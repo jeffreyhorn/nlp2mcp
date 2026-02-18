@@ -31,12 +31,11 @@ Scalars
     beta /0.75/
     a /0.0/
     r /0.025/
-    eta /0.0/
-    elasticity /0.9/
+    eta /0.9/
     z /0.01/
-    rho /0.0/
+    rho /0.03/
     y0 /4.275/
-    k0 /0.0/
+    k0 /15.0/
 ;
 
 tb(t) = 1$(ord(t) = 1);
@@ -223,3 +222,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = j.l;
+Display nlp2mcp_obj_val;

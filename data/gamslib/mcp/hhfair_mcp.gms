@@ -156,10 +156,10 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_a(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_a_fx_0 + sum(t, ((-1) * r) * nu_income(t)) + sum(tt, nu_terminal(tt)) =E= 0;
+stat_a(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_a_fx_0$sameas(tl, '0') + sum(t, ((-1) * r) * nu_income(t)) + sum(tt, nu_terminal(tt)) =E= 0;
 stat_c(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * a1 * c(t) ** ((-1) * a2) * ((-1) * a2) / c(t) / 10000)) * nu_utility(t) + p * nu_savings(t) + n(t) * ((-1) * (gamma1 * p)) * nu_timemoney(t) + 1.01 * gamma1 * p * lam_dom1(t) - piL_c(t) =E= 0;
 stat_l(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + ((-1) * w) * nu_income(t) + lam_dom2(t) - piL_l(t) + piU_l(t) =E= 0;
-stat_m(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_m_fx_0 + sum(t, n(t) * nu_timemoney(t)) + sum(tt, nu_terminal(tt)) + sum(t, (-1) * lam_dom1(t)) =E= 0;
+stat_m(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_m_fx_0$sameas(tl, '0') + sum(t, n(t) * nu_timemoney(t)) + sum(tt, nu_terminal(tt)) + sum(t, (-1) * lam_dom1(t)) =E= 0;
 stat_n(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + (m(t) - gamma1 * p * c(t)) * nu_timemoney(t) + lam_dom2(t) =E= 0;
 stat_s(tl)$(t(tl)).. nu_budget(tl) + sum(t, nu_savings(t)) =E= 0;
 stat_tax(t).. nu_taxes(t) + nu_savings(t) =E= 0;
@@ -249,3 +249,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = obj.l;
+Display nlp2mcp_obj_val;

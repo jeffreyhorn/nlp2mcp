@@ -121,3 +121,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = r.l;
+Display nlp2mcp_obj_val;

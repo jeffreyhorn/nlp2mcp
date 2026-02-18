@@ -708,10 +708,34 @@ def strip_unsupported_directives(source: str) -> str:
     lines = source.split("\n")
     filtered = []
     in_ontext_block = False
+    in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
 
     for line in lines:
         stripped = line.strip()
         stripped_lower = stripped.lower()
+
+        # Sprint 19 Day 11: Handle $onEchoV/$offEcho blocks (echo-to-file, content is non-GAMS)
+        # Also handle $onEcho/$offEcho variants
+        if stripped_lower.startswith("$onechov") or stripped_lower.startswith("$onecho"):
+            filtered.append(f"* [Stripped: {stripped}]")
+            in_echo_block = True
+            continue
+
+        if stripped_lower.startswith("$offecho"):
+            filtered.append(f"* [Stripped: {stripped}]")
+            in_echo_block = False
+            continue
+
+        # Sprint 19 Day 11: Handle $onEps/$offEps (epsilon display mode flag, not a block)
+        # Strip the directive lines only — content between them is normal GAMS code
+        if stripped_lower.startswith("$oneps") or stripped_lower.startswith("$offeps"):
+            filtered.append(f"* [Stripped: {stripped}]")
+            continue
+
+        # If inside echo block, strip content entirely (non-GAMS data)
+        if in_echo_block:
+            filtered.append(f"* [EchoContent: {line}]")
+            continue
 
         # Handle $ontext/$offtext comment blocks
         if stripped_lower.startswith("$ontext"):
@@ -1546,8 +1570,10 @@ def normalize_special_identifiers(source: str) -> str:
             # Data blocks appear after Set, Parameter, Scalar, Alias keywords
             is_declaration = re.match(r"^\s*(Set|Parameter|Scalar|Alias)\b", line, re.IGNORECASE)
             if is_declaration or in_multi_line_declaration:
-                # Check if entering a data block
-                slash_count = line.count("/")
+                # Sprint 19 Day 11: Count only slashes outside quoted strings.
+                # A description like 'n / m' contains a slash but does NOT open a data block.
+                unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", "", line)
+                slash_count = unquoted.count("/")
                 if slash_count == 1:
                     # Opening a data block
                     in_data_block = True

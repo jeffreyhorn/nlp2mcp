@@ -572,38 +572,48 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ## Day 11 — Declaration/Syntax Gaps + Checkpoint 2
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-18
+**Time Spent:** 4h
 
 ### PR Entries
 
-_(To be filled during Day 11)_
+- **Grammar: `NONNEGATIVE_K` terminal** — Added `Nonnegative Variables` support to `var_kind` rule in `gams_grammar.lark`. Fixes wall.gms.
+- **Grammar: `eqn_head_mixed_list`** — New `eqn_head_item` rule + `eqn_head_mixed_list` alternative in `eqn_head_decl` for equations where each name has its own domain (e.g., `Equation lpcons(i), defdual(j);`). IR builder handler added in `parser.py`. Fixes robustlp.gms, solveopt.gms.
+- **Grammar: `smax_expr`/`smin_expr`** — Moved `smax`/`smin` out of `FUNCNAME` into dedicated aggregation rules using `sum_domain`, supporting tuple index `(i,j)` as first argument. Added `_handle_smin_smax()` in IR builder. Fixes tricp.gms.
+- **Grammar: `DOLLAR NUMBER` in `condition`** — Added `DOLLAR NUMBER` alternative to equation definition condition rule, supporting `e3(i)$0 ..` patterns. Fixes solveopt.gms.
+- **Grammar: `offset_expr` extended** — Added `func_call` and `"(" expr ")"` alternatives to `offset_expr` for arithmetic expressions in index offsets (e.g., `m+floor((ord(n)-1)/k)`). Fixes imsl.gms.
+- **Grammar: `scalar_item` with description** — Added `SYMBOL_NAME STRING -> scalar_plain` variant so multi-scalar declarations with descriptions work (e.g., `k 'n / m',`). Fixes imsl.gms.
+- **Preprocessor: `$onEchoV`/`$offEcho` block stripping** — Added echo-to-file block stripping in `strip_unsupported_directives()`. Content between these directives is non-GAMS (raw PostScript, etc.). Fixes tricp.gms.
+- **Preprocessor: `$onEps`/`$offEps` directive stripping** — Strip directive lines only (content is normal GAMS code). Fixes tricp.gms.
+- **Preprocessor: slash-in-quoted-string fix** — `normalize_special_identifiers()` now counts only unquoted slashes when detecting data blocks, preventing `'n / m'` description from falsely opening a data block. Fixes imsl.gms.
+- **CLI: recursion limit 10000→50000** — Increased `required_limit` in `cli.py` from 10000 to 50000 for deeply nested models. Fixes imsl.gms.
+- **qdemo7**: Already parsed with recursion limit fix from earlier sprints — no grammar change needed.
 
 ### Checkpoint 2 Assessment
 
 | Criterion | Target | Actual | Met? |
 |-----------|--------|--------|------|
-| Parse rate | >=55% | | |
-| lexer_invalid_char | <30 | | |
-| internal_error | <15 | | |
-| FIX_ROADMAP P1-P3 | complete | | |
-| ISSUE_672 | resolved | | |
-| circle + house | confirmed | | |
-| Regressions | 0 | | |
+| Parse rate | >=55% (≥87/159) | **105/158 = 66.5%** | ✅ EXCEEDED |
+| lexer_invalid_char | <30 | **27** | ✅ PASS |
+| internal_error | <15 | **6** | ✅ PASS |
+| FIX_ROADMAP P1-P3 | complete | All done (Days 5-10) | ✅ PASS |
+| ISSUE_672 | resolved | Done (Day 4) | ✅ PASS |
+| circle + house | confirmed | Both confirmed (Days 3,7) | ✅ PASS |
+| Regressions | 0 | 0 (3553 pass) | ✅ PASS |
 
-**Go/No-Go Decision:**
+**Go/No-Go Decision: GO** — All 7 criteria satisfied. Parse rate exceeds Day 11 target by +11.8pp. Proceed to IndexOffset AD integration (Days 12-13).
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 11 |
 |--------|----------|--------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Translate success | 48 | |
-| Solve success | 20 | |
-| Full pipeline match | 7 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 (38.4%) | **105/158 (66.5%)** |
+| lexer_invalid_char | 72 | **27** |
+| internal_error | 24 | **6** |
+| Translate success | 48 | (not retested) |
+| Solve success | 20 | (not retested) |
+| Full pipeline match | 7 | (not retested) |
+| Test count | 3,294 | **3,553** |
 
 ---
 

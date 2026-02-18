@@ -25,7 +25,7 @@ Sets
 Alias(i, j);
 
 Parameters
-    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1, 'heavy-ind'.'heavy-ind' 0.0, 'heavy-ind'.services 0.0, services.services 0.0, 'food+agr'.'food+agr' 0.0, 'food+agr'.'heavy-ind' 0.0, 'food+agr'.services 0.0/
+    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1, 'heavy-ind'.'heavy-ind' 0.0, 'heavy-ind'.services 0.0, 'food+agr'.'food+agr' 0.0, 'food+agr'.'heavy-ind' 0.0, 'food+agr'.services 0.0, services.services 0.0/
     pdat(lmh,*,sde,i) /low.a.distr.'light-ind' 0.915, low.a.distr.'food+agr' 0.944, low.a.distr.'heavy-ind' 2.6, low.a.distr.services 0.8, low.a.effic.'light-ind' 3.83, low.a.effic.'food+agr' 3.24, low.a.effic.'heavy-ind' 4.0, low.a.effic.services 1.8, low.b.distr.'light-ind' 0.276, low.b.distr.'food+agr' 1.034, low.b.distr.'heavy-ind' 2.6, low.b.distr.services 0.77, low.b.effic.'light-ind' 2.551, low.b.effic.'food+agr' 3.39, low.b.effic.'heavy-ind' 4.0, low.b.effic.services 1.77, medium.a.subst.'light-ind' 0.11, medium.a.subst.'food+agr' 0.29, medium.a.subst.'heavy-ind' 0.2, medium.a.subst.services 0.05, medium.a.distr.'light-ind' 0.326, medium.a.distr.'food+agr' 0.443, medium.a.distr.'heavy-ind' 0.991, medium.a.distr.services 0.00798, medium.a.effic.'light-ind' 3.97, medium.a.effic.'food+agr' 3.33, medium.a.effic.'heavy-ind' 1.67, medium.a.effic.services 1.84, medium.b.subst.'light-ind' 0.22, medium.b.subst.'food+agr' 0.58, medium.b.subst.'heavy-ind' 0.4, medium.b.subst.services 0.1, medium.b.distr.'light-ind' 0.41, medium.b.distr.'food+agr' 0.47, medium.b.distr.'heavy-ind' 0.92, medium.b.distr.services 0.08, medium.b.effic.'light-ind' 3.99, medium.b.effic.'food+agr' 3.33, medium.b.effic.'heavy-ind' 1.8, medium.b.effic.services 1.89, high.a.subst.'light-ind' 0.45, high.a.subst.'food+agr' 1.15, high.a.subst.'heavy-ind' 0.4, high.a.subst.services 0.2, high.a.distr.'light-ind' 0.456, high.a.distr.'food+agr' 0.483, high.a.distr.'heavy-ind' 0.917, high.a.distr.services 0.23, high.a.effic.'light-ind' 4.0, high.a.effic.'food+agr' 3.33, high.a.effic.'heavy-ind' 1.8, high.a.effic.services 1.92, high.b.subst.'light-ind' 0.93, high.b.subst.'food+agr' 1.15, high.b.subst.'heavy-ind' 0.8, high.b.subst.services 0.4, high.b.distr.'light-ind' 0.484, high.b.distr.'food+agr' 0.483, high.b.distr.'heavy-ind' 0.769, high.b.distr.services 0.344, high.b.effic.'light-ind' 4.0, high.b.effic.'food+agr' 3.33, high.b.effic.'heavy-ind' 1.96, high.b.effic.services 1.96/
     ddat(lmh,*,i) /low.ynot.'light-ind' 100.0, low.ynot.'food+agr' 230.0, low.ynot.'heavy-ind' 220.0, low.ynot.services 450.0, medium.ynot.'light-ind' 100.0, medium.ynot.'food+agr' 230.0, medium.ynot.'heavy-ind' 220.0, medium.ynot.services 450.0, high.ynot.'light-ind' 100.0, high.ynot.'food+agr' 230.0, high.ynot.'heavy-ind' 220.0, high.ynot.services 450.0, medium.'p-elas'.'light-ind' -0.674, medium.'p-elas'.'food+agr' -0.246, medium.'p-elas'.'heavy-ind' -0.587, medium.'p-elas'.services -0.352, high.'p-elas'.'light-ind' -1.0, high.'p-elas'.'food+agr' -1.0, high.'p-elas'.'heavy-ind' -1.0, high.'p-elas'.services -1.0/
     tdat(lmh,*,t) /medium.alp.'light-ind' 0.005, medium.alp.'food+agr' 0.001, medium.alp.'heavy-ind' 0.01, high.alp.'light-ind' 0.0025, high.alp.'food+agr' 0.0005, high.alp.'heavy-ind' 0.00178, medium.gam.'light-ind' 1.0, medium.gam.'food+agr' 1.1, medium.gam.'heavy-ind' 1.0, high.gam.'light-ind' 1.0, high.gam.'food+agr' 1.1, high.gam.'heavy-ind' 1.0, medium.xsi.'light-ind' 0.005, medium.xsi.'food+agr' 0.0157, medium.xsi.'heavy-ind' 0.00178, high.xsi.'light-ind' 0.005, high.xsi.'food+agr' 0.0157, high.xsi.'heavy-ind' 0.00178/
@@ -246,12 +246,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(i).. sum(t, alp(t) * nu_dh(t)) + sum(t, ((-1) * h(t)) * lam_tb) + piU_e(i) =E= 0;
+stat_e(i).. sum(t, alp(t) * nu_dh(t)) + sum(t, ((-1) * h(t)) * lam_tb)$sameas(i, 'food+agr') + piU_e(i) =E= 0;
 stat_g(t).. nu_dg(t) + m(t) * lam_tb + piU_g(t) =E= 0;
 stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc + piU_l(i) =E= 0;
-stat_m(i).. sum(t, ((-1) * xsi(t)) * nu_dg(t)) + sum(t, g(t) * lam_tb) + piU_m(i) =E= 0;
+stat_m(i).. sum(t, ((-1) * xsi(t)) * nu_dg(t)) + sum(t, g(t) * lam_tb)$sameas(i, 'food+agr') + piU_m(i) =E= 0;
 stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
 stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / del(i) ** 2)) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;
@@ -376,3 +376,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = td.l;
+Display nlp2mcp_obj_val;

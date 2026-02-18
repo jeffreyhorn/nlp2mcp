@@ -2831,6 +2831,22 @@ class _ModelBuilder:
                 for name in names:
                     self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
                     self._equation_domains[name.lower()] = domain  # Issue #373: case-insensitive
+            elif child.data == "eqn_head_mixed_list":
+                # Sprint 19 Day 11: Handle mixed list where each name may have its own domain
+                # e.g., "Equation lpcons(i), defdual(j);" or "Equation eq1, eq2(i);"
+                for item in child.children:
+                    if not isinstance(item, Tree):
+                        continue
+                    if item.data == "eqn_head_item_domain":
+                        name = _token_text(item.children[0])
+                        domain = _domain_list(item.children[1])
+                        self._ensure_sets(domain, f"equation '{name}' domain", item)
+                        self._declared_equations.add(name.lower())
+                        self._equation_domains[name.lower()] = domain
+                    elif item.data == "eqn_head_item_scalar":
+                        name = _token_text(item.children[0])
+                        self._declared_equations.add(name.lower())
+                        self._equation_domains[name.lower()] = ()
 
     def _handle_eqn_def_scalar(self, node: Tree) -> None:
         name = _token_text(node.children[0])
@@ -3937,6 +3953,53 @@ class _ModelBuilder:
 
         return self._attach_domain(expr, remaining_domain)
 
+    def _handle_smin_smax(
+        self,
+        node: Tree,
+        func_name: str,
+        free_domain: tuple[str, ...],
+    ) -> Expr:
+        """Handle smin/smax aggregation expressions (Sprint 19 Day 11).
+
+        These now use dedicated grammar nodes with sum_domain (like sum/prod),
+        so the tree structure is: [SMAX_K/SMIN_K, sum_domain, body_expr].
+        Produces a Call node for IR fidelity.
+        """
+        sum_domain_node = node.children[1]
+        body_node = node.children[2]
+
+        # Extract index domain from sum_domain (same logic as _handle_aggregation)
+        condition_expr = None
+        if sum_domain_node.data == "tuple_domain":
+            index_spec_node = sum_domain_node.children[0]
+        elif sum_domain_node.data == "tuple_domain_cond":
+            index_spec_node = sum_domain_node.children[0]
+            condition_expr = self._expr(sum_domain_node.children[2], free_domain)
+        else:
+            index_spec_node = sum_domain_node.children[0]
+
+        index_list_node = index_spec_node.children[0]
+        if condition_expr is None and len(index_spec_node.children) > 1:
+            condition_expr = self._expr(index_spec_node.children[2], free_domain)
+
+        if index_list_node.data == "id_list":
+            indices = _id_list(index_list_node)
+        else:
+            indices = tuple(_extract_domain_indices(index_list_node))
+
+        self._ensure_sets(indices, f"{func_name} indices", node)
+        extended_domain = free_domain + tuple(indices)
+        body = self._expr(body_node, extended_domain)
+
+        args: list[Expr] = [SymbolRef(idx) for idx in indices]
+        if condition_expr is not None:
+            args.append(condition_expr)
+        args.append(body)
+
+        expr = Call(func_name, tuple(args))
+        remaining_domain = tuple(d for d in extended_domain if d not in indices)
+        return self._attach_domain(expr, remaining_domain)
+
     def _expr(self, node: Tree | Token, free_domain: tuple[str, ...]) -> Expr:
         if isinstance(node, Token):
             if node.type == "NUMBER":
@@ -4002,6 +4065,11 @@ class _ModelBuilder:
 
         if node.data == "prod":
             return self._handle_aggregation(node, Prod, free_domain)
+
+        if node.data in ("smin", "smax"):
+            # Sprint 19 Day 11: smin/smax now use dedicated grammar nodes with sum_domain
+            # Handle identically to sum/prod but produce a Call node for IR fidelity
+            return self._handle_smin_smax(node, node.data, free_domain)
 
         if node.data == "binop":
             left = self._expr(node.children[0], free_domain)

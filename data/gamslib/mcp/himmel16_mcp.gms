@@ -93,8 +93,8 @@ Equations
 
 * Stationarity equations
 stat_area(i).. nu_areadef(i) - nu_obj2 =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + nu_x_fx_1 + sum(j, 2 * (x(i) - x(j)) * lam_maxdist(i,j)) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + nu_y_fx_1 + nu_y_fx_2 + sum(j, 2 * (y(i) - y(j)) * lam_maxdist(i,j)) =E= 0;
+stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + nu_x_fx_1$sameas(i, '1') + sum(j, 2 * (x(i) - x(j)) * lam_maxdist(i,j)) =E= 0;
+stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + nu_y_fx_1$sameas(i, '1') + nu_y_fx_2$sameas(i, '2') + sum(j, 2 * (y(i) - y(j)) * lam_maxdist(i,j)) =E= 0;
 
 * Inequality complementarity equations
 comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
@@ -148,3 +148,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = totarea.l;
+Display nlp2mcp_obj_val;

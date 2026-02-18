@@ -92,9 +92,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r.. -1 + ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe("i1") + ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe("i2") + ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe("i3") + ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe("i4") + ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe("i5") + 4 * 2 * r * lam_nooverlap("i1","i1") + 4 * 2 * r * lam_nooverlap("i1","i2") + 4 * 2 * r * lam_nooverlap("i1","i3") + 4 * 2 * r * lam_nooverlap("i1","i4") + 4 * 2 * r * lam_nooverlap("i1","i5") + 4 * 2 * r * lam_nooverlap("i2","i1") + 4 * 2 * r * lam_nooverlap("i2","i2") + 4 * 2 * r * lam_nooverlap("i2","i3") + 4 * 2 * r * lam_nooverlap("i2","i4") + 4 * 2 * r * lam_nooverlap("i2","i5") + 4 * 2 * r * lam_nooverlap("i3","i1") + 4 * 2 * r * lam_nooverlap("i3","i2") + 4 * 2 * r * lam_nooverlap("i3","i3") + 4 * 2 * r * lam_nooverlap("i3","i4") + 4 * 2 * r * lam_nooverlap("i3","i5") + 4 * 2 * r * lam_nooverlap("i4","i1") + 4 * 2 * r * lam_nooverlap("i4","i2") + 4 * 2 * r * lam_nooverlap("i4","i3") + 4 * 2 * r * lam_nooverlap("i4","i4") + 4 * 2 * r * lam_nooverlap("i4","i5") + 4 * 2 * r * lam_nooverlap("i5","i1") + 4 * 2 * r * lam_nooverlap("i5","i2") + 4 * 2 * r * lam_nooverlap("i5","i3") + 4 * 2 * r * lam_nooverlap("i5","i4") + 4 * 2 * r * lam_nooverlap("i5","i5") - piL_r + piU_r =E= 0;
-stat_x(i).. 0 + 2 * x(i) * lam_circumscribe(i) + sum(j, 0 * lam_nooverlap(i,j)) - piL_x(i) + piU_x(i) =E= 0;
-stat_y(i).. 0 + 2 * y(i) * lam_circumscribe(i) + sum(j, 0 * lam_nooverlap(i,j)) - piL_y(i) + piU_y(i) =E= 0;
+stat_r.. -1 + sum(i, ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe(i)) + sum((i,j), 4 * 2 * r * lam_nooverlap(i,j)) - piL_r + piU_r =E= 0;
+stat_x(i).. 2 * x(i) * lam_circumscribe(i) + sum(j, ((-1) * (2 * (x(i) - x(j)))) * lam_nooverlap(i,j)) - piL_x(i) + piU_x(i) =E= 0;
+stat_y(i).. 2 * y(i) * lam_circumscribe(i) + sum(j, ((-1) * (2 * (y(i) - y(j)))) * lam_nooverlap(i,j)) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
 comp_circumscribe(i).. sqr(1 - r) - (sqr(x(i)) + sqr(y(i))) =G= 0;
@@ -143,3 +143,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = r.l;
+Display nlp2mcp_obj_val;

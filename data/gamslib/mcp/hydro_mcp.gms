@@ -136,7 +136,7 @@ stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4
 stat_loss(t).. nu_losseq(t) + lam_demcons(t) =E= 0;
 stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + sum(t, nu_dischar(t)) =E= 0;
 stat_thermal(t).. 1.15 * n * card(t) * (8 + 0.0032 * thermal(t)) - lam_demcons(t) - piL_thermal(t) + piU_thermal(t) =E= 0;
-stat_v(tt).. nu_flow(tt) + nu_v_fx_0 + nu_v_fx_1 + nu_v_fx_2 + nu_v_fx_3 + nu_v_fx_4 + nu_v_fx_5 + nu_v_fx_6 - piL_v(tt) + piU_v(tt) =E= 0;
+stat_v(tt).. nu_flow(tt) + nu_v_fx_0$sameas(tt, '0') + nu_v_fx_1$sameas(tt, '1') + nu_v_fx_2$sameas(tt, '2') + nu_v_fx_3$sameas(tt, '3') + nu_v_fx_4$sameas(tt, '4') + nu_v_fx_5$sameas(tt, '5') + nu_v_fx_6$sameas(tt, '6') - piL_v(tt) + piU_v(tt) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons(t).. thermal(t) + hydro(t) - (load(t) + loss(t)) =G= 0;
@@ -217,3 +217,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = cost.l;
+Display nlp2mcp_obj_val;

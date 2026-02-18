@@ -101,12 +101,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_f(t).. 0 + 0 * nu_cb(t) + 1 * nu_wb(t) + 0 * lam_wd(t) =E= 0;
-stat_h(t).. 0 + 0 * nu_cb(t) + (-1) * nu_wb(t) + (1 + 1 / alpha) * lam_wd(t) =E= 0;
-stat_p(t).. 0 + (-1) * nu_cb(t) + 0 * nu_wb(t) + 1 / rho ** 1 * lam_wd(t) =E= 0;
-stat_s(t).. 10 + 1 * nu_cb(t) + 0 * nu_wb(t) + 0 * lam_wd(t) =E= 0;
-stat_u(t).. 30 + (-1) * nu_cb(t) + 0 * nu_wb(t) + 0 * lam_wd(t) =E= 0;
-stat_w(t).. wage + sf(t) + 0 * nu_cb(t) + 1 * nu_wb(t) + (-1) * lam_wd(t) =E= 0;
+stat_f(t).. nu_wb(t) =E= 0;
+stat_h(t).. ((-1) * nu_wb(t)) + (1 + 1 / alpha) * lam_wd(t) =E= 0;
+stat_p(t).. ((-1) * nu_cb(t)) + 1 / rho ** 1 * lam_wd(t) =E= 0;
+stat_s(t).. 10 + nu_cb(t) =E= 0;
+stat_u(t).. 30 - nu_cb(t) =E= 0;
+stat_w(t).. wage + sf(t) + nu_wb(t) - lam_wd(t) =E= 0;
 
 * Inequality complementarity equations
 comp_wd(t).. w(t) - (p(t) / rho + (1 + 1 / alpha) * h(t)) =G= 0;
@@ -116,6 +116,16 @@ cb(t)$(ord(t) > 1).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
 wb(t)$(ord(t) > 1).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
 obj.. phi =E= sum(t, 10 * s(t) + 30 * u(t) + (wage + sf(t)) * w(t));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_cb.fx(t)$(not (ord(t) > 1)) = 0;
+nu_wb.fx(t)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -148,3 +158,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = phi.l;
+Display nlp2mcp_obj_val;

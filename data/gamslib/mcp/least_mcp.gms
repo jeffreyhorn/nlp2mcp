@@ -20,7 +20,7 @@ Sets
 ;
 
 Parameters
-    dat(i,*) /'1'.y 127.0, '1'.x -5.0, '2'.y 151.0, '2'.x -3.0, '3'.y 379.0, '3'.x -1.0, '4'.y 421.0, '4'.x 5.0, '5'.y 460.0, '5'.x 3.0, '6'.y 426.0, '6'.x 1.0/
+    dat(i,*)
 ;
 
 * ============================================
@@ -133,3 +133,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = ols.l;
+Display nlp2mcp_obj_val;

@@ -16,26 +16,38 @@ $offText
 * ============================================
 
 Sets
-    i /p1, p2, p3/
-    genchar /a, b, c, upplim, lowlim/
-    cg(genchar) /a, b, c/
-    s /'min-loss', s1, s2, s3, s4, 'min-cost'/
-    st(s) /s1, s2, s3, s4/
+    s /empty, '3', '6', '9', '12', '15', '18', '21'/
+    i /normal, disrupted/
 ;
 
+Alias(s, sp);
+Alias(s, spp);
 Alias(i, j);
 
 Parameters
-    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200.0, p1.lowlim 50.0, p2.a 200.0, p2.b 10.333, p2.c 0.00889, p2.upplim 150.0, p2.lowlim 37.5, p3.a 240.0, p3.b 10.833, p3.c 0.00741, p3.upplim 180.0, p3.lowlim 45.0/
-    pexp(cg) /a 0.0, b 1.0, c 2.0/
-    b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
-    b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
+    pi(s,i,sp,j,spp)
+    pr(i,j) /normal.normal 0.8, normal.disrupted 0.2, disrupted.normal 0.5, disrupted.disrupted 0.5/
+    lev(s)
+    dis(i) /disrupted 11.0/
+    p(s,sp,i)
+    c(s,sp,i)
 ;
 
 Scalars
-    b00 /0.040357/
-    demand /210.0/
+    b /0.95/
+    beta /0.0625/
+    g /0.25/
+    e /0.1/
+    q /110.0/
+    d /-130.0/
+    k /342.0/
+    pn /34.526/
+    h /0.32/
 ;
+
+lev(s) = 3 * (ord(s) - 1);
+p(s,sp,i) = (k / (q - dis(i) - d - (lev(sp) - lev(s)))) ** (1 / e);
+c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e)) / (1 - e)) + p(s,sp,i) * (lev(sp) - lev(s)) + h * lev(sp);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -49,14 +61,12 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    loss
-    cost
-    nu_costfn
+    pvcost
+    nu_constr(sp,j)
 ;
 
 Positive Variables
-    p(i)
-    lam_demcons
+    z(s,i,sp)
 ;
 
 * ============================================
@@ -68,7 +78,7 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-p.l(i) = 1;
+z.l(s,i,sp) = 1;
 
 * ============================================
 * Equations
@@ -79,11 +89,9 @@ p.l(i) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_p(i)
-    comp_demcons
-    costfn
-    lossfn
+    stat_z(s,i,sp)
+    constr(sp,j)
+    cost
 ;
 
 * ============================================
@@ -91,15 +99,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum(j, ((-1) * (b * pi(s,i,sp,j,sp))) * nu_constr(sp,j)) =E= 0;
 
 * Inequality complementarity equations
-comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
 
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
-lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
+constr(sp,j).. sum(spp, z(sp,j,spp)) - b * sum((s,i,spp), pi(s,i,sp,j,spp) * z(s,i,spp)) =E= beta;
+cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 
 
 * ============================================
@@ -116,11 +122,9 @@ lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * 
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_p.p,
-    comp_demcons.lam_demcons,
-    costfn.nu_costfn,
-    lossfn.loss
+    stat_z.z,
+    constr.nu_constr,
+    cost.pvcost
 /;
 
 * ============================================
@@ -130,5 +134,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = loss.l;
+nlp2mcp_obj_val = pvcost.l;
 Display nlp2mcp_obj_val;
