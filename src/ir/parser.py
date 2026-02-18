@@ -1694,52 +1694,60 @@ class _ModelBuilder:
                         suffixes = self._parse_set_element_id_list(first_child.children[1])
                         expanded_labels = [f"{p}.{s}" for p in prefixes for s in suffixes]
 
-                        # Get line number from first token in first set_element_id_list
-                        first_list = first_child.children[0]
-                        if first_list.children:
-                            first_eid = first_list.children[0]
-                            if isinstance(first_eid, Tree) and first_eid.children:
-                                first_token = first_eid.children[0]
-                            elif isinstance(first_eid, Token):
-                                first_token = first_eid
-                            else:
-                                first_token = None
-                            if first_token is not None and hasattr(first_token, "line"):
-                                row_label_map[first_token.line] = expanded_labels
+                        # Get line number: scan recursively for first Token in subtree
+                        first_token = next(
+                            (
+                                tok
+                                for tok in first_child.scan_values(lambda v: isinstance(v, Token))
+                            ),
+                            None,
+                        )
+                        if first_token is not None and hasattr(first_token, "line"):
+                            row_label_map[first_token.line] = expanded_labels
                     elif first_child.data == "tuple_suffix_expansion_label":
                         # Day 8: Suffix-expansion label like "sorghum.(bullock,'semi-mech')"
                         # Structure: tuple_suffix_expansion_label -> set_element_id_or_string, set_element_id_list
                         prefix_node = first_child.children[0]  # set_element_id_or_string
                         suffix_list_node = first_child.children[1]  # set_element_id_list
-                        # Extract the prefix (single element)
+                        # Extract prefixes: use _parse_set_element_id_list on a synthetic list
+                        # wrapper, or directly handle set_element_id_or_string (which may be
+                        # a range_expr that expands to multiple elements)
                         if (
                             isinstance(prefix_node, Tree)
                             and prefix_node.data == "set_element_id_or_string"
                         ):
                             inner = prefix_node.children[0]
                             if isinstance(inner, Token):
-                                prefix = _token_text(inner)
-                            elif isinstance(inner, Tree):
-                                # range_expr — expand; use first element
-                                prefix = _token_text(inner.children[0]) if inner.children else ""
+                                prefixes_for_label = [_token_text(inner)]
+                            elif isinstance(inner, Tree) and inner.data == "range_expr":
+                                bounds = [
+                                    _token_text(b.children[0])
+                                    for b in inner.children
+                                    if isinstance(b, Tree) and b.data == "range_bound"
+                                ]
+                                if len(bounds) == 2:
+                                    prefixes_for_label = self._expand_range(
+                                        bounds[0], bounds[1], inner
+                                    )
+                                else:
+                                    prefixes_for_label = ["*".join(bounds)]
                             else:
-                                prefix = ""
+                                prefixes_for_label = []
                         elif isinstance(prefix_node, Token):
-                            prefix = _token_text(prefix_node)
+                            prefixes_for_label = [_token_text(prefix_node)]
                         else:
-                            prefix = ""
+                            prefixes_for_label = []
                         suffixes = self._parse_set_element_id_list(suffix_list_node)
-                        expanded_labels = [f"{prefix}.{s}" for s in suffixes]
+                        expanded_labels = [f"{p}.{s}" for p in prefixes_for_label for s in suffixes]
 
-                        # Get line number from prefix token
-                        if isinstance(prefix_node, Tree) and prefix_node.children:
-                            first_token = prefix_node.children[0]
-                            if isinstance(first_token, Tree) and first_token.children:
-                                first_token = first_token.children[0]
-                        elif isinstance(prefix_node, Token):
-                            first_token = prefix_node
-                        else:
-                            first_token = None
+                        # Get line number: scan recursively for first Token in subtree
+                        first_token = next(
+                            (
+                                tok
+                                for tok in first_child.scan_values(lambda v: isinstance(v, Token))
+                            ),
+                            None,
+                        )
                         if first_token is not None and hasattr(first_token, "line"):
                             row_label_map[first_token.line] = expanded_labels
                 elif isinstance(first_child, Token):
@@ -1810,37 +1818,12 @@ class _ModelBuilder:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
                                         row_label_token_ids.add(id(tok))
-                    elif child.data == "tuple_cross_label":
-                        # Day 8: tuple_cross_label contains two set_element_id_list nodes
-                        # Collect all tokens, tracking them as row label tokens
-                        for subnode in child.children:
-                            if isinstance(subnode, Tree):
-                                for eid_node in subnode.children:
-                                    if isinstance(eid_node, Tree):
-                                        for tok in eid_node.children:
-                                            if isinstance(tok, Token):
-                                                all_tokens.append(tok)
-                                                row_label_token_ids.add(id(tok))
-                                    elif isinstance(eid_node, Token):
-                                        all_tokens.append(eid_node)
-                                        row_label_token_ids.add(id(eid_node))
-                    elif child.data == "tuple_suffix_expansion_label":
-                        # Day 8: tuple_suffix_expansion_label: set_element_id_or_string, set_element_id_list
-                        # Collect all tokens as row label tokens
-                        for subnode in child.children:
-                            if isinstance(subnode, Tree):
-                                for eid_node in subnode.children:
-                                    if isinstance(eid_node, Tree):
-                                        for tok in eid_node.children:
-                                            if isinstance(tok, Token):
-                                                all_tokens.append(tok)
-                                                row_label_token_ids.add(id(tok))
-                                    elif isinstance(eid_node, Token):
-                                        all_tokens.append(eid_node)
-                                        row_label_token_ids.add(id(eid_node))
-                            elif isinstance(subnode, Token):
-                                all_tokens.append(subnode)
-                                row_label_token_ids.add(id(subnode))
+                    elif child.data in ("tuple_cross_label", "tuple_suffix_expansion_label"):
+                        # Day 8: Recursively collect all tokens in the label subtree.
+                        # scan_values handles arbitrarily nested Trees (range_expr etc.)
+                        for tok in child.scan_values(lambda v: isinstance(v, Token)):
+                            all_tokens.append(tok)
+                            row_label_token_ids.add(id(tok))
 
         # Collect PLUS tokens to identify continuation lines and extract continuation values
         plus_lines = set()  # Set of line numbers that start with +

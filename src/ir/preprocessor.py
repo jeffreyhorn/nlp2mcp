@@ -2051,8 +2051,9 @@ def expand_tuple_only_table_rows(source: str) -> str:
     compound labels like (a,b).(c,d) are handled directly in the grammar.
     """
     # Pattern: optional whitespace, then ( elem1, elem2, ... ), then rest of line
-    # elem can be SET_ELEMENT_ID (alphanumeric + hyphens) or STRING ('...')
-    _ELEM = r"(?:'[^']*'|[A-Za-z0-9_][A-Za-z0-9_\-]*)"
+    # elem can be SET_ELEMENT_ID (alphanumeric + hyphens) or GAMS STRING ('...' with '' escapes)
+    # GAMS uses '' (double single-quote) as the escape for a literal single-quote inside strings.
+    _ELEM = r"(?:'(?:[^']|'')*'|[A-Za-z0-9_][A-Za-z0-9_\-]*)"
     _TUPLE_ROW = re.compile(
         r"^(\s*)"  # group 1: leading indent
         r"\(("  # literal ( then group 2: element list
@@ -2064,6 +2065,17 @@ def expand_tuple_only_table_rows(source: str) -> str:
         r"(\s*.*)$",  # group 3: rest of line (values)
         re.IGNORECASE,
     )
+    # Quote-aware element splitter: splits on commas outside of single-quoted strings
+    _SPLIT_ELEM = re.compile(r"'(?:[^']|'')*'|[^,]+")
+
+    def _split_elements(elem_list_str: str) -> list[str]:
+        """Split a comma-separated element list, respecting GAMS quoted strings."""
+        parts = []
+        for m in _SPLIT_ELEM.finditer(elem_list_str):
+            token = m.group(0).strip()
+            if token and token != ",":
+                parts.append(token)
+        return parts
 
     lines = source.split("\n")
     result = []
@@ -2109,8 +2121,8 @@ def expand_tuple_only_table_rows(source: str) -> str:
                     indent = m.group(1)
                     elem_list_str = m.group(2)
                     rest = m.group(3)
-                    # Parse elements: split on comma, strip whitespace/quotes
-                    raw_elems = [e.strip() for e in elem_list_str.split(",")]
+                    # Parse elements: use quote-aware splitter to handle 'a,b' strings
+                    raw_elems = _split_elements(elem_list_str)
                     for i_elem, elem in enumerate(raw_elems):
                         # Only append semicolon to the last expanded row if this was last line
                         if is_last_line and i_elem == len(raw_elems) - 1:
