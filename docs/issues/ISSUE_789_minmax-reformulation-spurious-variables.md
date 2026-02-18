@@ -1,8 +1,9 @@
 # Min/Max Reformulation Bug: Spurious Lambda Variables
 
+**GitHub Issue:** [#789](https://github.com/jeffreyhorn/nlp2mcp/issues/789)
 **Issue:** Min/max reformulation creates spurious intermediate lambda variables that cause PATH solver to fail with infeasibility.
 
-**Status:** Investigation Complete - Bug Identified  
+**Status:** Partially Fixed — structural fix applied (spurious lambda variables removed); mathematical reformulation for min/max in objective-defining equations remains open (#789)
 **Severity:** Critical - Min/max reformulation is broken  
 **Date:** 2025-11-03
 
