@@ -500,6 +500,73 @@ balance(t).. stock(t++1) =e= stock(t) + inflow(t) - outflow(t);
         assert model is not None
 
 
+class TestOffsetParenIndexing:
+    """Test parenthesized arithmetic offset expressions (Sprint 19 Day 13).
+
+    GAMS supports expressions like x(t-(ord(l)-1)) where the lead/lag offset
+    is a parenthesized arithmetic expression rather than a simple number or ID.
+    Grammar: offset_paren: "(" expr ")"
+    """
+
+    def test_paren_offset_ord_minus_const(self):
+        """x(t-(ord(l)-1)) — offset is (ord(l)-1), a paren expression."""
+        source = """
+Set t /1*4/;
+Set l /1*3/;
+Set lp /1*3/;
+Variable x(t,l);
+Parameter req(t) /1 1, 2 2, 3 3, 4 4/;
+Equation bal(t);
+bal(t).. sum((l,lp), x(t-(ord(l)-1),lp+(ord(l)-1))) =g= req(t);
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert "bal" in model.equations
+
+    def test_paren_offset_ord_direct(self):
+        """x(t-ord(l)) — standard offset_variable; verify still works."""
+        source = """
+Set t /1*4/;
+Set l /1*3/;
+Variable x(t,l);
+Parameter req(t) /1 1, 2 2, 3 3, 4 4/;
+Equation bal(t);
+bal(t).. sum(l, x(t-ord(l), l)) =g= req(t);
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert "bal" in model.equations
+
+    def test_paren_offset_positive(self):
+        """x(t+(n-1)) — positive paren offset."""
+        source = """
+Set t /1*4/;
+Scalar n /3/;
+Variable x(t);
+Variable y(t);
+Equation eq(t);
+eq(t).. y(t) =e= x(t+(n-1));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert "eq" in model.equations
+
+    def test_paren_offset_lag_with_ord(self):
+        """x(t-(ord(n)-1)) — paren lag matching otpop pattern."""
+        source = """
+Set t /1*4/;
+Set n /1*3/;
+Parameter alpha(n) /1 0.5, 2 0.3, 3 0.2/;
+Variable p(t);
+Variable pd(t);
+Equation pdef(t);
+pdef(t).. pd(t) =e= sum(n, alpha(n)*p(t-(ord(n) - 1)));
+"""
+        model = parse_model_text(source)
+        assert model is not None
+        assert "pdef" in model.equations
+
+
 class TestErrorHandling:
     """Test error handling for invalid indexing patterns."""
 

@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 19 Day 13: IndexOffset Validation + offset_paren/offset_func Fix - 2026-02-18
+
+**Branch:** `sprint19-day13-indexoffset-validation`
+
+#### Summary
+
+Validated the 8 IndexOffset-blocked models from the LEXER_ERROR_CATALOG Subcategory D list.
+Fixed a parser gap where `offset_paren` and `offset_func` expression types (already in the
+grammar since Day 11) were not handled in `_process_index_expr()`. Added an `expr_fn` callback
+parameter to thread the expression evaluator into offset processing. Documented 5 remaining
+blockers as GitHub issues #780–#784.
+
+#### Parser Changes (`src/ir/parser.py`)
+
+- Added `expr_fn: Callable[[Tree], Expr] | None = None` parameter to `_process_index_expr()`
+  and `_process_index_list()`
+- Added `offset_func` handler: wraps the inner `func_call` node in a synthetic `Tree("funccall",
+  [func_call_node])` before passing to `expr_fn` (required because `_expr()` dispatches on
+  `"funccall"`, not `"func_call"`)
+- Added `offset_paren` handler: evaluates the inner `expr` node via `expr_fn`
+- Updated `symbol_indexed` branch in `_expr()` to pass `lambda n: self._expr(n, free_domain)`
+  as `expr_fn` when calling `_process_index_list()`
+- Lint: moved `Callable` import from `typing` to `collections.abc` (ruff UP035)
+
+#### Tests (`tests/unit/test_arithmetic_indexing.py`)
+
+- Added `TestOffsetParenIndexing` class (4 tests):
+  - `test_paren_offset_ord_minus_const` — `x(t-(ord(l)-1))` (sparta pattern)
+  - `test_paren_offset_ord_direct` — `x(t-ord(l))` (offset_func path)
+  - `test_paren_offset_positive` — `x(t+(n-1))`
+  - `test_paren_offset_lag_with_ord` — `p(t-(ord(n)-1))` (otpop pattern)
+
+#### Issues Filed
+
+- [#780](https://github.com/jeffreyhorn/nlp2mcp/issues/780) — Eqn head lead/lag offset (mine.gms, ampl.gms): `pr(k,l+1,i,j)..` / `balance(r,tl+1)..`
+- [#781](https://github.com/jeffreyhorn/nlp2mcp/issues/781) — Set ordinal attributes (ampl.gms): `tl.first`, `tl.last` in dollar conditions
+- [#782](https://github.com/jeffreyhorn/nlp2mcp/issues/782) — Param tuple element list (tabora.gms): `/ (a08,a16,a24) 120 /`
+- [#783](https://github.com/jeffreyhorn/nlp2mcp/issues/783) — Eqn multiplier assignment (otpop.gms): `kdef.m = 1`
+- [#784](https://github.com/jeffreyhorn/nlp2mcp/issues/784) — Sum multi-index dollar scope (sparta.gms): `sum((i,j)$cond, body)`
+
+#### Pipeline Results
+
+3 of 8 IndexOffset-blocked models now translate cleanly (launch, robert, pak were already
+parsing; confirmed TRANSLATE OK). 5 models remain blocked pending issues #780–#784.
+
+**Test count:** 3,579 passed, 10 skipped, 2 xfailed (no regressions)
+
+---
+
 ### Sprint 19 Day 12: IndexOffset AD Integration (Part 1) - 2026-02-18
 
 **Branch:** `sprint19-day12-indexoffset-ad`

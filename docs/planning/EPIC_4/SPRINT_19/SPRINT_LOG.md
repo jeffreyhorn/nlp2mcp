@@ -624,7 +624,7 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ### PR Entries
 
-- **PR #XXX** — Sprint 19 Day 12: IndexOffset AD Integration (Part 1)
+- **PR #779** — Sprint 19 Day 12: IndexOffset AD Integration (Part 1)
   - AD: Added `IndexOffset` to imports in `src/ad/derivative_rules.py`
   - AD: Added `_substitute_index()` helper to substitute `str | IndexOffset` entries in index tuples
   - AD: Extended `_apply_index_substitution()` — VarRef/ParamRef now correctly substitute `IndexOffset` bases during sum-collapse; added `DollarConditional` branch (was previously a fall-through)
@@ -650,21 +650,50 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ## Day 13 — IndexOffset Validation + Lead/Lag Grammar
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-18
+**Time Spent:** ~3h
 
 ### PR Entries
 
-_(To be filled during Day 13)_
+- **PR #TBD** — Sprint 19 Day 13: IndexOffset Validation + offset_paren/offset_func fix
+  - Parser: Fixed `offset_paren` and `offset_func` handling in `_process_index_expr()` — added `expr_fn: Callable[[Tree], Expr] | None` callback parameter threaded from `_expr()` `symbol_indexed` branch
+  - Parser: `offset_func` wraps `func_call` node in synthetic `funccall` tree for correct `_expr()` dispatch
+  - Parser: `_process_index_list()` updated to accept and thread `expr_fn`
+  - Parser: lint fix — `Callable` import moved from `typing` to `collections.abc`
+  - Tests: 4 new tests in `TestOffsetParenIndexing` (`tests/unit/test_arithmetic_indexing.py`)
+  - 8 IndexOffset-blocked models evaluated: launch/robert/pak → TRANSLATE OK (3 unblocked); mine/ampl/tabora/otpop/sparta → 5 remaining blockers filed as issues
+  - Issues filed: #780 (eqn head lead offset — mine/ampl), #781 (set ordinal attributes — ampl), #782 (param tuple element list — tabora), #783 (eqn multiplier assignment — otpop), #784 (sum multi-index dollar scope — sparta)
+  - Issue documents created in `docs/issues/ISSUE_780_*` through `ISSUE_784_*`
+  - No parse rate change (3 models already translated; 5 blocked by issues above); 3,579 tests pass
+
+### Model Pipeline Results (Day 13)
+
+| Model | Parse | Translate | Blocker |
+|-------|-------|-----------|---------|
+| launch | OK | OK | ✓ unblocked |
+| robert | OK | OK | ✓ unblocked |
+| pak | OK | OK | ✓ unblocked |
+| mine | FAIL | — | #780 eqn head lead offset |
+| ampl | FAIL | — | #780 eqn head lead offset + #781 set ordinal attrs |
+| tabora | FAIL | — | #782 param tuple element list |
+| otpop | FAIL | — | #783 eqn multiplier assignment |
+| sparta | FAIL | — | #784 sum multi-index dollar scope |
+
+### Decisions
+
+- `offset_paren` / `offset_func` gap was a parser-only gap — grammar already had the rules (Sprint 19 Day 11); only the semantic handler was missing
+- `expr_fn` callback pattern avoids circular dependency between static helpers and instance methods
+- Equation marginal assignment (`eqname.m = value`) proposed as no-op: these are post-solve bookkeeping and don't affect MCP formulation
+- Sum multi-index dollar scope fix is a one-line change in `_handle_aggregation()`; deferred to avoid scope creep
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 13 |
 |--------|----------|--------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | 105/158 (unchanged — 3 models already parsed) |
+| lexer_invalid_char | 72 | 27 (unchanged) |
+| internal_error | 24 | 6 (unchanged) |
+| Test count | 3,294 | **3,579** |
 
 ---
 
