@@ -2114,18 +2114,19 @@ class _ModelBuilder:
         # When a table has no explicit domain (e.g., "Table td 'target data'"),
         # the Earley parser may consume the description STRING as a row label
         # in the first table_row. Detect this: if the first line is on the same
-        # line as the table name and has a single quoted-string token, it's the
-        # description, not column headers — skip it.
+        # line as the table name, it contains table metadata (name, domain, description)
+        # — not column headers — and must be skipped.
+        #
+        # Two sub-cases:
+        #   a) Single quoted-string token: just the description (original Issue #713 case,
+        #      e.g. "Table td 'target data'" where domain token was consumed elsewhere).
+        #   b) Multiple tokens: table name + domain + optional description all on one line
+        #      (e.g. "Table data(*,i) 'systolic blood pressure data'" — tokens include
+        #       the table name ID, domain ID, and description STRING).
         table_name_line = getattr(node.children[0], "line", None)
         first_line_num, first_line_tokens = sorted_lines[0]
-        if (
-            table_name_line is not None
-            and first_line_num == table_name_line
-            and len(first_line_tokens) == 1
-            and first_line_tokens[0].type in ("STRING", "ID")
-            and str(first_line_tokens[0])[0] in ("'", '"')
-        ):
-            # This is a description string, not column headers — skip it
+        if table_name_line is not None and first_line_num == table_name_line:
+            # Skip this line regardless of token count — it's the table declaration line
             if first_line_num in row_label_map:
                 del row_label_map[first_line_num]
             sorted_lines = sorted_lines[1:]
@@ -2138,6 +2139,148 @@ class _ModelBuilder:
         # (column headers are parsed as a table_row, so they might have been extracted as a row label)
         if first_line_num in row_label_map:
             del row_label_map[first_line_num]
+
+        # ISSUE_392: Detect secondary column-header lines that appear between data rows.
+        # When the preprocessor removes '+' continuation markers (replacing them with spaces),
+        # a GAMS table continuation line like:
+        #   +   16  17  18  ...  31
+        # becomes (the '+' replaced by a space to preserve column alignment):
+        #       16  17  18  ...  31
+        # This line has no ID row label — all tokens are NUMBER — and is therefore treated
+        # as a secondary column-header line that starts a new header section, rather than
+        # being merged into sorted_lines[0] (the primary column-header line).
+        #
+        # Detection (conservative): a non-first line is a secondary column-header line when
+        # ALL its tokens are NUMBER type.  Data rows always start with an ID (the row label),
+        # so a purely-numeric line cannot be a data row.
+        secondary_header_indices: list[int] = []  # indices into sorted_lines to absorb
+        for idx in range(1, len(sorted_lines)):
+            _, line_tokens = sorted_lines[idx]
+            if not line_tokens:
+                continue
+            if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
+                secondary_header_indices.append(idx)
+
+        if secondary_header_indices:
+            # Section-based processing for tables with continuation blocks.
+            #
+            # When the preprocessor removes '+' continuation markers, GAMS table blocks like:
+            #
+            #        1   2  ...  15
+            #   r1  v1  v2  ... v15
+            #   r2  ...
+            #
+            #   +   16  17  ...  31          <- '+' replaced by space; all-NUMBER line
+            #   r1  v16 v17 ... v31
+            #   r2  ...
+            #
+            # collapse into a single parse-tree row whose tokens still carry original line
+            # numbers.  After grouping by line, sorted_lines has the structure above with
+            # the continuation header appearing as a purely-numeric line.
+            #
+            # Strategy: split sorted_lines into independent sections, each containing
+            # its own column-header line plus the data lines that follow it (up to the next
+            # secondary header or end).  Process each section independently and accumulate
+            # all values into the same `values` dict.
+            #
+            # Note: the section-based path uses proximity-based column matching (find the
+            # nearest column header by column position) rather than the range-based matching
+            # used in the standard path.  Proximity matching is necessary here because the
+            # continuation preprocessor replaces '+' with a space — the token column positions
+            # already reflect the final layout — so no artificial column-offset adjustment is
+            # needed.  The range-based approach assumes a single merged header list with
+            # non-overlapping ranges; with two independent section headers that share similar
+            # column positions, non-overlapping ranges cannot be constructed.
+            #
+            # Section 0:  sorted_lines[0..first_secondary_idx-1]
+            # Section k:  sorted_lines[sec_idx_k .. sec_idx_{k+1}-1]  (sec_idx_k is the header)
+
+            # Build section boundaries: list of (header_idx, first_data_idx, end_idx)
+            section_bounds: list[tuple[int, int, int]] = []
+            prev_end = secondary_header_indices[0]  # section 0 ends just before first secondary
+            section_bounds.append((0, 1, prev_end))
+            for g, sec_idx in enumerate(secondary_header_indices):
+                next_sec = (
+                    secondary_header_indices[g + 1]
+                    if g + 1 < len(secondary_header_indices)
+                    else len(sorted_lines)
+                )
+                section_bounds.append((sec_idx, sec_idx + 1, next_sec))
+
+            # Process each section with its own header and accumulate into `values`.
+            section_values: dict[tuple[str, str], float] = {}
+
+            for header_idx, data_start, data_end in section_bounds:
+                sec_hdr_line_num, sec_hdr_tokens = sorted_lines[header_idx]
+                # Build the column-label list for this section (same logic as main path)
+                sec_col_headers: list[tuple[str, int]] = []  # (label, col_position)
+                for tok in sec_hdr_tokens:
+                    if tok.type in ("ID", "NUMBER", "STRING"):
+                        col_pos = getattr(tok, "column", 0) or 0
+                        col_label = str(tok).strip("'\"")
+                        sec_col_headers.append((col_label, col_pos))
+
+                # Process data lines in this section
+                for data_idx in range(data_start, data_end):
+                    data_line_num, data_tokens = sorted_lines[data_idx]
+                    if not data_tokens:
+                        continue
+                    # First token is the row label (ID, NUMBER, or STRING).
+                    # Use row_label_map (built from grammar tree labels) when available so
+                    # that complex label types (dotted, tuple, cross-product, etc.) are
+                    # handled correctly, consistent with the non-section-based path.
+                    if data_tokens[0].type not in ("ID", "NUMBER", "STRING"):
+                        continue
+                    if data_line_num in row_label_map:
+                        row_header_or_list = row_label_map[data_line_num]
+                        row_labels: list[str] = (
+                            row_header_or_list
+                            if isinstance(row_header_or_list, list)
+                            else [row_header_or_list]
+                        )
+                    else:
+                        row_labels = [str(data_tokens[0]).strip("'\"")]
+
+                    # Remaining tokens are values; match to column headers by proximity.
+                    # Tiebreaker: when two headers are equidistant, prefer the header with
+                    # the larger column position (i.e., the header to the right).
+                    # This matches GAMS right-aligned number layout where a multi-digit value
+                    # starts 1-2 chars to the left of its column header marker.
+                    used_sec_columns: set[str] = set()  # prevent overwriting a matched cell
+                    for val_tok in data_tokens[1:]:
+                        # Values are NUMBER or ID only (consistent with non-section path)
+                        if val_tok.type not in ("NUMBER", "ID"):
+                            continue
+                        # Skip tokens that belong to row labels (dotted/tuple labels)
+                        if id(val_tok) in row_label_token_ids:
+                            continue
+                        val_col = getattr(val_tok, "column", 0) or 0
+                        # Find the closest unmatched column header in this section
+                        best_col_label = None
+                        best_dist = float("inf")
+                        best_col_pos = -1
+                        for col_label, col_pos in sec_col_headers:
+                            if col_label in used_sec_columns:
+                                continue
+                            dist = abs(val_col - col_pos)
+                            if dist < best_dist or (dist == best_dist and col_pos > best_col_pos):
+                                best_dist = dist
+                                best_col_label = col_label
+                                best_col_pos = col_pos
+                        if best_col_label is not None:
+                            value = self._parse_table_value(str(val_tok).strip("'\""))
+                            # Store under each expanded row label (tuple labels expand to many)
+                            for rl in row_labels:
+                                section_values[(rl, best_col_label)] = value
+                            used_sec_columns.add(best_col_label)
+
+            # Replace `values` with the section-based results and return early,
+            # bypassing the normal single-pass column-matching loop below.
+            values: dict[tuple[str, ...], float] = {
+                (row_lbl, col_lbl): val for (row_lbl, col_lbl), val in section_values.items()
+            }
+            self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
+            return
 
         # Column headers: store name and column position
         col_headers = []  # List of (col_name, col_position) tuples

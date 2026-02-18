@@ -528,21 +528,45 @@ Subcategory A models newly parsing: indus, sarf, turkey, egypt, srkandw, dinam, 
 
 ## Day 10 — Table Parsing (ISSUE_392/399) + Subset Verification
 
-**Date:**
-**Time Spent:**
+**Date:** 2026-02-16
+**Time Spent:** ~4h
 
 ### PR Entries
 
-_(To be filled during Day 10)_
+- **ISSUE_392 (like model table continuation):** Fixed table parsing for GAMS tables with
+  `+` continuation blocks. Root cause: `remove_table_continuation_markers()` replaces `+`
+  with a space, collapsing the entire table into one `table_row` node. Tokens retain original
+  line numbers, so lines are reconstructable by grouping on `.line`.
+
+  Fix uses section-based processing: detect all-NUMBER non-first lines as secondary column
+  headers, split `sorted_lines` into independent (header + data) sections, process each
+  section with proximity-based column matching. Tiebreaker: on equidistant headers, prefer
+  the header to the right (larger column position) — matches GAMS right-aligned number layout.
+
+  Also broadened Issue #713 description-skip: previously required `len(tokens)==1` for the
+  table declaration line skip; now skips any `sorted_lines[0]` whose line number equals
+  `table_name_line`, regardless of token count. Handles tables where table name + domain +
+  description all appear on the same line (e.g., `Table data(*,i) 'systolic blood pressure data'`).
+
+  Result: **like model 62/62 values correct** (was 45/62 before); robert model unaffected
+  (9/9 values, no regression).
+
+- **ISSUE_399 (robert model table description):** Already resolved by existing Issue #713
+  code. No additional changes needed. Confirmed 9/9 values correct.
+
+- **Unknown 2.1 (subset relationship preservation):** Confirmed already implemented in
+  Sprint 17 Day 5 (`emit_original_sets()` in `src/emit/original_symbols.py`). `SetDef.domain`
+  correctly preserves parent set names; `_format_set_declaration()` emits `cg(genchar)` syntax.
+  83 unit tests passing. No additional work needed.
 
 ### Metrics Snapshot
 
 | Metric | Baseline | Day 10 |
 |--------|----------|--------|
-| Parse success | 61/159 | |
-| lexer_invalid_char | 72 | |
-| internal_error | 24 | |
-| Test count | 3,294 | |
+| Parse success | 61/159 | no change (table fix is IR-level, not parse-level) |
+| lexer_invalid_char | 72 | 72 |
+| internal_error | 24 | 24 |
+| Test count | 3,294 | 3,572 passed, 10 skipped, 1 xfailed |
 
 ---
 
