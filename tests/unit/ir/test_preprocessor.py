@@ -1197,6 +1197,49 @@ class TestExpandTupleOnlyTableRows:
         assert "data(i,j)" in result
         assert "(i,j)" in result  # domain preserved
 
+    def test_multiple_tables_in_sequence_state_resets(self):
+        """Two tables in sequence are both handled correctly with state reset."""
+        source = "Table t1(i,j)\n    c1\n(i1,i2)   1\n;\nTable t2(k,j)\n    c2\nk1   2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any("Table t1" in ln for ln in lines)
+        assert any("Table t2" in ln for ln in lines)
+        # Tuple in first table expanded
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "1" in ln for ln in lines)
+        # Normal row in second table unchanged
+        assert any(ln.strip().startswith("k1") and "2" in ln for ln in lines)
+
+    def test_table_followed_by_statement_without_semicolon(self):
+        """A new block keyword terminates the table even without a preceding semicolon."""
+        source = "Table t(i,j)\n    c1\n(i1,i2)   1\nSet j / a, b /;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        # Set declaration must be preserved exactly once
+        set_lines = [ln for ln in lines if ln.strip().lower().startswith("set")]
+        assert len(set_lines) == 1
+        assert "Set j" in set_lines[0]
+
+    def test_empty_lines_within_table_preserved(self):
+        """Empty lines inside a table body do not break tuple expansion."""
+        source = "Table t(i,j)\n    c1\n\n(i1,i2)   1\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        assert any(ln.strip() == "" for ln in lines)
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "1" in ln for ln in lines)
+
+    def test_comment_lines_within_table_data_preserved(self):
+        """Comment lines inside table data are preserved and not mis-parsed."""
+        source = "Table t(i,j)\n    c1\ni1   1\n* intermediate comment\n(i2,i3)   2\n;"
+        result = expand_tuple_only_table_rows(source)
+        lines = result.split("\n")
+        comment_lines = [ln for ln in lines if "intermediate comment" in ln]
+        assert comment_lines and comment_lines[0].lstrip().startswith("*")
+        assert any(ln.strip().startswith("i1") and "1" in ln for ln in lines)
+        assert any(ln.strip().startswith("i2") and "2" in ln for ln in lines)
+        assert any(ln.strip().startswith("i3") and "2" in ln for ln in lines)
+
 
 class TestNormalizeMultiLineCommentSkipping:
     """Tests for comment-skipping look-ahead in normalize_multi_line_continuations."""

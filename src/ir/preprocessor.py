@@ -2105,6 +2105,15 @@ def expand_tuple_only_table_rows(source: str) -> str:
                 result.append(line)
                 continue
 
+            # If a new block keyword starts without a semicolon, terminate the table.
+            # This prevents subsequent declaration lines from being misread as table rows.
+            if stripped and re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b", stripped, re.IGNORECASE
+            ):
+                in_table = False
+                result.append(line)
+                continue
+
             # Handle table termination: check for tuple expansion BEFORE ending
             is_last_line = stripped.endswith(";")
             if is_last_line:
