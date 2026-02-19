@@ -749,7 +749,7 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED
 
-**Findings (2026-02-16):** See `PIPELINE_MATCH_ANALYSIS.md` Section 1–2 for full per-model analysis.
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 1–2 for full per-model analysis.
 
 **16 models: 15 mismatch + 1 comparison error (port).** Classified into 4 types:
 
@@ -801,7 +801,7 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED
 
-**Findings (2026-02-16):** See `PIPELINE_MATCH_ANALYSIS.md` Sections 3–4.
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Sections 3–4.
 
 **Tolerances used:** `DEFAULT_ATOL=1e-8`, `DEFAULT_RTOL=1e-6` (set in `scripts/gamslib/test_solve.py:78-79`).
 
@@ -854,7 +854,7 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED
 
-**Findings (2026-02-16):** See `PIPELINE_MATCH_ANALYSIS.md` Section 7.
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 7.
 
 **Zero models among the 16 non-matching use `.scale`.** Checked all 15 mismatch models + port for `varname.scale` assignments in raw `.gms` source — none found.
 
@@ -897,7 +897,7 @@ Development team
 ### Verification Results
 ✅ Status: VERIFIED
 
-**Findings (2026-02-16):** See `PIPELINE_MATCH_ANALYSIS.md` Section 5.
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 5.
 
 **None of the 9 matching models use patterns targeted by Sprint 20 workstreams:**
 - IndexOffset (lead/lag): None

@@ -515,7 +515,7 @@ The 16 non-matching models need investigation. Likely causes (from Sprint 19 ret
 
 **Predicted matches after `.l` emission fix:** +1 to +2 (9 → 10–11); abel high confidence, chakra medium.
 
-**Tolerance finding:** Raising `rtol` from `1e-6` to `1e-4` would add 5 more matches (→ 14 or 16 combined).
+**Tolerance finding:** Raising `rtol` from `1e-6` to `1e-4` would add 5 more matches (→ 14–16 combined, depending on .l fix results).
 
 **No .scale usage** in any of the 16 non-matching models. `.scale` remains Sprint 21+ item.
 

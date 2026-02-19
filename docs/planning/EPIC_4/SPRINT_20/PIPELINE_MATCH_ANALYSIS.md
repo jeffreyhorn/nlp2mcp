@@ -1,6 +1,6 @@
 # Sprint 20 Prep Task 6: Full Pipeline Match Divergence Analysis
 
-**Date:** 2026-02-16
+**Date:** 2026-02-19
 **Branch:** `planning/sprint20-task6`
 **Status:** COMPLETE
 
@@ -33,14 +33,14 @@ This document classifies each of the 16 divergences and predicts the impact of t
 | process | 2410.83 | 1161.34 | 51.83% | Yes | No | Multiple optima | NLP locally optimal; .l emitted; PATH finds different local opt |
 | trig | 0.0 | 1.93 | 100% | Yes | No | Multiple optima | Non-convex global opt; .l emitted; PATH finds non-minimum KKT point |
 | aircraft | 1566.04 | 7332.5 | 78.64% | No | No | LP multi-model | Two solve statements (alloc1, alloc2); IR picks alloc2, NLP reference is alloc1 |
-| apl1p | 24515.65 | 23700.15 | 3.33% | No | No | LP warm-start | No .l inits; single solve; PATH finds different LP basis |
+| apl1p | 24515.65 | 23700.15 | 3.33% | No | No | LP multi-model | `solve apl1p` in apl1pca.gms; apl1p itself has no .l inits; PATH finds different LP basis |
 | apl1pca | 15902.49 | 23700.15 | 32.90% | No | No | LP multi-model | `solve apl1p` in apl1pca.gms; model set differs from NLP reference |
 | port | 0.2984 | null | N/A | No | No | Obj not tracked | LP model; MCP objective variable not captured in output |
 
 **Notes:**
 - `Has .l`: Yes = IR captures ≥1 `.l` constant init AND it is emitted in MCP file
 - No* = model has `.l` assignments in source but they are expression-based (param/formula); IR silently drops them
-- All 15 non-matching models use `.scale` = 0 (none use `.scale`)
+- None of the 16 non-matching models (including port) use `.scale`
 
 ---
 
@@ -109,7 +109,7 @@ The 5 near-match models fail only because the tolerance is very tight:
 
 All 5 would pass with `rtol=1e-4`. These are **numerical noise** differences (PATH vs IPOPT
 solver precision), not structural mismatches. Loosening `rtol` to `1e-4` would add 5 matches,
-bringing the total to **14 matches** (or 16 if both abel and chakra also fix).
+bringing the total to **14–16 matches** (depending on whether 0, 1, or both of abel/chakra also fix).
 
 **Recommendation for Sprint 20:** Consider raising default `rtol` to `1e-4` for the pipeline
 comparison as a separate improvement — but this is separate from the `.l` emission fix.
@@ -183,8 +183,9 @@ PATH should find the same local optimum as IPOPT.
 
 ## Section 7: `.scale` Analysis
 
-**No model in the non-matching set uses `.scale`.** All 15 models were checked for
-`varname.scale` assignments in their raw `.gms` source — none found.
+**No model in the non-matching set uses `.scale`.** All 15 mismatch models were checked for
+`varname.scale` assignments in their raw `.gms` source — none found. (port has no `.gms`-level
+`.scale` usage either.)
 
 `.scale` is therefore **not a primary blocker** for any of the 16 divergences.
 
@@ -196,4 +197,4 @@ PATH should find the same local optimum as IPOPT.
 - `data/gamslib/raw/*.gms` — original GAMS source for `.l` / `.scale` inspection
 - `data/gamslib/mcp/*.gms` — generated MCP files for `.l` emission verification
 - `scripts/gamslib/test_solve.py:78-79` — `DEFAULT_RTOL=1e-6`, `DEFAULT_ATOL=1e-8`
-- `src/ir/parser.py:~3562` — `_handle_assign` where expression-based `.l` is dropped
+- `src/ir/parser.py:3568-3571` — `_handle_assign` where expression-based `.l` is dropped (early `return` when `is_variable_bound` and `_extract_constant` raises)
