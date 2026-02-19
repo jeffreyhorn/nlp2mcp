@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 5: Audit Translate internal_error Models - 2026-02-19
+
+**Branch:** `planning/sprint20-task5`
+
+#### Summary
+
+True translate `internal_error` count confirmed at **2** (status JSON was stale — orani,
+prolog, ramsey now pass). Only maxmin (smin aggregation AD rule, deferred) and mlbeta
+(loggamma/digamma unavailable in GAMS, permanently infeasible) remain as genuine errors.
+Critical discovery: 14 `model_no_objective_def` failures are caused by a single preprocessor
+bug — `process_conditionals` incorrectly eats the `solve` statement after `$if set workSpace`
+inline directives. Fixing one function unblocks 13 models.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md`** (created): Per-model root
+  cause table for all 10 translate failures; stale-JSON correction for 3 now-passing models
+  (orani, prolog, ramsey); model_no_objective_def preprocessor bug analysis; effort
+  reallocation recommendation (0 S20-addressable translate errors; 13-model preprocessor fix)
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 7.1, 7.2,
+  8.1 → ✅ VERIFIED (7.1: 2 true errors; 7.2: no shared root cause; 8.1: 14 models, `$if`
+  preprocessor bug affects 13)
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 5 → ✅ COMPLETE
+
+---
+
 ### Sprint 20 Prep Task 4: Investigate .l Initialization Emission Gap - 2026-02-19
 
 **Branch:** `planning/sprint20-task4`
