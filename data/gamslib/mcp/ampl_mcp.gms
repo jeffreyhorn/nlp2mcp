@@ -15,6 +15,25 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    p /nuts, bolts, washers/
+    r /iron, nickel/
+    tl /'1', '2', '3', '4', '5'/
+    t(tl) /'1', '2', '3', '4'/
+;
+
+Parameters
+    b(r) /iron 35.8, nickel 7.32/
+    d(r) /iron 0.03, nickel 0.025/
+    f(r) /iron 0.02, nickel -0.01/
+    a(r,p) /iron.nuts 0.79, iron.bolts 0.83, iron.washers 0.92, nickel.nuts 0.21, nickel.bolts 0.17, nickel.washers 0.08/
+    c(p,t) /nuts.'1' 1.73, nuts.'2' 1.8, nuts.'3' 1.6, nuts.'4' 2.2, bolts.'1' 1.82, bolts.'2' 1.9, bolts.'3' 1.7, bolts.'4' 0.95, washers.'1' 1.05, washers.'2' 1.1, washers.'3' 0.95, washers.'4' 1.33/
+;
+
+Scalars
+    m /123.0/
+;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,16 +46,14 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    profit
+    nu_balance(r,tl)
 ;
 
 Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(p,tl)
+    s(r,tl)
+    lam_limit(t)
 ;
 
 * ============================================
@@ -46,9 +63,10 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables are set to 1.
 
-x1.l = -1.2;
-x2.l = 1.0;
+x.l(p,tl) = 1;
+s.l(r,tl) = 1;
 
 * ============================================
 * Equations
@@ -59,13 +77,11 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_s(r,tl)
+    stat_x(p,tl)
+    comp_limit(t)
+    balance(r,tl)
+    obj
 ;
 
 * ============================================
@@ -73,20 +89,26 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
+stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl)))) - nu_balance(r,tl) =E= 0;
+stat_x(p,tl)$(t(tl)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_balance(r,tl)) + sum(t, lam_limit(t)) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+* Inequality complementarity equations
+comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+balance(r,tl)$(ord(tl) <= card(tl) - 1).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
+obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl))) * s(r,tl));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+x.fx(p,tl)$(not (t(tl))) = 0;
+nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -102,13 +124,11 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_s.s,
+    stat_x.x,
+    comp_limit.lam_limit,
+    balance.nu_balance,
+    obj.profit
 /;
 
 * ============================================
@@ -118,5 +138,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = profit.l;
 Display nlp2mcp_obj_val;

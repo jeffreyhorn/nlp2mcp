@@ -85,7 +85,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + 1 * lam_supply(i) + (-1) * lam_demand(j) =E= 0;
+stat_x(i,j).. c(i,j) + lam_supply(i) - lam_demand(j) =E= 0;
 
 * Inequality complementarity equations
 comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
@@ -120,3 +120,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = z.l;
+Display nlp2mcp_obj_val;

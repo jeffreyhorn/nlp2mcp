@@ -15,6 +15,34 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    l /'1', '2', '3', '4'/
+    k /nw, ne, se, sw/
+;
+
+Alias(l, i);
+Alias(l, j);
+
+Sets
+    c(l,i,j)
+    d(l,i,j)
+;
+
+Parameters
+    conc(l,i,j)
+    li(k) /se 1.0, sw 1.0/
+    lj(k) /ne 1.0, se 1.0/
+    cost(l) /'1' 3000.0, '2' 6000.0, '3' 8000.0, '4' 10000.0/
+    rep(i,j,l)
+;
+
+Scalars
+    value /200000.0/
+;
+
+c(l,i,j) = 1$(ord(l) + ord(i) <= card(l) and ord(l) + ord(j) <= card(l));
+d(l,i,j) = 1$(ord(l) + ord(i) <= card(l) + 1 and ord(l) + ord(j) <= card(l) + 1);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,16 +55,12 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    profit
 ;
 
 Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(l,i,j)
+    piU_x(l,i,j)
 ;
 
 * ============================================
@@ -46,9 +70,17 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables are set to 1.
 
-x1.l = -1.2;
-x2.l = 1.0;
+x.l(l,i,j) = 1;
+
+* ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+rep(i,j,l) = x.l(l,i,j);
+$offImplicitAssign
 
 * ============================================
 * Equations
@@ -59,13 +91,9 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_x(l,i,j)
+    comp_up_x(l,i,j)
+    def
 ;
 
 * ============================================
@@ -73,19 +101,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
+stat_x(l,i,j).. ((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$d(l,i,j))) + piU_x(l,i,j) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
+* Inequality complementarity equations
 
 * Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+comp_up_x(l,i,j).. 1 - x(l,i,j) =G= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+def.. profit =E= sum((l,i,j)$(d(l,i,j)), (conc(l,i,j) * value / 100 - cost(l)) * x(l,i,j));
 
 
 * ============================================
@@ -102,13 +126,9 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_x.x,
+    def.profit,
+    comp_up_x.piU_x
 /;
 
 * ============================================
@@ -118,5 +138,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = profit.l;
 Display nlp2mcp_obj_val;

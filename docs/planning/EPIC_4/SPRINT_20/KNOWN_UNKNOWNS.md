@@ -677,13 +677,17 @@ If there are silent fixes, the baseline count is lower than 27 — a pleasant su
 Development team
 
 ### Verification Results
-✅ Status: VERIFIED
+⚠️ Status: WRONG — count is 26, not 27 (as of 2026-02-19 Task 9 full pipeline retest)
 
-**Findings (2026-02-19):** All 27 models re-run against current main. Count confirmed at exactly **27** — no silent fixes from Sprint 19 apply to the remaining models. The 45 models fixed in Sprint 19 were correctly accounted for; the remaining 27 all have distinct failure tokens not addressed by Sprint 19 grammar additions.
+**Findings (Task 3, 2026-02-19):** All 27 models re-run against main at that time. Count confirmed at **27**.
+
+**Findings (Task 9, 2026-02-19):** Full pipeline retest against `main` at commit `dc390373` reveals **26** `lexer_invalid_char` failures. One model has been silently fixed between the Task 3 retest and the Task 9 retest. The Sprint 20 baseline count is **26**.
+
+**Remaining 26 models:** camcge, cesam, cesam2, dinam, fdesign, ferts, gussrisk, indus, iobalance, lop, mathopt3, mexls, nemhaus, nonsharp, paperco, pindyck, saras, sarf, senstran, spatequ, springchain, tfordy, trnspwl, turkey, turkpow, worst
 
 **Zero regression:** No new models entered `lexer_invalid_char` after Sprint 19.
 
-**Assumption was correct:** The 27 remaining models were genuinely unaffected by Sprint 19 work and require new grammar additions to fix.
+**Assumption was partially correct:** 26 of the 27 models require new grammar additions; 1 was silently fixed by Sprint 19/20 prep work already merged to main.
 
 ---
 

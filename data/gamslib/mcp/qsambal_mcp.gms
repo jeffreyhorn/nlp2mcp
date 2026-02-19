@@ -15,6 +15,21 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /lab, h1, h2, p1, p2/
+;
+
+Alias(i, j);
+
+Parameters
+    xb(i,j) /lab.h1 15.0, lab.h2 3.0, lab.p1 130.0, lab.p2 80.0, h1.lab nan, h2.lab nan, p1.h1 15.0, p1.h2 130.0, p1.p2 20.0, p2.h1 25.0, p2.h2 40.0, p2.p1 55.0, lab.lab 0.0, h2.h1 0.0, h2.h2 0.0, h2.p1 0.0, h2.p2 0.0, h1.h1 0.0, h1.h2 0.0, h1.p1 0.0, h1.p2 0.0, p2.lab 0.0, p2.p2 0.0, p1.lab 0.0, p1.p1 0.0/
+    tb(i) /lab 220.0, h1 nan, h2 nan, p1 190.0, p2 105.0/
+    tw(i) /lab 0.0, h1 0.0, h2 0.0, p1 0.0, p2 0.0/
+    xw(i,j) /lab.lab 0.0, lab.h1 0.0, lab.h2 0.0, lab.p1 0.0, lab.p2 0.0, h1.lab 0.0, h1.h1 0.0, h1.h2 0.0, h1.p1 0.0, h1.p2 0.0, h2.lab 0.0, h2.h1 0.0, h2.h2 0.0, h2.p1 0.0, h2.p2 0.0, p1.lab 0.0, p1.h1 0.0, p1.h2 0.0, p1.p1 0.0, p1.p2 0.0, p2.lab 0.0, p2.h1 0.0, p2.h2 0.0, p2.p1 0.0, p2.p2 0.0/
+;
+
+xw(i,j) = 1$xb(i,j);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,28 +42,12 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    x(i,j)
+    t(i)
+    dev
+    nu_rbal(i)
+    nu_cbal(j)
 ;
-
-Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
-;
-
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-x1.l = -1.2;
-x2.l = 1.0;
 
 * ============================================
 * Equations
@@ -59,13 +58,11 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_t(i)
+    stat_x(i,j)
+    cbal(j)
+    devsqr
+    rbal(i)
 ;
 
 * ============================================
@@ -73,19 +70,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / tb(i) ** 2 * tw(i) + nu_rbal(i) + sum(j, nu_cbal(j)) =E= 0;
+stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,i)) * (-1) / xb(i,j) ** 2 * xw(i,j) + ((-1) * xb(i,j)) * nu_cbal(j) =E= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
+cbal(j).. t(j) =E= sum(i$(xb(i,j)), x(i,j));
+devsqr.. dev =E= sum((i,j)$(xw(i,j)), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i)), tw(i) * sqr(tb(i) - t(i)) / tb(i));
 
 
 * ============================================
@@ -102,13 +93,11 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_t.t,
+    stat_x.x,
+    cbal.nu_cbal,
+    devsqr.dev,
+    rbal.nu_rbal
 /;
 
 * ============================================
@@ -118,5 +107,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = dev.l;
 Display nlp2mcp_obj_val;

@@ -15,6 +15,11 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /a, b, c/
+    j(i) /b/
+;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,28 +32,21 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    obj
+    x1(i)
+    x2(i)
+    x3(i)
+    x4(i)
+    nu_e2(j)
 ;
 
 Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    lam_e1(i)
+    piU_x1(i)
+    piU_x2(i)
+    piU_x3(i)
+    piU_x4(i)
 ;
-
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-x1.l = -1.2;
-x2.l = 1.0;
 
 * ============================================
 * Equations
@@ -59,13 +57,17 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_x1(i)
+    stat_x2(i)
+    stat_x3(i)
+    stat_x4(i)
+    comp_e1(i)
+    comp_up_x1(i)
+    comp_up_x2(i)
+    comp_up_x3(i)
+    comp_up_x4(i)
+    defobj
+    e2(j)
 ;
 
 * ============================================
@@ -73,20 +75,33 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
+stat_x1(i).. 1 - lam_e1(i) + piU_x1(i) =E= 0;
+stat_x2(i)$(j(i)).. sum(j, nu_e2(j)) + piU_x2(i) =E= 0;
+stat_x3(i).. piU_x3(i) =E= 0;
+stat_x4(i).. piU_x4(i) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
+* Inequality complementarity equations
+comp_e1(i).. x1(i) - (ord(i) + x4(i)$0) =G= 0;
 
 * Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+comp_up_x1(i).. 10 - x1(i) =G= 0;
+comp_up_x2(i).. 20 - x2(i) =G= 0;
+comp_up_x3(i).. 30 - x3(i) =G= 0;
+comp_up_x4(i).. 40 - x4(i) =G= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+defobj.. obj =E= sum(i, x1(i));
+e2(j).. x2(j) =E= 20;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+x2.fx(i)$(not (j(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -104,11 +119,15 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 Model mcp_model /
     stat_x1.x1,
     stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
+    stat_x3.x3,
+    stat_x4.x4,
+    comp_e1.lam_e1,
+    defobj.obj,
+    e2.nu_e2,
     comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    comp_up_x2.piU_x2,
+    comp_up_x3.piU_x3,
+    comp_up_x4.piU_x4
 /;
 
 * ============================================
@@ -118,5 +137,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = obj.l;
 Display nlp2mcp_obj_val;

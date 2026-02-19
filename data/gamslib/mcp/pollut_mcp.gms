@@ -86,10 +86,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * power(k(j), 1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) + (-1) * nu_kdef + 0 * nu_ldef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) + 0 * lam_eq5a + 0 * lam_eq5b =E= 0;
-stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * power(l(j), z(j,"b")) * z(j,"b") / l(j))) + 0 * nu_kdef + (-1) * nu_ldef + sum(i, 0 * lam_eq4(i)) + 0 * lam_eq5a + 0 * lam_eq5b =E= 0;
-stat_tk.. ((-1) * sum(j, 0)) + (1 - sum(j, 0)) * nu_kdef + ((-1) * sum(j, 0)) * nu_ldef - sum(j, 0) * lam_eq4("cod") - sum(j, 0) * lam_eq4("land") - sum(j, 0) * lam_eq4("so2") - sum(j, 0) * lam_eq4("water") + (-1) * lam_eq5a - 1 * lam_eq5b =E= 0;
-stat_tl.. ((-1) * sum(j, 0)) + ((-1) * sum(j, 0)) * nu_kdef + (1 - sum(j, 0)) * nu_ldef - sum(j, 0) * lam_eq4("cod") - sum(j, 0) * lam_eq4("land") - sum(j, 0) * lam_eq4("so2") - sum(j, 0) * lam_eq4("water") + gamma2 * lam_eq5a - ((-1) * gamma1) * lam_eq5b =E= 0;
+stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) =E= 0;
+stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef =E= 0;
+stat_tk.. nu_kdef - lam_eq5a - lam_eq5b =E= 0;
+stat_tl.. nu_ldef + gamma2 * lam_eq5a - ((-1) * gamma1) * lam_eq5b =E= 0;
 
 * Inequality complementarity equations
 comp_eq4(i).. ((-1) * (sum(j, w(j,i) / z(j,"k") * k(j)) - tau(i))) =G= 0;
@@ -133,3 +133,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = output.l;
+Display nlp2mcp_obj_val;

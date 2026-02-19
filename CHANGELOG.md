@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 9: Snapshot Baseline Metrics - 2026-02-19
+
+**Branch:** `planning/sprint20-task9`
+
+#### Summary
+
+Sprint 20 baseline at commit `dc390373` (2026-02-19): parse 112/160 tested (70.0%),
+lexer_invalid_char 26 (down from 27 — one silently fixed), internal_error (parse) 2,
+translate 96/112 (85.7%), solve 27/96 (28.1%), full pipeline match 10/27 (37.0%),
+tests 3,579. Total catalog 219; tested 160; excluded 59 (29 LP, 26 NLP, 4 QCP).
+Unknown 4.2 updated: count is 26 not 27.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/BASELINE_METRICS.md`** (created): timestamped snapshot
+  with all pipeline metrics, explicit denominator, excluded model list (59 models with type),
+  and comparison table vs. Sprint 19 final state with discrepancy notes
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknown 4.2 → ⚠️ WRONG
+  — count is 26, not 27; one model silently fixed between Task 3 and Task 9 retests
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 9 → ✅ COMPLETE;
+  overview table updated; Changes, Result, acceptance criteria filled in
+
+---
+
 ### Sprint 20 Prep Task 8: Review Sprint 19 Retrospective Action Items - 2026-02-19
 
 **Branch:** `planning/sprint20-task8`

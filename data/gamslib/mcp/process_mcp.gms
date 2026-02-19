@@ -184,20 +184,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_acid.. 10 + 0 * nu_yield + 0 * nu_makeup + 1 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 + piU_acid =E= 0;
-stat_alkylate.. ((-1) * (octane * 0.063)) + 1 * nu_yield + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / (98 - strength) ** 2 / 1000000)) * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + rangey * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 + piU_alkylate =E= 0;
-stat_dilute.. 0 + 0 * nu_yield + 0 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * alkylate / (98 - strength) ** 2 / 1000000)) * nu_sdef + 0 * nu_motor + 0 * nu_drat + 1 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + ranged * nu_rngddil + 0 * nu_rngdf4 - piL_dilute + piU_dilute =E= 0;
-stat_f4.. 0 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0.222 * nu_ddil + 1 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + 0.222 * nu_rngddil + rangef * nu_rngdf4 - piL_f4 + piU_f4 =E= 0;
-stat_isom.. 3.36 + 0 * nu_yield + (-1) * nu_makeup + 0 * nu_sdef + 0 * nu_motor + ((-1) * (1 / olefin ** 1)) * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 + piU_isom =E= 0;
-stat_isor.. 0.035 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + ((-1) * (1 / olefin ** 1)) * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 + piU_isor =E= 0;
-stat_octane.. ((-1) * (0.063 * alkylate)) + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 1 * nu_motor + 0 * nu_drat + 0 * nu_ddil + (-3) * nu_df4 + 0 * nu_rngyield + rangem * nu_rngmotor + 0 * nu_rngddil + (-3) * nu_rngdf4 - piL_octane + piU_octane =E= 0;
-stat_olefin.. 5.04 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_yield + (-1) * nu_makeup + 0 * nu_sdef + 0 * nu_motor + ((-1) * (((-1) * (isor + isom)) / olefin ** 2)) * nu_drat + 0 * nu_ddil + 0 * nu_df4 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 - piL_olefin + piU_olefin =E= 0;
-stat_ranged.. 0 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + dilute * nu_rngddil + 0 * nu_rngdf4 - piL_ranged + piU_ranged =E= 0;
-stat_rangef.. 0 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + f4 * nu_rngdf4 - piL_rangef + piU_rangef =E= 0;
-stat_rangem.. 0 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + octane * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 - piL_rangem + piU_rangem =E= 0;
-stat_rangey.. 0 + 0 * nu_yield + 0 * nu_makeup + 0 * nu_sdef + 0 * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + alkylate * nu_rngyield + 0 * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 - piL_rangey + piU_rangey =E= 0;
-stat_ratio.. 0 + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_yield + 0 * nu_makeup + 0 * nu_sdef + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_motor + 1 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_rngyield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 - piL_ratio + piU_ratio =E= 0;
-stat_strength.. 0 + 0 * nu_yield + 0 * nu_makeup + ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / (98 - strength) ** 2 / 1000000)) * nu_sdef + (-0.325) * nu_motor + 0 * nu_drat + 0 * nu_ddil + 0 * nu_df4 + 0 * nu_rngyield + (-0.325) * nu_rngmotor + 0 * nu_rngddil + 0 * nu_rngdf4 - piL_strength + piU_strength =E= 0;
+stat_acid.. 10 + nu_sdef + piU_acid =E= 0;
+stat_alkylate.. ((-1) * (octane * 0.063)) + nu_yield + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / (98 - strength) ** 2 / 1000000)) * nu_sdef + rangey * nu_rngyield + piU_alkylate =E= 0;
+stat_dilute.. ((-1) * (1000 * (98 - strength) * strength * alkylate / (98 - strength) ** 2 / 1000000)) * nu_sdef + nu_ddil + ranged * nu_rngddil - piL_dilute + piU_dilute =E= 0;
+stat_f4.. 0.222 * nu_ddil + nu_df4 + 0.222 * nu_rngddil + rangef * nu_rngdf4 - piL_f4 + piU_f4 =E= 0;
+stat_isom.. 3.36 - nu_makeup + ((-1) * (1 / olefin ** 1)) * nu_drat + piU_isom =E= 0;
+stat_isor.. 0.035 + ((-1) * (1 / olefin ** 1)) * nu_drat + piU_isor =E= 0;
+stat_octane.. ((-1) * (0.063 * alkylate)) + nu_motor + (-3) * nu_df4 + rangem * nu_rngmotor + (-3) * nu_rngdf4 - piL_octane + piU_octane =E= 0;
+stat_olefin.. 5.04 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_yield - nu_makeup + ((-1) * (((-1) * (isor + isom)) / olefin ** 2)) * nu_drat + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield - piL_olefin + piU_olefin =E= 0;
+stat_ranged.. dilute * nu_rngddil - piL_ranged + piU_ranged =E= 0;
+stat_rangef.. f4 * nu_rngdf4 - piL_rangef + piU_rangef =E= 0;
+stat_rangem.. octane * nu_rngmotor - piL_rangem + piU_rangem =E= 0;
+stat_rangey.. alkylate * nu_rngyield - piL_rangey + piU_rangey =E= 0;
+stat_ratio.. ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_yield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_motor + nu_drat + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_rngyield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_rngmotor - piL_ratio + piU_ratio =E= 0;
+stat_strength.. ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / (98 - strength) ** 2 / 1000000)) * nu_sdef + (-0.325) * nu_motor + (-0.325) * nu_rngmotor - piL_strength + piU_strength =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_dilute.. dilute - 1.2 =G= 0;
@@ -313,3 +313,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = profit.l;
+Display nlp2mcp_obj_val;

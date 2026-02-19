@@ -15,6 +15,24 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'/
+;
+
+Alias(i, j);
+
+Parameters
+    theta(i)
+    p(i)
+;
+
+Scalars
+    ru /0.0/
+;
+
+theta(i) = ord(i) / card(i);
+p(i) = 1 / card(i);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,16 +45,17 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    Util
+    nu_rev(i)
 ;
 
 Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(i)
+    b(i)
+    w(i)
+    lam_pc(i)
+    lam_licd(i)
+    piL_x(i)
 ;
 
 * ============================================
@@ -46,9 +65,22 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x1.l = -1.2;
-x2.l = 1.0;
+x.l("0") = 0.0001;
+x.l("1") = 0.0001;
+x.l("2") = 0.0001;
+x.l("3") = 0.0001;
+x.l("4") = 0.0001;
+x.l("5") = 0.0001;
+x.l("6") = 0.0001;
+x.l("7") = 0.0001;
+x.l("8") = 0.0001;
+x.l("9") = 0.0001;
+x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
+b.l(i) = 1;
+w.l(i) = 1;
 
 * ============================================
 * Equations
@@ -59,13 +91,15 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_b(i)
+    stat_util
+    stat_w(i)
+    stat_x(i)
+    comp_licd(i)
+    comp_pc(i)
+    comp_lo_x(i)
+    obj
+    rev(i)
 ;
 
 * ============================================
@@ -73,19 +107,21 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
+stat_util.. 0 =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) - piL_x(i) =E= 0;
+
+* Inequality complementarity equations
+comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;
+comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
+rev(i).. b(i) =E= x(i) ** 0.5;
 
 
 * ============================================
@@ -102,13 +138,15 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_b.b,
+    stat_util.util,
+    stat_w.w,
+    stat_x.x,
+    comp_licd.lam_licd,
+    comp_pc.lam_pc,
+    obj.Util,
+    rev.nu_rev,
+    comp_lo_x.piL_x
 /;
 
 * ============================================
@@ -118,5 +156,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = Util.l;
 Display nlp2mcp_obj_val;

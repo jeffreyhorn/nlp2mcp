@@ -21,14 +21,10 @@ Sets
 ;
 
 Parameters
-    td(*,*) /icbm.'1' 0.05, icbm.'5' 0.15, icbm.'6' 0.1, icbm.'7' 0.15, icbm.'8' 0.2, icbm.'17' 0.05, icbm.avail 200.0, 'mrbm-1'.'1' 0.16, 'mrbm-1'.'2' 0.17, 'mrbm-1'.'3' 0.15, 'mrbm-1'.'4' 0.16, 'mrbm-1'.'5' 0.15, 'mrbm-1'.'6' 0.19, 'mrbm-1'.'7' 0.19, 'mrbm-1'.'8' 0.18, 'mrbm-1'.'9' 0.2, 'mrbm-1'.'10' 0.14, 'mrbm-1'.'12' 0.02, 'mrbm-1'.'14' 0.12, 'mrbm-1'.'15' 0.13, 'mrbm-1'.'16' 0.12, 'mrbm-1'.'17' 0.15, 'mrbm-1'.'18' 0.16, 'mrbm-1'.'19' 0.15, 'mrbm-1'.'20' 0.15, 'mrbm-1'.avail 100.0, 'lr-bomber'.'1' 0.04, 'lr-bomber'.'2' 0.05, 'lr-bomber'.'3' 0.04, 'lr-bomber'.'4' 0.04, 'lr-bomber'.'5' 0.04, 'lr-bomber'.'6' 0.1, 'lr-bomber'.'7' 0.08, 'lr-bomber'.'8' 0.09, 'lr-bomber'.'9' 0.08, 'lr-bomber'.'10' 0.05, 'lr-bomber'.'11' 0.01, 'lr-bomber'.'12' 0.02, 'lr-bomber'.'13' 0.01, 'lr-bomber'.'14' 0.02, 'lr-bomber'.'15' 0.03, 'lr-bomber'.'16' 0.02, 'lr-bomber'.'17' 0.05, 'lr-bomber'.'18' 0.08, 'lr-bomber'.'19' 0.07, 'lr-bomber'.'20' 0.08, 'lr-bomber'.avail 300.0, 'f-bomber'.'10' 0.04, 'f-bomber'.'11' 0.09, 'f-bomber'.'12' 0.08, 'f-bomber'.'13' 0.09, 'f-bomber'.'14' 0.08, 'f-bomber'.'15' 0.02, 'f-bomber'.'16' 0.07, 'f-bomber'.avail 150.0, 'mrbm-2'.'1' 0.08, 'mrbm-2'.'2' 0.06, 'mrbm-2'.'3' 0.08, 'mrbm-2'.'4' 0.05, 'mrbm-2'.'5' 0.05, 'mrbm-2'.'6' 0.02, 'mrbm-2'.'7' 0.02, 'mrbm-2'.'10' 0.1, 'mrbm-2'.'11' 0.05, 'mrbm-2'.'12' 0.04, 'mrbm-2'.'13' 0.09, 'mrbm-2'.'14' 0.02, 'mrbm-2'.'15' 0.01, 'mrbm-2'.'16' 0.01, 'mrbm-2'.avail 250.0, damage.'1' 60.0, damage.'2' 50.0, damage.'3' 50.0, damage.'4' 75.0, damage.'5' 40.0, damage.'6' 60.0, damage.'7' 35.0, damage.'8' 30.0, damage.'9' 25.0, damage.'10' 150.0, damage.'11' 30.0, damage.'12' 45.0, damage.'13' 125.0, damage.'14' 200.0, damage.'15' 200.0, damage.'16' 130.0, damage.'17' 100.0, damage.'18' 100.0, damage.'19' 100.0, damage.'20' 150.0, target.'1' 30.0, target.'5' 100.0, target.'10' 40.0, target.'14' 50.0, target.'15' 70.0, target.'16' 35.0, target.'20' 10.0, 'mrbm-2'.'8' 0.0, 'mrbm-2'.'9' 0.0, 'mrbm-2'.'17' 0.0, 'mrbm-2'.'18' 0.0, 'mrbm-2'.'19' 0.0, 'mrbm-2'.'20' 0.0, 'f-bomber'.'1' 0.0, 'f-bomber'.'2' 0.0, 'f-bomber'.'3' 0.0, 'f-bomber'.'4' 0.0, 'f-bomber'.'5' 0.0, 'f-bomber'.'6' 0.0, 'f-bomber'.'7' 0.0, 'f-bomber'.'8' 0.0, 'f-bomber'.'9' 0.0, 'f-bomber'.'17' 0.0, 'f-bomber'.'18' 0.0, 'f-bomber'.'19' 0.0, 'f-bomber'.'20' 0.0, 'mrbm-1'.'11' 0.0, 'mrbm-1'.'13' 0.0, damage.avail 0.0, target.'2' 0.0, target.'3' 0.0, target.'4' 0.0, target.'6' 0.0, target.'7' 0.0, target.'8' 0.0, target.'9' 0.0, target.'11' 0.0, target.'12' 0.0, target.'13' 0.0, target.'17' 0.0, target.'18' 0.0, target.'19' 0.0, target.avail 0.0, icbm.'2' 0.0, icbm.'3' 0.0, icbm.'4' 0.0, icbm.'9' 0.0, icbm.'10' 0.0, icbm.'11' 0.0, icbm.'12' 0.0, icbm.'13' 0.0, icbm.'14' 0.0, icbm.'15' 0.0, icbm.'16' 0.0, icbm.'18' 0.0, icbm.'19' 0.0, icbm.'20' 0.0/
+    td(*,*) /icbm.'1' 0.05, icbm.'5' 0.15, icbm.'6' 0.1, icbm.'7' 0.15, icbm.'8' 0.2, icbm.'17' 0.05, icbm.avail 200.0, 'mrbm-1'.'1' 0.16, 'mrbm-1'.'2' 0.17, 'mrbm-1'.'3' 0.15, 'mrbm-1'.'4' 0.16, 'mrbm-1'.'5' 0.15, 'mrbm-1'.'6' 0.19, 'mrbm-1'.'7' 0.19, 'mrbm-1'.'8' 0.18, 'mrbm-1'.'9' 0.2, 'mrbm-1'.'10' 0.14, 'mrbm-1'.'12' 0.02, 'mrbm-1'.'14' 0.12, 'mrbm-1'.'15' 0.13, 'mrbm-1'.'16' 0.12, 'mrbm-1'.'17' 0.15, 'mrbm-1'.'18' 0.16, 'mrbm-1'.'19' 0.15, 'mrbm-1'.'20' 0.15, 'mrbm-1'.avail 100.0, 'lr-bomber'.'1' 0.04, 'lr-bomber'.'2' 0.05, 'lr-bomber'.'3' 0.04, 'lr-bomber'.'4' 0.04, 'lr-bomber'.'5' 0.04, 'lr-bomber'.'6' 0.1, 'lr-bomber'.'7' 0.08, 'lr-bomber'.'8' 0.09, 'lr-bomber'.'9' 0.08, 'lr-bomber'.'10' 0.05, 'lr-bomber'.'11' 0.01, 'lr-bomber'.'12' 0.02, 'lr-bomber'.'13' 0.01, 'lr-bomber'.'14' 0.02, 'lr-bomber'.'15' 0.03, 'lr-bomber'.'16' 0.02, 'lr-bomber'.'17' 0.05, 'lr-bomber'.'18' 0.08, 'lr-bomber'.'19' 0.07, 'lr-bomber'.'20' 0.08, 'lr-bomber'.avail 300.0, 'f-bomber'.'10' 0.04, 'f-bomber'.'11' 0.09, 'f-bomber'.'12' 0.08, 'f-bomber'.'13' 0.09, 'f-bomber'.'14' 0.08, 'f-bomber'.'15' 0.02, 'f-bomber'.'16' 0.07, 'f-bomber'.avail 150.0, 'mrbm-2'.'1' 0.08, 'mrbm-2'.'2' 0.06, 'mrbm-2'.'3' 0.08, 'mrbm-2'.'4' 0.05, 'mrbm-2'.'5' 0.05, 'mrbm-2'.'6' 0.02, 'mrbm-2'.'7' 0.02, 'mrbm-2'.'10' 0.1, 'mrbm-2'.'11' 0.05, 'mrbm-2'.'12' 0.04, 'mrbm-2'.'13' 0.09, 'mrbm-2'.'14' 0.02, 'mrbm-2'.'15' 0.01, 'mrbm-2'.'16' 0.01, 'mrbm-2'.avail 250.0, damage.'1' 60.0, damage.'2' 50.0, damage.'3' 50.0, damage.'4' 75.0, damage.'5' 40.0, damage.'6' 60.0, damage.'7' 35.0, damage.'8' 30.0, damage.'9' 25.0, damage.'10' 150.0, damage.'11' 30.0, damage.'12' 45.0, damage.'13' 125.0, damage.'14' 200.0, damage.'15' 200.0, damage.'16' 130.0, damage.'17' 100.0, damage.'18' 100.0, damage.'19' 100.0, damage.'20' 150.0, target.'1' 30.0, target.'5' 100.0, target.'10' 40.0, target.'14' 50.0, target.'15' 70.0, target.'16' 35.0, target.'20' 10.0, 'mrbm-1'.'11' 0.0, 'mrbm-1'.'13' 0.0, 'mrbm-2'.'8' 0.0, 'mrbm-2'.'9' 0.0, 'mrbm-2'.'17' 0.0, 'mrbm-2'.'18' 0.0, 'mrbm-2'.'19' 0.0, 'mrbm-2'.'20' 0.0, damage.avail 0.0, 'f-bomber'.'1' 0.0, 'f-bomber'.'2' 0.0, 'f-bomber'.'3' 0.0, 'f-bomber'.'4' 0.0, 'f-bomber'.'5' 0.0, 'f-bomber'.'6' 0.0, 'f-bomber'.'7' 0.0, 'f-bomber'.'8' 0.0, 'f-bomber'.'9' 0.0, 'f-bomber'.'17' 0.0, 'f-bomber'.'18' 0.0, 'f-bomber'.'19' 0.0, 'f-bomber'.'20' 0.0, target.'2' 0.0, target.'3' 0.0, target.'4' 0.0, target.'6' 0.0, target.'7' 0.0, target.'8' 0.0, target.'9' 0.0, target.'11' 0.0, target.'12' 0.0, target.'13' 0.0, target.'17' 0.0, target.'18' 0.0, target.'19' 0.0, target.avail 0.0, icbm.'2' 0.0, icbm.'3' 0.0, icbm.'4' 0.0, icbm.'9' 0.0, icbm.'10' 0.0, icbm.'11' 0.0, icbm.'12' 0.0, icbm.'13' 0.0, icbm.'14' 0.0, icbm.'15' 0.0, icbm.'16' 0.0, icbm.'18' 0.0, icbm.'19' 0.0, icbm.'20' 0.0/
     wa(w)
     tm(t)
     mv(t)
-;
-
-Scalars
-    report /0.0/
 ;
 
 wa(w) = td(w,"avail");
@@ -97,8 +93,8 @@ Equations
 Alias(w, w__);
 
 * Stationarity equations
-stat_prob(t).. ((-1) * mv(t)) + (1 - ((-1) * (prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t)) * sum(w$(td(w,t)), 0)))) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t)) * sum(w$(td(w,t)), 0))))) * nu_etd + sum(w, 0 * lam_maxw(w)) =E= 0;
-stat_x(w,t).. 0 + prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), 0) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), 0))))) * nu_etd + 1 * lam_maxw(w) =E= 0;
+stat_prob(t).. ((-1) * mv(t)) + nu_probe(t) =E= 0;
+stat_x(w,t)$(td(w,t)).. prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) * nu_etd + td(w,t) * lam_maxw(w) + ((-1) * td(w,t)) * lam_minw(t) =E= 0;
 
 * Inequality complementarity equations
 comp_maxw(w).. ((-1) * (sum(t$(td(w,t)), x(w,t)) - wa(w))) =G= 0;
@@ -109,6 +105,16 @@ probe(t).. prob(t) =E= 1 - prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t));
 etdp.. tetd =E= sum(t, mv(t) * prob(t));
 etd.. tetd =E= sum(t, mv(t) * (1 - prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t))));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+x.fx(w,t)$(not (td(w,t))) = 0;
+lam_minw.fx(t)$(not (tm(t))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -138,3 +144,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = tetd.l;
+Display nlp2mcp_obj_val;

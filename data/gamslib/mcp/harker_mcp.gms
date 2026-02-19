@@ -136,8 +136,8 @@ Equations
 Alias(l, l__);
 
 * Stationarity equations
-stat_d(n).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(n,"rho") - pm * coefs(n,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') =E= 0;
-stat_s(n).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + ((coefs(n,"alpha") + 2 * coefs(n,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') =E= 0;
+stat_d(n).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') =E= 0;
+stat_s(n).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') =E= 0;
 stat_t(n,np).. sum(l, (-1) * nu_in(l)) =E= 0;
 stat_tt(l,lp).. ((-1) * nu_dbal(l)) - nu_in(l) =E= 0;
 

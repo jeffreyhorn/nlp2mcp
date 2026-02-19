@@ -16,11 +16,11 @@ $offText
 * ============================================
 
 Sets
-    i /inf/
+    i /'inf'/
 ;
 
 Parameters
-    theta(i) /inf 0.3/
+    theta(i) /'inf' 0.3/
     db(i)
     w(i)
 ;
@@ -65,6 +65,15 @@ b.l(i) = 1;
 c.l(i) = 1;
 
 * ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+db(i) = 0.5 * x.l(i) ** -0.5;
+w(i) = c.l(i);
+$offImplicitAssign
+
+* ============================================
 * Equations
 * ============================================
 
@@ -88,16 +97,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. -1 + 1 * nu_rev(i) + 0 * nu_pc(i) =E= 0;
-stat_c(i).. 1 + 0 * nu_rev(i) + 1 * nu_pc(i) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("inf") + 0 * nu_pc("inf") =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
+stat_b(i).. -1 + nu_rev(i) =E= 0;
+stat_c(i).. 1 + nu_pc(i) =E= 0;
+stat_util.. 0 =E= 0;
+stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, b(i) - c(i));
+obj.. util =E= sum(i, b(i) - c(i));
 rev(i).. b(i) =E= x(i) ** 0.5;
 pc(i).. c(i) - theta(i) * x(i) =E= 0;
 
@@ -131,3 +140,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = Util.l;
+Display nlp2mcp_obj_val;

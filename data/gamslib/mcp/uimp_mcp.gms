@@ -16,18 +16,31 @@ $offText
 * ============================================
 
 Sets
-    t /'q-1', 'q-2', 'q-3', 'q-4'/
+    i /summer, winter/
+    j /normal, overtime/
+    k /nuts, bolts, washers/
+    l /m1, m2, m3/
 ;
 
 Parameters
-    price(t) /'q-1' 10.0, 'q-2' 12.0, 'q-3' 8.0, 'q-4' 9.0/
-    istock(t) /'q-1' 50.0/
+    mh(l,k) /m1.nuts 4.0, m1.bolts 4.0, m1.washers 6.0, m2.nuts 7.0, m2.bolts 6.0, m2.washers 6.0, m3.nuts 3.0, m3.bolts 0.0, m3.washers 0.0/
+    mhadd(i,j) /summer.overtime -1.0, winter.normal 1.0, summer.normal 0.0, winter.overtime 0.0/
+    av(l,j) /m1.normal 100.0, m1.overtime 80.0, m2.normal 100.0, m2.overtime 90.0, m3.normal 40.0, m3.overtime 30.0/
+    t(i,j,k,l) /winter.overtime.washers.m1 5.0/
+    a(i,j,l)
+    tc(l,k) /m1.nuts 2.0, m1.bolts 3.0, m1.washers 4.0, m2.nuts 4.0, m2.bolts 3.0, m2.washers 2.0, m3.nuts 1.0, m3.bolts 0.0, m3.washers 0.0/
+    tcadd(i,j) /summer.overtime 1.0, winter.normal 1.0, winter.overtime 2.0, summer.normal 0.0/
+    c(i,j,k,l)
+    p(i,k) /summer.nuts 10.0, summer.bolts 10.0, summer.washers 9.0, winter.nuts 11.0, winter.bolts 11.0, winter.washers 10.0/
+    d(i,k) /summer.nuts 25.0, summer.bolts 30.0, summer.washers 30.0, winter.nuts 30.0, winter.bolts 25.0, winter.washers 25.0/
+    s(k) /nuts 1.0, bolts 1.0, washers 1.0/
+    h(k) /nuts 20.0, bolts 20.0/
 ;
 
-Scalars
-    storecost /1.0/
-    storecap /100.0/
-;
+t(i,j,k,l) = mh(l,k) + mhadd(i,j)$mh(l,k);
+a("summer",j,l) = av(l,j);
+a("winter",j,l) = av(l,j) + 10;
+c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -41,15 +54,19 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
+    z(i,k)
     cost
-    nu_sb(t)
+    revenue
+    profit
+    nu_cdef
+    nu_rdef
+    nu_ib(i,k)
 ;
 
 Positive Variables
-    stock(t)
-    sell(t)
-    buy(t)
-    piU_stock(t)
+    x(i,j,k,l)
+    y(i,k)
+    lam_ma(i,j,l)
 ;
 
 * ============================================
@@ -61,9 +78,8 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-stock.l(t) = 1;
-sell.l(t) = 1;
-buy.l(t) = 1;
+x.l(i,j,k,l) = 1;
+y.l(i,k) = 1;
 
 * ============================================
 * Equations
@@ -74,12 +90,16 @@ buy.l(t) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_buy(t)
-    stat_sell(t)
-    stat_stock(t)
-    comp_up_stock(t)
-    at
-    sb(t)
+    stat_cost
+    stat_revenue
+    stat_x(i,j,k,l)
+    stat_y(i,k)
+    stat_z(i,k)
+    comp_ma(i,j,l)
+    cdef
+    ib(i,k)
+    pdef
+    rdef
 ;
 
 * ============================================
@@ -87,16 +107,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_buy(t).. price(t) - nu_sb(t) =E= 0;
-stat_sell(t).. ((-1) * price(t)) + nu_sb(t) =E= 0;
-stat_stock(t).. storecost + nu_sb(t) + piU_stock(t) =E= 0;
+stat_cost.. 1 + nu_cdef =E= 0;
+stat_revenue.. -1 + nu_rdef =E= 0;
+stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) =E= 0;
+stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) =E= 0;
+stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) =E= 0;
 
-* Upper bound complementarity equations
-comp_up_stock(t).. 100 - stock(t) =G= 0;
+* Inequality complementarity equations
+comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
 
 * Original equality equations
-sb(t)$(ord(t) > 1).. stock(t) =E= stock(t-1) + buy(t) - sell(t) + istock(t);
-at.. cost =E= sum(t, price(t) * (buy(t) - sell(t)) + storecost * stock(t));
+pdef.. profit =E= revenue - cost;
+cdef.. cost =E= sum((i,k), s(k) * y(i,k) + sum((j,l), c(i,j,k,l) * x(i,j,k,l)));
+rdef.. revenue =E= sum((i,k), p(i,k) * z(i,k));
+ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
 
 
 * ============================================
@@ -106,7 +130,7 @@ at.. cost =E= sum(t, price(t) * (buy(t) - sell(t)) + storecost * stock(t));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_sb.fx(t)$(not (ord(t) > 1)) = 0;
+nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -122,12 +146,16 @@ nu_sb.fx(t)$(not (ord(t) > 1)) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_buy.buy,
-    stat_sell.sell,
-    stat_stock.stock,
-    at.cost,
-    sb.nu_sb,
-    comp_up_stock.piU_stock
+    stat_cost.cost,
+    stat_revenue.revenue,
+    stat_x.x,
+    stat_y.y,
+    stat_z.z,
+    comp_ma.lam_ma,
+    cdef.nu_cdef,
+    ib.nu_ib,
+    pdef.profit,
+    rdef.nu_rdef
 /;
 
 * ============================================
@@ -137,5 +165,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = cost.l;
+nlp2mcp_obj_val = profit.l;
 Display nlp2mcp_obj_val;

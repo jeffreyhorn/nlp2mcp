@@ -27,16 +27,18 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
-;
-
-Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    ba
+    so4
+    baoh
+    oh
+    hso4
+    h
+    nu_r1
+    nu_r2
+    nu_r3
+    nu_r4
+    nu_b1
+    nu_b2
 ;
 
 * ============================================
@@ -47,8 +49,12 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = -1.2;
-x2.l = 1.0;
+ba.l = 1.0;
+so4.l = 1.0;
+baoh.l = 1.0;
+oh.l = 1.0;
+hso4.l = 1.0;
+h.l = 1.0;
 
 * ============================================
 * Equations
@@ -59,13 +65,18 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_ba
+    stat_baoh
+    stat_h
+    stat_hso4
+    stat_oh
+    stat_so4
+    b1
+    b2
+    r1
+    r2
+    r3
+    r4
 ;
 
 * ============================================
@@ -73,19 +84,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+stat_ba.. 1 + so4 * nu_r1 + oh * ((-1) * baoh) / ba ** 2 / oh ** 2 * nu_r2 + nu_b1 + 2 * nu_b2 =E= 0;
+stat_baoh.. oh * 1 / ba ** 1 / oh ** 2 * nu_r2 + 1e-07 * nu_b1 + 1e-07 * nu_b2 =E= 0;
+stat_h.. ((-1) * (hso4 / so4)) / h ** 2 * nu_r3 + oh * nu_r4 + 0.01 * nu_b2 =E= 0;
+stat_hso4.. h * 1 / so4 ** 1 / h ** 2 * nu_r3 + (-1e-05) * nu_b1 + (-1e-05) * nu_b2 =E= 0;
+stat_oh.. ((-1) * (baoh / ba)) / oh ** 2 * nu_r2 + h * nu_r4 + (-0.01) * nu_b2 =E= 0;
+stat_so4.. ba * nu_r1 + h * ((-1) * hso4) / so4 ** 2 / h ** 2 * nu_r3 - nu_b1 + (-2) * nu_b2 =E= 0;
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+r1.. ba * so4 =E= 1;
+r2.. baoh / ba / oh =E= 4.8;
+r3.. hso4 / so4 / h =E= 0.98;
+r4.. h * oh =E= 1;
+b1.. ba + 1e-07 * baoh =E= so4 + 1e-05 * hso4;
+b2.. 2 * ba + 1e-07 * baoh + 0.01 * h =E= 2 * so4 + 1e-05 * hso4 + 0.01 * oh;
 
 
 * ============================================
@@ -102,13 +114,18 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_ba.ba,
+    stat_baoh.baoh,
+    stat_h.h,
+    stat_hso4.hso4,
+    stat_oh.oh,
+    stat_so4.so4,
+    b1.nu_b1,
+    b2.nu_b2,
+    r1.nu_r1,
+    r2.nu_r2,
+    r3.nu_r3,
+    r4.nu_r4
 /;
 
 * ============================================
@@ -118,5 +135,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = ba.l;
 Display nlp2mcp_obj_val;

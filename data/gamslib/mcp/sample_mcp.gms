@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    data(h,*) /'1'.pop 400000.0, '1'.a 25.0, '1'.b 1.0, '1'.cost 1.0, '2'.pop 300000.0, '2'.a 25.0, '2'.b 4.0, '2'.cost 1.0, '3'.pop 200000.0, '3'.a 25.0, '3'.b 16.0, '3'.cost 1.0, '4'.pop 100000.0, '4'.a 25.0, '4'.b 64.0, '4'.cost 1.0/
+    data(h,*)
     vmax(j) /a 0.04, b 0.01/
     w(h)
     k1(h,j)
@@ -97,8 +97,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_n(h).. data(h,"cost") + 0 * nu_cbalr + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) + sum(j, 0 * lam_vbalr(j)) - piL_n(h) =E= 0;
-stat_nr(h).. 0 + ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, 0 * lam_vbal(j)) + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
+stat_n(h).. data(h,"cost") + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) - piL_n(h) =E= 0;
+stat_nr(h).. ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
 
 * Inequality complementarity equations
 comp_vbal(j).. ((-1) * (sum(h, k1(h,j) / n(h)) - k2(j) - vmax(j))) =G= 0;
@@ -140,3 +140,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = c.l;
+Display nlp2mcp_obj_val;

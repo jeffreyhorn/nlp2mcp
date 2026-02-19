@@ -53,6 +53,15 @@ Positive Variables
 x1.l = 1.0;
 
 * ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+xdiff = 2.66695657 - x1.l;
+fdiff = -3.76250149 - obj.l;
+$offImplicitAssign
+
+* ============================================
 * Equations
 * ============================================
 
@@ -114,3 +123,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = obj.l;
+Display nlp2mcp_obj_val;
