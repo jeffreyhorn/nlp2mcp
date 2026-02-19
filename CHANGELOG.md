@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 8: Review Sprint 19 Retrospective Action Items - 2026-02-19
+
+**Branch:** `planning/sprint20-task8`
+
+#### Summary
+
+All 6 Sprint 19 "What Could Be Improved" retrospective items reviewed and actioned with
+concrete Sprint 20 actions. Items 1–5 feed directly into Sprint 20 PLAN.md (Task 10) and
+the Task 9 baseline snapshot. Item 6 (deferred issues accumulating) deferred to Epic 4 Sprint
+21/22 planning. Unknowns 3.1 and 3.2 partially verified from chenery issue file and source
+inspection: the `$` condition in chenery is equation-level (the easier implementation case,
+~6–8h not ~12–16h), and the AD system already has `DollarConditional` support; the gap is
+threading `EquationDef.condition` through stationarity assembly as a guard.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 3.1, 3.2 →
+  ⚠️ PARTIAL — condition form confirmed equation-level; AD gap identified (equation-level
+  condition not inherited into generated stat sum); full verification requires running chenery.gms
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 8 → ✅ COMPLETE;
+  overview table updated; Changes, Result, acceptance criteria filled in
+
+---
+
 ### Sprint 20 Prep Task 7: Design Accounting Variable Detection - 2026-02-19
 
 **Branch:** `planning/sprint20-task7`

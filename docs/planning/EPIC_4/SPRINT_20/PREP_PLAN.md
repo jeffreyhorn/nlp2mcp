@@ -24,14 +24,14 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint Goal Addressed |
 |---|------|----------|-----------|--------------|----------------------|
-| 1 | Create Sprint 20 Known Unknowns List | Critical | 2–3h | None | All workstreams |
-| 2 | Audit IndexOffset End-to-End Pipeline State | Critical | 2–3h | Task 1 | IndexOffset implementation |
-| 3 | Catalog Remaining lexer_invalid_char Subcategories | High | 2–3h | Task 1 | lexer_invalid_char reduction |
+| 1 | ✅ Create Sprint 20 Known Unknowns List | Critical | 2–3h | None | All workstreams |
+| 2 | ✅ Audit IndexOffset End-to-End Pipeline State | Critical | 2–3h | Task 1 | IndexOffset implementation |
+| 3 | ✅ Catalog Remaining lexer_invalid_char Subcategories | High | 2–3h | Task 1 | lexer_invalid_char reduction |
 | 4 | ✅ Investigate .l Initialization Emission Gap | High | 2–3h | Task 1 | Deferred Sprint 19 (#753/#757) |
 | 5 | ✅ Audit Translate internal_error Models | High | 2–3h | Tasks 1, 2 | Translation error fixes |
 | 6 | ✅ Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
 | 7 | ✅ Design Accounting Variable Detection (#764) | Medium | 2–3h | Tasks 1, 5 | Deferred Sprint 19 (#764) |
-| 8 | Review Sprint 19 Retrospective Action Items | Medium | 1h | None | Process improvement |
+| 8 | ✅ Review Sprint 19 Retrospective Action Items | Medium | 1h | None | Process improvement |
 | 9 | Snapshot Baseline Metrics | Medium | 1h | None | All workstreams |
 | 10 | Plan Sprint 20 Detailed Schedule | Critical | 3–4h | All tasks | Sprint planning |
 
@@ -628,7 +628,7 @@ grep "Algorithm\|False Positive\|Criterion" docs/planning/EPIC_4/SPRINT_20/ACCOU
 
 ## Task 8: Review Sprint 19 Retrospective Action Items
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 1 hour
 **Deadline:** Before Sprint 20 Day 1
@@ -669,11 +669,22 @@ Sprint 19 "What Could Be Improved" items (from retrospective):
 
 ### Changes
 
-*To be completed*
+- Updated `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`: Unknowns 3.1, 3.2 → ⚠️ PARTIAL with findings from chenery issue file and AD derivative_rules.py grep
 
 ### Result
 
-*To be completed*
+All 6 Sprint 19 retrospective "What Could Be Improved" items reviewed and actioned. Concrete actions assigned and homes identified:
+
+1. **Full pipeline match target missed** → Sprint 20 PLAN.md (Task 10) to include "models within 1% of reference objective" as a tracked leading indicator alongside full pipeline match
+2. **`lop` model exclusion undocumented** → Sprint 20 SPRINT_LOG.md template (Task 10) to include a denominator-change log section; any exclusion must be recorded with date and reason on the day of exclusion
+3. **Day 13 validation too late** → Sprint 20 PLAN.md (Task 10) to schedule model validation run on Day 10–11 (two days before sprint close), giving buffer for newly-discovered issues
+4. **`#671` premature "not fixable" assessment** → Sprint 20 PLAN.md (Task 10) process note: always run `python -m src.cli <model>` before declaring an issue not fixable; 30-second smoke test prevents false negatives
+5. **Parse rate denominator confusion** → Sprint 20 baseline snapshot (Task 9) pins the denominator from `gamslib_status.json` at sprint start; Task 9 captures this count explicitly
+6. **Deferred issues accumulating** → PROJECT_PLAN.md Epic 4 already has capacity for a "solver quality" workstream; noted for consideration when planning Sprint 21/22; defer decision to Task 10
+
+Unknowns 3.1 and 3.2 partially verified from issue file and source code inspection:
+- **3.1 PARTIAL:** `$` condition in chenery is equation-level (`dvv(i)$(sig(i) <> 0)..`), not inline — the easier case; EXECERROR=1 confirmed from issue file
+- **3.2 PARTIAL:** AD system has `_diff_dollar_conditional` (line 154, derivative_rules.py) for expression-level conditions; gap is that equation-level `EquationDef.condition` is not inherited as a guard in the generated stationarity sum — extension of existing code, not a new IR node type
 
 ### Verification
 
@@ -684,17 +695,16 @@ grep -l "smoke.test\|denominator\|validation.*Day 10\|ε.*reference" docs/planni
 
 ### Deliverables
 
-- Action items from Sprint 19 retrospective captured in Sprint 20 planning documents
-- Any new KNOWN_UNKNOWNS entries created for unresolved retrospective items
-- Updated KNOWN_UNKNOWNS.md with partial verification of Unknowns 3.1, 3.2 (chenery AD condition pattern)
+- Action items from Sprint 19 retrospective captured in Sprint 20 planning documents (Task 10 PLAN.md)
+- Updated KNOWN_UNKNOWNS.md: Unknowns 3.1, 3.2 → ⚠️ PARTIAL
 
 ### Acceptance Criteria
 
-- [ ] All 6 "What Could Be Improved" items reviewed
-- [ ] Each item has a concrete action assigned (not just acknowledged)
-- [ ] At least 3 actions incorporated into Sprint 20 PLAN.md or this PREP_PLAN
-- [ ] Smoke-test checklist created or referenced for "not fixable" declarations
-- [ ] Unknowns 3.1, 3.2 partially verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 6 "What Could Be Improved" items reviewed
+- [x] Each item has a concrete action assigned (not just acknowledged)
+- [x] At least 3 actions incorporated into Sprint 20 PLAN.md or this PREP_PLAN (items 1–5 all feed into Task 10 PLAN.md / Task 9 baseline)
+- [x] Smoke-test checklist created or referenced for "not fixable" declarations (item 4: always run CLI smoke test; 30-second check)
+- [x] Unknowns 3.1, 3.2 partially verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
