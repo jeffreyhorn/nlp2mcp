@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 7: Design Accounting Variable Detection - 2026-02-19
+
+**Branch:** `planning/sprint20-task7`
+
+#### Summary
+
+Formalized 4-criterion algorithm (C1–C4) for detecting accounting/auxiliary variables in the
+IR; all criteria statically computable from `ir.equations` and `ir.objective`. Under the
+naive/original C3, false positive risk is HIGH: 10 optimization variables across 3
+currently-solving models (demo1, himmel11, house) incorrectly flagged. After tightening C3
+(requiring v to appear in E_obj), risk is reduced to MODERATE: only demo1 (4 vars) remains a
+false positive (himmel11 and house correctly excluded). A 5th criterion (C5: multiplier
+consistency check) is still required before safe implementation. Recommendation: defer
+accounting variable detection to Sprint 21; mexss (#764) remains infeasible through Sprint 20.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md`** (created): mexss
+  pattern characterization (4 accounting vars: phipsi, philam, phipi, phieps); 4-criterion
+  algorithm with IR-level description and feasibility table; false positive analysis on 9
+  solving models; conservative vs. aggressive heuristic comparison; implementation location
+  (`src/kkt/stationarity.py:487`); corpus-wide impact estimate; Sprint 21 design roadmap
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 2.1, 2.2, 2.3,
+  2.4 verified — pattern confirmed, static feasibility confirmed for C1–C4, C5 not feasible
+  statically, false positive risk HIGH under original C3 (3 models); MODERATE under tightened
+  C3 (1 model — demo1 — remains; himmel11 and house correctly excluded)
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 7 → ✅ COMPLETE
+
+---
+
 ### Sprint 20 Prep Task 6: Investigate Full Pipeline Match Divergence - 2026-02-19
 
 **Branch:** `planning/sprint20-task6`
