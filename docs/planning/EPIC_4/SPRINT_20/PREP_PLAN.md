@@ -621,7 +621,7 @@ grep "Algorithm\|False Positive\|Criterion" docs/planning/EPIC_4/SPRINT_20/ACCOU
 - [x] False positive risk assessed on ≥3 currently-solving models
 - [x] Implementation location identified (file + function)
 - [x] Conservative vs. aggressive heuristic recommendation made
-- [x] Expected impact confirmed: mexss unblocked requires C5 (deferred Sprint 21); no currently-solving models broken by conservative approach
+- [x] Expected impact confirmed: mexss remains blocked pending C5 (deferred Sprint 21); no currently-solving models broken by conservative approach
 - [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
