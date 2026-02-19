@@ -600,7 +600,7 @@ A variable `v` is an accounting variable if:
 
 ### Result
 
-Algorithm formalized with 4 structural criteria (C1–C4) all statically computable from `ir.equations` and `ir.objective`; implementation location identified as `src/kkt/stationarity.py:487` (`build_stationarity_equations`). **High false positive risk found:** the naive heuristic incorrectly flags 10 optimization variables across 3 currently-solving models (demo1, himmel11, house). A 5th criterion (C5: multiplier consistency check) is required before safe implementation. **Recommendation: defer accounting variable detection to Sprint 21** — mexss remains infeasible but no currently-solving models are broken.
+Algorithm formalized with 4 structural criteria (C1–C4) all statically computable from `ir.equations` and `ir.objective`; implementation location identified as `src/kkt/stationarity.py:487` (`build_stationarity_equations`). **High false positive risk found for the naive/original heuristic (pre-tightening C3):** it incorrectly flags 10 optimization variables across 3 currently-solving models (demo1, himmel11, house). After tightening C3 per the design doc, false positives are reduced to demo1 only (MODERATE risk), but this still blocks safe shipping without a 5th criterion (C5: multiplier consistency check). **Recommendation: defer accounting variable detection to Sprint 21** — mexss remains infeasible but no currently-solving models are broken.
 
 ### Verification
 

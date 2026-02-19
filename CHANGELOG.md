@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Summary
 
 Formalized 4-criterion algorithm (C1–C4) for detecting accounting/auxiliary variables in the
-IR; all criteria statically computable from `ir.equations` and `ir.objective`. High false
-positive risk found: the naive heuristic incorrectly flags 10 optimization variables across 3
-currently-solving models (demo1, himmel11, house). A 5th criterion (C5: multiplier consistency
-check) is required for safe implementation. Recommendation: defer accounting variable detection
-to Sprint 21; mexss (#764) remains infeasible through Sprint 20.
+IR; all criteria statically computable from `ir.equations` and `ir.objective`. Under the
+naive/original C3, false positive risk is HIGH: 10 optimization variables across 3
+currently-solving models (demo1, himmel11, house) incorrectly flagged. After tightening C3
+(requiring v to appear in E_obj), risk is reduced to MODERATE: only demo1 (4 vars) remains a
+false positive (himmel11 and house correctly excluded). A 5th criterion (C5: multiplier
+consistency check) is still required before safe implementation. Recommendation: defer
+accounting variable detection to Sprint 21; mexss (#764) remains infeasible through Sprint 20.
 
 #### Planning Documents
 

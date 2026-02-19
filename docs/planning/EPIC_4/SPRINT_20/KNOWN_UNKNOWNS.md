@@ -438,10 +438,10 @@ If even one currently-solving model is broken by false positive detection, the f
 Development team
 
 ### Verification Results
-✅ Status: VERIFIED — 2026-02-19
+✅ Status: VERIFIED — RISK LEVEL CHANGE (HIGH → MODERATE) — 2026-02-19
 
 **Findings:**
-- **MODERATE FALSE POSITIVE RISK confirmed.** With tightened C3 (v must appear in E_obj), the candidate set narrows:
+- **FALSE POSITIVE RISK: HIGH under original C3 (3 models), MODERATE under tightened C3 (demo1 remains) — confirmed.** With tightened C3 (v must appear in E_obj), the candidate set narrows:
   - **himmel11** (`g2`, `g3`, `g4`): ✅ Safe — vars appear in no other equation (fail tightened C3)
   - **house** (`a1`, `a2`, `l`): ✅ Safe — vars appear in chained EQ equations, not E_obj (fail tightened C3)
   - **demo1** (`revenue`, `mcost`, `labcost`, `labearn`): ❌ **FALSE POSITIVE** — vars appear in `income` (E_obj), identical pattern to mexss
