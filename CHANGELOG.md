@@ -17,7 +17,7 @@ Completed Sprint 20 Prep Task 1: documented 26 unknowns across 8 categories for 
 planning. All four Sprint 20 workstreams covered (IndexOffset end-to-end, deferred Sprint 19
 solver blockers, remaining lexer_invalid_char, full pipeline match rate). Task-to-Unknown
 mapping appendix links each prep task (2–10) to its specific unknowns. Priority distribution:
-6 Critical, 11 High, 7 Medium, 2 Low. Estimated research time: 29–37 hours across Tasks 2–9.
+5 Critical, 10 High, 10 Medium, 1 Low. Estimated research time: 29–37 hours across Tasks 2–9.
 
 #### Planning Documents
 
@@ -45,6 +45,10 @@ mapping appendix links each prep task (2–10) to its specific unknowns. Priorit
   - Task 1 acceptance criteria all checked
   - Tasks 2–10: added `**Unknowns Verified:**` metadata, KNOWN_UNKNOWNS deliverable entries,
     and KNOWN_UNKNOWNS acceptance criteria items
+- **`docs/planning/EPIC_4/SPRINT_20/prompts/PREP_TASK_PROMPTS.md`** (created, ~1377 lines):
+  Self-contained prompts for Tasks 2–10, each including objective, background, step-by-step
+  instructions with concrete bash commands, known unknowns to verify, PREP_PLAN/CHANGELOG
+  update instructions, quality gate, commit message format, and PR body template
 
 ### Sprint 19 Day 14: Fix #780-#784, #774, #766, Close #671 - 2026-02-18
 

@@ -50,10 +50,10 @@ This document identifies all assumptions and unknowns for Sprint 20 features **b
 
 **Total Unknowns:** 26
 **By Priority:**
-- Critical: 6 (~23%)
-- High: 11 (~42%)
-- Medium: 7 (~27%)
-- Low: 2 (~8%)
+- Critical: 5 (~19%)
+- High: 10 (~38%)
+- Medium: 10 (~38%)
+- Low: 1 (~4%)
 
 **By Category:**
 - Category 1 (Variable Initialization Emission): 4 unknowns
@@ -781,7 +781,7 @@ Development team
 After Sprint 19's AD integration (PRs #779, #785), the 8 blocked models have moved from `lexer_invalid_char` or `internal_error` to a later failure stage (translate or solve). The remaining work is ≤4h of emit/parser fixes and end-to-end testing.
 
 ### Research Questions
-1. What is the current pipeline status of each of the 8 models: ampl, otpop, and 6 others?
+1. What is the current pipeline status of each of the 8 models: launch, mine, sparta, tabora, ampl, otpop, robert, pak?
 2. Do any of the 8 models still fail at the parse stage after Sprint 19?
 3. Do any fail at translate (if AD still has gaps)?
 4. Does any fail at solve (PATH infeasibility — unrelated to IndexOffset)?
