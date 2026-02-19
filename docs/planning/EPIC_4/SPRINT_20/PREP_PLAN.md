@@ -13,7 +13,7 @@
 Sprint 20 focuses on four workstreams:
 1. **IndexOffset end-to-end pipeline** — AD integration was completed in Sprint 19 (Sprint 19 PRs #779, #785); Sprint 20 focuses on AD index substitution, validation of IndexOffset behavior, and end-to-end testing of all 8 blocked models, including confirming emitter/parser coverage for Subcategory D models and addressing any newly identified issues
 2. **Deferred Sprint 19 solver blockers** — `.l` initialization emission (#753/#757), accounting variable detection (#764), AD condition propagation (#763), min/max in objective-defining equations (#789)
-3. **Remaining lexer_invalid_char reduction** — 27 remain after Sprint 19; Subcategories G, H, I, J, K not yet addressed
+3. **Remaining lexer_invalid_char reduction** — 27 remain after Sprint 19; Subcategories G, H, J, K not yet addressed; I requires re-check
 4. **Full pipeline match rate** — 9/160 (5.6%); close the gap between solve success (25 models) and full pipeline match by investigating objective value divergence
 
 This prep plan produces the research, catalogs, baselines, and design artifacts needed to begin Sprint 20 Day 1 without context-building overhead.

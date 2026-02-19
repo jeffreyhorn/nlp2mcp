@@ -1122,7 +1122,7 @@ you are on the clean `planning/sprint20-prep` base (no code changes).
    print('Parse:', dict(sorted(parse_statuses.items())))
    print('Translate:', dict(sorted(translate_statuses.items())))
    print('Solve:', dict(sorted(solve_statuses.items())))
-   print('Match (True=match, False=mismatch, None=not tested):', dict(sorted(str(k) for k in match_counts.items())))
+   print('Match (True=match, False=mismatch, None=not tested):', dict(sorted(match_counts.items(), key=lambda x: str(x[0]))))
    "
 
 4. Record the git commit SHA:
