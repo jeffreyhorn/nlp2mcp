@@ -309,7 +309,17 @@ If the pattern is more complex (e.g., accounting variables appear in multiple eq
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED — 2026-02-19
+
+**Findings:**
+- mexss has exactly 4 accounting variables: `phipsi`, `philam`, `phipi`, `phieps`
+- All are **scalar free variables** (no `Positive Variable` declaration, no bounds)
+- Each appears as the LHS of exactly one `=E=` equation (apsi, alam, api, aeps respectively)
+- None appear on the RHS of their own defining equation
+- All four appear **only** in the objective-defining equation (`obj`: `phi = phipsi + philam + phipi - phieps`)
+- All four pass all three originally-proposed criteria (C1, C2, C3)
+- The same structural pattern (C1–C3) fires on **demo1** (4 vars), **himmel11** (3 vars), and **house** (3 vars) — all currently solving; these are false positives
+- See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §1–§4 for full characterization
 
 ---
 
@@ -349,7 +359,15 @@ If static analysis is insufficient, we need to build a runtime dependency graph 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED — 2026-02-19
+
+**Findings:**
+- **C1–C4 (structural criteria) are statically computable** from `ir.equations` and `ir.objective` alone; no runtime dependency graph is required for detection
+- Criteria use: `edef.relation`, `edef.domain`, `lhs_rhs[0]` type, AST walk (`contains_var`)
+- Computational cost: O(E · AST_size) — negligible for all known models
+- **C5 (correctness / false-positive prevention) is NOT statically computable** — it requires checking whether forced multiplier values create contradictions with complementarity conditions
+- **Recommendation: defer accounting variable detection to Sprint 21** until a safe C5 criterion can be formulated
+- See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §3 for full feasibility table
 
 ---
 
@@ -382,7 +400,15 @@ Low impact — discovering fewer affected models means Priority 2 has a smaller 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED — 2026-02-19
+
+**Findings:**
+- **214 of 219 corpus models contain `=E=` equations**; 176 contain `=E=.*sum(` patterns
+- mexss is the **only currently-failing model** confirmed to be unblocked by correct accounting variable detection (model_status=5, Locally Infeasible)
+- At least 3 currently-solving models (demo1, himmel11, house) share the same structural pattern and would be affected by any naive implementation
+- Full corpus-wide scan for accounting variable candidates timed out (>2 min); exact count not computed
+- Impact: fixing mexss alone adds +1 to the pipeline match count (25→26 solve, 9→10 match) — **modest ROI**
+- See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §7 for corpus analysis
 
 ---
 
@@ -412,7 +438,17 @@ If even one currently-solving model is broken by false positive detection, the f
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED — 2026-02-19
+
+**Findings:**
+- **HIGH FALSE POSITIVE RISK confirmed.** The naive C1–C4 heuristic incorrectly flags 10 optimization variables across 3 currently-solving models:
+  - **demo1**: `revenue`, `mcost`, `labcost`, `labearn` (4 vars) — LP model, same pattern as mexss
+  - **himmel11**: `g2`, `g3`, `g4` (3 vars) — QCP model, vars appear nowhere except their own defining eq
+  - **house**: `a1`, `a2`, `l` (3 vars) — NLP model, vars appear in chains of EQ equations
+- The test suite (pipeline solve tests for demo1, himmel11, house) would catch these regressions automatically
+- Root cause: the static heuristic cannot distinguish mexss (broken by forced multiplier contradiction) from demo1 (consistent despite same structural pattern)
+- **Criterion C5** (multiplier consistency check) is required before any accounting variable detection can safely ship
+- See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §4–§5 for detailed false positive analysis and recommendation
 
 ---
 
