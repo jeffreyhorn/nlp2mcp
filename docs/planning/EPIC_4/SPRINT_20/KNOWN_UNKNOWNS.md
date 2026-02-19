@@ -125,7 +125,17 @@ If `.l` assignments are NOT captured in the IR, the fix requires both IR parser 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** The IR captures `.l` **partially** — constant values only. See `L_INIT_EMISSION_DESIGN.md`.
+
+**Constant `.l` IS captured** (stored in `VariableDef.l` / `VariableDef.l_map`). Example: bearing's `R.l = 6.0`, `mu.l = 6e-6` — these are stored via `_set_bound_value()` in `_apply_variable_bound`.
+
+**Expression-based `.l` is NOT captured.** In `_handle_assign` (parser.py ~line 3562), when `is_variable_bound = True` and `_extract_constant()` raises (non-constant expr), the code does `return` — silently dropping the `.l` expression. Affects 8 models: circle, circpack, glider, hs62, lnts, mlbeta, mlgamma, robot.
+
+**Fix requires 3 files:** `src/ir/symbols.py` (add `l_expr`/`l_expr_map` fields), `src/ir/parser.py` (store expr instead of drop), `src/emit/emit_gams.py` (emit new fields). Effort: ~3.5–4h (was ~2h assuming emit-only).
+
+**Assumption was WRONG:** The assumption that `.l` was fully parsed and only the emit layer needed extending was incorrect. The gap is in the parser.
 
 ---
 
@@ -164,7 +174,15 @@ If `.l` initialization is insufficient (bearing also needs `.scale`, or circle h
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `L_INIT_EMISSION_DESIGN.md` Finding 1.2.
+
+**Circle (#753) — high confidence `.l` fix resolves infeasibility.** circle.gms lines 46–48 set `a.l`, `b.l`, `r.l` to the centroid of the data point cloud — a warm start close to the optimal enclosing circle. Without these, PATH starts from all-zero (r=0 at lower bound boundary) and fails. The Sprint 19 PR #750 determinism fix ensures stable random data. With `.l` emission, PATH will receive a well-chosen starting point.
+
+**Bearing (#757) — `.l` is NOT the blocker.** Bearing's constant `.l` assignments (R.l=6.0, mu.l=6e-6, etc.) are ALREADY captured and emitted by the current pipeline. Bearing translates successfully. The blocker is 6 `.scale` assignments (`mu.scale`, `h.scale`, `W.scale`, `PL.scale`, `Ep.scale`, `Ef.scale`) that tell GAMS/PATH how to normalize variables for numerical stability. `.scale` is not in `VariableDef` and is not emitted. Bearing needs a separate `.scale` emission fix.
+
+**Assumption was PARTIALLY WRONG:** `.l` emission resolves circle but NOT bearing. Priority 1 delivers +1 model certain (circle) + 1–2 possible (circpack/glider/robot), not +2–4.
 
 ---
 
@@ -198,7 +216,15 @@ If the emitter has no concept of pre-solve assignments, adding `.l` initializati
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `L_INIT_EMISSION_DESIGN.md` Finding 1.3.
+
+**Yes — a complete initialization section already exists.** `src/emit/emit_gams.py` lines ~170–240 contain a variable initialization loop added in Sprint 18 Day 3. It reads `var_def.l_map` (indexed) and `var_def.l` (scalar), and emits GAMS assignments **after declarations and before the Model/Solve statement** — exactly the right location. No new "prolog" concept needs to be created.
+
+The section already works for bearing.gms (constant `.l` values) and all 28 models with constant `.l`. The gap is purely that it doesn't read `l_expr`/`l_expr_map` fields (which don't exist yet).
+
+**Assumption was CORRECT:** The emitter has the right structure. The fix is additive (read new fields) rather than structural (no architectural changes needed).
 
 ---
 
@@ -231,7 +257,22 @@ Low impact — undercount means pleasant surprise; overcount means the fix deliv
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `L_INIT_EMISSION_DESIGN.md` Finding 1.4.
+
+**8 models have expression-based `.l = expr` (currently missed):** circle, circpack, glider, hs62, lnts, mlbeta, mlgamma, robot
+
+**28 models** have constant `.l` assignments and are already benefiting from the existing initialization code.
+
+**Total models with any `.l =` assignment:** 55 of ~219 catalog models.
+
+Of the 8 expression-based models:
+- mlbeta, mlgamma: also blocked at parse stage (lexer_invalid_char) — `.l` fix won't unblock until parse is fixed
+- circle: expected to solve after fix (PATH warm-start)
+- circpack, glider, hs62, robot: possible solve improvement (currently untested / unknown PATH status)
+
+**Assumption was CORRECT:** The fix is not circle/bearing-specific. Multiple models benefit. Bearing is excluded (its `.l` is already emitted; `.scale` is its blocker).
 
 ---
 
