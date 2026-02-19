@@ -77,23 +77,31 @@ equation generated) additionally requires Criterion C5 (see below) to avoid fals
 `v` appears as a pure `VarRef` on the left-hand side of exactly one `=E=` equation `E_def(v)`.
 Indexed variables (where the LHS has an index domain) are excluded from consideration.
 
-*IR-level check:* `edef.relation == Rel.EQ`, `isinstance(lhs, VarRef)`, `len(edef.domain) == 0`,
+*IR-level check:* let `lhs = edef.lhs_rhs[0]`; require `edef.relation == Rel.EQ`,
+`isinstance(lhs, VarRef)`, `len(edef.domain) == 0`, `len(lhs.indices) == 0`,
+`lhs.attribute == ""` (bare variable reference, no `.l`/`.m`/etc. suffix),
 and `sum(1 for n,e in ir.equations.items() if e.relation==Rel.EQ and isinstance(e.lhs_rhs[0], VarRef) and e.lhs_rhs[0].name.lower() == v.lower()) == 1`
 
 **Criterion C2 — Not Self-Referential**
 `v` does not appear anywhere on the right-hand side (or condition) of `E_def(v)`.
 
-*IR-level check:* `not contains_var(rhs, v)` where `contains_var` does an AST walk.
+*IR-level check:* `not contains_var(rhs, v) and not (edef.condition is not None and contains_var(edef.condition, v))` where `contains_var` does an AST walk.
 
 **Criterion C3 — Appears In (and Only In) Objective-Defining Equation**
 The only equation (other than `E_def(v)`) where `v` appears must be the objective-defining
-equation `E_obj` (the unique `=E=` equation with the objective variable on its LHS), and `v`
-must appear at least once in `E_obj`. Variables that appear in no other equation (e.g.,
-himmel11's `g2/g3/g4`) do **not** pass C3 — they are auxiliary/intermediate variables, not
-objective-decomposition accounting variables, and excluding their stationarity equations would
-produce an under-constrained MCP.
+equation `E_obj`, and `v` must appear at least once in `E_obj`. Variables that appear in no
+other equation (e.g., himmel11's `g2/g3/g4`) do **not** pass C3 — they are
+auxiliary/intermediate variables, not objective-decomposition accounting variables, and
+excluding their stationarity equations would produce an under-constrained MCP.
 
-*IR-level check:* First verify `v` appears in `E_obj`:
+`E_obj` is located by finding the unique `=E=` equation whose LHS **or** RHS is a bare
+`VarRef` for the objective variable (matching `src/ir/normalize.py:_extract_objective_expression`
+which checks both sides). If `ObjectiveIR.expr` is set but no defining equation exists in
+`ir.equations` (i.e., the objective was given as an inline expression), C3 cannot be evaluated
+and the variable must be treated as a non-candidate.
+
+*IR-level check:* Locate `E_obj` as the name of the equation where `objvar` appears as a bare
+`VarRef` on the LHS or RHS with no indices. Then verify `v` appears in `E_obj`:
 `appears_in_obj = any(name.lower() == E_obj.lower() and (contains_var(lhs, v) or contains_var(rhs, v)) for name, edef in ir.equations.items() for lhs, rhs in [edef.lhs_rhs])`
 and require `appears_in_obj is True`. Then, for all `(name, edef)` in `ir.equations` where
 `name != E_def(v)`: if `contains_var(lhs, v) or contains_var(rhs, v)`, then
@@ -135,9 +143,9 @@ is not feasible from static IR inspection alone.
 
 | Criterion | Computable from Static IR? | IR Attributes Needed | Cost |
 |-----------|---------------------------|----------------------|------|
-| C1: Scalar VarRef LHS of exactly one =E= | ✓ Yes | `ir.equations`, `edef.relation`, `edef.domain`, `lhs_rhs[0]` type | O(E·V) |
-| C2: Not on own RHS | ✓ Yes | `edef.lhs_rhs[1]`, AST walk | O(E · AST_size) |
-| C3: Only in obj-defining eq | ✓ Yes | All `edef.lhs_rhs`, `ir.objective.objvar` | O(E · AST_size) |
+| C1: Scalar VarRef LHS of exactly one =E= | ✓ Yes | `ir.equations`, `edef.relation`, `edef.domain`, `lhs_rhs[0]` type, `VarRef.indices`, `VarRef.attribute` | O(E·V) |
+| C2: Not on own RHS or condition | ✓ Yes | `edef.lhs_rhs[1]`, `edef.condition`, AST walk | O(E · AST_size) |
+| C3: Appears in (and only in) obj-defining eq | ✓ Yes | All `edef.lhs_rhs`, `ir.objective.objvar`, `VarRef.indices` | O(E · AST_size) |
 | C4: Not in any inequality | ✓ Yes | `edef.relation` filter | O(E · AST_size) |
 | C5: Chain consistency | ✗ No | Requires symbolic analysis of reduced KKT system | O(V³) or higher |
 

@@ -318,7 +318,7 @@ Development team
 - None appear on the RHS of their own defining equation
 - All four appear **only** in the objective-defining equation (`obj`: `phi = phipsi + philam + phipi - phieps`)
 - All four pass all three originally-proposed criteria (C1, C2, C3)
-- The same structural pattern (C1–C3) fires on **demo1** (4 vars), **himmel11** (3 vars), and **house** (3 vars) — all currently solving; these are false positives
+- The same structural pattern (original, non-tightened C1–C3) fires on **demo1** (4 vars), **himmel11** (3 vars), and **house** (3 vars) — all currently solving; under the originally proposed criteria these are false positives (later tightened C3 correctly treats **himmel11** and **house** as safe)
 - See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §1–§4 for full characterization
 
 ---

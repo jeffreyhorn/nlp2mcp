@@ -29,7 +29,8 @@ to Sprint 21; mexss (#764) remains infeasible through Sprint 20.
   (`src/kkt/stationarity.py:487`); corpus-wide impact estimate; Sprint 21 design roadmap
 - **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 2.1, 2.2, 2.3,
   2.4 verified — pattern confirmed, static feasibility confirmed for C1–C4, C5 not feasible
-  statically, false positive risk HIGH (3 currently-solving models affected)
+  statically, false positive risk HIGH under original C3 (3 models); MODERATE under tightened
+  C3 (1 model — demo1 — remains; himmel11 and house correctly excluded)
 - **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 7 → ✅ COMPLETE
 
 ---
