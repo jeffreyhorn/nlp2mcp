@@ -619,7 +619,7 @@ Development team
 
 **Implication:** The "set element description" grammar rule added in Sprint 19 was sufficient for all known G patterns. No G-category work is needed in Sprint 20.
 
-**Assumption was partially wrong:** The assumption that G models would still be present was incorrect — G is completely resolved. The remaining catalog is dominated by A (6 models) and the new subcategory L (4 models).
+**Assumption was partially wrong:** The assumption that G models would still be present was incorrect — G is completely resolved. The remaining catalog is dominated by A (6 models) and the new subcategory L (5 models).
 
 ---
 

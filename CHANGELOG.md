@@ -15,11 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 All 27 remaining `lexer_invalid_char` models re-run and reclassified against the current
 codebase. Two new subcategories identified beyond the original A–K taxonomy: **L
-(Set-Model Exclusion)** — `/ all - setname /` pattern in set/model statements (4 models,
+(Set-Model Exclusion)** — `/ all - setname /` pattern in set/model statements (5 models,
 ~1–2h fix) — and **M (Unsupported Declarations)** — `File` and `Acronym` keywords (2
 models, ~1–2h). Subcategory G is fully resolved (0 remaining). The 2 Subcategory D
 models (mine, pindyck) are cascading from lead/lag and will resolve with the Sprint 20
-IndexOffset fix. Top-3 ROI: L (4 models, 1–2h), A (6 models, 3–4h), B (4 models, 0h
+IndexOffset fix. Top-3 ROI: L (5 models, 1–2h), A (6 models, 3–4h), B (3 models, 0h
 cascading free).
 
 #### Planning Documents

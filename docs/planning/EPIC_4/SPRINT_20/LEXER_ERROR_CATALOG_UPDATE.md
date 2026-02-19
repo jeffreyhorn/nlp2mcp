@@ -54,7 +54,7 @@ Sprint 19 resolved 45 of the original 72 models. Notable by subcategory:
 
 | Original Subcategory | Fixed Count | Examples |
 |---------------------|-------------|---------|
-| A (Tuple/Compound Set Data) | 6 | china, egypt, kand, marco, paklive, shale, srkandw |
+| A (Tuple/Compound Set Data) | 7 | china, egypt, kand, marco, paklive, shale, srkandw |
 | B (Cascading) | 11 | agreste, ampl, camcge→partial, fawley, feedtray, gtm, iswnm, korcge, nebrazil, otpop |
 | C (Put Statement Format) | 6 | apl1pca, prodsp2, ps10_s, ps10_s_mn, ps5_s_mn, stdcge |
 | D (Lead/Lag) | 2 | launch, sparta, tabora → translate success |
@@ -139,7 +139,7 @@ P2R3_MCP / DEM, SUP, IN_OUT.P /;   (* spatequ: 'eq.var' form in model list *)
 
 **Estimated effort:** 1–2h
 
-**ROI:** High — 4–5 models, clean grammar extension, low risk.
+**ROI:** High — 5 models, clean grammar extension, low risk.
 
 ---
 
@@ -228,7 +228,7 @@ Notable unexpected fixes (models that weren't in the primary Sprint 19 targets b
 | 3 | H: Control Flow | iobalance, lop | 1–2h |
 | — | B: Cascading (free) | nemhaus → resolves | 0h |
 
-### Phase 2: Core grammar (~4–6h, ~8 models)
+### Phase 2: Core grammar (~4–6h, ~9 models)
 | Priority | Subcategory | Models | Effort |
 |----------|-------------|--------|--------|
 | 4 | A: Compound Set Data (extended) | indus, mexls, paperco, sarf, turkey, turkpow | 3–4h |
