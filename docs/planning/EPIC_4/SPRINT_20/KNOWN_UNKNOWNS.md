@@ -1059,7 +1059,21 @@ If there are significantly more than 5 translate failures (e.g., 10–15 after t
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** True translate internal_error count is **2** (not 5 — status JSON was stale). See `TRANSLATE_ERROR_AUDIT.md`.
+
+**3 models now SUCCESS:** orani, prolog, ramsey — fixed by Sprint 19 work but status JSON not refreshed.
+
+**2 genuine internal errors remain:**
+- `maxmin.gms`: `ValueError: smin() expects 2 arguments, got 3` — AD rule `_diff_smin` only handles 2-arg scalar form; maxmin uses 3-arg aggregation form `smin(n, nn, sqrt(...))`. **Deferred** (~4–6h architectural).
+- `mlbeta.gms`: `ValueError: Differentiation of 'loggamma' requires digamma/psi` — `loggamma` derivative unavailable in GAMS. **Permanently infeasible**.
+
+**Additional non-internal_error failures:**
+- 4 models `codegen_numerical_error`: Inf/NaN parameter values (decomp, gastrans, gtm, ibm1). Deferred.
+- 1 model `timeout`: iswnm. Deferred.
+
+**Assumption was WRONG:** "~5 models, 6–8h" estimate from PROJECT_PLAN.md is incorrect. Only 2 true internal errors; both deferred. The translate error budget should be reallocated to `model_no_objective_def` fix (13 models, ~2–3h — see Unknown 8.1).
 
 ---
 
@@ -1092,7 +1106,17 @@ Low impact — if each failure has a unique root cause, the workstream takes mor
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** The 2 remaining translate internal errors do NOT share a common root cause — they are distinct:
+- maxmin: smin aggregation form (AD structural gap)
+- mlbeta: loggamma/digamma unavailability (GAMS limitation, permanently infeasible)
+
+**No systematic fix opportunity** for these 2 models. Each requires independent architectural work; mlbeta cannot be fixed at all.
+
+**However**, the `model_no_objective_def` category (14 models, Unknown 8.1) shows a strong systematic pattern: 13 models share the same `$if set workSpace` preprocessor bug. A single fix to `process_conditionals` would unblock 13 models simultaneously — the highest-ROI systematic fix available.
+
+**Assumption was WRONG:** The assumption that shared root causes exist among translate internal errors is false. But a better systematic opportunity exists in the parse-stage `model_no_objective_def` category.
 
 ---
 
@@ -1136,7 +1160,30 @@ If the count is higher than 5 (e.g., 10–12 models), the objective extraction w
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** `model_no_objective_def` is a **parse-stage** failure category (not translate-stage as assumed). Count: **14 models**. See `TRANSLATE_ERROR_AUDIT.md` Part 3.
+
+**Root cause (13 of 14 models): `process_conditionals` preprocessor bug.**
+All 13 have an unclosed `$if` directive that causes `process_conditionals` to incorrectly exclude the `solve` statement. The most common pattern (10 models) is:
+```gams
+$if set workSpace <model>.workSpace = %workSpace%
+
+solve <model> using nlp minimizing/maximizing <var>;
+```
+Other variants: `$if not set np $set np 25` (elec — unclosed, excludes everything through EOF), `$ifI` (feasopt1), `$if set noscenred $goTo` (clearlak), `$if %uselicd%` (partssupply), `$if not set DIM` + `$ifE` (srpchase). In all cases, `process_conditionals` misidentifies the inline single-line `$if` guard as an unclosed multi-line block, causing the following `solve` statement to be excluded.
+
+**Models (13 with `$if` bug):** camshape, catmix, chain, clearlak, danwolfe, elec, feasopt1, lnts, partssupply, polygon, rocket, robot, srpchase
+
+**14th model (lmp2):** Solve is inside a doubly-nested loop — Issue #749 only extracts from one level of nesting.
+
+**Fix location:** `src/ir/preprocessor.py` `process_conditionals()` — detect inline single-line `$if` guards (statement on same line as `$if`); don't carry exclusion to next line.
+
+**Effort estimate:** ~2–3h (preprocessor fix + tests). High ROI: +13 models parsing → potential +5–8 new parse successes (COPS models may have other blockers after parsing).
+
+**PROJECT_PLAN.md "5 models" estimate:** Was wrong — actual count is 14. And most fixes require a preprocessor change, not objective extraction enhancement. Objective extraction (e.g., `lmp2` doubly-nested loop) is secondary.
+
+**Assumption was WRONG:** `model_no_objective_def` is not primarily an objective-extraction problem — it's a preprocessor `$if` handling bug eating the `solve` statement.
 
 ---
 

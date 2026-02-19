@@ -28,7 +28,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 | 2 | Audit IndexOffset End-to-End Pipeline State | Critical | 2–3h | Task 1 | IndexOffset implementation |
 | 3 | Catalog Remaining lexer_invalid_char Subcategories | High | 2–3h | Task 1 | lexer_invalid_char reduction |
 | 4 | ✅ Investigate .l Initialization Emission Gap | High | 2–3h | Task 1 | Deferred Sprint 19 (#753/#757) |
-| 5 | Audit Translate internal_error Models | High | 2–3h | Tasks 1, 2 | Translation error fixes |
+| 5 | ✅ Audit Translate internal_error Models | High | 2–3h | Tasks 1, 2 | Translation error fixes |
 | 6 | Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
 | 7 | Design Accounting Variable Detection (#764) | Medium | 2–3h | Tasks 1, 5 | Deferred Sprint 19 (#764) |
 | 8 | Review Sprint 19 Retrospective Action Items | Medium | 1h | None | Process improvement |
@@ -368,7 +368,7 @@ grep "Fix Location" docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md
 
 ## Task 5: Audit Translate internal_error Models
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 20 Day 1
@@ -412,11 +412,12 @@ Models that now parse successfully after Sprint 19's 46-model improvement will e
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md`: per-model root cause table for all 10 translate failures; stale-JSON correction for 3 now-passing models; model_no_objective_def preprocessor bug analysis (13 models); effort reallocation recommendation
+- Updated `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`: Unknowns 7.1, 7.2, 8.1 → ✅ VERIFIED
 
 ### Result
 
-*To be completed*
+True translate `internal_error` count: **2** (not 5 — status JSON was stale). orani, prolog, ramsey now translate successfully. Only maxmin (smin aggregation AD rule, deferred ~4–6h) and mlbeta (loggamma/digamma unavailable, permanently infeasible) remain. PROJECT_PLAN.md "5 models, 6–8h" estimate corrected to 0 S20-addressable. The `model_no_objective_def` category (14 models at parse stage) is the high-ROI target: 13 models share a single preprocessor bug (`process_conditionals` eating the `solve` statement after a `$if set workSpace` directive) — fix effort ~2–3h.
 
 ### Verification
 
@@ -427,18 +428,18 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` — per-model root cause table for all translate internal errors
+- `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` — per-model root cause table for all translate failures; model_no_objective_def pattern analysis
 - Count of Sprint-20-addressable vs. deferred models
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 8.1
 
 ### Acceptance Criteria
 
-- [ ] Current translate internal_error count confirmed
-- [ ] Each failing model has: stack trace excerpt, root cause category, fixability assessment
-- [ ] IndexOffset-related errors separated from non-IndexOffset errors
-- [ ] Sprint 20 addressable count confirmed (PROJECT_PLAN.md says 5; verify or correct)
-- [ ] At least one fixable model has a specific code pointer (file, function, line) for the fix
-- [ ] Unknowns 7.1, 7.2, 8.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Current translate internal_error count confirmed (2, not 5; stale JSON corrected)
+- [x] Each failing model has: stack trace excerpt, root cause category, fixability assessment
+- [x] IndexOffset-related errors separated (none — no IndexOffset translate errors)
+- [x] Sprint 20 addressable count confirmed (0 translate internal errors; PROJECT_PLAN.md corrected)
+- [x] At least one fixable model has a specific code pointer (`src/ir/preprocessor.py` `process_conditionals()` for 13 no_objective_def models)
+- [x] Unknowns 7.1, 7.2, 8.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
