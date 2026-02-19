@@ -515,7 +515,29 @@ If the subcategory distribution is different than assumed (e.g., most remaining 
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** All 27 models re-run and reclassified. See `LEXER_ERROR_CATALOG_UPDATE.md`.
+
+**Subcategory distribution (Sprint 20 baseline):**
+
+| Subcategory | Name | Count | Models |
+|-------------|------|-------|--------|
+| A | Compound Set Data | 6 | indus, mexls, paperco, sarf, turkey, turkpow |
+| B | Cascading | 3 | fdesign, nemhaus, nonsharp |
+| D | Lead/Lag (→IndexOffset) | 2 | mine, pindyck |
+| E | Inline Scalar Data | 3 | cesam2, gussrisk, trnspwl |
+| H | Control Flow | 2 | iobalance, lop |
+| J | Bracket/Brace | 3 | mathopt3, saras, springchain |
+| K | Miscellaneous | 1 | dinam |
+| **L** | **Set-Model Exclusion (NEW)** | **5** | **camcge, cesam, ferts, spatequ, tfordy** |
+| **M** | **Unsupported Declarations (NEW)** | **2** | **senstran, worst** |
+
+**Two new subcategories identified:** L (Set-Model Exclusion: `/ all - setname /`) and M (Unsupported Declarations: `File`, `Acronym` keywords).
+
+**Top-3 ROI:** L (5 models, 1–2h), A (6 models, 3–4h), B (3 models, 0h cascading).
+
+**Assumption was wrong:** The dominant remaining categories are NOT G/H/J/K — they are A (6 models) and the new L (5 models). G is fully resolved (0 models remain). The old C (Put Statement) and I (Model/Solve) categories are fully resolved.
 
 ---
 
@@ -548,7 +570,13 @@ If there are silent fixes, the baseline count is lower than 27 — a pleasant su
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** All 27 models re-run against current main. Count confirmed at exactly **27** — no silent fixes from Sprint 19 apply to the remaining models. The 45 models fixed in Sprint 19 were correctly accounted for; the remaining 27 all have distinct failure tokens not addressed by Sprint 19 grammar additions.
+
+**Zero regression:** No new models entered `lexer_invalid_char` after Sprint 19.
+
+**Assumption was correct:** The 27 remaining models were genuinely unaffected by Sprint 19 work and require new grammar additions to fix.
 
 ---
 
@@ -585,7 +613,13 @@ If Subcategory G requires IR changes (e.g., storing descriptions in the IR), eff
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** Subcategory G is **fully resolved** — 0 models remain. Sprint 19 fixed all 3 Subcategory G models (ganges, gangesx, weapons). The question of whether G fixes are straightforward is moot for Sprint 20.
+
+**Implication:** The "set element description" grammar rule added in Sprint 19 was sufficient for all known G patterns. No G-category work is needed in Sprint 20.
+
+**Assumption was partially wrong:** The assumption that G models would still be present was incorrect — G is completely resolved. The remaining catalog is dominated by A (6 models) and the new subcategory L (5 models).
 
 ---
 
@@ -619,7 +653,14 @@ If Subcategory D models need separate grammar additions beyond IndexOffset work,
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** The 2 remaining Subcategory D models are `mine` and `pindyck`. Both are **cascading** failures from lead/lag expressions — they will resolve automatically when the Sprint 20 IndexOffset `to_gams_string()` fix is applied (same fix that closes sparta/tabora/otpop).
+
+- `mine`: Equation `pr(k,l+1,i,j)..` uses `l+1` lead; grammar fails on this, then cascades to `x.up(l,i,j)`. The grammar already supports `offset_paren`/`offset_func` from Sprint 19 PR #785 — the remaining gap is at the `to_gams_string()` level.
+- `pindyck`: Loop `loop(t$to(t), r.l(t) = r.l(t-1)-d.l(t))` uses `t-1` lag; cascades to `display` statement. Same root.
+
+**Assumption was correct:** No separate grammar additions are needed for Subcategory D beyond the IndexOffset workstream work already planned for Sprint 20.
 
 ---
 

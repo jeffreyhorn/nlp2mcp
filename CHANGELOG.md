@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 3: Catalog Remaining lexer_invalid_char Subcategories - 2026-02-19
+
+**Branch:** `planning/sprint20-task3`
+
+#### Summary
+
+All 27 remaining `lexer_invalid_char` models re-run and reclassified against the current
+codebase. Two new subcategories identified beyond the original A–K taxonomy: **L
+(Set-Model Exclusion)** — `/ all - setname /` pattern in set/model statements (5 models,
+~1–2h fix) — and **M (Unsupported Declarations)** — `File` and `Acronym` keywords (2
+models, ~1–2h). Subcategory G is fully resolved (0 remaining). The 2 Subcategory D
+models (mine, pindyck) are cascading from lead/lag and will resolve with the Sprint 20
+IndexOffset fix. Top-3 ROI: L (5 models, 1–2h), A (6 models, 3–4h), B (3 models, 0h
+cascading free).
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md`** (created): Full
+  27-model per-model table with subcategory, failing token, root pattern, and fix effort;
+  per-subcategory summary; new subcategory L and M documentation with fix approach;
+  top-3 ROI analysis; quick wins; Subcategory D/IndexOffset overlap assessment; Sprint 20
+  implementation order recommendation (Phase 1: L+M+H quick wins; Phase 2: A+E core
+  grammar; Phase 3: J+K if time permits)
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 4.1, 4.2,
+  4.3, 4.4 → ✅ VERIFIED with subcategory distribution table, count confirmation, G
+  resolution note, and D/IndexOffset overlap assessment
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 3 → ✅ COMPLETE;
+  Changes, Result, and all 6 acceptance criteria filled in
+
+---
+
 ### Sprint 20 Prep Task 2: Audit IndexOffset End-to-End Pipeline State - 2026-02-19
 
 **Branch:** `planning/sprint20-task2`
