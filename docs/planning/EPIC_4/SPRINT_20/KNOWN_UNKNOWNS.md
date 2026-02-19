@@ -747,7 +747,25 @@ If the gap is caused by KKT formulation errors (not initialization), Pipeline Ma
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 1–2 for full per-model analysis.
+
+**16 models: 15 mismatch + 1 comparison error (port).** Classified into 4 types:
+
+| Type | Count | Models |
+|------|-------|--------|
+| Tolerance too tight | 5 | chem, dispatch, hhmax, mhw4d, mhw4dx |
+| Missing .l init (expr-based, dropped by IR) | 2 | abel, chakra |
+| Multiple optima / different local KKT point | 5 | alkyl, himmel16, mathopt1, process, trig |
+| LP multi-model / wrong model selected | 3 | aircraft, apl1p, apl1pca |
+| Obj not tracked (MCP obj=null) | 1 | port |
+
+**Initialization (`.l` emission) is NOT the dominant cause.** Only 2 of 16 are missing expression-based `.l` inits. 5 models have `.l` correctly emitted but PATH still finds a different stationary point (non-convex).
+
+**Predicted match improvement from `.l` fix:** +1 to +2 (9 → 10–11). Abel high confidence (param-based expr); chakra medium (formula with `ord()`).
+
+**Assumption was WRONG:** The majority cause is not missing initialization. Tolerance (5) and multiple optima (5) are equally significant. The `.l` fix alone does not dominate match rate improvement.
 
 ---
 
@@ -781,7 +799,28 @@ If the tolerance is too tight, loosening it could convert several non-matches to
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Sections 3–4.
+
+**Tolerances used:** `DEFAULT_ATOL=1e-8`, `DEFAULT_RTOL=1e-6` (set in `scripts/gamslib/test_solve.py:78-79`).
+
+**Formula:** `|nlp_obj - mcp_obj| <= atol + rtol * max(|nlp_obj|, |mcp_obj|)`
+
+**5 models fail only due to tight tolerance** — their absolute differences are tiny (1e-4 to 5e-4) but exceed the combined tolerance. All 5 would pass with `rtol=1e-4`:
+
+| Model | Abs Diff | Required rtol |
+|-------|----------|---------------|
+| mhw4d / mhw4dx | 1.0e-4 | 3.6e-6 |
+| hhmax | 2.0e-4 | 1.4e-5 |
+| chem | 5.0e-4 | 1.1e-5 |
+| dispatch | 4.0e-4 | 5.0e-5 |
+
+**These are PATH vs. IPOPT solver precision differences**, not structural mismatches.
+
+**Within 5%:** apl1p (3.3% gap) would pass at `rtol=0.05` — too loose. alkyl (6.8%) would not.
+
+**Assumption was PARTIALLY WRONG:** The tolerance IS too tight for 5 models — they are genuine solver-precision near-matches. Raising `rtol` to `1e-4` would add 5 matches (9 → 14) with no code changes, but this change is a separate decision from the `.l` emission fix.
 
 ---
 
@@ -813,7 +852,15 @@ If `.scale` turns out to be the primary blocker for several models, the `.l` emi
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 7.
+
+**Zero models among the 16 non-matching use `.scale`.** Checked all 15 mismatch models + port for `varname.scale` assignments in raw `.gms` source — none found.
+
+**`.scale` is NOT a primary or secondary blocker** for any of the 16 divergences. The only model in the full catalog where `.scale` is a known blocker is `bearing` (Sprint 19 deferred issue #757) — which is NOT in the non-matching set because bearing doesn't even reach the solve stage.
+
+**Assumption was CORRECT:** `.scale` emission is a Sprint 21+ item and does not affect the 16-model pipeline match gap.
 
 ---
 
@@ -848,7 +895,21 @@ If a Sprint 20 change breaks any of the 9 matching models, the full pipeline mat
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** See `PIPELINE_MATCH_ANALYSIS.md` Section 5.
+
+**None of the 9 matching models use patterns targeted by Sprint 20 workstreams:**
+- IndexOffset (lead/lag): None
+- `.scale` assignments: None
+- Dollar conditions (`$(...)`) in equations: None
+- Accounting variable patterns: All use standard equality constraints
+
+**Test coverage gap confirmed:** None of the 9 matching models have end-to-end golden-file or solve-level test coverage. Only `rbrock` appears in integration tests (parse-only: `test_rbrock_gms_parses`). The 9 models are NOT protected by the test suite against regression.
+
+**Regression risk is LOW but non-zero.** Sprint 20 grammar/parser changes could affect these models even if they don't use targeted syntax. Recommendation: add golden-file tests for the 9 models as a Sprint 20 task.
+
+**Assumption was PARTIALLY WRONG:** The assumption that all 9 are in the golden-file test suite was incorrect — none are. The assumption that Sprint 20 changes won't affect them is likely correct given the non-overlap with targeted patterns.
 
 ---
 

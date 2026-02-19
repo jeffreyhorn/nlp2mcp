@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 6: Investigate Full Pipeline Match Divergence - 2026-02-19
+
+**Branch:** `planning/sprint20-task6`
+
+#### Summary
+
+All 16 models that solve but fail the pipeline match check classified into 4 divergence
+types: 5 tolerance-too-tight (solver precision differences, pass at `rtol=1e-4`), 2 missing
+expression-based `.l` initialization (dropped by IR; directly fixed by Sprint 20 Task 1),
+5 multiple optima (`.l` correctly emitted but non-convex problems find different local KKT
+points), and 3 LP multi-model issues (wrong model selected from multiple solve statements).
+Predicted match improvement from `.l` emission fix: +1 to +2 (9 → 10–11). Raising comparison
+`rtol` from `1e-6` to `1e-4` would add 5 further matches (→ 14+). No model in the non-matching
+set uses `.scale`. None of the 9 currently-matching models have end-to-end test coverage.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md`** (created): Per-model table
+  with objective gap %, divergence type, `.l`/`.scale` usage, likely cause; tolerance analysis
+  (formula, required rtol per model); predicted match count after `.l` fix; KKT review
+  candidates (abel, himmel16, mathopt1, trig); golden-file coverage for 9 matching models
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 5.1, 5.2, 5.3,
+  5.4 → ✅ VERIFIED (5.1: initialization not dominant; 5.2: rtol=1e-6 too tight for 5 models;
+  5.3: no .scale in non-matching set; 5.4: 9 matching models have no golden-file test coverage)
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 6 → ✅ COMPLETE
+
+---
+
 ### Sprint 20 Prep Task 5: Audit Translate internal_error Models - 2026-02-19
 
 **Branch:** `planning/sprint20-task5`

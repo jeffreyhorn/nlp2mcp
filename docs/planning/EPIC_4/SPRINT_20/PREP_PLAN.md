@@ -29,7 +29,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 | 3 | Catalog Remaining lexer_invalid_char Subcategories | High | 2–3h | Task 1 | lexer_invalid_char reduction |
 | 4 | ✅ Investigate .l Initialization Emission Gap | High | 2–3h | Task 1 | Deferred Sprint 19 (#753/#757) |
 | 5 | ✅ Audit Translate internal_error Models | High | 2–3h | Tasks 1, 2 | Translation error fixes |
-| 6 | Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
+| 6 | ✅ Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
 | 7 | Design Accounting Variable Detection (#764) | Medium | 2–3h | Tasks 1, 5 | Deferred Sprint 19 (#764) |
 | 8 | Review Sprint 19 Retrospective Action Items | Medium | 1h | None | Process improvement |
 | 9 | Snapshot Baseline Metrics | Medium | 1h | None | All workstreams |
@@ -445,7 +445,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md
 
 ## Task 6: Investigate Full Pipeline Match Divergence
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 20 Day 1
@@ -501,11 +501,25 @@ The 16 non-matching models need investigation. Likely causes (from Sprint 19 ret
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md`: 16 non-matching models classified into 4 divergence types with per-model objective gap table, tolerance analysis, `.l`/`.scale` audit, golden-file coverage status, and KKT review candidates
+- Updated `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`: Unknowns 5.1, 5.2, 5.3, 5.4 → ✅ VERIFIED
 
 ### Result
 
-*To be completed*
+**16 non-matching models classified** (15 mismatch + 1 comparison error):
+- **5 tolerance-too-tight** (chem, dispatch, hhmax, mhw4d, mhw4dx): abs diff 1e-4 to 5e-4; would pass at `rtol=1e-4`
+- **2 missing expr-based .l init** (abel, chakra): dropped by IR at `parser.py:3568-3571`
+- **5 multiple optima / different local KKT** (alkyl, himmel16, mathopt1, process, trig): `.l` correctly emitted; PATH finds different stationary point
+- **3 LP multi-model** (aircraft, apl1p, apl1pca): wrong model selected or multiple solve statements
+- **1 obj not tracked** (port): LP model, MCP objective variable not captured
+
+**Predicted matches after `.l` emission fix:** +1 to +2 (9 → 10–11); abel high confidence, chakra medium.
+
+**Tolerance finding:** Raising `rtol` from `1e-6` to `1e-4` would add 5 more matches (→ 14–16 combined, depending on .l fix results).
+
+**No .scale usage** in any of the 16 non-matching models. `.scale` remains Sprint 21+ item.
+
+**Golden-file gap:** None of the 9 currently-matching models have end-to-end test coverage. Regression risk is low but unguarded.
 
 ### Verification
 
@@ -522,12 +536,12 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md
 
 ### Acceptance Criteria
 
-- [ ] All 16 non-matching models identified and listed
-- [ ] Each model has: objective gap %, divergence type, likely cause
-- [ ] At least 3 models identified as resolvable in Sprint 20
-- [ ] Predicted new pipeline match count after `.l` emission fix documented
-- [ ] Any models with suspiciously large gaps (>100%) flagged for KKT review
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 16 non-matching models identified and listed (15 mismatch + 1 comparison error = 16)
+- [x] Each model has: objective gap %, divergence type, likely cause
+- [x] At least 3 models identified as resolvable in Sprint 20 (5 tolerance + 2 .l init = 7 resolvable)
+- [x] Predicted new pipeline match count after `.l` emission fix documented (9 → 10–11)
+- [x] Any models with suspiciously large gaps (>100%) flagged for KKT review (abel, himmel16, mathopt1, trig)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
