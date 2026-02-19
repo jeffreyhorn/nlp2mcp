@@ -133,7 +133,7 @@ as the objective variable* — the substitution is clean. In himmel11, `g2/g3/g4
 chains at all (they appear nowhere except their own defining equation). Neither pattern causes
 infeasibility because the stationarity equations, while forcing specific multiplier values, are
 consistent with the rest of the system. The mexss failure is caused by over-constraining the
-multipliers for the *optimization variables* (`u`, `v`, `e`, `z`), not the accounting variables.
+multipliers for the *optimization variables* (`u`, `v`, `e`), not the accounting variables.
 
 *Current assessment:* Static C5 check requires verifying consistency of the reduced system, which
 is not feasible from static IR inspection alone.
