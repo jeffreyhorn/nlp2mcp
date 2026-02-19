@@ -25,7 +25,7 @@ IndexOffset End-to-End Pipeline State.
 
 ## Branch
 Work on branch `planning/sprint20-task2`. Create it from the current branch
-`main `:
+`main`:
   git checkout main 
   git checkout -b planning/sprint20-task2
 
@@ -182,7 +182,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 3: Cata
 Remaining lexer_invalid_char Subcategories.
 
 ## Branch
-Work on branch `planning/sprint20-task3`. Create it from `main `:
+Work on branch `planning/sprint20-task3`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task3
 
@@ -336,7 +336,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 4: Inve
 .l Initialization Emission Gap.
 
 ## Branch
-Work on branch `planning/sprint20-task4`. Create it from `main `:
+Work on branch `planning/sprint20-task4`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task4
 
@@ -491,7 +491,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 5: Audi
 Translate internal_error Models.
 
 ## Branch
-Work on branch `planning/sprint20-task5`. Create it from `main `:
+Work on branch `planning/sprint20-task5`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task5
 
@@ -641,7 +641,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 6: Inve
 Full Pipeline Match Divergence.
 
 ## Branch
-Work on branch `planning/sprint20-task6`. Create it from `main `:
+Work on branch `planning/sprint20-task6`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task6
 
@@ -785,7 +785,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 7: Desi
 Accounting Variable Detection (#764 mexss).
 
 ## Branch
-Work on branch `planning/sprint20-task7`. Create it from `main `:
+Work on branch `planning/sprint20-task7`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task7
 
@@ -945,7 +945,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 8: Revi
 Sprint 19 Retrospective Action Items.
 
 ## Branch
-Work on branch `planning/sprint20-task8`. Create it from `main `:
+Work on branch `planning/sprint20-task8`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task8
 
@@ -1074,7 +1074,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 9: Snap
 Baseline Metrics.
 
 ## Branch
-Work on branch `planning/sprint20-task9`. Create it from `main `:
+Work on branch `planning/sprint20-task9`. Create it from `main`:
   git checkout main 
   git checkout -b planning/sprint20-task9
 
@@ -1097,7 +1097,7 @@ Sprint 19 final state (to be confirmed):
 
 The snapshot must be taken after all prep tasks that might involve code changes
 (Tasks 2–8) are complete. If this is being run before Tasks 2–8 are merged, ensure
-you are on the clean `main ` base (no code changes).
+you are on the clean `main` base (no code changes).
 
 ## What Needs to Be Done
 
@@ -1228,8 +1228,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 10: Pla
 Sprint 20 Detailed Schedule.
 
 ## Branch
-Work on branch `planning/sprint20-task10`. Create it from `main `
-AFTER Tasks 2–9 have been merged into `main `:
+Work on branch `planning/sprint20-task10`. Create it from `main`
+AFTER Tasks 2–9 have been merged into `main`:
   git checkout main 
   git pull origin main 
   git checkout -b planning/sprint20-task10
