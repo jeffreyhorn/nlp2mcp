@@ -18,17 +18,17 @@
 | ID | Subcategory | Count | Grammar-Fixable? | Priority | Est. Effort |
 |----|-------------|-------|-----------------|----------|-------------|
 | A | Tuple/Compound Set Data Syntax | 6 | Yes | P1 — High ROI | 3–4h |
-| B | Cascading Parse Failures | 4 | Indirect | P2 | 0h (resolve by fixing root) |
-| D | Lead/Lag Indexing | 2 | Yes | P1 | 0h (already fixed by Sprint 20 IndexOffset work) |
-| E | Special Values / Inline Scalar Data | 2 | Yes | P1 | 1–2h |
-| F | Declaration/Syntax Gaps | 2 | Yes | P1 | 2–3h |
-| G | Set Element Descriptions | 1 | Yes | P1 — Quick win | 0.5h |
+| B | Cascading Parse Failures | 3 | Indirect | P2 | 0h (resolve by fixing root) |
+| D | Lead/Lag Indexing | 2 | Yes | P1 | 0h (will be resolved by planned Sprint 20 IndexOffset `to_gams_string()` work) |
+| E | Special Values / Inline Scalar Data | 3 | Yes | P1 | 1–2h |
+| F | Declaration/Syntax Gaps | 0 | Yes | P1 | 0h |
+| G | Set Element Descriptions | 0 | Yes | P1 — Quick win | 0h |
 | H | Control Flow | 2 | Yes | P1 | 1–2h |
 | J | Bracket/Brace / Compile-time | 3 | Partial | P2 | 1h (1 grammar; 2 preprocessor) |
 | K | Miscellaneous | 1 | Investigate | P3 | 1–2h |
-| L | Set-Model Exclusion (`all - x`) | 4 | Yes | P1 — Quick win | 1–2h |
+| L | Set-Model Exclusion (`all - x`) | 5 | Yes | P1 — Quick win | 1–2h |
 | M | File/Acronym/Unsupported Declarations | 2 | Yes | P1 | 1–2h |
-| | **Total** | **27** | | | **~10–17h** |
+| | **Total** | **27** | | | **~9–15h** |
 
 **Note on Subcategory D:** `mine` and `pindyck` are both now classified as cascading failures of
 lead/lag expressions — both will resolve when the Sprint 20 IndexOffset `to_gams_string()` fix
@@ -36,14 +36,14 @@ lead/lag expressions — both will resolve when the Sprint 20 IndexOffset `to_ga
 They are listed as "D" for taxonomy consistency but the fix is already in progress.
 
 **Top-3 highest-ROI subcategories:**
-1. **L: Set-Model Exclusion** — 4 models, ~1–2h effort, pure grammar extension (new `all - set` syntax in model statements)
+1. **L: Set-Model Exclusion** — 5 models, ~1–2h effort, pure grammar extension (new `all - set` syntax in model statements)
 2. **A: Tuple/Compound Set Data** — 6 models, ~3–4h, known fix approach from Sprint 19
-3. **B: Cascading** — 4 models, 0h, will resolve when root-cause subcategories (A, D, H) are fixed
+3. **B: Cascading** — 3 models, 0h, will resolve when root-cause subcategories (A, D, H) are fixed
 
 **Quick wins (≤2h grammar, ≥2 models):**
-- **L: Set-Model Exclusion** — 4 models, `/ all - x /` pattern in Model statements (~1–2h)
-- **E: Inline Scalar Data** — 2 models, `scalar / .value /` pattern (~1h, may already work with Sprint 19 fixes)
-- **G: Set Element Descriptions** — 1 model (`lop`), `abort$` statement support (~1h) — also unblocks H
+- **L: Set-Model Exclusion** — 5 models, `/ all - x /` pattern in Model statements (~1–2h)
+- **E: Inline Scalar Data** — 3 models, `scalar / .value /` pattern (~1h, may already work with Sprint 19 fixes)
+- **H: Control Flow (`lop` abort$ pattern)** — 1 model (`lop`), `abort$` statement support (~1h) — also unblocks other H models
 - **M: File/Acronym declarations** — 2 models, skip or stub unsupported declarations (~1–2h)
 
 ---
@@ -106,18 +106,16 @@ Sprint 19 resolved 45 of the original 72 models. Notable by subcategory:
 | Subcategory | Name | Count | Models | Fix Effort | Notes |
 |-------------|------|-------|--------|------------|-------|
 | A | Compound Set Data | 6 | indus, mexls, paperco, sarf, turkey, turkpow | 3–4h | Extends Sprint 19 A fix; new patterns: multi-word elements, parenthesized sub-lists, ranges |
-| B | Cascading Failures | 4 | fdesign, nemhaus, nonsharp, pindyck* | 0h | Fix root cause (D, H, F/K) |
-| D | Lead/Lag Indexing | 2 | mine, pindyck | 0h (Sprint 20) | Will resolve with IndexOffset `to_gams_string()` fix |
-| E | Inline Scalar Data | 2 | cesam2, gussrisk, trnspwl | ~1h | Scalar param `/ value /` missing; may be grammar gap or whitespace issue |
+| B | Cascading Failures | 3 | fdesign, nemhaus, nonsharp | 0h | Fix root cause (D, H, F/K) |
+| D | Lead/Lag Indexing | 2 | mine, pindyck | 0h (Sprint 20) | Will resolve with planned IndexOffset `to_gams_string()` fix |
+| E | Inline Scalar Data | 3 | cesam2, gussrisk, trnspwl | ~1h | Scalar param `/ value /` missing; may be grammar gap or whitespace issue |
 | F | Declaration Gaps | 0 | — | — | All Sprint 19 F models fixed |
 | G | Set Element Descriptions | 0 | — | — | All Sprint 19 G models fixed (ganges, gangesx, weapons) |
 | H | Control Flow | 2 | iobalance, lop | 1–2h | `repeat/until` + `abort$` — both blocked earlier H models too |
 | J | Bracket/Brace | 3 | mathopt3, saras, springchain | 1h grammar (mathopt3); 2 preprocessor | saras: preprocessor artifact; springchain: `$eval`/compile-time |
 | K | Miscellaneous | 1 | dinam | 1–2h | Table header with inline comment — unique pattern |
-| L | Set-Model Exclusion | 4 | camcge, ferts, spatequ, tfordy (+cesam partial) | 1–2h | NEW subcategory: `/ all - setname /` and `/ model.attr /` patterns in Model/Set statements |
+| L | Set-Model Exclusion | 5 | camcge, cesam, ferts, spatequ, tfordy | 1–2h | NEW subcategory: `/ all - setname /` and `/ model.attr /` patterns in Model/Set statements |
 | M | File/Acronym Decls | 2 | senstran, worst | 1–2h | NEW subcategory: unsupported `File` and `Acronym` declaration keywords |
-
-**Note on E count:** cesam2, gussrisk, and trnspwl = 3 models in E (table row count says 2 — corrected to 3 in the per-model table).
 
 ---
 
@@ -167,20 +165,20 @@ Acronym future, call, puto;                   (* worst *)
 
 ## Top-3 Highest-ROI Subcategories
 
-### 1. Subcategory L: Set-Model Exclusion — 4 models, ~1–2h
-**Why:** Single consistent pattern (`all - x`), pure grammar addition, no IR/AD changes needed, unblocks camcge (CGE model), ferts, tfordy, spatequ.
+### 1. Subcategory L: Set-Model Exclusion — 5 models, ~1–2h
+**Why:** Single consistent pattern (`all - x`), pure grammar addition, no IR/AD changes needed, unblocks camcge (CGE model), cesam, ferts, tfordy, spatequ.
 
 ### 2. Subcategory A: Compound Set Data — 6 models, ~3–4h
 **Why:** Sprint 19 already implemented the core dotted-element fix; Sprint 20 needs to extend to handle parenthesized sub-lists `(sch-1*sch-3)`, multi-word elements (`wire rod`), and hyphenated-with-numeric-suffix elements (`hydro-4.1978`). The fix framework is already in place.
 
-### 3. Subcategory B: Cascading — 4 models, ~0h
-**Why:** These models (fdesign, nemhaus, nonsharp, pindyck) will resolve for free when subcategories D (IndexOffset) and H (control flow) are fixed. Zero additional effort required.
+### 3. Subcategory B: Cascading — 3 models, ~0h
+**Why:** These models (fdesign, nemhaus, nonsharp) will resolve for free when subcategories D (IndexOffset) and H (control flow) are fixed. Zero additional effort required.
 
 ---
 
 ## Quick Wins
 
-### Quick Win 1: Subcategory L — `all - setname` in set/model statements (~1–2h, 4 models)
+### Quick Win 1: Subcategory L — `all - setname` in set/model statements (~1–2h, 5 models)
 Grammar addition: recognize `all` as keyword and `all - name` pattern.
 ```
 model_element: ID ("." ID)?
@@ -222,10 +220,10 @@ Notable unexpected fixes (models that weren't in the primary Sprint 19 targets b
 
 ## Sprint 20 Implementation Order (Recommended)
 
-### Phase 1: Quick wins (~3–5h, ~8 models + cascading)
+### Phase 1: Quick wins (~3–5h, ~9 models + cascading)
 | Priority | Subcategory | Models | Effort |
 |----------|-------------|--------|--------|
-| 1 | L: Set-Model Exclusion | camcge, ferts, tfordy, spatequ | 1–2h |
+| 1 | L: Set-Model Exclusion | camcge, cesam, ferts, tfordy, spatequ | 1–2h |
 | 2 | M: File/Acronym Decls | senstran, worst | 1–2h |
 | 3 | H: Control Flow | iobalance, lop | 1–2h |
 | — | B: Cascading (free) | nemhaus → resolves | 0h |

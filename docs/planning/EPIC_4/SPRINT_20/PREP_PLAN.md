@@ -248,7 +248,7 @@ The subcategory counts above are estimates — the actual numbers after Sprint 1
 
 ### Result
 
-All 27 remaining `lexer_invalid_char` models rechecked and reclassified. Two new subcategories identified: **L (Set-Model Exclusion)** — `/ all - setname /` and dotted `eq.var` in model/set statements (4 models, 1–2h) — and **M (Unsupported Declarations)** — `File` and `Acronym` keywords (2 models, 1–2h). Subcategory G is fully resolved (0 remaining). Top ROI: L (4 models, 1–2h), A (6 models, 3–4h), B (4 models, 0h cascading). The 2 Subcategory D models (mine, pindyck) will resolve automatically with the Sprint 20 IndexOffset `to_gams_string()` fix — no separate grammar work needed.
+All 27 remaining `lexer_invalid_char` models rechecked and reclassified. Two new subcategories identified: **L (Set-Model Exclusion)** — `/ all - setname /` and dotted `eq.var` in model/set statements (5 models, 1–2h) — and **M (Unsupported Declarations)** — `File` and `Acronym` keywords (2 models, 1–2h). Subcategory G is fully resolved (0 remaining). Top ROI: L (5 models, 1–2h), A (6 models, 3–4h), B (3 models, 0h cascading). The 2 Subcategory D models (mine, pindyck) will resolve automatically with the Sprint 20 IndexOffset `to_gams_string()` fix — no separate grammar work needed.
 
 ### Verification
 
@@ -269,8 +269,8 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md
 - [x] All 27 `lexer_invalid_char` models rechecked against current codebase
 - [x] Each model has: subcategory, failing token/line, estimated fix effort
 - [x] Subcategory counts sum to 27
-- [x] Top 3 highest-ROI subcategories identified with effort estimates (L: 4 models 1–2h; A: 6 models 3–4h; B: 4 models 0h)
-- [x] At least 2 "quick win" grammar fixes identified (L: 4 models 1–2h; M: 2 models 1–2h; H: 2 models 1–2h)
+- [x] Top 3 highest-ROI subcategories identified with effort estimates (L: 5 models 1–2h; A: 6 models 3–4h; B: 3 models 0h)
+- [x] At least 2 "quick win" grammar fixes identified (L: 5 models 1–2h; M: 2 models 1–2h; H: 2 models 1–2h)
 - [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---

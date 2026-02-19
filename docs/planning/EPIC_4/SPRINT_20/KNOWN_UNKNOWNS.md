@@ -524,20 +524,20 @@ Development team
 | Subcategory | Name | Count | Models |
 |-------------|------|-------|--------|
 | A | Compound Set Data | 6 | indus, mexls, paperco, sarf, turkey, turkpow |
-| B | Cascading | 4 | fdesign, nemhaus, nonsharp, pindyck |
+| B | Cascading | 3 | fdesign, nemhaus, nonsharp |
 | D | Lead/Lag (→IndexOffset) | 2 | mine, pindyck |
 | E | Inline Scalar Data | 3 | cesam2, gussrisk, trnspwl |
 | H | Control Flow | 2 | iobalance, lop |
 | J | Bracket/Brace | 3 | mathopt3, saras, springchain |
 | K | Miscellaneous | 1 | dinam |
-| **L** | **Set-Model Exclusion (NEW)** | **4** | **camcge, ferts, spatequ, tfordy** |
+| **L** | **Set-Model Exclusion (NEW)** | **5** | **camcge, cesam, ferts, spatequ, tfordy** |
 | **M** | **Unsupported Declarations (NEW)** | **2** | **senstran, worst** |
 
 **Two new subcategories identified:** L (Set-Model Exclusion: `/ all - setname /`) and M (Unsupported Declarations: `File`, `Acronym` keywords).
 
-**Top-3 ROI:** L (4 models, 1–2h), A (6 models, 3–4h), B (4 models, 0h cascading).
+**Top-3 ROI:** L (5 models, 1–2h), A (6 models, 3–4h), B (3 models, 0h cascading).
 
-**Assumption was wrong:** The dominant remaining categories are NOT G/H/J/K — they are A (6 models) and the new L (4 models). G is fully resolved (0 models remain). The old C (Put Statement) and I (Model/Solve) categories are fully resolved.
+**Assumption was wrong:** The dominant remaining categories are NOT G/H/J/K — they are A (6 models) and the new L (5 models). G is fully resolved (0 models remain). The old C (Put Statement) and I (Model/Solve) categories are fully resolved.
 
 ---
 
