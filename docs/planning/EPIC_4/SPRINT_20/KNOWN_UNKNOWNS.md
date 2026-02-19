@@ -502,7 +502,7 @@ Development team
 
 **Findings (2026-02-19):** From `grep -n "DollarConditional\|condition\|dollar" src/ad/derivative_rules.py`.
 
-**Yes — the AD system has existing DollarConditional support.** `derivative_rules.py` line 154 dispatches `DollarConditional` nodes to `_diff_dollar_conditional` (line 1334), which implements:
+**Yes — the AD system has existing DollarConditional support.** `derivative_rules.py` lines 154–156 dispatch `DollarConditional` nodes to `_diff_dollar_conditional` (line 1334), which implements:
 
 ```
 d/dx[f$g] = (df/dx)$g
