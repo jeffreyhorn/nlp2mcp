@@ -117,7 +117,7 @@ wc -l docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md
 
 ## Task 2: Audit IndexOffset End-to-End Pipeline State
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 20 Day 1
@@ -163,11 +163,12 @@ Sprint 19 delivered the 4h AD work. Remaining: ~4h.
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md`: per-model status table for all 8 blocked models, failure analysis for sparta/tabora/otpop, xfail assessment, emit layer circular audit, revised effort estimate
+- Updated `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`: Unknowns 6.1, 6.2, 6.3 → ✅ VERIFIED with detailed findings
 
 ### Result
 
-*To be completed*
+5 of 8 IndexOffset-blocked models (launch, mine, ampl, robert, pak) now translate successfully — Sprint 19 AD work unblocked them. The 3 remaining failures (sparta, tabora, otpop) are all in `IndexOffset.to_gams_string()` in `src/ir/ast.py`: it doesn't handle `Unary("-", Call(...))` offsets (sparta/tabora) or `Binary(op, Call, Call)` offsets (otpop). The xfail test is a cleanup item only. Circular lead/lag (`++`/`--`) is fully supported. Revised IndexOffset effort estimate: **~3h** (was ~4h).
 
 ### Verification
 
@@ -185,11 +186,11 @@ grep -c "| " docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md
 
 ### Acceptance Criteria
 
-- [ ] All 8 blocked models run through current pipeline and status recorded
-- [ ] Each model has: current failure stage, specific error, remaining work estimate
-- [ ] Sprint 20 IndexOffset effort estimate revised based on findings
-- [ ] The xfail test (sum-collapse-with-IndexOffset-wrt) assessed for scope
-- [ ] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 8 blocked models run through current pipeline and status recorded
+- [x] Each model has: current failure stage, specific error, remaining work estimate
+- [x] Sprint 20 IndexOffset effort estimate revised based on findings
+- [x] The xfail test (sum-collapse-with-IndexOffset-wrt) assessed for scope
+- [x] Unknowns 6.1, 6.2, 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
