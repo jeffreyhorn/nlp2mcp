@@ -643,13 +643,15 @@ The majority of the 16 models that solve but don't match the reference solution 
 ### How to Verify
 ```bash
 python -c "
-import json, sys; sys.setrecursionlimit(50000)
+import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-# Find models with solve success but no pipeline match
+# Find models with MCP solve success but no pipeline match
 models = data['models']
 for m in models:
-    solve = m.get('nlp2mcp_solve', {})
-    # Check for solve success + no reference match
+    solve = m.get('mcp_solve', {})
+    comparison = m.get('solution_comparison', {})
+    if solve.get('status') == 'success' and comparison.get('objective_match') == False:
+        print(m.get('model_name', '<unknown>'), 'gap:', comparison.get('relative_difference'))
 "
 ```
 
@@ -996,11 +998,12 @@ Approximately 5 models fail with `model_no_objective_def` (objective variable no
 ### How to Verify
 ```bash
 python -c "
-import json, sys; sys.setrecursionlimit(50000)
+import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
 models = data['models']
-no_obj = [m['model_name'] for m in models 
-          if 'no_objective' in str(m.get('nlp2mcp_solve', {}).get('failure_category', ''))]
+no_obj = [m['model_name'] for m in models
+          if m.get('nlp2mcp_translate', {}).get('status') == 'failure'
+          and (m.get('nlp2mcp_translate', {}).get('error') or {}).get('category') == 'model_no_objective_def']
 print('no_objective_def models:', sorted(no_obj))
 "
 ```

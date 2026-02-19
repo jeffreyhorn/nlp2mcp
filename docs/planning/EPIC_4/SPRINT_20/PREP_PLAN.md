@@ -11,7 +11,7 @@
 ## Executive Summary
 
 Sprint 20 focuses on four workstreams:
-1. **IndexOffset end-to-end pipeline** — AD integration was completed in Sprint 19 (Sprint 19 PRs #779, #785); Sprint 20 closes the remaining gaps (emit support, parser coverage of Subcategory D models, end-to-end testing of all 8 blocked models)
+1. **IndexOffset end-to-end pipeline** — AD integration was completed in Sprint 19 (Sprint 19 PRs #779, #785); Sprint 20 focuses on AD index substitution, validation of IndexOffset behavior, and end-to-end testing of all 8 blocked models, including confirming emitter/parser coverage for Subcategory D models and addressing any newly identified issues
 2. **Deferred Sprint 19 solver blockers** — `.l` initialization emission (#753/#757), accounting variable detection (#764), AD condition propagation (#763), min/max in objective-defining equations (#789)
 3. **Remaining lexer_invalid_char reduction** — 27 remain after Sprint 19; Subcategories G, H, I, J, K not yet addressed
 4. **Full pipeline match rate** — 9/160 (5.6%); close the gap between solve success (25 models) and full pipeline match by investigating objective value divergence
@@ -140,7 +140,7 @@ Sprint 19 IndexOffset progress:
 - **Grammar/parser:** `offset_paren`, `offset_func` parser rules added in PR #785
 - **AD integration:** `_substitute_index()` + `_apply_index_substitution()` for VarRef/ParamRef/DollarConditional (PR #779); `offset_paren`/`offset_func` callback pattern (PR #785)
 - **Emit layer:** `_format_mixed_indices()` already handles IndexOffset (pre-Sprint 19)
-- **8 blocked models:** From `LEXER_ERROR_CATALOG.md` Subcategory D (lead/lag): `ampl`, `otpop` (lexer_invalid_char); plus 6 models in `unknown` status (pipeline not run)
+- **8 blocked models:** Per `INDEX_OFFSET_DESIGN_OPTIONS.md`: `launch`, `mine`, `sparta`, `tabora`, `ampl`, `otpop`, `robert`, `pak` (with `launch`/`mine`/`sparta`/`tabora` as Subcategory D lead/lag models)
 
 From `INDEX_OFFSET_DESIGN_OPTIONS.md`:
 > Effort estimate: 8h total (4h AD index-substitution work + 2h end-to-end pipeline tracing + 2h testing/integration), down from ~14-16h originally estimated
@@ -151,7 +151,7 @@ Sprint 19 delivered the 4h AD work. Remaining: ~4h.
 
 1. **Run each of the 8 blocked models** through the full pipeline:
    ```bash
-   python -c "import sys; sys.setrecursionlimit(50000); from src.ir.parser import parse_file; r = parse_file('data/gamslib/raw/<model>.gms'); print(r)"
+   python -m src.cli data/gamslib/raw/<model>.gms
    ```
 2. **For each model, classify current failure stage:** parse / translate / solve / none (already works)
 3. **Check `ampl` and `otpop`** specifically — both were in Subcategory D (lexer_invalid_char); Sprint 19 PRs #785–#786 fixed the parser for `ampl` (set ordinal attrs) and `otpop` (eqn attr assignment) — verify if lead/lag indexing is still a blocker or if those PRs resolved it

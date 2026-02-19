@@ -41,19 +41,27 @@ Sprint 19 IndexOffset progress:
 - AD integration: `_substitute_index()` + `_apply_index_substitution()` for VarRef/ParamRef/
   DollarConditional (PR #779); `offset_paren`/`offset_func` callback pattern (PR #785)
 - Emit layer: `_format_mixed_indices()` already handles IndexOffset (pre-Sprint 19)
-- 8 blocked models: From LEXER_ERROR_CATALOG.md Subcategory D (lead/lag): `ampl`, `otpop`
-  (lexer_invalid_char); plus 6 models in `unknown` status
+- 8 blocked models: Per `INDEX_OFFSET_DESIGN_OPTIONS.md`: `launch`, `mine`, `sparta`,
+  `tabora`, `ampl`, `otpop`, `robert`, `pak` (with `launch`/`mine`/`sparta`/`tabora` as
+  Subcategory D lead/lag models; `ampl`/`otpop` as cascading translate failures; `robert`
+  as path_syntax_error; `pak` as path_solve_terminated)
 
 Reference: docs/planning/EPIC_4/SPRINT_19/INDEX_OFFSET_DESIGN_OPTIONS.md
 Original effort estimate: ~4h remaining (AD work done in Sprint 19).
 
 ## What Needs to Be Done
 
-1. Run each of the 8 blocked models through the full pipeline. Use `python -m src.cli
-   data/gamslib/raw/<model>.gms` for each. The 8 models are: ampl, otpop, and the 6
-   models listed as `unknown` status in the LEXER_ERROR_CATALOG.md Subcategory D section.
-   (First read docs/planning/EPIC_4/SPRINT_19/LEXER_ERROR_CATALOG.md to get the exact
-   model list.)
+1. Run each of the 8 blocked models through the full pipeline:
+   ```
+   python -m src.cli data/gamslib/raw/launch.gms
+   python -m src.cli data/gamslib/raw/mine.gms
+   python -m src.cli data/gamslib/raw/sparta.gms
+   python -m src.cli data/gamslib/raw/tabora.gms
+   python -m src.cli data/gamslib/raw/ampl.gms
+   python -m src.cli data/gamslib/raw/otpop.gms
+   python -m src.cli data/gamslib/raw/robert.gms
+   python -m src.cli data/gamslib/raw/pak.gms
+   ```
 
 2. For each model, classify current failure stage:
    - parse (lexer_invalid_char or parse error)
@@ -525,12 +533,15 @@ Root cause categories for translate errors:
    python -c "
    import json
    with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-   no_obj = [m for m in data.get('models', [])
-             if 'no_objective' in str(m.get('pipeline_result', {}))]
+   no_obj = []
+   for m in data.get('models', []):
+       translate_stage = m.get('nlp2mcp_translate', {})
+       if translate_stage.get('status') == 'failure' and \
+          (translate_stage.get('error') or {}).get('category') == 'model_no_objective_def':
+           no_obj.append(m)
    print('Count:', len(no_obj))
-   for m in no_obj: print(m.get('model_name'), m.get('pipeline_result'))
+   for m in no_obj: print(m.get('model_name'), m.get('nlp2mcp_translate'))
    "
-   (Adjust the JSON structure as needed based on actual gamslib_status.json format.)
 
 6. Create `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` with:
    - Per-model table: | Model | Exception Type | Function | Root Cause Category | Fixable in S20? |
@@ -1101,12 +1112,17 @@ you are on the clean `planning/sprint20-prep` base (no code changes).
    Also query gamslib_status.json directly for precise counts:
    python -c "
    import json
-   with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-   # Print status distribution — adjust field names as needed
    from collections import Counter
-   statuses = Counter(m.get('pipeline_result', {}).get('status', 'unknown')
-                      for m in data.get('models', []))
-   print(dict(sorted(statuses.items())))
+   with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
+   models = data.get('models', [])
+   parse_statuses = Counter(m.get('nlp2mcp_parse', {}).get('status', 'not_tested') for m in models)
+   translate_statuses = Counter(m.get('nlp2mcp_translate', {}).get('status', 'not_tested') for m in models)
+   solve_statuses = Counter(m.get('mcp_solve', {}).get('status', 'not_tested') for m in models)
+   match_counts = Counter(m.get('solution_comparison', {}).get('objective_match') for m in models)
+   print('Parse:', dict(sorted(parse_statuses.items())))
+   print('Translate:', dict(sorted(translate_statuses.items())))
+   print('Solve:', dict(sorted(solve_statuses.items())))
+   print('Match (True=match, False=mismatch, None=not tested):', dict(sorted(str(k) for k in match_counts.items())))
    "
 
 4. Record the git commit SHA:
