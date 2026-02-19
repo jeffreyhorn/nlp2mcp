@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 2: Audit IndexOffset End-to-End Pipeline State - 2026-02-19
+
+**Branch:** `planning/sprint20-task2`
+
+#### Summary
+
+5 of 8 IndexOffset-blocked models (launch, mine, ampl, robert, pak) now translate
+successfully — Sprint 19 AD work unblocked them entirely. The 3 remaining failures
+(sparta, tabora, otpop) are all in `IndexOffset.to_gams_string()` (`src/ir/ast.py`):
+it doesn't handle `Unary("-", Call(...))` offsets (sparta/tabora) or
+`Binary(op, Call, Call)` offsets (otpop). Circular lead/lag (`++`/`--`) is fully
+supported. xfail test is a cleanup item only. Revised IndexOffset effort estimate:
+**~3h** (was ~4h).
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md`** (created): Per-model status
+  table for all 8 blocked models; failure analysis for sparta/tabora (Unary minus with
+  Call operand) and otpop (Binary with Card/Ord calls); xfail test scope assessment;
+  emit layer circular lead/lag verification; revised effort estimate breakdown
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 6.1, 6.2,
+  6.3 → ✅ VERIFIED with per-model status table, xfail assessment, and circular emit
+  layer confirmation
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 2 → ✅ COMPLETE;
+  Changes, Result, and all 5 acceptance criteria filled in
+
+---
+
 ### Sprint 20 Prep Task 1: Create Known Unknowns List - 2026-02-18
 
 **Branch:** `planning/sprint20-prep`

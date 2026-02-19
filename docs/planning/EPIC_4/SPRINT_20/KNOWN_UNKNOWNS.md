@@ -805,7 +805,24 @@ If any of the 8 models still fail at the parse stage (grammar gap), the IndexOff
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** Ran all 8 models via `python -m src.cli`. Results:
+
+| Model  | Prev Stage | Current Stage | Error |
+|--------|-----------|--------------|-------|
+| launch | parse=success, solve=failure | ✅ translate success | None — Sprint 19 AD work unblocked |
+| mine   | parse=failure | ✅ translate success | None — grammar fix unblocked parse + translate |
+| ampl   | parse=success, translate=not_tested | ✅ translate success | None |
+| robert | parse=success, solve=failure | ✅ translate success | None |
+| pak    | parse=success, solve=failure | ✅ translate success | None |
+| sparta | parse=failure | ❌ emit failure | `NotImplementedError: Unary minus with complex operand not supported: Call(ord, (SymbolRef(l)))` |
+| tabora | parse=failure | ❌ emit failure | `NotImplementedError: Unary minus with complex operand not supported: Call(ord, (SymbolRef(a)))` |
+| otpop  | parse=failure | ❌ stationarity failure | `NotImplementedError: Complex offset expressions not yet supported: Binary(-, Call(card, ...), Call(ord, ...))` |
+
+**Key finding:** 5 of 8 models now translate successfully — better than the ~4h estimate assumed. The 3 remaining failures are all in `IndexOffset.to_gams_string()` in `src/ir/ast.py`: it handles `Const`, `SymbolRef`, and `Unary("-", SymbolRef/Const)` offsets, but not `Unary("-", Call(...))` (sparta/tabora) or `Binary(op, Call, Call)` (otpop).
+
+See `INDEXOFFSET_AUDIT.md` for full per-model analysis and revised effort estimate (~3h).
 
 ---
 
@@ -841,7 +858,15 @@ If the xfail case is a real blocker for one of the 8 models, fixing it moves fro
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** The xfail test is `test_diff_sum_over_t_with_lead` in `tests/unit/ad/test_index_offset_ad.py`. It tests: `d/dx(t1+1) [sum(t, x(t+1))]` should collapse to `1`. Currently `_sum_should_collapse()` and `_is_concrete_instance_of()` expect `str` wrt-indices, not `IndexOffset`, so the sum doesn't collapse (xfail strict=True, currently passing as expected-failure).
+
+**Does it affect any of the 8 blocked models?** No. For the 3 still-failing models:
+- sparta/tabora: fail at emit stage, before AD sum-collapse is relevant
+- otpop: fails at stationarity index replacement (`indices_as_strings()`), before sum-collapse
+
+**Recommendation:** Cleanup item, not critical path. Fix in Sprint 20 alongside `to_gams_string()` fixes, but not a blocker for any model.
 
 ---
 
@@ -874,7 +899,18 @@ If circular lead/lag isn't handled by the emit layer, 1–2 models may still fai
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED
+
+**Findings (2026-02-19):** `_format_mixed_indices()` (src/emit/expr_to_gams.py) fully supports circular lead/lag. It delegates to `idx.to_gams_string()` for every `IndexOffset` it encounters. `IndexOffset.to_gams_string()` handles all circular cases:
+
+- `Const(1)`, `circular=True` → `"i++1"` ✅
+- `Const(-2)`, `circular=True` → `"i--2"` ✅  
+- `SymbolRef("j")`, `circular=True` → `"i++j"` ✅
+- `Unary("-", SymbolRef("j"))`, `circular=True` → `"i--j"` ✅
+
+All 4 patterns are covered by passing unit tests in `tests/unit/emit/test_expr_to_gams.py::TestIndexOffset`.
+
+**Circular lead/lag is NOT a blocker for any of the 8 models.** The 3 failing models (sparta, tabora, otpop) use complex arithmetic offsets (`ord()`, `card()` function calls), not `++`/`--` circular syntax.
 
 ---
 
