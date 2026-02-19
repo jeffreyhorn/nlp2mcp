@@ -101,17 +101,18 @@ which checks both sides). If `ObjectiveIR.expr` is set but no defining equation 
 and the variable must be treated as a non-candidate.
 
 *IR-level check:* Locate `E_obj` as the name of the equation where `objvar` appears as a bare
-`VarRef` on the LHS or RHS with no indices. Then verify `v` appears in `E_obj`:
-`appears_in_obj = any(name.lower() == E_obj.lower() and (contains_var(lhs, v) or contains_var(rhs, v)) for name, edef in ir.equations.items() for lhs, rhs in [edef.lhs_rhs])`
+`VarRef` on the LHS or RHS with no indices. Then verify `v` appears in `E_obj` (including its
+body and any condition):
+`appears_in_obj = any(name.lower() == E_obj.lower() and (contains_var(lhs, v) or contains_var(rhs, v) or (cond is not None and contains_var(cond, v))) for name, edef in ir.equations.items() for lhs, rhs, cond in [(edef.lhs_rhs[0], edef.lhs_rhs[1], edef.condition)])`
 and require `appears_in_obj is True`. Then, for all `(name, edef)` in `ir.equations` where
-`name != E_def(v)`: if `contains_var(lhs, v) or contains_var(rhs, v)`, then
+`name != E_def(v)`: if `contains_var(lhs, v) or contains_var(rhs, v) or (cond is not None and contains_var(cond, v))`, then
 `name.lower() == E_obj.lower()`.
 
 **Criterion C4 — Not Referenced in Any Inequality Constraint**
-`v` does not appear in any `=G=` or `=L=` equation body.
+`v` does not appear in any `=G=` or `=L=` equation body or condition.
 
 *IR-level check:* For all `(name, edef)` where `edef.relation in (Rel.GE, Rel.LE)`:
-`not (contains_var(edef.lhs_rhs[0], v) or contains_var(edef.lhs_rhs[1], v))`.
+`not (contains_var(edef.lhs_rhs[0], v) or contains_var(edef.lhs_rhs[1], v) or (edef.condition is not None and contains_var(edef.condition, v)))`.
 
 > **Note:** C4 is redundant with C3 for all known cases (if C3 passes, C4 trivially passes),
 > but is included as an explicit guard for correctness.
@@ -264,10 +265,13 @@ v is an accounting variable if:
       — verified by building a constraint dependency graph on the KKT system
 ```
 
-C5 can be approximated by: **the RHS of E_def(v) must contain only parameters or other
-accounting variables** (no direct optimization variables). This ensures the chain of forced
-multiplier values terminates cleanly without reaching optimization-variable stationarity
-equations.
+C5 can be **conservatively approximated** by: **the RHS of E_def(v) must contain only
+parameters or other accounting variables** (no direct optimization variables). This is a
+purely structural/static heuristic: the *exact* C5 (multiplier-consistency check over the
+full KKT system) is not statically decidable, and this approximation may admit both false
+positives and false negatives. Its goal is simply to ensure, in common cases, that the chain
+of forced multiplier values terminates cleanly without reaching optimization-variable
+stationarity equations.
 
 ---
 
