@@ -508,7 +508,7 @@ The 16 non-matching models need investigation. Likely causes (from Sprint 19 ret
 
 **16 non-matching models classified** (15 mismatch + 1 comparison error):
 - **5 tolerance-too-tight** (chem, dispatch, hhmax, mhw4d, mhw4dx): abs diff 1e-4 to 5e-4; would pass at `rtol=1e-4`
-- **2 missing expr-based .l init** (abel, chakra): dropped by IR at `parser.py:3562`
+- **2 missing expr-based .l init** (abel, chakra): dropped by IR at `parser.py:3568-3571`
 - **5 multiple optima / different local KKT** (alkyl, himmel16, mathopt1, process, trig): `.l` correctly emitted; PATH finds different stationary point
 - **3 LP multi-model** (aircraft, apl1p, apl1pca): wrong model selected or multiple solve statements
 - **1 obj not tracked** (port): LP model, MCP objective variable not captured
