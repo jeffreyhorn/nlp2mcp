@@ -60,7 +60,7 @@ This document classifies each of the 16 divergences and predicts the impact of t
 ## Section 3: Predicted Impact of Sprint 20 `.l` Emission Fix
 
 The `.l` emission fix (Task 1 in Sprint 20) will emit expression-based `.l` assignments that
-are currently dropped at `parser.py:3562`.
+are currently dropped at `parser.py:3568-3571`.
 
 ### Models directly helped:
 
