@@ -27,7 +27,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 | 1 | Create Sprint 20 Known Unknowns List | Critical | 2–3h | None | All workstreams |
 | 2 | Audit IndexOffset End-to-End Pipeline State | Critical | 2–3h | Task 1 | IndexOffset implementation |
 | 3 | Catalog Remaining lexer_invalid_char Subcategories | High | 2–3h | Task 1 | lexer_invalid_char reduction |
-| 4 | Investigate .l Initialization Emission Gap | High | 2–3h | Task 1 | Deferred Sprint 19 (#753/#757) |
+| 4 | ✅ Investigate .l Initialization Emission Gap | High | 2–3h | Task 1 | Deferred Sprint 19 (#753/#757) |
 | 5 | Audit Translate internal_error Models | High | 2–3h | Tasks 1, 2 | Translation error fixes |
 | 6 | Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
 | 7 | Design Accounting Variable Detection (#764) | Medium | 2–3h | Tasks 1, 5 | Deferred Sprint 19 (#764) |
@@ -277,7 +277,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md
 
 ## Task 4: Investigate .l Initialization Emission Gap
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 20 Day 1
@@ -334,11 +334,12 @@ The IR parser (`src/ir/parser.py`) handles many assignment types. The question i
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md`: gap analysis, fix strategy with 3-file changes, before/after example for circle, bearing assessment, revised effort estimate
+- Updated `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`: Unknowns 1.1, 1.2, 1.3, 1.4 → ✅ VERIFIED with detailed findings
 
 ### Result
 
-*To be completed*
+The `.l` emission gap is a **parser gap**, not an emitter gap. The emitter already has a complete initialization section (Sprint 18 Day 3). The parser silently drops expression-based `.l` assignments (`return` when `_extract_constant()` fails in `_handle_assign`). Fix requires 3 files: `symbols.py` (add `l_expr`/`l_expr_map` fields), `parser.py` (store instead of drop), `emit_gams.py` (emit new fields). Effort revised to ~3.5–4h (was ~2h). Circle fix: high confidence. Bearing: `.l` already emitted; blocked by `.scale` (separate fix). 8 expression-based models missed; 28 constant models already working.
 
 ### Verification
 
@@ -355,13 +356,13 @@ grep "Fix Location" docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md
 
 ### Acceptance Criteria
 
-- [ ] Whether `.l` assignments are captured in the IR is determined (yes/no)
-- [ ] Fix location in codebase identified with file + line range
-- [ ] Fix strategy documented with before/after example for circle.gms
-- [ ] Confirmed whether fix resolves circle infeasibility (or exposes deeper issue)
-- [ ] Bearing assessment: does same fix apply, or is `.scale` the primary blocker?
-- [ ] Effort estimate refined to ±1h
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Whether `.l` assignments are captured in the IR is determined (partial — constant yes, expression-based no)
+- [x] Fix location in codebase identified with file + line range (symbols.py ~86–95, parser.py ~3560–3575, emit_gams.py ~185–195)
+- [x] Fix strategy documented with before/after example for circle.gms
+- [x] Confirmed whether fix resolves circle infeasibility (yes — warm start, high confidence)
+- [x] Bearing assessment: `.scale` is the primary blocker; `.l` already emitted and working
+- [x] Effort estimate refined to ~3.5–4h (±0.5h)
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

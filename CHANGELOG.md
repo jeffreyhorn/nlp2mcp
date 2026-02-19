@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 4: Investigate .l Initialization Emission Gap - 2026-02-19
+
+**Branch:** `planning/sprint20-task4`
+
+#### Summary
+
+Traced `.l` variable initialization through the full IR pipeline (parse → symbols → emit).
+The emission gap is a **parser gap**, not an emitter gap: the MCP emitter already has a
+complete initialization section (Sprint 18 Day 3) that reads from `VariableDef.l` /
+`VariableDef.l_map`. The parser silently drops expression-based `.l = expr` assignments
+when `_extract_constant()` fails in `_handle_assign`. Fix requires 3 files: `symbols.py`
+(add `l_expr`/`l_expr_map` fields), `parser.py` (store instead of drop),
+`emit_gams.py` (emit new fields). Effort: ~3.5–4h. Circle fix: high confidence (warm
+start from centroid). Bearing: constant `.l` already emitted; blocked by `.scale` (6
+scale assignments, separate fix). 8 models have expression-based `.l`; 28 already work.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md`** (created): Gap analysis
+  showing parser is the drop point; fix strategy for 3 files with before/after circle
+  example; bearing assessment (`.scale` is blocker); impact table for 8 affected models;
+  revised effort estimate ~3.5–4h
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknowns 1.1, 1.2,
+  1.3, 1.4 → ✅ VERIFIED (1.1: partial capture; 1.2: circle yes, bearing no; 1.3: prolog
+  section exists; 1.4: 8 expression-based models, 28 constant already working)
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 4 → ✅ COMPLETE
+
+---
+
 ### Sprint 20 Prep Task 3: Catalog Remaining lexer_invalid_char Subcategories - 2026-02-19
 
 **Branch:** `planning/sprint20-task3`
