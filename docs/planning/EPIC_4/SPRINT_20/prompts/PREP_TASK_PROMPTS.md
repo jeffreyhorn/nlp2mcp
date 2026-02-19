@@ -25,8 +25,8 @@ IndexOffset End-to-End Pipeline State.
 
 ## Branch
 Work on branch `planning/sprint20-task2`. Create it from the current branch
-`planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+`main `:
+  git checkout main 
   git checkout -b planning/sprint20-task2
 
 ## Objective
@@ -149,7 +149,7 @@ For documentation-only commits, verify the docs were created:
 After committing and pushing, create a PR:
   git push origin planning/sprint20-task2
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 2: Audit IndexOffset End-to-End Pipeline State" \
     --body "## Summary
 Completes Sprint 20 Prep Task 2 from PREP_PLAN.md.
@@ -182,8 +182,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 3: Cata
 Remaining lexer_invalid_char Subcategories.
 
 ## Branch
-Work on branch `planning/sprint20-task3`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task3`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task3
 
 ## Objective
@@ -303,7 +303,7 @@ If any Python files were modified: make typecheck && make lint && make format &&
 ## Pull Request
   git push origin planning/sprint20-task3
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 3: Catalog Remaining lexer_invalid_char Subcategories" \
     --body "## Summary
 Completes Sprint 20 Prep Task 3 from PREP_PLAN.md.
@@ -336,8 +336,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 4: Inve
 .l Initialization Emission Gap.
 
 ## Branch
-Work on branch `planning/sprint20-task4`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task4`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task4
 
 ## Objective
@@ -459,7 +459,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task4
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 4: Investigate .l Initialization Emission Gap" \
     --body "## Summary
 Completes Sprint 20 Prep Task 4 from PREP_PLAN.md.
@@ -491,8 +491,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 5: Audi
 Translate internal_error Models.
 
 ## Branch
-Work on branch `planning/sprint20-task5`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task5`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task5
 
 ## Objective
@@ -609,7 +609,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task5
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 5: Audit Translate internal_error Models" \
     --body "## Summary
 Completes Sprint 20 Prep Task 5 from PREP_PLAN.md.
@@ -641,8 +641,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 6: Inve
 Full Pipeline Match Divergence.
 
 ## Branch
-Work on branch `planning/sprint20-task6`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task6`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task6
 
 ## Objective
@@ -753,7 +753,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task6
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 6: Investigate Full Pipeline Match Divergence" \
     --body "## Summary
 Completes Sprint 20 Prep Task 6 from PREP_PLAN.md.
@@ -785,8 +785,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 7: Desi
 Accounting Variable Detection (#764 mexss).
 
 ## Branch
-Work on branch `planning/sprint20-task7`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task7`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task7
 
 ## Objective
@@ -914,7 +914,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task7
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 7: Design Accounting Variable Detection (#764)" \
     --body "## Summary
 Completes Sprint 20 Prep Task 7 from PREP_PLAN.md.
@@ -945,8 +945,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 8: Revi
 Sprint 19 Retrospective Action Items.
 
 ## Branch
-Work on branch `planning/sprint20-task8`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task8`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task8
 
 ## Objective
@@ -1044,7 +1044,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task8
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 8: Review Sprint 19 Retrospective Action Items" \
     --body "## Summary
 Completes Sprint 20 Prep Task 8 from PREP_PLAN.md.
@@ -1074,8 +1074,8 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 9: Snap
 Baseline Metrics.
 
 ## Branch
-Work on branch `planning/sprint20-task9`. Create it from `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
+Work on branch `planning/sprint20-task9`. Create it from `main `:
+  git checkout main 
   git checkout -b planning/sprint20-task9
 
 ## Objective
@@ -1097,7 +1097,7 @@ Sprint 19 final state (to be confirmed):
 
 The snapshot must be taken after all prep tasks that might involve code changes
 (Tasks 2–8) are complete. If this is being run before Tasks 2–8 are merged, ensure
-you are on the clean `planning/sprint20-prep` base (no code changes).
+you are on the clean `main ` base (no code changes).
 
 ## What Needs to Be Done
 
@@ -1194,7 +1194,7 @@ several minutes. Verify:
 ## Pull Request
   git push origin planning/sprint20-task9
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 9: Snapshot Baseline Metrics" \
     --body "## Summary
 Completes Sprint 20 Prep Task 9 from PREP_PLAN.md.
@@ -1228,10 +1228,10 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 10: Pla
 Sprint 20 Detailed Schedule.
 
 ## Branch
-Work on branch `planning/sprint20-task10`. Create it from `planning/sprint20-prep`
-AFTER Tasks 2–9 have been merged into `planning/sprint20-prep`:
-  git checkout planning/sprint20-prep
-  git pull origin planning/sprint20-prep
+Work on branch `planning/sprint20-task10`. Create it from `main `
+AFTER Tasks 2–9 have been merged into `main `:
+  git checkout main 
+  git pull origin main 
   git checkout -b planning/sprint20-task10
 
 ## Objective
@@ -1360,7 +1360,7 @@ If Python files were modified: make typecheck && make lint && make format && mak
 ## Pull Request
   git push origin planning/sprint20-task10
   gh pr create \
-    --base planning/sprint20-prep \
+    --base main \
     --title "Sprint 20 Prep Task 10: Plan Sprint 20 Detailed Schedule" \
     --body "## Summary
 Completes Sprint 20 Prep Task 10 — the final prep task. Creates PLAN.md with
