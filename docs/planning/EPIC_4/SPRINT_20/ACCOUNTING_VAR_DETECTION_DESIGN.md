@@ -69,28 +69,35 @@ stationarity by the existing `should_skip_objvar` logic.
 
 ### Algorithm: Conservative Accounting Variable Detection
 
-A variable `v` is classified as an **accounting variable** (no stationarity equation generated)
-if and only if all four of the following criteria are satisfied:
+A variable `v` is considered a **candidate accounting variable** if it satisfies all of the
+following criteria C1–C4. Final classification as an accounting variable (i.e., no stationarity
+equation generated) additionally requires Criterion C5 (see below) to avoid false positives.
 
 **Criterion C1 — Scalar VarRef LHS**
 `v` appears as a pure `VarRef` on the left-hand side of exactly one `=E=` equation `E_def(v)`.
 Indexed variables (where the LHS has an index domain) are excluded from consideration.
 
 *IR-level check:* `edef.relation == Rel.EQ`, `isinstance(lhs, VarRef)`, `len(edef.domain) == 0`,
-and `sum(1 for n,e in ir.equations.items() if e.relation==Rel.EQ and isinstance(e.lhs_rhs[0], VarRef) and e.lhs_rhs[0].name.lower() == v) == 1`
+and `sum(1 for n,e in ir.equations.items() if e.relation==Rel.EQ and isinstance(e.lhs_rhs[0], VarRef) and e.lhs_rhs[0].name.lower() == v.lower()) == 1`
 
 **Criterion C2 — Not Self-Referential**
 `v` does not appear anywhere on the right-hand side (or condition) of `E_def(v)`.
 
 *IR-level check:* `not contains_var(rhs, v)` where `contains_var` does an AST walk.
 
-**Criterion C3 — Appears Only in Objective-Defining Equation**
-The only equation (other than `E_def(v)`) where `v` appears is the objective-defining equation
-`E_obj` (the unique `=E=` equation with the objective variable on its LHS). If `v` appears in no
-other equation, it also passes.
+**Criterion C3 — Appears In (and Only In) Objective-Defining Equation**
+The only equation (other than `E_def(v)`) where `v` appears must be the objective-defining
+equation `E_obj` (the unique `=E=` equation with the objective variable on its LHS), and `v`
+must appear at least once in `E_obj`. Variables that appear in no other equation (e.g.,
+himmel11's `g2/g3/g4`) do **not** pass C3 — they are auxiliary/intermediate variables, not
+objective-decomposition accounting variables, and excluding their stationarity equations would
+produce an under-constrained MCP.
 
-*IR-level check:* For all `(name, edef)` in `ir.equations` where `name != E_def(v)`: if
-`contains_var(lhs, v) or contains_var(rhs, v)`, then `name.lower() == E_obj.lower()`.
+*IR-level check:* First verify `v` appears in `E_obj`:
+`appears_in_obj = any(name.lower() == E_obj.lower() and (contains_var(lhs, v) or contains_var(rhs, v)) for name, edef in ir.equations.items() for lhs, rhs in [edef.lhs_rhs])`
+and require `appears_in_obj is True`. Then, for all `(name, edef)` in `ir.equations` where
+`name != E_def(v)`: if `contains_var(lhs, v) or contains_var(rhs, v)`, then
+`name.lower() == E_obj.lower()`.
 
 **Criterion C4 — Not Referenced in Any Inequality Constraint**
 `v` does not appear in any `=G=` or `=L=` equation body.
@@ -148,21 +155,25 @@ directly reusable.
 
 ### Models Tested
 
-The following currently-solving models were checked against criteria C1–C4:
+The following currently-solving models were checked against criteria C1–C4 (original) and
+C1–C4 (tightened, with C3 requiring v appear in E_obj):
 
-| Model | Accounting Var Candidates (C1–C4) | Would Be Excluded | Status After Exclusion |
-|-------|-----------------------------------|-------------------|------------------------|
-| **ajax** | 0 | — | No change |
-| **blend** | 0 | — | No change |
-| **trnsport** | 0 | — | No change |
-| **rbrock** | 0 | — | No change |
-| **prodmix** | 0 | — | No change |
-| **mathopt2** | 0 | — | No change |
-| **demo1** | 4 (`revenue`, `mcost`, `labcost`, `labearn`) | YES — **FALSE POSITIVE** | Would break model |
-| **himmel11** | 3 (`g2`, `g3`, `g4`) | YES — **FALSE POSITIVE** | Would break model |
-| **house** | 3 (`a1`, `a2`, `l`) | YES — **FALSE POSITIVE** | Would break model |
+| Model | Candidates (original C1–C4) | Pass tightened C3? | Would Be Excluded | Risk |
+|-------|-----------------------------|--------------------|-------------------|------|
+| **ajax** | 0 | — | — | None |
+| **blend** | 0 | — | — | None |
+| **trnsport** | 0 | — | — | None |
+| **rbrock** | 0 | — | — | None |
+| **prodmix** | 0 | — | — | None |
+| **mathopt2** | 0 | — | — | None |
+| **himmel11** | 3 (`g2`, `g3`, `g4`) | ✗ No — vars don't appear in E_obj at all | No | Safe |
+| **house** | 3 (`a1`, `a2`, `l`) | ✗ No — vars appear in chained EQ eqs, not E_obj | No | Safe |
+| **demo1** | 4 (`revenue`, `mcost`, `labcost`, `labearn`) | ✓ Yes — vars appear in `income` (E_obj) | YES — **FALSE POSITIVE** | Would break model |
 
-### Why C1–C4 Are Insufficient: demo1 vs mexss
+**Result of tightening C3:** himmel11 and house are correctly excluded from the candidate set.
+Only demo1 remains as a false positive under C1–C4 (tightened).
+
+### Why C1–C4 (Tightened) Are Still Insufficient: demo1 vs mexss
 
 demo1 and mexss have structurally identical patterns:
 - Both are LP models
@@ -188,35 +199,33 @@ without contributing to any binding constraint.
 
 ### False Positive Risk Summary
 
-**Applying C1–C4 to all currently-solving models would incorrectly exclude 10 optimization
-variables across 3 models (demo1, himmel11, house), breaking these models.** The test suite
-would catch these regressions automatically (solve tests for demo1, himmel11, house are in the
-pipeline), but the false exclusions would still produce wrong MCP formulations.
+**With tightened C3 (requiring v appear in E_obj), applying C1–C4 to all currently-solving
+models would incorrectly exclude 4 optimization variables in demo1, breaking that model.**
+himmel11 and house are safe (their candidate variables fail tightened C3). The test suite
+would catch the demo1 regression automatically (pipeline solve test), but the false exclusion
+would still produce a wrong MCP formulation. C5 is still required to distinguish demo1 from
+mexss.
 
 ---
 
 ## 5. Conservative vs. Aggressive Heuristic Recommendation
 
-### Option A: Aggressive (C1–C4 only)
-Detect and exclude any variable passing all four structural criteria.
+### Option A: Aggressive (C1–C4 with original C3)
+Detect and exclude any variable passing all four structural criteria (C3 allows variables
+that appear in no other equation).
 
 - **Pros:** Simple, statically computable, O(E·V) cost, ~50 lines of code.
-- **Cons:** **High false positive risk.** Would break demo1, himmel11, house. Not safe to implement without additional guards.
-- **Verdict:** ❌ Do not implement as-is.
+- **Cons:** **High false positive risk.** Would break demo1, himmel11, house. Not safe.
+- **Verdict:** ❌ Do not implement.
 
-### Option B: Conservative (C1–C4 + explicit allowlist)
-Apply C1–C4 but only exclude variables that appear exclusively in the **top-level**
-objective-decomposition chain — specifically, variables whose only non-defining appearance
-is in an equation that is itself directly paired with the objective variable in the MCP
-(`E_obj.objvar`), AND where `E_obj` is the *direct* parent (no intermediate chain).
+### Option B: C1–C4 with tightened C3 (requires v appear in E_obj)
+Apply C1–C4 with the revised C3: v must appear in E_obj (not just "appears nowhere else").
 
-- **Pros:** Correctly handles mexss pattern. Avoids himmel11 (g2/g3/g4 don't appear in
-  any other equation at all — they would need to fail C3 via a different logic).
-- **Cons:** himmel11's `g2/g3/g4` pass C3 (zero other references), so they would still be
-  incorrectly excluded. Need to add: if a variable appears in **no** equation other than its
-  own defining equation, it is NOT an accounting variable (it's likely an intermediate/auxiliary
-  variable used by the solver).
-- **Verdict:** ⚠️ Partially viable. Requires refinement.
+- **Pros:** Correctly handles mexss pattern. himmel11 and house are safe (vars fail tightened C3).
+  Reduces false positive set from 3 models to 1.
+- **Cons:** demo1 still a false positive — its accounting vars appear in `income` (E_obj) just
+  like mexss vars appear in `obj`. C5 is still required to distinguish the two cases.
+- **Verdict:** ⚠️ Better, but still insufficient without C5.
 
 ### Option C: Deferred to Sprint 21 (Recommended)
 Do not implement accounting variable detection in Sprint 20. Instead:
@@ -318,9 +327,11 @@ himmel11, house) have the same structural pattern and would be affected by any i
 Full corpus count not computed due to scan timeout.
 
 ### Unknown 2.4: False Positive Risk
-**VERIFIED — HIGH RISK.** Applying C1–C4 naively would incorrectly exclude 10 variables across
-3 currently-solving models. The test suite (pipeline solve tests) would catch these regressions,
-but the regressions would occur. Safe implementation requires C5.
+**VERIFIED — MODERATE RISK.** With the original C3, applying C1–C4 would incorrectly exclude
+10 variables across 3 currently-solving models (demo1, himmel11, house). With tightened C3
+(requiring v appear in E_obj), only demo1 (4 vars) remains a false positive. The test suite
+(pipeline solve tests) would catch regressions automatically. Safe implementation requires C5
+to distinguish demo1 from mexss.
 
 ---
 
