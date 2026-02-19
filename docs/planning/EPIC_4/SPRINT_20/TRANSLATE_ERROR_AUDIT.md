@@ -31,8 +31,8 @@ Status JSON showed 5 `internal_error` models. Re-running confirms only **2 remai
 
 | Model | File | Exception | Function | Root Cause | S20 Fixable? |
 |-------|------|-----------|----------|------------|-------------|
-| Max Min Location | `maxmin.gms` | `ValueError` | `_diff_smin` (derivative_rules.py:1216) | smin aggregation form: `smin(set, expr)` uses 3 AST args; AD rule expects 2-arg scalar `smin(a,b)` | **Deferred** |
-| Beta Distribution MLE | `mlbeta.gms` | `ValueError` | `_diff_call` (derivative_rules.py:595) | `loggamma(x)` derivative requires digamma/ψ function unavailable in GAMS | **Deferred** |
+| maxmin (Max Min Location) | `maxmin.gms` | `ValueError` | `_diff_smin` (derivative_rules.py:1216) | smin aggregation form: `smin(set, expr)` uses 3 AST args; AD rule expects 2-arg scalar `smin(a,b)` | **Deferred** |
+| mlbeta (Beta Distribution MLE) | `mlbeta.gms` | `ValueError` | `_diff_call` (derivative_rules.py:595) | `loggamma(x)` derivative requires digamma/ψ function unavailable in GAMS | **Deferred** |
 
 ### Models That Were Stale in Status JSON (Now Fixed)
 
@@ -156,27 +156,28 @@ line. The preprocessor's line-based parsing misidentifies the next line as the e
 
 ### Complete model_no_objective_def Model List
 
-| Model | File | $if Pattern | Solve Statement |
-|-------|------|-------------|-----------------|
-| Shape optimization cam | `camshape.gms` | `$if set workSpace` | `solve camshape using nlp maximizing area` |
-| Catalyst Mixing | `catmix.gms` | `$if set workSpace` | `solve catmix minimizing obj using nlp` |
-| Hanging Chain | `chain.gms` | `$if set workSpace` | `solve chain using nlp minimizing energy` |
-| ClearLake exercise | `clearlak.gms` | `$if set noscenred $goTo` | `solve mincost using lp min ec` |
-| Dantzig Wolfe | `danwolfe.gms` | `$if set` block | `solve master using lp minimizing z` (in loop) |
-| Electrons on sphere | `elec.gms` | (no `$if` before solve) | `solve elec using nlp minimizing potential` |
-| Feasopt | `feasopt1.gms` | `$ifI %system.lp%` | `solve transport using lp minimizing z` |
-| Linear Multiplicative | `lmp2.gms` | (no `$if`) | `solve lmp2 minimizing obj using nlp` (doubly-nested loop) |
-| Particle steering | `lnts.gms` | `$if set workSpace` | `solve lnts using nlp minimizing tf` |
-| Parts Supply | `partssupply.gms` | `$if %uselicd%` block | `solve m maximizing Util using nlp` (in loop) |
-| Largest polygon | `polygon.gms` | `$if set workSpace` | `solve polygon using nlp maximizing polygon_area` |
-| Robot arm | `robot.gms` | `$if set workSpace` | `solve robot miniziming tf using nlp` (typo) |
-| Goddard rocket | `rocket.gms` | `$if set workSpace` | `solve rocket using nlp maximizing final_velocity` |
-| Scenario Tree | `srpchase.gms` | `$if not set DIM` + `$ifE` | `solve purchase minimizing cost using lp` |
+| Model | File | $if Bug? | $if Pattern | Solve Statement |
+|-------|------|----------|-------------|-----------------|
+| Shape optimization cam | `camshape.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve camshape using nlp maximizing area` |
+| Catalyst Mixing | `catmix.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve catmix minimizing obj using nlp` |
+| Hanging Chain | `chain.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve chain using nlp minimizing energy` |
+| ClearLake exercise | `clearlak.gms` | ✅ yes | `$if set noscenred $goTo` (unclosed, excludes solve) | `solve mincost using lp min ec` |
+| Dantzig Wolfe | `danwolfe.gms` | ✅ yes | `$if set` block (unclosed, excludes solve) | `solve master using lp minimizing z` (in loop) |
+| Electrons on sphere | `elec.gms` | ✅ yes | `$if not set np $set np 25` (line 32, unclosed — excludes everything through EOF) | `solve elec using nlp minimizing potential` |
+| Feasopt | `feasopt1.gms` | ✅ yes | `$ifI %system.lp%` variants (unclosed, excludes solve) | `solve transport using lp minimizing z` |
+| Linear Multiplicative | `lmp2.gms` | ❌ no | (no `$if`) | `solve lmp2 minimizing obj using nlp` (doubly-nested loop — different root cause) |
+| Particle steering | `lnts.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve lnts using nlp minimizing tf` |
+| Parts Supply | `partssupply.gms` | ✅ yes | `$if %uselicd%` block (unclosed, excludes solve) | `solve m maximizing Util using nlp` (in loop) |
+| Largest polygon | `polygon.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve polygon using nlp maximizing polygon_area` |
+| Robot arm | `robot.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve robot minimizing tf using nlp` (typo in source: `miniziming`) |
+| Goddard rocket | `rocket.gms` | ✅ yes | `$if set workSpace` (inline guard, line before solve) | `solve rocket using nlp maximizing final_velocity` |
+| Scenario Tree | `srpchase.gms` | ✅ yes | `$if not set DIM` + `$ifE` (unclosed, excludes solve) | `solve purchase minimizing cost using lp` |
 
 **Notes:**
-- `robot.gms` has a typo: `miniziming` instead of `minimizing` — secondary issue even after `$if` fix
-- `elec.gms` — no `$if` before solve; needs further investigation
-- `clearlak.gms`, `danwolfe.gms`, `feasopt1.gms`, `partssupply.gms`, `srpchase.gms` — more complex `$if` variants
+- **13 models** (all except lmp2) are confirmed `$if`-bug cases where `process_conditionals` eats the solve statement
+- **lmp2** is a separate issue: solve is inside a doubly-nested loop; Issue #749 only extracts from one nesting level
+- `elec.gms` has `$if not set np $set np 25` at line 32 — this unclosed inline `$if` excludes everything from line 32 through EOF, including the Model declaration and solve statement
+- `robot.gms` source has typo `miniziming`; documented above with correction in parentheses
 
 ---
 

@@ -1165,13 +1165,13 @@ Development team
 **Findings (2026-02-19):** `model_no_objective_def` is a **parse-stage** failure category (not translate-stage as assumed). Count: **14 models**. See `TRANSLATE_ERROR_AUDIT.md` Part 3.
 
 **Root cause (13 of 14 models): `process_conditionals` preprocessor bug.**
-All 13 share this pattern in the source file:
+All 13 have an unclosed `$if` directive that causes `process_conditionals` to incorrectly exclude the `solve` statement. The most common pattern (10 models) is:
 ```gams
 $if set workSpace <model>.workSpace = %workSpace%
 
 solve <model> using nlp minimizing/maximizing <var>;
 ```
-`process_conditionals` evaluates `$if set workSpace` as False, then incorrectly treats the next line (the `solve` statement) as the excluded body. This is a single-line inline `$if` directive, but the preprocessor misidentifies the following line as the guarded block.
+Other variants: `$if not set np $set np 25` (elec — unclosed, excludes everything through EOF), `$ifI` (feasopt1), `$if set noscenred $goTo` (clearlak), `$if %uselicd%` (partssupply), `$if not set DIM` + `$ifE` (srpchase). In all cases, `process_conditionals` misidentifies the inline single-line `$if` guard as an unclosed multi-line block, causing the following `solve` statement to be excluded.
 
 **Models (13 with `$if` bug):** camshape, catmix, chain, clearlak, danwolfe, elec, feasopt1, lnts, partssupply, polygon, rocket, robot, srpchase
 

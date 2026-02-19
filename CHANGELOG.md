@@ -16,9 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 True translate `internal_error` count confirmed at **2** (status JSON was stale — orani,
 prolog, ramsey now pass). Only maxmin (smin aggregation AD rule, deferred) and mlbeta
 (loggamma/digamma unavailable in GAMS, permanently infeasible) remain as genuine errors.
-Critical discovery: 14 `model_no_objective_def` failures are caused by a single preprocessor
-bug — `process_conditionals` incorrectly eats the `solve` statement after `$if set workSpace`
-inline directives. Fixing one function unblocks 13 models.
+Critical discovery: 13 of 14 `model_no_objective_def` failures share a single preprocessor
+bug — `process_conditionals` incorrectly eats the `solve` statement when an inline `$if`
+directive is misread as an unclosed multi-line block. Fixing one function unblocks 13 models.
 
 #### Planning Documents
 
