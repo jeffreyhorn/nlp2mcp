@@ -1,8 +1,8 @@
 # Sprint 20 Detailed Plan
 
 **Created:** 2026-02-19  
-**Sprint Duration:** 14 days (Day 0 – Day 14)  
-**Estimated Effort:** ~35–42 hours (~2.5–3h/day effective capacity)  
+**Sprint Duration:** 15 days (Day 0 – Day 14)  
+**Estimated Effort:** ~35–42 hours (~2.3–2.8h/day effective capacity)  
 **Risk Level:** MEDIUM  
 **Baseline:** `dc390373` — parse 112/160 (70.0%), translate 96/112 (85.7%), solve 27/96 (28.1%), match 10/27 (37.0%), tests 3,579
 
@@ -36,7 +36,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 |---|---|---|---|
 | Parse success | 112/160 (70.0%) | ≥ 127/160 (≥ 79.4%) | ≥ 132/160 (≥ 82.5%) |
 | lexer_invalid_char | 26 | ≤ 11 | ≤ 8 |
-| model_no_objective_def | 14 | ≤ 2 | 0 |
+| model_no_objective_def | 14 | ≤ 4 | ≤ 1 |
 | Translate success | 96/112 (85.7%) | ≥ 110/127 (≥ 86.6%) | — |
 | Solve success | 27 | ≥ 30 | ≥ 33 |
 | Full pipeline match | 10 | ≥ 15 | ≥ 18 |
@@ -121,7 +121,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 | End-to-end: verify camshape, catmix, chain, lnts, polygon parse | 0.5h |
 | Handle lmp2 doubly-nested loop (if time) | 0.5h |
 
-**Acceptance criteria:** model_no_objective_def ≤ 2 (down from 14); at least 10 of the 13 `$if`-bug models now parse.
+**Acceptance criteria:** model_no_objective_def ≤ 4 (down from 14); at least 11 of the 13 `$if`-bug models now parse. (Rationale: fixing "at least 11" leaves ≤ 2 from the `$if` bug + lmp2 doubly-nested + robot/other edge cases = ≤ 4 total remaining. The ≤ 2 target was inconsistent with the "at least 10 of 13" fix rate.)
 
 ### WS5: Pipeline Match — Tolerance + Inf Parameters
 **Effort:** ~3–4h
@@ -158,7 +158,9 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 | WS6: Golden-file tests | 2h | Regression guard |
 | Pipeline retest | 1.5h | Full run after each major workstream |
 | Sprint close + retrospective | 1h | Day 14 |
-| **Total** | **~35–42h** | Down from PROJECT_PLAN.md's 50–64h |
+| **Total (workstreams only)** | **~26–29h** | Excludes sprint overhead below |
+| Sprint overhead (Day 0 kickoff, Day 6 checkpoint buffer, Day 11 model validation, Days 12–13 Phase 3 + regression) | ~9–13h | Captured in day-by-day schedule |
+| **Total (full sprint)** | **~35–42h** | Down from PROJECT_PLAN.md's 50–64h |
 
 ---
 
@@ -258,7 +260,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 | Handle robot typo (`miniziming`) if needed | grammar or preprocessor | robot parses |
 | Document lmp2 (doubly-nested loop) — file issue if needed | GitHub | lmp2 deferred or fixed |
 
-**End of Day 5 criterion:** model_no_objective_def ≤ 2; ≥ 10 models newly parsing; PR merged.
+**End of Day 5 criterion:** model_no_objective_def ≤ 4; ≥ 10 models newly parsing; PR merged.
 
 ---
 
@@ -358,7 +360,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 |---|---|---|
 | Parse success | ≥ 125/160 (78.1%) | File issues for unresolved models; defer Phase 3 |
 | lexer_invalid_char | ≤ 11 | Defer J/K subcategories to Sprint 21 |
-| model_no_objective_def | ≤ 2 | File issue for remaining; defer lmp2 fix |
+| model_no_objective_def | ≤ 4 | File issue for remaining; defer lmp2 fix |
 | Full pipeline match | ≥ 15 | Check rtol; investigate recent regressions |
 | Solve success | ≥ 30 | Investigate newly-parsing models' solver failures |
 | Tests | All pass | Block on test failures |
@@ -428,7 +430,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 |---|---|---|
 | Parse success | ≥ 125/160 | Defer Phase 3 to Sprint 21 |
 | lexer_invalid_char | ≤ 11 | Defer J/K (mathopt3, dinam) to Sprint 21 |
-| model_no_objective_def | ≤ 2 | Defer lmp2 fix to Sprint 21 |
+| model_no_objective_def | ≤ 4 | Defer lmp2 fix to Sprint 21 |
 | Full pipeline match | ≥ 15 | Investigate rtol; check abel/chakra |
 | Solve success | ≥ 30 | Investigate newly-parsing models |
 | All tests pass | Yes | Block on failures |
@@ -498,7 +500,7 @@ The following unknowns were not fully resolved during prep and are flagged as op
 | WS1: `.l` emission | circle solves (PATH model_status=1); abel+chakra objective values match reference; `l_expr`/`l_expr_map` fields tested |
 | WS2: IndexOffset | sparta, tabora, otpop all translate; mine, pindyck parse; xfail addressed |
 | WS3: Lexer | lexer_invalid_char ≤ 11; no regression in existing 112 parse successes |
-| WS4: model_no_objective_def | ≤ 2 remaining; ≥ 10 of 13 `$if`-bug models now parse |
+| WS4: model_no_objective_def | ≤ 4 remaining; ≥ 11 of 13 `$if`-bug models now parse |
 | WS5: Match/Tolerance | Full pipeline match ≥ 15; chem/dispatch/hhmax/mhw4d/mhw4dx all match; codegen_numerical_error ≤ 1 |
 | WS6: Regression tests | ≥ 5 solve-level regression tests for matching models; all pass in CI |
 
@@ -506,7 +508,7 @@ The following unknowns were not fully resolved during prep and are flagged as op
 
 - Parse success: ≥ 127/160 (≥ 79.4%)
 - lexer_invalid_char: ≤ 11
-- model_no_objective_def: ≤ 2
+- model_no_objective_def: ≤ 4
 - Translate success: ≥ 110/127 attempted
 - Solve success: ≥ 30
 - Full pipeline match: ≥ 15
