@@ -320,6 +320,7 @@ Development team
 - All four pass all three originally-proposed criteria (C1, C2, C3)
 - The same structural pattern (original, non-tightened C1–C3) fires on **demo1** (4 vars), **himmel11** (3 vars), and **house** (3 vars) — all currently solving; under the originally proposed criteria these are false positives (later tightened C3 correctly treats **himmel11** and **house** as safe)
 - See `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` §1–§4 for full characterization
+- These findings **disprove the original Unknown 2.1 assumption** that mexss accounting variables have "no contribution to the objective function"; instead, they participate in the objective **only via decomposition through auxiliary equations** in the objective-defining equation (`obj`). The correct framing is: they are definitional identities that *decompose* the objective variable — not variables that are independent of the objective.
 
 ---
 

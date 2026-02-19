@@ -135,8 +135,12 @@ infeasibility because the stationarity equations, while forcing specific multipl
 consistent with the rest of the system. The mexss failure is caused by over-constraining the
 multipliers for the *optimization variables* (`u`, `v`, `e`), not the accounting variables.
 
-*Current assessment:* Static C5 check requires verifying consistency of the reduced system, which
-is not feasible from static IR inspection alone.
+*Current assessment:* The structural C5 definition above (chain reachability) is a static,
+graph-theoretic property. However, what actually distinguishes mexss from demo1 is not chain
+structure (both pass) but **multiplier consistency**: whether the forced multiplier values create
+a contradiction with the complementarity conditions in the full KKT system. This multiplier-
+consistency sanity check (distinct from the structural chain criterion) requires verifying
+consistency of the reduced system, which is not feasible from static IR inspection alone.
 
 ---
 
