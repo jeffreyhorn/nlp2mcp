@@ -451,7 +451,20 @@ If `$` conditions are inline (not equation-level), propagation is much harder �
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+⚠️ Status: PARTIAL — full verification requires running chenery.gms
+
+**Findings (2026-02-19):** From `docs/issues/ISSUE_763_chenery-mcp-division-by-zero-del-parameter.md`.
+
+**Condition form: equation-level** (not inline). The `dvv` equation uses:
+```gams
+dvv(i)$(sig(i) <> 0)..
+    vv(i) =e= (pi*(1 - del(i))/del(i))**(-rho(i)/(1 + rho(i)));
+```
+The `$` guard `$(sig(i) <> 0)` is on the equation head, not wrapping the division sub-expression. The denominator `del(i)` is unguarded inside the equation body.
+
+**Error:** The generated `stat_pi` equation omits any guard against `del(i) = 0`, producing GAMS `EXECERROR = 1` (division by zero) at runtime. The `nu_dvv.fx(i)$(not (sig(i) <> 0)) = 0` fix correctly zeros out multipliers for excluded instances but does not prevent expression evaluation.
+
+**Assumption was CORRECT:** The `$` condition is equation-level. This is the easier case (~6–8h, not ~12–16h) — the condition already exists in the IR as `EquationDef.condition`; the fix requires threading it through the stationarity equation assembly to guard the derivative sum.
 
 ---
 
@@ -485,7 +498,23 @@ If the AD system has no concept of condition tracking, implementing condition pr
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+⚠️ Status: PARTIAL — full verification requires running chenery.gms
+
+**Findings (2026-02-19):** From `grep -n "DollarConditional\|condition\|dollar" src/ad/derivative_rules.py`.
+
+**Yes — the AD system has existing DollarConditional support.** `derivative_rules.py` line 154 dispatches `DollarConditional` nodes to `_diff_dollar_conditional` (line 1334), which implements:
+
+```
+d/dx[f$g] = (df/dx)$g
+```
+
+The condition `g` is preserved unchanged in the derivative — this correctly handles inline `$` conditions within expressions (e.g., `x(i)$(cond(i))`).
+
+**Gap for chenery:** The existing mechanism handles `DollarConditional` *within* an expression. The chenery problem is different: the `$` condition is on the **equation head** (`EquationDef.condition`), not on an expression node. The stationarity equation assembly in `stationarity.py` already reads `eq_def.condition` (line 95) for `_collect_referenced_variable_names`, but the derivative sum emitted for `stat_pi` does not inherit the source equation's condition as a guard.
+
+**Existing pattern for condition propagation:** `_find_variable_access_condition` (stationarity.py line 121) extracts common dollar conditions from sum aggregations. This is a narrower concept (per-variable access condition), not equation-level condition inheritance. The IndexOffset `_substitute_index` / `_apply_index_substitution` pattern (Sprint 19 PR #779) does NOT provide a direct analogue — it transforms index expressions, not conditions.
+
+**Assumption was PARTIALLY CORRECT:** The AD system has condition handling, but for expression-level `DollarConditional` nodes, not for equation-level condition inheritance. The fix requires a new code path in stationarity assembly to thread `EquationDef.condition` into the generated derivative sum guard — an extension of existing code, not a new IR node type.
 
 ---
 
