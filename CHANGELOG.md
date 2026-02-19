@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Sprint 20 PLAN.md created with 14-day schedule, 6 workstreams, and 2 checkpoints.
+Sprint 20 PLAN.md created with 15-day schedule (Day 0–14), 6 workstreams, and 2 checkpoints.
 Revised total effort ~35–42h (down from PROJECT_PLAN.md's 50–64h). Key scope changes:
 IndexOffset workstream reduced to ~3h (only `to_gams_string()` gaps remain); translate
 internal_error workstream eliminated (2 genuine errors, both architecturally deferred);

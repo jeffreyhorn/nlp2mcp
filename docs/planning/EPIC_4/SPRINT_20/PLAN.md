@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1) `.l` initialization emission to warm-start PATH for circle and other models, (2) IndexOffset `to_gams_string()` extensions for sparta/tabora/otpop, (3) lexer grammar work targeting subcategories L, M, H, A, and E (~15 new parse successes expected), and (4) the `model_no_objective_def` preprocessor fix (~13 new parse successes). Accounting variable detection (mexss/#764) and AD condition propagation (chenery/#763) are deferred to Sprint 21.
+Sprint 20 focuses on four primary high-ROI workstreams identified by the prep phase (WS1–WS4), with two additional supporting workstreams (WS5–WS6) defined below. The primary workstreams are: (1) `.l` initialization emission to warm-start PATH for circle and other models, (2) IndexOffset `to_gams_string()` extensions for sparta/tabora/otpop, (3) lexer grammar work targeting subcategories L, M, H, A, and E (~15 new parse successes expected), and (4) the `model_no_objective_def` preprocessor fix (~13 new parse successes). Accounting variable detection (mexss/#764) and AD condition propagation (chenery/#763) are deferred to Sprint 21.
 
 **Revised total effort from prep findings: ~35–42h** (down from PROJECT_PLAN.md's 50–64h estimate).
 
@@ -164,7 +164,7 @@ Sprint 20 focuses on four high-ROI workstreams identified by the prep phase: (1)
 
 ---
 
-## 14-Day Schedule
+## 15-Day Schedule
 
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
@@ -474,9 +474,9 @@ The following unknowns were not fully resolved during prep and are flagged as op
 - **Status:** 4 models fail because `±Inf` parameter values are not handled. Fix is straightforward (~2h) but not yet implemented.
 - **Sprint 20 decision:** IN SCOPE (WS5 Part B, Day 10).
 
-### Risk 4: Unknowns 4.1, 5.x, 7.x Still Marked INCOMPLETE in KNOWN_UNKNOWNS.md
-- **Status:** These were verified by Tasks 3, 6, and 5 respectively — the prep task results are documented in their respective design files. The KNOWN_UNKNOWNS.md entries were not retroactively updated.
-- **Sprint 20 action:** Update KNOWN_UNKNOWNS.md verification results during Day 0 sprint setup.
+### Risk 4: Stale KNOWN_UNKNOWNS.md Status for Previously INCOMPLETE Unknowns
+- **Status:** Unknowns 4.1, 5.x, and 7.x have now been verified (via Tasks 3, 6, and 5 respectively), and their `Status` fields in KNOWN_UNKNOWNS.md have been updated in this PR. The only remaining `Status: INCOMPLETE` entry is Unknown 6.4, which is explicitly deferred.
+- **Sprint 20 action:** None beyond normal monitoring — KNOWN_UNKNOWNS.md already reflects the current verification state.
 
 ---
 
