@@ -32,7 +32,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 | 6 | ✅ Investigate Full Pipeline Match Divergence | High | 2–3h | Task 1 | Full pipeline match rate |
 | 7 | ✅ Design Accounting Variable Detection (#764) | Medium | 2–3h | Tasks 1, 5 | Deferred Sprint 19 (#764) |
 | 8 | ✅ Review Sprint 19 Retrospective Action Items | Medium | 1h | None | Process improvement |
-| 9 | Snapshot Baseline Metrics | Medium | 1h | None | All workstreams |
+| 9 | ✅ Snapshot Baseline Metrics | Medium | 1h | None | All workstreams |
 | 10 | Plan Sprint 20 Detailed Schedule | Critical | 3–4h | All tasks | Sprint planning |
 
 **Total Estimated Time:** ~23–29 hours (~3–4 working days)
@@ -710,13 +710,13 @@ grep -l "smoke.test\|denominator\|validation.*Day 10\|ε.*reference" docs/planni
 
 ## Task 9: Snapshot Baseline Metrics
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 1 hour
 **Deadline:** Before Sprint 20 Day 1
 **Owner:** Development team
 **Dependencies:** None
-**Unknowns Verified:** 4.2 (confirms 27 count)
+**Unknowns Verified:** 4.2 (count is 26, not 27 — one silently fixed)
 
 ### Objective
 
@@ -763,11 +763,12 @@ Any changes made during prep tasks (if any code changes are made) could shift th
 
 ### Changes
 
-*To be completed*
+- **`docs/planning/EPIC_4/SPRINT_20/BASELINE_METRICS.md`** (created): timestamped snapshot with all pipeline metrics, explicit denominator, excluded model list, and comparison to Sprint 19 final state
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknown 4.2 → ⚠️ WRONG — count is 26 (not 27), one model silently fixed
 
 ### Result
 
-*To be completed*
+Sprint 20 baseline at commit `dc390373` (2026-02-19): **parse 112/160 (70.0%)**, lexer_invalid_char 26, internal_error (parse) 2, translate 96/112 (85.7%), solve 27/96 (28.1%), full pipeline match 10/27 (37.0%), tests 3,579. Total catalog 219; tested 160; excluded 59 (29 LP, 26 NLP, 4 QCP).
 
 ### Verification
 
@@ -783,12 +784,12 @@ grep "Parse\|Translate\|Solve\|Test count\|Baseline date" docs/planning/EPIC_4/S
 
 ### Acceptance Criteria
 
-- [ ] Full pipeline retest completed after all code-impacting prep tasks
-- [ ] Baseline metrics recorded with date and git commit SHA
-- [ ] Denominator explicitly documented (tested count and excluded count, with reasons)
-- [ ] Metrics match Sprint 19 final state (or discrepancy explained)
-- [ ] All excluded models listed individually with exclusion reason
-- [ ] Unknown 4.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Full pipeline retest completed after all code-impacting prep tasks
+- [x] Baseline metrics recorded with date and git commit SHA
+- [x] Denominator explicitly documented (tested count and excluded count, with reasons)
+- [x] Metrics match Sprint 19 final state (or discrepancy explained)
+- [x] All excluded models listed individually with exclusion reason
+- [x] Unknown 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -819,7 +820,7 @@ PROJECT_PLAN.md Sprint 20 scope (before prep revisions):
 - Sprint 19 deferred items (5 priorities): ~24–34h total
 - **Total PROJECT_PLAN.md estimate:** 26–30h + 24–34h = ~50–64h
 
-This is likely a 2-week sprint (Weeks 5–6, ~15 working days). The actual scope must be right-sized based on prep task findings.
+This is likely a 3-week sprint (Weeks 5–7, ~21 working days). The actual scope must be right-sized based on prep task findings.
 
 ### What Needs to Be Done
 

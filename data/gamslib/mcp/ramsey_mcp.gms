@@ -16,19 +16,34 @@ $offText
 * ============================================
 
 Sets
-    i /eff, 'inf'/
+    t /'1990', '1991', '1992', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000'/
+    tfirst(t)
+    tlast(t)
 ;
 
-Alias(i, j);
-
 Parameters
-    theta(i) /eff 0.2, 'inf' 0.3/
-    p(i) /eff 0.2, 'inf' 0.8/
+    beta(t)
+    al(t)
 ;
 
 Scalars
-    ru /0.0/
+    bet /0.95/
+    b /0.25/
+    g /0.03/
+    ac /0.15/
+    k0 /3.0/
+    i0 /0.05/
+    c0 /0.95/
+    a /0.0/
 ;
+
+tfirst(t) = 1$(ord(t) = 1);
+tlast(t) = 1$(ord(t) = card(t));
+
+a = (c0 + i0) / k0 ** b;
+beta(t) = bet ** ord(t);
+beta(tlast) = beta(tlast) / (1 - bet);
+al(t) = a * (1 + g) ** ((1 - b) * (ord(t) - 1));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -42,17 +57,19 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    Util
-    nu_rev(i)
+    k(t)
+    c(t)
+    i(t)
+    utility
+    nu_cc(t)
+    nu_kk(t)
 ;
 
 Positive Variables
-    x(i)
-    b(i)
-    w(i)
-    lam_pc(i)
-    lam_ic(i,j)
-    piL_x(i)
+    lam_tc(t)
+    piL_k(t)
+    piL_c(t)
+    piL_i(t)
 ;
 
 * ============================================
@@ -62,14 +79,40 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x.l("eff") = 0.0001;
-x.l("inf") = 0.0001;
-x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
-b.l(i) = 1;
-w.l(i) = 1;
+k.l("1990") = 3.0;
+k.l("1991") = 3.0;
+k.l("1992") = 3.0;
+k.l("1993") = 3.0;
+k.l("1994") = 3.0;
+k.l("1995") = 3.0;
+k.l("1996") = 3.0;
+k.l("1997") = 3.0;
+k.l("1998") = 3.0;
+k.l("1999") = 3.0;
+k.l("2000") = 3.0;
+c.l("1990") = 0.95;
+c.l("1991") = 0.95;
+c.l("1992") = 0.95;
+c.l("1993") = 0.95;
+c.l("1994") = 0.95;
+c.l("1995") = 0.95;
+c.l("1996") = 0.95;
+c.l("1997") = 0.95;
+c.l("1998") = 0.95;
+c.l("1999") = 0.95;
+c.l("2000") = 0.95;
+i.l("1990") = 0.05;
+i.l("1991") = 0.05;
+i.l("1992") = 0.05;
+i.l("1993") = 0.05;
+i.l("1994") = 0.05;
+i.l("1995") = 0.05;
+i.l("1996") = 0.05;
+i.l("1997") = 0.05;
+i.l("1998") = 0.05;
+i.l("1999") = 0.05;
+i.l("2000") = 0.05;
 
 * ============================================
 * Equations
@@ -80,15 +123,16 @@ w.l(i) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_b(i)
-    stat_util
-    stat_w(i)
-    stat_x(i)
-    comp_ic(i,j)
-    comp_pc(i)
-    comp_lo_x(i)
-    obj
-    rev(i)
+    stat_c(t)
+    stat_i(t)
+    stat_k(t)
+    comp_tc(t)
+    comp_lo_c(t)
+    comp_lo_i(t)
+    comp_lo_k(t)
+    cc(t)
+    kk(t)
+    util
 ;
 
 * ============================================
@@ -96,22 +140,32 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
-stat_util.. 0 =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) =E= 0;
-stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, theta(i) * lam_ic(i,j)) - piL_x(i) =E= 0;
+stat_c(t).. ((-1) * (beta(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
+stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) + sum(tlast, (-1) * lam_tc(tlast)) - piL_i(t) =E= 0;
+stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + sum(tlast, g * lam_tc(tlast)) - piL_k(t) =E= 0;
 
 * Inequality complementarity equations
-comp_ic(i,j).. w(i) - theta(i) * x(i) - (w(j) - theta(i) * x(j)) =G= 0;
-comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
+comp_tc(tlast).. ((-1) * (g * k(tlast) - i(tlast))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_x(i).. x(i) - 0.0001 =G= 0;
+comp_lo_c(t).. c(t) - 0.95 =G= 0;
+comp_lo_i(t).. i(t) - 0.05 =G= 0;
+comp_lo_k(t).. k(t) - 3 =G= 0;
 
 * Original equality equations
-obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
-rev(i).. b(i) =E= x(i) ** 0.5;
+cc(t).. al(t) * k(t) ** b =E= c(t) + i(t);
+kk(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= k(t) + i(t);
+util.. utility =E= sum(t, beta(t) * log(c(t)));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_kk.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -127,15 +181,16 @@ rev(i).. b(i) =E= x(i) ** 0.5;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_b.b,
-    stat_util.util,
-    stat_w.w,
-    stat_x.x,
-    comp_ic.lam_ic,
-    comp_pc.lam_pc,
-    obj.Util,
-    rev.nu_rev,
-    comp_lo_x.piL_x
+    stat_c.c,
+    stat_i.i,
+    stat_k.k,
+    comp_tc.lam_tc,
+    cc.nu_cc,
+    kk.nu_kk,
+    util.utility,
+    comp_lo_c.piL_c,
+    comp_lo_i.piL_i,
+    comp_lo_k.piL_k
 /;
 
 * ============================================
@@ -145,5 +200,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = Util.l;
+nlp2mcp_obj_val = utility.l;
 Display nlp2mcp_obj_val;

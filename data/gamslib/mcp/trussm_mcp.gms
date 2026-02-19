@@ -95,10 +95,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(i,k).. 0 + 0 * nu_deftk(i,k) + sum(j, b(j,i) * nu_stiffness(j,k)) + 2 * s(i,k) * lam_volumeeq(i,k) + 0 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
-stat_sigma(i,k).. 0 + 0 * nu_deftk(i,k) + sum(j, 0 * nu_stiffness(j,k)) + ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + 1 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
-stat_t(i).. 0 + sum(k, (-1) * nu_deftk(i,k)) + sum((j,k), 0 * nu_stiffness(j,k)) + sum(k, 0 * lam_volumeeq(i,k)) + sum(k, 0 * lam_reseq(k)) + 1 * lam_trusscomp =E= 0;
-stat_tk(i,k).. 0 + 1 * nu_deftk(i,k) + sum(j, 0 * nu_stiffness(j,k)) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) + 0 * lam_reseq(k) + 0 * lam_trusscomp =E= 0;
+stat_s(i,k).. sum(j, b(j,i) * nu_stiffness(j,k)) + 2 * s(i,k) * lam_volumeeq(i,k) =E= 0;
+stat_sigma(i,k).. ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + lam_reseq(k) =E= 0;
+stat_t(i).. sum(k, (-1) * nu_deftk(i,k)) + lam_trusscomp =E= 0;
+stat_tk(i,k).. nu_deftk(i,k) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) =E= 0;
 
 * Inequality complementarity equations
 comp_reseq(k).. ((-1) * (sum(i, sigma(i,k)) - tau)) =G= 0;
@@ -140,3 +140,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = tau.l;
+Display nlp2mcp_obj_val;

@@ -15,6 +15,24 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /boston, chicago, dallas, 'kansas-cty', losangeles, memphis, portland, 'salt-lake', 'wash-dc'/
+    r(i,i)
+;
+
+Alias(i, ip);
+Alias(i, ipp);
+
+Parameters
+    darc(i,ip)
+    uarc(i,ip) /boston.chicago 58.0, boston.'wash-dc' 25.0, chicago.'kansas-cty' 29.0, chicago.memphis 32.0, chicago.portland 130.0, chicago.'salt-lake' 85.0, dallas.'kansas-cty' 29.0, dallas.losangeles 85.0, dallas.memphis 28.0, dallas.'salt-lake' 75.0, 'kansas-cty'.memphis 27.0, 'kansas-cty'.'salt-lake' 66.0, 'kansas-cty'.'wash-dc' 62.0, losangeles.portland 58.0, losangeles.'salt-lake' 43.0, memphis.'wash-dc' 53.0, portland.'salt-lake' 48.0/
+    sroute(i,ip)
+;
+
+r(i,ip) = 1$darc(i,ip);
+
+darc(i,ip) = max(uarc(i,ip), uarc(ip,i));
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,16 +45,11 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    f
-    x1
-    x2
+    cost
 ;
 
 Positive Variables
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(i,ip,ipp)
 ;
 
 * ============================================
@@ -46,9 +59,9 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables are set to 1.
 
-x1.l = -1.2;
-x2.l = 1.0;
+x.l(i,ip,ipp) = 1;
 
 * ============================================
 * Equations
@@ -59,13 +72,8 @@ x2.l = 1.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    func
+    stat_x(i,ip,ipp)
+    cd
 ;
 
 * ============================================
@@ -73,19 +81,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 200 * (x2 - sqr(x1)) * ((-1) * (2 * x1)) + (-2) * (1 - x1) - piL_x1 + piU_x1 =E= 0;
-stat_x2.. 100 * 2 * (x2 - sqr(x1)) - piL_x2 + piU_x2 =E= 0;
+stat_x(i,ip,ipp).. darc(i,ip) =E= 0;
 
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 10 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
-comp_up_x2.. 10 - x2 =G= 0;
+* Inequality complementarity equations
 
 * Original equality equations
-func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
+cd.. cost =E= sum((i,ip,ipp), darc(ip,ipp) * x(i,ip,ipp));
 
 
 * ============================================
@@ -102,13 +103,8 @@ func.. f =E= 100 * sqr(x2 - sqr(x1)) + sqr(1 - x1);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    func.f,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_x.x,
+    cd.cost
 /;
 
 * ============================================
@@ -118,5 +114,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = f.l;
+nlp2mcp_obj_val = cost.l;
 Display nlp2mcp_obj_val;

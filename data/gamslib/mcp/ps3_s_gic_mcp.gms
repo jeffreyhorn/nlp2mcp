@@ -97,10 +97,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. ((-1) * p(i)) + 1 * nu_rev(i) + 0 * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("0") + 0 * nu_rev("1") + 0 * nu_rev("2") + 0 * lam_pc("0") + 0 * lam_pc("1") + 0 * lam_pc("2") + 0 * lam_ic("0","0") + 0 * lam_ic("0","1") + 0 * lam_ic("0","2") + 0 * lam_ic("1","0") + 0 * lam_ic("1","1") + 0 * lam_ic("1","2") + 0 * lam_ic("2","0") + 0 * lam_ic("2","1") + 0 * lam_ic("2","2") =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) + 0 * nu_rev(i) + (-1) * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, 0 * lam_ic(i,j)) - piL_x(i) =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
+stat_util.. 0 =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) =E= 0;
+stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + sum(j, theta(i) * lam_ic(i,j)) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_ic(i,j).. w(i) - theta(i) * x(i) - (w(j) - theta(i) * x(j)) =G= 0;
@@ -110,7 +110,7 @@ comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, p(i) * (b(i) - w(i)));
+obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
 rev(i).. b(i) =E= x(i) ** 0.5;
 
 
@@ -144,3 +144,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = Util.l;
+Display nlp2mcp_obj_val;

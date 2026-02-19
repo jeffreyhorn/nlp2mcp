@@ -88,7 +88,7 @@ Equations
 
 * Stationarity equations
 stat_s(r,tt)$(t(tt)).. misc("storage-c",r) - nu_sb(r,tt) =E= 0;
-stat_x(p,tt)$(t(tt)).. ((-1) * c(p,tt)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) =E= 0;
+stat_x(p,tt)$(t(tt)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;

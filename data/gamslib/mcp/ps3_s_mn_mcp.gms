@@ -99,10 +99,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. ((-1) * p(i)) + 1 * nu_rev(i) + 0 * lam_pc(i) + 0 * lam_licd(i) + 0 * lam_mn(i) =E= 0;
-stat_util.. ((-1) * sum(i, 0)) + 0 * nu_rev("0") + 0 * nu_rev("1") + 0 * nu_rev("2") + 0 * lam_pc("0") + 0 * lam_pc("1") + 0 * lam_pc("2") + 0 * lam_licd("0") + 0 * lam_licd("1") + 0 * lam_licd("2") + 0 * lam_mn("0") + 0 * lam_mn("1") + 0 * lam_mn("2") =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) + 0 * nu_rev(i) + (-1) * lam_pc(i) + (-1) * lam_licd(i) + 0 * lam_mn(i) =E= 0;
-stat_x(i).. 0 + ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (-1) * lam_mn(i) - piL_x(i) =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
+stat_util.. 0 =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) - lam_mn(i) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;
@@ -113,7 +113,7 @@ comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-obj.. Util =E= sum(i, p(i) * (b(i) - w(i)));
+obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
 rev(i).. b(i) =E= x(i) ** 0.5;
 
 
@@ -148,3 +148,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = Util.l;
+Display nlp2mcp_obj_val;

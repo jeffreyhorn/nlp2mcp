@@ -42,10 +42,10 @@ Parameters
 
 ku(k) = ord(k) < card(k);
 ki(k) = ord(k) = 1;
-kt(k) = not ku(k);
+kt(k) = (not ku(k));
 
-xtilde(n,k) = xinit(n) * power(1.0075, ord(k) - 1);
-utilde(m,k) = uinit(m) * power(1.0075, ord(k) - 1);
+xtilde(n,k) = xinit(n) * 1.0075 ** (ord(k) - 1);
+utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
 w(n,np,ku) = wk(n,np);
 w(n,np,kt) = 100 * wk(n,np);
 
@@ -86,19 +86,24 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(k, k__);
-Alias(m, m__);
-
 * Stationarity equations
-stat_u(m,k).. 0.5 * sum((k__,n,np), 0) + 0.5 * sum((ku,m__,mp), 0) + sum(n, ((-1) * (sum(np, 0) + b(n,m))) * nu_stateq(n,k)) =E= 0;
-stat_x(n,k).. 0.5 * sum(np, 0) + 0.5 * sum((ku,m,mp), 0) + ((-1) * (a(n,np) + sum(m, 0))) * nu_stateq(n,k) =E= 0;
+stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
+stat_x(n,k).. ((-1) * a(n,n)) * nu_stateq(n,k) =E= 0;
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
 stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+u.fx(m,k)$(not (ku(k))) = 0;
+nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -125,3 +130,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = j.l;
+Display nlp2mcp_obj_val;
