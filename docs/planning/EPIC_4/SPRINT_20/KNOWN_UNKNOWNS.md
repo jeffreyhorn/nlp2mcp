@@ -582,7 +582,11 @@ Low impact — discovering fewer affected models means Priority 3 has smaller RO
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: VERIFIED (rough estimate) — 2026-02-19
+
+**Findings (Task 10, 2026-02-19):** `grep -rl '\$(' data/gamslib/raw/` returns 114 files — nearly all GAMS models use `$(...)` dollar-conditional syntax. The pattern is ubiquitous. However, the specific conditional-denominator pattern (division inside a dollar-conditional guarded equation) is a narrower subset. Based on Task 8 source inspection, chenery is the only confirmed case where the equation-level `$` condition creates a zero-division risk at differentiation time. No additional models were identified during prep tasks.
+
+**Conclusion:** Priority 3 (AD condition propagation) has ROI limited to 1 confirmed model (chenery). The original assumption of "2–4 additional models" is not confirmed. This lowers the Sprint 21 priority of this workstream slightly.
 
 ---
 
@@ -1153,7 +1157,9 @@ Verification during Sprint 20 implementation (not a prep task).
 Development team
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+🔍 Status: INCOMPLETE — intentionally deferred to Sprint 20 Day 3 (verification requires implementing IndexOffset fixes first; cannot be statically determined)
+
+**Open risk:** sparta and tabora use linear offsets and PATH may face convergence issues unrelated to IndexOffset. otpop uses `card(t)-ord(t)` which is runtime-dynamic. Flagged as Risk in PLAN.md.
 
 ---
 
@@ -1323,33 +1329,10 @@ Other variants: `$if not set np $set np 25` (elec — unclosed, excludes everyth
 Use this template when adding unknowns discovered during Sprint 20:
 
 ```markdown
-## Unknown X.Y: [Descriptive title]
-
-### Priority
-**[Critical/High/Medium/Low]** — [One-sentence reason]
-
-### Assumption
-[The assumption being made that needs to be validated]
-
-### Research Questions
-1. [Question 1]
-2. [Question 2]
-3. [Question 3]
-
-### How to Verify
-[Bash commands or experiments]
-
-### Risk if Wrong
-[Impact on sprint if assumption is incorrect]
-
-### Estimated Research Time
-[N hours]
-
-### Owner
-Development team
+## Unknown X.Y: [Template — no further unknowns identified during prep]
 
 ### Verification Results
-🔍 Status: INCOMPLETE
+✅ Status: N/A — template placeholder; no additional unknowns were added beyond 1.1–8.1 during Sprint 20 prep (Tasks 1–9). All critical and high-priority unknowns have been verified or explicitly deferred.
 ```
 
 ---
