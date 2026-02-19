@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 1: Create Known Unknowns List - 2026-02-18
+
+**Branch:** `planning/sprint20-prep`
+
+#### Summary
+
+Completed Sprint 20 Prep Task 1: documented 26 unknowns across 8 categories for Sprint 20
+planning. All four Sprint 20 workstreams covered (IndexOffset end-to-end, deferred Sprint 19
+solver blockers, remaining lexer_invalid_char, full pipeline match rate). Task-to-Unknown
+mapping appendix links each prep task (2–10) to its specific unknowns. Priority distribution:
+5 Critical, 10 High, 10 Medium, 1 Low. Estimated research time: 29–37 hours across Tasks 2–9.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (created):
+  26 unknowns across 8 categories:
+  - Category 1 (Variable Initialization Emission): 4 unknowns (1.1–1.4) — `.l` IR capture,
+    PATH convergence impact, emit prolog structure, corpus-wide `.l` usage
+  - Category 2 (Accounting Variable Detection): 4 unknowns (2.1–2.4) — mexss pattern,
+    static analysis feasibility, model count, false positive risk
+  - Category 3 (AD Condition Propagation): 3 unknowns (3.1–3.3) — chenery `$` condition form,
+    existing AD condition mechanism, affected model count
+  - Category 4 (Remaining lexer_invalid_char Models): 4 unknowns (4.1–4.4) — subcategory
+    distribution, silent fixes, Subcategory G effort, Subcategory D / IndexOffset overlap
+  - Category 5 (Full Pipeline Match Rate): 4 unknowns (5.1–5.4) — primary divergence cause,
+    tolerance calibration, `.scale` usage, regression risk for 9 matching models
+  - Category 6 (IndexOffset Implementation): 4 unknowns (6.1–6.4) — per-model failure stage,
+    xfail test scope, circular lead/lag emit support, post-fix solve expectations
+  - Category 7 (Translation Internal Error Fixes): 2 unknowns (7.1–7.2) — current count and
+    root causes, systematic vs. case-by-case fix potential
+  - Category 8 (Objective Extraction Enhancement): 1 unknown (8.1) — `model_no_objective_def`
+    count and pattern diversity
+  - Appendix: Task-to-Unknown mapping table for Tasks 2–10
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated):
+  - Task 1 status: NOT STARTED → ✅ COMPLETE
+  - Task 1 acceptance criteria all checked
+  - Tasks 2–10: added `**Unknowns Verified:**` metadata, KNOWN_UNKNOWNS deliverable entries,
+    and KNOWN_UNKNOWNS acceptance criteria items
+- **`docs/planning/EPIC_4/SPRINT_20/prompts/PREP_TASK_PROMPTS.md`** (created, ~1377 lines):
+  Self-contained prompts for Tasks 2–10, each including objective, background, step-by-step
+  instructions with concrete bash commands, known unknowns to verify, PREP_PLAN/CHANGELOG
+  update instructions, quality gate, commit message format, and PR body template
+
 ### Sprint 19 Day 14: Fix #780-#784, #774, #766, Close #671 - 2026-02-18
 
 **Branches:** `sprint19-day14-fix-issues-780-784` (PR #786), `sprint19-day14-fix-open-issues` (PR #787)
