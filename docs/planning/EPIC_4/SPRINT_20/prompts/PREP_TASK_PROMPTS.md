@@ -26,7 +26,7 @@ IndexOffset End-to-End Pipeline State.
 ## Branch
 Work on branch `planning/sprint20-task2`. Create it from the current branch
 `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task2
 
 ## Objective
@@ -183,7 +183,7 @@ Remaining lexer_invalid_char Subcategories.
 
 ## Branch
 Work on branch `planning/sprint20-task3`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task3
 
 ## Objective
@@ -337,7 +337,7 @@ You are working on the nlp2mcp project. Your task is Sprint 20 Prep Task 4: Inve
 
 ## Branch
 Work on branch `planning/sprint20-task4`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task4
 
 ## Objective
@@ -492,7 +492,7 @@ Translate internal_error Models.
 
 ## Branch
 Work on branch `planning/sprint20-task5`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task5
 
 ## Objective
@@ -642,7 +642,7 @@ Full Pipeline Match Divergence.
 
 ## Branch
 Work on branch `planning/sprint20-task6`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task6
 
 ## Objective
@@ -786,7 +786,7 @@ Accounting Variable Detection (#764 mexss).
 
 ## Branch
 Work on branch `planning/sprint20-task7`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task7
 
 ## Objective
@@ -946,7 +946,7 @@ Sprint 19 Retrospective Action Items.
 
 ## Branch
 Work on branch `planning/sprint20-task8`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task8
 
 ## Objective
@@ -1075,7 +1075,7 @@ Baseline Metrics.
 
 ## Branch
 Work on branch `planning/sprint20-task9`. Create it from `main`:
-  git checkout main 
+  git checkout main
   git checkout -b planning/sprint20-task9
 
 ## Objective
@@ -1230,8 +1230,8 @@ Sprint 20 Detailed Schedule.
 ## Branch
 Work on branch `planning/sprint20-task10`. Create it from `main`
 AFTER Tasks 2–9 have been merged into `main`:
-  git checkout main 
-  git pull origin main 
+  git checkout main
+  git pull origin main
   git checkout -b planning/sprint20-task10
 
 ## Objective

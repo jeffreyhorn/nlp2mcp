@@ -10,8 +10,8 @@
 
 Of the 8 IndexOffset-blocked models, **5 now translate successfully** (launch, mine,
 ampl, robert, pak) — meaning Sprint 19 AD work unblocked them further than expected.
-The remaining **3 models** (sparta, tabora, otpop) fail at the **emit stage** due to
-two distinct `IndexOffset.to_gams_string()` gaps:
+The remaining **3 models** (sparta, tabora, otpop) are still blocked in the **translation pipeline** due to
+two distinct `IndexOffset.to_gams_string()` gaps that surface at different stages (emit vs. stationarity/index replacement):
 
 1. **sparta / tabora**: `Unary("-", Call(ord, ...))` — unary minus over a complex
    `Call()` operand inside an `IndexOffset` offset. The `to_gams_string()` method
@@ -41,7 +41,7 @@ via `idx.to_gams_string()` — the gap is in `IndexOffset.to_gams_string()` itse
 | pak     | parse=success, solve=failure | ✅ **translate success** | —                                           | None — translate now works; solve failure is PATH issue     | 0h         |
 | sparta  | parse=failure          | ❌ **emit failure**      | `NotImplementedError: Unary minus with complex operand not supported: Call(ord, (SymbolRef(l)))` | Extend `IndexOffset.to_gams_string()` for `Unary("-", Call(...))` | 1h |
 | tabora  | parse=failure          | ❌ **emit failure**      | `NotImplementedError: Unary minus with complex operand not supported: Call(ord, (SymbolRef(a)))` | Same fix as sparta                                          | 0.5h (shared fix) |
-| otpop   | parse=failure          | ❌ **emit failure**      | `NotImplementedError: Complex offset expressions not yet supported: Binary(-, Call(card, (SymbolRef(t))), Call(ord, (SymbolRef(t))))` | Extend `IndexOffset.to_gams_string()` for `Binary(op, Call, Call)` offset expressions | 1h |
+| otpop   | parse=failure          | ❌ **stationarity/index-replacement failure** | `NotImplementedError: Complex offset expressions not yet supported: Binary(-, Call(card, (SymbolRef(t))), Call(ord, (SymbolRef(t))))` | Extend `IndexOffset.to_gams_string()` for `Binary(op, Call, Call)` offset expressions | 1h |
 
 **Notes on "translate success" models:**
 - `launch`, `robert`, `pak` previously showed `solve=failure` in the status file. These
