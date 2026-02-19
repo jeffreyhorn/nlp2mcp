@@ -32,7 +32,7 @@ via `idx.to_gams_string()` — the gap is in `IndexOffset.to_gams_string()` itse
 
 ## Per-Model Status Table
 
-| Model   | Pre-Sprint19 Status     | Current Stage  | Error / Token                                           | Remaining Work                                              | Est. Hours |
+| Model   | Pre-Sprint19 Status     | Current Stage  | Error                                                   | Remaining Work                                              | Est. Hours |
 |---------|------------------------|----------------|---------------------------------------------------------|-------------------------------------------------------------|------------|
 | launch  | parse=success, solve=failure | ✅ **translate success** | —                                               | None — translate now works; solve failure is PATH issue     | 0h         |
 | mine    | parse=failure          | ✅ **translate success** | —                                               | None — now parses and translates successfully               | 0h         |
