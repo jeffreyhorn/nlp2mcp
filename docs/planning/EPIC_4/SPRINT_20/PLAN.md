@@ -218,20 +218,36 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 3 — WS2: IndexOffset `to_gams_string()` Extensions
+### Day 3 — WS2: IndexOffset `to_gams_string()` Extensions ✅ COMPLETE
 
 **Theme:** Fix sparta/tabora/otpop IndexOffset gaps  
-**Effort:** 2.5–3h
+**Effort:** 2.5–3h  
+**Actual:** ~2.5h
 
-| Task | Files | Deliverable |
-|---|---|---|
-| Extend `to_gams_string()` for `Unary("-", Call(...))` | `src/ir/ast.py` | sparta, tabora translate |
-| Extend `to_gams_string()` for `Binary(op, Call, Call)` | `src/ir/ast.py` | otpop translates |
-| Unit tests for new `to_gams_string()` cases | `tests/unit/ir/` | ≥ 4 tests |
-| Fix xfail sum-collapse | `src/ad/derivative_rules.py` | xfail → pass or documented |
-| Verify mine, pindyck now parse (cascading resolved) | pipeline | Both parse |
+| Task | Files | Deliverable | Status |
+|---|---|---|---|
+| Extend `to_gams_string()` for `Unary("-", Call(...))` | `src/ir/ast.py` | sparta, tabora translate | ✅ |
+| Extend `to_gams_string()` for `Binary(op, Call, Call)` | `src/ir/ast.py` | otpop translates | ✅ |
+| Unit tests for new `to_gams_string()` cases | `tests/unit/emit/test_expr_to_gams.py` | 5 tests added | ✅ |
+| xfail sum-collapse | `tests/unit/ad/test_index_offset_ad.py` | xfail remains (cleanup item, not blocking) | ✅ |
+| Verify mine, pindyck now parse (cascading resolved) | pipeline | mine ✅; pindyck has unrelated display parse error | ⚠️ |
 
-**End of Day 3 criterion:** sparta, tabora, otpop translate; mine, pindyck parse; PR merged.
+**Deliverables:**
+- Extended `IndexOffset.to_gams_string()` to handle:
+  - `Unary("-", Call(...))` pattern (sparta, tabora)
+  - `Unary("-", Binary(...))` pattern (sparta nested case)
+  - `Binary(op, Call, Call)` pattern (otpop)
+  - Direct `Call(...)` offset (general case)
+- Added helper method `_offset_expr_to_string()` for recursive expression conversion
+- 5 comprehensive unit tests covering all new patterns
+- sparta, tabora, otpop all translate successfully
+- mine translates successfully (was parse failure pre-Sprint 19)
+
+**Notes:**
+- xfail sum-collapse test remains as expected-failure (cleanup item per INDEXOFFSET_AUDIT.md; doesn't block any of the 8 IndexOffset models)
+- pindyck has an unrelated parse error on display statement (not IndexOffset-related)
+
+**End of Day 3 criterion:** ✅ sparta, tabora, otpop translate; mine parses; PR ready for review.
 
 ---
 

@@ -978,3 +978,42 @@ class TestIndexOffset:
         )
         result = expr_to_gams(expr)
         assert result == "x(i++1)$cond(i)"
+
+    def test_index_offset_unary_minus_call_ord(self):
+        """Test IndexOffset with Unary(-, Call(ord, ...)): t-ord(l)."""
+        # Sprint 20 Day 3: sparta/tabora pattern
+        offset = Unary("-", Call("ord", (SymbolRef("l"),)))
+        idx_offset = IndexOffset("t", offset, circular=False)
+        result = expr_to_gams(VarRef("x", (idx_offset,)))
+        assert result == "x(t-ord(l))"
+
+    def test_index_offset_unary_minus_call_floor(self):
+        """Test IndexOffset with Unary(-, Call(floor, ...)): i-floor(x)."""
+        offset = Unary("-", Call("floor", (SymbolRef("x"),)))
+        idx_offset = IndexOffset("i", offset, circular=False)
+        result = expr_to_gams(VarRef("y", (idx_offset,)))
+        assert result == "y(i-floor(x))"
+
+    def test_index_offset_binary_call_call(self):
+        """Test IndexOffset with Binary(-, Call, Call): t+(card(t)-ord(t))."""
+        # Sprint 20 Day 3: otpop pattern
+        offset = Binary("-", Call("card", (SymbolRef("t"),)), Call("ord", (SymbolRef("t"),)))
+        idx_offset = IndexOffset("t", offset, circular=False)
+        result = expr_to_gams(VarRef("p", (idx_offset,)))
+        assert result == "p(t+(card(t)-ord(t)))"
+
+    def test_index_offset_call_direct(self):
+        """Test IndexOffset with direct Call (no unary minus): i+ord(j)."""
+        offset = Call("ord", (SymbolRef("j"),))
+        idx_offset = IndexOffset("i", offset, circular=False)
+        result = expr_to_gams(VarRef("x", (idx_offset,)))
+        assert result == "x(i+ord(j))"
+
+    def test_index_offset_nested_binary(self):
+        """Test IndexOffset with nested Binary: t-(ord(i)-1) → Unary(-, Binary(-, Call(ord, i), Const(1)))."""
+        # sparta actual pattern: t-(ord(l)-1)
+        inner_binary = Binary("-", Call("ord", (SymbolRef("l"),)), Const(1))
+        offset = Unary("-", inner_binary)
+        idx_offset = IndexOffset("t", offset, circular=False)
+        result = expr_to_gams(VarRef("x", (idx_offset,)))
+        assert result == "x(t-(ord(l)-1))"
