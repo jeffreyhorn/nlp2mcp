@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Prep Task 10: Plan Sprint 20 Detailed Schedule - 2026-02-19
+
+**Branch:** `planning/sprint20-task10`
+
+#### Summary
+
+Sprint 20 PLAN.md created with 15-day schedule (Day 0–14), 6 workstreams, and 2 checkpoints.
+Revised total effort ~35–42h (down from PROJECT_PLAN.md's 50–64h). Key scope changes:
+IndexOffset workstream reduced to ~3h (only `to_gams_string()` gaps remain); translate
+internal_error workstream eliminated (2 genuine errors, both architecturally deferred);
+accounting variable detection (#764) and AD condition propagation (#763) deferred to
+Sprint 21; new model_no_objective_def preprocessor fix added (~3h, 13-model ROI).
+Sprint targets: parse ≥ 127/160, lexer_invalid_char ≤ 11, solve ≥ 30, match ≥ 15.
+All KNOWN_UNKNOWNS resolved or explicitly deferred. Prep phase complete.
+
+#### Planning Documents
+
+- **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (created): Day 0–14 schedule with 6
+  workstreams (WS1 `.l` emission, WS2 IndexOffset, WS3 lexer grammar, WS4
+  model_no_objective_def, WS5 tolerance/Inf, WS6 regression tests), Checkpoint 1 (Day 6)
+  and Checkpoint 2 (Day 11) with GO/NO-GO criteria, 3 contingency plans, Sprint 19
+  retrospective improvements incorporated
+- **`docs/planning/EPIC_4/SPRINT_20/prompts/PLAN_PROMPTS.md`** (created): Day-by-day
+  execution prompts (Day 0–14), each self-contained with objectives, prerequisites, tasks,
+  deliverables, quality checks, completion criteria, PR & review workflow
+- **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknown 3.3 verified,
+  Unknown 6.4 explicitly deferred, template X.Y closed out — no bare INCOMPLETE entries remain
+- **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 10 → ✅ COMPLETE; all 10
+  tasks ✅; Summary section updated with "PREP PHASE COMPLETE" note
+
+---
+
 ### Sprint 20 Prep Task 9: Snapshot Baseline Metrics - 2026-02-19
 
 **Branch:** `planning/sprint20-task9`

@@ -1,0 +1,531 @@
+# Sprint 20 Detailed Plan
+
+**Created:** 2026-02-19  
+**Sprint Duration:** 15 days (Day 0 – Day 14)  
+**Estimated Effort:** ~35–42 hours (~2.3–2.8h/day effective capacity)  
+**Risk Level:** MEDIUM  
+**Baseline:** `dc390373` — parse 112/160 (70.0%), translate 96/112 (85.7%), solve 27/96 (28.1%), match 10/27 (37.0%), tests 3,579
+
+---
+
+## Executive Summary
+
+Sprint 20 focuses on four primary high-ROI workstreams identified by the prep phase (WS1–WS4), with two additional supporting workstreams (WS5–WS6) defined below. The primary workstreams are: (1) `.l` initialization emission to warm-start PATH for circle and other models, (2) IndexOffset `to_gams_string()` extensions for sparta/tabora/otpop, (3) lexer grammar work targeting subcategories L, M, H, A, and E (~15 new parse successes expected), and (4) the `model_no_objective_def` preprocessor fix (~13 new parse successes). Accounting variable detection (mexss/#764) and AD condition propagation (chenery/#763) are deferred to Sprint 21.
+
+**Revised total effort from prep findings: ~35–42h** (down from PROJECT_PLAN.md's 50–64h estimate).
+
+### Key Scope Decisions vs. PROJECT_PLAN.md
+
+| Workstream | PROJECT_PLAN.md Estimate | Sprint 20 Plan | Decision |
+|---|---|---|---|
+| IndexOffset implementation | 14–16h | 3h | IN SCOPE — only `to_gams_string()` gaps remain (sparta/tabora/otpop); bulk of work done in Sprint 19 |
+| `.l` emission | 4–6h | 4h | IN SCOPE — requires IR + parser + emitter changes |
+| Translation internal_error fixes | 6–8h | 0h | DESCOPED — only 2 genuine errors remain, both architecturally deferred (smin agg., digamma) |
+| model_no_objective_def fix | 4h | 3h | IN SCOPE — preprocessor `$if` single-line bug affects 13 models (~2–3h fix) |
+| Accounting variable detection (#764) | 6–8h | 0h | DEFERRED to Sprint 21 — C5 multiplier-consistency criterion not statically feasible |
+| AD condition propagation (#763) | 6–8h | 0h | DEFERRED to Sprint 21 — equation-level condition threading is architectural (~6–8h) |
+| lexer_invalid_char reduction | 4–6h | 8–10h | EXPANDED — L (5 models), M (2 models), H (2 models), A (6 models), E (3 models) = ~18 models |
+| Pipeline match tolerance fix | 4–6h | 2h | IN SCOPE — raise rtol 1e-6→1e-4 to add 5 near-matches |
+| codegen_numerical_error (Inf params) | not planned | 2–3h | ADDED — 4 models, single pattern (±Inf parameter values) |
+
+---
+
+## Sprint 20 Targets
+
+| Metric | Baseline | Target | Stretch |
+|---|---|---|---|
+| Parse success | 112/160 (70.0%) | ≥ 127/160 (≥ 79.4%) | ≥ 132/160 (≥ 82.5%) |
+| lexer_invalid_char | 26 | ≤ 11 | ≤ 8 |
+| model_no_objective_def | 14 | ≤ 4 | ≤ 1 |
+| Translate success | 96/112 (85.7%) | ≥ 110/127 (≥ 86.6%) | — |
+| Solve success | 27 | ≥ 30 | ≥ 33 |
+| Full pipeline match | 10 | ≥ 15 | ≥ 18 |
+| Tests | 3,579 | ≥ 3,650 | — |
+
+**Parse target rationale:** lexer fixes (+15 models: L5, M2, H2, A6 partial, E3 partial via cascading) + model_no_objective_def fix (+12 from `$if` bug fix) + IndexOffset fix (+2 via mine/pindyck cascading) = +~29 in optimistic case; target set at +15 (conservative).
+
+**Match target rationale:** 5 near-matches via rtol fix + 2 from `.l` emission (abel, chakra) + 1 from circle solve = +8 optimistic → target ≥ 15 (conservative: +5 from rtol alone).
+
+---
+
+## Workstreams
+
+### WS1: `.l` Initialization Emission (Priority 1 deferred from Sprint 19)
+**Effort:** ~4h  
+**Target models:** circle (solve), abel (match), chakra (match), + 5 other models with expression-based `.l`  
+**Files:** `src/ir/symbols.py`, `src/ir/parser.py`, `src/emit/emit_gams.py`
+
+| Step | Effort |
+|---|---|
+| Add `l_expr`/`l_expr_map` fields to `VariableDef` | 0.5h |
+| Parser: store `.l` expressions instead of dropping at `_handle_assign` | 1h |
+| Emitter: emit `l_expr`/`l_expr_map` in initialization section | 0.5h |
+| Unit tests + circle regression | 1h |
+| End-to-end: run circle, abel, chakra through pipeline | 0.5h |
+
+**Acceptance criteria:** circle solves (PATH status 1); abel and chakra objective values match within rtol; `tests/` covers expression `.l` capture.
+
+### WS2: IndexOffset `to_gams_string()` Extensions
+**Effort:** ~3h  
+**Target models:** sparta, tabora (Unary+Call), otpop (Binary+Call/Call); mine, pindyck resolve as cascading bonus  
+**Files:** `src/ir/ast.py` (IndexOffset.to_gams_string)
+
+| Step | Effort |
+|---|---|
+| Extend `to_gams_string()` for `Unary("-", Call(...))` (sparta/tabora) | 1h |
+| Extend `to_gams_string()` for `Binary(op, Call, Call)` (otpop) | 1h |
+| End-to-end: sparta/tabora/otpop translate; verify PATH solve attempt | 0.5h |
+| Fix xfail sum-collapse for IndexOffset wrt-index (cleanup) | 0.5h |
+
+**Acceptance criteria:** sparta, tabora, otpop all translate successfully; mine and pindyck parse (lexer cascading resolved); xfail test either fixed or documented.
+
+### WS3: Lexer Grammar Fixes
+**Effort:** ~8–10h  
+**Target:** ≤ 11 lexer_invalid_char (from 26; −15 target)
+
+#### Phase 1 — Quick wins (~3–4h, ~9 models + cascading)
+
+| Subcategory | Models | Effort | Notes |
+|---|---|---|---|
+| L: Set-Model Exclusion | camcge, ferts, tfordy (3); cesam, spatequ (2) | 1–2h | `all - setname` pattern + dotted model-attr |
+| M: File/Acronym declarations | senstran, worst | 1h | Stub `File` and `Acronym` keywords |
+| H: Control Flow | iobalance (repeat/until), lop (abort$) | 1h | Also unblocks nemhaus (B cascading) |
+
+#### Phase 2 — Core grammar (~4–6h, ~9 models)
+
+| Subcategory | Models | Effort | Notes |
+|---|---|---|---|
+| A: Compound Set Data (extended) | indus, mexls, paperco, sarf, turkey, turkpow | 3–4h | Extends Sprint 19 A fix: parenthesized sub-lists, multi-word elements, hyphenated+numeric |
+| E: Inline Scalar Data | cesam2, gussrisk, trnspwl | 1h | `scalar / value /` missing grammar |
+
+#### Phase 3 — If time permits (~2h, 2+ models)
+
+| Subcategory | Models | Effort |
+|---|---|---|
+| J: Square bracket function call | mathopt3 | 1h |
+| K: Miscellaneous | dinam | 1–2h |
+
+**Automatic via IndexOffset WS2:** mine, pindyck (D cascading), fdesign (B cascading from H fix), nemhaus (B cascading from H fix)
+
+**Acceptance criteria:** lexer_invalid_char ≤ 11; no regression in existing parse successes.
+
+### WS4: model_no_objective_def Fix
+**Effort:** ~3h  
+**Target:** 13 models currently excluded by `$if set workSpace` preprocessor bug  
+**Files:** `src/ir/preprocessor.py` (process_conditionals)
+
+| Step | Effort |
+|---|---|
+| Fix `process_conditionals` inline `$if` guard (same-line vs next-line) | 1.5h |
+| Tests: unit tests for inline `$if` patterns | 0.5h |
+| End-to-end: verify camshape, catmix, chain, lnts, polygon parse | 0.5h |
+| Handle lmp2 doubly-nested loop (if time) | 0.5h |
+
+**Acceptance criteria:** model_no_objective_def ≤ 4 (down from 14); at least 11 of the 13 `$if`-bug models now parse. (Rationale: fixing "at least 11" leaves ≤ 2 from the `$if` bug + lmp2 doubly-nested + robot/other edge cases = ≤ 4 total remaining. The ≤ 2 target was inconsistent with the "at least 10 of 13" fix rate.)
+
+### WS5: Pipeline Match — Tolerance + Inf Parameters
+**Effort:** ~3–4h
+
+#### Part A: rtol adjustment (~2h)
+- Raise `DEFAULT_RTOL` from `1e-6` to `1e-4` in `scripts/gamslib/test_solve.py`
+- Verify that the 5 near-match models (chem, dispatch, hhmax, mhw4d, mhw4dx) now pass
+- Confirm no previously-failing model incorrectly passes at the new tolerance
+- **Acceptance criteria:** Full pipeline match ≥ 15; chem/dispatch/hhmax/mhw4d/mhw4dx all match
+
+#### Part B: codegen_numerical_error / Inf parameter handling (~2h, if time)
+- 4 models (decomp, gastrans, gtm, ibm1) fail because parameter values are `+Inf`/`-Inf`
+- Fix `validate_parameter_values` to treat IEEE infinity as "no bound" and emit `.up = +Inf` / `.lo = -Inf`
+- **Acceptance criteria:** decomp, gastrans, gtm, ibm1 translate; 0 codegen_numerical_error (excluding iswnm timeout)
+
+### WS6: Golden-File Tests for Matching Models
+**Effort:** ~2h  
+**Purpose:** Prevent regression on the 10 (→ target 15) models that achieve full pipeline match  
+**Files:** `tests/e2e/test_golden.py` or new `tests/e2e/test_gamslib_match.py`
+
+**Acceptance criteria:** Solve-level regression tests for at least 5 of the 10 currently-matching models; tests pass in CI.
+
+---
+
+## Revised Effort Summary
+
+| Workstream | Revised Estimate | Notes |
+|---|---|---|
+| WS1: `.l` emission | 4h | IR + parser + emitter (higher than original 2h estimate) |
+| WS2: IndexOffset `to_gams_string()` | 3h | Only 2 gap types remain; bulk done in Sprint 19 |
+| WS3: Lexer grammar | 8–10h | Phase 1 (3–4h) + Phase 2 (4–6h) |
+| WS4: model_no_objective_def | 3h | Preprocessor fix + tests |
+| WS5: Tolerance + Inf params | 3–4h | rtol (2h) + Inf params (2h) |
+| WS6: Golden-file tests | 2h | Regression guard |
+| Pipeline retest | 1.5h | Full run after each major workstream |
+| Sprint close + retrospective | 1h | Day 14 |
+| **Total (workstreams only)** | **~26–29h** | Excludes sprint overhead below |
+| Sprint overhead (Day 0 kickoff, Day 6 checkpoint buffer, Day 11 model validation, Days 12–13 Phase 3 + regression) | ~9–13h | Captured in day-by-day schedule |
+| **Total (full sprint)** | **~35–42h** | Down from PROJECT_PLAN.md's 50–64h |
+
+---
+
+## 15-Day Schedule
+
+### Day 0 — Baseline Confirm + Sprint Kickoff
+
+**Theme:** Verify clean baseline, read PLAN.md, confirm all tests pass  
+**Effort:** 1h
+
+| Task | Deliverable |
+|---|---|
+| `make test` — confirm 3,579 passed | Clean baseline ✅ |
+| Review BASELINE_METRICS.md | Baseline numbers internalized |
+| Create SPRINT_LOG.md | Sprint log initialized |
+| Read open GitHub issues; triage to workstream | Issue-to-WS mapping |
+
+**Day 0 criterion:** All tests pass; SPRINT_LOG.md created.
+
+---
+
+### Day 1 — WS1: `.l` Emission (IR + Parser)
+
+**Theme:** Fix `.l` expression capture in parser and IR  
+**Effort:** 3–3.5h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Add `l_expr`/`l_expr_map` to `VariableDef` | `src/ir/symbols.py` | Fields added |
+| Modify `_handle_assign` to store `.l` expressions | `src/ir/parser.py` | Expressions stored, not dropped |
+| Unit tests: expression `.l` capture | `tests/unit/ir/` | ≥ 3 tests covering scalar, indexed, chained `.l` |
+
+**End of Day 1 criterion:** `circle.gms` IR contains `a.l_expr`, `b.l_expr`, `r.l_expr`; unit tests pass.
+
+---
+
+### Day 2 — WS1: `.l` Emission (Emitter + End-to-End)
+
+**Theme:** Emit `.l` expressions; validate circle/abel/chakra  
+**Effort:** 2–2.5h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Emit `l_expr`/`l_expr_map` in initialization section | `src/emit/emit_gams.py` | `.l = expr` lines in MCP output |
+| End-to-end circle test | pipeline | circle MCP has correct `.l` init |
+| Verify circle PATH solve | PATH solver | PATH converges (model_status 1) |
+| Check abel, chakra objective match | `gamslib_status.json` | abel/chakra objective values correct |
+
+**End of Day 2 criterion:** circle solves; abel/chakra objective values match reference; PR merged.
+
+---
+
+### Day 3 — WS2: IndexOffset `to_gams_string()` Extensions
+
+**Theme:** Fix sparta/tabora/otpop IndexOffset gaps  
+**Effort:** 2.5–3h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Extend `to_gams_string()` for `Unary("-", Call(...))` | `src/ir/ast.py` | sparta, tabora translate |
+| Extend `to_gams_string()` for `Binary(op, Call, Call)` | `src/ir/ast.py` | otpop translates |
+| Unit tests for new `to_gams_string()` cases | `tests/unit/ir/` | ≥ 4 tests |
+| Fix xfail sum-collapse | `src/ad/derivative_rules.py` | xfail → pass or documented |
+| Verify mine, pindyck now parse (cascading resolved) | pipeline | Both parse |
+
+**End of Day 3 criterion:** sparta, tabora, otpop translate; mine, pindyck parse; PR merged.
+
+---
+
+### Day 4 — WS3 Phase 1: Lexer Quick Wins (L + M + H)
+
+**Theme:** Set-Model Exclusion, unsupported declarations, control flow  
+**Effort:** 3–4h
+
+| Task | Files | Models unblocked |
+|---|---|---|
+| Subcat L: `all - setname` + dotted model-attr | `src/gams/gams_grammar.lark` | camcge, ferts, tfordy, cesam, spatequ |
+| Subcat M: `File` + `Acronym` declarations | `src/gams/gams_grammar.lark` | senstran, worst |
+| Subcat H: `repeat/until` + `abort$` | `src/gams/gams_grammar.lark` | iobalance, lop |
+| Unit tests for new grammar rules | `tests/unit/` | ≥ 3 tests |
+| Pipeline retest on affected models | gamslib_status.json | 9–10 new parse successes |
+
+**End of Day 4 criterion:** camcge, cesam, ferts, tfordy, spatequ, senstran, worst, iobalance, lop all parse; nemhaus (B cascading) also resolves; PR merged.
+
+---
+
+### Day 5 — WS4: model_no_objective_def Preprocessor Fix
+
+**Theme:** Fix `$if set workSpace` inline-guard bug  
+**Effort:** 3h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Fix `process_conditionals` for single-line `$if` | `src/ir/preprocessor.py` | Inline `$if` guard handled correctly |
+| Unit tests: `$if set X stmt` on same line | `tests/unit/ir/` | ≥ 5 tests covering all inline `$if` variants |
+| End-to-end: camshape, catmix, chain, lnts, polygon parse | pipeline | ≥ 11 of 13 `$if`-bug models now parse |
+| Handle robot typo (`miniziming`) if needed | grammar or preprocessor | robot parses |
+| Document lmp2 (doubly-nested loop) — file issue if needed | GitHub | lmp2 deferred or fixed |
+
+**End of Day 5 criterion:** model_no_objective_def ≤ 4; ≥ 11 models newly parsing; PR merged.
+
+---
+
+### Day 6 — Checkpoint 1 + Buffer
+
+**Theme:** Checkpoint 1 GO/NO-GO; light work; buffer for Days 1–5 overruns
+
+#### Checkpoint 1 (Day 6) GO/NO-GO Criteria
+
+| Criterion | GO threshold | NO-GO action |
+|---|---|---|
+| Parse success | ≥ 125/160 (78.1%) | Defer WS3 Phase 2 (A subcat); focus on pipeline match |
+| Solve success | ≥ 28 | Investigate circle/abel PATH failures; debug before proceeding |
+| `.l` emission PR | Merged | If not merged: complete WS1 before Day 7 |
+| IndexOffset PR | Merged | If not merged: complete WS2 before Day 7 |
+| Tests | All pass | Block on test failures |
+
+**If GO:** Proceed with WS3 Phase 2 (Day 7–9) and WS5 (Day 10).  
+**If NO-GO (parse < 125):** Redirect Days 7–9 to remaining WS3 Phase 1 items and debugging.
+
+---
+
+### Day 7 — WS3 Phase 2: Compound Set Data (Part 1)
+
+**Theme:** Extend Subcategory A compound set data grammar  
+**Effort:** 3h
+
+| Task | Files | Models |
+|---|---|---|
+| Multi-word set elements (`wire rod`) — `mexls` pattern | `src/gams/gams_grammar.lark` | mexls |
+| Parenthesized sub-list in table header (`(sch-1*sch-3)`) — `sarf` pattern | grammar + preprocessor | sarf, possibly indus |
+| Unit tests | `tests/unit/` | ≥ 3 tests |
+
+---
+
+### Day 8 — WS3 Phase 2: Compound Set Data (Part 2) + Inline Scalar Data
+
+**Theme:** Complete Subcategory A; fix Subcategory E  
+**Effort:** 3–4h
+
+| Task | Files | Models |
+|---|---|---|
+| Multi-line table row label continuation (`paperco`) | grammar | paperco |
+| Hyphenated+numeric element (`hydro-4.1978`) — `turkpow` | grammar | turkpow, turkey |
+| Inline scalar data (`/ .05 /`, `/ 50 /`) — Subcat E | grammar | cesam2, gussrisk, trnspwl |
+| Pipeline retest for all Subcat A + E models | gamslib_status.json | ≥ 5 new parse successes |
+
+**End of Day 8 criterion:** indus, mexls, paperco, sarf, turkey, turkpow, cesam2, gussrisk, trnspwl — at least 6 of 9 now parse.
+
+---
+
+### Day 9 — WS5 Part A: Pipeline Match Tolerance Fix
+
+**Theme:** Raise rtol; validate near-match models; add golden-file tests  
+**Effort:** 3h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Raise `DEFAULT_RTOL` to `1e-4` | `scripts/gamslib/test_solve.py` | +5 near-matches (chem, dispatch, hhmax, mhw4d, mhw4dx) |
+| Run full pipeline retest; confirm match count | gamslib_status.json | Match ≥ 15 |
+| Add solve-level regression tests for 5 matching models | `tests/e2e/` | ≥ 5 new regression tests |
+| Verify no false positives at new rtol | pipeline | All matches are genuine |
+
+**End of Day 9 criterion:** Full pipeline match ≥ 15; rtol PR merged; regression tests pass.
+
+---
+
+### Day 10 — WS5 Part B: Inf Parameter Handling + Model Validation Prep
+
+**Theme:** Fix codegen_numerical_error; begin model validation  
+**Effort:** 3h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Fix `validate_parameter_values` for ±Inf values | `src/validation/numerical.py` or emitter | decomp, gastrans, gtm, ibm1 translate |
+| Emit `.up = +Inf` / `.lo = -Inf` as appropriate | `src/emit/emit_gams.py` | 0 codegen_numerical_error (ex iswnm) |
+| Begin model validation: run solve on all parse-success models | gamslib_status.json | Fresh solve results |
+
+**End of Day 10 criterion:** codegen_numerical_error ≤ 1 (iswnm timeout only); all newly-parsing models validated.
+
+---
+
+### Day 11 — Model Validation + Checkpoint 2
+
+**Theme:** Complete model validation; assess sprint state  
+**Effort:** 2–3h
+
+| Task | Deliverable |
+|---|---|
+| Complete model validation run (all parse-success models) | Updated solve/match metrics |
+| Review any new issues uncovered by validation | Filed GitHub issues |
+| Checkpoint 2 evaluation | GO/NO-GO decision |
+
+#### Checkpoint 2 (Day 11) GO/NO-GO Criteria
+
+| Criterion | GO threshold | NO-GO action |
+|---|---|---|
+| Parse success | ≥ 125/160 (78.1%) | File issues for unresolved models; defer Phase 3 |
+| lexer_invalid_char | ≤ 11 | Defer J/K subcategories to Sprint 21 |
+| model_no_objective_def | ≤ 4 | File issue for remaining; defer lmp2 fix |
+| Full pipeline match | ≥ 15 | Check rtol; investigate recent regressions |
+| Solve success | ≥ 30 | Investigate newly-parsing models' solver failures |
+| Tests | All pass | Block on test failures |
+
+**If GO:** Proceed with Phase 3 (Days 12–13) and remaining WS6.  
+**If NO-GO:** Redirect Days 12–13 to fix remaining Checkpoint 2 blockers.
+
+---
+
+### Day 12 — Phase 3 + WS6: Regression Tests
+
+**Theme:** Phase 3 grammar (if Checkpoint 2 GO); golden-file test coverage  
+**Effort:** 3h
+
+| Task | Files | Deliverable |
+|---|---|---|
+| Phase 3: Square bracket function call (mathopt3) — Subcat J | grammar | mathopt3 parses |
+| Phase 3: Miscellaneous (dinam) — Subcat K | grammar or preprocessor | dinam parses (if tractable) |
+| WS6: Golden-file solve tests for newly-matched models | `tests/e2e/` | ≥ 3 new regression tests |
+
+---
+
+### Day 13 — Sprint Close Prep: Issues + Documentation
+
+**Theme:** File/close remaining issues; update documentation  
+**Effort:** 2h
+
+| Task | Deliverable |
+|---|---|
+| File issues for all deferred items (accounting vars, AD condition propagation, `.scale`, lmp2, saras/springchain preprocessor) | GitHub issues filed |
+| Smoke-test all "not fixable" declarations (lesson from Sprint 19) | Each deferred item verified via `python -m src.cli <model>` |
+| Update SPRINT_LOG.md with final metrics | Sprint log complete |
+| Run final `make test` | 0 failures |
+
+---
+
+### Day 14 — Sprint Close + Retrospective
+
+**Theme:** Final pipeline retest; sprint retrospective  
+**Effort:** 2–3h
+
+| Task | Deliverable |
+|---|---|
+| Final full pipeline retest | Updated `gamslib_status.json` |
+| Record final metrics vs. targets | SPRINT_LOG.md complete |
+| Write Sprint 20 Retrospective | `docs/planning/EPIC_4/SPRINT_20/SPRINT_RETROSPECTIVE.md` |
+| Update CHANGELOG.md with sprint summary | CHANGELOG.md |
+| Tag release if appropriate | Git tag |
+
+---
+
+## Checkpoints Summary
+
+### Checkpoint 1 (Day 6)
+
+| Criterion | Target | Fallback if missed |
+|---|---|---|
+| Parse success | ≥ 125/160 | Defer Subcat A; focus on model_no_objective_def |
+| Solve success | ≥ 28 | Debug circle/abel; PATH warm-start analysis |
+| `.l` emission PR merged | Yes | Complete before Day 7 (Day 6 buffer) |
+| IndexOffset PR merged | Yes | Complete before Day 7 (Day 6 buffer) |
+| All tests pass | Yes | Block on failures |
+
+### Checkpoint 2 (Day 11)
+
+| Criterion | Target | Fallback if missed |
+|---|---|---|
+| Parse success | ≥ 125/160 | Defer Phase 3 to Sprint 21 |
+| lexer_invalid_char | ≤ 11 | Defer J/K (mathopt3, dinam) to Sprint 21 |
+| model_no_objective_def | ≤ 4 | Defer lmp2 fix to Sprint 21 |
+| Full pipeline match | ≥ 15 | Investigate rtol; check abel/chakra |
+| Solve success | ≥ 30 | Investigate newly-parsing models |
+| All tests pass | Yes | Block on failures |
+
+---
+
+## Contingency Plans
+
+### Contingency 1: WS3 Phase 1 takes longer than expected (> 4h)
+
+**Trigger:** By end of Day 4, fewer than 7 new lexer parse successes.  
+**Action:** Defer Subcategory A (WS3 Phase 2) entirely to Sprint 21. Redirect Days 7–8 to WS5 pipeline match work and WS6 golden-file tests. Parse target reduced to ≥ 120/160 (75%).
+
+### Contingency 2: model_no_objective_def fix is more complex than ~3h
+
+**Trigger:** By end of Day 5, fewer than 8 of 13 `$if`-bug models are unblocked.  
+**Action:** Document the specific preprocessor case that remains unresolved; file a detailed issue. Reduce model_no_objective_def target to ≤ 6. Use saved time on WS5 (tolerance/Inf) and WS6 (regression tests).
+
+### Contingency 3: circle still fails PATH after `.l` emission fix (at Day 2 check)
+
+**Trigger:** circle translates but PATH still reports model_status=5 (locally infeasible) after `.l` fix.  
+**Action:** Do not spend more than 1h debugging. File issue with exact PATH output. Close #753 as "requires `.scale` emission or alternative formulation." Proceed to WS2.
+
+---
+
+## Open Risks (KNOWN_UNKNOWNS PARTIAL/INCOMPLETE)
+
+The following unknowns were not fully resolved during prep and are flagged as open risks for Sprint 20:
+
+### Risk 1: AD Condition Propagation (Unknowns 3.1/3.2 — ⚠️ PARTIAL)
+- **Status:** chenery's `$` condition is equation-level (easier case, ~6–8h), not inline. AD system has `DollarConditional` support but `EquationDef.condition` is not threaded through stationarity assembly as a guard.
+- **Impact:** chenery (#763) remains blocked at solve stage.
+- **Sprint 20 decision:** DEFERRED to Sprint 21. Not on the critical path for match/solve targets.
+
+### Risk 2: Accounting Variable Detection C5 (Unknown 2.1/2.4 — ✅ VERIFIED but deferred)
+- **Status:** C1–C4 criteria are statically computable. C5 (multiplier-consistency) is not feasible statically. mexss remains blocked.
+- **Impact:** mexss (#764) deferred to Sprint 21.
+- **Sprint 20 decision:** DEFERRED. The tightened C3 criterion (demo1 only, 4 vars) still has moderate false positive risk; implementing without C5 would break demo1.
+
+### Risk 3: codegen_numerical_error (Unknown 8.1 — translated via Task 5)
+- **Status:** 4 models fail because `±Inf` parameter values are not handled. Fix is straightforward (~2h) but not yet implemented.
+- **Sprint 20 decision:** IN SCOPE (WS5 Part B, Day 10).
+
+### Risk 4: Stale KNOWN_UNKNOWNS.md Status for Previously INCOMPLETE Unknowns
+- **Status:** Unknowns 4.1, 5.x, and 7.x have now been verified (via Tasks 3, 6, and 5 respectively), and their `Status` fields in KNOWN_UNKNOWNS.md have been updated in this PR. The only remaining `Status: INCOMPLETE` entry is Unknown 6.4, which is explicitly deferred.
+- **Sprint 20 action:** None beyond normal monitoring — KNOWN_UNKNOWNS.md already reflects the current verification state.
+
+---
+
+## Sprint 19 Retrospective Process Improvements (Incorporated)
+
+1. **Model validation scheduled for Days 10–11** (not Day 13 as in Sprint 19) — provides buffer for newly-discovered issues before sprint close.
+2. **Smoke-test checklist for "not fixable" declarations** — Day 13 explicitly includes `python -m src.cli <model>` verification before closing any issue.
+3. **"Models within ε" tracked as leading indicator** — Sprint 20 targets track both tolerance-adjusted match (rtol=1e-4) and strict match separately.
+4. **Baseline denominator explicitly documented** — BASELINE_METRICS.md pins 160 tested / 219 total / 59 excluded from `gamslib_status.json` at commit `dc390373`.
+5. **Denominator changes formally documented** — Any model addition/exclusion during Sprint 20 will be recorded in SPRINT_LOG.md with date and reason.
+6. **Deferred issue accumulation tracked** — accounting vars, AD propagation, `.scale`, lmp2 all have explicit Sprint 21 deferrals in this plan.
+
+---
+
+## Acceptance Criteria
+
+### Per-Workstream
+
+| Workstream | Acceptance Criteria |
+|---|---|
+| WS1: `.l` emission | circle solves (PATH model_status=1); abel+chakra objective values match reference; `l_expr`/`l_expr_map` fields tested |
+| WS2: IndexOffset | sparta, tabora, otpop all translate; mine, pindyck parse; xfail addressed |
+| WS3: Lexer | lexer_invalid_char ≤ 11; no regression in existing 112 parse successes |
+| WS4: model_no_objective_def | ≤ 4 remaining; ≥ 11 of 13 `$if`-bug models now parse |
+| WS5: Match/Tolerance | Full pipeline match ≥ 15; chem/dispatch/hhmax/mhw4d/mhw4dx all match; codegen_numerical_error ≤ 1 |
+| WS6: Regression tests | ≥ 5 solve-level regression tests for matching models; all pass in CI |
+
+### Sprint-Level
+
+- Parse success: ≥ 127/160 (≥ 79.4%)
+- lexer_invalid_char: ≤ 11
+- model_no_objective_def: ≤ 4
+- Translate success: ≥ 110/127 attempted
+- Solve success: ≥ 30
+- Full pipeline match: ≥ 15
+- Tests: ≥ 3,650 (≥ +71 from baseline)
+- Zero regressions: all existing 112 parse successes maintained
+
+---
+
+## Files Reference
+
+| File | Purpose |
+|---|---|
+| `docs/planning/EPIC_4/SPRINT_20/BASELINE_METRICS.md` | Baseline numbers (commit dc390373) |
+| `docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md` | Sparta/tabora/otpop gap analysis |
+| `docs/planning/EPIC_4/SPRINT_20/LEXER_ERROR_CATALOG_UPDATE.md` | Subcategory L/M/H/A/E analysis |
+| `docs/planning/EPIC_4/SPRINT_20/L_INIT_EMISSION_DESIGN.md` | `.l` IR + parser + emitter design |
+| `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` | `$if` bug + translate error analysis |
+| `docs/planning/EPIC_4/SPRINT_20/PIPELINE_MATCH_ANALYSIS.md` | rtol + `.l` impact analysis |
+| `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md` | C1–C5 algorithm (Sprint 21 deferred) |
+| `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` | Open risks and verified assumptions |
