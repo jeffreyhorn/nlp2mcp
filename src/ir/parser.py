@@ -3040,7 +3040,11 @@ class _ModelBuilder:
         ):
             idx += 1
 
-        if idx < len(node.children) and isinstance(node.children[idx], Token):
+        if (
+            idx < len(node.children)
+            and isinstance(node.children[idx], Token)
+            and node.children[idx].type == "ID"
+        ):
             objvar = _token_text(node.children[idx])
         if objvar:
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)

@@ -420,6 +420,7 @@ REL_K: /=e=|=l=|=g=/i
 
 solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
           | "Solve"i ID "using"i solver_type obj_sense ID SEMI     -> solve
+          | "Solve"i ID "using"i solver_type SEMI                  -> solve
 obj_sense: MINIMIZING_K | MAXIMIZING_K
 solver_type: /(?i:nlp|dnlp|minlp|mip|lp|mcp|cns|qcp|rmip|rminlp)\b/  // Sprint 11 Day 2: Support more solvers
 // GAMS accepts any word starting with "min" or "max" as the solve direction
@@ -480,8 +481,10 @@ loop_stmt: LOOP_K "(" id_list "," loop_body ")" SEMI
          | LOOP_K "(" "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren
          | LOOP_K "(" ID DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_filtered
          | LOOP_K "(" ID DOLLAR "[" expr "]" "," loop_body ")" SEMI  -> loop_stmt_filtered
+         | LOOP_K "(" ID DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "[" expr "]" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
+         | LOOP_K "(" "(" id_list ")" DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_indexed
          | LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
          | LOOP_K "(" ID "(" id_list ")" DOLLAR "[" expr "]" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
@@ -737,7 +740,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas|errorf)\b/
 // Sprint 19 Day 11: smax/smin moved out of FUNCNAME to support aggregation index domain syntax
 SMAX_K: /(?i:smax)\b/
 SMIN_K: /(?i:smin)\b/
