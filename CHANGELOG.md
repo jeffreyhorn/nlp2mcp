@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 20 Day 1: WS1 .l Emission — IR + Parser - 2026-02-16
+### Sprint 20 Day 1: WS1 .l Emission — IR + Parser - 2026-02-20
 
 **Branch:** `sprint20-day1-l-emission-ir-parser`
 

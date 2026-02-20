@@ -6,7 +6,7 @@ Sprint 20 Day 1: Tests for expression-based .l assignments (non-constant RHS).
 from textwrap import dedent
 
 from src.ir import parser
-from src.ir.ast import Binary, VarRef
+from src.ir.ast import Binary, Const, VarRef
 
 
 def test_scalar_l_assignment_expression():
@@ -45,9 +45,8 @@ def test_scalar_l_assignment_expression():
 
     # The expression should be: (xmin + xmax) / 2
     # Top level: division by 2
-    assert isinstance(var_a.l_expr.right, float) or (
-        hasattr(var_a.l_expr.right, "value") and var_a.l_expr.right.value == 2.0
-    )
+    assert isinstance(var_a.l_expr.right, Const)
+    assert var_a.l_expr.right.value == 2.0
 
 
 def test_indexed_l_assignment_expression():

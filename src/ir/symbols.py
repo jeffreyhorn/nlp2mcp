@@ -95,6 +95,9 @@ class VariableDef:
     # Sprint 20 Day 1: Expression-based .l assignments (non-constant RHS)
     l_expr: Expr | None = None  # Scalar: a.l = (xmin+xmax)/2
     l_expr_map: dict[tuple[str, ...], Expr] = field(default_factory=dict)  # Indexed: x.l(i) = f(i)
+    # Note: Uses dict (not list like ParameterDef.expressions) because .l assignments
+    # are initialization values - each index should only be set once. Multi-step
+    # calibration patterns (Issue #741) are specific to parameter computations.
 
 
 @dataclass

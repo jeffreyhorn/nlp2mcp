@@ -3588,14 +3588,19 @@ class _ModelBuilder:
                         indices = _process_index_list(target.children[2])
                         # Convert indices to tuple of strings for the map key
                         # Handle str, IndexOffset (has .base), and SubsetIndex (has .subset_name)
-                        idx_tuple = tuple(
-                            (
-                                idx
-                                if isinstance(idx, str)
-                                else idx.base if isinstance(idx, IndexOffset) else idx.subset_name
-                            )
-                            for idx in indices
-                        )
+                        normalized_indices: list[str] = []
+                        for idx in indices:
+                            if isinstance(idx, str):
+                                normalized_indices.append(idx)
+                            elif isinstance(idx, IndexOffset):
+                                normalized_indices.append(idx.base)
+                            elif isinstance(idx, SubsetIndex):
+                                normalized_indices.append(idx.subset_name)
+                            else:
+                                raise ParserSemanticError(
+                                    f"Unsupported index type {type(idx)!r} in .l assignment indices"
+                                ) from None
+                        idx_tuple = tuple(normalized_indices)
                         var.l_expr_map[idx_tuple] = expr
                     else:
                         # Scalar .l assignment
