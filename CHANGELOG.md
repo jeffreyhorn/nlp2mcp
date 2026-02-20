@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 3: WS2 IndexOffset to_gams_string() Extensions - 2026-02-20
+
+**Branch:** `sprint20-day3-indexoffset-to-gams-string`
+
+#### Summary
+
+Sprint 20 Day 3 completed: Extended `IndexOffset.to_gams_string()` in `src/ir/ast.py` to handle complex offset expressions. Added support for `Unary("-", Call(...))` pattern (sparta, tabora), `Unary("-", Binary(...))` pattern (sparta nested case), `Binary(op, Call, Call)` pattern (otpop), and direct `Call(...)` offset. Created helper method `_offset_expr_to_string()` for recursive expression conversion. All three previously-blocked models (sparta, tabora, otpop) now translate successfully. Added 5 comprehensive unit tests covering all new patterns.
+
+#### Changes
+
+- **`src/ir/ast.py`**:
+  - Added `IndexOffset._offset_expr_to_string()` helper method to recursively convert offset expressions (Call, Binary, Unary, Const, SymbolRef) to GAMS string representation
+  - Extended `IndexOffset.to_gams_string()` to handle:
+    - `Unary("-", Call(...))`: e.g., `t-ord(l)` for sparta/tabora
+    - `Unary("-", Binary(...))`: e.g., `t-(ord(l)-1)` for sparta nested case
+    - `Binary(op, Call, Call)`: e.g., `t+(card(t)-ord(t))` for otpop
+    - Direct `Call(...)`: e.g., `i+ord(j)` for general case
+  - Properly wraps Binary expressions in parentheses to preserve precedence
+  - Raises NotImplementedError for circular lead/lag with complex offsets (not needed for target models)
+
+- **`tests/unit/emit/test_expr_to_gams.py`**:
+  - Added 5 new unit tests in `TestIndexOffset` class:
+    - `test_index_offset_unary_minus_call_ord`: Unary("-", Call("ord", ...))
+    - `test_index_offset_unary_minus_call_floor`: Unary("-", Call("floor", ...))
+    - `test_index_offset_binary_call_call`: Binary("-", Call, Call)
+    - `test_index_offset_call_direct`: Direct Call offset
+    - `test_index_offset_nested_binary`: Nested Binary in Unary (sparta pattern)
+
+- **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (updated): Day 3 marked ✅ COMPLETE with deliverables and notes
+
+#### Test Coverage
+
+- All tests pass: 3,591 passed (+5 new tests), 10 skipped, 2 xfailed
+- Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
+
+#### Models Unblocked
+
+- **sparta**: Now translates successfully (was emit failure on `t-(ord(l)-1)`)
+- **tabora**: Now translates successfully (was emit failure on `t-ord(a)`)
+- **otpop**: Now translates successfully (was stationarity failure on `t+(card(t)-ord(t))`)
+- **mine**: Confirms parse success (cascading benefit from Sprint 19)
+
+#### Notes
+
+- xfail sum-collapse test (`test_diff_sum_over_t_with_lead`) remains as expected-failure; this is a cleanup item per INDEXOFFSET_AUDIT.md and doesn't block any of the 8 IndexOffset models
+- pindyck has an unrelated parse error on display statement (not IndexOffset-related)
+
+---
+
 ### Sprint 20 Day 2: WS1 .l Emission — Emitter + End-to-End - 2026-02-20
 
 **Branch:** `sprint20-day2-l-emission-emitter`

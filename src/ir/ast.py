@@ -312,6 +312,86 @@ class IndexOffset(Expr):
     def __repr__(self) -> str:
         return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"
 
+    def _offset_expr_to_string(
+        self, expr: Expr, parent_op: str | None = None, is_right: bool = False
+    ) -> str:
+        """Convert an offset expression to GAMS string representation.
+
+        This is a simplified version of expr_to_gams for offset expressions only.
+        Handles Call, Binary, Unary, Const, and SymbolRef nodes with proper
+        precedence and adjacent operator handling.
+
+        Args:
+            expr: Offset expression to convert
+            parent_op: Parent operator for precedence handling
+            is_right: Whether this expression is the right operand of parent
+
+        Returns:
+            GAMS-formatted string representation
+
+        Raises:
+            NotImplementedError: For unsupported expression types
+        """
+        # Operator precedence (higher = tighter binding)
+        precedence = {"+": 4, "-": 4, "*": 5, "/": 5, "**": 6, "^": 6}
+
+        if isinstance(expr, Const):
+            return str(int(expr.value)) if float(expr.value).is_integer() else str(expr.value)
+        elif isinstance(expr, SymbolRef):
+            return expr.name
+        elif isinstance(expr, Call):
+            args_str = ",".join(self._offset_expr_to_string(arg) for arg in expr.args)
+            return f"{expr.func}({args_str})"
+        elif isinstance(expr, Unary):
+            child_str = self._offset_expr_to_string(expr.child)
+            # For unary minus, wrap Binary child in parens to preserve precedence
+            if expr.op == "-":
+                if isinstance(expr.child, Binary):
+                    return f"-({child_str})"
+                else:
+                    return f"-{child_str}"
+            return f"{expr.op}{child_str}"
+        elif isinstance(expr, Binary):
+            # Handle special case: subtraction of negative constant to avoid adjacent operators
+            # Convert "x - (-5)" to "x + 5" by rewriting the AST and delegating to standard Binary handling
+            if expr.op == "-" and isinstance(expr.right, Const) and expr.right.value < 0:
+                rewritten = Binary("+", expr.left, Const(-expr.right.value))
+                return self._offset_expr_to_string(
+                    rewritten, parent_op=parent_op, is_right=is_right
+                )
+
+            left_str = self._offset_expr_to_string(expr.left, parent_op=expr.op, is_right=False)
+            right_str = self._offset_expr_to_string(expr.right, parent_op=expr.op, is_right=True)
+
+            # Avoid adjacent operators: wrap right operand if it starts with +/-
+            if expr.op in {"+", "-"} and right_str and right_str[0] in {"+", "-"}:
+                right_str = f"({right_str})"
+
+            # Normalize exponentiation operator to GAMS '**'
+            gams_op = "**" if expr.op in {"^", "**"} else expr.op
+            result = f"{left_str}{gams_op}{right_str}"
+
+            # Add parentheses if needed for precedence
+            if parent_op:
+                parent_prec = precedence.get(parent_op, 0)
+                child_prec = precedence.get(expr.op, 0)
+                # Lower precedence always needs parens
+                if child_prec < parent_prec:
+                    return f"({result})"
+                # Equal precedence on right side needs parens for non-associative ops
+                # e.g., a - (b - c) vs a - b - c
+                if child_prec == parent_prec and is_right:
+                    # Subtraction, division, and exponentiation are left-associative
+                    if parent_op in ("-", "/", "^", "**"):
+                        return f"({result})"
+
+            return result
+        else:
+            # Unsupported expression type: fail loudly so invalid GAMS is not emitted silently
+            raise NotImplementedError(
+                f"Unsupported offset expression type {type(expr).__name__!r} in IndexOffset: {expr!r}"
+            )
+
     def to_gams_string(self) -> str:
         """Convert IndexOffset to GAMS syntax string.
 
@@ -326,6 +406,7 @@ class IndexOffset(Expr):
             IndexOffset('i', SymbolRef('j'), circular=False) -> 'i+j'
             IndexOffset('i', Unary('-', SymbolRef('j')), circular=False) -> 'i-j'
             IndexOffset('i', Unary('-', SymbolRef('j')), circular=True) -> 'i--j'
+            IndexOffset('i', Unary('-', Call('ord', ...)), circular=False) -> 'i-ord(...)'
 
         Raises:
             ValueError: If a constant offset is not an integer value.
@@ -380,10 +461,45 @@ class IndexOffset(Expr):
                         return f"{self.base}+{int(offset_val)}"
                     else:
                         return f"{self.base}{int(offset_val)}"
+            elif isinstance(inner, (Call, Binary)):
+                # Sprint 20 Day 3: Handle Unary("-", Call(...)) and Unary("-", Binary(...)) patterns
+                # e.g., sparta: t-(ord(l)-1) → Unary("-", Binary("-", Call("ord", ...), Const(1)))
+                # e.g., tabora: t-ord(a) → Unary("-", Call("ord", ...))
+                # Circular not supported for complex expressions
+                if self.circular:
+                    raise NotImplementedError(
+                        f"Circular lead/lag with complex operand not supported: {inner}"
+                    )
+                inner_str = self._offset_expr_to_string(inner)
+                # Wrap in parens if it's a Binary to preserve precedence
+                if isinstance(inner, Binary):
+                    return f"{self.base}-({inner_str})"
+                else:
+                    return f"{self.base}-{inner_str}"
             else:
                 raise NotImplementedError(
                     f"Unary minus with complex operand not supported: {inner}"
                 )
+        elif isinstance(self.offset, Binary):
+            # Sprint 20 Day 3: Handle Binary(op, ...) pattern
+            # e.g., otpop: t+(card(t)-ord(t)) → Binary("-", Call("card",...), Call("ord",...))
+            # Circular not supported for complex binary expressions
+            if self.circular:
+                raise NotImplementedError(
+                    f"Circular lead/lag with Binary offset not supported: {self.offset}"
+                )
+            offset_str = self._offset_expr_to_string(self.offset)
+            # Wrap complex offset in parentheses for clarity
+            return f"{self.base}+({offset_str})"
+        elif isinstance(self.offset, Call):
+            # Sprint 20 Day 3: Handle Call(...) pattern (direct call without unary minus)
+            # e.g., t+ord(i)
+            if self.circular:
+                raise NotImplementedError(
+                    f"Circular lead/lag with Call offset not supported: {self.offset}"
+                )
+            offset_str = self._offset_expr_to_string(self.offset)
+            return f"{self.base}+{offset_str}"
         else:
             # Complex expression - not supported
             raise NotImplementedError(
