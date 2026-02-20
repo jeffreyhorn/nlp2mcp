@@ -3586,24 +3586,39 @@ class _ModelBuilder:
                     # Extract indices for indexed .l assignments
                     if target.data == "bound_indexed" and len(target.children) > 2:
                         indices = _process_index_list(target.children[2])
-                        # Convert indices to tuple of strings for the map key
-                        # Handle str, IndexOffset (has .base), and SubsetIndex (has .subset_name)
-                        normalized_indices: list[str] = []
-                        for idx in indices:
-                            if isinstance(idx, str):
-                                normalized_indices.append(idx)
-                            elif isinstance(idx, IndexOffset):
-                                normalized_indices.append(idx.base)
-                            elif isinstance(idx, SubsetIndex):
-                                normalized_indices.append(idx.subset_name)
-                            else:
-                                raise ParserSemanticError(
-                                    f"Unsupported index type {type(idx)!r} in .l assignment indices"
-                                ) from None
-                        idx_tuple = tuple(normalized_indices)
+                        # Use the full index objects as the key to preserve offsets and subset structure
+                        idx_tuple = tuple(indices)
+                        # When storing an expression-level .l for specific indices, clear any
+                        # conflicting numeric level initialization for the same indices so
+                        # there is a single source of truth.
+                        if hasattr(var, "l_map") and var.l_map is not None:
+                            # For indexed assignments, we need to clear entries with matching base indices
+                            # Build a string-based key for comparison with l_map entries
+                            str_indices = tuple(
+                                (
+                                    idx
+                                    if isinstance(idx, str)
+                                    else (
+                                        idx.base
+                                        if isinstance(idx, IndexOffset)
+                                        else (
+                                            idx.subset_name
+                                            if isinstance(idx, SubsetIndex)
+                                            else str(idx)
+                                        )
+                                    )
+                                )
+                                for idx in indices
+                            )
+                            var.l_map.pop(str_indices, None)
                         var.l_expr_map[idx_tuple] = expr
                     else:
-                        # Scalar .l assignment
+                        # Scalar .l assignment: clear any existing numeric level information
+                        # so that the expression becomes the sole initializer.
+                        if hasattr(var, "l_map") and var.l_map is not None:
+                            var.l_map.clear()
+                        if hasattr(var, "l"):
+                            var.l = None
                         var.l_expr = expr
                     return
                 # For non-.l bounds (lo/up/fx with expressions): continue without storing
@@ -5260,10 +5275,32 @@ class _ModelBuilder:
             # the parser cannot statically resolve which indices each condition
             # covers. Accept the overwrite silently, matching GAMS semantics.
             storage[key] = value
+            # Sprint 20 Day 1: Clear expression-based .l when setting numeric .l (mutual exclusion)
+            if bound_kind == "l" and hasattr(var, "l_expr_map") and var.l_expr_map:
+                # Clear matching expression entries (check all since keys may have offsets)
+                keys_to_remove = [
+                    expr_key
+                    for expr_key in var.l_expr_map
+                    if len(expr_key) == len(key)
+                    and all(
+                        (k1 == k2)
+                        or (hasattr(k1, "base") and k1.base == k2)
+                        or (hasattr(k1, "subset_name") and k1.subset_name == k2)
+                        for k1, k2 in zip(expr_key, key, strict=True)
+                    )
+                ]
+                for expr_key in keys_to_remove:
+                    del var.l_expr_map[expr_key]
         else:
             scalar_attr = scalar_attrs[bound_kind]
             # Issue #714: Allow repeated scalar assignments (last-write-wins).
             setattr(var, scalar_attr, value)
+            # Sprint 20 Day 1: Clear expression-based .l when setting numeric .l (mutual exclusion)
+            if bound_kind == "l":
+                if hasattr(var, "l_expr") and var.l_expr is not None:
+                    var.l_expr = None
+                if hasattr(var, "l_expr_map") and var.l_expr_map:
+                    var.l_expr_map.clear()
 
     # Map GAMS word-form comparison operators to their symbolic equivalents.
     # This ensures downstream code (condition_eval, expr_to_gams) sees consistent

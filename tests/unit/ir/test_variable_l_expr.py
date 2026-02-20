@@ -198,3 +198,68 @@ def test_mixed_constant_and_expression_l_assignments():
     assert var_c.l is None
     assert var_c.l_expr is not None
     assert isinstance(var_c.l_expr, Binary)
+
+
+def test_l_assignment_overwrite_constant_then_expression():
+    """Last-write-wins when .l is assigned constant then expression for same variable."""
+    text = dedent("""
+        Parameters
+            p1
+        ;
+
+        p1 = 10.0;
+
+        Variables
+            x
+            obj
+        ;
+
+        x.l = 1.0;
+        x.l = p1 * 2;
+
+        Equations objdef;
+        objdef.. obj =e= x;
+
+        Model m / all /;
+        Solve m using NLP minimizing obj;
+    """)
+
+    model = parser.parse_model_text(text)
+
+    var_x = model.variables["x"]
+    # Final assignment is an expression, so l_expr should be set and l cleared
+    assert var_x.l is None
+    assert var_x.l_expr is not None
+    assert isinstance(var_x.l_expr, Binary)
+
+
+def test_l_assignment_overwrite_expression_then_constant():
+    """Last-write-wins when .l is assigned expression then constant for same variable."""
+    text = dedent("""
+        Parameters
+            p1
+        ;
+
+        p1 = 10.0;
+
+        Variables
+            x
+            obj
+        ;
+
+        x.l = p1 * 2;
+        x.l = 1.0;
+
+        Equations objdef;
+        objdef.. obj =e= x;
+
+        Model m / all /;
+        Solve m using NLP minimizing obj;
+    """)
+
+    model = parser.parse_model_text(text)
+
+    var_x = model.variables["x"]
+    # Final assignment is constant, so l should be set and l_expr cleared
+    assert var_x.l == 1.0
+    assert var_x.l_expr is None
