@@ -1,5 +1,7 @@
 """Unit tests for Issue #807, #808, #809 fixes."""
 
+from src.ad.derivative_rules import differentiate_expr
+from src.ir.ast import Binary, Call, Const, VarRef
 from src.ir.parser import parse_model_text, parse_text
 
 
@@ -132,3 +134,56 @@ class TestIssue809ErrorfFunction:
         """
         result = parse_text(source)
         assert result is not None
+
+
+class TestErrorfDerivative:
+    """Test errorf derivative rule: d(errorf(u))/dx = (2/sqrt(pi)) * exp(-sqr(u)) * du/dx."""
+
+    def test_errorf_derivative_simple(self):
+        """d(errorf(x))/dx = (2/sqrt(pi)) * exp(-sqr(x)) * 1."""
+        expr = Call("errorf", (VarRef("x"),))
+        result = differentiate_expr(expr, "x")
+        # Structure: (2/sqrt(pi)) * exp(-sqr(x)) * dx/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        # Right side is dx/dx = 1
+        assert isinstance(result.right, Const)
+        assert result.right.value == 1.0
+        # Left side is (2/sqrt(pi)) * exp(-sqr(x))
+        coeff = result.left
+        assert isinstance(coeff, Binary)
+        assert coeff.op == "*"
+        # coeff.left = 2/sqrt(pi)
+        assert isinstance(coeff.left, Binary)
+        assert coeff.left.op == "/"
+        # coeff.right = exp(-sqr(x))
+        assert isinstance(coeff.right, Call)
+        assert coeff.right.func == "exp"
+
+    def test_errorf_derivative_chain_rule(self):
+        """d(errorf(2*x))/dx applies chain rule."""
+        inner = Binary("*", Const(2.0), VarRef("x"))
+        expr = Call("errorf", (inner,))
+        result = differentiate_expr(expr, "x")
+        # Should be: (2/sqrt(pi)) * exp(-sqr(2*x)) * d(2*x)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+    def test_errorf_derivative_wrt_other_var(self):
+        """d(errorf(x))/dy = 0."""
+        expr = Call("errorf", (VarRef("x"),))
+        result = differentiate_expr(expr, "y")
+        # Inner derivative is 0, so whole thing should simplify or be 0-multiplied
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        # The darg/dx part should be Const(0.0)
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+    def test_errorf_wrong_arity(self):
+        """errorf with wrong number of args raises ValueError."""
+        import pytest
+
+        expr = Call("errorf", (VarRef("x"), VarRef("y")))
+        with pytest.raises(ValueError, match="errorf.*expects 1 argument"):
+            differentiate_expr(expr, "x")

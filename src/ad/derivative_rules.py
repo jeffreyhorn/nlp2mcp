@@ -584,6 +584,8 @@ def _diff_call(
         return _diff_abs(expr, wrt_var, wrt_indices, config)
     elif func == "sqr":
         return _diff_sqr(expr, wrt_var, wrt_indices, config)
+    elif func == "errorf":
+        return _diff_errorf(expr, wrt_var, wrt_indices, config)
     elif func in ("gamma", "loggamma"):
         # Check arity first for consistent error semantics with other functions
         if len(expr.args) != 1:
@@ -951,6 +953,61 @@ def _diff_sqr(
 
     # (2 * arg) * darg/dx
     return Binary("*", two_times_arg, darg_dx)
+
+
+# ============================================================================
+# Error Function (errorf / erf)
+# ============================================================================
+
+
+def _diff_errorf(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of GAMS error function: errorf(x).
+
+    GAMS errorf(x) is the standard error function erf(x).
+    Formula: d(errorf(u))/dx = (2/sqrt(pi)) * exp(-u^2) * du/dx
+
+    Args:
+        expr: Call("errorf", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+
+    Example:
+        >>> # d(errorf(x))/dx = (2/sqrt(pi)) * exp(-x^2)
+        >>> _diff_errorf(Call("errorf", [VarRef("x")]), "x", None)
+        # Returns: (2/sqrt(pi)) * exp(-sqr(x)) * 1
+    """
+    if len(expr.args) != 1:
+        raise ValueError(f"errorf() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    # 2 / sqrt(pi)
+    # pi = 3.14159265358979...;  2/sqrt(pi) ≈ 1.1283791670955126
+    two_over_sqrt_pi = Binary(
+        "/",
+        Const(2.0),
+        Call("sqrt", (Const(3.14159265358979),)),
+    )
+
+    # exp(-sqr(u))
+    neg_u_squared = Unary("-", Call("sqr", (arg,)))
+    exp_neg_u_sq = Call("exp", (neg_u_squared,))
+
+    # (2/sqrt(pi)) * exp(-sqr(u))
+    coeff = Binary("*", two_over_sqrt_pi, exp_neg_u_sq)
+
+    # coeff * du/dx
+    return Binary("*", coeff, darg_dx)
 
 
 # ============================================================================
