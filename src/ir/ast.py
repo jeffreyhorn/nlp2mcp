@@ -333,9 +333,9 @@ class IndexOffset(Expr):
             return f"{expr.func}({args_str})"
         elif isinstance(expr, Unary):
             child_str = self._offset_expr_to_string(expr.child)
-            # For unary minus, if child is complex, wrap in parens
+            # For unary minus, wrap Binary child in parens to preserve precedence
             if expr.op == "-":
-                if isinstance(expr.child, (Binary, Call)):
+                if isinstance(expr.child, Binary):
                     return f"-({child_str})"
                 else:
                     return f"-{child_str}"
