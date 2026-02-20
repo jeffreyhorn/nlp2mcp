@@ -144,7 +144,24 @@ def process_conditionals(source: str, macros: dict[str, str]) -> str:
                 i += 1
                 continue
 
-            # Parse the condition
+            # Check for inline $if (guarded statement on same line)
+            condition_part, inline_stmt = _split_inline_if(stripped)
+
+            if inline_stmt is not None:
+                # Inline $if: evaluate condition and include/exclude the
+                # inline statement.  Do NOT push to conditional stack —
+                # inline guards have no corresponding $endif.
+                condition_met = _evaluate_if_condition(condition_part, macros)
+                parent_including = True if not conditional_stack else conditional_stack[-1][2]
+                leading_ws = line[: len(line) - len(line.lstrip())]
+                if parent_including and condition_met:
+                    result.append(f"{leading_ws}{inline_stmt}")
+                else:
+                    result.append(f"* [Conditional: {stripped}]")
+                i += 1
+                continue
+
+            # Block-style $if: parse the condition and push to stack
             condition_met = _evaluate_if_condition(stripped, macros)
 
             # Push new conditional context
@@ -261,6 +278,57 @@ def process_conditionals(source: str, macros: dict[str, str]) -> str:
     return "\n".join(result)
 
 
+def _split_inline_if(directive_line: str) -> tuple[str, str | None]:
+    """Split an inline ``$if`` directive into condition and guarded statement.
+
+    GAMS supports two forms of ``$if``:
+
+    - **Block-style:** ``$if <condition>`` followed by lines until ``$endif``
+    - **Inline:** ``$if <condition> <statement>`` where the guarded statement
+      appears on the same line (no ``$endif`` needed)
+
+    This function detects the inline form and returns the condition part
+    and the inline statement.  For block-style directives it returns
+    ``(original_line, None)``.
+
+    Returns:
+        ``(condition_part, inline_statement)`` where *inline_statement* is
+        ``None`` for block-style directives.
+    """
+    stripped = directive_line.strip()
+
+    # Pattern 1: $if[I|E] [not] set VARNAME [<inline>]
+    m = re.match(
+        r"(\$if[ie]?\s+(?:not\s+)?set\s+\w+)\s+(.*)",
+        stripped,
+        re.IGNORECASE,
+    )
+    if m and m.group(2).strip():
+        return m.group(1), m.group(2).strip()
+
+    # Pattern 2: $if[I|E] [not] errorfree [<inline>]
+    m = re.match(
+        r"(\$if[ie]?\s+(?:not\s+)?errorfree)\s+(.*)",
+        stripped,
+        re.IGNORECASE,
+    )
+    if m and m.group(2).strip():
+        return m.group(1), m.group(2).strip()
+
+    # Pattern 3: $if[I|E] EXPR OP VALUE [<inline>]
+    # Matches conditions like: %system.lp% == cplex, mod(%DIM%,2)=1
+    m = re.match(
+        r"(\$if[ie]?\s+\S+\s*(?:>=|<=|>|<|==|!=|=)\s*\S+)\s+(.*)",
+        stripped,
+        re.IGNORECASE,
+    )
+    if m and m.group(2).strip():
+        return m.group(1), m.group(2).strip()
+
+    # No inline statement detected — block-style
+    return stripped, None
+
+
 def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
     """Evaluate a $if condition.
 
@@ -280,6 +348,9 @@ def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
         True
     """
     stripped = condition_line.strip()
+
+    # Normalize $ifI / $ifE to $if for uniform matching
+    stripped = re.sub(r"^\$if[ie]", "$if", stripped, count=1, flags=re.IGNORECASE)
 
     # Pattern: $if set varname
     match = re.match(r"\$if\s+set\s+(\w+)", stripped, re.IGNORECASE)

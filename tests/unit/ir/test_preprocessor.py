@@ -29,6 +29,7 @@ from src.ir.preprocessor import (
     normalize_multi_line_continuations,
     preprocess_gams_file,
     preprocess_text,
+    process_conditionals,
     strip_conditional_directives,
     strip_unsupported_directives,
 )
@@ -1510,3 +1511,82 @@ class TestExpandMultiSegmentTupleRowLabels:
         lines = result.split("\n")
         set_lines = [ln for ln in lines if ln.strip().lower().startswith("set")]
         assert len(set_lines) == 1
+
+
+class TestProcessConditionalsInline:
+    """Test inline $if handling in process_conditionals (Sprint 20 Day 5)."""
+
+    def test_inline_if_set_true(self):
+        """Inline $if set X stmt: included when X is defined."""
+        source = "$if set debug x = 1;\nsolve m using nlp;"
+        result = process_conditionals(source, {"debug": "1"})
+        assert "x = 1;" in result
+        assert "solve m using nlp;" in result
+        assert "Excluded" not in result
+
+    def test_inline_if_set_false(self):
+        """Inline $if set X stmt: excluded when X is NOT defined."""
+        source = "$if set workSpace camshape.workSpace = %workSpace%\nsolve camshape using nlp maximizing area;"
+        result = process_conditionals(source, {})
+        # The inline statement should be excluded (shown as Conditional comment)
+        assert "Conditional" in result
+        # But the solve statement on the NEXT line must NOT be excluded
+        assert "solve camshape using nlp maximizing area;" in result
+        assert "Excluded" not in result
+
+    def test_inline_if_not_set(self):
+        """Inline $if not set X stmt: included when X is NOT defined."""
+        source = "$if not set debug x = 1;\ny = 2;"
+        result = process_conditionals(source, {})
+        assert "x = 1;" in result
+        assert "y = 2;" in result
+        assert "Excluded" not in result
+
+    def test_inline_if_not_set_excluded(self):
+        """Inline $if not set X stmt: excluded when X IS defined."""
+        source = "$if not set debug x = 1;\ny = 2;"
+        result = process_conditionals(source, {"debug": "1"})
+        assert "Conditional" in result
+        # The next line must still be included
+        assert "y = 2;" in result
+
+    def test_inline_if_errorfree(self):
+        """Inline $if not errorfree $abort ...: handled as inline."""
+        source = "$if not errorfree $abort bad params\nsolve m using nlp;"
+        result = process_conditionals(source, {})
+        # errorfree is not a macro, so 'not errorfree' evaluates to True
+        # (errorfree not in macros → not set → $if not errorfree is true)
+        # The solve line must not be excluded regardless
+        assert "solve m using nlp;" in result
+        assert "Excluded" not in result
+
+    def test_inline_if_expr_with_goto(self):
+        """Inline $ifI with expression condition and $goTo."""
+        source = "$ifI 1 == 1 $goTo cont\nsolve m using nlp;"
+        result = process_conditionals(source, {})
+        # The solve line must not be excluded
+        assert "solve m using nlp;" in result
+
+    def test_inline_if_no_stack_leak(self):
+        """Inline $if must NOT leave entries on the conditional stack."""
+        source = "$if set missing x = 1;\ny = 2;\nz = 3;"
+        result = process_conditionals(source, {})
+        # No unclosed warnings
+        assert "unclosed" not in result.lower()
+        # Both subsequent lines must be included
+        assert "y = 2;" in result
+        assert "z = 3;" in result
+
+    def test_block_if_still_works(self):
+        """Block-style $if (no inline stmt) should still work as before."""
+        source = "$if set debug\nx = 1;\n$endif\ny = 2;"
+        result = process_conditionals(source, {"debug": "1"})
+        assert "x = 1;" in result
+        assert "y = 2;" in result
+
+    def test_block_if_false_excludes_body(self):
+        """Block-style $if (false) should exclude body until $endif."""
+        source = "$if set debug\nx = 1;\n$endif\ny = 2;"
+        result = process_conditionals(source, {})
+        assert "Excluded" in result
+        assert "y = 2;" in result
