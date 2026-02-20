@@ -17,7 +17,7 @@ This file contains comprehensive prompts for each day of Sprint 20 (Days 0–14)
 **Prerequisites:**
 - Read `docs/planning/EPIC_4/SPRINT_20/PLAN.md` (lines 1–50) — sprint overview, targets, and workstream summaries
 - Read `docs/planning/EPIC_4/SPRINT_20/BASELINE_METRICS.md` — exact baseline numbers at commit `dc390373`
-- Read `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` — note items still marked INCOMPLETE (Unknowns 4.1, 5.x, 7.x)
+- Read `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` — note Unknown 6.4 (Status: INCOMPLETE, explicitly deferred) and any items still marked PARTIAL
 - Review open GitHub issues referenced in PLAN.md (issues #753, #757, #763, #764, #789)
 
 **Tasks to Complete (~1 hour):**
@@ -31,10 +31,10 @@ This file contains comprehensive prompts for each day of Sprint 20 (Days 0–14)
    - Record baseline metrics (parse 112/160, translate 96/112, solve 27/96, match 10/27, lexer_invalid_char 26, tests 3,579)
    - Note the baseline commit: `dc390373`
 
-3. **Update KNOWN_UNKNOWNS.md stale entries** (0.25h)
-   - Unknowns 4.1, 5.x, 7.x are INCOMPLETE but were resolved by Tasks 3, 6, and 5 during prep
-   - Update each to ✅ VERIFIED with a brief note pointing to the relevant design doc
-   - Reference: `docs/planning/EPIC_4/SPRINT_20/INDEXOFFSET_AUDIT.md`, `LEXER_ERROR_CATALOG_UPDATE.md`, `TRANSLATE_ERROR_AUDIT.md`
+3. **Verify KNOWN_UNKNOWNS.md is current** (0.25h)
+   - Confirm Unknowns 4.1, 5.x, 7.x are already marked ✅ VERIFIED (resolved by Tasks 3, 6, and 5 during prep)
+   - Confirm Unknown 6.4 remains Status: INCOMPLETE (explicitly deferred to Sprint 20 Day 3)
+   - Check for any unexpected INCOMPLETE entries; if found, investigate or update accordingly
 
 4. **Map open issues to workstreams** (0.25h)
    - Review GitHub issues: `gh issue list --state open`
@@ -44,7 +44,7 @@ This file contains comprehensive prompts for each day of Sprint 20 (Days 0–14)
 **Deliverables:**
 - `make test` passing (3,579 tests)
 - `docs/planning/EPIC_4/SPRINT_20/SPRINT_LOG.md` initialized with baseline metrics
-- `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` updated (Unknowns 4.1, 5.x, 7.x → ✅ VERIFIED)
+- `docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md` verified current (Unknowns 4.1, 5.x, 7.x already ✅ VERIFIED; Unknown 6.4 INCOMPLETE as expected)
 
 **Quality Checks:**
 ALWAYS run these commands before any commit or push that includes changes to code files:
@@ -59,7 +59,7 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 - [ ] All success criteria met:
   - [ ] `make test` passes (3,579 tests)
   - [ ] `SPRINT_LOG.md` created with baseline metrics
-  - [ ] KNOWN_UNKNOWNS.md Unknowns 4.1, 5.x, 7.x marked ✅ VERIFIED
+  - [ ] KNOWN_UNKNOWNS.md verified current (no unexpected INCOMPLETE entries)
 - [ ] Mark Day 0 as complete in `docs/planning/EPIC_4/SPRINT_20/PLAN.md`
 - [ ] Log progress to `CHANGELOG.md`
 
@@ -411,7 +411,7 @@ After committing and pushing all changes:
 
 **Branch:** Create a new branch named `sprint20-day5-model-no-objective-def-fix` from `main`
 
-**Objective:** Fix `process_conditionals` in `src/ir/preprocessor.py` to handle same-line `$if` guard (the `$if set workSpace` bug), unblocking ≥ 10 of 13 affected models.
+**Objective:** Fix `process_conditionals` in `src/ir/preprocessor.py` to handle same-line `$if` guard (the `$if set workSpace` bug), unblocking ≥ 11 of 13 affected models.
 
 **Prerequisites:**
 - Read `docs/planning/EPIC_4/SPRINT_20/TRANSLATE_ERROR_AUDIT.md` — full analysis of `$if set workSpace` preprocessor bug; exact reproduction cases; the 13 affected models
@@ -436,7 +436,7 @@ After committing and pushing all changes:
      - Multi-statement same-line guard (if applicable)
      - Nested: `$if set X $if set Y stmt`
 
-3. **End-to-end: verify ≥ 10 of 13 `$if`-bug models now parse** (0.5h)
+3. **End-to-end: verify ≥ 11 of 13 `$if`-bug models now parse** (0.5h)
    - Run: camshape, catmix, chain, lnts, polygon, and others from the 13-model list
    - Confirm each reaches parse stage without `model_no_objective_def`
 
@@ -453,7 +453,7 @@ After committing and pushing all changes:
 - `src/ir/preprocessor.py` — `process_conditionals` handles inline `$if` guard
 - `tests/unit/ir/` — ≥ 5 unit tests for inline `$if` variants
 - model_no_objective_def count ≤ 4
-- ≥ 10 of 13 `$if`-bug models now parse
+- ≥ 11 of 13 `$if`-bug models now parse
 - lmp2 issue filed (if not already open)
 
 **Quality Checks:**
@@ -466,7 +466,7 @@ ALWAYS run these commands before any commit or push that includes changes to cod
 **Completion Criteria:**
 - [ ] All success criteria met:
   - [ ] model_no_objective_def ≤ 4 (down from 14)
-  - [ ] ≥ 10 of 13 `$if`-bug models newly parse
+  - [ ] ≥ 11 of 13 `$if`-bug models newly parse
   - [ ] ≥ 5 unit tests for inline `$if` patterns pass
   - [ ] lmp2 documented and issue filed
 - [ ] Mark Day 5 as complete in `docs/planning/EPIC_4/SPRINT_20/PLAN.md`
@@ -477,7 +477,7 @@ After committing and pushing all changes:
 1. Create a pull request using GitHub CLI:
    ```bash
    gh pr create --title "Sprint 20 Day 5: WS4 model_no_objective_def preprocessor fix" \
-                --body "Completes Day 5 tasks from Sprint 20 PLAN.md: process_conditionals inline \$if fix; model_no_objective_def ≤ 4; ≥ 10 of 13 \$if-bug models now parse." \
+                --body "Completes Day 5 tasks from Sprint 20 PLAN.md: process_conditionals inline \$if fix; model_no_objective_def ≤ 4; ≥ 11 of 13 \$if-bug models now parse." \
                 --base main
    ```
 2. Request a review from Copilot:

@@ -29,6 +29,9 @@ All KNOWN_UNKNOWNS resolved or explicitly deferred. Prep phase complete.
   model_no_objective_def, WS5 tolerance/Inf, WS6 regression tests), Checkpoint 1 (Day 6)
   and Checkpoint 2 (Day 11) with GO/NO-GO criteria, 3 contingency plans, Sprint 19
   retrospective improvements incorporated
+- **`docs/planning/EPIC_4/SPRINT_20/prompts/PLAN_PROMPTS.md`** (created): Day-by-day
+  execution prompts (Day 0–14), each self-contained with objectives, prerequisites, tasks,
+  deliverables, quality checks, completion criteria, PR & review workflow
 - **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): Unknown 3.3 verified,
   Unknown 6.4 explicitly deferred, template X.Y closed out — no bare INCOMPLETE entries remain
 - **`docs/planning/EPIC_4/SPRINT_20/PREP_PLAN.md`** (updated): Task 10 → ✅ COMPLETE; all 10

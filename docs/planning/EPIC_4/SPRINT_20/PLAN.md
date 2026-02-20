@@ -256,11 +256,11 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 |---|---|---|
 | Fix `process_conditionals` for single-line `$if` | `src/ir/preprocessor.py` | Inline `$if` guard handled correctly |
 | Unit tests: `$if set X stmt` on same line | `tests/unit/ir/` | ≥ 5 tests covering all inline `$if` variants |
-| End-to-end: camshape, catmix, chain, lnts, polygon parse | pipeline | ≥ 10 of 13 `$if`-bug models now parse |
+| End-to-end: camshape, catmix, chain, lnts, polygon parse | pipeline | ≥ 11 of 13 `$if`-bug models now parse |
 | Handle robot typo (`miniziming`) if needed | grammar or preprocessor | robot parses |
 | Document lmp2 (doubly-nested loop) — file issue if needed | GitHub | lmp2 deferred or fixed |
 
-**End of Day 5 criterion:** model_no_objective_def ≤ 4; ≥ 10 models newly parsing; PR merged.
+**End of Day 5 criterion:** model_no_objective_def ≤ 4; ≥ 11 models newly parsing; PR merged.
 
 ---
 

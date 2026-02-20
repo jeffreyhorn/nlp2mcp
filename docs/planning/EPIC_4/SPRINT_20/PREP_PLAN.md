@@ -847,6 +847,7 @@ This is likely a 3-week sprint (Weeks 5–7, ~21 working days). The actual scope
 ### Changes
 
 - **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (created): Day 0–14 schedule with 6 workstreams, 2 checkpoints, revised effort estimates, 3 contingency plans, acceptance criteria (parse ≥ 127/160, match ≥ 15, solve ≥ 30), Sprint 19 retrospective improvements incorporated
+- **`docs/planning/EPIC_4/SPRINT_20/prompts/PLAN_PROMPTS.md`** (created): Day-by-day execution prompts for Day 0–14, each prompt self-contained with branch naming, objectives, prerequisites, tasks, deliverables, quality checks, completion criteria, PR & review workflow
 - **`docs/planning/EPIC_4/SPRINT_20/KNOWN_UNKNOWNS.md`** (updated): remaining INCOMPLETE entries resolved — Unknown 3.3 verified (chenery only), Unknown 6.4 explicitly deferred, template X.Y closed out
 
 ### Result
