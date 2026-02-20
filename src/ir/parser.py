@@ -3051,6 +3051,36 @@ class _ModelBuilder:
         self.model.model_equations = []
         self.model.model_uses_all = True
 
+    @staticmethod
+    def _extract_model_refs(ref_list: Tree) -> tuple[list[str], bool]:
+        """Extract equation references from a ``model_ref_list`` tree node.
+
+        Returns ``(refs, uses_all)`` where *refs* is a list of equation names
+        and *uses_all* is ``True`` when the list represents ``/ all /`` or
+        ``/ all - eq1 ... /`` semantics.
+        """
+        refs: list[str] = []
+        has_all_except = False
+        for child in ref_list.children:
+            if isinstance(child, Tree):
+                if child.data == "model_simple_ref":
+                    refs.append(_token_text(child.children[0]))
+                elif child.data == "model_dotted_ref":
+                    # For dotted refs like eq.var, use the equation name (first ID)
+                    refs.append(_token_text(child.children[0]))
+                elif child.data == "model_all_except":
+                    has_all_except = True
+            elif isinstance(child, Token) and child.type == "ID":
+                # Backward compatibility: direct ID tokens
+                refs.append(_token_text(child))
+
+        # If the list contains only "all" (case-insensitive), treat as / all /
+        if len(refs) == 1 and refs[0].lower() == "all":
+            return [], True
+        if has_all_except:
+            return refs, True
+        return refs, False
+
     def _handle_model_with_list(self, node: Tree) -> None:
         name = _token_text(node.children[0])
         # Issue #714: Find the model_ref_list Tree child dynamically —
@@ -3061,14 +3091,11 @@ class _ModelBuilder:
         )
         if ref_list is None:
             raise self._error(f"Missing model_ref_list in model_with_list for '{name}'", node)
-        refs = [
-            _token_text(tok)
-            for tok in ref_list.children
-            if isinstance(tok, Token) and tok.type == "ID"
-        ]
+
+        refs, uses_all = self._extract_model_refs(ref_list)
         self.model.declared_model = name
         self.model.model_equations = refs
-        self.model.model_uses_all = False
+        self.model.model_uses_all = uses_all
 
     def _handle_model_decl(self, node: Tree) -> None:
         name = _token_text(node.children[0])
@@ -3109,27 +3136,19 @@ class _ModelBuilder:
         # Store equation list / all flag from the first model only
         first_item = model_items[0]
 
-        # Check if this model uses "all" or has an equation list
-        if len(first_item.children) > 1:
-            second_child = first_item.children[1]
-            if isinstance(second_child, Tree) and second_child.data == "model_ref_list":
-                # Model has equation list
-                refs = [
-                    _token_text(tok)
-                    for tok in second_child.children
-                    if isinstance(tok, Token) and tok.type == "ID"
-                ]
-                # Special case: if the list contains only "all" (case-insensitive), treat it as / all /
-                if len(refs) == 1 and refs[0].lower() == "all":
-                    self.model.model_equations = []
-                    self.model.model_uses_all = True
-                else:
-                    self.model.model_equations = refs
-                    self.model.model_uses_all = False
+        # Find the model_ref_list child (if any) — the / all / variant has no such child
+        ref_list = next(
+            (c for c in first_item.children if isinstance(c, Tree) and c.data == "model_ref_list"),
+            None,
+        )
+        if ref_list is not None:
+            refs, uses_all = self._extract_model_refs(ref_list)
+            self.model.model_equations = refs
+            self.model.model_uses_all = uses_all
         else:
-            # No equations specified
+            # / all / variant (no model_ref_list) or no equations
             self.model.model_equations = []
-            self.model.model_uses_all = False
+            self.model.model_uses_all = len(first_item.children) > 1
 
     def _handle_file_stmt(self, node: Tree) -> None:
         """Handle File declaration (Issue #746/#747).
