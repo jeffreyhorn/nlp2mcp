@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 5: WS4 model_no_objective_def Preprocessor Fix - 2026-02-20
+
+**Branch:** `sprint20-day5-model-no-objective-def-fix`
+
+#### Summary
+
+Fixed inline `$if` handling in `process_conditionals` to correctly detect single-line `$if` directives where the guarded statement appears on the same line as the condition. Previously, inline `$if set workSpace X` was treated as a block-style `$if`, causing the next line (often the `solve` statement) to be incorrectly excluded. Reduced `model_no_objective_def` from 14 to 4. Filed Issue #810 for lmp2 doubly-nested loop (deferred to Sprint 21).
+
+#### Changes
+
+- **`src/ir/preprocessor.py`**:
+  - Added `_split_inline_if()` helper to detect and split inline `$if` directives
+  - Updated `process_conditionals()` to handle inline `$if` without pushing to the conditional stack
+  - Updated `_evaluate_if_condition()` to normalize `$ifI`/`$ifE` prefixes to `$if`
+
+- **`tests/unit/ir/test_preprocessor.py`**:
+  - Added 9 unit tests in `TestProcessConditionalsInline` class covering:
+    - Inline `$if set X` (true/false), `$if not set X` (true/false)
+    - `$if not errorfree`, `$ifI` expression with `$goTo`
+    - Stack leak prevention, block-style `$if` backward compatibility
+
+- **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`**: Day 5 marked ✅ COMPLETE
+
+#### Models Newly Parsing with Objectives (8 of 13)
+
+camshape, catmix, chain, lnts, polygon, robot, rocket, elec
+
+#### Remaining model_no_objective_def (4)
+
+lmp1, lmp2, lmp3 (nested loop solve extraction — Issue #810), mhw4dxx (parse error — different root cause)
+
 ### Sprint 20 Day 4: WS3 Lexer Phase 1 — Subcategories L, M, H - 2026-02-20
 
 **Branch:** `sprint20-day4-lexer-phase1-lmh`
