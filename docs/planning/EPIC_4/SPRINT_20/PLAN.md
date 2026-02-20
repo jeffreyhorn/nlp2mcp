@@ -166,7 +166,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ## 15-Day Schedule
 
-### Day 0 — Baseline Confirm + Sprint Kickoff
+### Day 0 — Baseline Confirm + Sprint Kickoff ✅ COMPLETE
 
 **Theme:** Verify clean baseline, read PLAN.md, confirm all tests pass  
 **Effort:** 1h
@@ -174,11 +174,11 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | Task | Deliverable |
 |---|---|
 | `make test` — confirm 3,579 passed | Clean baseline ✅ |
-| Review BASELINE_METRICS.md | Baseline numbers internalized |
-| Create SPRINT_LOG.md | Sprint log initialized |
-| Read open GitHub issues; triage to workstream | Issue-to-WS mapping |
+| Review BASELINE_METRICS.md | Baseline numbers internalized ✅ |
+| Create SPRINT_LOG.md | Sprint log initialized ✅ |
+| Read open GitHub issues; triage to workstream | Issue-to-WS mapping ✅ |
 
-**Day 0 criterion:** All tests pass; SPRINT_LOG.md created.
+**Day 0 criterion:** All tests pass; SPRINT_LOG.md created. ✅
 
 ---
 
