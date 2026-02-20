@@ -5,7 +5,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.ir.ast import Expr
+    from src.ir.ast import Expr, IndexOffset, SubsetIndex
 
 
 @dataclass
@@ -92,6 +92,15 @@ class VariableDef:
     fx_map: dict[tuple[str, ...], float] = field(default_factory=dict)
     l_map: dict[tuple[str, ...], float] = field(default_factory=dict)
     m_map: dict[tuple[str, ...], float] = field(default_factory=dict)
+    # Sprint 20 Day 1: Expression-based .l assignments (non-constant RHS)
+    l_expr: Expr | None = None  # Scalar: a.l = (xmin+xmax)/2
+    l_expr_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(
+        default_factory=dict
+    )  # Indexed: x.l(i) = f(i), x.l(t+1) = g(t)
+    # Note: Keys preserve full index objects (str/IndexOffset/SubsetIndex) to maintain
+    # offset and subset structure. Uses dict (not list like ParameterDef.expressions)
+    # because .l assignments are initialization values - each index should only be set
+    # once. Multi-step calibration patterns (Issue #741) are specific to parameter computations.
 
 
 @dataclass

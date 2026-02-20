@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 1: WS1 .l Emission — IR + Parser - 2026-02-20
+
+**Branch:** `sprint20-day1-l-emission-ir-parser`
+
+#### Summary
+
+Sprint 20 Day 1 completed: Added `l_expr`/`l_expr_map` fields to `VariableDef` for expression-based `.l` assignments, modified `_handle_assign` to store `.l` expressions instead of dropping them, added 5 unit tests covering scalar, indexed, and chained `.l` capture. Verified circle.gms IR correctly populates `a.l_expr`, `b.l_expr`, `r.l_expr`. All 3,584 tests pass.
+
+#### Changes
+
+- **`src/ir/symbols.py`**: Added `l_expr: Expr | None` and `l_expr_map: dict[tuple[str, ...], Expr]` fields to `VariableDef` to store expression-based `.l` assignments (e.g., `a.l = (xmin+xmax)/2`)
+- **`src/ir/parser.py`**: Modified `_handle_assign` to detect `.l` bound assignments with non-constant expressions and store them in `var.l_expr` (scalar) or `var.l_expr_map` (indexed) instead of dropping them
+- **`tests/unit/ir/test_variable_l_expr.py`** (created): 5 unit tests covering scalar `.l` expressions, indexed `.l` expressions, chained `.l` assignments (referencing other variables), constant `.l` assignments (still use scalar `l` field), and mixed constant/expression `.l` assignments
+- **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (updated): Day 1 marked ✅ COMPLETE
+
+#### Test Coverage
+
+- New tests: 5 (`test_variable_l_expr.py`)
+- Total tests: 3,584 passed, 10 skipped, 2 xfailed
+
+---
+
 ### Sprint 20 Day 0: Baseline Confirm + Sprint Kickoff - 2026-02-19
 
 **Branch:** `sprint20-day0-kickoff`

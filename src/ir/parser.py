@@ -3560,14 +3560,68 @@ class _ModelBuilder:
             value = self._extract_constant(expr, "assignment")
         except ParserSemanticError:
             # Non-constant expressions:
-            # - For variable bounds with expressions: parse and continue (Sprint 10 Day 6)
+            # - For variable .l with expressions: store as expression (Sprint 20 Day 1)
+            # - For other variable bounds with expressions: parse and continue (Sprint 10 Day 6)
             # - For parameters with function calls: store as expression (Sprint 10 Day 4)
             # - For parameters with only param refs: store as expression (Sprint 17 Day 4)
             # - For parameters with variable refs: skip (runtime values, can't store)
             # (e.g., trig.gms: xdiff = 2.66695657 - x1.l uses x1.l which is runtime)
             if is_variable_bound:
-                # Variable bounds with expressions (circle.gms: a.l = (xmin + xmax)/2)
-                # Parse and continue without storing (mock/store approach)
+                # Sprint 20 Day 1: Store .l expressions for variable initialization
+                # Extract bound_kind from target to check if this is a .l assignment
+                bound_kind = None
+                if isinstance(target, Tree):
+                    if target.data == "bound_indexed" and len(target.children) > 1:
+                        bound_kind = _token_text(target.children[1]).lower()
+                    elif target.data == "bound_scalar" and len(target.children) > 1:
+                        bound_kind = _token_text(target.children[1]).lower()
+
+                if bound_kind == "l":
+                    # Store .l expression for emission (circle.gms: a.l = (xmin + xmax)/2)
+                    var_name = _token_text(target.children[0])
+                    if var_name not in self.model.variables:
+                        raise self._error(f"Variable '{var_name}' not declared", target) from None
+                    var = self.model.variables[var_name]
+
+                    # Extract indices for indexed .l assignments
+                    if target.data == "bound_indexed" and len(target.children) > 2:
+                        indices = _process_index_list(target.children[2])
+                        # Use the full index objects as the key to preserve offsets and subset structure
+                        idx_tuple = tuple(indices)
+                        # When storing an expression-level .l for specific indices, clear any
+                        # conflicting numeric level initialization for the same indices so
+                        # there is a single source of truth.
+                        if hasattr(var, "l_map") and var.l_map is not None:
+                            # For indexed assignments, we need to clear entries with matching base indices
+                            # Build a string-based key for comparison with l_map entries
+                            str_indices = tuple(
+                                (
+                                    idx
+                                    if isinstance(idx, str)
+                                    else (
+                                        idx.base
+                                        if isinstance(idx, IndexOffset)
+                                        else (
+                                            idx.subset_name
+                                            if isinstance(idx, SubsetIndex)
+                                            else str(idx)
+                                        )
+                                    )
+                                )
+                                for idx in indices
+                            )
+                            var.l_map.pop(str_indices, None)
+                        var.l_expr_map[idx_tuple] = expr
+                    else:
+                        # Scalar .l assignment: clear any existing numeric level information
+                        # so that the expression becomes the sole initializer.
+                        if hasattr(var, "l_map") and var.l_map is not None:
+                            var.l_map.clear()
+                        if hasattr(var, "l"):
+                            var.l = None
+                        var.l_expr = expr
+                    return
+                # For non-.l bounds (lo/up/fx with expressions): continue without storing
                 return
             # Sprint 17 Day 4: Store parameter expressions that don't reference variables
             # This enables computed parameters like c(i,j) = f*d(i,j)/1000 to be emitted
@@ -5221,10 +5275,32 @@ class _ModelBuilder:
             # the parser cannot statically resolve which indices each condition
             # covers. Accept the overwrite silently, matching GAMS semantics.
             storage[key] = value
+            # Sprint 20 Day 1: Clear expression-based .l when setting numeric .l (mutual exclusion)
+            if bound_kind == "l" and hasattr(var, "l_expr_map") and var.l_expr_map:
+                # Clear matching expression entries (check all since keys may have offsets)
+                keys_to_remove = [
+                    expr_key
+                    for expr_key in var.l_expr_map
+                    if len(expr_key) == len(key)
+                    and all(
+                        (k1 == k2)
+                        or (hasattr(k1, "base") and k1.base == k2)
+                        or (hasattr(k1, "subset_name") and k1.subset_name == k2)
+                        for k1, k2 in zip(expr_key, key, strict=True)
+                    )
+                ]
+                for expr_key in keys_to_remove:
+                    del var.l_expr_map[expr_key]
         else:
             scalar_attr = scalar_attrs[bound_kind]
             # Issue #714: Allow repeated scalar assignments (last-write-wins).
             setattr(var, scalar_attr, value)
+            # Sprint 20 Day 1: Clear expression-based .l when setting numeric .l (mutual exclusion)
+            if bound_kind == "l":
+                if hasattr(var, "l_expr") and var.l_expr is not None:
+                    var.l_expr = None
+                if hasattr(var, "l_expr_map") and var.l_expr_map:
+                    var.l_expr_map.clear()
 
     # Map GAMS word-form comparison operators to their symbolic equivalents.
     # This ensures downstream code (condition_eval, expr_to_gams) sees consistent
