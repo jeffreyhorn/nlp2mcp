@@ -312,18 +312,26 @@ class IndexOffset(Expr):
     def __repr__(self) -> str:
         return f"IndexOffset(base={self.base!r}, offset={self.offset!r}, circular={self.circular})"
 
-    def _offset_expr_to_string(self, expr: Expr) -> str:
+    def _offset_expr_to_string(self, expr: Expr, parent_op: str | None = None) -> str:
         """Convert an offset expression to GAMS string representation.
 
         This is a simplified version of expr_to_gams for offset expressions only.
-        Handles Call, Binary, Unary, Const, and SymbolRef nodes.
+        Handles Call, Binary, Unary, Const, and SymbolRef nodes with proper
+        precedence and adjacent operator handling.
 
         Args:
             expr: Offset expression to convert
+            parent_op: Parent operator for precedence handling
 
         Returns:
             GAMS-formatted string representation
+
+        Raises:
+            NotImplementedError: For unsupported expression types
         """
+        # Operator precedence (higher = tighter binding)
+        precedence = {"+": 4, "-": 4, "*": 5, "/": 5, "**": 6, "^": 6}
+
         if isinstance(expr, Const):
             return str(int(expr.value)) if float(expr.value).is_integer() else str(expr.value)
         elif isinstance(expr, SymbolRef):
@@ -341,12 +349,40 @@ class IndexOffset(Expr):
                     return f"-{child_str}"
             return f"{expr.op}{child_str}"
         elif isinstance(expr, Binary):
-            left_str = self._offset_expr_to_string(expr.left)
-            right_str = self._offset_expr_to_string(expr.right)
-            return f"{left_str}{expr.op}{right_str}"
+            # Handle special case: subtraction of negative constant to avoid adjacent operators
+            # Convert "x - (-5)" to "x + 5"
+            if expr.op == "-" and isinstance(expr.right, Const) and expr.right.value < 0:
+                left_str = self._offset_expr_to_string(expr.left, parent_op="+")
+                right_val = -expr.right.value
+                right_str = str(int(right_val)) if float(right_val).is_integer() else str(right_val)
+                result = f"{left_str}+{right_str}"
+                # Check if we need parens based on parent precedence
+                if parent_op and precedence.get("+", 0) < precedence.get(parent_op, 0):
+                    return f"({result})"
+                return result
+
+            left_str = self._offset_expr_to_string(expr.left, parent_op=expr.op)
+            right_str = self._offset_expr_to_string(expr.right, parent_op=expr.op)
+
+            # Avoid adjacent operators: wrap right operand if it starts with +/-
+            if expr.op in {"+", "-"} and right_str and right_str[0] in {"+", "-"}:
+                right_str = f"({right_str})"
+
+            result = f"{left_str}{expr.op}{right_str}"
+
+            # Add parentheses if needed for precedence
+            if parent_op:
+                parent_prec = precedence.get(parent_op, 0)
+                child_prec = precedence.get(expr.op, 0)
+                if child_prec < parent_prec:
+                    return f"({result})"
+
+            return result
         else:
-            # Fallback for any other expression type
-            return repr(expr)
+            # Unsupported expression type: fail loudly so invalid GAMS is not emitted silently
+            raise NotImplementedError(
+                f"Unsupported offset expression type {type(expr).__name__!r} in IndexOffset: {expr!r}"
+            )
 
     def to_gams_string(self) -> str:
         """Convert IndexOffset to GAMS syntax string.
