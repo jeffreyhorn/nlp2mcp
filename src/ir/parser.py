@@ -3560,14 +3560,48 @@ class _ModelBuilder:
             value = self._extract_constant(expr, "assignment")
         except ParserSemanticError:
             # Non-constant expressions:
-            # - For variable bounds with expressions: parse and continue (Sprint 10 Day 6)
+            # - For variable .l with expressions: store as expression (Sprint 20 Day 1)
+            # - For other variable bounds with expressions: parse and continue (Sprint 10 Day 6)
             # - For parameters with function calls: store as expression (Sprint 10 Day 4)
             # - For parameters with only param refs: store as expression (Sprint 17 Day 4)
             # - For parameters with variable refs: skip (runtime values, can't store)
             # (e.g., trig.gms: xdiff = 2.66695657 - x1.l uses x1.l which is runtime)
             if is_variable_bound:
-                # Variable bounds with expressions (circle.gms: a.l = (xmin + xmax)/2)
-                # Parse and continue without storing (mock/store approach)
+                # Sprint 20 Day 1: Store .l expressions for variable initialization
+                # Extract bound_kind from target to check if this is a .l assignment
+                bound_kind = None
+                if isinstance(target, Tree):
+                    if target.data == "bound_indexed" and len(target.children) > 1:
+                        bound_kind = _token_text(target.children[1]).lower()
+                    elif target.data == "bound_scalar" and len(target.children) > 1:
+                        bound_kind = _token_text(target.children[1]).lower()
+
+                if bound_kind == "l":
+                    # Store .l expression for emission (circle.gms: a.l = (xmin + xmax)/2)
+                    var_name = _token_text(target.children[0])
+                    if var_name not in self.model.variables:
+                        raise self._error(f"Variable '{var_name}' not declared", target) from None
+                    var = self.model.variables[var_name]
+
+                    # Extract indices for indexed .l assignments
+                    if target.data == "bound_indexed" and len(target.children) > 2:
+                        indices = _process_index_list(target.children[2])
+                        # Convert indices to tuple of strings for the map key
+                        # Handle str, IndexOffset (has .base), and SubsetIndex (has .subset_name)
+                        idx_tuple = tuple(
+                            idx
+                            if isinstance(idx, str)
+                            else idx.base
+                            if isinstance(idx, IndexOffset)
+                            else idx.subset_name
+                            for idx in indices
+                        )
+                        var.l_expr_map[idx_tuple] = expr
+                    else:
+                        # Scalar .l assignment
+                        var.l_expr = expr
+                    return
+                # For non-.l bounds (lo/up/fx with expressions): continue without storing
                 return
             # Sprint 17 Day 4: Store parameter expressions that don't reference variables
             # This enables computed parameters like c(i,j) = f*d(i,j)/1000 to be emitted

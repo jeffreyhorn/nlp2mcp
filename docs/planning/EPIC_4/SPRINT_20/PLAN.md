@@ -182,18 +182,18 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 1 — WS1: `.l` Emission (IR + Parser)
+### Day 1 — WS1: `.l` Emission (IR + Parser) ✅ COMPLETE
 
 **Theme:** Fix `.l` expression capture in parser and IR  
 **Effort:** 3–3.5h
 
 | Task | Files | Deliverable |
 |---|---|---|
-| Add `l_expr`/`l_expr_map` to `VariableDef` | `src/ir/symbols.py` | Fields added |
-| Modify `_handle_assign` to store `.l` expressions | `src/ir/parser.py` | Expressions stored, not dropped |
-| Unit tests: expression `.l` capture | `tests/unit/ir/` | ≥ 3 tests covering scalar, indexed, chained `.l` |
+| Add `l_expr`/`l_expr_map` to `VariableDef` | `src/ir/symbols.py` | Fields added ✅ |
+| Modify `_handle_assign` to store `.l` expressions | `src/ir/parser.py` | Expressions stored, not dropped ✅ |
+| Unit tests: expression `.l` capture | `tests/unit/ir/` | ≥ 3 tests covering scalar, indexed, chained `.l` ✅ |
 
-**End of Day 1 criterion:** `circle.gms` IR contains `a.l_expr`, `b.l_expr`, `r.l_expr`; unit tests pass.
+**End of Day 1 criterion:** `circle.gms` IR contains `a.l_expr`, `b.l_expr`, `r.l_expr`; unit tests pass. ✅
 
 ---
 
