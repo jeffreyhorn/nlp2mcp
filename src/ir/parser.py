@@ -3014,13 +3014,13 @@ class _ModelBuilder:
         # Grammar variant 2: "Solve"i ID "using"i solver_type obj_sense ID SEMI
         #   Children: [ID, solver_type, obj_sense, ID, SEMI]
 
-        # Skip solver_type if it appears first
-        if (
-            idx < len(node.children)
-            and isinstance(node.children[idx], Tree)
-            and node.children[idx].data == "solver_type"
-        ):
-            idx += 1
+        # Skip solver_type (Tree) or bare MCP_CNS_SOLVER token (no-objective variant)
+        if idx < len(node.children):
+            child = node.children[idx]
+            if isinstance(child, Tree) and child.data == "solver_type":
+                idx += 1
+            elif isinstance(child, Token) and child.type == "MCP_CNS_SOLVER":
+                idx += 1
 
         # Look for obj_sense
         if (
