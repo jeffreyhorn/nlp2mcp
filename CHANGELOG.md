@@ -33,16 +33,16 @@ Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcateg
   - For dotted refs like `eq.var`, extracts equation name (first ID) for storage in IR
 
 - **`tests/unit/test_sprint20_day4_grammar.py`** (new):
-  - Added 13 unit tests across three test classes:
-    - `TestSubcatL`: 4 tests for model exclusion patterns (single/multiple exclusions, dotted refs, mixed refs)
-    - `TestSubcatM`: 4 tests for File/Acronym declarations (with/without description, with path)
+  - Added 10 unit tests across three test classes:
+    - `TestSubcatL`: 4 tests for model exclusion patterns (single/multiple exclusions, dotted refs, mixed refs) with IR builder assertions
+    - `TestSubcatM`: 3 tests for File/Acronym declarations (with description, with path, acronym)
     - `TestSubcatH`: 3 tests for repeat/until loops (simple, multiple statements, with display)
 
 - **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (updated): Day 4 marked ✅ COMPLETE with detailed deliverables and notes
 
 #### Test Coverage
 
-- All tests pass: 3,602 passed (+13 new tests from Day 4, -2 from Day 3's 3,591 baseline due to independent test additions), 10 skipped, 2 xfailed
+- All tests pass: 3,601 passed (+10 new tests from Day 4), 10 skipped, 2 xfailed
 - Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
 
 #### Models Unblocked

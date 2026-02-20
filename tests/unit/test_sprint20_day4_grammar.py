@@ -1,6 +1,6 @@
 """Unit tests for Sprint 20 Day 4 grammar additions (Subcategories L, M, H)."""
 
-from src.ir.parser import parse_text
+from src.ir.parser import parse_model_text, parse_text
 
 
 class TestSubcatL:
@@ -14,6 +14,10 @@ class TestSubcatL:
         """
         result = parse_text(source)
         assert result is not None
+        # Verify IR builder sets model_uses_all flag
+        ir = parse_model_text(source)
+        assert ir.declared_model == "m"
+        assert ir.model_uses_all is True
 
     def test_model_all_except_multiple(self):
         """Test model with multiple exclusions: Model m / all - eq1 - eq2 /;"""
@@ -29,20 +33,35 @@ class TestSubcatL:
         source = """
         Equations eq1, eq2;
         Variables x, y;
+        eq1.. x =e= 0;
+        eq2.. y =e= 0;
         Model m / eq1.x, eq2.y /;
         """
         result = parse_text(source)
         assert result is not None
+        # Verify IR builder extracts equation names from dotted refs
+        ir = parse_model_text(source)
+        assert ir.declared_model == "m"
+        assert ir.model_equations == ["eq1", "eq2"]
+        assert ir.model_uses_all is False
 
     def test_model_mixed_refs(self):
         """Test model with mixed simple and dotted refs."""
         source = """
         Equations eq1, eq2, eq3;
-        Variables x, y;
+        Variables x, y, z;
+        eq1.. z =e= 0;
+        eq2.. x =e= 0;
+        eq3.. y =e= 0;
         Model m / eq1, eq2.x, eq3.y /;
         """
         result = parse_text(source)
         assert result is not None
+        # Verify IR builder handles mixed ref types
+        ir = parse_model_text(source)
+        assert ir.declared_model == "m"
+        assert ir.model_equations == ["eq1", "eq2", "eq3"]
+        assert ir.model_uses_all is False
 
 
 class TestSubcatM:
@@ -52,14 +71,6 @@ class TestSubcatM:
         """Test File declaration with description: File f 'desc';"""
         source = """
         File repdat 'sensitivity data report file';
-        """
-        result = parse_text(source)
-        assert result is not None
-
-    def test_file_without_description(self):
-        """Test File declaration without description: File f;"""
-        source = """
-        File output;
         """
         result = parse_text(source)
         assert result is not None

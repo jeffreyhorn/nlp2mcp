@@ -533,9 +533,9 @@ repeat_stmt: REPEAT_K exec_stmt* exec_stmt_final UNTIL_K expr SEMI
 // File statement declares a file handle for output operations
 // Syntax: file <name> / '<path>' /;  or  file <name> / path.ext /;  or  file <name> 'description';
 // We parse but don't process since file I/O is not relevant for NLP model extraction
-// Sprint 20 Day 4 (Subcat M): Added STRING-only variant for file declarations without path
+// Sprint 20 Day 4 (Subcat M): Added description-only variant for file declarations (STRING required)
 file_stmt: "file"i ID "/" file_path "/" SEMI
-         | "file"i ID STRING? SEMI
+         | "file"i ID STRING SEMI
 
 // Sprint 16 Day 6: Added FILE_PATH_UNQUOTED for unquoted paths like MODEL.STG (Issue #556)
 file_path: STRING
