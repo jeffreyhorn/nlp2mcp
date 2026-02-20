@@ -1554,9 +1554,9 @@ class TestProcessConditionalsInline:
         """Inline $if not errorfree $abort ...: handled as inline."""
         source = "$if not errorfree $abort bad params\nsolve m using nlp;"
         result = process_conditionals(source, {})
-        # errorfree is not a macro, so 'not errorfree' evaluates to True
-        # (errorfree not in macros → not set → $if not errorfree is true)
-        # The solve line must not be excluded regardless
+        # Regardless of how 'errorfree' is evaluated by _evaluate_if_condition(),
+        # an inline $if ... $abort directive must not cause the following line
+        # ("solve m using nlp;") to be excluded.
         assert "solve m using nlp;" in result
         assert "Excluded" not in result
 

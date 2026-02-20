@@ -36,7 +36,7 @@ camshape, catmix, chain, lnts, polygon, robot, rocket, elec
 
 #### Remaining model_no_objective_def (4)
 
-lmp1, lmp2, lmp3, mhw4dxx (all due to nested loop solve extraction — Issue #810)
+lmp1, lmp2, lmp3 (nested loop solve extraction — Issue #810), mhw4dxx (parse error — different root cause)
 
 ### Sprint 20 Day 4: WS3 Lexer Phase 1 — Subcategories L, M, H - 2026-02-20
 
