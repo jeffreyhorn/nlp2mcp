@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcategories from LEXER_ERROR_CATALOG_UPDATE.md. Added support for `all - eqname` exclusion pattern and dotted `eq.var` references in model statements (Subcat L), extended File declaration to support description-only variant (Subcat M), and added `repeat/until` loop construct (Subcat H). Successfully unblocked 5 of 9 target models (camcge, ferts, tfordy, iobalance, lop). Remaining 4 models now parse past lexer stage but encounter different errors (MCP solve without objective, loop syntax issues). Created 10 comprehensive unit tests covering all three subcategories.
+Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcategories from LEXER_ERROR_CATALOG_UPDATE.md. Added support for `all - eqname` exclusion pattern and dotted `eq.var` references in model statements (Subcat L), extended File declaration to support description-only variant (Subcat M), and added `repeat/until` loop construct (Subcat H). Successfully unblocked 5 of 9 target models (camcge, ferts, tfordy, iobalance, lop). Remaining 4 models now parse past lexer stage but encounter different errors (MCP solve without objective, loop syntax issues). Created 12 unit tests covering all three subcategories.
 
 #### Changes
 
@@ -33,8 +33,8 @@ Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcateg
   - For dotted refs like `eq.var`, extracts equation name (first ID) for storage in IR
 
 - **`tests/unit/test_sprint20_day4_grammar.py`** (new):
-  - Added 10 unit tests across three test classes:
-    - `TestSubcatL`: 4 tests for model exclusion patterns (single/multiple exclusions, dotted refs, mixed refs) with IR builder assertions
+  - Added 12 unit tests across three test classes:
+    - `TestSubcatL`: 6 tests for model exclusion patterns (single/multiple exclusions, dotted refs, mixed refs, multi-model with dotted refs, multi-model with /all/) with IR builder assertions
     - `TestSubcatM`: 3 tests for File/Acronym declarations (with description, with path, acronym)
     - `TestSubcatH`: 3 tests for repeat/until loops (simple, multiple statements, with display)
 
@@ -42,7 +42,7 @@ Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcateg
 
 #### Test Coverage
 
-- All tests pass: 3,601 passed (+10 new tests from Day 4), 10 skipped, 2 xfailed
+- All tests pass: 3,603 passed (+12 new tests from Day 4), 10 skipped, 2 xfailed
 - Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
 
 #### Models Unblocked

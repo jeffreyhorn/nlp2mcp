@@ -64,6 +64,39 @@ class TestSubcatL:
         assert ir.model_equations == ["eq1", "eq2", "eq3"]
         assert ir.model_uses_all is False
 
+    def test_multi_model_with_dotted_refs(self):
+        """Test multi-model declaration with dotted refs exercises _handle_model_multi."""
+        source = """
+        Equations eq1, eq2, eq3;
+        Variables x, y, z;
+        eq1.. x =e= 0;
+        eq2.. y =e= 0;
+        eq3.. z =e= 0;
+        Model
+            m1 / eq1.x, eq2.y /
+            m2 / eq3.z /;
+        """
+        result = parse_text(source)
+        assert result is not None
+        # _handle_model_multi stores the first model's equations
+        ir = parse_model_text(source)
+        assert ir.model_equations == ["eq1", "eq2"]
+        assert ir.model_uses_all is False
+
+    def test_multi_model_with_all(self):
+        """Test multi-model declaration where first model uses / all /."""
+        source = """
+        Equations eq1;
+        Model
+            m1 / all /
+            m2 / eq1 /;
+        """
+        result = parse_text(source)
+        assert result is not None
+        ir = parse_model_text(source)
+        assert ir.model_equations == []
+        assert ir.model_uses_all is True
+
 
 class TestSubcatM:
     """Test Subcat M: File and Acronym declarations."""

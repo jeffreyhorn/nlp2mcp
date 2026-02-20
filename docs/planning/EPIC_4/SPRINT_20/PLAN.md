@@ -262,7 +262,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | Subcat L: `all - setname` + dotted model-attr | `src/gams/gams_grammar.lark`, `src/ir/parser.py` | camcge, ferts, tfordy | ✅ |
 | Subcat M: `File` declaration (description variant) | `src/gams/gams_grammar.lark` | (existing Acronym already supported) | ✅ |
 | Subcat H: `repeat/until` loop | `src/gams/gams_grammar.lark` | iobalance, lop | ✅ |
-| Unit tests for new grammar rules | `tests/unit/test_sprint20_day4_grammar.py` | 10 tests added (4 L, 3 M, 3 H) | ✅ |
+| Unit tests for new grammar rules | `tests/unit/test_sprint20_day4_grammar.py` | 12 tests added (6 L, 3 M, 3 H) | ✅ |
 | IR builder updates for new model_ref structure | `src/ir/parser.py` | Handle model_simple_ref, model_dotted_ref, model_all_except | ✅ |
 | Pipeline retest on affected models | manual verification | 5 models now parse successfully | ✅ |
 
@@ -283,7 +283,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
   - Added REPEAT_K and UNTIL_K keywords
   - Models unblocked: iobalance ✅, lop ✅ (abort$ already supported from earlier sprints)
 
-**Test coverage:** 10 unit tests covering all three subcategories (3,601 total tests passing)
+**Test coverage:** 12 unit tests covering all three subcategories
 
 **Parse success count:** 5 of 9 target models now parse without lexer errors:
 - Subcat L: camcge ✅, ferts ✅, tfordy ✅ (cesam ⚠️ MCP error, spatequ ⚠️ MCP error)
@@ -296,7 +296,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 - worst has other parse errors after the Acronym declaration
 - nemhaus still has cascading errors (not yet resolved by H subcategory alone)
 
-**End of Day 4 criterion:** ✅ 5/9 models parse successfully (camcge, ferts, tfordy, iobalance, lop); grammar extended for all three subcategories; 10 unit tests pass; PR ready for review.
+**End of Day 4 criterion:** ✅ 5/9 models parse successfully (camcge, ferts, tfordy, iobalance, lop); grammar extended for all three subcategories; 12 unit tests pass; PR ready for review.
 
 ---
 
