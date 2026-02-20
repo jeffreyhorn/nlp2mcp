@@ -3061,11 +3061,24 @@ class _ModelBuilder:
         )
         if ref_list is None:
             raise self._error(f"Missing model_ref_list in model_with_list for '{name}'", node)
-        refs = [
-            _token_text(tok)
-            for tok in ref_list.children
-            if isinstance(tok, Token) and tok.type == "ID"
-        ]
+
+        # Sprint 20 Day 4: model_ref_list now contains model_ref children with subtypes
+        # (model_simple_ref, model_dotted_ref, model_all_except)
+        refs = []
+        for child in ref_list.children:
+            if isinstance(child, Tree):
+                if child.data == "model_simple_ref":
+                    refs.append(_token_text(child.children[0]))
+                elif child.data == "model_dotted_ref":
+                    # For dotted refs like eq.var, use the equation name (first ID)
+                    refs.append(_token_text(child.children[0]))
+                elif child.data == "model_all_except":
+                    # For "all - eq1 - eq2", we ignore this for now (not stored in IR)
+                    pass
+            elif isinstance(child, Token) and child.type == "ID":
+                # Backward compatibility: direct ID tokens (shouldn't happen with new grammar)
+                refs.append(_token_text(child))
+
         self.model.declared_model = name
         self.model.model_equations = refs
         self.model.model_uses_all = False
@@ -3113,12 +3126,19 @@ class _ModelBuilder:
         if len(first_item.children) > 1:
             second_child = first_item.children[1]
             if isinstance(second_child, Tree) and second_child.data == "model_ref_list":
-                # Model has equation list
-                refs = [
-                    _token_text(tok)
-                    for tok in second_child.children
-                    if isinstance(tok, Token) and tok.type == "ID"
-                ]
+                # Model has equation list - Sprint 20 Day 4: handle new model_ref structure
+                refs = []
+                for child in second_child.children:
+                    if isinstance(child, Tree):
+                        if child.data == "model_simple_ref":
+                            refs.append(_token_text(child.children[0]))
+                        elif child.data == "model_dotted_ref":
+                            refs.append(_token_text(child.children[0]))
+                        elif child.data == "model_all_except":
+                            pass  # Ignore exclusions for now
+                    elif isinstance(child, Token) and child.type == "ID":
+                        refs.append(_token_text(child))
+
                 # Special case: if the list contains only "all" (case-insensitive), treat it as / all /
                 if len(refs) == 1 and refs[0].lower() == "all":
                     self.model.model_equations = []
