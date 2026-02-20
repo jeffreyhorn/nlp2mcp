@@ -3589,11 +3589,11 @@ class _ModelBuilder:
                         # Convert indices to tuple of strings for the map key
                         # Handle str, IndexOffset (has .base), and SubsetIndex (has .subset_name)
                         idx_tuple = tuple(
-                            idx
-                            if isinstance(idx, str)
-                            else idx.base
-                            if isinstance(idx, IndexOffset)
-                            else idx.subset_name
+                            (
+                                idx
+                                if isinstance(idx, str)
+                                else idx.base if isinstance(idx, IndexOffset) else idx.subset_name
+                            )
                             for idx in indices
                         )
                         var.l_expr_map[idx_tuple] = expr
