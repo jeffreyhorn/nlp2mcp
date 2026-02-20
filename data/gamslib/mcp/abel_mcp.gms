@@ -31,7 +31,7 @@ Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/
     wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1.0, consumpt.invest 0.0, invest.consumpt 0.0/
-    lambda(m,mp) /'gov-expend'.'gov-expend' 1.0, money.'gov-expend' 0.444, 'gov-expend'.money 0.0, money.money 0.0/
+    lambda(m,mp) /'gov-expend'.'gov-expend' 1.0, money.'gov-expend' 0.444, money.money 0.0, 'gov-expend'.money 0.0/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
     uinit(m) /'gov-expend' 110.5, money 147.1/
@@ -66,6 +66,17 @@ Variables
     j
     nu_stateq(n,k)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+x.l(n,k) = xinit(n);
+u.l(m,k) = uinit(m);
 
 * ============================================
 * Equations

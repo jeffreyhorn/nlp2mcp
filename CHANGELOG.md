@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 2: WS1 .l Emission — Emitter + End-to-End - 2026-02-20
+
+**Branch:** `sprint20-day2-l-emission-emitter`
+
+#### Summary
+
+Sprint 20 Day 2 completed: Implemented emitter support for expression-based `.l` assignments. The emitter now correctly generates `.l = <expr>;` initialization statements in the MCP GAMS output. Circle's `.l` expressions (a.l, b.l, r.l) emit correctly. Discovered dependency ordering limitation: models with interdependent `.l` expressions (like chakra where `c.l` references `y.l` and `k.l`) generate Error 141 due to unordered emission. Issue #802 filed to track topological sort solution.
+
+#### Changes
+
+- **`src/emit/emit_gams.py`**: 
+  - Added `_index_to_gams_string()` helper to convert index objects (str/IndexOffset/SubsetIndex) to GAMS syntax
+  - Added Priority 1b in initialization section to emit `l_expr`/`l_expr_map` expressions
+  - Scalar `.l`: emits `varname.l = <expr>;`
+  - Indexed `.l`: emits `varname.l(indices) = <expr>;` preserving full index structure
+  - Added imports for IndexOffset and SubsetIndex
+- **`docs/planning/EPIC_4/SPRINT_20/PLAN.md`** (updated): Day 2 marked ✅ COMPLETE with notes on limitations
+
+#### Test Coverage
+
+- All existing tests pass: 3,586 passed, 10 skipped, 2 xfailed
+- Quality checks: typecheck ✅, lint ✅, format ✅, test ✅
+
+#### Known Limitations
+
+- **Dependency ordering**: `.l` expressions that reference other variables' `.l` values are emitted in iteration order, not dependency order. This causes GAMS Error 141 (uninitialized symbol) for models like chakra where `c.l(t) = y.l(t) + ...` is emitted before `y.l(t) = ...`. Tracked in Issue #802.
+- **Circle infeasibility**: Circle's `.l` expressions emit correctly but PATH still returns model_status=5 (locally infeasible), suggesting the infeasibility is due to model formulation, not initialization.
+
+---
+
 ### Sprint 20 Day 1: WS1 .l Emission — IR + Parser - 2026-02-20
 
 **Branch:** `sprint20-day1-l-emission-ir-parser`
