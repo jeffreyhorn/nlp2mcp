@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcategories from LEXER_ERROR_CATALOG_UPDATE.md. Added support for `all - eqname` exclusion pattern and dotted `eq.var` references in model statements (Subcat L), extended File declaration to support description-only variant (Subcat M), and added `repeat/until` loop construct (Subcat H). Successfully unblocked 5 of 9 target models (camcge, ferts, tfordy, iobalance, lop). Remaining 4 models now parse past lexer stage but encounter different errors (MCP solve without objective, loop syntax issues). Created 13 comprehensive unit tests covering all three subcategories.
+Sprint 20 Day 4 completed: Extended GAMS grammar to support three lexer subcategories from LEXER_ERROR_CATALOG_UPDATE.md. Added support for `all - eqname` exclusion pattern and dotted `eq.var` references in model statements (Subcat L), extended File declaration to support description-only variant (Subcat M), and added `repeat/until` loop construct (Subcat H). Successfully unblocked 5 of 9 target models (camcge, ferts, tfordy, iobalance, lop). Remaining 4 models now parse past lexer stage but encounter different errors (MCP solve without objective, loop syntax issues). Created 10 comprehensive unit tests covering all three subcategories.
 
 #### Changes
 

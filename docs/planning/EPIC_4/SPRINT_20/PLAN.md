@@ -274,7 +274,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
   - cesam, spatequ: Model definitions now parse; later errors are MCP-related (solve without objective), not lexer errors
   
 - **Subcat M (File/Acronym declarations)**: Extended File declaration to support description-only variant
-  - Grammar: Added `file_stmt` variant `"file"i ID STRING? SEMI` for `File name 'desc';` syntax
+  - Grammar: Added `file_stmt` variant `"file"i ID STRING SEMI` for `File name 'desc';` syntax
   - Acronym already supported from Sprint 17 Day 8
   - Models: senstran File declaration now parses (later error unrelated to File); worst Acronym supported but has other parse issues
   
@@ -296,7 +296,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 - worst has other parse errors after the Acronym declaration
 - nemhaus still has cascading errors (not yet resolved by H subcategory alone)
 
-**End of Day 4 criterion:** ✅ 5/9 models parse successfully (camcge, ferts, tfordy, iobalance, lop); grammar extended for all three subcategories; 13 unit tests pass; PR ready for review.
+**End of Day 4 criterion:** ✅ 5/9 models parse successfully (camcge, ferts, tfordy, iobalance, lop); grammar extended for all three subcategories; 10 unit tests pass; PR ready for review.
 
 ---
 

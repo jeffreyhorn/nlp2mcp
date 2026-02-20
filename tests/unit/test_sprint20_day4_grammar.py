@@ -17,6 +17,7 @@ class TestSubcatL:
         # Verify IR builder sets model_uses_all flag
         ir = parse_model_text(source)
         assert ir.declared_model == "m"
+        assert ir.model_equations == []
         assert ir.model_uses_all is True
 
     def test_model_all_except_multiple(self):
@@ -74,6 +75,9 @@ class TestSubcatM:
         """
         result = parse_text(source)
         assert result is not None
+        # Verify IR builder registers the file handle in declared_files
+        ir = parse_model_text(source)
+        assert "repdat" in ir.declared_files
 
     def test_file_with_path(self):
         """Test File declaration with path: File f / 'path.txt' /;"""
