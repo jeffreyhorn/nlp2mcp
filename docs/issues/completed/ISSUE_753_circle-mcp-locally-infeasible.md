@@ -1,10 +1,31 @@
 # Circle Model MCP is Locally Infeasible (PATH Solver Model Status 5)
 
 **GitHub Issue:** [#753](https://github.com/jeffreyhorn/nlp2mcp/issues/753)
-**Status:** PARTIALLY RESOLVED - MCP generates; solver infeasibility remains — Not fixable in Sprint 19 (requires IR+emitter support for .l level initialization)
+**Status:** CLOSED - Superseded by Issue #803 (deeper MCP formulation problem)
 **Severity:** High - MCP generation completes but produced MCP does not solve
 **Date:** 2026-02-13
 **Investigated:** 2026-02-16
+**Closed:** 2026-02-16
+
+---
+
+## CLOSURE NOTE (2026-02-16)
+
+Sprint 20 Day 2 (PR #802) implemented expression-based `.l` initialization emission. The circle model now correctly emits its `.l` initialization expressions:
+```gams
+a.l = (xmin + xmax)/2;
+b.l = (ymin + ymax)/2;
+r.l = sqrt(sqr(a.l - xmin) + sqr(b.l - ymin));
+```
+
+However, **the model remains infeasible** with PATH solver (model_status=5). This indicates the infeasibility is NOT due to missing initialization but rather a deeper issue with the MCP formulation itself.
+
+**This issue is now superseded by [Issue #803](https://github.com/jeffreyhorn/nlp2mcp/issues/803)**, which tracks the deeper MCP formulation problem. Possible causes include:
+- Incorrect stationarity equation formulation
+- Missing or incorrect complementarity conditions  
+- Bound handling issues in the KKT transformation
+
+The `.l` initialization work completed in Sprint 20 Day 1-2 is correct; the circle infeasibility requires investigation of the KKT transformation logic itself.
 
 ---
 

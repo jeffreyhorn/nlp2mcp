@@ -20,11 +20,38 @@ from src.emit.original_symbols import (
     has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
-from src.ir.ast import Expr
+from src.ir.ast import Expr, IndexOffset, SubsetIndex
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
 from src.kkt.objective import extract_objective_info
+
+
+def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
+    """Convert an index object to GAMS string representation.
+
+    Args:
+        idx: Index object (str, IndexOffset, or SubsetIndex)
+
+    Returns:
+        GAMS string representation of the index
+
+    Examples:
+        'i' -> 'i'
+        IndexOffset('t', Const(1), circular=False) -> 't+1'
+        SubsetIndex('subset', ('i', 'j')) -> 'subset(i,j)'
+    """
+    if isinstance(idx, str):
+        return idx
+    elif isinstance(idx, IndexOffset):
+        return idx.to_gams_string()
+    elif isinstance(idx, SubsetIndex):
+        # SubsetIndex: subset_name(indices)
+        indices_str = ",".join(idx.indices)
+        return f"{idx.subset_name}({indices_str})"
+    else:
+        # Fallback: convert to string
+        return str(idx)
 
 
 def emit_gams_mcp(
@@ -188,6 +215,19 @@ def emit_gams_mcp(
                     has_init = True
         elif var_def.l is not None:
             init_lines.append(f"{var_name}.l = {var_def.l};")
+            has_init = True
+
+        # Priority 1b: Expression-based .l assignments (Sprint 20 Day 2)
+        # These are non-constant .l initializations like a.l = (xmin+xmax)/2
+        if not has_init and hasattr(var_def, "l_expr_map") and var_def.l_expr_map:
+            for indices, expr in var_def.l_expr_map.items():  # type: ignore[assignment]
+                idx_str = ",".join(_index_to_gams_string(i) for i in indices)
+                expr_str = expr_to_gams(expr)
+                init_lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
+                has_init = True
+        elif not has_init and hasattr(var_def, "l_expr") and var_def.l_expr is not None:
+            expr_str = expr_to_gams(var_def.l_expr)
+            init_lines.append(f"{var_name}.l = {expr_str};")
             has_init = True
 
         # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided

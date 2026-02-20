@@ -64,6 +64,18 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+a.l = (xmin + xmax) / 2;
+b.l = (ymin + ymax) / 2;
+r.l = sqrt(sqr(a.l - xmin) + sqr(b.l - ymin));
+
+* ============================================
 * Equations
 * ============================================
 
