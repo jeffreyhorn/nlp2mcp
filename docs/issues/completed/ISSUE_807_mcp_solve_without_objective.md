@@ -93,3 +93,16 @@ Medium - affects 2 GAMSlib models that successfully parse model definitions but 
 
 ## Sprint Context
 Discovered during Sprint 20 Day 4 (WS3 Lexer Phase 1) after fixing Subcat L model exclusion patterns. These models now parse their model definitions successfully but fail at the solve statement.
+
+## Resolution
+
+**Status:** FIXED
+
+### Changes
+1. **`src/gams/gams_grammar.lark`**: Added third `solve_stmt` variant `"Solve"i ID "using"i solver_type SEMI -> solve` that omits the objective specification entirely. All three variants produce the same `solve` tree node.
+2. **`src/ir/parser.py`**: Fixed `_handle_solve` to check `node.children[idx].type == "ID"` before treating a token as the objective variable name, preventing the SEMI token from being mistakenly picked up as the objective.
+3. **`tests/unit/test_issue_fixes_807_808_809.py`**: Added 4 unit tests covering MCP/CNS solve without objective and verifying existing solve-with-objective still works.
+
+### Verification
+- Both `cesam.gms` and `spatequ.gms` now parse successfully.
+- 3,622 tests pass, 10 skipped, 2 xfailed.

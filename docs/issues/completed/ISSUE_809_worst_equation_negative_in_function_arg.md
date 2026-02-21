@@ -122,3 +122,18 @@ Medium - affects 1 GAMSlib model (worst). Acronym declaration now parses correct
 
 ## Sprint Context
 Discovered during Sprint 20 Day 4 (WS3 Lexer Phase 1) after fixing Subcat M Acronym declaration. The Acronym declaration now parses successfully, but the model fails later at an equation definition with complex nested function calls.
+
+## Resolution
+
+**Status:** FIXED
+
+### Root Cause (Corrected)
+The issue was NOT about unary minus handling or operator precedence. The actual root cause was that `errorf` (the GAMS error function / normal CDF) was missing from the `FUNCNAME` terminal regex. Without `FUNCNAME` recognition, `errorf(...)` was parsed as an indexed reference (`ref_indexed`), which doesn't allow unary minus inside its argument list. Adding `errorf` to `FUNCNAME` allows it to be parsed as a proper `func_call` with full expression support in arguments.
+
+### Changes
+1. **`src/gams/gams_grammar.lark`**: Added `errorf` to the `FUNCNAME` terminal regex.
+2. **`tests/unit/test_issue_fixes_807_808_809.py`**: Added 3 unit tests covering `errorf(x)`, `errorf(-x)`, and `a*errorf(-b) - c*errorf(-d)`.
+
+### Verification
+- `worst.gms` now parses successfully.
+- 3,622 tests pass, 10 skipped, 2 xfailed.
