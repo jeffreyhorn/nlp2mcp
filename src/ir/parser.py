@@ -1108,7 +1108,7 @@ class _ModelBuilder:
             # Subset without explicit members: cg(genchar)
             # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
-            domain = tuple(_id_list(item.children[1]))
+            domain = tuple(_id_or_wildcard_list(item.children[1]))
             # Note: desc_text is now allowed but we ignore it
             # A set with domain but no members is a subset declaration (members inherited from parent)
             self.model.add_set(SetDef(name=name, members=[], domain=domain))
@@ -1116,8 +1116,8 @@ class _ModelBuilder:
             # Subset with explicit members: cg(genchar) / a, b, c /
             # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
-            # Extract domain from id_list (the parent set(s))
-            domain = tuple(_id_list(item.children[1]))
+            # Extract domain from id_or_wildcard_list (the parent set(s))
+            domain = tuple(_id_or_wildcard_list(item.children[1]))
             members_node = next(
                 c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
             )
@@ -2539,7 +2539,7 @@ class _ModelBuilder:
                                     item_kind = _VAR_KIND_MAP[kind_token.type]
                             item_idx += 1
                         name = _token_text(var_item.children[item_idx])
-                        domain = _id_list(var_item.children[item_idx + 1])
+                        domain = _id_or_wildcard_list(var_item.children[item_idx + 1])
                         # Item-level > declaration-level > block-level
                         final_kind = (
                             item_kind
@@ -2628,7 +2628,7 @@ class _ModelBuilder:
                                 item_kind = _VAR_KIND_MAP[kind_token.type]
                         item_idx += 1
                     name = _token_text(var_item.children[item_idx])
-                    domain = _id_list(var_item.children[item_idx + 1])
+                    domain = _id_or_wildcard_list(var_item.children[item_idx + 1])
                     # Item-level > declaration-level > block-level
                     final_kind = (
                         item_kind
@@ -2689,7 +2689,7 @@ class _ModelBuilder:
                             item_kind = _VAR_KIND_MAP[kind_token.type]
                     item_idx += 1
                 name = _token_text(var_single_item.children[item_idx])
-                domain = _id_list(var_single_item.children[item_idx + 1])
+                domain = _id_or_wildcard_list(var_single_item.children[item_idx + 1])
                 # Item-level > block-level
                 final_kind = (
                     item_kind
@@ -4250,6 +4250,22 @@ class _ModelBuilder:
 
         if node.data == "number":
             return self._attach_domain(Const(float(node.children[0])), free_domain)
+
+        if node.data == "yes_value":
+            return self._attach_domain(Const(1.0), free_domain)
+
+        if node.data == "no_value":
+            return self._attach_domain(Const(0.0), free_domain)
+
+        if node.data == "yes_cond":
+            # yes$(condition) — evaluates to 1 if condition holds, 0 otherwise
+            # We treat the condition as opaque and return Const(1.0) since
+            # the dollar condition is handled at assignment level
+            return self._attach_domain(Const(1.0), free_domain)
+
+        if node.data == "no_cond":
+            # no$(condition) — evaluates to 0 if condition holds
+            return self._attach_domain(Const(0.0), free_domain)
 
         if node.data == "sum":
             return self._handle_aggregation(node, Sum, free_domain)
