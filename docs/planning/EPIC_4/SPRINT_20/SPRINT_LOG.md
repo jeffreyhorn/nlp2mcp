@@ -154,7 +154,7 @@
 ### Day 7 — WS3 Phase 2: Compound Set Data Part 1 (2026-02-20)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #815
 
 **Activities:**
 - Extended `table_row_label` to support deep dotted labels with parenthesized sub-lists (e.g., `wheat.bullock.standard.(heavy,january)`)

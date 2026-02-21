@@ -1745,7 +1745,8 @@ def _quote_special_in_line(line: str) -> str:
 
     # Avoid matching scientific-notation literals like 1.e-5:
     # require that the dot is not followed by an exponent pattern [eE][+-]?\d
-    processed = re.sub(r"\b(\d+)\.(?![eE][+-]?\d)([a-zA-Z_(])", quote_numeric_dot, processed)
+    # Also match quoted tuple suffixes like 1.'sch-1' or 2."foo"
+    processed = re.sub(r"\b(\d+)\.(?![eE][+-]?\d)([a-zA-Z_('\"])", quote_numeric_dot, processed)
 
     return processed
 
