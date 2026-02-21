@@ -619,7 +619,7 @@ def _diff_call(
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
             f"Supported functions: power, exp, log, log10, log2, sqrt, sin, cos, tan, "
-            f"abs, sqr, smin, smax, sameas, card, ord. "
+            f"abs, sqr, errorf, smin, smax, sameas, card, ord. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 

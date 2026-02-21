@@ -3048,6 +3048,8 @@ class _ModelBuilder:
             objvar = _token_text(node.children[idx])
         if objvar:
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
+        else:
+            self.model.objective = None
 
     def _handle_model_all(self, node: Tree) -> None:
         name = _token_text(node.children[0])
