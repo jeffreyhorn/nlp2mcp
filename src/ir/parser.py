@@ -1771,16 +1771,23 @@ class _ModelBuilder:
                         # Structure: tuple_suffix_expansion_label -> dotted_label, set_element_id_list
                         prefix_node = first_child.children[0]  # dotted_label
                         suffix_list_node = first_child.children[1]  # set_element_id_list
-                        # Extract prefix string from dotted_label (join tokens with ".")
+                        # Extract prefix string from dotted_label (join parts with ".")
+                        # dotted_label children can be Token (ID/STRING) or Tree (range_expr)
                         if isinstance(prefix_node, Tree) and prefix_node.data == "dotted_label":
-                            label_tokens = [
-                                tok for tok in prefix_node.children if isinstance(tok, Token)
-                            ]
-                            prefixes_for_label = (
-                                [".".join(_token_text(tok) for tok in label_tokens)]
-                                if label_tokens
-                                else []
-                            )
+                            parts: list[str] = []
+                            for child_node in prefix_node.children:
+                                if isinstance(child_node, Token):
+                                    parts.append(_token_text(child_node))
+                                elif (
+                                    isinstance(child_node, Tree) and child_node.data == "range_expr"
+                                ):
+                                    bounds = [
+                                        _token_text(b.children[0])
+                                        for b in child_node.children
+                                        if isinstance(b, Tree) and b.data == "range_bound"
+                                    ]
+                                    parts.append("*".join(bounds))
+                            prefixes_for_label = [".".join(parts)] if parts else []
                         elif isinstance(prefix_node, Token):
                             prefixes_for_label = [_token_text(prefix_node)]
                         else:
