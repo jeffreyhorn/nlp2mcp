@@ -103,6 +103,8 @@ _VAR_KIND_MAP = {
     "NEGATIVE_K": VarKind.NEGATIVE,
     "BINARY_K": VarKind.BINARY,
     "INTEGER_K": VarKind.INTEGER,
+    "SOS1_K": VarKind.SOS1,
+    "SOS2_K": VarKind.SOS2,
 }
 
 # Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
@@ -1873,7 +1875,10 @@ class _ModelBuilder:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
                                         row_label_token_ids.add(id(tok))
-                    elif child.data in ("tuple_cross_label", "tuple_suffix_expansion_label"):
+                    elif child.data in (
+                        "tuple_cross_label",
+                        "tuple_suffix_expansion_label",
+                    ):
                         # Day 8: Recursively collect all tokens in the label subtree.
                         # scan_values handles arbitrarily nested Trees (range_expr etc.)
                         for tok in child.scan_values(lambda v: isinstance(v, Token)):
@@ -4819,7 +4824,16 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "param_data_tuple_expansion":
+            if child.data == "param_data_cross_expansion":
+                # Sprint 20 Day 8: Cross-product expansion like (hydro-1*hydro-3).(1978,1983) inf
+                prefixes = self._parse_set_element_id_list(child.children[0])
+                suffixes = self._parse_set_element_id_list(child.children[1])
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
+                for p in prefixes:
+                    for s in suffixes:
+                        values[(p, s)] = value
+            elif child.data == "param_data_tuple_expansion":
                 # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
                 # Expands to route-1=13, route-2=13
                 # Issue #564: Also handles special values like (h1,h2) na
@@ -4882,6 +4896,14 @@ class _ModelBuilder:
                 for member in expanded_members:
                     key_tuple = (member,)
                     values[key_tuple] = value
+            elif child.data == "param_data_bare_value":
+                # Sprint 20 Day 8: Scalar param in Parameter block: / value /
+                value_node = child.children[0]
+                if isinstance(value_node, Tree) and value_node.data == "param_data_value":
+                    value = self._parse_param_data_value(value_node)
+                else:
+                    value = float(_token_text(value_node))
+                values[()] = value
             elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 # Issue #564 follow-up: value can now be a param_data_value

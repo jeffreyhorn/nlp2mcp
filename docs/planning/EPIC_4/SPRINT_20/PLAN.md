@@ -359,19 +359,20 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 8 — WS3 Phase 2: Compound Set Data (Part 2) + Inline Scalar Data
+### Day 8 — WS3 Phase 2: Compound Set Data (Part 2) + Inline Scalar Data ✅ COMPLETE
 
-**Theme:** Complete Subcategory A; fix Subcategory E  
+**Theme:** Complete Subcategory A; fix Subcategory E
 **Effort:** 3–4h
 
 | Task | Files | Models |
 |---|---|---|
-| Multi-line table row label continuation (`paperco`) | grammar | paperco |
-| Hyphenated+numeric element (`hydro-4.1978`) — `turkpow` | grammar | turkpow, turkey |
-| Inline scalar data (`/ .05 /`, `/ 50 /`) — Subcat E | grammar | cesam2, gussrisk, trnspwl |
+| Multi-line table row label continuation (`paperco`) | grammar, preprocessor | paperco |
+| Hyphenated+numeric element (`hydro-4.1978`) — `turkpow` | grammar, parser | turkpow, turkey |
+| Inline scalar data (`/ .05 /`, `/ 50 /`) — Subcat E | grammar, parser | cesam2, gussrisk, trnspwl |
 | Pipeline retest for all Subcat A + E models | gamslib_status.json | ≥ 5 new parse successes |
 
 **End of Day 8 criterion:** indus, mexls, paperco, sarf, turkey, turkpow, cesam2, gussrisk, trnspwl — at least 6 of 9 now parse.
+**Result:** 6 of 9 parse (indus, paperco, sarf, turkey, turkpow, trnspwl). Remaining: mexls (#816), cesam2 (#817), gussrisk (#818).
 
 ---
 

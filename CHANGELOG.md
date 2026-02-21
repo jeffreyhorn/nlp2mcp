@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 8: WS3 Phase 2 — Compound Set Data Part 2 + Inline Scalar Data - 2026-02-21
+
+**Branch:** `sprint20-day8-lexer-subcat-a-part2-e`
+
+#### Summary
+
+Extended Subcategory A compound set data grammar (Part 2) and added Subcategory E inline scalar data support. 6 of 9 target models now parse. Created issue documents for 3 remaining blockers (#816 mexls, #817 cesam2, #818 gussrisk).
+
+#### Changes
+
+- **Grammar**: Added `param_data_bare_value` for inline scalar parameter data (`Parameter x / 500 /`)
+- **Grammar**: Added `param_data_cross_expansion` for `(list).(list) value` cross-product in parameter data
+- **Grammar**: Added SOS1/SOS2 variable kind support (`SOS1_K`, `SOS2_K` terminals, `var_kind` extended)
+- **Preprocessor**: Added `join_multiline_table_row_parens()` to join multi-line parenthesized table row labels (e.g., `(ground\n chips)` → `(ground, chips)`)
+- **Parser**: Added handlers for `param_data_bare_value` and `param_data_cross_expansion`
+- **Symbols**: Added `VarKind.SOS1` and `VarKind.SOS2` enum values
+- **Emitter/Converter**: SOS1/SOS2 support in templates and converter type map
+- **Tests**: 6 unit tests for inline scalar data (3), cross-product expansion (1), SOS2 variable (1), multi-line table row label (1)
+
+#### Models affected
+
+- **paperco**: Now fully parses — multi-line paren table row label fix
+- **turkpow**: Now fully parses — cross-product param data expansion
+- **turkey**: Now fully parses — inline scalar data + parenthesized column group
+- **trnspwl**: Now fully parses — inline scalar data + SOS2 variable kind
+- **indus**: Passes (from Day 7)
+- **sarf**: Passes (from Day 7)
+- **mexls**: FAIL — blocked by `yes$(...)` conditional execution (#816)
+- **cesam2**: FAIL — blocked by conditional assignment in loop (#817)
+- **gussrisk**: FAIL — blocked by Set dict GUSS scenario mapping (#818)
+
 ### Sprint 20 Day 7: WS3 Phase 2 — Compound Set Data Part 1 - 2026-02-20
 
 **Branch:** `sprint20-day7-lexer-subcat-a-part1`

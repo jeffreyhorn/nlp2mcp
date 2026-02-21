@@ -2184,6 +2184,100 @@ def insert_missing_semicolons(source: str) -> str:
     return "\n".join(result)
 
 
+def join_multiline_table_row_parens(source: str) -> str:
+    """Join parenthesized table row labels that span multiple lines.
+
+    GAMS allows table row labels like:
+        (ground
+         chips )  40  55;
+
+    This function joins such multi-line groups onto a single line and
+    normalizes space-separated elements to comma-separated, producing:
+        (ground, chips)  40  55;
+
+    Must run before expand_tuple_only_table_rows.
+    """
+    lines = source.split("\n")
+    result: list[str] = []
+    in_table = False
+    table_header_seen = False
+    is_first_line_after_decl = False
+    accumulating = False
+    accum_lines: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        if re.match(r"^Table\b", stripped, re.IGNORECASE):
+            in_table = True
+            table_header_seen = False
+            is_first_line_after_decl = True
+            result.append(line)
+            continue
+
+        if in_table:
+            if is_first_line_after_decl:
+                if stripped:
+                    is_first_line_after_decl = False
+                    table_header_seen = True
+                result.append(line)
+                continue
+
+            if stripped and re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b", stripped, re.IGNORECASE
+            ):
+                in_table = False
+                result.append(line)
+                continue
+
+            if _has_statement_ending_semicolon(line) and not accumulating:
+                in_table = False
+
+            if table_header_seen:
+                if accumulating:
+                    accum_lines.append(line)
+                    if ")" in line:
+                        # Join all accumulated lines
+                        joined = " ".join(al.strip() for al in accum_lines)
+                        # Normalize: add commas between space-separated bare words
+                        # inside (...) — replace space between words with ", "
+                        # Pattern: inside (...), replace sequences of word-space-word
+                        paren_end = joined.index(")")
+                        inside = joined[: paren_end + 1]
+                        after = joined[paren_end + 1 :]
+                        # Add commas between space-separated elements inside parens
+                        paren_content = inside[1:-1]  # strip ( and )
+                        if "," not in paren_content:
+                            # Space-separated: add commas
+                            parts = paren_content.split()
+                            paren_content = ", ".join(parts)
+                        indent = accum_lines[0][
+                            : len(accum_lines[0]) - len(accum_lines[0].lstrip())
+                        ]
+                        result.append(f"{indent}({paren_content}){after}")
+                        accumulating = False
+                        accum_lines = []
+                        if _has_statement_ending_semicolon(line):
+                            in_table = False
+                        continue
+                    continue
+
+                if stripped.startswith("(") and ")" not in stripped:
+                    # Start of multi-line parenthesized group
+                    accumulating = True
+                    accum_lines = [line]
+                    continue
+
+            result.append(line)
+        else:
+            result.append(line)
+
+    # Flush any remaining accumulated lines
+    result.extend(accum_lines)
+
+    return "\n".join(result)
+
+
 def expand_tuple_only_table_rows(source: str) -> str:
     """Expand (a,b,c) tuple-only row labels in tables to individual rows.
 
@@ -2879,6 +2973,11 @@ def _preprocess_content(content: str) -> str:
 
     # Step 15: Quote identifiers with special characters (-, +) in data blocks
     content = normalize_special_identifiers(content)
+
+    # Step 15a: Join multi-line parenthesized table row labels onto one line
+    # e.g., "(ground\n chips ) 40 55;" → "(ground, chips) 40 55;"
+    # Must run before expand_tuple_only_table_rows
+    content = join_multiline_table_row_parens(content)
 
     # Step 15b: Expand (a,b,c) tuple-only row labels in tables
     # Must run after normalize_special_identifiers (which quotes hyphenated IDs)

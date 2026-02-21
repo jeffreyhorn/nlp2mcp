@@ -168,10 +168,16 @@ param_data_items: param_data_item ("," param_data_item)*
 // Example: k(j) / (route-1,route-2) 13, route-5 1 / expands to route-1=13, route-2=13, route-5=1
 // Issue #563: Added param_data_range_expansion for (ne2*ne5) 0 syntax
 // Issue #564: Support special values (na, inf, eps) via param_data_value rule
+// Sprint 20 Day 8: Added param_data_bare_value for scalar params in Parameter blocks
+// e.g., Parameter funds 'total funds' / 500 /;
+// Sprint 20 Day 8: Added param_data_cross_expansion for (list).(list) value patterns
+// e.g., (hydro-1*hydro-3).(1978,1983) inf
 param_data_item: data_matrix_row                              -> param_data_matrix_row
+                 | "(" set_element_id_list ")" "." "(" set_element_id_list ")" param_data_value -> param_data_cross_expansion
                  | "(" range_expr ")" param_data_value        -> param_data_range_expansion
                  | "(" set_element_id_list ")" param_data_value -> param_data_tuple_expansion
                  | data_indices param_data_value              -> param_data_scalar
+                 | param_data_value                           -> param_data_bare_value
 
 // Issue #564: Parameter data values can be numbers or special GAMS values (na, inf, eps, undf)
 // Also handles signed special values like -inf and +inf
@@ -209,7 +215,8 @@ var_single_item: var_kind? ID "(" id_list ")" (STRING | desc_text)? -> var_item_
 var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
         | var_kind? ID STRING?                               -> var_item_scalar
 
-var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K | NONNEGATIVE_K
+// Sprint 20 Day 8: Added SOS1_K, SOS2_K for special ordered set variable types
+var_kind: POSITIVE_K | NEGATIVE_K | BINARY_K | INTEGER_K | FREE_K | NONNEGATIVE_K | SOS1_K | SOS2_K
 
 POSITIVE_K   : /(?i:positive)\b/
 NEGATIVE_K   : /(?i:negative)\b/
@@ -217,6 +224,8 @@ BINARY_K     : /(?i:binary)\b/
 INTEGER_K    : /(?i:integer)\b/
 FREE_K       : /(?i:free)\b/
 NONNEGATIVE_K: /(?i:nonnegative)\b/
+SOS1_K       : /(?i:sos1)\b/
+SOS2_K       : /(?i:sos2)\b/
 
 // NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
 // e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
