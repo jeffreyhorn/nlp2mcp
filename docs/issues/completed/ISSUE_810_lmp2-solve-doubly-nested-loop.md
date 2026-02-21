@@ -83,3 +83,16 @@ Medium — affects 3 GAMSlib models (lmp1, lmp2, lmp3). The `model_no_objective_
 
 ## Sprint Context
 Discovered during Sprint 20 Day 5 while fixing the `$if set workSpace` inline guard preprocessor bug. The inline `$if` fix reduced `model_no_objective_def` from 14 to 4, but lmp1/lmp2/lmp3 require a different fix (nested loop extraction). Deferred to Sprint 21.
+
+## Resolution
+
+**Status:** FIXED
+
+**Approach:** Option 1 — Recursive extraction (as proposed).
+
+**Changes:**
+- `src/ir/parser.py`: Added `_find_solve_in_loop_body()` static method that recursively searches loop body statements for a `solve` node at any nesting depth. Recognizes all 6 loop statement variants (`loop_stmt`, `loop_stmt_paren`, `loop_stmt_filtered`, `loop_stmt_paren_filtered`, `loop_stmt_indexed`, `loop_stmt_indexed_filtered`) and recurses into their `loop_body` children.
+- `src/ir/parser.py`: Updated `_handle_loop_stmt` to call `_find_solve_in_loop_body()` instead of the previous flat scan of `body_stmts`.
+- `tests/unit/test_issue_810_nested_loop_solve.py`: 6 unit tests — doubly-nested, triply-nested, single-nested regression, top-level regression, parse check, and maximizing sense check.
+
+**Verified:** lmp1, lmp2, lmp3 all correctly extract objective from nested loops. `model_no_objective_def` reduced from 4 to 1 (only mhw4dxx remains, which has a different root cause — parse error).

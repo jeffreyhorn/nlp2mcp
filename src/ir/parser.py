@@ -3425,11 +3425,44 @@ class _ModelBuilder:
 
         # Issue #749: Extract solve info from loop body so the objective
         # is recorded even when the Solve statement is inside a loop.
+        # Issue #810: Recurse into nested loops to find solve at any depth.
         if self.model.objective is None:
-            for stmt in body_stmts:
-                if isinstance(stmt, Tree) and stmt.data == "solve":
-                    self._handle_solve(stmt)
-                    break
+            solve_node = self._find_solve_in_loop_body(body_stmts)
+            if solve_node is not None:
+                self._handle_solve(solve_node)
+
+    @staticmethod
+    def _find_solve_in_loop_body(stmts: list[Tree]) -> Tree | None:
+        """Recursively search loop body statements for a solve node.
+
+        Issue #810: Handles solve inside doubly (or deeper) nested loops.
+        """
+        _LOOP_DATA = {
+            "loop_stmt",
+            "loop_stmt_paren",
+            "loop_stmt_filtered",
+            "loop_stmt_paren_filtered",
+            "loop_stmt_indexed",
+            "loop_stmt_indexed_filtered",
+        }
+        for stmt in stmts:
+            if not isinstance(stmt, Tree):
+                continue
+            if stmt.data == "solve":
+                return stmt
+            if stmt.data in _LOOP_DATA:
+                # Collect child Trees from the nested loop's body
+                inner_stmts: list[Tree] = []
+                for child in stmt.children:
+                    if isinstance(child, Tree):
+                        if child.data == "loop_body":
+                            inner_stmts.extend(c for c in child.children if isinstance(c, Tree))
+                        elif child.data not in ("id_list", "solver_type", "expr"):
+                            inner_stmts.append(child)
+                result = _ModelBuilder._find_solve_in_loop_body(inner_stmts)
+                if result is not None:
+                    return result
+        return None
 
     def _handle_loop_stmt_paren(self, node: Tree) -> None:
         """Handle loop statement with double parentheses: loop((indices), ...)."""
