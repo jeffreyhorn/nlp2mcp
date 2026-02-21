@@ -130,6 +130,8 @@ class Converter:
             VarKind.NEGATIVE: "Negative",
             VarKind.BINARY: "Binary",
             VarKind.INTEGER: "Integer",
+            VarKind.SOS1: "SOS1",
+            VarKind.SOS2: "SOS2",
         }
         return type_map.get(kind, "Free")
 

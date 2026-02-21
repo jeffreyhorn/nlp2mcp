@@ -169,6 +169,32 @@
 
 **Metrics:** Tests 3,642 (+7), parse 127/160 (+4), lexer_invalid_char reduced
 
+### Day 8 — WS3 Phase 2: Compound Set Data Part 2 + Inline Scalar Data (2026-02-21)
+
+**Status:** ✅ COMPLETE
+**PR:** #819
+
+**Activities:**
+- Added `param_data_bare_value` for inline scalar data in Parameter blocks (`/ 500 /`, `/ .05 /`)
+- Added `param_data_cross_expansion` for `(list).(list) value` cross-product in parameter data
+- Added SOS1/SOS2 variable kind support (`SOS1_K`, `SOS2_K` terminals, `VarKind.SOS1`/`SOS2`)
+- Added preprocessor `join_multiline_table_row_parens()` for multi-line parenthesized table row labels
+- 7 unit tests added: inline scalar data (3), cross-product expansion (1), SOS1 variable (1), SOS2 variable (1), multi-line table row label (1)
+- Created issue documents for 3 remaining blockers: mexls (#816), cesam2 (#817), gussrisk (#818)
+
+**Model results (6 of 9 parse):**
+- **indus**: PASS (from Day 7)
+- **sarf**: PASS (from Day 7)
+- **paperco**: PASS — multi-line paren table row label fix
+- **turkpow**: PASS — cross-product param data expansion
+- **turkey**: PASS — inline scalar data + parenthesized column group
+- **trnspwl**: PASS — inline scalar data + SOS2 variable kind
+- **mexls**: FAIL — blocked by `yes$(...)` conditional execution (#816)
+- **cesam2**: FAIL — blocked by conditional assignment in loop (#817)
+- **gussrisk**: FAIL — blocked by `Set dict` GUSS scenario mapping (#818)
+
+**Metrics:** Tests 3,654 (+6), parse 127+ (no regression)
+
 ---
 
 ## Checkpoints

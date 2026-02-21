@@ -39,6 +39,7 @@ from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
     expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
+    join_multiline_table_row_parens,
     normalize_double_commas,
     normalize_multi_line_continuations,
     normalize_special_identifiers,
@@ -103,6 +104,8 @@ _VAR_KIND_MAP = {
     "NEGATIVE_K": VarKind.NEGATIVE,
     "BINARY_K": VarKind.BINARY,
     "INTEGER_K": VarKind.INTEGER,
+    "SOS1_K": VarKind.SOS1,
+    "SOS2_K": VarKind.SOS2,
 }
 
 # Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
@@ -276,6 +279,10 @@ def parse_text(source: str) -> Tree:
     # direct API users may call `parse_text()` directly with raw GAMS source.
     # Both paths must normalize special identifiers for correct parsing.
     source = normalize_special_identifiers(source)
+
+    # Sprint 20 Day 8: Join multi-line parenthesized table row labels onto one line.
+    # Must run before expand_tuple_only_table_rows.
+    source = join_multiline_table_row_parens(source)
 
     # Day 8: Expand (a,b,c) tuple-only row labels in tables to individual rows.
     # Must run after normalize_special_identifiers.
@@ -1873,7 +1880,10 @@ class _ModelBuilder:
                                     if isinstance(tok, Token):
                                         all_tokens.append(tok)
                                         row_label_token_ids.add(id(tok))
-                    elif child.data in ("tuple_cross_label", "tuple_suffix_expansion_label"):
+                    elif child.data in (
+                        "tuple_cross_label",
+                        "tuple_suffix_expansion_label",
+                    ):
                         # Day 8: Recursively collect all tokens in the label subtree.
                         # scan_values handles arbitrarily nested Trees (range_expr etc.)
                         for tok in child.scan_values(lambda v: isinstance(v, Token)):
@@ -4819,7 +4829,27 @@ class _ModelBuilder:
         for child in node.children:
             if not isinstance(child, Tree):
                 continue
-            if child.data == "param_data_tuple_expansion":
+            if child.data == "param_data_cross_expansion":
+                # Sprint 20 Day 8: Cross-product expansion like (hydro-1*hydro-3).(1978,1983) inf
+                prefixes = self._parse_set_element_id_list(child.children[0])
+                suffixes = self._parse_set_element_id_list(child.children[1])
+                value_node = child.children[-1]
+                value = self._parse_param_data_value(value_node)
+                # Validate domain dimensionality — cross-product requires exactly 2-D
+                if len(domain) != 2:
+                    raise self._error(
+                        f"Parameter '{param_name}' cross-product expansion syntax (prefix).(suffix) requires a 2-D parameter domain, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
+                for p in prefixes:
+                    self._verify_member_in_domain(param_name, domain[0], p, child.children[0])
+                for s in suffixes:
+                    self._verify_member_in_domain(param_name, domain[1], s, child.children[1])
+                for p in prefixes:
+                    for s in suffixes:
+                        values[(p, s)] = value
+            elif child.data == "param_data_tuple_expansion":
                 # Sprint 16 Day 7: Handle tuple expansion like (route-1,route-2) 13
                 # Expands to route-1=13, route-2=13
                 # Issue #564: Also handles special values like (h1,h2) na
@@ -4882,6 +4912,16 @@ class _ModelBuilder:
                 for member in expanded_members:
                     key_tuple = (member,)
                     values[key_tuple] = value
+            elif child.data == "param_data_bare_value":
+                # Sprint 20 Day 8: Scalar param in Parameter block: / value /
+                if len(domain) > 0:
+                    raise self._error(
+                        f"Parameter '{param_name}' bare value syntax (/ value /) requires a scalar parameter, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
+                value = self._parse_param_data_value(child.children[0])
+                values[()] = value
             elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])
                 # Issue #564 follow-up: value can now be a param_data_value

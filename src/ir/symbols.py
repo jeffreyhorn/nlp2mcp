@@ -35,6 +35,8 @@ class VarKind(Enum):
     NEGATIVE = auto()
     BINARY = auto()
     INTEGER = auto()
+    SOS1 = auto()
+    SOS2 = auto()
 
 
 class ObjSense(Enum):

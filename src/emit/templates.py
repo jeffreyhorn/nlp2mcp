@@ -94,6 +94,8 @@ def emit_variables(kkt: KKTSystem) -> str:
         VarKind.NEGATIVE: [],
         VarKind.BINARY: [],
         VarKind.INTEGER: [],
+        VarKind.SOS1: [],
+        VarKind.SOS2: [],
     }
 
     # Group primal variables by kind, excluding unreferenced variables
@@ -162,6 +164,8 @@ def emit_variables(kkt: KKTSystem) -> str:
         VarKind.NEGATIVE: "Negative Variables",
         VarKind.BINARY: "Binary Variables",
         VarKind.INTEGER: "Integer Variables",
+        VarKind.SOS1: "SOS1 Variables",
+        VarKind.SOS2: "SOS2 Variables",
     }
 
     for kind, block_name in kind_to_block.items():
