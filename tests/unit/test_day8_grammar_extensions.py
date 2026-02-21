@@ -4,12 +4,14 @@ Tests for:
 - Inline scalar data in Parameter blocks (/ value /)
 - Parenthesized cross-product expansion in parameter data
 - Multi-line parenthesized table row labels
-- SOS2 variable kind
+- SOS1/SOS2 variable kind
 """
 
 import pytest
 
 from src.ir.parser import parse_model_text
+from src.ir.preprocessor import join_multiline_table_row_parens
+from src.ir.symbols import VarKind
 
 pytestmark = pytest.mark.unit
 
@@ -76,16 +78,17 @@ class TestParamCrossExpansion:
         solve m minimizing obj using nlp;
         """
         ir = parse_model_text(source)
-        assert ("a", "1") in ir.params["p"].values
-        assert ("b", "2") in ir.params["p"].values
-        assert ir.params["p"].values[("a", "1")] == 10.0
+        # Verify all four cross-product combinations exist with correct values
+        for key in [("a", "1"), ("a", "2"), ("b", "1"), ("b", "2")]:
+            assert key in ir.params["p"].values
+            assert ir.params["p"].values[key] == 10.0
 
 
-class TestSOS2Variable:
-    """Test SOS2 variable kind parsing."""
+class TestSOSVariable:
+    """Test SOS1/SOS2 variable kind parsing."""
 
     def test_sos2_variable_parses(self):
-        """SOS2 Variable xs(i,j,s) should parse."""
+        """SOS2 Variable xs(i,j,s) should parse with correct kind."""
         source = """
         Set i / i1 /;
         Set j / j1 /;
@@ -99,24 +102,46 @@ class TestSOS2Variable:
         """
         ir = parse_model_text(source)
         assert "xs" in ir.variables
+        assert ir.variables["xs"].kind == VarKind.SOS2
+
+    def test_sos1_variable_parses(self):
+        """SOS1 Variable w(i) should parse with correct kind."""
+        source = """
+        Set i / i1, i2 /;
+        SOS1 Variable w(i);
+        Variables obj;
+        Equations defobj;
+        defobj.. obj =e= sum(i, w(i));
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        ir = parse_model_text(source)
+        assert "w" in ir.variables
+        assert ir.variables["w"].kind == VarKind.SOS1
 
 
 class TestMultilineTableRowLabel:
     """Test multi-line parenthesized table row labels."""
 
     def test_multiline_paren_row_label(self):
-        """Table row label (ground chips) spanning lines should parse."""
-        source = """
-        Set w / ground, chips /;
-        Set p / 'pulp-1', 'pulp-2' /;
-        Table cw(w,p) 'wood cost'
-                       'pulp-1'  'pulp-2'
-        (ground, chips)    40      55;
-        Variables obj;
-        Equations defobj;
-        defobj.. obj =e= sum((w,p), cw(w,p));
-        Model m / all /;
-        solve m minimizing obj using nlp;
-        """
-        ir = parse_model_text(source)
+        """Table row label spanning multiple lines should be joined by preprocessor."""
+        source = (
+            "Set w / ground, chips /;\n"
+            "Set p / 'pulp-1', 'pulp-2' /;\n"
+            "Table cw(w,p) 'wood cost'\n"
+            "                   'pulp-1'  'pulp-2'\n"
+            "(ground,\n"
+            " chips)              40      55;\n"
+            "Variables obj;\n"
+            "Equations defobj;\n"
+            "defobj.. obj =e= sum((w,p), cw(w,p));\n"
+            "Model m / all /;\n"
+            "solve m minimizing obj using nlp;\n"
+        )
+        # The preprocessor joins multi-line parens before grammar parsing
+        preprocessed = join_multiline_table_row_parens(source)
+        ir = parse_model_text(preprocessed)
         assert "cw" in ir.params
+        cw_values = ir.params["cw"].values
+        assert cw_values[("ground", "pulp-1")] == 40.0
+        assert cw_values[("chips", "pulp-2")] == 55.0

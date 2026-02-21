@@ -4830,6 +4830,17 @@ class _ModelBuilder:
                 suffixes = self._parse_set_element_id_list(child.children[1])
                 value_node = child.children[-1]
                 value = self._parse_param_data_value(value_node)
+                # Validate domain dimensionality — cross-product requires 2-D
+                if len(domain) < 2:
+                    raise self._error(
+                        f"Parameter '{param_name}' cross-product expansion syntax (prefix).(suffix) requires at least a 2-D parameter domain, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
+                for p in prefixes:
+                    self._verify_member_in_domain(param_name, domain[0], p, child.children[0])
+                for s in suffixes:
+                    self._verify_member_in_domain(param_name, domain[1], s, child.children[1])
                 for p in prefixes:
                     for s in suffixes:
                         values[(p, s)] = value
@@ -4898,6 +4909,12 @@ class _ModelBuilder:
                     values[key_tuple] = value
             elif child.data == "param_data_bare_value":
                 # Sprint 20 Day 8: Scalar param in Parameter block: / value /
+                if len(domain) > 0:
+                    raise self._error(
+                        f"Parameter '{param_name}' bare value syntax (/ value /) requires a scalar parameter, "
+                        f"but '{param_name}' has {len(domain)}-D domain {domain}",
+                        child,
+                    )
                 value_node = child.children[0]
                 if isinstance(value_node, Tree) and value_node.data == "param_data_value":
                     value = self._parse_param_data_value(value_node)

@@ -172,6 +172,9 @@ param_data_items: param_data_item ("," param_data_item)*
 // e.g., Parameter funds 'total funds' / 500 /;
 // Sprint 20 Day 8: Added param_data_cross_expansion for (list).(list) value patterns
 // e.g., (hydro-1*hydro-3).(1978,1983) inf
+// Note: param_data_bare_value MUST be last — Earley tries all alternatives, and more
+// specific patterns (matrix_row, expansions, data_indices) must be attempted first.
+// The parser validates that bare_value is only used with scalar (0-D) parameters.
 param_data_item: data_matrix_row                              -> param_data_matrix_row
                  | "(" set_element_id_list ")" "." "(" set_element_id_list ")" param_data_value -> param_data_cross_expansion
                  | "(" range_expr ")" param_data_value        -> param_data_range_expansion

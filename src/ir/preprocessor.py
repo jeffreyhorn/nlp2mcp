@@ -2236,21 +2236,34 @@ def join_multiline_table_row_parens(source: str) -> str:
             if table_header_seen:
                 if accumulating:
                     accum_lines.append(line)
-                    if ")" in line:
+                    # Check for unquoted closing paren
+                    unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", "", line)
+                    if ")" in unquoted:
                         # Join all accumulated lines
                         joined = " ".join(al.strip() for al in accum_lines)
-                        # Normalize: add commas between space-separated bare words
-                        # inside (...) — replace space between words with ", "
-                        # Pattern: inside (...), replace sequences of word-space-word
-                        paren_end = joined.index(")")
+                        # Find closing paren outside quotes
+                        joined_unquoted = re.sub(
+                            r"'[^']*'|\"[^\"]*\"", lambda m: " " * len(m.group()), joined
+                        )
+                        if ")" not in joined_unquoted:
+                            # No unquoted closing paren in joined string — keep accumulating
+                            continue
+                        paren_end = joined_unquoted.index(")")
                         inside = joined[: paren_end + 1]
                         after = joined[paren_end + 1 :]
                         # Add commas between space-separated elements inside parens
                         paren_content = inside[1:-1]  # strip ( and )
-                        if "," not in paren_content:
-                            # Space-separated: add commas
-                            parts = paren_content.split()
-                            paren_content = ", ".join(parts)
+                        # Handle both pure space-separated and mixed comma/space-separated
+                        segments = [seg.strip() for seg in paren_content.split(",")]
+                        normalized_segments = []
+                        for seg in segments:
+                            if not seg:
+                                continue
+                            tokens = seg.split()
+                            if len(tokens) > 1:
+                                seg = ", ".join(tokens)
+                            normalized_segments.append(seg)
+                        paren_content = ", ".join(normalized_segments)
                         indent = accum_lines[0][
                             : len(accum_lines[0]) - len(accum_lines[0].lstrip())
                         ]
