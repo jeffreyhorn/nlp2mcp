@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Checkpoint 1 GO/NO-GO evaluation. Parse at 123/160 (77.8%), 2 short of the 125 GO threshold — **NO-GO on parse**. Solve at 29 (≥ 28 threshold met). All other criteria pass. Contingency 1 NOT triggered (parse ≥ 120). Action: redirect Days 7-9 to WS3 debugging to close the 2-model parse gap.
+Checkpoint 1 GO/NO-GO evaluation. Parse at 123/160 (77.8%), 2 short of the 125 GO threshold — **NO-GO on parse**. Solve at 29 (≥ 28 threshold met). All other criteria pass. Contingency 1 NOT triggered (parse ≥ 120). Action: redirect Days 7–9 to WS3 debugging to close the 2-model parse gap.
 
 #### Checkpoint 1 Metrics
 

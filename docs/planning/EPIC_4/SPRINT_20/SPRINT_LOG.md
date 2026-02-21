@@ -144,10 +144,10 @@
 ### Day 6 — Checkpoint 1 + Buffer (2026-02-20)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #814
 
 **Activities:**
-- Ran full pipeline retest (158 models)
+- Ran full pipeline retest (160 models)
 - Evaluated Checkpoint 1 GO/NO-GO criteria
 - Triaged open GitHub issues from Days 3-5
 
@@ -176,7 +176,7 @@
 
 **Decision: NO-GO** — Parse 2 short of 125 threshold. Contingency 1 NOT triggered (parse ≥ 120).
 
-**Action:** Per PLAN.md, redirect Days 7-9 to remaining WS3 Phase 1 items and debugging to close the 2-model parse gap.
+**Action:** Per PLAN.md, redirect Days 7–9 to remaining WS3 Phase 1 items and debugging to close the 2-model parse gap.
 
 **Full Pipeline Metrics (Day 6):**
 
