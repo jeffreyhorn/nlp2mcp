@@ -172,7 +172,7 @@
 ### Day 8 — WS3 Phase 2: Compound Set Data Part 2 + Inline Scalar Data (2026-02-21)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #819
 
 **Activities:**
 - Added `param_data_bare_value` for inline scalar data in Parameter blocks (`/ 500 /`, `/ .05 /`)
