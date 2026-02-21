@@ -4276,9 +4276,8 @@ class _ModelBuilder:
             return self._attach_domain(expr, free_domain)
 
         if node.data == "no_cond":
-            # no$(condition) — evaluates to 0 if condition holds, otherwise 0.
-            # Construct a DollarConditional with constant value 0.0 and the
-            # parsed condition expression as the dollar condition.
+            # no$(condition) — always evaluates to 0. The condition is preserved
+            # in the IR via DollarConditional but does not affect the numeric value.
             value_expr = self._attach_domain(Const(0.0), free_domain)
             condition_tree = node.children[-1]
             condition = self._expr(condition_tree.children[1], free_domain)
