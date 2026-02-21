@@ -2275,7 +2275,8 @@ def join_multiline_table_row_parens(source: str) -> str:
                         continue
                     continue
 
-                if stripped.startswith("(") and ")" not in stripped:
+                unquoted_start = re.sub(r"'[^']*'|\"[^\"]*\"", "", stripped)
+                if stripped.startswith("(") and ")" not in unquoted_start:
                     # Start of multi-line parenthesized group
                     accumulating = True
                     accum_lines = [line]

@@ -179,7 +179,7 @@
 - Added `param_data_cross_expansion` for `(list).(list) value` cross-product in parameter data
 - Added SOS1/SOS2 variable kind support (`SOS1_K`, `SOS2_K` terminals, `VarKind.SOS1`/`SOS2`)
 - Added preprocessor `join_multiline_table_row_parens()` for multi-line parenthesized table row labels
-- 6 unit tests added: inline scalar data (3), cross-product expansion (1), SOS2 variable (1), multi-line table row label (1)
+- 7 unit tests added: inline scalar data (3), cross-product expansion (1), SOS1 variable (1), SOS2 variable (1), multi-line table row label (1)
 - Created issue documents for 3 remaining blockers: mexls (#816), cesam2 (#817), gussrisk (#818)
 
 **Model results (6 of 9 parse):**

@@ -24,7 +24,7 @@ Extended Subcategory A compound set data grammar (Part 2) and added Subcategory 
 - **Parser**: Added handlers for `param_data_bare_value` and `param_data_cross_expansion`
 - **Symbols**: Added `VarKind.SOS1` and `VarKind.SOS2` enum values
 - **Emitter/Converter**: SOS1/SOS2 support in templates and converter type map
-- **Tests**: 6 unit tests for inline scalar data (3), cross-product expansion (1), SOS2 variable (1), multi-line table row label (1)
+- **Tests**: 7 unit tests for inline scalar data (3), cross-product expansion (1), SOS1 variable (1), SOS2 variable (1), multi-line table row label (1)
 
 #### Models affected
 
