@@ -40,6 +40,8 @@ BLOCK_KEYWORDS = [
     "negative",
     "binary",
     "integer",
+    "sos1",
+    "sos2",
 ]
 
 

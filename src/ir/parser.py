@@ -39,6 +39,7 @@ from .model_ir import ModelIR, ObjectiveIR
 from .preprocessor import (
     expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
+    join_multiline_table_row_parens,
     normalize_double_commas,
     normalize_multi_line_continuations,
     normalize_special_identifiers,
@@ -278,6 +279,10 @@ def parse_text(source: str) -> Tree:
     # direct API users may call `parse_text()` directly with raw GAMS source.
     # Both paths must normalize special identifiers for correct parsing.
     source = normalize_special_identifiers(source)
+
+    # Sprint 20 Day 8: Join multi-line parenthesized table row labels onto one line.
+    # Must run before expand_tuple_only_table_rows.
+    source = join_multiline_table_row_parens(source)
 
     # Day 8: Expand (a,b,c) tuple-only row labels in tables to individual rows.
     # Must run after normalize_special_identifiers.
@@ -4830,10 +4835,10 @@ class _ModelBuilder:
                 suffixes = self._parse_set_element_id_list(child.children[1])
                 value_node = child.children[-1]
                 value = self._parse_param_data_value(value_node)
-                # Validate domain dimensionality — cross-product requires 2-D
-                if len(domain) < 2:
+                # Validate domain dimensionality — cross-product requires exactly 2-D
+                if len(domain) != 2:
                     raise self._error(
-                        f"Parameter '{param_name}' cross-product expansion syntax (prefix).(suffix) requires at least a 2-D parameter domain, "
+                        f"Parameter '{param_name}' cross-product expansion syntax (prefix).(suffix) requires a 2-D parameter domain, "
                         f"but '{param_name}' has {len(domain)}-D domain {domain}",
                         child,
                     )
@@ -4915,11 +4920,7 @@ class _ModelBuilder:
                         f"but '{param_name}' has {len(domain)}-D domain {domain}",
                         child,
                     )
-                value_node = child.children[0]
-                if isinstance(value_node, Tree) and value_node.data == "param_data_value":
-                    value = self._parse_param_data_value(value_node)
-                else:
-                    value = float(_token_text(value_node))
+                value = self._parse_param_data_value(child.children[0])
                 values[()] = value
             elif child.data == "param_data_scalar":
                 key = self._parse_data_indices(child.children[0])

@@ -10,7 +10,6 @@ Tests for:
 import pytest
 
 from src.ir.parser import parse_model_text
-from src.ir.preprocessor import join_multiline_table_row_parens
 from src.ir.symbols import VarKind
 
 pytestmark = pytest.mark.unit
@@ -138,9 +137,9 @@ class TestMultilineTableRowLabel:
             "Model m / all /;\n"
             "solve m minimizing obj using nlp;\n"
         )
-        # The preprocessor joins multi-line parens before grammar parsing
-        preprocessed = join_multiline_table_row_parens(source)
-        ir = parse_model_text(preprocessed)
+        # parse_model_text routes through parse_text which calls
+        # join_multiline_table_row_parens before grammar parsing
+        ir = parse_model_text(source)
         assert "cw" in ir.params
         cw_values = ir.params["cw"].values
         assert cw_values[("ground", "pulp-1")] == 40.0
