@@ -474,11 +474,14 @@ option_value: NUMBER
 // Conditional Statements (Sprint 8 Day 2)
 // ---------------------------
 
-if_stmt: IF_K "(" expr "," exec_stmt+ elseif_clause* else_clause? ")" SEMI
+// Sprint 20 Day 7: Use exec_stmt* exec_stmt_final pattern (like loop_body)
+// so the last statement before ) doesn't need a semicolon.
+// e.g., if(cond, x = 1) is valid GAMS (no semicolon before closing paren).
+if_stmt: IF_K "(" expr "," exec_stmt* exec_stmt_final elseif_clause* else_clause? ")" SEMI
 
-elseif_clause: ELSEIF_K expr "," exec_stmt+
+elseif_clause: ELSEIF_K expr "," exec_stmt* exec_stmt_final
 
-else_clause: ELSE_K exec_stmt+
+else_clause: ELSE_K exec_stmt* exec_stmt_final
 
 // Loop statement (Sprint 11 Day 2 Extended, Sprint 12 conditional filter and indexed sets)
 // Syntax: loop((indices), statements);

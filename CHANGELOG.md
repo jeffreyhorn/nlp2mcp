@@ -13,19 +13,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Summary
 
-Extended Subcategory A compound set data grammar: multi-word set elements, numeric-prefix tuples, and deep dotted table row labels with parenthesized sub-lists. lexer_invalid_char reduced from 21 to 19.
+Extended Subcategory A compound set data grammar and fixed `if_stmt` semicolon handling. Parse 123 → 127/160 (+4), crossing the Checkpoint 1 GO threshold of 125.
 
 #### Changes
 
 - **Grammar**: Extended `table_row_label` to support `dotted_label "." "(" set_element_id_list ")"` for deep dotted chains like `wheat.bullock.standard.(heavy,january)`
 - **Grammar**: Added `set_multiword_with_desc` rule for multi-word set elements (e.g., `wire rod 'description'`)
 - **Grammar**: Added `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` tuple variants for numeric-prefix set data
+- **Grammar**: Fixed `if_stmt` to use `exec_stmt* exec_stmt_final` pattern so the last statement before `)` doesn't require a semicolon (e.g., `if(cond, x = 1)`)
 - **Preprocessor**: Quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization consuming the dot
 - **Parser**: Updated `tuple_suffix_expansion_label` handler to extract prefix from `dotted_label` tree
 - **Tests**: 7 unit tests for multi-word elements, numeric-prefix tuples, and dotted-label parenthesized sub-lists
 
 #### Models affected
 
+- **lop**: Now fully parses (+1 parse success)
+- **fdesign**: Now fully parses — if_stmt fix (+1 parse success)
+- **senstran**: Now fully parses — cascading from if_stmt fix (+1 parse success)
+- **nemhaus**: Now fully parses — cascading from if_stmt fix (+1 parse success)
 - **sarf**: Now passes lexer/grammar stage (downstream internal_error: lead/lag)
 - **indus**: Now passes lexer/grammar stage (downstream internal_error: variable index)
 - **mexls**: Passes multi-word and numeric-dot stages (downstream `yes$(...)` syntax gap)

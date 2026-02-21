@@ -161,11 +161,13 @@
 - Added multi-word set element grammar rule (`SET_ELEMENT_ID SET_ELEMENT_ID STRING` → `set_multiword_with_desc`)
 - Added numeric-prefix tuple support: grammar rules for `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` in set data
 - Added preprocessor fix: quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization
+- Fixed `if_stmt` grammar to allow final statement without semicolon (like `loop_body`): `exec_stmt* exec_stmt_final` pattern
 - sarf and indus now pass grammar/lexer stage (blocked by downstream internal_error: lead/lag, variable index)
 - mexls passes multi-word and numeric-dot stages (blocked by downstream `yes$(...)` syntax)
+- **lop, fdesign, senstran, nemhaus**: now fully parse (+4 parse successes)
 - 7 unit tests added
 
-**Metrics:** Tests 3,642 (+7), lexer_invalid_char 19 (−2 from Day 6)
+**Metrics:** Tests 3,642 (+7), parse 127/160 (+4), lexer_invalid_char reduced
 
 ---
 
