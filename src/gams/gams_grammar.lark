@@ -524,7 +524,7 @@ loop_stmt: LOOP_K "(" id_list "," loop_body ")" SEMI
          | LOOP_K "(" ID DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "[" expr "]" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
-         | LOOP_K "(" "(" id_list ")" DOLLAR ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
+         | LOOP_K "(" "(" id_list ")" DOLLAR ID "(" index_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_indexed
          | LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
