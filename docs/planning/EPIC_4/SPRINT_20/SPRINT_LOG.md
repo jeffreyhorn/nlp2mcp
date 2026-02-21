@@ -76,6 +76,83 @@
 
 ---
 
+### Day 1 — WS1 `.l` Emission: IR + Parser (2026-02-19)
+
+**Status:** ✅ COMPLETE
+**PR:** #801 (merged)
+
+**Activities:**
+- Extended `VariableDef` with `l_expr`/`l_expr_map` for expression-based `.l` initialization
+- Mutual exclusion semantics: setting numeric clears expression storage and vice versa
+- Index preservation: `l_expr_map` keys use full `IndexOffset`/`SubsetIndex` objects
+- 7 unit tests added
+
+**Metrics:** Tests 3,586 (+7)
+
+---
+
+### Day 2 — WS1 `.l` Emission: Emitter + End-to-End (2026-02-19)
+
+**Status:** ✅ COMPLETE
+**PR:** #802 (merged)
+
+**Activities:**
+- Extended MCP emitter to emit `.l` initialization assignments
+- End-to-end pipeline testing for circle, abel, chakra models
+
+---
+
+### Day 3 — WS2 IndexOffset `to_gams_string()` Extensions (2026-02-20)
+
+**Status:** ✅ COMPLETE
+**PR:** #805 (merged)
+
+**Activities:**
+- Extended `IndexOffset.to_gams_string()` for arithmetic offsets, function-call offsets
+- Fixed sparta, tabora, otpop models
+
+---
+
+### Day 4 — WS3 Lexer Phase 1: Subcategories L, M, H (2026-02-20)
+
+**Status:** ✅ COMPLETE
+**PR:** #806 (merged)
+
+**Activities:**
+- Fixed lexer issues for subcategories L (camcge, ferts, tfordy), M (cesam, spatequ, senstran), H (worst, iobalance, lop)
+- Created issue docs for blocking models (#807, #808, #809)
+- lexer_invalid_char reduced from 26 to 21
+
+---
+
+### Day 5 — WS4 model_no_objective_def Preprocessor Fix (2026-02-20)
+
+**Status:** ✅ COMPLETE
+**PR:** #811 (merged)
+
+**Activities:**
+- Fixed `$if set workSpace` inline guard preprocessor bug
+- model_no_objective_def reduced from 14 to 4
+- Created issue #810 (nested loop solve extraction — deferred)
+
+**Additional PRs merged:**
+- #812: Fixed issues #807 (MCP/CNS solve w/o objective), #808 (loop tuple dollar condition), #809 (errorf in FUNCNAME); added errorf derivative & evaluator support
+- #813: Fixed issue #810 (recursive solve extraction from doubly-nested loops); model_no_objective_def reduced from 4 to 1
+
+---
+
+### Day 6 — Checkpoint 1 + Buffer (2026-02-20)
+
+**Status:** ✅ COMPLETE
+**PR:** #814
+
+**Activities:**
+- Ran full pipeline retest (160 models)
+- Evaluated Checkpoint 1 GO/NO-GO criteria
+- Triaged open GitHub issues from Days 3-5
+
+---
+
 ## Checkpoints
 
 ### Checkpoint 1 (Day 6)
@@ -87,7 +164,46 @@
 - IndexOffset PR merged
 - All tests pass
 
-**Status:** PENDING
+**Evaluation:**
+
+| Criterion | GO threshold | Current | Verdict |
+|---|---|---|---|
+| Parse success | ≥ 125/160 (78.1%) | 123/160 (77.8%) | **NO-GO** (-2) |
+| Solve success | ≥ 28 | 29 | **GO** |
+| `.l` emission PR | Merged | ✅ #801, #802 | **GO** |
+| IndexOffset PR | Merged | ✅ #805 | **GO** |
+| Tests | All pass | ✅ 3,635 passed | **GO** |
+
+**Decision: NO-GO** — Parse 2 short of 125 threshold. Contingency 1 NOT triggered (parse ≥ 120).
+
+**Action:** Per PLAN.md, redirect Days 7–9 to remaining WS3 Phase 1 items and debugging to close the 2-model parse gap.
+
+**Full Pipeline Metrics (Day 6):**
+
+| Metric | Baseline | Day 6 | Delta |
+|---|---|---|---|
+| Parse success | 112/160 (70.0%) | 123/160 (77.8%) | +11 |
+| lexer_invalid_char | 26 | 21 | -5 |
+| model_no_objective_def | 14 | 1 | -13 |
+| Translate success | 96/112 (85.7%) | 109/123 (88.6%) | +13 |
+| Solve success | 27 | 29 | +2 |
+| Full pipeline match | 10 | 10 | 0 |
+| Tests | 3,579 | 3,635 | +56 |
+
+**Parse error breakdown:**
+- lexer_invalid_char: 21
+- semantic_undefined_symbol: 8
+- internal_error: 3
+- parser_invalid_expression: 2
+- model_no_objective_def: 1
+
+**Solve error breakdown:**
+- path_syntax_error: 45
+- path_solve_terminated: 22
+- model_infeasible: 12
+- path_solve_license: 1
+
+**Status:** EVALUATED — NO-GO (parse)
 
 ---
 
@@ -118,3 +234,19 @@
 - Sprint 20 Prep Phase completed: 10 tasks merged to main via PRs #790–#799
 - All planning documents on main: PLAN.md, PLAN_PROMPTS.md, BASELINE_METRICS.md, KNOWN_UNKNOWNS.md, PREP_PLAN.md
 - Key deferrals to Sprint 21: accounting variable detection (#764), AD condition propagation (#763)
+
+### Day 6 Issue Triage
+
+Open GitHub issues reviewed at Checkpoint 1:
+
+| Issue | Summary | Stage | Sprint Action |
+|---|---|---|---|
+| #532 | Store Objective Variable Name | Enhancement | Deferred (long-standing) |
+| #757 | Bearing MCP locally infeasible | Solve | Deferred to Sprint 21 |
+| #763 | Chenery MCP division by zero (del parameter) | Solve | Deferred to Sprint 21 |
+| #764 | Mexss MCP locally infeasible (accounting vars) | Solve | Deferred to Sprint 21 |
+| #765 | Orani MCP locally infeasible (fixed exogenous vars) | Solve | Deferred to Sprint 21 |
+| #789 | Min/max in objective produces infeasible MCP | Solve | Deferred to Sprint 21 |
+| #803 | Circle MCP remains infeasible | Solve | WS5 candidate (Day 10) |
+
+All open issues are solve/match-stage; none block the parse gap that caused Checkpoint 1 NO-GO. The parse gap (123 → 125) is driven by `lexer_invalid_char` (21 remaining) and needs WS3 Phase 1 completion.

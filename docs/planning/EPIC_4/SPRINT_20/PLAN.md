@@ -327,7 +327,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 6 — Checkpoint 1 + Buffer
+### Day 6 — Checkpoint 1 + Buffer ✅
 
 **Theme:** Checkpoint 1 GO/NO-GO; light work; buffer for Days 1–5 overruns
 

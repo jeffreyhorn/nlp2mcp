@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 6: Checkpoint 1 Evaluation - 2026-02-20
+
+**Branch:** `sprint20-day6-checkpoint1`
+
+#### Summary
+
+Checkpoint 1 GO/NO-GO evaluation. Parse at 123/160 (77.8%), 2 short of the 125 GO threshold — **NO-GO on parse**. Solve at 29 (≥ 28 threshold met). All other criteria pass. Contingency 1 NOT triggered (parse ≥ 120). Action: redirect Days 7–9 to WS3 debugging to close the 2-model parse gap.
+
+#### Checkpoint 1 Metrics
+
+| Metric | Baseline | Day 6 | Delta |
+|---|---|---|---|
+| Parse success | 112/160 (70.0%) | 123/160 (77.8%) | +11 |
+| lexer_invalid_char | 26 | 21 | -5 |
+| model_no_objective_def | 14 | 1 | -13 |
+| Translate success | 96/112 (85.7%) | 109/123 (88.6%) | +13 |
+| Solve success | 27 | 29 | +2 |
+| Full pipeline match | 10 | 10 | 0 |
+| Tests | 3,579 | 3,635 | +56 |
+
+#### Additional fixes merged since Day 5
+
+- **PR #812**: Issues #807 (MCP/CNS solve w/o objective), #808 (loop tuple dollar condition), #809 (errorf in FUNCNAME), errorf derivative + evaluator
+- **PR #813**: Issue #810 (recursive solve extraction from doubly-nested loops), model_no_objective_def 4 → 1
+
 ### Sprint 20 Day 5: WS4 model_no_objective_def Preprocessor Fix - 2026-02-20
 
 **Branch:** `sprint20-day5-model-no-objective-def-fix`
