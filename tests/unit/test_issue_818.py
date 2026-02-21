@@ -45,7 +45,7 @@ class TestTripleDottedSetTuples:
         assert "dict" in ir.sets
         members = ir.sets["dict"].members
         assert len(members) == 1
-        assert "rapscenarios.scenario." in members[0]
+        assert members[0] == "rapscenarios.scenario."
 
 
 class TestSolveScenario:

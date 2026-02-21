@@ -2085,9 +2085,7 @@ def join_multiline_assignments(source: str) -> str:
                 ends_with_semi = _has_statement_ending_semicolon(stripped)
 
                 # Check if line ends with = (assignment continuation onto next line)
-                ends_with_assign = stripped.rstrip().endswith(
-                    "="
-                ) and not stripped.rstrip().endswith("==")
+                ends_with_assign = stripped.endswith("=") and not stripped.endswith("==")
 
                 if (paren_depth != 0 or ends_with_assign) and not ends_with_semi:
                     # Unbalanced parentheses or trailing = and no semicolon - start continuation
