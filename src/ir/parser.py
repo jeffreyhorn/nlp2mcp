@@ -4269,20 +4269,26 @@ class _ModelBuilder:
             # Construct a DollarConditional with constant value 1.0 and the
             # parsed condition expression as the dollar condition.
             # condition children: [DOLLAR_token, inner_expr]
+            # Attach free_domain to value_expr so _merge_domains sees matching
+            # domains (mirroring dollar_cond where value_expr inherits domain
+            # from _expr).
             value_expr = self._attach_domain(Const(1.0), free_domain)
             condition_tree = node.children[-1]
             condition = self._expr(condition_tree.children[1], free_domain)
             expr = DollarConditional(value_expr, condition)
-            return self._attach_domain(expr, free_domain)
+            return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
 
         if node.data == "no_cond":
             # no$(condition) — always evaluates to 0. The condition is preserved
             # in the IR via DollarConditional but does not affect the numeric value.
+            # Attach free_domain to value_expr so _merge_domains sees matching
+            # domains (mirroring dollar_cond where value_expr inherits domain
+            # from _expr).
             value_expr = self._attach_domain(Const(0.0), free_domain)
             condition_tree = node.children[-1]
             condition = self._expr(condition_tree.children[1], free_domain)
             expr = DollarConditional(value_expr, condition)
-            return self._attach_domain(expr, free_domain)
+            return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
 
         if node.data == "sum":
             return self._handle_aggregation(node, Sum, free_domain)
