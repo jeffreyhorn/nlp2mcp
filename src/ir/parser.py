@@ -1148,6 +1148,12 @@ class _ModelBuilder:
                     # Sprint 19 Day 1: Handle NUMBER STRING case (numeric set elements with descriptions)
                     # Note: _token_text() already strips quotes from STRING tokens
                     result.append(_token_text(child.children[0]))
+                elif child.data == "set_multiword_with_desc":
+                    # Sprint 20 Day 7: Multi-word set element with description
+                    # e.g., "wire rod 'rolling of wire rod'" -> element "wire rod"
+                    word1 = _token_text(child.children[0])
+                    word2 = _token_text(child.children[1])
+                    result.append(f"{word1} {word2}")
                 elif child.data == "set_tuple":
                     # Issue #567: Tuple notation with optional quoted parts
                     # ID.ID, ID.STRING, STRING.ID, STRING.STRING
@@ -1220,7 +1226,7 @@ class _ModelBuilder:
                 else:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
-                        f"Expected 'set_element', 'set_element_with_desc', 'set_tuple', "
+                        f"Expected 'set_element', 'set_element_with_desc', 'set_multiword_with_desc', 'set_tuple', "
                         f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
                         f"'set_tuple_cross_expansion', or 'set_range'.",
                         child,
@@ -1760,33 +1766,28 @@ class _ModelBuilder:
                             row_label_map[first_token.line] = expanded_labels
                     elif first_child.data == "tuple_suffix_expansion_label":
                         # Day 8: Suffix-expansion label like "sorghum.(bullock,'semi-mech')"
-                        # Structure: tuple_suffix_expansion_label -> set_element_id_or_string, set_element_id_list
-                        prefix_node = first_child.children[0]  # set_element_id_or_string
+                        # Sprint 20 Day 7: Extended to support dotted_label prefix
+                        # e.g. "wheat.bullock.standard.(heavy,january)"
+                        # Structure: tuple_suffix_expansion_label -> dotted_label, set_element_id_list
+                        prefix_node = first_child.children[0]  # dotted_label
                         suffix_list_node = first_child.children[1]  # set_element_id_list
-                        # Extract prefixes: use _parse_set_element_id_list on a synthetic list
-                        # wrapper, or directly handle set_element_id_or_string (which may be
-                        # a range_expr that expands to multiple elements)
-                        if (
-                            isinstance(prefix_node, Tree)
-                            and prefix_node.data == "set_element_id_or_string"
-                        ):
-                            inner = prefix_node.children[0]
-                            if isinstance(inner, Token):
-                                prefixes_for_label = [_token_text(inner)]
-                            elif isinstance(inner, Tree) and inner.data == "range_expr":
-                                bounds = [
-                                    _token_text(b.children[0])
-                                    for b in inner.children
-                                    if isinstance(b, Tree) and b.data == "range_bound"
-                                ]
-                                if len(bounds) == 2:
-                                    prefixes_for_label = self._expand_range(
-                                        bounds[0], bounds[1], inner
-                                    )
-                                else:
-                                    prefixes_for_label = ["*".join(bounds)]
-                            else:
-                                prefixes_for_label = []
+                        # Extract prefix string from dotted_label (join parts with ".")
+                        # dotted_label children can be Token (ID/STRING) or Tree (range_expr)
+                        if isinstance(prefix_node, Tree) and prefix_node.data == "dotted_label":
+                            parts: list[str] = []
+                            for child_node in prefix_node.children:
+                                if isinstance(child_node, Token):
+                                    parts.append(_token_text(child_node))
+                                elif (
+                                    isinstance(child_node, Tree) and child_node.data == "range_expr"
+                                ):
+                                    bounds = [
+                                        _token_text(b.children[0])
+                                        for b in child_node.children
+                                        if isinstance(b, Tree) and b.data == "range_bound"
+                                    ]
+                                    parts.append("*".join(bounds))
+                            prefixes_for_label = [".".join(parts)] if parts else []
                         elif isinstance(prefix_node, Token):
                             prefixes_for_label = [_token_text(prefix_node)]
                         else:
