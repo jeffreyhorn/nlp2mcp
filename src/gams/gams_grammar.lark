@@ -249,11 +249,14 @@ set_members: "(" set_member ("," set_member)* ")"
 // Issue #562: Added set_tuple_prefix_expansion for (a,b).c syntax
 // Issue #567: Support quoted strings in tuple dot notation (e.g., upper.'u-egypt')
 // Issue #568: Support hyphenated (quoted) prefix and suffixes in tuple expansion
+// Sprint 20 Day 7: Added NUMBER-dot variants for numeric-prefix tuples (e.g. 1.sicartsa)
+// Sprint 20 Day 7: Added set_multiword_with_desc for multi-word elements (e.g. wire rod 'desc')
 ?set_member: range_expr                          -> set_range
            | "(" set_element_id_list ")" "." "(" set_element_id_list ")"  -> set_tuple_cross_expansion
            | "(" set_element_id_list ")" "." SET_ELEMENT_ID  -> set_tuple_prefix_expansion
            | SET_ELEMENT_ID "." "(" set_element_id_list ")"  -> set_tuple_expansion
            | STRING "." "(" set_element_id_list ")"          -> set_tuple_expansion
+           | NUMBER "." "(" set_element_id_list ")"          -> set_tuple_expansion
            | SET_ELEMENT_ID "." SET_ELEMENT_ID STRING -> set_tuple_with_desc
            | SET_ELEMENT_ID "." STRING STRING    -> set_tuple_with_desc
            | STRING "." SET_ELEMENT_ID STRING    -> set_tuple_with_desc
@@ -262,6 +265,9 @@ set_members: "(" set_member ("," set_member)* ")"
            | SET_ELEMENT_ID "." STRING           -> set_tuple
            | STRING "." SET_ELEMENT_ID           -> set_tuple
            | STRING "." STRING                   -> set_tuple
+           | NUMBER "." SET_ELEMENT_ID           -> set_tuple
+           | NUMBER "." STRING                   -> set_tuple
+           | SET_ELEMENT_ID SET_ELEMENT_ID STRING -> set_multiword_with_desc
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
            | STRING STRING                       -> set_element_with_desc
            | NUMBER STRING                       -> set_element_with_desc
@@ -294,8 +300,10 @@ table_row: table_row_label table_value*
 //   - dotted_label simple form (unchanged)
 // Note: tuple-only (a,b) without dot suffix is NOT supported as row label
 // because it creates ambiguity with assignment index expressions.
+// Sprint 20 Day 7: Extended tuple_suffix_expansion_label to use dotted_label
+// so multi-level dotted chains like wheat.bullock.standard.(heavy,january) parse.
 table_row_label: "(" set_element_id_list ")" "." "(" set_element_id_list ")"  -> tuple_cross_label
-               | set_element_id_or_string "." "(" set_element_id_list ")"     -> tuple_suffix_expansion_label
+               | dotted_label "." "(" set_element_id_list ")"                 -> tuple_suffix_expansion_label
                | "(" id_list ")" "." dotted_label  -> tuple_label
                | dotted_label                       -> simple_label
 

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 7: WS3 Phase 2 — Compound Set Data Part 1 - 2026-02-20
+
+**Branch:** `sprint20-day7-lexer-subcat-a-part1`
+
+#### Summary
+
+Extended Subcategory A compound set data grammar: multi-word set elements, numeric-prefix tuples, and deep dotted table row labels with parenthesized sub-lists. lexer_invalid_char reduced from 21 to 19.
+
+#### Changes
+
+- **Grammar**: Extended `table_row_label` to support `dotted_label "." "(" set_element_id_list ")"` for deep dotted chains like `wheat.bullock.standard.(heavy,january)`
+- **Grammar**: Added `set_multiword_with_desc` rule for multi-word set elements (e.g., `wire rod 'description'`)
+- **Grammar**: Added `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` tuple variants for numeric-prefix set data
+- **Preprocessor**: Quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization consuming the dot
+- **Parser**: Updated `tuple_suffix_expansion_label` handler to extract prefix from `dotted_label` tree
+- **Tests**: 7 unit tests for multi-word elements, numeric-prefix tuples, and dotted-label parenthesized sub-lists
+
+#### Models affected
+
+- **sarf**: Now passes lexer/grammar stage (downstream internal_error: lead/lag)
+- **indus**: Now passes lexer/grammar stage (downstream internal_error: variable index)
+- **mexls**: Passes multi-word and numeric-dot stages (downstream `yes$(...)` syntax gap)
+
 ### Sprint 20 Day 6: Checkpoint 1 Evaluation - 2026-02-20
 
 **Branch:** `sprint20-day6-checkpoint1`

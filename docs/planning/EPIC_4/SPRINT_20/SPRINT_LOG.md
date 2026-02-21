@@ -151,6 +151,22 @@
 - Evaluated Checkpoint 1 GO/NO-GO criteria
 - Triaged open GitHub issues from Days 3-5
 
+### Day 7 — WS3 Phase 2: Compound Set Data Part 1 (2026-02-20)
+
+**Status:** ✅ COMPLETE
+**PR:** TBD
+
+**Activities:**
+- Extended `table_row_label` to support deep dotted labels with parenthesized sub-lists (e.g., `wheat.bullock.standard.(heavy,january)`)
+- Added multi-word set element grammar rule (`SET_ELEMENT_ID SET_ELEMENT_ID STRING` → `set_multiword_with_desc`)
+- Added numeric-prefix tuple support: grammar rules for `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` in set data
+- Added preprocessor fix: quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization
+- sarf and indus now pass grammar/lexer stage (blocked by downstream internal_error: lead/lag, variable index)
+- mexls passes multi-word and numeric-dot stages (blocked by downstream `yes$(...)` syntax)
+- 7 unit tests added
+
+**Metrics:** Tests 3,642 (+7), lexer_invalid_char 19 (−2 from Day 6)
+
 ---
 
 ## Checkpoints

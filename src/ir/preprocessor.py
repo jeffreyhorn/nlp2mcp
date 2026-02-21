@@ -1730,6 +1730,21 @@ def _quote_special_in_line(line: str) -> str:
 
     # Apply the replacement
     processed = re.sub(pattern, replace_if_not_quoted, line)
+
+    # Sprint 20 Day 7: Quote numeric prefixes in N.word and N.( tuple patterns
+    # e.g. "1.sicartsa" -> "'1'.sicartsa", "4.(hylsa,hylsap)" -> "'4'.(hylsa,hylsap)"
+    # so the lexer doesn't consume "1." as FLOAT
+    # Pattern: bare integer followed by dot and a letter or open-paren
+    def quote_numeric_dot(m: re.Match) -> str:  # type: ignore[type-arg]
+        num = m.group(1)
+        start = m.start()
+        before = processed[:start]
+        if before.count("'") % 2 == 1 or before.count('"') % 2 == 1:
+            return m.group(0)
+        return f"'{num}'.{m.group(2)}"
+
+    processed = re.sub(r"\b(\d+)\.([a-zA-Z_(])", quote_numeric_dot, processed)
+
     return processed
 
 
