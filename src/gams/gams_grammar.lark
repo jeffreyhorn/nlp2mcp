@@ -256,7 +256,7 @@ set_members: "(" set_member ("," set_member)* ")"
            | "(" set_element_id_list ")" "." SET_ELEMENT_ID  -> set_tuple_prefix_expansion
            | SET_ELEMENT_ID "." "(" set_element_id_list ")"  -> set_tuple_expansion
            | STRING "." "(" set_element_id_list ")"          -> set_tuple_expansion
-           | NUMBER "." "(" set_element_id_list ")"          -> set_tuple_expansion
+           | INT "." "(" set_element_id_list ")"             -> set_tuple_expansion
            | SET_ELEMENT_ID "." SET_ELEMENT_ID STRING -> set_tuple_with_desc
            | SET_ELEMENT_ID "." STRING STRING    -> set_tuple_with_desc
            | STRING "." SET_ELEMENT_ID STRING    -> set_tuple_with_desc
@@ -265,8 +265,8 @@ set_members: "(" set_member ("," set_member)* ")"
            | SET_ELEMENT_ID "." STRING           -> set_tuple
            | STRING "." SET_ELEMENT_ID           -> set_tuple
            | STRING "." STRING                   -> set_tuple
-           | NUMBER "." SET_ELEMENT_ID           -> set_tuple
-           | NUMBER "." STRING                   -> set_tuple
+           | INT "." SET_ELEMENT_ID              -> set_tuple
+           | INT "." STRING                      -> set_tuple
            | SET_ELEMENT_ID SET_ELEMENT_ID STRING -> set_multiword_with_desc
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
            | STRING STRING                       -> set_element_with_desc
@@ -814,6 +814,7 @@ OR: /(?i:or)\b/
 NOT_K: /(?i:not)\b/
 
 %import common.SIGNED_NUMBER
+%import common.INT
 %import common.CNAME
 %import common.WS_INLINE
 %import common.NEWLINE

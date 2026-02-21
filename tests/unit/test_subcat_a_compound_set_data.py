@@ -78,6 +78,23 @@ class TestNumericPrefixTuples:
         assert "4.hylsap" in ir.sets["own"].members
         assert "5.tamsa" in ir.sets["own"].members
 
+    def test_number_dot_quoted_string_suffix(self):
+        """Numeric prefix with quoted STRING suffix like 1.'sch-1'."""
+        source = """
+        Set o / 1*3 /;
+        Set s / 'sch-1', 'sch-2', 'sch-3' /;
+        Set own(o,s) / 1.'sch-1', 2.'sch-2', 3.'sch-3' /;
+        Variables obj, x;
+        Equations defobj;
+        defobj.. obj =e= x;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        ir = parse_model_text(source)
+        assert "1.sch-1" in ir.sets["own"].members
+        assert "2.sch-2" in ir.sets["own"].members
+        assert "3.sch-3" in ir.sets["own"].members
+
 
 class TestDottedLabelParenthesizedSubList:
     """Test deep dotted table row labels with parenthesized sub-lists."""
