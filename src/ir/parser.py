@@ -4265,14 +4265,25 @@ class _ModelBuilder:
             return self._attach_domain(Const(0.0), free_domain)
 
         if node.data == "yes_cond":
-            # yes$(condition) — evaluates to 1 if condition holds, 0 otherwise
-            # We treat the condition as opaque and return Const(1.0) since
-            # the dollar condition is handled at assignment level
-            return self._attach_domain(Const(1.0), free_domain)
+            # yes$(condition) — evaluates to 1 if condition holds, 0 otherwise.
+            # Construct a DollarConditional with constant value 1.0 and the
+            # parsed condition expression as the dollar condition.
+            # condition children: [DOLLAR_token, inner_expr]
+            value_expr = self._attach_domain(Const(1.0), free_domain)
+            condition_tree = node.children[-1]
+            condition = self._expr(condition_tree.children[1], free_domain)
+            expr = DollarConditional(value_expr, condition)
+            return self._attach_domain(expr, free_domain)
 
         if node.data == "no_cond":
-            # no$(condition) — evaluates to 0 if condition holds
-            return self._attach_domain(Const(0.0), free_domain)
+            # no$(condition) — evaluates to 0 if condition holds, otherwise 0.
+            # Construct a DollarConditional with constant value 0.0 and the
+            # parsed condition expression as the dollar condition.
+            value_expr = self._attach_domain(Const(0.0), free_domain)
+            condition_tree = node.children[-1]
+            condition = self._expr(condition_tree.children[1], free_domain)
+            expr = DollarConditional(value_expr, condition)
+            return self._attach_domain(expr, free_domain)
 
         if node.data == "sum":
             return self._handle_aggregation(node, Sum, free_domain)
@@ -4300,8 +4311,6 @@ class _ModelBuilder:
             # from the parse tree; terminals defined without quotes like DOLLAR are included)
             value_expr = self._expr(node.children[0], free_domain)
             condition = self._expr(node.children[2], free_domain)
-            from src.ir.ast import DollarConditional
-
             expr = DollarConditional(value_expr, condition)
             return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
 
@@ -4311,8 +4320,10 @@ class _ModelBuilder:
             expr = Unary(self._extract_operator(op_token), operand)
             return self._attach_domain(expr, self._expr_domain(operand))
 
-        if node.data == "funccall":
-            func_tree = node.children[0]
+        if node.data == "funccall" or node.data == "func_call":
+            # funccall wraps func_call: funccall.children[0] == func_call tree
+            # func_call appears directly when used in condition rule ($func_call)
+            func_tree = node.children[0] if node.data == "funccall" else node
             func_name = _token_text(func_tree.children[0]).lower()
             args: list[Expr] = []
 
