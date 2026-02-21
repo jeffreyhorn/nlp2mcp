@@ -19,7 +19,7 @@ Extended Subcategory A compound set data grammar and fixed `if_stmt` semicolon h
 
 - **Grammar**: Extended `table_row_label` to support `dotted_label "." "(" set_element_id_list ")"` for deep dotted chains like `wheat.bullock.standard.(heavy,january)`
 - **Grammar**: Added `set_multiword_with_desc` rule for multi-word set elements (e.g., `wire rod 'description'`)
-- **Grammar**: Added `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` tuple variants for numeric-prefix set data
+- **Grammar**: Added `INT.ID`, `INT.STRING`, `INT.(list)` tuple variants for numeric-prefix set data
 - **Grammar**: Fixed `if_stmt` to use `exec_stmt* exec_stmt_final` pattern so the last statement before `)` doesn't require a semicolon (e.g., `if(cond, x = 1)`)
 - **Preprocessor**: Quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization consuming the dot
 - **Parser**: Updated `tuple_suffix_expansion_label` handler to extract prefix from `dotted_label` tree

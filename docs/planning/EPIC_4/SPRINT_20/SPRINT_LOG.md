@@ -159,7 +159,7 @@
 **Activities:**
 - Extended `table_row_label` to support deep dotted labels with parenthesized sub-lists (e.g., `wheat.bullock.standard.(heavy,january)`)
 - Added multi-word set element grammar rule (`SET_ELEMENT_ID SET_ELEMENT_ID STRING` → `set_multiword_with_desc`)
-- Added numeric-prefix tuple support: grammar rules for `NUMBER.ID`, `NUMBER.STRING`, `NUMBER.(list)` in set data
+- Added numeric-prefix tuple support: grammar rules for `INT.ID`, `INT.STRING`, `INT.(list)` in set data
 - Added preprocessor fix: quote numeric prefixes in `N.word` and `N.(` patterns to prevent FLOAT tokenization
 - Fixed `if_stmt` grammar to allow final statement without semicolon (like `loop_body`): `exec_stmt* exec_stmt_final` pattern
 - sarf and indus now pass grammar/lexer stage (blocked by downstream internal_error: lead/lag, variable index)

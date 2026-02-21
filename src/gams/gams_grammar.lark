@@ -249,7 +249,7 @@ set_members: "(" set_member ("," set_member)* ")"
 // Issue #562: Added set_tuple_prefix_expansion for (a,b).c syntax
 // Issue #567: Support quoted strings in tuple dot notation (e.g., upper.'u-egypt')
 // Issue #568: Support hyphenated (quoted) prefix and suffixes in tuple expansion
-// Sprint 20 Day 7: Added NUMBER-dot variants for numeric-prefix tuples (e.g. 1.sicartsa)
+// Sprint 20 Day 7: Added INT-dot variants for numeric-prefix tuples (e.g. 1.sicartsa)
 // Sprint 20 Day 7: Added set_multiword_with_desc for multi-word elements (e.g. wire rod 'desc')
 ?set_member: range_expr                          -> set_range
            | "(" set_element_id_list ")" "." "(" set_element_id_list ")"  -> set_tuple_cross_expansion
