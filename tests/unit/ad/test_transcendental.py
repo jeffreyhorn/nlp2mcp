@@ -856,3 +856,38 @@ class TestErrorfDifferentiation:
         expr = Call("errorf", (VarRef("x"), VarRef("y")))
         with pytest.raises(ValueError, match="errorf.*expects 1 argument"):
             differentiate_expr(expr, "x")
+
+
+@pytest.mark.unit
+class TestErrorfEvaluation:
+    """Tests for errorf evaluation in the AD evaluator."""
+
+    def test_errorf_eval_zero(self):
+        """errorf(0) = erf(0) = 0."""
+        import math
+
+        from src.ad.evaluator import evaluate
+
+        expr = Call("errorf", (Const(0.0),))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(math.erf(0.0))
+
+    def test_errorf_eval_positive(self):
+        """errorf(1) = erf(1) ≈ 0.8427."""
+        import math
+
+        from src.ad.evaluator import evaluate
+
+        expr = Call("errorf", (Const(1.0),))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(math.erf(1.0))
+
+    def test_errorf_eval_negative(self):
+        """errorf(-1) = erf(-1) ≈ -0.8427 (odd function)."""
+        import math
+
+        from src.ad.evaluator import evaluate
+
+        expr = Call("errorf", (Const(-1.0),))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(math.erf(-1.0))

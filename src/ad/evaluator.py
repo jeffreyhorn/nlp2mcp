@@ -320,6 +320,13 @@ def _evaluate_call(
         except (ValueError, OverflowError) as e:
             raise EvaluationError(f"power({base}, {exponent}) failed: {e}") from e
 
+    elif func == "errorf":
+        if len(expr.args) != 1:
+            raise ValueError(f"errorf expects 1 argument, got {len(expr.args)}")
+        arg = _evaluate_expr(expr.args[0], var_values, param_values)
+        result = math.erf(arg)
+        return _check_numeric(result, f"errorf({arg})")
+
     else:
         raise ValueError(f"Unknown function: {func}")
 
