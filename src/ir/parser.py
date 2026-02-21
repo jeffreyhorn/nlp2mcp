@@ -1168,6 +1168,13 @@ class _ModelBuilder:
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_triple":
+                    # Issue #818: Triple-dotted tuples for GUSS dictionary sets
+                    # e.g., rapscenarios.scenario.'', rap.param.riskaver
+                    seg1 = _token_text(child.children[0])
+                    seg2 = _token_text(child.children[1])
+                    seg3 = _token_text(child.children[2])
+                    result.append(f"{seg1}.{seg2}.{seg3}")
                 elif child.data == "set_tuple_with_desc":
                     # Issue #567: Tuple with description - all quote combinations
                     # ID.ID STRING, ID.STRING STRING, STRING.ID STRING, STRING.STRING STRING
@@ -1234,7 +1241,7 @@ class _ModelBuilder:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
                         f"Expected 'set_element', 'set_element_with_desc', 'set_multiword_with_desc', 'set_tuple', "
-                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
+                        f"'set_triple', 'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
                         f"'set_tuple_cross_expansion', or 'set_range'.",
                         child,
                     )
