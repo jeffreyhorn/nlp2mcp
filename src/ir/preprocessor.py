@@ -1327,7 +1327,8 @@ def quote_unquoted_table_descriptions(source: str) -> str:
                 if desc.rstrip().endswith(";"):
                     trail = ";"
                     desc = desc.rstrip().rstrip(";").rstrip()
-                result.append(f"{prefix} '{desc}'{trail}")
+                escaped_desc = desc.replace("'", "''")
+                result.append(f"{prefix} '{escaped_desc}'{trail}")
                 continue
         result.append(line)
     return "\n".join(result)
