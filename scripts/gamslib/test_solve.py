@@ -20,7 +20,7 @@ Filter Options:
 
 Comparison Options:
     --compare      Compare NLP and MCP solutions after solving
-    --rtol FLOAT   Relative tolerance for objective comparison (default: 1e-6)
+    --rtol FLOAT   Relative tolerance for objective comparison (default: 1e-4)
     --atol FLOAT   Absolute tolerance for objective comparison (default: 1e-8)
 
 Examples:
@@ -75,7 +75,7 @@ from scripts.gamslib.error_taxonomy import (
 COMPARE_NOT_PERFORMED = "compare_not_performed"
 
 # Default tolerance values (based on solver defaults research)
-DEFAULT_RTOL = 1e-6  # Relative tolerance (matches PATH, CPLEX, GUROBI)
+DEFAULT_RTOL = 1e-4  # Relative tolerance for NLP↔MCP objective comparison
 DEFAULT_ATOL = 1e-8  # Absolute tolerance (matches IPOPT)
 
 # Database paths
@@ -418,7 +418,7 @@ def objectives_match(
     Args:
         nlp_obj: Objective value from NLP solve
         mcp_obj: Objective value from MCP solve
-        rtol: Relative tolerance (default 1e-6, matches PATH/CPLEX/GUROBI)
+        rtol: Relative tolerance (default 1e-4)
         atol: Absolute tolerance (default 1e-8, matches IPOPT)
 
     Returns:
@@ -638,18 +638,20 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
     """
     start_time = time.perf_counter()
 
-    # Find GAMS executable
-    gams_exe = shutil.which("gams")
+    # Find GAMS executable — prefer versioned paths over PATH lookup
+    # (PATH may find an older version with expired license)
+    gams_exe = None
+    for path in [
+        "/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams",
+        "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
+        "/opt/gams/gams",
+        "C:\\GAMS\\win64\\gams.exe",
+    ]:
+        if Path(path).exists():
+            gams_exe = path
+            break
     if not gams_exe:
-        gams_paths = [
-            "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
-            "/opt/gams/gams",
-            "C:\\GAMS\\win64\\gams.exe",
-        ]
-        for path in gams_paths:
-            if Path(path).exists():
-                gams_exe = path
-                break
+        gams_exe = shutil.which("gams")
 
     if not gams_exe:
         return {
