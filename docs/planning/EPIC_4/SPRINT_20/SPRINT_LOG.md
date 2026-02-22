@@ -348,7 +348,7 @@
 
 | Metric | Baseline | Day 6 | Day 11 | Delta (baseline) |
 |---|---|---|---|---|
-| Parse success | 112/160 (70.0%)* | 123/160 (77.8%)* | 129/158 (81.7%) | +17 |
+| Parse success | 112/158 (70.9%) | 123/158 (77.8%) | 129/158 (81.7%) | +17 |
 | lexer_invalid_char | 26 | 21 | 11 | -15 |
 | model_no_objective_def | 14 | 1 | 1 | -13 |
 | Translate success | 96/112 (85.7%) | 109/123 (88.6%) | 120/129 (93.0%) | +24 |
@@ -356,7 +356,7 @@
 | Full pipeline match | 10 | 10 | 16 | +6 |
 | Tests | 3,579 | 3,635 | 3,712 | +133 |
 
-\* The evaluation suite contains 158 candidate models (convexity status `verified_convex` or `likely_convex`). The "160" in sprint planning thresholds was an approximation; the actual denominator has been 158 throughout.
+Note: The evaluation suite contains 158 candidate models (convexity status `verified_convex` or `likely_convex`). The "160" in sprint planning thresholds was a planning approximation; the actual denominator has been 158 throughout.
 
 **Parse error breakdown (Day 11):**
 - lexer_invalid_char: 11

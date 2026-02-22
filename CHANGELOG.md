@@ -19,12 +19,14 @@ Checkpoint 2 evaluated: all 6 GO/NO-GO criteria met. Decision: **GO** for Phase 
 
 | Criterion | Target | Actual | Status |
 |---|---|---|---|
-| Parse success | >= 125/160 | 129/158 | GO |
+| Parse success | >= 125/160 | 129/158* | GO |
 | lexer_invalid_char | <= 11 | 11 | GO |
 | model_no_objective_def | <= 4 | 1 | GO |
 | Full pipeline match | >= 15 | 16 | GO |
 | Solve success | >= 30 | 33 | GO |
 | Tests | All pass | 3,712 passed, 10 skipped, 2 xfailed | GO |
+
+\* Evaluation suite has 158 candidates (filtered by convexity status); "160" in targets was a planning approximation.
 
 #### Activities
 
