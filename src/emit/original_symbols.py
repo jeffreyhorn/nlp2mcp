@@ -39,6 +39,8 @@ def _format_param_value(value: float) -> str:
             return "inf" if value > 0 else "-inf"
         if math.isnan(value):
             return "na"
+    if isinstance(value, (int, float)) and value == int(value):
+        return str(int(value))
     return str(value)
 
 

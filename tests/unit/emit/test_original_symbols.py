@@ -505,7 +505,7 @@ class TestEmitOriginalParameters:
 
         result = emit_original_parameters(model)
         assert "Scalars" in result
-        assert "threshold /0.0/" in result
+        assert "threshold /0/" in result
 
     def test_single_dimensional_parameter(self):
         """Test emission of parameter with one index."""
