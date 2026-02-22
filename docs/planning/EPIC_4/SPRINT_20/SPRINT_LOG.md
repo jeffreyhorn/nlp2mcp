@@ -435,9 +435,61 @@ Note: The evaluation suite contains 158 candidate models (convexity status `veri
 
 ## Sprint Close (Day 14)
 
-**Final Metrics:** TBD
+**Status:** ✅ COMPLETE
+**PR:** TBD
+**Date:** 2026-02-22
 
-**Sprint 20 Retrospective:** TBD
+### Final Pipeline Retest
+
+Full pipeline run completed (158 evaluated models, 160 parse-attempted):
+
+### Final Metrics vs. Targets
+
+| Metric | Baseline | Target | Day 6 | Day 11 | **Day 14 Final** | Status |
+|---|---|---|---|---|---|---|
+| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 129/158 | **132/160 (82.5%)** | ✅ Exceeded |
+| lexer_invalid_char | 26 | ≤ 11 | 21 | 11 | **10** | ✅ Met |
+| model_no_objective_def | 14 | ≤ 4 | 1 | 1 | **1** | ✅ Exceeded |
+| Translate success | 96/112 (85.7%) | ≥ 110/127 | 109/123 | 120/129 | **120/132 (90.9%)** | ✅ Met |
+| Solve success | 27 | ≥ 30 | 29 | 33 | **33** | ✅ Exceeded |
+| Full pipeline match | 10 | ≥ 15 | 10 | 16 | **16** | ✅ Met |
+| Tests | 3,579 | ≥ 3,650 | 3,635 | 3,712 | **3,715** | ✅ Met |
+| Zero regressions | — | All 112 maintained | ✅ | ✅ | ✅ | ✅ Met |
+
+**All 8 sprint-level acceptance criteria met.**
+
+### Parse Error Breakdown (Day 14 Final)
+
+| Category | Baseline | Day 6 | Day 11 | Day 14 |
+|---|---|---|---|---|
+| lexer_invalid_char | 26 | 21 | 11 | **10** |
+| semantic_undefined_symbol | 5 | 8 | 7 | **7** |
+| internal_error | 2 | 3 | 7 | **7** |
+| parser_invalid_expression | 1 | 2 | 3 | **3** |
+| model_no_objective_def | 14 | 1 | 1 | **1** |
+| **Total parse failures** | **48** | **35** | **29** | **28** |
+
+### Solve Error Breakdown (Day 14 Final)
+
+| Category | Count |
+|---|---|
+| path_syntax_error | 45 |
+| path_solve_terminated | 29 |
+| model_infeasible | 12 |
+| path_solve_license | 2 |
+| **Total solve failures** | **88** |
+
+### Matching Models (16)
+
+ajax, blend, chem, demo1, dispatch, hhmax, himmel11, house, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, splcge, trnsport, wall
+
+### Solving Models (33)
+
+abel, aircraft, ajax, alkyl, apl1p, apl1pca, blend, catmix, chakra, chem, chenery, circle, demo1, dispatch, hhmax, himmel11, himmel16, house, mathopt1, mathopt2, mhw4d, mhw4dx, port, process, prodmix, qabel, rbrock, sparta, splcge, trig, trnsport, wall, weapons
+
+### Sprint 20 Retrospective
+
+See `SPRINT_RETROSPECTIVE.md` in this directory.
 
 ---
 

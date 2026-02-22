@@ -471,18 +471,18 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 14 — Sprint Close + Retrospective
+### Day 14 — Sprint Close + Retrospective ✅ COMPLETE
 
-**Theme:** Final pipeline retest; sprint retrospective  
+**Theme:** Final pipeline retest; sprint retrospective
 **Effort:** 2–3h
 
-| Task | Deliverable |
-|---|---|
-| Final full pipeline retest | Updated `gamslib_status.json` |
-| Record final metrics vs. targets | SPRINT_LOG.md complete |
-| Write Sprint 20 Retrospective | `docs/planning/EPIC_4/SPRINT_20/SPRINT_RETROSPECTIVE.md` |
-| Update CHANGELOG.md with sprint summary | CHANGELOG.md |
-| Tag release if appropriate | Git tag |
+| Task | Deliverable | Status |
+|---|---|---|
+| Final full pipeline retest | Updated `gamslib_status.json` | ✅ |
+| Record final metrics vs. targets | SPRINT_LOG.md complete | ✅ |
+| Write Sprint 20 Retrospective | `docs/planning/EPIC_4/SPRINT_20/SPRINT_RETROSPECTIVE.md` | ✅ |
+| Update CHANGELOG.md with sprint summary | CHANGELOG.md | ✅ |
+| Tag release if appropriate | Git tag | ✅ |
 
 ---
 
@@ -582,14 +582,14 @@ The following unknowns were not fully resolved during prep and are flagged as op
 
 ### Sprint-Level
 
-- Parse success: ≥ 127/160 (≥ 79.4%)
-- lexer_invalid_char: ≤ 11
-- model_no_objective_def: ≤ 4
-- Translate success: ≥ 110/127 attempted
-- Solve success: ≥ 30
-- Full pipeline match: ≥ 15
-- Tests: ≥ 3,650 (≥ +71 from baseline)
-- Zero regressions: all existing 112 parse successes maintained
+- ✅ Parse success: ≥ 127/160 (≥ 79.4%) — **achieved: 132/160 (82.5%)**
+- ✅ lexer_invalid_char: ≤ 11 — **achieved: 10**
+- ✅ model_no_objective_def: ≤ 4 — **achieved: 1**
+- ✅ Translate success: ≥ 110/127 attempted — **achieved: 120/132 (90.9%)**
+- ✅ Solve success: ≥ 30 — **achieved: 33**
+- ✅ Full pipeline match: ≥ 15 — **achieved: 16**
+- ✅ Tests: ≥ 3,650 (≥ +71 from baseline) — **achieved: 3,715 (+136)**
+- ✅ Zero regressions: all existing 112 parse successes maintained — **confirmed**
 
 ---
 
