@@ -152,10 +152,10 @@ The emitter has two passes for parameter assignments:
 - **First pass** (`varref_filter="no_varref_attr"`): Parameters without `.l` references,
   emitted BEFORE Variables. Uses declaration order: `param_order = list(model_ir.params.keys())`
 - **Second pass** (`varref_filter="only_varref_attr"`): Calibration parameters with `.l`
-  references. Uses **topological sort** via Kahn's algorithm (lines 909-944).
+  references. Uses topological sort via Kahn's algorithm (lines 909-944).
 
 The gtm model's computed parameters (`supa`, `supb`, `supc`, `dema`, `demb`) have no `.l`
-references, so they go through the first pass with **no dependency ordering**. If `supa` is
+references, so they go through the first pass with no dependency ordering. If `supa` is
 declared before `supb` but depends on it, GAMS reports Error 141 (unassigned symbol).
 
 The topological sort infrastructure already exists in the codebase (Kahn's algorithm,
@@ -175,9 +175,9 @@ parameter pass.
 
 **Error 141 (parameter ordering)**:
 - Extending topological sort to the first pass is feasible but requires careful handling:
-  the existing Kahn's algorithm only operates on `eligible` parameters (filtered by
-  calibration status). Broadening this to all computed parameters needs testing across
-  the full model suite.
+  the existing Kahn's algorithm only operates on `eligible` parameters (filtered to include
+  only calibration parameters). Broadening this to all computed parameters needs testing
+  across the full model suite.
 
 ### Prerequisites Before Attempting Fix
 

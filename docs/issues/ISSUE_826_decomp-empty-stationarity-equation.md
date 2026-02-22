@@ -1,7 +1,7 @@
 # Decomp MCP: GAMS Error — Empty Stationarity Equation for `lam` Variable
 
 **GitHub Issue:** [#826](https://github.com/jeffreyhorn/nlp2mcp/issues/826)
-**Status:** OPEN — Cannot fix; deep KKT infrastructure issue
+**Status:** OPEN — Cannot fix; deep stationarity builder issue (domain/subset mapping limitation)
 **Severity:** High — MCP generates but GAMS reports compile error (EXECERROR = 2)
 **Date:** 2026-02-22
 **Affected Models:** decomp
@@ -117,7 +117,7 @@ builder.
    (no domain in their declaration). When `_add_indexed_jacobian_terms()` (lines 1382-1567)
    processes these equations:
    - `eq_indices` is empty (scalar constraint)
-   - The code goes to the `else` branch (line 1513) for scalar constraints
+   - The code processes scalar constraints in the `else` branch
    - The derivative expression contains concrete element indices ("1", "2") from set `s`
    - The `element_to_set` mapping maps `"1" → "ss"` (from variable instances)
    - But parameters like `mcost(s)` are declared over `s`, not `ss`
@@ -148,15 +148,16 @@ between variable domains and constraint access patterns:
 
 ### Prerequisites Before Attempting Fix
 
-1. **Option 3 (quickest mitigation)**: Add a post-build validation pass in
-   `build_stationarity_equations()` that detects empty stationarity expressions and either
-   fixes the associated variable (`.fx = 0`) or excludes the equation/variable pair from
-   the MCP model statement in `emit_model.py`.
+1. **Empty equation post-processing (quickest mitigation, option 3 above)**: Add a
+   post-build validation pass in `build_stationarity_equations()` that detects empty
+   stationarity expressions and either fixes the associated variable (`.fx = 0`) or
+   excludes the equation/variable pair from the MCP model statement in `emit_model.py`.
 
-2. **Option 1 or 2 (proper fix)**: Requires refactoring the indexed stationarity builder
-   to handle subset access patterns. This is a significant change affecting
-   `_add_indexed_jacobian_terms()`, `_replace_indices_in_expr()`, and potentially
-   `_build_element_to_set_mapping()`. Should be planned as a dedicated sprint task.
+2. **Per-instance or subset-aware stationarity (proper fix, options 1 or 2 above)**:
+   Requires refactoring the indexed stationarity builder to handle subset access patterns.
+   This is a significant change affecting `_add_indexed_jacobian_terms()`,
+   `_replace_indices_in_expr()`, and potentially `_build_element_to_set_mapping()`. Should
+   be planned as a dedicated sprint task.
 
 ### Key Code Locations
 

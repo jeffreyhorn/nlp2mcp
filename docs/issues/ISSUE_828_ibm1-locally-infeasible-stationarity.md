@@ -130,7 +130,7 @@ handles several scenarios:
 - `_process_indexed_bounds()` (partition.py lines 165-235) consolidates:
   - If all values identical and no scalar bound → uniform bound with `()` key
   - Otherwise → non-uniform bounds with per-instance keys `(var_name, (idx,))`
-- Infinite values in `up_map` are skipped per-element
+- Infinite values in `up_map` are tracked in `skipped_infinite` and excluded from bound multiplier creation
 
 ### The ibm1 Specific Problem
 
@@ -153,8 +153,9 @@ The stationarity equations show cost constants (`-0.03`, `-0.08`, `-0.17`) on th
 
 1. **Bound multipliers not created**: The partition/complementarity code may not be
    generating `piL_x` or `piU_x` multipliers at all. This could happen if:
-   - The parameter-assigned bounds (`x.up(s) = sup(s,"inventory")`) are not being resolved
-     to numeric values at IR time (stored as expressions rather than evaluated)
+   - It's possible that the parameter-assigned bounds (`x.up(s) = sup(s,"inventory")`) are
+     not being resolved to numeric values at IR time (stored as expressions rather than
+     evaluated)
    - The `up_map` entries are expression objects rather than floats, causing
      `_process_indexed_bounds()` to skip them
 
