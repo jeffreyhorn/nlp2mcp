@@ -603,6 +603,8 @@ def _diff_call(
         return _diff_smin(expr, wrt_var, wrt_indices, config)
     elif func == "smax":
         return _diff_smax(expr, wrt_var, wrt_indices, config)
+    elif func == "signpower":
+        return _diff_signpower(expr, wrt_var, wrt_indices, config)
     elif func in ("sameas", "card", "ord"):
         # GAMS set operations: constant with respect to decision variables.
         # sameas(a,b) = Kronecker delta (0 or 1 based on set element identity)
@@ -618,7 +620,7 @@ def _diff_call(
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
-            f"Supported functions: power, exp, log, log10, log2, sqrt, sin, cos, tan, "
+            f"Supported functions: power, signpower, exp, log, log10, log2, sqrt, sin, cos, tan, "
             f"abs, sqr, errorf, smin, smax, sameas, card, ord. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
@@ -1221,6 +1223,67 @@ def _diff_abs(
 
     # (x / sqrt(x² + ε)) * darg/dx
     return Binary("*", derivative_without_chain, darg_dx)
+
+
+def _diff_signpower(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of signpower function: signpower(x, n) = sign(x) * |x|^n.
+
+    For constant exponent n:
+        d/dx signpower(x, n) = n * abs(x)^(n-1) * dx/dx
+
+    This uses abs() which requires the --smooth-abs flag.
+
+    Args:
+        expr: Call("signpower", [base, exponent])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+        config: Configuration object (must have smooth_abs=True)
+
+    Returns:
+        Derivative expression (new AST)
+    """
+    if len(expr.args) != 2:
+        raise ValueError(f"signpower() expects 2 arguments, got {len(expr.args)}")
+
+    if config is None or not config.smooth_abs:
+        raise ValueError(
+            "signpower() differentiation requires the --smooth-abs flag because "
+            "d/dx signpower(x, n) = n * abs(x)^(n-1), which uses abs(). "
+            "Use --smooth-abs to enable smooth approximation of abs()."
+        )
+
+    base = expr.args[0]
+    exponent = expr.args[1]
+
+    if not isinstance(exponent, Const):
+        raise ValueError(
+            "signpower() differentiation only supports constant exponents. "
+            f"Got variable exponent: {exponent}"
+        )
+
+    n = exponent.value
+
+    # d/dx signpower(x, n) = n * abs(x)^(n-1) * dx/dx
+    dbase_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
+
+    # abs(x) — use smooth abs via the same machinery as _diff_abs
+    abs_base = Call("abs", (base,))
+
+    # abs(x)^(n-1)
+    n_minus_1 = Const(n - 1.0)
+    abs_pow = Call("power", (abs_base, n_minus_1))
+
+    # n * abs(x)^(n-1)
+    n_times_abs_pow = Binary("*", exponent, abs_pow)
+
+    # n * abs(x)^(n-1) * dx/dx
+    return Binary("*", n_times_abs_pow, dbase_dx)
 
 
 # ============================================================================

@@ -320,6 +320,17 @@ def _evaluate_call(
         except (ValueError, OverflowError) as e:
             raise EvaluationError(f"power({base}, {exponent}) failed: {e}") from e
 
+    elif func == "signpower":
+        if len(expr.args) != 2:
+            raise ValueError(f"signpower expects 2 arguments, got {len(expr.args)}")
+        base = _evaluate_expr(expr.args[0], var_values, param_values)
+        exponent = _evaluate_expr(expr.args[1], var_values, param_values)
+        try:
+            result = math.copysign(abs(base) ** exponent, base)
+            return _check_numeric(result, f"signpower({base}, {exponent})")
+        except (ValueError, OverflowError) as e:
+            raise EvaluationError(f"signpower({base}, {exponent}) failed: {e}") from e
+
     elif func == "errorf":
         if len(expr.args) != 1:
             raise ValueError(f"errorf expects 1 argument, got {len(expr.args)}")

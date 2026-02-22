@@ -4,9 +4,13 @@ Tests for transcendental and power function differentiation.
 Day 3: Tests for power, exp, log, sqrt derivatives.
 """
 
+import math
+
 import pytest
 
 from src.ad.derivative_rules import differentiate_expr
+from src.ad.evaluator import evaluate
+from src.config import Config
 from src.ir.ast import Binary, Call, Const, VarRef
 
 pytestmark = pytest.mark.unit
@@ -864,30 +868,135 @@ class TestErrorfEvaluation:
 
     def test_errorf_eval_zero(self):
         """errorf(0) = erf(0) = 0."""
-        import math
-
-        from src.ad.evaluator import evaluate
-
         expr = Call("errorf", (Const(0.0),))
         result = evaluate(expr, {}, {})
         assert result == pytest.approx(math.erf(0.0))
 
     def test_errorf_eval_positive(self):
         """errorf(1) = erf(1) ≈ 0.8427."""
-        import math
-
-        from src.ad.evaluator import evaluate
-
         expr = Call("errorf", (Const(1.0),))
         result = evaluate(expr, {}, {})
         assert result == pytest.approx(math.erf(1.0))
 
     def test_errorf_eval_negative(self):
         """errorf(-1) = erf(-1) ≈ -0.8427 (odd function)."""
-        import math
-
-        from src.ad.evaluator import evaluate
-
         expr = Call("errorf", (Const(-1.0),))
         result = evaluate(expr, {}, {})
         assert result == pytest.approx(math.erf(-1.0))
+
+
+# ============================================================================
+# Signpower Function Tests
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestSignpowerDifferentiation:
+    """Tests for signpower(x, n) differentiation."""
+
+    def test_signpower_constant_exponent(self):
+        """Test d(signpower(x, 2))/dx = 2 * abs(x)^1 * 1."""
+        expr = Call("signpower", (VarRef("x"), Const(2.0)))
+        config = Config(smooth_abs=True, smooth_abs_epsilon=1e-6)
+        result = differentiate_expr(expr, "x", config=config)
+
+        # Should be: 2 * power(abs(x), 1) * 1
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        # Left: 2 * power(abs(x), 1)
+        assert isinstance(result.left, Binary)
+        assert result.left.op == "*"
+        assert isinstance(result.left.left, Const)
+        assert result.left.left.value == 2.0
+        assert isinstance(result.left.right, Call)
+        assert result.left.right.func == "power"
+        # power(abs(x), 1.0)
+        abs_arg = result.left.right.args[0]
+        assert isinstance(abs_arg, Call)
+        assert abs_arg.func == "abs"
+
+        # Right: dx/dx = 1
+        assert isinstance(result.right, Const)
+        assert result.right.value == 1.0
+
+    def test_signpower_requires_smooth_abs(self):
+        """signpower differentiation requires --smooth-abs flag."""
+        expr = Call("signpower", (VarRef("x"), Const(2.0)))
+        with pytest.raises(ValueError, match="smooth-abs"):
+            differentiate_expr(expr, "x")
+
+    def test_signpower_requires_constant_exponent(self):
+        """signpower differentiation requires constant exponent."""
+        expr = Call("signpower", (VarRef("x"), VarRef("n")))
+        config = Config(smooth_abs=True, smooth_abs_epsilon=1e-6)
+        with pytest.raises(ValueError, match="constant exponents"):
+            differentiate_expr(expr, "x", config=config)
+
+    def test_signpower_wrong_arity(self):
+        """signpower with wrong number of args raises ValueError."""
+        expr = Call("signpower", (VarRef("x"),))
+        config = Config(smooth_abs=True, smooth_abs_epsilon=1e-6)
+        with pytest.raises(ValueError, match="expects 2 arguments"):
+            differentiate_expr(expr, "x", config=config)
+
+    def test_signpower_chain_rule(self):
+        """Test d(signpower(x^2, 3))/dx applies chain rule."""
+        inner = Call("power", (VarRef("x"), Const(2.0)))
+        expr = Call("signpower", (inner, Const(3.0)))
+        config = Config(smooth_abs=True, smooth_abs_epsilon=1e-6)
+        result = differentiate_expr(expr, "x", config=config)
+
+        # Should be: 3 * abs(x^2)^2 * d(x^2)/dx
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        # Left: 3 * power(abs(x^2), 2)
+        assert isinstance(result.left, Binary)
+        assert result.left.left.value == 3.0
+
+    def test_signpower_wrt_other_var(self):
+        """d(signpower(x, 2))/dy = 0 when x doesn't depend on y."""
+        expr = Call("signpower", (VarRef("x"), Const(2.0)))
+        config = Config(smooth_abs=True, smooth_abs_epsilon=1e-6)
+        result = differentiate_expr(expr, "y", config=config)
+
+        # dx/dy = 0, so result should simplify with 0
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+        assert isinstance(result.right, Const)
+        assert result.right.value == 0.0
+
+
+@pytest.mark.unit
+class TestSignpowerEvaluation:
+    """Tests for signpower(x, n) evaluation."""
+
+    def test_signpower_positive_base(self):
+        """signpower(3, 2) = sign(3) * |3|^2 = 9."""
+        expr = Call("signpower", (Const(3.0), Const(2.0)))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(9.0)
+
+    def test_signpower_negative_base(self):
+        """signpower(-3, 2) = sign(-3) * |-3|^2 = -9."""
+        expr = Call("signpower", (Const(-3.0), Const(2.0)))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(-9.0)
+
+    def test_signpower_zero_base(self):
+        """signpower(0, 2) = 0."""
+        expr = Call("signpower", (Const(0.0), Const(2.0)))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(0.0)
+
+    def test_signpower_fractional_exponent(self):
+        """signpower(-4, 0.5) = sign(-4) * |-4|^0.5 = -2."""
+        expr = Call("signpower", (Const(-4.0), Const(0.5)))
+        result = evaluate(expr, {}, {})
+        assert result == pytest.approx(-2.0)
+
+    def test_signpower_with_variable(self):
+        """signpower(x, 2) with x=-5 evaluates to -25."""
+        expr = Call("signpower", (VarRef("x"), Const(2.0)))
+        result = evaluate(expr, {("x", ()): -5.0}, {})
+        assert result == pytest.approx(-25.0)
