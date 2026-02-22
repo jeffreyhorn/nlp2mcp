@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 13: Sprint Close Prep — Issues + Documentation - 2026-02-22
+
+**Branch:** `sprint20-day13-sprint-close-prep`
+
+#### Summary
+
+Filed/reopened all deferred items as GitHub issues with sprint-21 label. Smoke-tested every deferred item to confirm failure modes. Total: 13 issues labeled sprint-21 (3 new: #835, #836, #837; 2 reopened: #763, #810; 8 existing labeled).
+
+#### Activities
+
+- Smoke-tested 7 deferred models: mexss, chenery, bearing, lmp2, saras, springchain, orani
+- Created issues: #835 (bearing .scale), #836 (saras preprocessor), #837 (springchain bracket)
+- Reopened #763 (chenery AD condition) and #810 (lmp2 nested loop)
+- Added sprint-21 label to all 13 deferred issues
+- Tests: 3,715 passed, 10 skipped, 2 xfailed
+
 ### Sprint 20 Day 12: Phase 3 Grammar (Subcat J+K) + WS6 Regression Tests - 2026-02-22
 
 **Branch:** `sprint20-day12-phase3-regression-tests`

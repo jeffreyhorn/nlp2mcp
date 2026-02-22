@@ -455,17 +455,19 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 13 — Sprint Close Prep: Issues + Documentation
+### Day 13 — Sprint Close Prep: Issues + Documentation ✅ COMPLETE
 
-**Theme:** File/close remaining issues; update documentation  
+**Theme:** File/close remaining issues; update documentation
 **Effort:** 2h
 
 | Task | Deliverable |
 |---|---|
-| File issues for all deferred items (accounting vars, AD condition propagation, `.scale`, lmp2, saras/springchain preprocessor) | GitHub issues filed |
-| Smoke-test all "not fixable" declarations (lesson from Sprint 19) | Each deferred item verified via `python -m src.cli <model>` |
-| Update SPRINT_LOG.md with final metrics | Sprint log complete |
-| Run final `make test` | 0 failures |
+| File issues for all deferred items | GitHub issues filed ✅ |
+| Smoke-test all "not fixable" declarations | Each deferred item verified ✅ |
+| Update SPRINT_LOG.md with final metrics | Sprint log complete ✅ |
+| Run final `make test` | 3,715 passed, 0 failures ✅ |
+
+**End of Day 13 criterion:** ✅ All deferred items have GitHub issues with sprint-21 label; all smoke-tested; SPRINT_LOG.md updated; `make test` passes.
 
 ---
 
