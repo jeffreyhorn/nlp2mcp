@@ -29,6 +29,8 @@ def _gams_available() -> bool:
     for p in [
         "/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams",
         "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
+        "/opt/gams/gams",
+        "C:\\GAMS\\win64\\gams.exe",
     ]:
         if Path(p).exists():
             return True
@@ -71,8 +73,6 @@ def _run_pipeline_and_solve(model_id: str) -> float:
         result = solve_mcp(mcp_path, timeout=120)
     finally:
         mcp_path.unlink(missing_ok=True)
-        lst_path = mcp_path.with_suffix(".lst")
-        lst_path.unlink(missing_ok=True)
 
     assert result["status"] == "success", f"MCP solve failed for {model_id}: {result.get('error')}"
     mcp_obj = result["objective_value"]
@@ -114,7 +114,7 @@ class TestGamslibMatch:
 
     @pytest.mark.parametrize(
         "model_id",
-        ["ajax", "blend", "chem", "dispatch", "hhmax", "mhw4d", "mhw4dx", "splcge"],
+        sorted(_NLP_REFERENCES.keys()),
     )
     def test_model_match(self, model_id: str):
         """Full pipeline solve + objective match for a GAMSlib model."""
