@@ -181,7 +181,7 @@ parameter pass.
 
 ### Prerequisites Before Attempting Fix
 
-1. **Error 170 — Domain-aware zero-fill** (two options):
+1. **Error 170 — Domain-aware zero-fill** (three options):
    - **Option A (parser-side)**: In `_handle_table_block()`, validate each `(row, col)` pair
      against the parameter's domain sets before adding the zero entry. Requires resolving
      domain sets before table parsing completes.
