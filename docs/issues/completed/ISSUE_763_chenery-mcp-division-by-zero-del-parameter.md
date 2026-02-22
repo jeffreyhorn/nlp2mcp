@@ -4,7 +4,7 @@
 **Status:** FIXED
 **Severity:** High — MCP generates but GAMS aborts with EXECERROR = 1 (division by zero)
 **Date:** 2026-02-16
-**Fixed:** 2026-02-21
+**Fixed:** 2026-02-22
 **Affected Models:** chenery
 
 ---

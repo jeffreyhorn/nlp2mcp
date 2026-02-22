@@ -5,6 +5,7 @@ GAMS MCP file from a KKT system.
 """
 
 import math
+from collections import deque
 
 from src.config import Config
 from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
@@ -55,12 +56,16 @@ def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
 
 
 def _collect_varref_names(expr: Expr) -> set[str]:
-    """Collect variable names referenced as .l in an expression tree."""
+    """Collect variable names referenced as .l in an expression tree and indices."""
     names: set[str] = set()
     if isinstance(expr, VarRef) and expr.attribute == "l":
         names.add(expr.name.lower())
     for child in expr.children():
         names.update(_collect_varref_names(child))
+    if isinstance(expr, VarRef):
+        for idx in expr.indices:
+            if isinstance(idx, Expr):
+                names.update(_collect_varref_names(idx))
     return names
 
 
@@ -298,10 +303,10 @@ def emit_gams_mcp(
             for dep_lower in deps:
                 if dep_lower in lower_to_name:
                     in_deg[vname] += 1
-        queue = [v for v in var_init_order if in_deg[v] == 0]
+        queue = deque(v for v in var_init_order if in_deg[v] == 0)
         sorted_vars: list[str] = []
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             sorted_vars.append(node)
             node_lower = name_to_lower[node]
             for vname in var_init_order:
@@ -348,7 +353,7 @@ def emit_gams_mcp(
         # Issue #763: Wrap .l initialization in $onImplicitAssign to suppress
         # GAMS Error 141 when .l expressions reference other variables' .l values
         # that haven't been assigned yet (e.g., v.l(i) = pk.l * k.l(i) + ...).
-        has_cross_varref = any(".l" in line and "=" in line for line in init_lines)
+        has_cross_varref = bool(var_l_deps)
         if has_cross_varref:
             sections.append("$onImplicitAssign")
         sections.extend(init_lines)

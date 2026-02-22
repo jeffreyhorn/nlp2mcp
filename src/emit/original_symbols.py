@@ -14,6 +14,7 @@ Key principles:
 
 import logging
 import re
+from collections import deque
 
 from src.emit.expr_to_gams import expr_to_gams
 from src.ir.ast import Call, Expr, MultiplierRef, ParamRef, VarRef
@@ -802,7 +803,7 @@ def _expr_contains_varref_attribute(expr: Expr) -> bool:
 
 
 def _collect_param_refs(expr: Expr) -> set[str]:
-    """Collect all ParamRef names referenced in an expression tree."""
+    """Collect all ParamRef names from an expression tree and its index expressions."""
     refs: set[str] = set()
     if isinstance(expr, ParamRef):
         refs.add(expr.name.lower())
@@ -903,10 +904,10 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
             for dep in deps:
                 if dep in eligible_lower:
                     in_degree[pname] += 1
-        queue = [p for p in eligible if in_degree[p] == 0]
+        queue = deque(p for p in eligible if in_degree[p] == 0)
         sorted_params: list[str] = []
         while queue:
-            node = queue.pop(0)
+            node = queue.popleft()
             sorted_params.append(node)
             node_lower = node.lower()
             for pname in eligible:
@@ -925,7 +926,9 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
         param_order = list(model_ir.params.keys())
 
     for param_name in param_order:
-        param_def = model_ir.params[param_name]
+        param_def = model_ir.params.get(param_name)
+        if param_def is None:
+            continue
         # Skip predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
             continue
