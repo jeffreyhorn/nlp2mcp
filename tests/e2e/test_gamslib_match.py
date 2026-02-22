@@ -114,6 +114,14 @@ _NLP_REFERENCES: dict[str, float] = {
 RTOL = 1e-4
 ATOL = 1e-8
 
+# MCP objective values for models that solve successfully but don't match
+# NLP objectives (MCP-only regression guards).
+_MCP_SOLVE_REFERENCES: dict[str, float] = {
+    "alkyl": -1.894,
+    "circle": 4.071,
+    "himmel16": 0.0,
+}
+
 skip_no_gams = pytest.mark.skipif(not _gams_available(), reason="GAMS not available")
 
 
@@ -138,4 +146,33 @@ class TestGamslibMatch:
         assert diff <= tolerance, (
             f"{model_id}: objective mismatch — "
             f"NLP={nlp_obj}, MCP={mcp_obj}, diff={diff:.2e}, tol={tolerance:.2e}"
+        )
+
+
+@pytest.mark.e2e
+@skip_no_gams
+class TestGamslibSolve:
+    """Regression tests for models that solve successfully.
+
+    These models produce stable MCP objective values but don't match the
+    NLP reference (due to non-convexity, bound handling, or other known
+    issues). The tests guard against regressions in the solve pipeline.
+    """
+
+    @pytest.mark.parametrize(
+        "model_id",
+        sorted(_MCP_SOLVE_REFERENCES.keys()),
+    )
+    def test_model_solve(self, model_id: str):
+        """Full pipeline solve + MCP objective stability for a GAMSlib model."""
+        expected_obj = _MCP_SOLVE_REFERENCES[model_id]
+        mcp_obj = _run_pipeline_and_solve(model_id)
+
+        diff = abs(expected_obj - mcp_obj)
+        max_abs = max(abs(expected_obj), abs(mcp_obj))
+        tolerance = ATOL + RTOL * max_abs
+
+        assert diff <= tolerance, (
+            f"{model_id}: MCP objective changed — "
+            f"expected={expected_obj}, got={mcp_obj}, diff={diff:.2e}, tol={tolerance:.2e}"
         )

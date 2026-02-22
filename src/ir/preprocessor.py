@@ -1297,6 +1297,43 @@ def strip_macro_directives(source: str) -> str:
     return "\n".join(filtered)
 
 
+def quote_unquoted_table_descriptions(source: str) -> str:
+    """Quote unquoted table descriptions that contain parentheses.
+
+    GAMS allows unquoted description text after a Table declaration's domain,
+    e.g.:
+        Table t1968(tm,tm) independently estimated data for 1968 (billions of pesos)
+
+    The grammar's DESCRIPTION token does not match parenthesized text, so
+    descriptions containing parentheses cause parse errors.  This function
+    converts such descriptions to quoted strings so the grammar's STRING
+    token can match them instead.
+
+    Only applies when the description text contains at least one '('.
+    Already-quoted descriptions (starting with ' or ") are left unchanged.
+    """
+    _TABLE_DECL = re.compile(r"^(\s*Table\s+\w+\s*\([^)]*\))\s+(.+)$", re.IGNORECASE)
+    lines = source.split("\n")
+    result = []
+    for line in lines:
+        m = _TABLE_DECL.match(line)
+        if m:
+            prefix = m.group(1)  # "Table name(domain)"
+            desc = m.group(2)  # everything after
+            # Only act on unquoted descriptions that contain parentheses
+            if "(" in desc and not desc.startswith("'") and not desc.startswith('"'):
+                # Strip trailing semicolons from description
+                trail = ""
+                if desc.rstrip().endswith(";"):
+                    trail = ";"
+                    desc = desc.rstrip().rstrip(";").rstrip()
+                escaped_desc = desc.replace("'", "''")
+                result.append(f"{prefix} '{escaped_desc}'{trail}")
+                continue
+        result.append(line)
+    return "\n".join(result)
+
+
 def normalize_table_continuations(source: str) -> str:
     """Remove table continuation markers (+) from multi-line table data.
 
@@ -2978,6 +3015,10 @@ def _preprocess_content(content: str) -> str:
     #   at(it) = xd0(it)/(gamma(it)*e0(it)**rhot(it) + (1 - gamma(it))
     #          * xxd0(it)**rhot(it))**(1/rhot(it));
     content = join_multiline_assignments(content)
+
+    # Step 11c: Quote unquoted table descriptions with parentheses
+    # e.g., Table t(i,j) desc text (units) → Table t(i,j) 'desc text (units)'
+    content = quote_unquoted_table_descriptions(content)
 
     # Step 12: Remove table continuation markers (+)
     content = normalize_table_continuations(content)

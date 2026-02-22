@@ -287,6 +287,8 @@ set_members: "(" set_member ("," set_member)* ")"
            | STRING "." STRING                   -> set_tuple
            | INT "." SET_ELEMENT_ID              -> set_tuple
            | INT "." STRING                      -> set_tuple
+           | SET_ELEMENT_ID "." INT              -> set_tuple
+           | STRING "." INT                      -> set_tuple
            | SET_ELEMENT_ID SET_ELEMENT_ID STRING -> set_multiword_with_desc
            | SET_ELEMENT_ID STRING               -> set_element_with_desc
            | STRING STRING                       -> set_element_with_desc
@@ -783,6 +785,7 @@ index_spec: index_list (DOLLAR expr)?
           | index_list DOLLAR "[" expr "]"
 
 func_call.3: FUNCNAME "(" arg_list? ")"
+           | FUNCNAME "[" arg_list? "]"
 arg_list: expr ("," expr)*
 
 // ---------------------------
