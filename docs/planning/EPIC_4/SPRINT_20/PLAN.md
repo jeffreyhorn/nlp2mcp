@@ -430,7 +430,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | model_no_objective_def | ≤ 4 | 1 | ✅ GO |
 | Full pipeline match | ≥ 15 | 16 | ✅ GO |
 | Solve success | ≥ 30 | 33 | ✅ GO |
-| Tests | All pass | 3,712 passed | ✅ GO |
+| Tests | All pass | 3,712 passed (10 skipped, 2 xfailed) | ✅ GO |
 
 **Decision: GO** — All 6 criteria met. Proceed with Phase 3 (Days 12–13) and remaining WS6.
 
@@ -501,7 +501,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | model_no_objective_def | ≤ 4 | 1 | ✅ |
 | Full pipeline match | ≥ 15 | 16 | ✅ |
 | Solve success | ≥ 30 | 33 | ✅ |
-| All tests pass | Yes | 3,712 passed | ✅ |
+| All tests pass | Yes | 3,712 passed, 10 skipped, 2 xfailed | ✅ |
 
 ---
 

@@ -263,7 +263,7 @@
 | #764 | mexss | Locally infeasible (accounting variables) | NO — structural KKT theory issue |
 | #765 | orani | Locally infeasible (CGE model type) | NO — model type incompatible with standard KKT |
 
-**Metrics:** Tests 3,712 passed (+133 from baseline)
+**Metrics:** Tests 3,712 passed, 10 skipped, 2 xfailed (+133 from baseline; Day 9's "3,714+" was an estimate)
 
 ---
 
