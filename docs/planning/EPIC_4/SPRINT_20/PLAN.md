@@ -410,30 +410,31 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 11 — Model Validation + Checkpoint 2
+### Day 11 — Model Validation + Checkpoint 2 ✅ COMPLETE
 
-**Theme:** Complete model validation; assess sprint state  
+**Theme:** Complete model validation; assess sprint state
 **Effort:** 2–3h
 
 | Task | Deliverable |
 |---|---|
-| Complete model validation run (all parse-success models) | Updated solve/match metrics |
-| Review any new issues uncovered by validation | Filed GitHub issues |
-| Checkpoint 2 evaluation | GO/NO-GO decision |
+| Complete model validation run (all parse-success models) | Updated solve/match metrics ✅ |
+| Review any new issues uncovered by validation | Filed GitHub issues ✅ |
+| Checkpoint 2 evaluation | GO/NO-GO decision ✅ |
 
 #### Checkpoint 2 (Day 11) GO/NO-GO Criteria
 
-| Criterion | GO threshold | NO-GO action |
-|---|---|---|
-| Parse success | ≥ 125/160 (78.1%) | File issues for unresolved models; defer Phase 3 |
-| lexer_invalid_char | ≤ 11 | Defer J/K subcategories to Sprint 21 |
-| model_no_objective_def | ≤ 4 | File issue for remaining; defer lmp2 fix |
-| Full pipeline match | ≥ 15 | Check rtol; investigate recent regressions |
-| Solve success | ≥ 30 | Investigate newly-parsing models' solver failures |
-| Tests | All pass | Block on test failures |
+| Criterion | GO threshold | Current | Verdict |
+|---|---|---|---|
+| Parse success | ≥ 125/160 (78.1%) | 129/158 (81.7%) | ✅ GO |
+| lexer_invalid_char | ≤ 11 | 11 | ✅ GO |
+| model_no_objective_def | ≤ 4 | 1 | ✅ GO |
+| Full pipeline match | ≥ 15 | 16 | ✅ GO |
+| Solve success | ≥ 30 | 33 | ✅ GO |
+| Tests | All pass | 3,712 passed | ✅ GO |
 
-**If GO:** Proceed with Phase 3 (Days 12–13) and remaining WS6.  
-**If NO-GO:** Redirect Days 12–13 to fix remaining Checkpoint 2 blockers.
+**Decision: GO** — All 6 criteria met. Proceed with Phase 3 (Days 12–13) and remaining WS6.
+
+**End of Day 11 criterion:** ✅ Checkpoint 2 evaluated; all criteria met; Phase 3 confirmed.
 
 ---
 
@@ -491,16 +492,16 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | IndexOffset PR merged | Yes | Complete before Day 7 (Day 6 buffer) |
 | All tests pass | Yes | Block on failures |
 
-### Checkpoint 2 (Day 11)
+### Checkpoint 2 (Day 11) ✅ GO
 
-| Criterion | Target | Fallback if missed |
-|---|---|---|
-| Parse success | ≥ 125/160 | Defer Phase 3 to Sprint 21 |
-| lexer_invalid_char | ≤ 11 | Defer J/K (mathopt3, dinam) to Sprint 21 |
-| model_no_objective_def | ≤ 4 | Defer lmp2 fix to Sprint 21 |
-| Full pipeline match | ≥ 15 | Investigate rtol; check abel/chakra |
-| Solve success | ≥ 30 | Investigate newly-parsing models |
-| All tests pass | Yes | Block on failures |
+| Criterion | Target | Actual | Status |
+|---|---|---|---|
+| Parse success | ≥ 125/160 | 129/158 | ✅ |
+| lexer_invalid_char | ≤ 11 | 11 | ✅ |
+| model_no_objective_def | ≤ 4 | 1 | ✅ |
+| Full pipeline match | ≥ 15 | 16 | ✅ |
+| Solve success | ≥ 30 | 33 | ✅ |
+| All tests pass | Yes | 3,712 passed | ✅ |
 
 ---
 
