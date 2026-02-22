@@ -20,7 +20,7 @@ from src.emit.original_symbols import (
     has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
-from src.ir.ast import Expr, IndexOffset, SubsetIndex
+from src.ir.ast import Expr, IndexOffset, SubsetIndex, VarRef
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
@@ -52,6 +52,16 @@ def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
     else:
         # Fallback: convert to string
         return str(idx)
+
+
+def _collect_varref_names(expr: Expr) -> set[str]:
+    """Collect variable names referenced as .l in an expression tree."""
+    names: set[str] = set()
+    if isinstance(expr, VarRef) and expr.attribute == "l":
+        names.add(expr.name.lower())
+    for child in expr.children():
+        names.update(_collect_varref_names(child))
+    return names
 
 
 def emit_gams_mcp(
@@ -194,7 +204,11 @@ def emit_gams_mcp(
     # Variables with level values, lower bounds, or positive type need initialization
     # to prevent division by zero during model generation when they appear in
     # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
-    init_lines: list[str] = []
+    # Issue #763: Collect init lines per variable, then topologically sort them
+    # so that .l expressions referencing other variables' .l come after their deps.
+    var_init_groups: dict[str, list[str]] = {}  # var_name -> init lines
+    var_init_order: list[str] = []  # preserve original order for stable sort
+    var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -205,29 +219,39 @@ def emit_gams_mcp(
         ):
             continue
         has_init = False
+        lines: list[str] = []
 
         # Priority 1: Check for explicit level values (l_map) - these take precedence
         if var_def.l_map:
             for indices, l_val in var_def.l_map.items():
                 if l_val is not None:
                     idx_str = ",".join(f'"{i}"' for i in indices)
-                    init_lines.append(f"{var_name}.l({idx_str}) = {l_val};")
+                    lines.append(f"{var_name}.l({idx_str}) = {l_val};")
                     has_init = True
         elif var_def.l is not None:
-            init_lines.append(f"{var_name}.l = {var_def.l};")
+            lines.append(f"{var_name}.l = {var_def.l};")
             has_init = True
 
         # Priority 1b: Expression-based .l assignments (Sprint 20 Day 2)
         # These are non-constant .l initializations like a.l = (xmin+xmax)/2
         if not has_init and hasattr(var_def, "l_expr_map") and var_def.l_expr_map:
+            deps: set[str] = set()
             for indices, expr in var_def.l_expr_map.items():  # type: ignore[assignment]
                 idx_str = ",".join(_index_to_gams_string(i) for i in indices)
                 expr_str = expr_to_gams(expr)
-                init_lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
+                lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
+                deps.update(_collect_varref_names(expr))
                 has_init = True
+            deps.discard(var_name.lower())  # remove self-references
+            if deps:
+                var_l_deps[var_name] = deps
         elif not has_init and hasattr(var_def, "l_expr") and var_def.l_expr is not None:
             expr_str = expr_to_gams(var_def.l_expr)
-            init_lines.append(f"{var_name}.l = {expr_str};")
+            lines.append(f"{var_name}.l = {expr_str};")
+            deps = _collect_varref_names(var_def.l_expr)
+            deps.discard(var_name.lower())
+            if deps:
+                var_l_deps[var_name] = deps
             has_init = True
 
         # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided
@@ -235,48 +259,67 @@ def emit_gams_mcp(
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
                     idx_str = ",".join(f'"{i}"' for i in indices)
-                    init_lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
+                    lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
                     has_init = True
         # Check for scalar lower bound
         elif not has_init and var_def.lo is not None and var_def.lo > 0:
-            init_lines.append(f"{var_name}.l = {var_def.lo};")
+            lines.append(f"{var_name}.l = {var_def.lo};")
             has_init = True
 
         # Priority 3: Positive variables: ensure all elements have non-zero values
-        # PR #658 review: Even with partial per-index inits, other elements may be 0.
-        # Always apply a blanket max() to ensure no POSITIVE variable element is 0.
-        # PR #664 review: Use small epsilon (1e-6) to preserve explicit small values
-        # like 0.0001 while preventing division by zero. Previous value of 1.0 was
-        # overriding explicit initializations.
-        # PR #658 review: Clamp to upper bound using GAMS .up attribute to respect
-        # per-element bounds (up_map), not just scalar var_def.up.
-        # Issue #651: Don't read from .l when initializing - GAMS Error 141 occurs
-        # if the variable was never assigned any .l values. For variables without
-        # explicit .l values, we set .l = 1 directly (not reading .up either to
-        # avoid Error 141 if bounds weren't assigned).
         if var_def.kind == VarKind.POSITIVE:
             if has_init:
                 has_positive_clamp = True
-                # Variable already has explicit .l values - preserve them with max()
-                # Use 1e-6 epsilon to allow small explicit values like 0.0001
                 if var_def.domain:
                     domain_str = ",".join(var_def.domain)
-                    init_lines.append(
+                    lines.append(
                         f"{var_name}.l({domain_str}) = min(max({var_name}.l({domain_str}), 1e-6), {var_name}.up({domain_str}));"
                     )
                 else:
-                    init_lines.append(
-                        f"{var_name}.l = min(max({var_name}.l, 1e-6), {var_name}.up);"
-                    )
+                    lines.append(f"{var_name}.l = min(max({var_name}.l, 1e-6), {var_name}.up);")
             else:
-                # No explicit .l values - just set to 1 directly
-                # Don't read .up either as it may not be assigned (Error 141)
                 has_positive_init = True
                 if var_def.domain:
                     domain_str = ",".join(var_def.domain)
-                    init_lines.append(f"{var_name}.l({domain_str}) = 1;")
+                    lines.append(f"{var_name}.l({domain_str}) = 1;")
                 else:
-                    init_lines.append(f"{var_name}.l = 1;")
+                    lines.append(f"{var_name}.l = 1;")
+
+        if lines:
+            var_init_groups[var_name] = lines
+            var_init_order.append(var_name)
+
+    # Issue #763: Topological sort of variable init groups so deps come first.
+    if var_l_deps:
+        name_to_lower = {v: v.lower() for v in var_init_order}
+        lower_to_name = {v.lower(): v for v in var_init_order}
+        in_deg: dict[str, int] = dict.fromkeys(var_init_order, 0)
+        for vname, deps in var_l_deps.items():
+            for dep_lower in deps:
+                if dep_lower in lower_to_name:
+                    in_deg[vname] += 1
+        queue = [v for v in var_init_order if in_deg[v] == 0]
+        sorted_vars: list[str] = []
+        while queue:
+            node = queue.pop(0)
+            sorted_vars.append(node)
+            node_lower = name_to_lower[node]
+            for vname in var_init_order:
+                if vname in sorted_vars:
+                    continue
+                if node_lower in var_l_deps.get(vname, set()):
+                    in_deg[vname] -= 1
+                    if in_deg[vname] == 0:
+                        queue.append(vname)
+        # Add any remaining (cycles) in original order
+        for v in var_init_order:
+            if v not in sorted_vars:
+                sorted_vars.append(v)
+        var_init_order = sorted_vars
+
+    init_lines: list[str] = []
+    for vname in var_init_order:
+        init_lines.extend(var_init_groups[vname])
 
     if init_lines:
         if add_comments:
@@ -302,7 +345,15 @@ def emit_gams_mcp(
             elif has_positive_init:
                 sections.append("* POSITIVE variables are set to 1.")
             sections.append("")
+        # Issue #763: Wrap .l initialization in $onImplicitAssign to suppress
+        # GAMS Error 141 when .l expressions reference other variables' .l values
+        # that haven't been assigned yet (e.g., v.l(i) = pk.l * k.l(i) + ...).
+        has_cross_varref = any(".l" in line and "=" in line for line in init_lines)
+        if has_cross_varref:
+            sections.append("$onImplicitAssign")
         sections.extend(init_lines)
+        if has_cross_varref:
+            sections.append("$offImplicitAssign")
         sections.append("")
 
     # Additional initialization for smooth_abs (if enabled)

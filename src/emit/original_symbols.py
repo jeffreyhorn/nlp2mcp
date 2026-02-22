@@ -801,6 +801,20 @@ def _expr_contains_varref_attribute(expr: Expr) -> bool:
     return any(_expr_contains_varref_attribute(child) for child in expr.children())
 
 
+def _collect_param_refs(expr: Expr) -> set[str]:
+    """Collect all ParamRef names referenced in an expression tree."""
+    refs: set[str] = set()
+    if isinstance(expr, ParamRef):
+        refs.add(expr.name.lower())
+    for child in expr.children():
+        refs.update(_collect_param_refs(child))
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in expr.indices:
+            if isinstance(idx, Expr):
+                refs.update(_collect_param_refs(idx))
+    return refs
+
+
 def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str = "all") -> str:
     """Emit computed parameter assignment statements.
 
@@ -839,7 +853,79 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
         s.lower() for s in model_ir.aliases.keys()
     }
 
-    for param_name, param_def in model_ir.params.items():
+    # Issue #763: Compute transitive closure of calibration parameters.
+    # A parameter that references .l values (VarRef with attribute) is a
+    # "calibration" parameter.  A parameter that transitively depends on a
+    # calibration parameter (e.g., rva = cva / cli, where cva and cli use .l)
+    # must also be emitted in the calibration section to avoid division-by-zero
+    # from uninitialized dependencies.
+    calibration_params: set[str] = set()
+    param_deps: dict[str, set[str]] = {}
+    if varref_filter in ("no_varref_attr", "only_varref_attr"):
+        for pname, pdef in model_ir.params.items():
+            if not pdef.expressions:
+                continue
+            pname_lower = pname.lower()
+            if any(_expr_contains_varref_attribute(ex) for _, ex in pdef.expressions):
+                calibration_params.add(pname_lower)
+            refs: set[str] = set()
+            for _, ex in pdef.expressions:
+                refs.update(_collect_param_refs(ex))
+            if refs:
+                param_deps[pname_lower] = refs
+        # Propagate calibration flag through transitive dependencies
+        changed = True
+        while changed:
+            changed = False
+            for pname_lower, deps in param_deps.items():
+                if pname_lower not in calibration_params and deps & calibration_params:
+                    calibration_params.add(pname_lower)
+                    changed = True
+
+    # Issue #763: When emitting calibration parameters, topologically sort them
+    # so dependencies are emitted first (e.g., cva and cli before rva = cva/cli).
+    param_order: list[str]
+    if varref_filter == "only_varref_attr":
+        eligible: list[str] = []
+        for pname, pdef in model_ir.params.items():
+            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+                continue
+            if not pdef.domain:
+                if any(len(k) > 0 for k, _ in pdef.expressions):
+                    continue
+            if pname.lower() in calibration_params:
+                eligible.append(pname)
+        # Kahn's algorithm for topological sort
+        eligible_lower = {p.lower() for p in eligible}
+        in_degree: dict[str, int] = dict.fromkeys(eligible, 0)
+        for pname in eligible:
+            deps = param_deps.get(pname.lower(), set())
+            for dep in deps:
+                if dep in eligible_lower:
+                    in_degree[pname] += 1
+        queue = [p for p in eligible if in_degree[p] == 0]
+        sorted_params: list[str] = []
+        while queue:
+            node = queue.pop(0)
+            sorted_params.append(node)
+            node_lower = node.lower()
+            for pname in eligible:
+                if pname in sorted_params:
+                    continue
+                deps = param_deps.get(pname.lower(), set())
+                if node_lower in deps:
+                    in_degree[pname] -= 1
+                    if in_degree[pname] == 0:
+                        queue.append(pname)
+        for pname in eligible:
+            if pname not in sorted_params:
+                sorted_params.append(pname)
+        param_order = sorted_params
+    else:
+        param_order = list(model_ir.params.keys())
+
+    for param_name in param_order:
+        param_def = model_ir.params[param_name]
         # Skip predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
             continue
@@ -870,15 +956,14 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
             if has_indexed_exprs:
                 continue
 
-        # Check if ANY expression for this parameter contains a VarRef attribute.
-        # If so, the entire parameter block (including multi-step follow-ups like
-        # self-referencing normalization) belongs together in the same emission pass.
-        param_has_varref_attr = any(
-            _expr_contains_varref_attribute(ex) for _, ex in param_def.expressions
+        # Issue #763: Use the transitive calibration set to determine which pass
+        # this parameter belongs to.
+        is_calibration = (
+            param_name.lower() in calibration_params if varref_filter != "all" else False
         )
-        if varref_filter == "no_varref_attr" and param_has_varref_attr:
+        if varref_filter == "no_varref_attr" and is_calibration:
             continue
-        if varref_filter == "only_varref_attr" and not param_has_varref_attr:
+        if varref_filter == "only_varref_attr" and not is_calibration:
             continue
 
         # Emit each expression assignment (list preserves sequential ordering)
