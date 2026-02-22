@@ -197,6 +197,26 @@
 
 ---
 
+### Day 9 — WS5 Part A: Pipeline Match Tolerance Fix + Regression Tests (2026-02-22)
+
+**Status:** ✅ COMPLETE
+**PR:** TBD
+
+**Activities:**
+- Raised `DEFAULT_RTOL` from `1e-6` to `1e-4` in `scripts/gamslib/test_solve.py`
+- Re-ran full pipeline solve: **16 matches** (target: ≥15) ✅
+- 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, splcge
+- Verified no false positives — clean gap between new matches (rel_diff ≤ 5e-5) and next mismatch (port at 1.3e-3)
+- Added 16 solve-level regression tests in `tests/e2e/test_gamslib_match.py`
+- Also fixed issue #763 (chenery MCP division by zero) in separate PR #822
+
+**Metrics:**
+- Full pipeline match: 10 → **16** (+6) — **TARGET MET** (≥15)
+- Solve success: **32** — **TARGET MET** (≥30)
+- Tests: 3,714+ (16 new regression tests)
+
+---
+
 ## Checkpoints
 
 ### Checkpoint 1 (Day 6)

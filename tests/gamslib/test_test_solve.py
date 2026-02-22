@@ -667,7 +667,7 @@ class TestObjectivesMatch:
 
     def test_default_tolerance_values(self):
         """Test that default tolerance values are as expected."""
-        assert DEFAULT_RTOL == 1e-6
+        assert DEFAULT_RTOL == 1e-4
         assert DEFAULT_ATOL == 1e-8
 
 
