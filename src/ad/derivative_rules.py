@@ -1270,14 +1270,19 @@ def _diff_signpower(
     n = exponent.value
 
     # d/dx signpower(x, n) = n * abs(x)^(n-1) * dx/dx
+    # Use smooth approximation: abs(x) ≈ sqrt(x² + ε) for differentiability at x=0
     dbase_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
 
-    # abs(x) — use smooth abs via the same machinery as _diff_abs
-    abs_base = Call("abs", (base,))
+    epsilon = Const(config.smooth_abs_epsilon)
 
-    # abs(x)^(n-1)
+    # sqrt(x² + ε) ≈ abs(x)
+    base_squared = Binary("*", base, base)
+    base_squared_plus_eps = Binary("+", base_squared, epsilon)
+    smooth_abs_base = Call("sqrt", (base_squared_plus_eps,))
+
+    # smooth_abs(x)^(n-1)
     n_minus_1 = Const(n - 1.0)
-    abs_pow = Call("power", (abs_base, n_minus_1))
+    abs_pow = Call("power", (smooth_abs_base, n_minus_1))
 
     # n * abs(x)^(n-1)
     n_times_abs_pow = Binary("*", exponent, abs_pow)

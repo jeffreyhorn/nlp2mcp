@@ -328,7 +328,7 @@ def _evaluate_call(
         try:
             result = math.copysign(abs(base) ** exponent, base)
             return _check_numeric(result, f"signpower({base}, {exponent})")
-        except (ValueError, OverflowError) as e:
+        except (ValueError, OverflowError, ZeroDivisionError) as e:
             raise EvaluationError(f"signpower({base}, {exponent}) failed: {e}") from e
 
     elif func == "errorf":

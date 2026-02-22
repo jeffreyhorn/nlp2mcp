@@ -911,10 +911,10 @@ class TestSignpowerDifferentiation:
         assert result.left.left.value == 2.0
         assert isinstance(result.left.right, Call)
         assert result.left.right.func == "power"
-        # power(abs(x), 1.0)
-        abs_arg = result.left.right.args[0]
-        assert isinstance(abs_arg, Call)
-        assert abs_arg.func == "abs"
+        # power(sqrt(x*x + eps), 1.0) — smooth abs approximation
+        smooth_abs_arg = result.left.right.args[0]
+        assert isinstance(smooth_abs_arg, Call)
+        assert smooth_abs_arg.func == "sqrt"
 
         # Right: dx/dx = 1
         assert isinstance(result.right, Const)
