@@ -110,21 +110,21 @@ def test_strip_simple_set():
     """Test stripping a simple $set directive."""
     source = "$set n 10\nSet i /1*10/;"
     result = strip_set_directives(source)
-    assert result == "* [Stripped: $set n 10]\nSet i /1*10/;"
+    assert result == "* Stripped: $set n 10\nSet i /1*10/;"
 
 
 def test_strip_set_preserves_indentation():
     """Test that stripping preserves indentation."""
     source = "    $set n 10\n    Set i;"
     result = strip_set_directives(source)
-    assert result == "    * [Stripped: $set n 10]\n    Set i;"
+    assert result == "    * Stripped: $set n 10\n    Set i;"
 
 
 def test_strip_set_in_conditional():
     """Test stripping $set in $if line."""
     source = "$if set n $set np %n%\nSet i;"
     result = strip_set_directives(source)
-    assert result == "* [Stripped: $if set n $set np %n%]\nSet i;"
+    assert result == "* Stripped: $if set n $set np %n%\nSet i;"
 
 
 def test_elec_gms_pattern():

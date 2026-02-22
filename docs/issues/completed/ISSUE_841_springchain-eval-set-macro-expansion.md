@@ -1,7 +1,7 @@
-# Springchain: Bracket Expression + Macro Expansion Blockers
+# Springchain: `$eval`/`$set` Compile-Time Macro Expansion Not Supported
 
-**GitHub Issue:** [#837](https://github.com/jeffreyhorn/nlp2mcp/issues/837)
-**Status:** PARTIALLY FIXED — Grammar extended but model still blocked by `$eval`/`$set` macro expansion
+**GitHub Issue:** [#841](https://github.com/jeffreyhorn/nlp2mcp/issues/841)
+**Status:** OPEN
 **Severity:** Medium — Model fails to parse entirely
 **Date:** 2026-02-22
 **Affected Models:** springchain
@@ -10,25 +10,15 @@
 
 ## Problem Summary
 
-The springchain model (`data/gamslib/raw/springchain.gms`) has two parse blockers:
-
-1. **Square bracket expressions in scalar data** (FIXED) — grammar did not support `[expr]` in scalar data blocks
-2. **`$eval`/`$set`/`%macro%` expansion** (OPEN) — preprocessor strips compile-time directives instead of executing them
-
----
-
-## Fix 1: Bracket Expression in Scalar Data (COMPLETED)
-
-Extended `scalar_data_item` rule in `src/gams/gams_grammar.lark` to accept `"[" expr "]"`
-bracket expressions in scalar data blocks. Updated parser in `src/ir/parser.py` to handle
-bracket expressions by storing them as computed parameter assignments (expressions) rather
-than trying to evaluate them to numeric constants at parse time.
+The springchain model (`data/gamslib/raw/springchain.gms`) fails to parse because it uses
+GAMS compile-time directives `$set`, `$eval`, and `$if not set` to define macros that are
+referenced throughout the model via `%N%` and `%NM1%` syntax. The preprocessor strips these
+directives without executing them, so the `%` characters in macro references reach the lexer
+and cause parse errors.
 
 ---
 
-## Remaining Blocker: `$eval`/`$set` Macro Expansion
-
-### Current Error
+## Error Details
 
 ```
 ParseError: Error: Parse error at line 36, column 45: Unexpected character: '%'
@@ -38,7 +28,9 @@ ParseError: Error: Parse error at line 36, column 45: Unexpected character: '%'
 Suggestion: This character is not valid in this context
 ```
 
-### Macro Definitions (raw file lines 21-22)
+---
+
+## Macro Definitions (raw file lines 21-22)
 
 ```gams
 $if not set N $set N 10
@@ -49,7 +41,9 @@ This defines:
 - `%N%` = `10` (number of springs, user-settable via command line)
 - `%NM1%` = `9` (N minus 1, computed by `$eval`)
 
-### All Macro References (8 occurrences across 7 lines)
+---
+
+## All Macro References (8 occurrences across 7 lines)
 
 | Line | Raw GAMS Code | After Expansion |
 |------|---------------|-----------------|
@@ -61,7 +55,21 @@ This defines:
 | 77 | `x.FX['n%N%'] = b_x;` | `x.FX['n10'] = b_x;` |
 | 78 | `y.FX['n%N%'] = b_y;` | `y.FX['n10'] = b_y;` |
 
-### Root Cause
+---
+
+## Reproduction Steps
+
+```bash
+python -c "
+import sys; sys.setrecursionlimit(50000)
+from src.ir.parser import parse_file
+ir = parse_file('data/gamslib/raw/springchain.gms')
+"
+```
+
+---
+
+## Root Cause
 
 The preprocessor (`src/ir/preprocessor.py`) currently handles `$set` and `$if not set`
 directives by stripping them (converting to comment lines). It does not:
@@ -71,7 +79,9 @@ directives by stripping them (converting to comment lines). It does not:
 3. **Execute `$eval`**: Evaluate arithmetic expressions and store the result as a macro
 4. **Expand `%macro%` references**: Replace `%name%` tokens with their stored values
 
-### Suggested Fix
+---
+
+## Suggested Fix
 
 **Approach: Implement `$set`/`$eval`/`%macro%` expansion in the preprocessor**
 
@@ -120,26 +130,7 @@ class Preprocessor:
 
 ---
 
-## Reproduction Steps
-
-```bash
-python -c "
-import sys; sys.setrecursionlimit(50000)
-from src.ir.parser import parse_file
-ir = parse_file('data/gamslib/raw/springchain.gms')
-"
-```
-
----
-
-## Files Modified (Fix 1)
-
-| File | Change |
-|------|--------|
-| `src/gams/gams_grammar.lark` | Added `"[" expr "]"` alternative to `scalar_data_item` |
-| `src/ir/parser.py` | Handle bracket expr in scalar data — store as computed assignment |
-
-## Files That Need Changes (Fix 2)
+## Files That Need Changes
 
 | File | Change |
 |------|--------|
@@ -150,11 +141,13 @@ ir = parse_file('data/gamslib/raw/springchain.gms')
 
 ## Related Issues
 
-- Issue #840 — saras also blocked by macro expansion (`%system.nlp%`), a simpler system-macro variant
-- Issue #841 — closed as duplicate of this issue
+- Issue #837 — partially fixed (bracket expressions in scalar data), still blocked by this macro issue
+- saras model — also blocked by macro expansion (`%system.nlp%`), though that's a simpler system-macro variant
 
 ---
 
-## Classification
+## Note on Issue #837 Relationship
 
-Lexer error catalog: Subcategory J (Bracket/Brace)
+Issue #837 was filed for the bracket expression syntax `[expr]` in scalar data, which has
+been fixed. The `$eval`/`$set` macro expansion is a separate, deeper issue that also blocks
+springchain. This issue supersedes the remaining blocker described in #837.

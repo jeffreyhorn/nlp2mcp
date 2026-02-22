@@ -162,7 +162,7 @@ class TestStripConditionalDirectives:
         """Strip a single $if not set directive."""
         source = '$if not set size $set size "10"'
         result = strip_conditional_directives(source)
-        assert result == '* [Stripped: $if not set size $set size "10"]'
+        assert result == '* Stripped: $if not set size $set size "10"'
 
     def test_preserve_other_lines(self):
         """Other lines remain unchanged."""
@@ -171,7 +171,7 @@ Set i /1*10/;
 Variables x;"""
         result = strip_conditional_directives(source)
         lines = result.split("\n")
-        assert lines[0].startswith("* [Stripped:")
+        assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Set i /1*10/;"
         assert lines[2] == "Variables x;"
 
@@ -185,7 +185,7 @@ Variables x;"""
         """Directive detection is case-insensitive."""
         source = '$IF NOT SET size $SET size "10"'
         result = strip_conditional_directives(source)
-        assert result.startswith("* [Stripped:")
+        assert result.startswith("* Stripped:")
 
     def test_multiple_directives(self):
         """Multiple directives are all stripped."""
@@ -195,9 +195,9 @@ $if not set name $set name "test"
 Variables x;"""
         result = strip_conditional_directives(source)
         lines = result.split("\n")
-        assert lines[0].startswith("* [Stripped:")
+        assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Set i /1*10/;"
-        assert lines[2].startswith("* [Stripped:")
+        assert lines[2].startswith("* Stripped:")
         assert lines[3] == "Variables x;"
 
     def test_empty_source(self):
@@ -233,7 +233,7 @@ Variables x;"""
         # Step 3: Strip directives
         final = strip_conditional_directives(expanded)
         lines = final.split("\n")
-        assert lines[0].startswith("* [Stripped:")
+        assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Set i /1*10/;"
         assert lines[2] == "Variables x;"
 
@@ -274,7 +274,7 @@ class TestStripUnsupportedDirectives:
 Set i /1*10/;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
-        assert lines[0] == "* [Stripped: $title My Model]"
+        assert lines[0] == "* Stripped: $title My Model"
         assert lines[1] == "Set i /1*10/;"
 
     def test_strip_eolcom_directive(self):
@@ -283,7 +283,7 @@ Set i /1*10/;"""
 Set i /1*10/;  // This is a comment"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
-        assert lines[0] == "* [Stripped: $eolCom //]"
+        assert lines[0] == "* Stripped: $eolCom //"
         assert lines[1] == "Set i /1*10/;  // This is a comment"
 
     def test_strip_ontext_offtext_block(self):
@@ -297,8 +297,8 @@ Variables x;"""
         result = strip_unsupported_directives(source)
         # $ontext/$offtext directives are replaced with stripped markers
         # Content inside is converted to GAMS comments (preserves line numbers)
-        assert "* [Stripped: $ontext]" in result
-        assert "* [Stripped: $offtext]" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* This is a long comment" in result
         assert "* that spans multiple lines" in result
         assert "Set i /1*10/;" in result
@@ -314,10 +314,10 @@ Comment block
 $offtext
 Variables x;"""
         result = strip_unsupported_directives(source)
-        assert "* [Stripped: $title Test Model]" in result
-        assert "* [Stripped: $eolCom //]" in result
-        assert "* [Stripped: $ontext]" in result
-        assert "* [Stripped: $offtext]" in result
+        assert "* Stripped: $title Test Model" in result
+        assert "* Stripped: $eolCom //" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* Comment block" in result
         assert "Set i /1*10/;" in result
 
@@ -325,8 +325,8 @@ Variables x;"""
         """Directive detection is case-insensitive."""
         source = "$TITLE My Model\n$EOLCOM //"
         result = strip_unsupported_directives(source)
-        assert "* [Stripped: $TITLE My Model]" in result
-        assert "* [Stripped: $EOLCOM //]" in result
+        assert "* Stripped: $TITLE My Model" in result
+        assert "* Stripped: $EOLCOM //" in result
 
     def test_preserve_other_lines(self):
         """Lines without directives remain unchanged."""
@@ -357,8 +357,8 @@ Variables x;""")
         result = preprocess_gams_file(test_file)
 
         # Check that preprocessing steps were applied
-        assert "* [Stripped: $title Test Model]" in result
-        assert "* [Stripped: $if not set N $set N 10]" in result
+        assert "* Stripped: $title Test Model" in result
+        assert "* Stripped: $if not set N $set N 10" in result
         assert "Set i /1*10/;" in result  # Macro expanded
         assert "Variables x;" in result
 
@@ -372,7 +372,7 @@ Variables x;   // Another comment""")
         result = preprocess_gams_file(test_file)
 
         # $eolCom directive should be stripped
-        assert "* [Stripped: $eolCom //]" in result
+        assert "* Stripped: $eolCom //" in result
         # Issue #722: End-of-line comments are now stripped by preprocessor
         # (before multiline joining) so they don't get embedded in joined lines
         assert "// This is a comment" not in result
@@ -410,8 +410,8 @@ Variables x;""")
         result = preprocess_gams_file(test_file)
 
         # Comment block directives should be stripped
-        assert "* [Stripped: $ontext]" in result
-        assert "* [Stripped: $offtext]" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         # Content converted to comments (line numbers preserved)
         assert "* This is a documentation block" in result
         # Code should remain
@@ -452,7 +452,7 @@ Variables x;""")
         # Macros from included file should be expanded
         assert "Set k /1*5/;" in result
         # Main file content preserved
-        assert "* [Stripped: $title Main Model]" in result
+        assert "* Stripped: $title Main Model" in result
         assert "Variables x;" in result
 
     def test_preprocessing_complex_integration(self, tmp_path: Path):
@@ -477,13 +477,13 @@ Variables x;""")
         result = preprocess_gams_file(main_file)
 
         # All preprocessing applied correctly
-        assert "* [Stripped: $title Complex Model]" in result
-        assert "* [Stripped: $eolCom //]" in result
+        assert "* Stripped: $title Complex Model" in result
+        assert "* Stripped: $eolCom //" in result
         assert "$include" not in result
         assert "Set i /1*10/;" in result
         assert "Parameter epsilon /1e-6/;" in result
-        assert "* [Stripped: $ontext]" in result
-        assert "* [Stripped: $offtext]" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* Documentation block" in result
         assert "// Index set" not in result  # Issue #722: eol comments stripped
         assert "Variables x;" in result
@@ -519,8 +519,8 @@ Set k number of points / 1*%points% /;""")
         result = preprocess_gams_file(test_file)
 
         # Check preprocessing
-        assert "* [Stripped: $eolCom //]" in result
-        assert "* [Stripped: $if not set points $set points 13]" in result
+        assert "* Stripped: $eolCom //" in result
+        assert "* Stripped: $if not set points $set points 13" in result
         assert "Set k number of points / 1*13 /;" in result
 
 
@@ -942,7 +942,7 @@ Set i / i1*i%N% /;"""
         # $include should be converted to comment (stripped marker, allowing for preserved indentation)
         lines = result.split("\n")
         include_line = [line for line in lines if "somefile.gms" in line][0]
-        assert include_line.lstrip().startswith("* [Stripped:")
+        assert include_line.lstrip().startswith("* Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -955,7 +955,7 @@ Set i / i1*i%N% /;"""
         # $batInclude should be converted to comment (stripped marker, allowing for preserved indentation)
         lines = result.split("\n")
         batinclude_line = [line for line in lines if "somefile.gms" in line][0]
-        assert batinclude_line.lstrip().startswith("* [Stripped:")
+        assert batinclude_line.lstrip().startswith("* Stripped:")
         # But %N% should still be expanded
         assert "i1*i5" in result
 
@@ -989,7 +989,7 @@ Set i / a, b, c /;"""
         # $title should be converted to comment (stripped marker)
         lines = result.split("\n")
         title_line = lines[0]
-        assert title_line.startswith("* [Stripped:")
+        assert title_line.startswith("* Stripped:")
         # Set statement should remain
         assert "Set i" in result
 
@@ -1032,9 +1032,9 @@ Set i / i1*i%N% /;"""
         assert len(lines) == 4
         # Lines with include directives should be comments
         include_line = [line for line in lines if "somefile.gms" in line][0]
-        assert include_line.lstrip().startswith("* [Stripped:")
+        assert include_line.lstrip().startswith("* Stripped:")
         batinclude_line = [line for line in lines if "anotherfile.gms" in line][0]
-        assert batinclude_line.lstrip().startswith("* [Stripped:")
+        assert batinclude_line.lstrip().startswith("* Stripped:")
         # %N% should still be expanded in non-include lines
         assert "i1*i5" in result
 
@@ -1050,7 +1050,7 @@ Scalar s / 1 /;"""
         # Should still contain the original quoted text, not be a stripped comment
         assert "Parameter p" in param_line
         assert '"contains $include text"' in param_line
-        assert not param_line.strip().startswith("* [Stripped:")
+        assert not param_line.strip().startswith("* Stripped:")
 
     def test_include_in_comment_not_stripped(self):
         """Test that $include in comment lines is left alone."""
@@ -1061,8 +1061,8 @@ Set i / i1, i2 /;"""
         # Comment line should be unchanged (not double-stripped)
         comment_line = lines[0]
         assert comment_line.startswith("* This comment mentions $include")
-        # Should NOT have [Stripped: marker
-        assert "[Stripped:" not in comment_line
+        # Should NOT have Stripped: marker
+        assert "Stripped:" not in comment_line
 
     def test_include_in_inline_comment_not_stripped(self):
         """Test that $include in inline comments doesn't cause line to be stripped."""
@@ -1073,7 +1073,7 @@ Parameter p / 1 /;"""
         # Line with inline comment should NOT be stripped - it's valid code
         set_line = lines[0]
         assert "Set i" in set_line
-        assert not set_line.strip().startswith("* [Stripped:")
+        assert not set_line.strip().startswith("* Stripped:")
 
     def test_include_like_identifier_not_stripped(self):
         """Test that identifiers like $include_foo are not misdetected as include directives."""
@@ -1088,11 +1088,11 @@ Parameter p / 1 /;"""
         lines = result.split("\n")
         # Lines 1 and 2 should NOT be stripped (they contain $include_data and $batInclude_file)
         assert "$include_data" in lines[0]
-        assert not lines[0].strip().startswith("* [Stripped:")
+        assert not lines[0].strip().startswith("* Stripped:")
         assert "$batInclude_file" in lines[1] or "$batinclude_file" in lines[1].lower()
-        assert not lines[1].strip().startswith("* [Stripped:")
+        assert not lines[1].strip().startswith("* Stripped:")
         # Line 3 should BE stripped (it's a real $include directive)
-        assert lines[2].strip().startswith("* [Stripped:")
+        assert lines[2].strip().startswith("* Stripped:")
         assert "real_include.gms" in lines[2]
         # Parameter line should be intact
         assert "Parameter p" in result
@@ -1109,7 +1109,7 @@ Parameter p / 1 /;"""
         result_single = preprocess_text(source_single)
         # Should NOT be stripped - the $include is inside quoted string
         assert "Parameter p" in result_single
-        assert not result_single.strip().startswith("* [Stripped:")
+        assert not result_single.strip().startswith("* Stripped:")
 
         # Test escaped double quote with $include after it
         # "say ""hello"" $include here" represents 'say "hello" $include here'
@@ -1117,7 +1117,7 @@ Parameter p / 1 /;"""
         result_double = preprocess_text(source_double)
         # Should NOT be stripped - the $include is inside quoted string
         assert "Parameter q" in result_double
-        assert not result_double.strip().startswith("* [Stripped:")
+        assert not result_double.strip().startswith("* Stripped:")
 
     def test_include_after_multiplication_is_stripped(self):
         """Test that $include after '*' in an expression is still stripped.
@@ -1131,7 +1131,7 @@ Parameter p / 1 /;"""
         source = 'eq.. a*b =e= 1; $include "x.gms"'
         result = preprocess_text(source)
         # Should BE stripped - the $include after the expression is a real directive
-        assert result.strip().startswith("* [Stripped:")
+        assert result.strip().startswith("* Stripped:")
         assert "x.gms" in result
 
     def test_include_in_inline_comment_after_semicolon_not_stripped(self):
@@ -1144,7 +1144,7 @@ Parameter p / 1 /;"""
         result = preprocess_text(source)
         # Should NOT be stripped - the $include is in a comment after ;
         assert "Set i" in result
-        assert not result.strip().startswith("* [Stripped:")
+        assert not result.strip().startswith("* Stripped:")
 
 
 class TestExpandTupleOnlyTableRows:

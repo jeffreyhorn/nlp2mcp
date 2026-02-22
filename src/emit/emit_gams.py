@@ -361,6 +361,26 @@ def emit_gams_mcp(
             sections.append("$offImplicitAssign")
         sections.append("")
 
+    # Issue #835: Emit .scale attributes for variables
+    scale_lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        if (
+            kkt.referenced_variables is not None
+            and var_name.lower() not in kkt.referenced_variables
+        ):
+            continue
+        if var_def.scale is not None:
+            scale_lines.append(f"{var_name}.scale = {expr_to_gams(var_def.scale)};")
+        if var_def.scale_map:
+            for indices, scale_expr in var_def.scale_map.items():  # type: ignore[assignment]
+                idx_str = ",".join(_index_to_gams_string(i) for i in indices)  # type: ignore[arg-type]
+                scale_lines.append(f"{var_name}.scale({idx_str}) = {expr_to_gams(scale_expr)};")
+    if scale_lines:
+        if add_comments:
+            sections.append("* Variable Scaling")
+        sections.extend(scale_lines)
+        sections.append("")
+
     # Additional initialization for smooth_abs (if enabled)
     # Note: This is now largely redundant with Priority 3 initialization above,
     # which already handles POSITIVE variables. Kept for explicit smooth_abs comment.
@@ -529,6 +549,11 @@ def emit_gams_mcp(
     model_code = emit_model_mcp(kkt, model_name)
     sections.append(model_code)
     sections.append("")
+
+    # Issue #835: Enable scaleOpt when any variable has .scale attributes
+    if scale_lines:
+        sections.append(f"{model_name}.scaleOpt = 1;")
+        sections.append("")
 
     # Solve statement
     if add_comments:

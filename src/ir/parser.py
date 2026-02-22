@@ -2788,8 +2788,24 @@ class _ModelBuilder:
                 values: list[float] = []
                 for sdi in data_node.children:
                     if isinstance(sdi, Tree) and sdi.data == "scalar_data_item":
+                        # Issue #837: Check if this scalar_data_item contains
+                        # a bracket expression [expr] (compile-time evaluation)
+                        expr_children = [
+                            c
+                            for c in sdi.children
+                            if isinstance(c, Tree) and c.data not in ("scalar_data_item",)
+                        ]
                         tokens = [c for c in sdi.children if isinstance(c, Token)]
-                        if len(tokens) == 1:
+                        if expr_children:
+                            # Bracket expression: store as computed assignment.
+                            # GAMS evaluates [expr] at compile time; we emit as
+                            # an assignment statement so GAMS evaluates it.
+                            bracket_expr = self._expr_with_context(
+                                expr_children[0], f"scalar '{name}' bracket data", ()
+                            )
+                            param.expressions.append(((), bracket_expr))
+                            values.append(0.0)  # placeholder
+                        elif len(tokens) == 1:
                             values.append(self._parse_table_value(_token_text(tokens[0])))
                         elif len(tokens) == 2:
                             # MINUS/PLUS + SPECIAL_VALUE (e.g., -inf, +inf)
@@ -3725,13 +3741,12 @@ class _ModelBuilder:
             if target.data == "attr_access":
                 # Handle general attribute access: var.scale, model.scaleOpt, etc.
                 # This is for attributes not covered by BOUND_K (lo, up, fx, l, m)
-                # For now, we parse and validate but don't store attribute values
-                # (mock/store approach - similar to how we handle variable bounds with expressions)
                 # Common attributes: scale, prior, stage, scaleOpt
                 # Validate that the base object exists (variable, parameter, equation, model, or file)
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
                 # Issue #746/#747: File handles (sol.pc, listA1out.pc) are also valid targets
                 base_name = _token_text(target.children[0])
+                attr_name = _token_text(target.children[1]).lower()
                 if (
                     base_name not in self.model.variables
                     and base_name not in self.model.params
@@ -3743,6 +3758,9 @@ class _ModelBuilder:
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
+                # Issue #835: Store .scale for variables
+                if attr_name == "scale" and base_name in self.model.variables:
+                    self.model.variables[base_name].scale = expr
                 return
             if target.data == "attr_access_indexed":
                 # Handle indexed attribute access: x.stage(g), var.scale(i), etc.
@@ -3751,6 +3769,7 @@ class _ModelBuilder:
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
                 # Issue #746/#747: File handles are also valid targets
                 base_name = _token_text(target.children[0])
+                attr_name = _token_text(target.children[1]).lower()
                 if (
                     base_name not in self.model.variables
                     and base_name not in self.model.params
@@ -3762,6 +3781,13 @@ class _ModelBuilder:
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
+                # Issue #835: Store indexed .scale for variables
+                if attr_name == "scale" and base_name in self.model.variables:
+                    indices = (
+                        _process_index_list(target.children[2]) if len(target.children) > 2 else ()
+                    )
+                    idx_tuple = tuple(indices)
+                    self.model.variables[base_name].scale_map[idx_tuple] = expr  # type: ignore[index]
                 return
             if target.data == "symbol_indexed":
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...

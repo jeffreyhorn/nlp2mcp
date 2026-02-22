@@ -160,7 +160,9 @@ desc_text: DESC_TEXT
 
 scalar_data_items: scalar_data_item ("," scalar_data_item)*
 // Issue #564 follow-up: Support special values (na, inf, eps, undf) in scalar data
+// Issue #837: Support bracket expressions [expr] for compile-time evaluation in scalar data
 scalar_data_item: NUMBER | SPECIAL_VALUE | MINUS SPECIAL_VALUE | PLUS SPECIAL_VALUE
+               | "[" expr "]"
 
 param_default: ASSIGN expr
 param_data_items: param_data_item ("," param_data_item)*
