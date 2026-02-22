@@ -141,7 +141,7 @@ def test_strip_macro_directives():
     source = """$macro fx(t) %fx%
 x =e= fx(y);"""
     result = strip_macro_directives(source)
-    expected = """* [Stripped: $macro fx(t) %fx%]
+    expected = """* Stripped: $macro fx(t) %fx%
 x =e= fx(y);"""
     assert result == expected
 
@@ -150,7 +150,7 @@ def test_strip_macro_preserves_indentation():
     """Test that stripping preserves indentation."""
     source = "  $macro fx(t) sin(t)\nx =e= y;"
     result = strip_macro_directives(source)
-    expected = "  * [Stripped: $macro fx(t) sin(t)]\nx =e= y;"
+    expected = "  * Stripped: $macro fx(t) sin(t)\nx =e= y;"
     assert result == expected
 
 

@@ -1,7 +1,7 @@
 # Springchain: Square Bracket Expression in Scalar Data Not Supported
 
 **GitHub Issue:** [#837](https://github.com/jeffreyhorn/nlp2mcp/issues/837)
-**Status:** OPEN — Grammar does not support `[expr]` in scalar data context
+**Status:** PARTIALLY FIXED — Grammar extended but model still blocked by `$eval` macro expansion
 **Severity:** Medium — Model fails to parse entirely
 **Date:** 2026-02-22
 **Affected Models:** springchain
@@ -16,64 +16,54 @@ that context.
 
 ---
 
-## Reproduction
+## Partial Fix Applied
 
-```bash
-python -m src.cli data/gamslib/raw/springchain.gms
+**Grammar fix (completed):**
+Extended `scalar_data_item` rule in `src/gams/gams_grammar.lark` to accept `"[" expr "]"`
+bracket expressions in scalar data blocks. Updated parser in `src/ir/parser.py` to handle
+bracket expressions by storing them as computed parameter assignments (expressions) rather
+than trying to evaluate them to numeric constants at parse time.
 
-# Error: Parse error at line 31, column 43: Unexpected character: '['
-#   L0    "rest length of each spring"     /  [2*sqrt(sqr(a_x-b_x) + sqr(a_y-b_y))/10]/
-#                                              ^
-```
+**Remaining blocker: `$eval` macro expansion**
 
----
-
-## Root Cause
-
-GAMS supports square bracket expressions `[expr]` as compile-time evaluation (similar to
-`$eval`). In the springchain model, a scalar parameter's data block uses this syntax:
-
+The springchain model uses `$eval` and `$set` compile-time directives:
 ```gams
-Scalar
-  L0    "rest length of each spring"     /  [2*sqrt(sqr(a_x-b_x) + sqr(a_y-b_y))/10]/
+$if not set N $set N 10
+$eval NM1 %N%-1
+Set n "spring index"  /n0*n%N%/;
 ```
 
-The `[2*sqrt(...)/10]` is evaluated at compile time to produce a numeric value. The grammar's
-`bracket_expr` rule exists for expressions in equation contexts but is not reachable from the
-scalar data context (inside `/` delimiters).
+The preprocessor currently **strips** `$set`/`$if not set` directives (turns them into comments)
+rather than executing them. This means `%N%` and `%NM1%` are never expanded, causing parse
+errors on lines that reference these macros.
+
+The bracket expression `[2*sqrt(sqr(a_x-b_x) + sqr(a_y-b_y))/%N%]` also contains `%N%`
+which would need expansion before the expression can be parsed.
 
 ---
 
-## Suggested Fix
+## What Must Be Done Before Full Fix
 
-**Option A (preprocessor):** Evaluate `[expr]` in scalar data contexts at preprocessing time,
-replacing them with their numeric values. This mirrors `$eval` semantics.
+1. **`$set` directive execution**: Instead of stripping `$set` directives, the preprocessor
+   should evaluate them and store key-value pairs for `%macro%` expansion.
+2. **`$eval` directive support**: Add `$eval` handling to the preprocessor — evaluate
+   arithmetic expressions and store results for `%macro%` expansion.
+3. **`%macro%` expansion**: Replace `%name%` tokens with their values throughout the source.
 
-**Option B (grammar):** Extend the grammar to allow `bracket_expr` in scalar data positions
-(inside `/` delimiters for Scalar/Parameter declarations).
-
-Option A is likely cleaner since it avoids grammar complexity and aligns with GAMS semantics
-where `[expr]` is compile-time evaluation.
+This is a significant preprocessor enhancement (~4-8h effort) that should be planned as a
+dedicated sprint task.
 
 ---
 
-## Files to Investigate
+## Files Modified
 
-| File | Relevance |
-|------|-----------|
-| `src/gams/gams_grammar.lark` | `scalar_data` / `data_record` rules — add bracket expr support |
-| `src/ir/preprocessor.py` | Potential `$eval`-style preprocessing for `[expr]` |
-| `data/gamslib/raw/springchain.gms` | Original model with bracket expressions in data |
+| File | Change |
+|------|--------|
+| `src/gams/gams_grammar.lark` | Added `"[" expr "]"` alternative to `scalar_data_item` |
+| `src/ir/parser.py` | Handle bracket expr in scalar data — store as computed assignment |
 
 ---
 
 ## Classification
 
 Lexer error catalog: Subcategory J (Bracket/Brace)
-
----
-
-## Estimated Effort
-
-~1-2h — either preprocessor `$eval` support or grammar extension for bracket expressions in
-data blocks

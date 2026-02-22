@@ -502,7 +502,7 @@ def preprocess_bat_includes(
         if not included_path.exists():
             # File doesn't exist - comment out the directive
             result_parts.append(
-                f"\n* [Stripped: $batInclude {included_filename} {args_str} - file not found]\n"
+                f"\n* Stripped: $batInclude {included_filename} {args_str} - file not found\n"
             )
             last_end = match.end()
             continue
@@ -771,7 +771,7 @@ def strip_unsupported_directives(source: str) -> str:
     Example:
         >>> source = "$title My Model\\nVariables x;\\n"
         >>> result = strip_unsupported_directives(source)
-        >>> # Result: "* [Stripped: $title My Model]\\nVariables x;\\n"
+        >>> # Result: "* Stripped: $title My Model\\nVariables x;\\n"
 
     Notes:
         - Line numbers are preserved by replacing directives with comments
@@ -790,34 +790,34 @@ def strip_unsupported_directives(source: str) -> str:
         # Sprint 19 Day 11: Handle $onEchoV/$offEcho blocks (echo-to-file, content is non-GAMS)
         # Also handle $onEcho/$offEcho variants
         if stripped_lower.startswith("$onechov") or stripped_lower.startswith("$onecho"):
-            filtered.append(f"* [Stripped: {stripped}]")
+            filtered.append(f"* Stripped: {stripped}")
             in_echo_block = True
             continue
 
         if stripped_lower.startswith("$offecho"):
-            filtered.append(f"* [Stripped: {stripped}]")
+            filtered.append(f"* Stripped: {stripped}")
             in_echo_block = False
             continue
 
         # Sprint 19 Day 11: Handle $onEps/$offEps (epsilon display mode flag, not a block)
         # Strip the directive lines only — content between them is normal GAMS code
         if stripped_lower.startswith("$oneps") or stripped_lower.startswith("$offeps"):
-            filtered.append(f"* [Stripped: {stripped}]")
+            filtered.append(f"* Stripped: {stripped}")
             continue
 
         # If inside echo block, strip content entirely (non-GAMS data)
         if in_echo_block:
-            filtered.append(f"* [EchoContent: {line}]")
+            filtered.append(f"* EchoContent: {line}")
             continue
 
         # Handle $ontext/$offtext comment blocks
         if stripped_lower.startswith("$ontext"):
-            filtered.append(f"* [Stripped: {stripped}]")
+            filtered.append(f"* Stripped: {stripped}")
             in_ontext_block = True
             continue
 
         if stripped_lower.startswith("$offtext"):
-            filtered.append(f"* [Stripped: {stripped}]")
+            filtered.append(f"* Stripped: {stripped}")
             in_ontext_block = False
             continue
 
@@ -828,12 +828,12 @@ def strip_unsupported_directives(source: str) -> str:
 
         # Strip $title directive
         if stripped_lower.startswith("$title"):
-            filtered.append(f"* [Stripped: {line}]")
+            filtered.append(f"* Stripped: {line}")
             continue
 
         # Strip $eolcom directive
         if stripped_lower.startswith("$eolcom"):
-            filtered.append(f"* [Stripped: {line}]")
+            filtered.append(f"* Stripped: {line}")
             continue
 
         # Sprint 9 Day 6: if/elseif/else, abort, and compile-time constants now fully supported
@@ -1190,7 +1190,7 @@ def strip_conditional_directives(source: str) -> str:
     Example:
         >>> source = '$if not set size $set size "10"\\nSet i /1*10/;'
         >>> result = strip_conditional_directives(source)
-        >>> # Result: '* [Stripped: $if not set size $set size "10"]\\nSet i /1*10/;'
+        >>> # Result: '* Stripped: $if not set size $set size "10"\\nSet i /1*10/;'
 
     Notes:
         - Preserves line numbers for accurate error reporting
@@ -1206,7 +1206,7 @@ def strip_conditional_directives(source: str) -> str:
         if re.match(r"^\$if\s+not\s+set\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
-            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+            filtered.append(f"{leading_ws}* Stripped: {stripped}")
         else:
             # Keep line unchanged
             filtered.append(line)
@@ -1230,7 +1230,7 @@ def strip_set_directives(source: str) -> str:
     Example:
         >>> source = '$set n 10\\nSet i /1*%n%/;'
         >>> result = strip_set_directives(source)
-        >>> # Result: '* [Stripped: $set n 10]\\nSet i /1*%n%/;'
+        >>> # Result: '* Stripped: $set n 10\\nSet i /1*%n%/;'
 
     Notes:
         - Preserves line numbers for accurate error reporting
@@ -1250,7 +1250,7 @@ def strip_set_directives(source: str) -> str:
         if re.search(r"\$set\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
-            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+            filtered.append(f"{leading_ws}* Stripped: {stripped}")
         else:
             # Keep line unchanged
             filtered.append(line)
@@ -1273,7 +1273,7 @@ def strip_macro_directives(source: str) -> str:
     Example:
         >>> source = '$macro fx(t) %fx%\\nx =e= fx(y);'
         >>> result = strip_macro_directives(source)
-        >>> # Result: '* [Stripped: $macro fx(t) %fx%]\\nx =e= sin(y) * cos(y);'
+        >>> # Result: '* Stripped: $macro fx(t) %fx%\\nx =e= sin(y) * cos(y);'
 
     Notes:
         - Preserves line numbers for accurate error reporting
@@ -1289,7 +1289,7 @@ def strip_macro_directives(source: str) -> str:
         if re.search(r"\$macro\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
-            filtered.append(f"{leading_ws}* [Stripped: {stripped}]")
+            filtered.append(f"{leading_ws}* Stripped: {stripped}")
         else:
             # Keep line unchanged
             filtered.append(line)
@@ -2921,7 +2921,7 @@ def _strip_include_directives(source: str) -> str:
             # Replace with comment to preserve line numbers, preserving original indentation
             stripped = line.strip()
             leading_ws = line[: len(line) - len(line.lstrip())]
-            result.append(f"{leading_ws}* [Stripped: {stripped}]")
+            result.append(f"{leading_ws}* Stripped: {stripped}")
         else:
             result.append(line)
     return "\n".join(result)
