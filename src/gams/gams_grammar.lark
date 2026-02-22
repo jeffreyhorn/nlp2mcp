@@ -90,18 +90,18 @@ set_decl: set_item ("," set_item)+          -> set_list
 
 // For single set declarations: allow desc_text or STRING
 // Issue #424: Use SYMBOL_NAME instead of ID to prevent quoted strings as set names
-set_single_item: SYMBOL_NAME "(" id_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
+set_single_item: SYMBOL_NAME "(" id_or_wildcard_list ")" (STRING | desc_text)? "/" set_members "/"     -> set_domain_with_members
                | SYMBOL_NAME (STRING | desc_text)? "/" set_members "/"                     -> set_simple
                | SYMBOL_NAME (STRING | desc_text)? alias_opt "/" set_members "/"           -> set_aliased
-               | SYMBOL_NAME "(" id_list ")" (STRING | desc_text)?                         -> set_domain
+               | SYMBOL_NAME "(" id_or_wildcard_list ")" (STRING | desc_text)?                         -> set_domain
                | SYMBOL_NAME (STRING | desc_text)?                                         -> set_empty
 
 // For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
 // Issue #424: Use SYMBOL_NAME instead of ID to prevent quoted strings as set names
-set_item: SYMBOL_NAME "(" id_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
+set_item: SYMBOL_NAME "(" id_or_wildcard_list ")" STRING? "/" set_members "/"     -> set_domain_with_members
         | SYMBOL_NAME STRING? "/" set_members "/"                     -> set_simple
         | SYMBOL_NAME STRING? alias_opt "/" set_members "/"           -> set_aliased
-        | SYMBOL_NAME "(" id_list ")" STRING?                         -> set_domain
+        | SYMBOL_NAME "(" id_or_wildcard_list ")" STRING?                         -> set_domain
         | SYMBOL_NAME STRING?                                         -> set_empty
 
 alias_decl: ID "," ID  "/" ID "/"                            -> alias_with_universe
@@ -211,11 +211,11 @@ var_decl: var_item ("," var_item)+                                  -> var_list
         | var_single_item                                           -> var_single
 
 // For single variable declarations: allow desc_text (3+ words) or STRING
-var_single_item: var_kind? ID "(" id_list ")" (STRING | desc_text)? -> var_item_indexed
+var_single_item: var_kind? ID "(" id_or_wildcard_list ")" (STRING | desc_text)? -> var_item_indexed
                | var_kind? ID (STRING | desc_text)?                 -> var_item_scalar
 
 // For comma-separated lists: only STRING allowed (desc_text would be ambiguous)
-var_item: var_kind? ID "(" id_list ")" STRING?               -> var_item_indexed
+var_item: var_kind? ID "(" id_or_wildcard_list ")" STRING?               -> var_item_indexed
         | var_kind? ID STRING?                               -> var_item_scalar
 
 // Sprint 20 Day 8: Added SOS1_K, SOS2_K for special ordered set variable types
@@ -273,6 +273,14 @@ set_members: "(" set_member ("," set_member)* ")"
            | SET_ELEMENT_ID "." STRING STRING    -> set_tuple_with_desc
            | STRING "." SET_ELEMENT_ID STRING    -> set_tuple_with_desc
            | STRING "." STRING STRING            -> set_tuple_with_desc
+           | SET_ELEMENT_ID "." SET_ELEMENT_ID "." SET_ELEMENT_ID -> set_triple
+           | SET_ELEMENT_ID "." SET_ELEMENT_ID "." STRING          -> set_triple
+           | SET_ELEMENT_ID "." STRING "." SET_ELEMENT_ID          -> set_triple
+           | SET_ELEMENT_ID "." STRING "." STRING                  -> set_triple
+           | STRING "." SET_ELEMENT_ID "." SET_ELEMENT_ID          -> set_triple
+           | STRING "." SET_ELEMENT_ID "." STRING                  -> set_triple
+           | STRING "." STRING "." SET_ELEMENT_ID                  -> set_triple
+           | STRING "." STRING "." STRING                          -> set_triple
            | SET_ELEMENT_ID "." SET_ELEMENT_ID   -> set_tuple
            | SET_ELEMENT_ID "." STRING           -> set_tuple
            | STRING "." SET_ELEMENT_ID           -> set_tuple
@@ -422,6 +430,11 @@ condition: DOLLAR "(" expr ")"
          | DOLLAR "[" expr "]"
          | DOLLAR cond_bound
          | DOLLAR set_attr
+         | DOLLAR sum_expr
+         | DOLLAR prod_expr
+         | DOLLAR smax_expr
+         | DOLLAR smin_expr
+         | DOLLAR func_call
          | DOLLAR ref_indexed
          | DOLLAR NUMBER
          | DOLLAR ID
@@ -438,7 +451,9 @@ REL_K: /=e=|=l=|=g=/i
 // Solve
 // ---------------------------
 
-solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
+solve_stmt: "Solve"i ID obj_sense ID "using"i solver_type "scenario"i ID SEMI -> solve
+          | "Solve"i ID obj_sense ID "using"i solver_type SEMI     -> solve
+          | "Solve"i ID "using"i solver_type obj_sense ID "scenario"i ID SEMI -> solve
           | "Solve"i ID "using"i solver_type obj_sense ID SEMI     -> solve
           | "Solve"i ID "using"i MCP_CNS_SOLVER SEMI               -> solve
 obj_sense: MINIMIZING_K | MAXIMIZING_K
@@ -509,6 +524,7 @@ loop_stmt: LOOP_K "(" id_list "," loop_body ")" SEMI
          | LOOP_K "(" ID DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR "[" expr "]" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
+         | LOOP_K "(" "(" id_list ")" DOLLAR ID "(" index_list ")" "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" "(" id_list ")" DOLLAR ID "," loop_body ")" SEMI  -> loop_stmt_paren_filtered
          | LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI  -> loop_stmt_indexed
          | LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI  -> loop_stmt_indexed_filtered
@@ -725,6 +741,10 @@ symbol_plain: ID
      | ref_bound
      | set_attr
      | ref_indexed
+     | YES_K condition                     -> yes_cond
+     | YES_K                              -> yes_value
+     | NO_K condition                      -> no_cond
+     | NO_K                               -> no_value
      | symbol_plain
      | "(" expr ")"
      | "[" expr "]"                       -> bracket_expr
@@ -735,18 +755,22 @@ compile_time_const: "%" compile_const_path "%"
 compile_const_path: ID ("." ID)*
 
 sum_expr: SUM_K "(" sum_domain "," expr ")"   -> sum
+        | SUM_K "[" sum_domain "," expr "]"   -> sum
         | SUM_K "{" sum_domain "," expr "}"   -> sum
 
 // Sprint 17 Day 6: Added prod aggregation function (like sum but for products)
 prod_expr: PROD_K "(" sum_domain "," expr ")"   -> prod
+         | PROD_K "[" sum_domain "," expr "]"   -> prod
          | PROD_K "{" sum_domain "," expr "}"   -> prod
 
 // Sprint 19 Day 11: smax/smin as aggregation functions with index domain support
 // Handles both smax(i, expr) [simple domain] and smax((i,j), expr) [tuple domain]
 smax_expr: SMAX_K "(" sum_domain "," expr ")"   -> smax
+         | SMAX_K "[" sum_domain "," expr "]"   -> smax
          | SMAX_K "{" sum_domain "," expr "}"   -> smax
 
 smin_expr: SMIN_K "(" sum_domain "," expr ")"   -> smin
+         | SMIN_K "[" sum_domain "," expr "]"   -> smin
          | SMIN_K "{" sum_domain "," expr "}"   -> smin
 
 sum_domain: index_spec
@@ -778,6 +802,8 @@ UNTIL_K: /(?i:until)\b/
 OPTION_K: /(?i:options?)\b/
 ON: /(?i:on)\b/
 OFF: /(?i:off)\b/
+YES_K: /(?i:yes)\b/
+NO_K: /(?i:no)\b/
 // Sprint 16 Day 6: Extended to allow number-start elements like "1964-i", "89-07"
 // Pattern allows: letter/underscore start, or digit start followed by '-'/'_' separator
 // This prevents stealing NUMBER tokens (e.g., "1", "10", "1e-3") while allowing "1964-i", "89-07"

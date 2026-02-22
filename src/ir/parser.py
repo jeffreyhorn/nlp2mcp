@@ -1108,7 +1108,7 @@ class _ModelBuilder:
             # Subset without explicit members: cg(genchar)
             # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
-            domain = tuple(_id_list(item.children[1]))
+            domain = tuple(_id_or_wildcard_list(item.children[1]))
             # Note: desc_text is now allowed but we ignore it
             # A set with domain but no members is a subset declaration (members inherited from parent)
             self.model.add_set(SetDef(name=name, members=[], domain=domain))
@@ -1116,8 +1116,8 @@ class _ModelBuilder:
             # Subset with explicit members: cg(genchar) / a, b, c /
             # Sprint 17 Day 5: Store domain (parent set) for subset relationships
             name = _token_text(item.children[0])
-            # Extract domain from id_list (the parent set(s))
-            domain = tuple(_id_list(item.children[1]))
+            # Extract domain from id_or_wildcard_list (the parent set(s))
+            domain = tuple(_id_or_wildcard_list(item.children[1]))
             members_node = next(
                 c for c in item.children if isinstance(c, Tree) and c.data == "set_members"
             )
@@ -1168,6 +1168,13 @@ class _ModelBuilder:
                     prefix = _token_text(child.children[0])
                     suffix = _token_text(child.children[1])
                     result.append(f"{prefix}.{suffix}")
+                elif child.data == "set_triple":
+                    # Issue #818: Triple-dotted tuples for GUSS dictionary sets
+                    # e.g., rapscenarios.scenario.'', rap.param.riskaver
+                    seg1 = _token_text(child.children[0])
+                    seg2 = _token_text(child.children[1])
+                    seg3 = _token_text(child.children[2])
+                    result.append(f"{seg1}.{seg2}.{seg3}")
                 elif child.data == "set_tuple_with_desc":
                     # Issue #567: Tuple with description - all quote combinations
                     # ID.ID STRING, ID.STRING STRING, STRING.ID STRING, STRING.STRING STRING
@@ -1234,7 +1241,7 @@ class _ModelBuilder:
                     raise self._error(
                         f"Unexpected set member node type: '{child.data}'. "
                         f"Expected 'set_element', 'set_element_with_desc', 'set_multiword_with_desc', 'set_tuple', "
-                        f"'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
+                        f"'set_triple', 'set_tuple_with_desc', 'set_tuple_expansion', 'set_tuple_prefix_expansion', "
                         f"'set_tuple_cross_expansion', or 'set_range'.",
                         child,
                     )
@@ -2539,7 +2546,7 @@ class _ModelBuilder:
                                     item_kind = _VAR_KIND_MAP[kind_token.type]
                             item_idx += 1
                         name = _token_text(var_item.children[item_idx])
-                        domain = _id_list(var_item.children[item_idx + 1])
+                        domain = _id_or_wildcard_list(var_item.children[item_idx + 1])
                         # Item-level > declaration-level > block-level
                         final_kind = (
                             item_kind
@@ -2628,7 +2635,7 @@ class _ModelBuilder:
                                 item_kind = _VAR_KIND_MAP[kind_token.type]
                         item_idx += 1
                     name = _token_text(var_item.children[item_idx])
-                    domain = _id_list(var_item.children[item_idx + 1])
+                    domain = _id_or_wildcard_list(var_item.children[item_idx + 1])
                     # Item-level > declaration-level > block-level
                     final_kind = (
                         item_kind
@@ -2689,7 +2696,7 @@ class _ModelBuilder:
                             item_kind = _VAR_KIND_MAP[kind_token.type]
                     item_idx += 1
                 name = _token_text(var_single_item.children[item_idx])
-                domain = _id_list(var_single_item.children[item_idx + 1])
+                domain = _id_or_wildcard_list(var_single_item.children[item_idx + 1])
                 # Item-level > block-level
                 final_kind = (
                     item_kind
@@ -4251,6 +4258,38 @@ class _ModelBuilder:
         if node.data == "number":
             return self._attach_domain(Const(float(node.children[0])), free_domain)
 
+        if node.data == "yes_value":
+            return self._attach_domain(Const(1.0), free_domain)
+
+        if node.data == "no_value":
+            return self._attach_domain(Const(0.0), free_domain)
+
+        if node.data == "yes_cond":
+            # yes$(condition) — evaluates to 1 if condition holds, 0 otherwise.
+            # Construct a DollarConditional with constant value 1.0 and the
+            # parsed condition expression as the dollar condition.
+            # condition children: [DOLLAR_token, inner_expr]
+            # Attach free_domain to value_expr so _merge_domains sees matching
+            # domains (mirroring dollar_cond where value_expr inherits domain
+            # from _expr).
+            value_expr = self._attach_domain(Const(1.0), free_domain)
+            condition_tree = node.children[-1]
+            condition = self._expr(condition_tree.children[1], free_domain)
+            expr = DollarConditional(value_expr, condition)
+            return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
+
+        if node.data == "no_cond":
+            # no$(condition) — always evaluates to 0. The condition is preserved
+            # in the IR via DollarConditional but does not affect the numeric value.
+            # Attach free_domain to value_expr so _merge_domains sees matching
+            # domains (mirroring dollar_cond where value_expr inherits domain
+            # from _expr).
+            value_expr = self._attach_domain(Const(0.0), free_domain)
+            condition_tree = node.children[-1]
+            condition = self._expr(condition_tree.children[1], free_domain)
+            expr = DollarConditional(value_expr, condition)
+            return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
+
         if node.data == "sum":
             return self._handle_aggregation(node, Sum, free_domain)
 
@@ -4277,8 +4316,6 @@ class _ModelBuilder:
             # from the parse tree; terminals defined without quotes like DOLLAR are included)
             value_expr = self._expr(node.children[0], free_domain)
             condition = self._expr(node.children[2], free_domain)
-            from src.ir.ast import DollarConditional
-
             expr = DollarConditional(value_expr, condition)
             return self._attach_domain(expr, self._merge_domains([value_expr, condition], node))
 
@@ -4288,8 +4325,10 @@ class _ModelBuilder:
             expr = Unary(self._extract_operator(op_token), operand)
             return self._attach_domain(expr, self._expr_domain(operand))
 
-        if node.data == "funccall":
-            func_tree = node.children[0]
+        if node.data == "funccall" or node.data == "func_call":
+            # funccall wraps func_call: funccall.children[0] == func_call tree
+            # func_call appears directly when used in condition rule ($func_call)
+            func_tree = node.children[0] if node.data == "funccall" else node
             func_name = _token_text(func_tree.children[0]).lower()
             args: list[Expr] = []
 
