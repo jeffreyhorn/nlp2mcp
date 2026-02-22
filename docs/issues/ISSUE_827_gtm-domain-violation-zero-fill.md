@@ -19,9 +19,10 @@ The gtm model (`data/gamslib/raw/gtm.gms`) generates an MCP file, but GAMS repor
 **** 141  Symbol declared but no values have been assigned.
 ```
 
-The errors occur because the emitter zero-fills parameter data for all combinations of domain
-indices, including `(i,j)` pairs where the first index is not in set `i` (e.g., `central`
-which is only in set `j`).
+The errors occur because the parser zero-fills parameter table data for all combinations of
+domain indices, including `(i,j)` pairs where the first index is not in set `i` (e.g.,
+`central` which is only in set `j`), and the emitter emits these entries without domain
+validation.
 
 Previously this model failed with `codegen_numerical_error` due to `+Inf` parameter value
 in the `sdat` table. The Inf handling fix (Sprint 20 Day 10) resolved that blocker, revealing
@@ -74,10 +75,11 @@ gams /tmp/gtm_mcp.gms lo=2
 
 ### Domain Violations (Error 170)
 
-The emitter's zero-fill logic in `emit_original_parameters()` generates entries for all
-combinations of the Cartesian product of domain sets. For `utc(i,j)`, this produces entries
-for `central.west-can`, `n-central.mexico`, etc. where the first index (`central`) is not in
-set `i`. GAMS enforces domain checking and rejects these entries.
+The parser's zero-fill logic in `_handle_table_block()` generates entries for all
+combinations of the Cartesian product of row and column headers. For `utc(i,j)`, this
+produces entries for `central.west-can`, `n-central.mexico`, etc. where the first index
+(`central`) is not in set `i`. The emitter then emits these entries without domain
+validation, and GAMS enforces domain checking and rejects them.
 
 The zero-fill should only generate entries for valid domain combinations, respecting the actual
 domain sets of each parameter dimension.

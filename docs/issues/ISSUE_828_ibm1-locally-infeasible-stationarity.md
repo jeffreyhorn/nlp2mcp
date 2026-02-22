@@ -120,9 +120,9 @@ handles several scenarios:
 - **Positive Variables**: `lo = 0.0` → creates uniform `piL_x` with variable's domain
 - **Infinite bound filtering**: `+Inf`/`-Inf` bounds are skipped at partition time
   (`partition.py`, lines 120-157), preventing meaningless multiplier generation
-- **Uniform bounds**: Single indexed multiplier `piL_x(i)` added to `stat_x(i)` via
+- **Uniform bounds**: Single indexed multiplier `piL_x(s)` added to `stat_x(s)` via
   `Binary("-", expr, MultiplierRef(piL_name, domain))` (stationarity.py lines 757-767)
-- **Non-uniform bounds**: Per-instance scalar multipliers `piL_x_i1` added to per-instance
+- **Non-uniform bounds**: Per-instance scalar multipliers `piL_x_s1` added to per-instance
   stationarity equations (stationarity.py lines 559-579, 1577-1623)
 
 **How bounds from parameter assignments are handled:**

@@ -127,9 +127,9 @@ builder.
 3. **Result**: After simplification, the stationarity expression becomes `Const(0.0)`,
    producing empty equations `stat_lam(1).. 0 =E= 0` and `stat_lam(2).. 0 =E= 0`.
 
-4. **No empty-equation filtering**: `emit_model.py` (lines 128-151) does not check whether
-   stationarity equations are empty before including them in MCP pairing. GAMS requires that
-   MCP-paired empty equations correspond to fixed variables.
+4. **No empty-equation filtering**: `src/emit/model.py` (function `emit_model_mcp`, lines
+   128-151) does not check whether stationarity equations are empty before including them in
+   MCP pairing. GAMS requires that MCP-paired empty equations correspond to fixed variables.
 
 ### Why This Cannot Be Simply Fixed
 
