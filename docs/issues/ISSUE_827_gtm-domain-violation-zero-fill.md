@@ -1,0 +1,114 @@
+# GTM MCP: GAMS Error 170 — Domain Violations from Zero-Filled Parameter Data
+
+**GitHub Issue:** [#827](https://github.com/jeffreyhorn/nlp2mcp/issues/827)
+**Status:** OPEN
+**Severity:** High — MCP generates but GAMS reports 28 compile errors (domain violations)
+**Date:** 2026-02-22
+**Affected Models:** gtm
+
+---
+
+## Problem Summary
+
+The gtm model (`data/gamslib/raw/gtm.gms`) generates an MCP file, but GAMS reports
+28 compile errors including domain violations (Error 170) and unassigned symbols (Error 141):
+
+```
+**** 170  Domain violation for element
+**** 300  Remaining errors not printed for this line
+**** 141  Symbol declared but no values have been assigned.
+```
+
+The errors occur because the emitter zero-fills parameter data for all combinations of domain
+indices, including `(i,j)` pairs where the first index is not in set `i` (e.g., `central`
+which is only in set `j`).
+
+Previously this model failed with `codegen_numerical_error` due to `+Inf` parameter value
+in the `sdat` table. The Inf handling fix (Sprint 20 Day 10) resolved that blocker, revealing
+these deeper issues.
+
+---
+
+## Specific Errors
+
+### Error 170: Domain Violations in `utc(i,j)` and `pc(i,j)`
+
+Parameters `utc(i,j)` and `pc(i,j)` have domain `(i,j)` where:
+- `i = {mexico, alberta-bc, atlantic, appalacia, us-gulf, mid-cont, permian-b, rockies, pacific, alaska}`
+- `j = {mexico, west-can, ont-quebec, atlantic, new-engl, ny-nj, mid-atl, south-atl, midwest, south-west, central, n-central, west, n-west}`
+
+The emitter zero-fills entries like `central.west-can 0.0` and `central.ont-quebec 0.0`
+where `central` is in set `j` but NOT in set `i`. GAMS correctly rejects these as domain
+violations.
+
+### Error 141: Unassigned Symbols (`supa`, `supb`, `dema`, `demb`)
+
+Parameters `supa(i)`, `supb(i)`, `dema(j)`, `demb(j)` are declared but assigned values
+via computed expressions that reference other parameters. The emitter emits the assignment
+statements (`supa(i) = ...`) but these assignments reference `supb` and `supc` which are
+declared without data, causing a cascade of Error 141 warnings.
+
+This is likely because the emitter emits parameter assignments in declaration order rather
+than dependency order — `supa` is assigned before `supb` gets its value.
+
+---
+
+## Reproduction
+
+```bash
+# Generate MCP
+python -m src.cli data/gamslib/raw/gtm.gms -o /tmp/gtm_mcp.gms
+
+# Run GAMS
+gams /tmp/gtm_mcp.gms lo=2
+
+# Expected output:
+# **** 170  Domain violation for element (on utc and pc parameters)
+# **** 141  Symbol declared but no values have been assigned (supa, supb, dema, demb)
+# **** 28 ERROR(S)   0 WARNING(S)
+```
+
+---
+
+## Root Cause
+
+### Domain Violations (Error 170)
+
+The emitter's zero-fill logic in `emit_original_parameters()` generates entries for all
+combinations of the Cartesian product of domain sets. For `utc(i,j)`, this produces entries
+for `central.west-can`, `n-central.mexico`, etc. where the first index (`central`) is not in
+set `i`. GAMS enforces domain checking and rejects these entries.
+
+The zero-fill should only generate entries for valid domain combinations, respecting the actual
+domain sets of each parameter dimension.
+
+### Unassigned Symbols (Error 141)
+
+Parameters `supa`, `supb`, `dema`, `demb` are computed from other parameters via assignment
+statements. The emitter needs to ensure these assignments are emitted in topologically-sorted
+(dependency) order so that referenced parameters have values before they are used.
+
+---
+
+## Suggested Fix
+
+**For Error 170:**
+- In `emit_original_parameters()` (or zero-fill logic), only generate entries for valid
+  domain combinations. Check each index against its declared domain set before emitting.
+- Alternatively, skip zero-filling for parameters with multi-dimensional domains and let
+  GAMS use its default value (0) for unspecified entries.
+
+**For Error 141:**
+- Topologically sort parameter assignment statements by their dependencies before emitting.
+- Alternatively, use `$onImplicitAssign` to suppress the warnings for parameters that are
+  computed later.
+
+---
+
+## Files to Investigate
+
+| File | Relevance |
+|------|-----------|
+| `src/emit/original_symbols.py` | `emit_original_parameters()` — zero-fill logic |
+| `src/emit/emit_gams.py` | Parameter assignment ordering |
+| `data/gamslib/raw/gtm.gms` | Original model with multi-domain parameters |

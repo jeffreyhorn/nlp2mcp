@@ -8,6 +8,8 @@ Also handles index aliasing for sum expressions to avoid GAMS Error 125
 in a nested sum.
 """
 
+import math
+
 from src.ir.ast import (
     Binary,
     Call,
@@ -49,6 +51,11 @@ PRECEDENCE = {
 def _format_numeric(value: int | float) -> str:
     """Format numeric value for GAMS, avoiding unnecessary decimals.
 
+    Handles special IEEE values:
+    - +Inf → 'inf' (GAMS native syntax)
+    - -Inf → '-inf' (parentheses, when needed, are added by expression handlers)
+    - NaN → 'na' (GAMS native syntax for Not Available)
+
     Args:
         value: Numeric value to format
 
@@ -62,7 +69,16 @@ def _format_numeric(value: int | float) -> str:
         '3.14'
         >>> _format_numeric(5)
         '5'
+        >>> _format_numeric(float('inf'))
+        'inf'
+        >>> _format_numeric(float('-inf'))
+        '-inf'
     """
+    if isinstance(value, float):
+        if math.isinf(value):
+            return "inf" if value > 0 else "-inf"
+        if math.isnan(value):
+            return "na"
     if isinstance(value, (int, float)) and value == int(value):
         return str(int(value))
     return str(value)

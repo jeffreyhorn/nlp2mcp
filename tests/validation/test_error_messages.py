@@ -25,23 +25,17 @@ from src.validation.numerical import (
 class TestNumericalErrorMessages:
     """Test numerical error message quality."""
 
-    def test_inf_parameter_message(self):
-        """Verify Inf parameter errors have clear, actionable error messages.
+    def test_inf_parameter_allowed(self):
+        """Verify Inf parameter values are allowed (GAMS native support).
 
-        Inf values (from division by zero or genuine overflow) are still rejected.
-        This test checks that the error message is informative.
+        ±Inf values in parameter tables are legitimate in GAMS (e.g., unlimited
+        capacity, unbounded supply). They are emitted as 'inf'/'-inf'.
         """
         model = ModelIR()
         model.params["p"] = ParameterDef(name="p", domain=("i",), values={("1",): float("inf")})
 
-        with pytest.raises(NumericalError) as exc_info:
-            validate_parameter_values(model)
-
-        error_msg = str(exc_info.value)
-        assert "parameter" in error_msg.lower()
-        assert "p" in error_msg
-        assert "Inf" in error_msg
-        assert len(error_msg) > 50  # Non-trivial message with actionable content
+        # Should NOT raise - Inf values are legitimate in GAMS
+        validate_parameter_values(model)
 
     def test_invalid_bounds_message(self):
         """Verify invalid bounds errors have clear messages with suggestions."""

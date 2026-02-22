@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 10: WS5 Part B — Inf Parameter Handling + Model Validation Prep - 2026-02-22
+
+**Branch:** `sprint20-day10-inf-params-model-validation`
+
+#### Summary
+
+Fixed `codegen_numerical_error` for all 4 affected models (decomp, gastrans, gtm, ibm1) by allowing ±Inf parameter values and emitting them as GAMS-native `inf`/`-inf` syntax. Filed 4 new blocking issues (#825–#828) for the next-layer problems exposed.
+
+#### Changes
+
+- **Validation**: `validate_parameter_values()` now allows ±Inf (GAMS natively supports `inf`/`-inf` in parameter tables)
+- **Emission**: Added `_format_param_value()` in `original_symbols.py` and `_format_numeric()` Inf/NaN handling in `expr_to_gams.py`
+- **Tests**: 9 new unit tests for ±Inf/NaN formatting in expressions and parameter data; updated 3 existing tests
+- **Issues**: Filed #825 (gastrans signpower), #826 (decomp empty stationarity), #827 (gtm domain violations), #828 (ibm1 infeasible)
+
+#### Metrics
+
+- codegen_numerical_error: 4 → **0** — target met
+- Tests: 3,701 passed (+15)
+
+---
+
 ### Sprint 20 Day 9: WS5 Part A — Pipeline Match Tolerance Fix + Regression Tests - 2026-02-22
 
 **Branch:** `sprint20-day9-rtol-tolerance-match`

@@ -217,6 +217,27 @@
 
 ---
 
+### Day 10 — WS5 Part B: Inf Parameter Handling + Model Validation Prep (2026-02-22)
+
+**Status:** ✅ COMPLETE
+**PR:** TBD
+
+**Activities:**
+- Fixed `validate_parameter_values()` to allow ±Inf (GAMS natively supports `inf`/`-inf` in parameter tables)
+- Added `_format_param_value()` helper in `original_symbols.py` for GAMS-compatible Inf/NaN emission
+- Added `_format_numeric()` Inf/NaN handling in `expr_to_gams.py`
+- Updated 3 existing tests (Inf no longer raises), added 9 new unit tests
+- End-to-end: decomp ✅, gtm ✅, ibm1 ✅ translate (gastrans blocked by `signpower` AD)
+- All 4 `codegen_numerical_error` models resolved — 0 remaining
+- Filed 4 new blocking issues: #825 (gastrans signpower), #826 (decomp empty stat eq), #827 (gtm domain violations), #828 (ibm1 infeasible)
+- Full pipeline retest started in background
+
+**Metrics:**
+- codegen_numerical_error: 4 → **0** — **TARGET MET** (≤1)
+- Tests: 3,701 passed (+15)
+
+---
+
 ## Checkpoints
 
 ### Checkpoint 1 (Day 6)
