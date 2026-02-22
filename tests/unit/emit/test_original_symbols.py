@@ -20,7 +20,7 @@ from src.emit.original_symbols import (
     emit_original_parameters,
     emit_original_sets,
 )
-from src.ir.ast import Binary, Call, Const, ParamRef
+from src.ir.ast import Binary, Call, Const, ParamRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, ParameterDef, SetDef
 
@@ -1177,3 +1177,94 @@ class TestSelfReferencingExpressionSkipping:
         # deltaq should be skipped, beta should be emitted
         assert "deltaq" not in result
         assert "beta(sc) =" in result
+
+
+@pytest.mark.unit
+class TestTransitiveCalibrationClassification:
+    """Issue #763: Test transitive calibration parameter detection and ordering.
+
+    Parameters that transitively depend on .l-referencing (calibration) parameters
+    must be deferred to the calibration pass and emitted in dependency order.
+    """
+
+    def test_transitive_calibration_deferred(self):
+        """A parameter referencing a calibration param is also deferred.
+
+        Setup: cva = sum(v.l * x.l), rva = cva / cli
+        - cva directly references .l → calibration
+        - rva references cva (calibration) → also calibration (transitive)
+        Both should be excluded from no_varref_attr pass.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        # cva = v.l(i) (directly references .l)
+        cva_expr = VarRef("v", ("i",), attribute="l")
+        model.params["cva"] = ParameterDef(
+            name="cva", domain=(), values={}, expressions=[((), cva_expr)]
+        )
+
+        # rva = cva / 2 (references cva, a calibration param)
+        rva_expr = Binary("/", ParamRef("cva", ()), Const(2.0))
+        model.params["rva"] = ParameterDef(
+            name="rva", domain=(), values={}, expressions=[((), rva_expr)]
+        )
+
+        # no_varref_attr pass should exclude both cva and rva
+        result = emit_computed_parameter_assignments(model, varref_filter="no_varref_attr")
+        assert "cva" not in result
+        assert "rva" not in result
+
+    def test_transitive_calibration_emitted_in_order(self):
+        """Calibration pass emits dependencies before dependents.
+
+        Setup: cva = v.l(i), rva = cva / 2
+        In only_varref_attr pass, cva must appear before rva.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        cva_expr = VarRef("v", ("i",), attribute="l")
+        model.params["cva"] = ParameterDef(
+            name="cva", domain=(), values={}, expressions=[((), cva_expr)]
+        )
+
+        rva_expr = Binary("/", ParamRef("cva", ()), Const(2.0))
+        model.params["rva"] = ParameterDef(
+            name="rva", domain=(), values={}, expressions=[((), rva_expr)]
+        )
+
+        result = emit_computed_parameter_assignments(model, varref_filter="only_varref_attr")
+        assert "cva" in result
+        assert "rva" in result
+        # cva must come before rva
+        assert result.index("cva") < result.index("rva")
+
+
+@pytest.mark.unit
+class TestCollectVarrefNames:
+    """Issue #763: Test _collect_varref_names helper and variable .l init ordering."""
+
+    def test_collects_varref_l_names(self):
+        """Detect .l references in expression trees."""
+        from src.emit.emit_gams import _collect_varref_names
+
+        # x.l(i) + y.l(j) → {x, y}
+        expr = Binary("+", VarRef("x", ("i",), attribute="l"), VarRef("y", ("j",), attribute="l"))
+        assert _collect_varref_names(expr) == {"x", "y"}
+
+    def test_ignores_bare_varrefs(self):
+        """Bare VarRef (no .l attribute) should not be collected."""
+        from src.emit.emit_gams import _collect_varref_names
+
+        expr = Binary("*", VarRef("x", ("i",)), Const(2.0))
+        assert _collect_varref_names(expr) == set()
+
+    def test_traverses_paramref_indices(self):
+        """VarRef .l inside a ParamRef's index expressions should be found."""
+        from src.emit.emit_gams import _collect_varref_names
+
+        # p(x.l) — ParamRef with VarRef.l in index
+        inner = VarRef("x", (), attribute="l")
+        expr = ParamRef("p", (inner,))
+        assert _collect_varref_names(expr) == {"x"}

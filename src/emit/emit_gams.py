@@ -21,7 +21,7 @@ from src.emit.original_symbols import (
     has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
-from src.ir.ast import Expr, IndexOffset, SubsetIndex, VarRef
+from src.ir.ast import Expr, IndexOffset, MultiplierRef, ParamRef, SubsetIndex, VarRef
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
@@ -62,7 +62,7 @@ def _collect_varref_names(expr: Expr) -> set[str]:
         names.add(expr.name.lower())
     for child in expr.children():
         names.update(_collect_varref_names(child))
-    if isinstance(expr, VarRef):
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
         for idx in expr.indices:
             if isinstance(idx, Expr):
                 names.update(_collect_varref_names(idx))
