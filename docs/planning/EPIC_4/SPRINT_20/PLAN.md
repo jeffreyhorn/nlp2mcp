@@ -425,12 +425,14 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 | Criterion | GO threshold | Current | Verdict |
 |---|---|---|---|
-| Parse success | ≥ 125/160 (78.1%) | 129/158 (81.7%) | ✅ GO |
+| Parse success | ≥ 125/160 (78.1%) | 129/158* (81.7%) | ✅ GO |
 | lexer_invalid_char | ≤ 11 | 11 | ✅ GO |
 | model_no_objective_def | ≤ 4 | 1 | ✅ GO |
 | Full pipeline match | ≥ 15 | 16 | ✅ GO |
 | Solve success | ≥ 30 | 33 | ✅ GO |
 | Tests | All pass | 3,712 passed (10 skipped, 2 xfailed) | ✅ GO |
+
+\* The evaluation suite contains 158 candidate models (filtered by convexity status). The "160" in sprint planning thresholds was an approximation; thresholds remain defined on the original planning numbers.
 
 **Decision: GO** — All 6 criteria met. Proceed with Phase 3 (Days 12–13) and remaining WS6.
 
@@ -496,12 +498,14 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 | Criterion | Target | Actual | Status |
 |---|---|---|---|
-| Parse success | ≥ 125/160 | 129/158 | ✅ |
+| Parse success | ≥ 125/160 | 129/158* | ✅ |
 | lexer_invalid_char | ≤ 11 | 11 | ✅ |
 | model_no_objective_def | ≤ 4 | 1 | ✅ |
 | Full pipeline match | ≥ 15 | 16 | ✅ |
 | Solve success | ≥ 30 | 33 | ✅ |
 | All tests pass | Yes | 3,712 passed, 10 skipped, 2 xfailed | ✅ |
+
+\* Evaluation suite has 158 candidates; "160" in thresholds was a planning approximation.
 
 ---
 
