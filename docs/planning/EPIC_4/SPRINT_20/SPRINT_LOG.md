@@ -236,6 +236,35 @@
 - codegen_numerical_error: 4 → **0** — **TARGET MET** (≤1)
 - Tests: 3,701 passed (+15)
 
+### Day 11 — Model Validation + Checkpoint 2 (2026-02-22)
+
+**Status:** ✅ COMPLETE
+**PR:** #833
+
+**Activities:**
+- Evaluated Checkpoint 2 GO/NO-GO criteria — all 6 criteria met, **decision: GO**
+- Reviewed Day 10 pipeline retest results (129/158 parse, 33 solve, 16 match)
+- Triaged 8 open GitHub issues: 5 unfixable (deep infrastructure), 3 potentially fixable before Day 14
+- Fixed issue #825 (gastrans signpower AD support) — PR #831 merged
+- Investigated issues #826, #827, #828 — documented root causes, all deep infrastructure issues — PR #832 merged
+- Filed issue #830 (gastrans Jacobian dynamic subset timeout)
+- Confirmed Phase 3 (Days 12–13): proceed with Subcat J/K grammar + WS6 regression tests
+
+**Issue Triage:**
+
+| Issue | Model | Problem | Fixable by Day 14? |
+|---|---|---|---|
+| #825 | gastrans | signpower AD not supported | ✅ FIXED (PR #831) |
+| #826 | decomp | Empty stationarity equation (domain/subset mismatch) | NO — stationarity builder refactor needed |
+| #827 | gtm | Domain violations from zero-fill + param ordering | NO — parser + emitter infrastructure needed |
+| #828 | ibm1 | Missing bound multipliers in stationarity | MAYBE — needs bound resolution debugging |
+| #830 | gastrans | Jacobian computation timeout (dynamic subset) | MAYBE — needs dynamic subset parsing improvement |
+| #757 | bearing | Locally infeasible (non-convex initialization) | NO — deferred to Sprint 21 |
+| #764 | mexss | Locally infeasible (accounting variables) | NO — structural KKT theory issue |
+| #765 | orani | Locally infeasible (CGE model type) | NO — model type incompatible with standard KKT |
+
+**Metrics:** Tests 3,712 passed, 10 skipped, 2 xfailed (+133 from baseline; Day 9's "3,714+" was an estimate)
+
 ---
 
 ## Checkpoints
@@ -302,7 +331,47 @@
 - Solve success ≥ 30
 - All tests pass
 
-**Status:** PENDING
+**Evaluation:**
+
+| Criterion | GO threshold | Current | Verdict |
+|---|---|---|---|
+| Parse success | ≥ 125/160 (78.1%) | 129/158 (81.7%) | **GO** |
+| lexer_invalid_char | ≤ 11 | 11 | **GO** (at threshold) |
+| model_no_objective_def | ≤ 4 | 1 | **GO** |
+| Full pipeline match | ≥ 15 | 16 | **GO** |
+| Solve success | ≥ 30 | 33 | **GO** |
+| Tests | All pass | 3,712 passed, 10 skipped, 2 xfailed | **GO** |
+
+**Decision: GO** — All 6 criteria met. Proceed with Phase 3 (Days 12–13).
+
+**Full Pipeline Metrics (Day 11):**
+
+| Metric | Baseline | Day 6 | Day 11 | Delta (baseline) |
+|---|---|---|---|---|
+| Parse success | 112/158 (70.9%) | 123/158 (77.8%) | 129/158 (81.7%) | +17 |
+| lexer_invalid_char | 26 | 21 | 11 | -15 |
+| model_no_objective_def | 14 | 1 | 1 | -13 |
+| Translate success | 96/112 (85.7%) | 109/123 (88.6%) | 120/129 (93.0%) | +24 |
+| Solve success | 27 | 29 | 33 | +6 |
+| Full pipeline match | 10 | 10 | 16 | +6 |
+| Tests | 3,579 | 3,635 | 3,712 | +133 |
+
+Note: The evaluation suite contains 158 candidate models (convexity status `verified_convex` or `likely_convex`). The "160" in earlier sprint planning and Checkpoint 1 tables is the original planning approximation; the Day 6/Day 11 full-pipeline evaluation tables above use the actual 158-case denominator.
+
+**Parse error breakdown (Day 11):**
+- lexer_invalid_char: 11
+- semantic_undefined_symbol: 7
+- internal_error: 7
+- parser_invalid_expression: 3
+- model_no_objective_def: 1
+
+**Solve error breakdown (Day 11):**
+- path_syntax_error: 45
+- path_solve_terminated: 29
+- model_infeasible: 11
+- path_solve_license: 2
+
+**Status:** EVALUATED — GO
 
 ---
 

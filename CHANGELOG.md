@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 11: Checkpoint 2 Evaluation + Model Validation - 2026-02-22
+
+**Branch:** `sprint20-day11-checkpoint2`
+
+#### Summary
+
+Checkpoint 2 evaluated: all 6 GO/NO-GO criteria met. Decision: **GO** for Phase 3 (Days 12-13). Triaged 8 open issues; fixed #825 (signpower AD), investigated #826/#827/#828 (deep infrastructure issues). Pipeline metrics: parse 129/158 (81.7%), solve 33, match 16.
+
+#### Checkpoint 2 Results
+
+| Criterion | Target | Actual | Status |
+|---|---|---|---|
+| Parse success | >= 125/160 | 129/158* | GO |
+| lexer_invalid_char | <= 11 | 11 | GO |
+| model_no_objective_def | <= 4 | 1 | GO |
+| Full pipeline match | >= 15 | 16 | GO |
+| Solve success | >= 30 | 33 | GO |
+| Tests | All pass | 3,712 passed, 10 skipped, 2 xfailed | GO |
+
+\* Evaluation suite has 158 candidates (filtered by convexity status); "160" in targets was a planning approximation.
+
+#### Activities
+
+- Fixed issue #825 (gastrans signpower AD support) via PR #831
+- Investigated issues #826, #827, #828 — documented root causes (deep infrastructure issues) via PR #832
+- Filed issue #830 (gastrans Jacobian dynamic subset timeout)
+- Triaged 8 open issues: 5 unfixable before sprint end, 3 potentially fixable
+
+---
+
 ### Sprint 20 Day 10: WS5 Part B — Inf Parameter Handling + Model Validation Prep - 2026-02-22
 
 **Branch:** `sprint20-day10-inf-params-model-validation`
