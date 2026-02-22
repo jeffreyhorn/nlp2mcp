@@ -31,7 +31,7 @@ Parameters
     scd(k) /good 0.25, medium 0.5, poor 0.25/
     land(s) /nigra 143.679, brutia 227.58/
     ymf(at,k,s,cl)
-    a(c,p) /pulplogs.'pulp-pl' -1.0, sawlogs.'pulp-pl' -1.0, sawlogs.'pulp-rs' -1.0, residuals.'pulp-sl' -1.0, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6, sawnwood.'pulp-pl' 0.0, sawnwood.'pulp-sl' 0.0, sawnwood.sawing 0.0, residuals.'pulp-pl' 0.0, residuals.sawing 0.0, sawlogs.'pulp-sl' 0.0, sawlogs.sawing 0.0, pulp.sawing 0.0, pulplogs.'pulp-sl' 0.0, pulplogs.'pulp-rs' 0.0, pulplogs.sawing 0.0/
+    a(c,p) /pulplogs.'pulp-pl' -1.0, sawlogs.'pulp-pl' -1.0, sawlogs.'pulp-rs' -1.0, residuals.'pulp-sl' -1.0, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6, sawlogs.'pulp-sl' 0.0, sawlogs.sawing 0.0, pulplogs.'pulp-sl' 0.0, pulplogs.'pulp-rs' 0.0, pulplogs.sawing 0.0, residuals.'pulp-pl' 0.0, residuals.sawing 0.0, sawnwood.'pulp-pl' 0.0, sawnwood.'pulp-sl' 0.0, sawnwood.sawing 0.0, pulp.sawing 0.0/
     b(m,p) /'pulp-mill'.'pulp-pl' 1.0, 'pulp-mill'.'pulp-sl' 1.0, 'pulp-mill'.'pulp-rs' 1.0, 'saw-mill'.sawing 1.0, 'saw-mill'.'pulp-pl' 0.0, 'saw-mill'.'pulp-sl' 0.0, 'saw-mill'.'pulp-rs' 0.0, 'pulp-mill'.sawing 0.0/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6.0/
     pd(cf) /pulp 147.0, sawnwood 70.0/

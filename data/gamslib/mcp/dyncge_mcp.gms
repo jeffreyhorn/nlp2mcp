@@ -301,6 +301,17 @@ Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
+Y.l(j) = Y00(j);
+F.l(h,j) = F00(h,j);
+X.l(i,j) = X00(i,j);
+Z.l(j) = Z00(j);
+Xp.l(i) = Xp00(i);
+Xv.l(i) = Xv00(i);
+E.l(i) = E00(i);
+M.l(i) = M00(i);
+Q.l(i) = Q00(i);
+D.l(i) = D00(i);
+FF.l(h) = FF00(h);
 pf.l("CAP","AGR") = 1.0;
 pf.l("CAP","LMN") = 1.0;
 pf.l("CAP","HMN") = 1.0;
@@ -335,6 +346,12 @@ pd.l("HMN") = 1.0;
 pd.l("SRV") = 1.0;
 pk.l = 1.0;
 epsilon.l = 1.0;
+Sp.l = Sp00;
+Td.l = Td00;
+Tz.l(j) = Tz00(j);
+Tm.l(i) = Tm00(i);
+II.l(j) = II00(j);
+III.l = III00;
 
 * ============================================
 * Equations

@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    ydat(b,*) /'municip-a'.rating 2.0, 'municip-a'.maturity 9.0, 'municip-a'.yield 4.3, 'municip-b'.rating 5.0, 'municip-b'.maturity 2.0, 'municip-b'.yield 4.5, corporate.rating 2.0, corporate.maturity 15.0, corporate.yield 5.4, corporate.'tax-rate' 0.5, 'us-ser-e'.rating 1.0, 'us-ser-e'.maturity 4.0, 'us-ser-e'.yield 5.0, 'us-ser-e'.'tax-rate' 0.5, 'us-ser-f'.rating 1.0, 'us-ser-f'.maturity 3.0, 'us-ser-f'.yield 4.4, 'us-ser-f'.'tax-rate' 0.5, 'municip-b'.'tax-rate' 0.0, 'municip-a'.'tax-rate' 0.0/
+    ydat(b,*) /'municip-a'.rating 2.0, 'municip-a'.maturity 9.0, 'municip-a'.yield 4.3, 'municip-b'.rating 5.0, 'municip-b'.maturity 2.0, 'municip-b'.yield 4.5, corporate.rating 2.0, corporate.maturity 15.0, corporate.yield 5.4, corporate.'tax-rate' 0.5, 'us-ser-e'.rating 1.0, 'us-ser-e'.maturity 4.0, 'us-ser-e'.yield 5.0, 'us-ser-e'.'tax-rate' 0.5, 'us-ser-f'.rating 1.0, 'us-ser-f'.maturity 3.0, 'us-ser-f'.yield 4.4, 'us-ser-f'.'tax-rate' 0.5, 'municip-a'.'tax-rate' 0.0, 'municip-b'.'tax-rate' 0.0/
 ;
 
 * ============================================
@@ -85,7 +85,7 @@ Equations
 
 * Stationarity equations
 stat_investment(b).. ((-1) * (ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")))) - nu_tdef + ((-1) * lam_groupmin)$sameas(b, 'corporate') + ydat(b,"rating") * lam_rdef + ydat(b,"maturity") * lam_mdef =E= 0;
-stat_tinvest.. nu_tdef - (-1.4) * lam_rdef - (-5) * lam_mdef + piU_tinvest =E= 0;
+stat_tinvest.. nu_tdef + (-1.4) * lam_rdef + (-5) * lam_mdef + piU_tinvest =E= 0;
 
 * Inequality complementarity equations
 comp_groupmin.. sum(g, investment(g)) - 4 =G= 0;

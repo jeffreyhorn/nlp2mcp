@@ -68,6 +68,17 @@ Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+x.l(n,k) = xinit(n);
+u.l(m,k) = uinit(m);
+
+* ============================================
 * Equations
 * ============================================
 

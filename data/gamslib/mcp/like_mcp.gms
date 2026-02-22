@@ -67,13 +67,12 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 * POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+* clamped to min(max(value, 1e-6), upper_bound).
 
-p.l("one") = 0.1;
-p.l("two") = 0.1;
-p.l("three") = 0.1;
+p.l(g) = 1 / 3;
 p.l(g) = min(max(p.l(g), 1e-6), p.up(g));
-m.l(g) = 1;
+m.l(g) = 100 + 30 * ord(g);
+m.l(g) = min(max(m.l(g), 1e-6), m.up(g));
 s.l("one") = 15.0;
 s.l("two") = 15.0;
 s.l("three") = 15.0;

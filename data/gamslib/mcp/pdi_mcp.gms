@@ -27,7 +27,7 @@ Sets
 Parameters
     pfd(p,*) /one.'max-prod' 5000.0, one.'over-prod' 1000.0, one.'prod-cost' 35.0, one.'over-cost' 45.0, two.'min-prod' 1200.0, two.'max-prod' 3000.0, two.'over-prod' 500.0, two.'prod-cost' 40.0, two.'over-cost' 43.0, three.'min-prod' 700.0, three.'max-prod' 1500.0, three.'prod-cost' 38.0, one.'min-prod' 0.0, three.'over-prod' 0.0, three.'over-cost' 0.0/
     fdec(p,d) /one.east 10.0, one.south 12.0, two.south 8.0, two.west 4.0, two.north 5.0, three.west 6.0, three.north 8.0, two.east 0.0, one.west 0.0, one.north 0.0, three.east 0.0, three.south 0.0/
-    sdec(d,c) /east.'1' 15.0, east.'2' 19.0, south.'1' 20.0, south.'2' 22.0, south.'3' 18.0, west.'1' 16.0, west.'3' 18.0, west.'4' 19.0, north.'3' 15.0, north.'4' 21.0, south.'4' 0.0, south.'5' 0.0, north.'1' 0.0, north.'2' 0.0, north.'5' 0.0, west.'2' 0.0, west.'5' 0.0, east.'3' 0.0, east.'4' 0.0, east.'5' 0.0/
+    sdec(d,c) /east.'1' 15.0, east.'2' 19.0, south.'1' 20.0, south.'2' 22.0, south.'3' 18.0, west.'1' 16.0, west.'3' 18.0, west.'4' 19.0, north.'3' 15.0, north.'4' 21.0, west.'2' 0.0, west.'5' 0.0, east.'3' 0.0, east.'4' 0.0, east.'5' 0.0, north.'1' 0.0, north.'2' 0.0, north.'5' 0.0, south.'4' 0.0, south.'5' 0.0/
     dcd(d,*) /east.'max-invent' 3000.0, east.'hold-cost' 2.0, south.'max-invent' 2500.0, south.'hold-cost' 2.0, west.'max-invent' 4000.0, west.'hold-cost' 1.0, north.'max-invent' 2500.0, north.'hold-cost' 3.0/
     czd(c,*)
     pc(p,m)

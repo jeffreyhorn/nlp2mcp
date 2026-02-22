@@ -16,31 +16,29 @@ $offText
 * ============================================
 
 Sets
-    i /summer, winter/
-    j /normal, overtime/
-    k /nuts, bolts, washers/
-    l /m1, m2, m3/
+    i /i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47, i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63, i64, i65, i66, i67, i68, i69, i70, i71, i72, i73, i74, i75, i76, i77, i78, i79, i80, i81, i82, i83, i84, i85, i86, i87, i88, i89, i90, i91, i92, i93, i94, i95, i96, i97, i98, i99, i100/
+    first(i)
+    last(i)
+    middle(i)
 ;
 
-Parameters
-    mh(l,k) /m1.nuts 4.0, m1.bolts 4.0, m1.washers 6.0, m2.nuts 7.0, m2.bolts 6.0, m2.washers 6.0, m3.nuts 3.0, m3.bolts 0.0, m3.washers 0.0/
-    mhadd(i,j) /summer.overtime -1.0, winter.normal 1.0, winter.overtime 0.0, summer.normal 0.0/
-    av(l,j) /m1.normal 100.0, m1.overtime 80.0, m2.normal 100.0, m2.overtime 90.0, m3.normal 40.0, m3.overtime 30.0/
-    t(i,j,k,l) /winter.overtime.washers.m1 5.0/
-    a(i,j,l)
-    tc(l,k) /m1.nuts 2.0, m1.bolts 3.0, m1.washers 4.0, m2.nuts 4.0, m2.bolts 3.0, m2.washers 2.0, m3.nuts 1.0, m3.bolts 0.0, m3.washers 0.0/
-    tcadd(i,j) /summer.overtime 1.0, winter.normal 1.0, winter.overtime 2.0, summer.normal 0.0/
-    c(i,j,k,l)
-    p(i,k) /summer.nuts 10.0, summer.bolts 10.0, summer.washers 9.0, winter.nuts 11.0, winter.bolts 11.0, winter.washers 10.0/
-    d(i,k) /summer.nuts 25.0, summer.bolts 30.0, summer.washers 30.0, winter.nuts 30.0, winter.bolts 25.0, winter.washers 25.0/
-    s(k) /nuts 1.0, bolts 1.0, washers 1.0/
-    h(k) /nuts 20.0, bolts 20.0/
+Alias(i, j);
+
+Scalars
+    R_v /1.0/
+    R_max /2.0/
+    R_min /1.0/
+    alpha /1.5/
+    d_theta /0.0/
 ;
 
-t(i,j,k,l) = mh(l,k) + mhadd(i,j)$mh(l,k);
-a("summer",j,l) = av(l,j);
-a("winter",j,l) = av(l,j) + 10;
-c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
+first("i1") = 1;
+last("i100") = 1;
+middle(i) = 1;
+middle(first) = 0;
+middle(last) = 0;
+
+d_theta = 2 * pi / (5 * (100 + 1));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -54,19 +52,19 @@ c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z(i,k)
-    cost
-    revenue
-    profit
-    nu_cdef
-    nu_rdef
-    nu_ib(i,k)
+    r(i)
+    rdiff(i)
+    area
+    nu_eqrdiff(i)
 ;
 
 Positive Variables
-    x(i,j,k,l)
-    y(i,k)
-    lam_ma(i,j,l)
+    lam_convexity(i)
+    lam_convex_edge1(i)
+    lam_convex_edge3(i)
+    lam_convex_edge4(i)
+    piL_r(i)
+    piU_r(i)
 ;
 
 * ============================================
@@ -76,10 +74,8 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
 
-x.l(i,j,k,l) = 1;
-y.l(i,k) = 1;
+r.l(i) = (R_min + R_max) / 2;
 
 * ============================================
 * Equations
@@ -90,16 +86,16 @@ y.l(i,k) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_revenue
-    stat_x(i,j,k,l)
-    stat_y(i,k)
-    stat_z(i,k)
-    comp_ma(i,j,l)
-    cdef
-    ib(i,k)
-    pdef
-    rdef
+    stat_r(i)
+    stat_rdiff(i)
+    comp_convex_edge1(i)
+    comp_convex_edge3(i)
+    comp_convex_edge4(i)
+    comp_convexity(i)
+    comp_lo_r(i)
+    comp_up_r(i)
+    eqrdiff(i)
+    obj
 ;
 
 * ============================================
@@ -107,20 +103,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. 1 + nu_cdef =E= 0;
-stat_revenue.. -1 + nu_rdef =E= 0;
-stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) =E= 0;
-stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) =E= 0;
-stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) =E= 0;
+stat_r(i).. ((-1) * (pi * R_v / 100)) + nu_eqrdiff(i) + (((-1) * r(i)) - r(i)) * lam_convexity(i) + (((-1) * R_min) - r(i)) * lam_convex_edge1(i) + (((-1) * r(i)) - R_max) * lam_convex_edge3(i) + ((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i) - piL_r(i) + piU_r(i) =E= 0;
+stat_rdiff(i).. nu_eqrdiff(i) =E= 0;
 
 * Inequality complementarity equations
-comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
+comp_convex_edge1(i)$(ord(i) <= card(i) - 1).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
+comp_convex_edge3(i)$(ord(i) > 1).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * R_max + 2 * r(i-1) * R_max * cos(d_theta))) =G= 0;
+comp_convex_edge4(i).. ((-1) * ((-2) * R_max * r(i) + 2 * sqr(r(i)) * cos(d_theta))) =G= 0;
+comp_convexity(i)$((ord(i) <= card(i) - 1) and (ord(i) > 1)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * r(i+1) + 2 * r(i-1) * r(i+1) * cos(d_theta))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_r(i).. r(i) - 1 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_r(i).. 2 - r(i) =G= 0;
 
 * Original equality equations
-pdef.. profit =E= revenue - cost;
-cdef.. cost =E= sum((i,k), s(k) * y(i,k) + sum((j,l), c(i,j,k,l) * x(i,j,k,l)));
-rdef.. revenue =E= sum((i,k), p(i,k) * z(i,k));
-ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
+obj.. area =E= pi * R_v / 100 * sum(i, r(i));
+eqrdiff(i)$(ord(i) <= card(i) - 1).. rdiff(i) =E= r(i+1) - r(i);
 
 
 * ============================================
@@ -130,7 +130,7 @@ ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
+nu_eqrdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -146,16 +146,16 @@ nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_revenue.revenue,
-    stat_x.x,
-    stat_y.y,
-    stat_z.z,
-    comp_ma.lam_ma,
-    cdef.nu_cdef,
-    ib.nu_ib,
-    pdef.profit,
-    rdef.nu_rdef
+    stat_r.r,
+    stat_rdiff.rdiff,
+    comp_convex_edge1.lam_convex_edge1,
+    comp_convex_edge3.lam_convex_edge3,
+    comp_convex_edge4.lam_convex_edge4,
+    comp_convexity.lam_convexity,
+    eqrdiff.nu_eqrdiff,
+    obj.area,
+    comp_lo_r.piL_r,
+    comp_up_r.piU_r
 /;
 
 * ============================================
@@ -165,5 +165,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = profit.l;
+nlp2mcp_obj_val = area.l;
 Display nlp2mcp_obj_val;

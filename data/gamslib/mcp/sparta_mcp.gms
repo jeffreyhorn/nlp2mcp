@@ -15,6 +15,26 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    t /'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'/
+    l /'len-1', 'len-2', 'len-3', 'len-4'/
+;
+
+Alias(l, lp);
+Alias(t, tp);
+
+Sets
+    ttl(t,tp,l)
+;
+
+Parameters
+    infl(t) /'1' 1.0, '2' 1.05, '3' 1.12, '4' 1.71, '5' 1.8, '6' 1.9, '7' 1.97, '8' 2.1, '9' 2.22, '10' 2.38/
+    req(t) /'1' 5.0, '2' 6.0, '3' 7.0, '4' 6.0, '5' 4.0, '6' 9.0, '7' 8.0, '8' 8.0, '9' 6.0, '10' 4.0/
+    clen(l) /'len-1' 50.0, 'len-2' 85.0, 'len-3' 115.0, 'len-4' 143.0/
+;
+
+ttl(t,tp,l) = 1$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t));
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,18 +47,14 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x1
-    x2
-    obj
-    nu_eqs
+    e(t)
+    z
+    nu_bal4(t)
 ;
 
 Positive Variables
-    lam_ineqs
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(t,l)
+    lam_bal2(t)
 ;
 
 * ============================================
@@ -48,9 +64,9 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables are set to 1.
 
-x1.l = 8.0;
-x2.l = -14.0;
+x.l(t,l) = 1;
 
 * ============================================
 * Equations
@@ -61,15 +77,11 @@ x2.l = -14.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_ineqs
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    eqs
-    objdef
+    stat_e(t)
+    stat_x(t,l)
+    comp_bal2(t)
+    bal4(t)
+    cost
 ;
 
 * ============================================
@@ -77,24 +89,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs + 3 * lam_ineqs - piL_x1 + piU_x1 =E= 0;
-stat_x2.. (-20) * (sqr(x1) - x2) + ((-1) * x1) * nu_eqs + 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
+stat_e(t).. nu_bal4(t) =E= 0;
+stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) + sum(tp, ((-1) * ((ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t)))) * lam_bal2(t)) =E= 0;
 
 * Inequality complementarity equations
-comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 15 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 20 - x1 =G= 0;
-comp_up_x2.. 20 - x2 =G= 0;
+comp_bal2(t).. sum((tp,l)$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t)), x(tp,l)) - req(t) =G= 0;
 
 * Original equality equations
-objdef.. obj =E= 10 * sqr(sqr(x1) - x2) + sqr(x1 - 1);
-eqs.. x1 =E= x1 * x2;
+cost.. z =E= sum((t,l), infl(t) * clen(l) * x(t,l));
+bal4(t)$(ord(t) > 1).. e(t) =E= e(t-1) + sum(l, x(t,l) - x(t-ord(l),l));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_bal4.fx(t)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -110,15 +123,11 @@ eqs.. x1 =E= x1 * x2;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    comp_ineqs.lam_ineqs,
-    eqs.nu_eqs,
-    objdef.obj,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_e.e,
+    stat_x.x,
+    comp_bal2.lam_bal2,
+    bal4.nu_bal4,
+    cost.z
 /;
 
 * ============================================
@@ -128,5 +137,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = obj.l;
+nlp2mcp_obj_val = z.l;
 Display nlp2mcp_obj_val;

@@ -87,13 +87,14 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
+z.l(s) = d.l * t.l(s) * (lw.l / 3 + wl.l * e) / 2;
 t.l("top") = 1.2;
 t.l("middle") = 1.2;
 t.l("bottom") = 1.3;
 wl.l = 45.8;
 lw.l = 43.2;
 d.l = 30.5;
-wc.l = 1.0;
+wc.l = wl.l + sqrt(lw.l ** 2 - d.l ** 2);
 
 * ============================================
 * Equations

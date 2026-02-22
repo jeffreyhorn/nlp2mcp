@@ -64,6 +64,8 @@ Positive Variables
 * non-zero initial values.
 
 r.l = 0.05;
+x.l(i) = -0.2 + ord(i) * 0.1;
+y.l(i) = -0.2 + ord(i) * 0.1;
 
 * ============================================
 * Equations

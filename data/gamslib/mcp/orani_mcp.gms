@@ -31,7 +31,7 @@ Alias(s, sp);
 Alias(i, ip);
 
 Parameters
-    amc(c,s,*) /food.domestic.agric 10.0, food.domestic.manuf 8.0, food.domestic.families 17.0, food.domestic.exp 19.0, clothing.domestic.agric 15.0, clothing.domestic.manuf 1.0, clothing.domestic.families 34.0, clothing.domestic.exp 1.0, food.imported.agric 1.0, food.imported.manuf 8.0, food.imported.families 1.0, food.imported.duty -1.0, clothing.imported.agric 5.0, clothing.imported.manuf 2.0, clothing.imported.families 10.0, clothing.imported.duty -5.0, food.domestic.duty 0.0, food.imported.exp 0.0, clothing.domestic.duty 0.0, clothing.imported.exp 0.0/
+    amc(c,s,*) /food.domestic.agric 10.0, food.domestic.manuf 8.0, food.domestic.families 17.0, food.domestic.exp 19.0, clothing.domestic.agric 15.0, clothing.domestic.manuf 1.0, clothing.domestic.families 34.0, clothing.domestic.exp 1.0, food.imported.agric 1.0, food.imported.manuf 8.0, food.imported.families 1.0, food.imported.duty -1.0, clothing.imported.agric 5.0, clothing.imported.manuf 2.0, clothing.imported.families 10.0, clothing.imported.duty -5.0, clothing.imported.exp 0.0, food.imported.exp 0.0, food.domestic.duty 0.0, clothing.domestic.duty 0.0/
     amf(f,i) /labor.agric 20.0, labor.manuf 20.0, capital.agric 10.0, capital.manuf 5.0/
     amq(c,i) /food.agric 45.0, food.manuf 9.0, clothing.agric 16.0, clothing.manuf 35.0/
     epsilon(c,s) /food.domestic 1.0, food.imported 1.0, clothing.domestic 1.0, clothing.imported 1.0/

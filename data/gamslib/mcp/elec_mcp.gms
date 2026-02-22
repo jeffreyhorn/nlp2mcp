@@ -15,6 +15,26 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25/
+    ut(i,i)
+;
+
+Alias(i, j);
+
+Parameters
+    theta(i)
+    phi(i)
+;
+
+ut(i,j) = 1;
+
+* Fix random seed for deterministic MCP evaluation
+execseed = 12345;
+
+theta(i) = 2 * pi * uniform(0, 1);
+phi(i) = pi * uniform(0, 1);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,18 +47,11 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x1
-    x2
-    obj
-    nu_eqs
-;
-
-Positive Variables
-    lam_ineqs
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(i)
+    y(i)
+    z(i)
+    potential
+    nu_ball(i)
 ;
 
 * ============================================
@@ -49,8 +62,9 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = 8.0;
-x2.l = -14.0;
+x.l(i) = cos(theta(i)) * sin(phi(i));
+y.l(i) = sin(theta(i)) * sin(phi(i));
+z.l(i) = cos(phi(i));
 
 * ============================================
 * Equations
@@ -61,15 +75,11 @@ x2.l = -14.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_ineqs
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    eqs
-    objdef
+    stat_x(i)
+    stat_y(i)
+    stat_z(i)
+    ball(i)
+    obj
 ;
 
 * ============================================
@@ -77,23 +87,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs + 3 * lam_ineqs - piL_x1 + piU_x1 =E= 0;
-stat_x2.. (-20) * (sqr(x1) - x2) + ((-1) * x1) * nu_eqs + 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
-
-* Inequality complementarity equations
-comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 15 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 20 - x1 =G= 0;
-comp_up_x2.. 20 - x2 =G= 0;
+stat_x(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (x(i) - x(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * x(i) * nu_ball(i) =E= 0;
+stat_y(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (y(i) - y(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * y(i) * nu_ball(i) =E= 0;
+stat_z(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (z(i) - z(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * z(i) * nu_ball(i) =E= 0;
 
 * Original equality equations
-objdef.. obj =E= 10 * sqr(sqr(x1) - x2) + sqr(x1 - 1);
-eqs.. x1 =E= x1 * x2;
+obj.. potential =E= sum((i,j), 1 / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))));
+ball(i).. sqr(x(i)) + sqr(y(i)) + sqr(z(i)) =E= 1;
 
 
 * ============================================
@@ -110,15 +110,11 @@ eqs.. x1 =E= x1 * x2;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    comp_ineqs.lam_ineqs,
-    eqs.nu_eqs,
-    objdef.obj,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_x.x,
+    stat_y.y,
+    stat_z.z,
+    ball.nu_ball,
+    obj.potential
 /;
 
 * ============================================
@@ -128,5 +124,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = obj.l;
+nlp2mcp_obj_val = potential.l;
 Display nlp2mcp_obj_val;

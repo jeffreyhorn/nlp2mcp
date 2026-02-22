@@ -96,9 +96,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a.. ((-1) * sum(i, 2 * (x(i) - a) * (-1) * lam_e(i))) =E= 0;
-stat_b.. ((-1) * sum(i, 2 * (y(i) - b) * (-1) * lam_e(i))) =E= 0;
-stat_r.. 1 - sum(i, ((-1) * (2 * r)) * lam_e(i)) - piL_r =E= 0;
+stat_a.. sum(i, 2 * (x(i) - a) * (-1) * lam_e(i)) =E= 0;
+stat_b.. sum(i, 2 * (y(i) - b) * (-1) * lam_e(i)) =E= 0;
+stat_r.. 1 + sum(i, ((-1) * (2 * r)) * lam_e(i)) - piL_r =E= 0;
 
 * Inequality complementarity equations
 comp_e(i).. ((-1) * (sqr(x(i) - a) + sqr(y(i) - b) - sqr(r))) =G= 0;
