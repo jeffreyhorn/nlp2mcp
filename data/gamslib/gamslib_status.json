@@ -1444,14 +1444,14 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-22T04:21:43.544222+00:00",
+        "translate_date": "2026-02-22T05:00:31.297116+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.495,
+        "translate_time_seconds": 5.0067,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-02-22T04:42:26.542326+00:00",
+        "solve_date": "2026-02-22T05:00:35.971395+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1459,12 +1459,12 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.3585,
+        "solve_time_seconds": 0.3523,
         "iterations": null,
-        "outcome_category": "path_syntax_error",
+        "outcome_category": "path_solve_terminated",
         "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
+          "category": "path_solve_terminated",
+          "message": "Parse error: no_solve_summary"
         }
       },
       "solution_comparison": {
