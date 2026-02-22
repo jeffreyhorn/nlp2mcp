@@ -105,7 +105,7 @@ class VariableDef:
     # once. Multi-step calibration patterns (Issue #741) are specific to parameter computations.
     # Issue #835: Variable scaling (.scale attribute)
     scale: Expr | None = None  # Scalar: mu.scale = 1.0e-6
-    scale_map: dict[tuple[str, ...], Expr] = field(
+    scale_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(
         default_factory=dict
     )  # Indexed: w.scale(i) = val
 

@@ -3786,7 +3786,7 @@ class _ModelBuilder:
                     indices = (
                         _process_index_list(target.children[2]) if len(target.children) > 2 else ()
                     )
-                    idx_tuple = tuple(str(i) for i in indices)
+                    idx_tuple = tuple(indices)
                     self.model.variables[base_name].scale_map[idx_tuple] = expr  # type: ignore[index]
                 return
             if target.data == "symbol_indexed":

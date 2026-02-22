@@ -372,8 +372,8 @@ def emit_gams_mcp(
         if var_def.scale is not None:
             scale_lines.append(f"{var_name}.scale = {expr_to_gams(var_def.scale)};")
         if var_def.scale_map:
-            for indices, scale_expr in var_def.scale_map.items():
-                idx_str = ",".join(f'"{i}"' for i in indices)
+            for indices, scale_expr in var_def.scale_map.items():  # type: ignore[assignment]
+                idx_str = ",".join(_index_to_gams_string(i) for i in indices)  # type: ignore[arg-type]
                 scale_lines.append(f"{var_name}.scale({idx_str}) = {expr_to_gams(scale_expr)};")
     if scale_lines:
         if add_comments:
