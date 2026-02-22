@@ -64,11 +64,13 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 tk.l(i,k) = 1;
 t.l(i) = 1;
-sigma.l(i,k) = 1;
+sigma.l(i,k) = uniform(0.1, 1);
+sigma.l(i,k) = min(max(sigma.l(i,k), 1e-6), sigma.up(i,k));
 
 * ============================================
 * Equations

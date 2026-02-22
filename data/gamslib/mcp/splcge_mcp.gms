@@ -26,7 +26,7 @@ Alias(i, j);
 Alias(h, k);
 
 Parameters
-    SAM(u,v) /BRD.HOH 15.0, MLK.HOH 35.0, CAP.BRD 5.0, CAP.MLK 20.0, LAB.BRD 10.0, LAB.MLK 15.0, HOH.CAP 25.0, HOH.LAB 25.0, MLK.BRD 0.0, MLK.MLK 0.0, MLK.CAP 0.0, MLK.LAB 0.0, HOH.BRD 0.0, HOH.MLK 0.0, HOH.HOH 0.0, BRD.BRD 0.0, BRD.MLK 0.0, BRD.CAP 0.0, BRD.LAB 0.0, CAP.CAP 0.0, CAP.LAB 0.0, CAP.HOH 0.0, LAB.CAP 0.0, LAB.LAB 0.0, LAB.HOH 0.0/
+    SAM(u,v) /BRD.HOH 15.0, MLK.HOH 35.0, CAP.BRD 5.0, CAP.MLK 20.0, LAB.BRD 10.0, LAB.MLK 15.0, HOH.CAP 25.0, HOH.LAB 25.0, LAB.CAP 0.0, LAB.LAB 0.0, LAB.HOH 0.0, HOH.BRD 0.0, HOH.MLK 0.0, HOH.HOH 0.0, BRD.BRD 0.0, BRD.MLK 0.0, BRD.CAP 0.0, BRD.LAB 0.0, MLK.BRD 0.0, MLK.MLK 0.0, MLK.CAP 0.0, MLK.LAB 0.0, CAP.CAP 0.0, CAP.LAB 0.0, CAP.HOH 0.0/
     X0(i)
     F0(h,j)
     Z0(j)
@@ -89,14 +89,9 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-X.l("BRD") = 0.001;
-X.l("MLK") = 0.001;
-F.l("CAP","BRD") = 0.001;
-F.l("CAP","MLK") = 0.001;
-F.l("LAB","BRD") = 0.001;
-F.l("LAB","MLK") = 0.001;
-Z.l("BRD") = 0.001;
-Z.l("MLK") = 0.001;
+X.l(i) = X0(i);
+F.l(h,j) = F0(h,j);
+Z.l(j) = Z0(j);
 px.l("BRD") = 1.0;
 px.l("MLK") = 1.0;
 pz.l("BRD") = 1.0;

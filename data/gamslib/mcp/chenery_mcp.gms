@@ -25,7 +25,7 @@ Sets
 Alias(i, j);
 
 Parameters
-    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1, services.services 0.0, 'food+agr'.'food+agr' 0.0, 'food+agr'.'heavy-ind' 0.0, 'food+agr'.services 0.0, 'heavy-ind'.'heavy-ind' 0.0, 'heavy-ind'.services 0.0/
+    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1, 'food+agr'.'food+agr' 0.0, 'food+agr'.'heavy-ind' 0.0, 'food+agr'.services 0.0, services.services 0.0, 'heavy-ind'.'heavy-ind' 0.0, 'heavy-ind'.services 0.0/
     pdat(lmh,*,sde,i) /low.a.distr.'light-ind' 0.915, low.a.distr.'food+agr' 0.944, low.a.distr.'heavy-ind' 2.6, low.a.distr.services 0.8, low.a.effic.'light-ind' 3.83, low.a.effic.'food+agr' 3.24, low.a.effic.'heavy-ind' 4.0, low.a.effic.services 1.8, low.b.distr.'light-ind' 0.276, low.b.distr.'food+agr' 1.034, low.b.distr.'heavy-ind' 2.6, low.b.distr.services 0.77, low.b.effic.'light-ind' 2.551, low.b.effic.'food+agr' 3.39, low.b.effic.'heavy-ind' 4.0, low.b.effic.services 1.77, medium.a.subst.'light-ind' 0.11, medium.a.subst.'food+agr' 0.29, medium.a.subst.'heavy-ind' 0.2, medium.a.subst.services 0.05, medium.a.distr.'light-ind' 0.326, medium.a.distr.'food+agr' 0.443, medium.a.distr.'heavy-ind' 0.991, medium.a.distr.services 0.00798, medium.a.effic.'light-ind' 3.97, medium.a.effic.'food+agr' 3.33, medium.a.effic.'heavy-ind' 1.67, medium.a.effic.services 1.84, medium.b.subst.'light-ind' 0.22, medium.b.subst.'food+agr' 0.58, medium.b.subst.'heavy-ind' 0.4, medium.b.subst.services 0.1, medium.b.distr.'light-ind' 0.41, medium.b.distr.'food+agr' 0.47, medium.b.distr.'heavy-ind' 0.92, medium.b.distr.services 0.08, medium.b.effic.'light-ind' 3.99, medium.b.effic.'food+agr' 3.33, medium.b.effic.'heavy-ind' 1.8, medium.b.effic.services 1.89, high.a.subst.'light-ind' 0.45, high.a.subst.'food+agr' 1.15, high.a.subst.'heavy-ind' 0.4, high.a.subst.services 0.2, high.a.distr.'light-ind' 0.456, high.a.distr.'food+agr' 0.483, high.a.distr.'heavy-ind' 0.917, high.a.distr.services 0.23, high.a.effic.'light-ind' 4.0, high.a.effic.'food+agr' 3.33, high.a.effic.'heavy-ind' 1.8, high.a.effic.services 1.92, high.b.subst.'light-ind' 0.93, high.b.subst.'food+agr' 1.15, high.b.subst.'heavy-ind' 0.8, high.b.subst.services 0.4, high.b.distr.'light-ind' 0.484, high.b.distr.'food+agr' 0.483, high.b.distr.'heavy-ind' 0.769, high.b.distr.services 0.344, high.b.effic.'light-ind' 4.0, high.b.effic.'food+agr' 3.33, high.b.effic.'heavy-ind' 1.96, high.b.effic.services 1.96/
     ddat(lmh,*,i) /low.ynot.'light-ind' 100.0, low.ynot.'food+agr' 230.0, low.ynot.'heavy-ind' 220.0, low.ynot.services 450.0, medium.ynot.'light-ind' 100.0, medium.ynot.'food+agr' 230.0, medium.ynot.'heavy-ind' 220.0, medium.ynot.services 450.0, high.ynot.'light-ind' 100.0, high.ynot.'food+agr' 230.0, high.ynot.'heavy-ind' 220.0, high.ynot.services 450.0, medium.'p-elas'.'light-ind' -0.674, medium.'p-elas'.'food+agr' -0.246, medium.'p-elas'.'heavy-ind' -0.587, medium.'p-elas'.services -0.352, high.'p-elas'.'light-ind' -1.0, high.'p-elas'.'food+agr' -1.0, high.'p-elas'.'heavy-ind' -1.0, high.'p-elas'.services -1.0/
     tdat(lmh,*,t) /medium.alp.'light-ind' 0.005, medium.alp.'food+agr' 0.001, medium.alp.'heavy-ind' 0.01, high.alp.'light-ind' 0.0025, high.alp.'food+agr' 0.0005, high.alp.'heavy-ind' 0.00178, medium.gam.'light-ind' 1.0, medium.gam.'food+agr' 1.1, medium.gam.'heavy-ind' 1.0, high.gam.'light-ind' 1.0, high.gam.'food+agr' 1.1, high.gam.'heavy-ind' 1.0, medium.xsi.'light-ind' 0.005, medium.xsi.'food+agr' 0.0157, medium.xsi.'heavy-ind' 0.00178, high.xsi.'light-ind' 0.005, high.xsi.'food+agr' 0.0157, high.xsi.'heavy-ind' 0.00178/
@@ -134,14 +134,15 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 * POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+* clamped to min(max(value, 1e-6), upper_bound).
 
 x.l("light-ind") = 200.0;
 x.l("food+agr") = 200.0;
 x.l("heavy-ind") = 200.0;
 x.l("services") = 200.0;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
-v.l(i) = 1;
+v.l(i) = pk.l * k.l(i) + plab * l.l(i);
+v.l(i) = min(max(v.l(i), 1e-6), v.up(i));
 y.l("light-ind") = 250.0;
 y.l("food+agr") = 250.0;
 y.l("heavy-ind") = 250.0;
@@ -152,8 +153,10 @@ p.l("food+agr") = 3.0;
 p.l("heavy-ind") = 3.0;
 p.l("services") = 3.0;
 p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
-l.l(i) = 1;
-k.l(i) = 1;
+l.l(i) = (((del(i) / vv.l(i) + 1 - del(i)) ** (1 / rho(i)))$(sig(i) <> 0) + 1$(sig(i) = 0)) / efy(i);
+l.l(i) = min(max(l.l(i), 1e-6), l.up(i));
+k.l(i) = (((del(i) + (1 - del(i)) * vv.l(i)) ** (1 / rho(i)))$(sig(i) <> 0) + del(i)$(sig(i) = 0)) / efy(i);
+k.l(i) = min(max(k.l(i), 1e-6), k.up(i));
 e.l("light-ind") = 0.0;
 e.l("food+agr") = 0.0;
 e.l("heavy-ind") = 0.0;
@@ -164,15 +167,14 @@ m.l("food+agr") = 0.0;
 m.l("heavy-ind") = 0.0;
 m.l("services") = 0.0;
 m.l(i) = min(max(m.l(i), 1e-6), m.up(i));
-g.l(t) = 1;
-h.l(t) = 1;
+g.l(t) = mew(t) + xsi(t) * m.l(t);
+g.l(t) = min(max(g.l(t), 1e-6), g.up(t));
+h.l(t) = gam(t) - alp(t) * e.l(t);
+h.l(t) = min(max(h.l(t), 1e-6), h.up(t));
 pk.l = 3.5;
-pi.l = 0.25;
+pi.l = pk.l / plab;
 pd.l = 0.3;
-vv.l("light-ind") = 0.001;
-vv.l("food+agr") = 0.001;
-vv.l("heavy-ind") = 0.001;
-vv.l("services") = 0.001;
+vv.l(i) = (pi.l * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i)));
 
 * ============================================
 * Post-solve Calibration (variable .l references)

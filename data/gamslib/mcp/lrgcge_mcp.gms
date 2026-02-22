@@ -26,7 +26,7 @@ Alias(i, j);
 Alias(h, k);
 
 Parameters
-    SAM(u,v) /BRD.BRD 21.0, BRD.MLK 8.0, BRD.HOH 20.0, BRD.GOV 19.0, BRD.INV 16.0, BRD.EXT 8.0, MLK.BRD 17.0, MLK.MLK 9.0, MLK.HOH 30.0, MLK.GOV 14.0, MLK.INV 15.0, MLK.EXT 4.0, CAP.BRD 20.0, CAP.MLK 30.0, LAB.BRD 15.0, LAB.MLK 25.0, IDT.BRD 5.0, IDT.MLK 4.0, TRF.BRD 1.0, TRF.MLK 2.0, HOH.CAP 50.0, HOH.LAB 40.0, GOV.IDT 9.0, GOV.TRF 3.0, GOV.HOH 23.0, INV.HOH 17.0, INV.GOV 2.0, INV.EXT 12.0, EXT.BRD 13.0, EXT.MLK 11.0, BRD.CAP 0.0, BRD.LAB 0.0, BRD.IDT 0.0, BRD.TRF 0.0, IDT.CAP 0.0, IDT.LAB 0.0, IDT.IDT 0.0, IDT.TRF 0.0, IDT.HOH 0.0, IDT.GOV 0.0, IDT.INV 0.0, IDT.EXT 0.0, CAP.CAP 0.0, CAP.LAB 0.0, CAP.IDT 0.0, CAP.TRF 0.0, CAP.HOH 0.0, CAP.GOV 0.0, CAP.INV 0.0, CAP.EXT 0.0, GOV.BRD 0.0, GOV.MLK 0.0, GOV.CAP 0.0, GOV.LAB 0.0, GOV.GOV 0.0, GOV.INV 0.0, GOV.EXT 0.0, INV.BRD 0.0, INV.MLK 0.0, INV.CAP 0.0, INV.LAB 0.0, INV.IDT 0.0, INV.TRF 0.0, INV.INV 0.0, TRF.CAP 0.0, TRF.LAB 0.0, TRF.IDT 0.0, TRF.TRF 0.0, TRF.HOH 0.0, TRF.GOV 0.0, TRF.INV 0.0, TRF.EXT 0.0, LAB.CAP 0.0, LAB.LAB 0.0, LAB.IDT 0.0, LAB.TRF 0.0, LAB.HOH 0.0, LAB.GOV 0.0, LAB.INV 0.0, LAB.EXT 0.0, EXT.CAP 0.0, EXT.LAB 0.0, EXT.IDT 0.0, EXT.TRF 0.0, EXT.HOH 0.0, EXT.GOV 0.0, EXT.INV 0.0, EXT.EXT 0.0, MLK.CAP 0.0, MLK.LAB 0.0, MLK.IDT 0.0, MLK.TRF 0.0, HOH.BRD 0.0, HOH.MLK 0.0, HOH.IDT 0.0, HOH.TRF 0.0, HOH.HOH 0.0, HOH.GOV 0.0, HOH.INV 0.0, HOH.EXT 0.0/
+    SAM(u,v) /BRD.BRD 21.0, BRD.MLK 8.0, BRD.HOH 20.0, BRD.GOV 19.0, BRD.INV 16.0, BRD.EXT 8.0, MLK.BRD 17.0, MLK.MLK 9.0, MLK.HOH 30.0, MLK.GOV 14.0, MLK.INV 15.0, MLK.EXT 4.0, CAP.BRD 20.0, CAP.MLK 30.0, LAB.BRD 15.0, LAB.MLK 25.0, IDT.BRD 5.0, IDT.MLK 4.0, TRF.BRD 1.0, TRF.MLK 2.0, HOH.CAP 50.0, HOH.LAB 40.0, GOV.IDT 9.0, GOV.TRF 3.0, GOV.HOH 23.0, INV.HOH 17.0, INV.GOV 2.0, INV.EXT 12.0, EXT.BRD 13.0, EXT.MLK 11.0, INV.BRD 0.0, INV.MLK 0.0, INV.CAP 0.0, INV.LAB 0.0, INV.IDT 0.0, INV.TRF 0.0, INV.INV 0.0, EXT.CAP 0.0, EXT.LAB 0.0, EXT.IDT 0.0, EXT.TRF 0.0, EXT.HOH 0.0, EXT.GOV 0.0, EXT.INV 0.0, EXT.EXT 0.0, TRF.CAP 0.0, TRF.LAB 0.0, TRF.IDT 0.0, TRF.TRF 0.0, TRF.HOH 0.0, TRF.GOV 0.0, TRF.INV 0.0, TRF.EXT 0.0, LAB.CAP 0.0, LAB.LAB 0.0, LAB.IDT 0.0, LAB.TRF 0.0, LAB.HOH 0.0, LAB.GOV 0.0, LAB.INV 0.0, LAB.EXT 0.0, HOH.BRD 0.0, HOH.MLK 0.0, HOH.IDT 0.0, HOH.TRF 0.0, HOH.HOH 0.0, HOH.GOV 0.0, HOH.INV 0.0, HOH.EXT 0.0, MLK.CAP 0.0, MLK.LAB 0.0, MLK.IDT 0.0, MLK.TRF 0.0, IDT.CAP 0.0, IDT.LAB 0.0, IDT.IDT 0.0, IDT.TRF 0.0, IDT.HOH 0.0, IDT.GOV 0.0, IDT.INV 0.0, IDT.EXT 0.0, GOV.BRD 0.0, GOV.MLK 0.0, GOV.CAP 0.0, GOV.LAB 0.0, GOV.GOV 0.0, GOV.INV 0.0, GOV.EXT 0.0, CAP.CAP 0.0, CAP.LAB 0.0, CAP.IDT 0.0, CAP.TRF 0.0, CAP.HOH 0.0, CAP.GOV 0.0, CAP.INV 0.0, CAP.EXT 0.0, BRD.CAP 0.0, BRD.LAB 0.0, BRD.IDT 0.0, BRD.TRF 0.0/
     Y0(j)
     F0(h,j)
     X0(i,j)
@@ -249,32 +249,17 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-Y.l("BRD") = 1e-05;
-Y.l("MLK") = 1e-05;
-F.l("CAP","BRD") = 1e-05;
-F.l("CAP","MLK") = 1e-05;
-F.l("LAB","BRD") = 1e-05;
-F.l("LAB","MLK") = 1e-05;
-X.l("BRD","BRD") = 1e-05;
-X.l("BRD","MLK") = 1e-05;
-X.l("MLK","BRD") = 1e-05;
-X.l("MLK","MLK") = 1e-05;
-Z.l("BRD") = 1e-05;
-Z.l("MLK") = 1e-05;
-Xp.l("BRD") = 1e-05;
-Xp.l("MLK") = 1e-05;
-Xg.l("BRD") = 1e-05;
-Xg.l("MLK") = 1e-05;
-Xv.l("BRD") = 1e-05;
-Xv.l("MLK") = 1e-05;
-E.l("BRD") = 1e-05;
-E.l("MLK") = 1e-05;
-M.l("BRD") = 1e-05;
-M.l("MLK") = 1e-05;
-Q.l("BRD") = 1e-05;
-Q.l("MLK") = 1e-05;
-D.l("BRD") = 1e-05;
-D.l("MLK") = 1e-05;
+Y.l(j) = Y0(j);
+F.l(h,j) = F0(h,j);
+X.l(i,j) = X0(i,j);
+Z.l(j) = Z0(j);
+Xp.l(i) = Xp0(i);
+Xg.l(i) = Xg0(i);
+Xv.l(i) = Xv0(i);
+E.l(i) = E0(i);
+M.l(i) = M0(i);
+Q.l(i) = Q0(i);
+D.l(i) = D0(i);
 pf.l("CAP") = 1.0;
 pf.l("LAB") = 1.0;
 py.l("BRD") = 1.0;
@@ -294,9 +279,11 @@ pWe.l("BRD") = 1.0;
 pWe.l("MLK") = 1.0;
 pWm.l("BRD") = 1.0;
 pWm.l("MLK") = 1.0;
-Sp.l = 1e-05;
-Sg.l = 1e-05;
-Td.l = 1e-05;
+Sp.l = Sp0;
+Sg.l = Sg0;
+Td.l = Td0;
+Tz.l(j) = Tz0(j);
+Tm.l(i) = Tm0(i);
 
 * ============================================
 * Post-solve Calibration (variable .l references)

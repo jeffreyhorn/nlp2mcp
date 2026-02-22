@@ -196,60 +196,24 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound).
 
-v.l("h0") = 0.01;
-v.l("h1") = 0.01;
-v.l("h2") = 0.01;
-v.l("h3") = 0.01;
-v.l("h4") = 0.01;
-v.l("h5") = 0.01;
-v.l("h6") = 0.01;
-v.l("h7") = 0.01;
-v.l("h8") = 0.01;
-v.l("h9") = 0.01;
-v.l("h10") = 0.01;
-v.l("h11") = 0.01;
-v.l("h12") = 0.01;
-v.l("h13") = 0.01;
-v.l("h14") = 0.01;
-v.l("h15") = 0.01;
-v.l("h16") = 0.01;
-v.l("h17") = 0.01;
-v.l("h18") = 0.01;
-v.l("h19") = 0.01;
-v.l("h20") = 0.01;
-v.l("h21") = 0.01;
-v.l("h22") = 0.01;
-v.l("h23") = 0.01;
-v.l("h24") = 0.01;
-v.l("h25") = 0.01;
-v.l("h26") = 0.01;
-v.l("h27") = 0.01;
-v.l("h28") = 0.01;
-v.l("h29") = 0.01;
-v.l("h30") = 0.01;
-v.l("h31") = 0.01;
-v.l("h32") = 0.01;
-v.l("h33") = 0.01;
-v.l("h34") = 0.01;
-v.l("h35") = 0.01;
-v.l("h36") = 0.01;
-v.l("h37") = 0.01;
-v.l("h38") = 0.01;
-v.l("h39") = 0.01;
-v.l("h40") = 0.01;
-v.l("h41") = 0.01;
-v.l("h42") = 0.01;
-v.l("h43") = 0.01;
-v.l("h44") = 0.01;
-v.l("h45") = 0.01;
-v.l("h46") = 0.01;
-v.l("h47") = 0.01;
-v.l("h48") = 0.01;
-v.l("h49") = 0.01;
-v.l("h50") = 0.01;
-step.l = 1;
+t_f.l = step.l * nh;
+pos.l("x",h) = c_0("x") + v_0("x") * (ord(h) - 1) / nh;
+pos.l("y",h) = c_0("y") + (ord(h) - 1) / nh * (c_f("y") - c_0("y"));
+vel.l(c,h) = v_0(c);
+cl.l(h) = cL_max / 2;
+r.l(i) = sqr(pos.l("x",i) / r_0 - 2.5);
+u.l(i) = u_c * (1 - r.l(i)) * exp(((-1) * r.l(i)));
+w.l(i) = vel.l("y",i) - u.l(i);
+v.l(i) = sqrt(sqr(vel.l("x",i)) + sqr(w.l(i)));
+D.l(i) = 0.5 * (c0 + c1 * sqr(cl.l(i))) * rho * S * sqr(v.l(i));
+L.l(i) = 0.5 * cl.l(i) * rho * S * sqr(v.l(i));
+v_dot.l("x",i) = (((-1) * l.l(i)) * w.l(i) / v.l(i) - d.l(i) * vel.l("x",i) / v.l(i)) / m;
+v_dot.l("y",i) = (l.l(i) * vel.l("x",i) / v.l(i) - d.l(i) * w.l(i) / v.l(i)) / m - g;
+step.l = 1 / nh;
+step.l = min(max(step.l, 1e-6), step.up);
 
 * ============================================
 * Equations

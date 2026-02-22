@@ -22,7 +22,7 @@ Sets
 Alias(i, j);
 
 Parameters
-    xb(i,j) /lab.h1 15.0, lab.h2 3.0, lab.p1 130.0, lab.p2 80.0, h1.lab nan, h2.lab nan, p1.h1 15.0, p1.h2 130.0, p1.p2 20.0, p2.h1 25.0, p2.h2 40.0, p2.p1 55.0, lab.lab 0.0, h2.h1 0.0, h2.h2 0.0, h2.p1 0.0, h2.p2 0.0, h1.h1 0.0, h1.h2 0.0, h1.p1 0.0, h1.p2 0.0, p2.lab 0.0, p2.p2 0.0, p1.lab 0.0, p1.p1 0.0/
+    xb(i,j) /lab.h1 15.0, lab.h2 3.0, lab.p1 130.0, lab.p2 80.0, h1.lab nan, h2.lab nan, p1.h1 15.0, p1.h2 130.0, p1.p2 20.0, p2.h1 25.0, p2.h2 40.0, p2.p1 55.0, p2.lab 0.0, p2.p2 0.0, p1.lab 0.0, p1.p1 0.0, h2.h1 0.0, h2.h2 0.0, h2.p1 0.0, h2.p2 0.0, h1.h1 0.0, h1.h2 0.0, h1.p1 0.0, h1.p2 0.0, lab.lab 0.0/
     tb(i) /lab 220.0, h1 nan, h2 nan, p1 190.0, p2 105.0/
     tw(i) /lab 0.0, h1 0.0, h2 0.0, p1 0.0, p2 0.0/
     xw(i,j) /lab.lab 0.0, lab.h1 0.0, lab.h2 0.0, lab.p1 0.0, lab.p2 0.0, h1.lab 0.0, h1.h1 0.0, h1.h2 0.0, h1.p1 0.0, h1.p2 0.0, h2.lab 0.0, h2.h1 0.0, h2.h2 0.0, h2.p1 0.0, h2.p2 0.0, p1.lab 0.0, p1.h1 0.0, p1.h2 0.0, p1.p1 0.0, p1.p2 0.0, p2.lab 0.0, p2.h1 0.0, p2.h2 0.0, p2.p1 0.0, p2.p2 0.0/
@@ -48,6 +48,17 @@ Variables
     nu_rbal(i)
     nu_cbal(j)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+x.l(i,j) = xb(i,j)$xw(i,j);
+t.l(i) = tb(i)$tw(i);
 
 * ============================================
 * Equations

@@ -15,6 +15,12 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    i /i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25/
+;
+
+Alias(i, j);
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,18 +33,18 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x1
-    x2
-    obj
-    nu_eqs
+    polygon_area
+    nu_r_fx_i25
+    nu_theta_fx_i25
 ;
 
 Positive Variables
-    lam_ineqs
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    r(i)
+    theta(i)
+    lam_ordered(i)
+    lam_distance(i,j)
+    piU_r(i)
+    piU_theta(i)
 ;
 
 * ============================================
@@ -48,9 +54,13 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound).
 
-x1.l = 8.0;
-x2.l = -14.0;
+r.l(i) = 4 * ord(i) * (card(i) + 1 - ord(i)) / sqr(card(i) + 1);
+r.l(i) = min(max(r.l(i), 1e-6), r.up(i));
+theta.l(i) = pi * ord(i) / card(i);
+theta.l(i) = min(max(theta.l(i), 1e-6), theta.up(i));
 
 * ============================================
 * Equations
@@ -61,15 +71,15 @@ x2.l = -14.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_ineqs
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    eqs
-    objdef
+    stat_r(i)
+    stat_theta(i)
+    comp_distance(i,j)
+    comp_ordered(i)
+    comp_up_r(i)
+    comp_up_theta(i)
+    obj
+    r_fx_i25
+    theta_fx_i25
 ;
 
 * ============================================
@@ -77,24 +87,31 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs + 3 * lam_ineqs - piL_x1 + piU_x1 =E= 0;
-stat_x2.. (-20) * (sqr(x1) - x2) + ((-1) * x1) * nu_eqs + 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
+stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$sameas(i, 'i25') + sum(j, (2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j)) + piU_r(i) =E= 0;
+stat_theta(i).. ((-1) * (0.5 * r(i) ** 2 * cos(0) * (-1))) + nu_theta_fx_i25$sameas(i, 'i25') + lam_ordered(i) + sum(j, ((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j)) + piU_theta(i) =E= 0;
 
 * Inequality complementarity equations
-comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 15 =G= 0;
+comp_distance(i,j)$(ord(j) > ord(i)).. ((-1) * (sqr(r(i)) + sqr(r(j)) - 2 * r(i) * r(j) * cos(theta(j) - theta(i)) - 1)) =G= 0;
+comp_ordered(i)$(ord(i) <= card(i) - 1).. ((-1) * (theta(i) - theta(i+1))) =G= 0;
 
 * Upper bound complementarity equations
-comp_up_x1.. 20 - x1 =G= 0;
-comp_up_x2.. 20 - x2 =G= 0;
+comp_up_r(i).. 1 - r(i) =G= 0;
+comp_up_theta(i).. 3.141592653589793 - theta(i) =G= 0;
 
 * Original equality equations
-objdef.. obj =E= 10 * sqr(sqr(x1) - x2) + sqr(x1 - 1);
-eqs.. x1 =E= x1 * x2;
+obj.. polygon_area =E= 0.5 * sum(i, r(i+1) * r(i) * sin(theta(i+1) - theta(i)));
+r_fx_i25.. r("i25") - 0 =E= 0;
+theta_fx_i25.. theta("i25") - 3.141592653589793 =E= 0;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_distance.fx(i,j)$(not (ord(j) > ord(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -110,15 +127,15 @@ eqs.. x1 =E= x1 * x2;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    comp_ineqs.lam_ineqs,
-    eqs.nu_eqs,
-    objdef.obj,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_r.r,
+    stat_theta.theta,
+    comp_distance.lam_distance,
+    comp_ordered.lam_ordered,
+    obj.polygon_area,
+    r_fx_i25.nu_r_fx_i25,
+    theta_fx_i25.nu_theta_fx_i25,
+    comp_up_r.piU_r,
+    comp_up_theta.piU_theta
 /;
 
 * ============================================
@@ -128,5 +145,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = obj.l;
+nlp2mcp_obj_val = polygon_area.l;
 Display nlp2mcp_obj_val;

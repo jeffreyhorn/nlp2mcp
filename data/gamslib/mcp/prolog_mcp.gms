@@ -117,14 +117,15 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-p.l("food") = 0.2;
-p.l("h-industry") = 0.2;
-p.l("l-industry") = 0.2;
+p.l(i) = p0(i);
 p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
-x.l(i,h) = 1;
-r.l(k) = 1;
+x.l(i,h) = x0(i,h);
+x.l(i,h) = min(max(x.l(i,h), 1e-6), x.up(i,h));
+r.l(k) = r0;
+r.l(k) = min(max(r.l(k), 1e-6), r.up(k));
 q.l(i,t) = 1;
-y.l(h) = 1;
+y.l(h) = y0(h);
+y.l(h) = min(max(y.l(h), 1e-6), y.up(h));
 
 * ============================================
 * Equations

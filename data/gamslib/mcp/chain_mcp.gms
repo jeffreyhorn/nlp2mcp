@@ -15,6 +15,25 @@ $offText
 * Original Model Declarations
 * ============================================
 
+Sets
+    nh /i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47, i48, i49, i50/
+;
+
+Alias(nh, i);
+
+Scalars
+    L /4.0/
+    a /1.0/
+    b /3.0/
+    tf /1.0/
+    h /0.0/
+    n /0.0/
+    tmin /0.0/
+;
+
+h = tf / n;
+n = card(nh) - 1;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -27,18 +46,13 @@ $offText
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x1
-    x2
-    obj
-    nu_eqs
-;
-
-Positive Variables
-    lam_ineqs
-    piL_x1
-    piL_x2
-    piU_x1
-    piU_x2
+    x(i)
+    u(i)
+    energy
+    nu_x_eqn(i)
+    nu_length_eqn
+    nu_x_fx_i0
+    nu_x_fx_i50
 ;
 
 * ============================================
@@ -49,8 +63,8 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = 8.0;
-x2.l = -14.0;
+x.l(i) = 4 * abs(b - a) * (ord(i) - 1) / n * (0.5 * (ord(i) - 1) / n - tmin) + a;
+u.l(i) = 4 * abs(b - a) * ((ord(i) - 1) / n - tmin);
 
 * ============================================
 * Equations
@@ -61,15 +75,13 @@ x2.l = -14.0;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
-    stat_x2
-    comp_ineqs
-    comp_lo_x1
-    comp_lo_x2
-    comp_up_x1
-    comp_up_x2
-    eqs
-    objdef
+    stat_u(i)
+    stat_x(i)
+    length_eqn
+    obj
+    x_eqn(i)
+    x_fx_i0
+    x_fx_i50
 ;
 
 * ============================================
@@ -77,24 +89,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 40 * (sqr(x1) - x2) * x1 + 2 * (x1 - 1) + (1 - x2) * nu_eqs + 3 * lam_ineqs - piL_x1 + piU_x1 =E= 0;
-stat_x2.. (-20) * (sqr(x1) - x2) + ((-1) * x1) * nu_eqs + 4 * lam_ineqs - piL_x2 + piU_x2 =E= 0;
-
-* Inequality complementarity equations
-comp_ineqs.. ((-1) * (3 * x1 + 4 * x2 - 25)) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 10 =G= 0;
-comp_lo_x2.. x2 + 15 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 20 - x1 =G= 0;
-comp_up_x2.. 20 - x2 =G= 0;
+stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * nu_length_eqn =E= 0;
+stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) - nu_x_eqn(i) + nu_x_fx_i0$sameas(i, 'i0') + nu_x_fx_i50$sameas(i, 'i50') =E= 0;
 
 * Original equality equations
-objdef.. obj =E= 10 * sqr(sqr(x1) - x2) + sqr(x1 - 1);
-eqs.. x1 =E= x1 * x2;
+obj.. energy =E= 0.5 * h * sum(i, x(i) * sqrt(1 + sqr(u(i))) + x(i+1) * sqrt(1 + sqr(u(i+1))));
+x_eqn(i)$(ord(i) <= card(i) - 1).. x(i+1) =E= x(i) + 0.5 * h * (u(i) + u(i+1));
+length_eqn.. 0.5 * h * sum(i, sqrt(1 + sqr(u(i))) + sqrt(1 + sqr(u(i+1)))) =E= L;
+x_fx_i0.. x("i0") - 1 =E= 0;
+x_fx_i50.. x("i50") - 3 =E= 0;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_x_eqn.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -110,15 +123,13 @@ eqs.. x1 =E= x1 * x2;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
-    stat_x2.x2,
-    comp_ineqs.lam_ineqs,
-    eqs.nu_eqs,
-    objdef.obj,
-    comp_lo_x1.piL_x1,
-    comp_lo_x2.piL_x2,
-    comp_up_x1.piU_x1,
-    comp_up_x2.piU_x2
+    stat_u.u,
+    stat_x.x,
+    length_eqn.nu_length_eqn,
+    obj.energy,
+    x_eqn.nu_x_eqn,
+    x_fx_i0.nu_x_fx_i0,
+    x_fx_i50.nu_x_fx_i50
 /;
 
 * ============================================
@@ -128,5 +139,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = obj.l;
+nlp2mcp_obj_val = energy.l;
 Display nlp2mcp_obj_val;

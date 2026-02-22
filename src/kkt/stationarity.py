@@ -1644,8 +1644,6 @@ def _add_jacobian_transpose_terms_scalar(
     - Scalar constraints: add  derivative * multiplier
     - Indexed constraints: add  sum(domain, derivative * multiplier)
 
-    For negated constraints (LE inequalities that complementarity negates),
-    negate the Jacobian term to account for the negation.
     """
     if jacobian.index_mapping is None:
         return expr
@@ -1678,12 +1676,6 @@ def _add_jacobian_transpose_terms_scalar(
         row_id, _ = entries[0]
         derivative = jacobian.get_derivative(row_id, col_id)
         _, eq_indices = jacobian.index_mapping.row_to_eq[row_id]
-
-        # Determine negation for this constraint
-        negate = False
-        if eq_name_base in kkt.complementarity_ineq:
-            comp_pair = kkt.complementarity_ineq[eq_name_base]
-            negate = comp_pair.negated and not comp_pair.is_max_constraint
 
         if eq_indices:
             # Indexed constraint: use symbolic indices with Sum() wrapping
@@ -1737,9 +1729,9 @@ def _add_jacobian_transpose_terms_scalar(
             mult_ref = MultiplierRef(mult_name, ())
             term = Binary("*", derivative, mult_ref)
 
-        if negate:
-            expr = Binary("-", expr, term)
-        else:
-            expr = Binary("+", expr, term)
+        # Always add J^T * multiplier terms.  The Jacobian is of the original
+        # constraint g(x) and the KKT stationarity is ∇f + λᵀ∇g = 0 regardless
+        # of whether the complementarity pair negated g for MCP form.
+        expr = Binary("+", expr, term)
 
     return expr

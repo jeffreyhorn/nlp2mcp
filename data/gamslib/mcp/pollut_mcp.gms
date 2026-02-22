@@ -61,6 +61,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+k.l(j) = z(j,"k0");
+l.l(j) = z(j,"l0");
+
+* ============================================
 * Equations
 * ============================================
 
@@ -88,8 +99,8 @@ Equations
 * Stationarity equations
 stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) =E= 0;
 stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef =E= 0;
-stat_tk.. nu_kdef - lam_eq5a - lam_eq5b =E= 0;
-stat_tl.. nu_ldef + gamma2 * lam_eq5a - ((-1) * gamma1) * lam_eq5b =E= 0;
+stat_tk.. nu_kdef - lam_eq5a + lam_eq5b =E= 0;
+stat_tl.. nu_ldef + gamma2 * lam_eq5a + ((-1) * gamma1) * lam_eq5b =E= 0;
 
 * Inequality complementarity equations
 comp_eq4(i).. ((-1) * (sum(j, w(j,i) / z(j,"k") * k(j)) - tau(i))) =G= 0;
