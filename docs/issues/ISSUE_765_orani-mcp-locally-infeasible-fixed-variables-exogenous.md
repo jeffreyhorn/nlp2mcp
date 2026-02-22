@@ -1,7 +1,7 @@
 # Orani MCP: Locally Infeasible Due to Fixed Exogenous Variables in Percentage-Change Model
 
 **GitHub Issue:** [#765](https://github.com/jeffreyhorn/nlp2mcp/issues/765)
-**Status:** OPEN — Not fixable in Sprint 19 (requires architectural support for fixed/exogenous variables in linearized CGE models)
+**Status:** OPEN — Not fixable (structurally infeasible linearized CGE model; see Investigation section below)
 **Severity:** High — MCP generates and compiles, but PATH solver reports locally infeasible
 **Date:** 2026-02-16
 **Affected Models:** orani
@@ -161,5 +161,101 @@ equations infeasible, and allow detection/handling of inconsistent equations.
 ## Related Issues
 
 - **ISSUE_670**: Cross-indexed sums (Error 149) — resolved; this issue is the next blocker
-- **mexss issue**: Similar infeasibility pattern from accounting variable stationarity
+- **ISSUE_764 (mexss)**: Similar infeasibility pattern from accounting variable stationarity
 - Other linearized CGE models (e.g., dyncge, irscge, korcge, lrgcge) may have the same problem
+
+---
+
+## Investigation Attempt (2026-02-22)
+
+### Approach: Exclude Fixed Variables from MCP Stationarity (Option A)
+
+**What was tried:**
+
+1. Added a `fixed_variables: set[str]` field to `KKTSystem` in `src/kkt/kkt_system.py`
+2. Modified `build_stationarity_equations()` in `src/kkt/stationarity.py` to detect variables
+   where `.lo == .up` (fully fixed via `.fx`), skip stationarity equation generation for them,
+   and record them in `KKTSystem.fixed_variables`
+
+**Identified fixed variables in orani:**
+- `df(c)`, `e(cm)`, `kappa(i)`, `phi`, `pm(c)`, `t(c)`, `v(ca)`, `ws`, `ye` — 9 variables
+
+**Result: Fix did NOT work.**
+
+Two cascading failures prevented this approach:
+
+#### Failure 1: MCP Count Mismatch
+
+Removing stationarity equations for 9 fixed variables (which eliminates 9 equation–variable
+pairs from the MCP model statement) produces a count mismatch:
+
+```
+*** Error: Counts do not match in model mcp_model
+    Unmatched free variables = 13
+```
+
+The emitter still declares all variables (including fixed ones), but their paired stationarity
+equations are gone. The MCP requires a 1:1 equation–variable pairing. Fixing this would require
+also removing the fixed variables from the MCP model statement and adding `.fx` handling in the
+emitter — a much deeper change than just skipping stationarity generation.
+
+#### Failure 2: Non-Fixed Variable Stationarity Equations Are Also Infeasible
+
+Even after addressing the count mismatch, the **non-fixed variable** stationarity equations
+are themselves structurally infeasible. For example:
+
+```gams
+stat_b.. nu_baltrade =E= 0;
+stat_cn(c,s).. nu_con(c,s) =E= 0;
+stat_cr.. nu_realc =E= 0;
+```
+
+These force equality constraint multipliers to zero. But the remaining stationarity equations
+for other variables (e.g., `stat_p`, `stat_pk`, `stat_w`) require those same multipliers to
+be nonzero to satisfy their own conditions. This creates a cascading infeasibility that cannot
+be resolved by simply excluding fixed variables.
+
+**Example cascade:**
+- `stat_b.. nu_baltrade =E= 0;` forces `nu_baltrade = 0`
+- `stat_et.. nu_exports + ((-1) * C) * nu_baltrade =E= 0;` then forces `nu_exports = 0`
+- But other equations need `nu_exports ≠ 0` to satisfy their conditions
+
+### Root Cause Analysis
+
+The orani model is a **linearized percentage-change CGE model**, not a standard NLP. The
+equations represent first-order approximations around an equilibrium, and the model's solution
+structure is fundamentally different from what the NLP→MCP transformation assumes:
+
+1. All variables represent **percentage changes** from a base equilibrium (not level values)
+2. Many variables are fixed to represent exogenous policy shocks
+3. The system of equations is a square linear system (N equations, N endogenous variables)
+   that should be solved directly, not reformulated as KKT conditions
+4. The stationarity equations for this linearized system are trivially constant (since the
+   Lagrangian gradients w.r.t. percentage-change variables produce constant multiplier terms),
+   making the resulting MCP structurally infeasible
+
+### What Must Be Done Before Attempting Another Fix
+
+1. **Model classification**: Add a pre-transformation heuristic that detects linearized CGE
+   models (e.g., >30% of variables fixed, all equations are linear, all constraints are
+   equalities). Such models should produce a warning and suggest solving directly as a
+   square system rather than converting to MCP.
+
+2. **Fixed-variable MCP handling**: If excluding fixed variables from stationarity is pursued,
+   the full pipeline must be updated:
+   - `build_stationarity_equations()`: skip fixed variables ✓ (done in attempt)
+   - `emit_gams.py`: suppress fixed variable declarations in MCP model statement
+   - `emit/model.py`: exclude fixed variables from equation–variable pairing
+   - `complementarity.py`: exclude fixed-variable bound complementarity pairs
+
+3. **Fundamental limitation**: Even with perfect fixed-variable handling, the orani model's
+   non-fixed variable stationarity equations are structurally infeasible due to the linearized
+   CGE nature of the model. This model class is **not suitable for NLP→MCP conversion** and
+   should be explicitly excluded or warned about.
+
+### Conclusion
+
+**This issue is NOT fixable** within the current NLP→MCP architecture. The orani model is a
+linearized percentage-change CGE model that represents a fundamentally different problem class
+from the nonlinear optimization problems that KKT-based MCP conversion is designed for. The
+recommended approach is to detect and warn about this model class rather than attempt conversion.

@@ -1,7 +1,7 @@
 # Mexss MCP: Locally Infeasible Due to Inconsistent Stationarity Equations for Accounting Variables
 
 **GitHub Issue:** [#764](https://github.com/jeffreyhorn/nlp2mcp/issues/764)
-**Status:** OPEN — Not fixable in Sprint 19 (requires KKT architectural changes for accounting/auxiliary variables)
+**Status:** OPEN — Not fixable (root cause is incorrect `sameas` guard in indexed stationarity builder; see Investigation section below)
 **Severity:** High — MCP generates and compiles, but PATH solver reports locally infeasible
 **Date:** 2026-02-16
 **Affected Models:** mexss
@@ -153,5 +153,128 @@ variable/equation pairs from the MCP.
 ## Related Issues
 
 - **ISSUE_670**: Cross-indexed sums (Error 149) — resolved; this issue is the next blocker
+- **ISSUE_767**: `sameas` guard for per-instance `.fx` multipliers — the guard logic is the root cause
+- **ISSUE_765 (orani)**: Similar infeasibility but caused by linearized CGE model structure
 - Similar pattern may affect other models with auxiliary cost-accounting variables
   (e.g., CGE models with decomposed cost functions)
+
+---
+
+## Investigation Attempt (2026-02-22)
+
+### Initial Analysis: Stationarity Equations
+
+Generated the MCP for mexss and examined the stationarity equations:
+
+```gams
+stat_phieps.. -1 + nu_aeps =E= 0;
+stat_philam.. 1 + nu_alam =E= 0;
+stat_phipsi.. 1 + nu_apsi =E= 0;
+stat_phipi.. 1 + nu_api =E= 0;
+```
+
+These are individually satisfiable (nu_aeps=1, nu_alam=-1, nu_apsi=-1, nu_api=-1). The
+accounting variable stationarity equations are NOT the primary source of infeasibility.
+
+### Actual Root Cause: Incorrect `sameas` Guard in `_add_indexed_jacobian_terms`
+
+The real problem is in the stationarity equations for indexed primal variables like `e(c,i)`,
+`u(c,i)`, `v(c,j)`, and `x(c,i,j)`. These equations have incorrect dollar conditions that
+restrict multiplier terms to single instances.
+
+**Example — `stat_e(c,i)`:**
+
+```gams
+stat_e(c,i)$(cf(c))..
+    (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa'))
+  + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa'))
+  + sum(cf, lam_mbf(cf,i))
+  + sum(cf, lam_me(cf))
+  =E= 0;
+```
+
+The `$(sameas(c, 'steel') and sameas(i, 'ahmsa'))` condition restricts the `nu_alam` and
+`nu_aeps` multiplier terms to ONLY the instance `e('steel','ahmsa')`. But the scalar equation
+`alam` sums over `e(cf,i)` for ALL valid `(cf,i)` combinations — the Jacobian derivative
+∂alam/∂e(c,i) = `mue(i)` is nonzero for all 5 instances where `c ∈ cf` (steel × 5 plants),
+not just `('steel','ahmsa')`.
+
+**How the bug manifests:**
+
+1. The `alam` equation is scalar (no domain indices)
+2. Its Jacobian w.r.t. `e(c,i)` has 5 nonzero entries: `(steel, ahmsa)`, `(steel, fundidora)`,
+   `(steel, sicartsa)`, `(steel, hylsa)`, `(steel, hylsap)`
+3. Variable `e` has 40 total instances (8 commodities × 5 plants)
+4. The Issue #767 guard at `stationarity.py:1543` checks `len(entries) < len(instances)` →
+   `5 < 40` → True → applies `sameas` guard
+5. But the guard uses `entries[0]` (the FIRST entry only, typically `('steel','ahmsa')`) to
+   build the `sameas` condition, ignoring the other 4 valid instances
+
+**The guard is designed for a different case:** It was built for scalar `.fx` constraints like
+`b_fx_s1.. b('s1') = value;` where only ONE instance of an indexed variable has a nonzero
+Jacobian entry. For such constraints, `len(entries) == 1` and the guard correctly restricts
+the multiplier to that single instance.
+
+**But for scalar equations like `alam` that sum over multiple instances of an indexed variable,**
+`len(entries) > 1` and the guard incorrectly restricts to the first entry only.
+
+### Same Bug Affects Multiple Stationarity Equations
+
+| Stationarity Eq | Scalar Constraint | Variable | Valid Instances | Guard Restricts To |
+|-----------------|-------------------|----------|-----------------|-------------------|
+| `stat_e(c,i)` | `alam` | `e(c,i)` | 5 (steel × 5 plants) | `(steel, ahmsa)` only |
+| `stat_e(c,i)` | `aeps` | `e(c,i)` | 5 (steel × 5 plants) | `(steel, ahmsa)` only |
+| `stat_u(c,i)` | `apsi` | `u(c,i)` | 5 (coke × 5 plants) | `(coke, ahmsa)` only |
+| `stat_v(c,j)` | `alam` | `v(c,j)` | 3 (steel × 3 markets) | `(steel, guadalaja)` only |
+| `stat_v(c,j)` | `api` | `v(c,j)` | 3 (steel × 3 markets) | `(steel, guadalaja)` only |
+| `stat_x(c,i,j)` | `alam` | `x(c,i,j)` | 15 (steel × 5 × 3) | `(steel, ahmsa, guadalaja)` only |
+
+This produces stationarity equations that are too restrictive — the multiplier terms only
+contribute to one instance when they should contribute to all valid instances.
+
+### Why This Is Not a Simple Fix
+
+The fix requires changing how `_add_indexed_jacobian_terms()` handles the case where a scalar
+constraint has multiple nonzero Jacobian entries for different instances of an indexed variable.
+Instead of a single `sameas` guard on `entries[0]`, the code needs to:
+
+1. **Group entries by their element indices** and determine if ALL instances of the variable
+   within the constraint's summation domain are present
+2. **If all instances in a subset are present**, use a subset condition (e.g., `$(cf(c))`)
+   rather than `sameas`
+3. **If only some instances are present**, generate a disjunction of `sameas` conditions
+   (e.g., `$(sameas(i,'ahmsa') or sameas(i,'fundidora') or ...)`)
+
+This requires:
+- Understanding the constraint's summation structure (which sets are being summed over)
+- Matching Jacobian entry indices against set membership
+- Generating appropriate GAMS conditions (subset membership vs sameas disjunctions)
+
+The Issue #767 guard at `stationarity.py:1536-1563` needs to be refactored from a simple
+"first entry" guard to a proper "active domain" guard.
+
+### What Must Be Done Before Attempting Another Fix
+
+1. **Refactor the Issue #767 guard** in `_add_indexed_jacobian_terms()` (stationarity.py:1536-1563):
+   - When `len(entries) > 1`, do NOT use `entries[0]` alone
+   - Group entries by their variable indices
+   - Determine if the entries cover a known subset (e.g., all elements of set `cf`)
+   - Generate appropriate conditions: subset membership `$(cf(c))` if entries match a defined
+     subset, or an `or`-disjunction of `sameas` calls if entries are arbitrary
+
+2. **Add test cases** for scalar-constraint-to-indexed-variable Jacobian patterns:
+   - Scalar equation summing over a subset of an indexed variable
+   - Scalar equation summing over multiple subsets
+   - Scalar equation with partial instance coverage (not matching any named subset)
+
+3. **Verify mexss solves correctly** after the guard fix — the accounting variable stationarity
+   equations (`stat_phieps`, etc.) are individually satisfiable, so fixing the `sameas` guard
+   should make the full MCP system feasible.
+
+### Conclusion
+
+**This issue is NOT fixable** with a simple change. The root cause is the Issue #767 `sameas`
+guard in `_add_indexed_jacobian_terms()` which incorrectly restricts scalar-constraint multiplier
+terms to a single variable instance when the constraint actually references multiple instances.
+The fix requires a non-trivial refactor of the guard logic to handle multi-entry Jacobian
+patterns. This is an architectural improvement that should be planned as a dedicated workstream.
