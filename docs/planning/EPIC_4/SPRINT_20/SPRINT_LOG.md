@@ -356,7 +356,7 @@
 | Full pipeline match | 10 | 10 | 16 | +6 |
 | Tests | 3,579 | 3,635 | 3,712 | +133 |
 
-Note: The evaluation suite contains 158 candidate models (convexity status `verified_convex` or `likely_convex`). The "160" in sprint planning thresholds was a planning approximation; the actual denominator has been 158 throughout.
+Note: The evaluation suite contains 158 candidate models (convexity status `verified_convex` or `likely_convex`). The "160" in earlier sprint planning and Checkpoint 1 tables is the original planning approximation; the Day 6/Day 11 full-pipeline evaluation tables above use the actual 158-case denominator.
 
 **Parse error breakdown (Day 11):**
 - lexer_invalid_char: 11
