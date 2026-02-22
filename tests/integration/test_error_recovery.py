@@ -45,28 +45,30 @@ def test_nan_parameter_allowed():
     validate_parameter_values(model)
 
 
-def test_inf_parameter_detected():
-    """Test that Inf in parameter values is caught."""
+def test_inf_parameter_allowed():
+    """Test that +Inf in parameter values is allowed.
+
+    GAMS natively supports +Inf in parameter tables (e.g., unlimited capacity).
+    These values are emitted as 'inf' in GAMS syntax.
+    """
     model = ModelIR()
     model.params["p"] = ParameterDef(name="p", domain=(), values={(): float("inf")})
 
-    with pytest.raises(NumericalError) as exc_info:
-        validate_parameter_values(model)
-
-    assert "parameter 'p'" in str(exc_info.value)
-    assert "Inf" in str(exc_info.value)
+    # Should NOT raise - Inf values are legitimate in GAMS
+    validate_parameter_values(model)
 
 
-def test_negative_inf_parameter_detected():
-    """Test that -Inf in parameter values is caught."""
+def test_negative_inf_parameter_allowed():
+    """Test that -Inf in parameter values is allowed.
+
+    GAMS natively supports -Inf in parameter tables (e.g., unbounded lower supply).
+    These values are emitted as '-inf' in GAMS syntax.
+    """
     model = ModelIR()
     model.params["q"] = ParameterDef(name="q", domain=(), values={(): float("-inf")})
 
-    with pytest.raises(NumericalError) as exc_info:
-        validate_parameter_values(model)
-
-    assert "parameter 'q'" in str(exc_info.value)
-    assert "-Inf" in str(exc_info.value)
+    # Should NOT raise - -Inf values are legitimate in GAMS
+    validate_parameter_values(model)
 
 
 def test_multiple_nan_parameters_allowed():

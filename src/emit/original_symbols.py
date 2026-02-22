@@ -13,6 +13,7 @@ Key principles:
 """
 
 import logging
+import math
 import re
 from collections import deque
 
@@ -23,6 +24,23 @@ from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 
 logger = logging.getLogger(__name__)
+
+
+def _format_param_value(value: float) -> str:
+    """Format a parameter/scalar value for GAMS data syntax.
+
+    Handles IEEE special values:
+    - +Inf → 'inf' (GAMS native)
+    - -Inf → '-inf' (GAMS native)
+    - NaN → 'na' (GAMS native for Not Available)
+    """
+    if isinstance(value, float):
+        if math.isinf(value):
+            return "inf" if value > 0 else "-inf"
+        if math.isnan(value):
+            return "na"
+    return str(value)
+
 
 # GAMS functions that produce stochastic (non-deterministic) output.
 # When these appear in parameter assignments within MCP files, the model
@@ -699,7 +717,7 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     # This ensures parameter data keys match set element quoting
                     sanitized_keys = [_sanitize_set_element(k) for k in expanded_key]
                     key_str = ".".join(sanitized_keys)
-                    data_parts.append(f"{key_str} {value}")
+                    data_parts.append(f"{key_str} {_format_param_value(value)}")
 
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
@@ -759,7 +777,7 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             for scalar_name, scalar_def in user_scalars.items():
                 # Scalars have values[()] = value (Finding #3)
                 value = scalar_def.values.get((), 0.0)
-                lines.append(f"    {scalar_name} /{value}/")
+                lines.append(f"    {scalar_name} /{_format_param_value(value)}/")
             lines.append(";")
 
     return "\n".join(lines)

@@ -1017,3 +1017,35 @@ class TestIndexOffset:
         idx_offset = IndexOffset("t", offset, circular=False)
         result = expr_to_gams(VarRef("x", (idx_offset,)))
         assert result == "x(t-(ord(l)-1))"
+
+
+@pytest.mark.unit
+class TestInfNanFormatting:
+    """Test formatting of IEEE special values (+Inf, -Inf, NaN) in GAMS syntax."""
+
+    def test_positive_inf_constant(self):
+        """Test +Inf constant emitted as 'inf'."""
+        result = expr_to_gams(Const(float("inf")))
+        assert result == "inf"
+
+    def test_negative_inf_constant(self):
+        """Test -Inf constant emitted as '-inf'."""
+        result = expr_to_gams(Const(float("-inf")))
+        assert result == "-inf"
+
+    def test_nan_constant(self):
+        """Test NaN constant emitted as 'na' (GAMS native)."""
+        result = expr_to_gams(Const(float("nan")))
+        assert result == "na"
+
+    def test_inf_in_expression(self):
+        """Test +Inf in a binary expression."""
+        expr = Binary("+", SymbolRef("x"), Const(float("inf")))
+        result = expr_to_gams(expr)
+        assert result == "x + inf"
+
+    def test_negative_inf_in_expression(self):
+        """Test -Inf in a binary expression (parenthesized as negative constant)."""
+        expr = Binary("*", Const(float("-inf")), SymbolRef("y"))
+        result = expr_to_gams(expr)
+        assert result == "(-inf) * y"

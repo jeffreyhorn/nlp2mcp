@@ -1268,3 +1268,42 @@ class TestCollectVarrefNames:
         inner = VarRef("x", (), attribute="l")
         expr = ParamRef("p", (inner,))
         assert _collect_varref_names(expr) == {"x"}
+
+
+@pytest.mark.unit
+class TestInfParameterEmission:
+    """Test that ±Inf parameter values are emitted as GAMS-compatible syntax."""
+
+    def test_positive_inf_parameter(self):
+        """Test +Inf in parameter data emitted as 'inf'."""
+        model = ModelIR()
+        model.params["cap"] = ParameterDef(
+            name="cap", domain=("i",), values={("alaska",): float("inf"), ("texas",): 100.0}
+        )
+        result = emit_original_parameters(model)
+        assert "alaska inf" in result
+        assert "texas 100" in result
+
+    def test_negative_inf_parameter(self):
+        """Test -Inf in parameter data emitted as '-inf'."""
+        model = ModelIR()
+        model.params["slo"] = ParameterDef(
+            name="slo", domain=("i",), values={("node1",): float("-inf"), ("node2",): 0.0}
+        )
+        result = emit_original_parameters(model)
+        assert "node1 -inf" in result
+        assert "node2 0" in result
+
+    def test_inf_scalar(self):
+        """Test +Inf scalar emitted as 'inf'."""
+        model = ModelIR()
+        model.params["bigm"] = ParameterDef(name="bigm", domain=(), values={(): float("inf")})
+        result = emit_original_parameters(model)
+        assert "bigm /inf/" in result
+
+    def test_nan_parameter_emitted_as_na(self):
+        """Test NaN in parameter data emitted as 'na' (GAMS native)."""
+        model = ModelIR()
+        model.params["p"] = ParameterDef(name="p", domain=("i",), values={("a",): float("nan")})
+        result = emit_original_parameters(model)
+        assert "a na" in result
