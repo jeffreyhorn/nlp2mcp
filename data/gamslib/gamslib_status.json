@@ -1430,9 +1430,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-21T03:00:45.295638+00:00",
+        "parse_date": "2026-02-22T06:33:02.782572+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.2062,
+        "parse_time_seconds": 1.6457,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1444,33 +1444,42 @@
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-02-22T04:21:43.544222+00:00",
+        "translate_date": "2026-02-22T06:33:04.919099+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.495,
+        "translate_time_seconds": 2.0922,
         "output_file": "data/gamslib/mcp/chenery_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-02-22T04:42:26.542326+00:00",
+        "status": "success",
+        "solve_date": "2026-02-22T06:33:05.467871+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.3585,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 839.769,
+        "solve_time_seconds": 0.5353,
+        "iterations": 4359,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-02-22T03:33:51.844313+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "mismatch",
+        "comparison_date": "2026-02-22T06:33:05.468176+00:00",
+        "nlp_objective": 1058.9199,
+        "mcp_objective": 839.769,
+        "absolute_difference": 219.1509000000001,
+        "relative_difference": 0.20695701346249143,
+        "objective_match": false,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 1e-06,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_mismatch",
+        "notes": "Mismatch: diff=2.19e+02 > tolerance=1.06e-03"
       }
     },
     {
