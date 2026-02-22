@@ -811,13 +811,15 @@ def strip_unsupported_directives(source: str) -> str:
             continue
 
         # Handle $ontext/$offtext comment blocks
+        # Note: marker must NOT contain literal "$ontext"/"$offtext" because the
+        # grammar has %ignore /(?si)\$ontext.*?\$offtext/ which would match it.
         if stripped_lower.startswith("$ontext"):
-            filtered.append(f"* Stripped: {stripped}")
+            filtered.append("* Stripped: ontext block begin")
             in_ontext_block = True
             continue
 
         if stripped_lower.startswith("$offtext"):
-            filtered.append(f"* Stripped: {stripped}")
+            filtered.append("* Stripped: ontext block end")
             in_ontext_block = False
             continue
 
@@ -841,6 +843,16 @@ def strip_unsupported_directives(source: str) -> str:
 
         # Keep all other lines unchanged
         filtered.append(line)
+
+    # Post-process: neutralize $ontext/$offtext in comment lines.
+    # The grammar has %ignore /(?si)\$ontext.*?\$offtext/ which can match
+    # across commented-out directives like *$offText, swallowing real code.
+    _ontext_re = re.compile(r"\$ontext", re.IGNORECASE)
+    _offtext_re = re.compile(r"\$offtext", re.IGNORECASE)
+    for i, line in enumerate(filtered):
+        if line.lstrip().startswith("*") and (_ontext_re.search(line) or _offtext_re.search(line)):
+            filtered[i] = _ontext_re.sub("ontext", line)
+            filtered[i] = _offtext_re.sub("offtext", filtered[i])
 
     return "\n".join(filtered)
 

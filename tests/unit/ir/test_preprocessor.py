@@ -297,8 +297,8 @@ Variables x;"""
         result = strip_unsupported_directives(source)
         # $ontext/$offtext directives are replaced with stripped markers
         # Content inside is converted to GAMS comments (preserves line numbers)
-        assert "* Stripped: $ontext" in result
-        assert "* Stripped: $offtext" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* This is a long comment" in result
         assert "* that spans multiple lines" in result
         assert "Set i /1*10/;" in result
@@ -316,8 +316,8 @@ Variables x;"""
         result = strip_unsupported_directives(source)
         assert "* Stripped: $title Test Model" in result
         assert "* Stripped: $eolCom //" in result
-        assert "* Stripped: $ontext" in result
-        assert "* Stripped: $offtext" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* Comment block" in result
         assert "Set i /1*10/;" in result
 
@@ -410,8 +410,8 @@ Variables x;""")
         result = preprocess_gams_file(test_file)
 
         # Comment block directives should be stripped
-        assert "* Stripped: $ontext" in result
-        assert "* Stripped: $offtext" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         # Content converted to comments (line numbers preserved)
         assert "* This is a documentation block" in result
         # Code should remain
@@ -482,8 +482,8 @@ Variables x;""")
         assert "$include" not in result
         assert "Set i /1*10/;" in result
         assert "Parameter epsilon /1e-6/;" in result
-        assert "* Stripped: $ontext" in result
-        assert "* Stripped: $offtext" in result
+        assert "* Stripped: ontext block begin" in result
+        assert "* Stripped: ontext block end" in result
         assert "* Documentation block" in result
         assert "// Index set" not in result  # Issue #722: eol comments stripped
         assert "Variables x;" in result
