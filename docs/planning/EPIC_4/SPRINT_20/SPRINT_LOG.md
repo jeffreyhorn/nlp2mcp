@@ -284,6 +284,47 @@
 
 ---
 
+### Day 13 — Sprint Close Prep: Issues + Documentation (2026-02-22)
+
+**Status:** ✅ COMPLETE
+**PR:** TBD
+
+**Activities:**
+- Smoke-tested all deferred items — confirmed failure modes match documentation
+- Reopened #763 (chenery AD condition propagation) and #810 (lmp2 nested loop) with sprint-21 label
+- Added sprint-21 label to existing open issues: #764, #765, #757, #826, #827, #828, #830, #789
+- Created 3 new issues with sprint-21 label:
+  - #835: bearing `.scale` attribute emission
+  - #836: saras orphan `]` from `$offText` stripping
+  - #837: springchain bracket expression in scalar data
+- Total deferred issues: 13 (all labeled sprint-21)
+
+**Deferred Items Summary:**
+
+| Issue | Model | Problem | Failure Mode Confirmed |
+|---|---|---|---|
+| #763 | chenery | AD condition propagation (div by zero) | ✅ MCP generates, warnings about condition eval |
+| #764 | mexss | Accounting variable stationarity | ✅ MCP generates, locally infeasible |
+| #765 | orani | CGE model type incompatible | ✅ MCP generates, locally infeasible |
+| #757 | bearing | Non-convex initialization + .scale | ✅ MCP generates, locally infeasible |
+| #810 | lmp2 | Solve in doubly-nested loop | ✅ MCP generates (wrong model — no objective) |
+| #826 | decomp | Empty stationarity equation | ✅ Documented in issue |
+| #827 | gtm | Domain violations from zero-fill | ✅ Documented in issue |
+| #828 | ibm1 | Missing bound multipliers | ✅ Documented in issue |
+| #830 | gastrans | Jacobian timeout (dynamic subset) | ✅ Documented in issue |
+| #835 | bearing | .scale emission not supported (sub-issue of #757) | ✅ MCP generates, solve fails |
+| #836 | saras | Orphan ] from $offText stripping | ✅ Parse error confirmed |
+| #837 | springchain | Bracket expr in scalar data | ✅ Parse error confirmed |
+| #789 | — | Min/max in objective equations | ✅ Known limitation |
+
+**Pre-close Metrics (awaiting Day 14 final retest for official sprint close metrics):**
+- Tests: 3,715 passed, 10 skipped, 2 xfailed (+136 from baseline)
+- Parse success: 129/158 (from Day 10 retest) + mathopt3, dinam now parse (Day 12)
+- Solve success: 33 (from Day 10 retest)
+- Match: 16 (from Day 10 retest)
+
+---
+
 ## Checkpoints
 
 ### Checkpoint 1 (Day 6)
