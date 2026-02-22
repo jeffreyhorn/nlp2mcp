@@ -312,7 +312,7 @@
 | #827 | gtm | Domain violations from zero-fill | ✅ Documented in issue |
 | #828 | ibm1 | Missing bound multipliers | ✅ Documented in issue |
 | #830 | gastrans | Jacobian timeout (dynamic subset) | ✅ Documented in issue |
-| #835 | bearing | .scale emission not supported | ✅ MCP generates, solve fails |
+| #835 | bearing | .scale emission not supported (sub-issue of #757) | ✅ MCP generates, solve fails |
 | #836 | saras | Orphan ] from $offText stripping | ✅ Parse error confirmed |
 | #837 | springchain | Bracket expr in scalar data | ✅ Parse error confirmed |
 | #789 | — | Min/max in objective equations | ✅ Known limitation |
