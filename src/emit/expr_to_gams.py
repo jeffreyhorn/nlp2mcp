@@ -53,7 +53,7 @@ def _format_numeric(value: int | float) -> str:
 
     Handles special IEEE values:
     - +Inf → 'inf' (GAMS native syntax)
-    - -Inf → '(-inf)' (parenthesized to avoid ambiguity in expressions)
+    - -Inf → '-inf' (parentheses, when needed, are added by expression handlers)
     - NaN → 'na' (GAMS native syntax for Not Available)
 
     Args:
