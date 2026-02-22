@@ -267,6 +267,23 @@
 
 ---
 
+### Day 12 — Phase 3 + WS6: Regression Tests (2026-02-22)
+
+**Status:** ✅ COMPLETE
+**PR:** TBD
+
+**Activities:**
+- **Subcat J (mathopt3)**: Added square bracket function call syntax (`FUNCNAME "[" args "]"`) to grammar — mathopt3 now parses
+- **Subcat K (dinam)**: Fixed two issues:
+  - Preprocessor: Added `quote_unquoted_table_descriptions()` to handle table descriptions with parentheses (e.g., `Table t(i,j) desc (units)`)
+  - Grammar: Added `STRING "." INT` and `SET_ELEMENT_ID "." INT` set tuple patterns for set element mappings (e.g., `'1968-71'.1971`)
+- **WS6**: Added 3 solve-level regression tests (alkyl, circle, himmel16) — total WS6 coverage = 19 tests (16 match + 3 solve)
+- No new models matched NLP↔MCP objectives during Sprint 20 beyond the 16 already covered
+
+**Metrics:** Tests 3,715 passed, 10 skipped, 2 xfailed (+136 from baseline)
+
+---
+
 ## Checkpoints
 
 ### Checkpoint 1 (Day 6)

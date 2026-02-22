@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 12: Phase 3 Grammar (Subcat J+K) + WS6 Regression Tests - 2026-02-22
+
+**Branch:** `sprint20-day12-phase3-regression-tests`
+
+#### Summary
+
+Phase 3 grammar additions: square bracket function calls (Subcat J, mathopt3) and table description + set tuple fixes (Subcat K, dinam). Added 3 solve-level regression tests (alkyl, circle, himmel16).
+
+#### Changes
+
+- Grammar: Added `FUNCNAME "[" args "]"` alternative for square bracket function calls (mathopt3)
+- Grammar: Added `STRING "." INT` and `SET_ELEMENT_ID "." INT` set tuple patterns for numeric set mappings (dinam)
+- Preprocessor: Added `quote_unquoted_table_descriptions()` for table descriptions with parentheses (dinam)
+- Tests: Added 3 solve-level regression tests (alkyl, circle, himmel16) — total WS6 = 19 tests
+
 ### Sprint 20 Day 11: Checkpoint 2 Evaluation + Model Validation - 2026-02-22
 
 **Branch:** `sprint20-day11-checkpoint2`

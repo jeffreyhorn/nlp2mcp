@@ -440,16 +440,18 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 
 ---
 
-### Day 12 — Phase 3 + WS6: Regression Tests
+### Day 12 — Phase 3 + WS6: Regression Tests ✅ COMPLETE
 
-**Theme:** Phase 3 grammar (if Checkpoint 2 GO); golden-file test coverage  
+**Theme:** Phase 3 grammar (if Checkpoint 2 GO); golden-file test coverage
 **Effort:** 3h
 
 | Task | Files | Deliverable |
 |---|---|---|
-| Phase 3: Square bracket function call (mathopt3) — Subcat J | grammar | mathopt3 parses |
-| Phase 3: Miscellaneous (dinam) — Subcat K | grammar or preprocessor | dinam parses (if tractable) |
-| WS6: Golden-file solve tests for newly-matched models | `tests/e2e/` | ≥ 3 new regression tests |
+| Phase 3: Square bracket function call (mathopt3) — Subcat J | grammar | mathopt3 parses ✅ |
+| Phase 3: Miscellaneous (dinam) — Subcat K | grammar + preprocessor | dinam parses ✅ |
+| WS6: Solve-level regression tests | `tests/e2e/` | 3 new regression tests ✅ |
+
+**End of Day 12 criterion:** ✅ mathopt3 parses (Subcat J); dinam parses (Subcat K); 3 solve-level regression tests added (alkyl, circle, himmel16); total WS6 coverage = 19 tests (16 match + 3 solve).
 
 ---
 
