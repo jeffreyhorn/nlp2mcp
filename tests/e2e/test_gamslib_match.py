@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 GAMSLIB_RAW = PROJECT_ROOT / "data" / "gamslib" / "raw"
-sys.setrecursionlimit(50000)
 
 
 def _gams_available() -> bool:
@@ -42,6 +42,20 @@ def _run_pipeline_and_solve(model_id: str) -> float:
 
     Raises pytest.skip if infrastructure is unavailable.
     """
+    gms_file = GAMSLIB_RAW / f"{model_id}.gms"
+    if not gms_file.exists():
+        pytest.skip(f"GAMSlib file not found: {gms_file}")
+
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        return _do_pipeline_and_solve(model_id, gms_file)
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+
+def _do_pipeline_and_solve(model_id: str, gms_file: Path) -> float:
+    """Inner pipeline logic, called with recursion limit already set."""
     from scripts.gamslib.test_solve import solve_mcp
     from src.ad.constraint_jacobian import compute_constraint_jacobian
     from src.ad.gradient import compute_objective_gradient
@@ -49,10 +63,6 @@ def _run_pipeline_and_solve(model_id: str) -> float:
     from src.ir.normalize import normalize_model
     from src.ir.parser import parse_model_file
     from src.kkt.assemble import assemble_kkt_system
-
-    gms_file = GAMSLIB_RAW / f"{model_id}.gms"
-    if not gms_file.exists():
-        pytest.skip(f"GAMSlib file not found: {gms_file}")
 
     # Parse → Translate
     model = parse_model_file(str(gms_file))

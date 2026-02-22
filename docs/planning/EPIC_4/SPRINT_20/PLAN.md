@@ -389,7 +389,7 @@ Sprint 20 focuses on four primary high-ROI workstreams identified by the prep ph
 | Verify no false positives at new rtol | pipeline | All matches are genuine |
 
 **End of Day 9 criterion:** Full pipeline match ≥ 15; rtol PR merged; regression tests pass.
-**Result:** 16 matches (+6: chem, dispatch, hhmax, mhw4d, mhw4dx, splcge). 8 regression tests added. Also fixed issue #763 (chenery MCP division by zero) in separate PR #822.
+**Result:** 16 matches (+6: chem, dispatch, hhmax, mhw4d, mhw4dx, splcge). Regression coverage added in `tests/e2e/test_gamslib_match.py` (16 parametrized model cases). Also fixed issue #763 (chenery MCP division by zero) in separate PR #822.
 
 ---
 

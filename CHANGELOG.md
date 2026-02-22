@@ -25,7 +25,7 @@ Raised `DEFAULT_RTOL` from `1e-6` to `1e-4` and gained 6 new pipeline matches. A
 
 - Full pipeline match: 10 → **16** (+6) — target ≥15 met
 - Solve success: **32** — target ≥30 met
-- Tests: 3,714+ (8 new regression tests)
+- Tests: 3,714+ (16 new regression tests)
 
 ---
 
