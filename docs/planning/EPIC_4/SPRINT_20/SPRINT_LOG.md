@@ -200,14 +200,14 @@
 ### Day 9 — WS5 Part A: Pipeline Match Tolerance Fix + Regression Tests (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #823
 
 **Activities:**
 - Raised `DEFAULT_RTOL` from `1e-6` to `1e-4` in `scripts/gamslib/test_solve.py`
 - Re-ran full pipeline solve: **16 matches** (target: ≥15) ✅
-- 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, splcge
+- 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, wall
 - Verified no false positives — clean gap between new matches (rel_diff ≤ 5e-5) and next mismatch (port at 1.3e-3)
-- Added 16 solve-level regression tests in `tests/e2e/test_gamslib_match.py`
+- Added 16 match regression tests in `tests/e2e/test_gamslib_match.py`
 - Also fixed issue #763 (chenery MCP division by zero) in separate PR #822
 
 **Metrics:**
@@ -220,7 +220,7 @@
 ### Day 10 — WS5 Part B: Inf Parameter Handling + Model Validation Prep (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #829
 
 **Activities:**
 - Fixed `validate_parameter_values()` to allow ±Inf (GAMS natively supports `inf`/`-inf` in parameter tables)
@@ -270,7 +270,7 @@
 ### Day 12 — Phase 3 + WS6: Regression Tests (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #834
 
 **Activities:**
 - **Subcat J (mathopt3)**: Added square bracket function call syntax (`FUNCNAME "[" args "]"`) to grammar — mathopt3 now parses
@@ -287,7 +287,7 @@
 ### Day 13 — Sprint Close Prep: Issues + Documentation (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #838
 
 **Activities:**
 - Smoke-tested all deferred items — confirmed failure modes match documentation
@@ -435,9 +435,68 @@ Note: The evaluation suite contains 158 candidate models (convexity status `veri
 
 ## Sprint Close (Day 14)
 
-**Final Metrics:** TBD
+**Status:** ✅ COMPLETE
+**PR:** #842
+**Date (log updated):** 2026-02-22
+_Note: Sprint days (Day 0–Day 14) are logical sprint days starting from 2026-02-19; dates shown are when entries were written._
 
-**Sprint 20 Retrospective:** TBD
+### Final Pipeline Retest
+
+Full pipeline run completed (158 evaluated models, 160 parse-attempted):
+
+### Final Metrics vs. Targets
+
+| Metric | Baseline | Target | Day 6 | Day 11 | **Day 14 Final** | Status |
+|---|---|---|---|---|---|---|
+| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 131/160* | **132/160 (82.5%)** | ✅ Exceeded |
+| lexer_invalid_char | 26 | ≤ 11 | 21 | 11 | **10** | ✅ Met |
+| model_no_objective_def | 14 | ≤ 4 | 1 | 1 | **1** | ✅ Exceeded |
+| Translate success | 96/112 (85.7%) | ≥ 110/127 | 109/123 | 120/129 | **120/132 (90.9%)** | ✅ Exceeded |
+| Solve success | 27 | ≥ 30 | 29 | 33 | **33** | ✅ Exceeded |
+| Full pipeline match | 10 | ≥ 15 | 10 | 16 | **16** | ✅ Met |
+| Tests | 3,579 | ≥ 3,650 | 3,635 | 3,712 | **3,715** | ✅ Met |
+| Zero regressions | — | All 112 maintained | ✅ | ✅ | ✅ | ✅ Met |
+
+*Note:* Day 11 parse was evaluated against 158 convexity-filtered candidates; all other columns use the full 160-model parse-attempted set. The Day 11 figure of 129/158 corresponds to 131/160 when including the 2 non-convex models.
+
+**All 8 sprint-level acceptance criteria met.**
+
+### Parse Error Breakdown (Day 14 Final)
+
+| Category | Baseline | Day 6 | Day 11 | Day 14 |
+|---|---|---|---|---|
+| lexer_invalid_char | 26 | 21 | 11 | **10** |
+| semantic_undefined_symbol | 5 | 8 | 7 | **7** |
+| internal_error | 2 | 3 | 7 | **7** |
+| parser_invalid_expression | 1 | 2 | 3 | **3** |
+| model_no_objective_def | 14 | 1 | 1 | **1** |
+| **Total parse failures** | **48** | **35** | **29** | **28** |
+
+### Solve Error Breakdown (Day 14 Final)
+
+| Category | Count |
+|---|---|
+| path_syntax_error | 45 |
+| path_solve_terminated | 29 |
+| model_infeasible | 12 |
+| path_solve_license | 2 |
+| **Total solve failures** | **88** |
+
+### Matching Models (16)
+
+ajax, blend, chem, demo1, dispatch, hhmax, himmel11, house, mathopt2, mhw4d, mhw4dx, prodmix, rbrock, splcge, trnsport, wall
+
+### Solving Models (33)
+
+abel, aircraft, ajax, alkyl, apl1p, apl1pca, blend, catmix, chakra, chem, chenery, circle, demo1, dispatch, hhmax, himmel11, himmel16, house, mathopt1, mathopt2, mhw4d, mhw4dx, port, process, prodmix, qabel, rbrock, sparta, splcge, trig, trnsport, wall, weapons
+
+### Sprint Close
+
+- Sprint 20 code freeze tagged as `sprint20-final` on the main branch.
+
+### Sprint 20 Retrospective
+
+See `SPRINT_RETROSPECTIVE.md` in this directory.
 
 ---
 

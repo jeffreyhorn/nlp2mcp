@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 20 Day 14: Sprint Close + Retrospective - 2026-02-22
+
+**Branch:** `sprint20-day14-sprint-close-retrospective`
+
+#### Sprint 20 Summary
+
+Sprint 20 completed all 8 acceptance criteria across 15 days (25 PRs merged, 3,715 tests, zero regressions).
+
+**Final metrics vs. baseline:**
+
+| Metric | Baseline | Final | Change |
+|---|---|---|---|
+| Parse success | 112/160 (70.0%) | 132/160 (82.5%) | **+20** |
+| lexer_invalid_char | 26 | 10 | **-16** |
+| model_no_objective_def | 14 | 1 | **-13** |
+| Translate success | 96/112 (85.7%) | 120/132 (90.9%) | **+24** |
+| Solve success | 27 | 33 | **+6** |
+| Full pipeline match | 10 | 16 | **+6** |
+| Tests | 3,579 | 3,715 | **+136** |
+
+**Key workstreams:** WS1 `.l` emission (IR + emitter), WS2 IndexOffset extensions, WS3 lexer grammar (3 phases), WS4 model_no_objective_def fix, WS5 tolerance/Inf handling, WS6 regression tests.
+
+**New matching models:** chem, dispatch, hhmax, mhw4d, mhw4dx, wall (+6)
+**New solving models (7):** catmix, chenery, circle, qabel, sparta, wall, weapons (net +6 vs baseline of 27)
+
+**Deferred to Sprint 21:** 13 issues labeled sprint-21 covering macro expansion, accounting variables, AD condition propagation, and solve-quality improvements.
+
 ### Sprint 20 Day 13: Sprint Close Prep — Issues + Documentation - 2026-02-22
 
 **Branch:** `sprint20-day13-sprint-close-prep`
