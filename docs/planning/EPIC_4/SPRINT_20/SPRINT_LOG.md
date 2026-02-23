@@ -207,7 +207,7 @@
 - Re-ran full pipeline solve: **16 matches** (target: ≥15) ✅
 - 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, wall
 - Verified no false positives — clean gap between new matches (rel_diff ≤ 5e-5) and next mismatch (port at 1.3e-3)
-- Added 16 solve-level regression tests in `tests/e2e/test_gamslib_match.py`
+- Added 16 match regression tests in `tests/e2e/test_gamslib_match.py`
 - Also fixed issue #763 (chenery MCP division by zero) in separate PR #822
 
 **Metrics:**
@@ -437,7 +437,8 @@ Note: The evaluation suite contains 158 candidate models (convexity status `veri
 
 **Status:** ✅ COMPLETE
 **PR:** #842
-**Date:** 2026-02-22
+**Date (log updated):** 2026-02-22
+_Note: Sprint days (Day 0–Day 14) are logical sprint days starting from 2026-02-19; dates shown are when entries were written._
 
 ### Final Pipeline Retest
 

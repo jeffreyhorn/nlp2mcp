@@ -112,7 +112,7 @@ The sprint plan targets used "/160" but the pipeline evaluation script filters t
 
 ### 3. Some PR Numbers Not Recorded in Sprint Log
 
-Days 9, 10, 12, and 13 have "PR: TBD" in the sprint log rather than actual PR numbers. This makes it harder to trace which changes went into which day.
+Earlier in the sprint, Days 9, 10, 12, and 13 temporarily had "PR: TBD" in the sprint log rather than actual PR numbers. These were later backfilled with PRs #823, #829, #834, and #838, but during the sprint this gap made it harder to trace which changes went into which day.
 
 **Lesson:** Always update the sprint log with PR numbers immediately after merge. Consider adding this to the post-merge checklist.
 
@@ -352,7 +352,7 @@ The gap between solve success (33) and match (16) indicates 17 models solve but 
 
 1. **Standardize pipeline denominator.** Use 160 (parse-attempted) as the canonical reference, not 158 (convexity-filtered). Document any exclusions explicitly.
 
-2. **Record PR numbers immediately after merge.** Several sprint log entries have "PR: TBD" — update these in the same commit as the day's work.
+2. **Record PR numbers immediately after merge.** Avoid leaving "PR: TBD" in sprint logs; record the PR number in the same commit as the day's work.
 
 3. **Verify parse claims end-to-end.** Always use `parse_file()` (not partial grammar checks) before claiming a model parses. The pipeline retest is the ground truth.
 
