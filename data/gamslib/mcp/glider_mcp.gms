@@ -23,23 +23,23 @@ Sets
 Alias(h, i);
 
 Parameters
-    c_0(c) /x 0.0, y 1000.0/
+    c_0(c) /x 0, y 1000/
     v_0(c) /x 13.23, y -1.288/
-    c_f(c) /y 900.0/
+    c_f(c) /y 900/
     v_f(c) /x 13.23, y -1.288/
 ;
 
 Scalars
-    nh /50.0/
-    cL_min /0.0/
+    nh /50/
+    cL_min /0/
     cL_max /1.4/
     u_c /2.5/
-    r_0 /100.0/
-    m /100.0/
+    r_0 /100/
+    m /100/
     g /9.81/
     c0 /0.034/
     c1 /0.069662/
-    S /14.0/
+    S /14/
     rho /1.13/
 ;
 
@@ -199,12 +199,15 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound).
 
-t_f.l = step.l * nh;
+$onImplicitAssign
 pos.l("x",h) = c_0("x") + v_0("x") * (ord(h) - 1) / nh;
 pos.l("y",h) = c_0("y") + (ord(h) - 1) / nh * (c_f("y") - c_0("y"));
 vel.l(c,h) = v_0(c);
 cl.l(h) = cL_max / 2;
+step.l = 1 / nh;
+step.l = min(max(step.l, 1e-6), step.up);
 r.l(i) = sqr(pos.l("x",i) / r_0 - 2.5);
+t_f.l = step.l * nh;
 u.l(i) = u_c * (1 - r.l(i)) * exp(((-1) * r.l(i)));
 w.l(i) = vel.l("y",i) - u.l(i);
 v.l(i) = sqrt(sqr(vel.l("x",i)) + sqr(w.l(i)));
@@ -212,8 +215,7 @@ D.l(i) = 0.5 * (c0 + c1 * sqr(cl.l(i))) * rho * S * sqr(v.l(i));
 L.l(i) = 0.5 * cl.l(i) * rho * S * sqr(v.l(i));
 v_dot.l("x",i) = (((-1) * l.l(i)) * w.l(i) / v.l(i) - d.l(i) * vel.l("x",i) / v.l(i)) / m;
 v_dot.l("y",i) = (l.l(i) * vel.l("x",i) / v.l(i) - d.l(i) * w.l(i) / v.l(i)) / m - g;
-step.l = 1 / nh;
-step.l = min(max(step.l, 1e-6), step.up);
+$offImplicitAssign
 
 * ============================================
 * Equations

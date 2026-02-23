@@ -52,27 +52,27 @@ Alias(t, tp);
 Alias(tf, tfp);
 
 Parameters
-    a(c,p) /'sur-water'.'buy-h2o-g' -1.0, 'grnd-water'.'buy-h2o-m' -1.0, 'mo-water'.'buy-h2o-m' -1.0, water.'buy-h2o-g' -0.5, water.'buy-h2o-m' -0.5, water.'buy-h2o-s' -0.5, 'mining-25'.'buy-h2o-g' 0.0, 'mining-25'.'buy-h2o-m' 0.0, 'shale-25'.'buy-h2o-s' -1.0, 'shale-30'.'buy-h2o-g' -1.0, 'shale-35'.'buy-h2o-m' -1.0, 'mined-25'.'buy-h2o-g' 1.0, 'mined-30'.'buy-h2o-g' 1.0, part.'.59' 0.0018, 'ret-25'.'.59' 0.0, 'mined-25'.'.59' -1.0, 'mined-30'.'.59' -1.0, 'mined-35'.'.59' -1.0, water.'.59' -1.18, 'shale-oil'.'.59' -1.0, spentshale.'.59' -1.0, so2.'.59' 5.9, particulate.'.59' 0.0, grades.'.59' 0.0, gpt.'.59' 0.0, upgrading.'.59' 0.0, syncrude.'.59' 0.84, 'misc-act-i'.'.59' 0.84, lpg.'.59' 0.077, ammonia.'.59' 0.0019, sulfur.'.59' 0.0024, coke.'.59' 0.0091, 'dispose-c'.'.59' 0.0, 'can-space'.'-.82' 0.82, 'mine-fill'.'-.82' 0.82, 'spoil-dist'.'-.82' 1.0, part.'-.82' -1.0, foot.spoils.'-.82' 0.0, '75'.'-.82' 0.0, 'part-50'.'-.82' 0.0, so2.'-.82' -1.0, 'part-red'.'-.82' 0.5, 'so2-red'.'-.82' 0.5/
-    b(m,p) /'mine-25'.'mining-25' 1.0, 'mine-30'.'mining-30' 1.0, 'mine-35'.'mining-35' 1.0, 'ret-25'.'mining-30' 0.0, 'ret-25'.'mining-35' 0.0, 'retort-25'.'mining-25' 1.0, 'retort-30'.'mining-30' 1.0, 'retort-35'.'mining-35' 1.0, 'buy-h2o-s'.'mining-30' 0.0, 'buy-h2o-s'.'mining-35' 0.0, 'h2o-s-eq'.'mining-25' 1.0, 'h2o-g-eq'.'mining-30' 1.0, 'h2o-m-eq'.'mining-35' 1.0, 'dispose-c'.'mining-30' 0.0, 'dispose-c'.'mining-35' 0.0, 'disp-c-eq'.'mining-25' 1.0, 'disp-u-eq'.'mining-30' 1.0, 'disp-d-eq'.'mining-35' 1.0, upgrading.'mining-25' 0.0, upgrader.'mining-25' 1.0, 'misc-eq'.'mining-30' 1.0, 'part-50'.'mining-25' 0.0, 'part-50'.'mining-30' 0.0, 'part-50'.'mining-35' 0.0, 'part-50-eq'.'mining-25' 1.0, 'part-90-eq'.'mining-30' 1.0, 'part-95-eq'.'mining-35' 1.0, 'part-99-eq'.'mining-35' 1.0, 'p-99pt5-eq'.'mining-35' 1.0, 'so2-50-eq'.'mining-30' 1.0, 'so2-90-eq'.'mining-35' 1.0, 'so2-95-eq'.'mining-35' 1.0, 'so2-99-eq'.'mining-35' 1.0, 's-99pt5-eq'.'mining-35' 1.0, 'mine-30'.'mining-25' 0.0, 'mine-30'.'mining-35' 0.0, upgrader.'mining-30' 0.0, upgrader.'mining-35' 0.0, 'retort-35'.'mining-25' 0.0, 'retort-35'.'mining-30' 0.0, 'retort-25'.'mining-30' 0.0, 'retort-25'.'mining-35' 0.0, 'part-50-eq'.'mining-30' 0.0, 'part-50-eq'.'mining-35' 0.0, 'part-90-eq'.'mining-25' 0.0, 'part-90-eq'.'mining-35' 0.0, 'part-95-eq'.'mining-25' 0.0, 'part-95-eq'.'mining-30' 0.0, 'buy-h2o-s'.'mining-25' 0.0, 'so2-95-eq'.'mining-25' 0.0, 'so2-95-eq'.'mining-30' 0.0, 'h2o-g-eq'.'mining-25' 0.0, 'h2o-g-eq'.'mining-35' 0.0, 's-99pt5-eq'.'mining-25' 0.0, 's-99pt5-eq'.'mining-30' 0.0, 'part-99-eq'.'mining-25' 0.0, 'part-99-eq'.'mining-30' 0.0, 'p-99pt5-eq'.'mining-25' 0.0, 'p-99pt5-eq'.'mining-30' 0.0, 'ret-25'.'mining-25' 0.0, 'so2-90-eq'.'mining-25' 0.0, 'so2-90-eq'.'mining-30' 0.0, 'so2-99-eq'.'mining-25' 0.0, 'so2-99-eq'.'mining-30' 0.0, 'disp-c-eq'.'mining-30' 0.0, 'disp-c-eq'.'mining-35' 0.0, 'dispose-c'.'mining-25' 0.0, 'disp-d-eq'.'mining-25' 0.0, 'disp-d-eq'.'mining-30' 0.0, 'misc-eq'.'mining-25' 0.0, 'misc-eq'.'mining-35' 0.0, 'mine-35'.'mining-25' 0.0, 'mine-35'.'mining-30' 0.0, upgrading.'mining-30' 0.0, upgrading.'mining-35' 0.0, 'so2-50-eq'.'mining-25' 0.0, 'so2-50-eq'.'mining-35' 0.0, 'h2o-s-eq'.'mining-30' 0.0, 'h2o-s-eq'.'mining-35' 0.0, 'mine-25'.'mining-30' 0.0, 'mine-25'.'mining-35' 0.0, 'h2o-m-eq'.'mining-25' 0.0, 'h2o-m-eq'.'mining-30' 0.0, 'disp-u-eq'.'mining-25' 0.0, 'disp-u-eq'.'mining-35' 0.0, 'retort-30'.'mining-25' 0.0, 'retort-30'.'mining-35' 0.0/
-    prm(c) /'sur-water' 24.0, 'grnd-water' 120.0, 'mo-water' 2.0/
-    rw1(c) /'sur-water' 300.0, 'mo-water' 9999999.0/
+    a(c,p) /'sur-water'.'buy-h2o-g' -1, 'grnd-water'.'buy-h2o-m' -1, 'mo-water'.'buy-h2o-m' -1, water.'buy-h2o-g' -0.5, water.'buy-h2o-m' -0.5, water.'buy-h2o-s' -0.5, 'mining-25'.'buy-h2o-g' 0, 'mining-25'.'buy-h2o-m' 0, 'shale-25'.'buy-h2o-s' -1, 'shale-30'.'buy-h2o-g' -1, 'shale-35'.'buy-h2o-m' -1, 'mined-25'.'buy-h2o-g' 1, 'mined-30'.'buy-h2o-g' 1, part.'.59' 0.0018, 'ret-25'.'.59' 0, 'mined-25'.'.59' -1, 'mined-30'.'.59' -1, 'mined-35'.'.59' -1, water.'.59' -1.18, 'shale-oil'.'.59' -1, spentshale.'.59' -1, so2.'.59' 5.9, particulate.'.59' 0, grades.'.59' 0, gpt.'.59' 0, upgrading.'.59' 0, syncrude.'.59' 0.84, 'misc-act-i'.'.59' 0.84, lpg.'.59' 0.077, ammonia.'.59' 0.0019, sulfur.'.59' 0.0024, coke.'.59' 0.0091, 'dispose-c'.'.59' 0, 'can-space'.'-.82' 0.82, 'mine-fill'.'-.82' 0.82, 'spoil-dist'.'-.82' 1, part.'-.82' -1, foot.spoils.'-.82' 0, '75'.'-.82' 0, 'part-50'.'-.82' 0, so2.'-.82' -1, 'part-red'.'-.82' 0.5, 'so2-red'.'-.82' 0.5/
+    b(m,p) /'mine-25'.'mining-25' 1, 'mine-30'.'mining-30' 1, 'mine-35'.'mining-35' 1, 'ret-25'.'mining-30' 0, 'ret-25'.'mining-35' 0, 'retort-25'.'mining-25' 1, 'retort-30'.'mining-30' 1, 'retort-35'.'mining-35' 1, 'buy-h2o-s'.'mining-30' 0, 'buy-h2o-s'.'mining-35' 0, 'h2o-s-eq'.'mining-25' 1, 'h2o-g-eq'.'mining-30' 1, 'h2o-m-eq'.'mining-35' 1, 'dispose-c'.'mining-30' 0, 'dispose-c'.'mining-35' 0, 'disp-c-eq'.'mining-25' 1, 'disp-u-eq'.'mining-30' 1, 'disp-d-eq'.'mining-35' 1, upgrading.'mining-25' 0, upgrader.'mining-25' 1, 'misc-eq'.'mining-30' 1, 'part-50'.'mining-25' 0, 'part-50'.'mining-30' 0, 'part-50'.'mining-35' 0, 'part-50-eq'.'mining-25' 1, 'part-90-eq'.'mining-30' 1, 'part-95-eq'.'mining-35' 1, 'part-99-eq'.'mining-35' 1, 'p-99pt5-eq'.'mining-35' 1, 'so2-50-eq'.'mining-30' 1, 'so2-90-eq'.'mining-35' 1, 'so2-95-eq'.'mining-35' 1, 'so2-99-eq'.'mining-35' 1, 's-99pt5-eq'.'mining-35' 1, 'so2-95-eq'.'mining-25' 0, 'so2-95-eq'.'mining-30' 0, 'p-99pt5-eq'.'mining-25' 0, 'p-99pt5-eq'.'mining-30' 0, 'so2-50-eq'.'mining-25' 0, 'so2-50-eq'.'mining-35' 0, 'buy-h2o-s'.'mining-25' 0, 'mine-35'.'mining-25' 0, 'mine-35'.'mining-30' 0, 'disp-c-eq'.'mining-30' 0, 'disp-c-eq'.'mining-35' 0, 'mine-25'.'mining-30' 0, 'mine-25'.'mining-35' 0, 'ret-25'.'mining-25' 0, 'disp-d-eq'.'mining-25' 0, 'disp-d-eq'.'mining-30' 0, 'h2o-g-eq'.'mining-25' 0, 'h2o-g-eq'.'mining-35' 0, upgrading.'mining-30' 0, upgrading.'mining-35' 0, 'retort-30'.'mining-25' 0, 'retort-30'.'mining-35' 0, 'retort-25'.'mining-30' 0, 'retort-25'.'mining-35' 0, upgrader.'mining-30' 0, upgrader.'mining-35' 0, 'h2o-s-eq'.'mining-30' 0, 'h2o-s-eq'.'mining-35' 0, 'dispose-c'.'mining-25' 0, 's-99pt5-eq'.'mining-25' 0, 's-99pt5-eq'.'mining-30' 0, 'part-50-eq'.'mining-30' 0, 'part-50-eq'.'mining-35' 0, 'part-99-eq'.'mining-25' 0, 'part-99-eq'.'mining-30' 0, 'retort-35'.'mining-25' 0, 'retort-35'.'mining-30' 0, 'misc-eq'.'mining-25' 0, 'misc-eq'.'mining-35' 0, 'mine-30'.'mining-25' 0, 'mine-30'.'mining-35' 0, 'so2-99-eq'.'mining-25' 0, 'so2-99-eq'.'mining-30' 0, 'part-95-eq'.'mining-25' 0, 'part-95-eq'.'mining-30' 0, 'disp-u-eq'.'mining-25' 0, 'disp-u-eq'.'mining-35' 0, 'so2-90-eq'.'mining-25' 0, 'so2-90-eq'.'mining-30' 0, 'part-90-eq'.'mining-25' 0, 'part-90-eq'.'mining-35' 0, 'h2o-m-eq'.'mining-25' 0, 'h2o-m-eq'.'mining-30' 0/
+    prm(c) /'sur-water' 24, 'grnd-water' 120, 'mo-water' 2/
+    rw1(c) /'sur-water' 300, 'mo-water' 9999999/
     rwesc(c) /'sur-water' 0.05/
     num(m) /'mine-25' 0.2, 'mine-30' 0.2, 'mine-35' 0.2, 'retort-25' 0.26, 'retort-30' 0.26, 'retort-35' 0.26, 'h2o-s-eq' 0.025, 'h2o-g-eq' 0.05, 'h2o-m-eq' 0.025, upgrader 0.26, 'disp-c-eq' 0.004, 'disp-u-eq' 0.002, 'disp-d-eq' 0.008, 'misc-eq' 0.254, 'part-50-eq' 0.0022, 'so2-50-eq' 0.0008, 'part-90-eq' 0.0074, 'so2-90-eq' 0.0026, 'part-95-eq' 0.0096, 'so2-95-eq' 0.0034, 'part-99-eq' 0.0148, 'so2-99-eq' 0.0052, 'p-99pt5-eq' 0.017, 's-99pt5-eq' 0.006/
-    nud(m) /'mine-25' 71430.0, 'mine-30' 71430.0, 'mine-35' 71430.0, 'retort-25' 71430.0, 'retort-30' 71430.0, 'retort-35' 71430.0, 'h2o-s-eq' 251040.0, 'h2o-g-eq' 251040.0, 'h2o-m-eq' 251040.0, upgrader 59524.0, 'disp-c-eq' 60000.0, 'disp-u-eq' 60000.0, 'disp-d-eq' 60000.0, 'misc-eq' 50000.0, 'part-50-eq' 329277.0, 'part-90-eq' 329277.0, 'part-95-eq' 329277.0, 'part-99-eq' 329277.0, 'p-99pt5-eq' 329277.0, 'so2-50-eq' 352921.0, 'so2-90-eq' 352921.0, 'so2-95-eq' 352921.0, 'so2-99-eq' 352921.0, 's-99pt5-eq' 352921.0/
+    nud(m) /'mine-25' 71430, 'mine-30' 71430, 'mine-35' 71430, 'retort-25' 71430, 'retort-30' 71430, 'retort-35' 71430, 'h2o-s-eq' 251040, 'h2o-g-eq' 251040, 'h2o-m-eq' 251040, upgrader 59524, 'disp-c-eq' 60000, 'disp-u-eq' 60000, 'disp-d-eq' 60000, 'misc-eq' 50000, 'part-50-eq' 329277, 'part-90-eq' 329277, 'part-95-eq' 329277, 'part-99-eq' 329277, 'p-99pt5-eq' 329277, 'so2-50-eq' 352921, 'so2-90-eq' 352921, 'so2-95-eq' 352921, 'so2-99-eq' 352921, 's-99pt5-eq' 352921/
     opc(p) /'mining-25' 2.08, 'mining-30' 2.08, 'mining-35' 2.08, 'ret-25' 2.7, 'ret-30' 2.7, 'ret-35' 2.7, 'buy-h2o-s' 0.07, 'buy-h2o-m' 0.07, 'buy-h2o-g' 0.14, upgrading 3.18, 'dispose-c' 0.4, 'dispose-u' 0.21, 'dispose-d' 1.86, miscell 4.07, 'part-50' 0.01, 'so2-50' 0.01, 'part-90' 0.03, 'so2-90' 0.03, 'part-95' 0.04, 'so2-95' 0.04, 'part-99' 0.06, 'so2-99' 0.06, 'part-99pt5' 0.07, 'so2-99pt5' 0.07/
     midyear(tf)
     prra(c,tf)
     prr(c,tf)
     nu(m)
-    bc(c) /'part-red' 10.0, 'so2-red' 1.0/
-    esa(c) /'part-red' 45.0, 'so2-red' 80.0/
-    po(c) /syncrude 34.0, lpg 30.0, ammonia 135.0, coke 75.0, sulfur 127.0/
+    bc(c) /'part-red' 10, 'so2-red' 1/
+    esa(c) /'part-red' 45, 'so2-red' 80/
+    po(c) /syncrude 34, lpg 30, ammonia 135, coke 75, sulfur 127/
     ycf(c) /syncrude 0.05, lpg 0.05/
-    bts(c) /'shale-25' 1820000.0, 'shale-30' 119000.0, 'shale-35' 40800.0/
+    bts(c) /'shale-25' 1820000, 'shale-30' 119000, 'shale-35' 40800/
     bra(c) /'sur-water' 0.818, 'mo-water' 1.1/
-    bga(c) /'grnd-water' 20.0/
-    bd(c) /'can-space' 6780.0/
-    indcap(tf) /'1990-94' 4.0, '1995-99' 5.0, '2000-04' 6.0, '2005-09' 6.0/
+    bga(c) /'grnd-water' 20/
+    bd(c) /'can-space' 6780/
+    indcap(tf) /'1990-94' 4, '1995-99' 5, '2000-04' 6, '2005-09' 6/
     pf(c,t)
     bs(c)
     br(c)
@@ -86,7 +86,7 @@ Parameters
     drd(c,i,tf)
     dgd(c,i)
     newcap(t)
-    ts(tf,tf) /'1985-89'.tfp 1.0, '1990-94'.tfp 1.0, '1995-99'.tfp 1.0, '2000-04'.tfp 1.0, '2005-09'.tfp 1.0/
+    ts(tf,tf) /'1985-89'.tfp 1, '1990-94'.tfp 1, '1995-99'.tfp 1, '2000-04'.tfp 1, '2005-09'.tfp 1/
     del(tf)
     xlev(c,tf)
     noplants(tf)
@@ -130,21 +130,21 @@ Parameters
 ;
 
 Scalars
-    theta /5.0/
+    theta /5/
     ps /0.25/
-    prga /25.0/
-    nutot /3.0/
-    days /330.0/
-    prg /0.0/
+    prga /25/
+    nutot /3/
+    days /330/
+    prg /0/
     boxh /0.4/
-    boxw /40.0/
+    boxw /40/
     boxl /14.4/
-    ebm /0.0/
+    ebm /0/
     rfs /0.6/
     rho /0.15/
-    zeta /20.0/
-    sigma /0.0/
-    pilev /0.0/
+    zeta /20/
+    sigma /0/
+    pilev /0/
 ;
 
 prg = prga / 7762;
@@ -168,17 +168,6 @@ dgd(crg,i) = dg(crg,i) - dg(crg,i-1);
 newcap(t) = 50 * 0.33 * indcap(t);
 del(tf) = (1 + rho) ** (1982 - midyear(tf));
 sigma = (1 + rho) ** 2 * rho / (1 - (1 + rho) ** ((-1) * zeta));
-noplants(t) = 20 * xlev("syncrude",t);
-rwy(crr,t) = 0.33 * rwd(crr,t);
-gwy(crg,t) = 0.33 * gwd(crg,t);
-gwp(crg,t) = theta * gwy(crg,t);
-gwcy(crg,t) = (gwp(crg,t) * prg + 0.5 * gwp(crg,t) ** 2 * (prm(crg) * prg - prg) / bg(crg) - sum(tp$(ts(t,tp)), gwp(crg,tp) * prg + 0.5 * gwp(crg,tp) ** 2 * (prm(crg) * prg - prg) / bg(crg))) / theta;
-capcpl(tf) = capcp(tf) / (noplants(tf+1) - noplants(tf));
-capcmt(tf) = sum(m, capcm(tf,m));
-cashfly(tf) = revy(tf) - tcosty(tf);
-fracst(crs) = theta * sum(t, fracsy(crs,t));
-fracrwy(crr,t) = 100 * rwy(crr,t) / (bra(crr) * 1000);
-fracgw(crg,t) = 100 * gwy(crg,t) / (bga(crg) * 1000);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -261,7 +250,6 @@ rwclast(crr,t) = 7762 * (prr(crr,t) + ur.l(crr,t) * (prm(crr) - 1) * prr(crr,t) 
 gwd(crg,t) = ((-1) * sum(p, a(crg,p) * z.l(p,t))) / (3.3 * 0.7762);
 gwclast(crg) = prga + prga * ug.l(crg) * (prm(crg) - 1) / bg(crg);
 capcp(tf) = 0.001 * sum(m, nu(m) * h.l(m,tf));
-capcm(tf,m) = nu(m) * h.l(m,tf) / (noplants(tf+1) - noplants(tf));
 revy(t) = r.l(t) / 1000;
 tcosty(t) = (phik.l(t) + phiy.l(t) + phir.l(t) + phio.l(t)) / 1000;
 revb(t) = r.l(t) / x.l("syncrude",t);
@@ -269,19 +257,31 @@ tcostb(t) = (phiy.l(t) + phir.l(t) + phik.l(t) + phio.l(t)) / x.l("syncrude",t);
 roycb(t) = phiy.l(t) / x.l("syncrude",t);
 swcb(mrs,t) = (sigma * sum(tfp$(ts(t,tfp)), nu(mrs) * h.l(mrs,tfp)) + sum(prws, opc(prws) * z.l(prws,t)) + sum(crrs, sum(i, drd(crrs,i,t) * uur.l(crrs,i,t)) / bbr(crrs))) / x.l("syncrude",t);
 mwcb(mrm,t) = (sigma * sum(tfp$(ts(t,tfp)), nu(mrm) * h.l(mrm,tfp)) + sum(prwm, opc(prwm) * z.l(prwm,t)) + sum(crrm, sum(i, drd(crrm,i,t) * uur.l(crrm,i,t)) / bbr(crrm))) / x.l("syncrude",t);
-gwcb(mrg,t) = (del(t) * sum(tfp$(ts(t,tfp)), nu(mrg) * h.l(mrg,tfp)) + sum(pgw, opc(pgw) * z.l(pgw,t)) + sum(crg, gwcy(crg,t))) / x.l("syncrude",t);
 capcb(t) = phik.l(t) / x.l("syncrude",t);
 oprcb(t) = phio.l(t) / x.l("syncrude",t);
 pccb(t) = (sigma * sum(tfp$(ts(t,tfp)), sum(mp, nu(mp) * h.l(mp,tfp)) + sum(ms, nu(ms) * h.l(ms,tfp))) + sum(pp, opc(pp) * z.l(pp,t))) / x.l("syncrude",t);
 elev(er,t) = ebm * sum(p, a(er,p) * z.l(p,t)) + bc(er);
 pccpp(mp,tf) = nu(mp) * h.l(mp,tf);
 pccsp(ms,tf) = nu(ms) * h.l(ms,tf);
-capmp(tf) = sum(mp, nu(mp) * h.l(mp,tf)) / (noplants(tf+1) - noplants(tf));
-capms(tf) = sum(ms, nu(ms) * h.l(ms,tf)) / (noplants(tf+1) - noplants(tf));
 fracsy(crs,t) = 100 * us.l(crs,t) / bs(crs);
 dacper(t) = 100 * z.l("dispose-c",t) / sum(pd, z.l(pd,t));
 dauper(t) = 100 * z.l("dispose-u",t) / sum(pd, z.l(pd,t));
 dadper(t) = 100 * z.l("dispose-d",t) / sum(pd, z.l(pd,t));
+noplants(t) = 20 * xlev("syncrude",t);
+rwy(crr,t) = 0.33 * rwd(crr,t);
+gwy(crg,t) = 0.33 * gwd(crg,t);
+cashfly(tf) = revy(tf) - tcosty(tf);
+fracst(crs) = theta * sum(t, fracsy(crs,t));
+capcpl(tf) = capcp(tf) / (noplants(tf+1) - noplants(tf));
+capcm(tf,m) = nu(m) * h.l(m,tf) / (noplants(tf+1) - noplants(tf));
+capmp(tf) = sum(mp, nu(mp) * h.l(mp,tf)) / (noplants(tf+1) - noplants(tf));
+capms(tf) = sum(ms, nu(ms) * h.l(ms,tf)) / (noplants(tf+1) - noplants(tf));
+fracrwy(crr,t) = 100 * rwy(crr,t) / (bra(crr) * 1000);
+gwp(crg,t) = theta * gwy(crg,t);
+fracgw(crg,t) = 100 * gwy(crg,t) / (bga(crg) * 1000);
+capcmt(tf) = sum(m, capcm(tf,m));
+gwcy(crg,t) = (gwp(crg,t) * prg + 0.5 * gwp(crg,t) ** 2 * (prm(crg) * prg - prg) / bg(crg) - sum(tp$(ts(t,tp)), gwp(crg,tp) * prg + 0.5 * gwp(crg,tp) ** 2 * (prm(crg) * prg - prg) / bg(crg))) / theta;
+gwcb(mrg,t) = (del(t) * sum(tfp$(ts(t,tfp)), nu(mrg) * h.l(mrg,tfp)) + sum(pgw, opc(pgw) * z.l(pgw,t)) + sum(crg, gwcy(crg,t))) / x.l("syncrude",t);
 $offImplicitAssign
 
 * ============================================

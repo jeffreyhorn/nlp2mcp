@@ -25,22 +25,22 @@ Sets
 
 Parameters
     alpha(g) /g1 0.68, g2 0.64/
-    ccmin(g) /g1 1000.0, g2 1000.0/
-    ccmax(g) /g1 10000.0, g2 10000.0/
-    c(g) /g1 4.0, g2 2.5/
-    f(g,dl) /g1.h 4.3, g1.m 2.0, g1.l 0.5, g2.h 8.7, g2.m 4.0, g2.l 1.0/
-    d(dl) /h 1040.0, m 1040.0, l 1040.0/
-    us(dl) /h 10.0, m 10.0, l 10.0/
-    v1(stoch,omega1) /out.o11 2.1, out.o12 1.0, pro.o11 0.5, pro.o12 0.5/
-    v2(stoch,omega2) /out.o21 2.0, out.o22 1.0, pro.o21 0.2, pro.o22 0.8/
-    hm1(dl) /h 300.0, m 400.0, l 200.0/
-    hm2(dl) /h 100.0, m 150.0, l 300.0/
+    ccmin(g) /g1 1000, g2 1000/
+    ccmax(g) /g1 10000, g2 10000/
+    c(g) /g1 4, g2 2.5/
+    f(g,dl) /g1.h 4.3, g1.m 2, g1.l 0.5, g2.h 8.7, g2.m 4, g2.l 1/
+    d(dl) /h 1040, m 1040, l 1040/
+    us(dl) /h 10, m 10, l 10/
+    v1(stoch,omega1) /out.o11 2.1, out.o12 1, pro.o11 0.5, pro.o12 0.5/
+    v2(stoch,omega2) /out.o21 2, out.o22 1, pro.o21 0.2, pro.o22 0.8/
+    hm1(dl) /h 300, m 400, l 200/
+    hm2(dl) /h 100, m 150, l 300/
 ;
 
 Scalars
-    h1 /0.0/
-    ccost /0.0/
-    ocost /0.0/
+    h1 /0/
+    ccost /0/
+    ocost /0/
 ;
 
 * ============================================

@@ -27,7 +27,7 @@ Parameters
 ;
 
 Scalars
-    ru /0.0/
+    ru /0/
 ;
 
 theta(i) = ord(i) / card(i);

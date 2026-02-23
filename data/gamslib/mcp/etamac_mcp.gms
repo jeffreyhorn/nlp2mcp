@@ -40,26 +40,26 @@ Parameters
 ;
 
 Scalars
-    nyper /5.0/
+    nyper /5/
     spda /0.96/
     kpvs /0.28/
     elvs /0.35/
     esub /0.45/
     k0 /10.9/
     e0 /2.5/
-    n0 /50.0/
+    n0 /50/
     i0 /0.7/
     c0 /3.2/
-    pe0 /50.0/
+    pe0 /50/
     pn0 /4.5/
-    pnref /3.0/
-    y0 /0.0/
+    pnref /3/
+    y0 /0/
     htrt0 /10.809/
-    thsnd /1000.0/
-    rho /0.0/
-    aconst /0.0/
-    bconst /0.0/
-    ninit /0.0/
+    thsnd /1000/
+    rho /0/
+    aconst /0/
+    bconst /0/
+    ninit /0/
     tol /0.3/
 ;
 

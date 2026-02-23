@@ -24,9 +24,9 @@ Sets
 Alias(j, jj);
 
 Scalars
-    gamma /2.0/
-    b0 /5.0/
-    bm /100.0/
+    gamma /2/
+    b0 /5/
+    bm /100/
 ;
 
 first("s1") = 1;

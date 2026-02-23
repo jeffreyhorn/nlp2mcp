@@ -26,7 +26,7 @@ Alias(i, j);
 Alias(h, k);
 
 Parameters
-    SAM(u,v) /BRD.BRD 21.0, BRD.MLK 8.0, BRD.HOH 20.0, BRD.GOV 19.0, BRD.INV 16.0, BRD.EXT 8.0, MLK.BRD 17.0, MLK.MLK 9.0, MLK.HOH 30.0, MLK.GOV 14.0, MLK.INV 15.0, MLK.EXT 4.0, CAP.BRD 20.0, CAP.MLK 30.0, LAB.BRD 15.0, LAB.MLK 25.0, IDT.BRD 5.0, IDT.MLK 4.0, TRF.BRD 1.0, TRF.MLK 2.0, HOH.CAP 50.0, HOH.LAB 40.0, GOV.IDT 9.0, GOV.TRF 3.0, GOV.HOH 23.0, INV.HOH 17.0, INV.GOV 2.0, INV.EXT 12.0, EXT.BRD 13.0, EXT.MLK 11.0, INV.BRD 0.0, INV.MLK 0.0, INV.CAP 0.0, INV.LAB 0.0, INV.IDT 0.0, INV.TRF 0.0, INV.INV 0.0, EXT.CAP 0.0, EXT.LAB 0.0, EXT.IDT 0.0, EXT.TRF 0.0, EXT.HOH 0.0, EXT.GOV 0.0, EXT.INV 0.0, EXT.EXT 0.0, TRF.CAP 0.0, TRF.LAB 0.0, TRF.IDT 0.0, TRF.TRF 0.0, TRF.HOH 0.0, TRF.GOV 0.0, TRF.INV 0.0, TRF.EXT 0.0, LAB.CAP 0.0, LAB.LAB 0.0, LAB.IDT 0.0, LAB.TRF 0.0, LAB.HOH 0.0, LAB.GOV 0.0, LAB.INV 0.0, LAB.EXT 0.0, HOH.BRD 0.0, HOH.MLK 0.0, HOH.IDT 0.0, HOH.TRF 0.0, HOH.HOH 0.0, HOH.GOV 0.0, HOH.INV 0.0, HOH.EXT 0.0, MLK.CAP 0.0, MLK.LAB 0.0, MLK.IDT 0.0, MLK.TRF 0.0, IDT.CAP 0.0, IDT.LAB 0.0, IDT.IDT 0.0, IDT.TRF 0.0, IDT.HOH 0.0, IDT.GOV 0.0, IDT.INV 0.0, IDT.EXT 0.0, GOV.BRD 0.0, GOV.MLK 0.0, GOV.CAP 0.0, GOV.LAB 0.0, GOV.GOV 0.0, GOV.INV 0.0, GOV.EXT 0.0, CAP.CAP 0.0, CAP.LAB 0.0, CAP.IDT 0.0, CAP.TRF 0.0, CAP.HOH 0.0, CAP.GOV 0.0, CAP.INV 0.0, CAP.EXT 0.0, BRD.CAP 0.0, BRD.LAB 0.0, BRD.IDT 0.0, BRD.TRF 0.0/
+    SAM(u,v) /BRD.BRD 21, BRD.MLK 8, BRD.HOH 20, BRD.GOV 19, BRD.INV 16, BRD.EXT 8, MLK.BRD 17, MLK.MLK 9, MLK.HOH 30, MLK.GOV 14, MLK.INV 15, MLK.EXT 4, CAP.BRD 20, CAP.MLK 30, LAB.BRD 15, LAB.MLK 25, IDT.BRD 5, IDT.MLK 4, TRF.BRD 1, TRF.MLK 2, HOH.CAP 50, HOH.LAB 40, GOV.IDT 9, GOV.TRF 3, GOV.HOH 23, INV.HOH 17, INV.GOV 2, INV.EXT 12, EXT.BRD 13, EXT.MLK 11, EXT.CAP 0, EXT.LAB 0, EXT.IDT 0, EXT.TRF 0, EXT.HOH 0, EXT.GOV 0, EXT.INV 0, EXT.EXT 0, MLK.CAP 0, MLK.LAB 0, MLK.IDT 0, MLK.TRF 0, BRD.CAP 0, BRD.LAB 0, BRD.IDT 0, BRD.TRF 0, TRF.CAP 0, TRF.LAB 0, TRF.IDT 0, TRF.TRF 0, TRF.HOH 0, TRF.GOV 0, TRF.INV 0, TRF.EXT 0, HOH.BRD 0, HOH.MLK 0, HOH.IDT 0, HOH.TRF 0, HOH.HOH 0, HOH.GOV 0, HOH.INV 0, HOH.EXT 0, IDT.CAP 0, IDT.LAB 0, IDT.IDT 0, IDT.TRF 0, IDT.HOH 0, IDT.GOV 0, IDT.INV 0, IDT.EXT 0, GOV.BRD 0, GOV.MLK 0, GOV.CAP 0, GOV.LAB 0, GOV.GOV 0, GOV.INV 0, GOV.EXT 0, LAB.CAP 0, LAB.LAB 0, LAB.IDT 0, LAB.TRF 0, LAB.HOH 0, LAB.GOV 0, LAB.INV 0, LAB.EXT 0, CAP.CAP 0, CAP.LAB 0, CAP.IDT 0, CAP.TRF 0, CAP.HOH 0, CAP.GOV 0, CAP.INV 0, CAP.EXT 0, INV.BRD 0, INV.MLK 0, INV.CAP 0, INV.LAB 0, INV.IDT 0, INV.TRF 0, INV.INV 0/
     Y0(j)
     F0(h,j)
     X0(i,j)
@@ -41,12 +41,12 @@ Parameters
     Tz0(j)
     Tm0(j)
     FF(h)
-    pWe0(i) /BRD 1.0, MLK 1.0/
-    pWm0(i) /BRD 1.0, MLK 1.0/
+    pWe0(i) /BRD 1, MLK 1/
+    pWm0(i) /BRD 1, MLK 1/
     tauz(i)
-    taum(i) /BRD 0.0, MLK 0.0/
-    sigma(i) /BRD 2.0, MLK 2.0/
-    psi(i) /BRD 2.0, MLK 2.0/
+    taum(i) /BRD 0, MLK 0/
+    sigma(i) /BRD 2, MLK 2/
+    psi(i) /BRD 2, MLK 2/
     eta(i)
     phi(i)
     alpha(i)
@@ -85,41 +85,41 @@ Parameters
 ;
 
 Scalars
-    Sp0 /0.0/
-    Sg0 /0.0/
-    Td0 /0.0/
-    Sf /0.0/
-    ssp /0.0/
-    ssg /0.0/
-    taud /0.0/
-    depsilon /0.0/
-    dTd /0.0/
-    dSp /0.0/
-    dSg /0.0/
-    UU0 /0.0/
-    ep0 /0.0/
-    ep1 /0.0/
-    EV /0.0/
+    Sp0 /0/
+    Sg0 /0/
+    Td0 /0/
+    Sf /0/
+    ssp /0/
+    ssg /0/
+    taud /0/
+    depsilon /0/
+    dTd /0/
+    dSp /0/
+    dSg /0/
+    UU0 /0/
+    ep0 /0/
+    ep1 /0/
+    EV /0/
 ;
 
-Y0(j) = sum(h, F0(h,j));
-F0(h,j) = SAM(h,j);
-X0(i,j) = SAM(i,j);
-Z0(j) = Y0(j) + sum(i, X0(i,j));
-Xp0(i) = SAM(i,"HOH");
-Xg0(i) = SAM(i,"GOV");
-Xv0(i) = SAM(i,"INV");
-E0(i) = SAM(i,"EXT");
-M0(i) = SAM("EXT",i);
-Q0(i) = Xp0(i) + Xg0(i) + Xv0(i) + sum(j, X0(i,j));
-D0(i) = (1 + tauz(i)) * Z0(i) - E0(i);
-Sp0 = SAM("INV","HOH");
-Sg0 = SAM("INV","GOV");
-Td0 = SAM("GOV","HOH");
-Tz0(j) = SAM("IDT",j);
-Tm0(j) = SAM("TRF","J");
-FF(h) = SAM("HOH",h);
-Sf = SAM("INV","EXT");
+y0(j) = sum(h, F0(h,j));
+f0(h,j) = SAM(h,j);
+x0(i,j) = SAM(i,j);
+z0(j) = Y0(j) + sum(i, X0(i,j));
+xp0(i) = SAM(i,"HOH");
+xg0(i) = SAM(i,"GOV");
+xv0(i) = SAM(i,"INV");
+e0(i) = SAM(i,"EXT");
+m0(i) = SAM("EXT",i);
+q0(i) = Xp0(i) + Xg0(i) + Xv0(i) + sum(j, X0(i,j));
+d0(i) = (1 + tauz(i)) * Z0(i) - E0(i);
+sp0 = SAM("INV","HOH");
+sg0 = SAM("INV","GOV");
+td0 = SAM("GOV","HOH");
+tz0(j) = SAM("IDT",j);
+tm0(j) = SAM("TRF","J");
+ff(h) = SAM("HOH",h);
+sf = SAM("INV","EXT");
 tauz(j) = Tz0(j) / Z0(j);
 taum(j) = Tm0(j) / M0(j);
 eta(i) = (sigma(i) - 1) / sigma(i);
@@ -140,9 +140,8 @@ theta(i) = Z0(i) / (xie(i) * E0(i) ** phi(i) + xid(i) * D0(i) ** phi(i)) ** (1 /
 ssp = Sp0 / sum(h, FF(h));
 ssg = Sg0 / (Td0 + sum(j, Tz0(j)) + sum(j, Tm0(j)));
 taud = Td0 / sum(h, FF(h));
-UU0 = prod(i, Xp0(i) ** alpha(i));
+uu0 = prod(i, Xp0(i) ** alpha(i));
 ep0 = UU0 / prod(i, (alpha(i) / 1) ** alpha(i));
-EV = ep1 - ep0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -315,6 +314,7 @@ dTm(i) = (tm.l(i) / Tm0(i) - 1) * 100;
 dSp = (sp.l / Sp0 - 1) * 100;
 dSg = (sg.l / Sg0 - 1) * 100;
 ep1 = uu.l / prod(i, (alpha(i) / 1) ** alpha(i));
+EV = ep1 - ep0;
 $offImplicitAssign
 
 * ============================================

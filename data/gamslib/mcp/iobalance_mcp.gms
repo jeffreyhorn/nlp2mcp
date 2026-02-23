@@ -24,20 +24,20 @@ Alias(i, j);
 Parameters
     a0(i,j)
     z1(i,j)
-    x(j) /'1' 421.0, '2' 284.0, '3' 283.0/
+    x(j) /'1' 421, '2' 284, '3' 283/
     u(i)
     v(j)
     a1(i,j)
-    r(i) /'1' 1.0, '2' 1.0, '3' 1.0/
-    s(j) /'1' 1.0, '2' 1.0, '3' 1.0/
+    r(i) /'1' 1, '2' 1, '3' 1/
+    s(j) /'1' 1, '2' 1, '3' 1/
     report(*,i,j)
     zbar(i,j)
 ;
 
 Scalars
-    oldr /0.0/
-    olds /0.0/
-    maxdelta /1.0/
+    oldr /0/
+    olds /0/
+    maxdelta /1/
 ;
 
 u(i) = sum(j, z1(i,j));

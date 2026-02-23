@@ -27,9 +27,9 @@ Sets
 ;
 
 Parameters
-    pwbound(s,b) /'stage-1'.lower 12.0, 'stage-1'.upper 16.0, 'stage-2'.lower 10.0, 'stage-2'.upper 12.0, 'stage-3'.lower 7.0, 'stage-3'.upper 9.0/
+    pwbound(s,b) /'stage-1'.lower 12, 'stage-1'.upper 16, 'stage-2'.lower 10, 'stage-2'.upper 12, 'stage-3'.lower 7, 'stage-3'.upper 9/
     iwf(s) /'stage-1' 0.5, 'stage-2' 0.6, 'stage-3' 0.7/
-    nume(s) /'stage-1' 5.0, 'stage-2' 5.0, 'stage-3' 1.0/
+    nume(s) /'stage-1' 5, 'stage-2' 5, 'stage-3' 1/
     rde1(s) /'stage-1' -257.963, 'stage-2' -257.963, 'stage-3' 32.591/
     rde2(s) /'stage-1' 160.99, 'stage-2' 160.99, 'stage-3' 181.806/
     rde3(s) /'stage-1' -0.146, 'stage-2' -0.146, 'stage-3' 0.539/
@@ -43,8 +43,8 @@ Parameters
 ;
 
 Scalars
-    pl /20.0/
-    numl /10.0/
+    pl /20/
+    numl /10/
     g /31.8/
 ;
 

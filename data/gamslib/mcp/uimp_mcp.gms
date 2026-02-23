@@ -23,18 +23,18 @@ Sets
 ;
 
 Parameters
-    mh(l,k) /m1.nuts 4.0, m1.bolts 4.0, m1.washers 6.0, m2.nuts 7.0, m2.bolts 6.0, m2.washers 6.0, m3.nuts 3.0, m3.bolts 0.0, m3.washers 0.0/
-    mhadd(i,j) /summer.overtime -1.0, winter.normal 1.0, winter.overtime 0.0, summer.normal 0.0/
-    av(l,j) /m1.normal 100.0, m1.overtime 80.0, m2.normal 100.0, m2.overtime 90.0, m3.normal 40.0, m3.overtime 30.0/
-    t(i,j,k,l) /winter.overtime.washers.m1 5.0/
+    mh(l,k) /m1.nuts 4, m1.bolts 4, m1.washers 6, m2.nuts 7, m2.bolts 6, m2.washers 6, m3.nuts 3, m3.bolts 0, m3.washers 0/
+    mhadd(i,j) /summer.overtime -1, winter.normal 1, summer.normal 0, winter.overtime 0/
+    av(l,j) /m1.normal 100, m1.overtime 80, m2.normal 100, m2.overtime 90, m3.normal 40, m3.overtime 30/
+    t(i,j,k,l) /winter.overtime.washers.m1 5/
     a(i,j,l)
-    tc(l,k) /m1.nuts 2.0, m1.bolts 3.0, m1.washers 4.0, m2.nuts 4.0, m2.bolts 3.0, m2.washers 2.0, m3.nuts 1.0, m3.bolts 0.0, m3.washers 0.0/
-    tcadd(i,j) /summer.overtime 1.0, winter.normal 1.0, winter.overtime 2.0, summer.normal 0.0/
+    tc(l,k) /m1.nuts 2, m1.bolts 3, m1.washers 4, m2.nuts 4, m2.bolts 3, m2.washers 2, m3.nuts 1, m3.bolts 0, m3.washers 0/
+    tcadd(i,j) /summer.overtime 1, winter.normal 1, winter.overtime 2, summer.normal 0/
     c(i,j,k,l)
-    p(i,k) /summer.nuts 10.0, summer.bolts 10.0, summer.washers 9.0, winter.nuts 11.0, winter.bolts 11.0, winter.washers 10.0/
-    d(i,k) /summer.nuts 25.0, summer.bolts 30.0, summer.washers 30.0, winter.nuts 30.0, winter.bolts 25.0, winter.washers 25.0/
-    s(k) /nuts 1.0, bolts 1.0, washers 1.0/
-    h(k) /nuts 20.0, bolts 20.0/
+    p(i,k) /summer.nuts 10, summer.bolts 10, summer.washers 9, winter.nuts 11, winter.bolts 11, winter.washers 10/
+    d(i,k) /summer.nuts 25, summer.bolts 30, summer.washers 30, winter.nuts 30, winter.bolts 25, winter.washers 25/
+    s(k) /nuts 1, bolts 1, washers 1/
+    h(k) /nuts 20, bolts 20/
 ;
 
 t(i,j,k,l) = mh(l,k) + mhadd(i,j)$mh(l,k);

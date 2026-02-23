@@ -23,13 +23,13 @@ Sets
 ;
 
 Parameters
-    a(r,p) /scrap.low 5.0, scrap.medium 3.0, scrap.high 1.0, new.low 1.0, new.medium 2.0, new.high 3.0/
-    c(p,t) /low.'1' 25.0, low.'2' 20.0, low.'3' 10.0, medium.'1' 50.0, medium.'2' 50.0, medium.'3' 50.0, high.'1' 75.0, high.'2' 80.0, high.'3' 100.0/
-    misc(*,r) /'max-stock'.scrap 400.0, 'max-stock'.new 275.0, 'storage-c'.scrap 0.5, 'storage-c'.new 2.0, 'res-value'.scrap 15.0, 'res-value'.new 25.0/
+    a(r,p) /scrap.low 5, scrap.medium 3, scrap.high 1, new.low 1, new.medium 2, new.high 3/
+    c(p,t) /low.'1' 25, low.'2' 20, low.'3' 10, medium.'1' 50, medium.'2' 50, medium.'3' 50, high.'1' 75, high.'2' 80, high.'3' 100/
+    misc(*,r) /'max-stock'.scrap 400, 'max-stock'.new 275, 'storage-c'.scrap 0.5, 'storage-c'.new 2, 'res-value'.scrap 15, 'res-value'.new 25/
 ;
 
 Scalars
-    m /40.0/
+    m /40/
 ;
 
 * ============================================

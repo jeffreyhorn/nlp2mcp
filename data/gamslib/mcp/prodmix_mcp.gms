@@ -21,9 +21,9 @@ Sets
 ;
 
 Parameters
-    labor(shop,desk) /carpentry.d1 4.0, carpentry.d2 9.0, carpentry.d3 7.0, carpentry.d4 10.0, finishing.d1 1.0, finishing.d2 1.0, finishing.d3 3.0, finishing.d4 40.0/
-    caplim(shop) /carpentry 6000.0, finishing 4000.0/
-    price(desk) /d1 12.0, d2 20.0, d3 18.0, d4 40.0/
+    labor(shop,desk) /carpentry.d1 4, carpentry.d2 9, carpentry.d3 7, carpentry.d4 10, finishing.d1 1, finishing.d2 1, finishing.d3 3, finishing.d4 40/
+    caplim(shop) /carpentry 6000, finishing 4000/
+    price(desk) /d1 12, d2 20, d3 18, d4 40/
 ;
 
 * ============================================

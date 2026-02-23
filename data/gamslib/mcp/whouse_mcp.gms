@@ -20,13 +20,13 @@ Sets
 ;
 
 Parameters
-    price(t) /'q-1' 10.0, 'q-2' 12.0, 'q-3' 8.0, 'q-4' 9.0/
-    istock(t) /'q-1' 50.0/
+    price(t) /'q-1' 10, 'q-2' 12, 'q-3' 8, 'q-4' 9/
+    istock(t) /'q-1' 50/
 ;
 
 Scalars
-    storecost /1.0/
-    storecap /100.0/
+    storecost /1/
+    storecap /100/
 ;
 
 * ============================================

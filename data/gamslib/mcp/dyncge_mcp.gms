@@ -29,7 +29,7 @@ Alias(i, j);
 Alias(h, k);
 
 Parameters
-    SAM(u,v) /AGR.AGR 3563.257, AGR.LMN 0.0, AGR.HMN 919.745, AGR.SRV 62.464, LMN.AGR 32220.169, LMN.LMN 329.469, LMN.HMN 802.026, LMN.SRV 1196.525, HMN.AGR 27648.678, HMN.LMN 4.931, HMN.HMN 34979.803, HMN.SRV 55083.516, SRV.AGR 234243.865, SRV.LMN 90707.177, SRV.HMN 79169.426, SRV.SRV 17426.156, IDT.AGR 433.854, IDT.LMN 0.0, IDT.HMN 0.0, IDT.SRV 0.0, TRF.AGR 149.278, TRF.LMN 2866.853, TRF.HMN 1749.385, TRF.SRV 8.575, CAP.AGR 5082.506, CAP.LMN 7042.697, CAP.HMN 21058.821, CAP.SRV 163045.396, LAB.AGR 1435.01, LAB.LMN 8942.365, LAB.HMN 42510.123, LAB.SRV 222732.7, EXT.AGR 2092.569, EXT.LMN 23796.669, EXT.HMN 30982.559, EXT.SRV 10837.256, HOH.HMN 0.0, HOH.SRV 0.0, GOV.AGR 52243.041, GOV.LMN 4774.091, HOH.LMN 0.0, INV.AGR 121930.608, INV.LMN 0.0, INV.SRV -6059.608, HOH.AGR 0.0, INV.HMN 0.0, GOV.HMN 0.0, GOV.SRV 0.0/
+    SAM(u,v) /AGR.AGR 3563.257, AGR.LMN 0, AGR.HMN 919.745, AGR.SRV 62.464, LMN.AGR 32220.169, LMN.LMN 329.469, LMN.HMN 802.026, LMN.SRV 1196.525, HMN.AGR 27648.678, HMN.LMN 4.931, HMN.HMN 34979.803, HMN.SRV 55083.516, SRV.AGR 234243.865, SRV.LMN 90707.177, SRV.HMN 79169.426, SRV.SRV 17426.156, IDT.AGR 433.854, IDT.LMN 0, IDT.HMN 0, IDT.SRV 0, TRF.AGR 149.278, TRF.LMN 2866.853, TRF.HMN 1749.385, TRF.SRV 8.575, CAP.AGR 5082.506, CAP.LMN 7042.697, CAP.HMN 21058.821, CAP.SRV 163045.396, LAB.AGR 1435.01, LAB.LMN 8942.365, LAB.HMN 42510.123, LAB.SRV 222732.7, EXT.AGR 2092.569, EXT.LMN 23796.669, EXT.HMN 30982.559, EXT.SRV 10837.256, HOH.HMN 0, HOH.SRV 0, GOV.AGR 52243.041, GOV.LMN 4774.091, HOH.LMN 0, INV.AGR 121930.608, INV.LMN 0, INV.SRV -6059.608, GOV.HMN 0, GOV.SRV 0, HOH.AGR 0, INV.HMN 0/
     SAMGAP(u)
     Y00(j)
     F00(h,j)
@@ -68,20 +68,20 @@ Parameters
     KK0(j,t)
     CC0(t)
     FF0(h,t)
-    pf0(h,j,t) /CAP.AGR.'0' 1.0, CAP.AGR.'1' 1.0, CAP.AGR.'2' 1.0, CAP.AGR.'3' 1.0, CAP.AGR.'4' 1.0, CAP.AGR.'5' 1.0, CAP.AGR.'6' 1.0, CAP.AGR.'7' 1.0, CAP.AGR.'8' 1.0, CAP.AGR.'9' 1.0, CAP.AGR.'10' 1.0, CAP.AGR.'11' 1.0, CAP.AGR.'12' 1.0, CAP.AGR.'13' 1.0, CAP.AGR.'14' 1.0, CAP.AGR.'15' 1.0, CAP.AGR.'16' 1.0, CAP.AGR.'17' 1.0, CAP.AGR.'18' 1.0, CAP.AGR.'19' 1.0, CAP.AGR.'20' 1.0, CAP.AGR.'21' 1.0, CAP.AGR.'22' 1.0, CAP.AGR.'23' 1.0, CAP.AGR.'24' 1.0, CAP.AGR.'25' 1.0, CAP.AGR.'26' 1.0, CAP.AGR.'27' 1.0, CAP.AGR.'28' 1.0, CAP.AGR.'29' 1.0, CAP.AGR.'30' 1.0, CAP.LMN.'0' 1.0, CAP.LMN.'1' 1.0, CAP.LMN.'2' 1.0, CAP.LMN.'3' 1.0, CAP.LMN.'4' 1.0, CAP.LMN.'5' 1.0, CAP.LMN.'6' 1.0, CAP.LMN.'7' 1.0, CAP.LMN.'8' 1.0, CAP.LMN.'9' 1.0, CAP.LMN.'10' 1.0, CAP.LMN.'11' 1.0, CAP.LMN.'12' 1.0, CAP.LMN.'13' 1.0, CAP.LMN.'14' 1.0, CAP.LMN.'15' 1.0, CAP.LMN.'16' 1.0, CAP.LMN.'17' 1.0, CAP.LMN.'18' 1.0, CAP.LMN.'19' 1.0, CAP.LMN.'20' 1.0, CAP.LMN.'21' 1.0, CAP.LMN.'22' 1.0, CAP.LMN.'23' 1.0, CAP.LMN.'24' 1.0, CAP.LMN.'25' 1.0, CAP.LMN.'26' 1.0, CAP.LMN.'27' 1.0, CAP.LMN.'28' 1.0, CAP.LMN.'29' 1.0, CAP.LMN.'30' 1.0, CAP.HMN.'0' 1.0, CAP.HMN.'1' 1.0, CAP.HMN.'2' 1.0, CAP.HMN.'3' 1.0, CAP.HMN.'4' 1.0, CAP.HMN.'5' 1.0, CAP.HMN.'6' 1.0, CAP.HMN.'7' 1.0, CAP.HMN.'8' 1.0, CAP.HMN.'9' 1.0, CAP.HMN.'10' 1.0, CAP.HMN.'11' 1.0, CAP.HMN.'12' 1.0, CAP.HMN.'13' 1.0, CAP.HMN.'14' 1.0, CAP.HMN.'15' 1.0, CAP.HMN.'16' 1.0, CAP.HMN.'17' 1.0, CAP.HMN.'18' 1.0, CAP.HMN.'19' 1.0, CAP.HMN.'20' 1.0, CAP.HMN.'21' 1.0, CAP.HMN.'22' 1.0, CAP.HMN.'23' 1.0, CAP.HMN.'24' 1.0, CAP.HMN.'25' 1.0, CAP.HMN.'26' 1.0, CAP.HMN.'27' 1.0, CAP.HMN.'28' 1.0, CAP.HMN.'29' 1.0, CAP.HMN.'30' 1.0, CAP.SRV.'0' 1.0, CAP.SRV.'1' 1.0, CAP.SRV.'2' 1.0, CAP.SRV.'3' 1.0, CAP.SRV.'4' 1.0, CAP.SRV.'5' 1.0, CAP.SRV.'6' 1.0, CAP.SRV.'7' 1.0, CAP.SRV.'8' 1.0, CAP.SRV.'9' 1.0, CAP.SRV.'10' 1.0, CAP.SRV.'11' 1.0, CAP.SRV.'12' 1.0, CAP.SRV.'13' 1.0, CAP.SRV.'14' 1.0, CAP.SRV.'15' 1.0, CAP.SRV.'16' 1.0, CAP.SRV.'17' 1.0, CAP.SRV.'18' 1.0, CAP.SRV.'19' 1.0, CAP.SRV.'20' 1.0, CAP.SRV.'21' 1.0, CAP.SRV.'22' 1.0, CAP.SRV.'23' 1.0, CAP.SRV.'24' 1.0, CAP.SRV.'25' 1.0, CAP.SRV.'26' 1.0, CAP.SRV.'27' 1.0, CAP.SRV.'28' 1.0, CAP.SRV.'29' 1.0, CAP.SRV.'30' 1.0, LAB.AGR.'0' 1.0, LAB.AGR.'1' 1.0, LAB.AGR.'2' 1.0, LAB.AGR.'3' 1.0, LAB.AGR.'4' 1.0, LAB.AGR.'5' 1.0, LAB.AGR.'6' 1.0, LAB.AGR.'7' 1.0, LAB.AGR.'8' 1.0, LAB.AGR.'9' 1.0, LAB.AGR.'10' 1.0, LAB.AGR.'11' 1.0, LAB.AGR.'12' 1.0, LAB.AGR.'13' 1.0, LAB.AGR.'14' 1.0, LAB.AGR.'15' 1.0, LAB.AGR.'16' 1.0, LAB.AGR.'17' 1.0, LAB.AGR.'18' 1.0, LAB.AGR.'19' 1.0, LAB.AGR.'20' 1.0, LAB.AGR.'21' 1.0, LAB.AGR.'22' 1.0, LAB.AGR.'23' 1.0, LAB.AGR.'24' 1.0, LAB.AGR.'25' 1.0, LAB.AGR.'26' 1.0, LAB.AGR.'27' 1.0, LAB.AGR.'28' 1.0, LAB.AGR.'29' 1.0, LAB.AGR.'30' 1.0, LAB.LMN.'0' 1.0, LAB.LMN.'1' 1.0, LAB.LMN.'2' 1.0, LAB.LMN.'3' 1.0, LAB.LMN.'4' 1.0, LAB.LMN.'5' 1.0, LAB.LMN.'6' 1.0, LAB.LMN.'7' 1.0, LAB.LMN.'8' 1.0, LAB.LMN.'9' 1.0, LAB.LMN.'10' 1.0, LAB.LMN.'11' 1.0, LAB.LMN.'12' 1.0, LAB.LMN.'13' 1.0, LAB.LMN.'14' 1.0, LAB.LMN.'15' 1.0, LAB.LMN.'16' 1.0, LAB.LMN.'17' 1.0, LAB.LMN.'18' 1.0, LAB.LMN.'19' 1.0, LAB.LMN.'20' 1.0, LAB.LMN.'21' 1.0, LAB.LMN.'22' 1.0, LAB.LMN.'23' 1.0, LAB.LMN.'24' 1.0, LAB.LMN.'25' 1.0, LAB.LMN.'26' 1.0, LAB.LMN.'27' 1.0, LAB.LMN.'28' 1.0, LAB.LMN.'29' 1.0, LAB.LMN.'30' 1.0, LAB.HMN.'0' 1.0, LAB.HMN.'1' 1.0, LAB.HMN.'2' 1.0, LAB.HMN.'3' 1.0, LAB.HMN.'4' 1.0, LAB.HMN.'5' 1.0, LAB.HMN.'6' 1.0, LAB.HMN.'7' 1.0, LAB.HMN.'8' 1.0, LAB.HMN.'9' 1.0, LAB.HMN.'10' 1.0, LAB.HMN.'11' 1.0, LAB.HMN.'12' 1.0, LAB.HMN.'13' 1.0, LAB.HMN.'14' 1.0, LAB.HMN.'15' 1.0, LAB.HMN.'16' 1.0, LAB.HMN.'17' 1.0, LAB.HMN.'18' 1.0, LAB.HMN.'19' 1.0, LAB.HMN.'20' 1.0, LAB.HMN.'21' 1.0, LAB.HMN.'22' 1.0, LAB.HMN.'23' 1.0, LAB.HMN.'24' 1.0, LAB.HMN.'25' 1.0, LAB.HMN.'26' 1.0, LAB.HMN.'27' 1.0, LAB.HMN.'28' 1.0, LAB.HMN.'29' 1.0, LAB.HMN.'30' 1.0, LAB.SRV.'0' 1.0, LAB.SRV.'1' 1.0, LAB.SRV.'2' 1.0, LAB.SRV.'3' 1.0, LAB.SRV.'4' 1.0, LAB.SRV.'5' 1.0, LAB.SRV.'6' 1.0, LAB.SRV.'7' 1.0, LAB.SRV.'8' 1.0, LAB.SRV.'9' 1.0, LAB.SRV.'10' 1.0, LAB.SRV.'11' 1.0, LAB.SRV.'12' 1.0, LAB.SRV.'13' 1.0, LAB.SRV.'14' 1.0, LAB.SRV.'15' 1.0, LAB.SRV.'16' 1.0, LAB.SRV.'17' 1.0, LAB.SRV.'18' 1.0, LAB.SRV.'19' 1.0, LAB.SRV.'20' 1.0, LAB.SRV.'21' 1.0, LAB.SRV.'22' 1.0, LAB.SRV.'23' 1.0, LAB.SRV.'24' 1.0, LAB.SRV.'25' 1.0, LAB.SRV.'26' 1.0, LAB.SRV.'27' 1.0, LAB.SRV.'28' 1.0, LAB.SRV.'29' 1.0, LAB.SRV.'30' 1.0/
-    py0(j,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pz0(j,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pq0(i,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pe0(i,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pm0(i,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pd0(i,t) /AGR.'0' 1.0, AGR.'1' 1.0, AGR.'2' 1.0, AGR.'3' 1.0, AGR.'4' 1.0, AGR.'5' 1.0, AGR.'6' 1.0, AGR.'7' 1.0, AGR.'8' 1.0, AGR.'9' 1.0, AGR.'10' 1.0, AGR.'11' 1.0, AGR.'12' 1.0, AGR.'13' 1.0, AGR.'14' 1.0, AGR.'15' 1.0, AGR.'16' 1.0, AGR.'17' 1.0, AGR.'18' 1.0, AGR.'19' 1.0, AGR.'20' 1.0, AGR.'21' 1.0, AGR.'22' 1.0, AGR.'23' 1.0, AGR.'24' 1.0, AGR.'25' 1.0, AGR.'26' 1.0, AGR.'27' 1.0, AGR.'28' 1.0, AGR.'29' 1.0, AGR.'30' 1.0, LMN.'0' 1.0, LMN.'1' 1.0, LMN.'2' 1.0, LMN.'3' 1.0, LMN.'4' 1.0, LMN.'5' 1.0, LMN.'6' 1.0, LMN.'7' 1.0, LMN.'8' 1.0, LMN.'9' 1.0, LMN.'10' 1.0, LMN.'11' 1.0, LMN.'12' 1.0, LMN.'13' 1.0, LMN.'14' 1.0, LMN.'15' 1.0, LMN.'16' 1.0, LMN.'17' 1.0, LMN.'18' 1.0, LMN.'19' 1.0, LMN.'20' 1.0, LMN.'21' 1.0, LMN.'22' 1.0, LMN.'23' 1.0, LMN.'24' 1.0, LMN.'25' 1.0, LMN.'26' 1.0, LMN.'27' 1.0, LMN.'28' 1.0, LMN.'29' 1.0, LMN.'30' 1.0, HMN.'0' 1.0, HMN.'1' 1.0, HMN.'2' 1.0, HMN.'3' 1.0, HMN.'4' 1.0, HMN.'5' 1.0, HMN.'6' 1.0, HMN.'7' 1.0, HMN.'8' 1.0, HMN.'9' 1.0, HMN.'10' 1.0, HMN.'11' 1.0, HMN.'12' 1.0, HMN.'13' 1.0, HMN.'14' 1.0, HMN.'15' 1.0, HMN.'16' 1.0, HMN.'17' 1.0, HMN.'18' 1.0, HMN.'19' 1.0, HMN.'20' 1.0, HMN.'21' 1.0, HMN.'22' 1.0, HMN.'23' 1.0, HMN.'24' 1.0, HMN.'25' 1.0, HMN.'26' 1.0, HMN.'27' 1.0, HMN.'28' 1.0, HMN.'29' 1.0, HMN.'30' 1.0, SRV.'0' 1.0, SRV.'1' 1.0, SRV.'2' 1.0, SRV.'3' 1.0, SRV.'4' 1.0, SRV.'5' 1.0, SRV.'6' 1.0, SRV.'7' 1.0, SRV.'8' 1.0, SRV.'9' 1.0, SRV.'10' 1.0, SRV.'11' 1.0, SRV.'12' 1.0, SRV.'13' 1.0, SRV.'14' 1.0, SRV.'15' 1.0, SRV.'16' 1.0, SRV.'17' 1.0, SRV.'18' 1.0, SRV.'19' 1.0, SRV.'20' 1.0, SRV.'21' 1.0, SRV.'22' 1.0, SRV.'23' 1.0, SRV.'24' 1.0, SRV.'25' 1.0, SRV.'26' 1.0, SRV.'27' 1.0, SRV.'28' 1.0, SRV.'29' 1.0, SRV.'30' 1.0/
-    pk0(t) /'0' 1.0, '1' 1.0, '2' 1.0, '3' 1.0, '4' 1.0, '5' 1.0, '6' 1.0, '7' 1.0, '8' 1.0, '9' 1.0, '10' 1.0, '11' 1.0, '12' 1.0, '13' 1.0, '14' 1.0, '15' 1.0, '16' 1.0, '17' 1.0, '18' 1.0, '19' 1.0, '20' 1.0, '21' 1.0, '22' 1.0, '23' 1.0, '24' 1.0, '25' 1.0, '26' 1.0, '27' 1.0, '28' 1.0, '29' 1.0, '30' 1.0/
-    epsilon0(t) /'0' 1.0, '1' 1.0, '2' 1.0, '3' 1.0, '4' 1.0, '5' 1.0, '6' 1.0, '7' 1.0, '8' 1.0, '9' 1.0, '10' 1.0, '11' 1.0, '12' 1.0, '13' 1.0, '14' 1.0, '15' 1.0, '16' 1.0, '17' 1.0, '18' 1.0, '19' 1.0, '20' 1.0, '21' 1.0, '22' 1.0, '23' 1.0, '24' 1.0, '25' 1.0, '26' 1.0, '27' 1.0, '28' 1.0, '29' 1.0, '30' 1.0/
-    PRICE0(t) /'0' 1.0, '1' 1.0, '2' 1.0, '3' 1.0, '4' 1.0, '5' 1.0, '6' 1.0, '7' 1.0, '8' 1.0, '9' 1.0, '10' 1.0, '11' 1.0, '12' 1.0, '13' 1.0, '14' 1.0, '15' 1.0, '16' 1.0, '17' 1.0, '18' 1.0, '19' 1.0, '20' 1.0, '21' 1.0, '22' 1.0, '23' 1.0, '24' 1.0, '25' 1.0, '26' 1.0, '27' 1.0, '28' 1.0, '29' 1.0, '30' 1.0/
+    pf0(h,j,t) /CAP.AGR.'0' 1, CAP.AGR.'1' 1, CAP.AGR.'2' 1, CAP.AGR.'3' 1, CAP.AGR.'4' 1, CAP.AGR.'5' 1, CAP.AGR.'6' 1, CAP.AGR.'7' 1, CAP.AGR.'8' 1, CAP.AGR.'9' 1, CAP.AGR.'10' 1, CAP.AGR.'11' 1, CAP.AGR.'12' 1, CAP.AGR.'13' 1, CAP.AGR.'14' 1, CAP.AGR.'15' 1, CAP.AGR.'16' 1, CAP.AGR.'17' 1, CAP.AGR.'18' 1, CAP.AGR.'19' 1, CAP.AGR.'20' 1, CAP.AGR.'21' 1, CAP.AGR.'22' 1, CAP.AGR.'23' 1, CAP.AGR.'24' 1, CAP.AGR.'25' 1, CAP.AGR.'26' 1, CAP.AGR.'27' 1, CAP.AGR.'28' 1, CAP.AGR.'29' 1, CAP.AGR.'30' 1, CAP.LMN.'0' 1, CAP.LMN.'1' 1, CAP.LMN.'2' 1, CAP.LMN.'3' 1, CAP.LMN.'4' 1, CAP.LMN.'5' 1, CAP.LMN.'6' 1, CAP.LMN.'7' 1, CAP.LMN.'8' 1, CAP.LMN.'9' 1, CAP.LMN.'10' 1, CAP.LMN.'11' 1, CAP.LMN.'12' 1, CAP.LMN.'13' 1, CAP.LMN.'14' 1, CAP.LMN.'15' 1, CAP.LMN.'16' 1, CAP.LMN.'17' 1, CAP.LMN.'18' 1, CAP.LMN.'19' 1, CAP.LMN.'20' 1, CAP.LMN.'21' 1, CAP.LMN.'22' 1, CAP.LMN.'23' 1, CAP.LMN.'24' 1, CAP.LMN.'25' 1, CAP.LMN.'26' 1, CAP.LMN.'27' 1, CAP.LMN.'28' 1, CAP.LMN.'29' 1, CAP.LMN.'30' 1, CAP.HMN.'0' 1, CAP.HMN.'1' 1, CAP.HMN.'2' 1, CAP.HMN.'3' 1, CAP.HMN.'4' 1, CAP.HMN.'5' 1, CAP.HMN.'6' 1, CAP.HMN.'7' 1, CAP.HMN.'8' 1, CAP.HMN.'9' 1, CAP.HMN.'10' 1, CAP.HMN.'11' 1, CAP.HMN.'12' 1, CAP.HMN.'13' 1, CAP.HMN.'14' 1, CAP.HMN.'15' 1, CAP.HMN.'16' 1, CAP.HMN.'17' 1, CAP.HMN.'18' 1, CAP.HMN.'19' 1, CAP.HMN.'20' 1, CAP.HMN.'21' 1, CAP.HMN.'22' 1, CAP.HMN.'23' 1, CAP.HMN.'24' 1, CAP.HMN.'25' 1, CAP.HMN.'26' 1, CAP.HMN.'27' 1, CAP.HMN.'28' 1, CAP.HMN.'29' 1, CAP.HMN.'30' 1, CAP.SRV.'0' 1, CAP.SRV.'1' 1, CAP.SRV.'2' 1, CAP.SRV.'3' 1, CAP.SRV.'4' 1, CAP.SRV.'5' 1, CAP.SRV.'6' 1, CAP.SRV.'7' 1, CAP.SRV.'8' 1, CAP.SRV.'9' 1, CAP.SRV.'10' 1, CAP.SRV.'11' 1, CAP.SRV.'12' 1, CAP.SRV.'13' 1, CAP.SRV.'14' 1, CAP.SRV.'15' 1, CAP.SRV.'16' 1, CAP.SRV.'17' 1, CAP.SRV.'18' 1, CAP.SRV.'19' 1, CAP.SRV.'20' 1, CAP.SRV.'21' 1, CAP.SRV.'22' 1, CAP.SRV.'23' 1, CAP.SRV.'24' 1, CAP.SRV.'25' 1, CAP.SRV.'26' 1, CAP.SRV.'27' 1, CAP.SRV.'28' 1, CAP.SRV.'29' 1, CAP.SRV.'30' 1, LAB.AGR.'0' 1, LAB.AGR.'1' 1, LAB.AGR.'2' 1, LAB.AGR.'3' 1, LAB.AGR.'4' 1, LAB.AGR.'5' 1, LAB.AGR.'6' 1, LAB.AGR.'7' 1, LAB.AGR.'8' 1, LAB.AGR.'9' 1, LAB.AGR.'10' 1, LAB.AGR.'11' 1, LAB.AGR.'12' 1, LAB.AGR.'13' 1, LAB.AGR.'14' 1, LAB.AGR.'15' 1, LAB.AGR.'16' 1, LAB.AGR.'17' 1, LAB.AGR.'18' 1, LAB.AGR.'19' 1, LAB.AGR.'20' 1, LAB.AGR.'21' 1, LAB.AGR.'22' 1, LAB.AGR.'23' 1, LAB.AGR.'24' 1, LAB.AGR.'25' 1, LAB.AGR.'26' 1, LAB.AGR.'27' 1, LAB.AGR.'28' 1, LAB.AGR.'29' 1, LAB.AGR.'30' 1, LAB.LMN.'0' 1, LAB.LMN.'1' 1, LAB.LMN.'2' 1, LAB.LMN.'3' 1, LAB.LMN.'4' 1, LAB.LMN.'5' 1, LAB.LMN.'6' 1, LAB.LMN.'7' 1, LAB.LMN.'8' 1, LAB.LMN.'9' 1, LAB.LMN.'10' 1, LAB.LMN.'11' 1, LAB.LMN.'12' 1, LAB.LMN.'13' 1, LAB.LMN.'14' 1, LAB.LMN.'15' 1, LAB.LMN.'16' 1, LAB.LMN.'17' 1, LAB.LMN.'18' 1, LAB.LMN.'19' 1, LAB.LMN.'20' 1, LAB.LMN.'21' 1, LAB.LMN.'22' 1, LAB.LMN.'23' 1, LAB.LMN.'24' 1, LAB.LMN.'25' 1, LAB.LMN.'26' 1, LAB.LMN.'27' 1, LAB.LMN.'28' 1, LAB.LMN.'29' 1, LAB.LMN.'30' 1, LAB.HMN.'0' 1, LAB.HMN.'1' 1, LAB.HMN.'2' 1, LAB.HMN.'3' 1, LAB.HMN.'4' 1, LAB.HMN.'5' 1, LAB.HMN.'6' 1, LAB.HMN.'7' 1, LAB.HMN.'8' 1, LAB.HMN.'9' 1, LAB.HMN.'10' 1, LAB.HMN.'11' 1, LAB.HMN.'12' 1, LAB.HMN.'13' 1, LAB.HMN.'14' 1, LAB.HMN.'15' 1, LAB.HMN.'16' 1, LAB.HMN.'17' 1, LAB.HMN.'18' 1, LAB.HMN.'19' 1, LAB.HMN.'20' 1, LAB.HMN.'21' 1, LAB.HMN.'22' 1, LAB.HMN.'23' 1, LAB.HMN.'24' 1, LAB.HMN.'25' 1, LAB.HMN.'26' 1, LAB.HMN.'27' 1, LAB.HMN.'28' 1, LAB.HMN.'29' 1, LAB.HMN.'30' 1, LAB.SRV.'0' 1, LAB.SRV.'1' 1, LAB.SRV.'2' 1, LAB.SRV.'3' 1, LAB.SRV.'4' 1, LAB.SRV.'5' 1, LAB.SRV.'6' 1, LAB.SRV.'7' 1, LAB.SRV.'8' 1, LAB.SRV.'9' 1, LAB.SRV.'10' 1, LAB.SRV.'11' 1, LAB.SRV.'12' 1, LAB.SRV.'13' 1, LAB.SRV.'14' 1, LAB.SRV.'15' 1, LAB.SRV.'16' 1, LAB.SRV.'17' 1, LAB.SRV.'18' 1, LAB.SRV.'19' 1, LAB.SRV.'20' 1, LAB.SRV.'21' 1, LAB.SRV.'22' 1, LAB.SRV.'23' 1, LAB.SRV.'24' 1, LAB.SRV.'25' 1, LAB.SRV.'26' 1, LAB.SRV.'27' 1, LAB.SRV.'28' 1, LAB.SRV.'29' 1, LAB.SRV.'30' 1/
+    py0(j,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pz0(j,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pq0(i,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pe0(i,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pm0(i,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pd0(i,t) /AGR.'0' 1, AGR.'1' 1, AGR.'2' 1, AGR.'3' 1, AGR.'4' 1, AGR.'5' 1, AGR.'6' 1, AGR.'7' 1, AGR.'8' 1, AGR.'9' 1, AGR.'10' 1, AGR.'11' 1, AGR.'12' 1, AGR.'13' 1, AGR.'14' 1, AGR.'15' 1, AGR.'16' 1, AGR.'17' 1, AGR.'18' 1, AGR.'19' 1, AGR.'20' 1, AGR.'21' 1, AGR.'22' 1, AGR.'23' 1, AGR.'24' 1, AGR.'25' 1, AGR.'26' 1, AGR.'27' 1, AGR.'28' 1, AGR.'29' 1, AGR.'30' 1, LMN.'0' 1, LMN.'1' 1, LMN.'2' 1, LMN.'3' 1, LMN.'4' 1, LMN.'5' 1, LMN.'6' 1, LMN.'7' 1, LMN.'8' 1, LMN.'9' 1, LMN.'10' 1, LMN.'11' 1, LMN.'12' 1, LMN.'13' 1, LMN.'14' 1, LMN.'15' 1, LMN.'16' 1, LMN.'17' 1, LMN.'18' 1, LMN.'19' 1, LMN.'20' 1, LMN.'21' 1, LMN.'22' 1, LMN.'23' 1, LMN.'24' 1, LMN.'25' 1, LMN.'26' 1, LMN.'27' 1, LMN.'28' 1, LMN.'29' 1, LMN.'30' 1, HMN.'0' 1, HMN.'1' 1, HMN.'2' 1, HMN.'3' 1, HMN.'4' 1, HMN.'5' 1, HMN.'6' 1, HMN.'7' 1, HMN.'8' 1, HMN.'9' 1, HMN.'10' 1, HMN.'11' 1, HMN.'12' 1, HMN.'13' 1, HMN.'14' 1, HMN.'15' 1, HMN.'16' 1, HMN.'17' 1, HMN.'18' 1, HMN.'19' 1, HMN.'20' 1, HMN.'21' 1, HMN.'22' 1, HMN.'23' 1, HMN.'24' 1, HMN.'25' 1, HMN.'26' 1, HMN.'27' 1, HMN.'28' 1, HMN.'29' 1, HMN.'30' 1, SRV.'0' 1, SRV.'1' 1, SRV.'2' 1, SRV.'3' 1, SRV.'4' 1, SRV.'5' 1, SRV.'6' 1, SRV.'7' 1, SRV.'8' 1, SRV.'9' 1, SRV.'10' 1, SRV.'11' 1, SRV.'12' 1, SRV.'13' 1, SRV.'14' 1, SRV.'15' 1, SRV.'16' 1, SRV.'17' 1, SRV.'18' 1, SRV.'19' 1, SRV.'20' 1, SRV.'21' 1, SRV.'22' 1, SRV.'23' 1, SRV.'24' 1, SRV.'25' 1, SRV.'26' 1, SRV.'27' 1, SRV.'28' 1, SRV.'29' 1, SRV.'30' 1/
+    pk0(t) /'0' 1, '1' 1, '2' 1, '3' 1, '4' 1, '5' 1, '6' 1, '7' 1, '8' 1, '9' 1, '10' 1, '11' 1, '12' 1, '13' 1, '14' 1, '15' 1, '16' 1, '17' 1, '18' 1, '19' 1, '20' 1, '21' 1, '22' 1, '23' 1, '24' 1, '25' 1, '26' 1, '27' 1, '28' 1, '29' 1, '30' 1/
+    epsilon0(t) /'0' 1, '1' 1, '2' 1, '3' 1, '4' 1, '5' 1, '6' 1, '7' 1, '8' 1, '9' 1, '10' 1, '11' 1, '12' 1, '13' 1, '14' 1, '15' 1, '16' 1, '17' 1, '18' 1, '19' 1, '20' 1, '21' 1, '22' 1, '23' 1, '24' 1, '25' 1, '26' 1, '27' 1, '28' 1, '29' 1, '30' 1/
+    PRICE0(t) /'0' 1, '1' 1, '2' 1, '3' 1, '4' 1, '5' 1, '6' 1, '7' 1, '8' 1, '9' 1, '10' 1, '11' 1, '12' 1, '13' 1, '14' 1, '15' 1, '16' 1, '17' 1, '18' 1, '19' 1, '20' 1, '21' 1, '22' 1, '23' 1, '24' 1, '25' 1, '26' 1, '27' 1, '28' 1, '29' 1, '30' 1/
     Xg0(i,t)
     Sf0(t)
-    pWe(i) /AGR 1.0, LMN 1.0, HMN 1.0, SRV 1.0/
-    pWm(i) /AGR 1.0, LMN 1.0, HMN 1.0, SRV 1.0/
+    pWe(i) /AGR 1, LMN 1, HMN 1, SRV 1/
+    pWm(i) /AGR 1, LMN 1, HMN 1, SRV 1/
     tauz(i)
     taum(i)
     Y1(j,t)
@@ -115,8 +115,8 @@ Parameters
     epsilon1(t)
     pk1(t)
     PRICE1(t)
-    sigma(i) /AGR 2.0, LMN 2.0, HMN 2.0, SRV 2.0/
-    psi(i) /AGR 2.0, LMN 2.0, HMN 2.0, SRV 2.0/
+    sigma(i) /AGR 2, LMN 2, HMN 2, SRV 2/
+    psi(i) /AGR 2, LMN 2, HMN 2, SRV 2/
     eta(i)
     phi(i)
     alpha(i)
@@ -137,70 +137,70 @@ Scalars
     ror /0.05/
     dep /0.04/
     pop /0.02/
-    zeta /1.0/
-    Sp00 /0.0/
-    Td00 /0.0/
-    III00 /0.0/
-    CC00 /0.0/
-    Sf00 /0.0/
-    III_ASS /0.0/
-    III_SAM /0.0/
-    adj /0.0/
-    a /0.0/
-    iota /0.0/
-    ssp /0.0/
+    zeta /1/
+    Sp00 /0/
+    Td00 /0/
+    III00 /0/
+    CC00 /0/
+    Sf00 /0/
+    III_ASS /0/
+    III_SAM /0/
+    adj /0/
+    a /0/
+    iota /0/
+    ssp /0/
 ;
 
-SAMGAP(u) = sum(v, SAM(u,v) - SAM(v,u));
-Y00(j) = sum(h, F00(h,j));
-F00(h,j) = SAM(h,j);
-X00(i,j) = SAM(i,j);
-Z00(j) = Y00(j) + sum(i, X00(i,j));
-Xp00(i) = SAM(i,"HOH");
-Xg00(i) = SAM(i,"GOV") - (Xv00(i) - SAM(i,"INV"));
-Xv00(i) = SAM(i,"INV") * adj;
-E00(i) = SAM(i,"EXT");
-M00(i) = SAM("EXT",i);
-Q00(i) = (1 + taum00(i)) * M00(i) + D00(i);
-D00(i) = (1 + tauz00(i)) * Z00(i) - E00(i);
-Sp00 = sum(h, FF00(h)) - (sum(i, Xp00(i)) + Td00);
-Td00 = SAM("GOV","HOH");
-Td00 = sum(i, Xg00(i)) - sum(i, Tz00(i) + Tm00(i));
-Tz00(j) = SAM("IDT",j);
-Tm00(j) = SAM("TRF",j);
-III00 = sum(i, Xv00(i));
-II00(j) = (Sp00 + Sf00) * F00("CAP",j) / sum(i, F00("CAP",i));
-KK00(j) = F00("CAP",j) / ror;
-CC00 = sum(i, Xp00(i));
-FF00(h) = SAM("HOH",h);
-Sf00 = SAM("INV","EXT");
+samgap(u) = sum(v, SAM(u,v) - SAM(v,u));
+y00(j) = sum(h, F00(h,j));
+f00(h,j) = SAM(h,j);
+x00(i,j) = SAM(i,j);
+z00(j) = Y00(j) + sum(i, X00(i,j));
+xp00(i) = SAM(i,"HOH");
+xg00(i) = SAM(i,"GOV") - (Xv00(i) - SAM(i,"INV"));
+xv00(i) = SAM(i,"INV") * adj;
+e00(i) = SAM(i,"EXT");
+m00(i) = SAM("EXT",i);
+q00(i) = (1 + taum00(i)) * M00(i) + D00(i);
+d00(i) = (1 + tauz00(i)) * Z00(i) - E00(i);
+sp00 = sum(h, FF00(h)) - (sum(i, Xp00(i)) + Td00);
+td00 = SAM("GOV","HOH");
+td00 = sum(i, Xg00(i)) - sum(i, Tz00(i) + Tm00(i));
+tz00(j) = SAM("IDT",j);
+tm00(j) = SAM("TRF",j);
+iii00 = sum(i, Xv00(i));
+ii00(j) = (Sp00 + Sf00) * F00("CAP",j) / sum(i, F00("CAP",i));
+kk00(j) = F00("CAP",j) / ror;
+cc00 = sum(i, Xp00(i));
+ff00(h) = SAM("HOH",h);
+sf00 = SAM("INV","EXT");
 tauz00(j) = Tz00(j) / Z00(j);
 taum00(j) = Tm00(j) / M00(j);
-Y0(j,t) = Y00(j) * (1 + pop) ** (ord(t) - 1);
-F0(h,j,t) = F00(h,j) * (1 + pop) ** (ord(t) - 1);
-X0(i,j,t) = X00(i,j) * (1 + pop) ** (ord(t) - 1);
-Z0(j,t) = Z00(j) * (1 + pop) ** (ord(t) - 1);
-Xp0(i,t) = Xp00(i) * (1 + pop) ** (ord(t) - 1);
-Xv0(i,t) = Xv00(i) * (1 + pop) ** (ord(t) - 1);
-E0(i,t) = E00(i) * (1 + pop) ** (ord(t) - 1);
-M0(i,t) = M00(i) * (1 + pop) ** (ord(t) - 1);
-Q0(i,t) = Q00(i) * (1 + pop) ** (ord(t) - 1);
-D0(i,t) = D00(i) * (1 + pop) ** (ord(t) - 1);
-Sp0(t) = Sp00 * (1 + pop) ** (ord(t) - 1);
-Td0(t) = Td00 * (1 + pop) ** (ord(t) - 1);
-Tz0(j,t) = Tz00(j) * (1 + pop) ** (ord(t) - 1);
-Tm0(i,t) = Tm00(i) * (1 + pop) ** (ord(t) - 1);
-III0(t) = III00 * (1 + pop) ** (ord(t) - 1);
-II0(j,t) = II00(j) * (1 + pop) ** (ord(t) - 1);
-KK0(j,t) = KK00(j) * (1 + pop) ** (ord(t) - 1);
-CC0(t) = CC00 * (1 + pop) ** (ord(t) - 1);
-FF0(h,t) = FF00(h) * (1 + pop) ** (ord(t) - 1);
-Xg0(i,t) = Xg00(i) * (1 + pop) ** (ord(t) - 1);
-Sf0(t) = Sf00 * (1 + pop) ** (ord(t) - 1);
+y0(j,t) = Y00(j) * (1 + pop) ** (ord(t) - 1);
+f0(h,j,t) = F00(h,j) * (1 + pop) ** (ord(t) - 1);
+x0(i,j,t) = X00(i,j) * (1 + pop) ** (ord(t) - 1);
+z0(j,t) = Z00(j) * (1 + pop) ** (ord(t) - 1);
+xp0(i,t) = Xp00(i) * (1 + pop) ** (ord(t) - 1);
+xv0(i,t) = Xv00(i) * (1 + pop) ** (ord(t) - 1);
+e0(i,t) = E00(i) * (1 + pop) ** (ord(t) - 1);
+m0(i,t) = M00(i) * (1 + pop) ** (ord(t) - 1);
+q0(i,t) = Q00(i) * (1 + pop) ** (ord(t) - 1);
+d0(i,t) = D00(i) * (1 + pop) ** (ord(t) - 1);
+sp0(t) = Sp00 * (1 + pop) ** (ord(t) - 1);
+td0(t) = Td00 * (1 + pop) ** (ord(t) - 1);
+tz0(j,t) = Tz00(j) * (1 + pop) ** (ord(t) - 1);
+tm0(i,t) = Tm00(i) * (1 + pop) ** (ord(t) - 1);
+iii0(t) = III00 * (1 + pop) ** (ord(t) - 1);
+ii0(j,t) = II00(j) * (1 + pop) ** (ord(t) - 1);
+kk0(j,t) = KK00(j) * (1 + pop) ** (ord(t) - 1);
+cc0(t) = CC00 * (1 + pop) ** (ord(t) - 1);
+ff0(h,t) = FF00(h) * (1 + pop) ** (ord(t) - 1);
+xg0(i,t) = Xg00(i) * (1 + pop) ** (ord(t) - 1);
+sf0(t) = Sf00 * (1 + pop) ** (ord(t) - 1);
 tauz(i) = tauz00(i);
 taum(i) = taum00(i);
-III_ASS = (pop + dep) / ror * FF00("CAP");
-III_SAM = sum(i, SAM(i,"INV"));
+iii_ass = (pop + dep) / ror * FF00("CAP");
+iii_sam = sum(i, SAM(i,"INV"));
 adj = III_ASS / III_SAM;
 eta(i) = (sigma(i) - 1) / sigma(i);
 phi(i) = (psi(i) + 1) / psi(i);

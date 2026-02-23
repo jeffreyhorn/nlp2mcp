@@ -29,15 +29,15 @@ Sets
 ;
 
 Parameters
-    coefs(l,*) /one.alpha 1.0, one.beta 0.5, one.rho 19.0, one.eta 0.2, two.alpha 2.0, two.beta 0.4, two.rho 27.0, two.eta 0.01, three.alpha 1.5, three.beta 0.3, three.rho 30.0, three.eta 0.3/
-    pairs(n,np,*) /one.four.kappa 1.0, one.four.nu 0.5, one.five.kappa 2.0, one.five.nu 0.2, two.six.kappa 3.0, two.six.nu 0.3, three.six.kappa 1.0, three.six.nu 0.4, four.one.kappa 2.0, four.one.nu 0.3, four.five.kappa 1.0, four.five.nu 0.1, four.six.kappa 1.0, four.six.nu 0.1, five.one.kappa 3.0, five.one.nu 0.5, five.four.kappa 2.0, five.four.nu 0.2, five.six.kappa 1.0, five.six.nu 1.0, six.two.kappa 2.0, six.two.nu 0.25, six.three.kappa 2.0, six.three.nu 0.2, six.four.kappa 1.0, six.four.nu 0.9, six.five.kappa 3.0, six.five.nu 0.8/
+    coefs(l,*) /one.alpha 1, one.beta 0.5, one.rho 19, one.eta 0.2, two.alpha 2, two.beta 0.4, two.rho 27, two.eta 0.01, three.alpha 1.5, three.beta 0.3, three.rho 30, three.eta 0.3/
+    pairs(n,np,*) /one.four.kappa 1, one.four.nu 0.5, one.five.kappa 2, one.five.nu 0.2, two.six.kappa 3, two.six.nu 0.3, three.six.kappa 1, three.six.nu 0.4, four.one.kappa 2, four.one.nu 0.3, four.five.kappa 1, four.five.nu 0.1, four.six.kappa 1, four.six.nu 0.1, five.one.kappa 3, five.one.nu 0.5, five.four.kappa 2, five.four.nu 0.2, five.six.kappa 1, five.six.nu 1, six.two.kappa 2, six.two.nu 0.25, six.three.kappa 2, six.three.nu 0.2, six.four.kappa 1, six.four.nu 0.9, six.five.kappa 3, six.five.nu 0.8/
     irep(iter,n,np)
 ;
 
 Scalars
-    pm /1.0/
-    tm /1.0/
-    objold /0.0/
+    pm /1/
+    tm /1/
+    objold /0/
 ;
 
 arc(n,np) = pairs(n,np,"kappa");

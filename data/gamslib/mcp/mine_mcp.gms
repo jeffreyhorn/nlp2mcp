@@ -30,14 +30,14 @@ Sets
 
 Parameters
     conc(l,i,j)
-    li(k) /se 1.0, sw 1.0/
-    lj(k) /ne 1.0, se 1.0/
-    cost(l) /'1' 3000.0, '2' 6000.0, '3' 8000.0, '4' 10000.0/
+    li(k) /se 1, sw 1/
+    lj(k) /ne 1, se 1/
+    cost(l) /'1' 3000, '2' 6000, '3' 8000, '4' 10000/
     rep(i,j,l)
 ;
 
 Scalars
-    value /200000.0/
+    value /200000/
 ;
 
 c(l,i,j) = 1$(ord(l) + ord(i) <= card(l) and ord(l) + ord(j) <= card(l));

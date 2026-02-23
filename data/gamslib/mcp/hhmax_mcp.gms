@@ -22,9 +22,9 @@ Sets
 
 Parameters
     alpha(i) /BRD 0.2, MLK 0.8/
-    px(i) /BRD 1.0, MLK 2.0/
-    pf(h) /CAP 2.0, LAB 1.0/
-    FF(h) /CAP 10.0, LAB 20.0/
+    px(i) /BRD 1, MLK 2/
+    pf(h) /CAP 2, LAB 1/
+    FF(h) /CAP 10, LAB 20/
 ;
 
 * ============================================

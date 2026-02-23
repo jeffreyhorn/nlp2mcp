@@ -24,12 +24,12 @@ Sets
 Alias(h, hp);
 
 Parameters
-    dd(j,h) /'route-1'.'1' 200.0, 'route-1'.'2' 220.0, 'route-1'.'3' 250.0, 'route-1'.'4' 270.0, 'route-1'.'5' 300.0, 'route-2'.'1' 50.0, 'route-2'.'2' 150.0, 'route-3'.'1' 140.0, 'route-3'.'2' 160.0, 'route-3'.'3' 180.0, 'route-3'.'4' 200.0, 'route-3'.'5' 220.0, 'route-4'.'1' 10.0, 'route-4'.'2' 50.0, 'route-4'.'3' 80.0, 'route-4'.'4' 100.0, 'route-4'.'5' 340.0, 'route-5'.'1' 580.0, 'route-5'.'2' 600.0, 'route-5'.'3' 620.0, 'route-2'.'3' 0.0, 'route-2'.'4' 0.0, 'route-2'.'5' 0.0, 'route-5'.'4' 0.0, 'route-5'.'5' 0.0/
-    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1, 'route-2'.'3' 0.0, 'route-2'.'4' 0.0, 'route-2'.'5' 0.0, 'route-5'.'4' 0.0, 'route-5'.'5' 0.0/
-    c(i,j) /a.'route-1' 18.0, a.'route-2' 21.0, a.'route-3' 18.0, a.'route-4' 16.0, a.'route-5' 10.0, b.'route-2' 15.0, b.'route-3' 16.0, b.'route-4' 14.0, b.'route-5' 9.0, c.'route-2' 10.0, c.'route-4' 9.0, c.'route-5' 6.0, d.'route-1' 17.0, d.'route-2' 16.0, d.'route-3' 17.0, d.'route-4' 15.0, d.'route-5' 10.0, b.'route-1' 0.0, c.'route-1' 0.0, c.'route-3' 0.0/
-    p(i,j) /a.'route-1' 16.0, a.'route-2' 15.0, a.'route-3' 28.0, a.'route-4' 23.0, a.'route-5' 81.0, b.'route-2' 10.0, b.'route-3' 14.0, b.'route-4' 15.0, b.'route-5' 57.0, c.'route-2' 5.0, c.'route-4' 7.0, c.'route-5' 29.0, d.'route-1' 9.0, d.'route-2' 11.0, d.'route-3' 22.0, d.'route-4' 17.0, d.'route-5' 55.0, b.'route-1' 0.0, c.'route-1' 0.0, c.'route-3' 0.0/
-    aa(i) /a 10.0, b 19.0, c 25.0, d 15.0/
-    k(j) /'route-1' 13.0, 'route-2' 13.0, 'route-3' 7.0, 'route-4' 7.0, 'route-5' 1.0/
+    dd(j,h) /'route-1'.'1' 200, 'route-1'.'2' 220, 'route-1'.'3' 250, 'route-1'.'4' 270, 'route-1'.'5' 300, 'route-2'.'1' 50, 'route-2'.'2' 150, 'route-3'.'1' 140, 'route-3'.'2' 160, 'route-3'.'3' 180, 'route-3'.'4' 200, 'route-3'.'5' 220, 'route-4'.'1' 10, 'route-4'.'2' 50, 'route-4'.'3' 80, 'route-4'.'4' 100, 'route-4'.'5' 340, 'route-5'.'1' 580, 'route-5'.'2' 600, 'route-5'.'3' 620, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
+    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
+    c(i,j) /a.'route-1' 18, a.'route-2' 21, a.'route-3' 18, a.'route-4' 16, a.'route-5' 10, b.'route-2' 15, b.'route-3' 16, b.'route-4' 14, b.'route-5' 9, c.'route-2' 10, c.'route-4' 9, c.'route-5' 6, d.'route-1' 17, d.'route-2' 16, d.'route-3' 17, d.'route-4' 15, d.'route-5' 10, b.'route-1' 0, c.'route-1' 0, c.'route-3' 0/
+    p(i,j) /a.'route-1' 16, a.'route-2' 15, a.'route-3' 28, a.'route-4' 23, a.'route-5' 81, b.'route-2' 10, b.'route-3' 14, b.'route-4' 15, b.'route-5' 57, c.'route-2' 5, c.'route-4' 7, c.'route-5' 29, d.'route-1' 9, d.'route-2' 11, d.'route-3' 22, d.'route-4' 17, d.'route-5' 55, b.'route-1' 0, c.'route-1' 0, c.'route-3' 0/
+    aa(i) /a 10, b 19, c 25, d 15/
+    k(j) /'route-1' 13, 'route-2' 13, 'route-3' 7, 'route-4' 7, 'route-5' 1/
     ed(j)
     gamma(j,h)
     deltb(j,h)

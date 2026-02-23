@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 1: Create Known Unknowns List - 2026-02-23
+
+**Branch:** `planning/sprint21-prep`
+
+#### Summary
+
+Created comprehensive Sprint 21 Known Unknowns document with 27 unknowns across 9 categories covering all Sprint 21 workstreams.
+
+#### Activities
+
+- Created `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 27 unknowns (7 Critical, 11 High, 6 Medium, 3 Low)
+- Categories: `%macro%` Expansion (4), internal_error Triage (3), path_syntax_error (4), Deferred Sprint 20 Issues (3), Match Rate Improvement (3), Semantic Error Resolution (2), Emerging Translation Blockers (2), PATH Convergence (3), Solution Comparison (3)
+- All unknowns include: assumption, research questions, verification method, risk assessment, estimated research time, and owner
+- Added Task-to-Unknown mapping appendix linking prep tasks 2–9 to their assigned unknowns
+- Updated `PREP_PLAN.md` Tasks 2–10 with "Unknowns to Verify" metadata
+- Updated `PREP_PLAN.md` Task 1 status to COMPLETE with all acceptance criteria checked
+
 ### Sprint 20 Day 14: Sprint Close + Retrospective - 2026-02-22
 
 **Branch:** `sprint20-day14-sprint-close-retrospective`

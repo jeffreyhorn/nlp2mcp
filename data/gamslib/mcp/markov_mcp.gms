@@ -28,7 +28,7 @@ Parameters
     pi(s,i,sp,j,spp)
     pr(i,j) /normal.normal 0.8, normal.disrupted 0.2, disrupted.normal 0.5, disrupted.disrupted 0.5/
     lev(s)
-    dis(i) /disrupted 11.0/
+    dis(i) /disrupted 11/
     p(s,sp,i)
     c(s,sp,i)
 ;
@@ -38,9 +38,9 @@ Scalars
     beta /0.0625/
     g /0.25/
     e /0.1/
-    q /110.0/
-    d /-130.0/
-    k /342.0/
+    q /110/
+    d /-130/
+    k /342/
     pn /34.526/
     h /0.32/
 ;

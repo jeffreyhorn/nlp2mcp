@@ -26,15 +26,15 @@ Sets
 Alias(i, j);
 
 Parameters
-    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200.0, p1.lowlim 50.0, p2.a 200.0, p2.b 10.333, p2.c 0.00889, p2.upplim 150.0, p2.lowlim 37.5, p3.a 240.0, p3.b 10.833, p3.c 0.00741, p3.upplim 180.0, p3.lowlim 45.0/
-    pexp(cg) /a 0.0, b 1.0, c 2.0/
+    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200, p1.lowlim 50, p2.a 200, p2.b 10.333, p2.c 0.00889, p2.upplim 150, p2.lowlim 37.5, p3.a 240, p3.b 10.833, p3.c 0.00741, p3.upplim 180, p3.lowlim 45/
+    pexp(cg) /a 0, b 1, c 2/
     b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
     b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
 ;
 
 Scalars
     b00 /0.040357/
-    demand /210.0/
+    demand /210/
 ;
 
 * ============================================
