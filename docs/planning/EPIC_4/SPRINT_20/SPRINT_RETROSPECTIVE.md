@@ -288,7 +288,7 @@ Days 12–14 added 2 parse successes (mathopt3, dinam) and 3 regression tests bu
 
 ### Translate/Solve Stage
 
-Models newly solving (Sprint 19 → Sprint 20): catmix, chenery, circle, qabel, sparta, wall, weapons (+7 new solvers, net +6 from baseline 27 → 33)
+Models newly solving (Sprint 19 → Sprint 20): catmix, chenery, circle, qabel, sparta, wall, weapons (+7 new solvers, net +6 from baseline 27 → 33; one baseline solver may have regressed due to grammar/preprocessor changes affecting translation)
 
 ### Full Pipeline Match (16 models)
 

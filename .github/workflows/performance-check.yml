@@ -27,6 +27,8 @@ jobs:
           echo "Fast test duration: ${duration}s"
 
           # Check budget (40s limit, 37s warning)
+          # Budget raised from 35s→40s in Sprint 20: test count grew 3,579→3,715
+          # (+3.8%) and several tests gained heavier assertions/fixtures.
           if [ $duration -gt 40 ]; then
             echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 40s)"
             exit 1

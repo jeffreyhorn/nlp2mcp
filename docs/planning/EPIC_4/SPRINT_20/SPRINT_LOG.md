@@ -490,6 +490,10 @@ ajax, blend, chem, demo1, dispatch, hhmax, himmel11, house, mathopt2, mhw4d, mhw
 
 abel, aircraft, ajax, alkyl, apl1p, apl1pca, blend, catmix, chakra, chem, chenery, circle, demo1, dispatch, hhmax, himmel11, himmel16, house, mathopt1, mathopt2, mhw4d, mhw4dx, port, process, prodmix, qabel, rbrock, sparta, splcge, trig, trnsport, wall, weapons
 
+### Sprint Close
+
+- Sprint 20 code freeze tagged as `sprint20-final` on the main branch.
+
 ### Sprint 20 Retrospective
 
 See `SPRINT_RETROSPECTIVE.md` in this directory.
