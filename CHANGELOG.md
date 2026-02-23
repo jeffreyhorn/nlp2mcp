@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Sprint 20 Summary
 
-Sprint 20 completed all 8 acceptance criteria across 15 days (24 PRs merged, 3,715 tests, zero regressions).
+Sprint 20 completed all 8 acceptance criteria across 15 days (25 PRs merged, 3,715 tests, zero regressions).
 
 **Final metrics vs. baseline:**
 

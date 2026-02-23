@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Sprint 20 met all 8 sprint-level acceptance criteria. Parse rate rose from 70.0% to 82.5% (+20 models), lexer_invalid_char dropped from 26 to 10, model_no_objective_def from 14 to 1, solve success reached 33 (+6), and full pipeline match reached 16 (+6). The sprint delivered across all 6 planned workstreams: `.l` emission, IndexOffset extensions, lexer grammar fixes (Phases 1–3), model_no_objective_def fix, tolerance/Inf handling, and regression tests. 24 PRs were merged with 3,715 tests passing and zero regressions.
+Sprint 20 met all 8 sprint-level acceptance criteria. Parse rate rose from 70.0% to 82.5% (+20 models), lexer_invalid_char dropped from 26 to 10, model_no_objective_def from 14 to 1, solve success reached 33 (+6), and full pipeline match reached 16 (+6). The sprint delivered across all 6 planned workstreams: `.l` emission, IndexOffset extensions, lexer grammar fixes (Phases 1–3), model_no_objective_def fix, tolerance/Inf handling, and regression tests. 25 PRs were merged with 3,715 tests passing and zero regressions.
 
 **Key Outcome:** 132/160 tested models now parse (82.5%, up from 70.0%). 33 models solve (up from 27). 16 models achieve full pipeline match (up from 10). All sprint targets met or exceeded.
 
@@ -373,7 +373,7 @@ The gap between solve success (33) and match (16) indicates 17 models solve but 
 | Solve Success | 33/120 (27.5%) |
 | Full Pipeline Match | 16/160 (10.0%) |
 | Tests | 3,715 passing |
-| PRs Merged | 24 |
+| PRs Merged | 25 |
 | lexer_invalid_char | 10 |
 | semantic_undefined_symbol | 7 |
 | internal_error | 7 |
@@ -434,7 +434,7 @@ The sprint's main gap is the growing internal_error and semantic_undefined_symbo
 - ✅ Solve success: 27 → 33 (+6 models, target ≥30)
 - ✅ Full pipeline match: 10 → 16 (+6 models, target ≥15)
 - ✅ Tests: 3,579 → 3,715 (+136, target ≥3,650)
-- ✅ Zero regressions across 24 PRs
+- ✅ Zero regressions across 25 PRs
 - ✅ 13 deferred items documented with sprint-21 labels
 
 Sprint 21 has a clear path: macro expansion, internal_error triage, solve quality improvements, and continued match rate growth.
