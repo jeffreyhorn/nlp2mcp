@@ -200,12 +200,12 @@
 ### Day 9 — WS5 Part A: Pipeline Match Tolerance Fix + Regression Tests (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #823
 
 **Activities:**
 - Raised `DEFAULT_RTOL` from `1e-6` to `1e-4` in `scripts/gamslib/test_solve.py`
 - Re-ran full pipeline solve: **16 matches** (target: ≥15) ✅
-- 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, splcge
+- 6 new matches: chem, dispatch, hhmax, mhw4d, mhw4dx, wall
 - Verified no false positives — clean gap between new matches (rel_diff ≤ 5e-5) and next mismatch (port at 1.3e-3)
 - Added 16 solve-level regression tests in `tests/e2e/test_gamslib_match.py`
 - Also fixed issue #763 (chenery MCP division by zero) in separate PR #822
@@ -220,7 +220,7 @@
 ### Day 10 — WS5 Part B: Inf Parameter Handling + Model Validation Prep (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #829
 
 **Activities:**
 - Fixed `validate_parameter_values()` to allow ±Inf (GAMS natively supports `inf`/`-inf` in parameter tables)
@@ -270,7 +270,7 @@
 ### Day 12 — Phase 3 + WS6: Regression Tests (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #834
 
 **Activities:**
 - **Subcat J (mathopt3)**: Added square bracket function call syntax (`FUNCNAME "[" args "]"`) to grammar — mathopt3 now parses
@@ -287,7 +287,7 @@
 ### Day 13 — Sprint Close Prep: Issues + Documentation (2026-02-22)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #838
 
 **Activities:**
 - Smoke-tested all deferred items — confirmed failure modes match documentation
@@ -447,7 +447,7 @@ Full pipeline run completed (158 evaluated models, 160 parse-attempted):
 
 | Metric | Baseline | Target | Day 6 | Day 11 | **Day 14 Final** | Status |
 |---|---|---|---|---|---|---|
-| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 129/160* | **132/160 (82.5%)** | ✅ Exceeded |
+| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 131/160* | **132/160 (82.5%)** | ✅ Exceeded |
 | lexer_invalid_char | 26 | ≤ 11 | 21 | 11 | **10** | ✅ Met |
 | model_no_objective_def | 14 | ≤ 4 | 1 | 1 | **1** | ✅ Exceeded |
 | Translate success | 96/112 (85.7%) | ≥ 110/127 | 109/123 | 120/129 | **120/132 (90.9%)** | ✅ Exceeded |
@@ -456,7 +456,7 @@ Full pipeline run completed (158 evaluated models, 160 parse-attempted):
 | Tests | 3,579 | ≥ 3,650 | 3,635 | 3,712 | **3,715** | ✅ Met |
 | Zero regressions | — | All 112 maintained | ✅ | ✅ | ✅ | ✅ Met |
 
-*\* Day 11 parse was evaluated against 158 convexity-filtered candidates; all other columns use the full 160-model parse-attempted set. The Day 11 figure of 129/158 corresponds to 131/160 when including the 2 non-convex models.*
+*Note:* Day 11 parse was evaluated against 158 convexity-filtered candidates; all other columns use the full 160-model parse-attempted set. The Day 11 figure of 129/158 corresponds to 131/160 when including the 2 non-convex models.
 
 **All 8 sprint-level acceptance criteria met.**
 
