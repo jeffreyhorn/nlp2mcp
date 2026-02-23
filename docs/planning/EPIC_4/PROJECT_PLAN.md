@@ -386,48 +386,73 @@ These items were originally planned for Sprint 18 but were deferred when archite
 
 ---
 
-# Sprint 21 (Weeks 7–8): Parse Completion & PATH Convergence Investigation
+# Sprint 21 (Weeks 7–8): Macro Expansion, Error Triage & Solve Quality
 
-**Goal:** Push parse rate toward completion. Begin systematic investigation of PATH convergence failures. Enhance solution comparison framework.
+**Goal:** Implement preprocessor macro expansion, triage internal_error models, reduce path_syntax_error failures, close deferred Sprint 20 issues, investigate PATH convergence, and enhance solution comparison. Push match rate from 16 toward 20+.
 
-**Note:** IndexOffset implementation completed in Sprint 20; Sprint 21 focuses on parse completion and solve investigation.
+**Note:** Sprint 20 final metrics (baseline for Sprint 21): parse 132/160 (82.5%), translate 120/132 (90.9%), solve 33/120 (27.5%), match 16/33 (48.5%), tests 3,715.
 
 ## Components
 
-### Parse Completion Push (~12-14h)
-- **Remaining lexer_invalid_char Fixes (6-8h)**
-  - Address remaining subcategories from Sprint 18 analysis
-  - Handle long-tail patterns (1-2 models each)
-  - Consider GAMS preprocessing for intractable patterns
-  - Target: `lexer_invalid_char` below 15
-  - **Deliverable:** Additional lexer/grammar fixes
+### Priority 1: `%macro%` Expansion in Preprocessor (~4–8h)
+- **Target models:** saras (`%system.nlp%`), springchain (`$set`/`$eval`/`%N%`/`%NM1%`), and other models using compile-time macros
+- The preprocessor currently strips `$set`/`$eval` directives without executing them
+- Implement a macro store + `%name%` expansion to unblock at least 2 `lexer_invalid_char` models
+- System macros (~1–2h); `$eval` support (~4–6h)
+- **Issues:** #837, #840
+- **Deliverable:** Preprocessor macro expansion with tests
 
-- **Remaining internal_error Fixes (4-5h)**
-  - Fix remaining internal_error patterns from Sprint 19 analysis
-  - Grammar disambiguation and IR construction hardening
-  - Target: `internal_error` (parse) below 8
-  - **Deliverable:** Additional internal_error fixes
+### Priority 2: internal_error Triage — 7 Models (~6–10h)
+- **Target models:** clearlak, imsl, indus, sarf, senstran, tfordy, turkpow
+- These models now parse the grammar but hit IR builder errors (table row index mismatches, lead/lag syntax, undefined references)
+- Each likely requires a targeted parser fix (1–2h per model, varying complexity)
+- **Deliverable:** IR builder fixes; updated pipeline metrics
 
-- **Semantic Error Resolution (2h)**
-  - Resolve `semantic_undefined_symbol` (2 models)
-  - Determine if these are GAMSLIB source issues or nlp2mcp bugs
-  - If GAMSLIB issues: add to syntax error report; if bugs: fix
-  - **Deliverable:** Semantic errors resolved or documented
+### Priority 3: Solve Quality — path_syntax_error (~8–12h)
+- **Target:** Reduce the 45 models failing with `path_syntax_error`
+- These translate but produce MCP files that PATH cannot process
+- Root causes include: malformed equation names, domain mismatches, stationarity system issues
+- Systematic triage (similar to Sprint 20 lexer error catalog) to identify highest-leverage fixes
+- **Deliverable:** path_syntax_error triage document; targeted fixes
 
-### Emerging Translation Blockers (~4-6h)
-- **Triage New Failures (2-3h)**
-  - As parse rate improves, newly-parsed models enter translation
-  - Identify and categorize new translation failures
-  - Prioritize by model count and fix effort
-  - **Deliverable:** Updated translation failure analysis
+### Priority 4: Deferred Sprint 20 Issues — 13 Issues (~8–12h)
+| Issue | Model | Problem |
+|---|---|---|
+| #763 | chenery | AD condition propagation |
+| #764 | mexss | Accounting variable stationarity |
+| #765 | orani | CGE model type incompatible |
+| #757 | bearing | Non-convex initialization |
+| #810 | lmp2 | Solve in doubly-nested loop |
+| #826 | decomp | Empty stationarity equation |
+| #827 | gtm | Domain violations from zero-fill |
+| #828 | ibm1 | Missing bound multipliers |
+| #830 | gastrans | Jacobian timeout (dynamic subset) |
+| #835 | bearing | .scale emission (partially done) |
+| #837 | springchain | Bracket expr + macro expansion |
+| #840 | saras | `%system.nlp%` system macro |
+| #789 | — | Min/max in objective equations |
 
-- **Fix High-Priority Blockers (2-3h)**
-  - Address the most impactful new translation failures
-  - May include new derivative rules, domain mismatches, etc.
-  - **Deliverable:** Fixes for emerging translation blockers
+### Priority 5: Full Pipeline Match Rate Improvement (~4–6h)
+- **Target:** 16 → 20+ matches
+- The gap between solve success (33) and match (16) indicates 17 models solve but produce different objectives
+- Investigate whether initialization, scaling, domain handling, or solver settings are the cause
+- Models close to matching (e.g., port at rel_diff 1.3e-3) may need targeted fixes
+- **Deliverable:** Match gap analysis; targeted fixes for near-match models
 
-### PATH Convergence Investigation (~8-10h)
-- **Systematic Analysis of 11 Models (4-5h)**
+### Semantic Error Resolution (~2h)
+- Resolve `semantic_undefined_symbol` (2 models)
+- Determine if these are GAMSLIB source issues or nlp2mcp bugs
+- If GAMSLIB issues: add to syntax error report; if bugs: fix
+- **Deliverable:** Semantic errors resolved or documented
+
+### Emerging Translation Blockers (~4–6h)
+- As parse rate improves, newly-parsed models enter translation
+- Identify and categorize new translation failures (2–3h)
+- Fix highest-priority blockers — may include new derivative rules, domain mismatches, etc. (2–3h)
+- **Deliverable:** Updated translation failure analysis; fixes for emerging blockers
+
+### PATH Convergence Investigation (~8–10h)
+- **Systematic Analysis of path_solve_terminated Models (4–5h)**
   - For each `path_solve_terminated` model:
     - Examine PATH solver output and iteration log
     - Check complementarity residuals at termination
@@ -435,7 +460,7 @@ These items were originally planned for Sprint 18 but were deferred when archite
   - Classify: KKT correctness issue, starting point, inherent difficulty, PATH options
   - **Deliverable:** `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md`
 
-- **Solution Comparison Enhancement (4-5h)**
+- **Solution Comparison Enhancement (4–5h)**
   - Extend comparison beyond objective value matching
   - Add: primal variable comparison, dual variable comparison, complementarity residuals
   - Implement combined relative/absolute tolerance with model-appropriate defaults
@@ -443,28 +468,39 @@ These items were originally planned for Sprint 18 but were deferred when archite
   - **Deliverable:** Enhanced solution comparison framework with tests
 
 ### Pipeline Retest (~2h)
-- Full pipeline run with updated parse and translation fixes
-- Record parse, translate, and solve metrics
-- **Deliverable:** Updated metrics; expected parse rate ≥ 75% of valid corpus
+- Full pipeline run after each priority block
+- Record parse, translate, solve, and match metrics
+- **Deliverable:** Updated metrics tracking
+
+## Process Recommendations (from Sprint 20 Retrospective)
+1. **Standardize pipeline denominator.** Use 160 (parse-attempted) as the canonical reference, not 158 (convexity-filtered). Document any exclusions explicitly.
+2. **Record PR numbers immediately after merge.** Avoid leaving "PR: TBD" in sprint logs; record the PR number in the same commit as the day's work.
+3. **Verify parse claims end-to-end.** Always use `parse_file()` (not partial grammar checks) before claiming a model parses. The pipeline retest is the ground truth.
 
 ## Deliverables
-- Additional parse fixes pushing `lexer_invalid_char` below 15
-- `internal_error` (parse) below 8
-- Fixes for emerging translation blockers
+- Preprocessor macro expansion (`$set`/`$eval`/`%name%`)
+- IR builder fixes for 7 internal_error models
+- path_syntax_error triage and targeted fixes
+- Progress on deferred Sprint 20 issues
+- Match rate improvement (16 → 20+)
+- Semantic errors resolved or documented
+- Updated translation failure analysis; fixes for emerging blockers
 - `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md`
-- Enhanced solution comparison framework
+- Enhanced solution comparison framework with tests
 - Updated pipeline metrics
 
 ## Acceptance Criteria
-- **Parse Rate:** ≥ 75% of valid corpus
-- **lexer_invalid_char:** Count below 15
-- **internal_error (parse):** Count below 8
-- **PATH Analysis:** All 11 `path_solve_terminated` models classified by root cause
+- **Parse Rate:** ≥ 135/160 (84.4%)
+- **lexer_invalid_char:** ≤ 5 (down from 8)
+- **internal_error (parse):** ≤ 3 (down from 7)
+- **Solve:** ≥ 36 (up from 33)
+- **Match:** ≥ 20 (up from 16)
+- **PATH Analysis:** All `path_solve_terminated` models classified by root cause
 - **Solution Comparison:** Framework extended with primal/dual/complementarity comparison
 - **Quality:** All tests pass; no regressions
 
-**Estimated Effort:** 26-32 hours
-**Risk Level:** MEDIUM (diminishing returns on parse fixes; PATH investigation may reveal fundamental issues)
+**Estimated Effort:** 46–66 hours
+**Risk Level:** MEDIUM (macro expansion is a new subsystem; path_syntax_error triage may reveal deep translation issues; PATH investigation may reveal fundamental issues)
 
 ---
 
