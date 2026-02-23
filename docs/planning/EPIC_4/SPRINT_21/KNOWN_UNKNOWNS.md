@@ -1124,6 +1124,5 @@ This table shows which prep tasks verify which unknowns:
 
 ### Coverage Analysis
 
-- **All 27 unknowns mapped:** 25 unknowns are directly verified by prep Tasks 2–8
-- **2 unknowns not directly mapped:** 7.1 and 7.2 (Emerging Translation Blockers) — these are inherently sprint-time unknowns that can only be verified after Priority 1–2 fixes are implemented
-- **Sprint-time unknowns:** 8.2, 8.3, 9.1, 9.2, 9.3 — partially verifiable during prep but fully resolved during sprint implementation
+- **All 27 unknowns mapped:** 20 unknowns are directly verified by prep Tasks 2–8
+- **7 unknowns not directly mapped during prep:** 7.1, 7.2 (Emerging Translation Blockers), 8.2, 8.3 (PATH Convergence), 9.1, 9.2, 9.3 (Solution Comparison) — these are inherently sprint-time unknowns that can only be fully verified after Priority 1–2 fixes are implemented

@@ -95,12 +95,12 @@ Previous research documents:
 ### Changes
 
 - Created `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 27 unknowns across 9 categories
-- Added Task-to-Unknown mapping appendix linking prep tasks 2–9 to verified unknowns
-- Updated PREP_PLAN.md Tasks 2–10 with "Unknowns Verified" metadata
+- Added Task-to-Unknown mapping appendix linking prep tasks 2–9 to their assigned unknowns
+- Updated PREP_PLAN.md Tasks 2–10 with "Unknowns to Verify" metadata
 
 ### Result
 
-Created comprehensive Known Unknowns document with 27 unknowns (7 Critical, 11 High, 6 Medium, 3 Low) covering all 9 Sprint 21 workstreams. Categories: `%macro%` Expansion (4), internal_error Triage (3), path_syntax_error (4), Deferred Sprint 20 Issues (3), Match Rate Improvement (3), Semantic Error Resolution (2), Emerging Translation Blockers (2), PATH Convergence (3), Solution Comparison (3). All unknowns include assumption, research questions, verification method, risk assessment, estimated research time, and owner. Task-to-Unknown mapping ensures all 25 directly-verifiable unknowns are assigned to prep tasks. Two sprint-time unknowns (7.1, 7.2) can only be verified after Priority 1–2 fixes.
+Created comprehensive Known Unknowns document with 27 unknowns (7 Critical, 11 High, 6 Medium, 3 Low) covering all 9 Sprint 21 workstreams. Categories: `%macro%` Expansion (4), internal_error Triage (3), path_syntax_error (4), Deferred Sprint 20 Issues (3), Match Rate Improvement (3), Semantic Error Resolution (2), Emerging Translation Blockers (2), PATH Convergence (3), Solution Comparison (3). All unknowns include assumption, research questions, verification method, risk assessment, estimated research time, and owner. Task-to-Unknown mapping ensures all 20 directly-verifiable unknowns are assigned to prep tasks. Seven sprint-time unknowns (7.1, 7.2, 8.2, 8.3, 9.1, 9.2, 9.3) can only be verified after Priority 1–2 fixes.
 
 ### Verification
 
@@ -118,7 +118,7 @@ grep -c "^##" docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 27 unknowns across 9 categories ✅
-- Task-to-Unknown mapping appendix linking prep tasks 2–9 to verified unknowns ✅
+- Task-to-Unknown mapping appendix linking prep tasks 2–9 to their assigned unknowns ✅
 
 ### Acceptance Criteria
 
