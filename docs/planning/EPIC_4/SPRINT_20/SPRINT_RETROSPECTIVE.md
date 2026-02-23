@@ -216,7 +216,7 @@ Days 12–14 added 2 parse successes (mathopt3, dinam) and 3 regression tests bu
 | SPRINT_LOG.md | `docs/planning/EPIC_4/SPRINT_20/SPRINT_LOG.md` | ✅ Complete |
 | PLAN.md (all days) | `docs/planning/EPIC_4/SPRINT_20/PLAN.md` | ✅ Complete |
 | CHANGELOG.md update | `CHANGELOG.md` | ✅ Complete |
-| Issue files (3 fixed → completed/) | `docs/issues/completed/` | ✅ #835, #836, #841 |
+| Issue files (2 fixed + 1 dup → completed/) | `docs/issues/completed/` | ✅ #835, #836 fixed; #841 closed as dup of #837 |
 | Issue files (2 new open) | `docs/issues/` | ✅ #837, #840 |
 | SPRINT_RETROSPECTIVE.md | `docs/planning/EPIC_4/SPRINT_20/` | ✅ This document |
 
