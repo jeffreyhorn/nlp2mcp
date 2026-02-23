@@ -30,7 +30,7 @@ Sprint 20 completed all 8 acceptance criteria across 15 days (24 PRs merged, 3,7
 **Key workstreams:** WS1 `.l` emission (IR + emitter), WS2 IndexOffset extensions, WS3 lexer grammar (3 phases), WS4 model_no_objective_def fix, WS5 tolerance/Inf handling, WS6 regression tests.
 
 **New matching models:** chem, dispatch, hhmax, mhw4d, mhw4dx, wall (+6)
-**New solving models:** catmix, chenery, circle, qabel, sparta, wall, weapons (+6 net)
+**New solving models (7):** catmix, chenery, circle, qabel, sparta, wall, weapons (net +6 vs baseline of 27)
 
 **Deferred to Sprint 21:** 13 issues labeled sprint-21 covering macro expansion, accounting variables, AD condition propagation, and solve-quality improvements.
 

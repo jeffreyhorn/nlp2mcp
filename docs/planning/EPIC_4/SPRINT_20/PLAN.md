@@ -585,7 +585,7 @@ The following unknowns were not fully resolved during prep and are flagged as op
 - ✅ Parse success: ≥ 127/160 (≥ 79.4%) — **achieved: 132/160 (82.5%)**
 - ✅ lexer_invalid_char: ≤ 11 — **achieved: 10**
 - ✅ model_no_objective_def: ≤ 4 — **achieved: 1**
-- ✅ Translate success: ≥ 110/127 attempted — **achieved: 120/132 (90.9%)**
+- ✅ Translate success: ≥ 110 translate successes (original target: ≥ 110/127; denominator grew with +20 parse successes) — **achieved: 120/132 (90.9%)**
 - ✅ Solve success: ≥ 30 — **achieved: 33**
 - ✅ Full pipeline match: ≥ 15 — **achieved: 16**
 - ✅ Tests: ≥ 3,650 (≥ +71 from baseline) — **achieved: 3,715 (+136)**

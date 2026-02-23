@@ -436,7 +436,7 @@ Note: The evaluation suite contains 158 candidate models (convexity status `veri
 ## Sprint Close (Day 14)
 
 **Status:** ✅ COMPLETE
-**PR:** TBD
+**PR:** #842
 **Date:** 2026-02-22
 
 ### Final Pipeline Retest
@@ -447,14 +447,16 @@ Full pipeline run completed (158 evaluated models, 160 parse-attempted):
 
 | Metric | Baseline | Target | Day 6 | Day 11 | **Day 14 Final** | Status |
 |---|---|---|---|---|---|---|
-| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 129/158 | **132/160 (82.5%)** | ✅ Exceeded |
+| Parse success | 112/160 (70.0%) | ≥ 127/160 | 123/160 | 129/160* | **132/160 (82.5%)** | ✅ Exceeded |
 | lexer_invalid_char | 26 | ≤ 11 | 21 | 11 | **10** | ✅ Met |
 | model_no_objective_def | 14 | ≤ 4 | 1 | 1 | **1** | ✅ Exceeded |
-| Translate success | 96/112 (85.7%) | ≥ 110/127 | 109/123 | 120/129 | **120/132 (90.9%)** | ✅ Met |
+| Translate success | 96/112 (85.7%) | ≥ 110/127 | 109/123 | 120/129 | **120/132 (90.9%)** | ✅ Exceeded |
 | Solve success | 27 | ≥ 30 | 29 | 33 | **33** | ✅ Exceeded |
 | Full pipeline match | 10 | ≥ 15 | 10 | 16 | **16** | ✅ Met |
 | Tests | 3,579 | ≥ 3,650 | 3,635 | 3,712 | **3,715** | ✅ Met |
 | Zero regressions | — | All 112 maintained | ✅ | ✅ | ✅ | ✅ Met |
+
+*\* Day 11 parse was evaluated against 158 convexity-filtered candidates; all other columns use the full 160-model parse-attempted set. The Day 11 figure of 129/158 corresponds to 131/160 when including the 2 non-convex models.*
 
 **All 8 sprint-level acceptance criteria met.**
 
