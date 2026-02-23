@@ -50,7 +50,7 @@ This prep plan produces the research, catalogs, baselines, and design artifacts 
 
 ## Task 1: Create Sprint 21 Known Unknowns List
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -94,11 +94,13 @@ Previous research documents:
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 27 unknowns across 9 categories
+- Added Task-to-Unknown mapping appendix linking prep tasks 2–9 to verified unknowns
+- Updated PREP_PLAN.md Tasks 2–10 with "Unknowns Verified" metadata
 
 ### Result
 
-*To be completed*
+Created comprehensive Known Unknowns document with 27 unknowns (7 Critical, 11 High, 6 Medium, 3 Low) covering all 9 Sprint 21 workstreams. Categories: `%macro%` Expansion (4), internal_error Triage (3), path_syntax_error (4), Deferred Sprint 20 Issues (3), Match Rate Improvement (3), Semantic Error Resolution (2), Emerging Translation Blockers (2), PATH Convergence (3), Solution Comparison (3). All unknowns include assumption, research questions, verification method, risk assessment, estimated research time, and owner. Task-to-Unknown mapping ensures all 25 directly-verifiable unknowns are assigned to prep tasks. Two sprint-time unknowns (7.1, 7.2) can only be verified after Priority 1–2 fixes.
 
 ### Verification
 
@@ -115,17 +117,17 @@ grep -c "^##" docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 20–30 unknowns across 6+ categories
-- Task-to-Unknown mapping appendix linking prep tasks 2–9 to verified unknowns
+- `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` with 27 unknowns across 9 categories ✅
+- Task-to-Unknown mapping appendix linking prep tasks 2–9 to verified unknowns ✅
 
 ### Acceptance Criteria
 
-- [ ] Document created with 20+ unknowns across 6+ categories
-- [ ] All unknowns have assumption, verification method, and priority
-- [ ] All Critical/High unknowns have verification plan
-- [ ] Unknowns cover all 9 Sprint 21 workstreams
-- [ ] Unresolved Sprint 20 unknowns carried forward where applicable
-- [ ] Research time estimated for each unknown
+- [x] Document created with 20+ unknowns across 6+ categories (27 unknowns, 9 categories)
+- [x] All unknowns have assumption, verification method, and priority
+- [x] All Critical/High unknowns have verification plan
+- [x] Unknowns cover all 9 Sprint 21 workstreams
+- [x] Unresolved Sprint 20 unknowns carried forward where applicable
+- [x] Research time estimated for each unknown
 
 ---
 
@@ -137,6 +139,7 @@ grep -c "^##" docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -210,6 +213,7 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 - `docs/planning/EPIC_4/SPRINT_21/MACRO_EXPANSION_DESIGN.md` — design document with architecture, scope, and test plan
 - Corpus survey results: count and classification of macro usage patterns across 160 models
 - Updated `KNOWN_UNKNOWNS.md` Category 1 unknowns marked as resolved
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 1.1, 1.2, 1.3, 1.4
 
 ### Acceptance Criteria
 
@@ -221,6 +225,7 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 - [ ] System macro registry defined
 - [ ] Design document created with test plan
 - [ ] Implementation approach confirmed for Sprint 21 Day 1
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -232,6 +237,7 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 2.1, 2.2, 2.3
 
 ### Objective
 
@@ -306,6 +312,7 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 
 - `docs/planning/EPIC_4/SPRINT_21/INTERNAL_ERROR_CATALOG.md` — per-model root cause analysis with subcategory classification
 - Recommended fix order based on batch-fix potential and model count
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 2.1, 2.2, 2.3
 
 ### Acceptance Criteria
 
@@ -315,6 +322,7 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 - [ ] Fix effort estimated per subcategory
 - [ ] Recommended fix order documented
 - [ ] Catalog document created
+- [ ] Unknowns 2.1, 2.2, 2.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -326,6 +334,7 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -388,6 +397,7 @@ print(f'path_syntax_error models: {len(pse)}')
 
 - `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — subcategory classification with model counts and root cause analysis
 - Prioritized fix order based on model count per subcategory and estimated effort
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Acceptance Criteria
 
@@ -398,6 +408,7 @@ print(f'path_syntax_error models: {len(pse)}')
 - [ ] Fix effort estimated per subcategory
 - [ ] Highest-leverage fixes identified (most models per fix)
 - [ ] Catalog document created with recommended attack order
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -409,6 +420,7 @@ print(f'path_syntax_error models: {len(pse)}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3, 4 (catalogs inform overlap with deferred issues)
+**Unknowns Verified:** 4.1, 4.2, 4.3
 
 ### Objective
 
@@ -479,6 +491,7 @@ ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/
 
 - `docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md` — per-issue assessment with Sprint 21 / defer recommendation
 - Overlap map showing which deferred issues are addressed by Sprint 21 Priority 1–3 work
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 4.1, 4.2, 4.3
 
 ### Acceptance Criteria
 
@@ -488,6 +501,7 @@ ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/
 - [ ] Each issue categorized as "Do in Sprint 21" or "Defer to Sprint 22+"
 - [ ] Fix effort estimated for "Do" items
 - [ ] Triage document created
+- [ ] Unknowns 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -499,6 +513,7 @@ ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -563,6 +578,7 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 
 - `docs/planning/EPIC_4/SPRINT_21/SOLVE_MATCH_GAP_ANALYSIS.md` — per-model divergence analysis sorted by relative difference
 - Top 5 near-match investigation findings with recommended fixes
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 5.1, 5.2, 5.3
 
 ### Acceptance Criteria
 
@@ -572,6 +588,7 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 - [ ] Top 5 near-match models investigated in detail
 - [ ] Recommended fixes documented with effort estimates
 - [ ] Analysis document created
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -583,6 +600,7 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
+**Unknowns Verified:** 6.1, 6.2
 
 ### Objective
 
@@ -636,6 +654,7 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 
 - `docs/planning/EPIC_4/SPRINT_21/SEMANTIC_ERROR_AUDIT.md` — per-model findings with classification
 - Clear recommendation: fix vs. document-and-exclude for each model
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknowns 6.1, 6.2
 
 ### Acceptance Criteria
 
@@ -644,6 +663,7 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 - [ ] Root cause classified (missing `$include`, conditional block, source error, parser bug)
 - [ ] Each model classified as "fixable" or "exclude"
 - [ ] Audit document created
+- [ ] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -655,6 +675,7 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** 8.1
 
 ### Objective
 
@@ -710,6 +731,7 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 
 - `docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md` — snapshot with commit hash, date, and all pipeline metrics
 - Confirmation that Sprint 20 retrospective values match current state
+- Updated `KNOWN_UNKNOWNS.md` with verification results for Unknown 8.1
 
 ### Acceptance Criteria
 
@@ -718,6 +740,7 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 - [ ] All metric categories recorded
 - [ ] Values compared with Sprint 20 retrospective
 - [ ] Baseline document created with commit hash
+- [ ] Unknown 8.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -729,6 +752,7 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** *(process alignment — no specific unknowns; ensures Sprint 20 lessons are applied)*
 
 ### Objective
 
@@ -797,6 +821,7 @@ grep -c "process" docs/planning/EPIC_4/SPRINT_21/RETROSPECTIVE_ALIGNMENT.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** All tasks (1–9)
+**Unknowns Verified:** *(integrates all verified unknowns from Tasks 2–9 into data-driven schedule)*
 
 ### Objective
 
@@ -905,7 +930,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 
 ## Success Criteria for Prep Phase
 
-- [ ] Known Unknowns document created (20+ unknowns, 6+ categories)
+- [x] Known Unknowns document created (27 unknowns, 9 categories)
 - [ ] Macro expansion design document completed
 - [ ] internal_error root cause catalog completed (7 models)
 - [ ] path_syntax_error root cause catalog completed (45 models)
