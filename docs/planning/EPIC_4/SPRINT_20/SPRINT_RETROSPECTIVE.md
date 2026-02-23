@@ -118,7 +118,7 @@ Days 9, 10, 12, and 13 have "PR: TBD" in the sprint log rather than actual PR nu
 
 ### 4. internal_error Category Growth
 
-internal_error grew from 2 (baseline) to 7 (Day 14). This is because models that previously failed at the lexer level now parse further and hit IR builder issues (table row index mismatches, lead/lag syntax, etc.). While the total parse failures decreased (-20), the shift in error categories indicates a "waterfall" effect.
+Parse-stage internal_error grew from 2 (Sprint 20 baseline) to 7 (Day 14). This is because models that previously failed at the lexer level now parse further and hit IR builder issues (table row index mismatches, lead/lag syntax, etc.). While the total parse failures decreased (-20), the shift in error categories indicates a "waterfall" effect.
 
 **Lesson:** Track error category shifts across sprints, not just total counts. The internal_error backlog should be triaged for Sprint 21.
 
@@ -381,15 +381,15 @@ The gap between solve success (33) and match (16) indicates 17 models solve but 
 
 ### Error Category Trends
 
-| Category | Sprint 18 End | Sprint 19 End | Sprint 20 End | Change (S19→S20) |
-|----------|--------------|--------------|--------------|------------------|
-| lexer_invalid_char | 72 | 27 | 10 | **-17** |
-| internal_error (pipeline) | 24 | 6 | 7 | +1 |
-| semantic_undefined_symbol | ~5 | 5 | 7 | +2 |
-| model_no_objective_def | — | 14 | 1 | **-13** |
-| parser_invalid_expression | — | 1 | 3 | +2 |
+| Category | Sprint 18 End | Sprint 19 End | Sprint 20 Baseline | Sprint 20 End | Change (baseline→end) |
+|----------|--------------|--------------|-------------------|--------------|----------------------|
+| lexer_invalid_char | 72 | 27 | 26 | 10 | **-16** |
+| internal_error (parse stage) | — | — | 2 | 7 | +5 |
+| semantic_undefined_symbol | ~5 | 5 | 5 | 7 | +2 |
+| model_no_objective_def | — | 14 | 14 | 1 | **-13** |
+| parser_invalid_expression | — | 1 | 1 | 3 | +2 |
 
-Note: internal_error and semantic_undefined_symbol grew because models that previously failed at the lexer stage now progress further, hitting later-stage errors. Net total parse failures decreased from 48 to 28 (-20).
+Note: The Sprint 20 baseline (26) differs from Sprint 19 End (27) because one lexer_invalid_char model was fixed during Sprint 20 prep. internal_error counts here are parse-stage only (Sprint 19 retrospective tracked "internal_error (pipeline)" across all stages: 24→6, a different metric). Parse-stage internal_error and semantic_undefined_symbol grew because models that previously failed at the lexer stage now progress further, hitting later-stage errors. Net total parse failures decreased from 48 to 28 (-20).
 
 ### 33 Solving Models
 
