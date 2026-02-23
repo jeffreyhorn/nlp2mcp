@@ -50,9 +50,9 @@ Sprint 20 met all 8 sprint-level acceptance criteria. Parse rate rose from 70.0%
 
 - **Translate Success:** Exceeded target (120/132 = 90.9% vs ≥ 86.6%). The higher parse count fed more models into translation, and the `.l` emission + Inf parameter fixes improved translation reliability.
 
-- **Solve Success:** Exceeded target (33 vs ≥ 30). New solvers include catmix, chenery, qabel, sparta, wall, weapons. The chenery fix (#763 parameter ordering) and `.l` emission (circle) were key enablers.
+- **Solve Success:** Exceeded target (33 vs ≥ 30). New solvers include catmix, chenery, circle, qabel, sparta, wall, weapons (+7 new, net +6 vs baseline 27). The chenery fix (#763 parameter ordering) and `.l` emission (circle) were key enablers.
 
-- **Full Pipeline Match:** Met target (16 vs ≥ 15). 6 new matches from rtol tolerance adjustment (1e-6 → 1e-4): chem, dispatch, hhmax, mhw4d, mhw4dx, splcge. Wall matched after Day 12 grammar fix.
+- **Full Pipeline Match:** Met target (16 vs ≥ 15). 5 new matches from rtol tolerance adjustment (1e-6 → 1e-4): chem, dispatch, hhmax, mhw4d, mhw4dx. Wall matched after Day 12 grammar fix (+6 total new matches).
 
 - **Tests:** Met target (3,715 vs ≥ 3,650). +136 tests from baseline, driven by regression tests (19 solve/match level), unit tests for grammar/parser, and issue-specific test coverage.
 
@@ -269,8 +269,9 @@ Days 12–14 added 2 parse successes (mathopt3, dinam) and 3 regression tests bu
 | 12 | #834 | Sprint 20 Day 12: Phase 3 grammar (Subcat J+K) + WS6 | ✅ Merged |
 | 13 | #838 | Sprint 20 Day 13: Sprint close prep — issues + documentation | ✅ Merged |
 | 13 | #839 | Fix issues #835, #836; partially fix #837 | ✅ Merged |
+| 14 | #842 | Sprint 20 Day 14: Sprint Close + Retrospective | ✅ Merged |
 
-**Total: 24 PRs merged in Sprint 20**
+**Total: 25 PRs merged in Sprint 20**
 
 ---
 
