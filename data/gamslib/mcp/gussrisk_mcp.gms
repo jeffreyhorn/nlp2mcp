@@ -16,32 +16,37 @@ $offText
 * ============================================
 
 Sets
-    l /'1', '2', '3', '4'/
-    k /nw, ne, se, sw/
+    stocks /buystock1, buystock2, buystock3, buystock4/
+    events /event1, event2, event3, event4, event5, event6, event7, event8, event9, event10/
+    rapscenarios /r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25/
+    dict /'rapscenarios.scenario.', rap.param.riskaver, invest.level.stockoutput, obj.level.objlevel, investav.marginal.investavshadow/
 ;
 
-Alias(l, i);
-Alias(l, j);
-
-Sets
-    c(l,i,j)
-    d(l,i,j)
-;
+Alias(stocks, s);
+Alias(stocks, sp);
+Alias(events, e);
+Alias(events, ep);
 
 Parameters
-    conc(l,i,j)
-    li(k) /se 1, sw 1/
-    lj(k) /ne 1, se 1/
-    cost(l) /'1' 3000, '2' 6000, '3' 8000, '4' 10000/
-    rep(i,j,l)
+    prices(stocks) /buystock1 22, buystock2 30, buystock3 28, buystock4 26/
+    returns(events,stocks) /event1.buystock1 7, event1.buystock2 6, event1.buystock3 8, event1.buystock4 5, event2.buystock1 8, event2.buystock2 4, event2.buystock3 16, event2.buystock4 6, event3.buystock1 4, event3.buystock2 8, event3.buystock3 14, event3.buystock4 6, event4.buystock1 5, event4.buystock2 9, event4.buystock3 -2, event4.buystock4 7, event5.buystock1 6, event5.buystock2 7, event5.buystock3 13, event5.buystock4 6, event6.buystock1 3, event6.buystock2 10, event6.buystock3 11, event6.buystock4 5, event7.buystock1 2, event7.buystock2 12, event7.buystock3 -2, event7.buystock4 6, event8.buystock1 5, event8.buystock2 4, event8.buystock3 18, event8.buystock4 6, event9.buystock1 4, event9.buystock2 7, event9.buystock3 12, event9.buystock4 5, event10.buystock1 3, event10.buystock2 9, event10.buystock3 -5, event10.buystock4 6/
+    mean(stocks)
+    covar(stocks,stocks)
+    riskaver(rapscenarios) /r0 0, r1 0.00025, r2 0.0005, r3 0.00075, r4 0.001, r5 0.0015, r6 0.002, r7 0.003, r8 0.005, r9 0.01, r10 0.011, r11 0.0125, r12 0.015, r13 0.025, r14 0.05, r15 0.1, r16 0.3, r17 0.5, r18 1, r19 2.5, r20 5, r21 10, r22 15, r23 20, r24 40, r25 80/
+    stockoutput(rapscenarios,stocks)
+    objlevel(rapscenarios)
+    investavshadow(rapscenarios)
+    output(*,rapscenarios)
 ;
 
 Scalars
-    value /200000/
+    funds /500/
+    rap /0/
+    variance /0/
 ;
 
-c(l,i,j) = 1$(ord(l) + ord(i) <= card(l) and ord(l) + ord(j) <= card(l));
-d(l,i,j) = 1$(ord(l) + ord(i) <= card(l) + 1 and ord(l) + ord(j) <= card(l) + 1);
+mean(s) = sum(e, returns(e,s)) / card(e);
+covar(s,sp) = sum(e, (returns(e,sp) - mean(sp)) * (returns(e,s) - mean(s))) / card(e);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -55,12 +60,12 @@ d(l,i,j) = 1$(ord(l) + ord(i) <= card(l) + 1 and ord(l) + ord(j) <= card(l) + 1)
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    profit
+    obj
 ;
 
 Positive Variables
-    x(l,i,j)
-    piU_x(l,i,j)
+    invest(stocks)
+    lam_investav
 ;
 
 * ============================================
@@ -72,14 +77,14 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-x.l(l,i,j) = 1;
+invest.l(stocks) = 1;
 
 * ============================================
 * Post-solve Calibration (variable .l references)
 * ============================================
 
 $onImplicitAssign
-rep(i,j,l) = x.l(l,i,j);
+variance = sum(s, sum(sp, invest.l(s) * covar(s,sp) * invest.l(sp)));
 $offImplicitAssign
 
 * ============================================
@@ -91,9 +96,9 @@ $offImplicitAssign
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(l,i,j)
-    comp_up_x(l,i,j)
-    def
+    stat_invest(stocks)
+    comp_investav
+    objj
 ;
 
 * ============================================
@@ -101,15 +106,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(l,i,j).. ((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$d(l,i,j))) + piU_x(l,i,j) =E= 0;
+stat_invest(stocks).. ((-1) * (mean(stocks) - rap * sum(sp, invest(sp) * covar(stocks,sp)))) + prices(stocks) * lam_investav =E= 0;
 
 * Inequality complementarity equations
-
-* Upper bound complementarity equations
-comp_up_x(l,i,j).. 1 - x(l,i,j) =G= 0;
+comp_investav.. ((-1) * (sum(s, prices(s) * invest(s)) - funds)) =G= 0;
 
 * Original equality equations
-def.. profit =E= sum((l,i,j)$(d(l,i,j)), (conc(l,i,j) * value / 100 - cost(l)) * x(l,i,j));
+objj.. obj =E= sum(s, mean(s) * invest(s)) - rap * sum((s,sp), invest(s) * covar(s,sp) * invest(sp));
 
 
 * ============================================
@@ -126,9 +129,9 @@ def.. profit =E= sum((l,i,j)$(d(l,i,j)), (conc(l,i,j) * value / 100 - cost(l)) *
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x.x,
-    def.profit,
-    comp_up_x.piU_x
+    stat_invest.invest,
+    comp_investav.lam_investav,
+    objj.obj
 /;
 
 * ============================================
@@ -138,5 +141,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = profit.l;
+nlp2mcp_obj_val = obj.l;
 Display nlp2mcp_obj_val;

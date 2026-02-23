@@ -48,9 +48,9 @@ Parameters
     FF(h,r)
     Sf(r)
     tauz(i,r)
-    taum(i,r) /BRD.JPN 0.0, BRD.USA 0.0, MLK.JPN 0.0, MLK.USA 0.0/
-    sigma(i) /BRD 2.0, MLK 2.0/
-    psi(i) /BRD 2.0, MLK 2.0/
+    taum(i,r) /BRD.JPN 0, BRD.USA 0, MLK.JPN 0, MLK.USA 0/
+    sigma(i) /BRD 2, MLK 2/
+    psi(i) /BRD 2, MLK 2/
     eta(i)
     phi(i)
     alpha(i,r)
@@ -97,24 +97,24 @@ Parameters
     dTm(i,r)
 ;
 
-Y0(j,r) = sum(h, F0(h,j,r));
-F0(h,j,r) = SAM(h,j,r);
-X0(i,j,r) = SAM(i,j,r);
-Z0(j,r) = Y0(j,r) + sum(i, X0(i,j,r));
-Xp0(i,r) = SAM(i,"HOH",r);
-Xg0(i,r) = SAM(i,"GOV",r);
-Xv0(i,r) = SAM(i,"INV",r);
-E0(i,r) = SAM(i,"EXT",r);
-M0(i,r) = SAM("EXT",i,r);
-Q0(i,r) = Xp0(i,r) + Xg0(i,r) + Xv0(i,r) + sum(j, X0(i,j,r));
-D0(i,r) = (1 + tauz(i,r)) * Z0(i,r) - E0(i,r);
-Sp0(r) = SAM("INV","HOH",r);
-Sg0(r) = SAM("INV","GOV",r);
-Td0(r) = SAM("GOV","HOH",r);
-Tz0(j,r) = SAM("IDT",j,r);
-Tm0(j,r) = SAM("TRF","J",r);
-FF(h,r) = SAM("HOH",h,r);
-Sf(r) = SAM("INV","EXT",r);
+y0(j,r) = sum(h, F0(h,j,r));
+f0(h,j,r) = SAM(h,j,r);
+x0(i,j,r) = SAM(i,j,r);
+z0(j,r) = Y0(j,r) + sum(i, X0(i,j,r));
+xp0(i,r) = SAM(i,"HOH",r);
+xg0(i,r) = SAM(i,"GOV",r);
+xv0(i,r) = SAM(i,"INV",r);
+e0(i,r) = SAM(i,"EXT",r);
+m0(i,r) = SAM("EXT",i,r);
+q0(i,r) = Xp0(i,r) + Xg0(i,r) + Xv0(i,r) + sum(j, X0(i,j,r));
+d0(i,r) = (1 + tauz(i,r)) * Z0(i,r) - E0(i,r);
+sp0(r) = SAM("INV","HOH",r);
+sg0(r) = SAM("INV","GOV",r);
+td0(r) = SAM("GOV","HOH",r);
+tz0(j,r) = SAM("IDT",j,r);
+tm0(j,r) = SAM("TRF","J",r);
+ff(h,r) = SAM("HOH",h,r);
+sf(r) = SAM("INV","EXT",r);
 tauz(j,r) = Tz0(j,r) / Z0(j,r);
 taum(j,r) = Tm0(j,r) / M0(j,r);
 eta(i) = (sigma(i) - 1) / sigma(i);

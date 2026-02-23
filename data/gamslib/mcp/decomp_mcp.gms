@@ -16,26 +16,29 @@ $offText
 * ============================================
 
 Sets
-    i /p1, p2, p3/
-    genchar /a, b, c, upplim, lowlim/
-    cg(genchar) /a, b, c/
-    s /'min-loss', s1, s2, s3, s4, 'min-cost'/
-    st(s) /s1, s2, s3, s4/
+    i /'plant-1', 'plant-2'/
+    j /'term-1', 'term-2', 'term-3', 'term-4'/
+    ss /'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'/
+    s(ss)
 ;
 
-Alias(i, j);
-
 Parameters
-    gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200, p1.lowlim 50, p2.a 200, p2.b 10.333, p2.c 0.00889, p2.upplim 150, p2.lowlim 37.5, p3.a 240, p3.b 10.833, p3.c 0.00741, p3.upplim 180, p3.lowlim 45/
-    pexp(cg) /a 0, b 1, c 2/
-    b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
-    b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
+    c(i,j) /'plant-1'.'term-1' 3, 'plant-1'.'term-2' 6, 'plant-1'.'term-3' 6, 'plant-1'.'term-4' 5, 'plant-2'.'term-1' 8, 'plant-2'.'term-2' 1, 'plant-2'.'term-3' 3, 'plant-2'.'term-4' 6/
+    t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2, 'plant-2'.'term-1' 0, 'plant-2'.'term-3' 0, 'plant-2'.'term-4' 0, 'plant-1'.'term-1' 0, 'plant-1'.'term-2' 0, 'plant-1'.'term-4' 0/
+    a(i) /'plant-1' 9, 'plant-2' 8/
+    b(j) /'term-1' 2, 'term-2' 7, 'term-3' 3, 'term-4' 5/
+    mcost(ss)
+    mtank(ss)
+    rep(ss,*) /'2'.gap inf/
 ;
 
 Scalars
-    b00 /0.040357/
-    demand /210/
+    ctank /0/
+    cship /1/
 ;
+
+s("1") = 1;
+s("2") = 1;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -49,14 +52,20 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    loss
     cost
-    nu_costfn
+    tank
+    ship
+    mobj
+    nu_defcost
+    nu_defship
+    nu_deftank
 ;
 
 Positive Variables
-    p(i)
-    lam_demcons
+    x(i,j)
+    lam(ss)
+    lam_supply(i)
+    lam_demand(j)
 ;
 
 * ============================================
@@ -68,7 +77,20 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-p.l(i) = 1;
+x.l(i,j) = 1;
+lam.l(ss) = 1;
+
+* ============================================
+* Post-solve Calibration (variable .l references)
+* ============================================
+
+$onImplicitAssign
+mcost("1") = ship.l;
+mcost("2") = ship.l;
+mtank("1") = tank.l;
+mtank("2") = tank.l;
+rep("2","obj") = mobj.l;
+$offImplicitAssign
 
 * ============================================
 * Equations
@@ -80,10 +102,16 @@ p.l(i) = 1;
 
 Equations
     stat_cost
-    stat_p(i)
-    comp_demcons
-    costfn
-    lossfn
+    stat_lam(ss)
+    stat_ship
+    stat_tank
+    stat_x(i,j)
+    comp_demand(j)
+    comp_supply(i)
+    cbal
+    defcost
+    defship
+    deftank
 ;
 
 * ============================================
@@ -91,16 +119,31 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
+stat_cost.. nu_defcost =E= 0;
+stat_lam(ss)$(s(ss)).. 0 =E= 0;
+stat_ship.. ((-1) * cship) * nu_defcost + nu_defship =E= 0;
+stat_tank.. ((-1) * ctank) * nu_defcost + nu_deftank =E= 0;
+stat_x(i,j).. ((-1) * c(i,j)) * nu_defship + ((-1) * t(i,j)) * nu_deftank + lam_supply(i) - lam_demand(j) =E= 0;
 
 * Inequality complementarity equations
-comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
+comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
+comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
 
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
-lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
+defcost.. cost =E= cship * ship + ctank * tank;
+defship.. ship =E= sum((i,j), c(i,j) * x(i,j));
+deftank.. tank =E= sum((i,j), t(i,j) * x(i,j));
+cbal.. mobj =E= sum(s, mcost(s) * lam(s));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam.fx(ss)$(not (s(ss))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -117,10 +160,16 @@ lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * 
 
 Model mcp_model /
     stat_cost.cost,
-    stat_p.p,
-    comp_demcons.lam_demcons,
-    costfn.nu_costfn,
-    lossfn.loss
+    stat_lam.lam,
+    stat_ship.ship,
+    stat_tank.tank,
+    stat_x.x,
+    comp_demand.lam_demand,
+    comp_supply.lam_supply,
+    cbal.mobj,
+    defcost.nu_defcost,
+    defship.nu_defship,
+    deftank.nu_deftank
 /;
 
 * ============================================
@@ -130,5 +179,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = loss.l;
+nlp2mcp_obj_val = mobj.l;
 Display nlp2mcp_obj_val;

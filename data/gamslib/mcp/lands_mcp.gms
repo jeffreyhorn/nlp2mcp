@@ -22,17 +22,17 @@ Sets
 ;
 
 Parameters
-    c(i) /'plant-1' 10.0, 'plant-2' 7.0, 'plant-3' 16.0, 'plant-4' 6.0/
-    d(j) /'mode-1' nan, 'mode-2' 3.0, 'mode-3' 2.0/
-    f(i,j) /'plant-1'.'mode-1' 40.0, 'plant-1'.'mode-2' 24.0, 'plant-1'.'mode-3' 4.0, 'plant-2'.'mode-1' 45.0, 'plant-2'.'mode-2' 27.0, 'plant-2'.'mode-3' 4.5, 'plant-3'.'mode-1' 32.0, 'plant-3'.'mode-2' 19.2, 'plant-3'.'mode-3' 3.2, 'plant-4'.'mode-1' 55.0, 'plant-4'.'mode-2' 33.0, 'plant-4'.'mode-3' 5.5/
-    dvar(s) /'s-1' 3.0, 's-2' 5.0, 's-3' 7.0/
+    c(i) /'plant-1' 10, 'plant-2' 7, 'plant-3' 16, 'plant-4' 6/
+    d(j) /'mode-1' na, 'mode-2' 3, 'mode-3' 2/
+    f(i,j) /'plant-1'.'mode-1' 40, 'plant-1'.'mode-2' 24, 'plant-1'.'mode-3' 4, 'plant-2'.'mode-1' 45, 'plant-2'.'mode-2' 27, 'plant-2'.'mode-3' 4.5, 'plant-3'.'mode-1' 32, 'plant-3'.'mode-2' 19.2, 'plant-3'.'mode-3' 3.2, 'plant-4'.'mode-1' 55, 'plant-4'.'mode-2' 33, 'plant-4'.'mode-3' 5.5/
+    dvar(s) /'s-1' 3, 's-2' 5, 's-3' 7/
     prob(s) /'s-1' 0.3, 's-2' 0.4, 's-3' 0.3/
     ds(j,s)
 ;
 
 Scalars
-    m /12.0/
-    b /120.0/
+    m /12/
+    b /120/
 ;
 
 ds(j,s) = d(j);

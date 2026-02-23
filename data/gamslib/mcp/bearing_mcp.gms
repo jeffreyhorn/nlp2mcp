@@ -22,22 +22,22 @@ Parameters
 Scalars
     gamma /0.0307/
     C /0.5/
-    N /750.0/
-    Ws /101000.0/
-    Pmax /1000.0/
-    delta_t_max /50.0/
+    N /750/
+    Ws /101000/
+    Pmax /1000/
+    delta_t_max /50/
     hmin /0.001/
     g /386.4/
-    taf /100.0/
-    P1 /0.0/
+    taf /100/
+    P1 /0/
     pump_efficiency /0.7/
-    C1 /0.0/
-    cn /0.0/
-    gr /0.0/
-    tar /0.0/
+    C1 /0/
+    cn /0/
+    gr /0/
+    tar /0/
 ;
 
-C1 = oil_constants("SAE 20","C1");
+c1 = oil_constants("SAE 20","C1");
 cn = oil_constants("SAE 20","n");
 gr = gamma / 0.0361111;
 tar = 459.7 + taf;
@@ -124,6 +124,14 @@ t.l = 600.0;
 W.l = 101000.0;
 tmp1.l = 0.0001;
 tmp2.l = 0.01;
+
+* Variable Scaling
+mu.scale = 1e-06;
+PL.scale = 10000;
+Ef.scale = 10000;
+Ep.scale = 10000;
+h.scale = hmin;
+W.scale = Ws;
 
 * ============================================
 * Equations
@@ -298,6 +306,8 @@ Model mcp_model /
     comp_up_r.piU_r,
     comp_up_r0.piU_r0
 /;
+
+mcp_model.scaleOpt = 1;
 
 * ============================================
 * Solve Statement

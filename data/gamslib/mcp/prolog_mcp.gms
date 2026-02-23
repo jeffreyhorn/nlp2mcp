@@ -27,11 +27,11 @@ Alias(i, j);
 Alias(g, gp);
 
 Parameters
-    a(i,j) /food.food 0.06, food.'l-industry' 0.244, 'h-industry'.food 0.064, 'h-industry'.'h-industry' 0.42, 'h-industry'.'l-industry' 0.172, 'l-industry'.food 0.048, 'l-industry'.'h-industry' 0.247, 'l-industry'.'l-industry' 0.084, food.'h-industry' 0.0/
+    a(i,j) /food.food 0.06, food.'l-industry' 0.244, 'h-industry'.food 0.064, 'h-industry'.'h-industry' 0.42, 'h-industry'.'l-industry' 0.172, 'l-industry'.food 0.048, 'l-industry'.'h-industry' 0.247, 'l-industry'.'l-industry' 0.084, food.'h-industry' 0/
     d(i,k,t)
     bb(h,k) /workers.labor 0.9, workers.capital 0.1, enterpr.labor 0.1, enterpr.capital 0.9/
-    x0(i,h) /food.workers 352.0, food.enterpr 430.0, 'l-industry'.workers 222.0, 'l-industry'.enterpr 292.0/
-    b(k) /labor 3712.0, capital 5000.0/
+    x0(i,h) /food.workers 352, food.enterpr 430, 'l-industry'.workers 222, 'l-industry'.enterpr 292/
+    b(k) /labor 3712, capital 5000/
     p0(i) /food 0.5942, 'h-industry' 1.6167, 'l-industry' 1.31077/
     y0(h)
     q0(i)
@@ -51,8 +51,8 @@ Parameters
 ;
 
 Scalars
-    r0 /0.0/
-    omega /-2.0/
+    r0 /0/
+    omega /-2/
 ;
 
 * Fix random seed for deterministic MCP evaluation

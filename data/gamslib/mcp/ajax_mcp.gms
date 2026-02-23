@@ -21,10 +21,10 @@ Sets
 ;
 
 Parameters
-    prate(g,m) /'20-bond-wt'.'machine-1' 53.0, '20-bond-wt'.'machine-2' 52.0, '20-bond-wt'.'machine-3' 49.0, '25-bond-wt'.'machine-1' 51.0, '25-bond-wt'.'machine-2' 49.0, '25-bond-wt'.'machine-3' 44.0, 'c-bond-ext'.'machine-1' 52.0, 'c-bond-ext'.'machine-2' 45.0, 'c-bond-ext'.'machine-3' 47.0, 'tissue-wrp'.'machine-1' 42.0, 'tissue-wrp'.'machine-2' 44.0, 'tissue-wrp'.'machine-3' 40.0/
-    pcost(g,m) /'20-bond-wt'.'machine-1' 76.0, '20-bond-wt'.'machine-2' 75.0, '20-bond-wt'.'machine-3' 73.0, '25-bond-wt'.'machine-1' 82.0, '25-bond-wt'.'machine-2' 80.0, '25-bond-wt'.'machine-3' 78.0, 'c-bond-ext'.'machine-1' 96.0, 'c-bond-ext'.'machine-2' 95.0, 'c-bond-ext'.'machine-3' 92.0, 'tissue-wrp'.'machine-1' 72.0, 'tissue-wrp'.'machine-2' 71.0, 'tissue-wrp'.'machine-3' 70.0/
-    dempr(g,*) /'20-bond-wt'.demand 30000.0, '20-bond-wt'.price 77.0, '25-bond-wt'.demand 20000.0, '25-bond-wt'.price 81.0, 'c-bond-ext'.demand 12000.0, 'c-bond-ext'.price 99.0, 'tissue-wrp'.demand 8000.0, 'tissue-wrp'.price 105.0/
-    avail(m) /'machine-1' 672.0, 'machine-2' 600.0, 'machine-3' 480.0/
+    prate(g,m) /'20-bond-wt'.'machine-1' 53, '20-bond-wt'.'machine-2' 52, '20-bond-wt'.'machine-3' 49, '25-bond-wt'.'machine-1' 51, '25-bond-wt'.'machine-2' 49, '25-bond-wt'.'machine-3' 44, 'c-bond-ext'.'machine-1' 52, 'c-bond-ext'.'machine-2' 45, 'c-bond-ext'.'machine-3' 47, 'tissue-wrp'.'machine-1' 42, 'tissue-wrp'.'machine-2' 44, 'tissue-wrp'.'machine-3' 40/
+    pcost(g,m) /'20-bond-wt'.'machine-1' 76, '20-bond-wt'.'machine-2' 75, '20-bond-wt'.'machine-3' 73, '25-bond-wt'.'machine-1' 82, '25-bond-wt'.'machine-2' 80, '25-bond-wt'.'machine-3' 78, 'c-bond-ext'.'machine-1' 96, 'c-bond-ext'.'machine-2' 95, 'c-bond-ext'.'machine-3' 92, 'tissue-wrp'.'machine-1' 72, 'tissue-wrp'.'machine-2' 71, 'tissue-wrp'.'machine-3' 70/
+    dempr(g,*) /'20-bond-wt'.demand 30000, '20-bond-wt'.price 77, '25-bond-wt'.demand 20000, '25-bond-wt'.price 81, 'c-bond-ext'.demand 12000, 'c-bond-ext'.price 99, 'tissue-wrp'.demand 8000, 'tissue-wrp'.price 105/
+    avail(m) /'machine-1' 672, 'machine-2' 600, 'machine-3' 480/
     mtr(m,*)
     par(g,*)
 ;

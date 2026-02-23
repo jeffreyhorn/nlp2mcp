@@ -25,11 +25,11 @@ Sets
 Alias(i, j);
 
 Scalars
-    R_v /1.0/
-    R_max /2.0/
-    R_min /1.0/
+    R_v /1/
+    R_max /2/
+    R_min /1/
     alpha /1.5/
-    d_theta /0.0/
+    d_theta /0/
 ;
 
 first("i1") = 1;

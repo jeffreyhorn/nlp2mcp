@@ -22,13 +22,13 @@ Sets
 Alias(nh, i);
 
 Scalars
-    L /4.0/
-    a /1.0/
-    b /3.0/
-    tf /1.0/
-    h /0.0/
-    n /0.0/
-    tmin /0.0/
+    L /4/
+    a /1/
+    b /3/
+    tf /1/
+    h /0/
+    n /0/
+    tmin /0/
 ;
 
 h = tf / n;

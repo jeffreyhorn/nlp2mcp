@@ -31,10 +31,10 @@ Alias(s, sp);
 Alias(i, ip);
 
 Parameters
-    amc(c,s,*) /food.domestic.agric 10.0, food.domestic.manuf 8.0, food.domestic.families 17.0, food.domestic.exp 19.0, clothing.domestic.agric 15.0, clothing.domestic.manuf 1.0, clothing.domestic.families 34.0, clothing.domestic.exp 1.0, food.imported.agric 1.0, food.imported.manuf 8.0, food.imported.families 1.0, food.imported.duty -1.0, clothing.imported.agric 5.0, clothing.imported.manuf 2.0, clothing.imported.families 10.0, clothing.imported.duty -5.0, clothing.imported.exp 0.0, food.imported.exp 0.0, food.domestic.duty 0.0, clothing.domestic.duty 0.0/
-    amf(f,i) /labor.agric 20.0, labor.manuf 20.0, capital.agric 10.0, capital.manuf 5.0/
-    amq(c,i) /food.agric 45.0, food.manuf 9.0, clothing.agric 16.0, clothing.manuf 35.0/
-    epsilon(c,s) /food.domestic 1.0, food.imported 1.0, clothing.domestic 1.0, clothing.imported 1.0/
+    amc(c,s,*) /food.domestic.agric 10, food.domestic.manuf 8, food.domestic.families 17, food.domestic.exp 19, clothing.domestic.agric 15, clothing.domestic.manuf 1, clothing.domestic.families 34, clothing.domestic.exp 1, food.imported.agric 1, food.imported.manuf 8, food.imported.families 1, food.imported.duty -1, clothing.imported.agric 5, clothing.imported.manuf 2, clothing.imported.families 10, clothing.imported.duty -5, food.domestic.duty 0, food.imported.exp 0, clothing.domestic.duty 0, clothing.imported.exp 0/
+    amf(f,i) /labor.agric 20, labor.manuf 20, capital.agric 10, capital.manuf 5/
+    amq(c,i) /food.agric 45, food.manuf 9, clothing.agric 16, clothing.manuf 35/
+    epsilon(c,s) /food.domestic 1, food.imported 1, clothing.domestic 1, clothing.imported 1/
     amt(i)
     gamma(c) /food 0.5, clothing 0.05/
     wl(i) /agric 0.5, manuf 0.5/
@@ -42,7 +42,7 @@ Parameters
     alphak(i)
     alphal(i)
     alphae(c,s)
-    etabar(c,s,cp,sp) /food.domestic.food.domestic 0.0, food.domestic.food.imported 0.0, food.domestic.clothing.domestic 0.0, food.domestic.clothing.imported 0.0, food.imported.food.domestic 0.0, food.imported.food.imported 0.0, food.imported.clothing.domestic 0.0, food.imported.clothing.imported 0.0, clothing.domestic.food.domestic 0.0, clothing.domestic.food.imported 0.0, clothing.domestic.clothing.domestic 0.0, clothing.domestic.clothing.imported 0.0, clothing.imported.food.domestic 0.0, clothing.imported.food.imported 0.0, clothing.imported.clothing.domestic 0.0, clothing.imported.clothing.imported 0.0/
+    etabar(c,s,cp,sp) /food.domestic.food.domestic 0, food.domestic.food.imported 0, food.domestic.clothing.domestic 0, food.domestic.clothing.imported 0, food.imported.food.domestic 0, food.imported.food.imported 0, food.imported.clothing.domestic 0, food.imported.clothing.imported 0, clothing.domestic.food.domestic 0, clothing.domestic.food.imported 0, clothing.domestic.clothing.domestic 0, clothing.domestic.clothing.imported 0, clothing.imported.food.domestic 0, clothing.imported.food.imported 0, clothing.imported.clothing.domestic 0, clothing.imported.clothing.imported 0/
     sb(c,s)
     eta(c,s,cp,sp)
     m(c,i)
@@ -61,9 +61,9 @@ Parameters
 ;
 
 Scalars
-    theta /1.0/
-    elevel /0.0/
-    mlevel /0.0/
+    theta /1/
+    elevel /0/
+    mlevel /0/
 ;
 
 ce(c,c) = 1;

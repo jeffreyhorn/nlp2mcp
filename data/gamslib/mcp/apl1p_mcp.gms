@@ -25,22 +25,22 @@ Sets
 
 Parameters
     alpha(g) /g1 0.68, g2 0.64/
-    ccmin(g) /g1 1000.0, g2 1000.0/
-    ccmax(g) /g1 10000.0, g2 10000.0/
-    c(g) /g1 4.0, g2 2.5/
-    f(g,dl) /g1.h 4.3, g1.m 2.0, g1.l 0.5, g2.h 8.7, g2.m 4.0, g2.l 1.0/
-    d(dl) /h 1040.0, m 1040.0, l 1040.0/
-    us(dl) /h 10.0, m 10.0, l 10.0/
-    v1(stoch,omega1) /out.o11 -1.0, out.o12 -0.9, out.o13 -0.5, out.o14 -0.1, pro.o11 0.2, pro.o12 0.3, pro.o13 0.4, pro.o14 0.1/
-    v2(stoch,omega2) /out.o21 -1.0, out.o22 -0.9, out.o23 -0.7, out.o24 -0.1, out.o25 -0.0, pro.o21 0.1, pro.o22 0.2, pro.o23 0.5, pro.o24 0.1, pro.o25 0.1/
-    v3(stoch,omega1) /out.o11 900.0, out.o12 1000.0, out.o13 1100.0, out.o14 1200.0, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
-    v4(stoch,omega1) /out.o11 900.0, out.o12 1000.0, out.o13 1100.0, out.o14 1200.0, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
-    v5(stoch,omega1) /out.o11 900.0, out.o12 1000.0, out.o13 1100.0, out.o14 1200.0, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
+    ccmin(g) /g1 1000, g2 1000/
+    ccmax(g) /g1 10000, g2 10000/
+    c(g) /g1 4, g2 2.5/
+    f(g,dl) /g1.h 4.3, g1.m 2, g1.l 0.5, g2.h 8.7, g2.m 4, g2.l 1/
+    d(dl) /h 1040, m 1040, l 1040/
+    us(dl) /h 10, m 10, l 10/
+    v1(stoch,omega1) /out.o11 -1, out.o12 -0.9, out.o13 -0.5, out.o14 -0.1, pro.o11 0.2, pro.o12 0.3, pro.o13 0.4, pro.o14 0.1/
+    v2(stoch,omega2) /out.o21 -1, out.o22 -0.9, out.o23 -0.7, out.o24 -0.1, out.o25 0, pro.o21 0.1, pro.o22 0.2, pro.o23 0.5, pro.o24 0.1, pro.o25 0.1/
+    v3(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
+    v4(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
+    v5(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
 ;
 
 Scalars
-    ccost /0.0/
-    ocost /0.0/
+    ccost /0/
+    ocost /0/
 ;
 
 * ============================================

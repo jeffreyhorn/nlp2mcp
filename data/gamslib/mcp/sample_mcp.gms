@@ -29,7 +29,7 @@ Parameters
 ;
 
 Scalars
-    tpop /0.0/
+    tpop /0/
 ;
 
 w(h) = data(h,"pop") / tpop;
@@ -69,12 +69,14 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
+$onImplicitAssign
 n.l("1") = 200.0;
 n.l("2") = 200.0;
 n.l("3") = 200.0;
 n.l("4") = 200.0;
 nr.l(h) = 1 / n.l(h);
 c.l = sum(h, data(h,"cost") * n.l(h));
+$offImplicitAssign
 
 * ============================================
 * Equations

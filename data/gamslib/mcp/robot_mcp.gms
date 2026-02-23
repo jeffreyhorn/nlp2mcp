@@ -21,11 +21,11 @@ Sets
 ;
 
 Scalars
-    nh /50.0/
-    L /5.0/
-    max_u_rho /1.0/
-    max_u_the /1.0/
-    max_u_phi /1.0/
+    nh /50/
+    L /5/
+    max_u_rho /1/
+    max_u_the /1/
+    max_u_phi /1/
 ;
 
 * ============================================
@@ -293,6 +293,7 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
+$onImplicitAssign
 rho.l("h0") = 4.5;
 rho.l("h1") = 4.5;
 rho.l("h2") = 4.5;
@@ -450,8 +451,9 @@ phi_dot.l("h48") = 0.0;
 phi_dot.l("h49") = 0.0;
 phi_dot.l("h50") = 0.0;
 step.l = 1 / nh;
-i_the.l(h) = i_phi.l(h) * sqr(sin(phi.l(h)));
 i_phi.l(h) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
+i_the.l(h) = i_phi.l(h) * sqr(sin(phi.l(h)));
+$offImplicitAssign
 
 * ============================================
 * Equations

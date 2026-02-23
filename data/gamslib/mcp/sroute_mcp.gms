@@ -25,7 +25,7 @@ Alias(i, ipp);
 
 Parameters
     darc(i,ip)
-    uarc(i,ip) /boston.chicago 58.0, boston.'wash-dc' 25.0, chicago.'kansas-cty' 29.0, chicago.memphis 32.0, chicago.portland 130.0, chicago.'salt-lake' 85.0, dallas.'kansas-cty' 29.0, dallas.losangeles 85.0, dallas.memphis 28.0, dallas.'salt-lake' 75.0, 'kansas-cty'.memphis 27.0, 'kansas-cty'.'salt-lake' 66.0, 'kansas-cty'.'wash-dc' 62.0, losangeles.portland 58.0, losangeles.'salt-lake' 43.0, memphis.'wash-dc' 53.0, portland.'salt-lake' 48.0/
+    uarc(i,ip) /boston.chicago 58, boston.'wash-dc' 25, chicago.'kansas-cty' 29, chicago.memphis 32, chicago.portland 130, chicago.'salt-lake' 85, dallas.'kansas-cty' 29, dallas.losangeles 85, dallas.memphis 28, dallas.'salt-lake' 75, 'kansas-cty'.memphis 27, 'kansas-cty'.'salt-lake' 66, 'kansas-cty'.'wash-dc' 62, losangeles.portland 58, losangeles.'salt-lake' 43, memphis.'wash-dc' 53, portland.'salt-lake' 48/
     sroute(i,ip)
 ;
 

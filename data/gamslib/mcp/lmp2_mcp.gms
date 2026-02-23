@@ -26,19 +26,19 @@ Sets
 ;
 
 Parameters
-    cases(c,*) /c1.m 10.0, c1.n 20.0, c2.m 20.0, c2.n 30.0, c3.m 60.0, c3.n 100.0, c4.m 100.0, c4.n 100.0, c5.m 200.0, c5.n 200.0/
+    cases(c,*) /c1.m 10, c1.n 20, c2.m 20, c2.n 30, c3.m 60, c3.n 100, c4.m 100, c4.n 100, c5.m 200, c5.n 200/
     cc(p,nn)
     f(p)
     A(mm,nn)
     b(mm)
-    rep(c,*) /c1.AvgResUsd 0.0, c2.AvgResUsd 0.0, c3.AvgResUsd 0.0, c4.AvgResUsd 0.0, c5.AvgResUsd 0.0, c1.AvgNodUsd 0.0, c2.AvgNodUsd 0.0, c3.AvgNodUsd 0.0, c4.AvgNodUsd 0.0, c5.AvgNodUsd 0.0/
+    rep(c,*) /c1.AvgResUsd 0, c2.AvgResUsd 0, c3.AvgResUsd 0, c4.AvgResUsd 0, c5.AvgResUsd 0, c1.AvgNodUsd 0, c2.AvgNodUsd 0, c3.AvgNodUsd 0, c4.AvgNodUsd 0, c5.AvgNodUsd 0/
 ;
 
 Scalars
-    ResMin /0.0/
-    Resmax /0.0/
-    NodMin /0.0/
-    Nodmax /0.0/
+    ResMin /0/
+    Resmax /0/
+    NodMin /0/
+    Nodmax /0/
 ;
 
 rep(c,"AvgResUsd") = rep(c,"AvgResUsd") / card(i);

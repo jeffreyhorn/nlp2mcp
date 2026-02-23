@@ -22,18 +22,18 @@ Sets
 ;
 
 Parameters
-    c(i) /'class-1' 12.0, 'class-2' 20.0, 'class-3' 18.0, 'class-4' 40.0/
-    q(j) /'work-1' 5.0, 'work-2' 10.0/
+    c(i) /'class-1' 12, 'class-2' 20, 'class-3' 18, 'class-4' 40/
+    q(j) /'work-1' 5, 'work-2' 10/
     h(j,s)
     t(j,i,s)
-    trand(j,*,i) /'work-1'.min.'class-1' 3.5, 'work-1'.min.'class-2' 8.0, 'work-1'.min.'class-3' 6.0, 'work-1'.min.'class-4' 9.0, 'work-1'.max.'class-1' 4.5, 'work-1'.max.'class-2' 10.0, 'work-1'.max.'class-3' 8.0, 'work-1'.max.'class-4' 11.0, 'work-2'.min.'class-1' 0.8, 'work-2'.min.'class-2' 0.8, 'work-2'.min.'class-3' 2.5, 'work-2'.min.'class-4' 36.0, 'work-2'.max.'class-1' 1.2, 'work-2'.max.'class-2' 1.2, 'work-2'.max.'class-3' 3.5, 'work-2'.max.'class-4' 44.0/
+    trand(j,*,i) /'work-1'.min.'class-1' 3.5, 'work-1'.min.'class-2' 8, 'work-1'.min.'class-3' 6, 'work-1'.min.'class-4' 9, 'work-1'.max.'class-1' 4.5, 'work-1'.max.'class-2' 10, 'work-1'.max.'class-3' 8, 'work-1'.max.'class-4' 11, 'work-2'.min.'class-1' 0.8, 'work-2'.min.'class-2' 0.8, 'work-2'.min.'class-3' 2.5, 'work-2'.min.'class-4' 36, 'work-2'.max.'class-1' 1.2, 'work-2'.max.'class-2' 1.2, 'work-2'.max.'class-3' 3.5, 'work-2'.max.'class-4' 44/
     stage1(*,i)
     t2(j,i)
-    h2(j) /'work-1' 6000.0, 'work-2' 4000.0/
+    h2(j) /'work-1' 6000, 'work-2' 4000/
 ;
 
 Scalars
-    p /0.0/
+    p /0/
 ;
 
 * Fix random seed for deterministic MCP evaluation

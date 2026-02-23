@@ -20,21 +20,21 @@ Sets
 ;
 
 Scalars
-    h_0 /1.0/
-    v_0 /0.0/
-    m_0 /1.0/
-    g_0 /1.0/
-    nh /50.0/
+    h_0 /1/
+    v_0 /0/
+    m_0 /1/
+    g_0 /1/
+    nh /50/
     t_c /3.5/
-    v_c /620.0/
-    h_c /500.0/
+    v_c /620/
+    h_c /500/
     m_c /0.6/
-    D_c /0.0/
-    m_f /0.0/
-    c /0.0/
+    D_c /0/
+    m_f /0/
+    c /0/
 ;
 
-D_c = 0.5 * v_c * m_0 / g_0;
+d_c = 0.5 * v_c * m_0 / g_0;
 m_f = m_c * m_0;
 c = 0.5 * sqrt(g_0 * h_0);
 
@@ -84,6 +84,7 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound).
 
+$onImplicitAssign
 step.l = 1 / nh;
 step.l = min(max(step.l, 1e-6), step.up);
 v.l(h) = (ord(h) - 1) / nh * (1 - (ord(h) - 1) / nh);
@@ -140,14 +141,15 @@ ht.l("h48") = 1.0;
 ht.l("h49") = 1.0;
 ht.l("h50") = 1.0;
 ht.l(h) = min(max(ht.l(h), 1e-6), ht.up(h));
-g.l(h) = g_0 * sqr(h_0 / ht.l(h));
-g.l(h) = min(max(g.l(h), 1e-6), g.up(h));
 m.l(h) = (m_f - m_0) * (ord(h) - 1) / nh + m_0;
 m.l(h) = min(max(m.l(h), 1e-6), m.up(h));
 t.l(h) = t.up(h) / 2;
 t.l(h) = min(max(t.l(h), 1e-6), t.up(h));
+g.l(h) = g_0 * sqr(h_0 / ht.l(h));
+g.l(h) = min(max(g.l(h), 1e-6), g.up(h));
 d.l(h) = D_c * sqr(v.l(h)) * exp(((-1) * h_c) * (ht.l(h) - h_0) / h_0);
 d.l(h) = min(max(d.l(h), 1e-6), d.up(h));
+$offImplicitAssign
 
 * ============================================
 * Equations

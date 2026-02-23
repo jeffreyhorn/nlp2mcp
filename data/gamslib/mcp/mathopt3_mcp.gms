@@ -15,11 +15,6 @@ $offText
 * Original Model Declarations
 * ============================================
 
-Scalars
-    xdiff /0/
-    fdiff /0/
-;
-
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -33,13 +28,22 @@ Scalars
 
 Variables
     x1
+    x2
+    x3
+    x4
+    x5
+    x6
     obj
+    nu_eq1
+    nu_eq2
+    nu_eq3
+    nu_eq4
 ;
 
 Positive Variables
     lam_ineq1
-    piL_x1
-    piU_x1
+    lam_ineq2
+    lam_ineq3
 ;
 
 * ============================================
@@ -50,16 +54,12 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = 1.0;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-xdiff = 2.66695657 - x1.l;
-fdiff = -3.76250149 - obj.l;
-$offImplicitAssign
+x1.l = 10.0;
+x2.l = -10.0;
+x3.l = 10.0;
+x4.l = 10.0;
+x5.l = 10.0;
+x6.l = -10.0;
 
 * ============================================
 * Equations
@@ -71,10 +71,19 @@ $offImplicitAssign
 
 Equations
     stat_x1
+    stat_x2
+    stat_x3
+    stat_x4
+    stat_x5
+    stat_x6
     comp_ineq1
-    comp_lo_x1
-    comp_up_x1
-    objdef
+    comp_ineq2
+    comp_ineq3
+    defobj
+    eq1
+    eq2
+    eq3
+    eq4
 ;
 
 * ============================================
@@ -82,19 +91,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 11 * cos(11 * x1) + 13 * ((-1) * (sin(13 * x1))) - cos(17 * x1) * 17 - ((-1) * (sin(19 * x1))) * 19 + (-1 + 5 * cos(x1)) * lam_ineq1 - piL_x1 + piU_x1 =E= 0;
+stat_x1.. 2 * (x1 + x2) + 4 * (x1 + x3 - x4) + (-2) * (x2 - x1 + x3 - x4) + 20 * sin(x5 - x6 + x1) * cos(x5 - x6 + x1) + 2 * x1 * nu_eq1 + (x3 - x2 * x4 - cos(x6 - x1 - x3) * (-1)) * nu_eq2 + x2 * nu_eq4 + 2 * lam_ineq1 + 3 * lam_ineq2 + lam_ineq3 =E= 0;
+stat_x2.. 2 * (x1 + x2) + 2 * (x2 - x1 + x3 - x4) + ((-1) * (cos(x2))) * nu_eq1 + ((-1) * (x1 * x4)) * nu_eq2 + (cos(x5) * x6 + 1) * nu_eq3 + x1 * nu_eq4 + 5 * lam_ineq1 + (-2) * lam_ineq2 + lam_ineq3 =E= 0;
+stat_x3.. 2 * (x3 - x5) + 4 * (x1 + x3 - x4) + 2 * (x2 - x1 + x3 - x4) + (x1 - cos(x6 - x1 - x3) * (-1)) * nu_eq2 + ((-1) * (cos(x3 * x4) * x4)) * nu_eq3 + ((-1) * (2 * x3)) * nu_eq4 + lam_ineq1 + lam_ineq2 + lam_ineq3 =E= 0;
+stat_x4.. (-2) * (x6 - x4) + (-4) * (x1 + x3 - x4) + (-2) * (x2 - x1 + x3 - x4) - nu_eq1 + ((-1) * (x1 * x2)) * nu_eq2 + ((-1) * (cos(x3 * x4) * x3)) * nu_eq3 + ((-1) * x5) * nu_eq4 + lam_ineq1 + (-4) * lam_ineq2 + lam_ineq3 =E= 0;
+stat_x5.. (-2) * (x3 - x5) + 20 * sin(x5 - x6 + x1) * cos(x5 - x6 + x1) + nu_eq1 - nu_eq2 + (x2 * x6 * ((-1) * (sin(x5))) - 1) * nu_eq3 + ((-1) * x4) * nu_eq4 + lam_ineq3 =E= 0;
+stat_x6.. 2 * (x6 - x4) + (-20) * sin(x5 - x6 + x1) * cos(x5 - x6 + x1) + nu_eq1 + ((-1) * (cos(x6 - x1 - x3))) * nu_eq2 + cos(x5) * x2 * nu_eq3 + ((-1) * (2 * x6)) * nu_eq4 + lam_ineq3 =E= 0;
 
 * Inequality complementarity equations
-comp_ineq1.. ((-1) * (((-1) * x1) + 5 * sin(x1))) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_x1.. x1 + 2 =G= 0;
-
-* Upper bound complementarity equations
-comp_up_x1.. 5 - x1 =G= 0;
+comp_ineq1.. ((-1) * (2 * x1 + 5 * x2 + x3 + x4 - 1)) =G= 0;
+comp_ineq2.. ((-1) * (3 * x1 - 2 * x2 + x3 - 4 * x4)) =G= 0;
+comp_ineq3.. ((-1) * (x1 + x2 + x3 + x4 + x5 + x6 - 2)) =G= 0;
 
 * Original equality equations
-objdef.. obj =E= sin(11 * x1) + cos(13 * x1) - sin(17 * x1) - cos(19 * x1);
+defobj.. obj =E= sqr(x1 + x2) + sqr(x3 - x5) + sqr(x6 - x4) + 2 * sqr(x1 + x3 - x4) + sqr(x2 - x1 + x3 - x4) + 10 * sqr(sin(x5 - x6 + x1));
+eq1.. sqr(x1) - sin(x2) - x4 + x5 + x6 =E= 0;
+eq2.. x1 * x3 - x2 * x4 * x1 - x5 - sin(x6 - x1 - x3) =E= 0;
+eq3.. x2 * x6 * cos(x5) - sin(x3 * x4) + x2 - x5 =E= 0;
+eq4.. x1 * x2 - sqr(x3) - x4 * x5 - sqr(x6) =E= 0;
 
 
 * ============================================
@@ -112,10 +126,19 @@ objdef.. obj =E= sin(11 * x1) + cos(13 * x1) - sin(17 * x1) - cos(19 * x1);
 
 Model mcp_model /
     stat_x1.x1,
+    stat_x2.x2,
+    stat_x3.x3,
+    stat_x4.x4,
+    stat_x5.x5,
+    stat_x6.x6,
     comp_ineq1.lam_ineq1,
-    objdef.obj,
-    comp_lo_x1.piL_x1,
-    comp_up_x1.piU_x1
+    comp_ineq2.lam_ineq2,
+    comp_ineq3.lam_ineq3,
+    defobj.obj,
+    eq1.nu_eq1,
+    eq2.nu_eq2,
+    eq3.nu_eq3,
+    eq4.nu_eq4
 /;
 
 * ============================================

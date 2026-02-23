@@ -26,18 +26,18 @@ Parameters
     hb(s)
     k1(s)
     k2(s)
-    l(s) /top 495.0, middle 385.0, bottom 315.0/
+    l(s) /top 495, middle 385, bottom 315/
 ;
 
 Scalars
     gam /0.001/
-    sig /1200.0/
+    sig /1200/
     dnv /3.9/
     ca /0.2/
     e /0.8/
-    ha /250.0/
+    ha /250/
     gamsteel /0.0078/
-    width /500.0/
+    width /500/
     tlow /1.05/
 ;
 
@@ -87,14 +87,16 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-z.l(s) = d.l * t.l(s) * (lw.l / 3 + wl.l * e) / 2;
+$onImplicitAssign
 t.l("top") = 1.2;
 t.l("middle") = 1.2;
 t.l("bottom") = 1.3;
 wl.l = 45.8;
 lw.l = 43.2;
 d.l = 30.5;
+z.l(s) = d.l * t.l(s) * (lw.l / 3 + wl.l * e) / 2;
 wc.l = wl.l + sqrt(lw.l ** 2 - d.l ** 2);
+$offImplicitAssign
 
 * ============================================
 * Equations

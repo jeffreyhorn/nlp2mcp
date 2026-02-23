@@ -25,10 +25,10 @@ Parameters
 ;
 
 Scalars
-    xmin /0.0/
-    ymin /0.0/
-    xmax /0.0/
-    ymax /0.0/
+    xmin /0/
+    ymin /0/
+    xmax /0/
+    ymax /0/
 ;
 
 * Fix random seed for deterministic MCP evaluation
@@ -71,9 +71,11 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
+$onImplicitAssign
 a.l = (xmin + xmax) / 2;
 b.l = (ymin + ymax) / 2;
 r.l = sqrt(sqr(a.l - xmin) + sqr(b.l - ymin));
+$offImplicitAssign
 
 * ============================================
 * Equations

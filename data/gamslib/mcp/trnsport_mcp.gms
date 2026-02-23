@@ -21,14 +21,14 @@ Sets
 ;
 
 Parameters
-    a(i) /seattle 350.0, 'san-diego' 600.0/
-    b(j) /'new-york' 325.0, chicago 300.0, topeka 275.0/
+    a(i) /seattle 350, 'san-diego' 600/
+    b(j) /'new-york' 325, chicago 300, topeka 275/
     d(i,j) /seattle.'new-york' 2.5, seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.'new-york' 2.5, 'san-diego'.chicago 1.8, 'san-diego'.topeka 1.4/
     c(i,j)
 ;
 
 Scalars
-    f /90.0/
+    f /90/
 ;
 
 c(i,j) = f * d(i,j) / 1000;

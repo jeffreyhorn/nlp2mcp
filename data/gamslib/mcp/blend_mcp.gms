@@ -21,8 +21,8 @@ Sets
 ;
 
 Parameters
-    compdat(*,alloy) /lead.a 10.0, lead.b 10.0, lead.c 40.0, lead.d 60.0, lead.e 30.0, lead.f 30.0, lead.g 30.0, lead.h 50.0, lead.i 20.0, zinc.a 10.0, zinc.b 30.0, zinc.c 50.0, zinc.d 30.0, zinc.e 30.0, zinc.f 40.0, zinc.g 20.0, zinc.h 40.0, zinc.i 30.0, tin.a 80.0, tin.b 60.0, tin.c 10.0, tin.d 10.0, tin.e 40.0, tin.f 30.0, tin.g 50.0, tin.h 10.0, tin.i 50.0, price.a 4.1, price.b 4.3, price.c 5.8, price.d 6.0, price.e 7.6, price.f 7.5, price.g 7.3, price.h 6.9, price.i 7.3/
-    rb(elem) /lead 30.0, zinc 30.0, tin 40.0/
+    compdat(*,alloy) /lead.a 10, lead.b 10, lead.c 40, lead.d 60, lead.e 30, lead.f 30, lead.g 30, lead.h 50, lead.i 20, zinc.a 10, zinc.b 30, zinc.c 50, zinc.d 30, zinc.e 30, zinc.f 40, zinc.g 20, zinc.h 40, zinc.i 30, tin.a 80, tin.b 60, tin.c 10, tin.d 10, tin.e 40, tin.f 30, tin.g 50, tin.h 10, tin.i 50, price.a 4.1, price.b 4.3, price.c 5.8, price.d 6, price.e 7.6, price.f 7.5, price.g 7.3, price.h 6.9, price.i 7.3/
+    rb(elem) /lead 30, zinc 30, tin 40/
     ce(alloy)
     report(alloy,*)
 ;

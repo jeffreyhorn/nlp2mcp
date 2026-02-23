@@ -22,11 +22,11 @@ Sets
 Alias(nh, i);
 
 Scalars
-    tf /1.0/
-    x1_0 /1.0/
-    x2_0 /0.0/
-    alpha /0.0/
-    h /0.0/
+    tf /1/
+    x1_0 /1/
+    x2_0 /0/
+    alpha /0/
+    h /0/
 ;
 
 h = tf / 100;

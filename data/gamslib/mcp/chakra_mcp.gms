@@ -29,13 +29,13 @@ Parameters
 Scalars
     delt /0.05/
     beta /0.75/
-    a /0.0/
+    a /0/
     r /0.025/
     eta /0.9/
     z /0.01/
     rho /0.03/
     y0 /4.275/
-    k0 /15.0/
+    k0 /15/
 ;
 
 tb(t) = 1$(ord(t) = 1);
@@ -79,9 +79,11 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-c.l(t) = y.l(t) + (1 - delt) * k.l(t) - k.l(t+1);
+$onImplicitAssign
 y.l(t) = y0 * 1.06 ** (ord(t) - 1);
 k.l(t) = (y.l(t) / alpha(t)) ** (1 / beta);
+c.l(t) = y.l(t) + (1 - delt) * k.l(t) - k.l(t+1);
+$offImplicitAssign
 
 * ============================================
 * Equations

@@ -26,19 +26,19 @@ Parameters
 ;
 
 Scalars
-    p /1.0/
+    p /1/
     r /0.07/
-    tr /0.0/
+    tr /0/
     th /1004.72366/
-    w /1.0/
+    w /1/
     d /0.2/
     a1 /0.5/
     a2 /-0.5/
-    am /1100.0/
+    am /1100/
     lambda /0.944/
-    lstar /400.0/
+    lstar /400/
     gamma1 /0.255905/
-    gamma2 /1.0/
+    gamma2 /1/
 ;
 
 ufact(t) = lambda ** (ord(t) - 1);

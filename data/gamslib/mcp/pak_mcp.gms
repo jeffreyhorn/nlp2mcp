@@ -22,7 +22,7 @@ Sets
 ;
 
 Parameters
-    k(j) /'non-traded' 3.0, traded 4.5/
+    k(j) /'non-traded' 3, traded 4.5/
     delt(t)
     vb(j) /'non-traded' 37.38/
     e(t)
@@ -39,8 +39,8 @@ Scalars
     rho /0.08/
     r /0.1/
     g /0.073/
-    gama /2.0/
-    d /1.0/
+    gama /2/
+    d /1/
     alpha /0.24/
     mgnp /0.1/
     mi /0.35/
@@ -48,8 +48,8 @@ Scalars
     beta /0.13/
     ee /0.049/
     q /0.5/
-    num /4.0/
-    dis /0.0/
+    num /4/
+    dis /0/
 ;
 
 delt(t) = (1 + rho) ** ((-1) * (ord(t)));

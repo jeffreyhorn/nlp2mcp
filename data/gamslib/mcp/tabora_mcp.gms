@@ -25,9 +25,9 @@ Sets
 ;
 
 Parameters
-    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10.0, maize.mar 13.0, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10.0, 'timber-1'.mar 3.0, 'timber-1'.may 10.0, 'timber-1'.aug 1.0, 'timber-1'.sep 7.0, 'timber-1'.oct 8.0, 'timber-1'.nov 9.0, 'timber-2'.jan 7.0, 'timber-2'.may 10.0, 'timber-2'.aug 1.0, other.jan 10.0, other.feb 8.0, other.mar 12.0, other.apr 10.0, other.may 4.0, other.jun 2.0, other.sep 10.0, other.oct 28.0, other.nov 24.0, 'timber-1'.feb 0.0, 'timber-1'.apr 0.0, 'timber-1'.jun 0.0, 'timber-1'.jul 0.0, 'timber-1'.dec 0.0, 'timber-2'.feb 0.0, 'timber-2'.mar 0.0, 'timber-2'.apr 0.0, 'timber-2'.jun 0.0, 'timber-2'.jul 0.0, 'timber-2'.sep 0.0, 'timber-2'.oct 0.0, 'timber-2'.nov 0.0, 'timber-2'.dec 0.0, other.jul 0.0, other.aug 0.0, other.dec 0.0, tobacco.jun 0.0, tobacco.jul 0.0, tobacco.dec 0.0, maize.jun 0.0, maize.jul 0.0, maize.aug 0.0, maize.sep 0.0, maize.dec 0.0/
-    tmd(*,c) /'input-cost'.tobacco 2000.0, 'input-cost'.maize 20.0, yield.tobacco 675.0, yield.maize 750.0, price.tobacco 8.4, price.maize 0.8/
-    yv(a) /a08 120.0, a16 120.0, a24 120.0/
+    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24, 'timber-2'.feb 0, 'timber-2'.mar 0, 'timber-2'.apr 0, 'timber-2'.jun 0, 'timber-2'.jul 0, 'timber-2'.sep 0, 'timber-2'.oct 0, 'timber-2'.nov 0, 'timber-2'.dec 0, maize.jun 0, maize.jul 0, maize.aug 0, maize.sep 0, maize.dec 0, other.jul 0, other.aug 0, other.dec 0, tobacco.jun 0, tobacco.jul 0, tobacco.dec 0, 'timber-1'.feb 0, 'timber-1'.apr 0, 'timber-1'.jun 0, 'timber-1'.jul 0, 'timber-1'.dec 0/
+    tmd(*,c) /'input-cost'.tobacco 2000, 'input-cost'.maize 20, yield.tobacco 675, yield.maize 750, price.tobacco 8.4, price.maize 0.8/
+    yv(a) /a08 120, a16 120, a24 120/
     vr(t)
     labor(m)
     fa(i)
@@ -42,27 +42,27 @@ Parameters
 ;
 
 Scalars
-    nfam /400.0/
-    sfam /3.0/
+    nfam /400/
+    sfam /3/
     resw /0.5/
-    fdmaize /650.0/
-    tob /234.0/
-    sr /5.0/
-    width /1.0/
-    ws /5.0/
-    whd /10.0/
-    wdm /25.0/
+    fdmaize /650/
+    tob /234/
+    sr /5/
+    width /1/
+    ws /5/
+    whd /10/
+    wdm /25/
     tr /1.31/
-    tc /349.0/
+    tc /349/
     wrc /46.75/
-    dwr /10.0/
-    labwc /1.0/
+    dwr /10/
+    labwc /1/
     labvc /0.5/
-    yw /40.0/
+    yw /40/
     rho /0.1/
     matr /0.25/
-    dmaize /0.0/
-    wr /0.0/
+    dmaize /0/
+    wr /0/
 ;
 
 dmaize = fdmaize * nfam;
