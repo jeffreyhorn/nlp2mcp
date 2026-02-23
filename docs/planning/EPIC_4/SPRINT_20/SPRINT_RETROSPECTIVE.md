@@ -100,7 +100,7 @@ The Day 13 sprint close prep created issue files for all 13 deferred items, smok
 
 ### 1. Day 8 Parse Count Claims Were Overstated
 
-Day 8 logs reported turkey and turkpow as parsing ("PASS"), but the final Day 14 retest shows both failing. Turkey fails with `lexer_invalid_char` and turkpow with `internal_error`. The Day 8 claims may have been based on partial preprocessor output rather than a full end-to-end parse.
+Day 8 logs reported turkey and turkpow as parsing ("PASS"), but the final Day 14 retest shows both failing. turkey fails with `lexer_invalid_char` and turkpow with `internal_error`. The Day 8 claims may have been based on partial preprocessor output rather than a full end-to-end parse.
 
 **Lesson:** Always verify parse claims with `parse_file()` end-to-end, not partial grammar checks. The pipeline retest is the source of truth.
 
