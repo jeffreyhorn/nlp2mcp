@@ -440,7 +440,7 @@ These items were originally planned for Sprint 18 but were deferred when archite
 - **Deliverable:** Match gap analysis; targeted fixes for near-match models
 
 ### Semantic Error Resolution (~2h)
-- Resolve `semantic_undefined_symbol` (2 models)
+- Resolve `semantic_undefined_symbol` (7 models)
 - Determine if these are GAMSLIB source issues or nlp2mcp bugs
 - If GAMSLIB issues: add to syntax error report; if bugs: fix
 - **Deliverable:** Semantic errors resolved or documented
@@ -476,6 +476,8 @@ These items were originally planned for Sprint 18 but were deferred when archite
 1. **Standardize pipeline denominator.** Use 160 (parse-attempted) as the canonical reference, not 158 (convexity-filtered). Document any exclusions explicitly.
 2. **Record PR numbers immediately after merge.** Avoid leaving "PR: TBD" in sprint logs; record the PR number in the same commit as the day's work.
 3. **Verify parse claims end-to-end.** Always use `parse_file()` (not partial grammar checks) before claiming a model parses. The pipeline retest is the ground truth.
+4. **Run targeted solve on newly-parsing models.** Don't wait for checkpoints to discover solve issues. A quick `--only-solve` run after each parse-improvement PR provides earlier feedback.
+5. **Track error category migration.** As lexer errors decrease, models shift to later-stage failures (`internal_error`, `semantic_undefined_symbol`). Track these transitions to prevent surprise backlogs.
 
 ## Deliverables
 - Preprocessor macro expansion (`$set`/`$eval`/`%name%`)
@@ -491,7 +493,7 @@ These items were originally planned for Sprint 18 but were deferred when archite
 
 ## Acceptance Criteria
 - **Parse Rate:** ≥ 135/160 (84.4%)
-- **lexer_invalid_char:** ≤ 5 (down from 8)
+- **lexer_invalid_char:** ≤ 5 (down from 10)
 - **internal_error (parse):** ≤ 3 (down from 7)
 - **Solve:** ≥ 36 (up from 33)
 - **Match:** ≥ 20 (up from 16)
@@ -499,7 +501,7 @@ These items were originally planned for Sprint 18 but were deferred when archite
 - **Solution Comparison:** Framework extended with primal/dual/complementarity comparison
 - **Quality:** All tests pass; no regressions
 
-**Estimated Effort:** 46–66 hours
+**Estimated Effort:** 46–68 hours
 **Risk Level:** MEDIUM (macro expansion is a new subsystem; path_syntax_error triage may reveal deep translation issues; PATH investigation may reveal fundamental issues)
 
 ---
