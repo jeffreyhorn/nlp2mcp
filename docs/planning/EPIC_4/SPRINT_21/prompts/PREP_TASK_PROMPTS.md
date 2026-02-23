@@ -6,13 +6,13 @@
 
 **Standing instructions:**
 - Never put "Co-authored-by" in commit messages or comments
-- PR review replies: ALWAYS use `gh api "repos/jeffreyhorn/nlp2mcp/pulls/NNN/comments/$id/replies" -X POST -f body="..."` to reply directly to individual comments
+- PR review replies: ALWAYS use `gh api "repos/jeffreyhorn/nlp2mcp/pulls/NNN/comments/$COMMENT_ID/replies" -X POST -f body="..."` to reply directly to individual comments
 
 ---
 
 ## Task 2: Research GAMS Macro Expansion Semantics
 
-```
+````
 On a new branch `planning/sprint21-task2` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 2: Research GAMS Macro Expansion Semantics.
 
 ### OBJECTIVE
@@ -150,13 +150,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 3: Catalog internal_error Root Causes (7 Models)
 
-```
+````
 On a new branch `planning/sprint21-task3` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 3: Catalog internal_error Root Causes (7 Models).
 
 ### OBJECTIVE
@@ -285,13 +285,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 4: Catalog path_syntax_error Root Causes (45 Models)
 
-```
+````
 On a new branch `planning/sprint21-task4` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 4: Catalog path_syntax_error Root Causes (45 Models).
 
 ### OBJECTIVE
@@ -418,13 +418,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 5: Triage Deferred Sprint 20 Issues
 
-```
+````
 On a new branch `planning/sprint21-task5` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 5: Triage Deferred Sprint 20 Issues.
 
 IMPORTANT: This task depends on Tasks 3 and 4. If Tasks 3 and 4 have NOT been merged into `planning/sprint21-prep` yet, branch from whichever task branch is most current, or wait for them to merge.
@@ -563,13 +563,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 6: Analyze Solve-Match Gap (17 Models)
 
-```
+````
 On a new branch `planning/sprint21-task6` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 6: Analyze Solve-Match Gap (17 Models).
 
 ### OBJECTIVE
@@ -695,13 +695,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 7: Audit semantic_undefined_symbol Models
 
-```
+````
 On a new branch `planning/sprint21-task7` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 7: Audit semantic_undefined_symbol Models.
 
 ### OBJECTIVE
@@ -815,13 +815,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 8: Snapshot Baseline Metrics & Pipeline Retest
 
-```
+````
 On a new branch `planning/sprint21-task8` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 8: Snapshot Baseline Metrics & Pipeline Retest.
 
 ### OBJECTIVE
@@ -937,13 +937,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 9: Review Sprint 20 Retrospective Action Items
 
-```
+````
 On a new branch `planning/sprint21-task9` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 9: Review Sprint 20 Retrospective Action Items.
 
 ### OBJECTIVE
@@ -1042,13 +1042,13 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````
 
 ---
 
 ## Task 10: Plan Sprint 21 Detailed Schedule
 
-```
+````
 On a new branch `planning/sprint21-task10` (branched from `planning/sprint21-prep`), execute Sprint 21 Prep Task 10: Plan Sprint 21 Detailed Schedule.
 
 IMPORTANT: This task depends on ALL tasks (1–9). Ensure all prior task PRs have been merged into `planning/sprint21-prep` before starting. If not all are merged, branch from the most current state that includes Tasks 2–9 deliverables.
@@ -1173,4 +1173,4 @@ Fix issues, commit, push, and reply to each comment using:
 ```bash
 gh api "repos/jeffreyhorn/nlp2mcp/pulls/PULL_NUMBER/comments/COMMENT_ID/replies" -X POST -f body="..."
 ```
-```
+````

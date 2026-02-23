@@ -842,7 +842,7 @@ Development team
 **Critical** — Determines the scope of Sprint 21's PATH Convergence Investigation workstream (8–10h budget)
 
 ### Assumption
-Of the 33 solving models, 0 currently fail with `path_solve_terminated` (all 33 solve successfully). The PATH convergence investigation targets models that solve but produce wrong answers (the 17 non-matching models) plus any models that PATH terminates early on.
+Current baseline (per `gamslib_status.json`) shows that some solving models already fail with `path_solve_terminated` (e.g., `camshape`). The PATH convergence investigation targets models that solve but produce wrong answers (the 17 non-matching models) plus any models where PATH terminates early with `path_solve_terminated`.
 
 ### Research Questions
 1. Among the 88 solve-stage failures, how many are `path_solve_terminated` (PATH ran but didn't converge)?

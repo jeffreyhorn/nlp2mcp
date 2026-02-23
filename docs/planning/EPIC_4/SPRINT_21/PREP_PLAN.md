@@ -139,7 +139,7 @@ grep -c "^##" docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
-**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4
+**Unknowns to Verify:** 1.1, 1.2, 1.3, 1.4
 
 ### Objective
 
@@ -237,7 +237,7 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
-**Unknowns Verified:** 2.1, 2.2, 2.3
+**Unknowns to Verify:** 2.1, 2.2, 2.3
 
 ### Objective
 
@@ -334,7 +334,7 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
-**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4
+**Unknowns to Verify:** 3.1, 3.2, 3.3, 3.4
 
 ### Objective
 
@@ -388,7 +388,19 @@ ls docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
 python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-pse = [m for m,v in data.items() if v.get('error_category') == 'path_syntax_error']
+models = data.get('models', [])
+pse = [
+    m.get('model_id', '?') for m in models
+    if isinstance(m, dict)
+    and isinstance(m.get('mcp_solve'), dict)
+    and (
+        m['mcp_solve'].get('outcome_category') == 'path_syntax_error'
+        or (
+            isinstance(m['mcp_solve'].get('error'), dict)
+            and m['mcp_solve']['error'].get('category') == 'path_syntax_error'
+        )
+    )
+]
 print(f'path_syntax_error models: {len(pse)}')
 "
 ```
@@ -420,7 +432,7 @@ print(f'path_syntax_error models: {len(pse)}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Tasks 1, 3, 4 (catalogs inform overlap with deferred issues)
-**Unknowns Verified:** 4.1, 4.2, 4.3
+**Unknowns to Verify:** 4.1, 4.2, 4.3
 
 ### Objective
 
@@ -513,7 +525,7 @@ ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
-**Unknowns Verified:** 5.1, 5.2, 5.3
+**Unknowns to Verify:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -568,8 +580,9 @@ ls docs/planning/EPIC_4/SPRINT_21/SOLVE_MATCH_GAP_ANALYSIS.md
 python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-solve = [m for m,v in data.items() if v.get('solve_success')]
-match = [m for m,v in data.items() if v.get('match')]
+models = data.get('models', [])
+solve = [m.get('model_id', '?') for m in models if isinstance(m, dict) and isinstance(m.get('mcp_solve'), dict) and m['mcp_solve'].get('status') == 'success']
+match = [m.get('model_id', '?') for m in models if isinstance(m, dict) and isinstance(m.get('mcp_solve'), dict) and m['mcp_solve'].get('status') == 'success' and isinstance(m.get('solution_comparison'), dict) and m['solution_comparison'].get('objective_match') == 'match']
 print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 "
 ```
@@ -600,7 +613,7 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** Task 1 (Known Unknowns)
-**Unknowns Verified:** 6.1, 6.2
+**Unknowns to Verify:** 6.1, 6.2
 
 ### Objective
 
@@ -645,7 +658,8 @@ ls docs/planning/EPIC_4/SPRINT_21/SEMANTIC_ERROR_AUDIT.md
 python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
-sue = [m for m,v in data.items() if v.get('error_category') == 'semantic_undefined_symbol']
+models = data.get('models', [])
+sue = [m.get('model_id', '?') for m in models if isinstance(m, dict) and isinstance(m.get('nlp2mcp_parse'), dict) and isinstance(m['nlp2mcp_parse'].get('error'), dict) and m['nlp2mcp_parse']['error'].get('category') == 'semantic_undefined_symbol']
 print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 "
 ```
@@ -675,7 +689,7 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** None
-**Unknowns Verified:** 8.1
+**Unknowns to Verify:** 8.1
 
 ### Objective
 
@@ -752,7 +766,7 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** None
-**Unknowns Verified:** *(process alignment — no specific unknowns; ensures Sprint 20 lessons are applied)*
+**Unknowns to Verify:** *(process alignment — no specific unknowns; ensures Sprint 20 lessons are applied)*
 
 ### Objective
 
@@ -821,7 +835,7 @@ grep -c "process" docs/planning/EPIC_4/SPRINT_21/RETROSPECTIVE_ALIGNMENT.md
 **Deadline:** Before Sprint 21 Day 1
 **Owner:** Development team
 **Dependencies:** All tasks (1–9)
-**Unknowns Verified:** *(integrates all verified unknowns from Tasks 2–9 into data-driven schedule)*
+**Unknowns to Verify:** *(integrates all verified unknowns from Tasks 2–9 into data-driven schedule)*
 
 ### Objective
 
