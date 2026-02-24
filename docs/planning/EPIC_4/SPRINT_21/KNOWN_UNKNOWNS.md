@@ -918,7 +918,26 @@ Most of the 7 semantic_undefined_symbol models reference symbols defined in `$in
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "most of the 7 models reference symbols defined in `$include` files" is WRONG. **None** of the 7 models are caused by `$include` references. All 7 fail because the nlp2mcp parser/IR builder doesn't recognize certain GAMS built-in functions or language features:
+
+1. **Missing GAMS built-in functions in grammar (5 models):**
+   - camcge, feedtray: Missing `sign()` — GAMS built-in for sign of argument (-1, 0, +1)
+   - cesam2: Missing `centropy()` — GAMS built-in for cross-entropy computation
+   - sambal: Missing `mapval()` — GAMS built-in for extended range arithmetic classification
+   - procmean: Missing `betareg()` — GAMS built-in for regularized incomplete Beta function
+   - All 4 functions are listed in the GAMS commands reference but missing from the FUNCNAME regex in `gams_grammar.lark`
+
+2. **Missing Acronym handler in IR builder (1 model):**
+   - worst: `Acronym future, call, puto;` — grammar parses via `acronym_stmt` rule (line 650) but IR builder has no handler, so acronym values are never registered as known symbols
+
+3. **sameas() string literal misinterpretation (1 model):**
+   - cesam: `$(not sameas(ii,"ROW"))` — IR builder rejects `"ROW"` as undefined symbol reference in sameas() condition, but it's a quoted set element name
+
+**Key finding:** All 7 are fixable parser/IR bugs. None should be excluded from metrics. The FUNCNAME fix alone (adding `sign|centropy|mapval|betareg`) would unblock 5 of 7 models in ~30min.
+
+See `SEMANTIC_ERROR_AUDIT.md` for full per-model analysis.
 
 ---
 
@@ -952,7 +971,28 @@ Models that fail due to `$include` references should be reclassified as "unsuppo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "models failing due to `$include` references should be reclassified as unsupported" is WRONG because **none** of the 7 models fail due to `$include` references. All 7 are fixable parser/IR bugs:
+
+1. **No models should be excluded:** All 7 `semantic_undefined_symbol` models fail due to nlp2mcp parser/IR builder bugs, not external dependencies or GAMSLIB source errors.
+
+2. **The effective denominator should NOT change:** Since all 7 are fixable, they should remain in the 160-model denominator. No reclassification to "unsupported" is warranted.
+
+3. **No new error category needed:** The `semantic_undefined_symbol` category correctly describes the symptom. The root causes are:
+   - 5 models: missing GAMS built-in functions in grammar FUNCNAME regex (fix: ~30min)
+   - 1 model: missing Acronym handler in IR builder (fix: ~1-2h)
+   - 1 model: sameas() string literal misinterpretation (fix: ~1h)
+
+4. **Metric impact after fixes:**
+   - Current parse rate: 132/160 (82.5%)
+   - After FUNCNAME fix: 137/160 (85.6%) — +5 models
+   - After all 3 fixes: 139/160 (86.9%) — +7 models
+   - Sprint 21 parse target (≥135/160): exceeded by FUNCNAME fix alone
+
+**Conclusion:** These models represent easy wins, not exclusion candidates. The FUNCNAME fix alone (~30min) exceeds the Sprint 21 parse target.
+
+See `SEMANTIC_ERROR_AUDIT.md` for full per-model analysis.
 
 ---
 
