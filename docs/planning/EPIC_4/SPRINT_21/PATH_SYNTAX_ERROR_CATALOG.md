@@ -25,7 +25,7 @@ All 45 path_syntax_error models were compiled through GAMS v53, and the compilat
 | I | MCP variable not referenced in equations | 1 | 1 | Translator (MCP model statement) | 1h |
 | J | Equation-variable dimension mismatch | 1 | 1 | Translator (equation-variable pairing) | 1h |
 
-**Total estimated effort: 14-21h** (above the 8-12h budget; triage recommended)
+**Total estimated effort: 15-22h** (above the 8-12h budget; triage recommended)
 
 ### Key Findings
 

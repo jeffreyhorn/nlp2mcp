@@ -423,7 +423,7 @@ Development team
 8. **I: MCP variable unreferenced** — 1 model — variable in model statement but not in equations
 9. **J: Equation-variable dimension mismatch** — 1 model — pairing dimensions don't match
 
-The assumption of 4–6 subcategories was partially wrong (9 subcategories), but the core insight that a few fixes address most models was correct. Total estimated effort: 14–21h (above the 8–12h budget; triage needed).
+The assumption of 4–6 subcategories was partially wrong (9 subcategories), but the core insight that a few fixes address most models was correct. Total estimated effort: 15–22h (above the 8–12h budget; triage needed).
 
 See `PATH_SYNTAX_ERROR_CATALOG.md` for full per-model analysis.
 

@@ -377,15 +377,15 @@ Sprint 21 Priority 3 allocates 8–12h to reduce path_syntax_error. These are mo
 ### Changes
 
 - Ran all 45 path_syntax_error models through GAMS v53, capturing compilation errors from LST output
-- Analyzed GAMS error codes ($141, $149, $170, $66, $445, $116, $121, $125, $140, $119, $120, $483, $70) across all 45 models
-- Classified into 9 subcategories: A (missing Table data, 17), B (domain violation, 5), C (uncontrolled set, 9), D (exponent parens, 3), E (index quoting, 7), F (reserved word, 1), G (index reuse, 2), I (variable unreferenced, 1), J (dimension mismatch, 1)
+- Analyzed GAMS error codes ($141, $149, $170, $66, $445, $116, $121, $125, $140, $483, $70) across all 45 models
+- Classified into 9 subcategories: A (missing Table data, 16), B (domain violation, 5), C (uncontrolled set, 9), D (exponent parens, 3), E (index quoting, 7), F (reserved word, 1), G (index reuse, 2), I (variable unreferenced, 1), J (dimension mismatch, 1)
 - Verified root causes by examining MCP files, original NLP files, and IR builder output
 - Created `PATH_SYNTAX_ERROR_CATALOG.md` with per-subcategory analysis and recommended fix order
 - Verified Known Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Result
 
-All 45 path_syntax_error models were classified into 9 distinct root cause subcategories. The dominant blocker is missing parameter/Table data (17/45 models, 38%) — the IR builder does not capture Table data blocks into ParameterDef.values. The top 3 subcategories (A + C + E) account for 33/45 models (73%). Errors span all three pipeline stages roughly evenly: parser (17), translator (13), emitter (15). Total estimated fix effort is 14–21h (above the 8–12h budget; triage recommended). Key unknowns resolved: subcategory count higher than assumed (9 vs 4–6), parser-stage issues dominate (not emitter as assumed), Model statement pairing has specific bugs (2 models).
+All 45 path_syntax_error models were classified into 9 distinct root cause subcategories. The dominant blocker is missing parameter/Table data (16/45 models, 36%) — the IR builder does not capture Table data blocks into ParameterDef.values. The top 3 subcategories (A + C + E) account for 32/45 models (71%). Errors span all three pipeline stages: parser (16), translator (14), emitter (15). Total estimated fix effort is 15–22h (above the 8–12h budget; triage recommended). Key unknowns resolved: subcategory count higher than assumed (9 vs 4–6), parser-stage issues dominate (not emitter as assumed), Model statement pairing has specific bugs (2 models).
 
 ### Verification
 

@@ -16,7 +16,7 @@ Ran all 45 path_syntax_error models through GAMS v53 compilation, classified 9 d
 
 #### Activities
 - Compiled all 45 path_syntax_error MCP files through GAMS v53 and captured compilation errors from LST output
-- Classified into 9 subcategories: missing Table data (17), uncontrolled set in stationarity equations (9), set index quoted as string (7), domain violation (5), negative exponent parens (3), set index reuse (2), GAMS reserved word collision (1), MCP variable unreferenced (1), dimension mismatch (1)
+- Classified into 9 subcategories: missing Table data (16), uncontrolled set in stationarity equations (9), set index quoted as string (7), domain violation (5), negative exponent parens (3), set index reuse (2), GAMS reserved word collision (1), MCP variable unreferenced (1), dimension mismatch (1)
 - Created `PATH_SYNTAX_ERROR_CATALOG.md` with per-subcategory analysis, per-model error summary, and recommended fix order
 - Verified Known Unknowns 3.1 (WRONG — 9 subcategories not 4–6), 3.2 (WRONG — Model statement has pairing bugs), 3.3 (VERIFIED — mostly legal identifiers, 1 reserved word collision), 3.4 (WRONG — parser stage dominates, not emitter)
 - Updated PREP_PLAN.md Task 4 status to COMPLETE
