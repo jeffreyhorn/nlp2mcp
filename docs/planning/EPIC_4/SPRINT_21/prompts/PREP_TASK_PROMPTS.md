@@ -1077,7 +1077,7 @@ Sprint 21 has 46–68h of work across 9 workstreams. Sprint 21 acceptance criter
    - **PR3:** Use full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) at all checkpoint gates when asserting models "parse"
    - **PR4:** Include "run newly-parsing models through full pipeline" after parse-improvement days (don't wait for checkpoints to discover solve issues)
    - **PR5:** Include error category breakdown at checkpoint gates — parse-stage (lexer_invalid_char, internal_error, semantic_undefined_symbol, parser_invalid_expression, model_no_objective_def) and solve/translate-stage (path_syntax_error, path_solve_terminated, model_infeasible, path_solve_license) — not just parse/solve/match totals
-   - **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Sprint 21 Priority 3 budget (8-12h) — the schedule must prioritize the top subcategories (A: missing Table data, C: uncontrolled set, E: index quoting — 32/45 models, 71%) within budget and defer lower-leverage subcategories
+   - **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Sprint 21 Priority 3 budget (8-12h) — the schedule must prioritize the top subcategories (A: missing Table data, C: uncontrolled set, E: index quoting — 32/48 models, 67%) within budget and defer lower-leverage subcategories. Note: the catalog analyzed 45 models; 3 additional models (dinam, ferts, tricp) entered path_syntax_error after the catalog was created (they began translating due to late Sprint 20 work) and are not yet subcategorized
 
 3. **Allocate workstreams to days** based on:
    - Dependencies (macro expansion before models that use macros)

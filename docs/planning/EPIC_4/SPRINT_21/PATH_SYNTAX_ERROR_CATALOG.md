@@ -1,15 +1,17 @@
-# path_syntax_error Root Cause Catalog (45 Models)
+# path_syntax_error Root Cause Catalog (45 of 48 Models)
 
 **Created:** 2026-02-24
 **Sprint:** 21 (Priority 3 workstream)
 **Budget:** 8-12h
 **Status:** Catalog complete, ready for Sprint 21 execution
 
+> **Note:** This catalog covers the 45 path_syntax_error models identified at the time of Task 4 (Prep Task 4). The subsequent baseline retest (Task 8, commit `feffaa95`) found 48 path_syntax_error models — 3 additional models (dinam, ferts, tricp) entered path_syntax_error status after the catalog was created, likely because late Sprint 20 work enabled them to translate successfully for the first time. These 3 models are not yet subcategorized and should be classified during Sprint 21 Day 6 (WS4).
+
 ---
 
 ## 1. Executive Summary
 
-All 45 path_syntax_error models were compiled through GAMS v53, and the compilation errors were captured and classified. The errors fall into **9 distinct root cause subcategories**, with **missing parameter/Table data** being the dominant blocker (16/45 models). The top 3 subcategories account for 32/45 models (71%), confirming that a small number of fixes can address the majority of failures.
+All 45 path_syntax_error models cataloged at the time of this analysis were compiled through GAMS v53, and the compilation errors were captured and classified. The errors fall into **9 distinct root cause subcategories**, with **missing parameter/Table data** being the dominant blocker (16/45 models). The top 3 subcategories account for 32/45 models (71%), confirming that a small number of fixes can address the majority of failures. Three additional models (dinam, ferts, tricp) entered path_syntax_error after this catalog was created and are not included in these counts (total baseline: 48).
 
 ### Root Cause Distribution
 
