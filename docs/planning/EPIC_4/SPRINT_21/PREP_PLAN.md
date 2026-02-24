@@ -850,7 +850,7 @@ Sprint 20 retrospective identified 5 process recommendations and multiple techni
 
 ### Result
 
-All 15 Sprint 20 retrospective action items are fully addressed in Sprint 21 planning. The 5 process recommendations are either already embedded in prep deliverables (PR1 in baseline metrics, PR5 in error catalogs) or flagged for Task 10 to encode in execution prompts (PR2, PR3, PR4). All 5 improvement lessons map directly to process recommendations or prep task deliverables. All 5 technical priorities have corresponding Sprint 21 workstreams (Priorities 1-5) with prep task catalogs providing data-driven prioritization. Zero gaps identified. One budget flag raised: path_syntax_error estimated effort (15-22h) exceeds Priority 3 budget (8-12h) — Task 10 must prioritize top subcategories within budget.
+All 15 Sprint 20 retrospective action items are fully addressed in Sprint 21 planning. The 5 process recommendations are either already embedded in prep deliverables (PR1 in baseline metrics, PR5 in error catalogs) or flagged for Task 10 to encode in execution prompts (PR2, PR3, PR4, PR5, budget awareness). All 5 improvement lessons map directly to process recommendations or prep task deliverables. All 5 technical priorities have corresponding Sprint 21 workstreams (Priorities 1-5) with prep task catalogs providing data-driven prioritization. Zero gaps identified. One budget flag raised: path_syntax_error estimated effort (15-22h) exceeds Priority 3 budget (8-12h) — Task 10 must prioritize top subcategories within budget.
 
 ### Verification
 

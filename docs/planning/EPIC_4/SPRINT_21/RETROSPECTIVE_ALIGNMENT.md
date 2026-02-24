@@ -173,7 +173,7 @@
 
 All 15 action items (5 process recommendations + 5 improvement lessons + 5 technical priorities) from the Sprint 20 retrospective are addressed in Sprint 21 planning:
 
-- **Process recommendations (5/5):** All addressed through baseline practices (PR1, PR2, PR3) or Sprint 21 execution prompts (PR4, PR5). Task 10 must encode PR2, PR3, PR4, PR5 into day-by-day execution prompts.
+- **Process recommendations (5/5):** All addressed through baseline practices (PR1) or Sprint 21 execution prompts (PR2-PR5). Task 10 must encode PR2, PR3, PR4, PR5 into day-by-day execution prompts.
 - **Improvement lessons (5/5):** All addressed — each maps to a process recommendation (WCI1→PR3, WCI2→PR1, WCI3→PR2, WCI5→PR4) or to a specific prep task deliverable (WCI4→Task 3 catalog).
 - **Technical priorities (5/5):** All addressed as Sprint 21 Priorities 1-5 with corresponding prep task catalogs, design documents, and known unknowns.
 
@@ -198,7 +198,7 @@ These items must be encoded into Sprint 21 day-by-day execution prompts:
 | Technical Priorities | 5 | 5 | 0 |
 | **Total** | **15** | **15** | **0** |
 
-All Sprint 20 retrospective action items are fully addressed in Sprint 21 planning. The five process recommendations are either already embedded in Sprint 21 prep deliverables (PR1 in baseline metrics, PR5 in error catalogs) or flagged for Task 10 to encode in execution prompts (PR2, PR3, PR4). All five technical priorities have corresponding Sprint 21 workstreams with prep task catalogs providing data-driven prioritization.
+All Sprint 20 retrospective action items are fully addressed in Sprint 21 planning. The five process recommendations are either already embedded in Sprint 21 prep deliverables (PR1 in baseline metrics, PR5 in error catalogs) and/or flagged for Task 10 to encode in execution prompts (PR2, PR3, PR4, PR5, budget awareness). All five technical priorities have corresponding Sprint 21 workstreams with prep task catalogs providing data-driven prioritization.
 
 ---
 
