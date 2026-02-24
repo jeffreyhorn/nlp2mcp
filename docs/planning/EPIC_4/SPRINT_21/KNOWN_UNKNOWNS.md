@@ -411,9 +411,9 @@ Development team
 ### Verification Results
 ❌ **Status:** WRONG
 
-**Findings:** The 45 models cluster into **9 distinct root cause subcategories**, not 4–6 as assumed. However, the top 3 subcategories DO account for 33/45 models (73%), exceeding the assumed 30+. The subcategories are:
+**Findings:** The 45 models cluster into **9 distinct root cause subcategories**, not 4–6 as assumed. However, the top 3 subcategories DO account for 32/45 models (71%), exceeding the assumed 30+. The subcategories are:
 
-1. **A: Missing parameter/Table data** — 17 models (38%) — IR builder does not capture Table data blocks
+1. **A: Missing parameter/Table data** — 16 models (36%) — IR builder does not capture Table data blocks
 2. **C: Uncontrolled set in stationarity equations** — 9 models (20%) — translator emits free set indices
 3. **E: Set index quoted as string literal** — 7 models (16%) — emitter quotes set references as strings
 4. **B: Domain violation in emitted data** — 5 models (11%) — emitter outputs out-of-domain elements
@@ -556,15 +556,15 @@ Development team
 
 | Pipeline Stage | Model Count | % of Total | Subcategories |
 |---------------|-------------|-----------|---------------|
-| **Parser (IR builder)** | 17 | 38% | A (missing Table data) |
+| **Parser (IR builder)** | 16 | 36% | A (missing Table data) |
 | **Emitter (formatting)** | 15 | 33% | B (domain violation), D (exponent parens), E (index quoting) |
-| **Translator (KKT generation)** | 13 | 29% | C (uncontrolled set), F (reserved word), G (index reuse), I (variable unreferenced), J (dimension mismatch) |
+| **Translator (KKT generation)** | 14 | 31% | C (uncontrolled set), F (reserved word), G (index reuse), I (variable unreferenced), J (dimension mismatch) |
 
-Key finding: The **parser stage** is actually the largest single contributor (17/45 = 38%), not the emitter. The IR builder's failure to capture Table data is the dominant root cause. This was unexpected — the assumption was that parser-stage issues would be minimal since these models all parse successfully; the Table data issue is specifically about data not being stored in the IR, not about parse failure.
+Key finding: The **parser stage** is actually the largest single contributor (16/45 = 36%), not the emitter. The IR builder's failure to capture Table data is the dominant root cause. This was unexpected — the assumption was that parser-stage issues would be minimal since these models all parse successfully; the Table data issue is specifically about data not being stored in the IR, not about parse failure.
 
 The emitter and translator each contribute about a third of the failures, with distinct fix strategies:
 - **Emitter fixes** (15 models): formatting corrections — relatively simple
-- **Translator fixes** (13 models): KKT generation and domain handling — more complex
+- **Translator fixes** (14 models): KKT generation and domain handling — more complex
 
 ---
 

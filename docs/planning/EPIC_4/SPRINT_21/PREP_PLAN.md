@@ -393,11 +393,11 @@ All 45 path_syntax_error models were classified into 9 distinct root cause subca
 # Verify catalog document exists
 ls docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
 
-# Verify all 45 models are covered
-grep -c "^|" docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
-# Should show 45+ lines in the per-model table
+# Verify all 45 models are covered in per-model table (section 6)
+grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
+# Should be 45 (one row per model in the Per-Model Error Summary table)
 
-# Smoke-test: confirm models still fail in GAMS compilation
+# Count path_syntax_error models in pipeline status
 python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)

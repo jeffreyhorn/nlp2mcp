@@ -9,13 +9,13 @@
 
 ## 1. Executive Summary
 
-All 45 path_syntax_error models were compiled through GAMS v53, and the compilation errors were captured and classified. The errors fall into **9 distinct root cause subcategories**, with **missing parameter/Table data** being the dominant blocker (17/45 models). The top 3 subcategories account for 31/45 models (69%), confirming that a small number of fixes can address the majority of failures.
+All 45 path_syntax_error models were compiled through GAMS v53, and the compilation errors were captured and classified. The errors fall into **9 distinct root cause subcategories**, with **missing parameter/Table data** being the dominant blocker (16/45 models). The top 3 subcategories account for 32/45 models (71%), confirming that a small number of fixes can address the majority of failures.
 
 ### Root Cause Distribution
 
 | Subcategory | Root Cause | Models | Count | Stage | Est. Effort |
 |-------------|-----------|--------|-------|-------|-------------|
-| A | Missing parameter/Table data | 17 | 17 | Parser (IR builder) | 4-6h |
+| A | Missing parameter/Table data | 16 | 16 | Parser (IR builder) | 4-6h |
 | B | Domain violation in emitted parameter data | 5 | 5 | Emitter (data formatting) | 2-3h |
 | C | Uncontrolled set in stationarity equations | 9 | 9 | Translator (KKT generation) | 3-5h |
 | D | Negative exponent needs parentheses (`** -N`) | 3 | 3 | Emitter (expression formatting) | 1h |
@@ -29,20 +29,20 @@ All 45 path_syntax_error models were compiled through GAMS v53, and the compilat
 
 ### Key Findings
 
-1. **Missing parameter/Table data is the primary blocker** (17/45 models) — the IR builder does not capture Table data blocks into `ParameterDef.values`, so the emitter outputs declarations without data
-2. **Top 3 subcategories (A + C + E) account for 33/45 models** (73%) — fixing these three issues would address the vast majority of failures
-3. **Errors span all three pipeline stages**: parser (17 models), translator (13 models), emitter (15 models)
+1. **Missing parameter/Table data is the primary blocker** (16/45 models) — the IR builder does not capture Table data blocks into `ParameterDef.values`, so the emitter outputs declarations without data
+2. **Top 3 subcategories (A + C + E) account for 32/45 models** (71%) — fixing these three issues would address the vast majority of failures
+3. **Errors span all three pipeline stages**: parser (16 models), translator (14 models), emitter (15 models)
 4. **Several subcategories have single-fix potential**: Subcategory D (parenthesizing negative exponents) and E (fixing set index quoting) are simple emitter fixes with high leverage
 
 ---
 
 ## 2. Subcategory Details
 
-### 2.1 Subcategory A: Missing Parameter/Table Data (17 models)
+### 2.1 Subcategory A: Missing Parameter/Table Data (16 models)
 
 **GAMS Error Codes:** $141 (symbol declared but no values assigned), $66 (symbol not defined — cascading)
 **Pipeline Stage:** Parser (IR builder)
-**Models:** egypt, gussrisk, hydro, iobalance, least, lmp2, marco, markov, mine, otpop, paperco, ps10_s_mn, ps5_s_mn, qdemo7, ship, sroute, tforss
+**Models:** gussrisk, hydro, iobalance, least, lmp2, marco, markov, mine, otpop, paperco, ps10_s_mn, ps5_s_mn, qdemo7, ship, sroute, tforss
 
 **Root Cause:**
 The IR builder (`src/ir/parser.py`) does not capture `Table` data blocks into `ParameterDef.values`. When the emitter outputs the MCP file, these parameters are declared but have no data assigned. GAMS then raises $141 when these empty parameters are referenced in assignments or equations.
@@ -70,7 +70,7 @@ u(i) = sum(j, z1(i,j));  ← $141: z1 has no values
 - **Ordering issue** (minority): marco (`phi.l` used before Solve), lmp2 (`n(nn)` subset used before assignment)
 - **$66 at Solve statement** (5 models: least, markov, mine, paperco, tforss): The model compiles but GAMS can't resolve equation references because data parameters used in equations are empty
 
-**Fix:** Enhance the IR builder to capture Table data into `ParameterDef.values`. This is a parser-stage fix that would unblock all 17 models (pending any secondary errors).
+**Fix:** Enhance the IR builder to capture Table data into `ParameterDef.values`. This is a parser-stage fix that would unblock all 16 models (pending any secondary errors).
 
 **Estimated Effort:** 4-6h (Table parsing is complex due to multi-line format, dotted indices, and column headers)
 
@@ -287,7 +287,7 @@ Based on model count, batch-fix potential, and estimated effort:
 
 | Priority | Subcategory | Models | Effort | Rationale |
 |----------|-------------|--------|--------|-----------|
-| 1 | A: Missing Table data | 17 | 4-6h | Highest leverage: one fix unblocks 17 models |
+| 1 | A: Missing Table data | 16 | 4-6h | Highest leverage: one fix unblocks 16 models |
 | 2 | E: Set index quoting | 7 | 1-2h | Simple emitter fix, unblocks 7 CGE models |
 | 3 | D: Negative exponent parens | 3 | 1h | Trivial emitter fix, unblocks 3 models |
 | 4 | C: Uncontrolled set | 9 | 3-5h | Complex translator fix, but affects 9 models |
@@ -298,7 +298,7 @@ Based on model count, batch-fix potential, and estimated effort:
 | 9 | J: Dimension mismatch | 1 | 1h | Pairing logic fix |
 
 **Recommended Sprint 21 approach (within 8-12h budget):**
-1. **Priority 1-3 (E + D + partial A):** Fix set index quoting, negative exponent parenthesization, and begin Table data capture — estimated 6-9h, unblocks 10-27 models
+1. **Priority 1-3 (E + D + partial A):** Fix set index quoting, negative exponent parenthesization, and begin Table data capture — estimated 6-9h, unblocks 10-26 models
 2. **Priority 4 (C) if time permits:** Address uncontrolled set issues — estimated 3-5h additional
 3. **Defer to Sprint 22:** Subcategories B, F, G, I, J (10 models total, ~6-9h) — these are lower-leverage individual fixes
 
@@ -308,11 +308,11 @@ Based on model count, batch-fix potential, and estimated effort:
 
 | Pipeline Stage | Subcategories | Model Count | % of Total |
 |---------------|---------------|-------------|-----------|
-| Parser (IR builder) | A | 17 | 38% |
+| Parser (IR builder) | A | 16 | 36% |
 | Translator (KKT generation) | C, F, G, I, J | 14 | 31% |
 | Emitter (formatting/quoting) | B, D, E | 15 | 33% |
 
-The errors are roughly evenly distributed across all three pipeline stages. The parser-stage issue (missing Table data) is the single largest subcategory, but translator and emitter issues together account for 62% of models.
+The errors are distributed across all three pipeline stages with no single stage dominating. The parser-stage issue (missing Table data) is the single largest subcategory, but translator and emitter issues together account for 64% of models.
 
 ---
 
