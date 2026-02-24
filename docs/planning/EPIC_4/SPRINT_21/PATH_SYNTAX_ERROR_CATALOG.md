@@ -384,5 +384,5 @@ The errors are distributed across all three pipeline stages with no single stage
 - **GAMS version:** All testing was done with GAMS v53 (`/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams`)
 - **Error code $257** appears in most models as a cascading error ("Solve statement not checked because of previous errors") and is excluded from root cause analysis
 - **Multi-cause models:** Several models (egypt, korcge, shale) have errors from multiple subcategories. The primary subcategory was determined by the first non-cascading error
-- **Table data vs. inline data:** Subcategory A specifically affects `Table` declarations with multi-line data blocks. Inline parameter data (`/key1 val1, key2 val2/`) IS captured correctly by the IR builder
+- **Table data vs. inline data:** Subcategory A covers missing parameter/Table data, including both `Table` declarations with multi-line data blocks and certain inline or derived parameter assignments. Most A-cases involve `Table` data; inline parameter data (`/key1 val1, key2 val2/`) is usually captured correctly by the IR builder
 - **$66 vs $141:** Both indicate missing data. $141 appears when the parameter is used in an assignment; $66 appears at the Solve statement when equations reference parameters with no data
