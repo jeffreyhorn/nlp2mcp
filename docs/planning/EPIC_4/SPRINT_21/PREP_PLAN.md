@@ -433,7 +433,7 @@ print(f'path_syntax_error models: {len(pse)}')
 
 ## Task 5: Triage Deferred Sprint 20 Issues
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -486,24 +486,40 @@ Active issue files: `docs/issues/ISSUE_757_*.md`, `docs/issues/ISSUE_764_*.md`, 
 
 ### Changes
 
-*To be completed*
+- Reviewed all 13 deferred Sprint 20 issue files (10 active in `docs/issues/`, 3 in `docs/issues/completed/`)
+- Cross-referenced deferred issue models with internal_error catalog (7 models) and path_syntax_error catalog (45 models)
+- Assessed pipeline status for each deferred issue model via `gamslib_status.json`
+- Analyzed gastrans Jacobian timeout root cause (dynamic subset fallback in `src/ad/index_mapping.py`)
+- Analyzed #789 min/max reformulation remaining mathematical issue
+- Classified: 3 resolved, 2 Priority 1 overlap, 4 do in Sprint 21, 4 defer to Sprint 22+
+- Created `DEFERRED_ISSUES_TRIAGE.md` with per-issue assessment and overlap map
+- Verified Known Unknowns 4.1, 4.2, 4.3
 
 ### Result
 
-*To be completed*
+Of 13 deferred issues: 3 already resolved (#763 chenery, #810 lmp2, #835 bearing `.scale`), 2 fully overlap with Priority 1 (#837 springchain, #840 saras — both need macro expansion), 2 partially overlap with Priority 3 (#810 lmp2 in Subcategory A, #827 gtm in Subcategory B). Recommended 4 issues for Sprint 21 Priority 4: #789 min/max reformulation (2-3h), #828 ibm1 bound multipliers (2-3h), #826 decomp empty stationarity (3-4h), #757 bearing convergence (2-3h) — total 9-13h. Deferred 4 issues to Sprint 22+: #764 mexss (8-12h architectural), #765 orani (incompatible model class), #827 gtm (6-8h), #830 gastrans (8-10h dynamic subset infrastructure). Key unknowns: 4.1 WRONG (broader overlaps than assumed), 4.2 VERIFIED (dynamic subset bug + performance issue), 4.3 VERIFIED (targeted 2-3h fix feasible).
 
 ### Verification
 
 ```bash
-# Verify all 13 issues accounted for
-ls docs/issues/ISSUE_757_*.md docs/issues/ISSUE_763_*.md docs/issues/ISSUE_764_*.md \
-   docs/issues/ISSUE_765_*.md docs/issues/ISSUE_789_*.md docs/issues/ISSUE_810_*.md \
-   docs/issues/ISSUE_826_*.md docs/issues/ISSUE_827_*.md docs/issues/ISSUE_828_*.md \
-   docs/issues/ISSUE_830_*.md docs/issues/ISSUE_835_*.md docs/issues/ISSUE_837_*.md \
-   docs/issues/ISSUE_840_*.md 2>/dev/null | wc -l
+# Verify triage document exists
+ls docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md
 
-# Check for any that moved to completed
-ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/dev/null
+# Count issues in triage document (one section per issue)
+grep -c "^### 2\." docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md
+# Should be 13
+
+# Verify all 13 issues accounted for in active or completed
+ls docs/issues/ISSUE_757_*.md docs/issues/ISSUE_764_*.md \
+   docs/issues/ISSUE_765_*.md docs/issues/ISSUE_789_*.md \
+   docs/issues/ISSUE_826_*.md docs/issues/ISSUE_827_*.md docs/issues/ISSUE_828_*.md \
+   docs/issues/ISSUE_830_*.md docs/issues/ISSUE_837_*.md \
+   docs/issues/ISSUE_840_*.md 2>/dev/null | wc -l
+# Should be 10 (active)
+
+ls docs/issues/completed/ISSUE_763_*.md docs/issues/completed/ISSUE_810_*.md \
+   docs/issues/completed/ISSUE_835_*.md 2>/dev/null | wc -l
+# Should be 3 (completed)
 ```
 
 ### Deliverables
@@ -514,13 +530,13 @@ ls docs/issues/completed/ISSUE_810_*.md docs/issues/completed/ISSUE_835_*.md 2>/
 
 ### Acceptance Criteria
 
-- [ ] All 13 deferred issues reviewed
-- [ ] Current status assessed for each
-- [ ] Overlaps with Sprint 21 priorities identified (especially #837/#840 → Priority 1)
-- [ ] Each issue categorized as "Do in Sprint 21" or "Defer to Sprint 22+"
-- [ ] Fix effort estimated for "Do" items
-- [ ] Triage document created
-- [ ] Unknowns 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 13 deferred issues reviewed
+- [x] Current status assessed for each
+- [x] Overlaps with Sprint 21 priorities identified (especially #837/#840 → Priority 1)
+- [x] Each issue categorized as "Do in Sprint 21" or "Defer to Sprint 22+"
+- [x] Fix effort estimated for "Do" items
+- [x] Triage document created
+- [x] Unknowns 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -955,7 +971,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [ ] Macro expansion design document completed
 - [x] internal_error root cause catalog completed (7 models)
 - [x] path_syntax_error root cause catalog completed (45 models)
-- [ ] Deferred issues triaged (13 issues, do/defer categorization)
+- [x] Deferred issues triaged (13 issues, do/defer categorization)
 - [ ] Solve-match gap analyzed (17 models)
 - [ ] Semantic error models audited (7 models)
 - [ ] Baseline metrics snapshotted and verified

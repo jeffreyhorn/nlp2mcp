@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 5: Triage Deferred Sprint 20 Issues - 2026-02-24
+
+**Branch:** `planning/sprint21-task5`
+
+#### Summary
+Reviewed all 13 deferred Sprint 20 issues, classified 3 as resolved, 2 as Priority 1 overlaps, 4 as Sprint 21 candidates (7-11h), and 4 as Sprint 22+ deferrals.
+
+#### Activities
+- Reviewed all 13 issue files (10 active, 3 completed) and assessed current pipeline status
+- Cross-referenced deferred issue models with internal_error and path_syntax_error catalogs
+- Analyzed gastrans Jacobian timeout root cause (dynamic subset fallback causing combinatorial explosion)
+- Analyzed min/max reformulation remaining mathematical infeasibility for objective-defining cases
+- Created `DEFERRED_ISSUES_TRIAGE.md` with per-issue assessment, overlap map, and prioritized recommendations
+- Verified Known Unknowns 4.1 (WRONG — broader overlaps), 4.2 (VERIFIED — both bug and performance), 4.3 (VERIFIED — targeted fix feasible)
+- Updated PREP_PLAN.md Task 5 status to COMPLETE
+
 ### Sprint 21 Prep Task 4: Catalog path_syntax_error Root Causes - 2026-02-24
 
 **Branch:** `planning/sprint21-task4`
