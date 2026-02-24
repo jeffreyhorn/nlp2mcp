@@ -508,9 +508,41 @@ These items were originally planned for Sprint 18 but were deferred when archite
 
 # Sprint 22 (Weeks 9–10): Solve Improvements & Solution Matching
 
-**Goal:** Fix KKT bugs and PATH configuration issues identified in Sprint 21. Improve starting point initialization. Begin MCP-NLP solution divergence analysis.
+**Goal:** Fix KKT bugs and PATH configuration issues identified in Sprint 21. Improve starting point initialization. Begin MCP-NLP solution divergence analysis. Address deferred Sprint 21 items.
 
 **Note:** PATH convergence analysis from Sprint 21; fixes now in Sprint 22.
+
+## Sprint 21 Deferred Items
+
+*Items triaged during Sprint 21 prep and explicitly deferred due to budget, architectural complexity, or model class limitations.*
+
+### Deferred Issues (4 issues, ~22-30h)
+
+| Issue | Model | Problem | Est. Effort | Why Deferred |
+|-------|-------|---------|-------------|-------------|
+| #764 | mexss | Accounting variable stationarity — `sameas` guard in `_add_indexed_jacobian_terms()` incorrectly restricts scalar-constraint multiplier terms | 8-12h | Architectural refactor of KKT assembly guard logic; too large for Sprint 21 deferred issues budget |
+| #765 | orani | CGE model type incompatible — linearized percentage-change model with exogenously fixed variables; stationarity equations structurally inconsistent | Detection/warning | Fundamental model class incompatibility with NLP→MCP conversion; needs model class detection rather than a fix |
+| #827 | gtm | Domain violations from zero-fill — requires domain-aware zero-filling in parser + topological sort for computed parameters in emitter | 6-8h | High effort; partially addressed by Sprint 21 WS4 Subcategory B emitter work but parser-side fix is independent |
+| #830 | gastrans | Jacobian timeout from dynamic subsets — dynamic subset fallback in `src/ad/index_mapping.py` causes combinatorial explosion | 8-10h | Requires dynamic subset member preservation + Jacobian sparsity infrastructure |
+
+**Source:** `docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md`
+
+### Deferred path_syntax_error Subcategories (19 models, ~6-8h)
+
+Sprint 21 WS4 triaged the top 3 subcategories (E+D+A, 26/48 models) within the 8-12h budget. The remaining 6 subcategories are deferred:
+
+| Subcategory | Root Cause | Models | Est. Effort | Stage |
+|-------------|-----------|--------|-------------|-------|
+| C | Uncontrolled set in stationarity equations | 9 | 3-5h | Translator (KKT generation) |
+| B | Domain violation in emitted parameter data | 5 | 2-3h | Emitter (data formatting) |
+| G | Set index reuse conflict in sum | 2 | 1-2h | Translator (sum domain handling) |
+| F | GAMS built-in function name collision | 1 | 1h | Translator (identifier naming) |
+| I | MCP variable not referenced in equations | 1 | 1h | Translator (MCP model statement) |
+| J | Equation-variable dimension mismatch | 1 | 1h | Translator (equation-variable pairing) |
+
+Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the Sprint 21 catalog was created and are not yet subcategorized.
+
+**Source:** `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md`
 
 ## Components
 

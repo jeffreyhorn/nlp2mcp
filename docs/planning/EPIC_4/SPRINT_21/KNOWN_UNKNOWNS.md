@@ -324,7 +324,18 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The 7 models fail for **5 distinct root causes**, not 2–3 as assumed. The distribution is:
+- **Lead/lag indexing in parameter assignments:** 3 models (imsl, sarf, tfordy) — `_extract_indices()` rejects `lag_lead_suffix` in parameter context
+- **Undefined symbol from missing `$libInclude`:** 1 model (clearlak) — `ScenRedParms` declared in external `scenred.gms`
+- **Variable index arity mismatch:** 1 model (indus) — `ppc` declared as scalar but used with 2 indices
+- **Malformed `if` statement parsing:** 1 model (senstran) — bare identifier `pors` not recognized as condition
+- **Table row index mismatch:** 1 model (turkpow) — dotted index notation `hydro-4.1978` not split
+
+Batch-fix potential exists for the lead/lag subcategory (3 models, one fix), but the other 4 models each need individual fixes. Total estimated effort: 7–11h (slightly above the 6–10h budget).
+
+See `INTERNAL_ERROR_CATALOG.md` for full per-model analysis.
 
 ---
 
@@ -356,7 +367,18 @@ Lead/lag syntax is not the primary blocker for the 7 internal_error models; most
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** Lead/lag **IS** the primary blocker — 3/7 models (imsl, sarf, tfordy) fail specifically because `_extract_indices()` at line 610-614 of `src/ir/parser.py` rejects any `lag_lead_suffix` in parameter assignment context. This contradicts the assumption that lead/lag is NOT the primary blocker.
+
+Specific lead/lag patterns found:
+- **imsl:** `m+floor((ord(n)-1)/k)` and `m+1` (linear lead, 2 instances)
+- **sarf:** `t++(cs(c,"start",s)-1)` (circular lead, 1 instance)
+- **tfordy:** `te+3`, `t-1`, `t-2` (linear lead/lag, 3 instances) plus 4 more in equation domains
+
+The grammar already parses all these patterns correctly via `lag_lead_suffix` (linear_lead, linear_lag, circular_lead, circular_lag). The issue is exclusively in the IR builder, not the parser.
+
+Additionally, 1 model (tfordy) has lead/lag patterns in non-blocking contexts: tfordy has lead/lag in equation domains (lines 189-195) which may be a secondary issue after the parameter assignment fix.
 
 ---
 
@@ -391,7 +413,18 @@ Each internal_error model can be fixed with a targeted, incremental change to `s
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** All 7 internal_error models can be fixed with targeted, incremental changes. No architectural refactoring is required.
+
+Fix assessment per model:
+- **imsl, sarf, tfordy (lead/lag):** **Type A** — add handler/case in `_extract_indices()` to extract base index and offset expression. No grammar changes needed (grammar already parses correctly). No ModelIR changes needed (offset info can be stored in existing structures). Fixes can be landed independently. **Effort: 2–3h** (shared across all 3).
+- **senstran (if statement):** **Type B** — grammar adjustment or handler update in `_handle_if_stmt` to accept bare identifier as condition. Minor, no architecture change. **Effort: 2–3h**.
+- **turkpow (table dotted index):** **Type A** — update `_parse_param_data_items` to split dotted indices based on domain cardinality. **Effort: 1–2h**.
+- **indus (index arity):** **Type A** — make `_make_symbol` more lenient for index arity mismatches. **Effort: 1–2h**.
+- **clearlak (missing include):** **Type A** — reclassify as `missing_include` or add lenient auto-declare. **Effort: 1h**.
+
+No fix requires changes to the ModelIR data structure. No fix requires changes to the Lark grammar (except possibly senstran). All fixes can be landed independently without cross-model regressions.
 
 ---
 
@@ -429,7 +462,23 @@ The 45 path_syntax_error models cluster into 4–6 root cause subcategories, wit
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The 45 models cluster into **9 distinct root cause subcategories**, not 4–6 as assumed. However, the top 3 subcategories DO account for 32/45 models (71%), exceeding the assumed 30+. The subcategories are:
+
+1. **A: Missing parameter/Table data** — 16 models (36%) — IR builder does not capture Table data blocks
+2. **C: Uncontrolled set in stationarity equations** — 9 models (20%) — translator emits free set indices
+3. **E: Set index quoted as string literal** — 7 models (16%) — emitter quotes set references as strings
+4. **B: Domain violation in emitted data** — 5 models (11%) — emitter outputs out-of-domain elements
+5. **D: Negative exponent needs parentheses** — 3 models (7%) — emitter outputs `** -N` without parens
+6. **G: Set index reuse in sum** — 2 models (4%) — translator reuses controlling index
+7. **F: GAMS built-in function collision** — 1 model — `gamma`/`psi` are reserved
+8. **I: MCP variable unreferenced** — 1 model — variable in model statement but not in equations
+9. **J: Equation-variable dimension mismatch** — 1 model — pairing dimensions don't match
+
+The assumption of 4–6 subcategories was partially wrong (9 subcategories), but the core insight that a few fixes address most models was correct. Total estimated effort: 15–22h (above the 8–12h budget; triage needed).
+
+See `PATH_SYNTAX_ERROR_CATALOG.md` for full per-model analysis.
 
 ---
 
@@ -464,7 +513,17 @@ The emitter (`src/emit/emit_gams.py`) correctly generates the `Model` statement 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The MCP Model statement is NOT generated correctly for all pairings. Two specific issues were found:
+
+1. **Subcategory I (nemhaus):** The Model statement includes variable `xb` and `y` paired with equations, but these variables do not appear in any model equation. GAMS error $483: "Mapped variables have to appear in the model." This is a translator bug where the MCP model statement includes variables that were eliminated or not referenced during KKT generation.
+
+2. **Subcategory J (pdi):** The Model statement pairs an equation with a variable of different dimensionality. GAMS error $70: "The dimensions of the equ.var pair do not conform." This is a translator bug in equation-variable pairing logic.
+
+Additionally, the assumption that the emitter "correctly generates pairings for all 120 translatable models" is misleading — of the 96 models that translate, 45 fail at GAMS compilation (path_syntax_error), so the emitter does NOT produce correct output for all translatable models.
+
+However, the Model statement pairing issue is a minor contributor (2/45 models, 4%). The dominant issues are missing data (16 models) and stationarity equation generation (9 models).
 
 ---
 
@@ -499,7 +558,19 @@ The emitter generates GAMS-legal identifiers for all equations, variables, and p
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with nuance)
+
+**Findings:** The emitter does violate GAMS identifier naming rules, but in a specific and limited way:
+
+1. **GAMS built-in function collision (Subcategory F, 1 model):** mingamma uses `gamma` and `psi` as variable names, which are GAMS built-in functions. The emitter outputs `gamma(x1)` and `psi(x1)` which GAMS interprets as function calls, not variable references. GAMS errors $121 (set expected) and $140 (unknown symbol).
+
+2. **Set index quoting (Subcategory E, 7 models):** Not strictly an identifier length/naming issue, but the emitter quotes set names as string literals (`"J"` instead of `J`), which GAMS doesn't resolve.
+
+3. **Identifier length:** No violations found. Generated identifiers (e.g., `stat_aweight`, `comp_lo_b3`, `nu_balance`) are all well under the 63-character GAMS limit.
+
+4. **Reserved keywords:** Only the `gamma`/`psi` collision was found. No other GAMS reserved keywords are used as identifiers.
+
+The assumption that "all generated identifiers are GAMS-legal" is mostly correct (only 1 model has a reserved word collision), but the quoting issue (7 models) is a related but distinct problem.
 
 ---
 
@@ -532,7 +603,21 @@ Most path_syntax_error models fail due to emitter-stage issues (incorrect MCP fo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "most fail due to emitter-stage issues" is WRONG. The failures are roughly evenly distributed across all three pipeline stages:
+
+| Pipeline Stage | Model Count | % of Total | Subcategories |
+|---------------|-------------|-----------|---------------|
+| **Parser (IR builder)** | 16 | 36% | A (missing Table data) |
+| **Emitter (formatting)** | 15 | 33% | B (domain violation), D (exponent parens), E (index quoting) |
+| **Translator (KKT generation)** | 14 | 31% | C (uncontrolled set), F (reserved word), G (index reuse), I (variable unreferenced), J (dimension mismatch) |
+
+Key finding: The **parser stage** is actually the largest single contributor (16/45 = 36%), not the emitter. The IR builder's failure to capture Table data is the dominant root cause. This was unexpected — the assumption was that parser-stage issues would be minimal since these models all parse successfully; the Table data issue is specifically about data not being stored in the IR, not about parse failure.
+
+The emitter and translator each contribute about a third of the failures, with distinct fix strategies:
+- **Emitter fixes** (15 models): formatting corrections — relatively simple
+- **Translator fixes** (14 models): KKT generation and domain handling — more complex
 
 ---
 
@@ -568,7 +653,17 @@ Issues #837 (springchain) and #840 (saras) fully overlap with Priority 1 (macro 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The overlap is broader than assumed. #837 and #840 do fully overlap with Priority 1 (correct), but additional overlaps exist:
+
+1. **Full Priority 1 overlaps (2 issues):** #837 (springchain) and #840 (saras) — both need `$eval`/`$set`/`%macro%` expansion, which is exactly Priority 1 work
+2. **Partial Priority 3 overlaps (2 issues):** #810 (lmp2) appears in path_syntax_error Subcategory A (missing Table data); #827 (gtm) appears in Subcategory B (domain violation)
+3. **No Priority 2 overlaps:** None of the 13 deferred issue models appear in the 7 internal_error models (clearlak, imsl, indus, sarf, senstran, tfordy, turkpow)
+4. **Already resolved (3 issues):** #763 (chenery — fixed in Sprint 20), #810 (lmp2 — loop extraction fixed), #835 (bearing — `.scale` emission added)
+5. **Completely independent (7 issues):** #764 (mexss), #765 (orani), #757 (bearing solver), #826 (decomp), #828 (ibm1), #830 (gastrans), #789 (min/max)
+
+The assumption that "only #837 and #840 overlap" was wrong — 4 issues have overlaps (2 full + 2 partial), and 3 are already resolved (including 1 that also has a partial overlap). Only 7 of 13 are truly independent.
 
 ---
 
@@ -602,7 +697,21 @@ The timeout is caused by dynamic subset expansion creating an exponential blowup
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** The timeout is **both** a dynamic subset bug AND a performance issue, confirming the assumption that dynamic subset expansion causes the blowup.
+
+1. **Dynamic subset bug:** Dynamic subsets `ap`, `as`, `aij` have 0 static members in the IR because their values are populated at GAMS runtime (e.g., `ap(a) = not as(a)`). The parser captures the `SetDef` with `domain=('a',)` but empty `members=[]`.
+
+2. **Fallback mechanism:** `resolve_set_members()` in `src/ad/index_mapping.py` (lines 163-191) falls back to parent sets when members are empty. For `aij(a,i,i)`, this means 24×20×20 = 9,600 instances instead of the correct ~24 arc tuples.
+
+3. **Combinatorial explosion:** The Jacobian computation loop iterates over all equation instances × all variable instances. With fallback to parent sets: ~11 equations × 9,600 instances × 7 variables × ~9,600 var instances ≈ billions of operations. Even with sparsity filtering (`referenced_vars` check), this remains intractable.
+
+4. **Fix feasibility:** Preserving dynamic subset members during parsing would reduce the enumeration space by ~400× (from 9,600 to ~24 for `aij`). However, the Jacobian also lacks general sparsity optimization (no early domain-mismatch termination).
+
+5. **Estimated effort:** 8-10h total (4-6h for parser dynamic subset preservation + 2-4h for Jacobian sparsity improvements). A quick mitigation (Jacobian timeout with error message) takes ~1h.
+
+**Recommendation:** Defer to Sprint 22+ due to high effort. Add 1h Jacobian timeout as optional quick win.
 
 ---
 
@@ -636,7 +745,21 @@ Issue #789 (min/max reformulation producing spurious variables) can be resolved 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** Yes, #789 can be resolved within Sprint 21's scope with a targeted fix (2-3h), confirming the assumption.
+
+1. **Structural fix already done:** The spurious lambda variables bug was already fixed — system now correctly has 10 variables/10 equations instead of 14/14.
+
+2. **Remaining issue is well-understood:** When min/max defines the objective variable (`minimize z` where `z = min(x,y)`), the epigraph reformulation produces `ν = -1` (from `∂L/∂z = 1 + ν = 0`), which then requires `λ₀ + λ₁ = -1` — infeasible since λ ≥ 0.
+
+3. **Fix approach:** Detect when min/max defines the objective variable and use direct constraints (`z ≤ x, z ≤ y`) instead of the auxiliary variable approach. This is a targeted change in `src/kkt/reformulation.py`'s `reformulate_min()` / `reformulate_max()` functions.
+
+4. **Scope:** The fix only affects objective-defining min/max cases. Non-objective min/max (in regular constraints) continues to use the existing epigraph reformulation, which works correctly.
+
+5. **No fundamental redesign needed:** The fix is a conditional branch in the reformulation logic, not an architectural change.
+
+**Recommendation:** Do in Sprint 21 as Priority 4 item #1 (highest leverage among deferred issues).
 
 ---
 
@@ -674,7 +797,34 @@ The primary divergence cause is `.l` initialization differences — the MCP solv
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that the primary divergence cause is `.l` initialization differences is WRONG. The analysis of all 17 models reveals a diverse set of root causes:
+
+1. **KKT formulation correctness issues (dominant cause):**
+   - **IndexOffset gradient bug** (2-4 models: chakra, catmix, possibly abel, qabel): `_diff_varref()` in `src/ad/derivative_rules.py` cannot match `IndexOffset("t", Const(-1))` against concrete index strings, producing zero gradients for lagged/lead variables. This causes missing stationarity terms and convergence to trivial/initial points.
+   - **LP bound multiplier gaps** (4 models: apl1p, apl1pca, sparta, aircraft): Verified_convex LP models with 3-79% mismatch strongly suggests missing bound dual variables in the KKT system.
+   - **Possible objective sign errors** (2 models: abel, qabel): MCP objective much larger than NLP, consistent with maximizing instead of minimizing a quadratic penalty.
+   - **Formulation over-constraints** (1 model: himmel16): Duplicate objective equations force trivial solution.
+
+2. **Local optima / solver convergence (secondary cause, 5 models):** weapons (highly nonconvex exponential structure, 7822 iterations), chenery (calibration sensitivity), process (bilinear constraints), trig (multi-modal trigonometric landscape), mathopt1 (degenerate equality constraint).
+
+3. **Tolerance issue (1 model):** port (0.134% difference, LP degeneracy).
+
+4. **Data mismatch (1 model):** circle (different random seeds between NLP and MCP).
+
+**Distribution by root cause category:**
+| Root Cause | Count | % of 17 |
+|-----------|-------|---------|
+| KKT formulation bugs | 7-9 | 41-53% |
+| Nonconvex local optima | 5 | 29% |
+| Tolerance | 1 | 6% |
+| Data mismatch | 1 | 6% |
+| Initialization | 1 | 6% |
+
+**Key insight:** `.l` emission is necessary but NOT sufficient — all 33 solving models already have `.l` values emitted. The bottleneck is KKT formulation correctness, not initialization.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full per-model analysis.
 
 ---
 
@@ -709,7 +859,26 @@ At least 4–6 of the 17 non-matching models have relative differences < 1e-2 an
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** Only **2 models** (not 4-6) have rel_diff < 1e-2:
+
+| Model | Rel Diff | Type | Fixable? |
+|-------|----------|------|----------|
+| port | 0.00134 (0.134%) | LP, verified_convex | **Yes** — tolerance adjustment (rtol=2e-3) |
+| chakra | 0.00707 (0.71%) | NLP, likely_convex | **Yes** — IndexOffset gradient fix |
+
+**Category A (near-match) count: 2, not 4-6.** The assumption that "at least 4-6 models have rel_diff < 1e-2" was wrong.
+
+**Why only 2:** The 17 non-matching models have a bimodal distribution — 2 near-matches (rel_diff < 1%), then a large gap to the next cluster at 3.3% (apl1p). There are no models in the 1e-3 to 1e-2 range between port and apl1p.
+
+**Fixability assessment:**
+- **port** (rtol=2e-3): YES — pure tolerance/solver-numerics issue. Both NLP and MCP report optimal. Adjusting comparison tolerance from 1e-4 to 2e-3 would classify port as matching. Effort: <1h.
+- **chakra** (IndexOffset gradient fix): YES — the stationarity equations are missing gradient terms due to `_diff_varref()` not handling IndexOffset indices. Fixing derivative_rules.py would produce correct KKT conditions. Effort: 3-4h.
+
+**Beyond Category A:** Fixing the IndexOffset gradient bug may also help Category B models catmix (rel_diff=1.0 but same root cause) and potentially abel/qabel. Combined with LP bound investigation, the realistic improvement is 16 → 18-20 matches.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full analysis.
 
 ---
 
@@ -743,7 +912,30 @@ The `.l` initialization emission implemented in Sprint 20 (Days 1–3) will impr
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (partially)
+
+**Findings:** The `.l` emission work is necessary infrastructure but does NOT directly improve match rates as assumed.
+
+**Evidence:**
+1. **All 33 solving models already have `.l` values emitted.** Every MCP file in `data/gamslib/mcp/` contains `.l` initialization lines (1-102 lines per file, depending on model size). The Sprint 20 `.l` emission work is fully deployed across the solve-success population.
+
+2. **16 models match, 17 don't — but ALL have `.l` emission.** The `.l` emission is a necessary condition for solving (PATH needs starting points) but is NOT the differentiating factor between matching and non-matching models.
+
+3. **The non-matching models fail for structural reasons, not initialization:**
+   - 7-9 models have KKT formulation bugs (missing gradient terms, sign errors, bound gaps)
+   - 5 models converge to different local optima despite having `.l` values
+   - 1 model has data mismatch, 1 has tolerance issue
+
+4. **`.l` emission quality varies:**
+   - Some models have generic initialization (all set to 1): apl1p, sparta, port
+   - Some have proper model-specific initialization: alkyl, chenery, catmix
+   - The quality of initialization correlates weakly with match success — some well-initialized models still don't match (alkyl, chenery), while some generically-initialized models do match (ajax, trnsport)
+
+**Conclusion:** Sprint 20's `.l` emission work was essential infrastructure that enabled 33 models to solve (vs. potentially fewer without any `.l` values). However, it is NOT the bottleneck for the 17-model match gap. Improving match rate requires fixing KKT formulation correctness issues, not better initialization.
+
+**Partial verification:** The assumption that `.l` emission "improves match rates for non-convex models" is partially true in that it enables solving, but wrong in that it's the primary lever for improving match rate from 16 to 20+.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full analysis.
 
 ---
 
@@ -779,7 +971,26 @@ Most of the 7 semantic_undefined_symbol models reference symbols defined in `$in
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "most of the 7 models reference symbols defined in `$include` files" is WRONG. **None** of the 7 models are caused by `$include` references. All 7 fail because the nlp2mcp parser/IR builder doesn't recognize certain GAMS built-in functions or language features:
+
+1. **Missing GAMS built-in functions in grammar (5 models):**
+   - camcge, feedtray: Missing `sign()` — GAMS built-in for sign of argument (-1, 0, +1)
+   - cesam2: Missing `centropy()` — GAMS built-in for cross-entropy computation
+   - sambal: Missing `mapval()` — GAMS built-in for extended range arithmetic classification
+   - procmean: Missing `betareg()` — GAMS built-in for regularized incomplete Beta function
+   - All 4 functions are listed in the GAMS commands reference but missing from the FUNCNAME regex in `gams_grammar.lark`
+
+2. **Missing Acronym handler in IR builder (1 model):**
+   - worst: `Acronym future, call, puto;` — grammar parses via `acronym_stmt` rule (line 650) but IR builder has no handler, so acronym values are never registered as known symbols
+
+3. **sameas() string literal misinterpretation (1 model):**
+   - cesam: `$(not sameas(ii,"ROW"))` — IR builder rejects `"ROW"` as undefined symbol reference in sameas() condition, but it's a quoted set element name
+
+**Key finding:** All 7 are fixable parser/IR bugs. None should be excluded from metrics. The FUNCNAME fix alone (adding `sign|centropy|mapval|betareg`) would unblock 5 of 7 models in ~30min.
+
+See `SEMANTIC_ERROR_AUDIT.md` for full per-model analysis.
 
 ---
 
@@ -813,7 +1024,28 @@ Models that fail due to `$include` references should be reclassified as "unsuppo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "models failing due to `$include` references should be reclassified as unsupported" is WRONG because **none** of the 7 models fail due to `$include` references. All 7 are fixable parser/IR bugs:
+
+1. **No models should be excluded:** All 7 `semantic_undefined_symbol` models fail due to nlp2mcp parser/IR builder bugs, not external dependencies or GAMSLIB source errors.
+
+2. **The effective denominator should NOT change:** Since all 7 are fixable, they should remain in the 160-model denominator. No reclassification to "unsupported" is warranted.
+
+3. **No new error category needed:** The `semantic_undefined_symbol` category correctly describes the symptom. The root causes are:
+   - 5 models: missing GAMS built-in functions in grammar FUNCNAME regex (fix: ~30min)
+   - 1 model: missing Acronym handler in IR builder (fix: ~1-2h)
+   - 1 model: sameas() string literal misinterpretation (fix: ~1h)
+
+4. **Metric impact after fixes:**
+   - Current parse rate: 132/160 (82.5%)
+   - After FUNCNAME fix: 137/160 (85.6%) — +5 models
+   - After all 3 fixes: 139/160 (86.9%) — +7 models
+   - Sprint 21 parse target (≥135/160): exceeded by FUNCNAME fix alone
+
+**Conclusion:** These models represent easy wins, not exclusion candidates. The FUNCNAME fix alone (~30min) exceeds the Sprint 21 parse target.
+
+See `SEMANTIC_ERROR_AUDIT.md` for full per-model analysis.
 
 ---
 
@@ -920,7 +1152,29 @@ Current baseline (per `gamslib_status.json`) shows that some solving models alre
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption mentioned "88 solve-stage failures" but the actual count is **91 failures** out of 124 real solve attempts (36 models were cascade-skipped due to parse/translate failure and have `status=not_tested`). The distribution across failure modes is:
+
+| Failure Mode | Count | % of 91 Failures | Description |
+|-------------|-------|------------------|-------------|
+| **path_syntax_error** | 48 | 52.7% | MCP file has GAMS compilation errors; PATH never starts |
+| **path_solve_terminated** | 29 | 31.9% | PATH ran but failed to converge |
+| **model_infeasible** | 12 | 13.2% | MCP compiles but KKT system is infeasible |
+| **path_solve_license** | 2 | 2.2% | Model exceeds PATH demo license size limit |
+
+**Key findings:**
+1. **`path_solve_terminated` is a significant population (29 models):** This is larger than assumed. The 29 models include camshape, chain, decomp, elec, etamac, fdesign, ganges, gangesx, hhfair, hs62, jobt, lands, like, pak, polygon, and 14 `ps*` variant models. The `ps*` models (10 variants) may share common root causes.
+
+2. **`path_syntax_error` dominates (48 models, 53%):** This grew from the earlier estimate of 45 to 48 models, likely because 3 additional translate-success models produce invalid MCP files.
+
+3. **`model_infeasible` (12 models):** These compile and PATH starts, but the KKT system has no feasible solution. This population overlaps with deferred issues (#757 bearing, #764 mexss, #765 orani, #828 ibm1).
+
+4. **The 8–10h PATH convergence budget covers 29 models:** With 10 `ps*` variants likely sharing causes, the effective distinct-model count is ~20. The 8–10h budget is reasonable if the `ps*` models can be batch-addressed.
+
+5. **Translation failures are a separate population:** 9 translate failures (7 internal_error + 2 timeout) prevent MCP generation for those models. These are not solve-stage failures but cascade-skips.
+
+See `BASELINE_METRICS.md` for full breakdown.
 
 ---
 

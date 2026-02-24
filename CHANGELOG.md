@@ -7,6 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 10: Plan Sprint 21 Detailed Schedule - 2026-02-24
+
+**Branch:** `planning/sprint21-task10`
+
+#### Summary
+Created data-driven 15-day Sprint 21 schedule with day-by-day execution prompts, incorporating all 9 prep task deliverables and 5 Sprint 20 retrospective action items. 9/10 prep tasks fully complete; Task 2 (macro expansion design) deferred to sprint execution Days 2-3.
+
+#### Activities
+- Reviewed all 9 prep task deliverables to synthesize workstreams, effort estimates, and dependencies
+- Designed 15-day schedule allocating 9 workstreams (WS1-WS9) across Days 0-14 (~48-58h total)
+- Applied path_syntax_error budget triage: top 3 subcategories (E+D+A, 26/45 models) within 8-12h budget
+- Encoded all 5 Sprint 20 retrospective action items (PR2-PR5, budget awareness) into schedule and prompts
+- Defined 3 checkpoint gates (Day 5, 10, 14) with error category breakdown per PR5
+- Created `PLAN.md` with detailed schedule, workstream descriptions, effort summary, dependency chain
+- Created `PLAN_PROMPTS.md` with execution prompts for each day including post-merge checklists
+- Created `SPRINT_LOG.md` template with baseline metrics, checkpoint tables, and PR log
+- Updated PREP_PLAN.md Task 10 status to COMPLETE; all 10 success criteria checked
+
+### Sprint 21 Prep Task 9: Review Sprint 20 Retrospective Action Items - 2026-02-24
+
+**Branch:** `planning/sprint21-task9`
+
+#### Summary
+Reviewed full Sprint 20 retrospective, extracted 15 action items (5 process recommendations, 5 improvement lessons, 5 technical priorities), and mapped all to Sprint 21 plan elements. Zero gaps found.
+
+#### Activities
+- Read full Sprint 20 retrospective (451 lines) and extracted all action items
+- Mapped 5 process recommendations to Sprint 21 prep deliverables and execution prompts
+- Mapped 5 improvement lessons to corresponding process recommendations and prep tasks
+- Mapped 5 technical priorities to Sprint 21 Priorities 1-5 with prep task catalogs
+- Verified 160 denominator consistency across baseline metrics (PR1)
+- Identified 5 action items for Task 10 to encode in day-by-day execution prompts
+- Created `RETROSPECTIVE_ALIGNMENT.md` with full mapping and gap analysis
+- Updated PREP_PLAN.md Task 9 status to COMPLETE
+
+### Sprint 21 Prep Task 8: Snapshot Baseline Metrics & Pipeline Retest - 2026-02-24
+
+**Branch:** `planning/sprint21-task8`
+
+#### Summary
+Ran full pipeline retest and snapshotted Sprint 21 baseline metrics at commit `feffaa95`. All Sprint 20 retrospective values match except translate (+3, from 120 to 123).
+
+#### Activities
+- Ran full test suite: 3,715 passed, 10 skipped, 2 xfailed
+- Ran full pipeline retest (160 models, 1,156s): parse 132/160, translate 123/132, solve 33/124, match 16/33
+- Classified solve failures: path_syntax_error (48), path_solve_terminated (29), model_infeasible (12), path_solve_license (2)
+- Compared with Sprint 20 retrospective: all match except translate (+3 genuine improvement)
+- Created `BASELINE_METRICS.md` with full metrics snapshot and Sprint 21 target gap analysis
+- Verified Known Unknown 8.1 (WRONG — 91 failures not 88, path_solve_terminated is 29 models)
+- Ran full quality gate: typecheck, lint, format, test — all pass
+- Updated PREP_PLAN.md Task 8 status to COMPLETE
+
+### Sprint 21 Prep Task 7: Audit semantic_undefined_symbol Models - 2026-02-24
+
+**Branch:** `planning/sprint21-task7`
+
+#### Summary
+Audited all 7 semantic_undefined_symbol models and found that none are caused by `$include` references — all 7 are fixable parser/IR builder bugs (missing GAMS built-in functions, missing Acronym handler, sameas() string literal misinterpretation).
+
+#### Activities
+- Ran all 7 models (camcge, cesam, cesam2, feedtray, procmean, sambal, worst) through parser and captured undefined symbol names/contexts
+- Checked original GAMS source for each — verified none use `$include` references
+- Classified 3 root cause categories: missing FUNCNAME functions (5 models), missing Acronym handler (1 model), sameas() string literal fix (1 model)
+- Verified `sign`, `centropy`, `mapval`, `betareg` as legitimate GAMS built-in functions via GAMS commands reference
+- Created `SEMANTIC_ERROR_AUDIT.md` with per-model analysis, root cause summary, and fix recommendations
+- Verified Known Unknowns 6.1 (WRONG — none are `$include` references), 6.2 (WRONG — none should be excluded)
+- Updated PREP_PLAN.md Task 7 status to COMPLETE
+
+### Sprint 21 Prep Task 6: Analyze Solve-Match Gap - 2026-02-24
+
+**Branch:** `planning/sprint21-task6`
+
+#### Summary
+Analyzed all 17 non-matching solve-success models, classified divergence causes, and identified that KKT formulation correctness (not `.l` initialization) is the primary bottleneck for match rate improvement.
+
+#### Activities
+- Extracted 17 non-matching models from `gamslib_status.json` with objective values and relative differences
+- Classified into 3 categories: near-match (2), moderate divergence (11), complete divergence (4)
+- Investigated all 17 models: checked stationarity equations, `.l` emission, gradient completeness
+- Identified IndexOffset gradient computation bug in `derivative_rules.py` affecting chakra, catmix, possibly abel/qabel
+- Identified LP bound multiplier gaps affecting 4 verified_convex LP models (apl1p, apl1pca, sparta, aircraft)
+- Created `SOLVE_MATCH_GAP_ANALYSIS.md` with per-model analysis and recommended Sprint 21 actions
+- Verified Known Unknowns 5.1 (WRONG — KKT bugs, not initialization), 5.2 (WRONG — only 2 near-match), 5.3 (WRONG partially — `.l` enables solving but not the match bottleneck)
+- Updated PREP_PLAN.md Task 6 status to COMPLETE
+
+### Sprint 21 Prep Task 5: Triage Deferred Sprint 20 Issues - 2026-02-24
+
+**Branch:** `planning/sprint21-task5`
+
+#### Summary
+Reviewed all 13 deferred Sprint 20 issues, classified 3 as resolved, 2 as Priority 1 overlaps, 4 as Sprint 21 candidates (9-13h, with #757 optional to fit 8-12h budget), and 4 as Sprint 22+ deferrals.
+
+#### Activities
+- Reviewed all 13 issue files (10 active, 3 completed) and assessed current pipeline status
+- Cross-referenced deferred issue models with internal_error and path_syntax_error catalogs
+- Analyzed gastrans Jacobian timeout root cause (dynamic subset fallback causing combinatorial explosion)
+- Analyzed min/max reformulation remaining mathematical infeasibility for objective-defining cases
+- Created `DEFERRED_ISSUES_TRIAGE.md` with per-issue assessment, overlap map, and prioritized recommendations
+- Verified Known Unknowns 4.1 (WRONG — broader overlaps), 4.2 (VERIFIED — both bug and performance), 4.3 (VERIFIED — targeted fix feasible)
+- Updated PREP_PLAN.md Task 5 status to COMPLETE
+
+### Sprint 21 Prep Task 4: Catalog path_syntax_error Root Causes - 2026-02-24
+
+**Branch:** `planning/sprint21-task4`
+
+#### Summary
+Ran all 45 path_syntax_error models through GAMS v53 compilation, classified 9 distinct root cause subcategories, and created a prioritized fix catalog for Sprint 21 Priority 3.
+
+#### Activities
+- Compiled all 45 path_syntax_error MCP files through GAMS v53 and captured compilation errors from LST output
+- Classified into 9 subcategories: missing Table data (16), uncontrolled set in stationarity equations (9), set index quoted as string (7), domain violation (5), negative exponent parens (3), set index reuse (2), GAMS reserved word collision (1), MCP variable unreferenced (1), dimension mismatch (1)
+- Created `PATH_SYNTAX_ERROR_CATALOG.md` with per-subcategory analysis, per-model error summary, and recommended fix order
+- Verified Known Unknowns 3.1 (WRONG — 9 subcategories not 4–6), 3.2 (WRONG — Model statement has pairing bugs), 3.3 (VERIFIED — mostly legal identifiers, 1 reserved word collision), 3.4 (WRONG — parser stage dominates, not emitter)
+- Updated PREP_PLAN.md Task 4 status to COMPLETE
+
+### Sprint 21 Prep Task 3: Catalog internal_error Root Causes - 2026-02-23
+
+**Branch:** `planning/sprint21-task3`
+
+#### Summary
+Ran all 7 internal_error models through `parse_model_file()` with full traceback capture, classified 5 distinct root cause subcategories, and created a prioritized fix catalog for Sprint 21 Priority 2.
+
+#### Activities
+- Ran 7 models (clearlak, imsl, indus, sarf, senstran, tfordy, turkpow) through `parse_model_file()` and captured tracebacks
+- Classified root causes: lead/lag in parameter assignments (3 models), undefined symbol from missing include (1), variable index arity mismatch (1), malformed if statement (1), table row index mismatch (1)
+- Created `INTERNAL_ERROR_CATALOG.md` with per-model analysis, fix types, effort estimates, and recommended fix order
+- Verified Known Unknowns 2.1 (WRONG — 5 causes not 2–3), 2.2 (WRONG — lead/lag IS primary blocker), 2.3 (VERIFIED — all incremental)
+- Updated PREP_PLAN.md Task 3 status to COMPLETE
+
 ### Sprint 21 Prep Task 2: Research GAMS Macro Expansion Semantics - 2026-02-23
 
 **Branch:** `planning/sprint21-task2`

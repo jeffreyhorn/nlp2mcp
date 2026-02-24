@@ -24,7 +24,7 @@ Sets
 
 Parameters
     c(i,j) /'plant-1'.'term-1' 3, 'plant-1'.'term-2' 6, 'plant-1'.'term-3' 6, 'plant-1'.'term-4' 5, 'plant-2'.'term-1' 8, 'plant-2'.'term-2' 1, 'plant-2'.'term-3' 3, 'plant-2'.'term-4' 6/
-    t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2, 'plant-2'.'term-1' 0, 'plant-2'.'term-3' 0, 'plant-2'.'term-4' 0, 'plant-1'.'term-1' 0, 'plant-1'.'term-2' 0, 'plant-1'.'term-4' 0/
+    t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2, 'plant-1'.'term-1' 0, 'plant-1'.'term-2' 0, 'plant-1'.'term-4' 0, 'plant-2'.'term-1' 0, 'plant-2'.'term-3' 0, 'plant-2'.'term-4' 0/
     a(i) /'plant-1' 9, 'plant-2' 8/
     b(j) /'term-1' 2, 'term-2' 7, 'term-3' 3, 'term-4' 5/
     mcost(ss)

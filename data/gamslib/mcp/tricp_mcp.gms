@@ -16,31 +16,22 @@ $offText
 * ============================================
 
 Sets
-    i /summer, winter/
-    j /normal, overtime/
-    k /nuts, bolts, washers/
-    l /m1, m2, m3/
+    n /n0, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19/
+    e(n,n) /n0.n1, n0.n2, n0.n3, n0.n5, n0.n6, n0.n7, n0.n9, n0.n11, n0.n19, n1.n2, n1.n3, n2.n3, n2.n4, n2.n7, n3.n4, n3.n5, n4.n5, n4.n6, n4.n7, n5.n6, n6.n7, n6.n8, n7.n8, n7.n9, n6.n10, n6.n11, n8.n9, n8.n10, n9.n10, n9.n11, n9.n12, n9.n13, n9.n14, n9.n15, n9.n18, n9.n19, n10.n11, n11.n12, n11.n13, n11.n14, n11.n16, n11.n17, n11.n19, n12.n13, n13.n14, n14.n15, n14.n16, n15.n16, n15.n17, n15.n18, n16.n17, n17.n18, n17.n19, n18.n19/
+    k /k0, k1/
 ;
+
+Alias(n, i);
+Alias(n, j);
+Alias(k, kp);
 
 Parameters
-    mh(l,k) /m1.nuts 4, m1.bolts 4, m1.washers 6, m2.nuts 7, m2.bolts 6, m2.washers 6, m3.nuts 3, m3.bolts 0, m3.washers 0/
-    mhadd(i,j) /summer.overtime -1, winter.normal 1, winter.overtime 0, summer.normal 0/
-    av(l,j) /m1.normal 100, m1.overtime 80, m2.normal 100, m2.overtime 90, m3.normal 40, m3.overtime 30/
-    t(i,j,k,l) /winter.overtime.washers.m1 5/
-    a(i,j,l)
-    tc(l,k) /m1.nuts 2, m1.bolts 3, m1.washers 4, m2.nuts 4, m2.bolts 3, m2.washers 2, m3.nuts 1, m3.bolts 0, m3.washers 0/
-    tcadd(i,j) /summer.overtime 1, winter.normal 1, winter.overtime 2, summer.normal 0/
-    c(i,j,k,l)
-    p(i,k) /summer.nuts 10, summer.bolts 10, summer.washers 9, winter.nuts 11, winter.bolts 11, winter.washers 10/
-    d(i,k) /summer.nuts 25, summer.bolts 30, summer.washers 30, winter.nuts 30, winter.bolts 25, winter.washers 25/
-    s(k) /nuts 1, bolts 1, washers 1/
-    h(k) /nuts 20, bolts 20/
+    fx(n,k) /n0.k0 10, n0.k1 10, n19.k0 20, n19.k1 10, n9.k0 15, n9.k1 20/
 ;
 
-t(i,j,k,l) = mh(l,k) + mhadd(i,j)$mh(l,k);
-a("summer",j,l) = av(l,j);
-a("winter",j,l) = av(l,j) + 10;
-c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
+Scalars
+    myScale /100/
+;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -54,19 +45,17 @@ c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z(i,k)
-    cost
-    revenue
-    profit
-    nu_cdef
-    nu_rdef
-    nu_ib(i,k)
+    obj
+    nu_eq1(i,j)
 ;
 
 Positive Variables
-    x(i,j,k,l)
-    y(i,k)
-    lam_ma(i,j,l)
+    x(n,k)
+    r(n)
+    slp(n,n)
+    sln(n,n)
+    z
+    lam_eq2(i,j)
 ;
 
 * ============================================
@@ -76,10 +65,16 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x.l(i,j,k,l) = 1;
-y.l(i,k) = 1;
+x.l(n,k) = myScale * uniform(0, smax(i, fx(i,k)));
+x.l(n,k) = min(max(x.l(n,k), 1e-6), x.up(n,k));
+r.l(n) = myScale * 1;
+r.l(n) = min(max(r.l(n), 1e-6), r.up(n));
+slp.l(n,n) = 1;
+sln.l(n,n) = 1;
+z.l = 1;
 
 * ============================================
 * Equations
@@ -90,16 +85,14 @@ y.l(i,k) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_revenue
-    stat_x(i,j,k,l)
-    stat_y(i,k)
-    stat_z(i,k)
-    comp_ma(i,j,l)
-    cdef
-    ib(i,k)
-    pdef
-    rdef
+    stat_r(n)
+    stat_sln(n,n)
+    stat_slp(n,n)
+    stat_x(n,k)
+    stat_z
+    comp_eq2(i,j)
+    defobj
+    eq1(i,j)
 ;
 
 * ============================================
@@ -107,20 +100,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. 1 + nu_cdef =E= 0;
-stat_revenue.. -1 + nu_rdef =E= 0;
-stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) =E= 0;
-stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) =E= 0;
-stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) =E= 0;
+stat_r(n).. sum((i,j), ((-1) * (2 * 2 * r(j) * 2)) * nu_eq1(i,j)) + sum((i,j), 2 * 2 * r(j) * 2 * lam_eq2(i,j)) =E= 0;
+stat_sln(n,n).. sum((i,j), nu_eq1(i,j)) =E= 0;
+stat_slp(n,n).. sum((i,j), (-1) * nu_eq1(i,j)) =E= 0;
+stat_x(n,k).. sum((i,j), 2 * (x(i,k) - x(j,k)) * nu_eq1(i,j)) + sum((i,j), ((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j)) =E= 0;
+stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), (-1) * lam_eq2(i,j)) =E= 0;
 
 * Inequality complementarity equations
-comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
+comp_eq2(i,j)$((not e(i,j)) and ord(i) < ord(j)).. sum(k, sqr(x(i,k) - x(j,k))) - (sqr(r(i) + r(j)) - z) =G= 0;
 
 * Original equality equations
-pdef.. profit =E= revenue - cost;
-cdef.. cost =E= sum((i,k), s(k) * y(i,k) + sum((j,l), c(i,j,k,l) * x(i,j,k,l)));
-rdef.. revenue =E= sum((i,k), p(i,k) * z(i,k));
-ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
+eq1(i,j).. sum(k, sqr(x(i,k) - x(j,k))) =E= sqr(r(i) + r(j)) + slp(i,j) - sln(i,j);
+defobj.. obj =E= 100 * z + sum(e, slp(n,i) + sln(n,i));
 
 
 * ============================================
@@ -130,7 +121,7 @@ ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
+lam_eq2.fx(i,j)$(not ((not e(i,j)) and ord(i) < ord(j))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -146,16 +137,14 @@ nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_revenue.revenue,
+    stat_r.r,
+    stat_sln.sln,
+    stat_slp.slp,
     stat_x.x,
-    stat_y.y,
     stat_z.z,
-    comp_ma.lam_ma,
-    cdef.nu_cdef,
-    ib.nu_ib,
-    pdef.profit,
-    rdef.nu_rdef
+    comp_eq2.lam_eq2,
+    defobj.obj,
+    eq1.nu_eq1
 /;
 
 * ============================================
@@ -165,5 +154,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = profit.l;
+nlp2mcp_obj_val = obj.l;
 Display nlp2mcp_obj_val;

@@ -1071,20 +1071,33 @@ Sprint 21 has 46–68h of work across 9 workstreams. Sprint 21 acceptance criter
    - `SEMANTIC_ERROR_AUDIT.md` — 7-model fix/exclude classification
    - `BASELINE_METRICS.md` — current pipeline snapshot
    - `RETROSPECTIVE_ALIGNMENT.md` — action item mapping
-2. **Allocate workstreams to days** based on:
+
+2. **Incorporate Sprint 20 retrospective action items** (from `RETROSPECTIVE_ALIGNMENT.md` Section 4 "Action Items for Task 10"). These MUST be encoded into the schedule and execution prompts:
+   - **PR2:** Include "record PR number in SPRINT_LOG.md" in every day's post-merge checklist
+   - **PR3:** Use full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) at all checkpoint gates when asserting models "parse"
+   - **PR4:** Include "run newly-parsing models through full pipeline" after parse-improvement days (don't wait for checkpoints to discover solve issues)
+   - **PR5:** Include error category breakdown at checkpoint gates — parse-stage (lexer_invalid_char, internal_error, semantic_undefined_symbol, parser_invalid_expression, model_no_objective_def) and solve/translate-stage (path_syntax_error, path_solve_terminated, model_infeasible, path_solve_license) — not just parse/solve/match totals
+   - **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Sprint 21 Priority 3 budget (8-12h) — the schedule must prioritize the top subcategories (A: missing Table data, C: uncontrolled set, E: index quoting — 32/48 models, 67%) within budget and defer lower-leverage subcategories. Note: the catalog analyzed 45 models; 3 additional models (dinam, ferts, tricp) entered path_syntax_error after the catalog was created (they began translating due to late Sprint 20 work) and are not yet subcategorized
+
+3. **Allocate workstreams to days** based on:
    - Dependencies (macro expansion before models that use macros)
    - Effort estimates (from catalogs and design documents)
    - Risk (high-risk items early)
    - Checkpoint gates (pipeline retests at regular intervals)
-3. **Create day-by-day schedule** with:
+4. **Create day-by-day schedule** with:
    - Workstream assignments per day
    - Specific tasks and deliverables
    - Time estimates
    - Dependencies on prior days
    - Verification commands
-4. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14)
-5. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`)
-6. **Define acceptance criteria** per day and overall
+5. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14) — each checkpoint must include:
+   - Full pipeline parse-stage retest (`parse_model_file()` + `validate_model_structure()`) per PR3
+   - Error category breakdown per PR5
+   - Solve attempt on any newly-parsing models per PR4
+6. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`) — each day's prompt must include:
+   - Post-merge checklist with "record PR number in SPRINT_LOG.md" per PR2
+   - If the day includes parse improvements: "run newly-parsing models through full pipeline" per PR4
+7. **Define acceptance criteria** per day and overall
 
 ### DELIVERABLES
 
@@ -1157,9 +1170,11 @@ gh pr create --base planning/sprint21-prep --title "Sprint 21 Prep Task 10: Plan
 - [ ] All 9 workstreams assigned to specific days
 - [ ] Time estimates sum to 46–68h total
 - [ ] Dependencies documented between days
-- [ ] Checkpoint gates defined
-- [ ] Execution prompts created for each day
+- [ ] Checkpoint gates defined (with error category breakdown per PR5, pipeline parse retest per PR3, solve attempts on new parsers per PR4)
+- [ ] Execution prompts created for each day (with PR number recording per PR2, targeted solve per PR4)
 - [ ] Sprint log template created
+- [ ] All 5 Sprint 20 retrospective action items from RETROSPECTIVE_ALIGNMENT.md encoded
+- [ ] path_syntax_error budget triage applied (top subcategories within 8-12h)
 - [ ] All PREP_PLAN.md Success Criteria checked
 EOF
 )"
