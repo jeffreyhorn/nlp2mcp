@@ -639,7 +639,7 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 
 ## Task 7: Audit semantic_undefined_symbol Models
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 1–2 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -674,11 +674,17 @@ Sprint 21 includes a "Semantic Error Resolution (~2h)" workstream for these 7 mo
 
 ### Changes
 
-*To be completed*
+- Ran all 7 semantic_undefined_symbol models through `parse_model_file()` and captured undefined symbol names and contexts
+- Checked original GAMS source for each undefined symbol — verified none use `$include` references
+- Identified 3 root cause categories: missing GAMS built-in functions in FUNCNAME (5 models), missing Acronym handler in IR builder (1 model), sameas() string literal misinterpretation (1 model)
+- Verified all 4 missing functions (`sign`, `centropy`, `mapval`, `betareg`) against GAMS commands reference
+- Created `SEMANTIC_ERROR_AUDIT.md` with per-model analysis, root cause classification, and fix recommendations
+- Verified Known Unknowns 6.1 (WRONG — none are `$include` references, all are parser/IR bugs), 6.2 (WRONG — none should be excluded, all are fixable)
+- Updated PREP_PLAN.md Task 7 status to COMPLETE
 
 ### Result
 
-*To be completed*
+All 7 semantic_undefined_symbol models are caused by fixable parser/IR builder bugs, not `$include` references or GAMSLIB source errors. Root causes: 5 models need 4 GAMS built-in functions added to FUNCNAME regex (`sign`, `centropy`, `mapval`, `betareg` — 30min fix), 1 model needs Acronym handler in IR builder (1-2h), 1 model needs sameas() string literal fix (1h). Total effort: ~3-4h for all 7 models. The FUNCNAME fix alone (+5 models) exceeds Sprint 21 parse target (≥135/160). None should be excluded from metrics. Unknown 6.1 was WRONG (no `$include` references), Unknown 6.2 was WRONG (no exclusions needed).
 
 ### Verification
 
@@ -704,12 +710,12 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 
 ### Acceptance Criteria
 
-- [ ] All 7 semantic_undefined_symbol models identified
-- [ ] Undefined symbol name and context captured for each
-- [ ] Root cause classified (missing `$include`, conditional block, source error, parser bug)
-- [ ] Each model classified as "fixable" or "exclude"
-- [ ] Audit document created
-- [ ] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 7 semantic_undefined_symbol models identified
+- [x] Undefined symbol name and context captured for each
+- [x] Root cause classified (missing `$include`, conditional block, source error, parser bug)
+- [x] Each model classified as "fixable" or "exclude"
+- [x] Audit document created
+- [x] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -982,7 +988,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [x] path_syntax_error root cause catalog completed (45 models)
 - [x] Deferred issues triaged (13 issues, do/defer categorization)
 - [x] Solve-match gap analyzed (17 models)
-- [ ] Semantic error models audited (7 models)
+- [x] Semantic error models audited (7 models)
 - [ ] Baseline metrics snapshotted and verified
 - [ ] Sprint 20 retrospective action items confirmed
 - [ ] Sprint 21 detailed schedule created

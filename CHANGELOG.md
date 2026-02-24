@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 7: Audit semantic_undefined_symbol Models - 2026-02-24
+
+**Branch:** `planning/sprint21-task7`
+
+#### Summary
+Audited all 7 semantic_undefined_symbol models and found that none are caused by `$include` references — all 7 are fixable parser/IR builder bugs (missing GAMS built-in functions, missing Acronym handler, sameas() string literal misinterpretation).
+
+#### Activities
+- Ran all 7 models (camcge, cesam, cesam2, feedtray, procmean, sambal, worst) through parser and captured undefined symbol names/contexts
+- Checked original GAMS source for each — verified none use `$include` references
+- Classified 3 root cause categories: missing FUNCNAME functions (5 models), missing Acronym handler (1 model), sameas() string literal fix (1 model)
+- Verified `sign`, `centropy`, `mapval`, `betareg` as legitimate GAMS built-in functions via GAMS commands reference
+- Created `SEMANTIC_ERROR_AUDIT.md` with per-model analysis, root cause summary, and fix recommendations
+- Verified Known Unknowns 6.1 (WRONG — none are `$include` references), 6.2 (WRONG — none should be excluded)
+- Updated PREP_PLAN.md Task 7 status to COMPLETE
+
 ### Sprint 21 Prep Task 6: Analyze Solve-Match Gap - 2026-02-24
 
 **Branch:** `planning/sprint21-task6`
