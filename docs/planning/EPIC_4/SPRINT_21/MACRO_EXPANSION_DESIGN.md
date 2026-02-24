@@ -228,7 +228,7 @@ def process_eval_directives(
 - Macro expansion within expressions (`%name%` → value before eval)
 - `card()` function: return `0` with a warning (requires runtime set cardinality, not available at preprocess time)
 
-**Safety:** Use `ast.literal_eval` on sanitized integer expressions or a simple recursive descent parser — do NOT use `eval()`.
+**Safety:** Implement a simple recursive descent parser for these arithmetic expressions — do NOT use `eval()`. Note that `ast.literal_eval` only handles Python literals and is not suitable for expressions like `10-1` or `4*7`.
 
 **Implementation approach:**
 1. Scan source line-by-line for `$eval` / `$evalGlobal` / `$evalLocal` directives
@@ -312,7 +312,7 @@ The `card(setname)` function in `$eval` requires knowing the cardinality of a se
 1. **Return 0 with warning** — simple, makes affected models produce wrong derived macros
 2. **Parse set definitions first** — extract set cardinalities from the source before processing `$eval`
 
-For Sprint 21, **option 1** is recommended. The 3 corpus models using `card()` in `$eval` (gqapsdp, spbenders4) are not in our immediate target list. If they become targets later, we can add set cardinality extraction.
+For Sprint 21, **option 1** is recommended. The 3 corpus instances using `card()` in `$eval` across 2 models (gqapsdp, spbenders4) are not in our immediate target list. If they become targets later, we can add set cardinality extraction.
 
 ### 4.3 Error Handling
 
@@ -451,7 +451,7 @@ class TestSarasExpansion:
 | System macro values wrong for specific models | Medium | Low | Values only affect `option` statements and abort conditions; incorrect values don't affect mathematical formulation |
 | `$eval` evaluation order matters | Low | Medium | Corpus has no interdependent `$eval` chains; our line-by-line processing matches GAMS order |
 | Existing tests break from new macro expansion | Low | High | System macros use dotted names (`system.nlp`) that don't collide with user macro names |
-| `card()` in `$eval` needed for target models | Low | Low | Only 3 models use `card()` in `$eval`; none are Sprint 21 targets |
+| `card()` in `$eval` needed for target models | Low | Low | Only 3 instances across 2 models use `card()` in `$eval`; none are Sprint 21 targets |
 
 ---
 
@@ -461,4 +461,4 @@ class TestSarasExpansion:
 - `%sysEnv.*%` environment variable macros (4 corpus uses, all in non-target models)
 - `$batInclude` positional parameter macros `%1`–`%9` (already handled by existing code)
 - `$macro` function `.local` scoping issues (known GAMS bug per documentation)
-- Numbered macro parameters `%1`–`%9` for `$batInclude` (already implemented)
+
