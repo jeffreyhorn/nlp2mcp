@@ -397,7 +397,7 @@
 
 | Day | PR # | Title | Status |
 |-----|------|-------|--------|
-| 0 | | | |
+| 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Open |
 | 1 | | | |
 | 2 | | | |
 | 3 | | | |
