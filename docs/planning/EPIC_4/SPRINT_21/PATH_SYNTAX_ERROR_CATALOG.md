@@ -191,7 +191,7 @@ Tm0(j) = SAM("TRF",J);     ← J references set j (uppercase alias)
                   ^
 ```
 
-**Pattern:** All 6 CGE models (irscge, lrgcge, moncge, quocge, stdcge, twocge) have the identical `SAM("TRF","J")` pattern. The 7th model (sample) has a similar issue with `data(h,"pop")` where `data` is a Table with no data (overlaps with Subcategory A).
+**Pattern:** 6 of the 7 models are CGE models (irscge, lrgcge, moncge, quocge, stdcge, twocge) with the identical `SAM("TRF","J")` pattern. The 7th model (sample) has a similar issue with `data(h,"pop")` where `data` is a Table with no data (overlaps with Subcategory A).
 
 **Fix:** Fix the emitter to distinguish between set references (bare identifiers) and string literals (quoted) in parameter indexing. When a parameter index position matches a declared set name, emit it as a bare identifier.
 
