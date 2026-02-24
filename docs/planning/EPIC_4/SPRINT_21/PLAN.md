@@ -181,7 +181,9 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | WS9: Solution comparison | 4-5h | Framework extended; Days 13-14 |
 | Pipeline retests | 2h | Checkpoints at Days 5, 10, 14 |
 | Sprint overhead | 2-3h | Day 0 kickoff, Day 14 close |
-| **Total** | **~51-68h** | Within 46-68h budget |
+| **Total (per-day sum)** | **~48-58h** | Within 46-68h budget |
+
+*Note: Per-workstream estimates sum higher (~51-70h) because multiple workstreams share days with overlapping effort (e.g., Day 5 combines checkpoint + WS3, Day 11 combines WS5+WS3+WS7). The ~48-58h total reflects the per-day schedule, which is the ground truth for capacity planning.*
 
 ---
 
@@ -633,14 +635,13 @@ Day 14: FINAL CHECKPOINT + Sprint Close
 
 ## Process Compliance (Sprint 20 Retrospective)
 
-This plan encodes all 5 Sprint 20 retrospective action items per `RETROSPECTIVE_ALIGNMENT.md`:
+This plan encodes all 5 Sprint 20 retrospective action items per `RETROSPECTIVE_ALIGNMENT.md` Section 4 (the items Task 10 must encode — PR1 was already addressed in prep deliverables):
 
-1. **PR1 (160 denominator):** All metrics use /160 denominator
-2. **PR2 (record PR numbers):** Every day's post-merge checklist includes "Record PR number in SPRINT_LOG.md"
-3. **PR3 (pipeline parse retest):** All checkpoint gates use `parse_model_file()` + `validate_model_structure()` (full pipeline), not `parse_file()` alone
-4. **PR4 (targeted solve on new parsers):** Days 1, 3, 4, 5, 6, 8, 11 include "run newly-parsing models through full pipeline"
-5. **PR5 (error category breakdown):** All checkpoint gates include parse-stage (lexer_invalid_char, internal_error, semantic_undefined_symbol, parser_invalid_expression, model_no_objective_def) and solve/translate-stage (path_syntax_error, path_solve_terminated, model_infeasible, path_solve_license) category counts
-6. **Budget awareness:** path_syntax_error top 3 subcategories (E+D+A, 26/45 models) scheduled within 8-12h budget; remaining 19 models deferred to Sprint 22
+1. **PR2 (record PR numbers):** Every day's post-merge checklist includes "Record PR number in SPRINT_LOG.md"
+2. **PR3 (pipeline parse retest):** All checkpoint gates use `parse_model_file()` + `validate_model_structure()` (full pipeline), not `parse_file()` alone
+3. **PR4 (targeted solve on new parsers):** Days 1, 3, 4, 5, 6, 8, 11 include "run newly-parsing models through full pipeline"
+4. **PR5 (error category breakdown):** All checkpoint gates include parse-stage (lexer_invalid_char, internal_error, semantic_undefined_symbol, parser_invalid_expression, model_no_objective_def) and solve/translate-stage (path_syntax_error, path_solve_terminated, model_infeasible, path_solve_license) category counts
+5. **Budget awareness:** path_syntax_error top 3 subcategories (E+D+A, 26/45 models) scheduled within 8-12h budget; remaining 19 models deferred to Sprint 22
 
 ---
 
