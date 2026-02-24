@@ -542,7 +542,7 @@ ls docs/issues/completed/ISSUE_763_*.md docs/issues/completed/ISSUE_810_*.md \
 
 ## Task 6: Analyze Solve-Match Gap (17 Models)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -587,11 +587,20 @@ Sprint 21 Priority 5 targets 20+ matches (currently 16). To plan targeted fixes,
 
 ### Changes
 
-*To be completed*
+- Extracted all 17 non-matching solve-success models from `gamslib_status.json` with objective values, relative/absolute differences
+- Sorted by relative difference and classified into 3 categories: A (near-match, 2 models), B (moderate, 11 models), C (complete divergence, 4 models)
+- Investigated all 17 models: read raw GAMS and MCP files, checked stationarity equations, `.l` emission, gradient completeness
+- Top 5 near-match investigation: port (tolerance), chakra (IndexOffset gradient bug), apl1p (LP bound gaps), alkyl (bound complementarity), circle (random data mismatch)
+- Investigated Category C models: mathopt1 (degenerate equality), trig (multi-modal), catmix (initialization + IndexOffset), himmel16 (over-constrained)
+- Investigated LP models: verified_convex LPs with significant mismatch suggest missing bound dual variables
+- Investigated remaining NLP models: chenery (calibration sensitivity), weapons (nonconvex convergence), process (bilinear), abel/qabel (possible sign error)
+- Verified `.l` emission status: all 33 solving models have `.l` values emitted
+- Created `SOLVE_MATCH_GAP_ANALYSIS.md` with per-model analysis and recommended Sprint 21 actions
+- Verified Known Unknowns 5.1 (WRONG — primary cause is KKT formulation bugs, not initialization), 5.2 (WRONG — only 2 near-match models, not 4-6), 5.3 (WRONG partially — `.l` emission enables solving but is not the bottleneck for match rate)
 
 ### Result
 
-*To be completed*
+All 17 non-matching models analyzed and classified. The primary divergence cause is NOT `.l` initialization differences as assumed, but KKT formulation correctness issues: (1) IndexOffset gradient computation bug in `derivative_rules.py` affects 2-4 models (chakra, catmix, possibly abel, qabel), (2) LP bound multiplier gaps affect 4 verified_convex LP models (apl1p, apl1pca, sparta, aircraft), (3) local optima and nonconvex convergence affect 5 NLP models. Only 2 models are near-match (rel_diff < 1%): port (tolerance issue, <1h fix) and chakra (IndexOffset bug, 3-4h fix). Recommended Sprint 21 actions: tolerance adjustment (+1 match), IndexOffset gradient fix (+2-4 matches), LP bound investigation (+0-4 matches). Projected match improvement: 16 → 18-22.
 
 ### Verification
 
@@ -618,13 +627,13 @@ print(f'Solve: {len(solve)}, Match: {len(match)}, Gap: {len(solve)-len(match)}')
 
 ### Acceptance Criteria
 
-- [ ] All 17 non-matching solve-success models identified
-- [ ] Relative and absolute differences recorded for each
-- [ ] Models classified into divergence categories (A–D)
-- [ ] Top 5 near-match models investigated in detail
-- [ ] Recommended fixes documented with effort estimates
-- [ ] Analysis document created
-- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 17 non-matching solve-success models identified
+- [x] Relative and absolute differences recorded for each
+- [x] Models classified into divergence categories (A–D)
+- [x] Top 5 near-match models investigated in detail
+- [x] Recommended fixes documented with effort estimates
+- [x] Analysis document created
+- [x] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -972,7 +981,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [x] internal_error root cause catalog completed (7 models)
 - [x] path_syntax_error root cause catalog completed (45 models)
 - [x] Deferred issues triaged (13 issues, do/defer categorization)
-- [ ] Solve-match gap analyzed (17 models)
+- [x] Solve-match gap analyzed (17 models)
 - [ ] Semantic error models audited (7 models)
 - [ ] Baseline metrics snapshotted and verified
 - [ ] Sprint 20 retrospective action items confirmed

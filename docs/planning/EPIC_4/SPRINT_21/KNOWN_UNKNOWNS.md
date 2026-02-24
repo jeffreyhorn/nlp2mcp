@@ -744,7 +744,34 @@ The primary divergence cause is `.l` initialization differences — the MCP solv
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that the primary divergence cause is `.l` initialization differences is WRONG. The analysis of all 17 models reveals a diverse set of root causes:
+
+1. **KKT formulation correctness issues (dominant cause):**
+   - **IndexOffset gradient bug** (2-4 models: chakra, catmix, possibly abel, qabel): `_diff_varref()` in `src/ad/derivative_rules.py` cannot match `IndexOffset("t", Const(-1))` against concrete index strings, producing zero gradients for lagged/lead variables. This causes missing stationarity terms and convergence to trivial/initial points.
+   - **LP bound multiplier gaps** (4 models: apl1p, apl1pca, sparta, aircraft): Verified_convex LP models with 3-79% mismatch strongly suggests missing bound dual variables in the KKT system.
+   - **Possible objective sign errors** (2 models: abel, qabel): MCP objective much larger than NLP, consistent with maximizing instead of minimizing a quadratic penalty.
+   - **Formulation over-constraints** (1 model: himmel16): Duplicate objective equations force trivial solution.
+
+2. **Local optima / solver convergence (secondary cause, 5 models):** weapons (highly nonconvex exponential structure, 7822 iterations), chenery (calibration sensitivity), process (bilinear constraints), trig (multi-modal trigonometric landscape), mathopt1 (degenerate equality constraint).
+
+3. **Tolerance issue (1 model):** port (0.134% difference, LP degeneracy).
+
+4. **Data mismatch (1 model):** circle (different random seeds between NLP and MCP).
+
+**Distribution by root cause category:**
+| Root Cause | Count | % of 17 |
+|-----------|-------|---------|
+| KKT formulation bugs | 7-9 | 41-53% |
+| Nonconvex local optima | 5 | 29% |
+| Tolerance | 1 | 6% |
+| Data mismatch | 1 | 6% |
+| Initialization | 1 | 6% |
+
+**Key insight:** `.l` emission is necessary but NOT sufficient — all 33 solving models already have `.l` values emitted. The bottleneck is KKT formulation correctness, not initialization.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full per-model analysis.
 
 ---
 
@@ -779,7 +806,26 @@ At least 4–6 of the 17 non-matching models have relative differences < 1e-2 an
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** Only **2 models** (not 4-6) have rel_diff < 1e-2:
+
+| Model | Rel Diff | Type | Fixable? |
+|-------|----------|------|----------|
+| port | 0.00134 (0.134%) | LP, verified_convex | **Yes** — tolerance adjustment (rtol=2e-3) |
+| chakra | 0.00707 (0.71%) | NLP, likely_convex | **Yes** — IndexOffset gradient fix |
+
+**Category A (near-match) count: 2, not 4-6.** The assumption that "at least 4-6 models have rel_diff < 1e-2" was wrong.
+
+**Why only 2:** The 17 non-matching models have a bimodal distribution — 2 near-matches (rel_diff < 1%), then a large gap to the next cluster at 3.3% (apl1p). There are no models in the 1e-3 to 1e-2 range between port and apl1p.
+
+**Fixability assessment:**
+- **port** (rtol=2e-3): YES — pure tolerance/solver-numerics issue. Both NLP and MCP report optimal. Adjusting comparison tolerance from 1e-4 to 2e-3 would classify port as matching. Effort: <1h.
+- **chakra** (IndexOffset gradient fix): YES — the stationarity equations are missing gradient terms due to `_diff_varref()` not handling IndexOffset indices. Fixing derivative_rules.py would produce correct KKT conditions. Effort: 3-4h.
+
+**Beyond Category A:** Fixing the IndexOffset gradient bug may also help Category B models catmix (rel_diff=1.0 but same root cause) and potentially abel/qabel. Combined with LP bound investigation, the realistic improvement is 16 → 18-20 matches.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full analysis.
 
 ---
 
@@ -813,7 +859,30 @@ The `.l` initialization emission implemented in Sprint 20 (Days 1–3) will impr
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (partially)
+
+**Findings:** The `.l` emission work is necessary infrastructure but does NOT directly improve match rates as assumed.
+
+**Evidence:**
+1. **All 33 solving models already have `.l` values emitted.** Every MCP file in `data/gamslib/mcp/` contains `.l` initialization lines (1-102 lines per file, depending on model size). The Sprint 20 `.l` emission work is fully deployed across the solve-success population.
+
+2. **16 models match, 17 don't — but ALL have `.l` emission.** The `.l` emission is a necessary condition for solving (PATH needs starting points) but is NOT the differentiating factor between matching and non-matching models.
+
+3. **The non-matching models fail for structural reasons, not initialization:**
+   - 7-9 models have KKT formulation bugs (missing gradient terms, sign errors, bound gaps)
+   - 5 models converge to different local optima despite having `.l` values
+   - 1 model has data mismatch, 1 has tolerance issue
+
+4. **`.l` emission quality varies:**
+   - Some models have generic initialization (all set to 1): apl1p, sparta, port
+   - Some have proper model-specific initialization: alkyl, chenery, catmix
+   - The quality of initialization correlates weakly with match success — some well-initialized models still don't match (alkyl, chenery), while some generically-initialized models do match (ajax, trnsport)
+
+**Conclusion:** Sprint 20's `.l` emission work was essential infrastructure that enabled 33 models to solve (vs. potentially fewer without any `.l` values). However, it is NOT the bottleneck for the 17-model match gap. Improving match rate requires fixing KKT formulation correctness issues, not better initialization.
+
+**Partial verification:** The assumption that `.l` emission "improves match rates for non-convex models" is partially true in that it enables solving, but wrong in that it's the primary lever for improving match rate from 16 to 20+.
+
+See `SOLVE_MATCH_GAP_ANALYSIS.md` for full analysis.
 
 ---
 

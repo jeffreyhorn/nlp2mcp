@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 6: Analyze Solve-Match Gap - 2026-02-24
+
+**Branch:** `planning/sprint21-task6`
+
+#### Summary
+Analyzed all 17 non-matching solve-success models, classified divergence causes, and identified that KKT formulation correctness (not `.l` initialization) is the primary bottleneck for match rate improvement.
+
+#### Activities
+- Extracted 17 non-matching models from `gamslib_status.json` with objective values and relative differences
+- Classified into 3 categories: near-match (2), moderate divergence (11), complete divergence (4)
+- Investigated all 17 models: checked stationarity equations, `.l` emission, gradient completeness
+- Identified IndexOffset gradient computation bug in `derivative_rules.py` affecting chakra, catmix, possibly abel/qabel
+- Identified LP bound multiplier gaps affecting 4 verified_convex LP models (apl1p, apl1pca, sparta, aircraft)
+- Created `SOLVE_MATCH_GAP_ANALYSIS.md` with per-model analysis and recommended Sprint 21 actions
+- Verified Known Unknowns 5.1 (WRONG — KKT bugs, not initialization), 5.2 (WRONG — only 2 near-match), 5.3 (WRONG partially — `.l` enables solving but not the match bottleneck)
+- Updated PREP_PLAN.md Task 6 status to COMPLETE
+
 ### Sprint 21 Prep Task 5: Triage Deferred Sprint 20 Issues - 2026-02-24
 
 **Branch:** `planning/sprint21-task5`
