@@ -24,20 +24,20 @@
 **Source:** Retrospective lines 355
 **Action:** Avoid leaving "PR: TBD" in sprint logs; record PR number in same commit as day's work.
 
-**Status:** ADDRESSED
+**Status:** PLANNED (Task 10; addressed in plan, not yet encoded)
 **Where:** Sprint 21 execution prompts should include "update SPRINT_LOG.md with PR number" as a post-merge step. This is a process discipline item for Task 10 (detailed schedule) to encode into day-by-day prompts.
 **Action for Task 10:** Include explicit "record PR number in SPRINT_LOG.md" instruction in each day's execution prompt.
 
 ---
 
-### PR3: Verify parse claims end-to-end with `parse_file()`
+### PR3: Verify parse claims end-to-end with pipeline parse stage
 
 **Source:** Retrospective lines 357
-**Action:** Always use `parse_file()` (not partial grammar checks) before claiming a model parses. Pipeline retest is ground truth.
+**Action:** Do not use `parse_file()` (grammar-only) as proof that a model "parses". End-to-end verification must use the full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`), i.e., the pipeline retest as ground truth.
 
 **Status:** ADDRESSED
-**Where:** Sprint 21 Prep Task 8 (Baseline Metrics) ran the full pipeline retest as ground truth. Sprint 21 execution should use pipeline retest at checkpoints, not ad-hoc grammar checks.
-**Action for Task 10:** Include pipeline retest at checkpoint gates (not just end-of-sprint).
+**Where:** Sprint 21 Prep Task 8 (Baseline Metrics) ran the full pipeline retest (`parse_model_file()` + `validate_model_structure()`) as ground truth. Sprint 21 execution should use this pipeline retest at checkpoints, not ad-hoc grammar checks or `parse_file()` alone.
+**Action for Task 10:** Include full pipeline parse-stage retest (`parse_model_file()` + `validate_model_structure()`) at checkpoint gates (not just end-of-sprint) when asserting that models "parse".
 
 ---
 
@@ -71,7 +71,7 @@
 **Lesson:** turkey and turkpow were reported as parsing on Day 8 but failed in the Day 14 retest. Claims were based on partial preprocessor output, not full end-to-end parse.
 
 **Status:** ADDRESSED (by PR3)
-**Where:** Process Recommendation PR3 (verify parse claims end-to-end) directly addresses this. Additionally, the Sprint 21 baseline (Task 8) was established via full pipeline retest, not partial checks.
+**Where:** Process Recommendation PR3 (verify parse claims end-to-end via `parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) directly addresses this. Additionally, the Sprint 21 baseline (Task 8) was established via full pipeline retest, not partial checks.
 
 ---
 
@@ -182,7 +182,7 @@ All 15 action items (5 process recommendations + 5 improvement lessons + 5 techn
 These items must be encoded into Sprint 21 day-by-day execution prompts:
 
 1. **PR2:** Include "record PR number in SPRINT_LOG.md" in every day's post-merge checklist
-2. **PR3:** Use full pipeline retest (not partial grammar checks) at all checkpoint gates
+2. **PR3:** Use full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) at all checkpoint gates
 3. **PR4:** Include "run newly-parsing models through full pipeline" after parse-improvement days
 4. **PR5:** Include error category breakdown (not just totals) at checkpoint gates
 5. **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Sprint 21 Priority 3 budget (8-12h) — Task 10 must prioritize top subcategories within budget
