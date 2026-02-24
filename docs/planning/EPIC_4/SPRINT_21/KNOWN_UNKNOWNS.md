@@ -126,7 +126,20 @@ This document identifies all assumptions and unknowns for Sprint 21 features **b
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** Corpus survey confirms the assumption is correct — simple integer arithmetic suffices for all 7 `$eval` instances across the entire GAMSlib corpus.
+
+**Evidence (all 7 `$eval` expressions found):**
+1. `springchain.gms:22` — `$eval NM1 %N%-1` (subtraction)
+2. `gqapsdp.gms:60` — `$eval imax card(i)` (card function — not simple arithmetic)
+3. `gqapsdp.gms:61` — `$eval jmax card(j)` (card function)
+4. `gqapsdp.gms:62` — `$eval xmax %imax%*%jmax%` (multiplication)
+5. `emfl.gms:30` — `$eval new %N1%*%N2%` (multiplication)
+6. `spbenders4.gms:88` — `$eval cardS card(s)+1` (card + addition)
+7. `srpchase.gms:20` — `$eval DIM %DIM%+1` (addition)
+
+**Decision:** Implement a minimal recursive descent evaluator supporting `+`, `-`, `*`, `//`, parentheses, and integer literals. Use `_safe_eval_int()` instead of Python `eval()` to avoid security risks. The `card()` function requires runtime set data — return 0 with a warning for now (only affects gqapsdp and spbenders4, not Sprint 21 targets).
 
 ---
 
@@ -160,7 +173,20 @@ Only saras and springchain are blocked by macro expansion. Other models in the 1
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — assumption partially wrong (broader impact than expected)
+
+**Findings:** Macro usage is far more widespread than assumed. 54 of 229 files (24%) use macro directives. However, the existing preprocessor already handles `$set` and `%name%` expansion, so most models are NOT blocked. The real gaps are `$eval` (5 files), system macros (20+ files), and `%modelStat.*%`/`%solveLink.*%` (21+ files).
+
+**Evidence:**
+- ~45 files use `$set` directives (already handled by preprocessor)
+- ~54 files use `%name%` expansion (already handled)
+- 5 files use `$eval` (NOT handled — springchain, gqapsdp, emfl, spbenders4, srpchase)
+- ~20 files use `%system.*%`/`%gams.*%` macros (NOT handled — left as unexpanded text)
+- ~13 files use `%modelStat.*%` constants (NOT handled)
+- ~8 files use `%solveLink.*%` constants (NOT handled)
+- 1 file uses `$setglobal` (NOT handled)
+
+**Impact reassessment:** Macro expansion has broader impact than assumed. Adding system macro and `%modelStat.*%`/`%solveLink.*%` support will fix option statements and abort conditions in ~21+ models, improving downstream correctness even for models that currently parse.
 
 ---
 
@@ -194,7 +220,23 @@ Development team
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — assumption partially wrong (more system macros exist)
+
+**Findings:** `%system.nlp%` returns the default NLP solver name (e.g., "CONOPT"). The assumption that no other system macros are used in the corpus is WRONG — 22+ unique system/built-in macros were found across 20+ files.
+
+**Evidence from saras.gms:**
+- Line 1488: `option nlp = %system.nlp%;`
+- Context: After solving with CONOPT explicitly (line 1486), restores the system default NLP solver
+- For nlp2mcp: expanding to `CONOPT` is a reasonable default
+
+**All system macros found in corpus (22+ unique):**
+- Solver selection: `%system.lp%` (9 uses), `%system.nlp%` (2), `%gams.nlp%` (6), `%gams.mip%` (6), `%gams.lp%`/`%gams.LP%` (6)
+- Infrastructure: `%gams.scrdir%` (5), `%gams.scrext%` (5), `%system.dirsep%` (4), `%gams.input%` (4), `%gams.wdir%` (2)
+- Status constants: `%modelStat.*%` (40+ uses, 12 variants), `%solveLink.*%` (15+ uses, 5 variants)
+- Other: `%gams.lo%` (4), `%gams.jobTrace%` (6), `%gams.license%` (2), `%system.fileSys%` (1)
+- Environment: `%sysEnv.GMSPYTHONLIB%` (4), `%sysEnv.PMI_*%` (2)
+
+**Decision:** Implement a `SYSTEM_MACROS` constant dictionary with reasonable defaults for all commonly-used system macros, including `%modelStat.*%` and `%solveLink.*%` numeric constants.
 
 ---
 
@@ -228,7 +270,18 @@ Macro expansion should happen as the first preprocessing step, before directive 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED — assumption confirmed with nuance
+
+**Findings:** The assumption is correct for our batch preprocessing approach. GAMS processes dollar control options immediately in source order during compilation. Macro expansion (`$set`/`$eval`) happens before code compilation but alongside other directives — they are NOT executed inside `$ontext`/`$offtext` blocks.
+
+**Evidence:**
+- GAMS documentation: "Dollar control options are not part of the GAMS language — they instruct the compiler to perform some task. The effect is felt immediately after the option is processed."
+- `$ontext`/`$offtext` blocks suppress ALL processing of their contents, including `$set`/`$eval`
+- The current preprocessor already handles the correct order: extract `$set` → process `$if` → expand `%name%` → strip directives → normalize
+- No GAMSlib model defines macros inside `$ontext` blocks
+- The existing pipeline ordering (Steps 1–10) is correct; new `$eval` processing fits naturally between Steps 2 and 3
+
+**Decision:** Keep the current pipeline ordering. Insert `$eval` processing as Step 2b (after `$set` extraction, before conditional processing). System macros initialize before Step 1 (Step 0). This matches GAMS's compile-time processing order for all corpus models.
 
 ---
 

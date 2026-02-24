@@ -118,6 +118,26 @@ Ran all 7 internal_error models through `parse_model_file()` with full traceback
 - Verified Known Unknowns 2.1 (WRONG — 5 causes not 2–3), 2.2 (WRONG — lead/lag IS primary blocker), 2.3 (VERIFIED — all incremental)
 - Updated PREP_PLAN.md Task 3 status to COMPLETE
 
+### Sprint 21 Prep Task 2: Research GAMS Macro Expansion Semantics - 2026-02-23
+
+**Branch:** `planning/sprint21-task2`
+
+#### Summary
+
+Researched GAMS `$set`/`$eval`/`%name%` macro expansion semantics and produced a comprehensive design document for the preprocessor macro subsystem.
+
+#### Activities
+
+- Surveyed all 229 GAMSlib files: 54 (24%) use macros, 7 `$eval` instances in 5 files, 22+ unique system macros
+- Analyzed springchain.gms: `$eval NM1 %N%-1` — simple integer subtraction, 9 `%name%` expansions
+- Analyzed saras.gms: `%system.nlp%` on line 1488 — restores default NLP solver after CONOPT override
+- Created `MACRO_EXPANSION_DESIGN.md` with 4-phase implementation plan (4–8h):
+  - Phase 1: System macro registry (`SYSTEM_MACROS` dict with 30+ entries)
+  - Phase 2: `$eval` directive with safe recursive descent evaluator
+  - Phase 3: `$setglobal`/`$setlocal` support (treat as `$set`)
+  - Phase 4: Integration and regression testing
+- Verified Known Unknowns 1.1 (VERIFIED), 1.2 (VERIFIED — broader than assumed), 1.3 (VERIFIED — more system macros than assumed), 1.4 (VERIFIED)
+
 ### Sprint 21 Prep Task 1: Create Known Unknowns List - 2026-02-23
 
 **Branch:** `planning/sprint21-prep`

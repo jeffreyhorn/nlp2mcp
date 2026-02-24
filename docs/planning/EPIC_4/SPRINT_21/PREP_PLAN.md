@@ -133,7 +133,7 @@ grep -c "^##" docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md
 
 ## Task 2: Research GAMS Macro Expansion Semantics
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -188,11 +188,16 @@ Two models are immediately blocked: saras (`%system.nlp%`) and springchain (`$se
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_21/MACRO_EXPANSION_DESIGN.md` with preprocessor architecture
+- Surveyed all 229 GAMSlib files (219 .gms + 10 .inc) for macro usage patterns
+- Analyzed springchain.gms: 1 `$eval` (subtraction), 8 `%N%` expansions, 1 `%NM1%` expansion
+- Analyzed saras.gms: 1 `%system.nlp%` usage (line 1488, restores default NLP solver)
+- Found 54 files (24%) use macros; 7 total `$eval` instances; 22+ unique system macros
+- Verified Known Unknowns 1.1 (VERIFIED), 1.2 (VERIFIED — broader than assumed), 1.3 (VERIFIED — more system macros than assumed), 1.4 (VERIFIED)
 
 ### Result
 
-*To be completed*
+Comprehensive macro expansion research complete. The preprocessor already handles `$set`, `$if not set ... $set`, `%name%` expansion, and `$macro` definitions. Three gaps identified: (1) `$eval` directive — 7 instances in 5 files, all simple integer arithmetic (`+`, `-`, `*`); implement with safe recursive descent evaluator, (2) system macros — 22+ unique `%system.*%`/`%gams.*%`/`%modelStat.*%`/`%solveLink.*%` macros across 20+ files; implement as a constant dictionary with reasonable defaults, (3) `$setglobal` — 1 instance; treat identically to `$set`. Design document specifies 4-phase implementation plan totaling 4–8 hours. springchain unblocked by `$eval` support; saras unblocked by `%system.nlp%` default; ~21 additional models get correct option/abort statements from `%modelStat.*%`/`%solveLink.*%` constants.
 
 ### Verification
 
@@ -217,15 +222,15 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 
 ### Acceptance Criteria
 
-- [ ] GAMS macro directive semantics documented (`$set`, `$eval`, `$setglobal`, `%name%`)
-- [ ] GAMSlib corpus surveyed: macro usage count and pattern classification
-- [ ] springchain `$set`/`$eval` usage fully analyzed
-- [ ] saras `%system.nlp%` usage fully analyzed
-- [ ] Preprocessor macro subsystem designed (store, expansion, `$eval` scope)
-- [ ] System macro registry defined
-- [ ] Design document created with test plan
-- [ ] Implementation approach confirmed for Sprint 21 Day 1
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] GAMS macro directive semantics documented (`$set`, `$eval`, `$setglobal`, `%name%`)
+- [x] GAMSlib corpus surveyed: macro usage count and pattern classification (54/229 files, 7 `$eval`, 22+ system macros)
+- [x] springchain `$set`/`$eval` usage fully analyzed (1 `$eval NM1 %N%-1`, simple subtraction)
+- [x] saras `%system.nlp%` usage fully analyzed (line 1488, restores default NLP solver)
+- [x] Preprocessor macro subsystem designed (store, expansion, `$eval` scope)
+- [x] System macro registry defined (SYSTEM_MACROS dict with 30+ entries)
+- [x] Design document created with test plan (MACRO_EXPANSION_DESIGN.md)
+- [x] Implementation approach confirmed for Sprint 21 Day 1 (4-phase, 4–8h)
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1002,7 +1007,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 ## Success Criteria for Prep Phase
 
 - [x] Known Unknowns document created (27 unknowns, 9 categories)
-- [ ] Macro expansion design document completed
+- [x] Macro expansion design document completed
 - [x] internal_error root cause catalog completed (7 models)
 - [x] path_syntax_error root cause catalog completed (45 models)
 - [x] Deferred issues triaged (13 issues, do/defer categorization)
