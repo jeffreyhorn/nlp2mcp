@@ -231,7 +231,7 @@ grep -n '%[A-Za-z]' data/gamslib/raw/springchain.gms 2>/dev/null | head -20
 
 ## Task 3: Catalog internal_error Root Causes (7 Models)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -282,11 +282,15 @@ This mirrors the Sprint 20 lexer error subcategory catalog that successfully gui
 
 ### Changes
 
-*To be completed*
+- Ran all 7 internal_error models through `parse_model_file()` with full traceback capture
+- Identified 4 distinct root cause subcategories: lead/lag (3 models), undefined symbol from missing include (1), variable index arity mismatch (1), malformed if statement (1), table row index mismatch (1)
+- Created `INTERNAL_ERROR_CATALOG.md` with per-model analysis, fix type classification, effort estimates, and recommended fix order
+- Verified Known Unknowns 2.1 (WRONG — 4 distinct causes, not 2–3), 2.2 (WRONG — lead/lag IS the primary blocker), 2.3 (VERIFIED — all fixes are incremental)
+- Discovered that `parse_file()` succeeds for all 7 models but `parse_model_file()` (which includes IR builder) fails — confirming these are IR builder issues, not grammar issues
 
 ### Result
 
-*To be completed*
+The 7 internal_error models have 4 distinct root causes, with lead/lag indexing in parameter assignments as the dominant blocker (3/7 models: imsl, sarf, tfordy). All fixes are incremental (Type A handler/case or Type B grammar+handler) — no architectural changes needed. The lead/lag subcategory offers batch-fix potential (one fix unblocks 3 models). Total estimated effort is 7–11h, slightly above the 6–10h budget. Recommended fix order: lead/lag first (highest leverage), then senstran if-statement, turkpow table parsing, indus arity, clearlak reclassification. Unknown 2.1 was WRONG (4 causes not 2–3), Unknown 2.2 was WRONG (lead/lag IS the primary blocker), and Unknown 2.3 was VERIFIED (all incremental).
 
 ### Verification
 
@@ -316,13 +320,13 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 
 ### Acceptance Criteria
 
-- [ ] All 7 internal_error models run and tracebacks captured
-- [ ] Root causes classified into subcategories (A, B, C, D...)
-- [ ] Models grouped by subcategory for batch fixes
-- [ ] Fix effort estimated per subcategory
-- [ ] Recommended fix order documented
-- [ ] Catalog document created
-- [ ] Unknowns 2.1, 2.2, 2.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 7 internal_error models run and tracebacks captured
+- [x] Root causes classified into subcategories (A, B, C, D...)
+- [x] Models grouped by subcategory for batch fixes
+- [x] Fix effort estimated per subcategory
+- [x] Recommended fix order documented
+- [x] Catalog document created
+- [x] Unknowns 2.1, 2.2, 2.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -946,7 +950,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 
 - [x] Known Unknowns document created (27 unknowns, 9 categories)
 - [ ] Macro expansion design document completed
-- [ ] internal_error root cause catalog completed (7 models)
+- [x] internal_error root cause catalog completed (7 models)
 - [ ] path_syntax_error root cause catalog completed (45 models)
 - [ ] Deferred issues triaged (13 issues, do/defer categorization)
 - [ ] Solve-match gap analyzed (17 models)
