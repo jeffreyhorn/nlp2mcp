@@ -109,11 +109,11 @@ Estimated Sprint 21 effort for recommended issues: **9-13h**. To stay within the
 | **Issue File** | `docs/issues/ISSUE_826_decomp-empty-stationarity-equation.md` |
 | **Current Status** | OPEN — domain/subset index mismatch in stationarity builder |
 | **Pipeline Status** | Parse ✓ Translate ✓ Solve ✗ (path_syntax_error) |
-| **Overlap** | Related to Priority 3 Subcategory C (uncontrolled set) — similar stationarity domain issue |
+| **Overlap** | Independent — addresses a similar domain issue as Priority 3 Subcategory C but different root cause |
 | **Est. Effort** | 3-4h (targeted fix: detect and handle empty stationarity equations) |
 | **Recommendation** | **Do in Sprint 21** |
 
-**Notes:** Variable `lam(ss)` declared over full set but equations access via dynamic subset `s(ss)`. Index replacement fails, producing empty stationarity equations. A pragmatic fix: detect empty stationarity equations post-generation and either eliminate them or add the variable to the objective function as a penalty. This partially overlaps with Priority 3 Subcategory C (uncontrolled set in stationarity equations) since both involve incorrect domain handling in stationarity generation.
+**Notes:** Variable `lam(ss)` declared over full set but equations access via dynamic subset `s(ss)`. Index replacement fails, producing empty stationarity equations. A pragmatic fix: detect empty stationarity equations post-generation and either eliminate them or add the variable to the objective function as a penalty. Both this issue and Priority 3 Subcategory C involve incorrect domain handling in stationarity generation, but the root causes differ: #826 is a dynamic subset mismatch while Subcategory C is an uncontrolled set issue.
 
 ---
 
@@ -272,7 +272,7 @@ Estimated Sprint 21 effort for recommended issues: **9-13h**. To stay within the
 |----------|-------|-------|--------|-----------|
 | 1 | #789 | (general) | 2-3h | Fixes min/max reformulation for all affected models |
 | 2 | #828 | ibm1 | 2-3h | Focused debugging of bound resolution |
-| 3 | #826 | decomp | 3-4h | Overlaps with Priority 3 stationarity domain work |
+| 3 | #826 | decomp | 3-4h | Independent of Priority 3; complements stationarity domain work |
 | 4 | #757 | bearing | 2-3h | Validates Sprint 20 `.l`/`.scale` emission work |
 
 **Total: 9-13h** (slightly above 8-12h budget; #757 can be dropped if time is tight)
