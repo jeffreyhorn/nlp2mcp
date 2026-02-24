@@ -470,7 +470,7 @@ Development team
 
 Additionally, the assumption that the emitter "correctly generates pairings for all 120 translatable models" is misleading — of the 96 models that translate, 45 fail at GAMS compilation (path_syntax_error), so the emitter does NOT produce correct output for all translatable models.
 
-However, the Model statement pairing issue is a minor contributor (2/45 models, 4%). The dominant issues are missing data (17 models) and stationarity equation generation (9 models).
+However, the Model statement pairing issue is a minor contributor (2/45 models, 4%). The dominant issues are missing data (16 models) and stationarity equation generation (9 models).
 
 ---
 

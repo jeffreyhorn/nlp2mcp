@@ -300,7 +300,7 @@ Based on model count, batch-fix potential, and estimated effort:
 **Recommended Sprint 21 approach (within 8-12h budget):**
 1. **Priority 1-3 (E + D + partial A):** Fix set index quoting, negative exponent parenthesization, and begin Table data capture — estimated 6-9h, unblocks 10-26 models
 2. **Priority 4 (C) if time permits:** Address uncontrolled set issues — estimated 3-5h additional
-3. **Defer to Sprint 22:** Subcategories B, F, G, I, J (10 models total, ~6-9h) — these are lower-leverage individual fixes
+3. **Defer to Sprint 22:** Subcategories B, F, G, I, J (10 models total, ~6-8h) — these are lower-leverage individual fixes
 
 ---
 
