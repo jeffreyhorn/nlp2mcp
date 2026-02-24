@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Prep Task 8: Snapshot Baseline Metrics & Pipeline Retest - 2026-02-24
+
+**Branch:** `planning/sprint21-task8`
+
+#### Summary
+Ran full pipeline retest and snapshotted Sprint 21 baseline metrics at commit `feffaa95`. All Sprint 20 retrospective values match except translate (+3, from 120 to 123).
+
+#### Activities
+- Ran full test suite: 3,715 passed, 10 skipped, 2 xfailed
+- Ran full pipeline retest (160 models, 1,156s): parse 132/160, translate 123/132, solve 33/124, match 16/33
+- Classified solve failures: path_syntax_error (48), path_solve_terminated (29), model_infeasible (12), path_solve_license (2)
+- Compared with Sprint 20 retrospective: all match except translate (+3 genuine improvement)
+- Created `BASELINE_METRICS.md` with full metrics snapshot and Sprint 21 target gap analysis
+- Verified Known Unknown 8.1 (WRONG — 91 failures not 88, path_solve_terminated is 29 models)
+- Ran full quality gate: typecheck, lint, format, test — all pass
+- Updated PREP_PLAN.md Task 8 status to COMPLETE
+
 ### Sprint 21 Prep Task 7: Audit semantic_undefined_symbol Models - 2026-02-24
 
 **Branch:** `planning/sprint21-task7`

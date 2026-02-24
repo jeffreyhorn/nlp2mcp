@@ -1099,7 +1099,29 @@ Current baseline (per `gamslib_status.json`) shows that some solving models alre
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption mentioned "88 solve-stage failures" but the actual count is **91 failures** out of 124 real solve attempts (36 models were cascade-skipped due to parse/translate failure and have `status=not_tested`). The distribution across failure modes is:
+
+| Failure Mode | Count | % of 91 Failures | Description |
+|-------------|-------|------------------|-------------|
+| **path_syntax_error** | 48 | 52.7% | MCP file has GAMS compilation errors; PATH never starts |
+| **path_solve_terminated** | 29 | 31.9% | PATH ran but failed to converge |
+| **model_infeasible** | 12 | 13.2% | MCP compiles but KKT system is infeasible |
+| **path_solve_license** | 2 | 2.2% | Model exceeds PATH demo license size limit |
+
+**Key findings:**
+1. **`path_solve_terminated` is a significant population (29 models):** This is larger than assumed. The 29 models include camshape, chain, decomp, elec, etamac, fdesign, ganges, gangesx, hhfair, hs62, jobt, lands, like, pak, polygon, and 14 `ps*` variant models. The `ps*` models (10 variants) may share common root causes.
+
+2. **`path_syntax_error` dominates (48 models, 53%):** This grew from the earlier estimate of 45 to 48 models, likely because 3 additional translate-success models produce invalid MCP files.
+
+3. **`model_infeasible` (12 models):** These compile and PATH starts, but the KKT system has no feasible solution. This population overlaps with deferred issues (#757 bearing, #764 mexss, #765 orani, #828 ibm1).
+
+4. **The 8–10h PATH convergence budget covers 29 models:** With 10 `ps*` variants likely sharing causes, the effective distinct-model count is ~20. The 8–10h budget is reasonable if the `ps*` models can be batch-addressed.
+
+5. **Translation failures are a separate population:** 9 translate failures (7 internal_error + 2 timeout) prevent MCP generation for those models. These are not solve-stage failures but cascade-skips.
+
+See `BASELINE_METRICS.md` for full breakdown.
 
 ---
 
