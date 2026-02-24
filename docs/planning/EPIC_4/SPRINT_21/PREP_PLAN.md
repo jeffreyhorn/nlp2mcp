@@ -721,7 +721,7 @@ print(f'semantic_undefined_symbol: {len(sue)}: {sue}')
 
 ## Task 8: Snapshot Baseline Metrics & Pipeline Retest
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 1–2 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -760,11 +760,18 @@ Sprint 20 established a baseline at commit `dc390373` (112/160 parse, 96/112 tra
 
 ### Changes
 
-*To be completed*
+- Ran full test suite (`make test`): 3,715 passed, 10 skipped, 2 xfailed
+- Ran full pipeline retest (`run_full_test.py --quiet`): 160 models processed in 1,156s
+- Recorded all metrics: parse 132/160, translate 123/132, solve 33/124, match 16/33
+- Compared with Sprint 20 retrospective values: all match except translate (+3, from 120 to 123 — genuine improvement from late Sprint 20 work)
+- Classified solve failures: path_syntax_error (48), path_solve_terminated (29), model_infeasible (12), path_solve_license (2)
+- Created `BASELINE_METRICS.md` with commit hash `feffaa95`, full pipeline metrics, and Sprint 21 target gap analysis
+- Verified Known Unknown 8.1 (WRONG — 91 failures not 88, and path_solve_terminated is 29 models, a significant population)
+- Ran full quality gate: typecheck, lint, format, test — all pass
 
 ### Result
 
-*To be completed*
+Pipeline baseline confirmed at commit `feffaa95`: parse 132/160 (82.5%), translate 123/132 (93.2%), solve 33/124 (26.6%), match 16/33 (48.5%), tests 3,715. All Sprint 20 retrospective values match except translate which improved from 120 to 123 (+3 models) due to late Sprint 20 work. Solve failures break down into 4 categories: path_syntax_error (48, 52.7%), path_solve_terminated (29, 31.9%), model_infeasible (12, 13.2%), path_solve_license (2, 2.2%). Sprint 21 targets require +3 parse, -5 lexer_invalid_char, -4 internal_error, +3 solve, +4 match. Unknown 8.1 was WRONG (91 failures not 88, significant path_solve_terminated population of 29 models).
 
 ### Verification
 
@@ -787,12 +794,12 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 
 ### Acceptance Criteria
 
-- [ ] Full test suite passes (3,715+ tests)
-- [ ] Full pipeline retest completed
-- [ ] All metric categories recorded
-- [ ] Values compared with Sprint 20 retrospective
-- [ ] Baseline document created with commit hash
-- [ ] Unknown 8.1 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Full test suite passes (3,715+ tests)
+- [x] Full pipeline retest completed
+- [x] All metric categories recorded
+- [x] Values compared with Sprint 20 retrospective
+- [x] Baseline document created with commit hash
+- [x] Unknown 8.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -989,7 +996,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [x] Deferred issues triaged (13 issues, do/defer categorization)
 - [x] Solve-match gap analyzed (17 models)
 - [x] Semantic error models audited (7 models)
-- [ ] Baseline metrics snapshotted and verified
+- [x] Baseline metrics snapshotted and verified
 - [ ] Sprint 20 retrospective action items confirmed
 - [ ] Sprint 21 detailed schedule created
 

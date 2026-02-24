@@ -22,7 +22,7 @@ Sets
 Alias(i, j);
 
 Parameters
-    xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55, p2.lab 0, p2.p2 0, h1.h1 0, h1.h2 0, h1.p1 0, h1.p2 0, h2.h1 0, h2.h2 0, h2.p1 0, h2.p2 0, p1.lab 0, p1.p1 0, lab.lab 0/
+    xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55, p2.lab 0, p2.p2 0, p1.lab 0, p1.p1 0, h2.h1 0, h2.h2 0, h2.p1 0, h2.p2 0, h1.h1 0, h1.h2 0, h1.p1 0, h1.p2 0, lab.lab 0/
     tb(i) /lab 220, h1 na, h2 na, p1 190, p2 105/
     tw(i) /lab 0, h1 0, h2 0, p1 0, p2 0/
     xw(i,j) /lab.lab 0, lab.h1 0, lab.h2 0, lab.p1 0, lab.p2 0, h1.lab 0, h1.h1 0, h1.h2 0, h1.p1 0, h1.p2 0, h2.lab 0, h2.h1 0, h2.h2 0, h2.p1 0, h2.p2 0, p1.lab 0, p1.h1 0, p1.h2 0, p1.p1 0, p1.p2 0, p2.lab 0, p2.h1 0, p2.h2 0, p2.p1 0, p2.p2 0/
