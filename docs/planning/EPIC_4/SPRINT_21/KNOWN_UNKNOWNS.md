@@ -325,7 +325,7 @@ Specific lead/lag patterns found:
 
 The grammar already parses all these patterns correctly via `lag_lead_suffix` (linear_lead, linear_lag, circular_lead, circular_lag). The issue is exclusively in the IR builder, not the parser.
 
-Additionally, 2 models (clearlak, tfordy) have lead/lag patterns in non-blocking contexts: clearlak has none, but tfordy has lead/lag in equation domains (lines 189-195) which may be a secondary issue after the parameter assignment fix.
+Additionally, 1 model (tfordy) has lead/lag patterns in non-blocking contexts: tfordy has lead/lag in equation domains (lines 189-195) which may be a secondary issue after the parameter assignment fix.
 
 ---
 

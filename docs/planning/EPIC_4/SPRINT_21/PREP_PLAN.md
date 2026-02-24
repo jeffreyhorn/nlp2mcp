@@ -302,12 +302,12 @@ ls docs/planning/EPIC_4/SPRINT_21/INTERNAL_ERROR_CATALOG.md
 grep -c "^###" docs/planning/EPIC_4/SPRINT_21/INTERNAL_ERROR_CATALOG.md
 # Should be 7+ (one per model)
 
-# Smoke-test: confirm models still fail
+# Smoke-test: confirm models still fail in IR builder
 python -c "
 import sys; sys.setrecursionlimit(50000)
-from src.ir.parser import parse_file
+from src.ir.parser import parse_model_file
 for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
-    try: parse_file(f'data/gamslib/raw/{m}.gms'); print(f'{m}: OK')
+    try: parse_model_file(f'data/gamslib/raw/{m}.gms'); print(f'{m}: OK')
     except: print(f'{m}: FAIL')
 "
 ```
