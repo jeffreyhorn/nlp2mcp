@@ -409,7 +409,23 @@ The 45 path_syntax_error models cluster into 4–6 root cause subcategories, wit
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The 45 models cluster into **9 distinct root cause subcategories**, not 4–6 as assumed. However, the top 3 subcategories DO account for 32/45 models (71%), exceeding the assumed 30+. The subcategories are:
+
+1. **A: Missing parameter/Table data** — 16 models (36%) — IR builder does not capture Table data blocks
+2. **C: Uncontrolled set in stationarity equations** — 9 models (20%) — translator emits free set indices
+3. **E: Set index quoted as string literal** — 7 models (16%) — emitter quotes set references as strings
+4. **B: Domain violation in emitted data** — 5 models (11%) — emitter outputs out-of-domain elements
+5. **D: Negative exponent needs parentheses** — 3 models (7%) — emitter outputs `** -N` without parens
+6. **G: Set index reuse in sum** — 2 models (4%) — translator reuses controlling index
+7. **F: GAMS built-in function collision** — 1 model — `gamma`/`psi` are reserved
+8. **I: MCP variable unreferenced** — 1 model — variable in model statement but not in equations
+9. **J: Equation-variable dimension mismatch** — 1 model — pairing dimensions don't match
+
+The assumption of 4–6 subcategories was partially wrong (9 subcategories), but the core insight that a few fixes address most models was correct. Total estimated effort: 15–22h (above the 8–12h budget; triage needed).
+
+See `PATH_SYNTAX_ERROR_CATALOG.md` for full per-model analysis.
 
 ---
 
@@ -444,7 +460,17 @@ The emitter (`src/emit/emit_gams.py`) correctly generates the `Model` statement 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The MCP Model statement is NOT generated correctly for all pairings. Two specific issues were found:
+
+1. **Subcategory I (nemhaus):** The Model statement includes variable `xb` and `y` paired with equations, but these variables do not appear in any model equation. GAMS error $483: "Mapped variables have to appear in the model." This is a translator bug where the MCP model statement includes variables that were eliminated or not referenced during KKT generation.
+
+2. **Subcategory J (pdi):** The Model statement pairs an equation with a variable of different dimensionality. GAMS error $70: "The dimensions of the equ.var pair do not conform." This is a translator bug in equation-variable pairing logic.
+
+Additionally, the assumption that the emitter "correctly generates pairings for all 120 translatable models" is misleading — of the 96 models that translate, 45 fail at GAMS compilation (path_syntax_error), so the emitter does NOT produce correct output for all translatable models.
+
+However, the Model statement pairing issue is a minor contributor (2/45 models, 4%). The dominant issues are missing data (16 models) and stationarity equation generation (9 models).
 
 ---
 
@@ -479,7 +505,19 @@ The emitter generates GAMS-legal identifiers for all equations, variables, and p
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with nuance)
+
+**Findings:** The emitter does violate GAMS identifier naming rules, but in a specific and limited way:
+
+1. **GAMS built-in function collision (Subcategory F, 1 model):** mingamma uses `gamma` and `psi` as variable names, which are GAMS built-in functions. The emitter outputs `gamma(x1)` and `psi(x1)` which GAMS interprets as function calls, not variable references. GAMS errors $121 (set expected) and $140 (unknown symbol).
+
+2. **Set index quoting (Subcategory E, 7 models):** Not strictly an identifier length/naming issue, but the emitter quotes set names as string literals (`"J"` instead of `J`), which GAMS doesn't resolve.
+
+3. **Identifier length:** No violations found. Generated identifiers (e.g., `stat_aweight`, `comp_lo_b3`, `nu_balance`) are all well under the 63-character GAMS limit.
+
+4. **Reserved keywords:** Only the `gamma`/`psi` collision was found. No other GAMS reserved keywords are used as identifiers.
+
+The assumption that "all generated identifiers are GAMS-legal" is mostly correct (only 1 model has a reserved word collision), but the quoting issue (7 models) is a related but distinct problem.
 
 ---
 
@@ -512,7 +550,21 @@ Most path_syntax_error models fail due to emitter-stage issues (incorrect MCP fo
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The assumption that "most fail due to emitter-stage issues" is WRONG. The failures are roughly evenly distributed across all three pipeline stages:
+
+| Pipeline Stage | Model Count | % of Total | Subcategories |
+|---------------|-------------|-----------|---------------|
+| **Parser (IR builder)** | 16 | 36% | A (missing Table data) |
+| **Emitter (formatting)** | 15 | 33% | B (domain violation), D (exponent parens), E (index quoting) |
+| **Translator (KKT generation)** | 14 | 31% | C (uncontrolled set), F (reserved word), G (index reuse), I (variable unreferenced), J (dimension mismatch) |
+
+Key finding: The **parser stage** is actually the largest single contributor (16/45 = 36%), not the emitter. The IR builder's failure to capture Table data is the dominant root cause. This was unexpected — the assumption was that parser-stage issues would be minimal since these models all parse successfully; the Table data issue is specifically about data not being stored in the IR, not about parse failure.
+
+The emitter and translator each contribute about a third of the failures, with distinct fix strategies:
+- **Emitter fixes** (15 models): formatting corrections — relatively simple
+- **Translator fixes** (14 models): KKT generation and domain handling — more complex
 
 ---
 

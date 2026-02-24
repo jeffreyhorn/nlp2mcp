@@ -332,7 +332,7 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 
 ## Task 4: Catalog path_syntax_error Root Causes (45 Models)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 21 Day 1
@@ -376,11 +376,16 @@ Sprint 21 Priority 3 allocates 8–12h to reduce path_syntax_error. These are mo
 
 ### Changes
 
-*To be completed*
+- Ran all 45 path_syntax_error models through GAMS v53, capturing compilation errors from LST output
+- Analyzed GAMS error codes ($141, $149, $170, $66, $445, $116, $121, $125, $140, $483, $70) across all 45 models
+- Classified into 9 subcategories: A (missing Table data, 16), B (domain violation, 5), C (uncontrolled set, 9), D (exponent parens, 3), E (index quoting, 7), F (reserved word, 1), G (index reuse, 2), I (variable unreferenced, 1), J (dimension mismatch, 1)
+- Verified root causes by examining MCP files, original NLP files, and IR builder output
+- Created `PATH_SYNTAX_ERROR_CATALOG.md` with per-subcategory analysis and recommended fix order
+- Verified Known Unknowns 3.1, 3.2, 3.3, 3.4
 
 ### Result
 
-*To be completed*
+All 45 path_syntax_error models were classified into 9 distinct root cause subcategories. The dominant blocker is missing parameter/Table data (16/45 models, 36%) — the IR builder does not capture Table data blocks into ParameterDef.values. The top 3 subcategories (A + C + E) account for 32/45 models (71%). Errors span all three pipeline stages: parser (16), translator (14), emitter (15). Total estimated fix effort is 15–22h (above the 8–12h budget; triage recommended). Key unknowns resolved: subcategory count higher than assumed (9 vs 4–6), parser-stage issues dominate (not emitter as assumed), Model statement pairing has specific bugs (2 models).
 
 ### Verification
 
@@ -388,7 +393,11 @@ Sprint 21 Priority 3 allocates 8–12h to reduce path_syntax_error. These are mo
 # Verify catalog document exists
 ls docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
 
-# Verify status file has path_syntax_error models
+# Verify all 45 models are covered in per-model table (section 6)
+grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md
+# Should be 45 (one row per model in the Per-Model Error Summary table)
+
+# Count path_syntax_error models in pipeline status
 python -c "
 import json
 with open('data/gamslib/gamslib_status.json') as f: data = json.load(f)
@@ -397,13 +406,7 @@ pse = [
     m.get('model_id', '?') for m in models
     if isinstance(m, dict)
     and isinstance(m.get('mcp_solve'), dict)
-    and (
-        m['mcp_solve'].get('outcome_category') == 'path_syntax_error'
-        or (
-            isinstance(m['mcp_solve'].get('error'), dict)
-            and m['mcp_solve']['error'].get('category') == 'path_syntax_error'
-        )
-    )
+    and m['mcp_solve'].get('outcome_category') == 'path_syntax_error'
 ]
 print(f'path_syntax_error models: {len(pse)}')
 "
@@ -417,14 +420,14 @@ print(f'path_syntax_error models: {len(pse)}')
 
 ### Acceptance Criteria
 
-- [ ] path_syntax_error model list extracted from pipeline status
-- [ ] At least 15–20 models analyzed in detail
-- [ ] Root causes classified into subcategories (A–F+)
-- [ ] Models counted per subcategory
-- [ ] Fix effort estimated per subcategory
-- [ ] Highest-leverage fixes identified (most models per fix)
-- [ ] Catalog document created with recommended attack order
-- [ ] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] path_syntax_error model list extracted from pipeline status
+- [x] At least 15–20 models analyzed in detail
+- [x] Root causes classified into subcategories (A–F+)
+- [x] Models counted per subcategory
+- [x] Fix effort estimated per subcategory
+- [x] Highest-leverage fixes identified (most models per fix)
+- [x] Catalog document created with recommended attack order
+- [x] Unknowns 3.1, 3.2, 3.3, 3.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -951,7 +954,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [x] Known Unknowns document created (27 unknowns, 9 categories)
 - [ ] Macro expansion design document completed
 - [x] internal_error root cause catalog completed (7 models)
-- [ ] path_syntax_error root cause catalog completed (45 models)
+- [x] path_syntax_error root cause catalog completed (45 models)
 - [ ] Deferred issues triaged (13 issues, do/defer categorization)
 - [ ] Solve-match gap analyzed (17 models)
 - [ ] Semantic error models audited (7 models)
