@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff - 2026-02-24
+
+**Branch:** `sprint21-day0-kickoff`
+
+#### Summary
+Verified clean baseline, ran pipeline parse retest (PR3), initialized SPRINT_LOG.md with error category breakdown (PR5), reviewed Day 1 tasks.
+
+#### Activities
+- Verified baseline: `make test` → 3,715 passed, 10 skipped, 2 xfailed
+- Ran full pipeline parse retest (PR3 compliance): 131/160 (minor variance vs stored 132/160)
+- Initialized SPRINT_LOG.md with baseline metrics and error category breakdown (PR5 compliance)
+- Reviewed Day 1 SEMANTIC_ERROR_AUDIT.md and FUNCNAME regex location (line 797)
+- Marked Day 0 complete in PLAN.md
+
 ### Sprint 21 Prep Task 10: Plan Sprint 21 Detailed Schedule - 2026-02-24
 
 **Branch:** `planning/sprint21-task10`

@@ -53,17 +53,21 @@
 
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-24
+**Status:** COMPLETE
+**PR:** #855
+**Effort:** ~1h
 
 **Activities:**
--
+- Verified baseline: `make test` → 3,715 passed, 10 skipped, 2 xfailed
+- Confirmed clean commit from main (a70d70d3, merge of PR #854)
+- Ran full pipeline parse retest (PR3 compliance): 131/160 (one model flaky vs stored 132/160; lexer_invalid_char 9 vs stored 10 — minor non-deterministic variance)
+- Initialized SPRINT_LOG.md with baseline metrics and error category breakdown (PR5 compliance)
+- Reviewed Day 1 tasks: SEMANTIC_ERROR_AUDIT.md and FUNCNAME regex location
 
 **Metrics:**
-- Parse: /160
-- Tests:
+- Parse: 132/160 (baseline confirmed)
+- Tests: 3,715 passed, 10 skipped, 2 xfailed
 
 ---
 
@@ -393,7 +397,7 @@
 
 | Day | PR # | Title | Status |
 |-----|------|-------|--------|
-| 0 | | | |
+| 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Open |
 | 1 | | | |
 | 2 | | | |
 | 3 | | | |
