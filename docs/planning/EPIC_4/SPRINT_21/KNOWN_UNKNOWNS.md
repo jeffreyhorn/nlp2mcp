@@ -273,7 +273,7 @@ Development team
 ### Verification Results
 ❌ **Status:** WRONG
 
-**Findings:** The 7 models fail for **4 distinct root causes**, not 2–3 as assumed. The distribution is:
+**Findings:** The 7 models fail for **5 distinct root causes**, not 2–3 as assumed. The distribution is:
 - **Lead/lag indexing in parameter assignments:** 3 models (imsl, sarf, tfordy) — `_extract_indices()` rejects `lag_lead_suffix` in parameter context
 - **Undefined symbol from missing `$libInclude`:** 1 model (clearlak) — `ScenRedParms` declared in external `scenred.gms`
 - **Variable index arity mismatch:** 1 model (indus) — `ppc` declared as scalar but used with 2 indices

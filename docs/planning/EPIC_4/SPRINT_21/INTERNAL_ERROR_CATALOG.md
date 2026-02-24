@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-All 7 internal_error models were run through `parse_model_file()` with full traceback capture. The errors fall into **4 distinct root cause subcategories**, with **lead/lag indexing in parameter assignments** being the dominant blocker (3/7 models). No two subcategories share the same fix, but the lead/lag subcategory offers clear batch-fix potential.
+All 7 internal_error models were run through `parse_model_file()` with full traceback capture. The errors fall into **5 distinct root cause subcategories**, with **lead/lag indexing in parameter assignments** being the dominant blocker (3/7 models). No two subcategories share the same fix, but the lead/lag subcategory offers clear batch-fix potential.
 
 ### Root Cause Distribution
 
@@ -21,7 +21,7 @@ All 7 internal_error models were run through `parse_model_file()` with full trac
 | D2 | Malformed `if` statement parsing | senstran | 1 | B: Grammar+handler | 2–3h |
 | A | Table row index mismatch | turkpow | 1 | A: Handler/case | 1–2h |
 
-**Total estimated effort: 7–11h** (within the 6–10h budget, with some buffer needed)
+**Total estimated effort: 7–11h** (slightly above the 6–10h budget, depending on buffer)
 
 ### Key Findings
 
@@ -42,7 +42,7 @@ All 7 internal_error models were run through `parse_model_file()` with full trac
 
 **Root Cause:**
 - Line 141: `$libInclude scenred.gms` — includes an external library file
-- Lines 143+: Multiple assignments to `ScenRedParms('num_leaves')`, `ScenRedParms('num_random')`, etc.
+- Line 142+: Multiple assignments to `ScenRedParms('num_leaves')`, `ScenRedParms('num_random')`, etc.
 - `ScenRedParms` is declared in the external `scenred.gms` file, which is not available to nlp2mcp
 - The preprocessor strips the `$libInclude` directive, leaving the assignments to an undeclared parameter
 

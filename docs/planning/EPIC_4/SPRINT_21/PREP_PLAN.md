@@ -283,14 +283,14 @@ This mirrors the Sprint 20 lexer error subcategory catalog that successfully gui
 ### Changes
 
 - Ran all 7 internal_error models through `parse_model_file()` with full traceback capture
-- Identified 4 distinct root cause subcategories: lead/lag (3 models), undefined symbol from missing include (1), variable index arity mismatch (1), malformed if statement (1), table row index mismatch (1)
+- Identified 5 distinct root cause subcategories: lead/lag (3 models), undefined symbol from missing include (1), variable index arity mismatch (1), malformed if statement (1), table row index mismatch (1)
 - Created `INTERNAL_ERROR_CATALOG.md` with per-model analysis, fix type classification, effort estimates, and recommended fix order
-- Verified Known Unknowns 2.1 (WRONG — 4 distinct causes, not 2–3), 2.2 (WRONG — lead/lag IS the primary blocker), 2.3 (VERIFIED — all fixes are incremental)
+- Verified Known Unknowns 2.1 (WRONG — 5 distinct causes, not 2–3), 2.2 (WRONG — lead/lag IS the primary blocker), 2.3 (VERIFIED — all fixes are incremental)
 - Discovered that `parse_file()` succeeds for all 7 models but `parse_model_file()` (which includes IR builder) fails — confirming these are IR builder issues, not grammar issues
 
 ### Result
 
-The 7 internal_error models have 4 distinct root causes, with lead/lag indexing in parameter assignments as the dominant blocker (3/7 models: imsl, sarf, tfordy). All fixes are incremental (Type A handler/case or Type B grammar+handler) — no architectural changes needed. The lead/lag subcategory offers batch-fix potential (one fix unblocks 3 models). Total estimated effort is 7–11h, slightly above the 6–10h budget. Recommended fix order: lead/lag first (highest leverage), then senstran if-statement, turkpow table parsing, indus arity, clearlak reclassification. Unknown 2.1 was WRONG (4 causes not 2–3), Unknown 2.2 was WRONG (lead/lag IS the primary blocker), and Unknown 2.3 was VERIFIED (all incremental).
+The 7 internal_error models have 5 distinct root causes, with lead/lag indexing in parameter assignments as the dominant blocker (3/7 models: imsl, sarf, tfordy). All fixes are incremental (Type A handler/case or Type B grammar+handler) — no architectural changes needed. The lead/lag subcategory offers batch-fix potential (one fix unblocks 3 models). Total estimated effort is 7–11h, slightly above the 6–10h budget. Recommended fix order: lead/lag first (highest leverage), then senstran if-statement, turkpow table parsing, indus arity, clearlak reclassification. Unknown 2.1 was WRONG (5 causes not 2–3), Unknown 2.2 was WRONG (lead/lag IS the primary blocker), and Unknown 2.3 was VERIFIED (all incremental).
 
 ### Verification
 
