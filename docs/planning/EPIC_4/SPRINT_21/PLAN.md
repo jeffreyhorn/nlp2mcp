@@ -204,6 +204,8 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 
 **Day 0 criterion:** All tests pass; SPRINT_LOG.md created with baseline metrics and error category breakdown.
 
+**Day 0 status:** COMPLETE (2026-02-24). Tests: 3,715 passed. Pipeline parse retest: 131/160 (minor non-deterministic variance vs stored 132/160). SPRINT_LOG.md initialized. PR #855.
+
 ---
 
 ### Day 1 — WS1: Semantic Error Resolution (+7 parse)
