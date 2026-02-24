@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Branch:** `planning/sprint21-task5`
 
 #### Summary
-Reviewed all 13 deferred Sprint 20 issues, classified 3 as resolved, 2 as Priority 1 overlaps, 4 as Sprint 21 candidates (7-11h), and 4 as Sprint 22+ deferrals.
+Reviewed all 13 deferred Sprint 20 issues, classified 3 as resolved, 2 as Priority 1 overlaps, 4 as Sprint 21 candidates (9-13h, with #757 optional to fit 8-12h budget), and 4 as Sprint 22+ deferrals.
 
 #### Activities
 - Reviewed all 13 issue files (10 active, 3 completed) and assessed current pipeline status

@@ -608,9 +608,9 @@ Development team
 2. **Partial Priority 3 overlaps (2 issues):** #810 (lmp2) appears in path_syntax_error Subcategory A (missing Table data); #827 (gtm) appears in Subcategory B (domain violation)
 3. **No Priority 2 overlaps:** None of the 13 deferred issue models appear in the 7 internal_error models (clearlak, imsl, indus, sarf, senstran, tfordy, turkpow)
 4. **Already resolved (3 issues):** #763 (chenery — fixed in Sprint 20), #810 (lmp2 — loop extraction fixed), #835 (bearing — `.scale` emission added)
-5. **Completely independent (6 issues):** #764 (mexss), #765 (orani), #757 (bearing solver), #826 (decomp), #828 (ibm1), #830 (gastrans), #789 (min/max)
+5. **Completely independent (7 issues):** #764 (mexss), #765 (orani), #757 (bearing solver), #826 (decomp), #828 (ibm1), #830 (gastrans), #789 (min/max)
 
-The assumption that "only #837 and #840 overlap" was wrong — 4 issues have overlaps (2 full + 2 partial), and 3 are already resolved. Only 6 of 13 are truly independent.
+The assumption that "only #837 and #840 overlap" was wrong — 4 issues have overlaps (2 full + 2 partial), and 3 are already resolved (including 1 that also has a partial overlap). Only 7 of 13 are truly independent.
 
 ---
 

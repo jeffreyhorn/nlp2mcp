@@ -13,11 +13,11 @@ All 13 deferred Sprint 20 issues were reviewed against current pipeline status, 
 
 - **3 already resolved** (#763, #810, #835) — no Sprint 21 work needed
 - **2 overlap with Priority 1** (#837, #840) — will be addressed by macro expansion work
-- **2 overlap with Priority 3** (#827 partially, #789 partially) — partial benefit from path_syntax_error fixes
+- **2 overlap with Priority 3** (#810, #827) — partial benefit from path_syntax_error fixes
 - **4 recommended for Sprint 21** (#789, #826, #828, #757) — tractable within budget
 - **4 deferred to Sprint 22+** (#764, #765, #830, #827) — require architectural changes or are low leverage
 
-Estimated Sprint 21 effort for recommended issues: **7-11h** (within 8-12h budget).
+Estimated Sprint 21 effort for recommended issues: **9-13h**. To stay within the 8-12h budget, treat #757 (2-3h) as a stretch/optional item.
 
 ---
 
@@ -266,7 +266,7 @@ Estimated Sprint 21 effort for recommended issues: **7-11h** (within 8-12h budge
 
 ## 4. Recommended Sprint 21 Plan
 
-### Do in Sprint 21 (4 issues, 7-11h)
+### Do in Sprint 21 (4 issues, 9-13h)
 
 | Priority | Issue | Model | Effort | Rationale |
 |----------|-------|-------|--------|-----------|
