@@ -905,20 +905,26 @@ Sprint 21 has 46–68h of work across 9 workstreams. A detailed schedule with da
 ### What Needs to Be Done
 
 1. **Review all prep task outputs** (Tasks 1–9 deliverables)
-2. **Allocate workstreams to days** based on:
+2. **Incorporate Sprint 20 retrospective action items** (from `RETROSPECTIVE_ALIGNMENT.md` Section 4):
+   - **PR2:** Include "record PR number in SPRINT_LOG.md" in every day's post-merge checklist
+   - **PR3:** Use full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) at all checkpoint gates
+   - **PR4:** Include "run newly-parsing models through full pipeline" after parse-improvement days
+   - **PR5:** Include error category breakdown (not just totals) at checkpoint gates
+   - **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Priority 3 budget (8-12h) — prioritize top subcategories within budget
+3. **Allocate workstreams to days** based on:
    - Dependencies (macro expansion before models that use macros)
    - Effort estimates (from catalogs and design documents)
    - Risk (high-risk items early)
    - Checkpoint gates (pipeline retests at regular intervals)
-3. **Create day-by-day schedule** with:
+4. **Create day-by-day schedule** with:
    - Workstream assignments per day
    - Specific tasks and deliverables
    - Time estimates
    - Dependencies on prior days
    - Verification commands
-4. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14)
-5. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`)
-6. **Define acceptance criteria** per day and overall
+5. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14)
+6. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`)
+7. **Define acceptance criteria** per day and overall
 
 ### Changes
 
@@ -952,6 +958,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [ ] Day-by-day schedule created covering entire sprint
 - [ ] All 9 workstreams assigned to specific days
 - [ ] Time estimates per day sum to 46–68h total
+- [ ] All 5 Sprint 20 retrospective action items encoded (from `RETROSPECTIVE_ALIGNMENT.md` Section 4)
 - [ ] Dependencies documented between days
 - [ ] Checkpoint gates defined
 - [ ] Execution prompts created for each day
