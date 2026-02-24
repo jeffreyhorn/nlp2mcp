@@ -600,7 +600,17 @@ Issues #837 (springchain) and #840 (saras) fully overlap with Priority 1 (macro 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The overlap is broader than assumed. #837 and #840 do fully overlap with Priority 1 (correct), but additional overlaps exist:
+
+1. **Full Priority 1 overlaps (2 issues):** #837 (springchain) and #840 (saras) — both need `$eval`/`$set`/`%macro%` expansion, which is exactly Priority 1 work
+2. **Partial Priority 3 overlaps (2 issues):** #810 (lmp2) appears in path_syntax_error Subcategory A (missing Table data); #827 (gtm) appears in Subcategory B (domain violation)
+3. **No Priority 2 overlaps:** None of the 13 deferred issue models appear in the 7 internal_error models (clearlak, imsl, indus, sarf, senstran, tfordy, turkpow)
+4. **Already resolved (3 issues):** #763 (chenery — fixed in Sprint 20), #810 (lmp2 — loop extraction fixed), #835 (bearing — `.scale` emission added)
+5. **Completely independent (7 issues):** #764 (mexss), #765 (orani), #757 (bearing solver), #826 (decomp), #828 (ibm1), #830 (gastrans), #789 (min/max)
+
+The assumption that "only #837 and #840 overlap" was wrong — 4 issues have overlaps (2 full + 2 partial), and 3 are already resolved (including 1 that also has a partial overlap). Only 7 of 13 are truly independent.
 
 ---
 
@@ -634,7 +644,21 @@ The timeout is caused by dynamic subset expansion creating an exponential blowup
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** The timeout is **both** a dynamic subset bug AND a performance issue, confirming the assumption that dynamic subset expansion causes the blowup.
+
+1. **Dynamic subset bug:** Dynamic subsets `ap`, `as`, `aij` have 0 static members in the IR because their values are populated at GAMS runtime (e.g., `ap(a) = not as(a)`). The parser captures the `SetDef` with `domain=('a',)` but empty `members=[]`.
+
+2. **Fallback mechanism:** `resolve_set_members()` in `src/ad/index_mapping.py` (lines 163-191) falls back to parent sets when members are empty. For `aij(a,i,i)`, this means 24×20×20 = 9,600 instances instead of the correct ~24 arc tuples.
+
+3. **Combinatorial explosion:** The Jacobian computation loop iterates over all equation instances × all variable instances. With fallback to parent sets: ~11 equations × 9,600 instances × 7 variables × ~9,600 var instances ≈ billions of operations. Even with sparsity filtering (`referenced_vars` check), this remains intractable.
+
+4. **Fix feasibility:** Preserving dynamic subset members during parsing would reduce the enumeration space by ~400× (from 9,600 to ~24 for `aij`). However, the Jacobian also lacks general sparsity optimization (no early domain-mismatch termination).
+
+5. **Estimated effort:** 8-10h total (4-6h for parser dynamic subset preservation + 2-4h for Jacobian sparsity improvements). A quick mitigation (Jacobian timeout with error message) takes ~1h.
+
+**Recommendation:** Defer to Sprint 22+ due to high effort. Add 1h Jacobian timeout as optional quick win.
 
 ---
 
@@ -668,7 +692,21 @@ Issue #789 (min/max reformulation producing spurious variables) can be resolved 
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** Yes, #789 can be resolved within Sprint 21's scope with a targeted fix (2-3h), confirming the assumption.
+
+1. **Structural fix already done:** The spurious lambda variables bug was already fixed — system now correctly has 10 variables/10 equations instead of 14/14.
+
+2. **Remaining issue is well-understood:** When min/max defines the objective variable (`minimize z` where `z = min(x,y)`), the epigraph reformulation produces `ν = -1` (from `∂L/∂z = 1 + ν = 0`), which then requires `λ₀ + λ₁ = -1` — infeasible since λ ≥ 0.
+
+3. **Fix approach:** Detect when min/max defines the objective variable and use direct constraints (`z ≤ x, z ≤ y`) instead of the auxiliary variable approach. This is a targeted change in `src/kkt/reformulation.py`'s `reformulate_min()` / `reformulate_max()` functions.
+
+4. **Scope:** The fix only affects objective-defining min/max cases. Non-objective min/max (in regular constraints) continues to use the existing epigraph reformulation, which works correctly.
+
+5. **No fundamental redesign needed:** The fix is a conditional branch in the reformulation logic, not an architectural change.
+
+**Recommendation:** Do in Sprint 21 as Priority 4 item #1 (highest leverage among deferred issues).
 
 ---
 
