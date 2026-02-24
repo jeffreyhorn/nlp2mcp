@@ -805,7 +805,7 @@ ls docs/planning/EPIC_4/SPRINT_21/BASELINE_METRICS.md
 
 ## Task 9: Review Sprint 20 Retrospective Action Items
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 1 hour
 **Deadline:** Before Sprint 21 Day 1
@@ -841,11 +841,16 @@ Sprint 20 retrospective identified 5 process recommendations and multiple techni
 
 ### Changes
 
-*To be completed*
+- Read full Sprint 20 retrospective (451 lines) and extracted all action items from 3 sections: Process Recommendations (5), What Could Be Improved (5), Technical Priorities (5)
+- Mapped all 15 action items to Sprint 21 plan elements (prep tasks, known unknowns, project plan priorities)
+- Verified 160 denominator is used consistently in BASELINE_METRICS.md (PR1)
+- Confirmed all 5 technical priorities have corresponding Sprint 21 workstreams with prep task catalogs
+- Identified 5 action items for Task 10 to encode in day-by-day execution prompts (PR2, PR3, PR4, PR5, budget awareness)
+- Created `RETROSPECTIVE_ALIGNMENT.md` with full mapping and gap analysis
 
 ### Result
 
-*To be completed*
+All 15 Sprint 20 retrospective action items are fully addressed in Sprint 21 planning. The 5 process recommendations are either already embedded in prep deliverables (PR1 in baseline metrics, PR5 in error catalogs) or flagged for Task 10 to encode in execution prompts (PR2, PR3, PR4, PR5, budget awareness). All 5 improvement lessons map directly to process recommendations or prep task deliverables. All 5 technical priorities have corresponding Sprint 21 workstreams (Priorities 1-5) with prep task catalogs providing data-driven prioritization. Zero gaps identified. One budget flag raised: path_syntax_error estimated effort (15-22h) exceeds Priority 3 budget (8-12h) — Task 10 must prioritize top subcategories within budget.
 
 ### Verification
 
@@ -859,16 +864,16 @@ grep -c "process" docs/planning/EPIC_4/SPRINT_21/RETROSPECTIVE_ALIGNMENT.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_21/RETROSPECTIVE_ALIGNMENT.md` — mapping of Sprint 20 action items to Sprint 21 plan
-- Confirmation that all critical action items are addressed
+- `docs/planning/EPIC_4/SPRINT_21/RETROSPECTIVE_ALIGNMENT.md` — mapping of Sprint 20 action items to Sprint 21 plan ✅
+- Confirmation that all critical action items are addressed (15/15, zero gaps) ✅
 
 ### Acceptance Criteria
 
-- [ ] Sprint 20 retrospective fully reviewed
-- [ ] All action items extracted
-- [ ] Each mapped to Sprint 21 plan or identified as gap
-- [ ] All 5 process recommendations confirmed in Sprint 21 practices
-- [ ] Alignment document created
+- [x] Sprint 20 retrospective fully reviewed
+- [x] All action items extracted (15 total: 5 process, 5 improvement, 5 technical)
+- [x] Each mapped to Sprint 21 plan or identified as gap (all 15 addressed, zero gaps)
+- [x] All 5 process recommendations confirmed in Sprint 21 practices
+- [x] Alignment document created
 
 ---
 
@@ -900,20 +905,26 @@ Sprint 21 has 46–68h of work across 9 workstreams. A detailed schedule with da
 ### What Needs to Be Done
 
 1. **Review all prep task outputs** (Tasks 1–9 deliverables)
-2. **Allocate workstreams to days** based on:
+2. **Incorporate Sprint 20 retrospective action items** (from `RETROSPECTIVE_ALIGNMENT.md` Section 4):
+   - **PR2:** Include "record PR number in SPRINT_LOG.md" in every day's post-merge checklist
+   - **PR3:** Use full pipeline parse stage (`parse_model_file()` + `validate_model_structure()`, not `parse_file()` alone) at all checkpoint gates
+   - **PR4:** Include "run newly-parsing models through full pipeline" after parse-improvement days
+   - **PR5:** Include error category breakdown (not just totals) at checkpoint gates
+   - **Budget awareness:** path_syntax_error estimated effort (15-22h) exceeds Priority 3 budget (8-12h) — prioritize top subcategories within budget
+3. **Allocate workstreams to days** based on:
    - Dependencies (macro expansion before models that use macros)
    - Effort estimates (from catalogs and design documents)
    - Risk (high-risk items early)
    - Checkpoint gates (pipeline retests at regular intervals)
-3. **Create day-by-day schedule** with:
+4. **Create day-by-day schedule** with:
    - Workstream assignments per day
    - Specific tasks and deliverables
    - Time estimates
    - Dependencies on prior days
    - Verification commands
-4. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14)
-5. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`)
-6. **Define acceptance criteria** per day and overall
+5. **Define checkpoint gates** (e.g., Day 5, Day 10, Day 14)
+6. **Create execution prompts** (`docs/planning/EPIC_4/SPRINT_21/prompts/PLAN_PROMPTS.md`)
+7. **Define acceptance criteria** per day and overall
 
 ### Changes
 
@@ -947,6 +958,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [ ] Day-by-day schedule created covering entire sprint
 - [ ] All 9 workstreams assigned to specific days
 - [ ] Time estimates per day sum to 46–68h total
+- [ ] All 5 Sprint 20 retrospective action items encoded (from `RETROSPECTIVE_ALIGNMENT.md` Section 4)
 - [ ] Dependencies documented between days
 - [ ] Checkpoint gates defined
 - [ ] Execution prompts created for each day
@@ -997,7 +1009,7 @@ grep -c "acceptance" docs/planning/EPIC_4/SPRINT_21/PLAN.md
 - [x] Solve-match gap analyzed (17 models)
 - [x] Semantic error models audited (7 models)
 - [x] Baseline metrics snapshotted and verified
-- [ ] Sprint 20 retrospective action items confirmed
+- [x] Sprint 20 retrospective action items confirmed
 - [ ] Sprint 21 detailed schedule created
 
 **Overall Goal:** No blockers, no surprises, data-driven sprint start with catalogs and designs ready
