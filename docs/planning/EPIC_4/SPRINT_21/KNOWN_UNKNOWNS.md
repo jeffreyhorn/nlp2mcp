@@ -271,7 +271,18 @@ for m in ['clearlak','imsl','indus','sarf','senstran','tfordy','turkpow']:
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** The 7 models fail for **5 distinct root causes**, not 2–3 as assumed. The distribution is:
+- **Lead/lag indexing in parameter assignments:** 3 models (imsl, sarf, tfordy) — `_extract_indices()` rejects `lag_lead_suffix` in parameter context
+- **Undefined symbol from missing `$libInclude`:** 1 model (clearlak) — `ScenRedParms` declared in external `scenred.gms`
+- **Variable index arity mismatch:** 1 model (indus) — `ppc` declared as scalar but used with 2 indices
+- **Malformed `if` statement parsing:** 1 model (senstran) — bare identifier `pors` not recognized as condition
+- **Table row index mismatch:** 1 model (turkpow) — dotted index notation `hydro-4.1978` not split
+
+Batch-fix potential exists for the lead/lag subcategory (3 models, one fix), but the other 4 models each need individual fixes. Total estimated effort: 7–11h (slightly above the 6–10h budget).
+
+See `INTERNAL_ERROR_CATALOG.md` for full per-model analysis.
 
 ---
 
@@ -303,7 +314,18 @@ Lead/lag syntax is not the primary blocker for the 7 internal_error models; most
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG
+
+**Findings:** Lead/lag **IS** the primary blocker — 3/7 models (imsl, sarf, tfordy) fail specifically because `_extract_indices()` at line 610-614 of `src/ir/parser.py` rejects any `lag_lead_suffix` in parameter assignment context. This contradicts the assumption that lead/lag is NOT the primary blocker.
+
+Specific lead/lag patterns found:
+- **imsl:** `m+floor((ord(n)-1)/k)` and `m+1` (linear lead, 2 instances)
+- **sarf:** `t++(cs(c,"start",s)-1)` (circular lead, 1 instance)
+- **tfordy:** `te+3`, `t-1`, `t-2` (linear lead/lag, 3 instances) plus 4 more in equation domains
+
+The grammar already parses all these patterns correctly via `lag_lead_suffix` (linear_lead, linear_lag, circular_lead, circular_lag). The issue is exclusively in the IR builder, not the parser.
+
+Additionally, 1 model (tfordy) has lead/lag patterns in non-blocking contexts: tfordy has lead/lag in equation domains (lines 189-195) which may be a secondary issue after the parameter assignment fix.
 
 ---
 
@@ -338,7 +360,18 @@ Each internal_error model can be fixed with a targeted, incremental change to `s
 Development team
 
 ### Verification Results
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+**Findings:** All 7 internal_error models can be fixed with targeted, incremental changes. No architectural refactoring is required.
+
+Fix assessment per model:
+- **imsl, sarf, tfordy (lead/lag):** **Type A** — add handler/case in `_extract_indices()` to extract base index and offset expression. No grammar changes needed (grammar already parses correctly). No ModelIR changes needed (offset info can be stored in existing structures). Fixes can be landed independently. **Effort: 2–3h** (shared across all 3).
+- **senstran (if statement):** **Type B** — grammar adjustment or handler update in `_handle_if_stmt` to accept bare identifier as condition. Minor, no architecture change. **Effort: 2–3h**.
+- **turkpow (table dotted index):** **Type A** — update `_parse_param_data_items` to split dotted indices based on domain cardinality. **Effort: 1–2h**.
+- **indus (index arity):** **Type A** — make `_make_symbol` more lenient for index arity mismatches. **Effort: 1–2h**.
+- **clearlak (missing include):** **Type A** — reclassify as `missing_include` or add lenient auto-declare. **Effort: 1h**.
+
+No fix requires changes to the ModelIR data structure. No fix requires changes to the Lark grammar (except possibly senstran). All fixes can be landed independently without cross-model regressions.
 
 ---
 
