@@ -1006,8 +1006,9 @@ def _topological_sort_statements(
     # Kahn's-style sort at the phase level.
     # A phase is ready when its deps are satisfied AND all prior phases of
     # the same param have been emitted (preserves within-param order).
-    params_with_exprs = set(param_chains.keys())
-    defined = {p for p in params_with_static_values if p not in params_with_exprs}
+    # Treat all params_with_static_values as already defined, even if they also
+    # have expressions, so that reads of their static .values do not block phases.
+    defined = set(params_with_static_values)
     emitted_phases: set[str] = set()
     remaining = list(range(len(phases)))
     sorted_stmts: list[_StmtTuple] = []
@@ -1182,10 +1183,6 @@ def emit_computed_parameter_assignments(
     # at the statement level so that dependencies are emitted before consumers.
     collected_stmts: list[_StmtTuple] = []
     params_with_static: set[str] = set()  # params that have .values (table data etc.)
-    # Track which params have self-referencing expressions with no prior assignment
-    # (Issue #738) — these need special handling after sorting.
-    skip_self_ref: set[tuple[str, int]] = set()  # (param_name_lower, stmt_orig_idx)
-
     stmt_idx = 0
     for param_name in param_order:
         param_def = model_ir.params.get(param_name)
@@ -1225,7 +1222,9 @@ def emit_computed_parameter_assignments(
         if param_def.values:
             params_with_static.add(param_name.lower())
 
-        # Issue #738: Track self-referencing expressions with no prior assignment
+        # Issue #738: Track self-referencing expressions with no prior assignment.
+        # Skipped statements are excluded from collected_stmts entirely so they
+        # don't introduce spurious dependencies in the topological sort.
         has_prior_assignment = bool(param_def.values)
         for key_tuple, expr in param_def.expressions:
             is_self_ref = _expr_references_param(expr, param_name)
@@ -1235,11 +1234,9 @@ def emit_computed_parameter_assignments(
                     "(no prior values — likely depends on dropped .l calibration)",
                     param_name,
                 )
-                skip_self_ref.add((param_name.lower(), stmt_idx))
-            else:
-                # Only mark as having a prior assignment when the statement
-                # will actually be emitted (not skipped).
-                has_prior_assignment = True
+                stmt_idx += 1
+                continue
+            has_prior_assignment = True
             collected_stmts.append((param_name, key_tuple, expr, stmt_idx))
             stmt_idx += 1
 
@@ -1248,11 +1245,7 @@ def emit_computed_parameter_assignments(
 
     # Emit sorted statements
     seen_assignment_lines: set[str] = set()
-    for param_name, key_tuple, expr, orig_idx in sorted_stmts:
-        # Issue #738: Skip self-referencing expressions flagged earlier
-        if (param_name.lower(), orig_idx) in skip_self_ref:
-            continue
-
+    for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
         # Convert expression to GAMS syntax
         domain_vars = frozenset(
             idx
