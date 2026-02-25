@@ -1978,6 +1978,25 @@ def _quote_special_in_line(line: str) -> str:
         processed,
     )
 
+    # Issue #863: Quote numeric suffixes in dotted table row labels.
+    # e.g., "jun.1" -> "jun.'1'", "'9000011'.oct.2" -> "'9000011'.oct.'2'"
+    # Pattern: a dot followed by a bare integer that ends at a word boundary,
+    # but only when preceded by a word character or closing quote (i.e., part of
+    # a dotted label, not a standalone decimal like 3.14 or .5).
+    def quote_suffix_numeric(m: re.Match) -> str:  # type: ignore[type-arg]
+        num = m.group(1)
+        start = m.start()
+        before = processed[:start]
+        if before.count("'") % 2 == 1 or before.count('"') % 2 == 1:
+            return m.group(0)
+        return f".'{num}'"
+
+    processed = re.sub(
+        r"(?<=[a-zA-Z_'\"])\.(\d+)\b",
+        quote_suffix_numeric,
+        processed,
+    )
+
     return processed
 
 

@@ -1726,6 +1726,12 @@ class _ModelBuilder:
 
         # Extract row labels first (to handle dotted labels and tuple labels)
         row_label_map = {}  # line_number -> row_label_string or list of row_label_strings
+        # Issue #863: Track column position of each label's first token so that when
+        # the Earley parser creates multiple table_row nodes on the same physical line,
+        # we keep the leftmost label (the real row label) and discard rightward labels
+        # (which are actually data values).
+        _row_label_col: dict[int, int] = {}  # line_number -> column of label's first token
+        _row_label_toks: dict[int, list[Token]] = {}  # line_number -> label tokens (for un-marking)
         for row in table_rows:
             # First child is always the row label (either table_row_label tree or ID token)
             if row.children:
@@ -1745,8 +1751,22 @@ class _ModelBuilder:
                             row_label = ".".join(label_parts)
                             # Get line number from first token
                             first_token = label_tokens[0]
-                            if hasattr(first_token, "line"):
-                                row_label_map[first_token.line] = row_label
+                            line = getattr(first_token, "line", None)
+                            if line is not None:
+                                new_col: int = getattr(first_token, "column", 0) or 0
+                                if line in row_label_map:
+                                    # Issue #863: Same line already has a label.
+                                    # Keep the leftmost one (real row label).
+                                    if new_col < _row_label_col.get(line, 0):
+                                        # New label is further left — replace.
+                                        _row_label_toks[line] = label_tokens
+                                        row_label_map[line] = row_label
+                                        _row_label_col[line] = new_col
+                                    # else: existing label is leftmost — discard new one
+                                else:
+                                    row_label_map[line] = row_label
+                                    _row_label_col[line] = new_col
+                                    _row_label_toks[line] = label_tokens
                     elif first_child.data == "tuple_label":
                         # Tuple label like "(low,medium,high).ynot"
                         # Structure: tuple_label -> id_list, dotted_label
@@ -1837,8 +1857,19 @@ class _ModelBuilder:
                 elif isinstance(first_child, Token):
                     # Simple ID label (legacy, shouldn't happen with new grammar)
                     row_label = _token_text(first_child)
-                    if hasattr(first_child, "line"):
-                        row_label_map[first_child.line] = row_label
+                    line = getattr(first_child, "line", None)
+                    if line is not None:
+                        new_col = getattr(first_child, "column", 0) or 0
+                        if line in row_label_map:
+                            # Issue #863: Keep leftmost label on same line
+                            if new_col < _row_label_col.get(line, 0):
+                                _row_label_toks[line] = [first_child]
+                                row_label_map[line] = row_label
+                                _row_label_col[line] = new_col
+                        else:
+                            row_label_map[line] = row_label
+                            _row_label_col[line] = new_col
+                            _row_label_toks[line] = [first_child]
 
         # Collect all tokens from table_row nodes with position info
         # Note: PLUS tokens are markers and will be skipped in line grouping
@@ -2232,16 +2263,26 @@ class _ModelBuilder:
         # as a secondary column-header line that starts a new header section, rather than
         # being merged into sorted_lines[0] (the primary column-header line).
         #
-        # Detection (conservative): a non-first line is a secondary column-header line when
-        # ALL its tokens are NUMBER type.  Data rows always start with an ID (the row label),
-        # so a purely-numeric line cannot be a data row.
+        # Detection: a non-first line is a secondary column-header line when ALL its tokens
+        # are NUMBER type AND the first token's column position is at or right of the column
+        # header start position.  Issue #863: Data rows with numeric row labels (e.g., 9000011)
+        # also have all-NUMBER tokens but start at the left margin (col < header start col).
+        first_header_col = min(
+            (getattr(tok, "column", 999) for tok in first_line_tokens if isinstance(tok, Token)),
+            default=999,
+        )
         secondary_header_indices: list[int] = []  # indices into sorted_lines to absorb
         for idx in range(1, len(sorted_lines)):
             _, line_tokens = sorted_lines[idx]
             if not line_tokens:
                 continue
             if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
-                secondary_header_indices.append(idx)
+                # Check column position: true secondary headers align with column
+                # headers; numeric data rows start at the left margin.
+                # Allow small left tolerance (3 cols) for the '+' replacement shift.
+                first_tok_col = getattr(line_tokens[0], "column", 0)
+                if first_tok_col >= first_header_col - 3:
+                    secondary_header_indices.append(idx)
 
         if secondary_header_indices:
             # Section-based processing for tables with continuation blocks.
@@ -2381,6 +2422,76 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))
             return
 
+        # Issue #863: Absorb numeric dotted-label segments that the grammar split off.
+        # When a table row label like '9000011'.jun.1 is parsed, the Earley parser may
+        # split off the trailing '.1' as a table_value NUMBER token (the lexer tokenizes
+        # '.1' as NUMBER 0.1).  Detect these: NUMBER tokens positioned left of the first
+        # column header are label segments, not values.  Absorb them into the row label.
+        min_col_header_col = min(pos for _, pos in col_headers)
+
+        # Issue #863: Remove false row labels created by Earley parser splitting a
+        # single physical line into multiple table_row nodes.  When this happens, data
+        # values (e.g. 'future' at col 25) are mistakenly entered into row_label_map
+        # (though the leftmost-wins logic in the loop above already kept the real label).
+        # False labels have their first token at column >= min_col_header_col (aligned
+        # with column headers), whereas real row labels start at the left margin.
+        # Also remove any remaining false entries from row_label_map (e.g. lines where
+        # ALL labels have col >= min_col_header_col).
+        # Un-mark false label tokens from row_label_token_ids so they become values.
+        for line_num in list(row_label_map):
+            col = _row_label_col.get(line_num, 0)
+            if col >= min_col_header_col:
+                del row_label_map[line_num]
+        # Scan ALL table_rows: any label whose first token has col >= min_col_header_col
+        # is a false label — un-mark its tokens from row_label_token_ids.
+        for row in table_rows:
+            if not row.children:
+                continue
+            first_child = row.children[0]
+            first_tok = None
+            label_tok_list: list[Token] = []
+            if isinstance(first_child, Tree) and first_child.data == "simple_label":
+                for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
+                    label_tok_list.append(tok)
+                    if first_tok is None:
+                        first_tok = tok
+            elif isinstance(first_child, Token):
+                label_tok_list.append(first_child)
+                first_tok = first_child
+            if first_tok is not None:
+                col = getattr(first_tok, "column", 0) or 0
+                if col >= min_col_header_col:
+                    for tok in label_tok_list:
+                        row_label_token_ids.discard(id(tok))
+
+        for line_num, line_tokens in sorted_lines[1:]:
+            if line_num not in row_label_map:
+                continue
+            row_label = row_label_map[line_num]
+            if isinstance(row_label, list):
+                continue  # Skip tuple-expanded labels
+            # Find NUMBER tokens between the row label and the first column header
+            absorbed = []
+            for tok in line_tokens:
+                if id(tok) in row_label_token_ids:
+                    continue
+                tok_col = getattr(tok, "column", 0) or 0
+                if tok_col >= min_col_header_col:
+                    break
+                if tok.type == "NUMBER":
+                    # This is a numeric label segment (e.g., '.1' tokenized as '.1')
+                    # The lexer consumed the dot as part of the number, so '.1' means
+                    # the original label segment was '1'.  Strip leading dot.
+                    val_str = str(tok)
+                    if val_str.startswith("."):
+                        val_str = val_str[1:]
+                    absorbed.append((tok, val_str))
+            if absorbed:
+                for tok, seg in absorbed:
+                    row_label = f"{row_label}.{seg}"
+                    row_label_token_ids.add(id(tok))
+                row_label_map[line_num] = row_label
+
         # Parse data rows
         values = {}
         for line_num, line_tokens in sorted_lines[1:]:
@@ -2482,11 +2593,17 @@ class _ModelBuilder:
             all_row_headers.add(row_header)
 
         # Also collect row headers from lines (to handle completely empty rows)
-        # Row labels can be ID, NUMBER, or STRING tokens
-        # Issue #665: Quoted row labels (e.g., '20-bond-wt') may be STRING tokens
+        # Issue #863: Use row_label_map when available so that dotted labels
+        # (e.g. '9000011.jun.1') are used instead of the bare first token ('9000011').
         for _line_num, line_tokens in sorted_lines[1:]:
-            if line_tokens and line_tokens[0].type in ("ID", "NUMBER", "STRING"):
-                # First token is row header
+            if _line_num in row_label_map:
+                rl = row_label_map[_line_num]
+                if isinstance(rl, list):
+                    all_row_headers.update(rl)
+                else:
+                    all_row_headers.add(rl)
+            elif line_tokens and line_tokens[0].type in ("ID", "NUMBER", "STRING"):
+                # Fallback: first token is row header
                 row_header = _token_text(line_tokens[0])
                 all_row_headers.add(row_header)
 
@@ -3097,7 +3214,10 @@ class _ModelBuilder:
             objvar = _token_text(node.children[idx])
         if objvar:
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
-        else:
+        elif self.model.objective is None:
+            # Only clear objective if none was previously set.
+            # MCP/CNS solves have no objective by design; don't overwrite
+            # a valid NLP objective from an earlier solve statement.
             self.model.objective = None
 
     def _handle_model_all(self, node: Tree) -> None:

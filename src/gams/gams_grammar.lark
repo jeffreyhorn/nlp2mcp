@@ -332,7 +332,9 @@ table_row_label: "(" set_element_id_list ")" "." "(" set_element_id_list ")"  ->
                | dotted_label                       -> simple_label
 
 // Issue #665: Allow STRING tokens for quoted row labels (e.g., '20-bond-wt')
-dotted_label: (ID | STRING) ("." (ID | STRING | range_expr))*
+// Issue #863: Allow NUMBER tokens for numeric row labels (e.g., 9000011) and
+// numeric dotted segments (e.g., '9000011'.jun.1 where 1 is an option index)
+dotted_label: (ID | STRING | NUMBER) ("." (ID | STRING | range_expr | NUMBER))*
 // table_value: NUMBER handles signed numbers like -5, 3.14
 // ID handles special values like inf, eps, na
 // negative_special handles -inf, -eps, etc. (MINUS only, not PLUS since + means continuation)

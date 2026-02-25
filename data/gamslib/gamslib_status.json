@@ -1145,27 +1145,48 @@
         "solve_time_seconds": 0.529
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-02-25T01:11:58.149770+00:00",
+        "status": "success",
+        "parse_date": "2026-02-25T07:06:44.990016+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.8682,
-        "error": {
-          "category": "model_no_objective_def",
-          "message": "Error: Model has no objective function defined\n\nSuggestion: Add an objective definition to your GAMS model:\n  Variables z;\n  Equations obj_def;\n  obj_def.. z =e= <expression>;\n  Model mymodel / all /;\n  Solve mymodel using NLP minimizing z;"
-        }
+        "parse_time_seconds": 5.0362,
+        "variables_count": 21,
+        "equations_count": 21
       },
       "nlp2mcp_translate": {
-        "status": "not_tested",
-        "translate_date": "2026-02-25T00:36:39.476891+00:00"
+        "status": "success",
+        "translate_date": "2026-02-25T07:07:01.935469+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 16.8677,
+        "output_file": "data/gamslib/mcp/cesam_mcp.gms"
       },
       "mcp_solve": {
-        "status": "not_tested",
-        "solve_date": "2026-02-25T00:36:39.476891+00:00"
+        "status": "failure",
+        "solve_date": "2026-02-25T07:07:02.218074+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.2635,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-02-25T00:36:39.476891+00:00",
-        "notes": "Skipped due to parse failure"
+        "comparison_date": "2026-02-25T07:07:02.218129+00:00",
+        "notes": "Skipped due to solve failure"
+      },
+      "model_statistics": {
+        "variables": 21,
+        "equations": 21,
+        "parameters": 0,
+        "sets": 6
       }
     },
     {
