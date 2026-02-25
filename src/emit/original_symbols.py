@@ -1228,16 +1228,20 @@ def emit_computed_parameter_assignments(
         # Issue #738: Track self-referencing expressions with no prior assignment
         has_prior_assignment = bool(param_def.values)
         for key_tuple, expr in param_def.expressions:
-            if _expr_references_param(expr, param_name) and not has_prior_assignment:
+            is_self_ref = _expr_references_param(expr, param_name)
+            if is_self_ref and not has_prior_assignment:
                 logger.info(
                     "Skipping self-referencing expression for parameter '%s' "
                     "(no prior values — likely depends on dropped .l calibration)",
                     param_name,
                 )
                 skip_self_ref.add((param_name.lower(), stmt_idx))
+            else:
+                # Only mark as having a prior assignment when the statement
+                # will actually be emitted (not skipped).
+                has_prior_assignment = True
             collected_stmts.append((param_name, key_tuple, expr, stmt_idx))
             stmt_idx += 1
-            has_prior_assignment = True
 
     # Issue #878: Topologically sort collected statements
     sorted_stmts = _topological_sort_statements(collected_stmts, params_with_static)
