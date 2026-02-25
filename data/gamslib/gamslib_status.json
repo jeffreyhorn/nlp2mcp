@@ -2735,7 +2735,7 @@
         "model_status": 2,
         "objective_value": 13.406,
         "solve_time_seconds": 0.497,
-        "notes": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation"
+        "error": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation"
       },
       "nlp2mcp_parse": {
         "status": "success",

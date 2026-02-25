@@ -1154,22 +1154,37 @@ def _restore_yes_keyword(expr: Expr) -> Expr:
     restores the ``yes`` keyword at positions where it was originally used:
     - ``DollarConditional(Const(1.0), cond)`` → ``DollarConditional(SymbolRef('yes'), cond)``
     - ``Binary(-, Const(1.0), rhs)`` → ``Binary(-, SymbolRef('yes'), rhs)``
+
+    The transformation is applied recursively so that nested expressions such as
+    ``Binary(+, DollarConditional(Const(1.0), cond1), DollarConditional(Const(1.0), cond2))``
+    or expressions inside function calls are also handled.
     """
     yes = SymbolRef("yes")
-    if (
-        isinstance(expr, DollarConditional)
-        and isinstance(expr.value_expr, Const)
-        and expr.value_expr.value == 1.0
-    ):
-        return DollarConditional(yes, expr.condition)
-    if (
-        isinstance(expr, Binary)
-        and expr.op == "-"
-        and isinstance(expr.left, Const)
-        and expr.left.value == 1.0
-    ):
-        return Binary(expr.op, yes, expr.right)
-    return expr
+
+    def transform(e: Expr) -> Expr:
+        if isinstance(e, DollarConditional):
+            value_expr = transform(e.value_expr)
+            condition = transform(e.condition)
+            if isinstance(value_expr, Const) and value_expr.value == 1.0:
+                value_expr = yes
+            return DollarConditional(value_expr, condition)
+
+        if isinstance(e, Binary):
+            left = transform(e.left)
+            right = transform(e.right)
+            if e.op == "-" and isinstance(left, Const) and left.value == 1.0:
+                left = yes
+            return Binary(e.op, left, right)
+
+        if isinstance(e, Call):
+            new_args = tuple(transform(arg) for arg in e.args)
+            if all(a1 is a2 for a1, a2 in zip(new_args, e.args, strict=True)):
+                return e
+            return Call(e.func, new_args)
+
+        return e
+
+    return transform(expr)
 
 
 def emit_set_assignments(model_ir: ModelIR) -> str:

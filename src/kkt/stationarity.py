@@ -1266,22 +1266,14 @@ def _replace_matching_indices(
                         mapped_alias = model_ir.aliases.get(mapped_set)
                         target_alias = model_ir.aliases.get(target_set)
                         mapped_root = (
-                            mapped_alias.lower()
-                            if isinstance(mapped_alias, str)
-                            else (
-                                mapped_alias.target.lower()
-                                if mapped_alias is not None
-                                else mapped_set.lower()
-                            )
+                            mapped_alias.target.lower()
+                            if mapped_alias is not None
+                            else mapped_set.lower()
                         )
                         target_root = (
-                            target_alias.lower()
-                            if isinstance(target_alias, str)
-                            else (
-                                target_alias.target.lower()
-                                if target_alias is not None
-                                else target_set.lower()
-                            )
+                            target_alias.target.lower()
+                            if target_alias is not None
+                            else target_set.lower()
                         )
                         if mapped_root == target_root:
                             mapped_set = target_set
