@@ -1156,10 +1156,12 @@ def extract_eval_directives(
     result: dict[str, str] = {}
 
     # Pattern: $eval varname expression
-    # The expression extends to end of line (stripped of whitespace)
-    pattern = r"\$eval\s+(\w+)\s+(.+)"
+    # Capture the expression up to a comment marker or end-of-line.
+    # Common GAMS-style inline comments start with "!".
+    # Other common comment styles ("//", "/*") are also treated as comment starters.
+    pattern = r"^\s*\$eval\s+(\w+)\s+(.+?)(?=\s*(?:!|//|/\*|$))"
 
-    for match in re.finditer(pattern, source, re.IGNORECASE):
+    for match in re.finditer(pattern, source, re.IGNORECASE | re.MULTILINE):
         var_name = match.group(1)
         expr_raw = match.group(2).strip()
 
@@ -1180,7 +1182,7 @@ def _safe_eval_arithmetic(expr: str) -> str:
     Supports: +, -, *, /, parentheses, integer literals.
     Returns the result as a string.
 
-    Raises ValueError for expressions that cannot be evaluated safely.
+    Returns the original expression as-is if it cannot be evaluated safely.
     """
     # Strip whitespace
     expr = expr.strip()
