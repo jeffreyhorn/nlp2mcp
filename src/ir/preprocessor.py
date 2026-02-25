@@ -1128,6 +1128,108 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
     return result
 
 
+def extract_eval_directives(
+    source: str, existing_macros: dict[str, str] | None = None
+) -> dict[str, str]:
+    """Extract $eval directives, evaluate arithmetic, and return macro values.
+
+    Parses lines like: $eval NM1 %N%-1
+    Expands %macro% references in the expression, then evaluates the integer
+    arithmetic expression, storing the result as a macro.
+
+    Args:
+        source: GAMS source code text
+        existing_macros: Dict of already-defined macros to expand within expressions
+
+    Returns:
+        Dictionary mapping variable names to their evaluated string values
+
+    Example:
+        >>> source = '$eval NM1 %N%-1'
+        >>> macros = extract_eval_directives(source, {'N': '10'})
+        >>> macros
+        {'NM1': '9'}
+    """
+    if existing_macros is None:
+        existing_macros = {}
+
+    result: dict[str, str] = {}
+
+    # Pattern: $eval varname expression
+    # The expression extends to end of line (stripped of whitespace)
+    pattern = r"\$eval\s+(\w+)\s+(.+)"
+
+    for match in re.finditer(pattern, source, re.IGNORECASE):
+        var_name = match.group(1)
+        expr_raw = match.group(2).strip()
+
+        # Expand %macro% references in the expression
+        all_macros = {**existing_macros, **result}
+        expr_expanded = expand_macros(expr_raw, all_macros)
+
+        # Evaluate the arithmetic expression safely
+        evaluated = _safe_eval_arithmetic(expr_expanded)
+        result[var_name] = evaluated
+
+    return result
+
+
+def _safe_eval_arithmetic(expr: str) -> str:
+    """Safely evaluate a simple integer arithmetic expression.
+
+    Supports: +, -, *, /, parentheses, integer literals.
+    Returns the result as a string.
+
+    Raises ValueError for expressions that cannot be evaluated safely.
+    """
+    # Strip whitespace
+    expr = expr.strip()
+
+    # Validate: only allow digits, whitespace, and basic arithmetic operators
+    if not re.match(r"^[\d\s+\-*/().]+$", expr):
+        # Not a pure arithmetic expression — return as-is (string concat)
+        return expr
+
+    try:
+        # Use compile + eval with empty namespaces for safety
+        code = compile(expr, "<eval>", "eval")
+        # Only allow safe builtins (none)
+        value = eval(code, {"__builtins__": {}}, {})  # noqa: S307
+        # Return integer result as string (no decimals for integer division)
+        if isinstance(value, float) and value == int(value):
+            return str(int(value))
+        return str(value)
+    except Exception:
+        # If evaluation fails, return the expression as-is
+        return expr
+
+
+def strip_eval_directives(source: str) -> str:
+    """Strip $eval directives, replacing with comments.
+
+    Removes $eval directives from the source while preserving
+    line numbers by replacing them with comment lines.
+
+    Args:
+        source: GAMS source code text
+
+    Returns:
+        Source code with $eval directives replaced by comments
+    """
+    lines = source.split("\n")
+    filtered = []
+
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r"\$eval\b", stripped, re.IGNORECASE):
+            leading_ws = line[: len(line) - len(line.lstrip())]
+            filtered.append(f"{leading_ws}* Stripped: {stripped}")
+        else:
+            filtered.append(line)
+
+    return "\n".join(filtered)
+
+
 def expand_macro_calls(source: str, macro_defs: dict[str, tuple[list[str], str]]) -> str:
     """Expand macro function calls with argument substitution.
 
@@ -3049,6 +3151,12 @@ def _preprocess_content(content: str) -> str:
     set_macros = extract_set_directives(content, macros)
     macros.update(set_macros)  # $set directives override conditional defaults
 
+    # Step 2a: Extract $eval directives (Sprint 21 Day 3)
+    # $eval evaluates arithmetic expressions and stores results as macros
+    # Must happen after $set extraction so %macro% refs in expressions resolve
+    eval_macros = extract_eval_directives(content, macros)
+    macros.update(eval_macros)
+
     # Step 2b: Inject system macros as defaults (Sprint 21 Day 2)
     # System macros (%system.nlp%, %modelStat.Optimal%, etc.) are pre-populated
     # with reasonable defaults. User $set directives can override them.
@@ -3078,6 +3186,9 @@ def _preprocess_content(content: str) -> str:
 
     # Step 8: Strip $set directives (replaced with comments)
     content = strip_set_directives(content)
+
+    # Step 8b: Strip $eval directives (Sprint 21 Day 3)
+    content = strip_eval_directives(content)
 
     # Step 9: Strip $macro directives (replaced with comments)
     content = strip_macro_directives(content)
