@@ -260,8 +260,20 @@ def _find_variable_subset_condition(
     # None means "seen the declared domain index (no substitution)"
     pos_subsets: dict[int, set[str] | None] = {}
 
-    def _walk_expr(expr: Expr, skip_declared_at: frozenset[str] = frozenset()) -> bool:
-        """Walk expr; return True if var_name found at least once."""
+    def _walk_expr(
+        expr: Expr,
+        skip_declared_at: frozenset[str] = frozenset(),
+        dollar_subsets: dict[str, str] | None = None,
+    ) -> bool:
+        """Walk expr; return True if var_name found at least once.
+
+        Args:
+            expr: Expression to walk
+            skip_declared_at: Domain indices already restricted by equation lead/lag
+            dollar_subsets: Mapping from domain index (lower) → subset name (lower)
+                when inside a DollarConditional that restricts that index to a subset.
+                Issue #871: Allows ``e(i)$it(i)`` to be treated as restricted to ``it``.
+        """
         found = False
         if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
             found = True
@@ -278,6 +290,15 @@ def _find_variable_subset_condition(
                         # index, so a plain declared-index access here is NOT
                         # evidence that the full domain is needed.
                         pass
+                    elif dollar_subsets and decl_lower in dollar_subsets:
+                        # Issue #871: Inside a DollarConditional that restricts this
+                        # index to a subset (e.g. e(i)$it(i) restricts i to it).
+                        # Treat as subset access, not full-domain access.
+                        sub_name = dollar_subsets[decl_lower]
+                        if pos not in pos_subsets:
+                            pos_subsets[pos] = {sub_name}
+                        elif pos_subsets[pos] is not None:
+                            pos_subsets[pos].add(sub_name)  # type: ignore[union-attr]
                     else:
                         # Used with the declared index — no substitution at this position
                         pos_subsets[pos] = None
@@ -288,8 +309,34 @@ def _find_variable_subset_condition(
                     elif pos_subsets[pos] is not None:
                         pos_subsets[pos].add(actual_lower)  # type: ignore[union-attr]
                     # If pos_subsets[pos] is already None (declared idx seen), leave as None
+
+        # Issue #871: When entering a DollarConditional, extract subset restrictions
+        # from the condition (e.g. $it(i) means index i is restricted to subset it).
+        if isinstance(expr, DollarConditional):
+            new_dollar: dict[str, str] = dict(dollar_subsets) if dollar_subsets else {}
+            cond = expr.condition
+            if isinstance(cond, SetMembershipTest) and len(cond.indices) == 1:
+                idx_expr = cond.indices[0]
+                if isinstance(idx_expr, SymbolRef):
+                    idx_lower = _resolve(idx_expr.name.lower())
+                    sub_lower = cond.set_name.lower()
+                    # Check: is sub_lower a known subset of a domain index?
+                    for decl_idx in var_domain:
+                        decl_lower = _resolve(decl_idx.lower())
+                        if idx_lower == decl_lower and sub_lower in (
+                            parent_to_subsets.get(decl_lower) or []
+                        ):
+                            new_dollar[decl_lower] = sub_lower
+            # Walk value_expr with the updated dollar_subsets context
+            if _walk_expr(expr.value_expr, skip_declared_at, new_dollar or None):
+                found = True
+            # Walk condition without dollar_subsets (condition itself is not guarded)
+            if _walk_expr(expr.condition, skip_declared_at, dollar_subsets):
+                found = True
+            return found
+
         for child in expr.children():
-            if _walk_expr(child, skip_declared_at):
+            if _walk_expr(child, skip_declared_at, dollar_subsets):
                 found = True
         return found
 
@@ -428,6 +475,29 @@ def _collect_access_conditions(
                 # variable was found (they will supply the enclosing condition).
                 return []
             return child_result
+
+    # Issue #871: Handle DollarConditional as a condition-guarding construct.
+    # If a DollarConditional's condition references domain indices, treat it
+    # like a conditioned Sum/Prod — the condition guards the variable access.
+    if isinstance(expr, DollarConditional):
+        cond = expr.condition
+        # Check if the dollar condition involves any of the variable's domain indices
+        cond_refs = _collect_symbolref_names(cond)
+        cond_overlaps = bool(cond_refs & var_domain_set)
+
+        child_result = _collect_access_conditions(
+            expr.value_expr,
+            var_name,
+            var_domain_set,
+            has_enclosing_condition=has_enclosing_condition or cond_overlaps,
+        )
+        if child_result is not None:
+            if not child_result and cond_overlaps:
+                # Variable found in value_expr with no inner condition,
+                # and this DollarConditional's condition restricts a relevant index.
+                return [cond]
+            return child_result
+        return None
 
     # For all other expression types, walk children
     other_results: list[Expr] = []

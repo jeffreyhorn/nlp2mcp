@@ -1567,6 +1567,14 @@ def normalize_table_continuations(source: str) -> str:
                 result.append(fixed_line)
                 continue
 
+            # Issue #874: Strip comment lines within table blocks.
+            # The grammar has %ignore for * comments, but the Earley parser
+            # sometimes fails to apply it, causing comment data to leak as
+            # table column headers or values.
+            if stripped.startswith("*"):
+                result.append("")  # blank line preserves line numbering
+                continue
+
             # Check if table ends
             if stripped.endswith(";"):
                 in_table = False
