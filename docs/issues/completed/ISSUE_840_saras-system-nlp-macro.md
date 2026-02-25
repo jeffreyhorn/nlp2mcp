@@ -1,9 +1,10 @@
 # Saras: `%system.nlp%` System Macro Not Expanded
 
 **GitHub Issue:** [#840](https://github.com/jeffreyhorn/nlp2mcp/issues/840)
-**Status:** OPEN
+**Status:** FIXED (Sprint 21 Day 2, PR #865)
 **Severity:** Medium — Model fails to parse entirely
 **Date:** 2026-02-22
+**Fixed:** 2026-02-24
 **Affected Models:** saras
 
 ---
