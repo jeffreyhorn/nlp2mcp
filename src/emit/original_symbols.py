@@ -18,7 +18,17 @@ import re
 from collections import deque
 
 from src.emit.expr_to_gams import expr_to_gams
-from src.ir.ast import Call, Expr, MultiplierRef, ParamRef, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    Expr,
+    MultiplierRef,
+    ParamRef,
+    SymbolRef,
+    VarRef,
+)
 from src.ir.constants import GAMS_RESERVED_CONSTANTS, PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
@@ -1135,6 +1145,33 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     return needed
 
 
+def _restore_yes_keyword(expr: Expr) -> Expr:
+    """Replace Const(1.0) with SymbolRef('yes') in set assignment expressions.
+
+    Issue #861: The parser converts GAMS ``yes`` to ``Const(1.0)`` during parsing.
+    For set assignments, ``yes`` must be preserved because GAMS distinguishes between
+    set membership (``yes$cond``) and numeric value (``1$cond``).  This function
+    restores the ``yes`` keyword at positions where it was originally used:
+    - ``DollarConditional(Const(1.0), cond)`` → ``DollarConditional(SymbolRef('yes'), cond)``
+    - ``Binary(-, Const(1.0), rhs)`` → ``Binary(-, SymbolRef('yes'), rhs)``
+    """
+    yes = SymbolRef("yes")
+    if (
+        isinstance(expr, DollarConditional)
+        and isinstance(expr.value_expr, Const)
+        and expr.value_expr.value == 1.0
+    ):
+        return DollarConditional(yes, expr.condition)
+    if (
+        isinstance(expr, Binary)
+        and expr.op == "-"
+        and isinstance(expr.left, Const)
+        and expr.left.value == 1.0
+    ):
+        return Binary(expr.op, yes, expr.right)
+    return expr
+
+
 def emit_set_assignments(model_ir: ModelIR) -> str:
     """Emit dynamic set assignment statements.
 
@@ -1161,10 +1198,15 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
     lines: list[str] = []
 
     for set_assignment in model_ir.set_assignments:
+        # Issue #861: Restore 'yes' keyword for set membership assignments.
+        # The parser converts yes → Const(1.0), but GAMS requires 'yes' for
+        # set assignment expressions to avoid type mismatch errors.
+        restored_expr = _restore_yes_keyword(set_assignment.expr)
+
         # Convert expression to GAMS syntax
         # Pass indices as domain_vars so they're recognized as domain variables
         domain_vars = frozenset(set_assignment.indices)
-        expr_str = expr_to_gams(set_assignment.expr, domain_vars=domain_vars)
+        expr_str = expr_to_gams(restored_expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
         # Quote symbol names that contain special characters (Issue #665)
