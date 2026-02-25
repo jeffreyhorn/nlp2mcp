@@ -416,6 +416,20 @@ def parse_model_file(path: str | Path) -> ModelIR:
     return parse_model_text(data)
 
 
+def _is_literal_const(expr: Expr) -> bool:
+    """Check if an expression is a literal constant (Const or Unary(+/-, Const)).
+
+    Issue #873: Used to restrict _extract_constant() binary arithmetic to
+    literal-only expressions (e.g. 1/0.99), not parameter resolutions
+    (e.g. (xmin+xmax)/2 which should stay as l_expr).
+    """
+    if isinstance(expr, Const):
+        return True
+    if isinstance(expr, Unary) and expr.op in ("-", "+") and isinstance(expr.child, Const):
+        return True
+    return False
+
+
 def _token_text(token: Token) -> str:
     """Extract text from a token, stripping quotes from STRING and escaped ID tokens.
 
@@ -3885,7 +3899,22 @@ class _ModelBuilder:
                             var.l = None
                         var.l_expr = expr
                     return
-                # For non-.l bounds (lo/up/fx with expressions): continue without storing
+                # Issue #873: Store expression-based .lo/.up/.fx bounds
+                if bound_kind in ("lo", "up", "fx"):
+                    var_name = _token_text(target.children[0])
+                    if var_name not in self.model.variables:
+                        raise self._error(f"Variable '{var_name}' not declared", target) from None
+                    var = self.model.variables[var_name]
+                    expr_attr = f"{bound_kind}_expr"
+                    expr_map_attr = f"{bound_kind}_expr_map"
+
+                    if target.data == "bound_indexed" and len(target.children) > 2:
+                        indices = _process_index_list(target.children[2])
+                        idx_tuple = tuple(indices)
+                        getattr(var, expr_map_attr)[idx_tuple] = expr
+                    else:
+                        setattr(var, expr_attr, expr)
+                    return
                 return
             # Sprint 17 Day 4: Store parameter expressions that don't reference variables
             # This enables computed parameters like c(i,j) = f*d(i,j)/1000 to be emitted
@@ -5038,12 +5067,13 @@ class _ModelBuilder:
             )
         # Sprint 21 Day 1: Quoted string literals (e.g., "ROW" in sameas(ii,"ROW"))
         # are set element name references, not undeclared symbols.
+        # Issue #874: Preserve quotes so the emitter outputs sameas(ii,"ROW") not sameas(ii,ROW).
         if isinstance(node, Token) and not idx_tuple:
             raw = str(node)
             if len(raw) >= 2 and (
                 (raw[0] == '"' and raw[-1] == '"') or (raw[0] == "'" and raw[-1] == "'")
             ):
-                return self._attach_domain(SymbolRef(name), free_domain)
+                return self._attach_domain(SymbolRef(f'"{name}"'), free_domain)
         raise self._parse_error(
             f"Undefined symbol '{name}' referenced",
             node,
@@ -5521,6 +5551,25 @@ class _ModelBuilder:
                 param = self.model.params.get(param_ref.name)
                 if param and not param.domain and () in param.values:
                     return -float(param.values[()])
+        # Issue #873: Handle simple binary arithmetic between literal constants
+        # (e.g., 1/0.99, -3*2).  Only evaluate when both operands are literal
+        # Const or Unary(-, Const) — NOT ParamRef resolutions, which should
+        # remain as expressions (e.g., (xmin+xmax)/2 stays as l_expr).
+        if isinstance(expr, Binary) and expr.op in ("+", "-", "*", "/"):
+            if _is_literal_const(expr.left) and _is_literal_const(expr.right):
+                try:
+                    left = self._extract_constant(expr.left, context)
+                    right = self._extract_constant(expr.right, context)
+                    if expr.op == "+":
+                        return left + right
+                    elif expr.op == "-":
+                        return left - right
+                    elif expr.op == "*":
+                        return left * right
+                    elif expr.op == "/" and right != 0:
+                        return left / right
+                except Exception:
+                    pass
         raise self._error(f"Assignments must use numeric constants; got {expr!r} in {context}")
 
     def _apply_variable_bound(

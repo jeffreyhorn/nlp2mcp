@@ -117,7 +117,7 @@ ATOL = 1e-8
 # MCP objective values for models that solve successfully but don't match
 # NLP objectives (MCP-only regression guards).
 _MCP_SOLVE_REFERENCES: dict[str, float] = {
-    "alkyl": -1.894,
+    "alkyl": -1.765,
     "circle": 4.071,
     "himmel16": 0.0,
 }

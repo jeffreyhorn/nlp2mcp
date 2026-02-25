@@ -1,10 +1,11 @@
 # camcge: Stationarity Equations Missing Subset Conditioning
 
 **GitHub Issue:** [#871](https://github.com/jeffreyhorn/nlp2mcp/issues/871)
-**Status:** OPEN
-**Severity:** High — Model compiles but PATH solver aborts with 5 execution errors (division by zero)
+**Status:** PARTIALLY FIXED
+**Severity:** High — Model compiles but PATH solver aborts with execution errors (division by zero)
 **Date:** 2026-02-24
 **Affected Models:** camcge
+**Partial Fix:** 2026-02-25
 
 ---
 
@@ -19,138 +20,55 @@ traded sectors). Non-traded sectors (`services`, `publiques`) have zero-valued p
 
 ---
 
-## Detailed Error Analysis
+## Partial Fix Applied (5 errors → 1 error)
 
-### Error 1: `stat_e(services)` — line 431
+### 1. DollarConditional subset detection (src/kkt/stationarity.py)
 
-**Original equation:** `edemand(it).. e(it)/e0(it) =e= ...`
-- Only defined over `it` (traded sectors)
-- Contains `e0(it)` in denominator → differentiation produces `1/e0(i)` term
+Extended `_find_variable_subset_condition()` to detect subset restrictions from
+`DollarConditional` nodes. When a variable like `e(i)` is accessed as `(pe(i)*e(i))$it(i)`,
+the `$it(i)` condition now propagates through the walk — the access is treated as restricted
+to `it` rather than full-domain.
 
-**Stationarity equation (emitted):**
-```
-stat_e(i).. sum(it, ...) + sum(it, 1 / e0(i) ** 1 * nu_edemand(it)) + ... =E= 0;
-```
+Added `dollar_subsets` parameter to `_walk_expr()` that maps domain indices to their
+restricting subset when inside a DollarConditional. When `actual_lower == decl_lower` but
+a dollar subset restriction exists, the access is recorded as a subset access.
 
-**Problem:** `e0(services) = 0` → division by zero when evaluating `stat_e(services)`.
-The `e0(i)` reference should be `e0(it)` or the entire sum should be conditioned on `it(i)`.
+### 2. DollarConditional handling in access condition detection (src/kkt/stationarity.py)
 
-### Error 2: `stat_k(*)` — line 441 (all 10 non-publiques sectors)
+Extended `_collect_access_conditions()` to recognize `DollarConditional` as a condition-
+guarding construct (similar to conditioned `Sum`/`Prod`). When a variable is found inside
+a `DollarConditional` whose condition references relevant domain indices, the condition
+is captured as a guarding condition.
 
-**Original equation:** `activity(i).. xd(i) =e= ad(i) * prod(lc$wdist(i,lc), l(i,lc)**alphl(lc,i)) * k(i)**(1 - sum(lc, alphl(lc,i)))`
-- Differentiation with respect to `k` produces `... * (1 - sum(lc, alphl(lc,i))) / k(i)` term
+### Results
 
-**Stationarity equation (emitted):**
-```
-stat_k(i).. ((-1) * (ad(i) * prod(lc$(wdist(i,lc)), l(i,lc) ** alphl(lc,i)) * k(i) ** (1 - sum(lc, alphl(lc,i))) * (1 - sum(lc, alphl(lc,i))) / k(i))) * nu_activity(i) + ... =E= 0;
-```
+The fix correctly detects and applies stationarity conditions for 7 variables:
+- `e`, `m`, `pe`, `pm`, `pwe`, `pwm`, `tm` — all conditioned on `it(i)`
 
-**Problem:** `k(i)` is initialized at 0 for some sectors → division by zero in `1/k(i)`.
-This is a Jacobian evaluation issue — the `nu_activity(i)` Jacobian has `k` in denominator.
-
-### Error 3: `stat_pd(services)` — line 447
-
-**Original equations:** `esupply(it)` and `costmin(it)` — both defined over `it` only.
-- Differentiation produces terms with `pd(it)` and `pm(it)` in denominators.
-
-**Problem:** The stationarity equation `stat_pd(i)` evaluates these terms for all `i`,
-but `services` and `publiques` have parameters that cause division by zero.
-
-### Error 4: `stat_pm(services)` — line 450
-
-Same pattern as `stat_pd` — `costmin(it)` derivative terms with `pm` in denominator.
+Execution errors reduced from **5 to 1**.
 
 ---
 
-## Root Cause
+## Remaining Issue (1 execution error)
 
-The stationarity equation builder (`src/kkt/stationarity.py`) does not propagate equation
-domain restrictions from the original constraints to the stationarity equations. When an
-original constraint like `edemand(it)` is only defined over the `it` subset, the KKT
-derivative terms from that constraint should only contribute to stationarity equations
-where the variable's domain intersects with `it`.
+### `stat_pd(services)` — division by zero at line 456
 
-Currently, the builder:
-1. Differentiates each constraint with respect to each variable
-2. Sums the Lagrangian contributions across all constraints
-3. Emits the stationarity equation over the variable's full domain
+The remaining error is NOT a subset conditioning issue. Variable `pd(i)` is genuinely
+referenced in equations over the full domain (`absorption(i)`, `sales(i)`) so its
+stationarity equation correctly covers all `i`.
 
-It does NOT condition the Lagrangian terms on the original constraint's domain subset.
+The bug is a **Jacobian domain index propagation issue**: in the stationarity equation
+`stat_pd(i)`, the Jacobian terms from `esupply(it)` contain `rhot(i)` instead of `rhot(it)`.
+The equation `esupply(it)` uses `rhot(it)`, but when the derivative is wrapped in
+`sum(it, ...)` for the stationarity equation, the parameter reference `rhot` incorrectly
+uses the outer domain `i` instead of the inner sum index `it`.
 
-This is the same class of issue as sambal's Bug 1 (Issue #862) — domain conditioning from
-original equations (whether via subset domains or dollar conditions) is not propagated to
-stationarity equations.
+This causes `rhot(services) - 1` in a denominator, and since `rhot(services) - 1 ≈ 0`
+(or creates a degenerate expression), GAMS reports division by zero.
 
----
-
-## Reproduction
-
-```bash
-# Generate MCP
-python -c "
-import sys; sys.setrecursionlimit(50000)
-from src.ir.parser import parse_file
-from src.kkt.builder import build_kkt_system
-from src.emit.emit_gams import emit_mcp_gams
-ir = parse_file('data/gamslib/raw/camcge.gms')
-kkt = build_kkt_system(ir)
-code = emit_mcp_gams(kkt)
-with open('/tmp/camcge_test.gms', 'w') as f: f.write(code)
-"
-
-# Run in GAMS
-/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams /tmp/camcge_test.gms o=/tmp/camcge_test.lst
-
-# Check errors
-grep 'division by zero\|Evaluation error' /tmp/camcge_test.lst
-```
-
-Expected: 0 execution errors, PATH solves successfully.
-Actual: 5 execution errors (division by zero), SOLVE aborted.
-
----
-
-## Proposed Fix
-
-### Option A: Emit domain-conditioned stationarity equations
-
-When building stationarity equations, detect the domain of each contributing constraint:
-- If `edemand(it)` contributes `∂edemand/∂e`, only include that term when `i ∈ it`
-- Emit: `stat_e(i).. sum(it, ...)$it(i) + ... =E= 0`
-
-This requires propagating the equation's domain filter through the AD differentiation and
-into the stationarity term collection.
-
-### Option B: Condition the full stationarity equation on the intersection of domains
-
-For each stationarity equation `stat_v(i)`, if all contributing terms require subset `it(i)`,
-condition the entire equation: `stat_e(i)$it(i)..`
-
-### Option C: Fix variable initialization to avoid zero-valued denominators
-
-Initialize variables like `e`, `k`, `pd`, `pm` with small non-zero values at problematic
-domain points. This is a workaround, not a proper fix, as the stationarity equations are
-mathematically wrong for non-traded sectors.
-
-**Recommended:** Option A — it's the mathematically correct approach and addresses the root
-cause. This is the same infrastructure needed for sambal's Bug 1 (Issue #862).
-
----
-
-## Effort Estimate
-
-~6-8h — requires changes to the AD → stationarity pipeline to propagate equation domain
-conditioning. This overlaps significantly with the sambal Issue #862 Bug 1 fix.
-
----
-
-## Files Likely Affected
-
-| File | Change |
-|------|--------|
-| `src/kkt/stationarity.py` | Propagate equation domain conditioning to stationarity terms |
-| `src/kkt/derivative_rules.py` | Preserve domain info through AD differentiation |
-| `src/emit/emit_gams.py` | Emit domain-conditioned stationarity equations |
+**This requires a separate fix** in the AD/Jacobian domain remapping system to properly
+propagate the equation domain index into derivative expressions when they are wrapped
+in stationarity sums.
 
 ---
 
@@ -159,3 +77,4 @@ conditioning. This overlaps significantly with the sambal Issue #862 Bug 1 fix.
 - **Issue #862** (sambal): Same class of issue — dollar condition from sum not propagated
 - **Issue #764** (mexss): Accounting variable stationarity conditioning
 - **Issue #826** (decomp): Empty stationarity equation from domain issues
+- **NEW**: Jacobian domain index propagation bug (rhot(i) vs rhot(it) in stationarity sums)

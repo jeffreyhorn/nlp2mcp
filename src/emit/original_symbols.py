@@ -172,6 +172,29 @@ def _quote_symbol(name: str) -> str:
     return f"'{name}'" if _needs_quoting(name) else name
 
 
+def _quote_assignment_index(idx: str, sets_lower: set[str]) -> str:
+    """Quote an index element for executable assignment LHS if needed (Issue #874).
+
+    In GAMS executable assignments like ``p(i,"3") = 0``, numeric-looking
+    indices must be quoted to distinguish them from numeric literals.  Already-
+    quoted indices (e.g., ``"revenue"``) are returned as-is.  Domain
+    variables (set/alias names) are never quoted.
+    """
+    # Already quoted
+    if (idx.startswith('"') and idx.endswith('"')) or (idx.startswith("'") and idx.endswith("'")):
+        return idx
+    # Known set/alias → domain variable, not an element literal
+    if idx.lower() in sets_lower:
+        return idx
+    # Numeric-looking → quote it
+    try:
+        float(idx)
+        return f'"{idx}"'
+    except ValueError:
+        pass
+    return idx
+
+
 def _sanitize_set_element(element: str) -> str:
     """Sanitize a set element name for safe GAMS emission.
 
@@ -1086,11 +1109,11 @@ def emit_computed_parameter_assignments(
             # Quote symbol names that contain special characters (Issue #665)
             if key_tuple:
                 # Indexed parameter: c(i,j) = expr
-                # key_tuple indices are already normalized:
-                # - Domain variables: unquoted (e.g., i, j)
-                # - Element literals: quoted strings (e.g., "route-1", "revenue")
-                # Emit indices as-is to avoid double-quoting element literals.
-                index_str = ",".join(key_tuple)
+                # Issue #874: Quote numeric-looking indices (e.g., "3" from jwt set)
+                quoted_keys = [
+                    _quote_assignment_index(idx, declared_sets_lower) for idx in key_tuple
+                ]
+                index_str = ",".join(quoted_keys)
                 assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
             else:
                 # Scalar parameter: f = expr
@@ -1291,7 +1314,9 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                     param_name,
                     expanded_key,
                 )
-            index_str = ",".join(expanded_key)
+            # Issue #874: Quote numeric-looking indices
+            quoted_keys = [_quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key]
+            index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
             )

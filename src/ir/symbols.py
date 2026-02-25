@@ -103,6 +103,19 @@ class VariableDef:
     # offset and subset structure. Uses dict (not list like ParameterDef.expressions)
     # because .l assignments are initialization values - each index should only be set
     # once. Multi-step calibration patterns (Issue #741) are specific to parameter computations.
+    # Issue #873: Expression-based .lo/.up/.fx bounds (non-constant RHS)
+    lo_expr: Expr | None = None
+    lo_expr_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(
+        default_factory=dict
+    )
+    up_expr: Expr | None = None
+    up_expr_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(
+        default_factory=dict
+    )
+    fx_expr: Expr | None = None
+    fx_expr_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(
+        default_factory=dict
+    )
     # Issue #835: Variable scaling (.scale attribute)
     scale: Expr | None = None  # Scalar: mu.scale = 1.0e-6
     scale_map: dict[tuple[str | IndexOffset | SubsetIndex, ...], Expr] = field(

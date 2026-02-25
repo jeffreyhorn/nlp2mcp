@@ -231,6 +231,36 @@ def emit_gams_mcp(
     sections.append(variables_code)
     sections.append("")
 
+    # Issue #873: Emit expression-based variable bounds (.lo/.up/.fx)
+    # These must come before .l initialization since .l may reference .lo/.up values.
+    bound_lines: list[str] = []
+    for var_name, var_def in kkt.model_ir.variables.items():
+        if (
+            kkt.referenced_variables is not None
+            and var_name.lower() not in kkt.referenced_variables
+        ):
+            continue
+        for kind in ("lo", "up", "fx"):
+            scalar_expr = getattr(var_def, f"{kind}_expr", None)
+            expr_map = getattr(var_def, f"{kind}_expr_map", None)
+            if expr_map:
+                for indices, bound_expr in expr_map.items():
+                    idx_str = ",".join(_index_to_gams_string(i) for i in indices)
+                    idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
+                    bound_lines.append(
+                        f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
+                    )
+            elif scalar_expr is not None:
+                bound_lines.append(f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};")
+    if bound_lines:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Variable Bounds")
+            sections.append("* ============================================")
+            sections.append("")
+        sections.extend(bound_lines)
+        sections.append("")
+
     # Sprint 18 Day 3 (P5 fix): Variable initialization to avoid division by zero
     # Variables with level values, lower bounds, or positive type need initialization
     # to prevent division by zero during model generation when they appear in
@@ -269,7 +299,10 @@ def emit_gams_mcp(
             deps: set[str] = set()
             for indices, expr in var_def.l_expr_map.items():  # type: ignore[assignment]
                 idx_str = ",".join(_index_to_gams_string(i) for i in indices)
-                expr_str = expr_to_gams(expr)
+                # Issue #874: Pass indices as domain_vars so the expression emitter
+                # doesn't quote set variable names (e.g., wbar1(ii,jwt) not wbar1(ii,"jwt"))
+                idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
+                expr_str = expr_to_gams(expr, domain_vars=idx_domain_vars)
                 lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
                 deps.update(_collect_varref_names(expr))
                 has_init = True
