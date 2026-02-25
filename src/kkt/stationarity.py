@@ -137,21 +137,21 @@ def _extract_all_conditioned_guard(
     # Collect (condition, sum_indices) pairs from all leaf terms
     cond_entries: list[tuple[Expr, tuple[str, ...]]] = []
 
-    def _collect(expr: Expr) -> bool:
+    def _collect(expr: Expr, sum_indices: tuple[str, ...] = ()) -> bool:
         """Return True if this sub-tree is all-conditioned (or zero)."""
         if isinstance(expr, Const) and expr.value == 0:
             return True
         if isinstance(expr, DollarConditional):
-            cond_entries.append((expr.condition, ()))
+            cond_entries.append((expr.condition, sum_indices))
             return True
-        if isinstance(expr, Sum) and isinstance(expr.body, DollarConditional):
-            cond_entries.append((expr.body.condition, expr.index_sets))
-            return True
+        if isinstance(expr, Sum):
+            # Traverse Sum body, attributing any conditions to this Sum's indices
+            return _collect(expr.body, expr.index_sets)
         if isinstance(expr, Binary) and expr.op in ("+", "-"):
-            return _collect(expr.left) and _collect(expr.right)
+            return _collect(expr.left, sum_indices) and _collect(expr.right, sum_indices)
         return False
 
-    if not _collect(stat_expr):
+    if not _collect(stat_expr, ()):
         return None
     if not cond_entries:
         return None
@@ -1454,15 +1454,17 @@ def _replace_matching_indices(
                         isinstance(element_to_set, ChainMap) and idx in element_to_set and model_ir
                     ):
                         mapped = element_to_set[idx]
-                        mapped_def = model_ir.sets.get(mapped)
-                        if (
-                            mapped_def
-                            and hasattr(mapped_def, "domain")
-                            and mapped_def.domain
-                            and target_set.lower() in {p.lower() for p in mapped_def.domain}
-                        ):
-                            # mapped is a subset of target_set — use subset
-                            new_indices.append(mapped)
+                        if mapped != target_set:
+                            mapped_def = model_ir.sets.get(mapped)
+                            if (
+                                mapped_def
+                                and mapped_def.domain
+                                and target_set.lower() in {p.lower() for p in mapped_def.domain}
+                            ):
+                                # mapped is a subset of target_set — use subset
+                                new_indices.append(mapped)
+                            else:
+                                new_indices.append(target_set)
                         else:
                             new_indices.append(target_set)
                     else:

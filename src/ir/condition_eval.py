@@ -159,23 +159,29 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         if expr.op.lower() == "or":
             return 1.0 if (left or right) else 0.0
 
-        # Arithmetic operators - ensure numeric types
+        # Arithmetic operators - ensure numeric types.
+        # Acronym string values are only valid in comparisons, not arithmetic.
+        def _check_numeric(op: str, lhs: float | str, rhs: float | str) -> tuple[float, float]:
+            if isinstance(lhs, str) or isinstance(rhs, str):
+                acronym_side = lhs if isinstance(lhs, str) else rhs
+                raise ConditionEvaluationError(
+                    f"Acronym '{acronym_side}' cannot be used in arithmetic "
+                    f"({op}); acronyms are only valid in comparisons"
+                )
+            return lhs, rhs
+
         if expr.op == "+":
-            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-                return left + right
-            raise ConditionEvaluationError("Arithmetic + requires numeric operands")
+            nl, nr = _check_numeric("+", left, right)
+            return nl + nr
         if expr.op == "-":
-            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-                return left - right
-            raise ConditionEvaluationError("Arithmetic - requires numeric operands")
+            nl, nr = _check_numeric("-", left, right)
+            return nl - nr
         if expr.op == "*":
-            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-                return left * right
-            raise ConditionEvaluationError("Arithmetic * requires numeric operands")
+            nl, nr = _check_numeric("*", left, right)
+            return nl * nr
         if expr.op == "/":
-            if isinstance(left, (int, float)) and isinstance(right, (int, float)):
-                return left / right if right != 0 else 0.0
-            raise ConditionEvaluationError("Arithmetic / requires numeric operands")
+            nl, nr = _check_numeric("/", left, right)
+            return nl / nr if nr != 0 else 0.0
 
         raise ConditionEvaluationError(f"Unsupported binary operator '{expr.op}' in condition")
 

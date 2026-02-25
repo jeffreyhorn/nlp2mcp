@@ -984,6 +984,10 @@ def _topological_sort_statements(
     last_phase_key: dict[str, str] = {}  # param -> key of its last phase
 
     for pname_low, chain in param_chains.items():
+        # cum_deps tracks all external dependencies seen so far across all
+        # phases of this parameter.  It is updated AFTER the new-dependency
+        # check so that the check compares the current statement's reads
+        # against dependencies accumulated from *previous* statements only.
         cum_deps: set[str] = set()
         phase_indices: list[int] = []
         phase_num = 0
@@ -1042,11 +1046,13 @@ def _topological_sort_statements(
             else:
                 still_blocked.append(pi)
         if not ready:
-            # Cycle — break with static values
+            # Cycle — break with static values, but only for a parameter's
+            # first phase (phase 0) to avoid emitting later phases out of
+            # order before their predecessors have been emitted.
             cycle_broken = False
             for pi in still_blocked:
-                _pkey, pname_low, _indices, _deps = phases[pi]
-                if pname_low in params_with_static_values:
+                pkey, pname_low, _indices, _deps = phases[pi]
+                if pname_low in params_with_static_values and phase_predecessor.get(pkey) is None:
                     defined.add(pname_low)
                     cycle_broken = True
             if cycle_broken:
