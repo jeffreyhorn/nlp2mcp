@@ -129,7 +129,7 @@
 
 **Date:** 2026-02-24
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #866
 **Effort:** ~2h
 
 **Activities:**
@@ -425,8 +425,8 @@
 |-----|------|-------|--------|
 | 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Merged |
 | 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Merged |
-| 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Open |
-| 3 | | | |
+| 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Merged |
+| 3 | #866 | Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) | Open |
 | 4 | | | |
 | 5 | | | |
 | 6 | | | |
