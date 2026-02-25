@@ -75,7 +75,7 @@
 
 **Date:** 2026-02-24
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #856
 **Effort:** ~3h
 
 **Activities:**
@@ -411,8 +411,8 @@
 
 | Day | PR # | Title | Status |
 |-----|------|-------|--------|
-| 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Open |
-| 1 | | | |
+| 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Merged |
+| 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Open |
 | 2 | | | |
 | 3 | | | |
 | 4 | | | |
