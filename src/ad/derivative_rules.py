@@ -616,12 +616,14 @@ def _diff_call(
             raise ValueError(f"{func}() expects {expected_arity} {arg_word}, got {len(expr.args)}")
         # Derivative is always 0.
         return Const(0.0)
+    elif func == "betareg":
+        return _diff_betareg(expr, wrt_var, wrt_indices, config)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
             f"Supported functions: power, signpower, exp, log, log10, log2, sqrt, sin, cos, tan, "
-            f"abs, sqr, errorf, smin, smax, sameas, card, ord. "
+            f"abs, sqr, errorf, smin, smax, sameas, card, ord, betareg. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
@@ -2154,3 +2156,67 @@ def _diff_prod(
     # Result: prod(i, f(i)) * sum(i, df(i)/dx / f(i))
     # Which is: expr * log_derivative
     return Binary("*", expr, log_derivative)
+
+
+# ============================================================================
+# Issue #859: betareg (Regularized Incomplete Beta Function)
+# ============================================================================
+
+
+def _diff_betareg(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of betareg(x, a, b) — the regularized incomplete Beta function.
+
+    d/dx betareg(x, a, b) = x^(a-1) * (1-x)^(b-1) / Beta(a, b)
+
+    where Beta(a, b) = gamma(a) * gamma(b) / gamma(a+b).
+
+    Only differentiates w.r.t. the first argument x. The shape parameters
+    a and b are treated as constant w.r.t. decision variables (standard
+    in GAMS optimization models).
+
+    With chain rule: d/dx betareg(g(x), a, b) =
+        g^(a-1) * (1-g)^(b-1) / Beta(a, b) * dg/dx
+    """
+    if len(expr.args) != 3:
+        raise ValueError(f"betareg() expects 3 arguments, got {len(expr.args)}")
+
+    x = expr.args[0]
+    a = expr.args[1]
+    b = expr.args[2]
+
+    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config)
+
+    # If x doesn't depend on wrt_var, derivative is 0
+    if isinstance(dx_dwrt, Const) and dx_dwrt.value == 0.0:
+        return Const(0.0)
+
+    # x^(a-1)
+    a_minus_1 = Binary("-", a, Const(1.0))
+    x_pow_a_minus_1 = Call("power", (x, a_minus_1))
+
+    # (1-x)^(b-1)
+    one_minus_x = Binary("-", Const(1.0), x)
+    b_minus_1 = Binary("-", b, Const(1.0))
+    one_minus_x_pow_b_minus_1 = Call("power", (one_minus_x, b_minus_1))
+
+    # numerator: x^(a-1) * (1-x)^(b-1)
+    numerator = Binary("*", x_pow_a_minus_1, one_minus_x_pow_b_minus_1)
+
+    # Beta(a, b) = gamma(a) * gamma(b) / gamma(a+b)
+    gamma_a = Call("gamma", (a,))
+    gamma_b = Call("gamma", (b,))
+    a_plus_b = Binary("+", a, b)
+    gamma_a_plus_b = Call("gamma", (a_plus_b,))
+    beta_ab = Binary("/", Binary("*", gamma_a, gamma_b), gamma_a_plus_b)
+
+    # f'(x) = numerator / Beta(a, b)
+    f_prime = Binary("/", numerator, beta_ab)
+
+    # Chain rule: f'(x) * dx/dwrt
+    return Binary("*", f_prime, dx_dwrt)
