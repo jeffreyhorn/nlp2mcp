@@ -67,7 +67,7 @@ class AliasDef:
 class ParameterDef:
     name: str
     domain: tuple[str, ...] = ()  # e.g., ("i","j")
-    values: dict[tuple[str, ...], float] = field(default_factory=dict)
+    values: dict[tuple[str, ...], float | str] = field(default_factory=dict)
     expressions: list[tuple[tuple[str, ...], Expr]] = field(
         default_factory=list
     )  # Sprint 10 Day 4: Store function calls/computed assignments as ordered list

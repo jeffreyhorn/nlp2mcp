@@ -383,6 +383,7 @@ def enumerate_equation_instances(
     if condition is not None:
         from ..ir.condition_eval import evaluate_condition
 
+        full_count = len(instances)
         filtered_instances = []
         for indices in instances:
             try:
@@ -398,6 +399,21 @@ def enumerate_equation_instances(
                     stacklevel=2,
                 )
                 filtered_instances.append(indices)
+        # Issue #877: If condition filtering removed ALL instances but the
+        # full domain was non-empty, the condition likely couldn't be evaluated
+        # at compile time (e.g. parameter data keys don't match domain
+        # structure).  Fall back to including all instances and let GAMS
+        # evaluate the dollar condition at runtime.
+        if not filtered_instances and full_count > 0:
+            import warnings
+
+            warnings.warn(
+                f"Condition for equation '{eq_name}' filtered out all "
+                f"{full_count} instances. Including all instances by default "
+                f"(condition will be evaluated at GAMS runtime).",
+                stacklevel=2,
+            )
+            filtered_instances = instances
         instances = filtered_instances
 
     # Sort for deterministic ordering

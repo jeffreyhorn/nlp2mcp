@@ -39,14 +39,19 @@ from src.ir.symbols import SetDef
 logger = logging.getLogger(__name__)
 
 
-def _format_param_value(value: float) -> str:
+def _format_param_value(value: float | str) -> str:
     """Format a parameter/scalar value for GAMS data syntax.
 
     Handles IEEE special values:
     - +Inf → 'inf' (GAMS native)
     - -Inf → '-inf' (GAMS native)
     - NaN → 'na' (GAMS native for Not Available)
+
+    Also handles acronym values stored as strings.
     """
+    # Issue #877: Acronym values stored as strings are emitted as-is
+    if isinstance(value, str):
+        return value
     if isinstance(value, float):
         if math.isinf(value):
             return "inf" if value > 0 else "-inf"
@@ -821,7 +826,9 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
         user_scalars = {
             name: param_def
             for name, param_def in scalars.items()
-            if name not in PREDEFINED_GAMS_CONSTANTS and is_valid_scalar_name(name)
+            if name not in PREDEFINED_GAMS_CONSTANTS
+            and is_valid_scalar_name(name)
+            and name.lower() not in model_ir.acronyms  # Issue #877: skip acronyms
         }
         if user_scalars:
             if lines:  # Add blank line if parameters were emitted
@@ -917,6 +924,154 @@ def _topological_sort_params(eligible: list[str], param_deps: dict[str, set[str]
         if pname not in sorted_params:
             sorted_params.append(pname)
     return sorted_params
+
+
+# Issue #878: Statement-level topological sort type
+_StmtTuple = tuple[str, tuple[str, ...], Expr, int]  # (param_name, key, expr, orig_idx)
+
+
+def _topological_sort_statements(
+    stmts: list[_StmtTuple],
+    params_with_static_values: set[str],
+) -> list[_StmtTuple]:
+    """Topologically sort individual assignment statements by read/write deps.
+
+    Issue #878: Parameter-level sorting can't handle cases where the same
+    parameter has assignments that both precede and depend on other parameters
+    (e.g., SAM is first loaded from data, then rewritten from T1).  This
+    function sorts at the individual statement level.
+
+    A statement is "ready" when all parameters it reads have either:
+    - Been written by a prior statement in the sorted order, OR
+    - Have static values (from table data / initial values), OR
+    - Are the same parameter being written (self-reference)
+
+    Args:
+        stmts: List of (param_name, key_tuple, expr, original_index) tuples
+        params_with_static_values: Set of lowercase param names that have
+            static .values data (considered already "defined")
+
+    Returns:
+        Topologically sorted list of statement tuples
+    """
+    if len(stmts) <= 1:
+        return stmts
+
+    # Collect read dependencies for each statement (excluding self-reads).
+    stmt_reads: list[set[str]] = []
+    for param_name, _key, expr, _idx in stmts:
+        refs = _collect_param_refs(expr)
+        refs.discard(param_name.lower())
+        stmt_reads.append(refs)
+
+    # Set of param names written by ANY statement in our list
+    writable = {s[0].lower() for s in stmts}
+
+    # Split each param's statements into "phases" at dependency boundaries.
+    # A new phase starts when a statement introduces a new external dep that
+    # previous stmts in the same param didn't have.  This allows, e.g.,
+    # SAM's early self-contained totals to emit separately from SAM's later
+    # T1-dependent totals.  Within a phase, original order is preserved.
+    # Each phase is a scheduling unit: (phase_key, [stmt_indices], deps).
+    from collections import defaultdict
+
+    param_chains: dict[str, list[int]] = defaultdict(list)
+    for i, (param_name, _key, _expr, _idx) in enumerate(stmts):
+        param_chains[param_name.lower()].append(i)
+
+    # phase_key = "param:N" where N is the phase number for that param
+    phases: list[tuple[str, str, list[int], set[str]]] = []  # (key, param, indices, deps)
+    last_phase_key: dict[str, str] = {}  # param -> key of its last phase
+
+    for pname_low, chain in param_chains.items():
+        cum_deps: set[str] = set()
+        phase_indices: list[int] = []
+        phase_num = 0
+        for i in chain:
+            new_deps = (stmt_reads[i] & writable) - cum_deps
+            if new_deps and phase_indices:
+                # New dependency boundary — close current phase
+                pkey = f"{pname_low}:{phase_num}"
+                phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
+                last_phase_key[pname_low] = pkey
+                phase_num += 1
+                phase_indices = []
+            cum_deps |= stmt_reads[i]
+            phase_indices.append(i)
+        if phase_indices:
+            pkey = f"{pname_low}:{phase_num}"
+            phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
+            last_phase_key[pname_low] = pkey
+
+    # Kahn's-style sort at the phase level.
+    # A phase is ready when its deps are satisfied AND all prior phases of
+    # the same param have been emitted (preserves within-param order).
+    params_with_exprs = set(param_chains.keys())
+    defined = {p for p in params_with_static_values if p not in params_with_exprs}
+    emitted_phases: set[str] = set()
+    remaining = list(range(len(phases)))
+    sorted_stmts: list[_StmtTuple] = []
+
+    # Build predecessor map: phase N of param P requires phase N-1 of param P
+    phase_predecessor: dict[str, str | None] = {}
+    param_phase_list: dict[str, list[str]] = defaultdict(list)
+    for pkey, pname_low, _indices, _deps in phases:
+        param_phase_list[pname_low].append(pkey)
+    for _pname_low, pkeys in param_phase_list.items():
+        phase_predecessor[pkeys[0]] = None
+        for j in range(1, len(pkeys)):
+            phase_predecessor[pkeys[j]] = pkeys[j - 1]
+
+    max_iterations = len(phases) + 1
+    for _ in range(max_iterations):
+        if not remaining:
+            break
+        ready: list[int] = []
+        still_blocked: list[int] = []
+        for pi in remaining:
+            pkey, pname_low, _indices, deps = phases[pi]
+            # Check predecessor emitted
+            pred = phase_predecessor[pkey]
+            if pred is not None and pred not in emitted_phases:
+                still_blocked.append(pi)
+                continue
+            unmet = (deps - defined) & writable
+            if not unmet:
+                ready.append(pi)
+            else:
+                still_blocked.append(pi)
+        if not ready:
+            # Cycle — break with static values
+            cycle_broken = False
+            for pi in still_blocked:
+                _pkey, pname_low, _indices, _deps = phases[pi]
+                if pname_low in params_with_static_values:
+                    defined.add(pname_low)
+                    cycle_broken = True
+            if cycle_broken:
+                remaining = still_blocked
+                continue
+            # Truly unresolvable — emit remaining in original order
+            all_remaining: list[int] = []
+            for pi in still_blocked:
+                all_remaining.extend(phases[pi][2])
+            all_remaining.sort()
+            for i in all_remaining:
+                sorted_stmts.append(stmts[i])
+            break
+        # Sort ready phases by their first stmt's original index
+        ready.sort(key=lambda pi: phases[pi][2][0])
+        for pi in ready:
+            pkey, pname_low, indices, _deps = phases[pi]
+            for i in indices:
+                sorted_stmts.append(stmts[i])
+            emitted_phases.add(pkey)
+            # Mark param as defined once its LAST phase is emitted
+            if pkey == last_phase_key[pname_low]:
+                defined.add(pname_low)
+        remaining = still_blocked
+
+    return sorted_stmts
 
 
 def emit_computed_parameter_assignments(
@@ -1023,6 +1178,15 @@ def emit_computed_parameter_assignments(
     else:
         param_order = list(model_ir.params.keys())
 
+    # Issue #878: Collect all eligible statements first, then topologically sort
+    # at the statement level so that dependencies are emitted before consumers.
+    collected_stmts: list[_StmtTuple] = []
+    params_with_static: set[str] = set()  # params that have .values (table data etc.)
+    # Track which params have self-referencing expressions with no prior assignment
+    # (Issue #738) — these need special handling after sorting.
+    skip_self_ref: set[tuple[str, int]] = set()  # (param_name_lower, stmt_orig_idx)
+
+    stmt_idx = 0
     for param_name in param_order:
         param_def = model_ir.params.get(param_name)
         if param_def is None:
@@ -1042,23 +1206,8 @@ def emit_computed_parameter_assignments(
             continue
 
         # Sprint 18 Day 2: Skip parameters with no declared domain but have INDEXED
-        # expressions. These are typically post-solve report parameters like:
-        #   Parameter report;
-        #   report('x1','global') = 1;
-        #   report('x1','solver') = x1.l;  (references solution values)
-        #   report('x1','diff') = report('x1','global') - report('x1','solver');
-        #
-        # GAMS allows declaring parameters without domains and using them with any
-        # indices, but emitting them to MCP causes errors:
-        # - Error 116: Label is unknown (the indices aren't declared sets)
-        # - Error 148: Dimension mismatch (scalar declared but used with indices)
-        #
-        # Issue #675: Even if some values exist (e.g., report('x1','global') = 1),
-        # the expressions may reference other indexed assignments that depend on
-        # solution values (.l) which aren't available until after solving.
-        # Skip ALL indexed expressions for domain-less parameters.
+        # expressions. These are typically post-solve report parameters.
         if not param_def.domain:
-            # Check if any expression has indexed keys (not scalar)
             has_indexed_exprs = any(len(key) > 0 for key, _expr in param_def.expressions)
             if has_indexed_exprs:
                 continue
@@ -1073,57 +1222,54 @@ def emit_computed_parameter_assignments(
         if varref_filter == "only_varref_attr" and not is_calibration:
             continue
 
-        # Emit each expression assignment (list preserves sequential ordering)
-        # Track whether we've emitted any expression for this parameter so far,
-        # used to detect self-referencing expressions that lack prior assignments.
+        if param_def.values:
+            params_with_static.add(param_name.lower())
+
+        # Issue #738: Track self-referencing expressions with no prior assignment
         has_prior_assignment = bool(param_def.values)
-        seen_assignment_lines: set[str] = set()  # Issue #768: deduplicate repeated assignments
         for key_tuple, expr in param_def.expressions:
-            # Issue #738: Skip self-referencing expressions when the parameter has no
-            # prior values or prior emitted expressions. This occurs when the parser
-            # drops the initial .l-based assignment but keeps the self-referencing
-            # follow-up. If a prior expression was already emitted (or static values
-            # exist), the self-reference is valid.
             if _expr_references_param(expr, param_name) and not has_prior_assignment:
                 logger.info(
                     "Skipping self-referencing expression for parameter '%s' "
                     "(no prior values — likely depends on dropped .l calibration)",
                     param_name,
                 )
-                continue
-
-            # Convert expression to GAMS syntax
-            # PR #658 review: Derive domain_vars from model context (declared sets/aliases)
-            # rather than trusting raw key strings. This prevents unquoted element literals
-            # like "cod", "apr", "land" from being misclassified as domain variables.
-            domain_vars = frozenset(
-                idx
-                for idx in key_tuple
-                if not idx.startswith('"')
-                and not idx.startswith("'")
-                and idx.lower() in declared_sets_lower
-            )
-            expr_str = expr_to_gams(expr, domain_vars=domain_vars)
-
-            # Format the LHS with indices
-            # Quote symbol names that contain special characters (Issue #665)
-            if key_tuple:
-                # Indexed parameter: c(i,j) = expr
-                # Issue #874: Quote numeric-looking indices (e.g., "3" from jwt set)
-                quoted_keys = [
-                    _quote_assignment_index(idx, declared_sets_lower) for idx in key_tuple
-                ]
-                index_str = ",".join(quoted_keys)
-                assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
-            else:
-                # Scalar parameter: f = expr
-                assignment_line = f"{_quote_symbol(param_name)} = {expr_str};"
-            # Issue #768: Skip duplicate assignments (e.g., scalar reassignments
-            # collected once per equation pass during KKT construction).
-            if assignment_line not in seen_assignment_lines:
-                seen_assignment_lines.add(assignment_line)
-                lines.append(assignment_line)
+                skip_self_ref.add((param_name.lower(), stmt_idx))
+            collected_stmts.append((param_name, key_tuple, expr, stmt_idx))
+            stmt_idx += 1
             has_prior_assignment = True
+
+    # Issue #878: Topologically sort collected statements
+    sorted_stmts = _topological_sort_statements(collected_stmts, params_with_static)
+
+    # Emit sorted statements
+    seen_assignment_lines: set[str] = set()
+    for param_name, key_tuple, expr, orig_idx in sorted_stmts:
+        # Issue #738: Skip self-referencing expressions flagged earlier
+        if (param_name.lower(), orig_idx) in skip_self_ref:
+            continue
+
+        # Convert expression to GAMS syntax
+        domain_vars = frozenset(
+            idx
+            for idx in key_tuple
+            if not idx.startswith('"')
+            and not idx.startswith("'")
+            and idx.lower() in declared_sets_lower
+        )
+        expr_str = expr_to_gams(expr, domain_vars=domain_vars)
+
+        # Format the LHS with indices
+        if key_tuple:
+            quoted_keys = [_quote_assignment_index(idx, declared_sets_lower) for idx in key_tuple]
+            index_str = ",".join(quoted_keys)
+            assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
+        else:
+            assignment_line = f"{_quote_symbol(param_name)} = {expr_str};"
+        # Issue #768: Skip duplicate assignments
+        if assignment_line not in seen_assignment_lines:
+            seen_assignment_lines.add(assignment_line)
+            lines.append(assignment_line)
 
     return "\n".join(lines)
 

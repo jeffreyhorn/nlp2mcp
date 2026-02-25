@@ -83,6 +83,10 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         # Could be an index reference (e.g., "i" in condition)
         if expr.name in index_map:
             return index_map[expr.name]
+        # Issue #877: Acronyms are symbolic constants — return the name
+        # as a string so comparisons like pdata(i,t,j,"type") = call work
+        if expr.name.lower() in model_ir.acronyms:
+            return expr.name.lower()
         # Could be a scalar parameter
         if expr.name in model_ir.params:
             param = model_ir.params[expr.name]
@@ -91,6 +95,13 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         raise ConditionEvaluationError(f"Unknown symbol '{expr.name}' in condition")
 
     if isinstance(expr, (VarRef, ParamRef)):
+        # Issue #877: Acronym references (no indices) return the name as string
+        if (
+            isinstance(expr, ParamRef)
+            and not expr.indices
+            and expr.name.lower() in model_ir.acronyms
+        ):
+            return expr.name.lower()
         # Parameter reference with indices (or variable reference in condition)
         param_name = expr.name
         if param_name not in model_ir.params:
@@ -137,7 +148,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
             return 1.0 if left >= right else 0.0  # type: ignore[operator]
         if expr.op == "<=":
             return 1.0 if left <= right else 0.0  # type: ignore[operator]
-        if expr.op == "==":
+        if expr.op in ("==", "="):
             return 1.0 if left == right else 0.0
         if expr.op == "<>":
             return 1.0 if left != right else 0.0

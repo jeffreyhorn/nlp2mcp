@@ -118,6 +118,81 @@ def _collect_symbolref_names(expr: Expr) -> set[str]:
     return result
 
 
+def _extract_all_conditioned_guard(
+    stat_expr: Expr, var_domain: tuple[str, ...], model_ir: ModelIR
+) -> Expr | None:
+    """Extract a combined guard when ALL top-level additive terms are DollarConditional.
+
+    Issue #877: When every Jacobian contribution to a stationarity equation is
+    wrapped in a DollarConditional (because the source equations all have dollar
+    conditions), the stationarity evaluates to 0 =E= 0 for instances where none
+    of the conditions hold.  This causes MCP pairing errors.
+
+    If the expression is a tree of Binary("+", ...) whose leaves are all
+    DollarConditional or Const(0), return the OR of all conditions — but only
+    if the combined condition's free indices are within var_domain.  When a
+    condition comes from inside a Sum and has extra indices, lift it into an
+    existence check: sum((extra_indices), 1$cond).
+    """
+    # Collect (condition, sum_indices) pairs from all leaf terms
+    cond_entries: list[tuple[Expr, tuple[str, ...]]] = []
+
+    def _collect(expr: Expr) -> bool:
+        """Return True if this sub-tree is all-conditioned (or zero)."""
+        if isinstance(expr, Const) and expr.value == 0:
+            return True
+        if isinstance(expr, DollarConditional):
+            cond_entries.append((expr.condition, ()))
+            return True
+        if isinstance(expr, Sum) and isinstance(expr.body, DollarConditional):
+            cond_entries.append((expr.body.condition, expr.index_sets))
+            return True
+        if isinstance(expr, Binary) and expr.op in ("+", "-"):
+            return _collect(expr.left) and _collect(expr.right)
+        return False
+
+    if not _collect(stat_expr):
+        return None
+    if not cond_entries:
+        return None
+
+    domain_set = {d.lower() for d in var_domain}
+    valid_conditions: list[Expr] = []
+    seen_reprs: set[str] = set()
+
+    for cond, sum_indices in cond_entries:
+        free = _collect_free_indices(cond, model_ir)
+        cond_repr = repr(cond)
+
+        if free <= domain_set:
+            # Condition indices are within equation domain — use directly
+            if cond_repr not in seen_reprs:
+                valid_conditions.append(cond)
+                seen_reprs.add(cond_repr)
+        elif sum_indices:
+            # Condition has extra indices from a Sum — lift by wrapping
+            # in sum((extra_indices), 1$cond) to create an existence check
+            extra = tuple(idx for idx in sum_indices if idx.lower() not in domain_set)
+            if extra:
+                lifted = Sum(
+                    index_sets=extra,
+                    body=DollarConditional(value_expr=Const(1), condition=cond),
+                )
+                lifted_repr = repr(lifted)
+                if lifted_repr not in seen_reprs:
+                    valid_conditions.append(lifted)
+                    seen_reprs.add(lifted_repr)
+
+    if not valid_conditions:
+        return None
+
+    # Build OR of all valid conditions: c1 or c2 or c3 ...
+    combined = valid_conditions[0]
+    for c in valid_conditions[1:]:
+        combined = Binary("or", combined, c)
+    return combined
+
+
 def _find_variable_access_condition(
     var_name: str,
     var_domain: tuple[str, ...],
@@ -673,6 +748,17 @@ def build_stationarity_equations(
                 if access_cond is None:
                     access_cond = _find_variable_subset_condition(
                         var_name, var_def.domain, kkt.model_ir
+                    )
+
+                # Issue #877: If no condition was found via access patterns or
+                # subset analysis, check if ALL additive terms in the stationarity
+                # expression are DollarConditional.  This happens when every
+                # equation referencing the variable has a dollar condition (e.g.,
+                # d2 in worst is only defined by dd2$pdata(...,"strike")).  Without
+                # a guard, excluded instances produce 0 =E= 0, causing MCP errors.
+                if access_cond is None:
+                    access_cond = _extract_all_conditioned_guard(
+                        stat_expr, var_def.domain, kkt.model_ir
                     )
 
                 stationarity[stat_name] = EquationDef(
@@ -1359,6 +1445,26 @@ def _replace_matching_indices(
                     # where i(s): target_set "s" → substitute "i".
                     if target_set.lower() in superset_to_subset:
                         new_indices.append(superset_to_subset[target_set.lower()])
+                    # Issue #879: When element_to_set is a ChainMap (Jacobian path
+                    # with constraint-specific overrides), and the element maps to a
+                    # subset of the declared domain target, use the subset index.
+                    # E.g., delta("light-ind") with declared_domain=("i",):
+                    # ChainMap maps "light-ind" → "it" (subset of i). Use "it".
+                    elif (
+                        isinstance(element_to_set, ChainMap) and idx in element_to_set and model_ir
+                    ):
+                        mapped = element_to_set[idx]
+                        mapped_def = model_ir.sets.get(mapped)
+                        if (
+                            mapped_def
+                            and hasattr(mapped_def, "domain")
+                            and mapped_def.domain
+                            and target_set.lower() in {p.lower() for p in mapped_def.domain}
+                        ):
+                            # mapped is a subset of target_set — use subset
+                            new_indices.append(mapped)
+                        else:
+                            new_indices.append(target_set)
                     else:
                         # Issue #730: When the declared domain target is an alias
                         # or a set not in the equation domain, prefer the
@@ -1560,6 +1666,21 @@ def _add_indexed_jacobian_terms(
                 mult_base_name = name_func(eq_name_base)
                 mult_ref = MultiplierRef(mult_base_name, mult_domain)
                 term: Expr = Binary("*", indexed_deriv, mult_ref)
+
+                # Issue #877: Propagate the equation's dollar condition into
+                # the Jacobian term BEFORE Sum wrapping, so that derivative
+                # expressions with undefined values (e.g. division by zero)
+                # are guarded for instances where the condition is false.
+                eq_def = kkt.model_ir.equations.get(eq_name_base)
+                if eq_def is not None and eq_def.condition is not None:
+                    indexed_condition = _replace_indices_in_expr(
+                        eq_def.condition,
+                        var_domain,
+                        constraint_element_to_set,
+                        kkt.model_ir,
+                        equation_domain=var_domain,
+                    )
+                    term = DollarConditional(value_expr=term, condition=indexed_condition)
 
                 # Determine if we need a sum or a direct term:
                 # - If domains match exactly: direct term deriv(i) * mult(i)
