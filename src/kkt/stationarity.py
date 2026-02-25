@@ -1246,6 +1246,45 @@ def _replace_matching_indices(
                     # NOTE: Only applies when prefer_declared_domain=False (for VarRef).
                     # For ParamRef, we trust declared_domain (Issue #572).
                     mapped_set = element_to_set[idx]
+                    # Issue #862: When the same element appears at multiple positions
+                    # of a variable with aliased domains (e.g., x("h1","h1") with
+                    # domain (i,j) where j aliases i), the gradient path's flat dict
+                    # loses position info and maps all occurrences to the first set.
+                    # Fix: if the mapped set differs from the declared domain target
+                    # at this position AND they share the same alias root, use the
+                    # declared domain to preserve positional semantics.
+                    # Guard: only apply when element_to_set is a plain dict (gradient
+                    # path), NOT a ChainMap (Jacobian path has position-specific
+                    # overrides that are already correct).
+                    if (
+                        declared_domain
+                        and i < len(declared_domain)
+                        and mapped_set.lower() != target_set.lower()
+                        and model_ir
+                        and not isinstance(element_to_set, ChainMap)
+                    ):
+                        mapped_alias = model_ir.aliases.get(mapped_set)
+                        target_alias = model_ir.aliases.get(target_set)
+                        mapped_root = (
+                            mapped_alias.lower()
+                            if isinstance(mapped_alias, str)
+                            else (
+                                mapped_alias.target.lower()
+                                if mapped_alias is not None
+                                else mapped_set.lower()
+                            )
+                        )
+                        target_root = (
+                            target_alias.lower()
+                            if isinstance(target_alias, str)
+                            else (
+                                target_alias.target.lower()
+                                if target_alias is not None
+                                else target_set.lower()
+                            )
+                        )
+                        if mapped_root == target_root:
+                            mapped_set = target_set
                     # Issue #620: Check if mapped_set is a superset of equation domain
                     if mapped_set.lower() in superset_to_subset:
                         new_indices.append(superset_to_subset[mapped_set.lower()])
