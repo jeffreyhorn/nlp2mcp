@@ -1525,14 +1525,14 @@ class _ModelBuilder:
             param = self._parse_param_decl(item)
             self.model.add_param(param)
 
-    def _parse_table_value(self, value_text: str) -> float:
+    def _parse_table_value(self, value_text: str) -> float | str:
         """Parse a table value, handling special GAMS values like inf, -inf, eps, na.
 
         Args:
             value_text: The text representation of the value
 
         Returns:
-            The parsed float value
+            The parsed float value, or str for acronym values
         """
         # Try parsing as a regular number first
         try:
@@ -1555,10 +1555,15 @@ class _ModelBuilder:
         if value_lower in _PREDEFINED_CONSTANTS:
             return _PREDEFINED_CONSTANTS[value_lower]
 
+        # Issue #877: Preserve acronym values as strings so they can be
+        # emitted back correctly in the MCP output
+        if value_lower in self.model.acronyms:
+            return value_lower
+
         # Default to 0.0 for unrecognized values
         return 0.0
 
-    def _parse_param_data_value(self, value_node: Tree | Token) -> float:
+    def _parse_param_data_value(self, value_node: Tree | Token) -> float | str:
         """Parse a param_data_value node, handling numbers and special GAMS values.
 
         Issue #564: Handles the grammar rule:
@@ -5543,14 +5548,22 @@ class _ModelBuilder:
         if isinstance(expr, ParamRef) and not expr.indices:
             param = self.model.params.get(expr.name)
             if param and not param.domain and () in param.values:
-                return float(param.values[()])
+                val = param.values[()]
+                if isinstance(val, str):
+                    raise ValueError(
+                        f"Cannot extract numeric constant from acronym '{val}' in {context}"
+                    )
+                return float(val)
         # Handle -inf for negative infinity (Unary minus on ParamRef)
         if isinstance(expr, Unary) and expr.op == "-" and isinstance(expr.child, ParamRef):
             param_ref = expr.child
             if not param_ref.indices:
                 param = self.model.params.get(param_ref.name)
                 if param and not param.domain and () in param.values:
-                    return -float(param.values[()])
+                    val = param.values[()]
+                    if isinstance(val, str):
+                        raise ValueError(f"Cannot negate acronym '{val}' in {context}")
+                    return -float(val)
         # Issue #873: Handle simple binary arithmetic between literal constants
         # (e.g., 1/0.99, -3*2).  Only evaluate when both operands are literal
         # Const or Unary(-, Const) — NOT ParamRef resolutions, which should

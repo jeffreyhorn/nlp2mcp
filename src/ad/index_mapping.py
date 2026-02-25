@@ -383,7 +383,9 @@ def enumerate_equation_instances(
     if condition is not None:
         from ..ir.condition_eval import evaluate_condition
 
+        full_count = len(instances)
         filtered_instances = []
+        had_eval_error = False
         for indices in instances:
             try:
                 if evaluate_condition(condition, eq_domain, indices, model_ir):
@@ -392,12 +394,31 @@ def enumerate_equation_instances(
                 # Log warning but continue (could make this configurable)
                 import warnings
 
+                had_eval_error = True
                 warnings.warn(
                     f"Failed to evaluate condition for {eq_name}{indices}: {e}. "
                     f"Including instance by default.",
                     stacklevel=2,
                 )
                 filtered_instances.append(indices)
+        # Issue #877: If condition filtering removed ALL instances but at least
+        # one evaluation raised an exception, the condition couldn't be reliably
+        # evaluated at compile time (e.g. parameter data keys don't match domain
+        # structure).  Fall back to including all instances and let GAMS
+        # evaluate the dollar condition at runtime.
+        # If no exceptions occurred, the condition genuinely evaluated to false
+        # for all instances — respect that result.
+        if not filtered_instances and full_count > 0 and had_eval_error:
+            import warnings
+
+            warnings.warn(
+                f"Condition for equation '{eq_name}' filtered out all "
+                f"{full_count} instances but evaluation errors occurred. "
+                f"Including all instances by default "
+                f"(condition will be evaluated at GAMS runtime).",
+                stacklevel=2,
+            )
+            filtered_instances = instances
         instances = filtered_instances
 
     # Sort for deterministic ordering

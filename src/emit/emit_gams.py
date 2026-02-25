@@ -157,6 +157,13 @@ def emit_gams_mcp(
             sections.append(aliases_by_phase[phase_idx])
             sections.append("")
 
+    # Issue #877: Emit Acronym declarations before parameters so that
+    # acronym values in parameter data are recognized correctly
+    if kkt.model_ir.acronyms:
+        acronym_names = sorted(kkt.model_ir.acronyms)
+        sections.append(f"Acronym {', '.join(acronym_names)};")
+        sections.append("")
+
     params_code = emit_original_parameters(kkt.model_ir)
     if params_code:
         sections.append(params_code)
