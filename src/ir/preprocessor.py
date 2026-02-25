@@ -45,6 +45,72 @@ BLOCK_KEYWORDS = [
 ]
 
 
+# Sprint 21 Day 2: System macros with reasonable defaults
+# These are GAMS built-in compile-time macros that expand to solver names,
+# status constants, and infrastructure values.
+SYSTEM_MACROS: dict[str, str] = {
+    # Solver selection macros
+    "system.nlp": "CONOPT",
+    "system.lp": "CPLEX",
+    "system.mip": "CPLEX",
+    "gams.nlp": "CONOPT",
+    "gams.lp": "CPLEX",
+    "gams.LP": "CPLEX",
+    "gams.mip": "CPLEX",
+    # Model status constants (%modelStat.*)
+    "modelStat.Optimal": "1",
+    "modelStat.LocallyOptimal": "2",
+    "modelStat.Unbounded": "3",
+    "modelStat.Infeasible": "4",
+    "modelStat.LocallyInfeasible": "5",
+    "modelStat.IntermediateInfeasible": "6",
+    "modelStat.IntermediateNonoptimal": "7",
+    "modelStat.IntegerSolution": "8",
+    "modelStat.NonIntegerSolution": "9",
+    "modelStat.IntegerInfeasible": "10",
+    "modelStat.LicensingProblem": "11",
+    "modelStat.ErrorUnknown": "12",
+    "modelStat.ErrorNoSolution": "13",
+    "modelStat.NoSolutionReturned": "14",
+    "modelStat.SolvedUnique": "15",
+    "modelStat.Solved": "16",
+    "modelStat.SolvedSingular": "17",
+    "modelStat.UnboundedNoSolution": "18",
+    "modelStat.InfeasibleNoSolution": "19",
+    # Solve status constants (%solveStat.*)
+    "solveStat.NormalCompletion": "1",
+    "solveStat.IterationInterrupt": "2",
+    "solveStat.ResourceInterrupt": "3",
+    "solveStat.TerminatedBySolver": "4",
+    "solveStat.EvaluationError": "5",
+    "solveStat.CapabilityProblem": "6",
+    "solveStat.LicensingProblem": "7",
+    "solveStat.UserInterrupt": "8",
+    "solveStat.SetupError": "9",
+    "solveStat.SolverError": "10",
+    "solveStat.InternalError": "11",
+    "solveStat.Skipped": "12",
+    "solveStat.SystemError": "13",
+    # Solve link constants (%solveLink.*)
+    "solveLink.ChainScript": "0",
+    "solveLink.CallScript": "1",
+    "solveLink.CallModule": "2",
+    "solveLink.AsyncGrid": "3",
+    "solveLink.AsyncSimulate": "4",
+    "solveLink.LoadLibrary": "5",
+    # Infrastructure macros (reasonable defaults)
+    "system.dirsep": "/",
+    "system.fileSys": "UNIX",
+    "gams.scrdir": "/tmp/",
+    "gams.scrext": "scr",
+    "gams.wdir": "./",
+    "gams.input": "model.gms",
+    "gams.lo": "0",
+    "gams.jobTrace": "0",
+    "gams.license": "demo",
+}
+
+
 class CircularIncludeError(Exception):
     """Raised when a circular include dependency is detected.
 
@@ -947,16 +1013,17 @@ def extract_set_directives(
 
     macros: dict[str, str] = {}
 
-    # Pattern: $set varname value
+    # Pattern: $set/$setglobal varname value
     # Matches: $set n 10
+    #          $setglobal solver CONOPT
     #          $set path "c:\data\models"
     #          $set tol 1e-6
     #          $if set n $set np %n%  (extracts the $set np %n% part)
-    # Case-insensitive for $set directive, preserves case for variable names
-    # The pattern looks for $set followed by variable name and value
+    # Case-insensitive for $set/$setglobal directive, preserves case for variable names
+    # The pattern looks for $set(global)? followed by variable name and value
     # It can appear anywhere in the line (e.g., after $if directives)
     # For unquoted values, match everything except semicolon and newline
-    pattern = r'\$set\s+(\w+)\s+(?:"([^"]*)"|([^;\n]+))'
+    pattern = r'\$set(?:global)?\s+(\w+)\s+(?:"([^"]*)"|([^;\n]+))'
 
     for match in re.finditer(pattern, source, re.IGNORECASE):
         var_name = match.group(1)
@@ -1255,11 +1322,12 @@ def strip_set_directives(source: str) -> str:
     for line in lines:
         stripped = line.strip()
 
-        # Check if this line contains a $set directive (standalone or after $if)
+        # Check if this line contains a $set/$setglobal directive (standalone or after $if)
         # Matches: $set n 10
+        #          $setglobal solver CONOPT
         #          $if set n $set np %n%
         #          $if not set n $set n 10
-        if re.search(r"\$set\b", stripped, re.IGNORECASE):
+        if re.search(r"\$set(?:global)?\b", stripped, re.IGNORECASE):
             # Replace with comment to preserve line number, preserving original indentation
             leading_ws = line[: len(line) - len(line.lstrip())]
             filtered.append(f"{leading_ws}* Stripped: {stripped}")
@@ -2980,6 +3048,13 @@ def _preprocess_content(content: str) -> str:
     # Pass existing macros so that $set can reference earlier macros
     set_macros = extract_set_directives(content, macros)
     macros.update(set_macros)  # $set directives override conditional defaults
+
+    # Step 2b: Inject system macros as defaults (Sprint 21 Day 2)
+    # System macros (%system.nlp%, %modelStat.Optimal%, etc.) are pre-populated
+    # with reasonable defaults. User $set directives can override them.
+    for key, val in SYSTEM_MACROS.items():
+        if key not in macros:
+            macros[key] = val
 
     # Step 3: Process $if/$else/$endif conditional blocks
     # This must happen after extracting macros so conditionals can test variable definitions

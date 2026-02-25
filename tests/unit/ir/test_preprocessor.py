@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from src.ir.preprocessor import (
+    SYSTEM_MACROS,
     _expand_gams_range,
     _needs_multi_segment_expansion,
     _parse_label_group,
@@ -24,6 +25,7 @@ from src.ir.preprocessor import (
     expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
     extract_conditional_sets,
+    extract_set_directives,
     join_multiline_assignments,
     join_multiline_equations,
     normalize_multi_line_continuations,
@@ -31,6 +33,7 @@ from src.ir.preprocessor import (
     preprocess_text,
     process_conditionals,
     strip_conditional_directives,
+    strip_set_directives,
     strip_unsupported_directives,
 )
 
@@ -1590,3 +1593,73 @@ class TestProcessConditionalsInline:
         result = process_conditionals(source, {})
         assert "Excluded" in result
         assert "y = 2;" in result
+
+
+class TestSystemMacros:
+    """Tests for Sprint 21 Day 2: system macro expansion."""
+
+    def test_system_nlp_macro_defined(self):
+        """SYSTEM_MACROS should contain system.nlp."""
+        assert "system.nlp" in SYSTEM_MACROS
+        assert SYSTEM_MACROS["system.nlp"] == "CONOPT"
+
+    def test_system_nlp_expansion(self):
+        """Expanding %system.nlp% should produce CONOPT."""
+        source = "option nlp = %system.nlp%;"
+        result = expand_macros(source, SYSTEM_MACROS)
+        assert result == "option nlp = CONOPT;"
+
+    def test_system_lp_expansion(self):
+        """Expanding %system.lp% should produce CPLEX."""
+        source = "option lp = %system.lp%;"
+        result = expand_macros(source, SYSTEM_MACROS)
+        assert result == "option lp = CPLEX;"
+
+    def test_modelstat_expansion(self):
+        """Expanding %modelStat.Optimal% should produce 1."""
+        source = "if (model.modelstat = %modelStat.Optimal%,"
+        result = expand_macros(source, SYSTEM_MACROS)
+        assert result == "if (model.modelstat = 1,"
+
+    def test_solvelink_expansion(self):
+        """Expanding %solveLink.LoadLibrary% should produce 5."""
+        source = "option solvelink = %solveLink.LoadLibrary%;"
+        result = expand_macros(source, SYSTEM_MACROS)
+        assert result == "option solvelink = 5;"
+
+    def test_preprocess_text_expands_system_macros(self):
+        """preprocess_text() should expand system macros in GAMS code."""
+        source = "Scalar x; x = 1;\noption nlp = %system.nlp%;"
+        result = preprocess_text(source)
+        assert "%system.nlp%" not in result
+        assert "CONOPT" in result
+
+    def test_user_set_overrides_system_macro(self):
+        """$set should override a system macro if same name is used."""
+        source = "$set system.nlp IPOPT\noption nlp = %system.nlp%;"
+        result = preprocess_text(source)
+        assert "IPOPT" in result
+
+
+class TestSetglobalDirective:
+    """Tests for Sprint 21 Day 2: $setglobal directive support."""
+
+    def test_setglobal_extracted(self):
+        """$setglobal directive should be extracted."""
+        source = "$setglobal solver CONOPT\noption nlp = %solver%;"
+        macros = extract_set_directives(source)
+        assert "solver" in macros
+        assert macros["solver"] == "CONOPT"
+
+    def test_setglobal_stripped(self):
+        """$setglobal directive lines should be stripped."""
+        source = "$setglobal solver CONOPT\noption nlp = %solver%;"
+        result = strip_set_directives(source)
+        assert "Stripped" in result.split("\n")[0]
+
+    def test_setglobal_in_preprocess_text(self):
+        """$setglobal should work end-to-end through preprocess_text."""
+        source = "$setglobal solver CONOPT\nScalar x; x = 1;\noption nlp = %solver%;"
+        result = preprocess_text(source)
+        assert "%solver%" not in result
+        assert "CONOPT" in result

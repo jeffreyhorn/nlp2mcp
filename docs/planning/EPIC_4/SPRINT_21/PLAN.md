@@ -252,9 +252,11 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 
 **End of Day 2 criterion:** saras parses (if `%system.nlp%` is the only blocker); `$set`/`%name%` expansion functional; unit tests pass.
 
+**Day 2 status:** COMPLETE (2026-02-24). `%system.nlp%` expands correctly. saras moved from lexer_invalid_char to semantic_undefined_symbol (Rcon1 — separate IR issue). $setglobal support added. Tests: 3,734 (+10).
+
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Run saras through full pipeline (PR4)
+- [x] Run saras through full pipeline (PR4) — macro expansion works; blocked by separate Rcon1 issue
 
 ---
 
