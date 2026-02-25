@@ -695,6 +695,15 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     # Solution: Keep wildcards as '*' in the domain declaration, which allows any
     # set or element to be used for indexing, matching the original GAMS behavior.
 
+    # Issue #860: Build set/alias lookup for detecting subset-qualified values.
+    # When a value key element is a set/alias name (not an element literal),
+    # it's a subset-qualified assignment like gamma(in) = 0 and must be emitted
+    # as an executable statement, not inline data. These are handled separately
+    # by emit_subset_value_assignments().
+    sets_and_aliases_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+
     # Emit Parameters
     if parameters:
         lines.append("Parameters")
@@ -712,6 +721,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
 
                     # Skip malformed entries (e.g., zero-fill entries with wrong dimensions)
                     if expanded_key is None:
+                        continue
+
+                    # Issue #860: Skip subset-qualified values from inline data.
+                    # These are emitted as executable assignments by
+                    # emit_subset_value_assignments() after set assignments.
+                    if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
                         continue
 
                     # Convert tuple to GAMS index syntax (Finding #3)
@@ -836,7 +851,46 @@ def _collect_param_refs(expr: Expr) -> set[str]:
     return refs
 
 
-def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str = "all") -> str:
+def _topological_sort_params(eligible: list[str], param_deps: dict[str, set[str]]) -> list[str]:
+    """Topologically sort parameters so dependencies are emitted first.
+
+    Uses Kahn's algorithm. Parameters with no dependencies come first.
+    Params not reachable (e.g., cycles) are appended at the end.
+    """
+    eligible_lower = {p.lower() for p in eligible}
+    in_degree: dict[str, int] = dict.fromkeys(eligible, 0)
+    for pname in eligible:
+        deps = param_deps.get(pname.lower(), set())
+        for dep in deps:
+            if dep in eligible_lower:
+                in_degree[pname] += 1
+    queue = deque(p for p in eligible if in_degree[p] == 0)
+    sorted_params: list[str] = []
+    while queue:
+        node = queue.popleft()
+        sorted_params.append(node)
+        node_lower = node.lower()
+        for pname in eligible:
+            if pname in sorted_params:
+                continue
+            deps = param_deps.get(pname.lower(), set())
+            if node_lower in deps:
+                in_degree[pname] -= 1
+                if in_degree[pname] == 0:
+                    queue.append(pname)
+    for pname in eligible:
+        if pname not in sorted_params:
+            sorted_params.append(pname)
+    return sorted_params
+
+
+def emit_computed_parameter_assignments(
+    model_ir: ModelIR,
+    *,
+    varref_filter: str = "all",
+    only_params: set[str] | None = None,
+    exclude_params: set[str] | None = None,
+) -> str:
     """Emit computed parameter assignment statements.
 
     Sprint 17 Day 4: Emit expressions stored in ParameterDef.expressions as
@@ -851,6 +905,8 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
             - ``"all"``: Emit all expressions (default, backward compatible)
             - ``"no_varref_attr"``: Skip expressions containing VarRef with attribute
             - ``"only_varref_attr"``: Only emit expressions containing VarRef with attribute
+        only_params: If provided, only emit params whose lowercase name is in this set.
+        exclude_params: If provided, skip params whose lowercase name is in this set.
 
     Returns:
         GAMS assignment statements as string
@@ -903,8 +959,8 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
                     calibration_params.add(pname_lower)
                     changed = True
 
-    # Issue #763: When emitting calibration parameters, topologically sort them
-    # so dependencies are emitted first (e.g., cva and cli before rva = cva/cli).
+    # Issue #763 / #860: Topologically sort computed parameter assignments so
+    # dependencies are emitted first. Applied to both calibration and regular passes.
     param_order: list[str]
     if varref_filter == "only_varref_attr":
         eligible: list[str] = []
@@ -916,32 +972,19 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
                     continue
             if pname.lower() in calibration_params:
                 eligible.append(pname)
-        # Kahn's algorithm for topological sort
-        eligible_lower = {p.lower() for p in eligible}
-        in_degree: dict[str, int] = dict.fromkeys(eligible, 0)
-        for pname in eligible:
-            deps = param_deps.get(pname.lower(), set())
-            for dep in deps:
-                if dep in eligible_lower:
-                    in_degree[pname] += 1
-        queue = deque(p for p in eligible if in_degree[p] == 0)
-        sorted_params: list[str] = []
-        while queue:
-            node = queue.popleft()
-            sorted_params.append(node)
-            node_lower = node.lower()
-            for pname in eligible:
-                if pname in sorted_params:
+        param_order = _topological_sort_params(eligible, param_deps)
+    elif varref_filter == "no_varref_attr":
+        # Issue #860: Topologically sort regular (non-calibration) parameters too.
+        eligible = []
+        for pname, pdef in model_ir.params.items():
+            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+                continue
+            if not pdef.domain:
+                if any(len(k) > 0 for k, _ in pdef.expressions):
                     continue
-                deps = param_deps.get(pname.lower(), set())
-                if node_lower in deps:
-                    in_degree[pname] -= 1
-                    if in_degree[pname] == 0:
-                        queue.append(pname)
-        for pname in eligible:
-            if pname not in sorted_params:
-                sorted_params.append(pname)
-        param_order = sorted_params
+            if pname.lower() not in calibration_params:
+                eligible.append(pname)
+        param_order = _topological_sort_params(eligible, param_deps)
     else:
         param_order = list(model_ir.params.keys())
 
@@ -951,6 +994,12 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
             continue
         # Skip predefined constants
         if param_name in PREDEFINED_GAMS_CONSTANTS:
+            continue
+
+        # Issue #860: Apply only_params / exclude_params filters
+        if only_params is not None and param_name.lower() not in only_params:
+            continue
+        if exclude_params is not None and param_name.lower() in exclude_params:
             continue
 
         # Check if this parameter has expressions (computed values)
@@ -1044,6 +1093,48 @@ def emit_computed_parameter_assignments(model_ir: ModelIR, *, varref_filter: str
     return "\n".join(lines)
 
 
+def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
+    """Compute the set of parameter names (lowercase) referenced by set assignments.
+
+    Issue #860: Set assignments like ``it(i) = 1$m0(i)`` reference computed
+    parameters (``m0``).  These parameters must be emitted BEFORE set assignments
+    even though computed parameters normally come after.  This function identifies
+    the transitive closure of parameters needed by set assignments.
+    """
+    if not model_ir.set_assignments:
+        return set()
+
+    # Direct parameter references in set assignment expressions
+    direct_deps: set[str] = set()
+    for sa in model_ir.set_assignments:
+        direct_deps.update(_collect_param_refs(sa.expr))
+
+    # Build dependency graph for all computed params
+    param_deps: dict[str, set[str]] = {}
+    for pname, pdef in model_ir.params.items():
+        if pdef.expressions:
+            refs: set[str] = set()
+            for _, ex in pdef.expressions:
+                refs.update(_collect_param_refs(ex))
+            if refs:
+                param_deps[pname.lower()] = refs
+
+    # Transitive closure: if set assignments need param A, and param A needs
+    # param B, then param B must also be emitted early.
+    needed: set[str] = set()
+    frontier = direct_deps & {p.lower() for p in model_ir.params.keys()}
+    while frontier:
+        needed.update(frontier)
+        next_frontier: set[str] = set()
+        for p in frontier:
+            for dep in param_deps.get(p, set()):
+                if dep not in needed and dep in {pk.lower() for pk in model_ir.params.keys()}:
+                    next_frontier.add(dep)
+        frontier = next_frontier
+
+    return needed
+
+
 def emit_set_assignments(model_ir: ModelIR) -> str:
     """Emit dynamic set assignment statements.
 
@@ -1087,3 +1178,35 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
             lines.append(f"{_quote_symbol(set_assignment.set_name)} = {expr_str};")
 
     return "\n".join(lines)
+
+
+def emit_subset_value_assignments(model_ir: ModelIR) -> str:
+    """Emit parameter values that use subset-qualified indices as executable assignments.
+
+    Issue #860: When a parameter's inline data contains keys that are set/alias
+    names (not element literals), those entries must be emitted as executable
+    assignment statements (e.g., ``gamma(in) = 0;``) rather than inline data
+    (which GAMS would misinterpret as ``gamma(i) /in 0/``).
+
+    Must be called AFTER set assignments so dynamic subsets are populated.
+    """
+    sets_and_aliases_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+    assignments: list[str] = []
+
+    for param_name, param_def in model_ir.params.items():
+        if not param_def.values or not param_def.domain:
+            continue
+        domain_size = len(param_def.domain)
+        for key_tuple, value in param_def.values.items():
+            expanded_key = _expand_table_key(key_tuple, domain_size)
+            if expanded_key is None:
+                continue
+            if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
+                index_str = ",".join(expanded_key)
+                assignments.append(
+                    f"{_quote_symbol(param_name)}({index_str}) = " f"{_format_param_value(value)};"
+                )
+
+    return "\n".join(assignments)
