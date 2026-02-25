@@ -226,9 +226,11 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 
 **End of Day 1 criterion:** parse ≥139/160; 7 semantic_undefined_symbol models resolved; newly-parsing models tested through full pipeline.
 
+**Day 1 status:** COMPLETE (2026-02-24). Parse 139/160 (stored). semantic_undefined_symbol: 0 (was 7). Tests: 3,724 passed (+9). All 7 models through full pipeline (PR4): 4 translate OK, 2 translate fail, 1 no objective. 0 solve.
+
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Run newly-parsing models through full pipeline (PR4)
+- [x] Run newly-parsing models through full pipeline (PR4)
 
 ---
 

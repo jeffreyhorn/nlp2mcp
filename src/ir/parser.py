@@ -111,7 +111,22 @@ _VAR_KIND_MAP = {
 # Aggregation functions that bind a set iterator as first argument (Sprint 10 Day 6)
 _AGGREGATION_FUNCTIONS = {"smin", "smax", "sum", "prod", "card"}
 
-_FUNCTION_NAMES = {"abs", "exp", "log", "log10", "log2", "sqrt", "sin", "cos", "tan", "sqr"}
+_FUNCTION_NAMES = {
+    "abs",
+    "exp",
+    "log",
+    "log10",
+    "log2",
+    "sqrt",
+    "sin",
+    "cos",
+    "tan",
+    "sqr",
+    "sign",
+    "centropy",
+    "mapval",
+    "betareg",
+}
 
 # GAMS predefined constants (case-insensitive)
 # These are automatically available in all GAMS models
@@ -3203,6 +3218,28 @@ class _ModelBuilder:
         file_name = _token_text(node.children[0])
         self.model.declared_files.add(file_name.lower())
 
+    def _handle_acronym_stmt(self, node: Tree) -> None:
+        """Handle Acronym declaration (Sprint 21 Day 1).
+
+        Grammar: acronym_stmt: "Acronym"i id_list SEMI
+
+        Registers each acronym name as a known symbol so that later
+        references (e.g., in conditional expressions) pass validation.
+        Acronyms are symbolic constants (like enums); they have no
+        numeric value in the NLP->MCP context, so we store them as
+        zero-valued scalar parameters.
+        """
+        for child in node.children:
+            if isinstance(child, Tree) and child.data == "id_list":
+                for token in child.children:
+                    if isinstance(token, Token) and token.type == "ID":
+                        name = _token_text(token)
+                        self.model.acronyms.add(name.lower())
+                        # Register as zero-valued scalar parameter so references resolve
+                        self.model.params[name] = ParameterDef(
+                            name=name, domain=(), values={(): 0.0}
+                        )
+
     def _handle_option_stmt(self, node: Tree) -> None:
         """Handle option statement (Sprint 8: mock/store approach).
 
@@ -4855,6 +4892,14 @@ class _ModelBuilder:
                 node,
                 suggestion=f"Declare '{name}' as a variable, parameter, or set before using it",
             )
+        # Sprint 21 Day 1: Quoted string literals (e.g., "ROW" in sameas(ii,"ROW"))
+        # are set element name references, not undeclared symbols.
+        if isinstance(node, Token) and not idx_tuple:
+            raw = str(node)
+            if len(raw) >= 2 and (
+                (raw[0] == '"' and raw[-1] == '"') or (raw[0] == "'" and raw[-1] == "'")
+            ):
+                return self._attach_domain(SymbolRef(name), free_domain)
         raise self._parse_error(
             f"Undefined symbol '{name}' referenced",
             node,

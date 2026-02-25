@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 1: Semantic Error Resolution (+7 parse) - 2026-02-24
+
+**Branch:** `sprint21-day1-semantic-errors`
+
+#### Summary
+Added 4 missing GAMS built-in functions to FUNCNAME, added acronym handler to IR builder, fixed sameas() string literal handling. All 7 `semantic_undefined_symbol` models now parse.
+
+#### Added
+- `sign`, `centropy`, `mapval`, `betareg` to FUNCNAME regex in grammar (unblocks 5 models)
+- `_handle_acronym_stmt` to IR builder — registers acronym names as zero-valued scalar parameters (unblocks worst.gms)
+- Quoted string literal handling in `_make_symbol` for sameas() conditions (unblocks cesam.gms)
+- `acronyms` field on `ModelIR` to track declared acronym names
+- 9 unit tests (4 FUNCNAME + 3 acronym handler + 2 sameas)
+
+#### Metrics
+- Parse: 139/160 (was 132, +7)
+- semantic_undefined_symbol: 0 (was 7)
+- Tests: 3,724 passed (+9)
+
 ### Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff - 2026-02-24
 
 **Branch:** `sprint21-day0-kickoff`
