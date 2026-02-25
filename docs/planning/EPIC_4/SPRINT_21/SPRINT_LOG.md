@@ -105,19 +105,23 @@
 
 ### Day 2 — WS2: Macro Expansion Part 1
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-24
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~2h
 
 **Activities:**
--
+- Added `SYSTEM_MACROS` constant with 60+ system/built-in macro defaults (solver names, modelStat/solveStat/solveLink constants, infrastructure paths)
+- Added `$setglobal` directive support to `extract_set_directives()` and `strip_set_directives()`
+- Injected system macros into preprocessing pipeline (Step 2b, before conditional processing)
+- saras: `%system.nlp%` now expands to `CONOPT`; model moved from `lexer_invalid_char` to `semantic_undefined_symbol` (separate IR builder issue with `Rcon1`)
+- 10 unit tests (7 system macros + 3 $setglobal)
 
 **Metrics:**
-- Parse: /160
-- lexer_invalid_char:
-- Tests:
-- saras pipeline status:
+- Parse: 139/160 (unchanged; saras moved error category but still fails)
+- lexer_invalid_char: 8 (fresh run; was 9)
+- Tests: 3,734 passed (+10), 10 skipped, 2 xfailed
+- saras pipeline status: macro expansion works (`%system.nlp%` → `CONOPT`); fails on `Rcon1` undeclared symbol (separate issue)
 
 ---
 
@@ -412,8 +416,8 @@
 | Day | PR # | Title | Status |
 |-----|------|-------|--------|
 | 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Merged |
-| 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Open |
-| 2 | | | |
+| 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Merged |
+| 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Open |
 | 3 | | | |
 | 4 | | | |
 | 5 | | | |

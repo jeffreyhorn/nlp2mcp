@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) - 2026-02-24
+
+**Branch:** `sprint21-day2-macro-expansion`
+
+#### Summary
+Added 60+ system macro defaults and `$setglobal` directive support to the preprocessor. The saras model now expands `%system.nlp%` correctly (was `lexer_invalid_char`, now blocked by separate Rcon1 case-sensitivity issue #857). Created issue documents for all 8 blocking models from Day 1 pipeline (#857-#864).
+
+#### Added
+- `SYSTEM_MACROS` constant with 60+ system/built-in macro defaults (solver names, modelStat/solveStat/solveLink constants, infrastructure paths)
+- `$setglobal` directive support in `extract_set_directives()` and `strip_set_directives()`
+- System macro injection in preprocessing pipeline (Step 2b, before conditional processing)
+- 10 unit tests (7 system macros + 3 $setglobal)
+- 8 issue documents for blocking models (#857-#864): saras, cesam2, procmean, camcge, feedtray, sambal, worst, cesam
+
+#### Metrics
+- Parse: 139/160 (unchanged; saras moved error category)
+- lexer_invalid_char: 8 (fresh run; was 9)
+- Tests: 3,734 passed (+10)
+
 ### Sprint 21 Day 1: Semantic Error Resolution (+7 parse) - 2026-02-24
 
 **Branch:** `sprint21-day1-semantic-errors`
