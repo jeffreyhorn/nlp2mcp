@@ -3119,20 +3119,35 @@ class _ModelBuilder:
                 suggestion=f"Add a declaration like 'Equation {name}({','.join(domain)});' before defining it",
             )
 
-        # Issue #774: singleton equation instantiation with quoted string literal as domain element.
-        # e.g. mmr3("2000-04").. — the quoted token is a set element, not a set name.
-        # Skip set-validation for the literal tokens and use the equation's declared domain instead.
-        # _domain_list strips quotes so we check raw tokens in the domain_list node.
+        # Issue #774 / Issue #868: Handle quoted string literal elements in equation domains.
+        # e.g. mmr3("2000-04").. — all-literal domain (Issue #774)
+        # e.g. Rcon1(r,"aland").. — mixed set/literal domain (Issue #868)
+        # Quoted tokens are fixed element selectors, not set names.  Skip set-validation
+        # for literal positions and use the equation's declared domain for those slots.
         domain_list_node = node.children[1]
         raw_tokens = [
             c.children[0]
             for c in domain_list_node.children
             if isinstance(c, Tree) and c.data == "domain_element" and c.children
         ]
-        if raw_tokens and all(isinstance(t, Token) and _is_string_literal(t) for t in raw_tokens):
-            domain = self._equation_domains.get(name.lower(), ())
-
-        self._ensure_sets(domain, f"equation '{name}' domain", node)
+        has_any_literal = any(isinstance(t, Token) and _is_string_literal(t) for t in raw_tokens)
+        if has_any_literal:
+            # Build filtered domain: keep set references, skip literal elements.
+            # The filtered domain is used both for validation and as the equation's
+            # stored domain (literal elements are fixed selectors, not set indices).
+            filtered_domain: list[str] = []
+            for i, d in enumerate(domain):
+                if (
+                    i < len(raw_tokens)
+                    and isinstance(raw_tokens[i], Token)
+                    and _is_string_literal(raw_tokens[i])
+                ):
+                    continue  # literal element — not a set reference, skip validation
+                filtered_domain.append(d)
+            self._ensure_sets(filtered_domain, f"equation '{name}' domain", node)
+            domain = tuple(filtered_domain)
+        else:
+            self._ensure_sets(domain, f"equation '{name}' domain", node)
 
         # Extract source location from equation definition node
         source_location = self._extract_source_location(node)
@@ -4939,8 +4954,11 @@ class _ModelBuilder:
         idx_tuple = tuple(expanded_indices)
         if name in self.model.variables:
             expected = self.model.variables[name].domain
+            # Issue #868: Variables declared without a domain (scalars) can be used
+            # with indices in equations (implicit domain), same as parameters.
+            # Only validate when the declaration has an explicit domain.
             # Issue #726: allow multi-dimensional sets as compact indices
-            if len(expected) != len(idx_tuple):
+            if len(expected) > 0 and len(expected) != len(idx_tuple):
                 effective_count = self._effective_index_count(idx_tuple)
                 if effective_count != len(expected):
                     index_word = "index" if len(expected) == 1 else "indices"
@@ -5549,10 +5567,10 @@ class _ModelBuilder:
                 raise
         else:
             if idx_tuple:
-                raise self._error(
-                    f"Variable '{name}' is scalar; indexed bounds are not allowed",
-                    node,
-                )
+                # Issue #868: Variable declared without domain but used with indices.
+                # This is valid GAMS (implicit domain).  We cannot expand indices
+                # without a declared domain, so skip storing the bound.
+                return
             index_tuples = [()]
 
         for key in index_tuples:

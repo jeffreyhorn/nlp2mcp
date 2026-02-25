@@ -618,12 +618,14 @@ def _diff_call(
         return Const(0.0)
     elif func == "betareg":
         return _diff_betareg(expr, wrt_var, wrt_indices, config)
+    elif func == "centropy":
+        return _diff_centropy(expr, wrt_var, wrt_indices, config)
     else:
         # Future: Other functions
         raise ValueError(
             f"Differentiation not yet implemented for function '{func}'. "
             f"Supported functions: power, signpower, exp, log, log10, log2, sqrt, sin, cos, tan, "
-            f"abs, sqr, errorf, smin, smax, sameas, card, ord, betareg. "
+            f"abs, sqr, errorf, smin, smax, sameas, card, ord, betareg, centropy. "
             f"Note: abs() requires --smooth-abs flag (non-differentiable at x=0)."
         )
 
@@ -2220,3 +2222,68 @@ def _diff_betareg(
 
     # Chain rule: f'(x) * dx/dwrt
     return Binary("*", f_prime, dx_dwrt)
+
+
+# ============================================================================
+# Issue #869: centropy (Cross-Entropy Function)
+# ============================================================================
+
+
+def _diff_centropy(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """
+    Derivative of centropy(x, y) — the GAMS cross-entropy function.
+
+    centropy(x, y) = x * ln((x + delta) / (y + delta))
+
+    Using the simplified form (delta ≈ 0, valid for x > 0, y > 0):
+
+    d/dx centropy(x, y) = ln(x/y) + 1
+    d/dy centropy(x, y) = -x/y
+
+    Both arguments may depend on the differentiation variable, so the
+    total derivative uses the chain rule on both:
+
+    d/dwrt centropy(f, g) = (ln(f/g) + 1) * df/dwrt + (-f/g) * dg/dwrt
+    """
+    if len(expr.args) != 2:
+        raise ValueError(f"centropy() expects 2 arguments, got {len(expr.args)}")
+
+    x = expr.args[0]
+    y = expr.args[1]
+
+    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config)
+    dy_dwrt = differentiate_expr(y, wrt_var, wrt_indices, config)
+
+    x_depends = not (isinstance(dx_dwrt, Const) and dx_dwrt.value == 0.0)
+    y_depends = not (isinstance(dy_dwrt, Const) and dy_dwrt.value == 0.0)
+
+    if not x_depends and not y_depends:
+        return Const(0.0)
+
+    result: Expr | None = None
+
+    if x_depends:
+        # d/dx centropy = ln(x/y) + 1
+        x_over_y = Binary("/", x, y)
+        ln_x_over_y = Call("log", (x_over_y,))
+        d_dx = Binary("+", ln_x_over_y, Const(1.0))
+        # Chain rule: (ln(x/y) + 1) * dx/dwrt
+        result = Binary("*", d_dx, dx_dwrt)
+
+    if y_depends:
+        # d/dy centropy = -x/y
+        neg_x_over_y = Binary("/", Unary("-", x), y)
+        # Chain rule: (-x/y) * dy/dwrt
+        y_term = Binary("*", neg_x_over_y, dy_dwrt)
+        if result is not None:
+            result = Binary("+", result, y_term)
+        else:
+            result = y_term
+
+    assert result is not None
+    return result
