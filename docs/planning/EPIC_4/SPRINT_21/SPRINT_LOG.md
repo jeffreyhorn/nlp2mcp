@@ -127,19 +127,27 @@
 
 ### Day 3 — WS2: Macro Expansion Part 2
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-24
+**Status:** COMPLETE
+**PR:** #866
+**Effort:** ~2h
 
 **Activities:**
--
+- Implemented `extract_eval_directives()` with `_safe_eval_arithmetic()` for `$eval` directive support
+- Added `strip_eval_directives()` to strip `$eval` lines after processing
+- Wired `$eval` extraction into `_preprocess_content()` pipeline (Step 2a, after $set, before system macros)
+- springchain: `$eval NM1 %N%-1` now evaluates correctly (`NM1 = 9`)
+- springchain full pipeline: parse OK, translate OK, solve OK (mismatch on comparison)
+- saras: still blocked by Rcon1 case-sensitivity issue (#857, separate from macro expansion)
+- Closed Issue #837 (springchain bracket + macro) as fully fixed
+- Moved ISSUE_837 and ISSUE_840 docs to completed/
+- 10 unit tests (8 $eval + 2 _safe_eval_arithmetic)
 
 **Metrics:**
-- Parse: /160
-- lexer_invalid_char:
-- Tests:
-- springchain pipeline status:
+- Parse: 140/160 (+1 springchain)
+- lexer_invalid_char: 8 (was 9; springchain removed)
+- Tests: 3,744 passed (+10), 10 skipped, 2 xfailed
+- springchain pipeline status: parse OK, translate OK, solve OK, mismatch
 
 ---
 
@@ -417,8 +425,8 @@
 |-----|------|-------|--------|
 | 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Merged |
 | 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Merged |
-| 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Open |
-| 3 | | | |
+| 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Merged |
+| 3 | #866 | Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) | Open |
 | 4 | | | |
 | 5 | | | |
 | 6 | | | |

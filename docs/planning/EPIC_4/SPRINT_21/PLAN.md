@@ -277,6 +277,8 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 
 **End of Day 3 criterion:** springchain and saras both parse; lexer_invalid_char ≤8; macro expansion tests pass.
 
+**Day 3 status:** COMPLETE — springchain parses, translates, solves (mismatch); saras blocked by #857 (separate case-sensitivity issue); 10 new tests; 3,744 passed.
+
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
 - [ ] Run springchain + saras through full pipeline (PR4)

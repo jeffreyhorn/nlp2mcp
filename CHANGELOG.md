@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) - 2026-02-24
+
+**Branch:** `sprint21-day3-macro-eval`
+
+#### Summary
+Implemented `$eval` directive with integer arithmetic evaluation. springchain now parses, translates, and solves. Macro expansion workstream (WS2) complete.
+
+#### Added
+- `extract_eval_directives()` — parses `$eval name expr`, expands macros, evaluates arithmetic
+- `_safe_eval_arithmetic()` — safely evaluates integer arithmetic expressions
+- `strip_eval_directives()` — strips `$eval` lines from source after processing
+- `$eval` wired into preprocessing pipeline (Step 2a, between $set and system macros)
+- 10 unit tests (8 $eval + 2 _safe_eval_arithmetic)
+
+#### Fixed
+- Issue #837 (springchain): `$eval NM1 %N%-1` now evaluates correctly
+- Issue #840 (saras): marked as fully fixed (closed in Day 2)
+
+#### Metrics
+- Parse: 140/160 (+1 springchain)
+- lexer_invalid_char: 8 (was 9)
+- Tests: 3,744 passed (+10)
+
 ### Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) - 2026-02-24
 
 **Branch:** `sprint21-day2-macro-expansion`

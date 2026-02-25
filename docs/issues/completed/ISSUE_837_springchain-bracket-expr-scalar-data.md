@@ -1,9 +1,10 @@
 # Springchain: Bracket Expression + Macro Expansion Blockers
 
 **GitHub Issue:** [#837](https://github.com/jeffreyhorn/nlp2mcp/issues/837)
-**Status:** PARTIALLY FIXED — Grammar extended but model still blocked by `$eval`/`$set` macro expansion
+**Status:** FIXED (Sprint 21 Day 3, PR TBD)
 **Severity:** Medium — Model fails to parse entirely
 **Date:** 2026-02-22
+**Fixed:** 2026-02-24
 **Affected Models:** springchain
 
 ---

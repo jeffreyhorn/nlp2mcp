@@ -20,11 +20,13 @@ from src.ir.preprocessor import (
     _expand_gams_range,
     _needs_multi_segment_expansion,
     _parse_label_group,
+    _safe_eval_arithmetic,
     _split_dotted_label_segments,
     expand_macros,
     expand_multi_segment_tuple_row_labels,
     expand_tuple_only_table_rows,
     extract_conditional_sets,
+    extract_eval_directives,
     extract_set_directives,
     join_multiline_assignments,
     join_multiline_equations,
@@ -33,6 +35,7 @@ from src.ir.preprocessor import (
     preprocess_text,
     process_conditionals,
     strip_conditional_directives,
+    strip_eval_directives,
     strip_set_directives,
     strip_unsupported_directives,
 )
@@ -1663,3 +1666,80 @@ class TestSetglobalDirective:
         result = preprocess_text(source)
         assert "%solver%" not in result
         assert "CONOPT" in result
+
+
+class TestEvalDirective:
+    """Tests for Sprint 21 Day 3: $eval directive support."""
+
+    def test_eval_simple_subtraction(self):
+        """$eval should evaluate simple integer subtraction."""
+        source = "$eval NM1 10-1"
+        macros = extract_eval_directives(source)
+        assert macros["NM1"] == "9"
+
+    def test_eval_with_macro_expansion(self):
+        """$eval should expand %macro% refs before evaluating."""
+        source = "$eval NM1 %N%-1"
+        macros = extract_eval_directives(source, {"N": "10"})
+        assert macros["NM1"] == "9"
+
+    def test_eval_chained(self):
+        """Multiple $eval directives should chain correctly."""
+        source = "$eval A 5+3\n$eval B %A%*2"
+        # First eval produces A=8, second uses it
+        macros = extract_eval_directives(source, {})
+        assert macros["A"] == "8"
+        assert macros["B"] == "16"
+
+    def test_eval_division(self):
+        """$eval should handle integer division."""
+        source = "$eval HALF 10/2"
+        macros = extract_eval_directives(source)
+        assert macros["HALF"] == "5"
+
+    def test_eval_parentheses(self):
+        """$eval should handle parenthesized expressions."""
+        source = "$eval X (3+4)*2"
+        macros = extract_eval_directives(source)
+        assert macros["X"] == "14"
+
+    def test_eval_non_arithmetic_passthrough(self):
+        """$eval with non-arithmetic expression returns it as-is."""
+        source = "$eval X hello"
+        macros = extract_eval_directives(source)
+        assert macros["X"] == "hello"
+
+    def test_eval_stripped(self):
+        """$eval directive lines should be stripped."""
+        source = "$eval NM1 10-1\nSet i /1*9/;"
+        result = strip_eval_directives(source)
+        assert "Stripped" in result.split("\n")[0]
+        assert "Set i /1*9/;" in result
+
+    def test_eval_end_to_end_preprocess(self):
+        """$eval should work end-to-end through preprocess_text."""
+        source = (
+            "$set N 10\n"
+            "$eval NM1 %N%-1\n"
+            "Scalar x; x = 1;\n"
+            "Set n /n0*n%N%/;\n"
+            "Parameter m(n) /n1*n%NM1% 1/;"
+        )
+        result = preprocess_text(source)
+        assert "%N%" not in result
+        assert "%NM1%" not in result
+        assert "n10" in result
+        assert "n9" in result
+
+    def test_safe_eval_arithmetic(self):
+        """_safe_eval_arithmetic should handle basic expressions."""
+        assert _safe_eval_arithmetic("10-1") == "9"
+        assert _safe_eval_arithmetic("3+4") == "7"
+        assert _safe_eval_arithmetic("6*7") == "42"
+        assert _safe_eval_arithmetic("20/4") == "5"
+        assert _safe_eval_arithmetic("(3+2)*4") == "20"
+
+    def test_safe_eval_non_numeric(self):
+        """_safe_eval_arithmetic should return non-numeric expressions as-is."""
+        assert _safe_eval_arithmetic("hello") == "hello"
+        assert _safe_eval_arithmetic("foo+bar") == "foo+bar"
