@@ -1179,7 +1179,8 @@ def extract_eval_directives(
 def _safe_eval_arithmetic(expr: str) -> str:
     """Safely evaluate a simple integer arithmetic expression.
 
-    Supports: +, -, *, /, parentheses, integer literals.
+    Supports: +, -, *, / (integer division, truncates toward zero),
+    parentheses, and integer literals.
     Returns the result as a string.
 
     Returns the original expression as-is if it cannot be evaluated safely.
@@ -1188,19 +1189,19 @@ def _safe_eval_arithmetic(expr: str) -> str:
     expr = expr.strip()
 
     # Validate: only allow digits, whitespace, and basic arithmetic operators
-    if not re.match(r"^[\d\s+\-*/().]+$", expr):
-        # Not a pure arithmetic expression — return as-is (string concat)
+    # No dots — only integer literals are supported
+    if not re.match(r"^[\d\s+\-*/()]+$", expr):
+        # Not a pure integer arithmetic expression — return as-is
         return expr
 
     try:
+        # Replace / with // for integer division semantics (truncate toward zero)
+        int_expr = re.sub(r"/(?!/)", "//", expr)
         # Use compile + eval with empty namespaces for safety
-        code = compile(expr, "<eval>", "eval")
+        code = compile(int_expr, "<eval>", "eval")
         # Only allow safe builtins (none)
         value = eval(code, {"__builtins__": {}}, {})  # noqa: S307
-        # Return integer result as string (no decimals for integer division)
-        if isinstance(value, float) and value == int(value):
-            return str(int(value))
-        return str(value)
+        return str(int(value))
     except Exception:
         # If evaluation fails, return the expression as-is
         return expr
@@ -3121,12 +3122,15 @@ def _preprocess_content(content: str) -> str:
     Preprocessing steps:
     1. Extract macro defaults from $if not set directives
     2. Extract general $set directives
+    2a. Extract $eval directives (evaluate arithmetic, store results as macros)
+    2b. Inject system macros as defaults (%system.nlp%, %modelStat.*, etc.)
     3. Process $if/$else/$endif conditional blocks
     4. Expand %variable% references
     5. Extract $macro definitions
     6. Expand macro function calls
     7. Strip conditional directives ($if not set)
     8. Strip $set directives
+    8b. Strip $eval directives
     9. Strip $macro directives
     10. Strip other unsupported directives ($title, $ontext, etc.)
     11. Join multi-line equations into single lines
