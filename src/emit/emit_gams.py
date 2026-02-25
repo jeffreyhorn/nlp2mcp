@@ -13,11 +13,13 @@ from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
+    compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
     emit_set_assignments,
+    emit_subset_value_assignments,
     has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
@@ -160,6 +162,20 @@ def emit_gams_mcp(
         sections.append(params_code)
         sections.append("")
 
+    # Issue #860: Identify computed parameters needed by set assignments.
+    # These must be emitted BEFORE set assignments to break the circular
+    # dependency (set assignments reference computed params, computed params
+    # normally come after set assignments). Only emit those that don't
+    # contain VarRef attributes (calibration params go later).
+    early_params = compute_set_assignment_param_deps(kkt.model_ir)
+    if early_params:
+        early_code = emit_computed_parameter_assignments(
+            kkt.model_ir, varref_filter="no_varref_attr", only_params=early_params
+        )
+        if early_code:
+            sections.append(early_code)
+            sections.append("")
+
     # PR #658: Emit dynamic set assignments BEFORE computed parameters
     # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
     # like w(n,np,ku) that reference them, otherwise they produce empty data.
@@ -168,12 +184,22 @@ def emit_gams_mcp(
         sections.append(set_assignments_code)
         sections.append("")
 
+    # Issue #860: Emit subset-qualified parameter values as executable assignments
+    # AFTER set assignments (dynamic subsets must be populated first).
+    subset_val_code = emit_subset_value_assignments(kkt.model_ir)
+    if subset_val_code:
+        sections.append(subset_val_code)
+        sections.append("")
+
     # Sprint 17 Day 4: Emit computed parameter assignments
     # Split into two passes: regular assignments go here (before Variables),
     # while .l-referencing calibration assignments are deferred until after
     # Variables are declared (GAMS requires variable declaration before .l access).
+    # Issue #860: Exclude params already emitted in the early pass.
     computed_params_code = emit_computed_parameter_assignments(
-        kkt.model_ir, varref_filter="no_varref_attr"
+        kkt.model_ir,
+        varref_filter="no_varref_attr",
+        exclude_params=early_params if early_params else None,
     )
     if computed_params_code:
         # Sprint 19 Day 3: If any computed parameter contains stochastic
