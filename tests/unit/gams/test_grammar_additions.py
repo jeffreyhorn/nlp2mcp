@@ -321,3 +321,131 @@ class TestBraceExpressions:
         assert "e" in model_parens.equations
         # Both should identify the same objective
         assert model_braces.objective.objvar == model_parens.objective.objvar
+
+
+class TestNewFuncnames:
+    """Tests for Sprint 21 Day 1: sign, centropy, mapval, betareg added to FUNCNAME."""
+
+    def test_sign_function(self):
+        """sign(x) should parse as a function call."""
+        code = """
+        Variable x, obj;
+        Equation e;
+        e.. obj =e= sign(x);
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+    def test_centropy_function(self):
+        """centropy(x, y) should parse as a two-argument function call."""
+        code = """
+        Variable x, y, obj;
+        Equation e;
+        e.. obj =e= centropy(x, y);
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+    def test_mapval_function(self):
+        """mapval(x) should parse as a function call."""
+        code = """
+        Parameter x;
+        Scalar result;
+        result = mapval(x);
+        """
+        parse_text(code)
+
+    def test_betareg_function(self):
+        """betareg(x, a, b) should parse as a three-argument function call."""
+        code = """
+        Variable y, obj;
+        Parameter alpha, beta;
+        Equation e;
+        e.. obj =e= betareg(y, alpha, beta);
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+
+class TestAcronymHandler:
+    """Tests for Sprint 21 Day 1: acronym_stmt IR builder handler."""
+
+    def test_acronym_registered_as_parameter(self):
+        """Acronym names should be registered as zero-valued scalar parameters."""
+        code = """
+        Acronym optimal, infeasible;
+        Variable x, obj;
+        Equation e;
+        e.. obj =e= x;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "optimal" in model.params
+        assert "infeasible" in model.params
+
+    def test_acronym_in_conditional_expression(self):
+        """Acronym used in dollar condition should resolve without error."""
+        code = """
+        Set i / a, b, c /;
+        Acronym future, call;
+        Parameter ptype(i) / a 0, b 0, c 0 /;
+        Variable x(i), obj;
+        Equation e;
+        e.. obj =e= sum(i$(ptype(i) = future), x(i));
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+    def test_acronym_tracked_in_model_acronyms_set(self):
+        """Acronym names should be tracked in model.acronyms."""
+        code = """
+        Acronym future, call, puto;
+        Variable x, obj;
+        Equation e;
+        e.. obj =e= x;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "future" in model.acronyms
+        assert "call" in model.acronyms
+        assert "puto" in model.acronyms
+
+
+class TestSameasStringLiteral:
+    """Tests for Sprint 21 Day 1: sameas() with quoted string literal arguments."""
+
+    def test_sameas_with_double_quoted_string(self):
+        """sameas(i, "ROW") should parse without undefined symbol error."""
+        code = """
+        Set i / a, b, ROW /;
+        Variable x(i), obj;
+        Equation e(i);
+        e(i)$(not sameas(i,"ROW")).. x(i) =e= 1;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations
+
+    def test_sameas_with_single_quoted_string(self):
+        """sameas(i, 'elem') should parse without undefined symbol error."""
+        code = """
+        Set i / a, b, elem /;
+        Variable x(i), obj;
+        Equation e(i);
+        e(i)$(sameas(i,'elem')).. x(i) =e= 1;
+        Model m / all /;
+        solve m minimizing obj using nlp;
+        """
+        model = parse_model_text(code)
+        assert "e" in model.equations

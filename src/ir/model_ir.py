@@ -57,6 +57,8 @@ class ModelIR:
     declared_models: set[str] = field(default_factory=set)
     # File handles (Issue #746/#747: track File declarations for validation)
     declared_files: set[str] = field(default_factory=set)
+    # Acronyms (Sprint 21 Day 1: symbolic constants declared via Acronym statement)
+    acronyms: set[str] = field(default_factory=set)
     _first_declared_model: str | None = field(default=None, repr=False)
     model_equations: list[str] = field(default_factory=list)
     model_uses_all: bool = False

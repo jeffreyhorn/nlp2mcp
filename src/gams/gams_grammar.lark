@@ -794,7 +794,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas|errorf)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas|errorf|sign|centropy|mapval|betareg)\b/
 // Sprint 19 Day 11: smax/smin moved out of FUNCNAME to support aggregation index domain syntax
 SMAX_K: /(?i:smax)\b/
 SMIN_K: /(?i:smin)\b/

@@ -73,19 +73,33 @@
 
 ### Day 1 — WS1: Semantic Error Resolution
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-24
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~3h
 
 **Activities:**
--
+- Added `sign|centropy|mapval|betareg` to FUNCNAME regex in grammar (+5 models: camcge, feedtray, cesam2, sambal, procmean)
+- Added `_handle_acronym_stmt` to IR builder — registers acronym names as zero-valued scalar parameters (+1 model: worst)
+- Fixed sameas() string literal handling — quoted strings in `_make_symbol` now resolve as set element references (+1 model: cesam)
+- Added 9 unit tests (4 FUNCNAME + 3 acronym handler + 2 sameas)
+- Ran all 7 newly-parsing models through full pipeline (PR4)
 
 **Metrics:**
-- Parse: /160
-- semantic_undefined_symbol:
-- Tests:
+- Parse: 139/160 (stored; fresh run 137/158 — consistent with Day 0 variance)
+- semantic_undefined_symbol: 0 (was 7)
+- Tests: 3,724 passed (+9), 10 skipped, 2 xfailed
 - Newly-parsing models pipeline status:
+
+| Model | Parse | Translate | Solve | Error |
+|-------|-------|-----------|-------|-------|
+| camcge | OK | OK | FAIL | path_syntax_error |
+| feedtray | OK | OK | FAIL | path_syntax_error |
+| cesam2 | OK | FAIL | — | internal_error |
+| sambal | OK | OK | FAIL | path_solve_terminated |
+| procmean | OK | FAIL | — | diff_unsupported_func |
+| worst | OK | OK | FAIL | path_syntax_error |
+| cesam | OK (no objective) | — | — | model_no_objective_def |
 
 ---
 
