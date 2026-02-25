@@ -3782,22 +3782,25 @@ class _ModelBuilder:
                 # Validate that the base object exists (variable, parameter, equation, model, or file)
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
                 # Issue #746/#747: File handles (sol.pc, listA1out.pc) are also valid targets
+                # Issue #857: Check declared equations too (populated before definitions)
                 base_name = _token_text(target.children[0])
+                base_lower = base_name.lower()
                 attr_name = _token_text(target.children[1]).lower()
                 if (
-                    base_name not in self.model.variables
-                    and base_name not in self.model.params
-                    and base_name not in self.model.equations
-                    and base_name.lower() not in self.model.declared_models
-                    and base_name.lower() not in self.model.declared_files
+                    base_lower not in self.model.variables
+                    and base_lower not in self.model.params
+                    and base_lower not in self.model.equations
+                    and base_lower not in self._declared_equations
+                    and base_lower not in self.model.declared_models
+                    and base_lower not in self.model.declared_files
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
                 # Issue #835: Store .scale for variables
-                if attr_name == "scale" and base_name in self.model.variables:
-                    self.model.variables[base_name].scale = expr
+                if attr_name == "scale" and base_lower in self.model.variables:
+                    self.model.variables[base_lower].scale = expr
                 return
             if target.data == "attr_access_indexed":
                 # Handle indexed attribute access: x.stage(g), var.scale(i), etc.
@@ -3805,21 +3808,24 @@ class _ModelBuilder:
                 # Validate that the base object exists (variable, parameter, equation, model, or file)
                 # Issue #558: Equations can also have attributes like .stage in stochastic programming
                 # Issue #746/#747: File handles are also valid targets
+                # Issue #857: Check declared equations too (populated before definitions)
                 base_name = _token_text(target.children[0])
+                base_lower = base_name.lower()
                 attr_name = _token_text(target.children[1]).lower()
                 if (
-                    base_name not in self.model.variables
-                    and base_name not in self.model.params
-                    and base_name not in self.model.equations
-                    and base_name.lower() not in self.model.declared_models
-                    and base_name.lower() not in self.model.declared_files
+                    base_lower not in self.model.variables
+                    and base_lower not in self.model.params
+                    and base_lower not in self.model.equations
+                    and base_lower not in self._declared_equations
+                    and base_lower not in self.model.declared_models
+                    and base_lower not in self.model.declared_files
                 ):
                     raise self._error(
                         f"Symbol '{base_name}' not declared as a variable, parameter, equation, model, or file",
                         target,
                     )
                 # Issue #835: Store indexed .scale for variables
-                if attr_name == "scale" and base_name in self.model.variables:
+                if attr_name == "scale" and base_lower in self.model.variables:
                     indices = (
                         _process_index_list(target.children[2]) if len(target.children) > 2 else ()
                     )

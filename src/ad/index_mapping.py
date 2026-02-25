@@ -243,6 +243,22 @@ def _resolve_alias(
         else:
             target_members = set_def.members
         final_set = target_name
+        # Issue #858: Dynamic subset with no members — fall back to parent set
+        # (same logic as resolve_set_members Issue #723 fallback).
+        if not target_members and hasattr(set_def, "domain") and set_def.domain:
+            for parent_name in set_def.domain:
+                parent_members, _ = resolve_set_members(parent_name, model_ir)
+                if parent_members:
+                    logger.warning(
+                        "Alias '%s' targets dynamic subset '%s' with no members; "
+                        "falling back to parent set '%s' (%d members)",
+                        alias_def.name,
+                        target_name,
+                        parent_name,
+                        len(parent_members),
+                    )
+                    target_members = parent_members
+                    break
     else:
         raise ValueError(
             f"Alias '{alias_def.name}' targets '{target_name}' which is not found. "
