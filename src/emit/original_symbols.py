@@ -26,7 +26,10 @@ from src.ir.ast import (
     Expr,
     MultiplierRef,
     ParamRef,
+    Prod,
+    Sum,
     SymbolRef,
+    Unary,
     VarRef,
 )
 from src.ir.constants import GAMS_RESERVED_CONSTANTS, PREDEFINED_GAMS_CONSTANTS
@@ -869,25 +872,24 @@ def _topological_sort_params(eligible: list[str], param_deps: dict[str, set[str]
     """
     eligible_lower = {p.lower() for p in eligible}
     in_degree: dict[str, int] = dict.fromkeys(eligible, 0)
+    # Build reverse dependency graph: dep -> list of params that depend on it.
+    dependents: dict[str, list[str]] = {}
     for pname in eligible:
         deps = param_deps.get(pname.lower(), set())
         for dep in deps:
             if dep in eligible_lower:
                 in_degree[pname] += 1
+                dependents.setdefault(dep, []).append(pname)
     queue = deque(p for p in eligible if in_degree[p] == 0)
     sorted_params: list[str] = []
     while queue:
         node = queue.popleft()
         sorted_params.append(node)
         node_lower = node.lower()
-        for pname in eligible:
-            if pname in sorted_params:
-                continue
-            deps = param_deps.get(pname.lower(), set())
-            if node_lower in deps:
-                in_degree[pname] -= 1
-                if in_degree[pname] == 0:
-                    queue.append(pname)
+        for pname in dependents.get(node_lower, ()):
+            in_degree[pname] -= 1
+            if in_degree[pname] == 0:
+                queue.append(pname)
     for pname in eligible:
         if pname not in sorted_params:
             sorted_params.append(pname)
@@ -1182,6 +1184,26 @@ def _restore_yes_keyword(expr: Expr) -> Expr:
                 return e
             return Call(e.func, new_args)
 
+        if isinstance(e, Unary):
+            child = transform(e.child)
+            if child is e.child:
+                return e
+            return Unary(e.op, child)
+
+        if isinstance(e, Sum):
+            body = transform(e.body)
+            cond = transform(e.condition) if e.condition is not None else None
+            if body is e.body and cond is e.condition:
+                return e
+            return Sum(e.index_sets, body, cond)
+
+        if isinstance(e, Prod):
+            body = transform(e.body)
+            cond = transform(e.condition) if e.condition is not None else None
+            if body is e.body and cond is e.condition:
+                return e
+            return Prod(e.index_sets, body, cond)
+
         return e
 
     return transform(expr)
@@ -1260,10 +1282,18 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
             expanded_key = _expand_table_key(key_tuple, domain_size)
             if expanded_key is None:
                 continue
-            if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
-                index_str = ",".join(expanded_key)
-                assignments.append(
-                    f"{_quote_symbol(param_name)}({index_str}) = " f"{_format_param_value(value)};"
+            is_set_flags = tuple(k.lower() in sets_and_aliases_lower for k in expanded_key)
+            if not any(is_set_flags):
+                continue
+            if any(is_set_flags) and not all(is_set_flags):
+                logger.debug(
+                    "emit_subset_value_assignments: mixed subset/literal key for %s: %r",
+                    param_name,
+                    expanded_key,
                 )
+            index_str = ",".join(expanded_key)
+            assignments.append(
+                f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
+            )
 
     return "\n".join(assignments)

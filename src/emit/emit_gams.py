@@ -197,7 +197,9 @@ def emit_gams_mcp(
     # Variables are declared (GAMS requires variable declaration before .l access).
     # Issue #860: Exclude params already emitted in the early pass.
     computed_params_code = emit_computed_parameter_assignments(
-        kkt.model_ir, varref_filter="no_varref_attr", exclude_params=early_params or None
+        kkt.model_ir,
+        varref_filter="no_varref_attr",
+        exclude_params=early_params if early_params else None,
     )
     if computed_params_code:
         # Sprint 19 Day 3: If any computed parameter contains stochastic
