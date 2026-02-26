@@ -16,7 +16,10 @@ import pytest
 
 from src.ad.derivative_rules import (
     _apply_index_substitution,
+    _is_concrete_instance_of,
+    _partial_index_match,
     _substitute_index,
+    _sum_should_collapse,
     differentiate_expr,
 )
 from src.ir.ast import (
@@ -234,23 +237,11 @@ class TestDifferentiateWithIndexOffset:
         assert isinstance(result, Const)
         assert result.value == 1.0
 
-    @pytest.mark.xfail(
-        reason=(
-            "Sum collapse with IndexOffset in wrt_indices requires _sum_should_collapse "
-            "to accept IndexOffset — Day 13 work. "
-            "_is_concrete_instance_of currently expects str, not IndexOffset."
-        ),
-        strict=True,
-    )
     def test_diff_sum_over_t_with_lead(self):
         """d/dx(t1+1) [sum(t, x(t+1))] collapses to 1.
 
         After sum collapse: only the t=t1 term survives (x(t1+1) matches x(t+1)
         when t=t1), so result = 1.
-
-        NOTE: This test is xfail (expected failure) for Day 12.
-        Extending _sum_should_collapse/_is_concrete_instance_of for IndexOffset
-        wrt_indices is tracked as Day 13 work.
         """
         expr = Sum(("t",), VarRef("x", (IndexOffset("t", Const(1.0), False),)))
         wrt = (IndexOffset("t1", Const(1.0), False),)
@@ -291,3 +282,88 @@ class TestDifferentiateWithIndexOffset:
         assert result.left.value == 0.0  # x(t) does not match x(t+1)
         assert isinstance(result.right, Const)
         assert result.right.value == 1.0  # x(t+1) matches x(t+1)
+
+    def test_diff_sum_over_t_with_lag(self):
+        """d/dx(t1-1) [sum(t, x(t-1))] collapses to 1.
+
+        Lag variant: sum over t of x(t-1), differentiate w.r.t. x(t1-1).
+        """
+        expr = Sum(("t",), VarRef("x", (IndexOffset("t", Const(-1.0), False),)))
+        wrt = (IndexOffset("t1", Const(-1.0), False),)
+        result = differentiate_expr(expr, "x", wrt)
+        assert isinstance(result, Const)
+        assert result.value == 1.0
+
+    def test_diff_sum_param_times_lead_var(self):
+        """d/dx(t1+1) [sum(t, a(t) * x(t+1))] produces product rule with a(t1).
+
+        Product rule under sum collapse: the derivative of a(t)*x(t+1) w.r.t.
+        x(t+1) gives x(t+1)*0 + a(t)*1, then substituting t→t1.
+        """
+        expr = Sum(
+            ("t",),
+            Binary(
+                "*",
+                ParamRef("a", ("t",)),
+                VarRef("x", (IndexOffset("t", Const(1.0), False),)),
+            ),
+        )
+        wrt = (IndexOffset("t1", Const(1.0), False),)
+        result = differentiate_expr(expr, "x", wrt)
+        # Product rule: x(t1+1)*0 + a(t1)*1  (unsimplified)
+        assert isinstance(result, Binary)
+        assert result.op == "+"
+        # Right term should be a(t1) * 1.0
+        assert isinstance(result.right, Binary)
+        assert result.right.op == "*"
+        assert isinstance(result.right.left, ParamRef)
+        assert result.right.left.name == "a"
+        assert result.right.left.indices == ("t1",)
+        assert isinstance(result.right.right, Const)
+        assert result.right.right.value == 1.0
+
+
+# ---------------------------------------------------------------------------
+# IndexOffset handling in _is_concrete_instance_of, _sum_should_collapse, _partial_index_match
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestIndexOffsetInCollapseFunctions:
+    """Tests for IndexOffset support in sum collapse helper functions."""
+
+    def test_is_concrete_instance_of_with_index_offset_no_crash(self):
+        """_is_concrete_instance_of with IndexOffset doesn't crash, returns False."""
+        io = IndexOffset("t1", Const(1.0), False)
+        result = _is_concrete_instance_of(io, "t")
+        assert result is False
+
+    def test_is_concrete_instance_of_with_string_still_works(self):
+        """_is_concrete_instance_of still works normally with strings."""
+        assert _is_concrete_instance_of("t1", "t") is True
+        assert _is_concrete_instance_of("t", "t") is False
+        assert _is_concrete_instance_of("j1", "t") is False
+
+    def test_sum_should_collapse_with_index_offset_wrt(self):
+        """_sum_should_collapse matches IndexOffset base against symbolic index."""
+        wrt = (IndexOffset("t1", Const(1.0), False),)
+        assert _sum_should_collapse(("t",), wrt) is True
+
+    def test_sum_should_collapse_index_offset_no_match(self):
+        """_sum_should_collapse returns False when IndexOffset base doesn't match."""
+        wrt = (IndexOffset("j1", Const(1.0), False),)
+        assert _sum_should_collapse(("t",), wrt) is False
+
+    def test_sum_should_collapse_mixed_str_and_index_offset(self):
+        """_sum_should_collapse with mixed str and IndexOffset wrt_indices."""
+        wrt = ("i1", IndexOffset("t1", Const(1.0), False))
+        assert _sum_should_collapse(("i", "t"), wrt) is True
+
+    def test_partial_index_match_with_index_offset(self):
+        """_partial_index_match finds IndexOffset match by base index."""
+        wrt = (IndexOffset("t1", Const(1.0), False), "extra")
+        matched_sym, matched_conc, remaining, symbolic_wrt = _partial_index_match(("t",), wrt)
+        assert matched_sym == ("t",)
+        assert matched_conc == (IndexOffset("t1", Const(1.0), False),)
+        assert remaining == ("extra",)
+        assert symbolic_wrt is not None

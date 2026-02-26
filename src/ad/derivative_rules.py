@@ -68,7 +68,7 @@ from ..ir.ast import (
 def differentiate_expr(
     expr: Expr,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -177,7 +177,7 @@ def differentiate_expr(
 def _diff_const(
     expr: Const,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Const:
     """
@@ -203,7 +203,7 @@ def _diff_const(
 def _diff_varref(
     expr: VarRef,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Const:
     """
@@ -280,7 +280,7 @@ def _diff_varref(
 def _diff_symbolref(
     expr: SymbolRef,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Const:
     """
@@ -331,7 +331,7 @@ def _diff_symbolref(
 def _diff_paramref(
     expr: ParamRef,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Const:
     """
@@ -366,7 +366,7 @@ def _diff_paramref(
 def _diff_binary(
     expr: Binary,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -462,7 +462,7 @@ def _diff_binary(
 def _diff_unary(
     expr: Unary,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -519,7 +519,7 @@ def _diff_unary(
 def _diff_call(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -633,7 +633,7 @@ def _diff_call(
 def _diff_power(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -713,7 +713,7 @@ def _diff_power(
 def _diff_exp(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -751,7 +751,7 @@ def _diff_exp(
 def _diff_log(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -792,7 +792,7 @@ def _diff_log(
 def _diff_log10(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -833,7 +833,7 @@ def _diff_log10(
 def _diff_log2(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -874,7 +874,7 @@ def _diff_log2(
 def _diff_sqrt(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -922,7 +922,7 @@ def _diff_sqrt(
 def _diff_sqr(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -969,7 +969,7 @@ def _diff_sqr(
 def _diff_errorf(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1024,7 +1024,7 @@ def _diff_errorf(
 def _diff_sin(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1062,7 +1062,7 @@ def _diff_sin(
 def _diff_cos(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1103,7 +1103,7 @@ def _diff_cos(
 def _diff_tan(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1155,7 +1155,7 @@ def _diff_tan(
 def _diff_abs(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1232,7 +1232,7 @@ def _diff_abs(
 def _diff_signpower(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1306,7 +1306,7 @@ def _diff_signpower(
 def _diff_smin(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1382,7 +1382,7 @@ def _diff_smin(
 def _diff_smax(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1463,7 +1463,7 @@ def _diff_smax(
 def _diff_dollar_conditional(
     expr: DollarConditional,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1524,7 +1524,7 @@ def _ensure_numeric_condition(cond: Expr) -> Expr:
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -1584,7 +1584,17 @@ def _diff_sum(
     if wrt_indices is not None and _sum_should_collapse(expr.index_sets, wrt_indices, config):
         # Differentiate symbolically using sum's index variables (e.g., ("i",))
         # This makes x(i) match when we differentiate w.r.t. x with indices ("i",)
-        body_derivative = differentiate_expr(expr.body, wrt_var, expr.index_sets, config)
+        # For IndexOffset wrt_indices, build symbolic indices that mirror the structure:
+        # e.g., wrt=(IndexOffset("t1",1),), sum_idx="t" → symbolic=(IndexOffset("t",1),)
+        symbolic_indices: tuple[str | IndexOffset, ...] = tuple(
+            (
+                IndexOffset(sum_idx, wrt_idx.offset, wrt_idx.circular)
+                if isinstance(wrt_idx, IndexOffset)
+                else sum_idx
+            )
+            for sum_idx, wrt_idx in zip(expr.index_sets, wrt_indices, strict=True)
+        )
+        body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_indices, config)
         # Substitute sum indices with concrete indices in result
         result = _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
         # Issue #720: Preserve dollar condition when sum collapses.
@@ -1655,9 +1665,14 @@ def _diff_sum(
 
 def _partial_index_match(
     sum_index_sets: tuple[str, ...],
-    wrt_indices: tuple[str, ...],
+    wrt_indices: tuple[str | IndexOffset, ...],
     config: Config | None = None,
-) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...], tuple[str, ...] | None]:
+) -> tuple[
+    tuple[str, ...],
+    tuple[str | IndexOffset, ...],
+    tuple[str | IndexOffset, ...],
+    tuple[str | IndexOffset, ...] | None,
+]:
     """
     Check for partial index match between sum indices and wrt_indices.
 
@@ -1671,9 +1686,12 @@ def _partial_index_match(
     - After outer sum: wrt_indices = ("g", "h") (symbolic g, concrete h)
     - Inner sum matches "dl" with "h" (at position 1, not 0)
 
+    For IndexOffset wrt_indices, the base index is checked against the symbolic
+    index (e.g., IndexOffset("t1", Const(1)) matches symbolic "t" via base "t1").
+
     Args:
         sum_index_sets: Tuple of symbolic index names from Sum (e.g., ("dl",))
-        wrt_indices: Tuple of indices, may be symbolic or concrete (e.g., ("g", "h"))
+        wrt_indices: Tuple of indices, may be symbolic, concrete, or IndexOffset
         config: Optional config with model_ir for set membership lookups
 
     Returns:
@@ -1700,22 +1718,32 @@ def _partial_index_match(
     if len(sum_index_sets) == 1:
         sum_idx = sum_index_sets[0]
         for i, wrt_idx in enumerate(wrt_indices):
-            # Check if wrt_idx is a concrete instance of sum_idx
-            if _is_concrete_instance_of(wrt_idx, sum_idx, config):
+            # For IndexOffset, check the base index; for str, check directly
+            check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+            if _is_concrete_instance_of(check_str, sum_idx, config):
                 # Found a match - build position-preserving symbolic_wrt
                 remaining = wrt_indices[:i] + wrt_indices[i + 1 :]
-                # Replace matched position with symbolic index, keep others as-is
-                symbolic_wrt = wrt_indices[:i] + (sum_idx,) + wrt_indices[i + 1 :]
+                # Replace matched position with symbolic index, keep others as-is.
+                # For IndexOffset matches, mirror the structure to preserve offset/circular:
+                # e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1) (not plain "t")
+                sym_idx: str | IndexOffset = (
+                    IndexOffset(sum_idx, wrt_idx.offset, wrt_idx.circular)
+                    if isinstance(wrt_idx, IndexOffset)
+                    else sum_idx
+                )
+                symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
                 return (sum_idx,), (wrt_idx,), remaining, symbolic_wrt
         # No match found
         return (), (), wrt_indices, None
 
     # For multi-index sums, try prefix matching (original behavior)
     matched_symbolic = []
-    matched_concrete = []
+    matched_concrete: list[str | IndexOffset] = []
     for i, sum_idx in enumerate(sum_index_sets):
         wrt_idx = wrt_indices[i]
-        if _is_concrete_instance_of(wrt_idx, sum_idx, config):
+        # For IndexOffset, check the base index; for str, check directly
+        check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+        if _is_concrete_instance_of(check_str, sum_idx, config):
             matched_symbolic.append(sum_idx)
             matched_concrete.append(wrt_idx)
         else:
@@ -1723,15 +1751,23 @@ def _partial_index_match(
             return (), (), wrt_indices, None
 
     remaining = wrt_indices[len(sum_index_sets) :]
-    # For prefix matching, symbolic_wrt is just sum_index_sets + remaining
-    symbolic_wrt = tuple(matched_symbolic) + remaining
+    # For prefix matching, symbolic_wrt replaces matched positions with symbolic
+    # sum indices. For IndexOffset matches, mirror the structure to preserve
+    # offset/circular info: e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1)
+    symbolic_wrt = (
+        tuple(
+            (IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym)
+            for sym, conc in zip(matched_symbolic, matched_concrete, strict=True)
+        )
+        + remaining
+    )
     return tuple(matched_symbolic), tuple(matched_concrete), remaining, symbolic_wrt
 
 
 def _partial_collapse_sum(
     expr: Sum,
     wrt_var: str,
-    wrt_indices: tuple[str, ...],
+    wrt_indices: tuple[str | IndexOffset, ...],
     config: Config | None = None,
 ) -> Expr | None:
     """
@@ -1747,7 +1783,7 @@ def _partial_collapse_sum(
     Args:
         expr: Sum expression with more indices than wrt_indices
         wrt_var: Variable name to differentiate with respect to
-        wrt_indices: Concrete indices (fewer than sum's indices)
+        wrt_indices: Concrete indices or IndexOffsets (fewer than sum's indices)
         config: Optional config with model_ir for set membership lookups
 
     Returns:
@@ -1761,7 +1797,7 @@ def _partial_collapse_sum(
 
     # Find which sum indices match wrt_indices
     matched_sum_indices: list[str] = []
-    matched_concrete: list[str] = []
+    matched_concrete: list[str | IndexOffset] = []
     remaining_sum_indices: list[str] = []
 
     # First, try positional matching (most common case in GAMS models).
@@ -1771,7 +1807,8 @@ def _partial_collapse_sum(
     positional_match = True
     for i, wrt_idx in enumerate(wrt_indices):
         if i < len(sum_index_sets):
-            if not _is_concrete_instance_of(wrt_idx, sum_index_sets[i], config):
+            check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+            if not _is_concrete_instance_of(check_str, sum_index_sets[i], config):
                 positional_match = False
                 break
         else:
@@ -1790,7 +1827,8 @@ def _partial_collapse_sum(
         for sum_idx in sum_index_sets:
             found_match = False
             for i, wrt_idx in enumerate(wrt_indices):
-                if not wrt_indices_used[i] and _is_concrete_instance_of(wrt_idx, sum_idx, config):
+                check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+                if not wrt_indices_used[i] and _is_concrete_instance_of(check_str, sum_idx, config):
                     matched_sum_indices.append(sum_idx)
                     matched_concrete.append(wrt_idx)
                     wrt_indices_used[i] = True
@@ -1813,7 +1851,16 @@ def _partial_collapse_sum(
 
     # Differentiate the body using symbolic indices for matched dimensions
     # This allows x(i) to match when we use ('i',) as wrt_indices
-    symbolic_wrt = tuple(matched_sum_indices)
+    # For IndexOffset wrt_indices, build symbolic indices that mirror the structure:
+    # e.g., wrt=(IndexOffset("t1",1),), sum_idx="t" → symbolic=(IndexOffset("t",1),)
+    symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(
+        (
+            IndexOffset(sum_idx, conc.offset, conc.circular)
+            if isinstance(conc, IndexOffset)
+            else sum_idx
+        )
+        for sum_idx, conc in zip(matched_sum_indices, matched_concrete, strict=True)
+    )
     body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
 
     # Substitute matched sum indices with their concrete values
@@ -1837,7 +1884,7 @@ def _partial_collapse_sum(
 
 def _sum_should_collapse(
     sum_index_sets: tuple[str, ...],
-    wrt_indices: tuple[str, ...],
+    wrt_indices: tuple[str | IndexOffset, ...],
     config: Config | None = None,
 ) -> bool:
     """
@@ -1848,12 +1895,15 @@ def _sum_should_collapse(
     2. We're differentiating w.r.t. concrete instances (e.g., "i1", "i2" or "1", "2")
     3. The concrete indices are members of the sets corresponding to symbolic variables
 
+    For IndexOffset wrt_indices (e.g., IndexOffset("t1", Const(1))), the base
+    index ("t1") is checked against the symbolic index using the same rules.
+
     This implements the mathematical rule:
     ∂(sum(i, x(i)))/∂x(i1) = sum(i, ∂x(i)/∂x(i1)) = sum(i, [1 if i=i1 else 0]) = 1
 
     Args:
         sum_index_sets: Tuple of index names from Sum (e.g., ("i",) or ("i", "j"))
-        wrt_indices: Tuple of concrete index names (e.g., ("i1",) or ("1", "2"))
+        wrt_indices: Tuple of concrete index names or IndexOffsets
         config: Optional config with model_ir for set membership lookups
 
     Returns:
@@ -1868,18 +1918,24 @@ def _sum_should_collapse(
         True
         >>> _sum_should_collapse(("i",), ("j1",))
         False
+        >>> _sum_should_collapse(("t",), (IndexOffset("t1", Const(1)),))
+        True
     """
     if len(sum_index_sets) != len(wrt_indices):
         return False
 
     for sum_idx, wrt_idx in zip(sum_index_sets, wrt_indices, strict=True):
-        if not _is_concrete_instance_of(wrt_idx, sum_idx, config):
+        # For IndexOffset, check the base index against the symbolic index
+        check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+        if not _is_concrete_instance_of(check_str, sum_idx, config):
             return False
 
     return True
 
 
-def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None = None) -> bool:
+def _is_concrete_instance_of(
+    concrete: str | IndexOffset, symbolic: str, config: Config | None = None
+) -> bool:
     """
     Check if a concrete index is an instance of a symbolic index.
 
@@ -1889,8 +1945,12 @@ def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None
     2. Fallback heuristic: concrete index should start with symbolic index name
        followed by digits (e.g., "i1" is instance of "i", "j23" is instance of "j")
 
+    IndexOffset objects (e.g., IndexOffset("t1", Const(1))) are not concrete
+    instances of a symbolic index. Callers should extract the base index and
+    call this function with the base string instead.
+
     Args:
-        concrete: Concrete index name (e.g., "i1", "j2", "1", "a")
+        concrete: Concrete index name (e.g., "i1", "j2", "1", "a") or IndexOffset
         symbolic: Symbolic index name (e.g., "i", "j", "h")
         config: Optional config with model_ir for set membership lookups
 
@@ -1908,7 +1968,15 @@ def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None
         False
         >>> _is_concrete_instance_of("j1", "i")
         False
+        >>> _is_concrete_instance_of(IndexOffset("t1", Const(1)), "t")
+        False
     """
+    # IndexOffset objects are never "concrete instances" in the heuristic sense.
+    # They represent lead/lag expressions (e.g., t+1, t-1). Callers that need
+    # IndexOffset matching should extract .base and call this separately.
+    if not isinstance(concrete, str):
+        return False
+
     # Strategy 1: Use model_ir for set membership lookup if available
     if config is not None and config.model_ir is not None:
         model_ir = config.model_ir
@@ -1951,7 +2019,9 @@ def _is_concrete_instance_of(concrete: str, symbolic: str, config: Config | None
 
 
 def _substitute_sum_indices(
-    expr: Expr, sum_indices: tuple[str, ...], concrete_indices: tuple[str, ...]
+    expr: Expr,
+    sum_indices: tuple[str, ...],
+    concrete_indices: tuple[str | IndexOffset, ...],
 ) -> Expr:
     """
     Replace symbolic sum indices with concrete indices in an expression.
@@ -1960,10 +2030,15 @@ def _substitute_sum_indices(
     For example, after differentiating sum(i, x(i)^2) w.r.t. x symbolically,
     we get 2*x(i), then substitute i->i1 to get 2*x(i1).
 
+    When concrete_indices contains IndexOffset objects, the substitution maps
+    the sum index to the IndexOffset's base string (e.g., "t" → "t1" for
+    IndexOffset("t1", Const(1))). The IndexOffset structure is already
+    preserved in the expression from the symbolic differentiation step.
+
     Args:
         expr: Expression to substitute in
         sum_indices: Symbolic index names to replace (e.g., ("i",))
-        concrete_indices: Concrete index names to use (e.g., ("i1",))
+        concrete_indices: Concrete index names or IndexOffsets (e.g., ("i1",))
 
     Returns:
         Expression with substituted indices
@@ -1974,7 +2049,14 @@ def _substitute_sum_indices(
         >>> result = _substitute_sum_indices(expr, ("i",), ("i1",))
         >>> # result is Binary("*", Const(2.0), VarRef("x", ("i1",)))
     """
-    substitution = dict(zip(sum_indices, concrete_indices, strict=True))
+    # For IndexOffset concrete indices, substitute the base string
+    # (e.g., IndexOffset("t1", 1) → substitution maps "t" → "t1")
+    substitution: dict[str, str] = {}
+    for sym, conc in zip(sum_indices, concrete_indices, strict=True):
+        if isinstance(conc, IndexOffset):
+            substitution[sym] = conc.base
+        else:
+            substitution[sym] = conc
     return _apply_index_substitution(expr, substitution)
 
 
@@ -2076,7 +2158,7 @@ def _substitute_index(
 def _diff_prod(
     expr: Prod,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -2132,8 +2214,17 @@ def _diff_prod(
     if wrt_indices is not None:
         # Check for exact match: prod binds same number of indices as wrt_indices
         if _sum_should_collapse(expr.index_sets, wrt_indices, config):
-            # Replace all concrete indices with symbolic prod indices
-            effective_wrt = expr.index_sets
+            # Replace all concrete indices with symbolic prod indices.
+            # For IndexOffset wrt_indices, mirror the structure:
+            # e.g., wrt=(IndexOffset("t1",1),), prod_idx="t" → (IndexOffset("t",1),)
+            effective_wrt = tuple(
+                (
+                    IndexOffset(prod_idx, wrt_idx.offset, wrt_idx.circular)
+                    if isinstance(wrt_idx, IndexOffset)
+                    else prod_idx
+                )
+                for prod_idx, wrt_idx in zip(expr.index_sets, wrt_indices, strict=True)
+            )
         elif len(wrt_indices) > len(expr.index_sets):
             # Partial match: prod binds fewer indices than wrt_indices
             # E.g., prod(w, f(w,t)) w.r.t. x('ICBM','1') — w binds 'ICBM', '1' is free
@@ -2168,7 +2259,7 @@ def _diff_prod(
 def _diff_betareg(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
@@ -2232,7 +2323,7 @@ def _diff_betareg(
 def _diff_centropy(
     expr: Call,
     wrt_var: str,
-    wrt_indices: tuple[str, ...] | None = None,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
 ) -> Expr:
     """
