@@ -7,7 +7,7 @@
 
 ## Summary
 
-After the Day 7 dotted column header fix (PR #905), tforss upgraded from `path_syntax_error` to `path_solve_terminated`. The model now has 153 execution errors: 100 "coefficient in variable is NA" errors, 52 "RHS value NA" errors, and 1 "unmatched variable not free or fixed" error. The root causes are: (1) `rho` is initialized to `na` because the original model sets it via a loop before solving, which the emitter doesn't reproduce; (2) KKT stationarity equations have incorrect structure; (3) variable `x(sawnwood)` is unmatched in the MCP.
+After the Day 7 dotted column header fix, tforss upgraded from `path_syntax_error` to `path_solve_terminated`. The model now has 153 execution errors: 100 "coefficient in variable is NA" errors, 52 "RHS value NA" errors, and 1 "unmatched variable not free or fixed" error. The root causes are: (1) `rho` is initialized to `na` because the original model sets it via a loop before solving, which the emitter doesn't reproduce; (2) KKT stationarity equations have incorrect structure; (3) variable `x(sawnwood)` is unmatched in the MCP.
 
 ## Root Cause Analysis
 
@@ -89,4 +89,4 @@ grep '^\*\*\*\* ' /tmp/tforss_mcp.lst | sort | uniq -c | sort -rn
 
 ## Related Issues
 
-- Issue #886 — tfordy/tforss compound table headers and hyphenated elements (PARTIALLY RESOLVED by PR #905 for table headers)
+- Issue #886 — tfordy/tforss compound table headers and hyphenated elements (PARTIALLY RESOLVED — table headers fixed in Day 7)

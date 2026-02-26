@@ -7,7 +7,7 @@
 
 ## Summary
 
-After the Day 7 dotted column header fix (PR #905), tfordy remains at `path_syntax_error` with 13 compilation errors. The set elements `period-1` through `period-9` are correctly quoted in set definitions (`'period-1'`) but are emitted unquoted in parameter assignment LHS positions (`avl(period-1,t) = 1`). GAMS interprets `period-1` as arithmetic (`period` minus `1`), causing $120 (unknown identifier) and $171 (domain violation) errors.
+After the Day 7 dotted column header fix, tfordy remains at `path_syntax_error` with 13 compilation errors. The set elements `period-1` through `period-9` are correctly quoted in set definitions (`'period-1'`) but are emitted unquoted in parameter assignment LHS positions (`avl(period-1,t) = 1`). GAMS interprets `period-1` as arithmetic (`period` minus `1`), causing $120 (unknown identifier) and $171 (domain violation) errors.
 
 ## Root Cause
 
@@ -73,4 +73,4 @@ A simple heuristic: if a set element label matches `[a-zA-Z_]\w*-\w+` (identifie
 
 ## Related Issues
 
-- Issue #886 — tfordy compound table headers and hyphenated elements (compound headers RESOLVED by PR #905; hyphenated quoting still open)
+- Issue #886 — tfordy compound table headers and hyphenated elements (compound headers RESOLVED in Day 7; hyphenated quoting still open)

@@ -7,7 +7,7 @@
 
 ## Summary
 
-After the Day 7 dotted column header fix (PR #905), twocge upgraded from `path_syntax_error` to `path_solve_terminated`. The SAM table now captures 50 values for JPN, but the USA continuation section (lines 48–73 in original) is missing entirely. This causes all derived parameters for USA to be zero, leading to 26 division-by-zero errors and 2 power-domain errors at runtime. Additionally, two trade equations (`eqpw`, `eqw`) are missing from the emitted MCP, and post-solve calibration code is placed before the solve statement.
+After the Day 7 dotted column header fix, twocge upgraded from `path_syntax_error` to `path_solve_terminated`. The SAM table now captures 50 values for JPN, but the USA continuation section (lines 48–73 in original) is missing entirely. This causes all derived parameters for USA to be zero, leading to 26 division-by-zero errors and 2 power-domain errors at runtime. Additionally, two trade equations (`eqpw`, `eqw`) are missing from the emitted MCP, and post-solve calibration code is placed before the solve statement.
 
 ## Root Cause Analysis
 
@@ -92,4 +92,4 @@ grep -c '^\*\*\*\* ' /tmp/twocge_mcp.lst  # 32 (28 exec + 4 meta)
 
 ## Related Issues
 
-- Issue #901 — twocge dotted table column headers (RESOLVED by PR #905)
+- Issue #901 — twocge dotted table column headers (RESOLVED by Day 7 dotted column header fix)
