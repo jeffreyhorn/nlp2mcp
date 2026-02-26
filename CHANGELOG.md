@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 7: Dotted Compound Column Headers in Table Parsing - 2026-02-26
+
+**Branch:** `sprint21-day7-table-data`
+
+#### Summary
+Fixed dotted compound column headers (e.g., `BRD.JPN`, `nigra.pulplogs`) in multi-dimensional GAMS tables. The parser was splitting each dot-separated segment into a separate column header, producing wrong-arity keys that caused all table data to be silently dropped by the emitter.
+
+#### Fixed
+- Added `_merge_dotted_col_headers()` helper that detects adjacent tokens separated by dots (verified via source text) and merges them into compound headers
+- Applied in both standard and section-based column header extraction paths in `_handle_table_block()`
+- twocge `SAM(u,v,r)`: 0 → 50 values captured (resolves #901 primary error)
+- tforss `ymf(at,k,s,cl)`: 0 → 96 values captured (resolves #886 table data component)
+- tfordy `yef(at,s,cl)`: 0 → 68 values, `ymf(at,k,s,cl)`: 0 → 96 values
+
+#### Added
+- 6 new unit tests for dotted column headers (4 synthetic + 2 GAMSlib integration)
+
+#### Metrics
+- Tests: 3,784 passed (+6), 10 skipped, 2 xfailed
+
 ### Sprint 21 Day 6: WS4 Emitter Fixes — Set Index Quoting + Negative Exponents - 2026-02-26
 
 **Branch:** `sprint21-day6-emitter-fixes`

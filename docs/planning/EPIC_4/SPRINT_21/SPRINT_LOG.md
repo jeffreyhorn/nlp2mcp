@@ -257,19 +257,25 @@
 
 ---
 
-### Day 7 — WS4: Table Data Capture Part 1
+### Day 7 — WS4: Dotted Compound Column Headers in Table Parsing
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~2h
 
 **Activities:**
--
+- Discovered that standard table data parsing already works (iobalance, qdemo7, least all have populated values)
+- Root-caused Subcategory A failures for twocge (#901) and tforss (#886): dotted compound column headers split into individual tokens
+- Added `_merge_dotted_col_headers()` helper that detects dot-adjacent tokens via source text verification
+- Applied fix in both standard and section-based column header extraction paths
+- Added 6 unit tests: 4 synthetic (compound, mixed, row+col, 3-part) + 2 GAMSlib (twocge, tforss)
 
 **Metrics:**
-- Tests:
-- Models with Table data populated:
+- Tests: 3,784 passed (+6), 10 skipped, 2 xfailed
+- twocge SAM: 0 → 50 values (upgraded from path_syntax_error to path_solve_terminated)
+- tforss ymf: 0 → 96 values (upgraded from path_syntax_error to path_solve_terminated)
+- tfordy yef: 0 → 68 values, ymf: 0 → 96 values (still path_syntax_error from Bug B #886)
 
 ---
 
