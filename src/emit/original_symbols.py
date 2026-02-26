@@ -961,9 +961,14 @@ def _topological_sort_statements(
         return stmts
 
     # Collect read dependencies for each statement (excluding self-reads).
+    # Also traverse IndexOffset.offset expressions in LHS key_tuple, since
+    # offsets like p(t+shift(i)) reference parameters that must be defined first.
     stmt_reads: list[set[str]] = []
-    for param_name, _key, expr, _idx in stmts:
+    for param_name, key, expr, _idx in stmts:
         refs = _collect_param_refs(expr)
+        for idx in key:
+            if isinstance(idx, IndexOffset) and isinstance(idx.offset, Expr):
+                refs.update(_collect_param_refs(idx.offset))
         refs.discard(param_name.lower())
         stmt_reads.append(refs)
 
@@ -1143,10 +1148,17 @@ def emit_computed_parameter_assignments(
             if not pdef.expressions:
                 continue
             pname_lower = pname.lower()
-            if any(_expr_contains_varref_attribute(ex) for _, ex in pdef.expressions):
+            # Check RHS expressions and IndexOffset.offset in LHS keys
+            # for VarRef with attribute (calibration detection).
+            all_exprs = [ex for _, ex in pdef.expressions]
+            for key, _ in pdef.expressions:
+                for idx in key:
+                    if isinstance(idx, IndexOffset) and isinstance(idx.offset, Expr):
+                        all_exprs.append(idx.offset)
+            if any(_expr_contains_varref_attribute(ex) for ex in all_exprs):
                 calibration_params.add(pname_lower)
             refs: set[str] = set()
-            for _, ex in pdef.expressions:
+            for ex in all_exprs:
                 refs.update(_collect_param_refs(ex))
             if refs:
                 param_deps[pname_lower] = refs
