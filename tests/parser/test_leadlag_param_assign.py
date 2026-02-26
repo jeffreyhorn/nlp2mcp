@@ -136,8 +136,8 @@ w(m+1,n)$w(m,n) = 1;
 """
         model = parse_model_text(gams)
         param = model.params["w"]
-        # First assignment: w(m,n) = 0 (expression path since domain over)
-        # Second assignment: w(m+1,n)$w(m,n) = 1 (expression path due to lead/lag)
+        # First assignment: w(m,n) = 0 (stored in param.values via domain-over expansion)
+        # Second assignment: w(m+1,n)$w(m,n) = 1 (stored in param.expressions due to lead/lag)
         assert len(param.expressions) >= 1
         # Find the lead/lag expression
         lead_exprs = [

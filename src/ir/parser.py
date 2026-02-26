@@ -4019,7 +4019,10 @@ class _ModelBuilder:
                 has_lead_lag = any(isinstance(idx, IndexOffset) for idx in indices)
 
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
-                if symbol_name in self.model.sets:
+                # Skip set assignment path for lead/lag indices — SetAssignment
+                # expects tuple[str, ...] and GAMS doesn't support lead/lag in
+                # set assignment LHS.
+                if symbol_name in self.model.sets and not has_lead_lag:
                     # Set assignment like: low(n,nn) = ord(n) > ord(nn)
                     # Sprint 18 Day 3: Store set assignments for emission (P4 fix)
                     # Dynamic subsets must be populated at runtime via these assignments
