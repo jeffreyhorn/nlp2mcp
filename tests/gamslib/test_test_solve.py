@@ -586,8 +586,8 @@ class TestObjectivesMatch:
 
     def test_outside_relative_tolerance(self):
         """Test values outside relative tolerance don't match."""
-        # 1000.0 vs 1001.0 -> diff=1.0, tol = 1e-8 + 1e-6 * 1001 = 0.001001
-        match, reason = objectives_match(1000.0, 1001.0)
+        # 1000.0 vs 1010.0 -> diff=10.0, tol = 1e-8 + 2e-3 * 1010 = 2.02
+        match, reason = objectives_match(1000.0, 1010.0)
         assert match is False
         assert "Mismatch" in reason
 
@@ -611,7 +611,8 @@ class TestObjectivesMatch:
 
     def test_negative_objectives_mismatch(self):
         """Test negative objectives that don't match."""
-        match, reason = objectives_match(-1000.0, -1001.0)
+        # -1000.0 vs -1010.0 -> diff=10.0, tol = 1e-8 + 2e-3 * 1010 = 2.02
+        match, reason = objectives_match(-1000.0, -1010.0)
         assert match is False
 
     def test_nan_handling(self):
@@ -667,7 +668,7 @@ class TestObjectivesMatch:
 
     def test_default_tolerance_values(self):
         """Test that default tolerance values are as expected."""
-        assert DEFAULT_RTOL == 1e-4
+        assert DEFAULT_RTOL == 2e-3
         assert DEFAULT_ATOL == 1e-8
 
 

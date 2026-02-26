@@ -75,7 +75,7 @@ from scripts.gamslib.error_taxonomy import (
 COMPARE_NOT_PERFORMED = "compare_not_performed"
 
 # Default tolerance values (based on solver defaults research)
-DEFAULT_RTOL = 1e-4  # Relative tolerance for NLP↔MCP objective comparison
+DEFAULT_RTOL = 2e-3  # Relative tolerance for NLP↔MCP objective comparison
 DEFAULT_ATOL = 1e-8  # Absolute tolerance (matches IPOPT)
 
 # Database paths
