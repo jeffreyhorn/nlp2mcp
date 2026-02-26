@@ -6,7 +6,7 @@ are emitted AFTER set assignments rather than before.
 """
 
 from src.emit.original_symbols import compute_set_assignment_param_deps
-from src.ir.ast import Const, ParamRef, SymbolRef
+from src.ir.ast import Const, ParamRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import ParameterDef, SetAssignment, SetDef
 
@@ -35,9 +35,7 @@ class TestComputeSetAssignmentParamDeps:
 
         # beta: computed param with dynamic set 'cn' as expression key
         beta = ParameterDef(name="beta", domain=("cn",))
-        beta.expressions.append(
-            (("cn",), ParamRef("demdat", indices=(SymbolRef("cn"), Const("ref-p"))))
-        )
+        beta.expressions.append((("cn",), ParamRef("demdat", indices=("cn", '"ref-p"'))))
         model_ir.params["beta"] = beta
 
         # Set assignment: cn(c) = yes$demdat(c,"ref-p")
@@ -45,7 +43,7 @@ class TestComputeSetAssignmentParamDeps:
             SetAssignment(
                 set_name="cn",
                 indices=("c",),
-                expr=ParamRef("demdat", indices=(SymbolRef("c"), Const("ref-p"))),
+                expr=ParamRef("demdat", indices=("c", '"ref-p"')),
                 location=None,
             )
         )
@@ -78,7 +76,7 @@ class TestComputeSetAssignmentParamDeps:
             SetAssignment(
                 set_name="ku",
                 indices=("k",),
-                expr=ParamRef("m0", indices=(SymbolRef("k"),)),
+                expr=ParamRef("m0", indices=("k",)),
                 location=None,
             )
         )
@@ -103,18 +101,14 @@ class TestComputeSetAssignmentParamDeps:
         demdat = ParameterDef(name="demdat", domain=("c", "*"))
         demdat.values[("wheat", "ref-p")] = 10.0
         # Expression with dynamic set key 'cn'
-        demdat.expressions.append(
-            (("cn", '"dem-a"'), ParamRef("alpha", indices=(SymbolRef("cn"),)))
-        )
+        demdat.expressions.append((("cn", '"dem-a"'), ParamRef("alpha", indices=("cn",))))
         # Expression with static key 'c'
         demdat.expressions.append((("c", '"price"'), Const(5.0)))
         model_ir.params["demdat"] = demdat
 
         # alpha: also uses cn key
         alpha = ParameterDef(name="alpha", domain=("cn",))
-        alpha.expressions.append(
-            (("cn",), ParamRef("demdat", indices=(SymbolRef("cn"), Const("ref-p"))))
-        )
+        alpha.expressions.append((("cn",), ParamRef("demdat", indices=("cn", '"ref-p"'))))
         model_ir.params["alpha"] = alpha
 
         # Set assignment: cn(c) = yes$demdat(c,"ref-p")
@@ -122,7 +116,7 @@ class TestComputeSetAssignmentParamDeps:
             SetAssignment(
                 set_name="cn",
                 indices=("c",),
-                expr=ParamRef("demdat", indices=(SymbolRef("c"), Const("ref-p"))),
+                expr=ParamRef("demdat", indices=("c", '"ref-p"')),
                 location=None,
             )
         )
@@ -152,14 +146,12 @@ class TestComputeSetAssignmentParamDeps:
 
         # beta(cn) depends on demdat
         beta = ParameterDef(name="beta", domain=("cn",))
-        beta.expressions.append(
-            (("cn",), ParamRef("demdat", indices=(SymbolRef("cn"), Const("ref-p"))))
-        )
+        beta.expressions.append((("cn",), ParamRef("demdat", indices=("cn", '"ref-p"'))))
         model_ir.params["beta"] = beta
 
         # alpha(cn) depends on beta
         alpha = ParameterDef(name="alpha", domain=("cn",))
-        alpha.expressions.append((("cn",), ParamRef("beta", indices=(SymbolRef("cn"),))))
+        alpha.expressions.append((("cn",), ParamRef("beta", indices=("cn",))))
         model_ir.params["alpha"] = alpha
 
         # Set assignment: cn(c) = yes$demdat(c,"ref-p")
@@ -167,7 +159,7 @@ class TestComputeSetAssignmentParamDeps:
             SetAssignment(
                 set_name="cn",
                 indices=("c",),
-                expr=ParamRef("demdat", indices=(SymbolRef("c"), Const("ref-p"))),
+                expr=ParamRef("demdat", indices=("c", '"ref-p"')),
                 location=None,
             )
         )

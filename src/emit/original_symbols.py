@@ -1360,12 +1360,8 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     if dynamic_set_names:
         disqualified: set[str] = set()
         for pname in needed:
-            # Look up param definition (case-insensitive)
-            p_def: ParameterDef | None = None
-            for pk, pv in model_ir.params.items():
-                if pk.lower() == pname:
-                    p_def = pv
-                    break
+            # Look up param definition (case-insensitive via CaseInsensitiveDict)
+            p_def: ParameterDef | None = model_ir.params.get(pname)
             if p_def and p_def.expressions:
                 for key_tuple, _expr in p_def.expressions:
                     for idx in key_tuple:
