@@ -36,13 +36,11 @@ Parameters
 
 Scalars
     pm /1/
-    tm /1/
+    tm /0.3333333333333333/
     objold /0/
 ;
 
 arc(n,np) = pairs(n,np,"kappa");
-
-tm = 1 / 3;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -136,8 +134,8 @@ Equations
 Alias(l, l__);
 
 * Stationarity equations
-stat_d(n).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') =E= 0;
-stat_s(n).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') =E= 0;
+stat_d(n)$(l(n)).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') =E= 0;
+stat_s(n)$(l(n)).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') =E= 0;
 stat_t(n,np).. sum(l, (-1) * nu_in(l)) =E= 0;
 stat_tt(l,lp).. ((-1) * nu_dbal(l)) - nu_in(l) =E= 0;
 
@@ -149,6 +147,16 @@ dbal(l).. d(l) =E= sum(lp, tt(lp,l));
 in(l).. d(l) =E= tt(l,l) + sum((n,l__), t(n,l__));
 objoli.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sum(lp, (d.l(l) - tt.l(lp,l) + tt(lp,l)) * tt(lp,l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum(arc, pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+d.fx(n)$(not (l(n))) = 0;
+s.fx(n)$(not (l(n))) = 0;
 
 * ============================================
 * Model MCP Declaration

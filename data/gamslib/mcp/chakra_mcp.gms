@@ -38,8 +38,8 @@ Scalars
     k0 /15/
 ;
 
-tb(t) = 1$(ord(t) = 1);
-tt(t) = 1$(ord(t) = card(t));
+tb(t) = yes$(ord(t) = 1);
+tt(t) = yes$(ord(t) = card(t));
 
 a = y0 / k0 ** beta;
 dis(t) = (1 + rho) ** (1 - ord(t)) / (1 - eta);
@@ -70,6 +70,13 @@ Positive Variables
     piL_y(t)
     piL_k(t)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+y.fx(tb) = y.l(tb);
+y.fx(tt) = y.l(tt);
 
 * ============================================
 * Variable Initialization

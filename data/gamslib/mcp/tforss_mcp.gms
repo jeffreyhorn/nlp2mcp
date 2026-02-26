@@ -31,8 +31,8 @@ Parameters
     scd(k) /good 0.25, medium 0.5, poor 0.25/
     land(s) /nigra 143.679, brutia 227.58/
     ymf(at,k,s,cl)
-    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6, sawlogs.'pulp-sl' 0, sawlogs.sawing 0, pulp.sawing 0, sawnwood.'pulp-pl' 0, sawnwood.'pulp-sl' 0, sawnwood.sawing 0, residuals.'pulp-pl' 0, residuals.sawing 0, pulplogs.'pulp-sl' 0, pulplogs.'pulp-rs' 0, pulplogs.sawing 0/
-    b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1, 'pulp-mill'.sawing 0, 'saw-mill'.'pulp-pl' 0, 'saw-mill'.'pulp-sl' 0, 'saw-mill'.'pulp-rs' 0/
+    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6, sawlogs.'pulp-sl' 0, sawlogs.sawing 0, pulplogs.'pulp-sl' 0, pulplogs.'pulp-rs' 0, pulplogs.sawing 0, pulp.sawing 0, residuals.'pulp-pl' 0, residuals.sawing 0, sawnwood.'pulp-pl' 0, sawnwood.'pulp-sl' 0, sawnwood.sawing 0/
+    b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1, 'saw-mill'.'pulp-pl' 0, 'saw-mill'.'pulp-sl' 0, 'saw-mill'.'pulp-rs' 0, 'pulp-mill'.sawing 0/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6/
     pd(cf) /pulp 147, sawnwood 70/
     nu(m) /'pulp-mill' 37.8, 'saw-mill' 61.5/
@@ -145,9 +145,9 @@ stat_phil.. 1 + nu_acutc =E= 0;
 stat_phip.. 1 + nu_aplnt =E= 0;
 stat_phir.. 1 + nu_aproc =E= 0;
 stat_phix.. -1 + nu_asales =E= 0;
-stat_r(c).. sum(cl, nu_lbal(cl)) + (((-1) * muc) * nu_acutc)$sameas(c, 'pulplogs') =E= 0;
+stat_r(c)$(cl(c)).. sum(cl, nu_lbal(cl)) + (((-1) * muc) * nu_acutc)$sameas(c, 'pulplogs') =E= 0;
 stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) =E= 0;
-stat_x(c).. sum(cf, ((-1) * pd(cf)) * nu_asales)$sameas(c, 'pulp') =E= 0;
+stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$sameas(c, 'pulp') =E= 0;
 stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) =E= 0;
 
 * Inequality complementarity equations
@@ -164,6 +164,16 @@ acutc.. phil =E= muc * sum(cl, r(cl));
 aplnt.. phip =E= mup * sum((s,k,at), v(s,k,at) * (1 + rho) ** age(at));
 benefit.. phi =E= phix - phik - phir - phil - phip;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+r.fx(c)$(not (cl(c))) = 0;
+x.fx(c)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

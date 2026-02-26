@@ -31,8 +31,8 @@ Scalars
     tmin /0/
 ;
 
-h = tf / n;
 n = card(nh) - 1;
+h = tf / n;
 
 * ============================================
 * Variables (Primal + Multipliers)

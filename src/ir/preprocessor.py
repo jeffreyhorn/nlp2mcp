@@ -1889,9 +1889,18 @@ def normalize_special_identifiers(source: str) -> str:
                         in_multi_line_declaration = False
                     continue
         elif "/" in line and in_data_block:
-            # Check if closing the data block
-            if line.strip().endswith("/") or line.strip().endswith("/;"):
+            # Check if closing the data block — process line BEFORE clearing
+            # flag so the closing line also gets special-identifier quoting
+            # (e.g., hydro-4.1978 250 / needs hydro-4 quoted).
+            closing = line.strip().endswith("/") or line.strip().endswith("/;")
+            processed = _quote_special_in_line(line)
+            result.append(processed)
+            if closing:
                 in_data_block = False
+            # Check if multi-line declaration ends
+            if in_multi_line_declaration and ";" in line and not in_data_block:
+                in_multi_line_declaration = False
+            continue
 
         # Check if multi-line declaration ends (semicolon outside data block)
         if in_multi_line_declaration and ";" in line and not in_data_block:

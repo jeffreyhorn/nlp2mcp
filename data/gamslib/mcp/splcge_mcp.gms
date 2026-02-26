@@ -26,7 +26,7 @@ Alias(i, j);
 Alias(h, k);
 
 Parameters
-    SAM(u,v) /BRD.HOH 15, MLK.HOH 35, CAP.BRD 5, CAP.MLK 20, LAB.BRD 10, LAB.MLK 15, HOH.CAP 25, HOH.LAB 25, CAP.CAP 0, CAP.LAB 0, CAP.HOH 0, MLK.BRD 0, MLK.MLK 0, MLK.CAP 0, MLK.LAB 0, BRD.BRD 0, BRD.MLK 0, BRD.CAP 0, BRD.LAB 0, HOH.BRD 0, HOH.MLK 0, HOH.HOH 0, LAB.CAP 0, LAB.LAB 0, LAB.HOH 0/
+    SAM(u,v) /BRD.HOH 15, MLK.HOH 35, CAP.BRD 5, CAP.MLK 20, LAB.BRD 10, LAB.MLK 15, HOH.CAP 25, HOH.LAB 25, BRD.BRD 0, BRD.MLK 0, BRD.CAP 0, BRD.LAB 0, CAP.CAP 0, CAP.LAB 0, CAP.HOH 0, HOH.BRD 0, HOH.MLK 0, HOH.HOH 0, LAB.CAP 0, LAB.LAB 0, LAB.HOH 0, MLK.BRD 0, MLK.MLK 0, MLK.CAP 0, MLK.LAB 0/
     X0(i)
     F0(h,j)
     Z0(j)
@@ -36,11 +36,11 @@ Parameters
     b(j)
 ;
 
-x0(i) = SAM(i,"HOH");
-f0(h,j) = SAM(h,j);
-z0(j) = sum(h, F0(h,j));
-ff(h) = SAM("HOH",h);
+X0(i) = SAM(i,"HOH");
+F0(h,j) = SAM(h,j);
+FF(h) = SAM("HOH",h);
 alpha(i) = X0(i) / sum(j, X0(j));
+Z0(j) = sum(h, F0(h,j));
 beta(h,j) = F0(h,j) / sum(k, F0(k,j));
 b(j) = Z0(j) / prod(h, F0(h,j) ** beta(h,j));
 

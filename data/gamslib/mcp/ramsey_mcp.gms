@@ -37,8 +37,8 @@ Scalars
     a /0/
 ;
 
-tfirst(t) = 1$(ord(t) = 1);
-tlast(t) = 1$(ord(t) = card(t));
+tfirst(t) = yes$(ord(t) = 1);
+tlast(t) = yes$(ord(t) = card(t));
 
 a = (c0 + i0) / k0 ** b;
 beta(t) = bet ** ord(t);
@@ -71,6 +71,13 @@ Positive Variables
     piL_c(t)
     piL_i(t)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+k.fx(tfirst) = k.lo(tfirst);
+i.up(t) = i0 * (1 + ac) ** (ord(t) - 1);
 
 * ============================================
 * Variable Initialization

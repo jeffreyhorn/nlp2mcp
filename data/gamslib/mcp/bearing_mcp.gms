@@ -37,7 +37,7 @@ Scalars
     tar /0/
 ;
 
-c1 = oil_constants("SAE 20","C1");
+C1 = oil_constants("SAE 20","C1");
 cn = oil_constants("SAE 20","n");
 gr = gamma / 0.0361111;
 tar = 459.7 + taf;

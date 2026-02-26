@@ -395,3 +395,33 @@ def test_chenery_full_example():
    lmh  'possible elasticities' / low, medium, high /
    sde  'other parameters'      / subst, distr, effic /;"""
     assert normalize_special_identifiers(source) == expected
+
+
+def test_special_identifier_on_closing_line():
+    """Test that special identifiers on the data-block closing line are quoted.
+
+    Regression test for turkpow fix: the closing line of a data block
+    (ending with / or /;) must also be processed for special identifiers.
+    Previously, the in_data_block flag was cleared before processing the
+    closing line, so identifiers like 'north-east' were left unquoted.
+    """
+    source = """Parameter p(i) /
+    north-east  100
+    south-west  200
+    mid-west  300 /;"""
+    expected = """Parameter p(i) /
+    'north-east'  100
+    'south-west'  200
+    'mid-west'  300 /;"""
+    assert normalize_special_identifiers(source) == expected
+
+
+def test_special_identifier_on_closing_line_with_slash():
+    """Test special identifier on closing line ending with bare /."""
+    source = """Set regions /
+    north-east
+    south-west /"""
+    expected = """Set regions /
+    'north-east'
+    'south-west' /"""
+    assert normalize_special_identifiers(source) == expected

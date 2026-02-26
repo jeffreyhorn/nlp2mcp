@@ -25,7 +25,7 @@ Sets
 ;
 
 Parameters
-    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24, tobacco.jun 0, tobacco.jul 0, tobacco.dec 0, other.jul 0, other.aug 0, other.dec 0, 'timber-1'.feb 0, 'timber-1'.apr 0, 'timber-1'.jun 0, 'timber-1'.jul 0, 'timber-1'.dec 0, maize.jun 0, maize.jul 0, maize.aug 0, maize.sep 0, maize.dec 0, 'timber-2'.feb 0, 'timber-2'.mar 0, 'timber-2'.apr 0, 'timber-2'.jun 0, 'timber-2'.jul 0, 'timber-2'.sep 0, 'timber-2'.oct 0, 'timber-2'.nov 0, 'timber-2'.dec 0/
+    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24, 'timber-1'.feb 0, 'timber-1'.apr 0, 'timber-1'.jun 0, 'timber-1'.jul 0, 'timber-1'.dec 0, other.jul 0, other.aug 0, other.dec 0, maize.jun 0, maize.jul 0, maize.aug 0, maize.sep 0, maize.dec 0, tobacco.jun 0, tobacco.jul 0, tobacco.dec 0, 'timber-2'.feb 0, 'timber-2'.mar 0, 'timber-2'.apr 0, 'timber-2'.jun 0, 'timber-2'.jul 0, 'timber-2'.sep 0, 'timber-2'.oct 0, 'timber-2'.nov 0, 'timber-2'.dec 0/
     tmd(*,c) /'input-cost'.tobacco 2000, 'input-cost'.maize 20, yield.tobacco 675, yield.maize 750, price.tobacco 8.4, price.maize 0.8/
     yv(a) /a08 120, a16 120, a24 120/
     vr(t)
@@ -67,17 +67,17 @@ Scalars
 
 dmaize = fdmaize * nfam;
 wr = tob * wrc + dwr * nfam;
-vr(t) = tr * sr * sum(a$(ord(t) + ord(a) > card(t)), yv(a) * delta(a));
 labor(m) = nfam * (sfam * wdm - ld("other",m));
-fa(i) = 100 * 3.1416 * dist(i) * width;
 dist(i) = sr - width / 2 + width * ord(i);
-labw(i) = yw * labwc * whd / (whd - 2 * dist(i) / ws);
 cc(c) = tmd("input-cost",c);
 yc(c) = tmd("yield",c);
 pc(c) = tmd("price",c);
-cr(c) = yc(c) * pc(c);
 delt(t) = (1 + rho) ** ((-1) * (ord(t)));
 delta(a) = (1 + rho) ** ((-1) * (ord(a)));
+fa(i) = 100 * 3.1416 * dist(i) * width;
+labw(i) = yw * labwc * whd / (whd - 2 * dist(i) / ws);
+cr(c) = yc(c) * pc(c);
+vr(t) = tr * sr * sum(a$(ord(t) + ord(a) > card(t)), yv(a) * delta(a));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -193,7 +193,7 @@ Equations
 
 * Stationarity equations
 stat_cost(t).. ((-1) * (delt(t) * (-1))) + nu_cd(t) =E= 0;
-stat_lc(t,m).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) =E= 0;
+stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) =E= 0;
 stat_mat_y01.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) + piU_mat_y01 =E= 0;
 stat_mat_y02.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
 stat_mat_y03.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
@@ -246,6 +246,15 @@ rd(t).. rev(t) =E= (sum(c, cr(c) * x(t,c)) + matr * cr("maize") * mat(t)) / 1000
 cd(t).. cost(t) =E= (sum(c, cc(c) * x(t,c)) + tc * v(t) + resw * whd * sum(mc, lc(t,mc)) + sum(i, tr * yw * dist(i) * w(t,i))) / 1000;
 od.. income =E= sum(t, delt(t) * (rev(t) - cost(t) + vr(t) * v(t) / 1000));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lc.fx(t,m)$(not (mc(m))) = 0;
 
 * ============================================
 * Model MCP Declaration

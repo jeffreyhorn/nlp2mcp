@@ -334,12 +334,12 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Unit tests for both fixes | `tests/` | ≥3 new tests |
 | Run newly-parsing models through full pipeline (PR4) | pipeline | Status recorded |
 
-**End of Day 5 criterion:** Checkpoint 1 metrics recorded with error category breakdown; senstran and turkpow parse; internal_error ≤2.
+**End of Day 5 criterion:** Checkpoint 1 metrics recorded with error category breakdown; senstran and turkpow parse; internal_error ≤2. **MET** — internal_error 3→1, senstran+turkpow parse OK.
 
 **Post-merge checklist:**
-- [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Record Checkpoint 1 metrics with error category breakdown in SPRINT_LOG.md (PR5)
-- [ ] Run senstran, turkpow through full pipeline (PR4)
+- [x] Record PR number in SPRINT_LOG.md (PR2)
+- [x] Record Checkpoint 1 metrics with error category breakdown in SPRINT_LOG.md (PR5)
+- [x] Run senstran, turkpow through full pipeline (PR4)
 
 ---
 

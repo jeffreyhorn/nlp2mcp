@@ -41,10 +41,10 @@ Scalars
     tlow /1.05/
 ;
 
-h(s) = hb(s) - l(s) / 2;
 hb(s) = ha + sum(sp$(ord(sp) <= ord(s)), l(sp));
-k1(s) = gam * h(s) * l(s) * l(s) / 12 / sig;
+h(s) = hb(s) - l(s) / 2;
 k2(s) = dnv * 0.000105 * sqrt(hb(s));
+k1(s) = gam * h(s) * l(s) * l(s) / 12 / sig;
 
 * ============================================
 * Variables (Primal + Multipliers)

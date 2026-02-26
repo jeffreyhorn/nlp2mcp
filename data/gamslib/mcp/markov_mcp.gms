@@ -99,7 +99,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(j, ((-1) * (b * pi(s,i,sp,j,sp))) * nu_constr(sp,j)) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum(spp, sum(j, ((-1) * (b * pi(s,i,sp,j,spp))) * nu_constr(sp,j))) =E= 0;
 
 * Inequality complementarity equations
 

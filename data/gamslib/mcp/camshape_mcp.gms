@@ -68,6 +68,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+r.lo("i1") = max(((-1) * alpha) * d_theta + R_min, r.lo("i1"));
+r.lo("i100") = max(R_max - alpha * d_theta, r.lo("i100"));
+r.up("i1") = min(R_min / (2 * cos(d_theta) - 1), r.up("i1"));
+r.up("i100") = min(R_max + alpha * d_theta, r.up("i100"));
+rdiff.lo(i(j)) = ((-1) * alpha) * d_theta;
+rdiff.up(i(j)) = alpha * d_theta;
+
+* ============================================
 * Variable Initialization
 * ============================================
 

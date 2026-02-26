@@ -97,44 +97,44 @@ Parameters
     dTm(i,r)
 ;
 
-y0(j,r) = sum(h, F0(h,j,r));
-f0(h,j,r) = SAM(h,j,r);
-x0(i,j,r) = SAM(i,j,r);
-z0(j,r) = Y0(j,r) + sum(i, X0(i,j,r));
-xp0(i,r) = SAM(i,"HOH",r);
-xg0(i,r) = SAM(i,"GOV",r);
-xv0(i,r) = SAM(i,"INV",r);
-e0(i,r) = SAM(i,"EXT",r);
-m0(i,r) = SAM("EXT",i,r);
-q0(i,r) = Xp0(i,r) + Xg0(i,r) + Xv0(i,r) + sum(j, X0(i,j,r));
-d0(i,r) = (1 + tauz(i,r)) * Z0(i,r) - E0(i,r);
-sp0(r) = SAM("INV","HOH",r);
-sg0(r) = SAM("INV","GOV",r);
-td0(r) = SAM("GOV","HOH",r);
-tz0(j,r) = SAM("IDT",j,r);
-tm0(j,r) = SAM("TRF","J",r);
-ff(h,r) = SAM("HOH",h,r);
-sf(r) = SAM("INV","EXT",r);
-tauz(j,r) = Tz0(j,r) / Z0(j,r);
-taum(j,r) = Tm0(j,r) / M0(j,r);
+F0(h,j,r) = SAM(h,j,r);
+X0(i,j,r) = SAM(i,j,r);
+Xp0(i,r) = SAM(i,"HOH",r);
+Xg0(i,r) = SAM(i,"GOV",r);
+Xv0(i,r) = SAM(i,"INV",r);
+E0(i,r) = SAM(i,"EXT",r);
+M0(i,r) = SAM("EXT",i,r);
+Sp0(r) = SAM("INV","HOH",r);
+Sg0(r) = SAM("INV","GOV",r);
+Td0(r) = SAM("GOV","HOH",r);
+Tz0(j,r) = SAM("IDT",j,r);
+Tm0(j,r) = SAM("TRF","J",r);
+FF(h,r) = SAM("HOH",h,r);
+Sf(r) = SAM("INV","EXT",r);
 eta(i) = (sigma(i) - 1) / sigma(i);
 phi(i) = (psi(i) + 1) / psi(i);
-alpha(i,r) = Xp0(i,r) / sum(j, Xp0(j,r));
+Y0(j,r) = sum(h, F0(h,j,r));
 beta(h,j,r) = F0(h,j,r) / sum(k, F0(k,j,r));
+alpha(i,r) = Xp0(i,r) / sum(j, Xp0(j,r));
+mu(i,r) = Xg0(i,r) / sum(j, Xg0(j,r));
+Q0(i,r) = Xp0(i,r) + Xg0(i,r) + Xv0(i,r) + sum(j, X0(i,j,r));
+taum(j,r) = Tm0(j,r) / M0(j,r);
+ssg(r) = Sg0(r) / (Td0(r) + sum(j, Tz0(j,r)) + sum(j, Tm0(j,r)));
+ssp(r) = Sp0(r) / sum(h, FF(h,r));
+taud(r) = Td0(r) / sum(h, FF(h,r));
+lambda(i,r) = Xv0(i,r) / (Sp0(r) + Sg0(r) + Sf(r));
+Z0(j,r) = Y0(j,r) + sum(i, X0(i,j,r));
 b(j,r) = Y0(j,r) / prod(h, F0(h,j,r) ** beta(h,j,r));
+tauz(j,r) = Tz0(j,r) / Z0(j,r);
 ax(i,j,r) = X0(i,j,r) / Z0(j,r);
 ay(j,r) = Y0(j,r) / Z0(j,r);
-mu(i,r) = Xg0(i,r) / sum(j, Xg0(j,r));
-lambda(i,r) = Xv0(i,r) / (Sp0(r) + Sg0(r) + Sf(r));
+D0(i,r) = (1 + tauz(i,r)) * Z0(i,r) - E0(i,r);
 deltam(i,r) = (1 + taum(i,r)) * M0(i,r) ** (1 - eta(i)) / ((1 + taum(i,r)) * M0(i,r) ** (1 - eta(i)) + D0(i,r) ** (1 - eta(i)));
 deltad(i,r) = D0(i,r) ** (1 - eta(i)) / ((1 + taum(i,r)) * M0(i,r) ** (1 - eta(i)) + D0(i,r) ** (1 - eta(i)));
-gamma(i,r) = Q0(i,r) / (deltam(i,r) * M0(i,r) ** eta(i) + deltad(i,r) * D0(i,r) ** eta(i)) ** (1 / eta(i));
 xid(i,r) = D0(i,r) ** (1 - phi(i)) / (E0(i,r) ** (1 - phi(i)) + D0(i,r) ** (1 - phi(i)));
 xie(i,r) = E0(i,r) ** (1 - phi(i)) / (E0(i,r) ** (1 - phi(i)) + D0(i,r) ** (1 - phi(i)));
+gamma(i,r) = Q0(i,r) / (deltam(i,r) * M0(i,r) ** eta(i) + deltad(i,r) * D0(i,r) ** eta(i)) ** (1 / eta(i));
 theta(i,r) = Z0(i,r) / (xie(i,r) * E0(i,r) ** phi(i) + xid(i,r) * D0(i,r) ** phi(i)) ** (1 / phi(i));
-ssp(r) = Sp0(r) / sum(h, FF(h,r));
-ssg(r) = Sg0(r) / (Td0(r) + sum(j, Tz0(j,r)) + sum(j, Tm0(j,r)));
-taud(r) = Td0(r) / sum(h, FF(h,r));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -462,7 +462,7 @@ stat_xg(i,r).. nu_eqXg(i,r) - nu_eqpqd(i,r) - piL_xg(i,r) =E= 0;
 stat_xp(i,r).. nu_eqXp(i,r) - nu_eqpqd(i,r) + ((-1) * (prod(i__, xp(i__,r) ** alpha(i__,r)) * sum(i__, xp(i__,r) ** alpha(i__,r) * alpha(i__,r) / xp(i__,r) / xp(i__,r) ** alpha(i__,r)))) * nu_eqUU(r) - piL_xp(i,r) =E= 0;
 stat_xv(i,r).. nu_eqXv(i,r) - nu_eqpqd(i,r) - piL_xv(i,r) =E= 0;
 stat_y(j,r).. nu_eqpy(j,r) + nu_eqY(j,r) + sum(h, ((-1) * (pf(h,r) * beta(h,j,r) * py(j,r) / pf(h,r) ** 2)) * nu_eqF(h,j,r)) - piL_y(j,r) =E= 0;
-stat_z(j,r).. sum(i, ((-1) * ax(j,j,r)) * nu_eqX(i,j,r)) + ((-1) * ay(j,r)) * nu_eqY(j,r) + sum(i, ((-1) * (tauz(i,r) * pz(i,r))) * nu_eqTz(i,r)) + sum(i, nu_eqpzd(i,r)) + sum(i, ((-1) * ((theta(i,r) ** phi(i) * xie(i,r) * (1 + tauz(i,r)) * pz(i,r) / pe(i,r)) ** (1 / (1 - phi(i))))) * nu_eqE(i,r)) + sum(i, ((-1) * ((theta(i,r) ** phi(i) * xid(i,r) * (1 + tauz(i,r)) * pz(i,r) / pd(i,r)) ** (1 / (1 - phi(i))))) * nu_eqDs(i,r)) - piL_z(j,r) =E= 0;
+stat_z(j,r).. sum(i, ((-1) * ax(i,j,r)) * nu_eqX(i,j,r)) + ((-1) * ay(j,r)) * nu_eqY(j,r) + sum(i, ((-1) * (tauz(i,r) * pz(i,r))) * nu_eqTz(i,r)) + sum(i, nu_eqpzd(i,r)) + sum(i, ((-1) * ((theta(i,r) ** phi(i) * xie(i,r) * (1 + tauz(i,r)) * pz(i,r) / pe(i,r)) ** (1 / (1 - phi(i))))) * nu_eqE(i,r)) + sum(i, ((-1) * ((theta(i,r) ** phi(i) * xid(i,r) * (1 + tauz(i,r)) * pz(i,r) / pd(i,r)) ** (1 / (1 - phi(i))))) * nu_eqDs(i,r)) - piL_z(j,r) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(i,r).. d(i,r) - 1e-05 =G= 0;
