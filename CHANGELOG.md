@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 8: Emission Ordering Fix for Dynamic-Set-Indexed Parameters - 2026-02-26
+
+**Branch:** `sprint21-day8-table-data-test`
+
+#### Summary
+Fixed emission ordering bug where computed parameters using dynamic set names as expression keys (e.g., `beta(cn)`) were emitted before those sets were assigned (e.g., `cn(c) = yes$demdat(c,"ref-p")`). The `compute_set_assignment_param_deps()` function now post-filters to exclude params whose LHS keys reference dynamic set names, ensuring they are emitted after set assignments.
+
+#### Fixed
+- `compute_set_assignment_param_deps()` in `src/emit/original_symbols.py`: Added post-filter to detect and exclude params with dynamic-set-indexed expression keys from early emission
+- qdemo7: 14 compilation errors ($120/$340/$352) → 0 compilation errors (only execution-time MCP pairing errors remain)
+
+#### Added
+- 5 new unit tests for `compute_set_assignment_param_deps()` dynamic set exclusion logic
+
+#### Metrics
+- Tests: 3,789 passed (+5), 10 skipped, 2 xfailed
+- Subcategory A models: 4 solve, 4 exec-only errors, 8 compile errors (distinct root causes)
+
 ### Sprint 21 Day 7: Dotted Compound Column Headers in Table Parsing - 2026-02-26
 
 **Branch:** `sprint21-day7-table-data`

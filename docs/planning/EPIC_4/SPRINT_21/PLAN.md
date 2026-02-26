@@ -402,11 +402,11 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Run all 16 Subcategory A models through full pipeline | pipeline | Solve status |
 | Fix secondary errors discovered during testing | various | Secondary fixes |
 
-**End of Day 8 criterion:** ≥10/16 Subcategory A models compile cleanly in GAMS (may have secondary errors); path_syntax_error reduced by ≥10 models.
+**End of Day 8 criterion:** ≥10/16 Subcategory A models compile cleanly in GAMS (may have secondary errors); path_syntax_error reduced by ≥10 models. **PARTIALLY MET** — Table data parsing already worked (Day 7). Fixed emission ordering bug for dynamic-set-indexed params. 8/16 compile cleanly (4 solve + 4 exec-only errors). qdemo7 moved from 14 compile errors to 0. Remaining 8 models have distinct root causes (unquoted literals, dimension mismatch, duplicate elements, etc.).
 
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Run all 16 Subcategory A models through full pipeline (PR4)
+- [x] Run all 16 Subcategory A models through full pipeline
 
 ---
 
