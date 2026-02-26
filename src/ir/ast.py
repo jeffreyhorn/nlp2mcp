@@ -339,6 +339,23 @@ class IndexOffset(Expr):
             return str(int(expr.value)) if float(expr.value).is_integer() else str(expr.value)
         elif isinstance(expr, SymbolRef):
             return expr.name
+        elif isinstance(expr, ParamRef):
+            if expr.indices:
+                idx_parts = [
+                    self._offset_expr_to_string(i) if isinstance(i, Expr) else i
+                    for i in expr.indices
+                ]
+                return f"{expr.name}({','.join(idx_parts)})"
+            return expr.name
+        elif isinstance(expr, VarRef):
+            base = f"{expr.name}.{expr.attribute}" if expr.attribute else expr.name
+            if expr.indices:
+                idx_parts = [
+                    self._offset_expr_to_string(i) if isinstance(i, Expr) else i
+                    for i in expr.indices
+                ]
+                return f"{base}({','.join(idx_parts)})"
+            return base
         elif isinstance(expr, Call):
             args_str = ",".join(self._offset_expr_to_string(arg) for arg in expr.args)
             return f"{expr.func}({args_str})"

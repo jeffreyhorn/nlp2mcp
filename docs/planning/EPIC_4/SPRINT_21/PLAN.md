@@ -301,11 +301,11 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Verify imsl, sarf, tfordy parse | pipeline | 3 models unblocked |
 | Run newly-parsing models through full pipeline (PR4) | pipeline | Translate/solve status |
 
-**End of Day 4 criterion:** imsl, sarf, tfordy all parse via `parse_model_file()`; internal_error ≤4.
+**End of Day 4 criterion:** imsl, sarf, tfordy all parse via `parse_model_file()`; internal_error ≤4. **MET** ✅
 
 **Post-merge checklist:**
-- [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Run imsl, sarf, tfordy through full pipeline (PR4)
+- [x] Record PR number in SPRINT_LOG.md (PR2)
+- [x] Run imsl, sarf, tfordy through full pipeline (PR4)
 
 ---
 

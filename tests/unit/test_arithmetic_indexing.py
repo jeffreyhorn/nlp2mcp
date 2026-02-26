@@ -1,12 +1,10 @@
 """Unit tests for arithmetic indexing (i++1, i--1, i+j) - Sprint 9 Day 3.
 
-Tests focus on equation definitions and bounds, which are the primary use cases
-for lead/lag indexing in GAMS (parameter assignments don't support IndexOffset).
+Tests focus on equation definitions and bounds. For lead/lag in parameter
+assignments, see tests/parser/test_leadlag_param_assign.py.
 """
 
-import pytest
-
-from src.ir.parser import ParserSemanticError, parse_model_text
+from src.ir.parser import parse_model_text
 
 
 class TestBasicArithmeticIndexing:
@@ -570,16 +568,17 @@ pdef(t).. pd(t) =e= sum(n, alpha(n)*p(t-(ord(n) - 1)));
 class TestErrorHandling:
     """Test error handling for invalid indexing patterns."""
 
-    def test_parameter_assignment_with_lead_lag_rejected(self):
-        """Test that lead/lag in parameter assignments is rejected."""
+    def test_parameter_assignment_with_lead_lag_accepted(self):
+        """Test that lead/lag in parameter assignments is accepted (Sprint 21 Day 4)."""
         source = """
 Set i /1*5/;
 Parameter x(i);
 x(i++1) = 10;
 """
-        # Parameter assignments don't support lead/lag offsets
-        with pytest.raises(ParserSemanticError):
-            parse_model_text(source)
+        # Sprint 21 Day 4: Lead/lag in parameter assignments now stores IndexOffset
+        model = parse_model_text(source)
+        param = model.params["x"]
+        assert len(param.expressions) == 1
 
 
 class TestBackwardCompatibility:

@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 4: Lead/Lag in Parameter Assignment LHS (+3 models) - 2026-02-25
+
+**Branch:** `sprint21-day4-leadlag-params`
+
+#### Summary
+Extended `_extract_indices()` and `_extract_indices_with_subset()` to handle lead/lag syntax (i+1, t-1, t++expr) in parameter assignment LHS indices. Unblocks 3 GAMSlib models (imsl, sarf, tfordy) that were blocked by `internal_error` in the IR builder.
+
+#### Added
+- `_extract_indices_with_subset()` now accepts optional `expr_fn` parameter for evaluating complex offset expressions
+- `ParameterDef.expressions` key type widened to `tuple[str | IndexOffset, ...]`
+- Emitter (`original_symbols.py`) handles `IndexOffset` keys via `to_gams_string()` in computed parameter assignments
+- 6 new unit tests for lead/lag in parameter assignments (linear lead, multi-index, linear lag, multiple lags, circular lead, conditional)
+
+#### Fixed
+- `_extract_indices()` gracefully returns base names for lead/lag indices instead of raising `ParserSemanticError`
+- `bound_indexed` handler in `_expr` now passes `expr_fn` for complex offset expressions
+- `_ef` in `symbol_indexed` handler passes `domain_context` for correct symbol resolution in offset expressions
+
+#### Metrics
+- Parse: 143/160 (+3: imsl, sarf, tfordy)
+- internal_error: 3 (was 7 at baseline)
+- Tests: 3,759 passed (+15), 10 skipped, 2 xfailed
+
 ### Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) - 2026-02-24
 
 **Branch:** `sprint21-day3-macro-eval`

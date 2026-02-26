@@ -68,7 +68,7 @@ class ParameterDef:
     name: str
     domain: tuple[str, ...] = ()  # e.g., ("i","j")
     values: dict[tuple[str, ...], float | str] = field(default_factory=dict)
-    expressions: list[tuple[tuple[str, ...], Expr]] = field(
+    expressions: list[tuple[tuple[str | IndexOffset, ...], Expr]] = field(
         default_factory=list
     )  # Sprint 10 Day 4: Store function calls/computed assignments as ordered list
     # Issue #741: Changed from dict to list to preserve sequential assignment order
