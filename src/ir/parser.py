@@ -1064,31 +1064,34 @@ def _merge_dotted_col_headers(
     Row labels already handle this via the ``dotted_label`` grammar node;
     this function provides equivalent behaviour for column headers.
     """
-    # Step 1: collect (name, col_pos, source_length, line_number) for header tokens
-    raw: list[tuple[str, int, int, int]] = []
+    # Step 1: collect (name, adjusted_col_pos, source_length, line_number, original_col_pos)
+    raw: list[tuple[str, int, int, int, int]] = []
     for token in tokens:
         if token.type in ("ID", "NUMBER", "STRING"):
             col_name = _token_text(token)
-            col_pos = getattr(token, "column", 0) or 0
+            orig_col_pos = getattr(token, "column", 0) or 0
+            col_pos = orig_col_pos
             line_num = getattr(token, "line", 0) or 0
             if continuation_col_offsets and id(token) in continuation_col_offsets:
+                # Apply synthetic continuation offset only to the adjusted position.
+                # Keep the original column for source-based adjacency and dot checks.
                 col_pos += continuation_col_offsets[id(token)]
-            raw.append((col_name, col_pos, len(str(token)), line_num))
+            raw.append((col_name, col_pos, len(str(token)), line_num, orig_col_pos))
 
     # Step 2: greedily merge adjacent entries separated by a dot character
     merged: list[tuple[str, int]] = []
     i = 0
     while i < len(raw):
-        name, pos, rlen, line = raw[i]
+        name, pos, rlen, line, orig_pos = raw[i]
         j = i + 1
         while j < len(raw):
-            next_name, next_pos, next_rlen, next_line = raw[j]
-            # Tokens must be on the same line and exactly 1 char apart
-            if next_line == line and pos + rlen + 1 == next_pos:
+            next_name, next_pos, next_rlen, next_line, next_orig_pos = raw[j]
+            # Tokens must be on the same line and exactly 1 char apart in the original source
+            if next_line == line and orig_pos + rlen + 1 == next_orig_pos:
                 # Verify the gap character is actually a dot in the source
                 if source_lines and 1 <= line <= len(source_lines):
                     # Lark columns are 1-based; source string is 0-based
-                    gap_idx = pos + rlen - 1  # 0-based index of gap char
+                    gap_idx = orig_pos + rlen - 1  # 0-based index of gap char
                     src = source_lines[line - 1]
                     if gap_idx < len(src) and src[gap_idx] == ".":
                         name = name + "." + next_name
@@ -1725,6 +1728,9 @@ class _ModelBuilder:
         """
         # Extract name and domain
         name = _token_text(node.children[0])
+
+        # Cache source lines once for dotted column header merging
+        source_lines = self.source.splitlines()
 
         # Sprint 19 Day 1: Handle tables with or without explicit domain
         # With domain: children = [ID, table_domain_list, (STRING)?, table_content+]
@@ -2416,7 +2422,7 @@ class _ModelBuilder:
                 # Build the column-label list for this section, merging dotted
                 # compound headers (same logic as main path).
                 sec_col_headers = _merge_dotted_col_headers(
-                    sec_hdr_tokens, source_lines=self.source.splitlines()
+                    sec_hdr_tokens, source_lines=source_lines
                 )
 
                 # Process data lines in this section
@@ -2486,7 +2492,7 @@ class _ModelBuilder:
         # (e.g., BRD.JPN → single header "BRD.JPN" for multi-dimensional tables).
         col_headers = _merge_dotted_col_headers(
             first_line_tokens,
-            source_lines=self.source.splitlines(),
+            source_lines=source_lines,
             continuation_col_offsets=continuation_col_offsets,
         )
 
