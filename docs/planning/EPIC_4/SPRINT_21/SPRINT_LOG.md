@@ -155,7 +155,7 @@
 
 **Date:** 2026-02-25
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #883
 **Effort:** ~3h
 
 **Activities:**

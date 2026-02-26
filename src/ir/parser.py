@@ -605,13 +605,13 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
 
 
 def _extract_indices(node: Tree) -> tuple[str, ...]:
-    """Extract indices from index_list for parameter assignments.
+    """Extract base index names from index_list for domain context.
 
-    Used for indexed parameter assignments like p('i1') where 'i1' should become i1.
-
-    Sprint 9 Note: Now handles index_expr nodes from index_list grammar.
-    Sprint 11 Day 2: Now handles index_simple and index_subset nodes.
-    Only supports plain identifiers (no IndexOffset) for parameter assignments.
+    Returns plain string names only (no IndexOffset). Used to build
+    ``domain_context`` tuples so that RHS expressions can resolve index
+    variables. Lead/lag suffixes are silently ignored — callers that need
+    full ``IndexOffset`` preservation should use ``_extract_indices_with_subset()``
+    with an ``expr_fn`` instead.
 
     Note on quoting behavior:
     - For value storage (param.values), quotes are stripped via _strip_quotes()
