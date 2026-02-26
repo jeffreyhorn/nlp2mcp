@@ -5,7 +5,7 @@ to handle lead/lag syntax (i+1, t-1, t++expr) in parameter assignments.
 Unblocks GAMSlib models imsl, sarf, tfordy.
 """
 
-from src.ir.ast import Binary, Call, Const, IndexOffset, Unary
+from src.ir.ast import Call, Const, IndexOffset, Unary
 from src.ir.parser import parse_model_text
 
 
