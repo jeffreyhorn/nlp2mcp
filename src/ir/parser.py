@@ -636,12 +636,8 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
             if child.data == "index_simple":
                 # index_simple: ID lag_lead_suffix?
                 id_token = child.children[0]
-                if len(child.children) > 1:
-                    # Has lag/lead suffix - not supported for parameter assignments
-                    raise ParserSemanticError(
-                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
-                    )
-                # Strip quotes if present
+                # Extract just the base name (lag/lead suffix is ignored here
+                # since this function is only used for domain context extraction)
                 indices.append(
                     _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
                 )
@@ -668,19 +664,11 @@ def _extract_indices(node: Tree) -> tuple[str, ...]:
                     indices.append(text)
             else:
                 # Old index_expr from legacy grammar
-                # Only support plain ID (no lag/lead for parameter assignments)
-                if len(child.children) == 1:
-                    # No lag/lead suffix, just extract the ID
-                    id_token = child.children[0]
-                    # Strip quotes if present
-                    indices.append(
-                        _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
-                    )
-                else:
-                    # Has lag/lead suffix - not supported for parameter assignments
-                    raise ParserSemanticError(
-                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
-                    )
+                # Extract the first child (base ID), ignoring any lag/lead suffix
+                id_token = child.children[0]
+                indices.append(
+                    _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
+                )
     return tuple(indices)
 
 
@@ -741,19 +729,28 @@ def _get_quoted_index_positions(node: Tree) -> set[int]:
     return quoted
 
 
-def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | None]:
+def _extract_indices_with_subset(
+    node: Tree,
+    expr_fn: Callable[[Tree], Expr] | None = None,
+) -> tuple[tuple[str | IndexOffset, ...], str | None]:
     """Extract indices from index_list along with any subset constraint.
+
+    Args:
+        node: The index_list Tree node from the grammar.
+        expr_fn: Optional expression evaluator for complex offset expressions
+            in lead/lag suffixes (e.g., floor(...), ord(...)).
 
     Returns:
         Tuple of (indices, subset_name) where:
-        - indices: tuple of domain index names
+        - indices: tuple of domain index names (str) or IndexOffset objects
         - subset_name: name of constraining subset if present, None otherwise
 
     Example:
         - arc(n,np) -> (('n', 'np'), 'arc')
         - (i, j) -> (('i', 'j'), None)
+        - (t+1, n) -> ((IndexOffset('t', Const(1), False), 'n'), None)
     """
-    indices: list[str] = []
+    indices: list[str | IndexOffset] = []
     subset_name: str | None = None
 
     for child in node.children:
@@ -778,25 +775,27 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
             if child.data == "index_simple":
                 id_token = child.children[0]
                 if len(child.children) > 1:
-                    raise ParserSemanticError(
-                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
-                    )
-                # Sprint 18 Day 2: Preserve quotes for element literals
-                # If the ID token starts/ends with quotes, it's an element literal
-                # (e.g., "revenue", 'total') - normalize to double quotes for emitter
-                token_text = str(id_token)
-                if id_token.type == "ID" and len(token_text) >= 2:
-                    if token_text.startswith('"') and token_text.endswith('"'):
-                        # Already double-quoted - preserve as-is
-                        indices.append(token_text)
-                    elif token_text.startswith("'") and token_text.endswith("'"):
-                        # Single-quoted - normalize to double quotes
-                        indices.append(f'"{token_text[1:-1]}"')
-                    else:
-                        # Unquoted identifier - use as-is (domain variable)
-                        indices.append(token_text)
+                    # Has lag/lead suffix — delegate to _process_index_expr
+                    # which builds an IndexOffset object
+                    result = _process_index_expr(child, expr_fn)
+                    indices.append(result)
                 else:
-                    indices.append(_token_text(id_token))
+                    # Sprint 18 Day 2: Preserve quotes for element literals
+                    # If the ID token starts/ends with quotes, it's an element literal
+                    # (e.g., "revenue", 'total') - normalize to double quotes for emitter
+                    token_text = str(id_token)
+                    if id_token.type == "ID" and len(token_text) >= 2:
+                        if token_text.startswith('"') and token_text.endswith('"'):
+                            # Already double-quoted - preserve as-is
+                            indices.append(token_text)
+                        elif token_text.startswith("'") and token_text.endswith("'"):
+                            # Single-quoted - normalize to double quotes
+                            indices.append(f'"{token_text[1:-1]}"')
+                        else:
+                            # Unquoted identifier - use as-is (domain variable)
+                            indices.append(token_text)
+                    else:
+                        indices.append(_token_text(id_token))
             elif child.data == "index_subset":
                 # index_subset: ID "(" index_list ")" lag_lead_suffix?
                 subset_name = _token_text(child.children[0])
@@ -823,9 +822,9 @@ def _extract_indices_with_subset(node: Tree) -> tuple[tuple[str, ...], str | Non
                         _strip_quotes(id_token) if id_token.type == "ID" else _token_text(id_token)
                     )
                 else:
-                    raise ParserSemanticError(
-                        "Lead/lag indexing (i++1, i--1) not supported in parameter assignments"
-                    )
+                    # Has lag/lead suffix — delegate to _process_index_expr
+                    result = _process_index_expr(child, expr_fn)
+                    indices.append(result)
 
     return tuple(indices), subset_name
 
@@ -4005,12 +4004,19 @@ class _ModelBuilder:
                 # Handle indexed assignment: p('i1') = 10, report('x1','global') = 1, or low(n,nn) = ...
                 symbol_name = _token_text(target.children[0])
 
-                # Extract indices and any subset constraint from id_list
+                # Extract indices and any subset constraint from id_list.
+                # Pass expr_fn with domain_context for lead/lag offset expression evaluation.
+                def _ef(n: Tree) -> Expr:
+                    return self._expr(n, domain_context)
+
                 indices, subset_name = (
-                    _extract_indices_with_subset(target.children[1])
+                    _extract_indices_with_subset(target.children[1], expr_fn=_ef)
                     if len(target.children) > 1
                     else ((), None)
                 )
+
+                # Detect lead/lag indices — these must go through expression storage
+                has_lead_lag = any(isinstance(idx, IndexOffset) for idx in indices)
 
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
                 if symbol_name in self.model.sets:
@@ -4052,7 +4058,12 @@ class _ModelBuilder:
                 # Sprint 17 Day 4: Only expand for constant values, not for expressions
                 # For expressions like gplus(c) = gibbs(c) + log(...), we store once with index
                 # and emit as a single GAMS assignment statement
-                if subset_name is None and len(indices) == 1 and indices[0] in self.model.sets:
+                if (
+                    subset_name is None
+                    and len(indices) == 1
+                    and isinstance(indices[0], str)
+                    and indices[0] in self.model.sets
+                ):
                     simple_subset = self.model.sets[indices[0]]
                     # Note: SetDef currently doesn't store domain information (the parent set).
                     # E.g., for "Set sub(i) / b, c /", we only store name='sub', members=['b','c'].
@@ -4095,6 +4106,7 @@ class _ModelBuilder:
                 # must NOT be expanded, even if they match a set name.
                 if (
                     not has_function_call
+                    and not has_lead_lag
                     and value is not None
                     and len(param.domain) > 0
                     and len(indices) == len(param.domain)
@@ -4145,8 +4157,11 @@ class _ModelBuilder:
                 # as param data (which would have mismatched key arity).
                 is_compact_index = len(param.domain) > 0 and len(indices) != len(param.domain)
 
-                # Sprint 10 Day 4: Store expression if it contains function calls, otherwise store value
-                if has_function_call or is_compact_index:
+                # Sprint 10 Day 4: Store expression if it contains function calls,
+                # lead/lag indices, or compact indices — otherwise store value.
+                # Lead/lag assignments must be emitted as GAMS statements since
+                # the runtime index computation is needed.
+                if has_function_call or is_compact_index or has_lead_lag:
                     # Keep quotes in expression indices for emitter
                     param.expressions.append((tuple(indices), expr))
                 elif value is not None:
@@ -4680,7 +4695,11 @@ class _ModelBuilder:
             name = _token_text(node.children[0])
             attribute = _token_text(node.children[1]).lower()  # Extract attribute
             # Use _process_index_list to handle i++1, i--2, etc. (Sprint 9)
-            indices = _process_index_list(node.children[2]) if len(node.children) > 2 else ()
+            # Sprint 21 Day 4: Pass expr_fn for complex offset expressions (offset_func, offset_paren)
+            _bi_ef = lambda n: self._expr(n, free_domain)  # noqa: E731
+            indices = (
+                _process_index_list(node.children[2], _bi_ef) if len(node.children) > 2 else ()
+            )
 
             # Check if this is an equation reference (Sprint 9 Day 6)
             if name in self.model.equations:

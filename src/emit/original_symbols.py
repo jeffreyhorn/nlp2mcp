@@ -24,6 +24,7 @@ from src.ir.ast import (
     Const,
     DollarConditional,
     Expr,
+    IndexOffset,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -927,7 +928,9 @@ def _topological_sort_params(eligible: list[str], param_deps: dict[str, set[str]
 
 
 # Issue #878: Statement-level topological sort type
-_StmtTuple = tuple[str, tuple[str, ...], Expr, int]  # (param_name, key, expr, orig_idx)
+_StmtTuple = tuple[
+    str, tuple[str | IndexOffset, ...], Expr, int
+]  # (param_name, key, expr, orig_idx)
 
 
 def _topological_sort_statements(
@@ -1253,18 +1256,29 @@ def emit_computed_parameter_assignments(
     seen_assignment_lines: set[str] = set()
     for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
         # Convert expression to GAMS syntax
-        domain_vars = frozenset(
-            idx
+        domain_vars: frozenset[str] = frozenset(
+            idx if isinstance(idx, str) else idx.base
             for idx in key_tuple
-            if not idx.startswith('"')
-            and not idx.startswith("'")
-            and idx.lower() in declared_sets_lower
+            if (
+                isinstance(idx, str)
+                and not idx.startswith('"')
+                and not idx.startswith("'")
+                and idx.lower() in declared_sets_lower
+            )
+            or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
         expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
         if key_tuple:
-            quoted_keys = [_quote_assignment_index(idx, declared_sets_lower) for idx in key_tuple]
+            quoted_keys = [
+                (
+                    idx.to_gams_string()
+                    if isinstance(idx, IndexOffset)
+                    else _quote_assignment_index(idx, declared_sets_lower)
+                )
+                for idx in key_tuple
+            ]
             index_str = ",".join(quoted_keys)
             assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
         else:

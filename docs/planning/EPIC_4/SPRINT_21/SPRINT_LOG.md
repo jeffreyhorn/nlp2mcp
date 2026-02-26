@@ -153,19 +153,34 @@
 
 ### Day 4 — WS3: internal_error Lead/Lag Fix
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-25
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~3h
 
 **Activities:**
--
+- Extended `_extract_indices()` to gracefully return base names when encountering `lag_lead_suffix` (instead of raising `ParserSemanticError`)
+- Extended `_extract_indices_with_subset()` with optional `expr_fn` parameter and widened return type to `str | IndexOffset`
+- Updated `_handle_assign` `symbol_indexed` handler: added `has_lead_lag` detection, guarded domain-over expansion, forced expression path for lead/lag keys
+- Widened `ParameterDef.expressions` key type to `tuple[str | IndexOffset, ...]` in symbols.py
+- Updated emitter (`original_symbols.py`): added `IndexOffset` import, widened `_StmtTuple`, updated `domain_vars` extraction and index formatting to dispatch `IndexOffset` to `to_gams_string()`
+- Fixed `bound_indexed` handler in `_expr` to pass `expr_fn` for complex offset expressions (tfordy fix)
+- Fixed `_ef` in `symbol_indexed` handler to pass `domain_context` instead of empty tuple (imsl fix)
+- Added `isinstance(idx, str)` guard for subset expansion check (type safety)
+- Updated existing test from `raises(ParserSemanticError)` to acceptance test
+- 6 new unit tests (linear lead, multi-index lead, linear lag, multiple lags, circular lead, conditional with lead)
 
 **Metrics:**
-- Parse: /160
-- internal_error:
-- Tests:
+- Parse: 143/160 (stored; fresh run 144/157 available)
+- internal_error: 3 (was 7 at baseline, 4 after Day 3 — 3 models fixed: imsl, sarf, tfordy)
+- Tests: 3,759 passed (+15), 10 skipped, 2 xfailed
 - imsl, sarf, tfordy pipeline status:
+
+| Model | Parse | Translate | Solve | Error |
+|-------|-------|-----------|-------|-------|
+| imsl | OK | FAIL | — | internal_error (translation) |
+| sarf | OK | FAIL | — | timeout |
+| tfordy | OK | OK | FAIL | path_syntax_error |
 
 ---
 
