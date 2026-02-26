@@ -1048,6 +1048,66 @@ def _process_index_list(
     return tuple(indices)
 
 
+def _merge_dotted_col_headers(
+    tokens: list[Token],
+    source_lines: list[str] | None = None,
+    continuation_col_offsets: dict[int, int] | None = None,
+) -> list[tuple[str, int]]:
+    """Merge adjacent tokens separated by dots into compound column headers.
+
+    When a table has dotted column headers like ``BRD.JPN``, Lark produces
+    separate ID tokens for each segment (the ``"."`` grammar literal is
+    discarded).  This function detects adjacency and verifies that the
+    character between adjacent tokens in the source text is actually a dot
+    (not a space), then merges them into a single compound header.
+
+    Row labels already handle this via the ``dotted_label`` grammar node;
+    this function provides equivalent behaviour for column headers.
+    """
+    # Step 1: collect (name, col_pos, source_length, line_number) for header tokens
+    raw: list[tuple[str, int, int, int]] = []
+    for token in tokens:
+        if token.type in ("ID", "NUMBER", "STRING"):
+            col_name = _token_text(token)
+            col_pos = getattr(token, "column", 0) or 0
+            line_num = getattr(token, "line", 0) or 0
+            if continuation_col_offsets and id(token) in continuation_col_offsets:
+                col_pos += continuation_col_offsets[id(token)]
+            raw.append((col_name, col_pos, len(str(token)), line_num))
+
+    # Step 2: greedily merge adjacent entries separated by a dot character
+    merged: list[tuple[str, int]] = []
+    i = 0
+    while i < len(raw):
+        name, pos, rlen, line = raw[i]
+        j = i + 1
+        while j < len(raw):
+            next_name, next_pos, next_rlen, next_line = raw[j]
+            # Tokens must be on the same line and exactly 1 char apart
+            if next_line == line and pos + rlen + 1 == next_pos:
+                # Verify the gap character is actually a dot in the source
+                if source_lines and 1 <= line <= len(source_lines):
+                    # Lark columns are 1-based; source string is 0-based
+                    gap_idx = pos + rlen - 1  # 0-based index of gap char
+                    src = source_lines[line - 1]
+                    if gap_idx < len(src) and src[gap_idx] == ".":
+                        name = name + "." + next_name
+                        rlen = rlen + 1 + next_rlen
+                        j += 1
+                        continue
+                    # Gap character is not a dot — stop merging
+                    break
+                # No source available — fall back to adjacency heuristic
+                name = name + "." + next_name
+                rlen = rlen + 1 + next_rlen
+                j += 1
+            else:
+                break
+        merged.append((name, pos))
+        i = j
+    return merged
+
+
 @dataclass
 class _ModelBuilder:
     """Walks the parse tree and instantiates ModelIR components."""
@@ -2353,13 +2413,11 @@ class _ModelBuilder:
 
             for header_idx, data_start, data_end in section_bounds:
                 sec_hdr_line_num, sec_hdr_tokens = sorted_lines[header_idx]
-                # Build the column-label list for this section (same logic as main path)
-                sec_col_headers: list[tuple[str, int]] = []  # (label, col_position)
-                for tok in sec_hdr_tokens:
-                    if tok.type in ("ID", "NUMBER", "STRING"):
-                        col_pos = getattr(tok, "column", 0) or 0
-                        col_label = str(tok).strip("'\"")
-                        sec_col_headers.append((col_label, col_pos))
+                # Build the column-label list for this section, merging dotted
+                # compound headers (same logic as main path).
+                sec_col_headers = _merge_dotted_col_headers(
+                    sec_hdr_tokens, source_lines=self.source.splitlines()
+                )
 
                 # Process data lines in this section
                 for data_idx in range(data_start, data_end):
@@ -2423,18 +2481,14 @@ class _ModelBuilder:
             self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
             return
 
-        # Column headers: store name and column position
-        col_headers = []  # List of (col_name, col_position) tuples
-        for token in first_line_tokens:
-            # Column headers can be ID, NUMBER, or STRING tokens
-            # Issue #665: Quoted identifiers like 'machine-1' may be STRING tokens
-            if token.type in ("ID", "NUMBER", "STRING"):
-                col_name = _token_text(token)
-                col_pos = getattr(token, "column", 0)
-                # Apply continuation offset if this token came from a continuation line
-                if id(token) in continuation_col_offsets:
-                    col_pos += continuation_col_offsets[id(token)]
-                col_headers.append((col_name, col_pos))
+        # Column headers: store name and column position.
+        # Merge adjacent tokens separated by dots into compound headers
+        # (e.g., BRD.JPN → single header "BRD.JPN" for multi-dimensional tables).
+        col_headers = _merge_dotted_col_headers(
+            first_line_tokens,
+            source_lines=self.source.splitlines(),
+            continuation_col_offsets=continuation_col_offsets,
+        )
 
         if not col_headers:
             self.model.add_param(ParameterDef(name=name, domain=domain, values={}))

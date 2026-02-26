@@ -381,7 +381,7 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Handle standard Table format (header row + data rows) | `parser.py` | Core functionality |
 | Unit tests for Table data capture | `tests/` | ≥3 new tests |
 
-**End of Day 7 criterion:** Table data parsing implemented for standard format; unit tests pass; at least 3 Subcategory A models (e.g., iobalance, qdemo7, hydro) have populated `ParameterDef.values`.
+**End of Day 7 criterion:** Table data parsing implemented for standard format; unit tests pass; at least 3 Subcategory A models (e.g., iobalance, qdemo7, hydro) have populated `ParameterDef.values`. **MET** — Standard table data already worked; dotted compound column header fix added for twocge (50 values), tforss (96 values), tfordy (68+96 values). 6 new tests pass.
 
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
