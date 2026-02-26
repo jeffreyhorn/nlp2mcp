@@ -358,11 +358,11 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Unit tests for both fixes | `tests/` | ≥4 new tests |
 | Re-run affected models through full pipeline | pipeline | Solve status for 10 models |
 
-**End of Day 6 criterion:** irscge, lrgcge, moncge, quocge, stdcge, twocge, sample, launch, ps2_f_eff, ps2_f_inf compile cleanly; solve attempted on all 10.
+**End of Day 6 criterion:** irscge, lrgcge, moncge, quocge, stdcge, twocge, sample, launch, ps2_f_eff, ps2_f_inf compile cleanly; solve attempted on all 10. **PARTIALLY MET** — 5/7 E-category and 3/3 D-category primary errors fixed; 2 models have secondary errors from other subcategories.
 
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
-- [ ] Run all 10 models through full pipeline (PR4)
+- [x] Run all 10 models through full pipeline (PR4)
 
 ---
 

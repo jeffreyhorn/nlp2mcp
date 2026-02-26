@@ -9,7 +9,7 @@ from collections import deque
 
 from src.config import Config
 from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
-from src.emit.expr_to_gams import expr_to_gams
+from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
@@ -279,6 +279,12 @@ def emit_gams_mcp(
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
+    # Issue #874 / Subcategory E: Build set/alias lookup for domain-aware index quoting.
+    # When a .l or .lo index is a set/alias name (e.g., J in SAM("TRF",J)), it must be
+    # emitted as a bare identifier, not a quoted string literal.
+    _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
+        a.lower() for a in kkt.model_ir.aliases
+    }
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip unreferenced variables (not declared, so no init needed)
         if (
@@ -293,7 +299,12 @@ def emit_gams_mcp(
         if var_def.l_map:
             for indices, l_val in var_def.l_map.items():
                 if l_val is not None:
-                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    # Subcategory E: Use domain-aware quoting — set/alias names are
+                    # emitted bare (e.g., J), element labels are quoted (e.g., "TRF").
+                    idx_domain_vars = frozenset(
+                        i for i in indices if i.lower() in _sets_aliases_lower
+                    )
+                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
                     lines.append(f"{var_name}.l({idx_str}) = {l_val};")
                     has_init = True
         elif var_def.l is not None:
@@ -329,7 +340,11 @@ def emit_gams_mcp(
         if not has_init and var_def.lo_map:
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
-                    idx_str = ",".join(f'"{i}"' for i in indices)
+                    # Subcategory E: Use domain-aware quoting (same as l_map above)
+                    idx_domain_vars = frozenset(
+                        i for i in indices if i.lower() in _sets_aliases_lower
+                    )
+                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
                     lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
                     has_init = True
         # Check for scalar lower bound

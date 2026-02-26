@@ -6,7 +6,7 @@ including operator precedence, function calls, and MultiplierRef support.
 
 import pytest
 
-from src.emit.expr_to_gams import _quote_indices, expr_to_gams
+from src.emit.expr_to_gams import _format_mixed_indices, _quote_indices, expr_to_gams
 from src.ir.ast import (
     Binary,
     Call,
@@ -619,6 +619,39 @@ class TestQuoteIndices:
 
 
 @pytest.mark.unit
+class TestSetIndexQuoting:
+    """Test Subcategory E: set references vs string literals in parameter indices.
+
+    In CGE models like irscge/stdcge, SAM("TRF",J) must emit J as a bare
+    identifier (set reference), not "J" (string literal). GAMS Error $116
+    ("label is unknown") occurs when set names are quoted as literals.
+    """
+
+    def test_mixed_literal_and_domain_var(self):
+        """Test SAM("TRF", J) pattern — "TRF" is literal, J is domain var.
+
+        When J is in domain_vars, it should be emitted bare.
+        """
+        result = _format_mixed_indices(("TRF", "J"), domain_vars=frozenset(["J"]))
+        assert result == '"TRF",J'
+
+    def test_all_literals_no_domain_context(self):
+        """Test that without domain context, uppercase indices are quoted."""
+        result = _format_mixed_indices(("TRF", "J"))
+        assert result == '"TRF","J"'
+
+    def test_domain_var_not_quoted_multi_char(self):
+        """Test multi-char set names are bare when in domain_vars."""
+        result = _format_mixed_indices(("TRF", "goods", "r"), domain_vars=frozenset(["goods", "r"]))
+        assert result == '"TRF",goods,r'
+
+    def test_twocge_three_index_pattern(self):
+        """Test twocge pattern: SAM("TRF","J",r) where J and r are domain vars."""
+        result = _format_mixed_indices(("TRF", "J", "r"), domain_vars=frozenset(["J", "r"]))
+        assert result == '"TRF",J,r'
+
+
+@pytest.mark.unit
 class TestDollarConditional:
     """Test DollarConditional expression conversion.
 
@@ -1049,3 +1082,57 @@ class TestInfNanFormatting:
         expr = Binary("*", Const(float("-inf")), SymbolRef("y"))
         result = expr_to_gams(expr)
         assert result == "(-inf) * y"
+
+
+@pytest.mark.unit
+class TestNegativeExponentParenthesization:
+    """Test Subcategory D: negative exponents wrapped in parentheses.
+
+    GAMS Error $445 ("more than one operator in a row") occurs when the
+    exponent of ** is negative, e.g., x ** -0.9904. GAMS requires
+    x ** (-0.9904) to clarify that the minus is part of the exponent.
+    """
+
+    def test_power_negative_constant_exponent(self):
+        """Test x ** -0.9904 becomes x ** (-0.9904)."""
+        expr = Binary("**", VarRef("pweight", ("s",)), Const(-0.9904))
+        result = expr_to_gams(expr, domain_vars=frozenset(["s"]))
+        assert result == "pweight(s) ** (-0.9904)"
+        # Must NOT contain bare "** -" (two operators in a row)
+        assert "** -0" not in result
+
+    def test_power_negative_integer_exponent(self):
+        """Test x ** -2 becomes x ** (-2)."""
+        expr = Binary("^", VarRef("x", ()), Const(-2))
+        result = expr_to_gams(expr)
+        assert result == "x ** (-2)"
+
+    def test_power_positive_exponent_no_parens(self):
+        """Test x ** 2 stays as x ** 2 (no unnecessary parentheses)."""
+        expr = Binary("^", VarRef("x", ()), Const(2))
+        result = expr_to_gams(expr)
+        assert result == "x ** 2"
+
+    def test_power_variable_exponent_no_parens(self):
+        """Test x ** n stays as x ** n (no parens for variable exponents)."""
+        expr = Binary("^", VarRef("x", ()), VarRef("n", ()))
+        result = expr_to_gams(expr)
+        assert result == "x ** n"
+
+    def test_power_negative_inf_exponent(self):
+        """Test x ** -inf becomes x ** (-inf)."""
+        expr = Binary("**", VarRef("x", ()), Const(float("-inf")))
+        result = expr_to_gams(expr)
+        assert result == "x ** (-inf)"
+
+    def test_launch_pattern(self):
+        """Test the launch.gms pattern: coeff * pweight(s) ** (-0.9904)."""
+        # 6739.127337 * pweight(s) ** -0.9904
+        expr = Binary(
+            "*",
+            Const(6739.127337),
+            Binary("**", VarRef("pweight", ("s",)), Const(-0.9904)),
+        )
+        result = expr_to_gams(expr, domain_vars=frozenset(["s"]))
+        assert "** (-0.9904)" in result
+        assert "** -" not in result

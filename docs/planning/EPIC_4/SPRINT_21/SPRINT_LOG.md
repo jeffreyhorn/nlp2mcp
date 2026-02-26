@@ -232,18 +232,28 @@
 
 ### Day 6 — WS4: path_syntax_error Emitter Fixes (E + D)
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~2h
 
 **Activities:**
--
+- Fixed Subcategory E: set index quoting — set/alias names in expression indices now emitted bare (not quoted as string literals)
+  - Root cause: `_quote_indices()` was case-sensitive; GAMS is case-insensitive (set `j` referenced as `J`)
+  - Extended `domain_vars` in computed parameter assignments to include all declared set/alias names
+  - Added case-insensitive matching to `_quote_indices()` via precomputed `domain_vars_lower`
+  - Fixed `l_map` and `lo_map` index quoting in `emit_gams.py` to use `_format_mixed_indices()` with domain-aware quoting
+- Fixed Subcategory D: negative exponent parenthesization — `x ** -0.9904` now emitted as `x ** (-0.9904)`
+  - Root cause: GAMS Error $445 ("more than one operator in a row") when exponent starts with `-`
+  - Added parenthesization in `expr_to_gams()` power operator handler
+- 11 new unit tests (4 set index quoting + 7 negative exponent)
 
 **Metrics:**
-- path_syntax_error:
-- Tests:
-- Models unblocked:
+- path_syntax_error: 53 → 45 (-8: 5 CGE models compile+solve, 3 D-category models compile)
+- Tests: 3,778 passed (+11), 10 skipped, 2 xfailed
+- Models unblocked (Subcategory E — $116 fix): irscge ✅, lrgcge ✅, moncge ✅, quocge ✅ (match!), stdcge ✅
+- Models unblocked (Subcategory D — $445 fix): launch (secondary $70), ps2_f_eff (runtime), ps2_f_inf (runtime)
+- Remaining: twocge (secondary $141/Subcat A), sample (secondary $170/Subcat B)
 
 ---
 
@@ -445,9 +455,9 @@
 | 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Merged |
 | 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Merged |
 | 3 | #866 | Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) | Open |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
+| 4 | #883 | Sprint 21 Day 4: Lead/Lag in Parameter Assignment LHS (+3 parse) | Merged |
+| 5 | #887 | Sprint 21 Day 5: Checkpoint 1 + senstran/turkpow (+2 parse) | Merged |
+| 6 | TBD | Sprint 21 Day 6: WS4 Emitter Fixes (E + D) | Open |
 | 7 | | | |
 | 8 | | | |
 | 9 | | | |
