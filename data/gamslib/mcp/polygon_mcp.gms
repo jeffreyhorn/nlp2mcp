@@ -87,8 +87,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$sameas(i, 'i25') + sum(j, (2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j)) + piU_r(i) =E= 0;
-stat_theta(i).. ((-1) * (0.5 * r(i) ** 2 * cos(0) * (-1))) + nu_theta_fx_i25$sameas(i, 'i25') + lam_ordered(i) + sum(j, ((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j)) + piU_theta(i) =E= 0;
+stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$sameas(i, 'i25') + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) + piU_r(i) =E= 0;
+stat_theta(i).. ((-1) * (0.5 * r(i) ** 2 * cos(0) * (-1))) + nu_theta_fx_i25$sameas(i, 'i25') + lam_ordered(i) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) + piU_theta(i) =E= 0;
 
 * Inequality complementarity equations
 comp_distance(i,j)$(ord(j) > ord(i)).. ((-1) * (sqr(r(i)) + sqr(r(j)) - 2 * r(i) * r(j) * cos(theta(j) - theta(i)) - 1)) =G= 0;

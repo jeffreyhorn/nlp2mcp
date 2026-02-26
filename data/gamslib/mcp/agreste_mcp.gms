@@ -34,7 +34,7 @@ Parameters
     landc(s) /good 8.775, medium 11.64, pasture 21.92/
     rations(r) /'rec-1' 5.141, 'rec-2' 21.646, 'rec-3' 49.845/
     xcropl(p,s) /'crop-19'.good 0.036, 'crop-19'.medium 0.298/
-    ldp(s,s) /good.good 1, medium.good -1, medium.medium 1, pasture.medium -1, pasture.good 0, good.medium 0/
+    ldp(s,s) /good.good 1, medium.good -1, medium.medium 1, pasture.medium -1, good.medium 0, pasture.good 0/
     lio(s,r) /medium.'rec-1' 1.407, medium.'rec-2' 0.611, medium.'rec-3' 0.631, pasture.'rec-1' 0.209, pasture.'rec-2' 2.03, pasture.'rec-3' 0.9/
     labor(p,tm) /'crop-02'.jan 8.23, 'crop-02'.feb 4.54, 'crop-02'.mar 18.7, 'crop-02'.apr 9.83, 'crop-02'.may 8.03, 'crop-02'.jun 20.95, 'crop-02'.jul 15.67, 'crop-02'.aug 15.48, 'crop-02'.sep 11.35, 'crop-02'.oct 8.38, 'crop-05'.jan 3.18, 'crop-05'.feb 1.44, 'crop-05'.mar 5.43, 'crop-05'.apr 3.31, 'crop-05'.may 11.13, 'crop-05'.jun 10.33, 'crop-05'.jul 3.27, 'crop-05'.aug 2.65, 'crop-05'.sep 5.47, 'crop-05'.oct 3.67, 'crop-10'.jan 7.59, 'crop-10'.feb 6.37, 'crop-10'.mar 4.03, 'crop-10'.apr 7.09, 'crop-10'.may 4.64, 'crop-10'.jun 5.91, 'crop-10'.jul 7.67, 'crop-10'.aug 9.23, 'crop-10'.sep 5.93, 'crop-10'.oct 9.05, 'crop-15'.jan 9.7, 'crop-15'.feb 8.87, 'crop-15'.mar 4.13, 'crop-15'.apr 2.13, 'crop-15'.may 7.18, 'crop-15'.jun 5.88, 'crop-15'.jul 3.21, 'crop-15'.aug 9.2, 'crop-15'.sep 6.89, 'crop-15'.oct 3.3, 'crop-16'.jan 6.18, 'crop-16'.feb 8.34, 'crop-16'.mar 7.28, 'crop-16'.apr 8.15, 'crop-16'.may 8.48, 'crop-16'.jun 10.71, 'crop-16'.jul 9.34, 'crop-16'.aug 12.76, 'crop-16'.sep 8.93, 'crop-16'.oct 10.22, 'crop-17'.jan 3.49, 'crop-17'.feb 2.11, 'crop-17'.mar 10.59, 'crop-17'.apr 12.01, 'crop-17'.may 3.47, 'crop-17'.jun 10.75, 'crop-17'.jul 5.88, 'crop-17'.aug 7.3, 'crop-17'.sep 4.14, 'crop-17'.oct 4.25, 'crop-19'.jan 7.73, 'crop-19'.feb 9.44, 'crop-19'.mar 0.56, 'crop-19'.apr 0.78, 'crop-19'.may 1.19, 'crop-19'.jun 0.44, 'crop-19'.jul 1.89, 'crop-19'.aug 3.04, 'crop-19'.sep 2.93, 'crop-19'.oct 4.99, 'crop-25'.jan 0.53, 'crop-25'.feb 0.89, 'crop-25'.mar 24.38, 'crop-25'.apr 22.03, 'crop-25'.may 16.91, 'crop-25'.jun 9.47, 'crop-25'.jul 10.97, 'crop-25'.aug 9.7, 'crop-25'.sep 4.93, 'crop-25'.oct 6.41, 'crop-29'.jan 4.73, 'crop-29'.feb 4.92, 'crop-29'.mar 9.24, 'crop-29'.apr 8.97, 'crop-29'.may 15.82, 'crop-29'.jun 13, 'crop-29'.jul 14.74, 'crop-29'.aug 10.64, 'crop-29'.sep 5.64, 'crop-29'.oct 4.9, 'crop-30'.jan 7.39, 'crop-30'.feb 2.67, 'crop-30'.mar 16.15, 'crop-30'.apr 23.69, 'crop-30'.may 28.12, 'crop-30'.jun 20.58, 'crop-30'.jul 17.73, 'crop-30'.aug 15.06, 'crop-30'.sep 4.58, 'crop-30'.oct 9.76, 'crop-33'.jan 2.65, 'crop-33'.feb 1.09, 'crop-33'.mar 10.61, 'crop-33'.apr 9.14, 'crop-33'.may 18.38, 'crop-33'.jun 11.5, 'crop-33'.jul 9.22, 'crop-33'.aug 13.36, 'crop-33'.sep 3.85, 'crop-33'.oct 3.87, 'crop-36'.jan 5.49, 'crop-36'.feb 5.26, 'crop-36'.mar 9.63, 'crop-36'.apr 16.18, 'crop-36'.may 20.11, 'crop-36'.jun 16.86, 'crop-36'.jul 14.86, 'crop-36'.aug 14, 'crop-36'.sep 8.04, 'crop-36'.oct 6.69, nov.jan 0, nov.feb 0, nov.mar 0, nov.apr 0, nov.may 0, nov.jun 0, nov.jul 0, nov.aug 0, nov.sep 0, nov.oct 0/
     llab(tm,r) /jan.'rec-1' 4.261, jan.'rec-2' 1.873, jan.'rec-3' 1.933, feb.'rec-1' 2.854, feb.'rec-2' 1.262, feb.'rec-3' 1.302, mar.'rec-1' 0.04, mar.'rec-2' 0.04, mar.'rec-3' 0.04, apr.'rec-1' 0.04, apr.'rec-2' 0.04, apr.'rec-3' 0.04, may.'rec-1' 0.04, may.'rec-2' 0.04, may.'rec-3' 0.04, jun.'rec-1' 0.04, jun.'rec-2' 0.04, jun.'rec-3' 0.04, jul.'rec-1' 0.04, jul.'rec-2' 0.04, jul.'rec-3' 0.04, aug.'rec-1' 0.04, aug.'rec-2' 0.04, aug.'rec-3' 0.04, sep.'rec-1' 0.04, sep.'rec-2' 0.04, sep.'rec-3' 0.04, oct.'rec-1' 0.04, oct.'rec-2' 0.04, oct.'rec-3' 0.04, nov.'rec-1' 7.075, nov.'rec-2' 3.095, nov.'rec-3' 3.195, dec.'rec-1' 7.075, dec.'rec-2' 3.095, dec.'rec-3' 3.195/
@@ -44,7 +44,7 @@ Parameters
     ravg(c)
     prdev(c,ty)
     yield(p,c,s) /'crop-02'.'cotton-h'.good 848, 'crop-02'.'cotton-h'.medium 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.good 251, 'crop-25'.'beans-cor'.medium 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.good 269, 'crop-29'.'cotton-h'.medium 149, 'crop-29'.'beans-arr'.good 285, 'crop-29'.'beans-arr'.medium 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.good 403, 'crop-30'.'cotton-h'.medium 133, 'crop-30'.'beans-cor'.good 115, 'crop-30'.'beans-cor'.medium 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.good 274, 'crop-33'.'beans-arr'.medium 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.good 288, 'crop-36'.'beans-arr'.medium 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328, 'crop-15'.oranges.medium 0/
-    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1, 'crop-15'.equipment 0, 'crop-30'.equipment 0, 'crop-30'.fertilizer 0, 'crop-30'.sprouts 0, 'crop-17'.equipment 0, 'crop-17'.sprouts 0, 'crop-02'.equipment 0, 'crop-02'.sprouts 0, 'crop-36'.equipment 0, 'crop-16'.equipment 0, 'crop-16'.seeds 0, 'crop-16'.sprouts 0, 'crop-33'.seeds 0, 'crop-33'.sprouts 0, 'crop-05'.equipment 0, 'crop-05'.fertilizer 0, 'crop-05'.seeds 0, 'crop-10'.equipment 0, 'crop-10'.seeds 0, 'crop-10'.sprouts 0, 'crop-29'.seeds 0/
+    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1, 'crop-16'.equipment 0, 'crop-16'.seeds 0, 'crop-16'.sprouts 0, 'crop-29'.seeds 0, 'crop-17'.equipment 0, 'crop-17'.sprouts 0, 'crop-36'.equipment 0, 'crop-02'.equipment 0, 'crop-02'.sprouts 0, 'crop-33'.seeds 0, 'crop-33'.sprouts 0, 'crop-15'.equipment 0, 'crop-10'.equipment 0, 'crop-10'.seeds 0, 'crop-10'.sprouts 0, 'crop-30'.equipment 0, 'crop-30'.fertilizer 0, 'crop-30'.sprouts 0, 'crop-05'.equipment 0, 'crop-05'.fertilizer 0, 'crop-05'.seeds 0/
     pcost(p)
     a(p) /'crop-02' 0, 'crop-05' 0, 'crop-10' 0, 'crop-15' 0, 'crop-16' 0, 'crop-17' 0, 'crop-19' 0, 'crop-25' 0, 'crop-29' 0, 'crop-30' 0, 'crop-33' 0, 'crop-36' 0/
 ;
@@ -62,11 +62,11 @@ Scalars
     phi /0/
 ;
 
-ps(p,s) = 1$sum(c, yield(p,c,s));
+ps(p,s) = yes$sum(c, yield(p,c,s));
 
 ravg(c) = sum(ty, crev(c,ty)) / card(ty);
-prdev(c,ty) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
 pcost(p) = sum(km, techc(p,km));
+prdev(c,ty) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -116,6 +116,12 @@ Positive Variables
     lam_awcc
     piU_flab(tm)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+xcrop.up(p,s) = xcropl(p,s);
 
 * ============================================
 * Variable Initialization

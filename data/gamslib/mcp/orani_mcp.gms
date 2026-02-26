@@ -31,7 +31,7 @@ Alias(s, sp);
 Alias(i, ip);
 
 Parameters
-    amc(c,s,*) /food.domestic.agric 10, food.domestic.manuf 8, food.domestic.families 17, food.domestic.exp 19, clothing.domestic.agric 15, clothing.domestic.manuf 1, clothing.domestic.families 34, clothing.domestic.exp 1, food.imported.agric 1, food.imported.manuf 8, food.imported.families 1, food.imported.duty -1, clothing.imported.agric 5, clothing.imported.manuf 2, clothing.imported.families 10, clothing.imported.duty -5, clothing.imported.exp 0, food.domestic.duty 0, clothing.domestic.duty 0, food.imported.exp 0/
+    amc(c,s,*) /food.domestic.agric 10, food.domestic.manuf 8, food.domestic.families 17, food.domestic.exp 19, clothing.domestic.agric 15, clothing.domestic.manuf 1, clothing.domestic.families 34, clothing.domestic.exp 1, food.imported.agric 1, food.imported.manuf 8, food.imported.families 1, food.imported.duty -1, clothing.imported.agric 5, clothing.imported.manuf 2, clothing.imported.families 10, clothing.imported.duty -5, clothing.domestic.duty 0, clothing.imported.exp 0, food.imported.exp 0, food.domestic.duty 0/
     amf(f,i) /labor.agric 20, labor.manuf 20, capital.agric 10, capital.manuf 5/
     amq(c,i) /food.agric 45, food.manuf 9, clothing.agric 16, clothing.manuf 35/
     epsilon(c,s) /food.domestic 1, food.imported 1, clothing.domestic 1, clothing.imported 1/
@@ -68,29 +68,29 @@ Scalars
 
 ce(c,c) = 1;
 
+alphak(i) = amf("capital",i) / sum(f, amf(f,i));
+alphal(i) = amf("labor",i) / sum(f, amf(f,i));
+m(c,i) = amq(c,i) / sum(ip, amq(c,ip));
+r(c,i) = amq(c,i) / sum(cp, amq(cp,i));
 amc(c,s,"total") = sum(i, amc(c,s,i)) + amc(c,s,"families") + amc(c,s,"exp") + amc(c,s,"duty");
 amt(i) = sum((c,s), amc(c,s,i)) + sum(f, amf(f,i));
 alpha(c,s,i) = amc(c,s,i) / sum(sp, amc(c,sp,i));
-alphak(i) = amf("capital",i) / sum(f, amf(f,i));
-alphal(i) = amf("labor",i) / sum(f, amf(f,i));
 alphae(c,s) = amc(c,s,"families") / sum(sp, amc(c,sp,"families"));
-etabar(c,s,cp,sp) = alphae(cp,sp);
-etabar(c,s,c,s) = -1 + alphae(c,s);
 sb(c,s) = amc(c,s,"families") / sum((cp,sp), amc(cp,sp,"families"));
-eta(c,s,cp,sp) = ((-1) * epsilon(c,s)) * sb(cp,sp) + etabar(c,s,cp,sp);
 elevel = sum((c,s), amc(c,s,"exp"));
-m(c,i) = amq(c,i) / sum(ip, amq(c,ip));
 mlevel = sum(c, amc(c,"imported","total"));
-mu(c,s) = sb(c,s);
 nm(c) = amc(c,"imported","total") / sum(cp, amc(cp,"imported","total"));
 nx(c) = amc(c,"domestic","exp") / sum(cp, amc(cp,"domestic","exp"));
-r(c,i) = amq(c,i) / sum(cp, amq(cp,i));
-sc(c,s,i) = amc(c,s,i) / amt(i);
-sk(i) = amf("capital",i) / amt(i);
-sl(i) = amf("labor",i) / amt(i);
 wc(c,s) = amc(c,s,"families") / (amc(c,s,"total") - amc(c,s,"duty"));
 we(c) = amc(c,"domestic","exp") / amc(c,"domestic","total");
 wi(c,s,i) = amc(c,s,i) / (amc(c,s,"total") - amc(c,s,"duty"));
+etabar(c,s,cp,sp) = alphae(cp,sp);
+etabar(c,s,c,s) = -1 + alphae(c,s);
+eta(c,s,cp,sp) = ((-1) * epsilon(c,s)) * sb(cp,sp) + etabar(c,s,cp,sp);
+mu(c,s) = sb(c,s);
+sc(c,s,i) = amc(c,s,i) / amt(i);
+sk(i) = amf("capital",i) / amt(i);
+sl(i) = amf("labor",i) / amt(i);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -265,7 +265,7 @@ stat_kappa(i).. ((-1) * nu_balcap(i)) + nu_kappa_fx_agric$sameas(i, 'agric') + n
 stat_l.. (-1) * nu_ballab =E= 0;
 stat_li(i).. nu_indlab(i) + wl(i) * nu_ballab =E= 0;
 stat_mt.. nu_imports + ((-1) * (100 * ((-1) * mlevel) / 10000)) * nu_baltrade =E= 0;
-stat_p(c,s).. mu(c,s) + ((-1) * eta(c,s,c,s)) * nu_con(c,s) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, ((-1) * sc(c,s,i)) * nu_pric(i)) =E= 0;
+stat_p(c,s).. mu(c,s) + sum((cp,sp), ((-1) * eta(c,s,cp,sp)) * nu_con(c,s)) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, ((-1) * sc(c,s,i)) * nu_pric(i)) =E= 0;
 stat_phi.. sum(c, (-1) * nu_priexp(c)) + sum(c, (-1) * nu_priimp(c)) + nu_phi_fx =E= 0;
 stat_pk(i).. (1 - alphak(i)) * nu_indcap(i) + ((-1) * alphak(i)) * nu_indlab(i) + ((-1) * sk(i)) * nu_pric(i) =E= 0;
 stat_pm(c).. ((-1) * nu_priimp(c)) + ((-1) * nm(c)) * nu_imports + nu_pm_fx_clothing$sameas(c, 'clothing') + nu_pm_fx_food$sameas(c, 'food') =E= 0;

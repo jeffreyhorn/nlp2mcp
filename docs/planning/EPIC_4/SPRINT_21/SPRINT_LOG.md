@@ -186,44 +186,47 @@
 
 ### Day 5 — CHECKPOINT 1 + WS3: internal_error (if-stmt + table)
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~3h
 
 **Checkpoint 1 Metrics:**
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| Parse | /160 | ≥ 141 | |
-| lexer_invalid_char | | ≤ 8 | |
-| internal_error | | ≤ 4 | |
-| semantic_undefined_symbol | | ≤ 0 | |
-| Solve | | — | |
-| Match | | — | |
-| Tests | | — | |
+| Parse | 146/160 (91.2%) | ≥ 141 | MET |
+| lexer_invalid_char | 8 | ≤ 8 | MET |
+| internal_error | 3 → 1 (post-fix) | ≤ 4 | MET |
+| semantic_undefined_symbol | 0 | ≤ 0 | MET |
+| Solve | 37 | — | baseline |
+| Match | 20 | — | baseline |
+| Tests | 3,766 (+7) | — | all pass |
 
 **Parse Error Breakdown:**
 
-| Category | Count |
-|----------|-------|
-| lexer_invalid_char | |
-| semantic_undefined_symbol | |
-| internal_error | |
-| parser_invalid_expression | |
-| model_no_objective_def | |
+| Category | Count | Models |
+|----------|-------|--------|
+| lexer_invalid_char | 8 | danwolfe, lop, nonsharp, partssupply, pindyck, srkandw, srpchase, turkey |
+| semantic_undefined_symbol | 0 | — |
+| internal_error | 3 (pre-fix) → 1 (post-fix) | clearlak (remaining) |
+| parser_invalid_expression | 3 | feasopt1, mathopt4, trnspwl |
+| model_no_objective_def | 0 | — |
 
 **Solve Error Breakdown:**
 
 | Category | Count |
 |----------|-------|
-| path_syntax_error | |
-| path_solve_terminated | |
-| model_infeasible | |
-| path_solve_license | |
+| path_syntax_error | 53 |
+| path_solve_terminated | 30 |
+| model_infeasible | 12 |
+| path_solve_license | 1 |
 
 **Activities:**
--
+- Fixed senstran: added `symbol_plain`, `ref_indexed`, `funccall` to `_handle_if_stmt` condition recognition (parser.py)
+- Fixed turkpow: preprocessor data-block closing line now gets special-identifier quoting; parser `param_data_matrix_row` handler uses direct children for NUMBER tokens and handles scalar-pattern dotted indices (preprocessor.py, parser.py)
+- 5 new unit tests (bare identifier condition, elseif bare identifier, funccall condition, dotted index 2D, dotted index numeric)
+- Checkpoint 1 pipeline retest with full error category breakdown
 
 ---
 

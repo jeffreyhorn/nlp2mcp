@@ -34,7 +34,7 @@ Scalars
     c /0/
 ;
 
-d_c = 0.5 * v_c * m_0 / g_0;
+D_c = 0.5 * v_c * m_0 / g_0;
 m_f = m_c * m_0;
 c = 0.5 * sqrt(g_0 * h_0);
 
@@ -73,6 +73,14 @@ Positive Variables
     piL_t(h)
     piU_m(h)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+m.lo(h) = m_f;
+m.fx("h50") = m_f;
+t.up(h) = T_c * m_0 * g_0;
 
 * ============================================
 * Variable Initialization

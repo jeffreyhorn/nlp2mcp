@@ -54,15 +54,15 @@ Scalars
     con /0/
 ;
 
-db(t) = db74 * (1 + g) ** (ord(t) - 1);
-xb(t) = xb74 + 3 * min(y(t) - 1974, 6) + 0.9 * max(y(t) - 1980, 0);
 rd(t) = rd74 * (1 + gr) ** (ord(t) - 1);
 del(t) = (1 + r) ** (card(t) - ord(t));
 y(tt) = 1964 + ord(tt);
-xtr(t) = min(xb(t), x74 * 1.02 ** (ord(t) - 1));
 ptr(t) = 10 * 1.02 ** (ord(t) - 1);
 db74 = d74 * phis("1974") ** a;
 con = g / pb ** b / (pb - ph);
+xb(t) = xb74 + 3 * min(y(t) - 1974, 6) + 0.9 * max(y(t) - 1980, 0);
+db(t) = db74 * (1 + g) ** (ord(t) - 1);
+xtr(t) = min(xb(t), x74 * 1.02 ** (ord(t) - 1));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -126,6 +126,13 @@ Positive Variables
     x(tt)
     piL_p(tt)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+x.up(t) = xb(t);
+p.fx(th) = phis(th);
 
 * ============================================
 * Variable Initialization
@@ -226,7 +233,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_as(tt)$(t(tt)).. nu_adef(tt) + sum(t, p(t) ** b * nu_sup(t)) =E= 0;
+stat_as(tt)$(t(tt)).. nu_adef(tt)$tp(tt) + sum(t, p(t) ** b * nu_sup(t)) =E= 0;
 stat_d(tt)$(t(tt)).. sum(t, nu_dem(t)) + sum(t, (-1) * nu_sup(t)) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
 stat_p(tt)$(t(tt)).. sum(t, ((-1) * (db(t) * p(t) ** ((-1) * a) * ((-1) * a) / p(t))) * nu_dem(t)) + sum(t, as(t) * p(t) ** b * b / p(t) * nu_sup(t)) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (ptr(t) - p(tt)) * (-1))) * nu_ptrack)$sameas(tt, '1974') + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_objx)$sameas(tt, '1974') - piL_p(tt) =E= 0;

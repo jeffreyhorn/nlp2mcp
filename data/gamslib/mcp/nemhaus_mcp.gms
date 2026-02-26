@@ -24,7 +24,7 @@ Sets
 Alias(i, k);
 
 Parameters
-    a(i,k) /'act-1'.'act-3' 0, 'act-1'.'act-4' 0, 'act-1'.'act-5' 0, 'act-2'.'act-3' 0, 'act-2'.'act-4' 0, 'act-2'.'act-5' 0, 'act-3'.'act-1' 0, 'act-3'.'act-2' 0, 'act-3'.'act-4' 0, 'act-3'.'act-5' 0, 'act-4'.'act-1' 0, 'act-4'.'act-2' 0, 'act-4'.'act-3' 0, 'act-4'.'act-4' 0, 'act-5'.'act-1' 0, 'act-5'.'act-2' 0, 'act-5'.'act-3' 0, 'act-5'.'act-4' 0, 'act-2'.'act-1' 0, 'act-2'.'act-2' 0, 'act-5'.'act-5' 0, 'act-4'.'act-5' 0, 'act-3'.'act-3' 0, 'act-1'.'act-1' 0, 'act-1'.'act-2' 0/
+    a(i,k) /'act-1'.'act-3' 0, 'act-1'.'act-4' 0, 'act-1'.'act-5' 0, 'act-2'.'act-3' 0, 'act-2'.'act-4' 0, 'act-2'.'act-5' 0, 'act-3'.'act-1' 0, 'act-3'.'act-2' 0, 'act-3'.'act-4' 0, 'act-3'.'act-5' 0, 'act-4'.'act-1' 0, 'act-4'.'act-2' 0, 'act-4'.'act-3' 0, 'act-4'.'act-4' 0, 'act-5'.'act-1' 0, 'act-5'.'act-2' 0, 'act-5'.'act-3' 0, 'act-5'.'act-4' 0, 'act-3'.'act-3' 0, 'act-4'.'act-5' 0, 'act-2'.'act-1' 0, 'act-2'.'act-2' 0, 'act-5'.'act-5' 0, 'act-1'.'act-1' 0, 'act-1'.'act-2' 0/
     objval(jj,*)
 ;
 

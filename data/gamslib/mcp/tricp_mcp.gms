@@ -59,6 +59,14 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.up(n,k) = myScale * smax(i, kp, fx(i,kp));
+x.fx(n,k) = myScale * fx(n,k);
+r.lo(n) = myScale * 0.001;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -100,10 +108,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(n).. sum((i,j), ((-1) * (2 * 2 * r(j) * 2)) * nu_eq1(i,j)) + sum((i,j), 2 * 2 * r(j) * 2 * lam_eq2(i,j)) =E= 0;
+stat_r(n).. sum((i,j), ((-1) * (2 * 2 * r(j) * 2)) * nu_eq1(i,j)) + sum((i,j), (2 * 2 * r(j) * 2 * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) =E= 0;
 stat_sln(n,n).. sum((i,j), nu_eq1(i,j)) =E= 0;
 stat_slp(n,n).. sum((i,j), (-1) * nu_eq1(i,j)) =E= 0;
-stat_x(n,k).. sum((i,j), 2 * (x(i,k) - x(j,k)) * nu_eq1(i,j)) + sum((i,j), ((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j)) =E= 0;
+stat_x(n,k).. sum((i,j), 2 * (x(i,k) - x(j,k)) * nu_eq1(i,j)) + sum((i,j), (((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) =E= 0;
 stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), (-1) * lam_eq2(i,j)) =E= 0;
 
 * Inequality complementarity equations

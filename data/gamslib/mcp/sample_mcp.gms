@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    data(h,*)
+    data(h,*) /'1.400000'.pop 25, '1.400000'.b 1, '1.400000'.cost 1, '2'.pop 300000, '2'.a 25, '2'.b 4, '2'.cost 1, '3'.pop 200000, '3'.a 25, '3'.b 16, '3'.cost 1, '4'.pop 100000, '4'.a 25, '4'.b 64, '4'.cost 1, '1.400000'.a 0/
     vmax(j) /a 0.04, b 0.01/
     w(h)
     k1(h,j)
@@ -32,8 +32,8 @@ Scalars
     tpop /0/
 ;
 
-w(h) = data(h,"pop") / tpop;
 tpop = sum(h, data(h,"pop"));
+w(h) = data(h,"pop") / tpop;
 k1(h,j) = sqr(w(h)) * data(h,j);
 k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
 
@@ -59,7 +59,15 @@ Positive Variables
     lam_vbal(j)
     lam_vbalr(j)
     piL_n(h)
+    piU_nr(h)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+n.up(h) = data(h,"pop");
+nr.lo(h) = 1 / data(h,"pop");
 
 * ============================================
 * Variable Initialization
@@ -92,6 +100,7 @@ Equations
     comp_vbal(j)
     comp_vbalr(j)
     comp_lo_n(h)
+    comp_up_nr(h)
     cbal
     cbalr
 ;
@@ -102,7 +111,7 @@ Equations
 
 * Stationarity equations
 stat_n(h).. data(h,"cost") + sum(j, ((-1) * k1(h,j)) / n(h) ** 2 * lam_vbal(j)) - piL_n(h) =E= 0;
-stat_nr(h).. ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, k1(h,j) * lam_vbalr(j)) =E= 0;
+stat_nr(h).. ((-1) * (((-1) * data(h,"cost")) / nr(h) ** 2)) * nu_cbalr + sum(j, k1(h,j) * lam_vbalr(j)) + piU_nr(h) =E= 0;
 
 * Inequality complementarity equations
 comp_vbal(j).. ((-1) * (sum(h, k1(h,j) / n(h)) - k2(j) - vmax(j))) =G= 0;
@@ -110,6 +119,9 @@ comp_vbalr(j).. ((-1) * (sum(h, k1(h,j) * nr(h)) - k2(j) - vmax(j))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_n(h).. n(h) - 100 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_nr(h).. 0.01 - nr(h) =G= 0;
 
 * Original equality equations
 cbal.. c =E= sum(h, data(h,"cost") * n(h));
@@ -136,7 +148,8 @@ Model mcp_model /
     comp_vbalr.lam_vbalr,
     cbal.c,
     cbalr.nu_cbalr,
-    comp_lo_n.piL_n
+    comp_lo_n.piL_n,
+    comp_up_nr.piU_nr
 /;
 
 * ============================================

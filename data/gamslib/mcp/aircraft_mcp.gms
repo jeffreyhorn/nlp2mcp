@@ -24,8 +24,8 @@ Sets
 Alias(h, hp);
 
 Parameters
-    dd(j,h) /'route-1'.'1' 200, 'route-1'.'2' 220, 'route-1'.'3' 250, 'route-1'.'4' 270, 'route-1'.'5' 300, 'route-2'.'1' 50, 'route-2'.'2' 150, 'route-3'.'1' 140, 'route-3'.'2' 160, 'route-3'.'3' 180, 'route-3'.'4' 200, 'route-3'.'5' 220, 'route-4'.'1' 10, 'route-4'.'2' 50, 'route-4'.'3' 80, 'route-4'.'4' 100, 'route-4'.'5' 340, 'route-5'.'1' 580, 'route-5'.'2' 600, 'route-5'.'3' 620, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0, 'route-5'.'4' 0, 'route-5'.'5' 0/
-    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0, 'route-5'.'4' 0, 'route-5'.'5' 0/
+    dd(j,h) /'route-1'.'1' 200, 'route-1'.'2' 220, 'route-1'.'3' 250, 'route-1'.'4' 270, 'route-1'.'5' 300, 'route-2'.'1' 50, 'route-2'.'2' 150, 'route-3'.'1' 140, 'route-3'.'2' 160, 'route-3'.'3' 180, 'route-3'.'4' 200, 'route-3'.'5' 220, 'route-4'.'1' 10, 'route-4'.'2' 50, 'route-4'.'3' 80, 'route-4'.'4' 100, 'route-4'.'5' 340, 'route-5'.'1' 580, 'route-5'.'2' 600, 'route-5'.'3' 620, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
+    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
     c(i,j) /a.'route-1' 18, a.'route-2' 21, a.'route-3' 18, a.'route-4' 16, a.'route-5' 10, b.'route-2' 15, b.'route-3' 16, b.'route-4' 14, b.'route-5' 9, c.'route-2' 10, c.'route-4' 9, c.'route-5' 6, d.'route-1' 17, d.'route-2' 16, d.'route-3' 17, d.'route-4' 15, d.'route-5' 10, c.'route-1' 0, c.'route-3' 0, b.'route-1' 0/
     p(i,j) /a.'route-1' 16, a.'route-2' 15, a.'route-3' 28, a.'route-4' 23, a.'route-5' 81, b.'route-2' 10, b.'route-3' 14, b.'route-4' 15, b.'route-5' 57, c.'route-2' 5, c.'route-4' 7, c.'route-5' 29, d.'route-1' 9, d.'route-2' 11, d.'route-3' 22, d.'route-4' 17, d.'route-5' 55, c.'route-1' 0, c.'route-3' 0, b.'route-1' 0/
     aa(i) /a 10, b 19, c 25, d 15/
@@ -68,6 +68,12 @@ Positive Variables
     lam_db(j)
     lam_yd(j,h)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+y.up(j,h) = deltb(j,h);
 
 * ============================================
 * Variable Initialization

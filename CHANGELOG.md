@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 5: Checkpoint 1 + senstran/turkpow Fixes (+2 models) - 2026-02-26
+
+**Branch:** `sprint21-day5-checkpoint1-internal-error`
+
+#### Summary
+Checkpoint 1 pipeline retest with full error category breakdown. Fixed senstran (bare identifier as if-statement condition) and turkpow (dotted index in parameter data block closing line not quoted by preprocessor).
+
+#### Added
+- `_handle_if_stmt` now recognizes `symbol_plain`, `ref_indexed`, and `funccall` as valid condition node types (both if and elseif)
+- Preprocessor data-block closing lines now get special-identifier quoting (fixes `hydro-4.1978` not being quoted)
+- `param_data_matrix_row` handler collects NUMBER tokens from direct children only and handles scalar-pattern dotted indices
+- 5 new unit tests (bare identifier condition, elseif, funccall condition, dotted index 2D, numeric dotted index)
+
+#### Fixed
+- senstran: `if(pors, ...)` where `pors` is a bare scalar parameter now recognized as valid condition
+- turkpow: `hydro-4.1978 250 /` on data-block closing line now properly quoted by preprocessor
+
+#### Metrics
+- Parse: 146/160 → 148/160 (+2: senstran, turkpow) post-fix
+- internal_error: 3 → 1 (clearlak remaining)
+- Solve: 37, Match: 20
+- Tests: 3,766 passed (+7), 10 skipped, 2 xfailed
+
 ### Sprint 21 Day 4: Lead/Lag in Parameter Assignment LHS (+3 models) - 2026-02-25
 
 **Branch:** `sprint21-day4-leadlag-params`

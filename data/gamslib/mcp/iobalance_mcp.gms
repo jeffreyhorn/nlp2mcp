@@ -22,8 +22,8 @@ Sets
 Alias(i, j);
 
 Parameters
-    a0(i,j)
-    z1(i,j)
+    a0(i,j) /'1'.'1' 0.12, '1'.'2' 0.1, '1'.'3' 0.049, '2'.'1' 0.21, '2'.'2' 0.247, '2'.'3' 0.265, '3'.'1' 0.026, '3'.'2' 0.249, '3'.'3' 0.145/
+    z1(i,j) /'1'.'1' 98, '1'.'2' 72, '1'.'3' 75, '2'.'1' 65, '2'.'2' 8, '2'.'3' 63, '3'.'1' 88, '3'.'2' 27, '3'.'3' 44/
     x(j) /'1' 421, '2' 284, '3' 283/
     u(i)
     v(j)
@@ -166,11 +166,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(i,j).. log(a(i,i) / a0(i,j)) * x(j) + x(j) * a(i,i) * 1 / (a(i,i) / a0(i,j)) * 1 / a0(i,j) ** 1 + x(j) * nu_colbal(j) + nu_defabs(i,j) + ((-1) * (2 * (a(i,i) + a0(i,j)))) * nu_defsd + ((-1) * (a0(i,j) * 2 * (a(i,i) + a0(i,j)) / a0(i,j) ** 2)) * nu_defrsd + lam_defmaxp(i,j) - lam_defmaxn(i,j) - piL_a(i,j) =E= 0;
+stat_a(i,j).. log(a(i,j) / a0(i,j)) * x(j) + x(j) * a(i,j) * 1 / (a(i,j) / a0(i,j)) * 1 / a0(i,j) ** 1 + x(j) * nu_colbal(j) + nu_defabs(i,j) + ((-1) * (2 * (a(i,j) + a0(i,j)))) * nu_defsd + ((-1) * (a0(i,j) * 2 * (a(i,j) + a0(i,j)) / a0(i,j) ** 2)) * nu_defrsd + lam_defmaxp(i,j) - lam_defmaxn(i,j) - piL_a(i,j) =E= 0;
 stat_amax.. ((-1) * nu_defLinf) + sum((i,j), (-1) * lam_defmaxp(i,j)) + sum((i,j), (-1) * lam_defmaxn(i,j)) =E= 0;
 stat_an(i,j).. nu_defabs(i,j) + ((-1) * (1 / sqr(card(i)))) * nu_defmad + ((-1) * (100 / sqr(card(i)) * 1 / a0(i,j) ** 1)) * nu_defmade =E= 0;
 stat_ap(i,j).. ((-1) * nu_defabs(i,j)) + ((-1) * (1 / sqr(card(i)))) * nu_defmad + ((-1) * (100 / sqr(card(i)) * 1 / a0(i,j) ** 1)) * nu_defmade =E= 0;
-stat_zv(i,j).. nu_colbalz(j) + ((-1) * (log(zv(i,i) / zbar(i,j)) + zv(i,i) * 1 / (zv(i,i) / zbar(i,j)) * 1 / zbar(i,j) ** 1)) * nu_defobjentz - piL_zv(i,j) =E= 0;
+stat_zv(i,j).. nu_colbalz(j) + ((-1) * (log(zv(i,j) / zbar(i,j)) + zv(i,j) * 1 / (zv(i,j) / zbar(i,j)) * 1 / zbar(i,j) ** 1)) * nu_defobjentz - piL_zv(i,j) =E= 0;
 
 * Inequality complementarity equations
 comp_defmaxn(i,j).. a(i,j) - a0(i,j) - ((-1) * amax) =G= 0;

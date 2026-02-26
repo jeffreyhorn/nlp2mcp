@@ -68,6 +68,12 @@ Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.fx(n,ki) = xinit(n);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -99,7 +105,7 @@ Equations
 
 * Stationarity equations
 stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
-stat_x(n,k).. ((-1) * a(n,n)) * nu_stateq(n,k) =E= 0;
+stat_x(n,k).. sum(np, ((-1) * a(n,np)) * nu_stateq(n,k)) =E= 0;
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));

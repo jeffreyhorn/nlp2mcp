@@ -26,17 +26,17 @@ Sets
 
 Parameters
     pfd(p,*) /one.'max-prod' 5000, one.'over-prod' 1000, one.'prod-cost' 35, one.'over-cost' 45, two.'min-prod' 1200, two.'max-prod' 3000, two.'over-prod' 500, two.'prod-cost' 40, two.'over-cost' 43, three.'min-prod' 700, three.'max-prod' 1500, three.'prod-cost' 38, three.'over-prod' 0, three.'over-cost' 0, one.'min-prod' 0/
-    fdec(p,d) /one.east 10, one.south 12, two.south 8, two.west 4, two.north 5, three.west 6, three.north 8, two.east 0, three.east 0, three.south 0, one.west 0, one.north 0/
-    sdec(d,c) /east.'1' 15, east.'2' 19, south.'1' 20, south.'2' 22, south.'3' 18, west.'1' 16, west.'3' 18, west.'4' 19, north.'3' 15, north.'4' 21, east.'3' 0, east.'4' 0, east.'5' 0, west.'2' 0, west.'5' 0, south.'4' 0, south.'5' 0, north.'1' 0, north.'2' 0, north.'5' 0/
+    fdec(p,d) /one.east 10, one.south 12, two.south 8, two.west 4, two.north 5, three.west 6, three.north 8, three.east 0, three.south 0, one.west 0, one.north 0, two.east 0/
+    sdec(d,c) /east.'1' 15, east.'2' 19, south.'1' 20, south.'2' 22, south.'3' 18, west.'1' 16, west.'3' 18, west.'4' 19, north.'3' 15, north.'4' 21, east.'3' 0, east.'4' 0, east.'5' 0, north.'1' 0, north.'2' 0, north.'5' 0, south.'4' 0, south.'5' 0, west.'2' 0, west.'5' 0/
     dcd(d,*) /east.'max-invent' 3000, east.'hold-cost' 2, south.'max-invent' 2500, south.'hold-cost' 2, west.'max-invent' 4000, west.'hold-cost' 1, north.'max-invent' 2500, north.'hold-cost' 3/
-    czd(c,*)
+    czd(c,*) /'1'.'min-demand' 2000, '1'.'max-demand' 2500, '1'.revenue 70, '2'.'max-demand' 2500, '2'.revenue 68, '3'.'min-demand' 2000, '3'.'max-demand' 3000, '3'.revenue 65, '4'.'min-demand' 1500, '4'.'max-demand' 2000, '4'.revenue 72, '5'.'min-demand' 1500, '5'.'max-demand' 3000, '5'.revenue 71, '2'.'min-demand' 0/
     pc(p,m)
     pco(p,m)
     revfac(m) /january 1, february 1, march 1.1, april 1.1/
 ;
 
-pd(p,d) = 1$fdec(p,d);
-dc(d,c) = 1$sdec(d,c);
+pd(p,d) = yes$fdec(p,d);
+dc(d,c) = yes$sdec(d,c);
 
 pc(p,m) = pfd(p,"prod-cost") + floor(2 ** (ord(m) - 1) / 2);
 pco(p,m) = pfd(p,"over-cost") + ord(m) - (ord(m) < card(m));
@@ -81,6 +81,17 @@ Positive Variables
     piL_s_south_april
     piL_s_west_april
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+pn.lo(p,m) = pfd(p,"min-prod");
+pn.up(p,m) = pfd(p,"max-prod");
+po.up(p,m) = pfd(p,"over-prod");
+dm.lo(c) = czd(c,"min-demand");
+dm.up(c) = czd(c,"max-demand");
+h.up(d,m) = dcd(d,"max-invent");
 
 * ============================================
 * Variable Initialization

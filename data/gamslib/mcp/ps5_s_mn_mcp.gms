@@ -46,12 +46,12 @@ Scalars
 ;
 
 theta(i) = ord(i) / card(i);
-f(i,t) = sum(j$(ord(j) <= ord(i)), pt(j,t));
-nomhrc0(i,t) = 1$(F(i,t) / pt(i+1,t) < F(i-1,t) / pt(i,t));
-util_gap(t) = 1$(round(Util_lic(t), 10) <> round(Util_Lic2(t), 10));
-p_nomhrc = sum(t$(noMHRC(t) > 0), 1) / card(t) * 100;
-p_nomn_lic = sum(t$(MN_lic(t) > 0), 1) / card(t) * 100;
-p_util_gap = sum(t$(Util_gap(t) > 0), 1) / card(t) * 100;
+Util_gap(t) = 1$(round(Util_lic(t), 10) <> round(Util_Lic2(t), 10));
+p_noMHRC = sum(t$(noMHRC(t) > 0), 1) / card(t) * 100;
+p_noMN_lic = sum(t$(MN_lic(t) > 0), 1) / card(t) * 100;
+F(i,t) = sum(j$(ord(j) <= ord(i)), pt(j,t));
+p_Util_gap = sum(t$(Util_gap(t) > 0), 1) / card(t) * 100;
+noMHRC0(i,t) = 1$(F(i,t) / pt(i+1,t) < F(i-1,t) / pt(i,t));
 
 * ============================================
 * Variables (Primal + Multipliers)

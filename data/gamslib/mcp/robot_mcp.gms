@@ -286,6 +286,15 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+the.fx("h50") = 2 * pi / 3;
+phi.fx(firstlast) = pi / 4;
+i_the.fx(firstlast(h)) = i_phi.l(h) * sqr(sin(phi.l(h)));
+i_phi.fx(firstlast(h)) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
+
+* ============================================
 * Variable Initialization
 * ============================================
 

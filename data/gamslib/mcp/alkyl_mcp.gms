@@ -76,6 +76,10 @@ Positive Variables
     piU_ratio
     piU_aciddilut
     piU_f4perf
+    piU_alkerr
+    piU_octerr
+    piU_aciderr
+    piU_f4err
 ;
 
 * ============================================
@@ -140,13 +144,17 @@ Equations
     comp_lo_olefinfeed
     comp_lo_ratio
     comp_up_aciddilut
+    comp_up_aciderr
     comp_up_acidfeed
     comp_up_acidstren
+    comp_up_alkerr
     comp_up_alkylyld
+    comp_up_f4err
     comp_up_f4perf
     comp_up_isobutmak
     comp_up_isobutrec
     comp_up_octane
+    comp_up_octerr
     comp_up_olefinfeed
     comp_up_ratio
     AcidBal
@@ -165,17 +173,17 @@ Equations
 
 * Stationarity equations
 stat_aciddilut.. ((-1) * (acidstren * 100 * alkylyld / 10000)) * nu_AcidBal + aciderr * nu_AcidDef - piL_aciddilut + piU_aciddilut =E= 0;
-stat_aciderr.. aciddilut * nu_AcidDef - piL_aciderr =E= 0;
+stat_aciderr.. aciddilut * nu_AcidDef - piL_aciderr + piU_aciderr =E= 0;
 stat_acidfeed.. 1 + (0.98 - acidstren) * nu_AcidBal - piL_acidfeed + piU_acidfeed =E= 0;
 stat_acidstren.. ((-1) * (alkylyld * aciddilut / 100 + acidfeed)) * nu_AcidBal + (-0.325) * nu_OctDef - piL_acidstren + piU_acidstren =E= 0;
-stat_alkerr.. alkylyld * nu_AlkylDef - piL_alkerr =E= 0;
+stat_alkerr.. alkylyld * nu_AlkylDef - piL_alkerr + piU_alkerr =E= 0;
 stat_alkylyld.. (-6.3) * octane + nu_AlkylShrnk + ((-1) * (acidstren * 100 * aciddilut / 10000)) * nu_AcidBal + alkerr * nu_AlkylDef - piL_alkylyld + piU_alkylyld =E= 0;
-stat_f4err.. f4perf * nu_F4Def - piL_f4err =E= 0;
+stat_f4err.. f4perf * nu_F4Def - piL_f4err + piU_f4err =E= 0;
 stat_f4perf.. 22.2 * nu_AcidDef + f4err * nu_F4Def - piL_f4perf + piU_f4perf =E= 0;
 stat_isobutmak.. 3.36 + (-0.819672131147541) * nu_AlkylShrnk + nu_IsoButBal - piL_isobutmak + piU_isobutmak =E= 0;
 stat_isobutrec.. 0.35 + 10 * nu_IsoButBal - piL_isobutrec + piU_isobutrec =E= 0;
 stat_octane.. (-6.3) * alkylyld + octerr * nu_OctDef + (-3) * nu_F4Def - piL_octane + piU_octane =E= 0;
-stat_octerr.. octane * nu_OctDef - piL_octerr =E= 0;
+stat_octerr.. octane * nu_OctDef - piL_octerr + piU_octerr =E= 0;
 stat_olefinfeed.. 5.04 + (-0.819672131147541) * nu_AlkylShrnk + ((-1) * ratio) * nu_IsoButBal + ((-1) * (1.12 + 0.13167 * ratio - 0.0067 * ratio * ratio)) * nu_AlkylDef - piL_olefinfeed + piU_olefinfeed =E= 0;
 stat_ratio.. ((-1) * olefinfeed) * nu_IsoButBal + ((-1) * (olefinfeed * (0.13167 - 0.0134 * ratio))) * nu_AlkylDef + ((-1) * (100 * (1.098 - 0.076 * ratio) / 10000)) * nu_OctDef - piL_ratio + piU_ratio =E= 0;
 
@@ -197,13 +205,17 @@ comp_lo_ratio.. ratio - 3 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_aciddilut.. 4 - aciddilut =G= 0;
+comp_up_aciderr.. 1.1111111111111112 - aciderr =G= 0;
 comp_up_acidfeed.. 1.2 - acidfeed =G= 0;
 comp_up_acidstren.. 0.93 - acidstren =G= 0;
+comp_up_alkerr.. 1.0101010101010102 - alkerr =G= 0;
 comp_up_alkylyld.. 5 - alkylyld =G= 0;
+comp_up_f4err.. 1.0101010101010102 - f4err =G= 0;
 comp_up_f4perf.. 1.62 - f4perf =G= 0;
 comp_up_isobutmak.. 2 - isobutmak =G= 0;
 comp_up_isobutrec.. 1.6 - isobutrec =G= 0;
 comp_up_octane.. 0.95 - octane =G= 0;
+comp_up_octerr.. 1.0101010101010102 - octerr =G= 0;
 comp_up_olefinfeed.. 2 - olefinfeed =G= 0;
 comp_up_ratio.. 12 - ratio =G= 0;
 
@@ -269,13 +281,17 @@ Model mcp_model /
     comp_lo_olefinfeed.piL_olefinfeed,
     comp_lo_ratio.piL_ratio,
     comp_up_aciddilut.piU_aciddilut,
+    comp_up_aciderr.piU_aciderr,
     comp_up_acidfeed.piU_acidfeed,
     comp_up_acidstren.piU_acidstren,
+    comp_up_alkerr.piU_alkerr,
     comp_up_alkylyld.piU_alkylyld,
+    comp_up_f4err.piU_f4err,
     comp_up_f4perf.piU_f4perf,
     comp_up_isobutmak.piU_isobutmak,
     comp_up_isobutrec.piU_isobutrec,
     comp_up_octane.piU_octane,
+    comp_up_octerr.piU_octerr,
     comp_up_olefinfeed.piU_olefinfeed,
     comp_up_ratio.piU_ratio
 /;

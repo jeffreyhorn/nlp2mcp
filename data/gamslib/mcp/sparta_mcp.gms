@@ -33,7 +33,7 @@ Parameters
     clen(l) /'len-1' 50, 'len-2' 85, 'len-3' 115, 'len-4' 143/
 ;
 
-ttl(t,tp,l) = 1$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t));
+ttl(t,tp,l) = yes$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -56,6 +56,12 @@ Positive Variables
     x(t,l)
     lam_bal2(t)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+e.lo(t) = req(t);
 
 * ============================================
 * Variable Initialization

@@ -29,9 +29,9 @@ Parameters
     sroute(i,ip)
 ;
 
-r(i,ip) = 1$darc(i,ip);
-
 darc(i,ip) = max(uarc(i,ip), uarc(ip,i));
+
+r(i,ip) = yes$darc(i,ip);
 
 * ============================================
 * Variables (Primal + Multipliers)

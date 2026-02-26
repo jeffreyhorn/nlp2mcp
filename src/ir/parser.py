@@ -3535,6 +3535,9 @@ class _ModelBuilder:
                     "atom",
                     "binop",
                     "compile_const",
+                    "symbol_plain",
+                    "ref_indexed",
+                    "funccall",
                 ):
                     # This is the main condition
                     if condition is None:
@@ -3561,6 +3564,9 @@ class _ModelBuilder:
                                 "atom",
                                 "binop",
                                 "compile_const",
+                                "symbol_plain",
+                                "ref_indexed",
+                                "funccall",
                             ):
                                 elseif_cond = elseif_child
                             else:
@@ -5280,33 +5286,41 @@ class _ModelBuilder:
                         f"Parameter '{param_name}' range notation not supported in table/matrix row indices",
                         child,
                     )
-                number_tokens = list(
-                    child.scan_values(lambda v: isinstance(v, Token) and v.type == "NUMBER")
-                )
+                # Collect only NUMBER tokens that are direct children of the
+                # matrix_row node, not those embedded inside data_indices
+                # (e.g., hydro-4.1978 has 1978 inside data_indices).
+                number_tokens = [
+                    ch for ch in child.children[1:] if isinstance(ch, Token) and ch.type == "NUMBER"
+                ]
                 values_list = [float(_token_text(tok)) for tok in number_tokens]
-                if len(domain) != len(row_indices) + 1:
+                # If row_indices covers all domain dims, this is a scalar
+                # pattern misclassified as matrix_row (e.g., dotted index
+                # hydro-4.1978 250 for param(m,te) splits into 2 indices).
+                if len(row_indices) == len(domain) and len(values_list) == 1:
+                    key_tuple = tuple(row_indices)
+                    for idx_symbol, set_name in zip(row_indices, domain, strict=True):
+                        if set_name != "*":
+                            self._verify_member_in_domain(param_name, set_name, idx_symbol, child)
+                    values[key_tuple] = values_list[0]
+                elif len(domain) != len(row_indices) + 1:
                     raise self._error(
                         f"Parameter '{param_name}' table row index mismatch",
                         child,
                     )
-                set_prefix = domain[:-1]
-                if len(set_prefix) != len(row_indices):
-                    raise self._error(
-                        f"Parameter '{param_name}' table indices do not match domain",
-                        child,
-                    )
-                for idx_symbol, set_name in zip(row_indices, set_prefix, strict=True):
-                    self._verify_member_in_domain(param_name, set_name, idx_symbol, child)
-                last_set = domain[-1]
-                domain_set = self._resolve_set_def(last_set, node=child)
-                if not domain_set or len(domain_set.members) < len(values_list):
-                    raise self._error(
-                        f"Parameter '{param_name}' table has more columns than members in set '{last_set}'",
-                        child,
-                    )
-                for col_value, col_member in zip(values_list, domain_set.members, strict=True):
-                    key_tuple = tuple(row_indices + [col_member])
-                    values[key_tuple] = col_value
+                else:
+                    set_prefix = domain[:-1]
+                    for idx_symbol, set_name in zip(row_indices, set_prefix, strict=True):
+                        self._verify_member_in_domain(param_name, set_name, idx_symbol, child)
+                    last_set = domain[-1]
+                    domain_set = self._resolve_set_def(last_set, node=child)
+                    if not domain_set or len(domain_set.members) < len(values_list):
+                        raise self._error(
+                            f"Parameter '{param_name}' table has more columns than members in set '{last_set}'",
+                            child,
+                        )
+                    for col_value, col_member in zip(values_list, domain_set.members, strict=True):
+                        key_tuple = tuple(row_indices + [col_member])
+                        values[key_tuple] = col_value
         return values
 
     def _parse_set_element_id_list(self, node: Tree) -> list[str]:

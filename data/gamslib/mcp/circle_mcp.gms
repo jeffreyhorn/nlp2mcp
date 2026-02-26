@@ -37,8 +37,8 @@ execseed = 12345;
 x(i) = uniform(1, 10);
 y(i) = uniform(1, 10);
 xmin = smin(i, x(i));
-ymin = smin(i, y(i));
 xmax = smax(i, x(i));
+ymin = smin(i, y(i));
 ymax = smax(i, y(i));
 
 * ============================================

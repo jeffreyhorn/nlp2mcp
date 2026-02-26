@@ -48,7 +48,7 @@ Scalars
     g /31.8/
 ;
 
-ge(s,ss) = 1$(ord(s) >= ord(ss));
+ge(s,ss) = yes$(ord(s) >= ord(ss));
 
 pre2("stage-3") = pre2("stage-3") * 10 ** pre3("stage-3");
 pre4("stage-3") = pre4("stage-3") * 10 ** pre5("stage-3");

@@ -60,20 +60,20 @@ execseed = 12345;
 
 y0(h) = sum(g, x0(g,h) * p0(g));
 r0 = sum(h, y0(h)) / sum(k, b(k));
-gamma(g,h) = x0(g,h) + beta(g,h) * y0(h) / p0(g) / omega;
-beta(g,h) = epsi(g,h) * alpha(g,h);
 alpha(g,h) = p0(g) * x0(g,h) / y0(h);
-al(g,h) = x0(g,h) - sum(gp, s(g,gp,h) * p0(gp)) - cl(g,h) * y0(h);
+wp(g) = sum(h, x0(g,h) * p0(g)) / sum(h, y0(h));
 cl(g,h) = epsi(g,h) * x0(g,h) / y0(h);
-s(g,gp,h) = eta(g,gp,h) * x0(g,h) / p0(gp);
-an(g,h) = x0(g,h) / prod(gp, p0(gp) ** eta(g,gp,h)) / y0(h) ** epsi(g,h);
-eta(g,gp,h) = ((-1) * (gamma(gp, h))) * p0(gp) * beta(g,h) / p0(g) / x0(g,h);
-eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;
+beta(g,h) = epsi(g,h) * alpha(g,h);
 epsi(g,h) = epsi(g,h) / sum(gp, epsi(gp,h) * alpha(gp,h));
 etest(h) = sum(g, epsi(g,h) * alpha(g,h)) - 1;
+gamma(g,h) = x0(g,h) + beta(g,h) * y0(h) / p0(g) / omega;
+eta(g,gp,h) = ((-1) * (gamma(gp, h))) * p0(gp) * beta(g,h) / p0(g) / x0(g,h);
+eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;
+s(g,gp,h) = eta(g,gp,h) * x0(g,h) / p0(gp);
+an(g,h) = x0(g,h) / prod(gp, p0(gp) ** eta(g,gp,h)) / y0(h) ** epsi(g,h);
 htest(g,h) = sum(gp, eta(g,gp,h)) + epsi(g,h);
 ctest(g,h) = sum(gp, alpha(gp,h) * eta(gp,g,h)) + alpha(g,h);
-wp(g) = sum(h, x0(g,h) * p0(g)) / sum(h, y0(h));
+al(g,h) = x0(g,h) - sum(gp, s(g,gp,h) * p0(gp)) - cl(g,h) * y0(h);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -158,11 +158,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_p(i).. ((-1) * sum(h, x(i,h))) + sum(gp, sum((g,h), ((-1) * ((p(g) * beta(g,h) * ((-1) * (gamma(gp, h))) - beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp)))) / p(g) ** 2)) * lam_de(g,h))) + sum(gp, sum((g,h), ((-1) * s(g,gp,h)) * lam_dl(g,h))) + sum((g,h), ((-1) * (y(h) ** epsi(i,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(t, (1 - a(i,i)) * lam_mp(i,t)) - piL_p(i) =E= 0;
-stat_q(i,t).. ((-1) * (1 - a(i,i))) * lam_cb(i) + sum(k, d(i,k,t) * lam_rc(k)) =E= 0;
+stat_p(i).. ((-1) * sum(h, x(i,h))) + sum(gp, sum((g,h), ((-1) * ((p(g) * beta(g,h) * ((-1) * (gamma(gp, h))) - beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp)))) / p(g) ** 2)) * lam_de(g,h))) + sum(gp, sum((g,h), ((-1) * s(g,gp,h)) * lam_dl(g,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
+stat_q(i,t).. sum(j, ((-1) * (1 - a(i,j))) * lam_cb(i)) + sum(k, d(i,k,t) * lam_rc(k)) =E= 0;
 stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) =E= 0;
 stat_x(i,h).. ((-1) * p(i)) + 1$g(i) * lam_cb(i) + sum(g, lam_de(g,h)) + sum(g, lam_dl(g,h)) + sum(g, lam_dn(g,h)) + p(i) * lam_bc(h) =E= 0;
-stat_y(h).. sum(g, ((-1) * (p(g) * beta(g,h) / p(g) ** 2)) * lam_de(g,h)) + sum(g, ((-1) * cl(g,h)) * lam_dl(g,h)) + sum(i, sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(i,h) * epsi(i,h) / y(h))) * lam_dn(g,h))) - lam_bc(h) + lam_id(h) =E= 0;
+stat_y(h).. sum(g, ((-1) * (p(g) * beta(g,h) / p(g) ** 2)) * lam_de(g,h)) + sum(g, ((-1) * cl(g,h)) * lam_dl(g,h)) + sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) =E= 0;
 
 * Inequality complementarity equations
 comp_bc(h).. ((-1) * (sum(g, x(g,h) * p(g)) - y(h))) =G= 0;
