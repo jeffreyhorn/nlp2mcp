@@ -1723,8 +1723,15 @@ def _partial_index_match(
             if _is_concrete_instance_of(check_str, sum_idx, config):
                 # Found a match - build position-preserving symbolic_wrt
                 remaining = wrt_indices[:i] + wrt_indices[i + 1 :]
-                # Replace matched position with symbolic index, keep others as-is
-                symbolic_wrt = wrt_indices[:i] + (sum_idx,) + wrt_indices[i + 1 :]
+                # Replace matched position with symbolic index, keep others as-is.
+                # For IndexOffset matches, mirror the structure to preserve offset/circular:
+                # e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1) (not plain "t")
+                sym_idx: str | IndexOffset = (
+                    IndexOffset(sum_idx, wrt_idx.offset, wrt_idx.circular)
+                    if isinstance(wrt_idx, IndexOffset)
+                    else sum_idx
+                )
+                symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
                 return (sum_idx,), (wrt_idx,), remaining, symbolic_wrt
         # No match found
         return (), (), wrt_indices, None
@@ -1744,8 +1751,16 @@ def _partial_index_match(
             return (), (), wrt_indices, None
 
     remaining = wrt_indices[len(sum_index_sets) :]
-    # For prefix matching, symbolic_wrt is just sum_index_sets + remaining
-    symbolic_wrt = tuple(matched_symbolic) + remaining
+    # For prefix matching, symbolic_wrt replaces matched positions with symbolic
+    # sum indices. For IndexOffset matches, mirror the structure to preserve
+    # offset/circular info: e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1)
+    symbolic_wrt = (
+        tuple(
+            (IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym)
+            for sym, conc in zip(matched_symbolic, matched_concrete, strict=True)
+        )
+        + remaining
+    )
     return tuple(matched_symbolic), tuple(matched_concrete), remaining, symbolic_wrt
 
 
@@ -2199,8 +2214,17 @@ def _diff_prod(
     if wrt_indices is not None:
         # Check for exact match: prod binds same number of indices as wrt_indices
         if _sum_should_collapse(expr.index_sets, wrt_indices, config):
-            # Replace all concrete indices with symbolic prod indices
-            effective_wrt = expr.index_sets
+            # Replace all concrete indices with symbolic prod indices.
+            # For IndexOffset wrt_indices, mirror the structure:
+            # e.g., wrt=(IndexOffset("t1",1),), prod_idx="t" → (IndexOffset("t",1),)
+            effective_wrt = tuple(
+                (
+                    IndexOffset(prod_idx, wrt_idx.offset, wrt_idx.circular)
+                    if isinstance(wrt_idx, IndexOffset)
+                    else prod_idx
+                )
+                for prod_idx, wrt_idx in zip(expr.index_sets, wrt_indices, strict=True)
+            )
         elif len(wrt_indices) > len(expr.index_sets):
             # Partial match: prod binds fewer indices than wrt_indices
             # E.g., prod(w, f(w,t)) w.r.t. x('ICBM','1') — w binds 'ICBM', '1' is free

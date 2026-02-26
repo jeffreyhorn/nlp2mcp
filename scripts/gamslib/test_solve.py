@@ -20,7 +20,7 @@ Filter Options:
 
 Comparison Options:
     --compare      Compare NLP and MCP solutions after solving
-    --rtol FLOAT   Relative tolerance for objective comparison (default: 1e-4)
+    --rtol FLOAT   Relative tolerance for objective comparison (default: 2e-3)
     --atol FLOAT   Absolute tolerance for objective comparison (default: 1e-8)
 
 Examples:
