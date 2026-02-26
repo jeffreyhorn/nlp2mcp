@@ -339,43 +339,48 @@
 
 ### Day 10 — CHECKPOINT 2 + WS5: Deferred Issues (#789, #828)
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~3h
 
 **Checkpoint 2 Metrics:**
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| Parse | /160 | ≥ 141 | |
-| lexer_invalid_char | | ≤ 5 | |
-| internal_error | | ≤ 3 | |
-| Solve | | ≥ 36 | |
-| Match | | ≥ 18 | |
-| Tests | | — | |
+| Parse | 146/157 (93.0%) | ≥ 141 | **MET** |
+| lexer_invalid_char | 7 | ≤ 5 | CLOSE |
+| internal_error | 1 | ≤ 3 | **MET** |
+| Solve | 43 | ≥ 36 | **MET** |
+| Match | 22 | ≥ 20 | **MET** |
+| Tests | 3,802 (+4) | — | all pass |
+
+Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Parse Error Breakdown:**
 
 | Category | Count |
 |----------|-------|
-| lexer_invalid_char | |
-| semantic_undefined_symbol | |
-| internal_error | |
-| parser_invalid_expression | |
-| model_no_objective_def | |
+| lexer_invalid_char | 7 |
+| semantic_undefined_symbol | 0 |
+| internal_error | 1 |
+| parser_invalid_expression | 3 |
+| model_no_objective_def | 0 |
 
 **Solve Error Breakdown:**
 
 | Category | Count |
 |----------|-------|
-| path_syntax_error | |
-| path_solve_terminated | |
-| model_infeasible | |
-| path_solve_license | |
+| path_syntax_error | 39 |
+| path_solve_terminated | 35 |
+| model_infeasible | 12 |
+| path_solve_license | 1 |
 
 **Activities:**
--
+- Checkpoint 2: Full pipeline retest across 157 models with error category breakdown
+- Fix #828: Mixed bounds stationarity fallback — `_build_stationarity_expr()` now falls back to uniform bound key `(var_name, ())` when per-instance key not found (ibm1 fix)
+- Fix #789: Min/max in objective-defining equations — confirmed mathematically infeasible (λ₀ + λ₁ = -1 with λ ≥ 0); added `warnings.warn()` for clear user feedback; removed dead `_replace_varref()` code
+- 5 new tests: 3 mixed-bounds stationarity + 2 min/max objective warning tests
 
 ---
 

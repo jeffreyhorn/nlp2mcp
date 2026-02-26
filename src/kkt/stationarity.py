@@ -1831,18 +1831,25 @@ def _build_stationarity_expr(
     key = (var_name, var_indices)
     if key in kkt.multipliers_bounds_lo:
         mult_def = kkt.multipliers_bounds_lo[key]
-        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
         piL_name = mult_def.name
-        # Use the multiplier's domain for the indices (empty for scalar multipliers)
         expr = Binary("-", expr, MultiplierRef(piL_name, mult_def.domain))
+    elif (var_name, ()) in kkt.multipliers_bounds_lo:
+        # Issue #828: Fallback for mixed bounds — variable has uniform lower bound
+        # (stored at key (var_name, ())) but non-uniform upper bound triggered
+        # per-instance stationarity. Use concrete instance indices for the
+        # indexed multiplier reference (e.g., piL_x("bin-1") not piL_x(s)).
+        mult_def = kkt.multipliers_bounds_lo[(var_name, ())]
+        expr = Binary("-", expr, MultiplierRef(mult_def.name, var_indices))
 
     # Add π^U (upper bound multiplier, if exists)
     if key in kkt.multipliers_bounds_up:
         mult_def = kkt.multipliers_bounds_up[key]
-        # Use the actual multiplier name from the definition (handles both indexed and scalar cases)
         piU_name = mult_def.name
-        # Use the multiplier's domain for the indices (empty for scalar multipliers)
         expr = Binary("+", expr, MultiplierRef(piU_name, mult_def.domain))
+    elif (var_name, ()) in kkt.multipliers_bounds_up:
+        # Issue #828: Fallback for mixed bounds — same logic as lower bound above.
+        mult_def = kkt.multipliers_bounds_up[(var_name, ())]
+        expr = Binary("+", expr, MultiplierRef(mult_def.name, var_indices))
 
     return expr
 
