@@ -188,20 +188,20 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #887
 **Effort:** ~3h
 
 **Checkpoint 1 Metrics:**
 
-| Metric | Value | Target | Status |
-|--------|-------|--------|--------|
-| Parse | 146/160 (91.2%) | ≥ 141 | MET |
-| lexer_invalid_char | 8 | ≤ 8 | MET |
-| internal_error | 3 → 1 (post-fix) | ≤ 4 | MET |
-| semantic_undefined_symbol | 0 | ≤ 0 | MET |
-| Solve | 37 | — | baseline |
-| Match | 20 | — | baseline |
-| Tests | 3,766 (+7) | — | all pass |
+| Metric | Pre-fix | Post-fix | Target | Status |
+|--------|---------|----------|--------|--------|
+| Parse | 146/160 (91.2%) | 148/160 (92.5%) | ≥ 141 | MET |
+| lexer_invalid_char | 8 | 8 | ≤ 8 | MET |
+| internal_error | 3 | 1 | ≤ 4 | MET |
+| semantic_undefined_symbol | 0 | 0 | ≤ 0 | MET |
+| Solve | 37 | 37 | — | baseline |
+| Match | 20 | 20 | — | baseline |
+| Tests | 3,766 (+7) | 3,766 (+7) | — | all pass |
 
 **Parse Error Breakdown:**
 
