@@ -281,18 +281,22 @@
 
 ### Day 8 — WS4: Table Data Capture Part 2
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** #TBD
+**Effort:** ~2h
 
 **Activities:**
--
+- Investigated all 16 Subcategory A models — found table data parsing already works (Day 7 fix)
+- Root-caused qdemo7 ordering bug: `compute_set_assignment_param_deps()` included params whose expression keys reference dynamic set names (e.g., `beta(cn)` emitted before `cn(c)` assignment)
+- Fixed `compute_set_assignment_param_deps()` with post-filter to exclude dynamic-set-indexed params from early emission
+- Added 5 unit tests for emission ordering logic
+- Regenerated and tested all 16 Subcategory A models through GAMS
 
 **Metrics:**
-- path_syntax_error:
-- Tests:
-- Subcategory A models compiling:
+- Tests: 3,789 passed (+5 from Day 8), 10 skipped, 2 xfailed
+- Subcategory A models: 4 solve (iobalance, least, mine, ship), 4 exec-only errors (qdemo7, otpop, sroute, tforss), 8 compile errors (gussrisk, hydro, lmp2, marco, markov, paperco, ps10_s_mn, ps5_s_mn)
+- qdemo7: Moved from 14 compile errors to 0 compile errors (execution-time MCP pairing errors remain)
 
 ---
 

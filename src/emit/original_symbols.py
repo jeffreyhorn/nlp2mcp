@@ -35,7 +35,7 @@ from src.ir.ast import (
 )
 from src.ir.constants import GAMS_RESERVED_CONSTANTS, PREDEFINED_GAMS_CONSTANTS
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import SetDef
+from src.ir.symbols import ParameterDef, SetDef
 
 logger = logging.getLogger(__name__)
 
@@ -1340,15 +1340,47 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     # Transitive closure: if set assignments need param A, and param A needs
     # param B, then param B must also be emitted early.
     needed: set[str] = set()
-    frontier = direct_deps & {p.lower() for p in model_ir.params.keys()}
+    all_param_keys_lower = {p.lower() for p in model_ir.params.keys()}
+    frontier = direct_deps & all_param_keys_lower
     while frontier:
         needed.update(frontier)
         next_frontier: set[str] = set()
         for p in frontier:
             for dep in param_deps.get(p, set()):
-                if dep not in needed and dep in {pk.lower() for pk in model_ir.params.keys()}:
+                if dep not in needed and dep in all_param_keys_lower:
                     next_frontier.add(dep)
         frontier = next_frontier
+
+    # Post-filter: remove params whose LHS expression keys reference dynamic
+    # set names.  These params MUST go AFTER set assignments because their
+    # indices (e.g., "cn" in beta(cn)) are populated by set assignments.
+    # Their static data (Table values) is already emitted by
+    # emit_original_parameters(), so only computed expressions are affected.
+    dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
+    if dynamic_set_names:
+        disqualified: set[str] = set()
+        for pname in needed:
+            # Look up param definition (case-insensitive)
+            p_def: ParameterDef | None = None
+            for pk, pv in model_ir.params.items():
+                if pk.lower() == pname:
+                    p_def = pv
+                    break
+            if p_def and p_def.expressions:
+                for key_tuple, _expr in p_def.expressions:
+                    for idx in key_tuple:
+                        idx_str = idx.lower() if isinstance(idx, str) else ""
+                        if idx_str in dynamic_set_names:
+                            disqualified.add(pname)
+                            break
+                    if pname in disqualified:
+                        break
+        if disqualified:
+            logger.info(
+                "Excluding dynamic-set-indexed params from early emission: %s",
+                sorted(disqualified),
+            )
+        needed -= disqualified
 
     return needed
 
