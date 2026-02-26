@@ -5,7 +5,7 @@ to handle lead/lag syntax (i+1, t-1, t++expr) in parameter assignments.
 Unblocks GAMSlib models imsl, sarf, tfordy.
 """
 
-from src.ir.ast import Const, IndexOffset
+from src.ir.ast import Binary, Call, Const, IndexOffset, Unary
 from src.ir.parser import parse_model_text
 
 
@@ -149,3 +149,53 @@ w(m+1,n)$w(m,n) = 1;
         assert key[0].base == "m"
         assert key[0].circular is False
         assert key[1] == "n"
+
+
+class TestComplexOffsetExprParamAssign:
+    """Test complex offset expressions (offset_func / offset_paren) in LHS."""
+
+    def test_function_call_in_offset(self):
+        """Test w(m+floor((ord(n)-1)/k),n) — imsl pattern with func call offset."""
+        gams = """
+Set m / 1*5 /;
+Set n / 1*5 /;
+Scalar k / 2 /;
+Parameter w(m,n);
+w(m+floor((ord(n)-1)/k),n) = 1;
+"""
+        model = parse_model_text(gams)
+        param = model.params["w"]
+        assert len(param.expressions) == 1
+        key, _expr = param.expressions[0]
+        assert len(key) == 2
+        # First index: m+floor(...) — IndexOffset with Call offset
+        assert isinstance(key[0], IndexOffset)
+        assert key[0].base == "m"
+        assert key[0].circular is False
+        assert isinstance(key[0].offset, Call)
+        assert key[0].offset.func == "floor"
+        # Second index: plain n
+        assert key[1] == "n"
+        # Verify to_gams_string handles ParamRef in offset
+        gams_str = key[0].to_gams_string()
+        assert gams_str.startswith("m+floor(")
+        assert "k" in gams_str
+
+    def test_parenthesized_offset(self):
+        """Test p(l,t-(ord(l)-1)) — offset_paren with arithmetic expression."""
+        gams = """
+Set t / 1*10 /;
+Set l / a, b, c /;
+Parameter p(l,t);
+p(l,t-(ord(l)-1)) = 1;
+"""
+        model = parse_model_text(gams)
+        param = model.params["p"]
+        assert len(param.expressions) == 1
+        key, _expr = param.expressions[0]
+        assert key[0] == "l"
+        assert isinstance(key[1], IndexOffset)
+        assert key[1].base == "t"
+        # Offset is Unary(-, Binary(-, Call(ord, ...), Const(1)))
+        assert isinstance(key[1].offset, Unary)
+        assert key[1].offset.op == "-"
