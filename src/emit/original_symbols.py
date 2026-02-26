@@ -1265,10 +1265,17 @@ def emit_computed_parameter_assignments(
     sorted_stmts = _topological_sort_statements(collected_stmts, params_with_static)
 
     # Emit sorted statements
+    # Subcategory E: Build set of all declared set/alias names (original case)
+    # so that set references like SAM("TRF",J) emit J bare (not "J").
+    # GAMS is case-insensitive, so we include both original case and lowercase.
+    declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
+
     seen_assignment_lines: set[str] = set()
     for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
         # Convert expression to GAMS syntax
-        domain_vars: frozenset[str] = frozenset(
+        # domain_vars includes: LHS key_tuple indices + all declared set/alias names
+        # (Subcategory E: so RHS set references like J are emitted bare)
+        lhs_domain: frozenset[str] = frozenset(
             idx if isinstance(idx, str) else idx.base
             for idx in key_tuple
             if (
@@ -1279,6 +1286,7 @@ def emit_computed_parameter_assignments(
             )
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
+        domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
         expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
         # Format the LHS with indices

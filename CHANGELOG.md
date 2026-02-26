@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 6: WS4 Emitter Fixes — Set Index Quoting + Negative Exponents - 2026-02-26
+
+**Branch:** `sprint21-day6-emitter-fixes`
+
+#### Summary
+Fixed two emitter subcategories from PATH_SYNTAX_ERROR_CATALOG: Subcategory E (set index quoted as string literal, 7 CGE models) and Subcategory D (negative exponent needs parentheses, 3 models). 5 CGE models now compile and solve (1 exact match); 3 D-category models' primary $445 error eliminated.
+
+#### Fixed
+- Subcategory E: Set references in expression indices now emitted bare instead of as string literals (e.g., `SAM("TRF",J)` not `SAM("TRF","J")`)
+  - `_quote_indices()` now uses case-insensitive matching for domain variables (GAMS is case-insensitive)
+  - Computed parameter assignments include all declared set/alias names in `domain_vars`
+  - `l_map` and `lo_map` index quoting in `emit_gams.py` uses `_format_mixed_indices()` with domain-aware quoting
+- Subcategory D: Negative exponent values now wrapped in parentheses (e.g., `x ** (-0.9904)` not `x ** -0.9904`)
+
+#### Added
+- 11 new unit tests (4 set index quoting patterns, 7 negative exponent patterns)
+
+#### Metrics
+- path_syntax_error: 53 → ~45 (-8 models' primary errors fixed)
+- Tests: 3,778 passed (+11), 10 skipped, 2 xfailed
+- Pipeline results: irscge ✅, lrgcge ✅, moncge ✅, quocge ✅ (match!), stdcge ✅
+
 ### Sprint 21 Day 5: Checkpoint 1 + senstran/turkpow Fixes (+2 models) - 2026-02-26
 
 **Branch:** `sprint21-day5-checkpoint1-internal-error`

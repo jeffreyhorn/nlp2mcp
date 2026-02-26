@@ -293,6 +293,9 @@ def _quote_indices(
     """
     if domain_vars is None:
         domain_vars = frozenset()
+    # Subcategory E: Precompute lowercase set for case-insensitive matching
+    # (GAMS is case-insensitive: set 'j' can be referenced as 'J')
+    domain_vars_lower = frozenset(dv.lower() for dv in domain_vars)
     result = []
     for idx in indices:
         # Strip ALL layers of quotes to handle double-quoted indices like ""cost""
@@ -317,7 +320,9 @@ def _quote_indices(
         elif idx_clean.lower() in GAMS_RESERVED_CONSTANTS:
             result.append(f'"{idx_clean}"')
         # Sprint 18 Day 2: If index is in domain_vars context, it's a domain variable - don't quote
-        elif idx_clean in domain_vars:
+        # Subcategory E: Use case-insensitive matching because GAMS is case-insensitive
+        # (e.g., set declared as 'j' but referenced as 'J' in SAM("TRF",J))
+        elif idx_clean in domain_vars or idx_clean.lower() in domain_vars_lower:
             result.append(idx_clean)
         # IndexOffset syntax (i++1, i--2, i+1, i-3, i+j) is valid GAMS - don't quote
         # PR #658: Pass domain_vars to support multi-letter lag detection (tt-1)
@@ -470,6 +475,13 @@ def expr_to_gams(
                 right_str = expr_to_gams(
                     right, parent_op=op, is_right=True, domain_vars=domain_vars
                 )
+
+                # Subcategory D: GAMS Error $445 ("more than one operator in a row")
+                # when the exponent is negative, e.g., x ** -0.9904. GAMS requires
+                # parentheses: x ** (-0.9904). Wrap the exponent in parens if it
+                # starts with a bare minus sign (not already parenthesized).
+                if right_str.startswith("-"):
+                    right_str = f"({right_str})"
 
                 # Determine if we need parentheses for the whole expression
                 needs_parens = _needs_parens(parent_op, op, is_right)
