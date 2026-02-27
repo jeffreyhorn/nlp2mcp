@@ -4792,11 +4792,13 @@ class _ModelBuilder:
             return expr
 
         # Issue #781: Set ordinal attribute accessors (set.first, set.last, set.pos, set.ord)
+        # Issue #899: set.off → ord(set) - 1 (zero-based ordinal)
         # tl.first  → ord(tl) == 1          (boolean: 1 when tl is first element)
         # tl.last   → ord(tl) == card(tl)   (boolean: 1 when tl is last element)
         # tl.ord    → ord(tl)               (same as ord(tl))
         # tl.pos    → ord(tl)               (same as ord(tl), GAMS synonym)
-        _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord"}
+        # tl.off    → ord(tl) - 1           (zero-based ordinal)
+        _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord", "off"}
         if node.data == "set_attr" or (
             node.data == "attr_access"
             and len(node.children) == 2
@@ -4810,10 +4812,64 @@ class _ModelBuilder:
             elif attr == "last":
                 card_call = Call("card", (SymbolRef(set_name),))
                 expr = Binary("==", ord_call, card_call)
+            elif attr == "off":
+                expr = Binary("-", ord_call, Const(1.0))
             else:
                 # .ord and .pos are synonyms for ord(set)
                 expr = ord_call
             return self._attach_domain(expr, free_domain)
+
+        # Issue #897/#898: General attribute access in expressions.
+        # Handles variable attributes (.infeas), equation attributes,
+        # and model attributes (.modelStat, .solveStat, .objVal) that
+        # are used on the RHS of assignments or in expressions.
+        if node.data == "attr_access":
+            base_name = _token_text(node.children[0])
+            attr_name = _token_text(node.children[1])
+            base_lower = base_name.lower()
+            attr_lower = attr_name.lower()
+
+            if base_lower in self.model.variables:
+                expr = self._make_symbol(base_name, (), free_domain, node)
+                if isinstance(expr, VarRef):
+                    object.__setattr__(expr, "name", expr.name.lower())
+                    object.__setattr__(expr, "attribute", attr_lower)
+                return self._attach_domain(expr, free_domain)
+            elif base_lower in self.model.equations:
+                from .ast import EquationRef
+
+                expr = EquationRef(name=base_lower, indices=(), attribute=attr_lower)
+                return self._attach_domain(expr, free_domain)
+            else:
+                # Model attributes (.modelStat, .solveStat, .objVal), file attributes,
+                # or other symbol attributes — treat as a ParamRef placeholder
+                expr = ParamRef(f"{base_name}.{attr_name}")
+                return self._attach_domain(expr, free_domain)
+
+        if node.data == "attr_access_indexed":
+            base_name = _token_text(node.children[0])
+            attr_name = _token_text(node.children[1])
+            base_lower = base_name.lower()
+            attr_lower = attr_name.lower()
+            _aai_ef = lambda n: self._expr(n, free_domain)  # noqa: E731
+            indices = (
+                _process_index_list(node.children[2], _aai_ef) if len(node.children) > 2 else ()
+            )
+
+            if base_lower in self.model.variables:
+                expr = self._make_symbol(base_name, indices, free_domain, node)
+                if isinstance(expr, VarRef):
+                    object.__setattr__(expr, "name", expr.name.lower())
+                    object.__setattr__(expr, "attribute", attr_lower)
+                return self._attach_domain(expr, free_domain)
+            elif base_lower in self.model.equations:
+                from .ast import EquationRef
+
+                expr = EquationRef(name=base_lower, indices=indices, attribute=attr_lower)
+                return self._attach_domain(expr, free_domain)
+            else:
+                expr = ParamRef(f"{base_name}.{attr_name}", indices=indices)
+                return self._attach_domain(expr, free_domain)
 
         # Support compile-time constants: %identifier% or %path.to.value%
         if node.data == "compile_const":

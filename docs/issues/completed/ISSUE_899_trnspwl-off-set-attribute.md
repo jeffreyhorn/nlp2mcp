@@ -2,6 +2,7 @@
 
 **GitHub Issue:** [#899](https://github.com/jeffreyhorn/nlp2mcp/issues/899)
 **Model:** trnspwl (GAMSlib SEQ=385, "A Transportation Problem with discretized economies of scale")
+**Status:** RESOLVED
 **Error category:** `parser_invalid_expression`
 **Error message:** `Unsupported expression type: attr_access`
 
@@ -49,9 +50,6 @@ This issue shares the `attr_access` root cause with:
 
 **Primary fix:** Add `attr_access` and `attr_access_indexed` handlers to the IR builder's `_expr()` method. Fixing #897 should also resolve the `attr_access` portion of this issue.
 
-## Fix Approach
+## Resolution
 
-1. Add `attr_access` handler to `_expr()` in `src/ir/parser.py` — shared with #897, #898
-2. Add `.off` to the set attribute handlers in the IR builder
-3. Translate `ss.off` as `ord(ss) - 1` in the IR (since `.off` = `.ord` - 1)
-4. This is a straightforward addition similar to how `.ord` is already handled
+Added `.off` to the `_SET_ORDINAL_ATTRS` set in `_expr()` in `src/ir/parser.py`. The handler translates `ss.off` to `ord(ss) - 1` (zero-based ordinal), following the same pattern as `.ord` and `.pos`. The trnspwl model now parses successfully.

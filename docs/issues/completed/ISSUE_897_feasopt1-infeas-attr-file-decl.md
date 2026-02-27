@@ -3,6 +3,7 @@
 **GitHub Issue:** [#897](https://github.com/jeffreyhorn/nlp2mcp/issues/897)
 **Model:** feasopt1 (GAMSlib SEQ=107, "An Infeasible Transportation Problem analyzed with Cplex option FeasOpt")
 **Error category:** `parser_invalid_expression`
+**Status:** RESOLVED
 **Error message:** `Unsupported expression type: attr_access_indexed`
 
 ## Description
@@ -51,9 +52,11 @@ This issue shares the `attr_access` root cause with:
 The `File` declaration blocker is also shared with:
 - [#895](https://github.com/jeffreyhorn/nlp2mcp/issues/895) — srpchase: `File` declaration + `$libInclude` + `putClose`
 
-## Fix Approach
+## Resolution
 
-1. Add `attr_access` and `attr_access_indexed` handlers to `_expr()` in `src/ir/parser.py` — shared with #898, #899
-2. Add `.infeas` to the grammar's variable/equation attribute list
-3. Add model attribute access (`.optFile`, `.modelStat`, `.solveStat`) to the grammar
-4. Handle `File` declarations (strip in preprocessor or add to grammar) — shared with #895
+Added `attr_access` and `attr_access_indexed` handlers to `_expr()` in `src/ir/parser.py`. These handle:
+- Variable attributes (`.infeas`, etc.) → `VarRef` with attribute field
+- Equation attributes → `EquationRef` with attribute field
+- Model/other attributes (`.modelStat`, `.optFile`) → `ParamRef` placeholder
+
+The `$ifI` directives are already handled by the preprocessor (`$ifi` lowercases to start with `$if`). The `File` declarations in feasopt1 are behind `$ifI %system.lp% == cplex` conditionals which evaluate to false, so they don't need parsing. The model now parses successfully.
