@@ -548,8 +548,15 @@ def expr_to_gams(
             if func == "power" and len(args) == 2:
                 exponent = args[1]
                 use_infix = not isinstance(exponent, (Const, ParamRef))
-                if isinstance(exponent, Const) and exponent.value != int(exponent.value):
-                    use_infix = True
+                if isinstance(exponent, Const):
+                    value = exponent.value
+                    if isinstance(value, float):
+                        # Avoid int() on non-finite floats (inf, nan); treat as requiring infix.
+                        if (not math.isfinite(value)) or (not value.is_integer()):
+                            use_infix = True
+                    else:
+                        if value != int(value):
+                            use_infix = True
                 if isinstance(exponent, ParamRef):
                     use_infix = True
                 if use_infix:
