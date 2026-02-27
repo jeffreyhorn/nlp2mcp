@@ -2556,7 +2556,7 @@ class _ModelBuilder:
                     row_label_end_col = max(row_label_end_col, tok_col + len(str(tok)))
             # Find NUMBER tokens between the row label and the first column header.
             # Issue #902: Only absorb if immediately adjacent to the row label
-            # (within 2 columns), not separated by whitespace.  This prevents
+            # (within 1 column), not separated by whitespace.  This prevents
             # data values (e.g., 400000 at col 7) from being absorbed as label
             # segments when they happen to be left of the first column header.
             absorbed = []

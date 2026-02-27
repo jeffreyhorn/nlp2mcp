@@ -1125,7 +1125,7 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
         'Set i /1*10/;'
 
     Notes:
-        - Case-sensitive macro name matching (GAMS convention)
+        - Case-insensitive macro name matching (GAMS convention)
         - Unknown macros are left as-is (e.g., %unknown% unchanged)
         - System macros like %gams.user1% can be added to macros dict
     """
