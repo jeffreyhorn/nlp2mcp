@@ -66,9 +66,19 @@ class TestDiagonalComplementarityFix:
         result = _generate_mcp("ps2_f_s")
         assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
 
+    def test_ps2_s_diagonal_fx_emitted(self):
+        """ps2_s: lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0 must appear."""
+        result = _generate_mcp("ps2_s")
+        assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
+
     def test_ps3_s_gic_diagonal_fx_emitted(self):
         """ps3_s_gic: lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0 must appear."""
         result = _generate_mcp("ps3_s_gic")
+        assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
+
+    def test_ps3_s_scp_diagonal_fx_emitted(self):
+        """ps3_s_scp: lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0 must appear."""
+        result = _generate_mcp("ps3_s_scp")
         assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
 
 
