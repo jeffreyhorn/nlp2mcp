@@ -50,7 +50,7 @@ lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 This mirrors the existing section 3 logic for equality multipliers. All three
 models now compile and solve to Optimal.
 
-**Tests:** `tests/unit/emit/test_fx_complementarity.py::TestLeadLagComplementarityFix`
+**Tests:** `tests/integration/emit/test_fx_complementarity.py::TestLeadLagComplementarityFix`
 
 ## Related Issues
 

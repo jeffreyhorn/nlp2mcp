@@ -46,7 +46,7 @@ lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;
 This fixes the diagonal multipliers to 0, satisfying GAMS MCP matching. All four
 models now compile and solve to Optimal.
 
-**Tests:** `tests/unit/emit/test_fx_complementarity.py::TestDiagonalComplementarityFix`
+**Tests:** `tests/integration/emit/test_fx_complementarity.py::TestDiagonalComplementarityFix`
 
 ## Related Issues
 
