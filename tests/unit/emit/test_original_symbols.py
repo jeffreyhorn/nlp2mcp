@@ -1359,3 +1359,9 @@ class TestQuoteAssignmentIndex:
         """Wildcard '*' should never be quoted (universal set reference)."""
         assert _quote_assignment_index("*", set()) == "*"
         assert _quote_assignment_index("*", {"m"}, frozenset({"c"})) == "*"
+
+    def test_hyphenated_domain_variable_quoted(self):
+        """Domain variable names that need quoting are quoted via _quote_symbol."""
+        # A hypothetical domain variable 'i-alias' contains a hyphen
+        result = _quote_assignment_index("i-alias", {"i-alias"})
+        assert result == "'i-alias'"

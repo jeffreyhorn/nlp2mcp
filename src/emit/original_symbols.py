@@ -186,8 +186,8 @@ def _quote_assignment_index(
     """Quote an index element for executable assignment LHS if needed.
 
     Issues #874, #886, #912, #916: In GAMS executable assignments like
-    ``p(i,"3") = 0``, indices must be quoted when they are:
-    - numeric-looking (``"3"`` not ``3``)
+    ``p(i,'3') = 0``, indices must be quoted when they are:
+    - numeric-looking (``'3'`` not ``3``)
     - containing operators like ``-`` or ``+`` (``'period-1'`` not ``period-1``)
     - literal element names that collide with declared set names
 
@@ -213,7 +213,7 @@ def _quote_assignment_index(
     # fall back to checking all declared sets (backward-compatible).
     check_set = domain_lower if domain_lower is not None else sets_lower
     if idx.lower() in check_set:
-        return idx
+        return _quote_symbol(idx)
     # Issue #912: When domain context is provided (values path where quotes
     # were stripped at parse time), any index that is NOT a domain variable
     # AND NOT a declared set/alias name is a literal element value.
