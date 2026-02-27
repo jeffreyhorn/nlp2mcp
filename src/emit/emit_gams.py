@@ -6,6 +6,7 @@ GAMS MCP file from a KKT system.
 
 import math
 from collections import deque
+from itertools import combinations
 from typing import cast
 
 from src.config import Config
@@ -567,6 +568,58 @@ def emit_gams_mcp(
             assert isinstance(eq_def.condition, Expr)
             cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 2b. Issue #943: Fix inequality multipliers whose complementarity equation
+    # has lead/lag expressions (e.g., i+1) that implicitly exclude terminal indices.
+    # Same logic as section 3 below but for inequality complementarity equations.
+    for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        eq_def = comp_pair.equation
+        if not eq_def.domain:
+            continue
+        # Skip if already handled by explicit condition above
+        if eq_def.condition is not None:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+        lead_offsets = {
+            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
+        }
+        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+        if inferred_cond is None:
+            continue
+        mult_name = comp_pair.variable
+        domain_str = ",".join(eq_def.domain)
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+
+    # 2c. Issue #942: Fix inequality multipliers on diagonal elements when the
+    # complementarity equation has 2+ indices from the same set (via aliases).
+    # Example: comp_ic(i,j) where j is an alias of i — diagonal (i,i) produces
+    # an empty equation (e.g., w(i)-theta(i)*x(i) - (w(i)-theta(i)*x(i)) = 0).
+    # Build a lookup from set name → canonical set (resolving aliases)
+    _alias_target: dict[str, str] = {}
+    for alias_def in kkt.model_ir.aliases.values():
+        _alias_target[alias_def.name] = alias_def.target
+    for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        eq_def = comp_pair.equation
+        if not eq_def.domain or len(eq_def.domain) < 2:
+            continue
+        # Resolve each domain index to its canonical set
+        canonical = [_alias_target.get(idx, idx) for idx in eq_def.domain]
+        # Find pairs of indices that share the same canonical set
+        for idx_a, idx_b in combinations(range(len(eq_def.domain)), 2):
+            if canonical[idx_a] == canonical[idx_b]:
+                # These two indices share the same set — diagonal is trivial
+                mult_name = comp_pair.variable
+                domain_str = ",".join(eq_def.domain)
+                d_i = eq_def.domain[idx_a]
+                d_j = eq_def.domain[idx_b]
+                fx_lines.append(f"{mult_name}.fx({domain_str})$(ord({d_i}) = ord({d_j})) = 0;")
 
     # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
     # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),
