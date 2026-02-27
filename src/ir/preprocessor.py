@@ -98,6 +98,10 @@ SYSTEM_MACROS: dict[str, str] = {
     "solveLink.AsyncGrid": "3",
     "solveLink.AsyncSimulate": "4",
     "solveLink.LoadLibrary": "5",
+    # Solution print control (%solPrint.*)
+    "solPrint.Quiet": "0",
+    "solPrint.On": "1",
+    "solPrint.Silent": "2",
     # Infrastructure macros (reasonable defaults)
     "system.dirsep": "/",
     "system.fileSys": "UNIX",
@@ -1121,7 +1125,7 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
         'Set i /1*10/;'
 
     Notes:
-        - Case-sensitive macro name matching (GAMS convention)
+        - Case-insensitive macro name matching (GAMS convention)
         - Unknown macros are left as-is (e.g., %unknown% unchanged)
         - System macros like %gams.user1% can be added to macros dict
     """
@@ -1131,8 +1135,10 @@ def expand_macros(source: str, macros: dict[str, str]) -> str:
         # Replace %varname% with value
         # The % delimiters prevent partial matches
         # Use lambda to prevent interpreting special regex replacement sequences
+        # GAMS macros are case-insensitive (e.g., %solveLink.callModule%
+        # matches %solveLink.CallModule%)
         pattern = f"%{re.escape(var_name)}%"
-        result = re.sub(pattern, lambda m: value, result)
+        result = re.sub(pattern, lambda m: value, result, flags=re.IGNORECASE)
 
     return result
 
@@ -3252,6 +3258,11 @@ def _preprocess_content(content: str) -> str:
 
     # Step 10: Strip other unsupported directives ($title, $ontext, etc.)
     content = strip_unsupported_directives(content)
+
+    # Step 10b: Normalize abort.noerror to abort (Issue #891)
+    # abort.noerror suppresses the error exit in GAMS — since we mock abort,
+    # just strip the .noerror suffix so the grammar can parse it.
+    content = re.sub(r"\babort\.noerror\b", "abort", content, flags=re.IGNORECASE)
 
     # Step 11: Join multi-line equations into single lines
     # This must happen before table continuation normalization to avoid

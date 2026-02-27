@@ -144,13 +144,13 @@ class TestExpandMacros:
         result = expand_macros(source, macros)
         assert result == "Parameter p /test-value_123/;"
 
-    def test_case_sensitive_macro_names(self):
-        """Macro names are case-sensitive."""
+    def test_case_insensitive_macro_names(self):
+        """GAMS macro names are case-insensitive (Issue #889)."""
         source = "Set i /1*%SIZE%/;\nSet j /1*%size%/;"
         macros = {"size": "10"}  # lowercase only
         result = expand_macros(source, macros)
-        # %SIZE% should remain, %size% should be replaced
-        assert "%SIZE%" in result
+        # Both %SIZE% and %size% should be replaced (case-insensitive)
+        assert "Set i /1*10/;" in result
         assert "Set j /1*10/;" in result
 
     def test_system_macro_simulation(self):

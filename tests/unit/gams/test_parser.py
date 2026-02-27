@@ -477,15 +477,15 @@ def test_alias_cycle_detected():
 def test_unsupported_statement_rejected():
     """Test that truly unsupported statements are rejected.
 
-    Note: Loop statements are now supported (Sprint 11 Day 2 Extended).
-    This test now checks for a different unsupported construct.
+    Note: Loop and while statements are now supported.
+    This test checks for an unsupported construct (for statement).
     """
     text = dedent("""
         Sets
             i /i1/ ;
 
-        while(i < 10,
-            display i;
+        for(j = 1 to 10,
+            display j;
         );
         """)
 
