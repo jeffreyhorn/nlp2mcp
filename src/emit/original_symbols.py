@@ -1575,7 +1575,8 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                 # where 'm' is both an element and a declared set name).
                 param_domain_lower = frozenset(d.lower() for d in param_def.domain)
                 quoted_keys = [
-                    k if k.lower() in param_domain_lower else f"'{k}'" for k in expanded_key
+                    k if k.lower() in param_domain_lower or k == "*" else f"'{k}'"
+                    for k in expanded_key
                 ]
             index_str = ",".join(quoted_keys)
             assignments.append(
