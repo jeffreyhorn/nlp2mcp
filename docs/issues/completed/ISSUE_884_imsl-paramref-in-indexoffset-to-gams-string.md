@@ -1,7 +1,7 @@
 # imsl: ParamRef Not Handled in IndexOffset._offset_expr_to_string()
 
 **GitHub Issue:** [#884](https://github.com/jeffreyhorn/nlp2mcp/issues/884)
-**Status:** OPEN
+**Status:** RESOLVED
 **Severity:** Medium — Model parses but translation fails
 **Date:** 2026-02-25
 **Affected Models:** imsl
@@ -120,6 +120,10 @@ w(m+1,n)$w(m,n) = 1 - w(m,n);
 ```
 
 ---
+
+## Resolution
+
+This issue was already fixed in commit b94ab2ba (PR #883 review comments), which added `ParamRef` and `VarRef` handlers to `IndexOffset._offset_expr_to_string()`. The imsl model now parses and translates successfully (`python -m src.cli data/gamslib/raw/imsl.gms` produces MCP output without errors).
 
 ## Related Issues
 
