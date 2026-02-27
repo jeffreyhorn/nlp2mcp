@@ -2,7 +2,9 @@
 
 When a variable's stationarity equation simplifies to 0 =E= 0 (e.g., because
 the stationarity builder can't propagate derivatives through subset access
-patterns), the equation must be removed and the variable fixed to 0.
+patterns), the variable is recorded in empty_stationarity_vars so the emitter
+can fix it to 0 via .fx statements. The stationarity equation itself is kept
+in the dict for MCP complementarity pairing.
 """
 
 from __future__ import annotations

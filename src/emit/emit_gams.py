@@ -6,6 +6,7 @@ GAMS MCP file from a KKT system.
 
 import math
 from collections import deque
+from typing import cast
 
 from src.config import Config
 from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
@@ -615,12 +616,31 @@ def emit_gams_mcp(
         needs_fix = stat_eq.condition is not None or var_name in kkt.stationarity_conditions
         if not needs_fix:
             continue
+
+        # Derive the dollar condition used in the stationarity equation, if any.
+        empty_cond: Expr | None = None
+        if stat_eq.condition is not None:
+            empty_cond = cast(Expr, stat_eq.condition)
+        elif var_name in kkt.stationarity_conditions:
+            empty_cond = kkt.stationarity_conditions[var_name]
+
         var_def = kkt.model_ir.variables.get(var_name)
+        cond_str: str | None = None
+        if empty_cond is not None:
+            dv = frozenset(var_def.domain) if var_def and var_def.domain else None
+            cond_str = expr_to_gams(empty_cond, domain_vars=dv)
+
         if var_def and var_def.domain:
             domain_str = ",".join(var_def.domain)
-            fx_lines.append(f"{var_name}.fx({domain_str}) = 0;")
+            if cond_str:
+                fx_lines.append(f"{var_name}.fx({domain_str})$({cond_str}) = 0;")
+            else:
+                fx_lines.append(f"{var_name}.fx({domain_str}) = 0;")
         else:
-            fx_lines.append(f"{var_name}.fx = 0;")
+            if cond_str:
+                fx_lines.append(f"{var_name}.fx$({cond_str}) = 0;")
+            else:
+                fx_lines.append(f"{var_name}.fx = 0;")
 
     if fx_lines:
         if add_comments:
