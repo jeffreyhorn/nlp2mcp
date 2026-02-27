@@ -24,7 +24,7 @@ Fixed #826: decomp model's empty stationarity equation now handled correctly —
 - 3 unit tests for `$libInclude` stripping in preprocessor
 
 #### Metrics
-- Tests: 3,808 passed (+6), 10 skipped, 1 xfailed
+- Tests: 3,808 passed (+5 new tests), 10 skipped, 1 xfailed
 
 ### Sprint 21 Day 10: Checkpoint 2 + Deferred Issues (#789, #828) - 2026-02-26
 

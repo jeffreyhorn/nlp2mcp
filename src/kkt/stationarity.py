@@ -800,13 +800,17 @@ def build_stationarity_equations(
         lhs, _ = eq_def.lhs_rhs
         if isinstance(lhs, Const) and lhs.value == 0.0:
             suffix = eq_name[5:] if eq_name.startswith("stat_") else eq_name
-            # Find the variable name: try exact match first, then prefix match
+            # Find the variable name: try exact match first, then longest prefix match
             var_name = suffix
             if suffix not in kkt.model_ir.variables:
-                for vn in kkt.model_ir.variables:
-                    if suffix.startswith(vn + "_") or suffix == vn:
-                        var_name = vn
-                        break
+                candidates = [
+                    vn
+                    for vn in kkt.model_ir.variables
+                    if suffix == vn or suffix.startswith(vn + "_")
+                ]
+                if candidates:
+                    # Use the longest matching variable name to avoid ambiguous prefixes
+                    var_name = max(candidates, key=len)
             empty_stat_vars.add(var_name)
     kkt.empty_stationarity_vars = empty_stat_vars
 
