@@ -789,6 +789,27 @@ def build_stationarity_equations(
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
+    # Issue #826: Detect empty stationarity equations (LHS == Const(0.0)).
+    # This happens when the stationarity builder can't propagate derivatives
+    # through subset access patterns (e.g., decomp's lam(ss) accessed via
+    # sum(s, ...) where s ⊂ ss). Record the variables so the emitter can
+    # fix them to 0. Keep the equations in the dict so MCP pairing still
+    # works (GAMS allows empty equations if the paired variable is fixed).
+    empty_stat_vars: set[str] = set()
+    for eq_name, eq_def in stationarity.items():
+        lhs, _ = eq_def.lhs_rhs
+        if isinstance(lhs, Const) and lhs.value == 0.0:
+            suffix = eq_name[5:] if eq_name.startswith("stat_") else eq_name
+            # Find the variable name: try exact match first, then prefix match
+            var_name = suffix
+            if suffix not in kkt.model_ir.variables:
+                for vn in kkt.model_ir.variables:
+                    if suffix.startswith(vn + "_") or suffix == vn:
+                        var_name = vn
+                        break
+            empty_stat_vars.add(var_name)
+    kkt.empty_stationarity_vars = empty_stat_vars
+
     # Collect multiplier names that actually appear in simplified stationarity equations.
     # After simplification, terms like 0 * nu_foo are eliminated, so those multipliers
     # no longer appear. The emitter uses this set to skip unreferenced multipliers.

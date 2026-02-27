@@ -347,6 +347,29 @@ Equations eq;"""
         result = strip_unsupported_directives("")
         assert result == ""
 
+    def test_strip_libinclude_directive(self):
+        """Issue #888: Strip $libInclude directive."""
+        source = "$libInclude scenred.gms\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "* Stripped: $libInclude scenred.gms"
+        assert lines[1] == "Variables x;"
+
+    def test_strip_libinclude_case_insensitive(self):
+        """$LIBINCLUDE and $libinclude are also stripped."""
+        source = "$LIBINCLUDE scenred.gms\n$libinclude other.gms\n"
+        result = strip_unsupported_directives(source)
+        assert "* Stripped: $LIBINCLUDE scenred.gms" in result
+        assert "* Stripped: $libinclude other.gms" in result
+
+    def test_strip_libinclude_with_space(self):
+        """$  libInclude (space after $) is also stripped."""
+        source = "$ libInclude scenred.gms\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
 
 class TestPreprocessGamsFile:
     """Test the complete preprocess_gams_file() integration function."""
