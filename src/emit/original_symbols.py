@@ -211,11 +211,14 @@ def _quote_assignment_index(
     check_set = domain_lower if domain_lower is not None else sets_lower
     if idx.lower() in check_set:
         return idx
-    # Issue #912: When domain context is provided, any index that is NOT a
-    # domain variable is a literal element value (quotes were stripped at
-    # parse time).  Quote it to prevent GAMS from interpreting it as a set
-    # reference or arithmetic expression.
-    if domain_lower is not None:
+    # Issue #912: When domain context is provided (values path where quotes
+    # were stripped at parse time), any index that is NOT a domain variable
+    # AND NOT a declared set/alias name is a literal element value.
+    # Quote it to prevent GAMS from interpreting it incorrectly.
+    # Indices that ARE declared set/alias names stay bare — they may be
+    # cross-domain references (e.g., yw(t,at,s,cl) where t is a subset
+    # of the declared domain set te).
+    if domain_lower is not None and idx.lower() not in sets_lower:
         return f"'{idx}'"
     # Issue #886/#916: Elements with operators (-,+) or other special chars
     # must be quoted so GAMS doesn't interpret them as arithmetic
@@ -1312,22 +1315,15 @@ def emit_computed_parameter_assignments(
         domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
         expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
-        # Issue #912: Use the parameter's declared domain to distinguish domain
-        # variables from literal element values that happen to share a set name.
-        param_def = model_ir.params.get(param_name)
-        param_domain_lower = (
-            frozenset(d.lower() for d in param_def.domain)
-            if param_def and param_def.domain
-            else frozenset()
-        )
-
         # Format the LHS with indices
+        # Note: expressions path preserves quotes in key_tuples, so literal
+        # elements are already quoted — no need to pass domain_lower here.
         if key_tuple:
             quoted_keys = [
                 (
                     idx.to_gams_string()
                     if isinstance(idx, IndexOffset)
-                    else _quote_assignment_index(idx, declared_sets_lower, param_domain_lower)
+                    else _quote_assignment_index(idx, declared_sets_lower)
                 )
                 for idx in key_tuple
             ]
@@ -1570,11 +1566,13 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                     _quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key
                 ]
             else:
-                # Mixed: use parameter domain to distinguish
+                # Mixed: all elements are literal values (quotes were stripped
+                # at parse time). Quote ALL non-domain elements, including those
+                # that collide with set names (Issue #912: e.g., cases(c1,m)
+                # where 'm' is both an element and a declared set name).
                 param_domain_lower = frozenset(d.lower() for d in param_def.domain)
                 quoted_keys = [
-                    _quote_assignment_index(k, sets_and_aliases_lower, param_domain_lower)
-                    for k in expanded_key
+                    k if k.lower() in param_domain_lower else f"'{k}'" for k in expanded_key
                 ]
             index_str = ",".join(quoted_keys)
             assignments.append(

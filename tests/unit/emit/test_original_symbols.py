@@ -1336,10 +1336,10 @@ class TestQuoteAssignmentIndex:
         """Elements with + must be quoted."""
         assert _quote_assignment_index("x+1", set()) == "'x+1'"
 
-    def test_set_collision_quoted_with_domain(self):
-        """Issue #912: element matching set name but not in domain is quoted."""
+    def test_set_name_not_quoted_with_domain(self):
+        """Set names stay bare even with domain_lower (cross-domain references)."""
         result = _quote_assignment_index("m", {"m", "n", "c"}, frozenset({"c", "*"}))
-        assert result == "'m'"
+        assert result == "m"
 
     def test_literal_element_quoted_with_domain(self):
         """Non-domain, non-set element is quoted when domain context provided."""
