@@ -1,6 +1,7 @@
 # Positive Variable Implicit lo=0 Not Propagated to KKT Partition
 
 **GitHub Issue:** #922 (https://github.com/jeffreyhorn/nlp2mcp/issues/922)
+**Status:** FIXED
 **Models:** apl1p, apl1pca (and any model with `Positive Variable` declarations)
 **Category:** match_mismatch (LP models solve but don't match NLP objective)
 **Severity:** KKT system incomplete — missing non-negativity bound multipliers
@@ -47,29 +48,22 @@ grep 'piL_x\|comp_lo_x\|piL_y\|piL_s' /tmp/apl1p_mcp.gms
 | apl1pca | LP (verified_convex) | 32.9% | Same as apl1p (variant) |
 | Any model with `Positive Variable` | Various | Various | All positive vars without explicit `.lo` |
 
-## Recommended Fix
+## Resolution
 
-**Option A (preferred — single-point fix in partition.py):**
+**Fixed using Option A (partition.py).** Option B (fixing in `add_var()`) was initially attempted but caused regressions: setting `lo=0.0` on the VariableDef during parsing interfered with models that also set explicit indexed bounds (e.g., `x.lo(c) = 0.001` in `chem.gms`), causing the partitioner to generate per-instance stationarity equations instead of indexed ones.
 
-After the `if var_def.lo is not None:` block (line 123), add:
-```python
-elif var_def.kind == VarKind.POSITIVE and (var_name, ()) not in result.bounds_lo:
-    result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
-```
+### Changes Made
 
-Requires importing `VarKind` in `partition.py`.
+**`src/kkt/partition.py`:**
+- Added `VarKind` to imports
+- After processing explicit scalar/indexed bounds, added implicit bound synthesis:
+  - `VarKind.POSITIVE`: adds `lo=0` if no explicit lo bound (scalar or indexed) exists
+  - `VarKind.NEGATIVE`: adds `up=0` if no explicit up bound exists
+  - `VarKind.BINARY`: adds `lo=0` and `up=1` if no explicit bounds exist
+- Only synthesizes bounds when neither `var_def.lo`/`var_def.up` nor `lo_map`/`up_map` have entries, avoiding conflicts with models that set explicit bounds
 
-**Option B (fix in parser):** Set `var_def.lo = 0.0` when `kind == VarKind.POSITIVE` in `add_var()`. This makes existing partition logic work automatically.
+### Verification
 
-Also need to handle `Negative Variable` (implicit `up=0`) and `Binary Variable` (implicit `lo=0`, `up=1`) similarly.
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/kkt/partition.py` | Add `VarKind.POSITIVE` check after line 123 to synthesize lo=0 bound entries |
-| OR `src/ir/parser.py` | Set `lo=0.0` in `add_var()` when kind is POSITIVE |
-
-## Estimated Effort
-
-~2h (including tests and pipeline retest for apl1p, apl1pca)
+- All 3,815 tests pass, 10 skipped, 1 xfailed
+- apl1p: MODEL STATUS 1 Optimal (piL_x, piL_y, piL_s now emitted)
+- chem, hhmax: No regression (MODEL STATUS 1 Optimal)

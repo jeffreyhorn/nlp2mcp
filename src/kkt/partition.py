@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import EquationDef
+from src.ir.symbols import EquationDef, VarKind
 
 
 @dataclass
@@ -158,6 +158,22 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
+
+        # Issue #922: Synthesize implicit bounds from variable kind.
+        # GAMS Positive Variable has implicit lo=0, Negative has up=0,
+        # Binary has lo=0 and up=1. Only add if no explicit bound exists
+        # (scalar or indexed) for that direction.
+        has_lo = var_def.lo is not None or bool(var_def.lo_map)
+        has_up = var_def.up is not None or bool(var_def.up_map)
+        if var_def.kind == VarKind.POSITIVE and not has_lo:
+            result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
+        elif var_def.kind == VarKind.NEGATIVE and not has_up:
+            result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain)
+        elif var_def.kind == VarKind.BINARY:
+            if not has_lo:
+                result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
+            if not has_up:
+                result.bounds_up[(var_name, ())] = BoundDef("up", 1.0, var_def.domain)
 
     return result
 
