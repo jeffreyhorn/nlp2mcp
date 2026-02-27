@@ -24,7 +24,7 @@ Checkpoint 2 full pipeline retest (146/157 parse, 43 solve, 22 match — all tar
 - 2 new integration tests for min/max objective warning (warns on objective chain, silent on constraint)
 
 #### Metrics
-- Tests: 3,802 passed (+4), 10 skipped, 1 xfailed
+- Tests: 3,802 passed (+5), 10 skipped, 1 xfailed
 - Parse: 146/157 (93.0%), Solve: 43, Match: 22
 - All Sprint 21 targets met: parse ≥ 141 ✓, internal_error ≤ 3 ✓, solve ≥ 36 ✓, match ≥ 20 ✓
 

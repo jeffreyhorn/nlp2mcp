@@ -842,7 +842,7 @@ def reformulate_model(model: ModelIR) -> None:
 
     # Issue #789: Detect objective chain BEFORE applying reformulations.
     # Min/max in objective-defining equations produces mathematically infeasible
-    # KKT systems (λ₀ + λ₁ = -1 where λ ≥ 0). Emit a clear error instead of
+    # KKT systems (λ₀ + λ₁ = -1 where λ ≥ 0). Emit a clear warning instead of
     # silently generating an infeasible MCP.
     from ..ir.minmax_detection import trace_objective_chain
 

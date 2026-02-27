@@ -353,7 +353,7 @@
 | internal_error | 1 | ≤ 3 | **MET** |
 | Solve | 43 | ≥ 36 | **MET** |
 | Match | 22 | ≥ 20 | **MET** |
-| Tests | 3,802 (+4) | — | all pass |
+| Tests | 3,802 (+5) | — | all pass |
 
 Note: 157 models processed (3 fewer than 160 — not available in local data).
 
