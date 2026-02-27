@@ -320,6 +320,28 @@ class TestFunctionCalls:
         result = expr_to_gams(Call("power", (VarRef("x", ()), Const(2))))
         assert result == "power(x, 2)"
 
+    def test_power_noninteger_const_uses_infix(self):
+        """Issue #904: power(x, -0.5) must emit as x ** (-0.5)."""
+        result = expr_to_gams(
+            Call("power", (VarRef("x", ("i",)), Const(-0.5))), domain_vars=frozenset(["i"])
+        )
+        assert result == "x(i) ** (-0.5)"
+
+    def test_power_positive_noninteger_const_uses_infix(self):
+        """Issue #904: power(x, 1.5) must emit as x ** 1.5."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), Const(1.5))))
+        assert result == "x ** 1.5"
+
+    def test_power_integer_const_stays_as_call(self):
+        """Integer exponent stays as power() call."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), Const(3))))
+        assert result == "power(x, 3)"
+
+    def test_power_paramref_uses_infix(self):
+        """Issue #904: power(x, param) must emit as x ** param (may be non-integer)."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), ParamRef("alpha", ()))))
+        assert result == "x ** alpha"
+
     def test_call_nested(self):
         """Test nested function calls."""
         inner = Call("log", (VarRef("x", ()),))

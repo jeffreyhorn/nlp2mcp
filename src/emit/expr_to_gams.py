@@ -540,17 +540,28 @@ def expr_to_gams(
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
-            # Issue #724: GAMS power(base, exp) requires exp to be constant.
-            # When the exponent contains a variable, emit as base ** exp instead.
+            # Issue #724: GAMS power(base, exp) requires integer exponent.
+            # Issue #904: AD can produce non-integer Const exponents (e.g.,
+            # d/dx[x^0.5] = 0.5 * power(x, -0.5)). Use ** for non-integer
+            # Const exponents and ParamRef exponents (may be non-integer
+            # at runtime). Only keep power() for integer Const exponents.
             if func == "power" and len(args) == 2:
                 exponent = args[1]
-                if not isinstance(exponent, (Const, ParamRef)):
+                use_infix = not isinstance(exponent, (Const, ParamRef))
+                if isinstance(exponent, Const) and exponent.value != int(exponent.value):
+                    use_infix = True
+                if isinstance(exponent, ParamRef):
+                    use_infix = True
+                if use_infix:
                     base_str = expr_to_gams(
                         args[0], parent_op="**", is_right=False, domain_vars=domain_vars
                     )
                     exp_str = expr_to_gams(
                         args[1], parent_op="**", is_right=True, domain_vars=domain_vars
                     )
+                    # Wrap negative exponents in parens (GAMS Error $445)
+                    if exp_str.startswith("-"):
+                        exp_str = f"({exp_str})"
                     result = f"{base_str} ** {exp_str}"
                     if _needs_parens(parent_op, "**", is_right):
                         return f"({result})"

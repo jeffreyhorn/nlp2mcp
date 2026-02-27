@@ -1,6 +1,7 @@
 # ps2_f_eff / ps2_f_inf: `power()` Emitted with Non-Integer Exponent Causes Runtime Error
 
 **GitHub Issue:** [#904](https://github.com/jeffreyhorn/nlp2mcp/issues/904)
+**Status:** FIXED
 **Model:** ps2_f_eff, ps2_f_inf (GAMSlib)
 **Error category:** `path_solve_terminated`
 **Runtime error:** `power: FUNC DOMAIN: pow(x,i), i not integer`
@@ -89,3 +90,26 @@ This converts `power(x(i), -0.5)` → `x(i) ** (-0.5)`, which GAMS handles corre
 - Primary Subcategory D ($445 negative exponent) already fixed in PR #900
 - The `**` operator with negative exponents already works correctly (tested in PR #900)
 - `ParamRef` exponents should also use `**` (they might be non-integer at runtime)
+
+## Resolution
+
+**Fixed in branch `fix-904-power-noninteger-exponent`.**
+
+### Changes Made
+
+1. **`src/emit/expr_to_gams.py` (lines 543-567):** Enhanced the `power()` → `**` emitter guard to use infix `**` for:
+   - Non-integer `Const` exponents (e.g., `Const(-0.5)` → `x ** (-0.5)`)
+   - `ParamRef` exponents (may be non-integer at runtime)
+   - Integer `Const` exponents continue to use `power()` (valid GAMS)
+   - Also added negative-exponent parenthesization in the Call-to-infix path (GAMS Error $445)
+
+2. **`tests/unit/emit/test_expr_to_gams.py`:** 4 new tests:
+   - `test_power_noninteger_const_uses_infix`: `power(x(i), -0.5)` → `x(i) ** (-0.5)`
+   - `test_power_positive_noninteger_const_uses_infix`: `power(x, 1.5)` → `x ** 1.5`
+   - `test_power_integer_const_stays_as_call`: `power(x, 3)` → `power(x, 3)` (unchanged)
+   - `test_power_paramref_uses_infix`: `power(x, alpha)` → `x ** alpha`
+
+### Verification
+
+- All 3,812 tests pass (+4 new), 10 skipped, 1 xfailed
+- Quality gate: typecheck, lint, format all pass
