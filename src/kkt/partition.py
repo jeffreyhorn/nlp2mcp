@@ -161,10 +161,11 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         # Issue #922: Synthesize implicit bounds from variable kind.
         # GAMS Positive Variable has implicit lo=0, Negative has up=0,
-        # Binary has lo=0 and up=1. Only add if no explicit bound exists
-        # (scalar or indexed) for that direction.
-        has_lo = var_def.lo is not None or bool(var_def.lo_map)
-        has_up = var_def.up is not None or bool(var_def.up_map)
+        # Binary has lo=0 and up=1. Only add if no explicit scalar bound
+        # exists for that direction; indexed bounds may only cover a subset
+        # of indices and should not suppress the implicit defaults.
+        has_lo = var_def.lo is not None
+        has_up = var_def.up is not None
         if var_def.kind == VarKind.POSITIVE and not has_lo:
             result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
         elif var_def.kind == VarKind.NEGATIVE and not has_up:
