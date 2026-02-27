@@ -2548,7 +2548,17 @@ class _ModelBuilder:
             row_label = row_label_map[line_num]
             if isinstance(row_label, list):
                 continue  # Skip tuple-expanded labels
-            # Find NUMBER tokens between the row label and the first column header
+            # Find the end column of the last row label token on this line
+            row_label_end_col = 0
+            for tok in line_tokens:
+                if id(tok) in row_label_token_ids:
+                    tok_col = getattr(tok, "column", 0) or 0
+                    row_label_end_col = max(row_label_end_col, tok_col + len(str(tok)))
+            # Find NUMBER tokens between the row label and the first column header.
+            # Issue #902: Only absorb if immediately adjacent to the row label
+            # (within 2 columns), not separated by whitespace.  This prevents
+            # data values (e.g., 400000 at col 7) from being absorbed as label
+            # segments when they happen to be left of the first column header.
             absorbed = []
             for tok in line_tokens:
                 if id(tok) in row_label_token_ids:
@@ -2557,6 +2567,9 @@ class _ModelBuilder:
                 if tok_col >= min_col_header_col:
                     break
                 if tok.type == "NUMBER":
+                    # Only absorb if immediately adjacent to previous label token
+                    if tok_col > row_label_end_col + 1:
+                        break  # Gap too large — this is a data value, not a label segment
                     # This is a numeric label segment (e.g., '.1' tokenized as '.1')
                     # The lexer consumed the dot as part of the number, so '.1' means
                     # the original label segment was '1'.  Strip leading dot.
@@ -2564,6 +2577,8 @@ class _ModelBuilder:
                     if val_str.startswith("."):
                         val_str = val_str[1:]
                     absorbed.append((tok, val_str))
+                    # Update end column for next adjacency check
+                    row_label_end_col = tok_col + len(str(tok))
             if absorbed:
                 for tok, seg in absorbed:
                     row_label = f"{row_label}.{seg}"
@@ -3734,6 +3749,7 @@ class _ModelBuilder:
             "loop_stmt_paren_filtered",
             "loop_stmt_indexed",
             "loop_stmt_indexed_filtered",
+            "while_stmt",
         }
         for stmt in stmts:
             if not isinstance(stmt, Tree):
@@ -3778,6 +3794,35 @@ class _ModelBuilder:
         """Handle loop over indexed set with filter: loop(setname(i,j)$(cond), ...)."""
         # Same as _handle_loop_stmt - the grammar handles the structure
         self._handle_loop_stmt(node)
+
+    def _handle_while_stmt(self, node: Tree) -> None:
+        """Handle while statement: while(condition, body);
+
+        Issue #889: Mock/store approach — treat like a loop with no indices.
+        Extract solve statements from the body if the model has no objective yet.
+        """
+        body_stmts: list[Tree] = []
+        for child in node.children:
+            if isinstance(child, Tree):
+                if child.data == "loop_body":
+                    for stmt in child.children:
+                        if isinstance(stmt, Tree):
+                            body_stmts.append(stmt)
+                elif child.data != "expr":
+                    body_stmts.append(child)
+
+        location = self._extract_source_location(node)
+        loop_stmt = LoopStatement(
+            indices=(),
+            body_stmts=body_stmts,
+            location=location,
+        )
+        self.model.loop_statements.append(loop_stmt)
+
+        if self.model.objective is None:
+            solve_node = self._find_solve_in_loop_body(body_stmts)
+            if solve_node is not None:
+                self._handle_solve(solve_node)
 
     def _expand_subset_assignment(
         self,
