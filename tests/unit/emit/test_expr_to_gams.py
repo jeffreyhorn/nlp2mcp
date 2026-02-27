@@ -342,6 +342,21 @@ class TestFunctionCalls:
         result = expr_to_gams(Call("power", (VarRef("x", ()), ParamRef("alpha", ()))))
         assert result == "x ** alpha"
 
+    def test_power_nonfinite_const_inf_uses_infix(self):
+        """Non-finite exponent +inf must also emit using infix power."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), Const(float("inf")))))
+        assert result == "x ** inf"
+
+    def test_power_nonfinite_const_nan_uses_infix(self):
+        """Non-finite exponent NaN must also emit using infix power."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), Const(float("nan")))))
+        assert result == "x ** na"
+
+    def test_power_integer_valued_float_stays_as_call(self):
+        """Integer-valued float exponent (3.0) stays as power() call."""
+        result = expr_to_gams(Call("power", (VarRef("x", ()), Const(3.0))))
+        assert result == "power(x, 3)"
+
     def test_call_nested(self):
         """Test nested function calls."""
         inner = Call("log", (VarRef("x", ()),))

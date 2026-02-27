@@ -540,14 +540,14 @@ def expr_to_gams(
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
-            # Issue #724: GAMS power(base, exp) requires integer exponent.
+            # Issue #724: In this emitter, GAMS power(base, exp) is only used when the exponent is an integer.
             # Issue #904: AD can produce non-integer Const exponents (e.g.,
             # d/dx[x^0.5] = 0.5 * power(x, -0.5)). Use ** for non-integer
             # Const exponents and ParamRef exponents (may be non-integer
             # at runtime). Only keep power() for integer Const exponents.
             if func == "power" and len(args) == 2:
                 exponent = args[1]
-                use_infix = not isinstance(exponent, (Const, ParamRef))
+                use_infix = not isinstance(exponent, Const)
                 if isinstance(exponent, Const):
                     value = exponent.value
                     if isinstance(value, float):
@@ -557,8 +557,6 @@ def expr_to_gams(
                     else:
                         if value != int(value):
                             use_infix = True
-                if isinstance(exponent, ParamRef):
-                    use_infix = True
                 if use_infix:
                     base_str = expr_to_gams(
                         args[0], parent_op="**", is_right=False, domain_vars=domain_vars
