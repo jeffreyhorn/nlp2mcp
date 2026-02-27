@@ -14,6 +14,7 @@ from src.emit.original_symbols import (
     _expand_table_key,
     _expr_references_param,
     _needs_quoting,
+    _quote_assignment_index,
     _sanitize_set_element,
     emit_computed_parameter_assignments,
     emit_original_aliases,
@@ -1307,3 +1308,49 @@ class TestInfParameterEmission:
         model.params["p"] = ParameterDef(name="p", domain=("i",), values={("a",): float("nan")})
         result = emit_original_parameters(model)
         assert "a na" in result
+
+
+@pytest.mark.unit
+class TestQuoteAssignmentIndex:
+    """Tests for _quote_assignment_index (Issues #886, #912, #916)."""
+
+    def test_already_double_quoted(self):
+        assert _quote_assignment_index('"foo"', set()) == '"foo"'
+
+    def test_already_single_quoted(self):
+        assert _quote_assignment_index("'foo'", set()) == "'foo'"
+
+    def test_domain_variable_not_quoted(self):
+        """Set name in sets_lower stays bare (backward-compatible)."""
+        assert _quote_assignment_index("i", {"i", "j"}) == "i"
+
+    def test_domain_variable_with_domain_lower(self):
+        """Set name matching domain_lower stays bare."""
+        assert _quote_assignment_index("i", {"i", "j"}, frozenset({"i"})) == "i"
+
+    def test_hyphenated_element_quoted(self):
+        """Issue #886/#916: period-1 must be quoted."""
+        assert _quote_assignment_index("period-1", set()) == "'period-1'"
+
+    def test_plus_element_quoted(self):
+        """Elements with + must be quoted."""
+        assert _quote_assignment_index("x+1", set()) == "'x+1'"
+
+    def test_set_collision_quoted_with_domain(self):
+        """Issue #912: element matching set name but not in domain is quoted."""
+        result = _quote_assignment_index("m", {"m", "n", "c"}, frozenset({"c", "*"}))
+        assert result == "'m'"
+
+    def test_literal_element_quoted_with_domain(self):
+        """Non-domain, non-set element is quoted when domain context provided."""
+        result = _quote_assignment_index("c1", {"m", "c"}, frozenset({"c", "*"}))
+        assert result == "'c1'"
+
+    def test_no_domain_context_set_not_quoted(self):
+        """Without domain_lower, set names stay bare (backward-compatible)."""
+        assert _quote_assignment_index("m", {"m", "n"}) == "m"
+
+    def test_numeric_quoted(self):
+        """Numeric-looking indices are quoted."""
+        result = _quote_assignment_index("3", set())
+        assert result == "'3'"

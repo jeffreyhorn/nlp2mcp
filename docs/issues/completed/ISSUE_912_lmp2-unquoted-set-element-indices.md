@@ -4,6 +4,7 @@
 **Model:** lmp2 (GAMSlib)
 **Sprint:** 21 Day 8
 **Error Category:** Compilation — $120 Unknown identifier, $340 Label/element name conflict, $171 Domain violation, $352 Set not initialized
+**Status:** RESOLVED
 
 ## Problem
 
@@ -49,18 +50,24 @@ cases('c1','n') = 20;
 
 The original uses **quoted** element references `'c1'` and `'m'` to disambiguate from the set names `c` and `m`. The emitter strips these quotes, causing GAMS to misinterpret the bare identifiers.
 
-## Reproduction
+## Fix
 
-```bash
-.venv/bin/python -m src.cli data/gamslib/raw/lmp2.gms -o /tmp/lmp2_mcp.gms
-/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams /tmp/lmp2_mcp.gms o=/tmp/lmp2_mcp.lst
-grep '^\*\*\*\*' /tmp/lmp2_mcp.lst | head -10
-```
+Fixed in `_quote_assignment_index()` in `src/emit/original_symbols.py`:
 
-## Suggested Fix
+1. Added `domain_lower` parameter: the parameter's declared domain set names.
+   Only indices matching domain sets are treated as domain variables; all others
+   are quoted as literal elements.
 
-The `_quote_assignment_index()` function in `src/emit/original_symbols.py` should preserve quotes for literal set element values in parameter assignments, especially when the element name matches a declared set name. If an element like `m` is also a declared set, it MUST be quoted as `'m'` in the assignment context.
+2. In `emit_subset_value_assignments()`, when a key has mixed set/non-set flags,
+   the parameter's domain is used to distinguish domain variables from literal
+   elements that collide with set names.
+
+3. In `emit_computed_parameter_assignments()`, `param_domain_lower` is passed
+   to ensure non-domain indices are properly quoted.
+
+After fix: `cases('c1','m') = 10;` — all 34 $120/$340/$171/$352 errors eliminated.
+3 remaining errors ($141/$257) are unrelated MCP emission issues.
 
 ## Impact
 
-34 compilation errors. Model cannot compile.
+34 → 3 compilation errors (all remaining are unrelated to quoting).

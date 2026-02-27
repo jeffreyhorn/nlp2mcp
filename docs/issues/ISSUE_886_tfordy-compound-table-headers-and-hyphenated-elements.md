@@ -1,8 +1,8 @@
 # tfordy: Compound Table Headers Dropped + Unquoted Hyphenated Set Elements
 
 **GitHub Issue:** [#886](https://github.com/jeffreyhorn/nlp2mcp/issues/886)
-**Status:** OPEN
-**Severity:** High — Model parses and translates but emitted GAMS has 15 compilation errors
+**Status:** PARTIALLY RESOLVED (Bug B fixed, Bug A still open)
+**Severity:** High — Model parses and translates but emitted GAMS has 8 compilation errors (down from 15)
 **Date:** 2026-02-25
 **Affected Models:** tfordy (potentially other models with dotted table headers)
 **Sprint:** 21 (Day 4 blocker)
@@ -88,17 +88,16 @@ But GAMS interprets `period-1` as the arithmetic expression `period minus 1`. It
 avl('period-1',t) = 1;
 ```
 
-### Fix
+### Fix (RESOLVED)
 
-In `_quote_assignment_index()` at `src/emit/original_symbols.py` line 181-201, add a check for elements containing hyphens or other operator characters:
+Fixed in `_quote_assignment_index()` at `src/emit/original_symbols.py`: added
+`_needs_quoting()` check to detect elements containing operators (`-`, `+`) or
+other special characters. When `domain_lower` is provided, all non-domain
+elements are now quoted as literals. The emitter now outputs `avl('period-1',t) = 1;`
+correctly.
 
-```python
-# After the numeric check, before the final return:
-if '-' in idx or '+' in idx:
-    return f"'{idx}'"
-```
-
-**Estimated effort:** 30min (emitter fix + test)
+Compilation errors from Bug B ($120 unquoted identifiers) are eliminated.
+Remaining 8 errors are all from Bug A (missing table data, uncontrolled sets).
 
 ---
 
