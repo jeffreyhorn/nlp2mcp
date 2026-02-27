@@ -3,7 +3,7 @@
 import pytest
 
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VariableDef
+from src.ir.symbols import SetDef, VariableDef, VarKind
 from src.kkt.partition import partition_constraints
 
 
@@ -367,3 +367,115 @@ class TestPartitionConstraints:
         assert result.bounds_lo[("x", ())].value == 0.5
         assert ("x", ("a",)) not in result.bounds_lo
         assert ("x", ("b",)) not in result.bounds_lo
+
+
+@pytest.mark.unit
+class TestVarKindImplicitBounds:
+    """Tests for VarKind implicit bound synthesis (Issue #922)."""
+
+    def test_positive_no_explicit_bounds(self):
+        """VarKind.POSITIVE with no explicit bounds should synthesize lo=0."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.POSITIVE)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.0
+        assert ("x", ()) not in result.bounds_up
+
+    def test_negative_no_explicit_bounds(self):
+        """VarKind.NEGATIVE with no explicit bounds should synthesize up=0."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.NEGATIVE)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_up
+        assert result.bounds_up[("x", ())].value == 0.0
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_binary_no_explicit_bounds(self):
+        """VarKind.BINARY with no explicit bounds should synthesize lo=0, up=1."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.BINARY)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.0
+        assert ("x", ()) in result.bounds_up
+        assert result.bounds_up[("x", ())].value == 1.0
+
+    def test_positive_with_explicit_scalar_lo(self):
+        """VarKind.POSITIVE with explicit scalar lo should NOT synthesize."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.POSITIVE, lo=5.0)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 5.0  # Explicit, not implicit 0
+
+    def test_positive_with_indexed_lo_map_only(self):
+        """VarKind.POSITIVE with only indexed lo_map should still synthesize base lo=0.
+
+        Indexed bounds may only cover a subset of indices, so uncovered
+        indices still need the implicit lo=0 from VarKind.POSITIVE.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b", "c"])
+
+        var = VariableDef(name="x", domain=("i",), kind=VarKind.POSITIVE)
+        var.lo_map[("a",)] = 1.0  # Only covers 'a', not 'b' or 'c'
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should have per-instance entry for 'a' AND implicit base lo=0
+        assert ("x", ("a",)) in result.bounds_lo
+        assert result.bounds_lo[("x", ("a",))].value == 1.0
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.0
+
+    def test_positive_with_consolidated_indexed_lo_not_overwritten(self):
+        """VarKind.POSITIVE with uniform indexed bounds should NOT be overwritten.
+
+        When all indexed bounds consolidate to (var, ()) with value 1.0,
+        the implicit lo=0 should NOT overwrite that consolidated entry.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+
+        var = VariableDef(name="x", domain=("i",), kind=VarKind.POSITIVE)
+        var.lo_map[("a",)] = 1.0
+        var.lo_map[("b",)] = 1.0
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Consolidated entry should have value 1.0, NOT implicit 0.0
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 1.0
+
+    def test_binary_with_explicit_lo_only(self):
+        """VarKind.BINARY with only explicit lo should synthesize up=1 only."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.BINARY, lo=0.0)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_lo
+        assert result.bounds_lo[("x", ())].value == 0.0  # Explicit
+        assert ("x", ()) in result.bounds_up
+        assert result.bounds_up[("x", ())].value == 1.0  # Synthesized
+
+    def test_continuous_no_implicit_bounds(self):
+        """VarKind.CONTINUOUS should NOT get implicit bounds."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.CONTINUOUS)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+        assert ("x", ()) not in result.bounds_up
