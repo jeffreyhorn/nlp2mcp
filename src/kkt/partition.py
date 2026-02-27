@@ -171,15 +171,20 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         has_up = var_def.up is not None
         has_lo_scalar_key = (var_name, ()) in result.bounds_lo
         has_up_scalar_key = (var_name, ()) in result.bounds_up
-        if var_def.kind == VarKind.POSITIVE and not has_lo and not has_lo_scalar_key:
-            result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
-        elif var_def.kind == VarKind.NEGATIVE and not has_up and not has_up_scalar_key:
-            result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain)
-        elif var_def.kind == VarKind.BINARY:
-            if not has_lo and not has_lo_scalar_key:
+        # If the variable is fixed (either via scalar .fx or an existing scalar
+        # fx entry in bounds_fx), additional implicit lo/up bounds are redundant
+        # and are therefore not synthesized.
+        has_fx_scalar = var_def.fx is not None or (var_name, ()) in result.bounds_fx
+        if not has_fx_scalar:
+            if var_def.kind == VarKind.POSITIVE and not has_lo and not has_lo_scalar_key:
                 result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
-            if not has_up and not has_up_scalar_key:
-                result.bounds_up[(var_name, ())] = BoundDef("up", 1.0, var_def.domain)
+            elif var_def.kind == VarKind.NEGATIVE and not has_up and not has_up_scalar_key:
+                result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain)
+            elif var_def.kind == VarKind.BINARY:
+                if not has_lo and not has_lo_scalar_key:
+                    result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
+                if not has_up and not has_up_scalar_key:
+                    result.bounds_up[(var_name, ())] = BoundDef("up", 1.0, var_def.domain)
 
     return result
 

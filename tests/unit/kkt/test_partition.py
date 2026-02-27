@@ -479,3 +479,26 @@ class TestVarKindImplicitBounds:
 
         assert ("x", ()) not in result.bounds_lo
         assert ("x", ()) not in result.bounds_up
+
+    def test_positive_with_fx_skips_implicit_lo(self):
+        """VarKind.POSITIVE with .fx should NOT synthesize implicit lo=0."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.POSITIVE, fx=5.0)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_fx
+        assert result.bounds_fx[("x", ())].value == 5.0
+        assert ("x", ()) not in result.bounds_lo  # No redundant implicit lo
+
+    def test_binary_with_fx_skips_implicit_bounds(self):
+        """VarKind.BINARY with .fx should NOT synthesize implicit lo=0 or up=1."""
+        model = ModelIR()
+        model.variables["x"] = VariableDef(name="x", kind=VarKind.BINARY, fx=1.0)
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) in result.bounds_fx
+        assert result.bounds_fx[("x", ())].value == 1.0
+        assert ("x", ()) not in result.bounds_lo  # No redundant implicit lo
+        assert ("x", ()) not in result.bounds_up  # No redundant implicit up
