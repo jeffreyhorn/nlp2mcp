@@ -147,6 +147,12 @@ class KKTSystem:
     # None means no filtering was performed (backwards compatible).
     referenced_multipliers: set[str] | None = None
 
+    # Issue #826: Variables whose stationarity equations are entirely empty
+    # (LHS == Const(0.0) after simplification). These variables are fixed to 0
+    # in the emitted MCP model (via .fx statements). Their stationarity equations
+    # are kept for complementarity pairing. Populated by build_stationarity_equations().
+    empty_stationarity_vars: set[str] = field(default_factory=set)
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None

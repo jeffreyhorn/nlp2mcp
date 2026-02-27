@@ -904,6 +904,15 @@ def strip_unsupported_directives(source: str) -> str:
             filtered.append(f"* Stripped: {line}")
             continue
 
+        # Issue #888: Strip $libInclude directives (GAMS system library includes).
+        # These reference library files (e.g., scenred.gms) not available to the parser.
+        # Match case-insensitive, with optional spaces after $.
+        if stripped_lower.startswith("$libinclude") or re.match(
+            r"^\$\s+libinclude", stripped_lower
+        ):
+            filtered.append(f"* Stripped: {stripped}")
+            continue
+
         # Sprint 9 Day 6: if/elseif/else, abort, and compile-time constants now fully supported
         # No longer stripping these statements - they are parsed by the grammar
 

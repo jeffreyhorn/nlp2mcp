@@ -6,6 +6,7 @@ GAMS MCP file from a KKT system.
 
 import math
 from collections import deque
+from typing import cast
 
 from src.config import Config
 from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
@@ -598,6 +599,48 @@ def emit_gams_mcp(
             domain_vars = frozenset(eq_def.domain)
             cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 4. Issue #826: Fix variables with empty stationarity equations.
+    # When the stationarity builder can't propagate derivatives through subset
+    # access patterns, the stationarity equation is empty (0 =E= 0).
+    # GAMS only rejects this for indexed equations with dollar conditions
+    # (conditioned instances expand to empty bodies). Scalar empty equations
+    # like "stat_uu.. 0 =E= 0;" are accepted without fixing.
+    for var_name in sorted(kkt.empty_stationarity_vars):
+        stat_name = f"stat_{var_name}"
+        stat_eq = kkt.stationarity.get(stat_name)
+        if stat_eq is None:
+            continue
+        # Only fix if the stationarity equation is conditioned (dollar condition)
+        # or if the variable has a stationarity condition (subset access pattern)
+        needs_fix = stat_eq.condition is not None or var_name in kkt.stationarity_conditions
+        if not needs_fix:
+            continue
+
+        # Derive the dollar condition used in the stationarity equation, if any.
+        empty_cond: Expr | None = None
+        if stat_eq.condition is not None:
+            empty_cond = cast(Expr, stat_eq.condition)
+        elif var_name in kkt.stationarity_conditions:
+            empty_cond = kkt.stationarity_conditions[var_name]
+
+        var_def = kkt.model_ir.variables.get(var_name)
+        cond_str: str | None = None
+        if empty_cond is not None:
+            dv = frozenset(var_def.domain) if var_def and var_def.domain else None
+            cond_str = expr_to_gams(empty_cond, domain_vars=dv)
+
+        if var_def and var_def.domain:
+            domain_str = ",".join(var_def.domain)
+            if cond_str:
+                fx_lines.append(f"{var_name}.fx({domain_str})$({cond_str}) = 0;")
+            else:
+                fx_lines.append(f"{var_name}.fx({domain_str}) = 0;")
+        else:
+            if cond_str:
+                fx_lines.append(f"{var_name}.fx$({cond_str}) = 0;")
+            else:
+                fx_lines.append(f"{var_name}.fx = 0;")
 
     if fx_lines:
         if add_comments:

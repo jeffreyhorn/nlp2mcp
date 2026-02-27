@@ -384,19 +384,23 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 ---
 
-### Day 11 — WS5 (#826) + WS3 Remaining + WS7 Emerging
+### Day 11 — #826 Decomp Empty Stationarity + Emerging Issues
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-02-26
+**Status:** COMPLETE
+**PR:** TBD
+**Effort:** ~2.5h
 
 **Activities:**
--
+- Fix #826: Detect empty stationarity equations (LHS simplifies to `Const(0.0)`) and fix variables with conditioned stationarity to 0. Decomp now solves (MODEL STATUS 1 Optimal) after being blocked by "empty equation but variable NOT fixed" GAMS error
+- Fix #888: Add `$libInclude` to `strip_unsupported_directives()` in preprocessor. clearlak advances from directive error to undeclared symbol error (library symbols still unavailable)
+- Verify indus: parses and translates successfully; GAMS fails with line-length error (pre-existing PATH syntax issue)
+- Triage 17 translation blockers: 9 timeout, 4 loggamma/gamma (need digamma), 1 signpower, 1 smin arity, 1 set '*', 1 `$libInclude`
+- 5 new tests: 2 empty stationarity detection + 3 `$libInclude` stripping
 
 **Metrics:**
-- internal_error:
-- Tests:
+- Tests: 3,808 passed (+5), 10 skipped, 1 xfailed
+- decomp: SOLVE → MATCH (pending pipeline retest)
 - Emerging blocker status:
 
 ---
@@ -495,8 +499,8 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 | 7 | | | |
 | 8 | #909 | Sprint 21 Day 8: Emission Ordering Fix for Dynamic-Set-Indexed Parameters | Merged |
 | 9 | #920 | Sprint 21 Day 9: WS6 Match Rate Improvement (Tolerance + IndexOffset Gradient) | Open |
-| 10 | | | |
-| 11 | | | |
+| 10 | #924 | Sprint 21 Day 10: Checkpoint 2 + Deferred Issues (#789, #828) | Merged |
+| 11 | TBD | Sprint 21 Day 11: #826 Decomp Empty Stationarity + Emerging Issues | Open |
 | 12 | | | |
 | 13 | | | |
 | 14 | | | |

@@ -1,6 +1,7 @@
 # tfordy: Unquoted Hyphenated Set Elements in Parameter Assignments
 
 **GitHub Issue**: [#908](https://github.com/jeffreyhorn/nlp2mcp/issues/908)
+**Status:** CLOSED — Duplicate of [#886](https://github.com/jeffreyhorn/nlp2mcp/issues/886) Bug B
 **Model**: `tfordy` (Timber Forest Sector — Dynamic)
 **Pipeline status**: `path_syntax_error` (13 compilation errors)
 **Blocking since**: Sprint 21 Day 7 (after dotted column header fix)
@@ -74,3 +75,14 @@ A simple heuristic: if a set element label matches `[a-zA-Z_]\w*-\w+` (identifie
 ## Related Issues
 
 - Issue #886 — tfordy compound table headers and hyphenated elements (compound headers RESOLVED in Day 7; hyphenated quoting still open)
+
+---
+
+## Duplicate Note
+
+This issue is a duplicate of [#886](https://github.com/jeffreyhorn/nlp2mcp/issues/886) Bug B.
+Issue #886 already documents the unquoted hyphenated set element bug as its "Bug B" section,
+identifying the same root cause (`_quote_assignment_index()` not quoting elements with hyphens)
+and the same proposed fix. This issue (#908) was filed after the Day 7 fix resolved #886 Bug A
+(compound dotted table headers), elaborating on Bug B as the sole remaining blocker. All tracking
+for this defect should continue under #886.

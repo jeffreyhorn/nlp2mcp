@@ -1,0 +1,75 @@
+# tricp: Translation Timeout — Triangular Graph Circle Packing
+
+**GitHub Issue:** [#933](https://github.com/jeffreyhorn/nlp2mcp/issues/933)
+**Status:** OPEN
+**Severity:** Medium — Model parses but translation times out (>60s)
+**Date:** 2026-02-26
+**Affected Models:** tricp
+**Sprint:** 21 (Day 11 triage)
+
+---
+
+## Problem Summary
+
+The `tricp.gms` model (GAMSlib SEQ=378, "Triangular Graph Circle Packing") parses successfully but times out during KKT translation (>60s). This is a QCP (Quadratically Constrained Program) with nonlinear constraints.
+
+---
+
+## Model Details
+
+| Property | Value |
+|----------|-------|
+| GAMSlib SEQ | 378 |
+| Solve Type | QCP |
+| Convexity | likely_convex |
+| Reference Objective | 3838.2686 |
+| Parse Status | success (~1.5s) |
+| Translate Status | timeout (>60s) |
+| Variables | 6 |
+| Equations | 3 |
+| Sets | 3 |
+| Parameters | 6 |
+
+### Key Variables
+
+| Variable | Domain |
+|----------|--------|
+| x | (n,k) |
+| r | (n) |
+| slp | (n,n) |
+| sln | (n,n) |
+| z | — |
+| obj | — |
+
+---
+
+## Reproduction
+
+```bash
+python -m src.cli data/gamslib/raw/tricp.gms -o /tmp/tricp_mcp.gms
+# Or:
+python scripts/gamslib/run_full_test.py --model tricp --only-translate --verbose
+```
+
+---
+
+## Root Cause
+
+Despite having only 6 variables and 3 equations, the model uses dense 2-dimensional variables `slp(n,n)` and `sln(n,n)` over a potentially large set `n`. The QCP equations contain quadratic terms requiring genuine symbolic differentiation. The Jacobian computation generates too many entries for the variable instance × equation instance pairs to complete within 60 seconds.
+
+---
+
+## Possible Fixes
+
+| Approach | Impact | Effort |
+|----------|--------|--------|
+| Sparsity-aware Jacobian (only compute interacting variable/equation pairs) | High | High |
+| Increase timeout limit | Low — may succeed if set `n` is moderate | Trivial |
+| Variable instance threshold with early abort | Low | Low |
+
+---
+
+## Related Issues
+
+- #885 (sarf): Same timeout pattern
+- dinam, egypt, ferts, ganges, gangesx, iswnm, nebrazil: Same timeout category

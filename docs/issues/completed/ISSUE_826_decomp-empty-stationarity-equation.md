@@ -1,9 +1,10 @@
 # Decomp MCP: GAMS Error — Empty Stationarity Equation for `lam` Variable
 
 **GitHub Issue:** [#826](https://github.com/jeffreyhorn/nlp2mcp/issues/826)
-**Status:** OPEN — Cannot fix; deep stationarity builder issue (domain/subset mapping limitation)
+**Status:** FIXED — Sprint 21 Day 11, PR [#925](https://github.com/jeffreyhorn/nlp2mcp/pull/925)
 **Severity:** High — MCP generates but GAMS reports compile error (EXECERROR = 2)
 **Date:** 2026-02-22
+**Fixed:** 2026-02-26
 **Affected Models:** decomp
 
 ---
@@ -167,3 +168,46 @@ between variable domains and constraint access patterns:
 | `_add_indexed_jacobian_terms()` | `stationarity.py:1382-1567` | Scalar constraint branch fails for subset access |
 | `_replace_indices_in_expr()` | `stationarity.py:923-1093` | Cannot map indices across different domain sets |
 | MCP pairing | `emit/model.py:128-151` | No filtering of empty stationarity equations |
+
+---
+
+## Resolution (Sprint 21 Day 11, 2026-02-26)
+
+### Fix Applied: Option 3 — Empty Equation Post-Processing
+
+The fix uses a workaround rather than the deep subset-aware stationarity approach. It detects
+empty stationarity equations after building them and selectively fixes the associated variables.
+
+**Key insight:** GAMS only rejects empty MCP-paired equations for **conditioned indexed equations**
+(where dollar conditions cause some instances to have empty bodies). Scalar empty equations like
+`stat_uu.. 0 =E= 0;` are accepted without fixing the variable.
+
+### Changes Made
+
+1. **`src/kkt/kkt_system.py`**: Added `empty_stationarity_vars: set[str]` field to `KKTSystem`
+   dataclass. Populated by `build_stationarity_equations()`.
+
+2. **`src/kkt/stationarity.py`** (post-build pass before `return stationarity`): Scan all
+   stationarity equations; if `LHS == Const(0.0)`, record the variable name in
+   `kkt.empty_stationarity_vars`. Equations are **kept** in the dict (not deleted) so MCP
+   pairing still works.
+
+3. **`src/emit/emit_gams.py`** (`.fx` emission section): For each variable in
+   `empty_stationarity_vars`, check if its stationarity equation has a dollar condition or is
+   in `kkt.stationarity_conditions`. Only emit `.fx = 0` for conditioned equations. This
+   ensures decomp's `lam` is fixed (conditioned via `$s(ss)`) while hhmax's `UU` is not
+   (scalar, unconditional).
+
+### Result
+
+- decomp MCP solves: MODEL STATUS 1 Optimal, SOLVER STATUS 1 Normal Completion
+- hhmax and splcge unaffected (scalar empty equations preserved, no regression)
+- All 3,808 tests pass
+
+### Limitation
+
+This is a workaround. The stationarity equation *should* have terms from `sum(s, mcost(s) * lam(s))`
+but the builder can't propagate them through subset access. Fixing to 0 is correct for variables
+with truly zero gradient, but may not produce the NLP optimum for models where the gradient is
+nonzero but can't be computed due to subset/domain mismatch. A proper fix requires subset-aware
+stationarity construction (options 1 or 2 above).

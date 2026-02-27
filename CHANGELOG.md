@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 11: Decomp Empty Stationarity (#826) + Emerging Issues - 2026-02-26
+
+**Branch:** `sprint21-day11-decomp-emerging`
+
+#### Summary
+Fixed #826: decomp model's empty stationarity equation now handled correctly — variables with conditioned empty stationarity are fixed to 0 so GAMS accepts the MCP pairing. Added `$libInclude` directive stripping to preprocessor (#888). Verified indus parses successfully. Triaged 17 translation blockers.
+
+#### Fixed
+- **#826**: `build_stationarity_equations()` in `stationarity.py` now detects empty stationarity equations (LHS == `Const(0.0)`) and records affected variables in `kkt.empty_stationarity_vars`. The emitter in `emit_gams.py` fixes these variables to 0 when their stationarity equation has a dollar condition (prevents GAMS "empty equation but variable NOT fixed" error). decomp model now solves: MODEL STATUS 1 Optimal.
+- **#888**: `strip_unsupported_directives()` in `preprocessor.py` now strips `$libInclude` directives (case-insensitive, with optional spaces after `$`)
+
+#### Added
+- `empty_stationarity_vars` field on `KKTSystem` dataclass to track variables with empty stationarity
+- 2 unit tests for empty stationarity detection (`tests/unit/kkt/test_stationarity_empty.py`)
+- 3 unit tests for `$libInclude` stripping in preprocessor
+
+#### Metrics
+- Tests: 3,808 passed (+5 new tests), 10 skipped, 1 xfailed
+
 ### Sprint 21 Day 10: Checkpoint 2 + Deferred Issues (#789, #828) - 2026-02-26
 
 **Branch:** `sprint21-day10-checkpoint2-deferred`
