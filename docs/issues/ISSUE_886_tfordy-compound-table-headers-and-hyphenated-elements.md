@@ -1,8 +1,8 @@
 # tfordy: Compound Table Headers Dropped + Unquoted Hyphenated Set Elements
 
 **GitHub Issue:** [#886](https://github.com/jeffreyhorn/nlp2mcp/issues/886)
-**Status:** OPEN
-**Severity:** High — Model parses and translates but emitted GAMS has 15 compilation errors
+**Status:** PARTIALLY RESOLVED (Bug B fixed, Bug A still open)
+**Severity:** Low — Model compiles cleanly with 0 errors; only blocked by GAMS demo license limit
 **Date:** 2026-02-25
 **Affected Models:** tfordy (potentially other models with dotted table headers)
 **Sprint:** 21 (Day 4 blocker)
@@ -88,17 +88,23 @@ But GAMS interprets `period-1` as the arithmetic expression `period minus 1`. It
 avl('period-1',t) = 1;
 ```
 
-### Fix
+### Fix (RESOLVED)
 
-In `_quote_assignment_index()` at `src/emit/original_symbols.py` line 181-201, add a check for elements containing hyphens or other operator characters:
+Fixed in `_quote_assignment_index()` at `src/emit/original_symbols.py`: added
+`_needs_quoting()` check to detect elements containing operators (`-`, `+`) or
+other special characters. When `domain_lower` is provided, all non-domain
+elements are now quoted as literals. The emitter now outputs `avl('period-1',t) = 1;`
+correctly.
 
-```python
-# After the numeric check, before the final return:
-if '-' in idx or '+' in idx:
-    return f"'{idx}'"
-```
+Compilation errors from Bug B ($120 unquoted identifiers) are eliminated.
 
-**Estimated effort:** 30min (emitter fix + test)
+**Update (2026-02-27):** After additional quoting fixes (PR #951), tfordy now
+compiles cleanly with **0 compilation errors**. The MCP model generates
+successfully (3,166 equations, 3,169 variables) but the solve is aborted
+because the model exceeds the GAMS demo license limit. Bug A (compound table
+headers) may still silently drop data, but it no longer causes compilation
+errors — the missing table data doesn't trigger $141 errors in the current
+MCP output. This needs further investigation with a full GAMS license.
 
 ---
 
@@ -164,6 +170,15 @@ avl(t,t)   = 1;
 avl(t,t-1) = 1;
 avl(t,t-2) = 1;
 ```
+
+---
+
+## Current Status (2026-02-27)
+
+- **Compilation:** 0 errors (clean)
+- **Solve:** ABORTED — GAMS demo license limit exceeded (3,166 equations / 3,169 variables)
+- **Bug A (compound table headers):** Still present but not causing compilation errors in MCP output. The silently dropped `yef`/`ymf` table data may affect solution correctness but cannot be verified without a full GAMS license.
+- **Bug B (unquoted hyphenated elements):** RESOLVED via `_quote_assignment_index()` fix in PR #951.
 
 ---
 

@@ -178,26 +178,55 @@ def _quote_symbol(name: str) -> str:
     return f"'{name}'" if _needs_quoting(name) else name
 
 
-def _quote_assignment_index(idx: str, sets_lower: set[str]) -> str:
-    """Quote an index element for executable assignment LHS if needed (Issue #874).
+def _quote_assignment_index(
+    idx: str,
+    sets_lower: set[str],
+    domain_lower: frozenset[str] | None = None,
+) -> str:
+    """Quote an index element for executable assignment LHS if needed.
 
-    In GAMS executable assignments like ``p(i,"3") = 0``, numeric-looking
-    indices must be quoted to distinguish them from numeric literals.  Already-
-    quoted indices (e.g., ``"revenue"``) are returned as-is.  Domain
-    variables (set/alias names) are never quoted.
+    Issues #874, #886, #912, #916: In GAMS executable assignments like
+    ``p(i,'3') = 0``, indices must be quoted when they are:
+    - numeric-looking (``'3'`` not ``3``)
+    - containing operators like ``-`` or ``+`` (``'period-1'`` not ``period-1``)
+    - literal element names that collide with declared set names
+
+    Already-quoted indices are returned as-is.  Domain variables (set/alias
+    names that are part of the parameter's declared domain) are never quoted.
+
+    Args:
+        idx: The index element string
+        sets_lower: All declared set/alias names (lowercase)
+        domain_lower: The parameter's declared domain set names (lowercase).
+            When provided, only indices matching domain sets are treated as
+            domain variables.  When ``None``, falls back to checking all
+            ``sets_lower`` (backward-compatible).
     """
     # Already quoted
     if (idx.startswith('"') and idx.endswith('"')) or (idx.startswith("'") and idx.endswith("'")):
         return idx
-    # Known set/alias → domain variable, not an element literal
-    if idx.lower() in sets_lower:
+    # Wildcard '*' should never be quoted (universal set reference)
+    if idx == "*":
         return idx
-    # Numeric-looking → quote it
-    try:
-        float(idx)
-        return f'"{idx}"'
-    except ValueError:
-        pass
+    # Domain variable check: if domain_lower is provided, only treat indices
+    # matching the parameter's own domain as domain variables.  Otherwise,
+    # fall back to checking all declared sets (backward-compatible).
+    check_set = domain_lower if domain_lower is not None else sets_lower
+    if idx.lower() in check_set:
+        return _quote_symbol(idx)
+    # Issue #912: When domain context is provided (values path where quotes
+    # were stripped at parse time), any index that is NOT a domain variable
+    # AND NOT a declared set/alias name is a literal element value.
+    # Quote it to prevent GAMS from interpreting it incorrectly.
+    # Indices that ARE declared set/alias names stay bare — they may be
+    # cross-domain references (e.g., yw(t,at,s,cl) where t is a subset
+    # of the declared domain set te).
+    if domain_lower is not None and idx.lower() not in sets_lower:
+        return f"'{idx}'"
+    # Issue #886/#916: Elements with operators (-,+) or other special chars
+    # must be quoted so GAMS doesn't interpret them as arithmetic
+    if _needs_quoting(idx):
+        return f"'{idx}'"
     return idx
 
 
@@ -1290,6 +1319,8 @@ def emit_computed_parameter_assignments(
         expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
+        # Note: expressions path preserves quotes in key_tuples, so literal
+        # elements are already quoted — no need to pass domain_lower here.
         if key_tuple:
             quoted_keys = [
                 (
@@ -1525,8 +1556,28 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                     param_name,
                     expanded_key,
                 )
-            # Issue #874: Quote numeric-looking indices
-            quoted_keys = [_quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key]
+            # Issue #874/#886/#912: Quote indices appropriately.
+            # When ALL elements are set names, this is a pure subset-over
+            # assignment (e.g., gamma(in) = 0) — keep set names unquoted.
+            # When the key is MIXED (some set names, some not), the set-name
+            # elements are likely literal collisions (e.g., cases(c1, m) = 10
+            # where 'm' is both an element and a set) — quote everything
+            # that isn't a domain variable.
+            if all(is_set_flags):
+                # Pure subset reference — keep set names bare
+                quoted_keys = [
+                    _quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key
+                ]
+            else:
+                # Mixed: all elements are literal values (quotes were stripped
+                # at parse time). Quote ALL non-domain elements, including those
+                # that collide with set names (Issue #912: e.g., cases(c1,m)
+                # where 'm' is both an element and a declared set name).
+                param_domain_lower = frozenset(d.lower() for d in param_def.domain)
+                quoted_keys = [
+                    k if k.lower() in param_domain_lower or k == "*" else f"'{k}'"
+                    for k in expanded_key
+                ]
             index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
