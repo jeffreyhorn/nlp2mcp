@@ -47,7 +47,7 @@ def _generate_mcp(model_name: str) -> str:
 
         model = parse_model_file(path)
         reformulate_model(model)
-        normalized_eqs = normalize_model(model)
+        normalized_eqs, _ = normalize_model(model)
         config = Config()
         gradient = compute_objective_gradient(model, config)
         J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
@@ -57,7 +57,7 @@ def _generate_mcp(model_name: str) -> str:
         sys.setrecursionlimit(old_limit)
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestDiagonalComplementarityFix:
     """Issue #942: Fix multipliers on diagonal of same-set multi-index complementarity."""
 
@@ -72,7 +72,7 @@ class TestDiagonalComplementarityFix:
         assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestLeadLagComplementarityFix:
     """Issue #943: Fix multipliers for excluded terminal indices from lead/lag."""
 
