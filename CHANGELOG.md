@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 10: Checkpoint 2 + Deferred Issues (#789, #828) - 2026-02-26
+
+**Branch:** `sprint21-day10-checkpoint2-deferred`
+
+#### Summary
+Checkpoint 2 full pipeline retest (146/157 parse, 43 solve, 22 match — all targets met). Fixed #828: mixed uniform/non-uniform bounds stationarity fallback. Fixed #789: confirmed min/max in objective-defining equations is mathematically infeasible; added clear warning.
+
+#### Fixed
+- **#828**: `_build_stationarity_expr()` in `stationarity.py` now falls back to uniform bound key `(var_name, ())` when per-instance key not found — fixes missing `-piL_x` term for variables with uniform lower bound + non-uniform upper bound (e.g., ibm1's `x(s)`)
+- **#789**: Added `warnings.warn()` in `reformulate_model()` when min/max appears in objective-defining equality equations — the KKT system is mathematically infeasible (λ₀ + λ₁ = -1 with λ ≥ 0)
+- Removed dead `_replace_varref()` function from `reformulation.py`
+
+#### Added
+- 3 new unit tests for mixed-bounds stationarity (uniform lo + non-uniform up, non-uniform lo + uniform up, both uniform)
+- 2 new integration tests for min/max objective warning (warns on objective chain, silent on constraint)
+
+#### Metrics
+- Tests: 3,802 passed (+5), 10 skipped, 1 xfailed
+- Parse: 146/157 (93.0%), Solve: 43, Match: 22
+- All Sprint 21 targets met: parse ≥ 141 ✓, internal_error ≤ 3 ✓, solve ≥ 36 ✓, match ≥ 20 ✓
+
 ### Sprint 21 Day 9: WS6 Match Rate Improvement (Tolerance + IndexOffset Gradient) - 2026-02-26
 
 **Branch:** `sprint21-day9-match-improvement`

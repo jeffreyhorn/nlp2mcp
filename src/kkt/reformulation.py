@@ -803,7 +803,8 @@ def reformulate_model(model: ModelIR) -> None:
                 "lambda_min_objdef_0_arg1": VariableDef(kind=POSITIVE, ...)
             }
     """
-    from ..ir.symbols import EquationDef, VariableDef, VarKind
+    from ..ir.ast import VarRef
+    from ..ir.symbols import EquationDef, Rel, VariableDef, VarKind
 
     # Initialize auxiliary variable manager
     aux_mgr = AuxiliaryVariableManager()
@@ -831,9 +832,7 @@ def reformulate_model(model: ModelIR) -> None:
                 else:
                     raise ValueError(f"Unknown func_type: {call.func_type}")
 
-                # Track which variable was defined (for Strategy 1)
-                from ..ir.ast import VarRef
-
+                # Track which variable was defined (for direct constraint / Strategy 1)
                 if isinstance(lhs, VarRef):
                     result.original_lhs_var = lhs.name
 
@@ -841,11 +840,42 @@ def reformulate_model(model: ModelIR) -> None:
                 reformulations.append((eq_name, call, result))
                 all_results.append(result)
 
+    # Issue #789: Detect objective chain BEFORE applying reformulations.
+    # Min/max in objective-defining equations produces mathematically infeasible
+    # KKT systems (λ₀ + λ₁ = -1 where λ ≥ 0). Emit a clear warning instead of
+    # silently generating an infeasible MCP.
+    from ..ir.minmax_detection import trace_objective_chain
+
+    obj_chain = trace_objective_chain(model) if model.objective else set()
+    for _eq_name, _call, result in reformulations:
+        # Only warn for equality equations that define an objective-chain variable.
+        # Inequalities (z >= min(x,y)) don't cause the same infeasibility.
+        eq_def = model.equations.get(_eq_name)
+        is_equality = eq_def is not None and eq_def.relation == Rel.EQ
+        if (
+            is_equality
+            and result.original_lhs_var is not None
+            and result.original_lhs_var in obj_chain
+        ):
+            import warnings
+
+            warnings.warn(
+                f"Issue #789: min/max in objective-defining equation "
+                f"'{result.context}' (variable '{result.original_lhs_var}') "
+                f"produces a mathematically infeasible KKT system. "
+                f"The epigraph reformulation creates stationarity equations that "
+                f"require non-negative multipliers to sum to a negative value. "
+                f"The generated MCP may be infeasible.",
+                stacklevel=2,
+            )
+            break
+
     # Apply reformulations
     for eq_name, min_max_call, result in reformulations:
+        eq_def = model.equations[eq_name]
+
         # 1. Add auxiliary variable to model
         # Issue #732: use equation domain so indexed min/max get indexed aux vars
-        eq_def = model.equations[eq_name]
         aux_var = VariableDef(
             name=result.aux_var_name,
             domain=eq_def.domain,

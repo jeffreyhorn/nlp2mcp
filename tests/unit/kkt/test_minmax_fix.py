@@ -331,3 +331,54 @@ class TestMinMaxDetectionScaffolding:
         The reformulation is general and works for all cases.
         """
         pass
+
+
+@pytest.mark.integration
+class TestMinMaxObjectiveWarning:
+    """Issue #789: Min/max in objective-defining equations emits a warning.
+
+    The KKT system for min/max in objective-defining equations is mathematically
+    infeasible (λ₀ + λ₁ = -1 with λ ≥ 0). The reformulation module should emit
+    a clear warning instead of silently producing an infeasible MCP.
+    """
+
+    def test_minimize_min_emits_warning(self):
+        """Reformulating z = min(x, y) in objective chain emits warning."""
+        import warnings
+
+        gams_file = "tests/fixtures/minmax_research/test1_minimize_min.gms"
+
+        model_ir = parse_model_file(gams_file)
+        assert model_ir is not None
+        normalize_model(model_ir)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            reformulate_model(model_ir)
+
+            # Should emit exactly one warning about Issue #789
+            issue_warnings = [x for x in w if "Issue #789" in str(x.message)]
+            assert (
+                len(issue_warnings) == 1
+            ), f"Expected 1 Issue #789 warning, got {len(issue_warnings)}"
+            assert "infeasible" in str(issue_warnings[0].message).lower()
+
+    def test_constraint_min_no_warning(self):
+        """Min/max in constraints (not objective chain) should NOT emit warning."""
+        import warnings
+
+        gams_file = "tests/fixtures/minmax_research/test6_constraint_min.gms"
+
+        model_ir = parse_model_file(gams_file)
+        assert model_ir is not None
+        normalize_model(model_ir)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            reformulate_model(model_ir)
+
+            # No #789 warning for constraint-only min/max
+            issue_warnings = [x for x in w if "Issue #789" in str(x.message)]
+            assert (
+                len(issue_warnings) == 0
+            ), f"Expected no Issue #789 warning for constraint min/max, got {len(issue_warnings)}"
