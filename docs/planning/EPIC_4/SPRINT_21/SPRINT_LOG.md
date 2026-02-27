@@ -399,7 +399,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 - 5 new tests: 2 empty stationarity detection + 3 `$libInclude` stripping
 
 **Metrics:**
-- Tests: 3,808 passed (+6), 10 skipped, 1 xfailed
+- Tests: 3,808 passed (+5), 10 skipped, 1 xfailed
 - decomp: SOLVE → MATCH (pending pipeline retest)
 - Emerging blocker status:
 
