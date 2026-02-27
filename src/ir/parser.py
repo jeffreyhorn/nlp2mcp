@@ -4792,12 +4792,12 @@ class _ModelBuilder:
             return expr
 
         # Issue #781: Set ordinal attribute accessors (set.first, set.last, set.pos, set.ord)
-        # Issue #899: set.off → ord(set) - 1 (zero-based ordinal)
+        # Issue #899: set.off preserved as SetAttrRef for native GAMS emission
         # tl.first  → ord(tl) == 1          (boolean: 1 when tl is first element)
         # tl.last   → ord(tl) == card(tl)   (boolean: 1 when tl is last element)
         # tl.ord    → ord(tl)               (same as ord(tl))
         # tl.pos    → ord(tl)               (same as ord(tl), GAMS synonym)
-        # tl.off    → ord(tl) - 1           (zero-based ordinal)
+        # tl.off    → SetAttrRef(tl, "off") (emitter outputs tl.off directly)
         _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord", "off"}
         if node.data == "set_attr" or (
             node.data == "attr_access"
@@ -4806,14 +4806,19 @@ class _ModelBuilder:
         ):
             set_name = _token_text(node.children[0])
             attr = _token_text(node.children[1]).lower()
+            # Preserve .off as first-class attribute (works on dynamic subsets,
+            # unlike ord(set)-1 which triggers GAMS error $197)
+            if attr == "off":
+                from .ast import SetAttrRef
+
+                expr = SetAttrRef(name=set_name, attribute="off")
+                return self._attach_domain(expr, free_domain)
             ord_call = Call("ord", (SymbolRef(set_name),))
             if attr == "first":
                 expr = Binary("==", ord_call, Const(1.0))
             elif attr == "last":
                 card_call = Call("card", (SymbolRef(set_name),))
                 expr = Binary("==", ord_call, card_call)
-            elif attr == "off":
-                expr = Binary("-", ord_call, Const(1.0))
             else:
                 # .ord and .pos are synonyms for ord(set)
                 expr = ord_call
@@ -4838,12 +4843,15 @@ class _ModelBuilder:
             elif base_lower in self.model.equations:
                 from .ast import EquationRef
 
-                expr = EquationRef(name=base_lower, indices=(), attribute=attr_lower)
+                # Use token text (base_name) for consistency with bound_scalar path
+                expr = EquationRef(name=base_name, indices=(), attribute=attr_lower)
                 return self._attach_domain(expr, free_domain)
             else:
-                # Model attributes (.modelStat, .solveStat, .objVal), file attributes,
-                # or other symbol attributes — treat as a ParamRef placeholder
-                expr = ParamRef(f"{base_name}.{attr_name}")
+                # Model attributes (.modelStat, .solveStat, .objVal) — use dedicated
+                # ModelAttrRef so the emitter can remap or skip after MCP transformation
+                from .ast import ModelAttrRef
+
+                expr = ModelAttrRef(model_name=base_name, attribute=attr_name)
                 return self._attach_domain(expr, free_domain)
 
         if node.data == "attr_access_indexed":
@@ -4865,10 +4873,14 @@ class _ModelBuilder:
             elif base_lower in self.model.equations:
                 from .ast import EquationRef
 
-                expr = EquationRef(name=base_lower, indices=indices, attribute=attr_lower)
+                # Use token text (base_name) for consistency with bound_indexed path
+                expr = EquationRef(name=base_name, indices=indices, attribute=attr_lower)
                 return self._attach_domain(expr, free_domain)
             else:
-                expr = ParamRef(f"{base_name}.{attr_name}", indices=indices)
+                # Model attributes with indices — use ModelAttrRef
+                from .ast import ModelAttrRef
+
+                expr = ModelAttrRef(model_name=base_name, attribute=attr_name)
                 return self._attach_domain(expr, free_domain)
 
         # Support compile-time constants: %identifier% or %path.to.value%

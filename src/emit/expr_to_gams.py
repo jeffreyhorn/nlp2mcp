@@ -18,9 +18,11 @@ from src.ir.ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    ModelAttrRef,
     MultiplierRef,
     ParamRef,
     Prod,
+    SetAttrRef,
     SetMembershipTest,
     Sum,
     SymbolRef,
@@ -441,6 +443,16 @@ def expr_to_gams(
                 return f"{eq_ref.name}.{eq_ref.attribute}({indices_str})"
             return f"{eq_ref.name}.{eq_ref.attribute}"
 
+        case SetAttrRef() as sa_ref:
+            # Set attribute access: ss.off, ss.pos, etc.
+            return f"{sa_ref.name}.{sa_ref.attribute}"
+
+        case ModelAttrRef() as ma_ref:
+            # Model attribute access: m.modelStat, m.solveStat, etc.
+            # After MCP transformation the original model may not exist;
+            # emit as mcp_model attribute reference.
+            return f"mcp_model.{ma_ref.attribute}"
+
         case Unary(op, child):
             child_str = expr_to_gams(child, parent_op=op, domain_vars=domain_vars)
             # GAMS unary operators: +, -, not
@@ -698,7 +710,16 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
                 for smt_idx in smt.indices:
                     _collect(smt_idx)
 
-            case VarRef() | ParamRef() | MultiplierRef() | EquationRef() | Const() | SymbolRef():
+            case (
+                VarRef()
+                | ParamRef()
+                | MultiplierRef()
+                | EquationRef()
+                | Const()
+                | SymbolRef()
+                | SetAttrRef()
+                | ModelAttrRef()
+            ):
                 # Leaf nodes - no nested sums
                 pass
 
@@ -822,7 +843,7 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                         return EquationRef(eq_ref.name, eq_indices, eq_ref.attribute)
                 return eq_ref
 
-            case Const() | SymbolRef():
+            case Const() | SymbolRef() | SetAttrRef() | ModelAttrRef():
                 # Leaf nodes with no indices
                 return e
 

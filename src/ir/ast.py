@@ -120,6 +120,38 @@ class EquationRef(Expr):
 
 
 @dataclass(frozen=True)
+class SetAttrRef(Expr):
+    """Reference to a set attribute (e.g., ss.off, ss.pos, ss.ord).
+
+    Preserves set attribute access as a first-class AST node so the emitter
+    can output native GAMS syntax (e.g., ``ss.off``) instead of rewriting to
+    ``ord(ss) - 1``, which fails for dynamic subsets (GAMS error $197).
+    """
+
+    name: str
+    attribute: str  # "off", "pos", "ord", "first", "last"
+
+    def __repr__(self) -> str:
+        return f"SetAttrRef({self.name}.{self.attribute})"
+
+
+@dataclass(frozen=True)
+class ModelAttrRef(Expr):
+    """Reference to a model attribute (e.g., m.modelStat, m.solveStat).
+
+    After NLP-to-MCP transformation, the original model name no longer exists.
+    This dedicated node allows the emitter to remap or skip these references
+    instead of emitting undefined symbols.
+    """
+
+    model_name: str
+    attribute: str  # "modelStat", "solveStat", "objVal", etc.
+
+    def __repr__(self) -> str:
+        return f"ModelAttrRef({self.model_name}.{self.attribute})"
+
+
+@dataclass(frozen=True)
 class MultiplierRef(Expr):
     """Reference to a KKT multiplier variable (λ, ν, π)."""
 

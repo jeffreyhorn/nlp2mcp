@@ -6212,7 +6212,7 @@ class TestAttrAccessInExpressions:
     """Tests for attr_access/attr_access_indexed in expression context (Issues #897, #898, #899)."""
 
     def test_set_off_attribute(self):
-        """Issue #899: set.off translates to ord(set) - 1."""
+        """Issue #899: set.off preserved as SetAttrRef for native GAMS emission."""
         text = dedent("""
             Set s / a, b, c /;
             Parameter p(s);
@@ -6223,13 +6223,12 @@ class TestAttrAccessInExpressions:
         # Stored in expressions list as (indices, expr)
         assert len(model.params["p"].expressions) == 1
         _, p_expr = model.params["p"].expressions[0]
-        # s.off should be translated to ord(s) - 1
-        assert isinstance(p_expr, Binary)
-        assert p_expr.op == "-"
-        assert isinstance(p_expr.left, Call)
-        assert p_expr.left.func == "ord"
-        assert isinstance(p_expr.right, Const)
-        assert p_expr.right.value == 1.0
+        # s.off should be preserved as SetAttrRef (not rewritten to ord()-1)
+        from src.ir.ast import SetAttrRef
+
+        assert isinstance(p_expr, SetAttrRef)
+        assert p_expr.name == "s"
+        assert p_expr.attribute == "off"
 
     def test_variable_infeas_scalar(self):
         """Issue #897: x.infeas produces VarRef with attribute='infeas'."""
@@ -6269,7 +6268,7 @@ class TestAttrAccessInExpressions:
         assert expr.attribute == "infeas"
 
     def test_model_attribute_modelstat(self):
-        """Issue #898: m.modelStat produces ParamRef placeholder."""
+        """Issue #898: m.modelStat produces ModelAttrRef."""
         text = dedent("""
             Variable x, obj;
             Equation eq1, objdef;
@@ -6280,8 +6279,11 @@ class TestAttrAccessInExpressions:
             report = m.modelStat;
             """)
         model = parser.parse_model_text(text)
-        # m.modelStat stored in expressions as ParamRef placeholder
+        # m.modelStat stored in expressions as ModelAttrRef
+        from src.ir.ast import ModelAttrRef
+
         assert len(model.params["report"].expressions) == 1
         _, expr = model.params["report"].expressions[0]
-        assert isinstance(expr, ParamRef)
-        assert "modelStat" in expr.name or "modelstat" in expr.name.lower()
+        assert isinstance(expr, ModelAttrRef)
+        assert expr.model_name == "m"
+        assert expr.attribute == "modelStat"

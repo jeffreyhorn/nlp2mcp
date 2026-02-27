@@ -1,7 +1,7 @@
 # mathopt4: `.modelStat` model attribute and `//` comments
 
 **GitHub Issue:** [#898](https://github.com/jeffreyhorn/nlp2mcp/issues/898)
-**Model:** mathopt4 (GAMSlib SEQ=202, "MathOptimizer Example 4")
+**Model:** mathopt4 (GAMSlib SEQ=258, "MathOptimizer Example 4")
 **Error category:** `parser_invalid_expression`
 **Status:** RESOLVED
 **Error message:** `Unsupported expression type: attr_access`
