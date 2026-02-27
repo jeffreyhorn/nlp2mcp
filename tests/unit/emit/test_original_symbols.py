@@ -1354,3 +1354,8 @@ class TestQuoteAssignmentIndex:
         """Numeric-looking indices are quoted."""
         result = _quote_assignment_index("3", set())
         assert result == "'3'"
+
+    def test_wildcard_never_quoted(self):
+        """Wildcard '*' should never be quoted (universal set reference)."""
+        assert _quote_assignment_index("*", set()) == "*"
+        assert _quote_assignment_index("*", {"m"}, frozenset({"c"})) == "*"

@@ -205,6 +205,9 @@ def _quote_assignment_index(
     # Already quoted
     if (idx.startswith('"') and idx.endswith('"')) or (idx.startswith("'") and idx.endswith("'")):
         return idx
+    # Wildcard '*' should never be quoted (universal set reference)
+    if idx == "*":
+        return idx
     # Domain variable check: if domain_lower is provided, only treat indices
     # matching the parameter's own domain as domain variables.  Otherwise,
     # fall back to checking all declared sets (backward-compatible).
