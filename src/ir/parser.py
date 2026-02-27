@@ -4792,11 +4792,13 @@ class _ModelBuilder:
             return expr
 
         # Issue #781: Set ordinal attribute accessors (set.first, set.last, set.pos, set.ord)
+        # Issue #899: set.off preserved as SetAttrRef for native GAMS emission
         # tl.first  → ord(tl) == 1          (boolean: 1 when tl is first element)
         # tl.last   → ord(tl) == card(tl)   (boolean: 1 when tl is last element)
         # tl.ord    → ord(tl)               (same as ord(tl))
         # tl.pos    → ord(tl)               (same as ord(tl), GAMS synonym)
-        _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord"}
+        # tl.off    → SetAttrRef(tl, "off") (emitter outputs tl.off directly)
+        _SET_ORDINAL_ATTRS = {"first", "last", "pos", "ord", "off"}
         if node.data == "set_attr" or (
             node.data == "attr_access"
             and len(node.children) == 2
@@ -4804,6 +4806,13 @@ class _ModelBuilder:
         ):
             set_name = _token_text(node.children[0])
             attr = _token_text(node.children[1]).lower()
+            # Preserve .off as first-class attribute (works on dynamic subsets,
+            # unlike ord(set)-1 which triggers GAMS error $197)
+            if attr == "off":
+                from .ast import SetAttrRef
+
+                expr = SetAttrRef(name=set_name, attribute="off")
+                return self._attach_domain(expr, free_domain)
             ord_call = Call("ord", (SymbolRef(set_name),))
             if attr == "first":
                 expr = Binary("==", ord_call, Const(1.0))
@@ -4814,6 +4823,65 @@ class _ModelBuilder:
                 # .ord and .pos are synonyms for ord(set)
                 expr = ord_call
             return self._attach_domain(expr, free_domain)
+
+        # Issue #897/#898: General attribute access in expressions.
+        # Handles variable attributes (.infeas), equation attributes,
+        # and model attributes (.modelStat, .solveStat, .objVal) that
+        # are used on the RHS of assignments or in expressions.
+        if node.data == "attr_access":
+            base_name = _token_text(node.children[0])
+            attr_name = _token_text(node.children[1])
+            base_lower = base_name.lower()
+            attr_lower = attr_name.lower()
+
+            if base_lower in self.model.variables:
+                expr = self._make_symbol(base_name, (), free_domain, node)
+                if isinstance(expr, VarRef):
+                    object.__setattr__(expr, "name", expr.name.lower())
+                    object.__setattr__(expr, "attribute", attr_lower)
+                return self._attach_domain(expr, free_domain)
+            elif base_lower in self.model.equations:
+                from .ast import EquationRef
+
+                # Use token text (base_name) for consistency with bound_scalar path
+                expr = EquationRef(name=base_name, indices=(), attribute=attr_lower)
+                return self._attach_domain(expr, free_domain)
+            else:
+                # Model attributes (.modelStat, .solveStat, .objVal) — use dedicated
+                # ModelAttrRef so the emitter can remap or skip after MCP transformation
+                from .ast import ModelAttrRef
+
+                expr = ModelAttrRef(model_name=base_name, attribute=attr_name)
+                return self._attach_domain(expr, free_domain)
+
+        if node.data == "attr_access_indexed":
+            base_name = _token_text(node.children[0])
+            attr_name = _token_text(node.children[1])
+            base_lower = base_name.lower()
+            attr_lower = attr_name.lower()
+            _aai_ef = lambda n: self._expr(n, free_domain)  # noqa: E731
+            indices = (
+                _process_index_list(node.children[2], _aai_ef) if len(node.children) > 2 else ()
+            )
+
+            if base_lower in self.model.variables:
+                expr = self._make_symbol(base_name, indices, free_domain, node)
+                if isinstance(expr, VarRef):
+                    object.__setattr__(expr, "name", expr.name.lower())
+                    object.__setattr__(expr, "attribute", attr_lower)
+                return self._attach_domain(expr, free_domain)
+            elif base_lower in self.model.equations:
+                from .ast import EquationRef
+
+                # Use token text (base_name) for consistency with bound_indexed path
+                expr = EquationRef(name=base_name, indices=indices, attribute=attr_lower)
+                return self._attach_domain(expr, free_domain)
+            else:
+                # Model attributes with indices — use ModelAttrRef
+                from .ast import ModelAttrRef
+
+                expr = ModelAttrRef(model_name=base_name, attribute=attr_name)
+                return self._attach_domain(expr, free_domain)
 
         # Support compile-time constants: %identifier% or %path.to.value%
         if node.data == "compile_const":

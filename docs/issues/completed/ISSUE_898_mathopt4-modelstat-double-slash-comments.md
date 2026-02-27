@@ -1,8 +1,9 @@
 # mathopt4: `.modelStat` model attribute and `//` comments
 
 **GitHub Issue:** [#898](https://github.com/jeffreyhorn/nlp2mcp/issues/898)
-**Model:** mathopt4 (GAMSlib SEQ=202, "MathOptimizer Example 4")
+**Model:** mathopt4 (GAMSlib SEQ=258, "MathOptimizer Example 4")
 **Error category:** `parser_invalid_expression`
+**Status:** RESOLVED
 **Error message:** `Unsupported expression type: attr_access`
 
 ## Description
@@ -47,9 +48,6 @@ This issue shares the `attr_access` root cause with:
 
 **Primary fix:** Add `attr_access` and `attr_access_indexed` handlers to the IR builder's `_expr()` method. Fixing #897 should also resolve the `attr_access` portion of this issue. This issue has an additional blocker: `//` end-of-line comments.
 
-## Fix Approach
+## Resolution
 
-1. Add `attr_access` handler to `_expr()` in `src/ir/parser.py` — shared with #897, #899
-2. Add model attribute access (`.modelStat`, `.solveStat`, `.objVal`) to the grammar
-3. Add `//` as an end-of-line comment form in the preprocessor or lexer
-4. These model attributes are typically used for reporting, not for MCP formulation, so they could be treated as display-only values
+Added `attr_access` handler to `_expr()` in `src/ir/parser.py`. Model attributes like `m.modelStat` are handled as `ParamRef` placeholders (they return numeric values used for reporting). The `//` end-of-line comments are already handled by the existing `strip_eol_comments()` preprocessor step (mathopt4 has `$eolCom //` at line 21). The model now parses successfully.

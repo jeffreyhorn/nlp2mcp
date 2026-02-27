@@ -6206,3 +6206,84 @@ class TestOuterParenSetMembers:
             """)
         model = parser.parse_model_text(text)
         assert model.sets["s"].members == ["a"]
+
+
+class TestAttrAccessInExpressions:
+    """Tests for attr_access/attr_access_indexed in expression context (Issues #897, #898, #899)."""
+
+    def test_set_off_attribute(self):
+        """Issue #899: set.off preserved as SetAttrRef for native GAMS emission."""
+        text = dedent("""
+            Set s / a, b, c /;
+            Parameter p(s);
+            p(s) = s.off;
+            Model m /all/;
+            """)
+        model = parser.parse_model_text(text)
+        # Stored in expressions list as (indices, expr)
+        assert len(model.params["p"].expressions) == 1
+        _, p_expr = model.params["p"].expressions[0]
+        # s.off should be preserved as SetAttrRef (not rewritten to ord()-1)
+        from src.ir.ast import SetAttrRef
+
+        assert isinstance(p_expr, SetAttrRef)
+        assert p_expr.name == "s"
+        assert p_expr.attribute == "off"
+
+    def test_variable_infeas_scalar(self):
+        """Issue #897: x.infeas produces VarRef with attribute='infeas'."""
+        text = dedent("""
+            Variable x;
+            Parameter report;
+            Equation dummy;
+            dummy.. x =e= 1;
+            report = x.infeas;
+            Model m /all/;
+            """)
+        model = parser.parse_model_text(text)
+        # x.infeas stored in expressions as VarRef with attribute
+        assert len(model.params["report"].expressions) == 1
+        _, expr = model.params["report"].expressions[0]
+        assert isinstance(expr, VarRef)
+        assert expr.name == "x"
+        assert expr.attribute == "infeas"
+
+    def test_variable_infeas_indexed(self):
+        """Issue #897: supply.infeas(i) produces indexed VarRef with attribute='infeas'."""
+        text = dedent("""
+            Set i / a, b /;
+            Variable supply(i);
+            Parameter adj(i);
+            Equation dummy(i);
+            dummy(i).. supply(i) =e= 1;
+            adj(i) = supply.infeas(i);
+            Model m /all/;
+            """)
+        model = parser.parse_model_text(text)
+        # supply.infeas(i) stored in expressions as indexed VarRef with attribute
+        assert len(model.params["adj"].expressions) == 1
+        _, expr = model.params["adj"].expressions[0]
+        assert isinstance(expr, VarRef)
+        assert expr.name == "supply"
+        assert expr.attribute == "infeas"
+
+    def test_model_attribute_modelstat(self):
+        """Issue #898: m.modelStat produces ModelAttrRef."""
+        text = dedent("""
+            Variable x, obj;
+            Equation eq1, objdef;
+            eq1.. x =e= 1;
+            objdef.. obj =e= x;
+            Parameter report;
+            Model m / all /;
+            report = m.modelStat;
+            """)
+        model = parser.parse_model_text(text)
+        # m.modelStat stored in expressions as ModelAttrRef
+        from src.ir.ast import ModelAttrRef
+
+        assert len(model.params["report"].expressions) == 1
+        _, expr = model.params["report"].expressions[0]
+        assert isinstance(expr, ModelAttrRef)
+        assert expr.model_name == "m"
+        assert expr.attribute == "modelStat"
