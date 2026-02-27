@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import EquationDef
+from src.ir.symbols import EquationDef, VarKind
 
 
 @dataclass
@@ -158,6 +158,33 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
+
+        # Issue #922: Synthesize implicit bounds from variable kind.
+        # GAMS Positive Variable has implicit lo=0, Negative has up=0,
+        # Binary has lo=0 and up=1. Only add if no explicit scalar bound
+        # exists for that direction; indexed bounds may only cover a subset
+        # of indices and should not suppress the implicit defaults.
+        # Also check whether a consolidated scalar bound entry already exists
+        # (e.g., synthesized from uniform indexed bounds). In that case, do
+        # not overwrite it with an implicit bound from the variable kind.
+        has_lo = var_def.lo is not None
+        has_up = var_def.up is not None
+        has_lo_scalar_key = (var_name, ()) in result.bounds_lo
+        has_up_scalar_key = (var_name, ()) in result.bounds_up
+        # If the variable is fixed (either via scalar .fx or an existing scalar
+        # fx entry in bounds_fx), additional implicit lo/up bounds are redundant
+        # and are therefore not synthesized.
+        has_fx_scalar = var_def.fx is not None or (var_name, ()) in result.bounds_fx
+        if not has_fx_scalar:
+            if var_def.kind == VarKind.POSITIVE and not has_lo and not has_lo_scalar_key:
+                result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
+            elif var_def.kind == VarKind.NEGATIVE and not has_up and not has_up_scalar_key:
+                result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain)
+            elif var_def.kind == VarKind.BINARY:
+                if not has_lo and not has_lo_scalar_key:
+                    result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain)
+                if not has_up and not has_up_scalar_key:
+                    result.bounds_up[(var_name, ())] = BoundDef("up", 1.0, var_def.domain)
 
     return result
 
