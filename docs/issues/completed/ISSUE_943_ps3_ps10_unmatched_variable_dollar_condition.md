@@ -39,8 +39,8 @@ complementarity multipliers (`lam_*`).
 ## Fix (RESOLVED)
 
 Added section 2b in `src/emit/emit_gams.py` (`.fx` emission): for each inequality
-complementarity equation without an explicit condition, check for lead/lag
-restrictions using `_collect_lead_lag_restrictions()` + `_build_domain_condition()`.
+complementarity equation, check for lead/lag restrictions regardless of whether an
+explicit condition is present using `_collect_lead_lag_restrictions()` + `_build_domain_condition()`.
 When a lead/lag condition is inferred, emit:
 
 ```gams
