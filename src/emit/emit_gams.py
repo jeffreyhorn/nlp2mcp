@@ -6,6 +6,7 @@ GAMS MCP file from a KKT system.
 
 import math
 from collections import deque
+from itertools import combinations
 from typing import cast
 
 from src.config import Config
@@ -24,7 +25,24 @@ from src.emit.original_symbols import (
     has_stochastic_parameters,
 )
 from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
-from src.ir.ast import Expr, IndexOffset, MultiplierRef, ParamRef, SubsetIndex, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    EquationRef,
+    Expr,
+    IndexOffset,
+    MultiplierRef,
+    ParamRef,
+    Prod,
+    SetAttrRef,
+    SetMembershipTest,
+    SubsetIndex,
+    Sum,
+    Unary,
+    VarRef,
+)
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import create_eq_multiplier_name
@@ -70,6 +88,93 @@ def _collect_varref_names(expr: Expr) -> set[str]:
             if isinstance(idx, Expr):
                 names.update(_collect_varref_names(idx))
     return names
+
+
+def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
+    """Substitute all occurrences of an index name in an expression AST.
+
+    Used by section 2c to check if a complementarity equation becomes trivial
+    on the diagonal (when two same-set indices are equal).
+    """
+
+    def _subst_single_index(i: str | IndexOffset) -> str | IndexOffset:
+        """Substitute within a single index element (str or IndexOffset)."""
+        if isinstance(i, str):
+            return new_idx if i == old_idx else i
+        if isinstance(i, IndexOffset):
+            base = new_idx if i.base == old_idx else i.base
+            new_offset = _substitute_index(i.offset, old_idx, new_idx)
+            return IndexOffset(base, new_offset, i.circular)
+        return i
+
+    if isinstance(expr, Const):
+        return expr
+    if isinstance(expr, VarRef):
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
+        return VarRef(expr.name, new_indices, expr.attribute)
+    if isinstance(expr, ParamRef):
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
+        return ParamRef(expr.name, new_indices)
+    if isinstance(expr, MultiplierRef):
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
+        return MultiplierRef(expr.name, new_indices)
+    if isinstance(expr, EquationRef):
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
+        return EquationRef(expr.name, new_indices, expr.attribute)
+    if isinstance(expr, SetAttrRef):
+        name = new_idx if expr.name == old_idx else expr.name
+        return SetAttrRef(name, expr.attribute)
+    if isinstance(expr, Binary):
+        return Binary(
+            expr.op,
+            _substitute_index(expr.left, old_idx, new_idx),
+            _substitute_index(expr.right, old_idx, new_idx),
+        )
+    if isinstance(expr, Unary):
+        return Unary(expr.op, _substitute_index(expr.child, old_idx, new_idx))
+    if isinstance(expr, Call):
+        new_args = tuple(_substitute_index(a, old_idx, new_idx) for a in expr.args)
+        return Call(expr.func, new_args)
+    if isinstance(expr, Sum):
+        # Don't substitute inside bound indices of aggregation
+        if old_idx in expr.index_sets:
+            return expr
+        new_body = _substitute_index(expr.body, old_idx, new_idx)
+        new_cond = (
+            _substitute_index(expr.condition, old_idx, new_idx)
+            if expr.condition is not None
+            else None
+        )
+        return Sum(expr.index_sets, new_body, new_cond)
+    if isinstance(expr, Prod):
+        if old_idx in expr.index_sets:
+            return expr
+        new_body = _substitute_index(expr.body, old_idx, new_idx)
+        new_cond = (
+            _substitute_index(expr.condition, old_idx, new_idx)
+            if expr.condition is not None
+            else None
+        )
+        return Prod(expr.index_sets, new_body, new_cond)
+    if isinstance(expr, DollarConditional):
+        return DollarConditional(
+            _substitute_index(expr.value_expr, old_idx, new_idx),
+            _substitute_index(expr.condition, old_idx, new_idx),
+        )
+    if isinstance(expr, SetMembershipTest):
+        smt_indices: tuple[Expr, ...] = tuple(
+            _substitute_index(i, old_idx, new_idx) for i in expr.indices
+        )
+        return SetMembershipTest(expr.set_name, smt_indices)
+    if isinstance(expr, IndexOffset):
+        base = new_idx if expr.base == old_idx else expr.base
+        new_offset = _substitute_index(expr.offset, old_idx, new_idx)
+        return IndexOffset(base, new_offset, expr.circular)
+    if isinstance(expr, SubsetIndex):
+        si_indices: tuple[str, ...] = tuple(new_idx if i == old_idx else i for i in expr.indices)
+        return SubsetIndex(expr.subset_name, si_indices)
+    # For any other type (SymbolRef, ModelAttrRef, CompileTimeConstant), return as-is
+    return expr
 
 
 def emit_gams_mcp(
@@ -567,6 +672,92 @@ def emit_gams_mcp(
             assert isinstance(eq_def.condition, Expr)
             cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 2b. Issue #943: Fix inequality multipliers whose complementarity equation
+    # has lead/lag expressions (e.g., i+1) that implicitly exclude terminal indices.
+    # Same logic as section 3 below but for inequality complementarity equations.
+    # Note: We compute lead/lag restrictions even when eq_def.condition is present,
+    # because emit_equation_def() ANDs explicit conditions with inferred lead/lag
+    # bounds. Section 2 above handles the explicit condition complement; this
+    # section handles the lead/lag complement separately.
+    for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        eq_def = comp_pair.equation
+        if not eq_def.domain:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+        lead_offsets = {
+            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
+        }
+        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+        if inferred_cond is None:
+            continue
+        mult_name = comp_pair.variable
+        domain_str = ",".join(eq_def.domain)
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+
+    # 2c. Issue #942: Fix inequality multipliers on diagonal elements when the
+    # complementarity equation has 2+ indices from the same set (via aliases)
+    # AND the diagonal equation instance is trivially empty.
+    # Example: comp_ic(i,j) where j is an alias of i — diagonal (i,i) produces
+    # an empty equation (e.g., w(i)-theta(i)*x(i) - (w(i)-theta(i)*x(i)) = 0).
+    # We verify emptiness by substituting d_j→d_i in the AST and checking if
+    # the constraint becomes trivially satisfied (LHS == RHS or LHS - RHS = 0).
+    _alias_target: dict[str, str] = {}
+    for alias_def in kkt.model_ir.aliases.values():
+        _alias_target[alias_def.name.lower()] = alias_def.target.lower()
+
+    def _resolve_canonical(idx_name: str) -> str:
+        """Resolve an index name to its canonical set by following alias chains."""
+        current = idx_name.lower()
+        visited: set[str] = set()
+        while current in _alias_target and current not in visited:
+            visited.add(current)
+            current = _alias_target[current]
+        return current
+
+    for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
+        if ref_mults is not None and comp_pair.variable not in ref_mults:
+            continue
+        eq_def = comp_pair.equation
+        if not eq_def.domain or len(eq_def.domain) < 2:
+            continue
+        # Resolve each domain index to its canonical set (case-insensitive,
+        # with transitive closure over chained aliases)
+        canonical = [_resolve_canonical(idx) for idx in eq_def.domain]
+        # Find pairs of indices that share the same canonical set
+        for idx_a, idx_b in combinations(range(len(eq_def.domain)), 2):
+            if canonical[idx_a] != canonical[idx_b]:
+                continue
+            d_i = eq_def.domain[idx_a]
+            d_j = eq_def.domain[idx_b]
+            # Verify the diagonal is actually empty: substitute d_j → d_i in the
+            # AST and check if the constraint becomes trivially satisfied.
+            lhs, rhs = eq_def.lhs_rhs
+            subst_lhs = _substitute_index(lhs, d_j, d_i)
+            subst_rhs = _substitute_index(rhs, d_j, d_i)
+            # Check 1: LHS == RHS after substitution (constraint is x ≥ x)
+            is_trivial = subst_lhs == subst_rhs
+            # Check 2: LHS = A - B with A == B and RHS = 0 (common pattern:
+            # f(i) - f(j) =G= 0 becomes f(i) - f(i) =G= 0, i.e., 0 ≥ 0)
+            if (
+                not is_trivial
+                and isinstance(subst_lhs, Binary)
+                and subst_lhs.op == "-"
+                and subst_lhs.left == subst_lhs.right
+                and isinstance(subst_rhs, Const)
+                and subst_rhs.value == 0.0
+            ):
+                is_trivial = True
+            if not is_trivial:
+                continue
+            mult_name = comp_pair.variable
+            domain_str = ",".join(eq_def.domain)
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(ord({d_i}) = ord({d_j})) = 0;")
 
     # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
     # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),
