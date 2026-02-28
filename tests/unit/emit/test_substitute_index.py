@@ -10,6 +10,7 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    EquationRef,
     IndexOffset,
     MultiplierRef,
     ParamRef,
@@ -60,6 +61,11 @@ class TestSubstituteIndexBasic:
         expr = MultiplierRef("lam_ic", ("i", "j"))
         result = _substitute_index(expr, "j", "i")
         assert result == MultiplierRef("lam_ic", ("i", "i"))
+
+    def test_equationref_substitutes(self):
+        expr = EquationRef("eq", ("i", "j"), attribute="m")
+        result = _substitute_index(expr, "j", "i")
+        assert result == EquationRef("eq", ("i", "i"), attribute="m")
 
     def test_set_attr_ref_substitutes(self):
         expr = SetAttrRef("j", "ord")

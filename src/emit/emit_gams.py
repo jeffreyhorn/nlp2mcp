@@ -710,14 +710,25 @@ def emit_gams_mcp(
     _alias_target: dict[str, str] = {}
     for alias_def in kkt.model_ir.aliases.values():
         _alias_target[alias_def.name.lower()] = alias_def.target.lower()
+
+    def _resolve_canonical(idx_name: str) -> str:
+        """Resolve an index name to its canonical set by following alias chains."""
+        current = idx_name.lower()
+        visited: set[str] = set()
+        while current in _alias_target and current not in visited:
+            visited.add(current)
+            current = _alias_target[current]
+        return current
+
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:
             continue
         eq_def = comp_pair.equation
         if not eq_def.domain or len(eq_def.domain) < 2:
             continue
-        # Resolve each domain index to its canonical set (case-insensitive)
-        canonical = [_alias_target.get(idx.lower(), idx.lower()) for idx in eq_def.domain]
+        # Resolve each domain index to its canonical set (case-insensitive,
+        # with transitive closure over chained aliases)
+        canonical = [_resolve_canonical(idx) for idx in eq_def.domain]
         # Find pairs of indices that share the same canonical set
         for idx_a, idx_b in combinations(range(len(eq_def.domain)), 2):
             if canonical[idx_a] != canonical[idx_b]:
