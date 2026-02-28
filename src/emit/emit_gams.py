@@ -45,7 +45,11 @@ from src.ir.ast import (
 )
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
-from src.kkt.naming import create_eq_multiplier_name
+from src.kkt.naming import (
+    create_bound_lo_multiplier_name,
+    create_bound_up_multiplier_name,
+    create_eq_multiplier_name,
+)
 from src.kkt.objective import extract_objective_info
 
 
@@ -640,6 +644,7 @@ def emit_gams_mcp(
     fx_lines: list[str] = []
 
     # 1. Fix primal variables with conditioned stationarity equations
+    ref_mults = kkt.referenced_multipliers
     for var_name, cond_expr in sorted(kkt.stationarity_conditions.items()):
         var_def = kkt.model_ir.variables.get(var_name)
         if var_def and var_def.domain:
@@ -658,9 +663,21 @@ def emit_gams_mcp(
             else:
                 fix_val = 0
             fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_val};")
+            # Issue #966: Also fix bound multipliers for this variable.
+            # When the primal variable is inactive, its bound multipliers must
+            # also be fixed to 0 so GAMS MCP matching doesn't see unmatched pairs.
+            piL_name = create_bound_lo_multiplier_name(var_name)
+            if (var_name, ()) in kkt.complementarity_bounds_lo:
+                comp_pair_lo = kkt.complementarity_bounds_lo[(var_name, ())]
+                if ref_mults is None or comp_pair_lo.variable in ref_mults:
+                    fx_lines.append(f"{piL_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+            piU_name = create_bound_up_multiplier_name(var_name)
+            if (var_name, ()) in kkt.complementarity_bounds_up:
+                comp_pair_up = kkt.complementarity_bounds_up[(var_name, ())]
+                if ref_mults is None or comp_pair_up.variable in ref_mults:
+                    fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
     # 2. Fix multipliers whose complementarity equation has a condition
-    ref_mults = kkt.referenced_multipliers
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:
             continue

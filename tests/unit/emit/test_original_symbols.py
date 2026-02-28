@@ -1293,7 +1293,8 @@ class TestInfParameterEmission:
         )
         result = emit_original_parameters(model)
         assert "node1 -inf" in result
-        assert "node2 0" in result
+        # Issue #967: Zero-valued entries are omitted to preserve GAMS sparse semantics
+        assert "node2 0" not in result
 
     def test_inf_scalar(self):
         """Test +Inf scalar emitted as 'inf'."""
