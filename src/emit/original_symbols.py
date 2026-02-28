@@ -800,6 +800,13 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
                         continue
 
+                    # Issue #967: Skip zero-valued entries to preserve GAMS sparse
+                    # semantics. Unassigned parameters default to zero in GAMS but are
+                    # skipped during division (sparse evaluation). Explicit zeros break
+                    # this, causing division-by-zero runtime errors.
+                    if isinstance(value, (int, float)) and value == 0:
+                        continue
+
                     # Convert tuple to GAMS index syntax (Finding #3)
                     # Apply quoting/sanitization to each element for consistent handling
                     # This ensures parameter data keys match set element quoting
