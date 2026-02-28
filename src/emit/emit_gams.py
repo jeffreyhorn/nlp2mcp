@@ -96,27 +96,30 @@ def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     Used by section 2c to check if a complementarity equation becomes trivial
     on the diagonal (when two same-set indices are equal).
     """
+
+    def _subst_single_index(i: str | IndexOffset) -> str | IndexOffset:
+        """Substitute within a single index element (str or IndexOffset)."""
+        if isinstance(i, str):
+            return new_idx if i == old_idx else i
+        if isinstance(i, IndexOffset):
+            base = new_idx if i.base == old_idx else i.base
+            new_offset = _substitute_index(i.offset, old_idx, new_idx)
+            return IndexOffset(base, new_offset, i.circular)
+        return i
+
     if isinstance(expr, Const):
         return expr
     if isinstance(expr, VarRef):
-        new_indices = tuple(
-            new_idx if isinstance(i, str) and i == old_idx else i for i in expr.indices
-        )
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
         return VarRef(expr.name, new_indices, expr.attribute)
     if isinstance(expr, ParamRef):
-        new_indices = tuple(
-            new_idx if isinstance(i, str) and i == old_idx else i for i in expr.indices
-        )
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
         return ParamRef(expr.name, new_indices)
     if isinstance(expr, MultiplierRef):
-        new_indices = tuple(
-            new_idx if isinstance(i, str) and i == old_idx else i for i in expr.indices
-        )
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
         return MultiplierRef(expr.name, new_indices)
     if isinstance(expr, EquationRef):
-        new_indices = tuple(
-            new_idx if isinstance(i, str) and i == old_idx else i for i in expr.indices
-        )
+        new_indices = tuple(_subst_single_index(i) for i in expr.indices)
         return EquationRef(expr.name, new_indices, expr.attribute)
     if isinstance(expr, SetAttrRef):
         name = new_idx if expr.name == old_idx else expr.name
