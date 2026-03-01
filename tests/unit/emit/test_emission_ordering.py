@@ -259,17 +259,26 @@ class TestDeferredBoundEmission:
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
         result = emit_gams_mcp(kkt)
 
-        # x.lo = 0 should be in "Variable Bounds" section, not in deferred bounds.
-        lo_candidates = [
-            result.find("x.lo = 0;"),
-            result.find("x.lo = 0.0;"),
-        ]
-        lo_positions = [pos for pos in lo_candidates if pos != -1]
-        assert lo_positions, "x.lo bound not found in emitted result"
-        lo_pos = min(lo_positions)
+        # x.lo = 0 should be in early "Variable Bounds" section, not inside
+        # a deferred $onImplicitAssign block.  Use comment-independent markers.
+        lines = result.splitlines()
+        lo_idx = next(
+            (i for i, ln in enumerate(lines) if "x.lo = 0;" in ln or "x.lo = 0.0;" in ln),
+            None,
+        )
+        assert lo_idx is not None, "x.lo bound not found in emitted result"
 
-        deferred_pos = result.find("Deferred")
-        if deferred_pos != -1:
-            assert (
-                lo_pos < deferred_pos
-            ), f"x.lo bound at pos {lo_pos} should precede Deferred bounds section at pos {deferred_pos}"
+        # Verify x.lo is NOT between a $onImplicitAssign/$offImplicitAssign pair
+        # that wraps deferred bounds (if any such pair exists after init).
+        on_off_pairs: list[tuple[int, int]] = []
+        on_stack: list[int] = []
+        for i, ln in enumerate(lines):
+            if "$onImplicitAssign" in ln:
+                on_stack.append(i)
+            elif "$offImplicitAssign" in ln and on_stack:
+                on_off_pairs.append((on_stack.pop(), i))
+        for on_idx, off_idx in on_off_pairs:
+            assert not (on_idx < lo_idx < off_idx), (
+                f"x.lo at line {lo_idx} is inside $onImplicitAssign block "
+                f"(lines {on_idx}-{off_idx}), should be in early bounds"
+            )
