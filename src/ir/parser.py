@@ -1048,6 +1048,52 @@ def _process_index_list(
     return tuple(indices)
 
 
+def _cleanup_false_row_labels(
+    row_label_map: dict[int, object],
+    row_label_col: dict[int, int],
+    min_col_header_col: int,
+    table_rows: Sequence[Tree],
+    row_label_token_ids: set[int],
+) -> None:
+    """Remove false row labels created by Earley parser splitting a single
+    physical line into multiple ``table_row`` nodes.
+
+    When this happens, data values positioned at/right of column headers may be
+    mistakenly entered into *row_label_map*.  This helper removes those entries
+    and un-marks the corresponding tokens from *row_label_token_ids* so they are
+    treated as values instead.
+
+    Used by both the section-based and non-section table parsing paths
+    (Issues #863, #968).
+    """
+    # Remove row_label_map entries positioned in the column-header area.
+    for line_num in list(row_label_map):
+        col = row_label_col.get(line_num, 0)
+        if col >= min_col_header_col:
+            del row_label_map[line_num]
+
+    # Un-mark false label tokens from row_label_token_ids.
+    for row in table_rows:
+        if not row.children:
+            continue
+        first_child = row.children[0]
+        first_tok = None
+        label_tok_list: list[Token] = []
+        if isinstance(first_child, Tree) and first_child.data == "simple_label":
+            for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
+                label_tok_list.append(tok)
+                if first_tok is None:
+                    first_tok = tok
+        elif isinstance(first_child, Token):
+            label_tok_list.append(first_child)
+            first_tok = first_child
+        if first_tok is not None:
+            col = getattr(first_tok, "column", 0) or 0
+            if col >= min_col_header_col:
+                for tok in label_tok_list:
+                    row_label_token_ids.discard(id(tok))
+
+
 def _merge_dotted_col_headers(
     tokens: list[Token],
     source_lines: list[str] | None = None,
@@ -2423,34 +2469,14 @@ class _ModelBuilder:
                     del row_label_map[sec_line_num]
 
             # Issue #863/#968: Remove false row labels positioned in the column
-            # header area (same cleanup as the non-section path).
-            # When the Earley parser splits data values into separate table_row
-            # nodes, numbers/IDs positioned at/right of column headers may be
-            # mistakenly entered into row_label_map.
-            for line_num in list(row_label_map):
-                col = _row_label_col.get(line_num, 0)
-                if col >= first_header_col:
-                    del row_label_map[line_num]
-            # Un-mark false label tokens from row_label_token_ids
-            for row in table_rows:
-                if not row.children:
-                    continue
-                first_child = row.children[0]
-                first_tok = None
-                label_tok_list: list[Token] = []
-                if isinstance(first_child, Tree) and first_child.data == "simple_label":
-                    for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
-                        label_tok_list.append(tok)
-                        if first_tok is None:
-                            first_tok = tok
-                elif isinstance(first_child, Token):
-                    label_tok_list.append(first_child)
-                    first_tok = first_child
-                if first_tok is not None:
-                    col = getattr(first_tok, "column", 0) or 0
-                    if col >= first_header_col:
-                        for tok in label_tok_list:
-                            row_label_token_ids.discard(id(tok))
+            # header area (shared helper — same cleanup as the non-section path).
+            _cleanup_false_row_labels(
+                row_label_map,
+                _row_label_col,
+                first_header_col,
+                table_rows,
+                row_label_token_ids,
+            )
 
             # Build section boundaries: list of (header_idx, first_data_idx, end_idx)
             section_bounds: list[tuple[int, int, int]] = []
@@ -2465,7 +2491,7 @@ class _ModelBuilder:
                 section_bounds.append((sec_idx, sec_idx + 1, next_sec))
 
             # Process each section with its own header and accumulate into `values`.
-            section_values: dict[tuple[str, str], float] = {}
+            section_values: dict[tuple[str, str], float | str] = {}
 
             for header_idx, data_start, data_end in section_bounds:
                 sec_hdr_line_num, sec_hdr_tokens = sorted_lines[header_idx]
@@ -2545,7 +2571,7 @@ class _ModelBuilder:
 
             # Replace `values` with the section-based results and return early,
             # bypassing the normal single-pass column-matching loop below.
-            values: dict[tuple[str, ...], float] = {
+            values: dict[tuple[str, ...], float | str] = {
                 (row_lbl, col_lbl): val for (row_lbl, col_lbl), val in section_values.items()
             }
             self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
@@ -2572,39 +2598,14 @@ class _ModelBuilder:
         min_col_header_col = min(pos for _, pos in col_headers)
 
         # Issue #863: Remove false row labels created by Earley parser splitting a
-        # single physical line into multiple table_row nodes.  When this happens, data
-        # values (e.g. 'future' at col 25) are mistakenly entered into row_label_map
-        # (though the leftmost-wins logic in the loop above already kept the real label).
-        # False labels have their first token at column >= min_col_header_col (aligned
-        # with column headers), whereas real row labels start at the left margin.
-        # Also remove any remaining false entries from row_label_map (e.g. lines where
-        # ALL labels have col >= min_col_header_col).
-        # Un-mark false label tokens from row_label_token_ids so they become values.
-        for line_num in list(row_label_map):
-            col = _row_label_col.get(line_num, 0)
-            if col >= min_col_header_col:
-                del row_label_map[line_num]
-        # Scan ALL table_rows: any label whose first token has col >= min_col_header_col
-        # is a false label — un-mark its tokens from row_label_token_ids.
-        for row in table_rows:
-            if not row.children:
-                continue
-            first_child = row.children[0]
-            first_tok = None
-            label_tok_list: list[Token] = []
-            if isinstance(first_child, Tree) and first_child.data == "simple_label":
-                for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
-                    label_tok_list.append(tok)
-                    if first_tok is None:
-                        first_tok = tok
-            elif isinstance(first_child, Token):
-                label_tok_list.append(first_child)
-                first_tok = first_child
-            if first_tok is not None:
-                col = getattr(first_tok, "column", 0) or 0
-                if col >= min_col_header_col:
-                    for tok in label_tok_list:
-                        row_label_token_ids.discard(id(tok))
+        # single physical line into multiple table_row nodes (shared helper).
+        _cleanup_false_row_labels(
+            row_label_map,
+            _row_label_col,
+            min_col_header_col,
+            table_rows,
+            row_label_token_ids,
+        )
 
         for line_num, line_tokens in sorted_lines[1:]:
             if line_num not in row_label_map:
