@@ -2409,7 +2409,9 @@ class _ModelBuilder:
             _, line_tokens = sorted_lines[idx]
             if not line_tokens:
                 continue
-            first_tok_col = getattr(line_tokens[0], "column", 0)
+            if not isinstance(line_tokens[0], Token):
+                continue
+            first_tok_col = getattr(line_tokens[0], "column", 0) or 0
             if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
                 # Check column position: true secondary headers align with column
                 # headers; numeric data rows start at the left margin.
