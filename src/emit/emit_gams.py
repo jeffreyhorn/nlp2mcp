@@ -568,7 +568,12 @@ def emit_gams_mcp(
             sections.append("* Deferred Variable Bounds (depend on .l values)")
             sections.append("* ============================================")
             sections.append("")
+        # Wrap deferred bounds in $onImplicitAssign to avoid GAMS Error 141
+        # when .l-based bounds read variables whose .l values were never
+        # explicitly initialized (treat them as implicitly 0 instead).
+        sections.append("$onImplicitAssign")
         sections.extend(deferred_bound_lines)
+        sections.append("$offImplicitAssign")
         sections.append("")
 
     # Issue #835: Emit .scale attributes for variables
