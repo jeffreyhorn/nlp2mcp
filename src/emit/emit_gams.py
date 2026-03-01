@@ -349,8 +349,10 @@ def emit_gams_mcp(
     sections.append("")
 
     # Issue #873: Emit expression-based variable bounds (.lo/.up/.fx)
-    # These must come before .l initialization since .l may reference .lo/.up values.
+    # Issue #921: Split into two passes — bounds that reference .l values must be
+    # emitted AFTER .l initialization (deferred), while others come before.
     bound_lines: list[str] = []
+    deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
         if (
             kkt.referenced_variables is not None
@@ -364,11 +366,17 @@ def emit_gams_mcp(
                 for indices, bound_expr in expr_map.items():
                     idx_str = ",".join(_index_to_gams_string(i) for i in indices)
                     idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
-                    bound_lines.append(
-                        f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
-                    )
+                    line = f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
+                    if _collect_varref_names(bound_expr):
+                        deferred_bound_lines.append(line)
+                    else:
+                        bound_lines.append(line)
             elif scalar_expr is not None:
-                bound_lines.append(f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};")
+                line = f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};"
+                if _collect_varref_names(scalar_expr):
+                    deferred_bound_lines.append(line)
+                else:
+                    bound_lines.append(line)
     if bound_lines:
         if add_comments:
             sections.append("* ============================================")
@@ -550,6 +558,17 @@ def emit_gams_mcp(
         sections.extend(init_lines)
         if has_cross_varref:
             sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # Issue #921: Emit deferred bounds (.lo/.up/.fx that reference .l values)
+    # after .l initialization so that the .l values they depend on exist.
+    if deferred_bound_lines:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Deferred Variable Bounds (depend on .l values)")
+            sections.append("* ============================================")
+            sections.append("")
+        sections.extend(deferred_bound_lines)
         sections.append("")
 
     # Issue #835: Emit .scale attributes for variables
