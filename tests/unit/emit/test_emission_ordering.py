@@ -232,15 +232,26 @@ class TestDeferredBoundEmission:
         result = emit_gams_mcp(kkt)
         lines = result.splitlines()
 
-        # Find the deferred .fx line and verify it's between $onImplicitAssign/$offImplicitAssign
+        # Find the deferred .fx line and verify it's wrapped in a matched
+        # $onImplicitAssign / $offImplicitAssign pair.
         fx_idx = next(i for i, ln in enumerate(lines) if "x.fx = x.l" in ln)
-        preceding = lines[:fx_idx]
-        following = lines[fx_idx + 1 :]
-        # Last $onImplicitAssign before .fx line
-        on_indices = [i for i, ln in enumerate(preceding) if "$onImplicitAssign" in ln]
-        off_indices = [i for i, ln in enumerate(following) if "$offImplicitAssign" in ln]
-        assert on_indices, "$onImplicitAssign not found before deferred .fx bound"
-        assert off_indices, "$offImplicitAssign not found after deferred .fx bound"
+
+        # Build ranges for matched $onImplicitAssign / $offImplicitAssign pairs.
+        implicit_ranges: list[tuple[int, int]] = []
+        on_stack: list[int] = []
+        for i, ln in enumerate(lines):
+            if "$onImplicitAssign" in ln:
+                on_stack.append(i)
+            elif "$offImplicitAssign" in ln and on_stack:
+                on_idx = on_stack.pop()
+                implicit_ranges.append((on_idx, i))
+
+        assert (
+            implicit_ranges
+        ), "No $onImplicitAssign/$offImplicitAssign pairs found in emitted output"
+        assert any(
+            on < fx_idx < off for (on, off) in implicit_ranges
+        ), "Deferred .fx bound is not wrapped in a matched $onImplicitAssign/$offImplicitAssign block"
 
     def test_non_l_bounds_not_deferred(self, manual_index_mapping):
         """Bounds that don't reference .l should stay in the early section."""
