@@ -224,6 +224,12 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
 # Module-level ErrorEnhancer instance (stateless, can be reused)
 _ERROR_ENHANCER = ErrorEnhancer()
 
+# Left tolerance (in columns) for range-based column matching in table parsing.
+# A value token is assigned to a column header if it falls within
+# [col_pos - _COL_LEFT_TOLERANCE, next_col_pos).  Used by both the section-based
+# and non-section table parsing paths.
+_COL_LEFT_TOLERANCE = 3
+
 
 def _extract_source_line_with_adjusted_column(
     source: str, line: int | None, column: int | None
@@ -1046,6 +1052,52 @@ def _process_index_list(
             # Fallback for unknown nodes
             raise ParserSemanticError(f"Unknown index_list child: {child}")
     return tuple(indices)
+
+
+def _cleanup_false_row_labels(
+    row_label_map: dict[int, object],
+    row_label_col: dict[int, int],
+    min_col_header_col: int,
+    table_rows: Sequence[Tree],
+    row_label_token_ids: set[int],
+) -> None:
+    """Remove false row labels created by Earley parser splitting a single
+    physical line into multiple ``table_row`` nodes.
+
+    When this happens, data values positioned at/right of column headers may be
+    mistakenly entered into *row_label_map*.  This helper removes those entries
+    and unmarks the corresponding tokens from *row_label_token_ids* so they are
+    treated as values instead.
+
+    Used by both the section-based and non-section table parsing paths
+    (Issues #863, #968).
+    """
+    # Remove row_label_map entries positioned in the column-header area.
+    for line_num in list(row_label_map):
+        col = row_label_col.get(line_num, 0)
+        if col >= min_col_header_col:
+            del row_label_map[line_num]
+
+    # Un-mark false label tokens from row_label_token_ids.
+    for row in table_rows:
+        if not row.children:
+            continue
+        first_child = row.children[0]
+        first_tok = None
+        label_tok_list: list[Token] = []
+        if isinstance(first_child, Tree) and first_child.data == "simple_label":
+            for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
+                label_tok_list.append(tok)
+                if first_tok is None:
+                    first_tok = tok
+        elif isinstance(first_child, Token):
+            label_tok_list.append(first_child)
+            first_tok = first_child
+        if first_tok is not None:
+            col = getattr(first_tok, "column", 0) or 0
+            if col >= min_col_header_col:
+                for tok in label_tok_list:
+                    row_label_token_ids.discard(id(tok))
 
 
 def _merge_dotted_col_headers(
@@ -2347,9 +2399,12 @@ class _ModelBuilder:
         # as a secondary column-header line that starts a new header section, rather than
         # being merged into sorted_lines[0] (the primary column-header line).
         #
-        # Detection: a non-first line is a secondary column-header line when ALL its tokens
-        # are NUMBER type AND the first token's column position is at or right of the column
-        # header start position.  Issue #863: Data rows with numeric row labels (e.g., 9000011)
+        # Detection: a non-first line is a secondary column-header line when:
+        # (a) ALL tokens are NUMBER type (original Issue #392), OR
+        # (b) ALL tokens are ID/STRING type and there are at least 2 tokens
+        #     (Issue #968: dotted column headers like BRD.USA MLK.USA), AND
+        # the first token's column position is at or right of the column header start
+        # position.  Issue #863: Data rows with numeric row labels (e.g., 9000011)
         # also have all-NUMBER tokens but start at the left margin (col < header start col).
         first_header_col = min(
             (getattr(tok, "column", 999) for tok in first_line_tokens if isinstance(tok, Token)),
@@ -2360,13 +2415,28 @@ class _ModelBuilder:
             _, line_tokens = sorted_lines[idx]
             if not line_tokens:
                 continue
+            if not isinstance(line_tokens[0], Token):
+                continue
+            first_tok_col = getattr(line_tokens[0], "column", 0) or 0
             if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
                 # Check column position: true secondary headers align with column
                 # headers; numeric data rows start at the left margin.
-                # Allow small left tolerance (3 cols) for the '+' replacement shift.
-                first_tok_col = getattr(line_tokens[0], "column", 0)
-                if first_tok_col >= first_header_col - 3:
+                # Allow small left tolerance for the '+' replacement shift.
+                if first_tok_col >= first_header_col - _COL_LEFT_TOLERANCE:
                     secondary_header_indices.append(idx)
+            elif (
+                len(line_tokens) >= 2
+                and all(
+                    tok.type in ("ID", "STRING") for tok in line_tokens if isinstance(tok, Token)
+                )
+                and first_tok_col >= first_header_col
+            ):
+                # Issue #968: All-ID/STRING lines positioned at or right of the
+                # column header start are continuation column headers with dotted
+                # names like BRD.USA MLK.USA CAP.USA.  No left tolerance here
+                # because data rows with ID-type values (e.g. -inf) can be close
+                # to but still left of the header column.
+                secondary_header_indices.append(idx)
 
         if secondary_header_indices:
             # Section-based processing for tables with continuation blocks.
@@ -2390,17 +2460,31 @@ class _ModelBuilder:
             # secondary header or end).  Process each section independently and accumulate
             # all values into the same `values` dict.
             #
-            # Note: the section-based path uses proximity-based column matching (find the
-            # nearest column header by column position) rather than the range-based matching
-            # used in the standard path.  Proximity matching is necessary here because the
-            # continuation preprocessor replaces '+' with a space — the token column positions
-            # already reflect the final layout — so no artificial column-offset adjustment is
-            # needed.  The range-based approach assumes a single merged header list with
-            # non-overlapping ranges; with two independent section headers that share similar
-            # column positions, non-overlapping ranges cannot be constructed.
+            # Note: the section-based path uses range-based column matching (same as
+            # the standard path) where each column owns the range from its position
+            # to the next column's start.  Each section has independent column headers,
+            # so the ranges within each section are non-overlapping.
             #
             # Section 0:  sorted_lines[0..first_secondary_idx-1]
             # Section k:  sorted_lines[sec_idx_k .. sec_idx_{k+1}-1]  (sec_idx_k is the header)
+
+            # Issue #968: Remove secondary header lines from row_label_map.
+            # The grammar may parse dotted column headers (e.g. BRD.USA) as
+            # simple_label row labels. They must not be treated as data rows.
+            for sec_idx in secondary_header_indices:
+                sec_line_num = sorted_lines[sec_idx][0]
+                if sec_line_num in row_label_map:
+                    del row_label_map[sec_line_num]
+
+            # Issue #863/#968: Remove false row labels positioned in the column
+            # header area (shared helper — same cleanup as the non-section path).
+            _cleanup_false_row_labels(
+                row_label_map,
+                _row_label_col,
+                first_header_col,
+                table_rows,
+                row_label_token_ids,
+            )
 
             # Build section boundaries: list of (header_idx, first_data_idx, end_idx)
             section_bounds: list[tuple[int, int, int]] = []
@@ -2415,7 +2499,7 @@ class _ModelBuilder:
                 section_bounds.append((sec_idx, sec_idx + 1, next_sec))
 
             # Process each section with its own header and accumulate into `values`.
-            section_values: dict[tuple[str, str], float] = {}
+            section_values: dict[tuple[str, str], float | str] = {}
 
             for header_idx, data_start, data_end in section_bounds:
                 sec_hdr_line_num, sec_hdr_tokens = sorted_lines[header_idx]
@@ -2446,11 +2530,12 @@ class _ModelBuilder:
                     else:
                         row_labels = [str(data_tokens[0]).strip("'\"")]
 
-                    # Remaining tokens are values; match to column headers by proximity.
-                    # Tiebreaker: when two headers are equidistant, prefer the header with
-                    # the larger column position (i.e., the header to the right).
-                    # This matches GAMS right-aligned number layout where a multi-digit value
-                    # starts 1-2 chars to the left of its column header marker.
+                    # Remaining tokens are values; match to column headers by range.
+                    # Issue #968: Use range-based matching (same as non-section path)
+                    # where each column owns the range from its position to the next
+                    # column's start.  This correctly handles right-aligned numbers
+                    # under dotted headers like BRD.JPN where the number's column
+                    # position falls between adjacent header start positions.
                     used_sec_columns: set[str] = set()  # prevent overwriting a matched cell
                     for val_tok in data_tokens[1:]:
                         # Values are NUMBER or ID only (consistent with non-section path)
@@ -2460,18 +2545,42 @@ class _ModelBuilder:
                         if id(val_tok) in row_label_token_ids:
                             continue
                         val_col = getattr(val_tok, "column", 0) or 0
-                        # Find the closest unmatched column header in this section
+                        # Range-based matching: each column owns from its position
+                        # (with left tolerance) to the next column's position.
                         best_col_label = None
-                        best_dist = float("inf")
-                        best_col_pos = -1
-                        for col_label, col_pos in sec_col_headers:
+                        for cidx, (col_label, col_pos) in enumerate(sec_col_headers):
                             if col_label in used_sec_columns:
                                 continue
-                            dist = abs(val_col - col_pos)
-                            if dist < best_dist or (dist == best_dist and col_pos > best_col_pos):
-                                best_dist = dist
+                            left_tolerance = _COL_LEFT_TOLERANCE
+                            if cidx > 0:
+                                prev_col_pos = sec_col_headers[cidx - 1][1]
+                                range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
+                            else:
+                                range_start = col_pos - left_tolerance
+                            if cidx + 1 < len(sec_col_headers):
+                                range_end = sec_col_headers[cidx + 1][1]
+                            else:
+                                range_end = float("inf")
+                            if range_start <= val_col < range_end:
                                 best_col_label = col_label
-                                best_col_pos = col_pos
+                                break
+                        # Fallback: choose closest unused header by column distance
+                        if best_col_label is None and sec_col_headers:
+                            best_distance = math.inf
+                            best_idx: int | None = None
+                            for fidx, (col_label, col_pos) in enumerate(sec_col_headers):
+                                if col_label in used_sec_columns:
+                                    continue
+                                distance = abs((col_pos or 0) - val_col)
+                                if (
+                                    best_idx is None
+                                    or distance < best_distance
+                                    or (distance == best_distance and fidx < best_idx)
+                                ):
+                                    best_distance = distance
+                                    best_idx = fidx
+                            if best_idx is not None:
+                                best_col_label = sec_col_headers[best_idx][0]
                         if best_col_label is not None:
                             value = self._parse_table_value(str(val_tok).strip("'\""))
                             # Store under each expanded row label (tuple labels expand to many)
@@ -2481,7 +2590,7 @@ class _ModelBuilder:
 
             # Replace `values` with the section-based results and return early,
             # bypassing the normal single-pass column-matching loop below.
-            values: dict[tuple[str, ...], float] = {
+            values: dict[tuple[str, ...], float | str] = {
                 (row_lbl, col_lbl): val for (row_lbl, col_lbl), val in section_values.items()
             }
             self.model.add_param(ParameterDef(name=name, domain=domain, values=values))
@@ -2508,39 +2617,14 @@ class _ModelBuilder:
         min_col_header_col = min(pos for _, pos in col_headers)
 
         # Issue #863: Remove false row labels created by Earley parser splitting a
-        # single physical line into multiple table_row nodes.  When this happens, data
-        # values (e.g. 'future' at col 25) are mistakenly entered into row_label_map
-        # (though the leftmost-wins logic in the loop above already kept the real label).
-        # False labels have their first token at column >= min_col_header_col (aligned
-        # with column headers), whereas real row labels start at the left margin.
-        # Also remove any remaining false entries from row_label_map (e.g. lines where
-        # ALL labels have col >= min_col_header_col).
-        # Un-mark false label tokens from row_label_token_ids so they become values.
-        for line_num in list(row_label_map):
-            col = _row_label_col.get(line_num, 0)
-            if col >= min_col_header_col:
-                del row_label_map[line_num]
-        # Scan ALL table_rows: any label whose first token has col >= min_col_header_col
-        # is a false label — un-mark its tokens from row_label_token_ids.
-        for row in table_rows:
-            if not row.children:
-                continue
-            first_child = row.children[0]
-            first_tok = None
-            label_tok_list: list[Token] = []
-            if isinstance(first_child, Tree) and first_child.data == "simple_label":
-                for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
-                    label_tok_list.append(tok)
-                    if first_tok is None:
-                        first_tok = tok
-            elif isinstance(first_child, Token):
-                label_tok_list.append(first_child)
-                first_tok = first_child
-            if first_tok is not None:
-                col = getattr(first_tok, "column", 0) or 0
-                if col >= min_col_header_col:
-                    for tok in label_tok_list:
-                        row_label_token_ids.discard(id(tok))
+        # single physical line into multiple table_row nodes (shared helper).
+        _cleanup_false_row_labels(
+            row_label_map,
+            _row_label_col,
+            min_col_header_col,
+            table_rows,
+            row_label_token_ids,
+        )
 
         for line_num, line_tokens in sorted_lines[1:]:
             if line_num not in row_label_map:
@@ -2638,7 +2722,7 @@ class _ModelBuilder:
                     # Determine the range this column owns
                     # Start: this column's position with small left tolerance, but
                     # not before the previous column's position (to avoid overlap)
-                    left_tolerance = 3
+                    left_tolerance = _COL_LEFT_TOLERANCE
                     if idx > 0:
                         prev_col_pos = col_headers[idx - 1][1]
                         # Allow left tolerance but don't overlap with previous column
