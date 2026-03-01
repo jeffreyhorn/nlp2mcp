@@ -5396,9 +5396,26 @@ class _ModelBuilder:
             # GAMS allows `Parameter load / 1 1200, 2 1500 /` without explicit
             # domain; the dimensionality is determined by the data keys.
             if not domain and param.values:
-                max_dim = max(len(k) for k in param.values)
-                if max_dim > 0:
-                    param.domain = ("*",) * max_dim
+                key_lengths = {len(k) for k in param.values}
+                # If scalar keys are present, they must not be mixed with indexed keys.
+                if 0 in key_lengths:
+                    non_scalar_lengths = {kl for kl in key_lengths if kl != 0}
+                    if non_scalar_lengths:
+                        raise self._error(
+                            f"Parameter '{name}' data mixes scalar and indexed keys",
+                            data_node or node,
+                        )
+                    # All keys are scalar: leave domain as empty tuple.
+                else:
+                    # All keys are indexed; ensure they have consistent arity.
+                    if len(key_lengths) > 1:
+                        raise self._error(
+                            f"Parameter '{name}' data has inconsistent tuple arity: {sorted(key_lengths)}",
+                            data_node or node,
+                        )
+                    inferred_dim = next(iter(key_lengths))
+                    if inferred_dim > 0:
+                        param.domain = ("*",) * inferred_dim
         return param
 
     def _parse_param_data_items(
