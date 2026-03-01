@@ -5392,6 +5392,13 @@ class _ModelBuilder:
             self._ensure_sets(domain, f"parameter '{name}' domain", node)
         if data_node is not None:
             param.values.update(self._parse_param_data_items(data_node, domain, name))
+            # Issue #911: Infer domain from data when not explicitly declared.
+            # GAMS allows `Parameter load / 1 1200, 2 1500 /` without explicit
+            # domain; the dimensionality is determined by the data keys.
+            if not domain and param.values:
+                max_dim = max(len(k) for k in param.values)
+                if max_dim > 0:
+                    param.domain = ("*",) * max_dim
         return param
 
     def _parse_param_data_items(
@@ -5522,8 +5529,11 @@ class _ModelBuilder:
                         values[(member,)] = value
                 else:
                     # Standard scalar data
-                    key_tuple: tuple[str, ...] = tuple(key) if domain else ()
-                    if len(key_tuple) != len(domain):
+                    # Issue #911: Preserve index keys even when domain is empty.
+                    # GAMS allows `Parameter load / 1 1200, 2 1500 /` without
+                    # explicit domain; the domain is inferred from the data.
+                    key_tuple: tuple[str, ...] = tuple(key)
+                    if domain and len(key_tuple) != len(domain):
                         raise self._error(
                             f"Parameter '{param_name}' data index mismatch: expected {len(domain)} dims, got {len(key_tuple)}",
                             child,
