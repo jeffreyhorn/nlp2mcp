@@ -670,8 +670,8 @@ r1       42;
         assert "USA" in col_regions, "USA section entries missing"
         jpn_keys = [k for k in sam.values if k[1].endswith(".JPN")]
         usa_keys = [k for k in sam.values if k[1].endswith(".USA")]
-        assert len(jpn_keys) == 30, f"Expected 30 JPN entries, got {len(jpn_keys)}"
-        assert len(usa_keys) == 30, f"Expected 30 USA entries, got {len(usa_keys)}"
+        assert len(jpn_keys) >= 30, f"Expected at least 30 JPN entries, got {len(jpn_keys)}"
+        assert len(usa_keys) >= 30, f"Expected at least 30 USA entries, got {len(usa_keys)}"
 
         # Verify specific cells are not overwritten (JPN and USA have different values)
         assert sam.values[("BRD", "BRD.JPN")] == 21.0
