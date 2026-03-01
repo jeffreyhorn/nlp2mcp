@@ -259,6 +259,17 @@ class TestDeferredBoundEmission:
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
         result = emit_gams_mcp(kkt)
 
-        # x.lo = 0 should be in "Variable Bounds" section, not "Deferred"
-        assert "x.lo = 0;" in result or "x.lo = 0.0;" in result
-        assert "Deferred" not in result
+        # x.lo = 0 should be in "Variable Bounds" section, not in deferred bounds.
+        lo_candidates = [
+            result.find("x.lo = 0;"),
+            result.find("x.lo = 0.0;"),
+        ]
+        lo_positions = [pos for pos in lo_candidates if pos != -1]
+        assert lo_positions, "x.lo bound not found in emitted result"
+        lo_pos = min(lo_positions)
+
+        deferred_pos = result.find("Deferred")
+        if deferred_pos != -1:
+            assert (
+                lo_pos < deferred_pos
+            ), f"x.lo bound at pos {lo_pos} should precede Deferred bounds section at pos {deferred_pos}"

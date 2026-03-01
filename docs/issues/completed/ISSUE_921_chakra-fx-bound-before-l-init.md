@@ -17,7 +17,7 @@ y.fx(tb) = y.l(tb);    <- line 78 of chakra_mcp.gms (Variable Bounds section)
 y.l(t) = y0 * 1.06 ** (ord(t) - 1);   <- line 90 (Variable Initialization section)
 ```
 
-At line 78, `y.l(tb)` is still uninitialized (default 0 for free variables), so GAMS reports the error.
+At line 78, the `.l` element for `y(tb)` is still unassigned, so GAMS reports error $141 ("Symbol declared but no values have been assigned."). (Only with `$onImplicitAssign` would such unassigned `.l` values be treated as 0.)
 
 ## Root Cause
 
