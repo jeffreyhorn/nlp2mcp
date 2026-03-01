@@ -282,3 +282,34 @@ class TestDeferredBoundEmission:
                 f"x.lo at line {lo_idx} is inside $onImplicitAssign block "
                 f"(lines {on_idx}-{off_idx}), should be in early bounds"
             )
+
+    def test_indexed_fx_expr_map_deferred(self, manual_index_mapping):
+        """Indexed .fx bound via fx_expr_map referencing .l is deferred."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        # Variable x(i) with indexed .fx referencing y.l(i)
+        x_var = VariableDef(name="x", domain=("i",), kind=VarKind.CONTINUOUS)
+        x_var.fx_expr_map = {("i",): VarRef(name="y", indices=("i",), attribute="l")}
+        model.variables["x"] = x_var
+        y_var = VariableDef(name="y", domain=("i",), kind=VarKind.CONTINUOUS)
+        y_var.l = 1.0
+        model.variables["y"] = y_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ("i1",)), ("y", ("i1",))])
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Indexed bound should be emitted with correct syntax
+        assert "x.fx(i) = y.l(i);" in result
+
+        # It should be deferred (after init), inside $onImplicitAssign block
+        lines = result.splitlines()
+        fx_idx = next(i for i, ln in enumerate(lines) if "x.fx(i) = y.l(i);" in ln)
+        preceding = lines[:fx_idx]
+        on_indices = [i for i, ln in enumerate(preceding) if "$onImplicitAssign" in ln]
+        assert on_indices, "Indexed .fx bound should be inside $onImplicitAssign block"
