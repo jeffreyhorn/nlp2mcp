@@ -224,6 +224,12 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
 # Module-level ErrorEnhancer instance (stateless, can be reused)
 _ERROR_ENHANCER = ErrorEnhancer()
 
+# Left tolerance (in columns) for range-based column matching in table parsing.
+# A value token is assigned to a column header if it falls within
+# [col_pos - _COL_LEFT_TOLERANCE, next_col_pos).  Used by both the section-based
+# and non-section table parsing paths.
+_COL_LEFT_TOLERANCE = 3
+
 
 def _extract_source_line_with_adjusted_column(
     source: str, line: int | None, column: int | None
@@ -2545,7 +2551,7 @@ class _ModelBuilder:
                         for cidx, (col_label, col_pos) in enumerate(sec_col_headers):
                             if col_label in used_sec_columns:
                                 continue
-                            left_tolerance = 3
+                            left_tolerance = _COL_LEFT_TOLERANCE
                             if cidx > 0:
                                 prev_col_pos = sec_col_headers[cidx - 1][1]
                                 range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
@@ -2558,12 +2564,23 @@ class _ModelBuilder:
                             if range_start <= val_col < range_end:
                                 best_col_label = col_label
                                 break
-                        # Fallback: assign to next unused column sequentially
-                        if best_col_label is None:
-                            for col_label, _ in sec_col_headers:
-                                if col_label not in used_sec_columns:
-                                    best_col_label = col_label
-                                    break
+                        # Fallback: choose closest unused header by column distance
+                        if best_col_label is None and sec_col_headers:
+                            best_distance = math.inf
+                            best_idx: int | None = None
+                            for fidx, (col_label, col_pos) in enumerate(sec_col_headers):
+                                if col_label in used_sec_columns:
+                                    continue
+                                distance = abs((col_pos or 0) - val_col)
+                                if (
+                                    best_idx is None
+                                    or distance < best_distance
+                                    or (distance == best_distance and fidx < best_idx)
+                                ):
+                                    best_distance = distance
+                                    best_idx = fidx
+                            if best_idx is not None:
+                                best_col_label = sec_col_headers[best_idx][0]
                         if best_col_label is not None:
                             value = self._parse_table_value(str(val_tok).strip("'\""))
                             # Store under each expanded row label (tuple labels expand to many)

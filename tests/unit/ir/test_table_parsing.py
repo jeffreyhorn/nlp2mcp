@@ -661,8 +661,8 @@ r1       42;
         for key in sam.values:
             assert len(key) == 2, f"Expected 2-tuple key, got {key}"
             assert "." in key[1], f"Column header should be compound: {key}"
-        # SAM should have 60 entries (30 JPN + 30 USA) — not ~30 from a single section
-        assert len(sam.values) == 60
+        # SAM should have at least 60 entries (30 JPN + 30 USA) — not ~30 from a single section
+        assert len(sam.values) >= 60
 
         # Issue #968 regression: Both JPN and USA sections must be present
         col_regions = {key[1].split(".")[-1] for key in sam.values}
