@@ -1,14 +1,20 @@
-"""Tests for emission ordering of computed parameters around set assignments.
+"""Tests for emission ordering.
 
-Sprint 21 Day 8: Verifies that compute_set_assignment_param_deps() correctly
-excludes parameters whose expression keys reference dynamic set names, so they
-are emitted AFTER set assignments rather than before.
+- Sprint 21 Day 8: Verifies that compute_set_assignment_param_deps() correctly
+  excludes parameters whose expression keys reference dynamic set names, so they
+  are emitted AFTER set assignments rather than before.
+- Issue #921: Verifies that .fx/.lo/.up bounds referencing .l values are emitted
+  AFTER the Variable Initialization section (deferred bounds).
 """
 
+from src.ad.gradient import GradientVector
+from src.ad.jacobian import JacobianStructure
+from src.emit.emit_gams import emit_gams_mcp
 from src.emit.original_symbols import compute_set_assignment_param_deps
-from src.ir.ast import Const, ParamRef
-from src.ir.model_ir import ModelIR
-from src.ir.symbols import ParameterDef, SetAssignment, SetDef
+from src.ir.ast import Const, ParamRef, VarRef
+from src.ir.model_ir import ModelIR, ObjectiveIR
+from src.ir.symbols import ObjSense, ParameterDef, SetAssignment, SetDef, VariableDef, VarKind
+from src.kkt.kkt_system import KKTSystem
 
 
 class TestComputeSetAssignmentParamDeps:
@@ -177,3 +183,144 @@ class TestComputeSetAssignmentParamDeps:
         model_ir.params["x"] = ParameterDef(name="x")
         result = compute_set_assignment_param_deps(model_ir)
         assert result == set()
+
+
+class TestDeferredBoundEmission:
+    """Issue #921: Bounds referencing .l must be emitted after Variable Initialization."""
+
+    def test_fx_referencing_l_emitted_after_init(self, manual_index_mapping):
+        """x.fx = x.l must appear after x.l initialization, not before."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        # Variable x with .l init and .fx that references .l
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.l_expr = Const(5.0)  # x.l = 5
+        x_var.fx_expr = VarRef(name="x", attribute="l")  # x.fx = x.l
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # .l init must appear before .fx bound
+        l_init_pos = result.index("x.l = 5")
+        fx_bound_pos = result.index("x.fx = x.l")
+        assert (
+            l_init_pos < fx_bound_pos
+        ), f".l init at pos {l_init_pos} should precede .fx bound at pos {fx_bound_pos}"
+
+    def test_deferred_bounds_wrapped_in_implicit_assign(self, manual_index_mapping):
+        """Deferred bounds must be wrapped in $onImplicitAssign/$offImplicitAssign."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.fx_expr = VarRef(name="x", attribute="l")  # x.fx = x.l
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+        lines = result.splitlines()
+
+        # Find the deferred .fx line and verify it's wrapped in a matched
+        # $onImplicitAssign / $offImplicitAssign pair.
+        fx_idx = next(i for i, ln in enumerate(lines) if "x.fx = x.l" in ln)
+
+        # Build ranges for matched $onImplicitAssign / $offImplicitAssign pairs.
+        implicit_ranges: list[tuple[int, int]] = []
+        on_stack: list[int] = []
+        for i, ln in enumerate(lines):
+            if "$onImplicitAssign" in ln:
+                on_stack.append(i)
+            elif "$offImplicitAssign" in ln and on_stack:
+                on_idx = on_stack.pop()
+                implicit_ranges.append((on_idx, i))
+
+        assert (
+            implicit_ranges
+        ), "No $onImplicitAssign/$offImplicitAssign pairs found in emitted output"
+        assert any(
+            on < fx_idx < off for (on, off) in implicit_ranges
+        ), "Deferred .fx bound is not wrapped in a matched $onImplicitAssign/$offImplicitAssign block"
+
+    def test_non_l_bounds_not_deferred(self, manual_index_mapping):
+        """Bounds that don't reference .l should stay in the early section."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.lo_expr = Const(0.0)  # x.lo = 0 (no .l reference)
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # x.lo = 0 should be in early "Variable Bounds" section, not inside
+        # a deferred $onImplicitAssign block.  Use comment-independent markers.
+        lines = result.splitlines()
+        lo_idx = next(
+            (i for i, ln in enumerate(lines) if "x.lo = 0;" in ln or "x.lo = 0.0;" in ln),
+            None,
+        )
+        assert lo_idx is not None, "x.lo bound not found in emitted result"
+
+        # Verify x.lo is NOT between a $onImplicitAssign/$offImplicitAssign pair
+        # that wraps deferred bounds (if any such pair exists after init).
+        on_off_pairs: list[tuple[int, int]] = []
+        on_stack: list[int] = []
+        for i, ln in enumerate(lines):
+            if "$onImplicitAssign" in ln:
+                on_stack.append(i)
+            elif "$offImplicitAssign" in ln and on_stack:
+                on_off_pairs.append((on_stack.pop(), i))
+        for on_idx, off_idx in on_off_pairs:
+            assert not (on_idx < lo_idx < off_idx), (
+                f"x.lo at line {lo_idx} is inside $onImplicitAssign block "
+                f"(lines {on_idx}-{off_idx}), should be in early bounds"
+            )
+
+    def test_indexed_fx_expr_map_deferred(self, manual_index_mapping):
+        """Indexed .fx bound via fx_expr_map referencing .l is deferred."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        # Variable x(i) with indexed .fx referencing y.l(i)
+        x_var = VariableDef(name="x", domain=("i",), kind=VarKind.CONTINUOUS)
+        x_var.fx_expr_map = {("i",): VarRef(name="y", indices=("i",), attribute="l")}
+        model.variables["x"] = x_var
+        y_var = VariableDef(name="y", domain=("i",), kind=VarKind.CONTINUOUS)
+        y_var.l = 1.0
+        model.variables["y"] = y_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ("i1",)), ("y", ("i1",))])
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Indexed bound should be emitted with correct syntax
+        assert "x.fx(i) = y.l(i);" in result
+
+        # It should be deferred (after init), inside $onImplicitAssign block
+        lines = result.splitlines()
+        fx_idx = next(i for i, ln in enumerate(lines) if "x.fx(i) = y.l(i);" in ln)
+        preceding = lines[:fx_idx]
+        on_indices = [i for i, ln in enumerate(preceding) if "$onImplicitAssign" in ln]
+        assert on_indices, "Indexed .fx bound should be inside $onImplicitAssign block"
