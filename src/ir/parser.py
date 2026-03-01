@@ -1060,7 +1060,7 @@ def _cleanup_false_row_labels(
 
     When this happens, data values positioned at/right of column headers may be
     mistakenly entered into *row_label_map*.  This helper removes those entries
-    and un-marks the corresponding tokens from *row_label_token_ids* so they are
+    and unmarks the corresponding tokens from *row_label_token_ids* so they are
     treated as values instead.
 
     Used by both the section-based and non-section table parsing paths
