@@ -2347,9 +2347,12 @@ class _ModelBuilder:
         # as a secondary column-header line that starts a new header section, rather than
         # being merged into sorted_lines[0] (the primary column-header line).
         #
-        # Detection: a non-first line is a secondary column-header line when ALL its tokens
-        # are NUMBER type AND the first token's column position is at or right of the column
-        # header start position.  Issue #863: Data rows with numeric row labels (e.g., 9000011)
+        # Detection: a non-first line is a secondary column-header line when:
+        # (a) ALL tokens are NUMBER type (original Issue #392), OR
+        # (b) ALL tokens are ID/STRING type and there are at least 2 tokens
+        #     (Issue #968: dotted column headers like BRD.USA MLK.USA), AND
+        # the first token's column position is at or right of the column header start
+        # position.  Issue #863: Data rows with numeric row labels (e.g., 9000011)
         # also have all-NUMBER tokens but start at the left margin (col < header start col).
         first_header_col = min(
             (getattr(tok, "column", 999) for tok in first_line_tokens if isinstance(tok, Token)),
@@ -2360,13 +2363,26 @@ class _ModelBuilder:
             _, line_tokens = sorted_lines[idx]
             if not line_tokens:
                 continue
+            first_tok_col = getattr(line_tokens[0], "column", 0)
             if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
                 # Check column position: true secondary headers align with column
                 # headers; numeric data rows start at the left margin.
                 # Allow small left tolerance (3 cols) for the '+' replacement shift.
-                first_tok_col = getattr(line_tokens[0], "column", 0)
                 if first_tok_col >= first_header_col - 3:
                     secondary_header_indices.append(idx)
+            elif (
+                len(line_tokens) >= 2
+                and all(
+                    tok.type in ("ID", "STRING") for tok in line_tokens if isinstance(tok, Token)
+                )
+                and first_tok_col >= first_header_col
+            ):
+                # Issue #968: All-ID/STRING lines positioned at or right of the
+                # column header start are continuation column headers with dotted
+                # names like BRD.USA MLK.USA CAP.USA.  No left tolerance here
+                # because data rows with ID-type values (e.g. -inf) can be close
+                # to but still left of the header column.
+                secondary_header_indices.append(idx)
 
         if secondary_header_indices:
             # Section-based processing for tables with continuation blocks.
@@ -2390,17 +2406,51 @@ class _ModelBuilder:
             # secondary header or end).  Process each section independently and accumulate
             # all values into the same `values` dict.
             #
-            # Note: the section-based path uses proximity-based column matching (find the
-            # nearest column header by column position) rather than the range-based matching
-            # used in the standard path.  Proximity matching is necessary here because the
-            # continuation preprocessor replaces '+' with a space — the token column positions
-            # already reflect the final layout — so no artificial column-offset adjustment is
-            # needed.  The range-based approach assumes a single merged header list with
-            # non-overlapping ranges; with two independent section headers that share similar
-            # column positions, non-overlapping ranges cannot be constructed.
+            # Note: the section-based path uses range-based column matching (same as
+            # the standard path) where each column owns the range from its position
+            # to the next column's start.  Each section has independent column headers,
+            # so the ranges within each section are non-overlapping.
             #
             # Section 0:  sorted_lines[0..first_secondary_idx-1]
             # Section k:  sorted_lines[sec_idx_k .. sec_idx_{k+1}-1]  (sec_idx_k is the header)
+
+            # Issue #968: Remove secondary header lines from row_label_map.
+            # The grammar may parse dotted column headers (e.g. BRD.USA) as
+            # simple_label row labels. They must not be treated as data rows.
+            for sec_idx in secondary_header_indices:
+                sec_line_num = sorted_lines[sec_idx][0]
+                if sec_line_num in row_label_map:
+                    del row_label_map[sec_line_num]
+
+            # Issue #863/#968: Remove false row labels positioned in the column
+            # header area (same cleanup as the non-section path).
+            # When the Earley parser splits data values into separate table_row
+            # nodes, numbers/IDs positioned at/right of column headers may be
+            # mistakenly entered into row_label_map.
+            for line_num in list(row_label_map):
+                col = _row_label_col.get(line_num, 0)
+                if col >= first_header_col:
+                    del row_label_map[line_num]
+            # Un-mark false label tokens from row_label_token_ids
+            for row in table_rows:
+                if not row.children:
+                    continue
+                first_child = row.children[0]
+                first_tok = None
+                label_tok_list: list[Token] = []
+                if isinstance(first_child, Tree) and first_child.data == "simple_label":
+                    for tok in first_child.scan_values(lambda v: isinstance(v, Token)):
+                        label_tok_list.append(tok)
+                        if first_tok is None:
+                            first_tok = tok
+                elif isinstance(first_child, Token):
+                    label_tok_list.append(first_child)
+                    first_tok = first_child
+                if first_tok is not None:
+                    col = getattr(first_tok, "column", 0) or 0
+                    if col >= first_header_col:
+                        for tok in label_tok_list:
+                            row_label_token_ids.discard(id(tok))
 
             # Build section boundaries: list of (header_idx, first_data_idx, end_idx)
             section_bounds: list[tuple[int, int, int]] = []
@@ -2446,11 +2496,12 @@ class _ModelBuilder:
                     else:
                         row_labels = [str(data_tokens[0]).strip("'\"")]
 
-                    # Remaining tokens are values; match to column headers by proximity.
-                    # Tiebreaker: when two headers are equidistant, prefer the header with
-                    # the larger column position (i.e., the header to the right).
-                    # This matches GAMS right-aligned number layout where a multi-digit value
-                    # starts 1-2 chars to the left of its column header marker.
+                    # Remaining tokens are values; match to column headers by range.
+                    # Issue #968: Use range-based matching (same as non-section path)
+                    # where each column owns the range from its position to the next
+                    # column's start.  This correctly handles right-aligned numbers
+                    # under dotted headers like BRD.JPN where the number's column
+                    # position falls between adjacent header start positions.
                     used_sec_columns: set[str] = set()  # prevent overwriting a matched cell
                     for val_tok in data_tokens[1:]:
                         # Values are NUMBER or ID only (consistent with non-section path)
@@ -2460,18 +2511,31 @@ class _ModelBuilder:
                         if id(val_tok) in row_label_token_ids:
                             continue
                         val_col = getattr(val_tok, "column", 0) or 0
-                        # Find the closest unmatched column header in this section
+                        # Range-based matching: each column owns from its position
+                        # (with left tolerance) to the next column's position.
                         best_col_label = None
-                        best_dist = float("inf")
-                        best_col_pos = -1
-                        for col_label, col_pos in sec_col_headers:
+                        for cidx, (col_label, col_pos) in enumerate(sec_col_headers):
                             if col_label in used_sec_columns:
                                 continue
-                            dist = abs(val_col - col_pos)
-                            if dist < best_dist or (dist == best_dist and col_pos > best_col_pos):
-                                best_dist = dist
+                            left_tolerance = 3
+                            if cidx > 0:
+                                prev_col_pos = sec_col_headers[cidx - 1][1]
+                                range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
+                            else:
+                                range_start = col_pos - left_tolerance
+                            if cidx + 1 < len(sec_col_headers):
+                                range_end = sec_col_headers[cidx + 1][1]
+                            else:
+                                range_end = float("inf")
+                            if range_start <= val_col < range_end:
                                 best_col_label = col_label
-                                best_col_pos = col_pos
+                                break
+                        # Fallback: assign to next unused column sequentially
+                        if best_col_label is None:
+                            for col_label, _ in sec_col_headers:
+                                if col_label not in used_sec_columns:
+                                    best_col_label = col_label
+                                    break
                         if best_col_label is not None:
                             value = self._parse_table_value(str(val_tok).strip("'\""))
                             # Store under each expanded row label (tuple labels expand to many)
