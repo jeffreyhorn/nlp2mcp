@@ -2421,8 +2421,8 @@ class _ModelBuilder:
             if all(tok.type == "NUMBER" for tok in line_tokens if isinstance(tok, Token)):
                 # Check column position: true secondary headers align with column
                 # headers; numeric data rows start at the left margin.
-                # Allow small left tolerance (3 cols) for the '+' replacement shift.
-                if first_tok_col >= first_header_col - 3:
+                # Allow small left tolerance for the '+' replacement shift.
+                if first_tok_col >= first_header_col - _COL_LEFT_TOLERANCE:
                     secondary_header_indices.append(idx)
             elif (
                 len(line_tokens) >= 2
@@ -2722,7 +2722,7 @@ class _ModelBuilder:
                     # Determine the range this column owns
                     # Start: this column's position with small left tolerance, but
                     # not before the previous column's position (to avoid overlap)
-                    left_tolerance = 3
+                    left_tolerance = _COL_LEFT_TOLERANCE
                     if idx > 0:
                         prev_col_pos = col_headers[idx - 1][1]
                         # Allow left tolerance but don't overlap with previous column
