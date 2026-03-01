@@ -644,7 +644,13 @@ r1       42;
         assert table.values[("r1", "a.b.c")] == 42.0
 
     def test_twocge_sam_table(self):
-        """twocge: SAM(u,v,r) with dotted column headers across continuations."""
+        """twocge: SAM(u,v,r) with dotted column headers across continuations.
+
+        Issue #968: Table + continuation sections with dotted column headers
+        (e.g. BRD.JPN, BRD.USA) must produce distinct entries for each section.
+        Before the fix, USA continuation headers were not detected as secondary
+        headers, causing USA values to overwrite JPN values.
+        """
         path = _GAMSLIB / "twocge.gms"
         if not path.exists():
             pytest.skip(f"GAMSlib raw file not available: {path}")
@@ -655,8 +661,23 @@ r1       42;
         for key in sam.values:
             assert len(key) == 2, f"Expected 2-tuple key, got {key}"
             assert "." in key[1], f"Column header should be compound: {key}"
-        # SAM should have substantial data (twocge has ~60 non-zero entries)
-        assert len(sam.values) >= 30
+        # SAM should have 60 entries (30 JPN + 30 USA) — not ~30 from a single section
+        assert len(sam.values) == 60
+
+        # Issue #968 regression: Both JPN and USA sections must be present
+        col_regions = {key[1].split(".")[-1] for key in sam.values}
+        assert "JPN" in col_regions, "JPN section entries missing"
+        assert "USA" in col_regions, "USA section entries missing"
+        jpn_keys = [k for k in sam.values if k[1].endswith(".JPN")]
+        usa_keys = [k for k in sam.values if k[1].endswith(".USA")]
+        assert len(jpn_keys) == 30, f"Expected 30 JPN entries, got {len(jpn_keys)}"
+        assert len(usa_keys) == 30, f"Expected 30 USA entries, got {len(usa_keys)}"
+
+        # Verify specific cells are not overwritten (JPN and USA have different values)
+        assert sam.values[("BRD", "BRD.JPN")] == 21.0
+        assert sam.values[("BRD", "BRD.USA")] == 40.0
+        assert sam.values[("CAP", "BRD.JPN")] == 20.0
+        assert sam.values[("CAP", "BRD.USA")] == 33.0
 
     def test_tforss_ymf_table(self):
         """tforss: ymf(at,k,s,cl) with dotted 2-part column headers."""
