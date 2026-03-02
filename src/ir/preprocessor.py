@@ -941,9 +941,11 @@ def strip_unsupported_directives(source: str) -> str:
         # Strip hybrid File declarations the grammar can't parse:
         # e.g. File fopts 'desc' / 'path' /;  or  File output where results go / 'path' /;
         # But NOT: File sol / path /;  or  File repdat 'desc';  (grammar handles these)
-        file_m = re.match(r"(?i)^file\s+(\S+)\s*(.*)", stripped)
+        # The ID may be quoted (grammar: ID = ESCAPED | /[a-zA-Z_]\w*/), so match
+        # either a quoted string or an unquoted identifier.
+        file_m = re.match(r"""(?i)^file\s+(?:'[^']*'|"[^"]*"|\S+)\s*(.*)""", stripped)
         if file_m:
-            rest = file_m.group(2)
+            rest = file_m.group(1)
             # Grammar-parseable: rest starts with / (path form) or is STRING; (desc form)
             # Bare forms (File fx; or File fx) are NOT grammar-parseable and get stripped.
             grammar_ok = rest.startswith("/") or re.match(r"""^(['"].*?['"])\s*;""", rest)
