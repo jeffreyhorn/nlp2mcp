@@ -430,6 +430,24 @@ Equations eq;"""
         assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Variables x;"
 
+    def test_strip_putclose_no_semicolon(self):
+        """putclose without trailing semicolon is stripped (grammar requires SEMI)."""
+        source = "putclose myf\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        # Second line is continuation (no ; on first) — also stripped
+        assert lines[1].startswith("* Stripped:")
+
+    def test_strip_multiline_put_semicolon_in_string(self):
+        """Semicolons inside quoted strings don't prematurely end multi-line stripping."""
+        source = "putClose fopts 'option;value'\n" "             / 'more data';\n" "Variables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")
+        assert lines[2] == "Variables x;"
+
     def test_strip_file_case_insensitive(self):
         """File/putClose stripping is case-insensitive."""
         source = "FILE myf 'desc' / 'file.txt' /;\nPUTCLOSE myf 'data';\n"

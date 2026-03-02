@@ -934,7 +934,7 @@ def strip_unsupported_directives(source: str) -> str:
         #   - puttl statements (not in grammar at all)
         if in_put_statement:
             filtered.append(f"* Stripped: {line}")
-            if ";" in stripped:
+            if _has_statement_ending_semicolon(stripped):
                 in_put_statement = False
             continue
 
@@ -954,23 +954,23 @@ def strip_unsupported_directives(source: str) -> str:
             )
             if not grammar_ok:
                 filtered.append(f"* Stripped: {stripped}")
-                if ";" not in stripped:
+                if not _has_statement_ending_semicolon(stripped):
                     in_put_statement = True
                 continue
 
         # Strip putClose with content (grammar only supports: putclose ID? ;)
         if re.match(r"(?i)^putclose\s", stripped):
             # Check if it matches the grammar form: putclose ID? ;
-            if not re.match(r"(?i)^putclose\s+\w*\s*;?\s*$", stripped):
+            if not re.match(r"(?i)^putclose(?:\s+\w+)?\s*;\s*$", stripped):
                 filtered.append(f"* Stripped: {stripped}")
-                if ";" not in stripped:
+                if not _has_statement_ending_semicolon(stripped):
                     in_put_statement = True
                 continue
 
         # Strip puttl statements (not in grammar at all)
         if re.match(r"(?i)^puttl\s", stripped):
             filtered.append(f"* Stripped: {stripped}")
-            if ";" not in stripped:
+            if not _has_statement_ending_semicolon(stripped):
                 in_put_statement = True
             continue
 

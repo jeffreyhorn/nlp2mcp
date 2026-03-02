@@ -4,7 +4,7 @@
 **Model:** srpchase (GAMSlib SEQ=356, "Scenario Tree Construction Example")
 **Error category:** `internal_error` (previously `lexer_invalid_char`)
 **Error message:** `Parameter 'ancestor' not declared` at line 39
-**Status:** PARTIALLY RESOLVED — `$libInclude`, hybrid `File`, and `putClose` with content are now stripped; remaining error is semantic (undeclared library symbols)
+**Status:** PARTIALLY RESOLVED — `$libInclude`, hybrid `File`, and `putClose` with content are now stripped; remaining error is a parser bug with set assignment IndexOffset (#976)
 
 ## Description
 
@@ -25,10 +25,13 @@ After the fix, srpchase advances from `lexer_invalid_char` (the `/` in the hybri
 ParserSemanticError: Parameter 'ancestor' not declared [context: expression] (line 39, column 1)
 ```
 
-This remaining error is because `$libInclude scenred` loads the scenario reduction library which defines `ancestor`, `ScenRedParms`, `ScenRedReport`, and other symbols. Without library symbol support, the model cannot be fully parsed.
+This remaining error is a parser bug: `ancestor` is declared in-model as `Set ancestor(n,n)` (line 26), but the assignment `ancestor(n,n-card(leaf))$stage(n,'t3') = yes;` at line 39 uses an arithmetic index offset `n-card(leaf)` on the LHS. The parser's `_handle_assign()` detects the `IndexOffset`, skips the set assignment path, and falls through to the parameter check which fails. See [#976](https://github.com/jeffreyhorn/nlp2mcp/issues/976) for the specific bug.
+
+Additionally, the model references undeclared scenred library symbols (`ScenRedParms`, `tree_con`) from the stripped `$libInclude scenred` directive.
 
 ## Related Issues
 
+- [#976](https://github.com/jeffreyhorn/nlp2mcp/issues/976) — srpchase: set assignment with IndexOffset on LHS (current blocker)
 - [#888](https://github.com/jeffreyhorn/nlp2mcp/issues/888) — clearlak: `$libInclude scenred` (primary fix)
 - [#894](https://github.com/jeffreyhorn/nlp2mcp/issues/894) — srkandw: `$ libInclude scenred` (space after `$`)
 - [#897](https://github.com/jeffreyhorn/nlp2mcp/issues/897) — feasopt1: `File` declaration + `.infeas` attribute
