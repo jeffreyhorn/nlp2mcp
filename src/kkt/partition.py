@@ -30,14 +30,20 @@ class BoundDef:
 
     Attributes:
         kind: Type of bound ('lo', 'up', 'fx')
-        value: Bound value (0.0 when expr is set)
+        value: Numeric bound value. When ``expr`` is set, this is an unused
+               placeholder (conventionally 0.0) — downstream code must use
+               ``expr`` via :func:`complementarity._bound_expr` instead of
+               ``Const(value)``.
         domain: Variable domain (for indexed variables)
         expr: Expression for parameter-assigned bounds (e.g., e.lo(t) = req(t)).
-              When set, use this instead of Const(value) in complementarity equations.
+              When set, complementarity equations use this expression instead of
+              ``Const(value)``. Currently only ``lo`` and ``up`` bounds support
+              expression values; ``fx`` expression-based bounds are not wired
+              into the KKT pipeline (see partition_constraints comments).
     """
 
     kind: str  # 'lo', 'up', 'fx'
-    value: float
+    value: float  # placeholder (0.0) when expr is set; see docstring
     domain: tuple[str, ...] = ()
     expr: Expr | None = None
 
@@ -374,7 +380,18 @@ def _process_expr_map_bound(
         kind: Bound kind ('lo' or 'up')
         target_dict: Target bounds dict (bounds_lo or bounds_up)
     """
-    if not expr_map or (var_name, ()) in target_dict:
+    if not expr_map:
+        return
+
+    if (var_name, ()) in target_dict:
+        logger.warning(
+            "Variable '%s' has a %s_expr_map override, but a scalar %s bound is "
+            "already recorded in the KKT bounds dictionary. Keeping the existing "
+            "scalar bound and ignoring the expression-based bound.",
+            var_name,
+            kind,
+            kind,
+        )
         return
 
     if len(expr_map) != 1:

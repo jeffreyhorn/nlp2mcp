@@ -21,11 +21,15 @@ The partitioner only processed numeric bound fields (`lo`/`lo_map`/`up`/`up_map`
 
 Three changes across 2 files:
 
-1. **`src/kkt/partition.py`**: Extended `BoundDef` with an optional `expr: Expr | None` field. Added processing of `lo_expr`/`lo_expr_map`/`up_expr`/`up_expr_map`/`fx_expr`/`fx_expr_map` in `partition_constraints()` — creates `BoundDef` entries with the expression stored in the `expr` field.
+1. **`src/kkt/partition.py`**: Extended `BoundDef` with an optional `expr: Expr | None` field. Added processing of `lo_expr`/`lo_expr_map` and `up_expr`/`up_expr_map` in `partition_constraints()` — creates `BoundDef` entries with the expression stored in the `expr` field for **lower** and **upper** expression-based bounds. Expression-based fixed bounds (`fx_expr`/`fx_expr_map`) are intentionally **not** wired into the KKT partition at this time.
 
-2. **`src/kkt/complementarity.py`**: Added `_bound_expr()` helper that returns `bound_def.expr` when set, otherwise `Const(bound_def.value)`. Replaced all `Const(bound_def.value)` in uniform bound complementarity equation construction with `_bound_expr(bound_def)`.
+2. **`src/kkt/complementarity.py`**: Added `_bound_expr()` helper that returns `bound_def.expr` when set, otherwise `Const(bound_def.value)`. Replaced all `Const(bound_def.value)` in uniform bound complementarity equation construction with `_bound_expr(bound_def)`, so expression-based lower/upper bounds participate correctly in the KKT equations.
 
-No changes needed in `assemble.py` — the multiplier creation logic only checks for bound existence (not values), so it works correctly with expression-based bounds.
+No changes needed in `assemble.py` — the multiplier creation logic only checks for bound existence (not values), so it works correctly with expression-based lower/upper bounds handled by the partitioner.
+
+### Limitations
+
+Expression-based fixed bounds (`fx_expr`/`fx_expr_map`) remain **unsupported** in the KKT pipeline. They are not partitioned into `BoundDef` entries and therefore do not generate multipliers, complementarity equations, or stationarity terms.
 
 ## Verification
 

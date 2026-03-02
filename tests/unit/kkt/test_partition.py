@@ -605,6 +605,21 @@ class TestExpressionBasedBounds:
         assert bound.value == 0.0
         assert bound.expr is None
 
+    def test_lo_expr_map_skipped_when_scalar_bound_exists(self):
+        """lo_expr_map should be skipped with a warning when scalar lo bound already exists."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",), lo=0.0)
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        # Numeric scalar bound should be present with no expr
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.value == 0.0
+        assert bound.expr is None
+
     def test_fx_expr_not_in_bounds_fx(self):
         """fx_expr should NOT produce a bounds_fx entry (not supported downstream)."""
         model = ModelIR()
