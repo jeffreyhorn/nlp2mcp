@@ -856,7 +856,7 @@ def strip_unsupported_directives(source: str) -> str:
     filtered = []
     in_ontext_block = False
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
-    in_put_statement = False  # Issue #895: multi-line put/putClose statements
+    in_put_statement = False  # Issue #895: multi-line File and put/putClose statements
 
     for line in lines:
         stripped = line.strip()
@@ -972,7 +972,7 @@ def strip_unsupported_directives(source: str) -> str:
                 continue
 
         # Strip puttl statements (not in grammar at all)
-        if re.match(r"(?i)^puttl\s", stripped):
+        if re.match(r"(?i)^puttl\b", stripped):
             filtered.append(f"* Stripped: {stripped}")
             if not _has_statement_ending_semicolon(stripped):
                 in_put_statement = True
