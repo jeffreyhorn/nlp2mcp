@@ -475,8 +475,9 @@ def _process_expr_map_bound(
     # Validate that key values match domain names (e.g., key ("t",) matches
     # domain ("t",)). Mismatched keys suggest the bound was assigned with
     # different indices than the variable declaration, so consolidation would
-    # be incorrect.
-    if tuple(str(idx) for idx in indices) != domain:
+    # be incorrect. Compare case-insensitively since the IR uses
+    # CaseInsensitiveDict and GAMS identifiers are case-insensitive.
+    if tuple(str(idx).lower() for idx in indices) != tuple(d.lower() for d in domain):
         logger.warning(
             "Variable '%s' %s_expr_map key %s does not match domain %s. Skipping.",
             var_name,

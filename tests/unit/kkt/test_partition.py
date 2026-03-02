@@ -632,6 +632,21 @@ class TestExpressionBasedBounds:
 
         assert ("x", ()) not in result.bounds_lo
 
+    def test_lo_expr_map_case_insensitive_domain_match(self):
+        """lo_expr_map key with different case should still consolidate."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("T",))
+        # Key uses lowercase "t" but domain is ("T",)
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+
     def test_lo_expr_map_skipped_when_per_instance_bounds_exist(self):
         """lo_expr_map should be skipped when per-instance numeric bounds exist."""
         model = ModelIR()
