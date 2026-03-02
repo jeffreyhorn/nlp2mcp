@@ -181,11 +181,12 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         # bounds already exist (per-instance bounds take precedence to avoid
         # a mixed state where the placeholder value=0.0 is used for instances
         # without numeric overrides).
+        # Check for per-instance bounds using the variable's own lo_map/up_map
+        # keys (O(per-var) instead of scanning the full bounds dict).
+        has_indexed_lo = any((var_name, idx) in result.bounds_lo for idx in var_def.lo_map)
+        has_indexed_up = any((var_name, idx) in result.bounds_up for idx in var_def.up_map)
         if var_def.lo_expr is not None:
             has_scalar_lo = (var_name, ()) in result.bounds_lo
-            has_indexed_lo = any(
-                name == var_name and indices != () for (name, indices) in result.bounds_lo
-            )
             if not has_scalar_lo and not has_indexed_lo:
                 result.bounds_lo[(var_name, ())] = BoundDef(
                     "lo", 0.0, var_def.domain, expr=var_def.lo_expr
@@ -205,9 +206,6 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
                 )
         if var_def.up_expr is not None:
             has_scalar_up = (var_name, ()) in result.bounds_up
-            has_indexed_up = any(
-                name == var_name and indices != () for (name, indices) in result.bounds_up
-            )
             if not has_scalar_up and not has_indexed_up:
                 result.bounds_up[(var_name, ())] = BoundDef(
                     "up", 0.0, var_def.domain, expr=var_def.up_expr
@@ -229,10 +227,20 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         # exactly one entry whose key matches var_def.domain (plain strings,
         # no IndexOffset/SubsetIndex). Otherwise warn and skip.
         _process_expr_map_bound(
-            var_def.lo_expr_map, var_name, var_def.domain, "lo", result.bounds_lo
+            var_def.lo_expr_map,
+            var_name,
+            var_def.domain,
+            "lo",
+            result.bounds_lo,
+            has_per_instance=has_indexed_lo,
         )
         _process_expr_map_bound(
-            var_def.up_expr_map, var_name, var_def.domain, "up", result.bounds_up
+            var_def.up_expr_map,
+            var_name,
+            var_def.domain,
+            "up",
+            result.bounds_up,
+            has_per_instance=has_indexed_up,
         )
 
         # Issue #922: Synthesize implicit bounds from variable kind.
@@ -405,6 +413,8 @@ def _process_expr_map_bound(
     domain: tuple[str, ...],
     kind: str,
     target_dict: dict,
+    *,
+    has_per_instance: bool = False,
 ) -> None:
     """Process an indexed expression-based bound map (lo_expr_map or up_expr_map).
 
@@ -418,6 +428,8 @@ def _process_expr_map_bound(
         domain: Variable domain tuple
         kind: Bound kind ('lo' or 'up')
         target_dict: Target bounds dict (bounds_lo or bounds_up)
+        has_per_instance: Whether per-instance numeric bounds already exist
+            for this variable (precomputed by caller for O(1) lookup).
     """
     if not expr_map:
         return
@@ -425,7 +437,6 @@ def _process_expr_map_bound(
     # Check for any existing bounds (scalar or per-instance) that would
     # conflict with a consolidated expression-based bound.
     has_scalar = (var_name, ()) in target_dict
-    has_per_instance = any(k[0] == var_name and k[1] != () for k in target_dict)
     if has_scalar or has_per_instance:
         logger.warning(
             "Variable '%s' has a %s_expr_map override, but %s %s bound(s) "
