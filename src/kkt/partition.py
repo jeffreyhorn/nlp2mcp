@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
+from src.ir.ast import Expr
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, VarKind
 
@@ -26,13 +27,16 @@ class BoundDef:
 
     Attributes:
         kind: Type of bound ('lo', 'up', 'fx')
-        value: Bound value
+        value: Bound value (0.0 when expr is set)
         domain: Variable domain (for indexed variables)
+        expr: Expression for parameter-assigned bounds (e.g., e.lo(t) = req(t)).
+              When set, use this instead of Const(value) in complementarity equations.
     """
 
     kind: str  # 'lo', 'up', 'fx'
     value: float
     domain: tuple[str, ...] = ()
+    expr: Expr | None = None
 
 
 @dataclass
@@ -158,6 +162,32 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
+
+        # Issue #923: Process expression-based bounds (lo_expr/lo_expr_map etc.)
+        # These are bounds assigned via parameter expressions like e.lo(t) = req(t).
+        # Scalar expression bounds
+        if var_def.lo_expr is not None and (var_name, ()) not in result.bounds_lo:
+            result.bounds_lo[(var_name, ())] = BoundDef(
+                "lo", 0.0, var_def.domain, expr=var_def.lo_expr
+            )
+        if var_def.up_expr is not None and (var_name, ()) not in result.bounds_up:
+            result.bounds_up[(var_name, ())] = BoundDef(
+                "up", 0.0, var_def.domain, expr=var_def.up_expr
+            )
+        if var_def.fx_expr is not None and (var_name, ()) not in result.bounds_fx:
+            result.bounds_fx[(var_name, ())] = BoundDef(
+                "fx", 0.0, var_def.domain, expr=var_def.fx_expr
+            )
+        # Indexed expression bounds — keys use domain indices (uniform across domain)
+        for _indices, expr in var_def.lo_expr_map.items():
+            if (var_name, ()) not in result.bounds_lo:
+                result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain, expr=expr)
+        for _indices, expr in var_def.up_expr_map.items():
+            if (var_name, ()) not in result.bounds_up:
+                result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain, expr=expr)
+        for _indices, expr in var_def.fx_expr_map.items():
+            if (var_name, ()) not in result.bounds_fx:
+                result.bounds_fx[(var_name, ())] = BoundDef("fx", 0.0, var_def.domain, expr=expr)
 
         # Issue #922: Synthesize implicit bounds from variable kind.
         # GAMS Positive Variable has implicit lo=0, Negative has up=0,

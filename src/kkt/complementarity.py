@@ -16,7 +16,7 @@ Key features:
 from __future__ import annotations
 
 from src.ad.index_mapping import enumerate_variable_instances
-from src.ir.ast import Binary, Const, Unary, VarRef
+from src.ir.ast import Binary, Const, Expr, Unary, VarRef
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
@@ -27,8 +27,15 @@ from src.kkt.naming import (
     create_ineq_multiplier_name,
     sanitize_index_for_identifier,
 )
-from src.kkt.partition import partition_constraints
+from src.kkt.partition import BoundDef, partition_constraints
 from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
+
+
+def _bound_expr(bound_def: BoundDef) -> Expr:
+    """Return the bound as an Expr: uses bound_def.expr if set, else Const(value)."""
+    if bound_def.expr is not None:
+        return bound_def.expr
+    return Const(bound_def.value)
 
 
 def build_complementarity_pairs(
@@ -251,7 +258,7 @@ def build_complementarity_pairs(
             if var_domain:
                 # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
                 # Use domain indices, not element values
-                F_piL = Binary("-", VarRef(var_name, var_domain), Const(bound_def.value))
+                F_piL = Binary("-", VarRef(var_name, var_domain), _bound_expr(bound_def))
                 comp_eq = EquationDef(
                     name=f"comp_lo_{var_name}",
                     domain=var_domain,
@@ -264,7 +271,7 @@ def build_complementarity_pairs(
                 )
             else:
                 # Scalar variable: create scalar equation comp_lo_x.. x - lo =G= 0
-                F_piL = Binary("-", VarRef(var_name, ()), Const(bound_def.value))
+                F_piL = Binary("-", VarRef(var_name, ()), _bound_expr(bound_def))
                 comp_eq = EquationDef(
                     name=f"comp_lo_{var_name}",
                     domain=(),
@@ -360,7 +367,7 @@ def build_complementarity_pairs(
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0
-                F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, var_domain))
+                F_piU = Binary("-", _bound_expr(bound_def), VarRef(var_name, var_domain))
                 comp_eq = EquationDef(
                     name=f"comp_up_{var_name}",
                     domain=var_domain,
@@ -373,7 +380,7 @@ def build_complementarity_pairs(
                 )
             else:
                 # Scalar variable: create scalar equation comp_up_x.. up - x =G= 0
-                F_piU = Binary("-", Const(bound_def.value), VarRef(var_name, ()))
+                F_piU = Binary("-", _bound_expr(bound_def), VarRef(var_name, ()))
                 comp_eq = EquationDef(
                     name=f"comp_up_{var_name}",
                     domain=(),
