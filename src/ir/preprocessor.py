@@ -950,10 +950,11 @@ def strip_unsupported_directives(source: str) -> str:
         if file_m:
             rest = file_m.group(1)
             # Grammar-parseable:
-            #   - Path form: / path /;  (must start with "/" and end with a semicolon)
+            #   - Path form: / path /;  (must start with "/" and contain a closing "/" before ";")
             #   - Description form: 'desc'; or "desc";
             # Bare forms (File fx; or File fx) are NOT grammar-parseable and get stripped.
-            path_form_ok = rest.startswith("/") and _has_statement_ending_semicolon(stripped)
+            # Path form is only OK if we see "/.../" before the terminating semicolon.
+            path_form_ok = bool(re.match(r"^/[^;]*/\s*;", rest))
             desc_form_ok = re.match(r"""^(['"].*?['"])\s*;""", rest)
             grammar_ok = path_form_ok or desc_form_ok
             if not grammar_ok:

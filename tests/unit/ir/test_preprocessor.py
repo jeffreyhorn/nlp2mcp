@@ -395,6 +395,14 @@ Equations eq;"""
         assert lines[1].startswith("* Stripped:")  # continuation consumed
         assert lines[2] == "Variables x;"
 
+    def test_strip_file_path_no_closing_slash(self):
+        """File path form without closing / is NOT grammar-parseable."""
+        source = "File sol / path ;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
     def test_preserve_file_string_desc(self):
         """File ID STRING; form is grammar-parseable and NOT stripped."""
         source = "File repdat 'report file';\nVariables x;\n"
@@ -424,6 +432,7 @@ Equations eq;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0] == "putclose myf;"
+        assert lines[1] == "Variables x;"
 
     def test_preserve_put_statement(self):
         """Grammar-parseable put statements are NOT stripped."""
