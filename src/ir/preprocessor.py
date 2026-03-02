@@ -829,6 +829,10 @@ def strip_unsupported_directives(source: str) -> str:
     - $title: Model title (documentation only)
     - $ontext/$offtext: Comment blocks (documentation only)
     - $eolcom: End-of-line comment character definition
+    - $libInclude: System library includes (not available to parser)
+    - Extended File declarations (hybrid form the grammar can't parse)
+    - putClose with content arguments (grammar only handles putclose ID? ;)
+    - puttl statements (not in grammar)
     - if() execution control statements: Runtime conditionals (not needed for model structure)
     - abort/display: Execution statements (not needed for model structure)
 
@@ -852,6 +856,7 @@ def strip_unsupported_directives(source: str) -> str:
     filtered = []
     in_ontext_block = False
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
+    in_put_statement = False  # Issue #895: multi-line put/putClose statements
 
     for line in lines:
         stripped = line.strip()
@@ -915,6 +920,58 @@ def strip_unsupported_directives(source: str) -> str:
             r"^\$\s+libinclude", stripped_lower
         ):
             filtered.append(f"* Stripped: {stripped}")
+            continue
+
+        # Issue #895: Strip extended GAMS put-file I/O forms that the grammar
+        # cannot parse.  The grammar already handles simple forms:
+        #   file_stmt:    File ID / path /;  |  File ID STRING;
+        #   put_stmt:     put items? ;       |  put items / ;
+        #   putclose_stmt: putclose ID? ;
+        # We only strip:
+        #   - Continuation lines of a multi-line put/putClose/File statement
+        #   - File declarations with the hybrid form (ID STRING / path /;)
+        #   - putClose with content arguments (not just putclose ID? ;)
+        #   - puttl statements (not in grammar at all)
+        if in_put_statement:
+            filtered.append(f"* Stripped: {line}")
+            if ";" in stripped:
+                in_put_statement = False
+            continue
+
+        # Strip hybrid File declarations the grammar can't parse:
+        # e.g. File fopts 'desc' / 'path' /;  or  File output where results go / 'path' /;
+        # But NOT: File sol / path /;  or  File repdat 'desc';  (grammar handles these)
+        file_m = re.match(r"(?i)^file\s+(\S+)\s*(.*)", stripped)
+        if file_m:
+            rest = file_m.group(2)
+            # Grammar-parseable: rest starts with / (path form) or is STRING; (desc form)
+            # or is just ; (bare form like "File fx;")
+            grammar_ok = (
+                rest.startswith("/")
+                or re.match(r"""^(['"].*?['"])\s*;""", rest)
+                or rest.startswith(";")
+                or rest == ""
+            )
+            if not grammar_ok:
+                filtered.append(f"* Stripped: {stripped}")
+                if ";" not in stripped:
+                    in_put_statement = True
+                continue
+
+        # Strip putClose with content (grammar only supports: putclose ID? ;)
+        if re.match(r"(?i)^putclose\s", stripped):
+            # Check if it matches the grammar form: putclose ID? ;
+            if not re.match(r"(?i)^putclose\s+\w*\s*;?\s*$", stripped):
+                filtered.append(f"* Stripped: {stripped}")
+                if ";" not in stripped:
+                    in_put_statement = True
+                continue
+
+        # Strip puttl statements (not in grammar at all)
+        if re.match(r"(?i)^puttl\s", stripped):
+            filtered.append(f"* Stripped: {stripped}")
+            if ";" not in stripped:
+                in_put_statement = True
             continue
 
         # Sprint 9 Day 6: if/elseif/else, abort, and compile-time constants now fully supported
