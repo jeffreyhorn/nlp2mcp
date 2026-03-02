@@ -2,8 +2,9 @@
 
 import pytest
 
-from src.ir.model_ir import ModelIR
-from src.ir.symbols import SetDef, VariableDef, VarKind
+from src.ir.ast import Binary, Const, IndexOffset, ParamRef, SubsetIndex, VarRef
+from src.ir.model_ir import ModelIR, ObjectiveIR
+from src.ir.symbols import EquationDef, ObjSense, Rel, SetDef, VariableDef, VarKind
 from src.kkt.partition import partition_constraints
 
 
@@ -502,3 +503,263 @@ class TestVarKindImplicitBounds:
         assert result.bounds_fx[("x", ())].value == 1.0
         assert ("x", ()) not in result.bounds_lo  # No redundant implicit lo
         assert ("x", ()) not in result.bounds_up  # No redundant implicit up
+
+
+@pytest.mark.unit
+class TestExpressionBasedBounds:
+    """Tests for expression-based bounds in partition (Issue #923)."""
+
+    def test_scalar_lo_expr_creates_bound(self):
+        """Scalar lo_expr should produce a bounds_lo entry with expr."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",))
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+        assert bound.domain == ("t",)
+
+    def test_scalar_up_expr_creates_bound(self):
+        """Scalar up_expr should produce a bounds_up entry with expr."""
+        model = ModelIR()
+        var = VariableDef(name="y", domain=("j",))
+        var.up_expr = ParamRef("deltb", indices=("j",))
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        assert ("y", ()) in result.bounds_up
+        bound = result.bounds_up[("y", ())]
+        assert bound.expr is not None
+
+    def test_lo_expr_map_single_entry_domain_match(self):
+        """lo_expr_map with single entry matching domain should consolidate."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",))
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+
+    def test_lo_expr_map_index_offset_skipped(self):
+        """lo_expr_map with IndexOffset key should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        offset_key = IndexOffset(base="t", offset=Const(1), circular=False)
+        var.lo_expr_map = {(offset_key,): ParamRef("p", indices=("t",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should NOT have created a bound entry
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_subset_index_skipped(self):
+        """lo_expr_map with SubsetIndex key should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("i",))
+        subset_key = SubsetIndex(subset_name="s", indices=("i",))
+        var.lo_expr_map = {(subset_key,): ParamRef("p", indices=("i",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_multiple_entries_skipped(self):
+        """lo_expr_map with multiple entries should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_expr_map = {
+            ("t",): ParamRef("req", indices=("t",)),
+            ("s",): ParamRef("other", indices=("s",)),
+        }
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_numeric_lo_takes_precedence_over_lo_expr(self):
+        """Numeric lo bound takes precedence over lo_expr."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",), lo=0.0)
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        # Numeric bound should be present with no expr
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.value == 0.0
+        assert bound.expr is None
+
+    def test_lo_expr_map_skipped_when_scalar_bound_exists(self):
+        """lo_expr_map should be skipped with a warning when scalar lo bound already exists."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",), lo=0.0)
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        # Numeric scalar bound should be present with no expr
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.value == 0.0
+        assert bound.expr is None
+
+    def test_lo_expr_map_mismatched_key_names_skipped(self):
+        """lo_expr_map where key values don't match domain names should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        # Key uses "s" but domain is ("t",)
+        var.lo_expr_map = {("s",): ParamRef("p", indices=("s",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_case_insensitive_domain_match(self):
+        """lo_expr_map key with different case should still consolidate."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("T",))
+        # Key uses lowercase "t" but domain is ("T",)
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+
+    def test_lo_expr_map_skipped_when_per_instance_bounds_exist(self):
+        """lo_expr_map should be skipped when per-instance numeric bounds exist."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_map = {("1",): 0.0, ("2",): 5.0}
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Per-instance numeric bounds should be present, expr_map ignored
+        assert ("x", ("1",)) in result.bounds_lo
+        assert ("x", ("2",)) in result.bounds_lo
+        assert result.bounds_lo[("x", ("1",))].expr is None
+        assert result.bounds_lo[("x", ("2",))].expr is None
+
+    def test_scalar_lo_expr_skipped_when_per_instance_bounds_exist(self):
+        """Scalar lo_expr should be skipped when per-instance numeric bounds exist."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_map = {("1",): 0.0, ("2",): 5.0}
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Per-instance numeric bounds should be present, scalar lo_expr ignored
+        assert ("x", ("1",)) in result.bounds_lo
+        assert ("x", ("2",)) in result.bounds_lo
+        # No scalar expr entry should exist
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_up_expr_map_single_entry_domain_match(self):
+        """up_expr_map with single entry matching domain should consolidate."""
+        model = ModelIR()
+        var = VariableDef(name="y", domain=("j",))
+        var.up_expr_map = {("j",): ParamRef("deltb", indices=("j",))}
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        assert ("y", ()) in result.bounds_up
+        bound = result.bounds_up[("y", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+
+    def test_up_expr_map_index_offset_skipped(self):
+        """up_expr_map with IndexOffset key should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="y", domain=("t",))
+        offset_key = IndexOffset(base="t", offset=Const(1), circular=False)
+        var.up_expr_map = {(offset_key,): ParamRef("p", indices=("t",))}
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        assert ("y", ()) not in result.bounds_up
+
+    def test_fx_expr_not_in_bounds_fx(self):
+        """fx_expr should NOT produce a bounds_fx entry (not supported downstream)."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.fx_expr = ParamRef("p", indices=("t",))
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # fx_expr should not be in bounds_fx
+        assert ("x", ()) not in result.bounds_fx
+
+
+@pytest.mark.unit
+class TestComplementarityExprBound:
+    """Integration test: expression-based bounds flow through to complementarity AST."""
+
+    def test_lo_expr_appears_in_complementarity_equation(self, manual_index_mapping):
+        """Complementarity for lo_expr should use the expression, not Const(0.0)."""
+        from src.ad.gradient import GradientVector
+        from src.ad.jacobian import JacobianStructure
+        from src.kkt.complementarity import build_complementarity_pairs
+        from src.kkt.kkt_system import KKTSystem
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.sets["t"] = ["1", "2"]
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("e", ("t",))),
+        )
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        var_e = VariableDef(name="e", domain=("t",))
+        var_e.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["e"] = var_e
+
+        idx = manual_index_mapping([("obj", ()), ("e", ("1",)), ("e", ("2",))])
+        gradient = GradientVector(num_cols=3, index_mapping=idx)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        _, comp_lo, _, _ = build_complementarity_pairs(kkt)
+
+        # Should have a lower bound complementarity for e
+        assert ("e", ()) in comp_lo
+        comp_eq = comp_lo[("e", ())].equation
+        lhs = comp_eq.lhs_rhs[0]
+
+        # LHS should be Binary("-", VarRef("e", ...), ParamRef("req", ...))
+        assert isinstance(lhs, Binary) and lhs.op == "-"
+        # The RHS of the subtraction should be the ParamRef, not Const(0.0)
+        assert isinstance(lhs.right, ParamRef), (
+            f"Expected ParamRef for expression-based bound, got {type(lhs.right).__name__}: "
+            f"{lhs.right}"
+        )

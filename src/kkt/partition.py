@@ -13,11 +13,15 @@ Key features:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
+from src.ir.ast import Expr, IndexOffset, SubsetIndex
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, VarKind
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,13 +30,22 @@ class BoundDef:
 
     Attributes:
         kind: Type of bound ('lo', 'up', 'fx')
-        value: Bound value
+        value: Numeric bound value. When ``expr`` is set, this is an unused
+               placeholder (conventionally 0.0) — downstream code must use
+               ``expr`` via :func:`complementarity._bound_expr` instead of
+               ``Const(value)``.
         domain: Variable domain (for indexed variables)
+        expr: Expression for parameter-assigned bounds (e.g., e.lo(t) = req(t)).
+              When set, complementarity equations use this expression instead of
+              ``Const(value)``. Currently only ``lo`` and ``up`` bounds support
+              expression values; ``fx`` expression-based bounds are not wired
+              into the KKT pipeline (see partition_constraints comments).
     """
 
     kind: str  # 'lo', 'up', 'fx'
-    value: float
+    value: float  # placeholder (0.0) when expr is set; see docstring
     domain: tuple[str, ...] = ()
+    expr: Expr | None = None
 
 
 @dataclass
@@ -158,6 +171,77 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         for indices, fx_val in var_def.fx_map.items():
             result.bounds_fx[(var_name, indices)] = BoundDef("fx", fx_val, var_def.domain)
+
+        # Issue #923: Process expression-based bounds (lo_expr/lo_expr_map etc.)
+        # These are bounds assigned via parameter expressions like e.lo(t) = req(t).
+        # Note: fx_expr/fx_expr_map are NOT processed here — fixed variable
+        # equalities are handled via normalized_bounds in ir/normalize.py, which
+        # does not yet support expression-based .fx values.
+        # Scalar expression bounds — skip if scalar or per-instance numeric
+        # bounds already exist (per-instance bounds take precedence to avoid
+        # a mixed state where the placeholder value=0.0 is used for instances
+        # without numeric overrides).
+        # Check for per-instance bounds using the variable's own lo_map/up_map
+        # keys (O(per-var) instead of scanning the full bounds dict).
+        has_indexed_lo = any((var_name, idx) in result.bounds_lo for idx in var_def.lo_map)
+        has_indexed_up = any((var_name, idx) in result.bounds_up for idx in var_def.up_map)
+        if var_def.lo_expr is not None:
+            has_scalar_lo = (var_name, ()) in result.bounds_lo
+            if not has_scalar_lo and not has_indexed_lo:
+                result.bounds_lo[(var_name, ())] = BoundDef(
+                    "lo", 0.0, var_def.domain, expr=var_def.lo_expr
+                )
+            elif has_scalar_lo:
+                logger.warning(
+                    "Variable '%s' has both numeric lo (%.6g) and lo_expr; "
+                    "keeping numeric bound (last-write-wins not yet implemented).",
+                    var_name,
+                    result.bounds_lo[(var_name, ())].value,
+                )
+            elif has_indexed_lo:
+                logger.warning(
+                    "Skipping scalar lo_expr bound for '%s' because indexed numeric "
+                    "lower bounds already exist; per-instance bounds take precedence.",
+                    var_name,
+                )
+        if var_def.up_expr is not None:
+            has_scalar_up = (var_name, ()) in result.bounds_up
+            if not has_scalar_up and not has_indexed_up:
+                result.bounds_up[(var_name, ())] = BoundDef(
+                    "up", 0.0, var_def.domain, expr=var_def.up_expr
+                )
+            elif has_scalar_up:
+                logger.warning(
+                    "Variable '%s' has both numeric up (%.6g) and up_expr; "
+                    "keeping numeric bound (last-write-wins not yet implemented).",
+                    var_name,
+                    result.bounds_up[(var_name, ())].value,
+                )
+            elif has_indexed_up:
+                logger.warning(
+                    "Skipping scalar up_expr bound for '%s' because indexed numeric "
+                    "upper bounds already exist; per-instance bounds take precedence.",
+                    var_name,
+                )
+        # Indexed expression bounds — only consolidate when the expr_map has
+        # exactly one entry whose key matches var_def.domain (plain strings,
+        # no IndexOffset/SubsetIndex). Otherwise warn and skip.
+        _process_expr_map_bound(
+            var_def.lo_expr_map,
+            var_name,
+            var_def.domain,
+            "lo",
+            result.bounds_lo,
+            has_per_instance=has_indexed_lo,
+        )
+        _process_expr_map_bound(
+            var_def.up_expr_map,
+            var_name,
+            var_def.domain,
+            "up",
+            result.bounds_up,
+            has_per_instance=has_indexed_up,
+        )
 
         # Issue #922: Synthesize implicit bounds from variable kind.
         # GAMS Positive Variable has implicit lo=0, Negative has up=0,
@@ -321,6 +405,100 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
     except (KeyError, AttributeError, ValueError):
         # If we can't access set information, assume not full coverage
         return False
+
+
+def _process_expr_map_bound(
+    expr_map: dict,
+    var_name: str,
+    domain: tuple[str, ...],
+    kind: str,
+    target_dict: dict,
+    *,
+    has_per_instance: bool = False,
+) -> None:
+    """Process an indexed expression-based bound map (lo_expr_map or up_expr_map).
+
+    Only consolidates to a single (var_name, ()) entry when the expr_map has
+    exactly one entry whose key is a tuple of plain strings matching var_def.domain
+    (no IndexOffset/SubsetIndex). Otherwise logs a warning and skips.
+
+    Args:
+        expr_map: The lo_expr_map or up_expr_map dict
+        var_name: Variable name
+        domain: Variable domain tuple
+        kind: Bound kind ('lo' or 'up')
+        target_dict: Target bounds dict (bounds_lo or bounds_up)
+        has_per_instance: Whether per-instance numeric bounds already exist
+            for this variable (precomputed by caller for O(1) lookup).
+    """
+    if not expr_map:
+        return
+
+    # Check for any existing bounds (scalar or per-instance) that would
+    # conflict with a consolidated expression-based bound.
+    has_scalar = (var_name, ()) in target_dict
+    if has_scalar or has_per_instance:
+        logger.warning(
+            "Variable '%s' has a %s_expr_map override, but %s %s bound(s) "
+            "are already recorded in the KKT bounds dictionary. Keeping the "
+            "existing bound(s) and ignoring the expression-based bound.",
+            var_name,
+            kind,
+            "a scalar" if has_scalar else "per-instance",
+            kind,
+        )
+        return
+
+    if len(expr_map) != 1:
+        logger.warning(
+            "Variable '%s' has %d entries in %s_expr_map; "
+            "only single-entry uniform bounds are supported in KKT pipeline. Skipping.",
+            var_name,
+            len(expr_map),
+            kind,
+        )
+        return
+
+    indices, expr = next(iter(expr_map.items()))
+
+    # Validate: all index elements must be plain strings matching the domain
+    if len(indices) != len(domain):
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s has %d indices but domain has %d. Skipping.",
+            var_name,
+            kind,
+            indices,
+            len(indices),
+            len(domain),
+        )
+        return
+
+    if any(isinstance(idx, (IndexOffset, SubsetIndex)) for idx in indices):
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s contains IndexOffset/SubsetIndex; "
+            "only plain-string domain indices are supported in KKT pipeline. Skipping.",
+            var_name,
+            kind,
+            indices,
+        )
+        return
+
+    # Validate that key values match domain names (e.g., key ("t",) matches
+    # domain ("t",)). Mismatched keys suggest the bound was assigned with
+    # different indices than the variable declaration, so consolidation would
+    # be incorrect. Compare case-insensitively since the IR uses
+    # CaseInsensitiveDict and GAMS identifiers are case-insensitive.
+    if tuple(str(idx).lower() for idx in indices) != tuple(d.lower() for d in domain):
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s does not match domain %s. Skipping.",
+            var_name,
+            kind,
+            indices,
+            domain,
+        )
+        return
+
+    target_dict[(var_name, ())] = BoundDef(kind, 0.0, domain, expr=expr)
 
 
 def _is_user_authored_bound(eq_def: EquationDef) -> bool:
