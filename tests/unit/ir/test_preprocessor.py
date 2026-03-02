@@ -403,6 +403,14 @@ Equations eq;"""
         assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Variables x;"
 
+    def test_preserve_file_string_path_with_semicolon(self):
+        """File path STRING with internal semicolon is grammar-parseable and NOT stripped."""
+        source = "File sol / 'my;file.txt' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / 'my;file.txt' /;"
+        assert lines[1] == "Variables x;"
+
     def test_preserve_file_string_desc(self):
         """File ID STRING; form is grammar-parseable and NOT stripped."""
         source = "File repdat 'report file';\nVariables x;\n"
