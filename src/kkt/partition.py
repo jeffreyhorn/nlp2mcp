@@ -422,15 +422,15 @@ def _process_expr_map_bound(
     if not expr_map:
         return
 
-    # Check for any existing numeric bounds (scalar or per-instance) that would
+    # Check for any existing bounds (scalar or per-instance) that would
     # conflict with a consolidated expression-based bound.
     has_scalar = (var_name, ()) in target_dict
     has_per_instance = any(k[0] == var_name and k[1] != () for k in target_dict)
     if has_scalar or has_per_instance:
         logger.warning(
             "Variable '%s' has a %s_expr_map override, but %s %s bound(s) "
-            "already recorded in the KKT bounds dictionary. Keeping the existing "
-            "numeric bound(s) and ignoring the expression-based bound.",
+            "are already recorded in the KKT bounds dictionary. Keeping the "
+            "existing bound(s) and ignoring the expression-based bound.",
             var_name,
             kind,
             "a scalar" if has_scalar else "per-instance",
