@@ -38,6 +38,6 @@ Additionally, the model references undeclared scenred library symbols (`ScenRedP
 
 ## Verification
 
-- 8 unit tests added for selective File/putClose stripping (4 strip, 4 preserve)
+- Unit tests added for selective File/putClose stripping (covering both strip and preserve cases)
 - No regressions (ps10_s.gms `File sol / path /;` still parsed by grammar)
 - All tests pass (3905 passed)
