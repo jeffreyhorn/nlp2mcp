@@ -958,7 +958,11 @@ def strip_unsupported_directives(source: str) -> str:
         # Strip putClose with content (grammar only supports: putclose ID? ;)
         if re.match(r"(?i)^putclose\s", stripped):
             # Check if it matches the grammar form: putclose ID? ;
-            if not re.match(r"(?i)^putclose(?:\s+\w+)?\s*;\s*$", stripped):
+            # ID token in grammar: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
+            if not re.match(
+                r"""(?i)^putclose(?:\s+(?:'[^']*'|"[^"]*"|[A-Za-z_][A-Za-z0-9_]*))?\s*;\s*$""",
+                stripped,
+            ):
                 filtered.append(f"* Stripped: {stripped}")
                 if not _has_statement_ending_semicolon(stripped):
                     in_put_statement = True
