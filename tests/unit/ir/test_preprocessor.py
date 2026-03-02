@@ -392,6 +392,7 @@ Equations eq;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0] == "File repdat 'report file';"
+        assert lines[1] == "Variables x;"
 
     def test_strip_putclose_with_content(self):
         """Issue #895: Strip putClose with content arguments (multi-line)."""
@@ -421,6 +422,7 @@ Equations eq;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0] == "put fopts 'some text';"
+        assert lines[1] == "Variables x;"
 
     def test_strip_puttl_statement(self):
         """Issue #895: puttl is not in grammar and is always stripped."""

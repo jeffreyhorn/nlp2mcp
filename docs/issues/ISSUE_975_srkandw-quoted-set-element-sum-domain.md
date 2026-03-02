@@ -1,7 +1,7 @@
 # srkandw: Quoted set element in sum domain not recognized
 
 **GitHub Issue:** [#975](https://github.com/jeffreyhorn/nlp2mcp/issues/975)
-**Model:** srkandw (GAMSlib SEQ=248, "Scenario Reduction - Kaut & Wallace")
+**Model:** srkandw (GAMSlib SEQ=353, "Scenario Reduction - Kaut & Wallace")
 **Error category:** `internal_error`
 **Error message:** `Unknown set or alias 'time-2' referenced in sum indices [context: conditional assignment] [domain: ('n',)] (line 61, column 10)`
 
