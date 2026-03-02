@@ -386,6 +386,15 @@ Equations eq;"""
         assert lines[0] == "File sol / solution_lic.csv /;"
         assert lines[1] == "Variables x;"
 
+    def test_strip_file_path_no_semicolon(self):
+        """File path form without trailing semicolon is NOT grammar-parseable."""
+        source = "File sol / solution_lic.csv /\n  'more' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")  # continuation consumed
+        assert lines[2] == "Variables x;"
+
     def test_preserve_file_string_desc(self):
         """File ID STRING; form is grammar-parseable and NOT stripped."""
         source = "File repdat 'report file';\nVariables x;\n"
