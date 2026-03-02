@@ -177,15 +177,40 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
         # Note: fx_expr/fx_expr_map are NOT processed here — fixed variable
         # equalities are handled via normalized_bounds in ir/normalize.py, which
         # does not yet support expression-based .fx values.
-        # Scalar expression bounds
-        if var_def.lo_expr is not None and (var_name, ()) not in result.bounds_lo:
-            result.bounds_lo[(var_name, ())] = BoundDef(
-                "lo", 0.0, var_def.domain, expr=var_def.lo_expr
+        # Scalar expression bounds — skip if scalar or per-instance numeric
+        # bounds already exist (per-instance bounds take precedence to avoid
+        # a mixed state where the placeholder value=0.0 is used for instances
+        # without numeric overrides).
+        if var_def.lo_expr is not None:
+            has_scalar_lo = (var_name, ()) in result.bounds_lo
+            has_indexed_lo = any(
+                name == var_name and indices != () for (name, indices) in result.bounds_lo
             )
-        if var_def.up_expr is not None and (var_name, ()) not in result.bounds_up:
-            result.bounds_up[(var_name, ())] = BoundDef(
-                "up", 0.0, var_def.domain, expr=var_def.up_expr
+            if not has_scalar_lo and not has_indexed_lo:
+                result.bounds_lo[(var_name, ())] = BoundDef(
+                    "lo", 0.0, var_def.domain, expr=var_def.lo_expr
+                )
+            elif has_indexed_lo:
+                logger.warning(
+                    "Skipping scalar lo_expr bound for '%s' because indexed numeric "
+                    "lower bounds already exist; per-instance bounds take precedence.",
+                    var_name,
+                )
+        if var_def.up_expr is not None:
+            has_scalar_up = (var_name, ()) in result.bounds_up
+            has_indexed_up = any(
+                name == var_name and indices != () for (name, indices) in result.bounds_up
             )
+            if not has_scalar_up and not has_indexed_up:
+                result.bounds_up[(var_name, ())] = BoundDef(
+                    "up", 0.0, var_def.domain, expr=var_def.up_expr
+                )
+            elif has_indexed_up:
+                logger.warning(
+                    "Skipping scalar up_expr bound for '%s' because indexed numeric "
+                    "upper bounds already exist; per-instance bounds take precedence.",
+                    var_name,
+                )
         # Indexed expression bounds — only consolidate when the expr_map has
         # exactly one entry whose key matches var_def.domain (plain strings,
         # no IndexOffset/SubsetIndex). Otherwise warn and skip.

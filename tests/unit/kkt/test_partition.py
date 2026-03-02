@@ -648,6 +648,22 @@ class TestExpressionBasedBounds:
         assert result.bounds_lo[("x", ("1",))].expr is None
         assert result.bounds_lo[("x", ("2",))].expr is None
 
+    def test_scalar_lo_expr_skipped_when_per_instance_bounds_exist(self):
+        """Scalar lo_expr should be skipped when per-instance numeric bounds exist."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_map = {("1",): 0.0, ("2",): 5.0}
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Per-instance numeric bounds should be present, scalar lo_expr ignored
+        assert ("x", ("1",)) in result.bounds_lo
+        assert ("x", ("2",)) in result.bounds_lo
+        # No scalar expr entry should exist
+        assert ("x", ()) not in result.bounds_lo
+
     def test_fx_expr_not_in_bounds_fx(self):
         """fx_expr should NOT produce a bounds_fx entry (not supported downstream)."""
         model = ModelIR()
