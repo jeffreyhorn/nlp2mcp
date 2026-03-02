@@ -866,7 +866,7 @@ def strip_unsupported_directives(source: str) -> str:
     filtered = []
     in_ontext_block = False
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
-    in_put_statement = False  # Issue #895: multi-line File and put/putClose statements
+    in_put_statement = False  # Issue #895: multi-line unsupported File/putClose/puttl stripping
 
     for line in lines:
         stripped = line.strip()
