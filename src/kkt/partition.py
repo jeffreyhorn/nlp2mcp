@@ -13,12 +13,15 @@ Key features:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
-from src.ir.ast import Expr
+from src.ir.ast import Expr, IndexOffset, SubsetIndex
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, VarKind
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -165,6 +168,9 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
 
         # Issue #923: Process expression-based bounds (lo_expr/lo_expr_map etc.)
         # These are bounds assigned via parameter expressions like e.lo(t) = req(t).
+        # Note: fx_expr/fx_expr_map are NOT processed here — fixed variable
+        # equalities are handled via normalized_bounds in ir/normalize.py, which
+        # does not yet support expression-based .fx values.
         # Scalar expression bounds
         if var_def.lo_expr is not None and (var_name, ()) not in result.bounds_lo:
             result.bounds_lo[(var_name, ())] = BoundDef(
@@ -174,20 +180,15 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             result.bounds_up[(var_name, ())] = BoundDef(
                 "up", 0.0, var_def.domain, expr=var_def.up_expr
             )
-        if var_def.fx_expr is not None and (var_name, ()) not in result.bounds_fx:
-            result.bounds_fx[(var_name, ())] = BoundDef(
-                "fx", 0.0, var_def.domain, expr=var_def.fx_expr
-            )
-        # Indexed expression bounds — keys use domain indices (uniform across domain)
-        for _indices, expr in var_def.lo_expr_map.items():
-            if (var_name, ()) not in result.bounds_lo:
-                result.bounds_lo[(var_name, ())] = BoundDef("lo", 0.0, var_def.domain, expr=expr)
-        for _indices, expr in var_def.up_expr_map.items():
-            if (var_name, ()) not in result.bounds_up:
-                result.bounds_up[(var_name, ())] = BoundDef("up", 0.0, var_def.domain, expr=expr)
-        for _indices, expr in var_def.fx_expr_map.items():
-            if (var_name, ()) not in result.bounds_fx:
-                result.bounds_fx[(var_name, ())] = BoundDef("fx", 0.0, var_def.domain, expr=expr)
+        # Indexed expression bounds — only consolidate when the expr_map has
+        # exactly one entry whose key matches var_def.domain (plain strings,
+        # no IndexOffset/SubsetIndex). Otherwise warn and skip.
+        _process_expr_map_bound(
+            var_def.lo_expr_map, var_name, var_def.domain, "lo", result.bounds_lo
+        )
+        _process_expr_map_bound(
+            var_def.up_expr_map, var_name, var_def.domain, "up", result.bounds_up
+        )
 
         # Issue #922: Synthesize implicit bounds from variable kind.
         # GAMS Positive Variable has implicit lo=0, Negative has up=0,
@@ -351,6 +352,66 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
     except (KeyError, AttributeError, ValueError):
         # If we can't access set information, assume not full coverage
         return False
+
+
+def _process_expr_map_bound(
+    expr_map: dict,
+    var_name: str,
+    domain: tuple[str, ...],
+    kind: str,
+    target_dict: dict,
+) -> None:
+    """Process an indexed expression-based bound map (lo_expr_map or up_expr_map).
+
+    Only consolidates to a single (var_name, ()) entry when the expr_map has
+    exactly one entry whose key is a tuple of plain strings matching var_def.domain
+    (no IndexOffset/SubsetIndex). Otherwise logs a warning and skips.
+
+    Args:
+        expr_map: The lo_expr_map or up_expr_map dict
+        var_name: Variable name
+        domain: Variable domain tuple
+        kind: Bound kind ('lo' or 'up')
+        target_dict: Target bounds dict (bounds_lo or bounds_up)
+    """
+    if not expr_map or (var_name, ()) in target_dict:
+        return
+
+    if len(expr_map) != 1:
+        logger.warning(
+            "Variable '%s' has %d entries in %s_expr_map; "
+            "only single-entry uniform bounds are supported in KKT pipeline. Skipping.",
+            var_name,
+            len(expr_map),
+            kind,
+        )
+        return
+
+    indices, expr = next(iter(expr_map.items()))
+
+    # Validate: all index elements must be plain strings matching the domain
+    if len(indices) != len(domain):
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s has %d indices but domain has %d. Skipping.",
+            var_name,
+            kind,
+            indices,
+            len(indices),
+            len(domain),
+        )
+        return
+
+    if any(isinstance(idx, (IndexOffset, SubsetIndex)) for idx in indices):
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s contains IndexOffset/SubsetIndex; "
+            "only plain-string domain indices are supported in KKT pipeline. Skipping.",
+            var_name,
+            kind,
+            indices,
+        )
+        return
+
+    target_dict[(var_name, ())] = BoundDef(kind, 0.0, domain, expr=expr)
 
 
 def _is_user_authored_bound(eq_def: EquationDef) -> bool:

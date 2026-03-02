@@ -2,6 +2,7 @@
 
 import pytest
 
+from src.ir.ast import Const, IndexOffset, ParamRef, SubsetIndex
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef, VariableDef, VarKind
 from src.kkt.partition import partition_constraints
@@ -502,3 +503,116 @@ class TestVarKindImplicitBounds:
         assert result.bounds_fx[("x", ())].value == 1.0
         assert ("x", ()) not in result.bounds_lo  # No redundant implicit lo
         assert ("x", ()) not in result.bounds_up  # No redundant implicit up
+
+
+@pytest.mark.unit
+class TestExpressionBasedBounds:
+    """Tests for expression-based bounds in partition (Issue #923)."""
+
+    def test_scalar_lo_expr_creates_bound(self):
+        """Scalar lo_expr should produce a bounds_lo entry with expr."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",))
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+        assert bound.domain == ("t",)
+
+    def test_scalar_up_expr_creates_bound(self):
+        """Scalar up_expr should produce a bounds_up entry with expr."""
+        model = ModelIR()
+        var = VariableDef(name="y", domain=("j",))
+        var.up_expr = ParamRef("deltb", indices=("j",))
+        model.variables["y"] = var
+
+        result = partition_constraints(model)
+
+        assert ("y", ()) in result.bounds_up
+        bound = result.bounds_up[("y", ())]
+        assert bound.expr is not None
+
+    def test_lo_expr_map_single_entry_domain_match(self):
+        """lo_expr_map with single entry matching domain should consolidate."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",))
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.expr is not None
+        assert isinstance(bound.expr, ParamRef)
+
+    def test_lo_expr_map_index_offset_skipped(self):
+        """lo_expr_map with IndexOffset key should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        offset_key = IndexOffset(base="t", offset=Const(1), circular=False)
+        var.lo_expr_map = {(offset_key,): ParamRef("p", indices=("t",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Should NOT have created a bound entry
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_subset_index_skipped(self):
+        """lo_expr_map with SubsetIndex key should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("i",))
+        subset_key = SubsetIndex(subset_name="s", indices=("i",))
+        var.lo_expr_map = {(subset_key,): ParamRef("p", indices=("i",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_multiple_entries_skipped(self):
+        """lo_expr_map with multiple entries should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_expr_map = {
+            ("t",): ParamRef("req", indices=("t",)),
+            ("s",): ParamRef("other", indices=("s",)),
+        }
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_numeric_lo_takes_precedence_over_lo_expr(self):
+        """Numeric lo bound takes precedence over lo_expr."""
+        model = ModelIR()
+        var = VariableDef(name="e", domain=("t",), lo=0.0)
+        var.lo_expr = ParamRef("req", indices=("t",))
+        model.variables["e"] = var
+
+        result = partition_constraints(model)
+
+        # Numeric bound should be present with no expr
+        assert ("e", ()) in result.bounds_lo
+        bound = result.bounds_lo[("e", ())]
+        assert bound.value == 0.0
+        assert bound.expr is None
+
+    def test_fx_expr_not_in_bounds_fx(self):
+        """fx_expr should NOT produce a bounds_fx entry (not supported downstream)."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.fx_expr = ParamRef("p", indices=("t",))
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # fx_expr should not be in bounds_fx
+        assert ("x", ()) not in result.bounds_fx
