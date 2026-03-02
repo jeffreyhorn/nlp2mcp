@@ -190,6 +190,13 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
                 result.bounds_lo[(var_name, ())] = BoundDef(
                     "lo", 0.0, var_def.domain, expr=var_def.lo_expr
                 )
+            elif has_scalar_lo:
+                logger.warning(
+                    "Variable '%s' has both numeric lo (%.6g) and lo_expr; "
+                    "keeping numeric bound (last-write-wins not yet implemented).",
+                    var_name,
+                    result.bounds_lo[(var_name, ())].value,
+                )
             elif has_indexed_lo:
                 logger.warning(
                     "Skipping scalar lo_expr bound for '%s' because indexed numeric "
@@ -204,6 +211,13 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             if not has_scalar_up and not has_indexed_up:
                 result.bounds_up[(var_name, ())] = BoundDef(
                     "up", 0.0, var_def.domain, expr=var_def.up_expr
+                )
+            elif has_scalar_up:
+                logger.warning(
+                    "Variable '%s' has both numeric up (%.6g) and up_expr; "
+                    "keeping numeric bound (last-write-wins not yet implemented).",
+                    var_name,
+                    result.bounds_up[(var_name, ())].value,
                 )
             elif has_indexed_up:
                 logger.warning(
