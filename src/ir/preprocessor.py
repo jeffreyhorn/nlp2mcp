@@ -791,6 +791,39 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     return False
 
 
+def _find_char_outside_strings(line: str, char: str, start: int = 0) -> int:
+    """Return the index of the first occurrence of *char* outside quoted strings, or -1.
+
+    Handles backslash escapes and GAMS-style doubled-quote escapes.
+    """
+    in_string = None
+    i = start
+    while i < len(line):
+        c = line[i]
+        if in_string:
+            if c == in_string:
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2
+                    continue
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 0:
+                    in_string = None
+            i += 1
+            continue
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+        if c == char:
+            return i
+        i += 1
+    return -1
+
+
 def _find_statement_semicolon_pos(line: str) -> int:
     """Return the index of the first statement-ending semicolon in line, or -1.
 
@@ -975,7 +1008,7 @@ def strip_unsupported_directives(source: str) -> str:
                     rest_upto_semi = stripped[rest_start:semicolon_pos]
                     rest_trimmed = rest_upto_semi.strip()
                     if rest_trimmed.startswith("/"):
-                        closing_slash = rest_trimmed.find("/", 1)
+                        closing_slash = _find_char_outside_strings(rest_trimmed, "/", 1)
                         if closing_slash != -1:
                             after_slash = rest_trimmed[closing_slash + 1 :].strip()
                             if after_slash == "":
