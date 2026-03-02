@@ -383,13 +383,18 @@ def _process_expr_map_bound(
     if not expr_map:
         return
 
-    if (var_name, ()) in target_dict:
+    # Check for any existing numeric bounds (scalar or per-instance) that would
+    # conflict with a consolidated expression-based bound.
+    has_scalar = (var_name, ()) in target_dict
+    has_per_instance = any(k[0] == var_name and k[1] != () for k in target_dict)
+    if has_scalar or has_per_instance:
         logger.warning(
-            "Variable '%s' has a %s_expr_map override, but a scalar %s bound is "
+            "Variable '%s' has a %s_expr_map override, but %s %s bound(s) "
             "already recorded in the KKT bounds dictionary. Keeping the existing "
-            "scalar bound and ignoring the expression-based bound.",
+            "numeric bound(s) and ignoring the expression-based bound.",
             var_name,
             kind,
+            "a scalar" if has_scalar else "per-instance",
             kind,
         )
         return
@@ -425,6 +430,20 @@ def _process_expr_map_bound(
             var_name,
             kind,
             indices,
+        )
+        return
+
+    # Validate that key values match domain names (e.g., key ("t",) matches
+    # domain ("t",)). Mismatched keys suggest the bound was assigned with
+    # different indices than the variable declaration, so consolidation would
+    # be incorrect.
+    if tuple(str(idx) for idx in indices) != domain:
+        logger.warning(
+            "Variable '%s' %s_expr_map key %s does not match domain %s. Skipping.",
+            var_name,
+            kind,
+            indices,
+            domain,
         )
         return
 

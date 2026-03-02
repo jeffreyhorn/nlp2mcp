@@ -19,7 +19,7 @@ The partitioner only processed numeric bound fields (`lo`/`lo_map`/`up`/`up_map`
 
 ## Fix
 
-Three changes across 2 files:
+Two changes across 2 files:
 
 1. **`src/kkt/partition.py`**: Extended `BoundDef` with an optional `expr: Expr | None` field. Added processing of `lo_expr`/`lo_expr_map` and `up_expr`/`up_expr_map` in `partition_constraints()` — creates `BoundDef` entries with the expression stored in the `expr` field for **lower** and **upper** expression-based bounds. Expression-based fixed bounds (`fx_expr`/`fx_expr_map`) are intentionally **not** wired into the KKT partition at this time.
 
@@ -37,4 +37,4 @@ After fix:
 - **sparta**: `piL_e(t)` multiplier created, `comp_lo_e(t).. e(t) - req(t) =G= 0` emitted, `stat_e(t)` includes `-piL_e(t)` term. Compiles cleanly, SOLVER STATUS 1, MODEL STATUS 1.
 - **aircraft**: `piU_y(j,h)` multiplier created, `comp_up_y(j,h).. deltb(j,h) - y(j,h) =G= 0` emitted. Compiles cleanly, SOLVER STATUS 1, MODEL STATUS 1.
 - Both models still have objective mismatches with their NLP counterparts, suggesting additional issues beyond expression-based bounds (separate investigation needed).
-- All 3881 tests pass.
+- All tests pass.

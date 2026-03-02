@@ -620,6 +620,34 @@ class TestExpressionBasedBounds:
         assert bound.value == 0.0
         assert bound.expr is None
 
+    def test_lo_expr_map_mismatched_key_names_skipped(self):
+        """lo_expr_map where key values don't match domain names should be skipped."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        # Key uses "s" but domain is ("t",)
+        var.lo_expr_map = {("s",): ParamRef("p", indices=("s",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_lo
+
+    def test_lo_expr_map_skipped_when_per_instance_bounds_exist(self):
+        """lo_expr_map should be skipped when per-instance numeric bounds exist."""
+        model = ModelIR()
+        var = VariableDef(name="x", domain=("t",))
+        var.lo_map = {("1",): 0.0, ("2",): 5.0}
+        var.lo_expr_map = {("t",): ParamRef("req", indices=("t",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        # Per-instance numeric bounds should be present, expr_map ignored
+        assert ("x", ("1",)) in result.bounds_lo
+        assert ("x", ("2",)) in result.bounds_lo
+        assert result.bounds_lo[("x", ("1",))].expr is None
+        assert result.bounds_lo[("x", ("2",))].expr is None
+
     def test_fx_expr_not_in_bounds_fx(self):
         """fx_expr should NOT produce a bounds_fx entry (not supported downstream)."""
         model = ModelIR()
