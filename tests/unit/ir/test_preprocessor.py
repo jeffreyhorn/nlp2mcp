@@ -434,6 +434,14 @@ Equations eq;"""
         assert lines[0] == "putclose myf;"
         assert lines[1] == "Variables x;"
 
+    def test_preserve_putclose_quoted_id(self):
+        """Grammar-parseable putclose with quoted ID is NOT stripped."""
+        source = 'putclose "my file";\nVariables x;\n'
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == 'putclose "my file";'
+        assert lines[1] == "Variables x;"
+
     def test_preserve_put_statement(self):
         """Grammar-parseable put statements are NOT stripped."""
         source = "put fopts 'some text';\nVariables x;\n"
@@ -462,6 +470,15 @@ Equations eq;"""
     def test_strip_multiline_put_semicolon_in_string(self):
         """Semicolons inside quoted strings don't prematurely end multi-line stripping."""
         source = "putClose fopts 'option;value'\n" "             / 'more data';\n" "Variables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")
+        assert lines[2] == "Variables x;"
+
+    def test_strip_multiline_put_gams_doubled_quote_escape(self):
+        """GAMS doubled-quote escapes don't prematurely end multi-line stripping."""
+        source = "putClose fopts 'it''s a;test'\n" "             / 'more';\n" "Variables x;\n"
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0].startswith("* Stripped:")

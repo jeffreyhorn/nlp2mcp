@@ -735,7 +735,9 @@ def _has_statement_ending_semicolon(line: str) -> bool:
 
     This handles:
     - Semicolons inside single or double quoted strings are ignored
-    - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
+    - Escaped quotes within strings via backslash
+    - GAMS-style doubled-quote escapes (double single-quotes or double
+      double-quotes inside the respective string delimiter)
 
     Note on comment/non-code handling in the surrounding preprocessor:
     - `*` is treated as a line comment only when it appears in column 1; such
@@ -745,8 +747,7 @@ def _has_statement_ending_semicolon(line: str) -> bool:
 
     This helper only detects a semicolon that is outside of string literals. It
     assumes that full-line comments and trailing non-code after `;` have already
-    been stripped. It does not handle nested quotes, but works for typical GAMS
-    code.
+    been stripped.
     """
     in_string = None
     i = 0
@@ -756,6 +757,10 @@ def _has_statement_ending_semicolon(line: str) -> bool:
         # Handle string state
         if in_string:
             if c == in_string:
+                # GAMS-style doubled-quote escape: '' or "" stays in string
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2  # skip both quotes
+                    continue
                 # Check if the quote is escaped by counting preceding backslashes
                 # An odd number of backslashes means the quote is escaped
                 backslash_count = 0
@@ -790,8 +795,9 @@ def _find_statement_semicolon_pos(line: str) -> int:
     """Return the index of the first statement-ending semicolon in line, or -1.
 
     Ignores semicolons inside single- or double-quoted strings (same logic as
-    _has_statement_ending_semicolon). Used to strip trailing content (including
-    inline comments) after the semicolon when checking for tuple row expansion.
+    _has_statement_ending_semicolon, including GAMS-style doubled-quote escapes).
+    Used to strip trailing content (including inline comments) after the
+    semicolon when checking for tuple row expansion.
     """
     in_string = None
     i = 0
@@ -799,6 +805,10 @@ def _find_statement_semicolon_pos(line: str) -> int:
         c = line[i]
         if in_string:
             if c == in_string:
+                # GAMS-style doubled-quote escape: '' or "" stays in string
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2
+                    continue
                 backslash_count = 0
                 j = i - 1
                 while j >= 0 and line[j] == "\\":
@@ -927,9 +937,11 @@ def strip_unsupported_directives(source: str) -> str:
         #   file_stmt:    File ID / path /;  |  File ID STRING;
         #   put_stmt:     put items? ;       |  put items / ;
         #   putclose_stmt: putclose ID? ;
-        # We only strip:
+        # We strip:
         #   - Continuation lines of a multi-line put/putClose/File statement
-        #   - File declarations with the hybrid form (ID STRING / path /;)
+        #   - Any File declaration whose remainder is not grammar-parseable,
+        #     including hybrid forms (ID STRING / path /;), malformed path forms,
+        #     and bare File declarations like "File fx;" or "File fx"
         #   - putClose with content arguments (not just putclose ID? ;)
         #   - puttl statements (not in grammar at all)
         if in_put_statement:
