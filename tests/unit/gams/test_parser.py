@@ -5064,6 +5064,73 @@ class TestSumDomainMismatch:
         assert model.equations["test"].domain == ("j",)
 
 
+class TestQuotedElementInSumDomain:
+    """Issue #975: Quoted set element in sum domain should be treated as literal."""
+
+    def test_quoted_element_filter_in_sum(self):
+        """sum(tn('time-2',n), 1) should not fail on 'time-2' lookup."""
+        text = dedent("""
+            Set t / time-1, time-2 /;
+            Set n / n-0*n-3 /;
+            Set tn(t,n) / time-1.(n-0*n-1), time-2.(n-2*n-3) /;
+            Set leaf(n) 'leaf nodes';
+            Parameter one;
+
+            Equation test(n);
+            test(n).. one =e= sum(tn('time-2',n), 1);
+        """)
+        model = parser.parse_model_text(text)
+        assert "test" in model.equations
+        assert model.equations["test"].domain == ("n",)
+
+    def test_quoted_element_in_conditional_assignment(self):
+        """leaf(n)$(sum(tn('time-2',n), 1)) = yes should parse."""
+        text = dedent("""
+            Set t / time-1, time-2 /;
+            Set n / n-0*n-3 /;
+            Set tn(t,n) / time-1.(n-0*n-1), time-2.(n-2*n-3) /;
+            Set leaf(n) 'leaf nodes';
+
+            leaf(n)$(sum(tn('time-2',n), 1)) = yes;
+        """)
+        model = parser.parse_model_text(text)
+        assert "leaf" in model.sets
+
+
+class TestSetAssignmentWithIndexOffset:
+    """Issue #976: Set assignment with IndexOffset on LHS should not fail."""
+
+    def test_set_assign_with_index_offset(self):
+        """ancestor(n, n-card(leaf)) = yes should be stored as SetAssignment."""
+        text = dedent("""
+            Set n / n0*n3 /;
+            Set leaf(n) / n2, n3 /;
+            Set ancestor(n,n) 'ancestor matrix';
+
+            ancestor(n, n-card(leaf)) = yes;
+        """)
+        model = parser.parse_model_text(text)
+        assert "ancestor" in model.sets
+        assert len(model.set_assignments) >= 1
+        sa = [a for a in model.set_assignments if a.set_name == "ancestor"]
+        assert len(sa) == 1
+
+    def test_set_assign_with_quoted_element_and_offset(self):
+        """ancestor(n,'n0') = yes and ancestor(n, n-card(leaf)) = yes together."""
+        text = dedent("""
+            Set n / n0*n3 /;
+            Set leaf(n) / n2, n3 /;
+            Set ancestor(n,n) 'ancestor matrix';
+
+            ancestor(n,'n0') = yes;
+            ancestor(n, n-card(leaf)) = yes;
+        """)
+        model = parser.parse_model_text(text)
+        assert "ancestor" in model.sets
+        sa = [a for a in model.set_assignments if a.set_name == "ancestor"]
+        assert len(sa) == 2
+
+
 # ==============================================================================
 # Sprint 16 Day 6 Grammar Features (PR #553)
 # ==============================================================================
