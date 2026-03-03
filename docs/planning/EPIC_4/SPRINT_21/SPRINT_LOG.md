@@ -409,7 +409,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Date:** 2026-03-03
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #981
 **Effort:** ~3h
 
 **Activities:**
