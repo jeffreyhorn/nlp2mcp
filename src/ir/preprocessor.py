@@ -895,6 +895,7 @@ def strip_unsupported_directives(source: str) -> str:
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
     in_put_statement = False  # Issue #895: multi-line unsupported File/putClose/puttl stripping
     skip_to_line_idx = -1  # consumed lookahead lines for File/putclose semicolon
+    scenred_predeclared = False  # Issue #978: only predeclare scenred symbols once
 
     for line_idx, line in enumerate(lines):
         if line_idx <= skip_to_line_idx:
@@ -960,6 +961,14 @@ def strip_unsupported_directives(source: str) -> str:
             r"^\$\s+libinclude", stripped_lower
         ):
             filtered.append(f"* Stripped: {stripped}")
+            # Issue #978: Predeclare symbols exported by known libraries.
+            # The scenred library defines ScenRedParms and ScenRedReport
+            # parameters that models reference after the $libInclude.
+            # Only inject on first encounter to avoid duplicate declarations.
+            if "scenred" in stripped_lower and not scenred_predeclared:
+                filtered.append("Parameter ScenRedParms(*);")
+                filtered.append("Parameter ScenRedReport(*);")
+                scenred_predeclared = True
             continue
 
         # Issue #895: Strip extended GAMS put-file I/O forms that the grammar
