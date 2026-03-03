@@ -353,7 +353,10 @@ Equations eq;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0] == "* Stripped: $libInclude scenred.gms"
-        assert lines[1] == "Variables x;"
+        # Issue #978: scenred predeclarations injected
+        assert lines[1] == "Parameter ScenRedParms(*);"
+        assert lines[2] == "Parameter ScenRedReport(*);"
+        assert lines[3] == "Variables x;"
 
     def test_strip_libinclude_case_insensitive(self):
         """$LIBINCLUDE and $libinclude are also stripped."""
@@ -368,7 +371,25 @@ Equations eq;"""
         result = strip_unsupported_directives(source)
         lines = result.split("\n")
         assert lines[0].startswith("* Stripped:")
-        assert lines[1] == "Variables x;"
+        # Issue #978: scenred predeclarations injected
+        assert lines[1] == "Parameter ScenRedParms(*);"
+        assert lines[2] == "Parameter ScenRedReport(*);"
+        assert lines[3] == "Variables x;"
+
+    def test_scenred_predeclare_only_once(self):
+        """Issue #978: scenred symbols predeclared only on first encounter."""
+        source = "$libInclude scenred.gms\n" "$libInclude scenred args\n" "Variables x;\n"
+        result = strip_unsupported_directives(source)
+        # Should only have one pair of predeclarations
+        assert result.count("Parameter ScenRedParms(*);") == 1
+        assert result.count("Parameter ScenRedReport(*);") == 1
+
+    def test_libinclude_non_scenred_no_predeclare(self):
+        """Non-scenred $libInclude does not inject predeclarations."""
+        source = "$libInclude other.gms\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        assert "ScenRedParms" not in result
+        assert "ScenRedReport" not in result
 
     def test_strip_file_hybrid_declaration(self):
         """Issue #895: Strip hybrid File declaration (ID STRING / path /)."""
