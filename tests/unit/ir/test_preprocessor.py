@@ -435,6 +435,24 @@ Equations eq;"""
         assert lines[0] == "File repdat 'report file';"
         assert lines[1] == "Variables x;"
 
+    def test_preserve_file_desc_next_line_semi(self):
+        """File ID STRING with ; on next line is grammar-parseable and NOT stripped."""
+        source = "File repdat 'report file'\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File repdat 'report file'"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
+
+    def test_preserve_file_path_next_line_semi(self):
+        """File ID / path / with ; on next line is grammar-parseable and NOT stripped."""
+        source = "File sol / solution_lic.csv /\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / solution_lic.csv /"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
+
     def test_strip_putclose_with_content(self):
         """Issue #895: Strip putClose with content arguments (multi-line)."""
         source = (
@@ -465,6 +483,15 @@ Equations eq;"""
         lines = result.split("\n")
         assert lines[0] == 'putclose "my file";'
         assert lines[1] == "Variables x;"
+
+    def test_preserve_putclose_next_line_semi(self):
+        """Grammar-parseable putclose with ; on next line is NOT stripped."""
+        source = "putclose myf\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "putclose myf"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
 
     def test_preserve_put_statement(self):
         """Grammar-parseable put statements are NOT stripped."""
