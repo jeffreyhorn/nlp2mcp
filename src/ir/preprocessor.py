@@ -896,11 +896,10 @@ def strip_unsupported_directives(source: str) -> str:
     in_ontext_block = False
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
     in_put_statement = False  # Issue #895: multi-line unsupported File/putClose/puttl stripping
-    skip_next_line = False  # consumed a next-line semicolon for File/putclose lookahead
+    skip_to_line_idx = -1  # consumed lookahead lines for File/putclose semicolon
 
     for line_idx, line in enumerate(lines):
-        if skip_next_line:
-            skip_next_line = False
+        if line_idx <= skip_to_line_idx:
             continue
         stripped = line.strip()
         stripped_lower = stripped.lower()
@@ -1003,13 +1002,18 @@ def strip_unsupported_directives(source: str) -> str:
             # The grammar ignores NEWLINE, so the semicolon may be on the next line.
             eval_stripped = stripped
             semicolon_pos = _find_statement_semicolon_pos(eval_stripped)
-            next_line_is_semi = False
-            if semicolon_pos == -1 and line_idx + 1 < len(lines):
-                next_stripped = lines[line_idx + 1].strip()
-                if next_stripped == ";":
-                    eval_stripped = stripped + ";"
-                    semicolon_pos = _find_statement_semicolon_pos(eval_stripped)
-                    next_line_is_semi = True
+            semi_line_idx = -1
+            if semicolon_pos == -1:
+                # Scan forward skipping blank and full-line * comment lines
+                for fwd in range(line_idx + 1, len(lines)):
+                    fwd_stripped = lines[fwd].strip()
+                    if fwd_stripped == "" or fwd_stripped.startswith("*"):
+                        continue
+                    if fwd_stripped == ";":
+                        eval_stripped = stripped + ";"
+                        semicolon_pos = _find_statement_semicolon_pos(eval_stripped)
+                        semi_line_idx = fwd
+                    break
             path_form_ok = False
             if semicolon_pos != -1:
                 rest_start = file_m.start(1)
@@ -1031,7 +1035,7 @@ def strip_unsupported_directives(source: str) -> str:
                                     )
                                 )
             # For desc form, if ; is on the next line, check rest + ";"
-            eval_rest = rest + ";" if next_line_is_semi else rest
+            eval_rest = rest + ";" if semi_line_idx != -1 else rest
             desc_form_ok = bool(re.match(r"""^(?:'[^']*'|"[^"]*")\s*;""", eval_rest))
             grammar_ok = path_form_ok or desc_form_ok
             if not grammar_ok:
@@ -1039,11 +1043,11 @@ def strip_unsupported_directives(source: str) -> str:
                 if not _has_statement_ending_semicolon(stripped):
                     in_put_statement = True
                 continue
-            # Grammar-parseable File: if we consumed a next-line ;, skip it
-            if next_line_is_semi:
-                filtered.append(line)
-                filtered.append(lines[line_idx + 1])
-                skip_next_line = True
+            # Grammar-parseable File: if we consumed lookahead lines, emit them
+            if semi_line_idx != -1:
+                for emit_idx in range(line_idx, semi_line_idx + 1):
+                    filtered.append(lines[emit_idx])
+                skip_to_line_idx = semi_line_idx
                 continue
 
         # Strip putClose with content (grammar only supports: putclose ID? ;)
@@ -1052,11 +1056,17 @@ def strip_unsupported_directives(source: str) -> str:
             # ID token in grammar: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
             # The grammar ignores NEWLINE, so the ; may be on the next line.
             pc_eval = stripped
-            pc_next_semi = False
-            if not _has_statement_ending_semicolon(stripped) and line_idx + 1 < len(lines):
-                if lines[line_idx + 1].strip() == ";":
-                    pc_eval = stripped + ";"
-                    pc_next_semi = True
+            pc_semi_line_idx = -1
+            if not _has_statement_ending_semicolon(stripped):
+                # Scan forward skipping blank and full-line * comment lines
+                for fwd in range(line_idx + 1, len(lines)):
+                    fwd_stripped = lines[fwd].strip()
+                    if fwd_stripped == "" or fwd_stripped.startswith("*"):
+                        continue
+                    if fwd_stripped == ";":
+                        pc_eval = stripped + ";"
+                        pc_semi_line_idx = fwd
+                    break
             if not re.match(
                 r"""(?i)^putclose(?:\s+(?:'[^']*'|"[^"]*"|[A-Za-z_][A-Za-z0-9_]*))?\s*;\s*$""",
                 pc_eval,
@@ -1065,11 +1075,11 @@ def strip_unsupported_directives(source: str) -> str:
                 if not _has_statement_ending_semicolon(stripped):
                     in_put_statement = True
                 continue
-            # Grammar-parseable putclose: if we consumed a next-line ;, skip it
-            if pc_next_semi:
-                filtered.append(line)
-                filtered.append(lines[line_idx + 1])
-                skip_next_line = True
+            # Grammar-parseable putclose: if we consumed lookahead lines, emit them
+            if pc_semi_line_idx != -1:
+                for emit_idx in range(line_idx, pc_semi_line_idx + 1):
+                    filtered.append(lines[emit_idx])
+                skip_to_line_idx = pc_semi_line_idx
                 continue
 
         # Strip puttl statements (not in grammar at all)

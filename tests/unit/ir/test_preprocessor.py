@@ -493,6 +493,28 @@ Equations eq;"""
         assert lines[1] == ";"
         assert lines[2] == "Variables x;"
 
+    def test_preserve_putclose_semi_after_blank_lines(self):
+        """putclose with ; after blank/comment lines is grammar-parseable."""
+        source = "putclose myf\n\n* comment\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "putclose myf"
+        assert lines[1] == ""
+        assert lines[2] == "* comment"
+        assert lines[3] == ";"
+        assert lines[4] == "Variables x;"
+
+    def test_preserve_file_desc_semi_after_blank_lines(self):
+        """File ID STRING with ; after blank/comment lines is preserved."""
+        source = "File repdat 'report file'\n\n* comment\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File repdat 'report file'"
+        assert lines[1] == ""
+        assert lines[2] == "* comment"
+        assert lines[3] == ";"
+        assert lines[4] == "Variables x;"
+
     def test_preserve_put_statement(self):
         """Grammar-parseable put statements are NOT stripped."""
         source = "put fopts 'some text';\nVariables x;\n"
