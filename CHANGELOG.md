@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Branch:** `sprint21-day12-path-convergence`
 
 #### Summary
-Systematically analyzed all 29 `path_solve_terminated` models from Sprint 21 baseline. Key finding: 14 models now solve successfully after Sprint 21 code improvements (Days 1–11). The remaining 15 models fail before PATH ever runs — execution errors at starting point (5), MCP pairing bugs (4), compilation errors (2), translation timeouts (2), and locally infeasible (2). No actual PATH convergence issues found. PATH options testing (relaxed tolerances, iteration limits) not applicable.
+Systematically analyzed all 29 `path_solve_terminated` models from Sprint 21 baseline. Key finding: 14 models now solve successfully after Sprint 21 code improvements (Days 1–11). The remaining 15 models still fail: 13 fail before PATH ever runs — execution errors at starting point (5), MCP pairing bugs (4), compilation errors (2), translation timeouts (2) — and 2 reach PATH but terminate as locally infeasible (chain, rocket). No actual PATH convergence issues found. PATH options testing (relaxed tolerances, iteration limits) not applicable to the 13 pre-solver failures.
 
 #### Added
 - `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md` — comprehensive per-model classification with root causes, recommended actions, and priority fixes for Sprint 22
@@ -20,7 +20,7 @@ Systematically analyzed all 29 `path_solve_terminated` models from Sprint 21 bas
 #### Analysis Results
 - 29/29 models classified (target: ≥20)
 - 14 models now solve (3 MATCH, 11 MISMATCH)
-- 15 models still fail (all pre-solver errors, not PATH convergence)
+- 15 models still fail: 13 pre-solver errors + 2 locally infeasible (not PATH convergence)
 - Top actionable fix: `.l` initialization improvement could unblock 5 models (Category B)
 
 ### Sprint 21 Day 11: Decomp Empty Stationarity (#826) + Emerging Issues - 2026-02-26

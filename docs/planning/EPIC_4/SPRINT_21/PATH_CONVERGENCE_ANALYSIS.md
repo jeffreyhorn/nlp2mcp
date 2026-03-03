@@ -20,9 +20,9 @@ Of the 29 models originally classified as `path_solve_terminated` at Sprint 21 b
 | **E: Translation timeout** | 2 | ganges, gangesx |
 | **F: Locally infeasible** | 2 | chain, rocket |
 
-**Key finding:** None of the 15 still-failing models have actual PATH solver convergence issues. All failures occur **before PATH runs** — during equation generation (B), model construction (C/D), or translation (E). The `path_solve_terminated` classification was a misnomer for these models; the true error is that GAMS aborts the solve before invoking PATH.
+**Key finding:** None of the 15 still-failing models have actual PATH solver convergence issues. 13 models fail **before PATH runs** — during equation generation (B), model construction (C/D), or translation (E). The `path_solve_terminated` classification was a misnomer for these models; the true error is that GAMS aborts the solve before invoking PATH. The remaining 2 models (chain, rocket) do reach PATH but terminate as **locally infeasible** — PATH completed its algorithm but found no feasible solution near the starting point.
 
-**Relaxed PATH options (convergence_tolerance, major_iteration_limit) are not applicable** because PATH never executes for any of the 15 failing models.
+**Relaxed PATH options (convergence_tolerance, major_iteration_limit) are not applicable** to the 13 pre-solver failures because PATH never executes. For the 2 locally infeasible models, PATH did run to completion — the issue is the solution landscape, not solver configuration.
 
 ---
 
@@ -56,17 +56,20 @@ These models were `path_solve_terminated` at baseline but now solve with Sprint 
 
 ### Category B: Execution Error at Starting Point (5 models)
 
-PATH never runs. GAMS aborts during equation generation because the default variable `.l` values (typically 0) cause mathematical domain errors in the stationarity equations.
+PATH never runs. GAMS aborts during equation generation due to mathematical domain errors. Three sub-causes exist: (1) default `.l = 0` values causing domain errors in KKT gradient expressions (elec, etamac, lands), (2) rPower domain error on a parameter expression (cclinpts), and (3) division by zero in post-solve calibration code (hs62).
 
 | Model | Error | Equation | Root Cause |
 |-------|-------|----------|------------|
-| cclinpts | `rPower: FUNC DOMAIN: x**y, x < 0` | stat_b(s1..s30) | Stationarity contains `x**y` where `x.l=0` defaults to negative domain |
+| cclinpts | `rPower: FUNC DOMAIN: x**y, x < 0` | stat_b(s1..s30) | Parameter expression `(1-gamma)**2` where `gamma=2` → `(-1)**2` rejected by GAMS rPower (requires non-negative base) |
 | elec | `division by zero (0)` | stat_x(i1..i25) | Stationarity has `1/distance` terms; all variables initialized to 0 → zero distances |
 | etamac | `division by zero (0)` + `log: FUNC SINGULAR: x = 0` | stat_c(1995..2040) | Consumption variables at 0 → log(0) and 1/c division errors |
-| hs62 | `division by zero (0)` | (single equation) | Variable at 0 causes division error in stationarity |
+| hs62 | `division by zero (0)` | (calibration block) | Post-solve calibration code `diff = (global - obj.l) / global` where `global = 0`; not a `.l` initialization issue |
 | lands | `RHS value NA in equation` | (generation phase) | NA/undefined value in equation RHS during generation |
 
-**Fix approach:** Initialize primal variables to the NLP solution's `.l` values. The nlp2mcp emitter already emits `.l` assignments from the original model; the issue is that some models have variables whose NLP `.l` defaults are 0, which causes domain errors in the KKT gradient expressions (e.g., `d/dx log(x)` = `1/x` evaluated at `x=0`).
+**Fix approach:** Different fixes per sub-cause:
+- **elec, etamac, lands** (`.l = 0` domain errors): Initialize primal variables to the NLP solution's `.l` values, or use `max(x.l, epsilon)` for variables in log/power/division terms.
+- **cclinpts** (rPower on parameter): Replace `(1-gamma)**2` with `sqr(1-gamma)` or `power(1-gamma, 2)` to avoid rPower domain restriction.
+- **hs62** (calibration division by zero): Guard the calibration division with a conditional or remove the post-solve calibration block from the MCP file.
 
 **Priority:** HIGH — 5 models blocked. Requires either:
 1. Smarter `.l` initialization (e.g., `max(x.l, epsilon)` for variables appearing in log/power/division terms)
@@ -148,9 +151,9 @@ PATH runs successfully (Normal Completion) but finds the system locally infeasib
 
 ## 4. PATH Options Testing
 
-**Not applicable.** None of the 15 still-failing models reach the PATH solver. All failures occur during GAMS equation generation (Category B), model construction validation (Category C), compilation (Category D), or translation (Category E). Relaxing `convergence_tolerance` or increasing `major_iteration_limit` cannot help because PATH is never invoked.
+**Not applicable for 13 of 15 models.** Categories B–E (13 models) never reach the PATH solver — failures occur during GAMS equation generation (B), model construction validation (C), compilation (D), or translation (E). Relaxing `convergence_tolerance` or increasing `major_iteration_limit` cannot help because PATH is never invoked.
 
-The 2 Category F models (chain, rocket) do reach PATH and terminate normally — but with "Locally Infeasible" status, not a convergence failure. PATH completed its algorithm; it simply found no feasible solution.
+The 2 Category F models (chain, rocket) do reach PATH and terminate with Normal Completion — but with "Locally Infeasible" model status, not a convergence failure. PATH completed its algorithm; it simply found no feasible solution. Relaxed tolerances would not change the outcome since PATH already ran to completion.
 
 ---
 
