@@ -236,12 +236,13 @@ class SetAssignment:
 
     Attributes:
         set_name: Name of the set being assigned to
-        indices: Tuple of index variable names (e.g., ('k',) or ('n', 'nn'))
+        indices: Tuple of index names or IndexOffset objects
+                 (e.g., ('k',) or ('n', IndexOffset(...)))
         expr: The parsed expression for the RHS (Expr AST node)
         location: Source location of the assignment
     """
 
     set_name: str
-    indices: tuple[str, ...]
+    indices: tuple[str | IndexOffset, ...]
     expr: Expr  # The parsed expression for the RHS
     location: SourceLocation | None

@@ -596,7 +596,17 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                 # index_simple: ID lag_lead_suffix?
                 # First child is the base ID
                 if child.children and isinstance(child.children[0], Token):
-                    identifiers.append(_token_text(child.children[0]))
+                    tok = child.children[0]
+                    # Issue #975: Quoted IDs (ESCAPED pattern) in domain
+                    # positions are element literals, not iteration variables.
+                    # Skip them so _ensure_sets won't try to resolve them.
+                    tok_val = str(tok)
+                    if len(tok_val) >= 2 and (
+                        (tok_val[0] == "'" and tok_val[-1] == "'")
+                        or (tok_val[0] == '"' and tok_val[-1] == '"')
+                    ):
+                        continue
+                    identifiers.append(_token_text(tok))
             elif child.data == "index_subset":
                 # index_subset: ID "(" index_list ")" lag_lead_suffix?
                 # Recursively extract from the nested index_list
@@ -604,9 +614,11 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                     if isinstance(subchild, Tree) and subchild.data == "index_list":
                         identifiers.extend(_extract_domain_indices(subchild))
             elif child.data == "index_string":
-                # Issue #566: index_string: STRING (quoted index like 'route-1')
-                if child.children and isinstance(child.children[0], Token):
-                    identifiers.append(_strip_quotes(child.children[0]))
+                # Issue #566 / #975: index_string is a quoted element literal
+                # (e.g., 'time-2'). In a sum/prod domain context these are
+                # fixed element filters, not iteration variables, so they are
+                # NOT added to the domain indices list.
+                pass
     return identifiers
 
 
@@ -4214,10 +4226,9 @@ class _ModelBuilder:
                 has_lead_lag = any(isinstance(idx, IndexOffset) for idx in indices)
 
                 # Sprint 11 Day 2 Extended: Check if this is a set assignment
-                # Skip set assignment path for lead/lag indices — SetAssignment
-                # expects tuple[str, ...] and GAMS doesn't support lead/lag in
-                # set assignment LHS.
-                if symbol_name in self.model.sets and not has_lead_lag:
+                # Issue #976: Allow IndexOffset indices in set assignments
+                # (e.g., ancestor(n, n-card(leaf)) = yes;).
+                if symbol_name in self.model.sets:
                     # Set assignment like: low(n,nn) = ord(n) > ord(nn)
                     # Sprint 18 Day 3: Store set assignments for emission (P4 fix)
                     # Dynamic subsets must be populated at runtime via these assignments

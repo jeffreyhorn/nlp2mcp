@@ -17,7 +17,7 @@ import math
 import re
 from collections import deque
 
-from src.emit.expr_to_gams import expr_to_gams
+from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
 from src.ir.ast import (
     Binary,
     Call,
@@ -1514,15 +1514,15 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
 
         # Convert expression to GAMS syntax
         # Pass indices as domain_vars so they're recognized as domain variables
-        domain_vars = frozenset(set_assignment.indices)
+        # Issue #976: Only include string indices in domain_vars (not IndexOffset)
+        domain_vars = frozenset(idx for idx in set_assignment.indices if isinstance(idx, str))
         expr_str = expr_to_gams(restored_expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
         # Quote symbol names that contain special characters (Issue #665)
         if set_assignment.indices:
-            # Emit indices as-is: they may be domain variables or already-normalized
-            # literals (e.g., "route-1"). Only quote the set_name as a symbol name.
-            index_str = ",".join(set_assignment.indices)
+            # Issue #976: Use _format_mixed_indices to handle IndexOffset objects
+            index_str = _format_mixed_indices(set_assignment.indices, domain_vars)
             lines.append(f"{_quote_symbol(set_assignment.set_name)}({index_str}) = {expr_str};")
         else:
             # Scalar set assignment (rare but possible)
