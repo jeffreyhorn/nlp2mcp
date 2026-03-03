@@ -886,6 +886,9 @@ def strip_unsupported_directives(source: str) -> str:
 
     Notes:
         - Line numbers are preserved by replacing directives with comments
+        - Exception: ``$libInclude scenred`` injects two extra predeclaration
+          lines (``Parameter ScenRedParms(*);`` and ``Parameter ScenRedReport(*);``),
+          which shifts subsequent line numbers by 2
         - $include directives are NOT stripped (handled by preprocess_includes)
         - Case-insensitive matching for all directives
     """
