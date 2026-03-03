@@ -415,7 +415,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 **Activities:**
 - Systematically analyzed all 29 baseline `path_solve_terminated` models
 - Ran full pipeline (`run_full_test.py --model NAME --verbose`) for each model
-- Ran direct GAMS execution on on-disk MCP files to capture detailed error messages
+- Ran direct GAMS execution of the on-disk MCP files to capture detailed error messages
 - Classified into 6 categories: A (now solves: 14), B (execution error/starting point: 5), C (MCP pairing: 4), D (compilation error: 2), E (translation timeout: 2), F (locally infeasible: 2)
 - Key finding: none of the 15 still-failing models have PATH convergence issues — all fail before PATH runs
 - PATH options testing (relaxed tolerances, iteration limits) not applicable

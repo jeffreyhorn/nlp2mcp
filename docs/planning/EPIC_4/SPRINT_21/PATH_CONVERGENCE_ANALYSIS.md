@@ -22,7 +22,7 @@ Of the 29 models originally classified as `path_solve_terminated` at Sprint 21 b
 
 **Key finding:** None of the 15 still-failing models have actual PATH solver convergence issues. All failures occur **before PATH runs** — during equation generation (B), model construction (C/D), or translation (E). The `path_solve_terminated` classification was a misnomer for these models; the true error is that GAMS aborts the solve before invoking PATH.
 
-**Relaxed PATH options (convergence_tolerance, iteration_limit) are not applicable** because PATH never executes for any of the 15 failing models.
+**Relaxed PATH options (convergence_tolerance, major_iteration_limit) are not applicable** because PATH never executes for any of the 15 failing models.
 
 ---
 

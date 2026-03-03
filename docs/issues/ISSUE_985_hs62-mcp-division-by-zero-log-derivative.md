@@ -10,7 +10,7 @@
 
 ## Problem Summary
 
-The hs62 model (Hock-Schittkowski test problem #62) parses and translates to MCP successfully, but GAMS aborts during equation generation with `division by zero (0)` at line 65. The stationarity equations contain `1 / (ratio_expression)` gradient terms from `log(ratio)` in the objective. The `.l` initialization sets `x1.l = x2.l = x3.l = 1`, which causes a denominator to evaluate to zero. PATH never runs.
+The hs62 model (Hock-Schittkowski test problem #62) parses and translates to MCP successfully, but GAMS aborts with `division by zero (0)` at line 65 of the MCP file. The error occurs in a post-solve calibration expression `diff = (global - obj.l) / global` that is placed **before** the Solve statement. The scalar `global` is initialized to 0, causing division by zero. The stationarity equations themselves are not the problem. PATH never runs.
 
 ---
 
@@ -30,23 +30,27 @@ gams data/gamslib/mcp/hs62_mcp.gms lo=3
 
 ## Root Cause Analysis
 
-The stationarity equation `stat_x1` contains:
+The error is at line 65 of the emitted MCP file, in a "Post-solve Calibration" block that appears **before** the Solve statement:
 
 ```gams
-stat_x1.. (-8204.37) * 1 / ((x1 + x2 + x3 + 0.03) / (0.09 * x1 + x2 + x3 + 0.03))
-    * (0.09 * x1 + x2 + x3 + 0.03 - (x1 + x2 + x3 + 0.03) * 0.09)
-    / (0.09 * x1 + x2 + x3 + 0.03) ** 2 + ... =E= 0;
+Scalars
+    global /0/          ← initialized to 0
+    solution /-26272.5145/
+    diff /0/
+;
+
+x1.l = 1;  x2.l = 1;  x3.l = 1;
+
+* Post-solve Calibration (variable .l references)
+$onImplicitAssign
+diff = (global - obj.l) / global;   ← line 65: division by zero (global = 0)
+$offImplicitAssign
+
+* Equations (stationarity, etc.) follow below...
+* ... then Solve statement
 ```
 
-This is the derivative of `log((x1+x2+x3+0.03) / (0.09*x1+x2+x3+0.03))`. The derivative of `log(u/v)` = `(v*u' - u*v') / (u*v)`. The numerator factor `(0.09*x1+x2+x3+0.03 - (x1+x2+x3+0.03)*0.09)` simplifies to `(1-0.09)*(x2+x3+0.03) - 0` which is nonzero, but the denominator `(0.09*x1+x2+x3+0.03)^2` evaluates correctly at `x1=x2=x3=1`.
-
-However, there is also a division error at line 65, which is in the "Post-solve Calibration" section:
-
-```gams
-diff = (global - obj.l) / global;
-```
-
-If `global = 0`, this causes division by zero. The issue is that `obj.l` is referenced before the solve, and `global` may be a parameter that is zero or uninitialized.
+The scalar `global` is declared with value 0. The expression `diff = (global - obj.l) / global` divides by `global` = 0, causing the execution error. This block is emitted from original model code that was intended to run **after** solving, but the emitter places it before the equations and Solve statement. The stationarity equations themselves evaluate correctly at the `.l` starting point.
 
 ---
 

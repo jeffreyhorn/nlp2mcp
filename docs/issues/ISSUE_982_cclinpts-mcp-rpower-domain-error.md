@@ -36,17 +36,17 @@ The stationarity equation `stat_b(j)` contains a power expression derived from t
 stat_b(j).. ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / (1 - gamma) ** 2)) * nu_FBCalc(j) + ... =E= 0;
 ```
 
-The `b(j) ** (1 - gamma)` term raises `b(j)` to a non-integer power. When `gamma > 1`, the exponent `(1 - gamma)` is negative. The variable `b.l` is initialized to 5.0, which should be valid. However, the gradient expression `b(j) ** (1 - gamma)` with `gamma` likely > 1 and a possible negative intermediate creates the domain error.
+The model declares `gamma = 2` (Scalar). With `gamma = 2`, `(1 - gamma) = -1`. The subexpression `(1 - gamma) ** 2` evaluates as `(-1) ** 2`. GAMS uses `rPower` for the `**` operator, which requires a non-negative base for real-valued exponentiation. Even though `(-1)^2 = 1` is mathematically well-defined, GAMS's `rPower` rejects the negative base `-1` and raises `FUNC DOMAIN: x**y, x < 0`.
 
-The `.l` initialization exists (`b.l("s1") = 5.0` etc.) but may not be sufficient if the expression requires `b > 0` strictly and intermediate evaluation produces negative values, or if `gamma` makes the expression `x^y` with `x < 0`.
+The variable `b.l` is initialized to 5.0, and `b(j) ** (1 - gamma)` = `5^(-1)` = 0.2 is fine. The problem is specifically the `(1 - gamma) ** 2` subexpression where the base `(1 - gamma) = -1` is negative.
 
 ---
 
 ## Suggested Fix
 
-1. **Investigate the actual value of `gamma`** in the original model — if `gamma > 1`, then `1 - gamma < 0` and `b(j)^(1-gamma)` requires `b(j) > 0` strictly. The `.l` values of 5.0 should work, so the issue may be in how the gradient is simplified/evaluated.
-2. **Add `option domlim = 100;`** to allow GAMS to continue past domain errors — PATH may still converge if evaluation errors are transient.
-3. **Simplify the gradient expression** — the `b(j) ** (1 - gamma) * (1 - gamma) / b(j)` can be rewritten as `(1 - gamma) * b(j) ** (-gamma)` which may have better numerical behavior.
+1. **Simplify the gradient expression** — the entire expression `(1 - gamma) * b^(1-gamma) * (1-gamma) / b / (1-gamma)^2` simplifies algebraically to `b^(-gamma)` = `1/b^gamma`, which avoids raising a negative base to any power. The AD/emitter should apply this simplification.
+2. **Use `sqr()` instead of `** 2`** — GAMS `sqr(x)` handles negative inputs correctly unlike `x ** 2` via `rPower`.
+3. **Add `option domlim = 100;`** as a workaround to allow GAMS to continue past domain errors.
 
 ---
 
