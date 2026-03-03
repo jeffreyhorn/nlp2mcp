@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-Of the 29 models originally classified as `path_solve_terminated` at Sprint 21 baseline, **14 now solve successfully** after Sprint 21 code improvements (Days 1–11). The remaining **15 models still fail**, but the root causes are NOT PATH convergence failures — they are **pre-solver errors** that prevent PATH from ever running.
+Of the 29 models originally classified as `path_solve_terminated` at Sprint 21 baseline, **14 now solve successfully** after Sprint 21 code improvements (Days 1–11). The remaining **15 models still fail**, but none of these failures are due to PATH convergence issues: **13 are pre-solver errors** that prevent PATH from ever running, and **2 reach PATH and terminate as locally infeasible**.
 
 | Category | Count | Models |
 |----------|-------|--------|
@@ -56,20 +56,22 @@ These models were `path_solve_terminated` at baseline but now solve with Sprint 
 
 ### Category B: Execution Error at Starting Point (5 models)
 
-PATH never runs. GAMS aborts during equation generation due to mathematical domain errors. Three sub-causes exist: (1) default `.l = 0` values causing domain errors in KKT gradient expressions (elec, etamac, lands), (2) rPower domain error on a parameter expression (cclinpts), and (3) division by zero in post-solve calibration code (hs62).
+PATH never runs. GAMS aborts during equation generation due to mathematical domain errors. Four sub-causes exist: (1) default `.l = 0` values causing domain errors in KKT gradient expressions (etamac), (2) rPower domain error on a parameter expression (cclinpts), (3) division by zero in distance terms due to self-pairs or duplicate coordinates (elec), (4) division by zero in post-solve calibration code (hs62), and (5) NA/undefined RHS parameter values (lands).
 
 | Model | Error | Equation | Root Cause |
 |-------|-------|----------|------------|
 | cclinpts | `rPower: FUNC DOMAIN: x**y, x < 0` | stat_b(s1..s30) | Parameter expression `(1-gamma)**2` where `gamma=2` → `(-1)**2` rejected by GAMS rPower (requires non-negative base) |
-| elec | `division by zero (0)` | stat_x(i1..i25) | Stationarity has `1/distance` terms; all variables initialized to 0 → zero distances |
+| elec | `division by zero (0)` | stat_x(i1..i25) | Stationarity has `1/distance` terms; `x/y/z.l(i)` are initialized from angular coordinates (e.g., `cos(theta(i))*sin(phi(i))`); division by zero arises when distance is zero for self-pairs (`i == j`) or duplicate angular coordinates |
 | etamac | `division by zero (0)` + `log: FUNC SINGULAR: x = 0` | stat_c(1995..2040) | Consumption variables at 0 → log(0) and 1/c division errors |
 | hs62 | `division by zero (0)` | (calibration block) | Post-solve calibration code `diff = (global - obj.l) / global` where `global = 0`; not a `.l` initialization issue |
-| lands | `RHS value NA in equation` | (generation phase) | NA/undefined value in equation RHS during generation |
+| lands | `RHS value NA in equation` | (generation phase) | NA/undefined parameter value in equation RHS during generation; not a `.l` initialization issue |
 
 **Fix approach:** Different fixes per sub-cause:
-- **elec, etamac, lands** (`.l = 0` domain errors): Initialize primal variables to the NLP solution's `.l` values, or use `max(x.l, epsilon)` for variables in log/power/division terms.
+- **etamac** (`.l = 0` domain errors): Initialize primal variables to the NLP solution's `.l` values, or use `max(x.l, epsilon)` for variables in log/power/division terms.
+- **elec** (zero-distance pairs): Exclude self-pairs (`i == j`) from distance calculations or enforce `distance >= epsilon` in `1/distance` expressions.
 - **cclinpts** (rPower on parameter): Replace `(1-gamma)**2` with `sqr(1-gamma)` or `power(1-gamma, 2)` to avoid rPower domain restriction.
 - **hs62** (calibration division by zero): Guard the calibration division with a conditional or remove the post-solve calibration block from the MCP file.
+- **lands** (NA/undefined RHS parameter): Ensure all RHS parameters are populated before equation generation — propagate `$` conditions from the NLP, provide defaults for missing parameters, or backfill from calibration data.
 
 **Priority:** HIGH — 5 models blocked. Requires either:
 1. Smarter `.l` initialization (e.g., `max(x.l, epsilon)` for variables appearing in log/power/division terms)
@@ -141,7 +143,7 @@ PATH runs successfully (Normal Completion) but finds the system locally infeasib
 | Root Cause | Count | % of 29 | Actionable? |
 |-----------|-------|---------|-------------|
 | Fixed by Sprint 21 improvements | 14 | 48% | Already done |
-| Starting point / domain errors | 5 | 17% | YES — `.l` initialization improvement |
+| Execution errors (Category B) | 5 | 17% | YES — model-specific fixes (see Category B sub-causes) |
 | MCP pairing bugs | 4 | 14% | YES — KKT builder fixes |
 | Compilation errors | 2 | 7% | YES — emitter fixes |
 | Translation timeout | 2 | 7% | Optimization needed |
@@ -167,7 +169,7 @@ The 2 Category F models (chain, rocket) do reach PATH and terminate with Normal 
 
 | Priority | Action | Models | Effort |
 |----------|--------|--------|--------|
-| 1 | `.l` initialization from NLP solution values | cclinpts, elec, etamac, hs62, lands | 3-4h |
+| 1 | Model-specific Category B fixes: `.l` init (etamac), self-pair exclusion (elec), rPower fix (cclinpts), calibration guard (hs62), parameter population (lands) | cclinpts, elec, etamac, hs62, lands | 3-4h |
 | 2 | Fix MCP pairing for fixed-value variables | hhfair, pak | 2-3h |
 | 3 | Fix variable/equation count mismatch | fdesign, trussm | 2-3h |
 | 4 | Fix compilation errors (missing data) | camshape, qsambal | 2h |

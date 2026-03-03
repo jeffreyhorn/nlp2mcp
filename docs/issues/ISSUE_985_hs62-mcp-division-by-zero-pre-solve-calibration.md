@@ -1,4 +1,4 @@
-# hs62: MCP Execution Error — Division by Zero (log derivative)
+# hs62: MCP Execution Error — Division by Zero in Pre-solve Calibration
 
 **GitHub Issue:** [#985](https://github.com/jeffreyhorn/nlp2mcp/issues/985)
 **Status:** OPEN

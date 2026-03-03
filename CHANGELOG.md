@@ -21,7 +21,7 @@ Systematically analyzed all 29 `path_solve_terminated` models from Sprint 21 bas
 - 29/29 models classified (target: ≥20)
 - 14 models now solve (3 MATCH, 11 MISMATCH)
 - 15 models still fail: 13 pre-solver errors + 2 locally infeasible (not PATH convergence)
-- Top actionable fix: `.l` initialization improvement could unblock 5 models (Category B)
+- Top actionable fix: model-specific Category B fixes (`.l` init, rPower fix, calibration guard, parameter population) could unblock 5 models
 
 ### Sprint 21 Day 11: Decomp Empty Stationarity (#826) + Emerging Issues - 2026-02-26
 
