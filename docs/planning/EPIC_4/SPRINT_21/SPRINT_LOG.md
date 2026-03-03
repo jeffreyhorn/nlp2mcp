@@ -407,16 +407,22 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 ### Day 12 — WS8: PATH Convergence Investigation
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-03-03
+**Status:** COMPLETE
+**PR:** #981
+**Effort:** ~3h
 
 **Activities:**
--
+- Systematically analyzed all 29 baseline `path_solve_terminated` models
+- Ran full pipeline (`run_full_test.py --model NAME --verbose`) for each model
+- Ran direct GAMS execution of the on-disk MCP files to capture detailed error messages
+- Classified into 6 categories: A (now solves: 14), B (execution error/starting point: 5), C (MCP pairing: 4), D (compilation error: 2), E (translation timeout: 2), F (locally infeasible: 2)
+- Key finding: none of the 15 still-failing models have PATH convergence issues — 13 fail before PATH runs and 2 reach PATH but terminate as locally infeasible (chain, rocket)
+- PATH options testing (relaxed tolerances, iteration limits) not applicable
+- Wrote `PATH_CONVERGENCE_ANALYSIS.md` with per-model classification, root causes, and recommended actions
 
 **Metrics:**
-- path_solve_terminated models classified: /29
+- path_solve_terminated models classified: 29/29
 
 ---
 
