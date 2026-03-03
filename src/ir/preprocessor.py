@@ -735,18 +735,13 @@ def _has_statement_ending_semicolon(line: str) -> bool:
 
     This handles:
     - Semicolons inside single or double quoted strings are ignored
-    - Escaped quotes within strings (e.g., "test\\"quote" or 'test\\'quote')
+    - Escaped quotes within strings via backslash
+    - GAMS-style doubled-quote escapes (double single-quotes or double
+      double-quotes inside the respective string delimiter)
 
-    Note on comment/non-code handling in the surrounding preprocessor:
-    - `*` is treated as a line comment only when it appears in column 1; such
-      full-line comments are removed before this function is called.
-    - Anything after a statement-terminating `;` is treated as non-code and is
-      ignored for scanning (including any `*` that might appear there).
-
-    This helper only detects a semicolon that is outside of string literals. It
-    assumes that full-line comments and trailing non-code after `;` have already
-    been stripped. It does not handle nested quotes, but works for typical GAMS
-    code.
+    It does not interpret or remove comments or other non-code text; callers
+    are responsible for any preprocessing (such as stripping comments) that
+    is required for their use case.
     """
     in_string = None
     i = 0
@@ -756,6 +751,10 @@ def _has_statement_ending_semicolon(line: str) -> bool:
         # Handle string state
         if in_string:
             if c == in_string:
+                # GAMS-style doubled-quote escape: '' or "" stays in string
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2  # skip both quotes
+                    continue
                 # Check if the quote is escaped by counting preceding backslashes
                 # An odd number of backslashes means the quote is escaped
                 backslash_count = 0
@@ -786,12 +785,46 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     return False
 
 
+def _find_char_outside_strings(line: str, char: str, start: int = 0) -> int:
+    """Return the index of the first occurrence of *char* outside quoted strings, or -1.
+
+    Handles backslash escapes and GAMS-style doubled-quote escapes.
+    """
+    in_string = None
+    i = start
+    while i < len(line):
+        c = line[i]
+        if in_string:
+            if c == in_string:
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2
+                    continue
+                backslash_count = 0
+                j = i - 1
+                while j >= 0 and line[j] == "\\":
+                    backslash_count += 1
+                    j -= 1
+                if backslash_count % 2 == 0:
+                    in_string = None
+            i += 1
+            continue
+        if c in ('"', "'"):
+            in_string = c
+            i += 1
+            continue
+        if c == char:
+            return i
+        i += 1
+    return -1
+
+
 def _find_statement_semicolon_pos(line: str) -> int:
     """Return the index of the first statement-ending semicolon in line, or -1.
 
     Ignores semicolons inside single- or double-quoted strings (same logic as
-    _has_statement_ending_semicolon). Used to strip trailing content (including
-    inline comments) after the semicolon when checking for tuple row expansion.
+    _has_statement_ending_semicolon, including GAMS-style doubled-quote escapes).
+    Used to strip trailing content (including inline comments) after the
+    semicolon when checking for tuple row expansion.
     """
     in_string = None
     i = 0
@@ -799,6 +832,10 @@ def _find_statement_semicolon_pos(line: str) -> int:
         c = line[i]
         if in_string:
             if c == in_string:
+                # GAMS-style doubled-quote escape: '' or "" stays in string
+                if i + 1 < len(line) and line[i + 1] == in_string:
+                    i += 2
+                    continue
                 backslash_count = 0
                 j = i - 1
                 while j >= 0 and line[j] == "\\":
@@ -829,6 +866,10 @@ def strip_unsupported_directives(source: str) -> str:
     - $title: Model title (documentation only)
     - $ontext/$offtext: Comment blocks (documentation only)
     - $eolcom: End-of-line comment character definition
+    - $libInclude: System library includes (not available to parser)
+    - Extended File declarations (hybrid form the grammar can't parse)
+    - putClose with content arguments (grammar only handles putclose ID? ;)
+    - puttl statements (not in grammar)
     - if() execution control statements: Runtime conditionals (not needed for model structure)
     - abort/display: Execution statements (not needed for model structure)
 
@@ -852,8 +893,12 @@ def strip_unsupported_directives(source: str) -> str:
     filtered = []
     in_ontext_block = False
     in_echo_block = False  # Sprint 19 Day 11: $onEchoV/$offEcho and $onEps/$offEps blocks
+    in_put_statement = False  # Issue #895: multi-line unsupported File/putClose/puttl stripping
+    skip_to_line_idx = -1  # consumed lookahead lines for File/putclose semicolon
 
-    for line in lines:
+    for line_idx, line in enumerate(lines):
+        if line_idx <= skip_to_line_idx:
+            continue
         stripped = line.strip()
         stripped_lower = stripped.lower()
 
@@ -915,6 +960,131 @@ def strip_unsupported_directives(source: str) -> str:
             r"^\$\s+libinclude", stripped_lower
         ):
             filtered.append(f"* Stripped: {stripped}")
+            continue
+
+        # Issue #895: Strip extended GAMS put-file I/O forms that the grammar
+        # cannot parse.  The grammar already handles simple forms:
+        #   file_stmt:    File ID / path /;  |  File ID STRING;
+        #   put_stmt:     put items? ;       |  put items / ;
+        #   putclose_stmt: putclose ID? ;
+        # We strip:
+        #   - Continuation lines of a multi-line put/putClose/File statement
+        #   - Any File declaration whose remainder is not grammar-parseable,
+        #     including hybrid forms (ID STRING / path /;), malformed path forms,
+        #     and bare File declarations like "File fx;" or "File fx"
+        #   - putClose with content arguments (not just putclose ID? ;)
+        #   - puttl statements (not in grammar at all)
+        if in_put_statement:
+            filtered.append(f"* Stripped: {line}")
+            if _has_statement_ending_semicolon(stripped):
+                in_put_statement = False
+            continue
+
+        # Strip hybrid File declarations the grammar can't parse:
+        # e.g. File fopts 'desc' / 'path' /;  or  File output 'where results go' / 'path' /;
+        # But NOT: File sol / path /;  or  File repdat 'desc';  (grammar handles these)
+        # The ID may be quoted (grammar: ID = ESCAPED | /[a-zA-Z_]\w*/), so match
+        # either a quoted string or an unquoted identifier.
+        file_m = re.match(
+            r"""(?i)^file\s+(?:'[^']*'|"[^"]*"|[A-Za-z_][A-Za-z0-9_]*)\s*(.*)""",
+            stripped,
+        )
+        if file_m:
+            rest = file_m.group(1)
+            # Grammar-parseable:
+            #   - Path form: / path /;  (closing "/" before statement-ending ";")
+            #   - Description form: 'desc'; or "desc";
+            # Bare forms (File fx; or File fx) are NOT grammar-parseable and get stripped.
+            # Use _find_statement_semicolon_pos to ignore semicolons inside strings
+            # when determining the statement terminator.
+            # The grammar ignores NEWLINE, so the semicolon may be on the next line.
+            eval_stripped = stripped
+            semicolon_pos = _find_statement_semicolon_pos(eval_stripped)
+            semi_line_idx = -1
+            if semicolon_pos == -1:
+                # Scan forward skipping blank and full-line * comment lines
+                for fwd in range(line_idx + 1, len(lines)):
+                    fwd_stripped = lines[fwd].strip()
+                    if fwd_stripped == "" or fwd_stripped.startswith("*"):
+                        continue
+                    if fwd_stripped == ";":
+                        eval_stripped = stripped + ";"
+                        semicolon_pos = _find_statement_semicolon_pos(eval_stripped)
+                        semi_line_idx = fwd
+                    break
+            path_form_ok = False
+            if semicolon_pos != -1:
+                rest_start = file_m.start(1)
+                if semicolon_pos > rest_start:
+                    rest_upto_semi = eval_stripped[rest_start:semicolon_pos]
+                    rest_trimmed = rest_upto_semi.strip()
+                    if rest_trimmed.startswith("/"):
+                        closing_slash = _find_char_outside_strings(rest_trimmed, "/", 1)
+                        if closing_slash != -1:
+                            after_slash = rest_trimmed[closing_slash + 1 :].strip()
+                            if after_slash == "":
+                                # Validate inner path matches grammar file_path:
+                                #   STRING | compile_time_const | FILE_PATH_UNQUOTED
+                                inner = rest_trimmed[1:closing_slash].strip()
+                                path_form_ok = bool(
+                                    re.match(
+                                        r"""^(?:'[^']*'|"[^"]*"|%[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*%|[a-zA-Z0-9_][a-zA-Z0-9_.\-]*)$""",
+                                        inner,
+                                    )
+                                )
+            # For desc form, if ; is on the next line, check rest + ";"
+            eval_rest = rest + ";" if semi_line_idx != -1 else rest
+            desc_form_ok = bool(re.match(r"""^(?:'[^']*'|"[^"]*")\s*;""", eval_rest))
+            grammar_ok = path_form_ok or desc_form_ok
+            if not grammar_ok:
+                filtered.append(f"* Stripped: {stripped}")
+                if not _has_statement_ending_semicolon(stripped):
+                    in_put_statement = True
+                continue
+            # Grammar-parseable File: if we consumed lookahead lines, emit them
+            if semi_line_idx != -1:
+                for emit_idx in range(line_idx, semi_line_idx + 1):
+                    filtered.append(lines[emit_idx])
+                skip_to_line_idx = semi_line_idx
+                continue
+
+        # Strip putClose with content (grammar only supports: putclose ID? ;)
+        if re.match(r"(?i)^putclose\s", stripped):
+            # Check if it matches the grammar form: putclose ID? ;
+            # ID token in grammar: ESCAPED | /[a-zA-Z_][a-zA-Z0-9_]*/
+            # The grammar ignores NEWLINE, so the ; may be on the next line.
+            pc_eval = stripped
+            pc_semi_line_idx = -1
+            if not _has_statement_ending_semicolon(stripped):
+                # Scan forward skipping blank and full-line * comment lines
+                for fwd in range(line_idx + 1, len(lines)):
+                    fwd_stripped = lines[fwd].strip()
+                    if fwd_stripped == "" or fwd_stripped.startswith("*"):
+                        continue
+                    if fwd_stripped == ";":
+                        pc_eval = stripped + ";"
+                        pc_semi_line_idx = fwd
+                    break
+            if not re.match(
+                r"""(?i)^putclose(?:\s+(?:'[^']*'|"[^"]*"|[A-Za-z_][A-Za-z0-9_]*))?\s*;\s*$""",
+                pc_eval,
+            ):
+                filtered.append(f"* Stripped: {stripped}")
+                if not _has_statement_ending_semicolon(stripped):
+                    in_put_statement = True
+                continue
+            # Grammar-parseable putclose: if we consumed lookahead lines, emit them
+            if pc_semi_line_idx != -1:
+                for emit_idx in range(line_idx, pc_semi_line_idx + 1):
+                    filtered.append(lines[emit_idx])
+                skip_to_line_idx = pc_semi_line_idx
+                continue
+
+        # Strip puttl statements (not in grammar at all)
+        if re.match(r"(?i)^puttl\b", stripped):
+            filtered.append(f"* Stripped: {stripped}")
+            if not _has_statement_ending_semicolon(stripped):
+                in_put_statement = True
             continue
 
         # Sprint 9 Day 6: if/elseif/else, abort, and compile-time constants now fully supported

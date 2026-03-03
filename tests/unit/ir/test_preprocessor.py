@@ -370,6 +370,201 @@ Equations eq;"""
         assert lines[0].startswith("* Stripped:")
         assert lines[1] == "Variables x;"
 
+    def test_strip_file_hybrid_declaration(self):
+        """Issue #895: Strip hybrid File declaration (ID STRING / path /)."""
+        source = "File fopts 'option file' / 'myfile.opt' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_file_simple_path(self):
+        """Grammar-parseable File declarations are NOT stripped."""
+        source = "File sol / solution_lic.csv /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / solution_lic.csv /;"
+        assert lines[1] == "Variables x;"
+
+    def test_strip_file_path_no_semicolon(self):
+        """File path form without trailing semicolon is NOT grammar-parseable."""
+        source = "File sol / solution_lic.csv /\n  'more' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")  # continuation consumed
+        assert lines[2] == "Variables x;"
+
+    def test_strip_file_path_no_closing_slash(self):
+        """File path form without closing / is NOT grammar-parseable."""
+        source = "File sol / path ;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_file_string_path_with_semicolon(self):
+        """File path STRING with internal semicolon is grammar-parseable and NOT stripped."""
+        source = "File sol / 'my;file.txt' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / 'my;file.txt' /;"
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_file_string_path_with_slash(self):
+        """File path STRING with internal / is grammar-parseable and NOT stripped."""
+        source = "File sol / '/tmp/a/b.txt' /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / '/tmp/a/b.txt' /;"
+        assert lines[1] == "Variables x;"
+
+    def test_strip_file_unquoted_path_with_spaces(self):
+        """File path with spaces in unquoted path is NOT grammar-parseable."""
+        source = "File sol / solution lic.csv /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_file_string_desc(self):
+        """File ID STRING; form is grammar-parseable and NOT stripped."""
+        source = "File repdat 'report file';\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File repdat 'report file';"
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_file_desc_next_line_semi(self):
+        """File ID STRING with ; on next line is grammar-parseable and NOT stripped."""
+        source = "File repdat 'report file'\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File repdat 'report file'"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
+
+    def test_preserve_file_path_next_line_semi(self):
+        """File ID / path / with ; on next line is grammar-parseable and NOT stripped."""
+        source = "File sol / solution_lic.csv /\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File sol / solution_lic.csv /"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
+
+    def test_strip_putclose_with_content(self):
+        """Issue #895: Strip putClose with content arguments (multi-line)."""
+        source = (
+            "putClose fopts 'line1'\n"
+            "             / 'line2'\n"
+            "             / 'line3';\n"
+            "Variables x;\n"
+        )
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")
+        assert lines[2].startswith("* Stripped:")
+        assert lines[3] == "Variables x;"
+
+    def test_preserve_putclose_simple(self):
+        """Grammar-parseable putclose (ID? ;) is NOT stripped."""
+        source = "putclose myf;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "putclose myf;"
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_putclose_quoted_id(self):
+        """Grammar-parseable putclose with quoted ID is NOT stripped."""
+        source = 'putclose "my file";\nVariables x;\n'
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == 'putclose "my file";'
+        assert lines[1] == "Variables x;"
+
+    def test_preserve_putclose_next_line_semi(self):
+        """Grammar-parseable putclose with ; on next line is NOT stripped."""
+        source = "putclose myf\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "putclose myf"
+        assert lines[1] == ";"
+        assert lines[2] == "Variables x;"
+
+    def test_preserve_putclose_semi_after_blank_lines(self):
+        """putclose with ; after blank/comment lines is grammar-parseable."""
+        source = "putclose myf\n\n* comment\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "putclose myf"
+        assert lines[1] == ""
+        assert lines[2] == "* comment"
+        assert lines[3] == ";"
+        assert lines[4] == "Variables x;"
+
+    def test_preserve_file_desc_semi_after_blank_lines(self):
+        """File ID STRING with ; after blank/comment lines is preserved."""
+        source = "File repdat 'report file'\n\n* comment\n;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "File repdat 'report file'"
+        assert lines[1] == ""
+        assert lines[2] == "* comment"
+        assert lines[3] == ";"
+        assert lines[4] == "Variables x;"
+
+    def test_preserve_put_statement(self):
+        """Grammar-parseable put statements are NOT stripped."""
+        source = "put fopts 'some text';\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0] == "put fopts 'some text';"
+        assert lines[1] == "Variables x;"
+
+    def test_strip_puttl_statement(self):
+        """Issue #895: puttl is not in grammar and is always stripped."""
+        source = "puttl 'some text';\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
+    def test_strip_putclose_no_semicolon(self):
+        """putclose without trailing semicolon is stripped (grammar requires SEMI)."""
+        source = "putclose myf\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        # Second line is continuation (no ; on first) — also stripped
+        assert lines[1].startswith("* Stripped:")
+
+    def test_strip_multiline_put_semicolon_in_string(self):
+        """Semicolons inside quoted strings don't prematurely end multi-line stripping."""
+        source = "putClose fopts 'option;value'\n" "             / 'more data';\n" "Variables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")
+        assert lines[2] == "Variables x;"
+
+    def test_strip_multiline_put_gams_doubled_quote_escape(self):
+        """GAMS doubled-quote escapes don't prematurely end multi-line stripping."""
+        source = "putClose fopts 'it''s a;test'\n" "             / 'more';\n" "Variables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1].startswith("* Stripped:")
+        assert lines[2] == "Variables x;"
+
+    def test_strip_file_case_insensitive(self):
+        """File/putClose stripping is case-insensitive."""
+        source = "FILE myf 'desc' / 'file.txt' /;\nPUTCLOSE myf 'data';\n"
+        result = strip_unsupported_directives(source)
+        assert "* Stripped:" in result.split("\n")[0]
+        assert "* Stripped:" in result.split("\n")[1]
+
 
 class TestPreprocessGamsFile:
     """Test the complete preprocess_gams_file() integration function."""
