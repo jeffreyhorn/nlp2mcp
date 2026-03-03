@@ -230,9 +230,9 @@ class TestBinaryOperators:
         assert result == "x / (-2)"
 
     def test_power_operator(self):
-        """Test power operator conversion to GAMS ** syntax."""
+        """Test power operator: x^2 becomes sqr(x) (#982)."""
         result = expr_to_gams(Binary("^", VarRef("x", ()), Const(2)))
-        assert result == "x ** 2"
+        assert result == "sqr(x)"
 
     def test_power_with_variables(self):
         """Test power with variable exponent."""
@@ -279,10 +279,10 @@ class TestOperatorPrecedence:
         assert result == "10 / (5 / 2)"
 
     def test_power_associativity(self):
-        """Test a ** (b ** c) needs parens."""
+        """Test a ** (b ** c) needs parens; inner b^2 becomes sqr(b) (#982)."""
         expr = Binary("^", Const(2), Binary("^", Const(3), Const(2)))
         result = expr_to_gams(expr)
-        assert result == "2 ** (3 ** 2)"
+        assert result == "2 ** (sqr(3))"
 
     def test_complex_expression(self):
         """Test complex nested expression."""
@@ -296,14 +296,14 @@ class TestOperatorPrecedence:
         assert result == "(a + b) * (c - d)"
 
     def test_power_in_addition(self):
-        """Test x**2 + y**2 doesn't need parens."""
+        """Test x^2 + y^2 becomes sqr(x) + sqr(y) (#982)."""
         expr = Binary(
             "+",
             Binary("^", VarRef("x", ()), Const(2)),
             Binary("^", VarRef("y", ()), Const(2)),
         )
         result = expr_to_gams(expr)
-        assert result == "x ** 2 + y ** 2"
+        assert result == "sqr(x) + sqr(y)"
 
 
 @pytest.mark.unit
@@ -475,14 +475,14 @@ class TestComplexExpressions:
     """Test complex real-world expressions."""
 
     def test_quadratic_objective(self):
-        """Test quadratic objective: x^2 + y^2."""
+        """Test quadratic objective: x^2 + y^2 becomes sqr(x) + sqr(y) (#982)."""
         expr = Binary(
             "+",
             Binary("^", VarRef("x", ()), Const(2)),
             Binary("^", VarRef("y", ()), Const(2)),
         )
         result = expr_to_gams(expr)
-        assert result == "x ** 2 + y ** 2"
+        assert result == "sqr(x) + sqr(y)"
 
     def test_stationarity_equation(self):
         """Test stationarity equation with multipliers."""
@@ -496,14 +496,14 @@ class TestComplexExpressions:
         assert result == "2 * x + nu_balance"
 
     def test_sum_with_power(self):
-        """Test sum(i, a(i) * x(i)^2)."""
+        """Test sum(i, a(i) * x(i)^2) becomes sum(i, a(i) * sqr(x(i))) (#982)."""
         body = Binary(
             "*",
             ParamRef("a", ("i",)),
             Binary("^", VarRef("x", ("i",)), Const(2)),
         )
         result = expr_to_gams(Sum(("i",), body))
-        assert result == "sum(i, a(i) * x(i) ** 2)"
+        assert result == "sum(i, a(i) * sqr(x(i)))"
 
     def test_complementarity_slack(self):
         """Test complementarity slack: -g(x) where g(x) = x - 10.
@@ -1145,10 +1145,10 @@ class TestNegativeExponentParenthesization:
         assert result == "x ** (-2)"
 
     def test_power_positive_exponent_no_parens(self):
-        """Test x ** 2 stays as x ** 2 (no unnecessary parentheses)."""
+        """Test x^2 becomes sqr(x) (#982, no unnecessary parentheses)."""
         expr = Binary("^", VarRef("x", ()), Const(2))
         result = expr_to_gams(expr)
-        assert result == "x ** 2"
+        assert result == "sqr(x)"
 
     def test_power_variable_exponent_no_parens(self):
         """Test x ** n stays as x ** n (no parens for variable exponents)."""

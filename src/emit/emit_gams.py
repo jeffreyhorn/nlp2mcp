@@ -489,6 +489,40 @@ def emit_gams_mcp(
                 else:
                     lines.append(f"{var_name}.l = 1;")
 
+        # Issue #984: Clamp expression-based .l to .lo bounds.
+        # When .l is set via an expression (Priority 1b) that may evaluate to 0,
+        # ensure .l >= .lo to prevent domain errors (log(0), 1/x division by zero)
+        # during equation generation.
+        has_l_expr = (hasattr(var_def, "l_expr_map") and var_def.l_expr_map) or (
+            hasattr(var_def, "l_expr") and var_def.l_expr is not None
+        )
+        if has_l_expr and var_def.lo is not None and var_def.lo > 0:
+            if var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                lines.append(
+                    f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), {var_def.lo});"
+                )
+            else:
+                lines.append(f"{var_name}.l = max({var_name}.l, {var_def.lo});")
+        elif has_l_expr and var_def.lo_map:
+            # If all lo_map values are the same, use a single domain-level clamp
+            lo_vals = [v for v in var_def.lo_map.values() if v is not None and v > 0]
+            if lo_vals and len(set(lo_vals)) == 1 and var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                lines.append(
+                    f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), {lo_vals[0]});"
+                )
+            else:
+                for indices, lo_val in var_def.lo_map.items():
+                    if lo_val is not None and lo_val > 0:
+                        idx_domain_vars = frozenset(
+                            i for i in indices if i.lower() in _sets_aliases_lower
+                        )
+                        idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
+                        lines.append(
+                            f"{var_name}.l({idx_str}) = max({var_name}.l({idx_str}), {lo_val});"
+                        )
+
         if lines:
             var_init_groups[var_name] = lines
             var_init_order.append(var_name)
@@ -606,22 +640,13 @@ def emit_gams_mcp(
             sections.append("")
 
     # Deferred .l-referencing calibration assignments (second pass).
-    # These must come after Variables are declared so GAMS recognizes var.l syntax.
+    # These reference variable .l values and are intended to run after the Solve
+    # so they see solved values. We compute the code now but emit it after Solve.
     # $onImplicitAssign suppresses GAMS Error 141 when reading .l from variables
     # that have been declared and initialized but not explicitly data-assigned.
     calibration_code = emit_computed_parameter_assignments(
         kkt.model_ir, varref_filter="only_varref_attr"
     )
-    if calibration_code:
-        if add_comments:
-            sections.append("* ============================================")
-            sections.append("* Post-solve Calibration (variable .l references)")
-            sections.append("* ============================================")
-            sections.append("")
-        sections.append("$onImplicitAssign")
-        sections.append(calibration_code)
-        sections.append("$offImplicitAssign")
-        sections.append("")
 
     # Equations
     if add_comments:
@@ -920,6 +945,20 @@ def emit_gams_mcp(
 
     solve_code = emit_solve(model_name)
     sections.append(solve_code)
+
+    # Emit post-solve calibration after the Solve statement (#985).
+    # These assignments reference variable .l values (e.g., obj.l) and must
+    # execute after PATH solves the model, not before equation generation.
+    if calibration_code:
+        sections.append("")
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Post-solve Calibration (variable .l references)")
+            sections.append("* ============================================")
+            sections.append("")
+        sections.append("$onImplicitAssign")
+        sections.append(calibration_code)
+        sections.append("$offImplicitAssign")
 
     # Emit NLP objective value capture for pipeline comparison.
     # MCP listings have no "OBJECTIVE VALUE" line, so we assign the NLP objective

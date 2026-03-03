@@ -114,7 +114,7 @@ class TestEmitEquationDef:
         rhs = Binary("*", Const(2), VarRef("y", ()))
         eq_def = EquationDef(name="nonlinear", domain=(), relation=Rel.EQ, lhs_rhs=(lhs, rhs))
         result, aliases = emit_equation_def("nonlinear", eq_def)
-        assert result == "nonlinear.. x ** 2 =E= 2 * y;"
+        assert result == "nonlinear.. sqr(x) =E= 2 * y;"
         assert aliases == set()
 
 
