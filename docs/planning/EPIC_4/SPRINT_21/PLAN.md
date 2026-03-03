@@ -507,6 +507,8 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 
 **End of Day 12 criterion:** ≥20/29 path_solve_terminated models classified; PATH_CONVERGENCE_ANALYSIS.md drafted.
 
+**Day 12 status:** COMPLETE (2026-03-03). All 29/29 models classified. Key finding: 14 now solve (Sprint 21 fixes), 15 still fail but none are PATH convergence issues — all are pre-solver errors (execution errors at starting point, MCP pairing bugs, compilation errors, translation timeouts, locally infeasible). PATH options testing not applicable. PATH_CONVERGENCE_ANALYSIS.md created.
+
 **Post-merge checklist:**
 - [ ] Record PR number in SPRINT_LOG.md (PR2)
 

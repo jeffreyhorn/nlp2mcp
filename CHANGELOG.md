@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 12: WS8 PATH Convergence Investigation - 2026-03-03
+
+**Branch:** `sprint21-day12-path-convergence`
+
+#### Summary
+Systematically analyzed all 29 `path_solve_terminated` models from Sprint 21 baseline. Key finding: 14 models now solve successfully after Sprint 21 code improvements (Days 1–11). The remaining 15 models fail before PATH ever runs — execution errors at starting point (5), MCP pairing bugs (4), compilation errors (2), translation timeouts (2), and locally infeasible (2). No actual PATH convergence issues found. PATH options testing (relaxed tolerances, iteration limits) not applicable.
+
+#### Added
+- `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md` — comprehensive per-model classification with root causes, recommended actions, and priority fixes for Sprint 22
+
+#### Analysis Results
+- 29/29 models classified (target: ≥20)
+- 14 models now solve (3 MATCH, 11 MISMATCH)
+- 15 models still fail (all pre-solver errors, not PATH convergence)
+- Top actionable fix: `.l` initialization improvement could unblock 5 models (Category B)
+
 ### Sprint 21 Day 11: Decomp Empty Stationarity (#826) + Emerging Issues - 2026-02-26
 
 **Branch:** `sprint21-day11-decomp-emerging`
