@@ -1017,11 +1017,11 @@ def strip_unsupported_directives(source: str) -> str:
                                 inner = rest_trimmed[1:closing_slash].strip()
                                 path_form_ok = bool(
                                     re.match(
-                                        r"""^(?:'[^']*'|"[^"]*"|%\w+(?:\.\w+)*%|[a-zA-Z0-9_][a-zA-Z0-9_.\-]*)$""",
+                                        r"""^(?:'[^']*'|"[^"]*"|%[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*%|[a-zA-Z0-9_][a-zA-Z0-9_.\-]*)$""",
                                         inner,
                                     )
                                 )
-            desc_form_ok = re.match(r"""^(['"].*?['"])\s*;""", rest)
+            desc_form_ok = re.match(r"""^(?:'[^']*'|"[^"]*")\s*;""", rest)
             grammar_ok = path_form_ok or desc_form_ok
             if not grammar_ok:
                 filtered.append(f"* Stripped: {stripped}")
