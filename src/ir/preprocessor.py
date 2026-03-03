@@ -1012,7 +1012,15 @@ def strip_unsupported_directives(source: str) -> str:
                         if closing_slash != -1:
                             after_slash = rest_trimmed[closing_slash + 1 :].strip()
                             if after_slash == "":
-                                path_form_ok = True
+                                # Validate inner path matches grammar file_path:
+                                #   STRING | compile_time_const | FILE_PATH_UNQUOTED
+                                inner = rest_trimmed[1:closing_slash].strip()
+                                path_form_ok = bool(
+                                    re.match(
+                                        r"""^(?:'[^']*'|"[^"]*"|%\w+(?:\.\w+)*%|[a-zA-Z0-9_][a-zA-Z0-9_.\-]*)$""",
+                                        inner,
+                                    )
+                                )
             desc_form_ok = re.match(r"""^(['"].*?['"])\s*;""", rest)
             grammar_ok = path_form_ok or desc_form_ok
             if not grammar_ok:

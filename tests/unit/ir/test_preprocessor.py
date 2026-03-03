@@ -419,6 +419,14 @@ Equations eq;"""
         assert lines[0] == "File sol / '/tmp/a/b.txt' /;"
         assert lines[1] == "Variables x;"
 
+    def test_strip_file_unquoted_path_with_spaces(self):
+        """File path with spaces in unquoted path is NOT grammar-parseable."""
+        source = "File sol / solution lic.csv /;\nVariables x;\n"
+        result = strip_unsupported_directives(source)
+        lines = result.split("\n")
+        assert lines[0].startswith("* Stripped:")
+        assert lines[1] == "Variables x;"
+
     def test_preserve_file_string_desc(self):
         """File ID STRING; form is grammar-parseable and NOT stripped."""
         source = "File repdat 'report file';\nVariables x;\n"
