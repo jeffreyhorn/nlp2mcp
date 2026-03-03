@@ -739,11 +739,9 @@ def _has_statement_ending_semicolon(line: str) -> bool:
     - GAMS-style doubled-quote escapes (double single-quotes or double
       double-quotes inside the respective string delimiter)
 
-    This helper only detects a semicolon that is outside of string literals.
-    It does not strip comments or trailing non-code; callers are responsible
-    for ensuring input is appropriate for their context. In
-    ``strip_unsupported_directives``, full-line ``*`` comments are removed
-    before this function is called, but other call sites may pass raw lines.
+    It does not interpret or remove comments or other non-code text; callers
+    are responsible for any preprocessing (such as stripping comments) that
+    is required for their use case.
     """
     in_string = None
     i = 0
