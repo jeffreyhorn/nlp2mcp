@@ -662,7 +662,7 @@ def compare_variable_values(
         - max_abs_diff: overall maximum absolute difference
         - max_rel_diff: overall maximum relative difference
         - worst_variable: name of variable with largest difference
-        - per_variable: list of per-variable summaries (sorted by max abs diff descending)
+        - per_variable: list of per-variable summaries (sorted by max abs diff descending, capped at the 10 worst entries)
     """
     common_vars = set(nlp_vars) & set(mcp_vars)
     per_variable: list[dict[str, Any]] = []

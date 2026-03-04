@@ -1134,6 +1134,16 @@ class TestCompareVariableValues:
         assert result["per_variable"][0]["name"] == "b"  # diff=100
         assert result["per_variable"][1]["name"] == "c"  # diff=50
 
+    def test_infinity_mismatch(self):
+        """Infinity mismatch sets worst_variable and increments diverged."""
+        nlp = {"x": {"": float("inf")}}
+        mcp = {"x": {"": 1.0}}
+        result = compare_variable_values(nlp, mcp)
+
+        assert result["variables_compared"] == 1
+        assert result["variables_diverged"] == 1
+        assert result["worst_variable"] == "x"
+
     def test_empty_inputs(self):
         """Empty inputs produce zero-count result."""
         result = compare_variable_values({}, {})

@@ -527,7 +527,7 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | Implement primal variable comparison | `scripts/gamslib/test_solve.py` | Primal comparison | ✅ Done |
 | Implement dual variable comparison | `scripts/gamslib/test_solve.py` | Dual comparison | ✅ Done |
 | Implement combined relative/absolute tolerance | `scripts/gamslib/test_solve.py` | Tolerance framework | ✅ Done |
-| Unit tests for comparison framework | `tests/gamslib/test_test_solve.py` | ≥3 new tests | ✅ Done (20 tests) |
+| Unit tests for comparison framework | `tests/gamslib/test_test_solve.py` | ≥3 new tests | ✅ Done (26 tests) |
 
 **End of Day 13 criterion:** All 29 path_solve_terminated models classified; solution comparison framework extended with primal and dual comparison. **MET**
 

@@ -22,7 +22,7 @@ per-variable LEVEL values and per-equation MARGINAL values from GAMS listing fil
 - `compare_variable_values()` — Compare per-variable values with max abs/rel diff reporting
 - `values_close()` — Combined tolerance check: `|a-b| <= atol + rtol * max(|a|,|b|)`
 - `_parse_gams_value()` — Robust GAMS numeric value parser (handles `.`, `EPS`, `INF`, `UNDF`)
-- 20 new unit tests across 5 test classes (TestValuesClose, TestExtractVariableValues,
+- 26 new unit tests across 5 test classes (TestValuesClose, TestExtractVariableValues,
   TestExtractEquationMarginals, TestCompareVariableValues, and related)
 
 #### Metrics
