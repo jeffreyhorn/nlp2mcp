@@ -411,6 +411,7 @@ def emit_gams_mcp(
         ):
             continue
         has_init = False
+        emitted_l_expr_init = False
         lines: list[str] = []
 
         # Priority 1: Check for explicit level values (l_map) - these take precedence
@@ -442,6 +443,7 @@ def emit_gams_mcp(
                 lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
                 deps.update(_collect_varref_names(expr))
                 has_init = True
+                emitted_l_expr_init = True
             deps.discard(var_name.lower())  # remove self-references
             if deps:
                 var_l_deps[var_name] = deps
@@ -453,6 +455,7 @@ def emit_gams_mcp(
             if deps:
                 var_l_deps[var_name] = deps
             has_init = True
+            emitted_l_expr_init = True
 
         # Priority 2: Check for indexed lower bounds (lo_map) if no .l was provided
         if not has_init and var_def.lo_map:
@@ -492,11 +495,9 @@ def emit_gams_mcp(
         # Issue #984: Clamp expression-based .l to .lo bounds.
         # When .l is set via an expression (Priority 1b) that may evaluate to 0,
         # ensure .l >= .lo to prevent domain errors (log(0), 1/x division by zero)
-        # during equation generation.
-        has_l_expr = (hasattr(var_def, "l_expr_map") and var_def.l_expr_map) or (
-            hasattr(var_def, "l_expr") and var_def.l_expr is not None
-        )
-        if has_l_expr and var_def.lo is not None and var_def.lo > 0:
+        # during equation generation. Only clamp when Priority 1b actually ran —
+        # if numeric .l (Priority 1) was used, the values are already correct.
+        if emitted_l_expr_init and var_def.lo is not None and var_def.lo > 0:
             if var_def.domain:
                 domain_str = ",".join(var_def.domain)
                 lines.append(
@@ -504,7 +505,7 @@ def emit_gams_mcp(
                 )
             else:
                 lines.append(f"{var_name}.l = max({var_name}.l, {var_def.lo});")
-        elif has_l_expr and var_def.lo_map:
+        elif emitted_l_expr_init and var_def.lo_map:
             # Emit per-index clamps only for indices present in lo_map.
             # This avoids changing semantics for indices that are intentionally
             # unbounded (partial lo_map coverage).
