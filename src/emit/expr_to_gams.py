@@ -372,8 +372,9 @@ def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = 
     # Equal precedence on right side needs parens for non-associative ops
     # e.g., a - (b - c) vs a - b - c
     if child_prec == parent_prec and is_right:
-        # Subtraction and division are left-associative
-        if parent_op in ("-", "/", "^"):
+        # Subtraction and division are left-associative; power (^ and **)
+        # is non-associative in GAMS so always parenthesize nested power.
+        if parent_op in ("-", "/", "^", "**"):
             return True
 
     return False

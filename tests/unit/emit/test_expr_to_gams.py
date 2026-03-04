@@ -284,6 +284,12 @@ class TestOperatorPrecedence:
         result = expr_to_gams(expr)
         assert result == "2 ** (sqr(3))"
 
+    def test_power_associativity_double_star(self):
+        """Test a ** (b ** c) with '**' AST op also parenthesizes correctly."""
+        expr = Binary("**", Const(2), Binary("**", Const(3), Const(4)))
+        result = expr_to_gams(expr)
+        assert result == "2 ** (3 ** 4)"
+
     def test_complex_expression(self):
         """Test complex nested expression."""
         # (a + b) * (c - d)
