@@ -17,7 +17,7 @@ parse 154/157 (98.1%), solve 65, match 30, tests 3,957. Sprint retrospective wri
 with Sprint 22 recommendations.
 
 #### Added
-- Sprint retrospective (`SPRINT_RETROSPECTIVE.md`)
+- Sprint retrospective (`docs/planning/EPIC_4/SPRINT_21/SPRINT_RETROSPECTIVE.md`)
 - Final metrics in SPRINT_LOG.md with full error category breakdown (PR3 + PR5)
 - PROJECT_PLAN.md updated with Sprint 21 actuals in Rolling KPIs
 

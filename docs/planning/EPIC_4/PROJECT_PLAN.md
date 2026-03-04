@@ -904,11 +904,13 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 | internal_error (parse) | ~23 | <15 | 7 | **0** | <5 | <5 | <3 | <3 |
 | path_syntax_error | ≤2 | ≤2 | 48 | **41** | ≤30 | ≤2 | ≤2 | ≤2 |
 | path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | ≤5 | ≤3 | ≤3 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | 0 | 0 | 0 | 0 |
+| model_infeasible | 0 | 0 | 12 | **15** | ≤12¹ | TBD¹ | TBD¹ | TBD¹ |
 | Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | ≥85% | ≥90% | ≥92% | ≥95% |
 | Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | ≥82% | ≥85% | ≥88% | ≥90% |
 | Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | ≥55% | ≥65% | ≥75% | ≥80% |
 | Full Pipeline (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | ≥50% | ≥55% | ≥65% | ≥70% |
+
+¹ Sprint 21 retrospective recommends S22 `model_infeasible` target of ≤12; S23–S25 targets TBD pending future planning.
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
