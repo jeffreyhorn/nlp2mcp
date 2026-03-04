@@ -438,12 +438,12 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 - Implemented primal variable comparison (`extract_variable_values`, `compare_variable_values`)
 - Implemented dual variable comparison (`extract_equation_marginals`)
 - Implemented combined tolerance framework (`values_close`, `_parse_gams_value`)
-- Added 26 new unit tests across 5 test classes
+- Added 26 new unit tests across 4 test classes
 
 **Metrics:**
 - path_solve_terminated classified: 29/29
 - Solution comparison: primal + dual extraction and comparison implemented
-- Tests: 3,951 passed (+26 new), 10 skipped, 1 xfailed
+- Tests: 3,957 passed (+26 new), 10 skipped, 1 xfailed
 
 ---
 

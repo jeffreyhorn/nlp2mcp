@@ -22,11 +22,11 @@ per-variable LEVEL values and per-equation MARGINAL values from GAMS listing fil
 - `compare_variable_values()` — Compare per-variable values with max abs/rel diff reporting
 - `values_close()` — Combined tolerance check: `|a-b| <= atol + rtol * max(|a|,|b|)`
 - `_parse_gams_value()` — Robust GAMS numeric value parser (handles `.`, `EPS`, `INF`, `UNDF`)
-- 26 new unit tests across 5 test classes (TestValuesClose, TestExtractVariableValues,
-  TestExtractEquationMarginals, TestCompareVariableValues, and related)
+- 26 new unit tests across 4 test classes (TestValuesClose, TestExtractVariableValues,
+  TestExtractEquationMarginals, TestCompareVariableValues)
 
 #### Metrics
-- Tests: 3,951 passed, 10 skipped, 1 xfailed
+- Tests: 3,957 passed, 10 skipped, 1 xfailed
 - PATH convergence: 29/29 models classified (completed Day 12)
 
 ### Sprint 21 Day 12: WS8 PATH Convergence Investigation - 2026-03-03
