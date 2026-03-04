@@ -634,10 +634,9 @@ def emit_gams_mcp(
             sections.append("* (POSITIVE variables already initialized above)")
             sections.append("")
 
-    # Note: Deferred .l-referencing calibration assignments (e.g., post-solve
-    # reporting like diff = (global - obj.l) / global) are intentionally skipped.
-    # See Issue #985 / PR #987 — they may divide by zero and are not needed
-    # for MCP correctness.
+    # Issue #985: Post-solve calibration/reporting assignments from the original
+    # NLP model (e.g., diff = (global - obj.l) / global) are intentionally
+    # skipped — they may divide by zero and are not needed for MCP correctness.
 
     # Equations
     if add_comments:
@@ -937,11 +936,7 @@ def emit_gams_mcp(
     solve_code = emit_solve(model_name)
     sections.append(solve_code)
 
-    # Issue #985 / PR #987: Skip post-solve calibration entirely.
-    # These are reporting assignments from the original NLP model (e.g.,
-    # diff = (global - obj.l) / global) that may reference parameters with
-    # zero or undefined values, causing division-by-zero after the MCP solve.
-    # They are not needed for MCP correctness or objective extraction.
+    # Issue #985: Post-solve calibration skipped (see note near Equations section).
 
     # Emit NLP objective value capture for pipeline comparison.
     # MCP listings have no "OBJECTIVE VALUE" line, so we assign the NLP objective

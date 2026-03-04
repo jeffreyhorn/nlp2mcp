@@ -17,12 +17,12 @@ The hs62 model (Hock-Schittkowski test problem #62) parses and translates to MCP
 
 ## Fix
 
-Moved post-solve calibration code (parameter assignments that reference variable `.l` values) from before the equations to after the Solve statement in `src/emit/emit_gams.py`. The calibration code is computed early but deferred for emission until after `Solve mcp_model using MCP;`.
+Disabled emission of post-solve calibration code (parameter assignments that reference variable `.l` values) in `src/emit/emit_gams.py`. The problematic expression `diff = (global - obj.l) / global` is no longer generated in the MCP file. These NLP reporting assignments may divide by zero and are not needed for MCP correctness or objective extraction.
 
-**Result:** hs62 now translates, solves, and matches the original objective (full pipeline success).
+**Result:** hs62 now translates and solves successfully without triggering division by zero (full pipeline success).
 
 ---
 
 ## Files Changed
 
-- `src/emit/emit_gams.py` — Moved calibration emission after Solve statement
+- `src/emit/emit_gams.py` — Removed post-solve calibration emission
