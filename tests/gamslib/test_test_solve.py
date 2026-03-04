@@ -1008,6 +1008,36 @@ i2           .            2.000          +INF             .
         result = extract_variable_values(lst)
         assert result["z"] == {"": 0.0}
 
+    def test_eps_value_is_zero(self):
+        """GAMS 'EPS' represents machine epsilon, treated as zero."""
+        lst = """
+---- VAR w                 -INF           EPS            +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert result["w"] == {"": 0.0}
+
+    def test_undf_value_skipped(self):
+        """GAMS 'UNDF' (undefined) is skipped — variable not included."""
+        lst = """
+---- VAR u                 -INF          UNDF            +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert "u" not in result
+
+    def test_indexed_eps_value(self):
+        """EPS in indexed variable data row is treated as zero."""
+        lst = """
+---- VAR y
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .            EPS            +INF             .
+i2           .            5.000          +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert result["y"]["i1"] == 0.0
+        assert result["y"]["i2"] == pytest.approx(5.0)
+
     def test_empty_lst(self):
         """Empty .lst returns empty dict."""
         assert extract_variable_values("") == {}
@@ -1042,6 +1072,22 @@ p3           .             6.4263        +INF             .
         assert result["comp_e"]["p1"] == pytest.approx(0.0)
         assert result["comp_e"]["p2"] == pytest.approx(1.234)
         assert result["comp_e"]["p3"] == pytest.approx(0.0)
+
+    def test_eps_marginal(self):
+        """EPS in equation marginal is treated as zero."""
+        lst = """
+---- EQU eq_a              .              .              .           EPS
+"""
+        result = extract_equation_marginals(lst)
+        assert result["eq_a"] == {"": 0.0}
+
+    def test_undf_marginal_skipped(self):
+        """UNDF in equation marginal skips the equation."""
+        lst = """
+---- EQU eq_b              .              .              .          UNDF
+"""
+        result = extract_equation_marginals(lst)
+        assert "eq_b" not in result
 
 
 class TestCompareVariableValues:

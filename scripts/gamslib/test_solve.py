@@ -432,18 +432,16 @@ def objectives_match(
 
     # Handle Infinity values
     if math.isinf(nlp_obj) or math.isinf(mcp_obj):
-        # Both infinite with same sign is a match
-        if math.isinf(nlp_obj) and math.isinf(mcp_obj):
-            if (nlp_obj > 0) == (mcp_obj > 0):
-                return (True, "Both objectives are infinite with same sign")
+        if values_close(nlp_obj, mcp_obj, rtol, atol):
+            return (True, "Both objectives are infinite with same sign")
         return (False, "Infinity in objective value")
 
-    # Calculate difference and tolerance
+    # Delegate numeric comparison to values_close
     diff = abs(nlp_obj - mcp_obj)
     max_abs = max(abs(nlp_obj), abs(mcp_obj))
     tolerance = atol + rtol * max_abs
 
-    if diff <= tolerance:
+    if values_close(nlp_obj, mcp_obj, rtol, atol):
         return (True, f"Match within tolerance (diff={diff:.2e}, tol={tolerance:.2e})")
     else:
         return (False, f"Mismatch: diff={diff:.2e} > tolerance={tolerance:.2e}")
@@ -506,8 +504,8 @@ def extract_variable_values(
         Example: {'x': {'': 5.0}, 'y': {'i1': 1.0, 'i2': 2.0}}
     """
     variables: dict[str, dict[str, float]] = {}
-    # 4-column numeric value pattern (LOWER, LEVEL, UPPER, MARGINAL)
-    val_tok = r"([\-+\.\dEeINF]+)"
+    # 4-column value token — accept any non-whitespace and let _parse_gams_value interpret
+    val_tok = r"(\S+)"
     scalar_pat = re.compile(
         rf"^----\s+VAR\s+(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
         re.MULTILINE,
@@ -531,7 +529,7 @@ def extract_variable_values(
         if name in variables:
             continue  # already parsed as scalar
         start = m.end()
-        # Look for the LOWER/LEVEL/UPPER/MARGINAL header within next 5 lines
+        # Look for the LOWER/LEVEL/UPPER/MARGINAL header in nearby text (~300 chars)
         header_region = lst_content[start : start + 300]
         if not re.search(r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL", header_region):
             continue
@@ -581,7 +579,7 @@ def extract_equation_marginals(
         Scalar equations use '' as the index key.
     """
     equations: dict[str, dict[str, float]] = {}
-    val_tok = r"([\-+\.\dEeINF]+)"
+    val_tok = r"(\S+)"
     scalar_pat = re.compile(
         rf"^----\s+EQU\s+(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
         re.MULTILINE,
@@ -698,8 +696,8 @@ def compare_variable_values(
             if not values_close(a, b, rtol, atol):
                 var_diverged += 1
 
-        if var_max_abs > overall_max_abs:
-            overall_max_abs = var_max_abs
+        if var_max_abs > overall_max_abs or (var_diverged > 0 and not worst_var):
+            overall_max_abs = max(overall_max_abs, var_max_abs)
             worst_var = var_name
         overall_max_rel = max(overall_max_rel, var_max_rel)
 
