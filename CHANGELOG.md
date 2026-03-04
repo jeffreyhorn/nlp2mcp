@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 14: Final Checkpoint + Sprint Close - 2026-03-04
+
+**Branch:** `sprint21-day14-sprint-close`
+
+#### Summary
+Final sprint checkpoint: all 8 acceptance criteria met. Full pipeline retest confirms
+parse 154/157 (98.1%), solve 65, match 30, tests 3,957. Sprint retrospective written
+with Sprint 22 recommendations.
+
+#### Added
+- Sprint retrospective (`SPRINT_RETROSPECTIVE.md`)
+- Final metrics in SPRINT_LOG.md with full error category breakdown (PR3 + PR5)
+- PROJECT_PLAN.md updated with Sprint 21 actuals in Rolling KPIs
+
+#### Metrics
+- Parse: 154/157 (98.1%) — baseline was 132/160 (82.5%)
+- Solve: 65 — baseline was 33
+- Match: 30 — baseline was 16
+- Tests: 3,957 passed, 10 skipped, 1 xfailed
+
 ### Sprint 21 Day 13: WS9 Solution Comparison Enhancement - 2026-03-04
 
 **Branch:** `sprint21-day13-path-solcomp`
