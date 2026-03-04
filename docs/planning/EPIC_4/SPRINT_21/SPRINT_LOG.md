@@ -107,7 +107,7 @@
 
 **Date:** 2026-02-24
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #865
 **Effort:** ~2h
 
 **Activities:**
@@ -234,7 +234,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #909
 **Effort:** ~2h
 
 **Activities:**
@@ -261,7 +261,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #909
 **Effort:** ~2h
 
 **Activities:**
@@ -341,7 +341,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #924
 **Effort:** ~3h
 
 **Checkpoint 2 Metrics:**
@@ -388,7 +388,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #980
 **Effort:** ~2.5h
 
 **Activities:**
