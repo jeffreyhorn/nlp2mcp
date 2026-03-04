@@ -897,18 +897,20 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 | S22 | S23 | S24 | S25 |
-|--------|-----|-----|-----|-----|-----|-----|-----|-----|
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 | S23 | S24 | S25 |
+|--------|-----|-----|-----|--------------|-----|-----|-----|-----|
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | <40 | <15 | <10 | <8 | <5 | <5 |
-| internal_error (parse) | ~23 | <15 | <10 | <8 | <5 | <5 | <3 | <3 |
-| path_syntax_error | ≤2 | ≤2 | ≤2 | ≤2 | ≤2 | ≤2 | ≤2 | ≤2 |
-| path_solve_terminated | 11 | 11 | 11 | classified | ≤5 | ≤3 | ≤3 | ≤3 |
-| model_infeasible | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| Parse Rate (valid corpus) | ~41% | ≥55% | ≥65% | ≥75% | ≥85% | ≥90% | ≥92% | ≥95% |
-| Translate Rate (of parsed) | ~69% | ~72% | ≥75% | ≥80% | ≥82% | ≥85% | ≥88% | ≥90% |
-| Solve Rate (of translated) | ≥52% | ≥52% | ≥52% | ≥50% | ≥55% | ≥65% | ≥75% | ≥80% |
-| Full Pipeline (valid corpus) | ~14% | ≥20% | ≥30% | ≥40% | ≥50% | ≥55% | ≥65% | ≥70% |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | <10 | <8 | <5 | <5 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | <5 | <5 | <3 | <3 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | ≤30 | ≤2 | ≤2 | ≤2 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | ≤5 | ≤3 | ≤3 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | ≤12¹ | TBD¹ | TBD¹ | TBD¹ |
+| Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | ≥85% | ≥90% | ≥92% | ≥95% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | ≥82% | ≥85% | ≥88% | ≥90% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | ≥55% | ≥65% | ≥75% | ≥80% |
+| Full Pipeline (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | ≥50% | ≥55% | ≥65% | ≥70% |
+
+¹ Sprint 21 retrospective recommends S22 `model_infeasible` target of ≤12; S23–S25 targets TBD pending future planning.
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
@@ -964,5 +966,6 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
   - Content cascaded forward: S19←S20, S20←S21, S21←S22, S22←S23, S23←S24, S24←S25
   - Sprint 25 now includes Epic 5 planning as new content
   - Updated KPIs to reflect accelerated progress in Sprint 18
+- **2026-03-04:** Sprint 21 final metrics recorded (all 8 acceptance criteria met: parse 154/157, solve 65, match 30, tests 3,957). Deferred to Sprint 22: #764 accounting vars, #765 CGE model type, #827 domain violations, #830 Jacobian timeout, remaining path_syntax_error subcategories (C/B/G/F/I/J)
 - **2026-02-18:** Added Sprint 19 deferred items to Sprint 20 (Priorities 1–5 from Sprint 19 retrospective: `.l` initialization emission, accounting variable detection, AD condition propagation, remaining lexer_invalid_char taxonomy, full pipeline match rate, plus smoke-test process recommendation)
 - **2026-02-05:** Initial EPIC_4 project plan created

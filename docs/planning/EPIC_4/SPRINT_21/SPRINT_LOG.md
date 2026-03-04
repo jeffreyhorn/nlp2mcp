@@ -107,7 +107,7 @@
 
 **Date:** 2026-02-24
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #865
 **Effort:** ~2h
 
 **Activities:**
@@ -234,7 +234,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #909
 **Effort:** ~2h
 
 **Activities:**
@@ -261,7 +261,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #909
 **Effort:** ~2h
 
 **Activities:**
@@ -341,7 +341,7 @@
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #924
 **Effort:** ~3h
 
 **Checkpoint 2 Metrics:**
@@ -388,7 +388,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Date:** 2026-02-26
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #980
 **Effort:** ~2.5h
 
 **Activities:**
@@ -430,7 +430,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Date:** 2026-03-04
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #988
 **Effort:** ~3h
 
 **Activities:**
@@ -449,50 +449,64 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 ### Day 14 — FINAL CHECKPOINT + Sprint Close
 
-**Date:**
-**Status:**
-**PR:**
-**Effort:**
+**Date:** 2026-03-04
+**Status:** COMPLETE
+**PR:** #989
+**Effort:** ~2h
+
+**Activities:**
+- Full pipeline retest: `.venv/bin/python scripts/gamslib/run_full_test.py --quiet` (157 models, 3,050s)
+- All 8 acceptance criteria verified — all MET
+- Sprint retrospective written (`SPRINT_RETROSPECTIVE.md`)
+- PROJECT_PLAN.md updated with Sprint 21 final metrics
+- CHANGELOG.md, PLAN.md updated
 
 **Final Metrics:**
 
 | Metric | Baseline | Final | Target | Status |
 |--------|----------|-------|--------|--------|
-| Parse | 132/160 | /160 | ≥ 135 | |
-| lexer_invalid_char | 10 | | ≤ 5 | |
-| internal_error | 7 | | ≤ 3 | |
-| Solve | 33 | | ≥ 36 | |
-| Match | 16 | | ≥ 20 | |
-| Tests | 3,715 | | ≥ 3,780 | |
+| Parse | 132/160 | 154/157 | ≥ 135 | **MET** |
+| lexer_invalid_char | 10 | 3 | ≤ 5 | **MET** |
+| internal_error (parse) | 7 | 0 | ≤ 3 | **MET** |
+| Solve | 33 | 65 | ≥ 36 | **MET** |
+| Match | 16 | 30 | ≥ 20 | **MET** |
+| Tests | 3,715 | 3,957 | ≥ 3,780 | **MET** |
 
 **Final Parse Error Breakdown:**
 
 | Category | Baseline | Final | Delta |
 |----------|----------|-------|-------|
-| lexer_invalid_char | 10 | | |
-| semantic_undefined_symbol | 7 | | |
-| internal_error | 7 | | |
-| parser_invalid_expression | 3 | | |
-| model_no_objective_def | 1 | | |
+| lexer_invalid_char | 10 | 3 | -7 |
+| semantic_undefined_symbol | 7 | 0 | -7 |
+| internal_error (parse) | 7 | 0 | -7 |
+| parser_invalid_expression | 3 | 0 | -3 |
+| model_no_objective_def | 1 | 0 | -1 |
 
 **Final Solve Error Breakdown:**
 
 | Category | Baseline | Final | Delta |
 |----------|----------|-------|-------|
-| path_syntax_error | 48 | | |
-| path_solve_terminated | 29 | | |
-| model_infeasible | 12 | | |
-| path_solve_license | 2 | | |
+| path_syntax_error | 48 | 41 | -7 |
+| path_solve_terminated | 29 | 12 | -17 |
+| model_infeasible | 12 | 15 | +3 |
+| path_solve_license | 2 | 4 | +2 |
+
+**Final Translate Error Breakdown:**
+
+| Category | Count |
+|----------|-------|
+| timeout | 11 |
+| internal_error | 6 |
 
 **Acceptance Criteria:**
-- [ ] Parse ≥ 135/160
-- [ ] lexer_invalid_char ≤ 5
-- [ ] internal_error ≤ 3
-- [ ] Solve ≥ 36
-- [ ] Match ≥ 20
-- [ ] PATH analysis: all path_solve_terminated classified
-- [ ] Solution comparison framework extended
-- [ ] All tests pass, ≥ 3,780
+- [x] Parse ≥ 135/160 (achieved: 154/157)
+- [x] lexer_invalid_char ≤ 5 (achieved: 3)
+- [x] internal_error (parse) ≤ 3 (achieved: 0)
+- [x] Solve ≥ 36 (achieved: 65)
+- [x] Match ≥ 20 (achieved: 30)
+- [x] PATH analysis: all path_solve_terminated classified (29/29)
+- [x] Solution comparison framework extended (primal + dual + combined tolerance)
+- [x] All tests pass, ≥ 3,780 (achieved: 3,957 passed, 10 skipped, 1 xfailed)
 
 ---
 
@@ -503,15 +517,13 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 | 0 | #855 | Sprint 21 Day 0: Baseline Confirm + Sprint Kickoff | Merged |
 | 1 | #856 | Sprint 21 Day 1: Semantic Error Resolution (+7 parse) | Merged |
 | 2 | #865 | Sprint 21 Day 2: Macro Expansion Part 1 (System Macros + $setglobal) | Merged |
-| 3 | #866 | Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) | Open |
+| 3 | #866 | Sprint 21 Day 3: Macro Expansion Part 2 ($eval + springchain) | Merged |
 | 4 | #883 | Sprint 21 Day 4: Lead/Lag in Parameter Assignment LHS (+3 parse) | Merged |
 | 5 | #887 | Sprint 21 Day 5: Checkpoint 1 + senstran/turkpow (+2 parse) | Merged |
-| 6 | TBD | Sprint 21 Day 6: WS4 Emitter Fixes (E + D) | Open |
-| 7 | | | |
-| 8 | #909 | Sprint 21 Day 8: Emission Ordering Fix for Dynamic-Set-Indexed Parameters | Merged |
-| 9 | #920 | Sprint 21 Day 9: WS6 Match Rate Improvement (Tolerance + IndexOffset Gradient) | Open |
+| 6-8 | #909 | Sprint 21 Days 6-8: WS4 Emitter Fixes (E + D + A) | Merged |
+| 9 | #920 | Sprint 21 Day 9: WS6 Match Rate Improvement (Tolerance + IndexOffset Gradient) | Merged |
 | 10 | #924 | Sprint 21 Day 10: Checkpoint 2 + Deferred Issues (#789, #828) | Merged |
-| 11 | TBD | Sprint 21 Day 11: #826 Decomp Empty Stationarity + Emerging Issues | Open |
-| 12 | | | |
-| 13 | | | |
-| 14 | | | |
+| 11 | #980 | Sprint 21 Day 11: #826 Decomp Empty Stationarity + Emerging Issues | Merged |
+| 12 | #981 | Sprint 21 Day 12: WS8 PATH Convergence Analysis | Merged |
+| 13 | #988 | Sprint 21 Day 13: WS9 Solution Comparison Enhancement | Merged |
+| 14 | #989 | Sprint 21 Day 14: Final Checkpoint + Sprint Close | Merged |
