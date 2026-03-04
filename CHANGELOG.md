@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 21 Day 13: WS9 Solution Comparison Enhancement - 2026-03-04
+
+**Branch:** `sprint21-day13-path-solcomp`
+
+#### Summary
+Extended the solution comparison framework with primal variable comparison, dual (equation
+marginal) comparison, and a combined tolerance framework. Added .lst file parsers for extracting
+per-variable LEVEL values and per-equation MARGINAL values from GAMS listing files.
+
+#### Added
+- `extract_variable_values()` — Parse primal variable LEVEL values from .lst files (scalar + indexed)
+- `extract_equation_marginals()` — Parse equation MARGINAL (dual) values from .lst files
+- `compare_variable_values()` — Compare per-variable values with max abs/rel diff reporting
+- `values_close()` — Combined tolerance check: `|a-b| <= atol + rtol * max(|a|,|b|)`
+- `_parse_gams_value()` — Robust GAMS numeric value parser (handles `.`, `EPS`, `INF`, `UNDF`)
+- 20 new unit tests across 5 test classes (TestValuesClose, TestExtractVariableValues,
+  TestExtractEquationMarginals, TestCompareVariableValues, and related)
+
+#### Metrics
+- Tests: 3,951 passed, 10 skipped, 1 xfailed
+- PATH convergence: 29/29 models classified (completed Day 12)
+
 ### Sprint 21 Day 12: WS8 PATH Convergence Investigation - 2026-03-03
 
 **Branch:** `sprint21-day12-path-convergence`

@@ -29,13 +29,17 @@ from scripts.gamslib.test_solve import (  # noqa: E402
     apply_filters,
     categorize_solve_outcome,
     compare_solutions,
+    compare_variable_values,
+    extract_equation_marginals,
     extract_objective_from_variables,
     extract_path_version,
+    extract_variable_values,
     get_translated_models,
     objectives_match,
     parse_gams_listing,
     solve_mcp,
     update_model_solve_result,
+    values_close,
 )
 
 
@@ -905,3 +909,187 @@ class TestCompareSolutions:
         assert result["absolute_difference"] == 10.0
         # relative = 10 / max(1000, 1010, 1e-10) = 10/1010 ≈ 0.0099
         assert result["relative_difference"] == pytest.approx(10.0 / 1010.0)
+
+
+class TestValuesClose:
+    """Tests for values_close combined tolerance function."""
+
+    def test_exact_match(self):
+        """Identical values are close."""
+        assert values_close(1.0, 1.0) is True
+
+    def test_within_tolerance(self):
+        """Values within combined tolerance are close."""
+        # diff=0.001, tol = 1e-8 + 2e-3 * 100 = 0.2
+        assert values_close(100.0, 100.001) is True
+
+    def test_outside_tolerance(self):
+        """Values outside combined tolerance are not close."""
+        # diff=10, tol = 1e-8 + 2e-3 * 110 = 0.22
+        assert values_close(100.0, 110.0) is False
+
+    def test_nan_not_close(self):
+        """NaN is never close to anything."""
+        assert values_close(float("nan"), 1.0) is False
+        assert values_close(1.0, float("nan")) is False
+
+    def test_inf_same_sign_close(self):
+        """Matching infinities are close."""
+        assert values_close(float("inf"), float("inf")) is True
+        assert values_close(float("-inf"), float("-inf")) is True
+
+    def test_inf_opposite_not_close(self):
+        """Opposite infinities are not close."""
+        assert values_close(float("inf"), float("-inf")) is False
+
+    def test_zero_within_atol(self):
+        """Zero vs small value within atol."""
+        assert values_close(0.0, 1e-9) is True
+
+    def test_zero_outside_atol(self):
+        """Zero vs value outside atol."""
+        assert values_close(0.0, 1e-7) is False
+
+
+class TestExtractVariableValues:
+    """Tests for extract_variable_values .lst parser."""
+
+    def test_scalar_variables(self):
+        """Parse scalar variables from .lst content."""
+        lst = """
+---- VAR a                 -INF            5.6833        +INF             .
+---- VAR b                 -INF            4.3702        +INF             .
+---- VAR r                 -INF            4.0707        +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert result["a"] == {"": pytest.approx(5.6833)}
+        assert result["b"] == {"": pytest.approx(4.3702)}
+        assert result["r"] == {"": pytest.approx(4.0707)}
+
+    def test_indexed_variable(self):
+        """Parse indexed variable with multiple indices."""
+        lst = """
+---- VAR lam_e
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+p1           .              .            +INF           15.0895
+p2           .            3.500          +INF           -0.0007
+p3           .            2.100          +INF            6.4263
+"""
+        result = extract_variable_values(lst)
+        assert "lam_e" in result
+        assert result["lam_e"]["p1"] == pytest.approx(0.0)
+        assert result["lam_e"]["p2"] == pytest.approx(3.5)
+        assert result["lam_e"]["p3"] == pytest.approx(2.1)
+
+    def test_mixed_scalar_and_indexed(self):
+        """Parse file with both scalar and indexed variables."""
+        lst = """
+---- VAR obj               -INF         100.000        +INF             .
+
+---- VAR x
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .            1.000          +INF             .
+i2           .            2.000          +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert result["obj"] == {"": pytest.approx(100.0)}
+        assert result["x"]["i1"] == pytest.approx(1.0)
+        assert result["x"]["i2"] == pytest.approx(2.0)
+
+    def test_dot_value_is_zero(self):
+        """GAMS '.' represents zero."""
+        lst = """
+---- VAR z                 -INF             .            +INF             .
+"""
+        result = extract_variable_values(lst)
+        assert result["z"] == {"": 0.0}
+
+    def test_empty_lst(self):
+        """Empty .lst returns empty dict."""
+        assert extract_variable_values("") == {}
+
+
+class TestExtractEquationMarginals:
+    """Tests for extract_equation_marginals .lst parser."""
+
+    def test_scalar_equations(self):
+        """Parse scalar equation marginals."""
+        lst = """
+---- EQU stat_a              .              .              .             5.6833
+---- EQU stat_b              .              .              .             4.3702
+"""
+        result = extract_equation_marginals(lst)
+        assert result["stat_a"] == {"": pytest.approx(5.6833)}
+        assert result["stat_b"] == {"": pytest.approx(4.3702)}
+
+    def test_indexed_equation(self):
+        """Parse indexed equation marginals."""
+        lst = """
+---- EQU comp_e
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+p1           .            15.0895        +INF             .
+p2           .            -0.0007        +INF           1.234
+p3           .             6.4263        +INF             .
+"""
+        result = extract_equation_marginals(lst)
+        assert "comp_e" in result
+        assert result["comp_e"]["p1"] == pytest.approx(0.0)
+        assert result["comp_e"]["p2"] == pytest.approx(1.234)
+        assert result["comp_e"]["p3"] == pytest.approx(0.0)
+
+
+class TestCompareVariableValues:
+    """Tests for compare_variable_values comparison function."""
+
+    def test_matching_variables(self):
+        """Variables that match within tolerance."""
+        nlp = {"x": {"": 100.0}, "y": {"i1": 1.0, "i2": 2.0}}
+        mcp = {"x": {"": 100.0}, "y": {"i1": 1.0, "i2": 2.0}}
+        result = compare_variable_values(nlp, mcp)
+
+        assert result["variables_compared"] == 2
+        assert result["variables_matched"] == 2
+        assert result["variables_diverged"] == 0
+        assert result["max_abs_diff"] == 0.0
+
+    def test_diverged_variable(self):
+        """Variable that diverges beyond tolerance."""
+        nlp = {"x": {"": 100.0}, "y": {"": 200.0}}
+        mcp = {"x": {"": 100.0}, "y": {"": 300.0}}
+        result = compare_variable_values(nlp, mcp)
+
+        assert result["variables_compared"] == 2
+        assert result["variables_matched"] == 1
+        assert result["variables_diverged"] == 1
+        assert result["max_abs_diff"] == pytest.approx(100.0)
+        assert result["worst_variable"] == "y"
+
+    def test_partial_overlap(self):
+        """Only common variables and indices are compared."""
+        nlp = {"x": {"": 1.0}, "unique_nlp": {"": 5.0}}
+        mcp = {"x": {"": 1.0}, "unique_mcp": {"": 5.0}}
+        result = compare_variable_values(nlp, mcp)
+
+        assert result["variables_compared"] == 1  # only x in common
+        assert result["variables_matched"] == 1
+
+    def test_per_variable_sorted_by_diff(self):
+        """Per-variable list is sorted by max abs diff descending."""
+        nlp = {"a": {"": 100.0}, "b": {"": 100.0}, "c": {"": 100.0}}
+        mcp = {"a": {"": 100.0}, "b": {"": 200.0}, "c": {"": 150.0}}
+        result = compare_variable_values(nlp, mcp)
+
+        assert result["per_variable"][0]["name"] == "b"  # diff=100
+        assert result["per_variable"][1]["name"] == "c"  # diff=50
+
+    def test_empty_inputs(self):
+        """Empty inputs produce zero-count result."""
+        result = compare_variable_values({}, {})
+        assert result["variables_compared"] == 0
+        assert result["variables_matched"] == 0
