@@ -920,7 +920,7 @@ class TestValuesClose:
 
     def test_within_tolerance(self):
         """Values within combined tolerance are close."""
-        # diff=0.001, tol = 1e-8 + 2e-3 * 100 = 0.2
+        # diff=0.001, tol = 1e-8 + 2e-3 * 100.001 ≈ 0.200002
         assert values_close(100.0, 100.001) is True
 
     def test_outside_tolerance(self):

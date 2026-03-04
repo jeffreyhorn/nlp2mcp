@@ -443,7 +443,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 **Metrics:**
 - path_solve_terminated classified: 29/29
 - Solution comparison: primal + dual extraction and comparison implemented
-- Tests: 3,951 passed (+20 new), 10 skipped, 1 xfailed
+- Tests: 3,951 passed (+26 new), 10 skipped, 1 xfailed
 
 ---
 
