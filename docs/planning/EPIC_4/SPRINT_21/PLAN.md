@@ -570,7 +570,7 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 **End of Day 14 criterion:** All acceptance criteria verified; retrospective written; Sprint 22 recommendations documented. **MET**
 
 **Post-merge checklist:**
-- [ ] Record PR number in SPRINT_LOG.md (PR2)
+- [x] Record PR number in SPRINT_LOG.md (PR2)
 - [x] Record final metrics with full error category breakdown in SPRINT_LOG.md (PR5)
 
 ---
