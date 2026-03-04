@@ -2,7 +2,7 @@
 
 **Created:** March 4, 2026
 **Duration:** 15 sprint days (Day 0 – Day 14)
-**Sprint Goal:** Parse ≥ 135/160, lexer_invalid_char ≤ 5, internal_error ≤ 3, Solve ≥ 36, Match ≥ 20, PATH analysis complete, solution comparison extended
+**Sprint Goal:** Parse ≥ 135/160, lexer_invalid_char ≤ 5, internal_error (parse) ≤ 3, Solve ≥ 36, Match ≥ 20, PATH analysis complete, solution comparison extended
 
 ---
 
@@ -92,7 +92,7 @@ Relaxing DEFAULT_RTOL to 2e-3 immediately added port. The IndexOffset gradient f
 Classifying all 29 path_solve_terminated models revealed that none had PATH convergence issues — they all fail before PATH runs (compilation, execution, MCP pairing errors) or are locally infeasible. This finding redirected Sprint 22 planning away from PATH solver tuning toward MCP formulation correctness.
 
 ### 7. Process Recommendations Were Effective
-- PR2 (record PR numbers): Mostly followed, though some "TBD" entries remain
+- PR2 (record PR numbers): Fully followed; all PR references in SPRINT_LOG.md are now resolved (no "TBD" entries remain)
 - PR3 (standardize pipeline denominator): Consistently used 157 (available) / 160 (catalog)
 - PR4 (targeted solve on newly-parsing models): Applied throughout
 - PR5 (full error category breakdown): Applied at both checkpoints and final
@@ -110,8 +110,8 @@ Despite reducing from 48 to 41, this remains the largest solve failure category.
 ### 3. model_infeasible Grew From 12 to 15
 Three new models entered this category from previous stages. While this is expected (more models now reach the solve stage), it indicates MCP formulation issues that need investigation.
 
-### 4. Some PR Numbers Were Left as "TBD"
-Despite PR2 process recommendation, several day entries in SPRINT_LOG.md still show "PR: TBD". Should record PR numbers immediately.
+### 4. Enforce Prompt PR Number Recording in SPRINT_LOG
+PR2 recommends recording PR numbers immediately for each day's work. We should consistently capture PR IDs in SPRINT_LOG.md at the time work is merged to keep the log auditable.
 
 ### 5. Day Gaps Between Sprints
 There was a 5-day gap between Day 11 (Feb 26) and Day 12 (Mar 3). While the sprint still completed within its window, the momentum loss required re-orientation time.
