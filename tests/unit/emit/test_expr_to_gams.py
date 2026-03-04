@@ -290,6 +290,12 @@ class TestOperatorPrecedence:
         result = expr_to_gams(expr)
         assert result == "2 ** (3 ** 4)"
 
+    def test_power_associativity_left_nested(self):
+        """Test (a^b)^c parenthesizes left child — power is non-associative in GAMS."""
+        expr = Binary("^", Binary("^", VarRef("a", ()), VarRef("b", ())), VarRef("c", ()))
+        result = expr_to_gams(expr)
+        assert result == "(a ** b) ** c"
+
     def test_complex_expression(self):
         """Test complex nested expression."""
         # (a + b) * (c - d)
