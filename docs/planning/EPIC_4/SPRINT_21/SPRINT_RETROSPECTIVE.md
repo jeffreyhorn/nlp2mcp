@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Sprint 21 met all 8 acceptance criteria, significantly exceeding most targets. Parse rate rose from 82.5% to 98.1% (+22 models), lexer_invalid_char dropped from 10 to 3, internal_error (parse) from 7 to 0, solve success nearly doubled to 65 (from 33), and full pipeline match reached 30 (from 16). The sprint delivered across 9 workstreams: semantic error resolution (+7 parse), macro expansion ($set/$eval/%name%), internal_error triage (lead/lag, if-stmt, table), path_syntax_error emitter fixes (set quoting, negative exponent, table data), deferred issues (#789, #826, #828), match rate improvement (tolerance + IndexOffset gradient), PATH convergence investigation (29/29 classified), and solution comparison enhancement (primal/dual extraction + combined tolerance). 12+ PRs were merged with 3,957 tests passing and zero regressions.
+Sprint 21 met all 8 acceptance criteria, significantly exceeding most targets. Parse rate rose from 82.5% to 98.1% (+22 models), lexer_invalid_char dropped from 10 to 3, internal_error (parse) from 7 to 0, solve success nearly doubled to 65 (from 33), and full pipeline match reached 30 (from 16). The sprint delivered across 8 workstreams: semantic error resolution (+7 parse), macro expansion ($set/$eval/%name%), internal_error triage (lead/lag, if-stmt, table), path_syntax_error emitter fixes (set quoting, negative exponent, table data), deferred issues (#789, #826, #828), match rate improvement (tolerance + IndexOffset gradient), PATH convergence investigation (29/29 classified), and solution comparison enhancement (primal/dual extraction + combined tolerance). 12+ PRs were merged with 3,957 tests passing and zero regressions.
 
 **Key Outcome:** 154/157 tested models now parse (98.1%, up from 82.5%). 65 models solve (up from 33). 30 models achieve full pipeline match (up from 16). All sprint targets met or exceeded.
 
@@ -160,7 +160,7 @@ Based on Sprint 21 findings:
 | Recommendation | Source | Effectiveness | Continue? |
 |----------------|--------|---------------|-----------|
 | PR1: Standardize pipeline denominator | Sprint 20 | ✅ Effective — 157 (available) / 160 (catalog) used consistently | Yes |
-| PR2: Record PR numbers immediately | Sprint 20 | ⚠️ Partially followed — some TBD entries remain | Yes, enforce |
+| PR2: Record PR numbers immediately | Sprint 20 | ✅ Effective — all PR numbers recorded; no TBD entries remain | Yes, enforce |
 | PR3: Full pipeline retest at checkpoints | Sprint 20 | ✅ Effective — Checkpoint 1, 2, and Final all have full breakdowns | Yes |
 | PR4: Targeted solve on newly-parsing models | Sprint 20 | ✅ Effective — applied throughout sprint | Yes |
 | PR5: Full error category breakdown | Sprint 20 | ✅ Effective — all checkpoints include parse + solve breakdowns | Yes |
