@@ -131,14 +131,6 @@ Model mcp_model /
 
 Solve mcp_model using MCP;
 
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-diff = (global - obj.l) / global;
-$offImplicitAssign
-
 Scalar nlp2mcp_obj_val;
 nlp2mcp_obj_val = obj.l;
 Display nlp2mcp_obj_val;

@@ -505,23 +505,18 @@ def emit_gams_mcp(
             else:
                 lines.append(f"{var_name}.l = max({var_name}.l, {var_def.lo});")
         elif has_l_expr and var_def.lo_map:
-            # If all lo_map values are the same, use a single domain-level clamp
-            lo_vals = [v for v in var_def.lo_map.values() if v is not None and v > 0]
-            if lo_vals and len(set(lo_vals)) == 1 and var_def.domain:
-                domain_str = ",".join(var_def.domain)
-                lines.append(
-                    f"{var_name}.l({domain_str}) = max({var_name}.l({domain_str}), {lo_vals[0]});"
-                )
-            else:
-                for indices, lo_val in var_def.lo_map.items():
-                    if lo_val is not None and lo_val > 0:
-                        idx_domain_vars = frozenset(
-                            i for i in indices if i.lower() in _sets_aliases_lower
-                        )
-                        idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
-                        lines.append(
-                            f"{var_name}.l({idx_str}) = max({var_name}.l({idx_str}), {lo_val});"
-                        )
+            # Emit per-index clamps only for indices present in lo_map.
+            # This avoids changing semantics for indices that are intentionally
+            # unbounded (partial lo_map coverage).
+            for indices, lo_val in var_def.lo_map.items():
+                if lo_val is not None and lo_val > 0:
+                    idx_domain_vars = frozenset(
+                        i for i in indices if i.lower() in _sets_aliases_lower
+                    )
+                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
+                    lines.append(
+                        f"{var_name}.l({idx_str}) = max({var_name}.l({idx_str}), {lo_val});"
+                    )
 
         if lines:
             var_init_groups[var_name] = lines
@@ -639,14 +634,10 @@ def emit_gams_mcp(
             sections.append("* (POSITIVE variables already initialized above)")
             sections.append("")
 
-    # Deferred .l-referencing calibration assignments (second pass).
-    # These reference variable .l values and are intended to run after the Solve
-    # so they see solved values. We compute the code now but emit it after Solve.
-    # $onImplicitAssign suppresses GAMS Error 141 when reading .l from variables
-    # that have been declared and initialized but not explicitly data-assigned.
-    calibration_code = emit_computed_parameter_assignments(
-        kkt.model_ir, varref_filter="only_varref_attr"
-    )
+    # Note: Deferred .l-referencing calibration assignments (e.g., post-solve
+    # reporting like diff = (global - obj.l) / global) are intentionally skipped.
+    # See Issue #985 / PR #987 — they may divide by zero and are not needed
+    # for MCP correctness.
 
     # Equations
     if add_comments:
@@ -946,19 +937,11 @@ def emit_gams_mcp(
     solve_code = emit_solve(model_name)
     sections.append(solve_code)
 
-    # Emit post-solve calibration after the Solve statement (#985).
-    # These assignments reference variable .l values (e.g., obj.l) and must
-    # execute after PATH solves the model, not before equation generation.
-    if calibration_code:
-        sections.append("")
-        if add_comments:
-            sections.append("* ============================================")
-            sections.append("* Post-solve Calibration (variable .l references)")
-            sections.append("* ============================================")
-            sections.append("")
-        sections.append("$onImplicitAssign")
-        sections.append(calibration_code)
-        sections.append("$offImplicitAssign")
+    # Issue #985 / PR #987: Skip post-solve calibration entirely.
+    # These are reporting assignments from the original NLP model (e.g.,
+    # diff = (global - obj.l) / global) that may reference parameters with
+    # zero or undefined values, causing division-by-zero after the MCP solve.
+    # They are not needed for MCP correctness or objective extraction.
 
     # Emit NLP objective value capture for pipeline comparison.
     # MCP listings have no "OBJECTIVE VALUE" line, so we assign the NLP objective

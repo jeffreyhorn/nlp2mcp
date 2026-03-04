@@ -324,3 +324,111 @@ class TestDeferredBoundEmission:
         preceding = lines[:fx_idx]
         on_indices = [i for i, ln in enumerate(preceding) if "$onImplicitAssign" in ln]
         assert on_indices, "Indexed .fx bound should be inside $onImplicitAssign block"
+
+
+class TestLExprClampToLo:
+    """Issue #984: Clamp expression-based .l to .lo bounds."""
+
+    def test_scalar_lo_clamp_emitted_after_l_expr(self, manual_index_mapping):
+        """Variable with l_expr and scalar lo emits max(.l, lo) after .l assignment."""
+        from src.ir.ast import Binary, ParamRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.l_expr = Binary("*", ParamRef("a"), ParamRef("b"))  # x.l = a * b
+        x_var.lo = 2.5
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        assert "x.l = a * b;" in result
+        assert "x.l = max(x.l, 2.5);" in result
+
+        # Clamp must appear after the .l expression assignment
+        lines = result.splitlines()
+        l_expr_idx = next(i for i, ln in enumerate(lines) if "x.l = a * b;" in ln)
+        clamp_idx = next(i for i, ln in enumerate(lines) if "x.l = max(x.l, 2.5);" in ln)
+        assert l_expr_idx < clamp_idx, ".l clamp must come after .l expression"
+
+    def test_indexed_lo_map_clamp_per_element(self, manual_index_mapping):
+        """Variable with l_expr_map and lo_map emits per-index max() clamps."""
+        from src.ir.ast import Binary, ParamRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        model.sets["t"] = SetDef(name="t", members=["1990", "2000"])
+
+        c_var = VariableDef(name="c", domain=("t",), kind=VarKind.CONTINUOUS)
+        c_var.l_expr_map = {("t",): Binary("*", ParamRef("c0"), ParamRef("l", indices=("t",)))}
+        c_var.lo_map = {("1990",): 3.2, ("2000",): 3.2}
+        model.variables["c"] = c_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("c", ("1990",)), ("c", ("2000",))])
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Expression-based .l should be emitted
+        assert "c.l(t) = c0 * l(t);" in result
+        # Per-index clamps should be emitted (not domain-wide)
+        assert 'c.l("1990") = max(c.l("1990"), 3.2);' in result
+        assert 'c.l("2000") = max(c.l("2000"), 3.2);' in result
+
+    def test_no_clamp_when_lo_zero(self, manual_index_mapping):
+        """No clamp emitted when .lo is 0 (non-positive)."""
+        from src.ir.ast import ParamRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.l_expr = ParamRef("a")  # x.l = a
+        x_var.lo = 0.0
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        assert "x.l = a;" in result
+        assert "max(x.l" not in result
+
+    def test_no_clamp_without_l_expr(self, manual_index_mapping):
+        """No clamp emitted for numeric .l (not expression-based)."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        x_var = VariableDef(name="x", domain=(), kind=VarKind.CONTINUOUS)
+        x_var.l = 5.0  # numeric .l, not expression-based
+        x_var.lo = 2.5
+        model.variables["x"] = x_var
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        assert "x.l = 5" in result
+        assert "max(x.l" not in result
