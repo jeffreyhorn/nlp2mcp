@@ -430,7 +430,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 
 **Date:** 2026-03-04
 **Status:** COMPLETE
-**PR:** TBD
+**PR:** #988
 **Effort:** ~3h
 
 **Activities:**
@@ -501,7 +501,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 **Acceptance Criteria:**
 - [x] Parse ≥ 135/160 (achieved: 154/157)
 - [x] lexer_invalid_char ≤ 5 (achieved: 3)
-- [x] internal_error ≤ 3 (achieved: 0)
+- [x] internal_error (parse) ≤ 3 (achieved: 0)
 - [x] Solve ≥ 36 (achieved: 65)
 - [x] Match ≥ 20 (achieved: 30)
 - [x] PATH analysis: all path_solve_terminated classified (29/29)
