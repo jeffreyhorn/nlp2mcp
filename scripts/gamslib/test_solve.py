@@ -432,21 +432,302 @@ def objectives_match(
 
     # Handle Infinity values
     if math.isinf(nlp_obj) or math.isinf(mcp_obj):
-        # Both infinite with same sign is a match
-        if math.isinf(nlp_obj) and math.isinf(mcp_obj):
-            if (nlp_obj > 0) == (mcp_obj > 0):
-                return (True, "Both objectives are infinite with same sign")
+        if values_close(nlp_obj, mcp_obj, rtol, atol):
+            return (True, "Both objectives are infinite with same sign")
         return (False, "Infinity in objective value")
 
-    # Calculate difference and tolerance
+    # Delegate numeric comparison to values_close
     diff = abs(nlp_obj - mcp_obj)
     max_abs = max(abs(nlp_obj), abs(mcp_obj))
     tolerance = atol + rtol * max_abs
 
-    if diff <= tolerance:
+    if values_close(nlp_obj, mcp_obj, rtol, atol):
         return (True, f"Match within tolerance (diff={diff:.2e}, tol={tolerance:.2e})")
     else:
         return (False, f"Mismatch: diff={diff:.2e} > tolerance={tolerance:.2e}")
+
+
+def values_close(
+    a: float,
+    b: float,
+    rtol: float = DEFAULT_RTOL,
+    atol: float = DEFAULT_ATOL,
+) -> bool:
+    """Check if two values are close using combined tolerance.
+
+    Uses: |a - b| <= atol + rtol * max(|a|, |b|)
+
+    Handles NaN and Inf gracefully (returns False for NaN, True for matching Inf).
+    """
+    if math.isnan(a) or math.isnan(b):
+        return False
+    if math.isinf(a) or math.isinf(b):
+        return math.isinf(a) and math.isinf(b) and (a > 0) == (b > 0)
+    diff = abs(a - b)
+    return diff <= atol + rtol * max(abs(a), abs(b))
+
+
+def _parse_gams_value(s: str) -> float | None:
+    """Parse a GAMS .lst numeric value.
+
+    Handles: numbers, scientific notation, '.' (zero), 'EPS' (zero),
+    '-INF', '+INF', 'INF', 'UNDF' (undefined → None).
+    """
+    s = s.strip()
+    if s in (".", "EPS"):
+        return 0.0
+    if s == "UNDF":
+        return None
+    if s in ("INF", "+INF"):
+        return float("inf")
+    if s == "-INF":
+        return float("-inf")
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def extract_variable_values(
+    lst_content: str,
+) -> dict[str, dict[str, float]]:
+    """Extract primal variable LEVEL values from a GAMS .lst file.
+
+    Parses both scalar and indexed variable sections.
+
+    Args:
+        lst_content: Contents of the .lst file
+
+    Returns:
+        Dict mapping variable names to {index_key: level_value}.
+        Scalar variables use '' as the index key.
+        Example: {'x': {'': 5.0}, 'y': {'i1': 1.0, 'i2': 2.0}}
+    """
+    variables: dict[str, dict[str, float]] = {}
+    # 4-column value token — accept any non-whitespace and let _parse_gams_value interpret
+    val_tok = r"(\S+)"
+    scalar_pat = re.compile(
+        rf"^----\s+VAR\s+(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
+        re.MULTILINE,
+    )
+    indexed_header = re.compile(r"^----\s+VAR\s+(\S+)\s*$", re.MULTILINE)
+    data_row = re.compile(
+        rf"^(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
+        re.MULTILINE,
+    )
+
+    # Pass 1: scalar variables (all 4 values on same line as ---- VAR)
+    for m in scalar_pat.finditer(lst_content):
+        name = m.group(1)
+        level = _parse_gams_value(m.group(3))  # LEVEL is 2nd column
+        if level is not None:
+            variables[name] = {"": level}
+
+    # Pass 2: indexed variables (header line, then column header, then data rows)
+    for m in indexed_header.finditer(lst_content):
+        name = m.group(1)
+        if name in variables:
+            continue  # already parsed as scalar
+        start = m.end()
+        # Look for the LOWER/LEVEL/UPPER/MARGINAL header in nearby text (~300 chars)
+        header_region = lst_content[start : start + 300]
+        if not re.search(r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL", header_region):
+            continue
+        # Find where header line ends, then parse data rows until next section
+        header_match = re.search(r"MARGINAL\s*\n", header_region)
+        if not header_match:
+            continue
+        data_start = start + header_match.end()
+        # Parse data rows until blank line or next section marker
+        vals: dict[str, float] = {}
+        pos = data_start
+        while pos < len(lst_content):
+            line_end = lst_content.find("\n", pos)
+            if line_end == -1:
+                line = lst_content[pos:]
+                line_end = len(lst_content)
+            else:
+                line = lst_content[pos:line_end]
+            stripped = line.strip()
+            if not stripped or stripped.startswith("----"):
+                break
+            row_m = data_row.match(stripped)
+            if row_m:
+                idx = row_m.group(1)
+                level = _parse_gams_value(row_m.group(3))  # LEVEL column
+                if level is not None:
+                    vals[idx] = level
+            pos = line_end + 1
+        if vals:
+            variables[name] = vals
+
+    return variables
+
+
+def extract_equation_marginals(
+    lst_content: str,
+) -> dict[str, dict[str, float]]:
+    """Extract equation MARGINAL (dual) values from a GAMS .lst file.
+
+    Parses both scalar and indexed equation sections.
+
+    Args:
+        lst_content: Contents of the .lst file
+
+    Returns:
+        Dict mapping equation names to {index_key: marginal_value}.
+        Scalar equations use '' as the index key.
+    """
+    equations: dict[str, dict[str, float]] = {}
+    val_tok = r"(\S+)"
+    scalar_pat = re.compile(
+        rf"^----\s+EQU\s+(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
+        re.MULTILINE,
+    )
+    indexed_header = re.compile(r"^----\s+EQU\s+(\S+)\s*$", re.MULTILINE)
+    data_row = re.compile(
+        rf"^(\S+)\s+{val_tok}\s+{val_tok}\s+{val_tok}\s+{val_tok}",
+        re.MULTILINE,
+    )
+
+    # Pass 1: scalar equations
+    for m in scalar_pat.finditer(lst_content):
+        name = m.group(1)
+        marginal = _parse_gams_value(m.group(5))  # MARGINAL is 4th column
+        if marginal is not None:
+            equations[name] = {"": marginal}
+
+    # Pass 2: indexed equations
+    for m in indexed_header.finditer(lst_content):
+        name = m.group(1)
+        if name in equations:
+            continue
+        start = m.end()
+        header_region = lst_content[start : start + 300]
+        if not re.search(r"LOWER\s+LEVEL\s+UPPER\s+MARGINAL", header_region):
+            continue
+        header_match = re.search(r"MARGINAL\s*\n", header_region)
+        if not header_match:
+            continue
+        data_start = start + header_match.end()
+        vals: dict[str, float] = {}
+        pos = data_start
+        while pos < len(lst_content):
+            line_end = lst_content.find("\n", pos)
+            if line_end == -1:
+                line = lst_content[pos:]
+                line_end = len(lst_content)
+            else:
+                line = lst_content[pos:line_end]
+            stripped = line.strip()
+            if not stripped or stripped.startswith("----"):
+                break
+            row_m = data_row.match(stripped)
+            if row_m:
+                idx = row_m.group(1)
+                marginal = _parse_gams_value(row_m.group(5))  # MARGINAL column
+                if marginal is not None:
+                    vals[idx] = marginal
+            pos = line_end + 1
+        if vals:
+            equations[name] = vals
+
+    return equations
+
+
+def compare_variable_values(
+    nlp_vars: dict[str, dict[str, float]],
+    mcp_vars: dict[str, dict[str, float]],
+    rtol: float = DEFAULT_RTOL,
+    atol: float = DEFAULT_ATOL,
+) -> dict[str, Any]:
+    """Compare primal or dual variable values between NLP and MCP solutions.
+
+    For each variable present in both solutions, computes:
+    - max absolute difference across all indices
+    - max relative difference across all indices
+    - count of indices that diverge beyond tolerance
+
+    Args:
+        nlp_vars: Variables from NLP solution {name: {index: value}}
+        mcp_vars: Variables from MCP solution {name: {index: value}}
+        rtol: Relative tolerance
+        atol: Absolute tolerance
+
+    Returns:
+        Dict with:
+        - variables_compared: number of variables compared
+        - variables_matched: number fully within tolerance
+        - variables_diverged: number with at least one index outside tolerance
+        - max_abs_diff: overall maximum absolute difference
+        - max_rel_diff: overall maximum relative difference
+        - worst_variable: name of variable with largest difference
+        - per_variable: list of per-variable summaries (sorted by max abs diff descending, capped at the 10 worst entries)
+    """
+    common_vars = set(nlp_vars) & set(mcp_vars)
+    per_variable: list[dict[str, Any]] = []
+    overall_max_abs = 0.0
+    overall_max_rel = 0.0
+    worst_var = ""
+    matched = 0
+    diverged = 0
+
+    for var_name in sorted(common_vars):
+        nlp_vals = nlp_vars[var_name]
+        mcp_vals = mcp_vars[var_name]
+        common_idx = set(nlp_vals) & set(mcp_vals)
+        if not common_idx:
+            continue
+
+        var_max_abs = 0.0
+        var_max_rel = 0.0
+        var_diverged = 0
+        for idx in common_idx:
+            a, b = nlp_vals[idx], mcp_vals[idx]
+            if math.isnan(a) or math.isnan(b) or math.isinf(a) or math.isinf(b):
+                if not values_close(a, b, rtol, atol):
+                    var_diverged += 1
+                continue
+            diff = abs(a - b)
+            max_abs = max(abs(a), abs(b))
+            rel = diff / max_abs if max_abs > 0 else (0.0 if diff == 0 else float("inf"))
+            var_max_abs = max(var_max_abs, diff)
+            var_max_rel = max(var_max_rel, rel)
+            if not values_close(a, b, rtol, atol):
+                var_diverged += 1
+
+        if var_max_abs > overall_max_abs or (var_diverged > 0 and not worst_var):
+            overall_max_abs = max(overall_max_abs, var_max_abs)
+            worst_var = var_name
+        overall_max_rel = max(overall_max_rel, var_max_rel)
+
+        if var_diverged == 0:
+            matched += 1
+        else:
+            diverged += 1
+
+        per_variable.append(
+            {
+                "name": var_name,
+                "indices_compared": len(common_idx),
+                "indices_diverged": var_diverged,
+                "max_abs_diff": var_max_abs,
+                "max_rel_diff": var_max_rel,
+            }
+        )
+
+    # Sort by max abs diff descending
+    per_variable.sort(key=lambda v: v["max_abs_diff"], reverse=True)
+
+    return {
+        "variables_compared": len(per_variable),
+        "variables_matched": matched,
+        "variables_diverged": diverged,
+        "max_abs_diff": overall_max_abs,
+        "max_rel_diff": overall_max_rel,
+        "worst_variable": worst_var,
+        "per_variable": per_variable[:10],  # Top 10 worst
+    }
 
 
 def compare_solutions(
