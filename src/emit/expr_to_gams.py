@@ -373,8 +373,13 @@ def _needs_parens(parent_op: str | None, child_op: str | None, is_right: bool = 
     # e.g., a - (b - c) vs a - b - c
     if child_prec == parent_prec and is_right:
         # Subtraction and division are left-associative
-        if parent_op in ("-", "/", "^"):
+        if parent_op in ("-", "/"):
             return True
+
+    # Power is non-associative in GAMS — both (a^b)^c and a^(b^c) must
+    # parenthesize the nested child regardless of side.
+    if parent_op in ("^", "**") and child_op in ("^", "**"):
+        return True
 
     return False
 
@@ -405,7 +410,7 @@ def expr_to_gams(
         >>> expr_to_gams(Binary("+", Const(1), Const(2)))
         '1 + 2'
         >>> expr_to_gams(Binary("^", VarRef("x", ()), Const(2)))
-        'x ** 2'
+        'sqr(x)'
     """
     if domain_vars is None:
         domain_vars = frozenset()
@@ -482,6 +487,16 @@ def expr_to_gams(
             # Convert power operator to GAMS syntax
             # Handle both ^ and ** (term collection may generate **)
             if op in ("^", "**"):
+                # Use sqr() for x**2 — GAMS rPower rejects negative bases
+                # (e.g. (-1)**2 raises FUNC DOMAIN) but sqr() handles them (#982).
+                if isinstance(right, Const) and right.value == 2.0:
+                    left_str = expr_to_gams(
+                        left, parent_op=None, is_right=False, domain_vars=domain_vars
+                    )
+                    result = f"sqr({left_str})"
+                    needs_parens = _needs_parens(parent_op, "**", is_right)
+                    return f"({result})" if needs_parens else result
+
                 # GAMS uses ** for exponentiation
                 left_str = expr_to_gams(left, parent_op=op, is_right=False, domain_vars=domain_vars)
                 right_str = expr_to_gams(
