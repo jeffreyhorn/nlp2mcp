@@ -553,7 +553,7 @@ Budget triage applied per RETROSPECTIVE_ALIGNMENT.md: full catalog is 15-22h; to
 | internal_error (parse) | pipeline | 0 | ✅ ≤ 3 |
 | Solve | pipeline | 65 | ✅ ≥ 36 |
 | Match | pipeline | 30 | ✅ ≥ 20 |
-| Error category breakdown (parse) | pipeline | lexer_invalid_char: 3 | ✅ |
+| Error category breakdown (parse) | pipeline | lexer_invalid_char: 3; all other parse-stage categories: 0 | ✅ |
 | Error category breakdown (solve) | pipeline | path_syntax_error: 41, model_infeasible: 15, path_solve_terminated: 12, path_solve_license: 4 | ✅ |
 | PATH analysis | document | 29/29 classified | ✅ |
 | Solution comparison | framework | Primal + dual + combined tolerance | ✅ |

@@ -478,7 +478,7 @@ Note: 157 models processed (3 fewer than 160 — not available in local data).
 |----------|----------|-------|-------|
 | lexer_invalid_char | 10 | 3 | -7 |
 | semantic_undefined_symbol | 7 | 0 | -7 |
-| internal_error | 7 | 0 | -7 |
+| internal_error (parse) | 7 | 0 | -7 |
 | parser_invalid_expression | 3 | 0 | -3 |
 | model_no_objective_def | 1 | 0 | -1 |
 

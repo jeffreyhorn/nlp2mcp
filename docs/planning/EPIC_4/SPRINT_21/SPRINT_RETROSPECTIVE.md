@@ -39,7 +39,7 @@ Sprint 21 met all 8 acceptance criteria, significantly exceeding most targets. P
 | Full Pipeline Match | 16 | ≥ 20 | **30** | ✅ Far exceeded |
 | Tests | 3,715 | ≥ 3,780 | **3,957** | ✅ Exceeded |
 | PATH Analysis | — | All classified | **29/29** | ✅ Met |
-| Solution Comparison | — | Extended | **Primal + dual** | ✅ Met |
+| Solution Comparison | — | Extended | **Primal + dual + combined tolerance** | ✅ Met |
 
 ### Final Error Category Breakdown
 
@@ -49,7 +49,7 @@ Sprint 21 met all 8 acceptance criteria, significantly exceeding most targets. P
 |----------|----------|-------|-------|
 | lexer_invalid_char | 10 | 3 | -7 |
 | semantic_undefined_symbol | 7 | 0 | -7 |
-| internal_error | 7 | 0 | -7 |
+| internal_error (parse) | 7 | 0 | -7 |
 | parser_invalid_expression | 3 | 0 | -3 |
 | model_no_objective_def | 1 | 0 | -1 |
 
