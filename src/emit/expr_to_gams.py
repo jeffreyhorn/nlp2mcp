@@ -405,7 +405,7 @@ def expr_to_gams(
         >>> expr_to_gams(Binary("+", Const(1), Const(2)))
         '1 + 2'
         >>> expr_to_gams(Binary("^", VarRef("x", ()), Const(2)))
-        'x ** 2'
+        'sqr(x)'
     """
     if domain_vars is None:
         domain_vars = frozenset()
