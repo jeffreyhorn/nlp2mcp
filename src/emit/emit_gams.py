@@ -437,8 +437,11 @@ def emit_gams_mcp(
             for indices, expr in var_def.l_expr_map.items():  # type: ignore[assignment]
                 idx_str = ",".join(_index_to_gams_string(i) for i in indices)
                 # Issue #874: Pass indices as domain_vars so the expression emitter
-                # doesn't quote set variable names (e.g., wbar1(ii,jwt) not wbar1(ii,"jwt"))
-                idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
+                # doesn't quote set variable names (e.g., wbar1(ii,jwt) not wbar1(ii,"jwt")).
+                # Only include actual set/alias names — element labels must stay quoted.
+                idx_domain_vars = frozenset(
+                    i for i in indices if isinstance(i, str) and i.lower() in _sets_aliases_lower
+                )
                 expr_str = expr_to_gams(expr, domain_vars=idx_domain_vars)
                 lines.append(f"{var_name}.l({idx_str}) = {expr_str};")
                 deps.update(_collect_varref_names(expr))
