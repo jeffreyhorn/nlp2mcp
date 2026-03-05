@@ -148,7 +148,7 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 
 ### Why This Matters
 
-path_syntax_error is the single largest solve failure category (41 models). Sprint 22 targets reducing this to ≤30 (−11 models). The Sprint 21 catalog classified 45 models into 9 subcategories, but:
+path_syntax_error is the single largest solve failure category (41 models). Sprint 22 targets reducing this to ≤30 (−11 models). The Sprint 21 catalog classified 45 models into 9 subcategories (A-G, I, J — no H), but:
 - Sprint 21 fixed subcategories E (set quoting), D (negative exponents), and parts of A (emission ordering)
 - 3 new models (dinam, ferts, tricp) entered this category and are unsubcategorized
 - Current subcategory counts need refreshing against the latest pipeline results
@@ -172,7 +172,7 @@ Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into subcategories A-J.
 
 1. **Run latest pipeline** to get current path_syntax_error model list:
    ```bash
-   .venv/bin/python scripts/gamslib/run_full_test.py --only-parse --quiet 2>&1 | grep path_syntax_error
+   .venv/bin/python scripts/gamslib/run_full_test.py --quiet 2>&1 | grep path_syntax_error
    ```
 2. **Diff against Sprint 21 catalog** to identify:
    - Models that moved OUT of path_syntax_error (now solving or in different category)
@@ -413,7 +413,7 @@ The 120s timeout is set in the pipeline runner. Some models may be very close to
 1. **List all 11 timeout models** from the latest pipeline output
 2. **For 3-5 representative models**, run translation with profiling:
    ```bash
-   timeout 180 python -c "
+   timeout 180 .venv/bin/python -c "
    import sys, time; sys.setrecursionlimit(50000)
    from src.ir.parser import parse_file
    t0 = time.time()

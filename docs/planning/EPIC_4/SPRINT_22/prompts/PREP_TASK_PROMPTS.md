@@ -34,7 +34,7 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 1. **Create branch** `planning/sprint22-task2` from `main`
 2. **Run latest pipeline** to get current path_syntax_error model list:
    ```bash
-   .venv/bin/python scripts/gamslib/run_full_test.py --only-parse --quiet 2>&1 | grep path_syntax_error
+   .venv/bin/python scripts/gamslib/run_full_test.py --quiet 2>&1 | grep path_syntax_error
    ```
 3. **Diff against Sprint 21 catalog** — identify models that moved OUT, moved IN, or stayed
 4. **Reclassify unsubcategorized models** (dinam, ferts, tricp, and any new entries) by running GAMS on their MCP files and examining error codes
@@ -129,11 +129,11 @@ EOF
 ```
 
 Then wait for reviewer comments. When the reviewer posts comments, use the standard review workflow:
-1. Fetch comments: `gh api repos/jeffreyhorn/nlp2mcp/pulls/PRNUMBER/comments`
+1. Fetch comments: `gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/PRNUMBER/comments"`
 2. Fix issues in code/docs
 3. Commit: `git commit -m "Address PR #PRNUMBER review comments"`
 4. Push
-5. Reply to each comment: `gh api "repos/jeffreyhorn/nlp2mcp/pulls/PRNUMBER/comments/$id/replies" -X POST -f body="..."`
+5. Reply to each comment: `gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/PRNUMBER/comments/$id/replies" -X POST -f body="..."`
 
 ---
 
@@ -387,7 +387,7 @@ Profile the 11 translation timeout models to identify whether bottlenecks are in
 2. **List all 11 timeout models** from latest pipeline output
 3. **For 3-5 representative models**, run translation with profiling:
    ```bash
-   timeout 180 python -c "
+   timeout 180 .venv/bin/python -c "
    import sys, time; sys.setrecursionlimit(50000)
    from src.ir.parser import parse_file
    t0 = time.time()
@@ -1083,9 +1083,9 @@ Then wait for reviewer comments and handle them using the standard workflow.
 ### Standard Review Workflow (all tasks)
 
 When the reviewer posts comments on a PR:
-1. Fetch: `gh api repos/jeffreyhorn/nlp2mcp/pulls/PRNUMBER/comments`
+1. Fetch: `gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/PRNUMBER/comments"`
 2. Find unreplied comments (no `replies` or reply count 0)
 3. Fix issues in code/docs
 4. Commit: `git commit -m "Address PR #PRNUMBER review comments"`
 5. Push: `git push`
-6. Reply to EACH comment individually: `gh api "repos/jeffreyhorn/nlp2mcp/pulls/PRNUMBER/comments/$id/replies" -X POST -f body="..."`
+6. Reply to EACH comment individually: `gh api "repos/$(gh repo view --json nameWithOwner -q .nameWithOwner)/pulls/PRNUMBER/comments/$id/replies" -X POST -f body="..."`
