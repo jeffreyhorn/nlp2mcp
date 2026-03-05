@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 1: Known Unknowns List - 2026-03-05
+
+**Branch:** `planning/sprint22-prep`
+
+#### Added
+- Sprint 22 Known Unknowns list (`docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md`)
+  - 26 unknowns across 7 categories (KKT Correctness, Starting Point, PATH Solver, Divergence Analysis, Parse Completion, Deferred Subcategories, Deferred Items)
+  - Task-to-Unknown mapping table linking each prep task to its unknowns
+  - Verification status tracking template for Sprint 22 runtime updates
+
+#### Changed
+- Updated PREP_PLAN.md: Task 1 marked COMPLETE; Tasks 2-10 annotated with "Unknowns to Verify" metadata
+
 ### Sprint 21 Day 14: Final Checkpoint + Sprint Close - 2026-03-04
 
 **Branch:** `sprint21-day14-sprint-close`

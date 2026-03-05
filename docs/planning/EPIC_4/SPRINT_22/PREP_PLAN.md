@@ -47,7 +47,7 @@ This prep plan focuses on research, root cause cataloging, and design tasks that
 
 ## Task 1: Create Sprint 22 Known Unknowns List
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -88,35 +88,47 @@ Sprint 22 shifts from parse improvements to solve improvements. Key areas of unc
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` with 26 unknowns across 7 categories
+- Each unknown includes: Priority, Assumption, Research Questions, How to Verify, Risk if Wrong, Estimated Research Time, Owner, Verification Results
+- Task-to-Unknown mapping table (Appendix A) links each prep task to its unknowns
+- KU-08 (PATH tuning irrelevant) verified immediately from existing Day 12 analysis
 
 ### Result
 
-*To be completed*
+26 unknowns identified across 7 categories:
+- Category 1: KKT Correctness Fixes (6 unknowns: KU-01 through KU-04, KU-24, KU-25)
+- Category 2: Starting Point Improvements (3 unknowns: KU-05 through KU-07)
+- Category 3: PATH Solver Tuning (3 unknowns: KU-08 through KU-10)
+- Category 4: MCP-NLP Solution Divergence Analysis (3 unknowns: KU-11 through KU-13)
+- Category 5: Parse Completion Final Push (2 unknowns: KU-14, KU-15)
+- Category 6: Deferred path_syntax_error Subcategories (4 unknowns: KU-16 through KU-19)
+- Category 7: Sprint 21 Deferred Items (4 unknowns: KU-20 through KU-23, KU-26)
+
+Priority distribution: 4 Critical, 11 High, 7 Medium, 4 Low. All Critical/High unknowns have verification deadlines ≤ Day 3.
 
 ### Verification
 
 ```bash
 # Verify document exists with expected structure
 test -f docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md && echo "EXISTS" || echo "MISSING"
-grep -c "Unknown" docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md
-# Expected: 20+ unknowns
+grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md
+# Expected: 26 unknowns
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` with 20+ unknowns across 6 categories
-- Each unknown has: assumption, verification method, priority, risk if wrong
-- Verification deadlines assigned (Day 0/1/2)
+- [x] `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` with 26 unknowns across 7 categories
+- [x] Each unknown has: assumption, verification method, priority, risk if wrong
+- [x] Verification deadlines assigned (Day 0/1/2/3)
 
 ### Acceptance Criteria
 
-- [ ] Document created with 20+ unknowns across 6 categories
-- [ ] All unknowns have assumption, verification method, priority
-- [ ] All Critical/High unknowns have verification plan
-- [ ] Unknowns cover all Sprint 22 components
-- [ ] Template for runtime updates defined
-- [ ] Verification deadlines assigned
+- [x] Document created with 26 unknowns across 7 categories
+- [x] All unknowns have assumption, verification method, priority
+- [x] All Critical/High unknowns have verification plan
+- [x] Unknowns cover all Sprint 22 components
+- [x] Template for runtime updates defined (Appendix C)
+- [x] Verification deadlines assigned
 
 ---
 
@@ -128,6 +140,7 @@ grep -c "Unknown" docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns to Verify:** KU-01, KU-03, KU-16, KU-17, KU-18, KU-19
 
 ### Objective
 
@@ -214,6 +227,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md && echo "EXIS
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns to Verify:** KU-05, KU-06, KU-09, KU-10, KU-25
 
 ### Objective
 
@@ -297,6 +311,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns to Verify:** KU-23, KU-24
 
 ### Objective
 
@@ -372,6 +387,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md && echo "EXIST
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns to Verify:** (none — no unknowns specific to timeout profiling)
 
 ### Objective
 
@@ -455,6 +471,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md && echo "E
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 2, 3, 4 (need solve-failure classifications to assess overlap)
+**Unknowns to Verify:** KU-20, KU-21, KU-22
 
 ### Objective
 
@@ -531,6 +548,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md && echo "EXIS
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** Task 2 (need updated subcategory catalog)
+**Unknowns to Verify:** KU-02, KU-04
 
 ### Objective
 
@@ -614,6 +632,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md && echo "
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns to Verify:** KU-14, KU-15
 
 ### Objective
 
@@ -689,6 +708,7 @@ make test
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** Task 3 (need path_solve_terminated classification for newly-solving model projections)
+**Unknowns to Verify:** KU-11, KU-12, KU-13, KU-26
 
 ### Objective
 
@@ -759,6 +779,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md && echo "EXISTS" |
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Sprint planning
 **Dependencies:** All tasks (1-9)
+**Unknowns to Verify:** (all remaining — synthesize findings into plan)
 
 ### Objective
 
@@ -884,7 +905,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md && echo "EXISTS" 
 Before Sprint 22 Day 1, verify:
 
 ### Critical (Must Complete)
-- [ ] Known Unknowns document created (Task 1)
+- [x] Known Unknowns document created (Task 1)
 - [ ] path_syntax_error catalog updated (Task 2)
 - [ ] path_solve_terminated models classified (Task 3)
 - [ ] Sprint 22 plan created with day-by-day schedule (Task 10)
