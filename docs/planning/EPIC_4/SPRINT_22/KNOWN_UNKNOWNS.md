@@ -20,9 +20,9 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 | ID | Category | Unknown | Priority | Assumption | Verification Deadline |
 |----|----------|---------|----------|------------|-----------------------|
 | KU-01 | KKT Correctness | Subcategory C uncontrolled sets are all same root cause | Critical | Yes, single AD/stationarity bug | Day 1 |
-| KU-02 | KKT Correctness | Subcategory C fix won't break currently-solving models | Critical | Fix is additive (domain conditioning) | Day 2 |
+| KU-02 | KKT Correctness | ~~Subcategory C fix won't break currently-solving models~~ | Critical | **VERIFIED** — fix is additive; only activates for uncontrolled indices | Day 2 |
 | KU-03 | KKT Correctness | ~~Subcategory B domain violations share a common emitter bug~~ | High | **REFUTED** — original 5 models dispersed; current B is cesam/cesam2 (new) | Day 1 |
-| KU-04 | KKT Correctness | Subcategory G set index reuse can be solved with aliasing | High | Simple alias renaming suffices | Day 2 |
+| KU-04 | KKT Correctness | ~~Subcategory G set index reuse can be solved with aliasing~~ | High | **VERIFIED** — aliasing mechanism is sound; detection needs enhancement | Day 2 |
 | KU-05 | Starting Point | Category B execution errors are all `.l`-initialization fixable | Critical | Yes, smart initialization prevents domain errors | Day 1 |
 | KU-06 | Starting Point | `option domlim` is sufficient to bypass remaining domain errors | High | GAMS continues past domain errors with approximate values | Day 1 |
 | KU-07 | Starting Point | etamac log(0)/division-by-zero is solvable with epsilon guards | Medium | `max(x.l, epsilon)` prevents domain errors without distorting KKT | Day 2 |
@@ -88,7 +88,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min (code review of stationarity builder)
 **Owner:** Task 7 (fix design)
-**Verification Results:** *To be completed during Task 7*
+**Verification Results:** VERIFIED — LOW REGRESSION RISK. The Subcategory C fix is additive — it enhances the existing `_collect_free_indices()` + Sum-wrapping logic (stationarity.py:1748-1759, 1774-1783) to catch uncontrolled indices it currently misses. The fix does NOT modify the core stationarity equation derivation. Currently-solving models have no uncontrolled indices (GAMS would raise $149), so the `if uncontrolled:` guard prevents the fix from activating on those models. `_collect_free_indices()` tracks bound indices from enclosing Sum/Prod nodes (line 1576) and cannot produce false positives for controlled indices. Full pipeline regression test is sufficient mitigation.
 
 ---
 
@@ -130,7 +130,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 7 (fix design)
-**Verification Results:** *To be completed during Task 7*
+**Verification Results:** VERIFIED — ALIASING IS SUFFICIENT (with enhanced detection). The existing `resolve_index_conflicts()` mechanism in `expr_to_gams.py` (lines 748-868) correctly renames conflicting indices and updates all references within the sum body via `active_aliases` propagation. The issue is that `collect_index_aliases()` (lines 670-745) only checks against the equation domain — it misses two patterns: (1) nested same-name reuse (`sum(cc, ... sum(cc, ...))` in spatequ/srkandw), (2) case-insensitive collisions (`R` vs `r` in kand/prolog). Enhancement: add `bound_indices` tracking through nesting levels and normalize comparisons to lowercase. The `__` suffix naming convention avoids collisions with user-defined identifiers.
 
 ---
 
@@ -637,9 +637,9 @@ Use this template during Sprint 22 to track verification results.
 | ID | Verified? | Date | Result | Action Taken |
 |----|-----------|------|--------|-------------|
 | KU-01 | Yes | 2026-03-05 | Confirmed — 2 sub-patterns, same root cause | Single KKT assembly fix targets all 10 models |
-| KU-02 | | | | |
+| KU-02 | Yes | 2026-03-06 | Verified — LOW regression risk; fix is additive, only activates for uncontrolled indices | Implement with confidence; full pipeline retest is sufficient |
 | KU-03 | Yes | 2026-03-05 | Refuted — 3 different errors, not common $170 | Investigate cesam/cesam2 fresh; reclassify agreste/china/gtm |
-| KU-04 | | | | |
+| KU-04 | Yes | 2026-03-06 | Verified — aliasing sufficient; detection needs enhancement for nesting + case | Enhance `collect_index_aliases()` with bound tracking + lowercase normalization |
 | KU-05 | Yes | 2026-03-06 | Partially refuted — diverse root causes, not just `.l` init | Model-specific fixes needed per model |
 | KU-06 | Yes | 2026-03-06 | Refuted — `domlim` doesn't apply to equation generation | Model-specific fixes instead of `domlim` |
 | KU-07 | | | | |

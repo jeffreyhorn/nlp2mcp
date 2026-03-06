@@ -590,7 +590,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md && echo "EXIS
 
 ## Task 7: Design path_syntax_error Fix Strategy
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -610,11 +610,11 @@ path_syntax_error fixes are the highest-leverage Sprint 22 work (−11 models ta
 
 From Task 2's catalog update, the priority subcategories for Sprint 22 are:
 
-- **Subcategory C (9 models):** Uncontrolled set in stationarity equations. Root cause: KKT assembly generates stationarity equations with set indices that aren't controlled by a domain. Fix likely in `src/kkt/stationarity.py` or `src/emit/emit_gams.py`.
-- **Subcategory B (5 models):** Domain violation in emitted parameter data. Root cause: emitter writes parameter values for domain combinations that don't exist. Fix in `src/emit/emit_gams.py`.
-- **Subcategory G (2 models):** Set index reuse conflict in sum. Root cause: translator reuses same index variable in nested sum expressions. Fix in `src/kkt/` or `src/ad/`.
+- **Subcategory C (10 models):** Uncontrolled set in stationarity equations ($149). Root cause: KKT assembly generates stationarity equations with set indices that aren't controlled by a domain. Fix in `src/kkt/stationarity.py`.
+- **Subcategory B (2 models):** Domain violation in emitted parameter data ($170). Root cause: emitter writes parameter values for domain combinations that don't exist. Fix in `src/emit/original_symbols.py`.
+- **Subcategory G (4 models):** Set index reuse conflict in sum ($125). Root cause: emitter's alias detection misses nested and case-insensitive conflicts. Fix in `src/emit/expr_to_gams.py`.
 
-**Source:** `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md`
+**Source:** `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md` (Task 2)
 
 ### What Needs to Be Done
 
@@ -628,9 +628,9 @@ From Task 2's catalog update, the priority subcategories for Sprint 22 are:
    - Identify which emitter code produces out-of-domain data
    - Design fix: filter parameter data by valid domain combinations
 3. **For Subcategory G (set index reuse):**
-   - Examine the 2 affected models
+   - Examine the 4 affected models (kand, prolog, spatequ, srkandw)
    - Identify the sum/prod expression pattern that causes index collision
-   - Design fix: rename conflicting indices during KKT derivation
+   - Design fix: rename conflicting indices during emitter expression formatting
 4. **Document implementation plan** with:
    - Files to modify per subcategory
    - Estimated LOC changes
@@ -640,11 +640,20 @@ From Task 2's catalog update, the priority subcategories for Sprint 22 are:
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md` with implementation designs for subcategories C, B, G
+- Traced root causes to specific source code: `src/kkt/stationarity.py` (C), `src/emit/original_symbols.py` (B), `src/emit/expr_to_gams.py` (G)
+- Verified KU-02 (Subcategory C regression risk: LOW — fix is additive, only activates for uncontrolled indices)
+- Verified KU-04 (Subcategory G aliasing sufficient: YES — existing `resolve_index_conflicts()` mechanism is sound, detection needs enhancement)
+- Updated KNOWN_UNKNOWNS.md with KU-02 and KU-04 verification results
 
 ### Result
 
-*To be completed*
+Fix design covers 16 models across 3 subcategories in estimated 5-9h:
+- **Subcategory C** (10 models): Enhance `_collect_free_indices()` + domain conditioning in `stationarity.py` (~110 LOC, 3-5h)
+- **Subcategory G** (4 models): Enhance `collect_index_aliases()` with nested conflict + case-insensitive detection in `expr_to_gams.py` (~100 LOC, 1-2h)
+- **Subcategory B** (2 models): Add `_is_in_domain()` domain membership filter in `original_symbols.py` (~70 LOC, 1-2h)
+- Recommended implementation order: C → G → B
+- All three fixes operate on different files with no interactions
 
 ### Verification
 
@@ -663,12 +672,12 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md && echo "
 
 ### Acceptance Criteria
 
-- [ ] Representative models examined for each target subcategory
-- [ ] Root cause traced to specific source code
-- [ ] Fix approach designed (not just "fix it" — specific code changes)
-- [ ] Files to modify listed per subcategory
-- [ ] Test strategy defined (regression + new tests)
-- [ ] Risk assessment: could fix break currently-solving models?
+- [x] Representative models examined for each target subcategory
+- [x] Root cause traced to specific source code
+- [x] Fix approach designed (not just "fix it" — specific code changes)
+- [x] Files to modify listed per subcategory
+- [x] Test strategy defined (regression + new tests)
+- [x] Risk assessment: could fix break currently-solving models?
 
 ---
 
