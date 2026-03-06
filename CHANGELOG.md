@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 12 current path_solve_terminated models classified (8 MCP pairing, 4 execution errors)
   - Movement analysis: 22 unique models moved out (14 model_optimal, 2 model_optimal from Cat B, 2 path_syntax_error, 2 N/A, 2 model_infeasible), 5 moved in (net −17)
   - Dominant fix: `_fx_` equation suppression unblocks 5 models (highest leverage)
-  - Sprint 22 target ≤5 achievable with 7 fixes in 4-5h
+  - Sprint 22 target ≤5 achievable by fixing 7 models via 2 fix types (Priority 1-2) in 4-5h
 
 #### Changed
 - Updated PREP_PLAN.md: Task 3 marked COMPLETE with results

@@ -28,7 +28,7 @@ Sprint 22 targets path_solve_terminated **≤ 5** (−7 models). Analysis shows 
 | Category | Sprint 21 | Current | Delta | Notes |
 |----------|-----------|---------|-------|-------|
 | A: Now solves | 14 | — | — | Already solved; removed from category |
-| B: Execution error | 5 | 4 | −1 | cclinpts→model_optimal, hs62→model_optimal; +fawley, +tforss new |
+| B: Execution error | 5 | 4 | −1 | cclinpts→model_optimal, hs62→model_optimal; etamac→MCP pairing (C); +fawley, +tforss new |
 | C: MCP pairing | 4 | 8 | +4 | etamac reclassified from B; +otpop, +pindyck, +springchain new |
 | D: Compilation error | 2 | 0 | −2 | camshape→path_syntax_error, qsambal→path_syntax_error |
 | E: Translation timeout | 2 | 0 | −2 | ganges/gangesx no longer in pipeline (N/A) |
