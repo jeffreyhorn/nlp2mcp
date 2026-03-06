@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 2: path_syntax_error Catalog Update - 2026-03-05
+
+**Branch:** `planning/sprint22-task2`
+
+#### Added
+- path_syntax_error status update (`docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md`)
+  - 43 current path_syntax_error models classified into subcategories
+  - Movement analysis: 22 moved out, 17 moved in, 26 stayed (6 reclassified)
+  - Subcategories D and E fully resolved by Sprint 21
+  - New Subcategory K (smax/sum domain tuple) and 5 new error patterns identified
+  - Prioritized fix order: A (15 models) + C (10) + G (4) = 29 models fixable
+
+#### Changed
+- Updated PREP_PLAN.md: Task 2 marked COMPLETE with results
+- Updated KNOWN_UNKNOWNS.md: Verification results for KU-01 (confirmed), KU-03 (refuted), KU-16 (non-issue), KU-17 (updated), KU-18 (confirmed), KU-19 (partially refuted)
+
 ### Sprint 22 Prep Task 1: Known Unknowns List - 2026-03-05
 
 **Branch:** `planning/sprint22-prep`
