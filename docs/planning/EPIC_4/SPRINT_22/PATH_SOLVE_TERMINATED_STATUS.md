@@ -3,8 +3,8 @@
 **Created:** 2026-03-06
 **Sprint:** 22 (Prep Task 3)
 **Status:** Complete — ready for Sprint 22 fix design (Task 7)
-**Data Source:** `data/gamslib/gamslib_status.json` (updated_date=2026-02-12, GAMS 51.3.0; Sprint 21 Day 12 pipeline run)
-**Error verification:** GAMS v53 (`/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams`) on on-disk MCP files
+**Data Source:** `data/gamslib/gamslib_status.json` (top-level updated_date=2026-02-12; per-model timestamps reflect Sprint 21 Day 12 pipeline run; GAMS 51.3.0)
+**Error verification:** GAMS v53 (local install) on on-disk MCP files
 
 ---
 
@@ -270,7 +270,7 @@ Add loop-dependent parameter resolution (lands, tforss) and elec conditional dom
 ## 8. Notes
 
 - **GAMS version:** Pipeline data from `gamslib_status.json` uses GAMS 51.3.0. Manual error classification (GAMS compilation of MCP files) used GAMS v53. Error types are consistent across both versions.
-- **etamac reclassification:** Sprint 21 `.l` clamping fix (PR #984) resolved etamac's 20 division-by-zero/log(0) errors but revealed 8 MCP pairing errors that were masked before. etamac is now Category C, not B.
+- **etamac reclassification:** Sprint 21 `.l` clamping fix (GitHub Issue #984) resolved etamac's 20 division-by-zero/log(0) errors but revealed 8 MCP pairing errors that were masked before. etamac is now Category C, not B.
 - **chain and rocket:** Moved to model_infeasible in the pipeline. They are genuinely locally infeasible (PATH ran to completion) and should be addressed in Task 4 (model_infeasible triage), not here.
 - **ganges and gangesx:** No longer appear in the pipeline (translate_failure / N/A). Translation timeout models are handled separately.
 - **camshape and qsambal:** Moved to path_syntax_error. Their compilation errors ($141) are handled in Task 2's Subcategory A classification.
