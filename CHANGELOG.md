@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 3: path_solve_terminated Classification - 2026-03-06
+
+**Branch:** `planning/sprint22-task3`
+
+#### Added
+- path_solve_terminated classification (`docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md`)
+  - 12 current path_solve_terminated models classified (8 MCP pairing, 4 execution errors)
+  - Movement analysis: 17 moved out (14 model_optimal, 2 path_syntax_error, 2 model_infeasible), 5 moved in
+  - Dominant fix: `_fx_` equation suppression unblocks 5 models (highest leverage)
+  - Sprint 22 target ≤5 achievable with 7 fixes in 4-5h
+
+#### Changed
+- Updated PREP_PLAN.md: Task 3 marked COMPLETE with results
+- Updated KNOWN_UNKNOWNS.md: Verified KU-05 (partially refuted), KU-06 (refuted), KU-09 (confirmed/moved), KU-10 (confirmed + expanded), KU-25 (confirmed)
+
 ### Sprint 22 Prep Task 2: path_syntax_error Catalog Update - 2026-03-05
 
 **Branch:** `planning/sprint22-task2`

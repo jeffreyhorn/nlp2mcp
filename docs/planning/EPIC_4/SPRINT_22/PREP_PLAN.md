@@ -235,7 +235,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md && echo "EXIS
 
 ## Task 3: Classify path_solve_terminated Root Causes
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -283,11 +283,22 @@ Sprint 21 PATH_CONVERGENCE_ANALYSIS.md (Day 12) classified the original 29 model
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md` with full classification of all 12 models
+- Updated `KNOWN_UNKNOWNS.md`: Verified KU-05 (partially refuted), KU-06 (refuted), KU-09 (confirmed/moved), KU-10 (confirmed + expanded), KU-25 (confirmed)
+- Updated Appendix C verification tracking for all 5 KUs
 
 ### Result
 
-*To be completed*
+12 current path_solve_terminated models classified into 2 error types:
+- **MCP pairing errors (8 models):** etamac, fdesign, hhfair, otpop, pak, pindyck, springchain, trussm — dominant sub-pattern is `_fx_` equation suppression (5 models)
+- **Execution errors (4 models):** elec, fawley, lands, tforss — diverse causes (conditional domain loss, `$` dropping, loop-dependent parameters)
+
+Key findings:
+- All 12 fail before PATH runs; `option domlim` is ineffective (KU-06 refuted)
+- `_fx_` equation suppression (single fix) unblocks 5 models — highest leverage
+- Sprint 22 target ≤5 achievable with Priority 1-2 fixes (7 models, 4-5h)
+- chain/rocket moved to model_infeasible (KU-09 confirmed)
+- Category C expanded from 4 to 8 models (KU-10 expanded)
 
 ### Verification
 
@@ -308,12 +319,12 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md
 
 ### Acceptance Criteria
 
-- [ ] All 12 remaining path_solve_terminated models classified
-- [ ] Each model has specific error identified (not just category)
-- [ ] Cross-references to existing issue docs where applicable
-- [ ] Fix effort estimates per model
-- [ ] Sprint 22 fix batches defined (enough for −7 models)
-- [ ] Genuine infeasibility cases identified and excluded from fix targets
+- [x] All 12 remaining path_solve_terminated models classified
+- [x] Each model has specific error identified (not just category)
+- [x] Cross-references to existing issue docs where applicable
+- [x] Fix effort estimates per model
+- [x] Sprint 22 fix batches defined (enough for −7 models)
+- [x] Genuine infeasibility cases identified and excluded from fix targets
 
 ---
 
@@ -921,7 +932,7 @@ Before Sprint 22 Day 1, verify:
 ### Critical (Must Complete)
 - [x] Known Unknowns document created (Task 1)
 - [x] path_syntax_error catalog updated (Task 2)
-- [ ] path_solve_terminated models classified (Task 3)
+- [x] path_solve_terminated models classified (Task 3)
 - [ ] Sprint 22 plan created with day-by-day schedule (Task 10)
 
 ### High Priority (Should Complete)
