@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - path_solve_terminated classification (`docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md`)
   - 12 current path_solve_terminated models classified (8 MCP pairing, 4 execution errors)
-  - Movement analysis: 17 moved out (14 model_optimal, 2 path_syntax_error, 2 model_infeasible), 5 moved in
+  - Movement analysis: 22 unique models moved out (14 model_optimal, 2 model_optimal from Cat B, 2 path_syntax_error, 2 N/A, 2 model_infeasible), 5 moved in (net −17)
   - Dominant fix: `_fx_` equation suppression unblocks 5 models (highest leverage)
   - Sprint 22 target ≤5 achievable with 7 fixes in 4-5h
 

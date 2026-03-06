@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-The path_solve_terminated category currently contains **12 models** (down from 29 at Sprint 21 baseline). Sprint 21 fixes moved 14 models to model_optimal (Category A) and 3 more shifted to other categories. Meanwhile, 5 models entered the category from path_syntax_error or as newly-translating models.
+The path_solve_terminated category currently contains **12 models** (down from 29 at Sprint 21 baseline). Since the Sprint 21 baseline, **22 unique models have moved out of this category** (14 to model_optimal / Category A and 8 to other categories), while 5 models have entered from path_syntax_error or as newly-translating models, yielding the net −17 change.
 
 Sprint 22 targets path_solve_terminated **≤ 5** (−7 models). Analysis shows the 12 models break into two dominant failure modes:
 
@@ -21,7 +21,7 @@ Sprint 22 targets path_solve_terminated **≤ 5** (−7 models). Analysis shows 
 
 **Key finding:** All 12 models fail **before PATH runs** — none have PATH convergence issues. The `path_solve_terminated` classification is a misnomer; the true errors are in GAMS equation generation or model construction. This confirms the Sprint 21 Day 12 analysis finding.
 
-**Sprint 22 target is achievable:** Fixing the `_fx_` equation suppression bug alone would resolve 4 models (hhfair, otpop, pak, pindyck). Adding fdesign/trussm (unmatched variable) fixes gets to 6. The −7 target requires fixing just one more model from execution errors or springchain.
+**Sprint 22 target is achievable:** Fixing the `_fx_` equation suppression bug alone would resolve 5 models (etamac, hhfair, otpop, pak, pindyck). Adding fdesign/trussm (unmatched variable) fixes gets to 7, meeting the −7 target without touching execution-error models.
 
 ### Key Changes from Sprint 21
 
@@ -37,14 +37,14 @@ Sprint 22 targets path_solve_terminated **≤ 5** (−7 models). Analysis shows 
 
 ### Model Movement
 
-**Moved OUT (17 models):**
+**Moved OUT (22 unique models; net −17 vs Sprint 21 baseline):**
 - **Category A → model_optimal (14):** decomp, jobt, like, polygon, ps2_f, ps2_f_s, ps2_s, ps3_f, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, ps10_s, solveopt
 - **Category B → model_optimal (2):** cclinpts, hs62
 - **Category D → path_syntax_error (2):** camshape, qsambal
 - **Category E → N/A (2):** ganges, gangesx (not in pipeline)
 - **Category F → model_infeasible (2):** chain, rocket
 
-Note: Some models moved to multiple categories — cclinpts and hs62 from Category B now solve; camshape and qsambal shifted to path_syntax_error (compilation errors reclassified). Total unique models moved out = 22 (14 + 2 + 2 + 2 + 2), but pipeline shows net −17 because 5 new models entered.
+Note: The bullets above list **22 unique models** moved out of `path_solve_terminated` (14 + 2 + 2 + 2 + 2). In the summary table this appears as a **net −17** change because **5 new models** entered the category after the Sprint 21 baseline (see "Moved IN" below).
 
 **Moved IN (5 models):**
 
@@ -162,7 +162,7 @@ The emitted MCP file has structural errors — variable-equation count mismatch 
 | etamac | 8 | `MCP pair totalcap.nu_totalcap has unmatched equation` for 8 time periods |
 
 **Root Cause:** etamac was originally Category B (execution error: division by zero + log(0)). Sprint 21 added `.l` clamping to `.lo` bounds in `src/emit/emit_gams.py`, which resolved the 20 domain errors. However, this revealed 8 MCP pairing errors that were masked before. The `totalcap` equation is emitted for all time periods but some periods have the variable fixed.
-**Issue doc:** #984 (partially — notes the 8 remaining matching errors after `.l` fix)
+**Issue:** #984 (internal tracking doc — partially, notes the 8 remaining matching errors after `.l` fix)
 **Fix:** Same `_fx_` suppression fix as C1.
 **Effort:** 0h (shared with C1 fix)
 
