@@ -590,7 +590,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md && echo "EXIS
 
 ## Task 7: Design path_syntax_error Fix Strategy
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -640,11 +640,20 @@ From Task 2's catalog update, the priority subcategories for Sprint 22 are:
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md` with implementation designs for subcategories C, B, G
+- Traced root causes to specific source code: `src/kkt/stationarity.py` (C), `src/emit/original_symbols.py` (B), `src/emit/expr_to_gams.py` (G)
+- Verified KU-02 (Subcategory C regression risk: LOW — fix is additive, only activates for uncontrolled indices)
+- Verified KU-04 (Subcategory G aliasing sufficient: YES — existing `resolve_index_conflicts()` mechanism is sound, detection needs enhancement)
+- Updated KNOWN_UNKNOWNS.md with KU-02 and KU-04 verification results
 
 ### Result
 
-*To be completed*
+Fix design covers 16 models across 3 subcategories in estimated 5-9h:
+- **Subcategory C** (10 models): Enhance `_collect_free_indices()` + domain conditioning in `stationarity.py` (~110 LOC, 3-5h)
+- **Subcategory G** (4 models): Enhance `collect_index_aliases()` with nested conflict + case-insensitive detection in `expr_to_gams.py` (~100 LOC, 1-2h)
+- **Subcategory B** (2 models): Add `_is_in_domain()` domain membership filter in `original_symbols.py` (~70 LOC, 1-2h)
+- Recommended implementation order: C → G → B
+- All three fixes operate on different files with no interactions
 
 ### Verification
 
@@ -663,12 +672,12 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md && echo "
 
 ### Acceptance Criteria
 
-- [ ] Representative models examined for each target subcategory
-- [ ] Root cause traced to specific source code
-- [ ] Fix approach designed (not just "fix it" — specific code changes)
-- [ ] Files to modify listed per subcategory
-- [ ] Test strategy defined (regression + new tests)
-- [ ] Risk assessment: could fix break currently-solving models?
+- [x] Representative models examined for each target subcategory
+- [x] Root cause traced to specific source code
+- [x] Fix approach designed (not just "fix it" — specific code changes)
+- [x] Files to modify listed per subcategory
+- [x] Test strategy defined (regression + new tests)
+- [x] Risk assessment: could fix break currently-solving models?
 
 ---
 

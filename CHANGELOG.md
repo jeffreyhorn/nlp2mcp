@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 7: path_syntax_error Fix Design - 2026-03-06
+
+**Branch:** `planning/sprint22-task7`
+
+#### Added
+- Fix design document (`docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md`)
+  - Subcategory C (10 models): Enhance `_collect_free_indices()` + domain conditioning in `stationarity.py` (~110 LOC, 3-5h)
+  - Subcategory G (4 models): Enhance `collect_index_aliases()` with nested conflict + case-insensitive detection in `expr_to_gams.py` (~100 LOC, 1-2h)
+  - Subcategory B (2 models): Add `_is_in_domain()` domain membership filter in `original_symbols.py` (~70 LOC, 1-2h)
+  - Recommended implementation order: C → G → B (no interactions between fixes)
+  - All regression risks assessed as LOW
+
+#### Changed
+- Updated PREP_PLAN.md: Task 7 marked COMPLETE with changes/result sections filled
+- Updated KNOWN_UNKNOWNS.md: Verified KU-02 (low regression risk), KU-04 (aliasing sufficient with enhanced detection)
+
 ### Sprint 22 Prep Task 6: Deferred Issues Decision - 2026-03-06
 
 **Branch:** `planning/sprint22-task6`
