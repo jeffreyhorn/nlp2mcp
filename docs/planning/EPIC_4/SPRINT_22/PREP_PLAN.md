@@ -781,7 +781,7 @@ make test
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** Task 3 (need path_solve_terminated classification for newly-solving model projections)
-**Unknowns to Verify:** KU-11 (PARTIALLY REFUTED), KU-12 (VERIFIED), KU-13 (PARTIALLY CONFIRMED), KU-26 (PARTIALLY VERIFIED)
+**Verification Results:** KU-11 (PARTIALLY REFUTED), KU-12 (VERIFIED), KU-13 (PARTIALLY CONFIRMED), KU-26 (PARTIALLY VERIFIED)
 
 ### Objective
 

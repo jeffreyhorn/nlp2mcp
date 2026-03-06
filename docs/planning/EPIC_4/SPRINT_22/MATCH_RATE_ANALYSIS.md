@@ -4,7 +4,7 @@
 **Sprint:** 22 (Prep Task 9)
 **Status:** Complete
 **Data Source:** `data/gamslib/gamslib_status.json` (snapshot as of 2026-03-06 on `main`)
-**Baseline:** 30/65 match (46.2%) — see BASELINE_METRICS.md
+**Baseline:** 30/65 match (46.2%) — see [BASELINE_METRICS](./BASELINE_METRICS.md)
 
 ---
 
@@ -368,12 +368,12 @@ For reference, the full 35-model breakdown by divergence magnitude:
 
 ### Issue Documents
 - Issues #958–#964: Principal-agent model family objective mismatches (Category B)
-- BASELINE_METRICS.md: Full mismatch table with objective values
-- PATH_SYNTAX_ERROR_STATUS.md: 40 path_syntax_error models (fix source for new matches)
-- PATH_SOLVE_TERMINATED_STATUS.md: 12 path_solve_terminated models (fix source for new matches)
-- PATH_SYNTAX_ERROR_FIX_DESIGN.md: Fix strategy for subcategories C, B, G
-- MODEL_INFEASIBLE_TRIAGE.md: 15 model_infeasible models
-- CONVEXITY_VERIFICATION_DESIGN.md: Convexity classification methodology
+- [BASELINE_METRICS](./BASELINE_METRICS.md): Full mismatch table with objective values
+- [PATH_SYNTAX_ERROR_STATUS](./PATH_SYNTAX_ERROR_STATUS.md): 40 path_syntax_error models (fix source for new matches)
+- [PATH_SOLVE_TERMINATED_STATUS](./PATH_SOLVE_TERMINATED_STATUS.md): 12 path_solve_terminated models (fix source for new matches)
+- [PATH_SYNTAX_ERROR_FIX_DESIGN](./PATH_SYNTAX_ERROR_FIX_DESIGN.md): Fix strategy for subcategories C, B, G
+- [MODEL_INFEASIBLE_TRIAGE](./MODEL_INFEASIBLE_TRIAGE.md): 15 model_infeasible models
+- [CONVEXITY_VERIFICATION_DESIGN](./CONVEXITY_VERIFICATION_DESIGN.md): Convexity classification methodology
 
 ### KU Verification Summary
 
