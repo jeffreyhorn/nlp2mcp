@@ -4,7 +4,7 @@
 **Sprint:** 22 (Prep Task 4)
 **Status:** Complete — ready for Sprint 22 fix design (Task 7)
 **Data Source:** `data/gamslib/gamslib_status.json` (top-level metadata `updated_date`=2026-02-12, GAMS 51.3.0; per-model status timestamps range up to the Sprint 21 Day 12 pipeline run — `updated_date` is not a reliable recency indicator)
-**Error verification:** GAMS v53 on on-disk MCP files
+**Error verification:** GAMS v53 using on-disk MCP files
 
 ---
 
@@ -81,7 +81,7 @@ These models have identifiable bugs in the KKT stationarity equations, bound mul
 **PATH output:** Residual 1.0, stuck on `stat_phipsi` (171 iterations, 3 restarts)
 **Issue doc:** #764 (`docs/issues/ISSUE_764_mexss-mcp-locally-infeasible-accounting-variables.md`)
 
-**Root cause:** The `sameas` guard in `_add_indexed_jacobian_terms()` (stationarity.py:1536-1563) incorrectly restricts scalar-constraint multiplier terms to a single variable instance. For example, the scalar equation `alam` sums over `e(cf,i)` for ALL 5 valid `(cf,i)` combinations, but the guard uses `entries[0]` (only `('steel','ahmsa')`) to build the `sameas` condition, ignoring the other 4 valid instances. This produces stationarity equations that are too restrictive — multiplier terms contribute to only one instance when they should contribute to all valid instances.
+**Root cause:** The `sameas` guard in `_add_indexed_jacobian_terms()` in `src/kkt/stationarity.py` incorrectly restricts scalar-constraint multiplier terms to a single variable instance. For example, the scalar equation `alam` sums over `e(cf,i)` for ALL 5 valid `(cf,i)` combinations, but the guard uses `entries[0]` (only `('steel','ahmsa')`) to build the `sameas` condition, ignoring the other 4 valid instances. This produces stationarity equations that are too restrictive — multiplier terms contribute to only one instance when they should contribute to all valid instances.
 
 Note: The initial analysis suspected accounting variable stationarity (`stat_phieps: -1 = 0`) as the root cause, but investigation showed those equations ARE individually satisfiable. The real problem is the `sameas` guard on indexed variable stationarity equations.
 **Fix:** Refactor the `sameas` guard to handle multi-entry Jacobian patterns — use subset conditions (`$(cf(c))`) when entries match a named subset, or `or`-disjunction of `sameas` calls for arbitrary entries.
