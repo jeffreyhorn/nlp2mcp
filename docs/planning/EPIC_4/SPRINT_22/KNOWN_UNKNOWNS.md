@@ -140,7 +140,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 **Assumption:** Some models currently classified as path_syntax_error have secondary KKT issues that are masked by the primary syntax error. Fixing the syntax error will allow them to reach the solve stage, where they may fail as model_infeasible.
 
 **Research Questions:**
-1. How many of the 41 path_syntax_error models are likely to solve vs shift to another error category?
+1. How many of the 43 path_syntax_error models are likely to solve vs shift to another error category?
 2. Are any of the 9 Subcategory C models known to have KKT correctness issues beyond the uncontrolled set?
 3. What is the expected "conversion rate" from path_syntax_error → solving?
 4. Should Sprint 22 targets account for model_infeasible growth?
@@ -151,7 +151,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min (review model types in subcategories)
 **Owner:** Tasks 2, 4 (catalog + triage)
-**Verification Results:** *To be completed during Tasks 2 and 4*
+**Verification Results:** CONFIRMED. Of 43 path_syntax_error models, an estimated 7-14 may shift to model_infeasible when syntax errors are fixed. Highest risk: 6 true CGE models (camcge, cesam, cesam2, dyncge, korcge, saras) — 3-4 likely infeasible based on twocge/orani precedent. 3 borderline CGE/SAM models (prolog, qsambal, sambal) also at elevated risk. 24 NLP models at ~18.8% base infeasibility rate (from current pipeline). The Sprint 22 ≤12 model_infeasible target should account for this influx — prioritize Category A KKT fixes (whouse, ibm1, uimp, mexss) early to build buffer.
 
 ---
 
@@ -594,7 +594,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 4 (model_infeasible triage)
-**Verification Results:** *To be completed during Task 4*
+**Verification Results:** CONFIRMED. orani is a linearized percentage-change CGE model — structurally incompatible with NLP→MCP conversion. Issue #765 investigation demonstrated: (1) excluding fixed variables from stationarity creates MCP count mismatch (13 unmatched variables), (2) even after fixing count mismatch, non-fixed variable stationarity equations are cascadingly infeasible, (3) variables represent percentage changes, not level values — a fundamentally different problem class. No other model_infeasible model has comparable fixed-variable density (orani has 54 `_fx_` references, highest among the 12 models in committed `gamslib_status.json` plus 3 from local reruns). Recommendation: add model class detection heuristic (>30% fixed variables + all linear equations → warning) rather than attempting conversion.
 
 ---
 
@@ -658,8 +658,8 @@ Use this template during Sprint 22 to track verification results.
 | KU-20 | | | | |
 | KU-21 | | | | |
 | KU-22 | | | | |
-| KU-23 | | | | |
-| KU-24 | | | | |
+| KU-23 | Yes | 2026-03-06 | Confirmed — orani linearized CGE, structurally incompatible | Add model class detection heuristic; exclude from metrics |
+| KU-24 | Yes | 2026-03-06 | Confirmed — 7-14 models at risk (6 CGE highest) | Fix Category A KKT bugs early; track influx |
 | KU-25 | Yes | 2026-03-06 | Confirmed — `ut` filter lost in MCP; needs IR enrichment | Fix is 2-3h (parser/IR), not 1h as assumed |
 | KU-26 | | | | |
 
