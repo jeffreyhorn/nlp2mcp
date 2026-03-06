@@ -147,9 +147,10 @@ Map the 12 remaining path_solve_terminated models to actionable fix categories u
 
 ### Context
 
-- Sprint 22 targets path_solve_terminated ≤ 5 (from 12, −7 models)
+- Sprint 22 targets path_solve_terminated ≤ 5
 - Sprint 21 Day 12 analysis classified all 29 original models into categories A-F
-- 14 now solve (Category A), 15 remain: B (5 execution errors), C (4 MCP pairing), D (2 compilation), E (2 timeout), F (2 locally infeasible)
+- 14 now solve (Category A), 15 still fail: B (5 execution errors), C (4 MCP pairing), D (2 compilation), E (2 timeout), F (2 locally infeasible)
+- Of these 15, ~12 are classified as `path_solve_terminated` in the pipeline (Category E overlaps with `translate_failure`, Category F may be classified separately)
 - Key finding: 13 of 15 fail BEFORE PATH runs — pre-solver errors fixable in translator/emitter
 - Issue documents exist: #983 (elec), #984 (etamac), #986 (lands)
 

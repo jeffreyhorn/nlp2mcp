@@ -60,7 +60,7 @@ Create proactive list of assumptions and unknowns for Sprint 22 to prevent late 
 
 ### Why This Matters
 
-Sprint 21 Retrospective (Process Recommendation PR2): Known unknowns identification proved highly effective in prior sprints. Sprint 22's solve-focused work involves complex KKT formulation issues where wrong assumptions can cost days of debugging.
+Sprint 21 Retrospective highlighted that proactive investigation (e.g., Day 12 PATH convergence analysis) prevented wasted effort on incorrect assumptions. Sprint 22's solve-focused work involves complex KKT formulation issues where wrong assumptions can cost days of debugging.
 
 ### Background
 
@@ -81,7 +81,7 @@ Sprint 22 shifts from parse improvements to solve improvements. Key areas of unc
    - model_infeasible: What fraction are KKT bugs vs MCP-incompatible model types?
    - Translation timeouts: Is the bottleneck in Lark/Earley parsing, KKT derivation, or GAMS emission?
    - Deferred issues: Are any prerequisites for high-leverage solve fixes?
-3. **Categorize by topic** (6 categories: path_syntax_error, path_solve_terminated, model_infeasible, translation, deferred issues, solution matching)
+3. **Categorize by topic** (7 categories: KKT correctness, starting point, PATH solver, MCP-NLP divergence, parse completion, deferred path_syntax_error subcategories, Sprint 21 deferred items)
 4. **Prioritize by risk** (Critical/High/Medium/Low)
 5. **Define verification method** for each unknown
 6. **Create document** at `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md`
@@ -99,10 +99,10 @@ Sprint 22 shifts from parse improvements to solve improvements. Key areas of unc
 - Category 1: KKT Correctness Fixes (6 unknowns: KU-01 through KU-04, KU-24, KU-25)
 - Category 2: Starting Point Improvements (3 unknowns: KU-05 through KU-07)
 - Category 3: PATH Solver Tuning (3 unknowns: KU-08 through KU-10)
-- Category 4: MCP-NLP Solution Divergence Analysis (3 unknowns: KU-11 through KU-13)
+- Category 4: MCP-NLP Solution Divergence Analysis (4 unknowns: KU-11 through KU-13, KU-26)
 - Category 5: Parse Completion Final Push (2 unknowns: KU-14, KU-15)
 - Category 6: Deferred path_syntax_error Subcategories (4 unknowns: KU-16 through KU-19)
-- Category 7: Sprint 21 Deferred Items (4 unknowns: KU-20 through KU-23, KU-26)
+- Category 7: Sprint 21 Deferred Items (4 unknowns: KU-20 through KU-23)
 
 Priority distribution: 4 Critical, 11 High, 7 Medium, 4 Low. All Critical/High unknowns have verification deadlines ≤ Day 3.
 
@@ -231,11 +231,11 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md && echo "EXIS
 
 ### Objective
 
-Map the 12 remaining path_solve_terminated models to actionable fix categories using Sprint 21 PATH_CONVERGENCE_ANALYSIS.md findings.
+Map the remaining path_solve_terminated models to actionable fix categories using Sprint 21 PATH_CONVERGENCE_ANALYSIS.md findings.
 
 ### Why This Matters
 
-Sprint 22 targets path_solve_terminated ≤ 5 (from 12, −7 models). Sprint 21 Day 12 analysis classified all 29 original models into categories A-F. Of the 12 remaining, most fail before PATH runs — meaning fixes are in the translator/emitter, not PATH tuning.
+Sprint 22 targets path_solve_terminated ≤ 5. Sprint 21 Day 12 analysis classified all 29 original models into categories A-F. Of the 15 still-failing models (~12 classified as `path_solve_terminated` in the pipeline — Category E overlaps `translate_failure`, Category F may be classified separately), most fail before PATH runs — meaning fixes are in the translator/emitter, not PATH tuning.
 
 ### Background
 

@@ -11,7 +11,7 @@
 
 This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvements & Solution Matching). Each unknown has a priority, assumption, research questions, verification method, and risk assessment. The goal is to prevent late discoveries during implementation by surfacing uncertainties early.
 
-**Process:** Sprint 21 Retrospective (PR2) recommended proactive known-unknowns identification. This document follows the pattern established in prior sprints.
+**Process:** Sprint 21 Retrospective highlighted the value of proactive investigation (e.g., Day 12 PATH convergence analysis invalidated PATH tuning assumptions). This document follows the pattern established in prior sprints.
 
 ---
 
@@ -304,7 +304,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 ---
 
-## Category 4: MCP-NLP Solution Divergence Analysis (3 unknowns)
+## Category 4: MCP-NLP Solution Divergence Analysis (4 unknowns)
 
 ### KU-11: Non-Matching Models Are Primarily Multi-Optima Cases
 
@@ -363,6 +363,26 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 **Risk if Wrong:** If newly-solving models have low match rates (similar to the current 46.2%), Sprint 22 would need +10 new solves to get +5 new matches. Match ≥ 35 target may be optimistic.
 
 **Estimated Research Time:** 15min (review model types)
+**Owner:** Task 9 (match rate analysis)
+**Verification Results:** *To be completed during Task 9*
+
+---
+
+### KU-26: NLP Solution Data Available for All Models
+
+**Priority:** Medium
+**Assumption:** NLP `.lst` files (containing NLP solve results) are available in `data/gamslib/raw/` for all models needed for divergence analysis.
+
+**Research Questions:**
+1. Do all 65 solving models have corresponding NLP `.lst` files?
+2. Are the NLP `.lst` files from the same GAMS version used for MCP solving?
+3. Do the `.lst` files contain objective values in a parseable format?
+
+**How to Verify:** Check for `.lst` files in `data/gamslib/raw/` for representative models.
+
+**Risk if Wrong:** If NLP solution data is missing, Sprint 22 would need to run NLP solves before divergence analysis — adding 2-4h of data collection work.
+
+**Estimated Research Time:** 15min
 **Owner:** Task 9 (match rate analysis)
 **Verification Results:** *To be completed during Task 9*
 
@@ -578,26 +598,6 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 ---
 
-### KU-26: NLP Solution Data Available for All Models
-
-**Priority:** Medium
-**Assumption:** NLP `.lst` files (containing NLP solve results) are available in `data/gamslib/raw/` for all models needed for divergence analysis.
-
-**Research Questions:**
-1. Do all 65 solving models have corresponding NLP `.lst` files?
-2. Are the NLP `.lst` files from the same GAMS version used for MCP solving?
-3. Do the `.lst` files contain objective values in a parseable format?
-
-**How to Verify:** Check for `.lst` files in `data/gamslib/raw/` for representative models.
-
-**Risk if Wrong:** If NLP solution data is missing, Sprint 22 would need to run NLP solves before divergence analysis — adding 2-4h of data collection work.
-
-**Estimated Research Time:** 15min
-**Owner:** Task 9 (match rate analysis)
-**Verification Results:** *To be completed during Task 9*
-
----
-
 ## Appendix A: Task-to-Unknown Mapping
 
 This table maps each PREP_PLAN.md task to the unknowns it should verify during execution.
@@ -622,8 +622,8 @@ This table maps each PREP_PLAN.md task to the unknowns it should verify during e
 | Priority | Count | Unknowns |
 |----------|-------|----------|
 | Critical | 4 | KU-01, KU-02, KU-05, KU-08 |
-| High | 11 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24, KU-25, KU-26 |
-| Medium | 7 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21 |
+| High | 10 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24, KU-25 |
+| Medium | 8 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21, KU-26 |
 | Low | 4 | KU-14, KU-16, KU-17, KU-18 |
 
 **All Critical and High unknowns have verification plans with deadlines ≤ Day 3.**
