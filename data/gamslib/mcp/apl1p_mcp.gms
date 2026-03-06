@@ -32,7 +32,7 @@ Parameters
     d(dl) /h 1040, m 1040, l 1040/
     us(dl) /h 10, m 10, l 10/
     v1(stoch,omega1) /out.o11 -1, out.o12 -0.9, out.o13 -0.5, out.o14 -0.1, pro.o11 0.2, pro.o12 0.3, pro.o13 0.4, pro.o14 0.1/
-    v2(stoch,omega2) /out.o21 -1, out.o22 -0.9, out.o23 -0.7, out.o24 -0.1, out.o25 0, pro.o21 0.1, pro.o22 0.2, pro.o23 0.5, pro.o24 0.1, pro.o25 0.1/
+    v2(stoch,omega2) /out.o21 -1, out.o22 -0.9, out.o23 -0.7, out.o24 -0.1, pro.o21 0.1, pro.o22 0.2, pro.o23 0.5, pro.o24 0.1, pro.o25 0.1/
     v3(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
     v4(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
     v5(stoch,omega1) /out.o11 900, out.o12 1000, out.o13 1100, out.o14 1200, pro.o11 0.15, pro.o12 0.45, pro.o13 0.25, pro.o14 0.15/
@@ -66,6 +66,9 @@ Positive Variables
     lam_cmax(g)
     lam_omax(g)
     lam_demand(dl)
+    piL_x(g)
+    piL_y(g,dl)
+    piL_s(dl)
 ;
 
 * ============================================
@@ -80,15 +83,6 @@ Positive Variables
 x.l(g) = 1;
 y.l(g,dl) = 1;
 s.l(dl) = 1;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-ccost = sum(g, c(g) * x.l(g));
-ocost = tcost.l - ccost;
-$offImplicitAssign
 
 * ============================================
 * Equations
@@ -106,6 +100,9 @@ Equations
     comp_cmin(g)
     comp_demand(dl)
     comp_omax(g)
+    comp_lo_s(dl)
+    comp_lo_x(g)
+    comp_lo_y(g,dl)
     cost
 ;
 
@@ -114,15 +111,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(dl).. us(dl) - lam_demand(dl) =E= 0;
-stat_x(g).. c(g) - lam_cmin(g) + lam_cmax(g) + ((-1) * alpha(g)) * lam_omax(g) =E= 0;
-stat_y(g,dl).. f(g,dl) + lam_omax(g) - lam_demand(dl) =E= 0;
+stat_s(dl).. us(dl) - lam_demand(dl) - piL_s(dl) =E= 0;
+stat_x(g).. c(g) - lam_cmin(g) + lam_cmax(g) + ((-1) * alpha(g)) * lam_omax(g) - piL_x(g) =E= 0;
+stat_y(g,dl).. f(g,dl) + lam_omax(g) - lam_demand(dl) - piL_y(g,dl) =E= 0;
 
 * Inequality complementarity equations
 comp_cmax(g).. ((-1) * (x(g) - ccmax(g))) =G= 0;
 comp_cmin(g).. x(g) - ccmin(g) =G= 0;
 comp_demand(dl).. sum(g, y(g,dl)) + s(dl) - d(dl) =G= 0;
 comp_omax(g).. ((-1) * (sum(dl, y(g,dl)) - alpha(g) * x(g))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_s(dl).. s(dl) - 0 =G= 0;
+comp_lo_x(g).. x(g) - 0 =G= 0;
+comp_lo_y(g,dl).. y(g,dl) - 0 =G= 0;
 
 * Original equality equations
 cost.. tcost =E= sum(g, c(g) * x(g)) + sum(g, sum(dl, f(g,dl) * y(g,dl))) + sum(dl, us(dl) * s(dl));
@@ -149,7 +151,10 @@ Model mcp_model /
     comp_cmin.lam_cmin,
     comp_demand.lam_demand,
     comp_omax.lam_omax,
-    cost.tcost
+    cost.tcost,
+    comp_lo_s.piL_s,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y
 /;
 
 * ============================================

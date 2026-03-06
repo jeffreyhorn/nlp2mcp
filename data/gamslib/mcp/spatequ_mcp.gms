@@ -30,7 +30,7 @@ Parameters
     AlphaS(r,c) /Reg1.Com1 -50, Reg1.Com2 -60, Reg2.Com1 -50, Reg2.Com2 -60, Reg3.Com1 -50, Reg3.Com2 -60/
     BetaS(r,c,cc) /Reg1.Com1.Com1 10, Reg1.Com1.Com2 0.5, Reg1.Com2.Com1 0.5, Reg1.Com2.Com2 15, Reg2.Com1.Com1 20, Reg2.Com1.Com2 0.5, Reg2.Com2.Com1 0.5, Reg2.Com2.Com2 25, Reg3.Com1.Com1 10, Reg3.Com1.Com2 0.5, Reg3.Com2.Com1 0.5, Reg3.Com2.Com2 15/
     BetasSq(r,c,cc) /Reg1.Com1.Com1 5, Reg1.Com1.Com2 0.5, Reg1.Com2.Com1 0.5, Reg1.Com2.Com2 7.5, Reg2.Com1.Com1 10, Reg2.Com1.Com2 0.5, Reg2.Com2.Com1 0.5, Reg2.Com2.Com2 12.5, Reg3.Com1.Com1 5, Reg3.Com1.Com2 0.5, Reg3.Com2.Com1 0.5, Reg3.Com2.Com2 7.5/
-    TCost(r,rr,c) /Reg1.Reg1.Com1 0, Reg1.Reg1.Com2 0, Reg1.Reg2.Com1 2, Reg1.Reg2.Com2 3, Reg1.Reg3.Com1 2, Reg1.Reg3.Com2 3, Reg2.Reg1.Com1 2, Reg2.Reg1.Com2 3, Reg2.Reg2.Com1 0, Reg2.Reg2.Com2 0, Reg2.Reg3.Com1 1, Reg2.Reg3.Com2 2, Reg3.Reg1.Com1 2, Reg3.Reg1.Com2 3, Reg3.Reg2.Com1 1, Reg3.Reg2.Com2 2, Reg3.Reg3.Com1 0, Reg3.Reg3.Com2 0/
+    TCost(r,rr,c) /Reg1.Reg2.Com1 2, Reg1.Reg2.Com2 3, Reg1.Reg3.Com1 2, Reg1.Reg3.Com2 3, Reg2.Reg1.Com1 2, Reg2.Reg1.Com2 3, Reg2.Reg3.Com1 1, Reg2.Reg3.Com2 2, Reg3.Reg1.Com1 2, Reg3.Reg1.Com2 3, Reg3.Reg2.Com1 1, Reg3.Reg2.Com2 2/
 ;
 
 * ============================================
@@ -69,6 +69,8 @@ Positive Variables
     P(r,c)
     lam_PDIF(r,rr,c)
     lam_DOM_TRAD(r,rr,c)
+    piL_x(r,rr,c)
+    piL_p(r,c)
 ;
 
 * ============================================
@@ -102,6 +104,8 @@ Equations
     stat_x(r,rr,c)
     comp_DOM_TRAD(r,rr,c)
     comp_PDIF(r,rr,c)
+    comp_lo_p(r,c)
+    comp_lo_x(r,rr,c)
     DEM(r,c)
     DEMINT(r,c)
     DEMLOG(r,c)
@@ -123,16 +127,20 @@ Equations
 * Stationarity equations
 stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
 stat_obj.. 0 =E= 0;
-stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc, BetadSq(r,c,cc) * p(r,cc)))) * nu_DEMINT(r,c)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc, BetasSq(r,c,cc) * p(r,cc)))) * nu_SUPINT(r,c)) + sum(rr, lam_PDIF(r,rr,c)) + sum(rr, (-1) * lam_DOM_TRAD(r,rr,c)) =E= 0;
+stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc, BetadSq(r,c,cc) * p(r,cc)))) * nu_DEMINT(r,c)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc, BetasSq(r,c,cc) * p(r,cc)))) * nu_SUPINT(r,c)) + sum(rr, lam_PDIF(r,rr,c)) + sum(rr, (-1) * lam_DOM_TRAD(r,rr,c)) - piL_p(r,c) =E= 0;
 stat_qd(r,c).. ((-1) * nu_DEM(r,c)) - nu_DEMLOG(r,c) + nu_SDBAL(c) - nu_DX(r,c) - nu_IN_OUT(r,c) =E= 0;
 stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SUPLOG(r,c) - nu_SDBAL(c) + sum((R,C), (-1) * nu_SX(R,C)) + nu_IN_OUT(r,c) =E= 0;
 stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;
 stat_tc.. 1 + nu_TRANSCOST =E= 0;
-stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) + nu_IN_OUT(r,c) =E= 0;
+stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) + nu_IN_OUT(r,c) - piL_x(r,rr,c) =E= 0;
 
 * Inequality complementarity equations
 comp_DOM_TRAD(r,rr,c).. p(r,c) + TCost(r,rr,c) - p(rr,c) =G= 0;
 comp_PDIF(r,rr,c).. ((-1) * (p(r,c) - p(rr,c) - TCost(r,rr,c))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_p(r,c).. p(r,c) - 0 =G= 0;
+comp_lo_x(r,rr,c).. x(r,rr,c) - 0 =G= 0;
 
 * Original equality equations
 DEM(r,c).. AlphaD(r,c) + sum(cc, BetaD(r,c,cc) * p(r,c)) =E= qd(r,c);
@@ -184,7 +192,9 @@ Model mcp_model /
     SUPINT.nu_SUPINT,
     SUPLOG.nu_SUPLOG,
     SX.nu_SX,
-    TRANSCOST.nu_TRANSCOST
+    TRANSCOST.nu_TRANSCOST,
+    comp_lo_p.piL_p,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

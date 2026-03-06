@@ -84,12 +84,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_ba.. 1 + so4 * nu_r1 + oh * ((-1) * baoh) / ba ** 2 / oh ** 2 * nu_r2 + nu_b1 + 2 * nu_b2 =E= 0;
-stat_baoh.. oh * 1 / ba ** 1 / oh ** 2 * nu_r2 + 1e-07 * nu_b1 + 1e-07 * nu_b2 =E= 0;
-stat_h.. ((-1) * (hso4 / so4)) / h ** 2 * nu_r3 + oh * nu_r4 + 0.01 * nu_b2 =E= 0;
-stat_hso4.. h * 1 / so4 ** 1 / h ** 2 * nu_r3 + (-1e-05) * nu_b1 + (-1e-05) * nu_b2 =E= 0;
-stat_oh.. ((-1) * (baoh / ba)) / oh ** 2 * nu_r2 + h * nu_r4 + (-0.01) * nu_b2 =E= 0;
-stat_so4.. ba * nu_r1 + h * ((-1) * hso4) / so4 ** 2 / h ** 2 * nu_r3 - nu_b1 + (-2) * nu_b2 =E= 0;
+stat_ba.. 1 + so4 * nu_r1 + oh * ((-1) * baoh) / sqr(ba) / sqr(oh) * nu_r2 + nu_b1 + 2 * nu_b2 =E= 0;
+stat_baoh.. oh * 1 / ba ** 1 / sqr(oh) * nu_r2 + 1e-07 * nu_b1 + 1e-07 * nu_b2 =E= 0;
+stat_h.. ((-1) * (hso4 / so4)) / sqr(h) * nu_r3 + oh * nu_r4 + 0.01 * nu_b2 =E= 0;
+stat_hso4.. h * 1 / so4 ** 1 / sqr(h) * nu_r3 + (-1e-05) * nu_b1 + (-1e-05) * nu_b2 =E= 0;
+stat_oh.. ((-1) * (baoh / ba)) / sqr(oh) * nu_r2 + h * nu_r4 + (-0.01) * nu_b2 =E= 0;
+stat_so4.. ba * nu_r1 + h * ((-1) * hso4) / sqr(so4) / sqr(h) * nu_r3 - nu_b1 + (-2) * nu_b2 =E= 0;
 
 * Original equality equations
 r1.. ba * so4 =E= 1;

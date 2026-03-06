@@ -87,9 +87,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (x(i) - x(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * x(i) * nu_ball(i) =E= 0;
-stat_y(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (y(i) - y(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * y(i) * nu_ball(i) =E= 0;
-stat_z(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (z(i) - z(j)))) / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))) ** 2) + 2 * z(i) * nu_ball(i) =E= 0;
+stat_x(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (x(i) - x(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * x(i) * nu_ball(i) =E= 0;
+stat_y(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (y(i) - y(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * y(i) * nu_ball(i) =E= 0;
+stat_z(i).. sum(j, ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (z(i) - z(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * z(i) * nu_ball(i) =E= 0;
 
 * Original equality equations
 obj.. potential =E= sum((i,j), 1 / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))));

@@ -69,9 +69,15 @@ Positive Variables
     m(h)
     t(h)
     d(h)
+    piL_step
+    piL_v(h)
     piL_ht(h)
+    piL_g(h)
+    piL_m(h)
     piL_t(h)
+    piL_d(h)
     piU_m(h)
+    piU_t(h)
 ;
 
 * ============================================
@@ -175,9 +181,15 @@ Equations
     stat_step
     stat_t(h)
     stat_v(h)
+    comp_lo_d(h)
+    comp_lo_g(h)
     comp_lo_ht(h)
+    comp_lo_m(h)
+    comp_lo_step
     comp_lo_t(h)
+    comp_lo_v(h)
     comp_up_m(h)
+    comp_up_t(h)
     df(h)
     gf(h)
     h_eqn(h)
@@ -194,20 +206,26 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_d(h).. nu_df(h) + ((-1) * (0.5 * step * m(h) * (-1) / m(h) ** 2)) * nu_v_eqn(h) =E= 0;
-stat_g(h).. nu_gf(h) + ((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / m(h) ** 2)) * nu_v_eqn(h) =E= 0;
-stat_ht(h).. ((-1) * (D_c * sqr(v(h)) * exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * h_0 * ((-1) * h_c) / h_0 ** 2)) * nu_df(h) + ((-1) * (g_0 * 2 * h_0 / ht(h) * ((-1) * h_0) / ht(h) ** 2)) * nu_gf(h) + nu_h_eqn(h) + nu_ht_fx_h0$sameas(h, 'h0') - piL_ht(h) =E= 0;
-stat_m(h).. nu_m_eqn(h) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / m(h) ** 2)) * nu_v_eqn(h) + nu_m_fx_h0$sameas(h, 'h0') + piU_m(h) =E= 0;
-stat_step.. sum(h, ((-1) * (2 * v(h) * 0.5)) * nu_h_eqn(h)) + sum(h, c * 2 * t(h) * 0.5 / c ** 2 * nu_m_eqn(h)) + sum(h, ((-1) * (2 * (t(h) - d(h) - m(h) * g(h)) / m(h) * 0.5)) * nu_v_eqn(h)) =E= 0;
-stat_t(h).. c * 0.5 * step / c ** 2 * nu_m_eqn(h) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) - piL_t(h) =E= 0;
-stat_v(h).. ((-1) * (exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * D_c * 2 * v(h))) * nu_df(h) + ((-1) * (0.5 * step)) * nu_h_eqn(h) + nu_v_eqn(h) + nu_v_fx_h0$sameas(h, 'h0') =E= 0;
+stat_d(h).. nu_df(h) + ((-1) * (0.5 * step * m(h) * (-1) / sqr(m(h)))) * nu_v_eqn(h) - piL_d(h) =E= 0;
+stat_g(h).. nu_gf(h) + ((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / sqr(m(h)))) * nu_v_eqn(h) - piL_g(h) =E= 0;
+stat_ht(h).. ((-1) * (D_c * sqr(v(h)) * exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * h_0 * ((-1) * h_c) / sqr(h_0))) * nu_df(h) + ((-1) * (g_0 * 2 * h_0 / ht(h) * ((-1) * h_0) / sqr(ht(h)))) * nu_gf(h) + nu_h_eqn(h) + nu_ht_fx_h0$sameas(h, 'h0') - piL_ht(h) =E= 0;
+stat_m(h).. nu_m_eqn(h) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h) + nu_m_fx_h0$sameas(h, 'h0') - piL_m(h) + piU_m(h) =E= 0;
+stat_step.. sum(h, ((-1) * (2 * v(h) * 0.5)) * nu_h_eqn(h)) + sum(h, c * 2 * t(h) * 0.5 / sqr(c) * nu_m_eqn(h)) + sum(h, ((-1) * (2 * (t(h) - d(h) - m(h) * g(h)) / m(h) * 0.5)) * nu_v_eqn(h)) - piL_step =E= 0;
+stat_t(h).. c * 0.5 * step / sqr(c) * nu_m_eqn(h) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) - piL_t(h) + piU_t(h) =E= 0;
+stat_v(h).. ((-1) * (exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * D_c * 2 * v(h))) * nu_df(h) + ((-1) * (0.5 * step)) * nu_h_eqn(h) + nu_v_eqn(h) + nu_v_fx_h0$sameas(h, 'h0') - piL_v(h) =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_d(h).. d(h) - 0 =G= 0;
+comp_lo_g(h).. g(h) - 0 =G= 0;
 comp_lo_ht(h).. ht(h) - 1 =G= 0;
+comp_lo_m(h).. m(h) - m_f =G= 0;
+comp_lo_step.. step - 0 =G= 0;
 comp_lo_t(h).. t(h) - 0 =G= 0;
+comp_lo_v(h).. v(h) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_m(h).. 1 - m(h) =G= 0;
+comp_up_t(h).. T_c * m_0 * g_0 - t(h) =G= 0;
 
 * Original equality equations
 obj.. final_velocity =E= ht("h50");
@@ -262,9 +280,15 @@ Model mcp_model /
     obj.final_velocity,
     v_eqn.nu_v_eqn,
     v_fx_h0.nu_v_fx_h0,
+    comp_lo_d.piL_d,
+    comp_lo_g.piL_g,
     comp_lo_ht.piL_ht,
+    comp_lo_m.piL_m,
+    comp_lo_step.piL_step,
     comp_lo_t.piL_t,
-    comp_up_m.piU_m
+    comp_lo_v.piL_v,
+    comp_up_m.piU_m,
+    comp_up_t.piU_t
 /;
 
 * ============================================

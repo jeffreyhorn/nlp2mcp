@@ -28,17 +28,24 @@ Parameters
     aq(p,q) /'pulp-1'.kraft 0.68, 'pulp-1'.newsprint 0.45, 'pulp-1'.printing 0.25, 'pulp-2'.kraft 0.32, 'pulp-2'.newsprint 0.55, 'pulp-2'.printing 0.75/
     cw(w,p) /ground.'pulp-1' 40, ground.'pulp-2' 55, chips.'pulp-1' 40, chips.'pulp-2' 55/
     cp(p,q) /'pulp-1'.kraft 40, 'pulp-1'.newsprint 60, 'pulp-1'.printing 70, 'pulp-2'.kraft 55, 'pulp-2'.newsprint 50, 'pulp-2'.printing 45/
-    sdat(q,*) /kraft.lower 18, kraft.upper 25, newsprint.lower 12, newsprint.upper 15, printing.lower 0, printing.upper 7/
+    sdat(q,*) /kraft.lower 18, kraft.upper 25, newsprint.lower 12, newsprint.upper 15, printing.upper 7/
     pq(q) /kraft 265, newsprint 275, printing 310/
     pp(p)
     pc(w) /ground 18, chips 16/
-    psdat(scenario,p,*)
+    psdat(scenario,p,*) /'scenario-2'.'pulp-1'.s 3, 'scenario-2'.'pulp-2'.s 3, 'scenario-3'.'pulp-1'.s 6, 'scenario-3'.'pulp-2'.s 10/
     ppdat(scenario,p) /'scenario-1'.'pulp-1' 120, 'scenario-1'.'pulp-2' 140, 'scenario-2'.'pulp-1' 120, 'scenario-2'.'pulp-2' 140, 'scenario-3'.'pulp-1' 120, 'scenario-3'.'pulp-2' 150/
 ;
 
 Scalars
     plog /65/
 ;
+
+psdat('scenario-2','pulp-1',p) = 5;
+psdat('scenario-2','pulp-2',p) = 5;
+psdat('scenario-3','pulp-1',p) = 6;
+psdat('scenario-3','pulp-2',p) = 10;
+psdat('scenario-1','pulp-1',p) = 0;
+psdat('scenario-1','pulp-2',p) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -67,6 +74,14 @@ Positive Variables
     paper(q)
     sales(p)
     purchase(p)
+    piL_logs(l)
+    piL_xw(w,p)
+    piL_pulp(p)
+    piL_xp(p,q)
+    piL_paper(q)
+    piL_sales(p)
+    piL_purchase(p)
+    piU_paper(q)
 ;
 
 * ============================================
@@ -109,6 +124,14 @@ Equations
     stat_sales(p)
     stat_xp(p,q)
     stat_xw(w,p)
+    comp_lo_logs(l)
+    comp_lo_paper(q)
+    comp_lo_pulp(p)
+    comp_lo_purchase(p)
+    comp_lo_sales(p)
+    comp_lo_xp(p,q)
+    comp_lo_xw(w,p)
+    comp_up_paper(q)
     logbal
     obj
     pbal(p)
@@ -121,13 +144,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_logs(l).. plog + 0.97 * nu_logbal =E= 0;
-stat_paper(q).. ((-1) * pq(q)) + sum(p, ((-1) * aq(p,q)) * nu_qbal(p,q)) =E= 0;
-stat_pulp(p).. sum(w, ((-1) * ap(w,p)) * nu_wbal(w,p)) - nu_pbal(p) =E= 0;
-stat_purchase(p).. pp(p) - nu_pbal(p) =E= 0;
-stat_sales(p).. ((-1) * pp(p)) + nu_pbal(p) =E= 0;
-stat_xp(p,q).. cp(p,q) + nu_pbal(p) + nu_qbal(p,q) =E= 0;
-stat_xw(w,p).. cw(w,p) + pc(w) - nu_logbal + nu_wbal(w,p) =E= 0;
+stat_logs(l).. plog + 0.97 * nu_logbal - piL_logs(l) =E= 0;
+stat_paper(q).. ((-1) * pq(q)) + sum(p, ((-1) * aq(p,q)) * nu_qbal(p,q)) - piL_paper(q) + piU_paper(q) =E= 0;
+stat_pulp(p).. sum(w, ((-1) * ap(w,p)) * nu_wbal(w,p)) - nu_pbal(p) - piL_pulp(p) =E= 0;
+stat_purchase(p).. pp(p) - nu_pbal(p) - piL_purchase(p) =E= 0;
+stat_sales(p).. ((-1) * pp(p)) + nu_pbal(p) - piL_sales(p) =E= 0;
+stat_xp(p,q).. cp(p,q) + nu_pbal(p) + nu_qbal(p,q) - piL_xp(p,q) =E= 0;
+stat_xw(w,p).. cw(w,p) + pc(w) - nu_logbal + nu_wbal(w,p) - piL_xw(w,p) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_logs(l).. logs(l) - 0 =G= 0;
+comp_lo_paper(q).. paper(q) - sdat(q,"lower") =G= 0;
+comp_lo_pulp(p).. pulp(p) - 0 =G= 0;
+comp_lo_purchase(p).. purchase(p) - 0 =G= 0;
+comp_lo_sales(p).. sales(p) - 0 =G= 0;
+comp_lo_xp(p,q).. xp(p,q) - 0 =G= 0;
+comp_lo_xw(w,p).. xw(w,p) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_paper(q).. sdat(q,"upper") - paper(q) =G= 0;
 
 * Original equality equations
 logbal.. 0.97 * sum(l, logs(l)) =E= sum((w,p), xw(w,p));
@@ -162,7 +197,15 @@ Model mcp_model /
     obj.profit,
     pbal.nu_pbal,
     qbal.nu_qbal,
-    wbal.nu_wbal
+    wbal.nu_wbal,
+    comp_lo_logs.piL_logs,
+    comp_lo_paper.piL_paper,
+    comp_lo_pulp.piL_pulp,
+    comp_lo_purchase.piL_purchase,
+    comp_lo_sales.piL_sales,
+    comp_lo_xp.piL_xp,
+    comp_lo_xw.piL_xw,
+    comp_up_paper.piU_paper
 /;
 
 * ============================================

@@ -57,6 +57,10 @@ Positive Variables
     dilute
     f4
     piL_olefin
+    piL_isor
+    piL_acid
+    piL_alkylate
+    piL_isom
     piL_strength
     piL_octane
     piL_ratio
@@ -141,8 +145,12 @@ Equations
     stat_rangey
     stat_ratio
     stat_strength
+    comp_lo_acid
+    comp_lo_alkylate
     comp_lo_dilute
     comp_lo_f4
+    comp_lo_isom
+    comp_lo_isor
     comp_lo_octane
     comp_lo_olefin
     comp_lo_ranged
@@ -184,24 +192,28 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_acid.. 10 + nu_sdef + piU_acid =E= 0;
-stat_alkylate.. ((-1) * (octane * 0.063)) + nu_yield + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / (98 - strength) ** 2 / 1000000)) * nu_sdef + rangey * nu_rngyield + piU_alkylate =E= 0;
-stat_dilute.. ((-1) * (1000 * (98 - strength) * strength * alkylate / (98 - strength) ** 2 / 1000000)) * nu_sdef + nu_ddil + ranged * nu_rngddil - piL_dilute + piU_dilute =E= 0;
+stat_acid.. 10 + nu_sdef - piL_acid + piU_acid =E= 0;
+stat_alkylate.. ((-1) * (octane * 0.063)) + nu_yield + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / sqr(98 - strength) / 1000000)) * nu_sdef + rangey * nu_rngyield - piL_alkylate + piU_alkylate =E= 0;
+stat_dilute.. ((-1) * (1000 * (98 - strength) * strength * alkylate / sqr(98 - strength) / 1000000)) * nu_sdef + nu_ddil + ranged * nu_rngddil - piL_dilute + piU_dilute =E= 0;
 stat_f4.. 0.222 * nu_ddil + nu_df4 + 0.222 * nu_rngddil + rangef * nu_rngdf4 - piL_f4 + piU_f4 =E= 0;
-stat_isom.. 3.36 - nu_makeup + ((-1) * (1 / olefin ** 1)) * nu_drat + piU_isom =E= 0;
-stat_isor.. 0.035 + ((-1) * (1 / olefin ** 1)) * nu_drat + piU_isor =E= 0;
+stat_isom.. 3.36 - nu_makeup + ((-1) * (1 / olefin ** 1)) * nu_drat - piL_isom + piU_isom =E= 0;
+stat_isor.. 0.035 + ((-1) * (1 / olefin ** 1)) * nu_drat - piL_isor + piU_isor =E= 0;
 stat_octane.. ((-1) * (0.063 * alkylate)) + nu_motor + (-3) * nu_df4 + rangem * nu_rngmotor + (-3) * nu_rngdf4 - piL_octane + piU_octane =E= 0;
-stat_olefin.. 5.04 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_yield - nu_makeup + ((-1) * (((-1) * (isor + isom)) / olefin ** 2)) * nu_drat + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield - piL_olefin + piU_olefin =E= 0;
+stat_olefin.. 5.04 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_yield - nu_makeup + ((-1) * (((-1) * (isor + isom)) / sqr(olefin))) * nu_drat + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield - piL_olefin + piU_olefin =E= 0;
 stat_ranged.. dilute * nu_rngddil - piL_ranged + piU_ranged =E= 0;
 stat_rangef.. f4 * nu_rngdf4 - piL_rangef + piU_rangef =E= 0;
 stat_rangem.. octane * nu_rngmotor - piL_rangem + piU_rangem =E= 0;
 stat_rangey.. alkylate * nu_rngyield - piL_rangey + piU_rangey =E= 0;
 stat_ratio.. ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_yield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_motor + nu_drat + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_rngyield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_rngmotor - piL_ratio + piU_ratio =E= 0;
-stat_strength.. ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / (98 - strength) ** 2 / 1000000)) * nu_sdef + (-0.325) * nu_motor + (-0.325) * nu_rngmotor - piL_strength + piU_strength =E= 0;
+stat_strength.. ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / sqr(98 - strength) / 1000000)) * nu_sdef + (-0.325) * nu_motor + (-0.325) * nu_rngmotor - piL_strength + piU_strength =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_acid.. acid - 0 =G= 0;
+comp_lo_alkylate.. alkylate - 0 =G= 0;
 comp_lo_dilute.. dilute - 1.2 =G= 0;
 comp_lo_f4.. f4 - 145 =G= 0;
+comp_lo_isom.. isom - 0 =G= 0;
+comp_lo_isor.. isor - 0 =G= 0;
 comp_lo_octane.. octane - 90 =G= 0;
 comp_lo_olefin.. olefin - 10 =G= 0;
 comp_lo_ranged.. ranged - 0.9 =G= 0;
@@ -282,8 +294,12 @@ Model mcp_model /
     rngyield.nu_rngyield,
     sdef.nu_sdef,
     yield.nu_yield,
+    comp_lo_acid.piL_acid,
+    comp_lo_alkylate.piL_alkylate,
     comp_lo_dilute.piL_dilute,
     comp_lo_f4.piL_f4,
+    comp_lo_isom.piL_isom,
+    comp_lo_isor.piL_isor,
     comp_lo_octane.piL_octane,
     comp_lo_olefin.piL_olefin,
     comp_lo_ranged.piL_ranged,

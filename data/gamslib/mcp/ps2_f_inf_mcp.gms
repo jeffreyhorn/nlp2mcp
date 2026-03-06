@@ -47,6 +47,8 @@ Positive Variables
     b(i)
     c(i)
     piL_x(i)
+    piL_b(i)
+    piL_c(i)
 ;
 
 * ============================================
@@ -65,15 +67,6 @@ b.l(i) = 1;
 c.l(i) = 1;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-db(i) = 0.5 * x.l(i) ** -0.5;
-w(i) = c.l(i);
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -86,6 +79,8 @@ Equations
     stat_c(i)
     stat_util
     stat_x(i)
+    comp_lo_b(i)
+    comp_lo_c(i)
     comp_lo_x(i)
     obj
     pc(i)
@@ -97,12 +92,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. -1 + nu_rev(i) =E= 0;
-stat_c(i).. 1 + nu_pc(i) =E= 0;
+stat_b(i).. -1 + nu_rev(i) - piL_b(i) =E= 0;
+stat_c(i).. 1 + nu_pc(i) - piL_c(i) =E= 0;
 stat_util.. 0 =E= 0;
-stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_b(i).. b(i) - 0 =G= 0;
+comp_lo_c(i).. c(i) - 0 =G= 0;
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
@@ -132,6 +129,8 @@ Model mcp_model /
     obj.Util,
     pc.nu_pc,
     rev.nu_rev,
+    comp_lo_b.piL_b,
+    comp_lo_c.piL_c,
     comp_lo_x.piL_x
 /;
 

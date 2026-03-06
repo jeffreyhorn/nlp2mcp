@@ -27,16 +27,16 @@ Sets
 ;
 
 Parameters
-    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-el' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-oh' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1, sponge.'pig-iron' 0, sponge.'steel-el' 0, sponge.'steel-bof' 0, scrap.'pig-iron' 0, scrap.sponge 0, scrap.'steel-bof' 0, pellets.'steel-oh' 0, pellets.'steel-el' 0, pellets.'steel-bof' 0, electric.'pig-iron' 0, electric.sponge 0, electric.'steel-oh' 0, electric.'steel-bof' 0, 'pig-iron'.sponge 0, 'pig-iron'.'steel-el' 0, steel.'pig-iron' 0, steel.sponge 0, coke.sponge 0, coke.'steel-oh' 0, coke.'steel-el' 0, coke.'steel-bof' 0, 'nat-gas'.'pig-iron' 0, 'nat-gas'.'steel-oh' 0, 'nat-gas'.'steel-el' 0, 'nat-gas'.'steel-bof' 0/
-    b(m,p) /'blast-furn'.'pig-iron' 1, openhearth.'steel-oh' 1, bof.'steel-bof' 1, 'direct-red'.sponge 1, 'elec-arc'.'steel-el' 1, 'blast-furn'.sponge 0, 'blast-furn'.'steel-oh' 0, 'blast-furn'.'steel-el' 0, 'blast-furn'.'steel-bof' 0, 'elec-arc'.'pig-iron' 0, 'elec-arc'.sponge 0, 'elec-arc'.'steel-oh' 0, 'elec-arc'.'steel-bof' 0, bof.'pig-iron' 0, bof.sponge 0, bof.'steel-oh' 0, bof.'steel-el' 0, openhearth.'pig-iron' 0, openhearth.sponge 0, openhearth.'steel-el' 0, openhearth.'steel-bof' 0, 'direct-red'.'pig-iron' 0, 'direct-red'.'steel-oh' 0, 'direct-red'.'steel-el' 0, 'direct-red'.'steel-bof' 0/
-    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56, 'blast-furn'.hylsa 0, 'blast-furn'.hylsap 0, 'elec-arc'.ahmsa 0, 'elec-arc'.fundidora 0, 'elec-arc'.sicartsa 0, bof.hylsa 0, bof.hylsap 0, openhearth.sicartsa 0, openhearth.hylsa 0, openhearth.hylsap 0, 'direct-red'.ahmsa 0, 'direct-red'.fundidora 0, 'direct-red'.sicartsa 0/
+    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-el' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-oh' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
+    b(m,p) /'blast-furn'.'pig-iron' 1, openhearth.'steel-oh' 1, bof.'steel-bof' 1, 'direct-red'.sponge 1, 'elec-arc'.'steel-el' 1/
+    k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56/
     d(c,j)
     dd(j) /'mexico-df' 55, monterrey 30, guadalaja 15/
-    rd(*,*) /ahmsa.'mexico-df' 1204, ahmsa.monterrey 218, ahmsa.guadalaja 1125, ahmsa.export 739, fundidora.'mexico-df' 1017, fundidora.guadalaja 1030, fundidora.export 521, sicartsa.'mexico-df' 819, sicartsa.monterrey 1305, sicartsa.guadalaja 704, hylsa.'mexico-df' 1017, hylsa.guadalaja 1030, hylsa.export 521, hylsap.'mexico-df' 185, hylsap.monterrey 1085, hylsap.guadalaja 760, hylsap.export 315, import.'mexico-df' 428, import.monterrey 521, import.guadalaja 300, fundidora.monterrey 0, sicartsa.export 0, import.export 0, hylsa.monterrey 0/
+    rd(*,*) /ahmsa.'mexico-df' 1204, ahmsa.monterrey 218, ahmsa.guadalaja 1125, ahmsa.export 739, fundidora.'mexico-df' 1017, fundidora.guadalaja 1030, fundidora.export 521, sicartsa.'mexico-df' 819, sicartsa.monterrey 1305, sicartsa.guadalaja 704, hylsa.'mexico-df' 1017, hylsa.guadalaja 1030, hylsa.export 521, hylsap.'mexico-df' 185, hylsap.monterrey 1085, hylsap.guadalaja 760, hylsap.export 315, import.'mexico-df' 428, import.monterrey 521, import.guadalaja 300/
     muf(i,j)
     muv(j)
     mue(i)
-    prices(c,*) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.domestic 14, electric.domestic 24, scrap.domestic 105, steel.import 150, steel.export 140, scrap.import 0, scrap.export 0, pellets.import 0, pellets.export 0, electric.import 0, electric.export 0, steel.domestic 0, coke.import 0, coke.export 0, 'nat-gas'.import 0, 'nat-gas'.export 0/
+    prices(c,*) /pellets.domestic 18.7, coke.domestic 52.17, 'nat-gas'.domestic 14, electric.domestic 24, scrap.domestic 105, steel.import 150, steel.export 140/
     pd(c)
     pv(c)
     pe(c)
@@ -91,6 +91,11 @@ Positive Variables
     lam_cc(m,i)
     lam_mr(cf,j)
     lam_me(cf)
+    piL_z(p,i)
+    piL_x(c,i,j)
+    piL_u(c,i)
+    piL_v(c,j)
+    piL_e(c,i)
 ;
 
 * ============================================
@@ -132,6 +137,11 @@ Equations
     comp_mbr(cr,i)
     comp_me(cf)
     comp_mr(cf,j)
+    comp_lo_e(c,i)
+    comp_lo_u(c,i)
+    comp_lo_v(c,j)
+    comp_lo_x(c,i,j)
+    comp_lo_z(p,i)
     aeps
     alam
     api
@@ -144,15 +154,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + sum(cf, lam_mbf(cf,i)) + sum(cf, lam_me(cf)) =E= 0;
+stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + sum(cf, lam_mbf(cf,i)) + sum(cf, lam_me(cf)) - piL_e(c,i) =E= 0;
 stat_phieps.. -1 + nu_aeps =E= 0;
 stat_philam.. 1 + nu_alam =E= 0;
 stat_phipi.. 1 + nu_api =E= 0;
 stat_phipsi.. 1 + nu_apsi =E= 0;
-stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(sameas(c, 'coke') and sameas(i, 'ahmsa')) + sum(cr, (-1) * lam_mbr(cr,i)) =E= 0;
-stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + sum(cf, (-1) * lam_mr(cf,j)) =E= 0;
-stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa') and sameas(j, 'guadalaja')) + sum(cf, lam_mbf(cf,i)) + sum(cf, (-1) * lam_mr(cf,j)) =E= 0;
-stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) =E= 0;
+stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(sameas(c, 'coke') and sameas(i, 'ahmsa')) + sum(cr, (-1) * lam_mbr(cr,i)) - piL_u(c,i) =E= 0;
+stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + sum(cf, (-1) * lam_mr(cf,j)) - piL_v(c,j) =E= 0;
+stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa') and sameas(j, 'guadalaja')) + sum(cf, lam_mbf(cf,i)) + sum(cf, (-1) * lam_mr(cf,j)) - piL_x(c,i,j) =E= 0;
+stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(m,i).. ((-1) * (sum(p, b(m,p) * z(p,i)) - k(m,i))) =G= 0;
@@ -161,6 +171,13 @@ comp_mbi(ci,i).. sum(p, a(ci,p) * z(p,i)) =G= 0;
 comp_mbr(cr,i).. sum(p, a(cr,p) * z(p,i)) + u(cr,i) =G= 0;
 comp_me(cf).. ((-1) * (sum(i, e(cf,i)) - eb)) =G= 0;
 comp_mr(cf,j).. sum(i, x(cf,i,j)) + v(cf,j) - d(cf,j) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_e(c,i).. e(c,i) - 0 =G= 0;
+comp_lo_u(c,i).. u(c,i) - 0 =G= 0;
+comp_lo_v(c,j).. v(c,j) - 0 =G= 0;
+comp_lo_x(c,i,j).. x(c,i,j) - 0 =G= 0;
+comp_lo_z(p,i).. z(p,i) - 0 =G= 0;
 
 * Original equality equations
 obj.. phi =E= phipsi + philam + phipi - phieps;
@@ -178,9 +195,13 @@ aeps.. phieps =E= sum((cf,i), pe(cf) * e(cf,i));
 * fixed for excluded instances to satisfy MCP matching.
 
 e.fx(c,i)$(not (cf(c))) = 0;
+piL_e.fx(c,i)$(not (cf(c))) = 0;
 u.fx(c,i)$(not (cr(c))) = 0;
+piL_u.fx(c,i)$(not (cr(c))) = 0;
 v.fx(c,j)$(not (cf(c))) = 0;
+piL_v.fx(c,j)$(not (cf(c))) = 0;
 x.fx(c,i,j)$(not (cf(c))) = 0;
+piL_x.fx(c,i,j)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -215,7 +236,12 @@ Model mcp_model /
     alam.nu_alam,
     api.nu_api,
     apsi.nu_apsi,
-    obj.phi
+    obj.phi,
+    comp_lo_e.piL_e,
+    comp_lo_u.piL_u,
+    comp_lo_v.piL_v,
+    comp_lo_x.piL_x,
+    comp_lo_z.piL_z
 /;
 
 * ============================================

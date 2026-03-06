@@ -25,11 +25,11 @@ Sets
 ;
 
 Parameters
-    pfd(p,*) /one.'max-prod' 5000, one.'over-prod' 1000, one.'prod-cost' 35, one.'over-cost' 45, two.'min-prod' 1200, two.'max-prod' 3000, two.'over-prod' 500, two.'prod-cost' 40, two.'over-cost' 43, three.'min-prod' 700, three.'max-prod' 1500, three.'prod-cost' 38, three.'over-prod' 0, three.'over-cost' 0, one.'min-prod' 0/
-    fdec(p,d) /one.east 10, one.south 12, two.south 8, two.west 4, two.north 5, three.west 6, three.north 8, three.east 0, three.south 0, one.west 0, one.north 0, two.east 0/
-    sdec(d,c) /east.'1' 15, east.'2' 19, south.'1' 20, south.'2' 22, south.'3' 18, west.'1' 16, west.'3' 18, west.'4' 19, north.'3' 15, north.'4' 21, east.'3' 0, east.'4' 0, east.'5' 0, north.'1' 0, north.'2' 0, north.'5' 0, south.'4' 0, south.'5' 0, west.'2' 0, west.'5' 0/
+    pfd(p,*) /one.'max-prod' 5000, one.'over-prod' 1000, one.'prod-cost' 35, one.'over-cost' 45, two.'min-prod' 1200, two.'max-prod' 3000, two.'over-prod' 500, two.'prod-cost' 40, two.'over-cost' 43, three.'min-prod' 700, three.'max-prod' 1500, three.'prod-cost' 38/
+    fdec(p,d) /one.east 10, one.south 12, two.south 8, two.west 4, two.north 5, three.west 6, three.north 8/
+    sdec(d,c) /east.'1' 15, east.'2' 19, south.'1' 20, south.'2' 22, south.'3' 18, west.'1' 16, west.'3' 18, west.'4' 19, north.'3' 15, north.'4' 21/
     dcd(d,*) /east.'max-invent' 3000, east.'hold-cost' 2, south.'max-invent' 2500, south.'hold-cost' 2, west.'max-invent' 4000, west.'hold-cost' 1, north.'max-invent' 2500, north.'hold-cost' 3/
-    czd(c,*) /'1'.'min-demand' 2000, '1'.'max-demand' 2500, '1'.revenue 70, '2'.'max-demand' 2500, '2'.revenue 68, '3'.'min-demand' 2000, '3'.'max-demand' 3000, '3'.revenue 65, '4'.'min-demand' 1500, '4'.'max-demand' 2000, '4'.revenue 72, '5'.'min-demand' 1500, '5'.'max-demand' 3000, '5'.revenue 71, '2'.'min-demand' 0/
+    czd(c,*) /'1'.'min-demand' 2000, '1'.'max-demand' 2500, '1'.revenue 70, '2'.'max-demand' 2500, '2'.revenue 68, '3'.'min-demand' 2000, '3'.'max-demand' 3000, '3'.revenue 65, '4'.'min-demand' 1500, '4'.'max-demand' 2000, '4'.revenue 72, '5'.'min-demand' 1500, '5'.'max-demand' 3000, '5'.revenue 71/
     pc(p,m)
     pco(p,m)
     revfac(m) /january 1, february 1, march 1.1, april 1.1/
@@ -76,10 +76,32 @@ Positive Variables
     po(p,m)
     s(d,m)
     h(d,m)
+    piL_x(p,d,m)
+    piL_y(d,c,m)
+    piL_pn(p,m)
+    piL_po(p,m)
     piL_s_east_april
+    piL_s_east_february
+    piL_s_east_january
+    piL_s_east_march
     piL_s_north_april
+    piL_s_north_february
+    piL_s_north_january
+    piL_s_north_march
     piL_s_south_april
+    piL_s_south_february
+    piL_s_south_january
+    piL_s_south_march
     piL_s_west_april
+    piL_s_west_february
+    piL_s_west_january
+    piL_s_west_march
+    piL_dm(c)
+    piL_h(d,m)
+    piU_pn(p,m)
+    piU_po(p,m)
+    piU_dm(c)
+    piU_h(d,m)
 ;
 
 * ============================================
@@ -149,10 +171,32 @@ Equations
     stat_transport
     stat_x(p,d,m)
     stat_y(d,c,m)
+    comp_lo_dm(c)
+    comp_lo_h(d,m)
+    comp_lo_pn(p,m)
+    comp_lo_po(p,m)
     comp_lo_s_east_april
+    comp_lo_s_east_february
+    comp_lo_s_east_january
+    comp_lo_s_east_march
     comp_lo_s_north_april
+    comp_lo_s_north_february
+    comp_lo_s_north_january
+    comp_lo_s_north_march
     comp_lo_s_south_april
+    comp_lo_s_south_february
+    comp_lo_s_south_january
+    comp_lo_s_south_march
     comp_lo_s_west_april
+    comp_lo_s_west_february
+    comp_lo_s_west_january
+    comp_lo_s_west_march
+    comp_lo_x(p,d,m)
+    comp_lo_y(d,c,m)
+    comp_up_dm(c)
+    comp_up_h(d,m)
+    comp_up_pn(p,m)
+    comp_up_po(p,m)
     ah
     ap
     apr
@@ -169,38 +213,62 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_dm(c).. sum(m, (-1) * nu_db(c,m)) =E= 0;
-stat_h(d,m).. nu_ib(d,m) - nu_hb(d,m) =E= 0;
+stat_dm(c).. sum(m, (-1) * nu_db(c,m)) - piL_dm(c) + piU_dm(c) =E= 0;
+stat_h(d,m).. nu_ib(d,m) - nu_hb(d,m) - piL_h(d,m) + piU_h(d,m) =E= 0;
 stat_holding.. 1 + nu_ah =E= 0;
-stat_pn(p,m).. nu_pb(p,m) + ((-1) * pc(p,m)) * nu_ap =E= 0;
-stat_po(p,m).. nu_pb(p,m) + ((-1) * pco(p,m)) * nu_ap =E= 0;
+stat_pn(p,m).. nu_pb(p,m) + ((-1) * pc(p,m)) * nu_ap - piL_pn(p,m) + piU_pn(p,m) =E= 0;
+stat_po(p,m).. nu_pb(p,m) + ((-1) * pco(p,m)) * nu_ap - piL_po(p,m) + piU_po(p,m) =E= 0;
 stat_production.. 1 + nu_ap =E= 0;
 stat_revenue.. -1 + nu_ar =E= 0;
 stat_s_east_april.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah - piL_s_east_april =E= 0;
-stat_s_east_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah =E= 0;
-stat_s_east_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah =E= 0;
-stat_s_east_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah =E= 0;
+stat_s_east_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah - piL_s_east_february =E= 0;
+stat_s_east_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah - piL_s_east_january =E= 0;
+stat_s_east_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("east","hold-cost")) * nu_ah - piL_s_east_march =E= 0;
 stat_s_north_april.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah - piL_s_north_april =E= 0;
-stat_s_north_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah =E= 0;
-stat_s_north_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah =E= 0;
-stat_s_north_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah =E= 0;
+stat_s_north_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah - piL_s_north_february =E= 0;
+stat_s_north_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah - piL_s_north_january =E= 0;
+stat_s_north_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("north","hold-cost")) * nu_ah - piL_s_north_march =E= 0;
 stat_s_south_april.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah - piL_s_south_april =E= 0;
-stat_s_south_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah =E= 0;
-stat_s_south_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah =E= 0;
-stat_s_south_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah =E= 0;
+stat_s_south_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah - piL_s_south_february =E= 0;
+stat_s_south_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah - piL_s_south_january =E= 0;
+stat_s_south_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("south","hold-cost")) * nu_ah - piL_s_south_march =E= 0;
 stat_s_west_april.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah - piL_s_west_april =E= 0;
-stat_s_west_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah =E= 0;
-stat_s_west_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah =E= 0;
-stat_s_west_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah =E= 0;
+stat_s_west_february.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah - piL_s_west_february =E= 0;
+stat_s_west_january.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah - piL_s_west_january =E= 0;
+stat_s_west_march.. sum((d,m), nu_hb(d,m)) + ((-1) * dcd("west","hold-cost")) * nu_ah - piL_s_west_march =E= 0;
 stat_transport.. 1 + nu_at =E= 0;
-stat_x(p,d,m)$(pd(p,d)).. ((-1) * 1$pd(p,d)) * nu_ib(d,m) + ((-1) * 1$pd(p,d)) * nu_pb(p,m) =E= 0;
-stat_y(d,c,m)$(dc(d,c)).. 1$dc(d,c) * nu_hb(d,m) + 1$dc(d,c) * nu_db(c,m) + ((-1) * (revfac(m) * czd(c,"revenue") * 1$dc(d,c))) * nu_ar =E= 0;
+stat_x(p,d,m)$(pd(p,d)).. ((-1) * 1$pd(p,d)) * nu_ib(d,m) + ((-1) * 1$pd(p,d)) * nu_pb(p,m) - piL_x(p,d,m) =E= 0;
+stat_y(d,c,m)$(dc(d,c)).. 1$dc(d,c) * nu_hb(d,m) + 1$dc(d,c) * nu_db(c,m) + ((-1) * (revfac(m) * czd(c,"revenue") * 1$dc(d,c))) * nu_ar - piL_y(d,c,m) =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_dm(c).. dm(c) - czd(c,"min-demand") =G= 0;
+comp_lo_h(d,m).. h(d,m) - 0 =G= 0;
+comp_lo_pn(p,m).. pn(p,m) - pfd(p,"min-prod") =G= 0;
+comp_lo_po(p,m).. po(p,m) - 0 =G= 0;
 comp_lo_s_east_april.. s("east","april") - 200 =G= 0;
+comp_lo_s_east_february.. s("east","february") - 0 =G= 0;
+comp_lo_s_east_january.. s("east","january") - 0 =G= 0;
+comp_lo_s_east_march.. s("east","march") - 0 =G= 0;
 comp_lo_s_north_april.. s("north","april") - 200 =G= 0;
+comp_lo_s_north_february.. s("north","february") - 0 =G= 0;
+comp_lo_s_north_january.. s("north","january") - 0 =G= 0;
+comp_lo_s_north_march.. s("north","march") - 0 =G= 0;
 comp_lo_s_south_april.. s("south","april") - 200 =G= 0;
+comp_lo_s_south_february.. s("south","february") - 0 =G= 0;
+comp_lo_s_south_january.. s("south","january") - 0 =G= 0;
+comp_lo_s_south_march.. s("south","march") - 0 =G= 0;
 comp_lo_s_west_april.. s("west","april") - 200 =G= 0;
+comp_lo_s_west_february.. s("west","february") - 0 =G= 0;
+comp_lo_s_west_january.. s("west","january") - 0 =G= 0;
+comp_lo_s_west_march.. s("west","march") - 0 =G= 0;
+comp_lo_x(p,d,m).. x(p,d,m) - 0 =G= 0;
+comp_lo_y(d,c,m).. y(d,c,m) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_dm(c).. czd(c,"max-demand") - dm(c) =G= 0;
+comp_up_h(d,m).. dcd(d,"max-invent") - h(d,m) =G= 0;
+comp_up_pn(p,m).. pfd(p,"max-prod") - pn(p,m) =G= 0;
+comp_up_po(p,m).. pfd(p,"over-prod") - po(p,m) =G= 0;
 
 * Original equality equations
 ib(d,m)$(ord(m) > 1).. h(d,m) =E= s(d,m-1) + sum(p$(pd(p,d)), x(p,d,m));
@@ -222,7 +290,9 @@ apr.. profit =E= revenue - transport - production - holding + 10;
 * fixed for excluded instances to satisfy MCP matching.
 
 x.fx(p,d,m)$(not (pd(p,d))) = 0;
+piL_x.fx(p,d,m)$(not (pd(p,d))) = 0;
 y.fx(d,c,m)$(not (dc(d,c))) = 0;
+piL_y.fx(d,c,m)$(not (dc(d,c))) = 0;
 nu_ib.fx(d,m)$(not (ord(m) > 1)) = 0;
 
 * ============================================
@@ -274,10 +344,32 @@ Model mcp_model /
     hb.nu_hb,
     ib.nu_ib,
     pb.nu_pb,
+    comp_lo_dm.piL_dm,
+    comp_lo_h.piL_h,
+    comp_lo_pn.piL_pn,
+    comp_lo_po.piL_po,
     comp_lo_s_east_april.piL_s_east_april,
+    comp_lo_s_east_february.piL_s_east_february,
+    comp_lo_s_east_january.piL_s_east_january,
+    comp_lo_s_east_march.piL_s_east_march,
     comp_lo_s_north_april.piL_s_north_april,
+    comp_lo_s_north_february.piL_s_north_february,
+    comp_lo_s_north_january.piL_s_north_january,
+    comp_lo_s_north_march.piL_s_north_march,
     comp_lo_s_south_april.piL_s_south_april,
-    comp_lo_s_west_april.piL_s_west_april
+    comp_lo_s_south_february.piL_s_south_february,
+    comp_lo_s_south_january.piL_s_south_january,
+    comp_lo_s_south_march.piL_s_south_march,
+    comp_lo_s_west_april.piL_s_west_april,
+    comp_lo_s_west_february.piL_s_west_february,
+    comp_lo_s_west_january.piL_s_west_january,
+    comp_lo_s_west_march.piL_s_west_march,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
+    comp_up_dm.piU_dm,
+    comp_up_h.piU_h,
+    comp_up_pn.piU_pn,
+    comp_up_po.piU_po
 /;
 
 * ============================================

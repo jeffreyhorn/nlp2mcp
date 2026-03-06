@@ -32,7 +32,7 @@ Parameters
     returns(events,stocks) /event1.buystock1 7, event1.buystock2 6, event1.buystock3 8, event1.buystock4 5, event2.buystock1 8, event2.buystock2 4, event2.buystock3 16, event2.buystock4 6, event3.buystock1 4, event3.buystock2 8, event3.buystock3 14, event3.buystock4 6, event4.buystock1 5, event4.buystock2 9, event4.buystock3 -2, event4.buystock4 7, event5.buystock1 6, event5.buystock2 7, event5.buystock3 13, event5.buystock4 6, event6.buystock1 3, event6.buystock2 10, event6.buystock3 11, event6.buystock4 5, event7.buystock1 2, event7.buystock2 12, event7.buystock3 -2, event7.buystock4 6, event8.buystock1 5, event8.buystock2 4, event8.buystock3 18, event8.buystock4 6, event9.buystock1 4, event9.buystock2 7, event9.buystock3 12, event9.buystock4 5, event10.buystock1 3, event10.buystock2 9, event10.buystock3 -5, event10.buystock4 6/
     mean(stocks)
     covar(stocks,stocks)
-    riskaver(rapscenarios) /r0 0, r1 0.00025, r2 0.0005, r3 0.00075, r4 0.001, r5 0.0015, r6 0.002, r7 0.003, r8 0.005, r9 0.01, r10 0.011, r11 0.0125, r12 0.015, r13 0.025, r14 0.05, r15 0.1, r16 0.3, r17 0.5, r18 1, r19 2.5, r20 5, r21 10, r22 15, r23 20, r24 40, r25 80/
+    riskaver(rapscenarios) /r1 0.00025, r2 0.0005, r3 0.00075, r4 0.001, r5 0.0015, r6 0.002, r7 0.003, r8 0.005, r9 0.01, r10 0.011, r11 0.0125, r12 0.015, r13 0.025, r14 0.05, r15 0.1, r16 0.3, r17 0.5, r18 1, r19 2.5, r20 5, r21 10, r22 15, r23 20, r24 40, r25 80/
     stockoutput(rapscenarios,stocks)
     objlevel(rapscenarios)
     investavshadow(rapscenarios)
@@ -66,6 +66,7 @@ Variables
 Positive Variables
     invest(stocks)
     lam_investav
+    piL_invest(stocks)
 ;
 
 * ============================================
@@ -80,14 +81,6 @@ Positive Variables
 invest.l(stocks) = 1;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-variance = sum(s, sum(sp, invest.l(s) * covar(s,sp) * invest.l(sp)));
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -98,6 +91,7 @@ $offImplicitAssign
 Equations
     stat_invest(stocks)
     comp_investav
+    comp_lo_invest(stocks)
     objj
 ;
 
@@ -106,10 +100,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_invest(stocks).. ((-1) * (mean(stocks) - rap * sum(sp, invest(sp) * covar(stocks,sp)))) + prices(stocks) * lam_investav =E= 0;
+stat_invest(stocks).. ((-1) * (mean(stocks) - rap * sum(sp, invest(sp) * covar(stocks,sp)))) + prices(stocks) * lam_investav - piL_invest(stocks) =E= 0;
 
 * Inequality complementarity equations
 comp_investav.. ((-1) * (sum(s, prices(s) * invest(s)) - funds)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_invest(stocks).. invest(stocks) - 0 =G= 0;
 
 * Original equality equations
 objj.. obj =E= sum(s, mean(s) * invest(s)) - rap * sum((s,sp), invest(s) * covar(s,sp) * invest(sp));
@@ -131,7 +128,8 @@ objj.. obj =E= sum(s, mean(s) * invest(s)) - rap * sum((s,sp), invest(s) * covar
 Model mcp_model /
     stat_invest.invest,
     comp_investav.lam_investav,
-    objj.obj
+    objj.obj,
+    comp_lo_invest.piL_invest
 /;
 
 * ============================================

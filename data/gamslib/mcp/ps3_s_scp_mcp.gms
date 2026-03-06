@@ -55,6 +55,8 @@ Positive Variables
     lam_licd(i)
     lam_licu(i)
     piL_x(i)
+    piL_b(i)
+    piL_w(i)
 ;
 
 * ============================================
@@ -91,6 +93,8 @@ Equations
     comp_licd(i)
     comp_licu(i)
     comp_pc(i)
+    comp_lo_b(i)
+    comp_lo_w(i)
     comp_lo_x(i)
     obj
     rev(i)
@@ -101,10 +105,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_util.. 0 =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) - lam_licd(i) - lam_licu(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + (1 - theta(i) + sqr(theta(i))) * lam_pc(i) + sum(j, (1 - theta(i) + sqr(theta(i))) * lam_ic(i,j)) + (1 - theta(i) + sqr(theta(i))) * lam_licd(i) + (1 - theta(i) + sqr(theta(i))) * lam_licu(i) - piL_x(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) - lam_licd(i) - lam_licu(i) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + (1 - theta(i) + sqr(theta(i))) * lam_pc(i) + sum(j, (1 - theta(i) + sqr(theta(i))) * lam_ic(i,j)) + (1 - theta(i) + sqr(theta(i))) * lam_licd(i) + (1 - theta(i) + sqr(theta(i))) * lam_licu(i) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_ic(i,j).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(j) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(j))) =G= 0;
@@ -113,12 +117,25 @@ comp_licu(i)$(ord(i) > 1).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * 
 comp_pc(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - ru =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_b(i).. b(i) - 0 =G= 0;
+comp_lo_w(i).. w(i) - 0 =G= 0;
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
 obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
 rev(i).. b(i) =E= x(i) ** 0.5;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
+lam_licu.fx(i)$(not (ord(i) > 1)) = 0;
+lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -144,6 +161,8 @@ Model mcp_model /
     comp_pc.lam_pc,
     obj.Util,
     rev.nu_rev,
+    comp_lo_b.piL_b,
+    comp_lo_w.piL_w,
     comp_lo_x.piL_x
 /;
 

@@ -36,8 +36,8 @@ Parameters
     maxflab(t) /kharif 390, rabi 530/
     watavail(t)
     crev(c)
-    cinput(*,ta,c) /landuse.kharif.wheat 0.1, landuse.kharif.basrice 1, landuse.kharif.irrrice 1, landuse.kharif.maize 1, landuse.kharif.oilseed 0.3, landuse.kharif.gram 0.3, landuse.kharif.cotton 1, landuse.kharif.sugar 1, landuse.kharif.berseem 0.3, landuse.kharif.kharfodder 1, landuse.rabi.wheat 1, landuse.rabi.basrice 0.1, landuse.rabi.oilseed 0.6, landuse.rabi.gram 1, landuse.rabi.cotton 0.4, landuse.rabi.sugar 1, landuse.rabi.berseem 0.8, landuse.rabi.kharfodder 0.1, irrwat.kharif.basrice 65, irrwat.kharif.irrrice 60, irrwat.kharif.maize 25, irrwat.kharif.gram 30, irrwat.kharif.cotton 25, irrwat.kharif.berseem 15, irrwat.rabi.wheat 20, irrwat.rabi.oilseed 20, irrwat.rabi.gram 15, irrwat.rabi.cotton 10, irrwat.rabi.sugar 45, irrwat.rabi.berseem 35, labor.kharif.wheat 7, labor.kharif.basrice 21, labor.kharif.irrrice 21, labor.kharif.maize 22, labor.kharif.oilseed 4, labor.kharif.gram 2, labor.kharif.cotton 11, labor.kharif.sugar 15, labor.kharif.berseem 3, labor.kharif.kharfodder 18, labor.rabi.wheat 16, labor.rabi.basrice 9, labor.rabi.irrrice 9, labor.rabi.maize 5, labor.rabi.oilseed 10, labor.rabi.gram 8, labor.rabi.cotton 10, labor.rabi.sugar 62, labor.rabi.berseem 15, labor.rabi.kharfodder 6, tdn.kharif.basrice -530, tdn.kharif.irrrice -510, tdn.kharif.maize -450, tdn.kharif.cotton -60, tdn.kharif.sugar -350, tdn.kharif.kharfodder -2400, protein.kharif.basrice -6, protein.kharif.irrrice -8, protein.kharif.maize -31, protein.kharif.cotton -1, protein.kharif.sugar -6, protein.kharif.kharfodder -242, draftpower.kharif.wheat 12, draftpower.kharif.basrice 8, draftpower.kharif.irrrice 8, draftpower.kharif.oilseed 3, draftpower.kharif.gram 3, draftpower.kharif.berseem 3, draftpower.rabi.wheat 6, draftpower.rabi.basrice 1, draftpower.rabi.irrrice 1, draftpower.rabi.maize 7, draftpower.rabi.oilseed 1, draftpower.rabi.gram 3, draftpower.rabi.cotton 7, draftpower.rabi.sugar 30, draftpower.rabi.kharfodder 6, credit.annual.wheat 150, credit.annual.basrice 180, credit.annual.irrrice 220, credit.annual.maize 100, credit.annual.oilseed 120, credit.annual.gram 70, credit.annual.cotton 145, credit.annual.sugar 500, credit.annual.berseem 65, credit.annual.kharfodder 120, yield.annual.wheat -16, yield.annual.basrice -11.4, yield.annual.irrrice -21, yield.annual.maize -10, yield.annual.oilseed -6, yield.annual.gram -6, yield.annual.cotton -10, yield.annual.sugar -375, irrwat.rabi.basrice 0, irrwat.rabi.irrrice 0, irrwat.rabi.maize 0, irrwat.rabi.kharfodder 0, yield.annual.berseem 0, yield.annual.kharfodder 0, landuse.rabi.irrrice 0, landuse.rabi.maize 0, tdn.kharif.wheat 0, tdn.kharif.oilseed 0, tdn.kharif.gram 0, tdn.kharif.berseem 0, draftpower.kharif.maize 0, draftpower.kharif.cotton 0, draftpower.kharif.sugar 0, draftpower.kharif.kharfodder 0, protein.kharif.wheat 0, protein.kharif.oilseed 0, protein.kharif.gram 0, protein.kharif.berseem 0, protein.rabi.wheat 0, protein.rabi.basrice 0, protein.rabi.irrrice 0, protein.rabi.maize 0, protein.rabi.oilseed 0, protein.rabi.gram 0, protein.rabi.cotton 0, protein.rabi.sugar 0, protein.rabi.berseem 0, protein.rabi.kharfodder 0, irrwat.kharif.wheat 0, irrwat.kharif.oilseed 0, irrwat.kharif.sugar 0, irrwat.kharif.kharfodder 0, draftpower.rabi.berseem 0/
-    linput(*,ta,h) /labor.kharif.bullocks 17.5, labor.kharif.bufflocows 19, labor.kharif.cattlecows 14, labor.rabi.bullocks 26.5, labor.rabi.bufflocows 29, labor.rabi.cattlecows 21.5, draftpower.kharif.bullocks -100, draftpower.rabi.bullocks -175, tdn.kharif.bullocks 1550, tdn.kharif.bufflocows 1050, tdn.kharif.cattlecows 750, tdn.rabi.bullocks 1550, tdn.rabi.bufflocows 1050, tdn.rabi.cattlecows 750, protein.kharif.bullocks 155, protein.kharif.bufflocows 105, protein.kharif.cattlecows 75, protein.rabi.bullocks 155, protein.rabi.bufflocows 105, protein.rabi.cattlecows 75, credit.annual.bullocks 300, credit.annual.bufflocows 250, credit.annual.cattlecows 180, draftpower.kharif.bufflocows 0, draftpower.kharif.cattlecows 0, draftpower.rabi.bufflocows 0, draftpower.rabi.cattlecows 0/
+    cinput(*,ta,c) /landuse.kharif.wheat 0.1, landuse.kharif.basrice 1, landuse.kharif.irrrice 1, landuse.kharif.maize 1, landuse.kharif.oilseed 0.3, landuse.kharif.gram 0.3, landuse.kharif.cotton 1, landuse.kharif.sugar 1, landuse.kharif.berseem 0.3, landuse.kharif.kharfodder 1, landuse.rabi.wheat 1, landuse.rabi.basrice 0.1, landuse.rabi.oilseed 0.6, landuse.rabi.gram 1, landuse.rabi.cotton 0.4, landuse.rabi.sugar 1, landuse.rabi.berseem 0.8, landuse.rabi.kharfodder 0.1, irrwat.kharif.basrice 65, irrwat.kharif.irrrice 60, irrwat.kharif.maize 25, irrwat.kharif.gram 30, irrwat.kharif.cotton 25, irrwat.kharif.berseem 15, irrwat.rabi.wheat 20, irrwat.rabi.oilseed 20, irrwat.rabi.gram 15, irrwat.rabi.cotton 10, irrwat.rabi.sugar 45, irrwat.rabi.berseem 35, labor.kharif.wheat 7, labor.kharif.basrice 21, labor.kharif.irrrice 21, labor.kharif.maize 22, labor.kharif.oilseed 4, labor.kharif.gram 2, labor.kharif.cotton 11, labor.kharif.sugar 15, labor.kharif.berseem 3, labor.kharif.kharfodder 18, labor.rabi.wheat 16, labor.rabi.basrice 9, labor.rabi.irrrice 9, labor.rabi.maize 5, labor.rabi.oilseed 10, labor.rabi.gram 8, labor.rabi.cotton 10, labor.rabi.sugar 62, labor.rabi.berseem 15, labor.rabi.kharfodder 6, tdn.kharif.basrice -530, tdn.kharif.irrrice -510, tdn.kharif.maize -450, tdn.kharif.cotton -60, tdn.kharif.sugar -350, tdn.kharif.kharfodder -2400, tdn.rabi.wheat -450, tdn.rabi.maize -650, tdn.rabi.oilseed -85, tdn.rabi.gram -215, tdn.rabi.cotton -130, tdn.rabi.sugar -1775, tdn.rabi.berseem -1940, protein.kharif.basrice -6, protein.kharif.irrrice -8, protein.kharif.maize -31, protein.kharif.cotton -1, protein.kharif.sugar -6, protein.kharif.kharfodder -242, draftpower.kharif.wheat 12, draftpower.kharif.basrice 8, draftpower.kharif.irrrice 8, draftpower.kharif.oilseed 3, draftpower.kharif.gram 3, draftpower.kharif.berseem 3, draftpower.rabi.wheat 6, draftpower.rabi.basrice 1, draftpower.rabi.irrrice 1, draftpower.rabi.maize 7, draftpower.rabi.oilseed 1, draftpower.rabi.gram 3, draftpower.rabi.cotton 7, draftpower.rabi.sugar 30, draftpower.rabi.kharfodder 6, credit.annual.wheat 150, credit.annual.basrice 180, credit.annual.irrrice 220, credit.annual.maize 100, credit.annual.oilseed 120, credit.annual.gram 70, credit.annual.cotton 145, credit.annual.sugar 500, credit.annual.berseem 65, credit.annual.kharfodder 120, yield.annual.wheat -16, yield.annual.basrice -11.4, yield.annual.irrrice -21, yield.annual.maize -10, yield.annual.oilseed -6, yield.annual.gram -6, yield.annual.cotton -10, yield.annual.sugar -375/
+    linput(*,ta,h) /labor.kharif.bullocks 17.5, labor.kharif.bufflocows 19, labor.kharif.cattlecows 14, labor.rabi.bullocks 26.5, labor.rabi.bufflocows 29, labor.rabi.cattlecows 21.5, draftpower.kharif.bullocks -100, draftpower.rabi.bullocks -175, tdn.kharif.bullocks 1550, tdn.kharif.bufflocows 1050, tdn.kharif.cattlecows 750, tdn.rabi.bullocks 1550, tdn.rabi.bufflocows 1050, tdn.rabi.cattlecows 750, protein.kharif.bullocks 155, protein.kharif.bufflocows 105, protein.kharif.cattlecows 75, protein.rabi.bullocks 155, protein.rabi.bufflocows 105, protein.rabi.cattlecows 75, credit.annual.bullocks 300, credit.annual.bufflocows 250, credit.annual.cattlecows 180/
 ;
 
 Scalars
@@ -94,6 +94,13 @@ Positive Variables
     lam_bullock
     lam_credit
     lam_nutbal(n,t)
+    piL_xcrop(c)
+    piL_wpurchase(t)
+    piL_xrations(n,t)
+    piL_xlabor(t)
+    piL_xtransf(n,t)
+    piL_dhire
+    piL_xlivestk(h)
     piU_xcrop_sugar
     piU_wpurchase(t)
 ;
@@ -114,14 +121,6 @@ xlabor.l(t) = 1;
 xtransf.l(n,t) = 1;
 dhire.l = 1;
 xlivestk.l(h) = 1;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-ivl = rev.l / sum(t, sum(c, cinput("labor",t,c) * xcrop.l(c)) + sum(h, linput("labor",t,h) * xlivestk.l(h)));
-$offImplicitAssign
 
 * ============================================
 * Equations
@@ -160,6 +159,13 @@ Equations
     comp_land(t)
     comp_nutbal(n,t)
     comp_water(t)
+    comp_lo_dhire
+    comp_lo_wpurchase(t)
+    comp_lo_xcrop(c)
+    comp_lo_xlabor(t)
+    comp_lo_xlivestk(h)
+    comp_lo_xrations(n,t)
+    comp_lo_xtransf(n,t)
     comp_up_wpurchase(t)
     comp_up_xcrop_sugar
     costdraft
@@ -176,26 +182,26 @@ Equations
 
 * Stationarity equations
 stat_dcost.. 1 + nu_costdraft + lam_credit =E= 0;
-stat_dhire.. ((-1) * draftcost) * nu_costdraft - lam_bullock =E= 0;
+stat_dhire.. ((-1) * draftcost) * nu_costdraft - lam_bullock - piL_dhire =E= 0;
 stat_lcost.. 1 + nu_costlabor + lam_credit =E= 0;
 stat_rcost.. 1 + nu_costrat + lam_credit =E= 0;
 stat_rev.. -1 + nu_totalrev =E= 0;
 stat_wcost.. 1 + nu_costwater + lam_credit =E= 0;
-stat_wpurchase(t).. ((-1) * watercost) * nu_costwater - lam_water(t) + piU_wpurchase(t) =E= 0;
-stat_xcrop_basrice.. ((-1) * crev("basrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("basrice") * lam_bullock + cinput("credit","annual","basrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_berseem.. ((-1) * crev("berseem")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("berseem") * lam_bullock + cinput("credit","annual","berseem") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_cotton.. ((-1) * crev("cotton")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("cotton") * lam_bullock + cinput("credit","annual","cotton") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_gram.. ((-1) * crev("gram")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("gram") * lam_bullock + cinput("credit","annual","gram") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_irrrice.. ((-1) * crev("irrrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("irrrice") * lam_bullock + cinput("credit","annual","irrrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_kharfodder.. ((-1) * crev("kharfodder")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("kharfodder") * lam_bullock + cinput("credit","annual","kharfodder") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_maize.. ((-1) * crev("maize")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("maize") * lam_bullock + cinput("credit","annual","maize") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_oilseed.. ((-1) * crev("oilseed")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("oilseed") * lam_bullock + cinput("credit","annual","oilseed") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xcrop_sugar.. ((-1) * crev("sugar")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("sugar") * lam_bullock + cinput("credit","annual","sugar") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) + piU_xcrop_sugar =E= 0;
-stat_xcrop_wheat.. ((-1) * crev("wheat")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("wheat") * lam_bullock + cinput("credit","annual","wheat") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) =E= 0;
-stat_xlabor(t).. ((-1) * laborcost) * nu_costlabor - lam_labor(t) =E= 0;
-stat_xlivestk(h).. ((-1) * gmargin(h)) * nu_totalrev + sum(t, linput("labor",t,h) * lam_labor(t)) + sum((dp,t), linput(dp,t,h) * lam_draft(dp,t)) + ((-1) * bullocka(h)) * lam_bullock + sum(ta, linput("credit",ta,h) * lam_credit) + sum((n,t), linput(n,t,h) * lam_nutbal(n,t)) =E= 0;
-stat_xrations(n,t).. ((-1) * rationcost(n)) * nu_costrat - lam_nutbal(n,t) =E= 0;
-stat_xtransf(n,t).. 0 =E= 0;
+stat_wpurchase(t).. ((-1) * watercost) * nu_costwater - lam_water(t) - piL_wpurchase(t) + piU_wpurchase(t) =E= 0;
+stat_xcrop_basrice.. ((-1) * crev("basrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("basrice") * lam_bullock + cinput("credit","annual","basrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("basrice") =E= 0;
+stat_xcrop_berseem.. ((-1) * crev("berseem")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("berseem") * lam_bullock + cinput("credit","annual","berseem") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("berseem") =E= 0;
+stat_xcrop_cotton.. ((-1) * crev("cotton")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("cotton") * lam_bullock + cinput("credit","annual","cotton") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("cotton") =E= 0;
+stat_xcrop_gram.. ((-1) * crev("gram")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("gram") * lam_bullock + cinput("credit","annual","gram") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("gram") =E= 0;
+stat_xcrop_irrrice.. ((-1) * crev("irrrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("irrrice") * lam_bullock + cinput("credit","annual","irrrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("irrrice") =E= 0;
+stat_xcrop_kharfodder.. ((-1) * crev("kharfodder")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("kharfodder") * lam_bullock + cinput("credit","annual","kharfodder") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("kharfodder") =E= 0;
+stat_xcrop_maize.. ((-1) * crev("maize")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("maize") * lam_bullock + cinput("credit","annual","maize") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("maize") =E= 0;
+stat_xcrop_oilseed.. ((-1) * crev("oilseed")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("oilseed") * lam_bullock + cinput("credit","annual","oilseed") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("oilseed") =E= 0;
+stat_xcrop_sugar.. ((-1) * crev("sugar")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("sugar") * lam_bullock + cinput("credit","annual","sugar") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("sugar") + piU_xcrop_sugar =E= 0;
+stat_xcrop_wheat.. ((-1) * crev("wheat")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("wheat") * lam_bullock + cinput("credit","annual","wheat") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("wheat") =E= 0;
+stat_xlabor(t).. ((-1) * laborcost) * nu_costlabor - lam_labor(t) - piL_xlabor(t) =E= 0;
+stat_xlivestk(h).. ((-1) * gmargin(h)) * nu_totalrev + sum(t, linput("labor",t,h) * lam_labor(t)) + sum((dp,t), linput(dp,t,h) * lam_draft(dp,t)) + ((-1) * bullocka(h)) * lam_bullock + sum(ta, linput("credit",ta,h) * lam_credit) + sum((n,t), linput(n,t,h) * lam_nutbal(n,t)) - piL_xlivestk(h) =E= 0;
+stat_xrations(n,t).. ((-1) * rationcost(n)) * nu_costrat - lam_nutbal(n,t) - piL_xrations(n,t) =E= 0;
+stat_xtransf(n,t).. ((-1) * piL_xtransf(n,t)) =E= 0;
 
 * Inequality complementarity equations
 comp_bullock.. ((-1) * (sum(c, bullockr(c) * xcrop(c)) - (sum(h, bullocka(h) * xlivestk(h)) + dhire))) =G= 0;
@@ -205,6 +211,15 @@ comp_labor(t).. ((-1) * (sum(c, cinput("labor",t,c) * xcrop(c)) + sum(h, linput(
 comp_land(t).. ((-1) * (sum(c, cinput("landuse",t,c) * xcrop(c)) - fsize)) =G= 0;
 comp_nutbal(n,t).. ((-1) * sum(c, cinput(n,t,c) * xcrop(c))) + eff(n) * xtransf(n,t--1) + xrations(n,t) - sum(h, linput(n,t,h) * xlivestk(h)) =G= 0;
 comp_water(t).. ((-1) * (sum(c, cinput("irrwat",t,c) * xcrop(c)) - (watavail(t) + wpurchase(t)))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_dhire.. dhire - 0 =G= 0;
+comp_lo_wpurchase(t).. wpurchase(t) - 0 =G= 0;
+comp_lo_xcrop(c).. xcrop(c) - 0 =G= 0;
+comp_lo_xlabor(t).. xlabor(t) - 0 =G= 0;
+comp_lo_xlivestk(h).. xlivestk(h) - 0 =G= 0;
+comp_lo_xrations(n,t).. xrations(n,t) - 0 =G= 0;
+comp_lo_xtransf(n,t).. xtransf(n,t) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_wpurchase(t).. 17.5 - wpurchase(t) =G= 0;
@@ -267,6 +282,13 @@ Model mcp_model /
     costwater.nu_costwater,
     obj.return,
     totalrev.nu_totalrev,
+    comp_lo_dhire.piL_dhire,
+    comp_lo_wpurchase.piL_wpurchase,
+    comp_lo_xcrop.piL_xcrop,
+    comp_lo_xlabor.piL_xlabor,
+    comp_lo_xlivestk.piL_xlivestk,
+    comp_lo_xrations.piL_xrations,
+    comp_lo_xtransf.piL_xtransf,
     comp_up_wpurchase.piU_wpurchase,
     comp_up_xcrop_sugar.piU_xcrop_sugar
 /;

@@ -54,6 +54,9 @@ Variables
 
 Positive Variables
     step
+    piL_u(h)
+    piL_step
+    piU_u(h)
 ;
 
 * ============================================
@@ -90,6 +93,9 @@ Equations
     stat_step
     stat_u(h)
     stat_y(c,h)
+    comp_lo_step
+    comp_lo_u(h)
+    comp_up_u(h)
     pos_eqn(c,h)
     tf_eqn
     velo1_eqn(h)
@@ -108,9 +114,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_step.. nh + sum((c,h), ((-1) * (2 * y(c,h) * 0.5)) * nu_pos_eqn(c,h)) + sum(h, ((-1) * (2 * a * cos(u(h)) * 0.5)) * nu_velo1_eqn(h)) + sum(h, ((-1) * (2 * a * sin(u(h)) * 0.5)) * nu_velo2_eqn(h)) =E= 0;
-stat_u(h).. ((-1) * (0.5 * step * a * ((-1) * (sin(u(h)))))) * nu_velo1_eqn(h) + ((-1) * (0.5 * step * a * cos(u(h)))) * nu_velo2_eqn(h) =E= 0;
+stat_step.. nh + sum((c,h), ((-1) * (2 * y(c,h) * 0.5)) * nu_pos_eqn(c,h)) + sum(h, ((-1) * (2 * a * cos(u(h)) * 0.5)) * nu_velo1_eqn(h)) + sum(h, ((-1) * (2 * a * sin(u(h)) * 0.5)) * nu_velo2_eqn(h)) - piL_step =E= 0;
+stat_u(h).. ((-1) * (0.5 * step * a * ((-1) * (sin(u(h)))))) * nu_velo1_eqn(h) + ((-1) * (0.5 * step * a * cos(u(h)))) * nu_velo2_eqn(h) - piL_u(h) + piU_u(h) =E= 0;
 stat_y(c,h).. ((-1) * nu_pos_eqn(c,h)) + nu_y_fx_y1_h0$(sameas(c, 'y1') and sameas(h, 'h0')) + nu_y_fx_y2_h0$(sameas(c, 'y2') and sameas(h, 'h0')) + nu_y_fx_y2_h50$(sameas(c, 'y2') and sameas(h, 'h50')) + nu_y_fx_y3_h0$(sameas(c, 'y3') and sameas(h, 'h0')) + nu_y_fx_y3_h50$(sameas(c, 'y3') and sameas(h, 'h50')) + nu_y_fx_y4_h0$(sameas(c, 'y4') and sameas(h, 'h0')) + nu_y_fx_y4_h50$(sameas(c, 'y4') and sameas(h, 'h50')) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_step.. step - 0 =G= 0;
+comp_lo_u(h).. u(h) - ((-1) * pi) / 2 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_u(h).. pi / 2 - u(h) =G= 0;
 
 * Original equality equations
 tf_eqn.. tf =E= step * nh;
@@ -164,7 +177,10 @@ Model mcp_model /
     y_fx_y3_h0.nu_y_fx_y3_h0,
     y_fx_y3_h50.nu_y_fx_y3_h50,
     y_fx_y4_h0.nu_y_fx_y4_h0,
-    y_fx_y4_h50.nu_y_fx_y4_h50
+    y_fx_y4_h50.nu_y_fx_y4_h50,
+    comp_lo_step.piL_step,
+    comp_lo_u.piL_u,
+    comp_up_u.piU_u
 /;
 
 * ============================================

@@ -34,19 +34,19 @@ Parameters
     landc(s) /good 8.775, medium 11.64, pasture 21.92/
     rations(r) /'rec-1' 5.141, 'rec-2' 21.646, 'rec-3' 49.845/
     xcropl(p,s) /'crop-19'.good 0.036, 'crop-19'.medium 0.298/
-    ldp(s,s) /good.good 1, medium.good -1, medium.medium 1, pasture.medium -1, good.medium 0, pasture.good 0/
+    ldp(s,s) /good.good 1, medium.good -1, medium.medium 1, pasture.medium -1/
     lio(s,r) /medium.'rec-1' 1.407, medium.'rec-2' 0.611, medium.'rec-3' 0.631, pasture.'rec-1' 0.209, pasture.'rec-2' 2.03, pasture.'rec-3' 0.9/
-    labor(p,tm) /'crop-02'.jan 8.23, 'crop-02'.feb 4.54, 'crop-02'.mar 18.7, 'crop-02'.apr 9.83, 'crop-02'.may 8.03, 'crop-02'.jun 20.95, 'crop-02'.jul 15.67, 'crop-02'.aug 15.48, 'crop-02'.sep 11.35, 'crop-02'.oct 8.38, 'crop-05'.jan 3.18, 'crop-05'.feb 1.44, 'crop-05'.mar 5.43, 'crop-05'.apr 3.31, 'crop-05'.may 11.13, 'crop-05'.jun 10.33, 'crop-05'.jul 3.27, 'crop-05'.aug 2.65, 'crop-05'.sep 5.47, 'crop-05'.oct 3.67, 'crop-10'.jan 7.59, 'crop-10'.feb 6.37, 'crop-10'.mar 4.03, 'crop-10'.apr 7.09, 'crop-10'.may 4.64, 'crop-10'.jun 5.91, 'crop-10'.jul 7.67, 'crop-10'.aug 9.23, 'crop-10'.sep 5.93, 'crop-10'.oct 9.05, 'crop-15'.jan 9.7, 'crop-15'.feb 8.87, 'crop-15'.mar 4.13, 'crop-15'.apr 2.13, 'crop-15'.may 7.18, 'crop-15'.jun 5.88, 'crop-15'.jul 3.21, 'crop-15'.aug 9.2, 'crop-15'.sep 6.89, 'crop-15'.oct 3.3, 'crop-16'.jan 6.18, 'crop-16'.feb 8.34, 'crop-16'.mar 7.28, 'crop-16'.apr 8.15, 'crop-16'.may 8.48, 'crop-16'.jun 10.71, 'crop-16'.jul 9.34, 'crop-16'.aug 12.76, 'crop-16'.sep 8.93, 'crop-16'.oct 10.22, 'crop-17'.jan 3.49, 'crop-17'.feb 2.11, 'crop-17'.mar 10.59, 'crop-17'.apr 12.01, 'crop-17'.may 3.47, 'crop-17'.jun 10.75, 'crop-17'.jul 5.88, 'crop-17'.aug 7.3, 'crop-17'.sep 4.14, 'crop-17'.oct 4.25, 'crop-19'.jan 7.73, 'crop-19'.feb 9.44, 'crop-19'.mar 0.56, 'crop-19'.apr 0.78, 'crop-19'.may 1.19, 'crop-19'.jun 0.44, 'crop-19'.jul 1.89, 'crop-19'.aug 3.04, 'crop-19'.sep 2.93, 'crop-19'.oct 4.99, 'crop-25'.jan 0.53, 'crop-25'.feb 0.89, 'crop-25'.mar 24.38, 'crop-25'.apr 22.03, 'crop-25'.may 16.91, 'crop-25'.jun 9.47, 'crop-25'.jul 10.97, 'crop-25'.aug 9.7, 'crop-25'.sep 4.93, 'crop-25'.oct 6.41, 'crop-29'.jan 4.73, 'crop-29'.feb 4.92, 'crop-29'.mar 9.24, 'crop-29'.apr 8.97, 'crop-29'.may 15.82, 'crop-29'.jun 13, 'crop-29'.jul 14.74, 'crop-29'.aug 10.64, 'crop-29'.sep 5.64, 'crop-29'.oct 4.9, 'crop-30'.jan 7.39, 'crop-30'.feb 2.67, 'crop-30'.mar 16.15, 'crop-30'.apr 23.69, 'crop-30'.may 28.12, 'crop-30'.jun 20.58, 'crop-30'.jul 17.73, 'crop-30'.aug 15.06, 'crop-30'.sep 4.58, 'crop-30'.oct 9.76, 'crop-33'.jan 2.65, 'crop-33'.feb 1.09, 'crop-33'.mar 10.61, 'crop-33'.apr 9.14, 'crop-33'.may 18.38, 'crop-33'.jun 11.5, 'crop-33'.jul 9.22, 'crop-33'.aug 13.36, 'crop-33'.sep 3.85, 'crop-33'.oct 3.87, 'crop-36'.jan 5.49, 'crop-36'.feb 5.26, 'crop-36'.mar 9.63, 'crop-36'.apr 16.18, 'crop-36'.may 20.11, 'crop-36'.jun 16.86, 'crop-36'.jul 14.86, 'crop-36'.aug 14, 'crop-36'.sep 8.04, 'crop-36'.oct 6.69, nov.jan 0, nov.feb 0, nov.mar 0, nov.apr 0, nov.may 0, nov.jun 0, nov.jul 0, nov.aug 0, nov.sep 0, nov.oct 0/
+    labor(p,tm) /'crop-02'.jan 4.79, 'crop-02'.feb 10.89, 'crop-02'.mar 18.7, 'crop-02'.apr 9.83, 'crop-02'.may 8.03, 'crop-02'.jun 20.95, 'crop-02'.jul 15.67, 'crop-02'.aug 15.48, 'crop-02'.sep 11.35, 'crop-02'.oct 8.38, 'crop-05'.jan 8.24, 'crop-05'.feb 0.89, 'crop-05'.mar 5.43, 'crop-05'.apr 3.31, 'crop-05'.may 11.13, 'crop-05'.jun 10.33, 'crop-05'.jul 3.27, 'crop-05'.aug 2.65, 'crop-05'.sep 5.47, 'crop-05'.oct 3.67, 'crop-10'.jan 5.78, 'crop-10'.feb 3.37, 'crop-10'.mar 4.03, 'crop-10'.apr 7.09, 'crop-10'.may 4.64, 'crop-10'.jun 5.91, 'crop-10'.jul 7.67, 'crop-10'.aug 9.23, 'crop-10'.sep 5.93, 'crop-10'.oct 9.05, 'crop-15'.jan 2, 'crop-15'.feb 2.36, 'crop-15'.mar 4.13, 'crop-15'.apr 2.13, 'crop-15'.may 7.18, 'crop-15'.jun 5.88, 'crop-15'.jul 3.21, 'crop-15'.aug 9.2, 'crop-15'.sep 6.89, 'crop-15'.oct 3.3, 'crop-16'.jan 5.71, 'crop-16'.feb 7.6, 'crop-16'.mar 7.28, 'crop-16'.apr 8.15, 'crop-16'.may 8.48, 'crop-16'.jun 10.71, 'crop-16'.jul 9.34, 'crop-16'.aug 12.76, 'crop-16'.sep 8.93, 'crop-16'.oct 10.22, 'crop-17'.jan 9.19, 'crop-17'.feb 14.42, 'crop-17'.mar 10.59, 'crop-17'.apr 12.01, 'crop-17'.may 3.47, 'crop-17'.jun 10.75, 'crop-17'.jul 5.88, 'crop-17'.aug 7.3, 'crop-17'.sep 4.14, 'crop-17'.oct 4.25, 'crop-19'.jan 1.22, 'crop-19'.feb 1.11, 'crop-19'.mar 0.56, 'crop-19'.apr 0.78, 'crop-19'.may 1.19, 'crop-19'.jun 0.44, 'crop-19'.jul 1.89, 'crop-19'.aug 3.04, 'crop-19'.sep 2.93, 'crop-19'.oct 4.99, 'crop-25'.jan 12.46, 'crop-25'.feb 11.35, 'crop-25'.mar 24.38, 'crop-25'.apr 22.03, 'crop-25'.may 16.91, 'crop-25'.jun 9.47, 'crop-25'.jul 10.97, 'crop-25'.aug 9.7, 'crop-25'.sep 4.93, 'crop-25'.oct 6.41, 'crop-29'.jan 5.54, 'crop-29'.feb 10.3, 'crop-29'.mar 9.24, 'crop-29'.apr 8.97, 'crop-29'.may 15.82, 'crop-29'.jun 13, 'crop-29'.jul 14.74, 'crop-29'.aug 10.64, 'crop-29'.sep 5.64, 'crop-29'.oct 4.9, 'crop-30'.jan 9.18, 'crop-30'.feb 3.94, 'crop-30'.mar 16.15, 'crop-30'.apr 23.69, 'crop-30'.may 28.12, 'crop-30'.jun 20.58, 'crop-30'.jul 17.73, 'crop-30'.aug 15.06, 'crop-30'.sep 4.58, 'crop-30'.oct 9.76, 'crop-33'.jan 6.87, 'crop-33'.feb 10.19, 'crop-33'.mar 10.61, 'crop-33'.apr 9.14, 'crop-33'.may 18.38, 'crop-33'.jun 11.5, 'crop-33'.jul 9.22, 'crop-33'.aug 13.36, 'crop-33'.sep 3.85, 'crop-33'.oct 3.87, 'crop-36'.jan 7.44, 'crop-36'.feb 10.21, 'crop-36'.mar 9.63, 'crop-36'.apr 16.18, 'crop-36'.may 20.11, 'crop-36'.jun 16.86, 'crop-36'.jul 14.86, 'crop-36'.aug 14, 'crop-36'.sep 8.04, 'crop-36'.oct 6.69, 'crop-02'.nov 8.23, 'crop-02'.dec 4.54, 'crop-05'.nov 3.18, 'crop-05'.dec 1.44, 'crop-10'.nov 7.59, 'crop-10'.dec 6.37, 'crop-15'.nov 9.7, 'crop-15'.dec 8.87, 'crop-16'.nov 6.18, 'crop-16'.dec 8.34, 'crop-17'.nov 3.49, 'crop-17'.dec 2.11, 'crop-19'.nov 7.73, 'crop-19'.dec 9.44, 'crop-25'.nov 0.53, 'crop-25'.dec 0.89, 'crop-29'.nov 4.73, 'crop-29'.dec 4.92, 'crop-30'.nov 7.39, 'crop-30'.dec 2.67, 'crop-33'.nov 2.65, 'crop-33'.dec 1.09, 'crop-36'.nov 5.49, 'crop-36'.dec 5.26/
     llab(tm,r) /jan.'rec-1' 4.261, jan.'rec-2' 1.873, jan.'rec-3' 1.933, feb.'rec-1' 2.854, feb.'rec-2' 1.262, feb.'rec-3' 1.302, mar.'rec-1' 0.04, mar.'rec-2' 0.04, mar.'rec-3' 0.04, apr.'rec-1' 0.04, apr.'rec-2' 0.04, apr.'rec-3' 0.04, may.'rec-1' 0.04, may.'rec-2' 0.04, may.'rec-3' 0.04, jun.'rec-1' 0.04, jun.'rec-2' 0.04, jun.'rec-3' 0.04, jul.'rec-1' 0.04, jul.'rec-2' 0.04, jul.'rec-3' 0.04, aug.'rec-1' 0.04, aug.'rec-2' 0.04, aug.'rec-3' 0.04, sep.'rec-1' 0.04, sep.'rec-2' 0.04, sep.'rec-3' 0.04, oct.'rec-1' 0.04, oct.'rec-2' 0.04, oct.'rec-3' 0.04, nov.'rec-1' 7.075, nov.'rec-2' 3.095, nov.'rec-3' 3.195, dec.'rec-1' 7.075, dec.'rec-2' 3.095, dec.'rec-3' 3.195/
     cbndl(c,dr) /'beans-arr'.one 0.225, 'beans-arr'.two 0.152, 'beans-arr'.three 0.15, manioc.one 0.965, manioc.two 2.64, manioc.three 0.935, corn.one 0.235, corn.two 0.232, corn.three 0.581/
     crev(c,ty) /banana.'1960' 6399, banana.'1961' 8193, banana.'1962' 9215, banana.'1963' 8581, banana.'1964' 7988, banana.'1965' 7228, banana.'1966' 5923, banana.'1967' 6738, banana.'1968' 7221, banana.'1969' 7842, 'sugar-cane'.'1960' 1667, 'sugar-cane'.'1961' 1899, 'sugar-cane'.'1962' 1898, 'sugar-cane'.'1963' 2230, 'sugar-cane'.'1964' 2265, 'sugar-cane'.'1965' 2067, 'sugar-cane'.'1966' 1499, 'sugar-cane'.'1967' 1903, 'sugar-cane'.'1968' 1901, 'sugar-cane'.'1969' 1929, 'beans-cor'.'1960' 546, 'beans-cor'.'1961' 585, 'beans-cor'.'1962' 1091, 'beans-cor'.'1963' 651, 'beans-cor'.'1964' 470, 'beans-cor'.'1965' 621, 'beans-cor'.'1966' 605, 'beans-cor'.'1967' 518, 'beans-cor'.'1968' 519, 'beans-cor'.'1969' 772, manioc.'1960' 986, manioc.'1961' 1543, manioc.'1962' 2658, manioc.'1963' 1639, manioc.'1964' 1146, manioc.'1965' 1380, manioc.'1966' 1357, manioc.'1967' 1702, manioc.'1968' 1560, manioc.'1969' 1580, corn.'1960' 267, corn.'1961' 378, corn.'1962' 544, corn.'1963' 329, corn.'1964' 320, corn.'1965' 351, corn.'1966' 310, corn.'1967' 322, corn.'1968' 294, corn.'1969' 349/
     price(c) /'cotton-h' 1.9, banana 4, 'sugar-cane' 35, 'beans-arr' 2.5, 'beans-cor' 1.5, oranges 10, manioc 0.17, corn 0.15, sisal 1/
     ravg(c)
     prdev(c,ty)
-    yield(p,c,s) /'crop-02'.'cotton-h'.good 848, 'crop-02'.'cotton-h'.medium 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.good 251, 'crop-25'.'beans-cor'.medium 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.good 269, 'crop-29'.'cotton-h'.medium 149, 'crop-29'.'beans-arr'.good 285, 'crop-29'.'beans-arr'.medium 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.good 403, 'crop-30'.'cotton-h'.medium 133, 'crop-30'.'beans-cor'.good 115, 'crop-30'.'beans-cor'.medium 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.good 274, 'crop-33'.'beans-arr'.medium 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.good 288, 'crop-36'.'beans-arr'.medium 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328, 'crop-15'.oranges.medium 0/
-    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1, 'crop-16'.equipment 0, 'crop-16'.seeds 0, 'crop-16'.sprouts 0, 'crop-29'.seeds 0, 'crop-17'.equipment 0, 'crop-17'.sprouts 0, 'crop-36'.equipment 0, 'crop-02'.equipment 0, 'crop-02'.sprouts 0, 'crop-33'.seeds 0, 'crop-33'.sprouts 0, 'crop-15'.equipment 0, 'crop-10'.equipment 0, 'crop-10'.seeds 0, 'crop-10'.sprouts 0, 'crop-30'.equipment 0, 'crop-30'.fertilizer 0, 'crop-30'.sprouts 0, 'crop-05'.equipment 0, 'crop-05'.fertilizer 0, 'crop-05'.seeds 0/
+    yield(p,c,s) /'crop-02'.'cotton-h'.good 848, 'crop-02'.'cotton-h'.medium 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.good 251, 'crop-25'.'beans-cor'.medium 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.good 269, 'crop-29'.'cotton-h'.medium 149, 'crop-29'.'beans-arr'.good 285, 'crop-29'.'beans-arr'.medium 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.good 403, 'crop-30'.'cotton-h'.medium 133, 'crop-30'.'beans-cor'.good 115, 'crop-30'.'beans-cor'.medium 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.good 274, 'crop-33'.'beans-arr'.medium 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.good 288, 'crop-36'.'beans-arr'.medium 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328/
+    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1/
     pcost(p)
-    a(p) /'crop-02' 0, 'crop-05' 0, 'crop-10' 0, 'crop-15' 0, 'crop-16' 0, 'crop-17' 0, 'crop-19' 0, 'crop-25' 0, 'crop-29' 0, 'crop-30' 0, 'crop-33' 0, 'crop-36' 0/
+    a(p)
 ;
 
 Scalars
@@ -114,6 +114,17 @@ Positive Variables
     lam_mbalc(c)
     lam_labc(tm)
     lam_awcc
+    piL_xcrop(p,s)
+    piL_xliver(r)
+    piL_lswitch(s)
+    piL_cons(dr)
+    piL_sales(c)
+    piL_flab(tm)
+    piL_tlab(tm)
+    piL_plab
+    piL_pdev(ty)
+    piL_ndev(ty)
+    piU_xcrop(p,s)
     piU_flab(tm)
 ;
 
@@ -173,7 +184,18 @@ Equations
     comp_labc(tm)
     comp_landb(s)
     comp_mbalc(c)
+    comp_lo_cons(dr)
+    comp_lo_flab(tm)
+    comp_lo_lswitch(s)
+    comp_lo_ndev(ty)
+    comp_lo_pdev(ty)
+    comp_lo_plab
+    comp_lo_sales(c)
+    comp_lo_tlab(tm)
+    comp_lo_xcrop(p,s)
+    comp_lo_xliver(r)
     comp_up_flab(tm)
+    comp_up_xcrop(p,s)
     acrop
     alab
     arev
@@ -191,22 +213,22 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cons(dr).. ((-1) * vsc) + nu_cond + sum(c, cbndl(c,dr) * lam_mbalc(c)) =E= 0;
+stat_cons(dr).. ((-1) * vsc) + nu_cond + sum(c, cbndl(c,dr) * lam_mbalc(c)) - piL_cons(dr) =E= 0;
 stat_cropcost.. 1 + nu_acrop + lam_awcc =E= 0;
-stat_flab(tm).. ((-1) * (dpm * fwage / dpm ** 2)) * nu_alab - lam_labc(tm) + piU_flab(tm) =E= 0;
+stat_flab(tm).. ((-1) * (dpm * fwage / sqr(dpm))) * nu_alab - lam_labc(tm) - piL_flab(tm) + piU_flab(tm) =E= 0;
 stat_labcost.. 1 + nu_alab =E= 0;
-stat_lswitch(s).. ldp(s,s) * lam_landb(s) =E= 0;
-stat_ndev(ty).. card(ty) * phi / card(ty) ** 2 + nu_ddev(ty) =E= 0;
-stat_pdev(ty).. card(ty) * phi / card(ty) ** 2 - nu_ddev(ty) =E= 0;
-stat_plab.. ((-1) * pwage) * nu_alab + sum(tm, ((-1) * dpm) * lam_labc(tm)) + pwage * lam_awcc =E= 0;
+stat_lswitch(s).. ldp(s,s) * lam_landb(s) - piL_lswitch(s) =E= 0;
+stat_ndev(ty).. card(ty) * phi / sqr(card(ty)) + nu_ddev(ty) - piL_ndev(ty) =E= 0;
+stat_pdev(ty).. card(ty) * phi / sqr(card(ty)) - nu_ddev(ty) - piL_pdev(ty) =E= 0;
+stat_plab.. ((-1) * pwage) * nu_alab + sum(tm, ((-1) * dpm) * lam_labc(tm)) + pwage * lam_awcc - piL_plab =E= 0;
 stat_rationr.. 1 + nu_rliv + lam_awcc =E= 0;
 stat_revenue.. -1 + nu_arev =E= 0;
-stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) =E= 0;
-stat_tlab(tm).. ((-1) * (dpm * twage / dpm ** 2)) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc =E= 0;
+stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) - piL_sales(c) =E= 0;
+stat_tlab(tm).. ((-1) * (dpm * twage / sqr(dpm))) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc - piL_tlab(tm) =E= 0;
 stat_vetcost.. 1 + nu_avet + lam_awcc =E= 0;
-stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$ps(p,s))) * nu_acrop + sum(tm, labor(p,tm) * 1$ps(p,s) * lam_labc(tm)) =E= 0;
+stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$ps(p,s))) * nu_acrop + sum(tm, labor(p,tm) * 1$ps(p,s) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
 stat_xlive.. nu_lbal + ((-1) * lprice) * nu_arev + ((-1) * vetpr) * nu_avet =E= 0;
-stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) =E= 0;
+stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) - piL_xliver(r) =E= 0;
 stat_xprod(c).. nu_dprod(c) =E= 0;
 
 * Inequality complementarity equations
@@ -215,8 +237,21 @@ comp_labc(tm).. ((-1) * (sum((p,s)$(ps(p,s)), labor(p,tm) * xcrop(p,s)) + sum(r,
 comp_landb(s).. ((-1) * (sum(p$(ps(p,s)), a(p) * xcrop(p,s))$sc(s) + sum(sp, ldp(s,sp) * lswitch(sp)) + sum(r, lio(s,r) * xliver(r)) - landc(s))) =G= 0;
 comp_mbalc(c).. sum((s,p), yield(p,c,s) * xcrop(p,s)) / 1000 - (sales(c) + sum(dr, cbndl(c,dr) * cons(dr))) =G= 0;
 
+* Lower bound complementarity equations
+comp_lo_cons(dr).. cons(dr) - 0 =G= 0;
+comp_lo_flab(tm).. flab(tm) - 0 =G= 0;
+comp_lo_lswitch(s).. lswitch(s) - 0 =G= 0;
+comp_lo_ndev(ty).. ndev(ty) - 0 =G= 0;
+comp_lo_pdev(ty).. pdev(ty) - 0 =G= 0;
+comp_lo_plab.. plab - 0 =G= 0;
+comp_lo_sales(c).. sales(c) - 0 =G= 0;
+comp_lo_tlab(tm).. tlab(tm) - 0 =G= 0;
+comp_lo_xcrop(p,s).. xcrop(p,s) - 0 =G= 0;
+comp_lo_xliver(r).. xliver(r) - 0 =G= 0;
+
 * Upper bound complementarity equations
 comp_up_flab(tm).. 70.5 - flab(tm) =G= 0;
+comp_up_xcrop(p,s).. xcropl(p,s) - xcrop(p,s) =G= 0;
 
 * Original equality equations
 lbal.. xlive =E= sum(r, xliver(r));
@@ -276,7 +311,18 @@ Model mcp_model /
     income.yfarm,
     lbal.nu_lbal,
     rliv.nu_rliv,
-    comp_up_flab.piU_flab
+    comp_lo_cons.piL_cons,
+    comp_lo_flab.piL_flab,
+    comp_lo_lswitch.piL_lswitch,
+    comp_lo_ndev.piL_ndev,
+    comp_lo_pdev.piL_pdev,
+    comp_lo_plab.piL_plab,
+    comp_lo_sales.piL_sales,
+    comp_lo_tlab.piL_tlab,
+    comp_lo_xcrop.piL_xcrop,
+    comp_lo_xliver.piL_xliver,
+    comp_up_flab.piU_flab,
+    comp_up_xcrop.piU_xcrop
 /;
 
 * ============================================

@@ -25,10 +25,10 @@ Sets
 Alias(i, j);
 
 Parameters
-    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1, services.services 0, 'heavy-ind'.'heavy-ind' 0, 'heavy-ind'.services 0, 'food+agr'.'food+agr' 0, 'food+agr'.'heavy-ind' 0, 'food+agr'.services 0/
-    pdat(lmh,*,sde,i) /low.a.distr.'light-ind' 0.915, low.a.distr.'food+agr' 0.944, low.a.distr.'heavy-ind' 2.6, low.a.distr.services 0.8, low.a.effic.'light-ind' 3.83, low.a.effic.'food+agr' 3.24, low.a.effic.'heavy-ind' 4, low.a.effic.services 1.8, low.b.distr.'light-ind' 0.276, low.b.distr.'food+agr' 1.034, low.b.distr.'heavy-ind' 2.6, low.b.distr.services 0.77, low.b.effic.'light-ind' 2.551, low.b.effic.'food+agr' 3.39, low.b.effic.'heavy-ind' 4, low.b.effic.services 1.77, medium.a.subst.'light-ind' 0.11, medium.a.subst.'food+agr' 0.29, medium.a.subst.'heavy-ind' 0.2, medium.a.subst.services 0.05, medium.a.distr.'light-ind' 0.326, medium.a.distr.'food+agr' 0.443, medium.a.distr.'heavy-ind' 0.991, medium.a.distr.services 0.00798, medium.a.effic.'light-ind' 3.97, medium.a.effic.'food+agr' 3.33, medium.a.effic.'heavy-ind' 1.67, medium.a.effic.services 1.84, medium.b.subst.'light-ind' 0.22, medium.b.subst.'food+agr' 0.58, medium.b.subst.'heavy-ind' 0.4, medium.b.subst.services 0.1, medium.b.distr.'light-ind' 0.41, medium.b.distr.'food+agr' 0.47, medium.b.distr.'heavy-ind' 0.92, medium.b.distr.services 0.08, medium.b.effic.'light-ind' 3.99, medium.b.effic.'food+agr' 3.33, medium.b.effic.'heavy-ind' 1.8, medium.b.effic.services 1.89, high.a.subst.'light-ind' 0.45, high.a.subst.'food+agr' 1.15, high.a.subst.'heavy-ind' 0.4, high.a.subst.services 0.2, high.a.distr.'light-ind' 0.456, high.a.distr.'food+agr' 0.483, high.a.distr.'heavy-ind' 0.917, high.a.distr.services 0.23, high.a.effic.'light-ind' 4, high.a.effic.'food+agr' 3.33, high.a.effic.'heavy-ind' 1.8, high.a.effic.services 1.92, high.b.subst.'light-ind' 0.93, high.b.subst.'food+agr' 1.15, high.b.subst.'heavy-ind' 0.8, high.b.subst.services 0.4, high.b.distr.'light-ind' 0.484, high.b.distr.'food+agr' 0.483, high.b.distr.'heavy-ind' 0.769, high.b.distr.services 0.344, high.b.effic.'light-ind' 4, high.b.effic.'food+agr' 3.33, high.b.effic.'heavy-ind' 1.96, high.b.effic.services 1.96, low.b.subst.'light-ind' 0, low.b.subst.'food+agr' 0, low.b.subst.'heavy-ind' 0, low.b.subst.services 0, low.a.subst.'light-ind' 0, low.a.subst.'food+agr' 0, low.a.subst.'heavy-ind' 0, low.a.subst.services 0/
-    ddat(lmh,*,i) /medium.'p-elas'.'light-ind' -0.674, medium.'p-elas'.'food+agr' -0.246, medium.'p-elas'.'heavy-ind' -0.587, medium.'p-elas'.services -0.352, high.'p-elas'.'light-ind' -1, high.'p-elas'.'food+agr' -1, high.'p-elas'.'heavy-ind' -1, high.'p-elas'.services -1/
-    tdat(lmh,*,t) /medium.alp.'light-ind' 0.005, medium.alp.'food+agr' 0.001, medium.alp.'heavy-ind' 0.01, high.alp.'light-ind' 0.0025, high.alp.'food+agr' 0.0005, high.alp.'heavy-ind' 0.00178/
+    aio(i,i) /'food+agr'.'light-ind' 0.1, 'heavy-ind'.'light-ind' 0.2, 'heavy-ind'.'food+agr' 0.1, services.'light-ind' 0.2, services.'food+agr' 0.3, services.'heavy-ind' 0.1/
+    pdat(lmh,*,sde,i) /low.a.distr.'light-ind' 0.915, low.a.distr.'food+agr' 0.944, low.a.distr.'heavy-ind' 2.6, low.a.distr.services 0.8, low.a.effic.'light-ind' 3.83, low.a.effic.'food+agr' 3.24, low.a.effic.'heavy-ind' 4, low.a.effic.services 1.8, low.b.distr.'light-ind' 0.276, low.b.distr.'food+agr' 1.034, low.b.distr.'heavy-ind' 2.6, low.b.distr.services 0.77, low.b.effic.'light-ind' 2.551, low.b.effic.'food+agr' 3.39, low.b.effic.'heavy-ind' 4, low.b.effic.services 1.77, medium.a.subst.'light-ind' 0.11, medium.a.subst.'food+agr' 0.29, medium.a.subst.'heavy-ind' 0.2, medium.a.subst.services 0.05, medium.a.distr.'light-ind' 0.326, medium.a.distr.'food+agr' 0.443, medium.a.distr.'heavy-ind' 0.991, medium.a.distr.services 0.00798, medium.a.effic.'light-ind' 3.97, medium.a.effic.'food+agr' 3.33, medium.a.effic.'heavy-ind' 1.67, medium.a.effic.services 1.84, medium.b.subst.'light-ind' 0.22, medium.b.subst.'food+agr' 0.58, medium.b.subst.'heavy-ind' 0.4, medium.b.subst.services 0.1, medium.b.distr.'light-ind' 0.41, medium.b.distr.'food+agr' 0.47, medium.b.distr.'heavy-ind' 0.92, medium.b.distr.services 0.08, medium.b.effic.'light-ind' 3.99, medium.b.effic.'food+agr' 3.33, medium.b.effic.'heavy-ind' 1.8, medium.b.effic.services 1.89, high.a.subst.'light-ind' 0.45, high.a.subst.'food+agr' 1.15, high.a.subst.'heavy-ind' 0.4, high.a.subst.services 0.2, high.a.distr.'light-ind' 0.456, high.a.distr.'food+agr' 0.483, high.a.distr.'heavy-ind' 0.917, high.a.distr.services 0.23, high.a.effic.'light-ind' 4, high.a.effic.'food+agr' 3.33, high.a.effic.'heavy-ind' 1.8, high.a.effic.services 1.92, high.b.subst.'light-ind' 0.93, high.b.subst.'food+agr' 1.15, high.b.subst.'heavy-ind' 0.8, high.b.subst.services 0.4, high.b.distr.'light-ind' 0.484, high.b.distr.'food+agr' 0.483, high.b.distr.'heavy-ind' 0.769, high.b.distr.services 0.344, high.b.effic.'light-ind' 4, high.b.effic.'food+agr' 3.33, high.b.effic.'heavy-ind' 1.96, high.b.effic.services 1.96/
+    ddat(lmh,*,i) /low.ynot.'light-ind' 100, low.ynot.'food+agr' 230, low.ynot.'heavy-ind' 220, low.ynot.services 450, medium.ynot.'light-ind' 100, medium.ynot.'food+agr' 230, medium.ynot.'heavy-ind' 220, medium.ynot.services 450, high.ynot.'light-ind' 100, high.ynot.'food+agr' 230, high.ynot.'heavy-ind' 220, high.ynot.services 450, medium.'p-elas'.'light-ind' -0.674, medium.'p-elas'.'food+agr' -0.246, medium.'p-elas'.'heavy-ind' -0.587, medium.'p-elas'.services -0.352, high.'p-elas'.'light-ind' -1, high.'p-elas'.'food+agr' -1, high.'p-elas'.'heavy-ind' -1, high.'p-elas'.services -1/
+    tdat(lmh,*,t) /medium.alp.'light-ind' 0.005, medium.alp.'food+agr' 0.001, medium.alp.'heavy-ind' 0.01, high.alp.'light-ind' 0.0025, high.alp.'food+agr' 0.0005, high.alp.'heavy-ind' 0.00178, medium.gam.'light-ind' 1, medium.gam.'food+agr' 1.1, medium.gam.'heavy-ind' 1, high.gam.'light-ind' 1, high.gam.'food+agr' 1.1, high.gam.'heavy-ind' 1, medium.xsi.'light-ind' 0.005, medium.xsi.'food+agr' 0.0157, medium.xsi.'heavy-ind' 0.00178, high.xsi.'light-ind' 0.005, high.xsi.'food+agr' 0.0157, high.xsi.'heavy-ind' 0.00178/
     mew(t) /'light-ind' 1, 'food+agr' 1, 'heavy-ind' 1/
     xsi(t)
     gam(t)
@@ -106,7 +106,16 @@ Positive Variables
     lam_mb(i)
     lam_tb
     lam_lc
+    piL_x(i)
+    piL_v(i)
+    piL_y(i)
     piL_p(i)
+    piL_l(i)
+    piL_k(i)
+    piL_e(i)
+    piL_m(i)
+    piL_g(t)
+    piL_h(t)
     piL_pk
     piL_pi
     piL_pd
@@ -168,25 +177,18 @@ h.l(t) = min(max(h.l(t), 1e-6), h.up(t));
 g.l(t) = mew(t) + xsi(t) * m.l(t);
 g.l(t) = min(max(g.l(t), 1e-6), g.up(t));
 pi.l = pk.l / plab;
+pi.l = max(pi.l, 0.25);
 vv.l(i) = (pi.l * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i)));
+vv.l("light-ind") = max(vv.l("light-ind"), 0.001);
+vv.l("food+agr") = max(vv.l("food+agr"), 0.001);
+vv.l("heavy-ind") = max(vv.l("heavy-ind"), 0.001);
+vv.l("services") = max(vv.l("services"), 0.001);
 l.l(i) = (((del(i) / vv.l(i) + 1 - del(i)) ** (1 / rho(i)))$(sig(i) <> 0) + 1$(sig(i) = 0)) / efy(i);
 l.l(i) = min(max(l.l(i), 1e-6), l.up(i));
 k.l(i) = (((del(i) + (1 - del(i)) * vv.l(i)) ** (1 / rho(i)))$(sig(i) <> 0) + del(i)$(sig(i) = 0)) / efy(i);
 k.l(i) = min(max(k.l(i), 1e-6), k.up(i));
 v.l(i) = pk.l * k.l(i) + plab * l.l(i);
 v.l(i) = min(max(v.l(i), 1e-6), v.up(i));
-$offImplicitAssign
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-cva = sum(i, v.l(i) * x.l(i));
-fve = sum(t, e.l(t) * h.l(t));
-emp = sum(i, l.l(i) * x.l(i));
-cli = sum(i, p.l(i) * ynot(i)) / sum(i, ynot(i));
-rva = cva / cli;
 $offImplicitAssign
 
 * ============================================
@@ -215,11 +217,20 @@ Equations
     comp_lc
     comp_mb(i)
     comp_tb
+    comp_lo_e(i)
+    comp_lo_g(t)
+    comp_lo_h(t)
+    comp_lo_k(i)
+    comp_lo_l(i)
+    comp_lo_m(i)
     comp_lo_p(i)
     comp_lo_pd
     comp_lo_pi
     comp_lo_pk
+    comp_lo_v(i)
     comp_lo_vv(i)
+    comp_lo_x(i)
+    comp_lo_y(i)
     comp_up_e(i)
     comp_up_g(t)
     comp_up_h(t)
@@ -250,20 +261,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(i)$(t(i)).. sum(t, alp(t) * nu_dh(t)) + sum(t, ((-1) * h(t)) * lam_tb)$sameas(i, 'food+agr') + piU_e(i) =E= 0;
-stat_g(t).. nu_dg(t) + m(t) * lam_tb + piU_g(t) =E= 0;
-stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb + piU_h(t) =E= 0;
-stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) + piU_k(i) =E= 0;
-stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc + piU_l(i) =E= 0;
-stat_m(i)$(t(i)).. sum(t, ((-1) * xsi(t)) * nu_dg(t)) + sum(t, g(t) * lam_tb)$sameas(i, 'food+agr') + piU_m(i) =E= 0;
+stat_e(i)$(t(i)).. sum(t, alp(t) * nu_dh(t)) + sum(t, ((-1) * h(t)) * lam_tb)$sameas(i, 'food+agr') - piL_e(i) + piU_e(i) =E= 0;
+stat_g(t).. nu_dg(t) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
+stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
+stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
+stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
+stat_m(i)$(t(i)).. sum(t, ((-1) * xsi(t)) * nu_dg(t)) + sum(t, g(t) * lam_tb)$sameas(i, 'food+agr') - piL_m(i) + piU_m(i) =E= 0;
 stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
-stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / del(i) ** 2)) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;
+stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / sqr(del(i)))) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;
 stat_pk.. ((-1) * (1 / plab ** 1)) * nu_fpr + sum(i, ((-1) * k(i)) * nu_dv(i)) - piL_pk + piU_pk =E= 0;
-stat_v(i).. ((-1) * nu_sup(i)) + nu_dv(i) + piU_v(i) =E= 0;
+stat_v(i).. ((-1) * nu_sup(i)) + nu_dv(i) - piL_v(i) + piU_v(i) =E= 0;
 stat_vv(i).. nu_dvv(i)$(sig(i) <> 0) - piL_vv(i) =E= 0;
-stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + l(i) * lam_lc + piU_x(i) =E= 0;
-stat_y(i).. -1 + nu_dem(i) + lam_mb(i) + piU_y(i) =E= 0;
+stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
+stat_y(i).. -1 + nu_dem(i) + lam_mb(i) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
 comp_lc.. ((-1) * (sum(i, l(i) * x(i)) - lbar)) =G= 0;
@@ -271,11 +282,20 @@ comp_mb(i).. x(i) - (y(i) + sum(j, aio(i,j) * x(j)) + (e(i) - m(i))$t(i)) =G= 0;
 comp_tb.. ((-1) * (sum(t, g(t) * m(t) - h(t) * e(t)) - dbar)) =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_e(i).. e(i) - 0 =G= 0;
+comp_lo_g(t).. g(t) - 0 =G= 0;
+comp_lo_h(t).. h(t) - 0 =G= 0;
+comp_lo_k(i).. k(i) - 0 =G= 0;
+comp_lo_l(i).. l(i) - 0 =G= 0;
+comp_lo_m(i).. m(i) - 0 =G= 0;
 comp_lo_p(i).. p(i) - 0.1 =G= 0;
 comp_lo_pd.. pd - 0.01 =G= 0;
 comp_lo_pi.. pi - 0.25 =G= 0;
 comp_lo_pk.. pk - 0.25 =G= 0;
+comp_lo_v(i).. v(i) - 0 =G= 0;
 comp_lo_vv(i).. vv(i) - 0.001 =G= 0;
+comp_lo_x(i).. x(i) - 0 =G= 0;
+comp_lo_y(i).. y(i) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_e(i).. 400 - e(i) =G= 0;
@@ -313,7 +333,11 @@ dv(i).. v(i) =E= pk * k(i) + plab * l(i);
 * fixed for excluded instances to satisfy MCP matching.
 
 e.fx(i)$(not (t(i))) = 0;
+piL_e.fx(i)$(not (t(i))) = 0;
+piU_e.fx(i)$(not (t(i))) = 0;
 m.fx(i)$(not (t(i))) = 0;
+piL_m.fx(i)$(not (t(i))) = 0;
+piU_m.fx(i)$(not (t(i))) = 0;
 nu_dvv.fx(i)$(not (sig(i) <> 0)) = 0;
 
 * ============================================
@@ -358,11 +382,20 @@ Model mcp_model /
     fpr.nu_fpr,
     kc.nu_kc,
     sup.nu_sup,
+    comp_lo_e.piL_e,
+    comp_lo_g.piL_g,
+    comp_lo_h.piL_h,
+    comp_lo_k.piL_k,
+    comp_lo_l.piL_l,
+    comp_lo_m.piL_m,
     comp_lo_p.piL_p,
     comp_lo_pd.piL_pd,
     comp_lo_pi.piL_pi,
     comp_lo_pk.piL_pk,
+    comp_lo_v.piL_v,
     comp_lo_vv.piL_vv,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
     comp_up_e.piU_e,
     comp_up_g.piU_g,
     comp_up_h.piU_h,

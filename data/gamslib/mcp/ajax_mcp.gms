@@ -51,6 +51,7 @@ Variables
 Positive Variables
     outp(g,m)
     lam_cap(m)
+    piL_outp(g,m)
 ;
 
 * ============================================
@@ -75,6 +76,7 @@ outp.l(g,m) = 1;
 Equations
     stat_outp(g,m)
     comp_cap(m)
+    comp_lo_outp(g,m)
     dem(g)
     pdef
 ;
@@ -84,10 +86,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_outp(g,m).. pcost(g,m) + nu_dem(g) + 1 / prate(g,m) ** 1 * lam_cap(m) =E= 0;
+stat_outp(g,m).. pcost(g,m) + nu_dem(g) + 1 / prate(g,m) ** 1 * lam_cap(m) - piL_outp(g,m) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(m).. ((-1) * (sum(g, outp(g,m) / prate(g,m)) - avail(m))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_outp(g,m).. outp(g,m) - 0 =G= 0;
 
 * Original equality equations
 dem(g).. sum(m, outp(g,m)) =E= dempr(g,"demand");
@@ -111,7 +116,8 @@ Model mcp_model /
     stat_outp.outp,
     comp_cap.lam_cap,
     dem.nu_dem,
-    pdef.profit
+    pdef.profit,
+    comp_lo_outp.piL_outp
 /;
 
 * ============================================

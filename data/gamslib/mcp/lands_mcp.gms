@@ -63,6 +63,9 @@ Positive Variables
     lam_dembal(j)
     lam_powbals(i,s)
     lam_dembals(j,s)
+    piL_x(i)
+    piL_y(i,j)
+    piL_ys(i,j,s)
 ;
 
 * ============================================
@@ -95,6 +98,9 @@ Equations
     comp_mincap
     comp_powbal(i)
     comp_powbals(i,s)
+    comp_lo_x(i)
+    comp_lo_y(i,j)
+    comp_lo_ys(i,j,s)
     defcost
     defcosts
 ;
@@ -104,9 +110,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i).. c(i) + ((-1) * c(i)) * nu_defcosts - lam_mincap - lam_powbal(i) + sum(s, (-1) * lam_powbals(i,s)) =E= 0;
-stat_y(i,j).. f(i,j) + lam_powbal(i) - lam_dembal(j) =E= 0;
-stat_ys(i,j,s).. ((-1) * (prob(s) * f(i,j))) * nu_defcosts + lam_powbals(i,s) - lam_dembals(j,s) =E= 0;
+stat_x(i).. c(i) + ((-1) * c(i)) * nu_defcosts - lam_mincap - lam_powbal(i) + sum(s, (-1) * lam_powbals(i,s)) - piL_x(i) =E= 0;
+stat_y(i,j).. f(i,j) + lam_powbal(i) - lam_dembal(j) - piL_y(i,j) =E= 0;
+stat_ys(i,j,s).. ((-1) * (prob(s) * f(i,j))) * nu_defcosts + lam_powbals(i,s) - lam_dembals(j,s) - piL_ys(i,j,s) =E= 0;
 
 * Inequality complementarity equations
 comp_dembal(j).. sum(i, y(i,j)) - d(j) =G= 0;
@@ -114,6 +120,11 @@ comp_dembals(j,s).. sum(i, ys(i,j,s)) - ds(j,s) =G= 0;
 comp_mincap.. sum(i, x(i)) - m =G= 0;
 comp_powbal(i).. ((-1) * (sum(j, y(i,j)) - x(i))) =G= 0;
 comp_powbals(i,s).. ((-1) * (sum(j, ys(i,j,s)) - x(i))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_x(i).. x(i) - 0 =G= 0;
+comp_lo_y(i,j).. y(i,j) - 0 =G= 0;
+comp_lo_ys(i,j,s).. ys(i,j,s) - 0 =G= 0;
 
 * Original equality equations
 defcost.. cost =E= sum(i, c(i) * x(i)) + sum((i,j), f(i,j) * y(i,j));
@@ -143,7 +154,10 @@ Model mcp_model /
     comp_powbal.lam_powbal,
     comp_powbals.lam_powbals,
     defcost.cost,
-    defcosts.nu_defcosts
+    defcosts.nu_defcosts,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
+    comp_lo_ys.piL_ys
 /;
 
 * ============================================

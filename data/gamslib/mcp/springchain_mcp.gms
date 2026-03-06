@@ -69,6 +69,9 @@ Positive Variables
     v
     lam_link_up(n)
     lam_cone_eq
+    piL_t_l0(n)
+    piL_t(n)
+    piL_v
 ;
 
 * ============================================
@@ -105,6 +108,9 @@ Equations
     stat_y(n)
     comp_cone_eq
     comp_link_up(n)
+    comp_lo_t(n)
+    comp_lo_t_l0(n)
+    comp_lo_v
     delta_x_eq(n)
     delta_y_eq(n)
     link_L0(n)
@@ -123,16 +129,21 @@ Equations
 * Stationarity equations
 stat_delta_x(n).. nu_delta_x_eq(n) + (2 * delta_x(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
 stat_delta_y(n).. nu_delta_y_eq(n) + (2 * delta_y(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
-stat_t(n).. ((-1) * nu_link_L0(n)) + 2 * t(n) * (ord(n) > 1) * lam_cone_eq =E= 0;
-stat_t_l0(n).. nu_link_L0(n) + (((-1) * (2 * t_l0(n))) * lam_link_up(n))$(ord(n) > 1) =E= 0;
+stat_t(n).. ((-1) * nu_link_L0(n)) + 2 * t(n) * (ord(n) > 1) * lam_cone_eq - piL_t(n) =E= 0;
+stat_t_l0(n).. nu_link_L0(n) + (((-1) * (2 * t_l0(n))) * lam_link_up(n))$(ord(n) > 1) - piL_t_l0(n) =E= 0;
 stat_unit.. nu_unit_fx + ((-1) * (2 * v)) * lam_cone_eq =E= 0;
-stat_v.. k + ((-1) * (unit * 2)) * lam_cone_eq =E= 0;
+stat_v.. k + ((-1) * (unit * 2)) * lam_cone_eq - piL_v =E= 0;
 stat_x(n).. ((-1) * nu_delta_x_eq(n)) + nu_x_fx_n0$sameas(n, 'n0') + nu_x_fx_n10$sameas(n, 'n10') =E= 0;
 stat_y(n).. m(n) * g * (ord(n) > 1 and ord(n) < card(n)) - nu_delta_y_eq(n) + nu_y_fx_n0$sameas(n, 'n0') + nu_y_fx_n10$sameas(n, 'n10') =E= 0;
 
 * Inequality complementarity equations
 comp_cone_eq.. 2 * v * unit - sum(n$(ord(n) > 1), sqr(t(n))) =G= 0;
 comp_link_up(n)$(ord(n) > 1).. sqr(t_l0(n)) - (sqr(delta_x(n)) + sqr(delta_y(n))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_t(n).. t(n) - 0 =G= 0;
+comp_lo_t_l0(n).. t_l0(n) - 0 =G= 0;
+comp_lo_v.. v - 0 =G= 0;
 
 * Original equality equations
 pot_energy.. obj =E= sum(n$(ord(n) > 1 and ord(n) < card(n)), m(n) * g * y(n)) + k * v;
@@ -189,7 +200,10 @@ Model mcp_model /
     x_fx_n0.nu_x_fx_n0,
     x_fx_n10.nu_x_fx_n10,
     y_fx_n0.nu_y_fx_n0,
-    y_fx_n10.nu_y_fx_n10
+    y_fx_n10.nu_y_fx_n10,
+    comp_lo_t.piL_t,
+    comp_lo_t_l0.piL_t_l0,
+    comp_lo_v.piL_v
 /;
 
 * ============================================

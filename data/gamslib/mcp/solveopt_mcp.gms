@@ -102,6 +102,7 @@ e2(j).. x2(j) =E= 20;
 * fixed for excluded instances to satisfy MCP matching.
 
 x2.fx(i)$(not (j(i))) = 0;
+piU_x2.fx(i)$(not (j(i))) = 0;
 
 * ============================================
 * Model MCP Declaration

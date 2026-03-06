@@ -35,26 +35,26 @@ Sets
 ;
 
 Parameters
-    mcp(s,c) /'bar-r-r'.barley 0.704, 'bar-r-r'.wheat 0.193, 'bar-r-r'.'e-rice' 0.807, 'bar-r-r'.'l-rice' 1, 'gm-r-r'.wheat 0.193, 'gm-r-r'.'e-rice' 0.807, 'gm-r-r'.'l-rice' 1, 'gm-r-r'.'l-sc-rice' 0.704, 'bar-sr'.barley 0.859, 'bar-sr'.'l-sc-rice' 1, 'bar-sr'.'g-manure' 0.141, 'bar-sr'.rapeseed 1, 'bar-sr'.azolla 0.859, 'wh-sr'.wheat 0.859, 'wh-sr'.'l-sc-rice' 1, 'wh-sr'.'g-manure' 0.141, 'wh-sr'.rapeseed 1, 'gm-sr'.'l-sc-rice' 1, 'gm-sr'.'g-manure' 1, 'gm-sr'.rapeseed 1, 'gm-sr'.azolla 0.859, 'rape-sr'.'l-sc-rice' 1, 'rape-sr'.'g-manure' 0.141, 'rape-sr'.'gm-seeds' 0.859, 'rape-sr'.rapeseed 1, 'fallow-sr'.'l-sc-rice' 1, 'fallow-sr'.'g-manure' 0.141, 'fallow-sr'.'azolla-e' 0.859, 'gm-s-sr'.'l-sc-rice' 1, 'gm-s-sr'.'g-manure' 0.1, 'gm-s-sr'.'gm-seeds' 0.9, 'bar-r'.barley 0.9, 'bar-r'.'m-rice' 1, 'bar-r'.'l-sc-rice' 0.1, 'bar-r'.rapeseed 1, 'wh-r'.wheat 0.9, 'wh-r'.'m-rice' 1, 'wh-r'.'l-sc-rice' 0.1, 'gm-r'.'m-rice' 1, 'gm-r'.'l-sc-rice' 1, 'gm-r'.rapeseed 1, 'wh-r'.barley 0, 'wh-r'.'e-rice' 0, 'wh-r'.'l-rice' 0, 'wh-r'.'g-manure' 0, 'wh-r'.'gm-seeds' 0, 'wh-r'.rapeseed 0, 'wh-r'.azolla 0, 'wh-r'.'azolla-e' 0, 'wh-r'.fodder 0, 'bar-r'.wheat 0, 'bar-r'.'e-rice' 0, 'bar-r'.'l-rice' 0, 'bar-r'.'g-manure' 0, 'bar-r'.'gm-seeds' 0, 'bar-r'.azolla 0, 'bar-r'.'azolla-e' 0, 'bar-r'.fodder 0, 'bar-r-r'.'m-rice' 0, 'bar-r-r'.'l-sc-rice' 0, 'bar-r-r'.'g-manure' 0, 'bar-r-r'.'gm-seeds' 0, 'bar-r-r'.rapeseed 0, 'bar-r-r'.azolla 0, 'bar-r-r'.'azolla-e' 0, 'bar-r-r'.fodder 0, 'gm-s-sr'.barley 0, 'gm-s-sr'.wheat 0, 'gm-s-sr'.'e-rice' 0, 'gm-s-sr'.'m-rice' 0, 'gm-s-sr'.'l-rice' 0, 'gm-s-sr'.rapeseed 0, 'gm-s-sr'.azolla 0, 'gm-s-sr'.'azolla-e' 0, 'gm-s-sr'.fodder 0, 'wh-sr'.barley 0, 'wh-sr'.'e-rice' 0, 'wh-sr'.'m-rice' 0, 'wh-sr'.'l-rice' 0, 'wh-sr'.'gm-seeds' 0, 'wh-sr'.azolla 0, 'wh-sr'.'azolla-e' 0, 'wh-sr'.fodder 0, 'gm-r-r'.barley 0, 'gm-r-r'.'m-rice' 0, 'gm-r-r'.'g-manure' 0, 'gm-r-r'.'gm-seeds' 0, 'gm-r-r'.rapeseed 0, 'gm-r-r'.azolla 0, 'gm-r-r'.'azolla-e' 0, 'gm-r-r'.fodder 0, 'gm-sr'.barley 0, 'gm-sr'.wheat 0, 'gm-sr'.'e-rice' 0, 'gm-sr'.'m-rice' 0, 'gm-sr'.'l-rice' 0, 'gm-sr'.'gm-seeds' 0, 'gm-sr'.'azolla-e' 0, 'gm-sr'.fodder 0, 'gm-r'.barley 0, 'gm-r'.wheat 0, 'gm-r'.'e-rice' 0, 'gm-r'.'l-rice' 0, 'gm-r'.'g-manure' 0, 'gm-r'.'gm-seeds' 0, 'gm-r'.azolla 0, 'gm-r'.'azolla-e' 0, 'gm-r'.fodder 0, 'fallow-sr'.barley 0, 'fallow-sr'.wheat 0, 'fallow-sr'.'e-rice' 0, 'fallow-sr'.'m-rice' 0, 'fallow-sr'.'l-rice' 0, 'fallow-sr'.'gm-seeds' 0, 'fallow-sr'.rapeseed 0, 'fallow-sr'.azolla 0, 'fallow-sr'.fodder 0, 'rape-sr'.barley 0, 'rape-sr'.wheat 0, 'rape-sr'.'e-rice' 0, 'rape-sr'.'m-rice' 0, 'rape-sr'.'l-rice' 0, 'rape-sr'.azolla 0, 'rape-sr'.'azolla-e' 0, 'rape-sr'.fodder 0, 'bar-sr'.wheat 0, 'bar-sr'.'e-rice' 0, 'bar-sr'.'m-rice' 0, 'bar-sr'.'l-rice' 0, 'bar-sr'.'gm-seeds' 0, 'bar-sr'.'azolla-e' 0, 'bar-sr'.fodder 0/
-    cdata(ca,*) /barley.yield 427.6, barley.'cash-cost' 11, barley.'straw-y' 1, barley.'proc-price' 226, wheat.yield 530.3, wheat.'cash-cost' 11, wheat.'straw-y' 1.1, wheat.'proc-price' 316, 'e-rice'.yield 690.3, 'e-rice'.'cash-cost' 14.9, 'e-rice'.'straw-y' 0.8, 'e-rice'.'proc-price' 232, 'm-rice'.yield 962.7, 'm-rice'.'cash-cost' 23.6, 'm-rice'.'straw-y' 1, 'm-rice'.'proc-price' 238, 'l-rice'.yield 558.2, 'l-rice'.'cash-cost' 18.9, 'l-rice'.'straw-y' 0.8, 'l-rice'.'proc-price' 272, 'l-sc-rice'.yield 857.7, 'l-sc-rice'.'cash-cost' 25.2, 'l-sc-rice'.'straw-y' 1, 'l-sc-rice'.'proc-price' 233, 'g-manure'.yield 4968.1, 'g-manure'.'cash-cost' 2.3, rapeseed.yield 221.1, rapeseed.'cash-cost' 9.8, rapeseed.'straw-y' 1.5, rapeseed.'proc-price' 720, rapeseed.'quota-sale' 4, azolla.yield 1149, 'azolla-e'.yield 1149, fodder.yield 1200, straw.'proc-price' 44, straw.'quota-sale' 1.2, pigs.'proc-price' 1200, pigs.'quota-sale' 4, shoats.'proc-price' 1800, vegetable.'proc-price' 375, pigs.yield 0, pigs.'cash-cost' 0, pigs.'straw-y' 0, shoats.yield 0, shoats.'cash-cost' 0, shoats.'straw-y' 0, shoats.'quota-sale' 0, 'm-rice'.'quota-sale' 0, 'e-rice'.'quota-sale' 0, barley.'quota-sale' 0, 'azolla-e'.'cash-cost' 0, 'azolla-e'.'straw-y' 0, 'azolla-e'.'proc-price' 0, 'azolla-e'.'quota-sale' 0, vegetable.yield 0, vegetable.'cash-cost' 0, vegetable.'straw-y' 0, vegetable.'quota-sale' 0, fodder.'cash-cost' 0, fodder.'straw-y' 0, fodder.'proc-price' 0, fodder.'quota-sale' 0, wheat.'quota-sale' 0, 'l-rice'.'quota-sale' 0, 'l-sc-rice'.'quota-sale' 0, straw.yield 0, straw.'cash-cost' 0, straw.'straw-y' 0, 'g-manure'.'straw-y' 0, 'g-manure'.'proc-price' 0, 'g-manure'.'quota-sale' 0, azolla.'cash-cost' 0, azolla.'straw-y' 0, azolla.'proc-price' 0, azolla.'quota-sale' 0/
+    mcp(s,c) /'bar-r-r'.barley 0.704, 'bar-r-r'.wheat 0.193, 'bar-r-r'.'e-rice' 0.807, 'bar-r-r'.'l-rice' 1, 'gm-r-r'.wheat 0.193, 'gm-r-r'.'e-rice' 0.807, 'gm-r-r'.'l-rice' 1, 'gm-r-r'.'l-sc-rice' 0.704, 'bar-sr'.barley 0.859, 'bar-sr'.'l-sc-rice' 1, 'bar-sr'.'g-manure' 0.141, 'bar-sr'.rapeseed 1, 'bar-sr'.azolla 0.859, 'wh-sr'.wheat 0.859, 'wh-sr'.'l-sc-rice' 1, 'wh-sr'.'g-manure' 0.141, 'wh-sr'.rapeseed 1, 'gm-sr'.'l-sc-rice' 1, 'gm-sr'.'g-manure' 1, 'gm-sr'.rapeseed 1, 'gm-sr'.azolla 0.859, 'rape-sr'.'l-sc-rice' 1, 'rape-sr'.'g-manure' 0.141, 'rape-sr'.'gm-seeds' 0.859, 'rape-sr'.rapeseed 1, 'fallow-sr'.'l-sc-rice' 1, 'fallow-sr'.'g-manure' 0.141, 'fallow-sr'.'azolla-e' 0.859, 'gm-s-sr'.'l-sc-rice' 1, 'gm-s-sr'.'g-manure' 0.1, 'gm-s-sr'.'gm-seeds' 0.9, 'bar-r'.barley 0.9, 'bar-r'.'m-rice' 1, 'bar-r'.'l-sc-rice' 0.1, 'bar-r'.rapeseed 1, 'wh-r'.wheat 0.9, 'wh-r'.'m-rice' 1, 'wh-r'.'l-sc-rice' 0.1, 'gm-r'.'m-rice' 1, 'gm-r'.'l-sc-rice' 1, 'gm-r'.rapeseed 1/
+    cdata(ca,*) /barley.yield 427.6, barley.'cash-cost' 11, barley.'straw-y' 1, barley.'proc-price' 226, wheat.yield 530.3, wheat.'cash-cost' 11, wheat.'straw-y' 1.1, wheat.'proc-price' 316, 'e-rice'.yield 690.3, 'e-rice'.'cash-cost' 14.9, 'e-rice'.'straw-y' 0.8, 'e-rice'.'proc-price' 232, 'm-rice'.yield 962.7, 'm-rice'.'cash-cost' 23.6, 'm-rice'.'straw-y' 1, 'm-rice'.'proc-price' 238, 'l-rice'.yield 558.2, 'l-rice'.'cash-cost' 18.9, 'l-rice'.'straw-y' 0.8, 'l-rice'.'proc-price' 272, 'l-sc-rice'.yield 857.7, 'l-sc-rice'.'cash-cost' 25.2, 'l-sc-rice'.'straw-y' 1, 'l-sc-rice'.'proc-price' 233, 'g-manure'.yield 4968.1, 'g-manure'.'cash-cost' 2.3, rapeseed.yield 221.1, rapeseed.'cash-cost' 9.8, rapeseed.'straw-y' 1.5, rapeseed.'proc-price' 720, rapeseed.'quota-sale' 4, azolla.yield 1149, 'azolla-e'.yield 1149, fodder.yield 1200, straw.'proc-price' 44, straw.'quota-sale' 1.2, pigs.'proc-price' 1200, pigs.'quota-sale' 4, shoats.'proc-price' 1800, vegetable.'proc-price' 375/
     yield(ca)
     yieldu(ca) /fodder 0.3, vegetable 0.24/
     cxcrop(s)
     aqsprice(ca)
-    purdata(ca,*) /'amm-water'.price 30, 'amm-bi'.price 123, nightsoil.price 20, nightsoil.quantity 7, ssp.price 100, ssp.quantity 500, 'pig-m'.price 12, 'pig-m'.quantity 10000, hyacinth.quantity 15, 'amm-water'.quantity 0, 'amm-bi'.quantity 0, hyacinth.price 0/
-    pigio(ca,p) /shoats.'r-shoats' 1, shoats.'r-pigs' -0.12, pigs.'r-pigs' 1, 'straw-b'.'r-shoats' 8, 'straw-b'.'r-pigs' 8, 'g-feed'.'r-shoats' -3.3, 'g-feed'.'r-pigs' -2.6, straw.'r-shoats' -8.8, straw.'r-pigs' -8.8, fodder.'r-shoats' -0.55, fodder.'r-pigs' -0.5, pigs.'r-shoats' 0/
+    purdata(ca,*) /'amm-water'.price 30, 'amm-bi'.price 123, nightsoil.price 20, nightsoil.quantity 7, ssp.price 100, ssp.quantity 500, 'pig-m'.price 12, 'pig-m'.quantity 10000, hyacinth.quantity 15/
+    pigio(ca,p) /shoats.'r-shoats' 1, shoats.'r-pigs' -0.12, pigs.'r-pigs' 1, 'straw-b'.'r-shoats' 8, 'straw-b'.'r-pigs' 8, 'g-feed'.'r-shoats' -3.3, 'g-feed'.'r-pigs' -2.6, straw.'r-shoats' -8.8, straw.'r-pigs' -8.8, fodder.'r-shoats' -0.55, fodder.'r-pigs' -0.5/
     cxpig(p) /'r-shoats' 90, 'r-pigs' 60/
     gio(ca,g) /'g-feed'.barley 1, 'g-feed'.wheat 1, 'g-feed'.'e-rice' 1, 'g-feed'.'m-rice' 1, 'g-feed'.'l-rice' 1, 'g-feed'.'l-sc-rice' 1/
-    lu(t,c) /'nov-1'.barley 8.15, 'nov-1'.wheat 8.15, 'nov-1'.'l-rice' 3.17, 'nov-1'.'l-sc-rice' 3, 'nov-1'.'gm-seeds' 14.9, 'nov-mar'.barley 7.45, 'nov-mar'.wheat 7.45, 'nov-mar'.'e-rice' 7.75, 'nov-mar'.'m-rice' 5.57, 'nov-mar'.'l-rice' 6.33, 'nov-mar'.'l-sc-rice' 13.07, 'nov-mar'.'g-manure' 1, 'nov-mar'.'gm-seeds' 1, 'nov-mar'.rapeseed 15.15, 'mar-2'.barley 1.1, 'mar-2'.wheat 1.1, 'mar-2'.'e-rice' 2.03, 'mar-2'.'m-rice' 0.74, 'mar-2'.'l-sc-rice' 0.74, 'mar-2'.'gm-seeds' 1.85, 'apr-1'.barley 0.4, 'apr-1'.wheat 0.4, 'apr-1'.'e-rice' 3.25, 'apr-1'.'m-rice' 0.7, 'apr-1'.'l-sc-rice' 0.7, 'apr-2'.barley 0.9, 'apr-2'.wheat 0.9, 'apr-2'.'e-rice' 3.36, 'apr-2'.'m-rice' 0.7, 'apr-2'.'l-sc-rice' 0.7, 'apr-2'.'gm-seeds' 1, 'may-1'.barley 0.2, 'may-1'.wheat 0.2, 'may-1'.'e-rice' 8.2, 'may-1'.'m-rice' 2.92, 'may-1'.'l-sc-rice' 4.42, 'may-1'.'g-manure' 3, 'may-1'.'gm-seeds' 0.9, 'may-jun'.barley 10.8, 'may-jun'.wheat 8.8, 'may-jun'.'e-rice' 13.58, 'may-jun'.'m-rice' 12.12, 'may-jun'.'l-rice' 1.5, 'may-jun'.'l-sc-rice' 5.27, 'may-jun'.'g-manure' 6.7, 'may-jun'.'gm-seeds' 8.4, 'jun-2'.wheat 2, 'jun-2'.'e-rice' 2.35, 'jun-2'.'m-rice' 4.4, 'jun-2'.'l-rice' 3, 'jun-2'.'l-sc-rice' 8.99, 'jul-1'.'e-rice' 2.48, 'jul-1'.'m-rice' 5.41, 'jul-1'.'l-rice' 3, 'jul-1'.'l-sc-rice' 5, 'jul-2'.'e-rice' 0.7, 'jul-2'.'m-rice' 5.59, 'jul-2'.'l-rice' 3, 'jul-2'.'l-sc-rice' 4.5, 'aug-1'.'e-rice' 8.42, 'aug-1'.'m-rice' 1, 'aug-1'.'l-rice' 9.35, 'aug-1'.'l-sc-rice' 1.42, 'aug-2'.'e-rice' 1.88, 'aug-2'.'m-rice' 3.65, 'aug-2'.'l-rice' 4.92, 'aug-2'.'l-sc-rice' 4.54, sep.barley 1.3, sep.wheat 1.3, sep.'m-rice' 3.2, sep.'l-rice' 5.09, sep.'l-sc-rice' 4.15, sep.'gm-seeds' 1, 'oct-1'.barley 1.3, 'oct-1'.wheat 1.3, 'oct-1'.'m-rice' 6.13, 'oct-1'.'l-rice' 1.52, 'oct-1'.'l-sc-rice' 1.25, 'oct-1'.'g-manure' 1.25, 'oct-1'.'gm-seeds' 0.5, 'oct-2'.barley 1.25, 'oct-2'.wheat 1.25, 'oct-2'.'m-rice' 4.37, 'oct-2'.'l-rice' 0.12, 'oct-2'.'l-sc-rice' 1, 'oct-2'.'g-manure' 1, 'oct-2'.'gm-seeds' 0.3, 'may-1'.'l-rice' 0, 'may-1'.rapeseed 0, 'apr-2'.'l-rice' 0, 'apr-2'.'g-manure' 0, 'apr-2'.rapeseed 0, sep.'e-rice' 0, sep.'g-manure' 0, sep.rapeseed 0, 'jul-1'.barley 0, 'jul-1'.wheat 0, 'jul-1'.'g-manure' 0, 'jul-1'.'gm-seeds' 0, 'jul-1'.rapeseed 0, 'oct-1'.'e-rice' 0, 'oct-1'.rapeseed 0, 'aug-1'.barley 0, 'aug-1'.wheat 0, 'aug-1'.'g-manure' 0, 'aug-1'.'gm-seeds' 0, 'aug-1'.rapeseed 0, 'jun-2'.barley 0, 'jun-2'.'g-manure' 0, 'jun-2'.'gm-seeds' 0, 'jun-2'.rapeseed 0, 'mar-2'.'l-rice' 0, 'mar-2'.'g-manure' 0, 'mar-2'.rapeseed 0, 'may-jun'.rapeseed 0, 'nov-1'.'e-rice' 0, 'nov-1'.'m-rice' 0, 'nov-1'.'g-manure' 0, 'nov-1'.rapeseed 0, 'apr-1'.'l-rice' 0, 'apr-1'.'g-manure' 0, 'apr-1'.'gm-seeds' 0, 'apr-1'.rapeseed 0, 'oct-2'.'e-rice' 0, 'oct-2'.rapeseed 0, 'jul-2'.barley 0, 'jul-2'.wheat 0, 'jul-2'.'g-manure' 0, 'jul-2'.'gm-seeds' 0, 'jul-2'.rapeseed 0, 'aug-2'.barley 0, 'aug-2'.wheat 0, 'aug-2'.'g-manure' 0, 'aug-2'.'gm-seeds' 0, 'aug-2'.rapeseed 0/
+    lu(t,c) /'nov-1'.barley 8.15, 'nov-1'.wheat 8.15, 'nov-1'.'l-rice' 3.17, 'nov-1'.'l-sc-rice' 3, 'nov-1'.'gm-seeds' 14.9, 'nov-mar'.barley 7.45, 'nov-mar'.wheat 7.45, 'nov-mar'.'e-rice' 7.75, 'nov-mar'.'m-rice' 5.57, 'nov-mar'.'l-rice' 6.33, 'nov-mar'.'l-sc-rice' 13.07, 'nov-mar'.'g-manure' 1, 'nov-mar'.'gm-seeds' 1, 'nov-mar'.rapeseed 15.15, 'mar-2'.barley 1.1, 'mar-2'.wheat 1.1, 'mar-2'.'e-rice' 2.03, 'mar-2'.'m-rice' 0.74, 'mar-2'.'l-sc-rice' 0.74, 'mar-2'.'gm-seeds' 1.85, 'apr-1'.barley 0.4, 'apr-1'.wheat 0.4, 'apr-1'.'e-rice' 3.25, 'apr-1'.'m-rice' 0.7, 'apr-1'.'l-sc-rice' 0.7, 'apr-2'.barley 0.9, 'apr-2'.wheat 0.9, 'apr-2'.'e-rice' 3.36, 'apr-2'.'m-rice' 0.7, 'apr-2'.'l-sc-rice' 0.7, 'apr-2'.'gm-seeds' 1, 'may-1'.barley 0.2, 'may-1'.wheat 0.2, 'may-1'.'e-rice' 8.2, 'may-1'.'m-rice' 2.92, 'may-1'.'l-sc-rice' 4.42, 'may-1'.'g-manure' 3, 'may-1'.'gm-seeds' 0.9, 'may-jun'.barley 10.8, 'may-jun'.wheat 8.8, 'may-jun'.'e-rice' 13.58, 'may-jun'.'m-rice' 12.12, 'may-jun'.'l-rice' 1.5, 'may-jun'.'l-sc-rice' 5.27, 'may-jun'.'g-manure' 6.7, 'may-jun'.'gm-seeds' 8.4, 'jun-2'.wheat 2, 'jun-2'.'e-rice' 2.35, 'jun-2'.'m-rice' 4.4, 'jun-2'.'l-rice' 3, 'jun-2'.'l-sc-rice' 8.99, 'jul-1'.'e-rice' 2.48, 'jul-1'.'m-rice' 5.41, 'jul-1'.'l-rice' 3, 'jul-1'.'l-sc-rice' 5, 'jul-2'.'e-rice' 0.7, 'jul-2'.'m-rice' 5.59, 'jul-2'.'l-rice' 3, 'jul-2'.'l-sc-rice' 4.5, 'aug-1'.'e-rice' 8.42, 'aug-1'.'m-rice' 1, 'aug-1'.'l-rice' 9.35, 'aug-1'.'l-sc-rice' 1.42, 'aug-2'.'e-rice' 1.88, 'aug-2'.'m-rice' 3.65, 'aug-2'.'l-rice' 4.92, 'aug-2'.'l-sc-rice' 4.54, sep.barley 1.3, sep.wheat 1.3, sep.'m-rice' 3.2, sep.'l-rice' 5.09, sep.'l-sc-rice' 4.15, sep.'gm-seeds' 1, 'oct-1'.barley 1.3, 'oct-1'.wheat 1.3, 'oct-1'.'m-rice' 6.13, 'oct-1'.'l-rice' 1.52, 'oct-1'.'l-sc-rice' 1.25, 'oct-1'.'g-manure' 1.25, 'oct-1'.'gm-seeds' 0.5, 'oct-2'.barley 1.25, 'oct-2'.wheat 1.25, 'oct-2'.'m-rice' 4.37, 'oct-2'.'l-rice' 0.12, 'oct-2'.'l-sc-rice' 1, 'oct-2'.'g-manure' 1, 'oct-2'.'gm-seeds' 0.3/
     lab(t,s)
     dlab(t,c)
     labj(t) /'aug-1' 0.12/
     days(t) /'nov-1' 22, 'nov-mar' 120, 'mar-2' 16, 'apr-1' 15, 'apr-2' 15, 'may-1' 14, 'may-jun' 32, 'jun-2' 15, 'jul-1' 15, 'jul-2' 12, 'aug-1' 14, 'aug-2' 21, sep 30, 'oct-1' 14, 'oct-2' 10/
-    nc(cf,nh) /'c-straw'.p2o5 0.11, 'c-straw'.k2o 0.85, 'c-straw'.humus 21.4, 'c-gm'.p2o5 0.11, 'c-gm'.k2o 0.35, 'c-gm'.humus 2.34, 'c-hyacinth'.p2o5 0.07, 'c-hyacinth'.k2o 0.11, 'c-hyacinth'.humus 2.64, 'pig-m'.p2o5 0.32, 'pig-m'.k2o 0.75, 'straw-b'.p2o5 0.2, 'straw-b'.k2o 0.8, 'straw-b'.humus 15.9, azolla.p2o5 0.02, azolla.k2o 0.12, azolla.humus 2.58, nightsoil.p2o5 0.3, nightsoil.k2o 0.25, 'rapes-c'.p2o5 2.5, 'rapes-c'.k2o 1.4, 'rapes-c'.humus 0, ssp.p2o5 0, ssp.k2o 0, ssp.humus 0, 'amm-water'.p2o5 0, 'amm-water'.k2o 0, 'amm-water'.humus 0, 'amm-bi'.p2o5 0, 'amm-bi'.k2o 0, 'amm-bi'.humus 0, nightsoil.humus 0, 'pig-m'.humus 0/
-    nu(cf,nh,en)
+    nc(cf,nh) /'c-straw'.p2o5 0.11, 'c-straw'.k2o 0.85, 'c-straw'.humus 21.4, 'c-gm'.p2o5 0.11, 'c-gm'.k2o 0.35, 'c-gm'.humus 2.34, 'c-hyacinth'.p2o5 0.07, 'c-hyacinth'.k2o 0.11, 'c-hyacinth'.humus 2.64, 'pig-m'.p2o5 0.32, 'pig-m'.k2o 0.75, 'straw-b'.p2o5 0.2, 'straw-b'.k2o 0.8, 'straw-b'.humus 15.9, azolla.p2o5 0.02, azolla.k2o 0.12, azolla.humus 2.58, nightsoil.p2o5 0.3, nightsoil.k2o 0.25, 'rapes-c'.p2o5 2.5, 'rapes-c'.k2o 1.4/
+    nu(cf,nh,en) /'c-straw'.p2o5.'p2o5-eff' 20, 'c-straw'.k2o.'k2o-exch' 14, 'c-straw'.humus.humus 100, 'c-gm'.p2o5.'p2o5-eff' 20, 'c-gm'.k2o.'k2o-exch' 14, 'c-gm'.humus.humus 100, 'c-hyacinth'.p2o5.'p2o5-eff' 20, 'c-hyacinth'.k2o.'k2o-exch' 14, 'c-hyacinth'.humus.humus 100, 'pig-m'.p2o5.'p2o5-eff' 8, 'pig-m'.k2o.'k2o-exch' 16, 'pig-m'.humus.humus 100, 'straw-b'.p2o5.'p2o5-eff' 8, 'straw-b'.k2o.'k2o-exch' 16, 'straw-b'.humus.humus 100, nightsoil.p2o5.'p2o5-eff' 8, nightsoil.k2o.'k2o-exch' 16, nightsoil.humus.humus 100, azolla.p2o5.'p2o5-eff' 20, azolla.k2o.'k2o-exch' 14, azolla.humus.humus 100, 'rapes-c'.p2o5.'p2o5-eff' 20, 'rapes-c'.k2o.'k2o-exch' 14, ssp.p2o5.'p2o5-eff' 25/
     pno(c,n) /barley.p2o5 1, barley.k2o 2, wheat.p2o5 1.2, wheat.k2o 2.4, 'e-rice'.p2o5 0.8, 'e-rice'.k2o 2.7, 'm-rice'.p2o5 1, 'm-rice'.k2o 2.9, 'l-rice'.p2o5 0.9, 'l-rice'.k2o 2.75, 'l-sc-rice'.p2o5 0.9, 'l-sc-rice'.k2o 3, 'g-manure'.p2o5 0.11, 'g-manure'.k2o 0.35, rapeseed.p2o5 3.6, rapeseed.k2o 7.1/
-    nup(cu,en) /fodder.'n-imm' 2, fodder.'n-tot' 11, fodder.'p2o5-eff' 1, fodder.'k2o-exch' 2.5, vegetable.'n-imm' 4.58, vegetable.'n-tot' 21.35, vegetable.'p2o5-eff' 2.57, vegetable.'k2o-exch' 3.93, fodder.humus 0, vegetable.humus 0/
-    soil(c,*) /barley.'p2o5-eff' 0.6, barley.'k2o-exch' 0.3, barley.inr 0.47, barley.iwr 4125, wheat.'p2o5-eff' 0.6, wheat.'k2o-exch' 0.3, wheat.inr 0.45, wheat.iwr 4125, 'e-rice'.'p2o5-eff' -0.1, 'e-rice'.'k2o-exch' 0.25, 'e-rice'.inr 0.45, 'e-rice'.iwr 4875, 'm-rice'.'p2o5-eff' 0.2, 'm-rice'.'k2o-exch' 0.35, 'm-rice'.inr 0.45, 'm-rice'.iwr 6000, 'l-rice'.'p2o5-eff' 0.6, 'l-rice'.'k2o-exch' 0.75, 'l-rice'.inr 0.3, 'l-rice'.iwr 4875, 'l-sc-rice'.'p2o5-eff' 0.05, 'l-sc-rice'.'k2o-exch' 0.25, 'l-sc-rice'.inr 0.24, 'l-sc-rice'.iwr 8250, 'g-manure'.'p2o5-eff' 0.9, 'g-manure'.'k2o-exch' 1, rapeseed.'p2o5-eff' 0.5, rapeseed.'k2o-exch' 0.4, rapeseed.inr 0.58, rapeseed.iwr 0, 'g-manure'.inr 0, 'g-manure'.iwr 0/
+    nup(cu,en) /fodder.'n-imm' 2, fodder.'n-tot' 11, fodder.'p2o5-eff' 1, fodder.'k2o-exch' 2.5, vegetable.'n-imm' 4.58, vegetable.'n-tot' 21.35, vegetable.'p2o5-eff' 2.57, vegetable.'k2o-exch' 3.93/
+    soil(c,*) /barley.'p2o5-eff' 0.6, barley.'k2o-exch' 0.3, barley.inr 0.47, barley.iwr 4125, wheat.'p2o5-eff' 0.6, wheat.'k2o-exch' 0.3, wheat.inr 0.45, wheat.iwr 4125, 'e-rice'.'p2o5-eff' -0.1, 'e-rice'.'k2o-exch' 0.25, 'e-rice'.inr 0.45, 'e-rice'.iwr 4875, 'm-rice'.'p2o5-eff' 0.2, 'm-rice'.'k2o-exch' 0.35, 'm-rice'.inr 0.45, 'm-rice'.iwr 6000, 'l-rice'.'p2o5-eff' 0.6, 'l-rice'.'k2o-exch' 0.75, 'l-rice'.inr 0.3, 'l-rice'.iwr 4875, 'l-sc-rice'.'p2o5-eff' 0.05, 'l-sc-rice'.'k2o-exch' 0.25, 'l-sc-rice'.inr 0.24, 'l-sc-rice'.iwr 8250, 'g-manure'.'p2o5-eff' 0.9, 'g-manure'.'k2o-exch' 1, rapeseed.'p2o5-eff' 0.5, rapeseed.'k2o-exch' 0.4, rapeseed.inr 0.58/
     cno(c,n)
     enc(cf,en)
     freq(c,en)
@@ -65,8 +65,8 @@ Parameters
     hreq(c,en)
     syield(ca,s,f)
     sys(s,f)
-    crec(ca,cf) /straw.'c-straw' 0.12, 'g-manure'.'c-gm' 0.12, hyacinth.'c-hyacinth' 0.12, 'pig-m'.'c-straw' 0.05, 'pig-m'.'c-gm' 0.05, 'pig-m'.'c-hyacinth' 0.05, silt.'c-straw' 0.83, silt.'c-gm' 0.83, silt.'c-hyacinth' 0.83, azolla.'c-hyacinth' 1, 'azolla-e'.azolla 0.2, 'azolla-e'.'c-straw' 0, 'azolla-e'.'c-gm' 0, 'azolla-e'.'c-hyacinth' 0, silt.azolla 0, hyacinth.'c-straw' 0, hyacinth.'c-gm' 0, hyacinth.azolla 0, straw.'c-gm' 0, straw.'c-hyacinth' 0, straw.azolla 0, 'g-manure'.'c-straw' 0, 'g-manure'.'c-hyacinth' 0, 'g-manure'.azolla 0, azolla.'c-straw' 0, azolla.'c-gm' 0, azolla.azolla 0, 'pig-m'.azolla 0/
-    chemnall(ca,*) /barley.crops 49, barley.qsa 0.17, wheat.crops 49, wheat.qsa 0.17, 'e-rice'.crops 53, 'e-rice'.aqsa 0.17, 'm-rice'.crops 45, 'm-rice'.qsa 0.17, 'l-rice'.crops 45, 'l-rice'.qsa 0.17, 'l-sc-rice'.crops 45, 'l-sc-rice'.qsa 0.17, rapeseed.crops 45, rapeseed.aqsa 0.45, 'g-manure'.crops 4, pigs.crops 0.225, pigs.aqsa 0.225, pigs.qsa 0, 'm-rice'.aqsa 0, 'e-rice'.qsa 0, barley.aqsa 0, rapeseed.qsa 0, wheat.aqsa 0, 'l-rice'.aqsa 0, 'l-sc-rice'.aqsa 0, 'g-manure'.qsa 0, 'g-manure'.aqsa 0/
+    crec(ca,cf) /straw.'c-straw' 0.12, 'g-manure'.'c-gm' 0.12, hyacinth.'c-hyacinth' 0.12, 'pig-m'.'c-straw' 0.05, 'pig-m'.'c-gm' 0.05, 'pig-m'.'c-hyacinth' 0.05, silt.'c-straw' 0.83, silt.'c-gm' 0.83, silt.'c-hyacinth' 0.83, azolla.'c-hyacinth' 1, 'azolla-e'.azolla 0.2/
+    chemnall(ca,*) /barley.crops 49, barley.qsa 0.17, wheat.crops 49, wheat.qsa 0.17, 'e-rice'.crops 53, 'e-rice'.aqsa 0.17, 'm-rice'.crops 45, 'm-rice'.qsa 0.17, 'l-rice'.crops 45, 'l-rice'.qsa 0.17, 'l-sc-rice'.crops 45, 'l-sc-rice'.qsa 0.17, rapeseed.crops 45, rapeseed.aqsa 0.45, 'g-manure'.crops 4, pigs.crops 0.225, pigs.aqsa 0.225/
     schem(s)
     frep(en,*)
 ;
@@ -87,42 +87,64 @@ Scalars
 ss(s,"normal") = 1;
 ss(sh,"high") = 1;
 
-gio(g,barley) = -1;
-gio(g,wheat) = -1;
-gio(g,e-rice) = -1;
-gio(g,m-rice) = -1;
-gio(g,l-rice) = -1;
-gio(g,l-sc-rice) = -1;
-nc(c-straw,n) = 0.63;
-nc(c-gm,n) = 0.4;
-nc(c-hyacinth,n) = 0.24;
-nc(pig-m,n) = 0.35;
-nc(straw-b,n) = 0.6;
-nc(azolla,n) = 0.34;
-nc(nightsoil,n) = 0.65;
-nc(rapes-c,n) = 4.6;
-nc(amm-water,n) = 3.75;
-nc(amm-bi,n) = 17;
-nc(ssp,n) = 15;
-pno(barley,n) = 3;
-pno(wheat,n) = 2.75;
-pno(e-rice,n) = 1.9;
-pno(m-rice,n) = 2.1;
-pno(l-rice,n) = 2.05;
-pno(l-sc-rice,n) = 1.9;
-pno(rapeseed,n) = 7;
-pno(g-manure,n) = 0;
-crec(cf,c-straw) = 1;
-crec(cf,c-gm) = 1;
-crec(cf,c-hyacinth) = 1;
-crec(cf,pig-m) = 1;
-crec(cf,straw-b) = 1;
-crec(cf,nightsoil) = 1;
-crec(cf,azolla) = 1;
-crec(cf,rapes-c) = 1;
-crec(cf,amm-water) = 1;
-crec(cf,amm-bi) = 1;
-crec(cf,ssp) = 1;
+gio(g,'barley') = -1;
+gio(g,'wheat') = -1;
+gio(g,'e-rice') = -1;
+gio(g,'m-rice') = -1;
+gio(g,'l-rice') = -1;
+gio(g,'l-sc-rice') = -1;
+nc('c-straw','n') = 0.63;
+nc('c-gm','n') = 0.4;
+nc('c-hyacinth','n') = 0.24;
+nc('pig-m','n') = 0.35;
+nc('straw-b','n') = 0.6;
+nc('azolla','n') = 0.34;
+nc('nightsoil','n') = 0.65;
+nc('rapes-c','n') = 4.6;
+nc('amm-water','n') = 3.75;
+nc('amm-bi','n') = 17;
+nc('ssp','n') = 15;
+nu('c-straw','n','n-imm') = 10;
+nu('c-straw','n','n-tot') = 76;
+nu('c-gm','n','n-imm') = 10;
+nu('c-gm','n','n-tot') = 76;
+nu('c-hyacinth','n','n-imm') = 10;
+nu('c-hyacinth','n','n-tot') = 76;
+nu('pig-m','n','n-imm') = 9;
+nu('pig-m','n','n-tot') = 76;
+nu('straw-b','n','n-imm') = 9;
+nu('straw-b','n','n-tot') = 76;
+nu('nightsoil','n','n-imm') = 9;
+nu('nightsoil','n','n-tot') = 76;
+nu('azolla','n','n-imm') = 20;
+nu('azolla','n','n-tot') = 76;
+nu('rapes-c','n','n-imm') = 10;
+nu('rapes-c','n','n-tot') = 76;
+nu('amm-water','n','n-imm') = 20;
+nu('amm-water','n','n-tot') = 40;
+nu('amm-bi','n','n-imm') = 22;
+nu('amm-bi','n','n-tot') = 45;
+nu('ssp','n','n-imm') = 0;
+nu('ssp','n','n-tot') = 0;
+pno('barley',n) = 3;
+pno('wheat',n) = 2.75;
+pno('e-rice',n) = 1.9;
+pno('m-rice',n) = 2.1;
+pno('l-rice',n) = 2.05;
+pno('l-sc-rice',n) = 1.9;
+pno('rapeseed',n) = 7;
+pno('g-manure',n) = 0;
+crec(cf,'c-straw') = 1;
+crec(cf,'c-gm') = 1;
+crec(cf,'c-hyacinth') = 1;
+crec(cf,'pig-m') = 1;
+crec(cf,'straw-b') = 1;
+crec(cf,'nightsoil') = 1;
+crec(cf,'azolla') = 1;
+crec(cf,'rapes-c') = 1;
+crec(cf,'amm-water') = 1;
+crec(cf,'amm-bi') = 1;
+crec(cf,'ssp') = 1;
 
 yield(ca) = cdata(ca,"yield") / jinperkg / 1000;
 cxcrop(s) = sum(c, cdata(c,"cash-cost") * mcp(s,c));
@@ -185,6 +207,14 @@ Positive Variables
     lam_landu
     lam_gmseed
     lam_grainq
+    piL_xcrop(s,f)
+    piL_xupland(ca)
+    piL_xpig(p)
+    piL_xfeed(g)
+    piL_xfert(ca)
+    piL_purchase(ca)
+    piL_sales(ca)
+    piL_aqsales(ca)
 ;
 
 * ============================================
@@ -213,15 +243,6 @@ sales.l(ca) = 1;
 aqsales.l(ca) = 1;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-frep(en,"supply") = 0.01 * sum(cf, enc(cf,en) * xfert.l(cf));
-frep(en,cf) = 0.01 * enc(cf,en) * xfert.l(cf);
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -247,6 +268,14 @@ Equations
     comp_landp
     comp_landu
     comp_mb(ca)
+    comp_lo_aqsales(ca)
+    comp_lo_purchase(ca)
+    comp_lo_sales(ca)
+    comp_lo_xcrop(s,f)
+    comp_lo_xfeed(g)
+    comp_lo_xfert(ca)
+    comp_lo_xpig(p)
+    comp_lo_xupland(ca)
     cdef
     incdef
 ;
@@ -256,15 +285,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aqsales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$sameas(ca, 'barley') =E= 0;
+stat_aqsales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$sameas(ca, 'barley') - piL_aqsales(ca) =E= 0;
 stat_ccost.. 1 + nu_cdef =E= 0;
-stat_purchase(ca)$(cp(ca)).. (((-1) * purdata(ca,"price")) * nu_cdef)$sameas(ca, 'amm-bi') =E= 0;
-stat_sales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"qsa")) * lam_chemn)$sameas(ca, 'barley') + ((-1) * lam_grainq)$sameas(ca, 'barley') =E= 0;
-stat_xcrop(s,f)$(ss(s,f)).. ((-1) * (cxcrop(s) * 1$ss(s,f))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$ss(s,f))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$ss(s,f) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$ss(s,f) * lam_fert(en)) + ((-1) * (schem(s) * 1$ss(s,f))) * lam_chemn + 1$ss(s,f) * lam_landp + sum(c, ((-1) * ((0.84 * mcp(s,c) - 0.16 * mcp(s,c)) * 1$ss(s,f))) * lam_gmseed) =E= 0;
-stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) =E= 0;
-stat_xfert(ca)$(cf(ca)).. sum(cf, ((-1) * cxfert(cf)) * nu_cdef)$sameas(ca, 'amm-bi') + sum(cf, crec(ca,cf) * lam_mb(ca)) + sum(cf, sum(en, ((-1) * (0.01 * enc(cf,en))) * lam_fert(en))) =E= 0;
-stat_xpig(p).. ((-1) * cxpig(p)) * nu_cdef + sum(ca, ((-1) * pigio(ca,p)) * lam_mb(ca)) =E= 0;
-stat_xupland(ca)$(cu(ca)).. sum(cu, sum(en, 0.001 * nup(cu,en) * lam_fert(en))) + lam_landu$sameas(ca, 'fodder') =E= 0;
+stat_purchase(ca)$(cp(ca)).. (((-1) * purdata(ca,"price")) * nu_cdef)$sameas(ca, 'amm-bi') - piL_purchase(ca) =E= 0;
+stat_sales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"qsa")) * lam_chemn)$sameas(ca, 'barley') + ((-1) * lam_grainq)$sameas(ca, 'barley') - piL_sales(ca) =E= 0;
+stat_xcrop(s,f)$(ss(s,f)).. ((-1) * (cxcrop(s) * 1$ss(s,f))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$ss(s,f))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$ss(s,f) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$ss(s,f) * lam_fert(en)) + ((-1) * (schem(s) * 1$ss(s,f))) * lam_chemn + 1$ss(s,f) * lam_landp + sum(c, ((-1) * ((0.84 * mcp(s,c) - 0.16 * mcp(s,c)) * 1$ss(s,f))) * lam_gmseed) - piL_xcrop(s,f) =E= 0;
+stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) - piL_xfeed(g) =E= 0;
+stat_xfert(ca)$(cf(ca)).. sum(cf, ((-1) * cxfert(cf)) * nu_cdef)$sameas(ca, 'amm-bi') + sum(cf, crec(ca,cf) * lam_mb(ca)) + sum(cf, sum(en, ((-1) * (0.01 * enc(cf,en))) * lam_fert(en))) - piL_xfert(ca) =E= 0;
+stat_xpig(p).. ((-1) * cxpig(p)) * nu_cdef + sum(ca, ((-1) * pigio(ca,p)) * lam_mb(ca)) - piL_xpig(p) =E= 0;
+stat_xupland(ca)$(cu(ca)).. sum(cu, sum(en, 0.001 * nup(cu,en) * lam_fert(en))) + lam_landu$sameas(ca, 'fodder') - piL_xupland(ca) =E= 0;
 
 * Inequality complementarity equations
 comp_chemn.. sum((s,f)$(ss(s,f)), schem(s) * xcrop(s,f)) + sum(cs, chemnall(cs,"qsa") * sales(cs) + chemnall(cs,"aqsa") * aqsales(cs)) - purchase("amm-bi") =G= 0;
@@ -275,6 +304,16 @@ comp_labor(t).. ((-1) * (sum((s,f)$(ss(s,f)), lab(t,s) * xcrop(s,f)) - (1 + labj
 comp_landp.. ((-1) * (sum((s,f)$(ss(s,f)), xcrop(s,f)) - paddy)) =G= 0;
 comp_landu.. ((-1) * (sum(cu, xupland(cu)) - upland)) =G= 0;
 comp_mb(ca).. sum((s,f)$(ss(s,f)), syield(ca,s,f) * xcrop(s,f)) + sum(p, pigio(ca,p) * xpig(p)) + purchase(ca)$cp(ca) + sum(g, gio(ca,g) * xfeed(g)) + (yieldu(ca) * xupland(ca))$cu(ca) - ((sales(ca) + aqsales(ca))$cs(ca) + sum(cf, crec(ca,cf) * xfert(cf))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_aqsales(ca).. aqsales(ca) - 0 =G= 0;
+comp_lo_purchase(ca).. purchase(ca) - 0 =G= 0;
+comp_lo_sales(ca).. sales(ca) - 0 =G= 0;
+comp_lo_xcrop(s,f).. xcrop(s,f) - 0 =G= 0;
+comp_lo_xfeed(g).. xfeed(g) - 0 =G= 0;
+comp_lo_xfert(ca).. xfert(ca) - 0 =G= 0;
+comp_lo_xpig(p).. xpig(p) - 0 =G= 0;
+comp_lo_xupland(ca).. xupland(ca) - 0 =G= 0;
 
 * Original equality equations
 cdef.. ccost =E= sum((s,f)$(ss(s,f)), cxcrop(s) * xcrop(s,f)) + sum(p, cxpig(p) * xpig(p)) + sum(cf, cxfert(cf) * xfert(cf)) + sum(cp, purdata(cp,"price") * purchase(cp));
@@ -289,11 +328,17 @@ incdef.. income =E= sum(cs, cdata(cs,"proc-price") * sales(cs) + aqsprice(cs) * 
 * fixed for excluded instances to satisfy MCP matching.
 
 aqsales.fx(ca)$(not (cs(ca))) = 0;
+piL_aqsales.fx(ca)$(not (cs(ca))) = 0;
 purchase.fx(ca)$(not (cp(ca))) = 0;
+piL_purchase.fx(ca)$(not (cp(ca))) = 0;
 sales.fx(ca)$(not (cs(ca))) = 0;
+piL_sales.fx(ca)$(not (cs(ca))) = 0;
 xcrop.fx(s,f)$(not (ss(s,f))) = 0;
+piL_xcrop.fx(s,f)$(not (ss(s,f))) = 0;
 xfert.fx(ca)$(not (cf(ca))) = 0;
+piL_xfert.fx(ca)$(not (cf(ca))) = 0;
 xupland.fx(ca)$(not (cu(ca))) = 0;
+piL_xupland.fx(ca)$(not (cu(ca))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -327,7 +372,15 @@ Model mcp_model /
     comp_landu.lam_landu,
     comp_mb.lam_mb,
     cdef.nu_cdef,
-    incdef.income
+    incdef.income,
+    comp_lo_aqsales.piL_aqsales,
+    comp_lo_purchase.piL_purchase,
+    comp_lo_sales.piL_sales,
+    comp_lo_xcrop.piL_xcrop,
+    comp_lo_xfeed.piL_xfeed,
+    comp_lo_xfert.piL_xfert,
+    comp_lo_xpig.piL_xpig,
+    comp_lo_xupland.piL_xupland
 /;
 
 * ============================================

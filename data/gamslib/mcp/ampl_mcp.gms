@@ -54,6 +54,9 @@ Positive Variables
     x(p,tl)
     s(r,tl)
     lam_limit(t)
+    piL_x(p,tl)
+    piL_s(r,tl)
+    piU_s(r,tl)
 ;
 
 * ============================================
@@ -86,6 +89,9 @@ Equations
     stat_s(r,tl)
     stat_x(p,tl)
     comp_limit(t)
+    comp_lo_s(r,tl)
+    comp_lo_x(p,tl)
+    comp_up_s(r,tl)
     balance(r,tl)
     obj
 ;
@@ -95,11 +101,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl)))) - nu_balance(r,tl) =E= 0;
-stat_x(p,tl)$(t(tl)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_balance(r,tl)) + sum(t, lam_limit(t)) =E= 0;
+stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl)))) - nu_balance(r,tl) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
+stat_x(p,tl)$(t(tl)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_balance(r,tl)) + sum(t, lam_limit(t)) - piL_x(p,tl) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_s(r,tl).. s(r,tl) - 0 =G= 0;
+comp_lo_x(p,tl).. x(p,tl) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_s(r,tl).. b(r) - s(r,tl) =G= 0;
 
 * Original equality equations
 balance(r,tl)$(ord(tl) <= card(tl) - 1).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
@@ -114,6 +127,7 @@ obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$t(tl
 * fixed for excluded instances to satisfy MCP matching.
 
 x.fx(p,tl)$(not (t(tl))) = 0;
+piL_x.fx(p,tl)$(not (t(tl))) = 0;
 nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
 
 * ============================================
@@ -134,7 +148,10 @@ Model mcp_model /
     stat_x.x,
     comp_limit.lam_limit,
     balance.nu_balance,
-    obj.profit
+    obj.profit,
+    comp_lo_s.piL_s,
+    comp_lo_x.piL_x,
+    comp_up_s.piU_s
 /;
 
 * ============================================

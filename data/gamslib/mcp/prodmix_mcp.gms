@@ -44,6 +44,7 @@ Variables
 Positive Variables
     mix(desk)
     lam_cap(shop)
+    piL_mix(desk)
 ;
 
 * ============================================
@@ -68,6 +69,7 @@ mix.l(desk) = 1;
 Equations
     stat_mix(desk)
     comp_cap(shop)
+    comp_lo_mix(desk)
     ap
 ;
 
@@ -76,10 +78,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_mix(desk).. ((-1) * price(desk)) + sum(shop, labor(shop,desk) * lam_cap(shop)) =E= 0;
+stat_mix(desk).. ((-1) * price(desk)) + sum(shop, labor(shop,desk) * lam_cap(shop)) - piL_mix(desk) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(shop).. ((-1) * (sum(desk, labor(shop,desk) * mix(desk)) - caplim(shop))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_mix(desk).. mix(desk) - 0 =G= 0;
 
 * Original equality equations
 ap.. profit =E= sum(desk, price(desk) * mix(desk));
@@ -101,7 +106,8 @@ ap.. profit =E= sum(desk, price(desk) * mix(desk));
 Model mcp_model /
     stat_mix.mix,
     comp_cap.lam_cap,
-    ap.profit
+    ap.profit,
+    comp_lo_mix.piL_mix
 /;
 
 * ============================================

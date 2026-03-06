@@ -22,8 +22,8 @@ Sets
 ;
 
 Parameters
-    f(j,k) /j1.k1 0.0008, j1.k2 0, j1.k3 0, j2.k1 0.0003, j2.k2 0, j2.k3 0, j3.k1 -0.0006, j3.k2 0, j3.k3 0, j4.k1 -1.0003, j4.k2 0, j4.k3 0/
-    b(j,i) /j1.i1 1, j1.i2 0, j1.i3 0.5, j1.i4 0, j1.i5 0, j2.i1 0, j2.i2 0, j2.i3 -0.5, j2.i4 -1, j2.i5 0, j3.i1 0, j3.i2 0.5, j3.i3 0, j3.i4 0, j3.i5 1, j4.i1 0, j4.i2 0.5, j4.i3 0, j4.i4 1, j4.i5 0/
+    f(j,k) /j1.k1 0.0008, j2.k1 0.0003, j3.k1 -0.0006, j4.k1 -1.0003/
+    b(j,i) /j1.i1 1, j1.i3 0.5, j2.i3 -0.5, j2.i4 -1, j3.i2 0.5, j3.i5 1, j4.i2 0.5, j4.i4 1/
 ;
 
 Scalars
@@ -55,6 +55,9 @@ Positive Variables
     lam_volumeeq(i,k)
     lam_reseq(k)
     lam_trusscomp
+    piL_tk(i,k)
+    piL_t(i)
+    piL_sigma(i,k)
 ;
 
 * ============================================
@@ -88,6 +91,9 @@ Equations
     comp_reseq(k)
     comp_trusscomp
     comp_volumeeq(i,k)
+    comp_lo_sigma(i,k)
+    comp_lo_t(i)
+    comp_lo_tk(i,k)
     deftk(i,k)
     stiffness(j,k)
 ;
@@ -98,14 +104,19 @@ Equations
 
 * Stationarity equations
 stat_s(i,k).. sum(j, b(j,i) * nu_stiffness(j,k)) + 2 * s(i,k) * lam_volumeeq(i,k) =E= 0;
-stat_sigma(i,k).. ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + lam_reseq(k) =E= 0;
-stat_t(i).. sum(k, (-1) * nu_deftk(i,k)) + lam_trusscomp =E= 0;
-stat_tk(i,k).. nu_deftk(i,k) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) =E= 0;
+stat_sigma(i,k).. ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + lam_reseq(k) - piL_sigma(i,k) =E= 0;
+stat_t(i).. sum(k, (-1) * nu_deftk(i,k)) + lam_trusscomp - piL_t(i) =E= 0;
+stat_tk(i,k).. nu_deftk(i,k) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) - piL_tk(i,k) =E= 0;
 
 * Inequality complementarity equations
 comp_reseq(k).. ((-1) * (sum(i, sigma(i,k)) - tau)) =G= 0;
 comp_trusscomp.. ((-1) * (sum(i, t(i)) - maxvolume)) =G= 0;
 comp_volumeeq(i,k).. 2 * tk(i,k) * sigma(i,k) - sqr(s(i,k)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_sigma(i,k).. sigma(i,k) - 0 =G= 0;
+comp_lo_t(i).. t(i) - 0 =G= 0;
+comp_lo_tk(i,k).. tk(i,k) - 0 =G= 0;
 
 * Original equality equations
 deftk(i,k).. tk(i,k) =E= t(i);
@@ -134,7 +145,10 @@ Model mcp_model /
     comp_trusscomp.lam_trusscomp,
     comp_volumeeq.lam_volumeeq,
     deftk.nu_deftk,
-    stiffness.nu_stiffness
+    stiffness.nu_stiffness,
+    comp_lo_sigma.piL_sigma,
+    comp_lo_t.piL_t,
+    comp_lo_tk.piL_tk
 /;
 
 * ============================================

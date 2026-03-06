@@ -25,7 +25,7 @@ Sets
 ;
 
 Parameters
-    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24, 'timber-1'.feb 0, 'timber-1'.apr 0, 'timber-1'.jun 0, 'timber-1'.jul 0, 'timber-1'.dec 0, other.jul 0, other.aug 0, other.dec 0, maize.jun 0, maize.jul 0, maize.aug 0, maize.sep 0, maize.dec 0, tobacco.jun 0, tobacco.jul 0, tobacco.dec 0, 'timber-2'.feb 0, 'timber-2'.mar 0, 'timber-2'.apr 0, 'timber-2'.jun 0, 'timber-2'.jul 0, 'timber-2'.sep 0, 'timber-2'.oct 0, 'timber-2'.nov 0, 'timber-2'.dec 0/
+    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24/
     tmd(*,c) /'input-cost'.tobacco 2000, 'input-cost'.maize 20, yield.tobacco 675, yield.maize 750, price.tobacco 8.4, price.maize 0.8/
     yv(a) /a08 120, a16 120, a24 120/
     vr(t)
@@ -111,6 +111,11 @@ Positive Variables
     lam_mm(t)
     lam_matd1(t)
     lam_matd2(t)
+    piL_w(t,i)
+    piL_v(t)
+    piL_x(t,c)
+    piL_mat(t)
+    piL_lc(t,m)
     piU_mat_y01
 ;
 
@@ -180,6 +185,11 @@ Equations
     comp_mm(t)
     comp_wa(i)
     comp_wb(t)
+    comp_lo_lc(t,m)
+    comp_lo_mat(t)
+    comp_lo_v(t)
+    comp_lo_w(t,i)
+    comp_lo_x(t,c)
     comp_up_mat_y01
     cd(t)
     lw(t)
@@ -193,41 +203,41 @@ Equations
 
 * Stationarity equations
 stat_cost(t).. ((-1) * (delt(t) * (-1))) + nu_cd(t) =E= 0;
-stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) =E= 0;
-stat_mat_y01.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) + piU_mat_y01 =E= 0;
-stat_mat_y02.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y03.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y04.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y05.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y06.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y07.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y08.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y09.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y10.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y11.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y12.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y13.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y14.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y15.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y16.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y17.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y18.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y19.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y20.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y21.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y22.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y23.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y24.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y25.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y26.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y27.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y28.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y29.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
-stat_mat_y30.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) =E= 0;
+stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) - piL_lc(t,m) =E= 0;
+stat_mat_y01.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y01") + piU_mat_y01 =E= 0;
+stat_mat_y02.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y02") =E= 0;
+stat_mat_y03.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y03") =E= 0;
+stat_mat_y04.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y04") =E= 0;
+stat_mat_y05.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y05") =E= 0;
+stat_mat_y06.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y06") =E= 0;
+stat_mat_y07.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y07") =E= 0;
+stat_mat_y08.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y08") =E= 0;
+stat_mat_y09.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y09") =E= 0;
+stat_mat_y10.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y10") =E= 0;
+stat_mat_y11.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y11") =E= 0;
+stat_mat_y12.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y12") =E= 0;
+stat_mat_y13.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y13") =E= 0;
+stat_mat_y14.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y14") =E= 0;
+stat_mat_y15.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y15") =E= 0;
+stat_mat_y16.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y16") =E= 0;
+stat_mat_y17.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y17") =E= 0;
+stat_mat_y18.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y18") =E= 0;
+stat_mat_y19.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y19") =E= 0;
+stat_mat_y20.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y20") =E= 0;
+stat_mat_y21.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y21") =E= 0;
+stat_mat_y22.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y22") =E= 0;
+stat_mat_y23.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y23") =E= 0;
+stat_mat_y24.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y24") =E= 0;
+stat_mat_y25.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y25") =E= 0;
+stat_mat_y26.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y26") =E= 0;
+stat_mat_y27.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y27") =E= 0;
+stat_mat_y28.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y28") =E= 0;
+stat_mat_y29.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y29") =E= 0;
+stat_mat_y30.. sum(t, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(t, ((-1) * (yc(c) * matr)) * lam_mm(t)) + sum(t, lam_matd1(t)) + sum(t, lam_matd2(t)) - piL_mat("y30") =E= 0;
 stat_rev(t).. ((-1) * delt(t)) + nu_rd(t) =E= 0;
-stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(m, ld("timber-1",m) * lam_lb(t,m)) =E= 0;
-stat_w(t,i).. ((-1) * labw(i)) * nu_lw(t) + ((-1) * (1000 * tr * yw * dist(i) / 1000000)) * nu_cd(t) + ((-1) * yw) * lam_wb(t) + lam_wa(i) =E= 0;
-stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) =E= 0;
+stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(m, ld("timber-1",m) * lam_lb(t,m)) - piL_v(t) =E= 0;
+stat_w(t,i).. ((-1) * labw(i)) * nu_lw(t) + ((-1) * (1000 * tr * yw * dist(i) / 1000000)) * nu_cd(t) + ((-1) * yw) * lam_wb(t) + lam_wa(i) - piL_w(t,i) =E= 0;
+stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) - piL_x(t,c) =E= 0;
 
 * Inequality complementarity equations
 comp_lb(t,m)$(ord(t) > 1).. ((-1) * (ld("timber-1",m) * v(t) + ld("timber-2",m) * v(t-1) + sum(c, ld(c,m) * x(t,c)) + lc(t,m)$mc(m) - labor(m))) =G= 0;
@@ -236,6 +246,13 @@ comp_matd2(t).. ((-1) * (mat(t) - x(t,"maize"))) =G= 0;
 comp_mm(t).. yc("maize") * (x(t,"maize") + matr * mat(t)) - dmaize =G= 0;
 comp_wa(i).. ((-1) * (sum(t, w(t,i)) - fa(i))) =G= 0;
 comp_wb(t).. yw * sum(i, w(t,i)) + sum(a, yv(a) * v(t-ord(a))) - (wrc * x(t,"tobacco") + dwr * nfam) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_lc(t,m).. lc(t,m) - 0 =G= 0;
+comp_lo_mat(t).. mat(t) - 0 =G= 0;
+comp_lo_v(t).. v(t) - 0 =G= 0;
+comp_lo_w(t,i).. w(t,i) - 0 =G= 0;
+comp_lo_x(t,c).. x(t,c) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_mat_y01.. 234 - mat("y01") =G= 0;
@@ -255,6 +272,9 @@ od.. income =E= sum(t, delt(t) * (rev(t) - cost(t) + vr(t) * v(t) / 1000));
 * fixed for excluded instances to satisfy MCP matching.
 
 lc.fx(t,m)$(not (mc(m))) = 0;
+piL_lc.fx(t,m)$(not (mc(m))) = 0;
+lam_lb.fx(t,m)$(not (ord(t) > 1)) = 0;
+lam_matd1.fx(t)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -316,6 +336,11 @@ Model mcp_model /
     lw.nu_lw,
     od.income,
     rd.nu_rd,
+    comp_lo_lc.piL_lc,
+    comp_lo_mat.piL_mat,
+    comp_lo_v.piL_v,
+    comp_lo_w.piL_w,
+    comp_lo_x.piL_x,
     comp_up_mat_y01.piU_mat_y01
 /;
 

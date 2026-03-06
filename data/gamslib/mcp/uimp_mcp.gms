@@ -23,13 +23,13 @@ Sets
 ;
 
 Parameters
-    mh(l,k) /m1.nuts 4, m1.bolts 4, m1.washers 6, m2.nuts 7, m2.bolts 6, m2.washers 6, m3.nuts 3, m3.bolts 0, m3.washers 0/
-    mhadd(i,j) /summer.overtime -1, winter.normal 1, winter.overtime 0, summer.normal 0/
+    mh(l,k) /m1.nuts 4, m1.bolts 4, m1.washers 6, m2.nuts 7, m2.bolts 6, m2.washers 6, m3.nuts 3/
+    mhadd(i,j) /summer.overtime -1, winter.normal 1/
     av(l,j) /m1.normal 100, m1.overtime 80, m2.normal 100, m2.overtime 90, m3.normal 40, m3.overtime 30/
     t(i,j,k,l) /winter.overtime.washers.m1 5/
     a(i,j,l)
-    tc(l,k) /m1.nuts 2, m1.bolts 3, m1.washers 4, m2.nuts 4, m2.bolts 3, m2.washers 2, m3.nuts 1, m3.bolts 0, m3.washers 0/
-    tcadd(i,j) /summer.overtime 1, winter.normal 1, winter.overtime 2, summer.normal 0/
+    tc(l,k) /m1.nuts 2, m1.bolts 3, m1.washers 4, m2.nuts 4, m2.bolts 3, m2.washers 2, m3.nuts 1/
+    tcadd(i,j) /summer.overtime 1, winter.normal 1, winter.overtime 2/
     c(i,j,k,l)
     p(i,k) /summer.nuts 10, summer.bolts 10, summer.washers 9, winter.nuts 11, winter.bolts 11, winter.washers 10/
     d(i,k) /summer.nuts 25, summer.bolts 30, summer.washers 30, winter.nuts 30, winter.bolts 25, winter.washers 25/
@@ -67,6 +67,10 @@ Positive Variables
     x(i,j,k,l)
     y(i,k)
     lam_ma(i,j,l)
+    piL_x(i,j,k,l)
+    piL_y(i,k)
+    piL_z(i,k)
+    piU_y(i,k)
 ;
 
 * ============================================
@@ -103,6 +107,10 @@ Equations
     stat_y(i,k)
     stat_z(i,k)
     comp_ma(i,j,l)
+    comp_lo_x(i,j,k,l)
+    comp_lo_y(i,k)
+    comp_lo_z(i,k)
+    comp_up_y(i,k)
     cdef
     ib(i,k)
     pdef
@@ -116,12 +124,20 @@ Equations
 * Stationarity equations
 stat_cost.. 1 + nu_cdef =E= 0;
 stat_revenue.. -1 + nu_rdef =E= 0;
-stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) =E= 0;
-stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) =E= 0;
-stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) =E= 0;
+stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) - piL_x(i,j,k,l) =E= 0;
+stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) - piL_y(i,k) + piU_y(i,k) =E= 0;
+stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) - piL_z(i,k) =E= 0;
 
 * Inequality complementarity equations
 comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_x(i,j,k,l).. x(i,j,k,l) - 0 =G= 0;
+comp_lo_y(i,k).. y(i,k) - 0 =G= 0;
+comp_lo_z(i,k).. z(i,k) - d(i,k) =G= 0;
+
+* Upper bound complementarity equations
+comp_up_y(i,k).. h(k) - y(i,k) =G= 0;
 
 * Original equality equations
 pdef.. profit =E= revenue - cost;
@@ -162,7 +178,11 @@ Model mcp_model /
     cdef.nu_cdef,
     ib.nu_ib,
     pdef.profit,
-    rdef.nu_rdef
+    rdef.nu_rdef,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
+    comp_lo_z.piL_z,
+    comp_up_y.piU_y
 /;
 
 * ============================================

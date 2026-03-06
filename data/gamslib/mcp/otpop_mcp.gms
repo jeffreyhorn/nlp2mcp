@@ -124,6 +124,7 @@ Variables
 
 Positive Variables
     x(tt)
+    piL_x(tt)
     piL_p(tt)
 ;
 
@@ -190,6 +191,7 @@ Equations
     stat_xdev
     stat_z
     comp_lo_p(tt)
+    comp_lo_x(tt)
     adef(tt)
     dem(t)
     kdef
@@ -239,12 +241,13 @@ stat_k.. -1 + nu_kdef =E= 0;
 stat_p(tt)$(t(tt)).. sum(t, ((-1) * (db(t) * p(t) ** ((-1) * a) * ((-1) * a) / p(t))) * nu_dem(t)) + sum(t, as(t) * p(t) ** b * b / p(t) * nu_sup(t)) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (ptr(t) - p(tt)) * (-1))) * nu_ptrack)$sameas(tt, '1974') + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_objx)$sameas(tt, '1974') - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) =E= 0;
 stat_pdev.. nu_ptrack =E= 0;
-stat_x(tt)$(t(tt)).. nu_x_fx_1965$sameas(tt, '1965') + nu_x_fx_1966$sameas(tt, '1966') + nu_x_fx_1967$sameas(tt, '1967') + nu_x_fx_1968$sameas(tt, '1968') + nu_x_fx_1969$sameas(tt, '1969') + nu_x_fx_1970$sameas(tt, '1970') + nu_x_fx_1971$sameas(tt, '1971') + nu_x_fx_1972$sameas(tt, '1972') + nu_x_fx_1973$sameas(tt, '1973') + sum(t, nu_sup(t)) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$sameas(tt, '1974') + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (xtr(t) - x(tt)) * (-1))) * nu_xtrack)$sameas(tt, '1974') + sum(t, ((-1) * (0.365 * del(t) * (1 - c) * p(tt) + (-0.365) * v * p(tt))) * nu_objx)$sameas(tt, '1974') + nu_x_fx_1974$sameas(tt, '1974') + nu_x_fx_1975$sameas(tt, '1975') + nu_x_fx_1976$sameas(tt, '1976') + nu_x_fx_1977$sameas(tt, '1977') + nu_x_fx_1978$sameas(tt, '1978') + nu_x_fx_1979$sameas(tt, '1979') + nu_x_fx_1980$sameas(tt, '1980') + nu_x_fx_1981$sameas(tt, '1981') + nu_x_fx_1982$sameas(tt, '1982') + nu_x_fx_1983$sameas(tt, '1983') + nu_x_fx_1984$sameas(tt, '1984') + nu_x_fx_1985$sameas(tt, '1985') + nu_x_fx_1986$sameas(tt, '1986') + nu_x_fx_1987$sameas(tt, '1987') + nu_x_fx_1988$sameas(tt, '1988') + nu_x_fx_1989$sameas(tt, '1989') + nu_x_fx_1990$sameas(tt, '1990') =E= 0;
+stat_x(tt)$(t(tt)).. nu_x_fx_1965$sameas(tt, '1965') + nu_x_fx_1966$sameas(tt, '1966') + nu_x_fx_1967$sameas(tt, '1967') + nu_x_fx_1968$sameas(tt, '1968') + nu_x_fx_1969$sameas(tt, '1969') + nu_x_fx_1970$sameas(tt, '1970') + nu_x_fx_1971$sameas(tt, '1971') + nu_x_fx_1972$sameas(tt, '1972') + nu_x_fx_1973$sameas(tt, '1973') + sum(t, nu_sup(t)) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$sameas(tt, '1974') + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (xtr(t) - x(tt)) * (-1))) * nu_xtrack)$sameas(tt, '1974') + sum(t, ((-1) * (0.365 * del(t) * (1 - c) * p(tt) + (-0.365) * v * p(tt))) * nu_objx)$sameas(tt, '1974') + nu_x_fx_1974$sameas(tt, '1974') + nu_x_fx_1975$sameas(tt, '1975') + nu_x_fx_1976$sameas(tt, '1976') + nu_x_fx_1977$sameas(tt, '1977') + nu_x_fx_1978$sameas(tt, '1978') + nu_x_fx_1979$sameas(tt, '1979') + nu_x_fx_1980$sameas(tt, '1980') + nu_x_fx_1981$sameas(tt, '1981') + nu_x_fx_1982$sameas(tt, '1982') + nu_x_fx_1983$sameas(tt, '1983') + nu_x_fx_1984$sameas(tt, '1984') + nu_x_fx_1985$sameas(tt, '1985') + nu_x_fx_1986$sameas(tt, '1986') + nu_x_fx_1987$sameas(tt, '1987') + nu_x_fx_1988$sameas(tt, '1988') + nu_x_fx_1989$sameas(tt, '1989') + nu_x_fx_1990$sameas(tt, '1990') - piL_x(tt) =E= 0;
 stat_xdev.. nu_xtrack =E= 0;
 stat_z.. -1 + nu_zdef =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_p(tt).. p(tt) - 1 =G= 0;
+comp_lo_x(tt).. x(tt) - 0 =G= 0;
 
 * Original equality equations
 dem(t).. d(t) =E= db(t) * p(t) ** ((-1) * a);
@@ -295,7 +298,9 @@ x_fx_1990.. x("1990") - 29.4 =E= 0;
 as.fx(tt)$(not (t(tt))) = 0;
 d.fx(tt)$(not (t(tt))) = 0;
 p.fx(tt)$(not (t(tt))) = 0;
+piL_p.fx(tt)$(not (t(tt))) = 0;
 x.fx(tt)$(not (t(tt))) = 0;
+piL_x.fx(tt)$(not (t(tt))) = 0;
 nu_adef.fx(tt)$(not (ord(tt) > 1)) = 0;
 
 * ============================================
@@ -357,7 +362,8 @@ Model mcp_model /
     x_fx_1990.nu_x_fx_1990,
     xtrack.nu_xtrack,
     zdef.nu_zdef,
-    comp_lo_p.piL_p
+    comp_lo_p.piL_p,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

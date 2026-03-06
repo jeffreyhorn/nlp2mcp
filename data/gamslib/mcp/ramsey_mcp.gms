@@ -70,6 +70,7 @@ Positive Variables
     piL_k(t)
     piL_c(t)
     piL_i(t)
+    piU_i(t)
 ;
 
 * ============================================
@@ -137,6 +138,7 @@ Equations
     comp_lo_c(t)
     comp_lo_i(t)
     comp_lo_k(t)
+    comp_up_i(t)
     cc(t)
     kk(t)
     util
@@ -148,7 +150,7 @@ Equations
 
 * Stationarity equations
 stat_c(t).. ((-1) * (beta(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
-stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) + sum(tlast, (-1) * lam_tc(tlast)) - piL_i(t) =E= 0;
+stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) + sum(tlast, (-1) * lam_tc(tlast)) - piL_i(t) + piU_i(t) =E= 0;
 stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + sum(tlast, g * lam_tc(tlast)) - piL_k(t) =E= 0;
 
 * Inequality complementarity equations
@@ -158,6 +160,9 @@ comp_tc(tlast).. ((-1) * (g * k(tlast) - i(tlast))) =G= 0;
 comp_lo_c(t).. c(t) - 0.95 =G= 0;
 comp_lo_i(t).. i(t) - 0.05 =G= 0;
 comp_lo_k(t).. k(t) - 3 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_i(t).. i0 * (1 + ac) ** (ord(t) - 1) - i(t) =G= 0;
 
 * Original equality equations
 cc(t).. al(t) * k(t) ** b =E= c(t) + i(t);
@@ -197,7 +202,8 @@ Model mcp_model /
     util.utility,
     comp_lo_c.piL_c,
     comp_lo_i.piL_i,
-    comp_lo_k.piL_k
+    comp_lo_k.piL_k,
+    comp_up_i.piU_i
 /;
 
 * ============================================

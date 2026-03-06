@@ -24,10 +24,10 @@ Sets
 Alias(h, hp);
 
 Parameters
-    dd(j,h) /'route-1'.'1' 200, 'route-1'.'2' 220, 'route-1'.'3' 250, 'route-1'.'4' 270, 'route-1'.'5' 300, 'route-2'.'1' 50, 'route-2'.'2' 150, 'route-3'.'1' 140, 'route-3'.'2' 160, 'route-3'.'3' 180, 'route-3'.'4' 200, 'route-3'.'5' 220, 'route-4'.'1' 10, 'route-4'.'2' 50, 'route-4'.'3' 80, 'route-4'.'4' 100, 'route-4'.'5' 340, 'route-5'.'1' 580, 'route-5'.'2' 600, 'route-5'.'3' 620, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
-    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1, 'route-5'.'4' 0, 'route-5'.'5' 0, 'route-2'.'3' 0, 'route-2'.'4' 0, 'route-2'.'5' 0/
-    c(i,j) /a.'route-1' 18, a.'route-2' 21, a.'route-3' 18, a.'route-4' 16, a.'route-5' 10, b.'route-2' 15, b.'route-3' 16, b.'route-4' 14, b.'route-5' 9, c.'route-2' 10, c.'route-4' 9, c.'route-5' 6, d.'route-1' 17, d.'route-2' 16, d.'route-3' 17, d.'route-4' 15, d.'route-5' 10, c.'route-1' 0, c.'route-3' 0, b.'route-1' 0/
-    p(i,j) /a.'route-1' 16, a.'route-2' 15, a.'route-3' 28, a.'route-4' 23, a.'route-5' 81, b.'route-2' 10, b.'route-3' 14, b.'route-4' 15, b.'route-5' 57, c.'route-2' 5, c.'route-4' 7, c.'route-5' 29, d.'route-1' 9, d.'route-2' 11, d.'route-3' 22, d.'route-4' 17, d.'route-5' 55, c.'route-1' 0, c.'route-3' 0, b.'route-1' 0/
+    dd(j,h) /'route-1'.'1' 200, 'route-1'.'2' 220, 'route-1'.'3' 250, 'route-1'.'4' 270, 'route-1'.'5' 300, 'route-2'.'1' 50, 'route-2'.'2' 150, 'route-3'.'1' 140, 'route-3'.'2' 160, 'route-3'.'3' 180, 'route-3'.'4' 200, 'route-3'.'5' 220, 'route-4'.'1' 10, 'route-4'.'2' 50, 'route-4'.'3' 80, 'route-4'.'4' 100, 'route-4'.'5' 340, 'route-5'.'1' 580, 'route-5'.'2' 600, 'route-5'.'3' 620/
+    lambda(j,h) /'route-1'.'1' 0.2, 'route-1'.'2' 0.05, 'route-1'.'3' 0.35, 'route-1'.'4' 0.2, 'route-1'.'5' 0.2, 'route-2'.'1' 0.3, 'route-2'.'2' 0.7, 'route-3'.'1' 0.1, 'route-3'.'2' 0.2, 'route-3'.'3' 0.4, 'route-3'.'4' 0.2, 'route-3'.'5' 0.1, 'route-4'.'1' 0.2, 'route-4'.'2' 0.2, 'route-4'.'3' 0.3, 'route-4'.'4' 0.2, 'route-4'.'5' 0.1, 'route-5'.'1' 0.1, 'route-5'.'2' 0.8, 'route-5'.'3' 0.1/
+    c(i,j) /a.'route-1' 18, a.'route-2' 21, a.'route-3' 18, a.'route-4' 16, a.'route-5' 10, b.'route-2' 15, b.'route-3' 16, b.'route-4' 14, b.'route-5' 9, c.'route-2' 10, c.'route-4' 9, c.'route-5' 6, d.'route-1' 17, d.'route-2' 16, d.'route-3' 17, d.'route-4' 15, d.'route-5' 10/
+    p(i,j) /a.'route-1' 16, a.'route-2' 15, a.'route-3' 28, a.'route-4' 23, a.'route-5' 81, b.'route-2' 10, b.'route-3' 14, b.'route-4' 15, b.'route-5' 57, c.'route-2' 5, c.'route-4' 7, c.'route-5' 29, d.'route-1' 9, d.'route-2' 11, d.'route-3' 22, d.'route-4' 17, d.'route-5' 55/
     aa(i) /a 10, b 19, c 25, d 15/
     k(j) /'route-1' 13, 'route-2' 13, 'route-3' 7, 'route-4' 7, 'route-5' 1/
     ed(j)
@@ -67,6 +67,12 @@ Positive Variables
     lam_ab(i)
     lam_db(j)
     lam_yd(j,h)
+    piL_x(i,j)
+    piL_y(j,h)
+    piL_b(j,h)
+    piL_oc
+    piL_bc
+    piU_y(j,h)
 ;
 
 * ============================================
@@ -107,6 +113,12 @@ Equations
     comp_ab(i)
     comp_db(j)
     comp_yd(j,h)
+    comp_lo_b(j,h)
+    comp_lo_bc
+    comp_lo_oc
+    comp_lo_x(i,j)
+    comp_lo_y(j,h)
+    comp_up_y(j,h)
     bcd1
     bcd2
     bd(j,h)
@@ -119,16 +131,26 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(j,h).. nu_bd(j,h) + ((-1) * (k(j) * lambda(j,h))) * nu_bcd2 =E= 0;
-stat_bc.. 1 + nu_bcd1 + nu_bcd2 =E= 0;
-stat_oc.. 1 + nu_ocd =E= 0;
-stat_x(i,j).. ((-1) * c(i,j)) * nu_ocd + lam_ab(i) + ((-1) * p(i,j)) * lam_db(j) + sum(h, ((-1) * p(i,j)) * lam_yd(j,h)) =E= 0;
-stat_y(j,h).. nu_bd(j,h) + ((-1) * (k(j) * ((-1) * (gamma(j, h))))) * nu_bcd1 + deltb(j,h) * lam_db(j) + lam_yd(j,h) =E= 0;
+stat_b(j,h).. nu_bd(j,h) + ((-1) * (k(j) * lambda(j,h))) * nu_bcd2 - piL_b(j,h) =E= 0;
+stat_bc.. 1 + nu_bcd1 + nu_bcd2 - piL_bc =E= 0;
+stat_oc.. 1 + nu_ocd - piL_oc =E= 0;
+stat_x(i,j).. ((-1) * c(i,j)) * nu_ocd + lam_ab(i) + ((-1) * p(i,j)) * lam_db(j) + sum(h, ((-1) * p(i,j)) * lam_yd(j,h)) - piL_x(i,j) =E= 0;
+stat_y(j,h).. nu_bd(j,h) + ((-1) * (k(j) * ((-1) * (gamma(j, h))))) * nu_bcd1 + deltb(j,h) * lam_db(j) + lam_yd(j,h) - piL_y(j,h) + piU_y(j,h) =E= 0;
 
 * Inequality complementarity equations
 comp_ab(i).. ((-1) * (sum(j, x(i,j)) - aa(i))) =G= 0;
 comp_db(j).. sum(i, p(i,j) * x(i,j)) - sum(h$(deltb(j,h)), y(j,h)) =G= 0;
 comp_yd(j,h).. ((-1) * (y(j,h) - sum(i, p(i,j) * x(i,j)))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_b(j,h).. b(j,h) - 0 =G= 0;
+comp_lo_bc.. bc - 0 =G= 0;
+comp_lo_oc.. oc - 0 =G= 0;
+comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
+comp_lo_y(j,h).. y(j,h) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_y(j,h).. deltb(j,h) - y(j,h) =G= 0;
 
 * Original equality equations
 bd(j,h).. b(j,h) =E= dd(j,h) - y(j,h);
@@ -164,7 +186,13 @@ Model mcp_model /
     bcd2.nu_bcd2,
     bd.nu_bd,
     obj.phi,
-    ocd.nu_ocd
+    ocd.nu_ocd,
+    comp_lo_b.piL_b,
+    comp_lo_bc.piL_bc,
+    comp_lo_oc.piL_oc,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y,
+    comp_up_y.piU_y
 /;
 
 * ============================================

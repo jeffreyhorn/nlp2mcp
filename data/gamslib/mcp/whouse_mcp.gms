@@ -49,6 +49,9 @@ Positive Variables
     stock(t)
     sell(t)
     buy(t)
+    piL_stock(t)
+    piL_sell(t)
+    piL_buy(t)
     piU_stock(t)
 ;
 
@@ -77,6 +80,9 @@ Equations
     stat_buy(t)
     stat_sell(t)
     stat_stock(t)
+    comp_lo_buy(t)
+    comp_lo_sell(t)
+    comp_lo_stock(t)
     comp_up_stock(t)
     at
     sb(t)
@@ -87,9 +93,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_buy(t).. price(t) - nu_sb(t) =E= 0;
-stat_sell(t).. ((-1) * price(t)) + nu_sb(t) =E= 0;
-stat_stock(t).. storecost + nu_sb(t) + piU_stock(t) =E= 0;
+stat_buy(t).. price(t) - nu_sb(t) - piL_buy(t) =E= 0;
+stat_sell(t).. ((-1) * price(t)) + nu_sb(t) - piL_sell(t) =E= 0;
+stat_stock(t).. storecost + nu_sb(t) - piL_stock(t) + piU_stock(t) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_buy(t).. buy(t) - 0 =G= 0;
+comp_lo_sell(t).. sell(t) - 0 =G= 0;
+comp_lo_stock(t).. stock(t) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_stock(t).. 100 - stock(t) =G= 0;
@@ -127,6 +138,9 @@ Model mcp_model /
     stat_stock.stock,
     at.cost,
     sb.nu_sb,
+    comp_lo_buy.piL_buy,
+    comp_lo_sell.piL_sell,
+    comp_lo_stock.piL_stock,
     comp_up_stock.piU_stock
 /;
 

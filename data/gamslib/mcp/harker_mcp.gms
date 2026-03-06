@@ -67,6 +67,9 @@ Positive Variables
     t(n,np)
     d(n)
     s(n)
+    piL_t(n,np)
+    piL_d(n)
+    piL_s(n)
 ;
 
 * ============================================
@@ -117,6 +120,9 @@ Equations
     stat_s(n)
     stat_t(n,np)
     stat_tt(l,lp)
+    comp_lo_d(n)
+    comp_lo_s(n)
+    comp_lo_t(n,np)
     bal
     dbal(l)
     in(l)
@@ -134,10 +140,15 @@ Equations
 Alias(l, l__);
 
 * Stationarity equations
-stat_d(n)$(l(n)).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') =E= 0;
-stat_s(n)$(l(n)).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') =E= 0;
-stat_t(n,np).. sum(l, (-1) * nu_in(l)) =E= 0;
+stat_d(n)$(l(n)).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') - piL_d(n) =E= 0;
+stat_s(n)$(l(n)).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') - piL_s(n) =E= 0;
+stat_t(n,np).. sum(l, (-1) * nu_in(l)) - piL_t(n,np) =E= 0;
 stat_tt(l,lp).. ((-1) * nu_dbal(l)) - nu_in(l) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_d(n).. d(n) - 0 =G= 0;
+comp_lo_s(n).. s(n) - 0 =G= 0;
+comp_lo_t(n,np).. t(n,np) - 0 =G= 0;
 
 * Original equality equations
 bal.. sum(l, d(l)) =E= sum(l, s(l));
@@ -156,7 +167,9 @@ objoli.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sum(lp, (d
 * fixed for excluded instances to satisfy MCP matching.
 
 d.fx(n)$(not (l(n))) = 0;
+piL_d.fx(n)$(not (l(n))) = 0;
 s.fx(n)$(not (l(n))) = 0;
+piL_s.fx(n)$(not (l(n))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -181,7 +194,10 @@ Model mcp_model /
     in.nu_in,
     objdef.obj,
     objoli.nu_objoli,
-    sbal.nu_sbal
+    sbal.nu_sbal,
+    comp_lo_d.piL_d,
+    comp_lo_s.piL_s,
+    comp_lo_t.piL_t
 /;
 
 * ============================================

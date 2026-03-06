@@ -27,7 +27,7 @@ Alias(i, j);
 
 Parameters
     gendata(i,genchar) /p1.a 213.1, p1.b 11.669, p1.c 0.00533, p1.upplim 200, p1.lowlim 50, p2.a 200, p2.b 10.333, p2.c 0.00889, p2.upplim 150, p2.lowlim 37.5, p3.a 240, p3.b 10.833, p3.c 0.00741, p3.upplim 180, p3.lowlim 45/
-    pexp(cg) /a 0, b 1, c 2/
+    pexp(cg) /b 1, c 2/
     b(i,j) /p1.p1 0.0676, p1.p2 0.00953, p1.p3 -0.00507, p2.p1 0.00953, p2.p2 0.0521, p2.p3 0.00901, p3.p1 -0.00507, p3.p2 0.00901, p3.p3 0.0294/
     b0(i) /p1 -0.0766, p2 -0.00342, p3 0.0189/
 ;
@@ -57,6 +57,8 @@ Variables
 Positive Variables
     p(i)
     lam_demcons
+    piL_p(i)
+    piU_p(i)
 ;
 
 * ============================================
@@ -89,6 +91,8 @@ Equations
     stat_cost
     stat_p(i)
     comp_demcons
+    comp_lo_p(i)
+    comp_up_p(i)
     costfn
     lossfn
 ;
@@ -99,13 +103,19 @@ Equations
 
 * Stationarity equations
 stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons - piL_p(i) + piU_p(i) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
 
+* Lower bound complementarity equations
+comp_lo_p(i).. p(i) - gendata(i,"lowlim") =G= 0;
+
+* Upper bound complementarity equations
+comp_up_p(i).. gendata(i,"upplim") - p(i) =G= 0;
+
 * Original equality equations
-costfn.. cost =E= sum((i,cg), gendata(i,cg) * power(p(i), pexp(cg)));
+costfn.. cost =E= sum((i,cg), gendata(i,cg) * p(i) ** pexp(cg));
 lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
 
 
@@ -127,7 +137,9 @@ Model mcp_model /
     stat_p.p,
     comp_demcons.lam_demcons,
     costfn.nu_costfn,
-    lossfn.loss
+    lossfn.loss,
+    comp_lo_p.piL_p,
+    comp_up_p.piU_p
 /;
 
 * ============================================

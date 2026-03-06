@@ -52,6 +52,7 @@ Positive Variables
     x(i,j)
     lam_supply(i)
     lam_demand(j)
+    piL_x(i,j)
 ;
 
 * ============================================
@@ -77,6 +78,7 @@ Equations
     stat_x(i,j)
     comp_demand(j)
     comp_supply(i)
+    comp_lo_x(i,j)
     cost
 ;
 
@@ -85,11 +87,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + lam_supply(i) - lam_demand(j) =E= 0;
+stat_x(i,j).. c(i,j) + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
 
 * Inequality complementarity equations
 comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
 comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
 
 * Original equality equations
 cost.. z =E= sum((i,j), c(i,j) * x(i,j));
@@ -112,7 +117,8 @@ Model mcp_model /
     stat_x.x,
     comp_demand.lam_demand,
     comp_supply.lam_supply,
-    cost.z
+    cost.z,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

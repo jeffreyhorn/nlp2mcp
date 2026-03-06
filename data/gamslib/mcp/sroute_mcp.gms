@@ -50,6 +50,7 @@ Variables
 
 Positive Variables
     x(i,ip,ipp)
+    piL_x(i,ip,ipp)
 ;
 
 * ============================================
@@ -73,6 +74,7 @@ x.l(i,ip,ipp) = 1;
 
 Equations
     stat_x(i,ip,ipp)
+    comp_lo_x(i,ip,ipp)
     cd
 ;
 
@@ -81,9 +83,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,ip,ipp).. darc(i,ip) =E= 0;
+stat_x(i,ip,ipp).. darc(i,ip) - piL_x(i,ip,ipp) =E= 0;
 
 * Inequality complementarity equations
+
+* Lower bound complementarity equations
+comp_lo_x(i,ip,ipp).. x(i,ip,ipp) - 0 =G= 0;
 
 * Original equality equations
 cd.. cost =E= sum((i,ip,ipp), darc(ip,ipp) * x(i,ip,ipp));
@@ -104,7 +109,8 @@ cd.. cost =E= sum((i,ip,ipp), darc(ip,ipp) * x(i,ip,ipp));
 
 Model mcp_model /
     stat_x.x,
-    cd.cost
+    cd.cost,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

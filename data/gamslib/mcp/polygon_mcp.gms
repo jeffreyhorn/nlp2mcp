@@ -43,6 +43,8 @@ Positive Variables
     theta(i)
     lam_ordered(i)
     lam_distance(i,j)
+    piL_r(i)
+    piL_theta(i)
     piU_r(i)
     piU_theta(i)
 ;
@@ -75,6 +77,8 @@ Equations
     stat_theta(i)
     comp_distance(i,j)
     comp_ordered(i)
+    comp_lo_r(i)
+    comp_lo_theta(i)
     comp_up_r(i)
     comp_up_theta(i)
     obj
@@ -87,12 +91,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$sameas(i, 'i25') + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) + piU_r(i) =E= 0;
-stat_theta(i).. ((-1) * (0.5 * r(i) ** 2 * cos(0) * (-1))) + nu_theta_fx_i25$sameas(i, 'i25') + lam_ordered(i) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) + piU_theta(i) =E= 0;
+stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$sameas(i, 'i25') + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_r(i) + piU_r(i) =E= 0;
+stat_theta(i).. ((-1) * (0.5 * sqr(r(i)) * cos(0) * (-1))) + nu_theta_fx_i25$sameas(i, 'i25') + lam_ordered(i) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_theta(i) + piU_theta(i) =E= 0;
 
 * Inequality complementarity equations
 comp_distance(i,j)$(ord(j) > ord(i)).. ((-1) * (sqr(r(i)) + sqr(r(j)) - 2 * r(i) * r(j) * cos(theta(j) - theta(i)) - 1)) =G= 0;
 comp_ordered(i)$(ord(i) <= card(i) - 1).. ((-1) * (theta(i) - theta(i+1))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_r(i).. r(i) - 0 =G= 0;
+comp_lo_theta(i).. theta(i) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_r(i).. 1 - r(i) =G= 0;
@@ -112,6 +120,7 @@ theta_fx_i25.. theta("i25") - 3.141592653589793 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 lam_distance.fx(i,j)$(not (ord(j) > ord(i))) = 0;
+lam_ordered.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -134,6 +143,8 @@ Model mcp_model /
     obj.polygon_area,
     r_fx_i25.nu_r_fx_i25,
     theta_fx_i25.nu_theta_fx_i25,
+    comp_lo_r.piL_r,
+    comp_lo_theta.piL_theta,
     comp_up_r.piU_r,
     comp_up_theta.piU_theta
 /;

@@ -20,8 +20,11 @@ Sets
     t(tt) /'1', '2', '3', '4', '5', '6'/
 ;
 
+Parameters
+    load(*) /'1' 1200, '2' 1500, '3' 1100, '4' 1800, '5' 950, '6' 1300/
+;
+
 Scalars
-    load /1300/
     losscof /8e-05/
     n /12/
 ;
@@ -59,6 +62,9 @@ Positive Variables
     v(tt)
     lam_demcons(t)
     piL_thermal(t)
+    piL_hydro(t)
+    piL_loss(t)
+    piL_q(tt)
     piL_v(tt)
     piU_thermal(t)
     piU_hydro(t)
@@ -109,6 +115,9 @@ Equations
     stat_thermal(t)
     stat_v(tt)
     comp_demcons(t)
+    comp_lo_hydro(t)
+    comp_lo_loss(t)
+    comp_lo_q(tt)
     comp_lo_thermal(t)
     comp_lo_v(tt)
     comp_up_hydro(t)
@@ -132,9 +141,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4.97) * nu_dischar(t) - lam_demcons(t) + piU_hydro(t) =E= 0;
-stat_loss(t).. nu_losseq(t) + lam_demcons(t) =E= 0;
-stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + sum(t, nu_dischar(t)) =E= 0;
+stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4.97) * nu_dischar(t) - lam_demcons(t) - piL_hydro(t) + piU_hydro(t) =E= 0;
+stat_loss(t).. nu_losseq(t) + lam_demcons(t) - piL_loss(t) =E= 0;
+stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + sum(t, nu_dischar(t)) - piL_q(tt) =E= 0;
 stat_thermal(t).. 1.15 * n * card(t) * (8 + 0.0032 * thermal(t)) - lam_demcons(t) - piL_thermal(t) + piU_thermal(t) =E= 0;
 stat_v(tt).. nu_flow(tt) + nu_v_fx_0$sameas(tt, '0') + nu_v_fx_1$sameas(tt, '1') + nu_v_fx_2$sameas(tt, '2') + nu_v_fx_3$sameas(tt, '3') + nu_v_fx_4$sameas(tt, '4') + nu_v_fx_5$sameas(tt, '5') + nu_v_fx_6$sameas(tt, '6') - piL_v(tt) + piU_v(tt) =E= 0;
 
@@ -142,6 +151,9 @@ stat_v(tt).. nu_flow(tt) + nu_v_fx_0$sameas(tt, '0') + nu_v_fx_1$sameas(tt, '1')
 comp_demcons(t).. thermal(t) + hydro(t) - (load(t) + loss(t)) =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_hydro(t).. hydro(t) - 0 =G= 0;
+comp_lo_loss(t).. loss(t) - 0 =G= 0;
+comp_lo_q(tt).. q(tt) - 0 =G= 0;
 comp_lo_thermal(t).. thermal(t) - 150 =G= 0;
 comp_lo_v(tt).. v(tt) - 60000 =G= 0;
 
@@ -172,6 +184,7 @@ v_fx_6.. v("6") - 100000 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 q.fx(tt)$(not (t(tt))) = 0;
+piL_q.fx(tt)$(not (t(tt))) = 0;
 nu_flow.fx(tt)$(not (ord(tt) > 1)) = 0;
 
 * ============================================
@@ -205,6 +218,9 @@ Model mcp_model /
     v_fx_4.nu_v_fx_4,
     v_fx_5.nu_v_fx_5,
     v_fx_6.nu_v_fx_6,
+    comp_lo_hydro.piL_hydro,
+    comp_lo_loss.piL_loss,
+    comp_lo_q.piL_q,
     comp_lo_thermal.piL_thermal,
     comp_lo_v.piL_v,
     comp_up_hydro.piU_hydro,

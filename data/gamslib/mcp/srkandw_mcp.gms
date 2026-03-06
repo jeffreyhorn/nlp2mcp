@@ -19,9 +19,14 @@ Sets
     i /'raw-1', 'raw-2'/
     j /'p-1', 'p-2'/
     t /'time-1', 'time-2'/
-    n /'n-1', 'n-2', 'n-3', 'n-4', 'n-5', 'n-6', 'n-7', 'n-8', 'n-9', 'n-10', 'n-11', 'n-12'/
+    n /'n-0', 'n-1', 'n-2', 'n-3', 'n-4', 'n-5', 'n-6', 'n-7', 'n-8', 'n-9', 'n-10', 'n-11', 'n-12'/
     tn(t,n) /'time-1'.'n-1', 'time-1'.'n-2', 'time-1'.'n-3', 'time-2'.'n-4', 'time-2'.'n-5', 'time-2'.'n-6', 'time-2'.'n-7', 'time-2'.'n-8', 'time-2'.'n-9', 'time-2'.'n-10', 'time-2'.'n-11', 'time-2'.'n-12'/
-    tree(n,n) /'n-1'.'n-4', 'n-1'.'n-5', 'n-1'.'n-6', 'n-2'.'n-7', 'n-2'.'n-8', 'n-2'.'n-9', 'n-3'.'n-10', 'n-3'.'n-11', 'n-3'.'n-12'/
+    tree(n,n) /'n-0'.'n-1', 'n-0'.'n-2', 'n-0'.'n-3', 'n-1'.'n-4', 'n-1'.'n-5', 'n-1'.'n-6', 'n-2'.'n-7', 'n-2'.'n-8', 'n-2'.'n-9', 'n-3'.'n-10', 'n-3'.'n-11', 'n-3'.'n-12'/
+    sn(n)
+    leaf(n)
+    run /run1, run2, run3, run4, run5, run6, run7, run8, run9/
+    method /'0-default', '1-fastback', '2-fastback+forw', '3-fastback+back'/
+    rleaf(method,run,n)
 ;
 
 Alias(n, nn);
@@ -31,17 +36,29 @@ Parameters
     a(j,i) /'p-1'.'raw-1' 2, 'p-1'.'raw-2' 6, 'p-2'.'raw-1' 3, 'p-2'.'raw-2' 3.4/
     f(j,t) /'p-1'.'time-1' 7, 'p-1'.'time-2' 10, 'p-2'.'time-1' 12, 'p-2'.'time-2' 15/
     stdat(n,*) /'n-1'.prob 0.3, 'n-1'.'p-1' 200, 'n-1'.'p-2' 180, 'n-2'.prob 0.4, 'n-2'.'p-1' 180, 'n-2'.'p-2' 160, 'n-3'.prob 0.3, 'n-3'.'p-1' 160, 'n-3'.'p-2' 140, 'n-4'.prob 0.2, 'n-4'.'p-1' 200, 'n-4'.'p-2' 180, 'n-5'.prob 0.5, 'n-5'.'p-1' 180, 'n-5'.'p-2' 160, 'n-6'.prob 0.3, 'n-6'.'p-1' 160, 'n-6'.'p-2' 140, 'n-7'.prob 0.3, 'n-7'.'p-1' 200, 'n-7'.'p-2' 180, 'n-8'.prob 0.4, 'n-8'.'p-1' 180, 'n-8'.'p-2' 160, 'n-9'.prob 0.3, 'n-9'.'p-1' 160, 'n-9'.'p-2' 140, 'n-10'.prob 0.4, 'n-10'.'p-1' 200, 'n-10'.'p-2' 180, 'n-11'.prob 0.4, 'n-11'.'p-1' 180, 'n-11'.'p-2' 160, 'n-12'.prob 0.2, 'n-12'.'p-1' 160, 'n-12'.'p-2' 140/
-    dem(n,j)
-    prob(n)
+    dem(j,n)
+    prob(n) /'n-0' 1/
+    sprob(n)
+    ScenRedParms(*)
+    ScenRedReport(*)
+    report(method,run,*)
 ;
 
 Scalars
     b /50/
+    psum /0/
+    rc /0/
+    runCount /0/
+    runMax /inf/
 ;
 
-dem(n,j) = stdat(n,j);
+leaf(n) = 1;
+sn(n) = 1;
+
+dem(j,n) = stdat(n,j);
 prob(n) = stdat(n,"prob");
 prob(n) = sum((nn,n), stdat(nn,"prob") * stdat(n,"prob"));
+sprob(n) = prob(n);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -105,23 +122,23 @@ Equations
 
 * Index aliases to avoid 'Set is under control already' error
 * (GAMS Error 125 when equation domain index is reused in sum)
-Alias(n, n__);
+Alias(sn, sn__);
 
 * Stationarity equations
-stat_x(i,t).. c(i) + lam_bal + sum((j,n), ((-1) * a(j,i)) * lam_dembal(j,t,n)) + sum((j,n), ((-1) * a(j,i)) * lam_dembalx(j,t,n)) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. prob(n) * f(j,t) - lam_dembal(j,t,n) - lam_dembalx(j,t,n) - piL_y(j,t,n) =E= 0;
+stat_x(i,t).. c(i) + lam_bal + sum((j,sn), ((-1) * a(j,i)) * lam_dembal(j,t,sn)) + sum((j,sn), ((-1) * a(j,i)) * lam_dembalx(j,t,sn)) - piL_x(i,t) =E= 0;
+stat_y(j,t,n).. sum(sn, (-1) * lam_dembal(j,t,sn)) + sum(sn, (-1) * lam_dembalx(j,t,sn)) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembal(j,t,n).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - dem(n,j) =G= 0;
-comp_dembalx(j,t,n)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum((nn,n__), y(j,t-1,nn))) =G= 0;
+comp_dembal(j,t,sn).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - dem(j,sn) =G= 0;
+comp_dembalx(j,t,sn)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - (dem(j,sn) + eps * sum((nn,sn__), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,t).. x(i,t) - 0 =G= 0;
 comp_lo_y(j,t,n).. y(j,t,n) - 0 =G= 0;
 
 * Original equality equations
-obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,n), prob(n) * f(j,t) * y(j,t,n));
+obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,sn), sprob(sn) * f(j,t) * y(j,t,sn));
 
 
 * ============================================
@@ -131,7 +148,7 @@ obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,n), prob(n) * f(j,t) * y(j,t
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-lam_dembalx.fx(j,t,n)$(not (ord(t) > 1)) = 0;
+lam_dembalx.fx(j,t,sn)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
