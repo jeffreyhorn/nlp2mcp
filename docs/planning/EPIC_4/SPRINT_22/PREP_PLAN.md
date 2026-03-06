@@ -490,7 +490,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md && echo "E
 - `docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md`
 - Bottleneck stage identified for 9 profiled models (2 extrapolated)
 - Tractability classification for all 11 models
-- Quick-win opportunities documented (timeout increase for 2 models; no code-level quick wins)
+- Quick-win opportunities documented (timeout increase to 150s for 3 models; no code-level quick wins)
 
 ### Acceptance Criteria
 

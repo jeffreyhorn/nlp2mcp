@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-06
 **Sprint:** 22 (Prep Task 5)
-**Pipeline timeout:** 60 seconds (subprocess-level, covers full parse+translate pipeline)
+**Translate subprocess timeout:** 60 seconds (applies to `batch_translate.py` subprocess only; parse in `batch_parse.py` runs in-process without this timeout)
 
 ---
 
@@ -20,7 +20,7 @@ All 11 translation timeout models were listed and 9 were profiled with stage-lev
 
 ## Timeout Model Inventory
 
-11 models fail with `translation_timeout` in `gamslib_status.json` (committed data as of 2026-03-06).
+11 models are marked with `nlp2mcp_translate.error.category: "timeout"` in `gamslib_status.json` (committed metadata updated 2026-02-12; counts and timings below are from local profiling runs on 2026-03-06).
 
 | Model | Type | File Size | Parse Time (pipeline) | Vars | Eqs | Sets | Params | Est. Var Instances |
 |-------|------|-----------|----------------------|------|-----|------|--------|--------------------|
