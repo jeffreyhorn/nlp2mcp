@@ -80,7 +80,7 @@ The issue is that `_collect_free_indices()` correctly identifies free indices bu
 | `src/kkt/stationarity.py` | 1543-1613 | Enhance `_collect_free_indices()` | ~20 |
 | `src/kkt/stationarity.py` | 1748-1759 | Fix indexed-constraint domain conditioning | ~15 |
 | `src/kkt/stationarity.py` | 1774-1783 | Fix scalar-constraint domain conditioning | ~15 |
-| `tests/kkt/test_stationarity.py` | new | Unit tests for uncontrolled index detection | ~60 |
+| `tests/unit/kkt/test_stationarity_uncontrolled_indices.py` | new | Unit tests for uncontrolled index detection | ~60 |
 
 **Total estimated LOC:** ~110
 **Estimated effort:** 3-5h
@@ -99,13 +99,13 @@ The issue is that `_collect_free_indices()` correctly identifies free indices bu
 
 3. **`_collect_free_indices()` changes are narrowing, not broadening.** The function may be enhanced to detect additional free indices (improving detection), but it cannot cause false positives for indices that ARE controlled — the walk explicitly tracks bound indices from enclosing Sum/Prod nodes (line 1576).
 
-4. **Existing test coverage.** `tests/kkt/test_stationarity.py` tests stationarity generation for representative models. The regression test strategy (Section 4) will add specific tests for the 10 affected models.
+4. **Existing test coverage.** Stationarity generation and `_collect_free_indices()` behavior are already covered by unit tests under `tests/unit/kkt/`. The regression test strategy (Section 4) will add specific tests for the 10 affected models within that suite.
 
 **Mitigation:** Run full pipeline retest after implementation. Compare solve/match counts before vs after. Any currently-solving model that regresses indicates a bug in the fix, not an inherent risk.
 
 ### 1.6 Test Strategy
 
-1. **Unit tests:** Add tests to `tests/kkt/test_stationarity.py` verifying:
+1. **Unit tests:** Add tests under `tests/unit/kkt/` (extending the existing `_collect_free_indices()` coverage) verifying:
    - `_collect_free_indices()` correctly identifies uncontrolled indices in representative derivative expressions
    - Sum wrapping is applied when uncontrolled indices are detected
    - Sum wrapping is NOT applied when all indices are controlled (regression guard)
@@ -176,7 +176,7 @@ This is the same class of issue that affected egypt/fawley in Sprint 21, but ces
 |------|-------|--------|----------|
 | `src/emit/original_symbols.py` | ~795 | Add domain membership check | ~5 |
 | `src/emit/original_symbols.py` | new helper | `_is_in_domain()` function | ~25 |
-| `tests/emit/test_original_symbols.py` | new | Unit tests for domain filtering | ~40 |
+| `tests/unit/emit/test_original_symbols.py` | new | Unit tests for domain filtering | ~40 |
 
 **Total estimated LOC:** ~70
 **Estimated effort:** 1-2h
@@ -288,7 +288,7 @@ The equation domain uses `(r,c)` but the KKT derivation introduces `sum((R,C), .
 |------|-------|--------|----------|
 | `src/emit/expr_to_gams.py` | 670-745 | Enhance `collect_index_aliases()` with nesting + case | ~30 |
 | `src/emit/expr_to_gams.py` | 748-868 | Enhance `resolve_index_conflicts()` for nested aliases | ~20 |
-| `tests/emit/test_expr_to_gams.py` | new | Unit tests for nested/case conflicts | ~50 |
+| `tests/unit/emit/test_expr_to_gams.py` | new | Unit tests for nested/case conflicts | ~50 |
 
 **Total estimated LOC:** ~100
 **Estimated effort:** 1-2h

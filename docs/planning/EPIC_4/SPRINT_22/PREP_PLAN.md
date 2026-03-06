@@ -610,11 +610,11 @@ path_syntax_error fixes are the highest-leverage Sprint 22 work (−11 models ta
 
 From Task 2's catalog update, the priority subcategories for Sprint 22 are:
 
-- **Subcategory C (9 models):** Uncontrolled set in stationarity equations. Root cause: KKT assembly generates stationarity equations with set indices that aren't controlled by a domain. Fix likely in `src/kkt/stationarity.py` or `src/emit/emit_gams.py`.
-- **Subcategory B (5 models):** Domain violation in emitted parameter data. Root cause: emitter writes parameter values for domain combinations that don't exist. Fix in `src/emit/emit_gams.py`.
-- **Subcategory G (2 models):** Set index reuse conflict in sum. Root cause: translator reuses same index variable in nested sum expressions. Fix in `src/kkt/` or `src/ad/`.
+- **Subcategory C (10 models):** Uncontrolled set in stationarity equations ($149). Root cause: KKT assembly generates stationarity equations with set indices that aren't controlled by a domain. Fix in `src/kkt/stationarity.py`.
+- **Subcategory B (2 models):** Domain violation in emitted parameter data ($170). Root cause: emitter writes parameter values for domain combinations that don't exist. Fix in `src/emit/original_symbols.py`.
+- **Subcategory G (4 models):** Set index reuse conflict in sum ($125). Root cause: emitter's alias detection misses nested and case-insensitive conflicts. Fix in `src/emit/expr_to_gams.py`.
 
-**Source:** `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md`
+**Source:** `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md` (Task 2)
 
 ### What Needs to Be Done
 
