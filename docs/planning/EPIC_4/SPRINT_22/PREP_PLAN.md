@@ -775,13 +775,13 @@ make test
 
 ## Task 9: Assess Match Rate Improvement Opportunities
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Medium
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** Task 3 (need path_solve_terminated classification for newly-solving model projections)
-**Unknowns to Verify:** KU-11, KU-12, KU-13, KU-26
+**Verification Results:** KU-11 (PARTIALLY REFUTED), KU-12 (VERIFIED), KU-13 (PARTIALLY CONFIRMED), KU-26 (PARTIALLY VERIFIED)
 
 ### Objective
 
@@ -814,11 +814,27 @@ Sprint 21 WS6 improved match rate via tolerance relaxation (DEFAULT_RTOL to 2e-3
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md` with full classification of 35 mismatch models
+- Classified models into 6 categories: A (KKT bug, 7), B (non-convex multi-optima, 7), C (CGE cluster, 4), D (zero MCP objective, 5), E (large divergence, 7), F (moderate divergence, 5)
+- Assessed KU-11 (PARTIALLY REFUTED), KU-12 (VERIFIED), KU-13 (PARTIALLY CONFIRMED), KU-26 (PARTIALLY VERIFIED)
+- Computed tolerance analysis for all 10 near-miss models — none recoverable through tolerance relaxation
+- Projected Sprint 22 match rate improvement: 37–51 models (conservative–optimistic)
 
 ### Result
 
-*To be completed*
+35 mismatch models classified into 6 divergence categories:
+- **Category A (KKT bug, 7 models):** 7 verified_convex models mismatch — definitive KKT formulation bugs (aircraft, apl1p, apl1pca, jobt, mine, senstran, sparta)
+- **Category B (non-convex, 7 models):** Principal-agent family (Issues #958–#964) with multiple KKT points — not fixable through tolerance relaxation
+- **Category C (CGE cluster, 4 models):** irscge, lrgcge, moncge, stdcge all converge to same MCP obj (25.508) — shared CGE-specific root cause
+- **Category D (zero MCP obj, 5 models):** catmix, himmel16, mathopt1, polygon, qdemo7 — likely missing objective terms in KKT
+- **Category E (large divergence, 7 models):** Diverse root causes, >20% divergence
+- **Category F (moderate divergence, 5 models):** Model-specific issues, 5–25% divergence
+
+Key findings:
+- Multi-optima accounts for only 20% of mismatches; KKT bugs (A+D) account for 34%
+- Tolerance relaxation cannot recover any near-miss models (closest is 2.54x threshold)
+- Sprint 22 target >= 35 achievable in all scenarios (conservative: 37, expected: 42, optimistic: 51)
+- Primary match driver is newly-solving models (50–70% expected match rate), not fixing existing mismatches
 
 ### Verification
 
@@ -829,18 +845,18 @@ test -f docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md && echo "EXISTS" |
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md`
-- Classification of 5-10 near-miss models
-- Projected match rate from Sprint 22 solve improvements
-- Recommendations for targeted match improvements
+- [x] `docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md`
+- [x] Classification of all 35 mismatch models (10 near-miss analyzed in detail)
+- [x] Projected match rate from Sprint 22 solve improvements
+- [x] Recommendations for targeted match improvements
 
 ### Acceptance Criteria
 
-- [ ] Current match/mismatch list captured
-- [ ] 5-10 near-miss models classified
-- [ ] Non-convex multi-optima models identified
-- [ ] Projected match improvement estimated
-- [ ] Recommendations documented for Sprint 22
+- [x] Current match/mismatch list captured
+- [x] 5-10 near-miss models classified
+- [x] Non-convex multi-optima models identified
+- [x] Projected match improvement estimated
+- [x] Recommendations documented for Sprint 22
 
 ---
 
@@ -991,7 +1007,7 @@ Before Sprint 22 Day 1, verify:
 - [x] Baseline metrics captured (Task 8)
 
 ### Medium Priority (Nice to Have)
-- [ ] Match rate improvement opportunities assessed (Task 9)
+- [x] Match rate improvement opportunities assessed (Task 9)
 
 ### Verification Commands
 

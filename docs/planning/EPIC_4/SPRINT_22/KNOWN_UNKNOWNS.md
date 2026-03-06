@@ -323,7 +323,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** *To be completed during Task 9*
+**Verification Results:** PARTIALLY REFUTED. Multi-optima (Category B: 7 ps* models) accounts for only 20% of the 35 mismatches. KKT formulation bugs are more prevalent: 7 verified_convex models (Category A) have definitive KKT bugs (convex NLP has a proven global optimal objective value, so any MCP/NLP objective divergence indicates a formulation error), and 5 models (Category D) have zero MCP objectives suggesting missing objective terms. Combined, KKT bugs (Categories A+D) account for 34% of mismatches. The remaining 46% includes CGE cluster (4 models with identical MCP obj 25.508), large divergence (7 models), and moderate divergence (5 models) with diverse root causes. Sprint 22 should prioritize Category A (LP KKT derivation pattern) and Category D (missing objective terms) as the most actionable improvements.
 
 ---
 
@@ -344,7 +344,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** *To be completed during Task 9*
+**Verification Results:** VERIFIED — TOLERANCE IS APPROPRIATE. Analysis of 10 nearest-miss models shows even the closest (ps2_f_s at 0.5% relative difference) is 2.54x the tolerance threshold. The nearest misses are non-convex models (Issues #958/#959) where relaxing tolerance would accept genuinely different KKT solutions as "matches." No model is "almost matching" due to tolerance strictness — all mismatches represent genuinely different solutions. The formula handles zero objectives (atol) and large objectives (rtol scaling) correctly. No tolerance changes recommended for Sprint 22.
 
 ---
 
@@ -364,7 +364,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min (review model types)
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** *To be completed during Task 9*
+**Verification Results:** PARTIALLY CONFIRMED. Current match rates: verified_convex 7/14 (50%), likely_convex 23/51 (45.1%), overall 30/65 (46.2%). However, the 50% verified_convex rate is misleadingly low — the 7 mismatches are likely KKT bugs (Category A), not inherent MCP limitations. path_syntax_error models are 42.5% verified_convex and 57.5% likely_convex; path_solve_terminated are 33.3% verified_convex and 66.7% likely_convex. Conservative projection: 50% match rate for newly-solving models; optimistic: 70%. Sprint 22 target (>= 35) requires +5 matches — achievable with +10 new solves at 50% match rate.
 
 ---
 
@@ -384,7 +384,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** *To be completed during Task 9*
+**Verification Results:** PARTIALLY VERIFIED. No NLP `.lst` files are tracked in `data/gamslib/raw/` in version control (they are generated locally by `gams <model>.gms` and excluded from the repo). During analysis, 18 `.lst` files were present in the local workspace from prior pipeline runs, covering 5 of 35 mismatch models (14%). Coverage is insufficient for comprehensive variable-level divergence case studies. However, `gamslib_status.json` already contains NLP and MCP objective values from pipeline runs, which is sufficient for the quantitative analysis performed in Task 9. For deeper case studies, NLP solves can be run on demand for specific models (<1 min each). This is a minor inconvenience, not a blocker.
 
 ---
 
@@ -639,9 +639,9 @@ Use this template during Sprint 22 to track verification results.
 | KU-08 | Yes | 2026-03-05 | Confirmed — PATH tuning irrelevant | No action; redirect to pre-solver fixes |
 | KU-09 | Yes | 2026-03-06 | Confirmed (moved) — chain/rocket now model_infeasible | Address in Task 4 (model_infeasible triage) |
 | KU-10 | Yes | 2026-03-06 | Confirmed + expanded — Category C now 8 models (was 4) | `_fx_` suppression fix targets 5 models; 3 others need separate fixes |
-| KU-11 | | | | |
-| KU-12 | | | | |
-| KU-13 | | | | |
+| KU-11 | Yes | 2026-03-06 | Partially refuted — multi-optima is only 20%; KKT bugs (A+D) are 34% | Prioritize Category A (LP KKT) and D (zero obj) investigation |
+| KU-12 | Yes | 2026-03-06 | Verified — tolerance appropriate; nearest miss 2.54x threshold | No tolerance changes; relaxation would mask bugs |
+| KU-13 | Yes | 2026-03-06 | Partially confirmed — 50–70% match rate for new solves | Target achievable with +10 new solves at 50% rate |
 | KU-14 | Yes | 2026-03-06 | Assumption WRONG — all 3 are non-trivial (1-2h each) | Not Sprint 22 scope; parse rate already 98.1% |
 | KU-15 | Yes | 2026-03-06 | Verified — parse rate stable at 154/157 (identical failures) | Monitor at Sprint 22 checkpoints |
 | KU-16 | Yes | 2026-03-05 | Non-issue — gamma/psi handled context-sensitively | Fix is isolated to mingamma only |
@@ -654,7 +654,7 @@ Use this template during Sprint 22 to track verification results.
 | KU-23 | Yes | 2026-03-06 | Confirmed — orani linearized CGE, structurally incompatible | Add model class detection heuristic; exclude from metrics |
 | KU-24 | Yes | 2026-03-06 | Confirmed — 7-14 models at risk (6 CGE highest) | Fix Category A KKT bugs early; track influx |
 | KU-25 | Yes | 2026-03-06 | Confirmed — `ut` filter lost in MCP; needs IR enrichment | Fix is 2-3h (parser/IR), not 1h as assumed |
-| KU-26 | | | | |
+| KU-26 | Yes | 2026-03-06 | Partially verified — no .lst files tracked in repo (local-only); JSON obj data sufficient | On-demand NLP solves for deeper case studies |
 
 ---
 
