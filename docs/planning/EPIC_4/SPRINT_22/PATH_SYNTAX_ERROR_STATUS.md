@@ -29,7 +29,7 @@ Sprint 22 targets path_syntax_error **≤ 30** (−13 models). Analysis shows th
 | K: smax domain (NEW) | — | 1 | +1 | tricp (was unsubcategorized) |
 | New patterns | — | 5 | +5 | GUSS, duplicate element, hyphenated labels, etc. |
 | Pipeline artifact | — | 1 | +1 | feedtray: MCP file missing |
-| Unsubcategorized | 3 | 0 | −3 | All classified |
+| Unsubcategorized | 3 | 0 | −3 | Legacy bucket emptied (all mapped to New patterns or Pipeline artifact) |
 | **Total** | **48** | **43** | **−5** | |
 
 ### What Sprint 21 Fixed
@@ -83,10 +83,10 @@ These models were not in the Sprint 21 catalog — they are newly translating an
 | cesam | $170 | B | Domain violation in parameter data |
 | cesam2 | $170 | B | Domain violation in parameter data |
 | decomp | $66 | A | Missing data in equations |
-| feedtray | unknown | Unclassified | MCP file not on disk; JSON records path_syntax_error |
-| imsl | $116 | Unclassified | Label unknown — needs investigation |
+| feedtray | unknown | Pipeline artifact | MCP file not on disk; JSON records path_syntax_error |
+| imsl | $116 | New pattern | Label unknown — needs investigation |
 | indus | $141 | A | Missing parameter data |
-| nonsharp | $187 | Unclassified | Assigned set used as domain |
+| nonsharp | $187 | New pattern | Assigned set used as domain |
 | qsambal | $141 | A | Missing parameter data |
 | ramsey | $141 | A | Missing parameter data |
 | sambal | $141 | A | Missing parameter data |
@@ -342,12 +342,12 @@ Add B + J + I + F (7 models, ~4-5h) to reach **~6 models** remaining.
 | china | $141 | 3 | A | Reclassified (was B) | Param 'sys' unassigned |
 | decomp | $66 | — | A | New | Missing data in equations |
 | dyncge | $149 | 22 | C | Stayed | Uncontrolled set |
-| feedtray | — | — | Unclassified | New | MCP file not on disk |
+| feedtray | — | — | Pipeline artifact | New | MCP file not on disk |
 | glider | $149 | 210 | C | Stayed | Uncontrolled set |
 | gtm | $120/$340 | 8 | New pattern | Reclassified (was B) | Unquoted hyphenated labels |
 | gussrisk | $161 | 6 | New pattern | Reclassified (was A) | GUSS dict syntax |
 | harker | $149 | 18 | C | Stayed | Uncontrolled set |
-| imsl | $116 | — | Unclassified | New | Label unknown |
+| imsl | $116 | — | New pattern | New | Label unknown |
 | indus | $141 | — | A | New | Missing parameter data |
 | kand | $125 | 3 | G | Stayed | Set index reuse |
 | korcge | $149 | 12 | C | Stayed | Uncontrolled set |
