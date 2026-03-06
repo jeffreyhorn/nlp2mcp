@@ -28,7 +28,7 @@ Sprint 22 targets Match >= 35 (+5 from baseline 30). This analysis classifies th
 | Newly-solving verified_convex models | +5 to +8 | High |
 | Newly-solving likely_convex models | +3 to +6 | Medium |
 | Existing mismatch fixes (KKT bugs) | +2 to +5 | Medium |
-| **Projected total** | **40–49** | — |
+| **Projected total** | **37–51** | — |
 
 Sprint 22 target of >= 35 is **achievable** through newly-solving models from path_syntax_error and path_solve_terminated fixes alone, without fixing any existing mismatches.
 
@@ -243,21 +243,21 @@ Coverage for mismatch analysis:
 
 ### 4.1 Match Improvement from Newly-Solving Models
 
-Sprint 22 targets solving +10 models (from path_syntax_error ≤30 and path_solve_terminated ≤5).
+Sprint 22's **committed** target is +10 new solves from path_syntax_error fixes (reducing from 40 to ≤30). Additional solves from path_solve_terminated (≤5 target, +7 models) and model_infeasible fixes (+3 models) represent **stretch** capacity, for up to +20 total new solves if all workstreams succeed.
 
-**Projected new solves by source:**
+**Projected new solves by source (potential capacity):**
 
 | Source | Target | Convexity | Expected Match Rate |
 |--------|--------|-----------|-------------------|
-| path_syntax_error fixes | +10 | 17 VC + 23 LC | 50–70% |
-| path_solve_terminated fixes | +7 | 4 VC + 8 LC | 50–70% |
-| model_infeasible fixes | +3 | varies | 30–50% |
+| path_syntax_error fixes | +10 (committed) | 17 VC + 23 LC | 50–70% |
+| path_solve_terminated fixes | +7 (stretch) | 4 VC + 8 LC | 50–70% |
+| model_infeasible fixes | +3 (stretch) | varies | 30–50% |
 
-**Conservative projection (50% match rate for new solves):**
+**Conservative projection (committed scope, 50% match rate):**
 - +10 new solves × 50% = +5 new matches → **35 total (meets target)**
 
-**Optimistic projection (70% match rate for new solves):**
-- +17 new solves × 70% = +12 new matches → **42 total (exceeds target)**
+**Optimistic projection (all workstreams, 70% match rate):**
+- +20 new solves × 70% = +14 new matches → **44 total (exceeds target)**
 
 ### 4.2 Match Improvement from Existing Mismatch Fixes
 
