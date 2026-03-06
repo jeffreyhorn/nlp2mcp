@@ -142,12 +142,12 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 | WS3: model_infeasible fixes | 4–8h | 3–4 models + permanent exclusions |
 | WS4: Solution divergence investigation | 2–3h | 2–3 representative models |
 | WS5: Timeout quick win | 0.5h | One-line change |
-| WS6: Deferred #764 (mexss) | 3–4h | Part of WS3 effort |
+| WS6: Deferred #764 (mexss) | 3–4h | Included in WS3 effort (not additive) |
 | Pipeline retest | 2h | After each major workstream completion |
 | Sprint close + retrospective | 1h | Day 14 |
-| **Total (workstreams only)** | **~21–34h** | |
+| **Total (workstreams only)** | **~20.5–33.5h** | WS6 overlaps WS3; counted once |
 | Sprint overhead (Day 0 kickoff, checkpoints, buffer) | ~3–5h | |
-| **Total (full sprint)** | **~24–39h** | Budget: 24–30h; contingency plans if over |
+| **Total (full sprint)** | **~23.5–38.5h** | Budget: 24–30h; contingency plans if over |
 
 ---
 
@@ -163,7 +163,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 | `make test` — confirm 3,957 passed | Clean baseline |
 | Review PLAN.md and all prep task deliverables | Plan internalized |
 | Create SPRINT_LOG.md from template | Sprint log initialized |
-| Run pipeline: `.venv/bin/python scripts/gamslib/run_full_test.py --only-parse --quiet` | Baseline confirmed |
+| Run pipeline: `.venv/bin/python scripts/gamslib/run_full_test.py --quiet` | Baseline confirmed |
 
 **Day 0 criterion:** All tests pass; SPRINT_LOG.md created; baseline matches BASELINE_METRICS.md.
 
@@ -176,7 +176,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 | Task | Files | Deliverable |
 |---|---|---|
-| WS5: Increase subprocess timeout 60s → 150s | `scripts/gamslib/run_full_test.py` | egypt, ferts, dinam translate |
+| WS5: Increase subprocess timeout 60s → 150s | `scripts/gamslib/batch_translate.py` | egypt, ferts, dinam translate |
 | WS1/C: Analyze `_collect_free_indices()` in stationarity.py | `src/kkt/stationarity.py` | Understand uncontrolled set root cause |
 | WS1/C: Implement domain conditioning for uncontrolled sets | `src/kkt/stationarity.py` | First 3–5 of 10 subcategory C models fixed |
 | Unit tests for domain conditioning | `tests/unit/kkt/` | ≥ 3 tests |

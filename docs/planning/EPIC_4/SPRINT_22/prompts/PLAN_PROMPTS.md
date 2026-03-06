@@ -31,7 +31,7 @@ This file contains comprehensive prompts for each day of Sprint 22 (Days 0–14)
    - Record the baseline commit: `53ac5979`
 
 3. **Run baseline pipeline** (0.25h)
-   - Run `.venv/bin/python scripts/gamslib/run_full_test.py --only-parse --quiet`
+   - Run `.venv/bin/python scripts/gamslib/run_full_test.py --quiet`
    - Confirm parse 154/157, translate 136/154, solve 65/136, match 30/65
 
 4. **Map open issues to workstreams** (0.25h)
@@ -92,7 +92,7 @@ After committing and pushing all changes:
 **Tasks to Complete (~2–3 hours):**
 
 1. **WS5: Increase subprocess timeout** (0.25h)
-   - In `scripts/gamslib/run_full_test.py`, change subprocess timeout from 60s to 150s
+   - In `scripts/gamslib/batch_translate.py`, change subprocess timeout from 60s to 150s
    - Verify egypt, ferts, dinam now translate (may need to rerun pipeline for these 3)
 
 2. **WS1/C: Analyze uncontrolled set root cause** (0.5h)
@@ -660,6 +660,13 @@ gh pr create --title "Sprint 22 Day 10: Checkpoint 2 + WS4 divergence complete" 
 - [ ] 0 regressions
 - [ ] Mark Day 11 as complete in PLAN.md
 
+**Pull Request & Review:**
+```bash
+gh pr create --title "Sprint 22 Day 11: Buffer / overflow tasks" \
+             --body "Completes overflow tasks from Days 1-10. Full pipeline retest with regression verification."
+```
+Request review from Copilot, address comments, merge when approved.
+
 ---
 
 ## Day 12 Prompt: Sprint Close Prep
@@ -695,6 +702,13 @@ gh pr create --title "Sprint 22 Day 10: Checkpoint 2 + WS4 divergence complete" 
 - [ ] Documentation updated
 - [ ] Mark Day 12 as complete in PLAN.md
 
+**Pull Request & Review:**
+```bash
+gh pr create --title "Sprint 22 Day 12: Sprint close prep" \
+             --body "Files GitHub issues for deferred items. Updates KNOWN_UNKNOWNS.md and SPRINT_LOG.md."
+```
+Request review from Copilot, address comments, merge when approved.
+
 ---
 
 ## Day 13 Prompt: Final Pipeline Retest + Metrics
@@ -727,6 +741,13 @@ gh pr create --title "Sprint 22 Day 10: Checkpoint 2 + WS4 divergence complete" 
 - [ ] Final metrics recorded
 - [ ] All acceptance criteria evaluated
 - [ ] Mark Day 13 as complete in PLAN.md
+
+**Pull Request & Review:**
+```bash
+gh pr create --title "Sprint 22 Day 13: Final pipeline retest + metrics" \
+             --body "Final full pipeline run. Records definitive sprint metrics and evaluates acceptance criteria."
+```
+Request review from Copilot, address comments, merge when approved.
 
 ---
 
