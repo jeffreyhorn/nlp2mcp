@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 5: Translation Timeout Profiling - 2026-03-06
+
+**Branch:** `planning/sprint22-task5`
+
+#### Added
+- Translation timeout profile (`docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md`)
+  - 11 timeout models profiled (8 with full stage-level timing, 3 extrapolated from parse times)
+  - Jacobian computation identified as dominant bottleneck in 8 of 11 models (57–99% of total time)
+  - 3 tractability tiers: Near-Miss (3: egypt, dinam, ferts), Slow (3: clearlak, turkpow, srpchase), Intractable (5: sarf, iswnm, nebrazil, ganges, gangesx)
+  - Recommendation: translation timeout reduction NOT a Sprint 22 workstream; trivial timeout increase (60s→150s) could recover 2 models
+
+#### Changed
+- Updated PREP_PLAN.md: Task 5 marked COMPLETE with results
+
 ### Sprint 22 Prep Task 4: model_infeasible Triage - 2026-03-06
 
 **Branch:** `planning/sprint22-task4`

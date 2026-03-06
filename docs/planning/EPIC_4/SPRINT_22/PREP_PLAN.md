@@ -414,7 +414,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md && echo "EXIST
 
 ## Task 5: Profile Translation Timeout Bottlenecks
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -465,11 +465,18 @@ The 120s timeout is set in the pipeline runner. Some models may be very close to
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md` with comprehensive profiling data
+- Profiled 8 of 11 models with full stage-level timing (remaining 3 extrapolated from parse times)
+- Classified all 11 models into 3 tractability tiers: Near-Miss (3), Slow (3), Intractable (5)
 
 ### Result
 
-*To be completed*
+- **Jacobian computation is the dominant bottleneck** in 8 of 11 models (57–99% of total time)
+- **Earley parsing** bottlenecks the remaining 3 models (dinam, ganges, gangesx)
+- **2 genuine near-misses**: egypt (59.6s total — literally borderline) and dinam (135s, parse-dominated)
+- **No quick wins for Sprint 22**: architectural changes needed (sparsity-aware Jacobian or LP fast-path)
+- **Trivial timeout increase** from 60s to 150s could recover egypt and dinam (reducing timeout count from 11 to 9)
+- **Translation timeout reduction NOT recommended** as a Sprint 22 workstream — not aligned with solve-stage focus
 
 ### Verification
 
@@ -481,18 +488,18 @@ test -f docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md && echo "E
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md`
-- Bottleneck stage identified for 3-5 representative models
+- Bottleneck stage identified for 8 profiled models (3 extrapolated)
 - Tractability classification for all 11 models
-- Quick-win opportunities identified (if any)
+- Quick-win opportunities documented (timeout increase for 2 models; no code-level quick wins)
 
 ### Acceptance Criteria
 
-- [ ] All 11 timeout models listed
-- [ ] 3-5 models profiled with stage-level timing
-- [ ] Bottleneck stage identified for profiled models
-- [ ] Tractability classification complete
-- [ ] Quick-win recommendations documented (or "none found")
-- [ ] Findings inform Sprint 22 scope decision (include timeout work or defer?)
+- [x] All 11 timeout models listed
+- [x] 3-5 models profiled with stage-level timing (8 profiled)
+- [x] Bottleneck stage identified for profiled models
+- [x] Tractability classification complete
+- [x] Quick-win recommendations documented (or "none found")
+- [x] Findings inform Sprint 22 scope decision (include timeout work or defer?)
 
 ---
 
