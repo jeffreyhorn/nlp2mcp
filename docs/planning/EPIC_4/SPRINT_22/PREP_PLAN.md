@@ -437,7 +437,7 @@ Sprint 21 identified 11 timeout models and 6 internal_error models at the transl
 - #926 (dinam), #927 (egypt), #928 (ferts), #929 (ganges), #930 (gangesx)
 - #931 (iswnm), #932 (nebrazil), #933 (tricp)
 
-The 120s timeout is set in the pipeline runner. Some models may be very close to completion (e.g., 130s) while others may be fundamentally intractable (hours).
+The 60s translation subprocess timeout is set in `batch_translate.py` (line 260). Some models may be very close to completion (e.g., 106s for ferts) while others may be fundamentally intractable (hours).
 
 **Source:** Sprint 21 SPRINT_RETROSPECTIVE.md (lines 104-105)
 
@@ -475,7 +475,7 @@ The 120s timeout is set in the pipeline runner. Some models may be very close to
 - **Earley parsing** bottlenecks the remaining 4 models (egypt, dinam, ganges, gangesx)
 - **4 near-misses**: egypt (59.6s), ferts (105.9s), dinam (135.0s), clearlak (191.8s)
 - **No quick wins for Sprint 22**: architectural changes needed (sparsity-aware Jacobian or LP fast-path)
-- **Trivial timeout increase** from 60s to 150s could recover egypt, ferts, and dinam (reducing timeout count from 11 to 8)
+- **Trivial timeout increase**: increasing the **60s translation subprocess timeout in `batch_translate.py` to 150s** could recover egypt, ferts, and dinam (reducing timeout count from 11 to 8)
 - **Translation timeout reduction NOT recommended** as a Sprint 22 workstream — not aligned with solve-stage focus
 
 ### Verification
