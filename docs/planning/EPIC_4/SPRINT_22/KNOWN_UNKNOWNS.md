@@ -175,7 +175,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
+**Verification Results:** PARTIALLY REFUTED. Only 2 of the original 5 Category B models (elec, lands) remain in path_solve_terminated. cclinpts and hs62 now solve (model_optimal). etamac shifted to Category C (MCP pairing) after Sprint 21's `.l` clamping fix resolved its domain errors but revealed 8 MCP pairing errors. The remaining 4 execution-error models (elec, fawley, lands, tforss) have diverse root causes: conditional domain loss (elec), `$` condition dropping (fawley), loop-dependent parameters (lands, tforss) — not just `.l` initialization. "All fixable through smarter `.l` initialization" was too optimistic; each model needs a different fix approach.
 
 ---
 
@@ -195,7 +195,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
+**Verification Results:** REFUTED. Tested `option domlim = 100;` on 5 models (elec, etamac, fawley, lands, tforss). None were helped. `domlim` controls domain violation tolerance during the solve phase (within PATH), but all 5 models abort before the solve is submitted — errors occur during GAMS equation generation/evaluation or model matrix construction, prior to solver invocation. For etamac, the failure is now MCP pairing (not domain errors, which were already fixed by `.l` clamping). For the other 4, equation-generation-time errors (division by zero, NA values) are not affected by `domlim`. Model-specific fixes (conditional domain restoration, `$` condition preservation, loop-dependent parameter resolution) are required instead.
 
 ---
 
@@ -236,7 +236,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
+**Verification Results:** CONFIRMED. The original elec model uses `ut(i,j)$(ord(j) > ord(i))` for upper-triangular self-pair exclusion. The MCP conversion lost this filter entirely: `ut` is initialized to the full Cartesian product (`ut(i,j) = 1`) and summations use `sum((i,j), ...)` instead of `sum(ut(i,j), ...)`. This causes division by zero for all 25 self-pairs where `distance = 0`. Additionally, the MCP double-counts electron pairs (sums both `(i,j)` and `(j,i)`). Fix requires parser/IR enrichment to preserve set-filtered domains through differentiation — estimated 2-3h, not the 1h originally assumed.
 
 ---
 
@@ -279,7 +279,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1h
 **Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
+**Verification Results:** CONFIRMED (moved). chain and rocket are no longer classified as path_solve_terminated — they are now model_infeasible in the pipeline. This confirms they are genuinely locally infeasible (PATH ran to completion with Normal Completion status). They are excluded from path_solve_terminated fix targets and should be addressed as part of model_infeasible triage (Task 4).
 
 ---
 
@@ -300,7 +300,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1h
 **Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
+**Verification Results:** CONFIRMED + EXPANDED. The original 4 Category C models (fdesign, trussm, hhfair, pak) still have MCP pairing errors, confirming the KKT builder bug hypothesis. Additionally, 4 new models (etamac, otpop, pindyck, springchain) also have MCP pairing errors — expanding Category C from 4 to 8 models. The dominant sub-pattern is `_fx_` equation suppression (5 models: etamac, hhfair, otpop, pak, pindyck) where the KKT builder emits equations for variables that GAMS has already eliminated via `.fx` assignments. fdesign/trussm are unmatched free variables (different sub-pattern). springchain is a stationarity domain mismatch (stationarity generated over all `n` but constraint is conditional on `ord(n) > 1`).
 
 ---
 
@@ -640,12 +640,12 @@ Use this template during Sprint 22 to track verification results.
 | KU-02 | | | | |
 | KU-03 | Yes | 2026-03-05 | Refuted — 3 different errors, not common $170 | Investigate cesam/cesam2 fresh; reclassify agreste/china/gtm |
 | KU-04 | | | | |
-| KU-05 | | | | |
-| KU-06 | | | | |
+| KU-05 | Yes | 2026-03-06 | Partially refuted — diverse root causes, not just `.l` init | Model-specific fixes needed per model |
+| KU-06 | Yes | 2026-03-06 | Refuted — `domlim` doesn't apply to equation generation | Model-specific fixes instead of `domlim` |
 | KU-07 | | | | |
 | KU-08 | Yes | 2026-03-05 | Confirmed — PATH tuning irrelevant | No action; redirect to pre-solver fixes |
-| KU-09 | | | | |
-| KU-10 | | | | |
+| KU-09 | Yes | 2026-03-06 | Confirmed (moved) — chain/rocket now model_infeasible | Address in Task 4 (model_infeasible triage) |
+| KU-10 | Yes | 2026-03-06 | Confirmed + expanded — Category C now 8 models (was 4) | `_fx_` suppression fix targets 5 models; 3 others need separate fixes |
 | KU-11 | | | | |
 | KU-12 | | | | |
 | KU-13 | | | | |
@@ -660,7 +660,7 @@ Use this template during Sprint 22 to track verification results.
 | KU-22 | | | | |
 | KU-23 | | | | |
 | KU-24 | | | | |
-| KU-25 | | | | |
+| KU-25 | Yes | 2026-03-06 | Confirmed — `ut` filter lost in MCP; needs IR enrichment | Fix is 2-3h (parser/IR), not 1h as assumed |
 | KU-26 | | | | |
 
 ---
