@@ -683,13 +683,13 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_FIX_DESIGN.md && echo "
 
 ## Task 8: Establish Sprint 22 Baseline Metrics
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 1 hour
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Development team
 **Dependencies:** None
-**Unknowns to Verify:** KU-14, KU-15
+**Unknowns to Verify:** KU-14 (VERIFIED), KU-15 (VERIFIED)
 
 ### Objective
 
@@ -725,11 +725,26 @@ Sprint 21 final metrics (from SPRINT_RETROSPECTIVE.md):
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/BASELINE_METRICS.md` with full error category breakdown
+- Ran full pipeline: 157 models, 3636.9s total
+- Ran test suite: 3,957 passed, 10 skipped, 1 xfailed
+- Verified KU-14: 3 lexer_invalid_char models (danwolfe, partssupply, turkey) all have non-trivial grammar root causes, not Sprint 22 scope
+- Verified KU-15: parse rate stable at 154/157 (98.1%), same 3 failures as Sprint 21
 
 ### Result
 
-*To be completed*
+Sprint 22 baseline established with one minor regression from Sprint 21 final:
+- **tricp** moved from translate success → translate timeout (+1 timeout, -1 path_syntax_error)
+- Net: Translate 136/154 (was 137), path_syntax_error 40 (was 41)
+- All other metrics match Sprint 21 final exactly
+
+| Stage | Sprint 21 Final | Sprint 22 Baseline | Delta |
+|-------|----------------|-------------------|-------|
+| Parse | 154/157 (98.1%) | 154/157 (98.1%) | — |
+| Translate | 137/154 (89.0%) | 136/154 (88.3%) | -1 (tricp timeout) |
+| Solve | 65/137 (47.4%) | 65/136 (47.8%) | — |
+| Match | 30/65 (46.2%) | 30/65 (46.2%) | — |
+| Tests | 3,957 passed | 3,957 passed | — |
 
 ### Verification
 
@@ -743,9 +758,9 @@ make test
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_22/BASELINE_METRICS.md` with full error category breakdown
-- Pipeline results matching Sprint 21 final (or noting any differences)
-- Test count confirmed
+- [x] `docs/planning/EPIC_4/SPRINT_22/BASELINE_METRICS.md` with full error category breakdown
+- [x] Pipeline results compared to Sprint 21 final (1 minor regression noted: tricp timeout)
+- [x] Test count confirmed: 3,957 passed, 10 skipped, 1 xfailed
 
 ### Acceptance Criteria
 
@@ -972,7 +987,7 @@ Before Sprint 22 Day 1, verify:
 - [ ] Translation timeout bottlenecks profiled (Task 5)
 - [ ] Deferred issues scope decision documented (Task 6)
 - [ ] path_syntax_error fix design ready (Task 7)
-- [ ] Baseline metrics captured (Task 8)
+- [x] Baseline metrics captured (Task 8)
 
 ### Medium Priority (Nice to Have)
 - [ ] Match rate improvement opportunities assessed (Task 9)

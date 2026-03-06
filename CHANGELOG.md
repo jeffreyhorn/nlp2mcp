@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 8: Establish Baseline Metrics - 2026-03-06
+
+**Branch:** `planning/sprint22-task8`
+
+#### Added
+- Baseline metrics document (`docs/planning/EPIC_4/SPRINT_22/BASELINE_METRICS.md`)
+  - Full pipeline run: Parse 154/157, Translate 136/154, Solve 65/136, Match 30/65
+  - Complete error breakdown: path_syntax_error 40, model_infeasible 15, path_solve_terminated 12, path_solve_license 4
+  - path_syntax_error subcategory mapping (A:15, C:10, G:4, B:2, I:2, J:2, New:5)
+  - All 35 match mismatch details with objective comparisons
+  - Sprint 22 target gap analysis
+
+#### Changed
+- Updated PREP_PLAN.md: Task 8 marked COMPLETE with baseline comparison table
+- Updated KNOWN_UNKNOWNS.md: Verified KU-14 (3 lexer failures are non-trivial, not Sprint 22 scope), KU-15 (parse rate stable at 154/157)
+
+#### Notes
+- Minor regression from Sprint 21 final: tricp moved from translate success → timeout (+1 timeout)
+- Test suite: 3,957 passed, 10 skipped, 1 xfailed (matches Sprint 21 final)
+
 ### Sprint 22 Prep Task 7: path_syntax_error Fix Design - 2026-03-06
 
 **Branch:** `planning/sprint22-task7`
