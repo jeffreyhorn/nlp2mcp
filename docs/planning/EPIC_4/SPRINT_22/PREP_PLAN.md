@@ -736,13 +736,14 @@ Sprint 21 final metrics (from SPRINT_RETROSPECTIVE.md):
 Sprint 22 baseline established with one minor regression from Sprint 21 final:
 - **tricp** moved from translate success → translate timeout (+1 timeout, -1 path_syntax_error)
 - Net: Translate 136/154 (was 137), path_syntax_error 40 (was 41)
-- All other metrics match Sprint 21 final exactly
+- Parse, match, and test counts match Sprint 21 final exactly
+- Solve success count unchanged at 65; denominator changed from 137 to 136 (tricp no longer reaches solve stage), so rate shifted from 47.4% to 47.8%
 
 | Stage | Sprint 21 Final | Sprint 22 Baseline | Delta |
 |-------|----------------|-------------------|-------|
 | Parse | 154/157 (98.1%) | 154/157 (98.1%) | — |
 | Translate | 137/154 (89.0%) | 136/154 (88.3%) | -1 (tricp timeout) |
-| Solve | 65/137 (47.4%) | 65/136 (47.8%) | — |
+| Solve | 65/137 (47.4%) | 65/136 (47.8%) | denominator -1 (tricp) |
 | Match | 30/65 (46.2%) | 30/65 (46.2%) | — |
 | Tests | 3,957 passed | 3,957 passed | — |
 

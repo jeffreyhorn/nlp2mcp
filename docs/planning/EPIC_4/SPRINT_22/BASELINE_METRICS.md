@@ -4,7 +4,7 @@
 **Branch:** `main` (commit after PR #996 merge)
 **Pipeline:** `run_full_test.py --quiet` (convex models only)
 **Test Suite:** `make test`
-**nlp2mcp Version:** 1.1.0
+**nlp2mcp Version:** 1.1.0 (from `pyproject.toml`; note `src/__init__.py` still reports `__version__ = "0.6.0"` at this commit)
 **GAMS Version:** 51.3.0
 **PATH Solver License:** Demo (300 variables/constraints)
 
@@ -101,15 +101,15 @@ Based on PATH_SYNTAX_ERROR_STATUS.md (Task 2) with current adjustments:
 
 | Subcategory | Count | Models | GAMS Error |
 |-------------|-------|--------|------------|
-| A: Missing data | 15 | agreste, camcge, camshape, china, decomp, imsl(*), indus, lmp2, markov, paperco, ps5_s_mn, ps10_s_mn, qsambal, ramsey, sambal, saras | $141/$66/$140 |
+| A: Missing data | 14 | agreste, camcge, camshape, china, decomp, indus, lmp2, markov, paperco, ps5_s_mn, ps10_s_mn, qsambal, ramsey, sambal, saras | $141/$66/$140 |
 | B: Domain violation | 2 | cesam, cesam2 | $170 |
 | C: Uncontrolled set | 10 | ampl, dyncge, glider, harker, korcge, paklive, robert, shale, tabora, trnspwl | $149 |
 | G: Set index reuse | 4 | kand, prolog, spatequ, srkandw | $125 |
 | I: Unreferenced var | 2 | nemhaus, worst | $483 |
 | J: Dimension mismatch | 2 | launch, pdi | $70 |
-| New patterns | 5 | gussrisk ($161), gtm ($120/$340), marco ($172), nonsharp ($187), imsl ($116) | Various |
+| New patterns | 6 | gussrisk ($161), gtm ($120/$340), imsl ($116), marco ($172), nonsharp ($187) | Various |
 
-(*) imsl appears in both Subcategory A (Task 2 classified as "New pattern") and the New patterns row.
+Note: imsl was classified as "New pattern" in Task 2 and is counted only under the "New patterns" subcategory here.
 
 ### Timing
 
