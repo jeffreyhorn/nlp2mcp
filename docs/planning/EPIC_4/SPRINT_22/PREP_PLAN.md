@@ -467,15 +467,15 @@ The 120s timeout is set in the pipeline runner. Some models may be very close to
 
 - Created `docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md` with comprehensive profiling data
 - Profiled 9 of 11 models with full stage-level timing (remaining 2 extrapolated from parse times)
-- Classified all 11 models into 3 tractability tiers: Near-Miss (3), Slow (3), Intractable (5)
+- Classified all 11 models into 3 tractability tiers: Near-Miss (4), Slow (2), Intractable (5)
 
 ### Result
 
 - **Jacobian computation is the dominant bottleneck** in 7 of 11 models (57–99% of total time)
 - **Earley parsing** bottlenecks the remaining 4 models (egypt, dinam, ganges, gangesx)
-- **2 genuine near-misses**: egypt (59.6s total — literally borderline) and dinam (135s, parse-dominated)
+- **4 near-misses**: egypt (59.6s), ferts (105.9s), dinam (135.0s), clearlak (191.8s)
 - **No quick wins for Sprint 22**: architectural changes needed (sparsity-aware Jacobian or LP fast-path)
-- **Trivial timeout increase** from 60s to 150s could recover egypt and dinam (reducing timeout count from 11 to 9)
+- **Trivial timeout increase** from 60s to 150s could recover egypt, ferts, and dinam (reducing timeout count from 11 to 8)
 - **Translation timeout reduction NOT recommended** as a Sprint 22 workstream — not aligned with solve-stage focus
 
 ### Verification

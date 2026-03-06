@@ -11,11 +11,10 @@
 All 11 translation timeout models were listed and 9 were profiled with stage-level timing (the remaining 2 share characteristics with profiled models). **The Jacobian computation stage is the dominant bottleneck** in 7 of 11 models, consuming 57–99% of total translation time. The remaining 4 models (egypt, dinam, ganges, gangesx) are bottlenecked by Lark/Earley parsing.
 
 **Key findings:**
-- **2 models are genuine near-misses** that complete within 135s: egypt (60s) and dinam (135s)
-- **3 models complete in 100–250s** (ferts 106s, clearlak 192s, turkpow 245s) — addressable with Jacobian optimization
-- **1 model completes in 250–510s** (srpchase 509s) — needs significant Jacobian optimization
+- **4 models are near-misses** completing within 200s: egypt (60s), ferts (106s), dinam (135s), clearlak (192s)
+- **2 models complete in 200–510s** (turkpow 245s, srpchase 509s) — need targeted Jacobian optimization
 - **3 models timeout in Jacobian** after 5+ minutes (sarf, iswnm, nebrazil) — need architectural change
-- **No quick wins exist** for Sprint 22 via timeout increase alone — even doubling to 120s only recovers egypt (1 model)
+- **No quick wins exist** for Sprint 22 via timeout increase alone — doubling the subprocess timeout to 120s recovers egypt and ferts (2 models), but addressing the remaining 9 requires code changes
 
 ---
 
@@ -47,7 +46,7 @@ All 11 translation timeout models were listed and 9 were profiled with stage-lev
 
 ## Profiling Results
 
-9 models were profiled with the full translation pipeline. Timing is wall-clock seconds on a single core (Apple M-series).
+9 models were run under stage-level timing instrumentation; 6 completed end-to-end and 3 were killed mid-Jacobian by a 5-minute per-run timeout. Timing is wall-clock seconds on a single core (Apple M-series).
 
 ### Completed Models (5)
 
@@ -120,14 +119,14 @@ The Lark/Earley parser scales with file complexity (not just size):
 | Model | Total | Gap to 60s | Quick Fix |
 |-------|------:|----------:|-----------|
 | **egypt** | 59.6s | −0.4s | Already borderline; minor parse optimization or timeout=65s would recover |
-| **ferts** | 105.9s | +45.9s | Jacobian optimization for 3-dim variables; timeout=120s may suffice |
+| **ferts** | 105.9s | +45.9s | Jacobian optimization for 3-dim variables; timeout=120s would recover |
 | **dinam** | 135.0s | +75.0s | Parse bottleneck; timeout=150s or Earley optimization |
+| **clearlak** | 191.8s | +131.8s | Jacobian (87%); timeout=200s or sparsity-aware Jacobian |
 
 ### Slow (total 200–600s, needs targeted optimization)
 
 | Model | Total | Bottleneck | Required Optimization |
 |-------|------:|------------|----------------------|
-| **clearlak** | 191.8s | Jacobian (87%) | Sparsity-aware Jacobian |
 | **turkpow** | 244.5s | Jacobian (96%) | Sparsity-aware Jacobian |
 | **srpchase** | 508.5s | Jacobian (99%) | Sparsity-aware Jacobian + dynamic subset resolution |
 
@@ -165,13 +164,13 @@ The Lark/Earley parser scales with file complexity (not just size):
 
 ### Timeout Increase (Trivial Effort)
 
-Increasing the pipeline timeout from 60s to 120s would recover **1 model** (egypt at 60s). Increasing to 150s adds dinam (135s). Increasing to 200s adds ferts (106s) and clearlak (192s).
+Increasing the pipeline timeout from 60s to 120s would recover **2 models** (egypt at 60s, ferts at 106s). Increasing to 150s adds dinam (135s). Increasing to 200s adds clearlak (192s).
 
 | Timeout | Models Recovered | Cumulative |
 |--------:|:-----------------|:-----------|
-| 120s | egypt | 1 |
-| 150s | +dinam | 2 |
-| 200s | +ferts, clearlak | 4 |
+| 120s | egypt, ferts | 2 |
+| 150s | +dinam | 3 |
+| 200s | +clearlak | 4 |
 | 300s | +turkpow | 5 |
 | 600s | +srpchase | 6 |
 | >600s | sarf, iswnm, nebrazil, ganges, gangesx still timeout | — |
@@ -203,7 +202,7 @@ Optimizing the Lark/Earley parser would help egypt, dinam, ganges, and gangesx:
 
 **Translation timeout reduction is NOT recommended as a Sprint 22 workstream.** The primary bottleneck (Jacobian computation) requires architectural changes (sparsity-aware differentiation or LP fast-path) that are multi-day efforts and not aligned with Sprint 22's focus on solve-stage improvements.
 
-**However, a trivial timeout increase from 60s to 150s** (a one-line change in `scripts/gamslib/batch_translate.py:260`) would recover egypt and dinam, reducing the timeout count from 11 to 9. This could be included as a low-effort pipeline improvement if desired.
+**However, a trivial timeout increase from 60s to 150s** (a one-line change in `scripts/gamslib/batch_translate.py:260`) would recover egypt, ferts, and dinam, reducing the timeout count from 11 to 8. This could be included as a low-effort pipeline improvement if desired.
 
 ---
 
