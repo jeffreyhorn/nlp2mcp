@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 9: Match Rate Improvement Analysis - 2026-03-06
+
+**Branch:** `planning/sprint22-task9`
+
+#### Added
+- Match rate analysis document (`docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md`)
+  - 35 mismatch models classified into 6 categories: A (KKT bug, 7), B (non-convex, 7), C (CGE cluster, 4), D (zero MCP obj, 5), E (large divergence, 7), F (moderate, 5)
+  - 7 verified_convex models identified as definitive KKT formulation bugs
+  - Tolerance analysis: nearest miss 2.54x threshold — no recoverable matches through relaxation
+  - Sprint 22 match projection: 37–51 (conservative–optimistic), target >= 35 achievable in all scenarios
+  - Recommendations: prioritize solve improvements as primary match driver; investigate Category A (LP KKT) and D (zero obj) for existing mismatch fixes
+
+#### Changed
+- Updated PREP_PLAN.md: Task 9 marked COMPLETE with classification summary and projection
+- Updated KNOWN_UNKNOWNS.md: Verified KU-11 (partially refuted — multi-optima is only 20%), KU-12 (tolerance appropriate), KU-13 (50–70% match rate for new solves), KU-26 (18 .lst files, JSON data sufficient)
+
 ### Sprint 22 Prep Task 8: Establish Baseline Metrics - 2026-03-06
 
 **Branch:** `planning/sprint22-task8`
