@@ -53,17 +53,17 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 ### KU-01: Subcategory C Uncontrolled Sets — Same Root Cause?
 
 **Priority:** Critical
-**Assumption:** All 9 Subcategory C models (ampl, dyncge, glider, harker, korcge, paklive, robert, shale, tabora) share the same root cause — the KKT stationarity generator emits equations with set indices outside their controlling domain.
+**Assumption:** All 10 current Subcategory C models (ampl, dyncge, glider, harker, korcge, paklive, robert, shale, tabora, trnspwl) share the same root cause — the KKT stationarity generator emits equations with set indices outside their controlling domain. *(Updated from 9 models after Task 2 identified trnspwl as a new Subcategory C entrant.)*
 
 **Research Questions:**
-1. Do all 9 models exhibit the same GAMS error pattern ($149: uncontrolled set)?
+1. Do all 10 models exhibit the same GAMS error pattern ($149: uncontrolled set)?
 2. Are the uncontrolled sets always from stationarity equations (∂L/∂x), or do some come from complementarity or feasibility equations?
 3. Is the root cause in the AD engine (`src/ad/`) or the stationarity builder (`src/kkt/`)?
-4. Do any of the 9 models have multiple distinct uncontrolled-set patterns?
+4. Do any of the 10 models have multiple distinct uncontrolled-set patterns?
 
 **How to Verify:** Examine GAMS `.lst` error output for 3 representative models (dyncge, glider, harker). Trace the uncontrolled set back to the source code that generates it.
 
-**Risk if Wrong:** If there are multiple distinct root causes, a single fix won't address all 9 models. Sprint 22 would need separate fixes per sub-pattern, increasing effort from 3-5h to potentially 8-12h.
+**Risk if Wrong:** If there are multiple distinct root causes, a single fix won't address all 10 models. Sprint 22 would need separate fixes per sub-pattern, increasing effort from 3-5h to potentially 8-12h.
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_syntax_error catalog update)

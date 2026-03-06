@@ -193,7 +193,7 @@ Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into 9 subcategories (A
 - Classified all 43 current path_syntax_error models into subcategories
 - Verified 6 Known Unknowns: KU-01 (confirmed), KU-03 (refuted), KU-16 (non-issue), KU-17 (updated), KU-18 (confirmed), KU-19 (partially refuted)
 - Identified 6 model reclassifications from Sprint 21 subcategories
-- Discovered 6 models with new error patterns not in Sprint 21 catalog
+- Discovered 5 models with new error patterns not in Sprint 21 catalog, plus 1 pipeline artifact (feedtray: MCP file missing)
 
 ### Result
 

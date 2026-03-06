@@ -22,12 +22,13 @@ Sprint 22 targets path_syntax_error **≤ 30** (−13 models). Analysis shows th
 | C: Uncontrolled set | 9 | 10 | +1 | 1 new (trnspwl) |
 | D: Negative exponent | 3 | 0 | −3 | **FULLY RESOLVED** |
 | E: Set quoting | 7 | 0 | −7 | **FULLY RESOLVED** |
-| F: Reserved word | 1 | 1 | 0 | |
+| F: Built-in name collision | 1 | 1 | 0 | |
 | G: Set index reuse | 2 | 4 | +2 | 2 new |
 | I: Unreferenced var | 1 | 2 | +1 | 1 new |
 | J: Dimension mismatch | 1 | 2 | +1 | launch reclassified from D |
 | K: smax domain (NEW) | — | 1 | +1 | tricp (was unsubcategorized) |
-| New patterns | — | 6 | +6 | GUSS, duplicate element, hyphenated labels, etc. |
+| New patterns | — | 5 | +5 | GUSS, duplicate element, hyphenated labels, etc. |
+| Pipeline artifact | — | 1 | +1 | feedtray: MCP file missing |
 | Unsubcategorized | 3 | 0 | −3 | All classified |
 | **Total** | **48** | **43** | **−5** | |
 
@@ -62,7 +63,7 @@ Sprint 22 targets path_syntax_error **≤ 30** (−13 models). Analysis shows th
 | ps2_f_inf | D ($445) | model_optimal | Negative exponent fix |
 | qdemo7 | A ($141) | model_optimal | Data emission fix |
 | quocge | E ($116) | model_optimal | Set quoting fix |
-| sample | E ($116) | model_optimal | Data emission fix |
+| sample | E ($116) | model_optimal | Set quoting fix |
 | ship | A ($141) | model_optimal | Data emission fix |
 | sroute | A ($141) | path_solve_license | Syntax fixed but license limit |
 | stdcge | E ($116) | model_optimal | Set quoting fix |
@@ -256,7 +257,7 @@ Both share the same root cause in KKT assembly — stationarity equations don't 
 
 ---
 
-### 3.9 New Patterns Not Matching Existing Subcategories (6 models)
+### 3.9 New Patterns Not Matching Existing Subcategories (5 models)
 
 These models have error patterns not seen in the Sprint 21 catalog:
 
@@ -267,9 +268,14 @@ These models have error patterns not seen in the Sprint 21 catalog:
 | gtm | $120/$340 | Unquoted hyphenated labels | Emitter outputs `d.l(n-central)` instead of `d.l("n-central")` | 1h |
 | nonsharp | $187 | Assigned set as domain | Dynamic set used as domain (GAMS requires static declared sets) | 1-2h |
 | imsl | $116 | Label unknown | Needs further investigation — possibly data issue or quoting | 1h |
-| feedtray | unknown | MCP file missing | JSON records path_syntax_error but MCP file not on disk | — |
 
 **Note:** gussrisk was previously Subcategory A ($141) and marco was previously Subcategory A ($141). Sprint 21 fixes resolved their original $141 errors, revealing different underlying issues.
+
+### 3.10 Pipeline Artifact Issue (1 model)
+
+| Model | Status | Notes |
+|-------|--------|-------|
+| feedtray | MCP file missing | JSON records path_syntax_error but MCP file not on disk. Needs pipeline re-run to regenerate or investigate why translation succeeded without producing output. Not actionable until MCP file is available. |
 
 ---
 
@@ -285,11 +291,11 @@ Sprint 22 target: path_syntax_error **≤ 30** (need to fix **≥ 13** models fr
 | 4 | B: Domain violation | 2 | 1-2h | 31 | Pattern already addressed in Sprint 21 |
 | 5 | J: Dimension mismatch | 2 | 1-2h | 33 | Systematic translator fix |
 | 6 | I: Unreferenced var | 2 | 1h | 35 | Simple model statement filtering |
-| 7 | F: Reserved word | 1 | 1h | 36 | Isolated single-model fix |
+| 7 | F: Built-in name collision | 1 | 1h | 36 | Isolated single-model fix |
 | 8 | K: smax domain | 1 | 1h | 37 | Single model, new subcategory |
-| 9 | New patterns | 5* | 4-7h | 42 | Assorted emitter fixes |
+| 9 | New patterns | 5 | 4-7h | 42 | Assorted emitter fixes |
 
-*Excluding feedtray (MCP file missing)
+**Note:** feedtray (1 model) excluded from fix plan — MCP file missing, not actionable until pipeline re-run.
 
 **Total estimated effort: 17-27h**
 
