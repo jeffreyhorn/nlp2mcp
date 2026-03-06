@@ -862,13 +862,13 @@ test -f docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md && echo "EXISTS" |
 
 ## Task 10: Plan Sprint 22 Detailed Schedule
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3 hours
 **Deadline:** Before Sprint 22 Day 1
 **Owner:** Sprint planning
 **Dependencies:** All tasks (1-9)
-**Unknowns to Verify:** (all remaining — synthesize findings into plan)
+**Verification Results:** All prep findings synthesized into 6 workstreams across 15-day schedule
 
 ### Objective
 
@@ -915,11 +915,31 @@ Sprint 21 Retrospective recommended targets:
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/PLAN.md` with full 15-day schedule and 6 workstreams
+- Created `docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md` with day-by-day execution prompts for all 15 days
+- Created `docs/planning/EPIC_4/SPRINT_22/SPRINT_LOG.md` template with day sections, checkpoint tables, and final metrics
+- Redirected PATH Solver Tuning budget (4–6h) to pre-solver error fixes (all path_solve_terminated models fail before PATH runs)
+- Reduced MCP-NLP Divergence Analysis scope (6–8h → 2–3h) since Task 9 completed bulk analysis
+- Added WS5 timeout quick win (0.5h) and WS6 deferred #764 (3–4h)
+- Defined checkpoint gates at Days 5 and 10 with GO/NO-GO criteria
+- Defined 4 contingency plans for high-risk scenarios
 
 ### Result
 
-*To be completed*
+Sprint 22 plan synthesizes all prep task findings into 6 workstreams:
+- **WS1 (5–9h):** path_syntax_error subcategory C/G/B fixes targeting 16 models → path_syntax_error ≤ 30
+- **WS2 (6–10h):** path_solve_terminated pre-solver error fixes targeting 8–12 models → path_solve_terminated ≤ 5
+- **WS3 (4–8h):** model_infeasible KKT bug fixes targeting 3–4 models + 4 permanent exclusions → model_infeasible ≤ 12
+- **WS4 (2–3h):** Solution divergence investigation of 2–3 representative Category A/D models
+- **WS5 (0.5h):** Translation timeout increase 60s → 150s recovering 3 models
+- **WS6 (3–4h):** Deferred issue #764 (mexss `sameas` guard)
+
+Key schedule decisions:
+- WS1 scheduled first (Days 1–3) as highest leverage workstream
+- WS3 scheduled after WS1 (Days 7–8) to absorb model_infeasible influx from KU-24
+- WS4 investigation-only (Days 9–10) with implementation deferred to Sprint 23 if complex
+- Checkpoint 1 (Day 5) gates on path_syntax_error ≤ 32 and Solve ≥ 70
+- Checkpoint 2 (Day 10) gates on all primary targets
 
 ### Verification
 
@@ -939,14 +959,14 @@ test -f docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md && echo "EXISTS" 
 
 ### Acceptance Criteria
 
-- [ ] Plan created with all 15 days defined
-- [ ] All workstreams mapped to specific days
-- [ ] Checkpoint gates defined with go/no-go criteria
-- [ ] Acceptance criteria match Sprint 22 targets
-- [ ] Known unknowns referenced
-- [ ] Contingency plans for high-risk workstreams
-- [ ] Day-by-day prompts created
-- [ ] Sprint log template created
+- [x] Plan created with all 15 days defined
+- [x] All workstreams mapped to specific days
+- [x] Checkpoint gates defined with go/no-go criteria
+- [x] Acceptance criteria match Sprint 22 targets
+- [x] Known unknowns referenced
+- [x] Contingency plans for high-risk workstreams
+- [x] Day-by-day prompts created
+- [x] Sprint log template created
 
 ---
 
@@ -997,13 +1017,13 @@ Before Sprint 22 Day 1, verify:
 - [x] Known Unknowns document created (Task 1)
 - [x] path_syntax_error catalog updated (Task 2)
 - [x] path_solve_terminated models classified (Task 3)
-- [ ] Sprint 22 plan created with day-by-day schedule (Task 10)
+- [x] Sprint 22 plan created with day-by-day schedule (Task 10)
 
 ### High Priority (Should Complete)
-- [ ] model_infeasible models triaged (Task 4)
-- [ ] Translation timeout bottlenecks profiled (Task 5)
-- [ ] Deferred issues scope decision documented (Task 6)
-- [ ] path_syntax_error fix design ready (Task 7)
+- [x] model_infeasible models triaged (Task 4)
+- [x] Translation timeout bottlenecks profiled (Task 5)
+- [x] Deferred issues scope decision documented (Task 6)
+- [x] path_syntax_error fix design ready (Task 7)
 - [x] Baseline metrics captured (Task 8)
 
 ### Medium Priority (Nice to Have)
