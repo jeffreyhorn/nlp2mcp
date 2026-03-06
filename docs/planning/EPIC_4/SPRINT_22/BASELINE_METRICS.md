@@ -101,13 +101,13 @@ Based on PATH_SYNTAX_ERROR_STATUS.md (Task 2) with current adjustments:
 
 | Subcategory | Count | Models | GAMS Error |
 |-------------|-------|--------|------------|
-| A: Missing data | 14 | agreste, camcge, camshape, china, decomp, indus, lmp2, markov, paperco, ps5_s_mn, ps10_s_mn, qsambal, ramsey, sambal, saras | $141/$66/$140 |
+| A: Missing data | 15 | agreste, camcge, camshape, china, decomp, indus, lmp2, markov, paperco, ps5_s_mn, ps10_s_mn, qsambal, ramsey, sambal, saras | $141/$66/$140 |
 | B: Domain violation | 2 | cesam, cesam2 | $170 |
 | C: Uncontrolled set | 10 | ampl, dyncge, glider, harker, korcge, paklive, robert, shale, tabora, trnspwl | $149 |
 | G: Set index reuse | 4 | kand, prolog, spatequ, srkandw | $125 |
 | I: Unreferenced var | 2 | nemhaus, worst | $483 |
 | J: Dimension mismatch | 2 | launch, pdi | $70 |
-| New patterns | 6 | gussrisk ($161), gtm ($120/$340), imsl ($116), marco ($172), nonsharp ($187) | Various |
+| New patterns | 5 | gussrisk ($161), gtm ($120/$340), imsl ($116), marco ($172), nonsharp ($187) | Various |
 
 Note: imsl was classified as "New pattern" in Task 2 and is counted only under the "New patterns" subcategory here.
 
