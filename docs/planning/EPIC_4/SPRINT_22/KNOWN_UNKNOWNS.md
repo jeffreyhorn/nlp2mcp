@@ -38,9 +38,9 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 | KU-17 | Deferred Subcategories | Subcategory I (nemhaus) MCP variable filtering is straightforward | Low | Filter unreferenced variables from model statement | Day 2 |
 | KU-18 | Deferred Subcategories | Subcategory J (pdi) dimension mismatch is a pairing logic bug | Low | Fix in MCP pair generation, not KKT | Day 2 |
 | KU-19 | Deferred Subcategories | 3 unsubcategorized models (dinam, ferts, tricp) fit existing subcategories | High | No new subcategory needed | Day 1 |
-| KU-20 | Deferred Items | #764 (mexss accounting vars) overlaps with Subcategory C work | Medium | Partial overlap — same KKT assembly code | Day 2 |
-| KU-21 | Deferred Items | #827 (gtm domain violations) overlaps with Subcategory B work | Medium | Partial overlap — emitter domain filtering | Day 2 |
-| KU-22 | Deferred Items | #830 (gastrans Jacobian timeout) is independent of Sprint 22 work | High | No overlap with path_syntax_error or path_solve_terminated fixes | Day 1 |
+| KU-20 | Deferred Items | ~~#764 (mexss accounting vars) overlaps with Subcategory C work~~ | Medium | **VERIFIED** — minimal overlap; independent code paths in stationarity.py | Day 2 |
+| KU-21 | Deferred Items | ~~#827 (gtm domain violations) overlaps with Subcategory B work~~ | Medium | **VERIFIED** — partial but indirect; gtm reclassified to $120/$340 | Day 2 |
+| KU-22 | Deferred Items | ~~#830 (gastrans Jacobian timeout) is independent of Sprint 22 work~~ | High | **VERIFIED** — confirmed independent; different pipeline layers | Day 1 |
 | KU-23 | Deferred Items | #765 (orani CGE incompatibility) is fundamentally unfixable | High | Model class detection + warning is the correct approach | Day 1 |
 | KU-24 | KKT Correctness | Fixing path_syntax_error models may shift them to model_infeasible | High | Some models have secondary KKT issues masked by syntax errors | Day 5 |
 | KU-25 | Starting Point | elec self-pair exclusion requires index-level filtering in emitter | Medium | Can filter `i != j` conditions during MCP emission | Day 2 |
@@ -532,7 +532,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (deferred issues survey)
-**Verification Results:** *To be completed during Task 6*
+**Verification Results:** VERIFIED — MINIMAL OVERLAP. #764's `sameas` guard logic (`_add_indexed_jacobian_terms()`, stationarity.py:1785-1812) and Subcategory C's uncontrolled free indices (Issue #670 logic, stationarity.py:1748-1759) are independent code paths within the same file. Fixing Subcategory C does NOT change mexss's behavior — mexss's stationarity equations already handle domain wrapping correctly; the bug is in the guard that restricts which variable instances receive multiplier terms. However, both fixes operate on `stationarity.py`, providing developer context overlap (not code overlap). #764 is re-estimated at 3-4h (Task 4) and included in Sprint 22 as part of model_infeasible Category A workstream.
 
 ---
 
@@ -553,7 +553,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (deferred issues survey)
-**Verification Results:** *To be completed during Task 6*
+**Verification Results:** VERIFIED — PARTIAL BUT INDIRECT. gtm was reclassified out of Subcategory B in Task 2 — its primary errors are now $120/$340 (unquoted hyphenated labels), not the $170 domain violations from #827. Current Subcategory B (cesam/cesam2) shares the $170 error code but has different origins (newly-translating models vs parser zero-fill). An emitter domain filtering fix for cesam/cesam2 might prevent gtm's secondary $170 errors, but gtm's primary $120/$340 errors must be fixed first. Decision: DEFER #827 to Sprint 23; gtm's $120/$340 fix (1h) is tracked separately in Task 2's new patterns.
 
 ---
 
@@ -573,7 +573,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 6 (deferred issues survey)
-**Verification Results:** *To be completed during Task 6*
+**Verification Results:** VERIFIED — CONFIRMED INDEPENDENT. #830's Jacobian timeout occurs in `src/ad/index_mapping.py` (dynamic subset fallback, lines 163-167) and `src/ad/constraint_jacobian.py`. No Sprint 22 workstream touches these code paths. Subcategory C fixes operate on stationarity equation generation (`src/kkt/stationarity.py`), a different pipeline layer. Task 5 profiling confirmed gastrans is in the "intractable" tier requiring architectural changes (sparsity-aware Jacobian or dynamic subset preservation). Decision: DEFER #830 to Sprint 23; potential synergy with other Jacobian-bottlenecked timeout models.
 
 ---
 
@@ -655,9 +655,9 @@ Use this template during Sprint 22 to track verification results.
 | KU-17 | Yes | 2026-03-05 | Updated — nemhaus is MINLP (binary vars) | Consider MINLP detection; simple filtering insufficient |
 | KU-18 | Yes | 2026-03-05 | Confirmed — 16 systematic $70 errors + launch reclassified | Subcategory J now 2 models; systematic dimension bug |
 | KU-19 | Yes | 2026-03-05 | Partially refuted — tricp needs new Subcat K; dinam/ferts are translate timeouts | New subcategory K created; 6 models reclassified |
-| KU-20 | | | | |
-| KU-21 | | | | |
-| KU-22 | | | | |
+| KU-20 | Yes | 2026-03-06 | Verified — minimal overlap (independent code paths in stationarity.py) | Include #764 in Category A workstream (3-4h) |
+| KU-21 | Yes | 2026-03-06 | Verified — partial but indirect (gtm reclassified; $120/$340 primary) | Defer #827; gtm $120/$340 fix tracked separately |
+| KU-22 | Yes | 2026-03-06 | Verified — confirmed independent (different pipeline layers) | Defer #830 to Sprint 23 |
 | KU-23 | Yes | 2026-03-06 | Confirmed — orani linearized CGE, structurally incompatible | Add model class detection heuristic; exclude from metrics |
 | KU-24 | Yes | 2026-03-06 | Confirmed — 7-14 models at risk (6 CGE highest) | Fix Category A KKT bugs early; track influx |
 | KU-25 | Yes | 2026-03-06 | Confirmed — `ut` filter lost in MCP; needs IR enrichment | Fix is 2-3h (parser/IR), not 1h as assumed |

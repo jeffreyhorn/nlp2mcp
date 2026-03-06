@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 6: Deferred Issues Decision - 2026-03-06
+
+**Branch:** `planning/sprint22-task6`
+
+#### Added
+- Deferred issues decision (`docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md`)
+  - #764 (mexss): INCLUDE in Sprint 22 as part of model_infeasible Category A workstream (3-4h)
+  - #765 (orani): WON'T FIX — structurally incompatible linearized CGE model
+  - #827 (gtm): DEFER to Sprint 23 — primary error ($120/$340) independent of domain violations; low leverage
+  - #830 (gastrans): DEFER to Sprint 23 — no overlap with Sprint 22; architectural Jacobian changes needed
+  - Leverage comparison: deferred issues 0.1-0.3 models/h vs Sprint 22 primary workstreams 2.0-3.75 models/h
+
+#### Changed
+- Updated PREP_PLAN.md: Task 6 marked COMPLETE
+- Updated KNOWN_UNKNOWNS.md: Verified KU-20 (minimal overlap), KU-21 (partial but indirect), KU-22 (confirmed independent)
+
 ### Sprint 22 Prep Task 5: Translation Timeout Profiling - 2026-03-06
 
 **Branch:** `planning/sprint22-task5`
