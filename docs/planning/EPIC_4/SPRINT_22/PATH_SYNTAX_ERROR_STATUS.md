@@ -3,13 +3,13 @@
 **Created:** 2026-03-05
 **Sprint:** 22 (Prep Task 2)
 **Status:** Complete — ready for Sprint 22 fix design (Task 7)
-**Data Source:** `data/gamslib/gamslib_status.json` (Sprint 21 Day 12 pipeline run)
+**Data Source:** `data/gamslib/gamslib_status.json` (updated_date=2026-02-12, GAMS 51.3.0; Sprint 21 Day 12 pipeline run)
 
 ---
 
 ## 1. Executive Summary
 
-The path_syntax_error category currently contains **43 models** (down from the Sprint 21 catalog's 48). Sprint 21 fixes moved 22 models out of this category, while 17 newly-translating models entered it. The net change is −5.
+The path_syntax_error category currently contains **43 models** (down from the Sprint 21 baseline of 48, of which 45 were classified in the catalog). Sprint 21 fixes moved 22 models out of this category, while 17 newly-translating models entered it. The net change is −5.
 
 Sprint 22 targets path_syntax_error **≤ 30** (−13 models). Analysis shows this is achievable by fixing **Subcategory A** (15 models, highest leverage) alone. Fixing A + C (25 models total) would far exceed the target.
 
@@ -377,7 +377,7 @@ Add B + J + I + F (7 models, ~4-5h) to reach **~6 models** remaining.
 | trnspwl | $149 | — | C | New | Uncontrolled set |
 | worst | $483 | — | I | New | MCP variable unreferenced |
 
-**Note:** qdemo7 is listed for completeness as it moved out to model_optimal.
+**Note:** qdemo7 previously belonged to this category but moved out to model_optimal in Sprint 21 and is not included in the 43 current models above.
 
 ---
 
@@ -389,14 +389,14 @@ Add B + J + I + F (7 models, ~4-5h) to reach **~6 models** remaining.
 | Subcategory C fix breaks currently-solving models | Medium | High | Full regression after fix (KU-02) |
 | New models continue entering path_syntax_error | Low | Low | Sprint 22 parse/translate improvements may add 2-5 more |
 | Effort estimates too optimistic for Subcat C | Medium | Medium | 3-5h may grow if AD engine changes needed |
-| New patterns (GUSS, duplicate, etc.) harder than expected | Medium | Low | Only 6 models; can defer to Sprint 23 |
+| New patterns (GUSS, duplicate, etc.) harder than expected | Medium | Low | Only 5 new-pattern models (excluding feedtray pipeline artifact); can defer to Sprint 23 |
 | feedtray MCP file issue blocks classification | Low | Low | Re-run pipeline to regenerate; or skip |
 
 ---
 
 ## 8. Notes
 
-- **GAMS version:** All testing done with GAMS v53
+- **GAMS version:** Pipeline data from `gamslib_status.json` uses GAMS 51.3.0. Manual error classification (GAMS compilation of MCP files) used GAMS v53 (`/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams`). Error codes are consistent across both versions.
 - **Subcategory H:** No Subcategory H was ever defined (historical gap from Sprint 21)
 - **Subcategories D and E:** Fully resolved in Sprint 21. No models remain.
 - **dinam, egypt, ferts:** Were in Sprint 21 unsubcategorized note. All three moved to translate_failure (timeout) — not path_syntax_error. Their Sprint 21 path_syntax_error status was from an earlier pipeline run.

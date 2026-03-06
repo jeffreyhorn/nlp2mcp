@@ -468,7 +468,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 2 (catalog update)
-**Verification Results:** UPDATED. nemhaus is an MINLP model (has binary variables `xb`, `y`). Binary/integer variables cannot participate in MCP (continuous complementarity), so the MCP translator includes them in the model statement but generates no stationarity equations for them. This is fundamentally a model-type incompatibility issue, not just a filtering bug. Simple filtering of unreferenced variables from the model statement would suppress the $483 error, but nemhaus also has missing parameter data ($141 on the objective). Consider adding MINLP detection with a warning rather than just filtering.
+**Verification Results:** UPDATED. nemhaus is a MINLP model (has binary variables `xb`, `y`). Binary/integer variables cannot participate in MCP (continuous complementarity), so the MCP translator includes them in the model statement but generates no stationarity equations for them. This is fundamentally a model-type incompatibility issue, not just a filtering bug. Simple filtering of unreferenced variables from the model statement would suppress the $483 error, but nemhaus also has missing parameter data ($141 on the objective). Consider adding MINLP detection with a warning rather than just filtering.
 
 ---
 

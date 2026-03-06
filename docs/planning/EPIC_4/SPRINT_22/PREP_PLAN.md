@@ -148,10 +148,10 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 
 ### Why This Matters
 
-path_syntax_error is the single largest solve failure category (43 models per latest pipeline). Sprint 22 targets reducing this to ≤30 (−13 models). The Sprint 21 catalog classified 45 models into 9 subcategories (A-G, I, J — no H), but:
+path_syntax_error is the single largest solve failure category (43 models per latest pipeline). Sprint 22 targets reducing this to ≤30 (−13 models). The Sprint 21 catalog classified 45 of the 48 baseline models into 9 subcategories (A-G, I, J — no H), but:
 - Sprint 21 fixed subcategories E (set quoting), D (negative exponents), and parts of A (emission ordering)
-- 3 new models (dinam, ferts, tricp) entered this category and are unsubcategorized
-- Current subcategory counts need refreshing against the latest pipeline results
+- Historically, 3 models (dinam, ferts, tricp) entered this category as unsubcategorized during Sprint 21; per Task 2 findings, dinam/ferts have since moved to translate_failure (timeout) and tricp was assigned to new Subcategory K
+- Subcategory counts were refreshed in Task 2 against the latest pipeline results
 
 ### Background
 
