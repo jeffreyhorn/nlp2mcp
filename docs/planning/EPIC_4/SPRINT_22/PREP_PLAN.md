@@ -816,7 +816,7 @@ Sprint 21 WS6 improved match rate via tolerance relaxation (DEFAULT_RTOL to 2e-3
 
 - Created `docs/planning/EPIC_4/SPRINT_22/MATCH_RATE_ANALYSIS.md` with full classification of 35 mismatch models
 - Classified models into 6 categories: A (KKT bug, 7), B (non-convex multi-optima, 7), C (CGE cluster, 4), D (zero MCP objective, 5), E (large divergence, 7), F (moderate divergence, 5)
-- Verified KU-11 (partially refuted), KU-12 (verified), KU-13 (partially confirmed), KU-26 (partially verified)
+- Assessed KU-11 (PARTIALLY REFUTED), KU-12 (VERIFIED), KU-13 (PARTIALLY CONFIRMED), KU-26 (PARTIALLY VERIFIED)
 - Computed tolerance analysis for all 10 near-miss models — none recoverable through tolerance relaxation
 - Projected Sprint 22 match rate improvement: 37–51 models (conservative–optimistic)
 

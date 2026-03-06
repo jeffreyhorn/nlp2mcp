@@ -3,7 +3,7 @@
 **Created:** 2026-03-06
 **Sprint:** 22 (Prep Task 9)
 **Status:** Complete
-**Data Source:** `data/gamslib/gamslib_status.json` @ `main` commit `53ac5979`
+**Data Source:** `data/gamslib/gamslib_status.json` (snapshot as of 2026-03-06 on `main`)
 **Baseline:** 30/65 match (46.2%) — see BASELINE_METRICS.md
 
 ---
@@ -217,7 +217,7 @@ However, the 50% rate for verified_convex is misleadingly low — the 7 verified
 - likely_convex: 8 (66.7%)
 
 **Projection for newly-solving models:**
-- Verified_convex models **should match at ~100%** (unique KKT point) IF the KKT formulation is correct for their model type
+- Verified_convex models **should match at ~100%** (since proven convex NLPs have a global optimal objective value and we use a consistent KKT formulation between NLP and MCP) IF the KKT formulation is correct for their model type
 - Likely_convex models should match at **45–70%** (accounting for non-convex models misclassified as likely_convex, and CGE/specialized model types)
 - Conservative estimate: **50% match rate** for newly-solving models (consistent with current baseline)
 - Optimistic estimate: **70% match rate** (if most newly-solving models are simple NLPs)
