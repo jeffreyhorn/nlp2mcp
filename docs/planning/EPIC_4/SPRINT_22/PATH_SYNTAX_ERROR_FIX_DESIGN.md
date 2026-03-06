@@ -97,7 +97,7 @@ The issue is that `_collect_free_indices()` correctly identifies free indices bu
 
 2. **Currently-solving models have no uncontrolled indices.** If they did, GAMS would raise $149 and they wouldn't solve. The fix's Sum-wrapping logic is only triggered for models that currently fail with $149.
 
-3. **`_collect_free_indices()` changes are narrowing, not broadening.** The function may be enhanced to detect additional free indices (improving detection), but it cannot cause false positives for indices that ARE controlled — the walk explicitly tracks bound indices from enclosing Sum/Prod nodes (line 1576).
+3. **`_collect_free_indices()` changes are conservative with respect to controlled indices.** The function may be enhanced to detect additional free indices (improving detection), but it must not introduce false positives for indices that ARE controlled — the walk explicitly tracks bound indices from enclosing Sum/Prod nodes (line 1576).
 
 4. **Existing test coverage.** Stationarity generation and `_collect_free_indices()` behavior are already covered by unit tests under `tests/unit/kkt/`. The regression test strategy (Section 4) will add specific tests for the 10 affected models within that suite.
 
@@ -309,7 +309,7 @@ The equation domain uses `(r,c)` but the KKT derivation introduces `sum((R,C), .
 
 ### 3.6 Test Strategy
 
-1. **Unit tests:** Add tests to `tests/emit/test_expr_to_gams.py` verifying:
+1. **Unit tests:** Add tests to `tests/unit/emit/test_expr_to_gams.py` verifying:
    - Nested same-name conflict: `Sum(("i",), Sum(("i",), body))` → detects `i` as needing alias
    - Case-insensitive conflict: equation domain `("r",)`, inner `Sum(("R",), body)` → detects `R`
    - No conflict: equation domain `("i",)`, inner `Sum(("j",), body)` → no alias needed

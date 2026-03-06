@@ -628,9 +628,9 @@ From Task 2's catalog update, the priority subcategories for Sprint 22 are:
    - Identify which emitter code produces out-of-domain data
    - Design fix: filter parameter data by valid domain combinations
 3. **For Subcategory G (set index reuse):**
-   - Examine the 2 affected models
+   - Examine the 4 affected models (kand, prolog, spatequ, srkandw)
    - Identify the sum/prod expression pattern that causes index collision
-   - Design fix: rename conflicting indices during KKT derivation
+   - Design fix: rename conflicting indices during emitter expression formatting
 4. **Document implementation plan** with:
    - Files to modify per subcategory
    - Estimated LOC changes
