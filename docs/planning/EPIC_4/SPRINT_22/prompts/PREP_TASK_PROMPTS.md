@@ -18,7 +18,7 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 
 - path_syntax_error is the single largest solve failure category (41 models at Sprint 21 close)
 - Sprint 22 targets reducing this to ≤30 (−11 models)
-- Sprint 21 `PATH_SYNTAX_ERROR_CATALOG.md` classified 45 models into subcategories A-J
+- Sprint 21 `PATH_SYNTAX_ERROR_CATALOG.md` classified 45 models into 9 subcategories (A-G, I, J — no H)
 - Sprint 21 WS4 fixed subcategories E (set quoting), D (negative exponents), and parts of A (emission ordering)
 - 3 new models (dinam, ferts, tricp) entered this category and are unsubcategorized
 - Deferred subcategories for Sprint 22: C (9, uncontrolled sets), B (5, domain violations), G (2, set index reuse), F (1), I (1), J (1)
@@ -26,7 +26,7 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 ### Reference Documents
 
 - `docs/planning/EPIC_4/SPRINT_22/PREP_PLAN.md` — Task 2 full description (lines 135-219)
-- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Sprint 21 subcategory A-J classification
+- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Sprint 21 subcategory A-G, I, J classification (no H)
 - `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` — Unknowns KU-01, KU-03, KU-16, KU-17, KU-18, KU-19
 
 ### What to Do
@@ -55,7 +55,7 @@ For each unknown below, update `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md
 - **KU-16** (Subcategory F reserved-word isolated): Search for `gamma`, `psi`, and other GAMS built-in names across model IR outputs. Are other models affected?
 - **KU-17** (Subcategory I straightforward): Check why `xb` and `y` are in nemhaus's MCP model statement. Are they missing stationarity equations?
 - **KU-18** (Subcategory J pairing logic): Examine pdi's MCP model statement dimension mismatch.
-- **KU-19** (3 unsubcategorized models fit existing subcategories): Classify dinam, ferts, tricp — do they match existing subcategories A-J or need a new one?
+- **KU-19** (3 unsubcategorized models fit existing subcategories): Classify dinam, ferts, tricp — do they match existing subcategories (A-G, I, J) or need a new one?
 
 For each unknown, write the verification result directly in the unknown's "Verification Results" field AND update Appendix C.
 

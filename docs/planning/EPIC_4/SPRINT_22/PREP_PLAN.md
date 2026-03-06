@@ -96,15 +96,15 @@ Sprint 22 shifts from parse improvements to solve improvements. Key areas of unc
 ### Result
 
 26 unknowns identified across 7 categories:
-- Category 1: KKT Correctness Fixes (6 unknowns: KU-01 through KU-04, KU-24, KU-25)
-- Category 2: Starting Point Improvements (3 unknowns: KU-05 through KU-07)
+- Category 1: KKT Correctness Fixes (5 unknowns: KU-01 through KU-04, KU-24)
+- Category 2: Starting Point Improvements (4 unknowns: KU-05 through KU-07, KU-25)
 - Category 3: PATH Solver Tuning (3 unknowns: KU-08 through KU-10)
 - Category 4: MCP-NLP Solution Divergence Analysis (4 unknowns: KU-11 through KU-13, KU-26)
 - Category 5: Parse Completion Final Push (2 unknowns: KU-14, KU-15)
 - Category 6: Deferred path_syntax_error Subcategories (4 unknowns: KU-16 through KU-19)
 - Category 7: Sprint 21 Deferred Items (4 unknowns: KU-20 through KU-23)
 
-Priority distribution: 4 Critical, 11 High, 7 Medium, 4 Low. All Critical/High unknowns have verification deadlines ≤ Day 3.
+Priority distribution: 4 Critical, 9 High, 9 Medium, 4 Low (as defined in KNOWN_UNKNOWNS.md Appendix B). All Critical/High unknowns have verification deadlines ≤ Day 3.
 
 ### Verification
 
@@ -155,7 +155,7 @@ path_syntax_error is the single largest solve failure category (41 models). Spri
 
 ### Background
 
-Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into subcategories A-J. Sprint 21 WS4 fixed the top-leverage subcategories. The deferred subcategories recommended for Sprint 22 are:
+Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into 9 subcategories (A-G, I, J — no H). Sprint 21 WS4 fixed the top-leverage subcategories. The deferred subcategories recommended for Sprint 22 are:
 
 | Subcategory | Root Cause | Sprint 21 Count | Est. Effort |
 |-------------|-----------|-----------------|-------------|
@@ -170,18 +170,22 @@ Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into subcategories A-J.
 
 ### What Needs to Be Done
 
-1. **Run latest pipeline** to get current path_syntax_error model list:
+1. **Run latest pipeline** to regenerate `data/gamslib/gamslib_status.json`:
    ```bash
-   .venv/bin/python scripts/gamslib/run_full_test.py --quiet 2>&1 | grep path_syntax_error
+   .venv/bin/python scripts/gamslib/run_full_test.py --quiet
    ```
-2. **Diff against Sprint 21 catalog** to identify:
+2. **Extract current `path_syntax_error` model list** from the status JSON:
+   ```bash
+   .venv/bin/python -c "import json; data=json.load(open('data/gamslib/gamslib_status.json')); [print(m) for m,v in sorted(data.items()) if v.get('solve_status')=='path_syntax_error']"
+   ```
+3. **Diff against Sprint 21 catalog** to identify:
    - Models that moved OUT of path_syntax_error (now solving or in different category)
    - Models that moved INTO path_syntax_error (newly parsing/translating)
    - Models still in path_syntax_error with same subcategory
-3. **Reclassify any unsubcategorized models** (dinam, ferts, tricp, and any new entries)
-4. **Update subcategory counts** based on current pipeline state
-5. **Prioritize subcategories** for Sprint 22 by leverage (models × effort ratio)
-6. **Create updated catalog** at `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md`
+4. **Reclassify any unsubcategorized models** (dinam, ferts, tricp, and any new entries)
+5. **Update subcategory counts** based on current pipeline state
+6. **Prioritize subcategories** for Sprint 22 by leverage (models × effort ratio)
+7. **Create updated catalog** at `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md`
 
 ### Changes
 
@@ -958,7 +962,7 @@ make test
 ### Sprint 21 Outputs (Inputs to Sprint 22)
 - `docs/planning/EPIC_4/SPRINT_21/SPRINT_RETROSPECTIVE.md` — Sprint 22 recommendations (lines 134-154)
 - `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md` — Classification of all 29 path_solve_terminated models
-- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Subcategory A-J classification
+- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Subcategory A-G, I, J classification (no H)
 - `docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md` — 4 deferred issues (#764, #765, #827, #830)
 
 ### Issue Documents

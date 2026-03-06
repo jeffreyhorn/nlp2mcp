@@ -48,7 +48,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 ---
 
-## Category 1: KKT Correctness Fixes (6 unknowns)
+## Category 1: KKT Correctness Fixes (5 unknowns)
 
 ### KU-01: Subcategory C Uncontrolled Sets — Same Root Cause?
 
@@ -155,27 +155,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 ---
 
-### KU-25: elec Self-Pair Exclusion Requires Index-Level Filtering
-
-**Priority:** Medium
-**Assumption:** The elec model's division-by-zero error (Category B execution error) can be fixed by adding `i != j` conditions to distance calculations in the emitted MCP, filtering self-pairs during emission.
-
-**Research Questions:**
-1. Does the original NLP model use `$(ord(i) <> ord(j))` or similar conditional to exclude self-pairs?
-2. Can the emitter detect and preserve such conditions from the IR?
-3. Would a generic `distance >= epsilon` guard be safer than self-pair exclusion?
-
-**How to Verify:** Examine elec's original GAMS file for self-pair exclusion conditions. Check if the IR preserves dollar conditions on equation terms.
-
-**Risk if Wrong:** If self-pair exclusion requires new IR infrastructure for conditional emission, the fix could take 4-6h instead of 1h.
-
-**Estimated Research Time:** 30min
-**Owner:** Task 3 (path_solve_terminated classification)
-**Verification Results:** *To be completed during Task 3*
-
----
-
-## Category 2: Starting Point Improvements (3 unknowns)
+## Category 2: Starting Point Improvements (4 unknowns)
 
 ### KU-05: Category B Execution Errors Are `.l`-Initialization Fixable
 
@@ -233,6 +213,26 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 **How to Verify:** Check etamac's NLP `.l` values — if all consumption variables are positive at the optimum, epsilon guards only affect the initial path from `.l = 0` to the solution, not the solution itself.
 
 **Risk if Wrong:** If epsilon guards distort the KKT conditions, the MCP solution would differ from the NLP optimal. The model would "solve" but not "match."
+
+**Estimated Research Time:** 30min
+**Owner:** Task 3 (path_solve_terminated classification)
+**Verification Results:** *To be completed during Task 3*
+
+---
+
+### KU-25: elec Self-Pair Exclusion Requires Index-Level Filtering
+
+**Priority:** Medium
+**Assumption:** The elec model's division-by-zero error (Category B execution error) can be fixed by adding `i != j` conditions to distance calculations in the emitted MCP, filtering self-pairs during emission.
+
+**Research Questions:**
+1. Does the original NLP model use `$(ord(i) <> ord(j))` or similar conditional to exclude self-pairs?
+2. Can the emitter detect and preserve such conditions from the IR?
+3. Would a generic `distance >= epsilon` guard be safer than self-pair exclusion?
+
+**How to Verify:** Examine elec's original GAMS file for self-pair exclusion conditions. Check if the IR preserves dollar conditions on equation terms.
+
+**Risk if Wrong:** If self-pair exclusion requires new IR infrastructure for conditional emission, the fix could take 4-6h instead of 1h.
 
 **Estimated Research Time:** 30min
 **Owner:** Task 3 (path_solve_terminated classification)
@@ -495,7 +495,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 ### KU-19: 3 Unsubcategorized Models Fit Existing Subcategories
 
 **Priority:** High
-**Assumption:** The 3 models that entered path_syntax_error after the Sprint 21 catalog (dinam, ferts, tricp) exhibit errors matching existing subcategories (A-J), requiring no new subcategory definition.
+**Assumption:** The 3 models that entered path_syntax_error after the Sprint 21 catalog (dinam, ferts, tricp) exhibit errors matching existing subcategories (A-G, I, J), requiring no new subcategory definition.
 
 **Research Questions:**
 1. What GAMS error codes do dinam, ferts, and tricp produce?
@@ -622,8 +622,8 @@ This table maps each PREP_PLAN.md task to the unknowns it should verify during e
 | Priority | Count | Unknowns |
 |----------|-------|----------|
 | Critical | 4 | KU-01, KU-02, KU-05, KU-08 |
-| High | 10 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24, KU-25 |
-| Medium | 8 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21, KU-26 |
+| High | 9 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24 |
+| Medium | 9 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21, KU-25, KU-26 |
 | Low | 4 | KU-14, KU-16, KU-17, KU-18 |
 
 **All Critical and High unknowns have verification plans with deadlines ≤ Day 3.**
@@ -671,7 +671,7 @@ Use this template during Sprint 22 to track verification results.
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` (lines 509-625) — Sprint 22 scope
 - `docs/planning/EPIC_4/SPRINT_21/SPRINT_RETROSPECTIVE.md` (lines 134-154) — Sprint 22 recommendations
 - `docs/planning/EPIC_4/SPRINT_21/PATH_CONVERGENCE_ANALYSIS.md` — Category A-F classification
-- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Subcategory A-J classification
+- `docs/planning/EPIC_4/SPRINT_21/PATH_SYNTAX_ERROR_CATALOG.md` — Subcategory A-G, I, J classification (no H)
 - `docs/planning/EPIC_4/SPRINT_21/DEFERRED_ISSUES_TRIAGE.md` — 4 deferred issues
 - `docs/planning/EPIC_4/SPRINT_22/PREP_PLAN.md` — Sprint 22 preparation plan
 
