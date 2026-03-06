@@ -39,11 +39,11 @@ Parameters
     crdat(cr,*) /'arabian-l'.supply 110, 'arabian-l'.price 35, 'arabian-l'.transport 24.15, 'arabian-l'.gravity 0.858, 'arabian-h'.supply 165, 'arabian-h'.price 34, 'arabian-h'.transport 24.15, 'arabian-h'.gravity 0.886, brega.supply 80, brega.price 42, brega.transport 10.05, brega.gravity 0.823/
     ddat(cf,*) /'motor-gas'.demand 40, 'motor-gas'.price 430, 'jet-fuel'.demand 20, 'jet-fuel'.price 300, 'heat-oil'.demand 50, 'heat-oil'.price 315, 'fuel-oil'.demand 145, 'fuel-oil'.price 250/
     kdat(k,*) /pipestill.capacity 65, pipestill.'oper-cost' 0.15, pipestill.'oper-days' 31, reformer.capacity 7.5, reformer.'oper-cost' 0.6, reformer.'oper-days' 28, 'c-cracker'.capacity 8, 'c-cracker'.'oper-cost' 0.65, 'c-cracker'.'oper-days' 28/
-    ap(c,p) /'arabian-l'.'d-arab-l' -1, 'arabian-h'.'d-arab-h' -1, brega.'d-arab-h' -1, 'lv-naphtha'.'d-arab-l' 0.035, 'lv-naphtha'.'d-arab-h' 0.03, 'lv-naphtha'.'d-brega' 0.045, 'iv-naphtha'.'d-arab-l' -1, 'iv-naphtha'.'d-arab-h' 0.075, 'iv-naphtha'.'d-brega' 0.135, 'v-heat-oil'.'d-arab-l' 0.39, 'v-heat-oil'.'d-arab-h' -1, 'v-heat-oil'.'d-brega' -1, 'vacuum-dst'.'d-arab-l' -1, 'vacuum-dst'.'d-arab-h' 0.23, 'vacuum-dst'.'d-brega' -1, 'res-arab-l'.'d-arab-l' 0.165, 'res-arab-h'.'d-arab-h' 0.335, 'res-brega'.'d-brega' 0.1, reform.'d-arab-l' 0, reform.'d-arab-h' 0, reform.'d-brega' 0, butane.'d-arab-l' 0.02, butane.'d-arab-h' 0.02, butane.'d-brega' 0.0325, reformate.'d-arab-l' 0.9, 'cc-naph-l'.'d-arab-h' 0.275, 'cc-naph-l'.'d-brega' 0.325, 'cc-naph-h'.'d-brega' 0.3775, 'cc-naph-h'.'d-arab-l' 0.45, 'cc-dist'.'d-arab-h' 0.68, 'cc-dist'.'d-brega' 0.555, 'cc-dist'.'d-arab-l' 0.585, 'fuel-equiv'.'d-arab-l' 0.08, 'fuel-equiv'.'d-arab-h' 0.025, 'fuel-equiv'.'d-brega' 0.035, 'res-arab-l'.'d-arab-h' 0, 'res-arab-l'.'d-brega' 0, 'arabian-h'.'d-arab-l' 0, 'arabian-h'.'d-brega' 0, 'res-arab-h'.'d-arab-l' 0, 'res-arab-h'.'d-brega' 0, 'res-brega'.'d-arab-l' 0, 'res-brega'.'d-arab-h' 0, brega.'d-arab-l' 0, brega.'d-brega' 0, 'arabian-l'.'d-arab-h' 0, 'arabian-l'.'d-brega' 0, reformate.'d-arab-h' 0, reformate.'d-brega' 0, 'cc-naph-h'.'d-arab-h' 0, 'cc-naph-l'.'d-arab-l' 0/
-    recipes(cf,c,r) /'heat-oil'.'v-heat-oil'.'recipe-1' 1, 'heat-oil'.'cc-dist'.'recipe-2' 1, 'jet-fuel'.'lv-naphtha'.'recipe-2' 0.2, 'jet-fuel'.'iv-naphtha'.'recipe-1' 0.3, 'jet-fuel'.'iv-naphtha'.'recipe-3' 0.1, 'jet-fuel'.'v-heat-oil'.'recipe-1' 0.7, 'jet-fuel'.'v-heat-oil'.'recipe-2' 0.8, 'jet-fuel'.'v-heat-oil'.'recipe-3' 0.1, 'jet-fuel'.'cc-dist'.'recipe-3' 0.8, 'jet-fuel'.'lv-naphtha'.'recipe-1' 0, 'jet-fuel'.'lv-naphtha'.'recipe-3' 0, 'heat-oil'.'v-heat-oil'.'recipe-2' 0, 'heat-oil'.'v-heat-oil'.'recipe-3' 0, 'heat-oil'.'cc-dist'.'recipe-1' 0, 'heat-oil'.'cc-dist'.'recipe-3' 0, 'jet-fuel'.'cc-dist'.'recipe-1' 0, 'jet-fuel'.'cc-dist'.'recipe-2' 0, 'jet-fuel'.'iv-naphtha'.'recipe-2' 0/
-    at(c,tr) /'lv-naphtha'.'tr-1' -1, butane.'tr-1' -1, 'fuel-equiv'.'tr-1' 1.11, 'fuel-equiv'.'tr-2' 1.07, butane.'tr-2' 0, 'lv-naphtha'.'tr-2' 0/
-    specs(cf,l,s) /'motor-gas'.lower.rvp 10, 'motor-gas'.lower.ron 99, 'motor-gas'.upper.'pct-212f' 60, 'fuel-oil'.upper.sulfur 3, 'fuel-oil'.upper.vbn 37.5, 'motor-gas'.lower.'pct-212f' 0, 'motor-gas'.lower.sulfur 0, 'motor-gas'.lower.vbn 0, 'motor-gas'.upper.rvp 0, 'motor-gas'.upper.ron 0, 'motor-gas'.upper.sulfur 0, 'motor-gas'.upper.vbn 0, 'fuel-oil'.upper.rvp 0, 'fuel-oil'.upper.ron 0, 'fuel-oil'.upper.'pct-212f' 0/
-    prop(c,*) /butane.rvp 75, butane.ron 101.6, butane.'pct-212f' 100, butane.gravity 0.57, 'lv-naphtha'.rvp 12, 'lv-naphtha'.ron 86.3, 'lv-naphtha'.'pct-212f' 95, 'lv-naphtha'.gravity 0.65, 'iv-naphtha'.gravity 0.737, reformate.rvp 6, reformate.ron 102.5, reformate.'pct-212f' 35, reformate.gravity 0.865, 'cc-naph-l'.rvp 7, 'cc-naph-l'.ron 94.9, 'cc-naph-l'.'pct-212f' 60, 'cc-naph-l'.gravity 0.73, 'cc-naph-h'.rvp 9, 'cc-naph-h'.ron 99.1, 'cc-naph-h'.'pct-212f' 64, 'cc-naph-h'.gravity 0.75, 'v-heat-oil'.sulfur 1, 'v-heat-oil'.vbn 14.8, 'v-heat-oil'.gravity 0.886, 'vacuum-dst'.sulfur 1.7, 'vacuum-dst'.vbn 21.8, 'vacuum-dst'.gravity 0.92, 'res-arab-l'.sulfur 4, 'res-arab-l'.vbn 48, 'res-arab-h'.sulfur 5, 'res-arab-h'.vbn 51, 'res-brega'.sulfur 0.6, 'res-brega'.vbn 44, 'cc-dist'.sulfur 1.5, 'cc-dist'.vbn 18, 'fuel-imp'.sulfur 3, 'fuel-imp'.vbn 37.5, 'fuel-equiv'.sulfur 3.5, 'fuel-equiv'.vbn 44, 'res-arab-l'.rvp 0, 'res-arab-l'.ron 0, 'res-arab-l'.'pct-212f' 0, 'res-arab-l'.gravity 0, 'fuel-imp'.rvp 0, 'fuel-imp'.ron 0, 'fuel-imp'.'pct-212f' 0, 'fuel-imp'.gravity 0, 'res-arab-h'.rvp 0, 'res-arab-h'.ron 0, 'res-arab-h'.'pct-212f' 0, 'res-arab-h'.gravity 0, reformate.sulfur 0, reformate.vbn 0, butane.sulfur 0, butane.vbn 0, 'cc-naph-h'.sulfur 0, 'cc-naph-h'.vbn 0, 'v-heat-oil'.rvp 0, 'v-heat-oil'.ron 0, 'v-heat-oil'.'pct-212f' 0, 'res-brega'.rvp 0, 'res-brega'.ron 0, 'res-brega'.'pct-212f' 0, 'res-brega'.gravity 0, 'iv-naphtha'.rvp 0, 'iv-naphtha'.ron 0, 'iv-naphtha'.'pct-212f' 0, 'iv-naphtha'.sulfur 0, 'iv-naphtha'.vbn 0, 'fuel-equiv'.rvp 0, 'fuel-equiv'.ron 0, 'fuel-equiv'.'pct-212f' 0, 'fuel-equiv'.gravity 0, 'vacuum-dst'.rvp 0, 'vacuum-dst'.ron 0, 'vacuum-dst'.'pct-212f' 0, 'lv-naphtha'.sulfur 0, 'lv-naphtha'.vbn 0, 'cc-naph-l'.sulfur 0, 'cc-naph-l'.vbn 0, 'cc-dist'.rvp 0, 'cc-dist'.ron 0, 'cc-dist'.'pct-212f' 0, 'cc-dist'.gravity 0/
+    ap(c,p) /'arabian-l'.'d-arab-l' -1, 'arabian-h'.'d-arab-h' -1, brega.'d-arab-h' -1, 'lv-naphtha'.'d-arab-l' 0.035, 'lv-naphtha'.'d-arab-h' 0.03, 'lv-naphtha'.'d-brega' 0.045, 'iv-naphtha'.'d-arab-l' 0.1, 'iv-naphtha'.'d-arab-h' 0.075, 'iv-naphtha'.'d-brega' 0.135, 'v-heat-oil'.'d-arab-l' 0.39, 'v-heat-oil'.'d-arab-h' 0.3, 'v-heat-oil'.'d-brega' 0.43, 'vacuum-dst'.'d-arab-l' 0.285, 'vacuum-dst'.'d-arab-h' 0.23, 'vacuum-dst'.'d-brega' 0.28, 'res-arab-l'.'d-arab-l' 0.165, 'res-arab-h'.'d-arab-h' 0.335, 'res-brega'.'d-brega' 0.1, 'iv-naphtha'.reform -1, 'v-heat-oil'.'ho-low-s' -1, 'v-heat-oil'.'ho-high-s' -1, 'vacuum-dst'.'vd-low-s' -1, 'vacuum-dst'.'vd-high-s' -1, butane.reform 0.02, butane.'ho-low-s' 0.02, butane.'ho-high-s' 0.0325, butane.'vd-low-s' 0.05, butane.'vd-high-s' 0.06, reformate.reform 0.9, 'cc-naph-l'.'ho-low-s' 0.275, 'cc-naph-l'.'vd-low-s' 0.325, 'cc-naph-h'.'ho-high-s' 0.3775, 'cc-naph-h'.'vd-high-s' 0.45, 'cc-dist'.'ho-low-s' 0.68, 'cc-dist'.'ho-high-s' 0.555, 'cc-dist'.'vd-low-s' 0.585, 'cc-dist'.'vd-high-s' 0.44, 'fuel-equiv'.reform 0.08, 'fuel-equiv'.'ho-low-s' 0.025, 'fuel-equiv'.'ho-high-s' 0.035, 'fuel-equiv'.'vd-low-s' 0.04, 'fuel-equiv'.'vd-high-s' 0.05/
+    recipes(cf,c,r) /'heat-oil'.'v-heat-oil'.'recipe-1' 1, 'heat-oil'.'cc-dist'.'recipe-2' 1, 'jet-fuel'.'lv-naphtha'.'recipe-2' 0.2, 'jet-fuel'.'iv-naphtha'.'recipe-1' 0.3, 'jet-fuel'.'iv-naphtha'.'recipe-3' 0.1, 'jet-fuel'.'v-heat-oil'.'recipe-1' 0.7, 'jet-fuel'.'v-heat-oil'.'recipe-2' 0.8, 'jet-fuel'.'v-heat-oil'.'recipe-3' 0.1, 'jet-fuel'.'cc-dist'.'recipe-3' 0.8/
+    at(c,tr) /'lv-naphtha'.'tr-1' -1, butane.'tr-1' -1, 'fuel-equiv'.'tr-1' 1.11, 'fuel-equiv'.'tr-2' 1.07/
+    specs(cf,l,s) /'motor-gas'.lower.rvp 10, 'motor-gas'.lower.ron 99, 'motor-gas'.upper.'pct-212f' 60, 'fuel-oil'.upper.sulfur 3, 'fuel-oil'.upper.vbn 37.5/
+    prop(c,*) /butane.rvp 75, butane.ron 101.6, butane.'pct-212f' 100, butane.gravity 0.57, 'lv-naphtha'.rvp 12, 'lv-naphtha'.ron 86.3, 'lv-naphtha'.'pct-212f' 95, 'lv-naphtha'.gravity 0.65, 'iv-naphtha'.gravity 0.737, reformate.rvp 6, reformate.ron 102.5, reformate.'pct-212f' 35, reformate.gravity 0.865, 'cc-naph-l'.rvp 7, 'cc-naph-l'.ron 94.9, 'cc-naph-l'.'pct-212f' 60, 'cc-naph-l'.gravity 0.73, 'cc-naph-h'.rvp 9, 'cc-naph-h'.ron 99.1, 'cc-naph-h'.'pct-212f' 64, 'cc-naph-h'.gravity 0.75, 'v-heat-oil'.sulfur 1, 'v-heat-oil'.vbn 14.8, 'v-heat-oil'.gravity 0.886, 'vacuum-dst'.sulfur 1.7, 'vacuum-dst'.vbn 21.8, 'vacuum-dst'.gravity 0.92, 'res-arab-l'.sulfur 4, 'res-arab-l'.vbn 48, 'res-arab-h'.sulfur 5, 'res-arab-h'.vbn 51, 'res-brega'.sulfur 0.6, 'res-brega'.vbn 44, 'cc-dist'.sulfur 1.5, 'cc-dist'.vbn 18, 'fuel-imp'.sulfur 3, 'fuel-imp'.vbn 37.5, 'fuel-equiv'.sulfur 3.5, 'fuel-equiv'.vbn 44/
     char(c,m) /'arabian-l'.weight 1, 'arabian-h'.weight 1, brega.weight 1, 'lv-naphtha'.weight 1, 'v-heat-oil'.weight 1, 'iv-naphtha'.weight 1, 'vacuum-dst'.weight 1, 'vacuum-res'.weight 1, 'res-arab-l'.weight 1, 'res-arab-h'.weight 1, 'res-brega'.weight 1, butane.weight 1, reformate.weight 1, 'cc-naph-l'.weight 1, 'cc-naph-h'.weight 1, 'cc-dist'.weight 1, 'fuel-imp'.weight 1, 'fuel-equiv'.weight 1/
     bp(k,p)
     kp(k)
@@ -112,6 +112,17 @@ Positive Variables
     q(cf,m)
     ov(cf,l,s)
     sales(cf)
+    piL_u(c)
+    piL_z(p)
+    piL_cap(k)
+    piL_trans(tr)
+    piL_import(c)
+    piL_bq(c,cf)
+    piL_rb(cf,r)
+    piL_q(cf,m)
+    piL_ov(cf,l,s)
+    piL_sales(cf)
+    piU_cap(k)
 ;
 
 * ============================================
@@ -165,6 +176,17 @@ Equations
     stat_transport
     stat_u(c)
     stat_z(p)
+    comp_lo_bq(c,cf)
+    comp_lo_cap(k)
+    comp_lo_import(c)
+    comp_lo_ov(cf,l,s)
+    comp_lo_q(cf,m)
+    comp_lo_rb(cf,r)
+    comp_lo_sales(cf)
+    comp_lo_trans(tr)
+    comp_lo_u(c)
+    comp_lo_z(p)
+    comp_up_cap(k)
     dbal(cf)
     doper
     dprof
@@ -181,20 +203,35 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_bq(c,cf)$(cfq(cf)).. sum((cfq,m), (((-1) * (char(c,m) * 1$bposs(cfq,c))) * nu_pbal(cfq,m))$cfm(cfq,m)) =E= 0;
-stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper =E= 0;
-stat_import(c)$(ci(c)).. (((-1) * pimp(c)) * nu_dpur)$sameas(c, 'fuel-imp') =E= 0;
-stat_ov(cf,l,s)$(cfq(cf)).. 0 =E= 0;
+stat_bq(c,cf)$(cfq(cf)).. sum((cfq,m), (((-1) * (char(c,m) * 1$bposs(cfq,c))) * nu_pbal(cfq,m))$cfm(cfq,m)) - piL_bq(c,cf) =E= 0;
+stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
+stat_import(c)$(ci(c)).. (((-1) * pimp(c)) * nu_dpur)$sameas(c, 'fuel-imp') - piL_import(c) =E= 0;
+stat_ov(cf,l,s)$(cfq(cf)).. ((-1) * piL_ov(cf,l,s)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m)$(cfq(cf)).. sum(cfq, nu_pbal(cfq,m)$cfm(cfq,m)) =E= 0;
-stat_rb(cf,r)$(cfr(cf)).. 0 =E= 0;
+stat_q(cf,m)$(cfq(cf)).. sum(cfq, nu_pbal(cfq,m)$cfm(cfq,m)) - piL_q(cf,m) =E= 0;
+stat_rb(cf,r)$(cfr(cf)).. ((-1) * piL_rb(cf,r)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
-stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev =E= 0;
-stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) =E= 0;
+stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
+stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c)$(cr(c)).. sum(cr, ((-1) * pcr(cr)) * nu_dpur)$sameas(c, 'arabian-h') + sum(cr, ((-1) * crdat(cr,"transport")) * nu_dtran)$sameas(c, 'arabian-h') =E= 0;
-stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) =E= 0;
+stat_u(c)$(cr(c)).. sum(cr, ((-1) * pcr(cr)) * nu_dpur)$sameas(c, 'arabian-h') + sum(cr, ((-1) * crdat(cr,"transport")) * nu_dtran)$sameas(c, 'arabian-h') - piL_u(c) =E= 0;
+stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_bq(c,cf).. bq(c,cf) - 0 =G= 0;
+comp_lo_cap(k).. cap(k) - 0 =G= 0;
+comp_lo_import(c).. import(c) - 0 =G= 0;
+comp_lo_ov(cf,l,s).. ov(cf,l,s) - 0 =G= 0;
+comp_lo_q(cf,m).. q(cf,m) - 0 =G= 0;
+comp_lo_rb(cf,r).. rb(cf,r) - 0 =G= 0;
+comp_lo_sales(cf).. sales(cf) - 0 =G= 0;
+comp_lo_trans(tr).. trans(tr) - 0 =G= 0;
+comp_lo_u(c).. u(c) - 0 =G= 0;
+comp_lo_z(p).. z(p) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_cap(k).. kp(k) - cap(k) =G= 0;
 
 * Original equality equations
 mbal(c).. u(c)$cr(c) + sum(p, ap(c,p) * z(p)) + sum(tr, at(c,tr) * trans(tr)) + import(c)$ci(c) =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c) + sum((cfr,r), recipes(cfr,c,r) * rb(cfr,r));
@@ -216,11 +253,17 @@ dprof.. profit =E= revenue - recurrent - purchase - transport;
 * fixed for excluded instances to satisfy MCP matching.
 
 bq.fx(c,cf)$(not (cfq(cf))) = 0;
+piL_bq.fx(c,cf)$(not (cfq(cf))) = 0;
 import.fx(c)$(not (ci(c))) = 0;
+piL_import.fx(c)$(not (ci(c))) = 0;
 ov.fx(cf,l,s)$(not (cfq(cf))) = 0;
+piL_ov.fx(cf,l,s)$(not (cfq(cf))) = 0;
 q.fx(cf,m)$(not (cfq(cf))) = 0;
+piL_q.fx(cf,m)$(not (cfq(cf))) = 0;
 rb.fx(cf,r)$(not (cfr(cf))) = 0;
+piL_rb.fx(cf,r)$(not (cfr(cf))) = 0;
 u.fx(c)$(not (cr(c))) = 0;
+piL_u.fx(c)$(not (cr(c))) = 0;
 nu_pbal.fx(cfq,m)$(not (cfm(cfq,m))) = 0;
 
 * ============================================
@@ -259,7 +302,18 @@ Model mcp_model /
     dtran.nu_dtran,
     kbal.nu_kbal,
     mbal.nu_mbal,
-    pbal.nu_pbal
+    pbal.nu_pbal,
+    comp_lo_bq.piL_bq,
+    comp_lo_cap.piL_cap,
+    comp_lo_import.piL_import,
+    comp_lo_ov.piL_ov,
+    comp_lo_q.piL_q,
+    comp_lo_rb.piL_rb,
+    comp_lo_sales.piL_sales,
+    comp_lo_trans.piL_trans,
+    comp_lo_u.piL_u,
+    comp_lo_z.piL_z,
+    comp_up_cap.piU_cap
 /;
 
 * ============================================

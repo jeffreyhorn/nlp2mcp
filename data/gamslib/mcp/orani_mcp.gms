@@ -31,7 +31,7 @@ Alias(s, sp);
 Alias(i, ip);
 
 Parameters
-    amc(c,s,*) /food.domestic.agric 10, food.domestic.manuf 8, food.domestic.families 17, food.domestic.exp 19, clothing.domestic.agric 15, clothing.domestic.manuf 1, clothing.domestic.families 34, clothing.domestic.exp 1, food.imported.agric 1, food.imported.manuf 8, food.imported.families 1, food.imported.duty -1, clothing.imported.agric 5, clothing.imported.manuf 2, clothing.imported.families 10, clothing.imported.duty -5, clothing.domestic.duty 0, clothing.imported.exp 0, food.imported.exp 0, food.domestic.duty 0/
+    amc(c,s,*) /food.domestic.agric 10, food.domestic.manuf 8, food.domestic.families 17, food.domestic.exp 19, clothing.domestic.agric 15, clothing.domestic.manuf 1, clothing.domestic.families 34, clothing.domestic.exp 1, food.imported.agric 1, food.imported.manuf 8, food.imported.families 1, food.imported.duty -1, clothing.imported.agric 5, clothing.imported.manuf 2, clothing.imported.families 10, clothing.imported.duty -5/
     amf(f,i) /labor.agric 20, labor.manuf 20, capital.agric 10, capital.manuf 5/
     amq(c,i) /food.agric 45, food.manuf 9, clothing.agric 16, clothing.manuf 35/
     epsilon(c,s) /food.domestic 1, food.imported 1, clothing.domestic 1, clothing.imported 1/
@@ -42,7 +42,7 @@ Parameters
     alphak(i)
     alphal(i)
     alphae(c,s)
-    etabar(c,s,cp,sp) /food.domestic.food.domestic 0, food.domestic.food.imported 0, food.domestic.clothing.domestic 0, food.domestic.clothing.imported 0, food.imported.food.domestic 0, food.imported.food.imported 0, food.imported.clothing.domestic 0, food.imported.clothing.imported 0, clothing.domestic.food.domestic 0, clothing.domestic.food.imported 0, clothing.domestic.clothing.domestic 0, clothing.domestic.clothing.imported 0, clothing.imported.food.domestic 0, clothing.imported.food.imported 0, clothing.imported.clothing.domestic 0, clothing.imported.clothing.imported 0/
+    etabar(c,s,cp,sp)
     sb(c,s)
     eta(c,s,cp,sp)
     m(c,i)
@@ -162,24 +162,6 @@ Variables
     nu_ws_fx
     nu_ye_fx
 ;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-varcomm(c,"t") = t.l(c);
-varcomm(c,"v") = v.l(c);
-varcomm(c,"df") = df.l(c);
-varcomm(c,"e") = e.l(c);
-varcomm(c,"px") = px.l(c);
-varcomm(c,"pm") = pm.l(c);
-varindus(i,"k") = k.l(i);
-varindus(i,"li") = li.l(i);
-varindus(i,"pk") = pk.l(i);
-varindus(i,"z") = z.l(i);
-varindus(i,"kappa") = kappa.l(i);
-$offImplicitAssign
 
 * ============================================
 * Equations

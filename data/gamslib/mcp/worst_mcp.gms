@@ -26,7 +26,7 @@ Acronym call, future, puto;
 Parameters
     tdata(t,*) /jun.term 0.09167, jun.r0 0.0697, jun.rmax 0.0857, jun.rmin 0.05245, jun.qmax 0.0788, jun.qmin 0.0388, oct.term 0.33889, oct.r0 0.079, oct.rmax 0.095, oct.rmin 0.06175, oct.qmax 0.0768, oct.qmin 0.0368, jan.term 0.58889, jan.r0 0.0779, jan.rmax 0.0939, jan.rmin 0.0619, jan.qmax 0.0768, jan.qmin 0.0368/
     f0(i,t) /'9000011'.jun 95.54, '9000011'.oct 93.27, '9000011'.jan 91.03, '9020063'.jun 95.54, '9020063'.oct 93.27, '9020063'.jan 91.03/
-    pdata(i,t,j,*) /'9000011'.jun.'1'.type future, '9000011'.jun.'1'.nom -35000, '9000011'.jun.'1'.price 96.6, '9000011'.oct.'1'.type future, '9000011'.oct.'1'.nom 15000, '9000011'.oct.'1'.price 96.6, '9020063'.jun.'1'.type future, '9020063'.jun.'1'.nom 74000, '9020063'.jun.'1'.price 96.15, '9020063'.oct.'1'.type future, '9020063'.oct.'1'.nom 20000, '9020063'.oct.'1'.price 95.8, '9020063'.oct.'2'.type call, '9020063'.oct.'2'.strike 95, '9020063'.oct.'2'.nom -30000, '9020063'.oct.'2'.price 3, '9020063'.oct.'3'.type call, '9020063'.oct.'3'.strike 97, '9020063'.oct.'3'.nom -30000, '9020063'.oct.'3'.price 1.5, '9020063'.oct.'4'.type puto, '9020063'.oct.'4'.strike 95, '9020063'.oct.'4'.nom 5000, '9020063'.oct.'4'.price 0.25, '9020063'.oct.'5'.type puto, '9020063'.oct.'5'.strike 97, '9020063'.oct.'5'.nom 15000, '9020063'.oct.'5'.price 1.2, '9020063'.jan.'1'.type future, '9020063'.jan.'1'.nom -290000, '9020063'.jan.'1'.price 95.8, '9020063'.jan.'2'.type call, '9020063'.jan.'2'.strike 95, '9020063'.jan.'2'.nom 25000, '9020063'.jan.'2'.price 0.9, '9020063'.jan.'3'.type call, '9020063'.jan.'3'.strike 97, '9020063'.jan.'3'.nom -50000, '9020063'.jan.'3'.price 0.9, '9020063'.jan.'4'.type call, '9020063'.jan.'4'.strike 99, '9020063'.jan.'4'.nom 25000, '9020063'.jan.'4'.price 0.9, '9020063'.jan.'5'.type puto, '9020063'.jan.'5'.strike 99, '9020063'.jan.'5'.nom 50000, '9020063'.jan.'5'.price 0.9, '9000011'.oct.'1'.strike 0, '9020063'.oct.'1'.strike 0, '9000011'.jun.'1'.strike 0, '9020063'.jan.'1'.strike 0, '9020063'.jun.'1'.strike 0/
+    pdata(i,t,j,*) /'9000011'.jun.'1'.type future, '9000011'.jun.'1'.nom -35000, '9000011'.jun.'1'.price 96.6, '9000011'.oct.'1'.type future, '9000011'.oct.'1'.nom 15000, '9000011'.oct.'1'.price 96.6, '9020063'.jun.'1'.type future, '9020063'.jun.'1'.nom 74000, '9020063'.jun.'1'.price 96.15, '9020063'.oct.'1'.type future, '9020063'.oct.'1'.nom 20000, '9020063'.oct.'1'.price 95.8, '9020063'.oct.'2'.type call, '9020063'.oct.'2'.strike 95, '9020063'.oct.'2'.nom -30000, '9020063'.oct.'2'.price 3, '9020063'.oct.'3'.type call, '9020063'.oct.'3'.strike 97, '9020063'.oct.'3'.nom -30000, '9020063'.oct.'3'.price 1.5, '9020063'.oct.'4'.type puto, '9020063'.oct.'4'.strike 95, '9020063'.oct.'4'.nom 5000, '9020063'.oct.'4'.price 0.25, '9020063'.oct.'5'.type puto, '9020063'.oct.'5'.strike 97, '9020063'.oct.'5'.nom 15000, '9020063'.oct.'5'.price 1.2, '9020063'.jan.'1'.type future, '9020063'.jan.'1'.nom -290000, '9020063'.jan.'1'.price 95.8, '9020063'.jan.'2'.type call, '9020063'.jan.'2'.strike 95, '9020063'.jan.'2'.nom 25000, '9020063'.jan.'2'.price 0.9, '9020063'.jan.'3'.type call, '9020063'.jan.'3'.strike 97, '9020063'.jan.'3'.nom -50000, '9020063'.jan.'3'.price 0.9, '9020063'.jan.'4'.type call, '9020063'.jan.'4'.strike 99, '9020063'.jan.'4'.nom 25000, '9020063'.jan.'4'.price 0.9, '9020063'.jan.'5'.type puto, '9020063'.jan.'5'.strike 99, '9020063'.jan.'5'.nom 50000, '9020063'.jan.'5'.price 0.9/
 ;
 
 * ============================================
@@ -53,6 +53,12 @@ Positive Variables
     r(t)
     q(t)
     piL_f(i,t)
+    piL_c(i,j,t)
+    piL_p(i,j,t)
+    piL_r(t)
+    piL_q(t)
+    piU_r(t)
+    piU_q(t)
 ;
 
 * ============================================
@@ -76,6 +82,12 @@ q.up(t) = tdata(t,"qmax");
 
 f.l(i,t) = f0(i,t) * exp(tdata(t,"r0") * tdata(t,"term"));
 f.l(i,t) = min(max(f.l(i,t), 1e-6), f.up(i,t));
+f.l("9000011","jun") = max(f.l("9000011","jun"), 0.001);
+f.l("9000011","oct") = max(f.l("9000011","oct"), 0.001);
+f.l("9000011","jan") = max(f.l("9000011","jan"), 0.001);
+f.l("9020063","jun") = max(f.l("9020063","jun"), 0.001);
+f.l("9020063","oct") = max(f.l("9020063","oct"), 0.001);
+f.l("9020063","jan") = max(f.l("9020063","jan"), 0.001);
 c.l(i,j,t) = 1;
 p.l(i,j,t) = 1;
 r.l(t) = (r.lo(t) + r.up(t)) / 2;
@@ -99,7 +111,13 @@ Equations
     stat_p(i,j,t)
     stat_q(t)
     stat_r(t)
+    comp_lo_c(i,j,t)
     comp_lo_f(i,t)
+    comp_lo_p(i,j,t)
+    comp_lo_q(t)
+    comp_lo_r(t)
+    comp_up_q(t)
+    comp_up_r(t)
     tpv
 ;
 
@@ -108,16 +126,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(i,j,t).. 0 =E= 0;
+stat_c(i,j,t).. ((-1) * piL_c(i,j,t)) =E= 0;
 stat_d1(i,t,j).. 0 =E= 0;
 stat_d2(i,t,j).. 0 =E= 0;
 stat_f(i,t).. ((-1) * sum(j$(pdata(i,t,j,"nom")), 1$(pdata(i,t,j,"type") = future))) - piL_f(i,t) =E= 0;
-stat_p(i,j,t).. 0 =E= 0;
-stat_q(t).. 0 =E= 0;
-stat_r(t).. 0 =E= 0;
+stat_p(i,j,t).. ((-1) * piL_p(i,j,t)) =E= 0;
+stat_q(t).. ((-1) * piL_q(t)) + piU_q(t) =E= 0;
+stat_r(t).. ((-1) * piL_r(t)) + piU_r(t) =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_c(i,j,t).. c(i,j,t) - 0 =G= 0;
 comp_lo_f(i,t).. f(i,t) - 0.001 =G= 0;
+comp_lo_p(i,j,t).. p(i,j,t) - 0 =G= 0;
+comp_lo_q(t).. q(t) - tdata(t,"qmin") =G= 0;
+comp_lo_r(t).. r(t) - tdata(t,"rmin") =G= 0;
+
+* Upper bound complementarity equations
+comp_up_q(t).. tdata(t,"qmax") - q(t) =G= 0;
+comp_up_r(t).. tdata(t,"rmax") - r(t) =G= 0;
 
 * Original equality equations
 tpv.. pval =E= sum((i,t,j)$(pdata(i,t,j,"nom")), (f(i,t) - pdata(i,t,j,"price") * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = future) + (c(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = call) + (p(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = puto));
@@ -145,7 +171,13 @@ Model mcp_model /
     stat_q.q,
     stat_r.r,
     tpv.pval,
-    comp_lo_f.piL_f
+    comp_lo_c.piL_c,
+    comp_lo_f.piL_f,
+    comp_lo_p.piL_p,
+    comp_lo_q.piL_q,
+    comp_lo_r.piL_r,
+    comp_up_q.piU_q,
+    comp_up_r.piU_r
 /;
 
 * ============================================

@@ -30,9 +30,9 @@ Sets
 Parameters
     scd(k) /good 0.25, medium 0.5, poor 0.25/
     land(s) /nigra 143.679, brutia 227.58/
-    ymf(at,k,s,cl)
-    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6, sawlogs.'pulp-sl' 0, sawlogs.sawing 0, pulplogs.'pulp-sl' 0, pulplogs.'pulp-rs' 0, pulplogs.sawing 0, pulp.sawing 0, residuals.'pulp-pl' 0, residuals.sawing 0, sawnwood.'pulp-pl' 0, sawnwood.'pulp-sl' 0, sawnwood.sawing 0/
-    b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1, 'saw-mill'.'pulp-pl' 0, 'saw-mill'.'pulp-sl' 0, 'saw-mill'.'pulp-rs' 0, 'pulp-mill'.sawing 0/
+    ymf(at,k,s,cl) /'a-10'.good.brutia.pulplogs 17.5, 'a-20'.good.nigra.pulplogs 120, 'a-20'.good.brutia.pulplogs 66.8, 'a-20'.medium.nigra.pulplogs 95, 'a-20'.medium.brutia.pulplogs 51.1, 'a-20'.poor.nigra.pulplogs 80, 'a-20'.poor.brutia.pulplogs 37.8, 'a-30'.good.nigra.pulplogs 132.6, 'a-30'.good.nigra.sawlogs 37.4, 'a-30'.good.brutia.pulplogs 91.3, 'a-30'.good.brutia.sawlogs 25.7, 'a-30'.medium.nigra.pulplogs 120.2, 'a-30'.medium.nigra.sawlogs 14.8, 'a-30'.medium.brutia.pulplogs 81.4, 'a-30'.medium.brutia.sawlogs 10, 'a-30'.poor.nigra.pulplogs 115, 'a-30'.poor.brutia.pulplogs 71.3, 'a-40'.good.nigra.pulplogs 121, 'a-40'.good.nigra.sawlogs 99, 'a-40'.good.brutia.pulplogs 91.3, 'a-40'.good.brutia.sawlogs 74.7, 'a-40'.medium.nigra.pulplogs 115.5, 'a-40'.medium.nigra.sawlogs 59.5, 'a-40'.medium.brutia.pulplogs 86.5, 'a-40'.medium.brutia.sawlogs 44.5, 'a-40'.poor.nigra.pulplogs 119, 'a-40'.poor.nigra.sawlogs 21, 'a-40'.poor.brutia.pulplogs 90.1, 'a-40'.poor.brutia.sawlogs 15.9, 'a-50'.good.nigra.pulplogs 108, 'a-50'.good.nigra.sawlogs 162, 'a-50'.good.brutia.pulplogs 76, 'a-50'.good.brutia.sawlogs 114, 'a-50'.medium.nigra.pulplogs 112, 'a-50'.medium.nigra.sawlogs 108, 'a-50'.medium.brutia.pulplogs 77, 'a-50'.medium.brutia.sawlogs 74, 'a-50'.poor.nigra.pulplogs 112.2, 'a-50'.poor.nigra.sawlogs 57.8, 'a-50'.poor.brutia.pulplogs 92, 'a-50'.poor.brutia.sawlogs 47.6, 'a-60'.good.nigra.pulplogs 104, 'a-60'.good.nigra.sawlogs 221, 'a-60'.good.brutia.pulplogs 76, 'a-60'.good.brutia.sawlogs 116, 'a-60'.medium.nigra.pulplogs 106, 'a-60'.medium.nigra.sawlogs 159, 'a-60'.medium.brutia.pulplogs 76, 'a-60'.medium.brutia.sawlogs 113, 'a-60'.poor.nigra.pulplogs 110, 'a-60'.poor.nigra.sawlogs 90, 'a-60'.poor.brutia.pulplogs 95.2, 'a-60'.poor.brutia.sawlogs 77.8, 'a-70'.good.nigra.pulplogs 105, 'a-70'.good.nigra.sawlogs 270, 'a-70'.good.brutia.pulplogs 78, 'a-70'.good.brutia.sawlogs 200, 'a-70'.medium.nigra.pulplogs 98, 'a-70'.medium.nigra.sawlogs 207, 'a-70'.medium.brutia.pulplogs 72, 'a-70'.medium.brutia.sawlogs 153, 'a-70'.poor.nigra.pulplogs 97, 'a-70'.poor.nigra.sawlogs 128, 'a-70'.poor.brutia.pulplogs 88, 'a-70'.poor.brutia.sawlogs 116, 'a-80'.good.nigra.pulplogs 102, 'a-80'.good.nigra.sawlogs 323, 'a-80'.good.brutia.pulplogs 76, 'a-80'.good.brutia.sawlogs 240, 'a-80'.medium.nigra.pulplogs 105, 'a-80'.medium.nigra.sawlogs 235, 'a-80'.medium.brutia.pulplogs 80, 'a-80'.medium.brutia.sawlogs 177, 'a-80'.poor.nigra.pulplogs 92, 'a-80'.poor.nigra.sawlogs 163, 'a-80'.poor.brutia.pulplogs 84, 'a-80'.poor.brutia.sawlogs 148/
+    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6/
+    b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6/
     pd(cf) /pulp 147, sawnwood 70/
     nu(m) /'pulp-mill' 37.8, 'saw-mill' 61.5/
@@ -88,6 +88,9 @@ Positive Variables
     x(c)
     lam_bal(c)
     lam_landc(s,k)
+    piL_v(s,k,at)
+    piL_z(p)
+    piL_x(c)
 ;
 
 * ============================================
@@ -124,6 +127,9 @@ Equations
     stat_z(p)
     comp_bal(c)
     comp_landc(s,k)
+    comp_lo_v(s,k,at)
+    comp_lo_x(c)
+    comp_lo_z(p)
     acutc
     ainvc
     aplnt
@@ -146,13 +152,18 @@ stat_phip.. 1 + nu_aplnt =E= 0;
 stat_phir.. 1 + nu_aproc =E= 0;
 stat_phix.. -1 + nu_asales =E= 0;
 stat_r(c)$(cl(c)).. sum(cl, nu_lbal(cl)) + (((-1) * muc) * nu_acutc)$sameas(c, 'pulplogs') =E= 0;
-stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) =E= 0;
-stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$sameas(c, 'pulp') =E= 0;
-stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) =E= 0;
+stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) - piL_v(s,k,at) =E= 0;
+stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$sameas(c, 'pulp') - piL_x(c) =E= 0;
+stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) - piL_z(p) =E= 0;
 
 * Inequality complementarity equations
 comp_bal(c).. sum(p, a(c,p) * z(p)) + r(c)$cl(c) - x(c)$cf(c) =G= 0;
 comp_landc(s,k).. ((-1) * (sum(at, v(s,k,at) * age(at)) - land(s) * scd(k))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_v(s,k,at).. v(s,k,at) - 0 =G= 0;
+comp_lo_x(c).. x(c) - 0 =G= 0;
+comp_lo_z(p).. z(p) - 0 =G= 0;
 
 * Original equality equations
 lbal(cl).. r(cl) =E= sum((s,k,at), ymf(at,k,s,cl) * v(s,k,at));
@@ -174,6 +185,7 @@ benefit.. phi =E= phix - phik - phir - phil - phip;
 
 r.fx(c)$(not (cl(c))) = 0;
 x.fx(c)$(not (cf(c))) = 0;
+piL_x.fx(c)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -208,7 +220,10 @@ Model mcp_model /
     asales.nu_asales,
     benefit.phi,
     cap.nu_cap,
-    lbal.nu_lbal
+    lbal.nu_lbal,
+    comp_lo_v.piL_v,
+    comp_lo_x.piL_x,
+    comp_lo_z.piL_z
 /;
 
 * ============================================

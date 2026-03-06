@@ -22,10 +22,10 @@ Sets
 ;
 
 Parameters
-    bspec(e,*) /iron.maximum 60, copper.maximum 100, manganese.maximum 40, magnesium.maximum 30, aluminum.maximum inf, aluminum.minimum 1500, silicon.maximum 300, silicon.minimum 250, magnesium.minimum 0, manganese.minimum 0, copper.minimum 0, iron.minimum 0/
-    prop(e,s) /iron.'bin-1' 0.15, iron.'bin-2' 0.04, iron.'bin-3' 0.02, iron.'bin-4' 0.04, iron.'bin-5' 0.02, iron.aluminum 0.01, iron.silicon 0, copper.'bin-1' 0.03, copper.'bin-2' 0.05, copper.'bin-3' 0.08, copper.'bin-4' 0.02, copper.'bin-5' 0.06, copper.aluminum 0.01, manganese.'bin-1' 0.02, manganese.'bin-2' 0.04, manganese.'bin-3' 0.01, manganese.'bin-4' 0.02, manganese.'bin-5' 0.02, magnesium.'bin-1' 0.02, magnesium.'bin-2' 0.03, magnesium.'bin-4' 0.01, aluminum.'bin-1' 0.7, aluminum.'bin-2' 0.75, aluminum.'bin-3' 0.8, aluminum.'bin-4' 0.75, aluminum.'bin-5' 0.8, aluminum.aluminum 0.97, silicon.'bin-1' 0.02, silicon.'bin-2' 0.06, silicon.'bin-3' 0.08, silicon.'bin-4' 0.12, silicon.'bin-5' 0.02, silicon.aluminum 0.01, silicon.silicon 1, magnesium.'bin-3' 0, magnesium.'bin-5' 0, magnesium.aluminum 0, magnesium.silicon 0, manganese.aluminum 0, manganese.silicon 0, copper.silicon 0, aluminum.silicon 0/
+    bspec(e,*) /iron.maximum 60, copper.maximum 100, manganese.maximum 40, magnesium.maximum 30, aluminum.maximum inf, aluminum.minimum 1500, silicon.maximum 300, silicon.minimum 250/
+    prop(e,s) /iron.'bin-1' 0.15, iron.'bin-2' 0.04, iron.'bin-3' 0.02, iron.'bin-4' 0.04, iron.'bin-5' 0.02, iron.aluminum 0.01, copper.'bin-1' 0.03, copper.'bin-2' 0.05, copper.'bin-3' 0.08, copper.'bin-4' 0.02, copper.'bin-5' 0.06, copper.aluminum 0.01, manganese.'bin-1' 0.02, manganese.'bin-2' 0.04, manganese.'bin-3' 0.01, manganese.'bin-4' 0.02, manganese.'bin-5' 0.02, magnesium.'bin-1' 0.02, magnesium.'bin-2' 0.03, magnesium.'bin-4' 0.01, aluminum.'bin-1' 0.7, aluminum.'bin-2' 0.75, aluminum.'bin-3' 0.8, aluminum.'bin-4' 0.75, aluminum.'bin-5' 0.8, aluminum.aluminum 0.97, silicon.'bin-1' 0.02, silicon.'bin-2' 0.06, silicon.'bin-3' 0.08, silicon.'bin-4' 0.12, silicon.'bin-5' 0.02, silicon.aluminum 0.01, silicon.silicon 1/
     dcheck(s)
-    sup(s,*) /'bin-1'.inventory 200, 'bin-1'.cost 0.03, 'bin-2'.inventory 750, 'bin-2'.cost 0.08, 'bin-3'.inventory 800, 'bin-3'.'min-use' 400, 'bin-3'.cost 0.17, 'bin-4'.inventory 700, 'bin-4'.'min-use' 100, 'bin-4'.cost 0.12, 'bin-5'.inventory 1500, 'bin-5'.cost 0.15, aluminum.inventory inf, aluminum.'min-use' 0.21, silicon.inventory inf, silicon.'min-use' 0.38, 'bin-2'.'min-use' 0, 'bin-5'.'min-use' 0, silicon.cost 0, 'bin-1'.'min-use' 0, aluminum.cost 0/
+    sup(s,*) /'bin-1'.inventory 200, 'bin-1'.cost 0.03, 'bin-2'.inventory 750, 'bin-2'.cost 0.08, 'bin-3'.inventory 800, 'bin-3'.'min-use' 400, 'bin-3'.cost 0.17, 'bin-4'.inventory 700, 'bin-4'.'min-use' 100, 'bin-4'.cost 0.12, 'bin-5'.inventory 1500, 'bin-5'.cost 0.15, aluminum.inventory inf, aluminum.'min-use' 0.21, silicon.inventory inf, silicon.'min-use' 0.38/
     report(s,*)
     xr(s)
     xr3(s)
@@ -56,6 +56,13 @@ Variables
     nu_ebal(e)
 ;
 
+Positive Variables
+    piL_x(s)
+    piL_bc(e)
+    piU_x(s)
+    piU_bc(e)
+;
+
 * ============================================
 * Variable Bounds
 * ============================================
@@ -64,19 +71,6 @@ x.lo(s) = sup(s,"min-use");
 x.up(s) = sup(s,"inventory");
 bc.lo(e) = bspec(e,"minimum");
 bc.up(e) = bspec(e,"maximum");
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-report(s,"run-1") = x.l(s);
-report(s,"run-2") = x.l(s);
-report(s,"run-3") = x.l(s);
-report(s,"run-4") = x.l(s);
-xr(s) = round(x.l(s));
-xr3(s) = round(x.l(s), 3);
-$offImplicitAssign
 
 * ============================================
 * Equations
@@ -89,6 +83,10 @@ $offImplicitAssign
 Equations
     stat_bc(e)
     stat_x(s)
+    comp_lo_bc(e)
+    comp_lo_x(s)
+    comp_up_bc(e)
+    comp_up_x(s)
     cdef
     ebal(e)
     yield
@@ -99,8 +97,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_bc(e).. nu_ebal(e) =E= 0;
-stat_x(s).. sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) =E= 0;
+stat_bc(e).. nu_ebal(e) - piL_bc(e) + piU_bc(e) =E= 0;
+stat_x(s).. sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_bc(e).. bc(e) - bspec(e,"minimum") =G= 0;
+comp_lo_x(s).. x(s) - sup(s,"min-use") =G= 0;
+
+* Upper bound complementarity equations
+comp_up_bc(e).. bspec(e,"maximum") - bc(e) =G= 0;
+comp_up_x(s).. sup(s,"inventory") - x(s) =G= 0;
 
 * Original equality equations
 yield.. sum(s, x(s)) =E= 2000;
@@ -126,7 +132,11 @@ Model mcp_model /
     stat_x.x,
     cdef.cost,
     ebal.nu_ebal,
-    yield.nu_yield
+    yield.nu_yield,
+    comp_lo_bc.piL_bc,
+    comp_lo_x.piL_x,
+    comp_up_bc.piU_bc,
+    comp_up_x.piU_x
 /;
 
 * ============================================

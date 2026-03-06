@@ -69,6 +69,9 @@ Positive Variables
     lam_lbal(j,s)
     lam_lbal2(j)
     lam_extra
+    piL_x(i)
+    piL_v(j,s)
+    piL_v2(j)
 ;
 
 * ============================================
@@ -83,17 +86,6 @@ Positive Variables
 x.l(i) = 1;
 v.l(j,s) = 1;
 v2.l(j) = 1;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-stage1("deterministic",i) = x.l(i);
-stage1("decis using scenarios",i) = x.l(i);
-stage1("decis using scenarios, exact",i) = x.l(i);
-stage1("decis indep. dist.",i) = x.l(i);
-$offImplicitAssign
 
 * ============================================
 * Equations
@@ -111,6 +103,9 @@ Equations
     comp_extra
     comp_lbal(j,s)
     comp_lbal2(j)
+    comp_lo_v(j,s)
+    comp_lo_v2(j)
+    comp_lo_x(i)
     obj
     obj2
 ;
@@ -121,14 +116,19 @@ Equations
 
 * Stationarity equations
 stat_eprofit.. nu_obj =E= 0;
-stat_v(j,s).. 1 / card(s) * q(j) * nu_obj - lam_lbal(j,s) =E= 0;
-stat_v2(j).. q(j) - lam_lbal2(j) =E= 0;
-stat_x(i).. ((-1) * c(i)) + ((-1) * c(i)) * nu_obj + sum((j,s), t(j,i,s) * lam_lbal(j,s)) + sum(j, t2(j,i) * lam_lbal2(j)) + c(i) * lam_extra =E= 0;
+stat_v(j,s).. 1 / card(s) * q(j) * nu_obj - lam_lbal(j,s) - piL_v(j,s) =E= 0;
+stat_v2(j).. q(j) - lam_lbal2(j) - piL_v2(j) =E= 0;
+stat_x(i).. ((-1) * c(i)) + ((-1) * c(i)) * nu_obj + sum((j,s), t(j,i,s) * lam_lbal(j,s)) + sum(j, t2(j,i) * lam_lbal2(j)) + c(i) * lam_extra - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_extra.. ((-1) * (sum(i, c(i) * x(i)) - 1000000)) =G= 0;
 comp_lbal(j,s).. ((-1) * (sum(i, t(j,i,s) * x(i)) - (h(j,s) + v(j,s)))) =G= 0;
 comp_lbal2(j).. ((-1) * (sum(i, t2(j,i) * x(i)) - (h2(j) + v2(j)))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_v(j,s).. v(j,s) - 0 =G= 0;
+comp_lo_v2(j).. v2(j) - 0 =G= 0;
+comp_lo_x(i).. x(i) - 0 =G= 0;
 
 * Original equality equations
 obj.. eprofit =E= sum(i, c(i) * x(i)) - 1 / card(s) * sum((j,s), q(j) * v(j,s));
@@ -157,7 +157,10 @@ Model mcp_model /
     comp_lbal.lam_lbal,
     comp_lbal2.lam_lbal2,
     obj.nu_obj,
-    obj2.profit
+    obj2.profit,
+    comp_lo_v.piL_v,
+    comp_lo_v2.piL_v2,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

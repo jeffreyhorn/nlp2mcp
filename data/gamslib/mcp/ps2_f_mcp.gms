@@ -52,6 +52,8 @@ Positive Variables
     w(i)
     lam_pc(i)
     piL_x(i)
+    piL_b(i)
+    piL_w(i)
 ;
 
 * ============================================
@@ -84,6 +86,8 @@ Equations
     stat_w(i)
     stat_x(i)
     comp_pc(i)
+    comp_lo_b(i)
+    comp_lo_w(i)
     comp_lo_x(i)
     obj
     rev(i)
@@ -94,15 +98,17 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(i).. ((-1) * p(i)) + nu_rev(i) =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_util.. 0 =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * power(x(i), -0.5))) * nu_rev(i) + theta(i) * lam_pc(i) - piL_x(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_b(i).. b(i) - 0 =G= 0;
+comp_lo_w(i).. w(i) - 0 =G= 0;
 comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
@@ -131,6 +137,8 @@ Model mcp_model /
     comp_pc.lam_pc,
     obj.Util,
     rev.nu_rev,
+    comp_lo_b.piL_b,
+    comp_lo_w.piL_w,
     comp_lo_x.piL_x
 /;
 

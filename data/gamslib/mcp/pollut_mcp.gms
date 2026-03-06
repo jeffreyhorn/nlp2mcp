@@ -58,6 +58,10 @@ Positive Variables
     lam_eq4(i)
     lam_eq5a
     lam_eq5b
+    piL_k(j)
+    piL_l(j)
+    piU_k(j)
+    piU_l(j)
 ;
 
 * ============================================
@@ -96,6 +100,10 @@ Equations
     comp_eq4(i)
     comp_eq5a
     comp_eq5b
+    comp_lo_k(j)
+    comp_lo_l(j)
+    comp_up_k(j)
+    comp_up_l(j)
     kdef
     ldef
     obj
@@ -106,8 +114,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) =E= 0;
-stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef =E= 0;
+stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) - piL_k(j) + piU_k(j) =E= 0;
+stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef - piL_l(j) + piU_l(j) =E= 0;
 stat_tk.. nu_kdef - lam_eq5a + lam_eq5b =E= 0;
 stat_tl.. nu_ldef + gamma2 * lam_eq5a + ((-1) * gamma1) * lam_eq5b =E= 0;
 
@@ -115,6 +123,14 @@ stat_tl.. nu_ldef + gamma2 * lam_eq5a + ((-1) * gamma1) * lam_eq5b =E= 0;
 comp_eq4(i).. ((-1) * (sum(j, w(j,i) / z(j,"k") * k(j)) - tau(i))) =G= 0;
 comp_eq5a.. tk - gamma2 * tl =G= 0;
 comp_eq5b.. ((-1) * (tk - gamma1 * tl)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_k(j).. k(j) - alpha * z(j,"k0") =G= 0;
+comp_lo_l(j).. l(j) - alpha * z(j,"l0") =G= 0;
+
+* Upper bound complementarity equations
+comp_up_k(j).. beta * z(j,"k0") - k(j) =G= 0;
+comp_up_l(j).. beta * z(j,"l0") - l(j) =G= 0;
 
 * Original equality equations
 obj.. output =E= sum(j, z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b"));
@@ -145,7 +161,11 @@ Model mcp_model /
     comp_eq5b.lam_eq5b,
     kdef.nu_kdef,
     ldef.nu_ldef,
-    obj.output
+    obj.output,
+    comp_lo_k.piL_k,
+    comp_lo_l.piL_l,
+    comp_up_k.piU_k,
+    comp_up_l.piU_l
 /;
 
 * ============================================

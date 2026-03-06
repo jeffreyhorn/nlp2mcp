@@ -52,6 +52,8 @@ Positive Variables
     x(p,tt)
     s(r,tt)
     lam_cc(t)
+    piL_x(p,tt)
+    piL_s(r,tt)
 ;
 
 * ============================================
@@ -84,6 +86,8 @@ Equations
     stat_s(r,tt)
     stat_x(p,tt)
     comp_cc(t)
+    comp_lo_s(r,tt)
+    comp_lo_x(p,tt)
     pd
     sb(r,tt)
 ;
@@ -93,11 +97,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(r,tt)$(t(tt)).. misc("storage-c",r) - nu_sb(r,tt) =E= 0;
-stat_x(p,tt)$(t(tt)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) =E= 0;
+stat_s(r,tt)$(t(tt)).. misc("storage-c",r) - nu_sb(r,tt) - piL_s(r,tt) =E= 0;
+stat_x(p,tt)$(t(tt)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) - piL_x(p,tt) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_s(r,tt).. s(r,tt) - 0 =G= 0;
+comp_lo_x(p,tt).. x(p,tt) - 0 =G= 0;
 
 * Original equality equations
 sb(r,tt)$(ord(tt) <= card(tt) - 1).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
@@ -112,7 +120,9 @@ pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(
 * fixed for excluded instances to satisfy MCP matching.
 
 s.fx(r,tt)$(not (t(tt))) = 0;
+piL_s.fx(r,tt)$(not (t(tt))) = 0;
 x.fx(p,tt)$(not (t(tt))) = 0;
+piL_x.fx(p,tt)$(not (t(tt))) = 0;
 nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
 
 * ============================================
@@ -133,7 +143,9 @@ Model mcp_model /
     stat_x.x,
     comp_cc.lam_cc,
     pd.profit,
-    sb.nu_sb
+    sb.nu_sb,
+    comp_lo_s.piL_s,
+    comp_lo_x.piL_x
 /;
 
 * ============================================

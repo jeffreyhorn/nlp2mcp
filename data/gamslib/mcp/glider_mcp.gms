@@ -23,7 +23,7 @@ Sets
 Alias(h, i);
 
 Parameters
-    c_0(c) /x 0, y 1000/
+    c_0(c) /y 1000/
     v_0(c) /x 13.23, y -1.288/
     c_f(c) /y 900/
     v_f(c) /x 13.23, y -1.288/
@@ -186,6 +186,7 @@ Positive Variables
     piL_vel_x_h9
     piL_cl(h)
     piL_v(h)
+    piL_step
     piU_cl(h)
 ;
 
@@ -220,6 +221,57 @@ t_f.l = step.l * nh;
 u.l(i) = u_c * (1 - r.l(i)) * exp(((-1) * r.l(i)));
 w.l(i) = vel.l("y",i) - u.l(i);
 v.l(i) = sqrt(sqr(vel.l("x",i)) + sqr(w.l(i)));
+v.l("h0") = max(v.l("h0"), 0.01);
+v.l("h1") = max(v.l("h1"), 0.01);
+v.l("h2") = max(v.l("h2"), 0.01);
+v.l("h3") = max(v.l("h3"), 0.01);
+v.l("h4") = max(v.l("h4"), 0.01);
+v.l("h5") = max(v.l("h5"), 0.01);
+v.l("h6") = max(v.l("h6"), 0.01);
+v.l("h7") = max(v.l("h7"), 0.01);
+v.l("h8") = max(v.l("h8"), 0.01);
+v.l("h9") = max(v.l("h9"), 0.01);
+v.l("h10") = max(v.l("h10"), 0.01);
+v.l("h11") = max(v.l("h11"), 0.01);
+v.l("h12") = max(v.l("h12"), 0.01);
+v.l("h13") = max(v.l("h13"), 0.01);
+v.l("h14") = max(v.l("h14"), 0.01);
+v.l("h15") = max(v.l("h15"), 0.01);
+v.l("h16") = max(v.l("h16"), 0.01);
+v.l("h17") = max(v.l("h17"), 0.01);
+v.l("h18") = max(v.l("h18"), 0.01);
+v.l("h19") = max(v.l("h19"), 0.01);
+v.l("h20") = max(v.l("h20"), 0.01);
+v.l("h21") = max(v.l("h21"), 0.01);
+v.l("h22") = max(v.l("h22"), 0.01);
+v.l("h23") = max(v.l("h23"), 0.01);
+v.l("h24") = max(v.l("h24"), 0.01);
+v.l("h25") = max(v.l("h25"), 0.01);
+v.l("h26") = max(v.l("h26"), 0.01);
+v.l("h27") = max(v.l("h27"), 0.01);
+v.l("h28") = max(v.l("h28"), 0.01);
+v.l("h29") = max(v.l("h29"), 0.01);
+v.l("h30") = max(v.l("h30"), 0.01);
+v.l("h31") = max(v.l("h31"), 0.01);
+v.l("h32") = max(v.l("h32"), 0.01);
+v.l("h33") = max(v.l("h33"), 0.01);
+v.l("h34") = max(v.l("h34"), 0.01);
+v.l("h35") = max(v.l("h35"), 0.01);
+v.l("h36") = max(v.l("h36"), 0.01);
+v.l("h37") = max(v.l("h37"), 0.01);
+v.l("h38") = max(v.l("h38"), 0.01);
+v.l("h39") = max(v.l("h39"), 0.01);
+v.l("h40") = max(v.l("h40"), 0.01);
+v.l("h41") = max(v.l("h41"), 0.01);
+v.l("h42") = max(v.l("h42"), 0.01);
+v.l("h43") = max(v.l("h43"), 0.01);
+v.l("h44") = max(v.l("h44"), 0.01);
+v.l("h45") = max(v.l("h45"), 0.01);
+v.l("h46") = max(v.l("h46"), 0.01);
+v.l("h47") = max(v.l("h47"), 0.01);
+v.l("h48") = max(v.l("h48"), 0.01);
+v.l("h49") = max(v.l("h49"), 0.01);
+v.l("h50") = max(v.l("h50"), 0.01);
 D.l(i) = 0.5 * (c0 + c1 * sqr(cl.l(i))) * rho * S * sqr(v.l(i));
 L.l(i) = 0.5 * cl.l(i) * rho * S * sqr(v.l(i));
 v_dot.l("x",i) = (((-1) * l.l(i)) * w.l(i) / v.l(i) - d.l(i) * vel.l("x",i) / v.l(i)) / m;
@@ -501,6 +553,7 @@ Equations
     comp_lo_pos_x_h7
     comp_lo_pos_x_h8
     comp_lo_pos_x_h9
+    comp_lo_step
     comp_lo_v(h)
     comp_lo_vel_x_h0
     comp_lo_vel_x_h1
@@ -574,8 +627,8 @@ Equations
 
 * Stationarity equations
 stat_cl(h).. sum(i, ((-1) * (sqr(v(i)) * S * rho * 0.5 * c1 * 2 * cl(i))) * nu_Ddef(i)) + sum(i, ((-1) * (sqr(v(i)) * S * rho * 0.5)) * nu_Ldef(i)) - piL_cl(h) + piU_cl(h) =E= 0;
-stat_d(h).. sum(i, nu_Ddef(i)) + sum(c, sum(i, ((-1) * (m * ((-1) * (v(i) * vel(c,i) / v(i) ** 2)) / m ** 2)) * nu_vx_dot_def(i))) + sum(i, ((-1) * (m * ((-1) * (v(i) * w(i) / v(i) ** 2)) / m ** 2)) * nu_vy_dot_def(i)) =E= 0;
-stat_l(h).. sum(i, nu_Ldef(i)) + sum(i, ((-1) * (m * v(i) * w(i) * (-1) / v(i) ** 2 / m ** 2)) * nu_vx_dot_def(i)) + sum(c, sum(i, ((-1) * (m * v(i) * vel(c,i) / v(i) ** 2 / m ** 2)) * nu_vy_dot_def(i))) =E= 0;
+stat_d(h).. sum(i, nu_Ddef(i)) + sum(c, sum(i, ((-1) * (m * ((-1) * (v(i) * vel(c,i) / sqr(v(i)))) / sqr(m))) * nu_vx_dot_def(i))) + sum(i, ((-1) * (m * ((-1) * (v(i) * w(i) / sqr(v(i)))) / sqr(m))) * nu_vy_dot_def(i)) =E= 0;
+stat_l(h).. sum(i, nu_Ldef(i)) + sum(i, ((-1) * (m * v(i) * w(i) * (-1) / sqr(v(i)) / sqr(m))) * nu_vx_dot_def(i)) + sum(c, sum(i, ((-1) * (m * v(i) * vel(c,i) / sqr(v(i)) / sqr(m))) * nu_vy_dot_def(i))) =E= 0;
 stat_pos_x_h0.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h0 =E= 0;
 stat_pos_x_h1.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h1 =E= 0;
 stat_pos_x_h10.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h10 =E= 0;
@@ -679,10 +732,10 @@ stat_pos_y_h7.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
 stat_pos_y_h8.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
 stat_pos_y_h9.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
 stat_r(h).. sum(i, nu_rdef(i)) + sum(i, ((-1) * (((-1) * (exp(((-1) * r(i))) * u_c)) - u_c * (1 - r(i)) * exp(((-1) * r(i))))) * nu_udef(i)) =E= 0;
-stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * ((vel(c,i) + vel(c,h)) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * ((v_dot(c,i) + v_dot(c,h)) * 0.5)) * nu_vel_eqn(c,i)) =E= 0;
+stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * ((vel(c,i) + vel(c,h)) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * ((v_dot(c,i) + v_dot(c,h)) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
 stat_t_f.. nu_tf_eqn =E= 0;
 stat_u(h).. sum(i, nu_udef(i)) + sum(i, nu_wdef(i)) =E= 0;
-stat_v(h).. sum(i, nu_vdef(i)) + sum(i, ((-1) * (0.5 * (c0 + c1 * sqr(cl(i))) * rho * S * 2 * v(i))) * nu_Ddef(i)) + sum(i, ((-1) * (0.5 * cl(i) * rho * S * 2 * v(i))) * nu_Ldef(i)) + sum(c, sum(i, ((-1) * (m * (((-1) * (((-1) * l(i)) * w(i))) / v(i) ** 2 - ((-1) * (d(i) * vel(c,i))) / v(i) ** 2) / m ** 2)) * nu_vx_dot_def(i))) + sum(c, sum(i, ((-1) * (m * (((-1) * (l(i) * vel(c,i))) / v(i) ** 2 - ((-1) * (d(i) * w(i))) / v(i) ** 2) / m ** 2)) * nu_vy_dot_def(i))) - piL_v(h) =E= 0;
+stat_v(h).. sum(i, nu_vdef(i)) + sum(i, ((-1) * (0.5 * (c0 + c1 * sqr(cl(i))) * rho * S * 2 * v(i))) * nu_Ddef(i)) + sum(i, ((-1) * (0.5 * cl(i) * rho * S * 2 * v(i))) * nu_Ldef(i)) + sum(c, sum(i, ((-1) * (m * (((-1) * (((-1) * l(i)) * w(i))) / sqr(v(i)) - ((-1) * (d(i) * vel(c,i))) / sqr(v(i))) / sqr(m))) * nu_vx_dot_def(i))) + sum(c, sum(i, ((-1) * (m * (((-1) * (l(i) * vel(c,i))) / sqr(v(i)) - ((-1) * (d(i) * w(i))) / sqr(v(i))) / sqr(m))) * nu_vy_dot_def(i))) - piL_v(h) =E= 0;
 stat_v_dot(c,h).. sum(i, ((-1) * (0.5 * step)) * nu_vel_eqn(c,i)) =E= 0;
 stat_vel_x_h0.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h0 =E= 0;
 stat_vel_x_h1.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h1 =E= 0;
@@ -786,7 +839,7 @@ stat_vel_y_h6.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i),
 stat_vel_y_h7.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
 stat_vel_y_h8.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
 stat_vel_y_h9.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_w(h).. sum(i, nu_wdef(i)) + sum(c, sum(i, ((-1) * (1 / (2 * sqrt(sqr(vel(c,i)) + sqr(w(i)))) * 2 * w(i))) * nu_vdef(i))) + sum(i, ((-1) * (m * v(i) * ((-1) * l(i)) / v(i) ** 2 / m ** 2)) * nu_vx_dot_def(i)) + sum(i, ((-1) * (m * ((-1) * (v(i) * d(i) / v(i) ** 2)) / m ** 2)) * nu_vy_dot_def(i)) =E= 0;
+stat_w(h).. sum(i, nu_wdef(i)) + sum(c, sum(i, ((-1) * (1 / (2 * sqrt(sqr(vel(c,i)) + sqr(w(i)))) * 2 * w(i))) * nu_vdef(i))) + sum(i, ((-1) * (m * v(i) * ((-1) * l(i)) / sqr(v(i)) / sqr(m))) * nu_vx_dot_def(i)) + sum(i, ((-1) * (m * ((-1) * (v(i) * d(i) / sqr(v(i)))) / sqr(m))) * nu_vy_dot_def(i)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_cl(h).. cl(h) - 0 =G= 0;
@@ -841,6 +894,7 @@ comp_lo_pos_x_h6.. pos(x,"h6") - 0 =G= 0;
 comp_lo_pos_x_h7.. pos(x,"h7") - 0 =G= 0;
 comp_lo_pos_x_h8.. pos(x,"h8") - 0 =G= 0;
 comp_lo_pos_x_h9.. pos(x,"h9") - 0 =G= 0;
+comp_lo_step.. step - 0 =G= 0;
 comp_lo_v(h).. v(h) - 0.01 =G= 0;
 comp_lo_vel_x_h0.. vel(x,"h0") - 0 =G= 0;
 comp_lo_vel_x_h1.. vel(x,"h1") - 0 =G= 0;
@@ -1214,6 +1268,7 @@ Model mcp_model /
     comp_lo_pos_x_h7.piL_pos_x_h7,
     comp_lo_pos_x_h8.piL_pos_x_h8,
     comp_lo_pos_x_h9.piL_pos_x_h9,
+    comp_lo_step.piL_step,
     comp_lo_v.piL_v,
     comp_lo_vel_x_h0.piL_vel_x_h0,
     comp_lo_vel_x_h1.piL_vel_x_h1,

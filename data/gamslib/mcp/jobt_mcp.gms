@@ -57,6 +57,12 @@ Positive Variables
     h(t)
     f(t)
     lam_wd(t)
+    piL_p(t)
+    piL_s(t)
+    piL_u(t)
+    piL_w(t)
+    piL_h(t)
+    piL_f(t)
 ;
 
 * ============================================
@@ -91,6 +97,12 @@ Equations
     stat_u(t)
     stat_w(t)
     comp_wd(t)
+    comp_lo_f(t)
+    comp_lo_h(t)
+    comp_lo_p(t)
+    comp_lo_s(t)
+    comp_lo_u(t)
+    comp_lo_w(t)
     cb(t)
     obj
     wb(t)
@@ -101,15 +113,23 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_f(t).. nu_wb(t) =E= 0;
-stat_h(t).. ((-1) * nu_wb(t)) + (1 + 1 / alpha) * lam_wd(t) =E= 0;
-stat_p(t).. ((-1) * nu_cb(t)) + 1 / rho ** 1 * lam_wd(t) =E= 0;
-stat_s(t).. 10 + nu_cb(t) =E= 0;
-stat_u(t).. 30 - nu_cb(t) =E= 0;
-stat_w(t).. wage + sf(t) + nu_wb(t) - lam_wd(t) =E= 0;
+stat_f(t).. nu_wb(t) - piL_f(t) =E= 0;
+stat_h(t).. ((-1) * nu_wb(t)) + (1 + 1 / alpha) * lam_wd(t) - piL_h(t) =E= 0;
+stat_p(t).. ((-1) * nu_cb(t)) + 1 / rho ** 1 * lam_wd(t) - piL_p(t) =E= 0;
+stat_s(t).. 10 + nu_cb(t) - piL_s(t) =E= 0;
+stat_u(t).. 30 - nu_cb(t) - piL_u(t) =E= 0;
+stat_w(t).. wage + sf(t) + nu_wb(t) - lam_wd(t) - piL_w(t) =E= 0;
 
 * Inequality complementarity equations
 comp_wd(t).. w(t) - (p(t) / rho + (1 + 1 / alpha) * h(t)) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_f(t).. f(t) - 0 =G= 0;
+comp_lo_h(t).. h(t) - 0 =G= 0;
+comp_lo_p(t).. p(t) - 0 =G= 0;
+comp_lo_s(t).. s(t) - 0 =G= 0;
+comp_lo_u(t).. u(t) - 0 =G= 0;
+comp_lo_w(t).. w(t) - 0 =G= 0;
 
 * Original equality equations
 cb(t)$(ord(t) > 1).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
@@ -150,7 +170,13 @@ Model mcp_model /
     comp_wd.lam_wd,
     cb.nu_cb,
     obj.phi,
-    wb.nu_wb
+    wb.nu_wb,
+    comp_lo_f.piL_f,
+    comp_lo_h.piL_h,
+    comp_lo_p.piL_p,
+    comp_lo_s.piL_s,
+    comp_lo_u.piL_u,
+    comp_lo_w.piL_w
 /;
 
 * ============================================

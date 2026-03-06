@@ -24,7 +24,7 @@ Sets
 Alias(i, k);
 
 Parameters
-    a(i,k) /'act-1'.'act-3' 0, 'act-1'.'act-4' 0, 'act-1'.'act-5' 0, 'act-2'.'act-3' 0, 'act-2'.'act-4' 0, 'act-2'.'act-5' 0, 'act-3'.'act-1' 0, 'act-3'.'act-2' 0, 'act-3'.'act-4' 0, 'act-3'.'act-5' 0, 'act-4'.'act-1' 0, 'act-4'.'act-2' 0, 'act-4'.'act-3' 0, 'act-4'.'act-4' 0, 'act-5'.'act-1' 0, 'act-5'.'act-2' 0, 'act-5'.'act-3' 0, 'act-5'.'act-4' 0, 'act-3'.'act-3' 0, 'act-4'.'act-5' 0, 'act-2'.'act-1' 0, 'act-2'.'act-2' 0, 'act-5'.'act-5' 0, 'act-1'.'act-1' 0, 'act-1'.'act-2' 0/
+    a(i,k)
     objval(jj,*)
 ;
 
@@ -52,6 +52,10 @@ Variables
 Positive Variables
     x(i,jj)
     y(i,jj,k)
+    piL_x(i,jj)
+    piL_y(i,jj,k)
+    piL_xb(i,jj)
+    piU_xb(i,jj)
 ;
 
 Binary Variables
@@ -82,6 +86,10 @@ Equations
     stat_x(i,jj)
     stat_xb(i,jj)
     stat_y(i,jj,k)
+    comp_lo_x(i,jj)
+    comp_lo_xb(i,jj)
+    comp_lo_y(i,jj,k)
+    comp_up_xb(i,jj)
     zdef
 ;
 
@@ -90,11 +98,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,jj)$(j(jj)).. 0 =E= 0;
-stat_xb(i,jj)$(j(jj)).. 0 =E= 0;
-stat_y(i,jj,k)$(j(jj)).. 0 =E= 0;
+stat_x(i,jj)$(j(jj)).. ((-1) * piL_x(i,jj)) =E= 0;
+stat_xb(i,jj)$(j(jj)).. ((-1) * piL_xb(i,jj)) + piU_xb(i,jj) =E= 0;
+stat_y(i,jj,k)$(j(jj)).. ((-1) * piL_y(i,jj,k)) =E= 0;
 
 * Inequality complementarity equations
+
+* Lower bound complementarity equations
+comp_lo_x(i,jj).. x(i,jj) - 0 =G= 0;
+comp_lo_xb(i,jj).. xb(i,jj) - 0 =G= 0;
+comp_lo_y(i,jj,k).. y(i,jj,k) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_xb(i,jj).. 1 - xb(i,jj) =G= 0;
 
 * Original equality equations
 zdef.. z =E= sum((i,j,k), x(i,j) * a(i,k) * x(k,j));
@@ -108,8 +124,12 @@ zdef.. z =E= sum((i,j,k), x(i,j) * a(i,k) * x(k,j));
 * fixed for excluded instances to satisfy MCP matching.
 
 x.fx(i,jj)$(not (j(jj))) = 0;
+piL_x.fx(i,jj)$(not (j(jj))) = 0;
 xb.fx(i,jj)$(not (j(jj))) = 0;
+piL_xb.fx(i,jj)$(not (j(jj))) = 0;
+piU_xb.fx(i,jj)$(not (j(jj))) = 0;
 y.fx(i,jj,k)$(not (j(jj))) = 0;
+piL_y.fx(i,jj,k)$(not (j(jj))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -128,7 +148,11 @@ Model mcp_model /
     stat_x.x,
     stat_xb.xb,
     stat_y.y,
-    zdef.z
+    zdef.z,
+    comp_lo_x.piL_x,
+    comp_lo_xb.piL_xb,
+    comp_lo_y.piL_y,
+    comp_up_xb.piU_xb
 /;
 
 * ============================================

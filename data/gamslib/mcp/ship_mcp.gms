@@ -95,7 +95,8 @@ wl.l = 45.8;
 lw.l = 43.2;
 d.l = 30.5;
 z.l(s) = d.l * t.l(s) * (lw.l / 3 + wl.l * e) / 2;
-wc.l = wl.l + sqrt(lw.l ** 2 - d.l ** 2);
+wc.l = wl.l + sqrt(sqr(lw.l) - sqr(d.l));
+wc.l = max(wc.l, 1.0);
 $offImplicitAssign
 
 * ============================================
@@ -130,11 +131,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_d.. sum(s, ((-1) * (2 * (lw / 3 + wl * e) * t(s) / 4)) * nu_zdef(s)) + ((-1) * (1 / (2 * sqrt(lw ** 2 - d ** 2)) * ((-1) * (2 * d)))) * nu_wdef + sum(s, ((-1) * (2 * z(s) / 4)) * lam_inertia(s)) + lam_geom =E= 0;
-stat_lw.. 1000 * wc * sum(s, t(s) * l(s)) * gamsteel * width / wc ** 2 / 1000000 + sum(s, ((-1) * (2 * d * t(s) * 0.3333333333333333 / 4)) * nu_zdef(s)) + ((-1) * (1 / (2 * sqrt(lw ** 2 - d ** 2)) * 2 * lw)) * nu_wdef + sum(s, k2(s) * lam_platel(s)) - lam_geom =E= 0;
-stat_t(s).. 1000 * wc * gamsteel * width * (wl + lw) * l(s) / wc ** 2 / 1000000 + ((-1) * (2 * (lw / 3 + wl * e) * d / 4)) * nu_zdef(s) - lam_platew(s) - lam_platel(s) - piL_t(s) =E= 0;
-stat_wc.. 1000 * ((-1) * (gamsteel * width * (wl + lw) * sum(s, t(s) * l(s)))) / wc ** 2 / 1000000 + nu_wdef + sum(s, k1(s) * lam_stress(s)) + sum(s, 2.2 * (k1(s) * wc) ** 1.3333333333333333 * 1.3333333333333333 / (k1(s) * wc) * k1(s) * lam_inertia(s)) - piL_wc =E= 0;
-stat_wl.. 1000 * wc * sum(s, t(s) * l(s)) * gamsteel * width / wc ** 2 / 1000000 + sum(s, ((-1) * (2 * d * t(s) * e / 4)) * nu_zdef(s)) - nu_wdef + sum(s, k2(s) * lam_platew(s)) =E= 0;
+stat_d.. sum(s, ((-1) * (2 * (lw / 3 + wl * e) * t(s) / 4)) * nu_zdef(s)) + ((-1) * (1 / (2 * sqrt(sqr(lw) - sqr(d))) * ((-1) * (2 * d)))) * nu_wdef + sum(s, ((-1) * (2 * z(s) / 4)) * lam_inertia(s)) + lam_geom =E= 0;
+stat_lw.. 1000 * wc * sum(s, t(s) * l(s)) * gamsteel * width / sqr(wc) / 1000000 + sum(s, ((-1) * (2 * d * t(s) * 0.3333333333333333 / 4)) * nu_zdef(s)) + ((-1) * (1 / (2 * sqrt(sqr(lw) - sqr(d))) * 2 * lw)) * nu_wdef + sum(s, k2(s) * lam_platel(s)) - lam_geom =E= 0;
+stat_t(s).. 1000 * wc * gamsteel * width * (wl + lw) * l(s) / sqr(wc) / 1000000 + ((-1) * (2 * (lw / 3 + wl * e) * d / 4)) * nu_zdef(s) - lam_platew(s) - lam_platel(s) - piL_t(s) =E= 0;
+stat_wc.. 1000 * ((-1) * (gamsteel * width * (wl + lw) * sum(s, t(s) * l(s)))) / sqr(wc) / 1000000 + nu_wdef + sum(s, k1(s) * lam_stress(s)) + sum(s, 2.2 * (k1(s) * wc) ** 1.3333333333333333 * 1.3333333333333333 / (k1(s) * wc) * k1(s) * lam_inertia(s)) - piL_wc =E= 0;
+stat_wl.. 1000 * wc * sum(s, t(s) * l(s)) * gamsteel * width / sqr(wc) / 1000000 + sum(s, ((-1) * (2 * d * t(s) * e / 4)) * nu_zdef(s)) - nu_wdef + sum(s, k2(s) * lam_platew(s)) =E= 0;
 stat_z(s).. nu_zdef(s) - lam_stress(s) + ((-1) * (2 * d / 4)) * lam_inertia(s) =E= 0;
 
 * Inequality complementarity equations

@@ -56,6 +56,12 @@ Positive Variables
     sln(n,n)
     z
     lam_eq2(i,j)
+    piL_x(n,k)
+    piL_r(n)
+    piL_slp(n,n)
+    piL_sln(n,n)
+    piL_z
+    piU_x(n,k)
 ;
 
 * ============================================
@@ -99,6 +105,12 @@ Equations
     stat_x(n,k)
     stat_z
     comp_eq2(i,j)
+    comp_lo_r(n)
+    comp_lo_sln(n,n)
+    comp_lo_slp(n,n)
+    comp_lo_x(n,k)
+    comp_lo_z
+    comp_up_x(n,k)
     defobj
     eq1(i,j)
 ;
@@ -108,14 +120,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(n).. sum((i,j), ((-1) * (2 * 2 * r(j) * 2)) * nu_eq1(i,j)) + sum((i,j), (2 * 2 * r(j) * 2 * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) =E= 0;
-stat_sln(n,n).. sum((i,j), nu_eq1(i,j)) =E= 0;
-stat_slp(n,n).. sum((i,j), (-1) * nu_eq1(i,j)) =E= 0;
-stat_x(n,k).. sum((i,j), 2 * (x(i,k) - x(j,k)) * nu_eq1(i,j)) + sum((i,j), (((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) =E= 0;
-stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), (-1) * lam_eq2(i,j)) =E= 0;
+stat_r(n).. sum((i,j), ((-1) * (2 * 2 * r(j) * 2)) * nu_eq1(i,j)) + sum((i,j), (2 * 2 * r(j) * 2 * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) - piL_r(n) =E= 0;
+stat_sln(n,n).. sum((i,j), nu_eq1(i,j)) - piL_sln(n,n) =E= 0;
+stat_slp(n,n).. sum((i,j), (-1) * nu_eq1(i,j)) - piL_slp(n,n) =E= 0;
+stat_x(n,k).. sum((i,j), 2 * (x(i,k) - x(j,k)) * nu_eq1(i,j)) + sum((i,j), (((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) - piL_x(n,k) + piU_x(n,k) =E= 0;
+stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), (-1) * lam_eq2(i,j)) - piL_z =E= 0;
 
 * Inequality complementarity equations
 comp_eq2(i,j)$((not e(i,j)) and ord(i) < ord(j)).. sum(k, sqr(x(i,k) - x(j,k))) - (sqr(r(i) + r(j)) - z) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_r(n).. r(n) - myScale * 0.001 =G= 0;
+comp_lo_sln(n,n).. sln(n,n) - 0 =G= 0;
+comp_lo_slp(n,n).. slp(n,n) - 0 =G= 0;
+comp_lo_x(n,k).. x(n,k) - 0 =G= 0;
+comp_lo_z.. z - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_x(n,k).. myScale * smax(i, kp, fx(i,kp)) - x(n,k) =G= 0;
 
 * Original equality equations
 eq1(i,j).. sum(k, sqr(x(i,k) - x(j,k))) =E= sqr(r(i) + r(j)) + slp(i,j) - sln(i,j);
@@ -152,7 +174,13 @@ Model mcp_model /
     stat_z.z,
     comp_eq2.lam_eq2,
     defobj.obj,
-    eq1.nu_eq1
+    eq1.nu_eq1,
+    comp_lo_r.piL_r,
+    comp_lo_sln.piL_sln,
+    comp_lo_slp.piL_slp,
+    comp_lo_x.piL_x,
+    comp_lo_z.piL_z,
+    comp_up_x.piU_x
 /;
 
 * ============================================

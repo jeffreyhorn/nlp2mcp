@@ -16,29 +16,14 @@ $offText
 * ============================================
 
 Sets
-    i /'plant-1', 'plant-2'/
-    j /'term-1', 'term-2', 'term-3', 'term-4'/
-    ss /'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'/
-    s(ss)
+    row /one, two, three, global/
 ;
+
+Acronym global;
 
 Parameters
-    c(i,j) /'plant-1'.'term-1' 3, 'plant-1'.'term-2' 6, 'plant-1'.'term-3' 6, 'plant-1'.'term-4' 5, 'plant-2'.'term-1' 8, 'plant-2'.'term-2' 1, 'plant-2'.'term-3' 3, 'plant-2'.'term-4' 6/
-    t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2/
-    a(i) /'plant-1' 9, 'plant-2' 8/
-    b(j) /'term-1' 2, 'term-2' 7, 'term-3' 3, 'term-4' 5/
-    mcost(ss)
-    mtank(ss)
-    rep(ss,*) /'2'.gap inf/
+    report(row,*)
 ;
-
-Scalars
-    ctank /0/
-    cship /1/
-;
-
-s("1") = 1;
-s("2") = 1;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -52,22 +37,18 @@ s("2") = 1;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    cost
-    tank
-    ship
-    mobj
-    nu_defcost
-    nu_defship
-    nu_deftank
+    x1
+    x2
+    obj
+    nu_eq1
 ;
 
 Positive Variables
-    x(i,j)
-    lam(ss)
-    lam_supply(i)
-    lam_demand(j)
-    piL_x(i,j)
-    piL_lam(ss)
+    lam_ineq1
+    piL_x1
+    piL_x2
+    piU_x1
+    piU_x2
 ;
 
 * ============================================
@@ -77,10 +58,9 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
 
-x.l(i,j) = 1;
-lam.l(ss) = 1;
+x1.l = 0.0;
+x2.l = 0.0;
 
 * ============================================
 * Equations
@@ -91,19 +71,15 @@ lam.l(ss) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_lam(ss)
-    stat_ship
-    stat_tank
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
-    comp_lo_lam(ss)
-    comp_lo_x(i,j)
-    cbal
-    defcost
-    defship
-    deftank
+    stat_x1
+    stat_x2
+    comp_ineq1
+    comp_lo_x1
+    comp_lo_x2
+    comp_up_x1
+    comp_up_x2
+    eq1
+    objdef
 ;
 
 * ============================================
@@ -111,36 +87,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_defcost =E= 0;
-stat_lam(ss)$(s(ss)).. ((-1) * piL_lam(ss)) =E= 0;
-stat_ship.. ((-1) * cship) * nu_defcost + nu_defship =E= 0;
-stat_tank.. ((-1) * ctank) * nu_defcost + nu_deftank =E= 0;
-stat_x(i,j).. ((-1) * c(i,j)) * nu_defship + ((-1) * t(i,j)) * nu_deftank + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
+stat_x1.. 8 * (2 * sqr(x1) - sqr(x2)) * x1 + 2 * (x2 - 6 * sqr(x1)) * ((-1) * (6 * 2 * x1)) + (1 - 100 * cos(2 * x1 + 3 * x2) * 2) * nu_eq1 + lam_ineq1 - piL_x1 + piU_x1 =E= 0;
+stat_x2.. 2 * (2 * sqr(x1) - sqr(x2)) * ((-1) * (2 * x2)) + 2 * (x2 - 6 * sqr(x1)) + ((-1) * (10 + 300 * cos(2 * x1 + 3 * x2))) * nu_eq1 + lam_ineq1 - piL_x2 + piU_x2 =E= 0;
 
 * Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
-comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
+comp_ineq1.. ((-1) * (x2 + x1 - 2)) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_lam(ss).. lam(ss) - 0 =G= 0;
-comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
+comp_lo_x1.. x1 + 10 =G= 0;
+comp_lo_x2.. x2 + 10 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_x1.. 10 - x1 =G= 0;
+comp_up_x2.. 10 - x2 =G= 0;
 
 * Original equality equations
-defcost.. cost =E= cship * ship + ctank * tank;
-defship.. ship =E= sum((i,j), c(i,j) * x(i,j));
-deftank.. tank =E= sum((i,j), t(i,j) * x(i,j));
-cbal.. mobj =E= sum(s, mcost(s) * lam(s));
+objdef.. obj =E= sqr(2 * sqr(x1) - sqr(x2)) + sqr(x2 - 6 * sqr(x1));
+eq1.. x1 =E= 10 * x2 + 100 * sin(2 * x1 + 3 * x2);
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-lam.fx(ss)$(not (s(ss))) = 0;
-piL_lam.fx(ss)$(not (s(ss))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -156,19 +120,15 @@ piL_lam.fx(ss)$(not (s(ss))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_lam.lam,
-    stat_ship.ship,
-    stat_tank.tank,
-    stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
-    cbal.mobj,
-    defcost.nu_defcost,
-    defship.nu_defship,
-    deftank.nu_deftank,
-    comp_lo_lam.piL_lam,
-    comp_lo_x.piL_x
+    stat_x1.x1,
+    stat_x2.x2,
+    comp_ineq1.lam_ineq1,
+    eq1.nu_eq1,
+    objdef.obj,
+    comp_lo_x1.piL_x1,
+    comp_lo_x2.piL_x2,
+    comp_up_x1.piU_x1,
+    comp_up_x2.piU_x2
 /;
 
 * ============================================
@@ -178,5 +138,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = mobj.l;
+nlp2mcp_obj_val = obj.l;
 Display nlp2mcp_obj_val;

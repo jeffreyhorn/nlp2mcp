@@ -80,6 +80,8 @@ Variables
 Positive Variables
     dp(n)
     dn(n)
+    piL_dp(n)
+    piL_dn(n)
     piL_z(n)
     piU_z(n)
 ;
@@ -97,17 +99,6 @@ dp.l(n) = 1;
 dn.l(n) = 1;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-prep(n,"t") = t(n);
-prep(n,"y") = y(n);
-prep(n,"dev") = dp.l(n) - dn.l(n);
-primaldev = sum(n, abs(prep(n,"dev")));
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -121,6 +112,8 @@ Equations
     stat_tdev
     stat_ym(m)
     stat_z(n)
+    comp_lo_dn(n)
+    comp_lo_dp(n)
     comp_lo_z(n)
     comp_up_z(n)
     ddev(n)
@@ -134,13 +127,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_dn(n).. nu_ddev(n) - nu_dtdev =E= 0;
-stat_dp(n).. ((-1) * nu_ddev(n)) - nu_dtdev =E= 0;
+stat_dn(n).. nu_ddev(n) - nu_dtdev - piL_dn(n) =E= 0;
+stat_dp(n).. ((-1) * nu_ddev(n)) - nu_dtdev - piL_dp(n) =E= 0;
 stat_tdev.. nu_dtdev =E= 0;
 stat_ym(m).. sum(n, w(m,n) * nu_ddev(n)) =E= 0;
 stat_z(n).. ((-1) * y(n)) + sum(m, w(m,n) * nu_ddual(m)) - piL_z(n) + piU_z(n) =E= 0;
 
 * Lower bound complementarity equations
+comp_lo_dn(n).. dn(n) - 0 =G= 0;
+comp_lo_dp(n).. dp(n) - 0 =G= 0;
 comp_lo_z(n).. z(n) + 1 =G= 0;
 
 * Upper bound complementarity equations
@@ -176,6 +171,8 @@ Model mcp_model /
     ddual.nu_ddual,
     dtdev.nu_dtdev,
     dtdual.tdual,
+    comp_lo_dn.piL_dn,
+    comp_lo_dp.piL_dp,
     comp_lo_z.piL_z,
     comp_up_z.piU_z
 /;

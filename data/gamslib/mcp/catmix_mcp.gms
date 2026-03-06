@@ -54,6 +54,7 @@ Variables
 
 Positive Variables
     u(nh)
+    piL_u(nh)
     piU_u(nh)
 ;
 
@@ -181,6 +182,7 @@ Equations
     stat_u(nh)
     stat_x1(nh)
     stat_x2(nh)
+    comp_lo_u(nh)
     comp_up_u(nh)
     defobj
     ode1(i)
@@ -194,9 +196,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_u(nh).. sum(i, ((-1) * (h / 2 * (10 * x2(i) - x1(i)))) * nu_ode1(i)) + sum(i, ((-1) * (h / 2 * (x1(i) - 10 * x2(i) - x2(i) * (-1)))) * nu_ode2(i)) + piU_u(nh) =E= 0;
+stat_u(nh).. sum(i, ((-1) * (h / 2 * (10 * x2(i) - x1(i)))) * nu_ode1(i)) + sum(i, ((-1) * (h / 2 * (x1(i) - 10 * x2(i) - x2(i) * (-1)))) * nu_ode2(i)) - piL_u(nh) + piU_u(nh) =E= 0;
 stat_x1(nh).. sum(i, ((-1) * (1 - h / 2 * u(i))) * nu_ode1(i)) + sum(i, ((-1) * (h / 2 * u(i))) * nu_ode2(i)) + nu_x1_fx_0$sameas(nh, '0') =E= 0;
 stat_x2(nh).. sum(i, ((-1) * (h / 2 * u(i) * 10)) * nu_ode1(i)) + sum(i, ((-1) * (1 + h / 2 * (u(i) * (-10) - (1 - u(i))))) * nu_ode2(i)) + nu_x2_fx_0$sameas(nh, '0') =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_u(nh).. u(nh) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_u(nh).. 1 - u(nh) =G= 0;
@@ -241,6 +246,7 @@ Model mcp_model /
     ode2.nu_ode2,
     x1_fx_0.nu_x1_fx_0,
     x2_fx_0.nu_x2_fx_0,
+    comp_lo_u.piL_u,
     comp_up_u.piU_u
 /;
 

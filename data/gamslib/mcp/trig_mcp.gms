@@ -53,15 +53,6 @@ Positive Variables
 x1.l = 1.0;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-xdiff = 2.66695657 - x1.l;
-fdiff = -3.76250149 - obj.l;
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 

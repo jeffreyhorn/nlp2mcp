@@ -291,8 +291,6 @@ Positive Variables
 
 the.fx("h50") = 2 * pi / 3;
 phi.fx(firstlast) = pi / 4;
-i_the.fx(firstlast(h)) = i_phi.l(h) * sqr(sin(phi.l(h)));
-i_phi.fx(firstlast(h)) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
 
 * ============================================
 * Variable Initialization
@@ -461,7 +459,118 @@ phi_dot.l("h49") = 0.0;
 phi_dot.l("h50") = 0.0;
 step.l = 1 / nh;
 i_phi.l(h) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
+i_phi.l("h0") = max(i_phi.l("h0"), 0.0001);
+i_phi.l("h1") = max(i_phi.l("h1"), 0.0001);
+i_phi.l("h2") = max(i_phi.l("h2"), 0.0001);
+i_phi.l("h3") = max(i_phi.l("h3"), 0.0001);
+i_phi.l("h4") = max(i_phi.l("h4"), 0.0001);
+i_phi.l("h5") = max(i_phi.l("h5"), 0.0001);
+i_phi.l("h6") = max(i_phi.l("h6"), 0.0001);
+i_phi.l("h7") = max(i_phi.l("h7"), 0.0001);
+i_phi.l("h8") = max(i_phi.l("h8"), 0.0001);
+i_phi.l("h9") = max(i_phi.l("h9"), 0.0001);
+i_phi.l("h10") = max(i_phi.l("h10"), 0.0001);
+i_phi.l("h11") = max(i_phi.l("h11"), 0.0001);
+i_phi.l("h12") = max(i_phi.l("h12"), 0.0001);
+i_phi.l("h13") = max(i_phi.l("h13"), 0.0001);
+i_phi.l("h14") = max(i_phi.l("h14"), 0.0001);
+i_phi.l("h15") = max(i_phi.l("h15"), 0.0001);
+i_phi.l("h16") = max(i_phi.l("h16"), 0.0001);
+i_phi.l("h17") = max(i_phi.l("h17"), 0.0001);
+i_phi.l("h18") = max(i_phi.l("h18"), 0.0001);
+i_phi.l("h19") = max(i_phi.l("h19"), 0.0001);
+i_phi.l("h20") = max(i_phi.l("h20"), 0.0001);
+i_phi.l("h21") = max(i_phi.l("h21"), 0.0001);
+i_phi.l("h22") = max(i_phi.l("h22"), 0.0001);
+i_phi.l("h23") = max(i_phi.l("h23"), 0.0001);
+i_phi.l("h24") = max(i_phi.l("h24"), 0.0001);
+i_phi.l("h25") = max(i_phi.l("h25"), 0.0001);
+i_phi.l("h26") = max(i_phi.l("h26"), 0.0001);
+i_phi.l("h27") = max(i_phi.l("h27"), 0.0001);
+i_phi.l("h28") = max(i_phi.l("h28"), 0.0001);
+i_phi.l("h29") = max(i_phi.l("h29"), 0.0001);
+i_phi.l("h30") = max(i_phi.l("h30"), 0.0001);
+i_phi.l("h31") = max(i_phi.l("h31"), 0.0001);
+i_phi.l("h32") = max(i_phi.l("h32"), 0.0001);
+i_phi.l("h33") = max(i_phi.l("h33"), 0.0001);
+i_phi.l("h34") = max(i_phi.l("h34"), 0.0001);
+i_phi.l("h35") = max(i_phi.l("h35"), 0.0001);
+i_phi.l("h36") = max(i_phi.l("h36"), 0.0001);
+i_phi.l("h37") = max(i_phi.l("h37"), 0.0001);
+i_phi.l("h38") = max(i_phi.l("h38"), 0.0001);
+i_phi.l("h39") = max(i_phi.l("h39"), 0.0001);
+i_phi.l("h40") = max(i_phi.l("h40"), 0.0001);
+i_phi.l("h41") = max(i_phi.l("h41"), 0.0001);
+i_phi.l("h42") = max(i_phi.l("h42"), 0.0001);
+i_phi.l("h43") = max(i_phi.l("h43"), 0.0001);
+i_phi.l("h44") = max(i_phi.l("h44"), 0.0001);
+i_phi.l("h45") = max(i_phi.l("h45"), 0.0001);
+i_phi.l("h46") = max(i_phi.l("h46"), 0.0001);
+i_phi.l("h47") = max(i_phi.l("h47"), 0.0001);
+i_phi.l("h48") = max(i_phi.l("h48"), 0.0001);
+i_phi.l("h49") = max(i_phi.l("h49"), 0.0001);
+i_phi.l("h50") = max(i_phi.l("h50"), 0.0001);
 i_the.l(h) = i_phi.l(h) * sqr(sin(phi.l(h)));
+i_the.l("h0") = max(i_the.l("h0"), 0.0001);
+i_the.l("h1") = max(i_the.l("h1"), 0.0001);
+i_the.l("h2") = max(i_the.l("h2"), 0.0001);
+i_the.l("h3") = max(i_the.l("h3"), 0.0001);
+i_the.l("h4") = max(i_the.l("h4"), 0.0001);
+i_the.l("h5") = max(i_the.l("h5"), 0.0001);
+i_the.l("h6") = max(i_the.l("h6"), 0.0001);
+i_the.l("h7") = max(i_the.l("h7"), 0.0001);
+i_the.l("h8") = max(i_the.l("h8"), 0.0001);
+i_the.l("h9") = max(i_the.l("h9"), 0.0001);
+i_the.l("h10") = max(i_the.l("h10"), 0.0001);
+i_the.l("h11") = max(i_the.l("h11"), 0.0001);
+i_the.l("h12") = max(i_the.l("h12"), 0.0001);
+i_the.l("h13") = max(i_the.l("h13"), 0.0001);
+i_the.l("h14") = max(i_the.l("h14"), 0.0001);
+i_the.l("h15") = max(i_the.l("h15"), 0.0001);
+i_the.l("h16") = max(i_the.l("h16"), 0.0001);
+i_the.l("h17") = max(i_the.l("h17"), 0.0001);
+i_the.l("h18") = max(i_the.l("h18"), 0.0001);
+i_the.l("h19") = max(i_the.l("h19"), 0.0001);
+i_the.l("h20") = max(i_the.l("h20"), 0.0001);
+i_the.l("h21") = max(i_the.l("h21"), 0.0001);
+i_the.l("h22") = max(i_the.l("h22"), 0.0001);
+i_the.l("h23") = max(i_the.l("h23"), 0.0001);
+i_the.l("h24") = max(i_the.l("h24"), 0.0001);
+i_the.l("h25") = max(i_the.l("h25"), 0.0001);
+i_the.l("h26") = max(i_the.l("h26"), 0.0001);
+i_the.l("h27") = max(i_the.l("h27"), 0.0001);
+i_the.l("h28") = max(i_the.l("h28"), 0.0001);
+i_the.l("h29") = max(i_the.l("h29"), 0.0001);
+i_the.l("h30") = max(i_the.l("h30"), 0.0001);
+i_the.l("h31") = max(i_the.l("h31"), 0.0001);
+i_the.l("h32") = max(i_the.l("h32"), 0.0001);
+i_the.l("h33") = max(i_the.l("h33"), 0.0001);
+i_the.l("h34") = max(i_the.l("h34"), 0.0001);
+i_the.l("h35") = max(i_the.l("h35"), 0.0001);
+i_the.l("h36") = max(i_the.l("h36"), 0.0001);
+i_the.l("h37") = max(i_the.l("h37"), 0.0001);
+i_the.l("h38") = max(i_the.l("h38"), 0.0001);
+i_the.l("h39") = max(i_the.l("h39"), 0.0001);
+i_the.l("h40") = max(i_the.l("h40"), 0.0001);
+i_the.l("h41") = max(i_the.l("h41"), 0.0001);
+i_the.l("h42") = max(i_the.l("h42"), 0.0001);
+i_the.l("h43") = max(i_the.l("h43"), 0.0001);
+i_the.l("h44") = max(i_the.l("h44"), 0.0001);
+i_the.l("h45") = max(i_the.l("h45"), 0.0001);
+i_the.l("h46") = max(i_the.l("h46"), 0.0001);
+i_the.l("h47") = max(i_the.l("h47"), 0.0001);
+i_the.l("h48") = max(i_the.l("h48"), 0.0001);
+i_the.l("h49") = max(i_the.l("h49"), 0.0001);
+i_the.l("h50") = max(i_the.l("h50"), 0.0001);
+$offImplicitAssign
+
+* ============================================
+* Deferred Variable Bounds (depend on .l values)
+* ============================================
+
+$onImplicitAssign
+i_the.fx(firstlast(h)) = i_phi.l(h) * sqr(sin(phi.l(h)));
+i_phi.fx(firstlast(h)) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
 $offImplicitAssign
 
 * ============================================
@@ -720,17 +829,17 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_i_phi(h).. nu_i_phi_eqn(h) + ((-1) * (sqr(sin(phi(h))))) * nu_i_the_eqn(h) + ((-1) * (0.5 * step * ((-1) * u_phi(h)) / i_phi(h) ** 2)) * nu_u_phi_eqn(h) - piL_i_phi(h) =E= 0;
-stat_i_the(h).. nu_i_the_eqn(h) + ((-1) * (0.5 * step * ((-1) * u_the(h)) / i_the(h) ** 2)) * nu_u_the_eqn(h) - piL_i_the(h) =E= 0;
+stat_i_phi(h).. nu_i_phi_eqn(h) + ((-1) * (sqr(sin(phi(h))))) * nu_i_the_eqn(h) + ((-1) * (0.5 * step * ((-1) * u_phi(h)) / sqr(i_phi(h)))) * nu_u_phi_eqn(h) - piL_i_phi(h) =E= 0;
+stat_i_the(h).. nu_i_the_eqn(h) + ((-1) * (0.5 * step * ((-1) * u_the(h)) / sqr(i_the(h)))) * nu_u_the_eqn(h) - piL_i_the(h) =E= 0;
 stat_phi(h).. ((-1) * (i_phi(h) * 2 * sin(phi(h)) * cos(phi(h)))) * nu_i_the_eqn(h) + nu_phi_eqn(h) - piL_phi(h) + piU_phi(h) =E= 0;
 stat_phi_dot(h).. ((-1) * (0.5 * step)) * nu_phi_eqn(h) + nu_u_phi_eqn(h) + nu_phi_dot_fx_h0$sameas(h, 'h0') + nu_phi_dot_fx_h1$sameas(h, 'h1') + nu_phi_dot_fx_h10$sameas(h, 'h10') + nu_phi_dot_fx_h11$sameas(h, 'h11') + nu_phi_dot_fx_h12$sameas(h, 'h12') + nu_phi_dot_fx_h13$sameas(h, 'h13') + nu_phi_dot_fx_h14$sameas(h, 'h14') + nu_phi_dot_fx_h15$sameas(h, 'h15') + nu_phi_dot_fx_h16$sameas(h, 'h16') + nu_phi_dot_fx_h17$sameas(h, 'h17') + nu_phi_dot_fx_h18$sameas(h, 'h18') + nu_phi_dot_fx_h19$sameas(h, 'h19') + nu_phi_dot_fx_h2$sameas(h, 'h2') + nu_phi_dot_fx_h20$sameas(h, 'h20') + nu_phi_dot_fx_h21$sameas(h, 'h21') + nu_phi_dot_fx_h22$sameas(h, 'h22') + nu_phi_dot_fx_h23$sameas(h, 'h23') + nu_phi_dot_fx_h24$sameas(h, 'h24') + nu_phi_dot_fx_h25$sameas(h, 'h25') + nu_phi_dot_fx_h26$sameas(h, 'h26') + nu_phi_dot_fx_h27$sameas(h, 'h27') + nu_phi_dot_fx_h28$sameas(h, 'h28') + nu_phi_dot_fx_h29$sameas(h, 'h29') + nu_phi_dot_fx_h3$sameas(h, 'h3') + nu_phi_dot_fx_h30$sameas(h, 'h30') + nu_phi_dot_fx_h31$sameas(h, 'h31') + nu_phi_dot_fx_h32$sameas(h, 'h32') + nu_phi_dot_fx_h33$sameas(h, 'h33') + nu_phi_dot_fx_h34$sameas(h, 'h34') + nu_phi_dot_fx_h35$sameas(h, 'h35') + nu_phi_dot_fx_h36$sameas(h, 'h36') + nu_phi_dot_fx_h37$sameas(h, 'h37') + nu_phi_dot_fx_h38$sameas(h, 'h38') + nu_phi_dot_fx_h39$sameas(h, 'h39') + nu_phi_dot_fx_h4$sameas(h, 'h4') + nu_phi_dot_fx_h40$sameas(h, 'h40') + nu_phi_dot_fx_h41$sameas(h, 'h41') + nu_phi_dot_fx_h42$sameas(h, 'h42') + nu_phi_dot_fx_h43$sameas(h, 'h43') + nu_phi_dot_fx_h44$sameas(h, 'h44') + nu_phi_dot_fx_h45$sameas(h, 'h45') + nu_phi_dot_fx_h46$sameas(h, 'h46') + nu_phi_dot_fx_h47$sameas(h, 'h47') + nu_phi_dot_fx_h48$sameas(h, 'h48') + nu_phi_dot_fx_h49$sameas(h, 'h49') + nu_phi_dot_fx_h5$sameas(h, 'h5') + nu_phi_dot_fx_h50$sameas(h, 'h50') + nu_phi_dot_fx_h6$sameas(h, 'h6') + nu_phi_dot_fx_h7$sameas(h, 'h7') + nu_phi_dot_fx_h8$sameas(h, 'h8') + nu_phi_dot_fx_h9$sameas(h, 'h9') =E= 0;
 stat_rho(h).. ((-1) * (3 * ((-3) * power(L - rho(h), 2) + 3 * power(rho(h), 2)) / 9)) * nu_i_phi_eqn(h) + nu_rho_eqn(h) + nu_rho_fx_h0$sameas(h, 'h0') + nu_rho_fx_h1$sameas(h, 'h1') + nu_rho_fx_h10$sameas(h, 'h10') + nu_rho_fx_h11$sameas(h, 'h11') + nu_rho_fx_h12$sameas(h, 'h12') + nu_rho_fx_h13$sameas(h, 'h13') + nu_rho_fx_h14$sameas(h, 'h14') + nu_rho_fx_h15$sameas(h, 'h15') + nu_rho_fx_h16$sameas(h, 'h16') + nu_rho_fx_h17$sameas(h, 'h17') + nu_rho_fx_h18$sameas(h, 'h18') + nu_rho_fx_h19$sameas(h, 'h19') + nu_rho_fx_h2$sameas(h, 'h2') + nu_rho_fx_h20$sameas(h, 'h20') + nu_rho_fx_h21$sameas(h, 'h21') + nu_rho_fx_h22$sameas(h, 'h22') + nu_rho_fx_h23$sameas(h, 'h23') + nu_rho_fx_h24$sameas(h, 'h24') + nu_rho_fx_h25$sameas(h, 'h25') + nu_rho_fx_h26$sameas(h, 'h26') + nu_rho_fx_h27$sameas(h, 'h27') + nu_rho_fx_h28$sameas(h, 'h28') + nu_rho_fx_h29$sameas(h, 'h29') + nu_rho_fx_h3$sameas(h, 'h3') + nu_rho_fx_h30$sameas(h, 'h30') + nu_rho_fx_h31$sameas(h, 'h31') + nu_rho_fx_h32$sameas(h, 'h32') + nu_rho_fx_h33$sameas(h, 'h33') + nu_rho_fx_h34$sameas(h, 'h34') + nu_rho_fx_h35$sameas(h, 'h35') + nu_rho_fx_h36$sameas(h, 'h36') + nu_rho_fx_h37$sameas(h, 'h37') + nu_rho_fx_h38$sameas(h, 'h38') + nu_rho_fx_h39$sameas(h, 'h39') + nu_rho_fx_h4$sameas(h, 'h4') + nu_rho_fx_h40$sameas(h, 'h40') + nu_rho_fx_h41$sameas(h, 'h41') + nu_rho_fx_h42$sameas(h, 'h42') + nu_rho_fx_h43$sameas(h, 'h43') + nu_rho_fx_h44$sameas(h, 'h44') + nu_rho_fx_h45$sameas(h, 'h45') + nu_rho_fx_h46$sameas(h, 'h46') + nu_rho_fx_h47$sameas(h, 'h47') + nu_rho_fx_h48$sameas(h, 'h48') + nu_rho_fx_h49$sameas(h, 'h49') + nu_rho_fx_h5$sameas(h, 'h5') + nu_rho_fx_h50$sameas(h, 'h50') + nu_rho_fx_h6$sameas(h, 'h6') + nu_rho_fx_h7$sameas(h, 'h7') + nu_rho_fx_h8$sameas(h, 'h8') + nu_rho_fx_h9$sameas(h, 'h9') - piL_rho(h) + piU_rho(h) =E= 0;
 stat_rho_dot(h).. ((-1) * (0.5 * step)) * nu_rho_eqn(h) + nu_u_rho_eqn(h) + nu_rho_dot_fx_h0$sameas(h, 'h0') + nu_rho_dot_fx_h1$sameas(h, 'h1') + nu_rho_dot_fx_h10$sameas(h, 'h10') + nu_rho_dot_fx_h11$sameas(h, 'h11') + nu_rho_dot_fx_h12$sameas(h, 'h12') + nu_rho_dot_fx_h13$sameas(h, 'h13') + nu_rho_dot_fx_h14$sameas(h, 'h14') + nu_rho_dot_fx_h15$sameas(h, 'h15') + nu_rho_dot_fx_h16$sameas(h, 'h16') + nu_rho_dot_fx_h17$sameas(h, 'h17') + nu_rho_dot_fx_h18$sameas(h, 'h18') + nu_rho_dot_fx_h19$sameas(h, 'h19') + nu_rho_dot_fx_h2$sameas(h, 'h2') + nu_rho_dot_fx_h20$sameas(h, 'h20') + nu_rho_dot_fx_h21$sameas(h, 'h21') + nu_rho_dot_fx_h22$sameas(h, 'h22') + nu_rho_dot_fx_h23$sameas(h, 'h23') + nu_rho_dot_fx_h24$sameas(h, 'h24') + nu_rho_dot_fx_h25$sameas(h, 'h25') + nu_rho_dot_fx_h26$sameas(h, 'h26') + nu_rho_dot_fx_h27$sameas(h, 'h27') + nu_rho_dot_fx_h28$sameas(h, 'h28') + nu_rho_dot_fx_h29$sameas(h, 'h29') + nu_rho_dot_fx_h3$sameas(h, 'h3') + nu_rho_dot_fx_h30$sameas(h, 'h30') + nu_rho_dot_fx_h31$sameas(h, 'h31') + nu_rho_dot_fx_h32$sameas(h, 'h32') + nu_rho_dot_fx_h33$sameas(h, 'h33') + nu_rho_dot_fx_h34$sameas(h, 'h34') + nu_rho_dot_fx_h35$sameas(h, 'h35') + nu_rho_dot_fx_h36$sameas(h, 'h36') + nu_rho_dot_fx_h37$sameas(h, 'h37') + nu_rho_dot_fx_h38$sameas(h, 'h38') + nu_rho_dot_fx_h39$sameas(h, 'h39') + nu_rho_dot_fx_h4$sameas(h, 'h4') + nu_rho_dot_fx_h40$sameas(h, 'h40') + nu_rho_dot_fx_h41$sameas(h, 'h41') + nu_rho_dot_fx_h42$sameas(h, 'h42') + nu_rho_dot_fx_h43$sameas(h, 'h43') + nu_rho_dot_fx_h44$sameas(h, 'h44') + nu_rho_dot_fx_h45$sameas(h, 'h45') + nu_rho_dot_fx_h46$sameas(h, 'h46') + nu_rho_dot_fx_h47$sameas(h, 'h47') + nu_rho_dot_fx_h48$sameas(h, 'h48') + nu_rho_dot_fx_h49$sameas(h, 'h49') + nu_rho_dot_fx_h5$sameas(h, 'h5') + nu_rho_dot_fx_h50$sameas(h, 'h50') + nu_rho_dot_fx_h6$sameas(h, 'h6') + nu_rho_dot_fx_h7$sameas(h, 'h7') + nu_rho_dot_fx_h8$sameas(h, 'h8') + nu_rho_dot_fx_h9$sameas(h, 'h9') =E= 0;
-stat_step.. nh + sum(h, ((-1) * (2 * rho_dot(h) * 0.5)) * nu_rho_eqn(h)) + sum(h, ((-1) * (2 * the_dot(h) * 0.5)) * nu_the_eqn(h)) + sum(h, ((-1) * (2 * phi_dot(h) * 0.5)) * nu_phi_eqn(h)) + sum(h, ((-1) * (L * 2 * u_rho(h) * 0.5 / L ** 2)) * nu_u_rho_eqn(h)) + sum(h, ((-1) * (2 * u_the(h) / i_the(h) * 0.5)) * nu_u_the_eqn(h)) + sum(h, ((-1) * (2 * u_phi(h) / i_phi(h) * 0.5)) * nu_u_phi_eqn(h)) =E= 0;
+stat_step.. nh + sum(h, ((-1) * (2 * rho_dot(h) * 0.5)) * nu_rho_eqn(h)) + sum(h, ((-1) * (2 * the_dot(h) * 0.5)) * nu_the_eqn(h)) + sum(h, ((-1) * (2 * phi_dot(h) * 0.5)) * nu_phi_eqn(h)) + sum(h, ((-1) * (L * 2 * u_rho(h) * 0.5 / sqr(L))) * nu_u_rho_eqn(h)) + sum(h, ((-1) * (2 * u_the(h) / i_the(h) * 0.5)) * nu_u_the_eqn(h)) + sum(h, ((-1) * (2 * u_phi(h) / i_phi(h) * 0.5)) * nu_u_phi_eqn(h)) =E= 0;
 stat_the(h).. nu_the_eqn(h) + nu_the_fx_h0$sameas(h, 'h0') - piL_the(h) + piU_the(h) =E= 0;
 stat_the_dot(h).. ((-1) * (0.5 * step)) * nu_the_eqn(h) + nu_u_the_eqn(h) + nu_the_dot_fx_h0$sameas(h, 'h0') + nu_the_dot_fx_h1$sameas(h, 'h1') + nu_the_dot_fx_h10$sameas(h, 'h10') + nu_the_dot_fx_h11$sameas(h, 'h11') + nu_the_dot_fx_h12$sameas(h, 'h12') + nu_the_dot_fx_h13$sameas(h, 'h13') + nu_the_dot_fx_h14$sameas(h, 'h14') + nu_the_dot_fx_h15$sameas(h, 'h15') + nu_the_dot_fx_h16$sameas(h, 'h16') + nu_the_dot_fx_h17$sameas(h, 'h17') + nu_the_dot_fx_h18$sameas(h, 'h18') + nu_the_dot_fx_h19$sameas(h, 'h19') + nu_the_dot_fx_h2$sameas(h, 'h2') + nu_the_dot_fx_h20$sameas(h, 'h20') + nu_the_dot_fx_h21$sameas(h, 'h21') + nu_the_dot_fx_h22$sameas(h, 'h22') + nu_the_dot_fx_h23$sameas(h, 'h23') + nu_the_dot_fx_h24$sameas(h, 'h24') + nu_the_dot_fx_h25$sameas(h, 'h25') + nu_the_dot_fx_h26$sameas(h, 'h26') + nu_the_dot_fx_h27$sameas(h, 'h27') + nu_the_dot_fx_h28$sameas(h, 'h28') + nu_the_dot_fx_h29$sameas(h, 'h29') + nu_the_dot_fx_h3$sameas(h, 'h3') + nu_the_dot_fx_h30$sameas(h, 'h30') + nu_the_dot_fx_h31$sameas(h, 'h31') + nu_the_dot_fx_h32$sameas(h, 'h32') + nu_the_dot_fx_h33$sameas(h, 'h33') + nu_the_dot_fx_h34$sameas(h, 'h34') + nu_the_dot_fx_h35$sameas(h, 'h35') + nu_the_dot_fx_h36$sameas(h, 'h36') + nu_the_dot_fx_h37$sameas(h, 'h37') + nu_the_dot_fx_h38$sameas(h, 'h38') + nu_the_dot_fx_h39$sameas(h, 'h39') + nu_the_dot_fx_h4$sameas(h, 'h4') + nu_the_dot_fx_h40$sameas(h, 'h40') + nu_the_dot_fx_h41$sameas(h, 'h41') + nu_the_dot_fx_h42$sameas(h, 'h42') + nu_the_dot_fx_h43$sameas(h, 'h43') + nu_the_dot_fx_h44$sameas(h, 'h44') + nu_the_dot_fx_h45$sameas(h, 'h45') + nu_the_dot_fx_h46$sameas(h, 'h46') + nu_the_dot_fx_h47$sameas(h, 'h47') + nu_the_dot_fx_h48$sameas(h, 'h48') + nu_the_dot_fx_h49$sameas(h, 'h49') + nu_the_dot_fx_h5$sameas(h, 'h5') + nu_the_dot_fx_h50$sameas(h, 'h50') + nu_the_dot_fx_h6$sameas(h, 'h6') + nu_the_dot_fx_h7$sameas(h, 'h7') + nu_the_dot_fx_h8$sameas(h, 'h8') + nu_the_dot_fx_h9$sameas(h, 'h9') =E= 0;
 stat_u_phi(h).. ((-1) * (0.5 * step * 1 / i_phi(h) ** 1)) * nu_u_phi_eqn(h) - piL_u_phi(h) + piU_u_phi(h) =E= 0;
-stat_u_rho(h).. ((-1) * (L * 0.5 * step / L ** 2)) * nu_u_rho_eqn(h) - piL_u_rho(h) + piU_u_rho(h) =E= 0;
+stat_u_rho(h).. ((-1) * (L * 0.5 * step / sqr(L))) * nu_u_rho_eqn(h) - piL_u_rho(h) + piU_u_rho(h) =E= 0;
 stat_u_the(h).. ((-1) * (0.5 * step * 1 / i_the(h) ** 1)) * nu_u_the_eqn(h) - piL_u_the(h) + piU_u_the(h) =E= 0;
 
 * Lower bound complementarity equations

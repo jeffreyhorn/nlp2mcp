@@ -39,7 +39,7 @@ Parameters
     dstr(i)
     kio(i)
     tm0(i)
-    te(i) /'ag-subsist' 0, 'ag-exp+ind' 0, sylvicult 0, 'ind-alim' 0, 'biens-cons' 0, 'biens-int' 0, 'cim-int' 0, 'biens-cap' 0, construct 0, services 0, publiques 0/
+    te(i)
     itax(i)
     alphl(lc,i)
     m0(i)
@@ -62,11 +62,11 @@ Parameters
     wa0(lc) /rural 0.11, 'urban-unsk' 0.15678, 'urban-skil' 1.8657/
     ld(lc)
     ls0(lc)
-    io(i,j) /'ag-subsist'.'ag-subsist' 0.03046, 'ag-subsist'.'ind-alim' 0.30266, 'ag-subsist'.'biens-cons' 0.00206, 'ag-subsist'.construct 0.0412, 'ag-exp+ind'.'ag-exp+ind' 0.01518, 'ag-exp+ind'.'ind-alim' 0.02043, 'ag-exp+ind'.'biens-cons' 0.01123, 'ag-exp+ind'.'biens-int' 0.00669, sylvicult.sylvicult 0.00243, sylvicult.'biens-cons' 0.02106, 'ind-alim'.'ag-subsist' 0.00341, 'ind-alim'.'ag-exp+ind' 0.00629, 'ind-alim'.'ind-alim' 0.03241, 'ind-alim'.'biens-cons' 0.01234, 'ind-alim'.'biens-int' 0.00503, 'ind-alim'.construct 0.00092, 'ind-alim'.services 0.01532, 'biens-cons'.'ind-alim' 0.00105, 'biens-cons'.'biens-cons' 0.05385, 'biens-cons'.'biens-int' 0.00435, 'biens-cons'.construct 0.00103, 'biens-cons'.services 0.00338, 'biens-int'.'ag-subsist' 0.00676, 'biens-int'.'ag-exp+ind' 0.12385, 'biens-int'.sylvicult 0.02095, 'biens-int'.'ind-alim' 0.03794, 'biens-int'.'biens-cons' 0.08309, 'biens-int'.'biens-int' 0.23461, 'biens-int'.'cim-int' 0.18289, 'biens-int'.'biens-cap' 0.01567, 'biens-int'.construct 0.14665, 'biens-int'.services 0.00929, 'biens-int'.publiques 0.08466, 'cim-int'.'ag-subsist' 2e-05, 'cim-int'.'ag-exp+ind' 0.00025, 'cim-int'.sylvicult 0.00017, 'cim-int'.'ind-alim' 0.11238, 'cim-int'.'biens-cons' 0.05095, 'cim-int'.'biens-int' 0.05593, 'cim-int'.'cim-int' 0.27608, 'cim-int'.'biens-cap' 0.11722, 'cim-int'.construct 0.18643, 'cim-int'.services 0.00018, 'biens-cap'.'ag-subsist' 0.00041, 'biens-cap'.'ag-exp+ind' 0.00971, 'biens-cap'.sylvicult 0.02427, 'biens-cap'.'ind-alim' 0.00931, 'biens-cap'.'biens-cons' 0.01229, 'biens-cap'.'biens-int' 0.05259, 'biens-cap'.'cim-int' 0.02053, 'biens-cap'.'biens-cap' 0.05013, 'biens-cap'.construct 0.02622, 'biens-cap'.services 0.00389, construct.'ag-subsist' 0.00472, construct.'ag-exp+ind' 0.00113, construct.sylvicult 0.00318, construct.'ind-alim' 0.10456, construct.'biens-cons' 0.01831, construct.'biens-int' 0.05302, construct.'cim-int' 0.00172, construct.'biens-cap' 0.00031, construct.construct 0.01457, construct.services 0.00385, construct.publiques 0.00394, services.'ag-subsist' 0.00375, services.'ag-exp+ind' 0.30649, services.sylvicult 0.26666, services.'ind-alim' 0.101, services.'biens-cons' 0.26072, services.'biens-int' 0.23006, services.'cim-int' 0.11793, services.'biens-cap' 0.09922, services.construct 0.13692, services.services 0.13728, services.publiques 0.24145, publiques.'ag-subsist' 0.00022, publiques.'ag-exp+ind' 0.00293, publiques.sylvicult 0.00327, publiques.'ind-alim' 0.00536, publiques.'biens-cons' 0.00539, publiques.'biens-int' 0.00957, publiques.'cim-int' 0.00486, publiques.'biens-cap' 0.00081, publiques.construct 0.00447, publiques.services 0.00219, 'ind-alim'.sylvicult 0, 'ind-alim'.'cim-int' 0, 'ind-alim'.'biens-cap' 0, 'ind-alim'.publiques 0, sylvicult.'ag-subsist' 0, sylvicult.'ag-exp+ind' 0, sylvicult.'ind-alim' 0, sylvicult.'biens-int' 0, sylvicult.'cim-int' 0, sylvicult.'biens-cap' 0, sylvicult.construct 0, sylvicult.services 0, sylvicult.publiques 0, 'biens-cons'.'ag-subsist' 0, 'biens-cons'.'ag-exp+ind' 0, 'biens-cons'.sylvicult 0, 'biens-cons'.'cim-int' 0, 'biens-cons'.'biens-cap' 0, 'biens-cons'.publiques 0, 'ag-subsist'.'ag-exp+ind' 0, 'ag-subsist'.sylvicult 0, 'ag-subsist'.'biens-int' 0, 'ag-subsist'.'cim-int' 0, 'ag-subsist'.'biens-cap' 0, 'ag-subsist'.services 0, 'ag-subsist'.publiques 0, 'biens-cap'.publiques 0, publiques.publiques 0, 'ag-exp+ind'.'ag-subsist' 0, 'ag-exp+ind'.sylvicult 0, 'ag-exp+ind'.'cim-int' 0, 'ag-exp+ind'.'biens-cap' 0, 'ag-exp+ind'.construct 0, 'ag-exp+ind'.services 0, 'ag-exp+ind'.publiques 0, 'cim-int'.publiques 0/
-    imat(i,j) /'ag-subsist'.'ag-subsist' 0.23637, 'biens-cap'.'ag-subsist' 0.5953, 'biens-cap'.'ag-exp+ind' 0.60608, 'biens-cap'.sylvicult 0.63876, 'biens-cap'.'ind-alim' 0.60608, 'biens-cap'.'biens-cons' 0.78723, 'biens-cap'.'biens-int' 0.63876, 'biens-cap'.'cim-int' 0.63876, 'biens-cap'.'biens-cap' 0.60608, 'biens-cap'.construct 0.71728, 'biens-cap'.services 0.1761, 'biens-cap'.publiques 0.1761, construct.'ag-subsist' 0.16833, construct.'ag-exp+ind' 0.39392, construct.sylvicult 0.36124, construct.'ind-alim' 0.39392, construct.'biens-cons' 0.21277, construct.'biens-int' 0.36124, construct.'cim-int' 0.36124, construct.'biens-cap' 0.39392, construct.construct 0.28272, construct.services 0.8239, construct.publiques 0.8239, 'ag-subsist'.'ag-exp+ind' 0, 'ag-subsist'.sylvicult 0, 'ag-subsist'.'ind-alim' 0, 'ag-subsist'.'biens-cons' 0, 'ag-subsist'.'biens-int' 0, 'ag-subsist'.'cim-int' 0, 'ag-subsist'.'biens-cap' 0, 'ag-subsist'.construct 0, 'ag-subsist'.services 0, 'ag-subsist'.publiques 0/
-    wdist(i,lc) /'ag-subsist'.rural 1.0189, 'ag-subsist'.'urban-unsk' 0.71491, 'ag-exp+ind'.rural 0.49556, 'ag-exp+ind'.'urban-unsk' 0.34774, 'ag-exp+ind'.'urban-skil' 0.29222, sylvicult.rural 3.2628, sylvicult.'urban-unsk' 2.289, sylvicult.'urban-skil' 1.9232, 'ind-alim'.rural 1.4571, 'ind-alim'.'urban-unsk' 1.0223, 'ind-alim'.'urban-skil' 0.85902, 'biens-cons'.rural 1.1335, 'biens-cons'.'urban-unsk' 0.79531, 'biens-cons'.'urban-skil' 0.66829, 'biens-int'.rural 3.1074, 'biens-int'.'urban-unsk' 2.1806, 'biens-int'.'urban-skil' 1.8323, 'cim-int'.rural 6.3224, 'cim-int'.'urban-unsk' 4.4364, 'cim-int'.'urban-skil' 3.7277, 'biens-cap'.rural 2.5035, 'biens-cap'.'urban-unsk' 1.7552, 'biens-cap'.'urban-skil' 1.4758, construct.rural 2.9204, construct.'urban-unsk' 2.0492, construct.'urban-skil' 1.722, services.rural 1.4039, services.'urban-unsk' 0.98502, services.'urban-skil' 0.82776, publiques.'urban-unsk' 1.3263, publiques.'urban-skil' 1.1146, 'ag-subsist'.'urban-skil' 0, publiques.rural 0/
-    xle(i,lc) /'ag-subsist'.rural 1654.43, 'ag-subsist'.'urban-unsk' 162.89, 'ag-exp+ind'.rural 399.93, 'ag-exp+ind'.'urban-unsk' 45.508, 'ag-exp+ind'.'urban-skil' 5.057, sylvicult.rural 7.662, sylvicult.'urban-unsk' 1.789, sylvicult.'urban-skil' 0.597, 'ind-alim'.rural 12.989, 'ind-alim'.'urban-unsk' 9.434, 'ind-alim'.'urban-skil' 2.358, 'biens-cons'.rural 28.344, 'biens-cons'.'urban-unsk' 37.462, 'biens-cons'.'urban-skil' 12.488, 'biens-int'.rural 18.331, 'biens-int'.'urban-unsk' 16.553, 'biens-int'.'urban-skil' 8.3, 'cim-int'.rural 1.458, 'cim-int'.'urban-unsk' 1.317, 'cim-int'.'urban-skil' 0.66, 'biens-cap'.rural 3.112, 'biens-cap'.'urban-unsk' 2.82, 'biens-cap'.'urban-skil' 1.208, construct.rural 22.584, construct.'urban-unsk' 28.462, construct.'urban-skil' 7.116, services.rural 121.2, services.'urban-unsk' 125.8, services.'urban-skil' 61.96, publiques.'urban-unsk' 83.029, publiques.'urban-skil' 32.771, 'ag-subsist'.'urban-skil' 0, publiques.rural 0/
-    zz(*,i) /m0.'ag-subsist' 2.461, m0.'ag-exp+ind' 8.039, m0.sylvicult 0.023, m0.'ind-alim' 17.961, m0.'biens-cons' 37.062, m0.'biens-int' 138.57, m0.'cim-int' 49.616, m0.'biens-cap' 134.72, m0.construct 74.439, e0.'ag-subsist' 4.594, e0.'ag-exp+ind' 125.07, e0.sylvicult 22.337, e0.'ind-alim' 23.451, e0.'biens-cons' 5.864, e0.'biens-int' 101.33, e0.'cim-int' 10.501, e0.'biens-cap' 3.838, e0.construct 81.626, xd0.'ag-subsist' 330.48, xd0.'ag-exp+ind' 131.45, xd0.sylvicult 29.503, xd0.'ind-alim' 72.024, xd0.'biens-cons' 118.43, xd0.'biens-int' 284.38, xd0.'cim-int' 34.169, xd0.'biens-cap' 10.298, xd0.construct 174.12, xd0.services 615.79, xd0.publiques 163.98, k.'ag-subsist' 495.73, k.'ag-exp+ind' 170.89, k.sylvicult 73.76, k.'ind-alim' 140, k.'biens-cons' 236.87, k.'biens-int' 853.13, k.'cim-int' 102.51, k.'biens-cap' 20.6, k.construct 435.29, k.services 769.73, k.publiques 180.36, depr.'ag-subsist' 0.0246, depr.'ag-exp+ind' 0.0472, depr.sylvicult 0.0244, depr.'ind-alim' 0.0144, depr.'biens-cons' 0.0212, depr.'biens-int' 0.0335, depr.'cim-int' 0.0335, depr.'biens-cap' 0.0111, depr.construct 0.0232, depr.services 0.0637, depr.publiques 0.0637, rhoc.'ag-subsist' 1.5, rhoc.'ag-exp+ind' 0.9, rhoc.sylvicult 0.4, rhoc.'ind-alim' 1.25, rhoc.'biens-cons' 1.25, rhoc.'biens-int' 0.5, rhoc.'cim-int' 0.75, rhoc.'biens-cap' 0.4, rhoc.construct 0.4, rhoc.services 0.4, rhoc.publiques 0.4, rhot.'ag-subsist' 1.5, rhot.'ag-exp+ind' 0.9, rhot.sylvicult 0.4, rhot.'ind-alim' 1.25, rhot.'biens-cons' 1.25, rhot.'biens-int' 0.5, rhot.'cim-int' 0.75, rhot.'biens-cap' 0.4, rhot.construct 0.4, rhot.services 0.4, rhot.publiques 0.4, eta.'ag-subsist' 1, eta.'ag-exp+ind' 1, eta.sylvicult 1, eta.'ind-alim' 4, eta.'biens-cons' 4, eta.'biens-int' 4, eta.'cim-int' 4, eta.'biens-cap' 4, eta.construct 4, eta.services 4, eta.publiques 4, pd0.'ag-subsist' 1, pd0.'ag-exp+ind' 1, pd0.sylvicult 1, pd0.'ind-alim' 1, pd0.'biens-cons' 1, pd0.'biens-int' 1, pd0.'cim-int' 1, pd0.'biens-cap' 1, pd0.construct 1, pd0.services 1, pd0.publiques 1, tm0.'ag-subsist' 0.2205, tm0.'ag-exp+ind' 0.233, tm0.sylvicult 0.278, tm0.'ind-alim' 0.3534, tm0.'biens-cons' 0.3826, tm0.'biens-int' 0.1768, tm0.'cim-int' 0.2633, tm0.'biens-cap' 0.268, itax.'ag-subsist' 0.002, itax.'ag-exp+ind' 0.191, itax.sylvicult 0.057, itax.'ind-alim' 0.038, itax.'biens-cons' 0.096, itax.'biens-int' 0.026, itax.'cim-int' 0.014, itax.'biens-cap' 0.029, itax.construct 0.034, itax.services 0.076, cles.'ag-subsist' 0.2744, cles.'ag-exp+ind' 0.00445, cles.sylvicult 0.05599, cles.'ind-alim' 0.14099, cles.'biens-cons' 0.17738, cles.'biens-cap' 0.004, cles.construct 0.31921, cles.services 0.02358, gles.construct 1, kio.'ag-subsist' 0.11, kio.'ag-exp+ind' 0.09, kio.sylvicult 0.06, kio.'ind-alim' 0.01, kio.'biens-cons' 0.04, kio.'biens-int' 0.14, kio.'cim-int' 0.02, kio.'biens-cap' 0.01, kio.construct 0.08, kio.services 0.34, kio.publiques 0.1, dstr.'ag-subsist' 0.012203, dstr.'ag-exp+ind' 0.026694, dstr.sylvicult 0.034742, dstr.'ind-alim' 0.044291, dstr.'biens-cons' 0.059958, dstr.'biens-int' 0.012287, dstr.'cim-int' 0.042047, dst.'ag-subsist' 4.033, dst.'ag-exp+ind' 3.509, dst.sylvicult 1.025, dst.'ind-alim' 3.19, dst.'biens-cons' 7.101, dst.'biens-int' 3.494, dst.'cim-int' 0.433, id.'ag-subsist' 6.71, id.'biens-int' 113.36, id.'cim-int' 138.13, id.'ag-exp+ind' 0, id.sylvicult 0, id.'ind-alim' 0, id.'biens-cons' 0, id.'biens-cap' 0, id.construct 0, id.services 0, id.publiques 0, tm0.construct 0, tm0.services 0, tm0.publiques 0, m0.services 0, m0.publiques 0, cles.'biens-int' 0, cles.'cim-int' 0, cles.publiques 0, gles.'ag-subsist' 0, gles.'ag-exp+ind' 0, gles.sylvicult 0, gles.'ind-alim' 0, gles.'biens-cons' 0, gles.'biens-int' 0, gles.'cim-int' 0, gles.'biens-cap' 0, gles.services 0, gles.publiques 0, e0.services 0, e0.publiques 0, dst.'biens-cap' 0, dst.construct 0, dst.services 0, dst.publiques 0, dstr.'biens-cap' 0, dstr.construct 0, dstr.services 0, dstr.publiques 0, itax.publiques 0/
+    io(i,j) /'ag-subsist'.'ag-subsist' 0.03046, 'ag-subsist'.'ind-alim' 0.30266, 'ag-subsist'.'biens-cons' 0.00206, 'ag-subsist'.construct 0.0412, 'ag-exp+ind'.'ag-exp+ind' 0.01518, 'ag-exp+ind'.'ind-alim' 0.02043, 'ag-exp+ind'.'biens-cons' 0.01123, 'ag-exp+ind'.'biens-int' 0.00669, sylvicult.sylvicult 0.00243, sylvicult.'biens-cons' 0.02106, 'ind-alim'.'ag-subsist' 0.00341, 'ind-alim'.'ag-exp+ind' 0.00629, 'ind-alim'.'ind-alim' 0.03241, 'ind-alim'.'biens-cons' 0.01234, 'ind-alim'.'biens-int' 0.00503, 'ind-alim'.construct 0.00092, 'ind-alim'.services 0.01532, 'biens-cons'.'ind-alim' 0.00105, 'biens-cons'.'biens-cons' 0.05385, 'biens-cons'.'biens-int' 0.00435, 'biens-cons'.construct 0.00103, 'biens-cons'.services 0.00338, 'biens-int'.'ag-subsist' 0.00676, 'biens-int'.'ag-exp+ind' 0.12385, 'biens-int'.sylvicult 0.02095, 'biens-int'.'ind-alim' 0.03794, 'biens-int'.'biens-cons' 0.08309, 'biens-int'.'biens-int' 0.23461, 'biens-int'.'cim-int' 0.18289, 'biens-int'.'biens-cap' 0.01567, 'biens-int'.construct 0.14665, 'biens-int'.services 0.00929, 'biens-int'.publiques 0.08466, 'cim-int'.'ag-subsist' 2e-05, 'cim-int'.'ag-exp+ind' 0.00025, 'cim-int'.sylvicult 0.00017, 'cim-int'.'ind-alim' 0.11238, 'cim-int'.'biens-cons' 0.05095, 'cim-int'.'biens-int' 0.05593, 'cim-int'.'cim-int' 0.27608, 'cim-int'.'biens-cap' 0.11722, 'cim-int'.construct 0.18643, 'cim-int'.services 0.00018, 'biens-cap'.'ag-subsist' 0.00041, 'biens-cap'.'ag-exp+ind' 0.00971, 'biens-cap'.sylvicult 0.02427, 'biens-cap'.'ind-alim' 0.00931, 'biens-cap'.'biens-cons' 0.01229, 'biens-cap'.'biens-int' 0.05259, 'biens-cap'.'cim-int' 0.02053, 'biens-cap'.'biens-cap' 0.05013, 'biens-cap'.construct 0.02622, 'biens-cap'.services 0.00389, construct.'ag-subsist' 0.00472, construct.'ag-exp+ind' 0.00113, construct.sylvicult 0.00318, construct.'ind-alim' 0.10456, construct.'biens-cons' 0.01831, construct.'biens-int' 0.05302, construct.'cim-int' 0.00172, construct.'biens-cap' 0.00031, construct.construct 0.01457, construct.services 0.00385, construct.publiques 0.00394, services.'ag-subsist' 0.00375, services.'ag-exp+ind' 0.30649, services.sylvicult 0.26666, services.'ind-alim' 0.101, services.'biens-cons' 0.26072, services.'biens-int' 0.23006, services.'cim-int' 0.11793, services.'biens-cap' 0.09922, services.construct 0.13692, services.services 0.13728, services.publiques 0.24145, publiques.'ag-subsist' 0.00022, publiques.'ag-exp+ind' 0.00293, publiques.sylvicult 0.00327, publiques.'ind-alim' 0.00536, publiques.'biens-cons' 0.00539, publiques.'biens-int' 0.00957, publiques.'cim-int' 0.00486, publiques.'biens-cap' 0.00081, publiques.construct 0.00447, publiques.services 0.00219/
+    imat(i,j) /'ag-subsist'.'ag-subsist' 0.23637, 'biens-cap'.'ag-subsist' 0.5953, 'biens-cap'.'ag-exp+ind' 0.60608, 'biens-cap'.sylvicult 0.63876, 'biens-cap'.'ind-alim' 0.60608, 'biens-cap'.'biens-cons' 0.78723, 'biens-cap'.'biens-int' 0.63876, 'biens-cap'.'cim-int' 0.63876, 'biens-cap'.'biens-cap' 0.60608, 'biens-cap'.construct 0.71728, 'biens-cap'.services 0.1761, 'biens-cap'.publiques 0.1761, construct.'ag-subsist' 0.16833, construct.'ag-exp+ind' 0.39392, construct.sylvicult 0.36124, construct.'ind-alim' 0.39392, construct.'biens-cons' 0.21277, construct.'biens-int' 0.36124, construct.'cim-int' 0.36124, construct.'biens-cap' 0.39392, construct.construct 0.28272, construct.services 0.8239, construct.publiques 0.8239/
+    wdist(i,lc) /'ag-subsist'.rural 1.0189, 'ag-subsist'.'urban-unsk' 0.71491, 'ag-exp+ind'.rural 0.49556, 'ag-exp+ind'.'urban-unsk' 0.34774, 'ag-exp+ind'.'urban-skil' 0.29222, sylvicult.rural 3.2628, sylvicult.'urban-unsk' 2.289, sylvicult.'urban-skil' 1.9232, 'ind-alim'.rural 1.4571, 'ind-alim'.'urban-unsk' 1.0223, 'ind-alim'.'urban-skil' 0.85902, 'biens-cons'.rural 1.1335, 'biens-cons'.'urban-unsk' 0.79531, 'biens-cons'.'urban-skil' 0.66829, 'biens-int'.rural 3.1074, 'biens-int'.'urban-unsk' 2.1806, 'biens-int'.'urban-skil' 1.8323, 'cim-int'.rural 6.3224, 'cim-int'.'urban-unsk' 4.4364, 'cim-int'.'urban-skil' 3.7277, 'biens-cap'.rural 2.5035, 'biens-cap'.'urban-unsk' 1.7552, 'biens-cap'.'urban-skil' 1.4758, construct.rural 2.9204, construct.'urban-unsk' 2.0492, construct.'urban-skil' 1.722, services.rural 1.4039, services.'urban-unsk' 0.98502, services.'urban-skil' 0.82776, publiques.'urban-unsk' 1.3263, publiques.'urban-skil' 1.1146/
+    xle(i,lc) /'ag-subsist'.rural 1654.43, 'ag-subsist'.'urban-unsk' 162.89, 'ag-exp+ind'.rural 399.93, 'ag-exp+ind'.'urban-unsk' 45.508, 'ag-exp+ind'.'urban-skil' 5.057, sylvicult.rural 7.662, sylvicult.'urban-unsk' 1.789, sylvicult.'urban-skil' 0.597, 'ind-alim'.rural 12.989, 'ind-alim'.'urban-unsk' 9.434, 'ind-alim'.'urban-skil' 2.358, 'biens-cons'.rural 28.344, 'biens-cons'.'urban-unsk' 37.462, 'biens-cons'.'urban-skil' 12.488, 'biens-int'.rural 18.331, 'biens-int'.'urban-unsk' 16.553, 'biens-int'.'urban-skil' 8.3, 'cim-int'.rural 1.458, 'cim-int'.'urban-unsk' 1.317, 'cim-int'.'urban-skil' 0.66, 'biens-cap'.rural 3.112, 'biens-cap'.'urban-unsk' 2.82, 'biens-cap'.'urban-skil' 1.208, construct.rural 22.584, construct.'urban-unsk' 28.462, construct.'urban-skil' 7.116, services.rural 121.2, services.'urban-unsk' 125.8, services.'urban-skil' 61.96, publiques.'urban-unsk' 83.029, publiques.'urban-skil' 32.771/
+    zz(*,i) /m0.'ag-subsist' 2.461, m0.'ag-exp+ind' 8.039, m0.sylvicult 0.023, m0.'ind-alim' 17.961, m0.'biens-cons' 37.062, m0.'biens-int' 138.57, m0.'cim-int' 49.616, m0.'biens-cap' 134.72, m0.construct 74.439, e0.'ag-subsist' 4.594, e0.'ag-exp+ind' 125.07, e0.sylvicult 22.337, e0.'ind-alim' 23.451, e0.'biens-cons' 5.864, e0.'biens-int' 101.33, e0.'cim-int' 10.501, e0.'biens-cap' 3.838, e0.construct 81.626, xd0.'ag-subsist' 330.48, xd0.'ag-exp+ind' 131.45, xd0.sylvicult 29.503, xd0.'ind-alim' 72.024, xd0.'biens-cons' 118.43, xd0.'biens-int' 284.38, xd0.'cim-int' 34.169, xd0.'biens-cap' 10.298, xd0.construct 174.12, xd0.services 615.79, xd0.publiques 163.98, k.'ag-subsist' 495.73, k.'ag-exp+ind' 170.89, k.sylvicult 73.76, k.'ind-alim' 140, k.'biens-cons' 236.87, k.'biens-int' 853.13, k.'cim-int' 102.51, k.'biens-cap' 20.6, k.construct 435.29, k.services 769.73, k.publiques 180.36, depr.'ag-subsist' 0.0246, depr.'ag-exp+ind' 0.0472, depr.sylvicult 0.0244, depr.'ind-alim' 0.0144, depr.'biens-cons' 0.0212, depr.'biens-int' 0.0335, depr.'cim-int' 0.0335, depr.'biens-cap' 0.0111, depr.construct 0.0232, depr.services 0.0637, depr.publiques 0.0637, rhoc.'ag-subsist' 1.5, rhoc.'ag-exp+ind' 0.9, rhoc.sylvicult 0.4, rhoc.'ind-alim' 1.25, rhoc.'biens-cons' 1.25, rhoc.'biens-int' 0.5, rhoc.'cim-int' 0.75, rhoc.'biens-cap' 0.4, rhoc.construct 0.4, rhoc.services 0.4, rhoc.publiques 0.4, rhot.'ag-subsist' 1.5, rhot.'ag-exp+ind' 0.9, rhot.sylvicult 0.4, rhot.'ind-alim' 1.25, rhot.'biens-cons' 1.25, rhot.'biens-int' 0.5, rhot.'cim-int' 0.75, rhot.'biens-cap' 0.4, rhot.construct 0.4, rhot.services 0.4, rhot.publiques 0.4, eta.'ag-subsist' 1, eta.'ag-exp+ind' 1, eta.sylvicult 1, eta.'ind-alim' 4, eta.'biens-cons' 4, eta.'biens-int' 4, eta.'cim-int' 4, eta.'biens-cap' 4, eta.construct 4, eta.services 4, eta.publiques 4, pd0.'ag-subsist' 1, pd0.'ag-exp+ind' 1, pd0.sylvicult 1, pd0.'ind-alim' 1, pd0.'biens-cons' 1, pd0.'biens-int' 1, pd0.'cim-int' 1, pd0.'biens-cap' 1, pd0.construct 1, pd0.services 1, pd0.publiques 1, tm0.'ag-subsist' 0.2205, tm0.'ag-exp+ind' 0.233, tm0.sylvicult 0.278, tm0.'ind-alim' 0.3534, tm0.'biens-cons' 0.3826, tm0.'biens-int' 0.1768, tm0.'cim-int' 0.2633, tm0.'biens-cap' 0.268, itax.'ag-subsist' 0.002, itax.'ag-exp+ind' 0.191, itax.sylvicult 0.057, itax.'ind-alim' 0.038, itax.'biens-cons' 0.096, itax.'biens-int' 0.026, itax.'cim-int' 0.014, itax.'biens-cap' 0.029, itax.construct 0.034, itax.services 0.076, cles.'ag-subsist' 0.2744, cles.'ag-exp+ind' 0.00445, cles.sylvicult 0.05599, cles.'ind-alim' 0.14099, cles.'biens-cons' 0.17738, cles.'biens-cap' 0.004, cles.construct 0.31921, cles.services 0.02358, gles.construct 1, kio.'ag-subsist' 0.11, kio.'ag-exp+ind' 0.09, kio.sylvicult 0.06, kio.'ind-alim' 0.01, kio.'biens-cons' 0.04, kio.'biens-int' 0.14, kio.'cim-int' 0.02, kio.'biens-cap' 0.01, kio.construct 0.08, kio.services 0.34, kio.publiques 0.1, dstr.'ag-subsist' 0.012203, dstr.'ag-exp+ind' 0.026694, dstr.sylvicult 0.034742, dstr.'ind-alim' 0.044291, dstr.'biens-cons' 0.059958, dstr.'biens-int' 0.012287, dstr.'cim-int' 0.042047, dst.'ag-subsist' 4.033, dst.'ag-exp+ind' 3.509, dst.sylvicult 1.025, dst.'ind-alim' 3.19, dst.'biens-cons' 7.101, dst.'biens-int' 3.494, dst.'cim-int' 0.433, id.'ag-subsist' 6.71, id.'biens-int' 113.36, id.'cim-int' 138.13/
 ;
 
 Scalars
@@ -271,27 +271,196 @@ ls.fx(lc) = ls0(lc);
 * non-zero initial values.
 
 pd.l(i) = pd0(i);
+pd.l("ag-subsist") = max(pd.l("ag-subsist"), 0.01);
+pd.l("ag-exp+ind") = max(pd.l("ag-exp+ind"), 0.01);
+pd.l("sylvicult") = max(pd.l("sylvicult"), 0.01);
+pd.l("ind-alim") = max(pd.l("ind-alim"), 0.01);
+pd.l("biens-cons") = max(pd.l("biens-cons"), 0.01);
+pd.l("biens-int") = max(pd.l("biens-int"), 0.01);
+pd.l("cim-int") = max(pd.l("cim-int"), 0.01);
+pd.l("biens-cap") = max(pd.l("biens-cap"), 0.01);
+pd.l("construct") = max(pd.l("construct"), 0.01);
+pd.l("services") = max(pd.l("services"), 0.01);
+pd.l("publiques") = max(pd.l("publiques"), 0.01);
 pm.l(i) = pm0(i);
+pm.l("ag-subsist") = max(pm.l("ag-subsist"), 0.01);
+pm.l("ag-exp+ind") = max(pm.l("ag-exp+ind"), 0.01);
+pm.l("sylvicult") = max(pm.l("sylvicult"), 0.01);
+pm.l("ind-alim") = max(pm.l("ind-alim"), 0.01);
+pm.l("biens-cons") = max(pm.l("biens-cons"), 0.01);
+pm.l("biens-int") = max(pm.l("biens-int"), 0.01);
+pm.l("cim-int") = max(pm.l("cim-int"), 0.01);
+pm.l("biens-cap") = max(pm.l("biens-cap"), 0.01);
+pm.l("construct") = max(pm.l("construct"), 0.01);
+pm.l("services") = max(pm.l("services"), 0.01);
+pm.l("publiques") = max(pm.l("publiques"), 0.01);
 pe.l(i) = pe0(i);
 pk.l(i) = pd0(i);
+pk.l("ag-subsist") = max(pk.l("ag-subsist"), 0.01);
+pk.l("ag-exp+ind") = max(pk.l("ag-exp+ind"), 0.01);
+pk.l("sylvicult") = max(pk.l("sylvicult"), 0.01);
+pk.l("ind-alim") = max(pk.l("ind-alim"), 0.01);
+pk.l("biens-cons") = max(pk.l("biens-cons"), 0.01);
+pk.l("biens-int") = max(pk.l("biens-int"), 0.01);
+pk.l("cim-int") = max(pk.l("cim-int"), 0.01);
+pk.l("biens-cap") = max(pk.l("biens-cap"), 0.01);
+pk.l("construct") = max(pk.l("construct"), 0.01);
+pk.l("services") = max(pk.l("services"), 0.01);
+pk.l("publiques") = max(pk.l("publiques"), 0.01);
 px.l(i) = pd0(i);
+px.l("ag-subsist") = max(px.l("ag-subsist"), 0.01);
+px.l("ag-exp+ind") = max(px.l("ag-exp+ind"), 0.01);
+px.l("sylvicult") = max(px.l("sylvicult"), 0.01);
+px.l("ind-alim") = max(px.l("ind-alim"), 0.01);
+px.l("biens-cons") = max(px.l("biens-cons"), 0.01);
+px.l("biens-int") = max(px.l("biens-int"), 0.01);
+px.l("cim-int") = max(px.l("cim-int"), 0.01);
+px.l("biens-cap") = max(px.l("biens-cap"), 0.01);
+px.l("construct") = max(px.l("construct"), 0.01);
+px.l("services") = max(px.l("services"), 0.01);
+px.l("publiques") = max(px.l("publiques"), 0.01);
 p.l(i) = pd0(i);
+p.l("ag-subsist") = max(p.l("ag-subsist"), 0.01);
+p.l("ag-exp+ind") = max(p.l("ag-exp+ind"), 0.01);
+p.l("sylvicult") = max(p.l("sylvicult"), 0.01);
+p.l("ind-alim") = max(p.l("ind-alim"), 0.01);
+p.l("biens-cons") = max(p.l("biens-cons"), 0.01);
+p.l("biens-int") = max(p.l("biens-int"), 0.01);
+p.l("cim-int") = max(p.l("cim-int"), 0.01);
+p.l("biens-cap") = max(p.l("biens-cap"), 0.01);
+p.l("construct") = max(p.l("construct"), 0.01);
+p.l("services") = max(p.l("services"), 0.01);
+p.l("publiques") = max(p.l("publiques"), 0.01);
 pva.l(i) = pva0(i);
 pwe.l(i) = pwe0(i);
+pwe.l("ag-subsist") = max(pwe.l("ag-subsist"), 0.01);
+pwe.l("ag-exp+ind") = max(pwe.l("ag-exp+ind"), 0.01);
+pwe.l("sylvicult") = max(pwe.l("sylvicult"), 0.01);
+pwe.l("ind-alim") = max(pwe.l("ind-alim"), 0.01);
+pwe.l("biens-cons") = max(pwe.l("biens-cons"), 0.01);
+pwe.l("biens-int") = max(pwe.l("biens-int"), 0.01);
+pwe.l("cim-int") = max(pwe.l("cim-int"), 0.01);
+pwe.l("biens-cap") = max(pwe.l("biens-cap"), 0.01);
+pwe.l("construct") = max(pwe.l("construct"), 0.01);
+pwe.l("services") = max(pwe.l("services"), 0.01);
+pwe.l("publiques") = max(pwe.l("publiques"), 0.01);
 tm.l(it) = tm0(it);
 x.l(i) = x0(i);
+x.l("ag-subsist") = max(x.l("ag-subsist"), 0.01);
+x.l("ag-exp+ind") = max(x.l("ag-exp+ind"), 0.01);
+x.l("sylvicult") = max(x.l("sylvicult"), 0.01);
+x.l("ind-alim") = max(x.l("ind-alim"), 0.01);
+x.l("biens-cons") = max(x.l("biens-cons"), 0.01);
+x.l("biens-int") = max(x.l("biens-int"), 0.01);
+x.l("cim-int") = max(x.l("cim-int"), 0.01);
+x.l("biens-cap") = max(x.l("biens-cap"), 0.01);
+x.l("construct") = max(x.l("construct"), 0.01);
+x.l("services") = max(x.l("services"), 0.01);
+x.l("publiques") = max(x.l("publiques"), 0.01);
 xd.l(i) = xd0(i);
+xd.l("ag-subsist") = max(xd.l("ag-subsist"), 0.01);
+xd.l("ag-exp+ind") = max(xd.l("ag-exp+ind"), 0.01);
+xd.l("sylvicult") = max(xd.l("sylvicult"), 0.01);
+xd.l("ind-alim") = max(xd.l("ind-alim"), 0.01);
+xd.l("biens-cons") = max(xd.l("biens-cons"), 0.01);
+xd.l("biens-int") = max(xd.l("biens-int"), 0.01);
+xd.l("cim-int") = max(xd.l("cim-int"), 0.01);
+xd.l("biens-cap") = max(xd.l("biens-cap"), 0.01);
+xd.l("construct") = max(xd.l("construct"), 0.01);
+xd.l("services") = max(xd.l("services"), 0.01);
+xd.l("publiques") = max(xd.l("publiques"), 0.01);
 xxd.l(i) = xxd0(i);
+xxd.l("ag-subsist") = max(xxd.l("ag-subsist"), 0.01);
+xxd.l("ag-exp+ind") = max(xxd.l("ag-exp+ind"), 0.01);
+xxd.l("sylvicult") = max(xxd.l("sylvicult"), 0.01);
+xxd.l("ind-alim") = max(xxd.l("ind-alim"), 0.01);
+xxd.l("biens-cons") = max(xxd.l("biens-cons"), 0.01);
+xxd.l("biens-int") = max(xxd.l("biens-int"), 0.01);
+xxd.l("cim-int") = max(xxd.l("cim-int"), 0.01);
+xxd.l("biens-cap") = max(xxd.l("biens-cap"), 0.01);
+xxd.l("construct") = max(xxd.l("construct"), 0.01);
+xxd.l("services") = max(xxd.l("services"), 0.01);
+xxd.l("publiques") = max(xxd.l("publiques"), 0.01);
 e.l(i) = e0(i);
+e.l("ag-subsist") = max(e.l("ag-subsist"), 0.01);
+e.l("ag-exp+ind") = max(e.l("ag-exp+ind"), 0.01);
+e.l("sylvicult") = max(e.l("sylvicult"), 0.01);
+e.l("ind-alim") = max(e.l("ind-alim"), 0.01);
+e.l("biens-cons") = max(e.l("biens-cons"), 0.01);
+e.l("biens-int") = max(e.l("biens-int"), 0.01);
+e.l("cim-int") = max(e.l("cim-int"), 0.01);
+e.l("biens-cap") = max(e.l("biens-cap"), 0.01);
+e.l("construct") = max(e.l("construct"), 0.01);
+e.l("services") = max(e.l("services"), 0.01);
+e.l("publiques") = max(e.l("publiques"), 0.01);
 m.l(i) = m0(i);
+m.l("ag-subsist") = max(m.l("ag-subsist"), 0.01);
+m.l("ag-exp+ind") = max(m.l("ag-exp+ind"), 0.01);
+m.l("sylvicult") = max(m.l("sylvicult"), 0.01);
+m.l("ind-alim") = max(m.l("ind-alim"), 0.01);
+m.l("biens-cons") = max(m.l("biens-cons"), 0.01);
+m.l("biens-int") = max(m.l("biens-int"), 0.01);
+m.l("cim-int") = max(m.l("cim-int"), 0.01);
+m.l("biens-cap") = max(m.l("biens-cap"), 0.01);
+m.l("construct") = max(m.l("construct"), 0.01);
+m.l("services") = max(m.l("services"), 0.01);
+m.l("publiques") = max(m.l("publiques"), 0.01);
 wa.l(lc) = wa0(lc);
+wa.l("rural") = max(wa.l("rural"), 0.01);
+wa.l("urban-unsk") = max(wa.l("urban-unsk"), 0.01);
+wa.l("urban-skil") = max(wa.l("urban-skil"), 0.01);
 l.l(i,lc) = xle(i,lc);
+l.l("ag-subsist","rural") = max(l.l("ag-subsist","rural"), 0.01);
+l.l("ag-subsist","urban-unsk") = max(l.l("ag-subsist","urban-unsk"), 0.01);
+l.l("ag-subsist","urban-skil") = max(l.l("ag-subsist","urban-skil"), 0.01);
+l.l("ag-exp+ind","rural") = max(l.l("ag-exp+ind","rural"), 0.01);
+l.l("ag-exp+ind","urban-unsk") = max(l.l("ag-exp+ind","urban-unsk"), 0.01);
+l.l("ag-exp+ind","urban-skil") = max(l.l("ag-exp+ind","urban-skil"), 0.01);
+l.l("sylvicult","rural") = max(l.l("sylvicult","rural"), 0.01);
+l.l("sylvicult","urban-unsk") = max(l.l("sylvicult","urban-unsk"), 0.01);
+l.l("sylvicult","urban-skil") = max(l.l("sylvicult","urban-skil"), 0.01);
+l.l("ind-alim","rural") = max(l.l("ind-alim","rural"), 0.01);
+l.l("ind-alim","urban-unsk") = max(l.l("ind-alim","urban-unsk"), 0.01);
+l.l("ind-alim","urban-skil") = max(l.l("ind-alim","urban-skil"), 0.01);
+l.l("biens-cons","rural") = max(l.l("biens-cons","rural"), 0.01);
+l.l("biens-cons","urban-unsk") = max(l.l("biens-cons","urban-unsk"), 0.01);
+l.l("biens-cons","urban-skil") = max(l.l("biens-cons","urban-skil"), 0.01);
+l.l("biens-int","rural") = max(l.l("biens-int","rural"), 0.01);
+l.l("biens-int","urban-unsk") = max(l.l("biens-int","urban-unsk"), 0.01);
+l.l("biens-int","urban-skil") = max(l.l("biens-int","urban-skil"), 0.01);
+l.l("cim-int","rural") = max(l.l("cim-int","rural"), 0.01);
+l.l("cim-int","urban-unsk") = max(l.l("cim-int","urban-unsk"), 0.01);
+l.l("cim-int","urban-skil") = max(l.l("cim-int","urban-skil"), 0.01);
+l.l("biens-cap","rural") = max(l.l("biens-cap","rural"), 0.01);
+l.l("biens-cap","urban-unsk") = max(l.l("biens-cap","urban-unsk"), 0.01);
+l.l("biens-cap","urban-skil") = max(l.l("biens-cap","urban-skil"), 0.01);
+l.l("construct","rural") = max(l.l("construct","rural"), 0.01);
+l.l("construct","urban-unsk") = max(l.l("construct","urban-unsk"), 0.01);
+l.l("construct","urban-skil") = max(l.l("construct","urban-skil"), 0.01);
+l.l("services","rural") = max(l.l("services","rural"), 0.01);
+l.l("services","urban-unsk") = max(l.l("services","urban-unsk"), 0.01);
+l.l("services","urban-skil") = max(l.l("services","urban-skil"), 0.01);
+l.l("publiques","rural") = max(l.l("publiques","rural"), 0.01);
+l.l("publiques","urban-unsk") = max(l.l("publiques","urban-unsk"), 0.01);
+l.l("publiques","urban-skil") = max(l.l("publiques","urban-skil"), 0.01);
 int.l(i) = int0(i);
+int.l("ag-subsist") = max(int.l("ag-subsist"), 0.01);
+int.l("ag-exp+ind") = max(int.l("ag-exp+ind"), 0.01);
+int.l("sylvicult") = max(int.l("sylvicult"), 0.01);
+int.l("ind-alim") = max(int.l("ind-alim"), 0.01);
+int.l("biens-cons") = max(int.l("biens-cons"), 0.01);
+int.l("biens-int") = max(int.l("biens-int"), 0.01);
+int.l("cim-int") = max(int.l("cim-int"), 0.01);
+int.l("biens-cap") = max(int.l("biens-cap"), 0.01);
+int.l("construct") = max(int.l("construct"), 0.01);
+int.l("services") = max(int.l("services"), 0.01);
+int.l("publiques") = max(int.l("publiques"), 0.01);
 cd.l(i) = cles(i) * cdtot0;
 gd.l("publiques") = 135.03;
 id.l(i) = id0(i);
 dst.l(i) = dst0(i);
 y.l = sum(i, pva0(i) * xd0(i) - depr(i) * k0(i));
+y.l = max(y.l, 0.01);
 gr.l = 179.0;
 tariff.l = 76.548;
 indtax.l = 102.45;
@@ -453,12 +622,12 @@ stat_ls(lc).. (-1) * nu_lmequil(lc) =E= 0;
 stat_m(i)$(it(i)).. sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * delta(it) * m(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / m(it))) * nu_armington(it)) + sum(it, 1 / xxd(it) ** 1 * nu_costmin(it)) + nu_m_fx_ag_exp_ind_ca61f4c4$sameas(i, 'ag-exp+ind') + nu_m_fx_ag_subsist_5576d1bb$sameas(i, 'ag-subsist') + nu_m_fx_biens_cap_392664c7$sameas(i, 'biens-cap') + nu_m_fx_biens_cons_135eaca1$sameas(i, 'biens-cons') + nu_m_fx_biens_int_bc4227de$sameas(i, 'biens-int') + nu_m_fx_cim_int_e7034a7c$sameas(i, 'cim-int') + nu_m_fx_construct$sameas(i, 'construct') + nu_m_fx_ind_alim_7c9641b7$sameas(i, 'ind-alim') + nu_m_fx_publiques$sameas(i, 'publiques') + nu_m_fx_services$sameas(i, 'services') + nu_m_fx_sylvicult$sameas(i, 'sylvicult') - piL_m(i) =E= 0;
 stat_mps.. sum(i, ((-1) * (y * cles(i) * (-1))) * nu_cdeq(i)) + ((-1) * y) * nu_hhsaveq + nu_mps_fx =E= 0;
 stat_p(i).. x(i) * nu_absorption(i) + sum(j, ((-1) * io(i,j)) * nu_actp(i)) + sum(j, ((-1) * imat(i,j)) * nu_pkdef(i)) + cd(i) * nu_cdeq(i) + ((-1) * gd(i)) * nu_gruse + kio(i) * dst(i) * nu_prodinv(i) - piL_p(i) =E= 0;
-stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * ((-1) * pe(it)) / pd(it) ** 2 / gamma(it) ** 2)) * nu_esupply(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * 1 / pm(it) ** 1 / (1 - delta(it)) ** 2)) * nu_costmin(it)) - piL_pd(i) =E= 0;
-stat_pe(i)$(it(i)).. sum(it, (1 + te(it)) * nu_pedef(it)) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * 1 / pd(it) ** 1 / gamma(it) ** 2)) * nu_esupply(it)) =E= 0;
+stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * ((-1) * pe(it)) / sqr(pd(it)) / sqr(gamma(it)))) * nu_esupply(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * 1 / pm(it) ** 1 / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pd(i) =E= 0;
+stat_pe(i)$(it(i)).. sum(it, (1 + te(it)) * nu_pedef(it)) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * 1 / pd(it) ** 1 / sqr(gamma(it)))) * nu_esupply(it)) =E= 0;
 stat_pk(i).. nu_pkdef(i) + ((-1) * (k(i) * depr(i))) * nu_depreq + dk(i) * nu_prodinv(i) - piL_pk(i) =E= 0;
-stat_pm(i)$(it(i)).. sum(it, nu_pmdef(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * ((-1) * pd(it)) / pm(it) ** 2 / (1 - delta(it)) ** 2)) * nu_costmin(it)) - piL_pm(i) =E= 0;
+stat_pm(i)$(it(i)).. sum(it, nu_pmdef(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * ((-1) * pd(it)) / sqr(pm(it)) / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pm(i) =E= 0;
 stat_pva(i).. ((-1) * nu_actp(i)) + sum(lc, (((-1) * (alphl(lc,i) * xd(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + ((-1) * xd(i)) * nu_gdp =E= 0;
-stat_pwe(i)$(it(i)).. sum(it, ((-1) * er) * nu_pedef(it)) + sum(it, ((-1) * ((pwe0(it) / pwe(it)) ** eta(it) * eta(it) / (pwe0(it) / pwe(it)) * ((-1) * pwe0(it)) / pwe(it) ** 2)) * nu_edemand(it)) - piL_pwe(i) =E= 0;
+stat_pwe(i)$(it(i)).. sum(it, ((-1) * er) * nu_pedef(it)) + sum(it, ((-1) * ((pwe0(it) / pwe(it)) ** eta(it) * eta(it) / (pwe0(it) / pwe(it)) * ((-1) * pwe0(it)) / sqr(pwe(it)))) * nu_edemand(it)) - piL_pwe(i) =E= 0;
 stat_pwm(i)$(it(i)).. sum(it, ((-1) * ((1 + tm(it)) * er)) * nu_pmdef(it)) =E= 0;
 stat_px(i).. xd(i) * nu_sales(i) + (1 - itax(i)) * nu_actp(i) + ((-1) * (xd(i) * itax(i))) * nu_indtaxdef - piL_px(i) =E= 0;
 stat_savings.. nu_totsav + sum(i, ((-1) * kio(i)) * nu_prodinv(i)) =E= 0;
@@ -467,7 +636,7 @@ stat_tm(i)$(it(i)).. sum(it, ((-1) * (pwm(it) * er)) * nu_pmdef(it)) =E= 0;
 stat_wa(lc).. sum(i, (l(i,lc) * wdist(i,lc) * nu_profitmax(i,lc))$wdist(i,lc)) - piL_wa(lc) =E= 0;
 stat_x(i).. p(i) * nu_absorption(i) + sum(it, nu_armington(it)) + sum(in, nu_xsn(in)) + nu_equil(i) - piL_x(i) =E= 0;
 stat_xd(i).. px(i) * nu_sales(i) + nu_activity(i) + sum(lc, (((-1) * (alphl(lc,i) * pva(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + sum(it, nu_cet(it)) + sum(in, (-1) * nu_xxdsn(in)) + sum(j, ((-1) * io(i,j)) * nu_inteq(j)) + ((-1) * dstr(i)) * nu_dsteq(i) + ((-1) * pva(i)) * nu_gdp + ((-1) * (itax(i) * px(i))) * nu_indtaxdef - piL_xd(i) =E= 0;
-stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * (1 - gamma(it)) * xxd(it) ** rhot(it) * rhot(it) / xxd(it))) * nu_cet(it)) + sum(it, ((-1) * e(it)) / xxd(it) ** 2 * nu_esupply(it)) + sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / xxd(it))) * nu_armington(it)) + sum(it, ((-1) * m(it)) / xxd(it) ** 2 * nu_costmin(it)) + sum(in, nu_xxdsn(in)) + sum(in, (-1) * nu_xsn(in)) - piL_xxd(i) =E= 0;
+stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * (1 - gamma(it)) * xxd(it) ** rhot(it) * rhot(it) / xxd(it))) * nu_cet(it)) + sum(it, ((-1) * e(it)) / sqr(xxd(it)) * nu_esupply(it)) + sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / xxd(it))) * nu_armington(it)) + sum(it, ((-1) * m(it)) / sqr(xxd(it)) * nu_costmin(it)) + sum(in, nu_xxdsn(in)) + sum(in, (-1) * nu_xsn(in)) - piL_xxd(i) =E= 0;
 stat_y.. sum(i, ((-1) * (cles(i) * (1 - mps))) * nu_cdeq(i)) + nu_gdp + ((-1) * mps) * nu_hhsaveq - piL_y =E= 0;
 
 * Lower bound complementarity equations
@@ -559,10 +728,14 @@ fsav_fx.. fsav - 36.841 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 e.fx(i)$(not (it(i))) = 0;
+piL_e.fx(i)$(not (it(i))) = 0;
 m.fx(i)$(not (it(i))) = 0;
+piL_m.fx(i)$(not (it(i))) = 0;
 pe.fx(i)$(not (it(i))) = 0;
 pm.fx(i)$(not (it(i))) = 0;
+piL_pm.fx(i)$(not (it(i))) = 0;
 pwe.fx(i)$(not (it(i))) = 0;
+piL_pwe.fx(i)$(not (it(i))) = 0;
 pwm.fx(i)$(not (it(i))) = 0;
 tm.fx(i)$(not (it(i))) = 0;
 nu_profitmax.fx(i,lc)$(not (wdist(i,lc))) = 0;

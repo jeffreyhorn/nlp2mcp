@@ -16,29 +16,24 @@ $offText
 * ============================================
 
 Sets
-    i /'plant-1', 'plant-2'/
-    j /'term-1', 'term-2', 'term-3', 'term-4'/
-    ss /'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'/
-    s(ss)
+    i /seattle, 'san-diego'/
+    j /'new-york', chicago, topeka/
 ;
 
 Parameters
-    c(i,j) /'plant-1'.'term-1' 3, 'plant-1'.'term-2' 6, 'plant-1'.'term-3' 6, 'plant-1'.'term-4' 5, 'plant-2'.'term-1' 8, 'plant-2'.'term-2' 1, 'plant-2'.'term-3' 3, 'plant-2'.'term-4' 6/
-    t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2/
-    a(i) /'plant-1' 9, 'plant-2' 8/
-    b(j) /'term-1' 2, 'term-2' 7, 'term-3' 3, 'term-4' 5/
-    mcost(ss)
-    mtank(ss)
-    rep(ss,*) /'2'.gap inf/
+    a(i) /seattle 350, 'san-diego' 600/
+    b(j) /'new-york' 325, chicago 300, topeka 275/
+    d(i,j) /seattle.'new-york' 2.5, seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.'new-york' 2.5, 'san-diego'.chicago 1.8, 'san-diego'.topeka 1.4/
+    c(i,j)
+    xbest(i,j)
 ;
 
 Scalars
-    ctank /0/
-    cship /1/
+    f /90/
 ;
 
-s("1") = 1;
-s("2") = 1;
+c(i,j) = f * d(i,j) / 1000;
+b(j) = 1.2 * b(j);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -52,22 +47,14 @@ s("2") = 1;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    cost
-    tank
-    ship
-    mobj
-    nu_defcost
-    nu_defship
-    nu_deftank
+    z
 ;
 
 Positive Variables
     x(i,j)
-    lam(ss)
     lam_supply(i)
     lam_demand(j)
     piL_x(i,j)
-    piL_lam(ss)
 ;
 
 * ============================================
@@ -80,7 +67,6 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,j) = 1;
-lam.l(ss) = 1;
 
 * ============================================
 * Equations
@@ -91,19 +77,11 @@ lam.l(ss) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
-    stat_lam(ss)
-    stat_ship
-    stat_tank
     stat_x(i,j)
     comp_demand(j)
     comp_supply(i)
-    comp_lo_lam(ss)
     comp_lo_x(i,j)
-    cbal
-    defcost
-    defship
-    deftank
+    cost
 ;
 
 * ============================================
@@ -111,36 +89,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_defcost =E= 0;
-stat_lam(ss)$(s(ss)).. ((-1) * piL_lam(ss)) =E= 0;
-stat_ship.. ((-1) * cship) * nu_defcost + nu_defship =E= 0;
-stat_tank.. ((-1) * ctank) * nu_defcost + nu_deftank =E= 0;
-stat_x(i,j).. ((-1) * c(i,j)) * nu_defship + ((-1) * t(i,j)) * nu_deftank + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
+stat_x(i,j).. c(i,j) + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
 
 * Inequality complementarity equations
 comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
 comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_lam(ss).. lam(ss) - 0 =G= 0;
 comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
 
 * Original equality equations
-defcost.. cost =E= cship * ship + ctank * tank;
-defship.. ship =E= sum((i,j), c(i,j) * x(i,j));
-deftank.. tank =E= sum((i,j), t(i,j) * x(i,j));
-cbal.. mobj =E= sum(s, mcost(s) * lam(s));
+cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-lam.fx(ss)$(not (s(ss))) = 0;
-piL_lam.fx(ss)$(not (s(ss))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -156,18 +116,10 @@ piL_lam.fx(ss)$(not (s(ss))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
-    stat_lam.lam,
-    stat_ship.ship,
-    stat_tank.tank,
     stat_x.x,
     comp_demand.lam_demand,
     comp_supply.lam_supply,
-    cbal.mobj,
-    defcost.nu_defcost,
-    defship.nu_defship,
-    deftank.nu_deftank,
-    comp_lo_lam.piL_lam,
+    cost.z,
     comp_lo_x.piL_x
 /;
 
@@ -178,5 +130,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = mobj.l;
+nlp2mcp_obj_val = z.l;
 Display nlp2mcp_obj_val;

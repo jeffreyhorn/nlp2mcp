@@ -48,6 +48,7 @@ Variables
 
 Positive Variables
     v(alloy)
+    piL_v(alloy)
 ;
 
 * ============================================
@@ -62,15 +63,6 @@ Positive Variables
 v.l(alloy) = 1;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-report(alloy,"blend-1") = v.l(alloy);
-report(alloy,"blend-2") = v.l(alloy);
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -80,6 +72,7 @@ $offImplicitAssign
 
 Equations
     stat_v(alloy)
+    comp_lo_v(alloy)
     ac
     mb
     pc(elem)
@@ -90,7 +83,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_v(alloy).. compdat("price",alloy) + sum(elem, compdat(elem,alloy) * nu_pc(elem)) + nu_mb =E= 0;
+stat_v(alloy).. compdat("price",alloy) + sum(elem, compdat(elem,alloy) * nu_pc(elem)) + nu_mb - piL_v(alloy) =E= 0;
+
+* Lower bound complementarity equations
+comp_lo_v(alloy).. v(alloy) - 0 =G= 0;
 
 * Original equality equations
 pc(elem).. sum(alloy, compdat(elem,alloy) * v(alloy)) =E= rb(elem);
@@ -115,7 +111,8 @@ Model mcp_model /
     stat_v.v,
     ac.phi,
     mb.nu_mb,
-    pc.nu_pc
+    pc.nu_pc,
+    comp_lo_v.piL_v
 /;
 
 * ============================================

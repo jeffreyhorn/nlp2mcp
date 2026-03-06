@@ -28,10 +28,10 @@ Sets
 ;
 
 Parameters
-    a(t,c) /jan.wheat 1, jan.clover 1, jan.beans 1, jan.onions 1, feb.wheat 1, feb.clover 1, feb.beans 1, feb.onions 1, mar.wheat 1, mar.clover 0.5, mar.beans 1, mar.onions 1, mar.cotton 0.5, apr.wheat 1, apr.beans 1, apr.onions 1, apr.cotton 1, may.wheat 1, may.onions 0.25, may.cotton 1, may.maize 0.25, jun.cotton 1, jun.maize 1, jul.cotton 1, jul.maize 1, jul.tomato 0.75, aug.cotton 1, aug.maize 1, aug.tomato 1, sep.cotton 1, sep.maize 1, sep.tomato 1, oct.cotton 1, oct.maize 0.5, oct.tomato 1, nov.wheat 0.5, nov.clover 0.25, nov.beans 0.25, nov.onions 0.5, nov.cotton 0.75, nov.tomato 0.75, dec.wheat 1, dec.clover 1, dec.beans 1, dec.onions 1, oct.wheat 0, oct.clover 0, oct.beans 0, oct.onions 0, jul.wheat 0, jul.clover 0, jul.beans 0, jul.onions 0, apr.clover 0, apr.maize 0, apr.tomato 0, jan.cotton 0, jan.maize 0, jan.tomato 0, jun.wheat 0, jun.clover 0, jun.beans 0, jun.onions 0, jun.tomato 0, aug.wheat 0, aug.clover 0, aug.beans 0, aug.onions 0, may.clover 0, may.beans 0, may.tomato 0, nov.maize 0, sep.wheat 0, sep.clover 0, sep.beans 0, sep.onions 0, feb.cotton 0, feb.maize 0, feb.tomato 0, dec.cotton 0, dec.maize 0, dec.tomato 0, mar.maize 0, mar.tomato 0/
-    lc(t,c) /jan.wheat 1.72, jan.clover 4.5, jan.beans 0.75, jan.onions 5.16, feb.wheat 0.5, feb.clover 1, feb.beans 0.75, feb.onions 5, mar.wheat 1, mar.clover 8, mar.beans 0.75, mar.onions 5, mar.cotton 5, apr.wheat 1, apr.beans 16, apr.onions 19.58, apr.cotton 5, may.wheat 17.16, may.onions 2.42, may.cotton 9, may.maize 4.3, jun.wheat 2.34, jun.cotton 2, jun.maize 5.04, jul.cotton 1.5, jul.maize 7.16, jul.tomato 17, aug.cotton 2, aug.maize 7.97, aug.tomato 15, sep.cotton 1, sep.maize 4.41, sep.tomato 12, oct.cotton 26, oct.maize 1.12, oct.tomato 7, nov.wheat 2.43, nov.clover 2.5, nov.beans 7.5, nov.onions 11.16, nov.cotton 12, nov.tomato 6, dec.wheat 1.35, dec.clover 7.5, dec.beans 0.75, dec.onions 4.68, oct.wheat 0, oct.clover 0, oct.beans 0, oct.onions 0, jul.wheat 0, jul.clover 0, jul.beans 0, jul.onions 0, apr.clover 0, apr.maize 0, apr.tomato 0, jan.cotton 0, jan.maize 0, jan.tomato 0, jun.clover 0, jun.beans 0, jun.onions 0, jun.tomato 0, aug.wheat 0, aug.clover 0, aug.beans 0, aug.onions 0, may.clover 0, may.beans 0, may.tomato 0, nov.maize 0, sep.wheat 0, sep.clover 0, sep.beans 0, sep.onions 0, feb.cotton 0, feb.maize 0, feb.tomato 0, dec.cotton 0, dec.maize 0, dec.tomato 0, mar.maize 0, mar.tomato 0/
+    a(t,c) /jan.wheat 1, jan.clover 1, jan.beans 1, jan.onions 1, feb.wheat 1, feb.clover 1, feb.beans 1, feb.onions 1, mar.wheat 1, mar.clover 0.5, mar.beans 1, mar.onions 1, mar.cotton 0.5, apr.wheat 1, apr.beans 1, apr.onions 1, apr.cotton 1, may.wheat 1, may.onions 0.25, may.cotton 1, may.maize 0.25, jun.cotton 1, jun.maize 1, jul.cotton 1, jul.maize 1, jul.tomato 0.75, aug.cotton 1, aug.maize 1, aug.tomato 1, sep.cotton 1, sep.maize 1, sep.tomato 1, oct.cotton 1, oct.maize 0.5, oct.tomato 1, nov.wheat 0.5, nov.clover 0.25, nov.beans 0.25, nov.onions 0.5, nov.cotton 0.75, nov.tomato 0.75, dec.wheat 1, dec.clover 1, dec.beans 1, dec.onions 1/
+    lc(t,c) /jan.wheat 1.72, jan.clover 4.5, jan.beans 0.75, jan.onions 5.16, feb.wheat 0.5, feb.clover 1, feb.beans 0.75, feb.onions 5, mar.wheat 1, mar.clover 8, mar.beans 0.75, mar.onions 5, mar.cotton 5, apr.wheat 1, apr.beans 16, apr.onions 19.58, apr.cotton 5, may.wheat 17.16, may.onions 2.42, may.cotton 9, may.maize 4.3, jun.wheat 2.34, jun.cotton 2, jun.maize 5.04, jul.cotton 1.5, jul.maize 7.16, jul.tomato 17, aug.cotton 2, aug.maize 7.97, aug.tomato 15, sep.cotton 1, sep.maize 4.41, sep.tomato 12, oct.cotton 26, oct.maize 1.12, oct.tomato 7, nov.wheat 2.43, nov.clover 2.5, nov.beans 7.5, nov.onions 11.16, nov.cotton 12, nov.tomato 6, dec.wheat 1.35, dec.clover 7.5, dec.beans 0.75, dec.onions 4.68/
     lio(cl,r) /clover.'rec-1' 1.3, clover.'rec-2' 2, straw.'rec-1' 1.6, straw.'rec-2' 0.8/
-    demdat(c,*) /wheat.'ref-p' 100, wheat.'ref-q' 2700, wheat.elas -0.8, wheat.'exp-p' 140, beans.'ref-p' 200, beans.'ref-q' 900, beans.elas -0.4, beans.'exp-p' 270, onions.'ref-p' 125, onions.'ref-q' 700, onions.elas -1, onions.'exp-p' 40, onions.'imp-p' inf, cotton.'ref-p' 350, cotton.'ref-q' 2100, cotton.elas -1, cotton.'exp-p' 300, cotton.'imp-p' inf, maize.'ref-p' 70, maize.'ref-q' 3800, maize.elas -0.5, maize.'exp-p' 85, tomato.'ref-p' 120, tomato.'ref-q' 500, tomato.elas -1.2, tomato.'exp-p' 60, tomato.'imp-p' inf, beans.'imp-p' 0, maize.'imp-p' 0, wheat.'imp-p' 0/
+    demdat(c,*) /wheat.'ref-p' 100, wheat.'ref-q' 2700, wheat.elas -0.8, wheat.'exp-p' 140, beans.'ref-p' 200, beans.'ref-q' 900, beans.elas -0.4, beans.'exp-p' 270, onions.'ref-p' 125, onions.'ref-q' 700, onions.elas -1, onions.'exp-p' 40, onions.'imp-p' inf, cotton.'ref-p' 350, cotton.'ref-q' 2100, cotton.elas -1, cotton.'exp-p' 300, cotton.'imp-p' inf, maize.'ref-p' 70, maize.'ref-q' 3800, maize.elas -0.5, maize.'exp-p' 85, tomato.'ref-p' 120, tomato.'ref-q' 500, tomato.elas -1.2, tomato.'exp-p' 60, tomato.'imp-p' inf/
     yield(c) /wheat 1.5, clover 6, beans 1, onions 3, cotton 1.5, maize 2, tomato 3/
     miscost(c) /wheat 10, beans 5, onions 50, cotton 80, maize 5, tomato 50/
     price(c)
@@ -54,11 +54,6 @@ Scalars
     straw /1.75/
 ;
 
-beta(cn) = demdat(cn,"ref-p") / demdat(cn,"ref-q") / demdat(cn,"elas");
-alpha(cn) = demdat(cn,"ref-p") - beta(cn) * demdat(cn,"ref-q");
-demdat(cn,"dem-a") = alpha(cn);
-demdat(cn,"dem-b") = beta(cn);
-
 cn(c) = yes$demdat(c,"ref-p");
 ce(c) = yes$demdat(c,"exp-p");
 cm(c) = yes$(demdat(c,"imp-p") < inf);
@@ -67,6 +62,10 @@ cm("clover") = 0;
 price(c) = demdat(c,"ref-p");
 pe(ce) = demdat(ce,"exp-p");
 pm(cm) = demdat(cm,"imp-p");
+beta(cn) = demdat(cn,"ref-p") / demdat(cn,"ref-q") / demdat(cn,"elas");
+alpha(cn) = demdat(cn,"ref-p") - beta(cn) * demdat(cn,"ref-q");
+demdat(cn,"dem-a") = alpha(cn);
+demdat(cn,"dem-b") = beta(cn);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -110,6 +109,16 @@ Positive Variables
     lam_lclover
     lam_lstraw
     lam_plow(s)
+    piL_xcrop(c)
+    piL_flab(t)
+    piL_tlab(t)
+    piL_xlive(r)
+    piL_natprod(c)
+    piL_thire(s)
+    piL_natcon(c)
+    piL_exports(c)
+    piL_imports(c)
+    piU_flab(t)
 ;
 
 * ============================================
@@ -165,6 +174,16 @@ Equations
     comp_lclover
     comp_lstraw
     comp_plow(s)
+    comp_lo_exports(c)
+    comp_lo_flab(t)
+    comp_lo_imports(c)
+    comp_lo_natcon(c)
+    comp_lo_natprod(c)
+    comp_lo_thire(s)
+    comp_lo_tlab(t)
+    comp_lo_xcrop(c)
+    comp_lo_xlive(r)
+    comp_up_flab(t)
     acost
     alab
     amisc
@@ -180,20 +199,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_exports(c).. 0 =E= 0;
-stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) =E= 0;
-stat_imports(c).. 0 =E= 0;
+stat_exports(c).. ((-1) * piL_exports(c)) =E= 0;
+stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_flab(t) =E= 0;
+stat_imports(c).. ((-1) * piL_imports(c)) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
-stat_natcon(c)$(cn(c)).. sum(cn, nu_dem(cn)) =E= 0;
-stat_natprod(c).. nu_proc(c) + sum(cn, (-1) * nu_dem(cn)) =E= 0;
+stat_natcon(c)$(cn(c)).. sum(cn, nu_dem(cn)) - piL_natcon(c) =E= 0;
+stat_natprod(c).. nu_proc(c) + sum(cn, (-1) * nu_dem(cn)) - piL_natprod(c) =E= 0;
 stat_pcost.. nu_aplow - nu_acost =E= 0;
 stat_rescost.. nu_ares - nu_acost =E= 0;
 stat_tcost.. 1 + nu_acost =E= 0;
-stat_thire(s).. ((-1) * trent) * nu_aplow - lam_plow(s) =E= 0;
-stat_tlab(t).. ((-1) * twage) * nu_alab - lam_laborbal(t) =E= 0;
-stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$sc(s,c) * lam_plow(s)) =E= 0;
-stat_xlive(r).. sum(t, llab * lam_laborbal(t)) + sum(cl, lio(cl,r) * lam_lclover) + sum(cl, lio(cl,r) * lam_lstraw) + sum(s, ((-1) * hpa) * lam_plow(s)) =E= 0;
+stat_thire(s).. ((-1) * trent) * nu_aplow - lam_plow(s) - piL_thire(s) =E= 0;
+stat_tlab(t).. ((-1) * twage) * nu_alab - lam_laborbal(t) - piL_tlab(t) =E= 0;
+stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$sc(s,c) * lam_plow(s)) - piL_xcrop(c) =E= 0;
+stat_xlive(r).. sum(t, llab * lam_laborbal(t)) + sum(cl, lio(cl,r) * lam_lclover) + sum(cl, lio(cl,r) * lam_lstraw) + sum(s, ((-1) * hpa) * lam_plow(s)) - piL_xlive(r) =E= 0;
 
 * Inequality complementarity equations
 comp_laborbal(t).. ((-1) * (sum(c, xcrop(c) * lc(t,c)) + sum(r, xlive(r)) * llab - (flab(t) + tlab(t)))) =G= 0;
@@ -201,6 +220,20 @@ comp_landbal(t).. ((-1) * (sum(c, xcrop(c) * a(t,c)) - land * fnum)) =G= 0;
 comp_lclover.. xcrop("clover") * yield("clover") - sum(r, xlive(r) * lio("clover",r)) =G= 0;
 comp_lstraw.. xcrop("wheat") * straw - sum(r, xlive(r) * lio("straw",r)) =G= 0;
 comp_plow(s).. ((-1) * (sum(c$(sc(s,c)), xcrop(c)) - (sum(r, xlive(r)) * hpa + thire(s)))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_exports(c).. exports(c) - 0 =G= 0;
+comp_lo_flab(t).. flab(t) - 0 =G= 0;
+comp_lo_imports(c).. imports(c) - 0 =G= 0;
+comp_lo_natcon(c).. natcon(c) - 0 =G= 0;
+comp_lo_natprod(c).. natprod(c) - 0 =G= 0;
+comp_lo_thire(s).. thire(s) - 0 =G= 0;
+comp_lo_tlab(t).. tlab(t) - 0 =G= 0;
+comp_lo_xcrop(c).. xcrop(c) - 0 =G= 0;
+comp_lo_xlive(r).. xlive(r) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_flab(t).. famlab * fnum - flab(t) =G= 0;
 
 * Original equality equations
 amisc.. mcost =E= sum(c, xcrop(c) * miscost(c));
@@ -221,6 +254,7 @@ objn.. cps =E= sum(cn, alpha(cn) * natcon(cn) + 0.5 * beta(cn) * sqr(natcon(cn))
 * fixed for excluded instances to satisfy MCP matching.
 
 natcon.fx(c)$(not (cn(c))) = 0;
+piL_natcon.fx(c)$(not (cn(c))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -262,7 +296,17 @@ Model mcp_model /
     ares.nu_ares,
     dem.nu_dem,
     objn.cps,
-    proc.nu_proc
+    proc.nu_proc,
+    comp_lo_exports.piL_exports,
+    comp_lo_flab.piL_flab,
+    comp_lo_imports.piL_imports,
+    comp_lo_natcon.piL_natcon,
+    comp_lo_natprod.piL_natprod,
+    comp_lo_thire.piL_thire,
+    comp_lo_tlab.piL_tlab,
+    comp_lo_xcrop.piL_xcrop,
+    comp_lo_xlive.piL_xlive,
+    comp_up_flab.piU_flab
 /;
 
 * ============================================

@@ -27,8 +27,8 @@ Alias(i, j);
 Alias(g, gp);
 
 Parameters
-    a(i,j) /food.food 0.06, food.'l-industry' 0.244, 'h-industry'.food 0.064, 'h-industry'.'h-industry' 0.42, 'h-industry'.'l-industry' 0.172, 'l-industry'.food 0.048, 'l-industry'.'h-industry' 0.247, 'l-industry'.'l-industry' 0.084, food.'h-industry' 0/
-    d(i,k,t)
+    a(i,j) /food.food 0.06, food.'l-industry' 0.244, 'h-industry'.food 0.064, 'h-industry'.'h-industry' 0.42, 'h-industry'.'l-industry' 0.172, 'l-industry'.food 0.048, 'l-industry'.'h-industry' 0.247, 'l-industry'.'l-industry' 0.084/
+    d(i,k,t) /food.labor.'tech-1' 1, food.capital.'tech-1' 2, food.labor.'tech-2' 1.2, food.capital.'tech-2' 1.8, food.labor.'tech-3' 0.8, food.capital.'tech-3' 2.2, 'h-industry'.labor.'tech-1' 2, 'h-industry'.capital.'tech-1' 3, 'h-industry'.labor.'tech-2' 1.8, 'h-industry'.capital.'tech-2' 3.5, 'h-industry'.labor.'tech-3' 2.4, 'h-industry'.capital.'tech-3' 2.3, 'l-industry'.labor.'tech-1' 3, 'l-industry'.capital.'tech-1' 3, 'l-industry'.labor.'tech-2' 2.7, 'l-industry'.capital.'tech-2' 3.2, 'l-industry'.labor.'tech-3' 3.2, 'l-industry'.capital.'tech-3' 2.7/
     bb(h,k) /workers.labor 0.9, workers.capital 0.1, enterpr.labor 0.1, enterpr.capital 0.9/
     x0(i,h) /food.workers 352, food.enterpr 430, 'l-industry'.workers 222, 'l-industry'.enterpr 292/
     b(k) /labor 3712, capital 5000/
@@ -105,6 +105,10 @@ Positive Variables
     lam_id(h)
     lam_mp(i,t)
     piL_p(i)
+    piL_x(i,h)
+    piL_r(k)
+    piL_q(i,t)
+    piL_y(h)
 ;
 
 * ============================================
@@ -119,6 +123,9 @@ Positive Variables
 
 p.l(i) = p0(i);
 p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
+p.l("food") = max(p.l("food"), 0.2);
+p.l(h-industry) = max(p.l(h-industry), 0.2);
+p.l(l-industry) = max(p.l(l-industry), 0.2);
 x.l(i,h) = x0(i,h);
 x.l(i,h) = min(max(x.l(i,h), 1e-6), x.up(i,h));
 r.l(k) = r0;
@@ -150,6 +157,10 @@ Equations
     comp_mp(i,t)
     comp_rc(k)
     comp_lo_p(i)
+    comp_lo_q(i,t)
+    comp_lo_r(k)
+    comp_lo_x(i,h)
+    comp_lo_y(h)
     zdef
 ;
 
@@ -158,11 +169,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_p(i).. ((-1) * sum(h, x(i,h))) + sum(gp, sum((g,h), ((-1) * ((p(g) * beta(g,h) * ((-1) * (gamma(gp, h))) - beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp)))) / p(g) ** 2)) * lam_de(g,h))) + sum(gp, sum((g,h), ((-1) * s(g,gp,h)) * lam_dl(g,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
-stat_q(i,t).. sum(j, ((-1) * (1 - a(i,j))) * lam_cb(i)) + sum(k, d(i,k,t) * lam_rc(k)) =E= 0;
-stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) =E= 0;
-stat_x(i,h).. ((-1) * p(i)) + 1$g(i) * lam_cb(i) + sum(g, lam_de(g,h)) + sum(g, lam_dl(g,h)) + sum(g, lam_dn(g,h)) + p(i) * lam_bc(h) =E= 0;
-stat_y(h).. sum(g, ((-1) * (p(g) * beta(g,h) / p(g) ** 2)) * lam_de(g,h)) + sum(g, ((-1) * cl(g,h)) * lam_dl(g,h)) + sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) =E= 0;
+stat_p(i).. ((-1) * sum(h, x(i,h))) + sum(gp, sum((g,h), ((-1) * ((p(g) * beta(g,h) * ((-1) * (gamma(gp, h))) - beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp)))) / sqr(p(g)))) * lam_de(g,h))) + sum(gp, sum((g,h), ((-1) * s(g,gp,h)) * lam_dl(g,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
+stat_q(i,t).. sum(j, ((-1) * (1 - a(i,j))) * lam_cb(i)) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
+stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) - piL_r(k) =E= 0;
+stat_x(i,h).. ((-1) * p(i)) + 1$g(i) * lam_cb(i) + sum(g, lam_de(g,h)) + sum(g, lam_dl(g,h)) + sum(g, lam_dn(g,h)) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
+stat_y(h).. sum(g, ((-1) * (p(g) * beta(g,h) / sqr(p(g)))) * lam_de(g,h)) + sum(g, ((-1) * cl(g,h)) * lam_dl(g,h)) + sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
 
 * Inequality complementarity equations
 comp_bc(h).. ((-1) * (sum(g, x(g,h) * p(g)) - y(h))) =G= 0;
@@ -176,6 +187,10 @@ comp_rc(k).. ((-1) * (sum((i,t), d(i,k,t) * q(i,t)) - b(k))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_p(i).. p(i) - 0.2 =G= 0;
+comp_lo_q(i,t).. q(i,t) - 0 =G= 0;
+comp_lo_r(k).. r(k) - 0 =G= 0;
+comp_lo_x(i,h).. x(i,h) - 0 =G= 0;
+comp_lo_y(h).. y(h) - 0 =G= 0;
 
 * Original equality equations
 zdef.. z =E= sum((g,h), x(g,h) * p(g)) - sum(k, b(k) * r(k));
@@ -209,7 +224,11 @@ Model mcp_model /
     comp_mp.lam_mp,
     comp_rc.lam_rc,
     zdef.z,
-    comp_lo_p.piL_p
+    comp_lo_p.piL_p,
+    comp_lo_q.piL_q,
+    comp_lo_r.piL_r,
+    comp_lo_x.piL_x,
+    comp_lo_y.piL_y
 /;
 
 * ============================================

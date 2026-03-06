@@ -67,6 +67,7 @@ Variables
 
 Positive Variables
     z(s,i,sp)
+    piL_z(s,i,sp)
 ;
 
 * ============================================
@@ -90,6 +91,7 @@ z.l(s,i,sp) = 1;
 
 Equations
     stat_z(s,i,sp)
+    comp_lo_z(s,i,sp)
     constr(sp,j)
     cost
 ;
@@ -99,9 +101,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(spp, sum(j, ((-1) * (b * pi(s,i,sp,j,spp))) * nu_constr(sp,j))) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum(spp, sum(j, ((-1) * (b * pi(s,i,sp,j,spp))) * nu_constr(sp,j))) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
+
+* Lower bound complementarity equations
+comp_lo_z(s,i,sp).. z(s,i,sp) - 0 =G= 0;
 
 * Original equality equations
 constr(sp,j).. sum(spp, z(sp,j,spp)) - b * sum((s,i,spp), pi(s,i,sp,j,spp) * z(s,i,spp)) =E= beta;
@@ -124,7 +129,8 @@ cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 Model mcp_model /
     stat_z.z,
     constr.nu_constr,
-    cost.pvcost
+    cost.pvcost,
+    comp_lo_z.piL_z
 /;
 
 * ============================================

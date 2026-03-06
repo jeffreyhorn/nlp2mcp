@@ -90,7 +90,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_delta.. ((-1) * (k1 * betareg(y, alpha, beta))) + k2 * (1 - betareg(y, alpha, beta)) + ((-1) * ((b - a) * (-1) / (b - a) ** 2)) * nu_ydef =E= 0;
+stat_delta.. ((-1) * (k1 * betareg(y, alpha, beta))) + k2 * (1 - betareg(y, alpha, beta)) + ((-1) * ((b - a) * (-1) / sqr(b - a))) * nu_ydef =E= 0;
 stat_y.. k1 * T * y ** (alpha - 1) * (1 - y) ** (beta - 1) / (gamma(alpha) * gamma(beta) / gamma(alpha + beta)) - k1 * ((delta + a) * y ** (alpha - 1) * (1 - y) ** (beta - 1) / (gamma(alpha) * gamma(beta) / gamma(alpha + beta)) + g3 * (b - a) * y ** (alpha + 1 - 1) * (1 - y) ** (beta - 1) / (gamma(alpha + 1) * gamma(beta) / gamma(alpha + 1 + beta))) + k2 * ((delta + a) * ((-1) * (y ** (alpha - 1) * (1 - y) ** (beta - 1) / (gamma(alpha) * gamma(beta) / gamma(alpha + beta)))) + (b - a) * ((-1) * (g3 * y ** (alpha + 1 - 1) * (1 - y) ** (beta - 1) / (gamma(alpha + 1) * gamma(beta) / gamma(alpha + 1 + beta))))) - k2 * T * ((-1) * (y ** (alpha - 1) * (1 - y) ** (beta - 1) / (gamma(alpha) * gamma(beta) / gamma(alpha + beta)))) + nu_ydef - piL_y + piU_y =E= 0;
 
 * Lower bound complementarity equations

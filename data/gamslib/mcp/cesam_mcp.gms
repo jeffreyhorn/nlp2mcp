@@ -36,7 +36,7 @@ Sets
 Alias(jj, a_jj);
 
 Parameters
-    SAM(i,j) /ACT.ACT 1488.157, ACT.COM 18416.303, ACT.FAC 0, ACT.ENT 0, COM.ACT 0, COM.COM 20751.634, COM.FAC 2518.5, COM.ENT 2597.798, FAC.ACT 0, FAC.COM 9805.414, FAC.FAC 0, FAC.ENT 0, ENT.ACT 0, ENT.COM 3732.706, ENT.FAC 0, ENT.ENT 0, HOU.ACT 209.501, HOU.COM 9687.915, HOU.FAC 0, HOU.ENT 0, GRE.ACT 0, GRE.COM 1470.1, GRE.FAC 0, GRE.ENT 0, GIN.ACT 1712.3, GIN.COM 1712.3, GIN.FAC 0, GIN.ENT 0, CAP.ACT 2163.857, CAP.COM 2200.14, CAP.FAC -406.2, CAP.ENT 0, ROW.ACT 0, ROW.COM 5573.815, ROW.FAC 0, ROW.ENT 0, Total.ACT 5573.815, Total.COM 1470.1, Total.FAC 1712.3, Total.ENT 2197.798/
+    SAM(i,j) /ACT.COM 14827.424, COM.ACT 7917.504, FAC.ACT 9805.414, ENT.FAC 3699.706, HOU.FAC 6031.308, HOU.ENT 3417.506, GRE.ACT 733.6, GRE.COM 357.4, GRE.FAC 74.4, GRE.ENT 165.2, CAP.ENT 150, ROW.COM 5573.815, Total.ACT 18456.518, Total.COM 20758.639, Total.FAC 9805.414, Total.ENT 3732.706, ACT.HOU 2101.049, ACT.GRE -0.327, COM.HOU 6953.332, COM.GRE 1564.5, COM.GIN 2518.5, COM.CAP 2597.798, ENT.GRE 33, HOU.GRE 29.6, GRE.HOU 139.5, CAP.HOU 649.156, CAP.GRE -356.673, CAP.GIN -406.2, Total.HOU 9643.037, Total.GRE 1470.1, Total.GIN 1712.3, Total.CAP 2197.798, ACT.ROW 1488.157, ACT.Total 18416.303, COM.Total 20751.634, FAC.Total 9805.414, ENT.Total 3732.706, HOU.ROW 209.501, HOU.Total 9687.915, GRE.Total 1470.1, GIN.ROW 1712.3, GIN.Total 1712.3, CAP.ROW 2163.857, CAP.Total 2200.14, ROW.Total 5573.815, Total.ROW 5573.815/
     SAM0(i,j)
     T0(i,j)
     T1(i,j)
@@ -44,7 +44,7 @@ Parameters
     Abar1(i,j)
     Target0(i)
     vbar1(i,jwt)
-    vbar2(macro,jwt) /gdpfc2.'3' 0, gdp2.'3' 0/
+    vbar2(macro,jwt)
     wbar1(i,jwt)
     wbar2(macro,jwt) /gdpfc2.'1' 0.013888888888888888, gdp2.'1' 0.013888888888888888, gdpfc2.'2' 0.375, gdp2.'2' 0.375, gdpfc2.'3' 0.2222222222222222, gdp2.'3' 0.2222222222222222, gdpfc2.'4' 0.375, gdp2.'4' 0.375, gdpfc2.'5' 0.013888888888888888, gdp2.'5' 0.013888888888888888/
     sigmay1(i)
@@ -77,12 +77,12 @@ Scalars
 red(ii,jj) = 1;
 NONZERO(ii,jj) = 1;
 
-vbar1(ii,"3") = 0;
-wbar1(ii,"1") = 0.013888888888888888;
-wbar1(ii,"2") = 0.375;
-wbar1(ii,"3") = 0.2222222222222222;
-wbar1(ii,"4") = 0.375;
-wbar1(ii,"5") = 0.013888888888888888;
+vbar1('ii','3') = 0;
+wbar1('ii','1') = 0.013888888888888888;
+wbar1('ii','2') = 0.375;
+wbar1('ii','3') = 0.2222222222222222;
+wbar1('ii','4') = 0.375;
+wbar1('ii','5') = 0.013888888888888888;
 redsam(ii,jj) = 0;
 
 SAM("TOTAL",jj) = sum(ii, SAM(ii,jj));
@@ -230,29 +230,6 @@ DENTROPY.l = sum((ii,jj)$(nonzero(ii,jj)), a.l(ii,jj) * (log(a.l(ii,jj) + epsilo
 $offImplicitAssign
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-savedent = dentropy.l;
-SEM = sum((ii,jj), sqr(a.l(ii,jj) - Abar1(ii,jj))) / sqr(card(ii));
-NormEntrop = sum((ii,jj)$(Abar1(ii,jj)), a.l(ii,jj) * log(a.l(ii,jj))) / sum((ii,jj)$(Abar1(ii,jj)), Abar1(ii,jj) * log(Abar1(ii,jj)));
-ANEW("total",jj) = sum(ii, a.l(ii,jj));
-ANEW(ii,"total") = sum(jj, a.l(ii,jj));
-meanerr1 = sum(ii, abs(err1.l(ii))) / card(ii);
-meanerr2 = sum(macro, abs(err2.l(macro))) / card(macro);
-Macsam1(ii,jj) = tsam.l(ii,jj);
-Macsam1("total",jj) = sum(ii, macsam1(ii,jj));
-Macsam1(ii,"total") = sum(jj, macsam1(ii,jj));
-Macsam1(ii,jj) = macsam1(ii,jj) + redsam(ii,jj);
-gdp00 = macsam1("fac","act") + macsam1("gre","act") - macsam1("act","gre") + macsam1("gre","com");
-Macsam2(i,j) = macsam1(i,j) * scalesam;
-percent1(i,j) = 100 * (macsam1(i,j) - T1(i,j)) / T1(i,j);
-PosBalan(i,j) = macsam2(i,j);
-Diffrnce(i,j) = PosBalan(i,j) - PosUnbal(i,j);
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -332,8 +309,8 @@ stat_m_sammake(i,j)$(ii(i) and ii(j)).. sum((ii,jj), sum((a_ii,a_jj), ((-1) * ((
 stat_m_sumw1(i)$(ii(i)).. sum((a_ii,a_jwt), (-1) * nu_d_W1(a_ii,a_jwt)) =E= 0;
 stat_m_sumw2(macro).. sum((a_macro,a_jwt), (-1) * nu_d_W2(a_macro,a_jwt)) =E= 0;
 stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$nonzero(ii,jj) + nu_COLSUM(jj) - piL_tsam(ii,jj) =E= 0;
-stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) + sum((a_ii,a_jwt), (2 * 1 / (w1(a_ii,a_jwt) + epsilon) + w1(a_ii,a_jwt) * (-1) / (w1(a_ii,a_jwt) + epsilon) ** 2) * nu_d_W1(a_ii,a_jwt)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
-stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) + sum((a_macro,a_jwt), (2 * 1 / (w2(a_macro,a_jwt) + epsilon) + w2(a_macro,a_jwt) * (-1) / (w2(a_macro,a_jwt) + epsilon) ** 2) * nu_d_W2(a_macro,a_jwt)) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
+stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) + sum((a_ii,a_jwt), (2 * 1 / (w1(a_ii,a_jwt) + epsilon) + w1(a_ii,a_jwt) * (-1) / sqr(w1(a_ii,a_jwt) + epsilon)) * nu_d_W1(a_ii,a_jwt)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
+stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) + sum((a_macro,a_jwt), (2 * 1 / (w2(a_macro,a_jwt) + epsilon) + w2(a_macro,a_jwt) * (-1) / sqr(w2(a_macro,a_jwt) + epsilon)) * nu_d_W2(a_macro,a_jwt)) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$nonzero(ii,jj)) + sum(jj, (-1) * nu_COLSUM(jj)) =E= 0;
 stat_y(ii).. nu_SAMEQ(ii) + ((-1) * nu_ROWSUM(ii))$((not sameas(ii, "ROW"))) =E= 0;
 

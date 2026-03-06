@@ -33,14 +33,14 @@ Alias(i, j);
 Alias(ii, jj);
 
 Parameters
-    SAM(i,j) /ACT.ACT 1488.157, ACT.COM 18416.303, ACT.FAC 0, ACT.ENT 0, COM.ACT 0, COM.COM 20751.634, COM.FAC 2518.5, COM.ENT 2597.798, FAC.ACT 0, FAC.COM 9805.414, FAC.FAC 0, FAC.ENT 0, ENT.ACT 0, ENT.COM 3732.706, ENT.FAC 0, ENT.ENT 0, HOU.COM 9687.915, HOU.FAC 0, GOV.ACT 0, GOV.COM 1470.1, GOV.FAC 0, GOV.ENT 0, GIN.ACT 1712.3, GIN.COM 1712.3, GIN.FAC 0, GIN.ENT 0, CAP.ACT 2163.857, CAP.COM 2200.14, CAP.FAC -406.2, CAP.ENT 0, ROW.ACT 0, ROW.COM 5573.815, ROW.FAC 0, ROW.ENT 0, Total.ACT 5573.815, Total.COM 1470.1, Total.FAC 1712.3, Total.ENT 2197.798, HOU.ENT 0, HOU.ACT 200/
+    SAM(i,j) /ACT.COM 14827.424, COM.ACT 7917.504, FAC.ACT 9805.414, ENT.FAC 3699.706, HOU.COM 6000, HOU.FAC 3300, GOV.ACT 733.6, GOV.COM 357.4, GOV.FAC 74.4, GOV.ENT 165.2, CAP.ENT 150, ROW.COM 5573.815, Total.ACT 18456.518, Total.COM 20758.639, Total.FAC 9805.414, Total.ENT 3732.706, ACT.HOU 2101.049, ACT.GOV -0.327, COM.HOU 6953.332, COM.GOV 1564.5, COM.GIN 2518.5, COM.CAP 2597.798, ENT.GOV 33, HOU.GOV 29.6, GOV.HOU 139.5, CAP.HOU 649.156, CAP.GOV -356.673, CAP.GIN -406.2, Total.HOU 9643.037, Total.GOV 1470.1, Total.GIN 1712.3, Total.CAP 2197.798, ACT.ROW 1488.157, ACT.Total 18416.303, COM.Total 20751.634, FAC.Total 9805.414, ENT.Total 3732.706, HOU.ROW 200, HOU.Total 9687.915, GOV.Total 1470.1, GIN.ROW 1712.3, GIN.Total 1712.3, CAP.ROW 2163.857, CAP.Total 2200.14, ROW.Total 5573.815, Total.ROW 5573.815/
     SAM0(i,j)
     SAMBALCHK(i)
     Abar0(i,j)
     ColSum0(i)
     macrov0(macro)
     vbar1(i,jwt)
-    vbar2(macro,jwt) /gdpfc2.'3' 0, gdp2.'3' 0/
+    vbar2(macro,jwt)
     vbar3(i,j,jwt)
     wbar1(i,jwt)
     wbar2(macro,jwt) /gdpfc2.'1' 0.006172839506172839, gdp2.'1' 0.006172839506172839, gdpfc2.'2' 0.19753086419753085, gdp2.'2' 0.19753086419753085, gdpfc2.'3' 0.5925925925925926, gdp2.'3' 0.5925925925925926, gdpfc2.'4' 0.19753086419753085, gdp2.'4' 0.19753086419753085, gdpfc2.'5' 0.006172839506172839, gdp2.'5' 0.006172839506172839/
@@ -77,7 +77,7 @@ NONZERO(ii,jj) = 1;
 icoeff(ii,acoeff) = 1;
 ival(ii,jj) = 1;
 
-vbar1(ii,"4") = 0;
+vbar1('ii','4') = 0;
 wbar1(ii,jwt1) = 0.14285714285714285;
 
 chkset(ii,jj) = 1$ival(ii,jj) + 1$icoeff(ii,jj) - 1$NONZERO(ii,jj);
@@ -286,28 +286,6 @@ W3.l(ii,jj,jwt) = wbar3(ii,jj,jwt);
 DENTROPY.l = 0.0;
 
 * ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-SAMBALCHK(jj) = SAM0("TOTAL",jj) - SAM0(jj,"TOTAL");
-SAMBALCHK(jj) = tsam.l("TOTAL",jj) - tsam.l(jj,"TOTAL");
-ANEW(ii,jj) = a.l(ii,jj);
-ANEW("total",jj) = sum(ii, a.l(ii,jj));
-ANEW(ii,"total") = sum(jj, a.l(ii,jj));
-meanerr1 = sum(ii, abs(err1.l(ii))) / card(ii);
-meanerr2 = sum(macro, abs(err2.l(macro))) / card(macro);
-Macsam1(ii,jj) = tsam.l(ii,jj);
-Macsam1("total",jj) = sum(ii, macsam1(ii,jj));
-Macsam1(ii,"total") = sum(jj, macsam1(ii,jj));
-gdp00 = macsam1("fac","act") + macsam1("gov","act") - macsam1("act","gov") + macsam1("gov","com");
-gdpfc00 = macsam1("fac","act");
-Macsam2(i,j) = macsam1(i,j) * scalesam;
-percent1(i,j) = 100 * (macsam1(i,j) - sam0(i,j)) / sam0(i,j);
-Diffrnce(i,j) = macsam1(i,j) - sam0(i,j);
-$offImplicitAssign
-
-* ============================================
 * Equations
 * ============================================
 
@@ -403,8 +381,14 @@ err1.fx(i)$(not (ii(i))) = 0;
 err3.fx(i,j)$(not (ii(i) and ii(j))) = 0;
 tsam.fx(i,j)$(not (ii(i) and ii(j))) = 0;
 w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
+piL_w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
+piU_w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
 w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
+piL_w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
+piU_w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
 w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
+piL_w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
+piU_w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
 y.fx(i)$(not (ii(i))) = 0;
 nu_ASAMEQ.fx(ii,jj)$(not (ICOEFF(ii,jj))) = 0;
 nu_ERROR3EQ.fx(ii,jj)$(not (NONZERO(ii,jj))) = 0;

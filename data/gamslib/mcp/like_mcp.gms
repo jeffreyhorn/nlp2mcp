@@ -21,7 +21,7 @@ Sets
 ;
 
 Parameters
-    data(*,i) /pressure.'1' 95, pressure.'2' 105, pressure.'3' 110, pressure.'4' 115, pressure.'5' 120, pressure.'6' 125, pressure.'7' 130, pressure.'8' 135, pressure.'9' 140, pressure.'10' 145, pressure.'11' 150, pressure.'12' 155, pressure.'13' 160, pressure.'14' 165, pressure.'15' 170, frequency.'1' 1, frequency.'2' 1, frequency.'3' 4, frequency.'4' 4, frequency.'5' 15, frequency.'6' 15, frequency.'7' 15, frequency.'8' 13, frequency.'9' 21, frequency.'10' 12, frequency.'11' 17, frequency.'12' 4, frequency.'13' 20, frequency.'14' 8, frequency.'15' 17, pressure.'16' 175, pressure.'17' 180, pressure.'18' 185, pressure.'19' 190, pressure.'20' 195, pressure.'21' 200, pressure.'22' 205, pressure.'23' 210, pressure.'24' 215, pressure.'25' 220, pressure.'26' 225, pressure.'27' 230, pressure.'28' 235, pressure.'29' 240, pressure.'30' 245, pressure.'31' 260, frequency.'16' 8, frequency.'17' 6, frequency.'18' 6, frequency.'19' 7, frequency.'20' 4, frequency.'21' 3, frequency.'22' 3, frequency.'23' 8, frequency.'24' 1, frequency.'25' 6, frequency.'26' 0, frequency.'27' 5, frequency.'28' 1, frequency.'29' 7, frequency.'30' 1, frequency.'31' 2/
+    data(*,i) /pressure.'1' 95, pressure.'2' 105, pressure.'3' 110, pressure.'4' 115, pressure.'5' 120, pressure.'6' 125, pressure.'7' 130, pressure.'8' 135, pressure.'9' 140, pressure.'10' 145, pressure.'11' 150, pressure.'12' 155, pressure.'13' 160, pressure.'14' 165, pressure.'15' 170, frequency.'1' 1, frequency.'2' 1, frequency.'3' 4, frequency.'4' 4, frequency.'5' 15, frequency.'6' 15, frequency.'7' 15, frequency.'8' 13, frequency.'9' 21, frequency.'10' 12, frequency.'11' 17, frequency.'12' 4, frequency.'13' 20, frequency.'14' 8, frequency.'15' 17, pressure.'16' 175, pressure.'17' 180, pressure.'18' 185, pressure.'19' 190, pressure.'20' 195, pressure.'21' 200, pressure.'22' 205, pressure.'23' 210, pressure.'24' 215, pressure.'25' 220, pressure.'26' 225, pressure.'27' 230, pressure.'28' 235, pressure.'29' 240, pressure.'30' 245, pressure.'31' 260, frequency.'16' 8, frequency.'17' 6, frequency.'18' 6, frequency.'19' 7, frequency.'20' 4, frequency.'21' 3, frequency.'22' 3, frequency.'23' 8, frequency.'24' 1, frequency.'25' 6, frequency.'27' 5, frequency.'28' 1, frequency.'29' 7, frequency.'30' 1, frequency.'31' 2/
     y(i)
     w(i)
 ;
@@ -56,6 +56,7 @@ Positive Variables
     s(g)
     lam_rank(g)
     piL_p(g)
+    piL_m(g)
     piL_s(g)
 ;
 
@@ -93,6 +94,7 @@ Equations
     stat_p(g)
     stat_s(g)
     comp_rank(g)
+    comp_lo_m(g)
     comp_lo_p(g)
     comp_lo_s(g)
     like
@@ -108,14 +110,15 @@ Equations
 Alias(g, g__);
 
 * Stationarity equations
-stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / s(g) ** 2)) + lam_rank(g) =E= 0;
+stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / sqr(s(g)))) + lam_rank(g) - piL_m(g) =E= 0;
 stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + nu_pdef - piL_p(g) =E= 0;
-stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / s(g) ** 2 - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / s(g) ** 2))) - piL_s(g) =E= 0;
+stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / sqr(s(g)) - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / sqr(s(g))))) - piL_s(g) =E= 0;
 
 * Inequality complementarity equations
 comp_rank(g)$(ord(g) <= card(g) - 1).. m(g+1) - m(g) =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_m(g).. m(g) - 0 =G= 0;
 comp_lo_p(g).. p(g) - 0.1 =G= 0;
 comp_lo_s(g).. s(g) - 0.1 =G= 0;
 
@@ -123,6 +126,15 @@ comp_lo_s(g).. s(g) - 0.1 =G= 0;
 like.. mlf =E= sum(i, w(i) * log(c * sum(g, p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))))));
 pdef.. sum(g, p(g)) =E= 1;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_rank.fx(g)$(not (ord(g) <= card(g) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -144,6 +156,7 @@ Model mcp_model /
     comp_rank.lam_rank,
     like.mlf,
     pdef.nu_pdef,
+    comp_lo_m.piL_m,
     comp_lo_p.piL_p,
     comp_lo_s.piL_s
 /;
