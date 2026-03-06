@@ -1,7 +1,7 @@
 # Sprint 22 Baseline Metrics
 
 **Date:** 2026-03-06
-**Branch:** `main` (commit after PR #996 merge)
+**Branch:** `main` @ `53ac5979` (PR #996 merge commit)
 **Pipeline:** `run_full_test.py --quiet` (convex models only)
 **Test Suite:** `make test`
 **nlp2mcp Version:** 1.1.0 (from `pyproject.toml`; note `src/__init__.py` still reports `__version__ = "0.6.0"` at this commit)
