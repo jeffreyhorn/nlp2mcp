@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Added
 - model_infeasible triage (`docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md`)
-  - 15 models classified into 4 categories: A (KKT bug, 4), B (nonconvex/starting point, 5), C (model type incompatible, 4), D (needs investigation, 2)
+  - 15 models classified (12 from committed `gamslib_status.json` + 3 from local reruns: ibm1, twocge, feasopt1) into 4 categories: A (KKT bug, 4), B (nonconvex/starting point, 5), C (model type incompatible, 4), D (needs investigation, 2)
   - 4 Sprint 22 fix candidates identified: whouse (lag conditioning), ibm1 (bound multipliers), uimp (multi-solve objective), mexss (`sameas` guard)
   - Sprint 22 target ≤12 achievable by fixing 3 Category A models in 5-8h
   - 4 models permanently excluded (feasopt1 intentionally infeasible, iobalance/meanvar multi-model, orani linearized CGE)

@@ -594,7 +594,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 4 (model_infeasible triage)
-**Verification Results:** CONFIRMED. orani is a linearized percentage-change CGE model — structurally incompatible with NLP→MCP conversion. Issue #765 investigation demonstrated: (1) excluding fixed variables from stationarity creates MCP count mismatch (13 unmatched variables), (2) even after fixing count mismatch, non-fixed variable stationarity equations are cascadingly infeasible, (3) variables represent percentage changes, not level values — a fundamentally different problem class. No other model_infeasible model has comparable fixed-variable density (orani has 54 `_fx_` references, highest of all 15). Recommendation: add model class detection heuristic (>30% fixed variables + all linear equations → warning) rather than attempting conversion.
+**Verification Results:** CONFIRMED. orani is a linearized percentage-change CGE model — structurally incompatible with NLP→MCP conversion. Issue #765 investigation demonstrated: (1) excluding fixed variables from stationarity creates MCP count mismatch (13 unmatched variables), (2) even after fixing count mismatch, non-fixed variable stationarity equations are cascadingly infeasible, (3) variables represent percentage changes, not level values — a fundamentally different problem class. No other model_infeasible model has comparable fixed-variable density (orani has 54 `_fx_` references, highest among the 12 models in committed `gamslib_status.json` plus 3 from local reruns). Recommendation: add model class detection heuristic (>30% fixed variables + all linear equations → warning) rather than attempting conversion.
 
 ---
 

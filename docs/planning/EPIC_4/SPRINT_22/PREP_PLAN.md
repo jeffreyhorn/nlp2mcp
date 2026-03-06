@@ -373,7 +373,7 @@ model_infeasible grew from 12 to 15 during Sprint 21 as more models reached the 
 
 ### Changes
 
-- Created `docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md` with full classification of all 15 models
+- Created `docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md` with full classification of 15 models (12 from committed `gamslib_status.json` + 3 from local pipeline reruns: ibm1, twocge, feasopt1)
 - Classified into 4 categories: A (KKT bug, 4), B (nonconvex/starting point, 5), C (model type incompatible, 4), D (needs investigation, 2)
 - Identified 4 Sprint 22 fix candidates: whouse, ibm1, uimp, mexss (8-12h total)
 - Verified KU-23 (confirmed — orani unfixable) and KU-24 (confirmed — 7-14 models at risk of shifting)

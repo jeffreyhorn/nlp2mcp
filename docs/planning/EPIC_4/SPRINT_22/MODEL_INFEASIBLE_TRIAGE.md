@@ -3,14 +3,14 @@
 **Created:** 2026-03-06
 **Sprint:** 22 (Prep Task 4)
 **Status:** Complete — ready for Sprint 22 fix design (Task 7)
-**Data Source:** `data/gamslib/gamslib_status.json` (top-level metadata `updated_date`=2026-02-12, GAMS 51.3.0; per-model status timestamps range up to the Sprint 21 Day 12 pipeline run — `updated_date` is not a reliable recency indicator)
+**Data Source:** `data/gamslib/gamslib_status.json` working-tree version (12 models committed as `model_infeasible` + 3 additional from local pipeline reruns: ibm1 reclassified from `model_optimal`, twocge from `path_syntax_error`, feasopt1 newly classified). Committed version has 12; working-tree has 15. All 15 were verified by direct GAMS execution.
 **Error verification:** GAMS v53 using on-disk MCP files
 
 ---
 
 ## 1. Executive Summary
 
-The model_infeasible category contains **15 models**, all with SOLVER STATUS 1 (Normal Completion). PATH completed its algorithm in every case — the infeasibility is in the MCP system itself, not a solver failure.
+The model_infeasible category contains **15 models** (12 in committed `gamslib_status.json` + 3 from local pipeline reruns — see Data Source), all with SOLVER STATUS 1 (Normal Completion). PATH completed its algorithm in every case — the infeasibility is in the MCP system itself, not a solver failure.
 
 Sprint 22 targets model_infeasible **≤ 12** (−3 models). Analysis shows the 15 models break into four classification categories:
 
@@ -25,10 +25,14 @@ Sprint 22 targets model_infeasible **≤ 12** (−3 models). Analysis shows the 
 
 ### Sub-status Breakdown
 
+Based on direct GAMS v53 execution of all 15 on-disk MCP files:
+
 | MODEL STATUS | Count | Meaning | Models |
 |-------------|-------|---------|--------|
-| **4 (Infeasible)** | 3 | Structural infeasibility detected at preprocessing | ibm1, uimp, whouse |
+| **4 (Infeasible)** | 3 | Structural infeasibility detected at preprocessing | ibm1*, uimp, whouse |
 | **5 (Locally Infeasible)** | 12 | PATH converged but could not satisfy complementarity | all others |
+
+*ibm1 is `model_optimal` in committed `gamslib_status.json` but `model_infeasible` when re-run with current on-disk MCP file.
 
 ---
 
@@ -52,6 +56,8 @@ These models have identifiable bugs in the KKT stationarity equations, bound mul
 **Priority:** HIGH — simplest LP model (45 lines GAMS), ideal diagnostic baseline
 
 #### ibm1 — Missing bound multiplier terms in stationarity
+
+**Note:** Committed `gamslib_status.json` shows ibm1 as `model_optimal`. Local pipeline rerun with current MCP file produces `model_infeasible` (MODEL STATUS 4). The committed result reflects an older MCP file; the current on-disk MCP file was re-generated after Sprint 21 changes.
 
 **MODEL STATUS:** 4 (Infeasible — detected at preprocessing)
 **PATH output:** `Inequality: infeasible 1.5000e+03 0.0000e+00 1.0000e+20` (bounds conflict)
@@ -362,5 +368,6 @@ Of 43 current path_syntax_error models:
 ## 10. Notes
 
 - **GAMS version:** Pipeline data from `gamslib_status.json` uses GAMS 51.3.0. Manual error classification (GAMS execution of MCP files) used GAMS v53. Error types are consistent across both versions.
+- **Committed vs working-tree discrepancy:** The committed `gamslib_status.json` has 12 `model_infeasible` models. The working-tree version (uncommitted local pipeline reruns) has 15, adding ibm1 (was `model_optimal`), twocge (was `path_syntax_error`), and feasopt1 (was unclassified). The discrepancy arises because Sprint 21 code improvements changed the MCP output for these models, but the status JSON was not re-committed. All 15 were verified by direct GAMS v53 execution of on-disk MCP files.
 - **MODEL STATUS 4 vs 5:** STATUS 4 (Infeasible) means PATH detected structural infeasibility at preprocessing before running any iterations. STATUS 5 (Locally Infeasible) means PATH ran its algorithm but converged to a point with nonzero residual. STATUS 4 models (ibm1, uimp, whouse) are more likely to have clear KKT construction bugs.
 - **Multi-model limitation:** 3 of 15 models (feasopt1, iobalance, meanvar) have multiple solve statements with different model definitions. The current pipeline generates one MCP per `.gms` file from the first or merged model. Per-solve-statement MCP generation would be a significant infrastructure change.
