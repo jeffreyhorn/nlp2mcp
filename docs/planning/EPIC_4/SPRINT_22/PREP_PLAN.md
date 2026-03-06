@@ -584,7 +584,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md && echo "EXIS
 - [x] Leverage ratios calculated
 - [x] Explicit include/defer/won't-fix decision for each
 - [x] Budget impact documented
-- [ ] Decision rationale clear and defensible
+- [x] Decision rationale clear and defensible
 
 ---
 

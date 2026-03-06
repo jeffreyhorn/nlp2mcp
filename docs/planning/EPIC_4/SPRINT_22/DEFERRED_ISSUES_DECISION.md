@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-All 4 deferred Sprint 21 issues (#764, #765, #827, #830) are **recommended to DEFER to Sprint 23**, with one conditional exception: #764 (mexss) should be **included in Sprint 22** as part of the model_infeasible Category A workstream, since Task 4 re-estimated its effort at 3-4h (down from the original 8-12h) and it directly addresses a Sprint 22 target.
+Three of the four deferred Sprint 21 issues (#765, #827, #830) are **recommended to DEFER to Sprint 23**; #764 (mexss) is **recommended to be included in Sprint 22** as part of the model_infeasible Category A workstream, since Task 4 re-estimated its effort at 3-4h (down from the original 8-12h) and it directly addresses a Sprint 22 target.
 
 The deferred issues have leverage ratios of 0.1-0.3 models/hour — an order of magnitude below Sprint 22's primary workstreams (Subcategory A: 2.5-3.75 models/h, Subcategory C: 2.0-3.33 models/h). Including all 4 deferred issues (22-30h) would consume the entire Sprint 22 budget (~24-30h) with minimal model count improvement.
 
@@ -114,7 +114,7 @@ The deferred issues have leverage ratios of 0.1-0.3 models/hour — an order of 
 ### Issue #830: gastrans — Jacobian Timeout from Dynamic Subsets
 
 **Original Estimate:** 8-10h (dynamic subset preservation + Jacobian sparsity)
-**Model Status:** translation_timeout (translate subprocess timeout at 60s)
+**Model Status:** timeout (translate subprocess timeout at 60s)
 
 **Root Cause:** Dynamic subsets (`ap`, `as`, `aij`) have 0 static members in IR because range notation (`a01*a19`) isn't expanded during parsing. The Jacobian computation falls back to iterating over parent sets, creating a combinatorial explosion (24 arcs × 20 nodes × 20 nodes × 7 equations × 7 variables = hundreds of thousands of Jacobian entries).
 
