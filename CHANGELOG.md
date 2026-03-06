@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Prep Task 4: model_infeasible Triage - 2026-03-06
+
+**Branch:** `planning/sprint22-task4`
+
+#### Added
+- model_infeasible triage (`docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md`)
+  - 15 models classified into 4 categories: A (KKT bug, 4), B (nonconvex/starting point, 5), C (model type incompatible, 4), D (needs investigation, 2)
+  - 4 Sprint 22 fix candidates identified: whouse (lag conditioning), ibm1 (bound multipliers), uimp (multi-solve objective), mexss (`sameas` guard)
+  - Sprint 22 target ≤12 achievable by fixing 3 Category A models in 5-8h
+  - 4 models permanently excluded (feasopt1 intentionally infeasible, iobalance/meanvar multi-model, orani linearized CGE)
+
+#### Changed
+- Updated PREP_PLAN.md: Task 4 marked COMPLETE with results
+- Updated KNOWN_UNKNOWNS.md: Verified KU-23 (confirmed — orani unfixable), KU-24 (confirmed — 7-14 path_syntax_error models at risk of shifting)
+
 ### Sprint 22 Prep Task 3: path_solve_terminated Classification - 2026-03-06
 
 **Branch:** `planning/sprint22-task3`

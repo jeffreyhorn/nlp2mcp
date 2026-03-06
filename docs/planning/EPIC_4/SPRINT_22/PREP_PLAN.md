@@ -330,7 +330,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_22/PATH_SOLVE_TERMINATED_STATUS.md
 
 ## Task 4: Triage model_infeasible Models
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 3 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -373,11 +373,19 @@ model_infeasible grew from 12 to 15 during Sprint 21 as more models reached the 
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md` with full classification of all 15 models
+- Classified into 4 categories: A (KKT bug, 4), B (nonconvex/starting point, 5), C (model type incompatible, 4), D (needs investigation, 2)
+- Identified 4 Sprint 22 fix candidates: whouse, ibm1, uimp, mexss (8-12h total)
+- Verified KU-23 (confirmed — orani unfixable) and KU-24 (confirmed — 7-14 models at risk of shifting)
+- Cross-referenced 5 existing issue documents (#757, #764, #765, #828, #970)
 
 ### Result
 
-*To be completed*
+- **Sprint 22 target ≤12 is achievable** by fixing 3-4 Category A models (whouse, ibm1, uimp, mexss)
+- 4 models permanently excluded (feasopt1 intentionally infeasible, iobalance/meanvar multi-model, orani linearized CGE)
+- 5 models deferred (nonconvex NLP, need warm-start infrastructure)
+- 2 models need deeper investigation (lnts `_fx_` handling, twocge CGE gradient)
+- **KU-24 risk:** 7-14 path_syntax_error models may shift to model_infeasible when fixed (especially 6 CGE models)
 
 ### Verification
 
@@ -395,12 +403,12 @@ test -f docs/planning/EPIC_4/SPRINT_22/MODEL_INFEASIBLE_TRIAGE.md && echo "EXIST
 
 ### Acceptance Criteria
 
-- [ ] All 15 model_infeasible models classified
-- [ ] Each model has PATH solver output examined
-- [ ] Cross-references to existing issue docs where applicable
-- [ ] Fix candidates identified with rationale
-- [ ] Models excluded from Sprint 22 scope documented with justification
-- [ ] Classification informs Sprint 22 target (≤12 achievable?)
+- [x] All 15 model_infeasible models classified
+- [x] Each model has PATH solver output examined
+- [x] Cross-references to existing issue docs where applicable
+- [x] Fix candidates identified with rationale
+- [x] Models excluded from Sprint 22 scope documented with justification
+- [x] Classification informs Sprint 22 target (≤12 achievable?)
 
 ---
 
