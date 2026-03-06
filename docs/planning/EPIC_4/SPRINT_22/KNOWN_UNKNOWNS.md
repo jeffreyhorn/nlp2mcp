@@ -21,7 +21,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 |----|----------|---------|----------|------------|-----------------------|
 | KU-01 | KKT Correctness | Subcategory C uncontrolled sets are all same root cause | Critical | Yes, single AD/stationarity bug | Day 1 |
 | KU-02 | KKT Correctness | Subcategory C fix won't break currently-solving models | Critical | Fix is additive (domain conditioning) | Day 2 |
-| KU-03 | KKT Correctness | Subcategory B domain violations share a common emitter bug | High | Yes, single emitter data-filtering fix | Day 1 |
+| KU-03 | KKT Correctness | ~~Subcategory B domain violations share a common emitter bug~~ | High | **REFUTED** — original 5 models dispersed; current B is cesam/cesam2 (new) | Day 1 |
 | KU-04 | KKT Correctness | Subcategory G set index reuse can be solved with aliasing | High | Simple alias renaming suffices | Day 2 |
 | KU-05 | Starting Point | Category B execution errors are all `.l`-initialization fixable | Critical | Yes, smart initialization prevents domain errors | Day 1 |
 | KU-06 | Starting Point | `option domlim` is sufficient to bypass remaining domain errors | High | GAMS continues past domain errors with approximate values | Day 1 |
@@ -95,17 +95,17 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 ### KU-03: Subcategory B Domain Violations — Common Emitter Bug?
 
 **Priority:** High
-**Assumption:** All 5 Subcategory B models (agreste, china, egypt, fawley, gtm) share the same emitter bug — parameter data is emitted with incorrect domain ordering or out-of-domain entries.
+**Assumption (historical):** ~~All 5 Subcategory B models (agreste, china, egypt, fawley, gtm) share the same emitter bug.~~ This assumption was based on the Sprint 21 catalog. Task 2 verification showed the original group no longer applies: egypt/fawley moved out of path_syntax_error; agreste/china reclassified to Subcategory A; gtm reclassified to a new pattern. Current Subcategory B contains only 2 newly-translating models (cesam, cesam2) with $170 errors that need fresh investigation.
 
-**Research Questions:**
-1. Do all 5 models show the same GAMS $170 error pattern?
-2. Is the domain ordering issue consistent (e.g., always swapped dimensions)?
-3. Does the fix require changes only in `src/emit/emit_gams.py` or also in the IR?
-4. Is #827 (gtm) a special case requiring additional parser-side work?
+**Research Questions (updated):**
+1. ~~Do all 5 models show the same GAMS $170 error pattern?~~ N/A — original group dispersed
+2. Do cesam and cesam2 share the same $170 domain violation pattern?
+3. Does the cesam/cesam2 fix require changes only in `src/emit/emit_gams.py` or also in the IR?
+4. Can the Sprint 21 egypt/fawley domain-filtering approach be adapted for cesam/cesam2?
 
-**How to Verify:** Examine emitted parameter data sections for 2-3 models. Compare domain ordering against parameter declarations.
+**How to Verify:** Examine emitted parameter data sections for cesam and cesam2. Compare domain ordering against parameter declarations.
 
-**Risk if Wrong:** If gtm requires a fundamentally different fix (parser-side zero-fill), it may need to be addressed separately from the other 4 models.
+**Risk if Wrong:** Low — only 2 models affected. If cesam/cesam2 require a different approach from egypt/fawley, effort is still ~1-2h.
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (catalog update)
