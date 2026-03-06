@@ -54,7 +54,7 @@ All 11 translation timeout models were listed and 9 were profiled with stage-lev
 |-------|------:|--------:|---------:|--------:|--------:|--------:|----:|--------:|------------|
 | egypt | 40.2 | 0.0 | 0.1 | 1.1 | 18.0 | 0.2 | 0.1 | **59.6** | Parse (67%) |
 | ferts | 20.9 | 0.0 | 0.1 | 0.2 | 59.9 | 24.7 | 0.2 | **105.9** | Jacobian (57%) + Assemble (23%) |
-| dinam | 100.2 | — | — | 0.1 | 34.4 | 0.1 | 0.1 | **135.0** | Parse (74%) |
+| dinam | 100.2 | 0.0 | 0.0 | 0.1 | 34.4 | 0.1 | 0.1 | **135.0** | Parse (74%) |
 | clearlak | 2.8 | 0.0 | 0.1 | 0.5 | 167.8 | 20.5 | 0.1 | **191.8** | Jacobian (87%) |
 | turkpow | 7.5 | 0.0 | 0.1 | 0.4 | 235.0 | 1.3 | 0.1 | **244.5** | Jacobian (96%) |
 
@@ -162,9 +162,9 @@ The Lark/Earley parser scales with file complexity (not just size):
 
 ## Quick-Win Assessment
 
-### Timeout Increase (Trivial Effort)
+### Translate Subprocess Timeout Increase (Trivial Effort)
 
-Increasing the pipeline timeout from 60s to 120s would recover **2 models** (egypt at 60s, ferts at 106s). Increasing to 150s adds dinam (135s). Increasing to 200s adds clearlak (192s).
+Increasing the translate subprocess timeout in `batch_translate.py` from 60s to 120s would recover **2 models** (egypt at 60s, ferts at 106s). Increasing to 150s adds dinam (135s). Increasing to 200s adds clearlak (192s).
 
 | Timeout | Models Recovered | Cumulative |
 |--------:|:-----------------|:-----------|
