@@ -506,7 +506,7 @@ test -f docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md && echo "E
 
 ## Task 6: Survey Deferred Issues for Sprint 22 Fit
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -550,11 +550,18 @@ The deferred issues total 22-30h of architectural work. Sprint 22 has ~24-30h to
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md` with decisions for all 4 issues
+- Verified KU-20 (minimal overlap), KU-21 (partial but indirect), KU-22 (confirmed independent)
+- Reviewed code overlap in `src/kkt/stationarity.py` (#764 vs Subcategory C) and `src/ad/index_mapping.py` (#830 vs Sprint 22)
 
 ### Result
 
-*To be completed*
+- **#764 (mexss): INCLUDE** — 3-4h as part of model_infeasible Category A workstream (re-estimated by Task 4, down from 8-12h)
+- **#765 (orani): WON'T FIX** — structurally incompatible linearized CGE model (KU-23 confirmed)
+- **#827 (gtm): DEFER** — primary error ($120/$340) is independent of #827's domain violations; low leverage (0.13-0.17 models/h)
+- **#830 (gastrans): DEFER** — no overlap with Sprint 22 (KU-22 confirmed); architectural Jacobian changes needed (0.10-0.13 models/h)
+- **Total Sprint 22 budget impact:** 3-4h (only #764, already in Category A workstream)
+- **Leverage comparison:** deferred issues 0.1-0.3 models/h vs Sprint 22 primary workstreams 2.0-3.75 models/h (10-25× gap)
 
 ### Verification
 
@@ -572,12 +579,12 @@ test -f docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md && echo "EXIS
 
 ### Acceptance Criteria
 
-- [ ] All 4 deferred issues reviewed against Sprint 22 goals
-- [ ] Overlap with Sprint 22 workstreams assessed
-- [ ] Leverage ratios calculated
-- [ ] Explicit include/defer/won't-fix decision for each
-- [ ] Budget impact documented
-- [ ] Decision rationale clear and defensible
+- [x] All 4 deferred issues reviewed against Sprint 22 goals
+- [x] Overlap with Sprint 22 workstreams assessed
+- [x] Leverage ratios calculated
+- [x] Explicit include/defer/won't-fix decision for each
+- [x] Budget impact documented
+- [x] Decision rationale clear and defensible
 
 ---
 
