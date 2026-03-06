@@ -140,7 +140,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 **Assumption:** Some models currently classified as path_syntax_error have secondary KKT issues that are masked by the primary syntax error. Fixing the syntax error will allow them to reach the solve stage, where they may fail as model_infeasible.
 
 **Research Questions:**
-1. How many of the 41 path_syntax_error models are likely to solve vs shift to another error category?
+1. How many of the 43 path_syntax_error models are likely to solve vs shift to another error category?
 2. Are any of the 9 Subcategory C models known to have KKT correctness issues beyond the uncontrolled set?
 3. What is the expected "conversion rate" from path_syntax_error → solving?
 4. Should Sprint 22 targets account for model_infeasible growth?

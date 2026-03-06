@@ -3,14 +3,14 @@
 **Created:** 2026-03-06
 **Sprint:** 22 (Prep Task 4)
 **Status:** Complete — ready for Sprint 22 fix design (Task 7)
-**Data Source:** `data/gamslib/gamslib_status.json` (updated_date=2026-02-12, GAMS 51.3.0; Sprint 21 Day 12 pipeline run)
+**Data Source:** `data/gamslib/gamslib_status.json` (top-level metadata `updated_date`=2026-02-12, GAMS 51.3.0; per-model status timestamps range up to the Sprint 21 Day 12 pipeline run — `updated_date` is not a reliable recency indicator)
 **Error verification:** GAMS v53 on on-disk MCP files
 
 ---
 
 ## 1. Executive Summary
 
-The model_infeasible category contains **15 models**, all with PATH SOLVER STATUS 1 (Normal Completion). PATH completed its algorithm in every case — the infeasibility is in the MCP system itself, not a solver failure.
+The model_infeasible category contains **15 models**, all with SOLVER STATUS 1 (Normal Completion). PATH completed its algorithm in every case — the infeasibility is in the MCP system itself, not a solver failure.
 
 Sprint 22 targets model_infeasible **≤ 12** (−3 models). Analysis shows the 15 models break into four classification categories:
 
