@@ -67,7 +67,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_syntax_error catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** CONFIRMED. All 10 current Subcategory C models share the same root cause (KKT stationarity generator fails to propagate domain requirements). Two sub-patterns identified: (1) scalar stationarity with indexed symbols (ampl, dyncge, glider), (2) domain mismatch in stationarity (harker, korcge, paklive, robert, shale, tabora, trnspwl). Both patterns originate in the same KKT assembly code path. A single fix addressing domain propagation should resolve all 10 models.
 
 ---
 
@@ -109,7 +109,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** REFUTED. The original 5 Subcategory B models do NOT share a common emitter bug. Sprint 21 fixes changed the compilation context: egypt and fawley moved out of path_syntax_error entirely. The remaining 3 "Subcategory B" models now show completely different errors: agreste=$66 (reclassified to A — missing data), china=$141 (reclassified to A — missing data), gtm=$120/$340 (reclassified to new pattern — unquoted hyphenated labels). Current Subcategory B contains only 2 newly-translating models (cesam, cesam2) with $170 errors. These should be investigated fresh rather than assuming they match the egypt/fawley pattern.
 
 ---
 
@@ -448,7 +448,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 2 (catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** NON-ISSUE. `gamma` and `psi` are used as parameter names in many GAMSlib models (e.g., camshape, sambal), but GAMS handles them context-sensitively — as parameters, not built-in function calls. Only mingamma has the collision because its stationarity equations use `gamma(x1)` in an expression context where GAMS interprets it as a function call. The fix (reserved-word renaming) is isolated to mingamma and does not need to be a general system. A general system would be prudent but is not required for Sprint 22.
 
 ---
 
@@ -468,7 +468,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 2 (catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** UPDATED. nemhaus is an MINLP model (has binary variables `xb`, `y`). Binary/integer variables cannot participate in MCP (continuous complementarity), so the MCP translator includes them in the model statement but generates no stationarity equations for them. This is fundamentally a model-type incompatibility issue, not just a filtering bug. Simple filtering of unreferenced variables from the model statement would suppress the $483 error, but nemhaus also has missing parameter data ($141 on the objective). Consider adding MINLP detection with a warning rather than just filtering.
 
 ---
 
@@ -488,7 +488,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 2 (catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** CONFIRMED. pdi has 16 systematic $70 errors — a dimension tracking bug in the MCP translator's equation-variable pairing logic. Additionally, launch (previously Subcategory D/$445) now shows $70 errors after Sprint 21's negative-exponent fix resolved the $445 errors, unmasking the underlying dimension mismatch. Subcategory J now contains 2 models (pdi, launch), confirming this is a systematic bug.
 
 ---
 
@@ -509,7 +509,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 30min
 **Owner:** Task 2 (catalog update)
-**Verification Results:** *To be completed during Task 2*
+**Verification Results:** PARTIALLY REFUTED. tricp ($148) does NOT fit existing subcategories — it requires a new Subcategory K (smax/sum domain tuple mismatch). dinam and ferts are NOT path_syntax_error — they moved to translate_failure (timeout) in the latest pipeline run. The Sprint 21 note about "3 unsubcategorized models" is no longer accurate: only tricp was actually path_syntax_error, and it needed a new subcategory. Additionally, 6 other models were reclassified during Task 2 analysis, revealing new error patterns (GUSS dict syntax, duplicate elements, unquoted hyphenated labels) not covered by existing subcategories A-J.
 
 ---
 
@@ -636,9 +636,9 @@ Use this template during Sprint 22 to track verification results.
 
 | ID | Verified? | Date | Result | Action Taken |
 |----|-----------|------|--------|-------------|
-| KU-01 | | | | |
+| KU-01 | Yes | 2026-03-05 | Confirmed — 2 sub-patterns, same root cause | Single KKT assembly fix targets all 10 models |
 | KU-02 | | | | |
-| KU-03 | | | | |
+| KU-03 | Yes | 2026-03-05 | Refuted — 3 different errors, not common $170 | Investigate cesam/cesam2 fresh; reclassify agreste/china/gtm |
 | KU-04 | | | | |
 | KU-05 | | | | |
 | KU-06 | | | | |
@@ -651,10 +651,10 @@ Use this template during Sprint 22 to track verification results.
 | KU-13 | | | | |
 | KU-14 | | | | |
 | KU-15 | | | | |
-| KU-16 | | | | |
-| KU-17 | | | | |
-| KU-18 | | | | |
-| KU-19 | | | | |
+| KU-16 | Yes | 2026-03-05 | Non-issue — gamma/psi handled context-sensitively | Fix is isolated to mingamma only |
+| KU-17 | Yes | 2026-03-05 | Updated — nemhaus is MINLP (binary vars) | Consider MINLP detection; simple filtering insufficient |
+| KU-18 | Yes | 2026-03-05 | Confirmed — 16 systematic $70 errors + launch reclassified | Subcategory J now 2 models; systematic dimension bug |
+| KU-19 | Yes | 2026-03-05 | Partially refuted — tricp needs new Subcat K; dinam/ferts are translate timeouts | New subcategory K created; 6 models reclassified |
 | KU-20 | | | | |
 | KU-21 | | | | |
 | KU-22 | | | | |

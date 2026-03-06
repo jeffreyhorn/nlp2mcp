@@ -12,7 +12,7 @@
 
 Sprint 21 achieved 154/157 parse (98.1%), 65 solve, 30 match — far exceeding all targets. Sprint 22 shifts focus from parse improvements to **solve rate improvement**. The two largest solve failure categories are:
 
-1. **path_syntax_error (41 models):** Emitter and translator bugs produce invalid GAMS MCP code
+1. **path_syntax_error (43 models):** Emitter and translator bugs produce invalid GAMS MCP code
 2. **path_solve_terminated (12 models):** Pre-solver errors (execution, compilation, MCP pairing) prevent PATH from running
 
 Additionally:
@@ -134,7 +134,7 @@ grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md
 
 ## Task 2: Catalog path_syntax_error Remaining Subcategories
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3 hours
 **Deadline:** Before Sprint 22 Day 1
@@ -148,7 +148,7 @@ Update the Sprint 21 path_syntax_error catalog with current status and prepare a
 
 ### Why This Matters
 
-path_syntax_error is the single largest solve failure category (41 models). Sprint 22 targets reducing this to ≤30 (−11 models). The Sprint 21 catalog classified 45 models into 9 subcategories (A-G, I, J — no H), but:
+path_syntax_error is the single largest solve failure category (43 models per latest pipeline). Sprint 22 targets reducing this to ≤30 (−13 models). The Sprint 21 catalog classified 45 models into 9 subcategories (A-G, I, J — no H), but:
 - Sprint 21 fixed subcategories E (set quoting), D (negative exponents), and parts of A (emission ordering)
 - 3 new models (dinam, ferts, tricp) entered this category and are unsubcategorized
 - Current subcategory counts need refreshing against the latest pipeline results
@@ -189,11 +189,21 @@ Sprint 21 PATH_SYNTAX_ERROR_CATALOG.md classified errors into 9 subcategories (A
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md` with full updated catalog
+- Classified all 43 current path_syntax_error models into subcategories
+- Verified 6 Known Unknowns: KU-01 (confirmed), KU-03 (refuted), KU-16 (non-issue), KU-17 (updated), KU-18 (confirmed), KU-19 (partially refuted)
+- Identified 6 model reclassifications from Sprint 21 subcategories
+- Discovered 6 models with new error patterns not in Sprint 21 catalog
 
 ### Result
 
-*To be completed*
+43 current path_syntax_error models classified (down from 48 in Sprint 21):
+- **22 moved OUT**: 13 model_optimal, 3 translate_failure, 3 path_solve_terminated, 2 model_infeasible, 1 path_solve_license
+- **17 moved IN**: Newly translating models reaching solve stage
+- **26 stayed**: Including 6 reclassified to different subcategories
+- **Subcategories D and E fully resolved** by Sprint 21
+- **Top 3 subcategories** (A=15, C=10, G=4) account for 29/43 models — fixing these reaches ≤14
+- **Sprint 22 target (≤30)** achievable with Subcategory A alone (15 models, 4-6h)
 
 ### Verification
 
@@ -207,19 +217,19 @@ test -f docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md && echo "EXIS
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md` with current subcategory breakdown
-- All 41 models classified into subcategories
-- Prioritized fix order for Sprint 22
-- Effort estimates per subcategory
+- [x] `docs/planning/EPIC_4/SPRINT_22/PATH_SYNTAX_ERROR_STATUS.md` with current subcategory breakdown
+- [x] All 43 models classified into subcategories
+- [x] Prioritized fix order for Sprint 22
+- [x] Effort estimates per subcategory
 
 ### Acceptance Criteria
 
-- [ ] All 41 current path_syntax_error models classified
-- [ ] Subcategory counts updated from Sprint 21 baseline
-- [ ] New/moved models identified and subcategorized
-- [ ] Fix priority order documented with rationale
-- [ ] Effort estimates provided per subcategory
-- [ ] Sprint 22 target subcategories identified (enough for −11 models)
+- [x] All 43 current path_syntax_error models classified
+- [x] Subcategory counts updated from Sprint 21 baseline
+- [x] New/moved models identified and subcategorized
+- [x] Fix priority order documented with rationale
+- [x] Effort estimates provided per subcategory
+- [x] Sprint 22 target subcategories identified (A alone exceeds −13 target)
 
 ---
 
@@ -910,7 +920,7 @@ Before Sprint 22 Day 1, verify:
 
 ### Critical (Must Complete)
 - [x] Known Unknowns document created (Task 1)
-- [ ] path_syntax_error catalog updated (Task 2)
+- [x] path_syntax_error catalog updated (Task 2)
 - [ ] path_solve_terminated models classified (Task 3)
 - [ ] Sprint 22 plan created with day-by-day schedule (Task 10)
 
