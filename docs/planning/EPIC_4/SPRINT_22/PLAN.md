@@ -2,7 +2,7 @@
 
 **Created:** 2026-03-06
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Estimated Effort:** ~24–30 hours (~1.6–2.0h/day effective capacity)
+**Effort:** Budget ~24–30 hours (~1.6–2.0h/day effective capacity); estimated range ~23.5–38.5h
 **Risk Level:** MEDIUM
 **Baseline:** `53ac5979` — parse 154/157 (98.1%), translate 136/154 (88.3%), solve 65/136 (47.8%), match 30/65 (46.2%), tests 3,957
 
@@ -42,7 +42,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 | Match | 30 | ≥ 35 | ≥ 40 |
 | Tests | 3,957 | ≥ 4,020 | — |
 | Parse success | 154/157 | ≥ 154/157 | ≥ 155/157 |
-| Translate success | 136/154 | ≥ 139/157 | — |
+| Translate success | 136/154 | ≥ 139/154 | — |
 
 **Solve target rationale:** path_syntax_error fixes (+10 from subcategories C/G/B) + path_solve_terminated fixes (+7 from MCP pairing errors) + model_infeasible fixes (+3 from Category A) = +20 optimistic → target ≥ 75 (conservative: +10 from committed path_syntax_error alone).
 

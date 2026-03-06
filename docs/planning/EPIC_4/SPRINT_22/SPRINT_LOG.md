@@ -13,7 +13,7 @@
 | Metric | Baseline | Target | Stretch |
 |---|---|---|---|
 | Parse success | 154/157 (98.1%) | ≥ 154/157 | ≥ 155/157 |
-| Translate success | 136/154 (88.3%) | ≥ 139/157 | — |
+| Translate success | 136/154 (88.3%) | ≥ 139/154 | — |
 | Solve success | 65/136 (47.8%) | ≥ 75 | ≥ 85 |
 | Match | 30/65 (46.2%) | ≥ 35 | ≥ 40 |
 | path_syntax_error | 40 | ≤ 30 | ≤ 25 |
