@@ -466,7 +466,8 @@ The 60s translation subprocess timeout is set in `batch_translate.py` (line 260)
 ### Changes
 
 - Created `docs/planning/EPIC_4/SPRINT_22/TRANSLATION_TIMEOUT_PROFILE.md` with comprehensive profiling data
-- Profiled 9 of 11 models with full stage-level timing (remaining 2 extrapolated from parse times)
+- Instrumented all 11 models with stage-level timing
+- Obtained end-to-end timings for 6 models; 3 additional models have partial later-stage timings (runs killed mid-Jacobian); remaining 2 are extrapolated from parse times
 - Classified all 11 models into 3 tractability tiers: Near-Miss (4), Slow (2), Intractable (5)
 
 ### Result
