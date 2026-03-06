@@ -323,7 +323,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** PARTIALLY REFUTED. Multi-optima (Category B: 7 ps* models) accounts for only 20% of the 35 mismatches. KKT formulation bugs are more prevalent: 7 verified_convex models (Category A) have definitive KKT bugs (convex NLP has unique optimum), and 5 models (Category D) have zero MCP objectives suggesting missing objective terms. Combined, KKT bugs (Categories A+D) account for 34% of mismatches. The remaining 46% includes CGE cluster (4 models with identical MCP obj 25.508), large divergence (7 models), and moderate divergence (5 models) with diverse root causes. Sprint 22 should prioritize Category A (LP KKT derivation pattern) and Category D (missing objective terms) as the most actionable improvements.
+**Verification Results:** PARTIALLY REFUTED. Multi-optima (Category B: 7 ps* models) accounts for only 20% of the 35 mismatches. KKT formulation bugs are more prevalent: 7 verified_convex models (Category A) have definitive KKT bugs (convex NLP has a proven global optimal objective value, so any MCP/NLP objective divergence indicates a formulation error), and 5 models (Category D) have zero MCP objectives suggesting missing objective terms. Combined, KKT bugs (Categories A+D) account for 34% of mismatches. The remaining 46% includes CGE cluster (4 models with identical MCP obj 25.508), large divergence (7 models), and moderate divergence (5 models) with diverse root causes. Sprint 22 should prioritize Category A (LP KKT derivation pattern) and Category D (missing objective terms) as the most actionable improvements.
 
 ---
 
@@ -384,7 +384,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Estimated Research Time:** 15min
 **Owner:** Task 9 (match rate analysis)
-**Verification Results:** PARTIALLY VERIFIED. 18 NLP `.lst` files found in `data/gamslib/raw/`, covering only 5 of 35 mismatch models (14%) and 7 of 30 matched models. Coverage is insufficient for comprehensive variable-level divergence case studies. However, `gamslib_status.json` already contains NLP and MCP objective values from pipeline runs, which is sufficient for the quantitative analysis performed in Task 9. For deeper case studies, NLP solves can be run on demand for specific models (<1 min each). This is a minor inconvenience, not a blocker.
+**Verification Results:** PARTIALLY VERIFIED. No NLP `.lst` files are tracked in `data/gamslib/raw/` in version control (they are generated locally by `gams <model>.gms` and excluded from the repo). During analysis, 18 `.lst` files were present in the local workspace from prior pipeline runs, covering 5 of 35 mismatch models (14%). Coverage is insufficient for comprehensive variable-level divergence case studies. However, `gamslib_status.json` already contains NLP and MCP objective values from pipeline runs, which is sufficient for the quantitative analysis performed in Task 9. For deeper case studies, NLP solves can be run on demand for specific models (<1 min each). This is a minor inconvenience, not a blocker.
 
 ---
 
@@ -654,7 +654,7 @@ Use this template during Sprint 22 to track verification results.
 | KU-23 | Yes | 2026-03-06 | Confirmed — orani linearized CGE, structurally incompatible | Add model class detection heuristic; exclude from metrics |
 | KU-24 | Yes | 2026-03-06 | Confirmed — 7-14 models at risk (6 CGE highest) | Fix Category A KKT bugs early; track influx |
 | KU-25 | Yes | 2026-03-06 | Confirmed — `ut` filter lost in MCP; needs IR enrichment | Fix is 2-3h (parser/IR), not 1h as assumed |
-| KU-26 | Yes | 2026-03-06 | Partially verified — 18 .lst files (14% mismatch coverage); JSON obj data sufficient | On-demand NLP solves for deeper case studies |
+| KU-26 | Yes | 2026-03-06 | Partially verified — no .lst files tracked in repo (local-only); JSON obj data sufficient | On-demand NLP solves for deeper case studies |
 
 ---
 

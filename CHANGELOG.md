@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Changed
 - Updated PREP_PLAN.md: Task 9 marked COMPLETE with classification summary and projection
-- Updated KNOWN_UNKNOWNS.md: Verified KU-11 (partially refuted — multi-optima is only 20%), KU-12 (tolerance appropriate), KU-13 (50–70% match rate for new solves), KU-26 (18 .lst files, JSON data sufficient)
+- Updated KNOWN_UNKNOWNS.md: Verified KU-11 (partially refuted — multi-optima is only 20%), KU-12 (tolerance appropriate), KU-13 (50–70% match rate for new solves), KU-26 (no .lst files tracked in repo; JSON objective data sufficient)
 
 ### Sprint 22 Prep Task 8: Establish Baseline Metrics - 2026-03-06
 

@@ -14,7 +14,7 @@ Sprint 22 targets Match >= 35 (+5 from baseline 30). This analysis classifies th
 
 **Key Findings:**
 
-1. **7 verified_convex models mismatch** — these are strong KKT formulation bug indicators (convex NLP has unique optimum, so MCP should match)
+1. **7 verified_convex models mismatch** — these are strong KKT formulation bug indicators (for a convex NLP the optimal objective value is global, so any MCP/NLP objective divergence points to a formulation bug)
 2. **7 principal-agent (ps*) models are non-convex** — multiple KKT points; not fixable through tolerance relaxation (Issues #958–#964)
 3. **4 CGE models converge to identical MCP objective (25.508)** — likely a shared CGE-specific formulation issue
 4. **5 models have MCP objective ~0** — likely missing objective terms or broken variable initialization
@@ -49,7 +49,7 @@ Sprint 22 target of >= 35 is **achievable** through newly-solving models from pa
 
 ### 2.2 Category A: KKT Formulation Bugs — Verified Convex (7 models)
 
-These models are **verified_convex** (LP optimal with solver status 1), meaning they have a unique global optimum. Any MCP/NLP divergence is a bug in the KKT derivation, not a multi-optima issue.
+These models are **verified_convex** (LP optimal with solver status 1), meaning the solver proved a global optimum. While convex problems (especially LPs) can have multiple optimal solutions, the optimal objective value is the same for all of them. Any MCP/NLP objective divergence is therefore a bug in the KKT derivation, not a multi-optima issue.
 
 | Model | NLP Obj | MCP Obj | Rel Diff | Likely Root Cause |
 |-------|---------|---------|----------|-------------------|
@@ -208,7 +208,7 @@ Current match rates by convexity:
 
 However, the 50% rate for verified_convex is misleadingly low — the 7 verified_convex mismatches are likely KKT bugs (Category A), not inherent MCP limitations. If those bugs are fixed, the verified_convex match rate would be 14/14 (100%).
 
-**path_syntax_error model convexity (40 models):**
+**path_syntax_error model convexity (40 of 43 models in pipeline test set; 2 excluded, 1 non-convex):**
 - verified_convex: 17 (42.5%)
 - likely_convex: 23 (57.5%)
 
@@ -228,14 +228,11 @@ However, the 50% rate for verified_convex is misleadingly low — the 7 verified
 
 **Status: PARTIALLY VERIFIED — COVERAGE IS LIMITED**
 
-NLP `.lst` files found in `data/gamslib/raw/`: **18 files**
+NLP `.lst` files tracked in `data/gamslib/raw/` in this repo: **0 files**
 
-Coverage for mismatch analysis:
-- Of 35 mismatched models, `.lst` files exist for: abel, aircraft, apl1p, circle, trig (5 models = 14%)
-- Of 30 matched models, `.lst` files exist for: blend, himmel11, house, hs62, prodmix, rbrock, trnsport (7 models)
-- Additional: agreste, ampl, camcge, cesam, china (solve-failure models)
+The `.lst` files are generated locally when running GAMSlib models via `gams <model>.gms` and are not committed to version control (`.gitignore` excludes them). During this analysis, 18 `.lst` files were present in the local workspace from prior pipeline runs, covering 5 of 35 mismatch models (14%). However, `gamslib_status.json` already contains NLP and MCP objective values extracted from pipeline runs, which is sufficient for the quantitative analysis performed here.
 
-**Conclusion:** `.lst` coverage is insufficient for comprehensive divergence case studies (14% of mismatch models). However, the `gamslib_status.json` already contains NLP and MCP objective values extracted from pipeline runs, which is sufficient for the quantitative analysis performed here. For deeper case studies (examining variable-level solution differences), NLP solves would need to be run on demand for specific models. This is a **minor inconvenience**, not a blocker — any model can be solved on demand in <1 minute.
+**Conclusion:** `.lst` coverage is local-only and insufficient for comprehensive variable-level divergence case studies. For deeper case studies, NLP solves can be run on demand for any model (`gams data/gamslib/raw/<model>.gms`, <1 min each). This is a minor inconvenience, not a blocker.
 
 ---
 
@@ -385,7 +382,7 @@ For reference, the full 35-model breakdown by divergence magnitude:
 | KU-11 | **PARTIALLY REFUTED** | Multi-optima is only 20% (7 models). KKT bugs (Categories A+D) account for 34% and are more actionable |
 | KU-12 | **VERIFIED** | Tolerance is appropriate. Nearest miss is 2.54x threshold. Relaxation would mask bugs |
 | KU-13 | **PARTIALLY CONFIRMED** | ~50–70% match rate for new solves; depends on convexity. Target achievable with +10 new solves |
-| KU-26 | **PARTIALLY VERIFIED** | 18 `.lst` files exist (14% mismatch coverage), but `gamslib_status.json` objective data is sufficient. On-demand NLP solves available for deeper analysis |
+| KU-26 | **PARTIALLY VERIFIED** | No `.lst` files tracked in repo (local-only, 18 generated from prior runs). `gamslib_status.json` objective data is sufficient; on-demand NLP solves available for deeper analysis |
 
 ---
 
