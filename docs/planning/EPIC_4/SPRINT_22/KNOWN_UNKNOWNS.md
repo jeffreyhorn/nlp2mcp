@@ -32,8 +32,8 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 | KU-11 | Divergence Analysis | 35 non-matching models are primarily multi-optima cases | Medium | Most divergence is from non-convexity, not KKT bugs | Day 3 |
 | KU-12 | Divergence Analysis | Combined tolerance formula is appropriate for all model types | Medium | `|a-b| <= atol + rtol*max(|a|,|b|)` works across scales | Day 2 |
 | KU-13 | Divergence Analysis | Newly-solving models from path_syntax_error fixes will mostly match | Medium | Convex NLP models produce unique KKT points | Day 5 |
-| KU-14 | Parse Completion | 3 remaining lexer_invalid_char models are low-effort fixes | Low | Simple grammar additions or preprocessor rules | Day 3 |
-| KU-15 | Parse Completion | Parse rate won't regress from solve-focused changes | High | KKT/emitter changes don't affect parser | Day 5 |
+| KU-14 | Parse Completion | 3 remaining lexer_invalid_char models are low-effort fixes | Low | **VERIFIED: NOT low-effort** — all 3 are non-trivial grammar features (1-2h each) | Task 8 |
+| KU-15 | Parse Completion | Parse rate won't regress from solve-focused changes | High | **VERIFIED** — parse rate stable at 154/157, same 3 failures | Task 8 |
 | KU-16 | Deferred Subcategories | Subcategory F (mingamma) reserved-word fix is isolated | Low | Renaming `gamma` → `gamma_v` has no side effects | Day 2 |
 | KU-17 | Deferred Subcategories | Subcategory I (nemhaus) MCP variable filtering is straightforward | Low | Filter unreferenced variables from model statement | Day 2 |
 | KU-18 | Deferred Subcategories | Subcategory J (pdi) dimension mismatch is a pairing logic bug | Low | Fix in MCP pair generation, not KKT | Day 2 |
@@ -394,19 +394,17 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Priority:** Low
 **Assumption:** The 3 remaining lexer_invalid_char models can be fixed with simple grammar additions or preprocessor rules, requiring ≤2h total.
+**Status:** VERIFIED — assumption is WRONG. All 3 are non-trivial grammar features requiring 1-2h each (3-6h total).
 
-**Research Questions:**
-1. What specific characters/patterns cause the lexer failures?
-2. Are these models worth fixing given the 98.1% parse rate?
-3. Could the fixes introduce ambiguities in the grammar?
+**Verification Results (Task 8):**
 
-**How to Verify:** Run the 3 models through the parser in verbose mode to identify the specific lexer error.
+| Model | Issue | Root Cause | Effort |
+|-------|-------|-----------|--------|
+| danwolfe | Parenthesized expression in data block | Grammar doesn't support `);` as data terminator after parenthesized groups | 1-2h |
+| partssupply | Model composition with `+` operator (#892) | Grammar doesn't support `Model m /eq1, eq2/ + /eq3/;` syntax | 1-2h |
+| turkey | Parenthesized table column groups (#896) | Grammar doesn't support `Table t(i, j) / (col1,col2).row1 val /` syntax | 1-2h |
 
-**Risk if Wrong:** If the lexer failures require complex grammar changes, the effort would exceed the budget. Low impact — parse rate is already at 98.1%.
-
-**Estimated Research Time:** 30min
-**Owner:** Task 8 (baseline metrics — identifies current parse failures)
-**Verification Results:** *To be completed during Task 8*
+**Impact:** These are not Sprint 22 scope. Parse rate is already at 98.1% and these 3 models require grammar extensions that are deferred to a future sprint.
 
 ---
 
@@ -414,19 +412,14 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 
 **Priority:** High
 **Assumption:** Sprint 22's KKT, emitter, and translator changes won't affect the parser or grammar, so parse rate (154/157) will remain stable.
+**Status:** VERIFIED — parse rate confirmed stable at 154/157 (98.1%).
 
-**Research Questions:**
-1. Do any Sprint 22 workstreams modify `src/ir/parser.py` or `src/gams/gams_grammar.lark`?
-2. Could emitter changes (domain filtering, expression formatting) cause re-parse failures?
-3. Is there a regression test that specifically checks parse count?
+**Verification Results (Task 8):**
+- Sprint 21 final: 154/157 (98.1%) — failures: danwolfe, partssupply, turkey
+- Sprint 22 baseline: 154/157 (98.1%) — failures: danwolfe, partssupply, turkey (identical)
+- No regression detected. Same 3 models fail with the same error category (lexer_invalid_char).
 
-**How to Verify:** Run parse-only pipeline retest (`--only-parse`) at each checkpoint. Verify 154/157 maintained.
-
-**Risk if Wrong:** If parse rate drops, Sprint 22 would need to allocate time to fix parser regressions, reducing time for solve improvements.
-
-**Estimated Research Time:** 15min (review workstream scope)
-**Owner:** Task 8 (baseline metrics)
-**Verification Results:** *To be completed during Task 8*
+**Monitoring Plan:** Continue to verify parse rate at Sprint 22 checkpoints using `--only-parse` pipeline runs.
 
 ---
 
@@ -649,8 +642,8 @@ Use this template during Sprint 22 to track verification results.
 | KU-11 | | | | |
 | KU-12 | | | | |
 | KU-13 | | | | |
-| KU-14 | | | | |
-| KU-15 | | | | |
+| KU-14 | Yes | 2026-03-06 | Assumption WRONG — all 3 are non-trivial (1-2h each) | Not Sprint 22 scope; parse rate already 98.1% |
+| KU-15 | Yes | 2026-03-06 | Verified — parse rate stable at 154/157 (identical failures) | Monitor at Sprint 22 checkpoints |
 | KU-16 | Yes | 2026-03-05 | Non-issue — gamma/psi handled context-sensitively | Fix is isolated to mingamma only |
 | KU-17 | Yes | 2026-03-05 | Updated — nemhaus is MINLP (binary vars) | Consider MINLP detection; simple filtering insufficient |
 | KU-18 | Yes | 2026-03-05 | Confirmed — 16 systematic $70 errors + launch reclassified | Subcategory J now 2 models; systematic dimension bug |
