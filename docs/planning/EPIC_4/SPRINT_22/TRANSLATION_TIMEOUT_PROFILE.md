@@ -8,12 +8,12 @@
 
 ## Executive Summary
 
-All 11 translation timeout models were listed and 8 were profiled with stage-level timing (the remaining 3 share characteristics with profiled models). **The Jacobian computation stage is the dominant bottleneck** in 8 of 11 models, consuming 57–99% of total translation time. The remaining 3 models (dinam, ganges, gangesx) are bottlenecked by Lark/Earley parsing.
+All 11 translation timeout models were listed and 9 were profiled with stage-level timing (the remaining 2 share characteristics with profiled models). **The Jacobian computation stage is the dominant bottleneck** in 7 of 11 models, consuming 57–99% of total translation time. The remaining 4 models (egypt, dinam, ganges, gangesx) are bottlenecked by Lark/Earley parsing.
 
 **Key findings:**
 - **2 models are genuine near-misses** that complete within 135s: egypt (60s) and dinam (135s)
 - **3 models complete in 100–250s** (ferts 106s, clearlak 192s, turkpow 245s) — addressable with Jacobian optimization
-- **3 models complete in 250–510s** (srpchase 509s) — need significant Jacobian optimization
+- **1 model completes in 250–510s** (srpchase 509s) — needs significant Jacobian optimization
 - **3 models timeout in Jacobian** after 5+ minutes (sarf, iswnm, nebrazil) — need architectural change
 - **No quick wins exist** for Sprint 22 via timeout increase alone — even doubling to 120s only recovers egypt (1 model)
 
@@ -47,7 +47,7 @@ All 11 translation timeout models were listed and 8 were profiled with stage-lev
 
 ## Profiling Results
 
-8 models were profiled with the full translation pipeline. Timing is wall-clock seconds on a single core (Apple M-series).
+9 models were profiled with the full translation pipeline. Timing is wall-clock seconds on a single core (Apple M-series).
 
 ### Completed Models (5)
 
@@ -65,7 +65,7 @@ All 11 translation timeout models were listed and 8 were profiled with stage-lev
 |-------|------:|--------:|---------:|--------:|--------:|--------:|----:|--------:|------------|
 | srpchase | 1.8 | 0.0 | 0.1 | 0.3 | 501.5 | 4.8 | 0.0 | **508.5** | Jacobian (99%) |
 
-### Timed Out at 5 Minutes (2)
+### Timed Out at 5 Minutes (3)
 
 | Model | Parse | Gradient | Jacobian (partial) | Status | Bottleneck |
 |-------|------:|--------:|-----------------:|--------|------------|
@@ -88,8 +88,8 @@ All 11 translation timeout models were listed and 8 were profiled with stage-lev
 
 | Stage | Models Where Dominant | % of Total Time (when dominant) |
 |-------|----------------------|--------------------------------|
-| **Jacobian** | 8 models (clearlak, ferts, iswnm, nebrazil, sarf, srpchase, turkpow, egypt partial) | 57–99% |
-| **Parse** | 3 models (dinam, ganges, gangesx) | 67–100% |
+| **Jacobian** | 7 models (clearlak, ferts, iswnm, nebrazil, sarf, srpchase, turkpow) | 57–99% |
+| **Parse** | 4 models (egypt, dinam, ganges, gangesx) | 67–100% |
 | **Assemble** | 0 as primary (ferts secondary at 23%) | — |
 | **Emit** | 0 | <0.1% in all cases |
 | **Gradient** | 0 as primary (sarf secondary at 7%) | — |
@@ -104,10 +104,11 @@ The Jacobian computation (`compute_constraint_jacobian`) iterates over every (eq
 
 **sarf** is the extreme case: variable `task(g,t,mn,mn)` has 369K instances × 16 equations = ~5.9M potential Jacobian entries.
 
-### Why Parsing Is Slow for 3 Models
+### Why Parsing Is Slow for 4 Models
 
 The Lark/Earley parser scales with file complexity (not just size):
 - **ganges/gangesx** (59–72 KB): Large NLP with 74 variables, 68 equations, 179 parameters — deeply nested expressions require extensive Earley chart processing
+- **egypt** (41 KB): LP with 62 parameters and 19 sets — parse takes 40s (67% of 60s total)
 - **dinam** (46 KB): Large LP with 109 parameters and 34 sets — extensive table data creates complex parse trees
 
 ---
@@ -178,21 +179,21 @@ Increasing the pipeline timeout from 60s to 120s would recover **1 model** (egyp
 ### Sparsity-Aware Jacobian (High Effort, High Impact)
 
 A sparsity-aware Jacobian that only computes derivatives for (equation, variable) pairs where the variable actually appears in the equation would dramatically reduce computation:
-- **Impact:** Would fix 8 of 11 timeout models (all Jacobian-bottlenecked)
+- **Impact:** Would fix 7 of 11 timeout models (all Jacobian-bottlenecked: ferts, clearlak, turkpow, srpchase, sarf, iswnm, nebrazil)
 - **Effort:** Architectural change — requires static analysis of equation expressions to build a dependency graph before computing derivatives
 - **Risk:** Medium — must handle indirect references (set mappings, conditional expressions)
 
 ### LP Fast-Path (Medium Effort, Medium Impact)
 
 For LP models (9 of 11 timeout models), all derivatives are constants. A fast path that extracts linear coefficients directly (without symbolic differentiation) would bypass the Jacobian entirely:
-- **Impact:** Would fix 8 LP timeout models
+- **Impact:** Would fix 7 Jacobian-bottlenecked LP timeout models (ferts, clearlak, turkpow, srpchase, sarf, iswnm, nebrazil)
 - **Effort:** Medium — requires LP detection + coefficient extraction from normalized equations
 - **Risk:** Low — LP structure is well-defined and can be detected at IR level
 
 ### Earley Parser Optimization (High Effort, Low Impact)
 
-Optimizing the Lark/Earley parser would help ganges/gangesx and dinam:
-- **Impact:** Would fix 3 parse-bottlenecked models
+Optimizing the Lark/Earley parser would help egypt, dinam, ganges, and gangesx:
+- **Impact:** Would fix 4 parse-bottlenecked models
 - **Effort:** High — Earley parser internals are complex
 - **Risk:** High — may require switching to LALR parser or preprocessing complex expressions
 
