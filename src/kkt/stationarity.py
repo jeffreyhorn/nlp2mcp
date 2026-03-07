@@ -1989,14 +1989,13 @@ def _add_jacobian_transpose_terms_scalar(
                 else:
                     term = Sum(mult_domain, term)
 
-                # Issue #949: The derivative may contain free indices beyond
-                # mult_domain (e.g. 'h' in pf(h,j) when mult_domain is ('j',)).
-                # These are already bound inside the Sum but the derivative itself
-                # may reference sets that are NOT in mult_domain.  Detect and wrap
-                # any such uncontrolled indices in an additional outer Sum.
+                # Issue #949: The term (derivative and any carried $-condition)
+                # may contain free indices beyond mult_domain (e.g. 'h' in
+                # pf(h,j) when mult_domain is ('j',)).  Collect from the full
+                # term so condition indices are also checked.
                 mult_domain_set = {d.lower() for d in mult_domain}
-                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                extra_uncontrolled = free_in_deriv - mult_domain_set
+                free_in_term = _collect_free_indices(term, kkt.model_ir)
+                extra_uncontrolled = free_in_term - mult_domain_set
                 if extra_uncontrolled:
                     extra_indices = tuple(sorted(extra_uncontrolled))
                     term = Sum(extra_indices, term)
