@@ -1,7 +1,11 @@
-"""Integration tests for uncontrolled index wrapping in stationarity equations.
+"""Integration tests for uncontrolled index handling in stationarity equations.
 
-Issue #949: Tests that stationarity equations correctly wrap uncontrolled
-set indices in Sum nodes to avoid GAMS Error $149.
+Issue #949: Tests that stationarity equations correctly handle uncontrolled
+set indices to avoid GAMS Error $149.
+
+Issue #1010: When a gradient contains a subset index (e.g. t where t ⊂ tt),
+it is wrapped in a conditional Sum — sum(t$(sameas(t,tt)), ...) — to select
+the matching element, preserving per-element gradient semantics.
 
 Two failure modes are covered:
 1. Gradient component with subset indices not in the variable domain
@@ -33,15 +37,44 @@ def _contains_any_sum(expr: Expr) -> bool:
     return any(_contains_any_sum(c) for c in expr.children())
 
 
+def _find_sum_with_sameas_condition(
+    expr: Expr, sum_index: str, sameas_args: tuple[str, str]
+) -> bool:
+    """Check if expression contains Sum(idx$(sameas(a,b)), ...).
+
+    Looks for a Sum node whose index_sets contain sum_index and whose
+    condition is Call('sameas', (SymbolRef(a), SymbolRef(b))).
+    """
+    from src.ir.ast import Call, SymbolRef
+
+    if isinstance(expr, Sum) and sum_index in expr.index_sets:
+        if (
+            expr.condition is not None
+            and isinstance(expr.condition, Call)
+            and expr.condition.func == "sameas"
+            and len(expr.condition.args) == 2
+        ):
+            args = expr.condition.args
+            if (
+                isinstance(args[0], SymbolRef)
+                and isinstance(args[1], SymbolRef)
+                and args[0].name == sameas_args[0]
+                and args[1].name == sameas_args[1]
+            ):
+                return True
+    return any(_find_sum_with_sameas_condition(c, sum_index, sameas_args) for c in expr.children())
+
+
 @pytest.mark.integration
 class TestGradientUncontrolledIndices:
     """Failure Mode 1: Gradient term contains subset indices not in var domain."""
 
-    def test_subset_index_in_gradient_wrapped_in_sum(self, manual_index_mapping):
+    def test_subset_index_in_gradient_wrapped_with_sameas(self, manual_index_mapping):
         """Gradient contains c(p,t) but variable domain is (p, tt) where t ⊂ tt.
 
-        Like the robert model: stat_x(p,tt) should wrap gradient c(p,t) in
-        sum(t, ...) so that t is controlled.
+        Issue #1010: Like the robert model, stat_x(p,tt) should wrap
+        gradient c(p,t) in sum(t$(sameas(t,tt)), ...) to select the
+        matching element, preserving per-element gradient semantics.
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -97,11 +130,13 @@ class TestGradientUncontrolledIndices:
 
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
-        # The stationarity expression should contain a Sum over 't' to control it
         lhs = stat_eq.lhs_rhs[0]
-        assert _find_sum_indices(lhs, {"t"}), (
-            "Gradient with subset index 't' should be wrapped in sum(t, ...) "
-            "to avoid GAMS Error $149"
+        # Issue #1010: subset index 't' should be wrapped in
+        # sum(t$(sameas(t,tt)), ...) to select the matching element,
+        # preserving per-element gradient semantics.
+        assert _find_sum_with_sameas_condition(lhs, "t", ("t", "tt")), (
+            "Gradient with subset index 't' should be wrapped in "
+            "sum(t$(sameas(t,tt)), ...) to select the matching element"
         )
 
     def test_no_wrapping_when_all_indices_controlled(self, manual_index_mapping):
