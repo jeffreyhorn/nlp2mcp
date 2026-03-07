@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Day 1: WS5 Timeout + WS1 Subcategory C (Part 1) - 2026-03-06
+
+**Branch:** `sprint22-day1-timeout-subcat-c`
+
+#### Changed
+- Increased translation subprocess timeout from 60s to 150s in `batch_translate.py` (recovers egypt, ferts, dinam)
+- Fixed stationarity gradient Sum wrapping for uncontrolled subset indices (Issue #949)
+- Fixed scalar Jacobian transpose path to detect extra uncontrolled indices beyond mult_domain
+
+#### Added
+- 4 integration tests for stationarity uncontrolled index wrapping (`test_stationarity_uncontrolled.py`)
+- Issue docs: #1002 (harker), #1003 (ampl), #1004 (glider), #1005 (shale)
+
+#### Fixed
+- 5 subcategory C models no longer have $149 errors: robert, dyncge, korcge, paklive, tabora
+
 ### Sprint 22 Day 0: Baseline Confirm + Sprint Kickoff - 2026-03-06
 
 **Branch:** `sprint22-day0-kickoff`

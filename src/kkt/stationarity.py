@@ -906,6 +906,18 @@ def _build_indexed_stationarity_expr(
     # We use VarRef with domain indices instead of element labels
     expr = _build_indexed_gradient_term(kkt, var_name, domain, instances)
 
+    # Issue #949: The gradient term may contain free indices not in the
+    # variable domain (e.g. subset index 't' when domain uses alias 'tt').
+    # Wrap the gradient in a Sum over any uncontrolled indices so GAMS
+    # doesn't raise Error $149.  This must be done BEFORE Jacobian terms
+    # are added, because the Jacobian terms have their own Sum wrapping.
+    var_domain_set = {d.lower() for d in domain}
+    free_in_grad = _collect_free_indices(expr, kkt.model_ir)
+    uncontrolled_grad = free_in_grad - var_domain_set
+    if uncontrolled_grad:
+        sum_indices = tuple(sorted(uncontrolled_grad))
+        expr = Sum(sum_indices, expr)
+
     # Add Jacobian transpose terms as sums
     expr = _add_indexed_jacobian_terms(
         expr,
@@ -1976,6 +1988,17 @@ def _add_jacobian_transpose_terms_scalar(
                     term = Sum(mult_domain, term, condition=indexed_condition)
                 else:
                     term = Sum(mult_domain, term)
+
+                # Issue #949: The term (derivative and any carried $-condition)
+                # may contain free indices beyond mult_domain (e.g. 'h' in
+                # pf(h,j) when mult_domain is ('j',)).  Collect from the full
+                # term so condition indices are also checked.
+                mult_domain_set = {d.lower() for d in mult_domain}
+                free_in_term = _collect_free_indices(term, kkt.model_ir)
+                extra_uncontrolled = free_in_term - mult_domain_set
+                if extra_uncontrolled:
+                    extra_indices = tuple(sorted(extra_uncontrolled))
+                    term = Sum(extra_indices, term)
             else:
                 # Fallback: no domain info, use per-instance (shouldn't happen)
                 mult_ref = MultiplierRef(mult_name, eq_indices)
