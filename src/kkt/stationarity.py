@@ -906,17 +906,31 @@ def _build_indexed_stationarity_expr(
     # We use VarRef with domain indices instead of element labels
     expr = _build_indexed_gradient_term(kkt, var_name, domain, instances)
 
-    # Issue #949: The gradient term may contain free indices not in the
-    # variable domain (e.g. subset index 't' when domain uses alias 'tt').
-    # Wrap the gradient in a Sum over any uncontrolled indices so GAMS
-    # doesn't raise Error $149.  This must be done BEFORE Jacobian terms
-    # are added, because the Jacobian terms have their own Sum wrapping.
+    # Issue #949 / #1010: The gradient term may contain free indices not in
+    # the variable domain (e.g. subset index 't' when domain uses 'tt').
+    # When the uncontrolled index is a subset of a domain index, wrap in
+    # sum(t$(sameas(t,tt)), ...) to select the matching element — this
+    # preserves per-element semantics instead of summing over all elements.
+    # Fall back to unconditional Sum wrapping for indices with no
+    # subset→superset mapping.  This must be done BEFORE Jacobian terms are
+    # added, because the Jacobian terms have their own Sum wrapping.
     var_domain_set = {d.lower() for d in domain}
     free_in_grad = _collect_free_indices(expr, kkt.model_ir)
     uncontrolled_grad = free_in_grad - var_domain_set
     if uncontrolled_grad:
-        sum_indices = tuple(sorted(uncontrolled_grad))
-        expr = Sum(sum_indices, expr)
+        remaining_uncontrolled: set[str] = set()
+        for idx in uncontrolled_grad:
+            superset = _find_superset_in_domain(idx, var_domain_set, kkt.model_ir)
+            if superset is not None:
+                # Wrap in sum(idx$(sameas(idx,superset)), ...) to select
+                # the single matching element
+                sameas_cond: Expr = Call("sameas", (SymbolRef(idx), SymbolRef(superset)))
+                expr = Sum((idx,), expr, condition=sameas_cond)
+            else:
+                remaining_uncontrolled.add(idx)
+        if remaining_uncontrolled:
+            sum_indices = tuple(sorted(remaining_uncontrolled))
+            expr = Sum(sum_indices, expr)
 
     # Add Jacobian transpose terms as sums
     expr = _add_indexed_jacobian_terms(
@@ -1623,6 +1637,131 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
         return set()
 
     return _walk(expr, frozenset())
+
+
+def _find_superset_in_domain(
+    subset_idx: str,
+    var_domain_set: set[str],
+    model_ir: ModelIR,
+) -> str | None:
+    """Find the superset domain index for a given subset index.
+
+    Issue #1010: Given an uncontrolled index like 't' and a variable domain
+    set like {'p', 'tt'}, check if 't' is a declared subset of any domain
+    index (e.g., t(tt) means t ⊂ tt).  Returns the superset domain index
+    name (lowercase) if found, None otherwise.
+
+    Also handles aliases: if 't' is an alias for a set that is a subset of
+    a domain index, the domain index is still returned.
+    """
+    subset_lower = subset_idx.lower()
+
+    # Resolve alias: if subset_idx is an alias, get the canonical set name
+    canonical = subset_lower
+    if subset_lower in model_ir.aliases:
+        alias_def = model_ir.aliases[subset_lower]
+        canonical = (
+            alias_def.target.lower() if hasattr(alias_def, "target") else str(alias_def).lower()
+        )
+
+    # Check if the canonical set has a single-element domain that matches
+    # one of the variable's domain indices
+    if canonical in model_ir.sets:
+        set_def = model_ir.sets[canonical]
+        if hasattr(set_def, "domain") and len(set_def.domain) == 1:
+            parent = set_def.domain[0].lower()
+            if parent in var_domain_set:
+                return parent
+            # The parent might itself be an alias for a domain index
+            if parent in model_ir.aliases:
+                alias_def = model_ir.aliases[parent]
+                resolved = (
+                    alias_def.target.lower()
+                    if hasattr(alias_def, "target")
+                    else str(alias_def).lower()
+                )
+                if resolved in var_domain_set:
+                    return resolved
+
+    return None
+
+
+def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
+    """Rewrite index names in an expression tree according to rename_map.
+
+    Issue #1010: When a gradient expression uses subset index 't' but the
+    stationarity equation is indexed over superset 'tt', rewrite 't' → 'tt'
+    so the index is controlled by the equation domain. This preserves
+    per-element semantics (c(p,tt) varies with tt) rather than collapsing
+    via Sum (sum(t, c(p,t)) is constant across tt).
+
+    Only string indices in VarRef/ParamRef/MultiplierRef/EquationRef and
+    IndexOffset.base are rewritten. The rename_map keys and values should
+    both be lowercase-normalized.
+    """
+    if not rename_map:
+        return expr
+
+    def _rewrite_indices(
+        indices: tuple[str | IndexOffset, ...],
+    ) -> tuple[str | IndexOffset, ...]:
+        result: list[str | IndexOffset] = []
+        for idx in indices:
+            if isinstance(idx, str) and idx.lower() in rename_map:
+                result.append(rename_map[idx.lower()])
+            elif isinstance(idx, IndexOffset) and idx.base.lower() in rename_map:
+                result.append(IndexOffset(rename_map[idx.base.lower()], idx.offset, idx.circular))
+            else:
+                result.append(idx)
+        return tuple(result)
+
+    if isinstance(expr, VarRef):
+        return VarRef(expr.name, _rewrite_indices(expr.indices), expr.attribute)
+    if isinstance(expr, ParamRef):
+        return ParamRef(expr.name, _rewrite_indices(expr.indices))
+    if isinstance(expr, MultiplierRef):
+        return MultiplierRef(expr.name, _rewrite_indices(expr.indices))
+    if isinstance(expr, Binary):
+        return Binary(
+            expr.op,
+            _rewrite_subset_to_superset(expr.left, rename_map),
+            _rewrite_subset_to_superset(expr.right, rename_map),
+        )
+    if isinstance(expr, Unary):
+        return Unary(expr.op, _rewrite_subset_to_superset(expr.child, rename_map))
+    if isinstance(expr, Sum):
+        new_body = _rewrite_subset_to_superset(expr.body, rename_map)
+        new_cond = (
+            _rewrite_subset_to_superset(expr.condition, rename_map)
+            if expr.condition is not None
+            else None
+        )
+        return Sum(expr.index_sets, new_body, new_cond)
+    if isinstance(expr, Prod):
+        new_body = _rewrite_subset_to_superset(expr.body, rename_map)
+        new_cond = (
+            _rewrite_subset_to_superset(expr.condition, rename_map)
+            if expr.condition is not None
+            else None
+        )
+        return Prod(expr.index_sets, new_body, new_cond)
+    if isinstance(expr, Call):
+        new_args = tuple(_rewrite_subset_to_superset(a, rename_map) for a in expr.args)
+        return Call(expr.func, new_args)
+    if isinstance(expr, DollarConditional):
+        return DollarConditional(
+            _rewrite_subset_to_superset(expr.value_expr, rename_map),
+            _rewrite_subset_to_superset(expr.condition, rename_map),
+        )
+    if isinstance(expr, SetMembershipTest):
+        new_indices = tuple(_rewrite_subset_to_superset(i, rename_map) for i in expr.indices)
+        return SetMembershipTest(expr.set_name, new_indices)
+    if isinstance(expr, SymbolRef):
+        if expr.name.lower() in rename_map:
+            return SymbolRef(rename_map[expr.name.lower()])
+        return expr
+    # Const, SetAttrRef, ModelAttrRef, etc. — no indices to rewrite
+    return expr
 
 
 def _add_indexed_jacobian_terms(
