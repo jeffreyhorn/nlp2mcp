@@ -915,13 +915,14 @@ def _build_indexed_stationarity_expr(
     # Fall back to unconditional Sum wrapping for indices with no
     # subset→superset mapping.  This must be done BEFORE Jacobian terms are
     # added, because the Jacobian terms have their own Sum wrapping.
-    var_domain_set = {d.lower() for d in domain}
+    domain_lower = tuple(d.lower() for d in domain)
+    var_domain_set = set(domain_lower)
     free_in_grad = _collect_free_indices(expr, kkt.model_ir)
     uncontrolled_grad = free_in_grad - var_domain_set
     if uncontrolled_grad:
         remaining_uncontrolled: set[str] = set()
         for idx in sorted(uncontrolled_grad):
-            superset = _find_superset_in_domain(idx, var_domain_set, kkt.model_ir)
+            superset = _find_superset_in_domain(idx, domain_lower, kkt.model_ir)
             if superset is not None:
                 # Wrap in sum(idx$(sameas(idx,superset)), ...) to select
                 # the single matching element
@@ -1666,15 +1667,19 @@ def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
 
 def _find_superset_in_domain(
     subset_idx: str,
-    var_domain_set: set[str],
+    var_domain: tuple[str, ...],
     model_ir: ModelIR,
 ) -> str | None:
     """Find the superset domain index for a given subset index.
 
     Issue #1010: Given an uncontrolled index like 't' and a variable domain
-    set like {'p', 'tt'}, check if 't' is a declared subset of any domain
+    tuple like ('p', 'tt'), check if 't' is a declared subset of any domain
     index (e.g., t(tt) means t ⊂ tt).  Returns the superset domain index
     name (lowercase) if found, None otherwise.
+
+    The domain is accepted as an ordered tuple so that when multiple domain
+    indices resolve to the same canonical target the first positional match
+    is selected deterministically.
 
     Also handles aliases transitively: alias chains (alias→alias) and
     multiple aliases to the same target set are resolved by following
@@ -1697,7 +1702,9 @@ def _find_superset_in_domain(
             # Compare the fully-resolved canonical parent against each
             # domain index's fully-resolved canonical target and return
             # the actual in-scope domain index name when a match is found.
-            for dom_idx in var_domain_set:
+            # Iterating the ordered tuple ensures the first positional
+            # match is selected deterministically.
+            for dom_idx in var_domain:
                 canonical_dom = _resolve_alias_target(dom_idx, model_ir)
                 if canonical_dom == canonical_parent:
                     return dom_idx

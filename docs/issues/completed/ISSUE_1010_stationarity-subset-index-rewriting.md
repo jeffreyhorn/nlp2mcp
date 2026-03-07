@@ -1,4 +1,4 @@
-# Stationarity gradient: rewrite subset indices to controlled domain with membership guard
+# Stationarity gradient: conditional Sum wrapping with `sameas(...)` for subset indices
 
 **GitHub Issue:** [#1010](https://github.com/jeffreyhorn/nlp2mcp/issues/1010)
 **Status:** FIXED
@@ -40,7 +40,7 @@ The original issue doc proposed replacing `c(p,t)` with `c(p,tt)`. This fails be
 
 3. **`_build_indexed_stationarity_expr()`** — Modified to wrap gradient in `Sum((idx,), expr, condition=Call("sameas", (SymbolRef(idx), SymbolRef(superset))))` when a subset→superset mapping exists. Falls back to unconditional Sum wrapping when no mapping exists.
 
-4. **Test updated** — `test_subset_index_in_gradient_rewritten_to_superset` now asserts the presence of `Sum(t$(sameas(t,tt)), ...)` instead of `Sum(t, ...)`.
+4. **Test updated** — `test_subset_index_in_gradient_wrapped_with_sameas` now asserts the presence of `Sum(t$(sameas(t,tt)), ...)` instead of `Sum(t, ...)`.
 
 ### Verification
 
