@@ -185,6 +185,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 1 criterion:** Timeout increased; ≥ 3 subcategory C models no longer have $149 error.
 
+**Day 1 status:** COMPLETE — Timeout increased 60s→150s; 5/10 subcategory C models fixed (robert, dyncge, korcge, paklive, tabora) via two stationarity.py fixes (gradient Sum wrapping + scalar Jacobian extra-index wrapping); remaining 5 have non-stationarity root causes (issues #1002–#1005, #949); 4 integration tests added; 3,961 tests pass.
+
 ---
 
 ### Day 2 — WS1: Subcategory C (Part 2)

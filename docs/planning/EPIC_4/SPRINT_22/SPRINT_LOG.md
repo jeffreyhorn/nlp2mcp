@@ -83,15 +83,25 @@
 
 ### Day 1 — WS5: Timeout Quick Win + WS1: Subcategory C (Part 1)
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~3h
 
 | Task | Status |
 |---|---|
-| Timeout increased 60s → 150s | |
-| Subcategory C analysis | |
-| Domain conditioning implemented | |
-| ≥ 3 C models fixed | |
+| Timeout increased 60s → 150s | :white_check_mark: `batch_translate.py` updated |
+| Subcategory C analysis | :white_check_mark: Two failure modes identified: (1) gradient not checked, (2) scalar Jacobian path lacks check |
+| Domain conditioning implemented | :white_check_mark: Two fixes in `stationarity.py`: gradient Sum wrapping + scalar Jacobian extra-index wrapping |
+| ≥ 3 C models fixed | :white_check_mark: 5 models fixed (robert, dyncge, korcge, paklive, tabora) — remaining 5 have non-stationarity root causes |
+| 4 integration tests | :white_check_mark: `test_stationarity_uncontrolled.py` — gradient subset wrapping, no-false-wrapping regression, scalar extra-index, scalar no-wrapping |
+| Issue docs for remaining 4 models | :white_check_mark: #1002 harker, #1003 ampl, #1004 glider, #1005 shale |
+| Tests | :white_check_mark: 3,961 passed (+4 from baseline), 10 skipped, 1 xfailed |
+
+**Analysis of remaining 5 subcategory C models:**
+- **harker** (#1002): Multi-dim set `arc(n,np)` as Sum domain — emitter expands body indices but not Sum domain
+- **ampl** (#1003): Dollar condition `$t(tl)` missing parentheses — needs `$(t(tl))`
+- **glider** (#1004): Set element `x` collides with identifier — needs quoting as `"x"`
+- **trnspwl** (#949): Existing issue — `ord()` on dynamic set + unquoted labels
+- **shale** (#1005): Uncontrolled set `t` in equation condition `$(ts(t,tf))` and `.fx` statements
 
 ---
 
