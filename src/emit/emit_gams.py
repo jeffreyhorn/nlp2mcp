@@ -657,9 +657,14 @@ def emit_gams_mcp(
             sections.append("")
         for mask_name, (domain, covered) in sorted(kkt.bound_param_masks.items()):
             domain_str = ",".join(domain)
-            elements = ", ".join(
-                _sanitize_set_element(idx) for inst in sorted(covered) for idx in inst
-            )
+            # Each instance in `covered` may be a multi-dimensional index tuple.
+            # Format each instance as a single dot-separated member (e.g., i1.j1),
+            # consistent with emit_original_sets and GAMS multi-dimensional syntax.
+            members = []
+            for inst in sorted(covered):
+                member = ".".join(_sanitize_set_element(idx) for idx in inst)
+                members.append(member)
+            elements = ", ".join(members)
             sections.append(f"Set {mask_name}({domain_str}) / {elements} /;")
         sections.append("")
 
