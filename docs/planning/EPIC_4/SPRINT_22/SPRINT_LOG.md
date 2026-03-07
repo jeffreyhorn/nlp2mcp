@@ -286,7 +286,7 @@
 | Metric | Baseline | Target | Actual | Status |
 |---|---|---|---|---|
 | Parse success | 154/157 | ≥ 154/157 | — | |
-| Translate success | 136/154 | ≥ 139/157 | — | |
+| Translate success | 136/154 | ≥ 139/154 | — | |
 | Solve success | 65 | ≥ 75 | — | |
 | Match | 30 | ≥ 35 | — | |
 | path_syntax_error | 40 | ≤ 30 | — | |
