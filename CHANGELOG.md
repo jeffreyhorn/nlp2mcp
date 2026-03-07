@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Day 0: Baseline Confirm + Sprint Kickoff - 2026-03-06
+
+**Branch:** `sprint22-day0-kickoff`
+
+#### Changed
+- Initialized SPRINT_LOG.md with baseline metrics and GitHub issue-to-workstream mapping
+- Confirmed baseline: parse 154/157, translate 134/154, solve 64/134, match 30/64, tests 3,957 (Day 0 run; BASELINE_METRICS.md reference: 136/154, 65/136, 30/65 — delta from timing variance)
+- Marked Day 0 complete in PLAN.md
+
 ### Sprint 22 Prep Task 10: Sprint 22 Plan - 2026-03-06
 
 **Branch:** `planning/sprint22-task10`

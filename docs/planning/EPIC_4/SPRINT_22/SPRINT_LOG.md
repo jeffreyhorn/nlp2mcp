@@ -1,7 +1,7 @@
 # Sprint 22 Log
 
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Start Date:** TBD
+**Start Date:** 2026-03-06
 **Baseline Commit:** `53ac5979` (PR #996 merge commit)
 
 ---
@@ -27,33 +27,36 @@
 
 ### WS1: path_syntax_error Subcategory Fixes (C, G, B)
 - **Target:** path_syntax_error ≤ 30 (−10 from 40)
-- **Subcategory C (10 models):** Uncontrolled set in stationarity ($149 error)
-- **Subcategory G (4 models):** Set index reuse conflict ($125 error)
-- **Subcategory B (2 models):** Domain violation in emitted data ($170 error)
+- **Subcategory C (10 models):** Uncontrolled set in stationarity ($149 error) — ampl, dyncge, glider, harker, korcge, paklive, robert, shale, tabora, trnspwl (#949)
+- **Subcategory G (4 models):** Set index reuse conflict ($125 error) — kand, prolog, spatequ, srkandw (#894)
+- **Subcategory B (2 models):** Domain violation in emitted data ($170 error) — cesam, cesam2
 - **Effort:** ~5–9h
 
 ### WS2: path_solve_terminated Pre-Solver Error Fixes
 - **Target:** path_solve_terminated ≤ 5 (−7 from 12)
-- **Priority 1:** `_fx_` equation suppression (5 models)
-- **Priority 2:** Unmatched free variables (2 models)
-- **Priority 3:** `$` condition preservation (1 model)
-- **Priority 4:** Stationarity domain conditioning (1 model)
+- **Priority 1:** `_fx_` equation suppression (5 models) — etamac (#984), hhfair, otpop (#915), pak, pindyck (#893)
+- **Priority 2:** Unmatched free variables (2 models) — fdesign, trussm
+- **Priority 3:** `$` condition preservation (1 model) — tforss (#907)
+- **Priority 4:** Stationarity domain conditioning (1 model) — springchain
+- **Related:** elec (#983), lands (#986) — execution errors (stretch)
 - **Effort:** ~6–10h
 
 ### WS3: model_infeasible KKT Bug Fixes
 - **Target:** model_infeasible ≤ 12 (−3 from 15)
 - **Exclude:** feasopt1, iobalance, meanvar, orani (permanently incompatible)
 - **Fix:** whouse (lag conditioning), ibm1 (mixed-bounds), uimp (multi-solve)
+- **Related:** #970 twocge (bug), chain, rocket, cpack, lnts, mathopt3, bearing
 - **Effort:** ~4–8h
 
 ### WS4: Solution Divergence Investigation
 - **Target:** Root cause for ≥ 1 Category A mismatch model
 - **Models:** apl1p, senstran (Category A); mathopt1 (Category D)
+- **Related:** #958–#964 (ps* series objective mismatches)
 - **Effort:** ~2–3h
 
 ### WS5: Translation Timeout Quick Win
-- **Target:** Recover egypt, ferts, dinam
-- **Fix:** Increase subprocess timeout 60s → 150s
+- **Target:** Recover egypt (#927), ferts (#928), dinam (#926)
+- **Fix:** Increase subprocess timeout 60s → 150s in `scripts/gamslib/batch_translate.py`
 - **Effort:** ~0.5h
 
 ### WS6: Deferred Issue #764 (mexss)
@@ -67,14 +70,14 @@
 
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~0.5h
 
 | Task | Status |
 |---|---|
-| `make test` baseline | |
-| SPRINT_LOG.md initialized | |
-| Pipeline baseline confirmed | |
+| `make test` baseline | :white_check_mark: 3,957 passed, 10 skipped, 1 xfailed |
+| SPRINT_LOG.md initialized | :white_check_mark: Baseline metrics filled, issue mapping added |
+| Pipeline baseline confirmed | :white_check_mark: parse 154/157, translate 134/154, solve 64/134, match 30/64 (timing variance: 2 translate timeouts, 1 solve delta vs BASELINE_METRICS.md) |
 
 ---
 

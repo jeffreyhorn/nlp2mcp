@@ -167,6 +167,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **Day 0 criterion:** All tests pass; SPRINT_LOG.md created; baseline matches BASELINE_METRICS.md.
 
+**Day 0 status:** COMPLETE — `make test` 3,957 passed; pipeline confirmed parse 154/157, translate 134/154 (2 timing-sensitive timeouts vs baseline 136), solve 64/134, match 30/64; SPRINT_LOG.md initialized with baseline metrics and issue mapping.
+
 ---
 
 ### Day 1 — WS5: Timeout Quick Win + WS1: Subcategory C (Part 1)
