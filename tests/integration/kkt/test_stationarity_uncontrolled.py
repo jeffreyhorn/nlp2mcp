@@ -33,6 +33,15 @@ def _find_sum_indices(expr, target_indices: set[str]) -> bool:
     return False
 
 
+def _contains_any_sum(expr) -> bool:
+    """Recursively check if the expression tree contains any Sum node."""
+    if isinstance(expr, Sum):
+        return True
+    if isinstance(expr, Binary):
+        return _contains_any_sum(expr.left) or _contains_any_sum(expr.right)
+    return False
+
+
 @pytest.mark.integration
 class TestGradientUncontrolledIndices:
     """Failure Mode 1: Gradient term contains subset indices not in var domain."""
@@ -155,10 +164,10 @@ class TestGradientUncontrolledIndices:
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
         lhs = stat_eq.lhs_rhs[0]
-        # The top-level expression should NOT be a Sum (no wrapping needed)
-        # It should be a Binary tree of gradient + bound terms
-        assert not isinstance(
-            lhs, Sum
+        # No Sum node should appear anywhere in the tree when all indices
+        # are already controlled by the variable domain.
+        assert not _contains_any_sum(
+            lhs
         ), "No Sum wrapping expected when all gradient indices match var_domain"
 
 
@@ -287,7 +296,8 @@ class TestScalarStationarityUncontrolledIndices:
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
         lhs = stat_eq.lhs_rhs[0]
-        # No Sum wrapping expected for fully scalar problem
-        assert not isinstance(
-            lhs, Sum
+        # No Sum node should appear anywhere in the tree for a fully scalar
+        # problem — no indices exist to wrap.
+        assert not _contains_any_sum(
+            lhs
         ), "No Sum wrapping expected for scalar constraint + scalar stationarity"

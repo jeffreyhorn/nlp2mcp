@@ -256,8 +256,9 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
             text=True,
         )
 
+        translate_timeout = 150  # seconds
         try:
-            stdout, stderr = proc.communicate(timeout=150)  # 150 second timeout
+            stdout, stderr = proc.communicate(timeout=translate_timeout)
             elapsed = time.perf_counter() - start_time
 
             if proc.returncode == 0:
@@ -289,7 +290,7 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
                 "translate_time_seconds": round(elapsed, 4),
                 "error": {
                     "category": "timeout",
-                    "message": "Translation timeout after 60 seconds",
+                    "message": f"Translation timeout after {translate_timeout} seconds",
                 },
             }
 
