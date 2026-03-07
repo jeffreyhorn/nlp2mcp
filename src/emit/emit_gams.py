@@ -642,6 +642,28 @@ def emit_gams_mcp(
     # NLP model (e.g., diff = (global - obj.l) / global) are intentionally
     # skipped — they may divide by zero and are not needed for MCP correctness.
 
+    # Issue #903/#1008/#1009: Emit bound parameters for non-uniform bounds.
+    # These indexed parameters hold per-element bound values so that
+    # complementarity equations stay indexed (avoiding GAMS $70).
+    if kkt.bound_params:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Bound Parameters (non-uniform bounds)")
+            sections.append("* ============================================")
+            sections.append("")
+        for param_name, (domain, data) in sorted(kkt.bound_params.items()):
+            domain_str = ",".join(domain)
+            sections.append(f"Parameter {param_name}({domain_str});")
+            for inst_indices, value in sorted(data.items()):
+                idx_str = ",".join(f"'{idx}'" for idx in inst_indices)
+                # Format value: use integer format if whole number
+                if value == int(value):
+                    val_str = str(int(value))
+                else:
+                    val_str = str(value)
+                sections.append(f"{param_name}({idx_str}) = {val_str};")
+            sections.append("")
+
     # Equations
     if add_comments:
         sections.append("* ============================================")

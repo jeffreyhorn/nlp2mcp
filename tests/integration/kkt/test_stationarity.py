@@ -336,9 +336,11 @@ class TestStationarityIndexed:
     def test_indexed_bounds_stationarity_nonuniform(self, manual_index_mapping):
         """Test stationarity with non-uniform indexed bounds.
 
-        When x(i) has different bound values per element (non-uniform bounds),
-        per-instance stationarity equations are generated to ensure bound
-        multipliers are properly included.
+        Issue #903/#1008/#1009: When x(i) has different bound values per
+        element, a single indexed stationarity equation stat_x(i) is
+        generated with an indexed multiplier piL_x(i). Non-uniform bound
+        values are encoded via indexed parameters in the complementarity
+        equations, keeping all MCP pairings dimension-consistent.
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -372,30 +374,24 @@ class TestStationarityIndexed:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
 
-        # Add NON-UNIFORM per-instance bound multipliers (different values)
-        # This represents x("i1") >= 0, x("i2") >= 1
-        kkt.multipliers_bounds_lo[("x", ("i1",))] = MultiplierDef(
-            name="piL_x_i1", domain=(), kind="bound_lo", associated_constraint="x"
-        )
-        kkt.multipliers_bounds_lo[("x", ("i2",))] = MultiplierDef(
-            name="piL_x_i2", domain=(), kind="bound_lo", associated_constraint="x"
+        # Add indexed bound multiplier (uniform key) — non-uniform bound
+        # values are handled by the complementarity builder via indexed
+        # parameters, not by per-instance multipliers.
+        kkt.multipliers_bounds_lo[("x", ())] = MultiplierDef(
+            name="piL_x", domain=("i",), kind="bound_lo", associated_constraint="x"
         )
 
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        # Should have per-instance stationarity equations
-        assert len(stationarity) == 2
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
-        assert stationarity["stat_x_i1"].domain == ()
-        assert stationarity["stat_x_i2"].domain == ()
+        # Single indexed stationarity equation
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
-        # Verify bound multipliers are included in stationarity expressions
-        stat_i1_str = str(stationarity["stat_x_i1"].lhs_rhs[0])
-        stat_i2_str = str(stationarity["stat_x_i2"].lhs_rhs[0])
-        assert "piL_x_i1" in stat_i1_str, "Bound multiplier missing from stat_x_i1"
-        assert "piL_x_i2" in stat_i2_str, "Bound multiplier missing from stat_x_i2"
+        # Verify indexed bound multiplier is included
+        stat_str = str(stationarity["stat_x"].lhs_rhs[0])
+        assert "piL_x" in stat_str, "Indexed bound multiplier missing from stat_x"
 
     def test_cross_domain_summation_partial_overlap(self, manual_index_mapping):
         """Test stationarity with partial domain overlap (trussm pattern).

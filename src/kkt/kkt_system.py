@@ -153,6 +153,17 @@ class KKTSystem:
     # are kept for complementarity pairing. Populated by build_stationarity_equations().
     empty_stationarity_vars: set[str] = field(default_factory=set)
 
+    # Issue #903/#1008/#1009: Indexed bound parameters for non-uniform bounds.
+    # When a variable has per-element bounds (e.g., x.lo("stage-1") = 125),
+    # the complementarity builder creates indexed parameters to hold the
+    # per-element values so that complementarity and stationarity equations
+    # stay indexed (avoiding scalar-indexed MCP pairing mismatch / GAMS $70).
+    # Maps param_name -> (domain, data_dict) where data_dict maps
+    # element tuple -> numeric value.
+    bound_params: dict[str, tuple[tuple[str, ...], dict[tuple[str, ...], float]]] = field(
+        default_factory=dict
+    )
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None

@@ -221,10 +221,15 @@ class TestKKTFullAssembly:
             min sum(i, x(i)^2)
             s.t. x("i1") ≥ 0, x("i2") ≥ 1 (different bounds per element)
 
+        Issue #903/#1008/#1009: Non-uniform bounds are encoded via indexed
+        parameters so that stationarity and complementarity equations stay
+        indexed, avoiding scalar-indexed MCP pairing mismatch (GAMS $70).
+
         KKT components:
             - Single indexed stationarity equation stat_x(i)
-            - Per-instance bound multipliers (for KKT solution)
-            - Per-instance complementarity equations (because bounds vary by element)
+            - Single indexed multiplier piL_x(i)
+            - Single indexed complementarity equation comp_lo_x(i)
+            - Indexed parameter x_lo_param(i) with per-element values
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -263,39 +268,33 @@ class TestKKTFullAssembly:
         # Assemble KKT
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        # Verify non-uniform bounds: stationarity is per-instance (not indexed)
-        # This ensures bound multipliers (piL_x_i1, piL_x_i2) are included
-        assert len(kkt.stationarity) == 2  # stat_x_i1, stat_x_i2
-        assert "stat_x_i1" in kkt.stationarity
-        assert "stat_x_i2" in kkt.stationarity
-        assert kkt.stationarity["stat_x_i1"].domain == ()  # Scalar
-        assert kkt.stationarity["stat_x_i2"].domain == ()  # Scalar
+        # Single indexed stationarity equation
+        assert len(kkt.stationarity) == 1
+        assert "stat_x" in kkt.stationarity
+        assert kkt.stationarity["stat_x"].domain == ("i",)
 
-        # Verify bound multipliers are included in stationarity expressions
-        stat_i1_str = str(kkt.stationarity["stat_x_i1"].lhs_rhs[0])
-        stat_i2_str = str(kkt.stationarity["stat_x_i2"].lhs_rhs[0])
-        assert "piL_x_i1" in stat_i1_str, "Lower bound multiplier missing from stat_x_i1"
-        assert "piL_x_i2" in stat_i2_str, "Lower bound multiplier missing from stat_x_i2"
+        # Verify indexed bound multiplier is included
+        stat_str = str(kkt.stationarity["stat_x"].lhs_rhs[0])
+        assert "piL_x" in stat_str, "Indexed bound multiplier missing from stat_x"
 
-        # Multipliers are per-element (for KKT solution)
-        assert len(kkt.multipliers_bounds_lo) == 2
-        assert ("x", ("i1",)) in kkt.multipliers_bounds_lo
-        assert ("x", ("i2",)) in kkt.multipliers_bounds_lo
+        # Single indexed multiplier
+        assert len(kkt.multipliers_bounds_lo) == 1
+        assert ("x", ()) in kkt.multipliers_bounds_lo
+        assert kkt.multipliers_bounds_lo[("x", ())].name == "piL_x"
 
-        # Complementarity is per-instance because bounds are non-uniform
-        # Each element has its own bound value, so we need separate equations
-        # and separate scalar multipliers (e.g., piL_x_i1, piL_x_i2)
-        assert len(kkt.complementarity_bounds_lo) == 2
-        assert ("x", ("i1",)) in kkt.complementarity_bounds_lo
-        assert ("x", ("i2",)) in kkt.complementarity_bounds_lo
-        # Verify different bound values are used
-        comp_i1 = kkt.complementarity_bounds_lo[("x", ("i1",))]
-        comp_i2 = kkt.complementarity_bounds_lo[("x", ("i2",))]
-        assert comp_i1.equation.domain == ()  # Per-instance (scalar) equation
-        assert comp_i2.equation.domain == ()
-        # Per-instance scalar multipliers for GAMS MCP model statement syntax
-        assert comp_i1.variable == "piL_x_i1"
-        assert comp_i2.variable == "piL_x_i2"
+        # Single indexed complementarity equation
+        assert len(kkt.complementarity_bounds_lo) == 1
+        assert ("x", ()) in kkt.complementarity_bounds_lo
+        comp = kkt.complementarity_bounds_lo[("x", ())]
+        assert comp.equation.domain == ("i",)
+        assert comp.variable == "piL_x"
+
+        # Bound parameter stored for emitter
+        assert "x_lo_param" in kkt.bound_params
+        domain, data = kkt.bound_params["x_lo_param"]
+        assert domain == ("i",)
+        assert data[("i1",)] == 0.0
+        assert data[("i2",)] == 1.0
 
     def test_indexed_bounds_assembly_uniform(self, manual_index_mapping):
         """Test KKT assembly with uniform indexed variable bounds.
