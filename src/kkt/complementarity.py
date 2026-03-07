@@ -203,25 +203,28 @@ def build_complementarity_pairs(
             # Get base bound value (if any) for elements without explicit overrides
             base_bound = lo_vars_base_bound.get(var_name)
 
-            # Create indexed bound parameter with per-element values
+            # Create indexed bound parameter.  When a base bound exists,
+            # store only the per-element overrides (sparse) — the emitter
+            # will use a domain-wide default assignment plus the overrides.
             param_name = f"{var_name}_lo_param"
             param_data: dict[tuple[str, ...], float] = {}
 
             all_instances = enumerate_variable_instances(var_def, kkt.model_ir)
             for inst_indices in all_instances:
                 if (var_name, inst_indices) in partition.bounds_lo:
-                    param_data[inst_indices] = partition.bounds_lo[(var_name, inst_indices)].value
-                elif base_bound is not None:
-                    param_data[inst_indices] = base_bound
+                    override_val = partition.bounds_lo[(var_name, inst_indices)].value
+                    # Only store if different from base (sparse representation)
+                    if base_bound is None or override_val != base_bound:
+                        param_data[inst_indices] = override_val
 
             # Store parameter on KKT system for the emitter
-            kkt.bound_params[param_name] = (var_domain, param_data)
+            kkt.bound_params[param_name] = (var_domain, param_data, base_bound)
 
             # When not all indices are covered (no base bound and only some
             # overrides), add a condition to restrict the equation to covered
             # indices and record a mask set for the emitter.
             lo_condition: Expr | None = None
-            if len(param_data) < len(all_instances):
+            if base_bound is None and len(param_data) < len(all_instances):
                 mask_name = f"has_{var_name}_lo"
                 kkt.bound_param_masks[mask_name] = (var_domain, set(param_data.keys()))
                 lo_condition = SetMembershipTest(mask_name, tuple(SymbolRef(d) for d in var_domain))
@@ -336,17 +339,15 @@ def build_complementarity_pairs(
             all_instances = enumerate_variable_instances(var_def, kkt.model_ir)
             for inst_indices in all_instances:
                 if (var_name, inst_indices) in partition.bounds_up:
-                    up_param_data[inst_indices] = partition.bounds_up[
-                        (var_name, inst_indices)
-                    ].value
-                elif base_bound is not None:
-                    up_param_data[inst_indices] = base_bound
+                    override_val = partition.bounds_up[(var_name, inst_indices)].value
+                    if base_bound is None or override_val != base_bound:
+                        up_param_data[inst_indices] = override_val
 
-            kkt.bound_params[param_name] = (var_domain, up_param_data)
+            kkt.bound_params[param_name] = (var_domain, up_param_data, base_bound)
 
             # When not all indices are covered, add a condition and mask set
             up_condition: Expr | None = None
-            if len(up_param_data) < len(all_instances):
+            if base_bound is None and len(up_param_data) < len(all_instances):
                 mask_name = f"has_{var_name}_up"
                 kkt.bound_param_masks[mask_name] = (var_domain, set(up_param_data.keys()))
                 up_condition = SetMembershipTest(mask_name, tuple(SymbolRef(d) for d in var_domain))

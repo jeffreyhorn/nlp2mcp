@@ -3,7 +3,7 @@
 **GitHub Issue:** [#903](https://github.com/jeffreyhorn/nlp2mcp/issues/903)
 **Status:** FIXED
 **Model:** launch (GAMSlib)
-**Error category:** `path_syntax_error`
+**Error category:** `gams_compilation_error`
 **GAMS error:** `$70` — The dimensions of the equ.var pair do not conform
 **Subcategory:** J (MCP pairing dimension mismatch)
 

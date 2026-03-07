@@ -3,7 +3,7 @@
 **GitHub Issue:** [#1008](https://github.com/jeffreyhorn/nlp2mcp/issues/1008)
 **Status:** FIXED
 **Model:** paklive (GAMSlib)
-**Error category:** `path_syntax_error`
+**Error category:** `gams_compilation_error`
 **GAMS error:** `$70` — The dimensions of the equ.var pair do not conform
 
 ## Description

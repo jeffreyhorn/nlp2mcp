@@ -3,7 +3,7 @@
 **GitHub Issue:** [#1009](https://github.com/jeffreyhorn/nlp2mcp/issues/1009)
 **Status:** FIXED
 **Model:** tabora (GAMSlib)
-**Error category:** `path_syntax_error`
+**Error category:** `gams_compilation_error`
 **GAMS error:** `$70` — The dimensions of the equ.var pair do not conform
 
 ## Description

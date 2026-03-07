@@ -158,10 +158,13 @@ class KKTSystem:
     # the complementarity builder creates indexed parameters to hold the
     # per-element values so that complementarity and stationarity equations
     # stay indexed (avoiding scalar-indexed MCP pairing mismatch / GAMS $70).
-    # Maps param_name -> (domain, data_dict) where data_dict maps
-    # element tuple -> numeric value.
-    bound_params: dict[str, tuple[tuple[str, ...], dict[tuple[str, ...], float]]] = field(
-        default_factory=dict
+    # Maps param_name -> (domain, overrides_dict, base_value).
+    #   overrides_dict: per-element values that differ from the base
+    #   base_value: uniform default (None if no finite base bound)
+    # When base_value is set, the emitter uses a domain-wide assignment
+    # plus sparse overrides instead of enumerating all instances.
+    bound_params: dict[str, tuple[tuple[str, ...], dict[tuple[str, ...], float], float | None]] = (
+        field(default_factory=dict)
     )
 
     # Mask sets for partial bound coverage.  When a variable has per-element

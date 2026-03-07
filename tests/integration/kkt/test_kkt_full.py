@@ -291,10 +291,11 @@ class TestKKTFullAssembly:
 
         # Bound parameter stored for emitter
         assert "x_lo_param" in kkt.bound_params
-        domain, data = kkt.bound_params["x_lo_param"]
+        domain, data, base_val = kkt.bound_params["x_lo_param"]
         assert domain == ("i",)
         assert data[("i1",)] == 0.0
         assert data[("i2",)] == 1.0
+        assert base_val is None
 
     def test_indexed_bounds_partial_up_no_base(self, manual_index_mapping):
         """Test KKT assembly with per-element upper bound override, no finite base.
@@ -353,8 +354,9 @@ class TestKKTFullAssembly:
 
         # Bound parameter should only contain the single covered index
         assert "x_up_param" in kkt.bound_params
-        _domain, data = kkt.bound_params["x_up_param"]
+        _domain, data, base_val = kkt.bound_params["x_up_param"]
         assert data == {("i1",): 10.0}
+        assert base_val is None
 
         # Mask set should be recorded
         assert "has_x_up" in kkt.bound_param_masks
