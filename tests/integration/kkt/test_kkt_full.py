@@ -296,6 +296,72 @@ class TestKKTFullAssembly:
         assert data[("i1",)] == 0.0
         assert data[("i2",)] == 1.0
 
+    def test_indexed_bounds_partial_up_no_base(self, manual_index_mapping):
+        """Test KKT assembly with per-element upper bound override, no finite base.
+
+        Problem:
+            min sum(i, x(i))
+            where x has 3 elements but only x("i1") has an upper bound of 10.
+            x("i2") and x("i3") are unbounded above (no finite base up).
+
+        The complementarity equation for the upper bound should be conditioned
+        on a mask set so that only x("i1") is bounded, and x("i2")/x("i3")
+        remain truly unbounded (not silently bounded at 0).
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        # Only x("i1") has an upper bound; no finite base upper bound
+        model.variables["x"] = VariableDef(name="x", domain=("i",), up_map={("i1",): 10.0})
+
+        model.equalities = ["objdef"]
+        model.sets["i"] = ["i1", "i2", "i3"]
+
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("i1",)), ("x", ("i2",)), ("x", ("i3",))],
+            [("objdef", ())],
+        )
+
+        gradient = GradientVector(num_cols=4, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(1.0))
+        gradient.set_derivative(2, Const(1.0))
+        gradient.set_derivative(3, Const(1.0))
+
+        J_eq = JacobianStructure(num_rows=1, num_cols=4, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=4, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        # Upper bound complementarity should exist and have a condition
+        assert ("x", ()) in kkt.complementarity_bounds_up
+        comp = kkt.complementarity_bounds_up[("x", ())]
+        assert comp.equation.domain == ("i",)
+        assert (
+            comp.equation.condition is not None
+        ), "Partial upper bound should have a condition restricting to covered indices"
+
+        # Bound parameter should only contain the single covered index
+        assert "x_up_param" in kkt.bound_params
+        _domain, data = kkt.bound_params["x_up_param"]
+        assert data == {("i1",): 10.0}
+
+        # Mask set should be recorded
+        assert "has_x_up" in kkt.bound_param_masks
+        mask_domain, covered = kkt.bound_param_masks["has_x_up"]
+        assert mask_domain == ("i",)
+        assert covered == {("i1",)}
+
     def test_indexed_bounds_assembly_uniform(self, manual_index_mapping):
         """Test KKT assembly with uniform indexed variable bounds.
 

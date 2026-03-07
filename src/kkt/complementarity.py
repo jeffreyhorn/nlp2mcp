@@ -16,7 +16,7 @@ Key features:
 from __future__ import annotations
 
 from src.ad.index_mapping import enumerate_variable_instances
-from src.ir.ast import Binary, Const, Expr, ParamRef, Unary, VarRef
+from src.ir.ast import Binary, Const, Expr, ParamRef, SetMembershipTest, SymbolRef, Unary, VarRef
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
@@ -217,6 +217,15 @@ def build_complementarity_pairs(
             # Store parameter on KKT system for the emitter
             kkt.bound_params[param_name] = (var_domain, param_data)
 
+            # When not all indices are covered (no base bound and only some
+            # overrides), add a condition to restrict the equation to covered
+            # indices and record a mask set for the emitter.
+            lo_condition: Expr | None = None
+            if len(param_data) < len(all_instances):
+                mask_name = f"has_{var_name}_lo"
+                kkt.bound_param_masks[mask_name] = (var_domain, set(param_data.keys()))
+                lo_condition = SetMembershipTest(mask_name, tuple(SymbolRef(d) for d in var_domain))
+
             # Create indexed multiplier and equation
             piL_name = create_bound_lo_multiplier_name(var_name)
             F_piL = Binary("-", VarRef(var_name, var_domain), ParamRef(param_name, var_domain))
@@ -225,6 +234,7 @@ def build_complementarity_pairs(
                 domain=var_domain,
                 relation=Rel.GE,
                 lhs_rhs=(F_piL, Const(0.0)),
+                condition=lo_condition,
             )
             comp_bounds_lo[(var_name, ())] = ComplementarityPair(
                 equation=comp_eq, variable=piL_name, variable_indices=var_domain
@@ -334,6 +344,13 @@ def build_complementarity_pairs(
 
             kkt.bound_params[param_name] = (var_domain, up_param_data)
 
+            # When not all indices are covered, add a condition and mask set
+            up_condition: Expr | None = None
+            if len(up_param_data) < len(all_instances):
+                mask_name = f"has_{var_name}_up"
+                kkt.bound_param_masks[mask_name] = (var_domain, set(up_param_data.keys()))
+                up_condition = SetMembershipTest(mask_name, tuple(SymbolRef(d) for d in var_domain))
+
             piU_name = create_bound_up_multiplier_name(var_name)
             F_piU = Binary("-", ParamRef(param_name, var_domain), VarRef(var_name, var_domain))
             comp_eq = EquationDef(
@@ -341,6 +358,7 @@ def build_complementarity_pairs(
                 domain=var_domain,
                 relation=Rel.GE,
                 lhs_rhs=(F_piU, Const(0.0)),
+                condition=up_condition,
             )
             comp_bounds_up[(var_name, ())] = ComplementarityPair(
                 equation=comp_eq, variable=piU_name, variable_indices=var_domain

@@ -18,7 +18,7 @@ This is the same root cause as issue #903 (launch model).
 
 Same fix as #1008. Eliminated per-instance scalar unrolling for non-uniform bounds. All stationarity, complementarity, and bound multiplier equations now remain indexed, with per-element bound values encoded via indexed GAMS parameters.
 
-See [ISSUE_1008](completed/ISSUE_1008_paklive-scalar-stationarity-mcp-pairing-mismatch.md) for full implementation details.
+See [ISSUE_1008](ISSUE_1008_paklive-scalar-stationarity-mcp-pairing-mismatch.md) for full implementation details.
 
 ### Verification
 

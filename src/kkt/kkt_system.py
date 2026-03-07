@@ -164,6 +164,15 @@ class KKTSystem:
         default_factory=dict
     )
 
+    # Mask sets for partial bound coverage.  When a variable has per-element
+    # bound overrides but no finite base bound, only a subset of indices have
+    # finite bounds.  The complementarity equation is conditioned on a mask set
+    # so that uncovered indices remain truly unbounded.
+    # Maps mask_set_name -> (domain, set of covered index tuples).
+    bound_param_masks: dict[str, tuple[tuple[str, ...], set[tuple[str, ...]]]] = field(
+        default_factory=dict
+    )
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None
