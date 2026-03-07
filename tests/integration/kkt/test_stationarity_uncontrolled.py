@@ -12,34 +12,25 @@ import pytest
 
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
-from src.ir.ast import Binary, Const, ParamRef, Sum, VarRef
+from src.ir.ast import Binary, Const, Expr, ParamRef, Sum, VarRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import EquationDef, ObjSense, Rel, SetDef, VariableDef
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 from src.kkt.stationarity import build_stationarity_equations
 
 
-def _find_sum_indices(expr, target_indices: set[str]) -> bool:
+def _find_sum_indices(expr: Expr, target_indices: set[str]) -> bool:
     """Recursively check if the expression contains a Sum with the given indices."""
-    if isinstance(expr, Sum):
-        if set(expr.index_sets) == target_indices:
-            return True
-        # Check body too for nested Sums
-        return _find_sum_indices(expr.body, target_indices)
-    if isinstance(expr, Binary):
-        return _find_sum_indices(expr.left, target_indices) or _find_sum_indices(
-            expr.right, target_indices
-        )
-    return False
+    if isinstance(expr, Sum) and set(expr.index_sets) == target_indices:
+        return True
+    return any(_find_sum_indices(c, target_indices) for c in expr.children())
 
 
-def _contains_any_sum(expr) -> bool:
+def _contains_any_sum(expr: Expr) -> bool:
     """Recursively check if the expression tree contains any Sum node."""
     if isinstance(expr, Sum):
         return True
-    if isinstance(expr, Binary):
-        return _contains_any_sum(expr.left) or _contains_any_sum(expr.right)
-    return False
+    return any(_contains_any_sum(c) for c in expr.children())
 
 
 @pytest.mark.integration
