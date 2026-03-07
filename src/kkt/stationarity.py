@@ -919,7 +919,7 @@ def _build_indexed_stationarity_expr(
     uncontrolled_grad = free_in_grad - var_domain_set
     if uncontrolled_grad:
         remaining_uncontrolled: set[str] = set()
-        for idx in uncontrolled_grad:
+        for idx in sorted(uncontrolled_grad):
             superset = _find_superset_in_domain(idx, var_domain_set, kkt.model_ir)
             if superset is not None:
                 # Wrap in sum(idx$(sameas(idx,superset)), ...) to select
@@ -1682,6 +1682,18 @@ def _find_superset_in_domain(
                 )
                 if resolved in var_domain_set:
                     return resolved
+            # A domain index might be an alias whose target matches parent.
+            # E.g., subset t(time) with domain index tt where alias(time,tt).
+            for dom_idx in var_domain_set:
+                if dom_idx in model_ir.aliases:
+                    alias_def = model_ir.aliases[dom_idx]
+                    target = (
+                        alias_def.target.lower()
+                        if hasattr(alias_def, "target")
+                        else str(alias_def).lower()
+                    )
+                    if target == parent:
+                        return dom_idx
 
     return None
 

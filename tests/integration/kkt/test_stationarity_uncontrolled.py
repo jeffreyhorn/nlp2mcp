@@ -3,9 +3,9 @@
 Issue #949: Tests that stationarity equations correctly handle uncontrolled
 set indices to avoid GAMS Error $149.
 
-Issue #1010: Subset indices are rewritten to their superset equivalents
-(e.g. t → tt) instead of being wrapped in Sum, preserving per-element
-gradient semantics.
+Issue #1010: When a gradient contains a subset index (e.g. t where t ⊂ tt),
+it is wrapped in a conditional Sum — sum(t$(sameas(t,tt)), ...) — to select
+the matching element, preserving per-element gradient semantics.
 
 Two failure modes are covered:
 1. Gradient component with subset indices not in the variable domain
@@ -69,12 +69,12 @@ def _find_sum_with_sameas_condition(
 class TestGradientUncontrolledIndices:
     """Failure Mode 1: Gradient term contains subset indices not in var domain."""
 
-    def test_subset_index_in_gradient_rewritten_to_superset(self, manual_index_mapping):
+    def test_subset_index_in_gradient_wrapped_with_sameas(self, manual_index_mapping):
         """Gradient contains c(p,t) but variable domain is (p, tt) where t ⊂ tt.
 
-        Issue #1010: Like the robert model, stat_x(p,tt) should rewrite
-        gradient c(p,t) to c(p,tt) so that the subset index 't' is replaced
-        by the controlled superset 'tt', preserving per-element semantics.
+        Issue #1010: Like the robert model, stat_x(p,tt) should wrap
+        gradient c(p,t) in sum(t$(sameas(t,tt)), ...) to select the
+        matching element, preserving per-element gradient semantics.
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
