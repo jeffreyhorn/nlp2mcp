@@ -29,6 +29,7 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    EquationRef,
     Expr,
     IndexOffset,
     MultiplierRef,
@@ -1639,6 +1640,30 @@ def _collect_free_indices(expr: Expr, model_ir: ModelIR) -> set[str]:
     return _walk(expr, frozenset())
 
 
+def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
+    """Resolve an alias name transitively to its canonical (non-alias) target.
+
+    Follows ``model_ir.aliases[name].target`` until a non-alias name is
+    reached or a cycle is detected.  All names are normalised to lowercase.
+    """
+    current = name.lower()
+    seen: set[str] = set()
+
+    while current not in seen:
+        seen.add(current)
+        alias_def = model_ir.aliases.get(current)
+        if alias_def is None:
+            break
+        target = (
+            alias_def.target.lower() if hasattr(alias_def, "target") else str(alias_def).lower()
+        )
+        if target == current:
+            break  # self-loop
+        current = target
+
+    return current
+
+
 def _find_superset_in_domain(
     subset_idx: str,
     var_domain_set: set[str],
@@ -1651,49 +1676,31 @@ def _find_superset_in_domain(
     index (e.g., t(tt) means t ⊂ tt).  Returns the superset domain index
     name (lowercase) if found, None otherwise.
 
-    Also handles aliases: if 't' is an alias for a set that is a subset of
-    a domain index, the domain index is still returned.
+    Also handles aliases transitively: alias chains (alias→alias) and
+    multiple aliases to the same target set are resolved by following
+    ``model_ir.aliases`` to their canonical (non-alias) target before
+    comparison.
     """
-    subset_lower = subset_idx.lower()
+    # Resolve subset_idx through any alias chain to the canonical set name
+    canonical_subset = _resolve_alias_target(subset_idx, model_ir)
 
-    # Resolve alias: if subset_idx is an alias, get the canonical set name
-    canonical = subset_lower
-    if subset_lower in model_ir.aliases:
-        alias_def = model_ir.aliases[subset_lower]
-        canonical = (
-            alias_def.target.lower() if hasattr(alias_def, "target") else str(alias_def).lower()
-        )
-
-    # Check if the canonical set has a single-element domain that matches
-    # one of the variable's domain indices
-    if canonical in model_ir.sets:
-        set_def = model_ir.sets[canonical]
+    # Check if the canonical set has a single-element domain (i.e. is a subset)
+    if canonical_subset in model_ir.sets:
+        set_def = model_ir.sets[canonical_subset]
         if hasattr(set_def, "domain") and len(set_def.domain) == 1:
-            parent = set_def.domain[0].lower()
-            if parent in var_domain_set:
-                return parent
-            # The parent might itself be an alias for a domain index
-            if parent in model_ir.aliases:
-                alias_def = model_ir.aliases[parent]
-                resolved = (
-                    alias_def.target.lower()
-                    if hasattr(alias_def, "target")
-                    else str(alias_def).lower()
-                )
-                if resolved in var_domain_set:
-                    return resolved
-            # A domain index might be an alias whose target matches parent.
-            # E.g., subset t(time) with domain index tt where alias(time,tt).
+            parent = set_def.domain[0]
+            if not isinstance(parent, str):
+                parent = str(parent)
+            # Resolve the parent through alias chains to its canonical target
+            canonical_parent = _resolve_alias_target(parent, model_ir)
+
+            # Compare the fully-resolved canonical parent against each
+            # domain index's fully-resolved canonical target and return
+            # the actual in-scope domain index name when a match is found.
             for dom_idx in var_domain_set:
-                if dom_idx in model_ir.aliases:
-                    alias_def = model_ir.aliases[dom_idx]
-                    target = (
-                        alias_def.target.lower()
-                        if hasattr(alias_def, "target")
-                        else str(alias_def).lower()
-                    )
-                    if target == parent:
-                        return dom_idx
+                canonical_dom = _resolve_alias_target(dom_idx, model_ir)
+                if canonical_dom == canonical_parent:
+                    return dom_idx
 
     return None
 
@@ -1707,7 +1714,7 @@ def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     per-element semantics (c(p,tt) varies with tt) rather than collapsing
     via Sum (sum(t, c(p,t)) is constant across tt).
 
-    Only string indices in VarRef/ParamRef/MultiplierRef/EquationRef and
+    String indices in VarRef, ParamRef, MultiplierRef, EquationRef, and
     IndexOffset.base are rewritten. The rename_map keys and values should
     both be lowercase-normalized.
     """
@@ -1733,6 +1740,8 @@ def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
         return ParamRef(expr.name, _rewrite_indices(expr.indices))
     if isinstance(expr, MultiplierRef):
         return MultiplierRef(expr.name, _rewrite_indices(expr.indices))
+    if isinstance(expr, EquationRef):
+        return EquationRef(expr.name, _rewrite_indices(expr.indices), expr.attribute)
     if isinstance(expr, Binary):
         return Binary(
             expr.op,
