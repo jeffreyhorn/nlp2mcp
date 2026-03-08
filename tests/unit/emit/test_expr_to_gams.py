@@ -808,6 +808,27 @@ class TestDollarConditional:
         assert "((a + b) ** rho)$(sig <> 0)" in result
         assert "1$(sig = 0)" in result
 
+    def test_binary_equality_operator_mapped(self):
+        """Issue #1003: IR '==' maps to GAMS '=' in emitted output."""
+        expr = Binary("==", VarRef("x", ()), Const(0))
+        result = expr_to_gams(expr)
+        assert result == "x = 0"
+
+    def test_binary_inequality_operator_mapped(self):
+        """Issue #1003: IR '!=' maps to GAMS '<>' in emitted output."""
+        expr = Binary("!=", VarRef("x", ()), Const(0))
+        result = expr_to_gams(expr)
+        assert result == "x <> 0"
+
+    def test_equality_in_dollar_condition(self):
+        """Issue #1003: Binary('==') inside dollar condition emits '='."""
+        expr = DollarConditional(
+            ParamRef("f", ("r",)),
+            Binary("==", Call("ord", (SymbolRef("tl"),)), Call("card", (SymbolRef("tl"),))),
+        )
+        result = expr_to_gams(expr)
+        assert result == "f(r)$(ord(tl) = card(tl))"
+
 
 @pytest.mark.unit
 class TestSetMembershipTest:
