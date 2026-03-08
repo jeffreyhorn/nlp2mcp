@@ -36,7 +36,9 @@ PRECEDENCE = {
     "or": 1,
     "and": 2,
     "=": 3,
+    "==": 3,  # IR alias for "=" — mapped to "=" at emission
     "<>": 3,
+    "!=": 3,  # IR alias for "<>" — mapped to "<>" at emission
     "<": 3,
     ">": 3,
     "<=": 3,
@@ -546,9 +548,13 @@ def expr_to_gams(
             if op in ("*", "/") and isinstance(right, Const) and right.value < 0:
                 right_str = f"({right_str})"
 
+            # Issue #1003: Map Python/IR comparison operators to GAMS equivalents.
+            # GAMS uses = (not ==) for equality and <> (not !=) for inequality.
+            gams_op = {"==": "=", "!=": "<>"}.get(op, op)
+
             # Determine if we need parentheses
             needs_parens = _needs_parens(parent_op, op, is_right)
-            result = f"{left_str} {op} {right_str}"
+            result = f"{left_str} {gams_op} {right_str}"
             return f"({result})" if needs_parens else result
 
         case Sum(index_sets, body, condition):
@@ -609,10 +615,12 @@ def expr_to_gams(
             # Parenthesize value if it's a complex expression to avoid precedence issues
             if isinstance(value_expr, (Binary, Unary, DollarConditional)):
                 value_str = f"({value_str})"
-            # Parenthesize condition if it's a complex expression
-            # This is required for GAMS syntax: expr$(cond <> 0) not expr$cond <> 0
-            if isinstance(condition, (Binary, Unary, DollarConditional)):
-                condition_str = f"({condition_str})"
+            # Issue #1003: Always parenthesize the dollar condition.
+            # GAMS requires $(cond) when the condition is a function-like
+            # expression such as a SetMembershipTest (e.g., $t(tl) must be
+            # $(t(tl))). Since $(...) is always valid GAMS syntax, always
+            # wrapping is safe and avoids ambiguity for all condition types.
+            condition_str = f"({condition_str})"
             return f"{value_str}${condition_str}"
 
         case SetMembershipTest(set_name, indices):

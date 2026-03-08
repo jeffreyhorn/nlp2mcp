@@ -712,7 +712,7 @@ class TestDollarConditional:
         """Test simple x$y."""
         expr = DollarConditional(VarRef("x", ()), VarRef("y", ()))
         result = expr_to_gams(expr)
-        assert result == "x$y"
+        assert result == "x$(y)"
 
     def test_dollar_conditional_with_indexed_vars(self):
         """Test s(n)$rn(n) from transportation problem."""
@@ -721,7 +721,7 @@ class TestDollarConditional:
             ParamRef("rn", ("n",)),
         )
         result = expr_to_gams(expr)
-        assert result == "s(n)$rn(n)"
+        assert result == "s(n)$(rn(n))"
 
     def test_dollar_conditional_with_binary_value(self):
         """Test (e - m)$t from chenery model.
@@ -733,7 +733,7 @@ class TestDollarConditional:
             VarRef("t", ("i",)),
         )
         result = expr_to_gams(expr)
-        assert result == "(e(i) - m(i))$t(i)"
+        assert result == "(e(i) - m(i))$(t(i))"
 
     def test_dollar_conditional_with_comparison_condition(self):
         """Test expr$(sig(i) <> 0) from chenery model."""
@@ -755,7 +755,7 @@ class TestDollarConditional:
         )
         expr = DollarConditional(inner_expr, VarRef("cond", ()))
         result = expr_to_gams(expr)
-        assert result == "((a / b + c) ** d)$cond"
+        assert result == "((a / b + c) ** d)$(cond)"
 
     def test_dollar_conditional_with_unary_value(self):
         """Test unary minus in value position needs parens."""
@@ -765,13 +765,13 @@ class TestDollarConditional:
         )
         result = expr_to_gams(expr)
         # Unary minus becomes ((-1) * x), which is then wrapped for dollar conditional
-        assert result == "(((-1) * x))$y"
+        assert result == "(((-1) * x))$(y)"
 
     def test_dollar_conditional_const_value(self):
         """Test 1$cond (constant as value)."""
         expr = DollarConditional(Const(1), ParamRef("sig", ("i",)))
         result = expr_to_gams(expr)
-        assert result == "1$sig(i)"
+        assert result == "1$(sig(i))"
 
     def test_dollar_conditional_nested(self):
         """Test nested dollar conditionals: (x$a)$b."""
@@ -779,14 +779,14 @@ class TestDollarConditional:
         expr = DollarConditional(inner, VarRef("b", ()))
         result = expr_to_gams(expr)
         # Inner dollar conditional needs parens
-        assert result == "(x$a)$b"
+        assert result == "(x$(a))$(b)"
 
     def test_dollar_conditional_in_sum(self):
         """Test sum(i, x(i)$a(i))."""
         body = DollarConditional(VarRef("x", ("i",)), ParamRef("a", ("i",)))
         expr = Sum(("i",), body)
         result = expr_to_gams(expr)
-        assert result == "sum(i, x(i)$a(i))"
+        assert result == "sum(i, x(i)$(a(i)))"
 
     def test_dollar_conditional_addition(self):
         """Test expr1$cond1 + expr2$cond2 from chenery dl equation.
@@ -836,7 +836,7 @@ class TestSetMembershipTest:
             SetMembershipTest("rn", (SymbolRef("n"),)),
         )
         result = expr_to_gams(expr)
-        assert result == "s(n)$rn(n)"
+        assert result == "s(n)$(rn(n))"
 
     def test_set_membership_with_expression_in_condition(self):
         """Test (e - m)$t(i) from chenery model."""
@@ -845,7 +845,7 @@ class TestSetMembershipTest:
             SetMembershipTest("t", (SymbolRef("i"),)),
         )
         result = expr_to_gams(expr)
-        assert result == "(e(i) - m(i))$t(i)"
+        assert result == "(e(i) - m(i))$(t(i))"
 
 
 @pytest.mark.unit
@@ -1059,7 +1059,7 @@ class TestIndexOffset:
             ParamRef("cond", ("i",)),
         )
         result = expr_to_gams(expr)
-        assert result == "x(i++1)$cond(i)"
+        assert result == "x(i++1)$(cond(i))"
 
     def test_index_offset_unary_minus_call_ord(self):
         """Test IndexOffset with Unary(-, Call(ord, ...)): t-ord(l)."""
