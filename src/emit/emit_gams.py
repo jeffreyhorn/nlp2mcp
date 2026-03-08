@@ -298,7 +298,9 @@ def emit_gams_mcp(
     # PR #658: Emit dynamic set assignments BEFORE computed parameters
     # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
     # like w(n,np,ku) that reference them, otherwise they produce empty data.
-    set_assignments_code = emit_set_assignments(kkt.model_ir)
+    # Issue #1007: Split into two passes — assignments referencing .l values
+    # (e.g., it(i) = yes$(e.l(i))) must be deferred until after Variables.
+    set_assignments_code = emit_set_assignments(kkt.model_ir, varref_filter="no_varref_attr")
     if set_assignments_code:
         sections.append(set_assignments_code)
         sections.append("")
@@ -593,6 +595,18 @@ def emit_gams_mcp(
         sections.extend(init_lines)
         if has_cross_varref:
             sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # Issue #1007: Emit deferred set assignments that reference .l values
+    # (e.g., it(i) = yes$(e.l(i) or m.l(i))) AFTER variable declarations
+    # and .l initialization. These were filtered out of the early pass above.
+    deferred_set_assignments_code = emit_set_assignments(
+        kkt.model_ir, varref_filter="only_varref_attr"
+    )
+    if deferred_set_assignments_code:
+        sections.append("$onImplicitAssign")
+        sections.append(deferred_set_assignments_code)
+        sections.append("$offImplicitAssign")
         sections.append("")
 
     # Issue #921: Emit deferred bounds (.lo/.up/.fx that reference .l values)
