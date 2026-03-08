@@ -39,13 +39,15 @@ class TestMixedBoundsStationarity:
     """Tests for stationarity equations with mixed uniform/non-uniform bounds."""
 
     def test_uniform_lo_nonuniform_up_includes_piL(self, manual_index_mapping):
-        """Issue #828: uniform lower bound + non-uniform upper bound.
+        """Issue #828/#903: uniform lower bound + non-uniform upper bound.
 
         Variable x(s) with:
           - lo = 0 (uniform) → multiplier at (x, ()) with domain ("s",)
-          - up("i1") = 10, up("i2") = 20 → multipliers at (x, ("i1",)), (x, ("i2",))
+          - up("i1") = 10, up("i2") = 20 → indexed multiplier at (x, ())
 
-        Per-instance stationarity for x("i1") must include -piL_x("i1").
+        Issue #903: Both bounds now produce indexed multipliers, so the
+        stationarity equation is always indexed. The LHS must include both
+        piL_x(s) and piU_x(s).
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -78,46 +80,37 @@ class TestMixedBoundsStationarity:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
 
-        # Uniform lower bound multiplier at (x, ()) with domain ("s",)
+        # Both lower and upper bound multipliers at indexed (uniform) key
         kkt.multipliers_bounds_lo[("x", ())] = MultiplierDef(
             name="piL_x", domain=("s",), kind="bound_lo", associated_constraint="x"
         )
-
-        # Non-uniform upper bound multipliers at per-instance keys
-        kkt.multipliers_bounds_up[("x", ("i1",))] = MultiplierDef(
-            name="piU_x_i1", domain=(), kind="bound_up", associated_constraint="x"
-        )
-        kkt.multipliers_bounds_up[("x", ("i2",))] = MultiplierDef(
-            name="piU_x_i2", domain=(), kind="bound_up", associated_constraint="x"
+        kkt.multipliers_bounds_up[("x", ())] = MultiplierDef(
+            name="piU_x", domain=("s",), kind="bound_up", associated_constraint="x"
         )
 
         stationarity = build_stationarity_equations(kkt)
 
-        # Should have per-instance stationarity equations (triggered by non-uniform up)
-        assert "stat_x_i1" in stationarity or "stat_x" in stationarity
+        # Single indexed stationarity equation
+        assert "stat_x" in stationarity
+        stat_eq = stationarity["stat_x"]
+        assert stat_eq.domain == ("s",)
 
-        # Find the stationarity equation for x("i1") — check both naming patterns
-        stat_eq = stationarity.get("stat_x_i1") or stationarity.get("stat_x")
-        assert (
-            stat_eq is not None
-        ), f"Expected stat_x_i1 or stat_x, got keys: {list(stationarity.keys())}"
-
-        # The LHS expression must contain a piL_x reference (lower bound multiplier)
+        # The LHS expression must contain both piL_x and piU_x
         lhs = stat_eq.lhs_rhs[0]
         piL_ref = _find_multiplier_ref(lhs, "piL_x")
-        assert piL_ref is not None, (
-            "Issue #828: Lower bound multiplier piL_x not found in stationarity "
-            "expression for x. This means the fallback to uniform key failed."
-        )
+        piU_ref = _find_multiplier_ref(lhs, "piU_x")
+        assert piL_ref is not None, "Lower bound multiplier piL_x not found in indexed stationarity"
+        assert piU_ref is not None, "Upper bound multiplier piU_x not found in indexed stationarity"
 
     def test_nonuniform_lo_uniform_up_includes_piU(self, manual_index_mapping):
         """Symmetric case: non-uniform lower bound + uniform upper bound.
 
         Variable x(s) with:
-          - lo("i1") = 1, lo("i2") = 2 → per-instance multipliers
+          - lo("i1") = 1, lo("i2") = 2 → indexed multiplier at (x, ())
           - up = 100 (uniform) → multiplier at (x, ()) with domain ("s",)
 
-        Per-instance stationarity for x("i1") must include +piU_x("i1").
+        Issue #903: Both bounds produce indexed multipliers, so the
+        indexed stationarity equation includes both piL_x(s) and piU_x(s).
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -147,32 +140,27 @@ class TestMixedBoundsStationarity:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
 
-        # Non-uniform lower bound multipliers at per-instance keys
-        kkt.multipliers_bounds_lo[("x", ("i1",))] = MultiplierDef(
-            name="piL_x_i1", domain=(), kind="bound_lo", associated_constraint="x"
+        # Both bounds at indexed (uniform) key
+        kkt.multipliers_bounds_lo[("x", ())] = MultiplierDef(
+            name="piL_x", domain=("s",), kind="bound_lo", associated_constraint="x"
         )
-        kkt.multipliers_bounds_lo[("x", ("i2",))] = MultiplierDef(
-            name="piL_x_i2", domain=(), kind="bound_lo", associated_constraint="x"
-        )
-
-        # Uniform upper bound multiplier at (x, ())
         kkt.multipliers_bounds_up[("x", ())] = MultiplierDef(
             name="piU_x", domain=("s",), kind="bound_up", associated_constraint="x"
         )
 
         stationarity = build_stationarity_equations(kkt)
 
-        # Find stationarity equation for x("i1")
-        stat_eq = stationarity.get("stat_x_i1") or stationarity.get("stat_x")
+        # Single indexed stationarity equation
+        stat_eq = stationarity.get("stat_x")
         assert stat_eq is not None, f"Keys: {list(stationarity.keys())}"
+        assert stat_eq.domain == ("s",)
 
-        # Must include upper bound multiplier piU_x
+        # Must include both multipliers
         lhs = stat_eq.lhs_rhs[0]
+        piL_ref = _find_multiplier_ref(lhs, "piL_x")
         piU_ref = _find_multiplier_ref(lhs, "piU_x")
-        assert piU_ref is not None, (
-            "Issue #828: Upper bound multiplier piU_x not found in stationarity. "
-            "The fallback to uniform key failed."
-        )
+        assert piL_ref is not None, "Lower bound multiplier piL_x not found in indexed stationarity"
+        assert piU_ref is not None, "Upper bound multiplier piU_x not found in indexed stationarity"
 
     def test_both_uniform_bounds_no_fallback_needed(self, manual_index_mapping):
         """When both bounds are uniform, standard indexed path is used (no fallback)."""

@@ -153,6 +153,29 @@ class KKTSystem:
     # are kept for complementarity pairing. Populated by build_stationarity_equations().
     empty_stationarity_vars: set[str] = field(default_factory=set)
 
+    # Issue #903/#1008/#1009: Indexed bound parameters for non-uniform bounds.
+    # When a variable has per-element bounds (e.g., x.lo("stage-1") = 125),
+    # the complementarity builder creates indexed parameters to hold the
+    # per-element values so that complementarity and stationarity equations
+    # stay indexed (avoiding scalar-indexed MCP pairing mismatch / GAMS $70).
+    # Maps param_name -> (domain, overrides_dict, base_value).
+    #   overrides_dict: per-element values that differ from the base
+    #   base_value: uniform default (None if no finite base bound)
+    # When base_value is set, the emitter uses a domain-wide assignment
+    # plus sparse overrides instead of enumerating all instances.
+    bound_params: dict[str, tuple[tuple[str, ...], dict[tuple[str, ...], float], float | None]] = (
+        field(default_factory=dict)
+    )
+
+    # Mask sets for partial bound coverage.  When a variable has per-element
+    # bound overrides but no finite base bound, only a subset of indices have
+    # finite bounds.  The complementarity equation is conditioned on a mask set
+    # so that uncovered indices remain truly unbounded.
+    # Maps mask_set_name -> (domain, set of covered index tuples).
+    bound_param_masks: dict[str, tuple[tuple[str, ...], set[tuple[str, ...]]]] = field(
+        default_factory=dict
+    )
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None

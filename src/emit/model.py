@@ -146,8 +146,6 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
                 if var_name and (not skip_objvar or var_name != obj_info.objvar):
                     # GAMS MCP syntax: indexed equations listed without indices
                     # stat_x.x (not stat_x(i).x(i)) - indexing is implicit
-                    # For per-instance stationarity (stat_x_i1.x), we pair scalar
-                    # equation with indexed variable - GAMS handles the element selection
                     pairs.append(f"    {eq_name}.{var_name}")
 
     # 2. Inequality complementarities (includes min/max complementarity)

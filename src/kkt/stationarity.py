@@ -47,7 +47,6 @@ from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
-    sanitize_index_for_identifier,
 )
 from src.kkt.objective import extract_objective_info
 
@@ -594,42 +593,6 @@ def _collect_access_conditions(
     return None
 
 
-def _has_nonuniform_bounds(kkt: KKTSystem, var_name: str) -> bool:
-    """Check if a variable has non-uniform bounds (per-instance multipliers).
-
-    Non-uniform bounds occur when:
-    - The variable has per-instance bound multipliers (stored with non-empty indices)
-    - AND no uniform bound multiplier (stored with empty indices)
-
-    This indicates the variable has different bound values for different elements,
-    requiring per-instance stationarity equations to include the bound multiplier terms.
-
-    Args:
-        kkt: KKT system with multiplier definitions
-        var_name: Variable name to check
-
-    Returns:
-        True if variable has non-uniform bounds requiring per-instance stationarity
-    """
-    # Check lower bounds
-    has_uniform_lo = (var_name, ()) in kkt.multipliers_bounds_lo
-    has_perinstance_lo = any(
-        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_lo.keys()
-    )
-
-    # Check upper bounds
-    has_uniform_up = (var_name, ()) in kkt.multipliers_bounds_up
-    has_perinstance_up = any(
-        key[0] == var_name and key[1] != () for key in kkt.multipliers_bounds_up.keys()
-    )
-
-    # Non-uniform if we have per-instance multipliers without uniform multipliers
-    nonuniform_lo = has_perinstance_lo and not has_uniform_lo
-    nonuniform_up = has_perinstance_up and not has_uniform_up
-
-    return nonuniform_lo or nonuniform_up
-
-
 def build_stationarity_equations(
     kkt: KKTSystem, config: Config | None = None
 ) -> dict[str, EquationDef]:
@@ -701,79 +664,57 @@ def build_stationarity_equations(
         skip_eq = obj_info.defining_equation if not kkt.model_ir.strategy1_applied else None
 
         if var_def.domain:
-            # Indexed variable: check if it has non-uniform bounds
-            if _has_nonuniform_bounds(kkt, var_name):
-                # Non-uniform bounds: generate per-instance stationarity equations
-                # This ensures bound multipliers (piL_x_i1, piL_x_i2, etc.) are included
-                for col_id, var_indices in instances:
-                    # Create per-instance equation name: stat_x_i1, stat_x_i2, etc.
-                    sanitized = [sanitize_index_for_identifier(idx) for idx in var_indices]
-                    indices_str = "_".join(sanitized) if sanitized else ""
-                    stat_name = (
-                        f"stat_{var_name}_{indices_str}" if indices_str else f"stat_{var_name}"
-                    )
+            # Issue #903/#1008/#1009: Always generate a single indexed stationarity
+            # equation for indexed variables. Non-uniform bounds are handled by
+            # the complementarity builder using indexed parameters, so bound
+            # multipliers are always indexed (keyed at (var_name, ())).
+            stat_name = f"stat_{var_name}"
+            stat_expr = _build_indexed_stationarity_expr(
+                kkt, var_name, var_def.domain, instances, skip_eq
+            )
+            stat_expr = apply_simplification(stat_expr, simp_mode)
 
-                    stat_expr = _build_stationarity_expr(
-                        kkt, col_id, var_name, var_indices, skip_eq
-                    )
-                    stat_expr = apply_simplification(stat_expr, simp_mode)
-                    stationarity[stat_name] = EquationDef(
-                        name=stat_name,
-                        domain=(),  # Scalar equation for this specific instance
-                        relation=Rel.EQ,
-                        lhs_rhs=(stat_expr, Const(0.0)),
-                    )
-            else:
-                # Uniform bounds: generate single indexed stationarity equation
-                stat_name = f"stat_{var_name}"
-                stat_expr = _build_indexed_stationarity_expr(
-                    kkt, var_name, var_def.domain, instances, skip_eq
-                )
-                stat_expr = apply_simplification(stat_expr, simp_mode)
+            # Issue #724: Detect if the variable is only accessed under a
+            # common dollar condition (e.g., td(w,t)).  If so, add that
+            # condition to the stationarity equation to prevent GAMS from
+            # generating empty equation instances, and record that the
+            # excluded variable instances need to be fixed.
+            access_cond = _find_variable_access_condition(var_name, var_def.domain, kkt.model_ir)
 
-                # Issue #724: Detect if the variable is only accessed under a
-                # common dollar condition (e.g., td(w,t)).  If so, add that
-                # condition to the stationarity equation to prevent GAMS from
-                # generating empty equation instances, and record that the
-                # excluded variable instances need to be fixed.
-                access_cond = _find_variable_access_condition(
+            # Issue #759: If no dollar-condition was found, check whether the
+            # variable is consistently accessed with a named subset index in
+            # place of one of its declared domain indices (e.g., u(m,ku) where
+            # the declared domain is (m,k)).  Use the subset membership as the
+            # stationarity equation condition so the terminal-period instances
+            # are excluded from the MCP pairing.
+            if access_cond is None:
+                access_cond = _find_variable_subset_condition(
                     var_name, var_def.domain, kkt.model_ir
                 )
 
-                # Issue #759: If no dollar-condition was found, check whether the
-                # variable is consistently accessed with a named subset index in
-                # place of one of its declared domain indices (e.g., u(m,ku) where
-                # the declared domain is (m,k)).  Use the subset membership as the
-                # stationarity equation condition so the terminal-period instances
-                # are excluded from the MCP pairing.
-                if access_cond is None:
-                    access_cond = _find_variable_subset_condition(
-                        var_name, var_def.domain, kkt.model_ir
-                    )
-
-                # Issue #877: If no condition was found via access patterns or
-                # subset analysis, check if ALL additive terms in the stationarity
-                # expression are DollarConditional.  This happens when every
-                # equation referencing the variable has a dollar condition (e.g.,
-                # d2 in worst is only defined by dd2$pdata(...,"strike")).  Without
-                # a guard, excluded instances produce 0 =E= 0, causing MCP errors.
-                if access_cond is None:
-                    access_cond = _extract_all_conditioned_guard(
-                        stat_expr, var_def.domain, kkt.model_ir
-                    )
-
-                stationarity[stat_name] = EquationDef(
-                    name=stat_name,
-                    domain=var_def.domain,  # Use same domain as variable
-                    relation=Rel.EQ,
-                    condition=access_cond,
-                    lhs_rhs=(stat_expr, Const(0.0)),
+            # Issue #877: If no condition was found via access patterns or
+            # subset analysis, check if ALL additive terms in the stationarity
+            # expression are DollarConditional.  This happens when every
+            # equation referencing the variable has a dollar condition (e.g.,
+            # d2 in worst is only defined by dd2$pdata(...,"strike")).  Without
+            # a guard, excluded instances produce 0 =E= 0, causing MCP errors.
+            if access_cond is None:
+                access_cond = _extract_all_conditioned_guard(
+                    stat_expr, var_def.domain, kkt.model_ir
                 )
 
-                # Store the condition on the KKT system for the emitter to use
-                # when generating .fx statements for excluded variable instances
-                if access_cond is not None:
-                    kkt.stationarity_conditions[var_name] = access_cond
+            stationarity[stat_name] = EquationDef(
+                name=stat_name,
+                domain=var_def.domain,  # Use same domain as variable
+                relation=Rel.EQ,
+                condition=access_cond,
+                lhs_rhs=(stat_expr, Const(0.0)),
+            )
+
+            # Store the condition on the KKT system for the emitter to use
+            # when generating .fx statements for excluded variable instances
+            if access_cond is not None:
+                kkt.stationarity_conditions[var_name] = access_cond
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:

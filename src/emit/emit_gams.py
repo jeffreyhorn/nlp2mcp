@@ -15,6 +15,8 @@ from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
+    _quote_assignment_index,
+    _sanitize_set_element,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_original_aliases,
@@ -642,6 +644,59 @@ def emit_gams_mcp(
     # NLP model (e.g., diff = (global - obj.l) / global) are intentionally
     # skipped — they may divide by zero and are not needed for MCP correctness.
 
+    # Issue #903/#1008/#1009: Emit bound parameters and mask sets for
+    # non-uniform bounds.  Indexed parameters hold per-element bound values
+    # so complementarity equations stay indexed (avoiding GAMS $70).
+    # Mask sets restrict equations to indices with finite bounds when only
+    # a subset of indices have overrides and no finite base bound exists.
+    if kkt.bound_param_masks:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Bound Mask Sets (partial bound coverage)")
+            sections.append("* ============================================")
+            sections.append("")
+        for mask_name, (domain, covered) in sorted(kkt.bound_param_masks.items()):
+            domain_str = ",".join(domain)
+            # Each instance in `covered` may be a multi-dimensional index tuple.
+            # Format each instance as a single dot-separated member (e.g., i1.j1),
+            # consistent with emit_original_sets and GAMS multi-dimensional syntax.
+            members = []
+            for inst in sorted(covered):
+                member = ".".join(_sanitize_set_element(idx) for idx in inst)
+                members.append(member)
+            elements = ", ".join(members)
+            sections.append(f"Set {mask_name}({domain_str}) / {elements} /;")
+        sections.append("")
+
+    if kkt.bound_params:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Bound Parameters (non-uniform bounds)")
+            sections.append("* ============================================")
+            sections.append("")
+        for param_name, (domain, data, base_value) in sorted(kkt.bound_params.items()):
+            domain_str = ",".join(domain)
+            sections.append(f"Parameter {param_name}({domain_str});")
+            # When a base value exists, emit a domain-wide default assignment
+            # followed by sparse overrides (avoids O(|domain|) assignments).
+            if base_value is not None:
+                if base_value == int(base_value):
+                    base_str = str(int(base_value))
+                else:
+                    base_str = str(base_value)
+                sections.append(f"{param_name}({domain_str}) = {base_str};")
+            for inst_indices, value in sorted(data.items()):
+                idx_str = ",".join(
+                    _quote_assignment_index(idx, set(), domain_lower=frozenset())
+                    for idx in inst_indices
+                )
+                if value == int(value):
+                    val_str = str(int(value))
+                else:
+                    val_str = str(value)
+                sections.append(f"{param_name}({idx_str}) = {val_str};")
+            sections.append("")
+
     # Equations
     if add_comments:
         sections.append("* ============================================")
@@ -818,6 +873,24 @@ def emit_gams_mcp(
             mult_name = comp_pair.variable
             domain_str = ",".join(eq_def.domain)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(ord({d_i}) = ord({d_j})) = 0;")
+
+    # 2d. Fix bound multipliers for partially-covered non-uniform bounds.
+    # When a variable has per-element bound overrides but no finite base bound,
+    # the complementarity equation is conditioned on a mask set.  The paired
+    # multiplier must be fixed to 0 for excluded indices.
+    for mask_name, (domain, _covered) in sorted(kkt.bound_param_masks.items()):
+        domain_str = ",".join(domain)
+        # Determine if this is a lower or upper bound mask and get multiplier name
+        # Mask names follow pattern: has_{var_name}_{lo|up}
+        if mask_name.endswith("_lo"):
+            var_name = mask_name[4:-3]  # strip "has_" and "_lo"
+            mult_name = create_bound_lo_multiplier_name(var_name)
+        elif mask_name.endswith("_up"):
+            var_name = mask_name[4:-3]  # strip "has_" and "_up"
+            mult_name = create_bound_up_multiplier_name(var_name)
+        else:
+            continue
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not {mask_name}({domain_str})) = 0;")
 
     # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
     # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),

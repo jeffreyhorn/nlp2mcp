@@ -114,6 +114,9 @@ class TestKKTAssemblerSmoke:
         - Partitioning (via lo_map/up_map)
         - Multiplier generation
         - Stationarity building
+
+        Issue #903/#1008/#1009: Non-uniform bounds produce a single indexed
+        stationarity equation with an indexed multiplier.
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -156,30 +159,22 @@ class TestKKTAssemblerSmoke:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
 
-        # Add per-instance bound multipliers (for non-uniform bounds)
-        kkt.multipliers_bounds_lo[("x", ("i1",))] = MultiplierDef(
-            name="piL_x_i1", domain=(), kind="bound_lo", associated_constraint="x"
-        )
-        kkt.multipliers_bounds_lo[("x", ("i2",))] = MultiplierDef(
-            name="piL_x_i2", domain=(), kind="bound_lo", associated_constraint="x"
+        # Add indexed bound multiplier (uniform key)
+        kkt.multipliers_bounds_lo[("x", ())] = MultiplierDef(
+            name="piL_x", domain=("i",), kind="bound_lo", associated_constraint="x"
         )
 
         # Build stationarity
         stationarity = build_stationarity_equations(kkt)
 
-        # Verify - non-uniform bounds generate per-instance stationarity equations
-        # This ensures bound multipliers (piL_x_i1, piL_x_i2) are properly included
-        assert len(stationarity) == 2
-        assert "stat_x_i1" in stationarity
-        assert "stat_x_i2" in stationarity
-        assert stationarity["stat_x_i1"].domain == ()
-        assert stationarity["stat_x_i2"].domain == ()
+        # Single indexed stationarity equation
+        assert len(stationarity) == 1
+        assert "stat_x" in stationarity
+        assert stationarity["stat_x"].domain == ("i",)
 
-        # Verify bound multipliers are included in stationarity expressions
-        stat_i1_str = str(stationarity["stat_x_i1"].lhs_rhs[0])
-        stat_i2_str = str(stationarity["stat_x_i2"].lhs_rhs[0])
-        assert "piL_x_i1" in stat_i1_str, "Lower bound multiplier missing from stat_x_i1"
-        assert "piL_x_i2" in stat_i2_str, "Lower bound multiplier missing from stat_x_i2"
+        # Verify indexed bound multiplier is included
+        stat_str = str(stationarity["stat_x"].lhs_rhs[0])
+        assert "piL_x" in stat_str, "Indexed bound multiplier missing from stat_x"
 
     def test_objective_variable_handling(self, manual_index_mapping):
         """Test that objective variable is correctly handled in KKT assembly.

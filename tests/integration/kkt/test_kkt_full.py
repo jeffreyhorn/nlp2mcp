@@ -221,10 +221,15 @@ class TestKKTFullAssembly:
             min sum(i, x(i)^2)
             s.t. x("i1") ≥ 0, x("i2") ≥ 1 (different bounds per element)
 
+        Issue #903/#1008/#1009: Non-uniform bounds are encoded via indexed
+        parameters so that stationarity and complementarity equations stay
+        indexed, avoiding scalar-indexed MCP pairing mismatch (GAMS $70).
+
         KKT components:
             - Single indexed stationarity equation stat_x(i)
-            - Per-instance bound multipliers (for KKT solution)
-            - Per-instance complementarity equations (because bounds vary by element)
+            - Single indexed multiplier piL_x(i)
+            - Single indexed complementarity equation comp_lo_x(i)
+            - Indexed parameter x_lo_param(i) with per-element values
         """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
@@ -263,39 +268,101 @@ class TestKKTFullAssembly:
         # Assemble KKT
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        # Verify non-uniform bounds: stationarity is per-instance (not indexed)
-        # This ensures bound multipliers (piL_x_i1, piL_x_i2) are included
-        assert len(kkt.stationarity) == 2  # stat_x_i1, stat_x_i2
-        assert "stat_x_i1" in kkt.stationarity
-        assert "stat_x_i2" in kkt.stationarity
-        assert kkt.stationarity["stat_x_i1"].domain == ()  # Scalar
-        assert kkt.stationarity["stat_x_i2"].domain == ()  # Scalar
+        # Single indexed stationarity equation
+        assert len(kkt.stationarity) == 1
+        assert "stat_x" in kkt.stationarity
+        assert kkt.stationarity["stat_x"].domain == ("i",)
 
-        # Verify bound multipliers are included in stationarity expressions
-        stat_i1_str = str(kkt.stationarity["stat_x_i1"].lhs_rhs[0])
-        stat_i2_str = str(kkt.stationarity["stat_x_i2"].lhs_rhs[0])
-        assert "piL_x_i1" in stat_i1_str, "Lower bound multiplier missing from stat_x_i1"
-        assert "piL_x_i2" in stat_i2_str, "Lower bound multiplier missing from stat_x_i2"
+        # Verify indexed bound multiplier is included
+        stat_str = str(kkt.stationarity["stat_x"].lhs_rhs[0])
+        assert "piL_x" in stat_str, "Indexed bound multiplier missing from stat_x"
 
-        # Multipliers are per-element (for KKT solution)
-        assert len(kkt.multipliers_bounds_lo) == 2
-        assert ("x", ("i1",)) in kkt.multipliers_bounds_lo
-        assert ("x", ("i2",)) in kkt.multipliers_bounds_lo
+        # Single indexed multiplier
+        assert len(kkt.multipliers_bounds_lo) == 1
+        assert ("x", ()) in kkt.multipliers_bounds_lo
+        assert kkt.multipliers_bounds_lo[("x", ())].name == "piL_x"
 
-        # Complementarity is per-instance because bounds are non-uniform
-        # Each element has its own bound value, so we need separate equations
-        # and separate scalar multipliers (e.g., piL_x_i1, piL_x_i2)
-        assert len(kkt.complementarity_bounds_lo) == 2
-        assert ("x", ("i1",)) in kkt.complementarity_bounds_lo
-        assert ("x", ("i2",)) in kkt.complementarity_bounds_lo
-        # Verify different bound values are used
-        comp_i1 = kkt.complementarity_bounds_lo[("x", ("i1",))]
-        comp_i2 = kkt.complementarity_bounds_lo[("x", ("i2",))]
-        assert comp_i1.equation.domain == ()  # Per-instance (scalar) equation
-        assert comp_i2.equation.domain == ()
-        # Per-instance scalar multipliers for GAMS MCP model statement syntax
-        assert comp_i1.variable == "piL_x_i1"
-        assert comp_i2.variable == "piL_x_i2"
+        # Single indexed complementarity equation
+        assert len(kkt.complementarity_bounds_lo) == 1
+        assert ("x", ()) in kkt.complementarity_bounds_lo
+        comp = kkt.complementarity_bounds_lo[("x", ())]
+        assert comp.equation.domain == ("i",)
+        assert comp.variable == "piL_x"
+
+        # Bound parameter stored for emitter
+        assert "x_lo_param" in kkt.bound_params
+        domain, data, base_val = kkt.bound_params["x_lo_param"]
+        assert domain == ("i",)
+        assert data[("i1",)] == 0.0
+        assert data[("i2",)] == 1.0
+        assert base_val is None
+
+    def test_indexed_bounds_partial_up_no_base(self, manual_index_mapping):
+        """Test KKT assembly with per-element upper bound override, no finite base.
+
+        Problem:
+            min sum(i, x(i))
+            where x has 3 elements but only x("i1") has an upper bound of 10.
+            x("i2") and x("i3") are unbounded above (no finite base up).
+
+        The complementarity equation for the upper bound should be conditioned
+        on a mask set so that only x("i1") is bounded, and x("i2")/x("i3")
+        remain truly unbounded (not silently bounded at 0).
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("i",))),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        # Only x("i1") has an upper bound; no finite base upper bound
+        model.variables["x"] = VariableDef(name="x", domain=("i",), up_map={("i1",): 10.0})
+
+        model.equalities = ["objdef"]
+        model.sets["i"] = ["i1", "i2", "i3"]
+
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("x", ("i1",)), ("x", ("i2",)), ("x", ("i3",))],
+            [("objdef", ())],
+        )
+
+        gradient = GradientVector(num_cols=4, index_mapping=index_mapping)
+        gradient.set_derivative(0, Const(1.0))
+        gradient.set_derivative(1, Const(1.0))
+        gradient.set_derivative(2, Const(1.0))
+        gradient.set_derivative(3, Const(1.0))
+
+        J_eq = JacobianStructure(num_rows=1, num_cols=4, index_mapping=index_mapping)
+        J_eq.set_derivative(0, 0, Const(1.0))
+
+        J_ineq = JacobianStructure(num_rows=0, num_cols=4, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        # Upper bound complementarity should exist and have a condition
+        assert ("x", ()) in kkt.complementarity_bounds_up
+        comp = kkt.complementarity_bounds_up[("x", ())]
+        assert comp.equation.domain == ("i",)
+        assert (
+            comp.equation.condition is not None
+        ), "Partial upper bound should have a condition restricting to covered indices"
+
+        # Bound parameter should only contain the single covered index
+        assert "x_up_param" in kkt.bound_params
+        _domain, data, base_val = kkt.bound_params["x_up_param"]
+        assert data == {("i1",): 10.0}
+        assert base_val is None
+
+        # Mask set should be recorded
+        assert "has_x_up" in kkt.bound_param_masks
+        mask_domain, covered = kkt.bound_param_masks["has_x_up"]
+        assert mask_domain == ("i",)
+        assert covered == {("i1",)}
 
     def test_indexed_bounds_assembly_uniform(self, manual_index_mapping):
         """Test KKT assembly with uniform indexed variable bounds.
