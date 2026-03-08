@@ -66,15 +66,19 @@ Two-part fix in `src/ir/parser.py`:
 
 1. **Alias resolution in domain expansion** (line ~4337): Added an else branch in the expansion loop that checks if an index is an alias resolving to the same set as the parameter's domain. Uses `_resolve_set_def()` on both the index and domain name to compare resolved `SetDef` objects by identity.
 
-2. **Conditional expression preservation** (line ~4494): In `_handle_conditional_assign_general()`, before delegating to `_handle_assign()`, check if the LHS is an indexed parameter where all indices are set/alias names (domain-over indices) with no lead/lag offsets. If so, store the conditional expression as a `DollarConditional` in `param.expressions` and return early, skipping the expansion that would ignore the condition.
+2. **Conditional expression preservation** (line ~4494): In `_handle_conditional_assign_general()`, before delegating to `_handle_assign()`, check if the LHS is an indexed parameter where all indices are set/alias names (domain-over indices) with no lead/lag offsets or subset indexing. If so, store a `LhsConditionalAssign(rhs=expr, condition=cond)` in `param.expressions` and return early, skipping the expansion that would ignore the condition. `LhsConditionalAssign` is a new AST node (in `src/ir/ast.py`) that distinguishes LHS-conditional assignments (`p(i)$cond = rhs`, only updates matching records) from RHS-dollar expressions (`p(i) = rhs$cond`, assigns 0 where false).
+
+3. **Emitter update**: Extended `emit_computed_parameter_assignments()` in `src/emit/original_symbols.py` to detect `LhsConditionalAssign` and emit the condition on the LHS.
 
 **Result:**
-- `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` is stored as a `DollarConditional` expression in `param.expressions`
-- The emitter outputs `ts(tf,tfp) = 1$(ord(tfp) < ord(tf));` — a correct conditional computed assignment
+- `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1` is stored as a `LhsConditionalAssign` expression in `param.expressions`
+- The emitter outputs `ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1;` — a correct LHS-conditional assignment
 - All 5 $170 errors eliminated, along with cascading $257/$141 errors
 
 Files modified:
-- `src/ir/parser.py`: Two changes — alias resolution in expansion loop, conditional assignment stored as expression
+- `src/ir/ast.py`: Added `LhsConditionalAssign` AST node
+- `src/ir/parser.py`: Alias resolution in expansion loop, conditional assignment stored as `LhsConditionalAssign`
+- `src/emit/original_symbols.py`: `LhsConditionalAssign` handling in emitter
 
 ### Verification
 
@@ -89,7 +93,7 @@ Files modified:
 ## Notes
 
 - The $257 (solve not checked) and $141 (unassigned symbol) errors were cascading consequences of the $170 errors
-- The emitter already supports `param.expressions` via `emit_computed_parameter_assignments()` — no emitter changes needed
+- The emitter already supported `param.expressions` via `emit_computed_parameter_assignments()`, and this fix extended it with `LhsConditionalAssign` handling so that `$cond` is correctly emitted on the LHS for conditional parameter assignments
 - The `Alias (tf,tfp)` declaration is correctly parsed (it appears in `model_ir.aliases`)
 - Similar patterns in other models that use alias indices in conditional parameter assignments will also benefit from this fix
 - Separate from Issue #1005 ($149 uncontrolled set), which was fixed in PR #1014

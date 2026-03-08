@@ -4334,6 +4334,9 @@ class _ModelBuilder:
                     # tfp is an alias for tf and domain is (tf,tf)).
                     expand_positions: list[int] = []
                     expand_set_defs: dict[int, SetDef] = {}
+                    # Issue #1015: Cache resolved domain SetDefs to avoid
+                    # redundant lookups in the alias-expansion branch.
+                    resolved_domain_cache: dict[str, SetDef | None] = {}
                     for pos, idx in enumerate(indices):
                         if pos in quoted_positions:
                             continue
@@ -4347,7 +4350,10 @@ class _ModelBuilder:
                             # Issue #1015: Check if idx is an alias resolving to the
                             # same set as the domain name.
                             resolved_idx = self._resolve_set_def(idx)
-                            resolved_domain = self._resolve_set_def(domain_name)
+                            dn_lower = domain_name.lower()
+                            if dn_lower not in resolved_domain_cache:
+                                resolved_domain_cache[dn_lower] = self._resolve_set_def(domain_name)
+                            resolved_domain = resolved_domain_cache[dn_lower]
                             if (
                                 resolved_idx is not None
                                 and resolved_domain is not None
