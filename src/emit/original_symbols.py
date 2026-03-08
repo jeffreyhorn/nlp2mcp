@@ -28,6 +28,7 @@ from src.ir.ast import (
     MultiplierRef,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -880,6 +881,56 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     return "\n".join(lines)
 
 
+def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
+    """Collect first-dimension labels lost by zero-filtering in parameter data.
+
+    Issue #1007: When multi-dimensional parameters have rows where ALL values
+    are zero, the zero-filtering from Issue #967 eliminates those rows entirely.
+    This drops the label from the emitted parameter data, causing GAMS $116
+    errors when the label is later referenced via string-indexed lookups like
+    ``zz("depr",i)``.
+
+    Returns the set of missing labels that need UEL registration via a
+    synthetic Set declaration.
+    """
+    sets_and_aliases_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+    missing: set[str] = set()
+
+    for param_def in model_ir.params.values():
+        domain = list(param_def.domain)
+        if not param_def.values or len(domain) < 2:
+            continue
+        # Only track labels for parameters with a universe (*) first dimension.
+        # Named set domains (e.g., i, j) already have their elements registered
+        # via the set declaration, so zero-filtered rows aren't truly lost.
+        if domain[0] != "*":
+            continue
+
+        domain_size = len(domain)
+        all_first_labels: set[str] = set()
+        emitted_first_labels: set[str] = set()
+
+        for key_tuple, value in param_def.values.items():
+            expanded_key = _expand_table_key(key_tuple, domain_size)
+            if expanded_key is None:
+                continue
+            if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
+                continue
+
+            first_label = expanded_key[0]
+            all_first_labels.add(first_label)
+
+            if isinstance(value, (int, float)) and value == 0:
+                continue
+            emitted_first_labels.add(first_label)
+
+        missing.update(all_first_labels - emitted_first_labels)
+
+    return missing
+
+
 def _expr_references_param(expr: Expr, param_name: str) -> bool:
     """Check if an expression tree contains a ParamRef to the given parameter.
 
@@ -1481,7 +1532,41 @@ def _restore_yes_keyword(expr: Expr) -> Expr:
     return transform(expr)
 
 
-def emit_set_assignments(model_ir: ModelIR) -> str:
+def _collect_set_membership_names(expr: Expr) -> set[str]:
+    """Collect all SetMembershipTest set names from an expression tree.
+
+    This walks both the standard ``children()`` interface and index
+    expressions on reference nodes (VarRef/ParamRef/MultiplierRef),
+    because those are not exposed via ``children()``.  ``IndexOffset``
+    indices are ``Expr`` subclasses, so they are handled by the same
+    recursive call (``IndexOffset.children()`` yields the offset).
+    """
+    names: set[str] = set()
+
+    if isinstance(expr, SetMembershipTest):
+        names.add(expr.set_name.lower())
+
+    # Recurse into normal children first.
+    for child in expr.children():
+        names.update(_collect_set_membership_names(child))
+
+    # Explicitly traverse reference indices that are not part of the
+    # generic children() interface.  IndexOffset is an Expr subclass,
+    # so the isinstance(idx, Expr) check covers it — its children()
+    # yields the offset expression for further traversal.
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in getattr(expr, "indices", None) or []:
+            if isinstance(idx, Expr):
+                names.update(_collect_set_membership_names(idx))
+
+    return names
+
+
+def emit_set_assignments(
+    model_ir: ModelIR,
+    *,
+    varref_filter: str = "all",
+) -> str:
     """Emit dynamic set assignment statements.
 
     Sprint 18 Day 3: Emit SetAssignment objects stored in model_ir.set_assignments
@@ -1493,6 +1578,12 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
 
     Args:
         model_ir: Model IR containing set assignment definitions
+        varref_filter: Controls which assignments are emitted based on whether
+            they contain attributed VarRef nodes (e.g., ``e.l(i)``), directly
+            or transitively through set dependencies:
+            - ``"all"``: Emit all assignments (default, backward compatible)
+            - ``"no_varref_attr"``: Skip assignments that need deferral
+            - ``"only_varref_attr"``: Only emit assignments that need deferral
 
     Returns:
         GAMS assignment statements as string
@@ -1501,12 +1592,48 @@ def emit_set_assignments(model_ir: ModelIR) -> str:
         ku(k) = yes$(ord(k) < card(k));
         low(n,nn) = ord(n) > ord(nn);
     """
+    _VALID_VARREF_FILTERS = {"all", "no_varref_attr", "only_varref_attr"}
+    if varref_filter not in _VALID_VARREF_FILTERS:
+        raise ValueError(
+            f"Invalid varref_filter={varref_filter!r}. "
+            f"Allowed values: {sorted(_VALID_VARREF_FILTERS)}"
+        )
+
     if not model_ir.set_assignments:
         return ""
+
+    # Issue #1007: Compute which set assignments need deferral (directly
+    # contain VarRef attributes, or transitively depend on deferred sets).
+    # E.g., it(i) = yes$(e.l(i)) is direct; in(i) = not it(i) is transitive.
+    deferred_sets: set[str] = set()
+    if varref_filter != "all":
+        # Pass 1: identify directly deferred set assignments
+        set_deps: dict[str, set[str]] = {}
+        for sa in model_ir.set_assignments:
+            sa_lower = sa.set_name.lower()
+            if _expr_contains_varref_attribute(sa.expr):
+                deferred_sets.add(sa_lower)
+            set_deps[sa_lower] = _collect_set_membership_names(sa.expr)
+        # Pass 2: propagate deferral through transitive dependencies
+        changed = True
+        while changed:
+            changed = False
+            for sa_lower, deps in set_deps.items():
+                if sa_lower not in deferred_sets and deps & deferred_sets:
+                    deferred_sets.add(sa_lower)
+                    changed = True
 
     lines: list[str] = []
 
     for set_assignment in model_ir.set_assignments:
+        # Issue #1007: Filter set assignments based on deferral status.
+        if varref_filter != "all":
+            is_deferred = set_assignment.set_name.lower() in deferred_sets
+            if varref_filter == "no_varref_attr" and is_deferred:
+                continue
+            if varref_filter == "only_varref_attr" and not is_deferred:
+                continue
+
         # Issue #861: Restore 'yes' keyword for set membership assignments.
         # The parser converts yes → Const(1.0), but GAMS requires 'yes' for
         # set assignment expressions to avoid type mismatch errors.
