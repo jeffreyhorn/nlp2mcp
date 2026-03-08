@@ -317,6 +317,32 @@ class DollarConditional(Expr):
 
 
 @dataclass(frozen=True)
+class LhsConditionalAssign(Expr):
+    """LHS-conditional assignment: param(i)$cond = rhs.
+
+    Issue #1015: Represents a conditional parameter assignment where the
+    condition guards the LHS (only records where cond is true are updated).
+    This is semantically different from DollarConditional (RHS dollar):
+      - LHS: p(i)$cond = rhs  →  only updates where cond is true
+      - RHS: p(i) = rhs$cond  →  assigns 0 where cond is false
+
+    Attributes:
+        rhs: The expression to assign
+        condition: The LHS condition expression
+    """
+
+    rhs: Expr
+    condition: Expr
+
+    def children(self) -> Iterable[Expr]:
+        yield self.rhs
+        yield self.condition
+
+    def __repr__(self) -> str:
+        return f"LhsConditionalAssign(${self.condition!r} = {self.rhs!r})"
+
+
+@dataclass(frozen=True)
 class IndexOffset(Expr):
     """
     Lead/lag indexing offset (Sprint 9 Day 3).

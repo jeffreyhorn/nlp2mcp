@@ -25,6 +25,7 @@ from .ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -4328,8 +4329,14 @@ class _ModelBuilder:
                     # Use _resolve_set_def to handle aliases (e.g., Alias(i,j); Parameter f(j);
                     # then f(j) = 0 should expand over the aliased set's members).
                     # Skip quoted indices — they are literal element references.
+                    # Issue #1015: Also check if idx is an alias that resolves to the
+                    # same underlying set as the domain name (e.g., ts(tf,tfp) where
+                    # tfp is an alias for tf and domain is (tf,tf)).
                     expand_positions: list[int] = []
                     expand_set_defs: dict[int, SetDef] = {}
+                    # Issue #1015: Cache resolved domain SetDefs to avoid
+                    # redundant lookups in the alias-expansion branch.
+                    resolved_domain_cache: dict[str, SetDef | None] = {}
                     for pos, idx in enumerate(indices):
                         if pos in quoted_positions:
                             continue
@@ -4339,6 +4346,21 @@ class _ModelBuilder:
                             if resolved is not None:
                                 expand_positions.append(pos)
                                 expand_set_defs[pos] = resolved
+                        else:
+                            # Issue #1015: Check if idx is an alias resolving to the
+                            # same set as the domain name.
+                            resolved_idx = self._resolve_set_def(idx)
+                            dn_lower = domain_name.lower()
+                            if dn_lower not in resolved_domain_cache:
+                                resolved_domain_cache[dn_lower] = self._resolve_set_def(domain_name)
+                            resolved_domain = resolved_domain_cache[dn_lower]
+                            if (
+                                resolved_idx is not None
+                                and resolved_domain is not None
+                                and resolved_idx is resolved_domain
+                            ):
+                                expand_positions.append(pos)
+                                expand_set_defs[pos] = resolved_idx
 
                     if expand_positions:
                         # Build list of member lists for positions that need expansion
@@ -4475,6 +4497,43 @@ class _ModelBuilder:
 
         # Store the conditional statement
         self.model.conditional_statements.append(cond_stmt)
+
+        # Issue #1015: For indexed parameter assignments where indices are
+        # set/alias names that would be domain-expanded, store the conditional
+        # expression directly in param.expressions.  Without this, _handle_assign
+        # expands the full Cartesian product of set elements ignoring the
+        # condition, producing incorrect values.
+        if (
+            isinstance(target, Tree)
+            and target.data == "symbol_indexed"
+            and len(target.children) > 1
+        ):
+            symbol_name = str(target.children[0]).lower()
+            param = self.model.params.get(symbol_name)
+            if param is not None and domain_context and len(domain_context) == len(param.domain):
+                # Skip if LHS has lead/lag offsets (e.g. w(m+1,n)$cond) or subset
+                # indexing (e.g. dist(arc(n,np))$cond) — those must go through
+                # _handle_assign for IndexOffset / SubsetIndex handling.
+                try:
+                    raw_indices = _process_index_list(target.children[1])
+                    has_offset = any(isinstance(idx, IndexOffset) for idx in raw_indices)
+                    has_subset_index = any(isinstance(idx, SubsetIndex) for idx in raw_indices)
+                except (AttributeError, IndexError, TypeError):
+                    has_offset = False
+                    has_subset_index = False
+                # Check if ALL indices resolve to a set (i.e., are domain-over indices)
+                all_domain_over = (
+                    not has_offset
+                    and not has_subset_index
+                    and all(self._resolve_set_def(idx) is not None for idx in domain_context)
+                )
+                if all_domain_over:
+                    rhs_evaluated = self._expr_with_context(
+                        rhs_expr, "conditional assignment", domain_context
+                    )
+                    cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
+                    param.expressions.append((tuple(domain_context), cond_expr))
+                    return
 
         # Also process the assignment itself so variables/parameters are updated
         self._handle_assign(assign_node)
