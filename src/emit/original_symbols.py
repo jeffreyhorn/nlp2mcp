@@ -25,6 +25,7 @@ from src.ir.ast import (
     DollarConditional,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -1374,7 +1375,15 @@ def emit_computed_parameter_assignments(
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
         domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
-        expr_str = expr_to_gams(expr, domain_vars=domain_vars)
+
+        # Issue #1015: LhsConditionalAssign wraps a LHS-conditional assignment
+        # p(i)$cond = rhs — emit condition on the LHS, not the RHS.
+        lhs_cond_str = ""
+        if isinstance(expr, LhsConditionalAssign):
+            lhs_cond_str = "$(" + expr_to_gams(expr.condition, domain_vars=domain_vars) + ")"
+            expr_str = expr_to_gams(expr.rhs, domain_vars=domain_vars)
+        else:
+            expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
         # Note: expressions path preserves quotes in key_tuples, so literal
@@ -1389,9 +1398,11 @@ def emit_computed_parameter_assignments(
                 for idx in key_tuple
             ]
             index_str = ",".join(quoted_keys)
-            assignment_line = f"{_quote_symbol(param_name)}({index_str}) = {expr_str};"
+            assignment_line = (
+                f"{_quote_symbol(param_name)}({index_str}){lhs_cond_str} = {expr_str};"
+            )
         else:
-            assignment_line = f"{_quote_symbol(param_name)} = {expr_str};"
+            assignment_line = f"{_quote_symbol(param_name)}{lhs_cond_str} = {expr_str};"
         # Issue #768: Skip duplicate assignments
         if assignment_line not in seen_assignment_lines:
             seen_assignment_lines.add(assignment_line)

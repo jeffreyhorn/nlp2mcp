@@ -25,6 +25,7 @@ from .ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -4524,7 +4525,7 @@ class _ModelBuilder:
                     rhs_evaluated = self._expr_with_context(
                         rhs_expr, "conditional assignment", domain_context
                     )
-                    cond_expr = DollarConditional(value_expr=rhs_evaluated, condition=condition)
+                    cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
                     param.expressions.append((tuple(domain_context), cond_expr))
                     return
 
