@@ -787,13 +787,6 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             if param_def.values:
                 domain_size = len(domain)
                 data_parts = []
-                # Issue #1007: Track first-dimension labels in multi-dim parameters
-                # so that all-zero rows can be preserved when needed.
-                all_first_labels: set[str] = set()
-                emitted_first_labels: set[str] = set()
-                # A representative zero entry per first-dim label for re-insertion
-                first_label_zero_entry: dict[str, str] = {}
-                track_labels = domain_size >= 2
                 for key_tuple, value in param_def.values.items():
                     # Expand key to match domain size (handles table data with dotted row headers)
                     expanded_key = _expand_table_key(key_tuple, domain_size)
@@ -808,21 +801,11 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
                         continue
 
-                    if track_labels:
-                        first_label = expanded_key[0]
-                        all_first_labels.add(first_label)
-
                     # Issue #967: Skip zero-valued entries to preserve GAMS sparse
                     # semantics. Unassigned parameters default to zero in GAMS but are
                     # skipped during division (sparse evaluation). Explicit zeros break
                     # this, causing division-by-zero runtime errors.
                     if isinstance(value, (int, float)) and value == 0:
-                        # Issue #1007: Remember a representative zero entry per
-                        # first-dimension label so we can re-insert it if ALL entries
-                        # for that label are zero (preserving the label for lookups).
-                        if track_labels and first_label not in first_label_zero_entry:
-                            sanitized = [_sanitize_set_element(k) for k in expanded_key]
-                            first_label_zero_entry[first_label] = ".".join(sanitized) + " 0"
                         continue
 
                     # Convert tuple to GAMS index syntax (Finding #3)
@@ -831,18 +814,6 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     sanitized_keys = [_sanitize_set_element(k) for k in expanded_key]
                     key_str = ".".join(sanitized_keys)
                     data_parts.append(f"{key_str} {_format_param_value(value)}")
-                    if track_labels:
-                        emitted_first_labels.add(first_label)
-
-                # Issue #1007: Re-insert representative zero entries for first-dim
-                # labels that were completely eliminated by zero-filtering.
-                # This ensures GAMS recognizes the label in subsequent lookups
-                # like zz("depr",i) even when all values for "depr" are zero.
-                if track_labels:
-                    missing_labels = all_first_labels - emitted_first_labels
-                    for label in sorted(missing_labels):
-                        if label in first_label_zero_entry:
-                            data_parts.append(first_label_zero_entry[label])
 
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
@@ -908,6 +879,56 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             lines.append(";")
 
     return "\n".join(lines)
+
+
+def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
+    """Collect first-dimension labels lost by zero-filtering in parameter data.
+
+    Issue #1007: When multi-dimensional parameters have rows where ALL values
+    are zero, the zero-filtering from Issue #967 eliminates those rows entirely.
+    This drops the label from the emitted parameter data, causing GAMS $116
+    errors when the label is later referenced via string-indexed lookups like
+    ``zz("depr",i)``.
+
+    Returns the set of missing labels that need UEL registration via a
+    synthetic Set declaration.
+    """
+    sets_and_aliases_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+    missing: set[str] = set()
+
+    for param_def in model_ir.params.values():
+        domain = list(param_def.domain)
+        if not param_def.values or len(domain) < 2:
+            continue
+        # Only track labels for parameters with a universe (*) first dimension.
+        # Named set domains (e.g., i, j) already have their elements registered
+        # via the set declaration, so zero-filtered rows aren't truly lost.
+        if domain[0] != "*":
+            continue
+
+        domain_size = len(domain)
+        all_first_labels: set[str] = set()
+        emitted_first_labels: set[str] = set()
+
+        for key_tuple, value in param_def.values.items():
+            expanded_key = _expand_table_key(key_tuple, domain_size)
+            if expanded_key is None:
+                continue
+            if any(k.lower() in sets_and_aliases_lower for k in expanded_key):
+                continue
+
+            first_label = expanded_key[0]
+            all_first_labels.add(first_label)
+
+            if isinstance(value, (int, float)) and value == 0:
+                continue
+            emitted_first_labels.add(first_label)
+
+        missing.update(all_first_labels - emitted_first_labels)
+
+    return missing
 
 
 def _expr_references_param(expr: Expr, param_name: str) -> bool:
@@ -1512,12 +1533,43 @@ def _restore_yes_keyword(expr: Expr) -> Expr:
 
 
 def _collect_set_membership_names(expr: Expr) -> set[str]:
-    """Collect all SetMembershipTest set names from an expression tree."""
+    """Collect all SetMembershipTest set names from an expression tree.
+
+    This walks both the standard ``children()`` interface and index/offset
+    expressions on reference nodes (VarRef/ParamRef/MultiplierRef/IndexOffset),
+    because those are not exposed via ``children()``.
+    """
     names: set[str] = set()
+
     if isinstance(expr, SetMembershipTest):
         names.add(expr.set_name.lower())
+
+    # Recurse into normal children first.
     for child in expr.children():
         names.update(_collect_set_membership_names(child))
+
+    # Explicitly traverse reference indices / offsets that are not part of
+    # the generic children() interface.
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        indices = getattr(expr, "indices", None) or []
+        for idx in indices:
+            if isinstance(idx, Expr):
+                names.update(_collect_set_membership_names(idx))
+            elif isinstance(idx, IndexOffset):
+                inner_index = getattr(idx, "index", None)
+                inner_offset = getattr(idx, "offset", None)
+                if isinstance(inner_index, Expr):
+                    names.update(_collect_set_membership_names(inner_index))
+                if isinstance(inner_offset, Expr):
+                    names.update(_collect_set_membership_names(inner_offset))
+    elif isinstance(expr, IndexOffset):
+        inner_index = getattr(expr, "index", None)
+        inner_offset = getattr(expr, "offset", None)
+        if isinstance(inner_index, Expr):
+            names.update(_collect_set_membership_names(inner_index))
+        if isinstance(inner_offset, Expr):
+            names.update(_collect_set_membership_names(inner_offset))
+
     return names
 
 
@@ -1551,6 +1603,13 @@ def emit_set_assignments(
         ku(k) = yes$(ord(k) < card(k));
         low(n,nn) = ord(n) > ord(nn);
     """
+    _VALID_VARREF_FILTERS = {"all", "no_varref_attr", "only_varref_attr"}
+    if varref_filter not in _VALID_VARREF_FILTERS:
+        raise ValueError(
+            f"Invalid varref_filter={varref_filter!r}. "
+            f"Allowed values: {sorted(_VALID_VARREF_FILTERS)}"
+        )
+
     if not model_ir.set_assignments:
         return ""
 

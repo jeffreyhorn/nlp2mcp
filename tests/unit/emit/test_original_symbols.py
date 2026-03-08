@@ -16,14 +16,26 @@ from src.emit.original_symbols import (
     _needs_quoting,
     _quote_assignment_index,
     _sanitize_set_element,
+    collect_missing_param_labels,
     emit_computed_parameter_assignments,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
+    emit_set_assignments,
 )
-from src.ir.ast import Binary, Call, Const, ParamRef, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    SetMembershipTest,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import AliasDef, ParameterDef, SetDef
+from src.ir.symbols import AliasDef, ParameterDef, SetAssignment, SetDef
 
 
 def _get_phases(phase_list: list[str], num_phases: int = 3) -> tuple[str, ...]:
@@ -1366,3 +1378,163 @@ class TestQuoteAssignmentIndex:
         # A hypothetical domain variable 'i-alias' contains a hyphen
         result = _quote_assignment_index("i-alias", {"i-alias"})
         assert result == "'i-alias'"
+
+
+class TestEmitSetAssignmentsDeferral:
+    """Issue #1007: Test .l-referencing set assignment deferral."""
+
+    def _make_model_with_set_assignments(self, assignments: list[SetAssignment]) -> ModelIR:
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.set_assignments = assignments
+        return model
+
+    def test_direct_varref_deferred(self):
+        """Set assignment with VarRef attribute is deferred."""
+        # it(i) = yes$(e.l(i))
+        sa = SetAssignment(
+            set_name="it",
+            indices=("i",),
+            expr=DollarConditional(
+                value_expr=Const(1.0),
+                condition=VarRef("e", ("i",), attribute="l"),
+            ),
+            location=None,
+        )
+        model = self._make_model_with_set_assignments([sa])
+
+        # no_varref_attr should skip it
+        result = emit_set_assignments(model, varref_filter="no_varref_attr")
+        assert result == ""
+
+        # only_varref_attr should emit it
+        result = emit_set_assignments(model, varref_filter="only_varref_attr")
+        assert "it(i)" in result
+
+        # all should emit it
+        result = emit_set_assignments(model, varref_filter="all")
+        assert "it(i)" in result
+
+    def test_transitive_dependency_deferred(self):
+        """Set assignment depending on a deferred set is also deferred."""
+        # it(i) = yes$(e.l(i))  -- direct VarRef
+        sa_it = SetAssignment(
+            set_name="it",
+            indices=("i",),
+            expr=DollarConditional(
+                value_expr=Const(1.0),
+                condition=VarRef("e", ("i",), attribute="l"),
+            ),
+            location=None,
+        )
+        # inn(i) = not it(i)  -- transitive dependency via SetMembershipTest
+        sa_in = SetAssignment(
+            set_name="inn",
+            indices=("i",),
+            expr=Unary("not", SetMembershipTest("it", (SymbolRef("i"),))),
+            location=None,
+        )
+        model = self._make_model_with_set_assignments([sa_it, sa_in])
+
+        # no_varref_attr should skip both
+        result = emit_set_assignments(model, varref_filter="no_varref_attr")
+        assert result == ""
+
+        # only_varref_attr should emit both
+        result = emit_set_assignments(model, varref_filter="only_varref_attr")
+        assert "it(i)" in result
+        assert "inn(i)" in result
+
+    def test_non_varref_not_deferred(self):
+        """Set assignment without VarRef is emitted in no_varref_attr pass."""
+        # ku(i) = yes$(ord(i) < card(i))
+        sa = SetAssignment(
+            set_name="ku",
+            indices=("i",),
+            expr=DollarConditional(
+                value_expr=Const(1.0),
+                condition=Binary(
+                    "<", Call("ord", (SymbolRef("i"),)), Call("card", (SymbolRef("i"),))
+                ),
+            ),
+            location=None,
+        )
+        model = self._make_model_with_set_assignments([sa])
+
+        result = emit_set_assignments(model, varref_filter="no_varref_attr")
+        assert "ku(i)" in result
+
+        result = emit_set_assignments(model, varref_filter="only_varref_attr")
+        assert result == ""
+
+    def test_invalid_varref_filter_raises(self):
+        """Invalid varref_filter raises ValueError."""
+        model = self._make_model_with_set_assignments([])
+        with pytest.raises(ValueError, match="Invalid varref_filter"):
+            emit_set_assignments(model, varref_filter="invalid")
+
+
+class TestCollectMissingParamLabels:
+    """Issue #1007: Test detection of labels lost by zero-filtering."""
+
+    def test_all_zero_row_detected(self):
+        """All-zero first-dimension label in *-domain param is detected."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.params["zz"] = ParameterDef(
+            name="zz",
+            domain=("*", "i"),
+            values={
+                ("alpha", "a"): 1.0,
+                ("alpha", "b"): 2.0,
+                ("beta", "a"): 0.0,
+                ("beta", "b"): 0.0,
+            },
+        )
+        missing = collect_missing_param_labels(model)
+        assert missing == {"beta"}
+
+    def test_mixed_zero_nonzero_not_missing(self):
+        """Label with at least one non-zero value is not missing."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.params["zz"] = ParameterDef(
+            name="zz",
+            domain=("*", "i"),
+            values={
+                ("alpha", "a"): 0.0,
+                ("alpha", "b"): 3.0,  # non-zero
+            },
+        )
+        missing = collect_missing_param_labels(model)
+        assert missing == set()
+
+    def test_named_domain_not_tracked(self):
+        """Parameters with named set first domain are not tracked."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.params["mat"] = ParameterDef(
+            name="mat",
+            domain=("i", "i"),
+            values={
+                ("a", "a"): 0.0,
+                ("a", "b"): 0.0,
+            },
+        )
+        missing = collect_missing_param_labels(model)
+        assert missing == set()
+
+    def test_no_zero_values_no_missing(self):
+        """Parameter with all non-zero values has no missing labels."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.params["zz"] = ParameterDef(
+            name="zz",
+            domain=("*", "i"),
+            values={
+                ("alpha", "a"): 1.0,
+                ("alpha", "b"): 2.0,
+            },
+        )
+        missing = collect_missing_param_labels(model)
+        assert missing == set()

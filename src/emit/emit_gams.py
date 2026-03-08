@@ -17,6 +17,7 @@ from src.emit.original_symbols import (
     _compute_set_alias_phases,
     _quote_assignment_index,
     _sanitize_set_element,
+    collect_missing_param_labels,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_original_aliases,
@@ -279,6 +280,16 @@ def emit_gams_mcp(
     params_code = emit_original_parameters(kkt.model_ir)
     if params_code:
         sections.append(params_code)
+        sections.append("")
+
+    # Issue #1007: Register UELs for first-dimension labels that were dropped
+    # by zero-filtering (Issue #967). A synthetic Set ensures GAMS recognizes
+    # these labels in string-indexed lookups like zz("depr",i) without
+    # re-introducing explicit zeros into parameter data.
+    missing_labels = collect_missing_param_labels(kkt.model_ir)
+    if missing_labels:
+        quoted = ", ".join(f"'{lab}'" for lab in sorted(missing_labels))
+        sections.append(f"Set nlp2mcp_uel_registry / {quoted} /;")
         sections.append("")
 
     # Issue #860: Identify computed parameters needed by set assignments.
