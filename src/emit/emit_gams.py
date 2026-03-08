@@ -288,8 +288,20 @@ def emit_gams_mcp(
     # re-introducing explicit zeros into parameter data.
     missing_labels = collect_missing_param_labels(kkt.model_ir)
     if missing_labels:
-        quoted = ", ".join(f"'{lab}'" for lab in sorted(missing_labels))
-        sections.append(f"Set nlp2mcp_uel_registry / {quoted} /;")
+        quoted = ", ".join(_sanitize_set_element(str(lab)) for lab in sorted(missing_labels))
+        # Choose a unique name that doesn't collide with existing symbols.
+        uel_name = "nlp2mcp_uel_registry"
+        existing_lower = (
+            {s.lower() for s in kkt.model_ir.sets}
+            | {s.lower() for s in kkt.model_ir.aliases}
+            | {s.lower() for s in kkt.model_ir.params}
+            | {s.lower() for s in kkt.model_ir.variables}
+        )
+        suffix = 0
+        while uel_name.lower() in existing_lower:
+            suffix += 1
+            uel_name = f"nlp2mcp_uel_registry{suffix}"
+        sections.append(f"Set {uel_name} / {quoted} /;")
         sections.append("")
 
     # Issue #860: Identify computed parameters needed by set assignments.

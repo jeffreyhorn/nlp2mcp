@@ -1535,9 +1535,11 @@ def _restore_yes_keyword(expr: Expr) -> Expr:
 def _collect_set_membership_names(expr: Expr) -> set[str]:
     """Collect all SetMembershipTest set names from an expression tree.
 
-    This walks both the standard ``children()`` interface and index/offset
-    expressions on reference nodes (VarRef/ParamRef/MultiplierRef/IndexOffset),
-    because those are not exposed via ``children()``.
+    This walks both the standard ``children()`` interface and index
+    expressions on reference nodes (VarRef/ParamRef/MultiplierRef),
+    because those are not exposed via ``children()``.  ``IndexOffset``
+    indices are ``Expr`` subclasses, so they are handled by the same
+    recursive call (``IndexOffset.children()`` yields the offset).
     """
     names: set[str] = set()
 
@@ -1548,27 +1550,14 @@ def _collect_set_membership_names(expr: Expr) -> set[str]:
     for child in expr.children():
         names.update(_collect_set_membership_names(child))
 
-    # Explicitly traverse reference indices / offsets that are not part of
-    # the generic children() interface.
+    # Explicitly traverse reference indices that are not part of the
+    # generic children() interface.  IndexOffset is an Expr subclass,
+    # so the isinstance(idx, Expr) check covers it — its children()
+    # yields the offset expression for further traversal.
     if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
-        indices = getattr(expr, "indices", None) or []
-        for idx in indices:
+        for idx in getattr(expr, "indices", None) or []:
             if isinstance(idx, Expr):
                 names.update(_collect_set_membership_names(idx))
-            elif isinstance(idx, IndexOffset):
-                inner_index = getattr(idx, "index", None)
-                inner_offset = getattr(idx, "offset", None)
-                if isinstance(inner_index, Expr):
-                    names.update(_collect_set_membership_names(inner_index))
-                if isinstance(inner_offset, Expr):
-                    names.update(_collect_set_membership_names(inner_offset))
-    elif isinstance(expr, IndexOffset):
-        inner_index = getattr(expr, "index", None)
-        inner_offset = getattr(expr, "offset", None)
-        if isinstance(inner_index, Expr):
-            names.update(_collect_set_membership_names(inner_index))
-        if isinstance(inner_offset, Expr):
-            names.update(_collect_set_membership_names(inner_offset))
 
     return names
 
