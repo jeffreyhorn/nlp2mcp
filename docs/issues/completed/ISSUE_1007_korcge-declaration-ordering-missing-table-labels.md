@@ -41,16 +41,17 @@ Files modified:
 - `src/emit/original_symbols.py`: Added `varref_filter` parameter and `_collect_set_membership_names()` helper for transitive dependency computation
 - `src/emit/emit_gams.py`: Split `emit_set_assignments()` call into two passes — `no_varref_attr` before Variables, `only_varref_attr` after `.l` initialization
 
-### Bug 2: Preserve all-zero table rows for label registration
+### Bug 2: Preserve label registration for all-zero table rows
 
-Modified `emit_original_parameters()` to track first-dimension labels in multi-dimensional parameters. When zero-filtering (Issue #967) eliminates ALL entries for a particular first-dimension label, one representative zero entry is re-inserted to register the label with GAMS. This preserves sparse evaluation semantics for entries with mixed zero/non-zero values while ensuring labels remain accessible for string-indexed lookups.
+Instead of re-inserting explicit zero entries (which would break Issue #967's sparse evaluation fix), we collect first-dimension labels for multi-dimensional `*`-domain parameters that would be entirely dropped by zero-filtering via `collect_missing_param_labels()`, and emit them into a synthetic UEL registry `Set`. This ensures GAMS sees the full set of string-indexable labels (e.g., `"depr"`, `"dstr"`, `"te"`, `"dst"`) without reintroducing all-zero rows, preserving sparse evaluation semantics while keeping labels available for string-indexed lookups.
 
 Files modified:
-- `src/emit/original_symbols.py`: Added label tracking and re-insertion logic in `emit_original_parameters()`
+- `src/emit/original_symbols.py`: Added `collect_missing_param_labels()` to track labels lost to zero-filtering
+- `src/emit/emit_gams.py`: Emit synthetic UEL registry `Set` to register missing parameter labels with GAMS
 
 ### Verification
 
-- All 3962 tests pass
+- All 3970 tests pass
 - Quality gate: typecheck, lint, format all pass
 - korcge model compiles with zero errors and solves to completion
 
