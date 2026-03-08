@@ -254,20 +254,24 @@ def _find_variable_access_condition(
         # Issue #730: Validate that all free indices in the condition are within
         # the variable's domain.  If the condition references indices from the
         # equation domain that are NOT in the variable domain, the condition
-        # cannot be used — it would produce bare/uncontrolled indices in GAMS.
-        # Example: pls(r) accessed in sum(r$(ri(r,i)), pls(r)) produces
+        # cannot be used as-is — it would produce bare/uncontrolled indices in
+        # GAMS.  Example: pls(r) accessed in sum(r$(ri(r,i)), pls(r)) produces
         # condition ri(r,i), but 'i' is not in pls's domain (r,).
         #
-        # Issue #730 review: Only consider SymbolRef names that are actual
-        # set/alias index variables, not literal element labels.  The parser
-        # wraps both free indices and literal elements as SymbolRef, so
-        # conditions like arc('a',i) would be incorrectly rejected if 'a'
-        # (a constant element) were treated as a free index.
-        all_symbolrefs = _collect_symbolref_names(first)
-        known_indices = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
-        cond_indices = all_symbolrefs & known_indices
-        if cond_indices - var_domain_set:
-            return None
+        # Issue #1005: Use _collect_free_indices() instead of
+        # _collect_symbolref_names() to detect uncontrolled indices — the
+        # latter misses string indices stored in ParamRef/VarRef nodes (e.g.,
+        # ParamRef('ts', ('t','tf')) has no SymbolRef children).  When extra
+        # indices are found, lift them into an existential check
+        # sum(extra, 1$cond) instead of rejecting the condition outright.
+        free_indices = _collect_free_indices(first, model_ir)
+        extra_indices = free_indices - {d.lower() for d in var_domain}
+        if extra_indices:
+            lifted = Sum(
+                index_sets=tuple(sorted(extra_indices)),
+                body=DollarConditional(value_expr=Const(1), condition=first),
+            )
+            return lifted
         return first
 
     return None
