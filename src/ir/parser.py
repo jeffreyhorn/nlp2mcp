@@ -4504,16 +4504,21 @@ class _ModelBuilder:
             symbol_name = str(target.children[0]).lower()
             param = self.model.params.get(symbol_name)
             if param is not None and domain_context and len(domain_context) == len(param.domain):
-                # Skip if LHS has lead/lag offsets (e.g. w(m+1,n)$cond) —
-                # those must go through _handle_assign for IndexOffset handling
+                # Skip if LHS has lead/lag offsets (e.g. w(m+1,n)$cond) or subset
+                # indexing (e.g. dist(arc(n,np))$cond) — those must go through
+                # _handle_assign for IndexOffset / SubsetIndex handling.
                 try:
                     raw_indices = _process_index_list(target.children[1])
                     has_offset = any(isinstance(idx, IndexOffset) for idx in raw_indices)
+                    has_subset_index = any(isinstance(idx, SubsetIndex) for idx in raw_indices)
                 except (AttributeError, IndexError, TypeError):
                     has_offset = False
+                    has_subset_index = False
                 # Check if ALL indices resolve to a set (i.e., are domain-over indices)
-                all_domain_over = not has_offset and all(
-                    self._resolve_set_def(idx) is not None for idx in domain_context
+                all_domain_over = (
+                    not has_offset
+                    and not has_subset_index
+                    and all(self._resolve_set_def(idx) is not None for idx in domain_context)
                 )
                 if all_domain_over:
                     rhs_evaluated = self._expr_with_context(
