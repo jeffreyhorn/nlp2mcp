@@ -17,6 +17,7 @@ from src.emit.original_symbols import (
     _compute_set_alias_phases,
     _quote_assignment_index,
     _sanitize_set_element,
+    collect_missing_param_labels,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_original_aliases,
@@ -281,6 +282,28 @@ def emit_gams_mcp(
         sections.append(params_code)
         sections.append("")
 
+    # Issue #1007: Register UELs for first-dimension labels that were dropped
+    # by zero-filtering (Issue #967). A synthetic Set ensures GAMS recognizes
+    # these labels in string-indexed lookups like zz("depr",i) without
+    # re-introducing explicit zeros into parameter data.
+    missing_labels = collect_missing_param_labels(kkt.model_ir)
+    if missing_labels:
+        quoted = ", ".join(_sanitize_set_element(str(lab)) for lab in sorted(missing_labels))
+        # Choose a unique name that doesn't collide with existing symbols.
+        uel_name = "nlp2mcp_uel_registry"
+        existing_lower = (
+            {s.lower() for s in kkt.model_ir.sets}
+            | {s.lower() for s in kkt.model_ir.aliases}
+            | {s.lower() for s in kkt.model_ir.params}
+            | {s.lower() for s in kkt.model_ir.variables}
+        )
+        suffix = 0
+        while uel_name.lower() in existing_lower:
+            suffix += 1
+            uel_name = f"nlp2mcp_uel_registry{suffix}"
+        sections.append(f"Set {uel_name} / {quoted} /;")
+        sections.append("")
+
     # Issue #860: Identify computed parameters needed by set assignments.
     # These must be emitted BEFORE set assignments to break the circular
     # dependency (set assignments reference computed params, computed params
@@ -298,7 +321,9 @@ def emit_gams_mcp(
     # PR #658: Emit dynamic set assignments BEFORE computed parameters
     # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
     # like w(n,np,ku) that reference them, otherwise they produce empty data.
-    set_assignments_code = emit_set_assignments(kkt.model_ir)
+    # Issue #1007: Split into two passes — assignments referencing .l values
+    # (e.g., it(i) = yes$(e.l(i))) must be deferred until after Variables.
+    set_assignments_code = emit_set_assignments(kkt.model_ir, varref_filter="no_varref_attr")
     if set_assignments_code:
         sections.append(set_assignments_code)
         sections.append("")
@@ -593,6 +618,18 @@ def emit_gams_mcp(
         sections.extend(init_lines)
         if has_cross_varref:
             sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # Issue #1007: Emit deferred set assignments that reference .l values
+    # (e.g., it(i) = yes$(e.l(i) or m.l(i))) AFTER variable declarations
+    # and .l initialization. These were filtered out of the early pass above.
+    deferred_set_assignments_code = emit_set_assignments(
+        kkt.model_ir, varref_filter="only_varref_attr"
+    )
+    if deferred_set_assignments_code:
+        sections.append("$onImplicitAssign")
+        sections.append(deferred_set_assignments_code)
+        sections.append("$offImplicitAssign")
         sections.append("")
 
     # Issue #921: Emit deferred bounds (.lo/.up/.fx that reference .l values)
