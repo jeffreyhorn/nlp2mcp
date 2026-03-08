@@ -265,7 +265,7 @@ def _find_variable_access_condition(
         # indices are found, lift them into an existential check
         # sum(extra, 1$cond) instead of rejecting the condition outright.
         free_indices = _collect_free_indices(first, model_ir)
-        extra_indices = free_indices - var_domain_set
+        extra_indices = free_indices - {d.lower() for d in var_domain}
         if extra_indices:
             lifted = Sum(
                 index_sets=tuple(sorted(extra_indices)),
