@@ -296,6 +296,8 @@ def emit_gams_mcp(
             | {s.lower() for s in kkt.model_ir.aliases}
             | {s.lower() for s in kkt.model_ir.params}
             | {s.lower() for s in kkt.model_ir.variables}
+            | {s.lower() for s in kkt.model_ir.acronyms}
+            | {s.lower() for s in kkt.model_ir.equations}
         )
         suffix = 0
         while uel_name.lower() in existing_lower:
