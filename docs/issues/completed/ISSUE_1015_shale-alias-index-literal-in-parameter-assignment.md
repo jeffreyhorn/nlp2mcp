@@ -62,7 +62,7 @@ The IR builder's `_handle_conditional_assign_general()` strips the dollar condit
 
 ## Fix Applied
 
-Two-part fix in `src/ir/parser.py`:
+Three-part fix:
 
 1. **Alias resolution in domain expansion** (line ~4337): Added an else branch in the expansion loop that checks if an index is an alias resolving to the same set as the parameter's domain. Uses `_resolve_set_def()` on both the index and domain name to compare resolved `SetDef` objects by identity.
 
