@@ -19,15 +19,16 @@ The glider model declares set `c / x, y /` (coordinates) and also has variables 
 This issue has been resolved by prior work. The emitter no longer generates per-instance complementarity equations with expanded element indices. Instead, it emits indexed equations using set iteration:
 
 - **Before**: `comp_lo_pos_x_h0.. pos(x,"h0") - 0 =G= 0;` (per-instance, bare `x`)
-- **After**: `comp_lo_pos(c,h)$(has_pos_lo(c,h)).. pos(c,h) - pos_lo_param(c,h) =G= 0;` (indexed)
+- **After**: `comp_lo_pos(c,h)$(has_pos_lo(c,h)).. pos(c,h) - pos_lo_param(c,h) =G= 0;` (indexed; indices are iterators like `c` and `h`, not concrete element labels)
 
-Element references like `pos("x",i)` are properly quoted wherever they appear in the emitted GAMS code.
+The complementarity and stationarity equations that triggered the original errors now use set iterators in index positions. Some other equations in the model (e.g., `rdef`, `vx_dot_def`, `obj`) do emit concrete element labels, but these are always properly quoted (e.g., `pos("x",i)`, `vel("x",i)`), so no ambiguity arises.
 
 ### Verification
 
 - glider MCP compiles with zero GAMS errors (only demo license limit)
 - No `$120`, `$149`, `$171`, or `$340` errors in listing file
-- All element references properly quoted: `pos("x","h50")`, `pos("x",i)`, etc.
+- Complementarity/stationarity equations use set iterators (`c`, `h`) — no concrete element labels in index positions
+- Other equations that reference specific elements properly quote them (e.g., `pos("x",i)`, `v_dot("y",i)`)
 - No code changes required — this issue was resolved by the transition from per-instance to indexed complementarity/stationarity equation emission
 
 ---
