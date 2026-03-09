@@ -194,19 +194,33 @@ def _collect_additive_terms(expr: Expr, sign: int = 1) -> list[tuple[int, Expr]]
 
     Used by section 2c to detect cancellation patterns like p(r,c) - p(r,c).
     """
+    result: list[tuple[int, Expr]] = []
+    _collect_additive_terms_acc(expr, sign, result)
+    return result
+
+
+def _collect_additive_terms_acc(expr: Expr, sign: int, acc: list[tuple[int, Expr]]) -> None:
+    """Accumulator helper — appends (sign, term) pairs to *acc* in-place."""
     if isinstance(expr, Binary) and expr.op == "+":
-        return _collect_additive_terms(expr.left, sign) + _collect_additive_terms(expr.right, sign)
+        _collect_additive_terms_acc(expr.left, sign, acc)
+        _collect_additive_terms_acc(expr.right, sign, acc)
+        return
     if isinstance(expr, Binary) and expr.op == "-":
-        return _collect_additive_terms(expr.left, sign) + _collect_additive_terms(expr.right, -sign)
+        _collect_additive_terms_acc(expr.left, sign, acc)
+        _collect_additive_terms_acc(expr.right, -sign, acc)
+        return
     if isinstance(expr, Unary) and expr.op == "-":
-        return _collect_additive_terms(expr.child, -sign)
+        _collect_additive_terms_acc(expr.child, -sign, acc)
+        return
     if isinstance(expr, Binary) and expr.op == "*":
         # Check for (-1) * expr pattern
         if isinstance(expr.left, Const) and expr.left.value == -1.0:
-            return _collect_additive_terms(expr.right, -sign)
+            _collect_additive_terms_acc(expr.right, -sign, acc)
+            return
         if isinstance(expr.right, Const) and expr.right.value == -1.0:
-            return _collect_additive_terms(expr.left, -sign)
-    return [(sign, expr)]
+            _collect_additive_terms_acc(expr.left, -sign, acc)
+            return
+    acc.append((sign, expr))
 
 
 def _contains_variable(expr: Expr) -> bool:
