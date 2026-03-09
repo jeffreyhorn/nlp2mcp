@@ -1,8 +1,11 @@
-"""Unit tests for fx_map emission in emit_gams_mcp().
+"""Unit tests for *_map emission in emit_gams_mcp().
 
 Issue #1021: Numeric per-element .fx bounds from VariableDef.fx_map must be
 re-emitted as .fx(...) = ...; lines in the MCP output, with literal UEL
 quoting via _quote_uel.
+
+Issue #1020: lo_map/l_map keys with hyphenated element labels or set-name
+collisions must be unconditionally quoted.
 """
 
 import pytest
@@ -137,3 +140,96 @@ class TestFxMapEmission:
 
         # Must be quoted — bare 'i' would be a running index
         assert "x.fx('i') = 0;" in result
+
+
+@pytest.mark.unit
+class TestLoMapEmission:
+    """Tests for lo_map quoting in emit_gams_mcp().
+
+    Issue #1020: lo_map keys are literal element labels and must be
+    unconditionally quoted via _quote_uel(), even when the label matches
+    a set/alias name or contains hyphens.
+    """
+
+    def test_hyphenated_lo_map_quoted(self, manual_index_mapping):
+        """lo_map with hyphenated elements emits quoted .l clamp lines.
+
+        Regression test for Issue #1020: 'h-industry' must not be mistaken
+        for IndexOffset syntax (h minus industry).
+        """
+        from src.ir.ast import ParamRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["i"] = SetDef(name="i", members=["food", "h-industry"])
+
+        p = VariableDef(name="p", domain=("i",), kind=VarKind.POSITIVE)
+        p.l_expr_map = {("i",): ParamRef("p0", indices=("i",))}
+        p.lo_map = {("h-industry",): 0.2}
+        model.variables["p"] = p
+
+        index_mapping = manual_index_mapping(
+            [("obj", ()), ("p", ("food",)), ("p", ("h-industry",))]
+        )
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Hyphenated element must be quoted
+        assert "p.l('h-industry') = max(p.l('h-industry'), 0.2);" in result
+
+    def test_lo_map_set_name_collision_quoted(self, manual_index_mapping):
+        """lo_map element that collides with set name must still be quoted.
+
+        Element 'i' in set 'i' must be emitted as p.l('i'), not p.l(i).
+        """
+        from src.ir.ast import ParamRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["i"] = SetDef(name="i", members=["i", "j"])
+
+        p = VariableDef(name="p", domain=("i",), kind=VarKind.POSITIVE)
+        p.l_expr_map = {("i",): ParamRef("p0", indices=("i",))}
+        p.lo_map = {("i",): 0.5}
+        model.variables["p"] = p
+
+        index_mapping = manual_index_mapping([("obj", ()), ("p", ("i",)), ("p", ("j",))])
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Element 'i' must be quoted — bare i would be a running index
+        assert "p.l('i') = max(p.l('i'), 0.5);" in result
+
+    def test_l_map_hyphenated_quoted(self, manual_index_mapping):
+        """l_map with hyphenated element emits quoted .l init lines."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["i"] = SetDef(name="i", members=["food", "h-industry"])
+
+        p = VariableDef(name="p", domain=("i",), kind=VarKind.CONTINUOUS)
+        p.l_map = {("h-industry",): 1.5}
+        model.variables["p"] = p
+
+        index_mapping = manual_index_mapping([("obj", ()), ("p", ("h-industry",))])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        assert "p.l('h-industry') = 1.5;" in result

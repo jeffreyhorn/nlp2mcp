@@ -384,8 +384,9 @@ class TestLExprClampToLo:
         # Expression-based .l should be emitted
         assert "c.l(t) = c0 * l(t);" in result
         # Per-index clamps should be emitted (not domain-wide)
-        assert 'c.l("1990") = max(c.l("1990"), 3.2);' in result
-        assert 'c.l("2000") = max(c.l("2000"), 3.2);' in result
+        # Issue #1020: lo_map keys use _quote_uel (single-quoted)
+        assert "c.l('1990') = max(c.l('1990'), 3.2);" in result
+        assert "c.l('2000') = max(c.l('2000'), 3.2);" in result
 
     def test_no_clamp_when_lo_zero(self, manual_index_mapping):
         """No clamp emitted when .lo is 0 (non-positive)."""
