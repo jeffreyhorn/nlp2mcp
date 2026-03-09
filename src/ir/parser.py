@@ -4596,6 +4596,9 @@ class _ModelBuilder:
 
         # Expand indices based on set definitions
         expanded_indices: list[str] = []
+        # Issue #1002: Track multi-dim sets expanded via domain so we can add
+        # a dollar condition (e.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...))
+        multidim_set_conditions: list[tuple[str, tuple[str, ...]]] = []
         for idx in indices:
             if isinstance(idx, str) and idx in self.model.sets:
                 set_def = self.model.sets[idx]
@@ -4606,8 +4609,16 @@ class _ModelBuilder:
                         m in self.model.sets or m in self.model.aliases for m in set_def.members
                     )
                 )
+                # Issue #1002: Multi-dimensional set used as bare sum domain.
+                # E.g., sum(arc, ...) where arc(n,np) has domain=('n','np').
+                # Expand to the domain indices so the body's expanded references
+                # (n, np) are controlled by the sum domain.
+                has_multidim_domain = set_def.domain is not None and len(set_def.domain) > 1
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
+                elif has_multidim_domain:
+                    expanded_indices.extend(set_def.domain)
+                    multidim_set_conditions.append((idx, set_def.domain))
                 else:
                     # Heuristic expansion for multi-dimensional sets
                     members_are_multidim = (
@@ -4662,11 +4673,31 @@ class _ModelBuilder:
 
         body = self._expr(node.children[2], body_domain)
 
-        # Store condition separately in the aggregation node.
-        # Previously the condition was folded as multiplication (cond * body),
-        # which is correct for Sum but wrong for Prod (where excluded elements
-        # should contribute 1, not 0). See Issue #716.
-        expr = aggregation_class(indices, body, condition_expr)
+        # Issue #1002: When a multi-dim set was expanded via its domain,
+        # add a dollar condition to restrict to the subset.
+        # E.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...)
+        if multidim_set_conditions:
+            conds: list[Expr] = []
+            for set_name, domain_indices in multidim_set_conditions:
+                conds.append(
+                    SetMembershipTest(
+                        set_name=set_name,
+                        indices=tuple(SymbolRef(d) for d in domain_indices),
+                    )
+                )
+            # Build combined set-membership condition
+            set_cond: Expr = conds[0]
+            for c in conds[1:]:
+                set_cond = Binary("and", set_cond, c)
+            # Combine with any existing condition from the parse tree
+            if condition_expr is not None:
+                condition_expr = Binary("and", condition_expr, set_cond)
+            else:
+                condition_expr = set_cond
+
+        # Use expanded indices (not original) so multi-dim set domains are
+        # properly represented.  See Issue #1002.
+        expr = aggregation_class(tuple(expanded_indices), body, condition_expr)
 
         return self._attach_domain(expr, remaining_domain)
 
