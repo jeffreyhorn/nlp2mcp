@@ -18,9 +18,12 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
     Unary,
     VarRef,
@@ -147,6 +150,44 @@ class TestContainsVariable:
     def test_sum_no_condition_clean(self):
         """Sum with clean body and no condition."""
         expr = Sum(index_sets=("i",), body=ParamRef("a", ("i",)))
+        assert _contains_variable(expr) is False
+
+    def test_index_offset_with_varref_in_offset(self):
+        """VarRef nested in IndexOffset offset must be detected."""
+        idx = IndexOffset(base="i", offset=VarRef("n", ()), circular=False)
+        expr = ParamRef("p", (idx,))
+        assert _contains_variable(expr) is True
+
+    def test_index_offset_without_varref(self):
+        """IndexOffset with Const offset — no variable."""
+        idx = IndexOffset(base="i", offset=Const(1), circular=False)
+        expr = ParamRef("p", (idx,))
+        assert _contains_variable(expr) is False
+
+    def test_set_membership_test_with_varref(self):
+        """VarRef in SetMembershipTest indices must be detected."""
+        expr = SetMembershipTest(set_name="s", indices=(VarRef("x", ()),))
+        assert _contains_variable(expr) is True
+
+    def test_set_membership_test_clean(self):
+        """SetMembershipTest with only ParamRef indices — no variable."""
+        expr = SetMembershipTest(set_name="s", indices=(ParamRef("p", ()),))
+        assert _contains_variable(expr) is False
+
+    def test_lhs_conditional_assign_with_varref_in_rhs(self):
+        """VarRef in LhsConditionalAssign rhs must be detected."""
+        expr = LhsConditionalAssign(
+            rhs=VarRef("x", ("i",)),
+            condition=ParamRef("mask", ("i",)),
+        )
+        assert _contains_variable(expr) is True
+
+    def test_lhs_conditional_assign_clean(self):
+        """LhsConditionalAssign with no variables — clean."""
+        expr = LhsConditionalAssign(
+            rhs=ParamRef("p", ("i",)),
+            condition=ParamRef("mask", ("i",)),
+        )
         assert _contains_variable(expr) is False
 
 

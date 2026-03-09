@@ -37,6 +37,7 @@ from src.ir.ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -248,9 +249,25 @@ def _collect_additive_terms_acc(expr: Expr, sign: int, acc: list[tuple[int, Expr
 
 
 def _contains_variable(expr: Expr) -> bool:
-    """Return True if *expr* contains any VarRef or MultiplierRef in its subtree."""
+    """Return True if *expr* contains any VarRef or MultiplierRef in its subtree.
+
+    Traverses index expressions (IndexOffset offsets), SetMembershipTest indices,
+    and LhsConditionalAssign children to catch nested variable references.
+    """
     if isinstance(expr, (VarRef, MultiplierRef)):
+        # VarRef/MultiplierRef found — but also check IndexOffset in indices
+        for idx in expr.indices:
+            if isinstance(idx, IndexOffset) and _contains_variable(idx.offset):
+                pass  # Already returning True below
         return True
+    if isinstance(expr, (ParamRef, EquationRef)):
+        # ParamRef/EquationRef are not variables, but their indices may contain
+        # IndexOffset with variable expressions in the offset.
+        return any(
+            isinstance(idx, IndexOffset) and _contains_variable(idx.offset) for idx in expr.indices
+        )
+    if isinstance(expr, IndexOffset):
+        return _contains_variable(expr.offset)
     if isinstance(expr, Binary):
         return _contains_variable(expr.left) or _contains_variable(expr.right)
     if isinstance(expr, Unary):
@@ -263,6 +280,10 @@ def _contains_variable(expr: Expr) -> bool:
         return _contains_variable(expr.body)
     if isinstance(expr, DollarConditional):
         return _contains_variable(expr.value_expr) or _contains_variable(expr.condition)
+    if isinstance(expr, SetMembershipTest):
+        return any(_contains_variable(idx) for idx in expr.indices)
+    if isinstance(expr, LhsConditionalAssign):
+        return _contains_variable(expr.rhs) or _contains_variable(expr.condition)
     return False
 
 
