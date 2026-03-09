@@ -54,15 +54,17 @@ Scalars
     straw /1.75/
 ;
 
-cn(c) = yes$demdat(c,"ref-p");
-ce(c) = yes$demdat(c,"exp-p");
+$onImplicitAssign
+cn(c) = yes$(demdat(c,"ref-p"));
+ce(c) = yes$(demdat(c,"exp-p"));
 cm(c) = yes$(demdat(c,"imp-p") < inf);
 cm("clover") = 0;
+$offImplicitAssign
 
 price(c) = demdat(c,"ref-p");
 pe(ce) = demdat(ce,"exp-p");
 pm(cm) = demdat(cm,"imp-p");
-beta(cn) = demdat(cn,"ref-p") / demdat(cn,"ref-q") / demdat(cn,"elas");
+beta(cn)$(demdat(cn,"ref-q")) = demdat(cn,"ref-p") / demdat(cn,"ref-q") / demdat(cn,"elas");
 alpha(cn) = demdat(cn,"ref-p") - beta(cn) * demdat(cn,"ref-q");
 demdat(cn,"dem-a") = alpha(cn);
 demdat(cn,"dem-b") = beta(cn);
@@ -211,7 +213,7 @@ stat_rescost.. nu_ares - nu_acost =E= 0;
 stat_tcost.. 1 + nu_acost =E= 0;
 stat_thire(s).. ((-1) * trent) * nu_aplow - lam_plow(s) - piL_thire(s) =E= 0;
 stat_tlab(t).. ((-1) * twage) * nu_alab - lam_laborbal(t) - piL_tlab(t) =E= 0;
-stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$sc(s,c) * lam_plow(s)) - piL_xcrop(c) =E= 0;
+stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$(sc(s,c)) * lam_plow(s)) - piL_xcrop(c) =E= 0;
 stat_xlive(r).. sum(t, llab * lam_laborbal(t)) + sum(cl, lio(cl,r) * lam_lclover) + sum(cl, lio(cl,r) * lam_lstraw) + sum(s, ((-1) * hpa) * lam_plow(s)) - piL_xlive(r) =E= 0;
 
 * Inequality complementarity equations
@@ -242,7 +244,7 @@ ares.. rescost =E= sum(t, flab(t) * rwage);
 aplow.. pcost =E= sum(s, thire(s) * trent);
 acost.. tcost =E= mcost + labcost + rescost + pcost;
 proc(c).. natprod(c) =E= xcrop(c) * yield(c);
-dem(cn).. natcon(cn) =E= natprod(cn) + imports(cn)$cm(cn) - exports(cn)$ce(cn);
+dem(cn).. natcon(cn) =E= natprod(cn) + imports(cn)$(cm(cn)) - exports(cn)$(ce(cn));
 objn.. cps =E= sum(cn, alpha(cn) * natcon(cn) + 0.5 * beta(cn) * sqr(natcon(cn))) + sum(ce, exports(ce) * pe(ce)) - sum(cm, imports(cm) * pm(cm)) - tcost;
 
 

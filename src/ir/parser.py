@@ -1187,6 +1187,7 @@ class _ModelBuilder:
         default_factory=list
     )
     _declared_equations: set[str] = field(default_factory=set)
+    _solve_seen: bool = False
 
     def __post_init__(self) -> None:
         if self._equation_domains is None:
@@ -3375,6 +3376,7 @@ class _ModelBuilder:
         self.model.add_equation(equation)
 
     def _handle_solve(self, node: Tree) -> None:
+        self._solve_seen = True
         name = _token_text(node.children[0])
         self.model.model_name = name
         sense = ObjSense.MIN
@@ -4067,6 +4069,12 @@ class _ModelBuilder:
                         bound_kind = _token_text(target.children[1]).lower()
 
                 if bound_kind == "l":
+                    # Issue #881: Skip post-solve .l expression assignments.
+                    # After a solve statement, .l assignments recompute levels
+                    # from solved values (e.g., DENTROPY.l = sum(..., a.l(i,j)*...))
+                    # which reference runtime .l values that are zero at init time.
+                    if self._solve_seen:
+                        return
                     # Store .l expression for emission (circle.gms: a.l = (xmin + xmax)/2)
                     var_name = _token_text(target.children[0])
                     if var_name not in self.model.variables:
@@ -4497,6 +4505,38 @@ class _ModelBuilder:
 
         # Store the conditional statement
         self.model.conditional_statements.append(cond_stmt)
+
+        # Issue #881: For conditional set assignments (e.g., NONZERO(ii,jj)$(Abar1(ii,jj)) = yes),
+        # wrap the RHS in a DollarConditional so the condition is preserved.
+        # This produces: set(i) = yes$(cond) instead of set(i)$cond = yes
+        # which is semantically equivalent for set assignments.  Embedding the
+        # condition in the expression avoids emission ordering problems (the
+        # normal set_assignment dependency analysis handles param refs in expr).
+        if (
+            isinstance(target, Tree)
+            and target.data == "symbol_indexed"
+            and len(target.children) > 1
+        ):
+            symbol_name = str(target.children[0]).lower()
+            if symbol_name in self.model.sets:
+                rhs_evaluated = self._expr_with_context(
+                    rhs_expr, "conditional assignment", domain_context
+                )
+                # Wrap RHS in DollarConditional: yes → yes$cond
+                cond_expr = DollarConditional(value_expr=rhs_evaluated, condition=condition)
+                location = self._extract_source_location(node)
+                try:
+                    raw_indices = _process_index_list(target.children[1])
+                except (AttributeError, IndexError, TypeError):
+                    raw_indices = ()
+                set_assignment = SetAssignment(
+                    set_name=symbol_name,
+                    indices=tuple(raw_indices),
+                    expr=cond_expr,
+                    location=location,
+                )
+                self.model.set_assignments.append(set_assignment)
+                return
 
         # Issue #1015: For indexed parameter assignments where indices are
         # set/alias names that would be domain-expanded, store the conditional
@@ -6060,6 +6100,11 @@ class _ModelBuilder:
             if isinstance(bound_token, str)
             else _token_text(bound_token).lower()
         )
+
+        # Issue #881: Skip post-solve .l assignments — they recompute levels
+        # from solved values and would overwrite pre-solve initializations.
+        if bound_kind == "l" and self._solve_seen:
+            return
 
         if var.domain:
             if not idx_tuple:
