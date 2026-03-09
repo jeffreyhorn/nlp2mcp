@@ -6431,23 +6431,22 @@ class _ModelBuilder:
                 # Expand to all domain members (original behavior)
                 member_lists.append(domain_set.members)
 
-        # Issue #1021: Filter Cartesian product to keep only entries where
-        # repeated set-name symbols have the same value (diagonal constraint).
+        # Issue #1021: Filter Cartesian product in a single pass to keep only
+        # entries where repeated set-name symbols have the same value (diagonal).
         # E.g., X.fx(r,r,c) = 0 → only (Reg1,Reg1,Com1), (Reg1,Reg1,Com2), etc.
         repeated_groups = [
             positions for positions in symbol_positions.values() if len(positions) > 1
         ]
-        all_tuples = [tuple(comb) for comb in product(*member_lists)]
         if repeated_groups:
-            all_tuples = [
+            return [
                 t
-                for t in all_tuples
+                for t in (tuple(comb) for comb in product(*member_lists))
                 if all(
                     all(t[pos] == t[positions[0]] for pos in positions[1:])
                     for positions in repeated_groups
                 )
             ]
-        return all_tuples
+        return [tuple(comb) for comb in product(*member_lists)]
 
     def _validate(self) -> None:
         for alias_name, alias in self.model.aliases.items():

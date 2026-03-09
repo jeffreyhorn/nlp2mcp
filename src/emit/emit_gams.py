@@ -208,6 +208,23 @@ def _collect_additive_terms(expr: Expr, sign: int = 1) -> list[tuple[int, Expr]]
     return [(sign, expr)]
 
 
+def _contains_variable(expr: Expr) -> bool:
+    """Return True if *expr* contains any VarRef or MultiplierRef in its subtree."""
+    if isinstance(expr, (VarRef, MultiplierRef)):
+        return True
+    if isinstance(expr, Binary):
+        return _contains_variable(expr.left) or _contains_variable(expr.right)
+    if isinstance(expr, Unary):
+        return _contains_variable(expr.child)
+    if isinstance(expr, Call):
+        return any(_contains_variable(a) for a in expr.args)
+    if isinstance(expr, (Sum, Prod)):
+        return _contains_variable(expr.body)
+    if isinstance(expr, DollarConditional):
+        return _contains_variable(expr.value_expr)
+    return False
+
+
 def _is_trivial_after_cancellation(lhs: Expr, rhs: Expr) -> bool:
     """Check if LHS =G= RHS is trivially satisfied after canceling matching terms.
 
@@ -237,11 +254,10 @@ def _is_trivial_after_cancellation(lhs: Expr, rhs: Expr) -> bool:
         if count == 0:
             continue  # Fully canceled
         term = term_exprs[key]
-        # If any VarRef remains uncanceled, not trivially empty
-        if isinstance(term, VarRef):
-            return False
-        # MultiplierRef remaining is also not trivial
-        if isinstance(term, MultiplierRef):
+        # Reject any remaining term that contains a VarRef or MultiplierRef
+        # anywhere in its subtree (not just top-level). E.g., reject
+        # Call('exp', (VarRef(...),)) or Binary('*', Const(2), VarRef(...)).
+        if _contains_variable(term):
             return False
 
     # All VarRef terms canceled — only ParamRef/Const remain
@@ -283,6 +299,9 @@ def emit_gams_mcp(
         ```
     """
     sections = []
+
+    # Lowercase set/alias names for quoting helpers (used by fx_map emission etc.)
+    _sets_lower = {s.lower() for s in kkt.model_ir.sets} | {s.lower() for s in kkt.model_ir.aliases}
 
     # Header comment
     if add_comments:
@@ -479,8 +498,11 @@ def emit_gams_mcp(
         # the source model. Without re-emitting them, the MCP solver
         # complains about empty equations with unfixed paired variables.
         if var_def.fx_map:
+            domain_lower = frozenset(d.lower() for d in var_def.domain)
             for indices, fx_val in sorted(var_def.fx_map.items()):
-                idx_str = ",".join(f"'{m}'" for m in indices)
+                idx_str = ",".join(
+                    _quote_assignment_index(m, _sets_lower, domain_lower) for m in indices
+                )
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
