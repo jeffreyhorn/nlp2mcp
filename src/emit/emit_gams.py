@@ -47,6 +47,7 @@ from src.ir.ast import (
     Unary,
     VarRef,
 )
+from src.ir.model_ir import ModelIR
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
@@ -219,21 +220,27 @@ def _contains_variable(expr: Expr) -> bool:
     if isinstance(expr, Call):
         return any(_contains_variable(a) for a in expr.args)
     if isinstance(expr, (Sum, Prod)):
+        if expr.condition is not None and _contains_variable(expr.condition):
+            return True
         return _contains_variable(expr.body)
     if isinstance(expr, DollarConditional):
-        return _contains_variable(expr.value_expr)
+        return _contains_variable(expr.value_expr) or _contains_variable(expr.condition)
     return False
 
 
-def _is_trivial_after_cancellation(lhs: Expr, rhs: Expr) -> bool:
+def _is_trivial_after_cancellation(
+    lhs: Expr,
+    rhs: Expr,
+    model_ir: ModelIR | None = None,
+) -> bool:
     """Check if LHS =G= RHS is trivially satisfied after canceling matching terms.
 
     Issue #1021: Detects cases like p(r,c) + TCost(r,r,c) - p(r,c) >= 0
     where VarRef terms cancel, leaving only ParamRef terms that evaluate to 0
-    for sparse parameter data.
+    on the diagonal.
 
-    Returns True if all VarRef terms cancel and only ParamRef/Const terms remain
-    with RHS = Const(0).
+    Returns True only when provably zero: all VarRef terms cancel AND remaining
+    terms are either Const(0) or ParamRef whose diagonal data entries are all 0.
     """
     if not (isinstance(rhs, Const) and rhs.value == 0.0):
         return False
@@ -259,9 +266,60 @@ def _is_trivial_after_cancellation(lhs: Expr, rhs: Expr) -> bool:
         # Call('exp', (VarRef(...),)) or Binary('*', Const(2), VarRef(...)).
         if _contains_variable(term):
             return False
+        # Const(0) is provably zero — accept it
+        if isinstance(term, Const) and term.value == 0.0:
+            continue
+        # Non-zero Const is not trivial
+        if isinstance(term, Const):
+            return False
+        # ParamRef: verify all diagonal entries are zero in actual data.
+        # Diagonal entries are those where repeated index symbols have equal
+        # values (e.g., TCost(r,r,c) → entries where positions 0 and 1 match).
+        if isinstance(term, ParamRef) and model_ir is not None:
+            if not _paramref_zero_on_diagonal(term, model_ir):
+                return False
+            continue
+        # Any other non-canceled non-Const term (Call, Binary, etc.) — not provably zero
+        return False
 
-    # All VarRef terms canceled — only ParamRef/Const remain
-    # The equation is data-dependent and trivially satisfied when params are 0
+    return True
+
+
+def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
+    """Check whether a ParamRef evaluates to 0 on all diagonal entries.
+
+    A ParamRef like TCost(r,r,c) has repeated index symbols at positions 0
+    and 1.  We check the parameter's data entries where those positions have
+    matching values.  Returns True only if ALL such entries are 0.
+    """
+    pdef = model_ir.params.get(param.name)
+    if pdef is None:
+        return False  # Unknown param — not provably zero
+
+    # Find positions with repeated index symbols
+    idx_symbols = [str(i) for i in param.indices]
+    sym_positions: dict[str, list[int]] = {}
+    for pos, sym in enumerate(idx_symbols):
+        sym_positions.setdefault(sym.lower(), []).append(pos)
+    repeated_groups = [positions for positions in sym_positions.values() if len(positions) > 1]
+    if not repeated_groups:
+        # No repeated indices — we can't prove it's zero without full evaluation
+        # Fall back: check if ALL entries in the parameter are zero
+        return all(v == 0 for v in pdef.values.values())
+
+    # Check only diagonal entries (where repeated positions have equal values)
+    for entry_key, val in pdef.values.items():
+        is_diagonal = all(
+            all(entry_key[pos] == entry_key[positions[0]] for pos in positions[1:])
+            for positions in repeated_groups
+        )
+        if is_diagonal and val != 0:
+            return False
+
+    # Also check if parameter has computed expressions — can't verify those
+    if pdef.expressions:
+        return False
+
     return True
 
 
@@ -1008,11 +1066,15 @@ def emit_gams_mcp(
             ):
                 is_trivial = True
             # Check 3 (Issue #1021): Collect additive terms, cancel matching
-            # VarRef pairs, and check if only ParamRef/Const remain.
+            # VarRef pairs, and verify remaining terms are provably zero
+            # (Const(0) or ParamRef with all-zero diagonal data).
             # Handles: p(r,c) + TCost(r,r,c) - p(r,c) =G= 0
-            # where VarRef(p) cancels, leaving ParamRef(TCost) which is 0.
+            # where VarRef(p) cancels, leaving ParamRef(TCost) which is 0
+            # on the diagonal (verified against actual parameter data).
             if not is_trivial:
-                is_trivial = _is_trivial_after_cancellation(subst_lhs, subst_rhs)
+                is_trivial = _is_trivial_after_cancellation(
+                    subst_lhs, subst_rhs, model_ir=kkt.model_ir
+                )
             if not is_trivial:
                 continue
             mult_name = comp_pair.variable
