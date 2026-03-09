@@ -4598,7 +4598,8 @@ class _ModelBuilder:
         expanded_indices: list[str] = []
         # Issue #1002: Track multi-dim sets expanded via domain so we can add
         # a dollar condition (e.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...))
-        multidim_set_conditions: list[tuple[str, tuple[str, ...]]] = []
+        # Each entry is (set_name, start_position_in_expanded_indices, count).
+        multidim_set_conditions: list[tuple[str, int, int]] = []
         for idx in indices:
             if isinstance(idx, str) and idx in self.model.sets:
                 set_def = self.model.sets[idx]
@@ -4640,8 +4641,9 @@ class _ModelBuilder:
                             seen_domain.add(dname)
                     if resolved:
                         adjusted_domain = tuple(domain_indices)
+                        start_pos = len(expanded_indices)
                         expanded_indices.extend(adjusted_domain)
-                        multidim_set_conditions.append((idx, adjusted_domain))
+                        multidim_set_conditions.append((idx, start_pos, len(adjusted_domain)))
                         continue
                 # Heuristic expansion for multi-dimensional sets
                 members_are_multidim = (
@@ -4703,13 +4705,10 @@ class _ModelBuilder:
         # substitutions) rather than the raw domain tuple.
         if multidim_set_conditions:
             conds: list[Expr] = []
-            offset = 0
-            for set_name, domain_indices in multidim_set_conditions:
-                count = len(domain_indices)
+            for set_name, start_pos, count in multidim_set_conditions:
                 set_iterators = tuple(
-                    SymbolRef(idx) for idx in expanded_indices[offset : offset + count]
+                    SymbolRef(expanded_indices[i]) for i in range(start_pos, start_pos + count)
                 )
-                offset += count
                 conds.append(
                     SetMembershipTest(
                         set_name=set_name,

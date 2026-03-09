@@ -5064,6 +5064,127 @@ class TestSumDomainMismatch:
         assert model.equations["test"].domain == ("j",)
 
 
+class TestBareMultidimSetSumDomain:
+    """Issue #1002: Bare multi-dim set as sum domain expands to constituent indices.
+
+    When sum(arc, ...) uses a dynamic multi-dimensional set like arc(n,np)
+    (defined via domain, not dot-separated members), the parser should expand
+    the Sum domain to the constituent indices and add a dollar condition.
+    """
+
+    def test_bare_multidim_set_sum_domain(self):
+        """sum(arc, p(arc)*t(arc)) should expand arc to (n,np) with condition."""
+        text = dedent("""
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set arc(n,np);
+            Parameter p(n,np) / a.b 1, b.c 2 /;
+            Variable t(n,np), obj;
+
+            arc(n,np) = p(n,np);
+
+            Equation eqn;
+            eqn.. obj =e= sum(arc, p(n,np) * t(n,np));
+        """)
+        model = parser.parse_model_text(text)
+        eq = model.equations["eqn"]
+        # Walk both lhs and rhs to find Sum nodes
+        from src.ir.ast import Sum
+
+        def find_sum(expr):
+            if isinstance(expr, Sum):
+                return expr
+            for child in expr.children():
+                result = find_sum(child)
+                if result is not None:
+                    return result
+            return None
+
+        lhs, rhs = eq.lhs_rhs
+        sum_node = find_sum(lhs) or find_sum(rhs)
+        assert sum_node is not None, "Should find a Sum node in the equation"
+        # index_sets should be expanded to ('n', 'np'), not ('arc',)
+        assert (
+            "arc" not in sum_node.index_sets
+        ), f"Sum domain should not contain bare 'arc', got {sum_node.index_sets}"
+        assert len(sum_node.index_sets) == 2
+        # Should have a condition (SetMembershipTest for arc)
+        assert sum_node.condition is not None, "Sum should have a dollar condition for the subset"
+
+    def test_bare_multidim_set_not_first_in_sum(self):
+        """sum((k, arc), ...) where arc is not the first index."""
+        text = dedent("""
+            Set n / a, b, c /;
+            Set k / x, y /;
+            Alias(n, np);
+            Set arc(n,np);
+            Parameter p(k, n, np);
+            Variable t(k, n, np), obj;
+
+            arc(n,np) = 1;
+
+            Equation eqn;
+            eqn.. obj =e= sum((k, arc), p(k, n, np) * t(k, n, np));
+        """)
+        model = parser.parse_model_text(text)
+        eq = model.equations["eqn"]
+        from src.ir.ast import Sum
+
+        def find_sum(expr):
+            if isinstance(expr, Sum):
+                return expr
+            for child in expr.children():
+                result = find_sum(child)
+                if result is not None:
+                    return result
+            return None
+
+        lhs, rhs = eq.lhs_rhs
+        sum_node = find_sum(lhs) or find_sum(rhs)
+        assert sum_node is not None
+        # Should have 3 indices: k, n, np (arc expanded)
+        assert len(sum_node.index_sets) == 3
+        assert "arc" not in sum_node.index_sets
+        assert sum_node.condition is not None
+
+    def test_bare_multidim_set_with_repeated_domain(self):
+        """sum(low, ...) where low(n,n) has repeated domain → alias substitution."""
+        text = dedent("""
+            Set n / a, b, c /;
+            Alias(n, np);
+            Set low(n,n);
+            Parameter dist(n,n);
+            Variable d(n,n), obj;
+
+            low(n,np) = 1;
+
+            Equation eqn;
+            eqn.. obj =e= sum(low, dist(n,np) * d(n,np));
+        """)
+        model = parser.parse_model_text(text)
+        eq = model.equations["eqn"]
+        from src.ir.ast import Sum
+
+        def find_sum(expr):
+            if isinstance(expr, Sum):
+                return expr
+            for child in expr.children():
+                result = find_sum(child)
+                if result is not None:
+                    return result
+            return None
+
+        lhs, rhs = eq.lhs_rhs
+        sum_node = find_sum(lhs) or find_sum(rhs)
+        assert sum_node is not None
+        # Should have 2 indices with no duplicates (alias substituted)
+        assert len(sum_node.index_sets) == 2
+        assert (
+            len(set(sum_node.index_sets)) == 2
+        ), f"Sum domain has duplicate indices: {sum_node.index_sets}"
+        assert sum_node.condition is not None
+
+
 class TestQuotedElementInSumDomain:
     """Issue #975: Quoted set element in sum domain should be treated as literal."""
 
