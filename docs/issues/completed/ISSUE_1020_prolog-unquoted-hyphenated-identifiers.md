@@ -25,7 +25,7 @@ The same issue affected the `l_map` and `lo_map` init paths, which also used `_f
 
 ## Fix Details
 
-Added a new `_format_map_indices()` helper function in `src/emit/emit_gams.py` that formats `*_map` keys (l_map, lo_map, fx_map) without using the `_is_index_offset_syntax()` heuristic. Instead, it uses a simple explicit check: indices matching a declared set/alias name are emitted bare; all others are unconditionally quoted via `_quote_uel()`.
+Added a new `_format_map_indices()` helper function in `src/emit/emit_gams.py` that formats `*_map` keys (l_map, lo_map, fx_map) without using the `_is_index_offset_syntax()` heuristic. Instead, it unconditionally quotes every index component via `_quote_uel()`, which also avoids set-name collision cases (e.g., an element `i` in set `i`).
 
 Replaced `_format_mixed_indices()` with `_format_map_indices()` at three call sites:
 1. **l_map emission** (Priority 1): variable `.l` numeric init
