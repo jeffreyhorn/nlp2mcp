@@ -6387,14 +6387,17 @@ class _ModelBuilder:
             if isinstance(symbol, str):
                 resolved_symbol_set = self._resolve_set_def(symbol, node=node)
                 if resolved_symbol_set is not None:
-                    # Symbol is a set/alias name - validate and use its members
+                    # Symbol is a set/alias name - validate and use its members.
+                    # Use the *referenced* set's members (not the full domain)
+                    # so subset-restricted bounds (e.g., x.fx(is) where is⊂i)
+                    # only expand over the subset.
                     if domain_set.members and resolved_symbol_set.members:
                         if set(resolved_symbol_set.members) - set(domain_set.members):
                             raise self._error(
                                 f"Alias '{symbol}' for variable '{var_name}' does not match domain '{domain_name}'",
                                 node,
                             )
-                    member_lists.append(domain_set.members)
+                    member_lists.append(resolved_symbol_set.members)
                     # Track this set-name symbol for diagonal constraint
                     symbol_positions.setdefault(symbol.lower(), []).append(pos)
                 else:

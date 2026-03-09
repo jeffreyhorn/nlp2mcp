@@ -308,6 +308,11 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
     if pdef is None:
         return False  # Unknown param — not provably zero
 
+    # Computed parameters (non-empty expressions) may evaluate to nonzero
+    # at runtime — can't verify statically, so reject early.
+    if pdef.expressions:
+        return False
+
     # Find positions with repeated index symbols
     idx_symbols = [str(i) for i in param.indices]
     sym_positions: dict[str, list[int]] = {}
@@ -327,10 +332,6 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
         )
         if is_diagonal and val != 0:
             return False
-
-    # Also check if parameter has computed expressions — can't verify those
-    if pdef.expressions:
-        return False
 
     return True
 
