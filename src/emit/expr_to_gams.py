@@ -701,7 +701,7 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
                 for idx in index_sets:
                     idx_lower = idx.lower()
                     if idx_lower in domain_set_lower or idx_lower in bound:
-                        aliases_needed.add(idx)
+                        aliases_needed.add(idx_lower)
                 # Recurse with expanded bound set
                 new_bound = bound | frozenset(idx.lower() for idx in index_sets)
                 if condition is not None:
@@ -778,10 +778,11 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                 for idx in index_sets:
                     idx_lower = idx.lower()
                     if idx_lower in domain_set_lower or idx_lower in bound_lower:
-                        # This index conflicts - use alias
-                        alias = _make_alias_name(idx)
+                        # This index conflicts - use alias (canonicalized to lowercase)
+                        alias = _make_alias_name(idx_lower)
                         agg_indices.append(alias)
-                        new_aliases[idx] = alias
+                        # Track alias under lowercase key for case-insensitive substitution
+                        new_aliases[idx_lower] = alias
                     else:
                         agg_indices.append(idx)
 
@@ -824,7 +825,7 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case VarRef() as var_ref:
                 if var_ref.indices and active_aliases:
                     var_indices: tuple[str | IndexOffset, ...] = tuple(
-                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        active_aliases.get(idx.lower(), idx) if isinstance(idx, str) else idx
                         for idx in var_ref.indices
                     )
                     if var_indices != var_ref.indices:
@@ -834,7 +835,7 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case ParamRef() as param_ref:
                 if param_ref.indices and active_aliases:
                     param_indices: tuple[str | IndexOffset, ...] = tuple(
-                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        active_aliases.get(idx.lower(), idx) if isinstance(idx, str) else idx
                         for idx in param_ref.indices
                     )
                     if param_indices != param_ref.indices:
@@ -844,7 +845,7 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case MultiplierRef() as mult_ref:
                 if mult_ref.indices and active_aliases:
                     mult_indices: tuple[str | IndexOffset, ...] = tuple(
-                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        active_aliases.get(idx.lower(), idx) if isinstance(idx, str) else idx
                         for idx in mult_ref.indices
                     )
                     if mult_indices != mult_ref.indices:
@@ -854,7 +855,7 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case EquationRef() as eq_ref:
                 if eq_ref.indices and active_aliases:
                     eq_indices: tuple[str | IndexOffset, ...] = tuple(
-                        active_aliases.get(idx, idx) if isinstance(idx, str) else idx
+                        active_aliases.get(idx.lower(), idx) if isinstance(idx, str) else idx
                         for idx in eq_ref.indices
                     )
                     if eq_indices != eq_ref.indices:

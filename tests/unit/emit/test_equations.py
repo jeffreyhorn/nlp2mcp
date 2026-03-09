@@ -435,22 +435,38 @@ class TestIndexAliasing:
         """Test that case-insensitive index collisions are detected.
 
         Subcategory G: GAMS is case-insensitive, so sum(R, ...) conflicts
-        with equation domain containing 'r'.
+        with equation domain containing 'r'. Aliases are canonical lowercase.
         """
         expr = Sum(("R",), VarRef("x", ("R",)))
         aliases = collect_index_aliases(expr, ("r",))
-        assert "R" in aliases
+        assert "r" in aliases
 
     def test_resolve_index_conflicts_case_insensitive(self):
         """Test that case-insensitive index collisions are resolved.
 
-        sum(R, x(R)) with equation domain (r,) should become sum(R__, x(R__)).
+        sum(R, x(R)) with equation domain (r,) should become sum(r__, x(r__))
+        using canonical lowercase for the alias.
         """
         expr = Sum(("R",), VarRef("x", ("R",)))
         result = resolve_index_conflicts(expr, ("r",))
         assert isinstance(result, Sum)
-        assert result.index_sets == ("R__",)
-        assert result.body.indices == ("R__",)
+        assert result.index_sets == ("r__",)
+        assert result.body.indices == ("r__",)
+
+    def test_resolve_index_conflicts_mixed_case_substitution(self):
+        """Test that case-insensitive substitution applies to all references.
+
+        sum(N, p(N) * q(n)) with domain (n,) — both N and n should be
+        replaced with n__ since GAMS is case-insensitive.
+        """
+        expr = Sum(("N",), Binary("*", ParamRef("p", ("N",)), ParamRef("q", ("n",))))
+        result = resolve_index_conflicts(expr, ("n",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("n__",)
+        body = result.body
+        assert isinstance(body, Binary)
+        assert body.left.indices == ("n__",)
+        assert body.right.indices == ("n__",)
 
     def test_collect_index_aliases_nested_sum_conflict(self):
         """Test nested sum where inner sum reuses outer sum's index.

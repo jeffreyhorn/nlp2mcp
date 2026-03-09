@@ -1376,9 +1376,16 @@ def emit_computed_parameter_assignments(
         if pd:
             param_aliases_needed.update(collect_index_aliases(ex, pd))
     if param_aliases_needed:
-        for idx in sorted(param_aliases_needed):
+        # Dedupe aliases case-insensitively and emit using _quote_symbol so that
+        # GAMS' case-insensitivity does not cause collisions (e.g., r vs R).
+        alias_bases_by_lower: dict[str, str] = {}
+        for idx in param_aliases_needed:
+            lower_idx = idx.lower()
+            if lower_idx not in alias_bases_by_lower:
+                alias_bases_by_lower[lower_idx] = idx
+        for idx in sorted(alias_bases_by_lower.values(), key=lambda s: s.lower()):
             alias_name = f"{idx}__"
-            lines.append(f"Alias({idx}, {alias_name});")
+            lines.append(f"Alias({_quote_symbol(idx)}, {_quote_symbol(alias_name)});")
 
     seen_assignment_lines: set[str] = set()
     for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
@@ -1755,15 +1762,13 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                 # flagged as a set by is_set_flags).
                 param_domain_lower = frozenset(d.lower() for d in param_def.domain)
                 quoted_keys = []
-                for k, is_set in zip(expanded_key, is_set_flags, strict=True):
-                    if is_set or k.lower() in param_domain_lower or k == "*":
-                        # Set/alias name or domain variable — keep bare
-                        quoted_keys.append(k)
-                    else:
-                        # Literal element — quote if needed
-                        quoted_keys.append(
-                            _quote_assignment_index(k, sets_and_aliases_lower, param_domain_lower)
-                        )
+                for k in expanded_key:
+                    # Issue #860/#912: Always route indices through _quote_assignment_index
+                    # so escaped identifiers are quoted correctly, while the helper
+                    # preserves non-literal subset/domain references as needed.
+                    quoted_keys.append(
+                        _quote_assignment_index(k, sets_and_aliases_lower, param_domain_lower)
+                    )
             index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
