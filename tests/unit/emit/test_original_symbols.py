@@ -22,6 +22,7 @@ from src.emit.original_symbols import (
     emit_original_parameters,
     emit_original_sets,
     emit_set_assignments,
+    emit_subset_value_assignments,
 )
 from src.ir.ast import (
     Binary,
@@ -1538,3 +1539,55 @@ class TestCollectMissingParamLabels:
         )
         missing = collect_missing_param_labels(model)
         assert missing == set()
+
+
+@pytest.mark.unit
+class TestSubsetValueAssignments:
+    """Tests for emit_subset_value_assignments().
+
+    Subcategory B: When parameter values have keys that are set/alias names
+    (subset-qualified), they are emitted as executable assignments, not inline
+    data. Mixed keys (some set names, some literals) must keep set names bare
+    and quote literals appropriately.
+    """
+
+    def test_mixed_key_subset_stays_bare(self):
+        """Test that subset name in mixed key is emitted bare, not quoted.
+
+        vbar1(i,jwt) with value ('ii', '3') = 0 where ii is a subset of i.
+        Should emit: vbar1(ii,'3') = 0;  (ii bare, '3' quoted)
+        NOT: vbar1('ii','3') = 0;  (which causes GAMS $170 domain violation)
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["ACT", "COM", "FAC"], domain=("*",))
+        model.sets["ii"] = SetDef(name="ii", members=["ACT", "COM"], domain=("i",))
+        model.sets["jwt"] = SetDef(name="jwt", members=["1", "2", "3"], domain=("*",))
+        model.params["vbar1"] = ParameterDef(
+            name="vbar1",
+            domain=("i", "jwt"),
+            values={("ii", "3"): 0.0},
+        )
+
+        result = emit_subset_value_assignments(model)
+        assert "vbar1(ii," in result
+        # ii should NOT be quoted
+        assert "vbar1('ii'" not in result
+
+    def test_pure_subset_key_stays_bare(self):
+        """Test that pure subset keys (all elements are set names) stay bare.
+
+        red(ii,jj) = 1 where ii and jj are subsets — both should be bare.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["ACT", "COM"], domain=("*",))
+        model.sets["ii"] = SetDef(name="ii", members=["ACT", "COM"], domain=("i",))
+        model.aliases["jj"] = AliasDef(name="jj", target="ii")
+        model.params["red"] = ParameterDef(
+            name="red",
+            domain=("i", "i"),
+            values={("ii", "jj"): 1.0},
+        )
+
+        result = emit_subset_value_assignments(model)
+        assert "red(ii,jj)" in result
+        assert "red('ii'" not in result

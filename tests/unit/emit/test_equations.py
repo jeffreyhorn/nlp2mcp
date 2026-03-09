@@ -14,7 +14,7 @@ from src.emit.equations import (
     emit_equation_definitions,
 )
 from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
-from src.ir.ast import Binary, Const, IndexOffset, Prod, Sum, VarRef
+from src.ir.ast import Binary, Const, IndexOffset, LhsConditionalAssign, ParamRef, Prod, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -430,6 +430,80 @@ class TestIndexAliasing:
         assert "sum(g__," in result
         assert "sum(m__," in result
         assert aliases == {"g", "m"}
+
+    def test_collect_index_aliases_case_insensitive(self):
+        """Test that case-insensitive index collisions are detected.
+
+        Subcategory G: GAMS is case-insensitive, so sum(R, ...) conflicts
+        with equation domain containing 'r'.
+        """
+        expr = Sum(("R",), VarRef("x", ("R",)))
+        aliases = collect_index_aliases(expr, ("r",))
+        assert "R" in aliases
+
+    def test_resolve_index_conflicts_case_insensitive(self):
+        """Test that case-insensitive index collisions are resolved.
+
+        sum(R, x(R)) with equation domain (r,) should become sum(R__, x(R__)).
+        """
+        expr = Sum(("R",), VarRef("x", ("R",)))
+        result = resolve_index_conflicts(expr, ("r",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("R__",)
+        assert result.body.indices == ("R__",)
+
+    def test_collect_index_aliases_nested_sum_conflict(self):
+        """Test nested sum where inner sum reuses outer sum's index.
+
+        sum(cc, sum(cc, x(cc))) — inner cc conflicts with outer cc's
+        bound scope, even when neither conflicts with equation domain.
+        """
+        inner = Sum(("cc",), VarRef("x", ("cc",)))
+        outer = Sum(("cc",), inner)
+        aliases = collect_index_aliases(outer, ("i",))
+        assert "cc" in aliases
+
+    def test_resolve_index_conflicts_nested_sum_conflict(self):
+        """Test resolution of nested sum index reuse.
+
+        sum(cc, sum(cc, x(cc))) with domain (i,) — the inner cc should
+        be aliased to cc__ since it's already bound by the outer sum.
+        """
+        inner = Sum(("cc",), VarRef("x", ("cc",)))
+        outer = Sum(("cc",), inner)
+        result = resolve_index_conflicts(outer, ("i",))
+        assert isinstance(result, Sum)
+        # The inner sum should have the aliased index
+        inner_result = result.body
+        assert isinstance(inner_result, Sum)
+        assert inner_result.index_sets == ("cc__",)
+
+    def test_collect_index_aliases_lhs_conditional_assign(self):
+        """Test that LhsConditionalAssign body and condition are walked.
+
+        For parameter assignments like prob(n)$(cond) = sum((nn,n), ...),
+        the sum index 'n' conflicts with the parameter domain.
+        """
+        rhs = Sum(("nn", "n"), Binary("*", ParamRef("p", ("nn",)), ParamRef("q", ("n",))))
+        cond = ParamRef("tn", ("n",))
+        expr = LhsConditionalAssign(rhs=rhs, condition=cond)
+        aliases = collect_index_aliases(expr, ("n",))
+        assert "n" in aliases
+
+    def test_resolve_index_conflicts_lhs_conditional_assign(self):
+        """Test that LhsConditionalAssign wrapping is preserved during resolution.
+
+        prob(n)$(cond) = sum((nn,n), ...) should resolve the inner n
+        to n__ while preserving the LhsConditionalAssign structure.
+        """
+        rhs = Sum(("nn", "n"), Binary("*", ParamRef("p", ("nn",)), ParamRef("q", ("n",))))
+        cond = ParamRef("tn", ("n",))
+        expr = LhsConditionalAssign(rhs=rhs, condition=cond)
+        result = resolve_index_conflicts(expr, ("n",))
+        assert isinstance(result, LhsConditionalAssign)
+        assert isinstance(result.rhs, Sum)
+        assert "n__" in result.rhs.index_sets
+        assert "nn" in result.rhs.index_sets
 
 
 @pytest.mark.unit

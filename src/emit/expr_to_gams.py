@@ -18,6 +18,7 @@ from src.ir.ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     ModelAttrRef,
     MultiplierRef,
     ParamRef,
@@ -676,10 +677,11 @@ def _make_alias_name(index: str) -> str:
 
 
 def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[str]:
-    """Collect all indices that need aliases due to conflicts with equation domain.
+    """Collect all indices that need aliases due to conflicts.
 
-    Recursively traverses the expression tree to find Sum nodes whose indices
-    conflict with the equation's domain indices.
+    Detects two conflict patterns:
+    1. Sum/Prod index collides with equation domain (case-insensitive)
+    2. Inner Sum/Prod index collides with outer Sum/Prod index (nested reuse)
 
     Args:
         expr: Expression to analyze
@@ -687,51 +689,47 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
 
     Returns:
         Set of original index names that need aliases
-
-    Examples:
-        >>> from src.ir.ast import Sum, Const
-        >>> expr = Sum(("i",), Const(0))
-        >>> collect_index_aliases(expr, ("i", "j"))
-        {'i'}
-        >>> collect_index_aliases(expr, ("k",))
-        set()
     """
-    if not equation_domain:
-        return set()
-
-    domain_set = set(equation_domain)
+    # Use case-insensitive comparison (GAMS is case-insensitive for identifiers)
+    domain_set_lower = {d.lower() for d in equation_domain}
     aliases_needed: set[str] = set()
 
-    def _collect(e: Expr) -> None:
+    def _collect(e: Expr, bound: frozenset[str]) -> None:
         match e:
             case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
-                # Check for conflicts
+                # Check for conflicts with equation domain or outer bound indices
                 for idx in index_sets:
-                    if idx in domain_set:
+                    idx_lower = idx.lower()
+                    if idx_lower in domain_set_lower or idx_lower in bound:
                         aliases_needed.add(idx)
-                # Recurse into condition and body
+                # Recurse with expanded bound set
+                new_bound = bound | frozenset(idx.lower() for idx in index_sets)
                 if condition is not None:
-                    _collect(condition)
-                _collect(body)
+                    _collect(condition, new_bound)
+                _collect(body, new_bound)
 
             case Binary(_, left, right):
-                _collect(left)
-                _collect(right)
+                _collect(left, bound)
+                _collect(right, bound)
 
             case Unary(_, child):
-                _collect(child)
+                _collect(child, bound)
 
             case Call(_, args):
                 for arg in args:
-                    _collect(arg)
+                    _collect(arg, bound)
 
             case DollarConditional(value_expr, condition):
-                _collect(value_expr)
-                _collect(condition)
+                _collect(value_expr, bound)
+                _collect(condition, bound)
 
             case SetMembershipTest() as smt:
                 for smt_idx in smt.indices:
-                    _collect(smt_idx)
+                    _collect(smt_idx, bound)
+
+            case LhsConditionalAssign(rhs, condition):
+                _collect(rhs, bound)
+                _collect(condition, bound)
 
             case (
                 VarRef()
@@ -743,24 +741,21 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
                 | SetAttrRef()
                 | ModelAttrRef()
             ):
-                # Leaf nodes - no nested sums
                 pass
 
             case _:
                 pass
 
-    _collect(expr)
+    _collect(expr, frozenset())
     return aliases_needed
 
 
 def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Expr:
     """Resolve index conflicts by replacing conflicting sum indices with aliases.
 
-    Creates a new expression tree where any Sum index that conflicts with the
-    equation's domain is replaced with an aliased version (e.g., "i" -> "i__").
-
-    Also replaces any references to the original index within the sum body
-    (in VarRef, ParamRef, MultiplierRef indices) with the aliased version.
+    Handles two conflict patterns:
+    1. Sum/Prod index collides with equation domain (case-insensitive)
+    2. Inner Sum/Prod index collides with outer Sum/Prod index (nested reuse)
 
     Args:
         expr: Expression to transform
@@ -768,19 +763,11 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
 
     Returns:
         New expression with conflicts resolved
-
-    Examples:
-        >>> from src.ir.ast import Sum, VarRef, Const
-        >>> expr = Sum(("i",), VarRef("x", ("i",)))
-        >>> result = resolve_index_conflicts(expr, ("i",))
-        >>> # Result: Sum(("i__",), VarRef("x", ("i__",)))
     """
-    if not equation_domain:
-        return expr
+    # Use case-insensitive comparison for conflict detection
+    domain_set_lower = {d.lower() for d in equation_domain}
 
-    domain_set = set(equation_domain)
-
-    def _resolve(e: Expr, active_aliases: dict[str, str]) -> Expr:
+    def _resolve(e: Expr, active_aliases: dict[str, str], bound_lower: frozenset[str]) -> Expr:
         """Recursively resolve conflicts, tracking active alias substitutions."""
         match e:
             case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
@@ -789,7 +776,8 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                 new_aliases = dict(active_aliases)  # Copy current aliases
 
                 for idx in index_sets:
-                    if idx in domain_set:
+                    idx_lower = idx.lower()
+                    if idx_lower in domain_set_lower or idx_lower in bound_lower:
                         # This index conflicts - use alias
                         alias = _make_alias_name(idx)
                         agg_indices.append(alias)
@@ -797,37 +785,44 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                     else:
                         agg_indices.append(idx)
 
-                # Recurse into condition and body with updated aliases
-                new_condition = _resolve(condition, new_aliases) if condition is not None else None
-                new_body = _resolve(body, new_aliases)
+                # Recurse with expanded bound set
+                new_bound = bound_lower | frozenset(idx.lower() for idx in index_sets)
+                new_condition = (
+                    _resolve(condition, new_aliases, new_bound) if condition is not None else None
+                )
+                new_body = _resolve(body, new_aliases, new_bound)
                 agg_class = type(e)  # Sum or Prod
                 return agg_class(tuple(agg_indices), new_body, new_condition)
 
             case Binary(op, left, right):
-                new_left = _resolve(left, active_aliases)
-                new_right = _resolve(right, active_aliases)
+                new_left = _resolve(left, active_aliases, bound_lower)
+                new_right = _resolve(right, active_aliases, bound_lower)
                 return Binary(op, new_left, new_right)
 
             case Unary(op, child):
-                new_child = _resolve(child, active_aliases)
+                new_child = _resolve(child, active_aliases, bound_lower)
                 return Unary(op, new_child)
 
             case Call(func, args):
-                new_args = tuple(_resolve(arg, active_aliases) for arg in args)
+                new_args = tuple(_resolve(arg, active_aliases, bound_lower) for arg in args)
                 return Call(func, new_args)
 
             case DollarConditional(value_expr, condition):
-                new_value = _resolve(value_expr, active_aliases)
-                new_condition = _resolve(condition, active_aliases)
+                new_value = _resolve(value_expr, active_aliases, bound_lower)
+                new_condition = _resolve(condition, active_aliases, bound_lower)
                 return DollarConditional(new_value, new_condition)
 
             case SetMembershipTest(set_name, indices):
-                new_indices = tuple(_resolve(idx, active_aliases) for idx in indices)
+                new_indices = tuple(_resolve(idx, active_aliases, bound_lower) for idx in indices)
                 return SetMembershipTest(set_name, new_indices)
+
+            case LhsConditionalAssign(rhs, condition):
+                new_rhs = _resolve(rhs, active_aliases, bound_lower)
+                new_cond = _resolve(condition, active_aliases, bound_lower)
+                return LhsConditionalAssign(rhs=new_rhs, condition=new_cond)
 
             case VarRef() as var_ref:
                 if var_ref.indices and active_aliases:
-                    # Replace any aliased indices (only strings, not IndexOffset)
                     var_indices: tuple[str | IndexOffset, ...] = tuple(
                         active_aliases.get(idx, idx) if isinstance(idx, str) else idx
                         for idx in var_ref.indices
@@ -867,10 +862,9 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                 return eq_ref
 
             case Const() | SymbolRef() | SetAttrRef() | ModelAttrRef():
-                # Leaf nodes with no indices
                 return e
 
             case _:
                 return e
 
-    return _resolve(expr, {})
+    return _resolve(expr, {}, frozenset())

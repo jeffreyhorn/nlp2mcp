@@ -17,7 +17,11 @@ import math
 import re
 from collections import deque
 
-from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
+from src.emit.expr_to_gams import (
+    _format_mixed_indices,
+    expr_to_gams,
+    resolve_index_conflicts,
+)
 from src.ir.ast import (
     Binary,
     Call,
@@ -1358,6 +1362,24 @@ def emit_computed_parameter_assignments(
     # GAMS is case-insensitive, so we include both original case and lowercase.
     declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
+    # Subcategory G: Collect aliases needed for index conflict resolution
+    # in parameter assignments so we can emit Alias declarations up front.
+    from src.emit.expr_to_gams import collect_index_aliases
+
+    param_aliases_needed: set[str] = set()
+    for _pn, kt, ex, _oi in sorted_stmts:
+        pd = tuple(
+            idx if isinstance(idx, str) else idx.base
+            for idx in kt
+            if isinstance(idx, str) or isinstance(idx, IndexOffset)
+        )
+        if pd:
+            param_aliases_needed.update(collect_index_aliases(ex, pd))
+    if param_aliases_needed:
+        for idx in sorted(param_aliases_needed):
+            alias_name = f"{idx}__"
+            lines.append(f"Alias({idx}, {alias_name});")
+
     seen_assignment_lines: set[str] = set()
     for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
         # Convert expression to GAMS syntax
@@ -1375,6 +1397,16 @@ def emit_computed_parameter_assignments(
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
         domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
+
+        # Issue #1002 (subcategory G): Resolve index conflicts in parameter
+        # assignment RHS — sum indices that collide with LHS domain indices
+        # need aliasing (e.g., prob(n) = sum((nn,n), ...) → sum((nn,n__), ...)).
+        param_domain = tuple(
+            idx if isinstance(idx, str) else idx.base
+            for idx in key_tuple
+            if isinstance(idx, str) or isinstance(idx, IndexOffset)
+        )
+        expr = resolve_index_conflicts(expr, param_domain)
 
         # Issue #1015: LhsConditionalAssign wraps a LHS-conditional assignment
         # p(i)$cond = rhs — emit condition on the LHS, not the RHS.
@@ -1714,15 +1746,24 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                     _quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key
                 ]
             else:
-                # Mixed: all elements are literal values (quotes were stripped
-                # at parse time). Quote ALL non-domain elements, including those
-                # that collide with set names (Issue #912: e.g., cases(c1,m)
-                # where 'm' is both an element and a declared set name).
+                # Mixed: some elements are set/alias names, others are literals.
+                # Set/alias names are legitimate subset references (e.g.,
+                # vbar1(ii,"3") where ii is a subset of i) — keep them bare.
+                # Non-set elements that had quotes stripped at parse time need
+                # re-quoting (Issue #912: e.g., cases(c1,m) where 'm' is both
+                # an element and a declared set name — but only when 'm' is NOT
+                # flagged as a set by is_set_flags).
                 param_domain_lower = frozenset(d.lower() for d in param_def.domain)
-                quoted_keys = [
-                    k if k.lower() in param_domain_lower or k == "*" else f"'{k}'"
-                    for k in expanded_key
-                ]
+                quoted_keys = []
+                for k, is_set in zip(expanded_key, is_set_flags, strict=True):
+                    if is_set or k.lower() in param_domain_lower or k == "*":
+                        # Set/alias name or domain variable — keep bare
+                        quoted_keys.append(k)
+                    else:
+                        # Literal element — quote if needed
+                        quoted_keys.append(
+                            _quote_assignment_index(k, sets_and_aliases_lower, param_domain_lower)
+                        )
             index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
