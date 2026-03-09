@@ -1782,9 +1782,10 @@ def emit_interleaved_params_and_sets(
     emitted_param_names: set[str] = set()
     emitted_sa_indices: set[int] = set()
 
-    # Pre-resolve expressions for alias collection
+    # Pre-resolve expressions for alias collection (and cache for reuse)
     all_aliases: dict[str, list[str]] = {}
-    for _name, key, expr, _idx, item_type, _sa in sorted_items:
+    resolved_exprs: dict[int, Expr] = {}  # sorted_items index → resolved expr
+    for si_idx, (_name, key, expr, _idx, item_type, _sa) in enumerate(sorted_items):
         if item_type != "param" or expr is None:
             continue
         param_domain = tuple(
@@ -1792,7 +1793,8 @@ def emit_interleaved_params_and_sets(
             for idx in key
             if isinstance(idx, str) or isinstance(idx, IndexOffset)
         )
-        _, expr_aliases = resolve_index_conflicts(expr, param_domain)
+        resolved, expr_aliases = resolve_index_conflicts(expr, param_domain)
+        resolved_exprs[si_idx] = resolved
         for base, alias_list in expr_aliases.items():
             existing = all_aliases.setdefault(base, [])
             for a in alias_list:
@@ -1805,7 +1807,7 @@ def emit_interleaved_params_and_sets(
                 lines.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
 
     seen: set[str] = set()
-    for name, key, expr, _idx, item_type, sa_idx in sorted_items:
+    for si_idx, (name, key, expr, _idx, item_type, sa_idx) in enumerate(sorted_items):
         if item_type == "set":
             # Emit set assignment
             assert sa_idx is not None
@@ -1826,12 +1828,7 @@ def emit_interleaved_params_and_sets(
             # Emit param expression
             assert expr is not None
             emitted_param_names.add(name.lower())
-            param_domain = tuple(
-                idx if isinstance(idx, str) else idx.base
-                for idx in key
-                if isinstance(idx, str) or isinstance(idx, IndexOffset)
-            )
-            resolved_expr, _ = resolve_index_conflicts(expr, param_domain)
+            resolved_expr = resolved_exprs[si_idx]
 
             lhs_domain: frozenset[str] = frozenset(
                 idx if isinstance(idx, str) else idx.base

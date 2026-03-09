@@ -4517,7 +4517,7 @@ class _ModelBuilder:
             and target.data == "symbol_indexed"
             and len(target.children) > 1
         ):
-            symbol_name = str(target.children[0]).lower()
+            symbol_name = _token_text(target.children[0])
             if symbol_name in self.model.sets:
                 rhs_evaluated = self._expr_with_context(
                     rhs_expr, "conditional assignment", domain_context
