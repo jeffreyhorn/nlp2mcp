@@ -6445,20 +6445,21 @@ class _ModelBuilder:
             positions for positions in symbol_positions.values() if len(positions) > 1
         ]
         if repeated_groups:
-            # Map each position to a "slot" label.  Positions that share the same
-            # set-name symbol map to the same slot so their values are linked.
-            # Positions not tracked in symbol_positions (literals, IndexOffset)
-            # get their own unique slot.
-            pos_to_slot: dict[int, str] = {}
+            # Map each position to a slot key.  Positions that share the same
+            # set-name symbol map to the same slot (str key) so their values
+            # are linked.  Positions not tracked in symbol_positions (literals,
+            # IndexOffset) get their own unique slot using the int position as
+            # key — this avoids collisions with real GAMS set names.
+            pos_to_slot: dict[int, str | int] = {}
             for sym_key, positions in symbol_positions.items():
                 for p in positions:
                     pos_to_slot[p] = sym_key
 
             # Collect unique slot keys in positional order
-            unique_slots: list[str] = []
-            seen: set[str] = set()
+            unique_slots: list[str | int] = []
+            seen: set[str | int] = set()
             for p in range(len(member_lists)):
-                slot = pos_to_slot.get(p, f"__pos{p}")
+                slot: str | int = pos_to_slot.get(p, p)
                 if slot not in seen:
                     unique_slots.append(slot)
                     seen.add(slot)
@@ -6470,10 +6471,12 @@ class _ModelBuilder:
             # For each unique slot, use the member list of its first position
             unique_member_lists = []
             for slot in unique_slots:
-                if slot in symbol_positions:
+                if isinstance(slot, str) and slot in symbol_positions:
                     unique_member_lists.append(member_lists[symbol_positions[slot][0]])
                 else:
-                    unique_member_lists.append(member_lists[int(slot.replace("__pos", ""))])
+                    # Int slot → use member_lists at that position directly
+                    assert isinstance(slot, int)
+                    unique_member_lists.append(member_lists[slot])
 
             result: list[tuple[str, ...]] = []
             for base_comb in product(*unique_member_lists):
