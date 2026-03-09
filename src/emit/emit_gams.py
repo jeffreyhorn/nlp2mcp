@@ -37,6 +37,7 @@ from src.ir.ast import (
     EquationRef,
     Expr,
     IndexOffset,
+    LhsConditionalAssign,
     MultiplierRef,
     ParamRef,
     Prod,
@@ -47,6 +48,7 @@ from src.ir.ast import (
     Unary,
     VarRef,
 )
+from src.ir.model_ir import ModelIR
 from src.ir.symbols import VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
@@ -55,6 +57,30 @@ from src.kkt.naming import (
     create_eq_multiplier_name,
 )
 from src.kkt.objective import extract_objective_info
+
+
+def _quote_uel(label: str) -> str:
+    """Quote a UEL (Unique Element Label) for GAMS .fx/.lo/.up emission.
+
+    fx_map/lo_map/up_map keys are always literal element values, never domain
+    variables.  Always single-quote them to prevent GAMS from interpreting a
+    label that collides with a set/alias name as a running index.
+
+    Uses _sanitize_set_element for consistent handling of special characters,
+    then ensures single-quoting with embedded-quote escaping.
+    """
+    # Sanitize via shared set-element sanitizer for consistent special-char handling
+    sanitized = _sanitize_set_element(label)
+
+    # If the sanitizer already returned a quoted element, respect that
+    if (sanitized.startswith("'") and sanitized.endswith("'")) or (
+        sanitized.startswith('"') and sanitized.endswith('"')
+    ):
+        return sanitized
+
+    # Escape any embedded single quotes before wrapping in single quotes
+    escaped = sanitized.replace("'", "''")
+    return f"'{escaped}'"
 
 
 def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
@@ -183,6 +209,172 @@ def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
         return SubsetIndex(expr.subset_name, si_indices)
     # For any other type (SymbolRef, ModelAttrRef, CompileTimeConstant), return as-is
     return expr
+
+
+def _collect_additive_terms(expr: Expr, sign: int = 1) -> list[tuple[int, Expr]]:
+    """Flatten an expression into signed additive terms.
+
+    Returns a list of (sign, term) pairs where sign is +1 or -1.
+    Recursively expands Binary(+/-) and Unary(-) to collect leaf terms.
+
+    Used by section 2c to detect cancellation patterns like p(r,c) - p(r,c).
+    """
+    result: list[tuple[int, Expr]] = []
+    _collect_additive_terms_acc(expr, sign, result)
+    return result
+
+
+def _collect_additive_terms_acc(expr: Expr, sign: int, acc: list[tuple[int, Expr]]) -> None:
+    """Accumulator helper — appends (sign, term) pairs to *acc* in-place."""
+    if isinstance(expr, Binary) and expr.op == "+":
+        _collect_additive_terms_acc(expr.left, sign, acc)
+        _collect_additive_terms_acc(expr.right, sign, acc)
+        return
+    if isinstance(expr, Binary) and expr.op == "-":
+        _collect_additive_terms_acc(expr.left, sign, acc)
+        _collect_additive_terms_acc(expr.right, -sign, acc)
+        return
+    if isinstance(expr, Unary) and expr.op == "-":
+        _collect_additive_terms_acc(expr.child, -sign, acc)
+        return
+    if isinstance(expr, Binary) and expr.op == "*":
+        # Check for (-1) * expr pattern
+        if isinstance(expr.left, Const) and expr.left.value == -1.0:
+            _collect_additive_terms_acc(expr.right, -sign, acc)
+            return
+        if isinstance(expr.right, Const) and expr.right.value == -1.0:
+            _collect_additive_terms_acc(expr.left, -sign, acc)
+            return
+    acc.append((sign, expr))
+
+
+def _contains_variable(expr: Expr) -> bool:
+    """Return True if *expr* contains any VarRef or MultiplierRef in its subtree.
+
+    Traverses index expressions (IndexOffset offsets), SetMembershipTest indices,
+    and LhsConditionalAssign children to catch nested variable references.
+    """
+    if isinstance(expr, (VarRef, MultiplierRef)):
+        return True
+    if isinstance(expr, (ParamRef, EquationRef)):
+        # ParamRef/EquationRef are not variables, but their indices may contain
+        # IndexOffset with variable expressions in the offset.
+        return any(
+            isinstance(idx, IndexOffset) and _contains_variable(idx.offset) for idx in expr.indices
+        )
+    if isinstance(expr, IndexOffset):
+        return _contains_variable(expr.offset)
+    if isinstance(expr, Binary):
+        return _contains_variable(expr.left) or _contains_variable(expr.right)
+    if isinstance(expr, Unary):
+        return _contains_variable(expr.child)
+    if isinstance(expr, Call):
+        return any(_contains_variable(a) for a in expr.args)
+    if isinstance(expr, (Sum, Prod)):
+        if expr.condition is not None and _contains_variable(expr.condition):
+            return True
+        return _contains_variable(expr.body)
+    if isinstance(expr, DollarConditional):
+        return _contains_variable(expr.value_expr) or _contains_variable(expr.condition)
+    if isinstance(expr, SetMembershipTest):
+        return any(_contains_variable(idx) for idx in expr.indices)
+    if isinstance(expr, LhsConditionalAssign):
+        return _contains_variable(expr.rhs) or _contains_variable(expr.condition)
+    return False
+
+
+def _is_trivial_after_cancellation(
+    lhs: Expr,
+    rhs: Expr,
+    model_ir: ModelIR | None = None,
+) -> bool:
+    """Check if LHS =G= RHS is trivially satisfied after canceling matching terms.
+
+    Issue #1021: Detects cases like p(r,c) + TCost(r,r,c) - p(r,c) >= 0
+    where VarRef terms cancel, leaving only ParamRef terms that evaluate to 0
+    on the diagonal.
+
+    Returns True only when provably zero: all VarRef terms cancel AND remaining
+    terms are either Const(0) or ParamRef whose diagonal data entries are all 0.
+    """
+    if not (isinstance(rhs, Const) and rhs.value == 0.0):
+        return False
+
+    terms = _collect_additive_terms(lhs)
+
+    # Group terms by their expression (for cancellation detection).
+    # Expr nodes are @dataclass(frozen=True), so they are hashable and
+    # support structural equality — use the Expr object itself as the key
+    # to avoid repr() mismatches (e.g., Const(5) vs Const(5.0)).
+    term_counts: dict[Expr, int] = {}
+    for sign, term in terms:
+        term_counts[term] = term_counts.get(term, 0) + sign
+
+    # Check remaining terms (those that didn't fully cancel)
+    for term, count in term_counts.items():
+        if count == 0:
+            continue  # Fully canceled
+        # Reject any remaining term that contains a VarRef or MultiplierRef
+        # anywhere in its subtree (not just top-level). E.g., reject
+        # Call('exp', (VarRef(...),)) or Binary('*', Const(2), VarRef(...)).
+        if _contains_variable(term):
+            return False
+        # Const(0) is provably zero — accept it
+        if isinstance(term, Const) and term.value == 0.0:
+            continue
+        # Non-zero Const is not trivial
+        if isinstance(term, Const):
+            return False
+        # ParamRef: verify all diagonal entries are zero in actual data.
+        # Diagonal entries are those where repeated index symbols have equal
+        # values (e.g., TCost(r,r,c) → entries where positions 0 and 1 match).
+        if isinstance(term, ParamRef) and model_ir is not None:
+            if not _paramref_zero_on_diagonal(term, model_ir):
+                return False
+            continue
+        # Any other non-canceled non-Const term (Call, Binary, etc.) — not provably zero
+        return False
+
+    return True
+
+
+def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
+    """Check whether a ParamRef evaluates to 0 on all diagonal entries.
+
+    A ParamRef like TCost(r,r,c) has repeated index symbols at positions 0
+    and 1.  We check the parameter's data entries where those positions have
+    matching values.  Returns True only if ALL such entries are 0.
+    """
+    pdef = model_ir.params.get(param.name)
+    if pdef is None:
+        return False  # Unknown param — not provably zero
+
+    # Computed parameters (non-empty expressions) may evaluate to nonzero
+    # at runtime — can't verify statically, so reject early.
+    if pdef.expressions:
+        return False
+
+    # Find positions with repeated index symbols
+    idx_symbols = [str(i) for i in param.indices]
+    sym_positions: dict[str, list[int]] = {}
+    for pos, sym in enumerate(idx_symbols):
+        sym_positions.setdefault(sym.lower(), []).append(pos)
+    repeated_groups = [positions for positions in sym_positions.values() if len(positions) > 1]
+    if not repeated_groups:
+        # No repeated indices — we can't prove it's zero without full evaluation
+        # Fall back: check if ALL entries in the parameter are zero
+        return all(v == 0 for v in pdef.values.values())
+
+    # Check only diagonal entries (where repeated positions have equal values)
+    for entry_key, val in pdef.values.items():
+        is_diagonal = all(
+            all(entry_key[pos] == entry_key[positions[0]] for pos in positions[1:])
+            for positions in repeated_groups
+        )
+        if is_diagonal and val != 0:
+            return False
+
+    return True
 
 
 def emit_gams_mcp(
@@ -381,6 +573,8 @@ def emit_gams_mcp(
     # Issue #873: Emit expression-based variable bounds (.lo/.up/.fx)
     # Issue #921: Split into two passes — bounds that reference .l values must be
     # emitted AFTER .l initialization (deferred), while others come before.
+    # Issue #1021: Also emit numeric per-element .fx bounds (fx_map) so that
+    # fixed variables are communicated to the MCP solver (e.g., X.fx(r,r,c) = 0).
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -407,6 +601,19 @@ def emit_gams_mcp(
                     deferred_bound_lines.append(line)
                 else:
                     bound_lines.append(line)
+
+        # Issue #1021: Emit numeric per-element .fx bounds from fx_map.
+        # These represent X.fx(r,r,c) = 0 style assignments parsed from
+        # the source model. Without re-emitting them, the MCP solver
+        # complains about empty equations with unfixed paired variables.
+        # fx_map keys are always literal UELs (never domain variables),
+        # so always quote them to avoid collisions with set/alias names.
+        if var_def.fx_map:
+            for indices, fx_val in sorted(var_def.fx_map.items()):
+                idx_str = ",".join(_quote_uel(m) for m in indices)
+                # Format value: use integer form for whole numbers
+                val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
     if bound_lines:
         if add_comments:
             sections.append("* ============================================")
@@ -908,6 +1115,16 @@ def emit_gams_mcp(
                 and subst_rhs.value == 0.0
             ):
                 is_trivial = True
+            # Check 3 (Issue #1021): Collect additive terms, cancel matching
+            # VarRef pairs, and verify remaining terms are provably zero
+            # (Const(0) or ParamRef with all-zero diagonal data).
+            # Handles: p(r,c) + TCost(r,r,c) - p(r,c) =G= 0
+            # where VarRef(p) cancels, leaving ParamRef(TCost) which is 0
+            # on the diagonal (verified against actual parameter data).
+            if not is_trivial:
+                is_trivial = _is_trivial_after_cancellation(
+                    subst_lhs, subst_rhs, model_ir=kkt.model_ir
+                )
             if not is_trivial:
                 continue
             mult_name = comp_pair.variable

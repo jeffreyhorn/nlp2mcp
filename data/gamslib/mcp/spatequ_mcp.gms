@@ -74,6 +74,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+X.fx('Reg1','Reg1','Com1') = 0;
+X.fx('Reg1','Reg1','Com2') = 0;
+X.fx('Reg2','Reg2','Com1') = 0;
+X.fx('Reg2','Reg2','Com2') = 0;
+X.fx('Reg3','Reg3','Com1') = 0;
+X.fx('Reg3','Reg3','Com2') = 0;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -124,12 +135,18 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(c, c__);
+Alias(cc, cc__);
+Alias(r, r__);
+
 * Stationarity equations
 stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
 stat_obj.. 0 =E= 0;
-stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc, BetadSq(r,c,cc) * p(r,cc)))) * nu_DEMINT(r,c)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc, BetasSq(r,c,cc) * p(r,cc)))) * nu_SUPINT(r,c)) + sum(rr, lam_PDIF(r,rr,c)) + sum(rr, (-1) * lam_DOM_TRAD(r,rr,c)) - piL_p(r,c) =E= 0;
+stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc__, BetadSq(r,c,cc__) * p(r,cc__)))) * nu_DEMINT(r,c)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc__, BetasSq(r,c,cc__) * p(r,cc__)))) * nu_SUPINT(r,c)) + sum(rr, lam_PDIF(r,rr,c)) + sum(rr, (-1) * lam_DOM_TRAD(r,rr,c)) - piL_p(r,c) =E= 0;
 stat_qd(r,c).. ((-1) * nu_DEM(r,c)) - nu_DEMLOG(r,c) + nu_SDBAL(c) - nu_DX(r,c) - nu_IN_OUT(r,c) =E= 0;
-stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SUPLOG(r,c) - nu_SDBAL(c) + sum((R,C), (-1) * nu_SX(R,C)) + nu_IN_OUT(r,c) =E= 0;
+stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SUPLOG(r,c) - nu_SDBAL(c) + sum((r__,c__), (-1) * nu_SX(r__,c__)) + nu_IN_OUT(r,c) =E= 0;
 stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;
 stat_tc.. 1 + nu_TRANSCOST =E= 0;
 stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) + nu_IN_OUT(r,c) - piL_x(r,rr,c) =E= 0;
@@ -156,6 +173,16 @@ SX(R,C).. sum(RR, x(R,RR,C)) =E= qs(R,C);
 DX(r,c).. sum(rr, x(rr,r,c)) =E= qd(r,c);
 IN_OUT(r,c).. qs(r,c) + sum(rr, x(rr,r,c) - x(r,rr,c)) =E= qd(r,c);
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_DOM_TRAD.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
+lam_PDIF.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
 
 * ============================================
 * Model MCP Declaration

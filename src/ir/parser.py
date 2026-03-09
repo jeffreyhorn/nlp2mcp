@@ -6362,7 +6362,12 @@ class _ModelBuilder:
                 node,
             )
         member_lists: list[list[str]] = []
-        for symbol, domain_name in zip(index_symbols, var.domain, strict=True):
+        # Issue #1021: Track which positions use the same set-name symbol
+        # so we can constrain the Cartesian product to diagonal entries.
+        # In GAMS, X.fx(r,r,c) = 0 means the same running index r is used
+        # in both positions — only diagonal entries (r,r,c) are assigned.
+        symbol_positions: dict[str, list[int]] = {}
+        for pos, (symbol, domain_name) in enumerate(zip(index_symbols, var.domain, strict=True)):
             domain_set = self._resolve_set_def(domain_name, node=node)
             if domain_set is None:
                 raise self._error(
@@ -6382,14 +6387,19 @@ class _ModelBuilder:
             if isinstance(symbol, str):
                 resolved_symbol_set = self._resolve_set_def(symbol, node=node)
                 if resolved_symbol_set is not None:
-                    # Symbol is a set/alias name - validate and use its members
+                    # Symbol is a set/alias name - validate and use its members.
+                    # Use the *referenced* set's members (not the full domain)
+                    # so subset-restricted bounds (e.g., x.fx(is) where is⊂i)
+                    # only expand over the subset.
                     if domain_set.members and resolved_symbol_set.members:
                         if set(resolved_symbol_set.members) - set(domain_set.members):
                             raise self._error(
-                                f"Alias '{symbol}' for variable '{var_name}' does not match domain '{domain_name}'",
+                                f"Set/alias '{symbol}' for variable '{var_name}' does not match domain '{domain_name}'",
                                 node,
                             )
-                    member_lists.append(domain_set.members)
+                    member_lists.append(resolved_symbol_set.members)
+                    # Track this set-name symbol for diagonal constraint
+                    symbol_positions.setdefault(symbol.lower(), []).append(pos)
                 else:
                     # Symbol is a literal value (e.g., "1", "2", "pellets")
                     # Strip quotes - validate matching quotes at both ends
@@ -6423,6 +6433,58 @@ class _ModelBuilder:
                 # Symbol is not a string (e.g., IndexOffset like i++1)
                 # Expand to all domain members (original behavior)
                 member_lists.append(domain_set.members)
+
+        # Issue #1021: Ensure that entries where repeated set-name symbols appear
+        # (e.g., X.fx(r,r,c)) only keep diagonal combinations such as
+        # (Reg1,Reg1,Com1), (Reg1,Reg1,Com2), etc.
+        #
+        # Instead of building the full Cartesian product and filtering (O(|r|^2*|c|)
+        # for pattern (r,r,c)), iterate over unique symbols and project combinations
+        # back to all positions, so repeated positions share the same chosen value.
+        repeated_groups = [
+            positions for positions in symbol_positions.values() if len(positions) > 1
+        ]
+        if repeated_groups:
+            # Map each position to a slot key.  Positions that share the same
+            # set-name symbol map to the same slot (str key) so their values
+            # are linked.  Positions not tracked in symbol_positions (literals,
+            # IndexOffset) get their own unique slot using the int position as
+            # key — this avoids collisions with real GAMS set names.
+            pos_to_slot: dict[int, str | int] = {}
+            for sym_key, positions in symbol_positions.items():
+                for p in positions:
+                    pos_to_slot[p] = sym_key
+
+            # Collect unique slot keys in positional order
+            unique_slots: list[str | int] = []
+            seen: set[str | int] = set()
+            for p in range(len(member_lists)):
+                slot: str | int = pos_to_slot.get(p, p)
+                if slot not in seen:
+                    unique_slots.append(slot)
+                    seen.add(slot)
+                if p not in pos_to_slot:
+                    pos_to_slot[p] = slot
+
+            slot_to_idx = {slot: idx for idx, slot in enumerate(unique_slots)}
+
+            # For each unique slot, use the member list of its first position
+            unique_member_lists = []
+            for slot in unique_slots:
+                if isinstance(slot, str) and slot in symbol_positions:
+                    unique_member_lists.append(member_lists[symbol_positions[slot][0]])
+                else:
+                    # Int slot → use member_lists at that position directly
+                    assert isinstance(slot, int)
+                    unique_member_lists.append(member_lists[slot])
+
+            result: list[tuple[str, ...]] = []
+            for base_comb in product(*unique_member_lists):
+                full_tuple = tuple(
+                    base_comb[slot_to_idx[pos_to_slot[p]]] for p in range(len(member_lists))
+                )
+                result.append(full_tuple)
+            return result
         return [tuple(comb) for comb in product(*member_lists)]
 
     def _validate(self) -> None:
