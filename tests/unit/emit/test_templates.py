@@ -21,7 +21,7 @@ from src.emit.templates import (
 )
 from src.ir.ast import Const
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import SetAssignment, SetDef, VariableDef, VarKind
+from src.ir.symbols import AliasDef, SetAssignment, SetDef, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem, MultiplierDef
 
 
@@ -331,6 +331,72 @@ class TestBuildDynamicSubsetMap:
         )
         result = _build_dynamic_subset_map(model_ir)
         assert result == {"im": "i"}
+
+    def test_alias_of_dynamic_subset(self):
+        """Alias of dynamic subset is remapped to the same parent (Issue #1022)."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ii", indices=("i",), expr=Const(1.0), location=None)
+        )
+        model_ir.aliases["jj"] = AliasDef(name="jj", target="ii")
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"ii": "i", "jj": "i"}
+
+    def test_multiple_aliases_of_same_dynamic_subset(self):
+        """Multiple aliases of the same dynamic subset all remap to parent."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ii", indices=("i",), expr=Const(1.0), location=None)
+        )
+        model_ir.aliases["jj"] = AliasDef(name="jj", target="ii")
+        model_ir.aliases["kk"] = AliasDef(name="kk", target="ii")
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"ii": "i", "jj": "i", "kk": "i"}
+
+    def test_alias_of_alias_chain(self):
+        """Alias-of-alias chain resolved via transitive closure."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ii", indices=("i",), expr=Const(1.0), location=None)
+        )
+        # jj -> ii (direct alias of dynamic subset)
+        model_ir.aliases["jj"] = AliasDef(name="jj", target="ii")
+        # kk -> jj (alias of alias — needs transitive closure)
+        model_ir.aliases["kk"] = AliasDef(name="kk", target="jj")
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"ii": "i", "jj": "i", "kk": "i"}
+
+    def test_alias_of_non_dynamic_set_ignored(self):
+        """Alias of a non-dynamic set is not included in the map."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="ii", indices=("i",), expr=Const(1.0), location=None)
+        )
+        # jj aliases a static set, not a dynamic one
+        model_ir.aliases["jj"] = AliasDef(name="jj", target="i")
+        result = _build_dynamic_subset_map(model_ir)
+        # Only ii is dynamic; jj aliases static "i" so not remapped
+        assert result == {"ii": "i"}
+
+    def test_alias_case_insensitive(self):
+        """Alias target matching is case-insensitive."""
+        model_ir = ModelIR()
+        model_ir.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model_ir.sets["II"] = SetDef(name="II", members=[], domain=("i",))
+        model_ir.set_assignments.append(
+            SetAssignment(set_name="II", indices=("i",), expr=Const(1.0), location=None)
+        )
+        model_ir.aliases["JJ"] = AliasDef(name="JJ", target="II")
+        result = _build_dynamic_subset_map(model_ir)
+        assert result == {"ii": "i", "jj": "i"}
 
 
 @pytest.mark.unit
