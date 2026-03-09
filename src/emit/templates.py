@@ -43,14 +43,19 @@ def _build_dynamic_subset_map(model_ir: ModelIR) -> dict[str, str]:
             result[name_lower] = set_def.domain[0]
 
     # Issue #1022: Extend map to aliases of dynamic subsets.
-    # If alias 'jj' targets dynamic set 'ii' (mapped to parent 'i'),
-    # remap 'jj' to the same parent 'i'.
+    # Use transitive-closure (fixed-point) loop to handle alias-of-alias chains.
+    # E.g., if kk -> jj -> ii and ii is dynamic (mapped to parent 'i'),
+    # then jj maps to 'i' in pass 1, kk maps to 'i' in pass 2.
     if result:
-        for alias_name, alias_def in model_ir.aliases.items():
-            alias_lower = alias_name.lower()
-            target_lower = alias_def.target.lower()
-            if target_lower in result and alias_lower not in result:
-                result[alias_lower] = result[target_lower]
+        changed = True
+        while changed:
+            changed = False
+            for alias_name, alias_def in model_ir.aliases.items():
+                alias_lower = alias_name.lower()
+                target_lower = alias_def.target.lower()
+                if target_lower in result and alias_lower not in result:
+                    result[alias_lower] = result[target_lower]
+                    changed = True
 
     return result
 
