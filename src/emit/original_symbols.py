@@ -17,7 +17,11 @@ import math
 import re
 from collections import deque
 
-from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
+from src.emit.expr_to_gams import (
+    _format_mixed_indices,
+    expr_to_gams,
+    resolve_index_conflicts,
+)
 from src.ir.ast import (
     Binary,
     Call,
@@ -1358,8 +1362,32 @@ def emit_computed_parameter_assignments(
     # GAMS is case-insensitive, so we include both original case and lowercase.
     declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
-    seen_assignment_lines: set[str] = set()
+    # Subcategory G: Pre-resolve all parameter assignment expressions to collect
+    # the full set of generated alias names (including i__2, i__3, etc. for deeply
+    # nested scopes). Emit Alias declarations up front before any assignments.
+    all_param_aliases: dict[str, list[str]] = {}
+    resolved_exprs: list[_StmtTuple] = []
     for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
+        param_domain = tuple(
+            idx if isinstance(idx, str) else idx.base
+            for idx in key_tuple
+            if isinstance(idx, str) or isinstance(idx, IndexOffset)
+        )
+        resolved_expr, expr_aliases = resolve_index_conflicts(expr, param_domain)
+        for base, alias_list in expr_aliases.items():
+            existing = all_param_aliases.setdefault(base, [])
+            for a in alias_list:
+                if a not in existing:
+                    existing.append(a)
+        resolved_exprs.append((param_name, key_tuple, resolved_expr, _orig_idx))
+
+    if all_param_aliases:
+        for base in sorted(all_param_aliases.keys()):
+            for alias_name in all_param_aliases[base]:
+                lines.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
+
+    seen_assignment_lines: set[str] = set()
+    for param_name, key_tuple, expr, _orig_idx in resolved_exprs:
         # Convert expression to GAMS syntax
         # domain_vars includes: LHS key_tuple indices + all declared set/alias names
         # (Subcategory E: so RHS set references like J are emitted bare)
@@ -1714,15 +1742,27 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                     _quote_assignment_index(k, sets_and_aliases_lower) for k in expanded_key
                 ]
             else:
-                # Mixed: all elements are literal values (quotes were stripped
-                # at parse time). Quote ALL non-domain elements, including those
-                # that collide with set names (Issue #912: e.g., cases(c1,m)
-                # where 'm' is both an element and a declared set name).
-                param_domain_lower = frozenset(d.lower() for d in param_def.domain)
-                quoted_keys = [
-                    k if k.lower() in param_domain_lower or k == "*" else f"'{k}'"
-                    for k in expanded_key
-                ]
+                # Mixed: some elements are set/alias names, others are literals.
+                # Use per-position is_set_flags to decide quoting:
+                # - is_set=True  → legitimate subset reference, keep bare
+                # - is_set=False → literal UEL (possibly colliding with a set
+                #   name, e.g., cases(c1,m) where 'm' is both element and set),
+                #   force-quote to prevent $170 domain violations.
+                quoted_keys = []
+                for k, is_set in zip(expanded_key, is_set_flags, strict=True):
+                    if is_set:
+                        # Legitimate set reference — keep bare (quote only if
+                        # the name contains special chars like '-')
+                        quoted_keys.append(_quote_assignment_index(k, sets_and_aliases_lower))
+                    else:
+                        # Literal element — force-quote even if it collides
+                        # with a declared set name
+                        if (k.startswith('"') and k.endswith('"')) or (
+                            k.startswith("'") and k.endswith("'")
+                        ):
+                            quoted_keys.append(k)
+                        else:
+                            quoted_keys.append(f"'{k}'")
             index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"

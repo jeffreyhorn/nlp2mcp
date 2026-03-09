@@ -14,7 +14,7 @@ from src.emit.equations import (
     emit_equation_definitions,
 )
 from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
-from src.ir.ast import Binary, Const, IndexOffset, Prod, Sum, VarRef
+from src.ir.ast import Binary, Const, IndexOffset, LhsConditionalAssign, ParamRef, Prod, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
@@ -42,7 +42,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("balance", eq_def)
         assert result == "balance.. x =E= 10;"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_indexed_equation(self):
         """Test indexed equation.
@@ -57,7 +57,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("balance", eq_def)
         assert result == "balance(i).. x(i) =E= 10;"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_multi_indexed_equation(self):
         """Test multi-indexed equation.
@@ -72,7 +72,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("flow", eq_def)
         assert result == "flow(i,j).. x(i,j) =E= y(j,i);"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_equation_le_relation(self):
         """Test equation with =L= (less than or equal) relation."""
@@ -84,7 +84,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("capacity", eq_def)
         assert result == "capacity.. x =L= 100;"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_equation_ge_relation(self):
         """Test equation with =G= (greater than or equal) relation."""
@@ -96,7 +96,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("demand", eq_def)
         assert result == "demand.. x =G= 5;"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_equation_with_binary_expression(self):
         """Test equation with binary expression on LHS."""
@@ -106,7 +106,7 @@ class TestEmitEquationDef:
         )
         result, aliases = emit_equation_def("sum_constraint", eq_def)
         assert result == "sum_constraint.. x + y =E= 10;"
-        assert aliases == set()
+        assert aliases == {}
 
     def test_equation_with_complex_expression(self):
         """Test equation with complex expression."""
@@ -115,7 +115,7 @@ class TestEmitEquationDef:
         eq_def = EquationDef(name="nonlinear", domain=(), relation=Rel.EQ, lhs_rhs=(lhs, rhs))
         result, aliases = emit_equation_def("nonlinear", eq_def)
         assert result == "nonlinear.. sqr(x) =E= 2 * y;"
-        assert aliases == set()
+        assert aliases == {}
 
 
 @pytest.mark.unit
@@ -128,7 +128,7 @@ class TestEmitEquationDefinitions:
         kkt = _create_minimal_kkt(model_ir)
         result, aliases = emit_equation_definitions(kkt)
         assert result == ""
-        assert aliases == set()
+        assert aliases == {}
 
     def test_stationarity_equations_only(self):
         """Test with only stationarity equations."""
@@ -146,7 +146,7 @@ class TestEmitEquationDefinitions:
         result, aliases = emit_equation_definitions(kkt)
         assert "* Stationarity equations" in result
         assert "stat_x.. 2 * x =E= 0;" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_multiple_stationarity_equations(self):
         """Test with multiple stationarity equations."""
@@ -169,7 +169,7 @@ class TestEmitEquationDefinitions:
         result, aliases = emit_equation_definitions(kkt)
         assert "stat_x.. x =E= 0;" in result
         assert "stat_y.. y =E= 0;" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_inequality_complementarity(self):
         """Test with inequality complementarity equations."""
@@ -189,7 +189,7 @@ class TestEmitEquationDefinitions:
         result, aliases = emit_equation_definitions(kkt)
         assert "* Inequality complementarity equations" in result
         assert "comp_g1.. slack_g1 =E= 0;" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_bound_complementarity(self):
         """Test with bound complementarity equations."""
@@ -223,7 +223,7 @@ class TestEmitEquationDefinitions:
         assert "comp_lo_x.. x - 0 =E= 0;" in result
         assert "* Upper bound complementarity equations" in result
         assert "comp_up_x.. 10 - x =E= 0;" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_equality_equations(self):
         """Test with original equality equations."""
@@ -241,7 +241,7 @@ class TestEmitEquationDefinitions:
 
         assert "* Original equality equations" in result
         assert "balance.. x =E= 10;" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_all_equation_types(self):
         """Test with all types of equations."""
@@ -299,7 +299,7 @@ class TestEmitEquationDefinitions:
         assert "comp_g1.." in result
         assert "comp_lo_x.." in result
         assert "objdef.." in result
-        assert aliases == set()
+        assert aliases == {}
 
 
 @pytest.mark.unit
@@ -345,59 +345,64 @@ class TestIndexAliasing:
         """Test that non-conflicting expressions are unchanged."""
         # sum(j, x(j)) with equation domain (i,)
         expr = Sum(("j",), VarRef("x", ("j",)))
-        result = resolve_index_conflicts(expr, ("i",))
+        result, aliases = resolve_index_conflicts(expr, ("i",))
         # Should be unchanged
         assert isinstance(result, Sum)
         assert result.index_sets == ("j",)
         assert result.body.indices == ("j",)
+        assert aliases == {}
 
     def test_resolve_index_conflicts_simple(self):
         """Test resolution of simple index conflict."""
         # sum(i, x(i)) with equation domain (i,)
         # Should become sum(i__, x(i__))
         expr = Sum(("i",), VarRef("x", ("i",)))
-        result = resolve_index_conflicts(expr, ("i",))
+        result, aliases = resolve_index_conflicts(expr, ("i",))
         assert isinstance(result, Sum)
         assert result.index_sets == ("i__",)
         assert result.body.indices == ("i__",)
+        assert aliases == {"i": ["i__"]}
 
     def test_resolve_index_conflicts_multiple_indices(self):
         """Test resolution with multiple conflicting indices."""
         # sum((i, j), x(i,j)) with equation domain (i, j)
         # Should become sum((i__, j__), x(i__, j__))
         expr = Sum(("i", "j"), VarRef("x", ("i", "j")))
-        result = resolve_index_conflicts(expr, ("i", "j"))
+        result, aliases = resolve_index_conflicts(expr, ("i", "j"))
         assert isinstance(result, Sum)
         assert result.index_sets == ("i__", "j__")
         assert result.body.indices == ("i__", "j__")
+        assert aliases == {"i": ["i__"], "j": ["j__"]}
 
     def test_resolve_index_conflicts_partial(self):
         """Test resolution when only some indices conflict."""
         # sum((i, k), x(i,k)) with equation domain (i,)
         # Should become sum((i__, k), x(i__, k))
         expr = Sum(("i", "k"), VarRef("x", ("i", "k")))
-        result = resolve_index_conflicts(expr, ("i",))
+        result, aliases = resolve_index_conflicts(expr, ("i",))
         assert isinstance(result, Sum)
         assert result.index_sets == ("i__", "k")
         assert result.body.indices == ("i__", "k")
+        assert aliases == {"i": ["i__"]}
 
     def test_resolve_index_conflicts_nested(self):
         """Test resolution in nested binary expressions."""
         # sum(i, x(i) + y(i)) with equation domain (i,)
         expr = Sum(("i",), Binary("+", VarRef("x", ("i",)), VarRef("y", ("i",))))
-        result = resolve_index_conflicts(expr, ("i",))
+        result, aliases = resolve_index_conflicts(expr, ("i",))
         assert isinstance(result, Sum)
         assert result.index_sets == ("i__",)
         body = result.body
         assert isinstance(body, Binary)
         assert body.left.indices == ("i__",)
         assert body.right.indices == ("i__",)
+        assert aliases == {"i": ["i__"]}
 
     def test_emit_equation_def_with_index_conflict(self):
         """Test that emit_equation_def detects and resolves index conflicts."""
         # stat_x(i).. sum(i, x(i)) =E= 0
         # Should become stat_x(i).. sum(i__, x(i__)) =E= 0
-        # and return {"i"} as aliases needed
+        # and return alias mapping for "i"
         eq_def = EquationDef(
             name="stat_x",
             domain=("i",),
@@ -408,7 +413,8 @@ class TestIndexAliasing:
         assert "stat_x(i).." in result
         assert "sum(i__," in result
         assert "x(i__)" in result
-        assert aliases == {"i"}
+        assert "i" in aliases
+        assert "i__" in aliases["i"]
 
     def test_emit_equation_def_multi_index_conflict(self):
         """Test emit_equation_def with multiple conflicting indices."""
@@ -429,7 +435,124 @@ class TestIndexAliasing:
         assert "stat_outp(g,m).." in result
         assert "sum(g__," in result
         assert "sum(m__," in result
-        assert aliases == {"g", "m"}
+        assert "g" in aliases and "m" in aliases
+        assert "g__" in aliases["g"]
+        assert "m__" in aliases["m"]
+
+    def test_collect_index_aliases_case_insensitive(self):
+        """Test that case-insensitive index collisions are detected.
+
+        Subcategory G: GAMS is case-insensitive, so sum(R, ...) conflicts
+        with equation domain containing 'r'. Aliases are canonical lowercase.
+        """
+        expr = Sum(("R",), VarRef("x", ("R",)))
+        aliases = collect_index_aliases(expr, ("r",))
+        assert "r" in aliases
+
+    def test_resolve_index_conflicts_case_insensitive(self):
+        """Test that case-insensitive index collisions are resolved.
+
+        sum(R, x(R)) with equation domain (r,) should become sum(r__, x(r__))
+        using canonical lowercase for the alias.
+        """
+        expr = Sum(("R",), VarRef("x", ("R",)))
+        result, aliases = resolve_index_conflicts(expr, ("r",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("r__",)
+        assert result.body.indices == ("r__",)
+        assert aliases == {"r": ["r__"]}
+
+    def test_resolve_index_conflicts_mixed_case_substitution(self):
+        """Test that case-insensitive substitution applies to all references.
+
+        sum(N, p(N) * q(n)) with domain (n,) — both N and n should be
+        replaced with n__ since GAMS is case-insensitive.
+        """
+        expr = Sum(("N",), Binary("*", ParamRef("p", ("N",)), ParamRef("q", ("n",))))
+        result, aliases = resolve_index_conflicts(expr, ("n",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("n__",)
+        body = result.body
+        assert isinstance(body, Binary)
+        assert body.left.indices == ("n__",)
+        assert body.right.indices == ("n__",)
+        assert aliases == {"n": ["n__"]}
+
+    def test_collect_index_aliases_nested_sum_conflict(self):
+        """Test nested sum where inner sum reuses outer sum's index.
+
+        sum(cc, sum(cc, x(cc))) — inner cc conflicts with outer cc's
+        bound scope, even when neither conflicts with equation domain.
+        """
+        inner = Sum(("cc",), VarRef("x", ("cc",)))
+        outer = Sum(("cc",), inner)
+        aliases = collect_index_aliases(outer, ("i",))
+        assert "cc" in aliases
+
+    def test_resolve_index_conflicts_nested_sum_conflict(self):
+        """Test resolution of nested sum index reuse.
+
+        sum(cc, sum(cc, x(cc))) with domain (i,) — the inner cc should
+        be aliased to cc__ since it's already bound by the outer sum.
+        """
+        inner = Sum(("cc",), VarRef("x", ("cc",)))
+        outer = Sum(("cc",), inner)
+        result, aliases = resolve_index_conflicts(outer, ("i",))
+        assert isinstance(result, Sum)
+        # The inner sum should have the aliased index
+        inner_result = result.body
+        assert isinstance(inner_result, Sum)
+        assert inner_result.index_sets == ("cc__",)
+        assert aliases == {"cc": ["cc__"]}
+
+    def test_resolve_index_conflicts_deeply_nested_unique_aliases(self):
+        """Test that deeply nested scopes get unique alias names.
+
+        sum(i, sum(i, x(i))) with domain (i,) — both sums conflict with
+        domain, so the outer gets i__ and the inner must get i__2 (not i__
+        again, which would reintroduce the conflict).
+        """
+        inner = Sum(("i",), VarRef("x", ("i",)))
+        outer = Sum(("i",), inner)
+        result, aliases = resolve_index_conflicts(outer, ("i",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__",)
+        inner_result = result.body
+        assert isinstance(inner_result, Sum)
+        # Inner must get a different alias than outer
+        assert inner_result.index_sets == ("i__2",)
+        # VarRef inside inner sum should use the inner alias
+        assert inner_result.body.indices == ("i__2",)
+        # Both aliases recorded under base "i"
+        assert aliases == {"i": ["i__", "i__2"]}
+
+    def test_collect_index_aliases_lhs_conditional_assign(self):
+        """Test that LhsConditionalAssign body and condition are walked.
+
+        For parameter assignments like prob(n)$(cond) = sum((nn,n), ...),
+        the sum index 'n' conflicts with the parameter domain.
+        """
+        rhs = Sum(("nn", "n"), Binary("*", ParamRef("p", ("nn",)), ParamRef("q", ("n",))))
+        cond = ParamRef("tn", ("n",))
+        expr = LhsConditionalAssign(rhs=rhs, condition=cond)
+        aliases = collect_index_aliases(expr, ("n",))
+        assert "n" in aliases
+
+    def test_resolve_index_conflicts_lhs_conditional_assign(self):
+        """Test that LhsConditionalAssign wrapping is preserved during resolution.
+
+        prob(n)$(cond) = sum((nn,n), ...) should resolve the inner n
+        to n__ while preserving the LhsConditionalAssign structure.
+        """
+        rhs = Sum(("nn", "n"), Binary("*", ParamRef("p", ("nn",)), ParamRef("q", ("n",))))
+        cond = ParamRef("tn", ("n",))
+        expr = LhsConditionalAssign(rhs=rhs, condition=cond)
+        result, aliases = resolve_index_conflicts(expr, ("n",))
+        assert isinstance(result, LhsConditionalAssign)
+        assert isinstance(result.rhs, Sum)
+        assert "n__" in result.rhs.index_sets
+        assert "nn" in result.rhs.index_sets
+        assert aliases == {"n": ["n__"]}
 
 
 @pytest.mark.unit
@@ -556,7 +679,7 @@ class TestLeadLagDomainRestrictions:
         )
         result, aliases = emit_equation_def("eq", eq_def)
         assert "$(ord(k) <= card(k) - 1)" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_emit_equation_def_with_lag(self):
         """Test emit_equation_def adds domain condition for lag."""
@@ -573,7 +696,7 @@ class TestLeadLagDomainRestrictions:
         )
         result, aliases = emit_equation_def("eq", eq_def)
         assert "$(ord(t) > 1)" in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_emit_equation_def_combines_with_existing_condition(self):
         """Test that inferred condition is combined with existing condition."""
@@ -594,7 +717,7 @@ class TestLeadLagDomainRestrictions:
         assert "k.val > 5" in result
         assert "ord(k) <= card(k) - 1" in result
         assert " and " in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_emit_equation_def_no_restriction_for_scalar(self):
         """Test that scalar equations don't get domain restrictions."""
@@ -607,7 +730,7 @@ class TestLeadLagDomainRestrictions:
         )
         result, aliases = emit_equation_def("eq", eq_def)
         assert "$" not in result
-        assert aliases == set()
+        assert aliases == {}
 
     def test_collect_lead_lag_restrictions_sum_shadows_domain(self):
         """Test that sum-local indices don't generate restrictions.
@@ -654,4 +777,4 @@ class TestLeadLagDomainRestrictions:
         result, aliases = emit_equation_def("eq", eq_def)
         assert "$(flag > 0)" in result
         assert "eq$(flag > 0).. x =E= y;" == result
-        assert aliases == set()
+        assert aliases == {}

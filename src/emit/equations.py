@@ -12,7 +12,6 @@ Also handles automatic domain restriction inference for lead/lag expressions:
 """
 
 from src.emit.expr_to_gams import (
-    collect_index_aliases,
     expr_to_gams,
     resolve_index_conflicts,
 )
@@ -182,7 +181,16 @@ def _build_domain_condition(
         return " and ".join(f"({c})" for c in conditions)
 
 
-def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]:
+def _merge_alias_dicts(target: dict[str, list[str]], source: dict[str, list[str]]) -> None:
+    """Merge alias mappings from *source* into *target*, avoiding duplicates."""
+    for base, aliases in source.items():
+        existing = target.setdefault(base, [])
+        for a in aliases:
+            if a not in existing:
+                existing.append(a)
+
+
+def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, dict[str, list[str]]]:
     """Emit a single equation definition in GAMS syntax.
 
     Handles index aliasing to avoid GAMS Error 125 when an equation's domain
@@ -193,7 +201,8 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
         eq_def: Equation definition with domain, relation, and LHS/RHS
 
     Returns:
-        Tuple of (GAMS equation definition string, set of indices needing aliases)
+        Tuple of (GAMS equation definition string, dict mapping canonical
+        lowercase base index names to lists of alias names generated for them)
 
     Examples:
         >>> # balance(i).. x(i) + y(i) =E= 10;
@@ -202,14 +211,12 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
     lhs, rhs = eq_def.lhs_rhs
     domain = eq_def.domain
 
-    # Collect aliases needed from both LHS and RHS
-    aliases_needed: set[str] = set()
-    aliases_needed.update(collect_index_aliases(lhs, domain))
-    aliases_needed.update(collect_index_aliases(rhs, domain))
-
-    # Resolve index conflicts in expressions
-    resolved_lhs = resolve_index_conflicts(lhs, domain)
-    resolved_rhs = resolve_index_conflicts(rhs, domain)
+    # Resolve index conflicts in expressions — also returns generated alias names
+    aliases: dict[str, list[str]] = {}
+    resolved_lhs, lhs_aliases = resolve_index_conflicts(lhs, domain)
+    _merge_alias_dicts(aliases, lhs_aliases)
+    resolved_rhs, rhs_aliases = resolve_index_conflicts(rhs, domain)
+    _merge_alias_dicts(aliases, rhs_aliases)
 
     # Convert to GAMS
     # Sprint 18 Day 2: Pass equation domain as domain_vars so domain indices are not quoted
@@ -249,10 +256,10 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
         if isinstance(eq_def.condition, str):
             existing_cond = eq_def.condition
         elif isinstance(eq_def.condition, Expr):
-            # Apply same alias collection and conflict resolution as LHS/RHS
+            # Apply same conflict resolution as LHS/RHS
             # to avoid GAMS Error 125 if condition has Sum/Prod binding domain indices
-            aliases_needed.update(collect_index_aliases(eq_def.condition, domain))
-            resolved_cond = resolve_index_conflicts(eq_def.condition, domain)
+            resolved_cond, cond_aliases = resolve_index_conflicts(eq_def.condition, domain)
+            _merge_alias_dicts(aliases, cond_aliases)
             existing_cond = expr_to_gams(resolved_cond, domain_vars=domain_vars)
         else:
             # Fallback: try to convert as Expr
@@ -285,7 +292,7 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, set[str]]
         else:
             eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
 
-    return eq_str, aliases_needed
+    return eq_str, aliases
 
 
 def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> str:
@@ -320,7 +327,7 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         return f"{eq_name}.. {expr_gams} {rel_gams} 0;"
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
+def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]]:
     """Emit all equation definitions from KKT system.
 
     Emits equation definitions for:
@@ -336,7 +343,8 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         kkt: KKT system containing all equations
 
     Returns:
-        Tuple of (GAMS equation definitions as string, set of indices needing aliases)
+        Tuple of (GAMS equation definitions as string, dict mapping canonical
+        lowercase base index names to lists of alias names generated for them)
 
     Example output:
         * Stationarity equations
@@ -353,7 +361,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         balance(i).. x(i) + y(i) =E= demand(i);
     """
     lines: list[str] = []
-    all_aliases: set[str] = set()
+    all_aliases: dict[str, list[str]] = {}
 
     # Stationarity equations
     if kkt.stationarity:
@@ -362,7 +370,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
             eq_def = kkt.stationarity[eq_name]
             eq_str, aliases = emit_equation_def(eq_name, eq_def)
             lines.append(eq_str)
-            all_aliases.update(aliases)
+            _merge_alias_dicts(all_aliases, aliases)
         lines.append("")
 
     # Skip complementarity equations whose multiplier was simplified away
@@ -379,7 +387,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
                 continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
-            all_aliases.update(aliases)
+            _merge_alias_dicts(all_aliases, aliases)
         lines.append("")
 
     # Lower bound complementarity equations
@@ -393,7 +401,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
                 continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
-            all_aliases.update(aliases)
+            _merge_alias_dicts(all_aliases, aliases)
         lines.append("")
 
     # Upper bound complementarity equations
@@ -407,7 +415,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
                 continue
             eq_str, aliases = emit_equation_def(comp_pair.equation.name, comp_pair.equation)
             lines.append(eq_str)
-            all_aliases.update(aliases)
+            _merge_alias_dicts(all_aliases, aliases)
         lines.append("")
 
     # Original equality equations (from model_ir)
@@ -438,7 +446,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
                 eq_def = kkt.model_ir.equations[eq_name]
                 eq_str, aliases = emit_equation_def(eq_name, eq_def)
                 lines.append(eq_str)
-                all_aliases.update(aliases)
+                _merge_alias_dicts(all_aliases, aliases)
             elif eq_name in kkt.model_ir.normalized_bounds:
                 norm_eq = kkt.model_ir.normalized_bounds[eq_name]
                 lines.append(emit_normalized_equation_def(eq_name, norm_eq))

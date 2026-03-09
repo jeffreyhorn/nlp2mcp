@@ -16,6 +16,7 @@ from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
     _quote_assignment_index,
+    _quote_symbol,
     _sanitize_set_element,
     collect_missing_param_labels,
     compute_set_assignment_param_deps,
@@ -766,9 +767,9 @@ def emit_gams_mcp(
         if add_comments:
             sections.append("* Index aliases to avoid 'Set is under control already' error")
             sections.append("* (GAMS Error 125 when equation domain index is reused in sum)")
-        for idx in sorted(index_aliases):
-            alias_name = f"{idx}__"
-            sections.append(f"Alias({idx}, {alias_name});")
+        for base in sorted(index_aliases.keys()):
+            for alias_name in index_aliases[base]:
+                sections.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
         sections.append("")
 
     sections.append(eq_defs_code)
