@@ -655,14 +655,18 @@ def _agg_domain_str(
     return idx_str
 
 
-def _make_alias_name(index: str) -> str:
+def _make_alias_name(index: str, taken: set[str] | frozenset[str] | None = None) -> str:
     """Create an alias name for an index to avoid conflicts.
 
     Uses double underscore suffix to create unique alias names that are
-    unlikely to conflict with user-defined sets.
+    unlikely to conflict with user-defined sets. When the first-choice alias
+    is already taken (e.g., in nested scopes), appends increasing numeric
+    suffixes to guarantee uniqueness.
 
     Args:
-        index: Original index name
+        index: Original index name (canonical lowercase)
+        taken: Set of lowercase names already bound in current scope.
+            When provided, the alias is guaranteed not to collide.
 
     Returns:
         Aliased index name
@@ -670,10 +674,19 @@ def _make_alias_name(index: str) -> str:
     Examples:
         >>> _make_alias_name("i")
         'i__'
-        >>> _make_alias_name("nodes")
-        'nodes__'
+        >>> _make_alias_name("i", frozenset({"i__"}))
+        'i__2'
     """
-    return f"{index}__"
+    candidate = f"{index}__"
+    if taken is None or candidate.lower() not in taken:
+        return candidate
+    # First choice taken — append increasing numeric suffixes
+    n = 2
+    while True:
+        candidate = f"{index}__{n}"
+        if candidate.lower() not in taken:
+            return candidate
+        n += 1
 
 
 def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[str]:
@@ -688,7 +701,7 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
         equation_domain: Tuple of index names used in the equation's domain
 
     Returns:
-        Set of original index names that need aliases
+        Set of canonical lowercase index names that need aliases
     """
     # Use case-insensitive comparison (GAMS is case-insensitive for identifiers)
     domain_set_lower = {d.lower() for d in equation_domain}
@@ -778,16 +791,24 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                 for idx in index_sets:
                     idx_lower = idx.lower()
                     if idx_lower in domain_set_lower or idx_lower in bound_lower:
-                        # This index conflicts - use alias (canonicalized to lowercase)
-                        alias = _make_alias_name(idx_lower)
+                        # This index conflicts - use alias (canonicalized to lowercase).
+                        # Pass current bound + domain as 'taken' so nested scopes
+                        # get unique aliases (e.g., i__ then i__2).
+                        taken = (
+                            domain_set_lower
+                            | bound_lower
+                            | frozenset(a.lower() for a in agg_indices)
+                        )
+                        alias = _make_alias_name(idx_lower, taken)
                         agg_indices.append(alias)
                         # Track alias under lowercase key for case-insensitive substitution
                         new_aliases[idx_lower] = alias
                     else:
                         agg_indices.append(idx)
 
-                # Recurse with expanded bound set
-                new_bound = bound_lower | frozenset(idx.lower() for idx in index_sets)
+                # Recurse with expanded bound set based on emitted agg_indices
+                # (not original index_sets) so nested sums see alias names too
+                new_bound = bound_lower | frozenset(idx.lower() for idx in agg_indices)
                 new_condition = (
                     _resolve(condition, new_aliases, new_bound) if condition is not None else None
                 )

@@ -494,6 +494,25 @@ class TestIndexAliasing:
         assert isinstance(inner_result, Sum)
         assert inner_result.index_sets == ("cc__",)
 
+    def test_resolve_index_conflicts_deeply_nested_unique_aliases(self):
+        """Test that deeply nested scopes get unique alias names.
+
+        sum(i, sum(i, x(i))) with domain (i,) — both sums conflict with
+        domain, so the outer gets i__ and the inner must get i__2 (not i__
+        again, which would reintroduce the conflict).
+        """
+        inner = Sum(("i",), VarRef("x", ("i",)))
+        outer = Sum(("i",), inner)
+        result = resolve_index_conflicts(outer, ("i",))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("i__",)
+        inner_result = result.body
+        assert isinstance(inner_result, Sum)
+        # Inner must get a different alias than outer
+        assert inner_result.index_sets == ("i__2",)
+        # VarRef inside inner sum should use the inner alias
+        assert inner_result.body.indices == ("i__2",)
+
     def test_collect_index_aliases_lhs_conditional_assign(self):
         """Test that LhsConditionalAssign body and condition are walked.
 
