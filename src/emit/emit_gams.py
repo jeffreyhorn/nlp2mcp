@@ -83,27 +83,16 @@ def _quote_uel(label: str) -> str:
     return f"'{escaped}'"
 
 
-def _format_map_indices(
-    indices: tuple[str, ...],
-    sets_aliases_lower: set[str],
-) -> str:
+def _format_map_indices(indices: tuple[str, ...]) -> str:
     """Format *_map keys (l_map, lo_map, fx_map) for GAMS emission.
 
-    Unlike _format_mixed_indices (which uses heuristics to distinguish domain
-    variables from element labels), this function uses an explicit check:
-    indices that match a declared set/alias name are emitted bare; all others
-    are unconditionally quoted via _quote_uel().
-
-    This avoids false positives from _is_index_offset_syntax() for element
-    labels like 'h-industry' (which matches the single-letter lag pattern).
+    All *_map keys are literal element labels after parser expansion
+    (_expand_variable_indices), so they are unconditionally quoted via
+    _quote_uel().  This prevents GAMS misparse when an element label
+    collides with a set/alias name (e.g., element 'i' in set i) or
+    contains special characters (e.g., 'h-industry').
     """
-    parts: list[str] = []
-    for idx in indices:
-        if isinstance(idx, str) and idx.lower() in sets_aliases_lower:
-            parts.append(idx)
-        else:
-            parts.append(_quote_uel(str(idx)))
-    return ",".join(parts)
+    return ",".join(_quote_uel(str(idx)) for idx in indices)
 
 
 def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
@@ -681,7 +670,7 @@ def emit_gams_mcp(
                     # Issue #1020: Use _format_map_indices for *_map keys — avoids
                     # false positives from _is_index_offset_syntax for hyphenated
                     # element labels like 'h-industry'.
-                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
+                    idx_str = _format_map_indices(indices)
                     lines.append(f"{var_name}.l({idx_str}) = {l_val};")
                     has_init = True
         elif var_def.l is not None:
@@ -723,7 +712,7 @@ def emit_gams_mcp(
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
                     # Issue #1020: Use _format_map_indices for *_map keys
-                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
+                    idx_str = _format_map_indices(indices)
                     lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
                     has_init = True
         # Check for scalar lower bound
@@ -770,7 +759,7 @@ def emit_gams_mcp(
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
                     # Issue #1020: Use _format_map_indices for *_map keys
-                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
+                    idx_str = _format_map_indices(indices)
                     lines.append(
                         f"{var_name}.l({idx_str}) = max({var_name}.l({idx_str}), {lo_val});"
                     )
