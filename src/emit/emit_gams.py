@@ -185,6 +185,70 @@ def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     return expr
 
 
+def _collect_additive_terms(expr: Expr, sign: int = 1) -> list[tuple[int, Expr]]:
+    """Flatten an expression into signed additive terms.
+
+    Returns a list of (sign, term) pairs where sign is +1 or -1.
+    Recursively expands Binary(+/-) and Unary(-) to collect leaf terms.
+
+    Used by section 2c to detect cancellation patterns like p(r,c) - p(r,c).
+    """
+    if isinstance(expr, Binary) and expr.op == "+":
+        return _collect_additive_terms(expr.left, sign) + _collect_additive_terms(expr.right, sign)
+    if isinstance(expr, Binary) and expr.op == "-":
+        return _collect_additive_terms(expr.left, sign) + _collect_additive_terms(expr.right, -sign)
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _collect_additive_terms(expr.child, -sign)
+    if isinstance(expr, Binary) and expr.op == "*":
+        # Check for (-1) * expr pattern
+        if isinstance(expr.left, Const) and expr.left.value == -1.0:
+            return _collect_additive_terms(expr.right, -sign)
+        if isinstance(expr.right, Const) and expr.right.value == -1.0:
+            return _collect_additive_terms(expr.left, -sign)
+    return [(sign, expr)]
+
+
+def _is_trivial_after_cancellation(lhs: Expr, rhs: Expr) -> bool:
+    """Check if LHS =G= RHS is trivially satisfied after canceling matching terms.
+
+    Issue #1021: Detects cases like p(r,c) + TCost(r,r,c) - p(r,c) >= 0
+    where VarRef terms cancel, leaving only ParamRef terms that evaluate to 0
+    for sparse parameter data.
+
+    Returns True if all VarRef terms cancel and only ParamRef/Const terms remain
+    with RHS = Const(0).
+    """
+    if not (isinstance(rhs, Const) and rhs.value == 0.0):
+        return False
+
+    terms = _collect_additive_terms(lhs)
+
+    # Group terms by their expression (for cancellation detection)
+    # We use repr() as a hash key since AST nodes support __eq__
+    term_counts: dict[str, int] = {}
+    term_exprs: dict[str, Expr] = {}
+    for sign, term in terms:
+        key = repr(term)
+        term_counts[key] = term_counts.get(key, 0) + sign
+        term_exprs[key] = term
+
+    # Check remaining terms (those that didn't fully cancel)
+    for key, count in term_counts.items():
+        if count == 0:
+            continue  # Fully canceled
+        term = term_exprs[key]
+        # If any VarRef remains uncanceled, not trivially empty
+        if isinstance(term, VarRef):
+            return False
+        # MultiplierRef remaining is also not trivial
+        if isinstance(term, MultiplierRef):
+            return False
+
+    # All VarRef terms canceled — only ParamRef/Const remain
+    # The equation is data-dependent and trivially satisfied when params are 0
+    return True
+
+
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
@@ -381,6 +445,8 @@ def emit_gams_mcp(
     # Issue #873: Emit expression-based variable bounds (.lo/.up/.fx)
     # Issue #921: Split into two passes — bounds that reference .l values must be
     # emitted AFTER .l initialization (deferred), while others come before.
+    # Issue #1021: Also emit numeric per-element .fx bounds (fx_map) so that
+    # fixed variables are communicated to the MCP solver (e.g., X.fx(r,r,c) = 0).
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -407,6 +473,17 @@ def emit_gams_mcp(
                     deferred_bound_lines.append(line)
                 else:
                     bound_lines.append(line)
+
+        # Issue #1021: Emit numeric per-element .fx bounds from fx_map.
+        # These represent X.fx(r,r,c) = 0 style assignments parsed from
+        # the source model. Without re-emitting them, the MCP solver
+        # complains about empty equations with unfixed paired variables.
+        if var_def.fx_map:
+            for indices, fx_val in sorted(var_def.fx_map.items()):
+                idx_str = ",".join(f"'{m}'" for m in indices)
+                # Format value: use integer form for whole numbers
+                val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
     if bound_lines:
         if add_comments:
             sections.append("* ============================================")
@@ -908,6 +985,12 @@ def emit_gams_mcp(
                 and subst_rhs.value == 0.0
             ):
                 is_trivial = True
+            # Check 3 (Issue #1021): Collect additive terms, cancel matching
+            # VarRef pairs, and check if only ParamRef/Const remain.
+            # Handles: p(r,c) + TCost(r,r,c) - p(r,c) =G= 0
+            # where VarRef(p) cancels, leaving ParamRef(TCost) which is 0.
+            if not is_trivial:
+                is_trivial = _is_trivial_after_cancellation(subst_lhs, subst_rhs)
             if not is_trivial:
                 continue
             mult_name = comp_pair.variable

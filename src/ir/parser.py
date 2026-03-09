@@ -6362,7 +6362,12 @@ class _ModelBuilder:
                 node,
             )
         member_lists: list[list[str]] = []
-        for symbol, domain_name in zip(index_symbols, var.domain, strict=True):
+        # Issue #1021: Track which positions use the same set-name symbol
+        # so we can constrain the Cartesian product to diagonal entries.
+        # In GAMS, X.fx(r,r,c) = 0 means the same running index r is used
+        # in both positions — only diagonal entries (r,r,c) are assigned.
+        symbol_positions: dict[str, list[int]] = {}
+        for pos, (symbol, domain_name) in enumerate(zip(index_symbols, var.domain, strict=True)):
             domain_set = self._resolve_set_def(domain_name, node=node)
             if domain_set is None:
                 raise self._error(
@@ -6390,6 +6395,8 @@ class _ModelBuilder:
                                 node,
                             )
                     member_lists.append(domain_set.members)
+                    # Track this set-name symbol for diagonal constraint
+                    symbol_positions.setdefault(symbol.lower(), []).append(pos)
                 else:
                     # Symbol is a literal value (e.g., "1", "2", "pellets")
                     # Strip quotes - validate matching quotes at both ends
@@ -6423,7 +6430,24 @@ class _ModelBuilder:
                 # Symbol is not a string (e.g., IndexOffset like i++1)
                 # Expand to all domain members (original behavior)
                 member_lists.append(domain_set.members)
-        return [tuple(comb) for comb in product(*member_lists)]
+
+        # Issue #1021: Filter Cartesian product to keep only entries where
+        # repeated set-name symbols have the same value (diagonal constraint).
+        # E.g., X.fx(r,r,c) = 0 → only (Reg1,Reg1,Com1), (Reg1,Reg1,Com2), etc.
+        repeated_groups = [
+            positions for positions in symbol_positions.values() if len(positions) > 1
+        ]
+        all_tuples = [tuple(comb) for comb in product(*member_lists)]
+        if repeated_groups:
+            all_tuples = [
+                t
+                for t in all_tuples
+                if all(
+                    all(t[pos] == t[positions[0]] for pos in positions[1:])
+                    for positions in repeated_groups
+                )
+            ]
+        return all_tuples
 
     def _validate(self) -> None:
         for alias_name, alias in self.model.aliases.items():
