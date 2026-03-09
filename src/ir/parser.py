@@ -6434,21 +6434,54 @@ class _ModelBuilder:
                 # Expand to all domain members (original behavior)
                 member_lists.append(domain_set.members)
 
-        # Issue #1021: Filter Cartesian product in a single pass to keep only
-        # entries where repeated set-name symbols have the same value (diagonal).
-        # E.g., X.fx(r,r,c) = 0 → only (Reg1,Reg1,Com1), (Reg1,Reg1,Com2), etc.
+        # Issue #1021: Ensure that entries where repeated set-name symbols appear
+        # (e.g., X.fx(r,r,c)) only keep diagonal combinations such as
+        # (Reg1,Reg1,Com1), (Reg1,Reg1,Com2), etc.
+        #
+        # Instead of building the full Cartesian product and filtering (O(|r|^2*|c|)
+        # for pattern (r,r,c)), iterate over unique symbols and project combinations
+        # back to all positions, so repeated positions share the same chosen value.
         repeated_groups = [
             positions for positions in symbol_positions.values() if len(positions) > 1
         ]
         if repeated_groups:
-            return [
-                t
-                for t in (tuple(comb) for comb in product(*member_lists))
-                if all(
-                    all(t[pos] == t[positions[0]] for pos in positions[1:])
-                    for positions in repeated_groups
+            # Map each position to a "slot" label.  Positions that share the same
+            # set-name symbol map to the same slot so their values are linked.
+            # Positions not tracked in symbol_positions (literals, IndexOffset)
+            # get their own unique slot.
+            pos_to_slot: dict[int, str] = {}
+            for sym_key, positions in symbol_positions.items():
+                for p in positions:
+                    pos_to_slot[p] = sym_key
+
+            # Collect unique slot keys in positional order
+            unique_slots: list[str] = []
+            seen: set[str] = set()
+            for p in range(len(member_lists)):
+                slot = pos_to_slot.get(p, f"__pos{p}")
+                if slot not in seen:
+                    unique_slots.append(slot)
+                    seen.add(slot)
+                if p not in pos_to_slot:
+                    pos_to_slot[p] = slot
+
+            slot_to_idx = {slot: idx for idx, slot in enumerate(unique_slots)}
+
+            # For each unique slot, use the member list of its first position
+            unique_member_lists = []
+            for slot in unique_slots:
+                if slot in symbol_positions:
+                    unique_member_lists.append(member_lists[symbol_positions[slot][0]])
+                else:
+                    unique_member_lists.append(member_lists[int(slot.replace("__pos", ""))])
+
+            result: list[tuple[str, ...]] = []
+            for base_comb in product(*unique_member_lists):
+                full_tuple = tuple(
+                    base_comb[slot_to_idx[pos_to_slot[p]]] for p in range(len(member_lists))
                 )
-            ]
+                result.append(full_tuple)
+            return result
         return [tuple(comb) for comb in product(*member_lists)]
 
     def _validate(self) -> None:

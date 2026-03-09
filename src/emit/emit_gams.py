@@ -64,12 +64,22 @@ def _quote_uel(label: str) -> str:
     fx_map/lo_map/up_map keys are always literal element values, never domain
     variables.  Always single-quote them to prevent GAMS from interpreting a
     label that collides with a set/alias name as a running index.
+
+    Uses _sanitize_set_element for consistent handling of special characters,
+    then ensures single-quoting with embedded-quote escaping.
     """
-    if (label.startswith("'") and label.endswith("'")) or (
-        label.startswith('"') and label.endswith('"')
+    # Sanitize via shared set-element sanitizer for consistent special-char handling
+    sanitized = _sanitize_set_element(label)
+
+    # If the sanitizer already returned a quoted element, respect that
+    if (sanitized.startswith("'") and sanitized.endswith("'")) or (
+        sanitized.startswith('"') and sanitized.endswith('"')
     ):
-        return label  # Already quoted
-    return f"'{label}'"
+        return sanitized
+
+    # Escape any embedded single quotes before wrapping in single quotes
+    escaped = sanitized.replace("'", "''")
+    return f"'{escaped}'"
 
 
 def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
@@ -384,9 +394,6 @@ def emit_gams_mcp(
         ```
     """
     sections = []
-
-    # Lowercase set/alias names for quoting helpers (used by fx_map emission etc.)
-    _sets_lower = {s.lower() for s in kkt.model_ir.sets} | {s.lower() for s in kkt.model_ir.aliases}
 
     # Header comment
     if add_comments:
