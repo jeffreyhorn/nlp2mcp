@@ -247,20 +247,18 @@ def _is_trivial_after_cancellation(
 
     terms = _collect_additive_terms(lhs)
 
-    # Group terms by their expression (for cancellation detection)
-    # We use repr() as a hash key since AST nodes support __eq__
-    term_counts: dict[str, int] = {}
-    term_exprs: dict[str, Expr] = {}
+    # Group terms by their expression (for cancellation detection).
+    # Expr nodes are @dataclass(frozen=True), so they are hashable and
+    # support structural equality — use the Expr object itself as the key
+    # to avoid repr() mismatches (e.g., Const(5) vs Const(5.0)).
+    term_counts: dict[Expr, int] = {}
     for sign, term in terms:
-        key = repr(term)
-        term_counts[key] = term_counts.get(key, 0) + sign
-        term_exprs[key] = term
+        term_counts[term] = term_counts.get(term, 0) + sign
 
     # Check remaining terms (those that didn't fully cancel)
-    for key, count in term_counts.items():
+    for term, count in term_counts.items():
         if count == 0:
             continue  # Fully canceled
-        term = term_exprs[key]
         # Reject any remaining term that contains a VarRef or MultiplierRef
         # anywhere in its subtree (not just top-level). E.g., reject
         # Call('exp', (VarRef(...),)) or Binary('*', Const(2), VarRef(...)).

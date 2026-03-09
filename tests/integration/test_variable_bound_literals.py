@@ -209,6 +209,46 @@ y.l("6") = 0.4;
     assert y.l_map[("6",)] == 0.4
 
 
+def test_repeated_index_diagonal_only(tmp_path):
+    """Issue #1021: Repeated set-name symbols produce diagonal-only fx_map entries.
+
+    In GAMS, X.fx(r,r,c) = 0 means the same running index r appears in
+    both the first and second positions — only diagonal entries (where both
+    positions have the same value) should be assigned.  This should produce
+    |r| * |c| entries, NOT |r| * |r| * |c| (full Cartesian product).
+    """
+    gams_code = """
+Set r / Reg1, Reg2, Reg3 /;
+Set c / Com1, Com2 /;
+Alias (r, rr);
+Variable X(r, rr, c);
+
+X.fx(r,r,c) = 0;
+"""
+    test_file = tmp_path / "test_diagonal_expansion.gms"
+    test_file.write_text(gams_code)
+
+    model = parse_model_file(test_file)
+
+    assert "X" in model.variables
+    var = model.variables["X"]
+    assert var.domain == ("r", "rr", "c")
+
+    # Diagonal entries: 3 regions × 2 commodities = 6 entries
+    assert len(var.fx_map) == 6
+
+    # All diagonal entries should be present
+    for r in ("Reg1", "Reg2", "Reg3"):
+        for c in ("Com1", "Com2"):
+            assert (r, r, c) in var.fx_map, f"Missing diagonal entry ({r},{r},{c})"
+            assert var.fx_map[(r, r, c)] == 0
+
+    # Off-diagonal entries should NOT be present
+    assert ("Reg1", "Reg2", "Com1") not in var.fx_map
+    assert ("Reg2", "Reg3", "Com2") not in var.fx_map
+    assert ("Reg3", "Reg1", "Com1") not in var.fx_map
+
+
 def test_variable_bound_quoted_string_literals(tmp_path):
     """Test literal indices with both single and double quotes."""
     gams_code = """

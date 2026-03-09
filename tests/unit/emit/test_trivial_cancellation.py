@@ -266,3 +266,16 @@ class TestIsTrivialAfterCancellation:
         model_ir.params["p"] = pdef
 
         assert _is_trivial_after_cancellation(lhs, rhs, model_ir=model_ir) is False
+
+    def test_const_int_vs_float_cancellation(self):
+        """Const(5) and Const(5.0) must cancel despite different repr().
+
+        Frozen dataclass equality: Const(5) == Const(5.0) is True,
+        but repr(Const(5)) != repr(Const(5.0)).  Using the Expr object
+        itself as dict key ensures correct cancellation.
+        """
+        # a + Const(5) - Const(5.0) =G= 0 — the constants should cancel
+        a = VarRef("a", ("i",))
+        lhs = Binary("-", Binary("+", a, Const(5)), Binary("+", a, Const(5.0)))
+        rhs = Const(0.0)
+        assert _is_trivial_after_cancellation(lhs, rhs) is True
