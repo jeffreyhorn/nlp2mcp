@@ -1362,33 +1362,32 @@ def emit_computed_parameter_assignments(
     # GAMS is case-insensitive, so we include both original case and lowercase.
     declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
-    # Subcategory G: Collect aliases needed for index conflict resolution
-    # in parameter assignments so we can emit Alias declarations up front.
-    from src.emit.expr_to_gams import collect_index_aliases
-
-    param_aliases_needed: set[str] = set()
-    for _pn, kt, ex, _oi in sorted_stmts:
-        pd = tuple(
+    # Subcategory G: Pre-resolve all parameter assignment expressions to collect
+    # the full set of generated alias names (including i__2, i__3, etc. for deeply
+    # nested scopes). Emit Alias declarations up front before any assignments.
+    all_param_aliases: dict[str, list[str]] = {}
+    resolved_exprs: list[_StmtTuple] = []
+    for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
+        param_domain = tuple(
             idx if isinstance(idx, str) else idx.base
-            for idx in kt
+            for idx in key_tuple
             if isinstance(idx, str) or isinstance(idx, IndexOffset)
         )
-        if pd:
-            param_aliases_needed.update(collect_index_aliases(ex, pd))
-    if param_aliases_needed:
-        # Dedupe aliases case-insensitively and emit using _quote_symbol so that
-        # GAMS' case-insensitivity does not cause collisions (e.g., r vs R).
-        alias_bases_by_lower: dict[str, str] = {}
-        for idx in param_aliases_needed:
-            lower_idx = idx.lower()
-            if lower_idx not in alias_bases_by_lower:
-                alias_bases_by_lower[lower_idx] = idx
-        for idx in sorted(alias_bases_by_lower.values(), key=lambda s: s.lower()):
-            alias_name = f"{idx}__"
-            lines.append(f"Alias({_quote_symbol(idx)}, {_quote_symbol(alias_name)});")
+        resolved_expr, expr_aliases = resolve_index_conflicts(expr, param_domain)
+        for base, alias_list in expr_aliases.items():
+            existing = all_param_aliases.setdefault(base, [])
+            for a in alias_list:
+                if a not in existing:
+                    existing.append(a)
+        resolved_exprs.append((param_name, key_tuple, resolved_expr, _orig_idx))
+
+    if all_param_aliases:
+        for base in sorted(all_param_aliases.keys()):
+            for alias_name in all_param_aliases[base]:
+                lines.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
 
     seen_assignment_lines: set[str] = set()
-    for param_name, key_tuple, expr, _orig_idx in sorted_stmts:
+    for param_name, key_tuple, expr, _orig_idx in resolved_exprs:
         # Convert expression to GAMS syntax
         # domain_vars includes: LHS key_tuple indices + all declared set/alias names
         # (Subcategory E: so RHS set references like J are emitted bare)
@@ -1404,16 +1403,6 @@ def emit_computed_parameter_assignments(
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
         domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
-
-        # Issue #1002 (subcategory G): Resolve index conflicts in parameter
-        # assignment RHS — sum indices that collide with LHS domain indices
-        # need aliasing (e.g., prob(n) = sum((nn,n), ...) → sum((nn,n__), ...)).
-        param_domain = tuple(
-            idx if isinstance(idx, str) else idx.base
-            for idx in key_tuple
-            if isinstance(idx, str) or isinstance(idx, IndexOffset)
-        )
-        expr = resolve_index_conflicts(expr, param_domain)
 
         # Issue #1015: LhsConditionalAssign wraps a LHS-conditional assignment
         # p(i)$cond = rhs — emit condition on the LHS, not the RHS.

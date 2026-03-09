@@ -340,7 +340,7 @@ def emit_equations(kkt: KKTSystem) -> str:
     return "\n".join(lines)
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
+def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]]:
     """Emit equation definitions (eq_name.. lhs =E= rhs;).
 
     Delegates to src.emit.equations for the actual implementation.
@@ -352,10 +352,10 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, set[str]]:
         kkt: KKT system
 
     Returns:
-        Tuple of (GAMS equation definitions string, set of indices needing aliases)
+        Tuple of (GAMS equation definitions string, dict mapping canonical
+        lowercase base index names to lists of alias names generated for them)
 
     Note:
-        The return type is `tuple[str, set[str]]` to support index aliasing.
         Callers must unpack the tuple:
         `equations_str, aliases = emit_equation_definitions(kkt)`
     """

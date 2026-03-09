@@ -763,7 +763,9 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
     return aliases_needed
 
 
-def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Expr:
+def resolve_index_conflicts(
+    expr: Expr, equation_domain: tuple[str, ...]
+) -> tuple[Expr, dict[str, list[str]]]:
     """Resolve index conflicts by replacing conflicting sum indices with aliases.
 
     Handles two conflict patterns:
@@ -775,10 +777,15 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
         equation_domain: Tuple of index names used in the equation's domain
 
     Returns:
-        New expression with conflicts resolved
+        Tuple of (new expression with conflicts resolved, dict mapping canonical
+        lowercase base index names to lists of alias names generated for them).
+        For example: {"i": ["i__", "i__2"]} when ``i`` is aliased at two nesting
+        levels.
     """
     # Use case-insensitive comparison for conflict detection
     domain_set_lower = {d.lower() for d in equation_domain}
+    # Accumulate all generated aliases: base_lower -> [alias1, alias2, ...]
+    generated_aliases: dict[str, list[str]] = {}
 
     def _resolve(e: Expr, active_aliases: dict[str, str], bound_lower: frozenset[str]) -> Expr:
         """Recursively resolve conflicts, tracking active alias substitutions."""
@@ -803,6 +810,8 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
                         agg_indices.append(alias)
                         # Track alias under lowercase key for case-insensitive substitution
                         new_aliases[idx_lower] = alias
+                        # Record the generated alias for Alias declaration emission
+                        generated_aliases.setdefault(idx_lower, []).append(alias)
                     else:
                         agg_indices.append(idx)
 
@@ -889,4 +898,5 @@ def resolve_index_conflicts(expr: Expr, equation_domain: tuple[str, ...]) -> Exp
             case _:
                 return e
 
-    return _resolve(expr, {}, frozenset())
+    resolved = _resolve(expr, {}, frozenset())
+    return resolved, generated_aliases

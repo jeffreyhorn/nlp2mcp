@@ -766,9 +766,9 @@ def emit_gams_mcp(
         if add_comments:
             sections.append("* Index aliases to avoid 'Set is under control already' error")
             sections.append("* (GAMS Error 125 when equation domain index is reused in sum)")
-        for idx in sorted(index_aliases):
-            alias_name = f"{idx}__"
-            sections.append(f"Alias({idx}, {alias_name});")
+        for base in sorted(index_aliases.keys()):
+            for alias_name in index_aliases[base]:
+                sections.append(f"Alias({base}, {alias_name});")
         sections.append("")
 
     sections.append(eq_defs_code)
