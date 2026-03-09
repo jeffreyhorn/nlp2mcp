@@ -58,6 +58,20 @@ from src.kkt.naming import (
 from src.kkt.objective import extract_objective_info
 
 
+def _quote_uel(label: str) -> str:
+    """Quote a UEL (Unique Element Label) for GAMS .fx/.lo/.up emission.
+
+    fx_map/lo_map/up_map keys are always literal element values, never domain
+    variables.  Always single-quote them to prevent GAMS from interpreting a
+    label that collides with a set/alias name as a running index.
+    """
+    if (label.startswith("'") and label.endswith("'")) or (
+        label.startswith('"') and label.endswith('"')
+    ):
+        return label  # Already quoted
+    return f"'{label}'"
+
+
 def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
     """Convert an index object to GAMS string representation.
 
@@ -568,12 +582,11 @@ def emit_gams_mcp(
         # These represent X.fx(r,r,c) = 0 style assignments parsed from
         # the source model. Without re-emitting them, the MCP solver
         # complains about empty equations with unfixed paired variables.
+        # fx_map keys are always literal UELs (never domain variables),
+        # so always quote them to avoid collisions with set/alias names.
         if var_def.fx_map:
-            domain_lower = frozenset(d.lower() for d in var_def.domain)
             for indices, fx_val in sorted(var_def.fx_map.items()):
-                idx_str = ",".join(
-                    _quote_assignment_index(m, _sets_lower, domain_lower) for m in indices
-                )
+                idx_str = ",".join(_quote_uel(m) for m in indices)
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")

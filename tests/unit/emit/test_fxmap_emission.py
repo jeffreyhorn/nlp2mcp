@@ -1,8 +1,8 @@
 """Unit tests for fx_map emission in emit_gams_mcp().
 
 Issue #1021: Numeric per-element .fx bounds from VariableDef.fx_map must be
-re-emitted as .fx(...) = ...; lines in the MCP output, with proper quoting
-via _quote_assignment_index.
+re-emitted as .fx(...) = ...; lines in the MCP output, with literal UEL
+quoting via _quote_uel.
 """
 
 import pytest
@@ -108,3 +108,32 @@ class TestFxMapEmission:
         result = emit_gams_mcp(kkt)
 
         assert "x.fx(" not in result
+
+    def test_fx_map_element_colliding_with_set_name(self, manual_index_mapping):
+        """fx_map element that collides with a set/alias name must still be quoted.
+
+        If set 'r' has member 'r' (self-referencing name), the element must be
+        emitted as x.fx('r') not x.fx(r) — the latter would be interpreted by
+        GAMS as a running index reference.
+        """
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Set 'i' with member 'i' — element name collides with set name
+        model.sets["i"] = SetDef(name="i", members=["i", "j"])
+
+        x = VariableDef(name="x", domain=("i",), kind=VarKind.CONTINUOUS)
+        x.fx_map[("i",)] = 0.0
+        model.variables["x"] = x
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ("i",))])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Must be quoted — bare 'i' would be a running index
+        assert "x.fx('i') = 0;" in result
