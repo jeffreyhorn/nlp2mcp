@@ -255,10 +255,6 @@ def _contains_variable(expr: Expr) -> bool:
     and LhsConditionalAssign children to catch nested variable references.
     """
     if isinstance(expr, (VarRef, MultiplierRef)):
-        # VarRef/MultiplierRef found — but also check IndexOffset in indices
-        for idx in expr.indices:
-            if isinstance(idx, IndexOffset) and _contains_variable(idx.offset):
-                pass  # Already returning True below
         return True
     if isinstance(expr, (ParamRef, EquationRef)):
         # ParamRef/EquationRef are not variables, but their indices may contain
