@@ -11,7 +11,7 @@ from typing import cast
 
 from src.config import Config
 from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
-from src.emit.expr_to_gams import _format_mixed_indices, expr_to_gams
+from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
     _compute_set_alias_phases,
@@ -81,6 +81,29 @@ def _quote_uel(label: str) -> str:
     # Escape any embedded single quotes before wrapping in single quotes
     escaped = sanitized.replace("'", "''")
     return f"'{escaped}'"
+
+
+def _format_map_indices(
+    indices: tuple[str, ...],
+    sets_aliases_lower: set[str],
+) -> str:
+    """Format *_map keys (l_map, lo_map, fx_map) for GAMS emission.
+
+    Unlike _format_mixed_indices (which uses heuristics to distinguish domain
+    variables from element labels), this function uses an explicit check:
+    indices that match a declared set/alias name are emitted bare; all others
+    are unconditionally quoted via _quote_uel().
+
+    This avoids false positives from _is_index_offset_syntax() for element
+    labels like 'h-industry' (which matches the single-letter lag pattern).
+    """
+    parts: list[str] = []
+    for idx in indices:
+        if isinstance(idx, str) and idx.lower() in sets_aliases_lower:
+            parts.append(idx)
+        else:
+            parts.append(_quote_uel(str(idx)))
+    return ",".join(parts)
 
 
 def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
@@ -655,12 +678,10 @@ def emit_gams_mcp(
         if var_def.l_map:
             for indices, l_val in var_def.l_map.items():
                 if l_val is not None:
-                    # Subcategory E: Use domain-aware quoting — set/alias names are
-                    # emitted bare (e.g., J), element labels are quoted (e.g., "TRF").
-                    idx_domain_vars = frozenset(
-                        i for i in indices if i.lower() in _sets_aliases_lower
-                    )
-                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
+                    # Issue #1020: Use _format_map_indices for *_map keys — avoids
+                    # false positives from _is_index_offset_syntax for hyphenated
+                    # element labels like 'h-industry'.
+                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
                     lines.append(f"{var_name}.l({idx_str}) = {l_val};")
                     has_init = True
         elif var_def.l is not None:
@@ -701,11 +722,8 @@ def emit_gams_mcp(
         if not has_init and var_def.lo_map:
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
-                    # Subcategory E: Use domain-aware quoting (same as l_map above)
-                    idx_domain_vars = frozenset(
-                        i for i in indices if i.lower() in _sets_aliases_lower
-                    )
-                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
+                    # Issue #1020: Use _format_map_indices for *_map keys
+                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
                     lines.append(f"{var_name}.l({idx_str}) = {lo_val};")
                     has_init = True
         # Check for scalar lower bound
@@ -751,10 +769,8 @@ def emit_gams_mcp(
             # unbounded (partial lo_map coverage).
             for indices, lo_val in var_def.lo_map.items():
                 if lo_val is not None and lo_val > 0:
-                    idx_domain_vars = frozenset(
-                        i for i in indices if i.lower() in _sets_aliases_lower
-                    )
-                    idx_str = _format_mixed_indices(indices, domain_vars=idx_domain_vars)
+                    # Issue #1020: Use _format_map_indices for *_map keys
+                    idx_str = _format_map_indices(indices, _sets_aliases_lower)
                     lines.append(
                         f"{var_name}.l({idx_str}) = max({var_name}.l({idx_str}), {lo_val});"
                     )
