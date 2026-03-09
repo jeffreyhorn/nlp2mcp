@@ -1743,21 +1743,26 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
                 ]
             else:
                 # Mixed: some elements are set/alias names, others are literals.
-                # Set/alias names are legitimate subset references (e.g.,
-                # vbar1(ii,"3") where ii is a subset of i) — keep them bare.
-                # Non-set elements that had quotes stripped at parse time need
-                # re-quoting (Issue #912: e.g., cases(c1,m) where 'm' is both
-                # an element and a declared set name — but only when 'm' is NOT
-                # flagged as a set by is_set_flags).
-                param_domain_lower = frozenset(d.lower() for d in param_def.domain)
+                # Use per-position is_set_flags to decide quoting:
+                # - is_set=True  → legitimate subset reference, keep bare
+                # - is_set=False → literal UEL (possibly colliding with a set
+                #   name, e.g., cases(c1,m) where 'm' is both element and set),
+                #   force-quote to prevent $170 domain violations.
                 quoted_keys = []
-                for k in expanded_key:
-                    # Issue #860/#912: Always route indices through _quote_assignment_index
-                    # so escaped identifiers are quoted correctly, while the helper
-                    # preserves non-literal subset/domain references as needed.
-                    quoted_keys.append(
-                        _quote_assignment_index(k, sets_and_aliases_lower, param_domain_lower)
-                    )
+                for k, is_set in zip(expanded_key, is_set_flags, strict=True):
+                    if is_set:
+                        # Legitimate set reference — keep bare (quote only if
+                        # the name contains special chars like '-')
+                        quoted_keys.append(_quote_assignment_index(k, sets_and_aliases_lower))
+                    else:
+                        # Literal element — force-quote even if it collides
+                        # with a declared set name
+                        if (k.startswith('"') and k.endswith('"')) or (
+                            k.startswith("'") and k.endswith("'")
+                        ):
+                            quoted_keys.append(k)
+                        else:
+                            quoted_keys.append(f"'{k}'")
             index_str = ",".join(quoted_keys)
             assignments.append(
                 f"{_quote_symbol(param_name)}({index_str}) = {_format_param_value(value)};"
