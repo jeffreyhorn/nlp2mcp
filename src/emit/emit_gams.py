@@ -622,7 +622,7 @@ def emit_gams_mcp(
         # so always quote them to avoid collisions with set/alias names.
         if var_def.fx_map:
             for indices, fx_val in sorted(var_def.fx_map.items()):
-                idx_str = ",".join(_quote_uel(m) for m in indices)
+                idx_str = _format_map_indices(indices)
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
