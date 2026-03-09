@@ -4616,42 +4616,65 @@ class _ModelBuilder:
                 has_multidim_domain = set_def.domain is not None and len(set_def.domain) > 1
                 if members_are_domain_sets:
                     expanded_indices.extend(set_def.members)
-                elif has_multidim_domain:
-                    expanded_indices.extend(set_def.domain)
-                    multidim_set_conditions.append((idx, set_def.domain))
-                else:
-                    # Heuristic expansion for multi-dimensional sets
-                    members_are_multidim = (
-                        set_def.members is not None
-                        and len(set_def.members) > 0
-                        and any("." in m for m in set_def.members)
-                    )
-                    if members_are_multidim:
-                        first_member = set_def.members[0]
-                        dim = len(first_member.split("."))
-                        if dim == 2:
-                            base_sets = [
-                                s
-                                for s in self.model.sets
-                                if s != idx and len(self.model.sets[s].members) > 0
-                            ]
-                            for bs_name in base_sets:
-                                bs = self.model.sets[bs_name]
-                                if bs.members and not any("." in m for m in bs.members):
-                                    alias_name = None
-                                    for a_name, a_def in self.model.aliases.items():
-                                        if a_def.target == bs_name:
-                                            alias_name = a_name
-                                            break
-                                    if alias_name:
-                                        expanded_indices.extend([bs_name, alias_name])
-                                        break
+                    continue
+                # Issue #1002: Multi-dim domain expansion with alias
+                # substitution for repeated entries (e.g., a(n,n) → (n,np)).
+                if has_multidim_domain:
+                    domain_indices = list(set_def.domain)
+                    seen_domain: set[str] = set()
+                    resolved = True
+                    for pos, dname in enumerate(domain_indices):
+                        if dname in seen_domain:
+                            alias_name = None
+                            for a_name, a_def in self.model.aliases.items():
+                                if a_def.target == dname and a_name not in domain_indices:
+                                    alias_name = a_name
+                                    break
+                            if alias_name is not None:
+                                domain_indices[pos] = alias_name
+                                seen_domain.add(alias_name)
                             else:
-                                expanded_indices.append(idx)
+                                resolved = False
+                                break
+                        else:
+                            seen_domain.add(dname)
+                    if resolved:
+                        adjusted_domain = tuple(domain_indices)
+                        expanded_indices.extend(adjusted_domain)
+                        multidim_set_conditions.append((idx, adjusted_domain))
+                        continue
+                # Heuristic expansion for multi-dimensional sets
+                members_are_multidim = (
+                    set_def.members is not None
+                    and len(set_def.members) > 0
+                    and any("." in m for m in set_def.members)
+                )
+                if members_are_multidim:
+                    first_member = set_def.members[0]
+                    dim = len(first_member.split("."))
+                    if dim == 2:
+                        base_sets = [
+                            s
+                            for s in self.model.sets
+                            if s != idx and len(self.model.sets[s].members) > 0
+                        ]
+                        for bs_name in base_sets:
+                            bs = self.model.sets[bs_name]
+                            if bs.members and not any("." in m for m in bs.members):
+                                alias_name = None
+                                for a_name, a_def in self.model.aliases.items():
+                                    if a_def.target == bs_name:
+                                        alias_name = a_name
+                                        break
+                                if alias_name:
+                                    expanded_indices.extend([bs_name, alias_name])
+                                    break
                         else:
                             expanded_indices.append(idx)
                     else:
                         expanded_indices.append(idx)
+                else:
+                    expanded_indices.append(idx)
             else:
                 expanded_indices.append(idx)
 
@@ -4676,13 +4699,21 @@ class _ModelBuilder:
         # Issue #1002: When a multi-dim set was expanded via its domain,
         # add a dollar condition to restrict to the subset.
         # E.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...)
+        # Use the actual expanded iterator symbols (which may have alias
+        # substitutions) rather than the raw domain tuple.
         if multidim_set_conditions:
             conds: list[Expr] = []
+            offset = 0
             for set_name, domain_indices in multidim_set_conditions:
+                count = len(domain_indices)
+                set_iterators = tuple(
+                    SymbolRef(idx) for idx in expanded_indices[offset : offset + count]
+                )
+                offset += count
                 conds.append(
                     SetMembershipTest(
                         set_name=set_name,
-                        indices=tuple(SymbolRef(d) for d in domain_indices),
+                        indices=set_iterators,
                     )
                 )
             # Build combined set-membership condition
