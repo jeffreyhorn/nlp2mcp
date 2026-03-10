@@ -3854,6 +3854,7 @@ class _ModelBuilder:
             indices=indices,
             body_stmts=body_stmts,
             location=location,
+            raw_node=node,
         )
 
         # Sprint 11: Mock/store approach - just store, don't execute
@@ -3947,6 +3948,7 @@ class _ModelBuilder:
             indices=(),
             body_stmts=body_stmts,
             location=location,
+            raw_node=node,
         )
         self.model.loop_statements.append(loop_stmt)
 

@@ -22,6 +22,7 @@ from src.emit.original_symbols import (
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_interleaved_params_and_sets,
+    emit_loop_statements,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
@@ -694,6 +695,13 @@ def emit_gams_mcp(
             sections.append("execseed = 12345;")
             sections.append("")
         sections.append(computed_params_code)
+        sections.append("")
+
+    # Issue #1025: Emit loop statements that contain parameter assignments
+    # (e.g., wbar3, vbar3, sigmay3 in cesam2 are assigned inside loops)
+    loop_code = emit_loop_statements(kkt.model_ir)
+    if loop_code:
+        sections.append(loop_code)
         sections.append("")
 
     # Variables (primal + multipliers)

@@ -211,12 +211,14 @@ class LoopStatement:
     Attributes:
         indices: Tuple of index variable names (e.g., ('n', 'd'))
         body_stmts: List of statements in the loop body (stored as raw trees)
+        raw_node: The original Lark parse tree node for faithful re-emission
         location: Source location of the loop statement
     """
 
     indices: tuple[str, ...]  # Loop index variables
     body_stmts: list[object]  # Loop body statements (Trees)
     location: SourceLocation | None
+    raw_node: object | None = None  # Original Lark Tree for re-emission
 
 
 @dataclass

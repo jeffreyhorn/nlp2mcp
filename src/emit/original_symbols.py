@@ -2258,3 +2258,369 @@ def emit_subset_value_assignments(
             )
 
     return "\n".join(assignments)
+
+
+def _loop_tree_to_gams(node: object) -> str:
+    """Reconstruct GAMS text from a Lark parse tree node.
+
+    Issue #1025: Faithfully converts raw Lark Tree objects back to GAMS
+    syntax for loop statement re-emission. Handles the tree node types
+    that appear in loop bodies (assign, conditional_assign_general, etc.)
+    and loop headers (id_list, index_list, conditions).
+
+    Args:
+        node: Lark Token or Tree object
+
+    Returns:
+        GAMS text representation
+    """
+    # Import here to avoid circular dependency — lark is only needed at emit time
+    from lark import Token, Tree
+
+    if isinstance(node, Token):
+        return str(node)
+    if not isinstance(node, Tree):
+        return str(node)
+
+    data = str(node.data)
+
+    if data == "id_list":
+        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+    if data in ("index_list", "arg_list"):
+        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "index_simple":
+        # index_simple: ID lag_lead_suffix?
+        base = _loop_tree_to_gams(node.children[0])
+        if len(node.children) > 1:
+            suffix = _loop_tree_to_gams(node.children[1])
+            return f"{base}{suffix}"
+        return base
+    if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
+        # e.g. ++1, --2, +1, -1  — operator token followed by offset
+        return "".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "index_subset":
+        # index_subset: ID "(" index_list ")" lag_lead_suffix?  e.g. low(n,nn)
+        name = _loop_tree_to_gams(node.children[0])
+        idx = _loop_tree_to_gams(node.children[1])
+        base = f"{name}({idx})"
+        if len(node.children) > 2:
+            suffix = _loop_tree_to_gams(node.children[2])
+            return f"{base}{suffix}"
+        return base
+    if data == "offset_paren":
+        # offset_paren: "(" expr ")"  e.g. (ord(n)-1)
+        return f"({_loop_tree_to_gams(node.children[0])})"
+    if data == "symbol_indexed":
+        name = _loop_tree_to_gams(node.children[0])
+        idx = _loop_tree_to_gams(node.children[1])
+        return f"{name}({idx})"
+    if data in ("symbol_plain", "lvalue", "number", "funccall"):
+        return _loop_tree_to_gams(node.children[0])
+    if data == "func_call":
+        name = _loop_tree_to_gams(node.children[0])
+        if len(node.children) > 1:
+            args = _loop_tree_to_gams(node.children[1])
+            return f"{name}({args})"
+        return f"{name}()"
+    if data in ("binop", "unaryop"):
+        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "condition":
+        # condition: DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)
+        # For $(expr) form, Lark discards anonymous parens — detect expr child
+        # and wrap it to preserve the original grouping.
+        children = [c for c in node.children if isinstance(c, (Tree, Token))]
+        parts: list[str] = []
+        for c in children:
+            if isinstance(c, Tree) and c.data == "expr":
+                parts.append(f"({_loop_tree_to_gams(c)})")
+            else:
+                parts.append(_loop_tree_to_gams(c))
+        return "".join(parts)
+    if data == "bound_indexed":
+        # cond_bound: ID "." BOUND_K "(" index_list ")" -> bound_indexed
+        # e.g. x.l(i,j)
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        idx = _loop_tree_to_gams(node.children[2])
+        return f"{name}.{attr}({idx})"
+    if data == "bound_scalar":
+        # cond_bound: ID "." BOUND_K -> bound_scalar
+        # e.g. x.l
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        return f"{name}.{attr}"
+    if data in ("set_attr", "attr_access"):
+        # set_attr: ID "." SET_ATTR_K  e.g. i.ord
+        # attr_access: ID "." ID  e.g. x.val
+        return ".".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "attr_access_indexed":
+        # ref_bound: ID "." ID "(" index_list ")" -> attr_access_indexed
+        # e.g. x.val(i)
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        idx = _loop_tree_to_gams(node.children[2])
+        return f"{name}.{attr}({idx})"
+    if data == "assign":
+        # assign: lvalue "=" expr ";"
+        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "conditional_assign_general":
+        # conditional_assign_general: lvalue condition "=" expr ";"
+        lhs = _loop_tree_to_gams(node.children[0])
+        cond = _loop_tree_to_gams(node.children[1])
+        rest = " ".join(_loop_tree_to_gams(c) for c in node.children[2:])
+        return f"{lhs}{cond} {rest}"
+    if data == "loop_body":
+        stmts = [_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree)]
+        return "\n".join(f"   {s}" for s in stmts)
+    if data == "paren":
+        inner = " ".join(_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree))
+        return f"({inner})"
+    # sum(domain, expr), prod(domain, expr), smax(domain, expr), smin(domain, expr)
+    if data in ("sum", "prod", "smax", "smin"):
+        domain = _loop_tree_to_gams(node.children[0])
+        body = _loop_tree_to_gams(node.children[1])
+        return f"{data}({domain}, {body})"
+    # sum_domain variants: index_spec, tuple_domain, tuple_domain_cond
+    if data == "sum_domain":
+        return _loop_tree_to_gams(node.children[0])
+    if data == "tuple_domain":
+        return f"({_loop_tree_to_gams(node.children[0])})"
+    if data == "tuple_domain_cond":
+        # Grammar: "(" index_spec ")" DOLLAR expr -> tuple_domain_cond
+        # children[0] = index_spec, children[1] = DOLLAR token, children[2] = expr
+        idx = _loop_tree_to_gams(node.children[0])
+        cond = _loop_tree_to_gams(node.children[2])
+        return f"({idx})$({cond})"
+    # dollar_cond: term $ term
+    if data == "dollar_cond":
+        lhs = _loop_tree_to_gams(node.children[0])
+        rhs = _loop_tree_to_gams(node.children[1])
+        return f"{lhs}${rhs}"
+    # dollar_cond_paren: term $ (expr) or term $ [expr]
+    if data == "dollar_cond_paren":
+        lhs = _loop_tree_to_gams(node.children[0])
+        rhs = _loop_tree_to_gams(node.children[1])
+        return f"{lhs}$({rhs})"
+    # bracket_expr: [ expr ]
+    if data == "bracket_expr":
+        return f"[{_loop_tree_to_gams(node.children[0])}]"
+    # brace_expr: { expr }
+    if data == "brace_expr":
+        return f"{{{_loop_tree_to_gams(node.children[0])}}}"
+    # yes$cond, no$cond
+    if data == "yes_cond":
+        return f"yes{_loop_tree_to_gams(node.children[0])}"
+    if data == "no_cond":
+        return f"no{_loop_tree_to_gams(node.children[0])}"
+    # bare yes/no values (YES_K/NO_K without condition)
+    if data == "yes_value":
+        return "yes"
+    if data == "no_value":
+        return "no"
+    # compile_const: compile_time_const -> %name%
+    if data == "compile_const":
+        inner = _loop_tree_to_gams(node.children[0])
+        return f"%{inner}%"
+    if data == "compile_const_path":
+        return ".".join(_loop_tree_to_gams(c) for c in node.children)
+    if data.startswith("loop_stmt"):
+        return _emit_loop_node(node)
+
+    # Fallback: join all children with spaces
+    return " ".join(_loop_tree_to_gams(c) for c in node.children)
+
+
+def _emit_loop_node(node: object) -> str:
+    """Emit a complete loop statement from its Lark Tree node.
+
+    Handles all loop variants: simple, paren, filtered, paren_filtered,
+    indexed, indexed_filtered.
+    """
+    from lark import Token, Tree
+
+    if not isinstance(node, Tree):
+        return ""
+
+    # Collect parts from the parse tree, handling all loop variants:
+    #   loop_stmt:                 id_list, loop_body
+    #   loop_stmt_paren:           id_list, loop_body  (anon parens discarded)
+    #   loop_stmt_filtered:        ID, DOLLAR, expr|ID[,index_list], loop_body
+    #   loop_stmt_paren_filtered:  id_list, DOLLAR, expr|ID[,index_list], loop_body
+    #   loop_stmt_indexed:         ID, id_list, loop_body
+    #   loop_stmt_indexed_filtered: ID, id_list, DOLLAR, expr, loop_body
+    id_list_parts: list[str] = []
+    leading_id: str | None = None  # Leading ID token (for filtered/indexed)
+    filter_dollar = False
+    filter_id: str | None = None
+    filter_idx: str | None = None
+    filter_expr: str | None = None  # expr after $ (for filtered variants)
+    body: str | None = None
+
+    for child in node.children:
+        if isinstance(child, Token):
+            if child.type == "DOLLAR":
+                filter_dollar = True
+            elif child.type == "ID":
+                if not filter_dollar and leading_id is None:
+                    # Before $: loop index or set name
+                    leading_id = str(child)
+                elif filter_dollar and filter_id is None:
+                    # After $: filter identifier
+                    filter_id = str(child)
+        elif isinstance(child, Tree):
+            if child.data == "id_list":
+                id_list_parts.append(_loop_tree_to_gams(child))
+            elif child.data == "index_list" and filter_dollar:
+                filter_idx = _loop_tree_to_gams(child)
+            elif child.data in ("expr", "condition") and filter_dollar:
+                filter_expr = _loop_tree_to_gams(child)
+            elif child.data == "loop_body":
+                body = _loop_tree_to_gams(child)
+
+    loop_kind = str(node.data)
+
+    # Build header depending on loop variant
+    if "indexed" in loop_kind:
+        # loop_stmt_indexed: loop(setname(i,j), ...)
+        indices = ",".join(id_list_parts)
+        if leading_id:
+            header = f"{leading_id}({indices})" if indices else leading_id
+        else:
+            header = f"({indices})" if indices else "()"
+    else:
+        # Non-indexed variants:
+        #   loop_stmt:                 id_list, loop_body           -> no extra parens
+        #   loop_stmt_paren:           id_list, loop_body           -> (id_list)
+        #   loop_stmt_filtered:        ID, DOLLAR, ..., loop_body   -> leading_id only
+        #   loop_stmt_paren_filtered:  id_list, DOLLAR, ..., body   -> (id_list)$...
+        is_paren_variant = loop_kind in ("loop_stmt_paren", "loop_stmt_paren_filtered")
+        if id_list_parts:
+            core = ",".join(id_list_parts)
+            header = f"({core})" if is_paren_variant else core
+        elif leading_id:
+            # loop_stmt_filtered with single ID: loop(i$..., ...)
+            header = leading_id
+        else:
+            # Fallback for empty id_list
+            header = "()" if is_paren_variant else ""
+
+    # Apply filter
+    if filter_expr:
+        header = f"{header}$({filter_expr})"
+    elif filter_id and filter_idx:
+        header += f"${filter_id}({filter_idx})"
+    elif filter_id:
+        header += f"${filter_id}"
+
+    if body:
+        return f"loop({header},\n{body}\n);"
+    return f"loop({header});"
+
+
+def _loop_contains_solve(loop_stmt: object) -> bool:
+    """Check if a loop body contains a solve statement.
+
+    Loops with solve statements are iterative solve procedures from the
+    original model and should NOT be re-emitted in the MCP output.
+    """
+    from lark import Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not isinstance(loop_stmt, LoopStatement):
+        return False
+
+    def _has_solve(stmts: list[object]) -> bool:
+        for stmt in stmts:
+            if isinstance(stmt, Tree):
+                if "solve" in str(stmt.data):
+                    return True
+                # Recurse into nested structures
+                if _has_solve(list(stmt.children)):
+                    return True
+        return False
+
+    return _has_solve(loop_stmt.body_stmts)
+
+
+def _loop_body_only_param_assigns(loop_stmt: object, param_names: set[str]) -> bool:
+    """Check if a loop body consists solely of parameter assignments.
+
+    Returns True only when every statement in the loop body is an ``assign``
+    or ``conditional_assign_general`` whose LHS target is a known parameter.
+    Loops containing display/execute/put/option/variable-attribute
+    assignments or any other procedural statements are rejected.
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not isinstance(loop_stmt, LoopStatement):
+        return False
+
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+
+    def _lhs_name(stmt: Tree) -> str | None:
+        """Extract the plain symbol name from the LHS of an assignment."""
+        if not stmt.children:
+            return None
+        lhs = stmt.children[0]
+        # Walk down lvalue → symbol_indexed → symbol_plain → ID
+        #              or lvalue → symbol_plain → ID
+        while isinstance(lhs, Tree) and lhs.data in ("lvalue", "symbol_indexed", "symbol_plain"):
+            lhs = lhs.children[0]
+        if isinstance(lhs, Token) and lhs.type == "ID":
+            return str(lhs).lower()
+        return None
+
+    for stmt in loop_stmt.body_stmts:
+        if not isinstance(stmt, Tree):
+            return False
+        if str(stmt.data) not in _ASSIGN_TYPES:
+            return False
+        name = _lhs_name(stmt)
+        if name is None or name not in param_names:
+            return False
+
+    return True
+
+
+def emit_loop_statements(model_ir: ModelIR) -> str:
+    """Emit loop statements that contain only parameter assignments.
+
+    Issue #1025: Loop bodies may contain parameter assignments that are not
+    captured in ParameterDef.values/expressions. This function re-emits
+    only those loop statements whose bodies consist exclusively of
+    assignments to known parameters (e.g., wbar3, vbar3, sigmay3).
+
+    Loops are skipped when they:
+    - contain solve statements (iterative solve procedures)
+    - are while statements (iterative procedures)
+    - contain non-assignment statements (display, execute, put, etc.)
+    - assign to variables or other non-parameter symbols
+
+    Args:
+        model_ir: Model IR with loop_statements
+
+    Returns:
+        GAMS loop statement code, or empty string if no qualifying loops
+    """
+    if not model_ir.loop_statements:
+        return ""
+
+    param_names = {name.lower() for name in model_ir.params}
+
+    lines: list[str] = []
+    for loop_stmt in model_ir.loop_statements:
+        if loop_stmt.raw_node is None:
+            continue
+        # Skip while_stmt nodes — they are iterative procedures, not parameter init
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
+            continue
+        if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_param_assigns(loop_stmt, param_names):
+            continue
+        lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
+
+    return "\n\n".join(lines)
