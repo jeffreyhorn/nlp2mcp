@@ -2060,6 +2060,9 @@ def emit_set_assignments(
             - ``"all"``: Emit all assignments (default, backward compatible)
             - ``"no_varref_attr"``: Skip assignments that need deferral
             - ``"only_varref_attr"``: Only emit assignments that need deferral
+        only_indices: If not None, only emit set assignments whose index in
+            ``model_ir.set_assignments`` is in this list. ``None`` (default)
+            emits all assignments; an empty list emits nothing.
 
     Returns:
         GAMS assignment statements as string

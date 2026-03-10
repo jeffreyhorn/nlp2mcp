@@ -1155,22 +1155,22 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-09T22:41:42.980863+00:00",
+        "parse_date": "2026-03-09T23:02:55.474197+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 9.6473,
+        "parse_time_seconds": 7.5365,
         "variables_count": 21,
         "equations_count": 21
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-03-09T22:40:45.204620+00:00",
+        "translate_date": "2026-03-09T23:03:17.601250+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 24.9081,
+        "translate_time_seconds": 22.0516,
         "output_file": "data/gamslib/mcp/cesam_mcp.gms"
       },
       "mcp_solve": {
         "status": "failure",
-        "solve_date": "2026-03-09T22:40:45.509848+00:00",
+        "solve_date": "2026-03-09T23:03:17.980586+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": null,
@@ -1178,7 +1178,7 @@
         "model_status": null,
         "model_status_text": null,
         "objective_value": null,
-        "solve_time_seconds": 0.272,
+        "solve_time_seconds": 0.3516,
         "iterations": null,
         "outcome_category": "path_solve_license",
         "error": {
@@ -1188,7 +1188,7 @@
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-03-09T22:40:45.509929+00:00",
+        "comparison_date": "2026-03-09T23:03:17.980673+00:00",
         "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
@@ -4095,14 +4095,12 @@
         "solve_time_seconds": 0.491
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-03-09T22:52:02.155510+00:00",
+        "status": "success",
+        "parse_date": "2026-03-06T19:21:13.811694+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1821,
-        "error": {
-          "category": "internal_error",
-          "message": "offset_func requires an expr_fn to evaluate the function call; call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
-        }
+        "parse_time_seconds": 11.4712,
+        "variables_count": 6,
+        "equations_count": 4
       },
       "nlp2mcp_translate": {
         "status": "success",
@@ -11015,14 +11013,12 @@
         "solve_time_seconds": 0.746
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-03-09T22:55:58.061444+00:00",
+        "status": "success",
+        "parse_date": "2026-03-06T19:42:16.577502+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7176,
-        "error": {
-          "category": "internal_error",
-          "message": "offset_func requires an expr_fn to evaluate the function call; call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
-        }
+        "parse_time_seconds": 1.1473,
+        "variables_count": 3,
+        "equations_count": 3
       },
       "nlp2mcp_translate": {
         "status": "failure",
