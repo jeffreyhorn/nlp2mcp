@@ -168,6 +168,9 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         pairs.append("")
         pairs.append("    * Equality constraints")
         for eq_name in sorted(kkt.model_ir.equalities):
+            # Skip _fx_ equations suppressed due to stationarity condition conflict
+            if eq_name in kkt.suppressed_fx_equations:
+                continue
             # Check if this is the objective defining equation that should be paired with objvar
             # Note: The multiplier for objdef is created in build_complementarity_pairs()
             # for all equality constraints, so it's guaranteed to exist.

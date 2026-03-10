@@ -475,6 +475,63 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
     return True
 
 
+def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
+    """Reconstruct the _fx_ equation name for a per-element fixed variable.
+
+    Mirrors the naming logic in normalize.py:_bound_name + _sanitize_identifier.
+    """
+    import hashlib
+
+    from src.kkt.naming import sanitize_index_for_identifier
+
+    if not indices:
+        return f"{var_name}_fx"
+    sanitized_parts = []
+    for idx in indices:
+        sanitized = sanitize_index_for_identifier(idx)
+        if sanitized != idx:
+            hash_suffix = hashlib.sha256(idx.encode("utf-8")).hexdigest()[:8]
+            sanitized = f"{sanitized}_{hash_suffix}"
+        sanitized_parts.append(sanitized)
+    joined = "_".join(sanitized_parts)
+    return f"{var_name}_fx_{joined}"
+
+
+def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
+    """Find _fx_ equations whose target index is outside the stationarity condition.
+
+    When a variable has a conditioned stationarity equation (e.g., stat_a(tl)$(t(tl))),
+    the emitter generates blanket .fx assignments for inactive instances. If the same
+    variable also has per-element _fx_ equations (from fx_map), those equations would
+    conflict — GAMS eliminates the fixed variable, leaving the _fx_ equation unmatched.
+
+    This function identifies such _fx_ equations so they can be suppressed from the MCP.
+    """
+    suppressed: set[str] = set()
+
+    for var_name, cond_expr in kkt.stationarity_conditions.items():
+        var_def = kkt.model_ir.variables.get(var_name)
+        if var_def is None or not var_def.fx_map:
+            continue
+
+        # Extract active set members from the condition
+        if not isinstance(cond_expr, SetMembershipTest):
+            continue
+
+        active_set_def = kkt.model_ir.sets.get(cond_expr.set_name)
+        if active_set_def is None or not active_set_def.members:
+            continue
+
+        active_members = set(active_set_def.members)
+
+        for indices, _value in var_def.fx_map.items():
+            # Check if any index element is outside the active set
+            if any(idx not in active_members for idx in indices):
+                suppressed.add(_fx_eq_name(var_name, indices))
+
+    return suppressed
+
+
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
@@ -717,6 +774,11 @@ def emit_gams_mcp(
         sections.append("*   π^L (piL_*): Positive multipliers for lower bounds")
         sections.append("*   π^U (piU_*): Positive multipliers for upper bounds")
         sections.append("")
+
+    # Compute _fx_ equations to suppress (conflict with fix-inactive blanket .fx).
+    # Must be done before emit_variables/emit_equations so they can filter.
+    suppressed_fx = _compute_suppressed_fx_equations(kkt)
+    kkt.suppressed_fx_equations = suppressed_fx
 
     variables_code = emit_variables(kkt)
     sections.append(variables_code)
@@ -1367,6 +1429,25 @@ def emit_gams_mcp(
                 fx_lines.append(f"{var_name}.fx$({cond_str}) = 0;")
             else:
                 fx_lines.append(f"{var_name}.fx = 0;")
+
+    # Fix suppressed _fx_ equations: fix their multipliers to 0 and re-emit
+    # the correct .fx value (instead of the blanket .fx = 0 from stationarity).
+    if suppressed_fx:
+        for var_name in sorted(kkt.stationarity_conditions):
+            var_def = kkt.model_ir.variables.get(var_name)
+            if var_def is None or not var_def.fx_map:
+                continue
+            for indices, fx_val in sorted(var_def.fx_map.items()):
+                eq_name = _fx_eq_name(var_name, indices)
+                if eq_name not in suppressed_fx:
+                    continue
+                # Fix the multiplier for this suppressed equation to 0
+                mult_name = create_eq_multiplier_name(eq_name)
+                fx_lines.append(f"{mult_name}.fx = 0;")
+                # Re-emit the correct .fx value for this element
+                idx_str = _format_map_indices(indices)
+                val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                fx_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
     if fx_lines:
         if add_comments:

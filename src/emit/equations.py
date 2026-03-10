@@ -433,6 +433,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]
 
         lines.append("* Original equality equations")
         for eq_name in kkt.model_ir.equalities:
+            # Skip _fx_ equations suppressed due to stationarity condition conflict
+            if eq_name in kkt.suppressed_fx_equations:
+                continue
             # Skip equations whose multiplier was simplified away,
             # but always keep the objective-defining equation (paired with objvar)
             is_objdef = eq_name == objdef_eq and not kkt.model_ir.strategy1_applied
