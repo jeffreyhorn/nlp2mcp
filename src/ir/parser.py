@@ -4562,8 +4562,8 @@ class _ModelBuilder:
                     raw_indices = _process_index_list(target.children[1])
                     has_offset = any(isinstance(idx, IndexOffset) for idx in raw_indices)
                     has_subset_index = any(isinstance(idx, SubsetIndex) for idx in raw_indices)
-                except (AttributeError, IndexError, TypeError):
-                    has_offset = False
+                except (AttributeError, IndexError, TypeError, ParserSemanticError):
+                    has_offset = True  # Assume offset; fall through to _handle_assign
                     has_subset_index = False
                 # Check if ALL indices resolve to a set (i.e., are domain-over indices)
                 all_domain_over = (

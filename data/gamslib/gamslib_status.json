@@ -4095,27 +4095,42 @@
         "solve_time_seconds": 0.491
       },
       "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-03-10T00:22:31.316879+00:00",
+        "status": "success",
+        "parse_date": "2026-03-10T00:27:00.549496+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5961,
-        "error": {
-          "category": "internal_error",
-          "message": "offset_func requires an expr_fn to evaluate the function call; call _process_index_expr with expr_fn=lambda n: self._expr(n, domain)"
-        }
+        "parse_time_seconds": 4.5478,
+        "variables_count": 6,
+        "equations_count": 4
       },
       "nlp2mcp_translate": {
-        "status": "not_tested",
-        "translate_date": "2026-03-10T00:22:31.379376+00:00"
+        "status": "success",
+        "translate_date": "2026-03-10T00:27:07.098125+00:00",
+        "nlp2mcp_version": "1.1.0",
+        "translate_time_seconds": 6.4248,
+        "output_file": "data/gamslib/mcp/imsl_mcp.gms"
       },
       "mcp_solve": {
-        "status": "not_tested",
-        "solve_date": "2026-03-10T00:22:31.379376+00:00"
+        "status": "failure",
+        "solve_date": "2026-03-10T00:27:07.618461+00:00",
+        "solver": "PATH",
+        "solver_version": null,
+        "solver_status": null,
+        "solver_status_text": null,
+        "model_status": null,
+        "model_status_text": null,
+        "objective_value": null,
+        "solve_time_seconds": 0.4698,
+        "iterations": null,
+        "outcome_category": "path_syntax_error",
+        "error": {
+          "category": "path_syntax_error",
+          "message": "Parse error: compilation_error"
+        }
       },
       "solution_comparison": {
         "comparison_status": "not_tested",
-        "comparison_date": "2026-03-10T00:22:31.379376+00:00",
-        "notes": "Skipped due to parse failure"
+        "comparison_date": "2026-03-10T00:27:07.618582+00:00",
+        "notes": "Skipped due to solve failure"
       },
       "model_statistics": {
         "variables": 6,
