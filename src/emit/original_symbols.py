@@ -2340,9 +2340,11 @@ def _loop_tree_to_gams(node: object) -> str:
     if data == "tuple_domain":
         return f"({_loop_tree_to_gams(node.children[0])})"
     if data == "tuple_domain_cond":
+        # Grammar: "(" index_spec ")" DOLLAR expr -> tuple_domain_cond
+        # children[0] = index_spec, children[1] = DOLLAR token, children[2] = expr
         idx = _loop_tree_to_gams(node.children[0])
-        cond = _loop_tree_to_gams(node.children[1])
-        return f"({idx})${cond}"
+        cond = _loop_tree_to_gams(node.children[2])
+        return f"({idx})$({cond})"
     # dollar_cond: term $ term
     if data == "dollar_cond":
         lhs = _loop_tree_to_gams(node.children[0])
@@ -2388,34 +2390,68 @@ def _emit_loop_node(node: object) -> str:
     if not isinstance(node, Tree):
         return ""
 
+    # Collect parts from the parse tree, handling all loop variants:
+    #   loop_stmt:                 id_list, loop_body
+    #   loop_stmt_paren:           id_list, loop_body  (anon parens discarded)
+    #   loop_stmt_filtered:        ID, DOLLAR, expr|ID[,index_list], loop_body
+    #   loop_stmt_paren_filtered:  id_list, DOLLAR, expr|ID[,index_list], loop_body
+    #   loop_stmt_indexed:         ID, id_list, loop_body
+    #   loop_stmt_indexed_filtered: ID, id_list, DOLLAR, expr, loop_body
     id_list_parts: list[str] = []
+    leading_id: str | None = None  # Leading ID token (for filtered/indexed)
     filter_dollar = False
     filter_id: str | None = None
     filter_idx: str | None = None
+    filter_expr: str | None = None  # expr after $ (for filtered variants)
     body: str | None = None
 
     for child in node.children:
         if isinstance(child, Token):
             if child.type == "DOLLAR":
                 filter_dollar = True
-            elif child.type == "ID" and filter_dollar and filter_id is None:
-                filter_id = str(child)
+            elif child.type == "ID":
+                if not filter_dollar and leading_id is None:
+                    # Before $: loop index or set name
+                    leading_id = str(child)
+                elif filter_dollar and filter_id is None:
+                    # After $: filter identifier
+                    filter_id = str(child)
         elif isinstance(child, Tree):
             if child.data == "id_list":
                 id_list_parts.append(_loop_tree_to_gams(child))
             elif child.data == "index_list" and filter_dollar:
                 filter_idx = _loop_tree_to_gams(child)
-            elif child.data == "condition":
-                # Some loop variants use a condition tree instead of bare $ + ID
-                filter_id = _loop_tree_to_gams(child)
+            elif child.data in ("expr", "condition") and filter_dollar:
+                filter_expr = _loop_tree_to_gams(child)
             elif child.data == "loop_body":
                 body = _loop_tree_to_gams(child)
 
-    header = "(" + ",".join(id_list_parts) + ")"
-    if filter_id and filter_idx:
+    loop_kind = str(node.data)
+
+    # Build header depending on loop variant
+    if "indexed" in loop_kind:
+        # loop_stmt_indexed: loop(setname(i,j), ...)
+        indices = ",".join(id_list_parts)
+        if leading_id:
+            header = f"{leading_id}({indices})" if indices else leading_id
+        else:
+            header = f"({indices})" if indices else "()"
+    else:
+        if id_list_parts:
+            header = "(" + ",".join(id_list_parts) + ")"
+        elif leading_id:
+            # loop_stmt_filtered with single ID: loop(i$..., ...)
+            header = leading_id
+        else:
+            header = "()"
+
+    # Apply filter
+    if filter_expr:
+        header = f"{header}$({filter_expr})"
+    elif filter_id and filter_idx:
         header += f"${filter_id}({filter_idx})"
     elif filter_id:
-        header += filter_id
+        header += f"${filter_id}"
 
     if body:
         return f"loop({header},\n{body}\n);"

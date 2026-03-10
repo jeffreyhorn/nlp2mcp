@@ -1945,32 +1945,23 @@ class TestLoopTreeToGams:
         assert "x(i)" in result
         assert "= 2 ;" in result
 
-    def test_dollar_filtered_loop(self):
-        """Test emission of a dollar-filtered loop header."""
+    def test_paren_filtered_loop_with_id_index_list(self):
+        """Test loop_stmt_paren_filtered: loop((ii,jj)$NONZERO(ii,jj), ...).
+
+        Grammar: LOOP_K "(" "(" id_list ")" DOLLAR ID "(" index_list ")" "," loop_body ")" SEMI
+        Lark children: [id_list, DOLLAR, ID, index_list, loop_body]
+        """
         from src.emit.original_symbols import _loop_tree_to_gams
 
-        # loop((ii,jj)$NONZERO(ii,jj), ...)
         id_list = self._make_tree(
             "id_list",
             [self._make_token("ID", "ii"), self._make_token("ID", "jj")],
         )
-        cond = self._make_tree(
-            "condition",
+        index_list = self._make_tree(
+            "index_list",
             [
-                self._make_token("DOLLAR", "$"),
-                self._make_tree(
-                    "symbol_indexed",
-                    [
-                        self._make_tree("symbol_plain", [self._make_token("ID", "NONZERO")]),
-                        self._make_tree(
-                            "index_list",
-                            [
-                                self._make_tree("index_simple", [self._make_token("ID", "ii")]),
-                                self._make_tree("index_simple", [self._make_token("ID", "jj")]),
-                            ],
-                        ),
-                    ],
-                ),
+                self._make_tree("index_simple", [self._make_token("ID", "ii")]),
+                self._make_tree("index_simple", [self._make_token("ID", "jj")]),
             ],
         )
         assign = self._make_tree(
@@ -1985,14 +1976,156 @@ class TestLoopTreeToGams:
             ],
         )
         body = self._make_tree("loop_body", [assign])
+        # Real Lark layout: id_list, DOLLAR token, ID token, index_list, loop_body
         loop = self._make_tree(
-            "loop_stmt_filtered",
-            [id_list, self._make_token("DOLLAR", "$"), cond, body],
+            "loop_stmt_paren_filtered",
+            [
+                id_list,
+                self._make_token("DOLLAR", "$"),
+                self._make_token("ID", "NONZERO"),
+                index_list,
+                body,
+            ],
         )
 
         result = _loop_tree_to_gams(loop)
         assert "loop(" in result
-        assert "NONZERO(ii,jj)" in result
+        assert "ii,jj" in result
+        assert "$NONZERO(ii,jj)" in result
+
+    def test_filtered_loop_with_id_dollar_expr(self):
+        """Test loop_stmt_filtered: loop(i$(a > b), ...).
+
+        Grammar: LOOP_K "(" ID DOLLAR "(" expr ")" "," loop_body ")" SEMI
+        Lark children: [ID, DOLLAR, expr, loop_body]
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        expr = self._make_tree(
+            "expr",
+            [
+                self._make_tree(
+                    "binop",
+                    [
+                        self._make_token("ID", "a"),
+                        self._make_token("GT", ">"),
+                        self._make_token("ID", "b"),
+                    ],
+                )
+            ],
+        )
+        assign = self._make_tree(
+            "assign",
+            [
+                self._make_tree(
+                    "lvalue", [self._make_tree("symbol_plain", [self._make_token("ID", "y")])]
+                ),
+                self._make_token("EQUAL", "="),
+                self._make_tree("number", [self._make_token("NUMBER", "0")]),
+                self._make_token("SEMICOLON", ";"),
+            ],
+        )
+        body = self._make_tree("loop_body", [assign])
+        # Real Lark layout: ID token, DOLLAR token, expr, loop_body
+        loop = self._make_tree(
+            "loop_stmt_filtered",
+            [
+                self._make_token("ID", "i"),
+                self._make_token("DOLLAR", "$"),
+                expr,
+                body,
+            ],
+        )
+
+        result = _loop_tree_to_gams(loop)
+        assert "loop(i$(a > b)" in result
+
+    def test_indexed_loop(self):
+        """Test loop_stmt_indexed: loop(setname(i,j), ...).
+
+        Grammar: LOOP_K "(" ID "(" id_list ")" "," loop_body ")" SEMI
+        Lark children: [ID, id_list, loop_body]
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        id_list = self._make_tree(
+            "id_list",
+            [self._make_token("ID", "i"), self._make_token("ID", "j")],
+        )
+        assign = self._make_tree(
+            "assign",
+            [
+                self._make_tree(
+                    "lvalue", [self._make_tree("symbol_plain", [self._make_token("ID", "y")])]
+                ),
+                self._make_token("EQUAL", "="),
+                self._make_tree("number", [self._make_token("NUMBER", "1")]),
+                self._make_token("SEMICOLON", ";"),
+            ],
+        )
+        body = self._make_tree("loop_body", [assign])
+        loop = self._make_tree(
+            "loop_stmt_indexed",
+            [
+                self._make_token("ID", "arc"),
+                id_list,
+                body,
+            ],
+        )
+
+        result = _loop_tree_to_gams(loop)
+        assert "loop(arc(i,j)" in result
+
+    def test_indexed_filtered_loop(self):
+        """Test loop_stmt_indexed_filtered: loop(arc(i,j)$(cond), ...).
+
+        Grammar: LOOP_K "(" ID "(" id_list ")" DOLLAR "(" expr ")" "," loop_body ")" SEMI
+        Lark children: [ID, id_list, DOLLAR, expr, loop_body]
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        id_list = self._make_tree(
+            "id_list",
+            [self._make_token("ID", "i"), self._make_token("ID", "j")],
+        )
+        expr = self._make_tree(
+            "expr",
+            [
+                self._make_tree(
+                    "binop",
+                    [
+                        self._make_token("ID", "d"),
+                        self._make_token("GT", ">"),
+                        self._make_token("NUMBER", "0"),
+                    ],
+                )
+            ],
+        )
+        assign = self._make_tree(
+            "assign",
+            [
+                self._make_tree(
+                    "lvalue", [self._make_tree("symbol_plain", [self._make_token("ID", "y")])]
+                ),
+                self._make_token("EQUAL", "="),
+                self._make_tree("number", [self._make_token("NUMBER", "1")]),
+                self._make_token("SEMICOLON", ";"),
+            ],
+        )
+        body = self._make_tree("loop_body", [assign])
+        loop = self._make_tree(
+            "loop_stmt_indexed_filtered",
+            [
+                self._make_token("ID", "arc"),
+                id_list,
+                self._make_token("DOLLAR", "$"),
+                expr,
+                body,
+            ],
+        )
+
+        result = _loop_tree_to_gams(loop)
+        assert "loop(arc(i,j)$(d > 0)" in result
 
     def test_unaryop_handler(self):
         """Test that unaryop nodes (not 'unary') are handled correctly."""
@@ -2173,6 +2306,81 @@ class TestLoopTreeToGams:
         node = self._make_tree("compile_const", [path])
         result = _loop_tree_to_gams(node)
         assert result == "%myconst%"
+
+    def test_tuple_domain_cond_skips_dollar_token(self):
+        """Test tuple_domain_cond correctly skips DOLLAR token at children[1].
+
+        Grammar: "(" index_spec ")" DOLLAR expr -> tuple_domain_cond
+        Lark children: [index_spec, DOLLAR, expr]
+        The condition expr is at children[2], NOT children[1] (which is DOLLAR).
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        index_spec = self._make_tree(
+            "index_list",
+            [
+                self._make_tree("index_simple", [self._make_token("ID", "i")]),
+                self._make_tree("index_simple", [self._make_token("ID", "j")]),
+            ],
+        )
+        cond_expr = self._make_tree(
+            "binop",
+            [
+                self._make_token("ID", "d"),
+                self._make_token("GT", ">"),
+                self._make_token("NUMBER", "0"),
+            ],
+        )
+        node = self._make_tree(
+            "tuple_domain_cond",
+            [index_spec, self._make_token("DOLLAR", "$"), cond_expr],
+        )
+        result = _loop_tree_to_gams(node)
+        assert result == "(i,j)$(d > 0)"
+
+    def test_sum_with_tuple_domain_cond(self):
+        """Test sum(domain, expr) where domain is tuple_domain_cond.
+
+        Validates the full sum((i,j)$cond, expr) pattern doesn't produce
+        garbled output like (i,j)$$.
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        index_spec = self._make_tree(
+            "index_list",
+            [
+                self._make_tree("index_simple", [self._make_token("ID", "i")]),
+                self._make_tree("index_simple", [self._make_token("ID", "j")]),
+            ],
+        )
+        cond_expr = self._make_tree(
+            "binop",
+            [
+                self._make_token("ID", "d"),
+                self._make_token("GT", ">"),
+                self._make_token("NUMBER", "0"),
+            ],
+        )
+        domain = self._make_tree(
+            "tuple_domain_cond",
+            [index_spec, self._make_token("DOLLAR", "$"), cond_expr],
+        )
+        body = self._make_tree(
+            "symbol_indexed",
+            [
+                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                self._make_tree(
+                    "index_list",
+                    [
+                        self._make_tree("index_simple", [self._make_token("ID", "i")]),
+                        self._make_tree("index_simple", [self._make_token("ID", "j")]),
+                    ],
+                ),
+            ],
+        )
+        sum_node = self._make_tree("sum", [domain, body])
+        result = _loop_tree_to_gams(sum_node)
+        assert result == "sum((i,j)$(d > 0), x(i,j))"
 
 
 @pytest.mark.unit
