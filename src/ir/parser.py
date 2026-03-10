@@ -4525,8 +4525,12 @@ class _ModelBuilder:
                 # Wrap RHS in DollarConditional: yes → yes$cond
                 cond_expr = DollarConditional(value_expr=rhs_evaluated, condition=condition)
                 location = self._extract_source_location(node)
+
+                def _ef(n: Tree) -> Expr:
+                    return self._expr(n, domain_context)
+
                 try:
-                    raw_indices = _process_index_list(target.children[1])
+                    raw_indices = _process_index_list(target.children[1], expr_fn=_ef)
                 except (AttributeError, IndexError, TypeError):
                     raw_indices = ()
                 set_assignment = SetAssignment(
