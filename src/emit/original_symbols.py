@@ -2306,8 +2306,10 @@ def _loop_tree_to_gams(node: object) -> str:
         return _loop_tree_to_gams(node.children[0])
     if data == "func_call":
         name = _loop_tree_to_gams(node.children[0])
-        args = _loop_tree_to_gams(node.children[1])
-        return f"{name}({args})"
+        if len(node.children) > 1:
+            args = _loop_tree_to_gams(node.children[1])
+            return f"{name}({args})"
+        return f"{name}()"
     if data in ("binop", "unaryop"):
         return " ".join(_loop_tree_to_gams(c) for c in node.children)
     if data == "condition":
@@ -2469,13 +2471,21 @@ def _emit_loop_node(node: object) -> str:
         else:
             header = f"({indices})" if indices else "()"
     else:
+        # Non-indexed variants:
+        #   loop_stmt:                 id_list, loop_body           -> no extra parens
+        #   loop_stmt_paren:           id_list, loop_body           -> (id_list)
+        #   loop_stmt_filtered:        ID, DOLLAR, ..., loop_body   -> leading_id only
+        #   loop_stmt_paren_filtered:  id_list, DOLLAR, ..., body   -> (id_list)$...
+        is_paren_variant = loop_kind in ("loop_stmt_paren", "loop_stmt_paren_filtered")
         if id_list_parts:
-            header = "(" + ",".join(id_list_parts) + ")"
+            core = ",".join(id_list_parts)
+            header = f"({core})" if is_paren_variant else core
         elif leading_id:
             # loop_stmt_filtered with single ID: loop(i$..., ...)
             header = leading_id
         else:
-            header = "()"
+            # Fallback for empty id_list
+            header = "()" if is_paren_variant else ""
 
     # Apply filter
     if filter_expr:

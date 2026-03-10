@@ -1941,7 +1941,7 @@ class TestLoopTreeToGams:
             ],
         )
         result = _loop_tree_to_gams(loop)
-        assert "loop(" in result
+        assert result.strip().startswith("loop(i,")
         assert "x(i)" in result
         assert "= 2 ;" in result
 
@@ -2457,6 +2457,16 @@ class TestLoopTreeToGams:
         )
         result = _loop_tree_to_gams(node)
         assert result == "x.val(i)"
+
+    def test_func_call_without_arg_list_emits_empty_parens(self):
+        """func_call without arg_list should emit FUNCNAME() without error."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        # Grammar allows: func_call -> FUNCNAME arg_list?
+        # Cover the case where arg_list is omitted entirely.
+        node = self._make_tree("func_call", [self._make_token("FUNCNAME", "foo")])
+        result = _loop_tree_to_gams(node)
+        assert result == "foo()"
 
 
 @pytest.mark.unit
