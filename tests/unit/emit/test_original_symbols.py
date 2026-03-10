@@ -2388,16 +2388,19 @@ class TestLoopContainsSolve:
     """Tests for _loop_contains_solve()."""
 
     def test_loop_with_solve_returns_true(self):
-        """Loop body with a solve_stmt should be detected."""
+        """Loop body with a solve node should be detected.
+
+        The grammar aliases solve_stmt -> solve, and the parser unwraps
+        loop_body so body_stmts contains the inner statements directly.
+        """
         from lark import Tree
 
         from src.ir.symbols import LoopStatement
 
-        solve = Tree("solve_stmt", [])
-        body = Tree("loop_body", [solve])
+        solve = Tree("solve", [])
         loop = LoopStatement(
             indices=("i",),
-            body_stmts=[body],
+            body_stmts=[solve],
             location=None,
             raw_node=Tree("loop_stmt", []),
         )
