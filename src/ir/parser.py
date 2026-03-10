@@ -4529,13 +4529,12 @@ class _ModelBuilder:
                 def _ef(n: Tree) -> Expr:
                     return self._expr(n, domain_context)
 
-                try:
-                    raw_indices = _process_index_list(target.children[1], expr_fn=_ef)
-                except (AttributeError, IndexError, TypeError):
-                    raw_indices = ()
+                indices, _subset_name = _extract_indices_with_subset(
+                    target.children[1], expr_fn=_ef
+                )
                 set_assignment = SetAssignment(
                     set_name=symbol_name,
-                    indices=tuple(raw_indices),
+                    indices=indices,
                     expr=cond_expr,
                     location=location,
                 )
