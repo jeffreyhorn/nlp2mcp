@@ -2412,6 +2412,11 @@ def _loop_tree_to_gams(node: object) -> str:
         return f"yes{_loop_tree_to_gams(node.children[0])}"
     if data == "no_cond":
         return f"no{_loop_tree_to_gams(node.children[0])}"
+    # bare yes/no values (YES_K/NO_K without condition)
+    if data == "yes_value":
+        return "yes"
+    if data == "no_value":
+        return "no"
     # compile_const: compile_time_const -> %name%
     if data == "compile_const":
         inner = _loop_tree_to_gams(node.children[0])

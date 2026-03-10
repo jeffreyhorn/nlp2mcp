@@ -2521,6 +2521,22 @@ class TestLoopTreeToGams:
         result = _loop_tree_to_gams(node)
         assert result == "(ord(n) - 1)"
 
+    def test_yes_value(self):
+        """yes_value emits bare 'yes'."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = self._make_tree("yes_value", [])
+        result = _loop_tree_to_gams(node)
+        assert result == "yes"
+
+    def test_no_value(self):
+        """no_value emits bare 'no'."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = self._make_tree("no_value", [])
+        result = _loop_tree_to_gams(node)
+        assert result == "no"
+
 
 @pytest.mark.unit
 class TestLoopContainsSolve:
