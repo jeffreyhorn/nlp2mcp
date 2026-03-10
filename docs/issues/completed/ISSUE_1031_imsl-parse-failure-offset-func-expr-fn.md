@@ -1,10 +1,10 @@
 # imsl parse failure: _process_index_list missing expr_fn in parameter conditional assign path
 
 **GitHub Issue:** [#1031](https://github.com/jeffreyhorn/nlp2mcp/issues/1031)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** Medium — prevents imsl from parsing
 **Date:** 2026-03-09
-**Affected Models:** imsl (SEQ=59)
+**Fixed:** 2026-03-10
 
 ---
 
@@ -26,10 +26,9 @@ The failure occurs in `_handle_conditional_assign_general` at the parameter cond
 import sys; sys.setrecursionlimit(50000)
 from src.ir.parser import parse_model_file
 ir = parse_model_file('data/gamslib/raw/imsl.gms')
-# Raises: ParserSemanticError: offset_func requires an expr_fn argument
+# Previously raised: ParserSemanticError: offset_func requires an expr_fn argument
+# Now parses successfully
 ```
-
-Full traceback points to `src/ir/parser.py` line 4562 in `_handle_conditional_assign_general`.
 
 ---
 
@@ -43,7 +42,7 @@ raw_indices = _process_index_list(target.children[1])
 
 without passing `expr_fn`. When the target has index offsets like `m+1`, `_process_index_list` tries to call `offset_func` which requires `expr_fn` to evaluate the offset expression.
 
-The set assignment path (lines ~4509-4539) was already fixed to pass `expr_fn` in PR #1029, but the parameter path was not.
+The set assignment path was already fixed to pass `expr_fn` in PR #1029, but the parameter path was not.
 
 ---
 
@@ -60,9 +59,11 @@ The `m+1` offset in `w(m+1,n)` requires `expr_fn` to process.
 
 ---
 
-## Proposed Fix
+## Fix
 
-Catch `ParserSemanticError` in the except clause alongside `AttributeError`, `IndexError`, `TypeError` and set `has_offset = True` so the assignment falls through to `_handle_assign`, which handles offsets correctly:
+**File:** `src/ir/parser.py` — `_handle_conditional_assign_general` parameter path
+
+Added `ParserSemanticError` to the except clause alongside `AttributeError`, `IndexError`, `TypeError`. When `_process_index_list` raises `ParserSemanticError` (because it can't evaluate the offset expression without `expr_fn`), the code sets `has_offset = True` so the assignment falls through to `_handle_assign`, which handles offsets correctly:
 
 ```python
 except (AttributeError, IndexError, TypeError, ParserSemanticError):
@@ -70,18 +71,21 @@ except (AttributeError, IndexError, TypeError, ParserSemanticError):
     has_subset_index = False
 ```
 
+**Commit:** `8cf82d59` (merged via PR #1029)
+
 ---
 
 ## Affected Files
 
-- `src/ir/parser.py` — `_handle_conditional_assign_general` parameter path (line ~4562)
-- `data/gamslib/raw/imsl.gms` — lines 40-41
+| File | Change |
+|------|--------|
+| `src/ir/parser.py` | Add `ParserSemanticError` to except clause in parameter conditional assign path |
 
 ---
 
 ## Context
 
-- Pre-existing issue (fails on `main` too)
+- Pre-existing issue, fixed as part of PR #1029 review work
 - Same class of bug as the srpchase regression fixed in PR #1029
 - Discovered during PR #1029 review
 - Related to Issue #1030 (dual parse entry points masking failures)
