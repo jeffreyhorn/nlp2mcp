@@ -4526,7 +4526,10 @@ class _ModelBuilder:
             and len(target.children) > 1
         ):
             symbol_name = _token_text(target.children[0])
-            if symbol_name in self.model.sets:
+            set_def = self.model.sets.get(symbol_name)
+            if set_def is not None and not set_def.members:
+                # Guard: only rewrite when the set starts empty (dynamic subset).
+                # Sets with pre-existing members need LHS-dollar semantics.
                 rhs_evaluated = self._expr_with_context(
                     rhs_expr, "conditional assignment", domain_context
                 )

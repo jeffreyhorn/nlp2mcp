@@ -47,8 +47,12 @@ dependencies.
 
 **Fix:** Two-part solution:
 - **DollarConditional embedding:** For conditional set assignments, the LHS condition is embedded
-  in the expression as `DollarConditional(yes, T0(ii,jj) < 0)`, producing `set(i) = yes$(cond)`
-  which is semantically equivalent to `set(i)$cond = yes`.
+  in the expression as `DollarConditional(yes, T0(ii,jj) < 0)`, producing `set(i) = yes$(cond)`.
+  In GAMS this is not, in general, semantically equivalent to `set(i)$cond = yes` (the RHS-dollar
+  form clears membership when `cond` is false, while the LHS-dollar form leaves existing membership
+  unchanged). The rewrite is safe here because these sets are dynamic subsets that start empty, so
+  the two forms coincide for the generated code. The rewrite is guarded to only apply when the
+  target set has no declared members.
 - **Interleaved emission:** New `emit_interleaved_params_and_sets()` function uses statement-level
   topological sorting to interleave set assignments with computed parameter expressions in the
   correct dependency order. This handles the chain: `SAM → T0 → red → redsam → T1 → Abar1 → nonzero`.
