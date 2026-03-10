@@ -1357,10 +1357,8 @@ def emit_computed_parameter_assignments(
     sorted_stmts = _topological_sort_statements(collected_stmts, params_with_static)
 
     # Emit sorted statements
-    # Subcategory E: Build set of all declared set/alias names (original case)
+    # Subcategory E: Build set of all declared set/alias names (canonical lowercase)
     # so that set references like SAM("TRF",J) emit J bare (not "J").
-    # GAMS is case-insensitive, so we include both original case and lowercase.
-    declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
     # Subcategory G: Pre-resolve all parameter assignment expressions to collect
     # the full set of generated alias names (including i__2, i__3, etc. for deeply
@@ -1402,7 +1400,7 @@ def emit_computed_parameter_assignments(
             )
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
-        domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
+        domain_vars = lhs_domain | frozenset(declared_sets_lower)
 
         # Issue #1015: LhsConditionalAssign wraps a LHS-conditional assignment
         # p(i)$cond = rhs — emit condition on the LHS, not the RHS.
@@ -1439,6 +1437,462 @@ def emit_computed_parameter_assignments(
     return "\n".join(lines)
 
 
+def emit_interleaved_params_and_sets(
+    model_ir: ModelIR,
+    *,
+    varref_filter: str = "no_varref_attr",
+) -> tuple[str, set[str], set[int]]:
+    """Emit an interleaved stream of computed params and set assignments.
+
+    Issue #881: When set assignments and computed parameters have circular
+    dependency chains (e.g., T0 → red → redsam → T1 → Abar1 → nonzero),
+    they must be emitted in an interleaved order.
+
+    This function identifies all params involved in such chains, collects
+    their expressions alongside set assignment statements, and uses the
+    existing statement-level topological sort to emit everything in the
+    correct dependency order.
+
+    Args:
+        model_ir: Model IR containing params and set assignments
+        varref_filter: Passed through for calibration filtering
+
+    Returns:
+        Tuple of:
+        - GAMS code string (empty if no interleaving needed)
+        - Set of lowercase param names emitted (for exclusion from later passes)
+        - Set of set assignment indices emitted (for exclusion from later passes)
+    """
+    if not model_ir.set_assignments:
+        return "", set(), set()
+
+    dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
+
+    # Identify set-blocked params: have LHS conditions on dynamic sets
+    set_blocked_params: set[str] = set()
+    for pname, pdef in model_ir.params.items():
+        if pdef.expressions:
+            for _, ex in pdef.expressions:
+                if isinstance(ex, LhsConditionalAssign):
+                    cond_sets = _collect_set_membership_names(ex.condition)
+                    if cond_sets & dynamic_set_names:
+                        set_blocked_params.add(pname.lower())
+                        break
+
+    if not set_blocked_params:
+        # No params depend on dynamic sets — no interleaving needed.
+        # Fall back to the simple early-params approach.
+        return "", set(), set()
+
+    # Identify all params that need to be part of the interleaved section.
+    # Start with set-blocked params, then add:
+    # - Params that set assignments directly depend on
+    # - Transitive deps of set-blocked params (upstream)
+    # - Params between set assignment deps and set-blocked params (downstream)
+    all_computed: set[str] = set()
+    param_deps_all: dict[str, set[str]] = {}  # union of all expr deps
+    for pname, pdef in model_ir.params.items():
+        if pdef.expressions:
+            pname_lower = pname.lower()
+            all_computed.add(pname_lower)
+            refs: set[str] = set()
+            for _, ex in pdef.expressions:
+                refs.update(_collect_param_refs(ex))
+            if refs:
+                param_deps_all[pname_lower] = refs
+
+    # Params directly needed by set assignments
+    sa_direct_deps: set[str] = set()
+    for sa in model_ir.set_assignments:
+        sa_direct_deps.update(_collect_param_refs(sa.expr) & all_computed)
+
+    # Build the involved set: everything between sa deps and set-blocked params
+    involved: set[str] = set(set_blocked_params) | sa_direct_deps
+
+    # Expand upstream: if an involved param depends on another computed param,
+    # that param is also involved.
+    frontier = set(involved)
+    while frontier:
+        next_f: set[str] = set()
+        for p in frontier:
+            for dep in param_deps_all.get(p, set()):
+                if dep in all_computed and dep not in involved:
+                    involved.add(dep)
+                    next_f.add(dep)
+        frontier = next_f
+
+    # Also expand downstream: if a non-involved param depends on an involved
+    # param AND depends on a set-blocked param transitively, include it.
+    # (E.g., T1 depends on both T0 and redsam)
+    changed = True
+    while changed:
+        changed = False
+        for pname in all_computed:
+            if pname in involved:
+                continue
+            deps = param_deps_all.get(pname, set())
+            if deps & involved:
+                # Check if this param also transitively reaches a set-blocked param
+                visited: set[str] = set()
+                to_visit = list(deps & all_computed)
+                reaches_blocked = False
+                while to_visit:
+                    d = to_visit.pop()
+                    if d in visited:
+                        continue
+                    visited.add(d)
+                    if d in set_blocked_params:
+                        reaches_blocked = True
+                        break
+                    to_visit.extend(param_deps_all.get(d, set()) & all_computed - visited)
+                if reaches_blocked:
+                    involved.add(pname)
+                    changed = True
+
+    # Post-filter: remove params whose expression keys use dynamic set names
+    # as running indices (e.g., beta(cn))
+    disqualified: set[str] = set()
+    for pname in involved:
+        p_def: ParameterDef | None = model_ir.params.get(pname)
+        if p_def and p_def.expressions:
+            for key_tuple, _expr in p_def.expressions:
+                for idx in key_tuple:
+                    idx_str = idx.lower() if isinstance(idx, str) else ""
+                    if idx_str in dynamic_set_names:
+                        disqualified.add(pname)
+                        break
+                if pname in disqualified:
+                    break
+    involved -= disqualified
+
+    if not involved:
+        return "", set(), set()
+
+    # Now build a unified stream of statements:
+    # - Param expressions from involved params
+    # - Set assignment "statements" (with special sentinel names)
+
+    # Use the existing statement-level sort infrastructure.
+    # Set assignments become pseudo-statements with a special param name
+    # like "__set_red__".  Their "reads" are the params they reference.
+    # Set-blocked params have "reads" that include the set pseudo-params.
+
+    # Collect all involved param expressions
+    declared_sets_lower = {s.lower() for s in model_ir.sets.keys()} | {
+        s.lower() for s in model_ir.aliases.keys()
+    }
+
+    # Calibration detection (same logic as emit_computed_parameter_assignments)
+    calibration_params: set[str] = set()
+    if varref_filter in ("no_varref_attr", "only_varref_attr"):
+        for pname, pdef in model_ir.params.items():
+            if not pdef.expressions:
+                continue
+            all_exprs = [ex for _, ex in pdef.expressions]
+            for key, _ in pdef.expressions:
+                for idx in key:
+                    if isinstance(idx, IndexOffset) and isinstance(idx.offset, Expr):
+                        all_exprs.append(idx.offset)
+            if any(_expr_contains_varref_attribute(ex) for ex in all_exprs):
+                calibration_params.add(pname.lower())
+        # Propagate calibration transitively
+        changed = True
+        while changed:
+            changed = False
+            for pname_lower, deps in param_deps_all.items():
+                if pname_lower not in calibration_params and deps & calibration_params:
+                    calibration_params.add(pname_lower)
+                    changed = True
+
+    # Build the combined statement list
+    # Each item: (pseudo_name, key_tuple, expr, orig_idx, item_type)
+    # item_type: "param" or "set"
+    combined: list[tuple[str, tuple, Expr | None, int, str, int | None]] = []
+    # (name, key, expr, idx, type, sa_idx_or_None)
+    params_with_static: set[str] = set()
+    stmt_idx = 0
+
+    for param_name in sorted(involved):
+        param_def = model_ir.params.get(param_name)
+        if param_def is None:
+            continue
+        if param_name in PREDEFINED_GAMS_CONSTANTS:
+            continue
+        # Filter calibration params in no_varref_attr mode
+        if varref_filter == "no_varref_attr" and param_name.lower() in calibration_params:
+            continue
+        if not param_def.expressions:
+            continue
+        if not param_def.domain:
+            if any(len(k) > 0 for k, _ in param_def.expressions):
+                continue
+        if param_def.values:
+            params_with_static.add(param_name.lower())
+
+        # Map to original casing for emission (involved contains lowercase names)
+        original_name = model_ir.params.get_original_name(param_name)
+
+        has_prior = bool(param_def.values)
+        for key_tuple, expr in param_def.expressions:
+            is_self = _expr_references_param(expr, param_name)
+            if is_self and not has_prior:
+                stmt_idx += 1
+                continue
+            has_prior = True
+            combined.append((original_name, key_tuple, expr, stmt_idx, "param", None))
+            stmt_idx += 1
+
+    # Issue #1007: Compute deferred sets (direct + transitive), matching
+    # emit_set_assignments() logic.  E.g., it(i) = yes$(e.l(i)) is direct;
+    # inn(i) = not it(i) is transitive.
+    deferred_sets: set[str] = set()
+    set_deps: dict[str, set[str]] = {}
+    for sa in model_ir.set_assignments:
+        sa_lower = sa.set_name.lower()
+        if _expr_contains_varref_attribute(sa.expr):
+            deferred_sets.add(sa_lower)
+        set_deps[sa_lower] = _collect_set_membership_names(sa.expr)
+    changed = True
+    while changed:
+        changed = False
+        for sa_lower, deps in set_deps.items():
+            if sa_lower not in deferred_sets and deps & deferred_sets:
+                deferred_sets.add(sa_lower)
+                changed = True
+
+    # Add set assignments as pseudo-statements
+    for i, sa in enumerate(model_ir.set_assignments):
+        # Skip deferred (varref) set assignments (direct + transitive)
+        if sa.set_name.lower() in deferred_sets:
+            continue
+        pseudo_name = f"__set_{sa.set_name.lower()}__"
+        combined.append((pseudo_name, (), None, stmt_idx, "set", i))
+        stmt_idx += 1
+
+    if not combined:
+        return "", set(), set()
+
+    # Build read deps for each statement
+    stmt_reads: list[set[str]] = []
+    for name, key, expr, _idx, item_type, sa_idx in combined:
+        if item_type == "param":
+            assert expr is not None  # param items always have an expression
+            refs = _collect_param_refs(expr)
+            for idx_val in key:
+                if isinstance(idx_val, IndexOffset) and isinstance(idx_val.offset, Expr):
+                    refs.update(_collect_param_refs(idx_val.offset))
+            refs.discard(name.lower())
+            # If this expression has a LHS condition on a dynamic set,
+            # add the set pseudo-name as a dependency.
+            if isinstance(expr, LhsConditionalAssign):
+                cond_sets = _collect_set_membership_names(expr.condition)
+                for sn in cond_sets & dynamic_set_names:
+                    refs.add(f"__set_{sn}__")
+            stmt_reads.append(refs)
+        else:
+            # Set assignment — reads the params it references AND
+            # any dynamic sets it depends on (set→set ordering).
+            assert sa_idx is not None  # set items always have an index
+            sa = model_ir.set_assignments[sa_idx]
+            refs = _collect_param_refs(sa.expr) - {name.lower()}
+            # Add pseudo-deps for referenced dynamic sets (e.g., kt = not ku)
+            for sn in _collect_set_membership_names(sa.expr) & dynamic_set_names:
+                refs.add(f"__set_{sn}__")
+            stmt_reads.append(refs)
+
+    # Set of all "writable" names (param names + set pseudo-names)
+    writable = {c[0].lower() for c in combined}
+
+    # Build the phase structure (same as _topological_sort_statements)
+    from collections import defaultdict
+
+    param_chains: dict[str, list[int]] = defaultdict(list)
+    for i, (name, _key, _expr_or_none, _idx, _type, _sa) in enumerate(combined):
+        param_chains[name.lower()].append(i)
+
+    phases: list[tuple[str, str, list[int], set[str]]] = []
+    last_phase_key: dict[str, str] = {}
+
+    for pname_low, chain in param_chains.items():
+        cum_deps: set[str] = set()
+        phase_indices: list[int] = []
+        phase_num = 0
+        for i in chain:
+            new_deps = (stmt_reads[i] & writable) - cum_deps
+            if new_deps and phase_indices:
+                pkey = f"{pname_low}:{phase_num}"
+                phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
+                last_phase_key[pname_low] = pkey
+                phase_num += 1
+                phase_indices = []
+            cum_deps |= stmt_reads[i]
+            phase_indices.append(i)
+        if phase_indices:
+            pkey = f"{pname_low}:{phase_num}"
+            phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
+            last_phase_key[pname_low] = pkey
+
+    # Kahn's-style phase sort
+    # Issue #881: Don't pre-define set-blocked params (those with LHS conditions
+    # on dynamic sets) even if they have static values.  Their computed expressions
+    # override the static defaults and must be ordered correctly.
+    set_blocked_lower = {p.lower() for p in set_blocked_params}
+    defined = params_with_static - set_blocked_lower
+    emitted_phases: set[str] = set()
+    remaining = list(range(len(phases)))
+    sorted_items: list[tuple[str, tuple, Expr | None, int, str, int | None]] = []
+
+    phase_predecessor: dict[str, str | None] = {}
+    param_phase_list: dict[str, list[str]] = defaultdict(list)
+    for pkey, pname_low, _indices, _deps in phases:
+        param_phase_list[pname_low].append(pkey)
+    for _pname_low, pkeys in param_phase_list.items():
+        phase_predecessor[pkeys[0]] = None
+        for j in range(1, len(pkeys)):
+            phase_predecessor[pkeys[j]] = pkeys[j - 1]
+
+    max_iterations = len(phases) + 1
+    for _ in range(max_iterations):
+        if not remaining:
+            break
+        ready: list[int] = []
+        still_blocked: list[int] = []
+        for pi in remaining:
+            pkey, pname_low, _indices, deps = phases[pi]
+            pred = phase_predecessor[pkey]
+            if pred is not None and pred not in emitted_phases:
+                still_blocked.append(pi)
+                continue
+            unmet = (deps - defined) & writable
+            if not unmet:
+                ready.append(pi)
+            else:
+                still_blocked.append(pi)
+        if not ready:
+            # Cycle — try breaking with static values
+            cycle_broken = False
+            for pi in still_blocked:
+                pkey, pname_low, _indices, _deps = phases[pi]
+                if pname_low in params_with_static and phase_predecessor.get(pkey) is None:
+                    defined.add(pname_low)
+                    cycle_broken = True
+            if cycle_broken:
+                remaining = still_blocked
+                continue
+            # Emit remaining in original order
+            all_remaining: list[int] = []
+            for pi in still_blocked:
+                all_remaining.extend(phases[pi][2])
+            all_remaining.sort()
+            for i in all_remaining:
+                sorted_items.append(combined[i])
+            break
+        ready.sort(key=lambda pi: phases[pi][2][0])
+        for pi in ready:
+            pkey, pname_low, indices, _deps = phases[pi]
+            for i in indices:
+                sorted_items.append(combined[i])
+            emitted_phases.add(pkey)
+            if pkey == last_phase_key[pname_low]:
+                defined.add(pname_low)
+        remaining = still_blocked
+
+    # Emit sorted items as GAMS code
+    lines: list[str] = []
+    emitted_param_names: set[str] = set()
+    emitted_sa_indices: set[int] = set()
+
+    # Pre-resolve expressions for alias collection (and cache for reuse)
+    all_aliases: dict[str, list[str]] = {}
+    resolved_exprs: dict[int, Expr] = {}  # sorted_items index → resolved expr
+    for si_idx, (_name, key, expr, _idx, item_type, _sa) in enumerate(sorted_items):
+        if item_type != "param" or expr is None:
+            continue
+        param_domain = tuple(
+            idx if isinstance(idx, str) else idx.base
+            for idx in key
+            if isinstance(idx, str) or isinstance(idx, IndexOffset)
+        )
+        resolved, expr_aliases = resolve_index_conflicts(expr, param_domain)
+        resolved_exprs[si_idx] = resolved
+        for base, alias_list in expr_aliases.items():
+            existing = all_aliases.setdefault(base, [])
+            for a in alias_list:
+                if a not in existing:
+                    existing.append(a)
+
+    if all_aliases:
+        for base in sorted(all_aliases.keys()):
+            for alias_name in all_aliases[base]:
+                lines.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
+
+    seen: set[str] = set()
+    for si_idx, (name, key, expr, _idx, item_type, sa_idx) in enumerate(sorted_items):
+        if item_type == "set":
+            # Emit set assignment
+            assert sa_idx is not None
+            sa = model_ir.set_assignments[sa_idx]
+            restored_expr = _restore_yes_keyword(sa.expr)
+            domain_vars = frozenset(idx for idx in sa.indices if isinstance(idx, str))
+            expr_str = expr_to_gams(restored_expr, domain_vars=domain_vars)
+            if sa.indices:
+                index_str = _format_mixed_indices(sa.indices, domain_vars)
+                line = f"{_quote_symbol(sa.set_name)}({index_str}) = {expr_str};"
+            else:
+                line = f"{_quote_symbol(sa.set_name)} = {expr_str};"
+            if line not in seen:
+                seen.add(line)
+                lines.append(line)
+            emitted_sa_indices.add(sa_idx)
+        else:
+            # Emit param expression
+            assert expr is not None
+            emitted_param_names.add(name.lower())
+            resolved_expr = resolved_exprs[si_idx]
+
+            lhs_domain: frozenset[str] = frozenset(
+                idx if isinstance(idx, str) else idx.base
+                for idx in key
+                if (
+                    isinstance(idx, str)
+                    and not idx.startswith('"')
+                    and not idx.startswith("'")
+                    and idx.lower() in declared_sets_lower
+                )
+                or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
+            )
+            domain_vars = lhs_domain | frozenset(declared_sets_lower)
+
+            lhs_cond_str = ""
+            if isinstance(resolved_expr, LhsConditionalAssign):
+                lhs_cond_str = (
+                    "$(" + expr_to_gams(resolved_expr.condition, domain_vars=domain_vars) + ")"
+                )
+                expr_str = expr_to_gams(resolved_expr.rhs, domain_vars=domain_vars)
+            else:
+                expr_str = expr_to_gams(resolved_expr, domain_vars=domain_vars)
+
+            if key:
+                quoted_keys = [
+                    (
+                        idx.to_gams_string()
+                        if isinstance(idx, IndexOffset)
+                        else _quote_assignment_index(idx, declared_sets_lower)
+                    )
+                    for idx in key
+                ]
+                index_str = ",".join(quoted_keys)
+                line = f"{_quote_symbol(name)}({index_str}){lhs_cond_str} = {expr_str};"
+            else:
+                line = f"{_quote_symbol(name)}{lhs_cond_str} = {expr_str};"
+
+            if line not in seen:
+                seen.add(line)
+                lines.append(line)
+
+    return "\n".join(lines), emitted_param_names, emitted_sa_indices
+
+
 def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     """Compute the set of parameter names (lowercase) referenced by set assignments.
 
@@ -1446,6 +1900,11 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     parameters (``m0``).  These parameters must be emitted BEFORE set assignments
     even though computed parameters normally come after.  This function identifies
     the transitive closure of parameters needed by set assignments.
+
+    Note: This function is used as a fallback when
+    ``emit_interleaved_params_and_sets`` returns empty (no set-blocked params).
+    The interleaved emitter handles the complex case (Issue #881) where params
+    have LHS conditions on dynamic sets.
     """
     if not model_ir.set_assignments:
         return set()
@@ -1482,13 +1941,10 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
     # Post-filter: remove params whose LHS expression keys reference dynamic
     # set names.  These params MUST go AFTER set assignments because their
     # indices (e.g., "cn" in beta(cn)) are populated by set assignments.
-    # Their static data (Table values) is already emitted by
-    # emit_original_parameters(), so only computed expressions are affected.
     dynamic_set_names = {sa.set_name.lower() for sa in model_ir.set_assignments}
     if dynamic_set_names:
         disqualified: set[str] = set()
         for pname in needed:
-            # Look up param definition (case-insensitive via CaseInsensitiveDict)
             p_def: ParameterDef | None = model_ir.params.get(pname)
             if p_def and p_def.expressions:
                 for key_tuple, _expr in p_def.expressions:
@@ -1501,7 +1957,7 @@ def compute_set_assignment_param_deps(model_ir: ModelIR) -> set[str]:
                         break
         if disqualified:
             logger.info(
-                "Excluding dynamic-set-indexed params from early emission: %s",
+                "Excluding dynamic-set-dependent params from early emission: %s",
                 sorted(disqualified),
             )
         needed -= disqualified
@@ -1605,6 +2061,7 @@ def emit_set_assignments(
     model_ir: ModelIR,
     *,
     varref_filter: str = "all",
+    only_indices: list[int] | None = None,
 ) -> str:
     """Emit dynamic set assignment statements.
 
@@ -1623,6 +2080,9 @@ def emit_set_assignments(
             - ``"all"``: Emit all assignments (default, backward compatible)
             - ``"no_varref_attr"``: Skip assignments that need deferral
             - ``"only_varref_attr"``: Only emit assignments that need deferral
+        only_indices: If not None, only emit set assignments whose index in
+            ``model_ir.set_assignments`` is in this list. ``None`` (default)
+            emits all assignments; an empty list emits nothing.
 
     Returns:
         GAMS assignment statements as string
@@ -1663,8 +2123,13 @@ def emit_set_assignments(
                     changed = True
 
     lines: list[str] = []
+    only_indices_set = set(only_indices) if only_indices is not None else None
 
-    for set_assignment in model_ir.set_assignments:
+    for sa_idx, set_assignment in enumerate(model_ir.set_assignments):
+        # Issue #881: If only_indices specified, skip set assignments not in the list.
+        if only_indices_set is not None and sa_idx not in only_indices_set:
+            continue
+
         # Issue #1007: Filter set assignments based on deferral status.
         if varref_filter != "all":
             is_deferred = set_assignment.set_name.lower() in deferred_sets
@@ -1697,7 +2162,11 @@ def emit_set_assignments(
     return "\n".join(lines)
 
 
-def emit_subset_value_assignments(model_ir: ModelIR) -> str:
+def emit_subset_value_assignments(
+    model_ir: ModelIR,
+    *,
+    exclude_params: set[str] | None = None,
+) -> str:
     """Emit parameter values that use subset-qualified indices as executable assignments.
 
     Issue #860: When a parameter's inline data contains keys that are set/alias
@@ -1706,6 +2175,10 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
     (which GAMS would misinterpret as ``gamma(i) /in 0/``).
 
     Must be called AFTER set assignments so dynamic subsets are populated.
+
+    Args:
+        model_ir: Model IR
+        exclude_params: Optional set of lowercase param names to skip (Issue #881).
     """
     sets_and_aliases_lower = {s.lower() for s in model_ir.sets.keys()} | {
         s.lower() for s in model_ir.aliases.keys()
@@ -1713,6 +2186,9 @@ def emit_subset_value_assignments(model_ir: ModelIR) -> str:
     assignments: list[str] = []
 
     for param_name, param_def in model_ir.params.items():
+        # Issue #881: Skip params handled by interleaved emission
+        if exclude_params and param_name.lower() in exclude_params:
+            continue
         if not param_def.values or not param_def.domain:
             continue
         domain_size = len(param_def.domain)

@@ -18,6 +18,7 @@ from src.emit.original_symbols import (
     _sanitize_set_element,
     collect_missing_param_labels,
     emit_computed_parameter_assignments,
+    emit_interleaved_params_and_sets,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
@@ -29,6 +30,7 @@ from src.ir.ast import (
     Call,
     Const,
     DollarConditional,
+    LhsConditionalAssign,
     ParamRef,
     SetMembershipTest,
     SymbolRef,
@@ -1591,3 +1593,290 @@ class TestSubsetValueAssignments:
         result = emit_subset_value_assignments(model)
         assert "red(ii,jj)" in result
         assert "red('ii'" not in result
+
+
+class TestEmitSetAssignmentsOnlyIndices:
+    """Issue #881: Test only_indices filtering in emit_set_assignments."""
+
+    def _make_model(self) -> ModelIR:
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.sets["ku"] = SetDef(name="ku", members=[], domain=("i",))
+        model.sets["ki"] = SetDef(name="ki", members=[], domain=("i",))
+        # sa0: ku(i) = yes$(ord(i) < card(i))
+        model.set_assignments = [
+            SetAssignment(
+                set_name="ku",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary(
+                        "<", Call("ord", (SymbolRef("i"),)), Call("card", (SymbolRef("i"),))
+                    ),
+                ),
+                location=None,
+            ),
+            # sa1: ki(i) = yes$(ord(i) = 1)
+            SetAssignment(
+                set_name="ki",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary("=", Call("ord", (SymbolRef("i"),)), Const(1.0)),
+                ),
+                location=None,
+            ),
+        ]
+        return model
+
+    def test_only_indices_subset(self):
+        """only_indices=[0] emits only the first set assignment."""
+        model = self._make_model()
+        result = emit_set_assignments(model, varref_filter="all", only_indices=[0])
+        assert "ku(i)" in result
+        assert "ki(i)" not in result
+
+    def test_only_indices_empty(self):
+        """only_indices=[] emits nothing."""
+        model = self._make_model()
+        result = emit_set_assignments(model, varref_filter="all", only_indices=[])
+        assert result == ""
+
+    def test_only_indices_none_emits_all(self):
+        """only_indices=None (default) emits all set assignments."""
+        model = self._make_model()
+        result = emit_set_assignments(model, varref_filter="all")
+        assert "ku(i)" in result
+        assert "ki(i)" in result
+
+
+class TestSubsetValueAssignmentsExcludeParams:
+    """Issue #881: Test exclude_params in emit_subset_value_assignments."""
+
+    def test_excluded_param_skipped(self):
+        """Param in exclude_params is not emitted."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["ACT", "COM"], domain=("*",))
+        model.sets["ii"] = SetDef(name="ii", members=["ACT", "COM"], domain=("i",))
+        model.params["gamma"] = ParameterDef(
+            name="gamma",
+            domain=("i",),
+            values={("ii",): 0.0},
+        )
+
+        # Without exclusion, gamma is emitted
+        result = emit_subset_value_assignments(model)
+        assert "gamma(ii)" in result
+
+        # With exclusion, gamma is skipped
+        result = emit_subset_value_assignments(model, exclude_params={"gamma"})
+        assert "gamma" not in result
+
+    def test_non_excluded_param_still_emitted(self):
+        """Params not in exclude_params are still emitted."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["ACT", "COM"], domain=("*",))
+        model.sets["ii"] = SetDef(name="ii", members=["ACT", "COM"], domain=("i",))
+        model.params["alpha"] = ParameterDef(
+            name="alpha",
+            domain=("i",),
+            values={("ii",): 1.0},
+        )
+        model.params["beta"] = ParameterDef(
+            name="beta",
+            domain=("i",),
+            values={("ii",): 2.0},
+        )
+
+        result = emit_subset_value_assignments(model, exclude_params={"alpha"})
+        assert "alpha" not in result
+        assert "beta(ii)" in result
+
+
+class TestEmitInterleavedParamsAndSets:
+    """Issue #881: Tests for emit_interleaved_params_and_sets."""
+
+    def test_chain_ordering(self):
+        """Set assignment must be emitted between params that depend on it.
+
+        Chain: T0 = sam/scale → red(i)$(T0(i) < 0) = yes → redsam(i)$red = T0(i)
+        The interleaved emitter must produce: T0 before red, red before redsam.
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.sets["red"] = SetDef(name="red", members=[], domain=("i",))
+
+        # T0(i) = sam(i) / scalesam  (simple param dep)
+        model.params["sam"] = ParameterDef(
+            name="sam", domain=("i",), values={("a",): 10.0, ("b",): -5.0}
+        )
+        model.params["t0"] = ParameterDef(
+            name="t0",
+            domain=("i",),
+            expressions=[
+                (("i",), Binary("/", ParamRef("sam", ("i",)), SymbolRef("scalesam"))),
+            ],
+        )
+        # redsam(i)$red(i) = T0(i)  (LHS conditional on dynamic set)
+        model.params["redsam"] = ParameterDef(
+            name="redsam",
+            domain=("i",),
+            values={("ii",): 0},
+            expressions=[
+                (
+                    ("i",),
+                    LhsConditionalAssign(
+                        rhs=ParamRef("t0", ("i",)),
+                        condition=SetMembershipTest("red", (SymbolRef("i"),)),
+                    ),
+                ),
+            ],
+        )
+
+        # Set assignment: red(i) = yes$(T0(i) < 0)
+        model.set_assignments = [
+            SetAssignment(
+                set_name="red",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary("<", ParamRef("t0", ("i",)), Const(0.0)),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "Should produce interleaved output"
+
+        # Check ordering: T0 before red, red before redsam
+        lines = code.split("\n")
+        t0_line = next((i for i, ln in enumerate(lines) if "t0(" in ln.lower()), None)
+        red_line = next((i for i, ln in enumerate(lines) if "red(i)" in ln.lower()), None)
+        redsam_line = next((i for i, ln in enumerate(lines) if "redsam(" in ln.lower()), None)
+        assert t0_line is not None, "T0 should be emitted"
+        assert red_line is not None, "red set assignment should be emitted"
+        assert redsam_line is not None, "redsam should be emitted"
+        assert t0_line < red_line, "T0 must come before red"
+        assert red_line < redsam_line, "red must come before redsam"
+
+        assert "t0" in param_names
+        assert "redsam" in param_names
+        assert 0 in sa_indices
+
+    def test_no_interleaving_without_set_blocked_params(self):
+        """Returns empty when no params have LHS conditions on dynamic sets."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.sets["ku"] = SetDef(name="ku", members=[], domain=("i",))
+        model.params["p"] = ParameterDef(
+            name="p",
+            domain=("i",),
+            expressions=[
+                (("i",), Binary("*", SymbolRef("i"), Const(2.0))),
+            ],
+        )
+        # Set assignment with no LhsConditionalAssign deps from params
+        model.set_assignments = [
+            SetAssignment(
+                set_name="ku",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary(
+                        "<", Call("ord", (SymbolRef("i"),)), Call("card", (SymbolRef("i"),))
+                    ),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code == ""
+        assert param_names == set()
+        assert sa_indices == set()
+
+    def test_transitive_deferred_set_excluded(self):
+        """Transitive deferred set assignments must be excluded from interleaved output.
+
+        it(i) = yes$(e.l(i))  — directly deferred (VarRef)
+        inn(i) = not it(i)    — transitively deferred (depends on deferred set)
+        red(i) = yes$(T0(i) < 0) — NOT deferred, should appear in interleaved output
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.sets["it"] = SetDef(name="it", members=[], domain=("i",))
+        model.sets["inn"] = SetDef(name="inn", members=[], domain=("i",))
+        model.sets["red"] = SetDef(name="red", members=[], domain=("i",))
+        model.variables["e"] = None  # placeholder to make VarRef valid
+
+        # T0(i) = sam(i) / scalesam
+        model.params["sam"] = ParameterDef(
+            name="sam", domain=("i",), values={("a",): 10.0, ("b",): -5.0}
+        )
+        model.params["t0"] = ParameterDef(
+            name="t0",
+            domain=("i",),
+            expressions=[
+                (("i",), Binary("/", ParamRef("sam", ("i",)), SymbolRef("scalesam"))),
+            ],
+        )
+        # redsam(i)$red(i) = T0(i)  — LHS condition on dynamic set triggers interleaving
+        model.params["redsam"] = ParameterDef(
+            name="redsam",
+            domain=("i",),
+            values={("ii",): 0},
+            expressions=[
+                (
+                    ("i",),
+                    LhsConditionalAssign(
+                        rhs=ParamRef("t0", ("i",)),
+                        condition=SetMembershipTest("red", (SymbolRef("i"),)),
+                    ),
+                ),
+            ],
+        )
+
+        model.set_assignments = [
+            # SA 0: it(i) = yes$(e.l(i))  — directly deferred (VarRef)
+            SetAssignment(
+                set_name="it",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=VarRef("e", ("i",), attribute="l"),
+                ),
+                location=None,
+            ),
+            # SA 1: inn(i) = not it(i)  — transitively deferred
+            SetAssignment(
+                set_name="inn",
+                indices=("i",),
+                expr=Unary("not", SetMembershipTest("it", (SymbolRef("i"),))),
+                location=None,
+            ),
+            # SA 2: red(i) = yes$(T0(i) < 0)  — NOT deferred
+            SetAssignment(
+                set_name="red",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary("<", ParamRef("t0", ("i",)), Const(0.0)),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "Should produce interleaved output"
+
+        # SA 0 (it) and SA 1 (inn) should NOT be in the interleaved output
+        assert 0 not in sa_indices, "Directly deferred set 'it' must be excluded"
+        assert 1 not in sa_indices, "Transitively deferred set 'inn' must be excluded"
+        # SA 2 (red) should be included
+        assert 2 in sa_indices, "Non-deferred set 'red' must be included"
+
+        # The output should not contain inn or it assignments
+        code_lower = code.lower()
+        assert "inn(" not in code_lower, "'inn' set assignment must not appear"
+        assert "it(" not in code_lower, "'it' set assignment must not appear"

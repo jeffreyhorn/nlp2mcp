@@ -49,9 +49,9 @@ Scalars
 ;
 
 d("steel",j) = dt * (1 + rse / 100) * dd(j) / 100;
-muf(i,j) = (2.48 + 0.0084 * rd(i,j))$rd(i,j);
-muv(j) = (2.48 + 0.0084 * rd("import",j))$rd("import",j);
-mue(i) = (2.48 + 0.0084 * rd(i,"export"))$rd(i,"export");
+muf(i,j) = (2.48 + 0.0084 * rd(i,j))$(rd(i,j));
+muv(j) = (2.48 + 0.0084 * rd("import",j))$(rd("import",j));
+mue(i) = (2.48 + 0.0084 * rd(i,"export"))$(rd(i,"export"));
 pd(c) = prices(c,"domestic");
 pv(c) = prices(c,"import");
 pe(c) = prices(c,"export");

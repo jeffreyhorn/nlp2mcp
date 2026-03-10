@@ -21,6 +21,7 @@ from src.emit.original_symbols import (
     collect_missing_param_labels,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
+    emit_interleaved_params_and_sets,
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
@@ -511,33 +512,61 @@ def emit_gams_mcp(
         sections.append(f"Set {uel_name} / {quoted} /;")
         sections.append("")
 
-    # Issue #860: Identify computed parameters needed by set assignments.
-    # These must be emitted BEFORE set assignments to break the circular
-    # dependency (set assignments reference computed params, computed params
-    # normally come after set assignments). Only emit those that don't
-    # contain VarRef attributes (calibration params go later).
-    early_params = compute_set_assignment_param_deps(kkt.model_ir)
-    if early_params:
-        early_code = emit_computed_parameter_assignments(
-            kkt.model_ir, varref_filter="no_varref_attr", only_params=early_params
-        )
-        if early_code:
-            sections.append(early_code)
-            sections.append("")
+    # Issue #860/#881: Emit set assignments and their dependent computed params
+    # in interleaved order.  When set assignments have complex dependency chains
+    # with computed parameters (e.g., T0 → red → redsam → T1 → Abar1 → nonzero),
+    # they must be interleaved rather than emitted in separate blocks.
+    # The interleaved emitter uses statement-level topological sorting to handle
+    # params like SAM that have both early and late expressions.
+    interleaved_code, interleaved_params, interleaved_sa_indices = emit_interleaved_params_and_sets(
+        kkt.model_ir, varref_filter="no_varref_attr"
+    )
 
-    # PR #658: Emit dynamic set assignments BEFORE computed parameters
-    # Dynamic subsets (e.g., ku(k)) must be populated before parameter assignments
-    # like w(n,np,ku) that reference them, otherwise they produce empty data.
+    # If no interleaving needed, fall back to the original early-params approach.
+    early_params: set[str] = set()
+    if not interleaved_code:
+        early_params = compute_set_assignment_param_deps(kkt.model_ir)
+        if early_params:
+            early_code = emit_computed_parameter_assignments(
+                kkt.model_ir, varref_filter="no_varref_attr", only_params=early_params
+            )
+            if early_code:
+                sections.append("$onImplicitAssign")
+                sections.append(early_code)
+                sections.append("$offImplicitAssign")
+                sections.append("")
+    else:
+        early_params = interleaved_params
+        sections.append("$onImplicitAssign")
+        sections.append(interleaved_code)
+        sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # PR #658: Emit remaining dynamic set assignments not handled by interleaving.
     # Issue #1007: Split into two passes — assignments referencing .l values
     # (e.g., it(i) = yes$(e.l(i))) must be deferred until after Variables.
-    set_assignments_code = emit_set_assignments(kkt.model_ir, varref_filter="no_varref_attr")
+    remaining_set_indices = (
+        [i for i in range(len(kkt.model_ir.set_assignments)) if i not in interleaved_sa_indices]
+        if interleaved_sa_indices
+        else None
+    )
+    set_assignments_code = emit_set_assignments(
+        kkt.model_ir,
+        varref_filter="no_varref_attr",
+        only_indices=remaining_set_indices,
+    )
     if set_assignments_code:
+        sections.append("$onImplicitAssign")
         sections.append(set_assignments_code)
+        sections.append("$offImplicitAssign")
         sections.append("")
 
     # Issue #860: Emit subset-qualified parameter values as executable assignments
     # AFTER set assignments (dynamic subsets must be populated first).
-    subset_val_code = emit_subset_value_assignments(kkt.model_ir)
+    subset_val_code = emit_subset_value_assignments(
+        kkt.model_ir,
+        exclude_params=interleaved_params if interleaved_params else None,
+    )
     if subset_val_code:
         sections.append(subset_val_code)
         sections.append("")
@@ -546,7 +575,7 @@ def emit_gams_mcp(
     # Split into two passes: regular assignments go here (before Variables),
     # while .l-referencing calibration assignments are deferred until after
     # Variables are declared (GAMS requires variable declaration before .l access).
-    # Issue #860: Exclude params already emitted in the early pass.
+    # Issue #860/#881: Exclude params already emitted in the interleaved pass.
     computed_params_code = emit_computed_parameter_assignments(
         kkt.model_ir,
         varref_filter="no_varref_attr",

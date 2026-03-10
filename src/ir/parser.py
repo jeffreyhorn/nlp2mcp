@@ -1187,6 +1187,7 @@ class _ModelBuilder:
         default_factory=list
     )
     _declared_equations: set[str] = field(default_factory=set)
+    _solve_seen: bool = False
 
     def __post_init__(self) -> None:
         if self._equation_domains is None:
@@ -3375,6 +3376,7 @@ class _ModelBuilder:
         self.model.add_equation(equation)
 
     def _handle_solve(self, node: Tree) -> None:
+        self._solve_seen = True
         name = _token_text(node.children[0])
         self.model.model_name = name
         sense = ObjSense.MIN
@@ -4067,6 +4069,12 @@ class _ModelBuilder:
                         bound_kind = _token_text(target.children[1]).lower()
 
                 if bound_kind == "l":
+                    # Issue #881: Skip post-solve .l expression assignments.
+                    # After a solve statement, .l assignments recompute levels
+                    # from solved values (e.g., DENTROPY.l = sum(..., a.l(i,j)*...))
+                    # which reference runtime .l values that are zero at init time.
+                    if self._solve_seen:
+                        return
                     # Store .l expression for emission (circle.gms: a.l = (xmin + xmax)/2)
                     var_name = _token_text(target.children[0])
                     if var_name not in self.model.variables:
@@ -4498,6 +4506,52 @@ class _ModelBuilder:
         # Store the conditional statement
         self.model.conditional_statements.append(cond_stmt)
 
+        # Issue #881: For conditional set assignments (e.g., NONZERO(ii,jj)$(Abar1(ii,jj)) = yes),
+        # wrap the RHS in a DollarConditional so the condition is preserved.
+        # This produces: set(i) = yes$(cond) instead of set(i)$cond = yes.
+        # NOTE: These forms are NOT generally semantically equivalent in GAMS.
+        # LHS-dollar leaves existing members unchanged when cond is false;
+        # RHS-dollar assigns 0 (clears membership) when cond is false.
+        # This rewrite is safe here because the target sets are dynamic subsets
+        # that start empty and are populated solely by these assignments, so
+        # there are no pre-existing members to preserve.  If models with
+        # pre-existing set members are encountered, SetAssignment should be
+        # extended with an optional LHS condition field instead.
+        # Embedding the condition in the expression avoids emission ordering
+        # problems (the normal set_assignment dependency analysis handles
+        # param refs in expr).
+        if (
+            isinstance(target, Tree)
+            and target.data == "symbol_indexed"
+            and len(target.children) > 1
+        ):
+            symbol_name = _token_text(target.children[0])
+            set_def = self.model.sets.get(symbol_name)
+            if set_def is not None and not set_def.members:
+                # Guard: only rewrite when the set starts empty (dynamic subset).
+                # Sets with pre-existing members need LHS-dollar semantics.
+                rhs_evaluated = self._expr_with_context(
+                    rhs_expr, "conditional assignment", domain_context
+                )
+                # Wrap RHS in DollarConditional: yes → yes$cond
+                cond_expr = DollarConditional(value_expr=rhs_evaluated, condition=condition)
+                location = self._extract_source_location(node)
+
+                def _ef(n: Tree) -> Expr:
+                    return self._expr(n, domain_context)
+
+                indices, _subset_name = _extract_indices_with_subset(
+                    target.children[1], expr_fn=_ef
+                )
+                set_assignment = SetAssignment(
+                    set_name=symbol_name,
+                    indices=indices,
+                    expr=cond_expr,
+                    location=location,
+                )
+                self.model.set_assignments.append(set_assignment)
+                return
+
         # Issue #1015: For indexed parameter assignments where indices are
         # set/alias names that would be domain-expanded, store the conditional
         # expression directly in param.expressions.  Without this, _handle_assign
@@ -4518,8 +4572,8 @@ class _ModelBuilder:
                     raw_indices = _process_index_list(target.children[1])
                     has_offset = any(isinstance(idx, IndexOffset) for idx in raw_indices)
                     has_subset_index = any(isinstance(idx, SubsetIndex) for idx in raw_indices)
-                except (AttributeError, IndexError, TypeError):
-                    has_offset = False
+                except (AttributeError, IndexError, TypeError, ParserSemanticError):
+                    has_offset = True  # Assume offset; fall through to _handle_assign
                     has_subset_index = False
                 # Check if ALL indices resolve to a set (i.e., are domain-over indices)
                 all_domain_over = (
@@ -6060,6 +6114,11 @@ class _ModelBuilder:
             if isinstance(bound_token, str)
             else _token_text(bound_token).lower()
         )
+
+        # Issue #881: Skip post-solve .l assignments — they recompute levels
+        # from solved values and would overwrite pre-solve initializations.
+        if bound_kind == "l" and self._solve_seen:
+            return
 
         if var.domain:
             if not idx_tuple:
