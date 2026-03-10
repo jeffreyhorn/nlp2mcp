@@ -552,6 +552,16 @@ def _collect_position_memberships(
         elif isinstance(expr, Binary) and expr.op == "and":
             _visit(expr.left)
             _visit(expr.right)
+            return
+
+        # Fallback: traverse children of other expression types so that
+        # membership tests nested under wrappers (e.g., DollarConditional)
+        # are still discovered.
+        children_fn = getattr(expr, "children", None)
+        if callable(children_fn):
+            for child in children_fn():
+                if isinstance(child, Expr):
+                    _visit(child)
 
     _visit(cond_expr)
     return position_members
