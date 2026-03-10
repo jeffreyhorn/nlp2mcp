@@ -1357,10 +1357,8 @@ def emit_computed_parameter_assignments(
     sorted_stmts = _topological_sort_statements(collected_stmts, params_with_static)
 
     # Emit sorted statements
-    # Subcategory E: Build set of all declared set/alias names (original case)
+    # Subcategory E: Build set of all declared set/alias names (canonical lowercase)
     # so that set references like SAM("TRF",J) emit J bare (not "J").
-    # GAMS is case-insensitive, so we include both original case and lowercase.
-    declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
     # Subcategory G: Pre-resolve all parameter assignment expressions to collect
     # the full set of generated alias names (including i__2, i__3, etc. for deeply
@@ -1402,7 +1400,7 @@ def emit_computed_parameter_assignments(
             )
             or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
         )
-        domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
+        domain_vars = lhs_domain | frozenset(declared_sets_lower)
 
         # Issue #1015: LhsConditionalAssign wraps a LHS-conditional assignment
         # p(i)$cond = rhs — emit condition on the LHS, not the RHS.
@@ -1585,7 +1583,6 @@ def emit_interleaved_params_and_sets(
     declared_sets_lower = {s.lower() for s in model_ir.sets.keys()} | {
         s.lower() for s in model_ir.aliases.keys()
     }
-    declared_sets_original = set(model_ir.sets.keys()) | set(model_ir.aliases.keys())
 
     # Calibration detection (same logic as emit_computed_parameter_assignments)
     calibration_params: set[str] = set()
@@ -1634,6 +1631,9 @@ def emit_interleaved_params_and_sets(
         if param_def.values:
             params_with_static.add(param_name.lower())
 
+        # Map to original casing for emission (involved contains lowercase names)
+        original_name = model_ir.params.get_original_name(param_name)
+
         has_prior = bool(param_def.values)
         for key_tuple, expr in param_def.expressions:
             is_self = _expr_references_param(expr, param_name)
@@ -1641,7 +1641,7 @@ def emit_interleaved_params_and_sets(
                 stmt_idx += 1
                 continue
             has_prior = True
-            combined.append((param_name, key_tuple, expr, stmt_idx, "param", None))
+            combined.append((original_name, key_tuple, expr, stmt_idx, "param", None))
             stmt_idx += 1
 
     # Add set assignments as pseudo-statements
@@ -1841,7 +1841,7 @@ def emit_interleaved_params_and_sets(
                 )
                 or (isinstance(idx, IndexOffset) and idx.base.lower() in declared_sets_lower)
             )
-            domain_vars = lhs_domain | declared_sets_original | frozenset(declared_sets_lower)
+            domain_vars = lhs_domain | frozenset(declared_sets_lower)
 
             lhs_cond_str = ""
             if isinstance(resolved_expr, LhsConditionalAssign):
