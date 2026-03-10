@@ -4700,6 +4700,39 @@ class TestSubsetIndexingAssignments:
         assert ("a", "y") not in model.params["cost"].values
         assert ("b", "x") not in model.params["cost"].values
 
+    def test_subset_indexing_expression_preserves_restriction(self):
+        """Test subset-indexed assignment with expression RHS preserves subset condition.
+
+        Issue #949 / PR #1032: nseg(g(s)) = p(s+1) - p(s) should store a single
+        expression with key ('s',) wrapped in LhsConditionalAssign to preserve
+        the subset restriction g(s), rather than expanding per-element.
+        """
+        from src.ir.ast import LhsConditionalAssign, SetMembershipTest
+
+        text = dedent("""
+            Set s / s0, s1, s2, s3 /;
+            Set g(s) / s0, s1, s2 /;
+            Parameter p(s) / s0 10, s1 20, s2 30, s3 40 /;
+            Parameter nseg(s);
+
+            nseg(g(s)) = p(s+1) - p(s);
+        """)
+        model = parser.parse_model_text(text)
+        assert "nseg" in model.params
+        pdef = model.params["nseg"]
+
+        # Should have a single expression entry, not per-element values
+        assert len(pdef.expressions) == 1
+        assert len(pdef.values) == 0
+
+        key, expr = pdef.expressions[0]
+        assert key == ("s",)
+
+        # Expression should be wrapped in LhsConditionalAssign with SetMembershipTest
+        assert isinstance(expr, LhsConditionalAssign)
+        assert isinstance(expr.condition, SetMembershipTest)
+        assert expr.condition.set_name == "g"
+
 
 class TestDomainOverAssignments:
     """Test domain-over parameter assignments (Issue #622).

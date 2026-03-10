@@ -4274,7 +4274,17 @@ class _ModelBuilder:
                             subset_def, param, has_function_call, expr, value, target
                         )
                         return
-                    # For expressions, fall through to store with domain indices
+                    # For expressions (e.g., nseg(g(s)) = p(s+1) - p(s)),
+                    # preserve the subset restriction by wrapping in
+                    # LhsConditionalAssign with a SetMembershipTest condition.
+                    # This emits as nseg(s)$(g(s)) = p(s+1) - p(s);
+                    condition = SetMembershipTest(
+                        set_name=subset_name,
+                        indices=tuple(
+                            SymbolRef(idx) if isinstance(idx, str) else idx for idx in indices
+                        ),
+                    )
+                    expr = LhsConditionalAssign(rhs=expr, condition=condition)
 
                 # Handle simple subset name as index: flag(sub) where sub is a subset of i
                 # Check if a single index is actually a subset name that should be expanded
