@@ -2289,7 +2289,15 @@ def _loop_tree_to_gams(node: object) -> str:
     if data in ("index_list", "arg_list"):
         return ",".join(_loop_tree_to_gams(c) for c in node.children)
     if data == "index_simple":
-        return _loop_tree_to_gams(node.children[0])
+        # index_simple: ID lag_lead_suffix?
+        base = _loop_tree_to_gams(node.children[0])
+        if len(node.children) > 1:
+            suffix = _loop_tree_to_gams(node.children[1])
+            return f"{base}{suffix}"
+        return base
+    if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
+        # e.g. ++1, --2, +1, -1  — operator token followed by offset
+        return "".join(_loop_tree_to_gams(c) for c in node.children)
     if data == "symbol_indexed":
         name = _loop_tree_to_gams(node.children[0])
         idx = _loop_tree_to_gams(node.children[1])
@@ -2314,6 +2322,30 @@ def _loop_tree_to_gams(node: object) -> str:
             else:
                 parts.append(_loop_tree_to_gams(c))
         return "".join(parts)
+    if data == "bound_indexed":
+        # cond_bound: ID "." BOUND_K "(" index_list ")" -> bound_indexed
+        # e.g. x.l(i,j)
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        idx = _loop_tree_to_gams(node.children[2])
+        return f"{name}.{attr}({idx})"
+    if data == "bound_scalar":
+        # cond_bound: ID "." BOUND_K -> bound_scalar
+        # e.g. x.l
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        return f"{name}.{attr}"
+    if data in ("set_attr", "attr_access"):
+        # set_attr: ID "." SET_ATTR_K  e.g. i.ord
+        # attr_access: ID "." ID  e.g. x.val
+        return ".".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "attr_access_indexed":
+        # ref_bound: ID "." ID "(" index_list ")" -> attr_access_indexed
+        # e.g. x.val(i)
+        name = _loop_tree_to_gams(node.children[0])
+        attr = _loop_tree_to_gams(node.children[1])
+        idx = _loop_tree_to_gams(node.children[2])
+        return f"{name}.{attr}({idx})"
     if data == "assign":
         # assign: lvalue "=" expr ";"
         return " ".join(_loop_tree_to_gams(c) for c in node.children)

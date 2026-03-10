@@ -2382,6 +2382,82 @@ class TestLoopTreeToGams:
         result = _loop_tree_to_gams(sum_node)
         assert result == "sum((i,j)$(d > 0), x(i,j))"
 
+    def test_index_simple_with_linear_lead(self):
+        """index_simple with lag/lead suffix preserves offset (e.g. t+1)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        suffix = self._make_tree(
+            "linear_lead",
+            [self._make_token("PLUS", "+"), self._make_token("NUMBER", "1")],
+        )
+        node = self._make_tree("index_simple", [self._make_token("ID", "t"), suffix])
+        result = _loop_tree_to_gams(node)
+        assert result == "t+1"
+
+    def test_index_simple_with_circular_lag(self):
+        """index_simple with circular lag suffix (e.g. j--2)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        suffix = self._make_tree(
+            "circular_lag",
+            [self._make_token("CIRCULAR_LAG", "--"), self._make_token("NUMBER", "2")],
+        )
+        node = self._make_tree("index_simple", [self._make_token("ID", "j"), suffix])
+        result = _loop_tree_to_gams(node)
+        assert result == "j--2"
+
+    def test_bound_indexed(self):
+        """bound_indexed emits ID.BOUND_K(index_list) e.g. x.l(i)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        idx = self._make_tree(
+            "index_list",
+            [self._make_tree("index_simple", [self._make_token("ID", "i")])],
+        )
+        node = self._make_tree(
+            "bound_indexed",
+            [self._make_token("ID", "x"), self._make_token("BOUND_K", "l"), idx],
+        )
+        result = _loop_tree_to_gams(node)
+        assert result == "x.l(i)"
+
+    def test_bound_scalar(self):
+        """bound_scalar emits ID.BOUND_K e.g. z.fx."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = self._make_tree(
+            "bound_scalar",
+            [self._make_token("ID", "z"), self._make_token("BOUND_K", "fx")],
+        )
+        result = _loop_tree_to_gams(node)
+        assert result == "z.fx"
+
+    def test_set_attr(self):
+        """set_attr emits ID.SET_ATTR_K e.g. i.ord."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = self._make_tree(
+            "set_attr",
+            [self._make_token("ID", "i"), self._make_token("SET_ATTR_K", "ord")],
+        )
+        result = _loop_tree_to_gams(node)
+        assert result == "i.ord"
+
+    def test_attr_access_indexed(self):
+        """attr_access_indexed emits ID.ID(index_list) e.g. x.val(i)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        idx = self._make_tree(
+            "index_list",
+            [self._make_tree("index_simple", [self._make_token("ID", "i")])],
+        )
+        node = self._make_tree(
+            "attr_access_indexed",
+            [self._make_token("ID", "x"), self._make_token("ID", "val"), idx],
+        )
+        result = _loop_tree_to_gams(node)
+        assert result == "x.val(i)"
+
 
 @pytest.mark.unit
 class TestLoopContainsSolve:
@@ -2475,7 +2551,7 @@ class TestEmitLoopStatements:
         from src.ir.symbols import LoopStatement
 
         model = ModelIR()
-        solve = Tree("solve_stmt", [])
+        solve = Tree("solve", [])
         loop_node = Tree("loop_stmt", [])
         model.loop_statements = [
             LoopStatement(
