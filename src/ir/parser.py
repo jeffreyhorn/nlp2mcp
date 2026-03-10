@@ -3430,8 +3430,12 @@ class _ModelBuilder:
     def _handle_model_all(self, node: Tree) -> None:
         name = _token_text(node.children[0])
         self.model.declared_model = name
-        self.model.model_equations = []
+        # Issue #1033: Snapshot the equations declared so far into model_equation_map.
+        # In GAMS, "Model name / all /" means all equations declared up to
+        # this point, not all equations in the entire file.
+        # Note: model_equations stays [] (convention for /all/) for backward compat.
         self.model.model_uses_all = True
+        self.model.model_equation_map[name.lower()] = list(self.model.equations.keys())
 
     @staticmethod
     def _extract_model_refs(ref_list: Tree) -> tuple[list[str], bool]:
@@ -3478,6 +3482,11 @@ class _ModelBuilder:
         self.model.declared_model = name
         self.model.model_equations = refs
         self.model.model_uses_all = uses_all
+        # Issue #1033: Store per-model equation list
+        if uses_all:
+            self.model.model_equation_map[name.lower()] = list(self.model.equations.keys())
+        else:
+            self.model.model_equation_map[name.lower()] = refs
 
     def _handle_model_decl(self, node: Tree) -> None:
         name = _token_text(node.children[0])
@@ -3511,14 +3520,28 @@ class _ModelBuilder:
         if not model_items:
             raise self._error("Multi-model declaration has no model items", node)
 
-        # Register every model name (Issue #729)
+        # Register every model name and its equation list (Issue #729, #1033)
         for item in model_items:
-            self.model.declared_model = _token_text(item.children[0])
+            item_name = _token_text(item.children[0])
+            self.model.declared_model = item_name
+            item_ref_list = next(
+                (c for c in item.children if isinstance(c, Tree) and c.data == "model_ref_list"),
+                None,
+            )
+            if item_ref_list is not None:
+                item_refs, item_uses_all = self._extract_model_refs(item_ref_list)
+                if item_uses_all:
+                    self.model.model_equation_map[item_name.lower()] = list(
+                        self.model.equations.keys()
+                    )
+                else:
+                    self.model.model_equation_map[item_name.lower()] = item_refs
+            else:
+                # / all / variant
+                self.model.model_equation_map[item_name.lower()] = list(self.model.equations.keys())
 
-        # Store equation list / all flag from the first model only
+        # Store equation list / all flag from the first model only (backward compat)
         first_item = model_items[0]
-
-        # Find the model_ref_list child (if any) — the / all / variant has no such child
         ref_list = next(
             (c for c in first_item.children if isinstance(c, Tree) and c.data == "model_ref_list"),
             None,
@@ -3528,7 +3551,6 @@ class _ModelBuilder:
             self.model.model_equations = refs
             self.model.model_uses_all = uses_all
         else:
-            # / all / variant (no model_ref_list) or no equations
             self.model.model_equations = []
             self.model.model_uses_all = len(first_item.children) > 1
 

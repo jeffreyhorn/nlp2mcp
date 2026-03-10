@@ -29,7 +29,11 @@ def subtract(lhs: Expr, rhs: Expr) -> Expr:
     return Binary("-", lhs, rhs)
 
 
-def _extract_objective_expression(equations: dict[str, EquationDef], objvar: str) -> Expr:
+def _extract_objective_expression(
+    equations: dict[str, EquationDef],
+    objvar: str,
+    model_eq_set: set[str] | None = None,
+) -> Expr:
     """
     Extract objective expression from equations before normalization.
 
@@ -40,6 +44,8 @@ def _extract_objective_expression(equations: dict[str, EquationDef], objvar: str
     Args:
         equations: Dictionary of equation definitions
         objvar: Name of the objective variable to find
+        model_eq_set: Optional set of lowercase equation names to restrict search
+            (Issue #1033: only consider equations in the solved model).
 
     Returns:
         Expression that defines the objective
@@ -54,6 +60,9 @@ def _extract_objective_expression(equations: dict[str, EquationDef], objvar: str
         >>> # Returns: Binary("+", Call("power", ...), VarRef("y"))
     """
     for _eq_name, eq_def in equations.items():
+        # Issue #1033: Skip equations not in the solved model
+        if model_eq_set is not None and _eq_name.lower() not in model_eq_set:
+            continue
         # Skip indexed equations (objective must be scalar)
         if eq_def.domain:
             continue
@@ -100,6 +109,38 @@ def normalize_equation(eq: EquationDef) -> NormalizedEquation:
     )
 
 
+def _collect_vars_in_equations(ir: ModelIR, model_eq_set: set[str]) -> set[str]:
+    """Collect variable names referenced in the given equations and the objective.
+
+    Issue #1033: Used to filter out variables that belong to other model
+    formulations when equation filtering is active.
+    """
+    referenced: set[str] = set()
+
+    def _walk(expr: Expr) -> None:
+        if isinstance(expr, VarRef):
+            referenced.add(expr.name.lower())
+        for child in expr.children():
+            _walk(child)
+
+    for name, eq in ir.equations.items():
+        if name.lower() not in model_eq_set:
+            continue
+        # EquationDef stores (lhs, rhs) as a tuple in lhs_rhs
+        if eq.lhs_rhs:
+            for side in eq.lhs_rhs:
+                if isinstance(side, Expr):
+                    _walk(side)
+
+    # Also include the objective variable
+    if ir.objective:
+        referenced.add(ir.objective.objvar.lower())
+        if ir.objective.expr:
+            _walk(ir.objective.expr)
+
+    return referenced
+
+
 def normalize_model(
     ir: ModelIR,
 ) -> tuple[dict[str, NormalizedEquation], dict[str, NormalizedEquation]]:
@@ -113,6 +154,17 @@ def normalize_model(
     normalization to avoid issues with finding it after equations are restructured.
     See GitHub Issue #19 for details.
     """
+    # Issue #1033: Compute model equation set BEFORE objective extraction
+    # so that only equations in the solved model are considered.
+    model_eq_set: set[str] | None = None
+    solved_model_eqs: list[str] | None = None
+    if ir.model_name:
+        solved_model_eqs = ir.model_equation_map.get(ir.model_name.lower())
+    if solved_model_eqs is None and ir.model_equations:
+        solved_model_eqs = ir.model_equations
+    if solved_model_eqs:
+        model_eq_set = {eq.lower() for eq in solved_model_eqs}
+
     # IMPORTANT: Extract objective expression BEFORE normalization
     # After normalization, equations are restructured and the objective
     # variable may not be easily found. Extract it now while equations
@@ -125,7 +177,9 @@ def normalize_model(
     if ir.objective and not ir.objective.expr and ir.equations:
         objvar = ir.objective.objvar
         try:
-            ir.objective.expr = _extract_objective_expression(ir.equations, objvar)
+            ir.objective.expr = _extract_objective_expression(
+                ir.equations, objvar, model_eq_set=model_eq_set
+            )
         except ValueError:
             # If no defining equation is found, that's OK - the objective might be
             # just a simple variable reference. The AD code will handle this case.
@@ -138,12 +192,24 @@ def normalize_model(
     ir.inequalities.clear()
 
     for name, eq in ir.equations.items():
+        if model_eq_set is not None and name.lower() not in model_eq_set:
+            continue
         n = normalize_equation(eq)
         norm[name] = n
         if n.relation == Rel.EQ:
             ir.equalities.append(name)
         else:
             ir.inequalities.append(name)
+
+    # Issue #1033: When equations were filtered, also remove variables that
+    # are not referenced in any included equation or the objective.  This
+    # prevents discrete variables from other formulations from leaking into
+    # the MCP model (e.g., SOS2/Binary variables from MIP formulations).
+    if model_eq_set is not None:
+        referenced_vars = _collect_vars_in_equations(ir, model_eq_set)
+        unreferenced = [vn for vn in ir.variables.keys() if vn.lower() not in referenced_vars]
+        for vn in unreferenced:
+            del ir.variables[vn]
 
     for var_name, var in ir.variables.items():
 

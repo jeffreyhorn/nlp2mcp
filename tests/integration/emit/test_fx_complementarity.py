@@ -76,10 +76,15 @@ class TestDiagonalComplementarityFix:
         result = _generate_mcp("ps3_s_gic")
         assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
 
-    def test_ps3_s_scp_diagonal_fx_emitted(self):
-        """ps3_s_scp: lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0 must appear."""
+    def test_ps3_s_scp_model_scoping(self):
+        """ps3_s_scp: solved model SB_lic_wo_SCP excludes ic(i,j).
+
+        Issue #1033: The last solve uses SB_lic_wo_SCP which includes
+        licd/licu (1D) but NOT ic(i,j) (2D). The 2D diagonal fix should
+        not appear because ic is not in the solved model.
+        """
         result = _generate_mcp("ps3_s_scp")
-        assert "lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;" in result
+        assert "lam_ic" not in result
 
 
 @pytest.mark.integration

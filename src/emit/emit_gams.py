@@ -60,6 +60,89 @@ from src.kkt.naming import (
 from src.kkt.objective import extract_objective_info
 
 
+def _merge_exclude_params(*sets: set[str] | None) -> set[str] | None:
+    """Merge multiple optional exclude-param sets into one."""
+    result: set[str] | None = None
+    for s in sets:
+        if s is not None:
+            if result is None:
+                result = set(s)
+            else:
+                result |= s
+    return result
+
+
+def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
+    """Collect parameter names relevant to the solved model.
+
+    Issue #1036: Parameters only used for post-solve reporting (e.g., referencing
+    .l/.m values) should not be emitted before the MCP solve.  This function
+    collects all parameters referenced in model equations (and transitively
+    through other parameter expressions) so the complement can be excluded.
+
+    Returns None when no model equation filtering is active (all params relevant).
+    """
+    # Only filter when model equations are restricted
+    solved_eqs: list[str] | None = None
+    if model_ir.model_name:
+        solved_eqs = model_ir.model_equation_map.get(model_ir.model_name.lower())
+    if solved_eqs is None and model_ir.model_equations:
+        solved_eqs = model_ir.model_equations
+    if not solved_eqs:
+        return None
+
+    model_eq_set = {eq.lower() for eq in solved_eqs}
+    referenced: set[str] = set()
+
+    def _walk(expr: Expr) -> None:
+        if isinstance(expr, ParamRef):
+            referenced.add(expr.name.lower())
+        for child in expr.children():
+            _walk(child)
+
+    # Collect params directly referenced in model equations
+    for name, eq in model_ir.equations.items():
+        if name.lower() not in model_eq_set:
+            continue
+        if eq.lhs_rhs:
+            for side in eq.lhs_rhs:
+                if isinstance(side, Expr):
+                    _walk(side)
+
+    # Also include params referenced in the objective expression
+    if model_ir.objective and model_ir.objective.expr:
+        _walk(model_ir.objective.expr)
+
+    # Also include params referenced in variable initialization (.l, .lo, .up, .fx)
+    # and bound expressions — these are critical for solver convergence.
+    for var_def in model_ir.variables.values():
+        for attr in ("l_expr", "lo_expr", "up_expr", "fx_expr"):
+            expr = getattr(var_def, attr, None)
+            if expr is not None:
+                _walk(expr)
+        for attr_map in ("l_expr_map", "lo_expr_map", "up_expr_map", "fx_expr_map"):
+            emap = getattr(var_def, attr_map, None)
+            if emap:
+                for expr in emap.values():
+                    _walk(expr)
+
+    # Transitive closure: params referenced by other relevant params' expressions
+    queue = deque(referenced)
+    while queue:
+        pname = queue.popleft()
+        pdef = model_ir.params.get(pname)
+        if pdef is None:
+            continue
+        for _, expr in pdef.expressions:
+            before = len(referenced)
+            _walk(expr)
+            for new_ref in list(referenced)[before:]:
+                queue.append(new_ref)
+        # Also walk inline values that are ParamRefs (unlikely but safe)
+
+    return referenced
+
+
 def _quote_uel(label: str) -> str:
     """Quote a UEL (Unique Element Label) for GAMS .fx/.lo/.up emission.
 
@@ -512,6 +595,17 @@ def emit_gams_mcp(
         sections.append(f"Set {uel_name} / {quoted} /;")
         sections.append("")
 
+    # Issue #1036: Compute non-model-relevant parameters.
+    # Parameters only used for post-solve reporting (e.g., referencing .l/.m
+    # solution values) must not be emitted as computed assignments before the
+    # MCP solve.  Compute the complement set and merge it into exclude_params
+    # for all computed parameter emission calls.
+    model_relevant_params = _collect_model_relevant_params(kkt.model_ir)
+    non_model_params: set[str] | None = None
+    if model_relevant_params is not None:
+        all_params_lower = {p.lower() for p in kkt.model_ir.params}
+        non_model_params = all_params_lower - model_relevant_params
+
     # Issue #860/#881: Emit set assignments and their dependent computed params
     # in interleaved order.  When set assignments have complex dependency chains
     # with computed parameters (e.g., T0 → red → redsam → T1 → Abar1 → nonzero),
@@ -563,9 +657,13 @@ def emit_gams_mcp(
 
     # Issue #860: Emit subset-qualified parameter values as executable assignments
     # AFTER set assignments (dynamic subsets must be populated first).
+    # Issue #1036: Also exclude non-model-relevant params (post-solve reporting).
     subset_val_code = emit_subset_value_assignments(
         kkt.model_ir,
-        exclude_params=interleaved_params if interleaved_params else None,
+        exclude_params=_merge_exclude_params(
+            interleaved_params if interleaved_params else None,
+            non_model_params,
+        ),
     )
     if subset_val_code:
         sections.append(subset_val_code)
@@ -576,10 +674,14 @@ def emit_gams_mcp(
     # while .l-referencing calibration assignments are deferred until after
     # Variables are declared (GAMS requires variable declaration before .l access).
     # Issue #860/#881: Exclude params already emitted in the interleaved pass.
+    # Issue #1036: Also exclude non-model-relevant params (post-solve reporting).
     computed_params_code = emit_computed_parameter_assignments(
         kkt.model_ir,
         varref_filter="no_varref_attr",
-        exclude_params=early_params if early_params else None,
+        exclude_params=_merge_exclude_params(
+            early_params if early_params else None,
+            non_model_params,
+        ),
     )
     if computed_params_code:
         # Sprint 19 Day 3: If any computed parameter contains stochastic

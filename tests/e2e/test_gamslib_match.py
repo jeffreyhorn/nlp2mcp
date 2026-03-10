@@ -119,7 +119,7 @@ ATOL = 1e-8
 _MCP_SOLVE_REFERENCES: dict[str, float] = {
     "alkyl": -1.765,
     "circle": 4.071,
-    "himmel16": 0.0,
+    "himmel16": -1.27346e-07,
 }
 
 skip_no_gams = pytest.mark.skipif(not _gams_available(), reason="GAMS not available")

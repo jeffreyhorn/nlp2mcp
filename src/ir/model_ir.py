@@ -62,6 +62,9 @@ class ModelIR:
     _first_declared_model: str | None = field(default=None, repr=False)
     model_equations: list[str] = field(default_factory=list)
     model_uses_all: bool = False
+    # Issue #1033: Per-model equation map — maps model name (lowercase) to equation list.
+    # For "/ all /" models, stores a snapshot of equations declared up to that point.
+    model_equation_map: dict[str, list[str]] = field(default_factory=dict)
     model_name: str | None = None
     objective: ObjectiveIR | None = None  # filled after parsing Solve
 
