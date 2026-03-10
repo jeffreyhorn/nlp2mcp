@@ -75,10 +75,21 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
     obj = model_ir.objective
     objvar = obj.objvar
 
+    # Issue #1033: Build model equation filter if applicable.
+    # When a model has multiple formulations (e.g., small / obj1 / large / obj2, areadef /),
+    # we must only consider equations in the solved model to find the correct
+    # objective-defining equation.
+    model_eq_set: set[str] | None = None
+    solved_eqs = model_ir.get_solved_model_equations()
+    if solved_eqs:
+        model_eq_set = {eq.lower() for eq in solved_eqs}
+
     # Find defining equation
     # Common patterns: "defobjective", "objdef", "obj_def", "define_obj"
     defining_eq = None
     for eq_name, eq_def in model_ir.equations.items():
+        if model_eq_set is not None and eq_name.lower() not in model_eq_set:
+            continue
         if _is_objective_defining_equation(eq_def, objvar):
             defining_eq = eq_name
             break

@@ -62,6 +62,9 @@ class ModelIR:
     _first_declared_model: str | None = field(default=None, repr=False)
     model_equations: list[str] = field(default_factory=list)
     model_uses_all: bool = False
+    # Issue #1033: Per-model equation map — maps model name (lowercase) to equation list.
+    # For "/ all /" models, stores a snapshot of equations declared up to that point.
+    model_equation_map: dict[str, list[str]] = field(default_factory=dict)
     model_name: str | None = None
     objective: ObjectiveIR | None = None  # filled after parsing Solve
 
@@ -90,6 +93,21 @@ class ModelIR:
             self.declared_models.add(lv)
             if self._first_declared_model is None:
                 self._first_declared_model = lv
+
+    def get_solved_model_equations(self) -> list[str] | None:
+        """Return the equation list for the solved model, or None if unfiltered.
+
+        Issue #1033 PR review: Centralizes the model equation resolution logic
+        previously duplicated in normalize_model(), _collect_model_relevant_params(),
+        and extract_objective_info().  Checks model_equation_map first (keyed by
+        model_name), then falls back to model_equations for backward compatibility.
+        """
+        solved_eqs: list[str] | None = None
+        if self.model_name:
+            solved_eqs = self.model_equation_map.get(self.model_name.lower())
+        if solved_eqs is None and self.model_equations:
+            solved_eqs = self.model_equations
+        return solved_eqs or None
 
     def add_set(self, s: SetDef) -> None:
         self.sets[s.name] = s
