@@ -2258,3 +2258,171 @@ def emit_subset_value_assignments(
             )
 
     return "\n".join(assignments)
+
+
+def _loop_tree_to_gams(node: object) -> str:
+    """Reconstruct GAMS text from a Lark parse tree node.
+
+    Issue #1025: Faithfully converts raw Lark Tree objects back to GAMS
+    syntax for loop statement re-emission. Handles the tree node types
+    that appear in loop bodies (assign, conditional_assign_general, etc.)
+    and loop headers (id_list, index_list, conditions).
+
+    Args:
+        node: Lark Token or Tree object
+
+    Returns:
+        GAMS text representation
+    """
+    # Import here to avoid circular dependency — lark is only needed at emit time
+    from lark import Token, Tree
+
+    if isinstance(node, Token):
+        return str(node)
+    if not isinstance(node, Tree):
+        return str(node)
+
+    data = str(node.data)
+
+    if data == "id_list":
+        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+    if data in ("index_list", "arg_list"):
+        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "index_simple":
+        return _loop_tree_to_gams(node.children[0])
+    if data == "symbol_indexed":
+        name = _loop_tree_to_gams(node.children[0])
+        idx = _loop_tree_to_gams(node.children[1])
+        return f"{name}({idx})"
+    if data in ("symbol_plain", "lvalue", "number", "funccall"):
+        return _loop_tree_to_gams(node.children[0])
+    if data == "func_call":
+        name = _loop_tree_to_gams(node.children[0])
+        args = _loop_tree_to_gams(node.children[1])
+        return f"{name}({args})"
+    if data in ("binop", "unary"):
+        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "condition":
+        return "".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "assign":
+        # assign: lvalue "=" expr ";"
+        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "conditional_assign_general":
+        # conditional_assign_general: lvalue condition "=" expr ";"
+        lhs = _loop_tree_to_gams(node.children[0])
+        cond = _loop_tree_to_gams(node.children[1])
+        rest = " ".join(_loop_tree_to_gams(c) for c in node.children[2:])
+        return f"{lhs}{cond} {rest}"
+    if data == "loop_body":
+        stmts = [_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree)]
+        return "\n".join(f"   {s}" for s in stmts)
+    if data == "paren":
+        inner = " ".join(_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree))
+        return f"({inner})"
+    if data.startswith("loop_stmt"):
+        return _emit_loop_node(node)
+
+    # Fallback: join all children with spaces
+    return " ".join(_loop_tree_to_gams(c) for c in node.children)
+
+
+def _emit_loop_node(node: object) -> str:
+    """Emit a complete loop statement from its Lark Tree node.
+
+    Handles all loop variants: simple, paren, filtered, paren_filtered,
+    indexed, indexed_filtered.
+    """
+    from lark import Token, Tree
+
+    if not isinstance(node, Tree):
+        return ""
+
+    id_list_parts: list[str] = []
+    filter_dollar = False
+    filter_id: str | None = None
+    filter_idx: str | None = None
+    body: str | None = None
+
+    for child in node.children:
+        if isinstance(child, Token):
+            if child.type == "DOLLAR":
+                filter_dollar = True
+            elif child.type == "ID" and filter_dollar and filter_id is None:
+                filter_id = str(child)
+        elif isinstance(child, Tree):
+            if child.data == "id_list":
+                id_list_parts.append(_loop_tree_to_gams(child))
+            elif child.data == "index_list" and filter_dollar:
+                filter_idx = _loop_tree_to_gams(child)
+            elif child.data == "condition":
+                # Some loop variants use a condition tree instead of bare $ + ID
+                filter_id = _loop_tree_to_gams(child)
+            elif child.data == "loop_body":
+                body = _loop_tree_to_gams(child)
+
+    header = "(" + ",".join(id_list_parts) + ")"
+    if filter_id and filter_idx:
+        header += f"${filter_id}({filter_idx})"
+    elif filter_id:
+        header += filter_id
+
+    if body:
+        return f"loop({header},\n{body}\n);"
+    return f"loop({header});"
+
+
+def _loop_contains_solve(loop_stmt: object) -> bool:
+    """Check if a loop body contains a solve statement.
+
+    Loops with solve statements are iterative solve procedures from the
+    original model and should NOT be re-emitted in the MCP output.
+    """
+    from lark import Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not isinstance(loop_stmt, LoopStatement):
+        return False
+
+    def _has_solve(stmts: list[object]) -> bool:
+        for stmt in stmts:
+            if isinstance(stmt, Tree):
+                if "solve" in str(stmt.data):
+                    return True
+                # Recurse into nested structures
+                if _has_solve(list(stmt.children)):
+                    return True
+        return False
+
+    return _has_solve(loop_stmt.body_stmts)
+
+
+def emit_loop_statements(model_ir: ModelIR) -> str:
+    """Emit loop statements from the model IR.
+
+    Issue #1025: Loop bodies contain parameter assignments that are not
+    captured in ParameterDef.values/expressions. This function re-emits
+    the original loop statements so that parameters like wbar3, vbar3,
+    sigmay3 get their values assigned.
+
+    Loops containing solve statements are skipped — those are iterative
+    solve procedures from the original model, not parameter initialization.
+
+    Args:
+        model_ir: Model IR with loop_statements
+
+    Returns:
+        GAMS loop statement code, or empty string if no loops
+    """
+    if not model_ir.loop_statements:
+        return ""
+
+    lines: list[str] = []
+    for loop_stmt in model_ir.loop_statements:
+        if loop_stmt.raw_node is None:
+            continue
+        if _loop_contains_solve(loop_stmt):
+            continue
+        lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
+
+    return "\n\n".join(lines)
