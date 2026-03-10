@@ -101,13 +101,45 @@ class ModelIR:
         previously duplicated in normalize_model(), _collect_model_relevant_params(),
         and extract_objective_info().  Checks model_equation_map first (keyed by
         model_name), then falls back to model_equations for backward compatibility.
+
+        Issue #1026: Resolves model references in equation lists. GAMS allows
+        referencing other models in equation lists (e.g., ``P2R3_NonLinear /
+        P2R3_Linear, DEMINT, SUPINT, OBJECT /``). When an entry matches a key
+        in ``model_equation_map``, it is expanded to that model's equations.
         """
         solved_eqs: list[str] | None = None
         if self.model_name:
             solved_eqs = self.model_equation_map.get(self.model_name.lower())
         if solved_eqs is None and self.model_equations:
             solved_eqs = self.model_equations
-        return solved_eqs or None
+        if not solved_eqs:
+            return None
+        # Resolve model references: if an entry matches another model name
+        # in model_equation_map, expand it to that model's equations.
+        resolved: list[str] = []
+        seen: set[str] = set()
+        self._resolve_model_refs(solved_eqs, resolved, seen)
+        return resolved or None
+
+    def _resolve_model_refs(
+        self,
+        refs: list[str],
+        out: list[str],
+        seen: set[str],
+    ) -> None:
+        """Recursively expand model references in an equation list."""
+        for ref in refs:
+            ref_lower = ref.lower()
+            if ref_lower in seen:
+                continue
+            # Check if this ref is a model name (not an equation name)
+            if ref_lower in self.model_equation_map and ref_lower not in self.equations:
+                seen.add(ref_lower)
+                self._resolve_model_refs(self.model_equation_map[ref_lower], out, seen)
+            else:
+                if ref_lower not in seen:
+                    seen.add(ref_lower)
+                    out.append(ref)
 
     def add_set(self, s: SetDef) -> None:
         self.sets[s.name] = s

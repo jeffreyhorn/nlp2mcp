@@ -3378,9 +3378,9 @@ class _ModelBuilder:
     def _handle_solve(self, node: Tree) -> None:
         self._solve_seen = True
         name = _token_text(node.children[0])
-        self.model.model_name = name
         sense = ObjSense.MIN
         objvar = None
+        is_mcp_cns = False
         idx = 1
 
         # Sprint 11 Day 2: solver_type can appear before OR after obj_sense
@@ -3391,8 +3391,13 @@ class _ModelBuilder:
         if idx < len(node.children):
             child = node.children[idx]
             if isinstance(child, Tree) and child.data == "solver_type":
+                # Check if the solver_type is MCP/CNS
+                if child.children and isinstance(child.children[0], Token):
+                    if child.children[0].type == "MCP_CNS_SOLVER":
+                        is_mcp_cns = True
                 idx += 1
             elif isinstance(child, Token) and child.type == "MCP_CNS_SOLVER":
+                is_mcp_cns = True
                 idx += 1
 
         # Look for obj_sense
@@ -3420,12 +3425,17 @@ class _ModelBuilder:
         ):
             objvar = _token_text(node.children[idx])
         if objvar:
+            self.model.model_name = name
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
-        elif self.model.objective is None:
-            # Only clear objective if none was previously set.
-            # MCP/CNS solves have no objective by design; don't overwrite
-            # a valid NLP objective from an earlier solve statement.
-            self.model.objective = None
+        elif is_mcp_cns and self.model.objective is not None:
+            # Issue #1026: MCP/CNS solves have no objective by design.
+            # Don't update model_name — preserve the previous NLP model name
+            # so that the KKT pipeline uses the NLP formulation's equations.
+            # The tool converts NLP→MCP, so the NLP model is the correct
+            # basis for transformation, not the already-MCP model.
+            pass
+        else:
+            self.model.model_name = name
 
     def _handle_model_all(self, node: Tree) -> None:
         name = _token_text(node.children[0])
