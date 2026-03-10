@@ -2300,10 +2300,20 @@ def _loop_tree_to_gams(node: object) -> str:
         name = _loop_tree_to_gams(node.children[0])
         args = _loop_tree_to_gams(node.children[1])
         return f"{name}({args})"
-    if data in ("binop", "unary"):
+    if data in ("binop", "unaryop"):
         return " ".join(_loop_tree_to_gams(c) for c in node.children)
     if data == "condition":
-        return "".join(_loop_tree_to_gams(c) for c in node.children)
+        # condition: DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)
+        # For $(expr) form, Lark discards anonymous parens — detect expr child
+        # and wrap it to preserve the original grouping.
+        children = [c for c in node.children if isinstance(c, (Tree, Token))]
+        parts: list[str] = []
+        for c in children:
+            if isinstance(c, Tree) and c.data == "expr":
+                parts.append(f"({_loop_tree_to_gams(c)})")
+            else:
+                parts.append(_loop_tree_to_gams(c))
+        return "".join(parts)
     if data == "assign":
         # assign: lvalue "=" expr ";"
         return " ".join(_loop_tree_to_gams(c) for c in node.children)
@@ -2319,6 +2329,47 @@ def _loop_tree_to_gams(node: object) -> str:
     if data == "paren":
         inner = " ".join(_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree))
         return f"({inner})"
+    # sum(domain, expr), prod(domain, expr), smax(domain, expr), smin(domain, expr)
+    if data in ("sum", "prod", "smax", "smin"):
+        domain = _loop_tree_to_gams(node.children[0])
+        body = _loop_tree_to_gams(node.children[1])
+        return f"{data}({domain}, {body})"
+    # sum_domain variants: index_spec, tuple_domain, tuple_domain_cond
+    if data == "sum_domain":
+        return _loop_tree_to_gams(node.children[0])
+    if data == "tuple_domain":
+        return f"({_loop_tree_to_gams(node.children[0])})"
+    if data == "tuple_domain_cond":
+        idx = _loop_tree_to_gams(node.children[0])
+        cond = _loop_tree_to_gams(node.children[1])
+        return f"({idx})${cond}"
+    # dollar_cond: term $ term
+    if data == "dollar_cond":
+        lhs = _loop_tree_to_gams(node.children[0])
+        rhs = _loop_tree_to_gams(node.children[1])
+        return f"{lhs}${rhs}"
+    # dollar_cond_paren: term $ (expr) or term $ [expr]
+    if data == "dollar_cond_paren":
+        lhs = _loop_tree_to_gams(node.children[0])
+        rhs = _loop_tree_to_gams(node.children[1])
+        return f"{lhs}$({rhs})"
+    # bracket_expr: [ expr ]
+    if data == "bracket_expr":
+        return f"[{_loop_tree_to_gams(node.children[0])}]"
+    # brace_expr: { expr }
+    if data == "brace_expr":
+        return f"{{{_loop_tree_to_gams(node.children[0])}}}"
+    # yes$cond, no$cond
+    if data == "yes_cond":
+        return f"yes{_loop_tree_to_gams(node.children[0])}"
+    if data == "no_cond":
+        return f"no{_loop_tree_to_gams(node.children[0])}"
+    # compile_const: compile_time_const -> %name%
+    if data == "compile_const":
+        inner = _loop_tree_to_gams(node.children[0])
+        return f"%{inner}%"
+    if data == "compile_const_path":
+        return ".".join(_loop_tree_to_gams(c) for c in node.children)
     if data.startswith("loop_stmt"):
         return _emit_loop_node(node)
 
@@ -2420,6 +2471,9 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
     lines: list[str] = []
     for loop_stmt in model_ir.loop_statements:
         if loop_stmt.raw_node is None:
+            continue
+        # Skip while_stmt nodes — they are iterative procedures, not parameter init
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
             continue
         if _loop_contains_solve(loop_stmt):
             continue
