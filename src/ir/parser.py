@@ -4508,10 +4508,18 @@ class _ModelBuilder:
 
         # Issue #881: For conditional set assignments (e.g., NONZERO(ii,jj)$(Abar1(ii,jj)) = yes),
         # wrap the RHS in a DollarConditional so the condition is preserved.
-        # This produces: set(i) = yes$(cond) instead of set(i)$cond = yes
-        # which is semantically equivalent for set assignments.  Embedding the
-        # condition in the expression avoids emission ordering problems (the
-        # normal set_assignment dependency analysis handles param refs in expr).
+        # This produces: set(i) = yes$(cond) instead of set(i)$cond = yes.
+        # NOTE: These forms are NOT generally semantically equivalent in GAMS.
+        # LHS-dollar leaves existing members unchanged when cond is false;
+        # RHS-dollar assigns 0 (clears membership) when cond is false.
+        # This rewrite is safe here because the target sets are dynamic subsets
+        # that start empty and are populated solely by these assignments, so
+        # there are no pre-existing members to preserve.  If models with
+        # pre-existing set members are encountered, SetAssignment should be
+        # extended with an optional LHS condition field instead.
+        # Embedding the condition in the expression avoids emission ordering
+        # problems (the normal set_assignment dependency analysis handles
+        # param refs in expr).
         if (
             isinstance(target, Tree)
             and target.data == "symbol_indexed"

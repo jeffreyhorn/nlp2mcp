@@ -1690,10 +1690,14 @@ def emit_interleaved_params_and_sets(
                     refs.add(f"__set_{sn}__")
             stmt_reads.append(refs)
         else:
-            # Set assignment — reads the params it references
+            # Set assignment — reads the params it references AND
+            # any dynamic sets it depends on (set→set ordering).
             assert sa_idx is not None  # set items always have an index
             sa = model_ir.set_assignments[sa_idx]
             refs = _collect_param_refs(sa.expr) - {name.lower()}
+            # Add pseudo-deps for referenced dynamic sets (e.g., kt = not ku)
+            for sn in _collect_set_membership_names(sa.expr) & dynamic_set_names:
+                refs.add(f"__set_{sn}__")
             stmt_reads.append(refs)
 
     # Set of all "writable" names (param names + set pseudo-names)
