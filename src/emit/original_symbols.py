@@ -1578,8 +1578,6 @@ def emit_interleaved_params_and_sets(
     # Set-blocked params have "reads" that include the set pseudo-params.
 
     # Collect all involved param expressions
-    from src.ir.constants import PREDEFINED_GAMS_CONSTANTS
-
     declared_sets_lower = {s.lower() for s in model_ir.sets.keys()} | {
         s.lower() for s in model_ir.aliases.keys()
     }
