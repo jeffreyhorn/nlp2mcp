@@ -1795,3 +1795,88 @@ class TestEmitInterleavedParamsAndSets:
         assert code == ""
         assert param_names == set()
         assert sa_indices == set()
+
+    def test_transitive_deferred_set_excluded(self):
+        """Transitive deferred set assignments must be excluded from interleaved output.
+
+        it(i) = yes$(e.l(i))  — directly deferred (VarRef)
+        inn(i) = not it(i)    — transitively deferred (depends on deferred set)
+        red(i) = yes$(T0(i) < 0) — NOT deferred, should appear in interleaved output
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"], domain=("*",))
+        model.sets["it"] = SetDef(name="it", members=[], domain=("i",))
+        model.sets["inn"] = SetDef(name="inn", members=[], domain=("i",))
+        model.sets["red"] = SetDef(name="red", members=[], domain=("i",))
+        model.variables["e"] = None  # placeholder to make VarRef valid
+
+        # T0(i) = sam(i) / scalesam
+        model.params["sam"] = ParameterDef(
+            name="sam", domain=("i",), values={("a",): 10.0, ("b",): -5.0}
+        )
+        model.params["t0"] = ParameterDef(
+            name="t0",
+            domain=("i",),
+            expressions=[
+                (("i",), Binary("/", ParamRef("sam", ("i",)), SymbolRef("scalesam"))),
+            ],
+        )
+        # redsam(i)$red(i) = T0(i)  — LHS condition on dynamic set triggers interleaving
+        model.params["redsam"] = ParameterDef(
+            name="redsam",
+            domain=("i",),
+            values={("ii",): 0},
+            expressions=[
+                (
+                    ("i",),
+                    LhsConditionalAssign(
+                        rhs=ParamRef("t0", ("i",)),
+                        condition=SetMembershipTest("red", (SymbolRef("i"),)),
+                    ),
+                ),
+            ],
+        )
+
+        model.set_assignments = [
+            # SA 0: it(i) = yes$(e.l(i))  — directly deferred (VarRef)
+            SetAssignment(
+                set_name="it",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=VarRef("e", ("i",), attribute="l"),
+                ),
+                location=None,
+            ),
+            # SA 1: inn(i) = not it(i)  — transitively deferred
+            SetAssignment(
+                set_name="inn",
+                indices=("i",),
+                expr=Unary("not", SetMembershipTest("it", (SymbolRef("i"),))),
+                location=None,
+            ),
+            # SA 2: red(i) = yes$(T0(i) < 0)  — NOT deferred
+            SetAssignment(
+                set_name="red",
+                indices=("i",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary("<", ParamRef("t0", ("i",)), Const(0.0)),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "Should produce interleaved output"
+
+        # SA 0 (it) and SA 1 (inn) should NOT be in the interleaved output
+        assert 0 not in sa_indices, "Directly deferred set 'it' must be excluded"
+        assert 1 not in sa_indices, "Transitively deferred set 'inn' must be excluded"
+        # SA 2 (red) should be included
+        assert 2 in sa_indices, "Non-deferred set 'red' must be included"
+
+        # The output should not contain inn or it assignments
+        code_lower = code.lower()
+        assert "inn(" not in code_lower, "'inn' set assignment must not appear"
+        assert "it(" not in code_lower, "'it' set assignment must not appear"

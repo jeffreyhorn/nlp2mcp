@@ -1642,10 +1642,28 @@ def emit_interleaved_params_and_sets(
             combined.append((original_name, key_tuple, expr, stmt_idx, "param", None))
             stmt_idx += 1
 
+    # Issue #1007: Compute deferred sets (direct + transitive), matching
+    # emit_set_assignments() logic.  E.g., it(i) = yes$(e.l(i)) is direct;
+    # inn(i) = not it(i) is transitive.
+    deferred_sets: set[str] = set()
+    set_deps: dict[str, set[str]] = {}
+    for sa in model_ir.set_assignments:
+        sa_lower = sa.set_name.lower()
+        if _expr_contains_varref_attribute(sa.expr):
+            deferred_sets.add(sa_lower)
+        set_deps[sa_lower] = _collect_set_membership_names(sa.expr)
+    changed = True
+    while changed:
+        changed = False
+        for sa_lower, deps in set_deps.items():
+            if sa_lower not in deferred_sets and deps & deferred_sets:
+                deferred_sets.add(sa_lower)
+                changed = True
+
     # Add set assignments as pseudo-statements
     for i, sa in enumerate(model_ir.set_assignments):
-        # Skip deferred (varref) set assignments
-        if _expr_contains_varref_attribute(sa.expr):
+        # Skip deferred (varref) set assignments (direct + transitive)
+        if sa.set_name.lower() in deferred_sets:
             continue
         pseudo_name = f"__set_{sa.set_name.lower()}__"
         combined.append((pseudo_name, (), None, stmt_idx, "set", i))
