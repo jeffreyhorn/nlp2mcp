@@ -2298,6 +2298,18 @@ def _loop_tree_to_gams(node: object) -> str:
     if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
         # e.g. ++1, --2, +1, -1  — operator token followed by offset
         return "".join(_loop_tree_to_gams(c) for c in node.children)
+    if data == "index_subset":
+        # index_subset: ID "(" index_list ")" lag_lead_suffix?  e.g. low(n,nn)
+        name = _loop_tree_to_gams(node.children[0])
+        idx = _loop_tree_to_gams(node.children[1])
+        base = f"{name}({idx})"
+        if len(node.children) > 2:
+            suffix = _loop_tree_to_gams(node.children[2])
+            return f"{base}{suffix}"
+        return base
+    if data == "offset_paren":
+        # offset_paren: "(" expr ")"  e.g. (ord(n)-1)
+        return f"({_loop_tree_to_gams(node.children[0])})"
     if data == "symbol_indexed":
         name = _loop_tree_to_gams(node.children[0])
         idx = _loop_tree_to_gams(node.children[1])

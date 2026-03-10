@@ -2468,6 +2468,59 @@ class TestLoopTreeToGams:
         result = _loop_tree_to_gams(node)
         assert result == "foo()"
 
+    def test_index_subset(self):
+        """index_subset emits name(index_list) e.g. low(n,nn)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        idx = self._make_tree(
+            "index_list",
+            [
+                self._make_tree("index_simple", [self._make_token("ID", "n")]),
+                self._make_tree("index_simple", [self._make_token("ID", "nn")]),
+            ],
+        )
+        node = self._make_tree("index_subset", [self._make_token("ID", "low"), idx])
+        result = _loop_tree_to_gams(node)
+        assert result == "low(n,nn)"
+
+    def test_index_subset_with_lag_lead(self):
+        """index_subset with lag/lead suffix e.g. nh(i+1)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        idx = self._make_tree(
+            "index_list",
+            [self._make_tree("index_simple", [self._make_token("ID", "i")])],
+        )
+        suffix = self._make_tree(
+            "linear_lead",
+            [self._make_token("PLUS", "+"), self._make_token("NUMBER", "1")],
+        )
+        node = self._make_tree("index_subset", [self._make_token("ID", "nh"), idx, suffix])
+        result = _loop_tree_to_gams(node)
+        assert result == "nh(i)+1"
+
+    def test_offset_paren(self):
+        """offset_paren emits (expr) e.g. (ord(n)-1)."""
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        inner = self._make_tree(
+            "binop",
+            [
+                self._make_tree(
+                    "func_call",
+                    [
+                        self._make_token("FUNCNAME", "ord"),
+                        self._make_tree("arg_list", [self._make_token("ID", "n")]),
+                    ],
+                ),
+                self._make_token("MINUS", "-"),
+                self._make_tree("number", [self._make_token("NUMBER", "1")]),
+            ],
+        )
+        node = self._make_tree("offset_paren", [inner])
+        result = _loop_tree_to_gams(node)
+        assert result == "(ord(n) - 1)"
+
 
 @pytest.mark.unit
 class TestLoopContainsSolve:
