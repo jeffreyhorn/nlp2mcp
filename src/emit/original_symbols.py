@@ -1412,14 +1412,20 @@ def emit_computed_parameter_assignments(
             expr_str = expr_to_gams(expr, domain_vars=domain_vars)
 
         # Format the LHS with indices
-        # Note: expressions path preserves quotes in key_tuples, so literal
-        # elements are already quoted — no need to pass domain_lower here.
+        # Issue #949: Pass param's declared domain so set-over expanded
+        # element labels (e.g., slope0 from nseg(g(s))) get quoted.
+        param_def = model_ir.params.get(param_name)
+        param_domain_lower: frozenset[str] | None = None
+        if param_def and param_def.domain:
+            param_domain_lower = frozenset(d.lower() for d in param_def.domain)
         if key_tuple:
             quoted_keys = [
                 (
                     idx.to_gams_string()
                     if isinstance(idx, IndexOffset)
-                    else _quote_assignment_index(idx, declared_sets_lower)
+                    else _quote_assignment_index(
+                        idx, declared_sets_lower, domain_lower=param_domain_lower
+                    )
                 )
                 for idx in key_tuple
             ]
@@ -1872,12 +1878,19 @@ def emit_interleaved_params_and_sets(
             else:
                 expr_str = expr_to_gams(resolved_expr, domain_vars=domain_vars)
 
+            # Issue #949: Pass param's declared domain for element quoting
+            interleaved_pdef = model_ir.params.get(name)
+            interleaved_domain_lower: frozenset[str] | None = None
+            if interleaved_pdef and interleaved_pdef.domain:
+                interleaved_domain_lower = frozenset(d.lower() for d in interleaved_pdef.domain)
             if key:
                 quoted_keys = [
                     (
                         idx.to_gams_string()
                         if isinstance(idx, IndexOffset)
-                        else _quote_assignment_index(idx, declared_sets_lower)
+                        else _quote_assignment_index(
+                            idx, declared_sets_lower, domain_lower=interleaved_domain_lower
+                        )
                     )
                     for idx in key
                 ]

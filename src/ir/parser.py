@@ -4258,7 +4258,10 @@ class _ModelBuilder:
                 param = self.model.params[symbol_name]
 
                 # Handle subset indexing: dist(arc(n,np)) = value
-                # Expand to all members of the subset
+                # Issue #949: Only expand to per-element assignments for constant
+                # values.  For expressions (e.g., nseg(g(s)) = p(s+1) - p(s)),
+                # fall through to store as a single indexed assignment so the
+                # domain variable (s) is preserved in the emitted GAMS.
                 if subset_name is not None:
                     if subset_name not in self.model.sets:
                         raise self._error(
@@ -4266,10 +4269,12 @@ class _ModelBuilder:
                             target,
                         )
                     subset_def = self.model.sets[subset_name]
-                    self._expand_subset_assignment(
-                        subset_def, param, has_function_call, expr, value, target
-                    )
-                    return
+                    if value is not None and not has_function_call:
+                        self._expand_subset_assignment(
+                            subset_def, param, has_function_call, expr, value, target
+                        )
+                        return
+                    # For expressions, fall through to store with domain indices
 
                 # Handle simple subset name as index: flag(sub) where sub is a subset of i
                 # Check if a single index is actually a subset name that should be expanded
