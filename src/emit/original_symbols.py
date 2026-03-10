@@ -2484,25 +2484,72 @@ def _loop_contains_solve(loop_stmt: object) -> bool:
     return _has_solve(loop_stmt.body_stmts)
 
 
+def _loop_body_only_param_assigns(loop_stmt: object, param_names: set[str]) -> bool:
+    """Check if a loop body consists solely of parameter assignments.
+
+    Returns True only when every statement in the loop body is an ``assign``
+    or ``conditional_assign_general`` whose LHS target is a known parameter.
+    Loops containing display/execute/put/option/variable-attribute
+    assignments or any other procedural statements are rejected.
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not isinstance(loop_stmt, LoopStatement):
+        return False
+
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+
+    def _lhs_name(stmt: Tree) -> str | None:
+        """Extract the plain symbol name from the LHS of an assignment."""
+        if not stmt.children:
+            return None
+        lhs = stmt.children[0]
+        # Walk down lvalue → symbol_indexed → symbol_plain → ID
+        #              or lvalue → symbol_plain → ID
+        while isinstance(lhs, Tree) and lhs.data in ("lvalue", "symbol_indexed", "symbol_plain"):
+            lhs = lhs.children[0]
+        if isinstance(lhs, Token) and lhs.type == "ID":
+            return str(lhs).lower()
+        return None
+
+    for stmt in loop_stmt.body_stmts:
+        if not isinstance(stmt, Tree):
+            return False
+        if str(stmt.data) not in _ASSIGN_TYPES:
+            return False
+        name = _lhs_name(stmt)
+        if name is None or name not in param_names:
+            return False
+
+    return True
+
+
 def emit_loop_statements(model_ir: ModelIR) -> str:
-    """Emit loop statements from the model IR.
+    """Emit loop statements that contain only parameter assignments.
 
-    Issue #1025: Loop bodies contain parameter assignments that are not
+    Issue #1025: Loop bodies may contain parameter assignments that are not
     captured in ParameterDef.values/expressions. This function re-emits
-    the original loop statements so that parameters like wbar3, vbar3,
-    sigmay3 get their values assigned.
+    only those loop statements whose bodies consist exclusively of
+    assignments to known parameters (e.g., wbar3, vbar3, sigmay3).
 
-    Loops containing solve statements are skipped — those are iterative
-    solve procedures from the original model, not parameter initialization.
+    Loops are skipped when they:
+    - contain solve statements (iterative solve procedures)
+    - are while statements (iterative procedures)
+    - contain non-assignment statements (display, execute, put, etc.)
+    - assign to variables or other non-parameter symbols
 
     Args:
         model_ir: Model IR with loop_statements
 
     Returns:
-        GAMS loop statement code, or empty string if no loops
+        GAMS loop statement code, or empty string if no qualifying loops
     """
     if not model_ir.loop_statements:
         return ""
+
+    param_names = {name.lower() for name in model_ir.params}
 
     lines: list[str] = []
     for loop_stmt in model_ir.loop_statements:
@@ -2512,6 +2559,8 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
         if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
             continue
         if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_param_assigns(loop_stmt, param_names):
             continue
         lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
 

@@ -2483,3 +2483,117 @@ class TestEmitLoopStatements:
             )
         ]
         assert emit_loop_statements(model) == ""
+
+    def test_loop_with_non_param_assign_skipped(self):
+        """Loops with display/execute/put statements are skipped."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_loop_statements
+        from src.ir.symbols import LoopStatement
+
+        model = ModelIR()
+        model.params["wbar3"] = ParameterDef(name="wbar3", domain=("i",), values={})
+        # Body contains a display statement, not a parameter assignment
+        display = Tree("display_stmt", [Token("ID", "x")])
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "i")]),
+                Tree("loop_body", [display]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("i",),
+                body_stmts=[display],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        assert emit_loop_statements(model) == ""
+
+    def test_loop_assigning_variable_skipped(self):
+        """Loops assigning to variables (not params) are skipped."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_loop_statements
+        from src.ir.symbols import LoopStatement
+
+        model = ModelIR()
+        # No params declared — the loop body assigns to 'x' which is not a param
+        assign = Tree(
+            "assign",
+            [
+                Tree("lvalue", [Tree("symbol_plain", [Token("ID", "x")])]),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "0")]),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "i")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("i",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        assert emit_loop_statements(model) == ""
+
+    def test_loop_assigning_param_emitted(self):
+        """Loops assigning only to known params are emitted."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_loop_statements
+        from src.ir.symbols import LoopStatement
+
+        model = ModelIR()
+        model.params["wbar3"] = ParameterDef(name="wbar3", domain=("i",), values={})
+        assign = Tree(
+            "assign",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "symbol_indexed",
+                            [
+                                Tree("symbol_plain", [Token("ID", "wbar3")]),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "i")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "i")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("i",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        result = emit_loop_statements(model)
+        assert "loop(" in result
+        assert "wbar3(i)" in result
