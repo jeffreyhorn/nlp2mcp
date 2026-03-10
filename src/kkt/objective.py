@@ -80,10 +80,9 @@ def extract_objective_info(model_ir: ModelIR) -> ObjectiveInfo:
     # we must only consider equations in the solved model to find the correct
     # objective-defining equation.
     model_eq_set: set[str] | None = None
-    if model_ir.model_name:
-        solved_eqs = model_ir.model_equation_map.get(model_ir.model_name.lower())
-        if solved_eqs:
-            model_eq_set = {eq.lower() for eq in solved_eqs}
+    solved_eqs = model_ir.get_solved_model_equations()
+    if solved_eqs:
+        model_eq_set = {eq.lower() for eq in solved_eqs}
 
     # Find defining equation
     # Common patterns: "defobjective", "objdef", "obj_def", "define_obj"

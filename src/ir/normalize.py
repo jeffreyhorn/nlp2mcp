@@ -157,11 +157,7 @@ def normalize_model(
     # Issue #1033: Compute model equation set BEFORE objective extraction
     # so that only equations in the solved model are considered.
     model_eq_set: set[str] | None = None
-    solved_model_eqs: list[str] | None = None
-    if ir.model_name:
-        solved_model_eqs = ir.model_equation_map.get(ir.model_name.lower())
-    if solved_model_eqs is None and ir.model_equations:
-        solved_model_eqs = ir.model_equations
+    solved_model_eqs = ir.get_solved_model_equations()
     if solved_model_eqs:
         model_eq_set = {eq.lower() for eq in solved_model_eqs}
 

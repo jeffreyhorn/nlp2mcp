@@ -83,11 +83,7 @@ def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
     Returns None when no model equation filtering is active (all params relevant).
     """
     # Only filter when model equations are restricted
-    solved_eqs: list[str] | None = None
-    if model_ir.model_name:
-        solved_eqs = model_ir.model_equation_map.get(model_ir.model_name.lower())
-    if solved_eqs is None and model_ir.model_equations:
-        solved_eqs = model_ir.model_equations
+    solved_eqs = model_ir.get_solved_model_equations()
     if not solved_eqs:
         return None
 
@@ -126,19 +122,24 @@ def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
                 for expr in emap.values():
                     _walk(expr)
 
-    # Transitive closure: params referenced by other relevant params' expressions
+    # Transitive closure: params referenced by other relevant params' expressions.
+    # Use snapshot + difference to correctly detect new refs (sets are unordered).
     queue = deque(referenced)
+    visited: set[str] = set()
     while queue:
         pname = queue.popleft()
+        if pname in visited:
+            continue
+        visited.add(pname)
         pdef = model_ir.params.get(pname)
         if pdef is None:
             continue
+        before_snapshot = set(referenced)
         for _, expr in pdef.expressions:
-            before = len(referenced)
             _walk(expr)
-            for new_ref in list(referenced)[before:]:
+        for new_ref in referenced - before_snapshot:
+            if new_ref not in visited:
                 queue.append(new_ref)
-        # Also walk inline values that are ParamRefs (unlikely but safe)
 
     return referenced
 

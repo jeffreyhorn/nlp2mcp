@@ -94,6 +94,21 @@ class ModelIR:
             if self._first_declared_model is None:
                 self._first_declared_model = lv
 
+    def get_solved_model_equations(self) -> list[str] | None:
+        """Return the equation list for the solved model, or None if unfiltered.
+
+        Issue #1033 PR review: Centralizes the model equation resolution logic
+        previously duplicated in normalize_model(), _collect_model_relevant_params(),
+        and extract_objective_info().  Checks model_equation_map first (keyed by
+        model_name), then falls back to model_equations for backward compatibility.
+        """
+        solved_eqs: list[str] | None = None
+        if self.model_name:
+            solved_eqs = self.model_equation_map.get(self.model_name.lower())
+        if solved_eqs is None and self.model_equations:
+            solved_eqs = self.model_equations
+        return solved_eqs or None
+
     def add_set(self, s: SetDef) -> None:
         self.sets[s.name] = s
 
