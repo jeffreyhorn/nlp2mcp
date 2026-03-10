@@ -135,6 +135,44 @@ class TestComputeSuppressedFxEquations:
         suppressed = _compute_suppressed_fx_equations(kkt)
         assert suppressed == {"a_fx_0", "m_fx_0"}
 
+    def test_multidim_domain_condition_on_first_index(self, manual_index_mapping):
+        """Variable with 2-D domain and condition on first index only should not over-suppress."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Two-dimensional domain: (ku, k), with stationarity condition only on ku via subset t.
+        model.sets["ku"] = SetDef(name="ku", members=["0", "1"])
+        model.sets["k"] = SetDef(name="k", members=["0", "1"])
+        model.sets["t"] = SetDef(name="t", members=["1"])
+
+        x = VariableDef(name="x", domain=("ku", "k"), kind=VarKind.CONTINUOUS)
+        # Fix x('0','0') outside the active subset on ku, and x('1','0') inside.
+        idx_out = ("0", "0")
+        idx_in = ("1", "0")
+        x.fx_map[idx_out] = 10.0
+        x.fx_map[idx_in] = 20.0
+        model.variables["x"] = x
+
+        kkt = _make_kkt(
+            model,
+            [
+                ("obj", ()),
+                ("x", ("0", "0")),
+                ("x", ("0", "1")),
+                ("x", ("1", "0")),
+                ("x", ("1", "1")),
+            ],
+            manual_index_mapping,
+        )
+        # Stationarity is active only where ku is in t; k index is unconstrained.
+        kkt.stationarity_conditions["x"] = SetMembershipTest("t", (SymbolRef("ku"),))
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        # Only the fx for the index with ku='0' (not in t) should be suppressed.
+        expected_suppressed = {_fx_eq_name("x", idx_out)}
+        assert suppressed == expected_suppressed
+
 
 @pytest.mark.unit
 class TestSuppressedFxInEmission:

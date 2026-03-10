@@ -51,7 +51,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VarKind
+from src.ir.symbols import VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
@@ -497,6 +497,66 @@ def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
     return f"{var_name}_fx_{joined}"
 
 
+def _collect_position_memberships(
+    kkt: KKTSystem,
+    var_def: VariableDef,
+    cond_expr: Expr,
+) -> dict[int, set[str]]:
+    """Map domain positions to active set members from a stationarity condition.
+
+    A SetMembershipTest like ``t(tl)`` restricts the domain variable ``tl`` to
+    members of set ``t``.  For multi-dimensional variables, only the domain
+    position corresponding to the condition's index symbol is constrained.
+
+    Binary("and", ...) conjunctions are traversed to collect multiple membership
+    tests (e.g., ``s(i) and t(j)`` restricts two different positions).
+
+    Returns:
+        Mapping from domain position (int) to the set of active UEL labels.
+        Multiple tests on the same position are intersected.
+    """
+    from src.ir.ast import SymbolRef as _SymbolRef
+
+    position_members: dict[int, set[str]] = {}
+    domain = getattr(var_def, "domain", ()) or ()
+
+    def _visit(expr: Expr) -> None:
+        if isinstance(expr, SetMembershipTest):
+            set_def = kkt.model_ir.sets.get(expr.set_name)
+            if set_def is None or not set_def.members:
+                return
+            # Find which domain position this condition constrains
+            if not expr.indices:
+                return
+            idx_expr = expr.indices[0]
+            idx_name: str | None = None
+            if isinstance(idx_expr, _SymbolRef):
+                idx_name = idx_expr.name
+            elif isinstance(idx_expr, str):
+                idx_name = idx_expr
+            if idx_name is None:
+                return
+            position: int | None = None
+            for i, dom_sym in enumerate(domain):
+                dom_name = dom_sym if isinstance(dom_sym, str) else getattr(dom_sym, "name", None)
+                if dom_name == idx_name:
+                    position = i
+                    break
+            if position is None:
+                return
+            active = set(set_def.members)
+            if position in position_members:
+                position_members[position] &= active
+            else:
+                position_members[position] = active
+        elif isinstance(expr, Binary) and expr.op == "and":
+            _visit(expr.left)
+            _visit(expr.right)
+
+    _visit(cond_expr)
+    return position_members
+
+
 def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     """Find _fx_ equations whose target index is outside the stationarity condition.
 
@@ -506,6 +566,8 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     conflict — GAMS eliminates the fixed variable, leaving the _fx_ equation unmatched.
 
     This function identifies such _fx_ equations so they can be suppressed from the MCP.
+    For multi-dimensional variables, only the domain position(s) constrained by the
+    condition are checked.
     """
     suppressed: set[str] = set()
 
@@ -514,20 +576,17 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
         if var_def is None or not var_def.fx_map:
             continue
 
-        # Extract active set members from the condition
-        if not isinstance(cond_expr, SetMembershipTest):
+        # Extract per-domain-position active set members from the condition
+        position_members = _collect_position_memberships(kkt, var_def, cond_expr)
+        if not position_members:
             continue
-
-        active_set_def = kkt.model_ir.sets.get(cond_expr.set_name)
-        if active_set_def is None or not active_set_def.members:
-            continue
-
-        active_members = set(active_set_def.members)
 
         for indices, _value in var_def.fx_map.items():
-            # Check if any index element is outside the active set
-            if any(idx not in active_members for idx in indices):
-                suppressed.add(_fx_eq_name(var_name, indices))
+            # Suppress if any constrained position has an index outside its active set
+            for pos, active_members in position_members.items():
+                if pos < len(indices) and indices[pos] not in active_members:
+                    suppressed.add(_fx_eq_name(var_name, indices))
+                    break
 
     return suppressed
 
