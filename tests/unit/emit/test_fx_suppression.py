@@ -13,7 +13,7 @@ from src.emit.emit_gams import _compute_suppressed_fx_equations, _fx_eq_name, em
 from src.ir.ast import Binary, SetMembershipTest, SymbolRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import ObjSense, SetDef, VariableDef, VarKind
-from src.kkt.kkt_system import KKTSystem
+from src.kkt.kkt_system import KKTSystem, MultiplierDef
 
 
 def _make_kkt(model, vars_list, manual_index_mapping):
@@ -313,6 +313,10 @@ class TestSuppressedFxInEmission:
             manual_index_mapping,
         )
         kkt.stationarity_conditions["a"] = SetMembershipTest("t", (SymbolRef("tl"),))
+        # Register the equality multiplier so it is declared in the Variables section.
+        kkt.multipliers_eq["a_fx_0"] = MultiplierDef(
+            name="nu_a_fx_0", domain=(), kind="eq", associated_constraint="a_fx_0"
+        )
 
         result = emit_gams_mcp(kkt)
 
