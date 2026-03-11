@@ -1560,14 +1560,29 @@ def emit_gams_mcp(
     # indices together (e.g., .fx(i,j) not .fx(i,i) for 2D coverage).
     dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
     if dynamic_map:
+        # Resolve an alias target through any intermediate aliases to its
+        # canonical (non-alias) base set name.
+        def _resolve_canonical_alias_target(target_name: str) -> str:
+            seen: set[str] = set()
+            current = target_name.lower()
+            while current not in seen:
+                seen.add(current)
+                adef = kkt.model_ir.aliases.get(current)
+                if adef is None:
+                    break
+                current = adef.target.lower()
+            return current
+
         # Build alias groups: parent_set -> [alias1, alias2, ...]
-        # so we can pick distinct names for each domain position
+        # so we can pick distinct names for each domain position. Use the
+        # canonical base set as the grouping key so alias-of-alias chains
+        # are grouped together.
         alias_groups: dict[str, list[str]] = {}
         for aname, adef in kkt.model_ir.aliases.items():
-            target = adef.target.lower()
-            if target not in alias_groups:
-                alias_groups[target] = []
-            alias_groups[target].append(aname.lower())
+            canonical_target = _resolve_canonical_alias_target(adef.target)
+            if canonical_target not in alias_groups:
+                alias_groups[canonical_target] = []
+            alias_groups[canonical_target].append(aname.lower())
         # Also include base set names
         for sname in kkt.model_ir.sets:
             sl = sname.lower()

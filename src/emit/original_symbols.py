@@ -1491,9 +1491,26 @@ def emit_interleaved_params_and_sets(
     #   set_assignment(ii) → param(ii,jj) → set_assignment(NONZERO)
     # requiring interleaving even when no LHS-condition-blocked params exist.
     # Build expanded set including aliases of dynamic sets.
+    # Resolve alias chains transitively (e.g., kk -> jj -> ii where ii is dynamic).
+    def _resolve_alias_chain(name: str) -> str:
+        """Walk alias chain to canonical (non-alias) target."""
+        seen: set[str] = set()
+        current = name
+        while current not in seen:
+            seen.add(current)
+            adef = model_ir.aliases.get(current)
+            if adef is None:
+                break
+            target = adef.target.lower()
+            if target == current:
+                break
+            current = target
+        return current
+
     dynamic_set_names_expanded = set(dynamic_set_names)
-    for aname, adef in model_ir.aliases.items():
-        if adef.target.lower() in dynamic_set_names:
+    for aname in model_ir.aliases:
+        canonical = _resolve_alias_chain(aname.lower())
+        if canonical in dynamic_set_names:
             dynamic_set_names_expanded.add(aname.lower())
 
     all_computed_quick: set[str] = {
@@ -1748,10 +1765,11 @@ def emit_interleaved_params_and_sets(
                 if idx_str in dynamic_set_names:
                     refs.add(f"__set_{idx_str}__")
                 elif idx_str in dynamic_set_names_expanded:
-                    # Alias of a dynamic set — depend on the target set assignment
-                    alias_target = model_ir.aliases.get(idx_str)
-                    if alias_target and alias_target.target.lower() in dynamic_set_names:
-                        refs.add(f"__set_{alias_target.target.lower()}__")
+                    # Alias (possibly chained) of a dynamic set — resolve
+                    # transitively to the canonical dynamic set target.
+                    canonical_target = _resolve_alias_chain(idx_str)
+                    if canonical_target in dynamic_set_names:
+                        refs.add(f"__set_{canonical_target}__")
             stmt_reads.append(refs)
         else:
             # Set assignment — reads the params it references AND
