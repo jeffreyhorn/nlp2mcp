@@ -3839,6 +3839,11 @@ class _ModelBuilder:
                     for stmt in child.children:
                         if isinstance(stmt, Tree):
                             body_stmts.append(stmt)
+                elif child.data == "index_list":
+                    # Issue #1041: Skip index_list trees — they are part of the
+                    # dollar condition in loop_stmt_paren_filtered (e.g.,
+                    # $NONZERO(ii,jj)), not body statements.
+                    continue
                 else:
                     # This is a statement in the loop body
                     # Expected statement types: assign_stmt, solve_stmt, option_stmt, etc.

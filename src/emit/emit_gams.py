@@ -1547,6 +1547,68 @@ def emit_gams_mcp(
             cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
+    # 3b. Issue #1041: Fix equality multipliers whose equation domain uses
+    # dynamic subsets. When TSAMEQ(ii,jj) is over dynamic subset (ii,jj) but
+    # nu_TSAMEQ is declared over parent domain (i,i), instances where i∉ii or
+    # j∉jj have no matching equation and must be fixed.
+    # Use distinct parent-set aliases per position to avoid GAMS binding both
+    # indices together (e.g., .fx(i,j) not .fx(i,i) for 2D coverage).
+    from src.emit.templates import _build_dynamic_subset_map
+
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
+    if dynamic_map:
+        # Build alias groups: parent_set -> [alias1, alias2, ...]
+        # so we can pick distinct names for each domain position
+        alias_groups: dict[str, list[str]] = {}
+        for aname, adef in kkt.model_ir.aliases.items():
+            target = adef.target.lower()
+            if target not in alias_groups:
+                alias_groups[target] = []
+            alias_groups[target].append(aname.lower())
+        # Also include base set names
+        for sname in kkt.model_ir.sets:
+            sl = sname.lower()
+            if sl not in alias_groups:
+                alias_groups[sl] = []
+            alias_groups[sl].insert(0, sl)
+        for eq_name in sorted(kkt.model_ir.equalities):
+            if eq_name not in kkt.model_ir.equations:
+                continue
+            eq_def = kkt.model_ir.equations[eq_name]
+            if not eq_def.domain:
+                continue
+            # Check if any domain index is a dynamic subset
+            has_dynamic = any(d.lower() in dynamic_map for d in eq_def.domain)
+            if not has_dynamic:
+                continue
+            mult_name = create_eq_multiplier_name(eq_name)
+            if ref_mults is not None and mult_name not in ref_mults:
+                continue
+            # Build parent domain with unique index names per position.
+            # When multiple positions share the same parent set, use
+            # distinct aliases (e.g., i, j instead of i, i).
+            parent_indices: list[str] = []
+            guards: list[str] = []
+            used_names: dict[str, int] = {}  # parent -> next alias index
+            for d in eq_def.domain:
+                dl = d.lower()
+                parent = dynamic_map.get(dl, dl)
+                # Pick a unique name for this parent set position
+                avail = alias_groups.get(parent, [parent])
+                idx = used_names.get(parent, 0)
+                if idx < len(avail):
+                    chosen = avail[idx]
+                else:
+                    chosen = parent  # fallback
+                used_names[parent] = idx + 1
+                parent_indices.append(chosen)
+                if dl in dynamic_map:
+                    guards.append(f"{d}({chosen})")
+            if guards:
+                parent_domain_str = ",".join(parent_indices)
+                guard_str = " and ".join(guards)
+                fx_lines.append(f"{mult_name}.fx({parent_domain_str})$(not ({guard_str})) = 0;")
+
     # 4. Issue #826: Fix variables with empty stationarity equations.
     # When the stationarity builder can't propagate derivatives through subset
     # access patterns, the stationarity equation is empty (0 =E= 0).

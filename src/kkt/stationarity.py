@@ -1666,6 +1666,71 @@ def _find_superset_in_domain(
     return None
 
 
+def _match_subset_domain(
+    mult_domain: tuple[str, ...],
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict[str, str] | None:
+    """Try to match mult_domain indices to var_domain indices via subset/alias.
+
+    Issue #1041: When a constraint is indexed by a subset (e.g., ``(ii, jj)``)
+    and the variable is indexed by the parent set (e.g., ``(i, j)`` or
+    ``(i, j, jwt)``), the indices appear disjoint by name but are related
+    by set inclusion.
+
+    Handles both equal-length domains (e.g., ``(ii, jj)`` vs ``(i, j)``)
+    and shorter mult domains (e.g., ``(ii, jj)`` vs ``(i, j, jwt)``).
+    Each mult index must find exactly one matching var index.
+
+    Returns a rename map ``{mult_idx: var_idx}`` if all mult indices match,
+    or ``None`` if no full match is possible.
+    """
+    if len(mult_domain) > len(var_domain):
+        return None
+
+    rename_map: dict[str, str] = {}
+    used_var_positions: set[int] = set()
+
+    for mult_idx in mult_domain:
+        canon_mult = _resolve_alias_target(mult_idx, model_ir)
+
+        # Also resolve the canonical subset parent if mult_idx is a subset
+        canon_parent: str | None = None
+        if canon_mult in model_ir.sets:
+            set_def = model_ir.sets[canon_mult]
+            if hasattr(set_def, "domain") and len(set_def.domain) == 1:
+                parent = set_def.domain[0]
+                if not isinstance(parent, str):
+                    parent = str(parent)
+                canon_parent = _resolve_alias_target(parent, model_ir)
+
+        matched = False
+        for k, var_idx in enumerate(var_domain):
+            if k in used_var_positions:
+                continue
+            canon_var = _resolve_alias_target(var_idx, model_ir)
+
+            if canon_mult == canon_var:
+                # Same canonical set — direct alias match
+                if mult_idx != var_idx:
+                    rename_map[mult_idx] = var_idx
+                used_var_positions.add(k)
+                matched = True
+                break
+
+            if canon_parent is not None and canon_parent == canon_var:
+                # mult_idx is a subset of var_idx
+                rename_map[mult_idx] = var_idx
+                used_var_positions.add(k)
+                matched = True
+                break
+
+        if not matched:
+            return None
+
+    return rename_map if rename_map else None
+
+
 def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     """Rewrite index names in an expression tree according to rename_map.
 
@@ -2087,9 +2152,23 @@ def _add_indexed_jacobian_terms(
                         # No sum needed - the i index is shared
                         pass
                     elif not mult_domain_set.intersection(var_domain_set):
-                        # Disjoint: constraint has indices independent of variable
-                        # Need to sum over the constraint's domain
-                        term = Sum(mult_domain, term)
+                        # Issue #1041: Before assuming truly disjoint, check if
+                        # mult indices are subsets/aliases of var indices
+                        # (e.g., mult_domain=('ii','jj'), var_domain=('i','j')
+                        # where ii ⊂ i).
+                        subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
+                        if subset_rename is not None:
+                            # Rewrite the term's indices from subset to superset.
+                            # No subset guard needed: the constraint's own dollar
+                            # condition (propagated at lines 2121-2134 above) already
+                            # restricts the term to valid instances. An extra guard
+                            # like $(ii(i) and jj(j)) is redundant and can cause
+                            # GAMS to generate zero equation instances.
+                            term = _rewrite_subset_to_superset(term, subset_rename)
+                        else:
+                            # Truly disjoint: constraint has indices independent
+                            # of variable. Need to sum over the constraint's domain.
+                            term = Sum(mult_domain, term)
                     else:
                         # Partial overlap: domains share some indices but each has unique ones
                         # This happens when a constraint sums over a variable using different indices.
