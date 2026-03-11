@@ -1608,7 +1608,7 @@ def emit_interleaved_params_and_sets(
             continue  # Keep — needed for index-blocked interleaving chain
         p_def2: ParameterDef | None = model_ir.params.get(pname)
         if p_def2 and p_def2.expressions:
-            for key_tuple, _expr in p_def.expressions:
+            for key_tuple, _expr in p_def2.expressions:
                 for idx in key_tuple:
                     idx_str = idx.lower() if isinstance(idx, str) else ""
                     if idx_str in dynamic_set_names:

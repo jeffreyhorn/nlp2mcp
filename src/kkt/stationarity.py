@@ -1712,15 +1712,17 @@ def _match_subset_domain(
 
             if canon_mult == canon_var:
                 # Same canonical set — direct alias match
-                if mult_idx != var_idx:
-                    rename_map[mult_idx] = var_idx
+                mult_key = str(mult_idx).lower()
+                var_key = str(var_idx).lower()
+                if mult_key != var_key:
+                    rename_map[mult_key] = var_idx
                 used_var_positions.add(k)
                 matched = True
                 break
 
             if canon_parent is not None and canon_parent == canon_var:
                 # mult_idx is a subset of var_idx
-                rename_map[mult_idx] = var_idx
+                rename_map[str(mult_idx).lower()] = var_idx
                 used_var_positions.add(k)
                 matched = True
                 break

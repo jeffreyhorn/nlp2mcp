@@ -1881,6 +1881,77 @@ class TestEmitInterleavedParamsAndSets:
         assert "inn(" not in code_lower, "'inn' set assignment must not appear"
         assert "it(" not in code_lower, "'it' set assignment must not appear"
 
+    def test_index_blocked_param_interleaving(self):
+        """Issue #1041: index-blocked params trigger interleaving.
+
+        When a set assignment depends on a computed param whose expression keys
+        use dynamic set names (or their aliases), the param must be emitted
+        before the set assignment even when no LHS-condition-blocked params exist.
+
+        Chain: ii(i) = yes → SAM(ii,jj) recomputed → Abar0(ii,jj) → NONZERO(ii,jj)$(Abar0)
+        """
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b", "total"], domain=("*",))
+        model.sets["ii"] = SetDef(name="ii", members=[], domain=("i",))
+        model.sets["nonzero"] = SetDef(name="nonzero", members=[], domain=("i", "i"))
+
+        # Alias: jj → ii (so jj is also a dynamic set alias)
+        model.aliases["jj"] = AliasDef(name="jj", target="ii")
+
+        # Computed param: abar0(ii,jj) = sam(ii,jj) / sam("total",jj)
+        model.params["sam"] = ParameterDef(
+            name="sam",
+            domain=("i", "i"),
+            values={("a", "a"): 1.0, ("a", "b"): 2.0, ("b", "a"): 3.0},
+        )
+        model.params["abar0"] = ParameterDef(
+            name="abar0",
+            domain=("i", "i"),
+            expressions=[
+                (
+                    ("ii", "jj"),
+                    Binary(
+                        "/",
+                        ParamRef("sam", ("ii", "jj")),
+                        ParamRef("sam", ('"total"', "jj")),
+                    ),
+                ),
+            ],
+        )
+
+        # Set assignments: ii(i) = yes, then NONZERO(ii,jj) = yes$(Abar0(ii,jj))
+        model.set_assignments = [
+            SetAssignment(
+                set_name="ii",
+                indices=("i",),
+                expr=Const(1.0),
+                location=None,
+            ),
+            SetAssignment(
+                set_name="nonzero",
+                indices=("ii", "jj"),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=ParamRef("abar0", ("ii", "jj")),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "Should produce interleaved output for index-blocked params"
+
+        # abar0 must be emitted (it's index-blocked)
+        assert "abar0" in param_names, "abar0 should be in emitted param names"
+
+        # Check ordering: abar0 before NONZERO set assignment
+        lines = code.split("\n")
+        abar0_line = next((i for i, ln in enumerate(lines) if "abar0(" in ln.lower()), None)
+        nonzero_line = next((i for i, ln in enumerate(lines) if "nonzero(" in ln.lower()), None)
+        assert abar0_line is not None, "abar0 should be emitted"
+        assert nonzero_line is not None, "NONZERO set assignment should be emitted"
+        assert abar0_line < nonzero_line, "abar0 must come before NONZERO"
+
 
 @pytest.mark.unit
 class TestLoopTreeToGams:

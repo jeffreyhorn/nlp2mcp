@@ -30,7 +30,12 @@ from src.emit.original_symbols import (
     emit_subset_value_assignments,
     has_stochastic_parameters,
 )
-from src.emit.templates import emit_equation_definitions, emit_equations, emit_variables
+from src.emit.templates import (
+    _build_dynamic_subset_map,
+    emit_equation_definitions,
+    emit_equations,
+    emit_variables,
+)
 from src.ir.ast import (
     Binary,
     Call,
@@ -1553,8 +1558,6 @@ def emit_gams_mcp(
     # j∉jj have no matching equation and must be fixed.
     # Use distinct parent-set aliases per position to avoid GAMS binding both
     # indices together (e.g., .fx(i,j) not .fx(i,i) for 2D coverage).
-    from src.emit.templates import _build_dynamic_subset_map
-
     dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
     if dynamic_map:
         # Build alias groups: parent_set -> [alias1, alias2, ...]
