@@ -1796,8 +1796,7 @@ def _compute_index_offset_key(
         if set_name in _domain_cache:
             return _domain_cache[set_name]
         try:
-            _, resolved_name = resolve_set_members(set_name, model_ir)
-            members, _ = resolve_set_members(resolved_name, model_ir)
+            members, resolved_name = resolve_set_members(set_name, model_ir)
             pos_map = {m: i for i, m in enumerate(members)}
             result = (resolved_name, pos_map)
         except (ValueError, KeyError):

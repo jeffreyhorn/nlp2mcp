@@ -106,6 +106,22 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
     """
     from ..ir.ast import Binary, Call, ParamRef, Prod, Sum, Unary, VarRef
 
+    # Cache for resolved domain members and member→position maps
+    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+
+    def _get_domain_members(domain_set_name: str) -> tuple[list[str], dict[str, int]] | None:
+        """Get (members, pos_map) for a domain set, with caching."""
+        if domain_set_name in _domain_cache:
+            return _domain_cache[domain_set_name]
+        try:
+            members, _ = resolve_set_members(domain_set_name, model_ir)
+            pos_map = {m: i for i, m in enumerate(members)}
+            result = (members, pos_map)
+        except (ValueError, KeyError):
+            result = None
+        _domain_cache[domain_set_name] = result
+        return result
+
     def _resolve_idx(idx, domain_set_name: str | None):
         """Resolve a single index if it's an IndexOffset with a concrete base."""
         if not isinstance(idx, IndexOffset):
@@ -118,16 +134,16 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
             return idx, True  # Can't resolve non-constant offset
         if domain_set_name is None:
             return idx, True  # No domain to resolve against
-        # Check if base is a concrete element by looking it up in the set
-        try:
-            members, _ = resolve_set_members(domain_set_name, model_ir)
-        except (ValueError, KeyError):
+        # Look up domain members (cached)
+        domain_info = _get_domain_members(domain_set_name)
+        if domain_info is None:
             return idx, True  # Can't resolve this domain
-        if base not in members:
+        members, pos_map = domain_info
+        if base not in pos_map:
             # base is still symbolic (e.g. "t" not yet substituted), skip
             return idx, True
         # Resolve: find position of base, add offset
-        pos = members.index(base)
+        pos = pos_map[base]
         offset_val = offset_expr.value
         # Require an integer-valued numeric constant; avoid silent float→int truncation
         if not isinstance(offset_val, (int, float)):
@@ -165,7 +181,7 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
                 # Out-of-bounds lead/lag → zero (GAMS convention)
                 return Const(0)
             new_indices.append(resolved)
-        return VarRef(expr.name, tuple(new_indices))
+        return VarRef(expr.name, tuple(new_indices), expr.attribute)
 
     elif isinstance(expr, ParamRef):
         domain = _get_domain_for_ref(expr.name, is_var=False)
@@ -802,8 +818,9 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
 
     if isinstance(expr, VarRef):
         # Substitute indices in VarRef (handles both string and IndexOffset)
+        # Preserve VarRef.attribute (e.g., x.l(i)) when reconstructing the node
         new_indices = tuple(_sub_idx(idx) for idx in expr.indices)
-        return VarRef(expr.name, new_indices)
+        return VarRef(expr.name, new_indices, expr.attribute)
 
     elif isinstance(expr, ParamRef):
         # Substitute indices in ParamRef (handles both string and IndexOffset)
