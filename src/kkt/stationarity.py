@@ -2030,8 +2030,8 @@ def _add_indexed_jacobian_terms(
                     # Issue #1045: For lead/lag patterns, the multiplier index needs
                     # an offset. E.g., if the Jacobian entry comes from totalcap(t-1)
                     # affecting k(t), the multiplier should be nu_totalcap(t-1), not
-                    # nu_totalcap(t). We achieve this by using the eq_indices→symbolic
-                    # mapping (which naturally produces the shifted index).
+                    # nu_totalcap(t). We encode this via the positional `offset_key`
+                    # and build an IndexOffset-based multiplier in `_build_offset_multiplier()`.
                     has_offset = any(o != 0 for o in offset_key)
                     if has_offset:
                         # Build multiplier with shifted indices
