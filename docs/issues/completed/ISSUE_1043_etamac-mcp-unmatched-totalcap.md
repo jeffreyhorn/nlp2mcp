@@ -47,4 +47,4 @@ The fix resolves the base of the `IndexOffset` against the declared domain index
 ## Files Changed
 
 - `src/kkt/stationarity.py` — Fixed IndexOffset handling in `_find_variable_subset_condition()`
-- `tests/unit/emit/test_fix_inactive.py` — Added 4 unit tests for IndexOffset subset detection
+- `tests/unit/kkt/test_fix_inactive.py` — Added 4 unit tests for IndexOffset subset detection
