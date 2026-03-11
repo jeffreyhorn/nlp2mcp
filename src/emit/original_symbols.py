@@ -1525,8 +1525,13 @@ def emit_interleaved_params_and_sets(
         if p_def and p_def.expressions:
             for key_tuple, _expr in p_def.expressions:
                 for idx in key_tuple:
-                    idx_str = idx.lower() if isinstance(idx, str) else ""
-                    if idx_str in dynamic_set_names_expanded:
+                    if isinstance(idx, str):
+                        idx_base = idx.lower()
+                    elif isinstance(idx, IndexOffset):
+                        idx_base = idx.base.lower()
+                    else:
+                        continue
+                    if idx_base in dynamic_set_names_expanded:
                         index_blocked_params.add(pname)
                         break
                 if pname in index_blocked_params:
@@ -1760,14 +1765,20 @@ def emit_interleaved_params_and_sets(
                     refs.add(f"__set_{sn}__")
             # Issue #1041: If expression keys use dynamic set names (or aliases)
             # as indices (e.g., Abar0(ii,jj)), those sets must be populated first.
+            # Also handle IndexOffset indices (e.g., t+1) by checking idx.base.
             for idx_val in key:
-                idx_str = idx_val.lower() if isinstance(idx_val, str) else ""
-                if idx_str in dynamic_set_names:
-                    refs.add(f"__set_{idx_str}__")
-                elif idx_str in dynamic_set_names_expanded:
+                if isinstance(idx_val, str):
+                    idx_base = idx_val.lower()
+                elif isinstance(idx_val, IndexOffset):
+                    idx_base = idx_val.base.lower()
+                else:
+                    continue
+                if idx_base in dynamic_set_names:
+                    refs.add(f"__set_{idx_base}__")
+                elif idx_base in dynamic_set_names_expanded:
                     # Alias (possibly chained) of a dynamic set — resolve
                     # transitively to the canonical dynamic set target.
-                    canonical_target = _resolve_alias_chain(idx_str)
+                    canonical_target = _resolve_alias_chain(idx_base)
                     if canonical_target in dynamic_set_names:
                         refs.add(f"__set_{canonical_target}__")
             stmt_reads.append(refs)
