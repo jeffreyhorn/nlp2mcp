@@ -1,6 +1,6 @@
 # pak: MCP Locally Infeasible — Incomplete Stationarity
 
-**GitHub Issue:** #1049 (https://github.com/jeffreyhorn/nlp2mcp/issues/1049)
+**GitHub Issue:** [#1049](https://github.com/jeffreyhorn/nlp2mcp/issues/1049)
 **Status:** Open — Root cause identified but requires architectural changes
 **Severity:** Medium — Model translates without structural errors, but PATH reports locally infeasible
 **Date:** 2026-03-11
@@ -70,7 +70,7 @@ stat_c(te).. (-1) * delt(te)$(t(te)) + (-1) * nu_incd(te)$(t(te)) + ... =E= 0;
 
 In `wdef.. w =E= sum(t, delt(t)*c(t)) - gama*fb + d*dis*gnp("1985")`, the expression `gnp("1985")` stores the index as `'"1985"'` (with quotes), while the variable instance `gnp(('1985',))` uses unquoted `'1985'`. The differentiation system fails to match these, so `∂wdef/∂gnp(1985) = 0` instead of the correct value `-d*dis`.
 
-**Fix required:** Either strip quotes from string literal indices during parsing, or normalize them during differentiation to ensure `gnp("1985")` matches `gnp(1985)`.
+**Fix required:** Add canonical index normalization in the differentiation system (`src/ad/derivative_rules.py`) so that quoted string literal indices like `'"1985"'` are matched against unquoted variable instance keys like `'1985'`. This should be done at differentiation time (not parse time) to preserve the original source representation in the IR while ensuring correct matching during Jacobian computation.
 
 ---
 
@@ -124,7 +124,7 @@ cd data/gamslib/mcp && gams pak_mcp.gms
 
 2. **Bug 2 (Non-uniform Gradient):** Refactor `_build_indexed_gradient_term()` to handle cases where the first instance has zero gradient but others don't. One approach: scan all instances to find one with a non-zero gradient and use that as the template.
 
-3. **Bug 3 (Quoted Indices):** Normalize string literal indices during parsing or differentiation to strip quotes, ensuring `gnp("1985")` matches `gnp(1985)`.
+3. **Bug 3 (Quoted Indices):** Add canonical index normalization in `src/ad/derivative_rules.py` so that quoted string literal indices (`'"1985"'`) match unquoted variable instance keys (`'1985'`) during differentiation.
 
 4. After fixing all three bugs, regenerate pak_mcp.gms and verify with GAMS PATH solver.
 
