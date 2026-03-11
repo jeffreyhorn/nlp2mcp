@@ -1691,7 +1691,10 @@ def _match_subset_domain(
     rename_map: dict[str, str] = {}
     used_var_positions: set[int] = set()
 
-    for mult_idx in mult_domain:
+    # Pre-resolve canonical targets for all var_domain positions.
+    var_canons = [_resolve_alias_target(v, model_ir) for v in var_domain]
+
+    for p, mult_idx in enumerate(mult_domain):
         canon_mult = _resolve_alias_target(mult_idx, model_ir)
 
         # Also resolve the canonical subset parent if mult_idx is a subset
@@ -1704,28 +1707,33 @@ def _match_subset_domain(
                     parent = str(parent)
                 canon_parent = _resolve_alias_target(parent, model_ir)
 
-        matched = False
-        for k, var_idx in enumerate(var_domain):
+        def _try_match(k: int) -> bool:
+            """Try to match mult_idx at var_domain position k."""
             if k in used_var_positions:
-                continue
-            canon_var = _resolve_alias_target(var_idx, model_ir)
-
-            if canon_mult == canon_var:
-                # Same canonical set — direct alias match
+                return False
+            canon_var = var_canons[k]
+            if canon_mult == canon_var or (canon_parent is not None and canon_parent == canon_var):
                 mult_key = str(mult_idx).lower()
-                var_key = str(var_idx).lower()
+                var_key = str(var_domain[k]).lower()
                 if mult_key != var_key:
-                    rename_map[mult_key] = var_idx
+                    rename_map[mult_key] = var_domain[k]
                 used_var_positions.add(k)
-                matched = True
-                break
+                return True
+            return False
 
-            if canon_parent is not None and canon_parent == canon_var:
-                # mult_idx is a subset of var_idx
-                rename_map[str(mult_idx).lower()] = var_idx
-                used_var_positions.add(k)
-                matched = True
-                break
+        # Prefer same-position match first when lengths align, to avoid
+        # greedy first-match mapping to the wrong position when multiple
+        # var_domain positions resolve to the same canonical set.
+        matched = False
+        if p < len(var_domain):
+            matched = _try_match(p)
+        if not matched:
+            for k in range(len(var_domain)):
+                if k == p:
+                    continue  # already tried
+                if _try_match(k):
+                    matched = True
+                    break
 
         if not matched:
             return None
