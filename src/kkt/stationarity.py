@@ -1730,7 +1730,7 @@ def _match_subset_domain(
         if not matched:
             return None
 
-    return rename_map if rename_map else None
+    return rename_map
 
 
 def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:

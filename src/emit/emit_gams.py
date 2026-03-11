@@ -1592,18 +1592,19 @@ def emit_gams_mcp(
             # distinct aliases (e.g., i, j instead of i, i).
             parent_indices: list[str] = []
             guards: list[str] = []
-            used_names: dict[str, int] = {}  # parent -> next alias index
+            used_names: dict[str, int] = {}  # parent (lowercased) -> next alias index
             for d in eq_def.domain:
                 dl = d.lower()
                 parent = dynamic_map.get(dl, dl)
+                parent_key = parent.lower()
                 # Pick a unique name for this parent set position
-                avail = alias_groups.get(parent, [parent])
-                idx = used_names.get(parent, 0)
+                avail = alias_groups.get(parent_key, [parent_key])
+                idx = used_names.get(parent_key, 0)
                 if idx < len(avail):
                     chosen = avail[idx]
                 else:
-                    chosen = parent  # fallback
-                used_names[parent] = idx + 1
+                    chosen = parent_key  # fallback to normalized parent name
+                used_names[parent_key] = idx + 1
                 parent_indices.append(chosen)
                 if dl in dynamic_map:
                     guards.append(f"{d}({chosen})")
