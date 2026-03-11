@@ -154,6 +154,9 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
             offset_val = int(offset_val)
         new_pos = pos + offset_val
         if idx.circular:
+            if not members:
+                # Empty domain — no valid target for circular indexing
+                return None, False
             new_pos = new_pos % len(members)
         if 0 <= new_pos < len(members):
             return members[new_pos], True
