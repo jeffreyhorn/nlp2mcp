@@ -187,7 +187,7 @@ class TestComputeSuppressedFxEquations:
 
         x = VariableDef(name="x", domain=("w", "t"), kind=VarKind.CONTINUOUS)
         idx_active = ("w1", "t1")  # in td
-        idx_inactive = ("w2", "t1")  # w2 not in any td tuple
+        idx_inactive = ("w2", "t1")  # (w2,t1) not in td
         x.fx_map[idx_active] = 5.0
         x.fx_map[idx_inactive] = 10.0
         model.variables["x"] = x
@@ -207,10 +207,48 @@ class TestComputeSuppressedFxEquations:
         kkt.stationarity_conditions["x"] = SetMembershipTest("td", (SymbolRef("w"), SymbolRef("t")))
 
         suppressed = _compute_suppressed_fx_equations(kkt)
-        # (w2, t1) is inactive: w2 not in the w-projection of td
+        # (w2, t1) is not in td — suppressed
         assert _fx_eq_name("x", idx_inactive) in suppressed
-        # (w1, t1) is active: w1 in td's w-projection AND t1 in td's t-projection
+        # (w1, t1) is in td — not suppressed
         assert _fx_eq_name("x", idx_active) not in suppressed
+
+    def test_multidim_membership_sparse_set(self, manual_index_mapping):
+        """Sparse 2-D set: (w2,t1) absent even though w2 and t1 appear in other tuples."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # td = {w1.t1, w2.t2} — sparse: w2 appears (in w2.t2) and t1 appears
+        # (in w1.t1) but (w2,t1) is NOT a member.
+        model.sets["w"] = SetDef(name="w", members=["w1", "w2"])
+        model.sets["t"] = SetDef(name="t", members=["t1", "t2"])
+        model.sets["td"] = SetDef(name="td", members=["w1.t1", "w2.t2"])
+
+        x = VariableDef(name="x", domain=("w", "t"), kind=VarKind.CONTINUOUS)
+        idx_in_td = ("w1", "t1")  # in td
+        idx_not_in_td = ("w2", "t1")  # NOT in td despite w2 and t1 appearing separately
+        x.fx_map[idx_in_td] = 5.0
+        x.fx_map[idx_not_in_td] = 10.0
+        model.variables["x"] = x
+
+        kkt = _make_kkt(
+            model,
+            [
+                ("obj", ()),
+                ("x", ("w1", "t1")),
+                ("x", ("w1", "t2")),
+                ("x", ("w2", "t1")),
+                ("x", ("w2", "t2")),
+            ],
+            manual_index_mapping,
+        )
+        kkt.stationarity_conditions["x"] = SetMembershipTest("td", (SymbolRef("w"), SymbolRef("t")))
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        # (w2, t1) is NOT in td — must be suppressed (full-tuple check)
+        assert _fx_eq_name("x", idx_not_in_td) in suppressed
+        # (w1, t1) IS in td — must not be suppressed
+        assert _fx_eq_name("x", idx_in_td) not in suppressed
 
 
 @pytest.mark.unit

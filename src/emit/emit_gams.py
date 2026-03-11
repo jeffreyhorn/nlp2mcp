@@ -497,27 +497,52 @@ def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
     return f"{var_name}_fx_{joined}"
 
 
+class _MembershipConstraints:
+    """Collected membership constraints from stationarity conditions.
+
+    Attributes:
+        position_members: Per-position active labels from 1-D membership tests.
+            Mapping from domain position (int) to set of active UEL labels.
+        tuple_constraints: Full-tuple constraints from multi-D membership tests.
+            Each entry is (domain_positions, active_tuples) where domain_positions
+            maps the membership test's index ordering to domain positions, and
+            active_tuples is the set of member tuples (split from dot-joined).
+    """
+
+    __slots__ = ("position_members", "tuple_constraints")
+
+    def __init__(self) -> None:
+        self.position_members: dict[int, set[str]] = {}
+        self.tuple_constraints: list[tuple[list[int], set[tuple[str, ...]]]] = []
+
+    def is_empty(self) -> bool:
+        return not self.position_members and not self.tuple_constraints
+
+
 def _collect_position_memberships(
     kkt: KKTSystem,
     var_def: VariableDef,
     cond_expr: Expr,
-) -> dict[int, set[str]]:
-    """Map domain positions to active set members from a stationarity condition.
+) -> _MembershipConstraints:
+    """Collect membership constraints from a stationarity condition.
 
     A SetMembershipTest like ``t(tl)`` restricts the domain variable ``tl`` to
     members of set ``t``.  For multi-dimensional variables, only the domain
     position corresponding to the condition's index symbol is constrained.
 
+    For multi-dimensional membership tests like ``td(w,t)``, full-tuple
+    membership is tracked to avoid unsound per-position projection.
+
     Binary("and", ...) conjunctions are traversed to collect multiple membership
     tests (e.g., ``s(i) and t(j)`` restricts two different positions).
 
     Returns:
-        Mapping from domain position (int) to the set of active UEL labels.
-        Multiple tests on the same position are intersected.
+        _MembershipConstraints with per-position members (1-D tests) and
+        full-tuple constraints (multi-D tests).
     """
     from src.ir.ast import SymbolRef as _SymbolRef
 
-    position_members: dict[int, set[str]] = {}
+    result = _MembershipConstraints()
     domain = getattr(var_def, "domain", ()) or ()
 
     def _visit(expr: Expr) -> None:
@@ -525,15 +550,11 @@ def _collect_position_memberships(
             set_def = kkt.model_ir.sets.get(expr.set_name)
             if set_def is None or not set_def.members:
                 return
-            # Find which domain positions this condition constrains.
-            # For multi-dimensional membership tests like td(w,t),
-            # expr.indices can contain multiple index symbols; each one
-            # should be mapped to its corresponding position in the
-            # variable's domain.
             if not expr.indices:
                 return
             # Map index symbol name -> domain position
             index_pos: dict[str, int] = {}
+            ordered_positions: list[int] = []
             for idx_expr in expr.indices:
                 idx_name: str | None = None
                 if isinstance(idx_expr, _SymbolRef):
@@ -548,51 +569,35 @@ def _collect_position_memberships(
                     )
                     if dom_name == idx_name:
                         index_pos[idx_name] = i
+                        ordered_positions.append(i)
                         break
             if not index_pos:
-                # None of the indices matched the variable's domain.
                 return
-            # Collect active members per constrained domain position.
-            # Heuristic: members can be simple labels ("w1") or
-            # dot-joined tuples ("w1.t1"). When tuple-like, the number
-            # of components should match the number of indices.
-            active_by_position: dict[int, set[str]] = {}
             num_indices = len(expr.indices)
-            for member in set_def.members:
-                if not isinstance(member, str):
-                    continue
-                parts = member.split(".")
-                if num_indices > 1 and len(parts) == num_indices:
-                    # Tuple membership: project each component to the
-                    # corresponding domain position, based on the index
-                    # symbol ordering in expr.indices.
-                    for idx_pos_i, idx_expr_i in enumerate(expr.indices):
-                        i_name: str | None = None
-                        if isinstance(idx_expr_i, _SymbolRef):
-                            i_name = idx_expr_i.name
-                        elif isinstance(idx_expr_i, str):
-                            i_name = idx_expr_i
-                        if i_name is None:
-                            continue
-                        dom_pos = index_pos.get(i_name)
-                        if dom_pos is None:
-                            continue
-                        label = parts[idx_pos_i]
-                        active_by_position.setdefault(dom_pos, set()).add(label)
-                elif num_indices == 1 and len(parts) == 1:
-                    # 1-D membership: all members apply directly to the
-                    # single constrained position.
-                    ((_only_name, only_pos),) = index_pos.items()
-                    active_by_position.setdefault(only_pos, set()).add(parts[0])
-                else:
-                    # Shape mismatch; conservatively skip this member.
-                    continue
-            # Merge collected actives into global position_members.
-            for position, active in active_by_position.items():
-                if position in position_members:
-                    position_members[position] &= active
-                else:
-                    position_members[position] = set(active)
+            if num_indices == 1:
+                # 1-D membership: store per-position active labels.
+                ((_only_name, only_pos),) = index_pos.items()
+                active: set[str] = set()
+                for member in set_def.members:
+                    if isinstance(member, str) and "." not in member:
+                        active.add(member)
+                if active:
+                    if only_pos in result.position_members:
+                        result.position_members[only_pos] &= active
+                    else:
+                        result.position_members[only_pos] = active
+            else:
+                # Multi-D membership: store full-tuple constraints.
+                # Members are dot-joined tuples (e.g., "w1.t1").
+                active_tuples: set[tuple[str, ...]] = set()
+                for member in set_def.members:
+                    if not isinstance(member, str):
+                        continue
+                    parts = tuple(member.split("."))
+                    if len(parts) == num_indices:
+                        active_tuples.add(parts)
+                if active_tuples and len(ordered_positions) == num_indices:
+                    result.tuple_constraints.append((ordered_positions, active_tuples))
         elif isinstance(expr, Binary) and expr.op == "and":
             _visit(expr.left)
             _visit(expr.right)
@@ -608,7 +613,7 @@ def _collect_position_memberships(
                     _visit(child)
 
     _visit(cond_expr)
-    return position_members
+    return result
 
 
 def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
@@ -620,8 +625,8 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     conflict — GAMS eliminates the fixed variable, leaving the _fx_ equation unmatched.
 
     This function identifies such _fx_ equations so they can be suppressed from the MCP.
-    For multi-dimensional variables, only the domain position(s) constrained by the
-    condition are checked.
+    For 1-D membership tests, per-position checking is used. For multi-D membership
+    tests, full-tuple membership is checked to avoid unsound per-position projection.
     """
     suppressed: set[str] = set()
 
@@ -630,17 +635,29 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
         if var_def is None or not var_def.fx_map:
             continue
 
-        # Extract per-domain-position active set members from the condition
-        position_members = _collect_position_memberships(kkt, var_def, cond_expr)
-        if not position_members:
+        constraints = _collect_position_memberships(kkt, var_def, cond_expr)
+        if constraints.is_empty():
             continue
 
         for indices, _value in var_def.fx_map.items():
-            # Suppress if any constrained position has an index outside its active set
-            for pos, active_members in position_members.items():
+            suppress = False
+            # Check 1-D per-position constraints
+            for pos, active_members in constraints.position_members.items():
                 if pos < len(indices) and indices[pos] not in active_members:
-                    suppressed.add(_fx_eq_name(var_name, indices))
+                    suppress = True
                     break
+            # Check multi-D full-tuple constraints
+            if not suppress:
+                for domain_positions, active_tuples in constraints.tuple_constraints:
+                    # Extract the index components at the constrained positions
+                    idx_tuple = tuple(
+                        indices[pos] for pos in domain_positions if pos < len(indices)
+                    )
+                    if len(idx_tuple) == len(domain_positions) and idx_tuple not in active_tuples:
+                        suppress = True
+                        break
+            if suppress:
+                suppressed.add(_fx_eq_name(var_name, indices))
 
     return suppressed
 
