@@ -38,7 +38,6 @@ Variables
     area(i)
     totarea
     nu_areadef(i)
-    nu_obj2
     nu_x_fx_1
     nu_y_fx_1
     nu_y_fx_2
@@ -49,6 +48,14 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.fx('1') = 0;
+y.fx('1') = 0;
+y.fx('2') = 0;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -56,15 +63,15 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x.l("2") = 0.5;
-x.l("3") = 0.5;
-x.l("4") = 0.5;
-x.l("5") = 0.0;
-x.l("6") = 0.0;
-y.l("3") = 0.4;
-y.l("4") = 0.8;
-y.l("5") = 0.8;
-y.l("6") = 0.4;
+x.l('2') = 0.5;
+x.l('3') = 0.5;
+x.l('4') = 0.5;
+x.l('5') = 0.0;
+x.l('6') = 0.0;
+y.l('3') = 0.4;
+y.l('4') = 0.8;
+y.l('5') = 0.8;
+y.l('6') = 0.4;
 
 * ============================================
 * Equations
@@ -80,7 +87,6 @@ Equations
     stat_y(i)
     comp_maxdist(i,j)
     areadef(i)
-    obj1
     obj2
     x_fx_1
     y_fx_1
@@ -92,16 +98,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_area(i).. nu_areadef(i) - nu_obj2 =E= 0;
-stat_x(i).. ((-1) * (0.5 * y(i))) + ((-1) * (0.5 * y(i))) * nu_areadef(i) + nu_x_fx_1$sameas(i, '1') + sum(j, (2 * (x(i) - x(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
-stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) + ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + nu_y_fx_1$sameas(i, '1') + nu_y_fx_2$sameas(i, '2') + sum(j, (2 * (y(i) - y(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
+stat_area(i).. -1 + nu_areadef(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * y(i))) * nu_areadef(i) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * ((-1) * y(i)))) * nu_areadef(i-1))$(ord(i) > 1) + nu_x_fx_1$(sameas(i, '1')) + sum(j, (2 * (x(i) - x(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
+stat_y(i).. ((-1) * (0.5 * ((-1) * x(i)))) * nu_areadef(i) + (((-1) * (0.5 * x(i))) * nu_areadef(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (0.5 * x(i))) * nu_areadef(i-1))$(ord(i) > 1) + nu_y_fx_1$(sameas(i, '1')) + nu_y_fx_2$(sameas(i, '2')) + sum(j, (2 * (y(i) - y(j)) * lam_maxdist(i,j))$(ord(i) < ord(j))) =E= 0;
 
 * Inequality complementarity equations
 comp_maxdist(i,j)$(ord(i) < ord(j)).. ((-1) * (sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 1)) =G= 0;
 
 * Original equality equations
 areadef(i).. area(i) =E= 0.5 * (x(i) * y(i++1) - y(i) * x(i++1));
-obj1.. totarea =E= 0.5 * sum(i, x(i) * y(i++1) - y(i) * x(i++1));
 obj2.. totarea =E= sum(i, area(i));
 x_fx_1.. x("1") - 0 =E= 0;
 y_fx_1.. y("1") - 0 =E= 0;
@@ -136,8 +141,7 @@ Model mcp_model /
     stat_y.y,
     comp_maxdist.lam_maxdist,
     areadef.nu_areadef,
-    obj1.totarea,
-    obj2.nu_obj2,
+    obj2.totarea,
     x_fx_1.nu_x_fx_1,
     y_fx_1.nu_y_fx_1,
     y_fx_2.nu_y_fx_2

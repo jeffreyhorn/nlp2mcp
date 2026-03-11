@@ -20,7 +20,6 @@ from src.ir.ast import (
     EquationRef,
     Expr,
     IndexOffset,
-    MultiplierRef,
     ParamRef,
     Prod,
     Sum,
@@ -117,8 +116,10 @@ def _collect_lead_lag_restrictions(
         if isinstance(e, IndexOffset):
             _check_index_offset(e, domain_map, lead_offsets, lag_offsets, bound_indices)
 
-        # Check for IndexOffset in VarRef/ParamRef/MultiplierRef/EquationRef indices
-        if isinstance(e, (VarRef, ParamRef, MultiplierRef, EquationRef)):
+        # Check for IndexOffset in VarRef/ParamRef/EquationRef indices
+        # Issue #1045: Skip MultiplierRef — its lead/lag offsets are guarded by
+        # DollarConditional at the term level, not by equation-level domain conditions.
+        if isinstance(e, (VarRef, ParamRef, EquationRef)):
             for idx in e.indices:
                 if isinstance(idx, IndexOffset):
                     _check_index_offset(idx, domain_map, lead_offsets, lag_offsets, bound_indices)
