@@ -358,8 +358,17 @@ def _find_variable_subset_condition(
             found = True
             indices = expr.indices or ()
             for pos, (decl_idx, actual_idx) in enumerate(zip(var_domain, indices, strict=False)):
+                if isinstance(actual_idx, IndexOffset):
+                    # Issue #1043: An IndexOffset like k(t+1) means the
+                    # variable is accessed across the range of the declared
+                    # domain — this IS evidence of full-domain usage.
+                    io_base = _resolve(actual_idx.base.lower())
+                    decl_lower_io = _resolve(decl_idx.lower())
+                    if io_base == decl_lower_io:
+                        pos_subsets[pos] = None  # full-domain evidence
+                    continue
                 if not isinstance(actual_idx, str):
-                    continue  # IndexOffset — skip
+                    continue  # Other non-string index types — skip
                 # Resolve aliases so that 'mp' is treated the same as 'm'
                 actual_lower = _resolve(actual_idx.lower())
                 decl_lower = _resolve(decl_idx.lower())

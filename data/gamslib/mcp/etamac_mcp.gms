@@ -63,9 +63,11 @@ Scalars
     tol /0.3/
 ;
 
+$onImplicitAssign
 bsyr(inityrs) = yes$(ord(inityrs) = 1);
 tfirst(t) = yes$(ord(t) = 1);
 tlast(t) = yes$(ord(t) = card(t));
+$offImplicitAssign
 
 y0 = i0 + c0 + (e0 * pe0 + n0 * pn0) / thsnd;
 rho = (esub - 1) / esub;
@@ -80,6 +82,14 @@ dfact(tfirst) = dfactcurr(tfirst) ** ninit;
 dfact(tlast) = dfact(tlast) / (1 - dfactcurr(tlast));
 aconst = (y0 ** rho - bconst * e0 ** (rho * elvs) * n0 ** (rho * (1 - elvs))) / k0 ** (rho * kpvs);
 ln(tfirst) = l(tfirst) - spda ** ninit;
+
+loop(t,
+   dfact(t+1) = dfact(t) * dfactcurr(t+1) ** nyper ;
+   l(t+1) = l(t) * 1 + grow(t+1) ** nyper ;
+   ln(t+1) = l(t+1) - l(t) * spda ** nyper ;
+   pelec(t+1) = pelec(t) * 1 + pegrow(t) ** nyper ;
+   pnelec(t+1) = pnelec(t) * 1 + pngrow(t) ** nyper ;
+);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -151,56 +161,56 @@ nn.lo(t) = tol * n0 * ln(t);
 * non-zero initial values.
 
 k.l(t) = k0 * l(t);
-k.l("1990") = max(k.l("1990"), 10.9);
-k.l("1995") = max(k.l("1995"), 10.9);
-k.l("2000") = max(k.l("2000"), 10.9);
-k.l("2005") = max(k.l("2005"), 10.9);
-k.l("2010") = max(k.l("2010"), 10.9);
-k.l("2015") = max(k.l("2015"), 10.9);
-k.l("2020") = max(k.l("2020"), 10.9);
-k.l("2025") = max(k.l("2025"), 10.9);
-k.l("2030") = max(k.l("2030"), 10.9);
+k.l('1990') = max(k.l('1990'), 10.9);
+k.l('1995') = max(k.l('1995'), 10.9);
+k.l('2000') = max(k.l('2000'), 10.9);
+k.l('2005') = max(k.l('2005'), 10.9);
+k.l('2010') = max(k.l('2010'), 10.9);
+k.l('2015') = max(k.l('2015'), 10.9);
+k.l('2020') = max(k.l('2020'), 10.9);
+k.l('2025') = max(k.l('2025'), 10.9);
+k.l('2030') = max(k.l('2030'), 10.9);
 y.l(t) = y0 * l(t);
 e.l(t) = e0 * l(t);
-e.l("1990") = max(e.l("1990"), 2.5);
-e.l("1995") = max(e.l("1995"), 2.5);
-e.l("2000") = max(e.l("2000"), 2.5);
-e.l("2005") = max(e.l("2005"), 2.5);
-e.l("2010") = max(e.l("2010"), 2.5);
-e.l("2015") = max(e.l("2015"), 2.5);
-e.l("2020") = max(e.l("2020"), 2.5);
-e.l("2025") = max(e.l("2025"), 2.5);
-e.l("2030") = max(e.l("2030"), 2.5);
+e.l('1990') = max(e.l('1990'), 2.5);
+e.l('1995') = max(e.l('1995'), 2.5);
+e.l('2000') = max(e.l('2000'), 2.5);
+e.l('2005') = max(e.l('2005'), 2.5);
+e.l('2010') = max(e.l('2010'), 2.5);
+e.l('2015') = max(e.l('2015'), 2.5);
+e.l('2020') = max(e.l('2020'), 2.5);
+e.l('2025') = max(e.l('2025'), 2.5);
+e.l('2030') = max(e.l('2030'), 2.5);
 n.l(t) = n0 * l(t);
-n.l("1990") = max(n.l("1990"), 50.0);
-n.l("1995") = max(n.l("1995"), 50.0);
-n.l("2000") = max(n.l("2000"), 50.0);
-n.l("2005") = max(n.l("2005"), 50.0);
-n.l("2010") = max(n.l("2010"), 50.0);
-n.l("2015") = max(n.l("2015"), 50.0);
-n.l("2020") = max(n.l("2020"), 50.0);
-n.l("2025") = max(n.l("2025"), 50.0);
-n.l("2030") = max(n.l("2030"), 50.0);
+n.l('1990') = max(n.l('1990'), 50.0);
+n.l('1995') = max(n.l('1995'), 50.0);
+n.l('2000') = max(n.l('2000'), 50.0);
+n.l('2005') = max(n.l('2005'), 50.0);
+n.l('2010') = max(n.l('2010'), 50.0);
+n.l('2015') = max(n.l('2015'), 50.0);
+n.l('2020') = max(n.l('2020'), 50.0);
+n.l('2025') = max(n.l('2025'), 50.0);
+n.l('2030') = max(n.l('2030'), 50.0);
 c.l(t) = c0 * l(t);
-c.l("1990") = max(c.l("1990"), 3.2);
-c.l("1995") = max(c.l("1995"), 3.2);
-c.l("2000") = max(c.l("2000"), 3.2);
-c.l("2005") = max(c.l("2005"), 3.2);
-c.l("2010") = max(c.l("2010"), 3.2);
-c.l("2015") = max(c.l("2015"), 3.2);
-c.l("2020") = max(c.l("2020"), 3.2);
-c.l("2025") = max(c.l("2025"), 3.2);
-c.l("2030") = max(c.l("2030"), 3.2);
+c.l('1990') = max(c.l('1990'), 3.2);
+c.l('1995') = max(c.l('1995'), 3.2);
+c.l('2000') = max(c.l('2000'), 3.2);
+c.l('2005') = max(c.l('2005'), 3.2);
+c.l('2010') = max(c.l('2010'), 3.2);
+c.l('2015') = max(c.l('2015'), 3.2);
+c.l('2020') = max(c.l('2020'), 3.2);
+c.l('2025') = max(c.l('2025'), 3.2);
+c.l('2030') = max(c.l('2030'), 3.2);
 i.l(t) = i0 * l(t);
-i.l("1990") = max(i.l("1990"), 0.7);
-i.l("1995") = max(i.l("1995"), 0.7);
-i.l("2000") = max(i.l("2000"), 0.7);
-i.l("2005") = max(i.l("2005"), 0.7);
-i.l("2010") = max(i.l("2010"), 0.7);
-i.l("2015") = max(i.l("2015"), 0.7);
-i.l("2020") = max(i.l("2020"), 0.7);
-i.l("2025") = max(i.l("2025"), 0.7);
-i.l("2030") = max(i.l("2030"), 0.7);
+i.l('1990') = max(i.l('1990'), 0.7);
+i.l('1995') = max(i.l('1995'), 0.7);
+i.l('2000') = max(i.l('2000'), 0.7);
+i.l('2005') = max(i.l('2005'), 0.7);
+i.l('2010') = max(i.l('2010'), 0.7);
+i.l('2015') = max(i.l('2015'), 0.7);
+i.l('2020') = max(i.l('2020'), 0.7);
+i.l('2025') = max(i.l('2025'), 0.7);
+i.l('2030') = max(i.l('2030'), 0.7);
 
 * ============================================
 * Equations
@@ -254,12 +264,12 @@ Equations
 stat_c(t).. ((-1) * (dfact(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
 stat_e(t).. sum(tfirst, (-1) * nu_fnewelec(tfirst)) + spda ** nyper * nu_newelec(t) + ((-1) * pelec(t)) * nu_costnrg(t) - piL_e(t) =E= 0;
 stat_ec(t).. thsnd * nu_costnrg(t) - nu_cc(t) =E= 0;
-stat_en(t)$(tfirst(t)).. sum(tfirst, nu_fnewelec(tfirst)) + sum(tfirst, ((-1) * ((aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) * nn(tfirst) ** (rho * (1 - elvs)) * bconst * en(tfirst) ** (rho * elvs) * rho * elvs / en(tfirst))) * nu_ftotalprod(tfirst)) - piL_en(t) =E= 0;
+stat_en(t).. sum(tfirst, nu_fnewelec(tfirst)) + sum(tfirst, ((-1) * ((aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) * nn(tfirst) ** (rho * (1 - elvs)) * bconst * en(tfirst) ** (rho * elvs) * rho * elvs / en(tfirst))) * nu_ftotalprod(tfirst)) - piL_en(t) =E= 0;
 stat_i(t).. ((-1) * ipm(t)) * nu_newcap(t) - nu_cc(t) + sum(tlast, (-1) * lam_tc(tlast)) - piL_i(t) =E= 0;
-stat_k(t)$(tlast(t)).. ((-1) * (spda ** nyper)) * nu_totalcap(t) + sum(tlast, (grow(tlast) + 1 - spda) * lam_tc(tlast)) - piL_k(t) =E= 0;
+stat_k(t).. ((-1) * (spda ** nyper)) * nu_totalcap(t) + sum(tlast, (grow(tlast) + 1 - spda) * lam_tc(tlast)) - piL_k(t) =E= 0;
 stat_kn(t).. ((-1) * piL_kn(t)) =E= 0;
 stat_n(t).. sum(tfirst, (-1) * nu_fnewnon(tfirst)) + spda ** nyper * nu_newnon(t) + ((-1) * pnelec(t)) * nu_costnrg(t) - piL_n(t) =E= 0;
-stat_nn(t)$(tfirst(t)).. sum(tfirst, nu_fnewnon(tfirst)) + sum(tfirst, ((-1) * ((aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) * bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(tfirst))) * nu_ftotalprod(tfirst)) - piL_nn(t) =E= 0;
+stat_nn(t).. sum(tfirst, nu_fnewnon(tfirst)) + sum(tfirst, ((-1) * ((aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) * bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(tfirst))) * nu_ftotalprod(tfirst)) - piL_nn(t) =E= 0;
 stat_y(t).. sum(tfirst, nu_ftotalprod(tfirst)) + ((-1) * (spda ** nyper)) * nu_totalprod(t) + nu_cc(t) - piL_y(t) =E= 0;
 stat_yn(t).. ((-1) * piL_yn(t)) =E= 0;
 
@@ -299,12 +309,6 @@ util.. utility =E= sum(t, dfact(t) * log(c(t)));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-en.fx(t)$(not (tfirst(t))) = 0;
-piL_en.fx(t)$(not (tfirst(t))) = 0;
-k.fx(t)$(not (tlast(t))) = 0;
-piL_k.fx(t)$(not (tlast(t))) = 0;
-nn.fx(t)$(not (tfirst(t))) = 0;
-piL_nn.fx(t)$(not (tfirst(t))) = 0;
 nu_newcap.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 nu_newelec.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 nu_newnon.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
