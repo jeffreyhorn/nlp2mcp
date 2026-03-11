@@ -10,7 +10,7 @@ import pytest
 from src.ad.gradient import GradientVector
 from src.ad.jacobian import JacobianStructure
 from src.emit.emit_gams import _compute_suppressed_fx_equations, _fx_eq_name, emit_gams_mcp
-from src.ir.ast import SetMembershipTest, SymbolRef
+from src.ir.ast import Binary, SetMembershipTest, SymbolRef
 from src.ir.model_ir import ModelIR, ObjectiveIR
 from src.ir.symbols import ObjSense, SetDef, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
@@ -249,6 +249,32 @@ class TestComputeSuppressedFxEquations:
         assert _fx_eq_name("x", idx_not_in_td) in suppressed
         # (w1, t1) IS in td — must not be suppressed
         assert _fx_eq_name("x", idx_in_td) not in suppressed
+
+    def test_disjunctive_condition_bails_out(self, manual_index_mapping):
+        """Binary('or', ...) condition should bail out — no suppression."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["tl"] = SetDef(name="tl", members=["0", "1", "2"])
+        model.sets["t"] = SetDef(name="t", members=["1", "2"])
+        model.sets["tt"] = SetDef(name="tt", members=["0", "1"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("0",)] = 1000.0  # "0" is not in t, but IS in tt
+        model.variables["a"] = a
+
+        kkt = _make_kkt(model, [("obj", ()), ("a", ("0",)), ("a", ("1",))], manual_index_mapping)
+        # Disjunctive condition: t(tl) or tt(tl) — suppression is unsound here
+        kkt.stationarity_conditions["a"] = Binary(
+            "or",
+            SetMembershipTest("t", (SymbolRef("tl"),)),
+            SetMembershipTest("tt", (SymbolRef("tl"),)),
+        )
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        # Must return empty — can't safely suppress under disjunction
+        assert suppressed == set()
 
 
 @pytest.mark.unit

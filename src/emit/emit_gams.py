@@ -478,23 +478,13 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
 def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
     """Reconstruct the _fx_ equation name for a per-element fixed variable.
 
-    Mirrors the naming logic in src/ir/normalize.py (_bound_name/_sanitize_identifier).
+    Delegates to the canonical bound-name logic in src/ir/normalize.py
+    (_bound_name/_sanitize_identifier) to avoid drift between normalization
+    and emission.
     """
-    import hashlib
+    from src.ir.normalize import _bound_name
 
-    from src.kkt.naming import sanitize_index_for_identifier
-
-    if not indices:
-        return f"{var_name}_fx"
-    sanitized_parts = []
-    for idx in indices:
-        sanitized = sanitize_index_for_identifier(idx)
-        if sanitized != idx:
-            hash_suffix = hashlib.sha256(idx.encode("utf-8")).hexdigest()[:8]
-            sanitized = f"{sanitized}_{hash_suffix}"
-        sanitized_parts.append(sanitized)
-    joined = "_".join(sanitized_parts)
-    return f"{var_name}_fx_{joined}"
+    return _bound_name(var_name, "fx", indices)
 
 
 class _MembershipConstraints:
