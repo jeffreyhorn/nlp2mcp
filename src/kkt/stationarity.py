@@ -1756,8 +1756,9 @@ def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     via Sum (sum(t, c(p,t)) is constant across tt).
 
     String indices in VarRef, ParamRef, MultiplierRef, EquationRef, and
-    IndexOffset.base are rewritten. The rename_map keys and values should
-    both be lowercase-normalized.
+    IndexOffset.base are rewritten. The rename_map keys must be
+    lowercase-normalized (lookups use ``idx.lower()``); values are used
+    as-is for replacement and may preserve original casing.
     """
     if not rename_map:
         return expr
