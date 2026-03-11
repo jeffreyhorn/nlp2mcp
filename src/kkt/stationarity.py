@@ -1752,6 +1752,7 @@ def _compute_index_offset_key(
     eq_domain: tuple[str, ...],
     var_domain: tuple[str, ...],
     model_ir: ModelIR,
+    _domain_cache: dict | None = None,
 ) -> tuple[int, ...]:
     """Compute the positional offset between equation and variable indices.
 
@@ -1767,6 +1768,16 @@ def _compute_index_offset_key(
     at corresponding positions. If the domains differ (e.g., cdef(i) vs x(c) where
     i and c are different sets), the offset is 0.
 
+    Args:
+        eq_indices: Concrete equation instance indices
+        var_indices: Concrete variable instance indices
+        eq_domain: Equation domain set names
+        var_domain: Variable domain set names
+        model_ir: Model IR for set resolution
+        _domain_cache: Optional cache dict for resolved set names and member→position
+            maps. Populated on first use and reused across calls to avoid redundant
+            resolve_set_members() lookups and O(n) list.index() scans.
+
     Returns:
         Tuple of integer offsets, one per index dimension. (0,0,...) means same-index.
         Falls back to (0,...) if positions can't be determined.
@@ -1776,6 +1787,23 @@ def _compute_index_offset_key(
     if len(eq_indices) != len(var_indices):
         # Different dimensionality — return zeros
         return (0,) * max(len(eq_indices), len(var_indices))
+
+    if _domain_cache is None:
+        _domain_cache = {}
+
+    def _resolve_cached(set_name: str) -> tuple[str, dict[str, int]] | None:
+        """Resolve a set name to (underlying_set_name, {member: position}) with caching."""
+        if set_name in _domain_cache:
+            return _domain_cache[set_name]
+        try:
+            _, resolved_name = resolve_set_members(set_name, model_ir)
+            members, _ = resolve_set_members(resolved_name, model_ir)
+            pos_map = {m: i for i, m in enumerate(members)}
+            result = (resolved_name, pos_map)
+        except (ValueError, KeyError):
+            result = None
+        _domain_cache[set_name] = result
+        return result
 
     offsets: list[int] = []
     for i, (eq_elem, var_elem) in enumerate(zip(eq_indices, var_indices, strict=True)):
@@ -1788,25 +1816,22 @@ def _compute_index_offset_key(
         if eq_set is None or var_set is None:
             offsets.append(0)
             continue
-        # Resolve both domains to their underlying set names
-        try:
-            _, eq_resolved = resolve_set_members(eq_set, model_ir)
-            _, var_resolved = resolve_set_members(var_set, model_ir)
-        except (ValueError, KeyError):
+        eq_info = _resolve_cached(eq_set)
+        var_info = _resolve_cached(var_set)
+        if eq_info is None or var_info is None:
             offsets.append(0)
             continue
+        eq_resolved, eq_pos_map = eq_info
+        var_resolved, var_pos_map = var_info
         if eq_resolved != var_resolved:
             # Different underlying sets — not a lead/lag pattern
             offsets.append(0)
             continue
-        # Same set: compute positional offset
-        try:
-            members, _ = resolve_set_members(eq_resolved, model_ir)
-        except (ValueError, KeyError):
-            offsets.append(0)
-            continue
-        if eq_elem in members and var_elem in members:
-            offsets.append(members.index(eq_elem) - members.index(var_elem))
+        # Same set: compute positional offset via O(1) dict lookup
+        eq_pos = eq_pos_map.get(eq_elem)
+        var_pos = var_pos_map.get(var_elem)
+        if eq_pos is not None and var_pos is not None:
+            offsets.append(eq_pos - var_pos)
         else:
             offsets.append(0)
 
@@ -1863,7 +1888,6 @@ def _build_offset_multiplier(
     mult_base_name: str,
     mult_domain: tuple[str, ...],
     offset_key: tuple[int, ...],
-    model_ir: ModelIR,
 ) -> Expr:
     """Build a multiplier reference with lead/lag offset indices.
 
@@ -1876,7 +1900,6 @@ def _build_offset_multiplier(
         mult_base_name: Base multiplier name (e.g., "nu_totalcap")
         mult_domain: Multiplier domain indices (e.g., ("t",))
         offset_key: Tuple of integer offsets per domain dimension
-        model_ir: Model IR for IndexOffset construction
 
     Returns:
         MultiplierRef with IndexOffset indices where offset != 0
@@ -1935,6 +1958,9 @@ def _add_indexed_jacobian_terms(
 
             constraint_entries[eq_name].append((row_id, col_id))
 
+    # Cache for resolved set names and member→position maps (shared across constraints)
+    domain_cache: dict = {}
+
     # For each constraint, add the Jacobian term
     for _eq_name, entries in constraint_entries.items():
         # Get first entry to extract structure
@@ -1961,7 +1987,12 @@ def _add_indexed_jacobian_terms(
                     _, entry_var_indices = jacobian.index_mapping.col_to_var[entry_col_id]
                     # Compute positional offset between eq and var indices in their domains
                     offset_key = _compute_index_offset_key(
-                        entry_eq_indices, entry_var_indices, mult_domain, var_domain, kkt.model_ir
+                        entry_eq_indices,
+                        entry_var_indices,
+                        mult_domain,
+                        var_domain,
+                        kkt.model_ir,
+                        _domain_cache=domain_cache,
                     )
                     if offset_key not in offset_groups:
                         offset_groups[offset_key] = []
@@ -2009,7 +2040,6 @@ def _add_indexed_jacobian_terms(
                             mult_base_name,
                             mult_domain,
                             offset_key,
-                            kkt.model_ir,
                         )
                     else:
                         mult_ref = MultiplierRef(mult_base_name, mult_domain)

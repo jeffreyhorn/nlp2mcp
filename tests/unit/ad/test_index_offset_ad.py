@@ -521,8 +521,9 @@ class TestResolveIndexOffsets:
         var_def = MagicMock()
         var_def.domain = ("t",)
         model_ir.variables = {"k": var_def, "kn": var_def}
-        # Parameter (empty for now)
-        model_ir.parameters = {}
+        # Parameter (empty for now) — align attribute name with real ModelIR
+        model_ir.params = {}
+        model_ir.parameters = model_ir.params
         return model_ir
 
     @staticmethod

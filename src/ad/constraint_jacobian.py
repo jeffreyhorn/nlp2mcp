@@ -128,7 +128,15 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
             return idx, True
         # Resolve: find position of base, add offset
         pos = members.index(base)
-        new_pos = pos + int(offset_expr.value)
+        offset_val = offset_expr.value
+        # Require an integer-valued numeric constant; avoid silent float→int truncation
+        if not isinstance(offset_val, (int, float)):
+            return idx, True  # Non-numeric constant offset; leave unresolved
+        if isinstance(offset_val, float):
+            if not offset_val.is_integer():
+                return idx, True  # Non-integer float offset; leave unresolved
+            offset_val = int(offset_val)
+        new_pos = pos + offset_val
         if idx.circular:
             new_pos = new_pos % len(members)
         if 0 <= new_pos < len(members):
@@ -189,6 +197,20 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
             _resolve_index_offsets(expr.condition, model_ir) if expr.condition is not None else None
         )
         return type(expr)(expr.index_sets, new_body, new_condition)
+
+    else:
+        # Handle DollarConditional and SetMembershipTest so IndexOffset nodes
+        # inside conditional subtrees are also resolved.
+        from ..ir.ast import DollarConditional, SetMembershipTest
+
+        if isinstance(expr, DollarConditional):
+            new_val = _resolve_index_offsets(expr.value_expr, model_ir)
+            new_cond = _resolve_index_offsets(expr.condition, model_ir)
+            return DollarConditional(value_expr=new_val, condition=new_cond)
+
+        if isinstance(expr, SetMembershipTest):
+            new_idx = tuple(_resolve_index_offsets(idx, model_ir) for idx in expr.indices)
+            return SetMembershipTest(expr.set_name, new_idx)
 
     # Other expression types pass through unchanged
     return expr
