@@ -68,13 +68,13 @@ Extended `emit_interleaved_params_and_sets()` to detect "index-blocked params" â
 
 **After**: Compiles and reaches solver. 447 equations generated (up from 167 NONE-affected). 66 unmatched free variables remain.
 
-The 66 remaining unmatched variables are from `stat_tsam` missing `nu_COLSUM(j)` and `nu_ROWSUM(i)` Jacobian contributions. This is a separate pre-existing Jacobian builder issue where `_match_subset_domain(('jj',), ('i', 'j'))` returns `{'jj': 'i'}` instead of `{'jj': 'j'}` due to greedy position matching when both positions resolve to the same canonical set.
+The 66 remaining unmatched variables are from `stat_tsam` missing `nu_COLSUM(j)` and `nu_ROWSUM(i)` Jacobian contributions. The COLSUM equation is indexed by `(jj,)` while variable TSAM has domain `(i, j)` â€” both `i` and `j` resolve to the same canonical set `i`. Position-aware matching maps `jj -> i` (position 0), which is correct for this position. The missing terms are a separate Jacobian builder issue where the constraint's contribution to the stationarity equation isn't being generated at all (the constraint-variable relationship isn't detected by the derivative propagation).
 
 ---
 
 ## Remaining Work (separate issue)
 
-The 66 unmatched free variables need a fix to `_match_subset_domain()` to handle ambiguous position matching when multiple target positions have the same parent set. This is tracked separately as it affects the Jacobian builder more broadly.
+The 66 unmatched free variables need investigation of the Jacobian builder's constraint-variable relationship detection for COLSUM/ROWSUM equations. This is tracked separately as it affects derivative propagation more broadly.
 
 ---
 

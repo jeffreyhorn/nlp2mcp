@@ -1520,6 +1520,9 @@ def emit_gams_mcp(
             continue
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not {mask_name}({domain_str})) = 0;")
 
+    # Build dynamic subset map once, used by sections 3 and 3b.
+    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
+
     # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
     # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),
     # but nu_stateq(n,k) is declared over the full (n,k) domain.  Fix the terminal
@@ -1544,7 +1547,10 @@ def emit_gams_mcp(
         mult_name = create_eq_multiplier_name(eq_name)
         if ref_mults is not None and mult_name not in ref_mults:
             continue
-        domain_str = ",".join(eq_def.domain)
+        # Remap dynamic subset indices to parent sets so .fx domain matches
+        # the multiplier's declared domain (which uses remapped parent sets).
+        remapped_domain = tuple(dynamic_map.get(d.lower(), d) for d in eq_def.domain)
+        domain_str = ",".join(remapped_domain)
         if inferred_cond is not None:
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
         elif eq_def.condition is not None and isinstance(eq_def.condition, Expr):
@@ -1558,7 +1564,6 @@ def emit_gams_mcp(
     # j∉jj have no matching equation and must be fixed.
     # Use distinct parent-set aliases per position to avoid GAMS binding both
     # indices together (e.g., .fx(i,j) not .fx(i,i) for 2D coverage).
-    dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
     if dynamic_map:
         # Resolve an alias target through any intermediate aliases to its
         # canonical (non-alias) base set name.
