@@ -1684,6 +1684,11 @@ def _match_subset_domain(
 
     Returns a rename map ``{mult_idx: var_idx}`` if all mult indices match,
     or ``None`` if no full match is possible.
+
+    Keys are lowercased (``str(mult_idx).lower()``); values preserve the
+    original ``var_domain`` casing.  Callers should use lowercased index
+    names for lookups (e.g., ``_rewrite_subset_to_superset`` normalizes
+    via ``idx.lower()``).
     """
     if len(mult_domain) > len(var_domain):
         return None
