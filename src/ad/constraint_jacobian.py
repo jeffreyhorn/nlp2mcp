@@ -85,7 +85,11 @@ def _is_zero_const(expr: Expr | None) -> bool:
     return isinstance(expr, Const) and expr.value == 0
 
 
-def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
+def _resolve_index_offsets(
+    expr: Expr,
+    model_ir: ModelIR,
+    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None] | None = None,
+) -> Expr:
     """Resolve IndexOffset nodes in VarRef/ParamRef indices to concrete domain elements.
 
     After _substitute_indices, an expression like k(t+1) with t→"1990" becomes
@@ -100,14 +104,18 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
     Args:
         expr: Expression with concrete IndexOffset nodes (after _substitute_indices)
         model_ir: Model IR for domain set lookup
+        _domain_cache: Optional shared cache for resolved domain members and
+            member→position maps. When provided, avoids redundant resolve_set_members()
+            calls across multiple invocations (e.g., across equation instances).
 
     Returns:
         Expression with IndexOffset nodes resolved to plain string indices
     """
     from ..ir.ast import Binary, Call, ParamRef, Prod, Sum, Unary, VarRef
 
-    # Cache for resolved domain members and member→position maps
-    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+    # Use provided cache or create a new one for this call tree
+    if _domain_cache is None:
+        _domain_cache = {}
 
     def _get_domain_members(domain_set_name: str) -> tuple[list[str], dict[str, int]] | None:
         """Get (members, pos_map) for a domain set, with caching."""
@@ -198,22 +206,24 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
         return ParamRef(expr.name, tuple(new_indices))
 
     elif isinstance(expr, Binary):
-        new_left = _resolve_index_offsets(expr.left, model_ir)
-        new_right = _resolve_index_offsets(expr.right, model_ir)
+        new_left = _resolve_index_offsets(expr.left, model_ir, _domain_cache)
+        new_right = _resolve_index_offsets(expr.right, model_ir, _domain_cache)
         return Binary(expr.op, new_left, new_right)
 
     elif isinstance(expr, Unary):
-        new_child = _resolve_index_offsets(expr.child, model_ir)
+        new_child = _resolve_index_offsets(expr.child, model_ir, _domain_cache)
         return Unary(expr.op, new_child)
 
     elif isinstance(expr, Call):
-        new_args = tuple(_resolve_index_offsets(arg, model_ir) for arg in expr.args)
+        new_args = tuple(_resolve_index_offsets(arg, model_ir, _domain_cache) for arg in expr.args)
         return Call(expr.func, new_args)
 
     elif isinstance(expr, (Sum, Prod)):
-        new_body = _resolve_index_offsets(expr.body, model_ir)
+        new_body = _resolve_index_offsets(expr.body, model_ir, _domain_cache)
         new_condition = (
-            _resolve_index_offsets(expr.condition, model_ir) if expr.condition is not None else None
+            _resolve_index_offsets(expr.condition, model_ir, _domain_cache)
+            if expr.condition is not None
+            else None
         )
         return type(expr)(expr.index_sets, new_body, new_condition)
 
@@ -223,12 +233,14 @@ def _resolve_index_offsets(expr: Expr, model_ir: ModelIR) -> Expr:
         from ..ir.ast import DollarConditional, SetMembershipTest
 
         if isinstance(expr, DollarConditional):
-            new_val = _resolve_index_offsets(expr.value_expr, model_ir)
-            new_cond = _resolve_index_offsets(expr.condition, model_ir)
+            new_val = _resolve_index_offsets(expr.value_expr, model_ir, _domain_cache)
+            new_cond = _resolve_index_offsets(expr.condition, model_ir, _domain_cache)
             return DollarConditional(value_expr=new_val, condition=new_cond)
 
         if isinstance(expr, SetMembershipTest):
-            new_idx = tuple(_resolve_index_offsets(idx, model_ir) for idx in expr.indices)
+            new_idx = tuple(
+                _resolve_index_offsets(idx, model_ir, _domain_cache) for idx in expr.indices
+            )
             return SetMembershipTest(expr.set_name, new_idx)
 
     # Other expression types pass through unchanged
@@ -528,6 +540,9 @@ def _compute_equality_jacobian(
         # Sparsity pre-check: find which variables appear in this equation
         referenced_vars = find_variables_in_expr(base_expr)
 
+        # Shared cache for IndexOffset resolution across all instances of this equation
+        resolve_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
@@ -541,7 +556,7 @@ def _compute_equality_jacobian(
                 # Issue #1045: Resolve IndexOffset nodes to concrete domain elements.
                 # After substitution, k(t+1) with t→"1990" becomes k(IndexOffset("1990",1)).
                 # This resolves it to k("1995") so differentiation can match var instances.
-                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir)
+                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
@@ -631,6 +646,9 @@ def _compute_inequality_jacobian(
         # Sparsity pre-check: find which variables appear in this equation
         referenced_vars = find_variables_in_expr(base_expr)
 
+        # Shared cache for IndexOffset resolution across all instances of this equation
+        resolve_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
@@ -642,7 +660,7 @@ def _compute_inequality_jacobian(
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
                 # Issue #1045: Resolve IndexOffset nodes to concrete domain elements
-                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir)
+                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
