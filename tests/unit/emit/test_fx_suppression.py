@@ -250,6 +250,27 @@ class TestComputeSuppressedFxEquations:
         # (w1, t1) IS in td — must not be suppressed
         assert _fx_eq_name("x", idx_in_td) not in suppressed
 
+    def test_case_insensitive_domain_matching(self, manual_index_mapping):
+        """Condition index symbol with different case still maps to domain position."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Domain uses lowercase "tl", condition uses uppercase "TL"
+        model.sets["tl"] = SetDef(name="tl", members=["0", "1", "2"])
+        model.sets["t"] = SetDef(name="t", members=["1", "2"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("0",)] = 1000.0  # "0" not in t
+        model.variables["a"] = a
+
+        kkt = _make_kkt(model, [("obj", ()), ("a", ("0",)), ("a", ("1",))], manual_index_mapping)
+        # Condition uses "TL" (uppercase) — should still match domain "tl"
+        kkt.stationarity_conditions["a"] = SetMembershipTest("t", (SymbolRef("TL"),))
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        assert suppressed == {"a_fx_0"}
+
     def test_disjunctive_condition_bails_out(self, manual_index_mapping):
         """Binary('or', ...) condition should bail out — no suppression."""
         model = ModelIR()

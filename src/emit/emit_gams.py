@@ -557,11 +557,14 @@ def _collect_position_memberships(
                     idx_name = idx_expr
                 if idx_name is None:
                     continue
+                idx_canon = idx_name.lower()
                 for i, dom_sym in enumerate(domain):
                     dom_name = (
                         dom_sym if isinstance(dom_sym, str) else getattr(dom_sym, "name", None)
                     )
-                    if dom_name == idx_name:
+                    if dom_name is None:
+                        continue
+                    if dom_name.lower() == idx_canon:
                         index_pos[idx_name] = i
                         ordered_positions.append(i)
                         break
