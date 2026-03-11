@@ -15,7 +15,7 @@ from src.ir.symbols import EquationDef, Rel, SetDef
 from src.kkt.stationarity import _find_variable_subset_condition
 
 
-def _make_model_with_sets(**subsets: dict) -> ModelIR:
+def _make_model_with_sets(**subsets: list[str]) -> ModelIR:
     """Create a ModelIR with set t and optional subsets."""
     model = ModelIR()
     model.sets["t"] = SetDef(
