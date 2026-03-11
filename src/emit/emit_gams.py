@@ -597,10 +597,13 @@ def _collect_position_memberships(
             _visit(expr.right)
             return
         elif isinstance(expr, Binary):
-            # Non-conjunctive binary operators (or, xor, etc.) make
-            # membership-based pruning unsound.  Conservatively bail out.
-            unsound = True
-            return
+            # Disjunctive boolean operators (or, xor) make membership-based
+            # pruning unsound.  Bail out only for those; for other Binary ops
+            # (arithmetic, comparison), fall through to children() traversal
+            # so nested SetMembershipTest nodes can still be collected.
+            if expr.op in ("or", "xor"):
+                unsound = True
+                return
 
         # Fallback: traverse children of other expression types so that
         # membership tests nested under wrappers (e.g., DollarConditional)
