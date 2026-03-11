@@ -271,6 +271,27 @@ class TestComputeSuppressedFxEquations:
         suppressed = _compute_suppressed_fx_equations(kkt)
         assert suppressed == {"a_fx_0"}
 
+    def test_case_insensitive_set_name_lookup(self, manual_index_mapping):
+        """SetMembershipTest with different-case set name still resolves (CaseInsensitiveDict)."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Set defined as lowercase "t", referenced as uppercase "T" in condition
+        model.sets["tl"] = SetDef(name="tl", members=["0", "1", "2"])
+        model.sets["t"] = SetDef(name="t", members=["1", "2"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("0",)] = 1000.0
+        model.variables["a"] = a
+
+        kkt = _make_kkt(model, [("obj", ()), ("a", ("0",)), ("a", ("1",))], manual_index_mapping)
+        # Use uppercase "T" as set name — CaseInsensitiveDict handles this
+        kkt.stationarity_conditions["a"] = SetMembershipTest("T", (SymbolRef("tl"),))
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        assert suppressed == {"a_fx_0"}
+
     def test_disjunctive_condition_bails_out(self, manual_index_mapping):
         """Binary('or', ...) condition should bail out — no suppression."""
         model = ModelIR()

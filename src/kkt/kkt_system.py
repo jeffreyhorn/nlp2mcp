@@ -153,11 +153,6 @@ class KKTSystem:
     # are kept for complementarity pairing. Populated by build_stationarity_equations().
     empty_stationarity_vars: set[str] = field(default_factory=set)
 
-    # _fx_ equations suppressed because their target index is outside the
-    # stationarity condition's active domain (would cause unmatched MCP pairs).
-    # Populated by the emitter's _compute_suppressed_fx_equations().
-    suppressed_fx_equations: set[str] = field(default_factory=set)
-
     # Issue #903/#1008/#1009: Indexed bound parameters for non-uniform bounds.
     # When a variable has per-element bounds (e.g., x.lo("stage-1") = 125),
     # the complementarity builder creates indexed parameters to hold the

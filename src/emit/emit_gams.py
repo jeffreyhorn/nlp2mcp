@@ -479,12 +479,11 @@ def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
     """Reconstruct the _fx_ equation name for a per-element fixed variable.
 
     Delegates to the canonical bound-name logic in src/ir/normalize.py
-    (_bound_name/_sanitize_identifier) to avoid drift between normalization
-    and emission.
+    (bound_name) to avoid drift between normalization and emission.
     """
-    from src.ir.normalize import _bound_name
+    from src.ir.normalize import bound_name
 
-    return _bound_name(var_name, "fx", indices)
+    return bound_name(var_name, "fx", indices)
 
 
 class _MembershipConstraints:
@@ -513,6 +512,8 @@ def _collect_position_memberships(
     kkt: KKTSystem,
     var_def: VariableDef,
     cond_expr: Expr,
+    set_members_cache: dict[str, set[str]] | None = None,
+    set_tuples_cache: dict[tuple[str, int], set[tuple[str, ...]]] | None = None,
 ) -> _MembershipConstraints:
     """Collect membership constraints from a stationarity condition.
 
@@ -574,10 +575,17 @@ def _collect_position_memberships(
             if num_indices == 1:
                 # 1-D membership: store per-position active labels.
                 ((_only_name, only_pos),) = index_pos.items()
-                active: set[str] = set()
-                for member in set_def.members:
-                    if isinstance(member, str):
-                        active.add(member)
+                cache_key_1d = expr.set_name.lower()
+                active: set[str]
+                if set_members_cache is not None and cache_key_1d in set_members_cache:
+                    active = set_members_cache[cache_key_1d]
+                else:
+                    active = set()
+                    for member in set_def.members:
+                        if isinstance(member, str):
+                            active.add(member)
+                    if set_members_cache is not None:
+                        set_members_cache[cache_key_1d] = active
                 if active:
                     if only_pos in result.position_members:
                         result.position_members[only_pos] &= active
@@ -586,13 +594,20 @@ def _collect_position_memberships(
             else:
                 # Multi-D membership: store full-tuple constraints.
                 # Members are dot-joined tuples (e.g., "w1.t1").
-                active_tuples: set[tuple[str, ...]] = set()
-                for member in set_def.members:
-                    if not isinstance(member, str):
-                        continue
-                    parts = tuple(member.split("."))
-                    if len(parts) == num_indices:
-                        active_tuples.add(parts)
+                cache_key_md = (expr.set_name.lower(), num_indices)
+                active_tuples: set[tuple[str, ...]]
+                if set_tuples_cache is not None and cache_key_md in set_tuples_cache:
+                    active_tuples = set_tuples_cache[cache_key_md]
+                else:
+                    active_tuples = set()
+                    for member in set_def.members:
+                        if not isinstance(member, str):
+                            continue
+                        parts = tuple(member.split("."))
+                        if len(parts) == num_indices:
+                            active_tuples.add(parts)
+                    if set_tuples_cache is not None:
+                        set_tuples_cache[cache_key_md] = active_tuples
                 if active_tuples and len(ordered_positions) == num_indices:
                     result.tuple_constraints.append((ordered_positions, active_tuples))
         elif isinstance(expr, Binary) and expr.op == "and":
@@ -636,13 +651,18 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     tests, full-tuple membership is checked to avoid unsound per-position projection.
     """
     suppressed: set[str] = set()
+    # Caches for parsed membership data, shared across all variables.
+    members_cache: dict[str, set[str]] = {}
+    tuples_cache: dict[tuple[str, int], set[tuple[str, ...]]] = {}
 
     for var_name, cond_expr in kkt.stationarity_conditions.items():
         var_def = kkt.model_ir.variables.get(var_name)
         if var_def is None or not var_def.fx_map:
             continue
 
-        constraints = _collect_position_memberships(kkt, var_def, cond_expr)
+        constraints = _collect_position_memberships(
+            kkt, var_def, cond_expr, members_cache, tuples_cache
+        )
         if constraints.is_empty():
             continue
 
@@ -914,8 +934,8 @@ def emit_gams_mcp(
 
     # Compute _fx_ equations to suppress (conflict with fix-inactive blanket .fx).
     # Must be done before emit_variables/emit_equations so they can filter.
+    # Kept local — passed explicitly to downstream emitters instead of mutating kkt.
     suppressed_fx = _compute_suppressed_fx_equations(kkt)
-    kkt.suppressed_fx_equations = suppressed_fx
 
     variables_code = emit_variables(kkt)
     sections.append(variables_code)
@@ -1299,7 +1319,7 @@ def emit_gams_mcp(
         sections.append("* Equality constraints: Original equality constraints")
         sections.append("")
 
-    equations_code = emit_equations(kkt)
+    equations_code = emit_equations(kkt, suppressed_fx_equations=suppressed_fx)
     sections.append(equations_code)
     sections.append("")
 
@@ -1310,7 +1330,9 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    eq_defs_code, index_aliases = emit_equation_definitions(kkt)
+    eq_defs_code, index_aliases = emit_equation_definitions(
+        kkt, suppressed_fx_equations=suppressed_fx
+    )
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
@@ -1615,7 +1637,7 @@ def emit_gams_mcp(
         sections.append("*          equation ≥ 0 if variable = 0")
         sections.append("")
 
-    model_code = emit_model_mcp(kkt, model_name)
+    model_code = emit_model_mcp(kkt, model_name, suppressed_fx_equations=suppressed_fx)
     sections.append(model_code)
     sections.append("")
 

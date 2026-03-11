@@ -229,7 +229,7 @@ def emit_kkt_sets(kkt: KKTSystem) -> str:
     return ""
 
 
-def emit_equations(kkt: KKTSystem) -> str:
+def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = None) -> str:
     """Emit Equations block declarations.
 
     Declares all equation names (stationarity, complementarity, equality).
@@ -237,6 +237,7 @@ def emit_equations(kkt: KKTSystem) -> str:
 
     Args:
         kkt: KKT system
+        suppressed_fx_equations: _fx_ equations to omit from declarations
 
     Returns:
         GAMS Equations block
@@ -327,7 +328,7 @@ def emit_equations(kkt: KKTSystem) -> str:
 
     for eq_name in sorted(kkt.model_ir.equalities):
         # Skip _fx_ equations suppressed due to stationarity condition conflict
-        if eq_name in kkt.suppressed_fx_equations:
+        if suppressed_fx_equations and eq_name in suppressed_fx_equations:
             continue
         # Skip equations whose multiplier was simplified away,
         # but always keep the objective-defining equation (paired with objvar)
@@ -364,7 +365,9 @@ def emit_equations(kkt: KKTSystem) -> str:
     return "\n".join(lines)
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]]:
+def emit_equation_definitions(
+    kkt: KKTSystem, suppressed_fx_equations: set[str] | None = None
+) -> tuple[str, dict[str, list[str]]]:
     """Emit equation definitions (eq_name.. lhs =E= rhs;).
 
     Delegates to src.emit.equations for the actual implementation.
@@ -374,6 +377,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]
 
     Args:
         kkt: KKT system
+        suppressed_fx_equations: _fx_ equations to omit from definitions
 
     Returns:
         Tuple of (GAMS equation definitions string, dict mapping canonical
@@ -385,7 +389,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]
     """
     from src.emit.equations import emit_equation_definitions as _emit_eq_defs
 
-    return _emit_eq_defs(kkt)
+    return _emit_eq_defs(kkt, suppressed_fx_equations=suppressed_fx_equations)
 
 
 def emit_model(kkt: KKTSystem) -> str:
