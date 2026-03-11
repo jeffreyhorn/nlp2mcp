@@ -579,7 +579,7 @@ def _collect_position_memberships(
                 ((_only_name, only_pos),) = index_pos.items()
                 active: set[str] = set()
                 for member in set_def.members:
-                    if isinstance(member, str) and "." not in member:
+                    if isinstance(member, str):
                         active.add(member)
                 if active:
                     if only_pos in result.position_members:
