@@ -4,6 +4,8 @@
 **Model:** pindyck (GAMSlib SEQ=249, "Optimal Pricing and Extraction for OPEC")
 **Error category:** `lexer_invalid_char`
 **Error message:** `Unexpected character: 'd'` at line 71, column 1
+**Status:** FIXED
+**Fixed:** Prior to Sprint 22 (parser/grammar improvements); model now parses and solves optimally
 
 ## Description
 
@@ -36,12 +38,13 @@ solve robert maximizing profit using nlp;
 
 ## Root Cause
 
-1. `display` with `.l` suffixed references (`td.l`, `s.l`, etc.) is not supported in the grammar — the `display_stmt` rule likely only handles plain identifiers
-2. `loop(t$to(t), ...)` — dollar-filtered loop domain where `$to(t)` filters the loop index `t` to only elements in dynamic set `to` — may also be unsupported
-3. The actual first failure may be earlier in the file (e.g., the `loop` or `.l` assignment lines)
+1. `display` with `.l` suffixed references (`td.l`, `s.l`, etc.) was not supported in the grammar
+2. `loop(t$to(t), ...)` — dollar-filtered loop domain where `$to(t)` filters the loop index `t` to only elements in dynamic set `to` — was not supported
 
-## Fix Approach
+## Solution
 
-1. Add `.l`, `.m`, `.lo`, `.up`, `.fx` attribute references to `display_stmt` item list
-2. Verify `loop` with dollar-filtered domain (`t$to(t)`) is supported
-3. These are common GAMS patterns that would unblock several other models
+Both features were added by grammar/parser improvements across Sprint 20-21:
+- `display` with `.l`/`.m`/`.lo`/`.up`/`.fx` attribute references
+- `loop` with dollar-filtered domain (`t$to(t)`)
+
+The model now parses, translates to MCP, and solves optimally with GAMS PATH solver.

@@ -51,7 +51,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VarKind
+from src.ir.symbols import VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
@@ -475,6 +475,220 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
     return True
 
 
+def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
+    """Reconstruct the _fx_ equation name for a per-element fixed variable.
+
+    Delegates to the canonical bound-name logic in src/ir/normalize.py
+    (bound_name) to avoid drift between normalization and emission.
+    """
+    from src.ir.normalize import bound_name
+
+    return bound_name(var_name, "fx", indices)
+
+
+class _MembershipConstraints:
+    """Collected membership constraints from stationarity conditions.
+
+    Attributes:
+        position_members: Per-position active labels from 1-D membership tests.
+            Mapping from domain position (int) to set of active UEL labels.
+        tuple_constraints: Full-tuple constraints from multi-D membership tests.
+            Each entry is (domain_positions, active_tuples) where domain_positions
+            maps the membership test's index ordering to domain positions, and
+            active_tuples is the set of member tuples (split from dot-joined).
+    """
+
+    __slots__ = ("position_members", "tuple_constraints")
+
+    def __init__(self) -> None:
+        self.position_members: dict[int, set[str]] = {}
+        self.tuple_constraints: list[tuple[list[int], set[tuple[str, ...]]]] = []
+
+    def is_empty(self) -> bool:
+        return not self.position_members and not self.tuple_constraints
+
+
+def _collect_position_memberships(
+    kkt: KKTSystem,
+    var_def: VariableDef,
+    cond_expr: Expr,
+    set_members_cache: dict[str, set[str]] | None = None,
+    set_tuples_cache: dict[tuple[str, int], set[tuple[str, ...]]] | None = None,
+) -> _MembershipConstraints:
+    """Collect membership constraints from a stationarity condition.
+
+    A SetMembershipTest like ``t(tl)`` restricts the domain variable ``tl`` to
+    members of set ``t``.  For multi-dimensional variables, only the domain
+    position corresponding to the condition's index symbol is constrained.
+
+    For multi-dimensional membership tests like ``td(w,t)``, full-tuple
+    membership is tracked to avoid unsound per-position projection.
+
+    Binary("and", ...) conjunctions are traversed to collect multiple membership
+    tests (e.g., ``s(i) and t(j)`` restricts two different positions).
+
+    Returns:
+        _MembershipConstraints with per-position members (1-D tests) and
+        full-tuple constraints (multi-D tests).
+    """
+    from src.ir.ast import SymbolRef as _SymbolRef
+
+    result = _MembershipConstraints()
+    domain = getattr(var_def, "domain", ()) or ()
+    unsound = False  # set True if we encounter non-conjunctive operators
+
+    def _visit(expr: Expr) -> None:
+        nonlocal unsound
+        if unsound:
+            return
+        if isinstance(expr, SetMembershipTest):
+            set_def = kkt.model_ir.sets.get(expr.set_name)
+            if set_def is None or not set_def.members:
+                return
+            if not expr.indices:
+                return
+            # Map index symbol name -> domain position
+            index_pos: dict[str, int] = {}
+            ordered_positions: list[int] = []
+            for idx_expr in expr.indices:
+                idx_name: str | None = None
+                if isinstance(idx_expr, _SymbolRef):
+                    idx_name = idx_expr.name
+                elif isinstance(idx_expr, str):
+                    idx_name = idx_expr
+                if idx_name is None:
+                    continue
+                idx_canon = idx_name.lower()
+                for i, dom_sym in enumerate(domain):
+                    dom_name = (
+                        dom_sym if isinstance(dom_sym, str) else getattr(dom_sym, "name", None)
+                    )
+                    if dom_name is None:
+                        continue
+                    if dom_name.lower() == idx_canon:
+                        index_pos[idx_name] = i
+                        ordered_positions.append(i)
+                        break
+            if not index_pos:
+                return
+            num_indices = len(expr.indices)
+            if num_indices == 1:
+                # 1-D membership: store per-position active labels.
+                ((_only_name, only_pos),) = index_pos.items()
+                cache_key_1d = expr.set_name.lower()
+                active: set[str]
+                if set_members_cache is not None and cache_key_1d in set_members_cache:
+                    active = set_members_cache[cache_key_1d]
+                else:
+                    active = set()
+                    for member in set_def.members:
+                        if isinstance(member, str):
+                            active.add(member)
+                    if set_members_cache is not None:
+                        set_members_cache[cache_key_1d] = active
+                if active:
+                    if only_pos in result.position_members:
+                        result.position_members[only_pos] &= active
+                    else:
+                        result.position_members[only_pos] = active
+            else:
+                # Multi-D membership: store full-tuple constraints.
+                # Members are dot-joined tuples (e.g., "w1.t1").
+                cache_key_md = (expr.set_name.lower(), num_indices)
+                active_tuples: set[tuple[str, ...]]
+                if set_tuples_cache is not None and cache_key_md in set_tuples_cache:
+                    active_tuples = set_tuples_cache[cache_key_md]
+                else:
+                    active_tuples = set()
+                    for member in set_def.members:
+                        if not isinstance(member, str):
+                            continue
+                        parts = tuple(member.split("."))
+                        if len(parts) == num_indices:
+                            active_tuples.add(parts)
+                    if set_tuples_cache is not None:
+                        set_tuples_cache[cache_key_md] = active_tuples
+                if active_tuples and len(ordered_positions) == num_indices:
+                    result.tuple_constraints.append((ordered_positions, active_tuples))
+        elif isinstance(expr, Binary) and expr.op == "and":
+            _visit(expr.left)
+            _visit(expr.right)
+            return
+        elif isinstance(expr, Binary):
+            # Disjunctive boolean operators (or, xor) make membership-based
+            # pruning unsound.  Bail out only for those; for other Binary ops
+            # (arithmetic, comparison), fall through to children() traversal
+            # so nested SetMembershipTest nodes can still be collected.
+            if expr.op in ("or", "xor"):
+                unsound = True
+                return
+
+        # Fallback: traverse children of other expression types so that
+        # membership tests nested under wrappers (e.g., DollarConditional)
+        # are still discovered.
+        children_fn = getattr(expr, "children", None)
+        if callable(children_fn):
+            for child in children_fn():
+                if isinstance(child, Expr):
+                    _visit(child)
+
+    _visit(cond_expr)
+    if unsound:
+        return _MembershipConstraints()  # empty — skip suppression
+    return result
+
+
+def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
+    """Find _fx_ equations whose target index is outside the stationarity condition.
+
+    When a variable has a conditioned stationarity equation (e.g., stat_a(tl)$(t(tl))),
+    the emitter generates blanket .fx assignments for inactive instances. If the same
+    variable also has per-element _fx_ equations (from fx_map), those equations would
+    conflict — GAMS eliminates the fixed variable, leaving the _fx_ equation unmatched.
+
+    This function identifies such _fx_ equations so they can be suppressed from the MCP.
+    For 1-D membership tests, per-position checking is used. For multi-D membership
+    tests, full-tuple membership is checked to avoid unsound per-position projection.
+    """
+    suppressed: set[str] = set()
+    # Caches for parsed membership data, shared across all variables.
+    members_cache: dict[str, set[str]] = {}
+    tuples_cache: dict[tuple[str, int], set[tuple[str, ...]]] = {}
+
+    for var_name, cond_expr in kkt.stationarity_conditions.items():
+        var_def = kkt.model_ir.variables.get(var_name)
+        if var_def is None or not var_def.fx_map:
+            continue
+
+        constraints = _collect_position_memberships(
+            kkt, var_def, cond_expr, members_cache, tuples_cache
+        )
+        if constraints.is_empty():
+            continue
+
+        for indices, _value in var_def.fx_map.items():
+            suppress = False
+            # Check 1-D per-position constraints
+            for pos, active_members in constraints.position_members.items():
+                if pos < len(indices) and indices[pos] not in active_members:
+                    suppress = True
+                    break
+            # Check multi-D full-tuple constraints
+            if not suppress:
+                for domain_positions, active_tuples in constraints.tuple_constraints:
+                    # Extract the index components at the constrained positions
+                    idx_tuple = tuple(
+                        indices[pos] for pos in domain_positions if pos < len(indices)
+                    )
+                    if len(idx_tuple) == len(domain_positions) and idx_tuple not in active_tuples:
+                        suppress = True
+                        break
+            if suppress:
+                suppressed.add(_fx_eq_name(var_name, indices))
+
+    return suppressed
+
+
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
@@ -717,6 +931,11 @@ def emit_gams_mcp(
         sections.append("*   π^L (piL_*): Positive multipliers for lower bounds")
         sections.append("*   π^U (piU_*): Positive multipliers for upper bounds")
         sections.append("")
+
+    # Compute _fx_ equations to suppress (conflict with fix-inactive blanket .fx).
+    # Must be done before emit_variables/emit_equations so they can filter.
+    # Kept local — passed explicitly to downstream emitters instead of mutating kkt.
+    suppressed_fx = _compute_suppressed_fx_equations(kkt)
 
     variables_code = emit_variables(kkt)
     sections.append(variables_code)
@@ -1100,7 +1319,7 @@ def emit_gams_mcp(
         sections.append("* Equality constraints: Original equality constraints")
         sections.append("")
 
-    equations_code = emit_equations(kkt)
+    equations_code = emit_equations(kkt, suppressed_fx_equations=suppressed_fx)
     sections.append(equations_code)
     sections.append("")
 
@@ -1111,7 +1330,9 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    eq_defs_code, index_aliases = emit_equation_definitions(kkt)
+    eq_defs_code, index_aliases = emit_equation_definitions(
+        kkt, suppressed_fx_equations=suppressed_fx
+    )
 
     # Emit index aliases if any are needed (to avoid GAMS Error 125)
     # These must be declared before the equation definitions that use them
@@ -1368,6 +1589,26 @@ def emit_gams_mcp(
             else:
                 fx_lines.append(f"{var_name}.fx = 0;")
 
+    # Fix suppressed _fx_ equations: fix their multipliers to 0 and re-emit
+    # the correct .fx value (instead of the blanket .fx = 0 from stationarity).
+    if suppressed_fx:
+        for var_name in sorted(kkt.stationarity_conditions):
+            var_def = kkt.model_ir.variables.get(var_name)
+            if var_def is None or not var_def.fx_map:
+                continue
+            for indices, fx_val in sorted(var_def.fx_map.items()):
+                eq_name = _fx_eq_name(var_name, indices)
+                if eq_name not in suppressed_fx:
+                    continue
+                # Fix the multiplier for this suppressed equation to 0
+                mult_name = create_eq_multiplier_name(eq_name)
+                if kkt.referenced_multipliers is None or mult_name in kkt.referenced_multipliers:
+                    fx_lines.append(f"{mult_name}.fx = 0;")
+                # Re-emit the correct .fx value for this element
+                idx_str = _format_map_indices(indices)
+                val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                fx_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
+
     if fx_lines:
         if add_comments:
             sections.append("* ============================================")
@@ -1396,7 +1637,7 @@ def emit_gams_mcp(
         sections.append("*          equation ≥ 0 if variable = 0")
         sections.append("")
 
-    model_code = emit_model_mcp(kkt, model_name)
+    model_code = emit_model_mcp(kkt, model_name, suppressed_fx_equations=suppressed_fx)
     sections.append(model_code)
     sections.append("")
 

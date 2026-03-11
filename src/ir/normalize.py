@@ -216,10 +216,10 @@ def normalize_model(
             expr: Expr,
             domain_sets: Sequence[str],
         ):
-            bound_name = _bound_name(var_name, suffix, indices)
+            bnd_name = bound_name(var_name, suffix, indices)
             expr = _attach_domain(expr, domain_sets)
-            bounds[bound_name] = NormalizedEquation(
-                name=bound_name,
+            bounds[bnd_name] = NormalizedEquation(
+                name=bnd_name,
                 domain_sets=tuple(domain_sets),
                 index_values=indices,
                 relation=kind,
@@ -228,9 +228,9 @@ def normalize_model(
                 rank=len(_expr_domain(expr)),
             )
             if kind == Rel.EQ:
-                ir.equalities.append(bound_name)
+                ir.equalities.append(bnd_name)
             else:
-                ir.inequalities.append(bound_name)
+                ir.inequalities.append(bnd_name)
 
         for indices, value in _iterate_bounds(var.lo_map, var.lo):
             expr = _binary("-", _const(value, var.domain), _var_ref(var_name, indices, var.domain))
@@ -295,7 +295,7 @@ def _sanitize_identifier(s: str) -> str:
     return sanitized
 
 
-def _bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
+def bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
     if not indices:
         return f"{var}_{suffix}"
     # Use underscores instead of parentheses for valid GAMS identifiers

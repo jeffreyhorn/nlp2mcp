@@ -4,6 +4,8 @@
 **Model:** otpop (GAMSlib)
 **Sprint:** 21 Day 8
 **Error Category:** Execution — MCP pair unmatched equation
+**Status:** FIXED
+**Fixed:** 2026-03-10 (PR #1044 — `_fx_` equation suppression)
 
 ## Problem
 
@@ -39,21 +41,21 @@ The KKT generator creates `x_fx` equations (fixed-value constraints) and `nu_x_f
 
 Similarly, `comp_lo_p` (lower bound complementarity for `p`) is generated for all years but only paired for active years.
 
-## Reproduction
+## Solution
 
-```bash
-.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms
-/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams /tmp/otpop_mcp.gms o=/tmp/otpop_mcp.lst
-grep 'MCP pair' /tmp/otpop_mcp.lst | head -10
-```
+PR #1044 implements `_fx_` equation suppression in the emitter:
 
-## Suggested Fix
+1. `_compute_suppressed_fx_equations()` in `src/emit/emit_gams.py` detects `_fx_` equations whose target index falls outside the stationarity condition's active domain (e.g., `x_fx_1965` where `1965` is not in the optimization set `t`)
+2. Suppressed equations are filtered from the MCP model statement, equation declarations, and equation definitions
+3. Their multipliers are fixed to 0 via `.fx` assignments
+4. The correct `.fx` values are re-emitted after the blanket fix-inactive lines
 
-When variables are fixed for a subset of indices (`.fx` with domain condition), the KKT generator should either:
-1. **Include all pairs in the MCP declaration** — generate the x_fx equations AND include them in the model block
-2. **Skip equation generation for fixed indices** — don't create x_fx equations for indices where the variable is already fixed (redundant constraint)
-3. **Fix the MCP model declaration** to include the missing pairs
+**Result:** All 9 `x_fx_*` unmatched errors eliminated. PATH solver now runs (model status: Locally Infeasible — a solve outcome, not a structural error).
 
-## Impact
+## Files Changed
 
-19 execution errors. Model compiles cleanly but cannot solve.
+- `src/emit/emit_gams.py` — `_fx_eq_name()`, `_compute_suppressed_fx_equations()`, fix-inactive suppression logic
+- `src/emit/model.py` — Filter suppressed equations from MCP model statement
+- `src/emit/equations.py` — Filter suppressed equations from equation definitions
+- `src/emit/templates.py` — Filter suppressed equations from equation declarations
+- `src/kkt/kkt_system.py` — Added `suppressed_fx_equations` field

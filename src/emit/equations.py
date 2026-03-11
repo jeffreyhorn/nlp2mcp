@@ -327,7 +327,9 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         return f"{eq_name}.. {expr_gams} {rel_gams} 0;"
 
 
-def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]]:
+def emit_equation_definitions(
+    kkt: KKTSystem, suppressed_fx_equations: set[str] | None = None
+) -> tuple[str, dict[str, list[str]]]:
     """Emit all equation definitions from KKT system.
 
     Emits equation definitions for:
@@ -341,6 +343,7 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]
 
     Args:
         kkt: KKT system containing all equations
+        suppressed_fx_equations: _fx_ equations to omit from definitions
 
     Returns:
         Tuple of (GAMS equation definitions as string, dict mapping canonical
@@ -433,6 +436,9 @@ def emit_equation_definitions(kkt: KKTSystem) -> tuple[str, dict[str, list[str]]
 
         lines.append("* Original equality equations")
         for eq_name in kkt.model_ir.equalities:
+            # Skip _fx_ equations suppressed due to stationarity condition conflict
+            if suppressed_fx_equations and eq_name in suppressed_fx_equations:
+                continue
             # Skip equations whose multiplier was simplified away,
             # but always keep the objective-defining equation (paired with objvar)
             is_objdef = eq_name == objdef_eq and not kkt.model_ir.strategy1_applied

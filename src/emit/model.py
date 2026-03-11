@@ -77,7 +77,11 @@ def _should_pair_with_objvar(
     return eq_name == obj_info.defining_equation and not strategy1_applied
 
 
-def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
+def emit_model_mcp(
+    kkt: KKTSystem,
+    model_name: str = "mcp_model",
+    suppressed_fx_equations: set[str] | None = None,
+) -> str:
     """Emit Model MCP declaration with complementarity pairs.
 
     The Model MCP block lists all equation-variable pairs that form the
@@ -103,6 +107,7 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
     Args:
         kkt: The KKT system containing all equations and variables
         model_name: Name for the GAMS model (default: "mcp_model")
+        suppressed_fx_equations: _fx_ equations to omit from MCP pairs
 
     Returns:
         GAMS Model MCP declaration string
@@ -168,6 +173,9 @@ def emit_model_mcp(kkt: KKTSystem, model_name: str = "mcp_model") -> str:
         pairs.append("")
         pairs.append("    * Equality constraints")
         for eq_name in sorted(kkt.model_ir.equalities):
+            # Skip _fx_ equations suppressed due to stationarity condition conflict
+            if suppressed_fx_equations and eq_name in suppressed_fx_equations:
+                continue
             # Check if this is the objective defining equation that should be paired with objvar
             # Note: The multiplier for objdef is created in build_complementarity_pairs()
             # for all equality constraints, so it's guaranteed to exist.
