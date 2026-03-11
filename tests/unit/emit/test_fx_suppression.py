@@ -173,6 +173,45 @@ class TestComputeSuppressedFxEquations:
         expected_suppressed = {_fx_eq_name("x", idx_out)}
         assert suppressed == expected_suppressed
 
+    def test_multidim_membership_test_with_tuple_members(self, manual_index_mapping):
+        """2-D SetMembershipTest with dot-joined tuple members suppresses correctly."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Variable x(w, t) with a 2-D membership condition td(w, t).
+        # td members are dot-joined tuples: "w1.t1", "w1.t2" — so (w1,t1) and (w1,t2) are active.
+        model.sets["w"] = SetDef(name="w", members=["w1", "w2"])
+        model.sets["t"] = SetDef(name="t", members=["t1", "t2"])
+        model.sets["td"] = SetDef(name="td", members=["w1.t1", "w1.t2"])
+
+        x = VariableDef(name="x", domain=("w", "t"), kind=VarKind.CONTINUOUS)
+        idx_active = ("w1", "t1")  # in td
+        idx_inactive = ("w2", "t1")  # w2 not in any td tuple
+        x.fx_map[idx_active] = 5.0
+        x.fx_map[idx_inactive] = 10.0
+        model.variables["x"] = x
+
+        kkt = _make_kkt(
+            model,
+            [
+                ("obj", ()),
+                ("x", ("w1", "t1")),
+                ("x", ("w1", "t2")),
+                ("x", ("w2", "t1")),
+                ("x", ("w2", "t2")),
+            ],
+            manual_index_mapping,
+        )
+        # 2-D membership condition: td(w, t)
+        kkt.stationarity_conditions["x"] = SetMembershipTest("td", (SymbolRef("w"), SymbolRef("t")))
+
+        suppressed = _compute_suppressed_fx_equations(kkt)
+        # (w2, t1) is inactive: w2 not in the w-projection of td
+        assert _fx_eq_name("x", idx_inactive) in suppressed
+        # (w1, t1) is active: w1 in td's w-projection AND t1 in td's t-projection
+        assert _fx_eq_name("x", idx_active) not in suppressed
+
 
 @pytest.mark.unit
 class TestSuppressedFxInEmission:

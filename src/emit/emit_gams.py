@@ -478,7 +478,7 @@ def _paramref_zero_on_diagonal(param: ParamRef, model_ir: ModelIR) -> bool:
 def _fx_eq_name(var_name: str, indices: tuple[str, ...]) -> str:
     """Reconstruct the _fx_ equation name for a per-element fixed variable.
 
-    Mirrors the naming logic in normalize.py:_bound_name + _sanitize_identifier.
+    Mirrors the naming logic in src/ir/normalize.py (_bound_name/_sanitize_identifier).
     """
     import hashlib
 
@@ -525,30 +525,74 @@ def _collect_position_memberships(
             set_def = kkt.model_ir.sets.get(expr.set_name)
             if set_def is None or not set_def.members:
                 return
-            # Find which domain position this condition constrains
+            # Find which domain positions this condition constrains.
+            # For multi-dimensional membership tests like td(w,t),
+            # expr.indices can contain multiple index symbols; each one
+            # should be mapped to its corresponding position in the
+            # variable's domain.
             if not expr.indices:
                 return
-            idx_expr = expr.indices[0]
-            idx_name: str | None = None
-            if isinstance(idx_expr, _SymbolRef):
-                idx_name = idx_expr.name
-            elif isinstance(idx_expr, str):
-                idx_name = idx_expr
-            if idx_name is None:
+            # Map index symbol name -> domain position
+            index_pos: dict[str, int] = {}
+            for idx_expr in expr.indices:
+                idx_name: str | None = None
+                if isinstance(idx_expr, _SymbolRef):
+                    idx_name = idx_expr.name
+                elif isinstance(idx_expr, str):
+                    idx_name = idx_expr
+                if idx_name is None:
+                    continue
+                for i, dom_sym in enumerate(domain):
+                    dom_name = (
+                        dom_sym if isinstance(dom_sym, str) else getattr(dom_sym, "name", None)
+                    )
+                    if dom_name == idx_name:
+                        index_pos[idx_name] = i
+                        break
+            if not index_pos:
+                # None of the indices matched the variable's domain.
                 return
-            position: int | None = None
-            for i, dom_sym in enumerate(domain):
-                dom_name = dom_sym if isinstance(dom_sym, str) else getattr(dom_sym, "name", None)
-                if dom_name == idx_name:
-                    position = i
-                    break
-            if position is None:
-                return
-            active = set(set_def.members)
-            if position in position_members:
-                position_members[position] &= active
-            else:
-                position_members[position] = active
+            # Collect active members per constrained domain position.
+            # Heuristic: members can be simple labels ("w1") or
+            # dot-joined tuples ("w1.t1"). When tuple-like, the number
+            # of components should match the number of indices.
+            active_by_position: dict[int, set[str]] = {}
+            num_indices = len(expr.indices)
+            for member in set_def.members:
+                if not isinstance(member, str):
+                    continue
+                parts = member.split(".")
+                if num_indices > 1 and len(parts) == num_indices:
+                    # Tuple membership: project each component to the
+                    # corresponding domain position, based on the index
+                    # symbol ordering in expr.indices.
+                    for idx_pos_i, idx_expr_i in enumerate(expr.indices):
+                        i_name: str | None = None
+                        if isinstance(idx_expr_i, _SymbolRef):
+                            i_name = idx_expr_i.name
+                        elif isinstance(idx_expr_i, str):
+                            i_name = idx_expr_i
+                        if i_name is None:
+                            continue
+                        dom_pos = index_pos.get(i_name)
+                        if dom_pos is None:
+                            continue
+                        label = parts[idx_pos_i]
+                        active_by_position.setdefault(dom_pos, set()).add(label)
+                elif num_indices == 1 and len(parts) == 1:
+                    # 1-D membership: all members apply directly to the
+                    # single constrained position.
+                    ((_only_name, only_pos),) = index_pos.items()
+                    active_by_position.setdefault(only_pos, set()).add(parts[0])
+                else:
+                    # Shape mismatch; conservatively skip this member.
+                    continue
+            # Merge collected actives into global position_members.
+            for position, active in active_by_position.items():
+                if position in position_members:
+                    position_members[position] &= active
+                else:
+                    position_members[position] = set(active)
         elif isinstance(expr, Binary) and expr.op == "and":
             _visit(expr.left)
             _visit(expr.right)
