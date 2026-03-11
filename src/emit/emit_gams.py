@@ -544,8 +544,12 @@ def _collect_position_memberships(
 
     result = _MembershipConstraints()
     domain = getattr(var_def, "domain", ()) or ()
+    unsound = False  # set True if we encounter non-conjunctive operators
 
     def _visit(expr: Expr) -> None:
+        nonlocal unsound
+        if unsound:
+            return
         if isinstance(expr, SetMembershipTest):
             set_def = kkt.model_ir.sets.get(expr.set_name)
             if set_def is None or not set_def.members:
@@ -602,6 +606,11 @@ def _collect_position_memberships(
             _visit(expr.left)
             _visit(expr.right)
             return
+        elif isinstance(expr, Binary):
+            # Non-conjunctive binary operators (or, xor, etc.) make
+            # membership-based pruning unsound.  Conservatively bail out.
+            unsound = True
+            return
 
         # Fallback: traverse children of other expression types so that
         # membership tests nested under wrappers (e.g., DollarConditional)
@@ -613,6 +622,8 @@ def _collect_position_memberships(
                     _visit(child)
 
     _visit(cond_expr)
+    if unsound:
+        return _MembershipConstraints()  # empty — skip suppression
     return result
 
 
