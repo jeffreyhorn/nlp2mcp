@@ -1584,7 +1584,8 @@ def emit_gams_mcp(
                     continue
                 # Fix the multiplier for this suppressed equation to 0
                 mult_name = create_eq_multiplier_name(eq_name)
-                fx_lines.append(f"{mult_name}.fx = 0;")
+                if kkt.referenced_multipliers is None or mult_name in kkt.referenced_multipliers:
+                    fx_lines.append(f"{mult_name}.fx = 0;")
                 # Re-emit the correct .fx value for this element
                 idx_str = _format_map_indices(indices)
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
