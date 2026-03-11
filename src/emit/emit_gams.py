@@ -1533,6 +1533,11 @@ def emit_gams_mcp(
         eq_def = kkt.model_ir.equations[eq_name]
         if not eq_def.domain:
             continue
+        # Skip equations with dynamic-subset domains — these are handled
+        # exclusively by section 3b which builds consistent domain/condition
+        # pairs with proper parent-set remapping.
+        if any(d.lower() in dynamic_map for d in eq_def.domain):
+            continue
         lhs, rhs = eq_def.lhs_rhs
         lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
         lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
@@ -1547,10 +1552,7 @@ def emit_gams_mcp(
         mult_name = create_eq_multiplier_name(eq_name)
         if ref_mults is not None and mult_name not in ref_mults:
             continue
-        # Remap dynamic subset indices to parent sets so .fx domain matches
-        # the multiplier's declared domain (which uses remapped parent sets).
-        remapped_domain = tuple(dynamic_map.get(d.lower(), d) for d in eq_def.domain)
-        domain_str = ",".join(remapped_domain)
+        domain_str = ",".join(eq_def.domain)
         if inferred_cond is not None:
             fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
         elif eq_def.condition is not None and isinstance(eq_def.condition, Expr):
