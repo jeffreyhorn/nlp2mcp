@@ -1746,6 +1746,176 @@ def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     return expr
 
 
+def _compute_index_offset_key(
+    eq_indices: tuple[str, ...],
+    var_indices: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+    _domain_cache: dict | None = None,
+) -> tuple[int, ...]:
+    """Compute the positional offset between equation and variable indices.
+
+    Issue #1045: For lead/lag equations, the equation instance and variable instance
+    have different elements from the same domain set. This function computes the
+    positional difference to group Jacobian entries by their offset pattern.
+
+    For example, if totalcap("1990") has a Jacobian entry for k("1995"), and the
+    set t = {"1990","1995","2000","2005","2010"}, then the offset is
+    pos("1990") - pos("1995") = 0 - 1 = -1.
+
+    Only computes offsets when the equation and variable share the same domain set
+    at corresponding positions. If the domains differ (e.g., cdef(i) vs x(c) where
+    i and c are different sets), the offset is 0.
+
+    Args:
+        eq_indices: Concrete equation instance indices
+        var_indices: Concrete variable instance indices
+        eq_domain: Equation domain set names
+        var_domain: Variable domain set names
+        model_ir: Model IR for set resolution
+        _domain_cache: Optional cache dict for resolved set names and member→position
+            maps. Populated on first use and reused across calls to avoid redundant
+            resolve_set_members() lookups and O(n) list.index() scans.
+
+    Returns:
+        Tuple of integer offsets, one per index dimension. (0,0,...) means same-index.
+        Falls back to (0,...) if positions can't be determined.
+    """
+    from ..ad.index_mapping import resolve_set_members
+
+    if len(eq_indices) != len(var_indices):
+        # Different dimensionality — return zeros
+        return (0,) * max(len(eq_indices), len(var_indices))
+
+    if _domain_cache is None:
+        _domain_cache = {}
+
+    def _resolve_cached(set_name: str) -> tuple[str, dict[str, int]] | None:
+        """Resolve a set name to (underlying_set_name, {member: position}) with caching."""
+        if set_name in _domain_cache:
+            return _domain_cache[set_name]
+        try:
+            members, resolved_name = resolve_set_members(set_name, model_ir)
+            pos_map = {m: i for i, m in enumerate(members)}
+            result = (resolved_name, pos_map)
+        except (ValueError, KeyError):
+            result = None
+        _domain_cache[set_name] = result
+        return result
+
+    offsets: list[int] = []
+    for i, (eq_elem, var_elem) in enumerate(zip(eq_indices, var_indices, strict=True)):
+        if eq_elem == var_elem:
+            offsets.append(0)
+            continue
+        # Only compute offset if both domains reference the same underlying set
+        eq_set = eq_domain[i] if i < len(eq_domain) else None
+        var_set = var_domain[i] if i < len(var_domain) else None
+        if eq_set is None or var_set is None:
+            offsets.append(0)
+            continue
+        eq_info = _resolve_cached(eq_set)
+        var_info = _resolve_cached(var_set)
+        if eq_info is None or var_info is None:
+            offsets.append(0)
+            continue
+        eq_resolved, eq_pos_map = eq_info
+        var_resolved, var_pos_map = var_info
+        if eq_resolved != var_resolved:
+            # Different underlying sets — not a lead/lag pattern
+            offsets.append(0)
+            continue
+        # Same set: compute positional offset via O(1) dict lookup
+        eq_pos = eq_pos_map.get(eq_elem)
+        var_pos = var_pos_map.get(var_elem)
+        if eq_pos is not None and var_pos is not None:
+            offsets.append(eq_pos - var_pos)
+        else:
+            offsets.append(0)
+
+    return tuple(offsets)
+
+
+def _build_offset_guard(
+    mult_domain: tuple[str, ...],
+    offset_key: tuple[int, ...],
+) -> Expr | None:
+    """Build a boundary guard condition for an offset multiplier term.
+
+    Issue #1045: When a stationarity term uses nu_eq(t-1) or nu_eq(t+1),
+    the term must be guarded to prevent out-of-bounds index access:
+    - For lag (offset < 0): $(ord(t) > abs(offset))
+    - For lead (offset > 0): $(ord(t) <= card(t) - offset)
+
+    Args:
+        mult_domain: Multiplier domain indices (e.g., ("t",))
+        offset_key: Tuple of integer offsets per domain dimension
+
+    Returns:
+        Guard expression or None if no guard needed
+    """
+    from ..ir.ast import Binary, Call, Const, SymbolRef
+
+    conditions: list[Expr] = []
+    for i, domain_idx in enumerate(mult_domain):
+        offset = offset_key[i] if i < len(offset_key) else 0
+        if offset < 0:
+            # Lag: ord(t) > abs(offset)
+            conditions.append(
+                Binary(">", Call("ord", (SymbolRef(domain_idx),)), Const(float(abs(offset))))
+            )
+        elif offset > 0:
+            # Lead: ord(t) <= card(t) - offset
+            conditions.append(
+                Binary(
+                    "<=",
+                    Call("ord", (SymbolRef(domain_idx),)),
+                    Binary("-", Call("card", (SymbolRef(domain_idx),)), Const(float(offset))),
+                )
+            )
+
+    if not conditions:
+        return None
+    guard = conditions[0]
+    for cond in conditions[1:]:
+        guard = Binary("and", guard, cond)
+    return guard
+
+
+def _build_offset_multiplier(
+    mult_base_name: str,
+    mult_domain: tuple[str, ...],
+    offset_key: tuple[int, ...],
+) -> Expr:
+    """Build a multiplier reference with lead/lag offset indices.
+
+    Issue #1045: When a Jacobian entry has an index offset between the equation
+    and variable instances, the multiplier needs a corresponding offset.
+    E.g., if totalcap(t-1) contributes to stat_k(t), the multiplier should be
+    nu_totalcap(t-1), not nu_totalcap(t).
+
+    Args:
+        mult_base_name: Base multiplier name (e.g., "nu_totalcap")
+        mult_domain: Multiplier domain indices (e.g., ("t",))
+        offset_key: Tuple of integer offsets per domain dimension
+
+    Returns:
+        MultiplierRef with IndexOffset indices where offset != 0
+    """
+    from ..ir.ast import Const, IndexOffset
+
+    new_indices: list[str | IndexOffset] = []
+    for i, domain_idx in enumerate(mult_domain):
+        offset = offset_key[i] if i < len(offset_key) else 0
+        if offset != 0:
+            new_indices.append(IndexOffset(domain_idx, Const(float(offset)), False))
+        else:
+            new_indices.append(domain_idx)
+
+    return MultiplierRef(mult_base_name, tuple(new_indices))
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -1787,6 +1957,9 @@ def _add_indexed_jacobian_terms(
 
             constraint_entries[eq_name].append((row_id, col_id))
 
+    # Cache for resolved set names and member→position maps (shared across constraints)
+    domain_cache: dict = {}
+
     # For each constraint, add the Jacobian term
     for _eq_name, entries in constraint_entries.items():
         # Get first entry to extract structure
@@ -1800,98 +1973,151 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
-                # Issue #649: Build constraint-specific element-to-set mapping.
-                # When a constraint has multiple indices from the same underlying set
-                # (e.g., maxdist(i,j) where both i,j iterate over the same set), we need
-                # to map element labels to their specific position in the constraint domain.
-                # For example, for maxdist(1,2) with domain (i,j):
-                #   "1" -> "i" (position 0)
-                #   "2" -> "j" (position 1)
-                # This ensures x(1) - x(2) becomes x(i) - x(j), not x(i) - x(i).
-                constraint_element_to_set = _build_constraint_element_mapping(
-                    element_to_set, eq_indices, mult_domain
-                )
+                # Issue #1045: Sub-group entries by their index offset pattern.
+                # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),
+                # variable k has two distinct Jacobian patterns in the same constraint:
+                #   1. ∂totalcap(t)/∂k(t) = -spda^nyper  (same-index)
+                #   2. ∂totalcap(t-1)/∂k(t) = 1          (offset: eq at t-1, var at t)
+                # These need separate stationarity terms with different multiplier indices.
+                # Group entries by the relationship between eq_indices and var_indices.
+                offset_groups: dict[tuple[int, ...], list[tuple[int, int]]] = {}
+                for entry_row_id, entry_col_id in entries:
+                    _, entry_eq_indices = jacobian.index_mapping.row_to_eq[entry_row_id]
+                    _, entry_var_indices = jacobian.index_mapping.col_to_var[entry_col_id]
+                    # Compute positional offset between eq and var indices in their domains
+                    offset_key = _compute_index_offset_key(
+                        entry_eq_indices,
+                        entry_var_indices,
+                        mult_domain,
+                        var_domain,
+                        kkt.model_ir,
+                        _domain_cache=domain_cache,
+                    )
+                    if offset_key not in offset_groups:
+                        offset_groups[offset_key] = []
+                    offset_groups[offset_key].append((entry_row_id, entry_col_id))
 
-                # Replace indices in derivative expression using constraint-aware mapping
-                # Issue #620: Pass var_domain as equation_domain for subset substitution
-                indexed_deriv = _replace_indices_in_expr(
-                    derivative,
-                    var_domain,
-                    constraint_element_to_set,
-                    kkt.model_ir,
-                    equation_domain=var_domain,
-                )
+                for offset_key, group_entries in offset_groups.items():
+                    group_row_id, group_col_id = group_entries[0]
+                    derivative = jacobian.get_derivative(group_row_id, group_col_id)
+                    _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
 
-                # Get base multiplier name (without element suffixes)
-                mult_base_name = name_func(eq_name_base)
-                mult_ref = MultiplierRef(mult_base_name, mult_domain)
-                term: Expr = Binary("*", indexed_deriv, mult_ref)
+                    # Issue #649: Build constraint-specific element-to-set mapping.
+                    # When a constraint has multiple indices from the same underlying set
+                    # (e.g., maxdist(i,j) where both i,j iterate over the same set), we need
+                    # to map element labels to their specific position in the constraint domain.
+                    # For example, for maxdist(1,2) with domain (i,j):
+                    #   "1" -> "i" (position 0)
+                    #   "2" -> "j" (position 1)
+                    # This ensures x(1) - x(2) becomes x(i) - x(j), not x(i) - x(i).
+                    constraint_element_to_set = _build_constraint_element_mapping(
+                        element_to_set, group_eq_indices, mult_domain
+                    )
 
-                # Issue #877: Propagate the equation's dollar condition into
-                # the Jacobian term BEFORE Sum wrapping, so that derivative
-                # expressions with undefined values (e.g. division by zero)
-                # are guarded for instances where the condition is false.
-                eq_def = kkt.model_ir.equations.get(eq_name_base)
-                if eq_def is not None and eq_def.condition is not None:
-                    indexed_condition = _replace_indices_in_expr(
-                        eq_def.condition,
+                    # Replace indices in derivative expression using constraint-aware mapping
+                    # Issue #620: Pass var_domain as equation_domain for subset substitution
+                    indexed_deriv = _replace_indices_in_expr(
+                        derivative,
                         var_domain,
                         constraint_element_to_set,
                         kkt.model_ir,
                         equation_domain=var_domain,
                     )
-                    term = DollarConditional(value_expr=term, condition=indexed_condition)
 
-                # Determine if we need a sum or a direct term:
-                # - If domains match exactly: direct term deriv(i) * mult(i)
-                # - If mult_domain is subset of var_domain: direct term deriv(i,j) * mult(i)
-                #   (the multiplier indices are shared with the variable - no summation needed)
-                # - If mult_domain is disjoint from var_domain: sum over mult_domain
-                #   (e.g., sum(k, deriv * mult(k)) where k is independent of variable indices)
-                # - If mult_domain partially overlaps var_domain but is not a subset: error
-                mult_domain_set = set(mult_domain)
-                var_domain_set = set(var_domain)
+                    # Get base multiplier name (without element suffixes)
+                    mult_base_name = name_func(eq_name_base)
 
-                if mult_domain == var_domain:
-                    # Exact match: direct term, no sum needed
-                    pass
-                elif mult_domain_set.issubset(var_domain_set):
-                    # Subset: constraint domain is contained in variable domain
-                    # e.g., supply(i) contributes to stat_x(i,j) with direct term lam_supply(i)
-                    # No sum needed - the i index is shared
-                    pass
-                elif not mult_domain_set.intersection(var_domain_set):
-                    # Disjoint: constraint has indices independent of variable
-                    # Need to sum over the constraint's domain
-                    term = Sum(mult_domain, term)
-                else:
-                    # Partial overlap: domains share some indices but each has unique ones
-                    # This happens when a constraint sums over a variable using different indices.
-                    # Example: stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
-                    #   - Variable s has domain ('i', 'k')
-                    #   - Constraint stiffness has domain ('j', 'k')
-                    #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
-                    # The stationarity term should sum over the extra multiplier indices:
-                    #   sum(j, derivative * nu_stiffness(j,k))
-                    extra_mult_indices = mult_domain_set - var_domain_set
-                    sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
-                    if sum_indices:
+                    # Issue #1045: For lead/lag patterns, the multiplier index needs
+                    # an offset. E.g., if the Jacobian entry comes from totalcap(t-1)
+                    # affecting k(t), the multiplier should be nu_totalcap(t-1), not
+                    # nu_totalcap(t). We encode this via the positional `offset_key`
+                    # and build an IndexOffset-based multiplier in `_build_offset_multiplier()`.
+                    has_offset = any(o != 0 for o in offset_key)
+                    if has_offset:
+                        # Build multiplier with shifted indices
+                        mult_ref = _build_offset_multiplier(
+                            mult_base_name,
+                            mult_domain,
+                            offset_key,
+                        )
+                    else:
+                        mult_ref = MultiplierRef(mult_base_name, mult_domain)
+                    term: Expr = Binary("*", indexed_deriv, mult_ref)
+
+                    # Issue #1045: Guard offset terms with boundary conditions.
+                    # nu_totalcap(t-1) is invalid when t is the first element,
+                    # nu_totalcap(t+1) is invalid when t is the last element.
+                    # Wrap the term in a DollarConditional to prevent out-of-bounds.
+                    if has_offset:
+                        offset_guard = _build_offset_guard(mult_domain, offset_key)
+                        if offset_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=offset_guard)
+
+                    # Issue #877: Propagate the equation's dollar condition into
+                    # the Jacobian term BEFORE Sum wrapping, so that derivative
+                    # expressions with undefined values (e.g. division by zero)
+                    # are guarded for instances where the condition is false.
+                    eq_def = kkt.model_ir.equations.get(eq_name_base)
+                    if eq_def is not None and eq_def.condition is not None:
+                        indexed_condition = _replace_indices_in_expr(
+                            eq_def.condition,
+                            var_domain,
+                            constraint_element_to_set,
+                            kkt.model_ir,
+                            equation_domain=var_domain,
+                        )
+                        term = DollarConditional(value_expr=term, condition=indexed_condition)
+
+                    # Determine if we need a sum or a direct term:
+                    # - If domains match exactly: direct term deriv(i) * mult(i)
+                    # - If mult_domain is subset of var_domain: direct term deriv(i,j) * mult(i)
+                    #   (the multiplier indices are shared with the variable - no summation needed)
+                    # - If mult_domain is disjoint from var_domain: sum over mult_domain
+                    #   (e.g., sum(k, deriv * mult(k)) where k is independent of variable indices)
+                    # - If mult_domain partially overlaps var_domain but is not a subset: error
+                    mult_domain_set = set(mult_domain)
+                    var_domain_set = set(var_domain)
+
+                    if mult_domain == var_domain:
+                        # Exact match: direct term, no sum needed
+                        pass
+                    elif mult_domain_set.issubset(var_domain_set):
+                        # Subset: constraint domain is contained in variable domain
+                        # e.g., supply(i) contributes to stat_x(i,j) with direct term lam_supply(i)
+                        # No sum needed - the i index is shared
+                        pass
+                    elif not mult_domain_set.intersection(var_domain_set):
+                        # Disjoint: constraint has indices independent of variable
+                        # Need to sum over the constraint's domain
+                        term = Sum(mult_domain, term)
+                    else:
+                        # Partial overlap: domains share some indices but each has unique ones
+                        # This happens when a constraint sums over a variable using different indices.
+                        # Example: stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
+                        #   - Variable s has domain ('i', 'k')
+                        #   - Constraint stiffness has domain ('j', 'k')
+                        #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
+                        # The stationarity term should sum over the extra multiplier indices:
+                        #   sum(j, derivative * nu_stiffness(j,k))
+                        extra_mult_indices = mult_domain_set - var_domain_set
+                        sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
+                        if sum_indices:
+                            term = Sum(sum_indices, term)
+
+                    # Issue #670: After domain-based sum wrapping, detect any remaining
+                    # free indices in the derivative expression that are not controlled by
+                    # either the stationarity equation domain or the multiplier domain.
+                    # These arise when the derivative contains indices from the original
+                    # constraint's inner sum that are outside both domains (cross-indexed
+                    # sum pattern). Wrap them in an additional Sum to avoid GAMS Error 149.
+                    controlled = var_domain_set | mult_domain_set
+                    free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                    uncontrolled = free_in_deriv - controlled
+                    if uncontrolled:
+                        sum_indices = tuple(sorted(uncontrolled))
                         term = Sum(sum_indices, term)
 
-                # Issue #670: After domain-based sum wrapping, detect any remaining
-                # free indices in the derivative expression that are not controlled by
-                # either the stationarity equation domain or the multiplier domain.
-                # These arise when the derivative contains indices from the original
-                # constraint's inner sum that are outside both domains (cross-indexed
-                # sum pattern). Wrap them in an additional Sum to avoid GAMS Error 149.
-                controlled = var_domain_set | mult_domain_set
-                free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                uncontrolled = free_in_deriv - controlled
-                if uncontrolled:
-                    sum_indices = tuple(sorted(uncontrolled))
-                    term = Sum(sum_indices, term)
-
-                expr = Binary("+", expr, term)
+                    expr = Binary("+", expr, term)
         else:
             # Scalar constraint
             mult_name = name_func(eq_name_base)

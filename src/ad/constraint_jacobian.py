@@ -53,12 +53,12 @@ if TYPE_CHECKING:
     from ..config import Config
     from ..ir.model_ir import ModelIR
 
-from ..ir.ast import Const, Expr
+from ..ir.ast import Const, Expr, IndexOffset
 from ..ir.normalize import NormalizedEquation
 from ..ir.symbols import EquationDef
 from .ad_core import apply_simplification, get_simplification_mode
 from .derivative_rules import differentiate_expr
-from .index_mapping import build_index_mapping, enumerate_variable_instances
+from .index_mapping import build_index_mapping, enumerate_variable_instances, resolve_set_members
 from .jacobian import JacobianStructure
 from .sparsity import find_variables_in_expr
 
@@ -83,6 +83,168 @@ def _precompute_variable_instances(
 def _is_zero_const(expr: Expr | None) -> bool:
     """Check if an expression is a zero constant."""
     return isinstance(expr, Const) and expr.value == 0
+
+
+def _resolve_index_offsets(
+    expr: Expr,
+    model_ir: ModelIR,
+    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None] | None = None,
+) -> Expr:
+    """Resolve IndexOffset nodes in VarRef/ParamRef indices to concrete domain elements.
+
+    After _substitute_indices, an expression like k(t+1) with t→"1990" becomes
+    k(IndexOffset("1990", Const(1.0), False)).  This function resolves the offset
+    by looking up the variable's/parameter's domain set and finding the element at
+    position ord("1990") + 1.
+
+    If the resolved position is out of bounds, the VarRef is replaced with Const(0)
+    because the variable instance doesn't exist (GAMS semantics for lead/lag beyond
+    set boundaries).
+
+    Args:
+        expr: Expression with concrete IndexOffset nodes (after _substitute_indices)
+        model_ir: Model IR for domain set lookup
+        _domain_cache: Optional shared cache for resolved domain members and
+            member→position maps. When provided, avoids redundant resolve_set_members()
+            calls across multiple invocations (e.g., across equation instances).
+
+    Returns:
+        Expression with IndexOffset nodes resolved to plain string indices
+    """
+    from ..ir.ast import Binary, Call, ParamRef, Prod, Sum, Unary, VarRef
+
+    # Use provided cache or create a new one for this call tree
+    if _domain_cache is None:
+        _domain_cache = {}
+
+    def _get_domain_members(domain_set_name: str) -> tuple[list[str], dict[str, int]] | None:
+        """Get (members, pos_map) for a domain set, with caching."""
+        if domain_set_name in _domain_cache:
+            return _domain_cache[domain_set_name]
+        try:
+            members, _ = resolve_set_members(domain_set_name, model_ir)
+            pos_map = {m: i for i, m in enumerate(members)}
+            result = (members, pos_map)
+        except (ValueError, KeyError):
+            result = None
+        _domain_cache[domain_set_name] = result
+        return result
+
+    def _resolve_idx(idx, domain_set_name: str | None):
+        """Resolve a single index if it's an IndexOffset with a concrete base."""
+        if not isinstance(idx, IndexOffset):
+            return idx, True  # (resolved_idx, valid)
+        base = idx.base
+        offset_expr = idx.offset
+        # Only resolve if the base looks like a concrete element (not a symbolic name)
+        # and the offset is a numeric constant
+        if not isinstance(offset_expr, Const):
+            return idx, True  # Can't resolve non-constant offset
+        if domain_set_name is None:
+            return idx, True  # No domain to resolve against
+        # Look up domain members (cached)
+        domain_info = _get_domain_members(domain_set_name)
+        if domain_info is None:
+            return idx, True  # Can't resolve this domain
+        members, pos_map = domain_info
+        if base not in pos_map:
+            # base is still symbolic (e.g. "t" not yet substituted), skip
+            return idx, True
+        # Resolve: find position of base, add offset
+        pos = pos_map[base]
+        offset_val = offset_expr.value
+        # Require an integer-valued numeric constant; avoid silent float→int truncation
+        if not isinstance(offset_val, (int, float)):
+            return idx, True  # Non-numeric constant offset; leave unresolved
+        if isinstance(offset_val, float):
+            if not offset_val.is_integer():
+                return idx, True  # Non-integer float offset; leave unresolved
+            offset_val = int(offset_val)
+        new_pos = pos + offset_val
+        if idx.circular:
+            if not members:
+                # Empty domain — no valid target for circular indexing
+                return None, False
+            new_pos = new_pos % len(members)
+        if 0 <= new_pos < len(members):
+            return members[new_pos], True
+        else:
+            # Out of bounds — this variable instance doesn't exist
+            return None, False
+
+    def _get_domain_for_ref(name: str, is_var: bool) -> tuple[str, ...]:
+        """Get the domain tuple for a variable or parameter."""
+        if is_var and name in model_ir.variables:
+            return model_ir.variables[name].domain
+        if not is_var and name in model_ir.params:
+            param = model_ir.params[name]
+            if hasattr(param, "domain"):
+                return param.domain
+        return ()
+
+    if isinstance(expr, VarRef):
+        domain = _get_domain_for_ref(expr.name, is_var=True)
+        new_indices = []
+        for i, idx in enumerate(expr.indices):
+            domain_set = domain[i] if i < len(domain) else None
+            resolved, valid = _resolve_idx(idx, domain_set)
+            if not valid:
+                # Out-of-bounds lead/lag → zero (GAMS convention)
+                return Const(0)
+            new_indices.append(resolved)
+        return VarRef(expr.name, tuple(new_indices), expr.attribute)
+
+    elif isinstance(expr, ParamRef):
+        domain = _get_domain_for_ref(expr.name, is_var=False)
+        new_indices = []
+        for i, idx in enumerate(expr.indices):
+            domain_set = domain[i] if i < len(domain) else None
+            resolved, valid = _resolve_idx(idx, domain_set)
+            if not valid:
+                return Const(0)
+            new_indices.append(resolved)
+        return ParamRef(expr.name, tuple(new_indices))
+
+    elif isinstance(expr, Binary):
+        new_left = _resolve_index_offsets(expr.left, model_ir, _domain_cache)
+        new_right = _resolve_index_offsets(expr.right, model_ir, _domain_cache)
+        return Binary(expr.op, new_left, new_right)
+
+    elif isinstance(expr, Unary):
+        new_child = _resolve_index_offsets(expr.child, model_ir, _domain_cache)
+        return Unary(expr.op, new_child)
+
+    elif isinstance(expr, Call):
+        new_args = tuple(_resolve_index_offsets(arg, model_ir, _domain_cache) for arg in expr.args)
+        return Call(expr.func, new_args)
+
+    elif isinstance(expr, (Sum, Prod)):
+        new_body = _resolve_index_offsets(expr.body, model_ir, _domain_cache)
+        new_condition = (
+            _resolve_index_offsets(expr.condition, model_ir, _domain_cache)
+            if expr.condition is not None
+            else None
+        )
+        return type(expr)(expr.index_sets, new_body, new_condition)
+
+    else:
+        # Handle DollarConditional and SetMembershipTest so IndexOffset nodes
+        # inside conditional subtrees are also resolved.
+        from ..ir.ast import DollarConditional, SetMembershipTest
+
+        if isinstance(expr, DollarConditional):
+            new_val = _resolve_index_offsets(expr.value_expr, model_ir, _domain_cache)
+            new_cond = _resolve_index_offsets(expr.condition, model_ir, _domain_cache)
+            return DollarConditional(value_expr=new_val, condition=new_cond)
+
+        if isinstance(expr, SetMembershipTest):
+            new_idx = tuple(
+                _resolve_index_offsets(idx, model_ir, _domain_cache) for idx in expr.indices
+            )
+            return SetMembershipTest(expr.set_name, new_idx)
+
+    # Other expression types pass through unchanged
+    return expr
 
 
 def compute_constraint_jacobian(
@@ -378,6 +540,9 @@ def _compute_equality_jacobian(
         # Sparsity pre-check: find which variables appear in this equation
         referenced_vars = find_variables_in_expr(base_expr)
 
+        # Shared cache for IndexOffset resolution across all instances of this equation
+        resolve_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
@@ -388,6 +553,10 @@ def _compute_equality_jacobian(
             constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
+                # Issue #1045: Resolve IndexOffset nodes to concrete domain elements.
+                # After substitution, k(t+1) with t→"1990" becomes k(IndexOffset("1990",1)).
+                # This resolves it to k("1995") so differentiation can match var instances.
+                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
@@ -477,6 +646,9 @@ def _compute_inequality_jacobian(
         # Sparsity pre-check: find which variables appear in this equation
         referenced_vars = find_variables_in_expr(base_expr)
 
+        # Shared cache for IndexOffset resolution across all instances of this equation
+        resolve_cache: dict[str, tuple[list[str], dict[str, int]] | None] = {}
+
         for eq_indices in eq_instances:
             # Get row ID for this equation instance
             row_id = index_mapping.get_row_id(eq_name, eq_indices)
@@ -487,6 +659,8 @@ def _compute_inequality_jacobian(
             constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
+                # Issue #1045: Resolve IndexOffset nodes to concrete domain elements
+                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
@@ -644,22 +818,34 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
         >>> # For instance balance(i1), substitute i → i1:
         >>> # VarRef('x', ('i',)) → VarRef('x', ('i1',))
     """
-    from ..ir.ast import Binary, Call, ParamRef, Prod, Sum, Unary, VarRef
+    from ..ir.ast import Binary, Call, IndexOffset, ParamRef, Prod, Sum, Unary, VarRef
+
+    def _sub_idx(idx):
+        """Substitute a single index, handling both strings and IndexOffset."""
+        if isinstance(idx, str):
+            if idx in symbolic_indices:
+                return concrete_indices[symbolic_indices.index(idx)]
+            return idx
+        elif isinstance(idx, IndexOffset):
+            # Issue #1045: Substitute the base of IndexOffset when it matches
+            # a symbolic index. E.g., IndexOffset("t", Const(1)) with t→"1990"
+            # becomes IndexOffset("1990", Const(1)), enabling correct
+            # differentiation of lead/lag variable references like k(t+1).
+            if idx.base in symbolic_indices:
+                new_base = concrete_indices[symbolic_indices.index(idx.base)]
+                return IndexOffset(new_base, idx.offset, idx.circular)
+            return idx
+        return idx  # Other types pass through
 
     if isinstance(expr, VarRef):
-        # Substitute indices in VarRef
-        new_indices = tuple(
-            concrete_indices[symbolic_indices.index(idx)] if idx in symbolic_indices else idx
-            for idx in expr.indices
-        )
-        return VarRef(expr.name, new_indices)
+        # Substitute indices in VarRef (handles both string and IndexOffset)
+        # Preserve VarRef.attribute (e.g., x.l(i)) when reconstructing the node
+        new_indices = tuple(_sub_idx(idx) for idx in expr.indices)
+        return VarRef(expr.name, new_indices, expr.attribute)
 
     elif isinstance(expr, ParamRef):
-        # Substitute indices in ParamRef
-        new_indices = tuple(
-            concrete_indices[symbolic_indices.index(idx)] if idx in symbolic_indices else idx
-            for idx in expr.indices
-        )
+        # Substitute indices in ParamRef (handles both string and IndexOffset)
+        new_indices = tuple(_sub_idx(idx) for idx in expr.indices)
         return ParamRef(expr.name, new_indices)
 
     elif isinstance(expr, Binary):
