@@ -2158,7 +2158,20 @@ def _add_indexed_jacobian_terms(
                     mult_domain_set = set(mult_domain)
                     var_domain_set = set(var_domain)
 
-                    if mult_domain == var_domain:
+                    # Issue #1041: Before branching on name-based overlap,
+                    # attempt subset/alias matching.  This handles fully
+                    # disjoint cases like ('ii','jj') vs ('i','j') AND mixed
+                    # cases like ('ii','j') vs ('i','j') where some indices
+                    # overlap by name but others are subset/alias-related.
+                    subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
+                    if subset_rename is not None:
+                        if subset_rename:
+                            # Rewrite the term's indices from subset to superset.
+                            # No subset guard needed: the constraint's own dollar
+                            # condition already restricts the term to valid instances.
+                            term = _rewrite_subset_to_superset(term, subset_rename)
+                        # else: empty rename_map means identity match, no rewrite needed
+                    elif mult_domain == var_domain:
                         # Exact match: direct term, no sum needed
                         pass
                     elif mult_domain_set.issubset(var_domain_set):
@@ -2167,23 +2180,9 @@ def _add_indexed_jacobian_terms(
                         # No sum needed - the i index is shared
                         pass
                     elif not mult_domain_set.intersection(var_domain_set):
-                        # Issue #1041: Before assuming truly disjoint, check if
-                        # mult indices are subsets/aliases of var indices
-                        # (e.g., mult_domain=('ii','jj'), var_domain=('i','j')
-                        # where ii ⊂ i).
-                        subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
-                        if subset_rename is not None:
-                            # Rewrite the term's indices from subset to superset.
-                            # No subset guard needed: the constraint's own dollar
-                            # condition (propagated at lines 2121-2134 above) already
-                            # restricts the term to valid instances. An extra guard
-                            # like $(ii(i) and jj(j)) is redundant and can cause
-                            # GAMS to generate zero equation instances.
-                            term = _rewrite_subset_to_superset(term, subset_rename)
-                        else:
-                            # Truly disjoint: constraint has indices independent
-                            # of variable. Need to sum over the constraint's domain.
-                            term = Sum(mult_domain, term)
+                        # Truly disjoint: constraint has indices independent
+                        # of variable. Need to sum over the constraint's domain.
+                        term = Sum(mult_domain, term)
                     else:
                         # Partial overlap: domains share some indices but each has unique ones
                         # This happens when a constraint sums over a variable using different indices.
