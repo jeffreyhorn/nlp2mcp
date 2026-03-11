@@ -1666,6 +1666,86 @@ def _find_superset_in_domain(
     return None
 
 
+def _match_subset_domain(
+    mult_domain: tuple[str, ...],
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> dict[str, str] | None:
+    """Try to match mult_domain indices to var_domain indices via subset/alias.
+
+    Issue #1041: When a constraint is indexed by a subset (e.g., ``(ii, jj)``)
+    and the variable is indexed by the parent set (e.g., ``(i, j)`` or
+    ``(i, j, jwt)``), the indices appear disjoint by name but are related
+    by set inclusion.
+
+    Handles both equal-length domains (e.g., ``(ii, jj)`` vs ``(i, j)``)
+    and shorter mult domains (e.g., ``(ii, jj)`` vs ``(i, j, jwt)``).
+    Each mult index must find exactly one matching var index.
+
+    Returns a rename map ``{mult_idx: var_idx}`` if all mult indices match,
+    or ``None`` if no full match is possible.
+
+    Keys are lowercased (``str(mult_idx).lower()``); values preserve the
+    original ``var_domain`` casing.  Callers should use lowercased index
+    names for lookups (e.g., ``_rewrite_subset_to_superset`` normalizes
+    via ``idx.lower()``).
+    """
+    if len(mult_domain) > len(var_domain):
+        return None
+
+    rename_map: dict[str, str] = {}
+    used_var_positions: set[int] = set()
+
+    # Pre-resolve canonical targets for all var_domain positions.
+    var_canons = [_resolve_alias_target(v, model_ir) for v in var_domain]
+
+    for p, mult_idx in enumerate(mult_domain):
+        canon_mult = _resolve_alias_target(mult_idx, model_ir)
+
+        # Also resolve the canonical subset parent if mult_idx is a subset
+        canon_parent: str | None = None
+        if canon_mult in model_ir.sets:
+            set_def = model_ir.sets[canon_mult]
+            if hasattr(set_def, "domain") and len(set_def.domain) == 1:
+                parent = set_def.domain[0]
+                if not isinstance(parent, str):
+                    parent = str(parent)
+                canon_parent = _resolve_alias_target(parent, model_ir)
+
+        def _try_match(k: int) -> bool:
+            """Try to match mult_idx at var_domain position k."""
+            if k in used_var_positions:
+                return False
+            canon_var = var_canons[k]
+            if canon_mult == canon_var or (canon_parent is not None and canon_parent == canon_var):
+                mult_key = str(mult_idx).lower()
+                var_key = str(var_domain[k]).lower()
+                if mult_key != var_key:
+                    rename_map[mult_key] = var_domain[k]
+                used_var_positions.add(k)
+                return True
+            return False
+
+        # Prefer same-position match first when lengths align, to avoid
+        # greedy first-match mapping to the wrong position when multiple
+        # var_domain positions resolve to the same canonical set.
+        matched = False
+        if p < len(var_domain):
+            matched = _try_match(p)
+        if not matched:
+            for k in range(len(var_domain)):
+                if k == p:
+                    continue  # already tried
+                if _try_match(k):
+                    matched = True
+                    break
+
+        if not matched:
+            return None
+
+    return rename_map
+
+
 def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     """Rewrite index names in an expression tree according to rename_map.
 
@@ -1676,8 +1756,9 @@ def _rewrite_subset_to_superset(expr: Expr, rename_map: dict[str, str]) -> Expr:
     via Sum (sum(t, c(p,t)) is constant across tt).
 
     String indices in VarRef, ParamRef, MultiplierRef, EquationRef, and
-    IndexOffset.base are rewritten. The rename_map keys and values should
-    both be lowercase-normalized.
+    IndexOffset.base are rewritten. The rename_map keys must be
+    lowercase-normalized (lookups use ``idx.lower()``); values are used
+    as-is for replacement and may preserve original casing.
     """
     if not rename_map:
         return expr
@@ -2078,7 +2159,20 @@ def _add_indexed_jacobian_terms(
                     mult_domain_set = set(mult_domain)
                     var_domain_set = set(var_domain)
 
-                    if mult_domain == var_domain:
+                    # Issue #1041: Before branching on name-based overlap,
+                    # attempt subset/alias matching.  This handles fully
+                    # disjoint cases like ('ii','jj') vs ('i','j') AND mixed
+                    # cases like ('ii','j') vs ('i','j') where some indices
+                    # overlap by name but others are subset/alias-related.
+                    subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
+                    if subset_rename is not None:
+                        if subset_rename:
+                            # Rewrite the term's indices from subset to superset.
+                            # No subset guard needed: the constraint's own dollar
+                            # condition already restricts the term to valid instances.
+                            term = _rewrite_subset_to_superset(term, subset_rename)
+                        # else: empty rename_map means identity match, no rewrite needed
+                    elif mult_domain == var_domain:
                         # Exact match: direct term, no sum needed
                         pass
                     elif mult_domain_set.issubset(var_domain_set):
@@ -2087,8 +2181,8 @@ def _add_indexed_jacobian_terms(
                         # No sum needed - the i index is shared
                         pass
                     elif not mult_domain_set.intersection(var_domain_set):
-                        # Disjoint: constraint has indices independent of variable
-                        # Need to sum over the constraint's domain
+                        # Truly disjoint: constraint has indices independent
+                        # of variable. Need to sum over the constraint's domain.
                         term = Sum(mult_domain, term)
                     else:
                         # Partial overlap: domains share some indices but each has unique ones

@@ -1,9 +1,10 @@
 # cesam2: MCP pair empty equation — associated variable not fixed
 
 **GitHub Issue:** [#1041](https://github.com/jeffreyhorn/nlp2mcp/issues/1041)
-**Status:** OPEN
+**Status:** PARTIALLY FIXED
 **Severity:** High — EXECERROR 486 aborts solve
 **Date:** 2026-03-10
+**Updated:** 2026-03-11
 **Affected Models:** cesam2 (and potentially any model with conditioned stationarity equations)
 
 ---
@@ -16,89 +17,75 @@ GAMS requires: if an MCP equation is empty for some instance, the paired variabl
 
 ---
 
-## Error Details
+## Root Cause Analysis
 
-```
-**** MCP pair stat_a.A has empty equation but associated variable is NOT fixed       (81 instances)
-**** MCP pair stat_err3.ERR3 has empty equation but associated variable is NOT fixed  (81 instances)
-**** MCP pair stat_tsam.TSAM has empty equation but associated variable is NOT fixed  (81 instances)
-**** MCP pair stat_w3.W3 has empty equation but associated variable is NOT fixed      (243 instances)
-**** SOLVE from line 367 ABORTED, EXECERROR = 486
-```
+Three distinct bugs were identified and fixed:
+
+### Bug 1: Parser `index_list` in loop body (from Issue #1025)
+The parser was incorrectly including `index_list` trees (e.g., `$NONZERO(ii,jj)`) as body statements in loop parsing. This caused parameters like `wbar3` to not be assigned.
+
+### Bug 2: Domain matching for subset/alias in stationarity builder
+`_add_indexed_jacobian_terms()` could not match constraint domains using dynamic subsets (e.g., `(ii, jj)`) against variable domains using parent sets (e.g., `(i, j)`). The stationarity builder wrapped these in unnecessary `Sum()` aggregations.
+
+### Bug 3: Set assignment emission ordering (ROOT CAUSE of empty equations)
+`NONZERO(ii,jj) = yes$(Abar0(ii,jj))` was emitted **before** `Abar0` was computed, making NONZERO empty at solve time. All constraint equations conditioned on NONZERO/icoeff/ival produced NONE instances.
+
+The root cause was in `emit_interleaved_params_and_sets()` which only detected "set-blocked params" (params with LHS conditions on dynamic sets) but not "index-blocked params" (params referenced by set assignments whose expression keys use dynamic set names or aliases).
 
 ---
 
-## Root Cause
+## Fixes Applied
 
-The cesam2 model has:
-- Set `i` with 10 members including `"Total"`
-- Dynamic subset `ii(i) = yes; ii("Total") = no;` — excludes `"Total"`
-- Variables `A(i,j)`, `ERR3(i,j)`, `TSAM(i,j)`, `W3(i,j,jwt)` declared over full `(i,j)` domain
-- Equations with conditions like `$(NONZERO(ii,jj))`, `$(IVAL(ii,jj))`, `$(ICOEFF(ii,jj))`
+### 1. `src/ir/parser.py` — Skip `index_list` in loop body
+```python
+elif child.data == "index_list":
+    continue  # Not a body statement
+```
 
-The KKT stationarity equations inherit these conditions:
+### 2. `src/kkt/stationarity.py` — Subset/alias domain matching
+Added `_match_subset_domain()` function that matches constraint domain indices to variable domain indices through subset/alias relationships, and `_rewrite_subset_to_superset()` to rewrite index names in expression trees.
+
+### 3. `src/emit/emit_gams.py` — Equality multiplier `.fx` for dynamic subsets
+Added section 3b that emits `.fx` statements for equality multipliers whose equation domain uses dynamic subsets:
 ```gams
-stat_a(i,j)$(ii(i) and ii(j)).. sum((ii,jj), ...) =E= 0;
-stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. sum((ii,jj), ...) =E= 0;
+nu_SAMCOEF.fx(i,j)$(not (ii(i) and jj(j))) = 0;
 ```
 
-For `(i,j)` pairs where the condition is false (e.g., `i="Total"` or `j="Total"`), the equation is empty. But the MCP model declaration pairs these equations with variables over the full domain:
-```gams
-Model mcp_model /
-    stat_a.a,
-    stat_w3.w3,
-    ...
-/;
-```
-
-GAMS requires that for every `(i,j)` instance where `stat_a` is empty, `A(i,j)` must be `.fx`'d. Currently the emitter does not generate these fix statements.
+### 4. `src/emit/original_symbols.py` — Index-blocked param detection
+Extended `emit_interleaved_params_and_sets()` to detect "index-blocked params" — parameters referenced by set assignments that are indexed by dynamic set names (including aliases). This ensures proper topological ordering:
+1. `ii(i) = 1; ii("Total") = 0;`
+2. SAM recomputation
+3. `Abar0(ii,jj)` computation
+4. `NONZERO(ii,jj) = yes$(Abar0(ii,jj));`
+5. `icoeff(ii,acoeff) = yes$(NONZERO(ii,acoeff));`
+6. `ival(ii,jj) = yes$(SAM0(ii,jj) and (not icoeff(ii,jj)));`
 
 ---
 
-## Reproduction
+## Results
 
-```bash
-python -m src.cli data/gamslib/raw/cesam2.gms -o /tmp/cesam2_mcp.gms --skip-convexity-check
-gams /tmp/cesam2_mcp.gms lo=0 o=/tmp/cesam2_mcp.lst
+**Before**: $141 compilation error (never reached solve)
 
-# Check MCP pair errors:
-grep "MCP pair" /tmp/cesam2_mcp.lst | sort | uniq -c
-# Expected: 486 total errors across 4 equation types
+**After**: Compiles and reaches solver. 447 equations generated (up from 167 NONE-affected). 66 unmatched free variables remain.
 
-# Check stationarity conditions:
-grep "stat_a\|stat_w3\|stat_err3\|stat_tsam" /tmp/cesam2_mcp.gms | grep '\$'
-```
+The 66 remaining unmatched variables are from `stat_tsam` missing `nu_COLSUM(j)` and `nu_ROWSUM(i)` Jacobian contributions. The COLSUM equation is indexed by `(jj,)` while variable TSAM has domain `(i, j)` — both `i` and `j` resolve to the same canonical set `i`. Position-aware matching maps `jj -> i` (position 0), which is correct for this position. The missing terms are a separate Jacobian builder issue where the constraint's contribution to the stationarity equation isn't being generated at all (the constraint-variable relationship isn't detected by the derivative propagation).
 
 ---
 
-## Suggested Fix
+## Remaining Work (separate issue)
 
-When a stationarity equation has a domain condition (dollar condition), emit `.fx` statements for the paired variable on instances where the condition is false:
-
-```gams
-* Fix variables for instances where stationarity equation is inactive
-a.fx(i,j)$(not (ii(i) and ii(j))) = 0;
-err3.fx(i,j)$(not (ii(i) and ii(j))) = 0;
-tsam.fx(i,j)$(not (ii(i) and ii(j))) = 0;
-w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
-```
-
-This pattern already exists in the emitter for inequality multipliers (`lam_*.fx(...)$(cond) = 0`). It needs to be extended to primal variables paired with conditioned stationarity equations.
-
-### Implementation
-
-1. In `src/kkt/assemble.py` or `src/emit/emit_gams.py`: when building the MCP model, detect stationarity equations with conditions.
-2. For each conditioned stationarity equation, emit a `.fx` statement for the paired variable with the negated condition.
-3. The condition can be extracted from the `EquationDef.condition` field or from the stationarity equation's dollar condition.
+The 66 unmatched free variables need investigation of the Jacobian builder's constraint-variable relationship detection for COLSUM/ROWSUM equations. This is tracked separately as it affects derivative propagation more broadly.
 
 ---
 
-## Files Likely Affected
+## Files Modified
 
 | File | Change |
 |------|--------|
-| `src/emit/emit_gams.py` | Emit `.fx` statements for variables paired with conditioned stationarity equations |
-| `src/kkt/assemble.py` | Propagate stationarity conditions to the KKT system metadata |
+| `src/ir/parser.py` | Skip `index_list` in loop body extraction |
+| `src/kkt/stationarity.py` | `_match_subset_domain()`, `_rewrite_subset_to_superset()`, domain matching |
+| `src/emit/emit_gams.py` | Section 3b: equality multiplier `.fx` for dynamic subset domains |
+| `src/emit/original_symbols.py` | Index-blocked param detection in `emit_interleaved_params_and_sets()` |
 
 ---
 

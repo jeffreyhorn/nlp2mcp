@@ -1485,7 +1485,59 @@ def emit_interleaved_params_and_sets(
                         set_blocked_params.add(pname.lower())
                         break
 
-    if not set_blocked_params:
+    # Issue #1041: Also detect "index-blocked" params — params that are
+    # (a) referenced by set assignments and (b) have expression keys using
+    # dynamic set names (or their aliases).  These create a three-way dependency:
+    #   set_assignment(ii) → param(ii,jj) → set_assignment(NONZERO)
+    # requiring interleaving even when no LHS-condition-blocked params exist.
+    # Build expanded set including aliases of dynamic sets.
+    # Resolve alias chains transitively (e.g., kk -> jj -> ii where ii is dynamic).
+    def _resolve_alias_chain(name: str) -> str:
+        """Walk alias chain to canonical (non-alias) target."""
+        seen: set[str] = set()
+        current = name
+        while current not in seen:
+            seen.add(current)
+            adef = model_ir.aliases.get(current)
+            if adef is None:
+                break
+            target = adef.target.lower()
+            if target == current:
+                break
+            current = target
+        return current
+
+    dynamic_set_names_expanded = set(dynamic_set_names)
+    for aname in model_ir.aliases:
+        canonical = _resolve_alias_chain(aname.lower())
+        if canonical in dynamic_set_names:
+            dynamic_set_names_expanded.add(aname.lower())
+
+    all_computed_quick: set[str] = {
+        p.lower() for p, pd in model_ir.params.items() if pd.expressions
+    }
+    sa_param_deps: set[str] = set()
+    for sa in model_ir.set_assignments:
+        sa_param_deps.update(_collect_param_refs(sa.expr) & all_computed_quick)
+    index_blocked_params: set[str] = set()
+    for pname in sa_param_deps:
+        p_def = model_ir.params.get(pname)
+        if p_def and p_def.expressions:
+            for key_tuple, _expr in p_def.expressions:
+                for idx in key_tuple:
+                    if isinstance(idx, str):
+                        idx_base = idx.lower()
+                    elif isinstance(idx, IndexOffset):
+                        idx_base = idx.base.lower()
+                    else:
+                        continue
+                    if idx_base in dynamic_set_names_expanded:
+                        index_blocked_params.add(pname)
+                        break
+                if pname in index_blocked_params:
+                    break
+
+    if not set_blocked_params and not index_blocked_params:
         # No params depend on dynamic sets — no interleaving needed.
         # Fall back to the simple early-params approach.
         return "", set(), set()
@@ -1512,8 +1564,8 @@ def emit_interleaved_params_and_sets(
     for sa in model_ir.set_assignments:
         sa_direct_deps.update(_collect_param_refs(sa.expr) & all_computed)
 
-    # Build the involved set: everything between sa deps and set-blocked params
-    involved: set[str] = set(set_blocked_params) | sa_direct_deps
+    # Build the involved set: everything between sa deps and set-blocked/index-blocked params
+    involved: set[str] = set(set_blocked_params) | index_blocked_params | sa_direct_deps
 
     # Expand upstream: if an involved param depends on another computed param,
     # that param is also involved.
@@ -1538,16 +1590,17 @@ def emit_interleaved_params_and_sets(
                 continue
             deps = param_deps_all.get(pname, set())
             if deps & involved:
-                # Check if this param also transitively reaches a set-blocked param
+                # Check if this param also transitively reaches a blocked param
                 visited: set[str] = set()
                 to_visit = list(deps & all_computed)
+                all_blocked = set_blocked_params | index_blocked_params
                 reaches_blocked = False
                 while to_visit:
                     d = to_visit.pop()
                     if d in visited:
                         continue
                     visited.add(d)
-                    if d in set_blocked_params:
+                    if d in all_blocked:
                         reaches_blocked = True
                         break
                     to_visit.extend(param_deps_all.get(d, set()) & all_computed - visited)
@@ -1556,12 +1609,28 @@ def emit_interleaved_params_and_sets(
                     changed = True
 
     # Post-filter: remove params whose expression keys use dynamic set names
-    # as running indices (e.g., beta(cn))
+    # as running indices (e.g., beta(cn)) — UNLESS they are needed for the
+    # index-blocked interleaving chain (Issue #1041: index-blocked params and
+    # their transitive dependencies must stay so the topological sort places
+    # them after their set dependencies but before dependent set assignments).
+    keep_for_interleave: set[str] = set(index_blocked_params)
+    _frontier = set(index_blocked_params)
+    while _frontier:
+        _next: set[str] = set()
+        for p in _frontier:
+            for dep in param_deps_all.get(p, set()):
+                if dep in involved and dep not in keep_for_interleave:
+                    keep_for_interleave.add(dep)
+                    _next.add(dep)
+        _frontier = _next
+
     disqualified: set[str] = set()
     for pname in involved:
-        p_def: ParameterDef | None = model_ir.params.get(pname)
-        if p_def and p_def.expressions:
-            for key_tuple, _expr in p_def.expressions:
+        if pname in keep_for_interleave:
+            continue  # Keep — needed for index-blocked interleaving chain
+        p_def2: ParameterDef | None = model_ir.params.get(pname)
+        if p_def2 and p_def2.expressions:
+            for key_tuple, _expr in p_def2.expressions:
                 for idx in key_tuple:
                     idx_str = idx.lower() if isinstance(idx, str) else ""
                     if idx_str in dynamic_set_names:
@@ -1694,6 +1763,24 @@ def emit_interleaved_params_and_sets(
                 cond_sets = _collect_set_membership_names(expr.condition)
                 for sn in cond_sets & dynamic_set_names:
                     refs.add(f"__set_{sn}__")
+            # Issue #1041: If expression keys use dynamic set names (or aliases)
+            # as indices (e.g., Abar0(ii,jj)), those sets must be populated first.
+            # Also handle IndexOffset indices (e.g., t+1) by checking idx.base.
+            for idx_val in key:
+                if isinstance(idx_val, str):
+                    idx_base = idx_val.lower()
+                elif isinstance(idx_val, IndexOffset):
+                    idx_base = idx_val.base.lower()
+                else:
+                    continue
+                if idx_base in dynamic_set_names:
+                    refs.add(f"__set_{idx_base}__")
+                elif idx_base in dynamic_set_names_expanded:
+                    # Alias (possibly chained) of a dynamic set — resolve
+                    # transitively to the canonical dynamic set target.
+                    canonical_target = _resolve_alias_chain(idx_base)
+                    if canonical_target in dynamic_set_names:
+                        refs.add(f"__set_{canonical_target}__")
             stmt_reads.append(refs)
         else:
             # Set assignment — reads the params it references AND
@@ -1742,8 +1829,11 @@ def emit_interleaved_params_and_sets(
     # Issue #881: Don't pre-define set-blocked params (those with LHS conditions
     # on dynamic sets) even if they have static values.  Their computed expressions
     # override the static defaults and must be ordered correctly.
+    # Issue #1041: Also exclude index-blocked params and their deps — these
+    # must be ordered after their dynamic set dependencies.
     set_blocked_lower = {p.lower() for p in set_blocked_params}
-    defined = params_with_static - set_blocked_lower
+    involved_lower = {p.lower() for p in involved}
+    defined = params_with_static - set_blocked_lower - involved_lower
     emitted_phases: set[str] = set()
     remaining = list(range(len(phases)))
     sorted_items: list[tuple[str, tuple, Expr | None, int, str, int | None]] = []
