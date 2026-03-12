@@ -153,7 +153,10 @@ class TestCallBasedParameterDetection:
         gamma_assignment_lines = [
             ln
             for ln in lines
-            if "gamma(i)" in ln and "=" in ln and "stat_" not in ln and ".." not in ln
+            if ln.lstrip().startswith("gamma(i)")
+            and "=" in ln
+            and "stat_" not in ln
+            and ".." not in ln
         ]
         assert (
             len(gamma_assignment_lines) > 0
