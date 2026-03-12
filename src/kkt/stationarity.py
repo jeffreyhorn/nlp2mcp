@@ -2210,7 +2210,15 @@ def _add_indexed_jacobian_terms(
                                     for orig_idx, parent_idx in rename_pairs:
                                         orig_set = model_sets.get(orig_idx)
                                         if orig_set is not None and hasattr(orig_set, "domain"):
-                                            if orig_set.domain == (parent_idx,):
+                                            orig_domain = orig_set.domain
+                                            # Compare case-insensitively: parser may
+                                            # preserve original casing.
+                                            if (
+                                                isinstance(orig_domain, tuple)
+                                                and len(orig_domain) == 1
+                                                and isinstance(orig_domain[0], str)
+                                                and orig_domain[0].lower() == parent_idx.lower()
+                                            ):
                                                 is_true_subset = True
                                                 break
                                     if is_true_subset:

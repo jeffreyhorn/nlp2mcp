@@ -1663,9 +1663,13 @@ def emit_gams_mcp(
         for orig_idx, wide_idx in zip(orig_dom, widened_dom, strict=True):
             if orig_idx.lower() != wide_idx.lower():
                 orig_set = kkt.model_ir.sets.get(orig_idx.lower())
-                if orig_set is not None and getattr(orig_set, "domain", None) == (
-                    wide_idx.lower(),
-                ):
+                orig_domain = getattr(orig_set, "domain", None) if orig_set is not None else None
+                orig_domain_lower = (
+                    tuple(d.lower() for d in orig_domain)
+                    if isinstance(orig_domain, tuple)
+                    else None
+                )
+                if orig_domain_lower == (wide_idx.lower(),):
                     widen_guards.append(f"{orig_idx}({wide_idx})")
         if widen_guards:
             domain_str = ",".join(widened_dom)

@@ -121,7 +121,10 @@ class TestMultiplierDomainWidening:
     def test_solveopt_multiplier_declared_over_parent_set(self):
         """solveopt: nu_e2 must be declared over i (not j) to avoid $171."""
         result = _generate_mcp("solveopt")
-        # nu_e2 should be declared over i (widened from j)
-        assert "nu_e2(i)" in result
+        # nu_e2 should be declared over i (widened from j) in the Variables section
+        variables_start = result.index("Variables")
+        variables_end = result.index("Equations", variables_start)
+        variables_section = result[variables_start:variables_end]
+        assert "nu_e2(i)" in variables_section
         # The fix statement must guard instances outside j
         assert "nu_e2.fx(i)$(not (j(i))) = 0;" in result
