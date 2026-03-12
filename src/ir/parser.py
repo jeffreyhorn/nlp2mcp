@@ -4635,21 +4635,15 @@ class _ModelBuilder:
                     and not has_subset_index
                     and all(self._resolve_set_def(idx) is not None for idx in domain_context)
                 )
-                if all_domain_over:
-                    rhs_evaluated = self._expr_with_context(
-                        rhs_expr, "conditional assignment", domain_context
-                    )
-                    cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
-                    param.expressions.append((tuple(domain_context), cond_expr))
-                    return
-                # Issue #1047: When not all indices are domain-over (e.g.,
-                # char(c,"volume")$prop(c,"gravity") where "volume" is a literal),
-                # still wrap the RHS in LhsConditionalAssign and store directly.
-                # Without this, _handle_assign drops the LHS condition entirely,
-                # causing division by zero when the guard prevents /0.
-                # Only apply for non-offset/non-subset cases (those need
-                # _handle_assign for IndexOffset/SubsetIndex key handling).
-                if not has_offset and not has_subset_index:
+                # Wrap RHS in LhsConditionalAssign and store directly when:
+                # 1. all_domain_over: all indices resolve to sets (standard case), OR
+                # 2. not all_domain_over but no offsets/subsets: mixed set/literal
+                #    indices (Issue #1047, e.g. char(c,"volume")$prop(c,"gravity")
+                #    where "volume" is a literal). Without this, _handle_assign
+                #    drops the LHS condition entirely, causing division by zero.
+                # Cases with IndexOffset/SubsetIndex must go through _handle_assign
+                # for proper key handling.
+                if all_domain_over or (not has_offset and not has_subset_index):
                     rhs_evaluated = self._expr_with_context(
                         rhs_expr, "conditional assignment", domain_context
                     )

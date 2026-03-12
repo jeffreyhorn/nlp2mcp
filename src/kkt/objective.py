@@ -138,7 +138,7 @@ def _is_objective_defining_equation(eq_def: EquationDef, objvar: str) -> bool:
     Requirements:
     - Must be an equality (=E=), not an inequality (=L=, =G=)
     - Must be scalar (no domain indices)
-    - LHS or RHS must be a simple variable reference to objvar
+    - LHS or RHS must be a variable or symbol reference to objvar
 
     Args:
         eq_def: Equation definition

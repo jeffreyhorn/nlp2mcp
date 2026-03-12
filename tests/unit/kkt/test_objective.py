@@ -283,11 +283,11 @@ class TestExtractObjectiveInfo:
         model.sets["k"] = SetDef(name="k", members=["k1", "k2"], domain=("*",))
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="tau")
 
-        # reseq(k).. sum(i, sigma(i,k)) =L= tau — indexed inequality
+        # reseq(k).. sum(i, sigma(i,k)) =E= tau — indexed equality (should not define objective)
         model.equations["reseq"] = EquationDef(
             name="reseq",
             domain=("k",),
-            relation=Rel.LE,
+            relation=Rel.EQ,
             lhs_rhs=(VarRef("x", ("k",)), VarRef("tau", ())),
         )
 

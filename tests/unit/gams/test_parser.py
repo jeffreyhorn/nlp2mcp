@@ -4754,8 +4754,18 @@ class TestSubsetIndexingAssignments:
         assert "char" in model.params
         pdef = model.params["char"]
 
-        # Find the "volume" expression
-        vol_exprs = [(k, e) for k, e in pdef.expressions if any(str(idx) == "volume" for idx in k)]
+        # Find the "volume" expression by checking the index value semantically
+        # (not via __str__) to avoid brittleness if stringification changes.
+        def _is_volume(idx: object) -> bool:
+            if isinstance(idx, str):
+                return idx == "volume"
+            if hasattr(idx, "value"):
+                return idx.value == "volume"
+            if hasattr(idx, "name"):
+                return idx.name == "volume"
+            return False
+
+        vol_exprs = [(k, e) for k, e in pdef.expressions if any(_is_volume(idx) for idx in k)]
         assert len(vol_exprs) == 1
         key, expr = vol_exprs[0]
 
