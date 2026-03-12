@@ -21,6 +21,12 @@ class ConditionEvaluationError(Exception):
     pass
 
 
+class ConditionCycleError(ConditionEvaluationError):
+    """Raised when a cycle is detected in expression-based parameter resolution."""
+
+    pass
+
+
 def evaluate_condition(
     condition: Expr,
     domain_sets: tuple[str, ...],
@@ -145,9 +151,9 @@ def _eval_expr(
         if param.expressions:
             # Cycle detection: avoid infinite recursion for self-referential
             # assignments like deltaq(sc) = deltaq(sc)/(1+deltaq(sc)).
-            visit_key = (param_name, concrete_indices)
+            visit_key = (param_name.lower(), concrete_indices)
             if visit_key in _visiting:
-                raise ConditionEvaluationError(
+                raise ConditionCycleError(
                     f"Cycle detected evaluating parameter '{param_name}' "
                     f"for indices {concrete_indices}"
                 )
@@ -179,12 +185,9 @@ def _eval_expr(
                     continue
                 try:
                     return _eval_expr(expr_body, expr_index_map, model_ir, _visiting=next_visiting)
-                except ConditionEvaluationError as exc:
-                    # Re-raise cycle-detection errors immediately — they indicate
-                    # a fundamental loop that won't resolve by trying earlier
-                    # assignments.
-                    if "Cycle detected" in str(exc):
-                        raise
+                except ConditionCycleError:
+                    raise  # Cycles won't resolve by trying earlier assignments
+                except ConditionEvaluationError:
                     pass  # Try next expression or fall through to error
             raise ConditionEvaluationError(
                 f"Parameter '{param_name}' has expression-based values that "
