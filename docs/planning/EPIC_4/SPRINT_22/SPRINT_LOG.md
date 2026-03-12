@@ -167,6 +167,16 @@
 
 **Root cause (fawley):** `_handle_conditional_assign_general()` in parser.py only wrapped RHS in `LhsConditionalAssign` when ALL indices resolved to sets. For `char(c,"volume")$prop(c,"gravity")`, the literal `"volume"` didn't resolve, so the condition was dropped. Fix: also wrap when indices include literals (non-offset, non-subset cases).
 
+**Pipeline retest (--only-solve):**
+- Solve: 67 (+2 from fdesign, trussm)
+- Match: 32 (+2 from fdesign, trussm)
+- path_solve_terminated: 9 (−3 from baseline)
+- fdesign: solve SUCCESS + MATCH (obj=1.046)
+- trussm: solve SUCCESS + MATCH (obj=0.45)
+- fawley: still path_solve_terminated (parser fix resolved div-by-zero, but solver convergence issue remains)
+
+**PR:** #1052
+
 ---
 
 ### Day 6 — WS2 Part 3 + Pipeline Retest
