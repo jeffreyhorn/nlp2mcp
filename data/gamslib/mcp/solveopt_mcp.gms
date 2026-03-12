@@ -37,7 +37,7 @@ Variables
     x2(i)
     x3(i)
     x4(i)
-    nu_e2(j)
+    nu_e2(i)
 ;
 
 Positive Variables
@@ -76,12 +76,12 @@ Equations
 
 * Stationarity equations
 stat_x1(i).. 1 - lam_e1(i) + piU_x1(i) =E= 0;
-stat_x2(i)$(j(i)).. sum(j, nu_e2(j)) + piU_x2(i) =E= 0;
+stat_x2(i)$(j(i)).. nu_e2(i) + piU_x2(i) =E= 0;
 stat_x3(i).. piU_x3(i) =E= 0;
 stat_x4(i).. piU_x4(i) =E= 0;
 
 * Inequality complementarity equations
-comp_e1(i).. x1(i) - (ord(i) + x4(i)$0) =G= 0;
+comp_e1(i).. x1(i) - (ord(i) + x4(i)$(0)) =G= 0;
 
 * Upper bound complementarity equations
 comp_up_x1(i).. 10 - x1(i) =G= 0;
@@ -103,6 +103,7 @@ e2(j).. x2(j) =E= 20;
 
 x2.fx(i)$(not (j(i))) = 0;
 piU_x2.fx(i)$(not (j(i))) = 0;
+nu_e2.fx(i)$(not (j(i))) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -1647,6 +1647,24 @@ def emit_gams_mcp(
                 guard_str = " and ".join(guards)
                 fx_lines.append(f"{mult_name}.fx({parent_domain_str})$(not ({guard_str})) = 0;")
 
+    # 3c. Issue #1053: Fix widened multipliers.
+    # When a multiplier's domain was widened from a subset to its parent set
+    # (e.g., nu_e2 from (j) to (i) because j⊂i), instances outside the
+    # original subset domain have no matching equation row and must be fixed.
+    for mult_name, (orig_dom, widened_dom) in sorted(kkt.multiplier_domain_widenings.items()):
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
+        # Build guard: for each widened position, add subset membership check
+        widen_guards: list[str] = []
+        for orig_idx, wide_idx in zip(orig_dom, widened_dom, strict=True):
+            if orig_idx.lower() != wide_idx.lower():
+                # wide_idx is the parent set, orig_idx is the subset
+                widen_guards.append(f"{orig_idx}({wide_idx})")
+        if widen_guards:
+            domain_str = ",".join(widened_dom)
+            guard_str = " and ".join(widen_guards)
+            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({guard_str})) = 0;")
+
     # 4. Issue #826: Fix variables with empty stationarity equations.
     # When the stationarity builder can't propagate derivatives through subset
     # access patterns, the stationarity equation is empty (0 =E= 0).

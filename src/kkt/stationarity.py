@@ -2171,6 +2171,28 @@ def _add_indexed_jacobian_terms(
                             # No subset guard needed: the constraint's own dollar
                             # condition already restricts the term to valid instances.
                             term = _rewrite_subset_to_superset(term, subset_rename)
+
+                            # Issue #1053: Widen the multiplier's declared domain
+                            # to match the rewritten indices.  When the equation
+                            # domain is a strict subset (e.g., j ⊂ i), the
+                            # multiplier is declared over (j) but stationarity
+                            # references it with parent-set index (i).  GAMS
+                            # enforces domain checking, so nu_e2(i) is invalid
+                            # when nu_e2 is declared over j.  Widening the
+                            # declaration to (i) makes the reference valid;
+                            # inactive instances are fixed to 0 by the emitter.
+                            if mult_base_name in multipliers:
+                                old_dom = multipliers[mult_base_name].domain
+                                new_dom = tuple(
+                                    subset_rename.get(d.lower(), d) if isinstance(d, str) else d
+                                    for d in old_dom
+                                )
+                                if new_dom != old_dom:
+                                    multipliers[mult_base_name].domain = new_dom
+                                    kkt.multiplier_domain_widenings[mult_base_name] = (
+                                        old_dom,
+                                        new_dom,
+                                    )
                         # else: empty rename_map means identity match, no rewrite needed
                     elif mult_domain == var_domain:
                         # Exact match: direct term, no sum needed
