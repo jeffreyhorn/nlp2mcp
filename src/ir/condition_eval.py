@@ -132,6 +132,10 @@ def _eval_expr(
                 raise ConditionEvaluationError(f"IndexOffset not supported in conditions: {idx}")
         concrete_indices: tuple[str, ...] = tuple(concrete_indices_list)
 
+        # Normalize indices: strip surrounding quotes so lookups match the
+        # canonical form used in param.values (e.g., '"target"' → 'target').
+        concrete_indices = tuple(idx.strip('"').strip("'") for idx in concrete_indices)
+
         # Look up parameter value
         if concrete_indices in param.values:
             return param.values[concrete_indices]
@@ -155,13 +159,32 @@ def _eval_expr(
                 # Only handle simple string domains (skip IndexOffset)
                 if not all(isinstance(d, str) for d in expr_domain):
                     continue
-                # Build index map from expression domain to concrete values
-                expr_index_map: dict[str, str] = dict(
-                    zip(expr_domain, concrete_indices, strict=True)  # type: ignore[arg-type]
-                )
+                # Build index map from expression domain to concrete values.
+                # Treat literals in expr_domain as fixed filters that must match
+                # the corresponding concrete index; only domain variables (names
+                # present in index_map) are bound into expr_index_map.
+                expr_index_map: dict[str, str] = {}
+                matches_literal_filters = True
+                for domain_idx, concrete_idx in zip(expr_domain, concrete_indices, strict=True):
+                    if domain_idx in index_map:
+                        # domain variable: bind to the concrete index
+                        expr_index_map[str(domain_idx)] = concrete_idx
+                    else:
+                        # literal index: must match exactly to apply this expression
+                        canon = str(domain_idx).strip('"').strip("'")
+                        if canon != concrete_idx:
+                            matches_literal_filters = False
+                            break
+                if not matches_literal_filters:
+                    continue
                 try:
                     return _eval_expr(expr_body, expr_index_map, model_ir, _visiting=next_visiting)
-                except ConditionEvaluationError:
+                except ConditionEvaluationError as exc:
+                    # Re-raise cycle-detection errors immediately — they indicate
+                    # a fundamental loop that won't resolve by trying earlier
+                    # assignments.
+                    if "Cycle detected" in str(exc):
+                        raise
                     pass  # Try next expression or fall through to error
             raise ConditionEvaluationError(
                 f"Parameter '{param_name}' has expression-based values that "
