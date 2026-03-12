@@ -69,13 +69,24 @@ def evaluate_condition(
         ) from e
 
 
-def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> float | str:
+def _eval_expr(
+    expr: Expr,
+    index_map: dict[str, str],
+    model_ir: ModelIR,
+    _visiting: frozenset[tuple[str, tuple[str, ...]]] | None = None,
+) -> float | str:
     """
     Recursively evaluate an expression with index substitution.
+
+    Args:
+        _visiting: Set of (param_name, indices) currently being evaluated,
+            used for cycle detection in expression-based parameter resolution.
 
     Returns:
         Numeric value or string (for set element comparisons)
     """
+    if _visiting is None:
+        _visiting = frozenset()
     if isinstance(expr, Const):
         return expr.value
 
@@ -128,7 +139,17 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         # evaluate the expression recursively. E.g., tm(t) = td("target",t)
         # can be resolved if td has static values.
         if param.expressions:
-            for expr_domain, expr_body in param.expressions:
+            # Cycle detection: avoid infinite recursion for self-referential
+            # assignments like deltaq(sc) = deltaq(sc)/(1+deltaq(sc)).
+            visit_key = (param_name, concrete_indices)
+            if visit_key in _visiting:
+                raise ConditionEvaluationError(
+                    f"Cycle detected evaluating parameter '{param_name}' "
+                    f"for indices {concrete_indices}"
+                )
+            next_visiting = _visiting | {visit_key}
+            # Iterate in reverse: last-write-wins for multi-step assignments.
+            for expr_domain, expr_body in reversed(param.expressions):
                 if len(expr_domain) != len(concrete_indices):
                     continue
                 # Only handle simple string domains (skip IndexOffset)
@@ -139,7 +160,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
                     zip(expr_domain, concrete_indices, strict=True)  # type: ignore[arg-type]
                 )
                 try:
-                    return _eval_expr(expr_body, expr_index_map, model_ir)
+                    return _eval_expr(expr_body, expr_index_map, model_ir, _visiting=next_visiting)
                 except ConditionEvaluationError:
                     pass  # Try next expression or fall through to error
             raise ConditionEvaluationError(
@@ -150,8 +171,8 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         return 0.0
 
     if isinstance(expr, Binary):
-        left = _eval_expr(expr.left, index_map, model_ir)
-        right = _eval_expr(expr.right, index_map, model_ir)
+        left = _eval_expr(expr.left, index_map, model_ir, _visiting=_visiting)
+        right = _eval_expr(expr.right, index_map, model_ir, _visiting=_visiting)
 
         # Comparison operators (work with both float and str for set comparisons)
         if expr.op == ">":
@@ -200,7 +221,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         raise ConditionEvaluationError(f"Unsupported binary operator '{expr.op}' in condition")
 
     if isinstance(expr, Unary):
-        operand_val = _eval_expr(expr.child, index_map, model_ir)
+        operand_val = _eval_expr(expr.child, index_map, model_ir, _visiting=_visiting)
         if expr.op.lower() == "not":
             return 1.0 if not operand_val else 0.0
         if expr.op == "-":
