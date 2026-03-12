@@ -124,10 +124,24 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         # Look up parameter value
         if concrete_indices in param.values:
             return param.values[concrete_indices]
-        # Issue #720: If the parameter has expression-based values (not statically
-        # resolved), we cannot evaluate at compile time. Raise an error so callers
-        # can decide how to handle it (e.g., include the instance by default).
+        # Issue #1057: If the parameter has expression-based values, try to
+        # evaluate the expression recursively. E.g., tm(t) = td("target",t)
+        # can be resolved if td has static values.
         if param.expressions:
+            for expr_domain, expr_body in param.expressions:
+                if len(expr_domain) != len(concrete_indices):
+                    continue
+                # Only handle simple string domains (skip IndexOffset)
+                if not all(isinstance(d, str) for d in expr_domain):
+                    continue
+                # Build index map from expression domain to concrete values
+                expr_index_map: dict[str, str] = dict(
+                    zip(expr_domain, concrete_indices, strict=True)  # type: ignore[arg-type]
+                )
+                try:
+                    return _eval_expr(expr_body, expr_index_map, model_ir)
+                except ConditionEvaluationError:
+                    pass  # Try next expression or fall through to error
             raise ConditionEvaluationError(
                 f"Parameter '{param_name}' has expression-based values that "
                 f"cannot be evaluated statically for indices {concrete_indices}"
