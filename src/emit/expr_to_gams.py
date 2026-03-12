@@ -574,6 +574,33 @@ def expr_to_gams(
 
         case Call(func, args):
             # Function calls: exp(x), log(x), sqrt(x), etc.
+
+            # Issue #1056: smax/smin with multi-index domains need tuple
+            # parentheses: smax((i,kp), fx(i,kp)) not smax(i, kp, fx(i,kp)).
+            # The parser stores args as [SymbolRef(idx)..., optional_cond, body].
+            if func in ("smax", "smin") and len(args) >= 2:
+                # Collect leading SymbolRef args as domain indices
+                domain_indices: list[str] = []
+                for arg in args:
+                    if isinstance(arg, SymbolRef):
+                        domain_indices.append(arg.name)
+                    else:
+                        break
+                if domain_indices:
+                    remaining = args[len(domain_indices) :]
+                    extended_domain_vars = domain_vars | frozenset(domain_indices)
+                    # Last remaining arg is the body; anything before it is a condition
+                    body_str = expr_to_gams(remaining[-1], domain_vars=extended_domain_vars)
+                    if len(domain_indices) == 1:
+                        idx_str = domain_indices[0]
+                    else:
+                        idx_str = "(" + ",".join(domain_indices) + ")"
+                    if len(remaining) > 1:
+                        # There's a condition expression before the body
+                        cond_str = expr_to_gams(remaining[0], domain_vars=extended_domain_vars)
+                        return f"{func}({idx_str}$({cond_str}), {body_str})"
+                    return f"{func}({idx_str}, {body_str})"
+
             # Issue #724: In this emitter, GAMS power(base, exp) is only used when the exponent is an integer.
             # Issue #904: AD can produce non-integer Const exponents (e.g.,
             # d/dx[x^0.5] = 0.5 * power(x, -0.5)). Use ** for non-integer
