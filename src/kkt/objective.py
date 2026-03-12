@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 from src.ir.ast import Expr, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import EquationDef
+from src.ir.symbols import EquationDef, Rel
 
 
 @dataclass
@@ -135,7 +135,10 @@ def _is_objective_defining_equation(eq_def: EquationDef, objvar: str) -> bool:
     or
         expression =E= objvar
 
-    We check if the LHS or RHS is a simple variable reference to objvar.
+    Requirements:
+    - Must be an equality (=E=), not an inequality (=L=, =G=)
+    - Must be scalar (no domain indices)
+    - LHS or RHS must be a simple variable reference to objvar
 
     Args:
         eq_def: Equation definition
@@ -144,6 +147,14 @@ def _is_objective_defining_equation(eq_def: EquationDef, objvar: str) -> bool:
     Returns:
         True if equation defines the objective variable
     """
+    # Only equality equations can be objective-defining
+    if eq_def.relation != Rel.EQ:
+        return False
+
+    # Objective defining equations must be scalar (no indexed domain)
+    if eq_def.domain:
+        return False
+
     lhs, rhs = eq_def.lhs_rhs
 
     # Check if LHS is objvar

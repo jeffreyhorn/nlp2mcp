@@ -4642,6 +4642,20 @@ class _ModelBuilder:
                     cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
                     param.expressions.append((tuple(domain_context), cond_expr))
                     return
+                # Issue #1047: When not all indices are domain-over (e.g.,
+                # char(c,"volume")$prop(c,"gravity") where "volume" is a literal),
+                # still wrap the RHS in LhsConditionalAssign and store directly.
+                # Without this, _handle_assign drops the LHS condition entirely,
+                # causing division by zero when the guard prevents /0.
+                # Only apply for non-offset/non-subset cases (those need
+                # _handle_assign for IndexOffset/SubsetIndex key handling).
+                if not has_offset and not has_subset_index:
+                    rhs_evaluated = self._expr_with_context(
+                        rhs_expr, "conditional assignment", domain_context
+                    )
+                    cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
+                    param.expressions.append((tuple(domain_context), cond_expr))
+                    return
 
         # Also process the assignment itself so variables/parameters are updated
         self._handle_assign(assign_node)

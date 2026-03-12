@@ -146,22 +146,26 @@
 
 ### Day 5 — Checkpoint 1 + WS2 Part 2
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~2h
 
-**Checkpoint 1 Decision:** —
+**Checkpoint 1 Decision:** CONDITIONAL GO — path_syntax_error (39) and solve (66) miss targets due to WS1 Days 2-3 not completed (work redirected to WS2 cesam2/etamac fixes). Tests pass; WS2 progress is strong. Proceeding with WS2/WS3 fixes while accepting WS1 debt.
 
 | Criterion | Target | Actual | Status |
 |---|---|---|---|
-| path_syntax_error | ≤ 32 | — | |
-| Solve success | ≥ 70 | — | |
-| Tests | All pass | — | |
+| path_syntax_error | ≤ 32 | 39 | :x: (WS1 Days 2-3 not done) |
+| Solve success | ≥ 70 | 66 | :x: (pre-WS2 fixes) |
+| Tests | All pass | 4,138 passed | :white_check_mark: |
 
 | Task | Status |
 |---|---|
-| Checkpoint 1 evaluation | |
-| Unmatched free variables fixed (2) | |
-| `$` condition preservation (1) | |
+| Checkpoint 1 evaluation | :white_check_mark: CONDITIONAL GO |
+| Unmatched free variables fixed (2) | :white_check_mark: fdesign (`t`), trussm (`tau`) — `_is_objective_defining_equation` now requires `=E=` and scalar domain |
+| `$` condition preservation (1) | :white_check_mark: fawley — parser now wraps LHS conditions in `LhsConditionalAssign` for literal-index assignments |
+
+**Root cause (fdesign/trussm):** `_is_objective_defining_equation()` in `src/kkt/objective.py` accepted inequality constraints (=L=) and indexed equations as "objective defining". For `minimize t` where `passband_up_bnds(i).. sum(..) =L= t`, the inequality was falsely matched. Fix: require `Rel.EQ` and empty domain.
+
+**Root cause (fawley):** `_handle_conditional_assign_general()` in parser.py only wrapped RHS in `LhsConditionalAssign` when ALL indices resolved to sets. For `char(c,"volume")$prop(c,"gravity")`, the literal `"volume"` didn't resolve, so the condition was dropped. Fix: also wrap when indices include literals (non-offset, non-subset cases).
 
 ---
 
