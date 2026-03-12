@@ -4754,15 +4754,21 @@ class TestSubsetIndexingAssignments:
         assert "char" in model.params
         pdef = model.params["char"]
 
-        # Find the "volume" expression by checking the index value semantically
-        # (not via __str__) to avoid brittleness if stringification changes.
+        # Find the "volume" expression by checking the index value semantically.
+        # Strip one layer of surrounding quotes to handle both quoted and
+        # unquoted storage forms.
+        def _strip_quotes(s: object) -> object:
+            if isinstance(s, str) and len(s) >= 2 and s[0] == s[-1] and s[0] in {'"', "'"}:
+                return s[1:-1]
+            return s
+
         def _is_volume(idx: object) -> bool:
             if isinstance(idx, str):
-                return idx == "volume"
-            if hasattr(idx, "value"):
-                return idx.value == "volume"
-            if hasattr(idx, "name"):
-                return idx.name == "volume"
+                return _strip_quotes(idx) == "volume"
+            if hasattr(idx, "value") and isinstance(idx.value, str):
+                return _strip_quotes(idx.value) == "volume"
+            if hasattr(idx, "name") and isinstance(idx.name, str):
+                return _strip_quotes(idx.name) == "volume"
             return False
 
         vol_exprs = [(k, e) for k, e in pdef.expressions if any(_is_volume(idx) for idx in k)]

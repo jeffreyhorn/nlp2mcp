@@ -4629,21 +4629,14 @@ class _ModelBuilder:
                 except (AttributeError, IndexError, TypeError, ParserSemanticError):
                     has_offset = True  # Assume offset; fall through to _handle_assign
                     has_subset_index = False
-                # Check if ALL indices resolve to a set (i.e., are domain-over indices)
-                all_domain_over = (
-                    not has_offset
-                    and not has_subset_index
-                    and all(self._resolve_set_def(idx) is not None for idx in domain_context)
-                )
-                # Wrap RHS in LhsConditionalAssign and store directly when:
-                # 1. all_domain_over: all indices resolve to sets (standard case), OR
-                # 2. not all_domain_over but no offsets/subsets: mixed set/literal
-                #    indices (Issue #1047, e.g. char(c,"volume")$prop(c,"gravity")
-                #    where "volume" is a literal). Without this, _handle_assign
-                #    drops the LHS condition entirely, causing division by zero.
-                # Cases with IndexOffset/SubsetIndex must go through _handle_assign
-                # for proper key handling.
-                if all_domain_over or (not has_offset and not has_subset_index):
+                # Wrap RHS in LhsConditionalAssign and store directly when
+                # there are no IndexOffset/SubsetIndex indices (those need
+                # _handle_assign for proper key handling). This covers both
+                # all-domain-over (standard) and mixed set/literal indices
+                # (Issue #1047, e.g. char(c,"volume")$prop(c,"gravity")).
+                # Without this, _handle_assign drops the LHS condition
+                # entirely, causing division by zero when the guard prevents /0.
+                if not has_offset and not has_subset_index:
                     rhs_evaluated = self._expr_with_context(
                         rhs_expr, "conditional assignment", domain_context
                     )
