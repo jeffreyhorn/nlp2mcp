@@ -245,3 +245,54 @@ class TestExtractObjectiveInfo:
 
         with pytest.raises(ValueError, match="Could not find defining equation"):
             extract_objective_info(model)
+
+    def test_inequality_not_defining_equation(self):
+        """Inequality constraint containing objvar should NOT be matched.
+
+        Regression test for fdesign/trussm: 'sum(..) =L= t' is a constraint,
+        not a defining equation. Only =E= equations define the objective.
+        """
+        model = ModelIR()
+        model.add_var(VariableDef("t", ()))
+        model.add_var(VariableDef("x", ()))
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="t")
+
+        # sum(x) =L= t — inequality, NOT a defining equation
+        model.equations["constraint"] = EquationDef(
+            name="constraint",
+            domain=(),
+            relation=Rel.LE,
+            lhs_rhs=(VarRef("x", ()), VarRef("t", ())),
+        )
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "t"
+        assert result.defining_equation == ""  # No defining equation found
+        assert result.needs_stationarity is True  # Simple variable objective
+
+    def test_indexed_equation_not_defining(self):
+        """Indexed equation containing objvar should NOT be matched.
+
+        Objective defining equations must be scalar (no domain).
+        """
+        from src.ir.symbols import SetDef
+
+        model = ModelIR()
+        model.add_var(VariableDef("tau", ()))
+        model.sets["k"] = SetDef(name="k", members=["k1", "k2"], domain=("*",))
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="tau")
+
+        # reseq(k).. sum(i, sigma(i,k)) =E= tau — indexed equality (should not define objective)
+        model.equations["reseq"] = EquationDef(
+            name="reseq",
+            domain=("k",),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("x", ("k",)), VarRef("tau", ())),
+        )
+
+        result = extract_objective_info(model)
+
+        assert result.objvar == "tau"
+        assert result.defining_equation == ""
+        assert result.needs_stationarity is True

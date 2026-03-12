@@ -4733,6 +4733,51 @@ class TestSubsetIndexingAssignments:
         assert isinstance(expr.condition, SetMembershipTest)
         assert expr.condition.set_name == "g"
 
+    def test_literal_index_conditional_preserves_condition(self):
+        """Test char(c,"volume")$prop(c,"gravity") = 1/prop(c,"gravity").
+
+        Issue #1047: When LHS has mixed set/literal indices (e.g., c is a set
+        but "volume" is a literal), the LHS dollar condition must still be
+        preserved as LhsConditionalAssign to prevent division by zero.
+        """
+        from src.ir.ast import LhsConditionalAssign
+
+        text = dedent("""
+            Set c / a, b, total /;
+            Set m / weight, volume /;
+            Parameter prop(c,*) / a.gravity 0.8, b.gravity 0.9, total.gravity 0 /;
+            Parameter char(c,m);
+            char(c,"weight") = 1;
+            char(c,"volume")$prop(c,"gravity") = 1/prop(c,"gravity");
+        """)
+        model = parser.parse_model_text(text)
+        assert "char" in model.params
+        pdef = model.params["char"]
+
+        # Find the "volume" expression by checking the index value semantically.
+        # Strip one layer of surrounding quotes to handle both quoted and
+        # unquoted storage forms.
+        def _strip_quotes(s: object) -> object:
+            if isinstance(s, str) and len(s) >= 2 and s[0] == s[-1] and s[0] in {'"', "'"}:
+                return s[1:-1]
+            return s
+
+        def _is_volume(idx: object) -> bool:
+            if isinstance(idx, str):
+                return _strip_quotes(idx) == "volume"
+            if hasattr(idx, "value") and isinstance(idx.value, str):
+                return _strip_quotes(idx.value) == "volume"
+            if hasattr(idx, "name") and isinstance(idx.name, str):
+                return _strip_quotes(idx.name) == "volume"
+            return False
+
+        vol_exprs = [(k, e) for k, e in pdef.expressions if any(_is_volume(idx) for idx in k)]
+        assert len(vol_exprs) == 1
+        key, expr = vol_exprs[0]
+
+        # Must be wrapped in LhsConditionalAssign to preserve the $prop guard
+        assert isinstance(expr, LhsConditionalAssign)
+
 
 class TestDomainOverAssignments:
     """Test domain-over parameter assignments (Issue #622).
