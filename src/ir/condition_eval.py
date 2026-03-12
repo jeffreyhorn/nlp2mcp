@@ -165,22 +165,28 @@ def _eval_expr(
                 # Only handle simple string domains (skip IndexOffset)
                 if not all(isinstance(d, str) for d in expr_domain):
                     continue
-                # Build index map from expression domain to concrete values.
-                # Treat literals in expr_domain as fixed filters that must match
-                # the corresponding concrete index; only domain variables (names
-                # present in index_map) are bound into expr_index_map.
+                # Treat quoted entries in expr_domain as fixed literal filters
+                # that must match the corresponding concrete index; all other
+                # entries are treated as domain variables and are bound by
+                # position into expr_index_map.
                 expr_index_map: dict[str, str] = {}
                 matches_literal_filters = True
                 for domain_idx, concrete_idx in zip(expr_domain, concrete_indices, strict=True):
-                    if domain_idx in index_map:
-                        # domain variable: bind to the concrete index
-                        expr_index_map[str(domain_idx)] = concrete_idx
-                    else:
-                        # literal index: must match exactly to apply this expression
-                        canon = str(domain_idx).strip('"').strip("'")
+                    domain_str = str(domain_idx)
+                    is_quoted = (
+                        len(domain_str) >= 2
+                        and domain_str[0] == domain_str[-1]
+                        and domain_str[0] in ("'", '"')
+                    )
+                    if is_quoted:
+                        # literal index: must match exactly (after stripping quotes)
+                        canon = domain_str[1:-1]
                         if canon != concrete_idx:
                             matches_literal_filters = False
                             break
+                    else:
+                        # domain variable: bind to the concrete index
+                        expr_index_map[domain_str] = concrete_idx
                 if not matches_literal_filters:
                     continue
                 try:
