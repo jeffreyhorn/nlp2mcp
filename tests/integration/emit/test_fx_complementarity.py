@@ -106,3 +106,25 @@ class TestLeadLagComplementarityFix:
         """ps10_s: lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0 must appear."""
         result = _generate_mcp("ps10_s")
         assert "lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;" in result
+
+
+@pytest.mark.integration
+class TestMultiplierDomainWidening:
+    """Issue #1053: Widen multiplier domain when equation domain is a strict subset.
+
+    When equation e2(j) has domain (j) which is a subset of variable x2(i)'s
+    domain (i), the multiplier nu_e2 must be declared over (i) — not (j) —
+    so that the stationarity reference nu_e2(i) is GAMS-domain-valid.
+    Instances outside j are fixed to 0.
+    """
+
+    def test_solveopt_multiplier_declared_over_parent_set(self):
+        """solveopt: nu_e2 must be declared over i (not j) to avoid $171."""
+        result = _generate_mcp("solveopt")
+        # nu_e2 should be declared over i (widened from j) in the Variables section
+        variables_start = result.index("Variables")
+        variables_end = result.index("Equations", variables_start)
+        variables_section = result[variables_start:variables_end]
+        assert "nu_e2(i)" in variables_section
+        # The fix statement must guard instances outside j
+        assert "nu_e2.fx(i)$(not (j(i))) = 0;" in result

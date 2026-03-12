@@ -2171,6 +2171,61 @@ def _add_indexed_jacobian_terms(
                             # No subset guard needed: the constraint's own dollar
                             # condition already restricts the term to valid instances.
                             term = _rewrite_subset_to_superset(term, subset_rename)
+
+                            # Issue #1053: Widen the multiplier's declared domain
+                            # to match the rewritten indices.  When the equation
+                            # domain is a strict subset (e.g., j ⊂ i), the
+                            # multiplier is declared over (j) but stationarity
+                            # references it with parent-set index (i).  GAMS
+                            # enforces domain checking, so nu_e2(i) is invalid
+                            # when nu_e2 is declared over j.  Widening the
+                            # declaration to (i) makes the reference valid;
+                            # inactive instances are fixed to 0 by the emitter.
+                            if mult_base_name in multipliers:
+                                old_dom = multipliers[mult_base_name].domain
+                                # Apply the subset→superset rename to the multiplier's
+                                # declared domain.  Note: subset_rename keys are
+                                # lowercased index names.
+                                rename_pairs: list[tuple[str, str]] = []
+                                new_dom_list: list[str] = []
+                                for d in old_dom:
+                                    if isinstance(d, str):
+                                        renamed = subset_rename.get(d.lower(), d)
+                                        if renamed.lower() != d.lower():
+                                            rename_pairs.append((d.lower(), renamed.lower()))
+                                        new_dom_list.append(renamed)
+                                    else:
+                                        new_dom_list.append(d)
+                                new_dom = tuple(new_dom_list)
+                                if new_dom != old_dom:
+                                    multipliers[mult_base_name].domain = new_dom
+
+                                    # Only record widenings for true subset→parent
+                                    # relationships, not pure alias renames.  An
+                                    # alias-only rename (e.g., ii→i where ii is an
+                                    # alias of i) does not need a .fx guard because
+                                    # the domains are equivalent.
+                                    is_true_subset = False
+                                    model_sets = kkt.model_ir.sets
+                                    for orig_idx, parent_idx in rename_pairs:
+                                        orig_set = model_sets.get(orig_idx)
+                                        if orig_set is not None and hasattr(orig_set, "domain"):
+                                            orig_domain = orig_set.domain
+                                            # Compare case-insensitively: parser may
+                                            # preserve original casing.
+                                            if (
+                                                isinstance(orig_domain, tuple)
+                                                and len(orig_domain) == 1
+                                                and isinstance(orig_domain[0], str)
+                                                and orig_domain[0].lower() == parent_idx.lower()
+                                            ):
+                                                is_true_subset = True
+                                                break
+                                    if is_true_subset:
+                                        kkt.multiplier_domain_widenings[mult_base_name] = (
+                                            old_dom,
+                                            new_dom,
+                                        )
                         # else: empty rename_map means identity match, no rewrite needed
                     elif mult_domain == var_domain:
                         # Exact match: direct term, no sum needed

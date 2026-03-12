@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.ir.ast import ParamRef, VarRef
+from src.ir.ast import MultiplierRef, ParamRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, SetDef
 from src.kkt.stationarity import _match_subset_domain, _rewrite_subset_to_superset
@@ -94,6 +94,13 @@ class TestRewriteSubsetToSuperset:
         result = _rewrite_subset_to_superset(expr, {"ii": "i", "jj": "j"})
         assert isinstance(result, ParamRef)
         assert result.indices == ("i", "j")
+
+    def test_rewrite_multiplierref_indices(self):
+        """MultiplierRef indices should be rewritten (Issue #1053)."""
+        expr = MultiplierRef("nu_e2", ("j",))
+        result = _rewrite_subset_to_superset(expr, {"j": "i"})
+        assert isinstance(result, MultiplierRef)
+        assert result.indices == ("i",)
 
     def test_empty_rename_map_noop(self):
         """Empty rename_map should return expression unchanged."""

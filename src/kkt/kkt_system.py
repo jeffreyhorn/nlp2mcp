@@ -176,6 +176,15 @@ class KKTSystem:
         default_factory=dict
     )
 
+    # Issue #1053: Multiplier domain widenings.
+    # When a multiplier's domain is widened from a subset to its parent set
+    # (e.g., nu_e2 from (j) to (i) because j⊂i), the emitter must fix
+    # instances outside the original subset to 0.
+    # Maps mult_name -> (original_domain, widened_domain).
+    multiplier_domain_widenings: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = field(
+        default_factory=dict
+    )
+
     # Scaling factors (optional, computed when --scale is used)
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None
