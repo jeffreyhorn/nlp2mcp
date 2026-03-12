@@ -1651,15 +1651,22 @@ def emit_gams_mcp(
     # When a multiplier's domain was widened from a subset to its parent set
     # (e.g., nu_e2 from (j) to (i) because j⊂i), instances outside the
     # original subset domain have no matching equation row and must be fixed.
+    # Only true subset→parent widenings are recorded (alias-only renames are
+    # excluded by the stationarity builder).
     for mult_name, (orig_dom, widened_dom) in sorted(kkt.multiplier_domain_widenings.items()):
         if ref_mults is not None and mult_name not in ref_mults:
             continue
-        # Build guard: for each widened position, add subset membership check
+        # Build guard: for each widened position where orig is a true subset
+        # of wide, add subset membership check.  Validate via model_ir.sets
+        # to avoid emitting invalid guards for alias-only renames.
         widen_guards: list[str] = []
         for orig_idx, wide_idx in zip(orig_dom, widened_dom, strict=True):
             if orig_idx.lower() != wide_idx.lower():
-                # wide_idx is the parent set, orig_idx is the subset
-                widen_guards.append(f"{orig_idx}({wide_idx})")
+                orig_set = kkt.model_ir.sets.get(orig_idx.lower())
+                if orig_set is not None and getattr(orig_set, "domain", None) == (
+                    wide_idx.lower(),
+                ):
+                    widen_guards.append(f"{orig_idx}({wide_idx})")
         if widen_guards:
             domain_str = ",".join(widened_dom)
             guard_str = " and ".join(widen_guards)
