@@ -128,3 +128,33 @@ class TestMultiplierDomainWidening:
         assert "nu_e2(i)" in variables_section
         # The fix statement must guard instances outside j
         assert "nu_e2.fx(i)$(not (j(i))) = 0;" in result
+
+
+@pytest.mark.integration
+class TestCallBasedParameterDetection:
+    """Issue #1054: Parameters referenced via Call nodes must be emitted.
+
+    When the parser treats `param(i)` as Call(func="param", ...) instead of
+    ParamRef("param", ...), the parameter must still be detected as
+    model-relevant and its computed assignment emitted.
+    """
+
+    def test_stdcge_gamma_assignment_emitted(self):
+        """stdcge: gamma(i) assignment must appear in MCP output."""
+        result = _generate_mcp("stdcge")
+        # gamma must be declared as a Parameter
+        assert "gamma" in result
+        # The computed assignment for gamma must be emitted (not just declared)
+        # Look for the assignment pattern: gamma(i) = <expression>
+        assert "gamma(i)" in result
+        # Verify the assignment contains the Armington function components
+        # (deltam, deltad, eta are used in the gamma formula)
+        lines = result.split("\n")
+        gamma_assignment_lines = [
+            ln
+            for ln in lines
+            if "gamma(i)" in ln and "=" in ln and "stat_" not in ln and ".." not in ln
+        ]
+        assert (
+            len(gamma_assignment_lines) > 0
+        ), "gamma(i) assignment statement not found in MCP output"

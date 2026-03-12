@@ -96,9 +96,16 @@ def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
     model_eq_set = {eq.lower() for eq in solved_eqs}
     referenced: set[str] = set()
 
+    param_names_lower = {p.lower() for p in model_ir.params}
+
     def _walk(expr: Expr) -> None:
         if isinstance(expr, ParamRef):
             referenced.add(expr.name.lower())
+        # Issue #1054: Parameters referenced via Call nodes (parser treats
+        # param(i) as a function call when not resolved to ParamRef).
+        # Check if Call.func matches a declared parameter name.
+        elif isinstance(expr, Call) and expr.func.lower() in param_names_lower:
+            referenced.add(expr.func.lower())
         for child in expr.children():
             _walk(child)
 
