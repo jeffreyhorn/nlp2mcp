@@ -21,6 +21,12 @@ class ConditionEvaluationError(Exception):
     pass
 
 
+class ConditionCycleError(ConditionEvaluationError):
+    """Raised when a cycle is detected in expression-based parameter resolution."""
+
+    pass
+
+
 def evaluate_condition(
     condition: Expr,
     domain_sets: tuple[str, ...],
@@ -69,13 +75,24 @@ def evaluate_condition(
         ) from e
 
 
-def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> float | str:
+def _eval_expr(
+    expr: Expr,
+    index_map: dict[str, str],
+    model_ir: ModelIR,
+    _visiting: frozenset[tuple[str, tuple[str, ...]]] | None = None,
+) -> float | str:
     """
     Recursively evaluate an expression with index substitution.
+
+    Args:
+        _visiting: Set of (param_name, indices) currently being evaluated,
+            used for cycle detection in expression-based parameter resolution.
 
     Returns:
         Numeric value or string (for set element comparisons)
     """
+    if _visiting is None:
+        _visiting = frozenset()
     if isinstance(expr, Const):
         return expr.value
 
@@ -121,13 +138,63 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
                 raise ConditionEvaluationError(f"IndexOffset not supported in conditions: {idx}")
         concrete_indices: tuple[str, ...] = tuple(concrete_indices_list)
 
+        # Normalize indices: strip surrounding quotes so lookups match the
+        # canonical form used in param.values (e.g., '"target"' → 'target').
+        concrete_indices = tuple(idx.strip('"').strip("'") for idx in concrete_indices)
+
         # Look up parameter value
         if concrete_indices in param.values:
             return param.values[concrete_indices]
-        # Issue #720: If the parameter has expression-based values (not statically
-        # resolved), we cannot evaluate at compile time. Raise an error so callers
-        # can decide how to handle it (e.g., include the instance by default).
+        # Issue #1057: If the parameter has expression-based values, try to
+        # evaluate the expression recursively. E.g., tm(t) = td("target",t)
+        # can be resolved if td has static values.
         if param.expressions:
+            # Cycle detection: avoid infinite recursion for self-referential
+            # assignments like deltaq(sc) = deltaq(sc)/(1+deltaq(sc)).
+            visit_key = (param_name.lower(), concrete_indices)
+            if visit_key in _visiting:
+                raise ConditionCycleError(
+                    f"Cycle detected evaluating parameter '{param_name}' "
+                    f"for indices {concrete_indices}"
+                )
+            next_visiting = _visiting | {visit_key}
+            # Iterate in reverse: last-write-wins for multi-step assignments.
+            for expr_domain, expr_body in reversed(param.expressions):
+                if len(expr_domain) != len(concrete_indices):
+                    continue
+                # Only handle simple string domains (skip IndexOffset)
+                if not all(isinstance(d, str) for d in expr_domain):
+                    continue
+                # Treat quoted entries in expr_domain as fixed literal filters
+                # that must match the corresponding concrete index; all other
+                # entries are treated as domain variables and are bound by
+                # position into expr_index_map.
+                expr_index_map: dict[str, str] = {}
+                matches_literal_filters = True
+                for domain_idx, concrete_idx in zip(expr_domain, concrete_indices, strict=True):
+                    domain_str = str(domain_idx)
+                    is_quoted = (
+                        len(domain_str) >= 2
+                        and domain_str[0] == domain_str[-1]
+                        and domain_str[0] in ("'", '"')
+                    )
+                    if is_quoted:
+                        # literal index: must match exactly (after stripping quotes)
+                        canon = domain_str[1:-1]
+                        if canon != concrete_idx:
+                            matches_literal_filters = False
+                            break
+                    else:
+                        # domain variable: bind to the concrete index
+                        expr_index_map[domain_str] = concrete_idx
+                if not matches_literal_filters:
+                    continue
+                try:
+                    return _eval_expr(expr_body, expr_index_map, model_ir, _visiting=next_visiting)
+                except ConditionCycleError:
+                    raise  # Cycles won't resolve by trying earlier assignments
+                except ConditionEvaluationError:
+                    pass  # Try next expression or fall through to error
             raise ConditionEvaluationError(
                 f"Parameter '{param_name}' has expression-based values that "
                 f"cannot be evaluated statically for indices {concrete_indices}"
@@ -136,8 +203,8 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         return 0.0
 
     if isinstance(expr, Binary):
-        left = _eval_expr(expr.left, index_map, model_ir)
-        right = _eval_expr(expr.right, index_map, model_ir)
+        left = _eval_expr(expr.left, index_map, model_ir, _visiting=_visiting)
+        right = _eval_expr(expr.right, index_map, model_ir, _visiting=_visiting)
 
         # Comparison operators (work with both float and str for set comparisons)
         if expr.op == ">":
@@ -186,7 +253,7 @@ def _eval_expr(expr: Expr, index_map: dict[str, str], model_ir: ModelIR) -> floa
         raise ConditionEvaluationError(f"Unsupported binary operator '{expr.op}' in condition")
 
     if isinstance(expr, Unary):
-        operand_val = _eval_expr(expr.child, index_map, model_ir)
+        operand_val = _eval_expr(expr.child, index_map, model_ir, _visiting=_visiting)
         if expr.op.lower() == "not":
             return 1.0 if not operand_val else 0.0
         if expr.op == "-":
