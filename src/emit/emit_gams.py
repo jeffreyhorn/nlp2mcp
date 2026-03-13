@@ -1525,6 +1525,7 @@ def emit_gams_mcp(
     # When a variable has per-element bound overrides but no finite base bound,
     # the complementarity equation is conditioned on a mask set.  The paired
     # multiplier must be fixed to 0 for excluded indices.
+    mults_fixed_by_mask: set[str] = set()
     for mask_name, (domain, _covered) in sorted(kkt.bound_param_masks.items()):
         domain_str = ",".join(domain)
         # Determine if this is a lower or upper bound mask and get multiplier name
@@ -1537,15 +1538,20 @@ def emit_gams_mcp(
             mult_name = create_bound_up_multiplier_name(var_name)
         else:
             continue
+        mults_fixed_by_mask.add(mult_name)
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not {mask_name}({domain_str})) = 0;")
 
-    # 2e. Fix bound multipliers whose complementarity equation has a guard
-    # condition (e.g., $(param < inf) to skip degenerate infinite-bound rows).
-    # The multiplier must be fixed to 0 for excluded instances.
+    # 2e. Fix bound multipliers whose complementarity equation has an
+    # expression-based guard condition (e.g., $(param < inf)) to skip
+    # degenerate infinite-bound rows.
+    # Skip multipliers already handled by section 2d (mask-set conditions)
+    # to avoid emitting duplicate .fx lines.
     # Handles both indexed (domain-conditioned) and scalar (unconditional) cases.
     for comp_dict in (kkt.complementarity_bounds_lo, kkt.complementarity_bounds_up):
         for _key, comp_pair in sorted(comp_dict.items()):
             if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            if comp_pair.variable in mults_fixed_by_mask:
                 continue
             eq_def = comp_pair.equation
             if eq_def.condition is not None:
