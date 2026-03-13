@@ -33,7 +33,9 @@ Parameters
     clen(l) /'len-1' 50, 'len-2' 85, 'len-3' 115, 'len-4' 143/
 ;
 
+$onImplicitAssign
 ttl(t,tp,l) = yes$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t));
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -54,7 +56,6 @@ Variables
 
 Positive Variables
     x(t,l)
-    lam_bal2(t)
     piL_x(t,l)
     piL_e(t)
 ;
@@ -87,7 +88,6 @@ x.l(t,l) = 1;
 Equations
     stat_e(t)
     stat_x(t,l)
-    comp_bal2(t)
     comp_lo_e(t)
     comp_lo_x(t,l)
     bal4(t)
@@ -99,11 +99,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(t).. nu_bal4(t) - piL_e(t) =E= 0;
-stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) + sum(tp, ((-1) * ((ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t)))) * lam_bal2(t)) - piL_x(t,l) =E= 0;
-
-* Inequality complementarity equations
-comp_bal2(t).. sum((tp,l)$(ord(tp) <= ord(t) and ord(tp) + ord(l) > ord(t)), x(tp,l)) - req(t) =G= 0;
+stat_e(t).. nu_bal4(t) + ((-1) * nu_bal4(t+1))$(ord(t) <= card(t) - 1) - piL_e(t) =E= 0;
+stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) - piL_x(t,l) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_e(t).. e(t) - req(t) =G= 0;
@@ -139,7 +136,6 @@ nu_bal4.fx(t)$(not (ord(t) > 1)) = 0;
 Model mcp_model /
     stat_e.e,
     stat_x.x,
-    comp_bal2.lam_bal2,
     bal4.nu_bal4,
     cost.z,
     comp_lo_e.piL_e,

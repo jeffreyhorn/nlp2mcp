@@ -57,8 +57,8 @@ Alias(t, tp);
 Alias(s, sp);
 
 Parameters
-    tm1960(tm,tm) /agri.agri 14.846, agri.mine 0.013, agri.petrol 0.073, agri.food 2.88, agri.text 0.943, agri.wood 1.101, agri.chem 0.55, agri.'n-met' 0.001, agri.'b-met' 0.002, agri.mach 0.028, agri.const 0.003, agri.elec 0.004, agri.trans 0.018, mine.agri 0.002, mine.mine 0.001, mine.petrol 2.007, mine.food 0.024, mine.text 0.004, mine.wood 0.06, mine.chem 0.093, mine.'n-met' 0.109, mine.'b-met' 0.455, mine.mach 0.143, mine.const 0.216, mine.elec 0.005, mine.comm 0.01, mine.trans 0.007, mine.serv 0.006, petrol.agri 2.257, petrol.mine 0.116, petrol.petrol 0.173, petrol.food 0.002, petrol.text 0.185, petrol.wood 0.222, petrol.chem 0.126, petrol.'n-met' 0.218, petrol.'b-met' 0.275, petrol.mach 0.173, petrol.const 0.124, petrol.elec 0.216, petrol.comm 0.163, petrol.trans 1.022, petrol.serv 0.094, food.agri 19.711, food.mine 0.042, food.petrol 0.083, food.food 2.3, food.text 0.04, food.wood 0.394, food.chem 0.13, food.'n-met' 0.005, food.'b-met' 0.021, food.mach 0.026, food.const 0.041, food.elec 0.002, food.comm 0.056, food.trans 0.028, food.serv 0.109, text.agri 7.835, text.mine 0.023, text.petrol 0.19, text.food 0.651, text.text 0.027, text.wood 0.544, text.chem 0.094, text.'n-met' 0.012, text.'b-met' 0.025, text.mach 0.081, text.const 0.038, text.elec 0.005, text.comm 0.09, text.trans 0.012, text.serv 0.084, wood.agri 1.242, wood.mine 0.117, wood.petrol 0.035, wood.food 0.13, wood.text 0.05, wood.wood 0.199, wood.chem 0.246, wood.'n-met' 0.092, wood.'b-met' 0.043, wood.mach 0.182, wood.const 0.613, wood.elec 0.013, wood.comm 0.428, wood.trans 0.048, wood.serv 0.357, chem.agri 3.635, chem.mine 0.217, chem.petrol 0.221, chem.food 0.073, chem.text 0.661, chem.wood 0.379, chem.chem 1.018, chem.'n-met' 0.049, chem.'b-met' 0.043, chem.mach 0.43, chem.const 0.191, chem.elec 0.011, chem.comm 0.078, chem.trans 0.304, chem.serv 0.318, 'n-met'.agri 0.099, 'n-met'.mine 0.117, 'n-met'.petrol 0.007, 'n-met'.food 0.072, 'n-met'.text 0.026, 'n-met'.wood 0.101, 'n-met'.chem 0.056, 'n-met'.'n-met' 0.18, 'n-met'.'b-met' 0.063, 'n-met'.mach 0.051, 'n-met'.const 1.428, 'n-met'.elec 0.001, 'n-met'.comm 0.02, 'n-met'.trans 0.002, 'n-met'.serv 0.017, 'b-met'.agri 0.048, 'b-met'.mine 0.024, 'b-met'.petrol 0.025, 'b-met'.food 0.092, 'b-met'.text 0.222, 'b-met'.wood 0.262, 'b-met'.chem 0.066, 'b-met'.'n-met' 0.033, 'b-met'.'b-met' 0.873, 'b-met'.mach 1.249, 'b-met'.const 1.166, 'b-met'.elec 0.013, 'b-met'.comm 0.132, 'b-met'.trans 0.027, 'b-met'.serv 0.149, mach.agri 3.28, mach.mine 0.281, mach.petrol 0.094, mach.food 0.114, mach.text 2.529, mach.wood 0.616, mach.chem 0.095, mach.'n-met' 0.043, mach.'b-met' 0.057, mach.mach 0.904, mach.const 0.867, mach.elec 0.052, mach.comm 0.206, mach.trans 0.097, mach.serv 0.463, const.agri 0.028, const.mine 0.024, const.petrol 0.026, const.food 12.787, const.text 0.038, const.wood 0.131, const.chem 0.02, const.'n-met' 0.025, const.'b-met' 0.022, const.mach 0.011, const.const 0.06, const.elec 0.043, const.comm 0.083, const.trans 0.072, const.serv 0.367, elec.agri 0.54, elec.mine 0.179, elec.petrol 0.003, elec.food 0.115, elec.text 0.122, elec.wood 0.062, elec.chem 0.075, elec.'n-met' 0.075, elec.'b-met' 0.062, elec.mach 0.063, elec.const 0.049, elec.elec 0.08, elec.comm 0.25, elec.trans 0.03, elec.serv 0.156, comm.agri 35.835, comm.mine 0.222, comm.petrol 0.336, comm.food 1.125, comm.text 3.625, comm.wood 0.214, comm.chem 0.869, comm.'n-met' 0.249, comm.'b-met' 0.314, comm.mach 0.544, comm.const 1.66, comm.elec 0.093, comm.comm 0.351, comm.trans 0.619, comm.serv 1.28, trans.agri 4.309, trans.mine 0.18, trans.petrol 0.111, trans.food 0.001, trans.text 0.087, trans.wood 0.021, trans.chem 0.03, trans.'n-met' 0.008, trans.'b-met' 0.007, trans.mach 0.046, trans.const 0.02, trans.elec 0.012, trans.comm 2.943, trans.trans 0.024, trans.serv 0.13, serv.agri 20.58, serv.mine 7.501, serv.petrol 1.166, serv.food 0.217, serv.text 0.572, serv.wood 0.241, serv.chem 0.347, serv.'n-met' 0.078, serv.'b-met' 0.239, serv.mach 0.312, serv.const 0.348, serv.elec 0.043, serv.comm 1.61, serv.trans 0.243, serv.serv 5.439, imp.agri 1.313, imp.mine 0.231, imp.petrol 0.055, imp.food 3.84, imp.text 0.599, imp.wood 0.479, imp.chem 1.664, imp.'n-met' 0.156, imp.'b-met' 0.366, imp.mach 1.934, imp.const 0.921, imp.elec 0.107, imp.comm 0.119, imp.trans 0.482, imp.serv 0.429, err.agri -0.036, err.mine -1.009, err.petrol 0.01, err.food 0.093, err.text 0.028, err.wood 0.021, err.chem 0.057, err.'n-met' 0.013, err.'b-met' 0.046, err.mach 0.047, err.const 0.088, err.elec 0.007, err.comm 0.116, err.trans 0.027, err.serv 0.344, va.agri 23.97, va.mine 2.306, va.petrol 5.128, va.food 10.62, va.text 5.434, va.wood 2.347, va.chem 3.245, va.'n-met' 1.182, va.'b-met' 1.786, va.mach 4.278, va.const 6.105, va.elec 1.502, va.comm 46.88, va.trans 4.996, va.serv 30.732, hc.mine 0, hc.petrol 0, hc.food 0, hc.text 0, hc.wood 0, agri.comm 0, agri.serv 0, hc.agri 0, hc.chem 0, hc.'n-met' 0, hc.'b-met' 0, hc.mach 0, hc.const 0, hc.elec 0, hc.comm 0, hc.trans 0, hc.serv 0/
-    t1968(tm,tm) /agri.exp 3.86, agri.gvp 44.775, mine.exp 2.36, mine.gvp 5.074, petrol.exp 0.45, petrol.gvp 17.001, food.exp 2.88, food.gvp 48.689, text.exp 0.58, text.gvp 22.671, wood.exp 0.31, wood.gvp 9.827, chem.exp 0.66, chem.gvp 17.913, 'n-met'.exp 0.12, 'n-met'.gvp 5.351, 'b-met'.exp 0.23, 'b-met'.gvp 10.768, mach.exp 0.56, mach.gvp 27.231, const.exp 26.774, elec.exp 5.669, comm.exp 1.56, comm.gvp 89.838, trans.exp 12.598, serv.exp 0.3, serv.gvp 72.242, hc.exp 191.1, gc.exp 17.7, tc.exp 4.22, exp.exp 13.87, imp.exp 21, fi.exp 49.5, ii.exp 5.5, va.exp 13.87, gc.gvp 0, fi.gvp 0, const.gvp 0, ii.gvp 0, imp.gvp 0, exp.gvp 0, hc.gvp 0, elec.gvp 0, va.gvp 0, tc.gvp 0, trans.gvp 0/
+    tm1960(tm,tm) /agri.agri 2.028, agri.mine 0.014, agri.petrol 0.001, agri.food 8.049, agri.text 1.091, agri.wood 0.521, agri.chem 0.55, agri.'n-met' 0.001, agri.'b-met' 0.002, agri.mach 0.028, agri.const 0.003, agri.elec 0.004, agri.trans 0.018, mine.agri 0.001, mine.mine 1.007, mine.petrol 0.128, mine.food 0.025, mine.text 0.004, mine.wood 0.008, mine.chem 0.093, mine.'n-met' 0.109, mine.'b-met' 0.455, mine.mach 0.143, mine.const 0.216, mine.elec 0.005, mine.comm 0.01, mine.trans 0.007, mine.serv 0.006, petrol.agri 0.621, petrol.mine 0.154, petrol.petrol 2.944, petrol.food 0.445, petrol.text 0.185, petrol.wood 0.097, petrol.chem 0.126, petrol.'n-met' 0.218, petrol.'b-met' 0.275, petrol.mach 0.173, petrol.const 0.124, petrol.elec 0.216, petrol.comm 0.163, petrol.trans 1.022, petrol.serv 0.094, food.agri 1.66, food.mine 0.012, food.petrol 0.011, food.food 4.697, food.text 0.054, food.wood 0.033, food.chem 0.13, food.'n-met' 0.005, food.'b-met' 0.021, food.mach 0.026, food.const 0.041, food.elec 0.002, food.comm 0.056, food.trans 0.028, food.serv 0.109, text.agri 0.522, text.mine 0.012, text.petrol 0.015, text.food 0.094, text.text 2.565, text.wood 0.038, text.chem 0.094, text.'n-met' 0.012, text.'b-met' 0.025, text.mach 0.081, text.const 0.038, text.elec 0.005, text.comm 0.09, text.trans 0.012, text.serv 0.084, wood.agri 0.123, wood.mine 0.035, wood.petrol 0.074, wood.food 0.438, wood.text 0.1, wood.wood 1.038, wood.chem 0.246, wood.'n-met' 0.092, wood.'b-met' 0.043, wood.mach 0.182, wood.const 0.613, wood.elec 0.013, wood.comm 0.428, wood.trans 0.048, wood.serv 0.357, chem.agri 0.741, chem.mine 0.099, chem.petrol 0.054, chem.food 0.134, chem.text 0.661, chem.wood 0.134, chem.chem 1.018, chem.'n-met' 0.049, chem.'b-met' 0.043, chem.mach 0.43, chem.const 0.191, chem.elec 0.011, chem.comm 0.078, chem.trans 0.304, chem.serv 0.318, 'n-met'.agri 0.003, 'n-met'.mine 0.012, 'n-met'.petrol 0.007, 'n-met'.food 0.252, 'n-met'.text 0.008, 'n-met'.wood 0.013, 'n-met'.chem 0.056, 'n-met'.'n-met' 0.18, 'n-met'.'b-met' 0.063, 'n-met'.mach 0.051, 'n-met'.const 1.428, 'n-met'.elec 0.001, 'n-met'.comm 0.02, 'n-met'.trans 0.002, 'n-met'.serv 0.017, 'b-met'.agri 0.048, 'b-met'.mine 0.068, 'b-met'.petrol 0.025, 'b-met'.food 0.144, 'b-met'.text 0.058, 'b-met'.wood 0.039, 'b-met'.chem 0.066, 'b-met'.'n-met' 0.033, 'b-met'.'b-met' 0.873, 'b-met'.mach 1.249, 'b-met'.const 1.166, 'b-met'.elec 0.013, 'b-met'.comm 0.132, 'b-met'.trans 0.027, 'b-met'.serv 0.149, mach.agri 0.224, mach.mine 0.05, mach.petrol 0.048, mach.food 0.317, mach.text 0.114, mach.wood 0.051, mach.chem 0.095, mach.'n-met' 0.043, mach.'b-met' 0.057, mach.mach 0.904, mach.const 0.867, mach.elec 0.052, mach.comm 0.206, mach.trans 0.097, mach.serv 0.463, const.agri 0.14, const.mine 0.024, const.petrol 0.026, const.food 0.045, const.text 0.038, const.wood 0.016, const.chem 0.02, const.'n-met' 0.025, const.'b-met' 0.022, const.mach 0.011, const.const 0.06, const.elec 0.043, const.comm 0.083, const.trans 0.072, const.serv 0.367, elec.agri 0.073, elec.mine 0.106, elec.petrol 0.003, elec.food 0.165, elec.text 0.122, elec.wood 0.062, elec.chem 0.075, elec.'n-met' 0.075, elec.'b-met' 0.062, elec.mach 0.063, elec.const 0.049, elec.elec 0.08, elec.comm 0.25, elec.trans 0.03, elec.serv 0.156, comm.agri 1.199, comm.mine 0.165, comm.petrol 0.197, comm.food 2.632, comm.text 1.527, comm.wood 0.483, comm.chem 0.869, comm.'n-met' 0.249, comm.'b-met' 0.314, comm.mach 0.544, comm.const 1.66, comm.elec 0.093, comm.comm 0.351, comm.trans 0.619, comm.serv 1.28, trans.agri 0.001, trans.mine 0.009, trans.petrol 0.012, trans.food 0.057, trans.text 0.032, trans.wood 0.021, trans.chem 0.03, trans.'n-met' 0.008, trans.'b-met' 0.007, trans.mach 0.046, trans.const 0.02, trans.elec 0.012, trans.comm 2.943, trans.trans 0.024, trans.serv 0.13, serv.agri 0.159, serv.mine 0.152, serv.petrol 0.227, serv.food 0.681, serv.text 0.337, serv.wood 0.241, serv.chem 0.347, serv.'n-met' 0.078, serv.'b-met' 0.239, serv.mach 0.312, serv.const 0.348, serv.elec 0.043, serv.comm 1.61, serv.trans 0.243, serv.serv 5.439, imp.agri 0.548, imp.mine 0.061, imp.petrol 0.704, imp.food 0.567, imp.text 0.599, imp.wood 0.44, imp.chem 1.664, imp.'n-met' 0.156, imp.'b-met' 0.366, imp.mach 1.934, imp.const 0.921, imp.elec 0.107, imp.comm 0.119, imp.trans 0.482, imp.serv 0.429, err.agri 0.105, err.mine 0.025, err.petrol 0.023, err.food 0.093, err.text 0.028, err.wood 0.021, err.chem 0.057, err.'n-met' 0.013, err.'b-met' 0.046, err.mach 0.047, err.const 0.088, err.elec 0.007, err.comm 0.116, err.trans 0.027, err.serv 0.344, va.agri 23.97, va.mine 2.306, va.petrol 5.128, va.food 10.62, va.text 5.434, va.wood 2.347, va.chem 3.245, va.'n-met' 1.182, va.'b-met' 1.786, va.mach 4.278, va.const 6.105, va.elec 1.502, va.comm 46.88, va.trans 4.996, va.serv 30.732, agri.hc 14.846, agri.gc 0.013, agri.tc 0.073, agri.exp 2.88, agri.fi 0.943, agri.ii 1.101, mine.hc 0.002, mine.gc 0.001, mine.tc 2.007, mine.exp 0.024, mine.fi 0.06, petrol.hc 2.257, petrol.gc 0.116, petrol.tc 0.173, petrol.exp 0.002, petrol.fi 0.222, food.hc 19.711, food.gc 0.042, food.tc 0.083, food.exp 2.3, food.fi 0.04, food.ii 0.394, text.hc 7.835, text.gc 0.023, text.tc 0.19, text.exp 0.651, text.fi 0.027, text.ii 0.544, wood.hc 1.242, wood.gc 0.117, wood.tc 0.035, wood.exp 0.13, wood.fi 0.05, wood.ii 0.199, chem.hc 3.635, chem.gc 0.217, chem.tc 0.221, chem.exp 0.073, chem.fi 0.379, 'n-met'.hc 0.099, 'n-met'.gc 0.117, 'n-met'.exp 0.072, 'n-met'.fi 0.026, 'n-met'.ii 0.101, 'b-met'.gc 0.024, 'b-met'.exp 0.092, 'b-met'.fi 0.222, 'b-met'.ii 0.262, mach.hc 3.28, mach.gc 0.281, mach.tc 0.094, mach.exp 0.114, mach.fi 2.529, mach.ii 0.616, const.hc 0.028, const.exp 12.787, const.fi 0.131, elec.hc 0.54, elec.gc 0.179, elec.exp 0.115, comm.hc 35.835, comm.gc 0.222, comm.tc 0.336, comm.exp 1.125, comm.fi 3.625, comm.ii 0.214, trans.hc 4.309, trans.gc 0.18, trans.tc 0.111, trans.exp 0.001, trans.fi 0.087, serv.hc 20.58, serv.gc 7.501, serv.tc 1.166, serv.exp 0.217, serv.fi 0.572, imp.hc 1.313, imp.gc 0.231, imp.tc 0.055, imp.exp 3.84, imp.fi 0.479, err.hc -0.036, err.gc -1.009, err.tc 0.01/
+    t1968(tm,tm) /agri.exp 3.86, agri.gvp 44.775, mine.exp 2.36, mine.gvp 5.074, petrol.exp 0.45, petrol.gvp 17.001, food.exp 2.88, food.gvp 48.689, text.exp 0.58, text.gvp 22.671, wood.exp 0.31, wood.gvp 9.827, chem.exp 0.66, chem.gvp 17.913, 'n-met'.exp 0.12, 'n-met'.gvp 5.351, 'b-met'.exp 0.23, 'b-met'.gvp 10.768, mach.exp 0.56, mach.gvp 27.231, const.exp 26.774, elec.exp 5.669, comm.exp 1.56, comm.gvp 89.838, trans.exp 12.598, serv.exp 0.3, serv.gvp 72.242, hc.exp 191.1, gc.exp 17.7, tc.exp 4.22, exp.exp 13.87, imp.exp 21, fi.exp 49.5, ii.exp 5.5, va.exp 13.87/
     xj60(jd)
     ax60(id,jd)
     aij60(id,jd)
@@ -78,7 +78,7 @@ Parameters
     apz(id,te)
     muc(te)
     muz(te)
-    b0(id,j) /agri.agri 0.934, mine.mine 0.124, petrol.petrol 0.004, food.food 0.048, text.text 0.047, wood.wood 0.154, chem.chem 0.102, 'n-met'.'n-met' 0.088, 'b-met'.'b-met' 0.352, mach.agri 0.207, mach.mine 0.261, mach.petrol 0.395, mach.food 0.197, mach.text 0.155, mach.wood 0.3, mach.chem 0.203, mach.'n-met' 0.319, mach.'b-met' 0.263, mach.mach 0.176, mach.const 0.085, mach.elec 0.886, mach.comm 0.189, mach.trans 1.634, mach.serv 0.273, const.agri 0.588, const.mine 0.331, const.petrol 0.615, const.food 0.299, const.text 0.145, const.wood 0.296, const.chem 0.232, const.'n-met' 0.447, const.'b-met' 0.275, const.mach 0.235, const.const 0.015, const.elec 2.109, const.comm 0.169, const.trans 5.173, const.serv 2.328, elec.const 0.462, comm.agri 0.224, comm.mine 0.204, comm.petrol 0.378, comm.food 0.193, comm.text 0.194, comm.wood 0.307, comm.chem 0.294, comm.'n-met' 0.279, comm.'b-met' 0.348, comm.mach 0.234, comm.const 0.07, comm.elec 0.707, comm.comm 0.126, comm.trans 1.363, comm.serv 0.199, trans.comm 0.159, serv.agri 0.039, serv.comm 0.196, serv.trans 0.154, imp.agri 0.262, imp.mine 0.1, imp.petrol 0.339, imp.food 0.183, imp.text 0.264, imp.wood 0.316, imp.chem 0.455, imp.'n-met' 0.202, imp.'b-met' 0.497, imp.mach 0.336, imp.const 0.042, imp.elec 0.369, imp.comm 0.011, imp.trans 0.835, imp.serv 0.055, 'b-met'.agri 0, 'b-met'.mine 0, 'b-met'.petrol 0, 'b-met'.food 0, 'b-met'.text 0, 'b-met'.wood 0, 'b-met'.chem 0, 'b-met'.'n-met' 0, 'b-met'.mach 0, 'b-met'.const 0, 'b-met'.elec 0, 'b-met'.comm 0, 'b-met'.trans 0, 'b-met'.serv 0, text.agri 0, text.mine 0, text.petrol 0, text.food 0, text.wood 0, text.chem 0, text.'n-met' 0, text.'b-met' 0, text.mach 0, text.const 0, text.elec 0, text.comm 0, text.trans 0, text.serv 0, elec.agri 0, elec.mine 0, elec.petrol 0, elec.food 0, elec.text 0, elec.wood 0, elec.chem 0, elec.'n-met' 0, elec.'b-met' 0, elec.mach 0, elec.elec 0, elec.comm 0, elec.trans 0, elec.serv 0, wood.agri 0, wood.mine 0, wood.petrol 0, wood.food 0, wood.text 0, wood.chem 0, wood.'n-met' 0, wood.'b-met' 0, wood.mach 0, wood.const 0, wood.elec 0, wood.comm 0, wood.trans 0, wood.serv 0, 'n-met'.agri 0, 'n-met'.mine 0, 'n-met'.petrol 0, 'n-met'.food 0, 'n-met'.text 0, 'n-met'.wood 0, 'n-met'.chem 0, 'n-met'.'b-met' 0, 'n-met'.mach 0, 'n-met'.const 0, 'n-met'.elec 0, 'n-met'.comm 0, 'n-met'.trans 0, 'n-met'.serv 0, agri.mine 0, agri.petrol 0, agri.food 0, agri.text 0, agri.wood 0, agri.chem 0, agri.'n-met' 0, agri.'b-met' 0, agri.mach 0, agri.const 0, agri.elec 0, agri.comm 0, agri.trans 0, agri.serv 0, trans.agri 0, trans.mine 0, trans.petrol 0, trans.food 0, trans.text 0, trans.wood 0, trans.chem 0, trans.'n-met' 0, trans.'b-met' 0, trans.mach 0, trans.const 0, trans.elec 0, trans.trans 0, trans.serv 0, mine.agri 0, mine.petrol 0, mine.food 0, mine.text 0, mine.wood 0, mine.chem 0, mine.'n-met' 0, mine.'b-met' 0, mine.mach 0, mine.const 0, mine.elec 0, mine.comm 0, mine.trans 0, mine.serv 0, serv.mine 0, serv.petrol 0, serv.food 0, serv.text 0, serv.wood 0, serv.chem 0, serv.'n-met' 0, serv.'b-met' 0, serv.mach 0, serv.const 0, serv.elec 0, serv.serv 0, food.agri 0, food.mine 0, food.petrol 0, food.text 0, food.wood 0, food.chem 0, food.'n-met' 0, food.'b-met' 0, food.mach 0, food.const 0, food.elec 0, food.comm 0, food.trans 0, food.serv 0, chem.agri 0, chem.mine 0, chem.petrol 0, chem.food 0, chem.text 0, chem.wood 0, chem.'n-met' 0, chem.'b-met' 0, chem.mach 0, chem.const 0, chem.elec 0, chem.comm 0, chem.trans 0, chem.serv 0, petrol.agri 0, petrol.mine 0, petrol.food 0, petrol.text 0, petrol.wood 0, petrol.chem 0, petrol.'n-met' 0, petrol.'b-met' 0, petrol.mach 0, petrol.const 0, petrol.elec 0, petrol.comm 0, petrol.trans 0, petrol.serv 0/
+    b0(id,j) /agri.agri 0.934, mine.mine 0.124, petrol.petrol 0.004, food.food 0.048, text.text 0.047, wood.wood 0.154, chem.chem 0.102, 'n-met'.'n-met' 0.088, 'b-met'.'b-met' 0.352, mach.agri 0.207, mach.mine 0.261, mach.petrol 0.395, mach.food 0.197, mach.text 0.155, mach.wood 0.3, mach.chem 0.203, mach.'n-met' 0.319, mach.'b-met' 0.263, mach.mach 0.176, mach.const 0.085, mach.elec 0.886, mach.comm 0.189, mach.trans 1.634, mach.serv 0.273, const.agri 0.588, const.mine 0.331, const.petrol 0.615, const.food 0.299, const.text 0.145, const.wood 0.296, const.chem 0.232, const.'n-met' 0.447, const.'b-met' 0.275, const.mach 0.235, const.const 0.015, const.elec 2.109, const.comm 0.169, const.trans 5.173, const.serv 2.328, elec.const 0.462, comm.agri 0.224, comm.mine 0.204, comm.petrol 0.378, comm.food 0.193, comm.text 0.194, comm.wood 0.307, comm.chem 0.294, comm.'n-met' 0.279, comm.'b-met' 0.348, comm.mach 0.234, comm.const 0.07, comm.elec 0.707, comm.comm 0.126, comm.trans 1.363, comm.serv 0.199, trans.comm 0.159, serv.agri 0.039, serv.comm 0.196, serv.trans 0.154, imp.agri 0.262, imp.mine 0.1, imp.petrol 0.339, imp.food 0.183, imp.text 0.264, imp.wood 0.316, imp.chem 0.455, imp.'n-met' 0.202, imp.'b-met' 0.497, imp.mach 0.336, imp.const 0.042, imp.elec 0.369, imp.comm 0.011, imp.trans 0.835, imp.serv 0.055/
     b(id,j,te)
     k(j,te)
     bk(id,j,te)
@@ -87,19 +87,19 @@ Parameters
     sigt(s,j,te)
     alr(te)
     csm(id) /comm 0.1125, serv 0.0217/
-    labor(j,s) /agri.eng 0.00541, agri.tech 0.02705, agri.admin 0.06222, agri.unskill 7.024, mine.eng 0.00376, mine.tech 0.00376, mine.admin 0.0073, mine.man 0.09249, petrol.eng 0.00437, petrol.tech 0.00611, petrol.admin 0.01746, petrol.man 0.05937, food.eng 0.00238, food.tech 0.0051, food.admin 0.03742, food.man 0.29528, text.eng 0.00189, text.tech 0.00631, text.admin 0.0265, text.man 0.59632, wood.eng 0.00143, wood.tech 0.01061, wood.admin 0.02122, wood.man 0.25344, chem.eng 0.00585, chem.tech 0.00704, chem.admin 0.03629, chem.man 0.0702, 'n-met'.eng 0.00105, 'n-met'.tech 0.0021, 'n-met'.admin 0.00876, 'n-met'.man 0.10484, 'b-met'.eng 0.00152, 'b-met'.tech 0.00228, 'b-met'.admin 0.00718, 'b-met'.man 0.07347, mach.eng 0.01857, mach.tech 0.02837, mach.admin 0.07831, mach.man 0.4914, const.eng 0.00916, const.tech 0.02185, const.admin 0.07332, const.man 0.60063, elec.eng 0.00394, elec.tech 0.00258, elec.admin 0.02523, elec.man 0.04402, comm.eng 0.0022, comm.tech 0.03002, comm.admin 0.2973, comm.man 1.13501, trans.eng 0.00182, trans.tech 0.00684, trans.admin 0.10212, trans.man 0.34511, serv.eng 0.01365, serv.tech 0.48598, serv.admin 0.58137, serv.man 1.28942, 'b-met'.unskill 0, text.unskill 0, elec.unskill 0, wood.unskill 0, 'n-met'.unskill 0, agri.man 0, comm.unskill 0, trans.unskill 0, mine.unskill 0, serv.unskill 0, food.unskill 0, chem.unskill 0, const.unskill 0, mach.unskill 0, petrol.unskill 0/
-    ls(te,s)
+    labor(j,s) /agri.eng 0.00541, agri.tech 0.02705, agri.admin 0.06222, agri.unskill 7.024, mine.eng 0.00376, mine.tech 0.00376, mine.admin 0.0073, mine.man 0.09249, petrol.eng 0.00437, petrol.tech 0.00611, petrol.admin 0.01746, petrol.man 0.05937, food.eng 0.00238, food.tech 0.0051, food.admin 0.03742, food.man 0.29528, text.eng 0.00189, text.tech 0.00631, text.admin 0.0265, text.man 0.59632, wood.eng 0.00143, wood.tech 0.01061, wood.admin 0.02122, wood.man 0.25344, chem.eng 0.00585, chem.tech 0.00704, chem.admin 0.03629, chem.man 0.0702, 'n-met'.eng 0.00105, 'n-met'.tech 0.0021, 'n-met'.admin 0.00876, 'n-met'.man 0.10484, 'b-met'.eng 0.00152, 'b-met'.tech 0.00228, 'b-met'.admin 0.00718, 'b-met'.man 0.07347, mach.eng 0.01857, mach.tech 0.02837, mach.admin 0.07831, mach.man 0.4914, const.eng 0.00916, const.tech 0.02185, const.admin 0.07332, const.man 0.60063, elec.eng 0.00394, elec.tech 0.00258, elec.admin 0.02523, elec.man 0.04402, comm.eng 0.0022, comm.tech 0.03002, comm.admin 0.2973, comm.man 1.13501, trans.eng 0.00182, trans.tech 0.00684, trans.admin 0.10212, trans.man 0.34511, serv.eng 0.01365, serv.tech 0.48598, serv.admin 0.58137, serv.man 1.28942/
+    ls(te,s) /'1968'.eng 0.077, '1968'.tech 0.646, '1968'.admin 1.382, '1968'.man 5.451, '1968'.unskill 7.024, '1971'.eng 0.097, '1971'.tech 0.791, '1971'.admin 1.623, '1971'.man 6.125, '1971'.unskill 7.389, '1974'.eng 0.117, '1974'.tech 0.936, '1974'.admin 1.864, '1974'.man 6.906, '1974'.unskill 7.841, '1977'.eng 0.137, '1977'.tech 1.081, '1977'.admin 2.105, '1977'.man 7.827, '1977'.unskill 8.321, '1980'.eng 0.157, '1980'.tech 1.226, '1980'.admin 2.346, '1980'.man 8.966, '1980'.unskill 8.83, '1983'.eng 0.177, '1983'.tech 1.371, '1983'.admin 2.587, '1983'.man 10.291, '1983'.unskill 9.37, '1986'.eng 0.197, '1986'.tech 1.516, '1986'.admin 2.828, '1986'.man 11.746, '1986'.unskill 9.943, '1989'.eng 0.217, '1989'.tech 1.661, '1989'.admin 3.069, '1989'.man 13.416, '1989'.unskill 10.552/
     sigma(j,s) /agri.eng 1, agri.tech 1, agri.admin 1.5, agri.man 2, agri.unskill 2, mine.eng 1, mine.tech 1, mine.admin 1.5, mine.man 1.5, mine.unskill 1.5, petrol.eng 1, petrol.tech 1, petrol.admin 1.5, petrol.man 3.5, petrol.unskill 3.5, food.eng 1, food.tech 1, food.admin 1.5, food.man 3.5, food.unskill 3.5, text.eng 1, text.tech 1, text.admin 1.5, text.man 3.5, text.unskill 3.5, wood.eng 1, wood.tech 1, wood.admin 1.5, wood.man 3.5, wood.unskill 3.5, chem.eng 1, chem.tech 1, chem.admin 1.5, chem.man 3.5, chem.unskill 3.5, 'n-met'.eng 1, 'n-met'.tech 1, 'n-met'.admin 1.5, 'n-met'.man 3.5, 'n-met'.unskill 3.5, 'b-met'.eng 1, 'b-met'.tech 1, 'b-met'.admin 1.5, 'b-met'.man 3.5, 'b-met'.unskill 3.5, mach.eng 1, mach.tech 1, mach.admin 1.5, mach.man 3.5, mach.unskill 3.5, const.eng 1, const.tech 1, const.admin 1.5, const.man 1.5, const.unskill 1.5, elec.eng 1, elec.tech 1, elec.admin 1.5, elec.man 3.5, elec.unskill 3.5, comm.eng 1, comm.tech 1, comm.admin 1.5, comm.man 3.5, comm.unskill 3.5, trans.eng 1, trans.tech 1, trans.admin 1.5, trans.man 1.5, trans.unskill 1.5, serv.eng 1, serv.tech 1, serv.admin 1.5, serv.man 1.5, serv.unskill 1.5/
-    sf(eit,s,l,s)
-    ldg(s,s) /eng.eng -1, tech.eng 1, tech.tech -1, admin.tech 1, admin.admin -1, man.admin 1, man.man -1, unskill.man 1, tech.admin 0, tech.man 0, man.eng 0, man.tech 0, eng.tech 0, eng.admin 0, eng.man 0, unskill.eng 0, unskill.tech 0, unskill.admin 0, admin.eng 0, admin.man 0/
-    lug(s,s) /eng.eng 1, tech.eng -1, tech.tech 1, admin.eng -0.5, admin.tech -1, admin.admin 1, man.eng -4, man.tech -2, man.admin -3, man.man 1, unskill.admin -1, tech.admin 0, tech.man 0, eng.tech 0, eng.admin 0, eng.man 0, unskill.eng 0, unskill.tech 0, unskill.man 0, admin.man 0/
+    sf(eit,s,l,s) /change.eng.'1'.eng 1, change.tech.'1'.eng 0.3, change.tech.'1'.tech 1, change.admin.'2'.eng -2, change.admin.'1'.eng 0.6, change.admin.'0'.eng 0.1, change.admin.'1'.tech -1.9, change.admin.'0'.tech 0.9, change.admin.'1'.admin 1, change.man.'0'.tech -2, change.man.'1'.admin 1, input.eng.'2'.eng -0.17, input.eng.'1'.eng -0.14, input.eng.'0'.eng -0.02, input.tech.'2'.eng -0.09, input.tech.'0'.eng -0.18, input.tech.'0'.tech -0.16, input.admin.'0'.tech -0.04/
+    ldg(s,s) /eng.eng -1, tech.eng 1, tech.tech -1, admin.tech 1, admin.admin -1, man.admin 1, man.man -1, unskill.man 1/
+    lug(s,s) /eng.eng 1, tech.eng -1, tech.tech 1, admin.eng -0.5, admin.tech -1, admin.admin 1, man.eng -4, man.tech -2, man.admin -3, man.man 1, unskill.admin -1/
     lugt(s,sp,te)
     pfc(te) /'1968' 2.1, '1971' 4.3, '1974' 4.7, '1977' 4.3, '1980' 3.1, '1983' 1.5, '1986' -0.5/
     infc(te) /'1968' -1.4, '1971' -1.9, '1974' -2.7, '1977' -3.4, '1980' -4, '1983' -4.4, '1986' -4.2/
     es(i) /food 0.409, text 0.064, wood 0.044, chem 0.183, 'n-met' 0.022, 'b-met' 0.064, mach 0.214/
     fdpup(t) /'1971' 5, '1974' 5.5, '1977' 5.5, '1980' 5.5, '1983' 5.5, '1986' 5/
     zmi(te,tep)
-    begr(*,*) /agri.lower 2, agri.upper 6, mine.upper 4, petrol.upper 1.5, food.upper 6, text.upper 4.5, wood.upper 6, chem.upper 10, 'n-met'.upper 7.5, 'b-met'.upper 10, mach.upper 12, tourism.lower 8, tourism.upper 13, 'b-met'.lower 0, text.lower 0, wood.lower 0, 'n-met'.lower 0, mine.lower 0, food.lower 0, chem.lower 0, mach.lower 0, petrol.lower 0/
+    begr(*,*) /agri.lower 2, agri.upper 6, mine.upper 4, petrol.upper 1.5, food.upper 6, text.upper 4.5, wood.upper 6, chem.upper 10, 'n-met'.upper 7.5, 'b-met'.upper 10, mach.upper 12, tourism.lower 8, tourism.upper 13/
     e0(i)
     elo(i,te)
     eup(i,te)
@@ -109,10 +109,10 @@ Parameters
     ts2(te,tep)
     ssr(i,s) /serv.man 2.4/
     betat(te)
-    w1(te) /'1968' 0, '1971' 1, '1974' 0, '1977' 0, '1980' 0, '1983' 0, '1986' 0, '1989' 0/
-    w2a(te) /'1968' 0, '1971' 0, '1974' 0, '1977' 0, '1980' 0, '1983' 0, '1986' 0, '1989' 0/
-    w2b(te) /'1968' 0, '1971' 0, '1974' 0, '1977' 0, '1980' 0, '1983' 0, '1986' 0, '1989' 0/
-    w3(te) /'1968' 0, '1971' 0, '1974' 0, '1977' 0, '1980' 0, '1983' 0, '1986' 0, '1989' 1/
+    w1(te) /'1971' 1/
+    w2a(te)
+    w2b(te)
+    w3(te) /'1989' 1/
 ;
 
 Scalars
@@ -149,60 +149,61 @@ Scalars
     last /7/
 ;
 
+$onImplicitAssign
 jdp(jd) = 1;
 jdp("exp") = 0;
 run(runset) = 0;
 run("gradualist") = 1;
+$offImplicitAssign
 
 xj60(jd) = sum(ic1, tm1960(ic1,jd));
-ax60(id,jd) = tm1960(id,jd);
-aij60(id,jd) = tm1960(id,jd) / xj60(jd);
 xj68(jdp) = t1968(jdp,"gvp");
 yi68(id) = t1968(id,"gvp");
 ax19(id) = t1968(id,"exp");
-aij68(id,jdp) = (1 + rho(id)) ** 8 * aij60(id,jdp);
-rho(id) = ((yi68(id) - ax19(id)) / temp1(id)) ** (1 / 8) - 1;
-temp1(id) = sum(jdp, aij60(id,jdp) * xj68(jdp));
-rho2(id) = rho(id);
 x0(j) = t1968(j,"gvp");
-a0(id,j) = aij68(id,j);
-a(id,j,te) = rhotp(id,te) * a0(id,j);
-a(id,id,te) = a(id,id,te) - 1;
-apc0(id) = (ax68(id,"gc") + ax68(id,"hc")) / total;
-apc(id,te) = apc0(id) * rhotp(id,te) * muc(te);
-apz0(id) = aij68(id,"tc");
-apz(id,te) = apz0(id) * rhotp(id,te) * muz(te);
-muc(te) = 1 / sum(id, apc0(id) * rhotp(id,te));
-muz(te) = 1 / sum(id, apz0(id) * rhotp(id,te));
 total = sum(id, ax68(id,"hc") + ax68(id,"gc"));
 b(id,j,te) = rhotp(id,te) * b0(id,j);
-k(j,te) = sum(id, b(id,j,te));
-bk(id,j,te) = b(id,j,te) / k(j,te);
-lreq0(s,j) = labor(j,s) / t1968(j,"gvp");
-lreq(s,j,te) = sigt(s,j,te) * lreq0(s,j);
+lreq0(s,j)$(t1968(j,"gvp")) = labor(j,s) / t1968(j,"gvp");
 sigt(s,j,te) = (1 / (1 + sigma(j,s) / 100)) ** (interval * (ord(te) - 1));
-alr(te) = 1 / (mrs / 1000 * (1 + sigma("agri","unskill") / 100) ** (8 + interval * (ord(te) - 1)));
 pvv = 1 - sum(id, csm(id));
 mrs = wage1960 / (mpc / 100);
-lugt(s,sp,te) = lug(s,sp)$sst(te,sp);
-zmi(t,tp) = dpc - rcd * (ord(t) - ord(tp));
+lugt(s,sp,te) = lug(s,sp)$(sst(te,sp));
 rcd = (dpc - 1) / card(t);
 e0(i) = ax68(i,"exp");
-elo(i,te) = e0(i) * (1 + begr(i,"lower") / 100) ** (interval * (ord(te) - 1));
-eup(i,te) = e0(i) * (1 + begr(i,"upper") / 100) ** (interval * (ord(te) - 1));
 z0 = sum(i, ax68(i,"tc"));
-zlo(te) = z0 * (1 + begr("tourism","lower") / 100) ** (interval * (ord(te) - 1));
-zup(te) = z0 * (1 + begr("tourism","upper") / 100) ** (interval * (ord(te) - 1));
 beta = (1 + r) ** ((-1) * interval);
-betatr = betat("1989") / (1 - beta * gamma);
 gamma = (1 + g) ** interval;
-gv3 = gamma - 1;
 pci = (1 + acc) ** interval - 1;
 ts(te,tep) = 1$(ord(te) >= ord(tep));
 ts2(te,tep) = 1$(ord(te) > ord(tep));
 betat(te) = (1 + r) ** ((-1) * (interval * (ord(te) - 1)));
+aij60(id,jd)$(xj60(jd)) = tm1960(id,jd) / xj60(jd);
+apc0(id) = (ax68(id,"gc") + ax68(id,"hc")) / total;
+k(j,te) = sum(id, b(id,j,te));
+lreq(s,j,te) = sigt(s,j,te) * lreq0(s,j);
+alr(te) = 1 / (mrs / 1000 * (1 + sigma("agri","unskill") / 100) ** (8 + interval * (ord(te) - 1)));
+zmi(t,tp) = dpc - rcd * (ord(t) - ord(tp));
+elo(i,te) = e0(i) * (1 + begr(i,"lower") / 100) ** (interval * (ord(te) - 1));
+eup(i,te) = e0(i) * (1 + begr(i,"upper") / 100) ** (interval * (ord(te) - 1));
+zlo(te) = z0 * (1 + begr("tourism","lower") / 100) ** (interval * (ord(te) - 1));
+zup(te) = z0 * (1 + begr("tourism","upper") / 100) ** (interval * (ord(te) - 1));
+gv3 = gamma - 1;
+betatr = betat("1989") / (1 - beta * gamma);
 w2a(t) = betat(t);
+temp1(id) = sum(jdp, aij60(id,jdp) * xj68(jdp));
+muc(te) = 1 / sum(id, apc0(id) * rhotp(id,te));
+bk(id,j,te) = b(id,j,te) / k(j,te);
 w2b("1989") = betatr;
+rho(id)$(temp1(id)) = ((yi68(id) - ax19(id)) / temp1(id)) ** (1 / 8) - 1;
+apc(id,te) = apc0(id) * rhotp(id,te) * muc(te);
+aij68(id,jdp) = (1 + rho(id)) ** 8 * aij60(id,jdp);
+rho2(id) = rho(id);
+a0(id,j) = aij68(id,j);
+apz0(id) = aij68(id,"tc");
+muz(te) = 1 / sum(id, apz0(id) * rhotp(id,te));
+a(id,j,te) = rhotp(id,te) * a0(id,j);
+a(id,id,te)$(t(te)) = a(id,id,te) - 1;
+apz(id,te) = apz0(id) * rhotp(id,te) * muz(te);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -220,16 +221,15 @@ Variables
     max1
     max2
     max3
-    nu_drql(s,t)
+    nu_drql(s,te)
     nu_trql(s,te)
-    nu_exdef(t)
-    nu_fexch(t)
-    nu_fgap(t)
+    nu_exdef(te)
+    nu_fexch(te)
+    nu_fgap(te)
     nu_ginv(te)
-    nu_gsav(t)
-    nu_ggdp(t)
+    nu_gsav(te)
+    nu_ggdp(te)
     nu_h(te)
-    nu_tcc(te)
     nu_obj2
     nu_obj3
     nu_inv_fx_1968
@@ -259,12 +259,44 @@ Positive Variables
     infdp
     fc(te)
     lam_mb(i,t)
-    lam_cap(j,t)
+    lam_cap(jd,te)
     lam_tic(i,te)
     lam_ldsc(s,te)
     lam_ffdp
     lam_dsc(te)
+    piL_x(jd,te)
+    piL_v(jd,te)
+    piL_ld(s,te)
+    piL_ul(s,te)
+    piL_ka(te)
+    piL_ed(s,te)
+    piL_rql(s,te)
+    piL_e(i,te)
+    piL_em(te)
+    piL_ea(te)
+    piL_zt(te)
+    piL_fdp(te)
+    piL_inv(te)
+    piL_sav(te)
+    piL_con(te)
+    piL_gdp(te)
+    piL_fc(te)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+e.lo(im,t) = elo(im,t);
+e.up(im,t) = eup(im,t);
+zt.lo(t) = zlo(t);
+zt.up(t) = zup(t);
+fdp.up(t) = fdpup(t);
+inv.fx('1968') = 55;
+sav.fx('1968') = 52.1;
+con.fx('1968') = 208.8;
+gdp.fx('1968') = 260.9;
+fc.fx(t) = pfc(t);
 
 * ============================================
 * Variable Initialization
@@ -330,6 +362,23 @@ Equations
     comp_ldsc(s,te)
     comp_mb(i,t)
     comp_tic(i,te)
+    comp_lo_con(te)
+    comp_lo_e(i,te)
+    comp_lo_ea(te)
+    comp_lo_ed(s,te)
+    comp_lo_em(te)
+    comp_lo_fc(te)
+    comp_lo_fdp(te)
+    comp_lo_gdp(te)
+    comp_lo_inv(te)
+    comp_lo_ka(te)
+    comp_lo_ld(s,te)
+    comp_lo_rql(s,te)
+    comp_lo_sav(te)
+    comp_lo_ul(s,te)
+    comp_lo_v(jd,te)
+    comp_lo_x(jd,te)
+    comp_lo_zt(te)
     con_fx_1968
     drql(s,t)
     exdef(t)
@@ -346,7 +395,6 @@ Equations
     obj2
     obj3
     sav_fx_1968
-    tcc(te)
     trql(s,te)
 ;
 
@@ -355,47 +403,65 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_con(te).. ((-1) * w1(te)) + (-1 - gamma) * nu_h(te) + ((-1) * (w2a(te) + w2b(te))) * nu_obj2 + ((-1) * w3(te)) * nu_obj3 + nu_con_fx_1968$sameas(te, '1968') + sum(t, sum(inc, apc(inc,te)) * nu_fexch(t)) + sum(t, nu_ggdp(t)) + nu_tcc(te) + sum(id, sum((i,t), apc(id,te) * lam_mb(i,t))) + sum(id, sum(i, apc(id,te) * lam_tic(i,te))) =E= 0;
-stat_e(i,te)$(t(te)).. sum(t, (-1) * nu_exdef(t)) =E= 0;
-stat_ea(te)$(t(te)).. sum(t, pvv * nu_exdef(t)) + sum(t, (-1) * nu_fexch(t)) + sum(id, sum((i,t), csm(id) * lam_mb(i,t))) =E= 0;
-stat_ed(s,te).. 0 =E= 0;
-stat_em(te).. sum(tep, sum(t, ((-1) * ts(te,tep)) * nu_exdef(t))) + sum((i,t), es(i) * zmi(te,te) * ts(te,te) * lam_mb(i,t)) =E= 0;
-stat_fc(te)$(t(te)).. sum(t, (-1) * nu_fgap(t)) =E= 0;
-stat_fdp(te)$(t(te)).. sum(tep, sum(t, (-1 + pci * ts2(te,tep)) * nu_fgap(t))) + lam_ffdp$sameas(te, '1971') =E= 0;
-stat_gdp(te)$(t(te)).. nu_gdp_fx_1968$sameas(te, '1968') + sum(t, (-1) * nu_ggdp(t)) + ((-1) * mps) * lam_dsc(te) =E= 0;
+stat_con(te).. ((-1) * w1(te)) + ((-1 - gamma) * nu_h(te))$(t(te) and ord(te) > 1 and ord(te) <= card(te) - 1) + ((((-1) * (gamma * (-1))) * nu_h(te+1))$(ord(te) <= card(te) - 1))$(t(te) and ord(te) > 1 and ord(te) <= card(te) - 1) + (nu_h(te-1)$(ord(te) > 1))$(t(te) and ord(te) > 1 and ord(te) <= card(te) - 1) + ((-1) * (w2a(te) + w2b(te))) * nu_obj2 + ((-1) * w3(te)) * nu_obj3 + nu_con_fx_1968$(sameas(te, '1968')) + sum(inc, apc(inc,te)) * nu_fexch(te) + nu_ggdp(te) + sum((i,t), apc(i,t) * lam_mb(i,t)) + sum(i, (apc(i,te) * (-1) * lam_tic(i,te))$(ord(te) > last and ord(te) > 1)) - piL_con(te) =E= 0;
+stat_e(i,te)$(im(i) and t(te)).. (-1) * nu_exdef(te) - piL_e(i,te) =E= 0;
+stat_ea(te)$(t(te)).. pvv * nu_exdef(te) - nu_fexch(te) + sum((i,t), csm(i) * lam_mb(i,t)) - piL_ea(te) =E= 0;
+stat_ed(s,te).. ((-1) * piL_ed(s,te)) =E= 0;
+stat_em(te).. sum(tep, ((-1) * ts(te,tep)) * nu_exdef(te)) + sum(tep, sum((i,t), es(i) * zmi(t,tep) * ts(t,tep) * lam_mb(i,t))) - piL_em(te) =E= 0;
+stat_fc(te)$(t(te)).. (-1) * nu_fgap(te) - piL_fc(te) =E= 0;
+stat_fdp(te)$(t(te)).. sum(tep, (-1 + pci * ts2(te,tep)) * nu_fgap(te)) + lam_ffdp$(sameas(te, '1971')) - piL_fdp(te) =E= 0;
+stat_gdp(te).. nu_gdp_fx_1968$(sameas(te, '1968')) - nu_ggdp(te) + (((-1) * mps) * lam_dsc(te))$(t(te) and ord(te) > 1) + ((((-1) * (mps * (-1))) * lam_dsc(te+1))$(ord(te) <= card(te) - 1))$(t(te) and ord(te) > 1) - piL_gdp(te) =E= 0;
 stat_infdp.. sum(t, nu_fgap(t)) + nu_infdp_fx =E= 0;
-stat_inv(te).. ((-1) * nu_ginv(te)) + nu_inv_fx_1968$sameas(te, '1968') + sum(t, nu_gsav(t)) =E= 0;
-stat_ka(te).. nu_ginv(te) + sum(j, sum(t, sum(inc, bk(inc,j,te)) * nu_fexch(t))) + sum((id,j), sum((i,t), bk(id,j,te) * lam_mb(i,t))) =E= 0;
-stat_ld(s,te).. ((-1) * ldg(s,s)) * lam_ldsc(s,te) =E= 0;
+stat_inv(te).. ((-1) * nu_ginv(te))$(ord(te) <= last) + nu_inv_fx_1968$(sameas(te, '1968')) + nu_gsav(te) - piL_inv(te) =E= 0;
+stat_ka(te).. nu_ginv(te)$(ord(te) <= last) + sum(j, sum(inc, bk(inc,j,te)) * nu_fexch(te)) + sum(j, sum((i,t), bk(i,j,t) * lam_mb(i,t))) - piL_ka(te) =E= 0;
+stat_ld(s,te).. (((-1) * ldg(s,s)) * lam_ldsc(s,te))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-2,te))$(ord(s) > 2))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+1,te))$(ord(s) <= card(s) - 1))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-1,te))$(ord(s) > 1))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+2,te))$(ord(s) <= card(s) - 2))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+3,te))$(ord(s) <= card(s) - 3))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+4,te))$(ord(s) <= card(s) - 4))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-3,te))$(ord(s) > 3))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-4,te))$(ord(s) > 4))$(ord(te) > initial) - piL_ld(s,te) =E= 0;
 stat_max2.. nu_obj2 =E= 0;
 stat_max3.. nu_obj3 =E= 0;
-stat_rgap(te)$(t(te)).. sum(t, (-1) * nu_fexch(t)) + sum(t, nu_fgap(t)) + sum(t, (-1) * nu_gsav(t)) =E= 0;
-stat_rql(s,te)$(t(te)).. sum(t, (-1) * nu_drql(s,t)) - nu_trql(s,te) + lam_ldsc(s,te) =E= 0;
-stat_sav(te)$(t(te)).. nu_sav_fx_1968$sameas(te, '1968') + sum(t, (-1) * nu_gsav(t)) + sum(t, nu_ggdp(t)) + lam_dsc(te) =E= 0;
-stat_ul(s,te)$(t(te)).. sum((i,t), ssr(i,s) * lam_mb(i,t)) + ((-1) * lugt(s,s,te)) * lam_ldsc(s,te) =E= 0;
-stat_v(jd,te)$(j(jd)).. sum(j, k(j,te) * nu_ginv(te)) + sum(j, sum(t, sum(inc, b(inc,j,te)) * nu_fexch(t))) + sum((j,t), ((-1) * (interval * ts2(te,te))) * lam_cap(j,t)) + sum((id,j), sum((i,t), b(id,j,te) * lam_mb(i,t))) =E= 0;
-stat_x(jd,te)$(j(jd) and t(te)).. sum(j, sum((s,t), lreq(s,j,te) * nu_drql(s,t))) + sum(t, sum(inc, a(inc,jd,te)) * nu_fexch(t)) + sum(id, sum((i,t), a(id,jd,te) * lam_mb(i,t))) + sum((j,t), lam_cap(j,t)) =E= 0;
-stat_zt(te)$(t(te)).. sum(t, (-1) * nu_fexch(t)) + sum(id, sum((i,t), apz(id,te) * lam_mb(i,t))) =E= 0;
+stat_rgap(te)$(t(te)).. ((-1) * nu_fexch(te)) + nu_fgap(te) - nu_gsav(te) =E= 0;
+stat_rql(s,te)$(t(te)).. ((-1) * nu_drql(s,te)) + ((-1) * nu_trql(s,te))$(ord(te) > last and ord(te) > 1) + lam_ldsc(s,te)$(ord(te) > initial) - piL_rql(s,te) =E= 0;
+stat_sav(te).. nu_sav_fx_1968$(sameas(te, '1968')) - nu_gsav(te) + nu_ggdp(te) + lam_dsc(te)$(t(te) and ord(te) > 1) + (((-1) * lam_dsc(te+1))$(ord(te) <= card(te) - 1))$(t(te) and ord(te) > 1) - piL_sav(te) =E= 0;
+stat_ul(s,te)$(t(te)).. sum((i,t), ssr(i,s) * lam_mb(i,t)) + sum(sp, (((-1) * lugt(s,sp,te)) * lam_ldsc(s,te))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s-2,te))$(ord(s) > 2))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s+1,te))$(ord(s) <= card(s) - 1))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s-1,te))$(ord(s) > 1))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s+2,te))$(ord(s) <= card(s) - 2))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s+3,te))$(ord(s) <= card(s) - 3))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s+4,te))$(ord(s) <= card(s) - 4))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s-3,te))$(ord(s) > 3))$(ord(te) > initial)) + sum(sp, ((((-1) * lugt(s,sp,te)) * lam_ldsc(s-4,te))$(ord(s) > 4))$(ord(te) > initial)) - piL_ul(s,te) =E= 0;
+stat_v(jd,te)$(j(jd)).. sum(j, (k(j,te) * nu_ginv(te))$(ord(te) <= last)) + sum(j, sum(inc, b(inc,j,te)) * nu_fexch(te)) + sum(j, sum(s, ((lreq(s,j,te) * interval * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last and ord(te) > 1))) + sum(tep, ((-1) * (interval * ts2(te,tep))) * lam_cap(jd,te)) + sum(j, sum((i,t), b(i,j,t) * lam_mb(i,t))) + sum(j, sum(i, (((gv3 * b(i,j,te) - interval * ((-1) * a(i,jd,te))) * lam_tic(i,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last and ord(te) > 1))) - piL_v(jd,te) =E= 0;
+stat_x(jd,te)$(j(jd)).. sum(j, sum((s,t), lreq(s,j,t) * nu_drql(s,t))) + sum(inc, a(inc,jd,te)) * nu_fexch(te) + sum(j, sum(s, ((lreq(s,j,te) * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last and ord(te) > 1))) + sum((i,t), a(i,jd,t) * lam_mb(i,t)) + lam_cap(jd,te) - piL_x(jd,te) =E= 0;
+stat_zt(te)$(t(te)).. ((-1) * nu_fexch(te)) + sum((i,t), apz(i,t) * lam_mb(i,t)) - piL_zt(te) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(j,t).. ((-1) * (x(j,t) - (x0(j) + interval * sum(te$(ts2(t,te)), v(j,te))))) =G= 0;
-comp_dsc(te)$((t(te)) and (ord(te) > 1)).. ((-1) * (sav(te) - sav(te-1) - mps * (gdp(te) - gdp(te-1)))) =G= 0;
+comp_dsc(te)$((t(te) and ord(te) > 1) and (ord(te) > 1)).. ((-1) * (sav(te) - sav(te-1) - mps * (gdp(te) - gdp(te-1)))) =G= 0;
 comp_ffdp.. ((-1) * (sum(t, fdp(t)) - cfdp)) =G= 0;
-comp_ldsc(s,te)$(ord(te) > initial).. ((-1) * (rql(s,te) - (ls(te,s) + sum(sp, ldg(s,sp) * ld(sp,te) + lugt(s,sp,te) * ul(sp,te)) + sum((tep,sp,l)$((ord(tep) + ord(l) - 1 > length(sp))$ts(te,tep)), sf("change",s,l,sp) * ed(sp,tep+(ord(l)-1))) + sum((sp,l)$(ord(te) + ord(l) - 1 > length(sp)), sf("input",s,l,sp) * ed(sp,te+(ord(l)-1)))))) =G= 0;
-comp_mb(i,t).. ((-1) * (sum(j, a(i,j,t) * x(j,t) + b(i,j,t) * v(j,t)) + bk(i,"agri",t) * ka(t) + apc(i,t) * con(t) + apz(i,t) * zt(t) + es(i) * sum(tep$(ts(t,tep)), zmi(t,tep) * em(tep)) + e(i,t)$im(i) + csm(i) * ea(t) + sum(s, ssr(i,s) * ul(s,t)))) =G= 0;
-comp_tic(i,te)$((ord(te) > last) and (ord(te) > 1)).. ((-1) * (apc(i,te-1) * (con(te) - con(te-1)) + gv3 * sum(j, b(i,j,te-1) * v(j,te-1)) + deltae(i) + deltaz(i) - interval * sum(j, ((-1) * a(i,j,te-1)) * v(j,te-1)))) =G= 0;
+comp_ldsc(s,te)$(ord(te) > initial).. ((-1) * (rql(s,te) - (ls(te,s) + sum(sp, ldg(s,sp) * ld(sp,te) + lugt(s,sp,te) * ul(sp,te)) + sum((tep,sp,l)$((ord(tep) + ord(l) - 1 > length(sp))$(ts(te,tep))), sf("change",s,l,sp) * ed(sp,tep+(ord(l)-1))) + sum((sp,l)$(ord(te) + ord(l) - 1 > length(sp)), sf("input",s,l,sp) * ed(sp,te+(ord(l)-1)))))) =G= 0;
+comp_mb(i,t).. ((-1) * (sum(j, a(i,j,t) * x(j,t) + b(i,j,t) * v(j,t)) + bk(i,"agri",t) * ka(t) + apc(i,t) * con(t) + apz(i,t) * zt(t) + es(i) * sum(tep$(ts(t,tep)), zmi(t,tep) * em(tep)) + e(i,t)$(im(i)) + csm(i) * ea(t) + sum(s, ssr(i,s) * ul(s,t)))) =G= 0;
+comp_tic(i,te)$((ord(te) > last and ord(te) > 1) and (ord(te) > 1)).. ((-1) * (apc(i,te-1) * (con(te) - con(te-1)) + gv3 * sum(j, b(i,j,te-1) * v(j,te-1)) + deltae(i) + deltaz(i) - interval * sum(j, ((-1) * a(i,j,te-1)) * v(j,te-1)))) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_con(te).. con(te) - 0 =G= 0;
+comp_lo_e(i,te).. e(i,te) - 0 =G= 0;
+comp_lo_ea(te).. ea(te) - 0 =G= 0;
+comp_lo_ed(s,te).. ed(s,te) - 0 =G= 0;
+comp_lo_em(te).. em(te) - 0 =G= 0;
+comp_lo_fc(te).. fc(te) - 0 =G= 0;
+comp_lo_fdp(te).. fdp(te) - 0 =G= 0;
+comp_lo_gdp(te).. gdp(te) - 0 =G= 0;
+comp_lo_inv(te).. inv(te) - 0 =G= 0;
+comp_lo_ka(te).. ka(te) - 0 =G= 0;
+comp_lo_ld(s,te).. ld(s,te) - 0 =G= 0;
+comp_lo_rql(s,te).. rql(s,te) - 0 =G= 0;
+comp_lo_sav(te).. sav(te) - 0 =G= 0;
+comp_lo_ul(s,te).. ul(s,te) - 0 =G= 0;
+comp_lo_v(jd,te).. v(jd,te) - 0 =G= 0;
+comp_lo_x(jd,te).. x(jd,te) - 0 =G= 0;
+comp_lo_zt(te).. zt(te) - 0 =G= 0;
 
 * Original equality equations
-drql(s,t).. sum(j, lreq(s,j,t) * x(j,t)) - (alr(t) * (ka(t) + interval * sum(te$(ts2(t,te)), ka(te))))$sun(s) =E= rql(s,t);
-trql(s,te)$((ord(te) > last) and (ord(te) > 1)).. sum(j, lreq(s,j,te) * (x(j,te-1) + interval * v(j,te-1))) - (interval * alr(te) * sum(tep$(ts2(te,tep)), ka(tep)))$sun(s) =E= rql(s,te);
+drql(s,t).. sum(j, lreq(s,j,t) * x(j,t)) - (alr(t) * (ka(t) + interval * sum(te$(ts2(t,te)), ka(te))))$(sun(s)) =E= rql(s,t);
+trql(s,te)$((ord(te) > last and ord(te) > 1) and (ord(te) > 1)).. sum(j, lreq(s,j,te) * (x(j,te-1) + interval * v(j,te-1))) - (interval * alr(te) * sum(tep$(ts2(te,tep)), ka(tep)))$(sun(s)) =E= rql(s,te);
 exdef(t).. pvv * ea(t) =E= sum(im, e(im,t)) + sum(tp$(ts(t,tp)), em(tp));
 fexch(t).. sum(inc, apc(inc,t) * con(t) + bk(inc,"agri",t) * ka(t) + sum(j, a(inc,j,t) * x(j,t) + b(inc,j,t) * v(j,t))) =E= ea(t) + zt(t) + rgap(t);
 fgap(t).. rgap(t) - fc(t) - fdp(t) + infdp + pci * sum(tp$(ts2(t,tp)), fdp(tp)) =E= infc(t);
 ginv(te)$(ord(te) <= last).. sum(j, k(j,te) * v(j,te)) + ka(te) =E= inv(te);
 gsav(t).. inv(t) =E= sav(t) + rgap(t);
 ggdp(t).. con(t) + sav(t) =E= gdp(t);
-h(te)$((t(te)) and ((ord(te) <= card(te) - 1) and (ord(te) > 1))).. con(te+1) - con(te) =E= gamma * (con(te) - con(te-1));
-tcc(te)$((ord(te) > last) and (ord(te) > 1)).. con(te) =E= gamma * con(te-1);
+h(te)$((t(te) and ord(te) > 1 and ord(te) <= card(te) - 1) and ((ord(te) <= card(te) - 1) and (ord(te) > 1))).. con(te+1) - con(te) =E= gamma * (con(te) - con(te-1));
 obj1.. max1 =E= sum(te, w1(te) * con(te));
 obj2.. max2 =E= sum(te, (w2a(te) + w2b(te)) * con(te));
 obj3.. max3 =E= sum(te, w3(te) * con(te));
@@ -413,25 +479,40 @@ infdp_fx.. infdp - 4.9 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-e.fx(i,te)$(not (t(te))) = 0;
+e.fx(i,te)$(not (im(i) and t(te))) = 0;
+piL_e.fx(i,te)$(not (im(i) and t(te))) = 0;
 ea.fx(te)$(not (t(te))) = 0;
+piL_ea.fx(te)$(not (t(te))) = 0;
 fc.fx(te)$(not (t(te))) = 0;
+piL_fc.fx(te)$(not (t(te))) = 0;
 fdp.fx(te)$(not (t(te))) = 0;
-gdp.fx(te)$(not (t(te))) = 0;
+piL_fdp.fx(te)$(not (t(te))) = 0;
 rgap.fx(te)$(not (t(te))) = 0;
 rql.fx(s,te)$(not (t(te))) = 0;
-sav.fx(te)$(not (t(te))) = 0;
+piL_rql.fx(s,te)$(not (t(te))) = 0;
 ul.fx(s,te)$(not (t(te))) = 0;
+piL_ul.fx(s,te)$(not (t(te))) = 0;
 v.fx(jd,te)$(not (j(jd))) = 0;
-x.fx(jd,te)$(not (j(jd) and t(te))) = 0;
+piL_v.fx(jd,te)$(not (j(jd))) = 0;
+x.fx(jd,te)$(not (j(jd))) = 0;
+piL_x.fx(jd,te)$(not (j(jd))) = 0;
 zt.fx(te)$(not (t(te))) = 0;
-lam_dsc.fx(te)$(not (t(te))) = 0;
+piL_zt.fx(te)$(not (t(te))) = 0;
+lam_dsc.fx(te)$(not (t(te) and ord(te) > 1)) = 0;
 lam_ldsc.fx(s,te)$(not (ord(te) > initial)) = 0;
-lam_tic.fx(i,te)$(not (ord(te) > last)) = 0;
+lam_tic.fx(i,te)$(not (ord(te) > last and ord(te) > 1)) = 0;
+lam_dsc.fx(te)$(not (ord(te) > 1)) = 0;
+lam_tic.fx(i,te)$(not (ord(te) > 1)) = 0;
 nu_ginv.fx(te)$(not (ord(te) <= last)) = 0;
 nu_h.fx(te)$(not ((ord(te) <= card(te) - 1) and (ord(te) > 1))) = 0;
-nu_tcc.fx(te)$(not (ord(te) > 1)) = 0;
 nu_trql.fx(s,te)$(not (ord(te) > 1)) = 0;
+lam_cap.fx(jd,te)$(not (j(jd) and t(te))) = 0;
+nu_drql.fx(s,te)$(not (t(te))) = 0;
+nu_exdef.fx(te)$(not (t(te))) = 0;
+nu_fexch.fx(te)$(not (t(te))) = 0;
+nu_fgap.fx(te)$(not (t(te))) = 0;
+nu_ggdp.fx(te)$(not (t(te))) = 0;
+nu_gsav.fx(te)$(not (t(te))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -490,8 +571,24 @@ Model mcp_model /
     obj2.nu_obj2,
     obj3.nu_obj3,
     sav_fx_1968.nu_sav_fx_1968,
-    tcc.nu_tcc,
-    trql.nu_trql
+    trql.nu_trql,
+    comp_lo_con.piL_con,
+    comp_lo_e.piL_e,
+    comp_lo_ea.piL_ea,
+    comp_lo_ed.piL_ed,
+    comp_lo_em.piL_em,
+    comp_lo_fc.piL_fc,
+    comp_lo_fdp.piL_fdp,
+    comp_lo_gdp.piL_gdp,
+    comp_lo_inv.piL_inv,
+    comp_lo_ka.piL_ka,
+    comp_lo_ld.piL_ld,
+    comp_lo_rql.piL_rql,
+    comp_lo_sav.piL_sav,
+    comp_lo_ul.piL_ul,
+    comp_lo_v.piL_v,
+    comp_lo_x.piL_x,
+    comp_lo_zt.piL_zt
 /;
 
 * ============================================

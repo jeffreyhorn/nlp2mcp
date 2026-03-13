@@ -85,12 +85,12 @@ Positive Variables
     u(c,i)
     v(c,j)
     e(c,i)
-    lam_mbf(cf,i)
+    lam_mbf(c,i)
     lam_mbi(ci,i)
-    lam_mbr(cr,i)
+    lam_mbr(c,i)
     lam_cc(m,i)
-    lam_mr(cf,j)
-    lam_me(cf)
+    lam_mr(c,j)
+    lam_me(c)
     piL_z(p,i)
     piL_x(c,i,j)
     piL_u(c,i)
@@ -154,14 +154,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + sum(cf, lam_mbf(cf,i)) + sum(cf, lam_me(cf)) - piL_e(c,i) =E= 0;
+stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + lam_mbf(c,i) + lam_me(c) - piL_e(c,i) =E= 0;
 stat_phieps.. -1 + nu_aeps =E= 0;
 stat_philam.. 1 + nu_alam =E= 0;
 stat_phipi.. 1 + nu_api =E= 0;
 stat_phipsi.. 1 + nu_apsi =E= 0;
-stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(sameas(c, 'coke') and sameas(i, 'ahmsa')) + sum(cr, (-1) * lam_mbr(cr,i)) - piL_u(c,i) =E= 0;
-stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + sum(cf, (-1) * lam_mr(cf,j)) - piL_v(c,j) =E= 0;
-stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa') and sameas(j, 'guadalaja')) + sum(cf, lam_mbf(cf,i)) + sum(cf, (-1) * lam_mr(cf,j)) - piL_x(c,i,j) =E= 0;
+stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(sameas(c, 'coke') and sameas(i, 'ahmsa')) - lam_mbr(c,i) - piL_u(c,i) =E= 0;
+stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) - lam_mr(c,j) - piL_v(c,j) =E= 0;
+stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa') and sameas(j, 'guadalaja')) + lam_mbf(c,i) - lam_mr(c,j) - piL_x(c,i,j) =E= 0;
 stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
 
 * Inequality complementarity equations
@@ -202,6 +202,10 @@ v.fx(c,j)$(not (cf(c))) = 0;
 piL_v.fx(c,j)$(not (cf(c))) = 0;
 x.fx(c,i,j)$(not (cf(c))) = 0;
 piL_x.fx(c,i,j)$(not (cf(c))) = 0;
+lam_mbf.fx(c,i)$(not (cf(c))) = 0;
+lam_mbr.fx(c,i)$(not (cr(c))) = 0;
+lam_me.fx(c)$(not (cf(c))) = 0;
+lam_mr.fx(c,j)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

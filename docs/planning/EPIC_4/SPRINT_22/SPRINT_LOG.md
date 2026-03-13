@@ -181,14 +181,33 @@
 
 ### Day 6 — WS2 Part 3 + Pipeline Retest
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~8h
+
+**Key Change:** Fixed implicit lead/lag domain conditioning in stationarity builder.
+Equations with IndexOffset (e.g., `delta_x_eq(n).. x(n) - x(n-1)`) have no explicit
+`$` condition but GAMS silently skips out-of-range instances. The fix teaches
+`_extract_all_conditioned_guard` to detect MultiplierRef nodes for lead/lag equations
+and treat them as implicitly conditioned. This allows proper domain restriction on
+stationarity equations without modifying the actual stationarity expression terms
+(avoiding regressions like catmix).
 
 | Task | Status |
 |---|---|
-| Stationarity domain conditioning | |
-| Full pipeline retest | |
-| model_infeasible influx assessed | |
+| Stationarity domain conditioning (springchain) | DONE — springchain now model_optimal |
+| Full pipeline retest | DONE — solve 77/141, match 35 |
+| model_infeasible influx assessed | DONE — 20→22 (+2 net); 3 resolved, 5 new (from PR #1064) |
+
+**Pipeline Metrics (Day 6):**
+
+| Metric | Baseline | Day 6 | Delta |
+|---|---|---|---|
+| Solve success | 65 | 77 | +12 |
+| Match | 30 | 35 | +5 |
+| path_syntax_error | 40 | 25 | −15 |
+| path_solve_terminated | 12 | 10 | −2 |
+| model_infeasible | 20 | 22 | +2 |
+| Tests | 3,957 | 4,141 | +184 |
 
 ---
 

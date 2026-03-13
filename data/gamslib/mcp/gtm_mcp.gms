@@ -29,7 +29,7 @@ Parameters
     ddat(j,*) /mexico.'ref-p' 1, mexico.'ref-q' 2.2, mexico.elas -0.5, 'west-can'.'ref-p' 3, 'west-can'.'ref-q' 1.47, 'west-can'.elas -0.5, 'ont-quebec'.'ref-p' 3.5, 'ont-quebec'.'ref-q' 1.38, 'ont-quebec'.elas -0.5, atlantic.'ref-p' 3.5, atlantic.'ref-q' 0.2, atlantic.elas -0.5, 'new-engl'.'ref-p' 9.37, 'new-engl'.'ref-q' 0.76, 'new-engl'.elas -0.6, 'ny-nj'.'ref-p' 8.33, 'ny-nj'.'ref-q' 1.18, 'ny-nj'.elas -0.66, 'mid-atl'.'ref-p' 8.26, 'mid-atl'.'ref-q' 0.89, 'mid-atl'.elas -0.65, 'south-atl'.'ref-p' 8.07, 'south-atl'.'ref-q' 1.62, 'south-atl'.elas -0.89, midwest.'ref-p' 8.01, midwest.'ref-q' 2.96, midwest.elas -0.65, 'south-west'.'ref-p' 7.29, 'south-west'.'ref-q' 6.04, 'south-west'.elas -0.84, central.'ref-p' 7.79, central.'ref-q' 1.17, central.elas -0.67, 'n-central'.'ref-p' 8.06, 'n-central'.'ref-q' 1.51, 'n-central'.elas -0.54, west.'ref-p' 8.18, west.'ref-q' 2.1, west.elas -0.43, 'n-west'.'ref-p' 9.39, 'n-west'.'ref-q' 0.36, 'n-west'.elas -0.57/
     supa(i)
     supb(i)
-    supc(i) /mexico 100, 'alberta-bc' 100, atlantic 100, appalacia 100, 'us-gulf' 100, 'mid-cont' 100, 'permian-b' 100, rockies 100, pacific 100, alaska 100/
+    supc(i)
     dema(j)
     demb(j)
     utc(i,j) /mexico.mexico 0.25, mexico.'new-engl' 2.29, mexico.'ny-nj' 2.22, mexico.'mid-atl' 2.03, mexico.'south-atl' 1.96, mexico.midwest 1.25, 'alberta-bc'.'west-can' 0.4, 'alberta-bc'.'ont-quebec' 0.9, 'alberta-bc'.'new-engl' 1.15, 'alberta-bc'.'ny-nj' 1.1, 'alberta-bc'.'mid-atl' 1.1, 'alberta-bc'.'south-atl' 1.55, 'alberta-bc'.midwest 0.8, 'alberta-bc'.'south-west' 1.25, atlantic.'new-engl' 1.5, appalacia.'ny-nj' 0.72, appalacia.'south-atl' 0.46, 'us-gulf'.'new-engl' 2.12, 'us-gulf'.'ny-nj' 1.08, 'us-gulf'.'mid-atl' 1.01, 'us-gulf'.'south-atl' 0.82, 'us-gulf'.midwest 0.75, 'us-gulf'.'south-west' 0.04, 'mid-cont'.'south-atl' 0.86, 'mid-cont'.midwest 0.14, 'permian-b'.'mid-atl' 0.83, 'permian-b'.'south-atl' 0.77, 'permian-b'.midwest 0.05, rockies.'south-atl' 0.53, alaska.'south-atl' 6, mexico.'n-central' 2.13, 'alberta-bc'.central 0.8, 'alberta-bc'.'n-central' 0.65, 'alberta-bc'.west 0.7, 'alberta-bc'.'n-west' 0.65, 'us-gulf'.central 0.54, 'mid-cont'.central 0.64, 'permian-b'.central 0.55, 'permian-b'.west 0.94, rockies.central 0.31, rockies.'n-central' 0.58, rockies.west 0.7, rockies.'n-west' 1.91, pacific.'n-central' 0.43/
@@ -38,20 +38,23 @@ Parameters
     report2(j,*)
 ;
 
+$onImplicitAssign
 check1(i,j) = yes$(utc(i,j) = 0 and pc(i,j) <> 0);
 check2(i,j) = yes$(utc(i,j) <> 0 and pc(i,j) = 0);
-ij(i,j) = yes$pc(i,j);
+ij(i,j) = yes$(pc(i,j));
+$offImplicitAssign
 
-supb(i) = ((sdat(i,"ref-p1") - sdat(i,"ref-p2")) / (1 / (supc(i) - sdat(i,"ref-q1")) - 1 / (supc(i) - sdat(i,"ref-q2"))))$(supc(i) <> inf);
 supc(i) = sdat(i,"limit");
+supc(i)$(supc(i) = inf) = 100;
 demb(j) = 1 / ddat(j,"elas") + 1;
+supb(i) = ((sdat(i,"ref-p1") - sdat(i,"ref-p2")) / (1 / (supc(i) - sdat(i,"ref-q1")) - 1 / (supc(i) - sdat(i,"ref-q2"))))$(supc(i) <> inf);
+dema(j) = ddat(j,"ref-p") / demb(j) / ddat(j,"ref-q") ** (demb(j) - 1);
+ddat(j,"dem-a") = dema(j);
 supa(i) = sdat(i,"ref-p1") - supb(i) / (supc(i) - sdat(i,"ref-q1"));
 supa(i) = round(supa(i), 4);
-dema(j) = ddat(j,"ref-p") / demb(j) / ddat(j,"ref-q") ** (demb(j) - 1);
 sdat(i,"sup-a") = supa(i);
-ddat(j,"dem-a") = dema(j);
-sdat(i,"sup-b") = supb(i);
 ddat(j,"dem-b") = demb(j);
+sdat(i,"sup-b") = supb(i);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -101,20 +104,20 @@ d.fx(jfx) = ddat(jfx,"ref-q");
 
 x.l(i,j) = 1;
 s.l(i) = 1;
-d.l("mexico") = 0.2;
-d.l("west-can") = 0.2;
-d.l("ont-quebec") = 0.2;
-d.l("atlantic") = 0.2;
-d.l("new-engl") = 0.2;
-d.l("ny-nj") = 0.2;
-d.l("mid-atl") = 0.2;
-d.l("south-atl") = 0.2;
-d.l("midwest") = 0.2;
-d.l("south-west") = 0.2;
-d.l("central") = 0.2;
-d.l(n-central) = 0.2;
-d.l("west") = 0.2;
-d.l(n-west) = 0.2;
+d.l('mexico') = 0.2;
+d.l('west-can') = 0.2;
+d.l('ont-quebec') = 0.2;
+d.l('atlantic') = 0.2;
+d.l('new-engl') = 0.2;
+d.l('ny-nj') = 0.2;
+d.l('mid-atl') = 0.2;
+d.l('south-atl') = 0.2;
+d.l('midwest') = 0.2;
+d.l('south-west') = 0.2;
+d.l('central') = 0.2;
+d.l('n-central') = 0.2;
+d.l('west') = 0.2;
+d.l('n-west') = 0.2;
 d.l(j) = min(max(d.l(j), 1e-6), d.up(j));
 
 * ============================================
@@ -146,7 +149,7 @@ Equations
 * Stationarity equations
 stat_d(j).. ((-1) * (dema(j) * d(j) ** demb(j) * demb(j) / d(j))) + lam_db(j) - piL_d(j) =E= 0;
 stat_s(i).. supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i) =E= 0;
-stat_x(i,j)$(ij(i,j)).. utc(i,j) * 1$ij(i,j) + 1$ij(i,j) * lam_sb(i) + ((-1) * 1$ij(i,j)) * lam_db(j) - piL_x(i,j) + piU_x(i,j) =E= 0;
+stat_x(i,j)$(ij(i,j)).. utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j) =E= 0;
 
 * Inequality complementarity equations
 comp_db(j).. sum(i$(ij(i,j)), x(i,j)) - d(j) =G= 0;

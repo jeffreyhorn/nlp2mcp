@@ -133,11 +133,9 @@ taud = Td0 / sum(h, FF(h));
 lambda(i) = Xv0(i) / (Sp0 + Sg0 + Sf);
 Z0(j) = Y0(j) + sum(i, X0(i,j));
 b(j) = Y0(j) / prod(h, F0(h,j) ** beta(h,j));
-UU0 = prod(i, Xp0(i) ** alpha(i));
 tauz(j) = Tz0(j) / Z0(j);
 ax(i,j) = X0(i,j) / Z0(j);
 ay(j) = Y0(j) / Z0(j);
-ep0 = UU0 / prod(i, (alpha(i) / 1) ** alpha(i));
 D0(i) = (1 + tauz(i)) * Z0(i) - E0(i);
 deltam(i) = (1 + taum(i)) * M0(i) ** (1 - eta(i)) / ((1 + taum(i)) * M0(i) ** (1 - eta(i)) + D0(i) ** (1 - eta(i)));
 deltad(i) = D0(i) ** (1 - eta(i)) / ((1 + taum(i)) * M0(i) ** (1 - eta(i)) + D0(i) ** (1 - eta(i)));
@@ -188,11 +186,11 @@ Variables
     nu_eqX(i,j)
     nu_eqY(j)
     nu_eqF(h,j)
-    nu_eqpzs(j)
+    nu_eqpzs(i)
     nu_eqTd
     nu_eqTz(j)
     nu_eqTm(i)
-    nu_eqXg(i)
+    nu_eqXg(j)
     nu_eqXv(i)
     nu_eqSp
     nu_eqSg
@@ -205,9 +203,9 @@ Variables
     nu_eqM(i)
     nu_eqD(i)
     nu_eqchi1(i)
-    nu_eqpzd(i)
-    nu_eqE(i)
-    nu_eqDs(i)
+    nu_eqpzd(j)
+    nu_eqE(j)
+    nu_eqDs(j)
     nu_eqpqd(i)
     nu_eqpf(h)
     nu_pf_fx_LAB
@@ -244,6 +242,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+pf.fx('LAB') = 1;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -254,56 +258,56 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound).
 
 Y.l(j) = Y0(j);
-Y.l("BRD") = max(Y.l("BRD"), 1e-05);
-Y.l("MLK") = max(Y.l("MLK"), 1e-05);
+Y.l('BRD') = max(Y.l('BRD'), 1e-05);
+Y.l('MLK') = max(Y.l('MLK'), 1e-05);
 F.l(h,j) = F0(h,j);
-F.l("CAP","BRD") = max(F.l("CAP","BRD"), 1e-05);
-F.l("CAP","MLK") = max(F.l("CAP","MLK"), 1e-05);
-F.l("LAB","BRD") = max(F.l("LAB","BRD"), 1e-05);
-F.l("LAB","MLK") = max(F.l("LAB","MLK"), 1e-05);
+F.l('CAP','BRD') = max(F.l('CAP','BRD'), 1e-05);
+F.l('CAP','MLK') = max(F.l('CAP','MLK'), 1e-05);
+F.l('LAB','BRD') = max(F.l('LAB','BRD'), 1e-05);
+F.l('LAB','MLK') = max(F.l('LAB','MLK'), 1e-05);
 X.l(i,j) = X0(i,j);
-X.l("BRD","BRD") = max(X.l("BRD","BRD"), 1e-05);
-X.l("BRD","MLK") = max(X.l("BRD","MLK"), 1e-05);
-X.l("MLK","BRD") = max(X.l("MLK","BRD"), 1e-05);
-X.l("MLK","MLK") = max(X.l("MLK","MLK"), 1e-05);
+X.l('BRD','BRD') = max(X.l('BRD','BRD'), 1e-05);
+X.l('BRD','MLK') = max(X.l('BRD','MLK'), 1e-05);
+X.l('MLK','BRD') = max(X.l('MLK','BRD'), 1e-05);
+X.l('MLK','MLK') = max(X.l('MLK','MLK'), 1e-05);
 Z.l(j) = Z0(j);
-Z.l("BRD") = max(Z.l("BRD"), 1e-05);
-Z.l("MLK") = max(Z.l("MLK"), 1e-05);
+Z.l('BRD') = max(Z.l('BRD'), 1e-05);
+Z.l('MLK') = max(Z.l('MLK'), 1e-05);
 Xp.l(i) = Xp0(i);
-Xp.l("BRD") = max(Xp.l("BRD"), 1e-05);
-Xp.l("MLK") = max(Xp.l("MLK"), 1e-05);
+Xp.l('BRD') = max(Xp.l('BRD'), 1e-05);
+Xp.l('MLK') = max(Xp.l('MLK'), 1e-05);
 Xg.l(i) = Xg0(i);
-Xg.l("BRD") = max(Xg.l("BRD"), 1e-05);
-Xg.l("MLK") = max(Xg.l("MLK"), 1e-05);
+Xg.l('BRD') = max(Xg.l('BRD'), 1e-05);
+Xg.l('MLK') = max(Xg.l('MLK'), 1e-05);
 Xv.l(i) = Xv0(i);
-Xv.l("BRD") = max(Xv.l("BRD"), 1e-05);
-Xv.l("MLK") = max(Xv.l("MLK"), 1e-05);
+Xv.l('BRD') = max(Xv.l('BRD'), 1e-05);
+Xv.l('MLK') = max(Xv.l('MLK'), 1e-05);
 E.l(i) = E0(i);
-E.l("BRD") = max(E.l("BRD"), 1e-05);
-E.l("MLK") = max(E.l("MLK"), 1e-05);
+E.l('BRD') = max(E.l('BRD'), 1e-05);
+E.l('MLK') = max(E.l('MLK'), 1e-05);
 M.l(i) = M0(i);
-M.l("BRD") = max(M.l("BRD"), 1e-05);
-M.l("MLK") = max(M.l("MLK"), 1e-05);
+M.l('BRD') = max(M.l('BRD'), 1e-05);
+M.l('MLK') = max(M.l('MLK'), 1e-05);
 Q.l(i) = Q0(i);
-Q.l("BRD") = max(Q.l("BRD"), 1e-05);
-Q.l("MLK") = max(Q.l("MLK"), 1e-05);
+Q.l('BRD') = max(Q.l('BRD'), 1e-05);
+Q.l('MLK') = max(Q.l('MLK'), 1e-05);
 D.l(i) = D0(i);
-D.l("BRD") = max(D.l("BRD"), 1e-05);
-D.l("MLK") = max(D.l("MLK"), 1e-05);
-pf.l("CAP") = 1.0;
-pf.l("LAB") = 1.0;
-py.l("BRD") = 1.0;
-py.l("MLK") = 1.0;
-pz.l("BRD") = 1.0;
-pz.l("MLK") = 1.0;
-pq.l("BRD") = 1.0;
-pq.l("MLK") = 1.0;
-pe.l("BRD") = 1.0;
-pe.l("MLK") = 1.0;
-pm.l("BRD") = 1.0;
-pm.l("MLK") = 1.0;
-pd.l("BRD") = 1.0;
-pd.l("MLK") = 1.0;
+D.l('BRD') = max(D.l('BRD'), 1e-05);
+D.l('MLK') = max(D.l('MLK'), 1e-05);
+pf.l('CAP') = 1.0;
+pf.l('LAB') = 1.0;
+py.l('BRD') = 1.0;
+py.l('MLK') = 1.0;
+pz.l('BRD') = 1.0;
+pz.l('MLK') = 1.0;
+pq.l('BRD') = 1.0;
+pq.l('MLK') = 1.0;
+pe.l('BRD') = 1.0;
+pe.l('MLK') = 1.0;
+pm.l('BRD') = 1.0;
+pm.l('MLK') = 1.0;
+pd.l('BRD') = 1.0;
+pd.l('MLK') = 1.0;
 epsilon.l = 1.0;
 Sp.l = Sp0;
 Sp.l = max(Sp.l, 1e-05);
@@ -313,10 +317,10 @@ Td.l = Td0;
 Td.l = max(Td.l, 1e-05);
 Tz.l(j) = Tz0(j);
 Tm.l(i) = Tm0(i);
-RT.l("BRD") = 0.0;
-RT.l("MLK") = 0.0;
-chi.l("BRD") = 0.0;
-chi.l("MLK") = 0.0;
+RT.l('BRD') = 0.0;
+RT.l('MLK') = 0.0;
+chi.l('BRD') = 0.0;
+chi.l('MLK') = 0.0;
 chi.l(i) = min(max(chi.l(i), 1e-6), chi.up(i));
 
 * ============================================
@@ -429,25 +433,25 @@ stat_f(h,j).. ((-1) * (b(j) * prod(h__, f(h__,j) ** beta(h__,j)) * sum(h__, f(h_
 stat_m(i).. ((-1) * (taum(i) * pm(i))) * nu_eqTm(i) + ((-1) * (chi(i) * pm(i))) * nu_eqRT(i) + ((-1) * pWm(i)) * nu_eqepsilon + ((-1) * (gamma(i) * (deltam(i) * m(i) ** eta(i) + deltad(i) * d(i) ** eta(i)) ** (1 / eta(i)) * 1 / eta(i) / (deltam(i) * m(i) ** eta(i) + deltad(i) * d(i) ** eta(i)) * deltam(i) * m(i) ** eta(i) * eta(i) / m(i))) * nu_eqpqs(i) + nu_eqM(i) - chi(i) * nu_eqchi1(i) + lam_eqchi2(i) - piL_m(i) =E= 0;
 stat_pd(i).. ((-1) * (q(i) * (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) * ((-1) * (gamma(i) ** eta(i) * deltad(i) * pq(i))) / sqr(pd(i)))) * nu_eqD(i) + ((-1) * (z(i) * (theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i) / pd(i)) ** (1 / (1 - phi(i))) * 1 / (1 - phi(i)) / (theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i) / pd(i)) * ((-1) * (theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i))) / sqr(pd(i)))) * nu_eqDs(i) - piL_pd(i) =E= 0;
 stat_pe(i).. nu_eqpe(i) + ((-1) * (z(i) * (theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i) / pe(i)) ** (1 / (1 - phi(i))) * 1 / (1 - phi(i)) / (theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i) / pe(i)) * ((-1) * (theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i))) / sqr(pe(i)))) * nu_eqE(i) - piL_pe(i) =E= 0;
-stat_pf(h).. sum(j, ((-1) * (((-1) * (beta(h,j) * py(j) * y(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + ((-1) * (taud * FF(h))) * nu_eqTd + ((-1) * (ssp * FF(h))) * nu_eqSp + sum(i, ((-1) * (pq(i) * alpha(i) * FF(h) / sqr(pq(i)))) * nu_eqXp(i)) + nu_pf_fx_LAB$sameas(h, 'LAB') - piL_pf(h) =E= 0;
+stat_pf(h).. sum(j, ((-1) * (((-1) * (beta(h,j) * py(j) * y(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + ((-1) * (taud * FF(h))) * nu_eqTd + ((-1) * (ssp * FF(h))) * nu_eqSp + sum(i, ((-1) * (pq(i) * alpha(i) * FF(h) / sqr(pq(i)))) * nu_eqXp(i)) + nu_pf_fx_LAB$(sameas(h, 'LAB')) - piL_pf(h) =E= 0;
 stat_pm(i).. ((-1) * (m(i) * taum(i))) * nu_eqTm(i) + ((-1) * (m(i) * chi(i))) * nu_eqRT(i) + nu_eqpm(i) + ((-1) * (q(i) * (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) * ((-1) * (gamma(i) ** eta(i) * deltam(i) * pq(i) * (1 + chi(i) + taum(i)))) / sqr((1 + chi(i) + taum(i)) * pm(i)))) * nu_eqM(i) - piL_pm(i) =E= 0;
-stat_pq(i).. sum(j, ((-1) * ax(i,j)) * nu_eqpzs(j)) + ((-1) * (((-1) * (mu(i) * (td + sum(j, tz(j)) + sum(j, tm(j)) - sg))) / sqr(pq(i)))) * nu_eqXg(i) + ((-1) * (((-1) * (lambda(i) * (sp + sg + epsilon * Sf))) / sqr(pq(i)))) * nu_eqXv(i) + ((-1) * (((-1) * (alpha(i) * (sum(h, pf(h) * FF(h)) + sum(j, rt(j)) - sp - td))) / sqr(pq(i)))) * nu_eqXp(i) + ((-1) * (q(i) * (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) * (1 + chi(i) + taum(i)) * pm(i) * gamma(i) ** eta(i) * deltam(i) / sqr((1 + chi(i) + taum(i)) * pm(i)))) * nu_eqM(i) + ((-1) * (q(i) * (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) * pd(i) * gamma(i) ** eta(i) * deltad(i) / sqr(pd(i)))) * nu_eqD(i) - piL_pq(i) =E= 0;
+stat_pq(i).. ((-1) * ax(i,i)) * nu_eqpzs(i) + (((-1) * ax(i,i)) * nu_eqpzs(i+1))$(ord(i) <= card(i) - 1) + (((-1) * ax(i,i)) * nu_eqpzs(i-1))$(ord(i) > 1) + ((-1) * (((-1) * (mu(i) * (td + sum(j, tz(j)) + sum(j, tm(j)) - sg))) / sqr(pq(i)))) * nu_eqXg(i) + ((-1) * (((-1) * (lambda(i) * (sp + sg + epsilon * Sf))) / sqr(pq(i)))) * nu_eqXv(i) + ((-1) * (((-1) * (alpha(i) * (sum(h, pf(h) * FF(h)) + sum(j, rt(j)) - sp - td))) / sqr(pq(i)))) * nu_eqXp(i) + ((-1) * (q(i) * (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) * (1 + chi(i) + taum(i)) * pm(i) * gamma(i) ** eta(i) * deltam(i) / sqr((1 + chi(i) + taum(i)) * pm(i)))) * nu_eqM(i) + ((-1) * (q(i) * (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) ** (1 / (1 - eta(i))) * 1 / (1 - eta(i)) / (gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) * pd(i) * gamma(i) ** eta(i) * deltad(i) / sqr(pd(i)))) * nu_eqD(i) - piL_pq(i) =E= 0;
 stat_py(j).. sum(h, ((-1) * (pf(h) * y(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) + ((-1) * ay(j)) * nu_eqpzs(j) - piL_py(j) =E= 0;
-stat_pz(j).. nu_eqpzs(j) + sum(i, ((-1) * (z(j) * tauz(i))) * nu_eqTz(j)) + sum(i, ((-1) * (z(i) * (theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i) / pe(i)) ** (1 / (1 - phi(i))) * 1 / (1 - phi(i)) / (theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i) / pe(i)) * pe(i) * theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) / sqr(pe(i)))) * nu_eqE(i)) + sum(i, ((-1) * (z(i) * (theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i) / pd(i)) ** (1 / (1 - phi(i))) * 1 / (1 - phi(i)) / (theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i) / pd(i)) * pd(i) * theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) / sqr(pd(i)))) * nu_eqDs(i)) - piL_pz(j) =E= 0;
+stat_pz(j).. nu_eqpzs(j) + sum(i, ((-1) * (z(j) * tauz(i))) * nu_eqTz(j)) + ((-1) * (z(j) * (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) * pe(j) * theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) / sqr(pe(j)))) * nu_eqE(j) + ((-1) * (z(j) * (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) * pd(j) * theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) / sqr(pd(j)))) * nu_eqDs(j) - piL_pz(j) =E= 0;
 stat_q(i).. nu_eqpqs(i) + ((-1) * ((gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + chi(i) + taum(i)) * pm(i))) ** (1 / (1 - eta(i))))) * nu_eqM(i) + ((-1) * ((gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) ** (1 / (1 - eta(i))))) * nu_eqD(i) + nu_eqpqd(i) - piL_q(i) =E= 0;
-stat_rt(i).. ((-1) * taud) * nu_eqTd + ((-1) * ssp) * nu_eqSp + ((-1) * (pq(i) * alpha(i) / sqr(pq(i)))) * nu_eqXp(i) + nu_eqRT(i) =E= 0;
+stat_rt(i).. ((-1) * taud) * nu_eqTd + ((-1) * ssp) * nu_eqSp + ((-1) * (pq(i) * alpha(i) / sqr(pq(i)))) * nu_eqXp(i) + (((-1) * (pq(i) * alpha(i) / sqr(pq(i)))) * nu_eqXp(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i) * alpha(i) / sqr(pq(i)))) * nu_eqXp(i-1))$(ord(i) > 1) + nu_eqRT(i) =E= 0;
 stat_sg.. sum(i, ((-1) * (pq(i) * mu(i) * (-1) / sqr(pq(i)))) * nu_eqXg(i)) + sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSg - piL_sg =E= 0;
 stat_sp.. sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSp + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_sp =E= 0;
 stat_td.. nu_eqTd + sum(i, ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i)) + ((-1) * ssg) * nu_eqSg + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_td =E= 0;
-stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + ((-1) * ssg) * nu_eqSg - piL_tm(i) =E= 0;
-stat_tz(j).. nu_eqTz(j) + sum(i, ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i)) + ((-1) * ssg) * nu_eqSg - piL_tz(j) =E= 0;
+stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i-1))$(ord(i) > 1) + ((-1) * ssg) * nu_eqSg - piL_tm(i) =E= 0;
+stat_tz(j).. nu_eqTz(j) + ((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j+1))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j-1))$(ord(j) > 1) + ((-1) * ssg) * nu_eqSg - piL_tz(j) =E= 0;
 stat_uu.. 0 =E= 0;
 stat_x(i,j).. nu_eqX(i,j) - piL_x(i,j) =E= 0;
 stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;
 stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * sum(i__, xp(i__) ** alpha(i__) * alpha(i__) / xp(i__) / xp(i__) ** alpha(i__)))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
 stat_xv(i).. nu_eqXv(i) - nu_eqpqd(i) - piL_xv(i) =E= 0;
 stat_y(j).. nu_eqpy(j) + nu_eqY(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * py(j) / sqr(pf(h)))) * nu_eqF(h,j)) - piL_y(j) =E= 0;
-stat_z(j).. sum(i, ((-1) * ax(i,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + sum(i, ((-1) * (tauz(i) * pz(j))) * nu_eqTz(j)) + sum(i, nu_eqpzd(i)) + sum(i, ((-1) * ((theta(i) ** phi(i) * xie(i) * (1 + tauz(i)) * pz(i) / pe(i)) ** (1 / (1 - phi(i))))) * nu_eqE(i)) + sum(i, ((-1) * ((theta(i) ** phi(i) * xid(i) * (1 + tauz(i)) * pz(i) / pd(i)) ** (1 / (1 - phi(i))))) * nu_eqDs(i)) - piL_z(j) =E= 0;
+stat_z(j).. sum(i, ((-1) * ax(i,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + sum(i, ((-1) * (tauz(i) * pz(j))) * nu_eqTz(j)) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;
 
 * Inequality complementarity equations
 comp_eqchi2(i).. Mquota(i) - m(i) =G= 0;

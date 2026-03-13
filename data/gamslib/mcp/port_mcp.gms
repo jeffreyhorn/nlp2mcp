@@ -86,7 +86,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_investment(b).. ((-1) * (ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")))) - nu_tdef + ((-1) * lam_groupmin)$sameas(b, 'corporate') + ydat(b,"rating") * lam_rdef + ydat(b,"maturity") * lam_mdef - piL_investment(b) =E= 0;
+stat_investment(b).. ((-1) * (ydat(b,"yield") / 100 * (1 - ydat(b,"tax-rate")))) - nu_tdef + ((-1) * lam_groupmin)$(sameas(b, 'corporate')) + ydat(b,"rating") * lam_rdef + ydat(b,"maturity") * lam_mdef - piL_investment(b) =E= 0;
 stat_tinvest.. nu_tdef + (-1.4) * lam_rdef + (-5) * lam_mdef + piU_tinvest =E= 0;
 
 * Inequality complementarity equations

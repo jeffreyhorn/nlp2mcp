@@ -43,9 +43,9 @@ Variables
     nu_tdeq(t)
     nu_seq(t)
     nu_cseq(t)
-    nu_deq(to)
+    nu_deq(t)
     nu_req(t)
-    nu_drev(to)
+    nu_drev(t)
     nu_td_fx_1974
     nu_s_fx_1974
     nu_cs_fx_1974
@@ -68,6 +68,15 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+td.fx('1974') = 18;
+s.fx('1974') = 6.5;
+cs.fx('1974') = 0;
+r.fx('1974') = 500;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -78,59 +87,56 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 $onImplicitAssign
-p.l("1974") = 14.0;
-p.l("1975") = 14.0;
-p.l("1976") = 14.0;
-p.l("1977") = 14.0;
-p.l("1978") = 14.0;
-p.l("1979") = 14.0;
-p.l("1980") = 14.0;
-p.l("1981") = 14.0;
-p.l("1982") = 14.0;
-p.l("1983") = 14.0;
-p.l("1984") = 14.0;
-p.l("1985") = 14.0;
-p.l("1986") = 14.0;
-p.l("1987") = 14.0;
-p.l("1988") = 14.0;
-p.l("1989") = 14.0;
-p.l("1990") = 14.0;
+p.l('1975') = 14.0;
+p.l('1976') = 14.0;
+p.l('1977') = 14.0;
+p.l('1978') = 14.0;
+p.l('1979') = 14.0;
+p.l('1980') = 14.0;
+p.l('1981') = 14.0;
+p.l('1982') = 14.0;
+p.l('1983') = 14.0;
+p.l('1984') = 14.0;
+p.l('1985') = 14.0;
+p.l('1986') = 14.0;
+p.l('1987') = 14.0;
+p.l('1988') = 14.0;
+p.l('1989') = 14.0;
+p.l('1990') = 14.0;
 p.l(t) = min(max(p.l(t), 1e-6), p.up(t));
-td.l("1974") = 18.0;
-td.l("1975") = 18.0;
-td.l("1976") = 18.0;
-td.l("1977") = 18.0;
-td.l("1978") = 18.0;
-td.l("1979") = 18.0;
-td.l("1980") = 18.0;
-td.l("1981") = 18.0;
-td.l("1982") = 18.0;
-td.l("1983") = 18.0;
-td.l("1984") = 18.0;
-td.l("1985") = 18.0;
-td.l("1986") = 18.0;
-td.l("1987") = 18.0;
-td.l("1988") = 18.0;
-td.l("1989") = 18.0;
-td.l("1990") = 18.0;
+td.l('1975') = 18.0;
+td.l('1976') = 18.0;
+td.l('1977') = 18.0;
+td.l('1978') = 18.0;
+td.l('1979') = 18.0;
+td.l('1980') = 18.0;
+td.l('1981') = 18.0;
+td.l('1982') = 18.0;
+td.l('1983') = 18.0;
+td.l('1984') = 18.0;
+td.l('1985') = 18.0;
+td.l('1986') = 18.0;
+td.l('1987') = 18.0;
+td.l('1988') = 18.0;
+td.l('1989') = 18.0;
+td.l('1990') = 18.0;
 td.l(t) = min(max(td.l(t), 1e-6), td.up(t));
-s.l("1974") = 7.0;
-s.l("1975") = 7.0;
-s.l("1976") = 7.0;
-s.l("1977") = 7.0;
-s.l("1978") = 7.0;
-s.l("1979") = 7.0;
-s.l("1980") = 7.0;
-s.l("1981") = 7.0;
-s.l("1982") = 7.0;
-s.l("1983") = 7.0;
-s.l("1984") = 7.0;
-s.l("1985") = 7.0;
-s.l("1986") = 7.0;
-s.l("1987") = 7.0;
-s.l("1988") = 7.0;
-s.l("1989") = 7.0;
-s.l("1990") = 7.0;
+s.l('1975') = 7.0;
+s.l('1976') = 7.0;
+s.l('1977') = 7.0;
+s.l('1978') = 7.0;
+s.l('1979') = 7.0;
+s.l('1980') = 7.0;
+s.l('1981') = 7.0;
+s.l('1982') = 7.0;
+s.l('1983') = 7.0;
+s.l('1984') = 7.0;
+s.l('1985') = 7.0;
+s.l('1986') = 7.0;
+s.l('1987') = 7.0;
+s.l('1988') = 7.0;
+s.l('1989') = 7.0;
+s.l('1990') = 7.0;
 s.l(t) = min(max(s.l(t), 1e-6), s.up(t));
 cs.l(to) = 7 * ord(to);
 cs.l(t) = min(max(cs.l(t), 1e-6), cs.up(t));
@@ -179,13 +185,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cs(t).. ((-1) * ((1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7) * log(1.02) * (-0.14285714285714285))) * nu_seq(t) + nu_cseq(t) + nu_cs_fx_1974$sameas(t, '1974') - piL_cs(t) =E= 0;
-stat_d(t)$(to(t)).. nu_req(t) + sum(to, nu_deq(to)) + sum(to, ((-1) * (p(to) - 250 / r(to))) * nu_drev(to)) - piL_d(t) =E= 0;
-stat_p(t)$(to(t)).. 0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + sum(to, ((-1) * d(to)) * nu_drev(to)) - piL_p(t) =E= 0;
-stat_r(t)$(to(t)).. nu_req(t) + nu_r_fx_1974$sameas(t, '1974') + sum(to, ((-1) * (d(to) * ((-1) * ((-250) / sqr(r(to)))))) * nu_drev(to)) - piL_r(t) =E= 0;
-stat_rev(t)$(to(t)).. sum(to, nu_drev(to)) =E= 0;
-stat_s(t)$(to(t)).. nu_seq(t) - nu_cseq(t) + nu_s_fx_1974$sameas(t, '1974') + sum(to, nu_deq(to)) - piL_s(t) =E= 0;
-stat_td(t)$(to(t)).. nu_tdeq(t) + nu_td_fx_1974$sameas(t, '1974') + sum(to, (-1) * nu_deq(to)) - piL_td(t) =E= 0;
+stat_cs(t).. ((-1) * ((1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7) * log(1.02) * (-0.14285714285714285))) * nu_seq(t) + nu_cseq(t) + ((-1) * nu_cseq(t+1))$(ord(t) <= card(t) - 1) + nu_cs_fx_1974$(sameas(t, '1974')) - piL_cs(t) =E= 0;
+stat_d(t)$(to(t)).. nu_req(t) + nu_deq(t) + ((-1) * (p(t) - 250 / r(t))) * nu_drev(t) - piL_d(t) =E= 0;
+stat_p(t)$(to(t)).. 0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + ((-1) * d(t)) * nu_drev(t) - piL_p(t) =E= 0;
+stat_r(t).. nu_req(t) + ((-1) * nu_req(t+1))$(ord(t) <= card(t) - 1) + nu_r_fx_1974$(sameas(t, '1974')) + ((-1) * (d(t) * ((-1) * ((-250) / sqr(r(t)))))) * nu_drev(t) - piL_r(t) =E= 0;
+stat_rev(t)$(to(t)).. nu_drev(t) =E= 0;
+stat_s(t).. nu_seq(t) + ((-0.75) * nu_seq(t+1))$(ord(t) <= card(t) - 1) - nu_cseq(t) + nu_s_fx_1974$(sameas(t, '1974')) + nu_deq(t) - piL_s(t) =E= 0;
+stat_td(t).. nu_tdeq(t) + ((-0.87) * nu_tdeq(t+1))$(ord(t) <= card(t) - 1) + nu_td_fx_1974$(sameas(t, '1974')) - nu_deq(t) - piL_td(t) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_cs(t).. cs(t) - 0 =G= 0;
@@ -220,17 +226,13 @@ d.fx(t)$(not (to(t))) = 0;
 piL_d.fx(t)$(not (to(t))) = 0;
 p.fx(t)$(not (to(t))) = 0;
 piL_p.fx(t)$(not (to(t))) = 0;
-r.fx(t)$(not (to(t))) = 0;
-piL_r.fx(t)$(not (to(t))) = 0;
 rev.fx(t)$(not (to(t))) = 0;
-s.fx(t)$(not (to(t))) = 0;
-piL_s.fx(t)$(not (to(t))) = 0;
-td.fx(t)$(not (to(t))) = 0;
-piL_td.fx(t)$(not (to(t))) = 0;
 nu_cseq.fx(t)$(not (ord(t) > 1)) = 0;
 nu_req.fx(t)$(not (ord(t) > 1)) = 0;
 nu_seq.fx(t)$(not (ord(t) > 1)) = 0;
 nu_tdeq.fx(t)$(not (ord(t) > 1)) = 0;
+nu_deq.fx(t)$(not (to(t))) = 0;
+nu_drev.fx(t)$(not (to(t))) = 0;
 
 * ============================================
 * Model MCP Declaration

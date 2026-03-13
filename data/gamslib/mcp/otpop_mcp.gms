@@ -57,12 +57,10 @@ Scalars
 rd(t) = rd74 * (1 + gr) ** (ord(t) - 1);
 del(t) = (1 + r) ** (card(t) - ord(t));
 y(tt) = 1964 + ord(tt);
-ptr(t) = 10 * 1.02 ** (ord(t) - 1);
 db74 = d74 * phis("1974") ** a;
 con = g / pb ** b / (pb - ph);
 xb(t) = xb74 + 3 * min(y(t) - 1974, 6) + 0.9 * max(y(t) - 1980, 0);
 db(t) = db74 * (1 + g) ** (ord(t) - 1);
-xtr(t) = min(xb(t), x74 * 1.02 ** (ord(t) - 1));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -82,18 +80,13 @@ Variables
     pd(tt)
     k
     z
-    xdev
-    pdev
     pi
-    nu_dem(t)
-    nu_sup(t)
+    nu_dem(tt)
+    nu_sup(tt)
     nu_adef(tt)
     nu_pdef(tt)
     nu_kdef
     nu_zdef
-    nu_xtrack
-    nu_ptrack
-    nu_objx
     nu_x_fx_1965
     nu_x_fx_1966
     nu_x_fx_1967
@@ -104,22 +97,6 @@ Variables
     nu_x_fx_1972
     nu_x_fx_1973
     nu_x_fx_1974
-    nu_x_fx_1975
-    nu_x_fx_1976
-    nu_x_fx_1977
-    nu_x_fx_1978
-    nu_x_fx_1979
-    nu_x_fx_1980
-    nu_x_fx_1981
-    nu_x_fx_1982
-    nu_x_fx_1983
-    nu_x_fx_1984
-    nu_x_fx_1985
-    nu_x_fx_1986
-    nu_x_fx_1987
-    nu_x_fx_1988
-    nu_x_fx_1989
-    nu_x_fx_1990
 ;
 
 Positive Variables
@@ -133,6 +110,16 @@ Positive Variables
 * ============================================
 
 x.up(t) = xb(t);
+x.fx('1965') = 29.4;
+x.fx('1966') = 29.4;
+x.fx('1967') = 29.4;
+x.fx('1968') = 29.4;
+x.fx('1969') = 29.4;
+x.fx('1970') = 29.4;
+x.fx('1971') = 29.4;
+x.fx('1972') = 29.4;
+x.fx('1973') = 29.4;
+x.fx('1974') = 29.4;
 p.fx(th) = phis(th);
 
 * ============================================
@@ -145,32 +132,32 @@ p.fx(th) = phis(th);
 * POSITIVE variables are set to 1.
 
 x.l(tt) = 1;
-p.l("1965") = 1.0;
-p.l("1966") = 1.0;
-p.l("1967") = 1.0;
-p.l("1968") = 1.0;
-p.l("1969") = 1.0;
-p.l("1970") = 1.0;
-p.l("1971") = 1.0;
-p.l("1972") = 1.0;
-p.l("1973") = 1.0;
-p.l("1974") = 1.0;
-p.l("1975") = 1.0;
-p.l("1976") = 1.0;
-p.l("1977") = 1.0;
-p.l("1978") = 1.0;
-p.l("1979") = 1.0;
-p.l("1980") = 1.0;
-p.l("1981") = 1.0;
-p.l("1982") = 1.0;
-p.l("1983") = 1.0;
-p.l("1984") = 1.0;
-p.l("1985") = 1.0;
-p.l("1986") = 1.0;
-p.l("1987") = 1.0;
-p.l("1988") = 1.0;
-p.l("1989") = 1.0;
-p.l("1990") = 1.0;
+p.l('1965') = 1.0;
+p.l('1966') = 1.0;
+p.l('1967') = 1.0;
+p.l('1968') = 1.0;
+p.l('1969') = 1.0;
+p.l('1970') = 1.0;
+p.l('1971') = 1.0;
+p.l('1972') = 1.0;
+p.l('1973') = 1.0;
+p.l('1974') = 1.0;
+p.l('1975') = 1.0;
+p.l('1976') = 1.0;
+p.l('1977') = 1.0;
+p.l('1978') = 1.0;
+p.l('1979') = 1.0;
+p.l('1980') = 1.0;
+p.l('1981') = 1.0;
+p.l('1982') = 1.0;
+p.l('1983') = 1.0;
+p.l('1984') = 1.0;
+p.l('1985') = 1.0;
+p.l('1986') = 1.0;
+p.l('1987') = 1.0;
+p.l('1988') = 1.0;
+p.l('1989') = 1.0;
+p.l('1990') = 1.0;
 
 * ============================================
 * Equations
@@ -186,9 +173,7 @@ Equations
     stat_k
     stat_p(tt)
     stat_pd(tt)
-    stat_pdev
     stat_x(tt)
-    stat_xdev
     stat_z
     comp_lo_p(tt)
     comp_lo_x(tt)
@@ -196,37 +181,9 @@ Equations
     dem(t)
     kdef
     obj
-    objx
     pdef(tt)
-    ptrack
     sup(t)
-    x_fx_1965
-    x_fx_1966
-    x_fx_1967
-    x_fx_1968
-    x_fx_1969
-    x_fx_1970
-    x_fx_1971
-    x_fx_1972
-    x_fx_1973
     x_fx_1974
-    x_fx_1975
-    x_fx_1976
-    x_fx_1977
-    x_fx_1978
-    x_fx_1979
-    x_fx_1980
-    x_fx_1981
-    x_fx_1982
-    x_fx_1983
-    x_fx_1984
-    x_fx_1985
-    x_fx_1986
-    x_fx_1987
-    x_fx_1988
-    x_fx_1989
-    x_fx_1990
-    xtrack
     zdef
 ;
 
@@ -235,14 +192,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_as(tt)$(t(tt)).. nu_adef(tt)$tp(tt) + sum(t, p(t) ** b * nu_sup(t)) =E= 0;
-stat_d(tt)$(t(tt)).. sum(t, nu_dem(t)) + sum(t, (-1) * nu_sup(t)) =E= 0;
+stat_as(tt).. nu_adef(tt)$(tp(tt)) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + p(tt) ** b * nu_sup(tt) =E= 0;
+stat_d(tt).. ((((-1) * ((pd(tt) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_dem(tt) - nu_sup(tt) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
-stat_p(tt)$(t(tt)).. sum(t, ((-1) * (db(t) * p(t) ** ((-1) * a) * ((-1) * a) / p(t))) * nu_dem(t)) + sum(t, as(t) * p(t) ** b * b / p(t) * nu_sup(t)) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (ptr(t) - p(tt)) * (-1))) * nu_ptrack)$sameas(tt, '1974') + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_objx)$sameas(tt, '1974') - piL_p(tt) =E= 0;
+stat_p(tt).. ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(sameas(tt, '1974')) - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) =E= 0;
-stat_pdev.. nu_ptrack =E= 0;
-stat_x(tt)$(t(tt)).. nu_x_fx_1965$sameas(tt, '1965') + nu_x_fx_1966$sameas(tt, '1966') + nu_x_fx_1967$sameas(tt, '1967') + nu_x_fx_1968$sameas(tt, '1968') + nu_x_fx_1969$sameas(tt, '1969') + nu_x_fx_1970$sameas(tt, '1970') + nu_x_fx_1971$sameas(tt, '1971') + nu_x_fx_1972$sameas(tt, '1972') + nu_x_fx_1973$sameas(tt, '1973') + sum(t, nu_sup(t)) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$sameas(tt, '1974') + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$sameas(tt, '1974') + sum(t, ((-1) * (2 * (xtr(t) - x(tt)) * (-1))) * nu_xtrack)$sameas(tt, '1974') + sum(t, ((-1) * (0.365 * del(t) * (1 - c) * p(tt) + (-0.365) * v * p(tt))) * nu_objx)$sameas(tt, '1974') + nu_x_fx_1974$sameas(tt, '1974') + nu_x_fx_1975$sameas(tt, '1975') + nu_x_fx_1976$sameas(tt, '1976') + nu_x_fx_1977$sameas(tt, '1977') + nu_x_fx_1978$sameas(tt, '1978') + nu_x_fx_1979$sameas(tt, '1979') + nu_x_fx_1980$sameas(tt, '1980') + nu_x_fx_1981$sameas(tt, '1981') + nu_x_fx_1982$sameas(tt, '1982') + nu_x_fx_1983$sameas(tt, '1983') + nu_x_fx_1984$sameas(tt, '1984') + nu_x_fx_1985$sameas(tt, '1985') + nu_x_fx_1986$sameas(tt, '1986') + nu_x_fx_1987$sameas(tt, '1987') + nu_x_fx_1988$sameas(tt, '1988') + nu_x_fx_1989$sameas(tt, '1989') + nu_x_fx_1990$sameas(tt, '1990') - piL_x(tt) =E= 0;
-stat_xdev.. nu_xtrack =E= 0;
+stat_x(tt)$(t(tt)).. nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(sameas(tt, '1974')) + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$(sameas(tt, '1974')) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt) =E= 0;
 stat_z.. -1 + nu_zdef =E= 0;
 
 * Lower bound complementarity equations
@@ -256,36 +211,8 @@ adef(tt)$((tp(tt)) and (ord(tt) > 1)).. as(tt) =E= as(tt-1) + con * d(tt-1) * (p
 pdef(tt).. pd(tt) =E= sum(n, alpha(n) * p(tt-(ord(n)-1)));
 kdef.. k =E= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
 zdef.. z =E= v * sum(t, 0.365 * (xb(t) - x(t)) * p(t+(card(t)-ord(t))));
-xtrack.. xdev =E= sum(t, sqr(xtr(t) - x(t)));
-ptrack.. pdev =E= sum(t, sqr(ptr(t) - p(t)));
 obj.. pi =E= k + z;
-objx.. pi =E= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t))) + v * sum(t, 0.365 * (xb(t) - x(t)) * p(t+(card(t)-ord(t))));
-x_fx_1965.. x("1965") - 29.4 =E= 0;
-x_fx_1966.. x("1966") - 29.4 =E= 0;
-x_fx_1967.. x("1967") - 29.4 =E= 0;
-x_fx_1968.. x("1968") - 29.4 =E= 0;
-x_fx_1969.. x("1969") - 29.4 =E= 0;
-x_fx_1970.. x("1970") - 29.4 =E= 0;
-x_fx_1971.. x("1971") - 29.4 =E= 0;
-x_fx_1972.. x("1972") - 29.4 =E= 0;
-x_fx_1973.. x("1973") - 29.4 =E= 0;
 x_fx_1974.. x("1974") - 29.4 =E= 0;
-x_fx_1975.. x("1975") - 29.4 =E= 0;
-x_fx_1976.. x("1976") - 29.4 =E= 0;
-x_fx_1977.. x("1977") - 29.4 =E= 0;
-x_fx_1978.. x("1978") - 29.4 =E= 0;
-x_fx_1979.. x("1979") - 29.4 =E= 0;
-x_fx_1980.. x("1980") - 29.4 =E= 0;
-x_fx_1981.. x("1981") - 29.4 =E= 0;
-x_fx_1982.. x("1982") - 29.4 =E= 0;
-x_fx_1983.. x("1983") - 29.4 =E= 0;
-x_fx_1984.. x("1984") - 29.4 =E= 0;
-x_fx_1985.. x("1985") - 29.4 =E= 0;
-x_fx_1986.. x("1986") - 29.4 =E= 0;
-x_fx_1987.. x("1987") - 29.4 =E= 0;
-x_fx_1988.. x("1988") - 29.4 =E= 0;
-x_fx_1989.. x("1989") - 29.4 =E= 0;
-x_fx_1990.. x("1990") - 29.4 =E= 0;
 
 
 * ============================================
@@ -295,13 +222,29 @@ x_fx_1990.. x("1990") - 29.4 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-as.fx(tt)$(not (t(tt))) = 0;
-d.fx(tt)$(not (t(tt))) = 0;
-p.fx(tt)$(not (t(tt))) = 0;
-piL_p.fx(tt)$(not (t(tt))) = 0;
 x.fx(tt)$(not (t(tt))) = 0;
 piL_x.fx(tt)$(not (t(tt))) = 0;
 nu_adef.fx(tt)$(not (ord(tt) > 1)) = 0;
+nu_dem.fx(tt)$(not (t(tt))) = 0;
+nu_sup.fx(tt)$(not (t(tt))) = 0;
+nu_x_fx_1965.fx = 0;
+x.fx('1965') = 29.4;
+nu_x_fx_1966.fx = 0;
+x.fx('1966') = 29.4;
+nu_x_fx_1967.fx = 0;
+x.fx('1967') = 29.4;
+nu_x_fx_1968.fx = 0;
+x.fx('1968') = 29.4;
+nu_x_fx_1969.fx = 0;
+x.fx('1969') = 29.4;
+nu_x_fx_1970.fx = 0;
+x.fx('1970') = 29.4;
+nu_x_fx_1971.fx = 0;
+x.fx('1971') = 29.4;
+nu_x_fx_1972.fx = 0;
+x.fx('1972') = 29.4;
+nu_x_fx_1973.fx = 0;
+x.fx('1973') = 29.4;
 
 * ============================================
 * Model MCP Declaration
@@ -322,45 +265,15 @@ Model mcp_model /
     stat_k.k,
     stat_p.p,
     stat_pd.pd,
-    stat_pdev.pdev,
     stat_x.x,
-    stat_xdev.xdev,
     stat_z.z,
     adef.nu_adef,
     dem.nu_dem,
     kdef.nu_kdef,
     obj.pi,
-    objx.nu_objx,
     pdef.nu_pdef,
-    ptrack.nu_ptrack,
     sup.nu_sup,
-    x_fx_1965.nu_x_fx_1965,
-    x_fx_1966.nu_x_fx_1966,
-    x_fx_1967.nu_x_fx_1967,
-    x_fx_1968.nu_x_fx_1968,
-    x_fx_1969.nu_x_fx_1969,
-    x_fx_1970.nu_x_fx_1970,
-    x_fx_1971.nu_x_fx_1971,
-    x_fx_1972.nu_x_fx_1972,
-    x_fx_1973.nu_x_fx_1973,
     x_fx_1974.nu_x_fx_1974,
-    x_fx_1975.nu_x_fx_1975,
-    x_fx_1976.nu_x_fx_1976,
-    x_fx_1977.nu_x_fx_1977,
-    x_fx_1978.nu_x_fx_1978,
-    x_fx_1979.nu_x_fx_1979,
-    x_fx_1980.nu_x_fx_1980,
-    x_fx_1981.nu_x_fx_1981,
-    x_fx_1982.nu_x_fx_1982,
-    x_fx_1983.nu_x_fx_1983,
-    x_fx_1984.nu_x_fx_1984,
-    x_fx_1985.nu_x_fx_1985,
-    x_fx_1986.nu_x_fx_1986,
-    x_fx_1987.nu_x_fx_1987,
-    x_fx_1988.nu_x_fx_1988,
-    x_fx_1989.nu_x_fx_1989,
-    x_fx_1990.nu_x_fx_1990,
-    xtrack.nu_xtrack,
     zdef.nu_zdef,
     comp_lo_p.piL_p,
     comp_lo_x.piL_x

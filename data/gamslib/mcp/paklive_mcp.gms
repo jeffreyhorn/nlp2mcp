@@ -101,7 +101,7 @@ Positive Variables
     piL_xtransf(n,t)
     piL_dhire
     piL_xlivestk(h)
-    piU_xcrop_sugar
+    piU_xcrop(c)
     piU_wpurchase(t)
 ;
 
@@ -123,6 +123,19 @@ dhire.l = 1;
 xlivestk.l(h) = 1;
 
 * ============================================
+* Bound Mask Sets (partial bound coverage)
+* ============================================
+
+Set has_xcrop_up(c) / sugar /;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter xcrop_up_param(c);
+xcrop_up_param('sugar') = 2;
+
+* ============================================
 * Equations
 * ============================================
 
@@ -138,16 +151,7 @@ Equations
     stat_rev
     stat_wcost
     stat_wpurchase(t)
-    stat_xcrop_basrice
-    stat_xcrop_berseem
-    stat_xcrop_cotton
-    stat_xcrop_gram
-    stat_xcrop_irrrice
-    stat_xcrop_kharfodder
-    stat_xcrop_maize
-    stat_xcrop_oilseed
-    stat_xcrop_sugar
-    stat_xcrop_wheat
+    stat_xcrop(c)
     stat_xlabor(t)
     stat_xlivestk(h)
     stat_xrations(n,t)
@@ -167,7 +171,7 @@ Equations
     comp_lo_xrations(n,t)
     comp_lo_xtransf(n,t)
     comp_up_wpurchase(t)
-    comp_up_xcrop_sugar
+    comp_up_xcrop(c)
     costdraft
     costlabor
     costrat
@@ -188,20 +192,11 @@ stat_rcost.. 1 + nu_costrat + lam_credit =E= 0;
 stat_rev.. -1 + nu_totalrev =E= 0;
 stat_wcost.. 1 + nu_costwater + lam_credit =E= 0;
 stat_wpurchase(t).. ((-1) * watercost) * nu_costwater - lam_water(t) - piL_wpurchase(t) + piU_wpurchase(t) =E= 0;
-stat_xcrop_basrice.. ((-1) * crev("basrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("basrice") * lam_bullock + cinput("credit","annual","basrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("basrice") =E= 0;
-stat_xcrop_berseem.. ((-1) * crev("berseem")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("berseem") * lam_bullock + cinput("credit","annual","berseem") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("berseem") =E= 0;
-stat_xcrop_cotton.. ((-1) * crev("cotton")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("cotton") * lam_bullock + cinput("credit","annual","cotton") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("cotton") =E= 0;
-stat_xcrop_gram.. ((-1) * crev("gram")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("gram") * lam_bullock + cinput("credit","annual","gram") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("gram") =E= 0;
-stat_xcrop_irrrice.. ((-1) * crev("irrrice")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("irrrice") * lam_bullock + cinput("credit","annual","irrrice") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("irrrice") =E= 0;
-stat_xcrop_kharfodder.. ((-1) * crev("kharfodder")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("kharfodder") * lam_bullock + cinput("credit","annual","kharfodder") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("kharfodder") =E= 0;
-stat_xcrop_maize.. ((-1) * crev("maize")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("maize") * lam_bullock + cinput("credit","annual","maize") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("maize") =E= 0;
-stat_xcrop_oilseed.. ((-1) * crev("oilseed")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("oilseed") * lam_bullock + cinput("credit","annual","oilseed") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("oilseed") =E= 0;
-stat_xcrop_sugar.. ((-1) * crev("sugar")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("sugar") * lam_bullock + cinput("credit","annual","sugar") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("sugar") + piU_xcrop_sugar =E= 0;
-stat_xcrop_wheat.. ((-1) * crev("wheat")) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr("wheat") * lam_bullock + cinput("credit","annual","wheat") * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop("wheat") =E= 0;
+stat_xcrop(c).. ((-1) * crev(c)) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr(c) * lam_bullock + sum(ta, cinput("credit",ta,c) * lam_credit) + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop(c) + piU_xcrop(c) =E= 0;
 stat_xlabor(t).. ((-1) * laborcost) * nu_costlabor - lam_labor(t) - piL_xlabor(t) =E= 0;
 stat_xlivestk(h).. ((-1) * gmargin(h)) * nu_totalrev + sum(t, linput("labor",t,h) * lam_labor(t)) + sum((dp,t), linput(dp,t,h) * lam_draft(dp,t)) + ((-1) * bullocka(h)) * lam_bullock + sum(ta, linput("credit",ta,h) * lam_credit) + sum((n,t), linput(n,t,h) * lam_nutbal(n,t)) - piL_xlivestk(h) =E= 0;
 stat_xrations(n,t).. ((-1) * rationcost(n)) * nu_costrat - lam_nutbal(n,t) - piL_xrations(n,t) =E= 0;
-stat_xtransf(n,t).. ((-1) * piL_xtransf(n,t)) =E= 0;
+stat_xtransf(n,t).. (((-1) * eff(n)) * lam_nutbal(n,t+1))$(ord(t) <= card(t) - 1) + (((-1) * eff(n)) * lam_nutbal(n,t-1))$(ord(t) > 1) - piL_xtransf(n,t) =E= 0;
 
 * Inequality complementarity equations
 comp_bullock.. ((-1) * (sum(c, bullockr(c) * xcrop(c)) - (sum(h, bullocka(h) * xlivestk(h)) + dhire))) =G= 0;
@@ -223,7 +218,7 @@ comp_lo_xtransf(n,t).. xtransf(n,t) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_wpurchase(t).. 17.5 - wpurchase(t) =G= 0;
-comp_up_xcrop_sugar.. 2 - xcrop("sugar") =G= 0;
+comp_up_xcrop(c)$(has_xcrop_up(c)).. xcrop_up_param(c) - xcrop(c) =G= 0;
 
 * Original equality equations
 totalrev.. rev =E= sum(c, crev(c) * xcrop(c)) + sum(h, gmargin(h) * xlivestk(h));
@@ -233,6 +228,15 @@ costwater.. wcost =E= watercost * sum(t, wpurchase(t));
 costrat.. rcost =E= sum(n, rationcost(n) * sum(t, xrations(n,t)));
 obj.. return =E= rev - lcost - wcost - rcost - dcost;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piU_xcrop.fx(c)$(not has_xcrop_up(c)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -255,16 +259,7 @@ Model mcp_model /
     stat_rev.rev,
     stat_wcost.wcost,
     stat_wpurchase.wpurchase,
-    stat_xcrop_basrice.xcrop,
-    stat_xcrop_berseem.xcrop,
-    stat_xcrop_cotton.xcrop,
-    stat_xcrop_gram.xcrop,
-    stat_xcrop_irrrice.xcrop,
-    stat_xcrop_kharfodder.xcrop,
-    stat_xcrop_maize.xcrop,
-    stat_xcrop_oilseed.xcrop,
-    stat_xcrop_sugar.xcrop,
-    stat_xcrop_wheat.xcrop,
+    stat_xcrop.xcrop,
     stat_xlabor.xlabor,
     stat_xlivestk.xlivestk,
     stat_xrations.xrations,
@@ -290,7 +285,7 @@ Model mcp_model /
     comp_lo_xrations.piL_xrations,
     comp_lo_xtransf.piL_xtransf,
     comp_up_wpurchase.piU_wpurchase,
-    comp_up_xcrop_sugar.piU_xcrop_sugar
+    comp_up_xcrop.piU_xcrop
 /;
 
 * ============================================

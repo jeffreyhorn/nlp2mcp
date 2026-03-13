@@ -58,8 +58,8 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound).
 
-X.l("BRD") = 0.001;
-X.l("MLK") = 0.001;
+X.l('BRD') = 0.001;
+X.l('MLK') = 0.001;
 X.l(i) = min(max(X.l(i), 1e-6), X.up(i));
 
 * ============================================

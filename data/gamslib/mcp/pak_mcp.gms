@@ -77,10 +77,10 @@ Variables
     c(te)
     w
     nu_gnpd(t)
-    nu_invd(t)
+    nu_invd(te)
     nu_invt(te)
     nu_tgap(t)
-    nu_incd(t)
+    nu_incd(te)
     nu_kbal(te,j)
     nu_taid
     nu_i_fx_1962_non_traded_683f00ae
@@ -94,9 +94,9 @@ Positive Variables
     v(t,j)
     i(te,j)
     s(t)
-    lam_capb(t,j)
+    lam_capb(te,j)
     lam_savl(t)
-    lam_impl(t)
+    lam_impl(te)
     lam_invu(te)
     lam_invl(te)
     lam_conl(te)
@@ -181,15 +181,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(te).. nu_c_fx_1962$(sameas(te, '1962')) + sum(t, (-1) * nu_incd(t)) + (1 + p) * lam_conl(te) + ((-1) * lam_conl(te-1))$(ord(te) > 1) =E= 0;
+stat_c(te).. nu_c_fx_1962$(sameas(te, '1962')) - nu_incd(te) + (1 + p) * lam_conl(te) + ((-1) * lam_conl(te-1))$(ord(te) > 1) =E= 0;
 stat_f(t).. ((-1) * nu_invd(t)) + nu_tgap(t) + nu_incd(t) + ((-1) * delt(t)) * nu_taid + lam_fup(t) + piU_f(t) =E= 0;
 stat_fb.. gama + nu_taid =E= 0;
 stat_gnp(t).. nu_gnpd(t) + nu_incd(t) + ((-1) * alpha) * lam_savl(t) + mgnp * lam_impl(t) + ((-1) * q) * lam_fup(t) =E= 0;
 stat_i(te,j).. ((-1) * nu_invt(te)) - nu_kbal(te,j) + nu_i_fx_1962_non_traded_683f00ae$(sameas(te, '1962') and sameas(j, 'non-traded')) + nu_i_fx_1962_traded$(sameas(te, '1962') and sameas(j, 'traded')) - piL_i(te,j) =E= 0;
-stat_ks(te,j).. ((-1) * nu_kbal(te,j)) + nu_kbal(te-1,j)$(ord(te) > 1) + nu_ks_fx_1962_non_traded_683f00ae$(sameas(te, '1962') and sameas(j, 'non-traded')) + nu_ks_fx_1962_traded$(sameas(te, '1962') and sameas(j, 'traded')) + sum(t, ((-1) * (1 / k(j))) * lam_capb(t,j)) =E= 0;
+stat_ks(te,j).. ((-1) * nu_kbal(te,j)) + nu_kbal(te-1,j)$(ord(te) > 1) + nu_ks_fx_1962_non_traded_683f00ae$(sameas(te, '1962') and sameas(j, 'non-traded')) + nu_ks_fx_1962_traded$(sameas(te, '1962') and sameas(j, 'traded')) + ((-1) * (1 / k(j))) * lam_capb(te,j) =E= 0;
 stat_m(t).. ((-1) * nu_tgap(t)) - lam_impl(t) =E= 0;
 stat_s(t).. ((-1) * nu_invd(t)) + lam_savl(t) - piL_s(t) =E= 0;
-stat_ti(te).. nu_invt(te) + sum(t, nu_invd(t)) + sum(t, (-1) * nu_incd(t)) + ((-1) * (1 + beta)) * lam_invu(te) + lam_invu(te-1)$(ord(te) > 1) + lam_invl(te) + ((-1) * lam_invl(te-1))$(ord(te) > 1) + sum(t, mi * lam_impl(t)) =E= 0;
+stat_ti(te).. nu_invt(te) + nu_invd(te) - nu_incd(te) + ((-1) * (1 + beta)) * lam_invu(te) + lam_invu(te-1)$(ord(te) > 1) + lam_invl(te) + ((-1) * lam_invl(te-1))$(ord(te) > 1) + mi * lam_impl(te) =E= 0;
 stat_v(t,j).. ((-1) * nu_gnpd(t)) + lam_capb(t,j) - piL_v(t,j) =E= 0;
 
 * Inequality complementarity equations
@@ -236,6 +236,10 @@ lam_conl.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
 lam_invl.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
 lam_invu.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
 nu_kbal.fx(te,j)$(not (ord(te) <= card(te) - 1)) = 0;
+lam_capb.fx(te,j)$(not (t(te))) = 0;
+lam_impl.fx(te)$(not (t(te))) = 0;
+nu_incd.fx(te)$(not (t(te))) = 0;
+nu_invd.fx(te)$(not (t(te))) = 0;
 
 * ============================================
 * Model MCP Declaration

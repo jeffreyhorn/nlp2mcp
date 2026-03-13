@@ -39,10 +39,9 @@ Scalars
 
 step = pi / 180;
 n = 2 * n2;
-omega_s = 2 * pi / 3;
-omega_p = pi / 2;
 omega(i) = (ord(i) - 1) * step;
 cosomega(i,k) = cos((ord(k) - 1 - (n - 1) / 2) * omega(i));
+cosomega(i,k)$(abs(cosomega(i,k)) < 1e-13) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -73,6 +72,7 @@ Positive Variables
     lam_passband_lo_bnds(i)
     lam_stopband_bnds(i)
     lam_stopband_bnds2(i)
+    piL_t
     piL_v3
     piL_u
 ;
@@ -101,6 +101,7 @@ v.l = 1;
 
 Equations
     stat_h(k)
+    stat_t
     stat_u
     stat_v
     stat_v2
@@ -110,6 +111,7 @@ Equations
     comp_so
     comp_stopband_bnds(i)
     comp_stopband_bnds2(i)
+    comp_lo_t
     comp_lo_u
     comp_lo_v3
     cone_lhs
@@ -122,7 +124,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(k)$(ord(k) < card(k)).. sum(i, (2 * cosomega(i,k) * (ord(k) < card(k)) * lam_passband_up_bnds(i))$omega_pass(i)) + sum(i, (((-1) * (2 * cosomega(i,k) * (ord(k) < card(k)))) * lam_passband_lo_bnds(i))$omega_pass(i)) + sum(i, (((-1) * (2 * cosomega(i,k) * (ord(k) < card(k)))) * lam_stopband_bnds(i))$omega_stop(i)) + sum(i, (2 * cosomega(i,k) * (ord(k) < card(k)) * lam_stopband_bnds2(i))$omega_stop(i)) =E= 0;
+stat_h(k)$(ord(k) < card(k)).. sum(i, (2 * cosomega(i,k) * (ord(k) < card(k)) * lam_passband_up_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * (ord(k) < card(k)))) * lam_passband_lo_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * (ord(k) < card(k)))) * lam_stopband_bnds(i))$(omega_stop(i))) + sum(i, (2 * cosomega(i,k) * (ord(k) < card(k)) * lam_stopband_bnds2(i))$(omega_stop(i))) =E= 0;
+stat_t.. 1 + nu_cone_rhs - nu_cone_lhs + sum(i$(omega_pass(i)), (-1) * lam_passband_up_bnds(i)) - piL_t =E= 0;
 stat_u.. ((-1) * nu_cone_rhs) - nu_cone_lhs + sum(i$(omega_pass(i)), lam_passband_lo_bnds(i)) - piL_u =E= 0;
 stat_v.. nu_v_fx + 2 * v * lam_so =E= 0;
 stat_v2.. nu_cone_rhs + 2 * v2 * lam_so =E= 0;
@@ -136,6 +139,7 @@ comp_stopband_bnds(i)$(omega_stop(i)).. ((-1) * (((-1) * beta) - 2 * sum(k$(ord(
 comp_stopband_bnds2(i)$(omega_stop(i)).. ((-1) * (2 * sum(k$(ord(k) < card(k)), h(k) * cosomega(i,k)) - beta)) =G= 0;
 
 * Lower bound complementarity equations
+comp_lo_t.. t - 1 =G= 0;
 comp_lo_u.. u - 0 =G= 0;
 comp_lo_v3.. v3 - 0 =G= 0;
 
@@ -173,6 +177,7 @@ lam_stopband_bnds2.fx(i)$(not (omega_stop(i))) = 0;
 
 Model mcp_model /
     stat_h.h,
+    stat_t.t,
     stat_u.u,
     stat_v.v,
     stat_v2.v2,
@@ -185,6 +190,7 @@ Model mcp_model /
     cone_lhs.nu_cone_lhs,
     cone_rhs.nu_cone_rhs,
     v_fx.nu_v_fx,
+    comp_lo_t.piL_t,
     comp_lo_u.piL_u,
     comp_lo_v3.piL_v3
 /;

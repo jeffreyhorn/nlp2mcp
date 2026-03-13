@@ -202,8 +202,10 @@ Scalars
     the1 /0.6/
 ;
 
+$onImplicitAssign
 cnf(c) = 1;
 cnf(cf) = 0;
+$offImplicitAssign
 
 land(c,t,"standard","standard",m) = lando(c,t,m);
 land(cw,t,s,w,m) = landcw(cw,t,s,w,m);
@@ -220,14 +222,9 @@ cdrwell = drcap * misc("dropc") + misc("drinvt");
 nit(c,t,s,w) = crio(c,t,s,w,"nit-input");
 yc(c,t,s,w) = crio(c,t,s,w,"yield");
 straw(c,t,s,w) = crio(c,t,s,w,"straw-yld");
-frtfac(cfr,t,s,w,"with") = min(3, (gammafrt(cfr) * psc(cfr) * crio(cfr,t,s,w,"yield") * fc / misc("nitrogen") / crio(cfr,t,s,w,"nit-input")) ** (1 / (1 - gammafrt(cfr))));
 wtd(c,t,s,w,sea) = sconv("tdn","rabi","berseem") * weed(c,t,s,w,sea) * fc;
 wdp(c,t,s,w,sea) = sconv("dp","kharif","sorghum") * weed(c,t,s,w,sea) * fc;
 yq(l,q) = livio(l,q);
-rep2(t,s,w,c,sea) = weed(c,t,s,w,sea);
-rep2(t,s,w,c,"total") = sum(sea, weed(c,t,s,w,sea));
-flabps(ps,g,hht) = sum((labs,int,dis), alab(dis,hht,labs,int) * labint(labs,int) * pmap(dis,g) * plab(hht) * lstd * popadj(ps)) / 1000;
-popps(g,ps) = sum(dis, fpop(dis) * pmap(dis,g) * popadj(ps)) / 1000;
 sub = (sum(cc, psc(cc) * conspc(cc,"gamc")) + sum(q, psq(q) * conspl(q,"gamq"))) / fs;
 mpcc(cc) = conspc(cc,"eec") * conspc(cc,"bwc");
 mpcq(q) = conspl(q,"eeq") * conspl(q,"bwq");
@@ -244,81 +241,70 @@ efs(g,m) = (1 - drc) * 0.2 * wpara1("rain",g,m) / areac(g,"at");
 we("mb",g,m) = wpara(g,"wamb") * wpara1("pevap",g,m) * wpara(g,"factor1") * 10 ** (-6);
 we("dm",g,m) = wpara(g,"wadm") * wpara1("pevap",g,m) * wpara(g,"factor") * 10 ** (-6);
 tech(c,t,s,w) = sum(m, land(c,t,s,w,m));
-rep1(t,s,w,c,"land",m) = land(c,t,s,w,m);
-cwcaptl(c,t,s,w) = crio(c,t,s,w,"cash-input") + misc("nitrogen") * nit(c,t,s,w) + misc("phosphorus") * crio(c,t,s,w,"pho-input") + wcapchng(c);
+cwcaptl(c,t,s,w)$(crio(c,t,s,w,"cash-input") <> 0) = crio(c,t,s,w,"cash-input") + misc("nitrogen") * nit(c,t,s,w) + misc("phosphorus") * crio(c,t,s,w,"pho-input") + wcapchng(c);
 tdy(cnf,t,s,w,sea) = sconv("tdn",sea,cnf) * straw(cnf,t,s,w) * fc;
 dpy(cnf,t,s,w,sea) = sconv("dp",sea,cnf) * straw(cnf,t,s,w) * fc;
 betac(g,cc) = mu * mpcc(cc) / psc(cc);
 betaq(g,q) = mu * mpcq(q) / psq(q);
-trseep(usp) = sum((m,i,g), (wdiv(i,g,m) * 1000 * wsu("mb",i,g,m))$dsp(g,i));
+trseep(usp) = sum((m,i,g), (wdiv(i,g,m) * 1000 * wsu("mb",i,g,m))$(dsp(g,i)));
 rpe(g,m) = wpara1("pevap",g,m) / pemax(g);
 phi1mb(g) = per * nrc * (lw("length",g,"mc") * ftn(g,"mc") + lw("length",g,"bc") * ftn(g,"bc"));
 phi1dm(g) = per * nrc * (lw("length",g,"di") * ftn(g,"di") + lw("length",g,"mi") * ftn(g,"mi"));
 dep2(g) = 0.5 * dep(g);
-fga1(g,v) = (fgo(v) + (dep(g) - fgi(v)) * (fgo(v+1) - fgo(v)) / (fgi(v+1) - fgi(v)))$test(v,g);
+fga1(g,v) = (fgo(v) + (dep(g) - fgi(v)) * (fgo(v+1) - fgo(v)) / (fgi(v+1) - fgi(v)))$(test(v,g));
 qggw(g) = sum(gn$(gg(g,gn)), qgf(gn,g));
-rep3(t,s,w,c,"yield") = yc(c,t,s,w);
-rep1(t,s,w,c,"bullock",m) = bpr(c,t,s,w,m);
-rep1(t,s,w,c,"tractor",m) = tr(c,t,s,w,m);
 tdy(cf,t,s,w,sea) = sconv("tdn",sea,cf) * yc(cf,t,s,w) * fc;
 dpy(cf,t,s,w,sea) = sconv("dp",sea,cf) * yc(cf,t,s,w) * fc;
-rep3(t,s,w,c,"nitrogen") = nit(c,t,s,w);
-rep3(t,s,w,c,"phosphorus") = crio(c,t,s,w,"pho-input");
 alphc(g,cc) = (conspc(cc,"gamc") - betac(g,cc) * sub) * pop(g);
 alphq(g,q) = (conspl(q,"gamq") - betaq(g,q) * sub) * pop(g);
-fgc1(g,v) = (fgo(v) + (dep2(g) - fgi(v)) * (fgo(v+1) - fgo(v)) / (fgi(v+1) - fgi(v)))$test2(v,g);
+fgc1(g,v) = (fgo(v) + (dep2(g) - fgi(v)) * (fgo(v+1) - fgo(v)) / (fgi(v+1) - fgi(v)))$(test2(v,g));
 fga(g) = sum(v, fga1(g,v));
 we("wc",g,m) = alpha * rpe(g,m) + wpara3("gamma","wtrcrs",m);
 we("fd",g,m) = alpha * rpe(g,m) + wpara3("gamma","fld",m);
 we("pg",g,m) = 0.5 * we("wc",g,m);
 ws("mb",g,m) = wpara3("cfw",g,m) * phi1mb(g) * dephc(g,m) / wpara(g,"mb");
-rep1(t,s,w,c,"labor",m) = labor(c,t,s,w,m);
-rep3(t,s,w,c,"straw") = straw(c,t,s,w);
 fgc(g) = sum(v, fgc1(g,v));
 subirr(g,m) = wpara1("pevap",g,m) * (1 - the1) * fga(g);
 ws("dm",g,m) = wpara3("cfw",g,m) * phi1dm(g) * dephc(g,m) / wpara(g,"dm");
-rep1(t,s,w,c,"watreq",m) = watreq(c,t,s,w,m);
-rep1(t,s,w,c,"land","total") = sum(m, land(c,t,s,w,m));
-rep1(t,s,w,c,"bullock","total") = sum(m, bpr(c,t,s,w,m));
-rep1(t,s,w,c,"tractor","total") = sum(m, tr(c,t,s,w,m));
-rep1(t,s,w,c,"labor","total") = sum(m, labor(c,t,s,w,m));
-rep1(t,s,w,c,"watreq","total") = sum(m, watreq(c,t,s,w,m));
-rep3(t,s,w,c,"cwcaptl") = cwcaptl(c,t,s,w);
 etgw(g) = sum(m, wpara1("pevap",g,m) * (wa(g) * fgc(g) + areac(g,"alg") * fga(g))) / 1000;
 ws("wc",g,m) = beta - alpha * rpe(g,m) + wpara3("zeta","wtrcrs",m);
 ws("pg",g,m) = 0.5 * ws("wc",g,m);
 ws("fd",g,m) = beta - alpha * rpe(g,m) + wpara3("zeta","fld",m);
 wl(u,g,m) = ws(u,g,m) + we(u,g,m);
 seeprain(g) = sum(m, (1 - drc) * ((ws("fd",g,m) + 0.2) * (areac(g,"at") - areac(g,"alg")) + ws("fd",g,m) * areac(g,"alg")) * wpara1("rain",g,m) / areac(g,"at"));
-rep4(g,"seepage",u,m) = ws(u,g,m);
 wcdeleff(g,m) = (1 - wl("wc",g,m)) * (1 - wl("fd",g,m));
 twdeleff(g,m) = (1 - wl("pg",g,m)) * (1 - wl("fd",g,m));
 efr(g,m) = (1 - drc - wl("fd",g,m)) * wpara1("rain",g,m) * 1000 / areac(g,"at");
 seepcgw(g) = sum(m, sum(i, wdiv(i,g,m) * 1000 * (1 - wlu("mb",i,g,m)) * (ws("mb",g,m) + (1 - wl("mb",g,m)) * (ws("dm",g,m) + (1 - wl("dm",g,m)) * (ws("wc",g,m) + (1 - wl("wc",g,m)) * ws("fd",g,m)))))) + trseep(g);
 seepgtw(g) = sum(m, gtw(g,m) * (ws("wc",g,m) + (1 - wl("wc",g,m)) * ws("fd",g,m))) / 1000;
-rep4(g,"evap",u,m) = we(u,g,m);
 cnldeleff(g,m) = (1 - wl("mb",g,m)) * (1 - wl("dm",g,m)) * wcdeleff(g,m);
 wn(g,c,t,s,w,m) = watreq(c,t,s,w,m) - efr(g,m) - subirr(g,m);
+wn(g,c,t,s,w,m)$(wn(g,c,t,s,w,m) < 0) = 0;
 gtw1(g,m) = gtw(g,m) * wcdeleff(g,m);
-rep4(g,"total",u,m) = wl(u,g,m);
-rep5(g,"rain",m) = efr(g,m);
-rep5(g,"rain","total") = sum(m, efr(g,m));
-rep6(g,"seepcgw") = seepcgw(g);
 wr(g,m) = sum(i, wdiv(i,g,m) * (1 - wlu("mb",i,g,m))) * cnldeleff(g,m) * 1000;
-rep5(g,"subirr",m) = subirr(g,m);
-rep5(g,"subirr","total") = sum(m, subirr(g,m));
-rep6(g,"seeprain") = seeprain(g);
-rep6(g,"rivseep") = sum(m, wpara1("rivseep",g,m)) / 1000;
-rep5(g,"cnldeleff",m) = cnldeleff(g,m);
-rep6(g,"seepgtw") = seepgtw(g);
-rep5(g,"canal",m) = sum(i, wdiv(i,g,m) * 1000);
-rep5(g,"canal","total") = sum(m, rep5(g,"canal",m));
-rep6(g,"underflow") = qggw(g);
-rep6(g,"gtw") = sum(m, gtw(g,m)) / 1000;
-rep5(g,"canal-rt",m) = wr(g,m);
-rep5(g,"canal-rt","total") = sum(m, wr(g,m));
-rep6(g,"etgw  ") = etgw(g);
-rep6(g,"net-seep") = seepcgw(g) + seeprain(g) + rep6(g,"rivseep") + rep6(g,"seepgtw") + qggw(g) - rep6(g,"gtw") - etgw(g);
+
+loop(psr,
+   psc(c) = pri("price",psr,c) ;
+   pp = pri1("protein",psr) ;
+   psq(q) = liveprc(q,psr) ;
+   yldchng(c) = pri("yldchng",psr,c) ;
+   wcapchng(c) = pri("wcapchng",psr,c) ;
+   misc(p1) = pri1(p1,psr) ;
+   dev(c,y) = dev60(c,y) * pri1("prdef",psr) ;
+   wage(m) = wageps(m,psr) ;
+);
+
+loop(sfresp,
+   nit(cfr,t,s,w)$frtfac(cfr,t,s,w,sfresp) <> 0 = crio(cfr,t,s,w,"nit-input") * frtfac(cfr,t,s,w,sfresp) ;
+   yc(cfr,t,s,w)$frtfac(cfr,t,s,w,sfresp) <> 0 = crio(cfr,t,s,w,"yield") + yldchng(cfr) * frtfac(cfr,t,s,w,sfresp) ** gammafrt(cfr) ;
+   straw(cfr,t,s,w)$frtfac(cfr,t,s,w,sfresp) <> 0 = crio(cfr,t,s,w,"straw-yld") * frtfac(cfr,t,s,w,sfresp) ** gammafrt(cfr) ;
+   rep3(t,s,w,cfr,"frtfac") = frtfac(cfr,t,s,w,sfresp) ;
+);
+
+loop(psr,
+   pop(g) = popps(g,psr) ;
+   flab(g,hht) = flabps(psr,g,hht) ;
+);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -536,36 +522,36 @@ Equations
 * Stationarity equations
 stat_acost(g).. nu_inbl(g) + nu_cost(g) - piL_acost(g) =E= 0;
 stat_animal(g,l).. ((-1) * lwcaptl(l)) * nu_cost(g) + sum(q, yq(l,q) * nu_cmbq(g,q)) + sum(m, lbq(l,m) * nu_labr(g,m)) + sum(sea, livio(l,"tn") * lam_fdsp(g,sea)) + sum(sea, livio(l,"pr") * lam_slsk(g,sea)) + sum(sea, gr * livio(l,"tn") * lam_sgfd(g,sea)) - piL_animal(g,l) =E= 0;
-stat_ccc(g,c).. ((-1) * (psc(c) * 1$cc(c))) * nu_inbl(g) + ((-1) * lam_cblc(g,c))$cc(c) - piL_ccc(g,c) =E= 0;
+stat_ccc(g,c).. ((-1) * (psc(c) * 1$(cc(c)))) * nu_inbl(g) + ((-1) * lam_cblc(g,c))$(cc(c)) - piL_ccc(g,c) =E= 0;
 stat_clc(g,q).. ((-1) * psq(q)) * nu_inbl(g) - nu_cmbq(g,q) - lam_cblq(g,q) - piL_clc(g,q) =E= 0;
 stat_dr(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) - piL_dr(g) =E= 0;
 stat_efl(g,m).. (-1) * nu_labr(g,m) - piL_efl(g,m) + piU_efl(g,m) =E= 0;
 stat_esl(g,m).. ((-1) * wage(m)) * nu_cost(g) - nu_labr(g,m) - piL_esl(g,m) + piU_esl(g,m) =E= 0;
 stat_inj(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) - piL_inj(g) =E= 0;
 stat_itr(g).. sum(p1, ((-1) * misc(p1)) * nu_cost(g)) + sum(m, ((-1) * trcap) * lam_trcp(g,m)) - piL_itr(g) =E= 0;
-stat_itw(g).. sum(m, (((-1) * twcap) * lam_tbcp(g,m))$fsg(g)) - piL_itw(g) =E= 0;
+stat_itw(g).. sum(m, (((-1) * twcap) * lam_tbcp(g,m))$(fsg(g))) - piL_itw(g) =E= 0;
 stat_ndev(g,y).. ((-1) * (1000 * ((-1) * (card(y) * r(g) * kl / sqr(card(y)))) / 1000000)) + nu_ddev(g,y) - piL_ndev(g,y) =E= 0;
-stat_pcc(g,c)$(cc(c)).. ((-1) * (((-1) * pbc(c)) * 1$cc(c))) * nu_inbl(g) + (pbc(c) - psc(c)) * 1$cc(c) * nu_nfin(g) - piL_pcc(g,c) =E= 0;
+stat_pcc(g,c)$(cc(c)).. ((-1) * (((-1) * pbc(c)) * 1$(cc(c)))) * nu_inbl(g) + (pbc(c) - psc(c)) * 1$(cc(c)) * nu_nfin(g) - piL_pcc(g,c) =E= 0;
 stat_pdev(g,y).. ((-1) * (1000 * ((-1) * (card(y) * r(g) * kl / sqr(card(y)))) / 1000000)) - nu_ddev(g,y) - piL_pdev(g,y) =E= 0;
 stat_plc(g,q).. pbq(q) * nu_inbl(g) + ((-1) * (pbq(q) - psq(q))) * nu_nfin(g) + nu_cmbq(g,q) - piL_plc(g,q) =E= 0;
 stat_ppc.. ((-1) * piL_ppc) =E= 0;
-stat_scc(g,c).. ((-1) * (psc(c) * 1$cnf(c))) * nu_inbl(g) + ((-1) * nu_cmbc(g,c))$cnf(c) - piL_scc(g,c) =E= 0;
+stat_scc(g,c).. ((-1) * (psc(c) * 1$(cnf(c)))) * nu_inbl(g) + ((-1) * nu_cmbc(g,c))$(cnf(c)) - piL_scc(g,c) =E= 0;
 stat_slc(g,q).. ((-1) * psq(q)) * nu_inbl(g) - nu_cmbq(g,q) - piL_slc(g,q) =E= 0;
 stat_slkland(g,m).. nu_landc(g,m) + efs(g,m) * nu_gwbl(g) - piL_slkland(g,m) =E= 0;
 stat_slkwater(g,m).. nu_watr(g,m) - piL_slkwater(g,m) =E= 0;
 stat_ts(g,m).. sum(p1, ((-1) * misc(p1)) * nu_cost(g)) - nu_trpw(g,m) + lam_trcp(g,m) - piL_ts(g,m) =E= 0;
-stat_tw(g,m).. sum(p1, ((-1) * misc(p1)) * nu_cost(g)) + lam_tbcp(g,m)$fsg(g) - piL_tw(g,m) =E= 0;
+stat_tw(g,m).. sum(p1, ((-1) * misc(p1)) * nu_cost(g)) + lam_tbcp(g,m)$(fsg(g)) - piL_tw(g,m) =E= 0;
 stat_x(g,c,t,s,w).. ((-1) * piL_x(g,c,t,s,w)) =E= 0;
 stat_xca(g,c).. sum(y, dev(c,y) * nu_ddev(g,y)) + nu_cacr(g,c) + 1.5 * nu_gwbl(g) - piL_xca(g,c) =E= 0;
 stat_yfa(g).. -0.001 + nu_inbl(g) - nu_nfin(g) =E= 0;
-stat_yva(g).. nu_nfin(g) + sum(c, (betac(g,c) * lam_cblc(g,c))$cc(c)) + sum(q, betaq(g,q) * lam_cblq(g,q)) =E= 0;
+stat_yva(g).. nu_nfin(g) + sum(c, (betac(g,c) * lam_cblc(g,c))$(cc(c))) + sum(q, betaq(g,q) * lam_cblq(g,q)) =E= 0;
 
 * Inequality complementarity equations
 comp_cblc(g,c)$(cc(c)).. ccc(g,c) - (alphc(g,c) + betac(g,c) * yva(g)) =G= 0;
 comp_cblq(g,q).. clc(g,q) - (alphq(g,q) + betaq(g,q) * yva(g)) =G= 0;
-comp_fdsp(g,sea).. ((-1) * (sum(l, livio(l,"tn") * animal(g,l)) - (gfd(g,sea) + sum((c,t,s,w), ((tdy(c,t,s,w,sea) + wtd(c,t,s,w,sea)) * x(g,c,t,s,w))$tech(c,t,s,w))))) =G= 0;
-comp_sgfd(g,sea).. ((-1) * (gr * sum(l, livio(l,"tn") * animal(g,l)) - (gfd(g,sea) + sum((cf,t,s,w), (tdy(cf,t,s,w,sea) * x(g,cf,t,s,w))$tech(cf,t,s,w)) + sum((c,t,s,w), (wtd(c,t,s,w,sea) * x(g,c,t,s,w))$tech(c,t,s,w))))) =G= 0;
-comp_slsk(g,sea).. ((-1) * (sum(l, livio(l,"pr") * animal(g,l)) - (ppc(g,sea) + gdp(g,sea) + sum((c,t,s,w), ((dpy(c,t,s,w,sea) + wdp(c,t,s,w,sea)) * x(g,c,t,s,w))$tech(c,t,s,w))))) =G= 0;
+comp_fdsp(g,sea).. ((-1) * (sum(l, livio(l,"tn") * animal(g,l)) - (gfd(g,sea) + sum((c,t,s,w), ((tdy(c,t,s,w,sea) + wtd(c,t,s,w,sea)) * x(g,c,t,s,w))$(tech(c,t,s,w)))))) =G= 0;
+comp_sgfd(g,sea).. ((-1) * (gr * sum(l, livio(l,"tn") * animal(g,l)) - (gfd(g,sea) + sum((cf,t,s,w), (tdy(cf,t,s,w,sea) * x(g,cf,t,s,w))$(tech(cf,t,s,w))) + sum((c,t,s,w), (wtd(c,t,s,w,sea) * x(g,c,t,s,w))$(tech(c,t,s,w)))))) =G= 0;
+comp_slsk(g,sea).. ((-1) * (sum(l, livio(l,"pr") * animal(g,l)) - (ppc(g,sea) + gdp(g,sea) + sum((c,t,s,w), ((dpy(c,t,s,w,sea) + wdp(c,t,s,w,sea)) * x(g,c,t,s,w))$(tech(c,t,s,w)))))) =G= 0;
 comp_tbcp(g,m)$(fsg(g)).. ((-1) * (tw(g,m) - (areac(g,"twg") / 1000 + twcap * itw(g)))) =G= 0;
 comp_trcp(g,m).. ((-1) * (ts(g,m) - (areac(g,"trg1") / 1000 + trcap * itr(g)))) =G= 0;
 
@@ -603,15 +589,15 @@ objt.. utl =E= sum(g, yfa(g) - r(g) * kl * sum(y, pdev(g,y) + ndev(g,y)) / card(
 inbl(g).. yfa(g) =E= sum(c$(cnf(c)), psc(c) * scc(g,c)) + sum(c$(cc(c)), psc(c) * ccc(g,c) - pbc(c) * pcc(g,c)) + sum(q, psq(q) * slc(g,q) - pbq(q) * plc(g,q) + psq(q) * clc(g,q)) - acost(g);
 nfin(g).. yva(g) =E= yfa(g) - sum(c$(cc(c)), (pbc(c) - psc(c)) * pcc(g,c)) + sum(q, (pbq(q) - psq(q)) * plc(g,q));
 ddev(g,y).. sum(c, dev(c,y) * xca(g,c)) =E= pdev(g,y) - ndev(g,y);
-cost(g).. acost(g) =E= sum((c,t,s,w), (cwcaptl(c,t,s,w) * x(g,c,t,s,w))$tech(c,t,s,w)) + sum(m, misc("twopc") * tw(g,m) + misc("tropc") * ts(g,m) + wage(m) * esl(g,m)) + sum(l, lwcaptl(l) * animal(g,l)) + sum(sea, pp * ppc(g,sea)) + (misc("twinvt") * (itw(g) + ntw(g)))$fsg(g) + misc("trinvt") * (itr(g) + ntr(g));
-cmbc(g,c)$(cnf(c)).. sum((t,s,w), (yc(c,t,s,w) * fc * x(g,c,t,s,w))$tech(c,t,s,w)) - scc(g,c) - (ccc(g,c) - pcc(g,c))$cc(c) =E= 0;
+cost(g).. acost(g) =E= sum((c,t,s,w), (cwcaptl(c,t,s,w) * x(g,c,t,s,w))$(tech(c,t,s,w))) + sum(m, misc("twopc") * tw(g,m) + misc("tropc") * ts(g,m) + wage(m) * esl(g,m)) + sum(l, lwcaptl(l) * animal(g,l)) + sum(sea, pp * ppc(g,sea)) + (misc("twinvt") * (itw(g) + ntw(g)))$(fsg(g)) + misc("trinvt") * (itr(g) + ntr(g));
+cmbc(g,c)$(cnf(c)).. sum((t,s,w), (yc(c,t,s,w) * fc * x(g,c,t,s,w))$(tech(c,t,s,w))) - scc(g,c) - (ccc(g,c) - pcc(g,c))$(cc(c)) =E= 0;
 cmbq(g,q).. sum(l, yq(l,q) * animal(g,l)) - slc(g,q) - clc(g,q) + plc(g,q) =E= 0;
-trpw(g,m).. sum((c,t,s,w), (tr(c,t,s,w,m) * x(g,c,t,s,w))$tech(c,t,s,w)) - ts(g,m) =E= 0;
-labr(g,m).. sum((c,t,s,w), (labor(c,t,s,w,m) * x(g,c,t,s,w))$tech(c,t,s,w)) + sum(l, lbq(l,m) * animal(g,l)) =E= efl(g,m) + esl(g,m);
-landc(g,m).. sum((c,t,s,w), (land(c,t,s,w,m) * x(g,c,t,s,w))$tech(c,t,s,w)) + slkland(g,m) =E= areac(g,"alg") / 1000;
-cacr(g,c).. xca(g,c) =E= sum((t,s,w), x(g,c,t,s,w)$tech(c,t,s,w));
-watr(g,m).. sum((c,t,s,w), (wn(g,c,t,s,w,m) * x(g,c,t,s,w))$tech(c,t,s,w)) + slkwater(g,m) =E= wr(g,m) + (twdeleff(g,m) * tw(g,m))$fsg(g) + gtw1(g,m) / 1000;
-gwbl(g).. sum(m, efs(g,m) * slkland(g,m) + ((ws("pg",g,m) + (1 - wl("pg",g,m)) * ws("fd",g,m)) * tw(g,m))$fsg(g) + wpara1("rivseep",g,m) / 1000) + sum(cri, xca(g,cri)) * 1.5 + seepcgw(g) + seepgtw(g) + qggw(g) + seeprain(g) =E= sum(m, tw(g,m)$fsg(g) + gtw(g,m) / 1000) + etgw(g) + (dr(g) - inj(g))$sg(g) + delgw(g);
+trpw(g,m).. sum((c,t,s,w), (tr(c,t,s,w,m) * x(g,c,t,s,w))$(tech(c,t,s,w))) - ts(g,m) =E= 0;
+labr(g,m).. sum((c,t,s,w), (labor(c,t,s,w,m) * x(g,c,t,s,w))$(tech(c,t,s,w))) + sum(l, lbq(l,m) * animal(g,l)) =E= efl(g,m) + esl(g,m);
+landc(g,m).. sum((c,t,s,w), (land(c,t,s,w,m) * x(g,c,t,s,w))$(tech(c,t,s,w))) + slkland(g,m) =E= areac(g,"alg") / 1000;
+cacr(g,c).. xca(g,c) =E= sum((t,s,w), x(g,c,t,s,w)$(tech(c,t,s,w)));
+watr(g,m).. sum((c,t,s,w), (wn(g,c,t,s,w,m) * x(g,c,t,s,w))$(tech(c,t,s,w))) + slkwater(g,m) =E= wr(g,m) + (twdeleff(g,m) * tw(g,m))$(fsg(g)) + gtw1(g,m) / 1000;
+gwbl(g).. sum(m, efs(g,m) * slkland(g,m) + ((ws("pg",g,m) + (1 - wl("pg",g,m)) * ws("fd",g,m)) * tw(g,m))$(fsg(g)) + wpara1("rivseep",g,m) / 1000) + sum(cri, xca(g,cri)) * 1.5 + seepcgw(g) + seepgtw(g) + qggw(g) + seeprain(g) =E= sum(m, tw(g,m)$(fsg(g)) + gtw(g,m) / 1000) + etgw(g) + (dr(g) - inj(g))$(sg(g)) + delgw(g);
 
 
 * ============================================

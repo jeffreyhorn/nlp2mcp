@@ -51,7 +51,6 @@ Positive Variables
     b(i)
     w(i)
     lam_pc(i)
-    lam_ic(i,j)
     lam_licd(i)
     lam_licu(i)
     piL_x(i)
@@ -69,9 +68,9 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x.l("0") = 0.0001;
-x.l("1") = 0.0001;
-x.l("2") = 0.0001;
+x.l('0') = 0.0001;
+x.l('1') = 0.0001;
+x.l('2') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
 w.l(i) = 1;
@@ -89,7 +88,6 @@ Equations
     stat_util
     stat_w(i)
     stat_x(i)
-    comp_ic(i,j)
     comp_licd(i)
     comp_licu(i)
     comp_pc(i)
@@ -107,11 +105,10 @@ Equations
 * Stationarity equations
 stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_util.. 0 =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) + sum(j, (-1) * lam_ic(i,j)) - lam_licd(i) - lam_licu(i) - piL_w(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + (1 - theta(i) + sqr(theta(i))) * lam_pc(i) + sum(j, (1 - theta(i) + sqr(theta(i))) * lam_ic(i,j)) + (1 - theta(i) + sqr(theta(i))) * lam_licd(i) + (1 - theta(i) + sqr(theta(i))) * lam_licu(i) - piL_x(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) + lam_licd(i-1)$(ord(i) > 1) - lam_licu(i) + lam_licu(i+1)$(ord(i) <= card(i) - 1) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + (1 - theta(i) + sqr(theta(i))) * lam_pc(i) + (1 - theta(i) + sqr(theta(i))) * lam_licd(i) + (((-1) * (1 - theta(i) + sqr(theta(i)))) * lam_licd(i-1))$(ord(i) > 1) + (1 - theta(i) + sqr(theta(i))) * lam_licu(i) + (((-1) * (1 - theta(i) + sqr(theta(i)))) * lam_licu(i+1))$(ord(i) <= card(i) - 1) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
-comp_ic(i,j).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(j) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(j))) =G= 0;
 comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(i+1) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i+1))) =G= 0;
 comp_licu(i)$(ord(i) > 1).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - (w(i-1) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i-1))) =G= 0;
 comp_pc(i).. w(i) - (theta(i) + (1 - theta(i) + sqr(theta(i))) * x(i)) - ru =G= 0;
@@ -135,7 +132,6 @@ rev(i).. b(i) =E= x(i) ** 0.5;
 
 lam_licd.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_licu.fx(i)$(not (ord(i) > 1)) = 0;
-lam_ic.fx(i,j)$(ord(i) = ord(j)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -155,7 +151,6 @@ Model mcp_model /
     stat_util.util,
     stat_w.w,
     stat_x.x,
-    comp_ic.lam_ic,
     comp_licd.lam_licd,
     comp_licu.lam_licu,
     comp_pc.lam_pc,

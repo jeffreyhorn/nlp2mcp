@@ -71,29 +71,30 @@ Scalars
     meanerr2 /0/
 ;
 
+$onImplicitAssign
 ii(i) = 1;
 ii("Total") = 0;
-NONZERO(ii,jj) = 1;
-icoeff(ii,acoeff) = 1;
-ival(ii,jj) = 1;
-
-vbar1('ii','4') = 0;
-wbar1(ii,jwt1) = 0.14285714285714285;
-
-chkset(ii,jj) = 1$ival(ii,jj) + 1$icoeff(ii,jj) - 1$NONZERO(ii,jj);
 SAM("TOTAL",jj) = sum(ii, SAM(ii,jj));
 SAM(ii,"TOTAL") = sum(jj, SAM(ii,jj));
 SAM(i,j) = SAM(i,j) / scalesam;
+Abar0(ii,jj)$(SAM("TOTAL",jj)) = SAM(ii,jj) / SAM("TOTAL",jj);
+Abar0("total",jj) = sum(ii, ABAR0(ii,jj));
+Abar0(ii,"total") = sum(jj, ABAR0(ii,jj));
 SAM0(ii,jj) = SAM(ii,jj);
 SAM0("TOTAL",jj) = sum(ii, SAM(ii,jj));
 SAM0(ii,"TOTAL") = sum(jj, SAM(ii,jj));
-Abar0(ii,jj) = SAM(ii,jj) / SAM("TOTAL",jj);
-Abar0("total",jj) = sum(ii, ABAR0(ii,jj));
-Abar0(ii,"total") = sum(jj, ABAR0(ii,jj));
+NegSam(i,j)$(SAM0(i,j) < 0) = SAM(i,j);
+NONZERO(ii,jj) = yes$(Abar0(ii,jj));
+icoeff(ii,acoeff) = yes$(NONZERO(ii,acoeff));
+ival(ii,jj) = yes$(SAM0(ii,jj) and (not icoeff(ii,jj)));
+$offImplicitAssign
+
+vbar1(ii,'4') = 0;
+wbar1(ii,jwt1) = 0.14285714285714285;
+
 ColSum0(ii) = (sam(ii,"total") + sam("total",ii)) / 2;
 gdp0 = sam("fac","act") + sam("gov","act") - sam("act","gov") + sam("gov","com");
 gdpfc0 = sam("fac","act");
-NegSam(i,j) = SAM(i,j);
 macrov0("gdp2") = gdp0;
 sigmay1(ii) = stderr1 * ColSum0(ii);
 macrov0("gdpfc2") = gdpfc0;
@@ -108,6 +109,17 @@ vbar2(macro,"1") = (-3) * sigmay2(macro);
 vbar2(macro,"2") = (-1.5) * sigmay2(macro);
 vbar2(macro,"4") = 1.5 * sigmay2(macro);
 vbar2(macro,"5") = 3 * sigmay2(macro);
+
+loop((ii,jj)$NONZERO(ii,jj),
+   sigmay3(ii,jj)$ival(ii,jj) = stderr3 * ABS(sam0(ii,jj)) ;
+   sigmay3(ii,jj)$icoeff(ii,jj) = stderr3 ;
+   vbar3(ii,jj,"1") = -3 * sigmay3(ii,jj) ;
+   vbar3(ii,jj,"2") = 0 ;
+   vbar3(ii,jj,"3") = 3 * sigmay3(ii,jj) ;
+   wbar3(ii,jj,"1") = 1 / 18 ;
+   wbar3(ii,jj,"2") = 16 / 18 ;
+   wbar3(ii,jj,"3") = 1 / 18 ;
+);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -134,26 +146,22 @@ Variables
     DENTROPY
     nu_ROWSUMEQ(i)
     nu_ROWSUM(i)
-    nu_COLSUM(jj)
-    nu_SAMCOEF(i,jj)
-    nu_TSAMEQ(i,jj)
-    nu_ASAMEQ(i,jj)
+    nu_COLSUM(i)
+    nu_SAMCOEF(i,j)
+    nu_TSAMEQ(i,j)
+    nu_ASAMEQ(i,j)
     nu_MACROEQ(macro)
     nu_ERROR1EQ(i)
     nu_ERROR2EQ(macro)
-    nu_ERROR3EQ(i,jj)
+    nu_ERROR3EQ(i,j)
     nu_SUMW1(i)
     nu_SUMW2(macro)
-    nu_SUMW3(i,jj)
+    nu_SUMW3(i,j)
 ;
 
 Positive Variables
-    piL_w1(i,jwt)
     piL_w2(macro,jwt)
-    piL_w3(i,j,jwt)
-    piU_w1(i,jwt)
     piU_w2(macro,jwt)
-    piU_w3(i,j,jwt)
 ;
 
 * ============================================
@@ -168,122 +176,47 @@ A.l(ii,jj) = Abar0(ii,jj);
 TSAM.l(ii,jj) = sam0(ii,jj);
 MACROV.l(macro) = macrov0(macro);
 Y.l(ii) = ColSum0(ii);
-ERR1.l("ACT") = 0.0;
-ERR1.l("COM") = 0.0;
-ERR1.l("FAC") = 0.0;
-ERR1.l("ENT") = 0.0;
-ERR1.l("HOU") = 0.0;
-ERR1.l("GOV") = 0.0;
-ERR1.l("GIN") = 0.0;
-ERR1.l("CAP") = 0.0;
-ERR1.l("ROW") = 0.0;
-ERR1.l("TOTAL") = 0.0;
-ERR2.l("gdpfc2") = 0.0;
-ERR2.l("gdp2") = 0.0;
-ERR3.l("ACT","ACT") = 0.0;
-ERR3.l("ACT","COM") = 0.0;
-ERR3.l("ACT","FAC") = 0.0;
-ERR3.l("ACT","ENT") = 0.0;
-ERR3.l("ACT","HOU") = 0.0;
-ERR3.l("ACT","GOV") = 0.0;
-ERR3.l("ACT","GIN") = 0.0;
-ERR3.l("ACT","CAP") = 0.0;
-ERR3.l("ACT","ROW") = 0.0;
-ERR3.l("ACT","TOTAL") = 0.0;
-ERR3.l("COM","ACT") = 0.0;
-ERR3.l("COM","COM") = 0.0;
-ERR3.l("COM","FAC") = 0.0;
-ERR3.l("COM","ENT") = 0.0;
-ERR3.l("COM","HOU") = 0.0;
-ERR3.l("COM","GOV") = 0.0;
-ERR3.l("COM","GIN") = 0.0;
-ERR3.l("COM","CAP") = 0.0;
-ERR3.l("COM","ROW") = 0.0;
-ERR3.l("COM","TOTAL") = 0.0;
-ERR3.l("FAC","ACT") = 0.0;
-ERR3.l("FAC","COM") = 0.0;
-ERR3.l("FAC","FAC") = 0.0;
-ERR3.l("FAC","ENT") = 0.0;
-ERR3.l("FAC","HOU") = 0.0;
-ERR3.l("FAC","GOV") = 0.0;
-ERR3.l("FAC","GIN") = 0.0;
-ERR3.l("FAC","CAP") = 0.0;
-ERR3.l("FAC","ROW") = 0.0;
-ERR3.l("FAC","TOTAL") = 0.0;
-ERR3.l("ENT","ACT") = 0.0;
-ERR3.l("ENT","COM") = 0.0;
-ERR3.l("ENT","FAC") = 0.0;
-ERR3.l("ENT","ENT") = 0.0;
-ERR3.l("ENT","HOU") = 0.0;
-ERR3.l("ENT","GOV") = 0.0;
-ERR3.l("ENT","GIN") = 0.0;
-ERR3.l("ENT","CAP") = 0.0;
-ERR3.l("ENT","ROW") = 0.0;
-ERR3.l("ENT","TOTAL") = 0.0;
-ERR3.l("HOU","ACT") = 0.0;
-ERR3.l("HOU","COM") = 0.0;
-ERR3.l("HOU","FAC") = 0.0;
-ERR3.l("HOU","ENT") = 0.0;
-ERR3.l("HOU","HOU") = 0.0;
-ERR3.l("HOU","GOV") = 0.0;
-ERR3.l("HOU","GIN") = 0.0;
-ERR3.l("HOU","CAP") = 0.0;
-ERR3.l("HOU","ROW") = 0.0;
-ERR3.l("HOU","TOTAL") = 0.0;
-ERR3.l("GOV","ACT") = 0.0;
-ERR3.l("GOV","COM") = 0.0;
-ERR3.l("GOV","FAC") = 0.0;
-ERR3.l("GOV","ENT") = 0.0;
-ERR3.l("GOV","HOU") = 0.0;
-ERR3.l("GOV","GOV") = 0.0;
-ERR3.l("GOV","GIN") = 0.0;
-ERR3.l("GOV","CAP") = 0.0;
-ERR3.l("GOV","ROW") = 0.0;
-ERR3.l("GOV","TOTAL") = 0.0;
-ERR3.l("GIN","ACT") = 0.0;
-ERR3.l("GIN","COM") = 0.0;
-ERR3.l("GIN","FAC") = 0.0;
-ERR3.l("GIN","ENT") = 0.0;
-ERR3.l("GIN","HOU") = 0.0;
-ERR3.l("GIN","GOV") = 0.0;
-ERR3.l("GIN","GIN") = 0.0;
-ERR3.l("GIN","CAP") = 0.0;
-ERR3.l("GIN","ROW") = 0.0;
-ERR3.l("GIN","TOTAL") = 0.0;
-ERR3.l("CAP","ACT") = 0.0;
-ERR3.l("CAP","COM") = 0.0;
-ERR3.l("CAP","FAC") = 0.0;
-ERR3.l("CAP","ENT") = 0.0;
-ERR3.l("CAP","HOU") = 0.0;
-ERR3.l("CAP","GOV") = 0.0;
-ERR3.l("CAP","GIN") = 0.0;
-ERR3.l("CAP","CAP") = 0.0;
-ERR3.l("CAP","ROW") = 0.0;
-ERR3.l("CAP","TOTAL") = 0.0;
-ERR3.l("ROW","ACT") = 0.0;
-ERR3.l("ROW","COM") = 0.0;
-ERR3.l("ROW","FAC") = 0.0;
-ERR3.l("ROW","ENT") = 0.0;
-ERR3.l("ROW","HOU") = 0.0;
-ERR3.l("ROW","GOV") = 0.0;
-ERR3.l("ROW","GIN") = 0.0;
-ERR3.l("ROW","CAP") = 0.0;
-ERR3.l("ROW","ROW") = 0.0;
-ERR3.l("ROW","TOTAL") = 0.0;
-ERR3.l("TOTAL","ACT") = 0.0;
-ERR3.l("TOTAL","COM") = 0.0;
-ERR3.l("TOTAL","FAC") = 0.0;
-ERR3.l("TOTAL","ENT") = 0.0;
-ERR3.l("TOTAL","HOU") = 0.0;
-ERR3.l("TOTAL","GOV") = 0.0;
-ERR3.l("TOTAL","GIN") = 0.0;
-ERR3.l("TOTAL","CAP") = 0.0;
-ERR3.l("TOTAL","ROW") = 0.0;
-ERR3.l("TOTAL","TOTAL") = 0.0;
+ERR2.l('gdpfc2') = 0.0;
+ERR2.l('gdp2') = 0.0;
 W1.l(ii,jwt) = wbar1(ii,jwt);
 W2.l(macro,jwt) = wbar2(macro,jwt);
 W3.l(ii,jj,jwt) = wbar3(ii,jj,jwt);
 DENTROPY.l = 0.0;
+
+* ============================================
+* Bound Mask Sets (partial bound coverage)
+* ============================================
+
+Set has_w2_lo(macro,jwt) / gdp2.'1', gdp2.'2', gdp2.'3', gdp2.'4', gdp2.'5', gdpfc2.'1', gdpfc2.'2', gdpfc2.'3', gdpfc2.'4', gdpfc2.'5' /;
+Set has_w2_up(macro,jwt) / gdp2.'1', gdp2.'2', gdp2.'3', gdp2.'4', gdp2.'5', gdpfc2.'1', gdpfc2.'2', gdpfc2.'3', gdpfc2.'4', gdpfc2.'5' /;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter w2_lo_param(macro,jwt);
+w2_lo_param('gdp2','1') = 0;
+w2_lo_param('gdp2','2') = 0;
+w2_lo_param('gdp2','3') = 0;
+w2_lo_param('gdp2','4') = 0;
+w2_lo_param('gdp2','5') = 0;
+w2_lo_param('gdpfc2','1') = 0;
+w2_lo_param('gdpfc2','2') = 0;
+w2_lo_param('gdpfc2','3') = 0;
+w2_lo_param('gdpfc2','4') = 0;
+w2_lo_param('gdpfc2','5') = 0;
+
+Parameter w2_up_param(macro,jwt);
+w2_up_param('gdp2','1') = 1;
+w2_up_param('gdp2','2') = 1;
+w2_up_param('gdp2','3') = 1;
+w2_up_param('gdp2','4') = 1;
+w2_up_param('gdp2','5') = 1;
+w2_up_param('gdpfc2','1') = 1;
+w2_up_param('gdpfc2','2') = 1;
+w2_up_param('gdpfc2','3') = 1;
+w2_up_param('gdpfc2','4') = 1;
+w2_up_param('gdpfc2','5') = 1;
 
 * ============================================
 * Equations
@@ -304,26 +237,22 @@ Equations
     stat_w2(macro,jwt)
     stat_w3(i,j,jwt)
     stat_y(i)
-    comp_lo_w1(i,jwt)
     comp_lo_w2(macro,jwt)
-    comp_lo_w3(i,j,jwt)
-    comp_up_w1(i,jwt)
     comp_up_w2(macro,jwt)
-    comp_up_w3(i,j,jwt)
-    ASAMEQ(i,jj)
-    COLSUM(jj)
+    ASAMEQ(i,i)
+    COLSUM(i)
     ENTROPY
     ERROR1EQ(i)
     ERROR2EQ(macro)
-    ERROR3EQ(i,jj)
+    ERROR3EQ(i,i)
     MACROEQ(macro)
     ROWSUM(i)
     ROWSUMEQ(i)
-    SAMCOEF(i,jj)
+    SAMCOEF(i,i)
     SUMW1(i)
     SUMW2(macro)
-    SUMW3(i,jj)
-    TSAMEQ(i,jj)
+    SUMW3(i,i)
+    TSAMEQ(i,i)
 ;
 
 * ============================================
@@ -331,26 +260,22 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(i,j)$(ii(i) and ii(j)).. sum((ii,jj), (((-1) * y(jj)) * nu_SAMCOEF(ii,jj))$NONZERO(ii,jj)) + sum((ii,jj), nu_ASAMEQ(ii,jj)$ICOEFF(ii,jj)) =E= 0;
-stat_err1(i)$(ii(i)).. sum(ii, (-1) * nu_ROWSUMEQ(ii)) + sum(ii, nu_ERROR1EQ(ii)) =E= 0;
+stat_a(i,j)$(ii(i) and ii(j)).. (((-1) * y(j)) * nu_SAMCOEF(i,j))$(NONZERO(i,j)) + nu_ASAMEQ(i,j)$(ICOEFF(i,j)) =E= 0;
+stat_err1(i)$(ii(i)).. ((-1) * nu_ROWSUMEQ(i)) + nu_ERROR1EQ(i) =E= 0;
 stat_err2(macro).. ((-1) * nu_MACROEQ(macro)) + nu_ERROR2EQ(macro) =E= 0;
-stat_err3(i,j)$(ii(i) and ii(j)).. sum((ii,jj), ((-1) * nu_TSAMEQ(ii,jj))$IVAL(ii,jj)) + sum((ii,jj), (((-1) * (abar0(i,j) * exp(err3(jj,jj)))) * nu_ASAMEQ(ii,jj))$ICOEFF(ii,jj)) + sum((ii,jj), nu_ERROR3EQ(ii,jj)$NONZERO(ii,jj)) =E= 0;
+stat_err3(i,j)$(ii(i) and ii(j)).. ((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) * (abar0(i,j) * exp(err3(j,j)))) * nu_ASAMEQ(i,j))$(ICOEFF(i,j)) + nu_ERROR3EQ(i,j)$(NONZERO(i,j)) =E= 0;
 stat_macrov(macro).. nu_MACROEQ(macro) =E= 0;
-stat_tsam(i,j)$(ii(i) and ii(j)).. sum((ii,jj), nu_SAMCOEF(ii,jj)$NONZERO(ii,jj)) + sum((ii,jj), nu_TSAMEQ(ii,jj)$IVAL(ii,jj)) =E= 0;
-stat_w1(i,jwt)$(ii(i) and jwt1(jwt)).. sum(ii, ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii)) + sum(ii, nu_SUMW1(ii)) - piL_w1(i,jwt) + piU_w1(i,jwt) =E= 0;
+stat_tsam(i,j)$(ii(i) and ii(j)).. nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) =E= 0;
+stat_w1(i,jwt)$(ii(i) and jwt1(jwt)).. ((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i) =E= 0;
 stat_w2(macro,jwt)$(jwt2(jwt)).. log(w2(macro,jwt) / wbar2(macro,jwt)) + 1 + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
-stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. sum((ii,jj), (((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(ii,jj))$NONZERO(ii,jj)) + sum((ii,jj), nu_SUMW3(ii,jj)$NONZERO(ii,jj)) - piL_w3(i,j,jwt) + piU_w3(i,j,jwt) =E= 0;
-stat_y(i)$(ii(i)).. sum(ii, nu_ROWSUMEQ(ii)) + sum(ii, (-1) * nu_ROWSUM(ii)) + sum(jj, (-1) * nu_COLSUM(jj)) + sum((ii,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii,jj))$NONZERO(ii,jj)) =E= 0;
+stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. (((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)) =E= 0;
+stat_y(i)$(ii(i)).. nu_ROWSUMEQ(i) - nu_ROWSUM(i) - nu_COLSUM(i) + sum((ii,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii,jj))$(NONZERO(ii,jj))) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_w1(i,jwt).. w1(i,jwt) - 0 =G= 0;
-comp_lo_w2(macro,jwt).. w2(macro,jwt) - 0 =G= 0;
-comp_lo_w3(i,j,jwt).. w3(i,j,jwt) - 0 =G= 0;
+comp_lo_w2(macro,jwt)$(has_w2_lo(macro,jwt)).. w2(macro,jwt) - w2_lo_param(macro,jwt) =G= 0;
 
 * Upper bound complementarity equations
-comp_up_w1(i,jwt).. 1 - w1(i,jwt) =G= 0;
-comp_up_w2(macro,jwt).. 1 - w2(macro,jwt) =G= 0;
-comp_up_w3(i,j,jwt).. 1 - w3(i,j,jwt) =G= 0;
+comp_up_w2(macro,jwt)$(has_w2_up(macro,jwt)).. w2_up_param(macro,jwt) - w2(macro,jwt) =G= 0;
 
 * Original equality equations
 ROWSUMEQ(ii).. y(ii) =E= ColSum0(ii) + err1(ii);
@@ -381,20 +306,32 @@ err1.fx(i)$(not (ii(i))) = 0;
 err3.fx(i,j)$(not (ii(i) and ii(j))) = 0;
 tsam.fx(i,j)$(not (ii(i) and ii(j))) = 0;
 w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
-piL_w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
-piU_w1.fx(i,jwt)$(not (ii(i) and jwt1(jwt))) = 0;
 w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
 piL_w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
 piU_w2.fx(macro,jwt)$(not (jwt2(jwt))) = 0;
 w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
-piL_w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
-piU_w3.fx(i,j,jwt)$(not (ii(i) and ii(j) and jwt3(jwt))) = 0;
 y.fx(i)$(not (ii(i))) = 0;
-nu_ASAMEQ.fx(ii,jj)$(not (ICOEFF(ii,jj))) = 0;
-nu_ERROR3EQ.fx(ii,jj)$(not (NONZERO(ii,jj))) = 0;
-nu_SAMCOEF.fx(ii,jj)$(not (NONZERO(ii,jj))) = 0;
-nu_SUMW3.fx(ii,jj)$(not (NONZERO(ii,jj))) = 0;
-nu_TSAMEQ.fx(ii,jj)$(not (IVAL(ii,jj))) = 0;
+piL_w2.fx(macro,jwt)$(not has_w2_lo(macro,jwt)) = 0;
+piU_w2.fx(macro,jwt)$(not has_w2_up(macro,jwt)) = 0;
+nu_ASAMEQ.fx(i,j)$(not (ii(i) and jj(j))) = 0;
+nu_COLSUM.fx(i)$(not (jj(i))) = 0;
+nu_ERROR1EQ.fx(i)$(not (ii(i))) = 0;
+nu_ERROR3EQ.fx(i,j)$(not (ii(i) and jj(j))) = 0;
+nu_ROWSUM.fx(i)$(not (ii(i))) = 0;
+nu_ROWSUMEQ.fx(i)$(not (ii(i))) = 0;
+nu_SAMCOEF.fx(i,j)$(not (ii(i) and jj(j))) = 0;
+nu_SUMW1.fx(i)$(not (ii(i))) = 0;
+nu_SUMW3.fx(i,j)$(not (ii(i) and jj(j))) = 0;
+nu_TSAMEQ.fx(i,j)$(not (ii(i) and jj(j))) = 0;
+nu_ASAMEQ.fx(i,j)$(not (ii(i))) = 0;
+nu_ERROR1EQ.fx(i)$(not (ii(i))) = 0;
+nu_ERROR3EQ.fx(i,j)$(not (ii(i))) = 0;
+nu_ROWSUM.fx(i)$(not (ii(i))) = 0;
+nu_ROWSUMEQ.fx(i)$(not (ii(i))) = 0;
+nu_SAMCOEF.fx(i,j)$(not (ii(i))) = 0;
+nu_SUMW1.fx(i)$(not (ii(i))) = 0;
+nu_SUMW3.fx(i,j)$(not (ii(i))) = 0;
+nu_TSAMEQ.fx(i,j)$(not (ii(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -434,12 +371,8 @@ Model mcp_model /
     SUMW2.nu_SUMW2,
     SUMW3.nu_SUMW3,
     TSAMEQ.nu_TSAMEQ,
-    comp_lo_w1.piL_w1,
     comp_lo_w2.piL_w2,
-    comp_lo_w3.piL_w3,
-    comp_up_w1.piU_w1,
-    comp_up_w2.piU_w2,
-    comp_up_w3.piU_w3
+    comp_up_w2.piU_w2
 /;
 
 * ============================================

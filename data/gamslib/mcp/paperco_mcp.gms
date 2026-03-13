@@ -40,13 +40,6 @@ Scalars
     plog /65/
 ;
 
-psdat('scenario-2','pulp-1',p) = 5;
-psdat('scenario-2','pulp-2',p) = 5;
-psdat('scenario-3','pulp-1',p) = 6;
-psdat('scenario-3','pulp-2',p) = 10;
-psdat('scenario-1','pulp-1',p) = 0;
-psdat('scenario-1','pulp-2',p) = 0;
-
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

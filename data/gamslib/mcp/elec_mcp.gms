@@ -27,7 +27,9 @@ Parameters
     phi(i)
 ;
 
-ut(i,j) = 1;
+$onImplicitAssign
+ut(i,j) = yes$(ord(j) > ord(i));
+$offImplicitAssign
 
 * Fix random seed for deterministic MCP evaluation
 execseed = 12345;

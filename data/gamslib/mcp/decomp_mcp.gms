@@ -37,8 +37,10 @@ Scalars
     cship /1/
 ;
 
+$onImplicitAssign
 s("1") = 1;
 s("2") = 1;
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -52,21 +54,11 @@ s("2") = 1;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    cost
-    tank
-    ship
     mobj
-    nu_defcost
-    nu_defship
-    nu_deftank
 ;
 
 Positive Variables
-    x(i,j)
     lam(ss)
-    lam_supply(i)
-    lam_demand(j)
-    piL_x(i,j)
     piL_lam(ss)
 ;
 
@@ -79,7 +71,6 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-x.l(i,j) = 1;
 lam.l(ss) = 1;
 
 * ============================================
@@ -91,19 +82,9 @@ lam.l(ss) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_cost
     stat_lam(ss)
-    stat_ship
-    stat_tank
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
     comp_lo_lam(ss)
-    comp_lo_x(i,j)
     cbal
-    defcost
-    defship
-    deftank
 ;
 
 * ============================================
@@ -111,24 +92,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cost.. nu_defcost =E= 0;
 stat_lam(ss)$(s(ss)).. ((-1) * piL_lam(ss)) =E= 0;
-stat_ship.. ((-1) * cship) * nu_defcost + nu_defship =E= 0;
-stat_tank.. ((-1) * ctank) * nu_defcost + nu_deftank =E= 0;
-stat_x(i,j).. ((-1) * c(i,j)) * nu_defship + ((-1) * t(i,j)) * nu_deftank + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
 
 * Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
-comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_lam(ss).. lam(ss) - 0 =G= 0;
-comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
 
 * Original equality equations
-defcost.. cost =E= cship * ship + ctank * tank;
-defship.. ship =E= sum((i,j), c(i,j) * x(i,j));
-deftank.. tank =E= sum((i,j), t(i,j) * x(i,j));
 cbal.. mobj =E= sum(s, mcost(s) * lam(s));
 
 
@@ -156,19 +127,9 @@ piL_lam.fx(ss)$(not (s(ss))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_cost.cost,
     stat_lam.lam,
-    stat_ship.ship,
-    stat_tank.tank,
-    stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
     cbal.mobj,
-    defcost.nu_defcost,
-    defship.nu_defship,
-    deftank.nu_deftank,
-    comp_lo_lam.piL_lam,
-    comp_lo_x.piL_x
+    comp_lo_lam.piL_lam
 /;
 
 * ============================================

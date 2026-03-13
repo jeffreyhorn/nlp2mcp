@@ -37,8 +37,10 @@ Scalars
     a /0/
 ;
 
+$onImplicitAssign
 tfirst(t) = yes$(ord(t) = 1);
 tlast(t) = yes$(ord(t) = card(t));
+$offImplicitAssign
 
 a = (c0 + i0) / k0 ** b;
 beta(t) = bet ** ord(t);
@@ -88,39 +90,39 @@ i.up(t) = i0 * (1 + ac) ** (ord(t) - 1);
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-k.l("1990") = 3.0;
-k.l("1991") = 3.0;
-k.l("1992") = 3.0;
-k.l("1993") = 3.0;
-k.l("1994") = 3.0;
-k.l("1995") = 3.0;
-k.l("1996") = 3.0;
-k.l("1997") = 3.0;
-k.l("1998") = 3.0;
-k.l("1999") = 3.0;
-k.l("2000") = 3.0;
-c.l("1990") = 0.95;
-c.l("1991") = 0.95;
-c.l("1992") = 0.95;
-c.l("1993") = 0.95;
-c.l("1994") = 0.95;
-c.l("1995") = 0.95;
-c.l("1996") = 0.95;
-c.l("1997") = 0.95;
-c.l("1998") = 0.95;
-c.l("1999") = 0.95;
-c.l("2000") = 0.95;
-i.l("1990") = 0.05;
-i.l("1991") = 0.05;
-i.l("1992") = 0.05;
-i.l("1993") = 0.05;
-i.l("1994") = 0.05;
-i.l("1995") = 0.05;
-i.l("1996") = 0.05;
-i.l("1997") = 0.05;
-i.l("1998") = 0.05;
-i.l("1999") = 0.05;
-i.l("2000") = 0.05;
+k.l('1990') = 3.0;
+k.l('1991') = 3.0;
+k.l('1992') = 3.0;
+k.l('1993') = 3.0;
+k.l('1994') = 3.0;
+k.l('1995') = 3.0;
+k.l('1996') = 3.0;
+k.l('1997') = 3.0;
+k.l('1998') = 3.0;
+k.l('1999') = 3.0;
+k.l('2000') = 3.0;
+c.l('1990') = 0.95;
+c.l('1991') = 0.95;
+c.l('1992') = 0.95;
+c.l('1993') = 0.95;
+c.l('1994') = 0.95;
+c.l('1995') = 0.95;
+c.l('1996') = 0.95;
+c.l('1997') = 0.95;
+c.l('1998') = 0.95;
+c.l('1999') = 0.95;
+c.l('2000') = 0.95;
+i.l('1990') = 0.05;
+i.l('1991') = 0.05;
+i.l('1992') = 0.05;
+i.l('1993') = 0.05;
+i.l('1994') = 0.05;
+i.l('1995') = 0.05;
+i.l('1996') = 0.05;
+i.l('1997') = 0.05;
+i.l('1998') = 0.05;
+i.l('1999') = 0.05;
+i.l('2000') = 0.05;
 
 * ============================================
 * Equations
@@ -150,8 +152,8 @@ Equations
 
 * Stationarity equations
 stat_c(t).. ((-1) * (beta(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
-stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) + sum(tlast, (-1) * lam_tc(tlast)) - piL_i(t) + piU_i(t) =E= 0;
-stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + sum(tlast, g * lam_tc(tlast)) - piL_k(t) =E= 0;
+stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) - lam_tc(t) - piL_i(t) + piU_i(t) =E= 0;
+stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + nu_kk(t-1)$(ord(t) > 1) + g * lam_tc(t) - piL_k(t) =E= 0;
 
 * Inequality complementarity equations
 comp_tc(tlast).. ((-1) * (g * k(tlast) - i(tlast))) =G= 0;
@@ -178,6 +180,7 @@ util.. utility =E= sum(t, beta(t) * log(c(t)));
 * fixed for excluded instances to satisfy MCP matching.
 
 nu_kk.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
+lam_tc.fx(t)$(not (tlast(t))) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -40,9 +40,11 @@ Parameters
     w(n,np,k)
 ;
 
+$onImplicitAssign
 ku(k) = ord(k) < card(k);
 ki(k) = ord(k) = 1;
 kt(k) = (not ku(k));
+$offImplicitAssign
 
 xtilde(n,k) = xinit(n) * 1.0075 ** (ord(k) - 1);
 utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
@@ -105,7 +107,7 @@ Equations
 
 * Stationarity equations
 stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
-stat_x(n,k).. sum(np, ((-1) * a(n,np)) * nu_stateq(n,k)) =E= 0;
+stat_x(n,k)$(ord(k) <= card(k) - 1 or ord(n) <= card(n) - 1 or ord(k) > 1 or ord(n) > 1).. sum(np, ((-1) * a(n,np)) * nu_stateq(n,k)) + sum(np, (((-1) * a(n,np)) * nu_stateq(n+1,k))$(ord(n) <= card(n) - 1)) + nu_stateq(n,k-1)$(ord(k) > 1) + sum(np, (((-1) * a(n,np)) * nu_stateq(n-1,k))$(ord(n) > 1)) =E= 0;
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
@@ -120,6 +122,7 @@ stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + 
 * fixed for excluded instances to satisfy MCP matching.
 
 u.fx(m,k)$(not (ku(k))) = 0;
+x.fx(n,k)$(not (ord(k) <= card(k) - 1 or ord(n) <= card(n) - 1 or ord(k) > 1 or ord(n) > 1)) = 0;
 nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
 
 * ============================================

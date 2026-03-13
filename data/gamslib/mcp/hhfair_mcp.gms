@@ -66,24 +66,31 @@ Variables
     u(t)
     y(t)
     nu_utility(t)
-    nu_income(t)
+    nu_income(tl)
     nu_taxes(t)
-    nu_savings(t)
+    nu_savings(tl)
     nu_budget(tl)
-    nu_timemoney(t)
+    nu_timemoney(tl)
     nu_terminal(tt)
     nu_a_fx_0
     nu_m_fx_0
 ;
 
 Positive Variables
-    lam_dom1(t)
+    lam_dom1(tl)
     lam_dom2(t)
     piL_c(t)
     piL_l(t)
     piL_u(t)
     piU_l(t)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+a.fx('0') = 1000;
+m.fx('0') = 100;
 
 * ============================================
 * Variable Initialization
@@ -93,23 +100,21 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-a.l("0") = 1000.0;
-a.l("1") = 1000.0;
-a.l("2") = 1000.0;
-a.l("3") = 1000.0;
-c.l("1") = 100.0;
-c.l("2") = 100.0;
-c.l("3") = 100.0;
-l.l("1") = 400.0;
-l.l("2") = 400.0;
-l.l("3") = 400.0;
-m.l("0") = 100.0;
-m.l("1") = 100.0;
-m.l("2") = 100.0;
-m.l("3") = 100.0;
-u.l("1") = 1.0;
-u.l("2") = 1.0;
-u.l("3") = 1.0;
+a.l('1') = 1000.0;
+a.l('2') = 1000.0;
+a.l('3') = 1000.0;
+c.l('1') = 100.0;
+c.l('2') = 100.0;
+c.l('3') = 100.0;
+l.l('1') = 400.0;
+l.l('2') = 400.0;
+l.l('3') = 400.0;
+m.l('1') = 100.0;
+m.l('2') = 100.0;
+m.l('3') = 100.0;
+u.l('1') = 1.0;
+u.l('2') = 1.0;
+u.l('3') = 1.0;
 
 * ============================================
 * Equations
@@ -156,12 +161,12 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_a(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_a_fx_0$sameas(tl, '0') + sum(t, ((-1) * r) * nu_income(t)) + sum(tt, nu_terminal(tt)) =E= 0;
+stat_a(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_a_fx_0$(sameas(tl, '0')) + ((-1) * r) * nu_income(tl) + sum(tt, nu_terminal(tt)) =E= 0;
 stat_c(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * a1 * c(t) ** ((-1) * a2) * ((-1) * a2) / c(t) / 10000)) * nu_utility(t) + p * nu_savings(t) + n(t) * ((-1) * (gamma1 * p)) * nu_timemoney(t) + 1.01 * gamma1 * p * lam_dom1(t) - piL_c(t) =E= 0;
 stat_l(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + ((-1) * w) * nu_income(t) + lam_dom2(t) - piL_l(t) + piU_l(t) =E= 0;
-stat_m(tl)$(t(tl)).. ((-1) * nu_budget(tl)) + nu_m_fx_0$sameas(tl, '0') + sum(t, n(t) * nu_timemoney(t)) + sum(tt, nu_terminal(tt)) + sum(t, (-1) * lam_dom1(t)) =E= 0;
+stat_m(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_m_fx_0$(sameas(tl, '0')) + n(tl) * nu_timemoney(tl) + sum(tt, nu_terminal(tt)) - lam_dom1(tl) =E= 0;
 stat_n(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + (m(t) - gamma1 * p * c(t)) * nu_timemoney(t) + lam_dom2(t) =E= 0;
-stat_s(tl)$(t(tl)).. nu_budget(tl) + sum(t, nu_savings(t)) =E= 0;
+stat_s(tl)$(t(tl)).. nu_budget(tl) + nu_savings(tl) =E= 0;
 stat_tax(t).. nu_taxes(t) + nu_savings(t) =E= 0;
 stat_u(t).. ((-1) * (prod(t__, u(t__) ** ufact(t__)) * sum(t__, u(t__) ** ufact(t__) * ufact(t__) / u(t__) / u(t__) ** ufact(t__)))) + nu_utility(t) - piL_u(t) =E= 0;
 stat_y(t).. nu_income(t) + ((-1) * d) * nu_taxes(t) - nu_savings(t) =E= 0;
@@ -198,10 +203,12 @@ m_fx_0.. m("0") - 100 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-a.fx(tl)$(not (t(tl))) = 0;
-m.fx(tl)$(not (t(tl))) = 0;
 s.fx(tl)$(not (t(tl))) = 0;
 nu_budget.fx(tl)$(not (ord(tl) > 1)) = 0;
+lam_dom1.fx(tl)$(not (t(tl))) = 0;
+nu_income.fx(tl)$(not (t(tl))) = 0;
+nu_savings.fx(tl)$(not (t(tl))) = 0;
+nu_timemoney.fx(tl)$(not (t(tl))) = 0;
 
 * ============================================
 * Model MCP Declaration

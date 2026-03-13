@@ -29,9 +29,6 @@ Parameters
     par(g,*)
 ;
 
-mtr(m,"avail-h") = avail(m);
-par(g,"demand") = dempr(g,"demand");
-
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

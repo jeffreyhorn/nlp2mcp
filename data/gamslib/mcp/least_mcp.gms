@@ -41,7 +41,6 @@ Variables
     b2
     b3
     nu_ddev(i)
-    nu_sequ
 ;
 
 Positive Variables
@@ -78,7 +77,6 @@ Equations
     comp_up_b3
     ddev(i)
     dols
-    sequ
 ;
 
 * ============================================
@@ -86,9 +84,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b1.. sum(i, (-1) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * (-1))) * nu_sequ =E= 0;
-stat_b2.. sum(i, ((-1) * (exp(b3 * dat(i,"x")))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (exp(b3 * dat(i,"x")))))) * nu_sequ =E= 0;
-stat_b3.. sum(i, ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))) * nu_ddev(i)) + ((-1) * sum(i, 2 * (dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))) * ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))))) * nu_sequ - piL_b3 + piU_b3 =E= 0;
+stat_b1.. sum(i, (-1) * nu_ddev(i)) =E= 0;
+stat_b2.. sum(i, ((-1) * (exp(b3 * dat(i,"x")))) * nu_ddev(i)) =E= 0;
+stat_b3.. sum(i, ((-1) * (b2 * exp(b3 * dat(i,"x")) * dat(i,"x"))) * nu_ddev(i)) - piL_b3 + piU_b3 =E= 0;
 stat_dev(i).. 2 * dev(i) - nu_ddev(i) =E= 0;
 
 * Lower bound complementarity equations
@@ -100,7 +98,6 @@ comp_up_b3.. 5 - b3 =G= 0;
 * Original equality equations
 dols.. ols =E= sum(i, sqr(dev(i)));
 ddev(i).. dat(i,"y") =E= b1 + b2 * exp(b3 * dat(i,"x")) + dev(i);
-sequ.. ols =E= sum(i, sqr(dat(i,"y") - b1 - b2 * exp(b3 * dat(i,"x"))));
 
 
 * ============================================
@@ -123,7 +120,6 @@ Model mcp_model /
     stat_dev.dev,
     ddev.nu_ddev,
     dols.ols,
-    sequ.nu_sequ,
     comp_lo_b3.piL_b3,
     comp_up_b3.piU_b3
 /;

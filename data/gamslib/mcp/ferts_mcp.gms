@@ -39,22 +39,22 @@ Sets
 Alias(i, ip);
 
 Parameters
-    cf75(j,c) /alexandria.'amm-sulf' 3, alexandria.urea 1, alexandria.'can-310' 5, alexandria.dap 8, behera.'amm-sulf' 90, behera.urea 35, behera.'can-260' 1, behera.'can-310' 25, behera.'can-335' 0.1, behera.dap 64, behera.'ssp-155' 1, behera.'c-250-55' 0.1, gharbia.'amm-sulf' 60, gharbia.urea 28, gharbia.'can-310' 17, gharbia.'can-335' 0.1, gharbia.dap 57, gharbia.'ssp-155' 1, gharbia.'c-250-55' 0.2, 'kafr-el-sh'.'amm-sulf' 45, 'kafr-el-sh'.urea 22, 'kafr-el-sh'.'can-260' 1, 'kafr-el-sh'.'can-310' 10, 'kafr-el-sh'.dap 25, 'kafr-el-sh'.'ssp-155' 2, 'kafr-el-sh'.'c-250-55' 0.1, dakahlia.'amm-sulf' 60, dakahlia.urea 20, dakahlia.'can-260' 1, dakahlia.'can-310' 26, dakahlia.dap 52, dakahlia.'ssp-155' 1, damietta.'amm-sulf' 15, damietta.urea 8, damietta.'can-310' 2, damietta.dap 5, sharkia.'amm-sulf' 50, sharkia.urea 28, sharkia.'can-260' 1, sharkia.'can-310' 31, sharkia.dap 43, sharkia.'ssp-155' 1, sharkia.'c-250-55' 0.1, ismailia.'amm-sulf' 6, ismailia.urea 2, ismailia.'can-310' 4, ismailia.dap 4, suez.'can-310' 1, suez.dap 1, menoufia.'amm-sulf' 21, menoufia.urea 30, menoufia.'can-260' 1, menoufia.'can-310' 24, menoufia.'can-335' 0.1, menoufia.dap 33, menoufia.'ssp-155' 2, menoufia.'c-250-55' 0.1, kalubia.'amm-sulf' 16, kalubia.urea 7, kalubia.'can-310' 25, kalubia.'can-335' 0.1, kalubia.dap 22, kalubia.'ssp-155' 1, giza.'amm-sulf' 6, giza.urea 2, giza.'can-310' 40, giza.dap 14, giza.'ssp-155' 1, giza.'c-250-55' 0.1, 'beni-suef'.'amm-sulf' 1, 'beni-suef'.urea 20, 'beni-suef'.'can-260' 1, 'beni-suef'.'can-310' 15, 'beni-suef'.dap 13, 'beni-suef'.'ssp-155' 3, fayoum.'amm-sulf' 6, fayoum.urea 20, fayoum.'can-260' 1, fayoum.'can-310' 20, fayoum.dap 17, fayoum.'ssp-155' 1, minia.'amm-sulf' 1, minia.urea 41, minia.'can-260' 2, minia.'can-310' 15, minia.'can-335' 35, minia.dap 0.1, minia.'ssp-155' 50, minia.'c-250-55' 3, minia.'c-300-100' 0.2, assiout.'amm-sulf' 1, assiout.urea 27, assiout.'can-260' 1, assiout.'can-310' 20, assiout.'can-335' 26, assiout.dap 35, assiout.'ssp-155' 5, assiout.'c-250-55' 0.1, 'new-valley'.urea 1, 'new-valley'.dap 1, sohag.'amm-sulf' 7, sohag.'can-260' 65, sohag.'can-310' 3, sohag.dap 20, sohag.'ssp-155' 1, quena.'amm-sulf' 3, quena.'can-260' 95, quena.'can-310' 2, quena.dap 8, aswan.'can-260' 40, aswan.dap 8, quena.urea 0, quena.'can-335' 0, quena.'ssp-155' 0, quena.'c-250-55' 0, quena.'c-300-100' 0, sharkia.'can-335' 0, sharkia.'c-300-100' 0, alexandria.'can-260' 0, alexandria.'can-335' 0, alexandria.'ssp-155' 0, alexandria.'c-250-55' 0, alexandria.'c-300-100' 0, damietta.'can-260' 0, damietta.'can-335' 0, damietta.'ssp-155' 0, damietta.'c-250-55' 0, damietta.'c-300-100' 0, giza.'can-260' 0, giza.'can-335' 0, giza.'c-300-100' 0, sohag.urea 0, sohag.'can-335' 0, sohag.'c-250-55' 0, sohag.'c-300-100' 0, menoufia.'c-300-100' 0, kalubia.'can-260' 0, kalubia.'c-250-55' 0, kalubia.'c-300-100' 0, behera.'c-300-100' 0, ismailia.'can-260' 0, ismailia.'can-335' 0, ismailia.'ssp-155' 0, ismailia.'c-250-55' 0, ismailia.'c-300-100' 0, suez.'amm-sulf' 0, suez.urea 0, suez.'can-260' 0, suez.'can-335' 0, suez.'ssp-155' 0, suez.'c-250-55' 0, suez.'c-300-100' 0, assiout.'c-300-100' 0, dakahlia.'can-335' 0, dakahlia.'c-250-55' 0, dakahlia.'c-300-100' 0, aswan.'amm-sulf' 0, aswan.urea 0, aswan.'can-310' 0, aswan.'can-335' 0, aswan.'ssp-155' 0, aswan.'c-250-55' 0, aswan.'c-300-100' 0, gharbia.'can-260' 0, gharbia.'c-300-100' 0, 'beni-suef'.'can-335' 0, 'beni-suef'.'c-250-55' 0, 'beni-suef'.'c-300-100' 0, fayoum.'can-335' 0, fayoum.'c-250-55' 0, fayoum.'c-300-100' 0, 'new-valley'.'amm-sulf' 0, 'new-valley'.'can-260' 0, 'new-valley'.'can-310' 0, 'new-valley'.'can-335' 0, 'new-valley'.'ssp-155' 0, 'new-valley'.'c-250-55' 0, 'new-valley'.'c-300-100' 0, 'kafr-el-sh'.'can-335' 0, 'kafr-el-sh'.'c-300-100' 0/
-    alpha(c,cq) /urea.n 0.46, 'can-260'.n 0.26, 'can-310'.n 0.31, 'can-335'.n 0.335, 'amm-sulf'.n 0.206, dap.n 0.18, dap.p2o5 0.46, 'ssp-155'.p2o5 0.155, 'c-250-55'.n 0.25, 'c-250-55'.p2o5 0.055, 'c-300-100'.n 0.3, 'c-300-100'.p2o5 0.1, 'can-335'.p2o5 0, urea.p2o5 0, 'can-310'.p2o5 0, 'ssp-155'.n 0, 'amm-sulf'.p2o5 0, 'can-260'.p2o5 0/
+    cf75(j,c) /alexandria.'amm-sulf' 3, alexandria.urea 1, alexandria.'can-310' 5, alexandria.dap 8, behera.'amm-sulf' 90, behera.urea 35, behera.'can-260' 1, behera.'can-310' 25, behera.'can-335' 0.1, behera.dap 64, behera.'ssp-155' 1, behera.'c-250-55' 0.1, gharbia.'amm-sulf' 60, gharbia.urea 28, gharbia.'can-310' 17, gharbia.'can-335' 0.1, gharbia.dap 57, gharbia.'ssp-155' 1, gharbia.'c-250-55' 0.2, 'kafr-el-sh'.'amm-sulf' 45, 'kafr-el-sh'.urea 22, 'kafr-el-sh'.'can-260' 1, 'kafr-el-sh'.'can-310' 10, 'kafr-el-sh'.dap 25, 'kafr-el-sh'.'ssp-155' 2, 'kafr-el-sh'.'c-250-55' 0.1, dakahlia.'amm-sulf' 60, dakahlia.urea 20, dakahlia.'can-260' 1, dakahlia.'can-310' 26, dakahlia.dap 52, dakahlia.'ssp-155' 1, damietta.'amm-sulf' 15, damietta.urea 8, damietta.'can-310' 2, damietta.dap 5, sharkia.'amm-sulf' 50, sharkia.urea 28, sharkia.'can-260' 1, sharkia.'can-310' 31, sharkia.dap 43, sharkia.'ssp-155' 1, sharkia.'c-250-55' 0.1, ismailia.'amm-sulf' 6, ismailia.urea 2, ismailia.'can-310' 4, ismailia.dap 4, suez.'can-310' 1, suez.dap 1, menoufia.'amm-sulf' 21, menoufia.urea 30, menoufia.'can-260' 1, menoufia.'can-310' 24, menoufia.'can-335' 0.1, menoufia.dap 33, menoufia.'ssp-155' 2, menoufia.'c-250-55' 0.1, kalubia.'amm-sulf' 16, kalubia.urea 7, kalubia.'can-310' 25, kalubia.'can-335' 0.1, kalubia.dap 22, kalubia.'ssp-155' 1, giza.'amm-sulf' 6, giza.urea 2, giza.'can-310' 40, giza.dap 14, giza.'ssp-155' 1, giza.'c-250-55' 0.1, 'beni-suef'.'amm-sulf' 1, 'beni-suef'.urea 20, 'beni-suef'.'can-260' 1, 'beni-suef'.'can-310' 15, 'beni-suef'.dap 13, 'beni-suef'.'ssp-155' 3, fayoum.'amm-sulf' 6, fayoum.urea 20, fayoum.'can-260' 1, fayoum.'can-310' 20, fayoum.dap 17, fayoum.'ssp-155' 1, minia.'amm-sulf' 1, minia.urea 41, minia.'can-260' 2, minia.'can-310' 15, minia.'can-335' 35, minia.dap 0.1, minia.'ssp-155' 50, minia.'c-250-55' 3, minia.'c-300-100' 0.2, assiout.'amm-sulf' 1, assiout.urea 27, assiout.'can-260' 1, assiout.'can-310' 20, assiout.'can-335' 26, assiout.dap 35, assiout.'ssp-155' 5, assiout.'c-250-55' 0.1, 'new-valley'.urea 1, 'new-valley'.dap 1, sohag.'amm-sulf' 7, sohag.'can-260' 65, sohag.'can-310' 3, sohag.dap 20, sohag.'ssp-155' 1, quena.'amm-sulf' 3, quena.'can-260' 95, quena.'can-310' 2, quena.dap 8, aswan.'can-260' 40, aswan.dap 8/
+    alpha(c,cq) /urea.n 0.46, 'can-260'.n 0.26, 'can-310'.n 0.31, 'can-335'.n 0.335, 'amm-sulf'.n 0.206, dap.n 0.18, dap.p2o5 0.46, 'ssp-155'.p2o5 0.155, 'c-250-55'.n 0.25, 'c-250-55'.p2o5 0.055, 'c-300-100'.n 0.3, 'c-300-100'.p2o5 0.1/
     cn75(*,cq)
-    road(j,*) /alexandria.'abu-kir' 16, alexandria.'kafr-el-zt' 119, alexandria.talkha 187, alexandria.'abu-zaabal' 210, alexandria.helwan 244, alexandria.assiout 607, alexandria.aswan 1135, behera.'abu-kir' 76, behera.'kafr-el-zt' 42, behera.talkha 120, behera.'abu-zaabal' 50, behera.helwan 184, behera.assiout 547, behera.aswan 1065, gharbia.'abu-kir' 150, gharbia.'kafr-el-zt' 20, gharbia.talkha 55, gharbia.'abu-zaabal' 65, gharbia.helwan 122, gharbia.assiout 485, gharbia.aswan 1003, 'kafr-el-sh'.'abu-kir' 145, 'kafr-el-sh'.'kafr-el-zt' 20, 'kafr-el-sh'.talkha 35, 'kafr-el-sh'.'abu-zaabal' 105, 'kafr-el-sh'.helwan 162, 'kafr-el-sh'.assiout 525, 'kafr-el-sh'.aswan 1043, dakahlia.'abu-kir' 208, dakahlia.'kafr-el-zt' 58, dakahlia.talkha 3, dakahlia.'abu-zaabal' 138, dakahlia.helwan 152, dakahlia.assiout 515, dakahlia.aswan 1033, damietta.'abu-kir' 267, damietta.'kafr-el-zt' 131, damietta.talkha 66, damietta.'abu-zaabal' 216, damietta.helwan 233, damietta.assiout 596, damietta.aswan 1114, sharkia.'abu-kir' 240, sharkia.'kafr-el-zt' 78, sharkia.talkha 58, sharkia.'abu-zaabal' 60, sharkia.helwan 110, sharkia.assiout 473, sharkia.aswan 991, ismailia.'abu-kir' 365, ismailia.'kafr-el-zt' 241, ismailia.talkha 146, ismailia.'abu-zaabal' 142, ismailia.helwan 173, ismailia.assiout 536, ismailia.aswan 1054, suez.'abu-kir' 370, suez.'kafr-el-zt' 246, suez.talkha 298, suez.'abu-zaabal' 224, suez.helwan 178, suez.assiout 541, suez.aswan 1059, menoufia.'abu-kir' 157, menoufia.'kafr-el-zt' 33, menoufia.talkha 90, menoufia.'abu-zaabal' 154, menoufia.helwan 109, menoufia.assiout 472, menoufia.aswan 990, kalubia.'abu-kir' 190, kalubia.'kafr-el-zt' 66, kalubia.talkha 81, kalubia.'abu-zaabal' 97, kalubia.helwan 76, kalubia.assiout 439, kalubia.aswan 957, giza.'abu-kir' 287, giza.'kafr-el-zt' 133, giza.talkha 146, giza.'abu-zaabal' 48, giza.helwan 9, giza.assiout 372, giza.aswan 890, 'beni-suef'.'abu-kir' 359, 'beni-suef'.'kafr-el-zt' 248, 'beni-suef'.talkha 261, 'beni-suef'.'abu-zaabal' 163, 'beni-suef'.helwan 105, 'beni-suef'.assiout 257, 'beni-suef'.aswan 775, fayoum.'abu-kir' 341, fayoum.'kafr-el-zt' 230, fayoum.talkha 243, fayoum.'abu-zaabal' 145, fayoum.helwan 88, fayoum.assiout 308, fayoum.aswan 826, minia.'abu-kir' 384, minia.'kafr-el-zt' 372, minia.talkha 386, minia.'abu-zaabal' 288, minia.helwan 230, minia.assiout 132, minia.aswan 650, assiout.'abu-kir' 616, assiout.'kafr-el-zt' 504, assiout.talkha 518, assiout.'abu-zaabal' 420, assiout.helwan 362, assiout.assiout 518, 'new-valley'.'abu-kir' 815, 'new-valley'.'kafr-el-zt' 703, 'new-valley'.talkha 717, 'new-valley'.'abu-zaabal' 619, 'new-valley'.helwan 561, 'new-valley'.assiout 199, 'new-valley'.aswan 519, sohag.'abu-kir' 715, sohag.'kafr-el-zt' 603, sohag.talkha 617, sohag.'abu-zaabal' 519, sohag.helwan 461, sohag.assiout 99, sohag.aswan 419, quena.'abu-kir' 858, quena.'kafr-el-zt' 746, quena.talkha 760, quena.'abu-zaabal' 662, quena.helwan 604, quena.assiout 242, quena.aswan 276, aswan.'abu-kir' 1134, aswan.'kafr-el-zt' 1022, aswan.talkha 1036, aswan.'abu-zaabal' 938, aswan.helwan 880, aswan.assiout 518, assiout.aswan 0, aswan.aswan 0/
-    rail(i,i) /'abu-zaabal'.'kafr-el-zt' 85, helwan.'kafr-el-zt' 142, helwan.'abu-zaabal' 57, assiout.'kafr-el-zt' 504, assiout.'abu-zaabal' 420, assiout.helwan 362, aswan.'kafr-el-zt' 1022, aswan.'abu-zaabal' 938, aswan.helwan 880, aswan.assiout 518, aswan.aswan 0, assiout.assiout 0, assiout.aswan 0, helwan.helwan 0, helwan.assiout 0, helwan.aswan 0, 'abu-zaabal'.'abu-zaabal' 0, 'abu-zaabal'.helwan 0, 'abu-zaabal'.assiout 0, 'abu-zaabal'.aswan 0/
-    impd(i,*) /'kafr-el-zt'.barge 104, 'kafr-el-zt'.road 6, 'abu-zaabal'.barge 210, 'abu-zaabal'.road 0.1, helwan.barge 183, assiout.barge 583, aswan.barge 1087, aswan.road 10, assiout.road 0, helwan.road 0/
+    road(j,*) /alexandria.'abu-kir' 16, alexandria.'kafr-el-zt' 119, alexandria.talkha 187, alexandria.'abu-zaabal' 210, alexandria.helwan 244, alexandria.assiout 607, alexandria.aswan 1135, behera.'abu-kir' 76, behera.'kafr-el-zt' 42, behera.talkha 120, behera.'abu-zaabal' 50, behera.helwan 184, behera.assiout 547, behera.aswan 1065, gharbia.'abu-kir' 150, gharbia.'kafr-el-zt' 20, gharbia.talkha 55, gharbia.'abu-zaabal' 65, gharbia.helwan 122, gharbia.assiout 485, gharbia.aswan 1003, 'kafr-el-sh'.'abu-kir' 145, 'kafr-el-sh'.'kafr-el-zt' 20, 'kafr-el-sh'.talkha 35, 'kafr-el-sh'.'abu-zaabal' 105, 'kafr-el-sh'.helwan 162, 'kafr-el-sh'.assiout 525, 'kafr-el-sh'.aswan 1043, dakahlia.'abu-kir' 208, dakahlia.'kafr-el-zt' 58, dakahlia.talkha 3, dakahlia.'abu-zaabal' 138, dakahlia.helwan 152, dakahlia.assiout 515, dakahlia.aswan 1033, damietta.'abu-kir' 267, damietta.'kafr-el-zt' 131, damietta.talkha 66, damietta.'abu-zaabal' 216, damietta.helwan 233, damietta.assiout 596, damietta.aswan 1114, sharkia.'abu-kir' 240, sharkia.'kafr-el-zt' 78, sharkia.talkha 58, sharkia.'abu-zaabal' 60, sharkia.helwan 110, sharkia.assiout 473, sharkia.aswan 991, ismailia.'abu-kir' 365, ismailia.'kafr-el-zt' 241, ismailia.talkha 146, ismailia.'abu-zaabal' 142, ismailia.helwan 173, ismailia.assiout 536, ismailia.aswan 1054, suez.'abu-kir' 370, suez.'kafr-el-zt' 246, suez.talkha 298, suez.'abu-zaabal' 224, suez.helwan 178, suez.assiout 541, suez.aswan 1059, menoufia.'abu-kir' 157, menoufia.'kafr-el-zt' 33, menoufia.talkha 90, menoufia.'abu-zaabal' 154, menoufia.helwan 109, menoufia.assiout 472, menoufia.aswan 990, kalubia.'abu-kir' 190, kalubia.'kafr-el-zt' 66, kalubia.talkha 81, kalubia.'abu-zaabal' 97, kalubia.helwan 76, kalubia.assiout 439, kalubia.aswan 957, giza.'abu-kir' 287, giza.'kafr-el-zt' 133, giza.talkha 146, giza.'abu-zaabal' 48, giza.helwan 9, giza.assiout 372, giza.aswan 890, 'beni-suef'.'abu-kir' 359, 'beni-suef'.'kafr-el-zt' 248, 'beni-suef'.talkha 261, 'beni-suef'.'abu-zaabal' 163, 'beni-suef'.helwan 105, 'beni-suef'.assiout 257, 'beni-suef'.aswan 775, fayoum.'abu-kir' 341, fayoum.'kafr-el-zt' 230, fayoum.talkha 243, fayoum.'abu-zaabal' 145, fayoum.helwan 88, fayoum.assiout 308, fayoum.aswan 826, minia.'abu-kir' 384, minia.'kafr-el-zt' 372, minia.talkha 386, minia.'abu-zaabal' 288, minia.helwan 230, minia.assiout 132, minia.aswan 650, assiout.'abu-kir' 616, assiout.'kafr-el-zt' 504, assiout.talkha 518, assiout.'abu-zaabal' 420, assiout.helwan 362, assiout.assiout 518, 'new-valley'.'abu-kir' 815, 'new-valley'.'kafr-el-zt' 703, 'new-valley'.talkha 717, 'new-valley'.'abu-zaabal' 619, 'new-valley'.helwan 561, 'new-valley'.assiout 199, 'new-valley'.aswan 519, sohag.'abu-kir' 715, sohag.'kafr-el-zt' 603, sohag.talkha 617, sohag.'abu-zaabal' 519, sohag.helwan 461, sohag.assiout 99, sohag.aswan 419, quena.'abu-kir' 858, quena.'kafr-el-zt' 746, quena.talkha 760, quena.'abu-zaabal' 662, quena.helwan 604, quena.assiout 242, quena.aswan 276, aswan.'abu-kir' 1134, aswan.'kafr-el-zt' 1022, aswan.talkha 1036, aswan.'abu-zaabal' 938, aswan.helwan 880, aswan.assiout 518/
+    rail(i,i) /'abu-zaabal'.'kafr-el-zt' 85, helwan.'kafr-el-zt' 142, helwan.'abu-zaabal' 57, assiout.'kafr-el-zt' 504, assiout.'abu-zaabal' 420, assiout.helwan 362, aswan.'kafr-el-zt' 1022, aswan.'abu-zaabal' 938, aswan.helwan 880, aswan.assiout 518/
+    impd(i,*) /'kafr-el-zt'.barge 104, 'kafr-el-zt'.road 6, 'abu-zaabal'.barge 210, 'abu-zaabal'.road 0.1, helwan.barge 183, assiout.barge 583, aswan.barge 1087, aswan.road 10/
     muf(i,j)
     mufv(j)
     mui(i,i)
     mur(i)
-    a(c,p) /'el-aswan'.'nitr-acid' -12, 'coke-gas'.'amm-elec' -2, pyrites.'sulf-a-p' -0.826, 'el-sulfur'.'sulf-a-s' -0.334, 'sulf-acid'.'sulf-a-s' -0.41, 'sulf-acid'.'sulf-a-p' 1, ammonia.'sulf-a-p' -0.21, ammonia.'nitr-acid' -0.26, ammonia.'amm-elec' 1, 'nitr-acid'.'nitr-acid' -0.76, electric.'sulf-a-s' -14, electric.'sulf-a-p' -75, electric.'nitr-acid' -19, electric.'amm-elec' -1960, 'bf-gas'.'amm-elec' -609, water.'sulf-a-s' -6, water.'sulf-a-p' -49, water.'nitr-acid' -49, water.'amm-elec' -17, steam.'amm-elec' -4, 'ssp-155'.'sulf-a-s' 1, 'ssp-155'.'sulf-a-p' 0, 'ssp-155'.'nitr-acid' 0, 'phos-rock'.'sulf-a-s' -0.62, 'sulf-acid'.'nitr-acid' -0.76, ammonia.'sulf-a-s' -0.2, 'nitr-acid'.'sulf-a-p' -0.71, limestone.'sulf-a-s' -0.12, limestone.'sulf-a-p' -0.04, 'can-310'.'sulf-a-p' 1, 'can-335'.'sulf-a-p' 1, 'amm-sulf'.'nitr-acid' 1, bags.'sulf-a-s' -22, bags.'sulf-a-p' -23, bags.'nitr-acid' -23, bags.'amm-elec' -22, steam.'sulf-a-s' -0.4, steam.'sulf-a-p' -0.4, bags.'amm-c-gas' 0, ammonia.'amm-c-gas' 0, 'can-335'.'sulf-a-s' 0, 'can-335'.'nitr-acid' 0, 'can-335'.'amm-elec' 0, 'can-335'.'amm-c-gas' 0, electric.'amm-c-gas' 0, steam.'nitr-acid' 0, steam.'amm-c-gas' 0, limestone.'nitr-acid' 0, limestone.'amm-elec' 0, limestone.'amm-c-gas' 0, 'coke-gas'.'sulf-a-s' 0, 'coke-gas'.'sulf-a-p' 0, 'coke-gas'.'nitr-acid' 0, 'coke-gas'.'amm-c-gas' 0, 'bf-gas'.'sulf-a-s' 0, 'bf-gas'.'sulf-a-p' 0, 'bf-gas'.'nitr-acid' 0, 'bf-gas'.'amm-c-gas' 0, 'nitr-acid'.'sulf-a-s' 0, 'nitr-acid'.'amm-elec' 0, 'nitr-acid'.'amm-c-gas' 0, 'el-sulfur'.'sulf-a-p' 0, 'el-sulfur'.'nitr-acid' 0, 'el-sulfur'.'amm-elec' 0, 'el-sulfur'.'amm-c-gas' 0, 'can-310'.'sulf-a-s' 0, 'can-310'.'nitr-acid' 0, 'can-310'.'amm-elec' 0, 'can-310'.'amm-c-gas' 0, 'amm-sulf'.'sulf-a-s' 0, 'amm-sulf'.'sulf-a-p' 0, 'amm-sulf'.'amm-elec' 0, 'amm-sulf'.'amm-c-gas' 0, pyrites.'sulf-a-s' 0, pyrites.'nitr-acid' 0, pyrites.'amm-elec' 0, pyrites.'amm-c-gas' 0, 'ssp-155'.'amm-elec' 0, 'ssp-155'.'amm-c-gas' 0, water.'amm-c-gas' 0, 'sulf-acid'.'amm-elec' 0, 'sulf-acid'.'amm-c-gas' 0, 'el-aswan'.'sulf-a-s' 0, 'el-aswan'.'sulf-a-p' 0, 'el-aswan'.'amm-elec' 0, 'el-aswan'.'amm-c-gas' 0, 'phos-rock'.'sulf-a-p' 0, 'phos-rock'.'nitr-acid' 0, 'phos-rock'.'amm-elec' 0, 'phos-rock'.'amm-c-gas' 0/
-    b(m,p) /'sulf-a-s'.'sulf-a-s' 1, 'sulf-a-p'.'sulf-a-p' 1, 'nitr-acid'.'nitr-acid' 1, 'amm-elec'.'amm-elec' 1, 'amm-c-gas'.'amm-c-gas' 1, ssp.'amm-c-gas' 1, 'c-amm-nitr'.'ssp-155' 1, 'c-amm-nitr'.'can-310' 1, 'amm-sulf'.'can-335' 1, 'sulf-a-s'.'sulf-a-p' 0, 'sulf-a-s'.'nitr-acid' 0, 'sulf-a-s'.'amm-elec' 0, 'sulf-a-s'.'amm-c-gas' 0, 'sulf-a-s'.'ssp-155' 0, 'sulf-a-s'.'can-310' 0, 'sulf-a-s'.'can-335' 0, 'sulf-a-s'.'amm-sulf' 0, ssp.'sulf-a-s' 0, ssp.'sulf-a-p' 0, ssp.'nitr-acid' 0, ssp.'amm-elec' 0, ssp.'ssp-155' 0, ssp.'can-310' 0, ssp.'can-335' 0, ssp.'amm-sulf' 0, 'amm-elec'.'sulf-a-s' 0, 'amm-elec'.'sulf-a-p' 0, 'amm-elec'.'nitr-acid' 0, 'amm-elec'.'amm-c-gas' 0, 'amm-elec'.'ssp-155' 0, 'amm-elec'.'can-310' 0, 'amm-elec'.'can-335' 0, 'amm-elec'.'amm-sulf' 0, 'amm-c-gas'.'sulf-a-s' 0, 'amm-c-gas'.'sulf-a-p' 0, 'amm-c-gas'.'nitr-acid' 0, 'amm-c-gas'.'amm-elec' 0, 'amm-c-gas'.'ssp-155' 0, 'amm-c-gas'.'can-310' 0, 'amm-c-gas'.'can-335' 0, 'amm-c-gas'.'amm-sulf' 0, 'c-amm-nitr'.'sulf-a-s' 0, 'c-amm-nitr'.'sulf-a-p' 0, 'c-amm-nitr'.'nitr-acid' 0, 'c-amm-nitr'.'amm-elec' 0, 'c-amm-nitr'.'amm-c-gas' 0, 'c-amm-nitr'.'can-335' 0, 'c-amm-nitr'.'amm-sulf' 0, 'nitr-acid'.'sulf-a-s' 0, 'nitr-acid'.'sulf-a-p' 0, 'nitr-acid'.'amm-elec' 0, 'nitr-acid'.'amm-c-gas' 0, 'nitr-acid'.'ssp-155' 0, 'nitr-acid'.'can-310' 0, 'nitr-acid'.'can-335' 0, 'nitr-acid'.'amm-sulf' 0, 'amm-sulf'.'sulf-a-s' 0, 'amm-sulf'.'sulf-a-p' 0, 'amm-sulf'.'nitr-acid' 0, 'amm-sulf'.'amm-elec' 0, 'amm-sulf'.'amm-c-gas' 0, 'amm-sulf'.'ssp-155' 0, 'amm-sulf'.'can-310' 0, 'amm-sulf'.'amm-sulf' 0, 'sulf-a-p'.'sulf-a-s' 0, 'sulf-a-p'.'nitr-acid' 0, 'sulf-a-p'.'amm-elec' 0, 'sulf-a-p'.'amm-c-gas' 0, 'sulf-a-p'.'ssp-155' 0, 'sulf-a-p'.'can-310' 0, 'sulf-a-p'.'can-335' 0, 'sulf-a-p'.'amm-sulf' 0/
+    a(c,p) /'el-aswan'.'nitr-acid' -12, 'coke-gas'.'amm-elec' -2, pyrites.'sulf-a-p' -0.826, 'el-sulfur'.'sulf-a-s' -0.334, 'sulf-acid'.'sulf-a-s' -0.41, 'sulf-acid'.'sulf-a-p' 1, ammonia.'sulf-a-p' -0.21, ammonia.'nitr-acid' -0.26, ammonia.'amm-elec' 1, 'nitr-acid'.'nitr-acid' -0.76, electric.'sulf-a-s' -14, electric.'sulf-a-p' -75, electric.'nitr-acid' -19, electric.'amm-elec' -1960, 'bf-gas'.'amm-elec' -609, water.'sulf-a-s' -6, water.'sulf-a-p' -49, water.'nitr-acid' -49, water.'amm-elec' -17, steam.'amm-elec' -4, 'ssp-155'.'sulf-a-s' 1, 'phos-rock'.'sulf-a-s' -0.62, 'sulf-acid'.'nitr-acid' -0.76, ammonia.'sulf-a-s' -0.2, 'nitr-acid'.'sulf-a-p' -0.71, limestone.'sulf-a-s' -0.12, limestone.'sulf-a-p' -0.04, 'can-310'.'sulf-a-p' 1, 'can-335'.'sulf-a-p' 1, 'amm-sulf'.'nitr-acid' 1, bags.'sulf-a-s' -22, bags.'sulf-a-p' -23, bags.'nitr-acid' -23, bags.'amm-elec' -22, steam.'sulf-a-s' -0.4, steam.'sulf-a-p' -0.4/
+    b(m,p) /'sulf-a-s'.'sulf-a-s' 1, 'sulf-a-p'.'sulf-a-p' 1, 'nitr-acid'.'nitr-acid' 1, 'amm-elec'.'amm-elec' 1, 'amm-c-gas'.'amm-c-gas' 1, ssp.'amm-c-gas' 1, 'c-amm-nitr'.'ssp-155' 1, 'c-amm-nitr'.'can-310' 1, 'amm-sulf'.'can-335' 1/
     pv(c) /pyrites 17.5, 'el-sulfur' 55, urea 150, 'can-260' 75, 'can-310' 90, 'can-335' 100, 'amm-sulf' 75, dap 175, 'ssp-155' 80, 'c-250-55' 100, 'c-300-100' 130/
-    pd(i,c) /'kafr-el-zt'.'phos-rock' 5, 'abu-zaabal'.'phos-rock' 4, helwan.limestone 1.2, helwan.'coke-gas' 16, helwan.'sulf-acid' 3, assiout.'phos-rock' 3.5, aswan.limestone 1.2, aswan.'el-aswan' 1, assiout.limestone 0, assiout.'coke-gas' 0, assiout.'el-aswan' 0, assiout.'sulf-acid' 0, 'kafr-el-zt'.limestone 0, 'kafr-el-zt'.'coke-gas' 0, 'kafr-el-zt'.'el-aswan' 0, 'kafr-el-zt'.'sulf-acid' 0, helwan.'el-aswan' 0, helwan.'phos-rock' 0, 'abu-zaabal'.limestone 0, 'abu-zaabal'.'coke-gas' 0, 'abu-zaabal'.'el-aswan' 0, 'abu-zaabal'.'sulf-acid' 0, aswan.'coke-gas' 0, aswan.'phos-rock' 0, aswan.'sulf-acid' 0/
+    pd(i,c) /'kafr-el-zt'.'phos-rock' 5, 'abu-zaabal'.'phos-rock' 4, helwan.limestone 1.2, helwan.'coke-gas' 16, helwan.'sulf-acid' 3, assiout.'phos-rock' 3.5, aswan.limestone 1.2, aswan.'el-aswan' 1/
     pmisc(c) /electric 0.007, 'bf-gas' 0.0075, water 0.031, steam 1.25, bags 0.28/
-    dcap(i,m) /aswan.'nitr-acid' 800, aswan.'amm-elec' 450, aswan.ssp 1100, helwan.'nitr-acid' 282, helwan.'amm-elec' 172, helwan.ssp 364, helwan.'c-amm-nitr' 24, 'kafr-el-zt'.'sulf-a-s' 200, 'kafr-el-zt'.'sulf-a-p' 50, 'kafr-el-zt'.'amm-c-gas' 600, assiout.'sulf-a-s' 250, assiout.'amm-c-gas' 600, 'abu-zaabal'.'sulf-a-s' 242, 'abu-zaabal'.'sulf-a-p' 227, 'abu-zaabal'.'amm-c-gas' 600, assiout.'sulf-a-p' 0, assiout.'nitr-acid' 0, assiout.'amm-elec' 0, assiout.ssp 0, assiout.'c-amm-nitr' 0, assiout.'amm-sulf' 0, 'kafr-el-zt'.'nitr-acid' 0, 'kafr-el-zt'.'amm-elec' 0, 'kafr-el-zt'.ssp 0, 'kafr-el-zt'.'c-amm-nitr' 0, 'kafr-el-zt'.'amm-sulf' 0, helwan.'sulf-a-s' 0, helwan.'sulf-a-p' 0, helwan.'amm-c-gas' 0, helwan.'amm-sulf' 0, 'abu-zaabal'.'nitr-acid' 0, 'abu-zaabal'.'amm-elec' 0, 'abu-zaabal'.ssp 0, 'abu-zaabal'.'c-amm-nitr' 0, 'abu-zaabal'.'amm-sulf' 0, aswan.'sulf-a-s' 0, aswan.'sulf-a-p' 0, aswan.'amm-c-gas' 0, aswan.'c-amm-nitr' 0, aswan.'amm-sulf' 0/
+    dcap(i,m) /aswan.'nitr-acid' 800, aswan.'amm-elec' 450, aswan.ssp 1100, helwan.'nitr-acid' 282, helwan.'amm-elec' 172, helwan.ssp 364, helwan.'c-amm-nitr' 24, 'kafr-el-zt'.'sulf-a-s' 200, 'kafr-el-zt'.'sulf-a-p' 50, 'kafr-el-zt'.'amm-c-gas' 600, assiout.'sulf-a-s' 250, assiout.'amm-c-gas' 600, 'abu-zaabal'.'sulf-a-s' 242, 'abu-zaabal'.'sulf-a-p' 227, 'abu-zaabal'.'amm-c-gas' 600/
     k(m,i)
     rxf(i,j,c)
 ;
@@ -66,27 +66,32 @@ Scalars
     tif /0/
 ;
 
-mpos(m,i) = 1$k(m,i);
-ppos(p,i) = 1$(sum(m$((not mpos(m,i))), b(m,p) <> 0) = 0);
+$onImplicitAssign
+pd(i,cr)$(pmisc(cr)) = pmisc(cr);
+k(m,i) = 0.33 * dcap(i,m);
+$offImplicitAssign
+
+$onImplicitAssign
+mpos(m,i) = yes$(k(m,i));
+ppos(p,i) = yes$(sum(m$((not mpos(m,i))), b(m,p) <> 0) = 0);
 ppos("can-310","helwan") = 0;
 ppos("can-335","aswan") = 0;
-cposp(c,i) = 1$sum(p$(ppos(p,i)), a(c,p) > 0);
-cposn(c,i) = 1$sum(p$(ppos(p,i)), a(c,p) < 0);
+cposp(c,i) = yes$(sum(p$(ppos(p,i)), a(c,p) > 0));
+cposn(c,i) = yes$(sum(p$(ppos(p,i)), a(c,p) < 0));
 cposi(cs,i,ip) = cposp(cs,i) * cposn(cs,ip);
-cposd(cr,i) = 1$(cposn(cr,i)$pd(i,cr));
-cposr(cr,i) = 1$(cposn(cr,i)$pv(cr));
+cposd(cr,i) = yes$(cposn(cr,i)$(pd(i,cr)));
+cposr(cr,i) = yes$(cposn(cr,i)$(pv(cr)));
 cpos(c,i) = cposp(c,i) + cposn(c,i);
+$offImplicitAssign
 
+mur(i) = 1 + 0.003 * impd(i,"barge") + (0.5 + 0.0144 * impd(i,"road"))$(impd(i,"road"));
 cn75(j,cq) = sum(cf, alpha(cf,cq) * cf75(j,cf));
 cn75("total",cq) = sum(j, cn75(j,cq));
 road(j,"import-pts") = road(j,"abu-kir");
 rail(i,ip) = rail(i,ip) + rail(ip,i);
-muf(i,j) = (0.5 + 0.0144 * road(j,i))$road(j,i);
-mufv(j) = (0.5 + 0.0144 * road(j,"import-pts"))$road(j,"import-pts");
-mui(i,ip) = (3.5 + 0.03 * rail(i,ip))$rail(i,ip);
-mur(i) = 1 + 0.003 * impd(i,"barge") + (0.5 + 0.0144 * impd(i,"road"))$impd(i,"road");
-pd(i,cr) = pmisc(cr);
-k(m,i) = 0.33 * dcap(i,m);
+muf(i,j) = (0.5 + 0.0144 * road(j,i))$(road(j,i));
+mufv(j) = (0.5 + 0.0144 * road(j,"import-pts"))$(road(j,"import-pts"));
+mui(i,ip) = (3.5 + 0.03 * rail(i,ip))$(rail(i,ip));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -108,231 +113,6 @@ Variables
     nu_ap
     nu_al
     nu_ai
-    nu_xi_fx_urea_aswan_aswan
-    nu_xi_fx_urea_aswan_helwan
-    nu_xi_fx_urea_aswan_assiout
-    nu_xi_fx_urea_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_urea_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_urea_helwan_aswan
-    nu_xi_fx_urea_helwan_helwan
-    nu_xi_fx_urea_helwan_assiout
-    nu_xi_fx_urea_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_urea_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_urea_assiout_aswan
-    nu_xi_fx_urea_assiout_helwan
-    nu_xi_fx_urea_assiout_assiout
-    nu_xi_fx_urea_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_urea_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_urea_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_urea_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_urea_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_urea_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_urea_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_urea_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_can_260_6f9ae351_aswan_aswan
-    nu_xi_fx_can_260_6f9ae351_aswan_helwan
-    nu_xi_fx_can_260_6f9ae351_aswan_assiout
-    nu_xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_can_260_6f9ae351_helwan_aswan
-    nu_xi_fx_can_260_6f9ae351_helwan_helwan
-    nu_xi_fx_can_260_6f9ae351_helwan_assiout
-    nu_xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_can_260_6f9ae351_assiout_aswan
-    nu_xi_fx_can_260_6f9ae351_assiout_helwan
-    nu_xi_fx_can_260_6f9ae351_assiout_assiout
-    nu_xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_can_310_39fe89a0_aswan_aswan
-    nu_xi_fx_can_310_39fe89a0_aswan_helwan
-    nu_xi_fx_can_310_39fe89a0_aswan_assiout
-    nu_xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_can_310_39fe89a0_helwan_aswan
-    nu_xi_fx_can_310_39fe89a0_helwan_helwan
-    nu_xi_fx_can_310_39fe89a0_helwan_assiout
-    nu_xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_can_310_39fe89a0_assiout_aswan
-    nu_xi_fx_can_310_39fe89a0_assiout_helwan
-    nu_xi_fx_can_310_39fe89a0_assiout_assiout
-    nu_xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_can_335_956b7145_aswan_aswan
-    nu_xi_fx_can_335_956b7145_aswan_helwan
-    nu_xi_fx_can_335_956b7145_aswan_assiout
-    nu_xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_can_335_956b7145_helwan_aswan
-    nu_xi_fx_can_335_956b7145_helwan_helwan
-    nu_xi_fx_can_335_956b7145_helwan_assiout
-    nu_xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_can_335_956b7145_assiout_aswan
-    nu_xi_fx_can_335_956b7145_assiout_helwan
-    nu_xi_fx_can_335_956b7145_assiout_assiout
-    nu_xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_amm_sulf_22042a14_aswan_aswan
-    nu_xi_fx_amm_sulf_22042a14_aswan_helwan
-    nu_xi_fx_amm_sulf_22042a14_aswan_assiout
-    nu_xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_amm_sulf_22042a14_helwan_aswan
-    nu_xi_fx_amm_sulf_22042a14_helwan_helwan
-    nu_xi_fx_amm_sulf_22042a14_helwan_assiout
-    nu_xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_amm_sulf_22042a14_assiout_aswan
-    nu_xi_fx_amm_sulf_22042a14_assiout_helwan
-    nu_xi_fx_amm_sulf_22042a14_assiout_assiout
-    nu_xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_dap_aswan_aswan
-    nu_xi_fx_dap_aswan_helwan
-    nu_xi_fx_dap_aswan_assiout
-    nu_xi_fx_dap_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_dap_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_dap_helwan_aswan
-    nu_xi_fx_dap_helwan_helwan
-    nu_xi_fx_dap_helwan_assiout
-    nu_xi_fx_dap_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_dap_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_dap_assiout_aswan
-    nu_xi_fx_dap_assiout_helwan
-    nu_xi_fx_dap_assiout_assiout
-    nu_xi_fx_dap_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_dap_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_dap_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_dap_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_dap_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_dap_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_dap_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_dap_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_ssp_155_4d937415_aswan_aswan
-    nu_xi_fx_ssp_155_4d937415_aswan_helwan
-    nu_xi_fx_ssp_155_4d937415_aswan_assiout
-    nu_xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_ssp_155_4d937415_helwan_aswan
-    nu_xi_fx_ssp_155_4d937415_helwan_helwan
-    nu_xi_fx_ssp_155_4d937415_helwan_assiout
-    nu_xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_ssp_155_4d937415_assiout_aswan
-    nu_xi_fx_ssp_155_4d937415_assiout_helwan
-    nu_xi_fx_ssp_155_4d937415_assiout_assiout
-    nu_xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_c_250_55_328bab59_aswan_aswan
-    nu_xi_fx_c_250_55_328bab59_aswan_helwan
-    nu_xi_fx_c_250_55_328bab59_aswan_assiout
-    nu_xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_c_250_55_328bab59_helwan_aswan
-    nu_xi_fx_c_250_55_328bab59_helwan_helwan
-    nu_xi_fx_c_250_55_328bab59_helwan_assiout
-    nu_xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_c_250_55_328bab59_assiout_aswan
-    nu_xi_fx_c_250_55_328bab59_assiout_helwan
-    nu_xi_fx_c_250_55_328bab59_assiout_assiout
-    nu_xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_c_300_100_6aee25a0_aswan_aswan
-    nu_xi_fx_c_300_100_6aee25a0_aswan_helwan
-    nu_xi_fx_c_300_100_6aee25a0_aswan_assiout
-    nu_xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_c_300_100_6aee25a0_helwan_aswan
-    nu_xi_fx_c_300_100_6aee25a0_helwan_helwan
-    nu_xi_fx_c_300_100_6aee25a0_helwan_assiout
-    nu_xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_c_300_100_6aee25a0_assiout_aswan
-    nu_xi_fx_c_300_100_6aee25a0_assiout_helwan
-    nu_xi_fx_c_300_100_6aee25a0_assiout_assiout
-    nu_xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70
     nu_xi_fx_ammonia_aswan_aswan
     nu_xi_fx_ammonia_aswan_helwan
     nu_xi_fx_ammonia_aswan_assiout
@@ -358,31 +138,6 @@ Variables
     nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout
     nu_xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
     nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_nitr_acid_6cc1334b_aswan_aswan
-    nu_xi_fx_nitr_acid_6cc1334b_aswan_helwan
-    nu_xi_fx_nitr_acid_6cc1334b_aswan_assiout
-    nu_xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_nitr_acid_6cc1334b_helwan_aswan
-    nu_xi_fx_nitr_acid_6cc1334b_helwan_helwan
-    nu_xi_fx_nitr_acid_6cc1334b_helwan_assiout
-    nu_xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_nitr_acid_6cc1334b_assiout_aswan
-    nu_xi_fx_nitr_acid_6cc1334b_assiout_helwan
-    nu_xi_fx_nitr_acid_6cc1334b_assiout_assiout
-    nu_xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70
     nu_xi_fx_sulf_acid_c8324d9c_aswan_aswan
     nu_xi_fx_sulf_acid_c8324d9c_aswan_helwan
     nu_xi_fx_sulf_acid_c8324d9c_aswan_assiout
@@ -408,281 +163,6 @@ Variables
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_el_aswan_15738b15_aswan_aswan
-    nu_xi_fx_el_aswan_15738b15_aswan_helwan
-    nu_xi_fx_el_aswan_15738b15_aswan_assiout
-    nu_xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_el_aswan_15738b15_helwan_aswan
-    nu_xi_fx_el_aswan_15738b15_helwan_helwan
-    nu_xi_fx_el_aswan_15738b15_helwan_assiout
-    nu_xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_el_aswan_15738b15_assiout_aswan
-    nu_xi_fx_el_aswan_15738b15_assiout_helwan
-    nu_xi_fx_el_aswan_15738b15_assiout_assiout
-    nu_xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_coke_gas_1443c379_aswan_aswan
-    nu_xi_fx_coke_gas_1443c379_aswan_helwan
-    nu_xi_fx_coke_gas_1443c379_aswan_assiout
-    nu_xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_coke_gas_1443c379_helwan_aswan
-    nu_xi_fx_coke_gas_1443c379_helwan_helwan
-    nu_xi_fx_coke_gas_1443c379_helwan_assiout
-    nu_xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_coke_gas_1443c379_assiout_aswan
-    nu_xi_fx_coke_gas_1443c379_assiout_helwan
-    nu_xi_fx_coke_gas_1443c379_assiout_assiout
-    nu_xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_phos_rock_3add2e77_aswan_aswan
-    nu_xi_fx_phos_rock_3add2e77_aswan_helwan
-    nu_xi_fx_phos_rock_3add2e77_aswan_assiout
-    nu_xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_phos_rock_3add2e77_helwan_aswan
-    nu_xi_fx_phos_rock_3add2e77_helwan_helwan
-    nu_xi_fx_phos_rock_3add2e77_helwan_assiout
-    nu_xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_phos_rock_3add2e77_assiout_aswan
-    nu_xi_fx_phos_rock_3add2e77_assiout_helwan
-    nu_xi_fx_phos_rock_3add2e77_assiout_assiout
-    nu_xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_limestone_aswan_aswan
-    nu_xi_fx_limestone_aswan_helwan
-    nu_xi_fx_limestone_aswan_assiout
-    nu_xi_fx_limestone_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_limestone_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_limestone_helwan_aswan
-    nu_xi_fx_limestone_helwan_helwan
-    nu_xi_fx_limestone_helwan_assiout
-    nu_xi_fx_limestone_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_limestone_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_limestone_assiout_aswan
-    nu_xi_fx_limestone_assiout_helwan
-    nu_xi_fx_limestone_assiout_assiout
-    nu_xi_fx_limestone_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_limestone_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_limestone_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_limestone_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_limestone_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_limestone_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_limestone_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_limestone_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_el_sulfur_578024f5_aswan_aswan
-    nu_xi_fx_el_sulfur_578024f5_aswan_helwan
-    nu_xi_fx_el_sulfur_578024f5_aswan_assiout
-    nu_xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_el_sulfur_578024f5_helwan_aswan
-    nu_xi_fx_el_sulfur_578024f5_helwan_helwan
-    nu_xi_fx_el_sulfur_578024f5_helwan_assiout
-    nu_xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_el_sulfur_578024f5_assiout_aswan
-    nu_xi_fx_el_sulfur_578024f5_assiout_helwan
-    nu_xi_fx_el_sulfur_578024f5_assiout_assiout
-    nu_xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_pyrites_aswan_aswan
-    nu_xi_fx_pyrites_aswan_helwan
-    nu_xi_fx_pyrites_aswan_assiout
-    nu_xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_pyrites_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_pyrites_helwan_aswan
-    nu_xi_fx_pyrites_helwan_helwan
-    nu_xi_fx_pyrites_helwan_assiout
-    nu_xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_pyrites_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_pyrites_assiout_aswan
-    nu_xi_fx_pyrites_assiout_helwan
-    nu_xi_fx_pyrites_assiout_assiout
-    nu_xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_pyrites_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_pyrites_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_pyrites_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_pyrites_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_electric_aswan_aswan
-    nu_xi_fx_electric_aswan_helwan
-    nu_xi_fx_electric_aswan_assiout
-    nu_xi_fx_electric_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_electric_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_electric_helwan_aswan
-    nu_xi_fx_electric_helwan_helwan
-    nu_xi_fx_electric_helwan_assiout
-    nu_xi_fx_electric_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_electric_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_electric_assiout_aswan
-    nu_xi_fx_electric_assiout_helwan
-    nu_xi_fx_electric_assiout_assiout
-    nu_xi_fx_electric_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_electric_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_electric_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_electric_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_electric_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_electric_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_electric_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_electric_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_bf_gas_74fb928b_aswan_aswan
-    nu_xi_fx_bf_gas_74fb928b_aswan_helwan
-    nu_xi_fx_bf_gas_74fb928b_aswan_assiout
-    nu_xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_bf_gas_74fb928b_helwan_aswan
-    nu_xi_fx_bf_gas_74fb928b_helwan_helwan
-    nu_xi_fx_bf_gas_74fb928b_helwan_assiout
-    nu_xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_bf_gas_74fb928b_assiout_aswan
-    nu_xi_fx_bf_gas_74fb928b_assiout_helwan
-    nu_xi_fx_bf_gas_74fb928b_assiout_assiout
-    nu_xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_water_aswan_aswan
-    nu_xi_fx_water_aswan_helwan
-    nu_xi_fx_water_aswan_assiout
-    nu_xi_fx_water_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_water_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_water_helwan_aswan
-    nu_xi_fx_water_helwan_helwan
-    nu_xi_fx_water_helwan_assiout
-    nu_xi_fx_water_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_water_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_water_assiout_aswan
-    nu_xi_fx_water_assiout_helwan
-    nu_xi_fx_water_assiout_assiout
-    nu_xi_fx_water_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_water_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_water_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_water_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_water_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_water_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_water_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_water_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_steam_aswan_aswan
-    nu_xi_fx_steam_aswan_helwan
-    nu_xi_fx_steam_aswan_assiout
-    nu_xi_fx_steam_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_steam_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_steam_helwan_aswan
-    nu_xi_fx_steam_helwan_helwan
-    nu_xi_fx_steam_helwan_assiout
-    nu_xi_fx_steam_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_steam_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_steam_assiout_aswan
-    nu_xi_fx_steam_assiout_helwan
-    nu_xi_fx_steam_assiout_assiout
-    nu_xi_fx_steam_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_steam_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_steam_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_steam_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_steam_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_steam_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_steam_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_steam_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    nu_xi_fx_bags_aswan_aswan
-    nu_xi_fx_bags_aswan_helwan
-    nu_xi_fx_bags_aswan_assiout
-    nu_xi_fx_bags_aswan_kafr_el_zt_4b0342d5
-    nu_xi_fx_bags_aswan_abu_zaabal_876cfd70
-    nu_xi_fx_bags_helwan_aswan
-    nu_xi_fx_bags_helwan_helwan
-    nu_xi_fx_bags_helwan_assiout
-    nu_xi_fx_bags_helwan_kafr_el_zt_4b0342d5
-    nu_xi_fx_bags_helwan_abu_zaabal_876cfd70
-    nu_xi_fx_bags_assiout_aswan
-    nu_xi_fx_bags_assiout_helwan
-    nu_xi_fx_bags_assiout_assiout
-    nu_xi_fx_bags_assiout_kafr_el_zt_4b0342d5
-    nu_xi_fx_bags_assiout_abu_zaabal_876cfd70
-    nu_xi_fx_bags_kafr_el_zt_4b0342d5_aswan
-    nu_xi_fx_bags_kafr_el_zt_4b0342d5_helwan
-    nu_xi_fx_bags_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    nu_xi_fx_bags_abu_zaabal_876cfd70_aswan
-    nu_xi_fx_bags_abu_zaabal_876cfd70_helwan
-    nu_xi_fx_bags_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70
 ;
 
 Positive Variables
@@ -692,10 +172,70 @@ Positive Variables
     vr(c,i)
     u(c,i)
     lam_mbd(cq,j)
-    lam_mbdb(cf,j)
+    lam_mbdb(c,j)
     lam_mb(c,i)
     lam_cc(m,i)
+    piL_xf(c,i,j)
+    piL_xi(c,i,i)
+    piL_vf(c,j)
+    piL_vr(c,i)
+    piL_u(c,i)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+xi.fx('ammonia','abu-zaabal','abu-zaabal') = 0;
+xi.fx('ammonia','abu-zaabal','assiout') = 0;
+xi.fx('ammonia','abu-zaabal','aswan') = 0;
+xi.fx('ammonia','abu-zaabal','helwan') = 0;
+xi.fx('ammonia','abu-zaabal','kafr-el-zt') = 0;
+xi.fx('ammonia','assiout','abu-zaabal') = 0;
+xi.fx('ammonia','assiout','assiout') = 0;
+xi.fx('ammonia','assiout','aswan') = 0;
+xi.fx('ammonia','assiout','helwan') = 0;
+xi.fx('ammonia','assiout','kafr-el-zt') = 0;
+xi.fx('ammonia','aswan','abu-zaabal') = 0;
+xi.fx('ammonia','aswan','assiout') = 0;
+xi.fx('ammonia','aswan','aswan') = 0;
+xi.fx('ammonia','aswan','helwan') = 0;
+xi.fx('ammonia','aswan','kafr-el-zt') = 0;
+xi.fx('ammonia','helwan','abu-zaabal') = 0;
+xi.fx('ammonia','helwan','assiout') = 0;
+xi.fx('ammonia','helwan','aswan') = 0;
+xi.fx('ammonia','helwan','helwan') = 0;
+xi.fx('ammonia','helwan','kafr-el-zt') = 0;
+xi.fx('ammonia','kafr-el-zt','abu-zaabal') = 0;
+xi.fx('ammonia','kafr-el-zt','assiout') = 0;
+xi.fx('ammonia','kafr-el-zt','aswan') = 0;
+xi.fx('ammonia','kafr-el-zt','helwan') = 0;
+xi.fx('ammonia','kafr-el-zt','kafr-el-zt') = 0;
+xi.fx('sulf-acid','abu-zaabal','abu-zaabal') = 0;
+xi.fx('sulf-acid','abu-zaabal','assiout') = 0;
+xi.fx('sulf-acid','abu-zaabal','aswan') = 0;
+xi.fx('sulf-acid','abu-zaabal','helwan') = 0;
+xi.fx('sulf-acid','abu-zaabal','kafr-el-zt') = 0;
+xi.fx('sulf-acid','assiout','abu-zaabal') = 0;
+xi.fx('sulf-acid','assiout','assiout') = 0;
+xi.fx('sulf-acid','assiout','aswan') = 0;
+xi.fx('sulf-acid','assiout','helwan') = 0;
+xi.fx('sulf-acid','assiout','kafr-el-zt') = 0;
+xi.fx('sulf-acid','aswan','abu-zaabal') = 0;
+xi.fx('sulf-acid','aswan','assiout') = 0;
+xi.fx('sulf-acid','aswan','aswan') = 0;
+xi.fx('sulf-acid','aswan','helwan') = 0;
+xi.fx('sulf-acid','aswan','kafr-el-zt') = 0;
+xi.fx('sulf-acid','helwan','abu-zaabal') = 0;
+xi.fx('sulf-acid','helwan','assiout') = 0;
+xi.fx('sulf-acid','helwan','aswan') = 0;
+xi.fx('sulf-acid','helwan','helwan') = 0;
+xi.fx('sulf-acid','helwan','kafr-el-zt') = 0;
+xi.fx('sulf-acid','kafr-el-zt','abu-zaabal') = 0;
+xi.fx('sulf-acid','kafr-el-zt','assiout') = 0;
+xi.fx('sulf-acid','kafr-el-zt','aswan') = 0;
+xi.fx('sulf-acid','kafr-el-zt','helwan') = 0;
+xi.fx('sulf-acid','kafr-el-zt','kafr-el-zt') = 0;
 
 * ============================================
 * Variable Initialization
@@ -711,16 +251,6 @@ xi.l(c,i,i) = 1;
 vf.l(c,j) = 1;
 vr.l(c,i) = 1;
 u.l(c,i) = 1;
-
-* ============================================
-* Post-solve Calibration (variable .l references)
-* ============================================
-
-$onImplicitAssign
-rxf(i,j,cf) = xf.l(cf,i,j);
-tds = sum((cf,i,j), xf.l(cf,i,j));
-tif = sum((cf,j), vf.l(cf,j));
-$offImplicitAssign
 
 * ============================================
 * Equations
@@ -744,35 +274,15 @@ Equations
     comp_mb(c,i)
     comp_mbd(cq,j)
     comp_mbdb(cf,j)
+    comp_lo_u(c,i)
+    comp_lo_vf(c,j)
+    comp_lo_vr(c,i)
+    comp_lo_xf(c,i,j)
+    comp_lo_xi(c,i,i)
     ai
     al
     ap
     obj
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70
-    xi_fx_amm_sulf_22042a14_assiout_assiout
-    xi_fx_amm_sulf_22042a14_assiout_aswan
-    xi_fx_amm_sulf_22042a14_assiout_helwan
-    xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5
-    xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70
-    xi_fx_amm_sulf_22042a14_aswan_assiout
-    xi_fx_amm_sulf_22042a14_aswan_aswan
-    xi_fx_amm_sulf_22042a14_aswan_helwan
-    xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5
-    xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70
-    xi_fx_amm_sulf_22042a14_helwan_assiout
-    xi_fx_amm_sulf_22042a14_helwan_aswan
-    xi_fx_amm_sulf_22042a14_helwan_helwan
-    xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
     xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70
     xi_fx_ammonia_abu_zaabal_876cfd70_assiout
     xi_fx_ammonia_abu_zaabal_876cfd70_aswan
@@ -798,456 +308,6 @@ Equations
     xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan
     xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan
     xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_bags_abu_zaabal_876cfd70_assiout
-    xi_fx_bags_abu_zaabal_876cfd70_aswan
-    xi_fx_bags_abu_zaabal_876cfd70_helwan
-    xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_bags_assiout_abu_zaabal_876cfd70
-    xi_fx_bags_assiout_assiout
-    xi_fx_bags_assiout_aswan
-    xi_fx_bags_assiout_helwan
-    xi_fx_bags_assiout_kafr_el_zt_4b0342d5
-    xi_fx_bags_aswan_abu_zaabal_876cfd70
-    xi_fx_bags_aswan_assiout
-    xi_fx_bags_aswan_aswan
-    xi_fx_bags_aswan_helwan
-    xi_fx_bags_aswan_kafr_el_zt_4b0342d5
-    xi_fx_bags_helwan_abu_zaabal_876cfd70
-    xi_fx_bags_helwan_assiout
-    xi_fx_bags_helwan_aswan
-    xi_fx_bags_helwan_helwan
-    xi_fx_bags_helwan_kafr_el_zt_4b0342d5
-    xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_bags_kafr_el_zt_4b0342d5_assiout
-    xi_fx_bags_kafr_el_zt_4b0342d5_aswan
-    xi_fx_bags_kafr_el_zt_4b0342d5_helwan
-    xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70
-    xi_fx_bf_gas_74fb928b_assiout_assiout
-    xi_fx_bf_gas_74fb928b_assiout_aswan
-    xi_fx_bf_gas_74fb928b_assiout_helwan
-    xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5
-    xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70
-    xi_fx_bf_gas_74fb928b_aswan_assiout
-    xi_fx_bf_gas_74fb928b_aswan_aswan
-    xi_fx_bf_gas_74fb928b_aswan_helwan
-    xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5
-    xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70
-    xi_fx_bf_gas_74fb928b_helwan_assiout
-    xi_fx_bf_gas_74fb928b_helwan_aswan
-    xi_fx_bf_gas_74fb928b_helwan_helwan
-    xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70
-    xi_fx_c_250_55_328bab59_assiout_assiout
-    xi_fx_c_250_55_328bab59_assiout_aswan
-    xi_fx_c_250_55_328bab59_assiout_helwan
-    xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5
-    xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70
-    xi_fx_c_250_55_328bab59_aswan_assiout
-    xi_fx_c_250_55_328bab59_aswan_aswan
-    xi_fx_c_250_55_328bab59_aswan_helwan
-    xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5
-    xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70
-    xi_fx_c_250_55_328bab59_helwan_assiout
-    xi_fx_c_250_55_328bab59_helwan_aswan
-    xi_fx_c_250_55_328bab59_helwan_helwan
-    xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70
-    xi_fx_c_300_100_6aee25a0_assiout_assiout
-    xi_fx_c_300_100_6aee25a0_assiout_aswan
-    xi_fx_c_300_100_6aee25a0_assiout_helwan
-    xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5
-    xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70
-    xi_fx_c_300_100_6aee25a0_aswan_assiout
-    xi_fx_c_300_100_6aee25a0_aswan_aswan
-    xi_fx_c_300_100_6aee25a0_aswan_helwan
-    xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5
-    xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70
-    xi_fx_c_300_100_6aee25a0_helwan_assiout
-    xi_fx_c_300_100_6aee25a0_helwan_aswan
-    xi_fx_c_300_100_6aee25a0_helwan_helwan
-    xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70
-    xi_fx_can_260_6f9ae351_assiout_assiout
-    xi_fx_can_260_6f9ae351_assiout_aswan
-    xi_fx_can_260_6f9ae351_assiout_helwan
-    xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5
-    xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70
-    xi_fx_can_260_6f9ae351_aswan_assiout
-    xi_fx_can_260_6f9ae351_aswan_aswan
-    xi_fx_can_260_6f9ae351_aswan_helwan
-    xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5
-    xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70
-    xi_fx_can_260_6f9ae351_helwan_assiout
-    xi_fx_can_260_6f9ae351_helwan_aswan
-    xi_fx_can_260_6f9ae351_helwan_helwan
-    xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70
-    xi_fx_can_310_39fe89a0_assiout_assiout
-    xi_fx_can_310_39fe89a0_assiout_aswan
-    xi_fx_can_310_39fe89a0_assiout_helwan
-    xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5
-    xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70
-    xi_fx_can_310_39fe89a0_aswan_assiout
-    xi_fx_can_310_39fe89a0_aswan_aswan
-    xi_fx_can_310_39fe89a0_aswan_helwan
-    xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5
-    xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70
-    xi_fx_can_310_39fe89a0_helwan_assiout
-    xi_fx_can_310_39fe89a0_helwan_aswan
-    xi_fx_can_310_39fe89a0_helwan_helwan
-    xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70
-    xi_fx_can_335_956b7145_assiout_assiout
-    xi_fx_can_335_956b7145_assiout_aswan
-    xi_fx_can_335_956b7145_assiout_helwan
-    xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5
-    xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70
-    xi_fx_can_335_956b7145_aswan_assiout
-    xi_fx_can_335_956b7145_aswan_aswan
-    xi_fx_can_335_956b7145_aswan_helwan
-    xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5
-    xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70
-    xi_fx_can_335_956b7145_helwan_assiout
-    xi_fx_can_335_956b7145_helwan_aswan
-    xi_fx_can_335_956b7145_helwan_helwan
-    xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70
-    xi_fx_coke_gas_1443c379_assiout_assiout
-    xi_fx_coke_gas_1443c379_assiout_aswan
-    xi_fx_coke_gas_1443c379_assiout_helwan
-    xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5
-    xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70
-    xi_fx_coke_gas_1443c379_aswan_assiout
-    xi_fx_coke_gas_1443c379_aswan_aswan
-    xi_fx_coke_gas_1443c379_aswan_helwan
-    xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5
-    xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70
-    xi_fx_coke_gas_1443c379_helwan_assiout
-    xi_fx_coke_gas_1443c379_helwan_aswan
-    xi_fx_coke_gas_1443c379_helwan_helwan
-    xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_dap_abu_zaabal_876cfd70_assiout
-    xi_fx_dap_abu_zaabal_876cfd70_aswan
-    xi_fx_dap_abu_zaabal_876cfd70_helwan
-    xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_dap_assiout_abu_zaabal_876cfd70
-    xi_fx_dap_assiout_assiout
-    xi_fx_dap_assiout_aswan
-    xi_fx_dap_assiout_helwan
-    xi_fx_dap_assiout_kafr_el_zt_4b0342d5
-    xi_fx_dap_aswan_abu_zaabal_876cfd70
-    xi_fx_dap_aswan_assiout
-    xi_fx_dap_aswan_aswan
-    xi_fx_dap_aswan_helwan
-    xi_fx_dap_aswan_kafr_el_zt_4b0342d5
-    xi_fx_dap_helwan_abu_zaabal_876cfd70
-    xi_fx_dap_helwan_assiout
-    xi_fx_dap_helwan_aswan
-    xi_fx_dap_helwan_helwan
-    xi_fx_dap_helwan_kafr_el_zt_4b0342d5
-    xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_dap_kafr_el_zt_4b0342d5_assiout
-    xi_fx_dap_kafr_el_zt_4b0342d5_aswan
-    xi_fx_dap_kafr_el_zt_4b0342d5_helwan
-    xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70
-    xi_fx_el_aswan_15738b15_assiout_assiout
-    xi_fx_el_aswan_15738b15_assiout_aswan
-    xi_fx_el_aswan_15738b15_assiout_helwan
-    xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5
-    xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70
-    xi_fx_el_aswan_15738b15_aswan_assiout
-    xi_fx_el_aswan_15738b15_aswan_aswan
-    xi_fx_el_aswan_15738b15_aswan_helwan
-    xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5
-    xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70
-    xi_fx_el_aswan_15738b15_helwan_assiout
-    xi_fx_el_aswan_15738b15_helwan_aswan
-    xi_fx_el_aswan_15738b15_helwan_helwan
-    xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70
-    xi_fx_el_sulfur_578024f5_assiout_assiout
-    xi_fx_el_sulfur_578024f5_assiout_aswan
-    xi_fx_el_sulfur_578024f5_assiout_helwan
-    xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5
-    xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70
-    xi_fx_el_sulfur_578024f5_aswan_assiout
-    xi_fx_el_sulfur_578024f5_aswan_aswan
-    xi_fx_el_sulfur_578024f5_aswan_helwan
-    xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5
-    xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70
-    xi_fx_el_sulfur_578024f5_helwan_assiout
-    xi_fx_el_sulfur_578024f5_helwan_aswan
-    xi_fx_el_sulfur_578024f5_helwan_helwan
-    xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_electric_abu_zaabal_876cfd70_assiout
-    xi_fx_electric_abu_zaabal_876cfd70_aswan
-    xi_fx_electric_abu_zaabal_876cfd70_helwan
-    xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_electric_assiout_abu_zaabal_876cfd70
-    xi_fx_electric_assiout_assiout
-    xi_fx_electric_assiout_aswan
-    xi_fx_electric_assiout_helwan
-    xi_fx_electric_assiout_kafr_el_zt_4b0342d5
-    xi_fx_electric_aswan_abu_zaabal_876cfd70
-    xi_fx_electric_aswan_assiout
-    xi_fx_electric_aswan_aswan
-    xi_fx_electric_aswan_helwan
-    xi_fx_electric_aswan_kafr_el_zt_4b0342d5
-    xi_fx_electric_helwan_abu_zaabal_876cfd70
-    xi_fx_electric_helwan_assiout
-    xi_fx_electric_helwan_aswan
-    xi_fx_electric_helwan_helwan
-    xi_fx_electric_helwan_kafr_el_zt_4b0342d5
-    xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_electric_kafr_el_zt_4b0342d5_assiout
-    xi_fx_electric_kafr_el_zt_4b0342d5_aswan
-    xi_fx_electric_kafr_el_zt_4b0342d5_helwan
-    xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_limestone_abu_zaabal_876cfd70_assiout
-    xi_fx_limestone_abu_zaabal_876cfd70_aswan
-    xi_fx_limestone_abu_zaabal_876cfd70_helwan
-    xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_limestone_assiout_abu_zaabal_876cfd70
-    xi_fx_limestone_assiout_assiout
-    xi_fx_limestone_assiout_aswan
-    xi_fx_limestone_assiout_helwan
-    xi_fx_limestone_assiout_kafr_el_zt_4b0342d5
-    xi_fx_limestone_aswan_abu_zaabal_876cfd70
-    xi_fx_limestone_aswan_assiout
-    xi_fx_limestone_aswan_aswan
-    xi_fx_limestone_aswan_helwan
-    xi_fx_limestone_aswan_kafr_el_zt_4b0342d5
-    xi_fx_limestone_helwan_abu_zaabal_876cfd70
-    xi_fx_limestone_helwan_assiout
-    xi_fx_limestone_helwan_aswan
-    xi_fx_limestone_helwan_helwan
-    xi_fx_limestone_helwan_kafr_el_zt_4b0342d5
-    xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_limestone_kafr_el_zt_4b0342d5_assiout
-    xi_fx_limestone_kafr_el_zt_4b0342d5_aswan
-    xi_fx_limestone_kafr_el_zt_4b0342d5_helwan
-    xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70
-    xi_fx_nitr_acid_6cc1334b_assiout_assiout
-    xi_fx_nitr_acid_6cc1334b_assiout_aswan
-    xi_fx_nitr_acid_6cc1334b_assiout_helwan
-    xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5
-    xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70
-    xi_fx_nitr_acid_6cc1334b_aswan_assiout
-    xi_fx_nitr_acid_6cc1334b_aswan_aswan
-    xi_fx_nitr_acid_6cc1334b_aswan_helwan
-    xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5
-    xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70
-    xi_fx_nitr_acid_6cc1334b_helwan_assiout
-    xi_fx_nitr_acid_6cc1334b_helwan_aswan
-    xi_fx_nitr_acid_6cc1334b_helwan_helwan
-    xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70
-    xi_fx_phos_rock_3add2e77_assiout_assiout
-    xi_fx_phos_rock_3add2e77_assiout_aswan
-    xi_fx_phos_rock_3add2e77_assiout_helwan
-    xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5
-    xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70
-    xi_fx_phos_rock_3add2e77_aswan_assiout
-    xi_fx_phos_rock_3add2e77_aswan_aswan
-    xi_fx_phos_rock_3add2e77_aswan_helwan
-    xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5
-    xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70
-    xi_fx_phos_rock_3add2e77_helwan_assiout
-    xi_fx_phos_rock_3add2e77_helwan_aswan
-    xi_fx_phos_rock_3add2e77_helwan_helwan
-    xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_pyrites_abu_zaabal_876cfd70_assiout
-    xi_fx_pyrites_abu_zaabal_876cfd70_aswan
-    xi_fx_pyrites_abu_zaabal_876cfd70_helwan
-    xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_pyrites_assiout_abu_zaabal_876cfd70
-    xi_fx_pyrites_assiout_assiout
-    xi_fx_pyrites_assiout_aswan
-    xi_fx_pyrites_assiout_helwan
-    xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5
-    xi_fx_pyrites_aswan_abu_zaabal_876cfd70
-    xi_fx_pyrites_aswan_assiout
-    xi_fx_pyrites_aswan_aswan
-    xi_fx_pyrites_aswan_helwan
-    xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5
-    xi_fx_pyrites_helwan_abu_zaabal_876cfd70
-    xi_fx_pyrites_helwan_assiout
-    xi_fx_pyrites_helwan_aswan
-    xi_fx_pyrites_helwan_helwan
-    xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70
-    xi_fx_ssp_155_4d937415_assiout_assiout
-    xi_fx_ssp_155_4d937415_assiout_aswan
-    xi_fx_ssp_155_4d937415_assiout_helwan
-    xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5
-    xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70
-    xi_fx_ssp_155_4d937415_aswan_assiout
-    xi_fx_ssp_155_4d937415_aswan_aswan
-    xi_fx_ssp_155_4d937415_aswan_helwan
-    xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5
-    xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70
-    xi_fx_ssp_155_4d937415_helwan_assiout
-    xi_fx_ssp_155_4d937415_helwan_aswan
-    xi_fx_ssp_155_4d937415_helwan_helwan
-    xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_steam_abu_zaabal_876cfd70_assiout
-    xi_fx_steam_abu_zaabal_876cfd70_aswan
-    xi_fx_steam_abu_zaabal_876cfd70_helwan
-    xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_steam_assiout_abu_zaabal_876cfd70
-    xi_fx_steam_assiout_assiout
-    xi_fx_steam_assiout_aswan
-    xi_fx_steam_assiout_helwan
-    xi_fx_steam_assiout_kafr_el_zt_4b0342d5
-    xi_fx_steam_aswan_abu_zaabal_876cfd70
-    xi_fx_steam_aswan_assiout
-    xi_fx_steam_aswan_aswan
-    xi_fx_steam_aswan_helwan
-    xi_fx_steam_aswan_kafr_el_zt_4b0342d5
-    xi_fx_steam_helwan_abu_zaabal_876cfd70
-    xi_fx_steam_helwan_assiout
-    xi_fx_steam_helwan_aswan
-    xi_fx_steam_helwan_helwan
-    xi_fx_steam_helwan_kafr_el_zt_4b0342d5
-    xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_steam_kafr_el_zt_4b0342d5_assiout
-    xi_fx_steam_kafr_el_zt_4b0342d5_aswan
-    xi_fx_steam_kafr_el_zt_4b0342d5_helwan
-    xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan
@@ -1273,56 +333,6 @@ Equations
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_urea_abu_zaabal_876cfd70_assiout
-    xi_fx_urea_abu_zaabal_876cfd70_aswan
-    xi_fx_urea_abu_zaabal_876cfd70_helwan
-    xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_urea_assiout_abu_zaabal_876cfd70
-    xi_fx_urea_assiout_assiout
-    xi_fx_urea_assiout_aswan
-    xi_fx_urea_assiout_helwan
-    xi_fx_urea_assiout_kafr_el_zt_4b0342d5
-    xi_fx_urea_aswan_abu_zaabal_876cfd70
-    xi_fx_urea_aswan_assiout
-    xi_fx_urea_aswan_aswan
-    xi_fx_urea_aswan_helwan
-    xi_fx_urea_aswan_kafr_el_zt_4b0342d5
-    xi_fx_urea_helwan_abu_zaabal_876cfd70
-    xi_fx_urea_helwan_assiout
-    xi_fx_urea_helwan_aswan
-    xi_fx_urea_helwan_helwan
-    xi_fx_urea_helwan_kafr_el_zt_4b0342d5
-    xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_urea_kafr_el_zt_4b0342d5_assiout
-    xi_fx_urea_kafr_el_zt_4b0342d5_aswan
-    xi_fx_urea_kafr_el_zt_4b0342d5_helwan
-    xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70
-    xi_fx_water_abu_zaabal_876cfd70_assiout
-    xi_fx_water_abu_zaabal_876cfd70_aswan
-    xi_fx_water_abu_zaabal_876cfd70_helwan
-    xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    xi_fx_water_assiout_abu_zaabal_876cfd70
-    xi_fx_water_assiout_assiout
-    xi_fx_water_assiout_aswan
-    xi_fx_water_assiout_helwan
-    xi_fx_water_assiout_kafr_el_zt_4b0342d5
-    xi_fx_water_aswan_abu_zaabal_876cfd70
-    xi_fx_water_aswan_assiout
-    xi_fx_water_aswan_aswan
-    xi_fx_water_aswan_helwan
-    xi_fx_water_aswan_kafr_el_zt_4b0342d5
-    xi_fx_water_helwan_abu_zaabal_876cfd70
-    xi_fx_water_helwan_assiout
-    xi_fx_water_helwan_aswan
-    xi_fx_water_helwan_helwan
-    xi_fx_water_helwan_kafr_el_zt_4b0342d5
-    xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
-    xi_fx_water_kafr_el_zt_4b0342d5_assiout
-    xi_fx_water_kafr_el_zt_4b0342d5_aswan
-    xi_fx_water_kafr_el_zt_4b0342d5_helwan
-    xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
 ;
 
 * ============================================
@@ -1333,249 +343,31 @@ Equations
 stat_psii.. 1 + 1 / er ** 1 * nu_ai =E= 0;
 stat_psil.. 1 + nu_al =E= 0;
 stat_psip.. 1 + nu_ap =E= 0;
-stat_u(c,i).. sum(cr, ((-1) * (pd(i,c) * 1$cposd(cr,i))) * nu_ap)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) =E= 0;
-stat_vf(c,j)$(cf(c)).. (((-1) * mufv(j)) * nu_al)$(sameas(c, 'amm-sulf') and sameas(j, 'alexandria')) + (((-1) * pv(c)) * nu_ai)$(sameas(c, 'amm-sulf') and sameas(j, 'alexandria')) =E= 0;
-stat_vr(c,i).. sum(cr, ((-1) * (mur(i) * 1$cposr(cr,i))) * nu_al)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) + sum(cr, ((-1) * (pv(c) * 1$cposr(cr,i))) * nu_ai)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) =E= 0;
-stat_xf(c,i,j).. sum(cf, sum(cq, ((-1) * (alpha(c,cq) * 1$cposp(cf,i))) * lam_mbd(cq,j))) + sum(cf, ((-1) * 1$cposp(cf,i)) * lam_mbdb(cf,j)) =E= 0;
-stat_xi(c,i,i).. nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'amm-sulf') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout$(sameas(c, 'amm-sulf') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan$(sameas(c, 'amm-sulf') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan$(sameas(c, 'amm-sulf') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'amm-sulf') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70$(sameas(c, 'amm-sulf') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_amm_sulf_22042a14_assiout_assiout$(sameas(c, 'amm-sulf') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_amm_sulf_22042a14_assiout_aswan$(sameas(c, 'amm-sulf') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_amm_sulf_22042a14_assiout_helwan$(sameas(c, 'amm-sulf') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'amm-sulf') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70$(sameas(c, 'amm-sulf') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_amm_sulf_22042a14_aswan_assiout$(sameas(c, 'amm-sulf') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_amm_sulf_22042a14_aswan_aswan$(sameas(c, 'amm-sulf') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_amm_sulf_22042a14_aswan_helwan$(sameas(c, 'amm-sulf') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'amm-sulf') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70$(sameas(c, 'amm-sulf') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_amm_sulf_22042a14_helwan_assiout$(sameas(c, 'amm-sulf') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_amm_sulf_22042a14_helwan_aswan$(sameas(c, 'amm-sulf') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_amm_sulf_22042a14_helwan_helwan$(sameas(c, 'amm-sulf') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'amm-sulf') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'amm-sulf') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'amm-sulf') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'amm-sulf') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'amm-sulf') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'amm-sulf') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + sum((cs,ip), ((-1) * (mui(i,i) * 1$cposi(cs,i,ip))) * nu_al)$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_aswan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_helwan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_assiout_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_assiout_assiout$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_assiout_aswan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_assiout_helwan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_aswan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_aswan_assiout$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_aswan_aswan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_aswan_helwan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_helwan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_helwan_assiout$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_helwan_aswan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_helwan_helwan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'bags') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bags_abu_zaabal_876cfd70_assiout$(sameas(c, 'bags') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_bags_abu_zaabal_876cfd70_aswan$(sameas(c, 'bags') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_bags_abu_zaabal_876cfd70_helwan$(sameas(c, 'bags') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'bags') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bags_assiout_abu_zaabal_876cfd70$(sameas(c, 'bags') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bags_assiout_assiout$(sameas(c, 'bags') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_bags_assiout_aswan$(sameas(c, 'bags') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_bags_assiout_helwan$(sameas(c, 'bags') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_bags_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'bags') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bags_aswan_abu_zaabal_876cfd70$(sameas(c, 'bags') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bags_aswan_assiout$(sameas(c, 'bags') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_bags_aswan_aswan$(sameas(c, 'bags') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_bags_aswan_helwan$(sameas(c, 'bags') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_bags_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'bags') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bags_helwan_abu_zaabal_876cfd70$(sameas(c, 'bags') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bags_helwan_assiout$(sameas(c, 'bags') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_bags_helwan_aswan$(sameas(c, 'bags') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_bags_helwan_helwan$(sameas(c, 'bags') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_bags_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'bags') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'bags') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bags_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'bags') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_bags_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'bags') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_bags_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'bags') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'bags') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'bf-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout$(sameas(c, 'bf-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan$(sameas(c, 'bf-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan$(sameas(c, 'bf-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'bf-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70$(sameas(c, 'bf-gas') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bf_gas_74fb928b_assiout_assiout$(sameas(c, 'bf-gas') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_bf_gas_74fb928b_assiout_aswan$(sameas(c, 'bf-gas') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_bf_gas_74fb928b_assiout_helwan$(sameas(c, 'bf-gas') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'bf-gas') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70$(sameas(c, 'bf-gas') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bf_gas_74fb928b_aswan_assiout$(sameas(c, 'bf-gas') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_bf_gas_74fb928b_aswan_aswan$(sameas(c, 'bf-gas') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_bf_gas_74fb928b_aswan_helwan$(sameas(c, 'bf-gas') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'bf-gas') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70$(sameas(c, 'bf-gas') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bf_gas_74fb928b_helwan_assiout$(sameas(c, 'bf-gas') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_bf_gas_74fb928b_helwan_aswan$(sameas(c, 'bf-gas') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_bf_gas_74fb928b_helwan_helwan$(sameas(c, 'bf-gas') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'bf-gas') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'bf-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'bf-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'bf-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'bf-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'bf-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'c-250-55') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout$(sameas(c, 'c-250-55') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan$(sameas(c, 'c-250-55') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan$(sameas(c, 'c-250-55') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'c-250-55') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70$(sameas(c, 'c-250-55') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_250_55_328bab59_assiout_assiout$(sameas(c, 'c-250-55') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_c_250_55_328bab59_assiout_aswan$(sameas(c, 'c-250-55') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_c_250_55_328bab59_assiout_helwan$(sameas(c, 'c-250-55') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'c-250-55') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70$(sameas(c, 'c-250-55') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_250_55_328bab59_aswan_assiout$(sameas(c, 'c-250-55') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_c_250_55_328bab59_aswan_aswan$(sameas(c, 'c-250-55') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_c_250_55_328bab59_aswan_helwan$(sameas(c, 'c-250-55') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'c-250-55') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70$(sameas(c, 'c-250-55') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_250_55_328bab59_helwan_assiout$(sameas(c, 'c-250-55') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_c_250_55_328bab59_helwan_aswan$(sameas(c, 'c-250-55') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_c_250_55_328bab59_helwan_helwan$(sameas(c, 'c-250-55') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'c-250-55') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'c-250-55') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'c-250-55') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'c-250-55') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'c-250-55') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'c-250-55') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'c-300-100') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout$(sameas(c, 'c-300-100') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan$(sameas(c, 'c-300-100') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan$(sameas(c, 'c-300-100') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'c-300-100') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70$(sameas(c, 'c-300-100') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_300_100_6aee25a0_assiout_assiout$(sameas(c, 'c-300-100') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_c_300_100_6aee25a0_assiout_aswan$(sameas(c, 'c-300-100') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_c_300_100_6aee25a0_assiout_helwan$(sameas(c, 'c-300-100') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'c-300-100') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70$(sameas(c, 'c-300-100') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_300_100_6aee25a0_aswan_assiout$(sameas(c, 'c-300-100') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_c_300_100_6aee25a0_aswan_aswan$(sameas(c, 'c-300-100') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_c_300_100_6aee25a0_aswan_helwan$(sameas(c, 'c-300-100') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'c-300-100') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70$(sameas(c, 'c-300-100') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_300_100_6aee25a0_helwan_assiout$(sameas(c, 'c-300-100') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_c_300_100_6aee25a0_helwan_aswan$(sameas(c, 'c-300-100') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_c_300_100_6aee25a0_helwan_helwan$(sameas(c, 'c-300-100') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'c-300-100') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'c-300-100') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'c-300-100') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'c-300-100') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'c-300-100') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'c-300-100') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'can-260') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout$(sameas(c, 'can-260') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan$(sameas(c, 'can-260') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan$(sameas(c, 'can-260') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'can-260') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70$(sameas(c, 'can-260') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_260_6f9ae351_assiout_assiout$(sameas(c, 'can-260') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_can_260_6f9ae351_assiout_aswan$(sameas(c, 'can-260') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_can_260_6f9ae351_assiout_helwan$(sameas(c, 'can-260') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'can-260') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70$(sameas(c, 'can-260') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_260_6f9ae351_aswan_assiout$(sameas(c, 'can-260') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_can_260_6f9ae351_aswan_aswan$(sameas(c, 'can-260') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_can_260_6f9ae351_aswan_helwan$(sameas(c, 'can-260') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'can-260') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70$(sameas(c, 'can-260') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_260_6f9ae351_helwan_assiout$(sameas(c, 'can-260') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_can_260_6f9ae351_helwan_aswan$(sameas(c, 'can-260') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_can_260_6f9ae351_helwan_helwan$(sameas(c, 'can-260') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'can-260') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'can-260') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'can-260') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'can-260') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'can-260') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'can-260') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'can-310') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout$(sameas(c, 'can-310') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan$(sameas(c, 'can-310') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan$(sameas(c, 'can-310') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'can-310') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70$(sameas(c, 'can-310') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_310_39fe89a0_assiout_assiout$(sameas(c, 'can-310') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_can_310_39fe89a0_assiout_aswan$(sameas(c, 'can-310') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_can_310_39fe89a0_assiout_helwan$(sameas(c, 'can-310') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'can-310') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70$(sameas(c, 'can-310') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_310_39fe89a0_aswan_assiout$(sameas(c, 'can-310') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_can_310_39fe89a0_aswan_aswan$(sameas(c, 'can-310') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_can_310_39fe89a0_aswan_helwan$(sameas(c, 'can-310') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'can-310') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70$(sameas(c, 'can-310') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_310_39fe89a0_helwan_assiout$(sameas(c, 'can-310') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_can_310_39fe89a0_helwan_aswan$(sameas(c, 'can-310') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_can_310_39fe89a0_helwan_helwan$(sameas(c, 'can-310') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'can-310') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'can-310') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'can-310') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'can-310') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'can-310') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'can-310') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'can-335') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout$(sameas(c, 'can-335') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan$(sameas(c, 'can-335') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan$(sameas(c, 'can-335') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'can-335') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70$(sameas(c, 'can-335') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_335_956b7145_assiout_assiout$(sameas(c, 'can-335') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_can_335_956b7145_assiout_aswan$(sameas(c, 'can-335') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_can_335_956b7145_assiout_helwan$(sameas(c, 'can-335') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'can-335') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70$(sameas(c, 'can-335') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_335_956b7145_aswan_assiout$(sameas(c, 'can-335') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_can_335_956b7145_aswan_aswan$(sameas(c, 'can-335') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_can_335_956b7145_aswan_helwan$(sameas(c, 'can-335') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'can-335') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70$(sameas(c, 'can-335') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_335_956b7145_helwan_assiout$(sameas(c, 'can-335') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_can_335_956b7145_helwan_aswan$(sameas(c, 'can-335') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_can_335_956b7145_helwan_helwan$(sameas(c, 'can-335') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'can-335') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'can-335') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'can-335') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'can-335') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'can-335') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'can-335') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'coke-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout$(sameas(c, 'coke-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan$(sameas(c, 'coke-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan$(sameas(c, 'coke-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'coke-gas') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70$(sameas(c, 'coke-gas') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_coke_gas_1443c379_assiout_assiout$(sameas(c, 'coke-gas') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_coke_gas_1443c379_assiout_aswan$(sameas(c, 'coke-gas') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_coke_gas_1443c379_assiout_helwan$(sameas(c, 'coke-gas') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'coke-gas') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70$(sameas(c, 'coke-gas') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_coke_gas_1443c379_aswan_assiout$(sameas(c, 'coke-gas') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_coke_gas_1443c379_aswan_aswan$(sameas(c, 'coke-gas') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_coke_gas_1443c379_aswan_helwan$(sameas(c, 'coke-gas') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'coke-gas') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70$(sameas(c, 'coke-gas') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_coke_gas_1443c379_helwan_assiout$(sameas(c, 'coke-gas') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_coke_gas_1443c379_helwan_aswan$(sameas(c, 'coke-gas') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_coke_gas_1443c379_helwan_helwan$(sameas(c, 'coke-gas') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'coke-gas') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'coke-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'coke-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'coke-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'coke-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'coke-gas') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'dap') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_dap_abu_zaabal_876cfd70_assiout$(sameas(c, 'dap') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_dap_abu_zaabal_876cfd70_aswan$(sameas(c, 'dap') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_dap_abu_zaabal_876cfd70_helwan$(sameas(c, 'dap') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'dap') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_dap_assiout_abu_zaabal_876cfd70$(sameas(c, 'dap') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_dap_assiout_assiout$(sameas(c, 'dap') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_dap_assiout_aswan$(sameas(c, 'dap') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_dap_assiout_helwan$(sameas(c, 'dap') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_dap_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'dap') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_dap_aswan_abu_zaabal_876cfd70$(sameas(c, 'dap') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_dap_aswan_assiout$(sameas(c, 'dap') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_dap_aswan_aswan$(sameas(c, 'dap') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_dap_aswan_helwan$(sameas(c, 'dap') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_dap_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'dap') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_dap_helwan_abu_zaabal_876cfd70$(sameas(c, 'dap') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_dap_helwan_assiout$(sameas(c, 'dap') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_dap_helwan_aswan$(sameas(c, 'dap') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_dap_helwan_helwan$(sameas(c, 'dap') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_dap_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'dap') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'dap') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_dap_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'dap') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_dap_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'dap') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_dap_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'dap') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'dap') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'el-aswan') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout$(sameas(c, 'el-aswan') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan$(sameas(c, 'el-aswan') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan$(sameas(c, 'el-aswan') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'el-aswan') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70$(sameas(c, 'el-aswan') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_aswan_15738b15_assiout_assiout$(sameas(c, 'el-aswan') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_el_aswan_15738b15_assiout_aswan$(sameas(c, 'el-aswan') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_el_aswan_15738b15_assiout_helwan$(sameas(c, 'el-aswan') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'el-aswan') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70$(sameas(c, 'el-aswan') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_aswan_15738b15_aswan_assiout$(sameas(c, 'el-aswan') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_el_aswan_15738b15_aswan_aswan$(sameas(c, 'el-aswan') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_el_aswan_15738b15_aswan_helwan$(sameas(c, 'el-aswan') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'el-aswan') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70$(sameas(c, 'el-aswan') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_aswan_15738b15_helwan_assiout$(sameas(c, 'el-aswan') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_el_aswan_15738b15_helwan_aswan$(sameas(c, 'el-aswan') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_el_aswan_15738b15_helwan_helwan$(sameas(c, 'el-aswan') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'el-aswan') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'el-aswan') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'el-aswan') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'el-aswan') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'el-aswan') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'el-aswan') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'el-sulfur') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout$(sameas(c, 'el-sulfur') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan$(sameas(c, 'el-sulfur') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan$(sameas(c, 'el-sulfur') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'el-sulfur') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70$(sameas(c, 'el-sulfur') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_sulfur_578024f5_assiout_assiout$(sameas(c, 'el-sulfur') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_el_sulfur_578024f5_assiout_aswan$(sameas(c, 'el-sulfur') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_el_sulfur_578024f5_assiout_helwan$(sameas(c, 'el-sulfur') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'el-sulfur') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70$(sameas(c, 'el-sulfur') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_sulfur_578024f5_aswan_assiout$(sameas(c, 'el-sulfur') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_el_sulfur_578024f5_aswan_aswan$(sameas(c, 'el-sulfur') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_el_sulfur_578024f5_aswan_helwan$(sameas(c, 'el-sulfur') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'el-sulfur') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70$(sameas(c, 'el-sulfur') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_sulfur_578024f5_helwan_assiout$(sameas(c, 'el-sulfur') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_el_sulfur_578024f5_helwan_aswan$(sameas(c, 'el-sulfur') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_el_sulfur_578024f5_helwan_helwan$(sameas(c, 'el-sulfur') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'el-sulfur') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'el-sulfur') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'el-sulfur') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'el-sulfur') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'el-sulfur') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'el-sulfur') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'electric') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_electric_abu_zaabal_876cfd70_assiout$(sameas(c, 'electric') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_electric_abu_zaabal_876cfd70_aswan$(sameas(c, 'electric') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_electric_abu_zaabal_876cfd70_helwan$(sameas(c, 'electric') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'electric') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_electric_assiout_abu_zaabal_876cfd70$(sameas(c, 'electric') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_electric_assiout_assiout$(sameas(c, 'electric') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_electric_assiout_aswan$(sameas(c, 'electric') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_electric_assiout_helwan$(sameas(c, 'electric') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_electric_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'electric') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_electric_aswan_abu_zaabal_876cfd70$(sameas(c, 'electric') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_electric_aswan_assiout$(sameas(c, 'electric') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_electric_aswan_aswan$(sameas(c, 'electric') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_electric_aswan_helwan$(sameas(c, 'electric') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_electric_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'electric') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_electric_helwan_abu_zaabal_876cfd70$(sameas(c, 'electric') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_electric_helwan_assiout$(sameas(c, 'electric') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_electric_helwan_aswan$(sameas(c, 'electric') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_electric_helwan_helwan$(sameas(c, 'electric') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_electric_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'electric') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'electric') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_electric_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'electric') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_electric_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'electric') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_electric_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'electric') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'electric') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'limestone') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_limestone_abu_zaabal_876cfd70_assiout$(sameas(c, 'limestone') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_limestone_abu_zaabal_876cfd70_aswan$(sameas(c, 'limestone') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_limestone_abu_zaabal_876cfd70_helwan$(sameas(c, 'limestone') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'limestone') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_limestone_assiout_abu_zaabal_876cfd70$(sameas(c, 'limestone') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_limestone_assiout_assiout$(sameas(c, 'limestone') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_limestone_assiout_aswan$(sameas(c, 'limestone') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_limestone_assiout_helwan$(sameas(c, 'limestone') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_limestone_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'limestone') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_limestone_aswan_abu_zaabal_876cfd70$(sameas(c, 'limestone') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_limestone_aswan_assiout$(sameas(c, 'limestone') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_limestone_aswan_aswan$(sameas(c, 'limestone') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_limestone_aswan_helwan$(sameas(c, 'limestone') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_limestone_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'limestone') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_limestone_helwan_abu_zaabal_876cfd70$(sameas(c, 'limestone') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_limestone_helwan_assiout$(sameas(c, 'limestone') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_limestone_helwan_aswan$(sameas(c, 'limestone') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_limestone_helwan_helwan$(sameas(c, 'limestone') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_limestone_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'limestone') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'limestone') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_limestone_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'limestone') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_limestone_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'limestone') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_limestone_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'limestone') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'limestone') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'nitr-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout$(sameas(c, 'nitr-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan$(sameas(c, 'nitr-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan$(sameas(c, 'nitr-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'nitr-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70$(sameas(c, 'nitr-acid') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_nitr_acid_6cc1334b_assiout_assiout$(sameas(c, 'nitr-acid') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_nitr_acid_6cc1334b_assiout_aswan$(sameas(c, 'nitr-acid') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_nitr_acid_6cc1334b_assiout_helwan$(sameas(c, 'nitr-acid') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'nitr-acid') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70$(sameas(c, 'nitr-acid') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_nitr_acid_6cc1334b_aswan_assiout$(sameas(c, 'nitr-acid') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_nitr_acid_6cc1334b_aswan_aswan$(sameas(c, 'nitr-acid') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_nitr_acid_6cc1334b_aswan_helwan$(sameas(c, 'nitr-acid') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'nitr-acid') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70$(sameas(c, 'nitr-acid') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_nitr_acid_6cc1334b_helwan_assiout$(sameas(c, 'nitr-acid') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_nitr_acid_6cc1334b_helwan_aswan$(sameas(c, 'nitr-acid') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_nitr_acid_6cc1334b_helwan_helwan$(sameas(c, 'nitr-acid') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'nitr-acid') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'nitr-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'nitr-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'nitr-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'nitr-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'nitr-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'phos-rock') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout$(sameas(c, 'phos-rock') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan$(sameas(c, 'phos-rock') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan$(sameas(c, 'phos-rock') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'phos-rock') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70$(sameas(c, 'phos-rock') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_phos_rock_3add2e77_assiout_assiout$(sameas(c, 'phos-rock') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_phos_rock_3add2e77_assiout_aswan$(sameas(c, 'phos-rock') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_phos_rock_3add2e77_assiout_helwan$(sameas(c, 'phos-rock') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'phos-rock') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70$(sameas(c, 'phos-rock') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_phos_rock_3add2e77_aswan_assiout$(sameas(c, 'phos-rock') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_phos_rock_3add2e77_aswan_aswan$(sameas(c, 'phos-rock') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_phos_rock_3add2e77_aswan_helwan$(sameas(c, 'phos-rock') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'phos-rock') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70$(sameas(c, 'phos-rock') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_phos_rock_3add2e77_helwan_assiout$(sameas(c, 'phos-rock') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_phos_rock_3add2e77_helwan_aswan$(sameas(c, 'phos-rock') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_phos_rock_3add2e77_helwan_helwan$(sameas(c, 'phos-rock') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'phos-rock') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'phos-rock') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'phos-rock') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'phos-rock') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'phos-rock') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'phos-rock') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'pyrites') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_pyrites_abu_zaabal_876cfd70_assiout$(sameas(c, 'pyrites') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_pyrites_abu_zaabal_876cfd70_aswan$(sameas(c, 'pyrites') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_pyrites_abu_zaabal_876cfd70_helwan$(sameas(c, 'pyrites') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'pyrites') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_pyrites_assiout_abu_zaabal_876cfd70$(sameas(c, 'pyrites') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_pyrites_assiout_assiout$(sameas(c, 'pyrites') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_pyrites_assiout_aswan$(sameas(c, 'pyrites') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_pyrites_assiout_helwan$(sameas(c, 'pyrites') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'pyrites') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_pyrites_aswan_abu_zaabal_876cfd70$(sameas(c, 'pyrites') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_pyrites_aswan_assiout$(sameas(c, 'pyrites') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_pyrites_aswan_aswan$(sameas(c, 'pyrites') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_pyrites_aswan_helwan$(sameas(c, 'pyrites') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'pyrites') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_pyrites_helwan_abu_zaabal_876cfd70$(sameas(c, 'pyrites') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_pyrites_helwan_assiout$(sameas(c, 'pyrites') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_pyrites_helwan_aswan$(sameas(c, 'pyrites') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_pyrites_helwan_helwan$(sameas(c, 'pyrites') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'pyrites') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'pyrites') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'pyrites') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'pyrites') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'pyrites') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'pyrites') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'ssp-155') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout$(sameas(c, 'ssp-155') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan$(sameas(c, 'ssp-155') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan$(sameas(c, 'ssp-155') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'ssp-155') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70$(sameas(c, 'ssp-155') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ssp_155_4d937415_assiout_assiout$(sameas(c, 'ssp-155') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_ssp_155_4d937415_assiout_aswan$(sameas(c, 'ssp-155') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_ssp_155_4d937415_assiout_helwan$(sameas(c, 'ssp-155') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'ssp-155') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70$(sameas(c, 'ssp-155') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ssp_155_4d937415_aswan_assiout$(sameas(c, 'ssp-155') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_ssp_155_4d937415_aswan_aswan$(sameas(c, 'ssp-155') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_ssp_155_4d937415_aswan_helwan$(sameas(c, 'ssp-155') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'ssp-155') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70$(sameas(c, 'ssp-155') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ssp_155_4d937415_helwan_assiout$(sameas(c, 'ssp-155') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_ssp_155_4d937415_helwan_aswan$(sameas(c, 'ssp-155') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_ssp_155_4d937415_helwan_helwan$(sameas(c, 'ssp-155') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'ssp-155') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'ssp-155') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'ssp-155') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'ssp-155') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'ssp-155') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'ssp-155') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'steam') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_steam_abu_zaabal_876cfd70_assiout$(sameas(c, 'steam') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_steam_abu_zaabal_876cfd70_aswan$(sameas(c, 'steam') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_steam_abu_zaabal_876cfd70_helwan$(sameas(c, 'steam') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'steam') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_steam_assiout_abu_zaabal_876cfd70$(sameas(c, 'steam') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_steam_assiout_assiout$(sameas(c, 'steam') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_steam_assiout_aswan$(sameas(c, 'steam') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_steam_assiout_helwan$(sameas(c, 'steam') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_steam_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'steam') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_steam_aswan_abu_zaabal_876cfd70$(sameas(c, 'steam') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_steam_aswan_assiout$(sameas(c, 'steam') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_steam_aswan_aswan$(sameas(c, 'steam') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_steam_aswan_helwan$(sameas(c, 'steam') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_steam_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'steam') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_steam_helwan_abu_zaabal_876cfd70$(sameas(c, 'steam') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_steam_helwan_assiout$(sameas(c, 'steam') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_steam_helwan_aswan$(sameas(c, 'steam') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_steam_helwan_helwan$(sameas(c, 'steam') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_steam_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'steam') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'steam') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_steam_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'steam') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_steam_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'steam') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_steam_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'steam') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'steam') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'urea') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_urea_abu_zaabal_876cfd70_assiout$(sameas(c, 'urea') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_urea_abu_zaabal_876cfd70_aswan$(sameas(c, 'urea') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_urea_abu_zaabal_876cfd70_helwan$(sameas(c, 'urea') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'urea') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_urea_assiout_abu_zaabal_876cfd70$(sameas(c, 'urea') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_urea_assiout_assiout$(sameas(c, 'urea') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_urea_assiout_aswan$(sameas(c, 'urea') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_urea_assiout_helwan$(sameas(c, 'urea') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_urea_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'urea') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_urea_aswan_abu_zaabal_876cfd70$(sameas(c, 'urea') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_urea_aswan_assiout$(sameas(c, 'urea') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_urea_aswan_aswan$(sameas(c, 'urea') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_urea_aswan_helwan$(sameas(c, 'urea') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_urea_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'urea') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_urea_helwan_abu_zaabal_876cfd70$(sameas(c, 'urea') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_urea_helwan_assiout$(sameas(c, 'urea') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_urea_helwan_aswan$(sameas(c, 'urea') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_urea_helwan_helwan$(sameas(c, 'urea') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_urea_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'urea') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'urea') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_urea_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'urea') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_urea_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'urea') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_urea_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'urea') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'urea') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'water') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_water_abu_zaabal_876cfd70_assiout$(sameas(c, 'water') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_water_abu_zaabal_876cfd70_aswan$(sameas(c, 'water') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_water_abu_zaabal_876cfd70_helwan$(sameas(c, 'water') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'water') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_water_assiout_abu_zaabal_876cfd70$(sameas(c, 'water') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_water_assiout_assiout$(sameas(c, 'water') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_water_assiout_aswan$(sameas(c, 'water') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_water_assiout_helwan$(sameas(c, 'water') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_water_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'water') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_water_aswan_abu_zaabal_876cfd70$(sameas(c, 'water') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_water_aswan_assiout$(sameas(c, 'water') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_water_aswan_aswan$(sameas(c, 'water') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_water_aswan_helwan$(sameas(c, 'water') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_water_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'water') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_water_helwan_abu_zaabal_876cfd70$(sameas(c, 'water') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_water_helwan_assiout$(sameas(c, 'water') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_water_helwan_aswan$(sameas(c, 'water') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_water_helwan_helwan$(sameas(c, 'water') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_water_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'water') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'water') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_water_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'water') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_water_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'water') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_water_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'water') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'water') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) =E= 0;
-stat_z(p,i)$(ppos(p,i)).. sum(c, ((-1) * (a(c,p) * 1$ppos(p,i))) * lam_mb(c,i)) + sum(m, b(m,p) * 1$ppos(p,i) * lam_cc(m,i)) =E= 0;
+stat_u(c,i).. sum(cr, ((-1) * (pd(i,c) * 1$(cposd(cr,i)))) * nu_ap)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) - piL_u(c,i) =E= 0;
+stat_vf(c,j)$(cf(c)).. (((-1) * mufv(j)) * nu_al)$(sameas(c, 'amm-sulf') and sameas(j, 'alexandria')) + (((-1) * pv(c)) * nu_ai)$(sameas(c, 'amm-sulf') and sameas(j, 'alexandria')) - piL_vf(c,j) =E= 0;
+stat_vr(c,i).. sum(cr, ((-1) * (mur(i) * 1$(cposr(cr,i)))) * nu_al)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) + sum(cr, ((-1) * (pv(c) * 1$(cposr(cr,i)))) * nu_ai)$(sameas(c, 'bags') and sameas(i, 'abu-zaabal')) - piL_vr(c,i) =E= 0;
+stat_xf(c,i,j)$(cf(c)).. sum(cf, sum(cq, ((-1) * (alpha(c,cq) * 1$(cposp(cf,i)))) * lam_mbd(cq,j))) + (((-1) * 1$(cposp(c,i))) * lam_mbdb(c,j))$(cf75(j,c)) - piL_xf(c,i,j) =E= 0;
+stat_xi(c,i,i).. sum((cs,ip), ((-1) * (mui(i,i) * 1$(cposi(cs,i,ip)))) * nu_al)$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_aswan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_helwan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_assiout_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_assiout_assiout$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_assiout_aswan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_assiout_helwan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_aswan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_aswan_assiout$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_aswan_aswan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_aswan_helwan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_helwan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_helwan_assiout$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_helwan_aswan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_helwan_helwan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) - piL_xi(c,i,i) =E= 0;
+stat_z(p,i)$(ppos(p,i)).. sum(c, ((-1) * (a(c,p) * 1$(ppos(p,i)))) * lam_mb(c,i)) + sum(m, (b(m,p) * 1$(ppos(p,i)) * lam_cc(m,i))$(mpos(m,i))) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(m,i)$(mpos(m,i)).. ((-1) * (sum(p$(ppos(p,i)), b(m,p) * z(p,i)) - util * k(m,i))) =G= 0;
-comp_mb(c,i).. sum(p$(ppos(p,i)), a(c,p) * z(p,i)) + sum(ip, xi(c,ip,i)$cposi(c,ip,i) - xi(c,i,ip)$cposi(c,i,ip)) + vr(c,i)$cposr(c,i) + u(c,i)$cposd(c,i) - sum(j$(cposp(c,i)), xf(c,i,j))$cf(c) =G= 0;
-comp_mbd(cq,j).. sum(cf, alpha(cf,cq) * (sum(i$(cposp(cf,i)), xf(cf,i,j)) + vf(cf,j)$pv(cf))) - cn75(j,cq) =G= 0;
-comp_mbdb(cf,j)$(cf75(j,cf)).. sum(i$(cposp(cf,i)), xf(cf,i,j)) + vf(cf,j)$pv(cf) - cf75(j,cf) =G= 0;
+comp_mb(c,i).. sum(p$(ppos(p,i)), a(c,p) * z(p,i)) + sum(ip, xi(c,ip,i)$(cposi(c,ip,i)) - xi(c,i,ip)$(cposi(c,i,ip))) + vr(c,i)$(cposr(c,i)) + u(c,i)$(cposd(c,i)) - sum(j$(cposp(c,i)), xf(c,i,j))$(cf(c)) =G= 0;
+comp_mbd(cq,j).. sum(cf, alpha(cf,cq) * (sum(i$(cposp(cf,i)), xf(cf,i,j)) + vf(cf,j)$(pv(cf)))) - cn75(j,cq) =G= 0;
+comp_mbdb(cf,j)$(cf75(j,cf)).. sum(i$(cposp(cf,i)), xf(cf,i,j)) + vf(cf,j)$(pv(cf)) - cf75(j,cf) =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_u(c,i).. u(c,i) - 0 =G= 0;
+comp_lo_vf(c,j).. vf(c,j) - 0 =G= 0;
+comp_lo_vr(c,i).. vr(c,i) - 0 =G= 0;
+comp_lo_xf(c,i,j).. xf(c,i,j) - 0 =G= 0;
+comp_lo_xi(c,i,i).. xi(c,i,i) - 0 =G= 0;
 
 * Original equality equations
 obj.. psi =E= psip + psil + psii;
 ap.. psip =E= sum((cr,i)$(cposd(cr,i)), pd(i,cr) * u(cr,i));
 al.. psil =E= sum(cf, sum((i,j)$(cposp(cf,i)), muf(i,j) * xf(cf,i,j)) + sum(j, mufv(j) * vf(cf,j))) + sum((cs,i,ip)$(cposi(cs,i,ip)), mui(i,ip) * xi(cs,i,ip)) + sum((cr,i)$(cposr(cr,i)), mur(i) * vr(cr,i));
 ai.. psii / er =E= sum((cf,j), pv(cf) * vf(cf,j)) + sum((cr,i)$(cposr(cr,i)), pv(cr) * vr(cr,i));
-xi_fx_urea_aswan_aswan.. xi("urea","aswan","aswan") - 0 =E= 0;
-xi_fx_urea_aswan_helwan.. xi("urea","aswan","helwan") - 0 =E= 0;
-xi_fx_urea_aswan_assiout.. xi("urea","aswan","assiout") - 0 =E= 0;
-xi_fx_urea_aswan_kafr_el_zt_4b0342d5.. xi("urea","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_urea_aswan_abu_zaabal_876cfd70.. xi("urea","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_urea_helwan_aswan.. xi("urea","helwan","aswan") - 0 =E= 0;
-xi_fx_urea_helwan_helwan.. xi("urea","helwan","helwan") - 0 =E= 0;
-xi_fx_urea_helwan_assiout.. xi("urea","helwan","assiout") - 0 =E= 0;
-xi_fx_urea_helwan_kafr_el_zt_4b0342d5.. xi("urea","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_urea_helwan_abu_zaabal_876cfd70.. xi("urea","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_urea_assiout_aswan.. xi("urea","assiout","aswan") - 0 =E= 0;
-xi_fx_urea_assiout_helwan.. xi("urea","assiout","helwan") - 0 =E= 0;
-xi_fx_urea_assiout_assiout.. xi("urea","assiout","assiout") - 0 =E= 0;
-xi_fx_urea_assiout_kafr_el_zt_4b0342d5.. xi("urea","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_urea_assiout_abu_zaabal_876cfd70.. xi("urea","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_urea_kafr_el_zt_4b0342d5_aswan.. xi("urea","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_urea_kafr_el_zt_4b0342d5_helwan.. xi("urea","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_urea_kafr_el_zt_4b0342d5_assiout.. xi("urea","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("urea","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("urea","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_urea_abu_zaabal_876cfd70_aswan.. xi("urea","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_urea_abu_zaabal_876cfd70_helwan.. xi("urea","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_urea_abu_zaabal_876cfd70_assiout.. xi("urea","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("urea","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("urea","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_aswan_aswan.. xi("can-260","aswan","aswan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_aswan_helwan.. xi("can-260","aswan","helwan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_aswan_assiout.. xi("can-260","aswan","assiout") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5.. xi("can-260","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70.. xi("can-260","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_helwan_aswan.. xi("can-260","helwan","aswan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_helwan_helwan.. xi("can-260","helwan","helwan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_helwan_assiout.. xi("can-260","helwan","assiout") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5.. xi("can-260","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70.. xi("can-260","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_assiout_aswan.. xi("can-260","assiout","aswan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_assiout_helwan.. xi("can-260","assiout","helwan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_assiout_assiout.. xi("can-260","assiout","assiout") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5.. xi("can-260","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70.. xi("can-260","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan.. xi("can-260","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan.. xi("can-260","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout.. xi("can-260","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("can-260","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("can-260","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan.. xi("can-260","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan.. xi("can-260","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout.. xi("can-260","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("can-260","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("can-260","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_aswan_aswan.. xi("can-310","aswan","aswan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_aswan_helwan.. xi("can-310","aswan","helwan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_aswan_assiout.. xi("can-310","aswan","assiout") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5.. xi("can-310","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70.. xi("can-310","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_helwan_aswan.. xi("can-310","helwan","aswan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_helwan_helwan.. xi("can-310","helwan","helwan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_helwan_assiout.. xi("can-310","helwan","assiout") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5.. xi("can-310","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70.. xi("can-310","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_assiout_aswan.. xi("can-310","assiout","aswan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_assiout_helwan.. xi("can-310","assiout","helwan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_assiout_assiout.. xi("can-310","assiout","assiout") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5.. xi("can-310","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70.. xi("can-310","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan.. xi("can-310","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan.. xi("can-310","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout.. xi("can-310","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("can-310","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("can-310","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan.. xi("can-310","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan.. xi("can-310","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout.. xi("can-310","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("can-310","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("can-310","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_can_335_956b7145_aswan_aswan.. xi("can-335","aswan","aswan") - 0 =E= 0;
-xi_fx_can_335_956b7145_aswan_helwan.. xi("can-335","aswan","helwan") - 0 =E= 0;
-xi_fx_can_335_956b7145_aswan_assiout.. xi("can-335","aswan","assiout") - 0 =E= 0;
-xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5.. xi("can-335","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70.. xi("can-335","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_335_956b7145_helwan_aswan.. xi("can-335","helwan","aswan") - 0 =E= 0;
-xi_fx_can_335_956b7145_helwan_helwan.. xi("can-335","helwan","helwan") - 0 =E= 0;
-xi_fx_can_335_956b7145_helwan_assiout.. xi("can-335","helwan","assiout") - 0 =E= 0;
-xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5.. xi("can-335","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70.. xi("can-335","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_can_335_956b7145_assiout_aswan.. xi("can-335","assiout","aswan") - 0 =E= 0;
-xi_fx_can_335_956b7145_assiout_helwan.. xi("can-335","assiout","helwan") - 0 =E= 0;
-xi_fx_can_335_956b7145_assiout_assiout.. xi("can-335","assiout","assiout") - 0 =E= 0;
-xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5.. xi("can-335","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70.. xi("can-335","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan.. xi("can-335","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan.. xi("can-335","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout.. xi("can-335","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("can-335","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("can-335","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan.. xi("can-335","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan.. xi("can-335","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout.. xi("can-335","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("can-335","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("can-335","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_aswan_aswan.. xi("amm-sulf","aswan","aswan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_aswan_helwan.. xi("amm-sulf","aswan","helwan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_aswan_assiout.. xi("amm-sulf","aswan","assiout") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5.. xi("amm-sulf","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70.. xi("amm-sulf","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_helwan_aswan.. xi("amm-sulf","helwan","aswan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_helwan_helwan.. xi("amm-sulf","helwan","helwan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_helwan_assiout.. xi("amm-sulf","helwan","assiout") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5.. xi("amm-sulf","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70.. xi("amm-sulf","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_assiout_aswan.. xi("amm-sulf","assiout","aswan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_assiout_helwan.. xi("amm-sulf","assiout","helwan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_assiout_assiout.. xi("amm-sulf","assiout","assiout") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5.. xi("amm-sulf","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70.. xi("amm-sulf","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan.. xi("amm-sulf","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan.. xi("amm-sulf","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout.. xi("amm-sulf","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("amm-sulf","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("amm-sulf","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan.. xi("amm-sulf","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan.. xi("amm-sulf","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout.. xi("amm-sulf","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("amm-sulf","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("amm-sulf","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_dap_aswan_aswan.. xi("dap","aswan","aswan") - 0 =E= 0;
-xi_fx_dap_aswan_helwan.. xi("dap","aswan","helwan") - 0 =E= 0;
-xi_fx_dap_aswan_assiout.. xi("dap","aswan","assiout") - 0 =E= 0;
-xi_fx_dap_aswan_kafr_el_zt_4b0342d5.. xi("dap","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_dap_aswan_abu_zaabal_876cfd70.. xi("dap","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_dap_helwan_aswan.. xi("dap","helwan","aswan") - 0 =E= 0;
-xi_fx_dap_helwan_helwan.. xi("dap","helwan","helwan") - 0 =E= 0;
-xi_fx_dap_helwan_assiout.. xi("dap","helwan","assiout") - 0 =E= 0;
-xi_fx_dap_helwan_kafr_el_zt_4b0342d5.. xi("dap","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_dap_helwan_abu_zaabal_876cfd70.. xi("dap","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_dap_assiout_aswan.. xi("dap","assiout","aswan") - 0 =E= 0;
-xi_fx_dap_assiout_helwan.. xi("dap","assiout","helwan") - 0 =E= 0;
-xi_fx_dap_assiout_assiout.. xi("dap","assiout","assiout") - 0 =E= 0;
-xi_fx_dap_assiout_kafr_el_zt_4b0342d5.. xi("dap","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_dap_assiout_abu_zaabal_876cfd70.. xi("dap","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_dap_kafr_el_zt_4b0342d5_aswan.. xi("dap","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_dap_kafr_el_zt_4b0342d5_helwan.. xi("dap","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_dap_kafr_el_zt_4b0342d5_assiout.. xi("dap","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("dap","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("dap","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_dap_abu_zaabal_876cfd70_aswan.. xi("dap","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_dap_abu_zaabal_876cfd70_helwan.. xi("dap","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_dap_abu_zaabal_876cfd70_assiout.. xi("dap","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("dap","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("dap","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_aswan_aswan.. xi("ssp-155","aswan","aswan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_aswan_helwan.. xi("ssp-155","aswan","helwan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_aswan_assiout.. xi("ssp-155","aswan","assiout") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5.. xi("ssp-155","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70.. xi("ssp-155","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_helwan_aswan.. xi("ssp-155","helwan","aswan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_helwan_helwan.. xi("ssp-155","helwan","helwan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_helwan_assiout.. xi("ssp-155","helwan","assiout") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5.. xi("ssp-155","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70.. xi("ssp-155","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_assiout_aswan.. xi("ssp-155","assiout","aswan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_assiout_helwan.. xi("ssp-155","assiout","helwan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_assiout_assiout.. xi("ssp-155","assiout","assiout") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5.. xi("ssp-155","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70.. xi("ssp-155","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan.. xi("ssp-155","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan.. xi("ssp-155","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout.. xi("ssp-155","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("ssp-155","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("ssp-155","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan.. xi("ssp-155","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan.. xi("ssp-155","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout.. xi("ssp-155","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("ssp-155","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("ssp-155","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_aswan_aswan.. xi("c-250-55","aswan","aswan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_aswan_helwan.. xi("c-250-55","aswan","helwan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_aswan_assiout.. xi("c-250-55","aswan","assiout") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5.. xi("c-250-55","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70.. xi("c-250-55","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_helwan_aswan.. xi("c-250-55","helwan","aswan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_helwan_helwan.. xi("c-250-55","helwan","helwan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_helwan_assiout.. xi("c-250-55","helwan","assiout") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5.. xi("c-250-55","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70.. xi("c-250-55","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_assiout_aswan.. xi("c-250-55","assiout","aswan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_assiout_helwan.. xi("c-250-55","assiout","helwan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_assiout_assiout.. xi("c-250-55","assiout","assiout") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5.. xi("c-250-55","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70.. xi("c-250-55","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan.. xi("c-250-55","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan.. xi("c-250-55","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout.. xi("c-250-55","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("c-250-55","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("c-250-55","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan.. xi("c-250-55","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan.. xi("c-250-55","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout.. xi("c-250-55","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("c-250-55","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("c-250-55","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_aswan_aswan.. xi("c-300-100","aswan","aswan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_aswan_helwan.. xi("c-300-100","aswan","helwan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_aswan_assiout.. xi("c-300-100","aswan","assiout") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5.. xi("c-300-100","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70.. xi("c-300-100","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_helwan_aswan.. xi("c-300-100","helwan","aswan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_helwan_helwan.. xi("c-300-100","helwan","helwan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_helwan_assiout.. xi("c-300-100","helwan","assiout") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5.. xi("c-300-100","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70.. xi("c-300-100","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_assiout_aswan.. xi("c-300-100","assiout","aswan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_assiout_helwan.. xi("c-300-100","assiout","helwan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_assiout_assiout.. xi("c-300-100","assiout","assiout") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5.. xi("c-300-100","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70.. xi("c-300-100","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan.. xi("c-300-100","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan.. xi("c-300-100","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout.. xi("c-300-100","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("c-300-100","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("c-300-100","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan.. xi("c-300-100","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan.. xi("c-300-100","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout.. xi("c-300-100","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("c-300-100","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("c-300-100","abu-zaabal","abu-zaabal") - 0 =E= 0;
 xi_fx_ammonia_aswan_aswan.. xi("ammonia","aswan","aswan") - 0 =E= 0;
 xi_fx_ammonia_aswan_helwan.. xi("ammonia","aswan","helwan") - 0 =E= 0;
 xi_fx_ammonia_aswan_assiout.. xi("ammonia","aswan","assiout") - 0 =E= 0;
@@ -1601,31 +393,6 @@ xi_fx_ammonia_abu_zaabal_876cfd70_helwan.. xi("ammonia","abu-zaabal","helwan") -
 xi_fx_ammonia_abu_zaabal_876cfd70_assiout.. xi("ammonia","abu-zaabal","assiout") - 0 =E= 0;
 xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("ammonia","abu-zaabal","kafr-el-zt") - 0 =E= 0;
 xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("ammonia","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_aswan_aswan.. xi("nitr-acid","aswan","aswan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_aswan_helwan.. xi("nitr-acid","aswan","helwan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_aswan_assiout.. xi("nitr-acid","aswan","assiout") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5.. xi("nitr-acid","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70.. xi("nitr-acid","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_helwan_aswan.. xi("nitr-acid","helwan","aswan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_helwan_helwan.. xi("nitr-acid","helwan","helwan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_helwan_assiout.. xi("nitr-acid","helwan","assiout") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5.. xi("nitr-acid","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70.. xi("nitr-acid","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_assiout_aswan.. xi("nitr-acid","assiout","aswan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_assiout_helwan.. xi("nitr-acid","assiout","helwan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_assiout_assiout.. xi("nitr-acid","assiout","assiout") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5.. xi("nitr-acid","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70.. xi("nitr-acid","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan.. xi("nitr-acid","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan.. xi("nitr-acid","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout.. xi("nitr-acid","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("nitr-acid","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("nitr-acid","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan.. xi("nitr-acid","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan.. xi("nitr-acid","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout.. xi("nitr-acid","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("nitr-acid","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("nitr-acid","abu-zaabal","abu-zaabal") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_aswan_aswan.. xi("sulf-acid","aswan","aswan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_aswan_helwan.. xi("sulf-acid","aswan","helwan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_aswan_assiout.. xi("sulf-acid","aswan","assiout") - 0 =E= 0;
@@ -1651,281 +418,6 @@ xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan.. xi("sulf-acid","abu-zaabal
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout.. xi("sulf-acid","abu-zaabal","assiout") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("sulf-acid","abu-zaabal","kafr-el-zt") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("sulf-acid","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_aswan_aswan.. xi("el-aswan","aswan","aswan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_aswan_helwan.. xi("el-aswan","aswan","helwan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_aswan_assiout.. xi("el-aswan","aswan","assiout") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5.. xi("el-aswan","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70.. xi("el-aswan","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_helwan_aswan.. xi("el-aswan","helwan","aswan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_helwan_helwan.. xi("el-aswan","helwan","helwan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_helwan_assiout.. xi("el-aswan","helwan","assiout") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5.. xi("el-aswan","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70.. xi("el-aswan","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_assiout_aswan.. xi("el-aswan","assiout","aswan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_assiout_helwan.. xi("el-aswan","assiout","helwan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_assiout_assiout.. xi("el-aswan","assiout","assiout") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5.. xi("el-aswan","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70.. xi("el-aswan","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan.. xi("el-aswan","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan.. xi("el-aswan","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout.. xi("el-aswan","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("el-aswan","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("el-aswan","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan.. xi("el-aswan","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan.. xi("el-aswan","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout.. xi("el-aswan","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("el-aswan","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("el-aswan","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_aswan_aswan.. xi("coke-gas","aswan","aswan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_aswan_helwan.. xi("coke-gas","aswan","helwan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_aswan_assiout.. xi("coke-gas","aswan","assiout") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5.. xi("coke-gas","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70.. xi("coke-gas","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_helwan_aswan.. xi("coke-gas","helwan","aswan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_helwan_helwan.. xi("coke-gas","helwan","helwan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_helwan_assiout.. xi("coke-gas","helwan","assiout") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5.. xi("coke-gas","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70.. xi("coke-gas","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_assiout_aswan.. xi("coke-gas","assiout","aswan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_assiout_helwan.. xi("coke-gas","assiout","helwan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_assiout_assiout.. xi("coke-gas","assiout","assiout") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5.. xi("coke-gas","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70.. xi("coke-gas","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan.. xi("coke-gas","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan.. xi("coke-gas","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout.. xi("coke-gas","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("coke-gas","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("coke-gas","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan.. xi("coke-gas","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan.. xi("coke-gas","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout.. xi("coke-gas","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("coke-gas","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("coke-gas","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_aswan_aswan.. xi("phos-rock","aswan","aswan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_aswan_helwan.. xi("phos-rock","aswan","helwan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_aswan_assiout.. xi("phos-rock","aswan","assiout") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5.. xi("phos-rock","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70.. xi("phos-rock","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_helwan_aswan.. xi("phos-rock","helwan","aswan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_helwan_helwan.. xi("phos-rock","helwan","helwan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_helwan_assiout.. xi("phos-rock","helwan","assiout") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5.. xi("phos-rock","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70.. xi("phos-rock","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_assiout_aswan.. xi("phos-rock","assiout","aswan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_assiout_helwan.. xi("phos-rock","assiout","helwan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_assiout_assiout.. xi("phos-rock","assiout","assiout") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5.. xi("phos-rock","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70.. xi("phos-rock","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan.. xi("phos-rock","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan.. xi("phos-rock","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout.. xi("phos-rock","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("phos-rock","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("phos-rock","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan.. xi("phos-rock","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan.. xi("phos-rock","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout.. xi("phos-rock","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("phos-rock","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("phos-rock","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_limestone_aswan_aswan.. xi("limestone","aswan","aswan") - 0 =E= 0;
-xi_fx_limestone_aswan_helwan.. xi("limestone","aswan","helwan") - 0 =E= 0;
-xi_fx_limestone_aswan_assiout.. xi("limestone","aswan","assiout") - 0 =E= 0;
-xi_fx_limestone_aswan_kafr_el_zt_4b0342d5.. xi("limestone","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_limestone_aswan_abu_zaabal_876cfd70.. xi("limestone","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_limestone_helwan_aswan.. xi("limestone","helwan","aswan") - 0 =E= 0;
-xi_fx_limestone_helwan_helwan.. xi("limestone","helwan","helwan") - 0 =E= 0;
-xi_fx_limestone_helwan_assiout.. xi("limestone","helwan","assiout") - 0 =E= 0;
-xi_fx_limestone_helwan_kafr_el_zt_4b0342d5.. xi("limestone","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_limestone_helwan_abu_zaabal_876cfd70.. xi("limestone","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_limestone_assiout_aswan.. xi("limestone","assiout","aswan") - 0 =E= 0;
-xi_fx_limestone_assiout_helwan.. xi("limestone","assiout","helwan") - 0 =E= 0;
-xi_fx_limestone_assiout_assiout.. xi("limestone","assiout","assiout") - 0 =E= 0;
-xi_fx_limestone_assiout_kafr_el_zt_4b0342d5.. xi("limestone","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_limestone_assiout_abu_zaabal_876cfd70.. xi("limestone","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_limestone_kafr_el_zt_4b0342d5_aswan.. xi("limestone","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_limestone_kafr_el_zt_4b0342d5_helwan.. xi("limestone","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_limestone_kafr_el_zt_4b0342d5_assiout.. xi("limestone","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("limestone","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("limestone","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_limestone_abu_zaabal_876cfd70_aswan.. xi("limestone","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_limestone_abu_zaabal_876cfd70_helwan.. xi("limestone","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_limestone_abu_zaabal_876cfd70_assiout.. xi("limestone","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("limestone","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("limestone","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_aswan_aswan.. xi("el-sulfur","aswan","aswan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_aswan_helwan.. xi("el-sulfur","aswan","helwan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_aswan_assiout.. xi("el-sulfur","aswan","assiout") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5.. xi("el-sulfur","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70.. xi("el-sulfur","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_helwan_aswan.. xi("el-sulfur","helwan","aswan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_helwan_helwan.. xi("el-sulfur","helwan","helwan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_helwan_assiout.. xi("el-sulfur","helwan","assiout") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5.. xi("el-sulfur","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70.. xi("el-sulfur","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_assiout_aswan.. xi("el-sulfur","assiout","aswan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_assiout_helwan.. xi("el-sulfur","assiout","helwan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_assiout_assiout.. xi("el-sulfur","assiout","assiout") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5.. xi("el-sulfur","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70.. xi("el-sulfur","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan.. xi("el-sulfur","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan.. xi("el-sulfur","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout.. xi("el-sulfur","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("el-sulfur","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("el-sulfur","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan.. xi("el-sulfur","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan.. xi("el-sulfur","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout.. xi("el-sulfur","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("el-sulfur","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("el-sulfur","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_pyrites_aswan_aswan.. xi("pyrites","aswan","aswan") - 0 =E= 0;
-xi_fx_pyrites_aswan_helwan.. xi("pyrites","aswan","helwan") - 0 =E= 0;
-xi_fx_pyrites_aswan_assiout.. xi("pyrites","aswan","assiout") - 0 =E= 0;
-xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5.. xi("pyrites","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_pyrites_aswan_abu_zaabal_876cfd70.. xi("pyrites","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_pyrites_helwan_aswan.. xi("pyrites","helwan","aswan") - 0 =E= 0;
-xi_fx_pyrites_helwan_helwan.. xi("pyrites","helwan","helwan") - 0 =E= 0;
-xi_fx_pyrites_helwan_assiout.. xi("pyrites","helwan","assiout") - 0 =E= 0;
-xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5.. xi("pyrites","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_pyrites_helwan_abu_zaabal_876cfd70.. xi("pyrites","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_pyrites_assiout_aswan.. xi("pyrites","assiout","aswan") - 0 =E= 0;
-xi_fx_pyrites_assiout_helwan.. xi("pyrites","assiout","helwan") - 0 =E= 0;
-xi_fx_pyrites_assiout_assiout.. xi("pyrites","assiout","assiout") - 0 =E= 0;
-xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5.. xi("pyrites","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_pyrites_assiout_abu_zaabal_876cfd70.. xi("pyrites","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan.. xi("pyrites","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan.. xi("pyrites","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout.. xi("pyrites","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("pyrites","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("pyrites","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_pyrites_abu_zaabal_876cfd70_aswan.. xi("pyrites","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_pyrites_abu_zaabal_876cfd70_helwan.. xi("pyrites","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_pyrites_abu_zaabal_876cfd70_assiout.. xi("pyrites","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("pyrites","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("pyrites","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_electric_aswan_aswan.. xi("electric","aswan","aswan") - 0 =E= 0;
-xi_fx_electric_aswan_helwan.. xi("electric","aswan","helwan") - 0 =E= 0;
-xi_fx_electric_aswan_assiout.. xi("electric","aswan","assiout") - 0 =E= 0;
-xi_fx_electric_aswan_kafr_el_zt_4b0342d5.. xi("electric","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_electric_aswan_abu_zaabal_876cfd70.. xi("electric","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_electric_helwan_aswan.. xi("electric","helwan","aswan") - 0 =E= 0;
-xi_fx_electric_helwan_helwan.. xi("electric","helwan","helwan") - 0 =E= 0;
-xi_fx_electric_helwan_assiout.. xi("electric","helwan","assiout") - 0 =E= 0;
-xi_fx_electric_helwan_kafr_el_zt_4b0342d5.. xi("electric","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_electric_helwan_abu_zaabal_876cfd70.. xi("electric","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_electric_assiout_aswan.. xi("electric","assiout","aswan") - 0 =E= 0;
-xi_fx_electric_assiout_helwan.. xi("electric","assiout","helwan") - 0 =E= 0;
-xi_fx_electric_assiout_assiout.. xi("electric","assiout","assiout") - 0 =E= 0;
-xi_fx_electric_assiout_kafr_el_zt_4b0342d5.. xi("electric","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_electric_assiout_abu_zaabal_876cfd70.. xi("electric","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_electric_kafr_el_zt_4b0342d5_aswan.. xi("electric","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_electric_kafr_el_zt_4b0342d5_helwan.. xi("electric","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_electric_kafr_el_zt_4b0342d5_assiout.. xi("electric","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("electric","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("electric","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_electric_abu_zaabal_876cfd70_aswan.. xi("electric","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_electric_abu_zaabal_876cfd70_helwan.. xi("electric","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_electric_abu_zaabal_876cfd70_assiout.. xi("electric","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("electric","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("electric","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_aswan_aswan.. xi("bf-gas","aswan","aswan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_aswan_helwan.. xi("bf-gas","aswan","helwan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_aswan_assiout.. xi("bf-gas","aswan","assiout") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5.. xi("bf-gas","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70.. xi("bf-gas","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_helwan_aswan.. xi("bf-gas","helwan","aswan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_helwan_helwan.. xi("bf-gas","helwan","helwan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_helwan_assiout.. xi("bf-gas","helwan","assiout") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5.. xi("bf-gas","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70.. xi("bf-gas","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_assiout_aswan.. xi("bf-gas","assiout","aswan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_assiout_helwan.. xi("bf-gas","assiout","helwan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_assiout_assiout.. xi("bf-gas","assiout","assiout") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5.. xi("bf-gas","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70.. xi("bf-gas","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan.. xi("bf-gas","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan.. xi("bf-gas","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout.. xi("bf-gas","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("bf-gas","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("bf-gas","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan.. xi("bf-gas","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan.. xi("bf-gas","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout.. xi("bf-gas","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("bf-gas","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("bf-gas","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_water_aswan_aswan.. xi("water","aswan","aswan") - 0 =E= 0;
-xi_fx_water_aswan_helwan.. xi("water","aswan","helwan") - 0 =E= 0;
-xi_fx_water_aswan_assiout.. xi("water","aswan","assiout") - 0 =E= 0;
-xi_fx_water_aswan_kafr_el_zt_4b0342d5.. xi("water","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_water_aswan_abu_zaabal_876cfd70.. xi("water","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_water_helwan_aswan.. xi("water","helwan","aswan") - 0 =E= 0;
-xi_fx_water_helwan_helwan.. xi("water","helwan","helwan") - 0 =E= 0;
-xi_fx_water_helwan_assiout.. xi("water","helwan","assiout") - 0 =E= 0;
-xi_fx_water_helwan_kafr_el_zt_4b0342d5.. xi("water","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_water_helwan_abu_zaabal_876cfd70.. xi("water","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_water_assiout_aswan.. xi("water","assiout","aswan") - 0 =E= 0;
-xi_fx_water_assiout_helwan.. xi("water","assiout","helwan") - 0 =E= 0;
-xi_fx_water_assiout_assiout.. xi("water","assiout","assiout") - 0 =E= 0;
-xi_fx_water_assiout_kafr_el_zt_4b0342d5.. xi("water","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_water_assiout_abu_zaabal_876cfd70.. xi("water","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_water_kafr_el_zt_4b0342d5_aswan.. xi("water","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_water_kafr_el_zt_4b0342d5_helwan.. xi("water","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_water_kafr_el_zt_4b0342d5_assiout.. xi("water","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("water","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("water","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_water_abu_zaabal_876cfd70_aswan.. xi("water","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_water_abu_zaabal_876cfd70_helwan.. xi("water","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_water_abu_zaabal_876cfd70_assiout.. xi("water","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("water","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("water","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_steam_aswan_aswan.. xi("steam","aswan","aswan") - 0 =E= 0;
-xi_fx_steam_aswan_helwan.. xi("steam","aswan","helwan") - 0 =E= 0;
-xi_fx_steam_aswan_assiout.. xi("steam","aswan","assiout") - 0 =E= 0;
-xi_fx_steam_aswan_kafr_el_zt_4b0342d5.. xi("steam","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_steam_aswan_abu_zaabal_876cfd70.. xi("steam","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_steam_helwan_aswan.. xi("steam","helwan","aswan") - 0 =E= 0;
-xi_fx_steam_helwan_helwan.. xi("steam","helwan","helwan") - 0 =E= 0;
-xi_fx_steam_helwan_assiout.. xi("steam","helwan","assiout") - 0 =E= 0;
-xi_fx_steam_helwan_kafr_el_zt_4b0342d5.. xi("steam","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_steam_helwan_abu_zaabal_876cfd70.. xi("steam","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_steam_assiout_aswan.. xi("steam","assiout","aswan") - 0 =E= 0;
-xi_fx_steam_assiout_helwan.. xi("steam","assiout","helwan") - 0 =E= 0;
-xi_fx_steam_assiout_assiout.. xi("steam","assiout","assiout") - 0 =E= 0;
-xi_fx_steam_assiout_kafr_el_zt_4b0342d5.. xi("steam","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_steam_assiout_abu_zaabal_876cfd70.. xi("steam","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_steam_kafr_el_zt_4b0342d5_aswan.. xi("steam","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_steam_kafr_el_zt_4b0342d5_helwan.. xi("steam","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_steam_kafr_el_zt_4b0342d5_assiout.. xi("steam","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("steam","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("steam","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_steam_abu_zaabal_876cfd70_aswan.. xi("steam","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_steam_abu_zaabal_876cfd70_helwan.. xi("steam","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_steam_abu_zaabal_876cfd70_assiout.. xi("steam","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("steam","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("steam","abu-zaabal","abu-zaabal") - 0 =E= 0;
-xi_fx_bags_aswan_aswan.. xi("bags","aswan","aswan") - 0 =E= 0;
-xi_fx_bags_aswan_helwan.. xi("bags","aswan","helwan") - 0 =E= 0;
-xi_fx_bags_aswan_assiout.. xi("bags","aswan","assiout") - 0 =E= 0;
-xi_fx_bags_aswan_kafr_el_zt_4b0342d5.. xi("bags","aswan","kafr-el-zt") - 0 =E= 0;
-xi_fx_bags_aswan_abu_zaabal_876cfd70.. xi("bags","aswan","abu-zaabal") - 0 =E= 0;
-xi_fx_bags_helwan_aswan.. xi("bags","helwan","aswan") - 0 =E= 0;
-xi_fx_bags_helwan_helwan.. xi("bags","helwan","helwan") - 0 =E= 0;
-xi_fx_bags_helwan_assiout.. xi("bags","helwan","assiout") - 0 =E= 0;
-xi_fx_bags_helwan_kafr_el_zt_4b0342d5.. xi("bags","helwan","kafr-el-zt") - 0 =E= 0;
-xi_fx_bags_helwan_abu_zaabal_876cfd70.. xi("bags","helwan","abu-zaabal") - 0 =E= 0;
-xi_fx_bags_assiout_aswan.. xi("bags","assiout","aswan") - 0 =E= 0;
-xi_fx_bags_assiout_helwan.. xi("bags","assiout","helwan") - 0 =E= 0;
-xi_fx_bags_assiout_assiout.. xi("bags","assiout","assiout") - 0 =E= 0;
-xi_fx_bags_assiout_kafr_el_zt_4b0342d5.. xi("bags","assiout","kafr-el-zt") - 0 =E= 0;
-xi_fx_bags_assiout_abu_zaabal_876cfd70.. xi("bags","assiout","abu-zaabal") - 0 =E= 0;
-xi_fx_bags_kafr_el_zt_4b0342d5_aswan.. xi("bags","kafr-el-zt","aswan") - 0 =E= 0;
-xi_fx_bags_kafr_el_zt_4b0342d5_helwan.. xi("bags","kafr-el-zt","helwan") - 0 =E= 0;
-xi_fx_bags_kafr_el_zt_4b0342d5_assiout.. xi("bags","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("bags","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("bags","kafr-el-zt","abu-zaabal") - 0 =E= 0;
-xi_fx_bags_abu_zaabal_876cfd70_aswan.. xi("bags","abu-zaabal","aswan") - 0 =E= 0;
-xi_fx_bags_abu_zaabal_876cfd70_helwan.. xi("bags","abu-zaabal","helwan") - 0 =E= 0;
-xi_fx_bags_abu_zaabal_876cfd70_assiout.. xi("bags","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("bags","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("bags","abu-zaabal","abu-zaabal") - 0 =E= 0;
 
 
 * ============================================
@@ -1936,9 +428,13 @@ xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("bags","abu-zaabal","abu
 * fixed for excluded instances to satisfy MCP matching.
 
 vf.fx(c,j)$(not (cf(c))) = 0;
+piL_vf.fx(c,j)$(not (cf(c))) = 0;
+xf.fx(c,i,j)$(not (cf(c))) = 0;
+piL_xf.fx(c,i,j)$(not (cf(c))) = 0;
 z.fx(p,i)$(not (ppos(p,i))) = 0;
 lam_cc.fx(m,i)$(not (mpos(m,i))) = 0;
 lam_mbdb.fx(cf,j)$(not (cf75(j,cf))) = 0;
+lam_mbdb.fx(c,j)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -1971,31 +467,6 @@ Model mcp_model /
     al.nu_al,
     ap.nu_ap,
     obj.psi,
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout.nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_assiout,
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan.nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_aswan,
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan.nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_helwan,
-    xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_amm_sulf_22042a14_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70.nu_xi_fx_amm_sulf_22042a14_assiout_abu_zaabal_876cfd70,
-    xi_fx_amm_sulf_22042a14_assiout_assiout.nu_xi_fx_amm_sulf_22042a14_assiout_assiout,
-    xi_fx_amm_sulf_22042a14_assiout_aswan.nu_xi_fx_amm_sulf_22042a14_assiout_aswan,
-    xi_fx_amm_sulf_22042a14_assiout_helwan.nu_xi_fx_amm_sulf_22042a14_assiout_helwan,
-    xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_amm_sulf_22042a14_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70.nu_xi_fx_amm_sulf_22042a14_aswan_abu_zaabal_876cfd70,
-    xi_fx_amm_sulf_22042a14_aswan_assiout.nu_xi_fx_amm_sulf_22042a14_aswan_assiout,
-    xi_fx_amm_sulf_22042a14_aswan_aswan.nu_xi_fx_amm_sulf_22042a14_aswan_aswan,
-    xi_fx_amm_sulf_22042a14_aswan_helwan.nu_xi_fx_amm_sulf_22042a14_aswan_helwan,
-    xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_amm_sulf_22042a14_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70.nu_xi_fx_amm_sulf_22042a14_helwan_abu_zaabal_876cfd70,
-    xi_fx_amm_sulf_22042a14_helwan_assiout.nu_xi_fx_amm_sulf_22042a14_helwan_assiout,
-    xi_fx_amm_sulf_22042a14_helwan_aswan.nu_xi_fx_amm_sulf_22042a14_helwan_aswan,
-    xi_fx_amm_sulf_22042a14_helwan_helwan.nu_xi_fx_amm_sulf_22042a14_helwan_helwan,
-    xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_amm_sulf_22042a14_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_amm_sulf_22042a14_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
     xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
     xi_fx_ammonia_abu_zaabal_876cfd70_assiout.nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout,
     xi_fx_ammonia_abu_zaabal_876cfd70_aswan.nu_xi_fx_ammonia_abu_zaabal_876cfd70_aswan,
@@ -2021,456 +492,6 @@ Model mcp_model /
     xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan,
     xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan,
     xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_bags_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_bags_abu_zaabal_876cfd70_assiout.nu_xi_fx_bags_abu_zaabal_876cfd70_assiout,
-    xi_fx_bags_abu_zaabal_876cfd70_aswan.nu_xi_fx_bags_abu_zaabal_876cfd70_aswan,
-    xi_fx_bags_abu_zaabal_876cfd70_helwan.nu_xi_fx_bags_abu_zaabal_876cfd70_helwan,
-    xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_bags_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_bags_assiout_abu_zaabal_876cfd70.nu_xi_fx_bags_assiout_abu_zaabal_876cfd70,
-    xi_fx_bags_assiout_assiout.nu_xi_fx_bags_assiout_assiout,
-    xi_fx_bags_assiout_aswan.nu_xi_fx_bags_assiout_aswan,
-    xi_fx_bags_assiout_helwan.nu_xi_fx_bags_assiout_helwan,
-    xi_fx_bags_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_bags_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_bags_aswan_abu_zaabal_876cfd70.nu_xi_fx_bags_aswan_abu_zaabal_876cfd70,
-    xi_fx_bags_aswan_assiout.nu_xi_fx_bags_aswan_assiout,
-    xi_fx_bags_aswan_aswan.nu_xi_fx_bags_aswan_aswan,
-    xi_fx_bags_aswan_helwan.nu_xi_fx_bags_aswan_helwan,
-    xi_fx_bags_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_bags_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_bags_helwan_abu_zaabal_876cfd70.nu_xi_fx_bags_helwan_abu_zaabal_876cfd70,
-    xi_fx_bags_helwan_assiout.nu_xi_fx_bags_helwan_assiout,
-    xi_fx_bags_helwan_aswan.nu_xi_fx_bags_helwan_aswan,
-    xi_fx_bags_helwan_helwan.nu_xi_fx_bags_helwan_helwan,
-    xi_fx_bags_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_bags_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_bags_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_bags_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_bags_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_bags_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_bags_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_bags_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_bags_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_bags_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout.nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_assiout,
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan.nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_aswan,
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan.nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_helwan,
-    xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_bf_gas_74fb928b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70.nu_xi_fx_bf_gas_74fb928b_assiout_abu_zaabal_876cfd70,
-    xi_fx_bf_gas_74fb928b_assiout_assiout.nu_xi_fx_bf_gas_74fb928b_assiout_assiout,
-    xi_fx_bf_gas_74fb928b_assiout_aswan.nu_xi_fx_bf_gas_74fb928b_assiout_aswan,
-    xi_fx_bf_gas_74fb928b_assiout_helwan.nu_xi_fx_bf_gas_74fb928b_assiout_helwan,
-    xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_bf_gas_74fb928b_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70.nu_xi_fx_bf_gas_74fb928b_aswan_abu_zaabal_876cfd70,
-    xi_fx_bf_gas_74fb928b_aswan_assiout.nu_xi_fx_bf_gas_74fb928b_aswan_assiout,
-    xi_fx_bf_gas_74fb928b_aswan_aswan.nu_xi_fx_bf_gas_74fb928b_aswan_aswan,
-    xi_fx_bf_gas_74fb928b_aswan_helwan.nu_xi_fx_bf_gas_74fb928b_aswan_helwan,
-    xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_bf_gas_74fb928b_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70.nu_xi_fx_bf_gas_74fb928b_helwan_abu_zaabal_876cfd70,
-    xi_fx_bf_gas_74fb928b_helwan_assiout.nu_xi_fx_bf_gas_74fb928b_helwan_assiout,
-    xi_fx_bf_gas_74fb928b_helwan_aswan.nu_xi_fx_bf_gas_74fb928b_helwan_aswan,
-    xi_fx_bf_gas_74fb928b_helwan_helwan.nu_xi_fx_bf_gas_74fb928b_helwan_helwan,
-    xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_bf_gas_74fb928b_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_bf_gas_74fb928b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout.nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_assiout,
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan.nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_aswan,
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan.nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_helwan,
-    xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_c_250_55_328bab59_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70.nu_xi_fx_c_250_55_328bab59_assiout_abu_zaabal_876cfd70,
-    xi_fx_c_250_55_328bab59_assiout_assiout.nu_xi_fx_c_250_55_328bab59_assiout_assiout,
-    xi_fx_c_250_55_328bab59_assiout_aswan.nu_xi_fx_c_250_55_328bab59_assiout_aswan,
-    xi_fx_c_250_55_328bab59_assiout_helwan.nu_xi_fx_c_250_55_328bab59_assiout_helwan,
-    xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_c_250_55_328bab59_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70.nu_xi_fx_c_250_55_328bab59_aswan_abu_zaabal_876cfd70,
-    xi_fx_c_250_55_328bab59_aswan_assiout.nu_xi_fx_c_250_55_328bab59_aswan_assiout,
-    xi_fx_c_250_55_328bab59_aswan_aswan.nu_xi_fx_c_250_55_328bab59_aswan_aswan,
-    xi_fx_c_250_55_328bab59_aswan_helwan.nu_xi_fx_c_250_55_328bab59_aswan_helwan,
-    xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_c_250_55_328bab59_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70.nu_xi_fx_c_250_55_328bab59_helwan_abu_zaabal_876cfd70,
-    xi_fx_c_250_55_328bab59_helwan_assiout.nu_xi_fx_c_250_55_328bab59_helwan_assiout,
-    xi_fx_c_250_55_328bab59_helwan_aswan.nu_xi_fx_c_250_55_328bab59_helwan_aswan,
-    xi_fx_c_250_55_328bab59_helwan_helwan.nu_xi_fx_c_250_55_328bab59_helwan_helwan,
-    xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_c_250_55_328bab59_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_c_250_55_328bab59_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout.nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_assiout,
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan.nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_aswan,
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan.nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_helwan,
-    xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_c_300_100_6aee25a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70.nu_xi_fx_c_300_100_6aee25a0_assiout_abu_zaabal_876cfd70,
-    xi_fx_c_300_100_6aee25a0_assiout_assiout.nu_xi_fx_c_300_100_6aee25a0_assiout_assiout,
-    xi_fx_c_300_100_6aee25a0_assiout_aswan.nu_xi_fx_c_300_100_6aee25a0_assiout_aswan,
-    xi_fx_c_300_100_6aee25a0_assiout_helwan.nu_xi_fx_c_300_100_6aee25a0_assiout_helwan,
-    xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_c_300_100_6aee25a0_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70.nu_xi_fx_c_300_100_6aee25a0_aswan_abu_zaabal_876cfd70,
-    xi_fx_c_300_100_6aee25a0_aswan_assiout.nu_xi_fx_c_300_100_6aee25a0_aswan_assiout,
-    xi_fx_c_300_100_6aee25a0_aswan_aswan.nu_xi_fx_c_300_100_6aee25a0_aswan_aswan,
-    xi_fx_c_300_100_6aee25a0_aswan_helwan.nu_xi_fx_c_300_100_6aee25a0_aswan_helwan,
-    xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_c_300_100_6aee25a0_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70.nu_xi_fx_c_300_100_6aee25a0_helwan_abu_zaabal_876cfd70,
-    xi_fx_c_300_100_6aee25a0_helwan_assiout.nu_xi_fx_c_300_100_6aee25a0_helwan_assiout,
-    xi_fx_c_300_100_6aee25a0_helwan_aswan.nu_xi_fx_c_300_100_6aee25a0_helwan_aswan,
-    xi_fx_c_300_100_6aee25a0_helwan_helwan.nu_xi_fx_c_300_100_6aee25a0_helwan_helwan,
-    xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_c_300_100_6aee25a0_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_c_300_100_6aee25a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout.nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_assiout,
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan.nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_aswan,
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan.nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_helwan,
-    xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_can_260_6f9ae351_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70.nu_xi_fx_can_260_6f9ae351_assiout_abu_zaabal_876cfd70,
-    xi_fx_can_260_6f9ae351_assiout_assiout.nu_xi_fx_can_260_6f9ae351_assiout_assiout,
-    xi_fx_can_260_6f9ae351_assiout_aswan.nu_xi_fx_can_260_6f9ae351_assiout_aswan,
-    xi_fx_can_260_6f9ae351_assiout_helwan.nu_xi_fx_can_260_6f9ae351_assiout_helwan,
-    xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_can_260_6f9ae351_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70.nu_xi_fx_can_260_6f9ae351_aswan_abu_zaabal_876cfd70,
-    xi_fx_can_260_6f9ae351_aswan_assiout.nu_xi_fx_can_260_6f9ae351_aswan_assiout,
-    xi_fx_can_260_6f9ae351_aswan_aswan.nu_xi_fx_can_260_6f9ae351_aswan_aswan,
-    xi_fx_can_260_6f9ae351_aswan_helwan.nu_xi_fx_can_260_6f9ae351_aswan_helwan,
-    xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_can_260_6f9ae351_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70.nu_xi_fx_can_260_6f9ae351_helwan_abu_zaabal_876cfd70,
-    xi_fx_can_260_6f9ae351_helwan_assiout.nu_xi_fx_can_260_6f9ae351_helwan_assiout,
-    xi_fx_can_260_6f9ae351_helwan_aswan.nu_xi_fx_can_260_6f9ae351_helwan_aswan,
-    xi_fx_can_260_6f9ae351_helwan_helwan.nu_xi_fx_can_260_6f9ae351_helwan_helwan,
-    xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_can_260_6f9ae351_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_can_260_6f9ae351_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout.nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_assiout,
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan.nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_aswan,
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan.nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_helwan,
-    xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_can_310_39fe89a0_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70.nu_xi_fx_can_310_39fe89a0_assiout_abu_zaabal_876cfd70,
-    xi_fx_can_310_39fe89a0_assiout_assiout.nu_xi_fx_can_310_39fe89a0_assiout_assiout,
-    xi_fx_can_310_39fe89a0_assiout_aswan.nu_xi_fx_can_310_39fe89a0_assiout_aswan,
-    xi_fx_can_310_39fe89a0_assiout_helwan.nu_xi_fx_can_310_39fe89a0_assiout_helwan,
-    xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_can_310_39fe89a0_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70.nu_xi_fx_can_310_39fe89a0_aswan_abu_zaabal_876cfd70,
-    xi_fx_can_310_39fe89a0_aswan_assiout.nu_xi_fx_can_310_39fe89a0_aswan_assiout,
-    xi_fx_can_310_39fe89a0_aswan_aswan.nu_xi_fx_can_310_39fe89a0_aswan_aswan,
-    xi_fx_can_310_39fe89a0_aswan_helwan.nu_xi_fx_can_310_39fe89a0_aswan_helwan,
-    xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_can_310_39fe89a0_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70.nu_xi_fx_can_310_39fe89a0_helwan_abu_zaabal_876cfd70,
-    xi_fx_can_310_39fe89a0_helwan_assiout.nu_xi_fx_can_310_39fe89a0_helwan_assiout,
-    xi_fx_can_310_39fe89a0_helwan_aswan.nu_xi_fx_can_310_39fe89a0_helwan_aswan,
-    xi_fx_can_310_39fe89a0_helwan_helwan.nu_xi_fx_can_310_39fe89a0_helwan_helwan,
-    xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_can_310_39fe89a0_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_can_310_39fe89a0_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout.nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_assiout,
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan.nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_aswan,
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan.nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_helwan,
-    xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_can_335_956b7145_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70.nu_xi_fx_can_335_956b7145_assiout_abu_zaabal_876cfd70,
-    xi_fx_can_335_956b7145_assiout_assiout.nu_xi_fx_can_335_956b7145_assiout_assiout,
-    xi_fx_can_335_956b7145_assiout_aswan.nu_xi_fx_can_335_956b7145_assiout_aswan,
-    xi_fx_can_335_956b7145_assiout_helwan.nu_xi_fx_can_335_956b7145_assiout_helwan,
-    xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_can_335_956b7145_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70.nu_xi_fx_can_335_956b7145_aswan_abu_zaabal_876cfd70,
-    xi_fx_can_335_956b7145_aswan_assiout.nu_xi_fx_can_335_956b7145_aswan_assiout,
-    xi_fx_can_335_956b7145_aswan_aswan.nu_xi_fx_can_335_956b7145_aswan_aswan,
-    xi_fx_can_335_956b7145_aswan_helwan.nu_xi_fx_can_335_956b7145_aswan_helwan,
-    xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_can_335_956b7145_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70.nu_xi_fx_can_335_956b7145_helwan_abu_zaabal_876cfd70,
-    xi_fx_can_335_956b7145_helwan_assiout.nu_xi_fx_can_335_956b7145_helwan_assiout,
-    xi_fx_can_335_956b7145_helwan_aswan.nu_xi_fx_can_335_956b7145_helwan_aswan,
-    xi_fx_can_335_956b7145_helwan_helwan.nu_xi_fx_can_335_956b7145_helwan_helwan,
-    xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_can_335_956b7145_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_can_335_956b7145_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout.nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_assiout,
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan.nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_aswan,
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan.nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_helwan,
-    xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_coke_gas_1443c379_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70.nu_xi_fx_coke_gas_1443c379_assiout_abu_zaabal_876cfd70,
-    xi_fx_coke_gas_1443c379_assiout_assiout.nu_xi_fx_coke_gas_1443c379_assiout_assiout,
-    xi_fx_coke_gas_1443c379_assiout_aswan.nu_xi_fx_coke_gas_1443c379_assiout_aswan,
-    xi_fx_coke_gas_1443c379_assiout_helwan.nu_xi_fx_coke_gas_1443c379_assiout_helwan,
-    xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_coke_gas_1443c379_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70.nu_xi_fx_coke_gas_1443c379_aswan_abu_zaabal_876cfd70,
-    xi_fx_coke_gas_1443c379_aswan_assiout.nu_xi_fx_coke_gas_1443c379_aswan_assiout,
-    xi_fx_coke_gas_1443c379_aswan_aswan.nu_xi_fx_coke_gas_1443c379_aswan_aswan,
-    xi_fx_coke_gas_1443c379_aswan_helwan.nu_xi_fx_coke_gas_1443c379_aswan_helwan,
-    xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_coke_gas_1443c379_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70.nu_xi_fx_coke_gas_1443c379_helwan_abu_zaabal_876cfd70,
-    xi_fx_coke_gas_1443c379_helwan_assiout.nu_xi_fx_coke_gas_1443c379_helwan_assiout,
-    xi_fx_coke_gas_1443c379_helwan_aswan.nu_xi_fx_coke_gas_1443c379_helwan_aswan,
-    xi_fx_coke_gas_1443c379_helwan_helwan.nu_xi_fx_coke_gas_1443c379_helwan_helwan,
-    xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_coke_gas_1443c379_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_coke_gas_1443c379_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_dap_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_dap_abu_zaabal_876cfd70_assiout.nu_xi_fx_dap_abu_zaabal_876cfd70_assiout,
-    xi_fx_dap_abu_zaabal_876cfd70_aswan.nu_xi_fx_dap_abu_zaabal_876cfd70_aswan,
-    xi_fx_dap_abu_zaabal_876cfd70_helwan.nu_xi_fx_dap_abu_zaabal_876cfd70_helwan,
-    xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_dap_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_dap_assiout_abu_zaabal_876cfd70.nu_xi_fx_dap_assiout_abu_zaabal_876cfd70,
-    xi_fx_dap_assiout_assiout.nu_xi_fx_dap_assiout_assiout,
-    xi_fx_dap_assiout_aswan.nu_xi_fx_dap_assiout_aswan,
-    xi_fx_dap_assiout_helwan.nu_xi_fx_dap_assiout_helwan,
-    xi_fx_dap_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_dap_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_dap_aswan_abu_zaabal_876cfd70.nu_xi_fx_dap_aswan_abu_zaabal_876cfd70,
-    xi_fx_dap_aswan_assiout.nu_xi_fx_dap_aswan_assiout,
-    xi_fx_dap_aswan_aswan.nu_xi_fx_dap_aswan_aswan,
-    xi_fx_dap_aswan_helwan.nu_xi_fx_dap_aswan_helwan,
-    xi_fx_dap_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_dap_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_dap_helwan_abu_zaabal_876cfd70.nu_xi_fx_dap_helwan_abu_zaabal_876cfd70,
-    xi_fx_dap_helwan_assiout.nu_xi_fx_dap_helwan_assiout,
-    xi_fx_dap_helwan_aswan.nu_xi_fx_dap_helwan_aswan,
-    xi_fx_dap_helwan_helwan.nu_xi_fx_dap_helwan_helwan,
-    xi_fx_dap_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_dap_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_dap_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_dap_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_dap_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_dap_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_dap_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_dap_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_dap_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_dap_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout.nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_assiout,
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan.nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_aswan,
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan.nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_helwan,
-    xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_el_aswan_15738b15_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70.nu_xi_fx_el_aswan_15738b15_assiout_abu_zaabal_876cfd70,
-    xi_fx_el_aswan_15738b15_assiout_assiout.nu_xi_fx_el_aswan_15738b15_assiout_assiout,
-    xi_fx_el_aswan_15738b15_assiout_aswan.nu_xi_fx_el_aswan_15738b15_assiout_aswan,
-    xi_fx_el_aswan_15738b15_assiout_helwan.nu_xi_fx_el_aswan_15738b15_assiout_helwan,
-    xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_el_aswan_15738b15_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70.nu_xi_fx_el_aswan_15738b15_aswan_abu_zaabal_876cfd70,
-    xi_fx_el_aswan_15738b15_aswan_assiout.nu_xi_fx_el_aswan_15738b15_aswan_assiout,
-    xi_fx_el_aswan_15738b15_aswan_aswan.nu_xi_fx_el_aswan_15738b15_aswan_aswan,
-    xi_fx_el_aswan_15738b15_aswan_helwan.nu_xi_fx_el_aswan_15738b15_aswan_helwan,
-    xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_el_aswan_15738b15_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70.nu_xi_fx_el_aswan_15738b15_helwan_abu_zaabal_876cfd70,
-    xi_fx_el_aswan_15738b15_helwan_assiout.nu_xi_fx_el_aswan_15738b15_helwan_assiout,
-    xi_fx_el_aswan_15738b15_helwan_aswan.nu_xi_fx_el_aswan_15738b15_helwan_aswan,
-    xi_fx_el_aswan_15738b15_helwan_helwan.nu_xi_fx_el_aswan_15738b15_helwan_helwan,
-    xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_el_aswan_15738b15_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_el_aswan_15738b15_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout.nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_assiout,
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan.nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_aswan,
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan.nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_helwan,
-    xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_el_sulfur_578024f5_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70.nu_xi_fx_el_sulfur_578024f5_assiout_abu_zaabal_876cfd70,
-    xi_fx_el_sulfur_578024f5_assiout_assiout.nu_xi_fx_el_sulfur_578024f5_assiout_assiout,
-    xi_fx_el_sulfur_578024f5_assiout_aswan.nu_xi_fx_el_sulfur_578024f5_assiout_aswan,
-    xi_fx_el_sulfur_578024f5_assiout_helwan.nu_xi_fx_el_sulfur_578024f5_assiout_helwan,
-    xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_el_sulfur_578024f5_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70.nu_xi_fx_el_sulfur_578024f5_aswan_abu_zaabal_876cfd70,
-    xi_fx_el_sulfur_578024f5_aswan_assiout.nu_xi_fx_el_sulfur_578024f5_aswan_assiout,
-    xi_fx_el_sulfur_578024f5_aswan_aswan.nu_xi_fx_el_sulfur_578024f5_aswan_aswan,
-    xi_fx_el_sulfur_578024f5_aswan_helwan.nu_xi_fx_el_sulfur_578024f5_aswan_helwan,
-    xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_el_sulfur_578024f5_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70.nu_xi_fx_el_sulfur_578024f5_helwan_abu_zaabal_876cfd70,
-    xi_fx_el_sulfur_578024f5_helwan_assiout.nu_xi_fx_el_sulfur_578024f5_helwan_assiout,
-    xi_fx_el_sulfur_578024f5_helwan_aswan.nu_xi_fx_el_sulfur_578024f5_helwan_aswan,
-    xi_fx_el_sulfur_578024f5_helwan_helwan.nu_xi_fx_el_sulfur_578024f5_helwan_helwan,
-    xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_el_sulfur_578024f5_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_el_sulfur_578024f5_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_electric_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_electric_abu_zaabal_876cfd70_assiout.nu_xi_fx_electric_abu_zaabal_876cfd70_assiout,
-    xi_fx_electric_abu_zaabal_876cfd70_aswan.nu_xi_fx_electric_abu_zaabal_876cfd70_aswan,
-    xi_fx_electric_abu_zaabal_876cfd70_helwan.nu_xi_fx_electric_abu_zaabal_876cfd70_helwan,
-    xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_electric_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_electric_assiout_abu_zaabal_876cfd70.nu_xi_fx_electric_assiout_abu_zaabal_876cfd70,
-    xi_fx_electric_assiout_assiout.nu_xi_fx_electric_assiout_assiout,
-    xi_fx_electric_assiout_aswan.nu_xi_fx_electric_assiout_aswan,
-    xi_fx_electric_assiout_helwan.nu_xi_fx_electric_assiout_helwan,
-    xi_fx_electric_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_electric_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_electric_aswan_abu_zaabal_876cfd70.nu_xi_fx_electric_aswan_abu_zaabal_876cfd70,
-    xi_fx_electric_aswan_assiout.nu_xi_fx_electric_aswan_assiout,
-    xi_fx_electric_aswan_aswan.nu_xi_fx_electric_aswan_aswan,
-    xi_fx_electric_aswan_helwan.nu_xi_fx_electric_aswan_helwan,
-    xi_fx_electric_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_electric_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_electric_helwan_abu_zaabal_876cfd70.nu_xi_fx_electric_helwan_abu_zaabal_876cfd70,
-    xi_fx_electric_helwan_assiout.nu_xi_fx_electric_helwan_assiout,
-    xi_fx_electric_helwan_aswan.nu_xi_fx_electric_helwan_aswan,
-    xi_fx_electric_helwan_helwan.nu_xi_fx_electric_helwan_helwan,
-    xi_fx_electric_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_electric_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_electric_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_electric_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_electric_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_electric_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_electric_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_electric_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_electric_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_electric_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_limestone_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_limestone_abu_zaabal_876cfd70_assiout.nu_xi_fx_limestone_abu_zaabal_876cfd70_assiout,
-    xi_fx_limestone_abu_zaabal_876cfd70_aswan.nu_xi_fx_limestone_abu_zaabal_876cfd70_aswan,
-    xi_fx_limestone_abu_zaabal_876cfd70_helwan.nu_xi_fx_limestone_abu_zaabal_876cfd70_helwan,
-    xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_limestone_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_limestone_assiout_abu_zaabal_876cfd70.nu_xi_fx_limestone_assiout_abu_zaabal_876cfd70,
-    xi_fx_limestone_assiout_assiout.nu_xi_fx_limestone_assiout_assiout,
-    xi_fx_limestone_assiout_aswan.nu_xi_fx_limestone_assiout_aswan,
-    xi_fx_limestone_assiout_helwan.nu_xi_fx_limestone_assiout_helwan,
-    xi_fx_limestone_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_limestone_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_limestone_aswan_abu_zaabal_876cfd70.nu_xi_fx_limestone_aswan_abu_zaabal_876cfd70,
-    xi_fx_limestone_aswan_assiout.nu_xi_fx_limestone_aswan_assiout,
-    xi_fx_limestone_aswan_aswan.nu_xi_fx_limestone_aswan_aswan,
-    xi_fx_limestone_aswan_helwan.nu_xi_fx_limestone_aswan_helwan,
-    xi_fx_limestone_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_limestone_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_limestone_helwan_abu_zaabal_876cfd70.nu_xi_fx_limestone_helwan_abu_zaabal_876cfd70,
-    xi_fx_limestone_helwan_assiout.nu_xi_fx_limestone_helwan_assiout,
-    xi_fx_limestone_helwan_aswan.nu_xi_fx_limestone_helwan_aswan,
-    xi_fx_limestone_helwan_helwan.nu_xi_fx_limestone_helwan_helwan,
-    xi_fx_limestone_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_limestone_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_limestone_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_limestone_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_limestone_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_limestone_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_limestone_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_limestone_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_limestone_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_limestone_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout.nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_assiout,
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan.nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_aswan,
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan.nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_helwan,
-    xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_nitr_acid_6cc1334b_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70.nu_xi_fx_nitr_acid_6cc1334b_assiout_abu_zaabal_876cfd70,
-    xi_fx_nitr_acid_6cc1334b_assiout_assiout.nu_xi_fx_nitr_acid_6cc1334b_assiout_assiout,
-    xi_fx_nitr_acid_6cc1334b_assiout_aswan.nu_xi_fx_nitr_acid_6cc1334b_assiout_aswan,
-    xi_fx_nitr_acid_6cc1334b_assiout_helwan.nu_xi_fx_nitr_acid_6cc1334b_assiout_helwan,
-    xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_nitr_acid_6cc1334b_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70.nu_xi_fx_nitr_acid_6cc1334b_aswan_abu_zaabal_876cfd70,
-    xi_fx_nitr_acid_6cc1334b_aswan_assiout.nu_xi_fx_nitr_acid_6cc1334b_aswan_assiout,
-    xi_fx_nitr_acid_6cc1334b_aswan_aswan.nu_xi_fx_nitr_acid_6cc1334b_aswan_aswan,
-    xi_fx_nitr_acid_6cc1334b_aswan_helwan.nu_xi_fx_nitr_acid_6cc1334b_aswan_helwan,
-    xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_nitr_acid_6cc1334b_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70.nu_xi_fx_nitr_acid_6cc1334b_helwan_abu_zaabal_876cfd70,
-    xi_fx_nitr_acid_6cc1334b_helwan_assiout.nu_xi_fx_nitr_acid_6cc1334b_helwan_assiout,
-    xi_fx_nitr_acid_6cc1334b_helwan_aswan.nu_xi_fx_nitr_acid_6cc1334b_helwan_aswan,
-    xi_fx_nitr_acid_6cc1334b_helwan_helwan.nu_xi_fx_nitr_acid_6cc1334b_helwan_helwan,
-    xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_nitr_acid_6cc1334b_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_nitr_acid_6cc1334b_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout.nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_assiout,
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan.nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_aswan,
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan.nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_helwan,
-    xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_phos_rock_3add2e77_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70.nu_xi_fx_phos_rock_3add2e77_assiout_abu_zaabal_876cfd70,
-    xi_fx_phos_rock_3add2e77_assiout_assiout.nu_xi_fx_phos_rock_3add2e77_assiout_assiout,
-    xi_fx_phos_rock_3add2e77_assiout_aswan.nu_xi_fx_phos_rock_3add2e77_assiout_aswan,
-    xi_fx_phos_rock_3add2e77_assiout_helwan.nu_xi_fx_phos_rock_3add2e77_assiout_helwan,
-    xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_phos_rock_3add2e77_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70.nu_xi_fx_phos_rock_3add2e77_aswan_abu_zaabal_876cfd70,
-    xi_fx_phos_rock_3add2e77_aswan_assiout.nu_xi_fx_phos_rock_3add2e77_aswan_assiout,
-    xi_fx_phos_rock_3add2e77_aswan_aswan.nu_xi_fx_phos_rock_3add2e77_aswan_aswan,
-    xi_fx_phos_rock_3add2e77_aswan_helwan.nu_xi_fx_phos_rock_3add2e77_aswan_helwan,
-    xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_phos_rock_3add2e77_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70.nu_xi_fx_phos_rock_3add2e77_helwan_abu_zaabal_876cfd70,
-    xi_fx_phos_rock_3add2e77_helwan_assiout.nu_xi_fx_phos_rock_3add2e77_helwan_assiout,
-    xi_fx_phos_rock_3add2e77_helwan_aswan.nu_xi_fx_phos_rock_3add2e77_helwan_aswan,
-    xi_fx_phos_rock_3add2e77_helwan_helwan.nu_xi_fx_phos_rock_3add2e77_helwan_helwan,
-    xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_phos_rock_3add2e77_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_phos_rock_3add2e77_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_pyrites_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_pyrites_abu_zaabal_876cfd70_assiout.nu_xi_fx_pyrites_abu_zaabal_876cfd70_assiout,
-    xi_fx_pyrites_abu_zaabal_876cfd70_aswan.nu_xi_fx_pyrites_abu_zaabal_876cfd70_aswan,
-    xi_fx_pyrites_abu_zaabal_876cfd70_helwan.nu_xi_fx_pyrites_abu_zaabal_876cfd70_helwan,
-    xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_pyrites_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_pyrites_assiout_abu_zaabal_876cfd70.nu_xi_fx_pyrites_assiout_abu_zaabal_876cfd70,
-    xi_fx_pyrites_assiout_assiout.nu_xi_fx_pyrites_assiout_assiout,
-    xi_fx_pyrites_assiout_aswan.nu_xi_fx_pyrites_assiout_aswan,
-    xi_fx_pyrites_assiout_helwan.nu_xi_fx_pyrites_assiout_helwan,
-    xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_pyrites_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_pyrites_aswan_abu_zaabal_876cfd70.nu_xi_fx_pyrites_aswan_abu_zaabal_876cfd70,
-    xi_fx_pyrites_aswan_assiout.nu_xi_fx_pyrites_aswan_assiout,
-    xi_fx_pyrites_aswan_aswan.nu_xi_fx_pyrites_aswan_aswan,
-    xi_fx_pyrites_aswan_helwan.nu_xi_fx_pyrites_aswan_helwan,
-    xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_pyrites_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_pyrites_helwan_abu_zaabal_876cfd70.nu_xi_fx_pyrites_helwan_abu_zaabal_876cfd70,
-    xi_fx_pyrites_helwan_assiout.nu_xi_fx_pyrites_helwan_assiout,
-    xi_fx_pyrites_helwan_aswan.nu_xi_fx_pyrites_helwan_aswan,
-    xi_fx_pyrites_helwan_helwan.nu_xi_fx_pyrites_helwan_helwan,
-    xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_pyrites_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_pyrites_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout.nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_assiout,
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan.nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_aswan,
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan.nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_helwan,
-    xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_ssp_155_4d937415_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70.nu_xi_fx_ssp_155_4d937415_assiout_abu_zaabal_876cfd70,
-    xi_fx_ssp_155_4d937415_assiout_assiout.nu_xi_fx_ssp_155_4d937415_assiout_assiout,
-    xi_fx_ssp_155_4d937415_assiout_aswan.nu_xi_fx_ssp_155_4d937415_assiout_aswan,
-    xi_fx_ssp_155_4d937415_assiout_helwan.nu_xi_fx_ssp_155_4d937415_assiout_helwan,
-    xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_ssp_155_4d937415_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70.nu_xi_fx_ssp_155_4d937415_aswan_abu_zaabal_876cfd70,
-    xi_fx_ssp_155_4d937415_aswan_assiout.nu_xi_fx_ssp_155_4d937415_aswan_assiout,
-    xi_fx_ssp_155_4d937415_aswan_aswan.nu_xi_fx_ssp_155_4d937415_aswan_aswan,
-    xi_fx_ssp_155_4d937415_aswan_helwan.nu_xi_fx_ssp_155_4d937415_aswan_helwan,
-    xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_ssp_155_4d937415_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70.nu_xi_fx_ssp_155_4d937415_helwan_abu_zaabal_876cfd70,
-    xi_fx_ssp_155_4d937415_helwan_assiout.nu_xi_fx_ssp_155_4d937415_helwan_assiout,
-    xi_fx_ssp_155_4d937415_helwan_aswan.nu_xi_fx_ssp_155_4d937415_helwan_aswan,
-    xi_fx_ssp_155_4d937415_helwan_helwan.nu_xi_fx_ssp_155_4d937415_helwan_helwan,
-    xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_ssp_155_4d937415_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_ssp_155_4d937415_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_steam_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_steam_abu_zaabal_876cfd70_assiout.nu_xi_fx_steam_abu_zaabal_876cfd70_assiout,
-    xi_fx_steam_abu_zaabal_876cfd70_aswan.nu_xi_fx_steam_abu_zaabal_876cfd70_aswan,
-    xi_fx_steam_abu_zaabal_876cfd70_helwan.nu_xi_fx_steam_abu_zaabal_876cfd70_helwan,
-    xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_steam_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_steam_assiout_abu_zaabal_876cfd70.nu_xi_fx_steam_assiout_abu_zaabal_876cfd70,
-    xi_fx_steam_assiout_assiout.nu_xi_fx_steam_assiout_assiout,
-    xi_fx_steam_assiout_aswan.nu_xi_fx_steam_assiout_aswan,
-    xi_fx_steam_assiout_helwan.nu_xi_fx_steam_assiout_helwan,
-    xi_fx_steam_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_steam_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_steam_aswan_abu_zaabal_876cfd70.nu_xi_fx_steam_aswan_abu_zaabal_876cfd70,
-    xi_fx_steam_aswan_assiout.nu_xi_fx_steam_aswan_assiout,
-    xi_fx_steam_aswan_aswan.nu_xi_fx_steam_aswan_aswan,
-    xi_fx_steam_aswan_helwan.nu_xi_fx_steam_aswan_helwan,
-    xi_fx_steam_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_steam_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_steam_helwan_abu_zaabal_876cfd70.nu_xi_fx_steam_helwan_abu_zaabal_876cfd70,
-    xi_fx_steam_helwan_assiout.nu_xi_fx_steam_helwan_assiout,
-    xi_fx_steam_helwan_aswan.nu_xi_fx_steam_helwan_aswan,
-    xi_fx_steam_helwan_helwan.nu_xi_fx_steam_helwan_helwan,
-    xi_fx_steam_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_steam_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_steam_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_steam_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_steam_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_steam_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_steam_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_steam_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_steam_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_steam_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan,
@@ -2496,56 +517,11 @@ Model mcp_model /
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan,
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan,
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_urea_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_urea_abu_zaabal_876cfd70_assiout.nu_xi_fx_urea_abu_zaabal_876cfd70_assiout,
-    xi_fx_urea_abu_zaabal_876cfd70_aswan.nu_xi_fx_urea_abu_zaabal_876cfd70_aswan,
-    xi_fx_urea_abu_zaabal_876cfd70_helwan.nu_xi_fx_urea_abu_zaabal_876cfd70_helwan,
-    xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_urea_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_urea_assiout_abu_zaabal_876cfd70.nu_xi_fx_urea_assiout_abu_zaabal_876cfd70,
-    xi_fx_urea_assiout_assiout.nu_xi_fx_urea_assiout_assiout,
-    xi_fx_urea_assiout_aswan.nu_xi_fx_urea_assiout_aswan,
-    xi_fx_urea_assiout_helwan.nu_xi_fx_urea_assiout_helwan,
-    xi_fx_urea_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_urea_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_urea_aswan_abu_zaabal_876cfd70.nu_xi_fx_urea_aswan_abu_zaabal_876cfd70,
-    xi_fx_urea_aswan_assiout.nu_xi_fx_urea_aswan_assiout,
-    xi_fx_urea_aswan_aswan.nu_xi_fx_urea_aswan_aswan,
-    xi_fx_urea_aswan_helwan.nu_xi_fx_urea_aswan_helwan,
-    xi_fx_urea_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_urea_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_urea_helwan_abu_zaabal_876cfd70.nu_xi_fx_urea_helwan_abu_zaabal_876cfd70,
-    xi_fx_urea_helwan_assiout.nu_xi_fx_urea_helwan_assiout,
-    xi_fx_urea_helwan_aswan.nu_xi_fx_urea_helwan_aswan,
-    xi_fx_urea_helwan_helwan.nu_xi_fx_urea_helwan_helwan,
-    xi_fx_urea_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_urea_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_urea_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_urea_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_urea_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_urea_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_urea_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_urea_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_urea_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_urea_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_water_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
-    xi_fx_water_abu_zaabal_876cfd70_assiout.nu_xi_fx_water_abu_zaabal_876cfd70_assiout,
-    xi_fx_water_abu_zaabal_876cfd70_aswan.nu_xi_fx_water_abu_zaabal_876cfd70_aswan,
-    xi_fx_water_abu_zaabal_876cfd70_helwan.nu_xi_fx_water_abu_zaabal_876cfd70_helwan,
-    xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_water_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
-    xi_fx_water_assiout_abu_zaabal_876cfd70.nu_xi_fx_water_assiout_abu_zaabal_876cfd70,
-    xi_fx_water_assiout_assiout.nu_xi_fx_water_assiout_assiout,
-    xi_fx_water_assiout_aswan.nu_xi_fx_water_assiout_aswan,
-    xi_fx_water_assiout_helwan.nu_xi_fx_water_assiout_helwan,
-    xi_fx_water_assiout_kafr_el_zt_4b0342d5.nu_xi_fx_water_assiout_kafr_el_zt_4b0342d5,
-    xi_fx_water_aswan_abu_zaabal_876cfd70.nu_xi_fx_water_aswan_abu_zaabal_876cfd70,
-    xi_fx_water_aswan_assiout.nu_xi_fx_water_aswan_assiout,
-    xi_fx_water_aswan_aswan.nu_xi_fx_water_aswan_aswan,
-    xi_fx_water_aswan_helwan.nu_xi_fx_water_aswan_helwan,
-    xi_fx_water_aswan_kafr_el_zt_4b0342d5.nu_xi_fx_water_aswan_kafr_el_zt_4b0342d5,
-    xi_fx_water_helwan_abu_zaabal_876cfd70.nu_xi_fx_water_helwan_abu_zaabal_876cfd70,
-    xi_fx_water_helwan_assiout.nu_xi_fx_water_helwan_assiout,
-    xi_fx_water_helwan_aswan.nu_xi_fx_water_helwan_aswan,
-    xi_fx_water_helwan_helwan.nu_xi_fx_water_helwan_helwan,
-    xi_fx_water_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_water_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_water_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
-    xi_fx_water_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_water_kafr_el_zt_4b0342d5_assiout,
-    xi_fx_water_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_water_kafr_el_zt_4b0342d5_aswan,
-    xi_fx_water_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_water_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_water_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
+    comp_lo_u.piL_u,
+    comp_lo_vf.piL_vf,
+    comp_lo_vr.piL_vr,
+    comp_lo_xf.piL_xf,
+    comp_lo_xi.piL_xi
 /;
 
 * ============================================

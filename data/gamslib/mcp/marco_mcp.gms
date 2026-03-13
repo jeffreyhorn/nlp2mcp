@@ -42,7 +42,7 @@ Parameters
     atc(cr,ci,q) /'mid-c'.'sr-naphtha'.density 272, 'mid-c'.'sr-naphtha'.sulfur 0.283, 'mid-c'.'sr-dist'.density 292, 'mid-c'.'sr-dist'.sulfur 0.526, 'mid-c'.'sr-gas-oil'.density 295, 'mid-c'.'sr-gas-oil'.sulfur 0.98, 'mid-c'.'cc-gas-oil'.density 294.4, 'mid-c'.'cc-gas-oil'.sulfur 0.353, 'mid-c'.'sr-res'.density 343, 'mid-c'.'sr-res'.sulfur 4.7, 'w-tex'.'sr-naphtha'.density 272, 'w-tex'.'sr-naphtha'.sulfur 1.48, 'w-tex'.'sr-dist'.density 297.6, 'w-tex'.'sr-dist'.sulfur 2.83, 'w-tex'.'sr-gas-oil'.density 303.3, 'w-tex'.'sr-gas-oil'.sulfur 5.05, 'w-tex'.'sr-res'.density 365, 'w-tex'.'sr-res'.sulfur 11, 'w-tex'.'cc-gas-oil'.density 299.1, 'w-tex'.'cc-gas-oil'.sulfur 1.31, 'w-tex'.'hydro-res'.density 365, 'w-tex'.'hydro-res'.sulfur 6/
 ;
 
-atc(cr,ci,q) = at(ci,q);
+atc(cr,ci,q)$(at(ci,q)) = at(ci,q);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -76,6 +76,7 @@ Positive Variables
     lam_mb(cr,ci)
     lam_cc(m)
     lam_lcp(cr)
+    lam_qub(cf,q)
     piL_z(cr,p)
     piL_x(cf)
     piL_u(cr)
@@ -119,6 +120,7 @@ Equations
     comp_lcp(cr)
     comp_mb(cr,ci)
     comp_mbr(cr)
+    comp_qub(cf,q)
     comp_lo_u(cr)
     comp_lo_ui(cr,ci)
     comp_lo_w(cr,ci,cf)
@@ -135,21 +137,26 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(cf, cf__);
+
 * Stationarity equations
 stat_phip.. 1 + nu_amat =E= 0;
 stat_phir.. -1 + nu_arev =E= 0;
 stat_phiw.. 1 + nu_aoper =E= 0;
 stat_u(cr).. ((-1) * pr(cr)) * nu_amat - lam_mbr(cr) + lam_lcp(cr) - piL_u(cr) =E= 0;
 stat_ui(cr,ci)$(cd(ci)).. ((-1) * piL_ui(cr,ci)) =E= 0;
-stat_w(cr,ci,cf).. ((-1) * 1$bp(cf,ci)) * nu_bb(cf) + 1$bp(cf,ci) * lam_mb(cr,ci) - piL_w(cr,ci,cf) =E= 0;
-stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev - piL_x(cf) =E= 0;
+stat_w(cr,ci,cf).. ((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) - piL_w(cr,ci,cf) =E= 0;
+stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(lim, sum(q, (((-1) * qs(lim,cf,q)) * lam_qub(cf,q))$(qs(lim,cf,q)))) - piL_x(cf) =E= 0;
 stat_z(cr,p).. ((-1) * op(p)) * nu_aoper + ((-1) * a(cr,cr,p)) * lam_mbr(cr) + sum(ci, ((-1) * a(cr,cr,p)) * lam_mb(cr,ci)) + sum(m, b(m,p) * lam_cc(m)) - piL_z(cr,p) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(m).. ((-1) * (sum(p, b(m,p) * sum(cr, z(cr,p))) - k(m))) =G= 0;
 comp_lcp(cr).. ((-1) * (u(cr) - ur(cr))) =G= 0;
-comp_mb(cr,ci).. sum(p, a(cr,ci,p) * z(cr,p)) + ui(cr,ci)$cd(ci) - sum(cf$(bp(cf,ci)), w(cr,ci,cf)) =G= 0;
+comp_mb(cr,ci).. sum(p, a(cr,ci,p) * z(cr,p)) + ui(cr,ci)$(cd(ci)) - sum(cf$(bp(cf,ci)), w(cr,ci,cf)) =G= 0;
 comp_mbr(cr).. sum(p, a(cr,"crude",p) * z(cr,p)) + u(cr) =G= 0;
+comp_qub(cf,q)$(qs("upper",cf,q)).. ((-1) * (sum((cr,cf__,ci), atc(cr,ci,q) * w(cr,ci,cf__)) - qs("upper",cf,q) * x(cf))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_u(cr).. u(cr) - 0 =G= 0;
@@ -175,6 +182,7 @@ aprof.. phi =E= phir - phip - phiw;
 
 ui.fx(cr,ci)$(not (cd(ci))) = 0;
 piL_ui.fx(cr,ci)$(not (cd(ci))) = 0;
+lam_qub.fx(cf,q)$(not (qs("upper",cf,q))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -202,6 +210,7 @@ Model mcp_model /
     comp_lcp.lam_lcp,
     comp_mb.lam_mb,
     comp_mbr.lam_mbr,
+    comp_qub.lam_qub,
     amat.nu_amat,
     aoper.nu_aoper,
     aprof.phi,

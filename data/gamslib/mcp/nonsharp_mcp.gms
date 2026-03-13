@@ -79,6 +79,7 @@ Scalars
     np /0/
 ;
 
+$onImplicitAssign
 bypass(pr) = 1;
 inter(colp,col,stm) = 0;
 inter("col-1","col-2","top") = 1;
@@ -97,9 +98,9 @@ savinter(colp,col,stm) = inter(colp,col,stm);
 savkey(col,stm,cp) = key(col,stm,cp);
 savlink(col,stm,cp) = link(col,stm,cp);
 k(km) = 0;
+$offImplicitAssign
 
 totfeed = sum(cp, feed(cp));
-np = card(pr);
 xinit(cp) = feed(cp) / totfeed;
 
 * ============================================
@@ -114,12 +115,9 @@ xinit(cp) = feed(cp) / totfeed;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    c
     alp
-    mu
-    nu_lpobj
     nu_spblinit
-    nu_spblcol(col,stm)
+    nu_spblcol(colp,stm)
     nu_mixbal(col,cp)
     nu_colbal(col,cp)
     nu_keybal(col,stm,cp)
@@ -142,11 +140,7 @@ Positive Variables
     x(col,stm,cp)
     rec(col,stm,cp)
     saint(col)
-    lam_intcon(col)
     lam_lintcon(col)
-    lam_bnd
-    lam_laerr(k)
-    lam_intcut(k)
     piL_finit(col)
     piL_fin(col)
     piL_f(col,stm)
@@ -158,19 +152,12 @@ Positive Variables
     piL_x(col,stm,cp)
     piL_rec(col,stm,cp)
     piL_saint(col)
-    piL_y(col)
     piU_finit(col)
     piU_fin(col)
     piU_f(col,stm)
-    piU_fby_prod_1
-    piU_fby_prod_2
+    piU_fby(pr)
     piU_cfin(col,cp)
     piU_rec(col,stm,cp)
-    piU_y(col)
-;
-
-Binary Variables
-    y(col)
 ;
 
 * ============================================
@@ -194,55 +181,63 @@ cfin.up(col,cp) = feed(cp);
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-finit.l("col-1") = 60.0;
-finit.l("col-2") = 0.0;
+finit.l('col-1') = 60.0;
+finit.l('col-2') = 0.0;
 finit.l(col) = min(max(finit.l(col), 1e-6), finit.up(col));
-fin.l("col-1") = 60.0;
-fin.l("col-2") = 40.0;
+fin.l('col-1') = 60.0;
+fin.l('col-2') = 40.0;
 fin.l(col) = min(max(fin.l(col), 1e-6), fin.up(col));
-f.l("col-1","top") = 20.0;
-f.l("col-2","top") = 20.0;
-f.l("col-1","bot") = 40.0;
-f.l("col-2","bot") = 20.0;
+f.l('col-1','top') = 20.0;
+f.l('col-2','top') = 20.0;
+f.l('col-1','bot') = 40.0;
+f.l('col-2','bot') = 20.0;
 f.l(col,stm) = min(max(f.l(col,stm), 1e-6), f.up(col,stm));
-fint.l("col-1","col-2","top") = 0.0;
-fint.l("col-2","col-1","bot") = 40.0;
+fint.l('col-1','col-2','top') = 0.0;
+fint.l('col-2','col-1','bot') = 40.0;
 fint.l(colp,col,stm) = min(max(fint.l(colp,col,stm), 1e-6), fint.up(colp,col,stm));
-fpr.l("col-1","top","prod-1") = 0.0;
-fpr.l("col-1","top","prod-2") = 20.0;
-fpr.l("col-1","bot","prod-1") = 0.0;
-fpr.l("col-1","bot","prod-2") = 0.0;
-fpr.l("col-2","top","prod-1") = 20.0;
-fpr.l("col-2","top","prod-2") = 0.0;
-fpr.l("col-2","bot","prod-1") = 0.0;
-fpr.l("col-2","bot","prod-2") = 20.0;
+fpr.l('col-1','top','prod-1') = 0.0;
+fpr.l('col-1','top','prod-2') = 20.0;
+fpr.l('col-1','bot','prod-1') = 0.0;
+fpr.l('col-1','bot','prod-2') = 0.0;
+fpr.l('col-2','top','prod-1') = 20.0;
+fpr.l('col-2','top','prod-2') = 0.0;
+fpr.l('col-2','bot','prod-1') = 0.0;
+fpr.l('col-2','bot','prod-2') = 20.0;
 fpr.l(col,stm,pr) = min(max(fpr.l(col,stm,pr), 1e-6), fpr.up(col,stm,pr));
-fby.l("prod-1") = 90.0;
-fby.l("prod-2") = 150.0;
+fby.l('prod-1') = 90.0;
+fby.l('prod-2') = 150.0;
 fby.l(pr) = min(max(fby.l(pr), 1e-6), fby.up(pr));
-cfin.l("col-1",a) = 20.0;
-cfin.l("col-1",b) = 20.0;
-cfin.l("col-1",c) = 20.0;
-cfin.l("col-2",a) = 0.0;
-cfin.l("col-2",b) = 20.0;
-cfin.l("col-2",c) = 20.0;
+cfin.l('col-1','a') = 20.0;
+cfin.l('col-1','b') = 20.0;
+cfin.l('col-1','c') = 20.0;
+cfin.l('col-2','a') = 0.0;
+cfin.l('col-2','b') = 20.0;
+cfin.l('col-2','c') = 20.0;
 cfin.l(col,cp) = min(max(cfin.l(col,cp), 1e-6), cfin.up(col,cp));
 xin.l(col,cp) = 1;
 x.l(col,stm,cp) = 1;
-rec.l("col-1","top",a) = 0.85;
-rec.l("col-1","top",b) = 0.85;
-rec.l("col-1","top",c) = 0.85;
-rec.l("col-1","bot",a) = 0.85;
-rec.l("col-1","bot",b) = 0.85;
-rec.l("col-1","bot",c) = 0.85;
-rec.l("col-2","top",a) = 0.85;
-rec.l("col-2","top",b) = 0.85;
-rec.l("col-2","top",c) = 0.85;
-rec.l("col-2","bot",a) = 0.85;
-rec.l("col-2","bot",b) = 0.85;
-rec.l("col-2","bot",c) = 0.85;
+rec.l('col-1','top','a') = 0.85;
+rec.l('col-1','top','b') = 0.85;
+rec.l('col-1','top','c') = 0.85;
+rec.l('col-1','bot','a') = 0.85;
+rec.l('col-1','bot','b') = 0.85;
+rec.l('col-1','bot','c') = 0.85;
+rec.l('col-2','top','a') = 0.85;
+rec.l('col-2','top','b') = 0.85;
+rec.l('col-2','top','c') = 0.85;
+rec.l('col-2','bot','a') = 0.85;
+rec.l('col-2','bot','b') = 0.85;
+rec.l('col-2','bot','c') = 0.85;
 rec.l(col,stm,cp) = min(max(rec.l(col,stm,cp), 1e-6), rec.up(col,stm,cp));
 saint.l(col) = 1;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter fby_up_param(pr);
+fby_up_param('prod-1') = 90;
+fby_up_param('prod-2') = 150;
 
 * ============================================
 * Equations
@@ -253,25 +248,17 @@ saint.l(col) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_c
     stat_cfin(col,cp)
     stat_f(col,stm)
-    stat_fby_prod_1
-    stat_fby_prod_2
+    stat_fby(pr)
     stat_fin(col)
     stat_finit(col)
     stat_fint(colp,col,stm)
     stat_fpr(col,stm,pr)
-    stat_mu
     stat_rec(col,stm,cp)
     stat_saint(col)
     stat_x(col,stm,cp)
     stat_xin(col,cp)
-    stat_y(col)
-    comp_bnd
-    comp_intcon(col)
-    comp_intcut(k)
-    comp_laerr(k)
     comp_lintcon(col)
     comp_lo_cfin(col,cp)
     comp_lo_f(col,stm)
@@ -284,21 +271,17 @@ Equations
     comp_lo_saint(col)
     comp_lo_x(col,stm,cp)
     comp_lo_xin(col,cp)
-    comp_lo_y(col)
     comp_up_cfin(col,cp)
     comp_up_f(col,stm)
-    comp_up_fby_prod_1
-    comp_up_fby_prod_2
+    comp_up_fby(pr)
     comp_up_fin(col)
     comp_up_finit(col)
     comp_up_rec(col,stm,cp)
-    comp_up_y(col)
     cfloin(col,cp)
     colbal(col,cp)
     dist(col,stm,cp)
     infeas
     keybal(col,stm,cp)
-    lpobj
     mixbal(col,cp)
     molsum(col,stm)
     molsumin(col)
@@ -318,27 +301,19 @@ Alias(pr, pr__);
 Alias(stm, stm__);
 
 * Stationarity equations
-stat_c.. nu_lpobj =E= 0;
 stat_cfin(col,cp).. ((-1) * nu_mixbal(col,cp)) + nu_colbal(col,cp) + sum(stm, rec(col,stm,cp) * nu_keybal(col,stm,cp)) - nu_cfloin(col,cp) - piL_cfin(col,cp) + piU_cfin(col,cp) =E= 0;
 stat_f(col,stm).. ((-1) * nu_spblcol(col,stm)) + sum(cp, ((-1) * x(col,stm,cp)) * nu_colbal(col,cp)) + sum(cp, ((-1) * x(col,stm,cp)) * nu_keybal(col,stm,cp)) - piL_f(col,stm) + piU_f(col,stm) =E= 0;
-stat_fby_prod_1.. nu_spblinit + sum((pr,cp)$(ord(pr) <> np), xinit(cp) * nu_probal(pr,cp)) - piL_fby("prod-1") + piU_fby_prod_1 =E= 0;
-stat_fby_prod_2.. nu_spblinit + sum((pr,cp)$(ord(pr) <> np), xinit(cp) * nu_probal(pr,cp)) - piL_fby("prod-2") + piU_fby_prod_2 =E= 0;
-stat_fin(col).. ((-1) * (a1(col) + sum((col__,stm,cp), a2(col__,stm) * rec(col__,stm,cp)) + sum(cp, a3(col,cp) * xin(col,cp)))) * nu_lpobj + sum(cp, xin(col,cp) * nu_cfloin(col,cp)) + lam_intcon(col) + lam_lintcon(col) - piL_fin(col) + piU_fin(col) =E= 0;
+stat_fby(pr).. nu_spblinit + sum(cp, (xinit(cp) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fby(pr) + piU_fby(pr) =E= 0;
+stat_fin(col).. sum(cp, xin(col,cp) * nu_cfloin(col,cp)) + lam_lintcon(col) - piL_fin(col) + piU_fin(col) =E= 0;
 stat_finit(col).. nu_spblinit + sum(cp, xinit(cp) * nu_mixbal(col,cp)) - piL_finit(col) + piU_finit(col) =E= 0;
-stat_fint(colp,col,stm).. nu_spblcol(col,stm) + sum(cp, x(col,stm,cp) * nu_mixbal(col,cp)) - piL_fint(colp,col,stm) =E= 0;
+stat_fint(colp,col,stm).. nu_spblcol(colp,stm) + sum(cp, x(col,stm,cp) * nu_mixbal(col,cp)) - piL_fint(colp,col,stm) =E= 0;
 stat_fpr(col,stm,pr).. nu_spblcol(col,stm) + sum(cp, (x(col,stm,cp) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fpr(col,stm,pr) =E= 0;
-stat_mu.. (-1) * lam_bnd =E= 0;
 stat_rec(col,stm,cp).. cfin(col,cp) * nu_keybal(col,stm,cp) - piL_rec(col,stm,cp) + piU_rec(col,stm,cp) =E= 0;
 stat_saint(col).. 1 - lam_lintcon(col) - piL_saint(col) =E= 0;
 stat_x(col,stm,cp).. ((-1) * f(col,stm)) * nu_colbal(col,cp) + ((-1) * f(col,stm)) * nu_keybal(col,stm,cp) + nu_molsum(col,stm) + nu_dist(col,stm,cp) - piL_x(col,stm,cp) =E= 0;
-stat_xin(col,cp).. ((-1) * (fin(col) * a3(col,cp))) * nu_lpobj + fin(col) * nu_cfloin(col,cp) + nu_molsumin(col) - piL_xin(col,cp) =E= 0;
-stat_y(col).. sum(k, (mlint(k,col) * ((-1) * totfeed) * lam_laerr(k))$(nfeas(k) = 0)) + sum(k, cutcol(k,col) * lam_intcut(k)) - piL_y(col) + piU_y(col) =E= 0;
+stat_xin(col,cp).. fin(col) * nu_cfloin(col,cp) + nu_molsumin(col) - piL_xin(col,cp) =E= 0;
 
 * Inequality complementarity equations
-comp_bnd.. mu - zlo =G= 0;
-comp_intcon(col).. ((-1) * (fin(col) - totfeed * yp(col))) =G= 0;
-comp_intcut(k).. ((-1) * (sum(col, cutcol(k,col) * y(col)) - cut(k))) =G= 0;
-comp_laerr(k)$(nfeas(k) = 0).. ((-1) * sum(col, mlint(k,col) * (fink(k,col) - totfeed * y(col)))) =G= 0;
 comp_lintcon(col).. ((-1) * (fin(col) - totfeed * yp(col) - saint(col))) =G= 0;
 
 * Lower bound complementarity equations
@@ -353,20 +328,16 @@ comp_lo_rec(col,stm,cp).. rec(col,stm,cp) - 0.85 =G= 0;
 comp_lo_saint(col).. saint(col) - 0 =G= 0;
 comp_lo_x(col,stm,cp).. x(col,stm,cp) - 0 =G= 0;
 comp_lo_xin(col,cp).. xin(col,cp) - 0 =G= 0;
-comp_lo_y(col).. y(col) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_cfin(col,cp).. feed(cp) - cfin(col,cp) =G= 0;
 comp_up_f(col,stm).. totfeed - f(col,stm) =G= 0;
-comp_up_fby_prod_1.. 90 - fby("prod-1") =G= 0;
-comp_up_fby_prod_2.. 150 - fby("prod-2") =G= 0;
+comp_up_fby(pr).. fby_up_param(pr) - fby(pr) =G= 0;
 comp_up_fin(col).. totfeed - fin(col) =G= 0;
 comp_up_finit(col).. totfeed - finit(col) =G= 0;
 comp_up_rec(col,stm,cp).. 1 - rec(col,stm,cp) =G= 0;
-comp_up_y(col).. 1 - y(col) =G= 0;
 
 * Original equality equations
-lpobj.. c =E= sum(col, cost(col) * yp(col) + (a1(col) + sum((col,stm,cp), a2(col,stm) * rec(col,stm,cp)) + sum(cp, a3(col,cp) * xin(col,cp))) * fin(col));
 spblinit.. sum(col, finit(col)) + sum(pr, fby(pr)) =E= totfeed;
 spblcol(col,stm).. sum((colp,col__,stm__), fint(colp,col__,stm__)) + sum((col__,stm__,pr), fpr(col__,stm__,pr)) - f(col,stm) =E= 0;
 mixbal(col,cp).. finit(col) * xinit(cp) + sum((col__,colp,stm), fint(col__,colp,stm) * x(colp,stm,cp)) - cfin(col,cp) =E= 0;
@@ -387,7 +358,6 @@ infeas.. alp =E= sum(col, saint(col));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-lam_laerr.fx(k)$(not (nfeas(k) = 0)) = 0;
 nu_probal.fx(pr,cp)$(not (ord(pr) <> np)) = 0;
 
 * ============================================
@@ -404,32 +374,23 @@ nu_probal.fx(pr,cp)$(not (ord(pr) <> np)) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_c.c,
     stat_cfin.cfin,
     stat_f.f,
-    stat_fby_prod_1.fby,
-    stat_fby_prod_2.fby,
+    stat_fby.fby,
     stat_fin.fin,
     stat_finit.finit,
     stat_fint.fint,
     stat_fpr.fpr,
-    stat_mu.mu,
     stat_rec.rec,
     stat_saint.saint,
     stat_x.x,
     stat_xin.xin,
-    stat_y.y,
-    comp_bnd.lam_bnd,
-    comp_intcon.lam_intcon,
-    comp_intcut.lam_intcut,
-    comp_laerr.lam_laerr,
     comp_lintcon.lam_lintcon,
     cfloin.nu_cfloin,
     colbal.nu_colbal,
     dist.nu_dist,
     infeas.alp,
     keybal.nu_keybal,
-    lpobj.nu_lpobj,
     mixbal.nu_mixbal,
     molsum.nu_molsum,
     molsumin.nu_molsumin,
@@ -447,15 +408,12 @@ Model mcp_model /
     comp_lo_saint.piL_saint,
     comp_lo_x.piL_x,
     comp_lo_xin.piL_xin,
-    comp_lo_y.piL_y,
     comp_up_cfin.piU_cfin,
     comp_up_f.piU_f,
-    comp_up_fby_prod_1.piU_fby_prod_1,
-    comp_up_fby_prod_2.piU_fby_prod_2,
+    comp_up_fby.piU_fby,
     comp_up_fin.piU_fin,
     comp_up_finit.piU_finit,
-    comp_up_rec.piU_rec,
-    comp_up_y.piU_y
+    comp_up_rec.piU_rec
 /;
 
 * ============================================

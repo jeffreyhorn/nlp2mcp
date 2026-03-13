@@ -48,7 +48,9 @@ Scalars
     g /31.8/
 ;
 
+$onImplicitAssign
 ge(s,ss) = yes$(ord(s) >= ord(ss));
+$offImplicitAssign
 
 pre2("stage-3") = pre2("stage-3") * 10 ** pre3("stage-3");
 pre4("stage-3") = pre4("stage-3") * 10 ** pre5("stage-3");
@@ -97,36 +99,20 @@ Positive Variables
     piL_iweight(s)
     piL_pweight(s)
     piL_instweight
-    piL_length_stage_1
-    piL_length_stage_2
-    piL_length_stage_3
+    piL_length(s)
     piL_thrust(s)
     piL_ethrust(s)
-    piL_ms_stage_1
-    piL_ms_stage_2
-    piL_ms_stage_3
-    piL_t2w_stage_1
-    piL_t2w_stage_2
-    piL_t2w_stage_3
+    piL_ms(s)
+    piL_t2w(s)
     piL_t(s)
-    piL_vfac_stage_1
-    piL_vfac_stage_2
-    piL_vfac_stage_3
+    piL_vfac(s)
     piL_v(s)
     piL_vt
     piU_instweight
-    piU_length_stage_1
-    piU_length_stage_2
-    piU_length_stage_3
-    piU_ms_stage_1
-    piU_ms_stage_2
-    piU_ms_stage_3
-    piU_t2w_stage_1
-    piU_t2w_stage_2
-    piU_t2w_stage_3
-    piU_vfac_stage_1
-    piU_vfac_stage_2
-    piU_vfac_stage_3
+    piU_length(s)
+    piU_ms(s)
+    piU_t2w(s)
+    piU_vfac(s)
     piU_vt
 ;
 
@@ -138,41 +124,85 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-aweight.l("stage-1") = 1.0;
-aweight.l("stage-2") = 1.0;
-aweight.l("stage-3") = 1.0;
-iweight.l("stage-1") = 136.0;
-iweight.l("stage-2") = 47.0;
-iweight.l("stage-3") = 16.0;
-pweight.l("stage-1") = 2176.0;
-pweight.l("stage-2") = 564.0;
-pweight.l("stage-3") = 144.0;
+aweight.l('stage-1') = 1.0;
+aweight.l('stage-2') = 1.0;
+aweight.l('stage-3') = 1.0;
+iweight.l('stage-1') = 136.0;
+iweight.l('stage-2') = 47.0;
+iweight.l('stage-3') = 16.0;
+pweight.l('stage-1') = 2176.0;
+pweight.l('stage-2') = 564.0;
+pweight.l('stage-3') = 144.0;
 instweight.l = 2.5;
-length.l("stage-1") = 125.0;
-length.l("stage-2") = 75.0;
-length.l("stage-3") = 50.0;
-thrust.l("stage-1") = 1.0;
-thrust.l("stage-2") = 1.0;
-thrust.l("stage-3") = 1.0;
-ethrust.l("stage-1") = 746.0;
-ethrust.l("stage-2") = 96.0;
-ethrust.l("stage-3") = 129.0;
-ms.l("stage-1") = 0.3;
-ms.l("stage-2") = 0.29;
-ms.l("stage-3") = 0.21;
-t2w.l("stage-1") = 1.2;
-t2w.l("stage-2") = 0.6;
-t2w.l("stage-3") = 0.7;
-t.l("stage-1") = 155.0;
-t.l("stage-2") = 314.0;
-t.l("stage-3") = 403.0;
-vfac.l("stage-1") = 240.0;
-vfac.l("stage-2") = 240.0;
-vfac.l("stage-3") = 340.0;
-v.l("stage-1") = 1000.0;
-v.l("stage-2") = 1000.0;
-v.l("stage-3") = 1000.0;
+length.l('stage-1') = 125.0;
+length.l('stage-2') = 75.0;
+length.l('stage-3') = 50.0;
+thrust.l('stage-1') = 1.0;
+thrust.l('stage-2') = 1.0;
+thrust.l('stage-3') = 1.0;
+ethrust.l('stage-1') = 746.0;
+ethrust.l('stage-2') = 96.0;
+ethrust.l('stage-3') = 129.0;
+ms.l('stage-1') = 0.3;
+ms.l('stage-2') = 0.29;
+ms.l('stage-3') = 0.21;
+t2w.l('stage-1') = 1.2;
+t2w.l('stage-2') = 0.6;
+t2w.l('stage-3') = 0.7;
+t.l('stage-1') = 155.0;
+t.l('stage-2') = 314.0;
+t.l('stage-3') = 403.0;
+vfac.l('stage-1') = 240.0;
+vfac.l('stage-2') = 240.0;
+vfac.l('stage-3') = 340.0;
+v.l('stage-1') = 1000.0;
+v.l('stage-2') = 1000.0;
+v.l('stage-3') = 1000.0;
 vt.l = 38632.0;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter length_lo_param(s);
+length_lo_param('stage-1') = 125;
+length_lo_param('stage-2') = 75;
+length_lo_param('stage-3') = 50;
+
+Parameter length_up_param(s);
+length_up_param('stage-1') = 150;
+length_up_param('stage-2') = 100;
+length_up_param('stage-3') = 70;
+
+Parameter ms_lo_param(s);
+ms_lo_param('stage-1') = 0.25;
+ms_lo_param('stage-2') = 0.24;
+ms_lo_param('stage-3') = 0.16;
+
+Parameter ms_up_param(s);
+ms_up_param('stage-1') = 0.3;
+ms_up_param('stage-2') = 0.29;
+ms_up_param('stage-3') = 0.21;
+
+Parameter t2w_lo_param(s);
+t2w_lo_param('stage-1') = 1.2;
+t2w_lo_param('stage-2') = 0.6;
+t2w_lo_param('stage-3') = 0.7;
+
+Parameter t2w_up_param(s);
+t2w_up_param('stage-1') = 1.4;
+t2w_up_param('stage-2') = 0.75;
+t2w_up_param('stage-3') = 0.9;
+
+Parameter vfac_lo_param(s);
+vfac_lo_param('stage-1') = 240;
+vfac_lo_param('stage-2') = 240;
+vfac_lo_param('stage-3') = 340;
+
+Parameter vfac_up_param(s);
+vfac_up_param('stage-1') = 290;
+vfac_up_param('stage-2') = 290;
+vfac_up_param('stage-3') = 375;
 
 * ============================================
 * Equations
@@ -187,22 +217,14 @@ Equations
     stat_ethrust(s)
     stat_instweight
     stat_iweight(s)
-    stat_length_stage_1
-    stat_length_stage_2
-    stat_length_stage_3
-    stat_ms_stage_1
-    stat_ms_stage_2
-    stat_ms_stage_3
+    stat_length(s)
+    stat_ms(s)
     stat_pweight(s)
     stat_t(s)
-    stat_t2w_stage_1
-    stat_t2w_stage_2
-    stat_t2w_stage_3
+    stat_t2w(s)
     stat_thrust(s)
     stat_v(s)
-    stat_vfac_stage_1
-    stat_vfac_stage_2
-    stat_vfac_stage_3
+    stat_vfac(s)
     stat_vt
     stat_weight(s)
     comp_pwlower(s)
@@ -211,36 +233,20 @@ Equations
     comp_lo_ethrust(s)
     comp_lo_instweight
     comp_lo_iweight(s)
-    comp_lo_length_stage_1
-    comp_lo_length_stage_2
-    comp_lo_length_stage_3
-    comp_lo_ms_stage_1
-    comp_lo_ms_stage_2
-    comp_lo_ms_stage_3
+    comp_lo_length(s)
+    comp_lo_ms(s)
     comp_lo_pweight(s)
     comp_lo_t(s)
-    comp_lo_t2w_stage_1
-    comp_lo_t2w_stage_2
-    comp_lo_t2w_stage_3
+    comp_lo_t2w(s)
     comp_lo_thrust(s)
     comp_lo_v(s)
-    comp_lo_vfac_stage_1
-    comp_lo_vfac_stage_2
-    comp_lo_vfac_stage_3
+    comp_lo_vfac(s)
     comp_lo_vt
     comp_up_instweight
-    comp_up_length_stage_1
-    comp_up_length_stage_2
-    comp_up_length_stage_3
-    comp_up_ms_stage_1
-    comp_up_ms_stage_2
-    comp_up_ms_stage_3
-    comp_up_t2w_stage_1
-    comp_up_t2w_stage_2
-    comp_up_t2w_stage_3
-    comp_up_vfac_stage_1
-    comp_up_vfac_stage_2
-    comp_up_vfac_stage_3
+    comp_up_length(s)
+    comp_up_ms(s)
+    comp_up_t2w(s)
+    comp_up_vfac(s)
     comp_up_vt
     costdef
     defv(s)
@@ -265,23 +271,15 @@ Alias(s, s__);
 stat_aweight(s).. 6739.127337000001 * pweight(s) ** (-0.9904) * thrust(s) ** 0.38745 * ms(s) ** 2.4242 * iweight(s) ** (-0.1959) * aweight(s) ** 0.2781 + 0.0615280908 * numl ** 0.9 * nume(s) ** 0.1616 * length(s) ** 0.1079 * pweight(s) ** 0.2362 * ms(s) ** (-1.5935) * aweight(s) ** (-0.6678) - nu_diweight(s) - piL_aweight(s) =E= 0;
 stat_ethrust(s).. 0.001 * rde2(s) * (ethrust(s) / 1000) ** rde3(s) * rde3(s) / (ethrust(s) / 1000) + 0.001 * rde4(s) * (ethrust(s) / 1000) ** rde5(s) * rde5(s) / (ethrust(s) / 1000) + (nume(s) * numl) ** 0.93 * (0.001 * pre1(s) + 0.001 * pre2(s) * (ethrust(s) / 1000) ** pre3(s) * pre3(s) / (ethrust(s) / 1000) + 0.001 * pre4(s) * (ethrust(s) / 1000) ** pre5(s) * pre5(s) / (ethrust(s) / 1000)) + ((-1) * nume(s)) * nu_dthrust(s) - piL_ethrust(s) =E= 0;
 stat_instweight.. 128.7135522 * (instweight * 1000) ** (-0.21399999999999997) + 12.436091999999999 * numl ** 0.9 * (instweight * 1000) ** (-0.21399999999999997) + sum(s, (-1) * nu_dweight(s)) - piL_instweight + piU_instweight =E= 0;
-stat_iweight(s).. (-1032.935643) * pweight(s) ** (-0.9904) * thrust(s) ** 0.38745 * ms(s) ** 2.4242 * aweight(s) ** 1.2781 * iweight(s) ** (-1.1959) + iwf(s) * nu_diweight(s) + sum(ss, ((-1) * 1$ge(ss,s)) * nu_dweight(s)) + sum(b, pwbound(s,b) * lam_pwlower(s)) + sum(b, ((-1) * pwbound(s,b)) * lam_pwupper(s)) - piL_iweight(s) =E= 0;
-stat_length_stage_1.. 0.185214 * numl ** 0.9 * nume("stage-1") ** 0.1616 * aweight("stage-1") ** 0.3322 * ms("stage-1") ** (-1.5935) * pweight("stage-1") ** 0.2362 * 0.1079 * length("stage-1") ** (-0.8921) - piL_length_stage_1 + piU_length_stage_1 =E= 0;
-stat_length_stage_2.. 0.185214 * numl ** 0.9 * nume("stage-2") ** 0.1616 * aweight("stage-2") ** 0.3322 * ms("stage-2") ** (-1.5935) * pweight("stage-2") ** 0.2362 * 0.1079 * length("stage-2") ** (-0.8921) - piL_length_stage_2 + piU_length_stage_2 =E= 0;
-stat_length_stage_3.. 0.185214 * numl ** 0.9 * nume("stage-3") ** 0.1616 * aweight("stage-3") ** 0.3322 * ms("stage-3") ** (-1.5935) * pweight("stage-3") ** 0.2362 * 0.1079 * length("stage-3") ** (-0.8921) - piL_length_stage_3 + piU_length_stage_3 =E= 0;
-stat_ms_stage_1.. 12782.249034 * pweight("stage-1") ** (-0.9904) * thrust("stage-1") ** 0.38745 * aweight("stage-1") ** 1.2781 * iweight("stage-1") ** (-0.1959) * ms("stage-1") ** 1.4242 + (-0.295138509) * numl ** 0.9 * nume("stage-1") ** 0.1616 * length("stage-1") ** 0.1079 * pweight("stage-1") ** 0.2362 * aweight("stage-1") ** 0.3322 * ms("stage-1") ** (-2.5934999999999997) + sum(s, weight(s) * (-1) * nu_msd(s)) + sum(s, ((-1) * (vfac(s) * g * 1 / (1 / ms(s)) * (-1) / sqr(ms(s)))) * nu_defv(s)) - piL_ms_stage_1 + piU_ms_stage_1 =E= 0;
-stat_ms_stage_2.. 12782.249034 * pweight("stage-2") ** (-0.9904) * thrust("stage-2") ** 0.38745 * aweight("stage-2") ** 1.2781 * iweight("stage-2") ** (-0.1959) * ms("stage-2") ** 1.4242 + (-0.295138509) * numl ** 0.9 * nume("stage-2") ** 0.1616 * length("stage-2") ** 0.1079 * pweight("stage-2") ** 0.2362 * aweight("stage-2") ** 0.3322 * ms("stage-2") ** (-2.5934999999999997) + sum(s, weight(s) * (-1) * nu_msd(s)) + sum(s, ((-1) * (vfac(s) * g * 1 / (1 / ms(s)) * (-1) / sqr(ms(s)))) * nu_defv(s)) - piL_ms_stage_2 + piU_ms_stage_2 =E= 0;
-stat_ms_stage_3.. 12782.249034 * pweight("stage-3") ** (-0.9904) * thrust("stage-3") ** 0.38745 * aweight("stage-3") ** 1.2781 * iweight("stage-3") ** (-0.1959) * ms("stage-3") ** 1.4242 + (-0.295138509) * numl ** 0.9 * nume("stage-3") ** 0.1616 * length("stage-3") ** 0.1079 * pweight("stage-3") ** 0.2362 * aweight("stage-3") ** 0.3322 * ms("stage-3") ** (-2.5934999999999997) + sum(s, weight(s) * (-1) * nu_msd(s)) + sum(s, ((-1) * (vfac(s) * g * 1 / (1 / ms(s)) * (-1) / sqr(ms(s)))) * nu_defv(s)) - piL_ms_stage_3 + piU_ms_stage_3 =E= 0;
-stat_pweight(s).. (-5222.151408) * aweight(s) ** 1.2781 * iweight(s) ** (-0.1959) * ms(s) ** 2.4242 * thrust(s) ** 0.38745 * pweight(s) ** (-1.9904) + 0.043747546799999995 * numl ** 0.9 * nume(s) ** 0.1616 * length(s) ** 0.1079 * aweight(s) ** 0.3322 * ms(s) ** (-1.5935) * pweight(s) ** (-0.7638) + 0.01173 * numl * (3 * sum(s__, pweight(s__)) / 1000) ** (-0.54) + sum(ss, ((-1) * 1$ge(ss,s)) * nu_dweight(s)) - nu_msd(s) + vfac(s) * nu_defvfac(s) - lam_pwlower(s) + lam_pwupper(s) - piL_pweight(s) =E= 0;
+stat_iweight(s).. (-1032.935643) * pweight(s) ** (-0.9904) * thrust(s) ** 0.38745 * ms(s) ** 2.4242 * aweight(s) ** 1.2781 * iweight(s) ** (-1.1959) + iwf(s) * nu_diweight(s) + sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s+1))$(ord(s) <= card(s) - 1)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s+2))$(ord(s) <= card(s) - 2)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s-1))$(ord(s) > 1)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s-2))$(ord(s) > 2)) + sum(b, pwbound(s,b) * lam_pwlower(s)) + sum(b, ((-1) * pwbound(s,b)) * lam_pwupper(s)) - piL_iweight(s) =E= 0;
+stat_length(s).. 0.185214 * numl ** 0.9 * nume(s) ** 0.1616 * aweight(s) ** 0.3322 * ms(s) ** (-1.5935) * pweight(s) ** 0.2362 * 0.1079 * length(s) ** (-0.8921) - piL_length(s) + piU_length(s) =E= 0;
+stat_ms(s).. 12782.249034 * pweight(s) ** (-0.9904) * thrust(s) ** 0.38745 * aweight(s) ** 1.2781 * iweight(s) ** (-0.1959) * ms(s) ** 1.4242 + (-0.295138509) * numl ** 0.9 * nume(s) ** 0.1616 * length(s) ** 0.1079 * pweight(s) ** 0.2362 * aweight(s) ** 0.3322 * ms(s) ** (-2.5934999999999997) - weight(s) * nu_msd(s) + ((-1) * (vfac(s) * g * 1 / (1 / ms(s)) * (-1) / sqr(ms(s)))) * nu_defv(s) - piL_ms(s) + piU_ms(s) =E= 0;
+stat_pweight(s).. (-5222.151408) * aweight(s) ** 1.2781 * iweight(s) ** (-0.1959) * ms(s) ** 2.4242 * thrust(s) ** 0.38745 * pweight(s) ** (-1.9904) + 0.043747546799999995 * numl ** 0.9 * nume(s) ** 0.1616 * length(s) ** 0.1079 * aweight(s) ** 0.3322 * ms(s) ** (-1.5935) * pweight(s) ** (-0.7638) + 0.01173 * numl * (3 * sum(s__, pweight(s__)) / 1000) ** (-0.54) + sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s+1))$(ord(s) <= card(s) - 1)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s+2))$(ord(s) <= card(s) - 2)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s-1))$(ord(s) > 1)) + sum(ss, (((-1) * 1$(ge(ss,s))) * nu_dweight(s-2))$(ord(s) > 2)) - nu_msd(s) + vfac(s) * nu_defvfac(s) - lam_pwlower(s) + lam_pwupper(s) - piL_pweight(s) =E= 0;
 stat_t(s).. ((-1) * thrust(s)) * nu_defvfac(s) - piL_t(s) =E= 0;
-stat_t2w_stage_1.. sum(s, weight(s) * nu_t2wr(s)) - piL_t2w_stage_1 + piU_t2w_stage_1 =E= 0;
-stat_t2w_stage_2.. sum(s, weight(s) * nu_t2wr(s)) - piL_t2w_stage_2 + piU_t2w_stage_2 =E= 0;
-stat_t2w_stage_3.. sum(s, weight(s) * nu_t2wr(s)) - piL_t2w_stage_3 + piU_t2w_stage_3 =E= 0;
+stat_t2w(s).. weight(s) * nu_t2wr(s) - piL_t2w(s) + piU_t2w(s) =E= 0;
 stat_thrust(s).. 2042.9347365000003 * pweight(s) ** (-0.9904) * aweight(s) ** 1.2781 * iweight(s) ** (-0.1959) * ms(s) ** 2.4242 * thrust(s) ** (-0.6125499999999999) + nu_dthrust(s) - nu_t2wr(s) + ((-1) * t(s)) * nu_defvfac(s) - piL_thrust(s) =E= 0;
 stat_v(s).. nu_defv(s) - nu_defvt - piL_v(s) =E= 0;
-stat_vfac_stage_1.. sum(s, pweight(s) * nu_defvfac(s)) + sum(s, ((-1) * (log(1 / ms(s)) * g)) * nu_defv(s)) - piL_vfac_stage_1 + piU_vfac_stage_1 =E= 0;
-stat_vfac_stage_2.. sum(s, pweight(s) * nu_defvfac(s)) + sum(s, ((-1) * (log(1 / ms(s)) * g)) * nu_defv(s)) - piL_vfac_stage_2 + piU_vfac_stage_2 =E= 0;
-stat_vfac_stage_3.. sum(s, pweight(s) * nu_defvfac(s)) + sum(s, ((-1) * (log(1 / ms(s)) * g)) * nu_defv(s)) - piL_vfac_stage_3 + piU_vfac_stage_3 =E= 0;
+stat_vfac(s).. pweight(s) * nu_defvfac(s) + ((-1) * (log(1 / ms(s)) * g)) * nu_defv(s) - piL_vfac(s) + piU_vfac(s) =E= 0;
 stat_vt.. nu_defvt - piL_vt + piU_vt =E= 0;
 stat_weight(s).. nu_dweight(s) + t2w(s) * nu_t2wr(s) + (1 - ms(s)) * nu_msd(s) =E= 0;
 
@@ -294,38 +292,22 @@ comp_lo_aweight(s).. aweight(s) - 1 =G= 0;
 comp_lo_ethrust(s).. ethrust(s) - 20 =G= 0;
 comp_lo_instweight.. instweight - 2.5 =G= 0;
 comp_lo_iweight(s).. iweight(s) - 5 =G= 0;
-comp_lo_length_stage_1.. length("stage-1") - 125 =G= 0;
-comp_lo_length_stage_2.. length("stage-2") - 75 =G= 0;
-comp_lo_length_stage_3.. length("stage-3") - 50 =G= 0;
-comp_lo_ms_stage_1.. ms("stage-1") - 0.25 =G= 0;
-comp_lo_ms_stage_2.. ms("stage-2") - 0.24 =G= 0;
-comp_lo_ms_stage_3.. ms("stage-3") - 0.16 =G= 0;
+comp_lo_length(s).. length(s) - length_lo_param(s) =G= 0;
+comp_lo_ms(s).. ms(s) - ms_lo_param(s) =G= 0;
 comp_lo_pweight(s).. pweight(s) - 50 =G= 0;
 comp_lo_t(s).. t(s) - 100 =G= 0;
-comp_lo_t2w_stage_1.. t2w("stage-1") - 1.2 =G= 0;
-comp_lo_t2w_stage_2.. t2w("stage-2") - 0.6 =G= 0;
-comp_lo_t2w_stage_3.. t2w("stage-3") - 0.7 =G= 0;
+comp_lo_t2w(s).. t2w(s) - t2w_lo_param(s) =G= 0;
 comp_lo_thrust(s).. thrust(s) - 1 =G= 0;
 comp_lo_v(s).. v(s) - 1000 =G= 0;
-comp_lo_vfac_stage_1.. vfac("stage-1") - 240 =G= 0;
-comp_lo_vfac_stage_2.. vfac("stage-2") - 240 =G= 0;
-comp_lo_vfac_stage_3.. vfac("stage-3") - 340 =G= 0;
+comp_lo_vfac(s).. vfac(s) - vfac_lo_param(s) =G= 0;
 comp_lo_vt.. vt - 35000 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_instweight.. 4 - instweight =G= 0;
-comp_up_length_stage_1.. 150 - length("stage-1") =G= 0;
-comp_up_length_stage_2.. 100 - length("stage-2") =G= 0;
-comp_up_length_stage_3.. 70 - length("stage-3") =G= 0;
-comp_up_ms_stage_1.. 0.3 - ms("stage-1") =G= 0;
-comp_up_ms_stage_2.. 0.29 - ms("stage-2") =G= 0;
-comp_up_ms_stage_3.. 0.21 - ms("stage-3") =G= 0;
-comp_up_t2w_stage_1.. 1.4 - t2w("stage-1") =G= 0;
-comp_up_t2w_stage_2.. 0.75 - t2w("stage-2") =G= 0;
-comp_up_t2w_stage_3.. 0.9 - t2w("stage-3") =G= 0;
-comp_up_vfac_stage_1.. 290 - vfac("stage-1") =G= 0;
-comp_up_vfac_stage_2.. 290 - vfac("stage-2") =G= 0;
-comp_up_vfac_stage_3.. 375 - vfac("stage-3") =G= 0;
+comp_up_length(s).. length_up_param(s) - length(s) =G= 0;
+comp_up_ms(s).. ms_up_param(s) - ms(s) =G= 0;
+comp_up_t2w(s).. t2w_up_param(s) - t2w(s) =G= 0;
+comp_up_vfac(s).. vfac_up_param(s) - vfac(s) =G= 0;
 comp_up_vt.. 50000 - vt =G= 0;
 
 * Original equality equations
@@ -358,22 +340,14 @@ Model mcp_model /
     stat_ethrust.ethrust,
     stat_instweight.instweight,
     stat_iweight.iweight,
-    stat_length_stage_1.length,
-    stat_length_stage_2.length,
-    stat_length_stage_3.length,
-    stat_ms_stage_1.ms,
-    stat_ms_stage_2.ms,
-    stat_ms_stage_3.ms,
+    stat_length.length,
+    stat_ms.ms,
     stat_pweight.pweight,
     stat_t.t,
-    stat_t2w_stage_1.t2w,
-    stat_t2w_stage_2.t2w,
-    stat_t2w_stage_3.t2w,
+    stat_t2w.t2w,
     stat_thrust.thrust,
     stat_v.v,
-    stat_vfac_stage_1.vfac,
-    stat_vfac_stage_2.vfac,
-    stat_vfac_stage_3.vfac,
+    stat_vfac.vfac,
     stat_vt.vt,
     stat_weight.weight,
     comp_pwlower.lam_pwlower,
@@ -391,36 +365,20 @@ Model mcp_model /
     comp_lo_ethrust.piL_ethrust,
     comp_lo_instweight.piL_instweight,
     comp_lo_iweight.piL_iweight,
-    comp_lo_length_stage_1.piL_length_stage_1,
-    comp_lo_length_stage_2.piL_length_stage_2,
-    comp_lo_length_stage_3.piL_length_stage_3,
-    comp_lo_ms_stage_1.piL_ms_stage_1,
-    comp_lo_ms_stage_2.piL_ms_stage_2,
-    comp_lo_ms_stage_3.piL_ms_stage_3,
+    comp_lo_length.piL_length,
+    comp_lo_ms.piL_ms,
     comp_lo_pweight.piL_pweight,
     comp_lo_t.piL_t,
-    comp_lo_t2w_stage_1.piL_t2w_stage_1,
-    comp_lo_t2w_stage_2.piL_t2w_stage_2,
-    comp_lo_t2w_stage_3.piL_t2w_stage_3,
+    comp_lo_t2w.piL_t2w,
     comp_lo_thrust.piL_thrust,
     comp_lo_v.piL_v,
-    comp_lo_vfac_stage_1.piL_vfac_stage_1,
-    comp_lo_vfac_stage_2.piL_vfac_stage_2,
-    comp_lo_vfac_stage_3.piL_vfac_stage_3,
+    comp_lo_vfac.piL_vfac,
     comp_lo_vt.piL_vt,
     comp_up_instweight.piU_instweight,
-    comp_up_length_stage_1.piU_length_stage_1,
-    comp_up_length_stage_2.piU_length_stage_2,
-    comp_up_length_stage_3.piU_length_stage_3,
-    comp_up_ms_stage_1.piU_ms_stage_1,
-    comp_up_ms_stage_2.piU_ms_stage_2,
-    comp_up_ms_stage_3.piU_ms_stage_3,
-    comp_up_t2w_stage_1.piU_t2w_stage_1,
-    comp_up_t2w_stage_2.piU_t2w_stage_2,
-    comp_up_t2w_stage_3.piU_t2w_stage_3,
-    comp_up_vfac_stage_1.piU_vfac_stage_1,
-    comp_up_vfac_stage_2.piU_vfac_stage_2,
-    comp_up_vfac_stage_3.piU_vfac_stage_3,
+    comp_up_length.piU_length,
+    comp_up_ms.piU_ms,
+    comp_up_t2w.piU_t2w,
+    comp_up_vfac.piU_vfac,
     comp_up_vt.piU_vt
 /;
 

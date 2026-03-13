@@ -41,20 +41,6 @@ Scalars
     Nodmax /0/
 ;
 
-cases('c1','m') = 10;
-cases('c1','n') = 20;
-cases('c2','m') = 20;
-cases('c2','n') = 30;
-cases('c3','m') = 60;
-cases('c3','n') = 100;
-cases('c4','m') = 100;
-cases('c4','n') = 100;
-cases('c5','m') = 200;
-cases('c5','n') = 200;
-
-rep(c,"AvgResUsd") = rep(c,"AvgResUsd") / card(i);
-rep(c,"AvgNodUsd") = rep(c,"AvgNodUsd") / card(i);
-
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

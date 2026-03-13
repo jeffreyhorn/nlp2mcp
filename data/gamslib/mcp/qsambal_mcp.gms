@@ -24,11 +24,13 @@ Alias(i, j);
 Parameters
     xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55/
     tb(i) /lab 220, h1 na, h2 na, p1 190, p2 105/
-    tw(i)
+    tw(i) /lab 1, h1 1, h2 1, p1 1, p2 1/
     xw(i,j)
 ;
 
-xw(i,j) = 1$xb(i,j);
+tw(i)$(tb(i) = na) = 0;
+xw(i,j) = 1$(xb(i,j));
+xw(i,j)$(xb(i,j) = na) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -46,7 +48,7 @@ Variables
     t(i)
     dev
     nu_rbal(i)
-    nu_cbal(j)
+    nu_cbal(i)
 ;
 
 * ============================================
@@ -57,8 +59,8 @@ Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x.l(i,j) = xb(i,j)$xw(i,j);
-t.l(i) = tb(i)$tw(i);
+x.l(i,j) = xb(i,j)$(xw(i,j));
+t.l(i) = tb(i)$(tw(i));
 
 * ============================================
 * Equations
@@ -81,8 +83,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * tw(i) + nu_rbal(i) + sum(j, nu_cbal(j)) =E= 0;
-stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * xw(i,j) + ((-1) * xb(i,j)) * nu_cbal(j) =E= 0;
+stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * tw(i) + nu_rbal(i) + nu_cbal(i) =E= 0;
+stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * xw(i,j) + ((-1) * xb(i,i)) * nu_cbal(i) =E= 0;
 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));

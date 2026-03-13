@@ -75,6 +75,15 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.fx('n0') = 0;
+x.fx('n10') = 2;
+y.fx('n0') = 0;
+y.fx('n10') = -1;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -127,14 +136,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_delta_x(n).. nu_delta_x_eq(n) + (2 * delta_x(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
-stat_delta_y(n).. nu_delta_y_eq(n) + (2 * delta_y(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
+stat_delta_x(n)$(ord(n) > 1).. nu_delta_x_eq(n) + (2 * delta_x(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
+stat_delta_y(n)$(ord(n) > 1).. nu_delta_y_eq(n) + (2 * delta_y(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
 stat_t(n).. ((-1) * nu_link_L0(n)) + 2 * t(n) * (ord(n) > 1) * lam_cone_eq - piL_t(n) =E= 0;
 stat_t_l0(n).. nu_link_L0(n) + (((-1) * (2 * t_l0(n))) * lam_link_up(n))$(ord(n) > 1) - piL_t_l0(n) =E= 0;
 stat_unit.. nu_unit_fx + ((-1) * (2 * v)) * lam_cone_eq =E= 0;
 stat_v.. k + ((-1) * (unit * 2)) * lam_cone_eq - piL_v =E= 0;
-stat_x(n).. ((-1) * nu_delta_x_eq(n)) + nu_x_fx_n0$sameas(n, 'n0') + nu_x_fx_n10$sameas(n, 'n10') =E= 0;
-stat_y(n).. m(n) * g * (ord(n) > 1 and ord(n) < card(n)) - nu_delta_y_eq(n) + nu_y_fx_n0$sameas(n, 'n0') + nu_y_fx_n10$sameas(n, 'n10') =E= 0;
+stat_x(n)$(ord(n) > 1 or ord(n) <= card(n) - 1 or sameas(n, 'n0') or sameas(n, 'n10')).. ((-1) * nu_delta_x_eq(n)) + nu_delta_x_eq(n+1)$(ord(n) <= card(n) - 1) + nu_x_fx_n0$(sameas(n, 'n0')) + nu_x_fx_n10$(sameas(n, 'n10')) =E= 0;
+stat_y(n).. m(n) * g * (ord(n) > 1 and ord(n) < card(n)) - nu_delta_y_eq(n) + nu_delta_y_eq(n+1)$(ord(n) <= card(n) - 1) + nu_y_fx_n0$(sameas(n, 'n0')) + nu_y_fx_n10$(sameas(n, 'n10')) =E= 0;
 
 * Inequality complementarity equations
 comp_cone_eq.. 2 * v * unit - sum(n$(ord(n) > 1), sqr(t(n))) =G= 0;
@@ -164,6 +173,9 @@ unit_fx.. unit - 1 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+delta_x.fx(n)$(not (ord(n) > 1)) = 0;
+delta_y.fx(n)$(not (ord(n) > 1)) = 0;
+x.fx(n)$(not (ord(n) > 1 or ord(n) <= card(n) - 1 or sameas(n, 'n0') or sameas(n, 'n10'))) = 0;
 lam_link_up.fx(n)$(not (ord(n) > 1)) = 0;
 nu_delta_x_eq.fx(n)$(not (ord(n) > 1)) = 0;
 nu_delta_y_eq.fx(n)$(not (ord(n) > 1)) = 0;

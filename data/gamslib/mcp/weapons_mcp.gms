@@ -43,10 +43,7 @@ mv(t) = td("damage",t);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    prob(t)
     tetd
-    nu_probe(t)
-    nu_etd
 ;
 
 Positive Variables
@@ -78,14 +75,11 @@ x.l(w,t) = min(max(x.l(w,t), 1e-6), x.up(w,t));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_prob(t)
     stat_x(w,t)
     comp_maxw(w)
     comp_minw(t)
     comp_lo_x(w,t)
     etd
-    etdp
-    probe(t)
 ;
 
 * ============================================
@@ -97,8 +91,7 @@ Equations
 Alias(w, w__);
 
 * Stationarity equations
-stat_prob(t).. ((-1) * mv(t)) + nu_probe(t) =E= 0;
-stat_x(w,t)$(td(w,t)).. prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)) * nu_probe(t) + ((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) * nu_etd + td(w,t) * lam_maxw(w) + (((-1) * td(w,t)) * lam_minw(t))$tm(t) - piL_x(w,t) =E= 0;
+stat_x(w,t)$(td(w,t)).. ((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) + td(w,t) * lam_maxw(w) + (((-1) * td(w,t)) * lam_minw(t))$(tm(t)) - piL_x(w,t) =E= 0;
 
 * Inequality complementarity equations
 comp_maxw(w).. ((-1) * (sum(t$(td(w,t)), x(w,t)) - wa(w))) =G= 0;
@@ -108,8 +101,6 @@ comp_minw(t)$(tm(t)).. sum(w$(td(w,t)), x(w,t)) - tm(t) =G= 0;
 comp_lo_x(w,t).. x(w,t) - 0 =G= 0;
 
 * Original equality equations
-probe(t).. prob(t) =E= 1 - prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t));
-etdp.. tetd =E= sum(t, mv(t) * prob(t));
 etd.. tetd =E= sum(t, mv(t) * (1 - prod(w$(td(w,t)), (1 - td(w,t)) ** x(w,t))));
 
 
@@ -138,13 +129,10 @@ lam_minw.fx(t)$(not (tm(t))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_prob.prob,
     stat_x.x,
     comp_maxw.lam_maxw,
     comp_minw.lam_minw,
-    etd.nu_etd,
-    etdp.tetd,
-    probe.nu_probe,
+    etd.tetd,
     comp_lo_x.piL_x
 /;
 

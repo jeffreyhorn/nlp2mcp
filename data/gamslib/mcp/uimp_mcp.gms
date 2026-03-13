@@ -37,10 +37,10 @@ Parameters
     h(k) /nuts 20, bolts 20/
 ;
 
-t(i,j,k,l) = mh(l,k) + mhadd(i,j)$mh(l,k);
+t(i,j,k,l) = mh(l,k) + mhadd(i,j)$(mh(l,k));
 a("summer",j,l) = av(l,j);
 a("winter",j,l) = av(l,j) + 10;
-c(i,j,k,l) = tc(l,k) + tcadd(i,j)$tc(l,k);
+c(i,j,k,l) = tc(l,k) + tcadd(i,j)$(tc(l,k));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -125,7 +125,7 @@ Equations
 stat_cost.. 1 + nu_cdef =E= 0;
 stat_revenue.. -1 + nu_rdef =E= 0;
 stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) - piL_x(i,j,k,l) =E= 0;
-stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) - piL_y(i,k) + piU_y(i,k) =E= 0;
+stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) + nu_ib(i+1,k)$(ord(i) <= card(i) - 1) - piL_y(i,k) + piU_y(i,k) =E= 0;
 stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) - piL_z(i,k) =E= 0;
 
 * Inequality complementarity equations

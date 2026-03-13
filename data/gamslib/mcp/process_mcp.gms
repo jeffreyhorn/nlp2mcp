@@ -32,13 +32,9 @@ Variables
     rangem
     ranged
     rangef
-    nu_yield
     nu_makeup
     nu_sdef
-    nu_motor
     nu_drat
-    nu_ddil
-    nu_df4
     nu_rngyield
     nu_rngmotor
     nu_rngddil
@@ -173,18 +169,14 @@ Equations
     comp_up_rangey
     comp_up_ratio
     comp_up_strength
-    ddil
-    df4
     dprofit
     drat
     makeup
-    motor
     rngddil
     rngdf4
     rngmotor
     rngyield
     sdef
-    yield
 ;
 
 * ============================================
@@ -193,19 +185,19 @@ Equations
 
 * Stationarity equations
 stat_acid.. 10 + nu_sdef - piL_acid + piU_acid =E= 0;
-stat_alkylate.. ((-1) * (octane * 0.063)) + nu_yield + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / sqr(98 - strength) / 1000000)) * nu_sdef + rangey * nu_rngyield - piL_alkylate + piU_alkylate =E= 0;
-stat_dilute.. ((-1) * (1000 * (98 - strength) * strength * alkylate / sqr(98 - strength) / 1000000)) * nu_sdef + nu_ddil + ranged * nu_rngddil - piL_dilute + piU_dilute =E= 0;
-stat_f4.. 0.222 * nu_ddil + nu_df4 + 0.222 * nu_rngddil + rangef * nu_rngdf4 - piL_f4 + piU_f4 =E= 0;
+stat_alkylate.. ((-1) * (octane * 0.063)) + 1.22 * nu_makeup + ((-1) * (1000 * (98 - strength) * strength * dilute / sqr(98 - strength) / 1000000)) * nu_sdef + rangey * nu_rngyield - piL_alkylate + piU_alkylate =E= 0;
+stat_dilute.. ((-1) * (1000 * (98 - strength) * strength * alkylate / sqr(98 - strength) / 1000000)) * nu_sdef + ranged * nu_rngddil - piL_dilute + piU_dilute =E= 0;
+stat_f4.. 0.222 * nu_rngddil + rangef * nu_rngdf4 - piL_f4 + piU_f4 =E= 0;
 stat_isom.. 3.36 - nu_makeup + ((-1) * (1 / olefin ** 1)) * nu_drat - piL_isom + piU_isom =E= 0;
 stat_isor.. 0.035 + ((-1) * (1 / olefin ** 1)) * nu_drat - piL_isor + piU_isor =E= 0;
-stat_octane.. ((-1) * (0.063 * alkylate)) + nu_motor + (-3) * nu_df4 + rangem * nu_rngmotor + (-3) * nu_rngdf4 - piL_octane + piU_octane =E= 0;
-stat_olefin.. 5.04 + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_yield - nu_makeup + ((-1) * (((-1) * (isor + isom)) / sqr(olefin))) * nu_drat + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield - piL_olefin + piU_olefin =E= 0;
+stat_octane.. ((-1) * (0.063 * alkylate)) + rangem * nu_rngmotor + (-3) * nu_rngdf4 - piL_octane + piU_octane =E= 0;
+stat_olefin.. 5.04 - nu_makeup + ((-1) * (((-1) * (isor + isom)) / sqr(olefin))) * nu_drat + ((-1) * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio))) * nu_rngyield - piL_olefin + piU_olefin =E= 0;
 stat_ranged.. dilute * nu_rngddil - piL_ranged + piU_ranged =E= 0;
 stat_rangef.. f4 * nu_rngdf4 - piL_rangef + piU_rangef =E= 0;
 stat_rangem.. octane * nu_rngmotor - piL_rangem + piU_rangem =E= 0;
 stat_rangey.. alkylate * nu_rngyield - piL_rangey + piU_rangey =E= 0;
-stat_ratio.. ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_yield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_motor + nu_drat + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_rngyield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_rngmotor - piL_ratio + piU_ratio =E= 0;
-stat_strength.. ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / sqr(98 - strength) / 1000000)) * nu_sdef + (-0.325) * nu_motor + (-0.325) * nu_rngmotor - piL_strength + piU_strength =E= 0;
+stat_ratio.. nu_drat + ((-1) * (olefin * (0.13167 - 0.00667 * 2 * ratio))) * nu_rngyield + ((-1) * (1.098 - 0.038 * 2 * ratio)) * nu_rngmotor - piL_ratio + piU_ratio =E= 0;
+stat_strength.. ((-1) * (1000 * ((98 - strength) * alkylate * dilute - alkylate * dilute * strength * (-1)) / sqr(98 - strength) / 1000000)) * nu_sdef + (-0.325) * nu_rngmotor - piL_strength + piU_strength =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_acid.. acid - 0 =G= 0;
@@ -240,13 +232,9 @@ comp_up_ratio.. 12 - ratio =G= 0;
 comp_up_strength.. 93 - strength =G= 0;
 
 * Original equality equations
-yield.. alkylate =E= olefin * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio));
 makeup.. alkylate =E= olefin + isom - 0.22 * alkylate;
 sdef.. acid =E= alkylate * dilute * strength / (98 - strength) / 1000;
-motor.. octane =E= 86.35 + 1.098 * ratio - 0.038 * sqr(ratio) - 0.325 * (89 - strength);
 drat.. ratio =E= (isor + isom) / olefin;
-ddil.. dilute =E= 35.82 - 0.222 * f4;
-df4.. f4 =E= -133 + 3 * octane;
 dprofit.. profit =E= 0.063 * alkylate * octane - 5.04 * olefin - 0.035 * isor - 10 * acid - 3.36 * isom;
 rngyield.. rangey * alkylate =E= olefin * (1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio));
 rngmotor.. rangem * octane =E= 86.35 + 1.098 * ratio - 0.038 * sqr(ratio) - 0.325 * (89 - strength);
@@ -282,18 +270,14 @@ Model mcp_model /
     stat_rangey.rangey,
     stat_ratio.ratio,
     stat_strength.strength,
-    ddil.nu_ddil,
-    df4.nu_df4,
     dprofit.profit,
     drat.nu_drat,
     makeup.nu_makeup,
-    motor.nu_motor,
     rngddil.nu_rngddil,
     rngdf4.nu_rngdf4,
     rngmotor.nu_rngmotor,
     rngyield.nu_rngyield,
     sdef.nu_sdef,
-    yield.nu_yield,
     comp_lo_acid.piL_acid,
     comp_lo_alkylate.piL_alkylate,
     comp_lo_dilute.piL_dilute,

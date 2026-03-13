@@ -51,20 +51,15 @@ ds("mode-1",s) = dvar(s);
 
 Variables
     cost
-    nu_defcosts
 ;
 
 Positive Variables
     x(i)
-    y(i,j)
     ys(i,j,s)
     lam_mincap
-    lam_powbal(i)
-    lam_dembal(j)
     lam_powbals(i,s)
     lam_dembals(j,s)
     piL_x(i)
-    piL_y(i,j)
     piL_ys(i,j,s)
 ;
 
@@ -78,7 +73,6 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i) = 1;
-y.l(i,j) = 1;
 ys.l(i,j,s) = 1;
 
 * ============================================
@@ -91,17 +85,12 @@ ys.l(i,j,s) = 1;
 
 Equations
     stat_x(i)
-    stat_y(i,j)
     stat_ys(i,j,s)
-    comp_dembal(j)
     comp_dembals(j,s)
     comp_mincap
-    comp_powbal(i)
     comp_powbals(i,s)
     comp_lo_x(i)
-    comp_lo_y(i,j)
     comp_lo_ys(i,j,s)
-    defcost
     defcosts
 ;
 
@@ -110,24 +99,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i).. c(i) + ((-1) * c(i)) * nu_defcosts - lam_mincap - lam_powbal(i) + sum(s, (-1) * lam_powbals(i,s)) - piL_x(i) =E= 0;
-stat_y(i,j).. f(i,j) + lam_powbal(i) - lam_dembal(j) - piL_y(i,j) =E= 0;
-stat_ys(i,j,s).. ((-1) * (prob(s) * f(i,j))) * nu_defcosts + lam_powbals(i,s) - lam_dembals(j,s) - piL_ys(i,j,s) =E= 0;
+stat_x(i).. c(i) - lam_mincap + sum(s, (-1) * lam_powbals(i,s)) - piL_x(i) =E= 0;
+stat_ys(i,j,s).. prob(s) * f(i,j) + lam_powbals(i,s) - lam_dembals(j,s) - piL_ys(i,j,s) =E= 0;
 
 * Inequality complementarity equations
-comp_dembal(j).. sum(i, y(i,j)) - d(j) =G= 0;
 comp_dembals(j,s).. sum(i, ys(i,j,s)) - ds(j,s) =G= 0;
 comp_mincap.. sum(i, x(i)) - m =G= 0;
-comp_powbal(i).. ((-1) * (sum(j, y(i,j)) - x(i))) =G= 0;
 comp_powbals(i,s).. ((-1) * (sum(j, ys(i,j,s)) - x(i))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i).. x(i) - 0 =G= 0;
-comp_lo_y(i,j).. y(i,j) - 0 =G= 0;
 comp_lo_ys(i,j,s).. ys(i,j,s) - 0 =G= 0;
 
 * Original equality equations
-defcost.. cost =E= sum(i, c(i) * x(i)) + sum((i,j), f(i,j) * y(i,j));
 defcosts.. cost =E= sum(i, c(i) * x(i)) + sum((i,j,s), prob(s) * f(i,j) * ys(i,j,s));
 
 
@@ -146,17 +130,12 @@ defcosts.. cost =E= sum(i, c(i) * x(i)) + sum((i,j,s), prob(s) * f(i,j) * ys(i,j
 
 Model mcp_model /
     stat_x.x,
-    stat_y.y,
     stat_ys.ys,
-    comp_dembal.lam_dembal,
     comp_dembals.lam_dembals,
     comp_mincap.lam_mincap,
-    comp_powbal.lam_powbal,
     comp_powbals.lam_powbals,
-    defcost.cost,
-    defcosts.nu_defcosts,
+    defcosts.cost,
     comp_lo_x.piL_x,
-    comp_lo_y.piL_y,
     comp_lo_ys.piL_ys
 /;
 

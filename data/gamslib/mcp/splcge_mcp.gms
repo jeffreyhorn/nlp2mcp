@@ -66,9 +66,9 @@ Variables
     nu_eqX(i)
     nu_eqpz(j)
     nu_eqF(h,j)
-    nu_eqpx(i)
+    nu_eqpx(j)
     nu_eqpf(h)
-    nu_eqZ(i)
+    nu_eqZ(j)
     nu_pf_fx_LAB
 ;
 
@@ -82,6 +82,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+pf.fx('LAB') = 1;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -90,22 +96,22 @@ Positive Variables
 * non-zero initial values.
 
 X.l(i) = X0(i);
-X.l("BRD") = max(X.l("BRD"), 0.001);
-X.l("MLK") = max(X.l("MLK"), 0.001);
+X.l('BRD') = max(X.l('BRD'), 0.001);
+X.l('MLK') = max(X.l('MLK'), 0.001);
 F.l(h,j) = F0(h,j);
-F.l("CAP","BRD") = max(F.l("CAP","BRD"), 0.001);
-F.l("CAP","MLK") = max(F.l("CAP","MLK"), 0.001);
-F.l("LAB","BRD") = max(F.l("LAB","BRD"), 0.001);
-F.l("LAB","MLK") = max(F.l("LAB","MLK"), 0.001);
+F.l('CAP','BRD') = max(F.l('CAP','BRD'), 0.001);
+F.l('CAP','MLK') = max(F.l('CAP','MLK'), 0.001);
+F.l('LAB','BRD') = max(F.l('LAB','BRD'), 0.001);
+F.l('LAB','MLK') = max(F.l('LAB','MLK'), 0.001);
 Z.l(j) = Z0(j);
-Z.l("BRD") = max(Z.l("BRD"), 0.001);
-Z.l("MLK") = max(Z.l("MLK"), 0.001);
-px.l("BRD") = 1.0;
-px.l("MLK") = 1.0;
-pz.l("BRD") = 1.0;
-pz.l("MLK") = 1.0;
-pf.l("CAP") = 1.0;
-pf.l("LAB") = 1.0;
+Z.l('BRD') = max(Z.l('BRD'), 0.001);
+Z.l('MLK') = max(Z.l('MLK'), 0.001);
+px.l('BRD') = 1.0;
+px.l('MLK') = 1.0;
+pz.l('BRD') = 1.0;
+pz.l('MLK') = 1.0;
+pf.l('CAP') = 1.0;
+pf.l('LAB') = 1.0;
 
 * ============================================
 * Equations
@@ -150,12 +156,12 @@ Alias(i, i__);
 
 * Stationarity equations
 stat_f(h,j).. ((-1) * (b(j) * prod(h__, f(h__,j) ** beta(h__,j)) * sum(h__, f(h__,j) ** beta(h__,j) * beta(h__,j) / f(h__,j) / f(h__,j) ** beta(h__,j)))) * nu_eqpz(j) + nu_eqF(h,j) + nu_eqpf(h) - piL_f(h,j) =E= 0;
-stat_pf(h).. sum(i, ((-1) * (px(i) * alpha(i) * FF(h) / sqr(px(i)))) * nu_eqX(i)) + sum(j, ((-1) * (((-1) * (beta(h,j) * pz(j) * z(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_pf_fx_LAB$sameas(h, 'LAB') - piL_pf(h) =E= 0;
+stat_pf(h).. sum(i, ((-1) * (px(i) * alpha(i) * FF(h) / sqr(px(i)))) * nu_eqX(i)) + sum(j, ((-1) * (((-1) * (beta(h,j) * pz(j) * z(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_pf_fx_LAB$(sameas(h, 'LAB')) - piL_pf(h) =E= 0;
 stat_px(i).. ((-1) * (((-1) * (alpha(i) * sum(h, pf(h) * FF(h)))) / sqr(px(i)))) * nu_eqX(i) + nu_eqZ(i) - piL_px(i) =E= 0;
-stat_pz(j).. sum(h, ((-1) * (pf(h) * z(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) + sum(i, (-1) * nu_eqZ(i)) - piL_pz(j) =E= 0;
+stat_pz(j).. sum(h, ((-1) * (pf(h) * z(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqZ(j) - piL_pz(j) =E= 0;
 stat_uu.. 0 =E= 0;
 stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) + nu_eqpx(i) - piL_x(i) =E= 0;
-stat_z(j).. nu_eqpz(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * pz(j) / sqr(pf(h)))) * nu_eqF(h,j)) + sum(i, (-1) * nu_eqpx(i)) - piL_z(j) =E= 0;
+stat_z(j).. nu_eqpz(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * pz(j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqpx(j) - piL_z(j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_f(h,j).. f(h,j) - 0.001 =G= 0;

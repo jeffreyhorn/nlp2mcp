@@ -29,8 +29,10 @@ Scalars
     bm /100/
 ;
 
+$onImplicitAssign
 first("s1") = 1;
 last("s30") = 1;
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -58,6 +60,13 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+b.fx('s1') = 5;
+b.fx('s30') = 100;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -65,36 +74,36 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-b.l("s1") = 5.0;
-b.l("s2") = 5.0;
-b.l("s3") = 5.0;
-b.l("s4") = 5.0;
-b.l("s5") = 5.0;
-b.l("s6") = 5.0;
-b.l("s7") = 5.0;
-b.l("s8") = 5.0;
-b.l("s9") = 5.0;
-b.l("s10") = 5.0;
-b.l("s11") = 5.0;
-b.l("s12") = 5.0;
-b.l("s13") = 5.0;
-b.l("s14") = 5.0;
-b.l("s15") = 5.0;
-b.l("s16") = 5.0;
-b.l("s17") = 5.0;
-b.l("s18") = 5.0;
-b.l("s19") = 5.0;
-b.l("s20") = 5.0;
-b.l("s21") = 5.0;
-b.l("s22") = 5.0;
-b.l("s23") = 5.0;
-b.l("s24") = 5.0;
-b.l("s25") = 5.0;
-b.l("s26") = 5.0;
-b.l("s27") = 5.0;
-b.l("s28") = 5.0;
-b.l("s29") = 5.0;
-b.l("s30") = 5.0;
+b.l('s1') = 5.0;
+b.l('s2') = 5.0;
+b.l('s3') = 5.0;
+b.l('s4') = 5.0;
+b.l('s5') = 5.0;
+b.l('s6') = 5.0;
+b.l('s7') = 5.0;
+b.l('s8') = 5.0;
+b.l('s9') = 5.0;
+b.l('s10') = 5.0;
+b.l('s11') = 5.0;
+b.l('s12') = 5.0;
+b.l('s13') = 5.0;
+b.l('s14') = 5.0;
+b.l('s15') = 5.0;
+b.l('s16') = 5.0;
+b.l('s17') = 5.0;
+b.l('s18') = 5.0;
+b.l('s19') = 5.0;
+b.l('s20') = 5.0;
+b.l('s21') = 5.0;
+b.l('s22') = 5.0;
+b.l('s23') = 5.0;
+b.l('s24') = 5.0;
+b.l('s25') = 5.0;
+b.l('s26') = 5.0;
+b.l('s27') = 5.0;
+b.l('s28') = 5.0;
+b.l('s29') = 5.0;
+b.l('s30') = 5.0;
 
 * ============================================
 * Equations
@@ -121,7 +130,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(j).. ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$sameas(j, 's1') + nu_b_fx_s30$sameas(j, 's30') - piL_b(j) + piU_b(j) =E= 0;
+stat_b(j).. ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$(sameas(j, 's1')) + nu_b_fx_s30$(sameas(j, 's30')) - piL_b(j) + piU_b(j) =E= 0;
 stat_fb(j).. nu_FBCalc(j) =E= 0;
 stat_objv.. 0 =E= 0;
 

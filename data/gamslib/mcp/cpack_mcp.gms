@@ -25,7 +25,9 @@ Sets
     ij(i,j)
 ;
 
-ij(i,j) = 1;
+$onImplicitAssign
+ij(i,j) = yes$(ord(i) < ord(j));
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)

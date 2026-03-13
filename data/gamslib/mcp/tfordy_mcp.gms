@@ -63,11 +63,15 @@ Scalars
     sgm /0/
 ;
 
-yw(t,at,s,cl) = yef(at+(ord(t)-1),s,cl);
+$onImplicitAssign
+yw(t,at,s,cl)$(u(at)) = yef(at+(ord(t)-1),s,cl);
 yv(te,te+3,s,cl,k) = ymf("a-30",k,s,cl);
+$offImplicitAssign
 
-wpos(u,t) = yes$sum((s,cl), yw(t,u,s,cl));
-vpos(t,te) = yes$sum((s,cl,k), yv(t,te,s,cl,k));
+$onImplicitAssign
+wpos(u,t) = yes$(sum((s,cl), yw(t,u,s,cl)));
+vpos(t,te) = yes$(sum((s,cl,k), yv(t,te,s,cl,k)));
+$offImplicitAssign
 
 avl('period-1',t) = 1;
 avl('period-2',t) = 1;
@@ -80,11 +84,14 @@ avl('period-8',t) = 1;
 avl('period-9',t) = 1;
 
 iad(u,s) = is(u,s) / sum(at, is(at,s)) / 100;
-age(at) = 10 * ord(at);
 avl(t,t-1) = 1;
 avl(t,t-2) = 1;
 delt(t) = (1 + rho) ** ((-10) * (ord(t) - 1));
 sgm = rho / (1 - (1 + rho) ** ((-1) * life));
+
+loop(at,
+   yv(t,t+ord(at),s,cl,k) = ymf(at,k,s,cl)
+);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -104,11 +111,11 @@ Variables
     phil(t)
     phip(t)
     phi
-    nu_lbal(cl,te)
+    nu_lbal(c,te)
     nu_ainvc(t)
     nu_aproc(t)
     nu_asales(t)
-    nu_acutc(t)
+    nu_acutc(te)
     nu_aplnt(t)
 ;
 
@@ -120,9 +127,9 @@ Positive Variables
     h(m,t)
     x(c,t)
     lam_efs(s,k,u)
-    lam_pfs(s,k,t)
+    lam_pfs(s,k,te)
     lam_sy1(te)
-    lam_sy2(cl,te)
+    lam_sy2(c,te)
     lam_bal(c,t)
     lam_cap(m,t)
     piL_w(s,k,u,te)
@@ -195,20 +202,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(m,t).. ((-1) * (sgm * nu(m) * avl(t,t))) * nu_ainvc(t) + ((-1) * avl(t,t)) * lam_cap(m,t) - piL_h(m,t) =E= 0;
+stat_h(m,t).. ((-1) * (sgm * nu(m) * avl(t,t))) * nu_ainvc(t) + ((-1) * avl(t,t)) * lam_cap(m,t) + (((-1) * avl(t,t)) * lam_cap(m,t+1))$(ord(t) <= card(t) - 1) + (((-1) * avl(t,t)) * lam_cap(m,t+2))$(ord(t) <= card(t) - 2) + (((-1) * avl(t,t)) * lam_cap(m,t+3))$(ord(t) <= card(t) - 3) + (((-1) * avl(t,t)) * lam_cap(m,t+4))$(ord(t) <= card(t) - 4) + (((-1) * avl(t,t)) * lam_cap(m,t+5))$(ord(t) <= card(t) - 5) + (((-1) * avl(t,t)) * lam_cap(m,t+6))$(ord(t) <= card(t) - 6) + (((-1) * avl(t,t)) * lam_cap(m,t+7))$(ord(t) <= card(t) - 7) + (((-1) * avl(t,t)) * lam_cap(m,t+8))$(ord(t) <= card(t) - 8) + (((-1) * avl(t,t)) * lam_cap(m,t-1))$(ord(t) > 1) + (((-1) * avl(t,t)) * lam_cap(m,t-2))$(ord(t) > 2) + (((-1) * avl(t,t)) * lam_cap(m,t-3))$(ord(t) > 3) + (((-1) * avl(t,t)) * lam_cap(m,t-4))$(ord(t) > 4) + (((-1) * avl(t,t)) * lam_cap(m,t-5))$(ord(t) > 5) + (((-1) * avl(t,t)) * lam_cap(m,t-6))$(ord(t) > 6) + (((-1) * avl(t,t)) * lam_cap(m,t-7))$(ord(t) > 7) + (((-1) * avl(t,t)) * lam_cap(m,t-8))$(ord(t) > 8) - piL_h(m,t) =E= 0;
 stat_phik(t).. ((-1) * (delt(t) * (-1))) + nu_ainvc(t) =E= 0;
 stat_phil(t).. ((-1) * (delt(t) * (-1))) + nu_acutc(t) =E= 0;
 stat_phip(t).. ((-1) * (delt(t) * (-1))) + nu_aplnt(t) =E= 0;
 stat_phir(t).. ((-1) * (delt(t) * (-1))) + nu_aproc(t) =E= 0;
 stat_phix(t).. ((-1) * delt(t)) + nu_asales(t) =E= 0;
-stat_r(c,te)$(cl(c)).. sum(cl, nu_lbal(cl,te)) + sum(t, ((-1) * muc) * nu_acutc(t)) - lam_sy1(te) + sum(cl, (-1) * lam_sy2(cl,te)) - piL_r(c,te) =E= 0;
-stat_v(s,k,t,te).. sum(tp, ((-1) * 1$vpos(tp,t)) * lam_pfs(s,k,t)) - piL_v(s,k,t,te) =E= 0;
-stat_w(s,k,u,te).. sum(t, 10 * 1$wpos(u,t) * lam_efs(s,k,u)) + sum(t, ((-1) * 1$wpos(u,t)) * lam_pfs(s,k,t)) - piL_w(s,k,u,te) =E= 0;
+stat_r(c,te)$(cl(c)).. nu_lbal(c,te) + ((-1) * muc) * nu_acutc(te) - lam_sy1(te) - lam_sy2(c,te) + lam_sy2(c,te+1)$(ord(te) <= card(te) - 1) - piL_r(c,te) =E= 0;
+stat_v(s,k,t,te).. sum(tp, ((-1) * 1$(vpos(tp,t))) * lam_pfs(s,k,t)) - piL_v(s,k,t,te) =E= 0;
+stat_w(s,k,u,te).. sum(t, 10 * 1$(wpos(u,t)) * lam_efs(s,k,u)) + ((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te) - piL_w(s,k,u,te) =E= 0;
 stat_x(c,t)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales(t)) - piL_x(c,t) =E= 0;
 stat_z(p,t).. ((-1) * pc(p)) * nu_aproc(t) + sum(c, ((-1) * a(c,p)) * lam_bal(c,t)) + sum(m, b(m,p) * lam_cap(m,t)) - piL_z(p,t) =E= 0;
 
 * Inequality complementarity equations
-comp_bal(c,t).. sum(p, a(c,p) * z(p,t)) + r(c,t)$cl(c) - x(c,t)$cf(c) =G= 0;
+comp_bal(c,t).. sum(p, a(c,p) * z(p,t)) + r(c,t)$(cl(c)) - x(c,t)$(cf(c)) =G= 0;
 comp_cap(m,t).. ((-1) * (sum(p, b(m,p) * z(p,t)) - sum(tp$(avl(t,tp)), h(m,tp)))) =G= 0;
 comp_efs(s,k,u).. ((-1) * (10 * sum(t$(wpos(u,t)), w(s,k,u,t)) - iad(u,s) * scd(k) * land(s))) =G= 0;
 comp_pfs(s,k,t).. ((-1) * (sum(te$(vpos(t,te)), v(s,k,t,te)) - (sum(u$(wpos(u,t)), w(s,k,u,t)) + sum(tp$(vpos(tp,t)), v(s,k,tp,t))))) =G= 0;
@@ -246,6 +253,10 @@ x.fx(c,t)$(not (cf(c))) = 0;
 piL_x.fx(c,t)$(not (cf(c))) = 0;
 lam_sy1.fx(te)$(not (ord(te) > 1)) = 0;
 lam_sy2.fx(cl,te)$(not (ord(te) > 1)) = 0;
+lam_pfs.fx(s,k,te)$(not (t(te))) = 0;
+lam_sy2.fx(c,te)$(not (cl(c))) = 0;
+nu_acutc.fx(te)$(not (t(te))) = 0;
+nu_lbal.fx(c,te)$(not (cl(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

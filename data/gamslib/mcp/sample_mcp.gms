@@ -49,18 +49,13 @@ k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    n(h)
     nr(h)
     c
-    nu_cbalr
 ;
 
 Positive Variables
-    lam_vbal(j)
     lam_vbalr(j)
-    piL_n(h)
     piL_nr(h)
-    piU_n(h)
     piU_nr(h)
 ;
 
@@ -68,7 +63,6 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-n.up(h) = data(h,"pop");
 nr.lo(h) = 1 / data(h,"pop");
 
 * ============================================
@@ -80,11 +74,6 @@ nr.lo(h) = 1 / data(h,"pop");
 * non-zero initial values.
 
 $onImplicitAssign
-n.l("1") = 200.0;
-n.l("2") = 200.0;
-n.l("3") = 200.0;
-n.l("4") = 200.0;
-nr.l(h) = 1 / n.l(h);
 c.l = sum(h, data(h,"cost") * n.l(h));
 $offImplicitAssign
 
@@ -97,15 +86,10 @@ $offImplicitAssign
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_n(h)
     stat_nr(h)
-    comp_vbal(j)
     comp_vbalr(j)
-    comp_lo_n(h)
     comp_lo_nr(h)
-    comp_up_n(h)
     comp_up_nr(h)
-    cbal
     cbalr
 ;
 
@@ -114,23 +98,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_n(h).. data(h,"cost") + sum(j, ((-1) * k1(h,j)) / sqr(n(h)) * lam_vbal(j)) - piL_n(h) + piU_n(h) =E= 0;
-stat_nr(h).. ((-1) * (((-1) * data(h,"cost")) / sqr(nr(h)))) * nu_cbalr + sum(j, k1(h,j) * lam_vbalr(j)) - piL_nr(h) + piU_nr(h) =E= 0;
+stat_nr(h).. ((-1) * data(h,"cost")) / sqr(nr(h)) + sum(j, k1(h,j) * lam_vbalr(j)) - piL_nr(h) + piU_nr(h) =E= 0;
 
 * Inequality complementarity equations
-comp_vbal(j).. ((-1) * (sum(h, k1(h,j) / n(h)) - k2(j) - vmax(j))) =G= 0;
 comp_vbalr(j).. ((-1) * (sum(h, k1(h,j) * nr(h)) - k2(j) - vmax(j))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_n(h).. n(h) - 100 =G= 0;
 comp_lo_nr(h).. nr(h) - 1 / data(h,"pop") =G= 0;
 
 * Upper bound complementarity equations
-comp_up_n(h).. data(h,"pop") - n(h) =G= 0;
 comp_up_nr(h).. 0.01 - nr(h) =G= 0;
 
 * Original equality equations
-cbal.. c =E= sum(h, data(h,"cost") * n(h));
 cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 
 
@@ -148,15 +127,10 @@ cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_n.n,
     stat_nr.nr,
-    comp_vbal.lam_vbal,
     comp_vbalr.lam_vbalr,
-    cbal.c,
-    cbalr.nu_cbalr,
-    comp_lo_n.piL_n,
+    cbalr.c,
     comp_lo_nr.piL_nr,
-    comp_up_n.piU_n,
     comp_up_nr.piU_nr
 /;
 
