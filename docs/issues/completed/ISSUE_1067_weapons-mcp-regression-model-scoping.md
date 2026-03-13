@@ -19,7 +19,7 @@ After investigation, this is **not a code bug** and cannot be fixed without inco
 
 2. **The KKT system is mathematically correct.** The stationarity equations for the `war` formulation are the correct derivatives of the Lagrangian. The product rule applied directly to `etd`'s nested `prod(w$td(w,t), (1-td(w,t))**x(w,t))` expression gives the right math — it's just numerically harder for PATH than the decomposed `prob(t)` chain.
 
-3. **The baseline was also problematic.** Before PR #1037, the code incorrectly included all equations from all models (including `warp`), reaching obj=1361 vs NLP reference=1735.57 — a 21.5% objective mismatch. The current formulation actually reaches obj=1729 (0.4% from NLP reference 1735.57) but fails PATH's feasibility tolerance (residual=39.6).
+3. **The baseline was also problematic.** Before PR #1037, the code incorrectly included all equations from all models (including `warp`), reaching obj=1361.56 vs NLP reference=1735.57 — a 21.6% objective mismatch. The current formulation actually reaches obj=1728.97 (0.4% from NLP reference 1735.57) but fails PATH's feasibility tolerance (residual=39.627).
 
 4. **Future improvement paths exist but are out of scope:**
    - Automatic intermediate variable introduction (major AD architecture feature)
