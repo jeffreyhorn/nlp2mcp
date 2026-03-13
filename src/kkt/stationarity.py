@@ -1772,6 +1772,115 @@ def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
     return current
 
 
+def _find_matching_subset(parent_set: str, values: set[str], model_ir: ModelIR) -> str | None:
+    """Find a named subset whose members exactly match *values*.
+
+    Searches ``model_ir.sets`` for a ``SetDef`` whose ``domain`` references
+    *parent_set* (or an alias of it) and whose ``members`` (case-insensitive)
+    equal *values*.  Returns the subset name if found, else ``None``.
+    """
+    canonical_parent = _resolve_alias_target(parent_set, model_ir)
+    for set_def in model_ir.sets.values():
+        if not set_def.domain or len(set_def.domain) != 1:
+            continue
+        dom_target = _resolve_alias_target(set_def.domain[0], model_ir)
+        if dom_target != canonical_parent:
+            continue
+        if {m.lower() for m in set_def.members} == {v.lower() for v in values}:
+            return set_def.name
+    return None
+
+
+def _build_sameas_guard(
+    var_domain: tuple[str, ...],
+    instances: list[tuple[int, tuple[str, ...]]],
+    entries: list[tuple[int, int]],
+    kkt: KKTSystem,
+) -> Expr | None:
+    """Build a guard condition for scalar-constraint multiplier terms.
+
+    Issue #767 / #764: When a scalar constraint references only a subset of
+    an indexed variable's instances, the multiplier term must be guarded so
+    that it only appears for the relevant instances in the stationarity
+    equation.
+
+    The original implementation used only ``entries[0]`` which is correct for
+    the single-entry ``.fx`` case but wrong when multiple entries exist (e.g.
+    a scalar equation that sums over a subset of the variable's domain).
+
+    This version collects ALL entry indices and builds the minimal guard:
+    - If entries cover all instances in every dimension → no guard needed.
+    - For each dimension where entry values are a strict subset:
+      - 1 value  → ``sameas(dom, 'val')``
+      - multiple → OR-disjunction of sameas calls, or subset membership if
+        a named subset matches.
+    - Per-dimension guards are ANDed together.
+    """
+    assert kkt.gradient.index_mapping is not None
+
+    # Collect index tuples from ALL entries
+    all_fixed: list[tuple[str, ...]] = []
+    for _, col_id in entries:
+        _, idx = kkt.gradient.index_mapping.col_to_var[col_id]
+        if idx and len(idx) == len(var_domain):
+            all_fixed.append(idx)
+
+    if not all_fixed:
+        return None
+
+    # Compute per-dimension unique values from entries and from all instances
+    ndim = len(var_domain)
+    per_dim_entry: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_all: list[set[str]] = [set() for _ in range(ndim)]
+
+    for idx in all_fixed:
+        for d, v in enumerate(idx):
+            per_dim_entry[d].add(v.lower())
+
+    for _, idx in instances:
+        for d, v in enumerate(idx):
+            per_dim_all[d].add(v.lower())
+
+    # Build per-dimension guards where entry values are a strict subset
+    dim_guards: list[Expr] = []
+    for d in range(ndim):
+        if per_dim_entry[d] >= per_dim_all[d]:
+            # Entries cover all values in this dimension — no guard needed
+            continue
+
+        dom_idx = var_domain[d]
+        entry_vals = per_dim_entry[d]
+
+        if len(entry_vals) == 1:
+            # Single value — simple sameas guard
+            val = next(iter(entry_vals))
+            dim_guards.append(Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{val}'"))))
+        else:
+            # Multiple values — try to find a matching named subset
+            subset_name = _find_matching_subset(dom_idx, entry_vals, kkt.model_ir)
+            if subset_name is not None:
+                dim_guards.append(SetMembershipTest(subset_name, (SymbolRef(dom_idx),)))
+            else:
+                # OR-disjunction of sameas calls
+                or_parts: list[Expr] = []
+                for val in sorted(entry_vals):
+                    or_parts.append(Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{val}'"))))
+                or_expr: Expr = or_parts[0]
+                for part in or_parts[1:]:
+                    or_expr = Binary("or", or_expr, part)
+                dim_guards.append(or_expr)
+
+    if not dim_guards:
+        # All dimensions fully covered — no guard needed
+        return None
+
+    # AND all dimension guards together
+    guard: Expr = dim_guards[0]
+    for dg in dim_guards[1:]:
+        guard = Binary("and", guard, dg)
+    return guard
+
+
 def _find_superset_in_domain(
     subset_idx: str,
     var_domain: tuple[str, ...],
@@ -2443,34 +2552,14 @@ def _add_indexed_jacobian_terms(
                     sum_indices = tuple(sorted(uncontrolled))
                     term = Sum(sum_indices, term)
 
-                # Issue #767: Guard per-instance fx multipliers with $(sameas(...))
+                # Issue #767 / #764: Guard multiplier terms with $(sameas(...))
                 # when only a subset of the indexed variable's instances have a
-                # nonzero Jacobian entry.  For example, if b_fx_s1 is a scalar
-                # equality that fixes b("s1"), only the column corresponding to
-                # b("s1") is nonzero.  Without a guard, nu_b_fx_s1 appears in
-                # every row of stat_b(j), making the KKT condition incorrect for
-                # j ≠ 's1'.  Build one $(sameas(j,'s1')) factor per domain index.
+                # nonzero Jacobian entry.  Handles both single-entry (.fx) and
+                # multi-entry (scalar equation summing over a subset) cases.
                 if var_domain and len(entries) < len(instances):
-                    # Look up the variable indices for the first (and typically only)
-                    # nonzero entry to find which instance this scalar constraint fixes.
-                    entry_col_id = entries[0][1]
-                    assert kkt.gradient.index_mapping is not None  # checked at function entry
-                    _var_name_check, fixed_indices = kkt.gradient.index_mapping.col_to_var[
-                        entry_col_id
-                    ]
-                    if fixed_indices and len(fixed_indices) == len(var_domain):
-                        # Build sameas condition: sameas(d0,'v0') and sameas(d1,'v1') ...
-                        guard: Expr | None = None
-                        for dom_idx, fixed_val in zip(var_domain, fixed_indices, strict=True):
-                            sameas_call: Expr = Call(
-                                "sameas",
-                                (SymbolRef(dom_idx), SymbolRef(f"'{fixed_val}'")),
-                            )
-                            guard = (
-                                sameas_call if guard is None else Binary("and", guard, sameas_call)
-                            )
-                        if guard is not None:
-                            term = DollarConditional(value_expr=term, condition=guard)
+                    guard = _build_sameas_guard(var_domain, instances, entries, kkt)
+                    if guard is not None:
+                        term = DollarConditional(value_expr=term, condition=guard)
 
                 expr = Binary("+", expr, term)
 

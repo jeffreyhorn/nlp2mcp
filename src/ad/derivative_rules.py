@@ -1736,31 +1736,40 @@ def _partial_index_match(
         # No match found
         return (), (), wrt_indices, None
 
-    # For multi-index sums, try prefix matching (original behavior)
+    # For multi-index sums, try arbitrary-position matching.
+    # Each sum index is matched against any unused position in wrt_indices.
+    # This handles cases like sum((j,l), x(i,j,k,l)) w.r.t. x('a','b','c','d')
+    # where j matches position 1 and l matches position 3.
+    matched_positions: list[int] = []  # positions in wrt_indices that matched
     matched_symbolic = []
     matched_concrete: list[str | IndexOffset] = []
-    for i, sum_idx in enumerate(sum_index_sets):
-        wrt_idx = wrt_indices[i]
-        # For IndexOffset, check the base index; for str, check directly
-        check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
-        if _is_concrete_instance_of(check_str, sum_idx, config):
-            matched_symbolic.append(sum_idx)
-            matched_concrete.append(wrt_idx)
-        else:
-            # Prefix match broken - no partial match
+    used_positions: set[int] = set()
+
+    for sum_idx in sum_index_sets:
+        found = False
+        for pos, wrt_idx in enumerate(wrt_indices):
+            if pos in used_positions:
+                continue
+            check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+            if _is_concrete_instance_of(check_str, sum_idx, config):
+                matched_positions.append(pos)
+                matched_symbolic.append(sum_idx)
+                matched_concrete.append(wrt_idx)
+                used_positions.add(pos)
+                found = True
+                break
+        if not found:
             return (), (), wrt_indices, None
 
-    remaining = wrt_indices[len(sum_index_sets) :]
-    # For prefix matching, symbolic_wrt replaces matched positions with symbolic
-    # sum indices. For IndexOffset matches, mirror the structure to preserve
-    # offset/circular info: e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1)
-    symbolic_wrt = (
-        tuple(
-            (IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym)
-            for sym, conc in zip(matched_symbolic, matched_concrete, strict=True)
+    # Build remaining (unmatched positions) and symbolic_wrt (position-preserving)
+    remaining = tuple(wrt_indices[i] for i in range(len(wrt_indices)) if i not in used_positions)
+    # Build symbolic_wrt: replace matched positions with symbolic sum indices
+    symbolic_list = list(wrt_indices)
+    for pos, sym, conc in zip(matched_positions, matched_symbolic, matched_concrete, strict=True):
+        symbolic_list[pos] = (
+            IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym
         )
-        + remaining
-    )
+    symbolic_wrt = tuple(symbolic_list)
     return tuple(matched_symbolic), tuple(matched_concrete), remaining, symbolic_wrt
 
 
