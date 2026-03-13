@@ -30,8 +30,9 @@ After investigation, this is **not a code bug** and cannot be fixed without inco
 
 The original GAMS model defines two equivalent formulations:
 ```gams
-Model war  'traditional'  / maxw, minw, etd         /
-Model warp 'extended'     / maxw, minw, probe, etdp /;
+Model
+   war  'traditional'  / maxw, minw, etd         /
+   warp 'extended'     / maxw, minw, probe, etdp /;
 solve war maximizing tetd using nlp;
 ```
 
