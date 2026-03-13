@@ -21,7 +21,7 @@ The agreste model is structurally infeasible (model_status=4, 0 iterations) due 
 
 ### Fix
 
-Added a `DollarConditional` case to `_collect_variables()` in `src/ad/sparsity.py` that recurses into `value_expr` to collect referenced variables.
+Added a `DollarConditional` case to `_collect_variables()` in `src/ad/sparsity.py` that recurses into both `value_expr` and `condition` to collect all referenced variables.
 
 ### Result
 
@@ -45,6 +45,8 @@ Fixing this requires changes to `_diff_sum()` and `_substitute_sum_indices()` to
 ## Files Modified
 
 - `src/ad/sparsity.py` — Added `DollarConditional` case to `_collect_variables()`
+- `tests/unit/ad/test_sparsity.py` — Added 4 unit tests for `DollarConditional` sparsity
+- `data/gamslib/mcp/agreste_mcp.gms` — Regenerated MCP fixture with corrected Jacobian
 
 ## Files
 
