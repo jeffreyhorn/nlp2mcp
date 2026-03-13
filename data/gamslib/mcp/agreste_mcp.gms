@@ -132,12 +132,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-xcrop.up(p,s) = xcropl(p,s);
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -229,7 +223,7 @@ stat_revenue.. -1 + nu_arev =E= 0;
 stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) - piL_sales(c) =E= 0;
 stat_tlab(tm).. ((-1) * (dpm * twage / sqr(dpm))) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc - piL_tlab(tm) =E= 0;
 stat_vetcost.. 1 + nu_avet + lam_awcc =E= 0;
-stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
+stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + (a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s) + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
 stat_xlive.. nu_lbal + ((-1) * lprice) * nu_arev + ((-1) * vetpr) * nu_avet =E= 0;
 stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) - piL_xliver(r) =E= 0;
 stat_xprod(c).. nu_dprod(c) =E= 0;
@@ -254,7 +248,7 @@ comp_lo_xliver(r).. xliver(r) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_flab(tm).. 70.5 - flab(tm) =G= 0;
-comp_up_xcrop(p,s).. xcropl(p,s) - xcrop(p,s) =G= 0;
+comp_up_xcrop(p,s)$(xcropl(p,s) < inf).. xcropl(p,s) - xcrop(p,s) =G= 0;
 
 * Original equality equations
 lbal.. xlive =E= sum(r, xliver(r));
@@ -268,6 +262,15 @@ alab.. labcost =E= (fwage * sum(tm, flab(tm)) + twage * sum(tm, tlab(tm))) / dpm
 avet.. vetcost =E= vetpr * xlive;
 income.. yfarm =E= revenue + vsc * sum(dr, cons(dr)) - labcost - rationr - vetcost - cropcost - phi * sum(ty, pdev(ty) + ndev(ty)) / card(ty);
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piU_xcrop.fx(p,s)$(not (xcropl(p,s) < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

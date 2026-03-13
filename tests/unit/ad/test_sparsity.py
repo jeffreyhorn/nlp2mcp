@@ -18,7 +18,17 @@ from src.ad.sparsity import (
     analyze_expression_sparsity,
     find_variables_in_expr,
 )
-from src.ir.ast import Binary, Call, Const, ParamRef, Sum, SymbolRef, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -141,6 +151,38 @@ class TestFindVariables:
 
         variables = find_variables_in_expr(expr)
         assert variables == {"x", "y"}
+
+    def test_dollar_conditional_value_only(self):
+        """Test DollarConditional with variable in value_expr only."""
+        # x$1 — variable in value, constant condition
+        expr = DollarConditional(value_expr=VarRef("x"), condition=Const(1.0))
+        variables = find_variables_in_expr(expr)
+        assert variables == {"x"}
+
+    def test_dollar_conditional_condition_only(self):
+        """Test DollarConditional with variable in condition only."""
+        # 1$y — constant value, variable condition
+        expr = DollarConditional(value_expr=Const(1.0), condition=VarRef("y"))
+        variables = find_variables_in_expr(expr)
+        assert variables == {"y"}
+
+    def test_dollar_conditional_both(self):
+        """Test DollarConditional with variables in both value and condition."""
+        # x$y — variables in both parts
+        expr = DollarConditional(value_expr=VarRef("x"), condition=VarRef("y"))
+        variables = find_variables_in_expr(expr)
+        assert variables == {"x", "y"}
+
+    def test_dollar_conditional_nested(self):
+        """Test DollarConditional nested in a sum (agreste-like pattern)."""
+        # sum(i, (a(i) * x(i))$condition(i))
+        body = DollarConditional(
+            value_expr=Binary("*", ParamRef("a", ("i",)), VarRef("x", ("i",))),
+            condition=ParamRef("cond", ("i",)),
+        )
+        expr = Sum(("i",), body)
+        variables = find_variables_in_expr(expr)
+        assert variables == {"x"}
 
 
 # ============================================================================
