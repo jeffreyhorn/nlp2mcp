@@ -1542,18 +1542,22 @@ def emit_gams_mcp(
     # 2e. Fix bound multipliers whose complementarity equation has a guard
     # condition (e.g., $(param < inf) to skip degenerate infinite-bound rows).
     # The multiplier must be fixed to 0 for excluded instances.
+    # Handles both indexed (domain-conditioned) and scalar (unconditional) cases.
     for comp_dict in (kkt.complementarity_bounds_lo, kkt.complementarity_bounds_up):
         for _key, comp_pair in sorted(comp_dict.items()):
             if ref_mults is not None and comp_pair.variable not in ref_mults:
                 continue
             eq_def = comp_pair.equation
-            if eq_def.condition is not None and eq_def.domain:
+            if eq_def.condition is not None:
                 mult_name = comp_pair.variable
-                domain_str = ",".join(eq_def.domain)
-                domain_vars = frozenset(eq_def.domain)
                 assert isinstance(eq_def.condition, Expr)
-                cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
-                fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+                cond_gams = expr_to_gams(eq_def.condition, domain_vars=frozenset(eq_def.domain))
+                if eq_def.domain:
+                    domain_str = ",".join(eq_def.domain)
+                    fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+                else:
+                    # Scalar: fix multiplier to 0 when guard condition is false
+                    fx_lines.append(f"{mult_name}.fx$(not ({cond_gams})) = 0;")
 
     # Build dynamic subset map once, used by sections 3 and 3b.
     dynamic_map = _build_dynamic_subset_map(kkt.model_ir)

@@ -274,8 +274,9 @@ def build_complementarity_pairs(
             # For expression-based bounds (e.g., x.lo(s) = param(s)), some
             # instances may have -INF values — add a guard condition to skip
             # them and avoid degenerate complementarity equations.
+            # Applies to both indexed and scalar variables.
             lo_guard: Expr | None = None
-            if bound_def.expr is not None and var_domain:
+            if bound_def.expr is not None:
                 lo_guard = Binary(">", bound_def.expr, Const(float("-inf")))
 
             if var_domain:
@@ -301,6 +302,7 @@ def build_complementarity_pairs(
                     domain=(),
                     relation=Rel.GE,
                     lhs_rhs=(F_piL, Const(0.0)),
+                    condition=lo_guard,
                 )
                 comp_bounds_lo[(var_name, ())] = ComplementarityPair(
                     equation=comp_eq, variable=piL_name, variable_indices=()
@@ -404,8 +406,9 @@ def build_complementarity_pairs(
             # For expression-based bounds (e.g., x.up(s) = param(s)), some
             # instances may have INF values — add a guard condition to skip
             # them and avoid degenerate complementarity equations.
+            # Applies to both indexed and scalar variables.
             up_guard: Expr | None = None
-            if bound_def.expr is not None and var_domain:
+            if bound_def.expr is not None:
                 up_guard = Binary("<", bound_def.expr, Const(float("inf")))
 
             if var_domain:
@@ -430,6 +433,7 @@ def build_complementarity_pairs(
                     domain=(),
                     relation=Rel.GE,
                     lhs_rhs=(F_piU, Const(0.0)),
+                    condition=up_guard,
                 )
                 comp_bounds_up[(var_name, ())] = ComplementarityPair(
                     equation=comp_eq, variable=piU_name, variable_indices=()
