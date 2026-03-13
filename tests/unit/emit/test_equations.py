@@ -778,3 +778,50 @@ class TestLeadLagDomainRestrictions:
         assert "$(flag > 0)" in result
         assert "eq$(flag > 0).. x =E= y;" == result
         assert aliases == {}
+
+    def test_skip_lead_lag_inference_suppresses_condition(self):
+        """Test that skip_lead_lag_inference=True prevents inferred conditions.
+
+        Original model equality equations (like whouse's sb(t).. stock(t) =E= stock(t-1) + ...)
+        should NOT get inferred $(ord(t) > 1) conditions because GAMS evaluates
+        lag references at boundary elements as 0 (default level value).
+        """
+        # eq(t).. x(t-1) =E= y(t)  — has a lag reference
+        # Without skip: would get $(ord(t) > 1) condition
+        # With skip: should emit eq(t).. x(t-1) =E= y(t); without condition
+        eq_def = EquationDef(
+            name="eq",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("t", Const(-1), circular=False),)),
+                VarRef("y", ("t",)),
+            ),
+        )
+        result, aliases = emit_equation_def("eq", eq_def, skip_lead_lag_inference=True)
+        # No $-condition should be inferred
+        assert "$" not in result
+        assert "eq(t).. x(t-1) =E= y(t);" == result
+        assert aliases == {}
+
+    def test_skip_lead_lag_inference_preserves_explicit_condition(self):
+        """Test that skip_lead_lag_inference preserves explicit parsed conditions.
+
+        Even with skip_lead_lag_inference=True, equations that have an explicit
+        $-condition from the original model should still emit that condition.
+        """
+        eq_def = EquationDef(
+            name="eq",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("t", Const(-1), circular=False),)),
+                VarRef("y", ("t",)),
+            ),
+            condition="flag > 0",
+        )
+        result, aliases = emit_equation_def("eq", eq_def, skip_lead_lag_inference=True)
+        # Explicit condition preserved, but no inferred lead/lag condition added
+        assert "$(flag > 0)" in result
+        assert "ord(t)" not in result
+        assert aliases == {}

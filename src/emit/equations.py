@@ -191,7 +191,12 @@ def _merge_alias_dicts(target: dict[str, list[str]], source: dict[str, list[str]
                 existing.append(a)
 
 
-def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, dict[str, list[str]]]:
+def emit_equation_def(
+    eq_name: str,
+    eq_def: EquationDef,
+    *,
+    skip_lead_lag_inference: bool = False,
+) -> tuple[str, dict[str, list[str]]]:
     """Emit a single equation definition in GAMS syntax.
 
     Handles index aliasing to avoid GAMS Error 125 when an equation's domain
@@ -200,6 +205,11 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, dict[str,
     Args:
         eq_name: Name of the equation
         eq_def: Equation definition with domain, relation, and LHS/RHS
+        skip_lead_lag_inference: If True, do not infer lead/lag domain
+            conditions from IndexOffset references. Use this for original
+            model equality equations where GAMS evaluates out-of-range lag
+            references as 0 (default variable level) rather than skipping
+            the equation instance.
 
     Returns:
         Tuple of (GAMS equation definition string, dict mapping canonical
@@ -231,22 +241,27 @@ def emit_equation_def(eq_name: str, eq_def: EquationDef) -> tuple[str, dict[str,
 
     # Detect lead/lag expressions and build domain conditions
     # Issues #649, #652-656: Equations with lead (k+1) or lag (t-1) need restrictions
-    lead_offsets: dict[str, int] = {}
-    lag_offsets: dict[str, int] = {}
-    if domain:
-        lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
-        rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
-        # Merge dicts, keeping max offset for each index
-        for idx, offset in lhs_lead.items():
-            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-        for idx, offset in rhs_lead.items():
-            lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-        for idx, offset in lhs_lag.items():
-            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
-        for idx, offset in rhs_lag.items():
-            lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
+    # For original model equalities, skip lead/lag inference — GAMS evaluates
+    # out-of-range lag references as 0 (default level) rather than skipping
+    # the equation instance.
+    inferred_condition: str | None = None
+    if not skip_lead_lag_inference:
+        lead_offsets: dict[str, int] = {}
+        lag_offsets: dict[str, int] = {}
+        if domain:
+            lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
+            rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
+            # Merge dicts, keeping max offset for each index
+            for idx, offset in lhs_lead.items():
+                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+            for idx, offset in rhs_lead.items():
+                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
+            for idx, offset in lhs_lag.items():
+                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
+            for idx, offset in rhs_lag.items():
+                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
 
-    inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
+        inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
 
     # Combine any parsed equation condition with inferred lead/lag domain bounds
     # Preserve the original parsed $-condition and AND it with the inferred bounds
@@ -451,7 +466,7 @@ def emit_equation_definitions(
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
-                eq_str, aliases = emit_equation_def(eq_name, eq_def)
+                eq_str, aliases = emit_equation_def(eq_name, eq_def, skip_lead_lag_inference=True)
                 lines.append(eq_str)
                 _merge_alias_dicts(all_aliases, aliases)
             elif eq_name in kkt.model_ir.normalized_bounds:

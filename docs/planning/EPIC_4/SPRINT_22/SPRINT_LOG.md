@@ -213,14 +213,42 @@ stationarity equations without modifying the actual stationarity expression term
 
 ### Day 7 — WS3: model_infeasible Fixes (Part 1)
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~4h
 
 | Task | Status |
 |---|---|
-| 4 models permanently excluded | |
-| whouse lag conditioning fixed | |
-| ibm1 mixed-bounds fixed | |
+| 4 models permanently excluded | :white_check_mark: feasopt1, iobalance, meanvar, orani |
+| whouse lag conditioning fixed | :white_check_mark: solve SUCCESS + MATCH (obj=-600.0) |
+| ibm1 mixed-bounds fixed | :white_check_mark: solve SUCCESS, MISMATCH (obj=80.0 vs 287.1; table parsing bug) |
+| Unit tests (4) | :white_check_mark: skip_lead_lag_inference (2), expr_bound guard (2) |
+| Tests | :white_check_mark: 4,145 passed (+4), 10 skipped, 1 xfailed |
+
+**Root cause (whouse):** Emitter inferred `$(ord(t) > 1)` on equality equation `sb(t)..
+stock(t) =E= stock(t-1) + buy(t) - sell(t)` because it detected `stock(t-1)` lag reference.
+But GAMS evaluates out-of-range lag refs as 0 (default level value), so the equation is valid
+for ALL t. The condition incorrectly excluded `sb('q-1')`, fixing `nu_sb('q-1') = 0`, making
+`stat_sell('q-1')` unsatisfiable. Fix: skip lead/lag condition inference for original equality
+equations via `skip_lead_lag_inference=True` parameter on `emit_equation_def()`.
+
+**Root cause (ibm1):** Two issues: (1) Double-bounding — emitting `.lo`/`.up` on primal
+variables AND explicit bound complementarity equations created over-constrained MCP. Fix:
+skip `.lo`/`.up` emission for variables with explicit bound complementarity. (2) Expression-
+based bounds with potential infinity — `comp_up_x(s).. sup(s,"inventory") - x(s) =G= 0`
+creates degenerate rows when `sup("aluminum","inventory") = INF`. Fix: guard conditions
+`$(expr < inf)` / `$(expr > -inf)` on expression-based bound complementarity. Note: objective
+mismatch (80 vs 287) due to table parsing bug assigning `sup(aluminum,"cost")` to wrong column.
+
+**Pipeline Metrics (Day 7):**
+
+| Metric | Baseline | Day 6 | Day 7 | Delta (D7-D6) |
+|---|---|---|---|---|
+| Solve success | 65 | 77 | 78 | +1 |
+| Match | 30 | 35 | 36 | +1 |
+| path_syntax_error | 40 | 25 | 25 | 0 |
+| path_solve_terminated | 12 | 10 | 10 | 0 |
+| model_infeasible | 20 | 22 | 17 | −5 |
+| Tests | 3,957 | 4,141 | 4,145 | +4 |
 
 ---
 

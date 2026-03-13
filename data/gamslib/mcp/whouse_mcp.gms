@@ -106,18 +106,9 @@ comp_lo_stock(t).. stock(t) - 0 =G= 0;
 comp_up_stock(t).. 100 - stock(t) =G= 0;
 
 * Original equality equations
-sb(t)$(ord(t) > 1).. stock(t) =E= stock(t-1) + buy(t) - sell(t) + istock(t);
+sb(t).. stock(t) =E= stock(t-1) + buy(t) - sell(t) + istock(t);
 at.. cost =E= sum(t, price(t) * (buy(t) - sell(t)) + storecost * stock(t));
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-nu_sb.fx(t)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
