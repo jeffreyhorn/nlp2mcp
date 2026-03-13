@@ -17,9 +17,9 @@ After investigation, this is **not a code bug** and cannot be fixed without inco
 
 1. **Model equation scoping is correct.** The solve statement says `solve war`, so we must use the `war` model's 3 equations (maxw, minw, etd). Using the `warp` model's equations would be incorrect — `warp` is a different model the user did not solve.
 
-2. **The KKT system is mathematically correct.** The stationarity equations for the `war` formulation are the correct derivatives of the Lagrangian. The product rule applied directly to `etd`'s nested `prod(w$td(w,t), (1-td(w,t))^x(w,t))` expression gives the right math — it's just numerically harder for PATH than the decomposed `prob(t)` chain.
+2. **The KKT system is mathematically correct.** The stationarity equations for the `war` formulation are the correct derivatives of the Lagrangian. The product rule applied directly to `etd`'s nested `prod(w$td(w,t), (1-td(w,t))**x(w,t))` expression gives the right math — it's just numerically harder for PATH than the decomposed `prob(t)` chain.
 
-3. **The baseline was also problematic.** Before PR #1037, the code incorrectly included all equations from all models (including `warp`), reaching obj=1361 vs NLP reference=1735 — a 21.5% objective mismatch. The current formulation actually reaches obj=1729 (0.4% from NLP reference 1735) but fails PATH's feasibility tolerance (residual=39.6).
+3. **The baseline was also problematic.** Before PR #1037, the code incorrectly included all equations from all models (including `warp`), reaching obj=1361 vs NLP reference=1735.57 — a 21.5% objective mismatch. The current formulation actually reaches obj=1729 (0.4% from NLP reference 1735.57) but fails PATH's feasibility tolerance (residual=39.6).
 
 4. **Future improvement paths exist but are out of scope:**
    - Automatic intermediate variable introduction (major AD architecture feature)
@@ -36,7 +36,7 @@ Model
 solve war maximizing tetd using nlp;
 ```
 
-- `war` uses `etd`: `tetd =E= sum(t, mv(t)*(1 - prod(w$td(w,t), (1-td(w,t))^x(w,t))))`
+- `war` uses `etd`: `tetd =E= sum(t, mv(t)*(1 - prod(w$td(w,t), (1-td(w,t))**x(w,t))))`
 - `warp` uses `probe(t)` as an intermediate: `prob(t) =E= 1 - prod(w$td(w,t), ...)` and `tetd =E= sum(t, mv(t)*prob(t))`
 
 The `warp` formulation decomposes the gradient chain through `prob(t)`, which was numerically better-conditioned for PATH. But the user solves `war`, not `warp`.
