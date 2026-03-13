@@ -34,7 +34,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..ir.ast import Expr
 
-from ..ir.ast import Binary, Call, Const, ParamRef, Prod, Sum, SymbolRef, Unary, VarRef
+from ..ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    Prod,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 
 @dataclass
@@ -191,6 +202,10 @@ def _collect_variables(expr: Expr, variables: set[str]) -> None:
         if expr.condition is not None:
             _collect_variables(expr.condition, variables)
         _collect_variables(expr.body, variables)
+
+    elif isinstance(expr, DollarConditional):
+        # Dollar conditional: expr$condition — variables appear in value_expr
+        _collect_variables(expr.value_expr, variables)
 
     else:
         # Unknown expression type: conservative approach (assume no variables)

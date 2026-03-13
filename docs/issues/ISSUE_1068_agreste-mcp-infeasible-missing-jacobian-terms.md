@@ -9,72 +9,45 @@
 
 ## Summary
 
-The agreste model is structurally infeasible (model_status=4, 0 iterations) because the stationarity equations are missing constraint Jacobian terms. Two bugs: (1) the `lam_landb(s)` multiplier term is entirely absent from `stat_xcrop(p,s)` due to a `$sc(s)` conditional wrapping the sum; (2) `stat_lswitch(s)` uses diagonal `ldp(s,s)` instead of the proper transposed summation `sum(sp, ldp(sp,s))` due to incorrect alias resolution.
+The agreste model is structurally infeasible (model_status=4, 0 iterations) due to two bugs:
+1. Missing `lam_landb(s)` in `stat_xcrop(p,s)` — **FIXED** (DollarConditional sparsity bug)
+2. Incorrect alias transposition in `stat_lswitch(s)` — **OPEN** (deep architectural issue)
 
-## Reproduction
+## Bug 1: DollarConditional Sparsity — FIXED
 
-```bash
-.venv/bin/python -m src.cli data/gamslib/raw/agreste.gms -o data/gamslib/mcp/agreste_mcp.gms
-cd /tmp && gams /path/to/data/gamslib/mcp/agreste_mcp.gms lo=2 o=agreste.lst
-# Expected: MODEL STATUS 4 (Infeasible), 0 iterations, 33 INFES markers
-```
+### Root Cause
 
-## Model Structure
+`_collect_variables()` in `src/ad/sparsity.py` did not handle `DollarConditional` expressions. When the constraint `landb(s)` contains `sum(p$ps(p,s), a(p)*xcrop(p,s))$sc(s)`, the outer `$sc(s)` wraps the sum in a `DollarConditional` node. The sparsity checker's `else` clause silently skipped this node, so `xcrop` was never detected as participating in `landb(s)`. The Jacobian builder never differentiated the constraint w.r.t. `xcrop`, and `stat_xcrop(p,s)` was missing the `lam_landb(s)` multiplier term entirely.
 
-- **Sets**: `s` (land types, 9 elements), `sp` alias of `s`, plus `p` (crops), `r` (livestock), `c` (commodities), etc.
-- **Objective**: Maximize `yfarm` (farm income)
-- **Key constraint**: `landb(s).. sum(p$ps(p,s), a(p)*xcrop(p,s))$sc(s) + sum(sp, ldp(s,sp)*lswitch(sp)) + sum(r, lio(s,r)*xliver(r)) =L= landc(s)`
-- **NLP reference objective**: 17706.43
+### Fix
 
-## Root Cause
+Added a `DollarConditional` case to `_collect_variables()` in `src/ad/sparsity.py` that recurses into `value_expr` to collect referenced variables.
 
-### Bug 1: Missing `lam_landb(s)` in `stat_xcrop(p,s)`
+### Result
 
-The `landb(s)` inequality constraint contains `xcrop(p,s)` inside `sum(p$ps(p,s), a(p)*xcrop(p,s))$sc(s)`. The derivative w.r.t. `xcrop(p,s)` should produce `a(p)$ps(p,s)$sc(s) * lam_landb(s)` in the stationarity equation.
-
-**Expected** in `stat_xcrop(p,s)`:
+`stat_xcrop(p,s)` now correctly includes:
 ```gams
-... + a(p)$(ps(p,s) and sc(s)) * lam_landb(s) ...
+(a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s)
 ```
 
-**Actual**: The `lam_landb(s)` term is **entirely absent** from `stat_xcrop`. The `$sc(s)` conditional wrapping the entire sum likely causes the derivative extraction to fail to recognize that `xcrop(p,s)` participates in `landb(s)`.
+## Bug 2: Alias Transposition in `stat_lswitch(s)` — OPEN
 
-### Bug 2: Wrong alias handling in `stat_lswitch(s)`
+### Root Cause
 
-The `landb(s)` constraint contains `sum(sp, ldp(s,sp)*lswitch(sp))`. Differentiating w.r.t. `lswitch(s)` should give `sum(s', ldp(s',s) * lam_landb(s'))` (transposed sum over the first index).
+The `landb(s)` constraint contains `sum(sp, ldp(s,sp)*lswitch(sp))` where `sp` is an alias of `s`. Differentiating w.r.t. `lswitch(s)` should produce `sum(sp, ldp(sp,s) * lam_landb(sp))` (transposed sum), but produces diagonal `ldp(s,s) * lam_landb(s)` with manual neighbor enumeration.
 
-**Expected**:
-```gams
-stat_lswitch(s).. sum(sp, ldp(sp,s) * lam_landb(sp)) + ... =E= 0;
-```
+The bug is in `_diff_sum()` in `src/ad/derivative_rules.py`. When the sum index `sp` matches the differentiation target `s` (both aliases of the same set), `_sum_should_collapse()` returns True and the sum is collapsed. The parameter `ldp(s,sp)` has `sp` substituted to `s`, producing diagonal `ldp(s,s)` instead of preserving the transposed sum structure.
 
-**Actual**:
-```gams
-stat_lswitch(s).. ldp(s,s) * lam_landb(s) + (ldp(s,s) * lam_landb(s+1))$(...) + ... =E= 0;
-```
+### What Would Be Needed
 
-The code uses `ldp(s,s)` (diagonal) for all terms instead of properly transposing the parameter indices. The alias `sp` is substituted with `s` throughout, collapsing the summation into a diagonal lookup with manual neighbor enumeration.
+Fixing this requires changes to `_diff_sum()` and `_substitute_sum_indices()` to detect when parameter indices inside a collapsed sum need transposition. This is an architectural change affecting how alias-indexed sums are differentiated and is deferred to a future sprint.
 
-## PATH Solver Output
+## Files Modified
 
-```
-MODEL STATUS      4 Infeasible
-0 iterations (structural infeasibility detected at preprocessing)
-33 INFES markers, 12 labeled INFEASIBLE in solution report
-```
-
-Key infeasible equations:
-- `stat_cons(one/two/three)`: `(-1)*vsc` = -934 each
-- `stat_cropcost/labcost/rationr/revenue/vetcost`: constant +1 or -1 RHS
-- `arev`: LHS = 56220 (accounting equation at zero initial point)
-
-## Fix Approach
-
-1. **Bug 1**: Fix the Jacobian builder to correctly detect variable participation inside dollar-conditioned sums. When `sum(p$cond, f(p,s)*x(p,s))$outer_cond` appears in a constraint, the derivative w.r.t. `x(p,s)` must carry both `$cond` and `$outer_cond`.
-2. **Bug 2**: Fix alias resolution in the stationarity builder. When differentiating `sum(sp, ldp(s,sp)*lswitch(sp))` w.r.t. `lswitch(s)`, the result should be `sum(s', ldp(s',s))` with proper index transposition, not diagonal `ldp(s,s)`.
+- `src/ad/sparsity.py` — Added `DollarConditional` case to `_collect_variables()`
 
 ## Files
 
 - `data/gamslib/raw/agreste.gms` — original LP model
 - `data/gamslib/mcp/agreste_mcp.gms` — generated MCP
-- Key MCP equation: `stat_xcrop(p,s)` (missing `lam_landb`), `stat_lswitch(s)` (wrong alias)
+- Key MCP equation: `stat_xcrop(p,s)` (Bug 1 fixed), `stat_lswitch(s)` (Bug 2 open)
