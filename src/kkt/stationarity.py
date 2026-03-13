@@ -1791,6 +1791,40 @@ def _find_matching_subset(parent_set: str, values: set[str], model_ir: ModelIR) 
     return None
 
 
+def _build_tuple_or_guard(
+    var_domain: tuple[str, ...],
+    all_fixed: list[tuple[str, ...]],
+) -> Expr:
+    """Build an OR-of-ANDs guard over exact entry tuples.
+
+    For each entry tuple, build ``sameas(d0,'v0') and sameas(d1,'v1') ...``,
+    then OR all such conjunctions together.
+    """
+    conjunctions: list[Expr] = []
+    # Deduplicate and sort for deterministic output
+    seen: set[tuple[str, ...]] = set()
+    for idx in all_fixed:
+        key = tuple(v.lower() for v in idx)
+        if key in seen:
+            continue
+        seen.add(key)
+        and_parts: list[Expr] = []
+        for dom_idx, fixed_val in zip(var_domain, idx, strict=True):
+            and_parts.append(
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{fixed_val.lower()}'")))
+            )
+        conj: Expr = and_parts[0]
+        for part in and_parts[1:]:
+            conj = Binary("and", conj, part)
+        conjunctions.append(conj)
+    # Sort by repr for deterministic output
+    conjunctions.sort(key=repr)
+    result: Expr = conjunctions[0]
+    for c in conjunctions[1:]:
+        result = Binary("or", result, c)
+    return result
+
+
 def _build_sameas_guard(
     var_domain: tuple[str, ...],
     instances: list[tuple[int, tuple[str, ...]]],
@@ -1809,12 +1843,15 @@ def _build_sameas_guard(
     a scalar equation that sums over a subset of the variable's domain).
 
     This version collects ALL entry indices and builds the minimal guard:
-    - If entries cover all instances in every dimension → no guard needed.
+    - If entries cover all instance tuples → no guard needed.
     - For each dimension where entry values are a strict subset:
       - 1 value  → ``sameas(dom, 'val')``
       - multiple → OR-disjunction of sameas calls, or subset membership if
         a named subset matches.
     - Per-dimension guards are ANDed together.
+    - If per-dimension analysis says "fully covered" but actual entry tuples
+      don't form a Cartesian product over all instance tuples, falls back to
+      OR-of-ANDs over exact entry tuples.
     """
     assert kkt.gradient.index_mapping is not None
 
@@ -1871,8 +1908,18 @@ def _build_sameas_guard(
                 dim_guards.append(or_expr)
 
     if not dim_guards:
-        # All dimensions fully covered — no guard needed
-        return None
+        # Per-dimension analysis says every dimension is fully covered.
+        # Verify full tuple coverage: per-dimension factorisation can be
+        # incorrect when entries don't form a Cartesian product over the
+        # instance space.  E.g., entries {(a,x),(b,y)} cover {a,b}×{x,y}
+        # per-dimension but miss tuples (a,y) and (b,x).
+        entry_tuples = {tuple(v.lower() for v in idx) for idx in all_fixed}
+        instance_tuples = {tuple(v.lower() for v in idx) for _, idx in instances}
+        if entry_tuples >= instance_tuples:
+            return None
+        # Tuples don't cover all instances — fall back to OR-of-ANDs over
+        # exact entry tuples.
+        return _build_tuple_or_guard(var_domain, all_fixed)
 
     # AND all dimension guards together
     guard: Expr = dim_guards[0]

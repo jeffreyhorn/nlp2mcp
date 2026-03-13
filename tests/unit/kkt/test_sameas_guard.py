@@ -124,7 +124,7 @@ class TestBuildSameasGuard:
         assert guard.op == "or"
 
     def test_multi_entry_named_subset_match(self):
-        """When entry values match a named subset, use SetMembershipTest."""
+        """Single-value subset uses sameas; multi-value subset uses SetMembershipTest."""
         kkt = _make_kkt(
             sets={
                 "c": SetDef(name="c", members=["steel", "copper", "aluminum"]),
@@ -152,9 +152,9 @@ class TestBuildSameasGuard:
 
         guard = _build_sameas_guard(("c", "i"), instances, entries, kkt)
         assert guard is not None
-        # First dimension: cf={steel} matches, so sameas(c,'steel')
+        # First dimension: cf={steel} is a single value → sameas(c,'steel')
+        # (Named subset cf exists but single-value path uses sameas directly)
         # Second dimension: {a,b} covers all i values, so no guard
-        # Result should be just sameas(c, 'steel')
         assert isinstance(guard, Call)
         assert guard.func == "sameas"
 
@@ -181,3 +181,32 @@ class TestBuildSameasGuard:
         # Should be sameas(i,'a') and sameas(j,'x')
         assert isinstance(guard, Binary)
         assert guard.op == "and"
+
+    def test_non_cartesian_entries_fallback_to_tuple_or(self):
+        """Entries covering all per-dim values but not all tuples get OR-of-ANDs guard.
+
+        Entries {(a,x),(b,y)} cover {a,b}×{x,y} per-dimension but miss
+        tuples (a,y) and (b,x).  The guard must not return None.
+        """
+        kkt = _make_kkt()
+        instances = [
+            (10, ("a", "x")),
+            (11, ("a", "y")),
+            (12, ("b", "x")),
+            (13, ("b", "y")),
+        ]
+        # Two entries that cover all dim values but NOT all tuples
+        entries = [(0, 10), (1, 13)]  # (a,x) and (b,y)
+        kkt.gradient.index_mapping.col_to_var = {
+            10: ("v", ("a", "x")),
+            11: ("v", ("a", "y")),
+            12: ("v", ("b", "x")),
+            13: ("v", ("b", "y")),
+        }
+
+        guard = _build_sameas_guard(("i", "j"), instances, entries, kkt)
+        assert guard is not None
+        # Should be OR of two AND-conjunctions:
+        # (sameas(i,'a') and sameas(j,'x')) or (sameas(i,'b') and sameas(j,'y'))
+        assert isinstance(guard, Binary)
+        assert guard.op == "or"
