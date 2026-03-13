@@ -18,7 +18,17 @@ from src.ad.sparsity import (
     analyze_expression_sparsity,
     find_variables_in_expr,
 )
-from src.ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, SymbolRef, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    Sum,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 pytestmark = pytest.mark.unit
 
