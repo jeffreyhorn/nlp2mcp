@@ -62,15 +62,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-x.lo(s) = sup(s,"min-use");
-x.up(s) = sup(s,"inventory");
-bc.lo(e) = bspec(e,"minimum");
-bc.up(e) = bspec(e,"maximum");
-
-* ============================================
 * Equations
 * ============================================
 
@@ -99,18 +90,30 @@ stat_bc(e).. nu_ebal(e) - piL_bc(e) + piU_bc(e) =E= 0;
 stat_x(s).. sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_bc(e).. bc(e) - bspec(e,"minimum") =G= 0;
-comp_lo_x(s).. x(s) - sup(s,"min-use") =G= 0;
+comp_lo_bc(e)$(bspec(e,"minimum") > -inf).. bc(e) - bspec(e,"minimum") =G= 0;
+comp_lo_x(s)$(sup(s,"min-use") > -inf).. x(s) - sup(s,"min-use") =G= 0;
 
 * Upper bound complementarity equations
-comp_up_bc(e).. bspec(e,"maximum") - bc(e) =G= 0;
-comp_up_x(s).. sup(s,"inventory") - x(s) =G= 0;
+comp_up_bc(e)$(bspec(e,"maximum") < inf).. bspec(e,"maximum") - bc(e) =G= 0;
+comp_up_x(s)$(sup(s,"inventory") < inf).. sup(s,"inventory") - x(s) =G= 0;
 
 * Original equality equations
 yield.. sum(s, x(s)) =E= 2000;
 ebal(e).. bc(e) =E= sum(s, prop(e,s) * x(s));
 cdef.. cost =E= sum(s, sup(s,"cost") * x(s));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_bc.fx(e)$(not (bspec(e,"minimum") > -inf)) = 0;
+piL_x.fx(s)$(not (sup(s,"min-use") > -inf)) = 0;
+piU_bc.fx(e)$(not (bspec(e,"maximum") < inf)) = 0;
+piU_x.fx(s)$(not (sup(s,"inventory") < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -958,6 +958,12 @@ def emit_gams_mcp(
     # emitted AFTER .l initialization (deferred), while others come before.
     # Issue #1021: Also emit numeric per-element .fx bounds (fx_map) so that
     # fixed variables are communicated to the MCP solver (e.g., X.fx(r,r,c) = 0).
+    # Collect variables with explicit bound complementarity — their .lo/.up
+    # bounds must not be emitted on the primal variable because the KKT system
+    # already handles bounds through comp_lo/comp_up equations paired with
+    # piL/piU multipliers. Emitting both creates an over-constrained MCP.
+    _vars_with_lo_comp = {k[0].lower() for k in kkt.complementarity_bounds_lo}
+    _vars_with_up_comp = {k[0].lower() for k in kkt.complementarity_bounds_up}
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -967,6 +973,12 @@ def emit_gams_mcp(
         ):
             continue
         for kind in ("lo", "up", "fx"):
+            # Skip .lo/.up for variables with explicit bound complementarity
+            # to avoid double-bounding in the MCP (bounds enforced by comp_lo/comp_up).
+            if kind == "lo" and var_name.lower() in _vars_with_lo_comp:
+                continue
+            if kind == "up" and var_name.lower() in _vars_with_up_comp:
+                continue
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
             if expr_map:
@@ -1527,13 +1539,32 @@ def emit_gams_mcp(
             continue
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not {mask_name}({domain_str})) = 0;")
 
+    # 2e. Fix bound multipliers whose complementarity equation has a guard
+    # condition (e.g., $(param < inf) to skip degenerate infinite-bound rows).
+    # The multiplier must be fixed to 0 for excluded instances.
+    for comp_dict in (kkt.complementarity_bounds_lo, kkt.complementarity_bounds_up):
+        for _key, comp_pair in sorted(comp_dict.items()):
+            if ref_mults is not None and comp_pair.variable not in ref_mults:
+                continue
+            eq_def = comp_pair.equation
+            if eq_def.condition is not None and eq_def.domain:
+                mult_name = comp_pair.variable
+                domain_str = ",".join(eq_def.domain)
+                domain_vars = frozenset(eq_def.domain)
+                assert isinstance(eq_def.condition, Expr)
+                cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+                fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
     # Build dynamic subset map once, used by sections 3 and 3b.
     dynamic_map = _build_dynamic_subset_map(kkt.model_ir)
 
-    # 3. Fix equality multipliers (nu_*) whose equation has lead/lag restrictions.
-    # Issue #760: stateq(n,k+1) generates rows only for k in ku (ord(k)<=card(k)-1),
-    # but nu_stateq(n,k) is declared over the full (n,k) domain.  Fix the terminal
-    # instances to 0 so GAMS MCP matching sees no unmatched free variable.
+    # 3. Fix equality multipliers (nu_*) whose equation has an explicit condition.
+    # Original model equalities no longer get inferred lead/lag conditions
+    # (GAMS evaluates out-of-range lag refs as 0), so we only fix multipliers
+    # for equations with explicit parsed $-conditions.
+    # Note: Inferred lead/lag .fx generation was removed — it incorrectly
+    # fixed multipliers for equations that GAMS evaluates at all domain
+    # elements (e.g., whouse sb(t) with stock(t-1)).
     for eq_name in sorted(kkt.model_ir.equalities):
         if eq_name not in kkt.model_ir.equations:
             continue
@@ -1545,27 +1576,16 @@ def emit_gams_mcp(
         # pairs with proper parent-set remapping.
         if any(d.lower() in dynamic_map for d in eq_def.domain):
             continue
-        lhs, rhs = eq_def.lhs_rhs
-        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
-        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
-        lead_offsets = {
-            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
-        }
-        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
-        # Also incorporate any explicit condition already on the equation
-        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
-        if inferred_cond is None and eq_def.condition is None:
+        # Only fix multipliers for equations with explicit parsed conditions
+        if eq_def.condition is None or not isinstance(eq_def.condition, Expr):
             continue
         mult_name = create_eq_multiplier_name(eq_name)
         if ref_mults is not None and mult_name not in ref_mults:
             continue
         domain_str = ",".join(eq_def.domain)
-        if inferred_cond is not None:
-            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
-        elif eq_def.condition is not None and isinstance(eq_def.condition, Expr):
-            domain_vars = frozenset(eq_def.domain)
-            cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
-            fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+        domain_vars = frozenset(eq_def.domain)
+        cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
     # 3b. Issue #1041: Fix equality multipliers whose equation domain uses
     # dynamic subsets. When TSAMEQ(ii,jj) is over dynamic subset (ii,jj) but

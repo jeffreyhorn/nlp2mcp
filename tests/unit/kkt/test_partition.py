@@ -763,3 +763,89 @@ class TestComplementarityExprBound:
             f"Expected ParamRef for expression-based bound, got {type(lhs.right).__name__}: "
             f"{lhs.right}"
         )
+
+    def test_expr_bound_gets_inf_guard_condition(self, manual_index_mapping):
+        """Expression-based bounds should get guard conditions to skip infinite values.
+
+        When x.up(s) = param(s) and param may contain INF for some elements,
+        the complementarity equation comp_up_x(s) should have a guard condition
+        $(param(s) < inf) to avoid degenerate rows in the MCP.
+        """
+        from src.ad.gradient import GradientVector
+        from src.ad.jacobian import JacobianStructure
+        from src.kkt.complementarity import build_complementarity_pairs
+        from src.kkt.kkt_system import KKTSystem
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.sets["s"] = ["a", "b"]
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("s",))),
+        )
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        var_x = VariableDef(name="x", domain=("s",))
+        # Expression-based upper bound: x.up(s) = param(s) — may have INF for some s
+        var_x.up_expr = ParamRef("inventory", indices=("s",))
+        model.variables["x"] = var_x
+
+        idx = manual_index_mapping([("obj", ()), ("x", ("a",)), ("x", ("b",))])
+        gradient = GradientVector(num_cols=3, index_mapping=idx)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        _, _, comp_up, _ = build_complementarity_pairs(kkt)
+
+        # Should have upper bound complementarity with guard condition
+        assert ("x", ()) in comp_up
+        comp_eq = comp_up[("x", ())].equation
+        assert (
+            comp_eq.condition is not None
+        ), "Expression-based upper bound should produce a guard condition"
+        # Guard should be: param(s) < inf
+        assert isinstance(comp_eq.condition, Binary)
+        assert comp_eq.condition.op == "<"
+        assert isinstance(comp_eq.condition.right, Const)
+        assert comp_eq.condition.right.value == float("inf")
+
+    def test_numeric_bound_gets_no_guard_condition(self, manual_index_mapping):
+        """Numeric (non-expression) bounds should NOT get guard conditions.
+
+        When bounds are simple numeric values (e.g., x.up = 100), there's no
+        risk of INF values, so no guard condition is needed.
+        """
+        from src.ad.gradient import GradientVector
+        from src.ad.jacobian import JacobianStructure
+        from src.kkt.complementarity import build_complementarity_pairs
+        from src.kkt.kkt_system import KKTSystem
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.sets["s"] = ["a", "b"]
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), VarRef("x", ("s",))),
+        )
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        var_x = VariableDef(name="x", domain=("s",))
+        # Numeric upper bound
+        var_x.up = 100.0
+        model.variables["x"] = var_x
+
+        idx = manual_index_mapping([("obj", ()), ("x", ("a",)), ("x", ("b",))])
+        gradient = GradientVector(num_cols=3, index_mapping=idx)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=idx)
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+
+        _, _, comp_up, _ = build_complementarity_pairs(kkt)
+
+        # Should have upper bound complementarity WITHOUT guard condition
+        assert ("x", ()) in comp_up
+        comp_eq = comp_up[("x", ())].equation
+        assert comp_eq.condition is None, "Numeric bounds should not produce a guard condition"
