@@ -61,7 +61,7 @@ sig(i) = pdat("medium","a","subst",i);
 thet(i) = ddat("medium","p-elas",i);
 del(i) = pdat("medium","a","distr",i);
 efy(i) = pdat("medium","a","effic",i);
-rho(i) = 1 / sig(i) - 1;
+rho(i)$(sig(i) <> 0) = 1 / sig(i) - 1;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -80,13 +80,12 @@ Variables
     pd
     td
     vv(i)
-    nu_dg(t)
-    nu_dh(t)
+    nu_dg(i)
+    nu_dh(i)
     nu_dem(i)
     nu_kc
     nu_sup(i)
     nu_fpr
-    nu_dvv(i)
     nu_dl(i)
     nu_dk(i)
     nu_dv(i)
@@ -145,30 +144,28 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound).
 
 $onImplicitAssign
-x.l("light-ind") = 200.0;
-x.l("food+agr") = 200.0;
-x.l("heavy-ind") = 200.0;
-x.l("services") = 200.0;
+x.l('light-ind') = 200.0;
+x.l('food+agr') = 200.0;
+x.l('heavy-ind') = 200.0;
+x.l('services') = 200.0;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
-y.l("light-ind") = 250.0;
-y.l("food+agr") = 250.0;
-y.l("heavy-ind") = 250.0;
-y.l("services") = 250.0;
+y.l('light-ind') = 250.0;
+y.l('food+agr') = 250.0;
+y.l('heavy-ind') = 250.0;
+y.l('services') = 250.0;
 y.l(i) = min(max(y.l(i), 1e-6), y.up(i));
-p.l("light-ind") = 3.0;
-p.l("food+agr") = 3.0;
-p.l("heavy-ind") = 3.0;
-p.l("services") = 3.0;
+p.l('light-ind') = 3.0;
+p.l('food+agr') = 3.0;
+p.l('heavy-ind') = 3.0;
+p.l('services') = 3.0;
 p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
-e.l("light-ind") = 0.0;
-e.l("food+agr") = 0.0;
-e.l("heavy-ind") = 0.0;
-e.l("services") = 0.0;
+e.l('light-ind') = 0.0;
+e.l('food+agr') = 0.0;
+e.l('heavy-ind') = 0.0;
 e.l(i) = min(max(e.l(i), 1e-6), e.up(i));
-m.l("light-ind") = 0.0;
-m.l("food+agr") = 0.0;
-m.l("heavy-ind") = 0.0;
-m.l("services") = 0.0;
+m.l('light-ind') = 0.0;
+m.l('food+agr') = 0.0;
+m.l('heavy-ind') = 0.0;
 m.l(i) = min(max(m.l(i), 1e-6), m.up(i));
 pk.l = 3.5;
 pd.l = 0.3;
@@ -179,10 +176,10 @@ g.l(t) = min(max(g.l(t), 1e-6), g.up(t));
 pi.l = pk.l / plab;
 pi.l = max(pi.l, 0.25);
 vv.l(i) = (pi.l * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i)));
-vv.l("light-ind") = max(vv.l("light-ind"), 0.001);
-vv.l("food+agr") = max(vv.l("food+agr"), 0.001);
-vv.l("heavy-ind") = max(vv.l("heavy-ind"), 0.001);
-vv.l("services") = max(vv.l("services"), 0.001);
+vv.l('light-ind') = max(vv.l('light-ind'), 0.001);
+vv.l('food+agr') = max(vv.l('food+agr'), 0.001);
+vv.l('heavy-ind') = max(vv.l('heavy-ind'), 0.001);
+vv.l('services') = max(vv.l('services'), 0.001);
 l.l(i) = (((del(i) / vv.l(i) + 1 - del(i)) ** (1 / rho(i)))$(sig(i) <> 0) + 1$(sig(i) = 0)) / efy(i);
 l.l(i) = min(max(l.l(i), 1e-6), l.up(i));
 k.l(i) = (((del(i) + (1 - del(i)) * vv.l(i)) ** (1 / rho(i)))$(sig(i) <> 0) + del(i)$(sig(i) = 0)) / efy(i);
@@ -190,6 +187,27 @@ k.l(i) = min(max(k.l(i), 1e-6), k.up(i));
 v.l(i) = pk.l * k.l(i) + plab * l.l(i);
 v.l(i) = min(max(v.l(i), 1e-6), v.up(i));
 $offImplicitAssign
+
+* ============================================
+* Bound Mask Sets (partial bound coverage)
+* ============================================
+
+Set has_e_up(i) / 'food+agr', 'heavy-ind', 'light-ind' /;
+Set has_m_up(i) / 'food+agr', 'heavy-ind', 'light-ind' /;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter e_up_param(i);
+e_up_param('food+agr') = 400;
+e_up_param('heavy-ind') = 400;
+e_up_param('light-ind') = 400;
+
+Parameter m_up_param(i);
+m_up_param('food+agr') = 400;
+m_up_param('heavy-ind') = 400;
+m_up_param('light-ind') = 400;
 
 * ============================================
 * Equations
@@ -250,7 +268,6 @@ Equations
     dl(i)
     dty
     dv(i)
-    dvv(i)
     fpr
     kc
     sup(i)
@@ -261,24 +278,24 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(i)$(t(i)).. sum(t, alp(t) * nu_dh(t)) + sum(t, ((-1) * h(t)) * lam_tb)$sameas(i, 'food+agr') - piL_e(i) + piU_e(i) =E= 0;
+stat_e(i)$(t(i)).. alp(i) * nu_dh(i) + sum(t, ((-1) * h(t)) * lam_tb)$(sameas(i, 'food+agr')) - piL_e(i) + piU_e(i) =E= 0;
 stat_g(t).. nu_dg(t) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
 stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
-stat_m(i)$(t(i)).. sum(t, ((-1) * xsi(t)) * nu_dg(t)) + sum(t, g(t) * lam_tb)$sameas(i, 'food+agr') - piL_m(i) + piU_m(i) =E= 0;
-stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) - piL_p(i) + piU_p(i) =E= 0;
+stat_m(i)$(t(i)).. ((-1) * xsi(i)) * nu_dg(i) + sum(t, g(t) * lam_tb)$(sameas(i, 'food+agr')) - piL_m(i) + piU_m(i) =E= 0;
+stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
-stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / sqr(del(i)))) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;
+stat_pi.. nu_fpr - piL_pi + piU_pi =E= 0;
 stat_pk.. ((-1) * (1 / plab ** 1)) * nu_fpr + sum(i, ((-1) * k(i)) * nu_dv(i)) - piL_pk + piU_pk =E= 0;
 stat_v(i).. ((-1) * nu_sup(i)) + nu_dv(i) - piL_v(i) + piU_v(i) =E= 0;
-stat_vv(i).. nu_dvv(i)$(sig(i) <> 0) - piL_vv(i) =E= 0;
-stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
+stat_vv(i).. ((-1) * piL_vv(i)) =E= 0;
+stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + (aio(i,i) * lam_mb(i+1))$(ord(i) <= card(i) - 1) + (aio(i,i) * lam_mb(i-1))$(ord(i) > 1) + (aio(i,i) * lam_mb(i+2))$(ord(i) <= card(i) - 2) + (aio(i,i) * lam_mb(i-2))$(ord(i) > 2) + (aio(i,i) * lam_mb(i+3))$(ord(i) <= card(i) - 3) + (aio(i,i) * lam_mb(i-3))$(ord(i) > 3) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
 stat_y(i).. -1 + nu_dem(i) + lam_mb(i) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
 comp_lc.. ((-1) * (sum(i, l(i) * x(i)) - lbar)) =G= 0;
-comp_mb(i).. x(i) - (y(i) + sum(j, aio(i,j) * x(j)) + (e(i) - m(i))$t(i)) =G= 0;
+comp_mb(i).. x(i) - (y(i) + sum(j, aio(i,j) * x(j)) + (e(i) - m(i))$(t(i))) =G= 0;
 comp_tb.. ((-1) * (sum(t, g(t) * m(t) - h(t) * e(t)) - dbar)) =G= 0;
 
 * Lower bound complementarity equations
@@ -298,12 +315,12 @@ comp_lo_x(i).. x(i) - 0 =G= 0;
 comp_lo_y(i).. y(i) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_e(i).. 400 - e(i) =G= 0;
+comp_up_e(i)$(has_e_up(i)).. e_up_param(i) - e(i) =G= 0;
 comp_up_g(t).. 4 - g(t) =G= 0;
 comp_up_h(t).. 4 - h(t) =G= 0;
 comp_up_k(i).. 1 - k(i) =G= 0;
 comp_up_l(i).. 1 - l(i) =G= 0;
-comp_up_m(i).. 400 - m(i) =G= 0;
+comp_up_m(i)$(has_m_up(i)).. m_up_param(i) - m(i) =G= 0;
 comp_up_p(i).. 100 - p(i) =G= 0;
 comp_up_pi.. 4 - pi =G= 0;
 comp_up_pk.. 4 - pk =G= 0;
@@ -319,7 +336,6 @@ dem(i).. y(i) =E= ynot(i) * (pd * p(i)) ** thet(i);
 kc.. sum(i, k(i) * x(i)) =E= kbar;
 sup(i).. p(i) =E= sum(j, aio(j,i) * p(j)) + v(i);
 fpr.. pi =E= pk / plab;
-dvv(i)$(sig(i) <> 0).. vv(i) =E= (pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i)));
 dl(i).. l(i) * efy(i) =E= ((del(i) / vv(i) + 1 - del(i)) ** (1 / rho(i)))$(sig(i) <> 0) + 1$(sig(i) = 0);
 dk(i).. k(i) * efy(i) =E= ((del(i) + (1 - del(i)) * vv(i)) ** (1 / rho(i)))$(sig(i) <> 0) + del(i)$(sig(i) = 0);
 dv(i).. v(i) =E= pk * k(i) + plab * l(i);
@@ -338,7 +354,10 @@ piU_e.fx(i)$(not (t(i))) = 0;
 m.fx(i)$(not (t(i))) = 0;
 piL_m.fx(i)$(not (t(i))) = 0;
 piU_m.fx(i)$(not (t(i))) = 0;
-nu_dvv.fx(i)$(not (sig(i) <> 0)) = 0;
+piU_e.fx(i)$(not has_e_up(i)) = 0;
+piU_m.fx(i)$(not has_m_up(i)) = 0;
+nu_dg.fx(i)$(not (t(i))) = 0;
+nu_dh.fx(i)$(not (t(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -378,7 +397,6 @@ Model mcp_model /
     dl.nu_dl,
     dty.td,
     dv.nu_dv,
-    dvv.nu_dvv,
     fpr.nu_fpr,
     kc.nu_kc,
     sup.nu_sup,

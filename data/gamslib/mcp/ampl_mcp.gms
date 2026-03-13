@@ -53,7 +53,7 @@ Variables
 Positive Variables
     x(p,tl)
     s(r,tl)
-    lam_limit(t)
+    lam_limit(tl)
     piL_x(p,tl)
     piL_s(r,tl)
     piU_s(r,tl)
@@ -101,8 +101,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl)))) - nu_balance(r,tl) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
-stat_x(p,tl)$(t(tl)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_balance(r,tl)) + sum(t, lam_limit(t)) - piL_x(p,tl) =E= 0;
+stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
+stat_x(p,tl)$(t(tl)).. sum(t$(sameas(t, tl)), ((-1) * c(p,t))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -116,7 +116,7 @@ comp_up_s(r,tl).. b(r) - s(r,tl) =G= 0;
 
 * Original equality equations
 balance(r,tl)$(ord(tl) <= card(tl) - 1).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
-obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$t(tl) + f(r)$(ord(tl) == card(tl))) * s(r,tl));
+obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl))) * s(r,tl));
 
 
 * ============================================
@@ -129,6 +129,7 @@ obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$t(tl
 x.fx(p,tl)$(not (t(tl))) = 0;
 piL_x.fx(p,tl)$(not (t(tl))) = 0;
 nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
+lam_limit.fx(tl)$(not (t(tl))) = 0;
 
 * ============================================
 * Model MCP Declaration

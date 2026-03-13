@@ -24,13 +24,13 @@ Sets
 Alias(n, nn);
 
 Scalars
-    p /0.0/
-    bnd /0.0/
+    p /0/
+    bnd /0/
 ;
 
+$onImplicitAssign
 low(n,nn) = ord(n) > ord(nn);
-
-bnd = 1 / max(ceil(sqrt(card(n))) - 1, 1);
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -45,9 +45,7 @@ bnd = 1 / max(ceil(sqrt(card(n))) - 1, 1);
 
 Variables
     point(n,d)
-    dist(n,n)
     mindist
-    nu_defdist(n,nn)
     nu_point_fx_p1_x
     nu_point_fx_p1_y
 ;
@@ -59,6 +57,23 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+point.fx('p1','x') = 0;
+point.fx('p1','y') = 0;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+
+point.l(n,d) = uniform(0, 1);
+
+* ============================================
 * Equations
 * ============================================
 
@@ -67,12 +82,11 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_dist(n,n)
+    stat_mindist
     stat_point(n,d)
     comp_mindist1a(n,nn)
     comp_lo_point(n,d)
     comp_up_point(n,d)
-    defdist(n,nn)
     point_fx_p1_x
     point_fx_p1_y
 ;
@@ -86,8 +100,8 @@ Equations
 Alias(d, d__);
 
 * Stationarity equations
-stat_dist(n,n).. sum(nn, nu_defdist(n,nn)) =E= 0;
-stat_point(n,d).. sum(nn, ((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)))) * nu_defdist(n,nn)) + nu_point_fx_p1_x + nu_point_fx_p1_y + sum(nn, ((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)))) * lam_mindist1a(n,nn)) - piL_point(n,d) + piU_point(n,d) =E= 0;
+stat_mindist.. sum((n,nn), lam_mindist1a(n,nn)) =E= 0;
+stat_point(n,d).. nu_point_fx_p1_x$(sameas(n, 'p1') and sameas(d, 'x')) + nu_point_fx_p1_y$(sameas(n, 'p1') and sameas(d, 'y')) + sum(nn, ((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)))) * lam_mindist1a(n,nn)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+9,nn))$(ord(n) <= card(n) - 9)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+10,nn))$(ord(n) <= card(n) - 10)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+11,nn))$(ord(n) <= card(n) - 11)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+12,nn))$(ord(n) <= card(n) - 12)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+1,nn))$(ord(n) <= card(n) - 1)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+2,nn))$(ord(n) <= card(n) - 2)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+3,nn))$(ord(n) <= card(n) - 3)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+4,nn))$(ord(n) <= card(n) - 4)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+5,nn))$(ord(n) <= card(n) - 5)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+6,nn))$(ord(n) <= card(n) - 6)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+7,nn))$(ord(n) <= card(n) - 7)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n+8,nn))$(ord(n) <= card(n) - 8)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-9,nn))$(ord(n) > 9)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-8,nn))$(ord(n) > 8)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-7,nn))$(ord(n) > 7)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-6,nn))$(ord(n) > 6)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-5,nn))$(ord(n) > 5)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-4,nn))$(ord(n) > 4)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-3,nn))$(ord(n) > 3)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-2,nn))$(ord(n) > 2)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-1,nn))$(ord(n) > 1)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-10,nn))$(ord(n) > 10)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-11,nn))$(ord(n) > 11)) + sum(nn, (((-1) * (1 / (2 * sqrt(sum(d__, sqr(point(n,d__) - point(nn,d__))))) * 2 * (point(n,d) - point(nn,d)) * (-1))) * lam_mindist1a(n-12,nn))$(ord(n) > 12)) - piL_point(n,d) + piU_point(n,d) =E= 0;
 
 * Inequality complementarity equations
 comp_mindist1a(n,nn).. ((-1) * (mindist - sqrt(sum(d, sqr(point(n,d) - point(nn,d)))))) =G= 0;
@@ -99,7 +113,6 @@ comp_lo_point(n,d).. point(n,d) - 0 =G= 0;
 comp_up_point(n,d).. 1 - point(n,d) =G= 0;
 
 * Original equality equations
-defdist(n,nn).. dist(n,nn) =E= sqrt(sum(d, sqr(point(n,d) - point(nn,d))));
 point_fx_p1_x.. point("p1",x) - 0 =E= 0;
 point_fx_p1_y.. point("p1",y) - 0 =E= 0;
 
@@ -118,10 +131,9 @@ point_fx_p1_y.. point("p1",y) - 0 =E= 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_dist.dist,
+    stat_mindist.mindist,
     stat_point.point,
     comp_mindist1a.lam_mindist1a,
-    defdist.nu_defdist,
     point_fx_p1_x.nu_point_fx_p1_x,
     point_fx_p1_y.nu_point_fx_p1_y,
     comp_lo_point.piL_point,
@@ -133,3 +145,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = mindist.l;
+Display nlp2mcp_obj_val;

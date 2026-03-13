@@ -39,11 +39,7 @@ Scalars
 * Fix random seed for deterministic MCP evaluation
 execseed = 12345;
 
-h("work-1",s) = normal(6000, 100);
-h("work-2",s) = normal(4000, 50);
-t(j,i,s) = uniform(trand(j,"min",i), trand(j,"max",i));
 t2(j,i) = (trand(j,"min",i) + trand(j,"max",i)) / 2;
-p = 1 / card(s);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -57,20 +53,15 @@ p = 1 / card(s);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    EProfit
     profit
-    nu_obj
 ;
 
 Positive Variables
     x(i)
-    v(j,s)
     v2(j)
-    lam_lbal(j,s)
     lam_lbal2(j)
     lam_extra
     piL_x(i)
-    piL_v(j,s)
     piL_v2(j)
 ;
 
@@ -84,7 +75,6 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i) = 1;
-v.l(j,s) = 1;
 v2.l(j) = 1;
 
 * ============================================
@@ -96,17 +86,12 @@ v2.l(j) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_eprofit
-    stat_v(j,s)
     stat_v2(j)
     stat_x(i)
     comp_extra
-    comp_lbal(j,s)
     comp_lbal2(j)
-    comp_lo_v(j,s)
     comp_lo_v2(j)
     comp_lo_x(i)
-    obj
     obj2
 ;
 
@@ -115,23 +100,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_eprofit.. nu_obj =E= 0;
-stat_v(j,s).. 1 / card(s) * q(j) * nu_obj - lam_lbal(j,s) - piL_v(j,s) =E= 0;
 stat_v2(j).. q(j) - lam_lbal2(j) - piL_v2(j) =E= 0;
-stat_x(i).. ((-1) * c(i)) + ((-1) * c(i)) * nu_obj + sum((j,s), t(j,i,s) * lam_lbal(j,s)) + sum(j, t2(j,i) * lam_lbal2(j)) + c(i) * lam_extra - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * c(i)) + sum(j, t2(j,i) * lam_lbal2(j)) + c(i) * lam_extra - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_extra.. ((-1) * (sum(i, c(i) * x(i)) - 1000000)) =G= 0;
-comp_lbal(j,s).. ((-1) * (sum(i, t(j,i,s) * x(i)) - (h(j,s) + v(j,s)))) =G= 0;
 comp_lbal2(j).. ((-1) * (sum(i, t2(j,i) * x(i)) - (h2(j) + v2(j)))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_v(j,s).. v(j,s) - 0 =G= 0;
 comp_lo_v2(j).. v2(j) - 0 =G= 0;
 comp_lo_x(i).. x(i) - 0 =G= 0;
 
 * Original equality equations
-obj.. eprofit =E= sum(i, c(i) * x(i)) - 1 / card(s) * sum((j,s), q(j) * v(j,s));
 obj2.. profit =E= sum(i, c(i) * x(i)) - sum(j, q(j) * v2(j));
 
 
@@ -149,16 +129,11 @@ obj2.. profit =E= sum(i, c(i) * x(i)) - sum(j, q(j) * v2(j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_eprofit.eprofit,
-    stat_v.v,
     stat_v2.v2,
     stat_x.x,
     comp_extra.lam_extra,
-    comp_lbal.lam_lbal,
     comp_lbal2.lam_lbal2,
-    obj.nu_obj,
     obj2.profit,
-    comp_lo_v.piL_v,
     comp_lo_v2.piL_v2,
     comp_lo_x.piL_x
 /;

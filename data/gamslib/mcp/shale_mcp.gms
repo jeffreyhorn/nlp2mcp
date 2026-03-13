@@ -147,12 +147,6 @@ Scalars
     pilev /0/
 ;
 
-ts('1985-89','tfp') = 1;
-ts('1990-94','tfp') = 1;
-ts('1995-99','tfp') = 1;
-ts('2000-04','tfp') = 1;
-ts('2005-09','tfp') = 1;
-
 prg = prga / 7762;
 midyear(tf) = 1982 + theta * ord(tf);
 nu(m) = 1000000000 * nutot * num(m) / (nud(m) * days);
@@ -161,6 +155,7 @@ bs(crs) = bts(crs) * rfs;
 br(crr) = 7762 * bra(crr);
 bg(crg) = 7762 * bga(crg);
 newcap(t) = 50 * 0.33 * indcap(t);
+ts(tf,tfp)$(ord(tfp) < ord(tf)) = 1;
 sigma = sqr(1 + rho) * rho / (1 - (1 + rho) ** ((-1) * zeta));
 prra(crr,t) = rw1(crr) * (1 + rwesc(crr)) ** (midyear(t) - 1982);
 pf(cf,t) = po(cf) * (1 + ycf(cf)) ** (midyear(t) - 1982);
@@ -194,20 +189,20 @@ Variables
     phig
     phik(tf)
     phio(tf)
-    nu_msu(crs,t)
-    nu_mrw(crr,t)
-    nu_mgw(crg)
+    nu_msu(c,tf)
+    nu_mrw(c,t)
+    nu_mgw(c)
     nu_mi(ci,t)
-    nu_mf(cf,t)
+    nu_mf(c,tf)
     nu_mnmr
-    nu_mrwb(crr,t)
-    nu_mgwb(crg)
-    nu_arev(t)
-    nu_aroy(t)
-    nu_arw(t)
+    nu_mrwb(c,tf)
+    nu_mgwb(c)
+    nu_arev(tf)
+    nu_aroy(tf)
+    nu_arw(tf)
     nu_agw
-    nu_acap(t)
-    nu_aopc(t)
+    nu_acap(tf)
+    nu_aopc(tf)
 ;
 
 Positive Variables
@@ -220,9 +215,9 @@ Positive Variables
     uur(c,i,tf)
     uug(c,i)
     lam_cdc(cc)
-    lam_cs(crs)
+    lam_cs(c)
     lam_cae(er,t)
-    lam_cpu(m,t)
+    lam_cpu(m,tf)
     piL_z(p,tf)
     piL_x(c,tf)
     piL_us(c,tf)
@@ -315,20 +310,20 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(m,tf)$(ts(t,tf)).. sum(t, ((-1) * (sigma * nu(m) * ts(t,tf))) * nu_acap(t)) + sum(t, ((-1) * ts(t,tf)) * lam_cpu(m,t)) - piL_h(m,tf) =E= 0;
+stat_h(m,tf)$(sum(t, 1$(ts(t,tf)))).. ((-1) * (sigma * nu(m) * ts(tf,tf))) * nu_acap(tf) + ((-1) * ts(tf,tf)) * lam_cpu(m,tf) - piL_h(m,tf) =E= 0;
 stat_phig.. 1 + nu_agw =E= 0;
-stat_phik(tf)$(t(tf)).. sum(t, nu_acap(t)) =E= 0;
-stat_phio(tf)$(t(tf)).. sum(t, nu_aopc(t)) =E= 0;
-stat_phir(tf)$(t(tf)).. sum(t, nu_arw(t)) =E= 0;
-stat_phiy(tf)$(t(tf)).. sum(t, nu_aroy(t)) =E= 0;
-stat_r(tf)$(t(tf)).. sum(t, nu_arev(t)) =E= 0;
-stat_ug(c)$(crg(c)).. sum(crg, nu_mgw(crg)) + sum(crg, nu_mgwb(crg)) - piL_ug(c) =E= 0;
-stat_ur(c,t)$(crr(c)).. sum(crr, nu_mrw(crr,t)) + sum(crr, nu_mrwb(crr,t)) - piL_ur(c,t) =E= 0;
-stat_us(c,tf)$(crs(c) and t(tf)).. sum((crs,t), nu_msu(crs,t)) + sum(crs, theta * lam_cs(crs)) - piL_us(c,tf) =E= 0;
-stat_uug(c,i)$(crg(c)).. sum(crg, (-1) * nu_mgwb(crg)) + (((-1) * (bbg(c) * dgd(c,i) / sqr(bbg(c)))) * nu_agw)$(sameas(c, 'grnd-water') and sameas(i, 'i1')) - piL_uug(c,i) =E= 0;
-stat_uur(c,i,tf)$(crr(c) and t(tf)).. sum((crr,t), (-1) * nu_mrwb(crr,t)) + sum(t, ((-1) * (bbr(c) * drd(c,i,t) / sqr(bbr(c)))) * nu_arw(t)) - piL_uur(c,i,tf) =E= 0;
-stat_x(c,tf)$(cf(c) and t(tf)).. sum((cf,t), (-1) * nu_mf(cf,t)) + sum(t, ((-1) * pf(c,t)) * nu_arev(t)) - piL_x(c,tf) =E= 0;
-stat_z(p,tf).. sum((crs,t), a(crs,p) * nu_msu(crs,t)) + sum((crr,t), a(crr,p) * nu_mrw(crr,t)) + sum(crg, a(crg,p) * nu_mgw(crg)) + sum((ci,t), a(ci,p) * nu_mi(ci,t)) + sum((cf,t), a(cf,p) * nu_mf(cf,t)) + sum(c, sum(t, ((-1) * (ps * a(c,p))) * nu_aroy(t))) + sum(t, ((-1) * opc(p)) * nu_aopc(t)) + nu_mnmr$(sameas(p, 'dispose-u') and sameas(tf, '1990-94')) + sum(cc, theta * a(cc,p) * lam_cdc(cc)) + sum((er,t), ebm * a(er,p) * lam_cae(er,t)) + sum((m,t), b(m,p) * lam_cpu(m,t)) - piL_z(p,tf) =E= 0;
+stat_phik(tf)$(t(tf)).. nu_acap(tf) =E= 0;
+stat_phio(tf)$(t(tf)).. nu_aopc(tf) =E= 0;
+stat_phir(tf)$(t(tf)).. nu_arw(tf) =E= 0;
+stat_phiy(tf)$(t(tf)).. nu_aroy(tf) =E= 0;
+stat_r(tf)$(t(tf)).. nu_arev(tf) =E= 0;
+stat_ug(c)$(crg(c)).. nu_mgw(c) + nu_mgwb(c) - piL_ug(c) =E= 0;
+stat_ur(c,t)$(crr(c)).. nu_mrw(c,t) + nu_mrwb(c,t) - piL_ur(c,t) =E= 0;
+stat_us(c,tf)$(crs(c) and t(tf)).. nu_msu(c,tf) + theta * lam_cs(c) - piL_us(c,tf) =E= 0;
+stat_uug(c,i)$(crg(c)).. ((-1) * nu_mgwb(c)) + (((-1) * (bbg(c) * dgd(c,i) / sqr(bbg(c)))) * nu_agw)$(sameas(c, 'grnd-water') and sameas(i, 'i1')) - piL_uug(c,i) =E= 0;
+stat_uur(c,i,tf)$(crr(c) and t(tf)).. ((-1) * nu_mrwb(c,tf)) + ((-1) * (bbr(c) * drd(c,i,tf) / sqr(bbr(c)))) * nu_arw(tf) - piL_uur(c,i,tf) =E= 0;
+stat_x(c,tf)$(cf(c) and t(tf)).. ((-1) * nu_mf(c,tf)) + ((-1) * pf(c,tf)) * nu_arev(tf) - piL_x(c,tf) =E= 0;
+stat_z(p,tf).. sum((crs,t), a(crs,p) * nu_msu(crs,t)) + sum((crr,t), a(crr,p) * nu_mrw(crr,t)) + sum(crg, a(crg,p) * nu_mgw(crg)) + sum((ci,t), a(ci,p) * nu_mi(ci,t)) + sum((cf,t), a(cf,p) * nu_mf(cf,t)) + sum(c, ((-1) * (ps * a(c,p))) * nu_aroy(tf)) + ((-1) * opc(p)) * nu_aopc(tf) + nu_mnmr$(sameas(p, 'dispose-u') and sameas(tf, '1990-94')) + sum(cc, theta * a(cc,p) * lam_cdc(cc)) + sum((er,t), ebm * a(er,p) * lam_cae(er,t)) + sum((m,t), b(m,p) * lam_cpu(m,t)) - piL_z(p,tf) =E= 0;
 
 * Inequality complementarity equations
 comp_cae(er,t).. ((-1) * (ebm * sum(p, a(er,p) * z(p,t)) + bc(er) - esa(er))) =G= 0;
@@ -371,8 +366,8 @@ aprof.. pi =E= theta * sum(t, del(t) * (r(t) - phir(t) - phio(t) - phiy(t) - phi
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-h.fx(m,tf)$(not (ts(t,tf))) = 0;
-piL_h.fx(m,tf)$(not (ts(t,tf))) = 0;
+h.fx(m,tf)$(not (sum(t, 1$(ts(t,tf))))) = 0;
+piL_h.fx(m,tf)$(not (sum(t, 1$(ts(t,tf))))) = 0;
 phik.fx(tf)$(not (t(tf))) = 0;
 phio.fx(tf)$(not (t(tf))) = 0;
 phir.fx(tf)$(not (t(tf))) = 0;
@@ -390,6 +385,19 @@ uur.fx(c,i,tf)$(not (crr(c) and t(tf))) = 0;
 piL_uur.fx(c,i,tf)$(not (crr(c) and t(tf))) = 0;
 x.fx(c,tf)$(not (cf(c) and t(tf))) = 0;
 piL_x.fx(c,tf)$(not (cf(c) and t(tf))) = 0;
+lam_cpu.fx(m,tf)$(not (t(tf))) = 0;
+lam_cs.fx(c)$(not (crs(c))) = 0;
+nu_acap.fx(tf)$(not (t(tf))) = 0;
+nu_aopc.fx(tf)$(not (t(tf))) = 0;
+nu_arev.fx(tf)$(not (t(tf))) = 0;
+nu_aroy.fx(tf)$(not (t(tf))) = 0;
+nu_arw.fx(tf)$(not (t(tf))) = 0;
+nu_mf.fx(c,tf)$(not (cf(c) and t(tf))) = 0;
+nu_mgw.fx(c)$(not (crg(c))) = 0;
+nu_mgwb.fx(c)$(not (crg(c))) = 0;
+nu_mrw.fx(c,t)$(not (crr(c))) = 0;
+nu_mrwb.fx(c,tf)$(not (t(tf))) = 0;
+nu_msu.fx(c,tf)$(not (crs(c) and t(tf))) = 0;
 
 * ============================================
 * Model MCP Declaration

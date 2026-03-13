@@ -46,7 +46,7 @@ Parameters
     yield(p,c,s) /'crop-02'.'cotton-h'.good 848, 'crop-02'.'cotton-h'.medium 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.good 251, 'crop-25'.'beans-cor'.medium 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.good 269, 'crop-29'.'cotton-h'.medium 149, 'crop-29'.'beans-arr'.good 285, 'crop-29'.'beans-arr'.medium 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.good 403, 'crop-30'.'cotton-h'.medium 133, 'crop-30'.'beans-cor'.good 115, 'crop-30'.'beans-cor'.medium 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.good 274, 'crop-33'.'beans-arr'.medium 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.good 288, 'crop-36'.'beans-arr'.medium 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328/
     techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1/
     pcost(p)
-    a(p)
+    a(p) /'crop-02' 1, 'crop-05' 1, 'crop-10' 1, 'crop-15' 1, 'crop-16' 1, 'crop-17' 1, 'crop-19' 1, 'crop-25' 1, 'crop-29' 1, 'crop-30' 1, 'crop-33' 1, 'crop-36' 1/
 ;
 
 Scalars
@@ -62,11 +62,14 @@ Scalars
     phi /0/
 ;
 
-ps(p,s) = yes$sum(c, yield(p,c,s));
+$onImplicitAssign
+ps(p,s) = yes$(sum(c, yield(p,c,s)));
+$offImplicitAssign
 
 ravg(c) = sum(ty, crev(c,ty)) / card(ty);
 pcost(p) = sum(km, techc(p,km));
-prdev(c,ty) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
+a(p)$(sum(s, yield(p,"cotton-h",s))) = 0;
+prdev(c,ty)$(ravg(c)) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -217,7 +220,7 @@ stat_cons(dr).. ((-1) * vsc) + nu_cond + sum(c, cbndl(c,dr) * lam_mbalc(c)) - pi
 stat_cropcost.. 1 + nu_acrop + lam_awcc =E= 0;
 stat_flab(tm).. ((-1) * (dpm * fwage / sqr(dpm))) * nu_alab - lam_labc(tm) - piL_flab(tm) + piU_flab(tm) =E= 0;
 stat_labcost.. 1 + nu_alab =E= 0;
-stat_lswitch(s).. ldp(s,s) * lam_landb(s) - piL_lswitch(s) =E= 0;
+stat_lswitch(s).. ldp(s,s) * lam_landb(s) + (ldp(s,s) * lam_landb(s+1))$(ord(s) <= card(s) - 1) + (ldp(s,s) * lam_landb(s+2))$(ord(s) <= card(s) - 2) + (ldp(s,s) * lam_landb(s-1))$(ord(s) > 1) + (ldp(s,s) * lam_landb(s-2))$(ord(s) > 2) - piL_lswitch(s) =E= 0;
 stat_ndev(ty).. card(ty) * phi / sqr(card(ty)) + nu_ddev(ty) - piL_ndev(ty) =E= 0;
 stat_pdev(ty).. card(ty) * phi / sqr(card(ty)) - nu_ddev(ty) - piL_pdev(ty) =E= 0;
 stat_plab.. ((-1) * pwage) * nu_alab + sum(tm, ((-1) * dpm) * lam_labc(tm)) + pwage * lam_awcc - piL_plab =E= 0;
@@ -226,7 +229,7 @@ stat_revenue.. -1 + nu_arev =E= 0;
 stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) - piL_sales(c) =E= 0;
 stat_tlab(tm).. ((-1) * (dpm * twage / sqr(dpm))) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc - piL_tlab(tm) =E= 0;
 stat_vetcost.. 1 + nu_avet + lam_awcc =E= 0;
-stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$ps(p,s))) * nu_acrop + sum(tm, labor(p,tm) * 1$ps(p,s) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
+stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
 stat_xlive.. nu_lbal + ((-1) * lprice) * nu_arev + ((-1) * vetpr) * nu_avet =E= 0;
 stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) - piL_xliver(r) =E= 0;
 stat_xprod(c).. nu_dprod(c) =E= 0;
@@ -234,7 +237,7 @@ stat_xprod(c).. nu_dprod(c) =E= 0;
 * Inequality complementarity equations
 comp_awcc.. ((-1) * (cropcost + rationr + vetcost + twage / dpm * sum(tm, tlab(tm)) + pwage * plab - wcbar)) =G= 0;
 comp_labc(tm).. ((-1) * (sum((p,s)$(ps(p,s)), labor(p,tm) * xcrop(p,s)) + sum(r, llab(tm,r) * xliver(r)) - (flab(tm) + tlab(tm) + dpm * plab))) =G= 0;
-comp_landb(s).. ((-1) * (sum(p$(ps(p,s)), a(p) * xcrop(p,s))$sc(s) + sum(sp, ldp(s,sp) * lswitch(sp)) + sum(r, lio(s,r) * xliver(r)) - landc(s))) =G= 0;
+comp_landb(s).. ((-1) * (sum(p$(ps(p,s)), a(p) * xcrop(p,s))$(sc(s)) + sum(sp, ldp(s,sp) * lswitch(sp)) + sum(r, lio(s,r) * xliver(r)) - landc(s))) =G= 0;
 comp_mbalc(c).. sum((s,p), yield(p,c,s) * xcrop(p,s)) / 1000 - (sales(c) + sum(dr, cbndl(c,dr) * cons(dr))) =G= 0;
 
 * Lower bound complementarity equations

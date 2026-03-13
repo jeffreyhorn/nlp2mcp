@@ -44,7 +44,7 @@ Variables
     cost
     nu_losseq(t)
     nu_flow(tt)
-    nu_dischar(t)
+    nu_dischar(tt)
     nu_v_fx_0
     nu_v_fx_1
     nu_v_fx_2
@@ -72,6 +72,18 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+v.fx('0') = 100000;
+v.fx('1') = 100000;
+v.fx('2') = 100000;
+v.fx('3') = 100000;
+v.fx('4') = 100000;
+v.fx('5') = 100000;
+v.fx('6') = 100000;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -81,24 +93,50 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-thermal.l("1") = 150.0;
-thermal.l("2") = 150.0;
-thermal.l("3") = 150.0;
-thermal.l("4") = 150.0;
-thermal.l("5") = 150.0;
-thermal.l("6") = 150.0;
+thermal.l('1') = 150.0;
+thermal.l('2') = 150.0;
+thermal.l('3') = 150.0;
+thermal.l('4') = 150.0;
+thermal.l('5') = 150.0;
+thermal.l('6') = 150.0;
 thermal.l(t) = min(max(thermal.l(t), 1e-6), thermal.up(t));
 hydro.l(t) = 1;
 loss.l(t) = 1;
 q.l(tt) = 1;
-v.l("0") = 60000.0;
-v.l("1") = 60000.0;
-v.l("2") = 60000.0;
-v.l("3") = 60000.0;
-v.l("4") = 60000.0;
-v.l("5") = 60000.0;
-v.l("6") = 60000.0;
+v.l('1') = 60000.0;
+v.l('2') = 60000.0;
+v.l('3') = 60000.0;
+v.l('4') = 60000.0;
+v.l('5') = 60000.0;
+v.l('6') = 60000.0;
 v.l(tt) = min(max(v.l(tt), 1e-6), v.up(tt));
+
+* ============================================
+* Bound Mask Sets (partial bound coverage)
+* ============================================
+
+Set has_v_up(tt) / '1', '2', '3', '4', '5', '6' /;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter v_lo_param(tt);
+v_lo_param(tt) = 0;
+v_lo_param('1') = 60000;
+v_lo_param('2') = 60000;
+v_lo_param('3') = 60000;
+v_lo_param('4') = 60000;
+v_lo_param('5') = 60000;
+v_lo_param('6') = 60000;
+
+Parameter v_up_param(tt);
+v_up_param('1') = 120000;
+v_up_param('2') = 120000;
+v_up_param('3') = 120000;
+v_up_param('4') = 120000;
+v_up_param('5') = 120000;
+v_up_param('6') = 120000;
 
 * ============================================
 * Equations
@@ -143,9 +181,9 @@ Equations
 * Stationarity equations
 stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4.97) * nu_dischar(t) - lam_demcons(t) - piL_hydro(t) + piU_hydro(t) =E= 0;
 stat_loss(t).. nu_losseq(t) + lam_demcons(t) - piL_loss(t) =E= 0;
-stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + sum(t, nu_dischar(t)) - piL_q(tt) =E= 0;
+stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + nu_dischar(tt) - piL_q(tt) =E= 0;
 stat_thermal(t).. 1.15 * n * card(t) * (8 + 0.0032 * thermal(t)) - lam_demcons(t) - piL_thermal(t) + piU_thermal(t) =E= 0;
-stat_v(tt).. nu_flow(tt) + nu_v_fx_0$sameas(tt, '0') + nu_v_fx_1$sameas(tt, '1') + nu_v_fx_2$sameas(tt, '2') + nu_v_fx_3$sameas(tt, '3') + nu_v_fx_4$sameas(tt, '4') + nu_v_fx_5$sameas(tt, '5') + nu_v_fx_6$sameas(tt, '6') - piL_v(tt) + piU_v(tt) =E= 0;
+stat_v(tt).. nu_flow(tt) + ((-1) * nu_flow(tt+1))$(ord(tt) <= card(tt) - 1) + nu_v_fx_0$(sameas(tt, '0')) + nu_v_fx_1$(sameas(tt, '1')) + nu_v_fx_2$(sameas(tt, '2')) + nu_v_fx_3$(sameas(tt, '3')) + nu_v_fx_4$(sameas(tt, '4')) + nu_v_fx_5$(sameas(tt, '5')) + nu_v_fx_6$(sameas(tt, '6')) - piL_v(tt) + piU_v(tt) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons(t).. thermal(t) + hydro(t) - (load(t) + loss(t)) =G= 0;
@@ -155,12 +193,12 @@ comp_lo_hydro(t).. hydro(t) - 0 =G= 0;
 comp_lo_loss(t).. loss(t) - 0 =G= 0;
 comp_lo_q(tt).. q(tt) - 0 =G= 0;
 comp_lo_thermal(t).. thermal(t) - 150 =G= 0;
-comp_lo_v(tt).. v(tt) - 60000 =G= 0;
+comp_lo_v(tt).. v(tt) - v_lo_param(tt) =G= 0;
 
 * Upper bound complementarity equations
 comp_up_hydro(t).. 1000 - hydro(t) =G= 0;
 comp_up_thermal(t).. 1500 - thermal(t) =G= 0;
-comp_up_v(tt).. 120000 - v(tt) =G= 0;
+comp_up_v(tt)$(has_v_up(tt)).. v_up_param(tt) - v(tt) =G= 0;
 
 * Original equality equations
 costfn.. cost =E= 1.15 * n * card(t) * sum(t, 500 + 8 * thermal(t) + 0.0016 * sqr(thermal(t)));
@@ -185,7 +223,9 @@ v_fx_6.. v("6") - 100000 =E= 0;
 
 q.fx(tt)$(not (t(tt))) = 0;
 piL_q.fx(tt)$(not (t(tt))) = 0;
+piU_v.fx(tt)$(not has_v_up(tt)) = 0;
 nu_flow.fx(tt)$(not (ord(tt) > 1)) = 0;
+nu_dischar.fx(tt)$(not (t(tt))) = 0;
 
 * ============================================
 * Model MCP Declaration

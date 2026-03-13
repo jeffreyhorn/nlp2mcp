@@ -75,54 +75,51 @@ Scalars
 ;
 
 $onImplicitAssign
-target0(ii) = (sam(ii,"total") + sam("total",ii)) / 2;
-sam("TOTAL",jj) = sum(ii, SAM(ii,jj));
-sam(ii,"TOTAL") = sum(jj, SAM(ii,jj));
-sam(i,j) = sam(i,j) / scalesam;
-t0(ii,jj) = SAM(ii,jj);
-t0("TOTAL",jj) = sum(ii, SAM(ii,jj));
-t0(ii,"TOTAL") = sum(jj, SAM(ii,jj));
-abar0(ii,jj)$(SAM(ii,jj)) = SAM(ii,jj) / SAM("TOTAL",jj);
-sam0(i,j) = sam(i,j);
-ctot(jj) = sum(ii, T0(ii,jj));
-rtot(ii) = sum(jj, T0(ii,jj));
-sigmay1(ii) = 0.05 * target0(ii);
-red(ii,jj) = yes$(T0(ii,jj) < 0);
-redsam(ii,jj)$(red(ii,jj)) = T0(ii,jj);
-redsam(jj,ii)$(red(ii,jj)) = T0(ii,jj);
-redsam("total",jj) = sum(ii, redsam(ii,jj));
-redsam(ii,"total") = sum(jj, redsam(ii,jj));
-vbar1(ii,"1") = (-3) * sigmay1(ii);
-vbar1(ii,"2") = (-1) * sigmay1(ii);
-vbar1(ii,"4") = 1 * sigmay1(ii);
-vbar1(ii,"5") = 3 * sigmay1(ii);
-t1(ii,jj) = T0(ii,jj) - redsam(ii,jj);
-t1("Total",jj) = sum(ii, T1(ii,jj));
-t1(ii,"Total") = sum(jj, T1(ii,jj));
-ctot(jj) = sum(ii, T1(ii,jj));
-gdpfc0 = T1("fac","act");
-rtot(ii) = sum(jj, T1(ii,jj));
-abar1(ii,jj) = T1(ii,jj) / sam("total",jj);
-abar1("total",jj) = sum(ii, ABAR1(ii,jj));
-abar1(ii,"total") = sum(jj, ABAR1(ii,jj));
-gdp0 = T1("fac","act") + T1("gre","act") - T1("act","gre") + T1("gre","com");
-sam(ii,"total") = sum(jj, T1(ii,jj));
-sam("total",jj) = sum(ii, T1(ii,jj));
-posunbal(i,j) = T1(i,j) * scalesam;
-sigmay2("gdpfc2") = 0.05 * gdpfc0;
-nonzero(ii,jj) = yes$(Abar1(ii,jj));
-sigmay2("gdp2") = 0.05 * gdp0;
-vbar2(macro,"1") = (-3) * sigmay2(macro);
-vbar2(macro,"2") = (-1) * sigmay2(macro);
-vbar2(macro,"4") = 1 * sigmay2(macro);
-vbar2(macro,"5") = 3 * sigmay2(macro);
+SAM("TOTAL",jj) = sum(ii, SAM(ii,jj));
+SAM(ii,"TOTAL") = sum(jj, SAM(ii,jj));
+SAM(i,j) = sam(i,j) / scalesam;
 $offImplicitAssign
 
+$onImplicitAssign
+red(ii,jj) = yes$(T0(ii,jj) < 0);
+NONZERO(ii,jj) = yes$(Abar1(ii,jj));
+$offImplicitAssign
+
+vbar1(ii,'3') = 0;
 wbar1(ii,'1') = 0.013888888888888888;
 wbar1(ii,'2') = 0.375;
 wbar1(ii,'3') = 0.2222222222222222;
 wbar1(ii,'4') = 0.375;
 wbar1(ii,'5') = 0.013888888888888888;
+redsam(ii,jj) = 0;
+
+T0(ii,jj) = SAM(ii,jj);
+T0("TOTAL",jj) = sum(ii, SAM(ii,jj));
+T0(ii,"TOTAL") = sum(jj, SAM(ii,jj));
+Target0(ii) = (sam(ii,"total") + sam("total",ii)) / 2;
+T1(ii,jj) = T0(ii,jj) - redsam(ii,jj);
+T1("Total",jj) = sum(ii, T1(ii,jj));
+T1(ii,"Total") = sum(jj, T1(ii,jj));
+sigmay1(ii) = 0.05 * target0(ii);
+redsam(ii,jj)$(red(ii,jj)) = T0(ii,jj);
+redsam(jj,ii)$(red(ii,jj)) = T0(ii,jj);
+redsam("total",jj) = sum(ii, redsam(ii,jj));
+redsam(ii,"total") = sum(jj, redsam(ii,jj));
+Abar1(ii,jj) = T1(ii,jj) / sam("total",jj);
+Abar1("total",jj) = sum(ii, ABAR1(ii,jj));
+Abar1(ii,"total") = sum(jj, ABAR1(ii,jj));
+vbar1(ii,"1") = (-3) * sigmay1(ii);
+vbar1(ii,"2") = (-1) * sigmay1(ii);
+vbar1(ii,"4") = 1 * sigmay1(ii);
+vbar1(ii,"5") = 3 * sigmay1(ii);
+gdp0 = T1("fac","act") + T1("gre","act") - T1("act","gre") + T1("gre","com");
+gdpfc0 = T1("fac","act");
+sigmay2("gdpfc2") = 0.05 * gdpfc0;
+sigmay2("gdp2") = 0.05 * gdp0;
+vbar2(macro,"1") = (-3) * sigmay2(macro);
+vbar2(macro,"2") = (-1) * sigmay2(macro);
+vbar2(macro,"4") = 1 * sigmay2(macro);
+vbar2(macro,"5") = 3 * sigmay2(macro);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -147,36 +144,16 @@ Variables
     DENTROPY
     GDPFC
     GDP
-    m_SAMEQ(i)
-    m_SAMMAKE(i,j)
-    m_ERROR1EQ(i)
-    m_ERROR2EQ(macro)
-    m_SUMW1(i)
-    m_SUMW2(macro)
-    m_ROWSUM(i)
-    m_COLSUM(j)
-    m_GDPFCDEF
-    m_GDPDEF
     nu_SAMEQ(ii)
     nu_SAMMAKE(ii,jj)
     nu_ERROR1EQ(ii)
     nu_SUMW1(ii)
     nu_ROWSUM(ii)
-    nu_COLSUM(jj)
+    nu_COLSUM(ii)
     nu_GDPFCDEF
     nu_GDPDEF
     nu_ERROR2EQ(macro)
     nu_SUMW2(macro)
-    nu_d_A(a_ii,a_jj)
-    nu_d_TSAM(a_ii,a_jj)
-    nu_d_Y(a_ii)
-    nu_d_X(a_ii)
-    nu_d_ERR1(a_ii)
-    nu_d_ERR2(a_macro)
-    nu_d_W1(a_ii,a_jwt)
-    nu_d_W2(a_macro,a_jwt)
-    nu_d_GDPFC
-    nu_d_GDP
 ;
 
 Positive Variables
@@ -402,16 +379,6 @@ Equations
     stat_err2(macro)
     stat_gdp
     stat_gdpfc
-    stat_m_colsum(j)
-    stat_m_error1eq(i)
-    stat_m_error2eq(macro)
-    stat_m_gdpdef
-    stat_m_gdpfcdef
-    stat_m_rowsum(i)
-    stat_m_sameq(i)
-    stat_m_sammake(i,j)
-    stat_m_sumw1(i)
-    stat_m_sumw2(macro)
     stat_tsam(ii,jj)
     stat_w1(ii,jwt)
     stat_w2(macro,jwt)
@@ -435,16 +402,6 @@ Equations
     SAMMAKE(ii,jj)
     SUMW1(ii)
     SUMW2(macro)
-    d_A(a_ii,a_jj)
-    d_ERR1(a_ii)
-    d_ERR2(a_macro)
-    d_GDP
-    d_GDPFC
-    d_TSAM(a_ii,a_jj)
-    d_W1(a_ii,a_jwt)
-    d_W2(a_macro,a_jwt)
-    d_X(a_ii)
-    d_Y(a_ii)
 ;
 
 * ============================================
@@ -452,25 +409,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) + sum(a_ii, ((-1) * (m_sammake(a_ii,a_ii) * 1$(sameas(a_ii, jj)) * (-1) * 1$(nonzero(ii,jj)))) * nu_d_X(a_ii)) + sum(a_ii, ((-1) * (m_sammake(a_ii,a_ii) * 1$(sameas(a_ii, jj)) * (-1) * 1$(nonzero(ii,jj)))) * nu_d_ERR1(a_ii)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
-stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) + sum(jj, (-1) * nu_COLSUM(jj)) =E= 0;
+stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
+stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) - nu_COLSUM(ii) =E= 0;
 stat_err2(macro).. nu_ERROR2EQ(macro) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_m_colsum(j)$(ii(j)).. sum((a_ii,a_jj), (-1) * nu_d_TSAM(a_ii,a_jj)) + sum(jj, sum(a_ii, 1$(sameas(a_ii, jj)) * nu_d_X(a_ii))) + sum(jj, sum(a_ii, 1$(sameas(a_ii, jj)) * nu_d_ERR1(a_ii))) =E= 0;
-stat_m_error1eq(i)$(ii(i)).. sum(a_ii, (-1) * nu_d_ERR1(a_ii)) + sum((ii,jwt), sum((a_ii,a_jwt), vbar1(i,jwt)$(sameas(a_ii, ii)) * nu_d_W1(a_ii,a_jwt))) =E= 0;
-stat_m_error2eq(macro).. sum(a_macro, (-1) * nu_d_ERR2(a_macro)) + sum(jwt, sum((a_macro,a_jwt), vbar2(macro,jwt)$(sameas(a_macro, macro)) * nu_d_W2(a_macro,a_jwt))) =E= 0;
-stat_m_gdpdef.. sum((a_ii,a_jj), (1$(sameas(a_jj, "fac") and sameas(a_jj, "act")) + 1$(sameas(a_jj, "gre") and sameas(a_jj, "act")) - 1$(sameas(a_jj, "act") and sameas(a_jj, "gre")) + 1$(sameas(a_jj, "gre") and sameas(a_jj, "com"))) * nu_d_TSAM(a_ii,a_jj)) + sum(a_macro, 1$(sameas(a_macro, "gdp2")) * nu_d_ERR2(a_macro)) - nu_d_GDP =E= 0;
-stat_m_gdpfcdef.. sum((a_ii,a_jj), ((-1) * 1$(sameas(a_jj, "fac") and sameas(a_jj, "act"))) * (-1) * nu_d_TSAM(a_ii,a_jj)) + sum(a_macro, 1$(sameas(a_macro, "gdpfc2")) * nu_d_ERR2(a_macro)) - nu_d_GDPFC =E= 0;
-stat_m_rowsum(i)$(ii(i)).. sum(ii, sum(a_ii, ((-1) * (((-1) * 1$(sameas(a_ii, ii))) * (not sameas(ii, "ROW")))) * nu_d_Y(a_ii))) =E= 0;
-stat_m_sameq(i)$(ii(i)).. sum(a_ii, (-1) * nu_d_Y(a_ii)) + sum(ii, sum(a_ii, 1$(sameas(a_ii, ii)) * nu_d_X(a_ii))) + sum(ii, sum(a_ii, 1$(sameas(a_ii, ii)) * nu_d_ERR1(a_ii))) =E= 0;
-stat_m_sammake(i,j)$(ii(i) and ii(j)).. sum((ii,jj), sum((a_ii,a_jj), ((-1) * (((-1) * 1$(sameas(a_jj, ii) and sameas(a_jj, jj))) * (x(ii) + err1(ii)) * 1$(nonzero(ii,jj)))) * nu_d_A(a_ii,a_jj))) + sum((ii,jj), sum(a_ii, ((-1) * (((-1) * a(ii,jj)) * 1$(sameas(a_ii, jj)) * 1$(nonzero(ii,jj)))) * nu_d_X(a_ii))) + sum((ii,jj), sum(a_ii, ((-1) * (((-1) * a(ii,jj)) * 1$(sameas(a_ii, jj)) * 1$(nonzero(ii,jj)))) * nu_d_ERR1(a_ii))) =E= 0;
-stat_m_sumw1(i)$(ii(i)).. sum((a_ii,a_jwt), (-1) * nu_d_W1(a_ii,a_jwt)) =E= 0;
-stat_m_sumw2(macro).. sum((a_macro,a_jwt), (-1) * nu_d_W2(a_macro,a_jwt)) =E= 0;
-stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_COLSUM(jj) - piL_tsam(ii,jj) =E= 0;
-stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) + sum((a_ii,a_jwt), (2 * 1 / (w1(a_ii,a_jwt) + epsilon) + w1(a_ii,a_jwt) * (-1) / sqr(w1(a_ii,a_jwt) + epsilon)) * nu_d_W1(a_ii,a_jwt)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
-stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) + sum((a_macro,a_jwt), (2 * 1 / (w2(a_macro,a_jwt) + epsilon) + w2(a_macro,a_jwt) * (-1) / sqr(w2(a_macro,a_jwt) + epsilon)) * nu_d_W2(a_macro,a_jwt)) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
-stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + sum(jj, (-1) * nu_COLSUM(jj)) =E= 0;
+stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_COLSUM(ii) - piL_tsam(ii,jj) =E= 0;
+stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
+stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
+stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) - nu_COLSUM(ii) =E= 0;
 stat_y(ii).. nu_SAMEQ(ii) + ((-1) * nu_ROWSUM(ii))$((not sameas(ii, "ROW"))) =E= 0;
 
 * Lower bound complementarity equations
@@ -496,16 +443,6 @@ GDPFCDEF.. gdpfc =E= tsam("fac","act") + err2("gdpfc2");
 GDPDEF.. gdp =E= tsam("fac","act") + tsam("gre","act") - tsam("act","gre") + tsam("gre","com") + err2("gdp2");
 ERROR2EQ(macro).. err2(macro) =E= sum(jwt, w2(macro,jwt) * vbar2(macro,jwt));
 SUMW2(macro).. sum(jwt, w2(macro,jwt)) =E= 1;
-d_A(a_ii,a_jj).. (log(a(a_ii,a_jj) + epsilon) - log(abar1(a_ii,a_jj) + epsilon))$(nonzero(a_ii,a_jj)) + (a(a_ii,a_jj) * 1 / (a(a_ii,a_jj) + epsilon))$(nonzero(a_ii,a_jj)) - sum((ii,jj)$(nonzero(ii,jj)), m_sammake(ii,jj) * ((-1) * 1$(sameas(a_ii, ii) and sameas(a_jj, jj))) * (x(jj) + err1(jj))) =E= 0;
-d_TSAM(a_ii,a_jj).. ((-1) * m_gdpfcdef) * ((-1) * 1$(sameas(a_ii, "fac") and sameas(a_jj, "act"))) - m_colsum(a_jj) - m_gdpdef * ((-1) * (1$(sameas(a_ii, "fac") and sameas(a_jj, "act")) + 1$(sameas(a_ii, "gre") and sameas(a_jj, "act")) - 1$(sameas(a_ii, "act") and sameas(a_jj, "gre")) + 1$(sameas(a_ii, "gre") and sameas(a_jj, "com")))) - m_rowsum(a_ii)$((not sameas(a_ii, "ROW"))) - m_sammake(a_ii,a_jj)$(nonzero(a_ii,a_jj)) =E= 0;
-d_Y(a_ii).. ((-1) * m_sameq(a_ii)) - sum(ii$((not sameas(ii, "ROW"))), m_rowsum(ii) * ((-1) * 1$(sameas(a_ii, ii)))) =E= 0;
-d_X(a_ii).. ((-1) * sum(jj, m_colsum(jj) * ((-1) * 1$(sameas(a_ii, jj))))) - sum(ii, m_sameq(ii) * ((-1) * 1$(sameas(a_ii, ii)))) - sum((ii,jj)$(nonzero(ii,jj)), m_sammake(ii,jj) * ((-1) * a(ii,jj)) * 1$(sameas(a_ii, jj))) =E= 0;
-d_ERR1(a_ii).. ((-1) * m_error1eq(a_ii)) - sum(jj, m_colsum(jj) * ((-1) * 1$(sameas(a_ii, jj)))) - sum(ii, m_sameq(ii) * ((-1) * 1$(sameas(a_ii, ii)))) - sum((ii,jj)$(nonzero(ii,jj)), m_sammake(ii,jj) * ((-1) * a(ii,jj)) * 1$(sameas(a_ii, jj))) =E= 0;
-d_ERR2(a_macro).. ((-1) * m_error2eq(a_macro)) - m_gdpfcdef * ((-1) * 1$(sameas(a_macro, "gdpfc2"))) - m_gdpdef * ((-1) * 1$(sameas(a_macro, "gdp2"))) =E= 0;
-d_W1(a_ii,a_jwt).. log(w1(a_ii,a_jwt) + epsilon) - log(wbar1(a_ii,a_jwt) + epsilon) + w1(a_ii,a_jwt) * 1 / (w1(a_ii,a_jwt) + epsilon) - sum(ii, m_error1eq(ii) * ((-1) * vbar1(ii,a_jwt)$(sameas(a_ii, ii)))) - m_sumw1(a_ii) =E= 0;
-d_W2(a_macro,a_jwt).. log(w2(a_macro,a_jwt) + epsilon) - log(wbar2(a_macro,a_jwt) + epsilon) + w2(a_macro,a_jwt) * 1 / (w2(a_macro,a_jwt) + epsilon) - sum(macro, m_error2eq(macro) * ((-1) * vbar2(macro,a_jwt)$(sameas(a_macro, macro)))) - m_sumw2(a_macro) =E= 0;
-d_GDPFC.. ((-1) * m_gdpfcdef) =E= 0;
-d_GDP.. ((-1) * m_gdpdef) =E= 0;
 
 
 * ============================================
@@ -515,12 +452,6 @@ d_GDP.. ((-1) * m_gdpdef) =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-m_colsum.fx(j)$(not (ii(j))) = 0;
-m_error1eq.fx(i)$(not (ii(i))) = 0;
-m_rowsum.fx(i)$(not (ii(i))) = 0;
-m_sameq.fx(i)$(not (ii(i))) = 0;
-m_sammake.fx(i,j)$(not (ii(i) and ii(j))) = 0;
-m_sumw1.fx(i)$(not (ii(i))) = 0;
 nu_ROWSUM.fx(ii)$(not ((not sameas(ii, "ROW")))) = 0;
 nu_SAMMAKE.fx(ii,jj)$(not (nonzero(ii,jj))) = 0;
 
@@ -543,16 +474,6 @@ Model mcp_model /
     stat_err2.err2,
     stat_gdp.gdp,
     stat_gdpfc.gdpfc,
-    stat_m_colsum.m_colsum,
-    stat_m_error1eq.m_error1eq,
-    stat_m_error2eq.m_error2eq,
-    stat_m_gdpdef.m_gdpdef,
-    stat_m_gdpfcdef.m_gdpfcdef,
-    stat_m_rowsum.m_rowsum,
-    stat_m_sameq.m_sameq,
-    stat_m_sammake.m_sammake,
-    stat_m_sumw1.m_sumw1,
-    stat_m_sumw2.m_sumw2,
     stat_tsam.tsam,
     stat_w1.w1,
     stat_w2.w2,
@@ -569,16 +490,6 @@ Model mcp_model /
     SAMMAKE.nu_SAMMAKE,
     SUMW1.nu_SUMW1,
     SUMW2.nu_SUMW2,
-    d_A.nu_d_A,
-    d_ERR1.nu_d_ERR1,
-    d_ERR2.nu_d_ERR2,
-    d_GDP.nu_d_GDP,
-    d_GDPFC.nu_d_GDPFC,
-    d_TSAM.nu_d_TSAM,
-    d_W1.nu_d_W1,
-    d_W2.nu_d_W2,
-    d_X.nu_d_X,
-    d_Y.nu_d_Y,
     comp_lo_a.piL_a,
     comp_lo_tsam.piL_tsam,
     comp_lo_w1.piL_w1,

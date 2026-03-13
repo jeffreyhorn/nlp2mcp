@@ -56,8 +56,7 @@ Parameters
     sectres(*,i) /pd.agricult 1, pd.industry 1, pd.services 1, pk.agricult 1, pk.industry 1, pk.services 1, pva.agricult 0.737, pva.industry 0.2911, pva.services 0.6625, x.agricult 711.6443, x.industry 930.3509, x.services 497.4428, xd.agricult 657.3677, xd.industry 840.05, xd.services 515.4296, xxd.agricult 641.7037, xxd.industry 812.2222, xxd.services 492.0307, e.agricult 15.6639, e.industry 27.8278, e.services 23.3988, m.agricult 69.9406, m.industry 118.1287, m.services 5.412, k.agricult 657.5754, k.industry 338.7076, k.services 1548.5192, int.agricult 256.645, int.industry 464.1656, int.services 156.2598, cd.agricult 452.1765, cd.industry 307.8561, cd.services 202.0416, gd.agricult 2.823, gd.industry 9.8806, gd.services 128.4482, id.industry 148.4488, id.services 10.6931, dk.agricult 20.6884, dk.industry 46.1511, dk.services 92.3023, pm.agricult 1, pm.industry 1, pm.services 1, pe.agricult 1, pe.industry 1, pe.services 1, px.agricult 1, px.industry 1, px.services 1, p.agricult 1, p.industry 1, p.services 1/
 ;
 
-it(i) = yes$(e.l(i) or m.l(i));
-in(i) = (not it(i));
+Set nlp2mcp_uel_registry / depr, dst, dstr, te /;
 
 delta(i) = zz("delta",i);
 ac(i) = zz("ac",i);
@@ -170,12 +169,6 @@ Variables
     nu_ieq(i)
     nu_caeq
     nu_equil(i)
-    nu_e_fx_agricult
-    nu_e_fx_industry
-    nu_e_fx_services
-    nu_m_fx_agricult
-    nu_m_fx_industry
-    nu_m_fx_services
     nu_l_fx_agricult_labor1
     nu_l_fx_agricult_labor2
     nu_l_fx_agricult_labor3
@@ -189,20 +182,30 @@ Variables
 
 Positive Variables
     piL_pd(i)
-    piL_pm(i)
     piL_pk(i)
     piL_px(i)
     piL_p(i)
     piL_x(i)
     piL_xd(i)
-    piL_xxd(i)
-    piL_e(i)
-    piL_m(i)
     piL_wa(lc)
     piL_l(i,lc)
     piL_int(i)
     piL_y
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+l.fx('agricult','labor1') = 0;
+l.fx('agricult','labor2') = 0;
+l.fx('agricult','labor3') = 0;
+l.fx('industry','labor1') = 0;
+l.fx('industry','labor2') = 0;
+l.fx('industry','labor3') = 0;
+l.fx('services','labor1') = 0;
+l.fx('services','labor2') = 0;
+l.fx('services','labor3') = 0;
 
 * ============================================
 * Variable Initialization
@@ -214,69 +217,57 @@ Positive Variables
 
 er.l = 1.0;
 pd.l(i) = sectres("pd",i);
-pd.l("agricult") = max(pd.l("agricult"), 0.01);
-pd.l("industry") = max(pd.l("industry"), 0.01);
-pd.l("services") = max(pd.l("services"), 0.01);
+pd.l('agricult') = max(pd.l('agricult'), 0.01);
+pd.l('industry') = max(pd.l('industry'), 0.01);
+pd.l('services') = max(pd.l('services'), 0.01);
 pm.l(i) = sectres("pm",i);
-pm.l("agricult") = max(pm.l("agricult"), 0.01);
-pm.l("industry") = max(pm.l("industry"), 0.01);
-pm.l("services") = max(pm.l("services"), 0.01);
 pe.l(i) = sectres("pe",i);
 pk.l(i) = sectres("pk",i);
-pk.l("agricult") = max(pk.l("agricult"), 0.01);
-pk.l("industry") = max(pk.l("industry"), 0.01);
-pk.l("services") = max(pk.l("services"), 0.01);
+pk.l('agricult') = max(pk.l('agricult'), 0.01);
+pk.l('industry') = max(pk.l('industry'), 0.01);
+pk.l('services') = max(pk.l('services'), 0.01);
 px.l(i) = sectres("px",i);
-px.l("agricult") = max(px.l("agricult"), 0.01);
-px.l("industry") = max(px.l("industry"), 0.01);
-px.l("services") = max(px.l("services"), 0.01);
+px.l('agricult') = max(px.l('agricult'), 0.01);
+px.l('industry') = max(px.l('industry'), 0.01);
+px.l('services') = max(px.l('services'), 0.01);
 p.l(i) = sectres("p",i);
-p.l("agricult") = max(p.l("agricult"), 0.01);
-p.l("industry") = max(p.l("industry"), 0.01);
-p.l("services") = max(p.l("services"), 0.01);
+p.l('agricult') = max(p.l('agricult'), 0.01);
+p.l('industry') = max(p.l('industry'), 0.01);
+p.l('services') = max(p.l('services'), 0.01);
 pva.l(i) = sectres("pva",i);
 pr.l = 0.0;
 pindex.l = 1.0;
 x.l(i) = sectres("x",i);
-x.l("agricult") = max(x.l("agricult"), 0.01);
-x.l("industry") = max(x.l("industry"), 0.01);
-x.l("services") = max(x.l("services"), 0.01);
+x.l('agricult') = max(x.l('agricult'), 0.01);
+x.l('industry') = max(x.l('industry'), 0.01);
+x.l('services') = max(x.l('services'), 0.01);
 xd.l(i) = sectres("xd",i);
-xd.l("agricult") = max(xd.l("agricult"), 0.01);
-xd.l("industry") = max(xd.l("industry"), 0.01);
-xd.l("services") = max(xd.l("services"), 0.01);
+xd.l('agricult') = max(xd.l('agricult'), 0.01);
+xd.l('industry') = max(xd.l('industry'), 0.01);
+xd.l('services') = max(xd.l('services'), 0.01);
 xxd.l(i) = sectres("xxd",i);
-xxd.l("agricult") = max(xxd.l("agricult"), 0.01);
-xxd.l("industry") = max(xxd.l("industry"), 0.01);
-xxd.l("services") = max(xxd.l("services"), 0.01);
 e.l(i) = sectres("e",i);
-e.l("agricult") = max(e.l("agricult"), 0.01);
-e.l("industry") = max(e.l("industry"), 0.01);
-e.l("services") = max(e.l("services"), 0.01);
 m.l(i) = sectres("m",i);
-m.l("agricult") = max(m.l("agricult"), 0.01);
-m.l("industry") = max(m.l("industry"), 0.01);
-m.l("services") = max(m.l("services"), 0.01);
 k.l(i) = sectres("k",i);
 wa.l(lc) = labres2("wa",lc);
-wa.l("labor1") = max(wa.l("labor1"), 0.01);
-wa.l("labor2") = max(wa.l("labor2"), 0.01);
-wa.l("labor3") = max(wa.l("labor3"), 0.01);
+wa.l('labor1') = max(wa.l('labor1'), 0.01);
+wa.l('labor2') = max(wa.l('labor2'), 0.01);
+wa.l('labor3') = max(wa.l('labor3'), 0.01);
 ls.l(lc) = labres2("ls",lc);
 l.l(i,lc) = labres1(i,lc);
-l.l("agricult","labor1") = max(l.l("agricult","labor1"), 0.01);
-l.l("agricult","labor2") = max(l.l("agricult","labor2"), 0.01);
-l.l("agricult","labor3") = max(l.l("agricult","labor3"), 0.01);
-l.l("industry","labor1") = max(l.l("industry","labor1"), 0.01);
-l.l("industry","labor2") = max(l.l("industry","labor2"), 0.01);
-l.l("industry","labor3") = max(l.l("industry","labor3"), 0.01);
-l.l("services","labor1") = max(l.l("services","labor1"), 0.01);
-l.l("services","labor2") = max(l.l("services","labor2"), 0.01);
-l.l("services","labor3") = max(l.l("services","labor3"), 0.01);
+l.l('agricult','labor1') = max(l.l('agricult','labor1'), 0.01);
+l.l('agricult','labor2') = max(l.l('agricult','labor2'), 0.01);
+l.l('agricult','labor3') = max(l.l('agricult','labor3'), 0.01);
+l.l('industry','labor1') = max(l.l('industry','labor1'), 0.01);
+l.l('industry','labor2') = max(l.l('industry','labor2'), 0.01);
+l.l('industry','labor3') = max(l.l('industry','labor3'), 0.01);
+l.l('services','labor1') = max(l.l('services','labor1'), 0.01);
+l.l('services','labor2') = max(l.l('services','labor2'), 0.01);
+l.l('services','labor3') = max(l.l('services','labor3'), 0.01);
 int.l(i) = sectres("int",i);
-int.l("agricult") = max(int.l("agricult"), 0.01);
-int.l("industry") = max(int.l("industry"), 0.01);
-int.l("services") = max(int.l("services"), 0.01);
+int.l('agricult') = max(int.l('agricult'), 0.01);
+int.l('industry') = max(int.l('industry'), 0.01);
+int.l('services') = max(int.l('services'), 0.01);
 cd.l(i) = sectres("cd",i);
 gd.l(i) = sectres("gd",i);
 id.l(i) = sectres("id",i);
@@ -299,6 +290,11 @@ remit.l = 0.0;
 fbor.l = 58.759;
 yh.l(hh) = hhres("yh",hh);
 tothhtax.l = 100.1122;
+
+$onImplicitAssign
+it(i) = yes$(e.l(i) or m.l(i));
+in(i) = (not it(i));
+$offImplicitAssign
 
 * ============================================
 * Deferred Variable Bounds (depend on .l values)
@@ -368,19 +364,15 @@ Equations
     stat_y
     stat_yh(hh)
     stat_ypr
-    comp_lo_e(i)
     comp_lo_int(i)
     comp_lo_l(i,lc)
-    comp_lo_m(i)
     comp_lo_p(i)
     comp_lo_pd(i)
     comp_lo_pk(i)
-    comp_lo_pm(i)
     comp_lo_px(i)
     comp_lo_wa(lc)
     comp_lo_x(i)
     comp_lo_xd(i)
-    comp_lo_xxd(i)
     comp_lo_y
     absorption(i)
     activity(i)
@@ -393,9 +385,6 @@ Equations
     costmin(i)
     depreq
     dsteq(i)
-    e_fx_agricult
-    e_fx_industry
-    e_fx_services
     equil(i)
     esupply(i)
     gdeq(i)
@@ -418,9 +407,6 @@ Equations
     l_fx_services_labor3
     labory
     lmequil(lc)
-    m_fx_agricult
-    m_fx_industry
-    m_fx_services
     netsubdef
     obj
     pedef(i)
@@ -447,11 +433,11 @@ Alias(i, i__);
 Alias(lc, lc__);
 
 * Stationarity equations
-stat_cd(i).. ((-1) * (prod(i__$(cles(i__,hh)), cd(i__) ** cles(i__,hh)) * sum(i__$(cles(i__,hh)), cd(i__) ** cles(i__,hh) * cles(i__,hh) / cd(i__) / cd(i__) ** cles(i__,hh)))) + p(i) * nu_cdeq(i) - nu_equil(i) =E= 0;
+stat_cd(i).. sum(hh, ((-1) * (prod(i__$(cles(i__,hh)), cd(i__) ** cles(i__,hh)) * sum(i__$(cles(i__,hh)), cd(i__) ** cles(i__,hh) * cles(i__,hh) / cd(i__) / cd(i__) ** cles(i__,hh))))) + p(i) * nu_cdeq(i) - nu_equil(i) =E= 0;
 stat_deprecia.. nu_capitaly + nu_depreq - nu_totsav =E= 0;
-stat_dk(i).. pk(i) * nu_prodinv(i) + sum(j, ((-1) * imat(i,j)) * nu_ieq(i)) =E= 0;
-stat_dst(i).. nu_dsteq(i) + kio(i) * p(i) * nu_prodinv(i) - nu_equil(i) =E= 0;
-stat_e(i)$(it(i)).. sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * gamma(it) * e(it) ** rhot(it) * rhot(it) / e(it))) * nu_cet(it)) + sum(it, 1 / xxd(it) ** 1 * nu_esupply(it)) + nu_e_fx_agricult$sameas(i, 'agricult') + nu_e_fx_industry$sameas(i, 'industry') + nu_e_fx_services$sameas(i, 'services') - piL_e(i) =E= 0;
+stat_dk(i).. pk(i) * nu_prodinv(i) + sum(j, ((-1) * imat(i,j)) * nu_ieq(i)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-1))$(ord(i) > 1)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-2))$(ord(i) > 2)) =E= 0;
+stat_dst(i).. nu_dsteq(i) + kio(i) * p(i) * nu_prodinv(i) + (kio(i) * p(i) * nu_prodinv(i+1))$(ord(i) <= card(i) - 1) + (kio(i) * p(i) * nu_prodinv(i+2))$(ord(i) <= card(i) - 2) + (kio(i) * p(i) * nu_prodinv(i-1))$(ord(i) > 1) + (kio(i) * p(i) * nu_prodinv(i-2))$(ord(i) > 2) - nu_equil(i) =E= 0;
+stat_e(i)$(it(i)).. ((-1) * (at(i) * (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) ** (1 / rhot(i)) * 1 / rhot(i) / (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) * gamma(i) * e(i) ** rhot(i) * rhot(i) / e(i))) * nu_cet(i) + 1 / xxd(i) ** 1 * nu_esupply(i) =E= 0;
 stat_er.. sum(it, ((-1) * ((1 + tm(it) + pr) * pwm(it))) * nu_pmdef(it)) + sum(it, ((-1) * (pwe(it) * (1 + te(it)))) * nu_pedef(it)) + ((-1) * remit) * nu_labory + ((-1) * fbor) * nu_capitaly + ((-1) * sum(it, tm(it) * m(it) * pwm(it))) * nu_tariffdef + ((-1) * sum(it, te(it) * e(it) * pwe(it))) * nu_netsubdef + ((-1) * (pr * sum(it, pwm(it) * m(it)))) * nu_premium + ((-1) * fsav) * nu_totsav =E= 0;
 stat_fbor.. ((-1) * er) * nu_capitaly - nu_caeq =E= 0;
 stat_fsav.. ((-1) * er) * nu_totsav - nu_caeq =E= 0;
@@ -465,53 +451,49 @@ stat_indtax.. ((-1) * nu_greq) + nu_indtaxdef =E= 0;
 stat_int(i).. nu_inteq(i) - nu_equil(i) - piL_int(i) =E= 0;
 stat_invest.. sum(i, ((-1) * kio(i)) * nu_prodinv(i)) =E= 0;
 stat_k(i).. ((-1) * (ad(i) * prod(lc$(wdist(i,lc)), l(i,lc) ** alphl(i,lc)) * k(i) ** (1 - sum(lc, alphl(i,lc))) * (1 - sum(lc, alphl(i,lc))) / k(i))) * nu_activity(i) + ((-1) * (depr(i) * pk(i))) * nu_depreq =E= 0;
-stat_l(i,lc).. ((-1) * (k(i) ** (1 - sum(lc__, alphl(i,lc__))) * ad(i) * prod(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(i,lc__)) * sum(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(i,lc__) * alphl(i,lc__) / l(i,lc__) / l(i,lc__) ** alphl(i,lc__)))) * nu_activity(i) + (wa(lc) * wdist(i,lc) * nu_profitmax(i,lc))$wdist(i,lc) + nu_lmequil(lc) + nu_l_fx_agricult_labor1$(sameas(i, 'agricult') and sameas(lc, 'labor1')) + nu_l_fx_agricult_labor2$(sameas(i, 'agricult') and sameas(lc, 'labor2')) + nu_l_fx_agricult_labor3$(sameas(i, 'agricult') and sameas(lc, 'labor3')) + nu_l_fx_industry_labor1$(sameas(i, 'industry') and sameas(lc, 'labor1')) + nu_l_fx_industry_labor2$(sameas(i, 'industry') and sameas(lc, 'labor2')) + nu_l_fx_industry_labor3$(sameas(i, 'industry') and sameas(lc, 'labor3')) + nu_l_fx_services_labor1$(sameas(i, 'services') and sameas(lc, 'labor1')) + nu_l_fx_services_labor2$(sameas(i, 'services') and sameas(lc, 'labor2')) + nu_l_fx_services_labor3$(sameas(i, 'services') and sameas(lc, 'labor3')) - piL_l(i,lc) =E= 0;
+stat_l(i,lc).. ((-1) * (k(i) ** (1 - sum(lc__, alphl(i,lc__))) * ad(i) * prod(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(i,lc__)) * sum(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(i,lc__) * alphl(i,lc__) / l(i,lc__) / l(i,lc__) ** alphl(i,lc__)))) * nu_activity(i) + (wa(lc) * wdist(i,lc) * nu_profitmax(i,lc))$(wdist(i,lc)) + nu_lmequil(lc) + nu_l_fx_agricult_labor1$(sameas(i, 'agricult') and sameas(lc, 'labor1')) + nu_l_fx_agricult_labor2$(sameas(i, 'agricult') and sameas(lc, 'labor2')) + nu_l_fx_agricult_labor3$(sameas(i, 'agricult') and sameas(lc, 'labor3')) + nu_l_fx_industry_labor1$(sameas(i, 'industry') and sameas(lc, 'labor1')) + nu_l_fx_industry_labor2$(sameas(i, 'industry') and sameas(lc, 'labor2')) + nu_l_fx_industry_labor3$(sameas(i, 'industry') and sameas(lc, 'labor3')) + nu_l_fx_services_labor1$(sameas(i, 'services') and sameas(lc, 'labor1')) + nu_l_fx_services_labor2$(sameas(i, 'services') and sameas(lc, 'labor2')) + nu_l_fx_services_labor3$(sameas(i, 'services') and sameas(lc, 'labor3')) - piL_l(i,lc) =E= 0;
 stat_ls(lc).. ((-1) * nu_lmequil(lc)) + ((-1) * wa(lc)) * nu_labory + wa(lc) * nu_capitaly =E= 0;
-stat_m(i)$(it(i)).. sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * delta(it) * m(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / m(it))) * nu_armington(it)) + sum(it, 1 / xxd(it) ** 1 * nu_costmin(it)) + nu_m_fx_agricult$sameas(i, 'agricult') + nu_m_fx_industry$sameas(i, 'industry') + nu_m_fx_services$sameas(i, 'services') - piL_m(i) =E= 0;
+stat_m(i)$(it(i)).. ((-1) * (ac(i) * (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) ** ((-1) / rhoc(i)) * (-1) / rhoc(i) / (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) * delta(i) * m(i) ** ((-1) * rhoc(i)) * ((-1) * rhoc(i)) / m(i))) * nu_armington(i) + 1 / xxd(i) ** 1 * nu_costmin(i) =E= 0;
 stat_mps(hh).. sum(i, ((-1) * ((1 - htax(hh)) * yh(hh) * cles(i,hh) * (-1))) * nu_cdeq(i)) + ((-1) * ((1 - htax(hh)) * yh(hh))) * nu_hhsaveq =E= 0;
 stat_netsub.. nu_greq + nu_netsubdef =E= 0;
-stat_p(i).. x(i) * nu_absorption(i) + sum(j, ((-1) * io(i,j)) * nu_actp(i)) + sum(j, ((-1) * imat(i,j)) * nu_pkdef(i)) + ((-1) * pwts(i)) * nu_pindexdef + cd(i) * nu_cdeq(i) + ((-1) * gd(i)) * nu_gruse + kio(i) * dst(i) * nu_prodinv(i) - piL_p(i) =E= 0;
-stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * ((-1) * pe(it)) / sqr(pd(it)) / sqr(gamma(it)))) * nu_esupply(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * 1 / pm(it) ** 1 / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pd(i) =E= 0;
-stat_pe(i)$(it(i)).. sum(it, nu_pedef(it)) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * 1 / pd(it) ** 1 / sqr(gamma(it)))) * nu_esupply(it)) =E= 0;
+stat_p(i).. x(i) * nu_absorption(i) + sum(j, ((-1) * io(i,j)) * nu_actp(i)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-1))$(ord(i) > 1)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-2))$(ord(i) > 2)) + sum(j, ((-1) * imat(i,j)) * nu_pkdef(i)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-1))$(ord(i) > 1)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-2))$(ord(i) > 2)) + ((-1) * pwts(i)) * nu_pindexdef + cd(i) * nu_cdeq(i) + ((-1) * gd(i)) * nu_gruse + kio(i) * dst(i) * nu_prodinv(i) + (kio(i) * dst(i) * nu_prodinv(i+1))$(ord(i) <= card(i) - 1) + (kio(i) * dst(i) * nu_prodinv(i+2))$(ord(i) <= card(i) - 2) + (kio(i) * dst(i) * nu_prodinv(i-1))$(ord(i) > 1) + (kio(i) * dst(i) * nu_prodinv(i-2))$(ord(i) > 2) - piL_p(i) =E= 0;
+stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + ((-1) * ((pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) ** (1 / (rhot(i) - 1)) * 1 / (rhot(i) - 1) / (pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) * gamma(i) * (1 - gamma(i)) * ((-1) * pe(i)) / sqr(pd(i)) / sqr(gamma(i)))) * nu_esupply(i) + ((-1) * ((pd(i) / pm(i) * delta(i) / (1 - delta(i))) ** (1 / (1 + rhoc(i))) * 1 / (1 + rhoc(i)) / (pd(i) / pm(i) * delta(i) / (1 - delta(i))) * (1 - delta(i)) * delta(i) * 1 / pm(i) ** 1 / sqr(1 - delta(i)))) * nu_costmin(i) - piL_pd(i) =E= 0;
+stat_pe(i)$(it(i)).. nu_pedef(i) + ((-1) * ((pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) ** (1 / (rhot(i) - 1)) * 1 / (rhot(i) - 1) / (pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) * gamma(i) * (1 - gamma(i)) * 1 / pd(i) ** 1 / sqr(gamma(i)))) * nu_esupply(i) =E= 0;
 stat_pindex.. nu_pindexdef =E= 0;
 stat_pk(i).. nu_pkdef(i) + ((-1) * (k(i) * depr(i))) * nu_depreq + dk(i) * nu_prodinv(i) - piL_pk(i) =E= 0;
-stat_pm(i)$(it(i)).. sum(it, nu_pmdef(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * ((-1) * pd(it)) / sqr(pm(it)) / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pm(i) =E= 0;
+stat_pm(i)$(it(i)).. nu_pmdef(i) + ((-1) * ((pd(i) / pm(i) * delta(i) / (1 - delta(i))) ** (1 / (1 + rhoc(i))) * 1 / (1 + rhoc(i)) / (pd(i) / pm(i) * delta(i) / (1 - delta(i))) * (1 - delta(i)) * delta(i) * ((-1) * pd(i)) / sqr(pm(i)) / sqr(1 - delta(i)))) * nu_costmin(i) =E= 0;
 stat_pr.. sum(it, ((-1) * (pwm(it) * er)) * nu_pmdef(it)) + ((-1) * (sum(it, pwm(it) * m(it)) * er)) * nu_premium =E= 0;
-stat_pva(i).. ((-1) * nu_actp(i)) + sum(lc, (((-1) * (alphl(i,lc) * xd(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + ((-1) * xd(i)) * nu_capitaly =E= 0;
+stat_pva(i).. ((-1) * nu_actp(i)) + sum(lc, (((-1) * (alphl(i,lc) * xd(i))) * nu_profitmax(i,lc))$(wdist(i,lc))) + ((-1) * xd(i)) * nu_capitaly =E= 0;
 stat_px(i).. xd(i) * nu_sales(i) + (1 - itax(i)) * nu_actp(i) + ((-1) * (xd(i) * itax(i))) * nu_indtaxdef - piL_px(i) =E= 0;
 stat_remit.. ((-1) * er) * nu_labory - nu_caeq =E= 0;
 stat_savings.. nu_totsav =E= 0;
 stat_tariff.. ((-1) * nu_greq) + nu_tariffdef =E= 0;
 stat_tothhtax.. ((-1) * nu_greq) + nu_hhtaxdef =E= 0;
-stat_wa(lc).. sum(i, (l(i,lc) * wdist(i,lc) * nu_profitmax(i,lc))$wdist(i,lc)) + ((-1) * ls(lc)) * nu_labory + ls(lc) * nu_capitaly - piL_wa(lc) =E= 0;
-stat_x(i).. p(i) * nu_absorption(i) + sum(it, nu_armington(it)) + sum(in, nu_xsn(in)) + nu_equil(i) - piL_x(i) =E= 0;
-stat_xd(i).. px(i) * nu_sales(i) + nu_activity(i) + sum(lc, (((-1) * (alphl(i,lc) * pva(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + sum(it, nu_cet(it)) + sum(in, (-1) * nu_xxdsn(in)) + sum(j, ((-1) * io(i,j)) * nu_inteq(i)) + ((-1) * dstr(i)) * nu_dsteq(i) + ((-1) * pva(i)) * nu_capitaly + ((-1) * (itax(i) * px(i))) * nu_indtaxdef - piL_xd(i) =E= 0;
-stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * (1 - gamma(it)) * xxd(it) ** rhot(it) * rhot(it) / xxd(it))) * nu_cet(it)) + sum(it, ((-1) * e(it)) / sqr(xxd(it)) * nu_esupply(it)) + sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / xxd(it))) * nu_armington(it)) + sum(it, ((-1) * m(it)) / sqr(xxd(it)) * nu_costmin(it)) + sum(in, nu_xxdsn(in)) + sum(in, (-1) * nu_xsn(in)) - piL_xxd(i) =E= 0;
+stat_wa(lc).. sum(i, (l(i,lc) * wdist(i,lc) * nu_profitmax(i,lc))$(wdist(i,lc))) + ((-1) * ls(lc)) * nu_labory + ls(lc) * nu_capitaly - piL_wa(lc) =E= 0;
+stat_x(i).. p(i) * nu_absorption(i) + nu_armington(i) + nu_xsn(i) + nu_equil(i) - piL_x(i) =E= 0;
+stat_xd(i).. px(i) * nu_sales(i) + nu_activity(i) + sum(lc, (((-1) * (alphl(i,lc) * pva(i))) * nu_profitmax(i,lc))$(wdist(i,lc))) + nu_cet(i) - nu_xxdsn(i) + sum(j, ((-1) * io(i,j)) * nu_inteq(i)) + sum(j, (((-1) * io(i,j)) * nu_inteq(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * io(i,j)) * nu_inteq(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * io(i,j)) * nu_inteq(i-1))$(ord(i) > 1)) + sum(j, (((-1) * io(i,j)) * nu_inteq(i-2))$(ord(i) > 2)) + ((-1) * dstr(i)) * nu_dsteq(i) + ((-1) * pva(i)) * nu_capitaly + ((-1) * (itax(i) * px(i))) * nu_indtaxdef - piL_xd(i) =E= 0;
+stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + ((-1) * (at(i) * (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) ** (1 / rhot(i)) * 1 / rhot(i) / (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) * (1 - gamma(i)) * xxd(i) ** rhot(i) * rhot(i) / xxd(i))) * nu_cet(i) + ((-1) * e(i)) / sqr(xxd(i)) * nu_esupply(i) + ((-1) * (ac(i) * (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) ** ((-1) / rhoc(i)) * (-1) / rhoc(i) / (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) * (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i)) * ((-1) * rhoc(i)) / xxd(i))) * nu_armington(i) + ((-1) * m(i)) / sqr(xxd(i)) * nu_costmin(i) + nu_xxdsn(i) - nu_xsn(i) =E= 0;
 stat_y.. nu_gdp - piL_y =E= 0;
 stat_yh(hh).. sum(i, ((-1) * ((1 - htax(hh)) * cles(i,hh) * (1 - mps(hh)))) * nu_cdeq(i)) - nu_gdp + ((-1) * ((1 - htax(hh)) * mps(hh))) * nu_hhsaveq + ((-1) * htax(hh)) * nu_hhtaxdef =E= 0;
 stat_ypr.. ((-1) * nu_capitaly) + nu_premium =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_e(i).. e(i) - 0.01 =G= 0;
 comp_lo_int(i).. int(i) - 0.01 =G= 0;
 comp_lo_l(i,lc).. l(i,lc) - 0.01 =G= 0;
-comp_lo_m(i).. m(i) - 0.01 =G= 0;
 comp_lo_p(i).. p(i) - 0.01 =G= 0;
 comp_lo_pd(i).. pd(i) - 0.01 =G= 0;
 comp_lo_pk(i).. pk(i) - 0.01 =G= 0;
-comp_lo_pm(i).. pm(i) - 0.01 =G= 0;
 comp_lo_px(i).. px(i) - 0.01 =G= 0;
 comp_lo_wa(lc).. wa(lc) - 0.01 =G= 0;
 comp_lo_x(i).. x(i) - 0.01 =G= 0;
 comp_lo_xd(i).. xd(i) - 0.01 =G= 0;
-comp_lo_xxd(i).. xxd(i) - 0.01 =G= 0;
 comp_lo_y.. y - 0.01 =G= 0;
 
 * Original equality equations
 pmdef(it).. pm(it) =E= pwm(it) * er * (1 + tm(it) + pr);
 pedef(it).. pe(it) =E= pwe(it) * (1 + te(it)) * er;
-absorption(i).. p(i) * x(i) =E= pd(i) * xxd(i) + (pm(i) * m(i))$it(i);
-sales(i).. px(i) * xd(i) =E= pd(i) * xxd(i) + (pe(i) * e(i))$it(i);
+absorption(i).. p(i) * x(i) =E= pd(i) * xxd(i) + (pm(i) * m(i))$(it(i));
+sales(i).. px(i) * xd(i) =E= pd(i) * xxd(i) + (pe(i) * e(i))$(it(i));
 actp(i).. px(i) * (1 - itax(i)) =E= pva(i) + sum(j, io(j,i) * p(j));
 pkdef(i).. pk(i) =E= sum(j, p(j) * imat(j,i));
 pindexdef.. pindex =E= sum(i, pwts(i) * p(i));
@@ -546,12 +528,6 @@ ieq(i).. id(i) =E= sum(j, imat(i,j) * dk(j));
 caeq.. sum(it, pwm(it) * m(it)) =E= sum(it, pwe(it) * e(it)) + fsav + remit + fbor;
 equil(i).. x(i) =E= int(i) + cd(i) + gd(i) + id(i) + dst(i);
 obj.. omega =E= prod(i$(cles(i,"lab-hh")), cd(i) ** cles(i,"lab-hh"));
-e_fx_agricult.. e("agricult") - 0 =E= 0;
-e_fx_industry.. e("industry") - 0 =E= 0;
-e_fx_services.. e("services") - 0 =E= 0;
-m_fx_agricult.. m("agricult") - 0 =E= 0;
-m_fx_industry.. m("industry") - 0 =E= 0;
-m_fx_services.. m("services") - 0 =E= 0;
 l_fx_agricult_labor1.. l("agricult","labor1") - 0 =E= 0;
 l_fx_agricult_labor2.. l("agricult","labor2") - 0 =E= 0;
 l_fx_agricult_labor3.. l("agricult","labor3") - 0 =E= 0;
@@ -571,13 +547,26 @@ l_fx_services_labor3.. l("services","labor3") - 0 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 e.fx(i)$(not (it(i))) = 0;
-piL_e.fx(i)$(not (it(i))) = 0;
 m.fx(i)$(not (it(i))) = 0;
-piL_m.fx(i)$(not (it(i))) = 0;
 pe.fx(i)$(not (it(i))) = 0;
 pm.fx(i)$(not (it(i))) = 0;
-piL_pm.fx(i)$(not (it(i))) = 0;
 nu_profitmax.fx(i,lc)$(not (wdist(i,lc))) = 0;
+nu_armington.fx(i)$(not (it(i))) = 0;
+nu_cet.fx(i)$(not (it(i))) = 0;
+nu_costmin.fx(i)$(not (it(i))) = 0;
+nu_esupply.fx(i)$(not (it(i))) = 0;
+nu_pedef.fx(i)$(not (it(i))) = 0;
+nu_pmdef.fx(i)$(not (it(i))) = 0;
+nu_xsn.fx(i)$(not (in(i))) = 0;
+nu_xxdsn.fx(i)$(not (in(i))) = 0;
+nu_armington.fx(i)$(not (it(i))) = 0;
+nu_cet.fx(i)$(not (it(i))) = 0;
+nu_costmin.fx(i)$(not (it(i))) = 0;
+nu_esupply.fx(i)$(not (it(i))) = 0;
+nu_pedef.fx(i)$(not (it(i))) = 0;
+nu_pmdef.fx(i)$(not (it(i))) = 0;
+nu_xsn.fx(i)$(not (in(i))) = 0;
+nu_xxdsn.fx(i)$(not (in(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -647,9 +636,6 @@ Model mcp_model /
     costmin.nu_costmin,
     depreq.nu_depreq,
     dsteq.nu_dsteq,
-    e_fx_agricult.nu_e_fx_agricult,
-    e_fx_industry.nu_e_fx_industry,
-    e_fx_services.nu_e_fx_services,
     equil.nu_equil,
     esupply.nu_esupply,
     gdeq.nu_gdeq,
@@ -672,9 +658,6 @@ Model mcp_model /
     l_fx_services_labor3.nu_l_fx_services_labor3,
     labory.nu_labory,
     lmequil.nu_lmequil,
-    m_fx_agricult.nu_m_fx_agricult,
-    m_fx_industry.nu_m_fx_industry,
-    m_fx_services.nu_m_fx_services,
     netsubdef.nu_netsubdef,
     obj.omega,
     pedef.nu_pedef,
@@ -689,19 +672,15 @@ Model mcp_model /
     totsav.nu_totsav,
     xsn.nu_xsn,
     xxdsn.nu_xxdsn,
-    comp_lo_e.piL_e,
     comp_lo_int.piL_int,
     comp_lo_l.piL_l,
-    comp_lo_m.piL_m,
     comp_lo_p.piL_p,
     comp_lo_pd.piL_pd,
     comp_lo_pk.piL_pk,
-    comp_lo_pm.piL_pm,
     comp_lo_px.piL_px,
     comp_lo_wa.piL_wa,
     comp_lo_x.piL_x,
     comp_lo_xd.piL_xd,
-    comp_lo_xxd.piL_xxd,
     comp_lo_y.piL_y
 /;
 

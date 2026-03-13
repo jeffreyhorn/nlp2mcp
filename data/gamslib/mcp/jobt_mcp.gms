@@ -116,9 +116,9 @@ Equations
 stat_f(t).. nu_wb(t) - piL_f(t) =E= 0;
 stat_h(t).. ((-1) * nu_wb(t)) + (1 + 1 / alpha) * lam_wd(t) - piL_h(t) =E= 0;
 stat_p(t).. ((-1) * nu_cb(t)) + 1 / rho ** 1 * lam_wd(t) - piL_p(t) =E= 0;
-stat_s(t).. 10 + nu_cb(t) - piL_s(t) =E= 0;
-stat_u(t).. 30 - nu_cb(t) - piL_u(t) =E= 0;
-stat_w(t).. wage + sf(t) + nu_wb(t) - lam_wd(t) - piL_w(t) =E= 0;
+stat_s(t).. 10 + nu_cb(t) + ((-1) * nu_cb(t+1))$(ord(t) <= card(t) - 1) - piL_s(t) =E= 0;
+stat_u(t).. 30 - nu_cb(t) + nu_cb(t+1)$(ord(t) <= card(t) - 1) - piL_u(t) =E= 0;
+stat_w(t).. wage + sf(t) + nu_wb(t) + ((-1) * nu_wb(t+1))$(ord(t) <= card(t) - 1) - lam_wd(t) - piL_w(t) =E= 0;
 
 * Inequality complementarity equations
 comp_wd(t).. w(t) - (p(t) / rho + (1 + 1 / alpha) * h(t)) =G= 0;

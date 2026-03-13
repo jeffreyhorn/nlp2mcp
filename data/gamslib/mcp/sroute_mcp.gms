@@ -29,9 +29,13 @@ Parameters
     sroute(i,ip)
 ;
 
+$onImplicitAssign
 darc(i,ip) = max(uarc(i,ip), uarc(ip,i));
+$offImplicitAssign
 
-r(i,ip) = yes$darc(i,ip);
+$onImplicitAssign
+r(i,ip) = yes$(darc(i,ip));
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)

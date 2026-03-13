@@ -88,9 +88,9 @@ Positive Variables
 * non-zero initial values.
 
 $onImplicitAssign
-t.l("top") = 1.2;
-t.l("middle") = 1.2;
-t.l("bottom") = 1.3;
+t.l('top') = 1.2;
+t.l('middle') = 1.2;
+t.l('bottom') = 1.3;
 wl.l = 45.8;
 lw.l = 43.2;
 d.l = 30.5;

@@ -70,15 +70,15 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound).
 
-p.l("one") = 0.3333333333333333;
-p.l("two") = 0.3333333333333333;
-p.l("three") = 0.3333333333333333;
+p.l('one') = 0.3333333333333333;
+p.l('two') = 0.3333333333333333;
+p.l('three') = 0.3333333333333333;
 p.l(g) = min(max(p.l(g), 1e-6), p.up(g));
 m.l(g) = 100 + 30 * ord(g);
 m.l(g) = min(max(m.l(g), 1e-6), m.up(g));
-s.l("one") = 15.0;
-s.l("two") = 15.0;
-s.l("three") = 15.0;
+s.l('one') = 15.0;
+s.l('two') = 15.0;
+s.l('three') = 15.0;
 s.l(g) = min(max(s.l(g), 1e-6), s.up(g));
 
 * ============================================
@@ -110,7 +110,7 @@ Equations
 Alias(g, g__);
 
 * Stationarity equations
-stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / sqr(s(g)))) + lam_rank(g) - piL_m(g) =E= 0;
+stat_m(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (-0.5) * 2 * (y(i) - m(g)) / s(g) * s(g) * (-1) / sqr(s(g)))) + lam_rank(g) + ((-1) * lam_rank(g-1))$(ord(g) > 1) - piL_m(g) =E= 0;
 stat_p(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * 1 / s(g) ** 1)) + nu_pdef - piL_p(g) =E= 0;
 stat_s(g).. ((-1) * sum(i, w(i) * 1 / (c * sum(g__, p(g__) / s(g__) * exp((-0.5) * sqr((y(i) - m(g__)) / s(g__))))) * c * (exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * ((-1) * p(g)) / sqr(s(g)) - p(g) / s(g) * exp((-0.5) * sqr((y(i) - m(g)) / s(g))) * (y(i) - m(g)) / s(g) * ((-1) * (y(i) - m(g))) / sqr(s(g))))) - piL_s(g) =E= 0;
 

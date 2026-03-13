@@ -35,9 +35,7 @@ Parameters
     deltb(j,h)
 ;
 
-ed(j) = sum(h, lambda(j,h) * dd(j,h));
-gamma(j,h) = sum(hp$(ord(hp) >= ord(h)), lambda(j,hp));
-deltb(j,h) = (dd(j,h) - dd(j,h-1))$dd(j,h);
+deltb(j,h) = (dd(j,h) - dd(j,h-1))$(dd(j,h));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -54,7 +52,6 @@ Variables
     phi
     nu_bd(j,h)
     nu_ocd
-    nu_bcd1
     nu_bcd2
 ;
 
@@ -65,7 +62,6 @@ Positive Variables
     oc
     bc
     lam_ab(i)
-    lam_db(j)
     lam_yd(j,h)
     piL_x(i,j)
     piL_y(j,h)
@@ -111,7 +107,6 @@ Equations
     stat_x(i,j)
     stat_y(j,h)
     comp_ab(i)
-    comp_db(j)
     comp_yd(j,h)
     comp_lo_b(j,h)
     comp_lo_bc
@@ -119,7 +114,6 @@ Equations
     comp_lo_x(i,j)
     comp_lo_y(j,h)
     comp_up_y(j,h)
-    bcd1
     bcd2
     bd(j,h)
     obj
@@ -132,14 +126,13 @@ Equations
 
 * Stationarity equations
 stat_b(j,h).. nu_bd(j,h) + ((-1) * (k(j) * lambda(j,h))) * nu_bcd2 - piL_b(j,h) =E= 0;
-stat_bc.. 1 + nu_bcd1 + nu_bcd2 - piL_bc =E= 0;
+stat_bc.. 1 + nu_bcd2 - piL_bc =E= 0;
 stat_oc.. 1 + nu_ocd - piL_oc =E= 0;
-stat_x(i,j).. ((-1) * c(i,j)) * nu_ocd + lam_ab(i) + ((-1) * p(i,j)) * lam_db(j) + sum(h, ((-1) * p(i,j)) * lam_yd(j,h)) - piL_x(i,j) =E= 0;
-stat_y(j,h).. nu_bd(j,h) + ((-1) * (k(j) * ((-1) * (gamma(j, h))))) * nu_bcd1 + deltb(j,h) * lam_db(j) + lam_yd(j,h) - piL_y(j,h) + piU_y(j,h) =E= 0;
+stat_x(i,j).. ((-1) * c(i,j)) * nu_ocd + lam_ab(i) + sum(h, ((-1) * p(i,j)) * lam_yd(j,h)) - piL_x(i,j) =E= 0;
+stat_y(j,h).. nu_bd(j,h) + lam_yd(j,h) - piL_y(j,h) + piU_y(j,h) =E= 0;
 
 * Inequality complementarity equations
 comp_ab(i).. ((-1) * (sum(j, x(i,j)) - aa(i))) =G= 0;
-comp_db(j).. sum(i, p(i,j) * x(i,j)) - sum(h$(deltb(j,h)), y(j,h)) =G= 0;
 comp_yd(j,h).. ((-1) * (y(j,h) - sum(i, p(i,j) * x(i,j)))) =G= 0;
 
 * Lower bound complementarity equations
@@ -155,7 +148,6 @@ comp_up_y(j,h).. deltb(j,h) - y(j,h) =G= 0;
 * Original equality equations
 bd(j,h).. b(j,h) =E= dd(j,h) - y(j,h);
 ocd.. oc =E= sum((i,j), c(i,j) * x(i,j));
-bcd1.. bc =E= sum(j, k(j) * (ed(j) - sum(h, gamma(j, h) * y(j,h))));
 bcd2.. bc =E= sum((j,h), k(j) * lambda(j,h) * b(j,h));
 obj.. phi =E= oc + bc;
 
@@ -180,9 +172,7 @@ Model mcp_model /
     stat_x.x,
     stat_y.y,
     comp_ab.lam_ab,
-    comp_db.lam_db,
     comp_yd.lam_yd,
-    bcd1.nu_bcd1,
     bcd2.nu_bcd2,
     bd.nu_bd,
     obj.phi,

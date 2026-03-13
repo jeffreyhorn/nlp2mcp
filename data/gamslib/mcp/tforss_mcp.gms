@@ -73,7 +73,7 @@ Variables
     phil
     phip
     phi
-    nu_lbal(cl)
+    nu_lbal(c)
     nu_cap(m)
     nu_ainvc
     nu_aproc
@@ -151,13 +151,13 @@ stat_phil.. 1 + nu_acutc =E= 0;
 stat_phip.. 1 + nu_aplnt =E= 0;
 stat_phir.. 1 + nu_aproc =E= 0;
 stat_phix.. -1 + nu_asales =E= 0;
-stat_r(c)$(cl(c)).. sum(cl, nu_lbal(cl)) + (((-1) * muc) * nu_acutc)$sameas(c, 'pulplogs') =E= 0;
+stat_r(c)$(cl(c)).. nu_lbal(c) + (((-1) * muc) * nu_acutc)$(sameas(c, 'pulplogs')) =E= 0;
 stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) - piL_v(s,k,at) =E= 0;
-stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$sameas(c, 'pulp') - piL_x(c) =E= 0;
+stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$(sameas(c, 'pulp')) - piL_x(c) =E= 0;
 stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) - piL_z(p) =E= 0;
 
 * Inequality complementarity equations
-comp_bal(c).. sum(p, a(c,p) * z(p)) + r(c)$cl(c) - x(c)$cf(c) =G= 0;
+comp_bal(c).. sum(p, a(c,p) * z(p)) + r(c)$(cl(c)) - x(c)$(cf(c)) =G= 0;
 comp_landc(s,k).. ((-1) * (sum(at, v(s,k,at) * age(at)) - land(s) * scd(k))) =G= 0;
 
 * Lower bound complementarity equations
@@ -186,6 +186,7 @@ benefit.. phi =E= phix - phik - phir - phil - phip;
 r.fx(c)$(not (cl(c))) = 0;
 x.fx(c)$(not (cf(c))) = 0;
 piL_x.fx(c)$(not (cf(c))) = 0;
+nu_lbal.fx(c)$(not (cl(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

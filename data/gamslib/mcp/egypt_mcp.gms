@@ -98,40 +98,31 @@ Scalars
     totmd /749576/
 ;
 
-cn(c) = yes$demdat(c,"domes-cons");
-cf(c) = yes$sum(z, feed(c,z));
-
-grdfcon(cf) = 1;
-
-stran(r,rp) = tranc(r,rp);
-dfyld(r,cf) = sum(z$(zr(z,r)), feed(cf,z) * grdfcon(cf));
-netcs(c,r) = (sum(z$(zr(z,r)), tractor(c,z) * ptrl) + cropdat(c,"misc") + cropdat(c,"pest") + cropdat(c,"n-fer") * pnfl + ppfl * cropdat(c,"p-fer") - indprod(c,r) * prby(c))$yield(c,r);
-yld(c,c,r) = yield(c,r);
-yld("veg-oil",c,r) = yield(c,r) * con(c);
-yld(cn,c,r) = yield(c,r);
-rep1(c,z,"land",tm) = land(c,z,tm);
-rep1(c,z,"land","total") = sum(tm, land(c,z,tm));
-rep1(c,z,"water",tm) = water(c,z,tm);
-rep1(c,z,"water","total") = sum(tm, water(c,z,tm));
-rep1(c,z,"laborm",tm) = laborm(c,z,tm);
-rep1(c,z,"laborm","total") = sum(tm, laborm(c,z,tm));
+$onImplicitAssign
+cf(c) = yes$(sum(z, feed(c,z)));
 pe(c) = demdat(c,"export-p");
 pm(c) = demdat(c,"import-p");
-beta(cn) = demdat(cn,"base-p") / demdat(cn,"domes-cons") / demdat(cn,"elas");
 price(c) = demdat(c,"base-p");
-regwatr(r,tm) = regwat(r,tm) * eff(r);
-regwatr(r,"total") = sum(tm, regwatr(r,tm));
+cn(c) = yes$(demdat(c,"domes-cons"));
+beta(cn)$(demdat(cn,"domes-cons")) = demdat(cn,"base-p") / demdat(cn,"domes-cons") / demdat(cn,"elas");
 alpha(cn) = demdat(cn,"base-p") - beta(cn) * demdat(cn,"domes-cons");
+demdat(cn,"dem-a") = alpha(cn);
+demdat(cn,"dem-b") = beta(cn);
+$offImplicitAssign
+
+stran(r,rp) = tranc(r,rp);
+netcs(c,r) = (sum(z$(zr(z,r)), tractor(c,z) * ptrl) + cropdat(c,"misc") + cropdat(c,"pest") + cropdat(c,"n-fer") * pnfl + ppfl * cropdat(c,"p-fer") - indprod(c,r) * prby(c))$(yield(c,r));
+yld(c,c,r) = yield(c,r);
+yld("veg-oil",c,r) = yield(c,r) * con(c);
+yld(cn,c,r)$(cnc(cn,c)) = yield(c,r);
+yld(c,c,r)$(sum(cn, cnc(cn,c))) = 0;
 pmax(cn) = price(cn) * high;
 pmin(cn) = price(cn) * low;
-demdat(cn,"dem-a") = alpha(cn);
 qmax(cn) = (pmin(cn) - alpha(cn)) / beta(cn);
 qmin(cn) = (pmax(cn) - alpha(cn)) / beta(cn);
-demdat(cn,"dem-b") = beta(cn);
 incr(cn) = (qmax(cn) - qmin(cn)) / (card(g) - 1);
 qs(cn,g) = qmin(cn) + incr(cn) * (ord(g) - 1);
 ws(cn,g) = alpha(cn) * qs(cn,g) + 0.5 * beta(cn) * sqr(qs(cn,g));
-rs(cn,g) = alpha(cn) * qs(cn,g) + beta(cn) * sqr(qs(cn,g));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -260,15 +251,15 @@ Equations
 
 * Stationarity equations
 stat_anut(nt,r).. (-1) * lam_nutb(nt,r) - piL_anut(nt,r) =E= 0;
-stat_exports(c)$(cn(c)).. sum(cn, (-1) * nu_demb(cn)) - piL_exports(c) + piU_exports(c) =E= 0;
+stat_exports(c)$(cn(c)).. (-1) * nu_demb(c) - piL_exports(c) + piU_exports(c) =E= 0;
 stat_flab(r,tm).. day * regwagm(r,tm) - lam_labbal(r,tm) - piL_flab(r,tm) + piU_flab(r,tm) =E= 0;
-stat_fodder(r,c).. sum(cf, nu_fodb(r,cf)) - lam_gfodb(r) - piL_fodder(r,c) =E= 0;
-stat_imports(c)$(cn(c)).. sum(cn, nu_demb(cn)) - piL_imports(c) + piU_imports(c) =E= 0;
-stat_natq(c,g)$(cn(c)).. sum(cn, ((-1) * qs(cn,g)) * nu_demb(cn)) + sum(cn, nu_conv(cn)) - piL_natq(c,g) =E= 0;
-stat_sales(c)$(cn(c)).. sum(cn, (1 - los(cn)) * nu_demb(cn)) + sum(cn, lam_comb(cn)) - piL_sales(c) =E= 0;
+stat_fodder(r,c).. nu_fodb(r,c) - lam_gfodb(r) - piL_fodder(r,c) =E= 0;
+stat_imports(c)$(cn(c)).. nu_demb(c) - piL_imports(c) + piU_imports(c) =E= 0;
+stat_natq(c,g)$(cn(c)).. ((-1) * qs(c,g)) * nu_demb(c) + nu_conv(c) - piL_natq(c,g) =E= 0;
+stat_sales(c)$(cn(c)).. (1 - los(c)) * nu_demb(c) + lam_comb(c) - piL_sales(c) =E= 0;
 stat_tlab(r,tm).. 2 * day * regwagm(r,tm) - lam_labbal(r,tm) - piL_tlab(r,tm) =E= 0;
 stat_trans(c,r,rp).. stran(r,rp) - piL_trans(c,r,rp) =E= 0;
-stat_xcrop(r,c).. netcs(c,r) + sum(cf, ((-1) * sum(z$(zr(z,r)), feed(cf,z))) * nu_fodb(r,cf)) + sum(cn, ((-1) * yld(cn,cn,r)) * lam_comb(cn)) + sum(s, 1$sv(s,c) * lam_vegetb(s,r)) - piL_xcrop(r,c) =E= 0;
+stat_xcrop(r,c).. netcs(c,r) + ((-1) * sum(z$(zr(z,r)), feed(c,z))) * nu_fodb(r,c) + ((-1) * yld(c,c,r)) * lam_comb(c) + sum(s, 1$(sv(s,c)) * lam_vegetb(s,r)) - piL_xcrop(r,c) =E= 0;
 
 * Inequality complementarity equations
 comp_comb(cn).. ((-1) * (sales(cn) - sum((r,c), xcrop(r,c) * yld(cn,c,r)))) =G= 0;
@@ -297,7 +288,7 @@ comp_up_imports(c).. tlimit(c,"imports") - imports(c) =G= 0;
 * Original equality equations
 demb(cn).. sales(cn) * (1 - los(cn)) + imports(cn) =E= exports(cn) + sum(g, qs(cn,g) * natq(cn,g));
 conv(cn).. sum(g, natq(cn,g)) =E= 1;
-fodb(r,cf).. fodder(r,cf) =E= xcrop(r,cf) * sum(z$(zr(z,r)), feed(cf,z)) + sum(rp$(tranc(r,rp)), trans(cf,rp,r) - trans(cf,r,rp))$ct(cf);
+fodb(r,cf).. fodder(r,cf) =E= xcrop(r,cf) * sum(z$(zr(z,r)), feed(cf,z)) + sum(rp$(tranc(r,rp)), trans(cf,rp,r) - trans(cf,r,rp))$(ct(cf));
 obj.. cps =E= totmd + sum(cn, sum(g, natq(cn,g) * ws(cn,g)) + exports(cn) * pe(cn) - imports(cn) * pm(cn)) - sum((ct,r,rp), trans(ct,r,rp) * stran(r,rp)) - sum((r,c), xcrop(r,c) * netcs(c,r)) - sum((r,nt), anut(nt,r) * prnut(nt)) - sum((r,tm), (flab(r,tm) + 2 * tlab(r,tm)) * regwagm(r,tm) * day);
 
 
@@ -318,6 +309,13 @@ natq.fx(c,g)$(not (cn(c))) = 0;
 piL_natq.fx(c,g)$(not (cn(c))) = 0;
 sales.fx(c)$(not (cn(c))) = 0;
 piL_sales.fx(c)$(not (cn(c))) = 0;
+nu_conv.fx(c)$(not (cn(c))) = 0;
+nu_demb.fx(c)$(not (cn(c))) = 0;
+nu_fodb.fx(r,c)$(not (cf(c))) = 0;
+lam_comb.fx(c)$(not (cn(c))) = 0;
+nu_conv.fx(c)$(not (cn(c))) = 0;
+nu_demb.fx(c)$(not (cn(c))) = 0;
+nu_fodb.fx(r,c)$(not (cf(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -40,7 +40,9 @@ Scalars
     objold /0/
 ;
 
+$onImplicitAssign
 arc(n,np) = pairs(n,np,"kappa");
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -54,13 +56,8 @@ arc(n,np) = pairs(n,np,"kappa");
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    tt(l,lp)
     obj
     nu_bal
-    nu_sbal(l)
-    nu_dbal(l)
-    nu_in(l)
-    nu_objoli
 ;
 
 Positive Variables
@@ -83,28 +80,13 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 t.l(n,np) = 1;
-tt.l("one","one") = 1.0;
-tt.l("one","two") = 1.0;
-tt.l("one","three") = 1.0;
-tt.l("two","one") = 1.0;
-tt.l("two","two") = 1.0;
-tt.l("two","three") = 1.0;
-tt.l("three","one") = 1.0;
-tt.l("three","two") = 1.0;
-tt.l("three","three") = 1.0;
-d.l("one") = 25.0;
-d.l("two") = 25.0;
-d.l("three") = 25.0;
-d.l("four") = 25.0;
-d.l("five") = 25.0;
-d.l("six") = 25.0;
+d.l('one') = 25.0;
+d.l('two') = 25.0;
+d.l('three') = 25.0;
 d.l(n) = min(max(d.l(n), 1e-6), d.up(n));
-s.l("one") = 25.0;
-s.l("two") = 25.0;
-s.l("three") = 25.0;
-s.l("four") = 25.0;
-s.l("five") = 25.0;
-s.l("six") = 25.0;
+s.l('one') = 25.0;
+s.l('two') = 25.0;
+s.l('three') = 25.0;
 s.l(n) = min(max(s.l(n), 1e-6), s.up(n));
 
 * ============================================
@@ -119,31 +101,21 @@ Equations
     stat_d(n)
     stat_s(n)
     stat_t(n,np)
-    stat_tt(l,lp)
     comp_lo_d(n)
     comp_lo_s(n)
     comp_lo_t(n,np)
     bal
-    dbal(l)
-    in(l)
     objdef
-    objoli
-    sbal(l)
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(l, l__);
-
 * Stationarity equations
-stat_d(n)$(l(n)).. nu_bal$sameas(n, 'one') + sum(l, nu_dbal(l)) + sum(l, nu_in(l)) + sum(l, ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * sum(lp, tt(l,lp)))) * nu_objoli)$sameas(n, 'one') - piL_d(n) =E= 0;
-stat_s(n)$(l(n)).. ((-1) * nu_bal)$sameas(n, 'one') + sum(l, nu_sbal(l)) + sum(l, (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) * nu_objoli)$sameas(n, 'one') - piL_s(n) =E= 0;
-stat_t(n,np).. sum(l, (-1) * nu_in(l)) - piL_t(n,np) =E= 0;
-stat_tt(l,lp).. ((-1) * nu_dbal(l)) - nu_in(l) =E= 0;
+stat_d(n)$(l(n)).. nu_bal$(sameas(n, 'one')) - piL_d(n) =E= 0;
+stat_s(n)$(l(n)).. ((-1) * nu_bal)$(sameas(n, 'one')) - piL_s(n) =E= 0;
+stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) - piL_t(n,np) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(n).. d(n) - 0 =G= 0;
@@ -152,11 +124,7 @@ comp_lo_t(n,np).. t(n,np) - 0 =G= 0;
 
 * Original equality equations
 bal.. sum(l, d(l)) =E= sum(l, s(l));
-objdef.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sqr(d(l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum(arc, pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
-sbal(l).. s(l) =E= sum(lp, tt(l,lp));
-dbal(l).. d(l) =E= sum(lp, tt(lp,l));
-in(l).. d(l) =E= tt(l,l) + sum((n,l__), t(n,l__));
-objoli.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sum(lp, (d.l(l) - tt.l(lp,l) + tt(lp,l)) * tt(lp,l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum(arc, pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
+objdef.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sqr(d(l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum((n,np)$(arc(n,np)), pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
 
 
 * ============================================
@@ -188,13 +156,8 @@ Model mcp_model /
     stat_d.d,
     stat_s.s,
     stat_t.t,
-    stat_tt.tt,
     bal.nu_bal,
-    dbal.nu_dbal,
-    in.nu_in,
     objdef.obj,
-    objoli.nu_objoli,
-    sbal.nu_sbal,
     comp_lo_d.piL_d,
     comp_lo_s.piL_s,
     comp_lo_t.piL_t

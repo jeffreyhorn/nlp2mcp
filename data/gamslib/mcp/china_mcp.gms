@@ -84,8 +84,10 @@ Scalars
     hdr /9/
 ;
 
+$onImplicitAssign
 ss(s,"normal") = 1;
 ss(sh,"high") = 1;
+$offImplicitAssign
 
 gio(g,'barley') = -1;
 gio(g,'wheat') = -1;
@@ -93,39 +95,39 @@ gio(g,'e-rice') = -1;
 gio(g,'m-rice') = -1;
 gio(g,'l-rice') = -1;
 gio(g,'l-sc-rice') = -1;
-nc('c-straw','n') = 0.63;
-nc('c-gm','n') = 0.4;
-nc('c-hyacinth','n') = 0.24;
-nc('pig-m','n') = 0.35;
-nc('straw-b','n') = 0.6;
-nc('azolla','n') = 0.34;
-nc('nightsoil','n') = 0.65;
-nc('rapes-c','n') = 4.6;
-nc('amm-water','n') = 3.75;
-nc('amm-bi','n') = 17;
-nc('ssp','n') = 15;
-nu('c-straw','n','n-imm') = 10;
-nu('c-straw','n','n-tot') = 76;
-nu('c-gm','n','n-imm') = 10;
-nu('c-gm','n','n-tot') = 76;
-nu('c-hyacinth','n','n-imm') = 10;
-nu('c-hyacinth','n','n-tot') = 76;
-nu('pig-m','n','n-imm') = 9;
-nu('pig-m','n','n-tot') = 76;
-nu('straw-b','n','n-imm') = 9;
-nu('straw-b','n','n-tot') = 76;
-nu('nightsoil','n','n-imm') = 9;
-nu('nightsoil','n','n-tot') = 76;
-nu('azolla','n','n-imm') = 20;
-nu('azolla','n','n-tot') = 76;
-nu('rapes-c','n','n-imm') = 10;
-nu('rapes-c','n','n-tot') = 76;
-nu('amm-water','n','n-imm') = 20;
-nu('amm-water','n','n-tot') = 40;
-nu('amm-bi','n','n-imm') = 22;
-nu('amm-bi','n','n-tot') = 45;
-nu('ssp','n','n-imm') = 0;
-nu('ssp','n','n-tot') = 0;
+nc('c-straw',n) = 0.63;
+nc('c-gm',n) = 0.4;
+nc('c-hyacinth',n) = 0.24;
+nc('pig-m',n) = 0.35;
+nc('straw-b',n) = 0.6;
+nc('azolla',n) = 0.34;
+nc('nightsoil',n) = 0.65;
+nc('rapes-c',n) = 4.6;
+nc('amm-water',n) = 3.75;
+nc('amm-bi',n) = 17;
+nc('ssp',n) = 15;
+nu('c-straw',n,'n-imm') = 10;
+nu('c-straw',n,'n-tot') = 76;
+nu('c-gm',n,'n-imm') = 10;
+nu('c-gm',n,'n-tot') = 76;
+nu('c-hyacinth',n,'n-imm') = 10;
+nu('c-hyacinth',n,'n-tot') = 76;
+nu('pig-m',n,'n-imm') = 9;
+nu('pig-m',n,'n-tot') = 76;
+nu('straw-b',n,'n-imm') = 9;
+nu('straw-b',n,'n-tot') = 76;
+nu('nightsoil',n,'n-imm') = 9;
+nu('nightsoil',n,'n-tot') = 76;
+nu('azolla',n,'n-imm') = 20;
+nu('azolla',n,'n-tot') = 76;
+nu('rapes-c',n,'n-imm') = 10;
+nu('rapes-c',n,'n-tot') = 76;
+nu('amm-water',n,'n-imm') = 20;
+nu('amm-water',n,'n-tot') = 40;
+nu('amm-bi',n,'n-imm') = 22;
+nu('amm-bi',n,'n-tot') = 45;
+nu('ssp',n,'n-imm') = 0;
+nu('ssp',n,'n-tot') = 0;
 pno('barley',n) = 3;
 pno('wheat',n) = 2.75;
 pno('e-rice',n) = 1.9;
@@ -134,26 +136,15 @@ pno('l-rice',n) = 2.05;
 pno('l-sc-rice',n) = 1.9;
 pno('rapeseed',n) = 7;
 pno('g-manure',n) = 0;
-crec(cf,'c-straw') = 1;
-crec(cf,'c-gm') = 1;
-crec(cf,'c-hyacinth') = 1;
-crec(cf,'pig-m') = 1;
-crec(cf,'straw-b') = 1;
-crec(cf,'nightsoil') = 1;
-crec(cf,'azolla') = 1;
-crec(cf,'rapes-c') = 1;
-crec(cf,'amm-water') = 1;
-crec(cf,'amm-bi') = 1;
-crec(cf,'ssp') = 1;
 
 yield(ca) = cdata(ca,"yield") / jinperkg / 1000;
 cxcrop(s) = sum(c, cdata(c,"cash-cost") * mcp(s,c));
 aqsprice(ca) = 1.1 * cdata(ca,"proc-price");
 aqsprice(c) = 1.5 * cdata(c,"proc-price");
 dlab(t,c) = lu(t,c) / days(t);
-tday = sum(t, days(t));
 enc(cf,en) = sum(nh, nu(cf,nh,en) * nc(cf,nh)) / 100;
 schem(s) = 0.001 * sum(c, chemnall(c,"crops") * mcp(s,c));
+crec(cf,cf)$((not sum(ca, crec(ca,cf)))) = 1;
 cno(c,n) = pno(c,n) * yield(c) / 100;
 hyield(c) = yield(c) * 1.07;
 lab(t,s) = sum(c, dlab(t,c) * mcp(s,c));
@@ -285,15 +276,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aqsales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$sameas(ca, 'barley') - piL_aqsales(ca) =E= 0;
+stat_aqsales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$(sameas(ca, 'barley')) - piL_aqsales(ca) =E= 0;
 stat_ccost.. 1 + nu_cdef =E= 0;
-stat_purchase(ca)$(cp(ca)).. (((-1) * purdata(ca,"price")) * nu_cdef)$sameas(ca, 'amm-bi') - piL_purchase(ca) =E= 0;
-stat_sales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"qsa")) * lam_chemn)$sameas(ca, 'barley') + ((-1) * lam_grainq)$sameas(ca, 'barley') - piL_sales(ca) =E= 0;
-stat_xcrop(s,f)$(ss(s,f)).. ((-1) * (cxcrop(s) * 1$ss(s,f))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$ss(s,f))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$ss(s,f) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$ss(s,f) * lam_fert(en)) + ((-1) * (schem(s) * 1$ss(s,f))) * lam_chemn + 1$ss(s,f) * lam_landp + sum(c, ((-1) * ((0.84 * mcp(s,c) - 0.16 * mcp(s,c)) * 1$ss(s,f))) * lam_gmseed) - piL_xcrop(s,f) =E= 0;
+stat_purchase(ca)$(cp(ca)).. (((-1) * purdata(ca,"price")) * nu_cdef)$(sameas(ca, 'amm-bi')) - piL_purchase(ca) =E= 0;
+stat_sales(ca)$(cs(ca)).. (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(sameas(ca, 'barley')) + ((-1) * lam_grainq)$(sameas(ca, 'barley')) - piL_sales(ca) =E= 0;
+stat_xcrop(s,f)$(ss(s,f)).. ((-1) * (cxcrop(s) * 1$(ss(s,f)))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$(ss(s,f)))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$(ss(s,f)) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$(ss(s,f)) * lam_fert(en)) + ((-1) * (schem(s) * 1$(ss(s,f)))) * lam_chemn + 1$(ss(s,f)) * lam_landp + sum(c, ((-1) * ((0.84 * mcp(s,c) - 0.16 * mcp(s,c)) * 1$(ss(s,f)))) * lam_gmseed) - piL_xcrop(s,f) =E= 0;
 stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) - piL_xfeed(g) =E= 0;
-stat_xfert(ca)$(cf(ca)).. sum(cf, ((-1) * cxfert(cf)) * nu_cdef)$sameas(ca, 'amm-bi') + sum(cf, crec(ca,cf) * lam_mb(ca)) + sum(cf, sum(en, ((-1) * (0.01 * enc(cf,en))) * lam_fert(en))) - piL_xfert(ca) =E= 0;
+stat_xfert(ca)$(cf(ca)).. sum(cf, ((-1) * cxfert(cf)) * nu_cdef)$(sameas(ca, 'amm-bi')) + sum(cf, crec(ca,cf) * lam_mb(ca)) + sum(cf, (crec(ca,cf) * lam_mb(ca-2))$(ord(ca) > 2)) + sum(cf, (crec(ca,cf) * lam_mb(ca+11))$(ord(ca) <= card(ca) - 11)) + sum(cf, (crec(ca,cf) * lam_mb(ca+13))$(ord(ca) <= card(ca) - 13)) + sum(cf, (crec(ca,cf) * lam_mb(ca-7))$(ord(ca) > 7)) + sum(cf, (crec(ca,cf) * lam_mb(ca+10))$(ord(ca) <= card(ca) - 10)) + sum(cf, (crec(ca,cf) * lam_mb(ca+12))$(ord(ca) <= card(ca) - 12)) + sum(cf, (crec(ca,cf) * lam_mb(ca+8))$(ord(ca) <= card(ca) - 8)) + sum(cf, (crec(ca,cf) * lam_mb(ca-3))$(ord(ca) > 3)) + sum(cf, (crec(ca,cf) * lam_mb(ca+15))$(ord(ca) <= card(ca) - 15)) + sum(cf, (crec(ca,cf) * lam_mb(ca+17))$(ord(ca) <= card(ca) - 17)) + sum(cf, (crec(ca,cf) * lam_mb(ca+5))$(ord(ca) <= card(ca) - 5)) + sum(cf, (crec(ca,cf) * lam_mb(ca+7))$(ord(ca) <= card(ca) - 7)) + sum(cf, (crec(ca,cf) * lam_mb(ca+21))$(ord(ca) <= card(ca) - 21)) + sum(cf, (crec(ca,cf) * lam_mb(ca+1))$(ord(ca) <= card(ca) - 1)) + sum(cf, (crec(ca,cf) * lam_mb(ca+3))$(ord(ca) <= card(ca) - 3)) + sum(cf, (crec(ca,cf) * lam_mb(ca-1))$(ord(ca) > 1)) + sum(cf, (crec(ca,cf) * lam_mb(ca-4))$(ord(ca) > 4)) + sum(cf, (crec(ca,cf) * lam_mb(ca+14))$(ord(ca) <= card(ca) - 14)) + sum(cf, (crec(ca,cf) * lam_mb(ca+4))$(ord(ca) <= card(ca) - 4)) + sum(cf, (crec(ca,cf) * lam_mb(ca+18))$(ord(ca) <= card(ca) - 18)) + sum(cf, (crec(ca,cf) * lam_mb(ca+9))$(ord(ca) <= card(ca) - 9)) + sum(cf, (crec(ca,cf) * lam_mb(ca+6))$(ord(ca) <= card(ca) - 6)) + sum(cf, (crec(ca,cf) * lam_mb(ca-6))$(ord(ca) > 6)) + sum(cf, (crec(ca,cf) * lam_mb(ca+2))$(ord(ca) <= card(ca) - 2)) + sum(cf, (crec(ca,cf) * lam_mb(ca+19))$(ord(ca) <= card(ca) - 19)) + sum(cf, (crec(ca,cf) * lam_mb(ca+16))$(ord(ca) <= card(ca) - 16)) + sum(cf, (crec(ca,cf) * lam_mb(ca+20))$(ord(ca) <= card(ca) - 20)) + sum(cf, (crec(ca,cf) * lam_mb(ca-5))$(ord(ca) > 5)) + sum(cf, (crec(ca,cf) * lam_mb(ca+23))$(ord(ca) <= card(ca) - 23)) + sum(cf, (crec(ca,cf) * lam_mb(ca+22))$(ord(ca) <= card(ca) - 22)) + sum(cf, (crec(ca,cf) * lam_mb(ca-11))$(ord(ca) > 11)) + sum(cf, (crec(ca,cf) * lam_mb(ca-13))$(ord(ca) > 13)) + sum(cf, (crec(ca,cf) * lam_mb(ca-18))$(ord(ca) > 18)) + sum(cf, (crec(ca,cf) * lam_mb(ca-14))$(ord(ca) > 14)) + sum(cf, (crec(ca,cf) * lam_mb(ca-10))$(ord(ca) > 10)) + sum(cf, (crec(ca,cf) * lam_mb(ca-8))$(ord(ca) > 8)) + sum(cf, (crec(ca,cf) * lam_mb(ca-12))$(ord(ca) > 12)) + sum(cf, (crec(ca,cf) * lam_mb(ca-15))$(ord(ca) > 15)) + sum(cf, (crec(ca,cf) * lam_mb(ca-17))$(ord(ca) > 17)) + sum(cf, (crec(ca,cf) * lam_mb(ca-9))$(ord(ca) > 9)) + sum(cf, (crec(ca,cf) * lam_mb(ca-16))$(ord(ca) > 16)) + sum(cf, (crec(ca,cf) * lam_mb(ca-19))$(ord(ca) > 19)) + sum(cf, (crec(ca,cf) * lam_mb(ca+25))$(ord(ca) <= card(ca) - 25)) + sum(cf, (crec(ca,cf) * lam_mb(ca+24))$(ord(ca) <= card(ca) - 24)) + sum(cf, (crec(ca,cf) * lam_mb(ca-21))$(ord(ca) > 21)) + sum(cf, (crec(ca,cf) * lam_mb(ca-20))$(ord(ca) > 20)) + sum(cf, (crec(ca,cf) * lam_mb(ca-25))$(ord(ca) > 25)) + sum(cf, (crec(ca,cf) * lam_mb(ca-22))$(ord(ca) > 22)) + sum(cf, (crec(ca,cf) * lam_mb(ca-24))$(ord(ca) > 24)) + sum(cf, (crec(ca,cf) * lam_mb(ca-23))$(ord(ca) > 23)) + sum(cf, sum(en, ((-1) * (0.01 * enc(cf,en))) * lam_fert(en))) - piL_xfert(ca) =E= 0;
 stat_xpig(p).. ((-1) * cxpig(p)) * nu_cdef + sum(ca, ((-1) * pigio(ca,p)) * lam_mb(ca)) - piL_xpig(p) =E= 0;
-stat_xupland(ca)$(cu(ca)).. sum(cu, sum(en, 0.001 * nup(cu,en) * lam_fert(en))) + lam_landu$sameas(ca, 'fodder') - piL_xupland(ca) =E= 0;
+stat_xupland(ca)$(cu(ca)).. sum(cu, sum(en, 0.001 * nup(cu,en) * lam_fert(en))) + lam_landu$(sameas(ca, 'fodder')) - piL_xupland(ca) =E= 0;
 
 * Inequality complementarity equations
 comp_chemn.. sum((s,f)$(ss(s,f)), schem(s) * xcrop(s,f)) + sum(cs, chemnall(cs,"qsa") * sales(cs) + chemnall(cs,"aqsa") * aqsales(cs)) - purchase("amm-bi") =G= 0;
@@ -303,7 +294,7 @@ comp_grainq.. sum(g, sales(g)) - grainquota =G= 0;
 comp_labor(t).. ((-1) * (sum((s,f)$(ss(s,f)), lab(t,s) * xcrop(s,f)) - (1 + labj(t)) * lsup)) =G= 0;
 comp_landp.. ((-1) * (sum((s,f)$(ss(s,f)), xcrop(s,f)) - paddy)) =G= 0;
 comp_landu.. ((-1) * (sum(cu, xupland(cu)) - upland)) =G= 0;
-comp_mb(ca).. sum((s,f)$(ss(s,f)), syield(ca,s,f) * xcrop(s,f)) + sum(p, pigio(ca,p) * xpig(p)) + purchase(ca)$cp(ca) + sum(g, gio(ca,g) * xfeed(g)) + (yieldu(ca) * xupland(ca))$cu(ca) - ((sales(ca) + aqsales(ca))$cs(ca) + sum(cf, crec(ca,cf) * xfert(cf))) =G= 0;
+comp_mb(ca).. sum((s,f)$(ss(s,f)), syield(ca,s,f) * xcrop(s,f)) + sum(p, pigio(ca,p) * xpig(p)) + purchase(ca)$(cp(ca)) + sum(g, gio(ca,g) * xfeed(g)) + (yieldu(ca) * xupland(ca))$(cu(ca)) - ((sales(ca) + aqsales(ca))$(cs(ca)) + sum(cf, crec(ca,cf) * xfert(cf))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_aqsales(ca).. aqsales(ca) - 0 =G= 0;

@@ -62,7 +62,7 @@ c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e
 
 Variables
     pvcost
-    nu_constr(sp,j)
+    nu_constr(s,i)
 ;
 
 Positive Variables
@@ -101,7 +101,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(spp, sum(j, ((-1) * (b * pi(s,i,sp,j,spp))) * nu_constr(sp,j))) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum(spp, ((-1) * (b * pi(s,i,s,i,spp))) * nu_constr(s,i)) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
 

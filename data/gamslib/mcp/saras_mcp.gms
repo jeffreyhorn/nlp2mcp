@@ -176,17 +176,17 @@ Scalars
     start1 /0/
 ;
 
+$onImplicitAssign
 bt(yr) = yes$(ord(yr) = card(ot));
 pt(yr) = yes$(ord(yr) = card(ot) + 1);
 ft(yr) = yes$(ord(yr) > card(ot));
+$offImplicitAssign
 
 NF(r,"f1") = trans_nf(r,"f1");
 NF(r,"f2") = run_nf2(r,"f2");
 NF(r,f) = bas_nf(r,f);
-FLC(r,"f1",res) = 0.725 * bas_nf(r,"f1") * Bas_FLC(r,"f1",res) / nf(r,"f1");
+FLC(r,'f1',res)$(fix(res)) = 0.725 * bas_nf(r,"f1") * Bas_FLC(r,"f1",res) / nf(r,"f1");
 FLC(r,f,res) = bas_FLC(r,f,res);
-rpro(r,p) = rpro(r,p) - diff(r,p);
-rpx(r,p) = rpro(r,p) - rcc(r,p);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -200,28 +200,17 @@ rpx(r,p) = rpro(r,p) - rcc(r,p);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    clpobj
-    llpobj
-    plpobj
-    flpobj
-    rlpobj
-    nlpobj
     nclpobj
     nllpobj
     nplpobj
     nflpobj
     nrlpobj
     nnlpobj
-    nu_nlpobj_
 ;
 
 Positive Variables
-    cx
-    lx
     ncx
     nlx
-    piL_cx
-    piL_lx
     piL_ncx
     piL_nlx
 ;
@@ -233,27 +222,12 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+* POSITIVE variables are set to 1.
 
-cx.l = 1;
-lx.l(r,f,ap) = llx(r,f,ap);
-lx.l = min(max(lx.l, 1e-6), lx.up);
 ncx.l = 1;
 nlx.l = 1;
 
 * Variable Scaling
-cx.scale(r,f,"dry","wmaize") = 10;
-cx.scale(r,f,"dry","ymaize") = 10;
-cx.scale(r,f,"dry","wheat") = 10;
-cx.scale(r,"f1","irrig","sorghum") = 0.1;
-cx.scale(r,"f2","irrig","wheat") = 0.1;
-lx.scale(r,f,"beef-cattle") = 10;
-lx.scale(r,f,"dairy-cattle") = 1;
-lx.scale(r,f,"mutton-sheep") = 100;
-lx.scale(r,f,"pork-pig") = 1;
-lx.scale(r,f,"chicken-broilers") = 1000;
-lx.scale(r,f,"chicken-eggs") = 100;
 ncx.scale(r,f,"dry","wmaize") = 10;
 ncx.scale(r,f,"dry","ymaize") = 10;
 ncx.scale(r,f,"dry","wheat") = 10;
@@ -275,26 +249,15 @@ nlx.scale(r,f,"chicken-eggs") = 100;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_clpobj
-    stat_cx
-    stat_flpobj
-    stat_llpobj
-    stat_lx
     stat_nclpobj
     stat_ncx
     stat_nflpobj
     stat_nllpobj
-    stat_nlpobj
     stat_nlx
     stat_nplpobj
     stat_nrlpobj
-    stat_plpobj
-    stat_rlpobj
-    comp_lo_cx
-    comp_lo_lx
     comp_lo_ncx
     comp_lo_nlx
-    nlpobj_
     nnlpobj_
 ;
 
@@ -303,32 +266,21 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_clpobj.. 0 =E= 0;
-stat_cx.. ((-1) * piL_cx) =E= 0;
-stat_flpobj.. 0 =E= 0;
-stat_llpobj.. 0 =E= 0;
-stat_lx.. ((-1) * piL_lx) =E= 0;
 stat_nclpobj.. 0 =E= 0;
 stat_ncx.. ((-1) * piL_ncx) =E= 0;
 stat_nflpobj.. 0 =E= 0;
 stat_nllpobj.. 0 =E= 0;
-stat_nlpobj.. (-1) * nu_nlpobj_ =E= 0;
 stat_nlx.. ((-1) * piL_nlx) =E= 0;
 stat_nplpobj.. 0 =E= 0;
 stat_nrlpobj.. 0 =E= 0;
-stat_plpobj.. 0 =E= 0;
-stat_rlpobj.. 0 =E= 0;
 
 * Inequality complementarity equations
 
 * Lower bound complementarity equations
-comp_lo_cx.. cx - 0 =G= 0;
-comp_lo_lx.. lx - 0 =G= 0;
 comp_lo_ncx.. ncx - 0 =G= 0;
 comp_lo_nlx.. nlx - 0 =G= 0;
 
 * Original equality equations
-nlpobj_.. sum(r, rlpobj(r)) =E= nlpobj;
 nnlpobj_.. sum(r, nrlpobj(r)) =E= nnlpobj;
 
 
@@ -346,25 +298,14 @@ nnlpobj_.. sum(r, nrlpobj(r)) =E= nnlpobj;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_clpobj.clpobj,
-    stat_cx.cx,
-    stat_flpobj.flpobj,
-    stat_llpobj.llpobj,
-    stat_lx.lx,
     stat_nclpobj.nclpobj,
     stat_ncx.ncx,
     stat_nflpobj.nflpobj,
     stat_nllpobj.nllpobj,
-    stat_nlpobj.nlpobj,
     stat_nlx.nlx,
     stat_nplpobj.nplpobj,
     stat_nrlpobj.nrlpobj,
-    stat_plpobj.plpobj,
-    stat_rlpobj.rlpobj,
-    nlpobj_.nu_nlpobj_,
     nnlpobj_.nnlpobj,
-    comp_lo_cx.piL_cx,
-    comp_lo_lx.piL_lx,
     comp_lo_ncx.piL_ncx,
     comp_lo_nlx.piL_nlx
 /;

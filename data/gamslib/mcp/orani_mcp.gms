@@ -66,16 +66,22 @@ Scalars
     mlevel /0/
 ;
 
+$onImplicitAssign
+amc(c,s,"total") = sum(i, amc(c,s,i)) + amc(c,s,"families") + amc(c,s,"exp") + amc(c,s,"duty");
 ce(c,c) = 1;
+alphae(c,s) = amc(c,s,"families") / sum(sp, amc(c,sp,"families"));
+etabar(c,s,cp,sp) = alphae(cp,sp);
+etabar(c,s,c,s) = -1 + alphae(c,s);
+etabar(c,s,cp,sp)$((not ce(c,cp))) = 0;
+eta(c,s,cp,sp) = ((-1) * epsilon(c,s)) * sb(cp,sp) + etabar(c,s,cp,sp);
+$offImplicitAssign
 
 alphak(i) = amf("capital",i) / sum(f, amf(f,i));
 alphal(i) = amf("labor",i) / sum(f, amf(f,i));
 m(c,i) = amq(c,i) / sum(ip, amq(c,ip));
 r(c,i) = amq(c,i) / sum(cp, amq(cp,i));
-amc(c,s,"total") = sum(i, amc(c,s,i)) + amc(c,s,"families") + amc(c,s,"exp") + amc(c,s,"duty");
 amt(i) = sum((c,s), amc(c,s,i)) + sum(f, amf(f,i));
 alpha(c,s,i) = amc(c,s,i) / sum(sp, amc(c,sp,i));
-alphae(c,s) = amc(c,s,"families") / sum(sp, amc(c,sp,"families"));
 sb(c,s) = amc(c,s,"families") / sum((cp,sp), amc(cp,sp,"families"));
 elevel = sum((c,s), amc(c,s,"exp"));
 mlevel = sum(c, amc(c,"imported","total"));
@@ -84,9 +90,6 @@ nx(c) = amc(c,"domestic","exp") / sum(cp, amc(cp,"domestic","exp"));
 wc(c,s) = amc(c,s,"families") / (amc(c,s,"total") - amc(c,s,"duty"));
 we(c) = amc(c,"domestic","exp") / amc(c,"domestic","total");
 wi(c,s,i) = amc(c,s,i) / (amc(c,s,"total") - amc(c,s,"duty"));
-etabar(c,s,cp,sp) = alphae(cp,sp);
-etabar(c,s,c,s) = -1 + alphae(c,s);
-eta(c,s,cp,sp) = ((-1) * epsilon(c,s)) * sb(cp,sp) + etabar(c,s,cp,sp);
 mu(c,s) = sb(c,s);
 sc(c,s,i) = amc(c,s,i) / amt(i);
 sk(i) = amf("capital",i) / amt(i);
@@ -148,7 +151,6 @@ Variables
     nu_realc
     nu_df_fx_food
     nu_df_fx_clothing
-    nu_e_fx_food
     nu_e_fx_clothing
     nu_kappa_fx_agric
     nu_kappa_fx_manuf
@@ -158,10 +160,24 @@ Variables
     nu_t_fx_food
     nu_t_fx_clothing
     nu_v_fx_food
-    nu_v_fx_clothing
     nu_ws_fx
     nu_ye_fx
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+df.fx('clothing') = 1;
+df.fx('food') = 1;
+e.fx('clothing') = 1;
+kappa.fx('agric') = 3;
+kappa.fx('manuf') = 3;
+pm.fx('clothing') = -2;
+pm.fx('food') = -2;
+t.fx('clothing') = 0;
+t.fx('food') = 0;
+v.fx('food') = 0;
 
 * ============================================
 * Equations
@@ -205,7 +221,6 @@ Equations
     df_fx_clothing
     df_fx_food
     e_fx_clothing
-    e_fx_food
     expd(c)
     exports
     imports
@@ -224,7 +239,6 @@ Equations
     supply(c,i)
     t_fx_clothing
     t_fx_food
-    v_fx_clothing
     v_fx_food
     wage
     ws_fx
@@ -239,22 +253,22 @@ Equations
 stat_b.. nu_baltrade =E= 0;
 stat_cn(c,s).. nu_con(c,s) =E= 0;
 stat_cr.. nu_realc =E= 0;
-stat_df(c).. ((-1) * nu_expd(c)) + nu_df_fx_clothing$sameas(c, 'clothing') + nu_df_fx_food$sameas(c, 'food') =E= 0;
-stat_e(c).. gamma(c) * nu_expd(c) + ((-1) * we(c)) * nu_bald(c) + ((-1) * nx(c)) * nu_exports + nu_e_fx_clothing$sameas(c, 'clothing') + nu_e_fx_food$sameas(c, 'food') =E= 0;
+stat_df(c).. ((-1) * nu_expd(c)) + nu_df_fx_clothing$(sameas(c, 'clothing')) + nu_df_fx_food$(sameas(c, 'food')) =E= 0;
+stat_e(c).. gamma(c) * nu_expd(c) + ((-1) * we(c)) * nu_bald(c) + ((-1) * nx(c)) * nu_exports + nu_e_fx_clothing$(sameas(c, 'clothing')) =E= 0;
 stat_et.. nu_exports + ((-1) * (100 * elevel / 10000)) * nu_baltrade =E= 0;
 stat_k(i).. nu_indcap(i) + nu_balcap(i) =E= 0;
-stat_kappa(i).. ((-1) * nu_balcap(i)) + nu_kappa_fx_agric$sameas(i, 'agric') + nu_kappa_fx_manuf$sameas(i, 'manuf') =E= 0;
+stat_kappa(i).. ((-1) * nu_balcap(i)) + nu_kappa_fx_agric$(sameas(i, 'agric')) + nu_kappa_fx_manuf$(sameas(i, 'manuf')) =E= 0;
 stat_l.. (-1) * nu_ballab =E= 0;
 stat_li(i).. nu_indlab(i) + wl(i) * nu_ballab =E= 0;
 stat_mt.. nu_imports + ((-1) * (100 * ((-1) * mlevel) / 10000)) * nu_baltrade =E= 0;
-stat_p(c,s).. mu(c,s) + sum((cp,sp), ((-1) * eta(c,s,cp,sp)) * nu_con(c,s)) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, ((-1) * sc(c,s,i)) * nu_pric(i)) =E= 0;
+stat_p(c,s).. mu(c,s) + sum((cp,sp), ((-1) * eta(c,s,cp,sp)) * nu_con(c,s)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c,s+1))$(ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s))$(ord(c) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s+1))$(ord(c) > 1 and ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c,s-1))$(ord(s) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c-1,s-1))$(ord(c) > 1 and ord(s) > 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s))$(ord(c) <= card(c) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s+1))$(ord(c) <= card(c) - 1 and ord(s) <= card(s) - 1)) + sum((cp,sp), (((-1) * eta(c,s,cp,sp)) * nu_con(c+1,s-1))$(ord(c) <= card(c) - 1 and ord(s) > 1)) + sum(i, (1 - alpha(c,s,i)) * nu_indc(c,s,i)) + sum(i, ((-1) * sc(c,s,i)) * nu_pric(i)) =E= 0;
 stat_phi.. sum(c, (-1) * nu_priexp(c)) + sum(c, (-1) * nu_priimp(c)) + nu_phi_fx =E= 0;
 stat_pk(i).. (1 - alphak(i)) * nu_indcap(i) + ((-1) * alphak(i)) * nu_indlab(i) + ((-1) * sk(i)) * nu_pric(i) =E= 0;
-stat_pm(c).. ((-1) * nu_priimp(c)) + ((-1) * nm(c)) * nu_imports + nu_pm_fx_clothing$sameas(c, 'clothing') + nu_pm_fx_food$sameas(c, 'food') =E= 0;
+stat_pm(c).. ((-1) * nu_priimp(c)) + ((-1) * nm(c)) * nu_imports + nu_pm_fx_clothing$(sameas(c, 'clothing')) + nu_pm_fx_food$(sameas(c, 'food')) =E= 0;
 stat_px(c).. nu_expd(c) - nu_priexp(c) + ((-1) * nx(c)) * nu_exports =E= 0;
 stat_q(c,i).. nu_supply(c,i) + m(c,i) * nu_bald(c) =E= 0;
-stat_t(c).. ((-1) * nu_priimp(c)) + nu_t_fx_clothing$sameas(c, 'clothing') + nu_t_fx_food$sameas(c, 'food') =E= 0;
-stat_v(c).. ((-1) * nu_priexp(c)) + nu_v_fx_clothing$sameas(c, 'clothing') + nu_v_fx_food$sameas(c, 'food') =E= 0;
+stat_t(c).. ((-1) * nu_priimp(c)) + nu_t_fx_clothing$(sameas(c, 'clothing')) + nu_t_fx_food$(sameas(c, 'food')) =E= 0;
+stat_v(c).. ((-1) * nu_priexp(c)) + nu_v_fx_food$(sameas(c, 'food')) =E= 0;
 stat_w.. sum(i, ((-1) * alphal(i)) * nu_indcap(i)) + sum(i, (1 - alphal(i)) * nu_indlab(i)) + sum(i, ((-1) * sl(i)) * nu_pric(i)) + nu_wage =E= 0;
 stat_ws.. ((-1) * nu_wage) + nu_ws_fx =E= 0;
 stat_x(c,s,i).. nu_indc(c,s,i) =E= 0;
@@ -284,7 +298,6 @@ wage.. w =E= theta * pc + ws;
 realc.. cr =E= ye - pc;
 df_fx_food.. df("food") - 1 =E= 0;
 df_fx_clothing.. df("clothing") - 1 =E= 0;
-e_fx_food.. e("food") - 1 =E= 0;
 e_fx_clothing.. e("clothing") - 1 =E= 0;
 kappa_fx_agric.. kappa("agric") - 3 =E= 0;
 kappa_fx_manuf.. kappa("manuf") - 3 =E= 0;
@@ -294,7 +307,6 @@ pm_fx_clothing.. pm("clothing") + 2 =E= 0;
 t_fx_food.. t("food") - 0 =E= 0;
 t_fx_clothing.. t("clothing") - 0 =E= 0;
 v_fx_food.. v("food") - 0 =E= 0;
-v_fx_clothing.. v("clothing") - 0 =E= 0;
 ws_fx.. ws - 0 =E= 0;
 ye_fx.. ye - 2 =E= 0;
 
@@ -346,7 +358,6 @@ Model mcp_model /
     df_fx_clothing.nu_df_fx_clothing,
     df_fx_food.nu_df_fx_food,
     e_fx_clothing.nu_e_fx_clothing,
-    e_fx_food.nu_e_fx_food,
     expd.nu_expd,
     exports.nu_exports,
     imports.nu_imports,
@@ -365,7 +376,6 @@ Model mcp_model /
     supply.nu_supply,
     t_fx_clothing.nu_t_fx_clothing,
     t_fx_food.nu_t_fx_food,
-    v_fx_clothing.nu_v_fx_clothing,
     v_fx_food.nu_v_fx_food,
     wage.nu_wage,
     ws_fx.nu_ws_fx,

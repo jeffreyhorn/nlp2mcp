@@ -42,8 +42,6 @@ Scalars
 
 u(i) = sum(j, z1(i,j));
 v(j) = sum(i, z1(i,j));
-a1(i,j) = z1(i,j) / x(j);
-zbar(i,j) = a0(i,j) * x(j);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -58,30 +56,12 @@ zbar(i,j) = a0(i,j) * x(j);
 
 Variables
     obj
-    zv(i,j)
-    nu_colbal(j)
-    nu_colbalz(j)
-    nu_defobjentz
-    nu_defabs(i,j)
-    nu_defmad
-    nu_defmade
-    nu_defLinf
-    nu_defsd
-    nu_defrsd
+    nu_colbal(i)
 ;
 
 Positive Variables
     a(i,j)
-    ap(i,j)
-    an(i,j)
-    amax
-    lam_defmaxp(i,j)
-    lam_defmaxn(i,j)
     piL_a(i,j)
-    piL_zv(i,j)
-    piL_ap(i,j)
-    piL_an(i,j)
-    piL_amax
 ;
 
 * ============================================
@@ -92,30 +72,18 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 * POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+* clamped to min(max(value, 1e-6), upper_bound).
 
-a.l("1","1") = 1e-05;
-a.l("1","2") = 1e-05;
-a.l("1","3") = 1e-05;
-a.l("2","1") = 1e-05;
-a.l("2","2") = 1e-05;
-a.l("2","3") = 1e-05;
-a.l("3","1") = 1e-05;
-a.l("3","2") = 1e-05;
-a.l("3","3") = 1e-05;
+a.l('1','1') = 1e-05;
+a.l('1','2') = 1e-05;
+a.l('1','3') = 1e-05;
+a.l('2','1') = 1e-05;
+a.l('2','2') = 1e-05;
+a.l('2','3') = 1e-05;
+a.l('3','1') = 1e-05;
+a.l('3','2') = 1e-05;
+a.l('3','3') = 1e-05;
 a.l(i,j) = min(max(a.l(i,j), 1e-6), a.up(i,j));
-zv.l("1","1") = 1.0;
-zv.l("1","2") = 1.0;
-zv.l("1","3") = 1.0;
-zv.l("2","1") = 1.0;
-zv.l("2","2") = 1.0;
-zv.l("2","3") = 1.0;
-zv.l("3","1") = 1.0;
-zv.l("3","2") = 1.0;
-zv.l("3","3") = 1.0;
-ap.l(i,j) = 1;
-an.l(i,j) = 1;
-amax.l = 1;
 
 * ============================================
 * Equations
@@ -127,27 +95,9 @@ amax.l = 1;
 
 Equations
     stat_a(i,j)
-    stat_amax
-    stat_an(i,j)
-    stat_ap(i,j)
-    stat_zv(i,j)
-    comp_defmaxn(i,j)
-    comp_defmaxp(i,j)
     comp_lo_a(i,j)
-    comp_lo_amax
-    comp_lo_an(i,j)
-    comp_lo_ap(i,j)
-    comp_lo_zv(i,j)
     colbal(j)
-    colbalz(j)
-    defLinf
-    defabs(i,j)
-    defmad
-    defmade
-    defobjent
-    defobjentz
     defrsd
-    defsd
 ;
 
 * ============================================
@@ -155,33 +105,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(i,j).. log(a(i,j) / a0(i,j)) * x(j) + x(j) * a(i,j) * 1 / (a(i,j) / a0(i,j)) * 1 / a0(i,j) ** 1 + x(j) * nu_colbal(j) + nu_defabs(i,j) + ((-1) * (2 * (a(i,j) + a0(i,j)))) * nu_defsd + ((-1) * (a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)))) * nu_defrsd + lam_defmaxp(i,j) - lam_defmaxn(i,j) - piL_a(i,j) =E= 0;
-stat_amax.. ((-1) * nu_defLinf) + sum((i,j), (-1) * lam_defmaxp(i,j)) + sum((i,j), (-1) * lam_defmaxn(i,j)) - piL_amax =E= 0;
-stat_an(i,j).. nu_defabs(i,j) + ((-1) * (1 / sqr(card(i)))) * nu_defmad + ((-1) * (100 / sqr(card(i)) * 1 / a0(i,j) ** 1)) * nu_defmade - piL_an(i,j) =E= 0;
-stat_ap(i,j).. ((-1) * nu_defabs(i,j)) + ((-1) * (1 / sqr(card(i)))) * nu_defmad + ((-1) * (100 / sqr(card(i)) * 1 / a0(i,j) ** 1)) * nu_defmade - piL_ap(i,j) =E= 0;
-stat_zv(i,j).. nu_colbalz(j) + ((-1) * (log(zv(i,j) / zbar(i,j)) + zv(i,j) * 1 / (zv(i,j) / zbar(i,j)) * 1 / zbar(i,j) ** 1)) * nu_defobjentz - piL_zv(i,j) =E= 0;
-
-* Inequality complementarity equations
-comp_defmaxn(i,j).. a(i,j) - a0(i,j) - ((-1) * amax) =G= 0;
-comp_defmaxp(i,j).. ((-1) * (a(i,j) - a0(i,j) - amax)) =G= 0;
+stat_a(i,j).. a0(i,j) * 2 * (a(i,j) + a0(i,j)) / sqr(a0(i,j)) + x(i) * nu_colbal(i) - piL_a(i,j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_a(i,j).. a(i,j) - 1e-05 =G= 0;
-comp_lo_amax.. amax - 0 =G= 0;
-comp_lo_an(i,j).. an(i,j) - 0 =G= 0;
-comp_lo_ap(i,j).. ap(i,j) - 0 =G= 0;
-comp_lo_zv(i,j).. zv(i,j) - 1 =G= 0;
 
 * Original equality equations
 colbal(j).. sum(i, a(i,j) * x(j)) =E= v(j);
-defobjent.. obj =E= sum((i,j), x(j) * a(i,j) * log(a(i,j) / a0(i,j)));
-colbalz(j).. sum(i, zv(i,j)) =E= v(j);
-defobjentz.. obj =E= sum((i,j), zv(i,j) * log(zv(i,j) / zbar(i,j)));
-defabs(i,j).. a(i,j) - a0(i,j) =E= ap(i,j) - an(i,j);
-defmad.. obj =E= 1 / sqr(card(i)) * sum((i,j), ap(i,j) + an(i,j));
-defmade.. obj =E= 100 / sqr(card(i)) * sum((i,j), (ap(i,j) + an(i,j)) / a0(i,j));
-defLinf.. obj =E= amax;
-defsd.. obj =E= sum((i,j), sqr(a(i,j) + a0(i,j)));
 defrsd.. obj =E= sum((i,j), sqr(a(i,j) + a0(i,j)) / a0(i,j));
 
 
@@ -200,27 +130,9 @@ defrsd.. obj =E= sum((i,j), sqr(a(i,j) + a0(i,j)) / a0(i,j));
 
 Model mcp_model /
     stat_a.a,
-    stat_amax.amax,
-    stat_an.an,
-    stat_ap.ap,
-    stat_zv.zv,
-    comp_defmaxn.lam_defmaxn,
-    comp_defmaxp.lam_defmaxp,
     colbal.nu_colbal,
-    colbalz.nu_colbalz,
-    defLinf.nu_defLinf,
-    defabs.nu_defabs,
-    defmad.nu_defmad,
-    defmade.nu_defmade,
-    defobjent.obj,
-    defobjentz.nu_defobjentz,
-    defrsd.nu_defrsd,
-    defsd.nu_defsd,
-    comp_lo_a.piL_a,
-    comp_lo_amax.piL_amax,
-    comp_lo_an.piL_an,
-    comp_lo_ap.piL_ap,
-    comp_lo_zv.piL_zv
+    defrsd.obj,
+    comp_lo_a.piL_a
 /;
 
 * ============================================

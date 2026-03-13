@@ -41,20 +41,11 @@ Scalars
 ;
 
 t(n) = (ord(n) - 1) / (card(n) - 1);
-s(m) = (ord(m) - 1) / (card(m) - 1);
 k = (card(n) - 1) / (card(m) - 1);
-deltn = 1 / (card(n) - 1);
-deltm = 1 / (card(m) - 1);
 y(n) = sum(l, -1 ** (ord(l) - 1) * (t(n) * pi) ** (2 * ord(l) - 1) / prod(r$(ord(r) <= 2 * ord(l) - 1), ord(r)));
 y(n) = round(y(n), 6);
 w(m+floor((ord(n)-1)/k),n) = 1 - mod(ord(n) - 1, k) / k;
 w(m+1,n) = 1 - w(m,n);
-drep(n,"t") = t(n);
-test(n,"power-ser") = y(n);
-drep(n,"y") = y(n);
-test(n,"sinus-fun") = sin(t(n) * pi);
-test(n,"error") = test(n,"sinus-fun") - test(n,"power-ser");
-dualdev = sum(n, abs(drep(n,"dev")));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -68,35 +59,15 @@ dualdev = sum(n, abs(drep(n,"dev")));
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    ym(m)
-    tdev
     tdual
     z(n)
-    nu_ddev(n)
     nu_ddual(m)
-    nu_dtdev
 ;
 
 Positive Variables
-    dp(n)
-    dn(n)
-    piL_dp(n)
-    piL_dn(n)
     piL_z(n)
     piU_z(n)
 ;
-
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables are set to 1.
-
-dp.l(n) = 1;
-dn.l(n) = 1;
 
 * ============================================
 * Equations
@@ -107,18 +78,10 @@ dn.l(n) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_dn(n)
-    stat_dp(n)
-    stat_tdev
-    stat_ym(m)
     stat_z(n)
-    comp_lo_dn(n)
-    comp_lo_dp(n)
     comp_lo_z(n)
     comp_up_z(n)
-    ddev(n)
     ddual(m)
-    dtdev
     dtdual
 ;
 
@@ -127,24 +90,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_dn(n).. nu_ddev(n) - nu_dtdev - piL_dn(n) =E= 0;
-stat_dp(n).. ((-1) * nu_ddev(n)) - nu_dtdev - piL_dp(n) =E= 0;
-stat_tdev.. nu_dtdev =E= 0;
-stat_ym(m).. sum(n, w(m,n) * nu_ddev(n)) =E= 0;
 stat_z(n).. ((-1) * y(n)) + sum(m, w(m,n) * nu_ddual(m)) - piL_z(n) + piU_z(n) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_dn(n).. dn(n) - 0 =G= 0;
-comp_lo_dp(n).. dp(n) - 0 =G= 0;
 comp_lo_z(n).. z(n) + 1 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_z(n).. 1 - z(n) =G= 0;
 
 * Original equality equations
-ddev(n).. sum(m, w(m,n) * ym(m)) - y(n) =E= dp(n) - dn(n);
 ddual(m).. sum(n, w(m,n) * z(n)) =E= 0;
-dtdev.. tdev =E= sum(n, dp(n) + dn(n));
 dtdual.. tdual =E= sum(n, y(n) * z(n)) + 1;
 
 
@@ -162,17 +117,9 @@ dtdual.. tdual =E= sum(n, y(n) * z(n)) + 1;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_dn.dn,
-    stat_dp.dp,
-    stat_tdev.tdev,
-    stat_ym.ym,
     stat_z.z,
-    ddev.nu_ddev,
     ddual.nu_ddual,
-    dtdev.nu_dtdev,
     dtdual.tdual,
-    comp_lo_dn.piL_dn,
-    comp_lo_dp.piL_dp,
     comp_lo_z.piL_z,
     comp_up_z.piU_z
 /;

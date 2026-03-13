@@ -52,23 +52,19 @@ Variables
     Qs(r,c)
     OBJ
     nu_DEM(r,c)
-    nu_DEMLOG(r,c)
     nu_DEMINT(r,c)
     nu_SUP(r,c)
-    nu_SUPLOG(r,c)
     nu_SUPINT(r,c)
     nu_SDBAL(c)
     nu_TRANSCOST
     nu_SX(R,C)
     nu_DX(r,c)
-    nu_IN_OUT(r,c)
 ;
 
 Positive Variables
     X(r,rr,c)
     P(r,c)
     lam_PDIF(r,rr,c)
-    lam_DOM_TRAD(r,rr,c)
     piL_x(r,rr,c)
     piL_p(r,c)
 ;
@@ -113,20 +109,16 @@ Equations
     stat_sint(r,c)
     stat_tc
     stat_x(r,rr,c)
-    comp_DOM_TRAD(r,rr,c)
     comp_PDIF(r,rr,c)
     comp_lo_p(r,c)
     comp_lo_x(r,rr,c)
     DEM(r,c)
     DEMINT(r,c)
-    DEMLOG(r,c)
     DX(r,c)
-    IN_OUT(r,c)
     OBJECT
     SDBAL(c)
     SUP(r,c)
     SUPINT(r,c)
-    SUPLOG(r,c)
     SX(R,C)
     TRANSCOST
 ;
@@ -137,22 +129,19 @@ Equations
 
 * Index aliases to avoid 'Set is under control already' error
 * (GAMS Error 125 when equation domain index is reused in sum)
-Alias(c, c__);
 Alias(cc, cc__);
-Alias(r, r__);
 
 * Stationarity equations
 stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
 stat_obj.. 0 =E= 0;
-stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc__, BetadSq(r,c,cc__) * p(r,cc__)))) * nu_DEMINT(r,c)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc__, BetasSq(r,c,cc__) * p(r,cc__)))) * nu_SUPINT(r,c)) + sum(rr, lam_PDIF(r,rr,c)) + sum(rr, (-1) * lam_DOM_TRAD(r,rr,c)) - piL_p(r,c) =E= 0;
-stat_qd(r,c).. ((-1) * nu_DEM(r,c)) - nu_DEMLOG(r,c) + nu_SDBAL(c) - nu_DX(r,c) - nu_IN_OUT(r,c) =E= 0;
-stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SUPLOG(r,c) - nu_SDBAL(c) + sum((r__,c__), (-1) * nu_SX(r__,c__)) + nu_IN_OUT(r,c) =E= 0;
+stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc__, BetadSq(r,c,cc__) * p(r,cc__)))) * nu_DEMINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c-1))$(ord(c) > 1)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc__, BetasSq(r,c,cc__) * p(r,cc__)))) * nu_SUPINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c-1))$(ord(c) > 1)) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
+stat_qd(r,c).. ((-1) * nu_DEM(r,c)) + nu_SDBAL(c) - nu_DX(r,c) =E= 0;
+stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SDBAL(c) - nu_SX(R,C) =E= 0;
 stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;
 stat_tc.. 1 + nu_TRANSCOST =E= 0;
-stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) + nu_IN_OUT(r,c) - piL_x(r,rr,c) =E= 0;
+stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) - piL_x(r,rr,c) =E= 0;
 
 * Inequality complementarity equations
-comp_DOM_TRAD(r,rr,c).. p(r,c) + TCost(r,rr,c) - p(rr,c) =G= 0;
 comp_PDIF(r,rr,c).. ((-1) * (p(r,c) - p(rr,c) - TCost(r,rr,c))) =G= 0;
 
 * Lower bound complementarity equations
@@ -161,17 +150,14 @@ comp_lo_x(r,rr,c).. x(r,rr,c) - 0 =G= 0;
 
 * Original equality equations
 DEM(r,c).. AlphaD(r,c) + sum(cc, BetaD(r,c,cc) * p(r,c)) =E= qd(r,c);
-DEMLOG(r,c).. AlphaD(r,c) + sum(cc, BetaD(r,c,cc) * log(p(r,c))) =E= qd(r,c);
 DEMINT(r,c).. dint(r,c) =E= AlphaD(r,c) * p(r,c) + sum(cc, BetadSq(r,c,cc) * p(r,cc)) * p(r,c);
 SUP(r,c).. AlphaS(r,c) + sum(cc, BetaS(r,c,cc) * p(r,c)) =E= qs(r,c);
-SUPLOG(r,c).. AlphaS(r,c) + sum(cc, BetaS(r,c,cc) * log(p(r,c))) =E= qs(r,c);
 SUPINT(r,c).. sint(r,c) =E= AlphaS(r,c) * p(r,c) + sum(cc, BetasSq(r,c,cc) * p(r,cc)) * p(r,c);
 SDBAL(c).. sum(r, qd(r,c)) =E= sum(r, qs(r,c));
 TRANSCOST.. tc =E= sum((r,rr,c), x(r,rr,c) * TCost(r,rr,c));
 OBJECT.. obj =E= sum((r,c), dint(r,c) - sint(r,c)) - tc;
 SX(R,C).. sum(RR, x(R,RR,C)) =E= qs(R,C);
 DX(r,c).. sum(rr, x(rr,r,c)) =E= qd(r,c);
-IN_OUT(r,c).. qs(r,c) + sum(rr, x(rr,r,c) - x(r,rr,c)) =E= qd(r,c);
 
 
 * ============================================
@@ -181,7 +167,6 @@ IN_OUT(r,c).. qs(r,c) + sum(rr, x(rr,r,c) - x(r,rr,c)) =E= qd(r,c);
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-lam_DOM_TRAD.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
 lam_PDIF.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
 
 * ============================================
@@ -206,18 +191,14 @@ Model mcp_model /
     stat_sint.sint,
     stat_tc.tc,
     stat_x.x,
-    comp_DOM_TRAD.lam_DOM_TRAD,
     comp_PDIF.lam_PDIF,
     DEM.nu_DEM,
     DEMINT.nu_DEMINT,
-    DEMLOG.nu_DEMLOG,
     DX.nu_DX,
-    IN_OUT.nu_IN_OUT,
     OBJECT.OBJ,
     SDBAL.nu_SDBAL,
     SUP.nu_SUP,
     SUPINT.nu_SUPINT,
-    SUPLOG.nu_SUPLOG,
     SX.nu_SX,
     TRANSCOST.nu_TRANSCOST,
     comp_lo_p.piL_p,

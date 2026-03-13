@@ -55,19 +55,19 @@ Scalars
 ;
 
 $onImplicitAssign
+price(c) = demdat(c,"ref-p");
 cn(c) = yes$(demdat(c,"ref-p"));
 ce(c) = yes$(demdat(c,"exp-p"));
 cm(c) = yes$(demdat(c,"imp-p") < inf);
 cm("clover") = 0;
-$offImplicitAssign
-
-price(c) = demdat(c,"ref-p");
-pe(ce) = demdat(ce,"exp-p");
-pm(cm) = demdat(cm,"imp-p");
 beta(cn)$(demdat(cn,"ref-q")) = demdat(cn,"ref-p") / demdat(cn,"ref-q") / demdat(cn,"elas");
 alpha(cn) = demdat(cn,"ref-p") - beta(cn) * demdat(cn,"ref-q");
 demdat(cn,"dem-a") = alpha(cn);
 demdat(cn,"dem-b") = beta(cn);
+$offImplicitAssign
+
+pe(ce) = demdat(ce,"exp-p");
+pm(cm) = demdat(cm,"imp-p");
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -206,8 +206,8 @@ stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_fl
 stat_imports(c).. ((-1) * piL_imports(c)) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
-stat_natcon(c)$(cn(c)).. sum(cn, nu_dem(cn)) - piL_natcon(c) =E= 0;
-stat_natprod(c).. nu_proc(c) + sum(cn, (-1) * nu_dem(cn)) - piL_natprod(c) =E= 0;
+stat_natcon(c)$(cn(c)).. nu_dem(c) - piL_natcon(c) =E= 0;
+stat_natprod(c).. nu_proc(c) - nu_dem(c) - piL_natprod(c) =E= 0;
 stat_pcost.. nu_aplow - nu_acost =E= 0;
 stat_rescost.. nu_ares - nu_acost =E= 0;
 stat_tcost.. 1 + nu_acost =E= 0;
@@ -257,6 +257,8 @@ objn.. cps =E= sum(cn, alpha(cn) * natcon(cn) + 0.5 * beta(cn) * sqr(natcon(cn))
 
 natcon.fx(c)$(not (cn(c))) = 0;
 piL_natcon.fx(c)$(not (cn(c))) = 0;
+nu_dem.fx(c)$(not (cn(c))) = 0;
+nu_dem.fx(c)$(not (cn(c))) = 0;
 
 * ============================================
 * Model MCP Declaration

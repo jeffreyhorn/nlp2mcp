@@ -95,7 +95,7 @@ Equations
 * Stationarity equations
 stat_buy(t).. price(t) - nu_sb(t) - piL_buy(t) =E= 0;
 stat_sell(t).. ((-1) * price(t)) + nu_sb(t) - piL_sell(t) =E= 0;
-stat_stock(t).. storecost + nu_sb(t) - piL_stock(t) + piU_stock(t) =E= 0;
+stat_stock(t).. storecost + nu_sb(t) + ((-1) * nu_sb(t+1))$(ord(t) <= card(t) - 1) - piL_stock(t) + piU_stock(t) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_buy(t).. buy(t) - 0 =G= 0;

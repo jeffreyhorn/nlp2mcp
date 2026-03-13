@@ -39,7 +39,7 @@ Scalars
     vmax /0/
 ;
 
-q(i,j) = q(j,i);
+q(i,j)$(ord(j) > ord(i)) = q(j,i);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -57,9 +57,7 @@ Variables
     m
     omega
     nu_vbal
-    nu_mbal
     nu_budget
-    nu_riskless
     nu_meanbal
     nu_m_fx
 ;
@@ -81,8 +79,7 @@ Positive Variables
 * non-zero initial values.
 * POSITIVE variables are set to 1.
 
-v.l = 1.0;
-m.l = 1.0;
+v.l = 0.01;
 x.l(i) = 1;
 
 * ============================================
@@ -103,10 +100,8 @@ Equations
     comp_up_x(i)
     budget
     m_fx
-    mbal
     meanbal
     obj2
-    riskless
     vbal
 ;
 
@@ -115,9 +110,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_m.. ((-1) * (1 / sqrt(v) ** 1)) + nu_mbal - nu_meanbal + nu_m_fx - piL_m =E= 0;
+stat_m.. ((-1) * (1 / sqrt(v) ** 1)) - nu_meanbal + nu_m_fx - piL_m =E= 0;
 stat_v.. ((-1) * (((-1) * (m * 1 / (2 * sqrt(v)))) / sqr(sqrt(v)))) + nu_vbal - piL_v =E= 0;
-stat_x(i).. ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + ((-1) * mu(i)) * nu_mbal + nu_budget + (mu(i) - r) * nu_riskless + (sf * sum(h, mu(h)) + (1 - sf) * mu(i)) * nu_meanbal - piL_x(i) + piU_x(i) =E= 0;
+stat_x(i).. ((-1) * sum(j, x(j) * q(i,j))) * nu_vbal + nu_budget + (sf * sum(h, mu(h)) + (1 - sf) * mu(i)) * nu_meanbal - piL_x(i) + piU_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_m.. m - 0 =G= 0;
@@ -129,9 +124,7 @@ comp_up_x(i).. 1 - x(i) =G= 0;
 
 * Original equality equations
 vbal.. v =E= sum((i,j), x(i) * q(i,j) * x(j));
-mbal.. m =E= sum(i, mu(i) * x(i));
 budget.. sum(i, x(i)) =E= 1;
-riskless.. sum(i, (mu(i) - r) * x(i)) =E= mup - r;
 obj2.. omega =E= m / sqrt(v);
 meanbal.. sum(i, x(i) * (sf * sum(h, mu(h)) + (1 - sf) * mu(i))) =E= m;
 m_fx.. m - 0.115 =E= 0;
@@ -156,10 +149,8 @@ Model mcp_model /
     stat_x.x,
     budget.nu_budget,
     m_fx.nu_m_fx,
-    mbal.nu_mbal,
     meanbal.nu_meanbal,
     obj2.omega,
-    riskless.nu_riskless,
     vbal.nu_vbal,
     comp_lo_m.piL_m,
     comp_lo_v.piL_v,

@@ -39,9 +39,10 @@ Scalars
     b /50/
 ;
 
+Alias(n, n__);
 dem(n,j) = stdat(n,j);
-prob(n) = stdat(n,"prob");
-prob(n) = sum((nn,n), stdat(nn,"prob") * stdat(n,"prob"));
+prob(n)$(tn("time-1",n)) = stdat(n,"prob");
+prob(n)$(tn("time-2",n)) = sum((nn,n__), stdat(nn,"prob") * stdat(n__,"prob"));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -62,7 +63,6 @@ Positive Variables
     x(i,t)
     y(j,t,n)
     lam_bal
-    lam_dembal(j,t,n)
     lam_dembalx(j,t,n)
     piL_x(i,t)
     piL_y(j,t,n)
@@ -92,7 +92,6 @@ Equations
     stat_x(i,t)
     stat_y(j,t,n)
     comp_bal
-    comp_dembal(j,t,n)
     comp_dembalx(j,t,n)
     comp_lo_x(i,t)
     comp_lo_y(j,t,n)
@@ -108,12 +107,11 @@ Equations
 Alias(n, n__);
 
 * Stationarity equations
-stat_x(i,t).. c(i) + lam_bal + sum((j,n), ((-1) * a(j,i)) * lam_dembal(j,t,n)) + sum((j,n), ((-1) * a(j,i)) * lam_dembalx(j,t,n)) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. prob(n) * f(j,t) - lam_dembal(j,t,n) - lam_dembalx(j,t,n) - piL_y(j,t,n) =E= 0;
+stat_x(i,t).. c(i) + lam_bal + sum((j,n), ((-1) * a(j,i)) * lam_dembalx(j,t,n)) - piL_x(i,t) =E= 0;
+stat_y(j,t,n).. prob(n) * f(j,t) - lam_dembalx(j,t,n) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembal(j,t,n).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - dem(n,j) =G= 0;
 comp_dembalx(j,t,n)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum((nn,n__), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
@@ -150,7 +148,6 @@ Model mcp_model /
     stat_x.x,
     stat_y.y,
     comp_bal.lam_bal,
-    comp_dembal.lam_dembal,
     comp_dembalx.lam_dembalx,
     obj.cost,
     comp_lo_x.piL_x,

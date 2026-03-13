@@ -68,122 +68,22 @@ Variables
     v_dot(c,h)
     final_x
     nu_tf_eqn
-    nu_rdef(i)
-    nu_udef(i)
-    nu_wdef(i)
-    nu_vdef(i)
-    nu_Ddef(i)
-    nu_Ldef(i)
-    nu_vx_dot_def(i)
-    nu_vy_dot_def(i)
-    nu_pos_eqn(c,i)
-    nu_vel_eqn(c,i)
+    nu_rdef(h)
+    nu_udef(h)
+    nu_wdef(h)
+    nu_vdef(h)
+    nu_Ddef(h)
+    nu_Ldef(h)
+    nu_vx_dot_def(h)
+    nu_vy_dot_def(h)
+    nu_pos_eqn(c,h)
+    nu_vel_eqn(c,h)
 ;
 
 Positive Variables
     step
-    piL_pos_x_h0
-    piL_pos_x_h1
-    piL_pos_x_h10
-    piL_pos_x_h11
-    piL_pos_x_h12
-    piL_pos_x_h13
-    piL_pos_x_h14
-    piL_pos_x_h15
-    piL_pos_x_h16
-    piL_pos_x_h17
-    piL_pos_x_h18
-    piL_pos_x_h19
-    piL_pos_x_h2
-    piL_pos_x_h20
-    piL_pos_x_h21
-    piL_pos_x_h22
-    piL_pos_x_h23
-    piL_pos_x_h24
-    piL_pos_x_h25
-    piL_pos_x_h26
-    piL_pos_x_h27
-    piL_pos_x_h28
-    piL_pos_x_h29
-    piL_pos_x_h3
-    piL_pos_x_h30
-    piL_pos_x_h31
-    piL_pos_x_h32
-    piL_pos_x_h33
-    piL_pos_x_h34
-    piL_pos_x_h35
-    piL_pos_x_h36
-    piL_pos_x_h37
-    piL_pos_x_h38
-    piL_pos_x_h39
-    piL_pos_x_h4
-    piL_pos_x_h40
-    piL_pos_x_h41
-    piL_pos_x_h42
-    piL_pos_x_h43
-    piL_pos_x_h44
-    piL_pos_x_h45
-    piL_pos_x_h46
-    piL_pos_x_h47
-    piL_pos_x_h48
-    piL_pos_x_h49
-    piL_pos_x_h5
-    piL_pos_x_h50
-    piL_pos_x_h6
-    piL_pos_x_h7
-    piL_pos_x_h8
-    piL_pos_x_h9
-    piL_vel_x_h0
-    piL_vel_x_h1
-    piL_vel_x_h10
-    piL_vel_x_h11
-    piL_vel_x_h12
-    piL_vel_x_h13
-    piL_vel_x_h14
-    piL_vel_x_h15
-    piL_vel_x_h16
-    piL_vel_x_h17
-    piL_vel_x_h18
-    piL_vel_x_h19
-    piL_vel_x_h2
-    piL_vel_x_h20
-    piL_vel_x_h21
-    piL_vel_x_h22
-    piL_vel_x_h23
-    piL_vel_x_h24
-    piL_vel_x_h25
-    piL_vel_x_h26
-    piL_vel_x_h27
-    piL_vel_x_h28
-    piL_vel_x_h29
-    piL_vel_x_h3
-    piL_vel_x_h30
-    piL_vel_x_h31
-    piL_vel_x_h32
-    piL_vel_x_h33
-    piL_vel_x_h34
-    piL_vel_x_h35
-    piL_vel_x_h36
-    piL_vel_x_h37
-    piL_vel_x_h38
-    piL_vel_x_h39
-    piL_vel_x_h4
-    piL_vel_x_h40
-    piL_vel_x_h41
-    piL_vel_x_h42
-    piL_vel_x_h43
-    piL_vel_x_h44
-    piL_vel_x_h45
-    piL_vel_x_h46
-    piL_vel_x_h47
-    piL_vel_x_h48
-    piL_vel_x_h49
-    piL_vel_x_h5
-    piL_vel_x_h50
-    piL_vel_x_h6
-    piL_vel_x_h7
-    piL_vel_x_h8
-    piL_vel_x_h9
+    piL_pos(c,h)
+    piL_vel(c,h)
     piL_cl(h)
     piL_v(h)
     piL_step
@@ -221,62 +121,179 @@ t_f.l = step.l * nh;
 u.l(i) = u_c * (1 - r.l(i)) * exp(((-1) * r.l(i)));
 w.l(i) = vel.l("y",i) - u.l(i);
 v.l(i) = sqrt(sqr(vel.l("x",i)) + sqr(w.l(i)));
-v.l("h0") = max(v.l("h0"), 0.01);
-v.l("h1") = max(v.l("h1"), 0.01);
-v.l("h2") = max(v.l("h2"), 0.01);
-v.l("h3") = max(v.l("h3"), 0.01);
-v.l("h4") = max(v.l("h4"), 0.01);
-v.l("h5") = max(v.l("h5"), 0.01);
-v.l("h6") = max(v.l("h6"), 0.01);
-v.l("h7") = max(v.l("h7"), 0.01);
-v.l("h8") = max(v.l("h8"), 0.01);
-v.l("h9") = max(v.l("h9"), 0.01);
-v.l("h10") = max(v.l("h10"), 0.01);
-v.l("h11") = max(v.l("h11"), 0.01);
-v.l("h12") = max(v.l("h12"), 0.01);
-v.l("h13") = max(v.l("h13"), 0.01);
-v.l("h14") = max(v.l("h14"), 0.01);
-v.l("h15") = max(v.l("h15"), 0.01);
-v.l("h16") = max(v.l("h16"), 0.01);
-v.l("h17") = max(v.l("h17"), 0.01);
-v.l("h18") = max(v.l("h18"), 0.01);
-v.l("h19") = max(v.l("h19"), 0.01);
-v.l("h20") = max(v.l("h20"), 0.01);
-v.l("h21") = max(v.l("h21"), 0.01);
-v.l("h22") = max(v.l("h22"), 0.01);
-v.l("h23") = max(v.l("h23"), 0.01);
-v.l("h24") = max(v.l("h24"), 0.01);
-v.l("h25") = max(v.l("h25"), 0.01);
-v.l("h26") = max(v.l("h26"), 0.01);
-v.l("h27") = max(v.l("h27"), 0.01);
-v.l("h28") = max(v.l("h28"), 0.01);
-v.l("h29") = max(v.l("h29"), 0.01);
-v.l("h30") = max(v.l("h30"), 0.01);
-v.l("h31") = max(v.l("h31"), 0.01);
-v.l("h32") = max(v.l("h32"), 0.01);
-v.l("h33") = max(v.l("h33"), 0.01);
-v.l("h34") = max(v.l("h34"), 0.01);
-v.l("h35") = max(v.l("h35"), 0.01);
-v.l("h36") = max(v.l("h36"), 0.01);
-v.l("h37") = max(v.l("h37"), 0.01);
-v.l("h38") = max(v.l("h38"), 0.01);
-v.l("h39") = max(v.l("h39"), 0.01);
-v.l("h40") = max(v.l("h40"), 0.01);
-v.l("h41") = max(v.l("h41"), 0.01);
-v.l("h42") = max(v.l("h42"), 0.01);
-v.l("h43") = max(v.l("h43"), 0.01);
-v.l("h44") = max(v.l("h44"), 0.01);
-v.l("h45") = max(v.l("h45"), 0.01);
-v.l("h46") = max(v.l("h46"), 0.01);
-v.l("h47") = max(v.l("h47"), 0.01);
-v.l("h48") = max(v.l("h48"), 0.01);
-v.l("h49") = max(v.l("h49"), 0.01);
-v.l("h50") = max(v.l("h50"), 0.01);
+v.l('h0') = max(v.l('h0'), 0.01);
+v.l('h1') = max(v.l('h1'), 0.01);
+v.l('h2') = max(v.l('h2'), 0.01);
+v.l('h3') = max(v.l('h3'), 0.01);
+v.l('h4') = max(v.l('h4'), 0.01);
+v.l('h5') = max(v.l('h5'), 0.01);
+v.l('h6') = max(v.l('h6'), 0.01);
+v.l('h7') = max(v.l('h7'), 0.01);
+v.l('h8') = max(v.l('h8'), 0.01);
+v.l('h9') = max(v.l('h9'), 0.01);
+v.l('h10') = max(v.l('h10'), 0.01);
+v.l('h11') = max(v.l('h11'), 0.01);
+v.l('h12') = max(v.l('h12'), 0.01);
+v.l('h13') = max(v.l('h13'), 0.01);
+v.l('h14') = max(v.l('h14'), 0.01);
+v.l('h15') = max(v.l('h15'), 0.01);
+v.l('h16') = max(v.l('h16'), 0.01);
+v.l('h17') = max(v.l('h17'), 0.01);
+v.l('h18') = max(v.l('h18'), 0.01);
+v.l('h19') = max(v.l('h19'), 0.01);
+v.l('h20') = max(v.l('h20'), 0.01);
+v.l('h21') = max(v.l('h21'), 0.01);
+v.l('h22') = max(v.l('h22'), 0.01);
+v.l('h23') = max(v.l('h23'), 0.01);
+v.l('h24') = max(v.l('h24'), 0.01);
+v.l('h25') = max(v.l('h25'), 0.01);
+v.l('h26') = max(v.l('h26'), 0.01);
+v.l('h27') = max(v.l('h27'), 0.01);
+v.l('h28') = max(v.l('h28'), 0.01);
+v.l('h29') = max(v.l('h29'), 0.01);
+v.l('h30') = max(v.l('h30'), 0.01);
+v.l('h31') = max(v.l('h31'), 0.01);
+v.l('h32') = max(v.l('h32'), 0.01);
+v.l('h33') = max(v.l('h33'), 0.01);
+v.l('h34') = max(v.l('h34'), 0.01);
+v.l('h35') = max(v.l('h35'), 0.01);
+v.l('h36') = max(v.l('h36'), 0.01);
+v.l('h37') = max(v.l('h37'), 0.01);
+v.l('h38') = max(v.l('h38'), 0.01);
+v.l('h39') = max(v.l('h39'), 0.01);
+v.l('h40') = max(v.l('h40'), 0.01);
+v.l('h41') = max(v.l('h41'), 0.01);
+v.l('h42') = max(v.l('h42'), 0.01);
+v.l('h43') = max(v.l('h43'), 0.01);
+v.l('h44') = max(v.l('h44'), 0.01);
+v.l('h45') = max(v.l('h45'), 0.01);
+v.l('h46') = max(v.l('h46'), 0.01);
+v.l('h47') = max(v.l('h47'), 0.01);
+v.l('h48') = max(v.l('h48'), 0.01);
+v.l('h49') = max(v.l('h49'), 0.01);
+v.l('h50') = max(v.l('h50'), 0.01);
 D.l(i) = 0.5 * (c0 + c1 * sqr(cl.l(i))) * rho * S * sqr(v.l(i));
 L.l(i) = 0.5 * cl.l(i) * rho * S * sqr(v.l(i));
 v_dot.l("x",i) = (((-1) * l.l(i)) * w.l(i) / v.l(i) - d.l(i) * vel.l("x",i) / v.l(i)) / m;
 v_dot.l("y",i) = (l.l(i) * vel.l("x",i) / v.l(i) - d.l(i) * w.l(i) / v.l(i)) / m - g;
 $offImplicitAssign
+
+* ============================================
+* Bound Mask Sets (partial bound coverage)
+* ============================================
+
+Set has_pos_lo(c,h) / x.h0, x.h1, x.h10, x.h11, x.h12, x.h13, x.h14, x.h15, x.h16, x.h17, x.h18, x.h19, x.h2, x.h20, x.h21, x.h22, x.h23, x.h24, x.h25, x.h26, x.h27, x.h28, x.h29, x.h3, x.h30, x.h31, x.h32, x.h33, x.h34, x.h35, x.h36, x.h37, x.h38, x.h39, x.h4, x.h40, x.h41, x.h42, x.h43, x.h44, x.h45, x.h46, x.h47, x.h48, x.h49, x.h5, x.h50, x.h6, x.h7, x.h8, x.h9 /;
+Set has_vel_lo(c,h) / x.h0, x.h1, x.h10, x.h11, x.h12, x.h13, x.h14, x.h15, x.h16, x.h17, x.h18, x.h19, x.h2, x.h20, x.h21, x.h22, x.h23, x.h24, x.h25, x.h26, x.h27, x.h28, x.h29, x.h3, x.h30, x.h31, x.h32, x.h33, x.h34, x.h35, x.h36, x.h37, x.h38, x.h39, x.h4, x.h40, x.h41, x.h42, x.h43, x.h44, x.h45, x.h46, x.h47, x.h48, x.h49, x.h5, x.h50, x.h6, x.h7, x.h8, x.h9 /;
+
+* ============================================
+* Bound Parameters (non-uniform bounds)
+* ============================================
+
+Parameter pos_lo_param(c,h);
+pos_lo_param('x','h0') = 0;
+pos_lo_param('x','h1') = 0;
+pos_lo_param('x','h10') = 0;
+pos_lo_param('x','h11') = 0;
+pos_lo_param('x','h12') = 0;
+pos_lo_param('x','h13') = 0;
+pos_lo_param('x','h14') = 0;
+pos_lo_param('x','h15') = 0;
+pos_lo_param('x','h16') = 0;
+pos_lo_param('x','h17') = 0;
+pos_lo_param('x','h18') = 0;
+pos_lo_param('x','h19') = 0;
+pos_lo_param('x','h2') = 0;
+pos_lo_param('x','h20') = 0;
+pos_lo_param('x','h21') = 0;
+pos_lo_param('x','h22') = 0;
+pos_lo_param('x','h23') = 0;
+pos_lo_param('x','h24') = 0;
+pos_lo_param('x','h25') = 0;
+pos_lo_param('x','h26') = 0;
+pos_lo_param('x','h27') = 0;
+pos_lo_param('x','h28') = 0;
+pos_lo_param('x','h29') = 0;
+pos_lo_param('x','h3') = 0;
+pos_lo_param('x','h30') = 0;
+pos_lo_param('x','h31') = 0;
+pos_lo_param('x','h32') = 0;
+pos_lo_param('x','h33') = 0;
+pos_lo_param('x','h34') = 0;
+pos_lo_param('x','h35') = 0;
+pos_lo_param('x','h36') = 0;
+pos_lo_param('x','h37') = 0;
+pos_lo_param('x','h38') = 0;
+pos_lo_param('x','h39') = 0;
+pos_lo_param('x','h4') = 0;
+pos_lo_param('x','h40') = 0;
+pos_lo_param('x','h41') = 0;
+pos_lo_param('x','h42') = 0;
+pos_lo_param('x','h43') = 0;
+pos_lo_param('x','h44') = 0;
+pos_lo_param('x','h45') = 0;
+pos_lo_param('x','h46') = 0;
+pos_lo_param('x','h47') = 0;
+pos_lo_param('x','h48') = 0;
+pos_lo_param('x','h49') = 0;
+pos_lo_param('x','h5') = 0;
+pos_lo_param('x','h50') = 0;
+pos_lo_param('x','h6') = 0;
+pos_lo_param('x','h7') = 0;
+pos_lo_param('x','h8') = 0;
+pos_lo_param('x','h9') = 0;
+
+Parameter vel_lo_param(c,h);
+vel_lo_param('x','h0') = 0;
+vel_lo_param('x','h1') = 0;
+vel_lo_param('x','h10') = 0;
+vel_lo_param('x','h11') = 0;
+vel_lo_param('x','h12') = 0;
+vel_lo_param('x','h13') = 0;
+vel_lo_param('x','h14') = 0;
+vel_lo_param('x','h15') = 0;
+vel_lo_param('x','h16') = 0;
+vel_lo_param('x','h17') = 0;
+vel_lo_param('x','h18') = 0;
+vel_lo_param('x','h19') = 0;
+vel_lo_param('x','h2') = 0;
+vel_lo_param('x','h20') = 0;
+vel_lo_param('x','h21') = 0;
+vel_lo_param('x','h22') = 0;
+vel_lo_param('x','h23') = 0;
+vel_lo_param('x','h24') = 0;
+vel_lo_param('x','h25') = 0;
+vel_lo_param('x','h26') = 0;
+vel_lo_param('x','h27') = 0;
+vel_lo_param('x','h28') = 0;
+vel_lo_param('x','h29') = 0;
+vel_lo_param('x','h3') = 0;
+vel_lo_param('x','h30') = 0;
+vel_lo_param('x','h31') = 0;
+vel_lo_param('x','h32') = 0;
+vel_lo_param('x','h33') = 0;
+vel_lo_param('x','h34') = 0;
+vel_lo_param('x','h35') = 0;
+vel_lo_param('x','h36') = 0;
+vel_lo_param('x','h37') = 0;
+vel_lo_param('x','h38') = 0;
+vel_lo_param('x','h39') = 0;
+vel_lo_param('x','h4') = 0;
+vel_lo_param('x','h40') = 0;
+vel_lo_param('x','h41') = 0;
+vel_lo_param('x','h42') = 0;
+vel_lo_param('x','h43') = 0;
+vel_lo_param('x','h44') = 0;
+vel_lo_param('x','h45') = 0;
+vel_lo_param('x','h46') = 0;
+vel_lo_param('x','h47') = 0;
+vel_lo_param('x','h48') = 0;
+vel_lo_param('x','h49') = 0;
+vel_lo_param('x','h5') = 0;
+vel_lo_param('x','h50') = 0;
+vel_lo_param('x','h6') = 0;
+vel_lo_param('x','h7') = 0;
+vel_lo_param('x','h8') = 0;
+vel_lo_param('x','h9') = 0;
 
 * ============================================
 * Equations
@@ -290,322 +307,20 @@ Equations
     stat_cl(h)
     stat_d(h)
     stat_l(h)
-    stat_pos_x_h0
-    stat_pos_x_h1
-    stat_pos_x_h10
-    stat_pos_x_h11
-    stat_pos_x_h12
-    stat_pos_x_h13
-    stat_pos_x_h14
-    stat_pos_x_h15
-    stat_pos_x_h16
-    stat_pos_x_h17
-    stat_pos_x_h18
-    stat_pos_x_h19
-    stat_pos_x_h2
-    stat_pos_x_h20
-    stat_pos_x_h21
-    stat_pos_x_h22
-    stat_pos_x_h23
-    stat_pos_x_h24
-    stat_pos_x_h25
-    stat_pos_x_h26
-    stat_pos_x_h27
-    stat_pos_x_h28
-    stat_pos_x_h29
-    stat_pos_x_h3
-    stat_pos_x_h30
-    stat_pos_x_h31
-    stat_pos_x_h32
-    stat_pos_x_h33
-    stat_pos_x_h34
-    stat_pos_x_h35
-    stat_pos_x_h36
-    stat_pos_x_h37
-    stat_pos_x_h38
-    stat_pos_x_h39
-    stat_pos_x_h4
-    stat_pos_x_h40
-    stat_pos_x_h41
-    stat_pos_x_h42
-    stat_pos_x_h43
-    stat_pos_x_h44
-    stat_pos_x_h45
-    stat_pos_x_h46
-    stat_pos_x_h47
-    stat_pos_x_h48
-    stat_pos_x_h49
-    stat_pos_x_h5
-    stat_pos_x_h50
-    stat_pos_x_h6
-    stat_pos_x_h7
-    stat_pos_x_h8
-    stat_pos_x_h9
-    stat_pos_y_h0
-    stat_pos_y_h1
-    stat_pos_y_h10
-    stat_pos_y_h11
-    stat_pos_y_h12
-    stat_pos_y_h13
-    stat_pos_y_h14
-    stat_pos_y_h15
-    stat_pos_y_h16
-    stat_pos_y_h17
-    stat_pos_y_h18
-    stat_pos_y_h19
-    stat_pos_y_h2
-    stat_pos_y_h20
-    stat_pos_y_h21
-    stat_pos_y_h22
-    stat_pos_y_h23
-    stat_pos_y_h24
-    stat_pos_y_h25
-    stat_pos_y_h26
-    stat_pos_y_h27
-    stat_pos_y_h28
-    stat_pos_y_h29
-    stat_pos_y_h3
-    stat_pos_y_h30
-    stat_pos_y_h31
-    stat_pos_y_h32
-    stat_pos_y_h33
-    stat_pos_y_h34
-    stat_pos_y_h35
-    stat_pos_y_h36
-    stat_pos_y_h37
-    stat_pos_y_h38
-    stat_pos_y_h39
-    stat_pos_y_h4
-    stat_pos_y_h40
-    stat_pos_y_h41
-    stat_pos_y_h42
-    stat_pos_y_h43
-    stat_pos_y_h44
-    stat_pos_y_h45
-    stat_pos_y_h46
-    stat_pos_y_h47
-    stat_pos_y_h48
-    stat_pos_y_h49
-    stat_pos_y_h5
-    stat_pos_y_h50
-    stat_pos_y_h6
-    stat_pos_y_h7
-    stat_pos_y_h8
-    stat_pos_y_h9
+    stat_pos(c,h)
     stat_r(h)
     stat_step
     stat_t_f
     stat_u(h)
     stat_v(h)
     stat_v_dot(c,h)
-    stat_vel_x_h0
-    stat_vel_x_h1
-    stat_vel_x_h10
-    stat_vel_x_h11
-    stat_vel_x_h12
-    stat_vel_x_h13
-    stat_vel_x_h14
-    stat_vel_x_h15
-    stat_vel_x_h16
-    stat_vel_x_h17
-    stat_vel_x_h18
-    stat_vel_x_h19
-    stat_vel_x_h2
-    stat_vel_x_h20
-    stat_vel_x_h21
-    stat_vel_x_h22
-    stat_vel_x_h23
-    stat_vel_x_h24
-    stat_vel_x_h25
-    stat_vel_x_h26
-    stat_vel_x_h27
-    stat_vel_x_h28
-    stat_vel_x_h29
-    stat_vel_x_h3
-    stat_vel_x_h30
-    stat_vel_x_h31
-    stat_vel_x_h32
-    stat_vel_x_h33
-    stat_vel_x_h34
-    stat_vel_x_h35
-    stat_vel_x_h36
-    stat_vel_x_h37
-    stat_vel_x_h38
-    stat_vel_x_h39
-    stat_vel_x_h4
-    stat_vel_x_h40
-    stat_vel_x_h41
-    stat_vel_x_h42
-    stat_vel_x_h43
-    stat_vel_x_h44
-    stat_vel_x_h45
-    stat_vel_x_h46
-    stat_vel_x_h47
-    stat_vel_x_h48
-    stat_vel_x_h49
-    stat_vel_x_h5
-    stat_vel_x_h50
-    stat_vel_x_h6
-    stat_vel_x_h7
-    stat_vel_x_h8
-    stat_vel_x_h9
-    stat_vel_y_h0
-    stat_vel_y_h1
-    stat_vel_y_h10
-    stat_vel_y_h11
-    stat_vel_y_h12
-    stat_vel_y_h13
-    stat_vel_y_h14
-    stat_vel_y_h15
-    stat_vel_y_h16
-    stat_vel_y_h17
-    stat_vel_y_h18
-    stat_vel_y_h19
-    stat_vel_y_h2
-    stat_vel_y_h20
-    stat_vel_y_h21
-    stat_vel_y_h22
-    stat_vel_y_h23
-    stat_vel_y_h24
-    stat_vel_y_h25
-    stat_vel_y_h26
-    stat_vel_y_h27
-    stat_vel_y_h28
-    stat_vel_y_h29
-    stat_vel_y_h3
-    stat_vel_y_h30
-    stat_vel_y_h31
-    stat_vel_y_h32
-    stat_vel_y_h33
-    stat_vel_y_h34
-    stat_vel_y_h35
-    stat_vel_y_h36
-    stat_vel_y_h37
-    stat_vel_y_h38
-    stat_vel_y_h39
-    stat_vel_y_h4
-    stat_vel_y_h40
-    stat_vel_y_h41
-    stat_vel_y_h42
-    stat_vel_y_h43
-    stat_vel_y_h44
-    stat_vel_y_h45
-    stat_vel_y_h46
-    stat_vel_y_h47
-    stat_vel_y_h48
-    stat_vel_y_h49
-    stat_vel_y_h5
-    stat_vel_y_h50
-    stat_vel_y_h6
-    stat_vel_y_h7
-    stat_vel_y_h8
-    stat_vel_y_h9
+    stat_vel(c,h)
     stat_w(h)
     comp_lo_cl(h)
-    comp_lo_pos_x_h0
-    comp_lo_pos_x_h1
-    comp_lo_pos_x_h10
-    comp_lo_pos_x_h11
-    comp_lo_pos_x_h12
-    comp_lo_pos_x_h13
-    comp_lo_pos_x_h14
-    comp_lo_pos_x_h15
-    comp_lo_pos_x_h16
-    comp_lo_pos_x_h17
-    comp_lo_pos_x_h18
-    comp_lo_pos_x_h19
-    comp_lo_pos_x_h2
-    comp_lo_pos_x_h20
-    comp_lo_pos_x_h21
-    comp_lo_pos_x_h22
-    comp_lo_pos_x_h23
-    comp_lo_pos_x_h24
-    comp_lo_pos_x_h25
-    comp_lo_pos_x_h26
-    comp_lo_pos_x_h27
-    comp_lo_pos_x_h28
-    comp_lo_pos_x_h29
-    comp_lo_pos_x_h3
-    comp_lo_pos_x_h30
-    comp_lo_pos_x_h31
-    comp_lo_pos_x_h32
-    comp_lo_pos_x_h33
-    comp_lo_pos_x_h34
-    comp_lo_pos_x_h35
-    comp_lo_pos_x_h36
-    comp_lo_pos_x_h37
-    comp_lo_pos_x_h38
-    comp_lo_pos_x_h39
-    comp_lo_pos_x_h4
-    comp_lo_pos_x_h40
-    comp_lo_pos_x_h41
-    comp_lo_pos_x_h42
-    comp_lo_pos_x_h43
-    comp_lo_pos_x_h44
-    comp_lo_pos_x_h45
-    comp_lo_pos_x_h46
-    comp_lo_pos_x_h47
-    comp_lo_pos_x_h48
-    comp_lo_pos_x_h49
-    comp_lo_pos_x_h5
-    comp_lo_pos_x_h50
-    comp_lo_pos_x_h6
-    comp_lo_pos_x_h7
-    comp_lo_pos_x_h8
-    comp_lo_pos_x_h9
+    comp_lo_pos(c,h)
     comp_lo_step
     comp_lo_v(h)
-    comp_lo_vel_x_h0
-    comp_lo_vel_x_h1
-    comp_lo_vel_x_h10
-    comp_lo_vel_x_h11
-    comp_lo_vel_x_h12
-    comp_lo_vel_x_h13
-    comp_lo_vel_x_h14
-    comp_lo_vel_x_h15
-    comp_lo_vel_x_h16
-    comp_lo_vel_x_h17
-    comp_lo_vel_x_h18
-    comp_lo_vel_x_h19
-    comp_lo_vel_x_h2
-    comp_lo_vel_x_h20
-    comp_lo_vel_x_h21
-    comp_lo_vel_x_h22
-    comp_lo_vel_x_h23
-    comp_lo_vel_x_h24
-    comp_lo_vel_x_h25
-    comp_lo_vel_x_h26
-    comp_lo_vel_x_h27
-    comp_lo_vel_x_h28
-    comp_lo_vel_x_h29
-    comp_lo_vel_x_h3
-    comp_lo_vel_x_h30
-    comp_lo_vel_x_h31
-    comp_lo_vel_x_h32
-    comp_lo_vel_x_h33
-    comp_lo_vel_x_h34
-    comp_lo_vel_x_h35
-    comp_lo_vel_x_h36
-    comp_lo_vel_x_h37
-    comp_lo_vel_x_h38
-    comp_lo_vel_x_h39
-    comp_lo_vel_x_h4
-    comp_lo_vel_x_h40
-    comp_lo_vel_x_h41
-    comp_lo_vel_x_h42
-    comp_lo_vel_x_h43
-    comp_lo_vel_x_h44
-    comp_lo_vel_x_h45
-    comp_lo_vel_x_h46
-    comp_lo_vel_x_h47
-    comp_lo_vel_x_h48
-    comp_lo_vel_x_h49
-    comp_lo_vel_x_h5
-    comp_lo_vel_x_h50
-    comp_lo_vel_x_h6
-    comp_lo_vel_x_h7
-    comp_lo_vel_x_h8
-    comp_lo_vel_x_h9
+    comp_lo_vel(c,h)
     comp_up_cl(h)
     Ddef(i)
     Ldef(i)
@@ -626,327 +341,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cl(h).. sum(i, ((-1) * (sqr(v(i)) * S * rho * 0.5 * c1 * 2 * cl(i))) * nu_Ddef(i)) + sum(i, ((-1) * (sqr(v(i)) * S * rho * 0.5)) * nu_Ldef(i)) - piL_cl(h) + piU_cl(h) =E= 0;
-stat_d(h).. sum(i, nu_Ddef(i)) + sum(c, sum(i, ((-1) * (m * ((-1) * (v(i) * vel(c,i) / sqr(v(i)))) / sqr(m))) * nu_vx_dot_def(i))) + sum(i, ((-1) * (m * ((-1) * (v(i) * w(i) / sqr(v(i)))) / sqr(m))) * nu_vy_dot_def(i)) =E= 0;
-stat_l(h).. sum(i, nu_Ldef(i)) + sum(i, ((-1) * (m * v(i) * w(i) * (-1) / sqr(v(i)) / sqr(m))) * nu_vx_dot_def(i)) + sum(c, sum(i, ((-1) * (m * v(i) * vel(c,i) / sqr(v(i)) / sqr(m))) * nu_vy_dot_def(i))) =E= 0;
-stat_pos_x_h0.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h0 =E= 0;
-stat_pos_x_h1.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h1 =E= 0;
-stat_pos_x_h10.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h10 =E= 0;
-stat_pos_x_h11.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h11 =E= 0;
-stat_pos_x_h12.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h12 =E= 0;
-stat_pos_x_h13.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h13 =E= 0;
-stat_pos_x_h14.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h14 =E= 0;
-stat_pos_x_h15.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h15 =E= 0;
-stat_pos_x_h16.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h16 =E= 0;
-stat_pos_x_h17.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h17 =E= 0;
-stat_pos_x_h18.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h18 =E= 0;
-stat_pos_x_h19.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h19 =E= 0;
-stat_pos_x_h2.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h2 =E= 0;
-stat_pos_x_h20.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h20 =E= 0;
-stat_pos_x_h21.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h21 =E= 0;
-stat_pos_x_h22.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h22 =E= 0;
-stat_pos_x_h23.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h23 =E= 0;
-stat_pos_x_h24.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h24 =E= 0;
-stat_pos_x_h25.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h25 =E= 0;
-stat_pos_x_h26.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h26 =E= 0;
-stat_pos_x_h27.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h27 =E= 0;
-stat_pos_x_h28.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h28 =E= 0;
-stat_pos_x_h29.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h29 =E= 0;
-stat_pos_x_h3.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h3 =E= 0;
-stat_pos_x_h30.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h30 =E= 0;
-stat_pos_x_h31.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h31 =E= 0;
-stat_pos_x_h32.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h32 =E= 0;
-stat_pos_x_h33.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h33 =E= 0;
-stat_pos_x_h34.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h34 =E= 0;
-stat_pos_x_h35.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h35 =E= 0;
-stat_pos_x_h36.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h36 =E= 0;
-stat_pos_x_h37.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h37 =E= 0;
-stat_pos_x_h38.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h38 =E= 0;
-stat_pos_x_h39.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h39 =E= 0;
-stat_pos_x_h4.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h4 =E= 0;
-stat_pos_x_h40.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h40 =E= 0;
-stat_pos_x_h41.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h41 =E= 0;
-stat_pos_x_h42.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h42 =E= 0;
-stat_pos_x_h43.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h43 =E= 0;
-stat_pos_x_h44.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h44 =E= 0;
-stat_pos_x_h45.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h45 =E= 0;
-stat_pos_x_h46.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h46 =E= 0;
-stat_pos_x_h47.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h47 =E= 0;
-stat_pos_x_h48.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h48 =E= 0;
-stat_pos_x_h49.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h49 =E= 0;
-stat_pos_x_h5.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h5 =E= 0;
-stat_pos_x_h50.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h50 =E= 0;
-stat_pos_x_h6.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h6 =E= 0;
-stat_pos_x_h7.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h7 =E= 0;
-stat_pos_x_h8.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h8 =E= 0;
-stat_pos_x_h9.. sum((c,i), nu_pos_eqn(c,i)) - piL_pos_x_h9 =E= 0;
-stat_pos_y_h0.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h1.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h10.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h11.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h12.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h13.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h14.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h15.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h16.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h17.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h18.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h19.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h2.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h20.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h21.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h22.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h23.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h24.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h25.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h26.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h27.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h28.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h29.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h3.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h30.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h31.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h32.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h33.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h34.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h35.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h36.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h37.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h38.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h39.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h4.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h40.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h41.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h42.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h43.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h44.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h45.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h46.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h47.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h48.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h49.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h5.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h50.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h6.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h7.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h8.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_pos_y_h9.. sum((c,i), nu_pos_eqn(c,i)) =E= 0;
-stat_r(h).. sum(i, nu_rdef(i)) + sum(i, ((-1) * (((-1) * (exp(((-1) * r(i))) * u_c)) - u_c * (1 - r(i)) * exp(((-1) * r(i))))) * nu_udef(i)) =E= 0;
-stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * ((vel(c,i) + vel(c,h)) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * ((v_dot(c,i) + v_dot(c,h)) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
+stat_cl(h).. ((-1) * (sqr(v(h)) * S * rho * 0.5 * c1 * 2 * cl(h))) * nu_Ddef(h) + ((-1) * (sqr(v(h)) * S * rho * 0.5)) * nu_Ldef(h) - piL_cl(h) + piU_cl(h) =E= 0;
+stat_d(h).. nu_Ddef(h) + sum(c, ((-1) * (m * ((-1) * (v(h) * vel(c,h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h)) + ((-1) * (m * ((-1) * (v(h) * w(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
+stat_l(h).. nu_Ldef(h) + ((-1) * (m * v(h) * w(h) * (-1) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + sum(c, ((-1) * (m * v(h) * vel(c,h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h)) =E= 0;
+stat_pos(c,h).. nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
+stat_r(h).. nu_rdef(h) + ((-1) * (((-1) * (exp(((-1) * r(h))) * u_c)) - u_c * (1 - r(h)) * exp(((-1) * r(h))))) * nu_udef(h) =E= 0;
+stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * (vel(c,i) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * (v_dot(c,i) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
 stat_t_f.. nu_tf_eqn =E= 0;
-stat_u(h).. sum(i, nu_udef(i)) + sum(i, nu_wdef(i)) =E= 0;
-stat_v(h).. sum(i, nu_vdef(i)) + sum(i, ((-1) * (0.5 * (c0 + c1 * sqr(cl(i))) * rho * S * 2 * v(i))) * nu_Ddef(i)) + sum(i, ((-1) * (0.5 * cl(i) * rho * S * 2 * v(i))) * nu_Ldef(i)) + sum(c, sum(i, ((-1) * (m * (((-1) * (((-1) * l(i)) * w(i))) / sqr(v(i)) - ((-1) * (d(i) * vel(c,i))) / sqr(v(i))) / sqr(m))) * nu_vx_dot_def(i))) + sum(c, sum(i, ((-1) * (m * (((-1) * (l(i) * vel(c,i))) / sqr(v(i)) - ((-1) * (d(i) * w(i))) / sqr(v(i))) / sqr(m))) * nu_vy_dot_def(i))) - piL_v(h) =E= 0;
-stat_v_dot(c,h).. sum(i, ((-1) * (0.5 * step)) * nu_vel_eqn(c,i)) =E= 0;
-stat_vel_x_h0.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h0 =E= 0;
-stat_vel_x_h1.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h1 =E= 0;
-stat_vel_x_h10.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h10 =E= 0;
-stat_vel_x_h11.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h11 =E= 0;
-stat_vel_x_h12.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h12 =E= 0;
-stat_vel_x_h13.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h13 =E= 0;
-stat_vel_x_h14.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h14 =E= 0;
-stat_vel_x_h15.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h15 =E= 0;
-stat_vel_x_h16.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h16 =E= 0;
-stat_vel_x_h17.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h17 =E= 0;
-stat_vel_x_h18.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h18 =E= 0;
-stat_vel_x_h19.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h19 =E= 0;
-stat_vel_x_h2.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h2 =E= 0;
-stat_vel_x_h20.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h20 =E= 0;
-stat_vel_x_h21.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h21 =E= 0;
-stat_vel_x_h22.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h22 =E= 0;
-stat_vel_x_h23.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h23 =E= 0;
-stat_vel_x_h24.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h24 =E= 0;
-stat_vel_x_h25.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h25 =E= 0;
-stat_vel_x_h26.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h26 =E= 0;
-stat_vel_x_h27.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h27 =E= 0;
-stat_vel_x_h28.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h28 =E= 0;
-stat_vel_x_h29.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h29 =E= 0;
-stat_vel_x_h3.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h3 =E= 0;
-stat_vel_x_h30.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h30 =E= 0;
-stat_vel_x_h31.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h31 =E= 0;
-stat_vel_x_h32.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h32 =E= 0;
-stat_vel_x_h33.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h33 =E= 0;
-stat_vel_x_h34.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h34 =E= 0;
-stat_vel_x_h35.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h35 =E= 0;
-stat_vel_x_h36.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h36 =E= 0;
-stat_vel_x_h37.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h37 =E= 0;
-stat_vel_x_h38.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h38 =E= 0;
-stat_vel_x_h39.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h39 =E= 0;
-stat_vel_x_h4.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h4 =E= 0;
-stat_vel_x_h40.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h40 =E= 0;
-stat_vel_x_h41.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h41 =E= 0;
-stat_vel_x_h42.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h42 =E= 0;
-stat_vel_x_h43.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h43 =E= 0;
-stat_vel_x_h44.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h44 =E= 0;
-stat_vel_x_h45.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h45 =E= 0;
-stat_vel_x_h46.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h46 =E= 0;
-stat_vel_x_h47.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h47 =E= 0;
-stat_vel_x_h48.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h48 =E= 0;
-stat_vel_x_h49.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h49 =E= 0;
-stat_vel_x_h5.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h5 =E= 0;
-stat_vel_x_h50.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h50 =E= 0;
-stat_vel_x_h6.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h6 =E= 0;
-stat_vel_x_h7.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h7 =E= 0;
-stat_vel_x_h8.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h8 =E= 0;
-stat_vel_x_h9.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) - piL_vel_x_h9 =E= 0;
-stat_vel_y_h0.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h1.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h10.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h11.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h12.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h13.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h14.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h15.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h16.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h17.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h18.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h19.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h2.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h20.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h21.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h22.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h23.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h24.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h25.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h26.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h27.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h28.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h29.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h3.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h30.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h31.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h32.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h33.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h34.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h35.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h36.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h37.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h38.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h39.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h4.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h40.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h41.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h42.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h43.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h44.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h45.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h46.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h47.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h48.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h49.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h5.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h50.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h6.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h7.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h8.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_vel_y_h9.. sum((c,i), ((-1) * (0.5 * step)) * nu_pos_eqn(c,i)) + sum((c,i), nu_vel_eqn(c,i)) =E= 0;
-stat_w(h).. sum(i, nu_wdef(i)) + sum(c, sum(i, ((-1) * (1 / (2 * sqrt(sqr(vel(c,i)) + sqr(w(i)))) * 2 * w(i))) * nu_vdef(i))) + sum(i, ((-1) * (m * v(i) * ((-1) * l(i)) / sqr(v(i)) / sqr(m))) * nu_vx_dot_def(i)) + sum(i, ((-1) * (m * ((-1) * (v(i) * d(i) / sqr(v(i)))) / sqr(m))) * nu_vy_dot_def(i)) =E= 0;
+stat_u(h).. nu_udef(h) + nu_wdef(h) =E= 0;
+stat_v(h).. nu_vdef(h) + ((-1) * (0.5 * (c0 + c1 * sqr(cl(h))) * rho * S * 2 * v(h))) * nu_Ddef(h) + ((-1) * (0.5 * cl(h) * rho * S * 2 * v(h))) * nu_Ldef(h) + sum(c, ((-1) * (m * (((-1) * (((-1) * l(h)) * w(h))) / sqr(v(h)) - ((-1) * (d(h) * vel(c,h))) / sqr(v(h))) / sqr(m))) * nu_vx_dot_def(h)) + sum(c, ((-1) * (m * (((-1) * (l(h) * vel(c,h))) / sqr(v(h)) - ((-1) * (d(h) * w(h))) / sqr(v(h))) / sqr(m))) * nu_vy_dot_def(h)) - piL_v(h) =E= 0;
+stat_v_dot(c,h)$(ord(h) <= card(h) - 1).. ((-1) * (0.5 * step)) * nu_vel_eqn(c,h) + (((-1) * (0.5 * step)) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) =E= 0;
+stat_vel(c,h).. ((-1) * (0.5 * step)) * nu_pos_eqn(c,h) + (((-1) * (0.5 * step)) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vel_eqn(c,h) + ((-1) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_vel(c,h) =E= 0;
+stat_w(h).. nu_wdef(h) + sum(c, ((-1) * (1 / (2 * sqrt(sqr(vel(c,h)) + sqr(w(h)))) * 2 * w(h))) * nu_vdef(h)) + ((-1) * (m * v(h) * ((-1) * l(h)) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_cl(h).. cl(h) - 0 =G= 0;
-comp_lo_pos_x_h0.. pos(x,"h0") - 0 =G= 0;
-comp_lo_pos_x_h1.. pos(x,"h1") - 0 =G= 0;
-comp_lo_pos_x_h10.. pos(x,"h10") - 0 =G= 0;
-comp_lo_pos_x_h11.. pos(x,"h11") - 0 =G= 0;
-comp_lo_pos_x_h12.. pos(x,"h12") - 0 =G= 0;
-comp_lo_pos_x_h13.. pos(x,"h13") - 0 =G= 0;
-comp_lo_pos_x_h14.. pos(x,"h14") - 0 =G= 0;
-comp_lo_pos_x_h15.. pos(x,"h15") - 0 =G= 0;
-comp_lo_pos_x_h16.. pos(x,"h16") - 0 =G= 0;
-comp_lo_pos_x_h17.. pos(x,"h17") - 0 =G= 0;
-comp_lo_pos_x_h18.. pos(x,"h18") - 0 =G= 0;
-comp_lo_pos_x_h19.. pos(x,"h19") - 0 =G= 0;
-comp_lo_pos_x_h2.. pos(x,"h2") - 0 =G= 0;
-comp_lo_pos_x_h20.. pos(x,"h20") - 0 =G= 0;
-comp_lo_pos_x_h21.. pos(x,"h21") - 0 =G= 0;
-comp_lo_pos_x_h22.. pos(x,"h22") - 0 =G= 0;
-comp_lo_pos_x_h23.. pos(x,"h23") - 0 =G= 0;
-comp_lo_pos_x_h24.. pos(x,"h24") - 0 =G= 0;
-comp_lo_pos_x_h25.. pos(x,"h25") - 0 =G= 0;
-comp_lo_pos_x_h26.. pos(x,"h26") - 0 =G= 0;
-comp_lo_pos_x_h27.. pos(x,"h27") - 0 =G= 0;
-comp_lo_pos_x_h28.. pos(x,"h28") - 0 =G= 0;
-comp_lo_pos_x_h29.. pos(x,"h29") - 0 =G= 0;
-comp_lo_pos_x_h3.. pos(x,"h3") - 0 =G= 0;
-comp_lo_pos_x_h30.. pos(x,"h30") - 0 =G= 0;
-comp_lo_pos_x_h31.. pos(x,"h31") - 0 =G= 0;
-comp_lo_pos_x_h32.. pos(x,"h32") - 0 =G= 0;
-comp_lo_pos_x_h33.. pos(x,"h33") - 0 =G= 0;
-comp_lo_pos_x_h34.. pos(x,"h34") - 0 =G= 0;
-comp_lo_pos_x_h35.. pos(x,"h35") - 0 =G= 0;
-comp_lo_pos_x_h36.. pos(x,"h36") - 0 =G= 0;
-comp_lo_pos_x_h37.. pos(x,"h37") - 0 =G= 0;
-comp_lo_pos_x_h38.. pos(x,"h38") - 0 =G= 0;
-comp_lo_pos_x_h39.. pos(x,"h39") - 0 =G= 0;
-comp_lo_pos_x_h4.. pos(x,"h4") - 0 =G= 0;
-comp_lo_pos_x_h40.. pos(x,"h40") - 0 =G= 0;
-comp_lo_pos_x_h41.. pos(x,"h41") - 0 =G= 0;
-comp_lo_pos_x_h42.. pos(x,"h42") - 0 =G= 0;
-comp_lo_pos_x_h43.. pos(x,"h43") - 0 =G= 0;
-comp_lo_pos_x_h44.. pos(x,"h44") - 0 =G= 0;
-comp_lo_pos_x_h45.. pos(x,"h45") - 0 =G= 0;
-comp_lo_pos_x_h46.. pos(x,"h46") - 0 =G= 0;
-comp_lo_pos_x_h47.. pos(x,"h47") - 0 =G= 0;
-comp_lo_pos_x_h48.. pos(x,"h48") - 0 =G= 0;
-comp_lo_pos_x_h49.. pos(x,"h49") - 0 =G= 0;
-comp_lo_pos_x_h5.. pos(x,"h5") - 0 =G= 0;
-comp_lo_pos_x_h50.. pos(x,"h50") - 0 =G= 0;
-comp_lo_pos_x_h6.. pos(x,"h6") - 0 =G= 0;
-comp_lo_pos_x_h7.. pos(x,"h7") - 0 =G= 0;
-comp_lo_pos_x_h8.. pos(x,"h8") - 0 =G= 0;
-comp_lo_pos_x_h9.. pos(x,"h9") - 0 =G= 0;
+comp_lo_pos(c,h)$(has_pos_lo(c,h)).. pos(c,h) - pos_lo_param(c,h) =G= 0;
 comp_lo_step.. step - 0 =G= 0;
 comp_lo_v(h).. v(h) - 0.01 =G= 0;
-comp_lo_vel_x_h0.. vel(x,"h0") - 0 =G= 0;
-comp_lo_vel_x_h1.. vel(x,"h1") - 0 =G= 0;
-comp_lo_vel_x_h10.. vel(x,"h10") - 0 =G= 0;
-comp_lo_vel_x_h11.. vel(x,"h11") - 0 =G= 0;
-comp_lo_vel_x_h12.. vel(x,"h12") - 0 =G= 0;
-comp_lo_vel_x_h13.. vel(x,"h13") - 0 =G= 0;
-comp_lo_vel_x_h14.. vel(x,"h14") - 0 =G= 0;
-comp_lo_vel_x_h15.. vel(x,"h15") - 0 =G= 0;
-comp_lo_vel_x_h16.. vel(x,"h16") - 0 =G= 0;
-comp_lo_vel_x_h17.. vel(x,"h17") - 0 =G= 0;
-comp_lo_vel_x_h18.. vel(x,"h18") - 0 =G= 0;
-comp_lo_vel_x_h19.. vel(x,"h19") - 0 =G= 0;
-comp_lo_vel_x_h2.. vel(x,"h2") - 0 =G= 0;
-comp_lo_vel_x_h20.. vel(x,"h20") - 0 =G= 0;
-comp_lo_vel_x_h21.. vel(x,"h21") - 0 =G= 0;
-comp_lo_vel_x_h22.. vel(x,"h22") - 0 =G= 0;
-comp_lo_vel_x_h23.. vel(x,"h23") - 0 =G= 0;
-comp_lo_vel_x_h24.. vel(x,"h24") - 0 =G= 0;
-comp_lo_vel_x_h25.. vel(x,"h25") - 0 =G= 0;
-comp_lo_vel_x_h26.. vel(x,"h26") - 0 =G= 0;
-comp_lo_vel_x_h27.. vel(x,"h27") - 0 =G= 0;
-comp_lo_vel_x_h28.. vel(x,"h28") - 0 =G= 0;
-comp_lo_vel_x_h29.. vel(x,"h29") - 0 =G= 0;
-comp_lo_vel_x_h3.. vel(x,"h3") - 0 =G= 0;
-comp_lo_vel_x_h30.. vel(x,"h30") - 0 =G= 0;
-comp_lo_vel_x_h31.. vel(x,"h31") - 0 =G= 0;
-comp_lo_vel_x_h32.. vel(x,"h32") - 0 =G= 0;
-comp_lo_vel_x_h33.. vel(x,"h33") - 0 =G= 0;
-comp_lo_vel_x_h34.. vel(x,"h34") - 0 =G= 0;
-comp_lo_vel_x_h35.. vel(x,"h35") - 0 =G= 0;
-comp_lo_vel_x_h36.. vel(x,"h36") - 0 =G= 0;
-comp_lo_vel_x_h37.. vel(x,"h37") - 0 =G= 0;
-comp_lo_vel_x_h38.. vel(x,"h38") - 0 =G= 0;
-comp_lo_vel_x_h39.. vel(x,"h39") - 0 =G= 0;
-comp_lo_vel_x_h4.. vel(x,"h4") - 0 =G= 0;
-comp_lo_vel_x_h40.. vel(x,"h40") - 0 =G= 0;
-comp_lo_vel_x_h41.. vel(x,"h41") - 0 =G= 0;
-comp_lo_vel_x_h42.. vel(x,"h42") - 0 =G= 0;
-comp_lo_vel_x_h43.. vel(x,"h43") - 0 =G= 0;
-comp_lo_vel_x_h44.. vel(x,"h44") - 0 =G= 0;
-comp_lo_vel_x_h45.. vel(x,"h45") - 0 =G= 0;
-comp_lo_vel_x_h46.. vel(x,"h46") - 0 =G= 0;
-comp_lo_vel_x_h47.. vel(x,"h47") - 0 =G= 0;
-comp_lo_vel_x_h48.. vel(x,"h48") - 0 =G= 0;
-comp_lo_vel_x_h49.. vel(x,"h49") - 0 =G= 0;
-comp_lo_vel_x_h5.. vel(x,"h5") - 0 =G= 0;
-comp_lo_vel_x_h50.. vel(x,"h50") - 0 =G= 0;
-comp_lo_vel_x_h6.. vel(x,"h6") - 0 =G= 0;
-comp_lo_vel_x_h7.. vel(x,"h7") - 0 =G= 0;
-comp_lo_vel_x_h8.. vel(x,"h8") - 0 =G= 0;
-comp_lo_vel_x_h9.. vel(x,"h9") - 0 =G= 0;
+comp_lo_vel(c,h)$(has_vel_lo(c,h)).. vel(c,h) - vel_lo_param(c,h) =G= 0;
 
 * Upper bound complementarity equations
 comp_up_cl(h).. 1.4 - cl(h) =G= 0;
@@ -973,6 +386,9 @@ vel_eqn(c,i)$(ord(i) > 1).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) +
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+v_dot.fx(c,h)$(not (ord(h) <= card(h) - 1)) = 0;
+piL_pos.fx(c,h)$(not has_pos_lo(c,h)) = 0;
+piL_vel.fx(c,h)$(not has_vel_lo(c,h)) = 0;
 nu_pos_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
 nu_vel_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
 
@@ -993,216 +409,14 @@ Model mcp_model /
     stat_cl.cl,
     stat_d.d,
     stat_l.l,
-    stat_pos_x_h0.pos,
-    stat_pos_x_h1.pos,
-    stat_pos_x_h10.pos,
-    stat_pos_x_h11.pos,
-    stat_pos_x_h12.pos,
-    stat_pos_x_h13.pos,
-    stat_pos_x_h14.pos,
-    stat_pos_x_h15.pos,
-    stat_pos_x_h16.pos,
-    stat_pos_x_h17.pos,
-    stat_pos_x_h18.pos,
-    stat_pos_x_h19.pos,
-    stat_pos_x_h2.pos,
-    stat_pos_x_h20.pos,
-    stat_pos_x_h21.pos,
-    stat_pos_x_h22.pos,
-    stat_pos_x_h23.pos,
-    stat_pos_x_h24.pos,
-    stat_pos_x_h25.pos,
-    stat_pos_x_h26.pos,
-    stat_pos_x_h27.pos,
-    stat_pos_x_h28.pos,
-    stat_pos_x_h29.pos,
-    stat_pos_x_h3.pos,
-    stat_pos_x_h30.pos,
-    stat_pos_x_h31.pos,
-    stat_pos_x_h32.pos,
-    stat_pos_x_h33.pos,
-    stat_pos_x_h34.pos,
-    stat_pos_x_h35.pos,
-    stat_pos_x_h36.pos,
-    stat_pos_x_h37.pos,
-    stat_pos_x_h38.pos,
-    stat_pos_x_h39.pos,
-    stat_pos_x_h4.pos,
-    stat_pos_x_h40.pos,
-    stat_pos_x_h41.pos,
-    stat_pos_x_h42.pos,
-    stat_pos_x_h43.pos,
-    stat_pos_x_h44.pos,
-    stat_pos_x_h45.pos,
-    stat_pos_x_h46.pos,
-    stat_pos_x_h47.pos,
-    stat_pos_x_h48.pos,
-    stat_pos_x_h49.pos,
-    stat_pos_x_h5.pos,
-    stat_pos_x_h50.pos,
-    stat_pos_x_h6.pos,
-    stat_pos_x_h7.pos,
-    stat_pos_x_h8.pos,
-    stat_pos_x_h9.pos,
-    stat_pos_y_h0.pos,
-    stat_pos_y_h1.pos,
-    stat_pos_y_h10.pos,
-    stat_pos_y_h11.pos,
-    stat_pos_y_h12.pos,
-    stat_pos_y_h13.pos,
-    stat_pos_y_h14.pos,
-    stat_pos_y_h15.pos,
-    stat_pos_y_h16.pos,
-    stat_pos_y_h17.pos,
-    stat_pos_y_h18.pos,
-    stat_pos_y_h19.pos,
-    stat_pos_y_h2.pos,
-    stat_pos_y_h20.pos,
-    stat_pos_y_h21.pos,
-    stat_pos_y_h22.pos,
-    stat_pos_y_h23.pos,
-    stat_pos_y_h24.pos,
-    stat_pos_y_h25.pos,
-    stat_pos_y_h26.pos,
-    stat_pos_y_h27.pos,
-    stat_pos_y_h28.pos,
-    stat_pos_y_h29.pos,
-    stat_pos_y_h3.pos,
-    stat_pos_y_h30.pos,
-    stat_pos_y_h31.pos,
-    stat_pos_y_h32.pos,
-    stat_pos_y_h33.pos,
-    stat_pos_y_h34.pos,
-    stat_pos_y_h35.pos,
-    stat_pos_y_h36.pos,
-    stat_pos_y_h37.pos,
-    stat_pos_y_h38.pos,
-    stat_pos_y_h39.pos,
-    stat_pos_y_h4.pos,
-    stat_pos_y_h40.pos,
-    stat_pos_y_h41.pos,
-    stat_pos_y_h42.pos,
-    stat_pos_y_h43.pos,
-    stat_pos_y_h44.pos,
-    stat_pos_y_h45.pos,
-    stat_pos_y_h46.pos,
-    stat_pos_y_h47.pos,
-    stat_pos_y_h48.pos,
-    stat_pos_y_h49.pos,
-    stat_pos_y_h5.pos,
-    stat_pos_y_h50.pos,
-    stat_pos_y_h6.pos,
-    stat_pos_y_h7.pos,
-    stat_pos_y_h8.pos,
-    stat_pos_y_h9.pos,
+    stat_pos.pos,
     stat_r.r,
     stat_step.step,
     stat_t_f.t_f,
     stat_u.u,
     stat_v.v,
     stat_v_dot.v_dot,
-    stat_vel_x_h0.vel,
-    stat_vel_x_h1.vel,
-    stat_vel_x_h10.vel,
-    stat_vel_x_h11.vel,
-    stat_vel_x_h12.vel,
-    stat_vel_x_h13.vel,
-    stat_vel_x_h14.vel,
-    stat_vel_x_h15.vel,
-    stat_vel_x_h16.vel,
-    stat_vel_x_h17.vel,
-    stat_vel_x_h18.vel,
-    stat_vel_x_h19.vel,
-    stat_vel_x_h2.vel,
-    stat_vel_x_h20.vel,
-    stat_vel_x_h21.vel,
-    stat_vel_x_h22.vel,
-    stat_vel_x_h23.vel,
-    stat_vel_x_h24.vel,
-    stat_vel_x_h25.vel,
-    stat_vel_x_h26.vel,
-    stat_vel_x_h27.vel,
-    stat_vel_x_h28.vel,
-    stat_vel_x_h29.vel,
-    stat_vel_x_h3.vel,
-    stat_vel_x_h30.vel,
-    stat_vel_x_h31.vel,
-    stat_vel_x_h32.vel,
-    stat_vel_x_h33.vel,
-    stat_vel_x_h34.vel,
-    stat_vel_x_h35.vel,
-    stat_vel_x_h36.vel,
-    stat_vel_x_h37.vel,
-    stat_vel_x_h38.vel,
-    stat_vel_x_h39.vel,
-    stat_vel_x_h4.vel,
-    stat_vel_x_h40.vel,
-    stat_vel_x_h41.vel,
-    stat_vel_x_h42.vel,
-    stat_vel_x_h43.vel,
-    stat_vel_x_h44.vel,
-    stat_vel_x_h45.vel,
-    stat_vel_x_h46.vel,
-    stat_vel_x_h47.vel,
-    stat_vel_x_h48.vel,
-    stat_vel_x_h49.vel,
-    stat_vel_x_h5.vel,
-    stat_vel_x_h50.vel,
-    stat_vel_x_h6.vel,
-    stat_vel_x_h7.vel,
-    stat_vel_x_h8.vel,
-    stat_vel_x_h9.vel,
-    stat_vel_y_h0.vel,
-    stat_vel_y_h1.vel,
-    stat_vel_y_h10.vel,
-    stat_vel_y_h11.vel,
-    stat_vel_y_h12.vel,
-    stat_vel_y_h13.vel,
-    stat_vel_y_h14.vel,
-    stat_vel_y_h15.vel,
-    stat_vel_y_h16.vel,
-    stat_vel_y_h17.vel,
-    stat_vel_y_h18.vel,
-    stat_vel_y_h19.vel,
-    stat_vel_y_h2.vel,
-    stat_vel_y_h20.vel,
-    stat_vel_y_h21.vel,
-    stat_vel_y_h22.vel,
-    stat_vel_y_h23.vel,
-    stat_vel_y_h24.vel,
-    stat_vel_y_h25.vel,
-    stat_vel_y_h26.vel,
-    stat_vel_y_h27.vel,
-    stat_vel_y_h28.vel,
-    stat_vel_y_h29.vel,
-    stat_vel_y_h3.vel,
-    stat_vel_y_h30.vel,
-    stat_vel_y_h31.vel,
-    stat_vel_y_h32.vel,
-    stat_vel_y_h33.vel,
-    stat_vel_y_h34.vel,
-    stat_vel_y_h35.vel,
-    stat_vel_y_h36.vel,
-    stat_vel_y_h37.vel,
-    stat_vel_y_h38.vel,
-    stat_vel_y_h39.vel,
-    stat_vel_y_h4.vel,
-    stat_vel_y_h40.vel,
-    stat_vel_y_h41.vel,
-    stat_vel_y_h42.vel,
-    stat_vel_y_h43.vel,
-    stat_vel_y_h44.vel,
-    stat_vel_y_h45.vel,
-    stat_vel_y_h46.vel,
-    stat_vel_y_h47.vel,
-    stat_vel_y_h48.vel,
-    stat_vel_y_h49.vel,
-    stat_vel_y_h5.vel,
-    stat_vel_y_h50.vel,
-    stat_vel_y_h6.vel,
-    stat_vel_y_h7.vel,
-    stat_vel_y_h8.vel,
-    stat_vel_y_h9.vel,
+    stat_vel.vel,
     stat_w.w,
     Ddef.nu_Ddef,
     Ldef.nu_Ldef,
@@ -1217,110 +431,10 @@ Model mcp_model /
     vy_dot_def.nu_vy_dot_def,
     wdef.nu_wdef,
     comp_lo_cl.piL_cl,
-    comp_lo_pos_x_h0.piL_pos_x_h0,
-    comp_lo_pos_x_h1.piL_pos_x_h1,
-    comp_lo_pos_x_h10.piL_pos_x_h10,
-    comp_lo_pos_x_h11.piL_pos_x_h11,
-    comp_lo_pos_x_h12.piL_pos_x_h12,
-    comp_lo_pos_x_h13.piL_pos_x_h13,
-    comp_lo_pos_x_h14.piL_pos_x_h14,
-    comp_lo_pos_x_h15.piL_pos_x_h15,
-    comp_lo_pos_x_h16.piL_pos_x_h16,
-    comp_lo_pos_x_h17.piL_pos_x_h17,
-    comp_lo_pos_x_h18.piL_pos_x_h18,
-    comp_lo_pos_x_h19.piL_pos_x_h19,
-    comp_lo_pos_x_h2.piL_pos_x_h2,
-    comp_lo_pos_x_h20.piL_pos_x_h20,
-    comp_lo_pos_x_h21.piL_pos_x_h21,
-    comp_lo_pos_x_h22.piL_pos_x_h22,
-    comp_lo_pos_x_h23.piL_pos_x_h23,
-    comp_lo_pos_x_h24.piL_pos_x_h24,
-    comp_lo_pos_x_h25.piL_pos_x_h25,
-    comp_lo_pos_x_h26.piL_pos_x_h26,
-    comp_lo_pos_x_h27.piL_pos_x_h27,
-    comp_lo_pos_x_h28.piL_pos_x_h28,
-    comp_lo_pos_x_h29.piL_pos_x_h29,
-    comp_lo_pos_x_h3.piL_pos_x_h3,
-    comp_lo_pos_x_h30.piL_pos_x_h30,
-    comp_lo_pos_x_h31.piL_pos_x_h31,
-    comp_lo_pos_x_h32.piL_pos_x_h32,
-    comp_lo_pos_x_h33.piL_pos_x_h33,
-    comp_lo_pos_x_h34.piL_pos_x_h34,
-    comp_lo_pos_x_h35.piL_pos_x_h35,
-    comp_lo_pos_x_h36.piL_pos_x_h36,
-    comp_lo_pos_x_h37.piL_pos_x_h37,
-    comp_lo_pos_x_h38.piL_pos_x_h38,
-    comp_lo_pos_x_h39.piL_pos_x_h39,
-    comp_lo_pos_x_h4.piL_pos_x_h4,
-    comp_lo_pos_x_h40.piL_pos_x_h40,
-    comp_lo_pos_x_h41.piL_pos_x_h41,
-    comp_lo_pos_x_h42.piL_pos_x_h42,
-    comp_lo_pos_x_h43.piL_pos_x_h43,
-    comp_lo_pos_x_h44.piL_pos_x_h44,
-    comp_lo_pos_x_h45.piL_pos_x_h45,
-    comp_lo_pos_x_h46.piL_pos_x_h46,
-    comp_lo_pos_x_h47.piL_pos_x_h47,
-    comp_lo_pos_x_h48.piL_pos_x_h48,
-    comp_lo_pos_x_h49.piL_pos_x_h49,
-    comp_lo_pos_x_h5.piL_pos_x_h5,
-    comp_lo_pos_x_h50.piL_pos_x_h50,
-    comp_lo_pos_x_h6.piL_pos_x_h6,
-    comp_lo_pos_x_h7.piL_pos_x_h7,
-    comp_lo_pos_x_h8.piL_pos_x_h8,
-    comp_lo_pos_x_h9.piL_pos_x_h9,
+    comp_lo_pos.piL_pos,
     comp_lo_step.piL_step,
     comp_lo_v.piL_v,
-    comp_lo_vel_x_h0.piL_vel_x_h0,
-    comp_lo_vel_x_h1.piL_vel_x_h1,
-    comp_lo_vel_x_h10.piL_vel_x_h10,
-    comp_lo_vel_x_h11.piL_vel_x_h11,
-    comp_lo_vel_x_h12.piL_vel_x_h12,
-    comp_lo_vel_x_h13.piL_vel_x_h13,
-    comp_lo_vel_x_h14.piL_vel_x_h14,
-    comp_lo_vel_x_h15.piL_vel_x_h15,
-    comp_lo_vel_x_h16.piL_vel_x_h16,
-    comp_lo_vel_x_h17.piL_vel_x_h17,
-    comp_lo_vel_x_h18.piL_vel_x_h18,
-    comp_lo_vel_x_h19.piL_vel_x_h19,
-    comp_lo_vel_x_h2.piL_vel_x_h2,
-    comp_lo_vel_x_h20.piL_vel_x_h20,
-    comp_lo_vel_x_h21.piL_vel_x_h21,
-    comp_lo_vel_x_h22.piL_vel_x_h22,
-    comp_lo_vel_x_h23.piL_vel_x_h23,
-    comp_lo_vel_x_h24.piL_vel_x_h24,
-    comp_lo_vel_x_h25.piL_vel_x_h25,
-    comp_lo_vel_x_h26.piL_vel_x_h26,
-    comp_lo_vel_x_h27.piL_vel_x_h27,
-    comp_lo_vel_x_h28.piL_vel_x_h28,
-    comp_lo_vel_x_h29.piL_vel_x_h29,
-    comp_lo_vel_x_h3.piL_vel_x_h3,
-    comp_lo_vel_x_h30.piL_vel_x_h30,
-    comp_lo_vel_x_h31.piL_vel_x_h31,
-    comp_lo_vel_x_h32.piL_vel_x_h32,
-    comp_lo_vel_x_h33.piL_vel_x_h33,
-    comp_lo_vel_x_h34.piL_vel_x_h34,
-    comp_lo_vel_x_h35.piL_vel_x_h35,
-    comp_lo_vel_x_h36.piL_vel_x_h36,
-    comp_lo_vel_x_h37.piL_vel_x_h37,
-    comp_lo_vel_x_h38.piL_vel_x_h38,
-    comp_lo_vel_x_h39.piL_vel_x_h39,
-    comp_lo_vel_x_h4.piL_vel_x_h4,
-    comp_lo_vel_x_h40.piL_vel_x_h40,
-    comp_lo_vel_x_h41.piL_vel_x_h41,
-    comp_lo_vel_x_h42.piL_vel_x_h42,
-    comp_lo_vel_x_h43.piL_vel_x_h43,
-    comp_lo_vel_x_h44.piL_vel_x_h44,
-    comp_lo_vel_x_h45.piL_vel_x_h45,
-    comp_lo_vel_x_h46.piL_vel_x_h46,
-    comp_lo_vel_x_h47.piL_vel_x_h47,
-    comp_lo_vel_x_h48.piL_vel_x_h48,
-    comp_lo_vel_x_h49.piL_vel_x_h49,
-    comp_lo_vel_x_h5.piL_vel_x_h5,
-    comp_lo_vel_x_h50.piL_vel_x_h50,
-    comp_lo_vel_x_h6.piL_vel_x_h6,
-    comp_lo_vel_x_h7.piL_vel_x_h7,
-    comp_lo_vel_x_h8.piL_vel_x_h8,
-    comp_lo_vel_x_h9.piL_vel_x_h9,
+    comp_lo_vel.piL_vel,
     comp_up_cl.piU_cl
 /;
 

@@ -59,8 +59,8 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = 0.0;
-x2.l = 0.0;
+x1.l = -4.0;
+x2.l = -2.0;
 
 * ============================================
 * Equations

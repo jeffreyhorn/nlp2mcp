@@ -87,6 +87,7 @@ Equations
     stat_s(i,k)
     stat_sigma(i,k)
     stat_t(i)
+    stat_tau
     stat_tk(i,k)
     comp_reseq(k)
     comp_trusscomp
@@ -106,6 +107,7 @@ Equations
 stat_s(i,k).. sum(j, b(j,i) * nu_stiffness(j,k)) + 2 * s(i,k) * lam_volumeeq(i,k) =E= 0;
 stat_sigma(i,k).. ((-1) * (2 * tk(i,k))) * lam_volumeeq(i,k) + lam_reseq(k) - piL_sigma(i,k) =E= 0;
 stat_t(i).. sum(k, (-1) * nu_deftk(i,k)) + lam_trusscomp - piL_t(i) =E= 0;
+stat_tau.. 1 + sum(k, (-1) * lam_reseq(k)) =E= 0;
 stat_tk(i,k).. nu_deftk(i,k) + ((-1) * (sigma(i,k) * 2)) * lam_volumeeq(i,k) - piL_tk(i,k) =E= 0;
 
 * Inequality complementarity equations
@@ -140,6 +142,7 @@ Model mcp_model /
     stat_s.s,
     stat_sigma.sigma,
     stat_t.t,
+    stat_tau.tau,
     stat_tk.tk,
     comp_reseq.lam_reseq,
     comp_trusscomp.lam_trusscomp,

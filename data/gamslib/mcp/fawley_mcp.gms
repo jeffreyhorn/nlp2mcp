@@ -61,18 +61,20 @@ Scalars
     ocpb /0/
 ;
 
+$onImplicitAssign
 cfr(cf) = sum((c,r)$(recipes(cf,c,r)), 1);
 cfq(cf) = (not cfr(cf));
 cfm(cf,m) = sum((l,s)$(specs(cf,l,s)), ms(m,s));
 cfm(cf,"weight") = 1;
+$offImplicitAssign
 
 prop(cr,"gravity") = crdat(cr,"gravity");
 ocpb = pbmg * ppb;
 kp(k) = kdat(k,"capacity") * kdat(k,"oper-days") / m3tob;
 oc(k) = kdat(k,"oper-cost") * m3tob;
 pcr(cr) = crdat(cr,"price") * m3tob / crdat(cr,"gravity");
-char(c,"volume") = 1 / prop(c,"gravity");
-bp(k,p) = 1 / sum(c$(ap(c,p) < 0), ((-1) * ap(c,p)) * prop(c,"gravity"));
+char(c,'volume')$(prop(c,"gravity")) = 1 / prop(c,"gravity");
+bp(k,p)$(kuse(k,p)) = 1 / sum(c$(ap(c,p) < 0), ((-1) * ap(c,p)) * prop(c,"gravity"));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -203,19 +205,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_bq(c,cf)$(cfq(cf)).. sum((cfq,m), (((-1) * (char(c,m) * 1$bposs(cfq,c))) * nu_pbal(cfq,m))$cfm(cfq,m)) - piL_bq(c,cf) =E= 0;
+stat_bq(c,cf)$(cfq(cf)).. sum((cfq,m), (((-1) * (char(c,m) * 1$(bposs(cfq,c)))) * nu_pbal(cfq,m))$(cfm(cfq,m))) - piL_bq(c,cf) =E= 0;
 stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
-stat_import(c)$(ci(c)).. (((-1) * pimp(c)) * nu_dpur)$sameas(c, 'fuel-imp') - piL_import(c) =E= 0;
+stat_import(c)$(ci(c)).. (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c) =E= 0;
 stat_ov(cf,l,s)$(cfq(cf)).. ((-1) * piL_ov(cf,l,s)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m)$(cfq(cf)).. sum(cfq, nu_pbal(cfq,m)$cfm(cfq,m)) - piL_q(cf,m) =E= 0;
+stat_q(cf,m)$(cfq(cf)).. nu_pbal(cf,m)$(cfm(cf,m)) - piL_q(cf,m) =E= 0;
 stat_rb(cf,r)$(cfr(cf)).. ((-1) * piL_rb(cf,r)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c)$(cr(c)).. sum(cr, ((-1) * pcr(cr)) * nu_dpur)$sameas(c, 'arabian-h') + sum(cr, ((-1) * crdat(cr,"transport")) * nu_dtran)$sameas(c, 'arabian-h') - piL_u(c) =E= 0;
+stat_u(c)$(cr(c)).. sum(cr, ((-1) * pcr(cr)) * nu_dpur)$(sameas(c, 'arabian-h')) + sum(cr, ((-1) * crdat(cr,"transport")) * nu_dtran)$(sameas(c, 'arabian-h')) - piL_u(c) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations
@@ -234,9 +236,9 @@ comp_lo_z(p).. z(p) - 0 =G= 0;
 comp_up_cap(k).. kp(k) - cap(k) =G= 0;
 
 * Original equality equations
-mbal(c).. u(c)$cr(c) + sum(p, ap(c,p) * z(p)) + sum(tr, at(c,tr) * trans(tr)) + import(c)$ci(c) =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c) + sum((cfr,r), recipes(cfr,c,r) * rb(cfr,r));
+mbal(c).. u(c)$(cr(c)) + sum(p, ap(c,p) * z(p)) + sum(tr, at(c,tr) * trans(tr)) + import(c)$(ci(c)) =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c) + sum((cfr,r), recipes(cfr,c,r) * rb(cfr,r));
 kbal(k).. cap(k) =E= sum(p, bp(k,p) * z(p));
-dbal(cf).. sales(cf) =E= q(cf,"weight")$cfq(cf) + sum((c,r), recipes(cf,c,r) * rb(cf,r))$cfr(cf);
+dbal(cf).. sales(cf) =E= q(cf,"weight")$(cfq(cf)) + sum((c,r), recipes(cf,c,r) * rb(cf,r))$(cfr(cf));
 pbal(cfq,m)$(cfm(cfq,m)).. q(cfq,m) =E= sum(c$(bposs(cfq,c)), char(c,m) * bq(c,cfq));
 drev.. revenue =E= sum(cf, ddat(cf,"price") * sales(cf));
 doper.. recurrent =E= sum(k, oc(k) * cap(k)) + ocpb * q("motor-gas","volume");
@@ -264,7 +266,8 @@ rb.fx(cf,r)$(not (cfr(cf))) = 0;
 piL_rb.fx(cf,r)$(not (cfr(cf))) = 0;
 u.fx(c)$(not (cr(c))) = 0;
 piL_u.fx(c)$(not (cr(c))) = 0;
-nu_pbal.fx(cfq,m)$(not (cfm(cfq,m))) = 0;
+nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
+nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
 
 * ============================================
 * Model MCP Declaration

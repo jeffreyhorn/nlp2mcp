@@ -51,7 +51,7 @@ Variables
 Positive Variables
     x(p,tt)
     s(r,tt)
-    lam_cc(t)
+    lam_cc(tt)
     piL_x(p,tt)
     piL_s(r,tt)
 ;
@@ -97,8 +97,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_s(r,tt)$(t(tt)).. misc("storage-c",r) - nu_sb(r,tt) - piL_s(r,tt) =E= 0;
-stat_x(p,tt)$(t(tt)).. ((-1) * c(p,t)) + sum(r, a(r,p) * nu_sb(r,tt)) + sum(t, lam_cc(t)) - piL_x(p,tt) =E= 0;
+stat_s(r,tt).. misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt) =E= 0;
+stat_x(p,tt)$(t(tt)).. sum(t$(sameas(t, tt)), ((-1) * c(p,t))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt) - piL_x(p,tt) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -119,11 +119,10 @@ pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-s.fx(r,tt)$(not (t(tt))) = 0;
-piL_s.fx(r,tt)$(not (t(tt))) = 0;
 x.fx(p,tt)$(not (t(tt))) = 0;
 piL_x.fx(p,tt)$(not (t(tt))) = 0;
 nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
+lam_cc.fx(tt)$(not (t(tt))) = 0;
 
 * ============================================
 * Model MCP Declaration

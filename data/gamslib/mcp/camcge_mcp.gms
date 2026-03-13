@@ -77,10 +77,14 @@ Scalars
     fsav0 /36.841/
 ;
 
+$onImplicitAssign
 m0(i) = zz("m0",i);
+$offImplicitAssign
 
-it(i) = yes$m0(i);
+$onImplicitAssign
+it(i) = yes$(m0(i));
 in(i) = (not it(i));
+$offImplicitAssign
 
 gamma(in) = 0;
 
@@ -113,13 +117,12 @@ pva0(i) = pd0(i) - sum(j, io(j,i) * pd0(j)) - itax(i);
 at(it) = xd0(it) / (gamma(it) * e0(it) ** rhot(it) + (1 - gamma(it)) * xxd0(it) ** rhot(it)) ** (1 / rhot(it));
 gamma(it) = 1 / (1 + pd0(it) / pe0(it) * (e0(it) / xxd0(it)) ** (rhot(it) - 1));
 pwe0(i) = pe0(i) / ((1 + te(i)) * er);
-x0(i) = pd0(i) * xxd0(i) + (pm0(i) * m0(i))$it(i);
+x0(i) = pd0(i) * xxd0(i) + (pm0(i) * m0(i))$(it(i));
 pwm0(i) = pm0(i) / ((1 + tm0(i)) * er);
 alphl(lc,i) = wdist(i,lc) * wa0(lc) * xle(i,lc) / (pva0(i) * xd0(i));
-delta(it) = pm0(it) / pd0(it) * (m0(it) / xxd0(it)) ** (1 + rhoc(it));
+delta(it)$(m0(it)) = pm0(it) / pd0(it) * (m0(it) / xxd0(it)) ** (1 + rhoc(it));
 delta(it) = delta(it) / (1 + delta(it));
 qd(i) = xllb(i,"rural") ** alphl("rural",i) * k0(i) ** (1 - sum(lc, alphl(lc,i)));
-ld(lc) = sum(i, (xd0(i) * pva0(i) * alphl(lc,i) / (wdist(i,lc) * wa0(lc)))$wdist(i,lc));
 ac(it) = x0(it) / (delta(it) * m0(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd0(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it));
 ad(i) = xd0(i) / qd(i);
 
@@ -189,7 +192,7 @@ Variables
     nu_costmin(i)
     nu_xxdsn(i)
     nu_xsn(i)
-    nu_inteq(j)
+    nu_inteq(i)
     nu_dsteq(i)
     nu_cdeq(i)
     nu_gdp
@@ -206,28 +209,6 @@ Variables
     nu_ieq(i)
     nu_caeq
     nu_equil(i)
-    nu_e_fx_ag_subsist_5576d1bb
-    nu_e_fx_ag_exp_ind_ca61f4c4
-    nu_e_fx_sylvicult
-    nu_e_fx_ind_alim_7c9641b7
-    nu_e_fx_biens_cons_135eaca1
-    nu_e_fx_biens_int_bc4227de
-    nu_e_fx_cim_int_e7034a7c
-    nu_e_fx_biens_cap_392664c7
-    nu_e_fx_construct
-    nu_e_fx_services
-    nu_e_fx_publiques
-    nu_m_fx_ag_subsist_5576d1bb
-    nu_m_fx_ag_exp_ind_ca61f4c4
-    nu_m_fx_sylvicult
-    nu_m_fx_ind_alim_7c9641b7
-    nu_m_fx_biens_cons_135eaca1
-    nu_m_fx_biens_int_bc4227de
-    nu_m_fx_cim_int_e7034a7c
-    nu_m_fx_biens_cap_392664c7
-    nu_m_fx_construct
-    nu_m_fx_services
-    nu_m_fx_publiques
     nu_l_fx_publiques_rural
     nu_l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83
     nu_gdtot_fx
@@ -237,16 +218,11 @@ Variables
 
 Positive Variables
     piL_pd(i)
-    piL_pm(i)
     piL_pk(i)
     piL_px(i)
     piL_p(i)
-    piL_pwe(i)
     piL_x(i)
     piL_xd(i)
-    piL_xxd(i)
-    piL_e(i)
-    piL_m(i)
     piL_wa(lc)
     piL_l(i,lc)
     piL_int(i)
@@ -261,6 +237,8 @@ pwm.fx(i) = pwm0(i);
 tm.fx(it) = tm0(it);
 k.fx(i) = k0(i);
 ls.fx(lc) = ls0(lc);
+l.fx('ag-subsist','urban-skil') = 0;
+l.fx('publiques','rural') = 0;
 
 * ============================================
 * Variable Initialization
@@ -271,192 +249,137 @@ ls.fx(lc) = ls0(lc);
 * non-zero initial values.
 
 pd.l(i) = pd0(i);
-pd.l("ag-subsist") = max(pd.l("ag-subsist"), 0.01);
-pd.l("ag-exp+ind") = max(pd.l("ag-exp+ind"), 0.01);
-pd.l("sylvicult") = max(pd.l("sylvicult"), 0.01);
-pd.l("ind-alim") = max(pd.l("ind-alim"), 0.01);
-pd.l("biens-cons") = max(pd.l("biens-cons"), 0.01);
-pd.l("biens-int") = max(pd.l("biens-int"), 0.01);
-pd.l("cim-int") = max(pd.l("cim-int"), 0.01);
-pd.l("biens-cap") = max(pd.l("biens-cap"), 0.01);
-pd.l("construct") = max(pd.l("construct"), 0.01);
-pd.l("services") = max(pd.l("services"), 0.01);
-pd.l("publiques") = max(pd.l("publiques"), 0.01);
+pd.l('ag-subsist') = max(pd.l('ag-subsist'), 0.01);
+pd.l('ag-exp+ind') = max(pd.l('ag-exp+ind'), 0.01);
+pd.l('sylvicult') = max(pd.l('sylvicult'), 0.01);
+pd.l('ind-alim') = max(pd.l('ind-alim'), 0.01);
+pd.l('biens-cons') = max(pd.l('biens-cons'), 0.01);
+pd.l('biens-int') = max(pd.l('biens-int'), 0.01);
+pd.l('cim-int') = max(pd.l('cim-int'), 0.01);
+pd.l('biens-cap') = max(pd.l('biens-cap'), 0.01);
+pd.l('construct') = max(pd.l('construct'), 0.01);
+pd.l('services') = max(pd.l('services'), 0.01);
+pd.l('publiques') = max(pd.l('publiques'), 0.01);
 pm.l(i) = pm0(i);
-pm.l("ag-subsist") = max(pm.l("ag-subsist"), 0.01);
-pm.l("ag-exp+ind") = max(pm.l("ag-exp+ind"), 0.01);
-pm.l("sylvicult") = max(pm.l("sylvicult"), 0.01);
-pm.l("ind-alim") = max(pm.l("ind-alim"), 0.01);
-pm.l("biens-cons") = max(pm.l("biens-cons"), 0.01);
-pm.l("biens-int") = max(pm.l("biens-int"), 0.01);
-pm.l("cim-int") = max(pm.l("cim-int"), 0.01);
-pm.l("biens-cap") = max(pm.l("biens-cap"), 0.01);
-pm.l("construct") = max(pm.l("construct"), 0.01);
-pm.l("services") = max(pm.l("services"), 0.01);
-pm.l("publiques") = max(pm.l("publiques"), 0.01);
 pe.l(i) = pe0(i);
 pk.l(i) = pd0(i);
-pk.l("ag-subsist") = max(pk.l("ag-subsist"), 0.01);
-pk.l("ag-exp+ind") = max(pk.l("ag-exp+ind"), 0.01);
-pk.l("sylvicult") = max(pk.l("sylvicult"), 0.01);
-pk.l("ind-alim") = max(pk.l("ind-alim"), 0.01);
-pk.l("biens-cons") = max(pk.l("biens-cons"), 0.01);
-pk.l("biens-int") = max(pk.l("biens-int"), 0.01);
-pk.l("cim-int") = max(pk.l("cim-int"), 0.01);
-pk.l("biens-cap") = max(pk.l("biens-cap"), 0.01);
-pk.l("construct") = max(pk.l("construct"), 0.01);
-pk.l("services") = max(pk.l("services"), 0.01);
-pk.l("publiques") = max(pk.l("publiques"), 0.01);
+pk.l('ag-subsist') = max(pk.l('ag-subsist'), 0.01);
+pk.l('ag-exp+ind') = max(pk.l('ag-exp+ind'), 0.01);
+pk.l('sylvicult') = max(pk.l('sylvicult'), 0.01);
+pk.l('ind-alim') = max(pk.l('ind-alim'), 0.01);
+pk.l('biens-cons') = max(pk.l('biens-cons'), 0.01);
+pk.l('biens-int') = max(pk.l('biens-int'), 0.01);
+pk.l('cim-int') = max(pk.l('cim-int'), 0.01);
+pk.l('biens-cap') = max(pk.l('biens-cap'), 0.01);
+pk.l('construct') = max(pk.l('construct'), 0.01);
+pk.l('services') = max(pk.l('services'), 0.01);
+pk.l('publiques') = max(pk.l('publiques'), 0.01);
 px.l(i) = pd0(i);
-px.l("ag-subsist") = max(px.l("ag-subsist"), 0.01);
-px.l("ag-exp+ind") = max(px.l("ag-exp+ind"), 0.01);
-px.l("sylvicult") = max(px.l("sylvicult"), 0.01);
-px.l("ind-alim") = max(px.l("ind-alim"), 0.01);
-px.l("biens-cons") = max(px.l("biens-cons"), 0.01);
-px.l("biens-int") = max(px.l("biens-int"), 0.01);
-px.l("cim-int") = max(px.l("cim-int"), 0.01);
-px.l("biens-cap") = max(px.l("biens-cap"), 0.01);
-px.l("construct") = max(px.l("construct"), 0.01);
-px.l("services") = max(px.l("services"), 0.01);
-px.l("publiques") = max(px.l("publiques"), 0.01);
+px.l('ag-subsist') = max(px.l('ag-subsist'), 0.01);
+px.l('ag-exp+ind') = max(px.l('ag-exp+ind'), 0.01);
+px.l('sylvicult') = max(px.l('sylvicult'), 0.01);
+px.l('ind-alim') = max(px.l('ind-alim'), 0.01);
+px.l('biens-cons') = max(px.l('biens-cons'), 0.01);
+px.l('biens-int') = max(px.l('biens-int'), 0.01);
+px.l('cim-int') = max(px.l('cim-int'), 0.01);
+px.l('biens-cap') = max(px.l('biens-cap'), 0.01);
+px.l('construct') = max(px.l('construct'), 0.01);
+px.l('services') = max(px.l('services'), 0.01);
+px.l('publiques') = max(px.l('publiques'), 0.01);
 p.l(i) = pd0(i);
-p.l("ag-subsist") = max(p.l("ag-subsist"), 0.01);
-p.l("ag-exp+ind") = max(p.l("ag-exp+ind"), 0.01);
-p.l("sylvicult") = max(p.l("sylvicult"), 0.01);
-p.l("ind-alim") = max(p.l("ind-alim"), 0.01);
-p.l("biens-cons") = max(p.l("biens-cons"), 0.01);
-p.l("biens-int") = max(p.l("biens-int"), 0.01);
-p.l("cim-int") = max(p.l("cim-int"), 0.01);
-p.l("biens-cap") = max(p.l("biens-cap"), 0.01);
-p.l("construct") = max(p.l("construct"), 0.01);
-p.l("services") = max(p.l("services"), 0.01);
-p.l("publiques") = max(p.l("publiques"), 0.01);
+p.l('ag-subsist') = max(p.l('ag-subsist'), 0.01);
+p.l('ag-exp+ind') = max(p.l('ag-exp+ind'), 0.01);
+p.l('sylvicult') = max(p.l('sylvicult'), 0.01);
+p.l('ind-alim') = max(p.l('ind-alim'), 0.01);
+p.l('biens-cons') = max(p.l('biens-cons'), 0.01);
+p.l('biens-int') = max(p.l('biens-int'), 0.01);
+p.l('cim-int') = max(p.l('cim-int'), 0.01);
+p.l('biens-cap') = max(p.l('biens-cap'), 0.01);
+p.l('construct') = max(p.l('construct'), 0.01);
+p.l('services') = max(p.l('services'), 0.01);
+p.l('publiques') = max(p.l('publiques'), 0.01);
 pva.l(i) = pva0(i);
 pwe.l(i) = pwe0(i);
-pwe.l("ag-subsist") = max(pwe.l("ag-subsist"), 0.01);
-pwe.l("ag-exp+ind") = max(pwe.l("ag-exp+ind"), 0.01);
-pwe.l("sylvicult") = max(pwe.l("sylvicult"), 0.01);
-pwe.l("ind-alim") = max(pwe.l("ind-alim"), 0.01);
-pwe.l("biens-cons") = max(pwe.l("biens-cons"), 0.01);
-pwe.l("biens-int") = max(pwe.l("biens-int"), 0.01);
-pwe.l("cim-int") = max(pwe.l("cim-int"), 0.01);
-pwe.l("biens-cap") = max(pwe.l("biens-cap"), 0.01);
-pwe.l("construct") = max(pwe.l("construct"), 0.01);
-pwe.l("services") = max(pwe.l("services"), 0.01);
-pwe.l("publiques") = max(pwe.l("publiques"), 0.01);
 tm.l(it) = tm0(it);
 x.l(i) = x0(i);
-x.l("ag-subsist") = max(x.l("ag-subsist"), 0.01);
-x.l("ag-exp+ind") = max(x.l("ag-exp+ind"), 0.01);
-x.l("sylvicult") = max(x.l("sylvicult"), 0.01);
-x.l("ind-alim") = max(x.l("ind-alim"), 0.01);
-x.l("biens-cons") = max(x.l("biens-cons"), 0.01);
-x.l("biens-int") = max(x.l("biens-int"), 0.01);
-x.l("cim-int") = max(x.l("cim-int"), 0.01);
-x.l("biens-cap") = max(x.l("biens-cap"), 0.01);
-x.l("construct") = max(x.l("construct"), 0.01);
-x.l("services") = max(x.l("services"), 0.01);
-x.l("publiques") = max(x.l("publiques"), 0.01);
+x.l('ag-subsist') = max(x.l('ag-subsist'), 0.01);
+x.l('ag-exp+ind') = max(x.l('ag-exp+ind'), 0.01);
+x.l('sylvicult') = max(x.l('sylvicult'), 0.01);
+x.l('ind-alim') = max(x.l('ind-alim'), 0.01);
+x.l('biens-cons') = max(x.l('biens-cons'), 0.01);
+x.l('biens-int') = max(x.l('biens-int'), 0.01);
+x.l('cim-int') = max(x.l('cim-int'), 0.01);
+x.l('biens-cap') = max(x.l('biens-cap'), 0.01);
+x.l('construct') = max(x.l('construct'), 0.01);
+x.l('services') = max(x.l('services'), 0.01);
+x.l('publiques') = max(x.l('publiques'), 0.01);
 xd.l(i) = xd0(i);
-xd.l("ag-subsist") = max(xd.l("ag-subsist"), 0.01);
-xd.l("ag-exp+ind") = max(xd.l("ag-exp+ind"), 0.01);
-xd.l("sylvicult") = max(xd.l("sylvicult"), 0.01);
-xd.l("ind-alim") = max(xd.l("ind-alim"), 0.01);
-xd.l("biens-cons") = max(xd.l("biens-cons"), 0.01);
-xd.l("biens-int") = max(xd.l("biens-int"), 0.01);
-xd.l("cim-int") = max(xd.l("cim-int"), 0.01);
-xd.l("biens-cap") = max(xd.l("biens-cap"), 0.01);
-xd.l("construct") = max(xd.l("construct"), 0.01);
-xd.l("services") = max(xd.l("services"), 0.01);
-xd.l("publiques") = max(xd.l("publiques"), 0.01);
+xd.l('ag-subsist') = max(xd.l('ag-subsist'), 0.01);
+xd.l('ag-exp+ind') = max(xd.l('ag-exp+ind'), 0.01);
+xd.l('sylvicult') = max(xd.l('sylvicult'), 0.01);
+xd.l('ind-alim') = max(xd.l('ind-alim'), 0.01);
+xd.l('biens-cons') = max(xd.l('biens-cons'), 0.01);
+xd.l('biens-int') = max(xd.l('biens-int'), 0.01);
+xd.l('cim-int') = max(xd.l('cim-int'), 0.01);
+xd.l('biens-cap') = max(xd.l('biens-cap'), 0.01);
+xd.l('construct') = max(xd.l('construct'), 0.01);
+xd.l('services') = max(xd.l('services'), 0.01);
+xd.l('publiques') = max(xd.l('publiques'), 0.01);
 xxd.l(i) = xxd0(i);
-xxd.l("ag-subsist") = max(xxd.l("ag-subsist"), 0.01);
-xxd.l("ag-exp+ind") = max(xxd.l("ag-exp+ind"), 0.01);
-xxd.l("sylvicult") = max(xxd.l("sylvicult"), 0.01);
-xxd.l("ind-alim") = max(xxd.l("ind-alim"), 0.01);
-xxd.l("biens-cons") = max(xxd.l("biens-cons"), 0.01);
-xxd.l("biens-int") = max(xxd.l("biens-int"), 0.01);
-xxd.l("cim-int") = max(xxd.l("cim-int"), 0.01);
-xxd.l("biens-cap") = max(xxd.l("biens-cap"), 0.01);
-xxd.l("construct") = max(xxd.l("construct"), 0.01);
-xxd.l("services") = max(xxd.l("services"), 0.01);
-xxd.l("publiques") = max(xxd.l("publiques"), 0.01);
 e.l(i) = e0(i);
-e.l("ag-subsist") = max(e.l("ag-subsist"), 0.01);
-e.l("ag-exp+ind") = max(e.l("ag-exp+ind"), 0.01);
-e.l("sylvicult") = max(e.l("sylvicult"), 0.01);
-e.l("ind-alim") = max(e.l("ind-alim"), 0.01);
-e.l("biens-cons") = max(e.l("biens-cons"), 0.01);
-e.l("biens-int") = max(e.l("biens-int"), 0.01);
-e.l("cim-int") = max(e.l("cim-int"), 0.01);
-e.l("biens-cap") = max(e.l("biens-cap"), 0.01);
-e.l("construct") = max(e.l("construct"), 0.01);
-e.l("services") = max(e.l("services"), 0.01);
-e.l("publiques") = max(e.l("publiques"), 0.01);
 m.l(i) = m0(i);
-m.l("ag-subsist") = max(m.l("ag-subsist"), 0.01);
-m.l("ag-exp+ind") = max(m.l("ag-exp+ind"), 0.01);
-m.l("sylvicult") = max(m.l("sylvicult"), 0.01);
-m.l("ind-alim") = max(m.l("ind-alim"), 0.01);
-m.l("biens-cons") = max(m.l("biens-cons"), 0.01);
-m.l("biens-int") = max(m.l("biens-int"), 0.01);
-m.l("cim-int") = max(m.l("cim-int"), 0.01);
-m.l("biens-cap") = max(m.l("biens-cap"), 0.01);
-m.l("construct") = max(m.l("construct"), 0.01);
-m.l("services") = max(m.l("services"), 0.01);
-m.l("publiques") = max(m.l("publiques"), 0.01);
 wa.l(lc) = wa0(lc);
-wa.l("rural") = max(wa.l("rural"), 0.01);
-wa.l("urban-unsk") = max(wa.l("urban-unsk"), 0.01);
-wa.l("urban-skil") = max(wa.l("urban-skil"), 0.01);
+wa.l('rural') = max(wa.l('rural'), 0.01);
+wa.l('urban-unsk') = max(wa.l('urban-unsk'), 0.01);
+wa.l('urban-skil') = max(wa.l('urban-skil'), 0.01);
 l.l(i,lc) = xle(i,lc);
-l.l("ag-subsist","rural") = max(l.l("ag-subsist","rural"), 0.01);
-l.l("ag-subsist","urban-unsk") = max(l.l("ag-subsist","urban-unsk"), 0.01);
-l.l("ag-subsist","urban-skil") = max(l.l("ag-subsist","urban-skil"), 0.01);
-l.l("ag-exp+ind","rural") = max(l.l("ag-exp+ind","rural"), 0.01);
-l.l("ag-exp+ind","urban-unsk") = max(l.l("ag-exp+ind","urban-unsk"), 0.01);
-l.l("ag-exp+ind","urban-skil") = max(l.l("ag-exp+ind","urban-skil"), 0.01);
-l.l("sylvicult","rural") = max(l.l("sylvicult","rural"), 0.01);
-l.l("sylvicult","urban-unsk") = max(l.l("sylvicult","urban-unsk"), 0.01);
-l.l("sylvicult","urban-skil") = max(l.l("sylvicult","urban-skil"), 0.01);
-l.l("ind-alim","rural") = max(l.l("ind-alim","rural"), 0.01);
-l.l("ind-alim","urban-unsk") = max(l.l("ind-alim","urban-unsk"), 0.01);
-l.l("ind-alim","urban-skil") = max(l.l("ind-alim","urban-skil"), 0.01);
-l.l("biens-cons","rural") = max(l.l("biens-cons","rural"), 0.01);
-l.l("biens-cons","urban-unsk") = max(l.l("biens-cons","urban-unsk"), 0.01);
-l.l("biens-cons","urban-skil") = max(l.l("biens-cons","urban-skil"), 0.01);
-l.l("biens-int","rural") = max(l.l("biens-int","rural"), 0.01);
-l.l("biens-int","urban-unsk") = max(l.l("biens-int","urban-unsk"), 0.01);
-l.l("biens-int","urban-skil") = max(l.l("biens-int","urban-skil"), 0.01);
-l.l("cim-int","rural") = max(l.l("cim-int","rural"), 0.01);
-l.l("cim-int","urban-unsk") = max(l.l("cim-int","urban-unsk"), 0.01);
-l.l("cim-int","urban-skil") = max(l.l("cim-int","urban-skil"), 0.01);
-l.l("biens-cap","rural") = max(l.l("biens-cap","rural"), 0.01);
-l.l("biens-cap","urban-unsk") = max(l.l("biens-cap","urban-unsk"), 0.01);
-l.l("biens-cap","urban-skil") = max(l.l("biens-cap","urban-skil"), 0.01);
-l.l("construct","rural") = max(l.l("construct","rural"), 0.01);
-l.l("construct","urban-unsk") = max(l.l("construct","urban-unsk"), 0.01);
-l.l("construct","urban-skil") = max(l.l("construct","urban-skil"), 0.01);
-l.l("services","rural") = max(l.l("services","rural"), 0.01);
-l.l("services","urban-unsk") = max(l.l("services","urban-unsk"), 0.01);
-l.l("services","urban-skil") = max(l.l("services","urban-skil"), 0.01);
-l.l("publiques","rural") = max(l.l("publiques","rural"), 0.01);
-l.l("publiques","urban-unsk") = max(l.l("publiques","urban-unsk"), 0.01);
-l.l("publiques","urban-skil") = max(l.l("publiques","urban-skil"), 0.01);
+l.l('ag-subsist','rural') = max(l.l('ag-subsist','rural'), 0.01);
+l.l('ag-subsist','urban-unsk') = max(l.l('ag-subsist','urban-unsk'), 0.01);
+l.l('ag-subsist','urban-skil') = max(l.l('ag-subsist','urban-skil'), 0.01);
+l.l('ag-exp+ind','rural') = max(l.l('ag-exp+ind','rural'), 0.01);
+l.l('ag-exp+ind','urban-unsk') = max(l.l('ag-exp+ind','urban-unsk'), 0.01);
+l.l('ag-exp+ind','urban-skil') = max(l.l('ag-exp+ind','urban-skil'), 0.01);
+l.l('sylvicult','rural') = max(l.l('sylvicult','rural'), 0.01);
+l.l('sylvicult','urban-unsk') = max(l.l('sylvicult','urban-unsk'), 0.01);
+l.l('sylvicult','urban-skil') = max(l.l('sylvicult','urban-skil'), 0.01);
+l.l('ind-alim','rural') = max(l.l('ind-alim','rural'), 0.01);
+l.l('ind-alim','urban-unsk') = max(l.l('ind-alim','urban-unsk'), 0.01);
+l.l('ind-alim','urban-skil') = max(l.l('ind-alim','urban-skil'), 0.01);
+l.l('biens-cons','rural') = max(l.l('biens-cons','rural'), 0.01);
+l.l('biens-cons','urban-unsk') = max(l.l('biens-cons','urban-unsk'), 0.01);
+l.l('biens-cons','urban-skil') = max(l.l('biens-cons','urban-skil'), 0.01);
+l.l('biens-int','rural') = max(l.l('biens-int','rural'), 0.01);
+l.l('biens-int','urban-unsk') = max(l.l('biens-int','urban-unsk'), 0.01);
+l.l('biens-int','urban-skil') = max(l.l('biens-int','urban-skil'), 0.01);
+l.l('cim-int','rural') = max(l.l('cim-int','rural'), 0.01);
+l.l('cim-int','urban-unsk') = max(l.l('cim-int','urban-unsk'), 0.01);
+l.l('cim-int','urban-skil') = max(l.l('cim-int','urban-skil'), 0.01);
+l.l('biens-cap','rural') = max(l.l('biens-cap','rural'), 0.01);
+l.l('biens-cap','urban-unsk') = max(l.l('biens-cap','urban-unsk'), 0.01);
+l.l('biens-cap','urban-skil') = max(l.l('biens-cap','urban-skil'), 0.01);
+l.l('construct','rural') = max(l.l('construct','rural'), 0.01);
+l.l('construct','urban-unsk') = max(l.l('construct','urban-unsk'), 0.01);
+l.l('construct','urban-skil') = max(l.l('construct','urban-skil'), 0.01);
+l.l('services','rural') = max(l.l('services','rural'), 0.01);
+l.l('services','urban-unsk') = max(l.l('services','urban-unsk'), 0.01);
+l.l('services','urban-skil') = max(l.l('services','urban-skil'), 0.01);
+l.l('publiques','rural') = max(l.l('publiques','rural'), 0.01);
+l.l('publiques','urban-unsk') = max(l.l('publiques','urban-unsk'), 0.01);
+l.l('publiques','urban-skil') = max(l.l('publiques','urban-skil'), 0.01);
 int.l(i) = int0(i);
-int.l("ag-subsist") = max(int.l("ag-subsist"), 0.01);
-int.l("ag-exp+ind") = max(int.l("ag-exp+ind"), 0.01);
-int.l("sylvicult") = max(int.l("sylvicult"), 0.01);
-int.l("ind-alim") = max(int.l("ind-alim"), 0.01);
-int.l("biens-cons") = max(int.l("biens-cons"), 0.01);
-int.l("biens-int") = max(int.l("biens-int"), 0.01);
-int.l("cim-int") = max(int.l("cim-int"), 0.01);
-int.l("biens-cap") = max(int.l("biens-cap"), 0.01);
-int.l("construct") = max(int.l("construct"), 0.01);
-int.l("services") = max(int.l("services"), 0.01);
-int.l("publiques") = max(int.l("publiques"), 0.01);
+int.l('ag-subsist') = max(int.l('ag-subsist'), 0.01);
+int.l('ag-exp+ind') = max(int.l('ag-exp+ind'), 0.01);
+int.l('sylvicult') = max(int.l('sylvicult'), 0.01);
+int.l('ind-alim') = max(int.l('ind-alim'), 0.01);
+int.l('biens-cons') = max(int.l('biens-cons'), 0.01);
+int.l('biens-int') = max(int.l('biens-int'), 0.01);
+int.l('cim-int') = max(int.l('cim-int'), 0.01);
+int.l('biens-cap') = max(int.l('biens-cap'), 0.01);
+int.l('construct') = max(int.l('construct'), 0.01);
+int.l('services') = max(int.l('services'), 0.01);
+int.l('publiques') = max(int.l('publiques'), 0.01);
 cd.l(i) = cles(i) * cdtot0;
-gd.l("publiques") = 135.03;
+gd.l('publiques') = 135.03;
 id.l(i) = id0(i);
 dst.l(i) = dst0(i);
 y.l = sum(i, pva0(i) * xd0(i) - depr(i) * k0(i));
@@ -513,20 +436,15 @@ Equations
     stat_xd(i)
     stat_xxd(i)
     stat_y
-    comp_lo_e(i)
     comp_lo_int(i)
     comp_lo_l(i,lc)
-    comp_lo_m(i)
     comp_lo_p(i)
     comp_lo_pd(i)
     comp_lo_pk(i)
-    comp_lo_pm(i)
-    comp_lo_pwe(i)
     comp_lo_px(i)
     comp_lo_wa(lc)
     comp_lo_x(i)
     comp_lo_xd(i)
-    comp_lo_xxd(i)
     comp_lo_y
     absorption(i)
     activity(i)
@@ -539,17 +457,6 @@ Equations
     depreq
     dsteq(i)
     dutydef
-    e_fx_ag_exp_ind_ca61f4c4
-    e_fx_ag_subsist_5576d1bb
-    e_fx_biens_cap_392664c7
-    e_fx_biens_cons_135eaca1
-    e_fx_biens_int_bc4227de
-    e_fx_cim_int_e7034a7c
-    e_fx_construct
-    e_fx_ind_alim_7c9641b7
-    e_fx_publiques
-    e_fx_services
-    e_fx_sylvicult
     edemand(i)
     equil(i)
     esupply(i)
@@ -566,17 +473,6 @@ Equations
     l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83
     l_fx_publiques_rural
     lmequil(lc)
-    m_fx_ag_exp_ind_ca61f4c4
-    m_fx_ag_subsist_5576d1bb
-    m_fx_biens_cap_392664c7
-    m_fx_biens_cons_135eaca1
-    m_fx_biens_int_bc4227de
-    m_fx_cim_int_e7034a7c
-    m_fx_construct
-    m_fx_ind_alim_7c9641b7
-    m_fx_publiques
-    m_fx_services
-    m_fx_sylvicult
     mps_fx
     obj
     pedef(i)
@@ -603,10 +499,10 @@ Alias(lc, lc__);
 * Stationarity equations
 stat_cd(i).. ((-1) * (prod(i__$(cles(i__)), cd(i__) ** cles(i__)) * sum(i__$(cles(i__)), cd(i__) ** cles(i__) * cles(i__) / cd(i__) / cd(i__) ** cles(i__)))) + p(i) * nu_cdeq(i) - nu_equil(i) =E= 0;
 stat_deprecia.. nu_gdp + nu_depreq - nu_totsav =E= 0;
-stat_dk(i).. pk(i) * nu_prodinv(i) + sum(j, ((-1) * imat(i,j)) * nu_ieq(i)) =E= 0;
-stat_dst(i).. nu_dsteq(i) + kio(i) * p(i) * nu_prodinv(i) - nu_equil(i) =E= 0;
+stat_dk(i).. pk(i) * nu_prodinv(i) + sum(j, ((-1) * imat(i,j)) * nu_ieq(i)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-1))$(ord(i) > 1)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+6))$(ord(i) <= card(i) - 6)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+3))$(ord(i) <= card(i) - 3)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+4))$(ord(i) <= card(i) - 4)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+5))$(ord(i) <= card(i) - 5)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+7))$(ord(i) <= card(i) - 7)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+9))$(ord(i) <= card(i) - 9)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+8))$(ord(i) <= card(i) - 8)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i+10))$(ord(i) <= card(i) - 10)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-6))$(ord(i) > 6)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-7))$(ord(i) > 7)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-3))$(ord(i) > 3)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-2))$(ord(i) > 2)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-4))$(ord(i) > 4)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-5))$(ord(i) > 5)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-8))$(ord(i) > 8)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-9))$(ord(i) > 9)) + sum(j, (((-1) * imat(i,j)) * nu_ieq(i-10))$(ord(i) > 10)) =E= 0;
+stat_dst(i).. nu_dsteq(i) + kio(i) * p(i) * nu_prodinv(i) + (kio(i) * p(i) * nu_prodinv(i-1))$(ord(i) > 1) + (kio(i) * p(i) * nu_prodinv(i+6))$(ord(i) <= card(i) - 6) + (kio(i) * p(i) * nu_prodinv(i+3))$(ord(i) <= card(i) - 3) + (kio(i) * p(i) * nu_prodinv(i+4))$(ord(i) <= card(i) - 4) + (kio(i) * p(i) * nu_prodinv(i+5))$(ord(i) <= card(i) - 5) + (kio(i) * p(i) * nu_prodinv(i+7))$(ord(i) <= card(i) - 7) + (kio(i) * p(i) * nu_prodinv(i+2))$(ord(i) <= card(i) - 2) + (kio(i) * p(i) * nu_prodinv(i+9))$(ord(i) <= card(i) - 9) + (kio(i) * p(i) * nu_prodinv(i+8))$(ord(i) <= card(i) - 8) + (kio(i) * p(i) * nu_prodinv(i+1))$(ord(i) <= card(i) - 1) + (kio(i) * p(i) * nu_prodinv(i+10))$(ord(i) <= card(i) - 10) + (kio(i) * p(i) * nu_prodinv(i-6))$(ord(i) > 6) + (kio(i) * p(i) * nu_prodinv(i-7))$(ord(i) > 7) + (kio(i) * p(i) * nu_prodinv(i-3))$(ord(i) > 3) + (kio(i) * p(i) * nu_prodinv(i-2))$(ord(i) > 2) + (kio(i) * p(i) * nu_prodinv(i-4))$(ord(i) > 4) + (kio(i) * p(i) * nu_prodinv(i-5))$(ord(i) > 5) + (kio(i) * p(i) * nu_prodinv(i-8))$(ord(i) > 8) + (kio(i) * p(i) * nu_prodinv(i-9))$(ord(i) > 9) + (kio(i) * p(i) * nu_prodinv(i-10))$(ord(i) > 10) - nu_equil(i) =E= 0;
 stat_duty.. ((-1) * nu_greq) + nu_dutydef =E= 0;
-stat_e(i)$(it(i)).. sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * gamma(it) * e(it) ** rhot(it) * rhot(it) / e(it))) * nu_cet(it)) + sum(it, 1 / e0(it) ** 1 * nu_edemand(it)) + sum(it, 1 / xxd(it) ** 1 * nu_esupply(it)) + nu_e_fx_ag_exp_ind_ca61f4c4$sameas(i, 'ag-exp+ind') + nu_e_fx_ag_subsist_5576d1bb$sameas(i, 'ag-subsist') + nu_e_fx_biens_cap_392664c7$sameas(i, 'biens-cap') + nu_e_fx_biens_cons_135eaca1$sameas(i, 'biens-cons') + nu_e_fx_biens_int_bc4227de$sameas(i, 'biens-int') + nu_e_fx_cim_int_e7034a7c$sameas(i, 'cim-int') + nu_e_fx_construct$sameas(i, 'construct') + nu_e_fx_ind_alim_7c9641b7$sameas(i, 'ind-alim') + nu_e_fx_publiques$sameas(i, 'publiques') + nu_e_fx_services$sameas(i, 'services') + nu_e_fx_sylvicult$sameas(i, 'sylvicult') - piL_e(i) =E= 0;
+stat_e(i)$(it(i)).. ((-1) * (at(i) * (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) ** (1 / rhot(i)) * 1 / rhot(i) / (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) * gamma(i) * e(i) ** rhot(i) * rhot(i) / e(i))) * nu_cet(i) + 1 / e0(i) ** 1 * nu_edemand(i) + 1 / xxd(i) ** 1 * nu_esupply(i) =E= 0;
 stat_fsav.. ((-1) * er) * nu_totsav - nu_caeq + nu_fsav_fx =E= 0;
 stat_gd(i).. ((-1) * p(i)) * nu_gruse + nu_gdeq(i) - nu_equil(i) =E= 0;
 stat_gdtot.. sum(i, ((-1) * gles(i)) * nu_gdeq(i)) + nu_gdtot_fx =E= 0;
@@ -615,52 +511,47 @@ stat_gr.. nu_greq + nu_gruse =E= 0;
 stat_hhsav.. nu_hhsaveq - nu_totsav =E= 0;
 stat_id(i).. nu_ieq(i) - nu_equil(i) =E= 0;
 stat_indtax.. ((-1) * nu_greq) + nu_indtaxdef =E= 0;
-stat_int(i).. sum(j, nu_inteq(j)) - nu_equil(i) - piL_int(i) =E= 0;
+stat_int(i).. nu_inteq(i) - nu_equil(i) - piL_int(i) =E= 0;
 stat_k(i).. ((-1) * (ad(i) * prod(lc$(wdist(i,lc)), l(i,lc) ** alphl(lc,i)) * k(i) ** (1 - sum(lc, alphl(lc,i))) * (1 - sum(lc, alphl(lc,i))) / k(i))) * nu_activity(i) + ((-1) * (depr(i) * pk(i))) * nu_depreq =E= 0;
-stat_l(i,lc).. ((-1) * (k(i) ** (1 - sum(lc__, alphl(lc__,i))) * ad(i) * prod(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(lc__,i)) * sum(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(lc__,i) * alphl(lc__,i) / l(i,lc__) / l(i,lc__) ** alphl(lc__,i)))) * nu_activity(i) + (wa(lc) * wdist(i,lc) * nu_profitmax(i,lc))$wdist(i,lc) + nu_lmequil(lc) + nu_l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83$(sameas(i, 'ag-subsist') and sameas(lc, 'urban-skil')) + nu_l_fx_publiques_rural$(sameas(i, 'publiques') and sameas(lc, 'rural')) - piL_l(i,lc) =E= 0;
+stat_l(i,lc).. ((-1) * (k(i) ** (1 - sum(lc__, alphl(lc__,i))) * ad(i) * prod(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(lc__,i)) * sum(lc__$(wdist(i,lc__)), l(i,lc__) ** alphl(lc__,i) * alphl(lc__,i) / l(i,lc__) / l(i,lc__) ** alphl(lc__,i)))) * nu_activity(i) + (wa(lc) * wdist(i,lc) * nu_profitmax(i,lc))$(wdist(i,lc)) + nu_lmequil(lc) + nu_l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83$(sameas(i, 'ag-subsist') and sameas(lc, 'urban-skil')) + nu_l_fx_publiques_rural$(sameas(i, 'publiques') and sameas(lc, 'rural')) - piL_l(i,lc) =E= 0;
 stat_ls(lc).. (-1) * nu_lmequil(lc) =E= 0;
-stat_m(i)$(it(i)).. sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * delta(it) * m(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / m(it))) * nu_armington(it)) + sum(it, 1 / xxd(it) ** 1 * nu_costmin(it)) + nu_m_fx_ag_exp_ind_ca61f4c4$sameas(i, 'ag-exp+ind') + nu_m_fx_ag_subsist_5576d1bb$sameas(i, 'ag-subsist') + nu_m_fx_biens_cap_392664c7$sameas(i, 'biens-cap') + nu_m_fx_biens_cons_135eaca1$sameas(i, 'biens-cons') + nu_m_fx_biens_int_bc4227de$sameas(i, 'biens-int') + nu_m_fx_cim_int_e7034a7c$sameas(i, 'cim-int') + nu_m_fx_construct$sameas(i, 'construct') + nu_m_fx_ind_alim_7c9641b7$sameas(i, 'ind-alim') + nu_m_fx_publiques$sameas(i, 'publiques') + nu_m_fx_services$sameas(i, 'services') + nu_m_fx_sylvicult$sameas(i, 'sylvicult') - piL_m(i) =E= 0;
+stat_m(i)$(it(i)).. ((-1) * (ac(i) * (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) ** ((-1) / rhoc(i)) * (-1) / rhoc(i) / (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) * delta(i) * m(i) ** ((-1) * rhoc(i)) * ((-1) * rhoc(i)) / m(i))) * nu_armington(i) + 1 / xxd(i) ** 1 * nu_costmin(i) =E= 0;
 stat_mps.. sum(i, ((-1) * (y * cles(i) * (-1))) * nu_cdeq(i)) + ((-1) * y) * nu_hhsaveq + nu_mps_fx =E= 0;
-stat_p(i).. x(i) * nu_absorption(i) + sum(j, ((-1) * io(i,j)) * nu_actp(i)) + sum(j, ((-1) * imat(i,j)) * nu_pkdef(i)) + cd(i) * nu_cdeq(i) + ((-1) * gd(i)) * nu_gruse + kio(i) * dst(i) * nu_prodinv(i) - piL_p(i) =E= 0;
-stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * ((-1) * pe(it)) / sqr(pd(it)) / sqr(gamma(it)))) * nu_esupply(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * 1 / pm(it) ** 1 / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pd(i) =E= 0;
-stat_pe(i)$(it(i)).. sum(it, (1 + te(it)) * nu_pedef(it)) + sum(it, ((-1) * ((pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) ** (1 / (rhot(it) - 1)) * 1 / (rhot(it) - 1) / (pe(it) / pd(it) * (1 - gamma(it)) / gamma(it)) * gamma(it) * (1 - gamma(it)) * 1 / pd(it) ** 1 / sqr(gamma(it)))) * nu_esupply(it)) =E= 0;
+stat_p(i).. x(i) * nu_absorption(i) + sum(j, ((-1) * io(i,j)) * nu_actp(i)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-1))$(ord(i) > 1)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+6))$(ord(i) <= card(i) - 6)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+3))$(ord(i) <= card(i) - 3)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+4))$(ord(i) <= card(i) - 4)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+5))$(ord(i) <= card(i) - 5)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+7))$(ord(i) <= card(i) - 7)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+9))$(ord(i) <= card(i) - 9)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+8))$(ord(i) <= card(i) - 8)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * io(i,j)) * nu_actp(i+10))$(ord(i) <= card(i) - 10)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-6))$(ord(i) > 6)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-7))$(ord(i) > 7)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-3))$(ord(i) > 3)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-2))$(ord(i) > 2)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-4))$(ord(i) > 4)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-5))$(ord(i) > 5)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-8))$(ord(i) > 8)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-9))$(ord(i) > 9)) + sum(j, (((-1) * io(i,j)) * nu_actp(i-10))$(ord(i) > 10)) + sum(j, ((-1) * imat(i,j)) * nu_pkdef(i)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-1))$(ord(i) > 1)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+6))$(ord(i) <= card(i) - 6)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+3))$(ord(i) <= card(i) - 3)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+4))$(ord(i) <= card(i) - 4)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+5))$(ord(i) <= card(i) - 5)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+7))$(ord(i) <= card(i) - 7)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+2))$(ord(i) <= card(i) - 2)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+9))$(ord(i) <= card(i) - 9)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+8))$(ord(i) <= card(i) - 8)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+1))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i+10))$(ord(i) <= card(i) - 10)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-6))$(ord(i) > 6)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-7))$(ord(i) > 7)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-3))$(ord(i) > 3)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-2))$(ord(i) > 2)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-4))$(ord(i) > 4)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-5))$(ord(i) > 5)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-8))$(ord(i) > 8)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-9))$(ord(i) > 9)) + sum(j, (((-1) * imat(i,j)) * nu_pkdef(i-10))$(ord(i) > 10)) + cd(i) * nu_cdeq(i) + ((-1) * gd(i)) * nu_gruse + kio(i) * dst(i) * nu_prodinv(i) + (kio(i) * dst(i) * nu_prodinv(i-1))$(ord(i) > 1) + (kio(i) * dst(i) * nu_prodinv(i+6))$(ord(i) <= card(i) - 6) + (kio(i) * dst(i) * nu_prodinv(i+3))$(ord(i) <= card(i) - 3) + (kio(i) * dst(i) * nu_prodinv(i+4))$(ord(i) <= card(i) - 4) + (kio(i) * dst(i) * nu_prodinv(i+5))$(ord(i) <= card(i) - 5) + (kio(i) * dst(i) * nu_prodinv(i+7))$(ord(i) <= card(i) - 7) + (kio(i) * dst(i) * nu_prodinv(i+2))$(ord(i) <= card(i) - 2) + (kio(i) * dst(i) * nu_prodinv(i+9))$(ord(i) <= card(i) - 9) + (kio(i) * dst(i) * nu_prodinv(i+8))$(ord(i) <= card(i) - 8) + (kio(i) * dst(i) * nu_prodinv(i+1))$(ord(i) <= card(i) - 1) + (kio(i) * dst(i) * nu_prodinv(i+10))$(ord(i) <= card(i) - 10) + (kio(i) * dst(i) * nu_prodinv(i-6))$(ord(i) > 6) + (kio(i) * dst(i) * nu_prodinv(i-7))$(ord(i) > 7) + (kio(i) * dst(i) * nu_prodinv(i-3))$(ord(i) > 3) + (kio(i) * dst(i) * nu_prodinv(i-2))$(ord(i) > 2) + (kio(i) * dst(i) * nu_prodinv(i-4))$(ord(i) > 4) + (kio(i) * dst(i) * nu_prodinv(i-5))$(ord(i) > 5) + (kio(i) * dst(i) * nu_prodinv(i-8))$(ord(i) > 8) + (kio(i) * dst(i) * nu_prodinv(i-9))$(ord(i) > 9) + (kio(i) * dst(i) * nu_prodinv(i-10))$(ord(i) > 10) - piL_p(i) =E= 0;
+stat_pd(i).. ((-1) * xxd(i)) * nu_absorption(i) + ((-1) * xxd(i)) * nu_sales(i) + ((-1) * ((pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) ** (1 / (rhot(i) - 1)) * 1 / (rhot(i) - 1) / (pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) * gamma(i) * (1 - gamma(i)) * ((-1) * pe(i)) / sqr(pd(i)) / sqr(gamma(i)))) * nu_esupply(i) + ((-1) * ((pd(i) / pm(i) * delta(i) / (1 - delta(i))) ** (1 / (1 + rhoc(i))) * 1 / (1 + rhoc(i)) / (pd(i) / pm(i) * delta(i) / (1 - delta(i))) * (1 - delta(i)) * delta(i) * 1 / pm(i) ** 1 / sqr(1 - delta(i)))) * nu_costmin(i) - piL_pd(i) =E= 0;
+stat_pe(i)$(it(i)).. (1 + te(i)) * nu_pedef(i) + ((-1) * ((pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) ** (1 / (rhot(i) - 1)) * 1 / (rhot(i) - 1) / (pe(i) / pd(i) * (1 - gamma(i)) / gamma(i)) * gamma(i) * (1 - gamma(i)) * 1 / pd(i) ** 1 / sqr(gamma(i)))) * nu_esupply(i) =E= 0;
 stat_pk(i).. nu_pkdef(i) + ((-1) * (k(i) * depr(i))) * nu_depreq + dk(i) * nu_prodinv(i) - piL_pk(i) =E= 0;
-stat_pm(i)$(it(i)).. sum(it, nu_pmdef(it)) + sum(it, ((-1) * ((pd(it) / pm(it) * delta(it) / (1 - delta(it))) ** (1 / (1 + rhoc(it))) * 1 / (1 + rhoc(it)) / (pd(it) / pm(it) * delta(it) / (1 - delta(it))) * (1 - delta(it)) * delta(it) * ((-1) * pd(it)) / sqr(pm(it)) / sqr(1 - delta(it)))) * nu_costmin(it)) - piL_pm(i) =E= 0;
-stat_pva(i).. ((-1) * nu_actp(i)) + sum(lc, (((-1) * (alphl(lc,i) * xd(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + ((-1) * xd(i)) * nu_gdp =E= 0;
-stat_pwe(i)$(it(i)).. sum(it, ((-1) * er) * nu_pedef(it)) + sum(it, ((-1) * ((pwe0(it) / pwe(it)) ** eta(it) * eta(it) / (pwe0(it) / pwe(it)) * ((-1) * pwe0(it)) / sqr(pwe(it)))) * nu_edemand(it)) - piL_pwe(i) =E= 0;
-stat_pwm(i)$(it(i)).. sum(it, ((-1) * ((1 + tm(it)) * er)) * nu_pmdef(it)) =E= 0;
+stat_pm(i)$(it(i)).. nu_pmdef(i) + ((-1) * ((pd(i) / pm(i) * delta(i) / (1 - delta(i))) ** (1 / (1 + rhoc(i))) * 1 / (1 + rhoc(i)) / (pd(i) / pm(i) * delta(i) / (1 - delta(i))) * (1 - delta(i)) * delta(i) * ((-1) * pd(i)) / sqr(pm(i)) / sqr(1 - delta(i)))) * nu_costmin(i) =E= 0;
+stat_pva(i).. ((-1) * nu_actp(i)) + sum(lc, (((-1) * (alphl(lc,i) * xd(i))) * nu_profitmax(i,lc))$(wdist(i,lc))) + ((-1) * xd(i)) * nu_gdp =E= 0;
+stat_pwe(i)$(it(i)).. ((-1) * er) * nu_pedef(i) + ((-1) * ((pwe0(i) / pwe(i)) ** eta(i) * eta(i) / (pwe0(i) / pwe(i)) * ((-1) * pwe0(i)) / sqr(pwe(i)))) * nu_edemand(i) =E= 0;
+stat_pwm(i)$(it(i)).. ((-1) * ((1 + tm(i)) * er)) * nu_pmdef(i) =E= 0;
 stat_px(i).. xd(i) * nu_sales(i) + (1 - itax(i)) * nu_actp(i) + ((-1) * (xd(i) * itax(i))) * nu_indtaxdef - piL_px(i) =E= 0;
 stat_savings.. nu_totsav + sum(i, ((-1) * kio(i)) * nu_prodinv(i)) =E= 0;
 stat_tariff.. ((-1) * nu_greq) + nu_tariffdef =E= 0;
-stat_tm(i)$(it(i)).. sum(it, ((-1) * (pwm(it) * er)) * nu_pmdef(it)) =E= 0;
-stat_wa(lc).. sum(i, (l(i,lc) * wdist(i,lc) * nu_profitmax(i,lc))$wdist(i,lc)) - piL_wa(lc) =E= 0;
-stat_x(i).. p(i) * nu_absorption(i) + sum(it, nu_armington(it)) + sum(in, nu_xsn(in)) + nu_equil(i) - piL_x(i) =E= 0;
-stat_xd(i).. px(i) * nu_sales(i) + nu_activity(i) + sum(lc, (((-1) * (alphl(lc,i) * pva(i))) * nu_profitmax(i,lc))$wdist(i,lc)) + sum(it, nu_cet(it)) + sum(in, (-1) * nu_xxdsn(in)) + sum(j, ((-1) * io(i,j)) * nu_inteq(j)) + ((-1) * dstr(i)) * nu_dsteq(i) + ((-1) * pva(i)) * nu_gdp + ((-1) * (itax(i) * px(i))) * nu_indtaxdef - piL_xd(i) =E= 0;
-stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + sum(it, ((-1) * (at(it) * (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) ** (1 / rhot(it)) * 1 / rhot(it) / (gamma(it) * e(it) ** rhot(it) + (1 - gamma(it)) * xxd(it) ** rhot(it)) * (1 - gamma(it)) * xxd(it) ** rhot(it) * rhot(it) / xxd(it))) * nu_cet(it)) + sum(it, ((-1) * e(it)) / sqr(xxd(it)) * nu_esupply(it)) + sum(it, ((-1) * (ac(it) * (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) ** ((-1) / rhoc(it)) * (-1) / rhoc(it) / (delta(it) * m(it) ** ((-1) * rhoc(it)) + (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it))) * (1 - delta(it)) * xxd(it) ** ((-1) * rhoc(it)) * ((-1) * rhoc(it)) / xxd(it))) * nu_armington(it)) + sum(it, ((-1) * m(it)) / sqr(xxd(it)) * nu_costmin(it)) + sum(in, nu_xxdsn(in)) + sum(in, (-1) * nu_xsn(in)) - piL_xxd(i) =E= 0;
+stat_tm(i)$(it(i)).. ((-1) * (pwm(i) * er)) * nu_pmdef(i) =E= 0;
+stat_wa(lc).. sum(i, (l(i,lc) * wdist(i,lc) * nu_profitmax(i,lc))$(wdist(i,lc))) - piL_wa(lc) =E= 0;
+stat_x(i).. p(i) * nu_absorption(i) + nu_armington(i) + nu_xsn(i) + nu_equil(i) - piL_x(i) =E= 0;
+stat_xd(i).. px(i) * nu_sales(i) + nu_activity(i) + sum(lc, (((-1) * (alphl(lc,i) * pva(i))) * nu_profitmax(i,lc))$(wdist(i,lc))) + nu_cet(i) - nu_xxdsn(i) + ((-1) * io(i,i)) * nu_inteq(i) + (((-1) * io(i,i)) * nu_inteq(i-1))$(ord(i) > 1) + (((-1) * io(i,i)) * nu_inteq(i+6))$(ord(i) <= card(i) - 6) + (((-1) * io(i,i)) * nu_inteq(i+3))$(ord(i) <= card(i) - 3) + (((-1) * io(i,i)) * nu_inteq(i+4))$(ord(i) <= card(i) - 4) + (((-1) * io(i,i)) * nu_inteq(i+5))$(ord(i) <= card(i) - 5) + (((-1) * io(i,i)) * nu_inteq(i+7))$(ord(i) <= card(i) - 7) + (((-1) * io(i,i)) * nu_inteq(i+2))$(ord(i) <= card(i) - 2) + (((-1) * io(i,i)) * nu_inteq(i+9))$(ord(i) <= card(i) - 9) + (((-1) * io(i,i)) * nu_inteq(i+8))$(ord(i) <= card(i) - 8) + (((-1) * io(i,i)) * nu_inteq(i+1))$(ord(i) <= card(i) - 1) + (((-1) * io(i,i)) * nu_inteq(i+10))$(ord(i) <= card(i) - 10) + (((-1) * io(i,i)) * nu_inteq(i-6))$(ord(i) > 6) + (((-1) * io(i,i)) * nu_inteq(i-7))$(ord(i) > 7) + (((-1) * io(i,i)) * nu_inteq(i-3))$(ord(i) > 3) + (((-1) * io(i,i)) * nu_inteq(i-2))$(ord(i) > 2) + (((-1) * io(i,i)) * nu_inteq(i-4))$(ord(i) > 4) + (((-1) * io(i,i)) * nu_inteq(i-5))$(ord(i) > 5) + (((-1) * io(i,i)) * nu_inteq(i-8))$(ord(i) > 8) + (((-1) * io(i,i)) * nu_inteq(i-9))$(ord(i) > 9) + (((-1) * io(i,i)) * nu_inteq(i-10))$(ord(i) > 10) + ((-1) * dstr(i)) * nu_dsteq(i) + ((-1) * pva(i)) * nu_gdp + ((-1) * (itax(i) * px(i))) * nu_indtaxdef - piL_xd(i) =E= 0;
+stat_xxd(i).. ((-1) * pd(i)) * nu_absorption(i) + ((-1) * pd(i)) * nu_sales(i) + ((-1) * (at(i) * (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) ** (1 / rhot(i)) * 1 / rhot(i) / (gamma(i) * e(i) ** rhot(i) + (1 - gamma(i)) * xxd(i) ** rhot(i)) * (1 - gamma(i)) * xxd(i) ** rhot(i) * rhot(i) / xxd(i))) * nu_cet(i) + ((-1) * e(i)) / sqr(xxd(i)) * nu_esupply(i) + ((-1) * (ac(i) * (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) ** ((-1) / rhoc(i)) * (-1) / rhoc(i) / (delta(i) * m(i) ** ((-1) * rhoc(i)) + (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i))) * (1 - delta(i)) * xxd(i) ** ((-1) * rhoc(i)) * ((-1) * rhoc(i)) / xxd(i))) * nu_armington(i) + ((-1) * m(i)) / sqr(xxd(i)) * nu_costmin(i) + nu_xxdsn(i) - nu_xsn(i) =E= 0;
 stat_y.. sum(i, ((-1) * (cles(i) * (1 - mps))) * nu_cdeq(i)) + nu_gdp + ((-1) * mps) * nu_hhsaveq - piL_y =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_e(i).. e(i) - 0.01 =G= 0;
 comp_lo_int(i).. int(i) - 0.01 =G= 0;
 comp_lo_l(i,lc).. l(i,lc) - 0.01 =G= 0;
-comp_lo_m(i).. m(i) - 0.01 =G= 0;
 comp_lo_p(i).. p(i) - 0.01 =G= 0;
 comp_lo_pd(i).. pd(i) - 0.01 =G= 0;
 comp_lo_pk(i).. pk(i) - 0.01 =G= 0;
-comp_lo_pm(i).. pm(i) - 0.01 =G= 0;
-comp_lo_pwe(i).. pwe(i) - 0.01 =G= 0;
 comp_lo_px(i).. px(i) - 0.01 =G= 0;
 comp_lo_wa(lc).. wa(lc) - 0.01 =G= 0;
 comp_lo_x(i).. x(i) - 0.01 =G= 0;
 comp_lo_xd(i).. xd(i) - 0.01 =G= 0;
-comp_lo_xxd(i).. xxd(i) - 0.01 =G= 0;
 comp_lo_y.. y - 0.01 =G= 0;
 
 * Original equality equations
 pmdef(it).. pm(it) =E= pwm(it) * er * (1 + tm(it));
 pedef(it).. pe(it) * (1 + te(it)) =E= pwe(it) * er;
-absorption(i).. p(i) * x(i) =E= pd(i) * xxd(i) + (pm(i) * m(i))$it(i);
-sales(i).. px(i) * xd(i) =E= pd(i) * xxd(i) + (pe(i) * e(i))$it(i);
+absorption(i).. p(i) * x(i) =E= pd(i) * xxd(i) + (pm(i) * m(i))$(it(i));
+sales(i).. px(i) * xd(i) =E= pd(i) * xxd(i) + (pe(i) * e(i))$(it(i));
 actp(i).. px(i) * (1 - itax(i)) =E= pva(i) + sum(j, io(j,i) * p(j));
 pkdef(i).. pk(i) =E= sum(j, p(j) * imat(j,i));
 activity(i).. xd(i) =E= ad(i) * prod(lc$(wdist(i,lc)), l(i,lc) ** alphl(lc,i)) * k(i) ** (1 - sum(lc, alphl(lc,i)));
@@ -691,28 +582,6 @@ ieq(i).. id(i) =E= sum(j, imat(i,j) * dk(j));
 caeq.. sum(it, pwm(it) * m(it)) =E= sum(it, pwe(it) * e(it)) + fsav;
 equil(i).. x(i) =E= int(i) + cd(i) + gd(i) + id(i) + dst(i);
 obj.. omega =E= prod(i$(cles(i)), cd(i) ** cles(i));
-e_fx_ag_subsist_5576d1bb.. e("ag-subsist") - 0 =E= 0;
-e_fx_ag_exp_ind_ca61f4c4.. e("ag-exp+ind") - 0 =E= 0;
-e_fx_sylvicult.. e("sylvicult") - 0 =E= 0;
-e_fx_ind_alim_7c9641b7.. e("ind-alim") - 0 =E= 0;
-e_fx_biens_cons_135eaca1.. e("biens-cons") - 0 =E= 0;
-e_fx_biens_int_bc4227de.. e("biens-int") - 0 =E= 0;
-e_fx_cim_int_e7034a7c.. e("cim-int") - 0 =E= 0;
-e_fx_biens_cap_392664c7.. e("biens-cap") - 0 =E= 0;
-e_fx_construct.. e("construct") - 0 =E= 0;
-e_fx_services.. e("services") - 0 =E= 0;
-e_fx_publiques.. e("publiques") - 0 =E= 0;
-m_fx_ag_subsist_5576d1bb.. m("ag-subsist") - 0 =E= 0;
-m_fx_ag_exp_ind_ca61f4c4.. m("ag-exp+ind") - 0 =E= 0;
-m_fx_sylvicult.. m("sylvicult") - 0 =E= 0;
-m_fx_ind_alim_7c9641b7.. m("ind-alim") - 0 =E= 0;
-m_fx_biens_cons_135eaca1.. m("biens-cons") - 0 =E= 0;
-m_fx_biens_int_bc4227de.. m("biens-int") - 0 =E= 0;
-m_fx_cim_int_e7034a7c.. m("cim-int") - 0 =E= 0;
-m_fx_biens_cap_392664c7.. m("biens-cap") - 0 =E= 0;
-m_fx_construct.. m("construct") - 0 =E= 0;
-m_fx_services.. m("services") - 0 =E= 0;
-m_fx_publiques.. m("publiques") - 0 =E= 0;
 l_fx_publiques_rural.. l("publiques","rural") - 0 =E= 0;
 l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83.. l("ag-subsist","urban-skil") - 0 =E= 0;
 gdtot_fx.. gdtot - 135.03 =E= 0;
@@ -728,17 +597,31 @@ fsav_fx.. fsav - 36.841 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 e.fx(i)$(not (it(i))) = 0;
-piL_e.fx(i)$(not (it(i))) = 0;
 m.fx(i)$(not (it(i))) = 0;
-piL_m.fx(i)$(not (it(i))) = 0;
 pe.fx(i)$(not (it(i))) = 0;
 pm.fx(i)$(not (it(i))) = 0;
-piL_pm.fx(i)$(not (it(i))) = 0;
 pwe.fx(i)$(not (it(i))) = 0;
-piL_pwe.fx(i)$(not (it(i))) = 0;
 pwm.fx(i)$(not (it(i))) = 0;
 tm.fx(i)$(not (it(i))) = 0;
 nu_profitmax.fx(i,lc)$(not (wdist(i,lc))) = 0;
+nu_armington.fx(i)$(not (it(i))) = 0;
+nu_cet.fx(i)$(not (it(i))) = 0;
+nu_costmin.fx(i)$(not (it(i))) = 0;
+nu_edemand.fx(i)$(not (it(i))) = 0;
+nu_esupply.fx(i)$(not (it(i))) = 0;
+nu_pedef.fx(i)$(not (it(i))) = 0;
+nu_pmdef.fx(i)$(not (it(i))) = 0;
+nu_xsn.fx(i)$(not (in(i))) = 0;
+nu_xxdsn.fx(i)$(not (in(i))) = 0;
+nu_armington.fx(i)$(not (it(i))) = 0;
+nu_cet.fx(i)$(not (it(i))) = 0;
+nu_costmin.fx(i)$(not (it(i))) = 0;
+nu_edemand.fx(i)$(not (it(i))) = 0;
+nu_esupply.fx(i)$(not (it(i))) = 0;
+nu_pedef.fx(i)$(not (it(i))) = 0;
+nu_pmdef.fx(i)$(not (it(i))) = 0;
+nu_xsn.fx(i)$(not (in(i))) = 0;
+nu_xxdsn.fx(i)$(not (in(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -802,17 +685,6 @@ Model mcp_model /
     depreq.nu_depreq,
     dsteq.nu_dsteq,
     dutydef.nu_dutydef,
-    e_fx_ag_exp_ind_ca61f4c4.nu_e_fx_ag_exp_ind_ca61f4c4,
-    e_fx_ag_subsist_5576d1bb.nu_e_fx_ag_subsist_5576d1bb,
-    e_fx_biens_cap_392664c7.nu_e_fx_biens_cap_392664c7,
-    e_fx_biens_cons_135eaca1.nu_e_fx_biens_cons_135eaca1,
-    e_fx_biens_int_bc4227de.nu_e_fx_biens_int_bc4227de,
-    e_fx_cim_int_e7034a7c.nu_e_fx_cim_int_e7034a7c,
-    e_fx_construct.nu_e_fx_construct,
-    e_fx_ind_alim_7c9641b7.nu_e_fx_ind_alim_7c9641b7,
-    e_fx_publiques.nu_e_fx_publiques,
-    e_fx_services.nu_e_fx_services,
-    e_fx_sylvicult.nu_e_fx_sylvicult,
     edemand.nu_edemand,
     equil.nu_equil,
     esupply.nu_esupply,
@@ -829,17 +701,6 @@ Model mcp_model /
     l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83.nu_l_fx_ag_subsist_5576d1bb_urban_skil_d920fa83,
     l_fx_publiques_rural.nu_l_fx_publiques_rural,
     lmequil.nu_lmequil,
-    m_fx_ag_exp_ind_ca61f4c4.nu_m_fx_ag_exp_ind_ca61f4c4,
-    m_fx_ag_subsist_5576d1bb.nu_m_fx_ag_subsist_5576d1bb,
-    m_fx_biens_cap_392664c7.nu_m_fx_biens_cap_392664c7,
-    m_fx_biens_cons_135eaca1.nu_m_fx_biens_cons_135eaca1,
-    m_fx_biens_int_bc4227de.nu_m_fx_biens_int_bc4227de,
-    m_fx_cim_int_e7034a7c.nu_m_fx_cim_int_e7034a7c,
-    m_fx_construct.nu_m_fx_construct,
-    m_fx_ind_alim_7c9641b7.nu_m_fx_ind_alim_7c9641b7,
-    m_fx_publiques.nu_m_fx_publiques,
-    m_fx_services.nu_m_fx_services,
-    m_fx_sylvicult.nu_m_fx_sylvicult,
     mps_fx.nu_mps_fx,
     obj.omega,
     pedef.nu_pedef,
@@ -852,20 +713,15 @@ Model mcp_model /
     totsav.nu_totsav,
     xsn.nu_xsn,
     xxdsn.nu_xxdsn,
-    comp_lo_e.piL_e,
     comp_lo_int.piL_int,
     comp_lo_l.piL_l,
-    comp_lo_m.piL_m,
     comp_lo_p.piL_p,
     comp_lo_pd.piL_pd,
     comp_lo_pk.piL_pk,
-    comp_lo_pm.piL_pm,
-    comp_lo_pwe.piL_pwe,
     comp_lo_px.piL_px,
     comp_lo_wa.piL_wa,
     comp_lo_x.piL_x,
     comp_lo_xd.piL_xd,
-    comp_lo_xxd.piL_xxd,
     comp_lo_y.piL_y
 /;
 

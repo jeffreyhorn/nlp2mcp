@@ -70,16 +70,16 @@ Positive Variables
 * POSITIVE variables with explicit .l values are
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x.l("0") = 0.0001;
-x.l("1") = 0.0001;
-x.l("2") = 0.0001;
-x.l("3") = 0.0001;
-x.l("4") = 0.0001;
-x.l("5") = 0.0001;
-x.l("6") = 0.0001;
-x.l("7") = 0.0001;
-x.l("8") = 0.0001;
-x.l("9") = 0.0001;
+x.l('0') = 0.0001;
+x.l('1') = 0.0001;
+x.l('2') = 0.0001;
+x.l('3') = 0.0001;
+x.l('4') = 0.0001;
+x.l('5') = 0.0001;
+x.l('6') = 0.0001;
+x.l('7') = 0.0001;
+x.l('8') = 0.0001;
+x.l('9') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
 w.l(i) = 1;
@@ -113,8 +113,8 @@ Equations
 * Stationarity equations
 stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_util.. 0 =E= 0;
-stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) - piL_w(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) - piL_x(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) + lam_licd(i-1)$(ord(i) > 1) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;

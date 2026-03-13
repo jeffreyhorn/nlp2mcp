@@ -61,19 +61,12 @@ execseed = 12345;
 y0(h) = sum(g, x0(g,h) * p0(g));
 r0 = sum(h, y0(h)) / sum(k, b(k));
 alpha(g,h) = p0(g) * x0(g,h) / y0(h);
-wp(g) = sum(h, x0(g,h) * p0(g)) / sum(h, y0(h));
-cl(g,h) = epsi(g,h) * x0(g,h) / y0(h);
 beta(g,h) = epsi(g,h) * alpha(g,h);
 epsi(g,h) = epsi(g,h) / sum(gp, epsi(gp,h) * alpha(gp,h));
-etest(h) = sum(g, epsi(g,h) * alpha(g,h)) - 1;
 gamma(g,h) = x0(g,h) + beta(g,h) * y0(h) / p0(g) / omega;
 eta(g,gp,h) = ((-1) * (gamma(gp, h))) * p0(gp) * beta(g,h) / p0(g) / x0(g,h);
 eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;
-s(g,gp,h) = eta(g,gp,h) * x0(g,h) / p0(gp);
 an(g,h) = x0(g,h) / prod(gp, p0(gp) ** eta(g,gp,h)) / y0(h) ** epsi(g,h);
-htest(g,h) = sum(gp, eta(g,gp,h)) + epsi(g,h);
-ctest(g,h) = sum(gp, alpha(gp,h) * eta(gp,g,h)) + alpha(g,h);
-al(g,h) = x0(g,h) - sum(gp, s(g,gp,h) * p0(gp)) - cl(g,h) * y0(h);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -98,9 +91,7 @@ Positive Variables
     y(h)
     lam_cb(i)
     lam_rc(k)
-    lam_de(g,h)
-    lam_dl(g,h)
-    lam_dn(g,h)
+    lam_dn(i,h)
     lam_bc(h)
     lam_id(h)
     lam_mp(i,t)
@@ -123,9 +114,9 @@ Positive Variables
 
 p.l(i) = p0(i);
 p.l(i) = min(max(p.l(i), 1e-6), p.up(i));
-p.l("food") = max(p.l("food"), 0.2);
-p.l(h-industry) = max(p.l(h-industry), 0.2);
-p.l(l-industry) = max(p.l(l-industry), 0.2);
+p.l('food') = max(p.l('food'), 0.2);
+p.l('h-industry') = max(p.l('h-industry'), 0.2);
+p.l('l-industry') = max(p.l('l-industry'), 0.2);
 x.l(i,h) = x0(i,h);
 x.l(i,h) = min(max(x.l(i,h), 1e-6), x.up(i,h));
 r.l(k) = r0;
@@ -150,8 +141,6 @@ Equations
     stat_y(h)
     comp_bc(h)
     comp_cb(i)
-    comp_de(g,h)
-    comp_dl(g,h)
     comp_dn(g,h)
     comp_id(h)
     comp_mp(i,t)
@@ -169,17 +158,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_p(i).. ((-1) * sum(h, x(i,h))) + sum(gp, sum((g,h), ((-1) * ((p(g) * beta(g,h) * ((-1) * (gamma(gp, h))) - beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp)))) / sqr(p(g)))) * lam_de(g,h))) + sum(gp, sum((g,h), ((-1) * s(g,gp,h)) * lam_dl(g,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
+stat_p(i).. ((-1) * sum(h, x(i,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
 stat_q(i,t).. sum(j, ((-1) * (1 - a(i,j))) * lam_cb(i)) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
 stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) - piL_r(k) =E= 0;
-stat_x(i,h).. ((-1) * p(i)) + 1$g(i) * lam_cb(i) + sum(g, lam_de(g,h)) + sum(g, lam_dl(g,h)) + sum(g, lam_dn(g,h)) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
-stat_y(h).. sum(g, ((-1) * (p(g) * beta(g,h) / sqr(p(g)))) * lam_de(g,h)) + sum(g, ((-1) * cl(g,h)) * lam_dl(g,h)) + sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
+stat_x(i,h).. ((-1) * p(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
+stat_y(h).. sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
 
 * Inequality complementarity equations
 comp_bc(h).. ((-1) * (sum(g, x(g,h) * p(g)) - y(h))) =G= 0;
 comp_cb(i).. ((-1) * (sum(h$(g(i)), x(i,h)) - sum(t, q(i,t) - sum(j, a(i,j) * q(j,t))))) =G= 0;
-comp_de(g,h).. ((-1) * (x(g,h) - (gamma(g, h) + beta(g,h) * (y(h) - sum(gp, gamma(gp, h) * p(gp))) / p(g)))) =G= 0;
-comp_dl(g,h).. ((-1) * (x(g,h) - (al(g,h) + sum(gp, s(g,gp,h) * p(gp)) + cl(g,h) * y(h)))) =G= 0;
 comp_dn(g,h).. ((-1) * (x(g,h) - an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h))) =G= 0;
 comp_id(h).. ((-1) * (y(h) - sum(k, bb(h,k) * b(k) * r(k)))) =G= 0;
 comp_mp(i,t).. ((-1) * (p(i) - (sum(j, a(j,i) * p(j)) + sum(k, d(i,k,t) * r(k))))) =G= 0;
@@ -195,6 +182,15 @@ comp_lo_y(h).. y(h) - 0 =G= 0;
 * Original equality equations
 zdef.. z =E= sum((g,h), x(g,h) * p(g)) - sum(k, b(k) * r(k));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_dn.fx(i,h)$(not (g(i))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -217,8 +213,6 @@ Model mcp_model /
     stat_y.y,
     comp_bc.lam_bc,
     comp_cb.lam_cb,
-    comp_de.lam_de,
-    comp_dl.lam_dl,
     comp_dn.lam_dn,
     comp_id.lam_id,
     comp_mp.lam_mp,

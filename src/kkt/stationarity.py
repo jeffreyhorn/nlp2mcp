@@ -51,6 +51,113 @@ from src.kkt.naming import (
 from src.kkt.objective import extract_objective_info
 
 
+def _compute_lead_lag_conditions(model_ir: ModelIR) -> dict[str, Expr]:
+    """Compute implicit lead/lag domain restrictions for equations.
+
+    GAMS silently skips equation instances that reference undefined elements
+    via lead/lag indexing (e.g., ``x(n-1)`` when ``n`` is the first element).
+    The emitter already infers these restrictions when writing GAMS output.
+
+    This function computes equivalent AST conditions for use by the
+    stationarity builder, which wraps multiplier terms with
+    ``DollarConditional`` guards.  This allows ``_extract_all_conditioned_guard``
+    to detect when ALL stationarity terms are conditional and add a condition
+    to the stationarity equation, preventing MCP unmatched-equation errors.
+
+    NOTE: This does NOT modify ``eq_def.condition``.  Modifying the equation
+    IR caused regressions (e.g., catmix) because the stationarity builder
+    over-restricted variable domains.
+
+    Returns:
+        Dict mapping equation name → inferred lead/lag condition AST.
+    """
+    result: dict[str, Expr] = {}
+    for eq_name, eq_def in model_ir.equations.items():
+        if not eq_def.domain:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        lead_offsets: dict[str, int] = {}
+        lag_offsets: dict[str, int] = {}
+        domain_map = {d.lower(): d for d in eq_def.domain}
+        _collect_lead_lag_offsets(lhs, domain_map, lead_offsets, lag_offsets, set())
+        _collect_lead_lag_offsets(rhs, domain_map, lead_offsets, lag_offsets, set())
+        cond = _build_lead_lag_condition_expr(lead_offsets, lag_offsets)
+        if cond is not None:
+            result[eq_name] = cond
+    return result
+
+
+def _collect_lead_lag_offsets(
+    expr: Expr,
+    domain_map: dict[str, str],
+    lead_offsets: dict[str, int],
+    lag_offsets: dict[str, int],
+    bound_indices: set[str],
+) -> None:
+    """Walk an expression tree collecting lead/lag offset magnitudes per domain index.
+
+    Only non-circular IndexOffset nodes are considered.  Indices currently
+    bound by a Sum or Prod are excluded to avoid false positives when a
+    sum-local index shadows an equation-level domain index.
+    """
+    if isinstance(expr, IndexOffset) and not expr.circular:
+        base_lower = expr.base.lower() if isinstance(expr.base, str) else None
+        if base_lower and base_lower in domain_map and base_lower not in bound_indices:
+            canonical = domain_map[base_lower]
+            if isinstance(expr.offset, Const):
+                offset_val = int(expr.offset.value)
+                if offset_val > 0:
+                    lead_offsets[canonical] = max(lead_offsets.get(canonical, 0), offset_val)
+                elif offset_val < 0:
+                    lag_offsets[canonical] = max(lag_offsets.get(canonical, 0), abs(offset_val))
+
+    if isinstance(expr, (VarRef, ParamRef, EquationRef)):
+        for idx in expr.indices:
+            if isinstance(idx, IndexOffset):
+                _collect_lead_lag_offsets(idx, domain_map, lead_offsets, lag_offsets, bound_indices)
+
+    if isinstance(expr, (Sum, Prod)):
+        new_bound = bound_indices | {idx.lower() for idx in expr.index_sets}
+        for child in expr.children():
+            _collect_lead_lag_offsets(child, domain_map, lead_offsets, lag_offsets, new_bound)
+    else:
+        for child in expr.children():
+            _collect_lead_lag_offsets(child, domain_map, lead_offsets, lag_offsets, bound_indices)
+
+
+def _build_lead_lag_condition_expr(
+    lead_offsets: dict[str, int],
+    lag_offsets: dict[str, int],
+) -> Expr | None:
+    """Build an AST condition expression from lead/lag offset dicts.
+
+    - Lag offset n for index t → ``Binary(">", Call("ord", (SymbolRef(t),)), Const(n))``
+    - Lead offset n for index k → ``Binary("<=", Call("ord", (SymbolRef(k),)),
+      Binary("-", Call("card", (SymbolRef(k),)), Const(n)))``
+
+    Multiple restrictions are AND-combined.
+    """
+    parts: list[Expr] = []
+    for idx in sorted(lag_offsets):
+        mag = lag_offsets[idx]
+        parts.append(Binary(">", Call("ord", (SymbolRef(idx),)), Const(float(mag))))
+    for idx in sorted(lead_offsets):
+        mag = lead_offsets[idx]
+        parts.append(
+            Binary(
+                "<=",
+                Call("ord", (SymbolRef(idx),)),
+                Binary("-", Call("card", (SymbolRef(idx),)), Const(float(mag))),
+            )
+        )
+    if not parts:
+        return None
+    combined = parts[0]
+    for p in parts[1:]:
+        combined = Binary("and", combined, p)
+    return combined
+
+
 def _collect_referenced_variable_names(model_ir: ModelIR) -> set[str]:
     """Collect names of all variables referenced in equation bodies or the objective.
 
@@ -119,7 +226,10 @@ def _collect_symbolref_names(expr: Expr) -> set[str]:
 
 
 def _extract_all_conditioned_guard(
-    stat_expr: Expr, var_domain: tuple[str, ...], model_ir: ModelIR
+    stat_expr: Expr,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+    lead_lag_conditions: dict[str, Expr] | None = None,
 ) -> Expr | None:
     """Extract a combined guard when ALL top-level additive terms are DollarConditional.
 
@@ -133,9 +243,36 @@ def _extract_all_conditioned_guard(
     if the combined condition's free indices are within var_domain.  When a
     condition comes from inside a Sum and has extra indices, lift it into an
     existence check: sum((extra_indices), 1$cond).
+
+    Issue #springchain: Terms containing MultiplierRef nodes for equations with
+    implicit lead/lag restrictions (from ``lead_lag_conditions``) are treated as
+    implicitly conditioned.  This handles the case where an equation like
+    ``delta_x_eq(n).. x(n) - x(n-1)`` has no explicit condition but GAMS
+    silently skips instances with out-of-range IndexOffset.
     """
     # Collect (condition, sum_indices) pairs from all leaf terms
     cond_entries: list[tuple[Expr, tuple[str, ...]]] = []
+
+    def _find_multiplier_ll_cond(expr: Expr) -> Expr | None:
+        """Check if a term contains a MultiplierRef for a lead/lag equation.
+
+        Returns the lead/lag condition if found, None otherwise.
+        """
+        if lead_lag_conditions is None:
+            return None
+        if isinstance(expr, MultiplierRef):
+            # MultiplierRef name is nu_EQNAME or lam_EQNAME
+            for prefix in ("nu_", "lam_"):
+                if expr.name.startswith(prefix):
+                    eq_name = expr.name[len(prefix) :]
+                    if eq_name in lead_lag_conditions:
+                        return lead_lag_conditions[eq_name]
+            return None
+        for child in expr.children():
+            result = _find_multiplier_ll_cond(child)
+            if result is not None:
+                return result
+        return None
 
     def _collect(expr: Expr, sum_indices: tuple[str, ...] = ()) -> bool:
         """Return True if this sub-tree is all-conditioned (or zero)."""
@@ -149,6 +286,11 @@ def _extract_all_conditioned_guard(
             return _collect(expr.body, expr.index_sets)
         if isinstance(expr, Binary) and expr.op in ("+", "-"):
             return _collect(expr.left, sum_indices) and _collect(expr.right, sum_indices)
+        # Issue #springchain: Check for implicit lead/lag condition via MultiplierRef
+        ll_cond = _find_multiplier_ll_cond(expr)
+        if ll_cond is not None:
+            cond_entries.append((ll_cond, sum_indices))
+            return True
         return False
 
     if not _collect(stat_expr, ()):
@@ -664,6 +806,14 @@ def build_stationarity_equations(
     # Resolve simplification mode once for all equations
     simp_mode = get_simplification_mode(config)
 
+    # Issue #springchain: Pre-compute implicit lead/lag domain conditions for
+    # all equations.  Equations like delta_x_eq(n).. x(n) - x(n-1) have no
+    # explicit condition but GAMS silently skips instances with out-of-range
+    # IndexOffset.  The stationarity builder needs to guard the Jacobian terms
+    # with these implicit conditions so that _extract_all_conditioned_guard can
+    # detect when ALL terms are conditional and add a domain restriction.
+    lead_lag_conditions = _compute_lead_lag_conditions(kkt.model_ir)
+
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
         # Get variable definition to determine domain
@@ -713,7 +863,10 @@ def build_stationarity_equations(
             # a guard, excluded instances produce 0 =E= 0, causing MCP errors.
             if access_cond is None:
                 access_cond = _extract_all_conditioned_guard(
-                    stat_expr, var_def.domain, kkt.model_ir
+                    stat_expr,
+                    var_def.domain,
+                    kkt.model_ir,
+                    lead_lag_conditions=lead_lag_conditions,
                 )
 
             stationarity[stat_name] = EquationDef(

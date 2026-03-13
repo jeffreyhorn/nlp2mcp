@@ -56,6 +56,13 @@ Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.fx('i0') = 1;
+x.fx('i50') = 3;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -89,8 +96,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * nu_length_eqn =E= 0;
-stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) - nu_x_eqn(i) + nu_x_fx_i0$sameas(i, 'i0') + nu_x_fx_i50$sameas(i, 'i50') =E= 0;
+stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + (((-1) * (0.5 * h)) * nu_x_eqn(i-1))$(ord(i) > 1) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * nu_length_eqn =E= 0;
+stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) - nu_x_eqn(i) + nu_x_eqn(i-1)$(ord(i) > 1) + nu_x_fx_i0$(sameas(i, 'i0')) + nu_x_fx_i50$(sameas(i, 'i50')) =E= 0;
 
 * Original equality equations
 obj.. energy =E= 0.5 * h * sum(i, x(i) * sqrt(1 + sqr(u(i))) + x(i+1) * sqrt(1 + sqr(u(i+1))));
