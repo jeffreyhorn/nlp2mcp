@@ -9,22 +9,31 @@
 
 ## Summary
 
-The pdi model is structurally infeasible (model_status=4, 0 iterations) because accounting/intermediate variables (`holding`, `production`, `transport`, `revenue`) get trivial stationarity equations of the form `1 + nu_xxx =E= 0`, which force the free multiplier to a constant. This is the same pattern as issue #764.
+The pdi model is structurally infeasible (model_status=4, 0 iterations) because accounting/intermediate variables (`holding`, `production`, `transport`, `revenue`) get trivial stationarity equations of the form `1 + nu_xxx =E= 0`, which force the free multiplier to a constant. This is the same pattern as issue #764 (mexss).
 
-## Reproduction
+## Resolution: Duplicate of #764 — Cannot Fix Yet
 
-```bash
-.venv/bin/python -m src.cli data/gamslib/raw/pdi.gms -o data/gamslib/mcp/pdi_mcp.gms
-cd /tmp && gams /path/to/data/gamslib/mcp/pdi_mcp.gms lo=2 o=pdi.lst
-# Expected: MODEL STATUS 4 (Infeasible), 0 iterations
-```
+This issue is a duplicate of [#764](https://github.com/jeffreyhorn/nlp2mcp/issues/764) (mexss accounting variables). The root cause and required fix are identical.
+
+### Why This Cannot Be Fixed Now
+
+The accounting variable elimination was explicitly deferred in Sprint 20 after thorough analysis (see `docs/planning/EPIC_4/SPRINT_20/ACCOUNTING_VAR_DETECTION_DESIGN.md`). The design identified 5 detection criteria (C1-C5):
+
+- **C1-C4** (static analysis): Computable but produce **false positives** — incorrectly classifying variables in models like `demo1`, `himmel11`, `house` as accounting variables
+- **C5** (multiplier consistency): Requires runtime dependency graph analysis — not feasible from static analysis alone
+
+The `sameas` guard bug in `src/kkt/stationarity.py:2446-2473` (using only the first Jacobian entry for scalar equations that sum over multiple variable instances) is a contributing factor but not sufficient to fix the full accounting variable pattern.
+
+### What Must Be Done Before Fixing
+
+1. Implement C5 multiplier-consistency checking with a constraint dependency graph
+2. Fix the `sameas` guard to handle multi-entry Jacobian patterns for scalar equations
+3. Validate against known false-positive models (demo1, himmel11, house)
 
 ## Model Structure
 
 - **Sets**: `p` (plants), `d` (distribution centers), `m` (months), `c` (commodities)
 - **Objective**: Maximize `profit`
-- **Decision variables**: `x(p,d,m)` (transport), `pn(p,m)` (normal production), `po(p,m)` (overtime production), `s(d,m)` (sales), `h(d,m)` (inventory), `dm(d,m)` (demand)
-- **Accounting variables**: `profit`, `revenue`, `production`, `transport`, `holding`
 - **Accounting equations**:
   - `ar.. revenue =E= sum(...)`
   - `at.. transport =E= sum(...)`
@@ -32,9 +41,7 @@ cd /tmp && gams /path/to/data/gamslib/mcp/pdi_mcp.gms lo=2 o=pdi.lst
   - `ah.. holding =E= sum(...)`
   - `apr.. profit =E= revenue - transport - production - holding + 10`
 
-## Root Cause
-
-The accounting variables (`revenue`, `transport`, `production`, `holding`) appear in the objective chain only through their defining equations. The KKT builder generates stationarity equations for each:
+## Trivial Stationarity Equations
 
 ```gams
 stat_holding..    1 + nu_ah =E= 0;
@@ -43,29 +50,8 @@ stat_transport..  1 + nu_at =E= 0;
 stat_revenue..   -1 + nu_ar =E= 0;
 ```
 
-These equations force `nu_ah = -1`, `nu_ap = -1`, `nu_at = -1`, `nu_ar = 1`. Combined with the MCP complementarity structure (free multipliers paired with equality constraints), this creates a structurally infeasible system — the multiplier values are over-determined.
-
-The correct approach is to either:
-1. Substitute accounting variables out before generating KKT conditions (inline `revenue = sum(...)` etc. into the `profit` equation), or
-2. Propagate the objective gradient chain through accounting equations so that stationarity equations for decision variables include the contribution of these accounting definitions.
-
-This is the same accounting variable pattern documented in issue #764.
-
-## PATH Solver Output
-
-```
-MODEL STATUS      4 Infeasible
-0 iterations (structural infeasibility detected at preprocessing)
-```
-
-65 total INFES markers in the solution report.
-
-## Fix Approach
-
-Same fix as #764: implement accounting variable elimination or gradient chain propagation to handle intermediate variables that appear only as bookkeeping quantities in the objective chain.
-
 ## Files
 
 - `data/gamslib/raw/pdi.gms` — original LP model
 - `data/gamslib/mcp/pdi_mcp.gms` — generated MCP
-- Key equations: `stat_holding`, `stat_production`, `stat_transport`, `stat_revenue`
+- `docs/issues/ISSUE_764_mexss-mcp-locally-infeasible-accounting-variables.md` — parent issue
