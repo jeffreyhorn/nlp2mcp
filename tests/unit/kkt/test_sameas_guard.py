@@ -21,7 +21,11 @@ import pytest
 from src.ir.ast import Binary, Call, SetMembershipTest
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
-from src.kkt.stationarity import _build_sameas_guard, _find_matching_subset
+from src.kkt.stationarity import (
+    _build_sameas_guard,
+    _find_matching_subset,
+    _quote_sameas_uel,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -237,3 +241,26 @@ class TestBuildSameasGuard:
         # cf={steel,copper} is a multi-value subset of c → SetMembershipTest
         assert isinstance(guard, SetMembershipTest)
         assert guard.set_name == "cf"
+
+
+class TestQuoteSameasUel:
+    """Tests for _quote_sameas_uel() UEL quoting/normalization."""
+
+    def test_plain_value_gets_quoted(self):
+        assert _quote_sameas_uel("steel") == "'steel'"
+
+    def test_embedded_single_quote_escaped(self):
+        assert _quote_sameas_uel("it's") == "'it''s'"
+
+    def test_already_single_quoted_returned_as_is(self):
+        assert _quote_sameas_uel("'SAE 10'") == "'SAE 10'"
+
+    def test_already_double_quoted_returned_as_is(self):
+        assert _quote_sameas_uel('"SAE 10"') == '"SAE 10"'
+
+    def test_doubled_quotes_normalized(self):
+        """Parser artifact ''SAE 10'' normalized to 'SAE 10'."""
+        assert _quote_sameas_uel("''SAE 10''") == "'SAE 10'"
+
+    def test_whitespace_stripped(self):
+        assert _quote_sameas_uel("  steel  ") == "'steel'"

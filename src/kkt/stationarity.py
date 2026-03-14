@@ -1794,9 +1794,30 @@ def _find_matching_subset(parent_set: str, values: set[str], model_ir: ModelIR) 
 def _quote_sameas_uel(val: str) -> str:
     """Quote a UEL literal for use in ``sameas(dom, '...')``.
 
-    Escapes embedded single quotes by doubling them, then wraps in
-    single quotes.  Consistent with ``_quote_uel`` in ``emit_gams.py``.
+    Handles pre-quoted values and doubled-quote normalization consistently
+    with ``_quote_uel`` in ``emit_gams.py`` and ``_sanitize_set_element``
+    in ``original_symbols.py``.
+
+    - Already single-quoted (e.g. ``'SAE 10'``) → returned as-is.
+    - Doubled quotes from parser (e.g. ``''SAE 10''``) → normalized to
+      single-quoted ``'SAE 10'``.
+    - Unquoted → embedded single quotes escaped by doubling, then wrapped.
     """
+    val = val.strip()
+
+    # Normalize doubled single quotes (parser artifact: ''label'' → 'label')
+    if len(val) >= 4 and val.startswith("''") and val.endswith("''"):
+        val = "'" + val[2:-2] + "'"
+
+    # Already single-quoted → return as-is
+    if len(val) >= 2 and val.startswith("'") and val.endswith("'"):
+        return val
+
+    # Already double-quoted → return as-is
+    if len(val) >= 2 and val.startswith('"') and val.endswith('"'):
+        return val
+
+    # Unquoted: escape embedded single quotes and wrap
     escaped = val.replace("'", "''")
     return f"'{escaped}'"
 
