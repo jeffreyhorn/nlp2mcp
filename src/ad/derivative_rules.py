@@ -1736,31 +1736,66 @@ def _partial_index_match(
         # No match found
         return (), (), wrt_indices, None
 
-    # For multi-index sums, try prefix matching (original behavior)
+    # For multi-index sums, try arbitrary-position matching.
+    # Each sum index is matched against any unused position in wrt_indices.
+    # This handles cases like sum((j,l), x(i,j,k,l)) w.r.t. x('a','b','c','d')
+    # where j matches position 1 and l matches position 3.
+    #
+    # To avoid greedy mis-assignment when sets overlap (e.g., a subset
+    # relationship), sort sum indices by the number of candidate positions
+    # (most-constrained-first) and use backtracking to find a valid assignment.
+    candidates: dict[str, list[int]] = {}
+    for sum_idx in sum_index_sets:
+        cands: list[int] = []
+        for pos, wrt_idx in enumerate(wrt_indices):
+            check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+            if _is_concrete_instance_of(check_str, sum_idx, config):
+                cands.append(pos)
+        candidates[sum_idx] = cands
+
+    # Sort by number of candidates (most-constrained first) to reduce backtracking
+    sorted_indices = sorted(sum_index_sets, key=lambda s: len(candidates[s]))
+
+    # Backtracking search for a valid assignment
+    assignment: dict[str, int] = {}  # sum_idx → position in wrt_indices
+    used_positions: set[int] = set()
+
+    def _backtrack(depth: int) -> bool:
+        if depth == len(sorted_indices):
+            return True
+        sum_idx = sorted_indices[depth]
+        for pos in candidates[sum_idx]:
+            if pos not in used_positions:
+                assignment[sum_idx] = pos
+                used_positions.add(pos)
+                if _backtrack(depth + 1):
+                    return True
+                used_positions.discard(pos)
+                del assignment[sum_idx]
+        return False
+
+    if not _backtrack(0):
+        return (), (), wrt_indices, None
+
+    # Reconstruct results in original sum_index_sets order
+    matched_positions: list[int] = []
     matched_symbolic = []
     matched_concrete: list[str | IndexOffset] = []
-    for i, sum_idx in enumerate(sum_index_sets):
-        wrt_idx = wrt_indices[i]
-        # For IndexOffset, check the base index; for str, check directly
-        check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
-        if _is_concrete_instance_of(check_str, sum_idx, config):
-            matched_symbolic.append(sum_idx)
-            matched_concrete.append(wrt_idx)
-        else:
-            # Prefix match broken - no partial match
-            return (), (), wrt_indices, None
+    for sum_idx in sum_index_sets:
+        pos = assignment[sum_idx]
+        matched_positions.append(pos)
+        matched_symbolic.append(sum_idx)
+        matched_concrete.append(wrt_indices[pos])
 
-    remaining = wrt_indices[len(sum_index_sets) :]
-    # For prefix matching, symbolic_wrt replaces matched positions with symbolic
-    # sum indices. For IndexOffset matches, mirror the structure to preserve
-    # offset/circular info: e.g., wrt=IndexOffset("t1",1) → IndexOffset("t",1)
-    symbolic_wrt = (
-        tuple(
-            (IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym)
-            for sym, conc in zip(matched_symbolic, matched_concrete, strict=True)
+    # Build remaining (unmatched positions) and symbolic_wrt (position-preserving)
+    remaining = tuple(wrt_indices[i] for i in range(len(wrt_indices)) if i not in used_positions)
+    # Build symbolic_wrt: replace matched positions with symbolic sum indices
+    symbolic_list = list(wrt_indices)
+    for pos, sym, conc in zip(matched_positions, matched_symbolic, matched_concrete, strict=True):
+        symbolic_list[pos] = (
+            IndexOffset(sym, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sym
         )
-        + remaining
-    )
+    symbolic_wrt = tuple(symbolic_list)
     return tuple(matched_symbolic), tuple(matched_concrete), remaining, symbolic_wrt
 
 
