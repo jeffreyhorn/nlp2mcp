@@ -57,7 +57,6 @@ from ..ir.ast import (
     IndexOffset,
     ParamRef,
     Prod,
-    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -1518,7 +1517,8 @@ def _ensure_numeric_condition(cond: Expr) -> Expr:
       directly (GAMS Error 130).  Wrapping emits ``1$ri(r,i)``.
     - ParamRef (e.g., ``mh(l,k)``) would use the parameter's actual numeric
       value as a coefficient instead of 0/1.  Wrapping emits ``1$mh(l,k)``.
-    - Const values are already numeric and can be evaluated directly.
+    - Const values are folded to ``Const(1.0)`` or ``Const(0.0)`` based on
+      whether the constant is nonzero or zero (boolean folding).
     """
     if isinstance(cond, Const):
         return Const(1.0) if cond.value != 0 else Const(0.0)
