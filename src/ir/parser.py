@@ -2559,42 +2559,46 @@ class _ModelBuilder:
                         if id(val_tok) in row_label_token_ids:
                             continue
                         val_col = getattr(val_tok, "column", 0) or 0
-                        # Range-based matching: each column owns from its position
-                        # (with left tolerance) to the next column's position.
+                        # Issue #1074: Gap-midpoint range matching — each
+                        # column owns the range between the midpoints of
+                        # the gaps on either side.
                         best_col_label = None
                         for cidx, (col_label, col_pos) in enumerate(sec_col_headers):
                             if col_label in used_sec_columns:
                                 continue
-                            left_tolerance = _COL_LEFT_TOLERANCE
                             if cidx > 0:
-                                prev_col_pos = sec_col_headers[cidx - 1][1]
-                                range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
+                                prev_right = (sec_col_headers[cidx - 1][1] or 0) + len(
+                                    sec_col_headers[cidx - 1][0]
+                                )
+                                range_start = (prev_right + (col_pos or 0)) / 2
                             else:
-                                range_start = col_pos - left_tolerance
+                                range_start = (col_pos or 0) - _COL_LEFT_TOLERANCE
                             if cidx + 1 < len(sec_col_headers):
-                                range_end = sec_col_headers[cidx + 1][1]
+                                this_right = (col_pos or 0) + len(col_label)
+                                next_start = sec_col_headers[cidx + 1][1] or 0
+                                range_end = (this_right + next_start) / 2
                             else:
                                 range_end = float("inf")
                             if range_start <= val_col < range_end:
                                 best_col_label = col_label
                                 break
-                        # Fallback: choose closest unused header by column distance
+                        # Fallback: closest unused column by distance
                         if best_col_label is None and sec_col_headers:
                             best_distance = math.inf
-                            best_idx: int | None = None
+                            best_col_idx: int | None = None
                             for fidx, (col_label, col_pos) in enumerate(sec_col_headers):
                                 if col_label in used_sec_columns:
                                     continue
                                 distance = abs((col_pos or 0) - val_col)
                                 if (
-                                    best_idx is None
+                                    best_col_idx is None
                                     or distance < best_distance
-                                    or (distance == best_distance and fidx < best_idx)
+                                    or (distance == best_distance and fidx < best_col_idx)
                                 ):
                                     best_distance = distance
-                                    best_idx = fidx
-                            if best_idx is not None:
-                                best_col_label = sec_col_headers[best_idx][0]
+                                    best_col_idx = fidx
+                            if best_col_idx is not None:
+                                best_col_label = sec_col_headers[best_col_idx][0]
                         if best_col_label is not None:
                             value = self._parse_table_value(str(val_tok).strip("'\""))
                             # Store under each expanded row label (tuple labels expand to many)
@@ -2723,45 +2727,55 @@ class _ModelBuilder:
                 if id(token) in continuation_col_offsets:
                     token_col += continuation_col_offsets[id(token)]
 
-                # Find the column header that this value falls under
-                # Issue #665: Use range-based matching where each column "owns" the range
-                # from its position (with small left tolerance) up to the next column's
-                # start position. For the last column, it owns everything to the right.
-                # The ranges are non-overlapping: each column ends where the next begins.
+                # Find the column header that this value falls under.
+                # Issue #1074: Use gap-midpoint range matching.  Each column
+                # owns the range from the midpoint of the gap to the left
+                # (between the previous header's right edge and this header's
+                # left edge) up to the midpoint of the gap to the right.
+                # This places boundaries in the actual whitespace between
+                # columns, correctly handling both right-aligned values
+                # (e.g. numbers under wide headers) and position-shifted
+                # values (e.g. when preprocessor quoting changes positions).
                 best_match = None
-                for idx, (col_name, col_pos) in enumerate(col_headers):
-                    # Skip columns that have already been matched
+                for cidx, (col_name, col_pos) in enumerate(col_headers):
                     if col_name in used_columns:
                         continue
-                    # Determine the range this column owns
-                    # Start: this column's position with small left tolerance, but
-                    # not before the previous column's position (to avoid overlap)
-                    left_tolerance = _COL_LEFT_TOLERANCE
-                    if idx > 0:
-                        prev_col_pos = col_headers[idx - 1][1]
-                        # Allow left tolerance but don't overlap with previous column
-                        range_start = max(prev_col_pos + 1, col_pos - left_tolerance)
+                    # Left boundary
+                    if cidx > 0:
+                        prev_right = col_headers[cidx - 1][1] + len(col_headers[cidx - 1][0])
+                        range_start = (prev_right + col_pos) / 2
                     else:
-                        # First column: allow small left tolerance
-                        range_start = col_pos - left_tolerance
-                    # End: next column's position (exclusive), or infinity for last
-                    if idx + 1 < len(col_headers):
-                        next_col_pos = col_headers[idx + 1][1]
-                        range_end = next_col_pos
+                        range_start = col_pos - _COL_LEFT_TOLERANCE
+                    # Right boundary
+                    if cidx + 1 < len(col_headers):
+                        this_right = col_pos + len(col_name)
+                        next_start = col_headers[cidx + 1][1]
+                        range_end = (this_right + next_start) / 2
                     else:
                         range_end = float("inf")
-                    # Check if value falls in this column's range
                     if range_start <= token_col < range_end:
                         best_match = col_name
                         break
 
-                # Fallback: if no range match (e.g., value is left of first header),
-                # assign to the next unused column sequentially to avoid data loss
-                if best_match is None:
-                    for col_name, _ in col_headers:
-                        if col_name not in used_columns:
-                            best_match = col_name
-                            break
+                # Fallback: if no range match (e.g., value is far left of
+                # first header), assign to the closest unused column by
+                # distance from header start position.
+                if best_match is None and col_headers:
+                    best_distance = math.inf
+                    best_col_idx: int | None = None
+                    for fidx, (col_name, col_pos) in enumerate(col_headers):
+                        if col_name in used_columns:
+                            continue
+                        distance = abs((col_pos or 0) - token_col)
+                        if (
+                            best_col_idx is None
+                            or distance < best_distance
+                            or (distance == best_distance and fidx < best_col_idx)
+                        ):
+                            best_distance = distance
+                            best_col_idx = fidx
+                    if best_col_idx is not None:
+                        best_match = col_headers[best_col_idx][0]
 
                 if best_match:
                     # Parse the value
