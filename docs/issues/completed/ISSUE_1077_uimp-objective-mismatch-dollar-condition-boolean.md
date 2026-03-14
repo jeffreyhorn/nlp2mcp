@@ -1,8 +1,11 @@
 # UIMP MCP: Objective Mismatch — Dollar Condition Used as Multiplier Instead of Boolean
 
 **GitHub Issue:** [#1077](https://github.com/jeffreyhorn/nlp2mcp/issues/1077)
-**Status:** OPEN
+**Status:** RESOLVED
 **Severity:** Medium — MCP solves (STATUS 1 Optimal) but objective is wrong
+**Resolution:** Fixed `_ensure_numeric_condition()` in `src/ad/derivative_rules.py` to wrap ALL
+non-trivial conditions as `1$cond`, not just `SetMembershipTest`. Now emits `1$(mh(l,k))`
+instead of `mh(l,k)` as a multiplicative factor.
 **Date:** 2026-03-13
 **Affected Models:** uimp
 

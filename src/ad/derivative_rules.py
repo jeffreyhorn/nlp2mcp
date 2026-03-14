@@ -1507,18 +1507,22 @@ def _diff_dollar_conditional(
 
 
 def _ensure_numeric_condition(cond: Expr) -> Expr:
-    """Convert a set membership test to a numeric expression for use as a factor.
+    """Convert a dollar condition to a numeric 0/1 indicator for use as a factor.
 
-    Issue #730: When a sum with a dollar condition collapses during
-    differentiation, the condition becomes a multiplicative factor.
-    SetMembershipTest nodes (e.g., ri(r,i)) are boolean in GAMS and cannot
-    be used as numeric values directly (GAMS Error 130: "Division not defined
-    for a set").  Wrapping as DollarConditional(1, cond) emits ``1$ri(r,i)``
-    which is a valid numeric 0/1 indicator in GAMS.
+    Issue #730 / #1077: When a sum with a dollar condition collapses during
+    differentiation, the condition becomes a multiplicative factor.  All GAMS
+    dollar conditions are boolean: nonzero → include (1), zero → exclude (0).
+    We must ensure proper 0/1 semantics by wrapping as ``1$cond``.
+
+    - SetMembershipTest (e.g., ``ri(r,i)``) cannot be used as a numeric value
+      directly (GAMS Error 130).  Wrapping emits ``1$ri(r,i)``.
+    - ParamRef (e.g., ``mh(l,k)``) would use the parameter's actual numeric
+      value as a coefficient instead of 0/1.  Wrapping emits ``1$mh(l,k)``.
+    - Const values are already numeric and can be evaluated directly.
     """
-    if isinstance(cond, SetMembershipTest):
-        return DollarConditional(Const(1.0), cond)
-    return cond
+    if isinstance(cond, Const):
+        return Const(1.0) if cond.value != 0 else Const(0.0)
+    return DollarConditional(Const(1.0), cond)
 
 
 def _diff_sum(

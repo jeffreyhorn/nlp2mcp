@@ -1,8 +1,12 @@
 # Mexss MCP: Locally Infeasible Due to Inconsistent Stationarity Equations for Accounting Variables
 
 **GitHub Issue:** [#764](https://github.com/jeffreyhorn/nlp2mcp/issues/764)
-**Status:** OPEN — Not fixable (root cause is incorrect `sameas` guard in indexed stationarity builder; see Investigation section below)
+**Status:** RESOLVED
 **Severity:** High — MCP generates and compiles, but PATH solver reports locally infeasible
+**Resolution:** Fixed by PR #1076 (sameas guard refactor for multi-entry support in
+`_add_indexed_jacobian_terms()`). The guard now correctly generates per-dimension subset
+membership conditions instead of restricting to `entries[0]` only. After fix + PR #1079
+(table alignment), mexss solves MODEL STATUS 1 with obj=538.811 matching NLP reference.
 **Date:** 2026-02-16
 **Affected Models:** mexss
 
