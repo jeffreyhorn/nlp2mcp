@@ -1740,26 +1740,52 @@ def _partial_index_match(
     # Each sum index is matched against any unused position in wrt_indices.
     # This handles cases like sum((j,l), x(i,j,k,l)) w.r.t. x('a','b','c','d')
     # where j matches position 1 and l matches position 3.
-    matched_positions: list[int] = []  # positions in wrt_indices that matched
-    matched_symbolic = []
-    matched_concrete: list[str | IndexOffset] = []
-    used_positions: set[int] = set()
-
+    #
+    # To avoid greedy mis-assignment when sets overlap (e.g., a subset
+    # relationship), sort sum indices by the number of candidate positions
+    # (most-constrained-first) and use backtracking to find a valid assignment.
+    candidates: dict[str, list[int]] = {}
     for sum_idx in sum_index_sets:
-        found = False
+        cands: list[int] = []
         for pos, wrt_idx in enumerate(wrt_indices):
-            if pos in used_positions:
-                continue
             check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
             if _is_concrete_instance_of(check_str, sum_idx, config):
-                matched_positions.append(pos)
-                matched_symbolic.append(sum_idx)
-                matched_concrete.append(wrt_idx)
+                cands.append(pos)
+        candidates[sum_idx] = cands
+
+    # Sort by number of candidates (most-constrained first) to reduce backtracking
+    sorted_indices = sorted(sum_index_sets, key=lambda s: len(candidates[s]))
+
+    # Backtracking search for a valid assignment
+    assignment: dict[str, int] = {}  # sum_idx → position in wrt_indices
+    used_positions: set[int] = set()
+
+    def _backtrack(depth: int) -> bool:
+        if depth == len(sorted_indices):
+            return True
+        sum_idx = sorted_indices[depth]
+        for pos in candidates[sum_idx]:
+            if pos not in used_positions:
+                assignment[sum_idx] = pos
                 used_positions.add(pos)
-                found = True
-                break
-        if not found:
-            return (), (), wrt_indices, None
+                if _backtrack(depth + 1):
+                    return True
+                used_positions.discard(pos)
+                del assignment[sum_idx]
+        return False
+
+    if not _backtrack(0):
+        return (), (), wrt_indices, None
+
+    # Reconstruct results in original sum_index_sets order
+    matched_positions: list[int] = []
+    matched_symbolic = []
+    matched_concrete: list[str | IndexOffset] = []
+    for sum_idx in sum_index_sets:
+        pos = assignment[sum_idx]
+        matched_positions.append(pos)
+        matched_symbolic.append(sum_idx)
+        matched_concrete.append(wrt_indices[pos])
 
     # Build remaining (unmatched positions) and symbolic_wrt (position-preserving)
     remaining = tuple(wrt_indices[i] for i in range(len(wrt_indices)) if i not in used_positions)

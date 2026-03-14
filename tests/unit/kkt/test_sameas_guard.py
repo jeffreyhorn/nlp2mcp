@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.ir.ast import Binary, Call
+from src.ir.ast import Binary, Call, SetMembershipTest
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 from src.kkt.stationarity import _build_sameas_guard, _find_matching_subset
@@ -210,3 +210,30 @@ class TestBuildSameasGuard:
         # (sameas(i,'a') and sameas(j,'x')) or (sameas(i,'b') and sameas(j,'y'))
         assert isinstance(guard, Binary)
         assert guard.op == "or"
+
+    def test_multi_value_subset_uses_set_membership_test(self):
+        """Multi-value subset uses SetMembershipTest guard."""
+        kkt = _make_kkt(
+            sets={
+                "c": SetDef(name="c", members=["steel", "copper", "aluminum"]),
+                "cf": SetDef(name="cf", members=["steel", "copper"], domain=("c",)),
+            }
+        )
+        instances = [
+            (10, ("steel",)),
+            (11, ("copper",)),
+            (12, ("aluminum",)),
+        ]
+        # Entries for steel and copper (matching cf subset)
+        entries = [(0, 10), (1, 11)]
+        kkt.gradient.index_mapping.col_to_var = {
+            10: ("e", ("steel",)),
+            11: ("e", ("copper",)),
+            12: ("e", ("aluminum",)),
+        }
+
+        guard = _build_sameas_guard(("c",), instances, entries, kkt)
+        assert guard is not None
+        # cf={steel,copper} is a multi-value subset of c → SetMembershipTest
+        assert isinstance(guard, SetMembershipTest)
+        assert guard.set_name == "cf"

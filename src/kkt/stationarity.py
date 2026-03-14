@@ -1791,6 +1791,16 @@ def _find_matching_subset(parent_set: str, values: set[str], model_ir: ModelIR) 
     return None
 
 
+def _quote_sameas_uel(val: str) -> str:
+    """Quote a UEL literal for use in ``sameas(dom, '...')``.
+
+    Escapes embedded single quotes by doubling them, then wraps in
+    single quotes.  Consistent with ``_quote_uel`` in ``emit_gams.py``.
+    """
+    escaped = val.replace("'", "''")
+    return f"'{escaped}'"
+
+
 def _build_tuple_or_guard(
     var_domain: tuple[str, ...],
     all_fixed: list[tuple[str, ...]],
@@ -1811,7 +1821,10 @@ def _build_tuple_or_guard(
         and_parts: list[Expr] = []
         for dom_idx, fixed_val in zip(var_domain, idx, strict=True):
             and_parts.append(
-                Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{fixed_val.lower()}'")))
+                Call(
+                    "sameas",
+                    (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(fixed_val.lower()))),
+                )
             )
         conj: Expr = and_parts[0]
         for part in and_parts[1:]:
@@ -1891,7 +1904,9 @@ def _build_sameas_guard(
         if len(entry_vals) == 1:
             # Single value — simple sameas guard
             val = next(iter(entry_vals))
-            dim_guards.append(Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{val}'"))))
+            dim_guards.append(
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(val))))
+            )
         else:
             # Multiple values — try to find a matching named subset
             subset_name = _find_matching_subset(dom_idx, entry_vals, kkt.model_ir)
@@ -1901,7 +1916,9 @@ def _build_sameas_guard(
                 # OR-disjunction of sameas calls
                 or_parts: list[Expr] = []
                 for val in sorted(entry_vals):
-                    or_parts.append(Call("sameas", (SymbolRef(dom_idx), SymbolRef(f"'{val}'"))))
+                    or_parts.append(
+                        Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(val))))
+                    )
                 or_expr: Expr = or_parts[0]
                 for part in or_parts[1:]:
                     or_expr = Binary("or", or_expr, part)
