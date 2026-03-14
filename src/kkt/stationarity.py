@@ -1832,7 +1832,8 @@ def _build_tuple_or_guard(
     then OR all such conjunctions together.
     """
     conjunctions: list[Expr] = []
-    # Deduplicate and sort for deterministic output
+    # Deduplicate (case-insensitive) and sort for deterministic output.
+    # Preserve original casing for emitted sameas guards.
     seen: set[tuple[str, ...]] = set()
     for idx in all_fixed:
         key = tuple(v.lower() for v in idx)
@@ -1844,7 +1845,7 @@ def _build_tuple_or_guard(
             and_parts.append(
                 Call(
                     "sameas",
-                    (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(fixed_val.lower()))),
+                    (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(fixed_val))),
                 )
             )
         conj: Expr = and_parts[0]
@@ -1899,46 +1900,55 @@ def _build_sameas_guard(
     if not all_fixed:
         return None
 
-    # Compute per-dimension unique values from entries and from all instances
+    # Compute per-dimension unique values from entries and from all instances.
+    # Keep lowercase sets for coverage comparison, but preserve original casing
+    # for emitted sameas guards (UELs are case-sensitive in GAMS).
     ndim = len(var_domain)
-    per_dim_entry: list[set[str]] = [set() for _ in range(ndim)]
-    per_dim_all: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_entry_lc: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_all_lc: list[set[str]] = [set() for _ in range(ndim)]
+    # Map lowercase → original-casing representative per dimension
+    per_dim_entry_orig: list[dict[str, str]] = [{} for _ in range(ndim)]
 
     for idx in all_fixed:
         for d, v in enumerate(idx):
-            per_dim_entry[d].add(v.lower())
+            lc = v.lower()
+            per_dim_entry_lc[d].add(lc)
+            if lc not in per_dim_entry_orig[d]:
+                per_dim_entry_orig[d][lc] = v  # first-seen casing wins
 
     for _, idx in instances:
         for d, v in enumerate(idx):
-            per_dim_all[d].add(v.lower())
+            per_dim_all_lc[d].add(v.lower())
 
     # Build per-dimension guards where entry values are a strict subset
     dim_guards: list[Expr] = []
     for d in range(ndim):
-        if per_dim_entry[d] >= per_dim_all[d]:
+        if per_dim_entry_lc[d] >= per_dim_all_lc[d]:
             # Entries cover all values in this dimension — no guard needed
             continue
 
         dom_idx = var_domain[d]
-        entry_vals = per_dim_entry[d]
+        entry_vals_lc = per_dim_entry_lc[d]
 
-        if len(entry_vals) == 1:
-            # Single value — simple sameas guard
-            val = next(iter(entry_vals))
+        if len(entry_vals_lc) == 1:
+            # Single value — simple sameas guard (use original casing)
+            lc_val = next(iter(entry_vals_lc))
+            orig_val = per_dim_entry_orig[d][lc_val]
             dim_guards.append(
-                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(val))))
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
             )
         else:
             # Multiple values — try to find a matching named subset
-            subset_name = _find_matching_subset(dom_idx, entry_vals, kkt.model_ir)
+            subset_name = _find_matching_subset(dom_idx, entry_vals_lc, kkt.model_ir)
             if subset_name is not None:
                 dim_guards.append(SetMembershipTest(subset_name, (SymbolRef(dom_idx),)))
             else:
-                # OR-disjunction of sameas calls
+                # OR-disjunction of sameas calls (use original casing, sorted by lowercase)
                 or_parts: list[Expr] = []
-                for val in sorted(entry_vals):
+                for lc_val in sorted(entry_vals_lc):
+                    orig_val = per_dim_entry_orig[d][lc_val]
                     or_parts.append(
-                        Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(val))))
+                        Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
                     )
                 or_expr: Expr = or_parts[0]
                 for part in or_parts[1:]:
