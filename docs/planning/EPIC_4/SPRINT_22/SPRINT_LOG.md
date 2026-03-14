@@ -294,14 +294,12 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | mine root cause analysis | :white_check_mark: Translation error (SetMembershipTest) — not divergence-related |
 | Pattern identified | :white_check_mark: 4/7 incomparable (multi-solve/stochastic), 1 also has KKT bug (sparta), 1 already fixed (jobt), 1 translation error (mine) |
 
-**Key Finding:** Only 1 of 7 Category A models (jobt) had a genuine KKT formulation bug,
-and it was already fixed on Day 7 (skip_lead_lag_inference for original equality equations).
-The remaining 6 are misclassified:
+**Key Finding:** Of the 7 Category A models, 2 have genuine KKT issues and 5 do not:
 
-- **senstran, apl1p, apl1pca, aircraft**: Multi-solve or stochastic solver models where
-  NLP reference captures a different solve iteration/mode than the MCP represents. MCP
-  formulations are correct for the deterministic/first-solve case.
-- **sparta**: Multi-solve (4 formulations) + actual KKT bug in bal4 formulation (infeasible).
+- **jobt**: KKT bug — already fixed on Day 7 (skip_lead_lag_inference). Now matches.
+- **sparta**: Multi-solve (4 formulations) + open KKT infeasibility bug in bal4 (#1081).
+- **senstran, apl1p, apl1pca, aircraft**: Multi-solve or stochastic solver — NLP reference
+  captures a different solve iteration/mode. MCP formulations are correct.
 - **mine**: Pre-existing translation error (SetMembershipTest not supported).
 
 **Impact:** +1 match (jobt). 4 models should be reclassified as "incomparable" rather than
