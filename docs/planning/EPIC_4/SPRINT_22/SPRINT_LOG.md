@@ -286,6 +286,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | Task | Status |
 |---|---|
 | apl1p root cause analysis | :white_check_mark: Stochastic solver (DECIS) — incomparable reference |
+| apl1pca root cause analysis | :white_check_mark: Same as apl1p — identical deterministic core, different stochastic scenarios |
 | senstran root cause analysis | :white_check_mark: Multi-solve with modified parameters — incomparable reference |
 | jobt root cause analysis | :white_check_mark: **FIXED** by Day 7 skip_lead_lag_inference (obj matches: 21343.056) |
 | aircraft root cause analysis | :white_check_mark: Multi-solve with bound changes — incomparable reference |
@@ -307,7 +308,7 @@ The remaining 6 are misclassified:
 "mismatch". Full analysis in [CATEGORY_A_DIVERGENCE_ANALYSIS](./CATEGORY_A_DIVERGENCE_ANALYSIS.md).
 
 **Issues filed:** #1080 (multi-solve reference comparison), #1081 (sparta KKT bug)
-**PR:** #TBD
+**PR:** #1082
 
 ---
 

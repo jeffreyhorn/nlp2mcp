@@ -9,9 +9,9 @@
 ## Executive Summary
 
 All 7 Category A (verified_convex mismatch) models were investigated. The key finding is that
-**only 1 of 7 has a KKT formulation bug** — and it was already fixed on Day 7. The remaining
-6 models have mismatches due to **multi-solve / stochastic solver reference comparison issues**,
-not KKT derivation errors.
+**only 1 of 7 has a KKT formulation bug** — and it was already fixed on Day 7. Of the remaining
+6: **5 have mismatches due to multi-solve / stochastic solver reference comparison issues**
+(not KKT derivation errors), and **1 has a pre-existing translation error** (mine).
 
 | Model | Root Cause | Status | Action |
 |-------|-----------|--------|--------|
@@ -53,14 +53,17 @@ PATH solver STATUS 1 (Optimal).
 
 **Root cause:** The original model runs a sensitivity analysis loop:
 ```gams
+* Excerpt from senstran.gms loop body (lines 88-114):
 counter = 10;
 loop((ip,jp)$counter, counter = counter - 1;
-   c(ip,jp) = c(ip,jp)*(1-sens);        // reduce cell
-   solve transport using lp minimizing z; // solve model
-   ...
-   c(ip,jp) = c(ip,jp)/(1-sens)*(1+sens); // increase cell
-   solve transport using lp minimizing z;  // solve model
-   c(ip,jp) = c(ip,jp)/(1+sens);          // reset cell
+   c(ip,jp) = c(ip,jp)*(1-sens);              // reduce cell
+   solve transport using lp minimizing z;      // solve model
+   ...                                         // (reporting omitted)
+   c(ip,jp) = c(ip,jp)/(1 - sens)*(1 + sens); // increase cell
+   solve transport using lp minimizing z;      // solve model
+   c(ip,jp) = c(ip,jp)/(1 + sens);            // reset cell
+   ...                                         // (reporting omitted)
+);
 ```
 
 This modifies the cost matrix `c(ip,jp)` between solves. The pipeline extracts the **last
