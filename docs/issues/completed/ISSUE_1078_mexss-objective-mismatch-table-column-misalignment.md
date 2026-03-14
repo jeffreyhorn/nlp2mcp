@@ -1,8 +1,10 @@
 # MEXSS MCP: Objective Mismatch — Table Column Misalignment in `a(c,p)` Matrix
 
 **GitHub Issue:** [#1078](https://github.com/jeffreyhorn/nlp2mcp/issues/1078)
-**Status:** OPEN
+**Status:** RESOLVED
 **Severity:** Medium — MCP solves (STATUS 1 Optimal) but objective is wrong
+**Resolution:** Fixed by PR #1079 (table column misalignment fix using gap-midpoint matching).
+After fix, MCP objective = 538.811, matching NLP reference exactly.
 **Date:** 2026-03-13
 **Affected Models:** mexss
 **Related:** #1074 (ibm1 table column misalignment — same parser bug class)

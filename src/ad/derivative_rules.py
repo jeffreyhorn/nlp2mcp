@@ -1507,18 +1507,23 @@ def _diff_dollar_conditional(
 
 
 def _ensure_numeric_condition(cond: Expr) -> Expr:
-    """Convert a set membership test to a numeric expression for use as a factor.
+    """Convert a dollar condition to a numeric 0/1 indicator for use as a factor.
 
-    Issue #730: When a sum with a dollar condition collapses during
-    differentiation, the condition becomes a multiplicative factor.
-    SetMembershipTest nodes (e.g., ri(r,i)) are boolean in GAMS and cannot
-    be used as numeric values directly (GAMS Error 130: "Division not defined
-    for a set").  Wrapping as DollarConditional(1, cond) emits ``1$ri(r,i)``
-    which is a valid numeric 0/1 indicator in GAMS.
+    Issue #730 / #1077: When a sum with a dollar condition collapses during
+    differentiation, the condition becomes a multiplicative factor.  All GAMS
+    dollar conditions are boolean: nonzero → include (1), zero → exclude (0).
+    We must ensure proper 0/1 semantics by wrapping as ``1$cond``.
+
+    - SetMembershipTest (e.g., ``ri(r,i)``) cannot be used as a numeric value
+      directly (GAMS Error 130).  Wrapping emits ``1$ri(r,i)``.
+    - ParamRef (e.g., ``mh(l,k)``) would use the parameter's actual numeric
+      value as a coefficient instead of 0/1.  Wrapping emits ``1$mh(l,k)``.
+    - Const values are folded to ``Const(1.0)`` or ``Const(0.0)`` based on
+      whether the constant is nonzero or zero (boolean folding).
     """
-    if isinstance(cond, SetMembershipTest):
-        return DollarConditional(Const(1.0), cond)
-    return cond
+    if isinstance(cond, Const):
+        return Const(1.0) if cond.value != 0 else Const(0.0)
+    return DollarConditional(Const(1.0), cond)
 
 
 def _diff_sum(
@@ -2109,7 +2114,10 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     if isinstance(expr, Const):
         return expr
     elif isinstance(expr, SymbolRef):
-        # SymbolRef represents scalar symbols without indices, no substitution needed
+        # SymbolRef may appear as an index inside SetMembershipTest (e.g., SymbolRef("j")).
+        # When a sum collapses, j → j1, so we substitute the name if it's in the map.
+        if expr.name in substitution:
+            return SymbolRef(substitution[expr.name])
         return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef, including IndexOffset bases
@@ -2151,8 +2159,14 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         new_value = _apply_index_substitution(expr.value_expr, substitution)
         new_cond = _apply_index_substitution(expr.condition, substitution)
         return DollarConditional(new_value, new_cond)
+    elif isinstance(expr, SetMembershipTest):
+        # Substitute indices in SetMembershipTest (e.g., ri(j) → ri(j1) on collapse)
+        new_idx_list: list[Expr] = [
+            _apply_index_substitution(idx, substitution) for idx in expr.indices
+        ]
+        return SetMembershipTest(expr.set_name, tuple(new_idx_list))
     else:
-        # IndexOffset, SetMembershipTest, CompileTimeConstant etc. — pass through unchanged
+        # IndexOffset, CompileTimeConstant etc. — pass through unchanged
         return expr
 
 
