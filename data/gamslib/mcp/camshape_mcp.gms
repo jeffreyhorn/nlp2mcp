@@ -73,10 +73,6 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-r.lo("i1") = max(((-1) * alpha) * d_theta + R_min, r.lo("i1"));
-r.lo("i100") = max(R_max - alpha * d_theta, r.lo("i100"));
-r.up("i1") = min(R_min / (2 * cos(d_theta) - 1), r.up("i1"));
-r.up("i100") = min(R_max + alpha * d_theta, r.up("i100"));
 rdiff.lo(i(j)) = ((-1) * alpha) * d_theta;
 rdiff.up(i(j)) = alpha * d_theta;
 
@@ -233,7 +229,7 @@ comp_up_r(i).. 2 - r(i) =G= 0;
 
 * Original equality equations
 obj.. area =E= pi * R_v / 100 * sum(i, r(i));
-eqrdiff(i)$(ord(i) <= card(i) - 1).. rdiff(i) =E= r(i+1) - r(i);
+eqrdiff(i).. rdiff(i) =E= r(i+1) - r(i);
 
 
 * ============================================
@@ -247,7 +243,6 @@ rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge3.fx(i)$(not (ord(i) > 1)) = 0;
 lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0;
-nu_eqrdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

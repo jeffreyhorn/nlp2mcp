@@ -115,7 +115,6 @@ i.fx('1962','non-traded') = 4.564;
 i.fx('1962','traded') = 0;
 ks.fx('1962','non-traded') = 0;
 ks.fx('1962','traded') = 0;
-f.up(t) = inf$(card(t) - ord(t) >= num);
 c.fx('1962') = 33.999;
 
 * ============================================
@@ -207,7 +206,7 @@ comp_lo_s(t).. s(t) - 0 =G= 0;
 comp_lo_v(t,j).. v(t,j) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_f(t).. inf$(card(t) - ord(t) >= num) - f(t) =G= 0;
+comp_up_f(t)$(inf$(card(t) - ord(t) >= num) < inf).. inf$(card(t) - ord(t) >= num) - f(t) =G= 0;
 
 * Original equality equations
 gnpd(t).. gnp(t) =E= sum(j, v(t,j));
@@ -215,7 +214,7 @@ invd(t).. ti(t) =E= s(t) + f(t);
 invt(te).. ti(te) =E= sum(j, i(te,j));
 tgap(t).. f(t) =E= m(t) - e(t) - v(t,"traded");
 incd(t).. gnp(t) =E= c(t) + ti(t) - f(t);
-kbal(te,j)$(ord(te) <= card(te) - 1).. ks(te+1,j) =E= ks(te,j) + i(te,j);
+kbal(te,j).. ks(te+1,j) =E= ks(te,j) + i(te,j);
 taid.. fb =E= sum(t, delt(t) * f(t));
 wdef.. w =E= sum(t, delt(t) * c(t)) - gama * fb + d * dis * gnp("1985");
 i_fx_1962_non_traded_683f00ae.. i("1962","non-traded") - 4.564 =E= 0;
@@ -235,7 +234,7 @@ c_fx_1962.. c("1962") - 33.999 =E= 0;
 lam_conl.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
 lam_invl.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
 lam_invu.fx(te)$(not (ord(te) <= card(te) - 1)) = 0;
-nu_kbal.fx(te,j)$(not (ord(te) <= card(te) - 1)) = 0;
+piU_f.fx(t)$(not (inf$(card(t) - ord(t) >= num) < inf)) = 0;
 lam_capb.fx(te,j)$(not (t(te))) = 0;
 lam_impl.fx(te)$(not (t(te))) = 0;
 nu_incd.fx(te)$(not (t(te))) = 0;

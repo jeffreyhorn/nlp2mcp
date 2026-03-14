@@ -86,10 +86,8 @@ Positive Variables
 
 v.fx('h0') = 0;
 ht.fx('h0') = 1;
-m.lo(h) = m_f;
 m.fx("h50") = m_f;
 m.fx('h0') = 1;
-t.up(h) = T_c * m_0 * g_0;
 
 * ============================================
 * Variable Initialization
@@ -221,22 +219,22 @@ stat_v(h).. ((-1) * (exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * D_c * 2 * v(h))) 
 comp_lo_d(h).. d(h) - 0 =G= 0;
 comp_lo_g(h).. g(h) - 0 =G= 0;
 comp_lo_ht(h).. ht(h) - 1 =G= 0;
-comp_lo_m(h).. m(h) - m_f =G= 0;
+comp_lo_m(h)$(m_f > -inf).. m(h) - m_f =G= 0;
 comp_lo_step.. step - 0 =G= 0;
 comp_lo_t(h).. t(h) - 0 =G= 0;
 comp_lo_v(h).. v(h) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_m(h).. 1 - m(h) =G= 0;
-comp_up_t(h).. T_c * m_0 * g_0 - t(h) =G= 0;
+comp_up_t(h)$(T_c * m_0 * g_0 < inf).. T_c * m_0 * g_0 - t(h) =G= 0;
 
 * Original equality equations
 obj.. final_velocity =E= ht("h50");
 df(h).. d(h) =E= D_c * sqr(v(h)) * exp(((-1) * h_c) * (ht(h) - h_0) / h_0);
 gf(h).. g(h) =E= g_0 * sqr(h_0 / ht(h));
-h_eqn(h)$(ord(h) > 1).. ht(h) =E= ht(h-1) + 0.5 * step * (v(h) + v(h-1));
-m_eqn(h)$(ord(h) > 1).. m(h) =E= m(h-1) - 0.5 * step * (t(h) + t(h-1)) / c;
-v_eqn(h)$(ord(h) > 1).. v(h) =E= v(h-1) + 0.5 * step * ((t(h) - d(h) - m(h) * g(h)) / m(h) + (t(h-1) - d(h-1) - m(h-1) * g(h-1)) / m(h-1));
+h_eqn(h).. ht(h) =E= ht(h-1) + 0.5 * step * (v(h) + v(h-1));
+m_eqn(h).. m(h) =E= m(h-1) - 0.5 * step * (t(h) + t(h-1)) / c;
+v_eqn(h).. v(h) =E= v(h-1) + 0.5 * step * ((t(h) - d(h) - m(h) * g(h)) / m(h) + (t(h-1) - d(h-1) - m(h-1) * g(h-1)) / m(h-1));
 v_fx_h0.. v("h0") - 0 =E= 0;
 ht_fx_h0.. ht("h0") - 1 =E= 0;
 m_fx_h0.. m("h0") - 1 =E= 0;
@@ -249,9 +247,8 @@ m_fx_h0.. m("h0") - 1 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_h_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_m_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_v_eqn.fx(h)$(not (ord(h) > 1)) = 0;
+piL_m.fx(h)$(not (m_f > -inf)) = 0;
+piU_t.fx(h)$(not (T_c * m_0 * g_0 < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

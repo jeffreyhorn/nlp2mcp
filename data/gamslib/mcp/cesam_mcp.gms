@@ -409,7 +409,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
+stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,ii)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
 stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) - nu_COLSUM(ii) =E= 0;
 stat_err2(macro).. nu_ERROR2EQ(macro) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;

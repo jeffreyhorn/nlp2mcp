@@ -132,20 +132,10 @@ comp_lo_u(t).. u(t) - 0 =G= 0;
 comp_lo_w(t).. w(t) - 0 =G= 0;
 
 * Original equality equations
-cb(t)$(ord(t) > 1).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
-wb(t)$(ord(t) > 1).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
+cb(t).. s(t) =E= s(t-1) + p(t) - d(t) - u(t-1) + u(t) + si(t);
+wb(t).. w(t) =E= w(t-1) - f(t) + h(t) + wi(t);
 obj.. phi =E= sum(t, 10 * s(t) + 30 * u(t) + (wage + sf(t)) * w(t));
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-nu_cb.fx(t)$(not (ord(t) > 1)) = 0;
-nu_wb.fx(t)$(not (ord(t) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

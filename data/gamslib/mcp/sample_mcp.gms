@@ -60,12 +60,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-nr.lo(h) = 1 / data(h,"pop");
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -104,7 +98,7 @@ stat_nr(h).. ((-1) * data(h,"cost")) / sqr(nr(h)) + sum(j, k1(h,j) * lam_vbalr(j
 comp_vbalr(j).. ((-1) * (sum(h, k1(h,j) * nr(h)) - k2(j) - vmax(j))) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_nr(h).. nr(h) - 1 / data(h,"pop") =G= 0;
+comp_lo_nr(h)$(1 / data(h,"pop") > -inf).. nr(h) - 1 / data(h,"pop") =G= 0;
 
 * Upper bound complementarity equations
 comp_up_nr(h).. 0.01 - nr(h) =G= 0;
@@ -112,6 +106,15 @@ comp_up_nr(h).. 0.01 - nr(h) =G= 0;
 * Original equality equations
 cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_nr.fx(h)$(not (1 / data(h,"pop") > -inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

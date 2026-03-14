@@ -58,6 +58,7 @@ $offImplicitAssign
 Variables
     obj
     nu_bal
+    nu_nbal(n)
 ;
 
 Positive Variables
@@ -105,6 +106,7 @@ Equations
     comp_lo_s(n)
     comp_lo_t(n,np)
     bal
+    nbal(n)
     objdef
 ;
 
@@ -112,10 +114,14 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(n, n__);
+
 * Stationarity equations
-stat_d(n)$(l(n)).. nu_bal$(sameas(n, 'one')) - piL_d(n) =E= 0;
-stat_s(n)$(l(n)).. ((-1) * nu_bal)$(sameas(n, 'one')) - piL_s(n) =E= 0;
-stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) - piL_t(n,np) =E= 0;
+stat_d(n)$(l(n)).. ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
+stat_s(n)$(l(n)).. 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
+stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,n)) - piL_t(n,np) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(n).. d(n) - 0 =G= 0;
@@ -124,6 +130,7 @@ comp_lo_t(n,np).. t(n,np) - 0 =G= 0;
 
 * Original equality equations
 bal.. sum(l, d(l)) =E= sum(l, s(l));
+nbal(n).. s(n)$(l(n)) + sum((np,n__), t(np,n__)) =E= d(n)$(l(n)) + sum((n__,np), t(n__,np));
 objdef.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sqr(d(l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum((n,np)$(arc(n,np)), pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
 
 
@@ -157,6 +164,7 @@ Model mcp_model /
     stat_s.s,
     stat_t.t,
     bal.nu_bal,
+    nbal.nu_nbal,
     objdef.obj,
     comp_lo_d.piL_d,
     comp_lo_s.piL_s,

@@ -203,7 +203,7 @@ comp_up_v(tt)$(has_v_up(tt)).. v_up_param(tt) - v(tt) =G= 0;
 * Original equality equations
 costfn.. cost =E= 1.15 * n * card(t) * sum(t, 500 + 8 * thermal(t) + 0.0016 * sqr(thermal(t)));
 losseq(t).. loss(t) =E= losscof * power(hydro(t), 2);
-flow(tt)$(ord(tt) > 1).. v(tt) =E= v(tt-1) + (2000 - q(tt)) * n;
+flow(tt).. v(tt) =E= v(tt-1) + (2000 - q(tt)) * n;
 dischar(t).. q(t) =E= 330 + 4.97 * hydro(t);
 v_fx_0.. v("0") - 100000 =E= 0;
 v_fx_1.. v("1") - 100000 =E= 0;
@@ -224,7 +224,6 @@ v_fx_6.. v("6") - 100000 =E= 0;
 q.fx(tt)$(not (t(tt))) = 0;
 piL_q.fx(tt)$(not (t(tt))) = 0;
 piU_v.fx(tt)$(not has_v_up(tt)) = 0;
-nu_flow.fx(tt)$(not (ord(tt) > 1)) = 0;
 nu_dischar.fx(tt)$(not (t(tt))) = 0;
 
 * ============================================

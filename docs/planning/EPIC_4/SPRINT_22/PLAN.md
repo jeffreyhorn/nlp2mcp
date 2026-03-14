@@ -354,6 +354,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 10 criterion:** Checkpoint 2 evaluated; solution divergence investigation complete.
 
+**Day 10 status:** COMPLETE — Checkpoint 2 CONDITIONAL GO (solve 74 ≥ 73, match 39 ≥ 33, path_syntax_error 27 ≤ 30 pass; path_solve_terminated 15 and model_infeasible 18 miss targets due to 7 regressions from Day 8/9 PRs). Category D analysis complete: mathopt1 is multi-KKT-point divergence, not a bug. 8 issues filed (#1084–#1091).
+
 ---
 
 ### Day 11 — Buffer / Overflow

@@ -62,13 +62,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-p.lo(i) = gendata(i,"lowlim");
-p.up(i) = gendata(i,"upplim");
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -109,15 +102,25 @@ stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * 
 comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_p(i).. p(i) - gendata(i,"lowlim") =G= 0;
+comp_lo_p(i)$(gendata(i,"lowlim") > -inf).. p(i) - gendata(i,"lowlim") =G= 0;
 
 * Upper bound complementarity equations
-comp_up_p(i).. gendata(i,"upplim") - p(i) =G= 0;
+comp_up_p(i)$(gendata(i,"upplim") < inf).. gendata(i,"upplim") - p(i) =G= 0;
 
 * Original equality equations
 costfn.. cost =E= sum((i,cg), gendata(i,cg) * p(i) ** pexp(cg));
 lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * p(j)) / 100;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_p.fx(i)$(not (gendata(i,"lowlim") > -inf)) = 0;
+piU_p.fx(i)$(not (gendata(i,"upplim") < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

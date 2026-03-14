@@ -78,13 +78,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-paper.lo(q) = sdat(q,"lower");
-paper.up(q) = sdat(q,"upper");
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -147,7 +140,7 @@ stat_xw(w,p).. cw(w,p) + pc(w) - nu_logbal + nu_wbal(w,p) - piL_xw(w,p) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_logs(l).. logs(l) - 0 =G= 0;
-comp_lo_paper(q).. paper(q) - sdat(q,"lower") =G= 0;
+comp_lo_paper(q)$(sdat(q,"lower") > -inf).. paper(q) - sdat(q,"lower") =G= 0;
 comp_lo_pulp(p).. pulp(p) - 0 =G= 0;
 comp_lo_purchase(p).. purchase(p) - 0 =G= 0;
 comp_lo_sales(p).. sales(p) - 0 =G= 0;
@@ -155,7 +148,7 @@ comp_lo_xp(p,q).. xp(p,q) - 0 =G= 0;
 comp_lo_xw(w,p).. xw(w,p) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_paper(q).. sdat(q,"upper") - paper(q) =G= 0;
+comp_up_paper(q)$(sdat(q,"upper") < inf).. sdat(q,"upper") - paper(q) =G= 0;
 
 * Original equality equations
 logbal.. 0.97 * sum(l, logs(l)) =E= sum((w,p), xw(w,p));
@@ -164,6 +157,16 @@ pbal(p).. sum(q, xp(p,q)) =E= purchase(p) - sales(p) + pulp(p);
 qbal(p,q).. xp(p,q) =E= aq(p,q) * paper(q);
 obj.. profit =E= sum(p, pp(p) * sales(p)) + sum(q, pq(q) * paper(q)) - sum(l, plog * logs(l)) - sum((p,q), cp(p,q) * xp(p,q)) - sum((w,p), (cw(w,p) + pc(w)) * xw(w,p)) - sum(p, pp(p) * purchase(p));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_paper.fx(q)$(not (sdat(q,"lower") > -inf)) = 0;
+piU_paper.fx(q)$(not (sdat(q,"upper") < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration
