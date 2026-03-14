@@ -254,27 +254,59 @@ mismatch (80 vs 287) due to table parsing bug assigning `sup(aluminum,"cost")` t
 
 ### Day 8 — WS3 Part 2 + WS6: mexss
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~6h
 
 | Task | Status |
 |---|---|
-| uimp multi-solve fixed | |
-| mexss `sameas` guard fixed (#764) | |
-| model_infeasible ≤ 12 | |
+| uimp + mexss `sameas` guard fixed (#764) | :white_check_mark: PR #1076 merged — multi-entry sameas guard refactor |
+| ibm1 table column misalignment fixed | :white_check_mark: PR #1079 merged — gap-midpoint column matching |
+| ISSUE_828 (ibm1 locally infeasible) resolved | :white_check_mark: Root cause was table misalignment (ISSUE_1074) |
+| model_infeasible reduced | :white_check_mark: ibm1 now MODEL STATUS 1 (Optimal), mexss solves |
+
+**Root cause (uimp/mexss):** `_add_indexed_jacobian_terms()` in `stationarity.py` had a
+`sameas` guard that restricted scalar-constraint multiplier terms to `entries[0]` only.
+For scalar equations summing over indexed variables, this dropped valid multiplier terms
+for all but the first Jacobian entry. Fix: multi-entry guard with per-dimension value
+collection, OR-disjunction for partial coverage, no guard when all instances covered.
+
+**Root cause (ibm1):** Table column misalignment in `_handle_table_block()` — range-based
+column matching used next column start as boundary, causing values in sparse rows to map
+to wrong columns. Fix: gap-midpoint matching with source_width for right-edge computation.
+
+**PRs:** #1076 (sameas guard), #1079 (table column alignment)
 
 ---
 
 ### Day 9 — WS4: Solution Divergence (Part 1)
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~2h
 
 | Task | Status |
 |---|---|
-| apl1p root cause analysis | |
-| senstran root cause analysis | |
-| Pattern identified | |
+| apl1p root cause analysis | :white_check_mark: Stochastic solver (DECIS) — incomparable reference |
+| apl1pca root cause analysis | :white_check_mark: Same as apl1p — identical deterministic core, different stochastic scenarios |
+| senstran root cause analysis | :white_check_mark: Multi-solve with modified parameters — incomparable reference |
+| jobt root cause analysis | :white_check_mark: **FIXED** by Day 7 skip_lead_lag_inference (obj matches: 21343.056) |
+| aircraft root cause analysis | :white_check_mark: Multi-solve with bound changes — incomparable reference |
+| sparta root cause analysis | :white_check_mark: Multi-solve + actual KKT bug (infeasible) |
+| mine root cause analysis | :white_check_mark: Translation error (SetMembershipTest) — not divergence-related |
+| Pattern identified | :white_check_mark: 4/7 incomparable (multi-solve/stochastic), 1 also has KKT bug (sparta), 1 already fixed (jobt), 1 translation error (mine) |
+
+**Key Finding:** Of the 7 Category A models, 2 have genuine KKT issues and 5 do not:
+
+- **jobt**: KKT bug — already fixed on Day 7 (skip_lead_lag_inference). Now matches.
+- **sparta**: Multi-solve (4 formulations) + open KKT infeasibility bug in bal4 (#1081).
+- **senstran, apl1p, apl1pca, aircraft**: Multi-solve or stochastic solver — NLP reference
+  captures a different solve iteration/mode. MCP formulations are correct.
+- **mine**: Pre-existing translation error (SetMembershipTest not supported).
+
+**Impact:** +1 match (jobt). 4 models should be reclassified as "incomparable" rather than
+"mismatch". Full analysis in [CATEGORY_A_DIVERGENCE_ANALYSIS](./CATEGORY_A_DIVERGENCE_ANALYSIS.md).
+
+**Issues filed:** #1080 (multi-solve reference comparison), #1081 (sparta KKT bug)
+**PR:** #1082
 
 ---
 
