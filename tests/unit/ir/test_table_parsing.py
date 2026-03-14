@@ -381,6 +381,45 @@ class TestEdgeCases:
         assert table.values[("i1", "j2")] == 2.0
         assert table.values[("i1", "j3")] == 3.0
 
+    def test_sparse_row_missing_middle_column(self):
+        """Issue #1074: Sparse rows with blank middle column assign values to wrong columns.
+
+        When a row has 3+ columns but the middle is blank, the right-aligned
+        value near the next header boundary must be assigned to the correct
+        (rightmost) column, not the middle one.
+        """
+        gams = """
+        Sets s /bin1, bin2, aluminum, silicon/;
+
+        Table sup(s,*) 'supply and cost data'
+                        inventory  min_use   cost
+           bin1               200             .03
+           bin2               800      400    .17
+           aluminum           inf             .21
+           silicon            inf             .38;
+        """
+        model = parse_model_text(gams)
+        table = model.params["sup"]
+
+        # Rows with blank middle column: value should go to 'cost', not 'min_use'
+        assert table.values[("bin1", "inventory")] == 200.0
+        assert table.values[("bin1", "cost")] == 0.03
+        assert ("bin1", "min_use") not in table.values or table.values[("bin1", "min_use")] == 0.0
+
+        assert table.values[("aluminum", "inventory")] == float("inf")
+        assert table.values[("aluminum", "cost")] == 0.21
+        assert ("aluminum", "min_use") not in table.values or table.values[
+            ("aluminum", "min_use")
+        ] == 0.0
+
+        assert table.values[("silicon", "inventory")] == float("inf")
+        assert table.values[("silicon", "cost")] == 0.38
+
+        # Row with all 3 values present
+        assert table.values[("bin2", "inventory")] == 800.0
+        assert table.values[("bin2", "min_use")] == 400.0
+        assert table.values[("bin2", "cost")] == 0.17
+
 
 class TestTableIntegration:
     """Test table integration with rest of model."""
