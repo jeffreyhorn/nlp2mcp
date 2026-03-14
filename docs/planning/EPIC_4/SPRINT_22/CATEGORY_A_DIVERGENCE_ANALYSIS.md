@@ -111,9 +111,9 @@ is fundamentally different from KKT transformation.
 **Root cause:** The model has two sequential solves with different variable bounds:
 ```gams
 y.up(j,h) = deltb(j,h);              // tight bounds
-solve alloc1 minimizing phi using lp;  // 1st solve → NLP ref
+solve alloc1 using lp minimizing phi;  // 1st solve → NLP ref
 y.up(j,h) = +inf;                     // relaxed bounds
-solve alloc2 minimizing phi using lp;  // 2nd solve → MCP captures this
+solve alloc2 using lp minimizing phi;  // 2nd solve → MCP captures this
 ```
 
 The MCP captures the second formulation (alloc2 with y.up=+inf). The NLP reference reports
