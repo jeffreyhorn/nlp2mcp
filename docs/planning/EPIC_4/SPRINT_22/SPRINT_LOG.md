@@ -389,7 +389,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 **Category D Analysis (mathopt1):** The MCP transformation is mathematically correct. mathopt1 is a non-convex NLP with bilinear equality constraint `x1 = x1*x2`. Both (1,1) with obj=0 and (0,0) with obj=1 are valid KKT points. NLP finds local minimum (obj=1), MCP/PATH finds global minimum (obj≈0). This is the same multi-KKT-point pattern as Category B. See [CATEGORY_D_DIVERGENCE_ANALYSIS](./CATEGORY_D_DIVERGENCE_ANALYSIS.md).
 
 **Issues filed:** #1084–#1090 (regressions), #1091 (Category D reclassification)
-**PR:** #TBD
+**PR:** #1092
 
 ---
 
