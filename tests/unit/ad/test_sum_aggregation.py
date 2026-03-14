@@ -7,7 +7,17 @@ Day 5: Tests for sum(indices, expr) derivatives.
 import pytest
 
 from src.ad.derivative_rules import differentiate_expr
-from src.ir.ast import Binary, Call, Const, DollarConditional, ParamRef, Sum, VarRef
+from src.ir.ast import (
+    Binary,
+    Call,
+    Const,
+    DollarConditional,
+    ParamRef,
+    SetMembershipTest,
+    Sum,
+    SymbolRef,
+    VarRef,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -318,3 +328,48 @@ class TestDollarConditionBooleanIndicator:
         assert dc.value_expr.value == 1.0
         assert isinstance(dc.condition, ParamRef)
         assert dc.condition.name == "mh"
+        # Verify concrete index substitution: j → j1
+        assert dc.condition.indices == ("j1",)
+
+        # Verify the other operand is Const(1.0) (the derivative of x(j) w.r.t. x(j1))
+        other = result.left if isinstance(result.right, DollarConditional) else result.right
+        assert isinstance(other, Const)
+        assert other.value == 1.0
+
+    def test_set_membership_condition_substituted_on_collapse(self):
+        """SetMembershipTest condition indices are substituted when a sum collapses.
+
+        sum(j$ri(j), x(j)) differentiated w.r.t. x(j1):
+        The SetMembershipTest ri(j) must become ri(j1) after collapse, wrapped
+        as 1$(ri(j1)).
+        """
+        # sum(j$ri(j), x(j))  differentiated w.r.t. x(j1)
+        expr = Sum(
+            ("j",),
+            VarRef("x", ("j",)),
+            condition=SetMembershipTest("ri", (SymbolRef("j"),)),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("j1",))
+
+        # Sum collapses: result = 1 * 1$(ri(j1))
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        if isinstance(result.right, DollarConditional):
+            dc = result.right
+        elif isinstance(result.left, DollarConditional):
+            dc = result.left
+        else:
+            pytest.fail(
+                f"Expected DollarConditional in result, got: "
+                f"left={type(result.left).__name__}, right={type(result.right).__name__}"
+            )
+
+        assert isinstance(dc.value_expr, Const)
+        assert dc.value_expr.value == 1.0
+        assert isinstance(dc.condition, SetMembershipTest)
+        assert dc.condition.set_name == "ri"
+        # Verify concrete index substitution: j → j1
+        assert len(dc.condition.indices) == 1
+        assert isinstance(dc.condition.indices[0], SymbolRef)
+        assert dc.condition.indices[0].name == "j1"

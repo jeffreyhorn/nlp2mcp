@@ -57,6 +57,7 @@ from ..ir.ast import (
     IndexOffset,
     ParamRef,
     Prod,
+    SetMembershipTest,
     Sum,
     SymbolRef,
     Unary,
@@ -2113,7 +2114,10 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     if isinstance(expr, Const):
         return expr
     elif isinstance(expr, SymbolRef):
-        # SymbolRef represents scalar symbols without indices, no substitution needed
+        # SymbolRef may appear as an index inside SetMembershipTest (e.g., SymbolRef("j")).
+        # When a sum collapses, j → j1, so we substitute the name if it's in the map.
+        if expr.name in substitution:
+            return SymbolRef(substitution[expr.name])
         return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef, including IndexOffset bases
@@ -2155,8 +2159,14 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         new_value = _apply_index_substitution(expr.value_expr, substitution)
         new_cond = _apply_index_substitution(expr.condition, substitution)
         return DollarConditional(new_value, new_cond)
+    elif isinstance(expr, SetMembershipTest):
+        # Substitute indices in SetMembershipTest (e.g., ri(j) → ri(j1) on collapse)
+        new_idx_list: list[Expr] = [
+            _apply_index_substitution(idx, substitution) for idx in expr.indices
+        ]
+        return SetMembershipTest(expr.set_name, tuple(new_idx_list))
     else:
-        # IndexOffset, SetMembershipTest, CompileTimeConstant etc. — pass through unchanged
+        # IndexOffset, CompileTimeConstant etc. — pass through unchanged
         return expr
 
 
