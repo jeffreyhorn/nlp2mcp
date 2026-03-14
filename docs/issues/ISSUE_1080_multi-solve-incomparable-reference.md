@@ -2,18 +2,22 @@
 
 **GitHub Issue:** [#1080](https://github.com/jeffreyhorn/nlp2mcp/issues/1080)
 **Status:** OPEN
-**Severity:** Medium — Causes false "mismatch" classification for 5 models
+**Severity:** Medium — Causes false "mismatch" classification for 4 models
 **Date:** 2026-03-14
-**Affected Models:** senstran, apl1p, apl1pca, aircraft, sparta
+**Affected Models:** senstran, apl1p, apl1pca, aircraft (sparta is also multi-solve but has
+an additional KKT infeasibility bug tracked separately in #1081)
 
 ---
 
 ## Problem Summary
 
-5 Category A (verified_convex mismatch) models have mismatches caused by the pipeline
+4 Category A (verified_convex mismatch) models have mismatches caused by the pipeline
 comparing the MCP objective against an NLP reference from a different solve iteration or
 solver mode. These are not KKT formulation bugs — the MCP formulation is correct for the
 deterministic/first-solve case, but the NLP reference captures a different problem.
+
+A 5th model (sparta) is also multi-solve but additionally has a real KKT infeasibility bug
+in the bal4 formulation, tracked separately in #1081.
 
 ---
 
