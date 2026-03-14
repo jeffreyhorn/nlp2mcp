@@ -481,12 +481,12 @@ comp_up_u_the(h).. 1 - u_the(h) =G= 0;
 tf_eqn.. tf =E= step * nh;
 i_phi_eqn(h).. i_phi(h) =E= (power(L - rho(h), 3) + power(rho(h), 3)) / 3;
 i_the_eqn(h).. i_the(h) =E= i_phi(h) * sqr(sin(phi(h)));
-rho_eqn(h)$(ord(h) > 1).. rho(h) =E= rho(h-1) + 0.5 * step * (rho_dot(h) + rho_dot(h-1));
-the_eqn(h)$(ord(h) > 1).. the(h) =E= the(h-1) + 0.5 * step * (the_dot(h) + the_dot(h-1));
-phi_eqn(h)$(ord(h) > 1).. phi(h) =E= phi(h-1) + 0.5 * step * (phi_dot(h) + phi_dot(h-1));
-u_rho_eqn(h)$(ord(h) > 1).. rho_dot(h) =E= rho_dot(h-1) + 0.5 * step * (u_rho(h) + u_rho(h-1)) / L;
-u_the_eqn(h)$(ord(h) > 1).. the_dot(h) =E= the_dot(h-1) + 0.5 * step * (u_the(h) / i_the(h) + u_the(h-1) / i_the(h-1));
-u_phi_eqn(h)$(ord(h) > 1).. phi_dot(h) =E= phi_dot(h-1) + 0.5 * step * (u_phi(h) / i_phi(h) + u_phi(h-1) / i_phi(h-1));
+rho_eqn(h).. rho(h) =E= rho(h-1) + 0.5 * step * (rho_dot(h) + rho_dot(h-1));
+the_eqn(h).. the(h) =E= the(h-1) + 0.5 * step * (the_dot(h) + the_dot(h-1));
+phi_eqn(h).. phi(h) =E= phi(h-1) + 0.5 * step * (phi_dot(h) + phi_dot(h-1));
+u_rho_eqn(h).. rho_dot(h) =E= rho_dot(h-1) + 0.5 * step * (u_rho(h) + u_rho(h-1)) / L;
+u_the_eqn(h).. the_dot(h) =E= the_dot(h-1) + 0.5 * step * (u_the(h) / i_the(h) + u_the(h-1) / i_the(h-1));
+u_phi_eqn(h).. phi_dot(h) =E= phi_dot(h-1) + 0.5 * step * (u_phi(h) / i_phi(h) + u_phi(h-1) / i_phi(h-1));
 rho_fx_h0.. rho("h0") - 4.5 =E= 0;
 rho_fx_h50.. rho("h50") - 4.5 =E= 0;
 the_fx_h0.. the("h0") - 0 =E= 0;
@@ -508,12 +508,6 @@ phi_dot_fx_h50.. phi_dot("h50") - 0 =E= 0;
 phi_dot.fx(h)$(not (ord(h) > 1 or ord(h) <= card(h) - 1 or ord(h) > 10 or ord(h) > 11 or ord(h) > 12 or ord(h) > 13 or ord(h) > 14 or ord(h) > 15 or ord(h) > 16 or ord(h) > 17 or ord(h) > 18 or ord(h) > 19 or ord(h) > 2 or ord(h) > 20 or ord(h) > 21 or ord(h) > 22 or ord(h) > 23 or ord(h) > 24 or ord(h) > 25 or ord(h) > 26 or ord(h) > 27 or ord(h) > 28 or ord(h) > 29 or ord(h) > 3 or ord(h) > 30 or ord(h) > 31 or ord(h) > 32 or ord(h) > 33 or ord(h) > 34 or ord(h) > 35 or ord(h) > 36 or ord(h) > 37 or ord(h) > 38 or ord(h) > 39 or ord(h) > 4 or ord(h) > 40 or ord(h) > 41 or ord(h) > 42 or ord(h) > 43 or ord(h) > 44 or ord(h) > 45 or ord(h) > 46 or ord(h) > 47 or ord(h) > 48 or ord(h) > 49 or ord(h) > 5 or ord(h) > 50 or ord(h) > 6 or ord(h) > 7 or ord(h) > 8 or ord(h) > 9 or sameas(h, 'h0') or sameas(h, 'h50'))) = 0;
 rho_dot.fx(h)$(not (ord(h) > 1 or ord(h) <= card(h) - 1 or sameas(h, 'h0') or sameas(h, 'h50'))) = 0;
 the_dot.fx(h)$(not (ord(h) > 1 or ord(h) <= card(h) - 1 or ord(h) > 10 or ord(h) > 11 or ord(h) > 12 or ord(h) > 13 or ord(h) > 14 or ord(h) > 15 or ord(h) > 16 or ord(h) > 17 or ord(h) > 18 or ord(h) > 19 or ord(h) > 2 or ord(h) > 20 or ord(h) > 21 or ord(h) > 22 or ord(h) > 23 or ord(h) > 24 or ord(h) > 25 or ord(h) > 26 or ord(h) > 27 or ord(h) > 28 or ord(h) > 29 or ord(h) > 3 or ord(h) > 30 or ord(h) > 31 or ord(h) > 32 or ord(h) > 33 or ord(h) > 34 or ord(h) > 35 or ord(h) > 36 or ord(h) > 37 or ord(h) > 38 or ord(h) > 39 or ord(h) > 4 or ord(h) > 40 or ord(h) > 41 or ord(h) > 42 or ord(h) > 43 or ord(h) > 44 or ord(h) > 45 or ord(h) > 46 or ord(h) > 47 or ord(h) > 48 or ord(h) > 49 or ord(h) > 5 or ord(h) > 50 or ord(h) > 6 or ord(h) > 7 or ord(h) > 8 or ord(h) > 9 or sameas(h, 'h0') or sameas(h, 'h50'))) = 0;
-nu_phi_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_rho_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_the_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_u_phi_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_u_rho_eqn.fx(h)$(not (ord(h) > 1)) = 0;
-nu_u_the_eqn.fx(h)$(not (ord(h) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -146,7 +146,7 @@ stat_phip.. 1 + nu_amat =E= 0;
 stat_phir.. -1 + nu_arev =E= 0;
 stat_phiw.. 1 + nu_aoper =E= 0;
 stat_u(cr).. ((-1) * pr(cr)) * nu_amat - lam_mbr(cr) + lam_lcp(cr) - piL_u(cr) =E= 0;
-stat_ui(cr,ci)$(cd(ci)).. ((-1) * piL_ui(cr,ci)) =E= 0;
+stat_ui(cr,ci)$(cd(ci)).. ((-1) * 1$(cd(ci))) * lam_mb(cr,ci) - piL_ui(cr,ci) =E= 0;
 stat_w(cr,ci,cf).. ((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) - piL_w(cr,ci,cf) =E= 0;
 stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(lim, sum(q, (((-1) * qs(lim,cf,q)) * lam_qub(cf,q))$(qs(lim,cf,q)))) - piL_x(cf) =E= 0;
 stat_z(cr,p).. ((-1) * op(p)) * nu_aoper + ((-1) * a(cr,cr,p)) * lam_mbr(cr) + sum(ci, ((-1) * a(cr,cr,p)) * lam_mb(cr,ci)) + sum(m, b(m,p) * lam_cc(m)) - piL_z(cr,p) =E= 0;

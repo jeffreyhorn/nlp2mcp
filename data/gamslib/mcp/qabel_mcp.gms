@@ -31,7 +31,7 @@ Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/
     wk(n,np) /consumpt.consumpt 0.0625, invest.invest 1/
-    lambda(m,mp) /'gov-expend'.'gov-expend' 1, money.'gov-expend' 0.444/
+    lambda(m,mp) /'gov-expend'.'gov-expend' 1, money.money 0.444/
     c(n) /consumpt -59.4, invest -184.7/
     xinit(n) /consumpt 387.9, invest 85.3/
     uinit(m) /'gov-expend' 110.5, money 147.1/
@@ -111,7 +111,7 @@ stat_x(n,k)$(ord(k) <= card(k) - 1 or ord(n) <= card(n) - 1 or ord(k) > 1 or ord
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
-stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
+stateq(n,k).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + sum(m, b(n,m) * u(m,k)) + c(n);
 
 
 * ============================================
@@ -123,7 +123,6 @@ stateq(n,k)$(ord(k) <= card(k) - 1).. x(n,k+1) =E= sum(np, a(n,np) * x(np,k)) + 
 
 u.fx(m,k)$(not (ku(k))) = 0;
 x.fx(n,k)$(not (ord(k) <= card(k) - 1 or ord(n) <= card(n) - 1 or ord(k) > 1 or ord(n) > 1)) = 0;
-nu_stateq.fx(n,k)$(not (ord(k) <= card(k) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -62,15 +62,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-r.lo(t) = tdata(t,"rmin");
-r.up(t) = tdata(t,"rmax");
-q.lo(t) = tdata(t,"qmin");
-q.up(t) = tdata(t,"qmax");
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -138,16 +129,28 @@ stat_r(t).. ((-1) * piL_r(t)) + piU_r(t) =E= 0;
 comp_lo_c(i,j,t).. c(i,j,t) - 0 =G= 0;
 comp_lo_f(i,t).. f(i,t) - 0.001 =G= 0;
 comp_lo_p(i,j,t).. p(i,j,t) - 0 =G= 0;
-comp_lo_q(t).. q(t) - tdata(t,"qmin") =G= 0;
-comp_lo_r(t).. r(t) - tdata(t,"rmin") =G= 0;
+comp_lo_q(t)$(tdata(t,"qmin") > -inf).. q(t) - tdata(t,"qmin") =G= 0;
+comp_lo_r(t)$(tdata(t,"rmin") > -inf).. r(t) - tdata(t,"rmin") =G= 0;
 
 * Upper bound complementarity equations
-comp_up_q(t).. tdata(t,"qmax") - q(t) =G= 0;
-comp_up_r(t).. tdata(t,"rmax") - r(t) =G= 0;
+comp_up_q(t)$(tdata(t,"qmax") < inf).. tdata(t,"qmax") - q(t) =G= 0;
+comp_up_r(t)$(tdata(t,"rmax") < inf).. tdata(t,"rmax") - r(t) =G= 0;
 
 * Original equality equations
 tpv.. pval =E= sum((i,t,j)$(pdata(i,t,j,"nom")), (f(i,t) - pdata(i,t,j,"price") * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = future) + (c(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = call) + (p(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = puto));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_q.fx(t)$(not (tdata(t,"qmin") > -inf)) = 0;
+piL_r.fx(t)$(not (tdata(t,"rmin") > -inf)) = 0;
+piU_q.fx(t)$(not (tdata(t,"qmax") < inf)) = 0;
+piU_r.fx(t)$(not (tdata(t,"rmax") < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

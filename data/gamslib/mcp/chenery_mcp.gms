@@ -278,18 +278,18 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(i)$(t(i)).. alp(i) * nu_dh(i) + sum(t, ((-1) * h(t)) * lam_tb)$(sameas(i, 'food+agr')) - piL_e(i) + piU_e(i) =E= 0;
+stat_e(i)$(t(i)).. alp(i) * nu_dh(i) + 1$(t(i)) * lam_mb(i) + sum(t, ((-1) * h(t)) * lam_tb)$(t(i)) - piL_e(i) + piU_e(i) =E= 0;
 stat_g(t).. nu_dg(t) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
 stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
-stat_m(i)$(t(i)).. ((-1) * xsi(i)) * nu_dg(i) + sum(t, g(t) * lam_tb)$(sameas(i, 'food+agr')) - piL_m(i) + piU_m(i) =E= 0;
+stat_m(i)$(t(i)).. ((-1) * xsi(i)) * nu_dg(i) + -1$(t(i)) * lam_mb(i) + sum(t, g(t) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i) =E= 0;
 stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
 stat_pi.. nu_fpr - piL_pi + piU_pi =E= 0;
 stat_pk.. ((-1) * (1 / plab ** 1)) * nu_fpr + sum(i, ((-1) * k(i)) * nu_dv(i)) - piL_pk + piU_pk =E= 0;
 stat_v(i).. ((-1) * nu_sup(i)) + nu_dv(i) - piL_v(i) + piU_v(i) =E= 0;
-stat_vv(i).. ((-1) * piL_vv(i)) =E= 0;
+stat_vv(i).. ((-1) * ((del(i) / vv(i) + 1 - del(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) / vv(i) + 1 - del(i)) * ((-1) * del(i)) / (vv(i) * vv(i)))$(sig(i) <> 0)) * nu_dl(i) + ((-1) * ((del(i) + (1 - del(i)) * vv(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) + (1 - del(i)) * vv(i)) * (1 - del(i)))$(sig(i) <> 0)) * nu_dk(i) - piL_vv(i) =E= 0;
 stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + (aio(i,i) * lam_mb(i+1))$(ord(i) <= card(i) - 1) + (aio(i,i) * lam_mb(i-1))$(ord(i) > 1) + (aio(i,i) * lam_mb(i+2))$(ord(i) <= card(i) - 2) + (aio(i,i) * lam_mb(i-2))$(ord(i) > 2) + (aio(i,i) * lam_mb(i+3))$(ord(i) <= card(i) - 3) + (aio(i,i) * lam_mb(i-3))$(ord(i) > 3) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
 stat_y(i).. -1 + nu_dem(i) + lam_mb(i) - piL_y(i) + piU_y(i) =E= 0;
 

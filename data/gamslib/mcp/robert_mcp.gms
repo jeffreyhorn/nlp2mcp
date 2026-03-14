@@ -108,7 +108,7 @@ comp_lo_s(r,tt).. s(r,tt) - 0 =G= 0;
 comp_lo_x(p,tt).. x(p,tt) - 0 =G= 0;
 
 * Original equality equations
-sb(r,tt)$(ord(tt) <= card(tt) - 1).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
+sb(r,tt).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
 pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(r,t))) + sum(r, misc("res-value",r) * s(r,"4"));
 
 
@@ -121,7 +121,6 @@ pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(
 
 x.fx(p,tt)$(not (t(tt))) = 0;
 piL_x.fx(p,tt)$(not (t(tt))) = 0;
-nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
 lam_cc.fx(tt)$(not (t(tt))) = 0;
 
 * ============================================

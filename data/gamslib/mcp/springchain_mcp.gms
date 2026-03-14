@@ -138,12 +138,12 @@ Equations
 * Stationarity equations
 stat_delta_x(n)$(ord(n) > 1).. nu_delta_x_eq(n) + (2 * delta_x(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
 stat_delta_y(n)$(ord(n) > 1).. nu_delta_y_eq(n) + (2 * delta_y(n) * lam_link_up(n))$(ord(n) > 1) =E= 0;
-stat_t(n).. ((-1) * nu_link_L0(n)) + 2 * t(n) * (ord(n) > 1) * lam_cone_eq - piL_t(n) =E= 0;
+stat_t(n).. ((-1) * nu_link_L0(n)) + 2 * t(n) * 1$(ord(n) > 1) * lam_cone_eq - piL_t(n) =E= 0;
 stat_t_l0(n).. nu_link_L0(n) + (((-1) * (2 * t_l0(n))) * lam_link_up(n))$(ord(n) > 1) - piL_t_l0(n) =E= 0;
 stat_unit.. nu_unit_fx + ((-1) * (2 * v)) * lam_cone_eq =E= 0;
 stat_v.. k + ((-1) * (unit * 2)) * lam_cone_eq - piL_v =E= 0;
 stat_x(n)$(ord(n) > 1 or ord(n) <= card(n) - 1 or sameas(n, 'n0') or sameas(n, 'n10')).. ((-1) * nu_delta_x_eq(n)) + nu_delta_x_eq(n+1)$(ord(n) <= card(n) - 1) + nu_x_fx_n0$(sameas(n, 'n0')) + nu_x_fx_n10$(sameas(n, 'n10')) =E= 0;
-stat_y(n).. m(n) * g * (ord(n) > 1 and ord(n) < card(n)) - nu_delta_y_eq(n) + nu_delta_y_eq(n+1)$(ord(n) <= card(n) - 1) + nu_y_fx_n0$(sameas(n, 'n0')) + nu_y_fx_n10$(sameas(n, 'n10')) =E= 0;
+stat_y(n).. m(n) * g * 1$(ord(n) > 1 and ord(n) < card(n)) - nu_delta_y_eq(n) + nu_delta_y_eq(n+1)$(ord(n) <= card(n) - 1) + nu_y_fx_n0$(sameas(n, 'n0')) + nu_y_fx_n10$(sameas(n, 'n10')) =E= 0;
 
 * Inequality complementarity equations
 comp_cone_eq.. 2 * v * unit - sum(n$(ord(n) > 1), sqr(t(n))) =G= 0;
@@ -156,8 +156,8 @@ comp_lo_v.. v - 0 =G= 0;
 
 * Original equality equations
 pot_energy.. obj =E= sum(n$(ord(n) > 1 and ord(n) < card(n)), m(n) * g * y(n)) + k * v;
-delta_x_eq(n)$(ord(n) > 1).. delta_x(n) =E= x(n) - x(n-1);
-delta_y_eq(n)$(ord(n) > 1).. delta_y(n) =E= y(n) - y(n-1);
+delta_x_eq(n).. delta_x(n) =E= x(n) - x(n-1);
+delta_y_eq(n).. delta_y(n) =E= y(n) - y(n-1);
 link_L0(n).. t_l0(n) =E= L0 + t(n);
 x_fx_n0.. x("n0") - 0 =E= 0;
 x_fx_n10.. x("n10") - 2 =E= 0;
@@ -177,8 +177,6 @@ delta_x.fx(n)$(not (ord(n) > 1)) = 0;
 delta_y.fx(n)$(not (ord(n) > 1)) = 0;
 x.fx(n)$(not (ord(n) > 1 or ord(n) <= card(n) - 1 or sameas(n, 'n0') or sameas(n, 'n10'))) = 0;
 lam_link_up.fx(n)$(not (ord(n) > 1)) = 0;
-nu_delta_x_eq.fx(n)$(not (ord(n) > 1)) = 0;
-nu_delta_y_eq.fx(n)$(not (ord(n) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

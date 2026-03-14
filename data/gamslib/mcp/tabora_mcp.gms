@@ -25,7 +25,7 @@ Sets
 ;
 
 Parameters
-    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.aug 37.3, tobacco.sep 44.7, tobacco.oct 19.7, tobacco.nov 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.oct 13.3, maize.nov 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.sep 10, other.oct 28, other.nov 24/
+    ld(*,m) /tobacco.jan 44.7, tobacco.feb 84.2, tobacco.mar 87.3, tobacco.apr 90.7, tobacco.may 20.5, tobacco.sep 37.3, tobacco.oct 44.7, tobacco.nov 19.7, tobacco.dec 46.4, maize.jan 46.7, maize.feb 10, maize.mar 13, maize.apr 16.7, maize.may 18.3, maize.nov 13.3, maize.dec 33.3, 'timber-1'.jan 10, 'timber-1'.mar 3, 'timber-1'.may 10, 'timber-1'.aug 1, 'timber-1'.sep 7, 'timber-1'.oct 8, 'timber-1'.nov 9, 'timber-2'.jan 7, 'timber-2'.may 10, 'timber-2'.aug 1, other.jan 10, other.feb 8, other.mar 12, other.apr 10, other.may 4, other.jun 2, other.oct 10, other.nov 28, other.dec 24/
     tmd(*,c) /'input-cost'.tobacco 2000, 'input-cost'.maize 20, yield.tobacco 675, yield.maize 750, price.tobacco 8.4, price.maize 0.8/
     yv(a) /a08 120, a16 120, a24 120/
     vr(t)
@@ -187,7 +187,7 @@ Equations
 
 * Stationarity equations
 stat_cost(t).. ((-1) * (delt(t) * (-1))) + nu_cd(t) =E= 0;
-stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) - piL_lc(t,m) =E= 0;
+stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) + 1$(mc(m)) * lam_lb(t,m) - piL_lc(t,m) =E= 0;
 stat_mat(t).. sum(c, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(c, ((-1) * (yc(c) * matr)) * lam_mm(t)) + lam_matd1(t) + lam_matd2(t) - piL_mat(t) + piU_mat(t) =E= 0;
 stat_rev(t).. ((-1) * delt(t)) + nu_rd(t) =E= 0;
 stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(m, ld("timber-1",m) * lam_lb(t,m)) - piL_v(t) =E= 0;

@@ -539,7 +539,7 @@ comp_up_r(t,n).. 200 - r(t,n) =G= 0;
 
 * Original equality equations
 ecdef.. ec =E= sum((t,nn), snprob(nn) * (floodCost * f(t,nn) + lowCost * z(t,nn)));
-ldef(t,nn)$(((not root(nn))) and (ord(t) > 1)).. l(t,nn) =E= sum((nn__,parent), l(t-1,parent)) + ndelta(nn) + z(t,nn) - r(t,nn) - f(t,nn);
+ldef(t,nn)$((not root(nn))).. l(t,nn) =E= sum((nn__,parent), l(t-1,parent)) + ndelta(nn) + z(t,nn) - r(t,nn) - f(t,nn);
 l_fx_dec_n1.. l("dec","n1") - 100 =E= 0;
 l_fx_dec_n2.. l("dec","n2") - 100 =E= 0;
 l_fx_dec_n3.. l("dec","n3") - 100 =E= 0;

@@ -78,7 +78,7 @@ Equations
 stat_x1(i).. 1 - lam_e1(i) + piU_x1(i) =E= 0;
 stat_x2(i)$(j(i)).. nu_e2(i) + piU_x2(i) =E= 0;
 stat_x3(i).. piU_x3(i) =E= 0;
-stat_x4(i).. piU_x4(i) =E= 0;
+stat_x4(i).. 1$(0) * lam_e1(i) + piU_x4(i) =E= 0;
 
 * Inequality complementarity equations
 comp_e1(i).. x1(i) - (ord(i) + x4(i)$(0)) =G= 0;

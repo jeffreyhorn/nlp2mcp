@@ -375,8 +375,8 @@ Ldef(i).. l(i) =E= 0.5 * cl(i) * rho * S * sqr(v(i));
 vx_dot_def(i).. v_dot("x",i) =E= (((-1) * l(i)) * w(i) / v(i) - d(i) * vel("x",i) / v(i)) / m;
 vy_dot_def(i).. v_dot("y",i) =E= (l(i) * vel("x",i) / v(i) - d(i) * w(i) / v(i)) / m - g;
 obj.. final_x =E= pos("x","h50");
-pos_eqn(c,i)$(ord(i) > 1).. pos(c,i) =E= pos(c,i-1) + 0.5 * step * (vel(c,i) + vel(c,i-1));
-vel_eqn(c,i)$(ord(i) > 1).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) + v_dot(c,i-1));
+pos_eqn(c,i).. pos(c,i) =E= pos(c,i-1) + 0.5 * step * (vel(c,i) + vel(c,i-1));
+vel_eqn(c,i).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) + v_dot(c,i-1));
 
 
 * ============================================
@@ -389,8 +389,6 @@ vel_eqn(c,i)$(ord(i) > 1).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) +
 v_dot.fx(c,h)$(not (ord(h) <= card(h) - 1)) = 0;
 piL_pos.fx(c,h)$(not has_pos_lo(c,h)) = 0;
 piL_vel.fx(c,h)$(not has_vel_lo(c,h)) = 0;
-nu_pos_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
-nu_vel_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

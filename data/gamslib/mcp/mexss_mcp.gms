@@ -27,7 +27,7 @@ Sets
 ;
 
 Parameters
-    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-el' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-oh' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
+    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-bof' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-el' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
     b(m,p) /'blast-furn'.'pig-iron' 1, openhearth.'steel-oh' 1, bof.'steel-bof' 1, 'direct-red'.sponge 1, 'elec-arc'.'steel-el' 1/
     k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56/
     d(c,j)
@@ -154,14 +154,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel') and sameas(i, 'ahmsa')) + lam_mbf(c,i) + lam_me(c) - piL_e(c,i) =E= 0;
+stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel')) + lam_mbf(c,i) + lam_me(c) - piL_e(c,i) =E= 0;
 stat_phieps.. -1 + nu_aeps =E= 0;
 stat_philam.. 1 + nu_alam =E= 0;
 stat_phipi.. 1 + nu_api =E= 0;
 stat_phipsi.. 1 + nu_apsi =E= 0;
-stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(sameas(c, 'coke') and sameas(i, 'ahmsa')) - lam_mbr(c,i) - piL_u(c,i) =E= 0;
-stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel') and sameas(j, 'guadalaja')) - lam_mr(c,j) - piL_v(c,j) =E= 0;
-stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel') and sameas(i, 'ahmsa') and sameas(j, 'guadalaja')) + lam_mbf(c,i) - lam_mr(c,j) - piL_x(c,i,j) =E= 0;
+stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(cr(c)) - lam_mbr(c,i) - piL_u(c,i) =E= 0;
+stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel')) - lam_mr(c,j) - piL_v(c,j) =E= 0;
+stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel')) + lam_mbf(c,i) - lam_mr(c,j) - piL_x(c,i,j) =E= 0;
 stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
 
 * Inequality complementarity equations

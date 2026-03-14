@@ -61,12 +61,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-e.lo(t) = req(t);
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -103,12 +97,12 @@ stat_e(t).. nu_bal4(t) + ((-1) * nu_bal4(t+1))$(ord(t) <= card(t) - 1) - piL_e(t
 stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) - piL_x(t,l) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_e(t).. e(t) - req(t) =G= 0;
+comp_lo_e(t)$(req(t) > -inf).. e(t) - req(t) =G= 0;
 comp_lo_x(t,l).. x(t,l) - 0 =G= 0;
 
 * Original equality equations
 cost.. z =E= sum((t,l), infl(t) * clen(l) * x(t,l));
-bal4(t)$(ord(t) > 1).. e(t) =E= e(t-1) + sum(l, x(t,l) - x(t-ord(l),l));
+bal4(t).. e(t) =E= e(t-1) + sum(l, x(t,l) - x(t-ord(l),l));
 
 
 * ============================================
@@ -118,7 +112,7 @@ bal4(t)$(ord(t) > 1).. e(t) =E= e(t-1) + sum(l, x(t,l) - x(t-ord(l),l));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_bal4.fx(t)$(not (ord(t) > 1)) = 0;
+piL_e.fx(t)$(not (req(t) > -inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

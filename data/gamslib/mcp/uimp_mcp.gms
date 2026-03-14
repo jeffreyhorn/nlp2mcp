@@ -74,13 +74,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-y.up(i,k) = h(k);
-z.lo(i,k) = d(i,k);
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -124,7 +117,7 @@ Equations
 * Stationarity equations
 stat_cost.. 1 + nu_cdef =E= 0;
 stat_revenue.. -1 + nu_rdef =E= 0;
-stat_x(i,j,k,l).. t(i,j,k,l) * lam_ma(i,j,l) - piL_x(i,j,k,l) =E= 0;
+stat_x(i,j,k,l).. ((-1) * c(i,j,k,l)) * nu_cdef + 1$(mh(l,k)) * nu_ib(i,k) + t(i,j,k,l) * lam_ma(i,j,l) - piL_x(i,j,k,l) =E= 0;
 stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) + nu_ib(i+1,k)$(ord(i) <= card(i) - 1) - piL_y(i,k) + piU_y(i,k) =E= 0;
 stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) - piL_z(i,k) =E= 0;
 
@@ -134,16 +127,16 @@ comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
 * Lower bound complementarity equations
 comp_lo_x(i,j,k,l).. x(i,j,k,l) - 0 =G= 0;
 comp_lo_y(i,k).. y(i,k) - 0 =G= 0;
-comp_lo_z(i,k).. z(i,k) - d(i,k) =G= 0;
+comp_lo_z(i,k)$(d(i,k) > -inf).. z(i,k) - d(i,k) =G= 0;
 
 * Upper bound complementarity equations
-comp_up_y(i,k).. h(k) - y(i,k) =G= 0;
+comp_up_y(i,k)$(h(k) < inf).. h(k) - y(i,k) =G= 0;
 
 * Original equality equations
 pdef.. profit =E= revenue - cost;
 cdef.. cost =E= sum((i,k), s(k) * y(i,k) + sum((j,l), c(i,j,k,l) * x(i,j,k,l)));
 rdef.. revenue =E= sum((i,k), p(i,k) * z(i,k));
-ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
+ib(i,k).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
 
 
 * ============================================
@@ -153,7 +146,8 @@ ib(i,k)$(ord(i) > 1).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_ib.fx(i,k)$(not (ord(i) > 1)) = 0;
+piL_z.fx(i,k)$(not (d(i,k) > -inf)) = 0;
+piU_y.fx(i,k)$(not (h(k) < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

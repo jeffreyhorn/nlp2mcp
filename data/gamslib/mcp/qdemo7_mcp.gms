@@ -124,12 +124,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-flab.up(t) = famlab * fnum;
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -201,9 +195,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_exports(c).. ((-1) * piL_exports(c)) =E= 0;
+stat_exports(c).. 1$(ce(c)) * nu_dem(c) - piL_exports(c) =E= 0;
 stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_flab(t) =E= 0;
-stat_imports(c).. ((-1) * piL_imports(c)) =E= 0;
+stat_imports(c).. ((-1) * 1$(cm(c))) * nu_dem(c) - piL_imports(c) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
 stat_natcon(c)$(cn(c)).. nu_dem(c) - piL_natcon(c) =E= 0;
@@ -235,7 +229,7 @@ comp_lo_xcrop(c).. xcrop(c) - 0 =G= 0;
 comp_lo_xlive(r).. xlive(r) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_flab(t).. famlab * fnum - flab(t) =G= 0;
+comp_up_flab(t)$(famlab * fnum < inf).. famlab * fnum - flab(t) =G= 0;
 
 * Original equality equations
 amisc.. mcost =E= sum(c, xcrop(c) * miscost(c));
@@ -257,6 +251,7 @@ objn.. cps =E= sum(cn, alpha(cn) * natcon(cn) + 0.5 * beta(cn) * sqr(natcon(cn))
 
 natcon.fx(c)$(not (cn(c))) = 0;
 piL_natcon.fx(c)$(not (cn(c))) = 0;
+piU_flab.fx(t)$(not (famlab * fnum < inf)) = 0;
 nu_dem.fx(c)$(not (cn(c))) = 0;
 nu_dem.fx(c)$(not (cn(c))) = 0;
 

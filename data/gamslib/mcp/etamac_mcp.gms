@@ -147,11 +147,6 @@ Positive Variables
 * ============================================
 
 k.fx(tfirst) = k0 * spda ** ninit + knew(tfirst);
-kn.lo(t) = tol * i0 * ipm(t);
-y.lo(t) = y0;
-yn.lo(t) = tol * y0 * ln(t);
-en.lo(t) = tol * e0 * ln(t);
-nn.lo(t) = tol * n0 * ln(t);
 
 * ============================================
 * Variable Initialization
@@ -281,25 +276,25 @@ comp_tc(tlast).. ((-1) * (k(tlast) * (grow(tlast) + 1 - spda) - i(tlast))) =G= 0
 * Lower bound complementarity equations
 comp_lo_c(t).. c(t) - 3.2 =G= 0;
 comp_lo_e(t).. e(t) - 2.5 =G= 0;
-comp_lo_en(t).. en(t) - tol * e0 * ln(t) =G= 0;
+comp_lo_en(t)$(tol * e0 * ln(t) > -inf).. en(t) - tol * e0 * ln(t) =G= 0;
 comp_lo_i(t).. i(t) - 0.7 =G= 0;
 comp_lo_k(t).. k(t) - 10.9 =G= 0;
-comp_lo_kn(t).. kn(t) - tol * i0 * ipm(t) =G= 0;
+comp_lo_kn(t)$(tol * i0 * ipm(t) > -inf).. kn(t) - tol * i0 * ipm(t) =G= 0;
 comp_lo_n(t).. n(t) - 50 =G= 0;
-comp_lo_nn(t).. nn(t) - tol * n0 * ln(t) =G= 0;
-comp_lo_y(t).. y(t) - y0 =G= 0;
-comp_lo_yn(t).. yn(t) - tol * y0 * ln(t) =G= 0;
+comp_lo_nn(t)$(tol * n0 * ln(t) > -inf).. nn(t) - tol * n0 * ln(t) =G= 0;
+comp_lo_y(t)$(y0 > -inf).. y(t) - y0 =G= 0;
+comp_lo_yn(t)$(tol * y0 * ln(t) > -inf).. yn(t) - tol * y0 * ln(t) =G= 0;
 
 * Original equality equations
-newcap(t)$(ord(t) <= card(t) - 1).. kn(t+1) =E= i(t) * ipm(t);
-newprod(t)$(ord(t) <= card(t) - 1).. yn(t+1) =E= (aconst * kn(t+1) ** (rho * kpvs) * ln(t+1) ** (rho * (1 - kpvs)) + bconst * en(t+1) ** (rho * elvs) * nn(t+1) ** (rho * (1 - elvs))) ** (1 / rho);
+newcap(t).. kn(t+1) =E= i(t) * ipm(t);
+newprod(t).. yn(t+1) =E= (aconst * kn(t+1) ** (rho * kpvs) * ln(t+1) ** (rho * (1 - kpvs)) + bconst * en(t+1) ** (rho * elvs) * nn(t+1) ** (rho * (1 - elvs))) ** (1 / rho);
 fnewelec(tfirst).. en(tfirst) =E= e(tfirst) - e0 * spda ** nyper;
-newelec(t)$(ord(t) <= card(t) - 1).. en(t+1) =E= e(t+1) - e(t) * spda ** nyper;
+newelec(t).. en(t+1) =E= e(t+1) - e(t) * spda ** nyper;
 fnewnon(tfirst).. nn(tfirst) =E= n(tfirst) - n0 * spda ** nyper;
-newnon(t)$(ord(t) <= card(t) - 1).. nn(t+1) =E= n(t+1) - n(t) * spda ** nyper;
-totalcap(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= k(t) * spda ** nyper + kn(t+1);
+newnon(t).. nn(t+1) =E= n(t+1) - n(t) * spda ** nyper;
+totalcap(t).. k(t+1) =E= k(t) * spda ** nyper + kn(t+1);
 ftotalprod(tfirst).. y(tfirst) =E= y0 * spda ** ninit + (aconst * knew(tfirst) ** (rho * kpvs) * ln(tfirst) ** (rho * (1 - kpvs)) + bconst * en(tfirst) ** (rho * elvs) * nn(tfirst) ** (rho * (1 - elvs))) ** (1 / rho);
-totalprod(t)$(ord(t) <= card(t) - 1).. y(t+1) =E= y(t) * spda ** nyper + yn(t+1);
+totalprod(t).. y(t+1) =E= y(t) * spda ** nyper + yn(t+1);
 costnrg(t).. thsnd * ec(t) =E= pelec(t) * e(t) + pnelec(t) * n(t);
 cc(t).. y(t) =E= c(t) + i(t) + ec(t);
 util.. utility =E= sum(t, dfact(t) * log(c(t)));
@@ -312,12 +307,11 @@ util.. utility =E= sum(t, dfact(t) * log(c(t)));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_newcap.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
-nu_newelec.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
-nu_newnon.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
-nu_newprod.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
-nu_totalcap.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
-nu_totalprod.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
+piL_en.fx(t)$(not (tol * e0 * ln(t) > -inf)) = 0;
+piL_kn.fx(t)$(not (tol * i0 * ipm(t) > -inf)) = 0;
+piL_nn.fx(t)$(not (tol * n0 * ln(t) > -inf)) = 0;
+piL_y.fx(t)$(not (y0 > -inf)) = 0;
+piL_yn.fx(t)$(not (tol * y0 * ln(t) > -inf)) = 0;
 nu_fnewelec.fx(t)$(not (tfirst(t))) = 0;
 nu_fnewnon.fx(t)$(not (tfirst(t))) = 0;
 nu_ftotalprod.fx(t)$(not (tfirst(t))) = 0;

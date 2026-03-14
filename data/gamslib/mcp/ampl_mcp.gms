@@ -60,12 +60,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-s.up(r,tl) = b(r);
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -112,10 +106,10 @@ comp_lo_s(r,tl).. s(r,tl) - 0 =G= 0;
 comp_lo_x(p,tl).. x(p,tl) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_s(r,tl).. b(r) - s(r,tl) =G= 0;
+comp_up_s(r,tl)$(b(r) < inf).. b(r) - s(r,tl) =G= 0;
 
 * Original equality equations
-balance(r,tl)$(ord(tl) <= card(tl) - 1).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
+balance(r,tl).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
 obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl))) * s(r,tl));
 
 
@@ -128,7 +122,7 @@ obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(t
 
 x.fx(p,tl)$(not (t(tl))) = 0;
 piL_x.fx(p,tl)$(not (t(tl))) = 0;
-nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
+piU_s.fx(r,tl)$(not (b(r) < inf)) = 0;
 lam_limit.fx(tl)$(not (t(tl))) = 0;
 
 * ============================================

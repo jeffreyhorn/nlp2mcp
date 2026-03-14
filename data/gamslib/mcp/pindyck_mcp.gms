@@ -202,11 +202,11 @@ comp_lo_s(t).. s(t) - 0 =G= 0;
 comp_lo_td(t).. td(t) - 0 =G= 0;
 
 * Original equality equations
-tdeq(t)$(ord(t) > 1).. td(t) =E= 0.87 * td(t-1) - 0.13 * p(t) + demand(t);
-seq(t)$(ord(t) > 1).. s(t) =E= 0.75 * s(t-1) + (1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7);
-cseq(t)$(ord(t) > 1).. cs(t) =E= cs(t-1) + s(t);
+tdeq(t).. td(t) =E= 0.87 * td(t-1) - 0.13 * p(t) + demand(t);
+seq(t).. s(t) =E= 0.75 * s(t-1) + (1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7);
+cseq(t).. cs(t) =E= cs(t-1) + s(t);
 deq(to).. d(to) =E= td(to) - s(to);
-req(t)$(ord(t) > 1).. r(t) =E= r(t-1) - d(t);
+req(t).. r(t) =E= r(t-1) - d(t);
 drev(to).. rev(to) =E= d(to) * (p(to) - 250 / r(to));
 tprofit.. profit =E= sum(to, rev(to) * 1.05 ** (1 - ord(to)));
 td_fx_1974.. td("1974") - 18 =E= 0;
@@ -227,10 +227,6 @@ piL_d.fx(t)$(not (to(t))) = 0;
 p.fx(t)$(not (to(t))) = 0;
 piL_p.fx(t)$(not (to(t))) = 0;
 rev.fx(t)$(not (to(t))) = 0;
-nu_cseq.fx(t)$(not (ord(t) > 1)) = 0;
-nu_req.fx(t)$(not (ord(t) > 1)) = 0;
-nu_seq.fx(t)$(not (ord(t) > 1)) = 0;
-nu_tdeq.fx(t)$(not (ord(t) > 1)) = 0;
 nu_deq.fx(t)$(not (to(t))) = 0;
 nu_drev.fx(t)$(not (to(t))) = 0;
 

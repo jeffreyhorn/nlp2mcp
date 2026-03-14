@@ -65,15 +65,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-k.lo(j) = alpha * z(j,"k0");
-k.up(j) = beta * z(j,"k0");
-l.lo(j) = alpha * z(j,"l0");
-l.up(j) = beta * z(j,"l0");
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -125,18 +116,30 @@ comp_eq5a.. tk - gamma2 * tl =G= 0;
 comp_eq5b.. ((-1) * (tk - gamma1 * tl)) =G= 0;
 
 * Lower bound complementarity equations
-comp_lo_k(j).. k(j) - alpha * z(j,"k0") =G= 0;
-comp_lo_l(j).. l(j) - alpha * z(j,"l0") =G= 0;
+comp_lo_k(j)$(alpha * z(j,"k0") > -inf).. k(j) - alpha * z(j,"k0") =G= 0;
+comp_lo_l(j)$(alpha * z(j,"l0") > -inf).. l(j) - alpha * z(j,"l0") =G= 0;
 
 * Upper bound complementarity equations
-comp_up_k(j).. beta * z(j,"k0") - k(j) =G= 0;
-comp_up_l(j).. beta * z(j,"l0") - l(j) =G= 0;
+comp_up_k(j)$(beta * z(j,"k0") < inf).. beta * z(j,"k0") - k(j) =G= 0;
+comp_up_l(j)$(beta * z(j,"l0") < inf).. beta * z(j,"l0") - l(j) =G= 0;
 
 * Original equality equations
 obj.. output =E= sum(j, z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b"));
 kdef.. tk =E= sum(j, k(j));
 ldef.. tl =E= sum(j, l(j));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piL_k.fx(j)$(not (alpha * z(j,"k0") > -inf)) = 0;
+piL_l.fx(j)$(not (alpha * z(j,"l0") > -inf)) = 0;
+piU_k.fx(j)$(not (beta * z(j,"k0") < inf)) = 0;
+piU_l.fx(j)$(not (beta * z(j,"l0") < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

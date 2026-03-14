@@ -80,7 +80,6 @@ Positive Variables
 * ============================================
 
 k.fx(tfirst) = k.lo(tfirst);
-i.up(t) = i0 * (1 + ac) ** (ord(t) - 1);
 
 * ============================================
 * Variable Initialization
@@ -164,11 +163,11 @@ comp_lo_i(t).. i(t) - 0.05 =G= 0;
 comp_lo_k(t).. k(t) - 3 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_i(t).. i0 * (1 + ac) ** (ord(t) - 1) - i(t) =G= 0;
+comp_up_i(t)$(i0 * (1 + ac) ** (ord(t) - 1) < inf).. i0 * (1 + ac) ** (ord(t) - 1) - i(t) =G= 0;
 
 * Original equality equations
 cc(t).. al(t) * k(t) ** b =E= c(t) + i(t);
-kk(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= k(t) + i(t);
+kk(t).. k(t+1) =E= k(t) + i(t);
 util.. utility =E= sum(t, beta(t) * log(c(t)));
 
 
@@ -179,7 +178,7 @@ util.. utility =E= sum(t, beta(t) * log(c(t)));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-nu_kk.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
+piU_i.fx(t)$(not (i0 * (1 + ac) ** (ord(t) - 1) < inf)) = 0;
 lam_tc.fx(t)$(not (tlast(t))) = 0;
 
 * ============================================

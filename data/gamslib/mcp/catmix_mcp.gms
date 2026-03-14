@@ -215,8 +215,8 @@ comp_up_u(nh).. 1 - u(nh) =G= 0;
 
 * Original equality equations
 defobj.. obj =E= -1 + x1("100") + x2("100") + alpha * h * sum(i, sqr(u(i+1) - u(i)));
-ode1(i)$(ord(i) <= card(i) - 1).. x1(i+1) =E= x1(i) + h / 2 * (u(i) * (10 * x2(i) - x1(i)) + u(i+1) * (10 * x2(i+1) - x1(i+1)));
-ode2(i)$(ord(i) <= card(i) - 1).. x2(i+1) =E= x2(i) + h / 2 * (u(i) * (x1(i) - 10 * x2(i)) - (1 - u(i)) * x2(i) + u(i+1) * (x1(i+1) - 10 * x2(i+1)) - (1 - u(i+1)) * x2(i+1));
+ode1(i).. x1(i+1) =E= x1(i) + h / 2 * (u(i) * (10 * x2(i) - x1(i)) + u(i+1) * (10 * x2(i+1) - x1(i+1)));
+ode2(i).. x2(i+1) =E= x2(i) + h / 2 * (u(i) * (x1(i) - 10 * x2(i)) - (1 - u(i)) * x2(i) + u(i+1) * (x1(i+1) - 10 * x2(i+1)) - (1 - u(i+1)) * x2(i+1));
 x1_fx_0.. x1("0") - 1 =E= 0;
 x2_fx_0.. x2("0") - 0 =E= 0;
 
@@ -230,8 +230,6 @@ x2_fx_0.. x2("0") - 0 =E= 0;
 
 x1.fx(nh)$(not (ord(nh) > 1 or sameas(nh, '0'))) = 0;
 x2.fx(nh)$(not (ord(nh) > 1 or sameas(nh, '0'))) = 0;
-nu_ode1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
-nu_ode2.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -164,12 +164,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-finit.up(col) = totfeed;
-fin.up(col) = totfeed;
-f.up(col,stm) = totfeed;
 fint.up(savinter(colp,col,stm)) = totfeed;
 fpr.up(savprst(col,stm,pr)) = totfeed;
-cfin.up(col,cp) = feed(cp);
 
 * ============================================
 * Variable Initialization
@@ -330,11 +326,11 @@ comp_lo_x(col,stm,cp).. x(col,stm,cp) - 0 =G= 0;
 comp_lo_xin(col,cp).. xin(col,cp) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_cfin(col,cp).. feed(cp) - cfin(col,cp) =G= 0;
-comp_up_f(col,stm).. totfeed - f(col,stm) =G= 0;
+comp_up_cfin(col,cp)$(feed(cp) < inf).. feed(cp) - cfin(col,cp) =G= 0;
+comp_up_f(col,stm)$(totfeed < inf).. totfeed - f(col,stm) =G= 0;
 comp_up_fby(pr).. fby_up_param(pr) - fby(pr) =G= 0;
-comp_up_fin(col).. totfeed - fin(col) =G= 0;
-comp_up_finit(col).. totfeed - finit(col) =G= 0;
+comp_up_fin(col)$(totfeed < inf).. totfeed - fin(col) =G= 0;
+comp_up_finit(col)$(totfeed < inf).. totfeed - finit(col) =G= 0;
 comp_up_rec(col,stm,cp).. 1 - rec(col,stm,cp) =G= 0;
 
 * Original equality equations
@@ -358,6 +354,10 @@ infeas.. alp =E= sum(col, saint(col));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+piU_cfin.fx(col,cp)$(not (feed(cp) < inf)) = 0;
+piU_f.fx(col,stm)$(not (totfeed < inf)) = 0;
+piU_fin.fx(col)$(not (totfeed < inf)) = 0;
+piU_finit.fx(col)$(not (totfeed < inf)) = 0;
 nu_probal.fx(pr,cp)$(not (ord(pr) <> np)) = 0;
 
 * ============================================

@@ -310,27 +310,86 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ---
 
-### Day 10 — Checkpoint 2 + WS4 Part 2
+### Day 9 (continued) — ISSUE_1077 + ISSUE_1078 + ISSUE_764 Closure
 
-**Status:** NOT STARTED
-**Effort:** —
-
-**Checkpoint 2 Decision:** —
-
-| Criterion | Target | Actual | Status |
-|---|---|---|---|
-| path_syntax_error | ≤ 30 | — | |
-| path_solve_terminated | ≤ 6 | — | |
-| model_infeasible | ≤ 13 | — | |
-| Solve success | ≥ 73 | — | |
-| Match | ≥ 33 | — | |
-| Tests | All pass | — | |
+**Status:** COMPLETE
+**Effort:** ~2h
 
 | Task | Status |
 |---|---|
-| Checkpoint 2 evaluation | |
-| mathopt1 Category D analysis | |
-| Fix strategies documented | |
+| ISSUE_1077 (uimp dollar condition boolean) fixed | :white_check_mark: PR #1083 merged — `_ensure_numeric_condition()` wraps all non-Const conditions as `1$cond` |
+| ISSUE_1078 (mexss table column) confirmed fixed | :white_check_mark: Already fixed by PR #1079 |
+| ISSUE_764 (mexss infeasible) confirmed fixed | :white_check_mark: Already fixed by PR #1076 |
+| uimp verified: MODEL STATUS 1, obj=1571.048 | :white_check_mark: Matches NLP reference |
+| mexss verified: MODEL STATUS 1, obj=538.811 | :white_check_mark: Matches NLP reference |
+| Issues #764, #1077, #1078 closed | :white_check_mark: Moved to `docs/issues/completed/` |
+
+**PR:** #1083
+
+---
+
+### Day 10 — Checkpoint 2 + WS4 Part 2
+
+**Status:** COMPLETE
+**Effort:** ~2h
+
+**Checkpoint 2 Decision:** CONDITIONAL GO — Solve (74) and Match (39) exceed targets. path_syntax_error (27) passes. path_solve_terminated (15) and model_infeasible (18 excl. excluded) miss targets due to 7 regressions from Day 8/9 PRs (#1076 sameas guard, #1083 dollar condition). Regressions filed as #1084–#1090. Proceeding with sprint close while documenting regressions for Sprint 23 investigation.
+
+| Criterion | Target | Actual | Status |
+|---|---|---|---|
+| path_syntax_error | ≤ 30 | 27 | :white_check_mark: |
+| path_solve_terminated | ≤ 6 | 15 | :x: (+5 regressions from Day 8/9 PRs) |
+| model_infeasible | ≤ 13 | 18 | :x: (+5 regressions from Day 8/9 PRs) |
+| Solve success | ≥ 73 | 74 | :white_check_mark: |
+| Match | ≥ 33 | 39 | :white_check_mark: |
+| Tests | All pass | 4,173 passed | :white_check_mark: |
+
+| Task | Status |
+|---|---|
+| Checkpoint 2 evaluation | :white_check_mark: CONDITIONAL GO |
+| mathopt1 Category D analysis | :white_check_mark: Not a bug — multi-KKT-point divergence (reclassify to Category B) |
+| Fix strategies documented | :white_check_mark: Category D analysis doc + 8 issues filed |
+
+**Pipeline Metrics (Day 10):**
+
+| Metric | Baseline | Day 7 | Day 10 | Delta (D10-D7) |
+|---|---|---|---|---|
+| Solve success | 65 | 78 | 74 | −4 |
+| Match | 30 | 36 | 39 | +3 |
+| path_syntax_error | 40 | 25 | 27 | +2 |
+| path_solve_terminated | 12 | 10 | 15 | +5 |
+| model_infeasible | 20 | 17 | 21 | +4 |
+| Tests | 3,957 | 4,145 | 4,173 | +28 |
+
+**Regressions (7 models, from Day 8/9 PRs #1076/#1083):**
+
+| Model | Previous | Current | Issue |
+|---|---|---|---|
+| catmix | model_optimal | model_infeasible | #1084 |
+| fdesign | model_optimal (match) | path_solve_terminated | #1085 |
+| harker | model_optimal | path_solve_terminated | #1086 |
+| hydro | model_optimal | model_infeasible | #1087 |
+| pindyck | model_optimal | model_infeasible | #1088 |
+| qabel | model_optimal | path_solve_terminated | #1089 |
+| port | match | mismatch (obj sign flip) | #1090 |
+
+**Improvements (6 new matches from Day 8/9 PRs):**
+
+| Model | Previous | Current |
+|---|---|---|
+| ibm1 | model_infeasible | match (obj=287.1) |
+| jobt | mismatch | match (obj=21343.1) |
+| mexss | N/A | match (obj=538.8) |
+| pdi | model_infeasible | match (obj=294070.0) |
+| uimp | model_infeasible | match (obj=1571.0) |
+| whouse | model_infeasible | match (obj=−600.0) |
+
+**Net:** +6 new matches, −2 lost matches (fdesign, port) = +4 net matches.
+
+**Category D Analysis (mathopt1):** The MCP transformation is mathematically correct. mathopt1 is a non-convex NLP with bilinear equality constraint `x1 = x1*x2`. Both (1,1) with obj=0 and (0,0) with obj=1 are valid KKT points. NLP finds local minimum (obj=1), MCP/PATH finds global minimum (obj≈0). This is the same multi-KKT-point pattern as Category B. See [CATEGORY_D_DIVERGENCE_ANALYSIS](./CATEGORY_D_DIVERGENCE_ANALYSIS.md).
+
+**Issues filed:** #1084–#1090 (regressions), #1091 (Category D reclassification)
+**PR:** #1092
 
 ---
 

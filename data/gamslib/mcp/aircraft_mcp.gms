@@ -72,12 +72,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-y.up(j,h) = deltb(j,h);
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -143,7 +137,7 @@ comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
 comp_lo_y(j,h).. y(j,h) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_y(j,h).. deltb(j,h) - y(j,h) =G= 0;
+comp_up_y(j,h)$(deltb(j,h) < inf).. deltb(j,h) - y(j,h) =G= 0;
 
 * Original equality equations
 bd(j,h).. b(j,h) =E= dd(j,h) - y(j,h);
@@ -151,6 +145,15 @@ ocd.. oc =E= sum((i,j), c(i,j) * x(i,j));
 bcd2.. bc =E= sum((j,h), k(j) * lambda(j,h) * b(j,h));
 obj.. phi =E= oc + bc;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+piU_y.fx(j,h)$(not (deltb(j,h) < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

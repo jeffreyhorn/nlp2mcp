@@ -83,8 +83,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * tw(i) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * xw(i,j) + ((-1) * xb(i,i)) * nu_cbal(i) =E= 0;
+stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
+stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,i))) * nu_cbal(i) =E= 0;
 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));

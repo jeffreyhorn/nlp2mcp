@@ -195,9 +195,9 @@ Equations
 stat_as(tt).. nu_adef(tt)$(tp(tt)) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + p(tt) ** b * nu_sup(tt) =E= 0;
 stat_d(tt).. ((((-1) * ((pd(tt) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_dem(tt) - nu_sup(tt) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
-stat_p(tt).. ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(sameas(tt, '1974')) - piL_p(tt) =E= 0;
+stat_p(tt).. ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) =E= 0;
-stat_x(tt)$(t(tt)).. nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(sameas(tt, '1974')) + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$(sameas(tt, '1974')) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt) =E= 0;
+stat_x(tt)$(t(tt)).. nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt)) + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$(t(tt)) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt) =E= 0;
 stat_z.. -1 + nu_zdef =E= 0;
 
 * Lower bound complementarity equations
@@ -207,7 +207,7 @@ comp_lo_x(tt).. x(tt) - 0 =G= 0;
 * Original equality equations
 dem(t).. d(t) =E= db(t) * p(t) ** ((-1) * a);
 sup(t).. x(t) =E= d(t) - as(t) * p(t) ** b;
-adef(tt)$((tp(tt)) and (ord(tt) > 1)).. as(tt) =E= as(tt-1) + con * d(tt-1) * (pd(tt-l) - ph);
+adef(tt)$(tp(tt)).. as(tt) =E= as(tt-1) + con * d(tt-1) * (pd(tt-l) - ph);
 pdef(tt).. pd(tt) =E= sum(n, alpha(n) * p(tt-(ord(n)-1)));
 kdef.. k =E= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
 zdef.. z =E= v * sum(t, 0.365 * (xb(t) - x(t)) * p(t+(card(t)-ord(t))));
@@ -224,7 +224,7 @@ x_fx_1974.. x("1974") - 29.4 =E= 0;
 
 x.fx(tt)$(not (t(tt))) = 0;
 piL_x.fx(tt)$(not (t(tt))) = 0;
-nu_adef.fx(tt)$(not (ord(tt) > 1)) = 0;
+nu_adef.fx(tt)$(not (tp(tt))) = 0;
 nu_dem.fx(tt)$(not (t(tt))) = 0;
 nu_sup.fx(tt)$(not (t(tt))) = 0;
 nu_x_fx_1965.fx = 0;
