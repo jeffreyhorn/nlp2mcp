@@ -1,4 +1,4 @@
-# Category A Divergence Analysis: Verified_Convex Mismatch Models
+# Category A Divergence Analysis: `verified_convex` Mismatch Models
 
 **Sprint 22 Day 9 — WS4 Solution Divergence Investigation**
 **Date:** 2026-03-14
@@ -8,10 +8,16 @@
 
 ## Executive Summary
 
-All 7 Category A (verified_convex mismatch) models were investigated. The key finding is that
+All 7 Category A (`verified_convex` mismatch) models were investigated. The key finding is that
 **only 1 of 7 has a KKT formulation bug** — and it was already fixed on Day 7. Of the remaining
 6: **5 have mismatches due to multi-solve / stochastic solver reference comparison issues**
 (not KKT derivation errors), and **1 has a pre-existing translation error** (mine).
+
+> **Note:** This analysis supersedes the Category A classification in
+> [MATCH_RATE_ANALYSIS.md](./MATCH_RATE_ANALYSIS.md), which labeled all `verified_convex`
+> mismatches as "definitive KKT bugs". Investigation revealed that most mismatches are due
+> to the pipeline's NLP reference extraction capturing a different solve iteration or
+> stochastic solver mode, not KKT derivation errors.
 
 | Model | Root Cause | Status | Action |
 |-------|-----------|--------|--------|

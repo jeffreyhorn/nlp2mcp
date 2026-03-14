@@ -292,7 +292,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | aircraft root cause analysis | :white_check_mark: Multi-solve with bound changes — incomparable reference |
 | sparta root cause analysis | :white_check_mark: Multi-solve + actual KKT bug (infeasible) |
 | mine root cause analysis | :white_check_mark: Translation error (SetMembershipTest) — not divergence-related |
-| Pattern identified | :white_check_mark: 5/7 are multi-solve/stochastic reference issues, 1 already fixed, 1 translation error |
+| Pattern identified | :white_check_mark: 4/7 incomparable (multi-solve/stochastic), 1 also has KKT bug (sparta), 1 already fixed (jobt), 1 translation error (mine) |
 
 **Key Finding:** Only 1 of 7 Category A models (jobt) had a genuine KKT formulation bug,
 and it was already fixed on Day 7 (skip_lead_lag_inference for original equality equations).
