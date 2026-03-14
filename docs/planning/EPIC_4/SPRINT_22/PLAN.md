@@ -323,6 +323,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 9 criterion:** Root cause identified for ≥ 1 Category A model; fix complexity estimated.
 
+**Day 9 status:** COMPLETE — All 7 Category A models analyzed. 1/7 (jobt) was a genuine KKT bug already fixed on Day 7. 5/7 are multi-solve/stochastic reference comparison issues (#1080). 1/7 (sparta) has actual KKT bug (#1081). 1/7 (mine) is a pre-existing translation error. See [CATEGORY_A_DIVERGENCE_ANALYSIS](./CATEGORY_A_DIVERGENCE_ANALYSIS.md).
+
 ---
 
 ### Day 10 — Checkpoint 2 + WS4: Solution Divergence (Part 2)
