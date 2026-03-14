@@ -1117,7 +1117,7 @@ def _merge_dotted_col_headers(
     tokens: list[Token],
     source_lines: list[str] | None = None,
     continuation_col_offsets: dict[int, int] | None = None,
-) -> list[tuple[str, int]]:
+) -> list[tuple[str, int, int]]:
     """Merge adjacent tokens separated by dots into compound column headers.
 
     When a table has dotted column headers like ``BRD.JPN``, Lark produces
@@ -1128,6 +1128,10 @@ def _merge_dotted_col_headers(
 
     Row labels already handle this via the ``dotted_label`` grammar node;
     this function provides equivalent behaviour for column headers.
+
+    Returns a list of ``(label, col_pos, source_width)`` tuples where
+    *source_width* is the original token span width in the source text
+    (including quotes if the header was auto-quoted by the preprocessor).
     """
     # Step 1: collect (name, adjusted_col_pos, source_length, line_number, original_col_pos)
     raw: list[tuple[str, int, int, int, int]] = []
@@ -1144,7 +1148,7 @@ def _merge_dotted_col_headers(
             raw.append((col_name, col_pos, len(str(token)), line_num, orig_col_pos))
 
     # Step 2: greedily merge adjacent entries separated by a dot character
-    merged: list[tuple[str, int]] = []
+    merged: list[tuple[str, int, int]] = []
     i = 0
     while i < len(raw):
         name, pos, rlen, line, orig_pos = raw[i]
@@ -1171,7 +1175,7 @@ def _merge_dotted_col_headers(
                 j += 1
             else:
                 break
-        merged.append((name, pos))
+        merged.append((name, pos, rlen))
         i = j
     return merged
 
@@ -2563,18 +2567,18 @@ class _ModelBuilder:
                         # column owns the range between the midpoints of
                         # the gaps on either side.
                         best_col_label = None
-                        for cidx, (col_label, col_pos) in enumerate(sec_col_headers):
+                        for cidx, (col_label, col_pos, col_width) in enumerate(sec_col_headers):
                             if col_label in used_sec_columns:
                                 continue
                             if cidx > 0:
-                                prev_right = (sec_col_headers[cidx - 1][1] or 0) + len(
-                                    sec_col_headers[cidx - 1][0]
-                                )
+                                prev_right = (sec_col_headers[cidx - 1][1] or 0) + sec_col_headers[
+                                    cidx - 1
+                                ][2]
                                 range_start = (prev_right + (col_pos or 0)) / 2
                             else:
                                 range_start = (col_pos or 0) - _COL_LEFT_TOLERANCE
                             if cidx + 1 < len(sec_col_headers):
-                                this_right = (col_pos or 0) + len(col_label)
+                                this_right = (col_pos or 0) + col_width
                                 next_start = sec_col_headers[cidx + 1][1] or 0
                                 range_end = (this_right + next_start) / 2
                             else:
@@ -2586,7 +2590,7 @@ class _ModelBuilder:
                         if best_col_label is None and sec_col_headers:
                             best_distance = math.inf
                             best_col_idx: int | None = None
-                            for fidx, (col_label, col_pos) in enumerate(sec_col_headers):
+                            for fidx, (col_label, col_pos, _cw) in enumerate(sec_col_headers):
                                 if col_label in used_sec_columns:
                                     continue
                                 distance = abs((col_pos or 0) - val_col)
@@ -2632,7 +2636,7 @@ class _ModelBuilder:
         # split off the trailing '.1' as a table_value NUMBER token (the lexer tokenizes
         # '.1' as NUMBER 0.1).  Detect these: NUMBER tokens positioned left of the first
         # column header are label segments, not values.  Absorb them into the row label.
-        min_col_header_col = min(pos for _, pos in col_headers)
+        min_col_header_col = min(pos for _, pos, *_ in col_headers)
 
         # Issue #863: Remove false row labels created by Earley parser splitting a
         # single physical line into multiple table_row nodes (shared helper).
@@ -2737,18 +2741,18 @@ class _ModelBuilder:
                 # (e.g. numbers under wide headers) and position-shifted
                 # values (e.g. when preprocessor quoting changes positions).
                 best_match = None
-                for cidx, (col_name, col_pos) in enumerate(col_headers):
+                for cidx, (col_name, col_pos, col_width) in enumerate(col_headers):
                     if col_name in used_columns:
                         continue
                     # Left boundary
                     if cidx > 0:
-                        prev_right = col_headers[cidx - 1][1] + len(col_headers[cidx - 1][0])
+                        prev_right = col_headers[cidx - 1][1] + col_headers[cidx - 1][2]
                         range_start = (prev_right + col_pos) / 2
                     else:
                         range_start = col_pos - _COL_LEFT_TOLERANCE
                     # Right boundary
                     if cidx + 1 < len(col_headers):
-                        this_right = col_pos + len(col_name)
+                        this_right = col_pos + col_width
                         next_start = col_headers[cidx + 1][1]
                         range_end = (this_right + next_start) / 2
                     else:
@@ -2763,7 +2767,7 @@ class _ModelBuilder:
                 if best_match is None and col_headers:
                     best_distance = math.inf
                     best_col_idx: int | None = None
-                    for fidx, (col_name, col_pos) in enumerate(col_headers):
+                    for fidx, (col_name, col_pos, _cw) in enumerate(col_headers):
                         if col_name in used_columns:
                             continue
                         distance = abs((col_pos or 0) - token_col)
@@ -2812,7 +2816,7 @@ class _ModelBuilder:
                 row_header = _token_text(line_tokens[0])
                 all_row_headers.add(row_header)
 
-        col_names = [name for name, _ in col_headers]
+        col_names = [name for name, *_ in col_headers]
         for row_header in all_row_headers:
             for col_name in col_names:
                 key = (row_header, col_name)
