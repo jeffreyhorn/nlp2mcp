@@ -23,8 +23,10 @@ All 7 Category A (verified_convex mismatch) models were investigated. The key fi
 | sparta | Multi-solve: 4 formulations | Infeasible (separate bug) | File KKT issue |
 | mine | Translation error (SetMembershipTest) | Pre-existing bug | Not divergence-related |
 
-**Impact on match rate:** jobt should now match (+1). The 5 multi-solve models should be
-reclassified as "incomparable" rather than "mismatch". mine has a pre-existing translation bug.
+**Impact on match rate:** jobt should now match (+1). 4 models (senstran, apl1p, apl1pca,
+aircraft) should be reclassified as "incomparable" rather than "mismatch". sparta is also
+multi-solve but has a separate KKT infeasibility bug (#1081) that must be fixed independently.
+mine has a pre-existing translation bug.
 
 ---
 
