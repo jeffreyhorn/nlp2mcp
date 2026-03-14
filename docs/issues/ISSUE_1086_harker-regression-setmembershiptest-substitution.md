@@ -4,7 +4,7 @@
 **Status:** OPEN
 **Severity:** High — model_optimal regressed to path_solve_terminated
 **Date:** 2026-03-14
-**Affected Models:** harker
+**Affected Models:** harker (SEQ=85, "Spatial Competition")
 **Regressing PR:** #1083 (Sprint 22 Day 9)
 
 ---
@@ -27,7 +27,9 @@ After the change, `SetMembershipTest` indices get substituted to concrete values
 ```bash
 python -m src.cli data/gamslib/raw/harker.gms -o /tmp/harker_mcp.gms
 gams /tmp/harker_mcp.gms lo=2
-# PATH solver reports system failure / solve terminated
+# **** MCP pair nbal.nu_nbal has empty equation but associated variable is NOT fixed
+#      nu_nbal(four), nu_nbal(five), nu_nbal(six)
+# **** SOLVE from line 178 ABORTED, EXECERROR = 3
 ```
 
 ---
@@ -36,10 +38,12 @@ gams /tmp/harker_mcp.gms lo=2
 
 ### Model Structure
 
-harker has a transportation network with:
-- `Set n /one*five/` (5 nodes), `alias(n, np)`
-- `Set arc(n,np)` — sparse 2D set defining valid arcs between nodes
+harker has a transportation network with 6 nodes:
+- `Set n /one*six/` (6 nodes), `alias(n, np)`
+- `Set l(n) /one, two, three/` — supply/demand regions
+- `Set arc(n,np)` — sparse 2D set defining 14 valid transport arcs
 - Equations use conditions like `$arc(n,np)` to restrict to valid arcs
+- Two models: `hark` (competitive equilibrium) and `harkoli` (Cournot-Nash oligopoly)
 
 ### The Bug
 
@@ -62,28 +66,56 @@ This means the condition `arc(n,n)` only allows diagonal arcs (a node to itself)
 doesn't match any arc in the model. The stationarity equations become structurally wrong,
 and PATH cannot solve the system.
 
-### Additional Issue
+### Bug 2: `stat_t` condition `arc(n,n)` instead of `arc(n,np)`
 
-The `nbal` equation now appears in the MCP (previously absent), likely also related to the
-stationarity builder changes. This further distorts the system structure.
+The generated stationarity equation:
+```gams
+stat_t(n,np).. (...) * 1$(arc(n,n)) - piL_t(n,np) =E= 0;
+```
+
+`arc(n,n)` is always FALSE (no self-arcs), so the entire gradient term vanishes, forcing
+`piL_t = 0` and removing ALL nonlinear terms (`NON LINEAR N-Z = 0` in model statistics).
+
+### Bug 3: `nbal` equation missing `arc` set restriction in sums
+
+**Generated:**
+```gams
+nbal(n).. s(n)$(l(n)) + sum((np,n__), t(np,n__)) =E= d(n)$(l(n)) + sum((n__,np), t(n__,np));
+```
+
+**Original GAMS:**
+```gams
+nbal(n).. s(n)$l(n) + sum(arc(np,n), t(arc)) =e= d(n)$l(n) + sum(arc(n,np), t(arc));
+```
+
+The parser (`_extract_domain_indices` at line 581 of `parser.py`) discards the parent set
+name `arc` when extracting indices from `sum(arc(np,n), ...)`, creating
+`Sum(('np', 'n'), body, condition=None)` without the `arc` set restriction. This is a
+latent parser bug that was masked because `nbal` wasn't included in the MCP before.
+
+The `nbal` equation generates empty equations for non-region nodes (`four`, `five`, `six`)
+where the paired `nu_nbal` variables are not fixed, triggering `EXECERROR = 3`.
 
 ---
 
 ## Suggested Fix
 
-**Option A (Recommended):** In `_replace_indices_in_expr`, when a multi-index expression
-like `SetMembershipTest("arc", ("five", "five"))` is encountered, use positional domain
-information to distinguish which occurrence maps to which set alias. The `arc` set has
-domain `(n, np)`, so position 0 maps to `n` and position 1 maps to `np`.
+**Fix 1 (Critical — stat_t condition):** In `_replace_indices_in_expr` in
+`src/kkt/stationarity.py`, add position-aware handling for `SetMembershipTest` when the
+flat `element_to_set` mapping is ambiguous. Use the set's declared domain (`arc` has domain
+`(n, np)`) to correctly resolve position 0 → `n`, position 1 → `np`.
 
-**Option B:** Don't substitute `SetMembershipTest` indices in `_apply_index_substitution`
-when the substitution would collapse distinct alias indices to the same concrete value.
-Detect when multiple positions in the set's domain are aliases of the same underlying set
-and preserve the symbolic names.
+**Fix 2 (Parser — nbal sum domain):** In `_extract_domain_indices` in `src/ir/parser.py`,
+when processing `sum(arc(np,n), ...)`, preserve the parent set name and generate a
+`SetMembershipTest` condition: `Sum(('np',), body, condition=SetMembershipTest('arc', (...)))`.
+Recognize that when a sum index matches an equation domain variable (e.g., `n` in `nbal(n)`),
+it's a filter, not a new iteration variable.
 
-**Option C:** Revert `SetMembershipTest` handling in `_apply_index_substitution` to the
-pre-PR-#1083 behavior (don't substitute), and find an alternative way to handle the uimp
-case that motivated the change.
+**Fix 3 (nbal multiplier):** If `nu_nbal` instances for non-region nodes remain empty after
+Fix 2, add `.fx = 0` statements for `nu_nbal(n)$(not l(n))`.
+
+**Alternative:** Revert `SetMembershipTest` handling in `_apply_index_substitution` to
+pre-PR-#1083 behavior and find an alternative way to handle the uimp case.
 
 ---
 
@@ -93,3 +125,4 @@ case that motivated the change.
 |------|--------|
 | `src/ad/derivative_rules.py:2114-2121` | Fix SetMembershipTest index substitution |
 | `src/kkt/stationarity.py` | Use positional domain info in `_replace_indices_in_expr` |
+| `src/ir/parser.py:581` | Preserve parent set in `_extract_domain_indices` for sum domains |
