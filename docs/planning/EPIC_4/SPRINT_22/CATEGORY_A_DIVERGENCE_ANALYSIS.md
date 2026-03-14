@@ -8,10 +8,12 @@
 
 ## Executive Summary
 
-All 7 Category A (`verified_convex` mismatch) models were investigated. The key finding is that
-**only 1 of 7 has a KKT formulation bug** — and it was already fixed on Day 7. Of the remaining
-6: **5 have mismatches due to multi-solve / stochastic solver reference comparison issues**
-(not KKT derivation errors), and **1 has a pre-existing translation error** (mine).
+All 7 Category A (`verified_convex` mismatch) models were investigated. The breakdown:
+- **1/7 (jobt)**: Genuine KKT bug — already fixed on Day 7
+- **4/7 (senstran, apl1p, apl1pca, aircraft)**: Multi-solve / stochastic reference comparison
+  issues (not KKT derivation errors)
+- **1/7 (sparta)**: Multi-solve AND a separate KKT infeasibility bug (#1081)
+- **1/7 (mine)**: Pre-existing translation error
 
 > **Note:** This analysis supersedes the Category A classification in
 > [MATCH_RATE_ANALYSIS.md](./MATCH_RATE_ANALYSIS.md), which labeled all `verified_convex`
