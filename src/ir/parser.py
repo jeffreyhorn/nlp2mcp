@@ -4694,7 +4694,7 @@ class _ModelBuilder:
         if isinstance(target, Tree) and target.data in ("bound_indexed", "bound_scalar"):
             bound_kind = _token_text(target.children[1]).lower()
             var_name = _token_text(target.children[0])
-            if var_name in self.model.variables and bound_kind in ("lo", "up", "fx", "l"):
+            if var_name in self.model.variables and bound_kind in ("lo", "up", "fx"):
                 var = self.model.variables[var_name]
                 rhs_evaluated = self._expr_with_context(
                     rhs_expr, "conditional assignment", domain_context

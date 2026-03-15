@@ -964,6 +964,12 @@ def emit_gams_mcp(
     # piL/piU multipliers. Emitting both creates an over-constrained MCP.
     _vars_with_lo_comp = {k[0].lower() for k in kkt.complementarity_bounds_lo}
     _vars_with_up_comp = {k[0].lower() for k in kkt.complementarity_bounds_up}
+    # Issue #874: Build set/alias lookup for domain-aware index quoting.
+    # Used for both bound emission and .l initialization to ensure set/alias
+    # names are emitted bare while element labels stay quoted.
+    _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
+        a.lower() for a in kkt.model_ir.aliases
+    }
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -984,17 +990,19 @@ def emit_gams_mcp(
             if expr_map:
                 for indices, bound_expr in expr_map.items():
                     idx_str = ",".join(_index_to_gams_string(i) for i in indices)
-                    # Collect domain vars from all index types:
-                    # str → use directly, IndexOffset → use .base,
-                    # SubsetIndex → use .indices
+                    # Collect domain vars from all index types, filtering
+                    # against known sets/aliases so concrete element labels
+                    # stay quoted in expr_to_gams.
                     _dv: set[str] = set()
                     for i in indices:
                         if isinstance(i, str):
-                            _dv.add(i)
+                            if i.lower() in _sets_aliases_lower:
+                                _dv.add(i)
                         elif isinstance(i, IndexOffset):
-                            _dv.add(i.base)
+                            if i.base.lower() in _sets_aliases_lower:
+                                _dv.add(i.base)
                         elif isinstance(i, SubsetIndex):
-                            _dv.update(i.indices)
+                            _dv.update(si for si in i.indices if si.lower() in _sets_aliases_lower)
                     idx_domain_vars = frozenset(_dv)
                     # Issue #1087: Handle LhsConditionalAssign — emit condition on LHS
                     if isinstance(bound_expr, LhsConditionalAssign):
@@ -1055,12 +1063,6 @@ def emit_gams_mcp(
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
-    # Issue #874 / Subcategory E: Build set/alias lookup for domain-aware index quoting.
-    # When a .l or .lo index is a set/alias name (e.g., J in SAM("TRF",J)), it must be
-    # emitted as a bare identifier, not a quoted string literal.
-    _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
-        a.lower() for a in kkt.model_ir.aliases
-    }
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip unreferenced variables (not declared, so no init needed)
         if (

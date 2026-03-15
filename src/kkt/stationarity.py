@@ -828,7 +828,7 @@ def build_stationarity_equations(
         # that appear in the defining equation need its Jacobian contribution.
         skip_eq = (
             obj_info.defining_equation
-            if not kkt.model_ir.strategy1_applied and var_name == obj_info.objvar
+            if not kkt.model_ir.strategy1_applied and var_name.lower() == obj_info.objvar.lower()
             else None
         )
 
@@ -983,7 +983,7 @@ def _group_variables_by_name(
         var_name, var_indices = index_mapping.col_to_var[col_id]
 
         # Skip objective variable (if specified)
-        if objvar and var_name == objvar:
+        if objvar and var_name.lower() == objvar.lower():
             continue
 
         if var_name not in groups:
