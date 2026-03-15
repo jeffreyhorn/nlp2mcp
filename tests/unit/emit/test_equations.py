@@ -12,6 +12,7 @@ from src.emit.equations import (
     _collect_lead_lag_restrictions,
     emit_equation_def,
     emit_equation_definitions,
+    infer_lead_lag_condition,
 )
 from src.emit.expr_to_gams import collect_index_aliases, resolve_index_conflicts
 from src.ir.ast import Binary, Const, IndexOffset, LhsConditionalAssign, ParamRef, Prod, Sum, VarRef
@@ -804,6 +805,58 @@ class TestLeadLagDomainRestrictions:
         assert "eq(t).. x(t-1) =E= y(t);" == result
         assert aliases == {}
 
+    def test_head_domain_offset_restores_inference(self):
+        """Test that has_head_domain_offset=True restores lead/lag inference.
+
+        Issue #1084: Equations like ode1(nh(i+1)) have has_head_domain_offset=True,
+        so skip_lead_lag_inference should be False, and the emitter should add the
+        $(ord(i) <= card(i) - 1) guard.
+        """
+        eq_def = EquationDef(
+            name="ode",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("i", Const(1), circular=False),)),
+                Binary("+", VarRef("x", ("i",)), Const(1)),
+            ),
+            has_head_domain_offset=True,
+        )
+        # When has_head_domain_offset=True, emit should use skip_lead_lag_inference=False
+        result, aliases = emit_equation_def(
+            "ode", eq_def, skip_lead_lag_inference=not eq_def.has_head_domain_offset
+        )
+        assert "$(ord(i) <= card(i) - 1)" in result
+        assert aliases == {}
+
+    def test_no_head_domain_offset_skips_inference(self):
+        """Test that has_head_domain_offset=False skips lead/lag inference.
+
+        Equations like whouse sb(t) have has_head_domain_offset=False, so
+        skip_lead_lag_inference=True and no guard should be added even though
+        the body contains lag references.
+        """
+        eq_def = EquationDef(
+            name="sb",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("stock", ("t",)),
+                Binary(
+                    "+",
+                    VarRef("stock", (IndexOffset("t", Const(-1), circular=False),)),
+                    VarRef("buy", ("t",)),
+                ),
+            ),
+            has_head_domain_offset=False,
+        )
+        result, aliases = emit_equation_def(
+            "sb", eq_def, skip_lead_lag_inference=not eq_def.has_head_domain_offset
+        )
+        assert "$" not in result
+        assert "sb(t).. stock(t) =E= stock(t-1) + buy(t);" == result
+        assert aliases == {}
+
     def test_skip_lead_lag_inference_preserves_explicit_condition(self):
         """Test that skip_lead_lag_inference preserves explicit parsed conditions.
 
@@ -825,3 +878,54 @@ class TestLeadLagDomainRestrictions:
         assert "$(flag > 0)" in result
         assert "ord(t)" not in result
         assert aliases == {}
+
+
+@pytest.mark.unit
+class TestInferLeadLagCondition:
+    """Test the infer_lead_lag_condition helper function."""
+
+    def test_lead_offset(self):
+        """Lead offset x(i+1) produces ord(i) <= card(i) - 1."""
+        eq_def = EquationDef(
+            name="eq",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("i", Const(1), circular=False),)),
+                VarRef("y", ("i",)),
+            ),
+        )
+        assert infer_lead_lag_condition(eq_def) == "ord(i) <= card(i) - 1"
+
+    def test_lag_offset(self):
+        """Lag offset x(t-1) produces ord(t) > 1."""
+        eq_def = EquationDef(
+            name="eq",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef("x", (IndexOffset("t", Const(-1), circular=False),)),
+                VarRef("y", ("t",)),
+            ),
+        )
+        assert infer_lead_lag_condition(eq_def) == "ord(t) > 1"
+
+    def test_no_domain_returns_none(self):
+        """Scalar equation returns None."""
+        eq_def = EquationDef(
+            name="eq",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("x", ()), Const(0)),
+        )
+        assert infer_lead_lag_condition(eq_def) is None
+
+    def test_no_offsets_returns_none(self):
+        """Equation with domain but no lead/lag returns None."""
+        eq_def = EquationDef(
+            name="eq",
+            domain=("i",),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("x", ("i",)), Const(0)),
+        )
+        assert infer_lead_lag_condition(eq_def) is None

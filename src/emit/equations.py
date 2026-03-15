@@ -182,6 +182,24 @@ def _build_domain_condition(
         return " and ".join(f"({c})" for c in conditions)
 
 
+def infer_lead_lag_condition(eq_def: EquationDef) -> str | None:
+    """Infer a GAMS domain condition from lead/lag offsets in an equation's body.
+
+    Collects lead/lag offsets from both LHS and RHS, keeps the maximum offset
+    per index, and builds the combined condition string.
+
+    Returns None if the equation has no domain or no lead/lag offsets.
+    """
+    if not eq_def.domain:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+    lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+    lead_offsets = {k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)}
+    lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+    return _build_domain_condition(lead_offsets, lag_offsets)
+
+
 def _merge_alias_dicts(target: dict[str, list[str]], source: dict[str, list[str]]) -> None:
     """Merge alias mappings from *source* into *target*, avoiding duplicates."""
     for base, aliases in source.items():
