@@ -340,7 +340,7 @@ class TestDollarConditionBooleanIndicator:
         assert isinstance(other, Const)
         assert other.value == 1.0
 
-    def test_set_membership_condition_substituted_on_collapse(self):
+    def test_set_membership_condition_stays_symbolic_on_collapse(self):
         """SetMembershipTest condition stays symbolic when a sum collapses.
 
         sum(j$ri(j), x(j)) differentiated w.r.t. x(j1):

@@ -984,7 +984,18 @@ def emit_gams_mcp(
             if expr_map:
                 for indices, bound_expr in expr_map.items():
                     idx_str = ",".join(_index_to_gams_string(i) for i in indices)
-                    idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
+                    # Collect domain vars from all index types:
+                    # str → use directly, IndexOffset → use .base,
+                    # SubsetIndex → use .indices
+                    _dv: set[str] = set()
+                    for i in indices:
+                        if isinstance(i, str):
+                            _dv.add(i)
+                        elif isinstance(i, IndexOffset):
+                            _dv.add(i.base)
+                        elif isinstance(i, SubsetIndex):
+                            _dv.update(i.indices)
+                    idx_domain_vars = frozenset(_dv)
                     # Issue #1087: Handle LhsConditionalAssign — emit condition on LHS
                     if isinstance(bound_expr, LhsConditionalAssign):
                         lhs_cond = (
