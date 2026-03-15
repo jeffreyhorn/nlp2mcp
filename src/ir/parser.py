@@ -578,6 +578,35 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
     return tuple(identifiers)
 
 
+def _domain_list_has_offset(node: Tree) -> bool:
+    """Check if any domain element has a lead/lag offset (e.g., i+1, t-1).
+
+    Used to detect head-domain offsets like ``eq(set(i+1))`` that restrict
+    which equation instances are generated.
+    """
+    for domain_elem in node.children:
+        if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
+            continue
+        if len(domain_elem.children) == 2:
+            second_child = domain_elem.children[1]
+            if isinstance(second_child, Tree) and second_child.data in (
+                "linear_lead",
+                "linear_lag",
+            ):
+                return True
+            # Also check nested domains like nh(i+1)
+            if isinstance(second_child, Tree) and second_child.data == "index_list":
+                for child in second_child.children:
+                    if isinstance(child, Tree) and child.data == "index_simple":
+                        for sub in child.children:
+                            if isinstance(sub, Tree) and sub.data in (
+                                "linear_lead",
+                                "linear_lag",
+                            ):
+                                return True
+    return False
+
+
 def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     """Recursively extract base identifiers from index_list for domain tracking.
 
@@ -3320,7 +3349,9 @@ class _ModelBuilder:
 
     def _handle_eqn_def_domain(self, node: Tree) -> None:
         name = _token_text(node.children[0])
-        domain = _domain_list(node.children[1])  # Sprint 11 Day 1: Use _domain_list
+        domain_list_node = node.children[1]
+        domain = _domain_list(domain_list_node)  # Sprint 11 Day 1: Use _domain_list
+        head_has_offset = _domain_list_has_offset(domain_list_node)
         if name.lower() not in self._declared_equations:  # Issue #373: case-insensitive
             raise self._parse_error(
                 f"Equation '{name}' defined without declaration",
@@ -3333,7 +3364,6 @@ class _ModelBuilder:
         # e.g. Rcon1(r,"aland").. — mixed set/literal domain (Issue #868)
         # Quoted tokens are fixed element selectors, not set names.  Skip set-validation
         # for literal positions and use the equation's declared domain for those slots.
-        domain_list_node = node.children[1]
         raw_tokens = [
             c.children[0]
             for c in domain_list_node.children
@@ -3390,6 +3420,7 @@ class _ModelBuilder:
             lhs_rhs=(lhs, rhs),
             condition=condition_expr,
             source_location=source_location,
+            has_head_domain_offset=head_has_offset,
         )
         self.model.add_equation(equation)
 

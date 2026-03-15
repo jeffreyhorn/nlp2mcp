@@ -1597,6 +1597,38 @@ def emit_gams_mcp(
         cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
+    # 3a. Issue #1084: Fix equality multipliers for equations with head-domain
+    # offsets (e.g., ode1(nh(i+1))). These equations are restricted to fewer
+    # instances than the full domain, so the multiplier must be fixed to 0
+    # for excluded instances. The inferred lead/lag condition from the equation
+    # body reconstructs the restriction.
+    for eq_name in sorted(kkt.model_ir.equalities):
+        if eq_name not in kkt.model_ir.equations:
+            continue
+        eq_def = kkt.model_ir.equations[eq_name]
+        if not eq_def.domain or not eq_def.has_head_domain_offset:
+            continue
+        # Skip if already handled by section 3 (explicit condition)
+        if eq_def.condition is not None and isinstance(eq_def.condition, Expr):
+            continue
+        if any(d.lower() in dynamic_map for d in eq_def.domain):
+            continue
+        mult_name = create_eq_multiplier_name(eq_name)
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+        lead_offsets = {
+            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
+        }
+        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+        if inferred_cond is None:
+            continue
+        domain_str = ",".join(eq_def.domain)
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+
     # 3b. Issue #1041: Fix equality multipliers whose equation domain uses
     # dynamic subsets. When TSAMEQ(ii,jj) is over dynamic subset (ii,jj) but
     # nu_TSAMEQ is declared over parent domain (i,i), instances where i∉ii or

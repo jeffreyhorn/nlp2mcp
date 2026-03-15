@@ -466,7 +466,11 @@ def emit_equation_definitions(
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
-                eq_str, aliases = emit_equation_def(eq_name, eq_def, skip_lead_lag_inference=True)
+                eq_str, aliases = emit_equation_def(
+                    eq_name,
+                    eq_def,
+                    skip_lead_lag_inference=not eq_def.has_head_domain_offset,
+                )
                 lines.append(eq_str)
                 _merge_alias_dicts(all_aliases, aliases)
             elif eq_name in kkt.model_ir.normalized_bounds:

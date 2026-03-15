@@ -139,6 +139,9 @@ class EquationDef:
     lhs_rhs: tuple  # (lhs_expr, rhs_expr) kept as AST later
     condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering
     source_location: SourceLocation | None = None  # Source location of equation definition
+    has_head_domain_offset: bool = (
+        False  # True when equation head had lead/lag qualifier e.g. eq(set(i+1))
+    )
 
 
 @dataclass
