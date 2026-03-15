@@ -1,10 +1,11 @@
 # qabel: Regression — _partial_collapse_sum Builds symbolic_wrt in Wrong Order
 
 **GitHub Issue:** [#1089](https://github.com/jeffreyhorn/nlp2mcp/issues/1089)
-**Status:** PARTIALLY FIXED
+**Status:** PRIMARY FIXED / SECONDARY DEFERRED
 **Severity:** High — model_optimal regressed to path_solve_terminated
-**Progress:** Primary bug fixed: `symbolic_wrt` now built in `wrt_indices` position order via positional `wrt_to_symbolic` list with `used_match_positions` tracking. Model improved from path_solve_terminated to model_optimal, but objective mismatches (MCP=51133 vs NLP=46965, ~8.2%) due to secondary alias issue (x(np,k) != x(n,k) in `_diff_varref` — pre-existing).
+**Progress:** Primary bug (symbolic_wrt ordering) fixed in PR #1094. Model restored to model_optimal (MODEL STATUS 1). Objective mismatch (MCP=51133 vs NLP=46965, ~8.9%) is NOT caused by the secondary alias issue — it is a non-convex QCP local-optimum difference. The secondary alias issue (alias-aware `_diff_varref`) was attempted and reverted because it causes regressions in other models.
 **Date:** 2026-03-14
+**Last Updated:** 2026-03-15
 **Affected Models:** qabel
 
 ---
@@ -86,48 +87,95 @@ differentiate_expr(VarRef('x', ('n','k')), 'x', ('k','n'), config)  →  Const(0
 
 ---
 
-## Suggested Fix
+## Fix Applied (Primary Bug — PR #1094)
 
-Replace the `symbolic_wrt` construction at lines 1896-1903 of `derivative_rules.py`:
+The `symbolic_wrt` construction in `_partial_collapse_sum` was fixed to build in
+`wrt_indices` position order using a positional `wrt_to_symbolic` list with
+`used_match_positions` tracking. This was merged in PR #1094.
 
-**Current (wrong):**
-```python
-symbolic_wrt = tuple(
-    (IndexOffset(sum_idx, conc.offset, conc.circular) if isinstance(conc, IndexOffset) else sum_idx)
-    for sum_idx, conc in zip(matched_sum_indices, matched_concrete, strict=True)
-)
-```
-
-**Fixed:**
-```python
-# Build mapping: concrete_value -> symbolic_index
-concrete_to_symbolic = {}
-for sum_idx, conc in zip(matched_sum_indices, matched_concrete):
-    key = conc if not isinstance(conc, IndexOffset) else conc
-    concrete_to_symbolic[key] = sum_idx
-
-# Rebuild in wrt_indices position order
-symbolic_wrt = tuple(
-    (IndexOffset(concrete_to_symbolic[idx], idx.offset, idx.circular)
-     if isinstance(idx, IndexOffset)
-     else concrete_to_symbolic[idx])
-    for idx in wrt_indices
-    if idx in concrete_to_symbolic
-)
-```
-
-### Secondary Issue: Alias-Indexed Variable Differentiation
-
-Even with Bug 1 fixed, the term `x(np,k)` in the body (where `np` is alias of `n`) would
-differentiate to 0 w.r.t. `x(n,k)` because `('np','k') != ('n','k')`. The AD engine's
-`_diff_varref` performs exact tuple matching without alias resolution. The correct derivative
-should produce a Kronecker delta `sameas(np,n)`. This is a separate, pre-existing issue.
+**Result:** qabel restored to MODEL STATUS 1 (Optimal), SOLVER STATUS 1 (Normal).
 
 ---
 
-## Files to Modify
+## Objective Mismatch Investigation
 
-| File | Change |
-|------|--------|
-| `src/ad/derivative_rules.py:1896-1903` | Build `symbolic_wrt` in `wrt_indices` position order |
-| `src/ad/derivative_rules.py:259-277` | (Secondary) Add alias-aware matching in `_diff_varref` |
+After the primary fix, qabel shows:
+- NLP (CONOPT): obj = 46965.036
+- MCP (PATH):   obj = 51133.487
+- Mismatch: ~8.9%
+
+### Is this caused by the secondary alias issue?
+
+**No.** Investigation confirmed:
+
+1. The `stat_x` stationarity equation in the generated MCP already includes the correct
+   gradient terms. The `x(np,k)` term in the objective produces a `sameas(np,n)` guard
+   through the existing `_partial_collapse_sum` machinery (which handles the remaining
+   `np` index after collapsing `n` and `k`).
+
+2. The objective mismatch is due to the non-convex nature of the QCP. The KKT system
+   finds a different local optimum than CONOPT. Both are valid stationary points.
+
+3. The MCP result (51133.487) is identical whether or not alias-aware `_diff_varref`
+   is enabled — confirmed by testing on both `main` and the experimental branch.
+
+---
+
+## Attempted Fix: Alias-Aware `_diff_varref` (REVERTED)
+
+### Approach
+
+Added `_resolve_alias_root()` helper to follow alias chains to root set names, then
+modified `_diff_varref` to return `sameas(e_idx, w_idx)` Kronecker deltas when indices
+differ only by aliases of the same set.
+
+### Why It Was Reverted
+
+The alias-aware matching is **too aggressive** in summation contexts. When a model has:
+```gams
+Alias(i, j);
+sum((i,j), p(i) * b(i,j) * p(j))
+```
+
+Differentiating w.r.t. `p(i)`, the term `p(j)` should NOT produce `sameas(j,i)` because
+`j` is a **separate sum iteration variable** — it iterates independently over the same set.
+The alias-aware `_diff_varref` incorrectly treats `p(j)` as equivalent to `p(i)` (since
+both `i` and `j` alias the same root set), adding a spurious `sameas(j,i)` that restricts
+the gradient to the diagonal only.
+
+**Regression:** The `dispatch` model (GAMSlib SEQ=220) went from model_optimal to
+objective mismatch (NLP=7.9546, MCP=8.061) because the gradient of the quadratic
+`sum((i,j), p(i)*b(i,j)*p(j))` was incorrectly restricted by sameas guards.
+
+### What Must Be Done Before Reattempting
+
+A correct alias-aware differentiation would need to:
+
+1. **Track summation context**: `_diff_varref` would need to know which indices are
+   currently being iterated over by enclosing `sum()` expressions, so it can distinguish
+   "same iteration variable via alias" from "different iteration variable on same set."
+
+2. **Pass iteration context through the call chain**: The `differentiate_expr` recursive
+   calls would need to carry a set of "active iteration indices" (indices bound by enclosing
+   sums). When `_diff_varref` encounters an alias match, it should only produce `sameas()`
+   if the alias index is NOT in the active iteration set.
+
+3. **Handle nested sums**: The context tracking must handle arbitrarily nested sum
+   expressions where the same set appears at multiple levels.
+
+This is a significant refactor of the AD engine's calling convention and is deferred to
+a future sprint.
+
+---
+
+## Files Modified
+
+| File | Change | PR |
+|------|--------|----|
+| `src/ad/derivative_rules.py:~1896` | Build `symbolic_wrt` in `wrt_indices` position order | #1094 |
+
+## Files NOT Modified (Secondary Issue Deferred)
+
+| File | Change | Reason |
+|------|--------|--------|
+| `src/ad/derivative_rules.py:259-277` | Alias-aware matching in `_diff_varref` | Causes dispatch regression; needs summation-context tracking |
