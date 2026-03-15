@@ -822,9 +822,15 @@ def build_stationarity_equations(
 
         var_def = kkt.model_ir.variables[var_name]
 
-        # Determine which equation to skip in stationarity building
-        # Skip objdef equation UNLESS Strategy 1 was applied
-        skip_eq = obj_info.defining_equation if not kkt.model_ir.strategy1_applied else None
+        # Determine which equation to skip in stationarity building.
+        # Skip objdef equation ONLY for the objective variable itself,
+        # UNLESS Strategy 1 was applied. Issue #1088: Other variables
+        # that appear in the defining equation need its Jacobian contribution.
+        skip_eq = (
+            obj_info.defining_equation
+            if not kkt.model_ir.strategy1_applied and var_name.lower() == obj_info.objvar.lower()
+            else None
+        )
 
         if var_def.domain:
             # Issue #903/#1008/#1009: Always generate a single indexed stationarity
@@ -977,7 +983,7 @@ def _group_variables_by_name(
         var_name, var_indices = index_mapping.col_to_var[col_id]
 
         # Skip objective variable (if specified)
-        if objvar and var_name == objvar:
+        if objvar and var_name.lower() == objvar.lower():
             continue
 
         if var_name not in groups:
@@ -1397,10 +1403,35 @@ def _replace_indices_in_expr(
             # Issue #730: Handle set membership tests like im(i) or ri(r,i).
             # The indices are Expr nodes that may contain SymbolRef with concrete
             # element values needing replacement.
-            new_idx = tuple(
-                _replace_indices_in_expr(idx, domain, element_to_set, model_ir, equation_domain)
-                for idx in smt.indices
-            )
+            # Issue #1086: Use the set's declared domain for positional resolution
+            # to avoid ambiguity when an element belongs to multiple sets.
+            # E.g., arc(n,np) with domain (n,np): position 1 maps to np, not n.
+            smt_domain: tuple[str, ...] | None = None
+            if model_ir and smt.set_name in model_ir.sets:
+                smt_domain = model_ir.sets[smt.set_name].domain
+            new_idx_list: list[Expr] = []
+            for pos, idx in enumerate(smt.indices):
+                if (
+                    smt_domain
+                    and model_ir is not None
+                    and pos < len(smt_domain)
+                    and isinstance(idx, SymbolRef)
+                    and element_to_set
+                    and idx.name in element_to_set
+                    # Only use positional resolution for concrete element values,
+                    # not for indices that are already set/alias names
+                    and idx.name not in model_ir.sets
+                    and idx.name not in model_ir.aliases
+                ):
+                    # Use set's declared domain for this position
+                    new_idx_list.append(SymbolRef(smt_domain[pos]))
+                else:
+                    new_idx_list.append(
+                        _replace_indices_in_expr(
+                            idx, domain, element_to_set, model_ir, equation_domain
+                        )
+                    )
+            new_idx = tuple(new_idx_list)
             if new_idx != smt.indices:
                 return SetMembershipTest(smt.set_name, new_idx)
             return expr

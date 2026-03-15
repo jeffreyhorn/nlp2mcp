@@ -220,6 +220,29 @@ def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
         return str(idx)
 
 
+def _index_to_gams_string_quoted(
+    idx: str | IndexOffset | SubsetIndex,
+    sets_aliases_lower: frozenset[str] | set[str],
+) -> str:
+    """Convert an index to GAMS string, quoting concrete element labels.
+
+    Like _index_to_gams_string but quotes string indices that are NOT
+    known set/alias names.  This prevents GAMS from misinterpreting a
+    concrete element label (e.g., 'h-industry', 'a') as a domain variable
+    or producing invalid GAMS for hyphenated labels.
+
+    Args:
+        idx: Index object (str, IndexOffset, or SubsetIndex)
+        sets_aliases_lower: Lowercase set/alias names to leave bare
+    """
+    if isinstance(idx, str):
+        if idx.lower() in sets_aliases_lower:
+            return idx  # domain variable — leave bare
+        return _quote_uel(idx)  # concrete element — quote
+    # IndexOffset and SubsetIndex always use domain variable bases
+    return _index_to_gams_string(idx)
+
+
 def _collect_varref_names(expr: Expr) -> set[str]:
     """Collect variable names referenced as .l in an expression tree and indices."""
     names: set[str] = set()
@@ -964,6 +987,12 @@ def emit_gams_mcp(
     # piL/piU multipliers. Emitting both creates an over-constrained MCP.
     _vars_with_lo_comp = {k[0].lower() for k in kkt.complementarity_bounds_lo}
     _vars_with_up_comp = {k[0].lower() for k in kkt.complementarity_bounds_up}
+    # Issue #874: Build set/alias lookup for domain-aware index quoting.
+    # Used for both bound emission and .l initialization to ensure set/alias
+    # names are emitted bare while element labels stay quoted.
+    _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
+        a.lower() for a in kkt.model_ir.aliases
+    }
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -982,16 +1011,50 @@ def emit_gams_mcp(
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
             if expr_map:
+                # Variable domain names are always set/alias references — include
+                # them in the bare-names set so domain variables stay unquoted even
+                # when the model's set registry is incomplete (e.g., in unit tests).
+                _bare_names = _sets_aliases_lower | {d.lower() for d in (var_def.domain or ())}
                 for indices, bound_expr in expr_map.items():
-                    idx_str = ",".join(_index_to_gams_string(i) for i in indices)
-                    idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
-                    line = f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
+                    idx_str = ",".join(
+                        _index_to_gams_string_quoted(i, _bare_names) for i in indices
+                    )
+                    # Collect domain vars from all index types, filtering
+                    # against known sets/aliases so concrete element labels
+                    # stay quoted in expr_to_gams.
+                    _dv: set[str] = set()
+                    for i in indices:
+                        if isinstance(i, str):
+                            if i.lower() in _bare_names:
+                                _dv.add(i)
+                        elif isinstance(i, IndexOffset):
+                            if i.base.lower() in _bare_names:
+                                _dv.add(i.base)
+                        elif isinstance(i, SubsetIndex):
+                            _dv.update(si for si in i.indices if si.lower() in _bare_names)
+                    idx_domain_vars = frozenset(_dv)
+                    # Issue #1087: Handle LhsConditionalAssign — emit condition on LHS
+                    if isinstance(bound_expr, LhsConditionalAssign):
+                        lhs_cond = (
+                            "$("
+                            + expr_to_gams(bound_expr.condition, domain_vars=idx_domain_vars)
+                            + ")"
+                        )
+                        rhs_str = expr_to_gams(bound_expr.rhs, domain_vars=idx_domain_vars)
+                        line = f"{var_name}.{kind}({idx_str}){lhs_cond} = {rhs_str};"
+                    else:
+                        line = f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
                     if _collect_varref_names(bound_expr):
                         deferred_bound_lines.append(line)
                     else:
                         bound_lines.append(line)
             elif scalar_expr is not None:
-                line = f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};"
+                if isinstance(scalar_expr, LhsConditionalAssign):
+                    lhs_cond = "$(" + expr_to_gams(scalar_expr.condition) + ")"
+                    rhs_str = expr_to_gams(scalar_expr.rhs)
+                    line = f"{var_name}.{kind}{lhs_cond} = {rhs_str};"
+                else:
+                    line = f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};"
                 if _collect_varref_names(scalar_expr):
                     deferred_bound_lines.append(line)
                 else:
@@ -1029,12 +1092,6 @@ def emit_gams_mcp(
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
-    # Issue #874 / Subcategory E: Build set/alias lookup for domain-aware index quoting.
-    # When a .l or .lo index is a set/alias name (e.g., J in SAM("TRF",J)), it must be
-    # emitted as a bare identifier, not a quoted string literal.
-    _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
-        a.lower() for a in kkt.model_ir.aliases
-    }
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip unreferenced variables (not declared, so no init needed)
         if (

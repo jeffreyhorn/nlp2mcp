@@ -4779,6 +4779,73 @@ class TestSubsetIndexingAssignments:
         assert isinstance(expr, LhsConditionalAssign)
 
 
+class TestConditionalVariableBounds:
+    """Test conditional variable bound assignments store LhsConditionalAssign.
+
+    Issue #1087: v.fx(tt)$(ord(tt)=1) = 100e3 must store the condition with
+    the bound so it appears on the LHS in emission, not apply unconditionally.
+    """
+
+    def test_conditional_fx_indexed_stores_lhs_conditional(self):
+        """v.fx(i)$(cond) = rhs stores LhsConditionalAssign in fx_expr_map."""
+        from src.ir.ast import LhsConditionalAssign
+
+        text = dedent("""
+            Set t / 1974*1990 /;
+            Variable r(t);
+            r.fx(t)$(ord(t) eq 1) = 500;
+        """)
+        model = parser.parse_model_text(text)
+        var = model.variables["r"]
+        assert hasattr(var, "fx_expr_map") and var.fx_expr_map
+        # Should have exactly one entry with condition preserved
+        assert len(var.fx_expr_map) == 1
+        key = next(iter(var.fx_expr_map))
+        bound_expr = var.fx_expr_map[key]
+        assert isinstance(bound_expr, LhsConditionalAssign)
+        # The condition should be present (not None)
+        assert bound_expr.condition is not None
+
+    def test_conditional_lo_indexed_stores_lhs_conditional(self):
+        """v.lo(i)$(cond) = rhs stores LhsConditionalAssign in lo_expr_map."""
+        from src.ir.ast import LhsConditionalAssign
+
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter flag(i) / a 1, b 0, c 1 /;
+            Variable x(i);
+            x.lo(i)$flag(i) = 0;
+        """)
+        model = parser.parse_model_text(text)
+        var = model.variables["x"]
+        assert hasattr(var, "lo_expr_map") and var.lo_expr_map
+        key = next(iter(var.lo_expr_map))
+        bound_expr = var.lo_expr_map[key]
+        assert isinstance(bound_expr, LhsConditionalAssign)
+        assert bound_expr.condition is not None
+
+    def test_conditional_l_not_stored_as_lhs_conditional(self):
+        """v.l(i)$(cond) = rhs must NOT store LhsConditionalAssign in l_expr_map.
+
+        The .l init emitter doesn't support LhsConditionalAssign, so conditional
+        .l assignments should fall through to _handle_assign.
+        """
+        from src.ir.ast import LhsConditionalAssign
+
+        text = dedent("""
+            Set i / a, b, c /;
+            Parameter flag(i) / a 1, b 0, c 1 /;
+            Variable x(i);
+            x.l(i)$flag(i) = 10;
+        """)
+        model = parser.parse_model_text(text)
+        var = model.variables["x"]
+        # l_expr_map should either be empty or not contain LhsConditionalAssign
+        if hasattr(var, "l_expr_map") and var.l_expr_map:
+            for bound_expr in var.l_expr_map.values():
+                assert not isinstance(bound_expr, LhsConditionalAssign)
+
+
 class TestDomainOverAssignments:
     """Test domain-over parameter assignments (Issue #622).
 

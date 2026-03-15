@@ -298,8 +298,12 @@ class TestDollarConditionBooleanIndicator:
 
         The dollar condition mh(j) is a ParamRef.  When the sum collapses
         (concrete index j1 triggers collapse), the condition must become
-        ``1$(mh(j1))`` (a DollarConditional), NOT the raw ``mh(j1)`` value
+        ``1$(mh(j))`` (a DollarConditional), NOT the raw ``mh(j)`` value
         used as a coefficient.
+
+        Issue #1085: The condition stays symbolic (using sum index j, not
+        concrete j1) so that _replace_indices_in_expr can correctly map
+        it to the stationarity domain without ambiguity.
         """
         # sum(j$mh(j), x(j))  differentiated w.r.t. x(j1)
         expr = Sum(
@@ -309,7 +313,7 @@ class TestDollarConditionBooleanIndicator:
         )
         result = differentiate_expr(expr, "x", wrt_indices=("j1",))
 
-        # Sum collapses: result = 1 * 1$(mh(j1))
+        # Sum collapses: result = 1 * 1$(mh(j))
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -328,20 +332,21 @@ class TestDollarConditionBooleanIndicator:
         assert dc.value_expr.value == 1.0
         assert isinstance(dc.condition, ParamRef)
         assert dc.condition.name == "mh"
-        # Verify concrete index substitution: j → j1
-        assert dc.condition.indices == ("j1",)
+        # Issue #1085: Condition stays symbolic (j, not j1)
+        assert dc.condition.indices == ("j",)
 
         # Verify the other operand is Const(1.0) (the derivative of x(j) w.r.t. x(j1))
         other = result.left if isinstance(result.right, DollarConditional) else result.right
         assert isinstance(other, Const)
         assert other.value == 1.0
 
-    def test_set_membership_condition_substituted_on_collapse(self):
-        """SetMembershipTest condition indices are substituted when a sum collapses.
+    def test_set_membership_condition_stays_symbolic_on_collapse(self):
+        """SetMembershipTest condition stays symbolic when a sum collapses.
 
         sum(j$ri(j), x(j)) differentiated w.r.t. x(j1):
-        The SetMembershipTest ri(j) must become ri(j1) after collapse, wrapped
-        as 1$(ri(j1)).
+        The SetMembershipTest ri(j) stays as ri(j) after collapse, wrapped
+        as 1$(ri(j)).  Issue #1085: Keeping the condition symbolic avoids
+        ambiguity when concrete values belong to multiple sets.
         """
         # sum(j$ri(j), x(j))  differentiated w.r.t. x(j1)
         expr = Sum(
@@ -351,7 +356,7 @@ class TestDollarConditionBooleanIndicator:
         )
         result = differentiate_expr(expr, "x", wrt_indices=("j1",))
 
-        # Sum collapses: result = 1 * 1$(ri(j1))
+        # Sum collapses: result = 1 * 1$(ri(j))
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -369,7 +374,163 @@ class TestDollarConditionBooleanIndicator:
         assert dc.value_expr.value == 1.0
         assert isinstance(dc.condition, SetMembershipTest)
         assert dc.condition.set_name == "ri"
-        # Verify concrete index substitution: j → j1
+        # Issue #1085: Condition stays symbolic (j, not j1)
         assert len(dc.condition.indices) == 1
         assert isinstance(dc.condition.indices[0], SymbolRef)
-        assert dc.condition.indices[0].name == "j1"
+        assert dc.condition.indices[0].name == "j"
+
+
+@pytest.mark.unit
+class TestPartialIndexMatchDollarConditions:
+    """Ensure dollar conditions stay symbolic on partial-index-match collapse.
+
+    Issue #1085: When wrt_indices has MORE indices than the sum, the
+    partial-index-match path collapses the sum but must keep conditions
+    in symbolic form (using sum index names, not concrete values).
+    """
+
+    def test_paramref_condition_stays_symbolic_partial_match(self):
+        """sum(j$mh(j), x(i,j)) differentiated w.r.t. x(i1,j1).
+
+        Partial-index-match: wrt has 2 indices, sum has 1.
+        After collapse, condition mh(j) must stay symbolic (j, not j1).
+        """
+        # sum(j$mh(j), x(i1,j)) — the body uses concrete i1 + symbolic j
+        expr = Sum(
+            ("j",),
+            VarRef("x", ("i1", "j")),
+            condition=ParamRef("mh", ("j",)),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("i1", "j1"))
+
+        # Sum collapses via partial-index-match: j matches j1
+        # Result = 1 * 1$(mh(j))
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        if isinstance(result.right, DollarConditional):
+            dc = result.right
+        elif isinstance(result.left, DollarConditional):
+            dc = result.left
+        else:
+            pytest.fail(
+                f"Expected DollarConditional in result, got: "
+                f"left={type(result.left).__name__}, right={type(result.right).__name__}"
+            )
+
+        assert isinstance(dc.condition, ParamRef)
+        assert dc.condition.name == "mh"
+        # Issue #1085: Condition stays symbolic (j, not j1)
+        assert dc.condition.indices == ("j",)
+
+    def test_setmembership_condition_stays_symbolic_partial_match(self):
+        """sum(j$ri(j), x(i,j)) differentiated w.r.t. x(i1,j1).
+
+        Partial-index-match with SetMembershipTest condition.
+        """
+        expr = Sum(
+            ("j",),
+            VarRef("x", ("i1", "j")),
+            condition=SetMembershipTest("ri", (SymbolRef("j"),)),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("i1", "j1"))
+
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        if isinstance(result.right, DollarConditional):
+            dc = result.right
+        elif isinstance(result.left, DollarConditional):
+            dc = result.left
+        else:
+            pytest.fail(
+                f"Expected DollarConditional in result, got: "
+                f"left={type(result.left).__name__}, right={type(result.right).__name__}"
+            )
+
+        assert isinstance(dc.condition, SetMembershipTest)
+        assert dc.condition.set_name == "ri"
+        assert len(dc.condition.indices) == 1
+        assert isinstance(dc.condition.indices[0], SymbolRef)
+        assert dc.condition.indices[0].name == "j"
+
+
+@pytest.mark.unit
+class TestPartialCollapseDollarConditions:
+    """Ensure dollar conditions are preserved on partial-collapse.
+
+    Issue #1085: When wrt_indices has FEWER indices than the sum, the
+    _partial_collapse_sum path collapses matched dimensions and wraps
+    remaining dimensions in a new Sum, preserving conditions.
+    """
+
+    def test_paramref_condition_preserved_partial_collapse(self):
+        """sum((i,j)$mh(i,j), x(i)) differentiated w.r.t. x(i1).
+
+        Partial collapse: i matches i1, j remains as sum dimension.
+        Condition mh(i,j) must be preserved on the remaining Sum.
+        """
+        expr = Sum(
+            ("i", "j"),
+            VarRef("x", ("i",)),
+            condition=ParamRef("mh", ("i", "j")),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("i1",))
+
+        # Partial collapse: result should be Sum(("j",), body, condition=mh(i,j))
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("j",)
+        # The condition must be preserved on the remaining Sum
+        assert result.condition is not None
+        assert isinstance(result.condition, ParamRef)
+        assert result.condition.name == "mh"
+
+    def test_setmembership_condition_preserved_partial_collapse(self):
+        """sum((i,j)$ri(i,j), x(i)) differentiated w.r.t. x(i1).
+
+        Partial collapse with SetMembershipTest condition preserved on Sum.
+        """
+        expr = Sum(
+            ("i", "j"),
+            VarRef("x", ("i",)),
+            condition=SetMembershipTest("ri", (SymbolRef("i"), SymbolRef("j"))),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("i1",))
+
+        assert isinstance(result, Sum)
+        assert result.index_sets == ("j",)
+        assert result.condition is not None
+        assert isinstance(result.condition, SetMembershipTest)
+        assert result.condition.set_name == "ri"
+
+    def test_condition_becomes_indicator_when_fully_collapsed(self):
+        """sum((i,j)$mh(i,j), x(i,j)) differentiated w.r.t. x(i1,j1).
+
+        When all sum indices match (full collapse via _partial_collapse_sum),
+        the condition must become a 1$(cond) indicator with symbolic indices.
+        """
+        expr = Sum(
+            ("i", "j"),
+            VarRef("x", ("i", "j")),
+            condition=ParamRef("mh", ("i", "j")),
+        )
+        result = differentiate_expr(expr, "x", wrt_indices=("i1", "j1"))
+
+        # Full collapse: result = 1 * 1$(mh(i,j))
+        assert isinstance(result, Binary)
+        assert result.op == "*"
+
+        if isinstance(result.right, DollarConditional):
+            dc = result.right
+        elif isinstance(result.left, DollarConditional):
+            dc = result.left
+        else:
+            pytest.fail(
+                f"Expected DollarConditional in result, got: "
+                f"left={type(result.left).__name__}, right={type(result.right).__name__}"
+            )
+
+        assert isinstance(dc.condition, ParamRef)
+        assert dc.condition.name == "mh"
+        # Condition stays symbolic (i,j not i1,j1)
+        assert dc.condition.indices == ("i", "j")

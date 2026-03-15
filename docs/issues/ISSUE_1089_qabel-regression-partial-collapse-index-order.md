@@ -1,8 +1,9 @@
 # qabel: Regression — _partial_collapse_sum Builds symbolic_wrt in Wrong Order
 
 **GitHub Issue:** [#1089](https://github.com/jeffreyhorn/nlp2mcp/issues/1089)
-**Status:** OPEN
+**Status:** PARTIALLY FIXED
 **Severity:** High — model_optimal regressed to path_solve_terminated
+**Progress:** Primary bug fixed: `symbolic_wrt` now built in `wrt_indices` position order via positional `wrt_to_symbolic` list with `used_match_positions` tracking. Model improved from path_solve_terminated to model_optimal, but objective mismatches (MCP=51133 vs NLP=46965, ~8.2%) due to secondary alias issue (x(np,k) != x(n,k) in `_diff_varref` — pre-existing).
 **Date:** 2026-03-14
 **Affected Models:** qabel
 

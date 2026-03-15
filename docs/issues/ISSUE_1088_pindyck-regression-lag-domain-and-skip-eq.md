@@ -1,8 +1,9 @@
 # pindyck: Regression — Lag-Domain Lost + skip_eq Applied to All Variables
 
 **GitHub Issue:** [#1088](https://github.com/jeffreyhorn/nlp2mcp/issues/1088)
-**Status:** OPEN
+**Status:** PARTIALLY FIXED
 **Severity:** High — model_optimal regressed to model_infeasible
+**Progress:** Bug 1 (lag-domain) fixed by PR #1093. Bug 2 (skip_eq scope) fixed: scoped to objective variable only in `stationarity.py:827`. Bug 3 (loop-based init) remains — broader infrastructure issue. Model now solves to model_optimal but objective mismatches (MCP=7.3 vs NLP=1170.5) due to poor initial point from missing sequential loop initialization.
 **Date:** 2026-03-14
 **Affected Models:** pindyck
 **Regressing PRs:** #1076 (lag domain), stationarity.py (skip_eq scope)

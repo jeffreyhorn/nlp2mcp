@@ -1607,9 +1607,12 @@ def _diff_sum(
         # We multiply by the condition rather than using DollarConditional ($)
         # because GAMS treats $ as structural exclusion, which would prevent
         # multiplier variables from being recognized in the MCP model.
+        # Issue #1085: Keep condition in symbolic form (using sum index names)
+        # so that _replace_indices_in_expr can correctly map them to the
+        # stationarity domain.  Substituting concrete values causes ambiguity
+        # when the element belongs to multiple sets.
         if expr.condition is not None:
-            subst_cond = _substitute_sum_indices(expr.condition, expr.index_sets, wrt_indices)
-            result = Binary("*", result, _ensure_numeric_condition(subst_cond))
+            result = Binary("*", result, _ensure_numeric_condition(expr.condition))
         return result
 
     # Check for partial index match (nested sum case or mixed concrete/symbolic case)
@@ -1641,12 +1644,9 @@ def _diff_sum(
                 body_derivative, matched_indices, matched_concrete
             )
             # Issue #720: Preserve dollar condition when sum collapses via partial match.
-            # Multiply by condition rather than using DollarConditional (see above).
+            # Issue #1085: Keep condition symbolic (see direct collapse path above).
             if expr.condition is not None:
-                subst_cond = _substitute_sum_indices(
-                    expr.condition, matched_indices, matched_concrete
-                )
-                result_body = Binary("*", result_body, _ensure_numeric_condition(subst_cond))
+                result_body = Binary("*", result_body, _ensure_numeric_condition(expr.condition))
             return result_body
 
     # Check for partial collapse (sum has more indices than wrt_indices)
@@ -1893,14 +1893,28 @@ def _partial_collapse_sum(
     # This allows x(i) to match when we use ('i',) as wrt_indices
     # For IndexOffset wrt_indices, build symbolic indices that mirror the structure:
     # e.g., wrt=(IndexOffset("t1",1),), sum_idx="t" → symbolic=(IndexOffset("t",1),)
-    symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(
-        (
-            IndexOffset(sum_idx, conc.offset, conc.circular)
-            if isinstance(conc, IndexOffset)
-            else sum_idx
-        )
-        for sum_idx, conc in zip(matched_sum_indices, matched_concrete, strict=True)
-    )
+    # Build positional mapping: for each wrt_indices position, find
+    # which matched_concrete entry corresponds to it, then use the
+    # paired matched_sum_indices entry as the symbolic name.
+    # A positional approach (rather than a dict) handles duplicate
+    # concrete values correctly (e.g., x(a,a) where both map to 'a').
+    wrt_to_symbolic: list[str | IndexOffset] = []
+    used_match_positions: set[int] = set()
+    for idx in wrt_indices:
+        for mi, (conc, sum_idx) in enumerate(
+            zip(matched_concrete, matched_sum_indices, strict=True)
+        ):
+            if mi in used_match_positions:
+                continue
+            if conc == idx:
+                if isinstance(idx, IndexOffset):
+                    wrt_to_symbolic.append(IndexOffset(sum_idx, idx.offset, idx.circular))
+                else:
+                    wrt_to_symbolic.append(sum_idx)
+                used_match_positions.add(mi)
+                break
+
+    symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
     body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
 
     # Substitute matched sum indices with their concrete values
@@ -1914,11 +1928,13 @@ def _partial_collapse_sum(
     else:
         # Issue #720: Preserve dollar condition when sum fully collapses.
         # Multiply by condition rather than using DollarConditional.
+        # Issue #1085: Keep the condition in symbolic form (using sum index
+        # names, not concrete values) so that _replace_indices_in_expr can
+        # correctly map them to the stationarity domain.  Substituting
+        # concrete values (e.g., ord('0')) causes ambiguity when the element
+        # belongs to multiple sets.
         if expr.condition is not None:
-            subst_cond = _substitute_sum_indices(
-                expr.condition, tuple(matched_sum_indices), tuple(matched_concrete)
-            )
-            result_body = Binary("*", result_body, _ensure_numeric_condition(subst_cond))
+            result_body = Binary("*", result_body, _ensure_numeric_condition(expr.condition))
         return result_body
 
 
