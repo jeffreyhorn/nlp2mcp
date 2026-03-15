@@ -585,29 +585,20 @@ def _domain_list_has_offset(node: Tree) -> bool:
     (``++`` / ``--``) offsets.  Circular offsets wrap around the set and do
     not restrict which equation instances are generated.
 
+    Recursively walks the entire subtree of each domain element so that
+    deeply nested qualifiers like ``eq(nh(j(i+1)))`` are also detected.
+
     Used to detect head-domain qualifiers like ``eq(set(i+1))`` that restrict
     which equation instances are generated.
     """
+    _OFFSET_NAMES = frozenset({"linear_lead", "linear_lag"})
     for domain_elem in node.children:
         if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
             continue
-        if len(domain_elem.children) == 2:
-            second_child = domain_elem.children[1]
-            if isinstance(second_child, Tree) and second_child.data in (
-                "linear_lead",
-                "linear_lag",
-            ):
+        # Walk all descendants of this domain element
+        for descendant in domain_elem.iter_subtrees():
+            if descendant.data in _OFFSET_NAMES:
                 return True
-            # Also check nested domains like nh(i+1)
-            if isinstance(second_child, Tree) and second_child.data == "index_list":
-                for child in second_child.children:
-                    if isinstance(child, Tree) and child.data == "index_simple":
-                        for sub in child.children:
-                            if isinstance(sub, Tree) and sub.data in (
-                                "linear_lead",
-                                "linear_lag",
-                            ):
-                                return True
     return False
 
 
