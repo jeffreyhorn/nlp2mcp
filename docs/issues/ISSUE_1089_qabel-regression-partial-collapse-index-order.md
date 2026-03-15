@@ -109,9 +109,11 @@ After the primary fix, qabel shows:
 **No.** Investigation confirmed:
 
 1. The `stat_x` stationarity equation in the generated MCP already includes the correct
-   gradient terms. The `x(np,k)` term in the objective produces a `sameas(np,n)` guard
-   through the existing `_partial_collapse_sum` machinery (which handles the remaining
-   `np` index after collapsing `n` and `k`).
+   gradient terms. After `_partial_collapse_sum` collapses `n` and `k`, the residual `np`
+   index remains free in the gradient. The stationarity builder's uncontrolled-index handler
+   (`_find_superset_in_domain` at `stationarity.py:1037-1043`) detects that `np` is an alias
+   of domain index `n` and wraps the term in `sum(np$(sameas(np,n)), ...)`, producing the
+   correct Kronecker delta guard.
 
 2. The objective mismatch is due to the non-convex nature of the QCP. The KKT system
    finds a different local optimum than CONOPT. Both are valid stationary points.
