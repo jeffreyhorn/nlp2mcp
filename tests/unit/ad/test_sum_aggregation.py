@@ -298,8 +298,12 @@ class TestDollarConditionBooleanIndicator:
 
         The dollar condition mh(j) is a ParamRef.  When the sum collapses
         (concrete index j1 triggers collapse), the condition must become
-        ``1$(mh(j1))`` (a DollarConditional), NOT the raw ``mh(j1)`` value
+        ``1$(mh(j))`` (a DollarConditional), NOT the raw ``mh(j)`` value
         used as a coefficient.
+
+        Issue #1085: The condition stays symbolic (using sum index j, not
+        concrete j1) so that _replace_indices_in_expr can correctly map
+        it to the stationarity domain without ambiguity.
         """
         # sum(j$mh(j), x(j))  differentiated w.r.t. x(j1)
         expr = Sum(
@@ -309,7 +313,7 @@ class TestDollarConditionBooleanIndicator:
         )
         result = differentiate_expr(expr, "x", wrt_indices=("j1",))
 
-        # Sum collapses: result = 1 * 1$(mh(j1))
+        # Sum collapses: result = 1 * 1$(mh(j))
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -328,8 +332,8 @@ class TestDollarConditionBooleanIndicator:
         assert dc.value_expr.value == 1.0
         assert isinstance(dc.condition, ParamRef)
         assert dc.condition.name == "mh"
-        # Verify concrete index substitution: j → j1
-        assert dc.condition.indices == ("j1",)
+        # Issue #1085: Condition stays symbolic (j, not j1)
+        assert dc.condition.indices == ("j",)
 
         # Verify the other operand is Const(1.0) (the derivative of x(j) w.r.t. x(j1))
         other = result.left if isinstance(result.right, DollarConditional) else result.right
@@ -337,11 +341,12 @@ class TestDollarConditionBooleanIndicator:
         assert other.value == 1.0
 
     def test_set_membership_condition_substituted_on_collapse(self):
-        """SetMembershipTest condition indices are substituted when a sum collapses.
+        """SetMembershipTest condition stays symbolic when a sum collapses.
 
         sum(j$ri(j), x(j)) differentiated w.r.t. x(j1):
-        The SetMembershipTest ri(j) must become ri(j1) after collapse, wrapped
-        as 1$(ri(j1)).
+        The SetMembershipTest ri(j) stays as ri(j) after collapse, wrapped
+        as 1$(ri(j)).  Issue #1085: Keeping the condition symbolic avoids
+        ambiguity when concrete values belong to multiple sets.
         """
         # sum(j$ri(j), x(j))  differentiated w.r.t. x(j1)
         expr = Sum(
@@ -351,7 +356,7 @@ class TestDollarConditionBooleanIndicator:
         )
         result = differentiate_expr(expr, "x", wrt_indices=("j1",))
 
-        # Sum collapses: result = 1 * 1$(ri(j1))
+        # Sum collapses: result = 1 * 1$(ri(j))
         assert isinstance(result, Binary)
         assert result.op == "*"
 
@@ -369,7 +374,7 @@ class TestDollarConditionBooleanIndicator:
         assert dc.value_expr.value == 1.0
         assert isinstance(dc.condition, SetMembershipTest)
         assert dc.condition.set_name == "ri"
-        # Verify concrete index substitution: j → j1
+        # Issue #1085: Condition stays symbolic (j, not j1)
         assert len(dc.condition.indices) == 1
         assert isinstance(dc.condition.indices[0], SymbolRef)
-        assert dc.condition.indices[0].name == "j1"
+        assert dc.condition.indices[0].name == "j"

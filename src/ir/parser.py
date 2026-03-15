@@ -2607,7 +2607,7 @@ class _ModelBuilder:
                                 range_end = (this_right + next_start) / 2
                             else:
                                 range_end = float("inf")
-                            if range_start <= val_col < range_end:
+                            if range_start <= val_col <= range_end:
                                 best_col_label = col_label
                                 break
                         # Fallback: closest unused column by distance
@@ -2781,7 +2781,7 @@ class _ModelBuilder:
                         range_end = (this_right + next_start) / 2
                     else:
                         range_end = float("inf")
-                    if range_start <= token_col < range_end:
+                    if range_start <= token_col <= range_end:
                         best_match = col_name
                         break
 
@@ -4687,6 +4687,27 @@ class _ModelBuilder:
                     cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
                     param.expressions.append((tuple(domain_context), cond_expr))
                     return
+
+        # Issue #1087: For conditional bound assignments (e.g., v.fx(tt)$(ord(tt)=1) = 100e3),
+        # store the condition with the bound so it appears on the LHS in emission.
+        # Without this, the condition is stripped and the bound applies to ALL elements.
+        if isinstance(target, Tree) and target.data in ("bound_indexed", "bound_scalar"):
+            bound_kind = _token_text(target.children[1]).lower()
+            var_name = _token_text(target.children[0])
+            if var_name in self.model.variables and bound_kind in ("lo", "up", "fx", "l"):
+                var = self.model.variables[var_name]
+                rhs_evaluated = self._expr_with_context(
+                    rhs_expr, "conditional assignment", domain_context
+                )
+                cond_expr = LhsConditionalAssign(rhs=rhs_evaluated, condition=condition)
+                expr_map_attr = f"{bound_kind}_expr_map"
+                if target.data == "bound_indexed" and len(target.children) > 2:
+                    indices = _process_index_list(target.children[2])
+                    idx_tuple = tuple(indices)
+                    getattr(var, expr_map_attr)[idx_tuple] = cond_expr
+                else:
+                    setattr(var, f"{bound_kind}_expr", cond_expr)
+                return
 
         # Also process the assignment itself so variables/parameters are updated
         self._handle_assign(assign_node)

@@ -1,8 +1,9 @@
 # hydro: Regression — Conditional .fx Expansion + Lag-Domain Equation
 
 **GitHub Issue:** [#1087](https://github.com/jeffreyhorn/nlp2mcp/issues/1087)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — model_optimal regressed to model_infeasible
+**Fix:** Bug 1: Added `bound_indexed`/`bound_scalar` handler in `_handle_conditional_assign_general` that stores conditional bounds as `LhsConditionalAssign` in `*_expr_map`, plus emitter support in `emit_gams.py` to emit conditions on LHS. Bug 2: Already fixed by PR #1093 (`has_head_domain_offset` flag). Now hydro translates, solves to optimal, and matches.
 **Date:** 2026-03-14
 **Affected Models:** hydro
 **Regressing PRs:** #1076 (lag domain), parser (conditional .fx)

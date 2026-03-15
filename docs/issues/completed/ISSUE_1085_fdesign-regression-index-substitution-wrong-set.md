@@ -1,8 +1,9 @@
 # fdesign: Regression — Index Substitution Maps to Wrong Set
 
 **GitHub Issue:** [#1085](https://github.com/jeffreyhorn/nlp2mcp/issues/1085)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — model_optimal/match regressed to path_solve_terminated
+**Fix:** Keep sum dollar conditions symbolic (using sum index names, not substituted concrete values) in all three collapse paths of `derivative_rules.py` (`_diff_sum` direct, partial index match, and `_partial_collapse_sum`). This avoids ambiguity when `_replace_indices_in_expr` maps elements back to set names. Now fdesign translates, solves to optimal, and matches.
 **Date:** 2026-03-14
 **Affected Models:** fdesign
 **Regressing PR:** #1083 (Sprint 22 Day 9)

@@ -985,13 +985,28 @@ def emit_gams_mcp(
                 for indices, bound_expr in expr_map.items():
                     idx_str = ",".join(_index_to_gams_string(i) for i in indices)
                     idx_domain_vars = frozenset(i for i in indices if isinstance(i, str))
-                    line = f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
+                    # Issue #1087: Handle LhsConditionalAssign — emit condition on LHS
+                    if isinstance(bound_expr, LhsConditionalAssign):
+                        lhs_cond = (
+                            "$("
+                            + expr_to_gams(bound_expr.condition, domain_vars=idx_domain_vars)
+                            + ")"
+                        )
+                        rhs_str = expr_to_gams(bound_expr.rhs, domain_vars=idx_domain_vars)
+                        line = f"{var_name}.{kind}({idx_str}){lhs_cond} = {rhs_str};"
+                    else:
+                        line = f"{var_name}.{kind}({idx_str}) = {expr_to_gams(bound_expr, domain_vars=idx_domain_vars)};"
                     if _collect_varref_names(bound_expr):
                         deferred_bound_lines.append(line)
                     else:
                         bound_lines.append(line)
             elif scalar_expr is not None:
-                line = f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};"
+                if isinstance(scalar_expr, LhsConditionalAssign):
+                    lhs_cond = "$(" + expr_to_gams(scalar_expr.condition) + ")"
+                    rhs_str = expr_to_gams(scalar_expr.rhs)
+                    line = f"{var_name}.{kind}{lhs_cond} = {rhs_str};"
+                else:
+                    line = f"{var_name}.{kind} = {expr_to_gams(scalar_expr)};"
                 if _collect_varref_names(scalar_expr):
                     deferred_bound_lines.append(line)
                 else:

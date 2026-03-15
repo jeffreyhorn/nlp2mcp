@@ -1,8 +1,9 @@
 # port: Regression — Table Gap-Midpoint Boundary Off-by-One
 
 **GitHub Issue:** [#1090](https://github.com/jeffreyhorn/nlp2mcp/issues/1090)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** Medium — match regressed to mismatch (obj sign flip: +0.298 → -0.261)
+**Fix:** Changed `token_col < range_end` to `token_col <= range_end` in both table parsing paths (section-based and non-section). Now port translates, solves to optimal, and matches.
 **Date:** 2026-03-14
 **Affected Models:** port
 **Regressing PR:** #1079 (Sprint 22 Day 8)

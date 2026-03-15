@@ -1,8 +1,9 @@
 # harker: Regression — SetMembershipTest Substitution Exposes Index Mapping Bug
 
 **GitHub Issue:** [#1086](https://github.com/jeffreyhorn/nlp2mcp/issues/1086)
-**Status:** OPEN
+**Status:** PARTIALLY FIXED
 **Severity:** High — model_optimal regressed to path_solve_terminated
+**Progress:** Bug 2 (stat_t arc(n,n) → arc(n,np)) fixed via two changes: (1) sum conditions kept symbolic in `derivative_rules.py`, (2) positional domain resolution for `SetMembershipTest` in `_replace_indices_in_expr`. Bug 3 (nbal parser) remains: `_extract_domain_indices` drops parent set name from `sum(arc(np,n), ...)`, producing `Sum(('np','n'), body)` without `arc` restriction. Model still path_solve_terminated due to nbal empty equations.
 **Date:** 2026-03-14
 **Affected Models:** harker (SEQ=85, "Spatial Competition")
 **Regressing PR:** #1083 (Sprint 22 Day 9)
