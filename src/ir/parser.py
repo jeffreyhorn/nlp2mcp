@@ -579,9 +579,13 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
 
 
 def _domain_list_has_offset(node: Tree) -> bool:
-    """Check if any domain element has a lead/lag offset (e.g., i+1, t-1).
+    """Check if any domain element has a *linear* lead/lag offset (e.g., i+1, t-1).
 
-    Used to detect head-domain offsets like ``eq(set(i+1))`` that restrict
+    Only detects ``linear_lead`` / ``linear_lag`` suffixes, NOT circular
+    (``++`` / ``--``) offsets.  Circular offsets wrap around the set and do
+    not restrict which equation instances are generated.
+
+    Used to detect head-domain qualifiers like ``eq(set(i+1))`` that restrict
     which equation instances are generated.
     """
     for domain_elem in node.children:

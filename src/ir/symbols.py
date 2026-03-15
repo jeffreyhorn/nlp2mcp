@@ -140,7 +140,8 @@ class EquationDef:
     condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering
     source_location: SourceLocation | None = None  # Source location of equation definition
     has_head_domain_offset: bool = (
-        False  # True when equation head had lead/lag qualifier e.g. eq(set(i+1))
+        False  # True when equation head had linear lead/lag qualifier e.g. eq(set(i+1))
+        # Circular offsets (++/--) do not restrict domain generation and are excluded.
     )
 
 

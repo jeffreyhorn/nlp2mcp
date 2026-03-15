@@ -264,22 +264,7 @@ def emit_equation_def(
     # the equation instance.
     inferred_condition: str | None = None
     if not skip_lead_lag_inference:
-        lead_offsets: dict[str, int] = {}
-        lag_offsets: dict[str, int] = {}
-        if domain:
-            lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
-            rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
-            # Merge dicts, keeping max offset for each index
-            for idx, offset in lhs_lead.items():
-                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-            for idx, offset in rhs_lead.items():
-                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-            for idx, offset in lhs_lag.items():
-                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
-            for idx, offset in rhs_lag.items():
-                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
-
-        inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
+        inferred_condition = infer_lead_lag_condition(eq_def)
 
     # Combine any parsed equation condition with inferred lead/lag domain bounds
     # Preserve the original parsed $-condition and AND it with the inferred bounds
