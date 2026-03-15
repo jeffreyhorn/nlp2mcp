@@ -220,6 +220,29 @@ def _index_to_gams_string(idx: str | IndexOffset | SubsetIndex) -> str:
         return str(idx)
 
 
+def _index_to_gams_string_quoted(
+    idx: str | IndexOffset | SubsetIndex,
+    sets_aliases_lower: frozenset[str] | set[str],
+) -> str:
+    """Convert an index to GAMS string, quoting concrete element labels.
+
+    Like _index_to_gams_string but quotes string indices that are NOT
+    known set/alias names.  This prevents GAMS from misinterpreting a
+    concrete element label (e.g., 'h-industry', 'a') as a domain variable
+    or producing invalid GAMS for hyphenated labels.
+
+    Args:
+        idx: Index object (str, IndexOffset, or SubsetIndex)
+        sets_aliases_lower: Lowercase set/alias names to leave bare
+    """
+    if isinstance(idx, str):
+        if idx.lower() in sets_aliases_lower:
+            return idx  # domain variable — leave bare
+        return _quote_uel(idx)  # concrete element — quote
+    # IndexOffset and SubsetIndex always use domain variable bases
+    return _index_to_gams_string(idx)
+
+
 def _collect_varref_names(expr: Expr) -> set[str]:
     """Collect variable names referenced as .l in an expression tree and indices."""
     names: set[str] = set()
@@ -988,21 +1011,27 @@ def emit_gams_mcp(
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
             if expr_map:
+                # Variable domain names are always set/alias references — include
+                # them in the bare-names set so domain variables stay unquoted even
+                # when the model's set registry is incomplete (e.g., in unit tests).
+                _bare_names = _sets_aliases_lower | {d.lower() for d in (var_def.domain or ())}
                 for indices, bound_expr in expr_map.items():
-                    idx_str = ",".join(_index_to_gams_string(i) for i in indices)
+                    idx_str = ",".join(
+                        _index_to_gams_string_quoted(i, _bare_names) for i in indices
+                    )
                     # Collect domain vars from all index types, filtering
                     # against known sets/aliases so concrete element labels
                     # stay quoted in expr_to_gams.
                     _dv: set[str] = set()
                     for i in indices:
                         if isinstance(i, str):
-                            if i.lower() in _sets_aliases_lower:
+                            if i.lower() in _bare_names:
                                 _dv.add(i)
                         elif isinstance(i, IndexOffset):
-                            if i.base.lower() in _sets_aliases_lower:
+                            if i.base.lower() in _bare_names:
                                 _dv.add(i.base)
                         elif isinstance(i, SubsetIndex):
-                            _dv.update(si for si in i.indices if si.lower() in _sets_aliases_lower)
+                            _dv.update(si for si in i.indices if si.lower() in _bare_names)
                     idx_domain_vars = frozenset(_dv)
                     # Issue #1087: Handle LhsConditionalAssign — emit condition on LHS
                     if isinstance(bound_expr, LhsConditionalAssign):
