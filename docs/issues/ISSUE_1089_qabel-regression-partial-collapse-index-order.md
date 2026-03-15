@@ -1,7 +1,7 @@
 # qabel: Regression — _partial_collapse_sum Builds symbolic_wrt in Wrong Order
 
 **GitHub Issue:** [#1089](https://github.com/jeffreyhorn/nlp2mcp/issues/1089)
-**Status:** PRIMARY FIXED / SECONDARY DEFERRED
+**Status:** PARTIALLY FIXED
 **Severity:** High — model_optimal regressed to path_solve_terminated
 **Progress:** Primary bug (symbolic_wrt ordering) fixed in PR #1094. Model restored to model_optimal (MODEL STATUS 1). Objective mismatch (MCP=51133 vs NLP=46965, ~8.9%) is NOT caused by the secondary alias issue — it is a non-convex QCP local-optimum difference. The secondary alias issue (alias-aware `_diff_varref`) was attempted and reverted because it causes regressions in other models.
 **Date:** 2026-03-14
