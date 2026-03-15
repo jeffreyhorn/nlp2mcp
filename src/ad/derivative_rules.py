@@ -1906,9 +1906,7 @@ def _partial_collapse_sum(
         ):
             if mi in used_match_positions:
                 continue
-            if conc == idx or (
-                isinstance(idx, IndexOffset) and isinstance(conc, IndexOffset) and conc == idx
-            ):
+            if conc == idx:
                 if isinstance(idx, IndexOffset):
                     wrt_to_symbolic.append(IndexOffset(sum_idx, idx.offset, idx.circular))
                 else:
