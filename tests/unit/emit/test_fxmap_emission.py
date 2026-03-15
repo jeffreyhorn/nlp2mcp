@@ -233,3 +233,44 @@ class TestLoMapEmission:
         result = emit_gams_mcp(kkt)
 
         assert "p.l('h-industry') = 1.5;" in result
+
+
+@pytest.mark.unit
+class TestConditionalBoundEmission:
+    """Tests for LhsConditionalAssign emission in bound lines.
+
+    Issue #1087: v.fx(i)$(cond) = rhs must emit the condition on the LHS,
+    not apply the bound unconditionally to all elements.
+    """
+
+    def test_conditional_fx_emits_lhs_condition(self, manual_index_mapping):
+        """fx_expr_map with LhsConditionalAssign emits condition on LHS."""
+        from src.ir.ast import Call, Const, LhsConditionalAssign, SymbolRef
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["t"] = SetDef(name="t", members=["1974", "1975", "1976"])
+
+        r = VariableDef(name="r", domain=("t",), kind=VarKind.CONTINUOUS)
+        # Store conditional bound: r.fx(t)$(ord(t) eq 1) = 500
+        from src.ir.ast import Binary
+
+        cond = Binary("eq", Call("ord", (SymbolRef("t"),)), Const(1.0))
+        r.fx_expr_map[("t",)] = LhsConditionalAssign(rhs=Const(500.0), condition=cond)
+        model.variables["r"] = r
+
+        index_mapping = manual_index_mapping([("obj", ()), ("r", ("1974",))])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # The condition must appear on the LHS: r.fx(t)$(ord(t) eq 1) = 500;
+        assert "r.fx(t)$(" in result
+        assert "= 500;" in result
+        # Must NOT emit unconditional r.fx(t) = 500;
+        assert "r.fx(t) = 500;" not in result
