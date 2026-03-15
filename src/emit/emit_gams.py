@@ -1599,9 +1599,9 @@ def emit_gams_mcp(
         eq_def = kkt.model_ir.equations[eq_name]
         if not eq_def.domain or not eq_def.has_head_domain_offset:
             continue
-        # Skip if already handled by section 3 (explicit condition)
-        if eq_def.condition is not None and isinstance(eq_def.condition, Expr):
-            continue
+        # Don't skip when an explicit condition is present: section 3 handles
+        # the explicit-condition complement and this section handles the
+        # inferred lead/lag complement independently.
         if any(d.lower() in dynamic_map for d in eq_def.domain):
             continue
         mult_name = create_eq_multiplier_name(eq_name)
