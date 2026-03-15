@@ -182,6 +182,24 @@ def _build_domain_condition(
         return " and ".join(f"({c})" for c in conditions)
 
 
+def infer_lead_lag_condition(eq_def: EquationDef) -> str | None:
+    """Infer a GAMS domain condition from lead/lag offsets in an equation's body.
+
+    Collects lead/lag offsets from both LHS and RHS, keeps the maximum offset
+    per index, and builds the combined condition string.
+
+    Returns None if the equation has no domain or no lead/lag offsets.
+    """
+    if not eq_def.domain:
+        return None
+    lhs, rhs = eq_def.lhs_rhs
+    lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
+    lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
+    lead_offsets = {k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)}
+    lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
+    return _build_domain_condition(lead_offsets, lag_offsets)
+
+
 def _merge_alias_dicts(target: dict[str, list[str]], source: dict[str, list[str]]) -> None:
     """Merge alias mappings from *source* into *target*, avoiding duplicates."""
     for base, aliases in source.items():
@@ -246,22 +264,7 @@ def emit_equation_def(
     # the equation instance.
     inferred_condition: str | None = None
     if not skip_lead_lag_inference:
-        lead_offsets: dict[str, int] = {}
-        lag_offsets: dict[str, int] = {}
-        if domain:
-            lhs_lead, lhs_lag = _collect_lead_lag_restrictions(lhs, domain)
-            rhs_lead, rhs_lag = _collect_lead_lag_restrictions(rhs, domain)
-            # Merge dicts, keeping max offset for each index
-            for idx, offset in lhs_lead.items():
-                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-            for idx, offset in rhs_lead.items():
-                lead_offsets[idx] = max(lead_offsets.get(idx, 0), offset)
-            for idx, offset in lhs_lag.items():
-                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
-            for idx, offset in rhs_lag.items():
-                lag_offsets[idx] = max(lag_offsets.get(idx, 0), offset)
-
-        inferred_condition = _build_domain_condition(lead_offsets, lag_offsets)
+        inferred_condition = infer_lead_lag_condition(eq_def)
 
     # Combine any parsed equation condition with inferred lead/lag domain bounds
     # Preserve the original parsed $-condition and AND it with the inferred bounds
@@ -466,7 +469,11 @@ def emit_equation_definitions(
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
-                eq_str, aliases = emit_equation_def(eq_name, eq_def, skip_lead_lag_inference=True)
+                eq_str, aliases = emit_equation_def(
+                    eq_name,
+                    eq_def,
+                    skip_lead_lag_inference=not eq_def.has_head_domain_offset,
+                )
                 lines.append(eq_str)
                 _merge_alias_dicts(all_aliases, aliases)
             elif eq_name in kkt.model_ir.normalized_bounds:

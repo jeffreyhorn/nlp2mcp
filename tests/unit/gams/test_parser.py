@@ -6553,3 +6553,93 @@ class TestAttrAccessInExpressions:
         assert isinstance(expr, ModelAttrRef)
         assert expr.model_name == "m"
         assert expr.attribute == "modelStat"
+
+
+@pytest.mark.unit
+class TestHeadDomainOffset:
+    """Test has_head_domain_offset detection in EquationDef.
+
+    Issue #1084: Equations with lead/lag qualifiers in the head domain
+    (e.g., ode1(nh(i+1))) need lead/lag inference restored, while
+    equations without (e.g., sb(t)) should skip it.
+    """
+
+    def test_simple_domain_no_offset(self):
+        """Plain eq(i).. has no head-domain offset."""
+        text = dedent("""\
+            Set i / a, b, c /;
+            Variables x(i), obj;
+            Equations balance(i), defobj;
+            balance(i).. x(i) =e= 1;
+            defobj.. obj =e= sum(i, x(i));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["balance"].has_head_domain_offset is False
+
+    def test_scalar_equation_no_offset(self):
+        """Scalar equation has no head-domain offset."""
+        text = dedent("""\
+            Set i / a, b, c /;
+            Variables x(i), obj;
+            Equations defobj;
+            defobj.. obj =e= sum(i, x(i));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["defobj"].has_head_domain_offset is False
+
+    def test_lead_offset_in_head(self):
+        """eq(set(i+1)).. has a head-domain offset (lead)."""
+        text = dedent("""\
+            Set nh / 0*5 /; Alias(nh, i);
+            Variables x(nh), obj;
+            Equations ode(nh), defobj;
+            ode(nh(i+1)).. x(i+1) =e= x(i) + 1;
+            defobj.. obj =e= sum(i, x(i));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["ode"].has_head_domain_offset is True
+        assert model.equations["ode"].domain == ("i",)
+
+    def test_lag_offset_in_head(self):
+        """eq(set(t-1)).. has a head-domain offset (lag)."""
+        text = dedent("""\
+            Set tt / 0*5 /; Alias(tt, t);
+            Variables v(tt), obj;
+            Equations flow(tt), defobj;
+            flow(tt(t-1)).. v(t) =e= v(t-1) + 1;
+            defobj.. obj =e= sum(t, v(t));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["flow"].has_head_domain_offset is True
+        assert model.equations["flow"].domain == ("t",)
+
+    def test_direct_lead_offset_in_head(self):
+        """eq(i+1).. has a head-domain offset (direct, no parent set)."""
+        text = dedent("""\
+            Set i / 0*5 /;
+            Variables x(i), obj;
+            Equations ode(i), defobj;
+            ode(i+1).. x(i+1) =e= x(i) + 1;
+            defobj.. obj =e= sum(i, x(i));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["ode"].has_head_domain_offset is True
+
+    def test_body_lag_no_head_offset(self):
+        """eq(t).. with lag only in body does NOT set the flag."""
+        text = dedent("""\
+            Set t / 1*5 /;
+            Variables stock(t), buy(t), obj;
+            Parameters istock(t);
+            Equations sb(t), defobj;
+            sb(t).. stock(t) =e= stock(t-1) + buy(t) + istock(t);
+            defobj.. obj =e= sum(t, stock(t));
+            Model m / all /; Solve m using NLP minimizing obj;
+        """)
+        model = parser.parse_model_text(text)
+        assert model.equations["sb"].has_head_domain_offset is False

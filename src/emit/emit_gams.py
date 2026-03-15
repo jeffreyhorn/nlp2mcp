@@ -10,7 +10,7 @@ from itertools import combinations
 from typing import cast
 
 from src.config import Config
-from src.emit.equations import _build_domain_condition, _collect_lead_lag_restrictions
+from src.emit.equations import infer_lead_lag_condition
 from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
@@ -1436,16 +1436,7 @@ def emit_gams_mcp(
         if ref_mults is not None and comp_pair.variable not in ref_mults:
             continue
         eq_def = comp_pair.equation
-        if not eq_def.domain:
-            continue
-        lhs, rhs = eq_def.lhs_rhs
-        lead_l, lag_l = _collect_lead_lag_restrictions(lhs, eq_def.domain)
-        lead_r, lag_r = _collect_lead_lag_restrictions(rhs, eq_def.domain)
-        lead_offsets = {
-            k: max(lead_l.get(k, 0), lead_r.get(k, 0)) for k in set(lead_l) | set(lead_r)
-        }
-        lag_offsets = {k: max(lag_l.get(k, 0), lag_r.get(k, 0)) for k in set(lag_l) | set(lag_r)}
-        inferred_cond = _build_domain_condition(lead_offsets, lag_offsets)
+        inferred_cond = infer_lead_lag_condition(eq_def)
         if inferred_cond is None:
             continue
         mult_name = comp_pair.variable
@@ -1596,6 +1587,31 @@ def emit_gams_mcp(
         domain_vars = frozenset(eq_def.domain)
         cond_gams = expr_to_gams(eq_def.condition, domain_vars=domain_vars)
         fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 3a. Issue #1084: Fix equality multipliers for equations with head-domain
+    # offsets (e.g., ode1(nh(i+1))). These equations are restricted to fewer
+    # instances than the full domain, so the multiplier must be fixed to 0
+    # for excluded instances. The inferred lead/lag condition from the equation
+    # body reconstructs the restriction.
+    for eq_name in sorted(kkt.model_ir.equalities):
+        if eq_name not in kkt.model_ir.equations:
+            continue
+        eq_def = kkt.model_ir.equations[eq_name]
+        if not eq_def.domain or not eq_def.has_head_domain_offset:
+            continue
+        # Don't skip when an explicit condition is present: section 3 handles
+        # the explicit-condition complement and this section handles the
+        # inferred lead/lag complement independently.
+        if any(d.lower() in dynamic_map for d in eq_def.domain):
+            continue
+        mult_name = create_eq_multiplier_name(eq_name)
+        if ref_mults is not None and mult_name not in ref_mults:
+            continue
+        inferred_cond = infer_lead_lag_condition(eq_def)
+        if inferred_cond is None:
+            continue
+        domain_str = ",".join(eq_def.domain)
+        fx_lines.append(f"{mult_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
 
     # 3b. Issue #1041: Fix equality multipliers whose equation domain uses
     # dynamic subsets. When TSAMEQ(ii,jj) is over dynamic subset (ii,jj) but
