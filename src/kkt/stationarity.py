@@ -1098,15 +1098,28 @@ def _build_indexed_gradient_term(
 ) -> Expr:
     """Build gradient term for indexed variable.
 
-    For now, we use the gradient from the first instance as a placeholder.
-    This assumes the gradient structure is uniform across instances.
+    Uses a representative instance with a non-zero gradient component.
+    When some instances have zero gradient (e.g., d(n) where the objective
+    only depends on d(l) with l ⊂ n), the first instance may have a zero
+    gradient.  Scanning for a non-zero representative ensures the gradient
+    term is not incorrectly set to zero.
     """
     if not instances:
         return Const(0.0)
 
-    # Get gradient from first instance
+    # Issue #1086: Find a representative instance with non-zero gradient.
+    # The first instance may have zero gradient if the objective only
+    # depends on a subset of the variable's domain.
     col_id, var_indices = instances[0]
     grad_component = kkt.gradient.get_derivative(col_id)
+
+    if grad_component is None or (isinstance(grad_component, Const) and grad_component.value == 0):
+        for c_id, _v_idx in instances[1:]:
+            gc = kkt.gradient.get_derivative(c_id)
+            if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
+                col_id = c_id
+                grad_component = gc
+                break
 
     if grad_component is None:
         return Const(0.0)
