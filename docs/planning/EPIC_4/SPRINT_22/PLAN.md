@@ -372,6 +372,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 11 criterion:** All workstream targets met or documented as blocked; regression-free.
 
+**Day 11 status:** COMPLETE — All 7 Day 10 regressions restored to model_optimal (PRs #1094–#1097); qabel's remaining objective mismatch tracked separately in #1089. Pipeline: solve 80 (≥75 ✓), match 41 (≥40 stretch ✓), model_infeasible 9 (≤10 stretch ✓). path_syntax_error 31 (≤30 miss by 1), path_solve_terminated 7 (≤5 miss by 2). Tests: 4,206 passed.
+
 ---
 
 ### Day 12 — Sprint Close Prep: Issues + Documentation
