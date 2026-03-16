@@ -266,6 +266,13 @@ def _sanitize_set_element(element: str) -> str:
     if len(element) >= 4 and element.startswith("''") and element.endswith("''"):
         element = "'" + element[2:-2] + "'"
 
+    # Normalize double-quoted elements to single-quoted
+    # GAMS allows both "sc-mill" and 'sc-mill' as quoted labels.
+    # The parser/IR may store elements with double quotes (e.g., from
+    # variable bound assignments like xca.up(g,"sc-mill")).
+    if len(element) >= 2 and element.startswith('"') and element.endswith('"'):
+        element = "'" + element[1:-1] + "'"
+
     # Handle pre-quoted elements from the parser
     # If element is already wrapped in single quotes, strip them for validation
     # and return with quotes preserved
