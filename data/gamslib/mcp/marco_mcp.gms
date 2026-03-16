@@ -37,7 +37,7 @@ Parameters
     pf(cf) /premium 10.5, regular 9.1, distillate 7.7, 'fuel-gas' 1.5, 'fuel-oil' 6.65/
     ur(cr) /'mid-c' 200, 'w-tex' 200/
     op(p) /'a-dist' 0.1, 'n-reform' 0.15, 'cc-dist' 0.8, 'cc-gas-oil' 0.08, hydro 0.1/
-    qs(lim,cf,q) /lower.premium.octane 90, lower.regular.octane 86, upper.premium.'vapor-pr' 12.7, upper.regular.'vapor-pr' 12.7, upper.distillate.density 306, upper.distillate.sulfur 0.5, upper.'fuel-oil'.density 352, upper.'fuel-oil'.sulfur 3.5, upper.'fuel-oil'.sulfur 3.4/
+    qs(lim,cf,q) /lower.premium.octane 90, lower.regular.octane 86, upper.premium.'vapor-pr' 12.7, upper.regular.'vapor-pr' 12.7, upper.distillate.density 306, upper.distillate.sulfur 0.5, upper.'fuel-oil'.density 352, upper.'fuel-oil'.sulfur 3.4/
     at(ci,q) /'sr-gas'.octane 78.5, 'sr-gas'.'vapor-pr' 18.4, 'sr-naphtha'.octane 65, 'sr-naphtha'.'vapor-pr' 6.54, 'rf-gas'.octane 104, 'rf-gas'.'vapor-pr' 2.57, 'cc-gas'.octane 93.7, 'cc-gas'.'vapor-pr' 6.9, butane.octane 91.8, butane.'vapor-pr' 199.2/
     atc(cr,ci,q) /'mid-c'.'sr-naphtha'.density 272, 'mid-c'.'sr-naphtha'.sulfur 0.283, 'mid-c'.'sr-dist'.density 292, 'mid-c'.'sr-dist'.sulfur 0.526, 'mid-c'.'sr-gas-oil'.density 295, 'mid-c'.'sr-gas-oil'.sulfur 0.98, 'mid-c'.'cc-gas-oil'.density 294.4, 'mid-c'.'cc-gas-oil'.sulfur 0.353, 'mid-c'.'sr-res'.density 343, 'mid-c'.'sr-res'.sulfur 4.7, 'w-tex'.'sr-naphtha'.density 272, 'w-tex'.'sr-naphtha'.sulfur 1.48, 'w-tex'.'sr-dist'.density 297.6, 'w-tex'.'sr-dist'.sulfur 2.83, 'w-tex'.'sr-gas-oil'.density 303.3, 'w-tex'.'sr-gas-oil'.sulfur 5.05, 'w-tex'.'sr-res'.density 365, 'w-tex'.'sr-res'.sulfur 11, 'w-tex'.'cc-gas-oil'.density 299.1, 'w-tex'.'cc-gas-oil'.sulfur 1.31, 'w-tex'.'hydro-res'.density 365, 'w-tex'.'hydro-res'.sulfur 6/
 ;
@@ -137,18 +137,14 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(cf, cf__);
-
 * Stationarity equations
 stat_phip.. 1 + nu_amat =E= 0;
 stat_phir.. -1 + nu_arev =E= 0;
 stat_phiw.. 1 + nu_aoper =E= 0;
 stat_u(cr).. ((-1) * pr(cr)) * nu_amat - lam_mbr(cr) + lam_lcp(cr) - piL_u(cr) =E= 0;
 stat_ui(cr,ci)$(cd(ci)).. ((-1) * 1$(cd(ci))) * lam_mb(cr,ci) - piL_ui(cr,ci) =E= 0;
-stat_w(cr,ci,cf).. ((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) - piL_w(cr,ci,cf) =E= 0;
-stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(lim, sum(q, (((-1) * qs(lim,cf,q)) * lam_qub(cf,q))$(qs(lim,cf,q)))) - piL_x(cf) =E= 0;
+stat_w(cr,ci,cf)$(bp(cf,ci)).. ((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) + sum(q, (atc(cr,ci,q) * 1$(bp(cf,ci)) * lam_qub(cf,q))$(qs("upper",cf,q))) - piL_w(cr,ci,cf) =E= 0;
+stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(q, (((-1) * qs("upper",cf,q)) * lam_qub(cf,q))$(qs("upper",cf,q))) - piL_x(cf) =E= 0;
 stat_z(cr,p).. ((-1) * op(p)) * nu_aoper + ((-1) * a(cr,cr,p)) * lam_mbr(cr) + sum(ci, ((-1) * a(cr,cr,p)) * lam_mb(cr,ci)) + sum(m, b(m,p) * lam_cc(m)) - piL_z(cr,p) =E= 0;
 
 * Inequality complementarity equations
@@ -156,7 +152,7 @@ comp_cc(m).. ((-1) * (sum(p, b(m,p) * sum(cr, z(cr,p))) - k(m))) =G= 0;
 comp_lcp(cr).. ((-1) * (u(cr) - ur(cr))) =G= 0;
 comp_mb(cr,ci).. sum(p, a(cr,ci,p) * z(cr,p)) + ui(cr,ci)$(cd(ci)) - sum(cf$(bp(cf,ci)), w(cr,ci,cf)) =G= 0;
 comp_mbr(cr).. sum(p, a(cr,"crude",p) * z(cr,p)) + u(cr) =G= 0;
-comp_qub(cf,q)$(qs("upper",cf,q)).. ((-1) * (sum((cr,cf__,ci), atc(cr,ci,q) * w(cr,ci,cf__)) - qs("upper",cf,q) * x(cf))) =G= 0;
+comp_qub(cf,q)$(qs("upper",cf,q)).. ((-1) * (sum((cr,ci)$(bp(cf,ci)), atc(cr,ci,q) * w(cr,ci,cf)) - qs("upper",cf,q) * x(cf))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_u(cr).. u(cr) - 0 =G= 0;
@@ -182,6 +178,8 @@ aprof.. phi =E= phir - phip - phiw;
 
 ui.fx(cr,ci)$(not (cd(ci))) = 0;
 piL_ui.fx(cr,ci)$(not (cd(ci))) = 0;
+w.fx(cr,ci,cf)$(not (bp(cf,ci))) = 0;
+piL_w.fx(cr,ci,cf)$(not (bp(cf,ci))) = 0;
 lam_qub.fx(cf,q)$(not (qs("upper",cf,q))) = 0;
 
 * ============================================

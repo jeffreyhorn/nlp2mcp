@@ -24,17 +24,25 @@ $macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1
 * Original Model Declarations
 * ============================================
 
-Scalars
-    x1opt /1.46163214496836/
-    x1delta /0/
-    x2delta /0/
-    y1opt /0.8856031944108887/
-    y1delta /0/
-    y2delta /0/
-    y2opt /0/
-    xtol /5e-05/
-    ytol /1e-06/
+Sets
+    i /i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47, i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63, i64, i65, i66, i67, i68, i69, i70, i71, i72, i73, i74, i75/
 ;
+
+Parameters
+    x(i) /i1 0.4973016, i2 0.3558841, i3 0.02419578, i4 0.1913753, i5 0.4919495, i6 0.9790016, i7 0.385657, i8 0.1568263, i9 0.8040481, i10 0.810872, i11 0.6016693, i12 0.03691279, i13 0.9454942, i14 0.1853702, i15 0.3496894, i16 0.4249933, i17 0.9900851, i18 0.6308701, i19 0.04474022, i20 0.004408432, i21 0.003718974, i22 0.1066217, i23 0.5304127, i24 0.6781648, i25 0.06206926, i26 0.4048511, i27 0.4941163, i28 0.1644695, i29 0.02285463, i30 5.654344e-05, i31 0.2657641, i32 0.7316988, i33 0.6789551, i34 0.3624824, i35 0.007429815, i36 0.1503384, i37 0.7314336, i38 0.04586442, i39 0.04060616, i40 0.3395101, i41 0.9269645, i42 0.002192909, i43 0.0251185, i44 0.415249, i45 0.1612197, i46 0.01512879, i47 0.1381864, i48 0.005730967, i49 0.1185086, i50 0.741131, i51 0.01564168, i52 0.2206906, i53 0.9836009, i54 0.4632388, i55 0.9968135, i56 0.0008792355, i57 0.9692757, i58 0.9823214, i59 0.1248862, i60 0.1598848, i61 0.09561613, i62 0.2513807, i63 0.4435097, i64 0.8852468, i65 0.01149253, i66 0.6575999, i67 0.8236305, i68 0.7388426, i69 0.6382491, i70 0.3426699, i71 0.1244351, i72 2.753017e-05, i73 0.162574, i74 0.02953334, i75 0.08739085/
+;
+
+Scalars
+    n /0/
+    average /0/
+    stdev /0/
+    tmp /0/
+;
+
+n = card(i);
+average = sum(i, x(i)) / n;
+stdev = sqrt(sum(i, sqr(x(i) - average)) / (n - 1));
+tmp = average * (1 - average) / sqr(stdev) - 1;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -48,12 +56,14 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    y2
-    x2
+    alpha
+    beta
+    like
 ;
 
 Positive Variables
-    piL_x2
+    piL_alpha
+    piL_beta
 ;
 
 * ============================================
@@ -64,7 +74,10 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x2.l = 0.01;
+alpha.l = tmp * average;
+alpha.l = max(alpha.l, 0.0001);
+beta.l = tmp * (1 - average);
+beta.l = max(beta.l, 0.0001);
 
 * ============================================
 * Equations
@@ -75,9 +88,11 @@ x2.l = 0.01;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x2
-    comp_lo_x2
-    y2def
+    stat_alpha
+    stat_beta
+    comp_lo_alpha
+    comp_lo_beta
+    loglike
 ;
 
 * ============================================
@@ -85,13 +100,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x2.. digamma__(x2) - piL_x2 =E= 0;
+stat_alpha.. ((-1) * (n * (digamma__(alpha + beta) - digamma__(alpha)) + sum(i, log(x(i))))) - piL_alpha =E= 0;
+stat_beta.. ((-1) * (n * (digamma__(alpha + beta) - digamma__(beta)) + sum(i, log(1 - x(i))))) - piL_beta =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x2.. x2 - 0.01 =G= 0;
+comp_lo_alpha.. alpha - 0.0001 =G= 0;
+comp_lo_beta.. beta - 0.0001 =G= 0;
 
 * Original equality equations
-y2def.. y2 =E= loggamma(x2);
+loglike.. like =E= n * (loggamma(alpha + beta) - loggamma(alpha) - loggamma(beta)) + sum(i, (alpha - 1) * log(x(i))) + sum(i, (beta - 1) * log(1 - x(i)));
 
 
 * ============================================
@@ -108,9 +125,11 @@ y2def.. y2 =E= loggamma(x2);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x2.x2,
-    y2def.y2,
-    comp_lo_x2.piL_x2
+    stat_alpha.alpha,
+    stat_beta.beta,
+    loglike.like,
+    comp_lo_alpha.piL_alpha,
+    comp_lo_beta.piL_beta
 /;
 
 * ============================================
@@ -120,5 +139,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = y2.l;
+nlp2mcp_obj_val = like.l;
 Display nlp2mcp_obj_val;

@@ -11,33 +11,34 @@ KKT System Components:
   - Primal feasibility: g(x) ≤ 0, h(x) = 0, lo ≤ x ≤ up
 $offText
 
+$onText
+  digamma__ : smooth approximation of the digamma (psi) function.
+  Uses asymptotic expansion at z = x+8 with recurrence shift.
+  Unconditional (no ifthen) - safe for MCP/NLP.
+  Accurate to ~14 digits for x > 0.
+$offText
+$macro digamma__asy(z) (log(z) - 1/(2*(z)) - 1/(12*sqr(z)) + 1/(120*power(z,4)) - 1/(252*power(z,6)) + 1/(240*power(z,8)))
+$macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1/((x)+4) - 1/((x)+3) - 1/((x)+2) - 1/((x)+1) - 1/(x))
+
 * ============================================
 * Original Model Declarations
 * ============================================
 
 Sets
-    i /seattle, 'san-diego'/
-    j /'new-york', chicago, topeka/
+    i /i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29/
 ;
 
-Alias(i, ip);
-Alias(j, jp);
-
 Parameters
-    a(i) /seattle 350, 'san-diego' 600/
-    b(j) /'new-york' 325, chicago 300, topeka 275/
-    d(i,j) /seattle.'new-york' 2.5, seattle.chicago 1.7, seattle.topeka 1.8, 'san-diego'.'new-york' 2.5, 'san-diego'.chicago 1.8, 'san-diego'.topeka 1.4/
-    c(i,j)
+    x(i) /i1 90, i2 10, i3 60, i4 186, i5 61, i6 49, i7 14, i8 24, i9 56, i10 20, i11 79, i12 84, i13 44, i14 59, i15 29, i16 118, i17 25, i18 156, i19 310, i20 76, i21 26, i22 44, i23 23, i24 62, i25 130, i26 208, i27 70, i28 101, i29 208/
 ;
 
 Scalars
-    f /90/
-    sens /0.3/
-    pors /1/
-    counter /10/
+    n /0/
+    average /0/
+    stdev /0/
 ;
 
-c(i,j) = f * d(i,j) / 1000;
+n = card(i);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -51,14 +52,14 @@ c(i,j) = f * d(i,j) / 1000;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    z
+    beta
+    mu
+    like
 ;
 
 Positive Variables
-    x(i,j)
-    lam_supply(i)
-    lam_demand(j)
-    piL_x(i,j)
+    piL_beta
+    piL_mu
 ;
 
 * ============================================
@@ -68,9 +69,9 @@ Positive Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
 
-x.l(i,j) = 1;
+beta.l = 0.001;
+mu.l = 0.001;
 
 * ============================================
 * Equations
@@ -81,11 +82,11 @@ x.l(i,j) = 1;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x(i,j)
-    comp_demand(j)
-    comp_supply(i)
-    comp_lo_x(i,j)
-    cost
+    stat_beta
+    stat_mu
+    comp_lo_beta
+    comp_lo_mu
+    loglike
 ;
 
 * ============================================
@@ -93,17 +94,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,j).. c(i,j) + lam_supply(i) - lam_demand(j) - piL_x(i,j) =E= 0;
-
-* Inequality complementarity equations
-comp_demand(j).. sum(i, x(i,j)) - b(j) =G= 0;
-comp_supply(i).. ((-1) * (sum(j, x(i,j)) - a(i))) =G= 0;
+stat_beta.. ((-1) * (n * (1 / beta - digamma__(beta)) + sum(i, log(beta * x(i) / mu) + (beta - 1) * 1 / (beta * x(i) / mu) * mu * x(i) / sqr(mu)) - sum(i, mu * x(i) / sqr(mu)))) - piL_beta =E= 0;
+stat_mu.. ((-1) * (n * ((-1) * (1 / mu)) + sum(i, (beta - 1) * 1 / (beta * x(i) / mu) * ((-1) * (beta * x(i))) / sqr(mu)) - sum(i, ((-1) * (beta * x(i))) / sqr(mu)))) - piL_mu =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x(i,j).. x(i,j) - 0 =G= 0;
+comp_lo_beta.. beta - 0.001 =G= 0;
+comp_lo_mu.. mu - 0.001 =G= 0;
 
 * Original equality equations
-cost.. z =E= sum((i,j), c(i,j) * x(i,j));
+loglike.. like =E= n * (log(beta) - log(mu) - loggamma(beta)) + sum(i, (beta - 1) * log(beta * x(i) / mu)) - sum(i, beta * x(i) / mu);
 
 
 * ============================================
@@ -120,11 +119,11 @@ cost.. z =E= sum((i,j), c(i,j) * x(i,j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x.x,
-    comp_demand.lam_demand,
-    comp_supply.lam_supply,
-    cost.z,
-    comp_lo_x.piL_x
+    stat_beta.beta,
+    stat_mu.mu,
+    loglike.like,
+    comp_lo_beta.piL_beta,
+    comp_lo_mu.piL_mu
 /;
 
 * ============================================
@@ -134,5 +133,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = z.l;
+nlp2mcp_obj_val = like.l;
 Display nlp2mcp_obj_val;

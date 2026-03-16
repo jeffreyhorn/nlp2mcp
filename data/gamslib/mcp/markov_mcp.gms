@@ -45,6 +45,7 @@ Scalars
     h /0.32/
 ;
 
+pi(s,i,sp,j,sp) = pr(i,j);
 lev(s) = 3 * (ord(s) - 1);
 p(s,sp,i) = (k / (q - dis(i) - d - (lev(sp) - lev(s)))) ** (1 / e);
 c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e)) / (1 - e)) + p(s,sp,i) * (lev(sp) - lev(s)) + h * lev(sp);
@@ -101,7 +102,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(spp, ((-1) * (b * pi(s,i,s,i,spp))) * nu_constr(s,i)) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum(spp, (1 - b * pi(s,i,s,i,spp)) * nu_constr(s,i)) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
 
