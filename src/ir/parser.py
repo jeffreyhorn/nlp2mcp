@@ -4763,6 +4763,26 @@ class _ModelBuilder:
         else:
             indices = tuple(_extract_domain_indices(index_list_node))
 
+        # Issue #1086: Detect index_subset patterns in sum domains.
+        # E.g., sum(arc(np,n), body) — the set name "arc" is discarded by
+        # _extract_domain_indices but we need it to generate a SetMembershipTest
+        # condition restricting the sum to valid set members.
+        # Collect (set_name, child_indices) for each index_subset found.
+        subset_domain_info: list[tuple[str, list[str]]] = []
+        if index_list_node.data != "id_list":
+            for child in index_list_node.children:
+                if isinstance(child, Tree) and child.data == "index_subset":
+                    # First Token child is the set name
+                    set_name = None
+                    child_indices: list[str] = []
+                    for subchild in child.children:
+                        if isinstance(subchild, Token) and set_name is None:
+                            set_name = _token_text(subchild)
+                        elif isinstance(subchild, Tree) and subchild.data == "index_list":
+                            child_indices = _extract_domain_indices(subchild)
+                    if set_name and child_indices:
+                        subset_domain_info.append((set_name, child_indices))
+
         # Use explicit names for error messages
         aggregation_name = "sum" if aggregation_class is Sum else "prod"
 
@@ -4854,6 +4874,27 @@ class _ModelBuilder:
             else:
                 expanded_indices.append(idx)
 
+        # Issue #1086: Map index_subset info to multidim_set_conditions.
+        # For sum(arc(np,n), body), find positions of [np, n] in expanded_indices
+        # and add (arc, start_pos, count) so a SetMembershipTest is generated.
+        # Also track which indices from index_subset are already in the
+        # enclosing free_domain — they are filters, not new iteration variables.
+        subset_filter_indices: set[str] = set()
+        for set_name, child_idxs in subset_domain_info:
+            # Find position of first child index in expanded_indices
+            try:
+                start_pos = expanded_indices.index(child_idxs[0])
+            except ValueError:
+                continue
+            # Verify all child indices are contiguous in expanded_indices
+            count = len(child_idxs)
+            if expanded_indices[start_pos : start_pos + count] == child_idxs:
+                multidim_set_conditions.append((set_name, start_pos, count))
+                # Indices already in free_domain are filters, not iteration vars.
+                for ci in child_idxs:
+                    if ci in free_domain:
+                        subset_filter_indices.add(ci)
+
         # Calculate domains
         new_agg_indices = set(expanded_indices) - set(free_domain)
         remaining_domain = tuple(d for d in free_domain if d not in new_agg_indices)
@@ -4899,9 +4940,19 @@ class _ModelBuilder:
             else:
                 condition_expr = set_cond
 
+        # Issue #1086: Remove filter indices from expanded_indices for the
+        # Sum's index_sets. Indices from index_subset that are already in
+        # the equation's free_domain are not new iteration variables — they
+        # appear in the SetMembershipTest condition to filter the sum.
+        # E.g., sum(arc(np,n), body) in nbal(n) → Sum(("np",), body, arc(np,n))
+        if subset_filter_indices:
+            sum_indices = tuple(idx for idx in expanded_indices if idx not in subset_filter_indices)
+        else:
+            sum_indices = tuple(expanded_indices)
+
         # Use expanded indices (not original) so multi-dim set domains are
         # properly represented.  See Issue #1002.
-        expr = aggregation_class(tuple(expanded_indices), body, condition_expr)
+        expr = aggregation_class(sum_indices, body, condition_expr)
 
         return self._attach_domain(expr, remaining_domain)
 
