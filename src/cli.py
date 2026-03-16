@@ -28,6 +28,7 @@ from src.ir.parser import parse_model_file
 from src.kkt.assemble import assemble_kkt_system
 from src.kkt.reformulation import reformulate_model
 from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
+from src.kkt.sqr_reformulation import reformulate_sqr_equalities
 from src.logging_config import setup_logging
 from src.utils.error_codes import get_error_info
 from src.validation.model import validate_model_structure
@@ -271,8 +272,12 @@ def main(
                 eqs_added = len(model.equations) - eqs_before
                 if vars_added > 0 or eqs_added > 0:
                     normalized_eqs, _ = normalize_model(model)
+                sqr_reformulated = reformulate_sqr_equalities(model)
+                if sqr_reformulated:
+                    normalized_eqs, _ = normalize_model(model)
                 ctx.add_detail("vars_added", vars_added)
                 ctx.add_detail("eqs_added", eqs_added)
+                ctx.add_detail("sqr_reformulated", len(sqr_reformulated))
                 ctx.add_detail("normalized_equations", len(normalized_eqs))
         else:
             normalized_eqs, _ = normalize_model(model)
@@ -301,6 +306,16 @@ def main(
             # and update equations that had min/max replaced with aux vars
             if vars_added > 0 or eqs_added > 0:
                 normalized_eqs, _ = normalize_model(model)
+
+            # Step 2.6: Reformulate sqr(expr)=0 equalities (Issue #1071)
+            sqr_reformulated = reformulate_sqr_equalities(model)
+            if sqr_reformulated:
+                normalized_eqs, _ = normalize_model(model)
+                if verbose >= 2:
+                    click.echo(
+                        f"  Reformulated {len(sqr_reformulated)} sqr equality(s): "
+                        f"{', '.join(sqr_reformulated)}"
+                    )
 
         # Step 3: Compute derivatives (IR Generation stage)
         if verbose:
