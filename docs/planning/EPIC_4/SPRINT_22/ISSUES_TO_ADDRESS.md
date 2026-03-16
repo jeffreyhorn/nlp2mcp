@@ -26,7 +26,7 @@ These are well-understood fixes with clear implementation paths and low regressi
 | 5 | **#1080** multi-solve classification | senstran, apl1p, apl1pca, aircraft | mismatch (false) | Add `multi_solve` flag to pipeline; reclassify 4 models as incomparable (improves match rate metric) | 1h |
 | 6 | **#914** markov | markov | path_syntax_error | Preserve computed parameter assignments with repeated index names in emitter | 1h |
 
-**Tier 1 impact:** 8 models advanced (2 path_syntax_error fixed, 1 translation fixed, 1 compilation fixed, 4 reclassified). ~5-7h total.
+**Tier 1 impact:** 10 models advanced (4 path_syntax_error fixed: marco, ps10_s_mn, ps5_s_mn, markov; 1 translation fixed: indus; 1 compilation fixed: mathopt4; 4 reclassified: senstran, apl1p, apl1pca, aircraft). ~5-7h total.
 
 ---
 
@@ -43,7 +43,7 @@ Shared root causes that unblock multiple models, or single-model fixes with clea
 | 11 | **#862** sambal | sambal, qsambal | path_solve_terminated | Propagate dollar conditions from collapsed sum expressions through AD to stationarity | 2-3h |
 | 12 | **#1071** hs62 | hs62 | model_infeasible | Detect `sqr(expr) = 0` constraints and reformulate as `expr = 0` (LICQ fix) | 2h |
 
-**Tier 2 impact:** 10 models advanced (4 translation fixed, 3 path_syntax_error, 2 path_solve_terminated, 1 model_infeasible). ~12-16h total.
+**Tier 2 impact:** 10 models advanced (3 translate_failure fixed: mingamma, mlbeta, mlgamma; 2 path_syntax_error fixed: gussrisk, maxmin; 3 path_solve_terminated fixed: elec, sambal, qsambal; 2 model_infeasible fixed: robustlp, hs62). ~12-16h total.
 
 ---
 
@@ -108,7 +108,7 @@ Worth doing if time permits, but lower ROI than Tier 1-2.
 | 4 | **#934** indus line-break | indus → translate | 1.5h |
 | 5 | **#914** markov param | markov → solve | 1h |
 
-**Expected outcome:** +5 models advancing (3 path_syntax_error → solve, 1 translate → solve, 1 mismatch → match)
+**Expected outcome:** +6 models advancing (4 path_syntax_error → solve: marco, ps10_s_mn, ps5_s_mn, markov; 1 translate → solve: indus; 1 mismatch → match: mathopt4)
 
 ### Day 13: Best of Tier 2 (~5h)
 
