@@ -88,7 +88,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_v(i,k).. nu_defv(i,k) + 2 * v(i,i) * lam_socpqcpcons(i) =E= 0;
+stat_v(i,k).. nu_defv(i,k) + 2 * v(i,k) * lam_socpqcpcons(i) =E= 0;
 stat_x(j).. c(j) + sum(i, A(i,j) * nu_defrhs(i)) + sum((i,k), ((-1) * P(i,j,k)) * nu_defv(i,k)) =E= 0;
 stat_y(i).. nu_defrhs(i) + ((-1) * (2 * y(i))) * lam_socpqcpcons(i) - piL_y(i) =E= 0;
 
