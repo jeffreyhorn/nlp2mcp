@@ -1532,8 +1532,6 @@ def _is_related_to_eq_domain(
     if not model_ir or not equation_domain:
         return False
 
-    eq_domain_lower = {s.lower() for s in equation_domain}
-
     # Resolve alias target of target_set
     target_lower = target_set.lower()
     target_alias = model_ir.aliases.get(target_set) or model_ir.aliases.get(target_lower)
@@ -1776,9 +1774,7 @@ def _replace_matching_indices(
                             equation_domain
                             and target_set.lower() not in eq_domain_lower
                             and not target_is_subset_of_eq_domain
-                            and not _is_related_to_eq_domain(
-                                target_set, equation_domain, model_ir
-                            )
+                            and not _is_related_to_eq_domain(target_set, equation_domain, model_ir)
                         ):
                             # Issue #1099: The declared domain set is completely
                             # independent of the equation domain (not in it, not a

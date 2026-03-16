@@ -2930,10 +2930,10 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
             if "solve" in str(stmt.data):
                 break
             if str(stmt.data) not in _ASSIGN_TYPES:
-                break
+                continue
             name = _lhs_name(stmt)
             if name is None or name not in param_names:
-                break
+                continue
             # Emit this assignment with loop index substituted
             gams_text = _tree_to_gams_subst(stmt, subst)
             assign_lines.append(gams_text)

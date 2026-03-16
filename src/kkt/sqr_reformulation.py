@@ -34,11 +34,21 @@ def _extract_sqr_inner(expr: Expr) -> Expr | None:
     if isinstance(expr, Call) and expr.func == "sqr" and len(expr.args) == 1:
         return expr.args[0]
 
-    # c * sqr(expr) or sqr(expr) * c
+    # c * sqr(expr) or sqr(expr) * c — only when the other factor is a constant
     if isinstance(expr, Binary) and expr.op == "*":
-        if isinstance(expr.right, Call) and expr.right.func == "sqr" and len(expr.right.args) == 1:
+        if (
+            isinstance(expr.left, Const)
+            and isinstance(expr.right, Call)
+            and expr.right.func == "sqr"
+            and len(expr.right.args) == 1
+        ):
             return expr.right.args[0]
-        if isinstance(expr.left, Call) and expr.left.func == "sqr" and len(expr.left.args) == 1:
+        if (
+            isinstance(expr.right, Const)
+            and isinstance(expr.left, Call)
+            and expr.left.func == "sqr"
+            and len(expr.left.args) == 1
+        ):
             return expr.left.args[0]
 
     return None
