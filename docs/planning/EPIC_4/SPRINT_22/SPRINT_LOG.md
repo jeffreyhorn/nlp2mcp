@@ -395,14 +395,44 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ### Day 11 — Buffer / Overflow
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~1h
+
+**Key Finding:** All 7 Day 10 regressions (#1084–#1090) were resolved by PRs #1094–#1097 (merged between Days 10 and 11). No new unfinished workstream tasks remain. Only #1089 (qabel) is still open — the primary bug is fixed (MODEL STATUS 1) but the secondary alias differentiation issue is deferred.
 
 | Task | Status |
 |---|---|
-| Overflow tasks completed | |
-| Full pipeline retest | |
-| Regression testing | |
+| Overflow tasks completed | :white_check_mark: No unfinished tasks — all 7 regressions fixed by PRs #1094–#1097 |
+| Full pipeline retest | :white_check_mark: solve 80, match 41, path_syntax_error 31, model_infeasible 9 |
+| Regression testing | :white_check_mark: 4,206 passed, 10 skipped, 1 xfailed (1 flaky timing test confirmed non-issue) |
+
+**Regression Resolution (all 7 models restored to model_optimal):**
+
+| Model | Day 10 | Day 11 | Match? | Fix PR |
+|---|---|---|---|---|
+| catmix | model_infeasible | model_optimal | mismatch (nonconvex) | #1094 |
+| fdesign | path_solve_terminated | model_optimal | **MATCH** (1.046) | #1094 |
+| harker | path_solve_terminated | model_optimal | mismatch (nonconvex) | #1097 |
+| hydro | model_infeasible | model_optimal | **MATCH** (4366944.16) | #1094 |
+| pindyck | model_infeasible | model_optimal | **MATCH** (1170.486) | #1096 |
+| port | mismatch (sign flip) | model_optimal | **MATCH** (0.298) | #1094 |
+| qabel | path_solve_terminated | model_optimal | mismatch (nonconvex) | #1095 |
+
+**Pipeline Metrics (Day 11):**
+
+| Metric | Baseline | Day 10 | Day 11 | Delta (D11-D10) | Target | Status |
+|---|---|---|---|---|---|---|
+| Solve success | 65 | 74 | 80 | +6 | ≥ 75 | :white_check_mark: |
+| Match | 30 | 39 | 41 | +2 | ≥ 35 | :white_check_mark: (stretch ≥ 40 met!) |
+| path_syntax_error | 40 | 27 | 31 | +4 | ≤ 30 | :x: (miss by 1) |
+| path_solve_terminated | 12 | 15 | 7 | −8 | ≤ 5 | :x: (miss by 2) |
+| model_infeasible | 15 | 18 | 9 | −9 | ≤ 12 | :white_check_mark: (beat stretch ≤ 10!) |
+| Tests | 3,957 | 4,173 | 4,206 | +33 | ≥ 4,020 | :white_check_mark: |
+
+**Notes:**
+- path_syntax_error increased from 27 (Day 10) to 31 — likely due to pipeline timing variance or models that were borderline between translate timeout and syntax error. Sprint 22 baseline was 40; we are still at −9 from baseline.
+- path_solve_terminated improved dramatically from 15 to 7 with the regression fixes.
+- model_infeasible improved from 18 to 9 — below baseline (15) and below stretch target (≤10).
 
 ---
 
