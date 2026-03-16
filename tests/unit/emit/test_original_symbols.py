@@ -2857,6 +2857,7 @@ class TestVarLevelLoopStatements:
                 ),
                 Token("EQUAL", "="),
                 Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
             ],
         )
 
@@ -2885,6 +2886,7 @@ class TestVarLevelLoopStatements:
                 ),
                 Token("EQUAL", "="),
                 Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
             ],
         )
 

@@ -451,7 +451,7 @@ class TestVarLevelLoopEmissionOrdering:
         model.variables["r"] = r_var
         model.sets["t"] = SetDef(name="t", members=["1", "2", "3"])
 
-        # Build a loop: loop(t, r.l(t) = 1)
+        # Build a loop: loop(t, r.l(t) = 1;)
         assign = Tree(
             "assign",
             [
@@ -473,6 +473,7 @@ class TestVarLevelLoopEmissionOrdering:
                 ),
                 Token("EQUAL", "="),
                 Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
             ],
         )
         loop_node = Tree(
@@ -498,11 +499,18 @@ class TestVarLevelLoopEmissionOrdering:
 
         kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
         result = emit_gams_mcp(kkt)
+        lines = result.splitlines()
 
-        # Default POSITIVE init should be suppressed
-        assert "r.l(t) = 1;" not in result
-        # Loop should be emitted
-        assert "loop(" in result
+        # Default POSITIVE init should be suppressed: check that "r.l(t) = 1;"
+        # does NOT appear as a standalone line outside of a loop() block.
+        loop_pos = next((i for i, ln in enumerate(lines) if "loop(" in ln), None)
+        assert loop_pos is not None, "Loop should be emitted"
+        for i, ln in enumerate(lines):
+            if "r.l(t) = 1;" in ln.strip() and i < loop_pos:
+                raise AssertionError(
+                    f"Default POSITIVE init 'r.l(t) = 1;' found at line {i}, "
+                    f"before loop at line {loop_pos}"
+                )
 
     def test_loop_emitted_after_var_init(self, manual_index_mapping):
         """Loop-based .l init must appear after the Variable Initialization section."""
@@ -545,6 +553,7 @@ class TestVarLevelLoopEmissionOrdering:
                 ),
                 Token("EQUAL", "="),
                 Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
             ],
         )
         loop_node = Tree(
