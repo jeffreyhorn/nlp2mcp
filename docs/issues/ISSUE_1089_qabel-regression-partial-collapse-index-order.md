@@ -108,12 +108,13 @@ After the primary fix, qabel shows:
 
 **No.** Investigation confirmed:
 
-1. The `stat_x` stationarity equation in the generated MCP already includes the correct
-   gradient terms. After `_partial_collapse_sum` collapses `n` and `k`, the residual `np`
-   index remains free in the gradient. The stationarity builder's uncontrolled-index handler
-   (`_find_superset_in_domain` at `stationarity.py:1037-1043`) detects that `np` is an alias
-   of domain index `n` and wraps the term in `sum(np$(sameas(np,n)), ...)`, producing the
-   correct Kronecker delta guard.
+1. The generated `stat_x` stationarity equation is missing the `x(np,k)` cross-term
+   derivative: since `_diff_varref` uses exact index-tuple matching, `d/d(x(n,k))` of
+   `x(np,k)` returns 0 (because `('np','k') != ('n','k')`). Only the `x(n,k)` term
+   contributes to the gradient. Despite this, PATH finds a stationary point (MODEL STATUS 1)
+   — the missing cross-term affects the objective value but not structural solvability.
+   Note: `_find_superset_in_domain` handles subset→superset relationships only, not pure
+   aliases like `Alias(n,np)`, so the uncontrolled-index handler does not apply here.
 
 2. The objective mismatch is due to the non-convex nature of the QCP. The KKT system
    finds a different local optimum than CONOPT. Both are valid stationary points.
@@ -127,9 +128,10 @@ After the primary fix, qabel shows:
 
 ### Approach
 
-Added `_resolve_alias_root()` helper to follow alias chains to root set names, then
-modified `_diff_varref` to return `sameas(e_idx, w_idx)` Kronecker deltas when indices
-differ only by aliases of the same set.
+On an experimental branch (reverted, never merged), added a `_resolve_alias_root()` helper
+to `derivative_rules.py` to follow alias chains to root set names, then modified
+`_diff_varref` to return `sameas(e_idx, w_idx)` Kronecker deltas when indices differ only
+by aliases of the same set.
 
 ### Why It Was Reverted
 
