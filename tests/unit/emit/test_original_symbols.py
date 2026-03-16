@@ -2826,3 +2826,255 @@ class TestEmitLoopStatements:
         result = emit_loop_statements(model)
         assert "loop(" in result
         assert "wbar3(i)" in result
+
+
+class TestVarLevelLoopStatements:
+    """Tests for variable .l loop emission (Issue #1088)."""
+
+    @staticmethod
+    def _make_var_level_assign(var_name: str, bound_kind: str = "l"):
+        """Build a mock assign tree: var_name.bound_kind(t) = expr."""
+        from lark import Token, Tree
+
+        return Tree(
+            "assign",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "bound_indexed",
+                            [
+                                Token("ID", var_name),
+                                Token("BOUND_K", bound_kind),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "t")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+
+    @staticmethod
+    def _make_param_assign(param_name: str):
+        """Build a mock assign tree: param_name(t) = expr."""
+        from lark import Token, Tree
+
+        return Tree(
+            "assign",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "symbol_indexed",
+                            [
+                                Tree("symbol_plain", [Token("ID", param_name)]),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "t")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+
+    def test_loop_body_only_var_level_assigns_basic(self):
+        """Loop with a single var .l assign is detected."""
+        from src.emit.original_symbols import _loop_body_only_var_level_assigns
+        from src.ir.symbols import LoopStatement
+
+        assign = self._make_var_level_assign("r")
+        loop = LoopStatement(indices=("t",), body_stmts=[assign], location=None, raw_node=None)
+        assert _loop_body_only_var_level_assigns(loop, {"r"})
+
+    def test_loop_body_only_var_level_assigns_rejects_non_l(self):
+        """Loop with .fx (not .l) assign is rejected."""
+        from src.emit.original_symbols import _loop_body_only_var_level_assigns
+        from src.ir.symbols import LoopStatement
+
+        assign = self._make_var_level_assign("r", bound_kind="fx")
+        loop = LoopStatement(indices=("t",), body_stmts=[assign], location=None, raw_node=None)
+        assert not _loop_body_only_var_level_assigns(loop, {"r"})
+
+    def test_loop_body_only_var_level_assigns_rejects_param(self):
+        """Loop with parameter assign (not var .l) is rejected."""
+        from src.emit.original_symbols import _loop_body_only_var_level_assigns
+        from src.ir.symbols import LoopStatement
+
+        assign = self._make_param_assign("myparam")
+        loop = LoopStatement(indices=("t",), body_stmts=[assign], location=None, raw_node=None)
+        assert not _loop_body_only_var_level_assigns(loop, {"r"})
+
+    def test_loop_body_mixed_rejects(self):
+        """Loop with mixed param + var .l assigns is rejected."""
+        from src.emit.original_symbols import _loop_body_only_var_level_assigns
+        from src.ir.symbols import LoopStatement
+
+        assign_l = self._make_var_level_assign("r")
+        assign_p = self._make_param_assign("myparam")
+        loop = LoopStatement(
+            indices=("t",),
+            body_stmts=[assign_l, assign_p],
+            location=None,
+            raw_node=None,
+        )
+        assert not _loop_body_only_var_level_assigns(loop, {"r"})
+
+    def test_loop_body_conditional_var_level(self):
+        """Conditional var .l assign (conditional_assign_general) is accepted."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import _loop_body_only_var_level_assigns
+        from src.ir.symbols import LoopStatement
+
+        assign = Tree(
+            "conditional_assign_general",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "bound_indexed",
+                            [
+                                Token("ID", "x"),
+                                Token("BOUND_K", "l"),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "t")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("DOLLAR", "$"),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+            ],
+        )
+        loop = LoopStatement(indices=("t",), body_stmts=[assign], location=None, raw_node=None)
+        assert _loop_body_only_var_level_assigns(loop, {"x"})
+
+    def test_get_var_level_loop_varnames(self):
+        """Collects variable names from qualifying .l loops."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import get_var_level_loop_varnames
+        from src.ir.symbols import LoopStatement, VariableDef
+
+        model = ModelIR()
+        model.variables["r"] = VariableDef(name="r", domain=("t",))
+        assign = self._make_var_level_assign("r")
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "t")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        result = get_var_level_loop_varnames(model)
+        assert result == {"r"}
+
+    def test_get_var_level_loop_varnames_skips_while(self):
+        """while_stmt loops are excluded from var level collection."""
+        from lark import Tree
+
+        from src.emit.original_symbols import get_var_level_loop_varnames
+        from src.ir.symbols import LoopStatement, VariableDef
+
+        model = ModelIR()
+        model.variables["r"] = VariableDef(name="r", domain=("t",))
+        assign = self._make_var_level_assign("r")
+        while_node = Tree("while_stmt", [])
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=while_node,
+            )
+        ]
+        assert get_var_level_loop_varnames(model) == set()
+
+    def test_emit_var_level_loop_statements_basic(self):
+        """Qualifying var .l loop is emitted."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_var_level_loop_statements
+        from src.ir.symbols import LoopStatement, VariableDef
+
+        model = ModelIR()
+        model.variables["r"] = VariableDef(name="r", domain=("t",))
+        assign = self._make_var_level_assign("r")
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "t")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        result = emit_var_level_loop_statements(model)
+        assert "loop(" in result
+        assert "r" in result
+
+    def test_emit_var_level_loop_statements_empty(self):
+        """No loops returns empty string."""
+        from src.emit.original_symbols import emit_var_level_loop_statements
+
+        model = ModelIR()
+        assert emit_var_level_loop_statements(model) == ""
+
+    def test_emit_var_level_loop_skips_param_only(self):
+        """Parameter-only loops are not emitted by var level emitter."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_var_level_loop_statements
+        from src.ir.symbols import LoopStatement, VariableDef
+
+        model = ModelIR()
+        model.variables["r"] = VariableDef(name="r", domain=("t",))
+        model.params["myparam"] = ParameterDef(name="myparam", domain=("t",), values={})
+        assign = self._make_param_assign("myparam")
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "t")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+        assert emit_var_level_loop_statements(model) == ""

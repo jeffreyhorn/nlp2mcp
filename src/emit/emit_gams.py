@@ -28,6 +28,8 @@ from src.emit.original_symbols import (
     emit_original_sets,
     emit_set_assignments,
     emit_subset_value_assignments,
+    emit_var_level_loop_statements,
+    get_var_level_loop_varnames,
     has_stochastic_parameters,
 )
 from src.emit.templates import (
@@ -1087,6 +1089,9 @@ def emit_gams_mcp(
     # denominators of stationarity equations (e.g., from differentiating log(x) or 1/x)
     # Issue #763: Collect init lines per variable, then topologically sort them
     # so that .l expressions referencing other variables' .l come after their deps.
+    # Issue #1088: Variables whose .l is set by a loop should not get default
+    # POSITIVE init (e.g., r.l(t)=1) since the loop provides correct values.
+    loop_level_vars = get_var_level_loop_varnames(kkt.model_ir)
     var_init_groups: dict[str, list[str]] = {}  # var_name -> init lines
     var_init_order: list[str] = []  # preserve original order for stable sort
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
@@ -1161,7 +1166,8 @@ def emit_gams_mcp(
             has_init = True
 
         # Priority 3: Positive variables: ensure all elements have non-zero values
-        if var_def.kind == VarKind.POSITIVE:
+        # Issue #1088: Skip default POSITIVE init for vars with loop-based .l
+        if var_def.kind == VarKind.POSITIVE and var_name.lower() not in loop_level_vars:
             if has_init:
                 has_positive_clamp = True
                 if var_def.domain:
@@ -1273,6 +1279,14 @@ def emit_gams_mcp(
         sections.extend(init_lines)
         if has_cross_varref:
             sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # Issue #1088: Emit loop-based .l initialization after regular .l init.
+    # Some models initialize variables sequentially via loops (e.g.,
+    # loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))).
+    var_level_loop_code = emit_var_level_loop_statements(kkt.model_ir)
+    if var_level_loop_code:
+        sections.append(var_level_loop_code)
         sections.append("")
 
     # Issue #1007: Emit deferred set assignments that reference .l values

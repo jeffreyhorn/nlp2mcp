@@ -2675,6 +2675,60 @@ def _loop_body_only_param_assigns(loop_stmt: object, param_names: set[str]) -> b
     return True
 
 
+def _loop_body_only_var_level_assigns(loop_stmt: object, var_names: set[str]) -> bool:
+    """Check if a loop body consists solely of variable ``.l`` assignments.
+
+    Returns True only when every statement in the loop body is an ``assign``
+    or ``conditional_assign_general`` whose LHS is a variable ``.l`` attribute
+    (e.g., ``r.l(t) = r.l(t-1) - d.l(t)``).
+
+    Issue #1088: Loop-based ``.l`` initialization is sequential and
+    order-dependent; it must be emitted as a loop rather than expanded
+    into individual element assignments.
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not isinstance(loop_stmt, LoopStatement):
+        return False
+
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+
+    def _is_var_level_lhs(stmt: Tree) -> bool:
+        """Check if LHS is a variable .l attribute (bound_indexed or bound_scalar)."""
+        if not stmt.children:
+            return False
+        lhs = stmt.children[0]
+        # Walk through lvalue wrapper
+        while isinstance(lhs, Tree) and lhs.data == "lvalue":
+            lhs = lhs.children[0]
+        if not isinstance(lhs, Tree):
+            return False
+        if lhs.data not in ("bound_indexed", "bound_scalar"):
+            return False
+        # bound_indexed: ID "." BOUND_K "(" index_list ")"
+        # bound_scalar: ID "." BOUND_K
+        # children[0] = ID (variable name), children[1] = BOUND_K (l/lo/up/fx)
+        if len(lhs.children) < 2:
+            return False
+        var_name = lhs.children[0]
+        bound_kind = lhs.children[1]
+        if not isinstance(var_name, Token) or not isinstance(bound_kind, Token):
+            return False
+        return str(var_name).lower() in var_names and str(bound_kind).lower() == "l"
+
+    for stmt in loop_stmt.body_stmts:
+        if not isinstance(stmt, Tree):
+            return False
+        if str(stmt.data) not in _ASSIGN_TYPES:
+            return False
+        if not _is_var_level_lhs(stmt):
+            return False
+
+    return True
+
+
 def emit_loop_statements(model_ir: ModelIR) -> str:
     """Emit loop statements that contain only parameter assignments.
 
@@ -2710,6 +2764,87 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
         if _loop_contains_solve(loop_stmt):
             continue
         if not _loop_body_only_param_assigns(loop_stmt, param_names):
+            continue
+        lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
+
+    return "\n\n".join(lines)
+
+
+def get_var_level_loop_varnames(model_ir: ModelIR) -> set[str]:
+    """Return lowercase variable names whose ``.l`` is assigned inside loops.
+
+    Issue #1088: Variables initialized by loop-based ``.l`` assignments
+    should not receive default POSITIVE initialization (e.g., ``r.l(t) = 1``)
+    because the loop provides the correct sequential values.
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not model_ir.loop_statements:
+        return set()
+
+    var_names = {name.lower() for name in model_ir.variables}
+    result: set[str] = set()
+
+    for loop_stmt in model_ir.loop_statements:
+        if not isinstance(loop_stmt, LoopStatement):
+            continue
+        if loop_stmt.raw_node is None:
+            continue
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
+            continue
+        if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_var_level_assigns(loop_stmt, var_names):
+            continue
+        # Extract variable names from each .l assignment LHS
+        for stmt in loop_stmt.body_stmts:
+            if not isinstance(stmt, Tree):
+                continue
+            lhs = stmt.children[0] if stmt.children else None
+            while isinstance(lhs, Tree) and lhs.data == "lvalue":
+                lhs = lhs.children[0]
+            if isinstance(lhs, Tree) and lhs.data in ("bound_indexed", "bound_scalar"):
+                if len(lhs.children) >= 2 and isinstance(lhs.children[0], Token):
+                    vn = str(lhs.children[0]).lower()
+                    if vn in var_names:
+                        result.add(vn)
+
+    return result
+
+
+def emit_var_level_loop_statements(model_ir: ModelIR) -> str:
+    """Emit loop statements that contain variable ``.l`` assignments.
+
+    Issue #1088: Some models initialize variable levels sequentially via
+    loops (e.g., ``loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))``).
+    These must be emitted as loops rather than expanded into individual
+    assignments because they are order-dependent.
+
+    This function should be called AFTER regular ``.l`` initialization
+    so that non-loop ``.l`` values are available for the loop body.
+
+    Args:
+        model_ir: Model IR with loop_statements
+
+    Returns:
+        GAMS loop statement code, or empty string if no qualifying loops
+    """
+    if not model_ir.loop_statements:
+        return ""
+
+    var_names = {name.lower() for name in model_ir.variables}
+
+    lines: list[str] = []
+    for loop_stmt in model_ir.loop_statements:
+        if loop_stmt.raw_node is None:
+            continue
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
+            continue
+        if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_var_level_assigns(loop_stmt, var_names):
             continue
         lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
 
