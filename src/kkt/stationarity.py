@@ -2265,8 +2265,24 @@ def _compute_index_offset_key(
     from ..ad.index_mapping import resolve_set_members
 
     if len(eq_indices) != len(var_indices):
-        # Different dimensionality — return zeros
-        return (0,) * max(len(eq_indices), len(var_indices))
+        # Issue #1086: Different dimensionality (e.g., 1D equation nbal(n)
+        # with 2D variable t(n,np)). Determine which variable position the
+        # equation index matches, so entries with different alignments are
+        # grouped separately. Use a large sentinel offset for the non-matching
+        # positions to distinguish groups.
+        if len(eq_indices) < len(var_indices):
+            # Find which var position(s) the eq indices match
+            offsets_list: list[int] = [999] * len(var_indices)
+            used_eq: set[int] = set()
+            for vi, ve in enumerate(var_indices):
+                for ei, ee in enumerate(eq_indices):
+                    if ei not in used_eq and ee.lower() == ve.lower():
+                        offsets_list[vi] = 0
+                        used_eq.add(ei)
+                        break
+            return tuple(offsets_list)
+        # More equation dims than variable dims — return zeros
+        return (0,) * len(var_indices)
 
     if _domain_cache is None:
         _domain_cache = {}
@@ -2478,7 +2494,17 @@ def _add_indexed_jacobian_terms(
                     offset_groups[offset_key].append((entry_row_id, entry_col_id))
 
                 for offset_key, group_entries in offset_groups.items():
+                    # Issue #1086: For dimension-mismatch groups, prefer a
+                    # representative entry with distinct variable indices so
+                    # the element→domain mapping doesn't have key collisions
+                    # (e.g., avoid t(five,five) where both map to the same key).
                     group_row_id, group_col_id = group_entries[0]
+                    if any(o == 999 for o in offset_key) and len(group_entries) > 1:
+                        for _rid, _cid in group_entries:
+                            _, _vidx = jacobian.index_mapping.col_to_var[_cid]
+                            if len(set(_vidx)) == len(_vidx):
+                                group_row_id, group_col_id = _rid, _cid
+                                break
                     derivative = jacobian.get_derivative(group_row_id, group_col_id)
                     _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
 
@@ -2490,9 +2516,44 @@ def _add_indexed_jacobian_terms(
                     #   "1" -> "i" (position 0)
                     #   "2" -> "j" (position 1)
                     # This ensures x(1) - x(2) becomes x(i) - x(j), not x(i) - x(i).
-                    constraint_element_to_set = _build_constraint_element_mapping(
-                        element_to_set, group_eq_indices, mult_domain
-                    )
+                    is_dim_mismatch = any(o == 999 for o in offset_key)
+                    if is_dim_mismatch:
+                        # Issue #1086: For dimension-mismatch (e.g., 1D eq nbal(n) →
+                        # 2D var t(n,np)), build element mapping from the representative
+                        # entry's VARIABLE indices, so concrete elements map to the
+                        # correct variable domain names — not the equation domain names.
+                        # Also remap the sum iteration alias (e.g., "np") to the variable
+                        # domain name at the unmatched position.
+                        _, rep_var_indices = jacobian.index_mapping.col_to_var[group_col_id]
+                        overrides: dict[str, str] = {}
+                        alias_remap: dict[str, str] = {}
+                        for vi, vdom in enumerate(var_domain):
+                            if vi < len(rep_var_indices):
+                                overrides[rep_var_indices[vi]] = vdom
+                            # For unmatched positions (sentinel 999), the variable
+                            # index came from a sum iteration variable (alias). Find
+                            # that alias and remap it to the variable domain name.
+                            if (
+                                vi < len(offset_key)
+                                and offset_key[vi] == 999
+                                and vi < len(rep_var_indices)
+                            ):
+                                # The concrete element at this position came from
+                                # an alias/set iteration var. Find which alias it
+                                # belongs to and remap that alias name.
+                                elem = rep_var_indices[vi]
+                                for aname, adef in kkt.model_ir.aliases.items():
+                                    target = adef.target if hasattr(adef, "target") else adef
+                                    if isinstance(target, str):
+                                        tgt_set = kkt.model_ir.sets.get(target)
+                                        if tgt_set and hasattr(tgt_set, "members"):
+                                            if elem.lower() in [m.lower() for m in tgt_set.members]:
+                                                alias_remap[aname] = vdom
+                        constraint_element_to_set = ChainMap(overrides, alias_remap, element_to_set)
+                    else:
+                        constraint_element_to_set = _build_constraint_element_mapping(
+                            element_to_set, group_eq_indices, mult_domain
+                        )
 
                     # Replace indices in derivative expression using constraint-aware mapping
                     # Issue #620: Pass var_domain as equation_domain for subset substitution
@@ -2513,7 +2574,16 @@ def _add_indexed_jacobian_terms(
                     # nu_totalcap(t). We encode this via the positional `offset_key`
                     # and build an IndexOffset-based multiplier in `_build_offset_multiplier()`.
                     has_offset = any(o != 0 for o in offset_key)
-                    if has_offset:
+                    mult_ref: Expr
+                    if is_dim_mismatch:
+                        # Extract the variable domain names at matched positions
+                        matched_var_dims = tuple(
+                            var_domain[i]
+                            for i, o in enumerate(offset_key)
+                            if o == 0 and i < len(var_domain)
+                        )
+                        mult_ref = MultiplierRef(mult_base_name, matched_var_dims)
+                    elif has_offset:
                         # Build multiplier with shifted indices
                         mult_ref = _build_offset_multiplier(
                             mult_base_name,
@@ -2528,7 +2598,7 @@ def _add_indexed_jacobian_terms(
                     # nu_totalcap(t-1) is invalid when t is the first element,
                     # nu_totalcap(t+1) is invalid when t is the last element.
                     # Wrap the term in a DollarConditional to prevent out-of-bounds.
-                    if has_offset:
+                    if has_offset and not is_dim_mismatch:
                         offset_guard = _build_offset_guard(mult_domain, offset_key)
                         if offset_guard is not None:
                             term = DollarConditional(value_expr=term, condition=offset_guard)

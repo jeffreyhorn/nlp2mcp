@@ -1633,21 +1633,52 @@ def _diff_sum(
     # - x('seattle', j) matches x with indices ('seattle', 'j') → returns 1
     # - Result is substituted: j→chicago
     if wrt_indices is not None and len(wrt_indices) > len(expr.index_sets):
-        matched_indices, matched_concrete, remaining_indices, symbolic_wrt = _partial_index_match(
-            expr.index_sets, wrt_indices, config
-        )
-        if matched_indices and symbolic_wrt is not None:
-            # Found a match - use position-preserving symbolic_wrt for differentiation
-            body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
-            # Substitute matched sum indices with their concrete values in the result
-            result_body = _substitute_sum_indices(
-                body_derivative, matched_indices, matched_concrete
+        # Issue #1086: For single-index sums, the greedy first-match in
+        # _partial_index_match may pick the wrong position when both wrt
+        # indices are members of the same set (e.g., sum(np, t(np,n)) w.r.t.
+        # t("three","four") where np aliases n). Try all candidate positions
+        # and return the first non-zero derivative.
+        if len(expr.index_sets) == 1:
+            sum_idx = expr.index_sets[0]
+            for i, wrt_idx in enumerate(wrt_indices):
+                check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+                if _is_concrete_instance_of(check_str, sum_idx, config):
+                    sym_idx: str | IndexOffset = (
+                        IndexOffset(sum_idx, wrt_idx.offset, wrt_idx.circular)
+                        if isinstance(wrt_idx, IndexOffset)
+                        else sum_idx
+                    )
+                    symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
+                    body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
+                    if not (isinstance(body_derivative, Const) and body_derivative.value == 0.0):
+                        result_body = _substitute_sum_indices(
+                            body_derivative, (sum_idx,), (wrt_idx,)
+                        )
+                        if expr.condition is not None:
+                            result_body = Binary(
+                                "*", result_body, _ensure_numeric_condition(expr.condition)
+                            )
+                        return result_body
+        else:
+            matched_indices, matched_concrete, remaining_indices, partial_symbolic_wrt = (
+                _partial_index_match(expr.index_sets, wrt_indices, config)
             )
-            # Issue #720: Preserve dollar condition when sum collapses via partial match.
-            # Issue #1085: Keep condition symbolic (see direct collapse path above).
-            if expr.condition is not None:
-                result_body = Binary("*", result_body, _ensure_numeric_condition(expr.condition))
-            return result_body
+            if matched_indices and partial_symbolic_wrt is not None:
+                # Found a match - use position-preserving symbolic_wrt for differentiation
+                body_derivative = differentiate_expr(
+                    expr.body, wrt_var, partial_symbolic_wrt, config
+                )
+                # Substitute matched sum indices with their concrete values in the result
+                result_body = _substitute_sum_indices(
+                    body_derivative, matched_indices, matched_concrete
+                )
+                # Issue #720: Preserve dollar condition when sum collapses via partial match.
+                # Issue #1085: Keep condition symbolic (see direct collapse path above).
+                if expr.condition is not None:
+                    result_body = Binary(
+                        "*", result_body, _ensure_numeric_condition(expr.condition)
+                    )
+                return result_body
 
     # Check for partial collapse (sum has more indices than wrt_indices)
     # For sum((i, cg), x(i) * y(cg)) w.r.t. x('p1'):
