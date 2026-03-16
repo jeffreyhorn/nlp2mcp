@@ -6278,19 +6278,18 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "excluded",
+        "status": "likely_convex",
         "verification_date": "2026-01-01T14:59:28Z",
         "solver_status": 1,
         "model_status": 2,
         "objective_value": -0.1215,
-        "solve_time_seconds": 0.482,
-        "error": "Gamma function is not convex on x>0. Additionally, GAMS lacks the digamma/psi function needed for derivatives."
+        "solve_time_seconds": 0.482
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-02-11T21:05:33.391111+00:00",
+        "parse_date": "2026-03-16T20:54:43.444453+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9285,
+        "parse_time_seconds": 0.8535,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -6301,37 +6300,43 @@
         "sets": 0
       },
       "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-02-22T03:54:59.204967+00:00",
+        "status": "success",
+        "translate_date": "2026-03-16T20:54:44.768768+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 2.4491,
-        "error": {
-          "category": "internal_error",
-          "message": "Error: Invalid model - Differentiation of 'loggamma' requires the digamma/psi function, which is not available in GAMS. Models using loggamma() in the objective or constraints cannot be converted to MCP.\n"
-        }
+        "translate_time_seconds": 1.2656,
+        "output_file": "data/gamslib/mcp/mingamma_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-02-11T21:05:36.894634+00:00",
+        "status": "success",
+        "solve_date": "2026-03-16T20:54:45.101686+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.4903,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": -0.121,
+        "solve_time_seconds": 0.3206,
+        "iterations": 9,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-02-11T21:05:36.894800+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "mismatch",
+        "comparison_date": "2026-03-16T20:54:45.102044+00:00",
+        "nlp_objective": -0.1215,
+        "mcp_objective": -0.121,
+        "absolute_difference": 0.0005000000000000004,
+        "relative_difference": 0.0041152263374485635,
+        "objective_match": false,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_mismatch",
+        "notes": "Mismatch: diff=5.00e-04 > tolerance=2.43e-04"
       }
     },
     {
