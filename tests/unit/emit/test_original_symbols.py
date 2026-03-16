@@ -559,15 +559,30 @@ class TestEmitOriginalParameters:
         assert "i1.j2 3" in result or "i1.j2 3.0" in result
         assert "i2.j1 1.8" in result
 
-    def test_parameter_with_no_data(self):
-        """Test emission of parameter declared but with no data."""
+    def test_parameter_with_no_data_no_expressions_skipped(self):
+        """Issue #917: Parameters with no values and no expressions are skipped.
+
+        These are typically loop-initialized reporting parameters that serve
+        no purpose in the single-solve MCP and would cause GAMS $141 errors.
+        """
         model = ModelIR()
         model.params["capacity"] = ParameterDef(name="capacity", domain=("i",), values={})
 
         result = emit_original_parameters(model)
+        assert "capacity(i)" not in result
+
+    def test_parameter_with_no_data_but_expressions_declared(self):
+        """Parameters with no data but with expressions should still be declared."""
+        from src.ir.ast import Const
+
+        model = ModelIR()
+        pdef = ParameterDef(name="capacity", domain=("i",), values={})
+        pdef.expressions.append((("i",), Const(42.0)))
+        model.params["capacity"] = pdef
+
+        result = emit_original_parameters(model)
         assert "Parameters" in result
         assert "capacity(i)" in result
-        # No slash notation when no data
 
     def test_mixed_scalars_and_parameters(self):
         """Test emission with both scalars and parameters."""

@@ -791,7 +791,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             # Format tuple keys as GAMS syntax: ("i1", "j2") → "i1.j2"
             if param_def.values:
                 domain_size = len(domain)
-                data_parts = []
+                # Issue #913: Use dict for last-write-wins deduplication.
+                # Table data and computed assignments may create entries with
+                # different key representations (e.g., ('upper.fuel-oil', 'sulfur')
+                # vs ('upper', 'fuel-oil', 'sulfur')) that expand to the same
+                # normalized key. The dict ensures only the last value is emitted.
+                data_by_key: dict[str, str] = {}
                 for key_tuple, value in param_def.values.items():
                     # Expand key to match domain size (handles table data with dotted row headers)
                     expanded_key = _expand_table_key(key_tuple, domain_size)
@@ -818,11 +823,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     # This ensures parameter data keys match set element quoting
                     sanitized_keys = [_sanitize_set_element(k) for k in expanded_key]
                     key_str = ".".join(sanitized_keys)
-                    data_parts.append(f"{key_str} {_format_param_value(value)}")
+                    data_by_key[key_str] = f"{key_str} {_format_param_value(value)}"
 
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
+                data_parts = list(data_by_key.values())
                 if data_parts:
                     # Emit parameter with data
                     data_str = ", ".join(data_parts)
@@ -834,6 +840,13 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
+                # Issue #917: Skip parameters with no values AND no expressions.
+                # These are typically loop-initialized reporting parameters
+                # (e.g., Util_lic(t) = Util.l inside a solve loop) that serve
+                # no purpose in the single-solve MCP. Emitting empty declarations
+                # causes GAMS $141 ("Symbol declared but no values assigned").
+                if not param_def.expressions:
+                    continue
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
@@ -1269,7 +1282,7 @@ def emit_computed_parameter_assignments(
     if varref_filter == "only_varref_attr":
         eligible: list[str] = []
         for pname, pdef in model_ir.params.items():
-            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+            if (pname in PREDEFINED_GAMS_CONSTANTS and not pdef.domain) or not pdef.expressions:
                 continue
             if not pdef.domain:
                 if any(len(k) > 0 for k, _ in pdef.expressions):
@@ -1281,7 +1294,7 @@ def emit_computed_parameter_assignments(
         # Issue #860: Topologically sort regular (non-calibration) parameters too.
         eligible = []
         for pname, pdef in model_ir.params.items():
-            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+            if (pname in PREDEFINED_GAMS_CONSTANTS and not pdef.domain) or not pdef.expressions:
                 continue
             if not pdef.domain:
                 if any(len(k) > 0 for k, _ in pdef.expressions):
@@ -1301,8 +1314,10 @@ def emit_computed_parameter_assignments(
         param_def = model_ir.params.get(param_name)
         if param_def is None:
             continue
-        # Skip predefined constants
-        if param_name in PREDEFINED_GAMS_CONSTANTS:
+        # Skip predefined constants — but only if the parameter has no domain.
+        # Issue #914: Models may declare indexed parameters whose name collides
+        # with a built-in constant (e.g., pi(s,i,sp,j,spp) in markov).
+        if param_name in PREDEFINED_GAMS_CONSTANTS and not param_def.domain:
             continue
 
         # Issue #860: Apply only_params / exclude_params filters
@@ -1691,7 +1706,7 @@ def emit_interleaved_params_and_sets(
         param_def = model_ir.params.get(param_name)
         if param_def is None:
             continue
-        if param_name in PREDEFINED_GAMS_CONSTANTS:
+        if param_name in PREDEFINED_GAMS_CONSTANTS and not param_def.domain:
             continue
         # Filter calibration params in no_varref_attr mode
         if varref_filter == "no_varref_attr" and param_name.lower() in calibration_params:
