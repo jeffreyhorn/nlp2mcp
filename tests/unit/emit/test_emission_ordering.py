@@ -433,3 +433,149 @@ class TestLExprClampToLo:
 
         assert "x.l = 5" in result
         assert "max(x.l" not in result
+
+
+class TestVarLevelLoopEmissionOrdering:
+    """Issue #1088: Loop-based .l init emitted after regular .l init."""
+
+    def test_positive_var_no_default_init_when_loop_provides(self, manual_index_mapping):
+        """POSITIVE variable with loop-based .l should NOT get default r.l(t) = 1."""
+        from lark import Token, Tree
+
+        from src.ir.symbols import LoopStatement
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+        r_var = VariableDef(name="r", domain=("t",), kind=VarKind.POSITIVE)
+        model.variables["r"] = r_var
+        model.sets["t"] = SetDef(name="t", members=["1", "2", "3"])
+
+        # Build a loop: loop(t, r.l(t) = 1)
+        assign = Tree(
+            "assign",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "bound_indexed",
+                            [
+                                Token("ID", "r"),
+                                Token("BOUND_K", "l"),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "t")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+            ],
+        )
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "t")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("r", ("1",))])
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # Default POSITIVE init should be suppressed
+        assert "r.l(t) = 1;" not in result
+        # Loop should be emitted
+        assert "loop(" in result
+
+    def test_loop_emitted_after_var_init(self, manual_index_mapping):
+        """Loop-based .l init must appear after the Variable Initialization section."""
+        from lark import Token, Tree
+
+        from src.ir.symbols import LoopStatement
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        # Variable d with explicit .l
+        d_var = VariableDef(name="d", domain=("t",), kind=VarKind.POSITIVE)
+        d_var.l = 11.0
+        model.variables["d"] = d_var
+
+        # Variable r — loop-based .l
+        r_var = VariableDef(name="r", domain=("t",), kind=VarKind.POSITIVE)
+        model.variables["r"] = r_var
+        model.sets["t"] = SetDef(name="t", members=["1", "2", "3"])
+
+        assign = Tree(
+            "assign",
+            [
+                Tree(
+                    "lvalue",
+                    [
+                        Tree(
+                            "bound_indexed",
+                            [
+                                Token("ID", "r"),
+                                Token("BOUND_K", "l"),
+                                Tree(
+                                    "index_list",
+                                    [Tree("index_simple", [Token("ID", "t")])],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                Token("EQUAL", "="),
+                Tree("number", [Token("NUMBER", "1")]),
+            ],
+        )
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Tree("id_list", [Token("ID", "t")]),
+                Tree("loop_body", [assign]),
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("t",),
+                body_stmts=[assign],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("d", ("1",)), ("r", ("1",))])
+        gradient = GradientVector(num_cols=3, index_mapping=index_mapping)
+        J_eq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=3, index_mapping=index_mapping)
+
+        kkt = KKTSystem(model_ir=model, gradient=gradient, J_eq=J_eq, J_ineq=J_ineq)
+        result = emit_gams_mcp(kkt)
+
+        # d.l should appear in regular init
+        assert "d.l = 11" in result
+        # loop should appear after d.l init
+        d_init_pos = result.index("d.l = 11")
+        loop_pos = result.index("loop(")
+        assert (
+            d_init_pos < loop_pos
+        ), f"Regular .l init (pos {d_init_pos}) should precede loop (pos {loop_pos})"
