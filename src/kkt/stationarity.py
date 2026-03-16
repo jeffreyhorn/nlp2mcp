@@ -1517,6 +1517,54 @@ def _preserve_subset_var_indices(
     return None
 
 
+def _is_related_to_eq_domain(
+    target_set: str,
+    equation_domain: tuple[str, ...],
+    model_ir: ModelIR | None,
+) -> bool:
+    """Check if target_set is related to any set in the equation domain.
+
+    Returns True if target_set is an alias of, superset of, or shares an
+    alias root with any set in the equation domain.  Used to distinguish
+    between truly independent sets (like 'lim' vs. equation domain (cf,q))
+    and related sets (like 'mp' which aliases 'm' in the equation domain).
+    """
+    if not model_ir or not equation_domain:
+        return False
+
+    eq_domain_lower = {s.lower() for s in equation_domain}
+
+    # Resolve alias target of target_set
+    target_lower = target_set.lower()
+    target_alias = model_ir.aliases.get(target_set) or model_ir.aliases.get(target_lower)
+    target_root = target_lower
+    if target_alias is not None:
+        t = target_alias.target if hasattr(target_alias, "target") else target_alias
+        if isinstance(t, str):
+            target_root = t.lower()
+
+    # Check if target_root matches any equation domain set or its alias root
+    for eq_set in equation_domain:
+        eq_lower = eq_set.lower()
+        eq_alias = model_ir.aliases.get(eq_set) or model_ir.aliases.get(eq_lower)
+        eq_root = eq_lower
+        if eq_alias is not None:
+            t = eq_alias.target if hasattr(eq_alias, "target") else eq_alias
+            if isinstance(t, str):
+                eq_root = t.lower()
+        if target_root == eq_root:
+            return True
+        # Check if target_set is a superset of eq_set
+        eq_set_def = model_ir.sets.get(eq_set) or model_ir.sets.get(eq_lower)
+        if eq_set_def and hasattr(eq_set_def, "domain") and eq_set_def.domain:
+            if target_lower in {p.lower() for p in eq_set_def.domain}:
+                return True
+            if target_root in {p.lower() for p in eq_set_def.domain}:
+                return True
+
+    return False
+
+
 def _replace_matching_indices(
     indices: tuple[str, ...],
     element_to_set: Mapping[str, str],
@@ -1724,6 +1772,22 @@ def _replace_matching_indices(
                             and target_set.lower() not in eq_domain_lower
                         ):
                             new_indices.append(element_to_set[idx])
+                        elif (
+                            equation_domain
+                            and target_set.lower() not in eq_domain_lower
+                            and not target_is_subset_of_eq_domain
+                            and not _is_related_to_eq_domain(
+                                target_set, equation_domain, model_ir
+                            )
+                        ):
+                            # Issue #1099: The declared domain set is completely
+                            # independent of the equation domain (not in it, not a
+                            # subset of it, not an alias of any eq domain set, not
+                            # a superset).  The concrete element (e.g., "upper"
+                            # from set lim, or a quoted literal like '"upper"') is
+                            # a fixed literal in the equation condition — preserve
+                            # it as-is rather than replacing with the set name.
+                            new_indices.append(idx)
                         else:
                             new_indices.append(target_set)
         elif idx in element_to_set:
@@ -2288,16 +2352,52 @@ def _compute_index_offset_key(
         # equation index matches, so entries with different alignments are
         # grouped separately. Use a large sentinel offset for the non-matching
         # positions to distinguish groups.
+        #
+        # Issue #1099/#1100: For dimension-mismatch, use domain/alias-based
+        # matching instead of element-value string matching. Element matching
+        # fails when independent sets share element labels (marco: "hydro"
+        # in both m and p) or aliases share all elements (markov: s/sp/spp).
+        #
+        # All entries for the same eq→var relationship should be grouped
+        # together (single offset_key). The downstream _match_subset_domain()
+        # and Sum-wrapping logic correctly handles the multiplier indexing.
         if len(eq_indices) < len(var_indices):
-            # Find which var position(s) the eq indices match
             offsets_list: list[int] = [_SENTINEL_UNMATCHED] * len(var_indices)
-            used_eq: set[int] = set()
-            for vi, ve in enumerate(var_indices):
-                for ei, ee in enumerate(eq_indices):
-                    if ei not in used_eq and ee.lower() == ve.lower():
+
+            # Use domain-level matching to determine which variable positions
+            # correspond to equation positions (alias + subset resolution).
+            eq_canons = [_resolve_alias_target(d, model_ir) for d in eq_domain]
+            var_canons = [_resolve_alias_target(d, model_ir) for d in var_domain]
+
+            def _canon_or_parent(set_name: str) -> str:
+                """Get canonical set or its parent if it's a 1-D subset."""
+                canon = _resolve_alias_target(set_name, model_ir)
+                sdef = model_ir.sets.get(canon)
+                if sdef and hasattr(sdef, "domain") and len(sdef.domain) == 1:
+                    return _resolve_alias_target(str(sdef.domain[0]), model_ir)
+                return canon
+
+            eq_roots = [_canon_or_parent(d) for d in eq_domain]
+            var_roots = [_canon_or_parent(d) for d in var_domain]
+
+            used_var: set[int] = set()
+            for ei in range(len(eq_domain)):
+                # First pass: prefer exact canonical match (same set/alias)
+                matched = False
+                for vi in range(len(var_domain)):
+                    if vi not in used_var and eq_canons[ei] == var_canons[vi]:
                         offsets_list[vi] = 0
-                        used_eq.add(ei)
+                        used_var.add(vi)
+                        matched = True
                         break
+                if not matched:
+                    # Second pass: match via common root (subset relationships)
+                    for vi in range(len(var_domain)):
+                        if vi not in used_var and eq_roots[ei] == var_roots[vi]:
+                            offsets_list[vi] = 0
+                            used_var.add(vi)
+                            break
+
             return tuple(offsets_list)
         # More equation dims than variable dims — return zeros
         return (0,) * len(var_indices)
@@ -2594,13 +2694,11 @@ def _add_indexed_jacobian_terms(
                     has_offset = any(o != 0 for o in offset_key)
                     mult_ref: Expr
                     if is_dim_mismatch:
-                        # Extract the variable domain names at matched positions
-                        matched_var_dims = tuple(
-                            var_domain[i]
-                            for i, o in enumerate(offset_key)
-                            if o == 0 and i < len(var_domain)
-                        )
-                        mult_ref = MultiplierRef(mult_base_name, matched_var_dims)
+                        # Issue #1099/#1100: Use the equation's own domain for
+                        # the multiplier. The downstream _match_subset_domain()
+                        # and Sum-wrapping logic handles renaming subset indices
+                        # to superset and wrapping disjoint indices in sums.
+                        mult_ref = MultiplierRef(mult_base_name, mult_domain)
                     elif has_offset:
                         # Build multiplier with shifted indices
                         mult_ref = _build_offset_multiplier(

@@ -2785,6 +2785,175 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
     return "\n\n".join(lines)
 
 
+def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
+    """Emit parameter assignments from before the first solve in solve-containing loops.
+
+    Issue #1101/#1102: Multi-solve loops like ``loop(t, p(i) = pt(i,t); solve ...;)``
+    contain pre-solve parameter assignments that are needed for the MCP output.
+    The loop itself is skipped (it contains a solve), but the pre-solve
+    parameter assignments must be emitted with the loop index substituted
+    by the first element of its set.
+
+    Args:
+        model_ir: Model IR with loop_statements and sets
+
+    Returns:
+        GAMS assignment statements, or empty string if none found
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not model_ir.loop_statements:
+        return ""
+
+    param_names = {name.lower() for name in model_ir.params}
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+
+    def _lhs_name(stmt: Tree) -> str | None:
+        if not stmt.children:
+            return None
+        lhs = stmt.children[0]
+        while isinstance(lhs, Tree) and lhs.data in ("lvalue", "symbol_indexed", "symbol_plain"):
+            lhs = lhs.children[0]
+        if isinstance(lhs, Token) and lhs.type == "ID":
+            return str(lhs).lower()
+        return None
+
+    def _tree_to_gams_subst(node: object, subst: dict[str, str]) -> str:
+        """Like _loop_tree_to_gams but substitutes loop index tokens."""
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() in subst:
+                return subst[str(node).lower()]
+            return str(node)
+        if not isinstance(node, Tree):
+            return str(node)
+        data = str(node.data)
+        if data == "index_simple":
+            base = node.children[0]
+            if isinstance(base, Token) and base.type == "ID" and str(base).lower() in subst:
+                val = subst[str(base).lower()]
+                if len(node.children) > 1:
+                    suffix = _tree_to_gams_subst(node.children[1], subst)
+                    return f"{val}{suffix}"
+                return val
+        # Fall through to _loop_tree_to_gams for all other cases,
+        # but we need recursion with substitution — re-dispatch children.
+        return _loop_tree_to_gams_subst_dispatch(node, subst)
+
+    def _loop_tree_to_gams_subst_dispatch(node: Tree, subst: dict[str, str]) -> str:
+        """Dispatch to _loop_tree_to_gams logic but with token substitution."""
+        data = str(node.data)
+        if data == "id_list":
+            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data in ("index_list", "arg_list"):
+            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "index_simple":
+            base = _tree_to_gams_subst(node.children[0], subst)
+            if len(node.children) > 1:
+                suffix = _tree_to_gams_subst(node.children[1], subst)
+                return f"{base}{suffix}"
+            return base
+        if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
+            return "".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "index_subset":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            idx = _tree_to_gams_subst(node.children[1], subst)
+            base = f"{name}({idx})"
+            if len(node.children) > 2:
+                suffix = _tree_to_gams_subst(node.children[2], subst)
+                return f"{base}{suffix}"
+            return base
+        if data == "offset_paren":
+            return f"({_tree_to_gams_subst(node.children[0], subst)})"
+        if data == "symbol_indexed":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            idx = _tree_to_gams_subst(node.children[1], subst)
+            return f"{name}({idx})"
+        if data in ("symbol_plain", "lvalue", "number", "funccall"):
+            return _tree_to_gams_subst(node.children[0], subst)
+        if data == "func_call":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            if len(node.children) > 1:
+                args = _tree_to_gams_subst(node.children[1], subst)
+                return f"{name}({args})"
+            return f"{name}()"
+        if data in ("binop", "unaryop"):
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "condition":
+            children = [c for c in node.children if isinstance(c, (Tree, Token))]
+            parts: list[str] = []
+            for c in children:
+                if isinstance(c, Tree) and c.data == "expr":
+                    parts.append(f"({_tree_to_gams_subst(c, subst)})")
+                else:
+                    parts.append(_tree_to_gams_subst(c, subst))
+            return "".join(parts)
+        if data == "assign":
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "conditional_assign_general":
+            lhs = _tree_to_gams_subst(node.children[0], subst)
+            cond = _tree_to_gams_subst(node.children[1], subst)
+            rest = " ".join(_tree_to_gams_subst(c, subst) for c in node.children[2:])
+            return f"{lhs}{cond} {rest}"
+        if data == "expr":
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        # Fallback: join children
+        return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+
+    assign_lines: list[str] = []
+    emitted_params: set[str] = set()
+    for loop_stmt in model_ir.loop_statements:
+        if not isinstance(loop_stmt, LoopStatement):
+            continue
+        if not _loop_contains_solve(loop_stmt):
+            continue
+        if not loop_stmt.indices:
+            continue
+
+        # Build substitution: each loop index -> first element of its set
+        subst: dict[str, str] = {}
+        for idx_name in loop_stmt.indices:
+            idx_lower = idx_name.lower()
+            sdef = model_ir.sets.get(idx_lower)
+            if sdef and sdef.members:
+                first_elem = sdef.members[0]
+                subst[idx_lower] = f"'{first_elem}'"
+
+        if not subst:
+            continue
+
+        # Extract pre-solve param assignments
+        for stmt in loop_stmt.body_stmts:
+            if not isinstance(stmt, Tree):
+                break
+            if "solve" in str(stmt.data):
+                break
+            if str(stmt.data) not in _ASSIGN_TYPES:
+                break
+            name = _lhs_name(stmt)
+            if name is None or name not in param_names:
+                break
+            # Emit this assignment with loop index substituted
+            gams_text = _tree_to_gams_subst(stmt, subst)
+            assign_lines.append(gams_text)
+            emitted_params.add(name)
+
+    if not assign_lines:
+        return ""
+
+    # Emit declarations for params that were skipped by Issue #917 logic
+    # (no values, no expressions — only assigned inside solve loops)
+    decl_lines: list[str] = []
+    for pname in sorted(emitted_params):
+        pdef = model_ir.params.get(pname)
+        if pdef and not pdef.values and not pdef.expressions and pdef.domain:
+            domain_str = ",".join(pdef.domain)
+            decl_lines.append(f"Parameter {pname}({domain_str});")
+
+    return "\n".join(decl_lines + assign_lines)
+
+
 def get_var_level_loop_varnames(model_ir: ModelIR) -> set[str]:
     """Return lowercase variable names whose ``.l`` is assigned inside loops.
 

@@ -26,6 +26,7 @@ from src.emit.original_symbols import (
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
+    emit_pre_solve_param_assignments,
     emit_set_assignments,
     emit_subset_value_assignments,
     emit_var_level_loop_statements,
@@ -1014,6 +1015,13 @@ def emit_gams_mcp(
     loop_code = emit_loop_statements(kkt.model_ir)
     if loop_code:
         sections.append(loop_code)
+        sections.append("")
+
+    # Issue #1101/#1102: Emit pre-solve parameter assignments from solve-containing
+    # loops (e.g., p(i) = pt(i,'1') from multi-solve loop models)
+    pre_solve_code = emit_pre_solve_param_assignments(kkt.model_ir)
+    if pre_solve_code:
+        sections.append(pre_solve_code)
         sections.append("")
 
     # Variables (primal + multipliers)

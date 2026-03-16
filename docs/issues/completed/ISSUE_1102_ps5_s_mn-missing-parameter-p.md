@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1102](https://github.com/jeffreyhorn/nlp2mcp/issues/1102)
 **Model:** ps5_s_mn (GAMSlib SEQ=368)
-**Status:** OPEN
+**Status:** FIXED
 **Error Category:** Compilation — $140 Unknown symbol
 **Severity:** Medium — model translates but GAMS compilation fails (3 errors)
 **Sprint:** 22 Day 12
@@ -37,7 +37,7 @@ stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 
 ## Root Cause
 
-Identical to the ps10_s_mn issue. In the original `ps5_s_mn.gms`, `p(i)` is assigned inside the solve loop:
+Identical to ps10_s_mn (#1101). In the original `ps5_s_mn.gms`, `p(i)` is assigned inside the solve loop:
 
 ```gams
 loop(t,
@@ -51,48 +51,34 @@ The KKT transformation references `p(i)` in stationarity equations and the objec
 
 ---
 
-## Reproduction
+## Fix Details
 
-```bash
-python -m src.cli data/gamslib/raw/ps5_s_mn.gms -o /tmp/ps5_s_mn_mcp.gms --skip-convexity-check
-/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams /tmp/ps5_s_mn_mcp.gms lo=2 o=/tmp/ps5_s_mn_mcp.lst
-grep '^\*\*\*\*' /tmp/ps5_s_mn_mcp.lst
-```
+Fixed by the same `emit_pre_solve_param_assignments()` function as #1101:
 
----
+**Files modified:**
+- `src/emit/original_symbols.py`: `emit_pre_solve_param_assignments()` detects loop-body parameter assignments before `solve` statements and emits them with the loop index substituted by the first element
+- `src/emit/emit_gams.py`: Calls the new function
 
-## Original GAMS Context
-
+**Output:**
 ```gams
-Sets i /0*4/, t /1*1000/;
-Parameters theta(i), pt(i,t), p(i);
-
-theta(i) = ord(i)/card(i);
-loop(t,
-   pt(i,t) = uniform(0,1);
-);
-
-* Inner NLP model references p(i):
-Equations obj, rev(i), pc(i), licd(i);
-obj..  util =e= sum(i, p(i)*(b(i) - w(i)));
-rev(i).. p(i)*sqrt(x(i)) =e= b(i);
+Parameter p(i);
+p(i) = pt(i,'1');
 ```
 
----
-
-## Suggested Fix
-
-Same as ps10_s_mn: detect loop-body parameter assignments that feed into the solved model and emit initialization using a representative loop iteration value (e.g., `p(i) = pt(i,'1');`).
+**Verification:**
+- GAMS compilation: 0 errors (was 3)
+- MODEL STATUS 1 (Optimal)
+- All 4209 tests pass, no regressions
 
 ---
 
 ## Related Issues
 
 - #917: Empty parameter declarations removed (prerequisite fix)
-- ps10_s_mn: Identical root cause (same model family)
+- #1101: ps10_s_mn — identical root cause, same fix
 
 ---
 
 ## Impact
 
-1 primary compilation error. Model cannot compile or solve.
+1 primary compilation error. Model now compiles and solves successfully.

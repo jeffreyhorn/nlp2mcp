@@ -393,40 +393,67 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ---
 
-### Day 11 — Buffer / Overflow
+### Day 11 — Regression Fixes (#1084–#1090)
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~8h (spread across PRs #1093–#1097)
+
+Day 8/9 PRs (#1076 sameas guard, #1083 dollar condition) introduced 7 regressions.
+Day 11 fixed all 7 through 5 PRs.
 
 | Task | Status |
 |---|---|
-| Overflow tasks completed | |
-| Full pipeline retest | |
-| Regression testing | |
+| #1084 catmix lead/lag inference | :white_check_mark: PR #1093 — restore lead/lag domain inference for head-domain offset equations |
+| #1085 fdesign restored | :white_check_mark: PR #1094 — fixed by catmix lead/lag fix cascade |
+| #1086 harker Jacobian dimension | :white_check_mark: PR #1097 — preserve index_subset in sum domains + non-zero gradient representative |
+| #1087 hydro restored | :white_check_mark: PR #1094 — fixed by catmix lead/lag fix cascade |
+| #1088 pindyck .l init | :white_check_mark: PR #1096 — support loop-based variable .l initialization |
+| #1089 qabel alias diff | :white_check_mark: PR #1095 — primary fixed (symbolic_wrt ordering); secondary alias issue deferred |
+| #1090 port sign flip | :white_check_mark: PR #1094 — fixed by catmix lead/lag fix cascade |
+| Tests | :white_check_mark: 4,200+ passed |
+
+**Regression status after Day 11:**
+- **Fully restored:** catmix, fdesign, hydro, port, pindyck, harker (6/7)
+- **Partially restored:** qabel (primary fixed, ~8.9% obj mismatch from alias issue deferred)
+
+**PRs:** #1093, #1094, #1095, #1096, #1097
 
 ---
 
-### Day 12 — Sprint Close Prep
+### Day 12 — Quick Wins + Sprint Close Prep
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~6h
 
 | Task | Status |
 |---|---|
-| GitHub issues filed | |
-| KNOWN_UNKNOWNS.md updated | |
-| SPRINT_LOG.md updated | |
+| #913 marco stationarity dedup | :white_check_mark: PR #1103 — deduplicate overlapping Jacobian entries |
+| #914 markov pi parameter | :white_check_mark: PR #1103 — emit pi as parameter in MCP |
+| #917 empty param emission | :white_check_mark: PR #1103 — skip parameters with no assigned values |
+| #950 mathopt4 closed | :white_check_mark: Already fixed by #985 |
+| #935 mingamma digamma | :white_check_mark: PR #1103 — implement digamma/psi derivative for gamma/loggamma |
+| #936 mlbeta digamma | :white_check_mark: PR #1103 — same digamma fix |
+| #937 mlgamma digamma | :white_check_mark: PR #1103 — same digamma fix |
+| #938 robustlp gamma | :white_check_mark: PR #1103 — gamma as variable name correctly handled |
+| #1080 multi-solve classification | :white_check_mark: PR #1103 — skip comparison for multi-solve models |
+| #1071 hs62 sqr reformulation | :white_check_mark: PR #1103 — reformulate sqr(expr)=0 to expr=0 (LICQ fix) |
+| Issue docs moved to completed | :white_check_mark: 13 issue docs moved to docs/issues/completed/ |
+| Issue docs for #1099-#1102 | :white_check_mark: 4 new compilation error issue docs |
+| Parse-only pipeline | :white_check_mark: 150/153 (98.0%) — no regressions |
+| Tests | :white_check_mark: 4,209 passed (+252 from baseline), 10 skipped, 1 xfailed |
+
+**PR:** #1103
 
 ---
 
 ### Day 13 — Final Pipeline Retest + Metrics
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS
 **Effort:** —
 
 | Task | Status |
 |---|---|
-| Final pipeline retest | |
+| Final pipeline retest | :hourglass_flowing_sand: Running |
 | Final metrics recorded | |
 | Acceptance criteria evaluated | |
 
