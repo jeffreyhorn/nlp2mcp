@@ -398,7 +398,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 **Status:** COMPLETE
 **Effort:** ~1h
 
-**Key Finding:** All 7 Day 10 regressions (#1084–#1090) were resolved by PRs #1094–#1097 (merged between Days 10 and 11). No new unfinished workstream tasks remain. Only #1089 (qabel) is still open — the primary bug is fixed (MODEL STATUS 1) but the secondary alias differentiation issue is deferred.
+**Key Finding:** All 7 Day 10 regressions (#1084–#1090) were resolved to model_optimal (MODEL STATUS 1) by PRs #1094–#1097 (merged between Days 10 and 11). No new unfinished workstream tasks remain. Issue #1089 (qabel) remains open — the primary regression bug is fixed but qabel has a separate objective mismatch (nonconvex QCP with multiple valid KKT points; secondary alias differentiation issue deferred to future sprint).
 
 | Task | Status |
 |---|---|
@@ -412,11 +412,11 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 |---|---|---|---|---|
 | catmix | model_infeasible | model_optimal | mismatch (nonconvex) | #1094 |
 | fdesign | path_solve_terminated | model_optimal | **MATCH** (1.046) | #1094 |
-| harker | path_solve_terminated | model_optimal | mismatch (nonconvex) | #1097 |
+| harker | path_solve_terminated | model_optimal | mismatch (nonconvex multi-KKT: MCP=859.66, NLP=706.31) | #1097 |
 | hydro | model_infeasible | model_optimal | **MATCH** (4366944.16) | #1094 |
 | pindyck | model_infeasible | model_optimal | **MATCH** (1170.486) | #1096 |
 | port | mismatch (sign flip) | model_optimal | **MATCH** (0.298) | #1094 |
-| qabel | path_solve_terminated | model_optimal | mismatch (nonconvex) | #1095 |
+| qabel | path_solve_terminated | model_optimal | mismatch (nonconvex QCP; alias differentiation deferred, #1089) | #1095 |
 
 **Pipeline Metrics (Day 11):**
 
