@@ -1,9 +1,10 @@
 # ps5_s_mn: Objective Mismatch — 5-Type Principal-Agent Monte Carlo, Multi-Solve
 
 **GitHub Issue:** [#1108](https://github.com/jeffreyhorn/nlp2mcp/issues/1108)
-**Status:** OPEN
+**Status:** RESOLVED (short-term fix applied)
+**Resolved:** 2026-03-16
 **Model:** ps5_s_mn (GAMSlib SEQ=374)
-**Error category:** `objective_mismatch`
+**Error category:** `objective_mismatch` → `compare_multi_solve_skip`
 **MCP objective:** 0.728
 **NLP objective:** 0.4254
 **Absolute difference:** 0.30
@@ -37,6 +38,12 @@ NLP reference is from last iteration (t=1000, different random data). MCP uses f
 
 MCP=0.728 vs NLP SB_lic(t=1)=0.421 — even with matching data, a 73% mismatch from non-convex KKT multiplicity with the `b(i) = x(i)**0.5` revenue function.
 
+## Resolution
+
+**Short-term fix applied:** Set `multi_solve: true` in `data/gamslib/gamslib_status.json`. The pipeline comparison now skips this model with category `compare_multi_solve_skip`, removing it from the mismatch count.
+
+**Remaining long-term work:** Multi-solve warm-start infrastructure. Deferred — 6h+ architectural change.
+
 ## Reproduction
 
 ```bash
@@ -48,19 +55,11 @@ gams data/gamslib/raw/ps5_s_mn.gms lo=2
 # NLP obj = 0.4254
 ```
 
-## Recommended Fix
-
-1. **Short-term**: Set `multi_solve: true` in `gamslib_status.json` to skip comparison
-2. **Long-term**: Multi-solve warm-start infrastructure
-
 ## Related Issues
 
 - #963 (ps3_s_mn): 3-type variant, same pattern
 - #964 (ps10_s): 10-type single-solve variant
 - #944 (ps5_s_mn): Multi-solve pattern incompatibility (broader)
 - #1080: Multi-solve classification infrastructure (resolved, but flags not applied)
+- #1109: Multi-solve database flags not applied (this fix)
 - #917, #1102: Previous compilation errors (RESOLVED)
-
-## Estimated Effort
-
-Short-term (database flag): 15 minutes. Long-term (warm-start): 6h+ architectural change.
