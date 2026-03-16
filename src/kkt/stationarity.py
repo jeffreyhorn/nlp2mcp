@@ -50,6 +50,11 @@ from src.kkt.naming import (
 )
 from src.kkt.objective import extract_objective_info
 
+# Sentinel value used in offset keys to mark variable positions that have no
+# matching equation index (dimension-mismatch cases, e.g. 1-D equation
+# contributing to a 2-D variable).  Deliberately larger than any real offset.
+_SENTINEL_UNMATCHED: int = 999
+
 
 def _compute_lead_lag_conditions(model_ir: ModelIR) -> dict[str, Expr]:
     """Compute implicit lead/lag domain restrictions for equations.
@@ -2285,7 +2290,7 @@ def _compute_index_offset_key(
         # positions to distinguish groups.
         if len(eq_indices) < len(var_indices):
             # Find which var position(s) the eq indices match
-            offsets_list: list[int] = [999] * len(var_indices)
+            offsets_list: list[int] = [_SENTINEL_UNMATCHED] * len(var_indices)
             used_eq: set[int] = set()
             for vi, ve in enumerate(var_indices):
                 for ei, ee in enumerate(eq_indices):
@@ -2512,7 +2517,7 @@ def _add_indexed_jacobian_terms(
                     # the element→domain mapping doesn't have key collisions
                     # (e.g., avoid t(five,five) where both map to the same key).
                     group_row_id, group_col_id = group_entries[0]
-                    if any(o == 999 for o in offset_key) and len(group_entries) > 1:
+                    if any(o == _SENTINEL_UNMATCHED for o in offset_key) and len(group_entries) > 1:
                         for _rid, _cid in group_entries:
                             _, _vidx = jacobian.index_mapping.col_to_var[_cid]
                             if len(set(_vidx)) == len(_vidx):
@@ -2529,7 +2534,7 @@ def _add_indexed_jacobian_terms(
                     #   "1" -> "i" (position 0)
                     #   "2" -> "j" (position 1)
                     # This ensures x(1) - x(2) becomes x(i) - x(j), not x(i) - x(i).
-                    is_dim_mismatch = any(o == 999 for o in offset_key)
+                    is_dim_mismatch = any(o == _SENTINEL_UNMATCHED for o in offset_key)
                     if is_dim_mismatch:
                         # Issue #1086: For dimension-mismatch (e.g., 1D eq nbal(n) →
                         # 2D var t(n,np)), build element mapping from the representative
@@ -2543,12 +2548,12 @@ def _add_indexed_jacobian_terms(
                         for vi, vdom in enumerate(var_domain):
                             if vi < len(rep_var_indices):
                                 overrides[rep_var_indices[vi]] = vdom
-                            # For unmatched positions (sentinel 999), the variable
+                            # For unmatched positions (sentinel), the variable
                             # index came from a sum iteration variable (alias). Find
                             # that alias and remap it to the variable domain name.
                             if (
                                 vi < len(offset_key)
-                                and offset_key[vi] == 999
+                                and offset_key[vi] == _SENTINEL_UNMATCHED
                                 and vi < len(rep_var_indices)
                             ):
                                 # The concrete element at this position came from
