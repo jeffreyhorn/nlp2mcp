@@ -919,6 +919,9 @@ def resolve_index_conflicts(
                         return EquationRef(eq_ref.name, eq_indices, eq_ref.attribute)
                 return eq_ref
 
+            case SymbolRef(name) if active_aliases and name.lower() in active_aliases:
+                return SymbolRef(active_aliases[name.lower()])
+
             case Const() | SymbolRef() | SetAttrRef() | ModelAttrRef():
                 return e
 

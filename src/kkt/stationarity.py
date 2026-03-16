@@ -1409,6 +1409,8 @@ def _replace_indices_in_expr(
             smt_domain: tuple[str, ...] | None = None
             if model_ir and smt.set_name in model_ir.sets:
                 smt_domain = model_ir.sets[smt.set_name].domain
+            # Build equation domain set for checking if element came from equation index
+            eq_domain_lower = {d.lower() for d in equation_domain} if equation_domain else set()
             new_idx_list: list[Expr] = []
             for pos, idx in enumerate(smt.indices):
                 if (
@@ -1423,8 +1425,17 @@ def _replace_indices_in_expr(
                     and idx.name not in model_ir.sets
                     and idx.name not in model_ir.aliases
                 ):
-                    # Use set's declared domain for this position
-                    new_idx_list.append(SymbolRef(smt_domain[pos]))
+                    # Issue #1086: If the element maps via element_to_set to a
+                    # set name that is in the equation domain, use that mapping
+                    # instead of positional resolution. The equation domain
+                    # index is authoritative for elements that originated from
+                    # equation instance substitution.
+                    mapped_set = element_to_set[idx.name]
+                    if mapped_set.lower() in eq_domain_lower:
+                        new_idx_list.append(SymbolRef(mapped_set))
+                    else:
+                        # Use set's declared domain for this position
+                        new_idx_list.append(SymbolRef(smt_domain[pos]))
                 else:
                     new_idx_list.append(
                         _replace_indices_in_expr(
