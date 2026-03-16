@@ -23,6 +23,7 @@ Sets
 Alias(s, sp);
 Alias(s, spp);
 Alias(i, j);
+Alias(s, s__kkt1);
 
 Parameters
     pi(s,i,sp,j,spp)
@@ -63,11 +64,12 @@ c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e
 
 Variables
     pvcost
-    nu_constr(s,i)
+    nu_constr(sp,j)
 ;
 
 Positive Variables
     z(s,i,sp)
+    lam_equil(s,sp)
     piL_z(s,i,sp)
 ;
 
@@ -92,6 +94,7 @@ z.l(s,i,sp) = 1;
 
 Equations
     stat_z(s,i,sp)
+    comp_equil(s,spp)
     comp_lo_z(s,i,sp)
     constr(sp,j)
     cost
@@ -102,9 +105,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(spp, (1 - b * pi(s,i,s,i,spp)) * nu_constr(s,i)) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s__kkt1,j,sp)) * nu_constr(s__kkt1,j)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
+comp_equil(s,spp).. ((-1) * (z(s,"disrupted",spp) * (ord(spp) - ord(s)))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_z(s,i,sp).. z(s,i,sp) - 0 =G= 0;
@@ -129,6 +133,7 @@ cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 
 Model mcp_model /
     stat_z.z,
+    comp_equil.lam_equil,
     constr.nu_constr,
     cost.pvcost,
     comp_lo_z.piL_z

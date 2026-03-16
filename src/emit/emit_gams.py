@@ -55,6 +55,7 @@ from src.ir.ast import (
     SetMembershipTest,
     SubsetIndex,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
@@ -400,7 +401,9 @@ def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     if isinstance(expr, SubsetIndex):
         si_indices: tuple[str, ...] = tuple(new_idx if i == old_idx else i for i in expr.indices)
         return SubsetIndex(expr.subset_name, si_indices)
-    # For any other type (SymbolRef, ModelAttrRef, CompileTimeConstant), return as-is
+    if isinstance(expr, SymbolRef):
+        return SymbolRef(new_idx) if expr.name == old_idx else expr
+    # For any other type (ModelAttrRef, CompileTimeConstant), return as-is
     return expr
 
 
@@ -473,6 +476,35 @@ def _contains_variable(expr: Expr) -> bool:
         return any(_contains_variable(idx) for idx in expr.indices)
     if isinstance(expr, LhsConditionalAssign):
         return _contains_variable(expr.rhs) or _contains_variable(expr.condition)
+    return False
+
+
+def _is_provably_zero(expr: Expr) -> bool:
+    """Return True if *expr* is structurally provably zero.
+
+    Detects patterns that evaluate to zero after index substitution:
+    - Const(0)
+    - A - A  (subtraction of structurally identical expressions)
+    - A * B  where either factor is provably zero (zero-product property)
+    - Unary("-", A) where A is provably zero
+    - (-1) * A  or A * (-1) where A is provably zero
+
+    Used by the diagonal-triviality check (Section 2c) to handle cases like
+    z(s,"disrupted",s) * (ord(s) - ord(s)) where the second factor is zero,
+    making the entire product zero regardless of the VarRef in the first factor.
+    """
+    if isinstance(expr, Const) and expr.value == 0.0:
+        return True
+    if isinstance(expr, Binary):
+        if expr.op == "-" and expr.left == expr.right:
+            return True
+        if expr.op == "*":
+            return _is_provably_zero(expr.left) or _is_provably_zero(expr.right)
+        if expr.op in ("+", "-"):
+            # 0 + 0 = 0;  0 - 0 = 0
+            return _is_provably_zero(expr.left) and _is_provably_zero(expr.right)
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _is_provably_zero(expr.child)
     return False
 
 
@@ -1634,6 +1666,17 @@ def emit_gams_mcp(
                 and subst_lhs.left == subst_lhs.right
                 and isinstance(subst_rhs, Const)
                 and subst_rhs.value == 0.0
+            ):
+                is_trivial = True
+            # Check 2b (Issue #1104): LHS is structurally zero after substitution.
+            # Handles: (-1) * (z(s,"disrupted",s) * (ord(s) - ord(s))) =G= 0
+            # where the (ord(s) - ord(s)) factor is provably zero, making the
+            # entire product zero regardless of the VarRef factor.
+            if (
+                not is_trivial
+                and isinstance(subst_rhs, Const)
+                and subst_rhs.value == 0.0
+                and _is_provably_zero(subst_lhs)
             ):
                 is_trivial = True
             # Check 3 (Issue #1021): Collect additive terms, cancel matching
