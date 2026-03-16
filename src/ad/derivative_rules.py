@@ -200,6 +200,35 @@ def _diff_const(
     return Const(0.0)
 
 
+def _strip_quotes(s: str) -> str:
+    """Strip surrounding single or double quotes from a string."""
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+        return s[1:-1]
+    return s
+
+
+def _indices_match(
+    a: tuple[str | IndexOffset, ...],
+    b: tuple[str | IndexOffset, ...],
+) -> bool:
+    """Compare index tuples with quote normalization.
+
+    Issue #1104: VarRef indices from parsed equations may contain embedded
+    quotes (e.g., '"disrupted"') while instance indices from set enumeration
+    use the unquoted form ('disrupted'). This function normalizes string
+    indices by stripping quotes before comparison.
+    """
+    if len(a) != len(b):
+        return False
+    for ai, bi in zip(a, b, strict=True):
+        if isinstance(ai, str) and isinstance(bi, str):
+            if _strip_quotes(ai).lower() != _strip_quotes(bi).lower():
+                return False
+        elif ai != bi:
+            return False
+    return True
+
+
 def _diff_varref(
     expr: VarRef,
     wrt_var: str,
@@ -270,8 +299,11 @@ def _diff_varref(
         else:
             return Const(0.0)
 
-    # Indices specified: must match exactly
-    if expr.indices == wrt_indices:
+    # Indices specified: must match (with quote normalization)
+    # Issue #1104: VarRef indices from parsed equations may contain embedded
+    # quotes (e.g., '"disrupted"') while instance indices from set enumeration
+    # use unquoted form ('disrupted'). Normalize before comparison.
+    if _indices_match(expr.indices, wrt_indices):
         return Const(1.0)
     else:
         return Const(0.0)
