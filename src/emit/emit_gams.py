@@ -58,7 +58,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VariableDef, VarKind
+from src.ir.symbols import EquationDef, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
@@ -78,6 +78,63 @@ def _merge_exclude_params(*sets: set[str] | None) -> set[str] | None:
             else:
                 result |= s
     return result
+
+
+def _expr_uses_func(expr: Expr, func_name: str) -> bool:
+    """Check if an expression tree contains a Call to the given function."""
+    if isinstance(expr, Call) and expr.func == func_name:
+        return True
+    if isinstance(expr, Call):
+        return any(_expr_uses_func(a, func_name) for a in expr.args)
+    if isinstance(expr, Binary):
+        return _expr_uses_func(expr.left, func_name) or _expr_uses_func(expr.right, func_name)
+    if isinstance(expr, Unary):
+        return _expr_uses_func(expr.child, func_name)
+    if isinstance(expr, Sum):
+        return _expr_uses_func(expr.body, func_name)
+    if isinstance(expr, Prod):
+        return _expr_uses_func(expr.body, func_name)
+    if isinstance(expr, DollarConditional):
+        return _expr_uses_func(expr.value_expr, func_name) or _expr_uses_func(
+            expr.condition, func_name
+        )
+    return False
+
+
+def _kkt_uses_digamma(kkt: KKTSystem) -> bool:
+    """Check if any KKT equation uses the digamma__ approximation."""
+
+    def _check_eq(eq: EquationDef) -> bool:
+        if eq.lhs_rhs:
+            for side in eq.lhs_rhs:
+                if isinstance(side, Expr) and _expr_uses_func(side, "digamma__"):
+                    return True
+        return False
+
+    for eq in kkt.stationarity.values():
+        if _check_eq(eq):
+            return True
+    for cp in kkt.complementarity_ineq.values():
+        if _check_eq(cp.equation):
+            return True
+    return False
+
+
+# Digamma (psi) approximation macro.
+# Uses asymptotic series with unconditional argument shifting by 8.
+# For any x > 0: psi(x) = psi(x+8) - sum_{k=0}^{7} 1/(x+k)
+# The asymptotic series at z = x+8 >= 8 gives ~14 digits of accuracy.
+# psi(z) ~ ln(z) - 1/(2z) - 1/(12z^2) + 1/(120z^4) - 1/(252z^6) + 1/(240z^8)
+DIGAMMA_MACRO = """\
+$onText
+  digamma__ : smooth approximation of the digamma (psi) function.
+  Uses asymptotic expansion at z = x+8 with recurrence shift.
+  Unconditional (no ifthen) - safe for MCP/NLP.
+  Accurate to ~14 digits for x > 0.
+$offText
+$macro digamma__asy(z) (log(z) - 1/(2*(z)) - 1/(12*sqr(z)) + 1/(120*power(z,4)) - 1/(252*power(z,6)) + 1/(240*power(z,8)))
+$macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1/((x)+4) - 1/((x)+3) - 1/((x)+2) - 1/((x)+1) - 1/(x))
+"""
 
 
 def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
@@ -776,6 +833,10 @@ def emit_gams_mcp(
         sections.append("  - Primal feasibility: g(x) ≤ 0, h(x) = 0, lo ≤ x ≤ up")
         sections.append("$offText")
         sections.append("")
+
+    # Emit digamma macro if needed (Issue #935-938)
+    if _kkt_uses_digamma(kkt):
+        sections.append(DIGAMMA_MACRO)
 
     # Original model symbols
     if add_comments:

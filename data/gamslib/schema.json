@@ -155,6 +155,10 @@
         "model_statistics": {
           "$ref": "#/definitions/model_statistics",
           "description": "Model statistics extracted from IR (variables, equations, parameters, sets)"
+        },
+        "multi_solve": {
+          "type": "boolean",
+          "description": "True if the original model contains multiple solve statements or loop-based solves, making NLP reference objective incomparable with MCP"
         }
       }
     },
@@ -649,6 +653,7 @@
         "compare_nlp_failed",
         "compare_mcp_failed",
         "compare_both_infeasible",
+        "compare_multi_solve_skip",
         "compare_not_performed"
       ]
     }

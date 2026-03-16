@@ -587,18 +587,7 @@ def _diff_call(
     elif func == "errorf":
         return _diff_errorf(expr, wrt_var, wrt_indices, config)
     elif func in ("gamma", "loggamma"):
-        # Check arity first for consistent error semantics with other functions
-        if len(expr.args) != 1:
-            raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
-        # Gamma derivatives require the digamma/psi function, which GAMS doesn't have.
-        # d/dx[gamma(x)] = gamma(x) * psi(x)
-        # d/dx[loggamma(x)] = psi(x)
-        # Since psi() is not available in GAMS, we cannot emit valid code.
-        raise ValueError(
-            f"Differentiation of '{func}' requires the digamma/psi function, "
-            f"which is not available in GAMS. Models using {func}() in the "
-            f"objective or constraints cannot be converted to MCP."
-        )
+        return _diff_gamma(expr, wrt_var, wrt_indices, config)
     elif func == "smin":
         return _diff_smin(expr, wrt_var, wrt_indices, config)
     elif func == "smax":
@@ -1014,6 +1003,48 @@ def _diff_errorf(
 
     # coeff * du/dx
     return Binary("*", coeff, darg_dx)
+
+
+def _diff_gamma(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """Derivative of gamma(u) and loggamma(u).
+
+    Mathematical formulas:
+        d/dx[loggamma(u)] = digamma(u) * du/dx
+        d/dx[gamma(u)]    = gamma(u) * digamma(u) * du/dx
+
+    The digamma function is emitted as ``Call("digamma__", ...)``.
+    The GAMS emitter provides a ``$macro digamma__`` that implements
+    an asymptotic series approximation with argument shifting.
+
+    Args:
+        expr: Call("gamma", [arg]) or Call("loggamma", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+    """
+    func = expr.func
+    if len(expr.args) != 1:
+        raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    digamma_u = Call("digamma__", (arg,))
+
+    if func == "loggamma":
+        # d/dx[loggamma(u)] = digamma(u) * du/dx
+        return Binary("*", digamma_u, darg_dx)
+    else:
+        # d/dx[gamma(u)] = gamma(u) * digamma(u) * du/dx
+        gamma_u = Call("gamma", (arg,))
+        return Binary("*", Binary("*", gamma_u, digamma_u), darg_dx)
 
 
 # ============================================================================
