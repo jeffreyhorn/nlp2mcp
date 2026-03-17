@@ -679,11 +679,11 @@ This table maps each PREP_PLAN.md task to the unknowns it should verify during e
 | Priority | Count | Unknowns |
 |----------|-------|----------|
 | Critical | 4 | KU-01, KU-02, KU-05, KU-08 |
-| High | 9 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24 |
-| Medium | 9 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21, KU-25, KU-26 |
+| High | 11 | KU-03, KU-04, KU-06, KU-10, KU-15, KU-19, KU-22, KU-23, KU-24, KU-27, KU-28 |
+| Medium | 11 | KU-07, KU-09, KU-11, KU-12, KU-13, KU-20, KU-21, KU-25, KU-26, KU-29, KU-30 |
 | Low | 4 | KU-14, KU-16, KU-17, KU-18 |
 
-**All Critical and High unknowns have verification plans with deadlines ≤ Day 3.**
+**All Critical and High unknowns from prep (KU-01–KU-26) have verification plans with deadlines ≤ Day 3. KU-27–KU-30 were discovered during Sprint 22 implementation and are documented for Sprint 23.**
 
 ---
 
@@ -744,5 +744,5 @@ Use this template during Sprint 22 to track verification results.
 ---
 
 **Document Created:** 2026-03-05
-**Total Unknowns:** 26 (across 7 categories)
-**Next Steps:** Verify unknowns during Tasks 2-10; update Verification Status Tracking table
+**Total Unknowns:** 30 (26 from prep across 7 categories + 4 discovered during Sprint 22)
+**Next Steps:** KU-27–KU-30 deferred to Sprint 23; all prep unknowns (KU-01–KU-26) verified
