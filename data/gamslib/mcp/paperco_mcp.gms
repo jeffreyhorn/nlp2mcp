@@ -30,7 +30,6 @@ Parameters
     cp(p,q) /'pulp-1'.kraft 40, 'pulp-1'.newsprint 60, 'pulp-1'.printing 70, 'pulp-2'.kraft 55, 'pulp-2'.newsprint 50, 'pulp-2'.printing 45/
     sdat(q,*) /kraft.lower 18, kraft.upper 25, newsprint.lower 12, newsprint.upper 15, printing.upper 7/
     pq(q) /kraft 265, newsprint 275, printing 310/
-    pp(p)
     pc(w) /ground 18, chips 16/
     psdat(scenario,p,*) /'scenario-2'.'pulp-1'.s 3, 'scenario-2'.'pulp-2'.s 3, 'scenario-3'.'pulp-1'.s 6, 'scenario-3'.'pulp-2'.s 10/
     ppdat(scenario,p) /'scenario-1'.'pulp-1' 120, 'scenario-1'.'pulp-2' 140, 'scenario-2'.'pulp-1' 120, 'scenario-2'.'pulp-2' 140, 'scenario-3'.'pulp-1' 120, 'scenario-3'.'pulp-2' 150/
@@ -39,6 +38,9 @@ Parameters
 Scalars
     plog /65/
 ;
+
+Parameter pp(p);
+pp(p) = ppdat('scenario-1',p) ;
 
 * ============================================
 * Variables (Primal + Multipliers)

@@ -40,8 +40,6 @@ Parameters
     prob(n) /'n-0' 1/
     sprob(n)
     ScenRedParms(*)
-    ScenRedReport(*)
-    report(method,run,*)
 ;
 
 Scalars
@@ -53,15 +51,16 @@ Scalars
 ;
 
 $onImplicitAssign
-leaf(n) = yes$(sum(n, 1));
+leaf(n) = yes$(sum(()$(tn(n)), 1));
 sn(n) = 1;
 $offImplicitAssign
 
-Alias(n, n__);
 dem(j,n) = stdat(n,j);
 prob(n)$(tn("time-1",n)) = stdat(n,"prob");
-prob(n)$(tn("time-2",n)) = sum((nn,n__), stdat(nn,"prob") * stdat(n__,"prob"));
+prob(n)$(tn("time-2",n)) = sum(nn$(tree(nn,n)), stdat(nn,"prob") * stdat(n,"prob"));
 sprob(n) = prob(n);
+
+ScenRedParms('reduction_method') = ord('0-default') - 1 ;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -121,24 +120,20 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(sn, sn__);
-
 * Stationarity equations
 stat_x(i,t).. c(i) + lam_bal + sum((j,sn), ((-1) * a(j,i)) * lam_dembalx(j,t,sn)) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. (-1) * lam_dembalx(j,t,n) - piL_y(j,t,n) =E= 0;
+stat_y(j,t,n).. ((-1) * lam_dembalx(j,t,n)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1)) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembalx(j,t,sn)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - (dem(j,sn) + eps * sum((nn,sn__), y(j,t-1,nn))) =G= 0;
+comp_dembalx(j,t,sn)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - (dem(j,sn) + eps * sum(nn$(tree(nn,sn)), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,t).. x(i,t) - 0 =G= 0;
 comp_lo_y(j,t,n).. y(j,t,n) - 0 =G= 0;
 
 * Original equality equations
-obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,sn), sprob(sn) * f(j,t) * y(j,t,sn));
+obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,sn)$(tn(t,sn)), sprob(sn) * f(j,t) * y(j,t,sn));
 
 
 * ============================================

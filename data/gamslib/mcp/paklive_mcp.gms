@@ -192,9 +192,9 @@ stat_rcost.. 1 + nu_costrat + lam_credit =E= 0;
 stat_rev.. -1 + nu_totalrev =E= 0;
 stat_wcost.. 1 + nu_costwater + lam_credit =E= 0;
 stat_wpurchase(t).. ((-1) * watercost) * nu_costwater - lam_water(t) - piL_wpurchase(t) + piU_wpurchase(t) =E= 0;
-stat_xcrop(c).. ((-1) * crev(c)) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr(c) * lam_bullock + sum(ta, cinput("credit",ta,c) * lam_credit) + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop(c) + piU_xcrop(c) =E= 0;
+stat_xcrop(c).. ((-1) * crev(c)) * nu_totalrev + sum(t, cinput("landuse",t,c) * lam_land(t)) + sum(t, cinput("irrwat",t,c) * lam_water(t)) + sum(t, cinput("labor",t,c) * lam_labor(t)) + sum((dp,t), cinput(dp,t,c) * lam_draft(dp,t)) + bullockr(c) * lam_bullock + cinput("credit","annual",c) * lam_credit + sum((n,t), cinput(n,t,c) * lam_nutbal(n,t)) - piL_xcrop(c) + piU_xcrop(c) =E= 0;
 stat_xlabor(t).. ((-1) * laborcost) * nu_costlabor - lam_labor(t) - piL_xlabor(t) =E= 0;
-stat_xlivestk(h).. ((-1) * gmargin(h)) * nu_totalrev + sum(t, linput("labor",t,h) * lam_labor(t)) + sum((dp,t), linput(dp,t,h) * lam_draft(dp,t)) + ((-1) * bullocka(h)) * lam_bullock + sum(ta, linput("credit",ta,h) * lam_credit) + sum((n,t), linput(n,t,h) * lam_nutbal(n,t)) - piL_xlivestk(h) =E= 0;
+stat_xlivestk(h).. ((-1) * gmargin(h)) * nu_totalrev + sum(t, linput("labor",t,h) * lam_labor(t)) + sum((dp,t), linput(dp,t,h) * lam_draft(dp,t)) + ((-1) * bullocka(h)) * lam_bullock + linput("credit","annual",h) * lam_credit + sum((n,t), linput(n,t,h) * lam_nutbal(n,t)) - piL_xlivestk(h) =E= 0;
 stat_xrations(n,t).. ((-1) * rationcost(n)) * nu_costrat - lam_nutbal(n,t) - piL_xrations(n,t) =E= 0;
 stat_xtransf(n,t).. (((-1) * eff(n)) * lam_nutbal(n,t+1))$(ord(t) <= card(t) - 1) + (((-1) * eff(n)) * lam_nutbal(n,t-1))$(ord(t) > 1) - piL_xtransf(n,t) =E= 0;
 

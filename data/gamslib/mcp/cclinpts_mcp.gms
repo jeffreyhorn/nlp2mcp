@@ -116,7 +116,6 @@ b.l('s30') = 5.0;
 Equations
     stat_b(j)
     stat_fb(j)
-    stat_objv
     comp_lo_b(j)
     comp_up_b(j)
     FBCalc(j)
@@ -132,7 +131,6 @@ Equations
 * Stationarity equations
 stat_b(j).. ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$(sameas(j, 's1')) + nu_b_fx_s30$(sameas(j, 's30')) - piL_b(j) + piU_b(j) =E= 0;
 stat_fb(j).. nu_FBCalc(j) =E= 0;
-stat_objv.. 0 =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_b(j).. b(j) - 5 =G= 0;
@@ -163,7 +161,6 @@ b_fx_s30.. b("s30") - 100 =E= 0;
 Model mcp_model /
     stat_b.b,
     stat_fb.fb,
-    stat_objv.objv,
     FBCalc.nu_FBCalc,
     b_fx_s1.nu_b_fx_s1,
     b_fx_s30.nu_b_fx_s30,

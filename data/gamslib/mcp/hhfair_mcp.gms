@@ -189,7 +189,7 @@ utility(t).. u(t) =E= (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) 
 income(t).. y(t) =E= w * l(t) + r * a(t);
 taxes(t).. tax(t) =E= d * y(t) - tr;
 savings(t).. s(t) =E= y(t) - tax(t) - p * c(t);
-budget(tl).. s(tl) =E= a(tl) - a(tl-1) + m(tl) - m(tl-1);
+budget(tl)$(ord(tl) > 1).. s(tl) =E= a(tl) - a(tl-1) + m(tl) - m(tl-1);
 timemoney(t).. n(t) * (m(t) - gamma1 * p * c(t)) =E= gamma2;
 terminal(tt).. a(tt) + m(tt) =E= am;
 a_fx_0.. a("0") - 1000 =E= 0;
@@ -204,6 +204,7 @@ m_fx_0.. m("0") - 100 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 s.fx(tl)$(not (t(tl))) = 0;
+nu_budget.fx(tl)$(not (ord(tl) > 1)) = 0;
 lam_dom1.fx(tl)$(not (t(tl))) = 0;
 nu_income.fx(tl)$(not (t(tl))) = 0;
 nu_savings.fx(tl)$(not (t(tl))) = 0;

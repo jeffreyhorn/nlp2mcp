@@ -126,7 +126,6 @@ Equations
     stat_pf(h)
     stat_px(i)
     stat_pz(j)
-    stat_uu
     stat_x(i)
     stat_z(j)
     comp_lo_f(h,j)
@@ -159,7 +158,6 @@ stat_f(h,j).. ((-1) * (b(j) * prod(h__, f(h__,j) ** beta(h__,j)) * sum(h__, f(h_
 stat_pf(h).. sum(i, ((-1) * (px(i) * alpha(i) * FF(h) / sqr(px(i)))) * nu_eqX(i)) + sum(j, ((-1) * (((-1) * (beta(h,j) * pz(j) * z(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_pf_fx_LAB$(sameas(h, 'LAB')) - piL_pf(h) =E= 0;
 stat_px(i).. ((-1) * (((-1) * (alpha(i) * sum(h, pf(h) * FF(h)))) / sqr(px(i)))) * nu_eqX(i) + nu_eqZ(i) - piL_px(i) =E= 0;
 stat_pz(j).. sum(h, ((-1) * (pf(h) * z(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqZ(j) - piL_pz(j) =E= 0;
-stat_uu.. 0 =E= 0;
 stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) + nu_eqpx(i) - piL_x(i) =E= 0;
 stat_z(j).. nu_eqpz(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * pz(j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqpx(j) - piL_z(j) =E= 0;
 
@@ -200,7 +198,6 @@ Model mcp_model /
     stat_pf.pf,
     stat_px.px,
     stat_pz.pz,
-    stat_uu.uu,
     stat_x.x,
     stat_z.z,
     eqF.nu_eqF,

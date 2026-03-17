@@ -42,7 +42,7 @@ Parameters
     yw(te,at,s,cl)
     yv(te,te,s,cl,k)
     iad(at,s)
-    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-sl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6/
+    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6/
     b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6/
     pd(cf) /pulp 147, sawnwood 70/
@@ -131,6 +131,8 @@ Positive Variables
     lam_pfs(s,k,te)
     lam_sy1(te)
     lam_sy2(c,te)
+    lam_sy3(te)
+    lam_sy4(t)
     lam_bal(c,te)
     lam_cap(m,t)
     piL_w(s,k,u,te)
@@ -183,6 +185,8 @@ Equations
     comp_pfs(s,k,t)
     comp_sy1(te)
     comp_sy2(cl,te)
+    comp_sy3(te)
+    comp_sy4(t)
     comp_lo_h(m,t)
     comp_lo_r(c,te)
     comp_lo_v(s,k,t,te)
@@ -204,16 +208,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(m,t).. ((-1) * (sgm * nu(m) * 1$(avl(t,t)))) * nu_ainvc(t) + ((-1) * 1$(avl(t,t))) * lam_cap(m,t) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+1))$(ord(t) <= card(t) - 1) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+2))$(ord(t) <= card(t) - 2) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+3))$(ord(t) <= card(t) - 3) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+4))$(ord(t) <= card(t) - 4) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+5))$(ord(t) <= card(t) - 5) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+6))$(ord(t) <= card(t) - 6) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+7))$(ord(t) <= card(t) - 7) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t+8))$(ord(t) <= card(t) - 8) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-1))$(ord(t) > 1) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-2))$(ord(t) > 2) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-3))$(ord(t) > 3) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-4))$(ord(t) > 4) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-5))$(ord(t) > 5) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-6))$(ord(t) > 6) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-7))$(ord(t) > 7) + (((-1) * 1$(avl(t,t))) * lam_cap(m,t-8))$(ord(t) > 8) - piL_h(m,t) =E= 0;
+stat_h(m,t).. sum(tp, ((-1) * (sgm * nu(m) * 1$(avl(t,tp)))) * nu_ainvc(t)) + sum(tp, ((-1) * 1$(avl(t,tp))) * lam_cap(m,t)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+1))$(ord(t) <= card(t) - 1)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+2))$(ord(t) <= card(t) - 2)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+3))$(ord(t) <= card(t) - 3)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+4))$(ord(t) <= card(t) - 4)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+5))$(ord(t) <= card(t) - 5)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+6))$(ord(t) <= card(t) - 6)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+7))$(ord(t) <= card(t) - 7)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t+8))$(ord(t) <= card(t) - 8)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-1))$(ord(t) > 1)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-2))$(ord(t) > 2)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-3))$(ord(t) > 3)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-4))$(ord(t) > 4)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-5))$(ord(t) > 5)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-6))$(ord(t) > 6)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-7))$(ord(t) > 7)) + sum(tp, (((-1) * 1$(avl(t,tp))) * lam_cap(m,t-8))$(ord(t) > 8)) - piL_h(m,t) =E= 0;
 stat_phik(t).. ((-1) * (delt(t) * (-1))) + nu_ainvc(t) =E= 0;
 stat_phil(t).. ((-1) * (delt(t) * (-1))) + nu_acutc(t) =E= 0;
 stat_phip(t).. ((-1) * (delt(t) * (-1))) + nu_aplnt(t) =E= 0;
 stat_phir(t).. ((-1) * (delt(t) * (-1))) + nu_aproc(t) =E= 0;
 stat_phix(t).. ((-1) * delt(t)) + nu_asales(t) =E= 0;
-stat_r(c,te)$(cl(c)).. nu_lbal(c,te) + ((-1) * muc) * nu_acutc(te) + ((-1) * 1$(cl(c))) * lam_bal(c,te) - lam_sy1(te) - lam_sy2(c,te) + lam_sy2(c,te+1)$(ord(te) <= card(te) - 1) - piL_r(c,te) =E= 0;
-stat_v(s,k,t,te).. sum(cl, ((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te)) + ((-1) * 1$(vpos(t,t))) * lam_pfs(s,k,t) - piL_v(s,k,t,te) =E= 0;
-stat_w(s,k,u,te).. sum(cl, ((-1) * yw(te,u,s,cl)) * nu_lbal(cl,te)) + 1$(ord(u) + ord(te) <= 5) * 1$(wpos(u,te)) * nu_wbnd + 10 * 1$(wpos(u,te)) * lam_efs(s,k,u) + ((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te) - piL_w(s,k,u,te) =E= 0;
-stat_x(c,t)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales(t)) + 1$(cf(c)) * lam_bal(c,t) - piL_x(c,t) =E= 0;
+stat_r(c,te)$(cl(c)).. nu_lbal(c,te) + ((-1) * muc) * nu_acutc(te) + ((-1) * 1$(cl(c))) * lam_bal(c,te) - lam_sy1(te) - lam_sy2(c,te) + lam_sy2(c,te+1)$(ord(te) <= card(te) - 1) - lam_sy3(te) - piL_r(c,te) =E= 0;
+stat_v(s,k,t,te).. sum(cl, ((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te)) + 1$(vpos(t,te)) * lam_pfs(s,k,t) - piL_v(s,k,t,te) =E= 0;
+stat_w(s,k,u,te).. sum(cl, ((-1) * yw(te,u,s,cl)) * nu_lbal(cl,te)) + 1$(ord(u) + ord(te) <= 5) * 1$(wpos(u,te)) * nu_wbnd + sum(t, 10 * 1$(wpos(u,t)) * lam_efs(s,k,u)) + ((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te) - piL_w(s,k,u,te) =E= 0;
+stat_x(c,t)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales(t)) - lam_sy4(t) + 1$(cf(c)) * lam_bal(c,t) - piL_x(c,t) =E= 0;
 stat_z(p,t).. ((-1) * pc(p)) * nu_aproc(t) + sum(c, ((-1) * a(c,p)) * lam_bal(c,t)) + sum(m, b(m,p) * lam_cap(m,t)) - piL_z(p,t) =E= 0;
 
 * Inequality complementarity equations
@@ -223,6 +227,8 @@ comp_efs(s,k,u).. ((-1) * (10 * sum(t$(wpos(u,t)), w(s,k,u,t)) - iad(u,s) * scd(
 comp_pfs(s,k,t).. ((-1) * (sum(te$(vpos(t,te)), v(s,k,t,te)) - (sum(u$(wpos(u,t)), w(s,k,u,t)) + sum(tp$(vpos(tp,t)), v(s,k,tp,t))))) =G= 0;
 comp_sy1(te)$(ord(te) > 1).. sum(cl, r(cl,te)) - sum(cl, r(cl,te-1)) =G= 0;
 comp_sy2(cl,te)$(ord(te) > 1).. r(cl,te) - r(cl,te-1) =G= 0;
+comp_sy3(te)$(ord(te) > 1).. r("pulplogs",te) - r("pulplogs",te-1) =G= 0;
+comp_sy4(t)$(ord(t) > 1).. x("pulp",t) - x("pulp",t-1) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_h(m,t).. h(m,t) - 0 =G= 0;
@@ -256,6 +262,8 @@ x.fx(c,t)$(not (cf(c))) = 0;
 piL_x.fx(c,t)$(not (cf(c))) = 0;
 lam_sy1.fx(te)$(not (ord(te) > 1)) = 0;
 lam_sy2.fx(cl,te)$(not (ord(te) > 1)) = 0;
+lam_sy3.fx(te)$(not (ord(te) > 1)) = 0;
+lam_sy4.fx(t)$(not (ord(t) > 1)) = 0;
 lam_bal.fx(c,te)$(not (t(te))) = 0;
 lam_pfs.fx(s,k,te)$(not (t(te))) = 0;
 lam_sy2.fx(c,te)$(not (cl(c))) = 0;
@@ -293,6 +301,8 @@ Model mcp_model /
     comp_pfs.lam_pfs,
     comp_sy1.lam_sy1,
     comp_sy2.lam_sy2,
+    comp_sy3.lam_sy3,
+    comp_sy4.lam_sy4,
     acutc.nu_acutc,
     ainvc.nu_ainvc,
     aplnt.nu_aplnt,

@@ -31,7 +31,6 @@ Sets
 Parameters
     coefs(l,*) /one.alpha 1, one.beta 0.5, one.rho 19, one.eta 0.2, two.alpha 2, two.beta 0.4, two.rho 27, two.eta 0.01, three.alpha 1.5, three.beta 0.3, three.rho 30, three.eta 0.3/
     pairs(n,np,*) /one.four.kappa 1, one.four.nu 0.5, one.five.kappa 2, one.five.nu 0.2, two.six.kappa 3, two.six.nu 0.3, three.six.kappa 1, three.six.nu 0.4, four.one.kappa 2, four.one.nu 0.3, four.five.kappa 1, four.five.nu 0.1, four.six.kappa 1, four.six.nu 0.1, five.one.kappa 3, five.one.nu 0.5, five.four.kappa 2, five.four.nu 0.2, five.six.kappa 1, five.six.nu 1, six.two.kappa 2, six.two.nu 0.25, six.three.kappa 2, six.three.nu 0.2, six.four.kappa 1, six.four.nu 0.9, six.five.kappa 3, six.five.nu 0.8/
-    irep(iter,n,np)
 ;
 
 Scalars
@@ -43,6 +42,8 @@ Scalars
 $onImplicitAssign
 arc(n,np) = pairs(n,np,"kappa");
 $offImplicitAssign
+
+objold = harkoli objVal ;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -114,14 +115,10 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(n, n__);
-
 * Stationarity equations
-stat_d(n)$(l(n)).. ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
-stat_s(n)$(l(n)).. 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
-stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,n)) - piL_t(n,np) =E= 0;
+stat_d(n)$(l(n)).. sum(l$(sameas(l, n)), ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * 2 * d(n)))) + ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
+stat_s(n)$(l(n)).. sum(l$(sameas(l, n)), coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) + 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
+stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) + ((-1) * 1$(arc(n,np))) * nu_nbal(n) - piL_t(n,np) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(n).. d(n) - 0 =G= 0;
@@ -130,7 +127,7 @@ comp_lo_t(n,np).. t(n,np) - 0 =G= 0;
 
 * Original equality equations
 bal.. sum(l, d(l)) =E= sum(l, s(l));
-nbal(n).. s(n)$(l(n)) + sum((np,n__), t(np,n__)) =E= d(n)$(l(n)) + sum((n__,np), t(n__,np));
+nbal(n).. s(n)$(l(n)) + sum(np$(arc(np,n)), t(np,n)) =E= d(n)$(l(n)) + sum(np$(arc(n,np)), t(n,np));
 objdef.. obj =E= sum(l, coefs(l,"rho") * d(l) - pm * coefs(l,"eta") * sqr(d(l))) - sum(l, coefs(l,"alpha") * s(l) + coefs(l,"beta") * sqr(s(l))) - sum((n,np)$(arc(n,np)), pairs(n,np,"kappa") * t(n,np) + tm * pairs(n,np,"nu") * power(t(n,np), 3));
 
 

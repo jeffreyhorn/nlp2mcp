@@ -119,6 +119,15 @@ cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 
 
 * ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_equil.fx(s,spp)$(ord(s) = ord(spp)) = 0;
+
+* ============================================
 * Model MCP Declaration
 * ============================================
 

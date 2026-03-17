@@ -34,7 +34,6 @@ Parameters
     b(k) /labor 3712, capital 5000/
     p0(i) /food 0.5942, 'h-industry' 1.6167, 'l-industry' 1.31077/
     y0(h)
-    q0(i)
     gamma(g,h)
     beta(g,h)
     alpha(g,h)

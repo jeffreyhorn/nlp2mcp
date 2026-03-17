@@ -96,16 +96,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + (((-1) * (0.5 * h)) * nu_x_eqn(i-1))$(ord(i) > 1) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * nu_length_eqn =E= 0;
-stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) - nu_x_eqn(i) + nu_x_eqn(i-1)$(ord(i) > 1) + nu_x_fx_i0$(sameas(i, 'i0')) + nu_x_fx_i50$(sameas(i, 'i50')) =E= 0;
+stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + (((-1) * (0.5 * h)) * nu_x_eqn(i-1))$(ord(i) > 1) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) * nu_length_eqn =E= 0;
+stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) * 1$(nh(i)) - nu_x_eqn(i) + nu_x_eqn(i-1)$(ord(i) > 1) + nu_x_fx_i0$(sameas(i, 'i0')) + nu_x_fx_i50$(sameas(i, 'i50')) =E= 0;
 
 * Original equality equations
-obj.. energy =E= 0.5 * h * sum(i, x(i) * sqrt(1 + sqr(u(i))) + x(i+1) * sqrt(1 + sqr(u(i+1))));
-x_eqn(i).. x(i+1) =E= x(i) + 0.5 * h * (u(i) + u(i+1));
-length_eqn.. 0.5 * h * sum(i, sqrt(1 + sqr(u(i))) + sqrt(1 + sqr(u(i+1)))) =E= L;
+obj.. energy =E= 0.5 * h * sum(i$(nh(i)), x(i) * sqrt(1 + sqr(u(i))) + x(i+1) * sqrt(1 + sqr(u(i+1))));
+x_eqn(i)$(ord(i) <= card(i) - 1).. x(i+1) =E= x(i) + 0.5 * h * (u(i) + u(i+1));
+length_eqn.. 0.5 * h * sum(i$(nh(i)), sqrt(1 + sqr(u(i))) + sqrt(1 + sqr(u(i+1)))) =E= L;
 x_fx_i0.. x("i0") - 1 =E= 0;
 x_fx_i50.. x("i50") - 3 =E= 0;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_x_eqn.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

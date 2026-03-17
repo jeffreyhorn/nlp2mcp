@@ -84,7 +84,7 @@ r.fx('1974') = 500;
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 * POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
+* clamped to min(max(value, 1e-6), upper_bound).
 
 $onImplicitAssign
 p.l('1975') = 14.0;
@@ -140,10 +140,13 @@ s.l('1990') = 7.0;
 s.l(t) = min(max(s.l(t), 1e-6), s.up(t));
 cs.l(to) = 7 * ord(to);
 cs.l(t) = min(max(cs.l(t), 1e-6), cs.up(t));
-r.l(t) = 1;
 d.l(to) = td.l(to) - s.l(to);
 d.l(t) = min(max(d.l(t), 1e-6), d.up(t));
 $offImplicitAssign
+
+loop(t$to(t),
+   r.l(t) = r.l(t-1) - d.l(t)
+);
 
 * ============================================
 * Equations
@@ -189,7 +192,7 @@ stat_cs(t).. ((-1) * ((1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7) * log(1.
 stat_d(t)$(to(t)).. nu_req(t) + nu_deq(t) + ((-1) * (p(t) - 250 / r(t))) * nu_drev(t) - piL_d(t) =E= 0;
 stat_p(t)$(to(t)).. 0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + ((-1) * d(t)) * nu_drev(t) - piL_p(t) =E= 0;
 stat_r(t).. nu_req(t) + ((-1) * nu_req(t+1))$(ord(t) <= card(t) - 1) + nu_r_fx_1974$(sameas(t, '1974')) + ((-1) * (d(t) * ((-1) * ((-250) / sqr(r(t)))))) * nu_drev(t) - piL_r(t) =E= 0;
-stat_rev(t)$(to(t)).. nu_drev(t) =E= 0;
+stat_rev(t)$(to(t)).. ((-1) * (1.05 ** (1 - ord(t)))) + nu_drev(t) =E= 0;
 stat_s(t).. nu_seq(t) + ((-0.75) * nu_seq(t+1))$(ord(t) <= card(t) - 1) - nu_cseq(t) + nu_s_fx_1974$(sameas(t, '1974')) + nu_deq(t) - piL_s(t) =E= 0;
 stat_td(t).. nu_tdeq(t) + ((-0.87) * nu_tdeq(t+1))$(ord(t) <= card(t) - 1) + nu_td_fx_1974$(sameas(t, '1974')) - nu_deq(t) - piL_td(t) =E= 0;
 
@@ -202,11 +205,11 @@ comp_lo_s(t).. s(t) - 0 =G= 0;
 comp_lo_td(t).. td(t) - 0 =G= 0;
 
 * Original equality equations
-tdeq(t).. td(t) =E= 0.87 * td(t-1) - 0.13 * p(t) + demand(t);
-seq(t).. s(t) =E= 0.75 * s(t-1) + (1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7);
-cseq(t).. cs(t) =E= cs(t-1) + s(t);
+tdeq(t)$(ord(t) > 1).. td(t) =E= 0.87 * td(t-1) - 0.13 * p(t) + demand(t);
+seq(t)$(ord(t) > 1).. s(t) =E= 0.75 * s(t-1) + (1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7);
+cseq(t)$(ord(t) > 1).. cs(t) =E= cs(t-1) + s(t);
 deq(to).. d(to) =E= td(to) - s(to);
-req(t).. r(t) =E= r(t-1) - d(t);
+req(t)$(ord(t) > 1).. r(t) =E= r(t-1) - d(t);
 drev(to).. rev(to) =E= d(to) * (p(to) - 250 / r(to));
 tprofit.. profit =E= sum(to, rev(to) * 1.05 ** (1 - ord(to)));
 td_fx_1974.. td("1974") - 18 =E= 0;
@@ -227,6 +230,10 @@ piL_d.fx(t)$(not (to(t))) = 0;
 p.fx(t)$(not (to(t))) = 0;
 piL_p.fx(t)$(not (to(t))) = 0;
 rev.fx(t)$(not (to(t))) = 0;
+nu_cseq.fx(t)$(not (ord(t) > 1)) = 0;
+nu_req.fx(t)$(not (ord(t) > 1)) = 0;
+nu_seq.fx(t)$(not (ord(t) > 1)) = 0;
+nu_tdeq.fx(t)$(not (ord(t) > 1)) = 0;
 nu_deq.fx(t)$(not (to(t))) = 0;
 nu_drev.fx(t)$(not (to(t))) = 0;
 

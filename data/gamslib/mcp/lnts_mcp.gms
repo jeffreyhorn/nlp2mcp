@@ -121,7 +121,7 @@ Equations
 * Stationarity equations
 stat_step.. nh + sum((c,h), ((-1) * (2 * y(c,h) * 0.5)) * nu_pos_eqn(c,h)) + sum(h, ((-1) * (2 * a * cos(u(h)) * 0.5)) * nu_velo1_eqn(h)) + sum(h, ((-1) * (2 * a * sin(u(h)) * 0.5)) * nu_velo2_eqn(h)) - piL_step =E= 0;
 stat_u(h).. ((-1) * (0.5 * step * a * ((-1) * (sin(u(h)))))) * nu_velo1_eqn(h) + (((-1) * (0.5 * step * a * ((-1) * (sin(u(h)))))) * nu_velo1_eqn(h-1))$(ord(h) > 1) + ((-1) * (0.5 * step * a * cos(u(h)))) * nu_velo2_eqn(h) + (((-1) * (0.5 * step * a * cos(u(h)))) * nu_velo2_eqn(h-1))$(ord(h) > 1) - piL_u(h) + piU_u(h) =E= 0;
-stat_y(c,h)$(ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or ord(c) > 2 or ord(c) > 2 and ord(h) > 1 or sameas(c, 'y1') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h50') or sameas(c, 'y3') and sameas(h, 'h0') or sameas(c, 'y3') and sameas(h, 'h50') or sameas(c, 'y4') and sameas(h, 'h0') or sameas(c, 'y4') and sameas(h, 'h50')).. ((-1) * nu_pos_eqn(c,h)) + nu_pos_eqn(c,h-1)$(ord(h) > 1) + (((-1) * (0.5 * step)) * nu_pos_eqn(c-2,h))$(ord(c) > 2) + (((-1) * (0.5 * step)) * nu_pos_eqn(c-2,h-1))$(ord(c) > 2 and ord(h) > 1) + nu_y_fx_y1_h0$(sameas(c, 'y1') and sameas(h, 'h0')) + nu_y_fx_y2_h0$(sameas(c, 'y2') and sameas(h, 'h0')) + nu_y_fx_y2_h50$(sameas(c, 'y2') and sameas(h, 'h50')) + nu_y_fx_y3_h0$(sameas(c, 'y3') and sameas(h, 'h0')) + nu_y_fx_y3_h50$(sameas(c, 'y3') and sameas(h, 'h50')) + nu_y_fx_y4_h0$(sameas(c, 'y4') and sameas(h, 'h0')) + nu_y_fx_y4_h50$(sameas(c, 'y4') and sameas(h, 'h50')) =E= 0;
+stat_y(c,h)$(ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or ord(c) > 2 or ord(c) > 2 and ord(h) > 1 or sameas(c, 'y1') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h50') or ord(h) <= card(h) - 1 or sameas(c, 'y3') and sameas(h, 'h0') or sameas(c, 'y3') and sameas(h, 'h50') or sameas(c, 'y4') and sameas(h, 'h0') or sameas(c, 'y4') and sameas(h, 'h50')).. ((-1) * nu_pos_eqn(c,h)) + nu_pos_eqn(c,h-1)$(ord(h) > 1) + (((-1) * (0.5 * step)) * nu_pos_eqn(c-2,h))$(ord(c) > 2) + (((-1) * (0.5 * step)) * nu_pos_eqn(c-2,h-1))$(ord(c) > 2 and ord(h) > 1) + nu_y_fx_y1_h0$(sameas(c, 'y1') and sameas(h, 'h0')) + nu_y_fx_y2_h0$(sameas(c, 'y2') and sameas(h, 'h0')) + nu_y_fx_y2_h50$(sameas(c, 'y2') and sameas(h, 'h50')) - nu_velo1_eqn(h) + nu_y_fx_y3_h0$(sameas(c, 'y3') and sameas(h, 'h0')) + nu_y_fx_y3_h50$(sameas(c, 'y3') and sameas(h, 'h50')) - nu_velo2_eqn(h) + nu_y_fx_y4_h0$(sameas(c, 'y4') and sameas(h, 'h0')) + nu_y_fx_y4_h50$(sameas(c, 'y4') and sameas(h, 'h50')) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_step.. step - 0 =G= 0;
@@ -132,9 +132,9 @@ comp_up_u(h)$(pi / 2 < inf).. pi / 2 - u(h) =G= 0;
 
 * Original equality equations
 tf_eqn.. tf =E= step * nh;
-pos_eqn(c,h).. y(c,h+1) =E= y(c,h) + 0.5 * step * (y(c+2,h) + y(c+2,h+1));
-velo1_eqn(h).. y("y3",h+1) =E= y("y3",h) + 0.5 * step * (a * cos(u(h)) + a * cos(u(h+1)));
-velo2_eqn(h).. y("y4",h+1) =E= y("y4",h) + 0.5 * step * (a * sin(u(h)) + a * sin(u(h+1)));
+pos_eqn(c,h)$((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1)).. y(c,h+1) =E= y(c,h) + 0.5 * step * (y(c+2,h) + y(c+2,h+1));
+velo1_eqn(h)$(ord(h) <= card(h) - 1).. y("y3",h+1) =E= y("y3",h) + 0.5 * step * (a * cos(u(h)) + a * cos(u(h+1)));
+velo2_eqn(h)$(ord(h) <= card(h) - 1).. y("y4",h+1) =E= y("y4",h) + 0.5 * step * (a * sin(u(h)) + a * sin(u(h+1)));
 y_fx_y1_h0.. y("y1","h0") - 0 =E= 0;
 y_fx_y2_h0.. y("y2","h0") - 0 =E= 0;
 y_fx_y3_h0.. y("y3","h0") - 0 =E= 0;
@@ -151,9 +151,12 @@ y_fx_y4_h50.. y("y4","h50") - 0 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-y.fx(c,h)$(not (ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or ord(c) > 2 or ord(c) > 2 and ord(h) > 1 or sameas(c, 'y1') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h50') or sameas(c, 'y3') and sameas(h, 'h0') or sameas(c, 'y3') and sameas(h, 'h50') or sameas(c, 'y4') and sameas(h, 'h0') or sameas(c, 'y4') and sameas(h, 'h50'))) = 0;
+y.fx(c,h)$(not (ord(c) <= card(c) - 2 and ord(h) <= card(h) - 1 or ord(h) > 1 or ord(c) > 2 or ord(c) > 2 and ord(h) > 1 or sameas(c, 'y1') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h0') or sameas(c, 'y2') and sameas(h, 'h50') or ord(h) <= card(h) - 1 or sameas(c, 'y3') and sameas(h, 'h0') or sameas(c, 'y3') and sameas(h, 'h50') or sameas(c, 'y4') and sameas(h, 'h0') or sameas(c, 'y4') and sameas(h, 'h50'))) = 0;
 piL_u.fx(h)$(not (((-1) * pi) / 2 > -inf)) = 0;
 piU_u.fx(h)$(not (pi / 2 < inf)) = 0;
+nu_pos_eqn.fx(c,h)$(not ((ord(c) <= card(c) - 2) and (ord(h) <= card(h) - 1))) = 0;
+nu_velo1_eqn.fx(h)$(not (ord(h) <= card(h) - 1)) = 0;
+nu_velo2_eqn.fx(h)$(not (ord(h) <= card(h) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -33,10 +33,6 @@ Parameters
     mean(stocks)
     covar(stocks,stocks)
     riskaver(rapscenarios) /r1 0.00025, r2 0.0005, r3 0.00075, r4 0.001, r5 0.0015, r6 0.002, r7 0.003, r8 0.005, r9 0.01, r10 0.011, r11 0.0125, r12 0.015, r13 0.025, r14 0.05, r15 0.1, r16 0.3, r17 0.5, r18 1, r19 2.5, r20 5, r21 10, r22 15, r23 20, r24 40, r25 80/
-    stockoutput(rapscenarios,stocks)
-    objlevel(rapscenarios)
-    investavshadow(rapscenarios)
-    output(*,rapscenarios)
 ;
 
 Scalars

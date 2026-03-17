@@ -71,7 +71,6 @@ X.l(i) = min(max(X.l(i), 1e-6), X.up(i));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_uu
     stat_x(i)
     comp_lo_x(i)
     eqX(i)
@@ -87,7 +86,6 @@ Equations
 Alias(i, i__);
 
 * Stationarity equations
-stat_uu.. 0 =E= 0;
 stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
@@ -112,7 +110,6 @@ obj.. uu =E= prod(i, x(i) ** alpha(i));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_uu.uu,
     stat_x.x,
     eqX.nu_eqX,
     obj.UU,

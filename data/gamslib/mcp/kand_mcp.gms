@@ -39,10 +39,9 @@ Scalars
     b /50/
 ;
 
-Alias(n, n__);
 dem(n,j) = stdat(n,j);
 prob(n)$(tn("time-1",n)) = stdat(n,"prob");
-prob(n)$(tn("time-2",n)) = sum((nn,n__), stdat(nn,"prob") * stdat(n__,"prob"));
+prob(n)$(tn("time-2",n)) = sum(nn$(tree(nn,n)), stdat(nn,"prob") * stdat(n,"prob"));
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -102,24 +101,20 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(n, n__);
-
 * Stationarity equations
 stat_x(i,t).. c(i) + lam_bal + sum((j,n), ((-1) * a(j,i)) * lam_dembalx(j,t,n)) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. prob(n) * f(j,t) - lam_dembalx(j,t,n) - piL_y(j,t,n) =E= 0;
+stat_y(j,t,n).. prob(n) * f(j,t) * 1$(tn(t,n)) - lam_dembalx(j,t,n) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+9))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 9)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+10))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 10)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+11))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 11)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+1))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 1)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+2))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 2)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+3))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 3)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+4))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 4)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+5))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 5)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+6))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 6)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+7))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 7)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+8))$(ord(t) <= card(t) - 1 and ord(n) <= card(n) - 8)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-9))$(ord(t) <= card(t) - 1 and ord(n) > 9)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-8))$(ord(t) <= card(t) - 1 and ord(n) > 8)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-7))$(ord(t) <= card(t) - 1 and ord(n) > 7)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-6))$(ord(t) <= card(t) - 1 and ord(n) > 6)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-5))$(ord(t) <= card(t) - 1 and ord(n) > 5)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-4))$(ord(t) <= card(t) - 1 and ord(n) > 4)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-3))$(ord(t) <= card(t) - 1 and ord(n) > 3)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-2))$(ord(t) <= card(t) - 1 and ord(n) > 2)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-1))$(ord(t) <= card(t) - 1 and ord(n) > 1)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-10))$(ord(t) <= card(t) - 1 and ord(n) > 10)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-11))$(ord(t) <= card(t) - 1 and ord(n) > 11)) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembalx(j,t,n)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum((nn,n__), y(j,t-1,nn))) =G= 0;
+comp_dembalx(j,t,n)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,n) - (dem(n,j) + eps * sum(nn$(tree(nn,n)), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,t).. x(i,t) - 0 =G= 0;
 comp_lo_y(j,t,n).. y(j,t,n) - 0 =G= 0;
 
 * Original equality equations
-obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,n), prob(n) * f(j,t) * y(j,t,n));
+obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,n)$(tn(t,n)), prob(n) * f(j,t) * y(j,t,n));
 
 
 * ============================================

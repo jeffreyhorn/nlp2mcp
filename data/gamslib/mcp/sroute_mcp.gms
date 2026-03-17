@@ -26,7 +26,6 @@ Alias(i, ipp);
 Parameters
     darc(i,ip)
     uarc(i,ip) /boston.chicago 58, boston.'wash-dc' 25, chicago.'kansas-cty' 29, chicago.memphis 32, chicago.portland 130, chicago.'salt-lake' 85, dallas.'kansas-cty' 29, dallas.losangeles 85, dallas.memphis 28, dallas.'salt-lake' 75, 'kansas-cty'.memphis 27, 'kansas-cty'.'salt-lake' 66, 'kansas-cty'.'wash-dc' 62, losangeles.portland 58, losangeles.'salt-lake' 43, memphis.'wash-dc' 53, portland.'salt-lake' 48/
-    sroute(i,ip)
 ;
 
 $onImplicitAssign
@@ -54,6 +53,7 @@ Variables
 
 Positive Variables
     x(i,ip,ipp)
+    lam_nb(i,ip)
     piL_x(i,ip,ipp)
 ;
 
@@ -78,6 +78,7 @@ x.l(i,ip,ipp) = 1;
 
 Equations
     stat_x(i,ip,ipp)
+    comp_nb(i,ip)
     comp_lo_x(i,ip,ipp)
     cd
 ;
@@ -87,9 +88,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,ip,ipp).. darc(i,ip) - piL_x(i,ip,ipp) =E= 0;
+stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(i,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
 
 * Inequality complementarity equations
+comp_nb(i,ip)$((not sameas(i, ip))).. sum(ipp$(darc(ipp,ip)), x(i,ipp,ip)) - (sum(ipp$(darc(ip,ipp)), x(i,ip,ipp)) + 1) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,ip,ipp).. x(i,ip,ipp) - 0 =G= 0;
@@ -97,6 +99,15 @@ comp_lo_x(i,ip,ipp).. x(i,ip,ipp) - 0 =G= 0;
 * Original equality equations
 cd.. cost =E= sum((i,ip,ipp), darc(ip,ipp) * x(i,ip,ipp));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_nb.fx(i,ip)$(not ((not sameas(i, ip)))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -113,6 +124,7 @@ cd.. cost =E= sum((i,ip,ipp), darc(ip,ipp) * x(i,ip,ipp));
 
 Model mcp_model /
     stat_x.x,
+    comp_nb.lam_nb,
     cd.cost,
     comp_lo_x.piL_x
 /;

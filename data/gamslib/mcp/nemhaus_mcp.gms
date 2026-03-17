@@ -25,7 +25,6 @@ Alias(i, k);
 
 Parameters
     a(i,k) /'act-1'.'act-3' 2, 'act-1'.'act-4' 4, 'act-1'.'act-5' 3, 'act-2'.'act-3' 6, 'act-2'.'act-4' 2, 'act-2'.'act-5' 3, 'act-3'.'act-1' 2, 'act-3'.'act-2' 6, 'act-3'.'act-4' 5, 'act-3'.'act-5' 3, 'act-4'.'act-1' 4, 'act-4'.'act-2' 2, 'act-4'.'act-3' 5, 'act-4'.'act-4' 3, 'act-5'.'act-1' 3, 'act-5'.'act-2' 3, 'act-5'.'act-3' 3, 'act-5'.'act-4' 3/
-    objval(jj,*)
 ;
 
 Scalars
