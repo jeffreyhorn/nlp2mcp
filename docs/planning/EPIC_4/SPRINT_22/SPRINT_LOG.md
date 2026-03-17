@@ -483,7 +483,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 - Match: 47
 - path_syntax_error: 20
 - path_solve_terminated: 10
-- model_infeasible: 15 (12 excl. permanently excluded)
+- model_infeasible: 15 total; 12 in-scope after excluding 3 permanently excluded models (feasopt1, iobalance, orani)
 - path_solve_license: 7
 
 **Issues filed for Sprint 23:**
@@ -510,7 +510,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ## Final Metrics (Day 13 — Definitive Full Pipeline)
 
-_Numbers below are from the definitive full pipeline retest (`run_full_test.py --quiet`), which re-parses, re-translates, re-solves, and re-compares all 160 in-scope models. Denominators differ from baseline (157→160 parse-attempted, 154→156 translate-attempted) because 3 additional models entered scope during the sprint._
+_Numbers below are from the definitive full pipeline retest (`run_full_test.py --quiet`), which re-parses, re-translates, re-solves, and re-compares all 160 in-scope models. Parse-attempted grew from 157 to 160 because 3 additional models entered scope during the sprint. Translate-attempted is 156 (= 160 parse-attempted minus 4 parse failures that cascade to not_tested), up from baseline 154._
 
 | Metric | Baseline | Target | Stretch | Actual | Delta | Status |
 |---|---|---|---|---|---|---|
@@ -520,7 +520,7 @@ _Numbers below are from the definitive full pipeline retest (`run_full_test.py -
 | Match | 30 | ≥ 35 | ≥ 40 | 47 | +17 | :white_check_mark: (stretch target exceeded!) |
 | path_syntax_error | 40 | ≤ 30 | ≤ 25 | 20 | −20 | :white_check_mark: (beat stretch!) |
 | path_solve_terminated | 12 | ≤ 5 | ≤ 3 | 10 | −2 | :x: (miss by 5) |
-| model_infeasible | 15 | ≤ 12 | ≤ 10 | 12 | −3 | :white_check_mark: (15 total; 12 excl. 3 permanently excluded) |
+| model_infeasible | 15 | ≤ 12 | ≤ 10 | 12 | −3 | :white_check_mark: (15 total; 12 in-scope after excluding 3 permanently excluded) |
 | Tests | 3,957 | ≥ 4,020 | — | 4,209 | +252 | :white_check_mark: |
 
 **Summary:** 6 of 8 targets met (Translate, Solve, Match, path_syntax_error, model_infeasible, Tests). 3 exceeded stretch targets (Match ≥ 40, path_syntax_error ≤ 25, Solve ≥ 85). 2 misses: parse success (97.5% vs ≥ 98.1%; 4 failures in larger 160-model corpus vs 3 in 157), path_solve_terminated (10 vs ≤ 5).
@@ -529,11 +529,11 @@ _Numbers below are from the definitive full pipeline retest (`run_full_test.py -
 - **+24 solve** (65 → 89): WS1 subcategory C fixes, WS2 pre-solver fixes, WS3 model_infeasible fixes, WS6 regression fixes, Day 12 quick wins (marco, digamma, hs62, etc.)
 - **+17 match** (30 → 47): Exceeded stretch target by +7; new matches include ibm1, jobt, mexss, pdi, uimp, whouse, fdesign, trussm, pindyck, hydro, port, hs62, mlbeta, mlgamma, marco, lands, springchain
 - **−20 path_syntax_error** (40 → 20): Beat stretch target (≤ 25) by 5; full pipeline re-translation resolved many syntax issues
-- **−3 model_infeasible** (15 → 12 in-scope): Met target (≤ 12); 3 permanently excluded (feasopt1, iobalance, orani)
+- **−3 model_infeasible** (15 → 12 in-scope after excluding 3 permanently excluded: feasopt1, iobalance, orani): Met target (≤ 12)
 - **+252 tests** (3,957 → 4,209): Extensive regression testing added throughout sprint
 
 **Note on Day 11 vs Day 13 numbers:** Day 11 used `--only-solve` (partial pipeline: solve 80, match 41, path_syntax_error 31, model_infeasible 9). Day 13 used full pipeline (re-translates everything): solve 89, match 47, path_syntax_error 20, model_infeasible 12. The differences arise because full re-translation picks up all Day 12 fixes (marco Jacobian dedup, digamma, hs62 sqr reformulation, etc.) and non-deterministic translation timing affects which models reach the solve stage.
 
 **Additional pipeline categories:**
 - path_solve_license: 7 (infrastructure limit, not code bugs)
-- Translate failures: 15/156 (4 parse failures cascade to not_tested; 15 actual translate failures)
+- Translate failures: 15 out of 156 attempted (4 additional models had parse failures and were not tested for translation)
