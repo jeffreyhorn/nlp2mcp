@@ -897,20 +897,20 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 | S23 | S24 | S25 |
-|--------|-----|-----|-----|--------------|-----|-----|-----|-----|
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 | S24 | S25 |
+|--------|-----|-----|-----|--------------|--------------|-----|-----|-----|
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | 10 | **3** | <10 | <8 | <5 | <5 |
-| internal_error (parse) | ~23 | <15 | 7 | **0** | <5 | <5 | <3 | <3 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | ≤30 | ≤2 | ≤2 | ≤2 |
-| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | ≤5 | ≤3 | ≤3 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | ≤12¹ | TBD¹ | TBD¹ | TBD¹ |
-| Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | ≥85% | ≥90% | ≥92% | ≥95% |
-| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | ≥82% | ≥85% | ≥88% | ≥90% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | ≥55% | ≥65% | ≥75% | ≥80% |
-| Full Pipeline (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | ≥50% | ≥55% | ≥65% | ≥70% |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | <8 | <5 | <5 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | <5 | <3 | <3 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | ≤15 | ≤10 | ≤5 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | ≤5 | ≤3 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | ≤8 | ≤5 | ≤5 |
+| Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | ≥97.5% | ≥98% | ≥98% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | ≥93% | ≥95% | ≥95% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | ≥70% | ≥75% | ≥80% |
+| Full Pipeline (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | ≥34% | ≥40% | ≥50% |
 
-¹ Sprint 21 retrospective recommends S22 `model_infeasible` target of ≤12; S23–S25 targets TBD pending future planning.
+² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently excluded models (feasopt1, iobalance, orani). S23–S25 targets are in-scope counts.
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
@@ -961,6 +961,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ## Changelog
 
+- **2026-03-17:** Sprint 22 final metrics recorded (6/8 targets met, 3 exceeded stretch: solve 89, match 47, path_syntax_error 20). Updated Rolling KPIs with Sprint 22 actuals and revised S23–S25 targets. 24 issues labeled `sprint-23` for Sprint 23 backlog.
 - **2026-02-06:** Reorganized sprints 18-25 after Sprint 18 scope expansion
   - Sprint 18 expanded to ~56h by pulling Sprint 19 items (emit_gams.py completion, lexer analysis, fix roadmap)
   - Content cascaded forward: S19←S20, S20←S21, S21←S22, S22←S23, S23←S24, S24←S25
