@@ -196,11 +196,11 @@ Based on Sprint 22 findings and the 24 issues labeled `sprint-23`:
 
 | Workstream | Planned Effort | Actual Effort | Models Fixed | Key PRs |
 |------------|---------------|---------------|-------------|---------|
-| WS1: path_syntax_error C | 5-9h | ~3h | 5 (robert, dyncge, korcge, paklive, tabora) | #1007 |
+| WS1: path_syntax_error C | 5-9h | ~3h | 5 (robert, dyncge, korcge, paklive, tabora) | #1006 |
 | WS2: path_solve_terminated | 6-10h | ~12h | 5 (fdesign, trussm, fawley, springchain, whouse) | #1052, #1064 |
 | WS3: model_infeasible | 4-8h | ~10h | 5 (whouse, ibm1, uimp, mexss, pdi) | #1076, #1079, #1083 |
 | WS4: Divergence investigation | 2-3h | ~4h | 1 fix (jobt), 4 reclassified | #1082 |
-| WS5: Timeout quick win | 0.5h | ~0.5h | 0 (timeout increase; models recovered at translate stage) | #1007 |
+| WS5: Timeout quick win | 0.5h | ~0.5h | 0 (timeout increase; models recovered at translate stage) | #1006 |
 | WS6: Deferred #764 | 3-4h | included in WS3 | mexss (via sameas guard) | #1076 |
 | Day 12 quick wins | — | ~6h | 8 fixes (marco, markov, digamma, hs62, etc.) | #1103 |
 | Sprint close | 2h | ~6h | Documentation and metrics | #1113, #1114 |
