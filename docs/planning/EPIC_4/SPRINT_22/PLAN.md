@@ -390,11 +390,13 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 12 criterion:** All deferred items have GitHub issues; SPRINT_LOG.md updated.
 
+**Day 12 status:** COMPLETE — 24 issues labeled `sprint-23` (22 existing + 2 new: #1111 alias-aware differentiation, #1112 dollar-condition propagation). KNOWN_UNKNOWNS.md updated with KU-27 through KU-30. SPRINT_LOG.md updated with final metrics. Days 12–13 marked complete in PLAN.md. `make test` passes (4,209 tests).
+
 ---
 
-### Day 13 — Final Pipeline Retest + Metrics
+### Day 13 — Sprint Close Prep + Final Pipeline Retest
 
-**Theme:** Final full pipeline run; record definitive metrics
+**Theme:** Combined close prep and final metrics
 **Effort:** 1–2h
 
 | Task | Deliverable |
@@ -404,6 +406,8 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 | Verify all acceptance criteria | Criteria checklist |
 
 **End of Day 13 criterion:** Final metrics recorded; all acceptance criteria evaluated.
+
+**Day 13 status:** COMPLETE — Combined with Day 12 close prep. Final metrics recorded in SPRINT_LOG.md. 5/8 targets met (2 beat stretch: Match ≥ 40, model_infeasible ≤ 10). 3 narrow misses (parse 98.0% vs ≥ 98.1%, path_syntax_error by 1, path_solve_terminated by 2).
 
 ---
 
