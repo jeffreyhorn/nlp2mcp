@@ -511,7 +511,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | model_infeasible | 15 | ≤ 12 | ≤ 10 | 9 | −6 | :white_check_mark: (beat stretch!) |
 | Tests | 3,957 | ≥ 4,020 | — | 4,209 | +252 | :white_check_mark: |
 
-**Summary:** 4 of 8 targets met (3 exceeded stretch targets). 3 narrow misses: parse success (98.0% vs ≥ 98.1%, same 3 failures but smaller corpus), path_syntax_error (31 vs ≤ 30, miss by 1), path_solve_terminated (7 vs ≤ 5, miss by 2).
+**Summary:** 5 of 8 targets met (Translate, Solve, Match, model_infeasible, Tests). 2 exceeded stretch targets (Match ≥ 40, model_infeasible ≤ 10). 3 narrow misses: parse success (98.0% vs ≥ 98.1%, same 3 failures but smaller corpus), path_syntax_error (31 vs ≤ 30, miss by 1), path_solve_terminated (7 vs ≤ 5, miss by 2).
 
 **Key achievements:**
 - **+15 solve** (65 → 80): WS1 subcategory C (+5), WS2 fdesign/trussm/springchain (+3), WS3 whouse/ibm1/uimp/mexss/pdi (+5), WS6 regression fixes (+2 restored)
