@@ -502,7 +502,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 | Metric | Baseline | Target | Stretch | Actual | Delta | Status |
 |---|---|---|---|---|---|---|
-| Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 150/153 (98.0%) | −0.1% | :white_check_mark: (maintained; corpus reduced from 157 to 153 models) |
+| Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 150/153 (98.0%) | −0.1% | :x: (narrow miss; same 3 failures, but corpus reduced from 157→153 lowers the percentage) |
 | Translate success | 136/154 (88.3%) | ≥ 139/154 | — | 141/150 (94.0%) | +5.7% | :white_check_mark: |
 | Solve success | 65 | ≥ 75 | ≥ 85 | 80 | +15 | :white_check_mark: (stretch target: miss by 5) |
 | Match | 30 | ≥ 35 | ≥ 40 | 41 | +11 | :white_check_mark: (stretch target met!) |
@@ -511,7 +511,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | model_infeasible | 15 | ≤ 12 | ≤ 10 | 9 | −6 | :white_check_mark: (beat stretch!) |
 | Tests | 3,957 | ≥ 4,020 | — | 4,209 | +252 | :white_check_mark: |
 
-**Summary:** 5 of 8 targets met (3 exceeded stretch targets). 2 narrow misses (path_syntax_error by 1, path_solve_terminated by 2). Both narrow misses are due to pipeline timing variance (models borderline between translate timeout and syntax error categories).
+**Summary:** 4 of 8 targets met (3 exceeded stretch targets). 3 narrow misses: parse success (98.0% vs ≥ 98.1%, same 3 failures but smaller corpus), path_syntax_error (31 vs ≤ 30, miss by 1), path_solve_terminated (7 vs ≤ 5, miss by 2).
 
 **Key achievements:**
 - **+15 solve** (65 → 80): WS1 subcategory C (+5), WS2 fdesign/trussm/springchain (+3), WS3 whouse/ibm1/uimp/mexss/pdi (+5), WS6 regression fixes (+2 restored)
