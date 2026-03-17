@@ -113,8 +113,8 @@ comp_lo_point(n,d).. point(n,d) - 0 =G= 0;
 comp_up_point(n,d).. 1 - point(n,d) =G= 0;
 
 * Original equality equations
-point_fx_p1_x.. point("p1",x) - 0 =E= 0;
-point_fx_p1_y.. point("p1",y) - 0 =E= 0;
+point_fx_p1_x.. point("p1","x") - 0 =E= 0;
+point_fx_p1_y.. point("p1","y") - 0 =E= 0;
 
 
 * ============================================

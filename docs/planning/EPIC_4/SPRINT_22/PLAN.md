@@ -407,7 +407,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 13 criterion:** Final metrics recorded; all acceptance criteria evaluated.
 
-**Day 13 status:** COMPLETE — Combined with Day 12 close prep. Final metrics recorded in SPRINT_LOG.md. 5/8 targets met (2 beat stretch: Match ≥ 40, model_infeasible ≤ 10). 3 narrow misses (parse 98.0% vs ≥ 98.1%, path_syntax_error by 1, path_solve_terminated by 2).
+**Day 13 status:** COMPLETE — Definitive full pipeline retest: solve 89, match 47, path_syntax_error 20, model_infeasible 12 (excl. excluded). 6/8 targets met (3 beat stretch: Solve ≥ 85, Match ≥ 40, path_syntax_error ≤ 25). 2 misses (parse 97.5% vs ≥ 98.1%, path_solve_terminated 10 vs ≤ 5).
 
 ---
 

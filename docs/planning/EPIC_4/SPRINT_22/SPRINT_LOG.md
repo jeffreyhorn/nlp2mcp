@@ -465,16 +465,26 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 ### Day 13 — Sprint Close Prep + Final Pipeline Retest
 
 **Status:** COMPLETE
-**Effort:** ~2h
+**Effort:** ~4h
 
 | Task | Status |
 |---|---|
 | 24 issues labeled with `sprint-23` | :white_check_mark: Including 2 new issues (#1111, #1112) |
 | KNOWN_UNKNOWNS.md updated | :white_check_mark: 4 new unknowns (KU-27 through KU-30) |
-| SPRINT_LOG.md updated | :white_check_mark: Final metrics recorded |
+| SPRINT_LOG.md updated | :white_check_mark: Definitive final metrics recorded |
 | PLAN.md updated | :white_check_mark: Day 12–13 marked complete |
-| Final pipeline retest | :white_check_mark: Results match Day 11 (no regressions from PR #1103) |
-| `make test` | :white_check_mark: All tests pass |
+| Full pipeline retest | :white_check_mark: solve 89, match 47 (definitive; +9/+6 vs Day 11 partial) |
+| `make test` | :white_check_mark: 4,209 passed, 10 skipped, 1 xfailed |
+
+**Definitive full pipeline results (all 160 models):**
+- Parse: 156/160 (97.5%)
+- Translate: 141/156 (90.4%)
+- Solve: 89 model_optimal
+- Match: 47
+- path_syntax_error: 20
+- path_solve_terminated: 10
+- model_infeasible: 15 total; 12 in-scope after excluding 3 permanently excluded models (feasopt1, iobalance, orani)
+- path_solve_license: 7
 
 **Issues filed for Sprint 23:**
 - 24 total issues labeled `sprint-23`
@@ -498,23 +508,32 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ---
 
-## Final Metrics (Day 13)
+## Final Metrics (Day 13 — Definitive Full Pipeline)
+
+_Numbers below are from the definitive full pipeline retest (`run_full_test.py --quiet`), which re-parses, re-translates, re-solves, and re-compares all 160 in-scope models. Parse-attempted grew from 157 to 160 because 3 additional models entered scope during the sprint. Translate-attempted is 156 (= 160 parse-attempted minus 4 parse failures that cascade to not_tested), up from baseline 154._
 
 | Metric | Baseline | Target | Stretch | Actual | Delta | Status |
 |---|---|---|---|---|---|---|
-| Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 150/153 (98.0%) | −0.1% | :x: (narrow miss; same 3 failures, but corpus reduced from 157→153 lowers the percentage) |
-| Translate success | 136/154 (88.3%) | ≥ 90.3% | — | 141/150 (94.0%) | +5.7% | :white_check_mark: |
-| Solve success | 65 | ≥ 75 | ≥ 85 | 80 | +15 | :white_check_mark: (stretch target: miss by 5) |
-| Match | 30 | ≥ 35 | ≥ 40 | 41 | +11 | :white_check_mark: (stretch target met!) |
-| path_syntax_error | 40 | ≤ 30 | ≤ 25 | 31 | −9 | :x: (miss by 1) |
-| path_solve_terminated | 12 | ≤ 5 | ≤ 3 | 7 | −5 | :x: (miss by 2) |
-| model_infeasible | 15 | ≤ 12 | ≤ 10 | 9 | −6 | :white_check_mark: (beat stretch!) |
+| Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 156/160 (97.5%) | −0.6% | :x: (4 failures vs baseline 3; corpus grew 157→160) |
+| Translate success | 136/154 (88.3%) | ≥ 90.3% | — | 141/156 (90.4%) | +2.1% | :white_check_mark: |
+| Solve success | 65 | ≥ 75 | ≥ 85 | 89 | +24 | :white_check_mark: (stretch target exceeded!) |
+| Match | 30 | ≥ 35 | ≥ 40 | 47 | +17 | :white_check_mark: (stretch target exceeded!) |
+| path_syntax_error | 40 | ≤ 30 | ≤ 25 | 20 | −20 | :white_check_mark: (beat stretch!) |
+| path_solve_terminated | 12 | ≤ 5 | ≤ 3 | 10 | −2 | :x: (miss by 5) |
+| model_infeasible | 15 | ≤ 12 | ≤ 10 | 12 | −3 | :white_check_mark: (15 total; 12 in-scope after excluding 3 permanently excluded) |
 | Tests | 3,957 | ≥ 4,020 | — | 4,209 | +252 | :white_check_mark: |
 
-**Summary:** 5 of 8 targets met (Translate, Solve, Match, model_infeasible, Tests). 2 exceeded stretch targets (Match ≥ 40, model_infeasible ≤ 10). 3 narrow misses: parse success (98.0% vs ≥ 98.1%, same 3 failures but smaller corpus), path_syntax_error (31 vs ≤ 30, miss by 1), path_solve_terminated (7 vs ≤ 5, miss by 2).
+**Summary:** 6 of 8 targets met (Translate, Solve, Match, path_syntax_error, model_infeasible, Tests). 3 exceeded stretch targets (Match ≥ 40, path_syntax_error ≤ 25, Solve ≥ 85). 2 misses: parse success (97.5% vs ≥ 98.1%; 4 failures in larger 160-model corpus vs 3 in 157), path_solve_terminated (10 vs ≤ 5).
 
 **Key achievements:**
-- **+15 solve** (65 → 80): WS1 subcategory C (+5), WS2 fdesign/trussm/springchain (+3), WS3 whouse/ibm1/uimp/mexss/pdi (+5), WS6 regression fixes (+2 restored)
-- **+11 match** (30 → 41): Beat stretch target by +1; new matches include ibm1, jobt, mexss, pdi, uimp, whouse, fdesign, trussm, pindyck, hydro, port
-- **−6 model_infeasible** (15 → 9): Beat stretch target; 4 permanently excluded + 5 fixed + 2 new = net −6
+- **+24 solve** (65 → 89): WS1 subcategory C fixes, WS2 pre-solver fixes, WS3 model_infeasible fixes, WS6 regression fixes, Day 12 quick wins (marco, digamma, hs62, etc.)
+- **+17 match** (30 → 47): Exceeded stretch target by +7; new matches include ibm1, jobt, mexss, pdi, uimp, whouse, fdesign, trussm, pindyck, hydro, port, hs62, mlbeta, mlgamma, marco, lands, springchain
+- **−20 path_syntax_error** (40 → 20): Beat stretch target (≤ 25) by 5; full pipeline re-translation resolved many syntax issues
+- **−3 model_infeasible** (15 → 12 in-scope after excluding 3 permanently excluded: feasopt1, iobalance, orani): Met target (≤ 12)
 - **+252 tests** (3,957 → 4,209): Extensive regression testing added throughout sprint
+
+**Note on Day 11 vs Day 13 numbers:** Day 11 used `--only-solve` (partial pipeline: solve 80, match 41, path_syntax_error 31, model_infeasible 9). Day 13 used full pipeline (re-translates everything): solve 89, match 47, path_syntax_error 20, model_infeasible 12. The differences arise because full re-translation picks up all Day 12 fixes (marco Jacobian dedup, digamma, hs62 sqr reformulation, etc.) and non-deterministic translation timing affects which models reach the solve stage.
+
+**Additional pipeline categories:**
+- path_solve_license: 7 (infrastructure limit, not code bugs)
+- Translate failures: 15 out of 156 attempted (4 additional models had parse failures and were not tested for translation)
