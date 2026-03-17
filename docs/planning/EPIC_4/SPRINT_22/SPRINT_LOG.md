@@ -496,15 +496,15 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 ### Day 14 — Sprint Close + Retrospective
 
-**Status:** NOT STARTED
-**Effort:** —
+**Status:** COMPLETE
+**Effort:** ~1h
 
 | Task | Status |
 |---|---|
-| Retrospective written | |
-| CHANGELOG.md updated | |
-| PROJECT_PLAN.md KPIs updated | |
-| Sprint 23 scope outlined | |
+| Retrospective written | :white_check_mark: `SPRINT_RETROSPECTIVE.md` — 7 went well, 5 to improve, 3 to do differently |
+| CHANGELOG.md updated | :white_check_mark: Sprint 22 summary entry with metrics and key changes |
+| PROJECT_PLAN.md KPIs updated | :white_check_mark: Sprint 22 actuals filled in Rolling KPIs table |
+| Sprint 23 scope outlined | :white_check_mark: 5 priorities with suggested targets in retrospective |
 
 ---
 

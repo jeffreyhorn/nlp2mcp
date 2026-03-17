@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 22 Summary - 2026-03-17
+
+**Duration:** 15 days (Day 0 – Day 14) | **6/8 targets met, 3 exceeded stretch**
+
+#### Metrics (Baseline → Final)
+- **Solve:** 65 → 89 (+24) | **Match:** 30 → 47 (+17) | **path_syntax_error:** 40 → 20 (−20)
+- **model_infeasible:** 15 total (12 in-scope; 3 permanently excluded: feasopt1, iobalance, orani) | **Tests:** 3,957 → 4,209 (+252)
+- **Parse:** 154/157 → 156/160 (97.5%) | **Translate:** 136/154 → 141/156 (90.4%)
+
+#### Key Changes
+- Stationarity domain conditioning for uncontrolled subset indices (WS1: 5 subcategory C models)
+- Objective equation identification fix requiring `=E=` and scalar domain (fdesign, trussm)
+- LHS conditional assignment for literal-index dollar conditions (fawley)
+- Implicit lead/lag domain conditioning in stationarity builder (springchain)
+- Multi-entry sameas guard refactor in `_add_indexed_jacobian_terms()` (uimp, mexss)
+- Table column gap-midpoint alignment fix (ibm1)
+- Dollar condition `_ensure_numeric_condition()` wrapper (uimp)
+- Skip lead/lag condition inference for equality equations (whouse)
+- Expression-based bound complementarity guards for infinity (ibm1)
+- Category A divergence analysis: 4 models reclassified as multi-solve incomparable
+- Category D analysis: mathopt1 is multi-KKT-point divergence (not a bug)
+- Jacobian dedup for overlapping stationarity entries (marco)
+- Digamma/psi derivative for gamma/loggamma functions (mingamma, mlbeta, mlgamma)
+- Reformulate `sqr(expr)=0` to `expr=0` for LICQ compliance (hs62)
+- Multi-solve model comparison skip
+- Translation subprocess timeout increased 60s → 150s
+- 24 issues labeled `sprint-23` for Sprint 23 backlog
+
+#### PRs
+#1006, #1052, #1064, #1076, #1079, #1082, #1083, #1092, #1094, #1095, #1096, #1097, #1103, #1113, #1114
+
 ### Sprint 22 Day 1: WS5 Timeout + WS1 Subcategory C (Part 1) - 2026-03-06
 
 **Branch:** `sprint22-day1-timeout-subcat-c`
