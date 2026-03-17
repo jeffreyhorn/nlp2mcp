@@ -16,13 +16,18 @@ from src.emit.expr_to_gams import (
     resolve_index_conflicts,
 )
 from src.ir.ast import (
+    Binary,
+    Call,
     Const,
+    DollarConditional,
     EquationRef,
     Expr,
     IndexOffset,
+    MultiplierRef,
     ParamRef,
     Prod,
     Sum,
+    Unary,
     VarRef,
 )
 from src.ir.normalize import NormalizedEquation
@@ -314,6 +319,69 @@ def emit_equation_def(
     return eq_str, aliases
 
 
+def _quote_expr_indices(expr: Expr) -> Expr:
+    """Pre-quote all string indices in VarRef/ParamRef/MultiplierRef nodes.
+
+    Issue #939: Per-element bound equations are scalar — all indices in VarRef
+    and ParamRef are concrete element labels, not domain variables.  By wrapping
+    them in double quotes here, ``expr_to_gams`` will see them as already-quoted
+    and preserve them verbatim (avoiding the heuristic that treats single-letter
+    lowercase identifiers like 'x' as domain variables).
+
+    Only string indices are quoted; IndexOffset objects are left unchanged.
+    """
+
+    def _quote_idx(idx: str | IndexOffset) -> str | IndexOffset:
+        if isinstance(idx, IndexOffset):
+            return idx
+        # Already quoted
+        if idx.startswith('"') or idx.startswith("'"):
+            return idx
+        return f'"{idx}"'
+
+    match expr:
+        case VarRef():
+            new_indices = (
+                tuple(_quote_idx(i) for i in expr.indices) if expr.indices else expr.indices
+            )
+            return VarRef(expr.name, new_indices, attribute=expr.attribute)
+        case ParamRef():
+            new_indices = (
+                tuple(_quote_idx(i) for i in expr.indices) if expr.indices else expr.indices
+            )
+            return ParamRef(expr.name, new_indices)
+        case MultiplierRef():
+            new_indices = (
+                tuple(_quote_idx(i) for i in expr.indices) if expr.indices else expr.indices
+            )
+            return MultiplierRef(expr.name, new_indices)
+        case Binary(op, left, right):
+            return Binary(op, _quote_expr_indices(left), _quote_expr_indices(right))
+        case Unary(op, child):
+            return Unary(op, _quote_expr_indices(child))
+        case Call(func, args):
+            return Call(func, tuple(_quote_expr_indices(a) for a in args))
+        case DollarConditional(value_expr, condition):
+            return DollarConditional(
+                _quote_expr_indices(value_expr), _quote_expr_indices(condition)
+            )
+        case Sum(index_sets, body, condition):
+            return Sum(
+                index_sets,
+                _quote_expr_indices(body),
+                _quote_expr_indices(condition) if condition else None,
+            )
+        case Prod(index_sets, body, condition):
+            return Prod(
+                index_sets,
+                _quote_expr_indices(body),
+                _quote_expr_indices(condition) if condition else None,
+            )
+        case _:
+            # Const, SymbolRef, SetMembershipTest, EquationRef, etc. — no indices to quote
+            return expr
+
+
 def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> str:
     """Emit a normalized equation definition in GAMS syntax.
 
@@ -330,9 +398,20 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         >>> # x_fx.. x - 10.0 =E= 0;
         >>> # x_lo.. -(x - 0.0) =L= 0;
     """
-    # PR #658: Pass domain_vars so multi-letter domain indices aren't quoted
-    domain_vars = frozenset(norm_eq.domain_sets) if norm_eq.domain_sets else frozenset()
-    expr_gams = expr_to_gams(norm_eq.expr, domain_vars=domain_vars)
+    # PR #658: Pass domain_vars so multi-letter domain indices aren't quoted.
+    if norm_eq.domain_sets:
+        domain_vars: frozenset[str] | None = frozenset(norm_eq.domain_sets)
+    else:
+        domain_vars = None
+
+    # Issue #939: Per-element bound equations are scalar — all VarRef/ParamRef
+    # indices are concrete element labels, not domain variables.  Pre-quote them
+    # so expr_to_gams treats them as already-quoted literals (avoids the heuristic
+    # that leaves single-letter lowercase identifiers like 'x' unquoted).
+    emit_expr = norm_eq.expr
+    if norm_eq.index_values and not norm_eq.domain_sets:
+        emit_expr = _quote_expr_indices(emit_expr)
+    expr_gams = expr_to_gams(emit_expr, domain_vars=domain_vars)
 
     # Determine relation
     rel_map = {Rel.EQ: "=E=", Rel.LE: "=L=", Rel.GE: "=G="}

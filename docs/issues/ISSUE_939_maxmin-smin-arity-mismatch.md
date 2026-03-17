@@ -1,99 +1,79 @@
-# maxmin: smin() Argument Count Mismatch — Expects 2 Arguments, Got 3
+# maxmin: Unquoted Element Labels in .fx Equations (GAMS $120/$340)
 
 **GitHub Issue:** [#939](https://github.com/jeffreyhorn/nlp2mcp/issues/939)
-**Status:** OPEN
-**Severity:** Medium — Model parses but cannot be translated (smin arity error)
+**Status:** PARTIALLY FIXED
+**Severity:** Medium — Model translates but compilation errors prevented solve
 **Date:** 2026-02-26
+**Last Updated:** 2026-03-17
 **Affected Models:** maxmin
-**Sprint:** 21 (Day 11 triage)
 
 ---
 
 ## Problem Summary
 
-The `maxmin.gms` model (GAMSlib SEQ=206, "Max Min Location of Points in Unit Square") parses successfully but fails during KKT translation because the symbolic differentiation engine encounters an `smin()` call with 3 arguments, but expects exactly 2.
+The original issue described an `smin()` arity mismatch error. However, the solved model
+(`maxmin1a`) does not use `smin` — only the unused `maxmin2a` model does. The `smin` arity
+issue remains for models that use multi-index `smin(domain(i,j), expr)`, but it does not
+block this model.
 
----
-
-## Model Details
-
-| Property | Value |
-|----------|-------|
-| GAMSlib SEQ | 206 |
-| Solve Type | NLP |
-| Convexity | likely_convex |
-| Reference Objective | 0.3528 |
-| Parse Status | success |
-| Translate Status | failure — `internal_error` |
-
----
-
-## Error Message
-
-```
-Error: Invalid model - smin() expects 2 arguments, got 3
+The actual blocking issue was GAMS compilation errors $120/$340 on the `.fx` equations:
+```gams
+point_fx_p1_x.. point("p1",x) - 0 =E= 0;
 ```
 
----
-
-## Reproduction
-
-```bash
-python -m src.cli data/gamslib/raw/maxmin.gms -o /tmp/maxmin_mcp.gms
-# Or:
-python scripts/gamslib/run_full_test.py --model maxmin --only-translate --verbose
-```
+The set element `x` (from set `d / x, y /`) was emitted without quotes, causing GAMS to
+interpret it as a set/alias reference rather than a literal element label.
 
 ---
 
-## Root Cause
+## Fix Applied (2026-03-17)
 
-In GAMS, `smin` (scalar minimum) has the syntax `smin(index, expression)` where `index` is a set domain and `expression` is the body to minimize over. However, the maxmin model likely uses a nested or multi-index `smin` call that the IR parser represents with 3 arguments instead of the expected 2 (domain + body).
+Added `_quote_literal_indices()` in `src/ir/normalize.py` to pre-quote per-element bound
+indices (from `fx_map`/`lo_map`/`up_map`) before they are stored in the VarRef expression.
+This ensures `expr_to_gams` treats them as UELs, not domain variables.
 
-The error is raised in `src/ad/derivative_rules.py:1345`:
-```python
-raise ValueError(f"smin() expects 2 arguments, got {len(expr.args)}")
-```
-
-This suggests either:
-1. The parser is including the domain index as a separate argument (should be part of the smin expression structure, not a plain argument)
-2. The model uses a nested smin pattern not handled by the current AST representation
-3. The smin call has a compound domain `(i,j)` that gets expanded into separate arguments
+**Before:** `point("p1",x)` — `x` unquoted, GAMS error $120/$340
+**After:** `point("p1","x")` — `x` quoted, compiles correctly
 
 ---
 
-## Possible Fixes
+## Remaining Issue: PATH Convergence
 
-| Approach | Impact | Effort |
-|----------|--------|--------|
-| Debug the smin AST representation — check how multi-index domains are stored | High — would fix this specific model | Low-Medium |
-| Update derivative rule to handle 3+ argument smin (domain expansion) | High | Low |
-| Inspect the parsed IR to understand what 3 arguments are being passed | Diagnostic | Low |
+After the compilation fix, the MCP compiles but PATH fails with execution errors (division
+by zero in stationarity equations). This is caused by the `low(n,nn)` set filtering — the
+stationarity equation has `1/sqrt(distance)` terms where `distance = 0` for electron pairs
+not in the lower-triangular filter. The `$(low(n,nn))` condition should prevent evaluation
+but the stationarity builder expands the Jacobian into per-offset terms that may not carry
+the condition properly.
 
-### Diagnostic Step
-
-```python
-import sys; sys.setrecursionlimit(50000)
-from src.ir.parser import parse_model_file
-m = parse_model_file('data/gamslib/raw/maxmin.gms')
-# Inspect equations for smin usage
-for name, eq in m.equations.items():
-    print(f"{name}: {eq.lhs} =E= {eq.rhs}")
-```
+This is the same class of issue as ISSUE_983 (elec) and ISSUE_862 (sambal) — domain
+conditions from set-filtered sums not fully propagated through the stationarity pipeline.
 
 ---
 
-## Files to Investigate
+## smin() Arity Note
+
+The original issue about `smin(low(n,nn), expr)` creating 3 arguments instead of 2 is a
+real parser issue, but does not affect the solved model `maxmin1a`. The smin multi-index
+domain handling would need to be fixed for models that actually solve using smin-based
+equations:
+- Parser's `_handle_smin_smax()` (line 5040) expands multi-index domains into separate
+  `SymbolRef` args
+- `_diff_smin` (line 1407) expects exactly 2 arguments
+- Fix: bundle multi-index domain as a tuple first argument, or use a dedicated SminExpr node
+
+---
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `src/ir/normalize.py` | Added `_quote_literal_indices()`, applied to lo_map/up_map/fx_map |
+
+## Files to Investigate (Remaining Issues)
 
 | File | Relevance |
 |------|-----------|
-| `src/ad/derivative_rules.py:1340-1350` | smin differentiation rule with arity check |
-| `src/ir/parser.py` | How smin expressions are parsed and stored in AST |
-| `src/gams/gams_grammar.lark` | Grammar rule for `smin_expr` |
-| `data/gamslib/raw/maxmin.gms` | Original model to inspect smin usage |
-
----
-
-## Related Issues
-
-- None directly — this is a unique argument count mismatch for smin
+| `src/ir/parser.py:5040` | smin multi-index domain expansion |
+| `src/ad/derivative_rules.py:1407` | smin arity check |
+| `src/kkt/stationarity.py` | Domain condition propagation for set-filtered sums |

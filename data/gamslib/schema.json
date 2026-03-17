@@ -173,6 +173,7 @@
           "enum": [
             "verified_convex",
             "likely_convex",
+            "non_convex",
             "locally_optimal",
             "infeasible",
             "unbounded",
@@ -183,6 +184,15 @@
             "not_tested"
           ],
           "description": "Convexity verification status"
+        },
+        "non_convex_reason": {
+          "type": "string",
+          "description": "Explanation of why the model is non-convex (when status is 'non_convex')"
+        },
+        "updated_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when convexity status was last updated"
         },
         "verification_date": {
           "type": "string",

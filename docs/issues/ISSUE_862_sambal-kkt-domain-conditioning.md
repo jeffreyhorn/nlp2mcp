@@ -1,10 +1,11 @@
 # Sambal: KKT Stationarity Domain Conditioning + Wrong Index Reference
 
 **GitHub Issue:** [#862](https://github.com/jeffreyhorn/nlp2mcp/issues/862)
-**Status:** PARTIALLY RESOLVED
-**Severity:** Medium — Model translates but PATH solver aborts (path_solve_terminated)
+**Status:** PARTIALLY RESOLVED — Bug 2 fixed, Bug 1 requires architectural AD changes
+**Severity:** Medium — Model translates but execution errors abort solve (division by zero)
 **Date:** 2026-02-24
 **Partially Resolved:** 2026-02-24
+**Last Updated:** 2026-03-17
 **Affected Models:** sambal
 
 ---
@@ -57,6 +58,27 @@ collapsed sum expressions in the objective to the generated stationarity equatio
 4. This is an architectural enhancement affecting the AD → stationarity pipeline
 
 **Effort estimate:** ~4-6h for Bug 1
+
+### Investigated Fix Approach (2026-03-17)
+
+Analysis confirmed that the AD engine already computes the correct gradient with the dollar
+condition embedded as `DollarConditional(1, SetMembershipTest("xw", (i,j)))` multiplied
+into the gradient expression. The issue is that `_find_variable_access_condition()` in
+`src/kkt/stationarity.py` only scans **constraint equation bodies** for conditions, not the
+**objective gradient**. The condition from the objective sum is embedded in the gradient
+expression but never extracted to become an equation-level guard.
+
+**Concrete fix path:**
+1. Add `_extract_gradient_conditions()` to `src/ad/gradient.py` to scan computed gradients
+   for embedded `DollarConditional` nodes
+2. Store extracted conditions in `KKTSystem.gradient_conditions: dict[str, Expr | None]`
+3. Modify `_find_variable_access_condition()` in `src/kkt/stationarity.py` to also check
+   gradient conditions from the objective
+4. The existing infrastructure for applying conditions at the equation level already works
+
+**Why not fixed now:** The change spans 3 files (`src/ad/gradient.py`, `src/kkt/kkt_system.py`,
+`src/kkt/stationarity.py`) and requires careful testing to ensure no regressions in the
+condition-detection pipeline for other models.
 
 ---
 

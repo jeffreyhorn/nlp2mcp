@@ -308,6 +308,14 @@ def _sanitize_set_element(element: str) -> str:
             f"GAMS injection. Dangerous characters: {dangerous_chars & set(element)}"
         )
 
+    # GUSS dict sets use three-component dot-separated elements where the
+    # last component may be an empty quoted string (e.g., rapscenarios.scenario.'').
+    # The parser stores this as a trailing dot: "rapscenarios.scenario."
+    # Restore the empty component so GAMS interprets it as a 3-tuple, not a
+    # quoted single label.  (Issue #910)
+    if element.endswith("."):
+        return element + "''"
+
     # Check if element needs quoting (spaces, +, -)
     # Elements with spaces (e.g., 'SAE 10' stripped to 'SAE 10') need re-quoting
     if _needs_quoting(element):
