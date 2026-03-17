@@ -390,7 +390,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 12 criterion:** All deferred items have GitHub issues; SPRINT_LOG.md updated.
 
-**Day 12 status:** COMPLETE — 24 issues labeled `sprint-23` (22 existing + 2 new: #1111 alias-aware differentiation, #1112 dollar-condition propagation). KNOWN_UNKNOWNS.md updated with KU-27 through KU-30. SPRINT_LOG.md updated with final metrics. PLAN.md marked complete. `make test` passes (4,209 tests).
+**Day 12 status:** COMPLETE — 24 issues labeled `sprint-23` (22 existing + 2 new: #1111 alias-aware differentiation, #1112 dollar-condition propagation). KNOWN_UNKNOWNS.md updated with KU-27 through KU-30. SPRINT_LOG.md updated with final metrics. Days 12–13 marked complete in PLAN.md. `make test` passes (4,209 tests).
 
 ---
 

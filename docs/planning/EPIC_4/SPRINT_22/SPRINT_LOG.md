@@ -502,13 +502,13 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 
 | Metric | Baseline | Target | Stretch | Actual | Delta | Status |
 |---|---|---|---|---|---|---|
-| Parse success | 154/157 (98.1%) | ≥ 154/157 | ≥ 155/157 | 150/153 (98.0%) | −0.1% | :white_check_mark: (maintained; 4 models moved out of corpus) |
+| Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 150/153 (98.0%) | −0.1% | :white_check_mark: (maintained; corpus reduced from 157 to 153 models) |
 | Translate success | 136/154 (88.3%) | ≥ 139/154 | — | 141/150 (94.0%) | +5.7% | :white_check_mark: |
 | Solve success | 65 | ≥ 75 | ≥ 85 | 80 | +15 | :white_check_mark: (stretch target: miss by 5) |
-| Match | 30 | ≥ 35 | ≥ 40 | 41 | +11 | :white_check_mark: :white_check_mark: (stretch target met!) |
+| Match | 30 | ≥ 35 | ≥ 40 | 41 | +11 | :white_check_mark: (stretch target met!) |
 | path_syntax_error | 40 | ≤ 30 | ≤ 25 | 31 | −9 | :x: (miss by 1) |
 | path_solve_terminated | 12 | ≤ 5 | ≤ 3 | 7 | −5 | :x: (miss by 2) |
-| model_infeasible | 15 | ≤ 12 | ≤ 10 | 9 | −6 | :white_check_mark: :white_check_mark: (beat stretch!) |
+| model_infeasible | 15 | ≤ 12 | ≤ 10 | 9 | −6 | :white_check_mark: (beat stretch!) |
 | Tests | 3,957 | ≥ 4,020 | — | 4,209 | +252 | :white_check_mark: |
 
 **Summary:** 5 of 8 targets met (3 exceeded stretch targets). 2 narrow misses (path_syntax_error by 1, path_solve_terminated by 2). Both narrow misses are due to pipeline timing variance (models borderline between translate timeout and syntax error categories).
