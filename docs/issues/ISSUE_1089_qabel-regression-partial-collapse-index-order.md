@@ -3,9 +3,9 @@
 **GitHub Issue:** [#1089](https://github.com/jeffreyhorn/nlp2mcp/issues/1089)
 **Status:** PARTIALLY FIXED
 **Severity:** High — model_optimal regressed to path_solve_terminated
-**Progress:** Primary bug (symbolic_wrt ordering) fixed in PR #1094. Model restored to model_optimal (MODEL STATUS 1). Objective mismatch (MCP=51133 vs NLP=46965, ~8.9%) is NOT caused by the secondary alias issue — it is a non-convex QCP local-optimum difference. The secondary alias issue (alias-aware `_diff_varref`) was attempted and reverted because it causes regressions in other models.
+**Progress:** Primary bug (symbolic_wrt ordering) fixed in PR #1094. Model restored to model_optimal (MODEL STATUS 1). Objective mismatch (MCP=51133 vs NLP=46965, ~8.9%) is caused by missing alias-aware differentiation: `d/d(x(n,k))` of `x(np,k)` returns 0 because `_diff_varref` doesn't recognize `np` as an alias of `n`. This produces an incomplete gradient (missing cross-terms from the quadratic objective). The model is provably convex (PSD quadratic objective + linear constraints), so the mismatch is a real bug, not expected behavior. A naive alias-aware fix was attempted and reverted because it causes regressions in models with independent alias iteration variables (e.g., dispatch).
 **Date:** 2026-03-14
-**Last Updated:** 2026-03-15
+**Last Updated:** 2026-03-17
 **Affected Models:** qabel
 
 ---
@@ -104,23 +104,34 @@ After the primary fix, qabel shows:
 - MCP (PATH):   obj = 51133.487
 - Mismatch: ~8.9%
 
-### Is this caused by the secondary alias issue?
+### Root Cause: Missing Alias-Aware Differentiation
 
-**No.** Investigation confirmed:
+The objective mismatch is caused by incomplete gradients due to alias-unaware differentiation.
 
-1. The generated `stat_x` stationarity equation is missing the `x(np,k)` cross-term
-   derivative: since `_diff_varref` uses exact index-tuple matching, `d/d(x(n,k))` of
-   `x(np,k)` returns 0 (because `('np','k') != ('n','k')`). Only the `x(n,k)` term
-   contributes to the gradient. Despite this, PATH finds a stationary point (MODEL STATUS 1)
-   — the missing cross-term affects the objective value but not structural solvability.
-   Note: `_find_superset_in_domain` handles subset→superset relationships only, not pure
-   aliases like `Alias(n,np)`, so the uncontrolled-index handler does not apply here.
+The qabel model is **provably convex**: the objective is a quadratic form with positive
+semi-definite penalty matrices (`wk` and `lambda` are diagonal with positive entries), and
+all constraints (`stateq`) are linear. The model header explicitly states: "this model is
+convex and should be very easy to solve."
 
-2. The objective mismatch is due to the non-convex nature of the QCP. The KKT system
-   finds a different local optimum than CONOPT. Both are valid stationary points.
+The generated `stat_x` stationarity equation is missing the `x(np,k)` cross-term
+derivative: since `_diff_varref` uses exact index-tuple matching, `d/d(x(n,k))` of
+`x(np,k)` returns 0 (because `('np','k') != ('n','k')`). Only the `x(n,k)` term
+contributes to the gradient. Despite this, PATH finds a stationary point (MODEL STATUS 1)
+— the missing cross-term affects the objective value but not structural solvability.
+Note: `_find_superset_in_domain` handles subset→superset relationships only, not pure
+aliases like `Alias(n,np)`, so the uncontrolled-index handler does not apply here.
 
-3. The MCP result (51133.487) is identical whether or not alias-aware `_diff_varref`
-   is enabled — confirmed by testing on both `main` and the experimental branch.
+The correct gradient of the quadratic objective w.r.t. `x(n,k)` should include both:
+- The `x(n,k)` term (currently captured)
+- The `x(np,k)` cross-term where `np=n` (currently missing — returns 0)
+
+Because the model is convex, the unique global optimum should be found if the gradient
+is correct. The 8.9% mismatch (MCP=51133 vs NLP=46965) is a direct consequence of the
+incomplete gradient — **not** a non-convex local-optimum difference.
+
+Note: The MCP result (51133.487) is identical whether or not alias-aware `_diff_varref`
+is enabled — the reverted experimental fix did not actually resolve the cross-term issue
+because it was too aggressive (adding spurious `sameas` guards in summation contexts).
 
 ---
 
