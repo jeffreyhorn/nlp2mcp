@@ -102,7 +102,6 @@ P.l(r,c) = 1;
 
 Equations
     stat_dint(r,c)
-    stat_obj
     stat_p(r,c)
     stat_qd(r,c)
     stat_qs(r,c)
@@ -133,13 +132,12 @@ Alias(cc, cc__);
 
 * Stationarity equations
 stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
-stat_obj.. 0 =E= 0;
 stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc__, BetadSq(r,c,cc__) * p(r,cc__)))) * nu_DEMINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c-1))$(ord(c) > 1)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc__, BetasSq(r,c,cc__) * p(r,cc__)))) * nu_SUPINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c-1))$(ord(c) > 1)) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
 stat_qd(r,c).. ((-1) * nu_DEM(r,c)) + nu_SDBAL(c) - nu_DX(r,c) =E= 0;
 stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SDBAL(c) - nu_SX(R,C) =E= 0;
 stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;
 stat_tc.. 1 + nu_TRANSCOST =E= 0;
-stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_DX(r,c) - piL_x(r,rr,c) =E= 0;
+stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_SX(R,C) + nu_DX(r,c) - piL_x(r,rr,c) =E= 0;
 
 * Inequality complementarity equations
 comp_PDIF(r,rr,c).. ((-1) * (p(r,c) - p(rr,c) - TCost(r,rr,c))) =G= 0;
@@ -184,7 +182,6 @@ lam_PDIF.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
 
 Model mcp_model /
     stat_dint.dint,
-    stat_obj.obj,
     stat_p.p,
     stat_qd.qd,
     stat_qs.qs,

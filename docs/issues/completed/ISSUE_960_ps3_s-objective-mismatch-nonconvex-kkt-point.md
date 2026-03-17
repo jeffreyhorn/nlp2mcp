@@ -1,7 +1,7 @@
 # ps3_s: Objective Mismatch — Non-Convex 3-Type Principal-Agent Model
 
 **GitHub Issue:** [#960](https://github.com/jeffreyhorn/nlp2mcp/issues/960)
-**Status:** OPEN
+**Status:** WON'T FIX — Expected behavior for non-convex models (multiple KKT points)
 **Model:** ps3_s (GAMSlib SEQ=367)
 **Error category:** `objective_mismatch`
 **MCP objective:** 1.056

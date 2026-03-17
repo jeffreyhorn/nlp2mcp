@@ -11,23 +11,30 @@ KKT System Components:
   - Primal feasibility: g(x) ≤ 0, h(x) = 0, lo ≤ x ≤ up
 $offText
 
+$onText
+  digamma__ : smooth approximation of the digamma (psi) function.
+  Uses asymptotic expansion at z = x+8 with recurrence shift.
+  Unconditional (no ifthen) - safe for MCP/NLP.
+  Accurate to ~14 digits for x > 0.
+$offText
+$macro digamma__asy(z) (log(z) - 1/(2*(z)) - 1/(12*sqr(z)) + 1/(120*power(z,4)) - 1/(252*power(z,6)) + 1/(240*power(z,8)))
+$macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1/((x)+4) - 1/((x)+3) - 1/((x)+2) - 1/((x)+1) - 1/(x))
+
 * ============================================
 * Original Model Declarations
 * ============================================
 
 Scalars
     x1opt /1.46163214496836/
-    x1delta /0.0/
-    x2delta /0.0/
+    x1delta /0/
+    x2delta /0/
     y1opt /0.8856031944108887/
-    y1delta /0.0/
-    y2delta /0.0/
-    y2opt /0.0/
+    y1delta /0/
+    y2delta /0/
+    y2opt /0/
     xtol /5e-05/
     ytol /1e-06/
 ;
-
-y2opt = log(y1opt);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -41,15 +48,11 @@ y2opt = log(y1opt);
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    y1
     y2
-    x1
     x2
-    nu_y1def
 ;
 
 Positive Variables
-    piL_x1
     piL_x2
 ;
 
@@ -61,7 +64,6 @@ Positive Variables
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
 
-x1.l = 0.01;
 x2.l = 0.01;
 
 * ============================================
@@ -73,12 +75,8 @@ x2.l = 0.01;
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_x1
     stat_x2
-    stat_y1
-    comp_lo_x1
     comp_lo_x2
-    y1def
     y2def
 ;
 
@@ -87,16 +85,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x1.. 0 + ((-1) * (gamma(x1) * psi(x1))) * nu_y1def - piL_x1 =E= 0;
-stat_x2.. psi(x2) + 0 * nu_y1def - piL_x2 =E= 0;
-stat_y1.. 0 + 1 * nu_y1def =E= 0;
+stat_x2.. digamma__(x2) - piL_x2 =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_x1.. x1 - 0.01 =G= 0;
 comp_lo_x2.. x2 - 0.01 =G= 0;
 
 * Original equality equations
-y1def.. y1 =E= gamma(x1);
 y2def.. y2 =E= loggamma(x2);
 
 
@@ -114,12 +108,8 @@ y2def.. y2 =E= loggamma(x2);
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_x1.x1,
     stat_x2.x2,
-    stat_y1.y1,
-    y1def.nu_y1def,
     y2def.y2,
-    comp_lo_x1.piL_x1,
     comp_lo_x2.piL_x2
 /;
 
@@ -128,3 +118,7 @@ Model mcp_model /
 * ============================================
 
 Solve mcp_model using MCP;
+
+Scalar nlp2mcp_obj_val;
+nlp2mcp_obj_val = y2.l;
+Display nlp2mcp_obj_val;

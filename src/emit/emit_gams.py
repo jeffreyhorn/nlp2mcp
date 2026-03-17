@@ -26,6 +26,7 @@ from src.emit.original_symbols import (
     emit_original_aliases,
     emit_original_parameters,
     emit_original_sets,
+    emit_pre_solve_param_assignments,
     emit_set_assignments,
     emit_subset_value_assignments,
     emit_var_level_loop_statements,
@@ -54,11 +55,12 @@ from src.ir.ast import (
     SetMembershipTest,
     SubsetIndex,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VariableDef, VarKind
+from src.ir.symbols import EquationDef, VariableDef, VarKind
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_bound_lo_multiplier_name,
@@ -78,6 +80,63 @@ def _merge_exclude_params(*sets: set[str] | None) -> set[str] | None:
             else:
                 result |= s
     return result
+
+
+def _expr_uses_func(expr: Expr, func_name: str) -> bool:
+    """Check if an expression tree contains a Call to the given function."""
+    if isinstance(expr, Call) and expr.func == func_name:
+        return True
+    if isinstance(expr, Call):
+        return any(_expr_uses_func(a, func_name) for a in expr.args)
+    if isinstance(expr, Binary):
+        return _expr_uses_func(expr.left, func_name) or _expr_uses_func(expr.right, func_name)
+    if isinstance(expr, Unary):
+        return _expr_uses_func(expr.child, func_name)
+    if isinstance(expr, Sum):
+        return _expr_uses_func(expr.body, func_name)
+    if isinstance(expr, Prod):
+        return _expr_uses_func(expr.body, func_name)
+    if isinstance(expr, DollarConditional):
+        return _expr_uses_func(expr.value_expr, func_name) or _expr_uses_func(
+            expr.condition, func_name
+        )
+    return False
+
+
+def _kkt_uses_digamma(kkt: KKTSystem) -> bool:
+    """Check if any KKT equation uses the digamma__ approximation."""
+
+    def _check_eq(eq: EquationDef) -> bool:
+        if eq.lhs_rhs:
+            for side in eq.lhs_rhs:
+                if isinstance(side, Expr) and _expr_uses_func(side, "digamma__"):
+                    return True
+        return False
+
+    for eq in kkt.stationarity.values():
+        if _check_eq(eq):
+            return True
+    for cp in kkt.complementarity_ineq.values():
+        if _check_eq(cp.equation):
+            return True
+    return False
+
+
+# Digamma (psi) approximation macro.
+# Uses asymptotic series with unconditional argument shifting by 8.
+# For any x > 0: psi(x) = psi(x+8) - sum_{k=0}^{7} 1/(x+k)
+# The asymptotic series at z = x+8 >= 8 gives ~14 digits of accuracy.
+# psi(z) ~ ln(z) - 1/(2z) - 1/(12z^2) + 1/(120z^4) - 1/(252z^6) + 1/(240z^8)
+DIGAMMA_MACRO = """\
+$onText
+  digamma__ : smooth approximation of the digamma (psi) function.
+  Uses asymptotic expansion at z = x+8 with recurrence shift.
+  Unconditional (no ifthen) - safe for MCP/NLP.
+  Accurate to ~14 digits for x > 0.
+$offText
+$macro digamma__asy(z) (log(z) - 1/(2*(z)) - 1/(12*sqr(z)) + 1/(120*power(z,4)) - 1/(252*power(z,6)) + 1/(240*power(z,8)))
+$macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1/((x)+4) - 1/((x)+3) - 1/((x)+2) - 1/((x)+1) - 1/(x))
+"""
 
 
 def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
@@ -342,7 +401,9 @@ def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     if isinstance(expr, SubsetIndex):
         si_indices: tuple[str, ...] = tuple(new_idx if i == old_idx else i for i in expr.indices)
         return SubsetIndex(expr.subset_name, si_indices)
-    # For any other type (SymbolRef, ModelAttrRef, CompileTimeConstant), return as-is
+    if isinstance(expr, SymbolRef):
+        return SymbolRef(new_idx) if expr.name == old_idx else expr
+    # For any other type (ModelAttrRef, CompileTimeConstant), return as-is
     return expr
 
 
@@ -415,6 +476,35 @@ def _contains_variable(expr: Expr) -> bool:
         return any(_contains_variable(idx) for idx in expr.indices)
     if isinstance(expr, LhsConditionalAssign):
         return _contains_variable(expr.rhs) or _contains_variable(expr.condition)
+    return False
+
+
+def _is_provably_zero(expr: Expr) -> bool:
+    """Return True if *expr* is structurally provably zero.
+
+    Detects patterns that evaluate to zero after index substitution:
+    - Const(0)
+    - A - A  (subtraction of structurally identical expressions)
+    - A * B  where either factor is provably zero (zero-product property)
+    - Unary("-", A) where A is provably zero
+    - (-1) * A  or A * (-1) where A is provably zero
+
+    Used by the diagonal-triviality check (Section 2c) to handle cases like
+    z(s,"disrupted",s) * (ord(s) - ord(s)) where the second factor is zero,
+    making the entire product zero regardless of the VarRef in the first factor.
+    """
+    if isinstance(expr, Const) and expr.value == 0.0:
+        return True
+    if isinstance(expr, Binary):
+        if expr.op == "-" and expr.left == expr.right:
+            return True
+        if expr.op == "*":
+            return _is_provably_zero(expr.left) or _is_provably_zero(expr.right)
+        if expr.op in ("+", "-"):
+            # 0 + 0 = 0;  0 - 0 = 0
+            return _is_provably_zero(expr.left) and _is_provably_zero(expr.right)
+    if isinstance(expr, Unary) and expr.op == "-":
+        return _is_provably_zero(expr.child)
     return False
 
 
@@ -777,6 +867,10 @@ def emit_gams_mcp(
         sections.append("$offText")
         sections.append("")
 
+    # Emit digamma macro if needed (Issue #935-938)
+    if _kkt_uses_digamma(kkt):
+        sections.append(DIGAMMA_MACRO)
+
     # Original model symbols
     if add_comments:
         sections.append("* ============================================")
@@ -953,6 +1047,13 @@ def emit_gams_mcp(
     loop_code = emit_loop_statements(kkt.model_ir)
     if loop_code:
         sections.append(loop_code)
+        sections.append("")
+
+    # Issue #1101/#1102: Emit pre-solve parameter assignments from solve-containing
+    # loops (e.g., p(i) = pt(i,'1') from multi-solve loop models)
+    pre_solve_code = emit_pre_solve_param_assignments(kkt.model_ir)
+    if pre_solve_code:
+        sections.append(pre_solve_code)
         sections.append("")
 
     # Variables (primal + multipliers)
@@ -1565,6 +1666,17 @@ def emit_gams_mcp(
                 and subst_lhs.left == subst_lhs.right
                 and isinstance(subst_rhs, Const)
                 and subst_rhs.value == 0.0
+            ):
+                is_trivial = True
+            # Check 2b (Issue #1104): LHS is structurally zero after substitution.
+            # Handles: (-1) * (z(s,"disrupted",s) * (ord(s) - ord(s))) =G= 0
+            # where the (ord(s) - ord(s)) factor is provably zero, making the
+            # entire product zero regardless of the VarRef factor.
+            if (
+                not is_trivial
+                and isinstance(subst_rhs, Const)
+                and subst_rhs.value == 0.0
+                and _is_provably_zero(subst_lhs)
             ):
                 is_trivial = True
             # Check 3 (Issue #1021): Collect additive terms, cancel matching

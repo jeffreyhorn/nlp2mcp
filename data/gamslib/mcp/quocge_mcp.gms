@@ -352,7 +352,6 @@ Equations
     stat_td
     stat_tm(i)
     stat_tz(j)
-    stat_uu
     stat_x(i,j)
     stat_xg(i)
     stat_xp(i)
@@ -445,8 +444,7 @@ stat_sp.. sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eq
 stat_td.. nu_eqTd + sum(i, ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i)) + ((-1) * ssg) * nu_eqSg + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_td =E= 0;
 stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i-1))$(ord(i) > 1) + ((-1) * ssg) * nu_eqSg - piL_tm(i) =E= 0;
 stat_tz(j).. nu_eqTz(j) + ((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j+1))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j-1))$(ord(j) > 1) + ((-1) * ssg) * nu_eqSg - piL_tz(j) =E= 0;
-stat_uu.. 0 =E= 0;
-stat_x(i,j).. nu_eqX(i,j) - piL_x(i,j) =E= 0;
+stat_x(i,j).. nu_eqX(i,j) - nu_eqpqd(i) - piL_x(i,j) =E= 0;
 stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;
 stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * sum(i__, xp(i__) ** alpha(i__) * alpha(i__) / xp(i__) / xp(i__) ** alpha(i__)))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
 stat_xv(i).. nu_eqXv(i) - nu_eqpqd(i) - piL_xv(i) =E= 0;
@@ -548,7 +546,6 @@ Model mcp_model /
     stat_td.td,
     stat_tm.tm,
     stat_tz.tz,
-    stat_uu.uu,
     stat_x.x,
     stat_xg.xg,
     stat_xp.xp,

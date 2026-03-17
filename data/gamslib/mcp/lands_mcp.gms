@@ -38,6 +38,8 @@ Scalars
 ds(j,s) = d(j);
 ds("mode-1",s) = dvar(s);
 
+d('mode-1') = dvar('s-1') ;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -57,6 +59,7 @@ Positive Variables
     x(i)
     ys(i,j,s)
     lam_mincap
+    lam_bbal
     lam_powbals(i,s)
     lam_dembals(j,s)
     piL_x(i)
@@ -86,6 +89,7 @@ ys.l(i,j,s) = 1;
 Equations
     stat_x(i)
     stat_ys(i,j,s)
+    comp_bbal
     comp_dembals(j,s)
     comp_mincap
     comp_powbals(i,s)
@@ -99,10 +103,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i).. c(i) - lam_mincap + sum(s, (-1) * lam_powbals(i,s)) - piL_x(i) =E= 0;
+stat_x(i).. c(i) - lam_mincap + c(i) * lam_bbal + sum(s, (-1) * lam_powbals(i,s)) - piL_x(i) =E= 0;
 stat_ys(i,j,s).. prob(s) * f(i,j) + lam_powbals(i,s) - lam_dembals(j,s) - piL_ys(i,j,s) =E= 0;
 
 * Inequality complementarity equations
+comp_bbal.. ((-1) * (sum(i, c(i) * x(I)) - b)) =G= 0;
 comp_dembals(j,s).. sum(i, ys(i,j,s)) - ds(j,s) =G= 0;
 comp_mincap.. sum(i, x(i)) - m =G= 0;
 comp_powbals(i,s).. ((-1) * (sum(j, ys(i,j,s)) - x(i))) =G= 0;
@@ -131,6 +136,7 @@ defcosts.. cost =E= sum(i, c(i) * x(i)) + sum((i,j,s), prob(s) * f(i,j) * ys(i,j
 Model mcp_model /
     stat_x.x,
     stat_ys.ys,
+    comp_bbal.lam_bbal,
     comp_dembals.lam_dembals,
     comp_mincap.lam_mincap,
     comp_powbals.lam_powbals,

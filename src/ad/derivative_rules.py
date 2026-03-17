@@ -200,6 +200,35 @@ def _diff_const(
     return Const(0.0)
 
 
+def _strip_quotes(s: str) -> str:
+    """Strip surrounding single or double quotes from a string."""
+    if len(s) >= 2 and s[0] == s[-1] and s[0] in ('"', "'"):
+        return s[1:-1]
+    return s
+
+
+def _indices_match(
+    a: tuple[str | IndexOffset, ...],
+    b: tuple[str | IndexOffset, ...],
+) -> bool:
+    """Compare index tuples with quote normalization.
+
+    Issue #1104: VarRef indices from parsed equations may contain embedded
+    quotes (e.g., '"disrupted"') while instance indices from set enumeration
+    use the unquoted form ('disrupted'). This function normalizes string
+    indices by stripping quotes before comparison.
+    """
+    if len(a) != len(b):
+        return False
+    for ai, bi in zip(a, b, strict=True):
+        if isinstance(ai, str) and isinstance(bi, str):
+            if _strip_quotes(ai).lower() != _strip_quotes(bi).lower():
+                return False
+        elif ai != bi:
+            return False
+    return True
+
+
 def _diff_varref(
     expr: VarRef,
     wrt_var: str,
@@ -270,8 +299,11 @@ def _diff_varref(
         else:
             return Const(0.0)
 
-    # Indices specified: must match exactly
-    if expr.indices == wrt_indices:
+    # Indices specified: must match (with quote normalization)
+    # Issue #1104: VarRef indices from parsed equations may contain embedded
+    # quotes (e.g., '"disrupted"') while instance indices from set enumeration
+    # use unquoted form ('disrupted'). Normalize before comparison.
+    if _indices_match(expr.indices, wrt_indices):
         return Const(1.0)
     else:
         return Const(0.0)
@@ -587,18 +619,7 @@ def _diff_call(
     elif func == "errorf":
         return _diff_errorf(expr, wrt_var, wrt_indices, config)
     elif func in ("gamma", "loggamma"):
-        # Check arity first for consistent error semantics with other functions
-        if len(expr.args) != 1:
-            raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
-        # Gamma derivatives require the digamma/psi function, which GAMS doesn't have.
-        # d/dx[gamma(x)] = gamma(x) * psi(x)
-        # d/dx[loggamma(x)] = psi(x)
-        # Since psi() is not available in GAMS, we cannot emit valid code.
-        raise ValueError(
-            f"Differentiation of '{func}' requires the digamma/psi function, "
-            f"which is not available in GAMS. Models using {func}() in the "
-            f"objective or constraints cannot be converted to MCP."
-        )
+        return _diff_gamma(expr, wrt_var, wrt_indices, config)
     elif func == "smin":
         return _diff_smin(expr, wrt_var, wrt_indices, config)
     elif func == "smax":
@@ -1014,6 +1035,48 @@ def _diff_errorf(
 
     # coeff * du/dx
     return Binary("*", coeff, darg_dx)
+
+
+def _diff_gamma(
+    expr: Call,
+    wrt_var: str,
+    wrt_indices: tuple[str | IndexOffset, ...] | None = None,
+    config: Config | None = None,
+) -> Expr:
+    """Derivative of gamma(u) and loggamma(u).
+
+    Mathematical formulas:
+        d/dx[loggamma(u)] = digamma(u) * du/dx
+        d/dx[gamma(u)]    = gamma(u) * digamma(u) * du/dx
+
+    The digamma function is emitted as ``Call("digamma__", ...)``.
+    The GAMS emitter provides a ``$macro digamma__`` that implements
+    an asymptotic series approximation with argument shifting.
+
+    Args:
+        expr: Call("gamma", [arg]) or Call("loggamma", [arg])
+        wrt_var: Variable to differentiate with respect to
+        wrt_indices: Optional index tuple for specific variable instance
+
+    Returns:
+        Derivative expression (new AST)
+    """
+    func = expr.func
+    if len(expr.args) != 1:
+        raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
+
+    arg = expr.args[0]
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+
+    digamma_u = Call("digamma__", (arg,))
+
+    if func == "loggamma":
+        # d/dx[loggamma(u)] = digamma(u) * du/dx
+        return Binary("*", digamma_u, darg_dx)
+    else:
+        # d/dx[gamma(u)] = gamma(u) * digamma(u) * du/dx
+        gamma_u = Call("gamma", (arg,))
+        return Binary("*", Binary("*", gamma_u, digamma_u), darg_dx)
 
 
 # ============================================================================

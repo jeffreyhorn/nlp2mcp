@@ -94,10 +94,10 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-pos.fx(c,"h0") = c_0(c);
-pos.fx("y","h50") = c_f("y");
-vel.fx(c,"h0") = v_0(c);
-vel.fx(c,"h50") = v_f(c);
+pos.fx(c,'h0') = c_0(c);
+pos.fx('y','h50') = c_f("y");
+vel.fx(c,'h0') = v_0(c);
+vel.fx(c,'h50') = v_f(c);
 
 * ============================================
 * Variable Initialization
@@ -342,17 +342,17 @@ Equations
 
 * Stationarity equations
 stat_cl(h).. ((-1) * (sqr(v(h)) * S * rho * 0.5 * c1 * 2 * cl(h))) * nu_Ddef(h) + ((-1) * (sqr(v(h)) * S * rho * 0.5)) * nu_Ldef(h) - piL_cl(h) + piU_cl(h) =E= 0;
-stat_d(h).. nu_Ddef(h) + sum(c, ((-1) * (m * ((-1) * (v(h) * vel(c,h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h)) + ((-1) * (m * ((-1) * (v(h) * w(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
-stat_l(h).. nu_Ldef(h) + ((-1) * (m * v(h) * w(h) * (-1) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + sum(c, ((-1) * (m * v(h) * vel(c,h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h)) =E= 0;
-stat_pos(c,h).. nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
+stat_d(h).. nu_Ddef(h) + ((-1) * (m * ((-1) * (v(h) * vel("x",h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * w(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
+stat_l(h).. nu_Ldef(h) + ((-1) * (m * v(h) * w(h) * (-1) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * v(h) * vel("x",h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
+stat_pos(c,h).. -1 + ((-1) * (2 * (pos(c,h) / r_0 - 2.5) * 1 / r_0 ** 1)) * nu_rdef(h) + nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
 stat_r(h).. nu_rdef(h) + ((-1) * (((-1) * (exp(((-1) * r(h))) * u_c)) - u_c * (1 - r(h)) * exp(((-1) * r(h))))) * nu_udef(h) =E= 0;
 stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * (vel(c,i) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * (v_dot(c,i) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
 stat_t_f.. nu_tf_eqn =E= 0;
 stat_u(h).. nu_udef(h) + nu_wdef(h) =E= 0;
-stat_v(h).. nu_vdef(h) + ((-1) * (0.5 * (c0 + c1 * sqr(cl(h))) * rho * S * 2 * v(h))) * nu_Ddef(h) + ((-1) * (0.5 * cl(h) * rho * S * 2 * v(h))) * nu_Ldef(h) + sum(c, ((-1) * (m * (((-1) * (((-1) * l(h)) * w(h))) / sqr(v(h)) - ((-1) * (d(h) * vel(c,h))) / sqr(v(h))) / sqr(m))) * nu_vx_dot_def(h)) + sum(c, ((-1) * (m * (((-1) * (l(h) * vel(c,h))) / sqr(v(h)) - ((-1) * (d(h) * w(h))) / sqr(v(h))) / sqr(m))) * nu_vy_dot_def(h)) - piL_v(h) =E= 0;
-stat_v_dot(c,h)$(ord(h) <= card(h) - 1).. ((-1) * (0.5 * step)) * nu_vel_eqn(c,h) + (((-1) * (0.5 * step)) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) =E= 0;
-stat_vel(c,h).. ((-1) * (0.5 * step)) * nu_pos_eqn(c,h) + (((-1) * (0.5 * step)) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vel_eqn(c,h) + ((-1) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_vel(c,h) =E= 0;
-stat_w(h).. nu_wdef(h) + sum(c, ((-1) * (1 / (2 * sqrt(sqr(vel(c,h)) + sqr(w(h)))) * 2 * w(h))) * nu_vdef(h)) + ((-1) * (m * v(h) * ((-1) * l(h)) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
+stat_v(h).. nu_vdef(h) + ((-1) * (0.5 * (c0 + c1 * sqr(cl(h))) * rho * S * 2 * v(h))) * nu_Ddef(h) + ((-1) * (0.5 * cl(h) * rho * S * 2 * v(h))) * nu_Ldef(h) + ((-1) * (m * (((-1) * (((-1) * l(h)) * w(h))) / sqr(v(h)) - ((-1) * (d(h) * vel("x",h))) / sqr(v(h))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * (((-1) * (l(h) * vel("x",h))) / sqr(v(h)) - ((-1) * (d(h) * w(h))) / sqr(v(h))) / sqr(m))) * nu_vy_dot_def(h) - piL_v(h) =E= 0;
+stat_v_dot(c,h).. nu_vx_dot_def(h) + ((-1) * (0.5 * step)) * nu_vel_eqn(c,h) + (((-1) * (0.5 * step)) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vy_dot_def(h) =E= 0;
+stat_vel(c,h).. ((-1) * (1 / (2 * sqrt(sqr(vel(c,h)) + sqr(w(h)))) * 2 * vel(c,h))) * nu_vdef(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * v(h) * l(h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h) + ((-1) * (0.5 * step)) * nu_pos_eqn(c,h) + (((-1) * (0.5 * step)) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vel_eqn(c,h) + ((-1) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) - nu_wdef(h) - piL_vel(c,h) =E= 0;
+stat_w(h).. nu_wdef(h) + ((-1) * (1 / (2 * sqrt(sqr(vel("x",h)) + sqr(w(h)))) * 2 * w(h))) * nu_vdef(h) + ((-1) * (m * v(h) * ((-1) * l(h)) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_cl(h).. cl(h) - 0 =G= 0;
@@ -375,8 +375,8 @@ Ldef(i).. l(i) =E= 0.5 * cl(i) * rho * S * sqr(v(i));
 vx_dot_def(i).. v_dot("x",i) =E= (((-1) * l(i)) * w(i) / v(i) - d(i) * vel("x",i) / v(i)) / m;
 vy_dot_def(i).. v_dot("y",i) =E= (l(i) * vel("x",i) / v(i) - d(i) * w(i) / v(i)) / m - g;
 obj.. final_x =E= pos("x","h50");
-pos_eqn(c,i).. pos(c,i) =E= pos(c,i-1) + 0.5 * step * (vel(c,i) + vel(c,i-1));
-vel_eqn(c,i).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) + v_dot(c,i-1));
+pos_eqn(c,i)$(ord(i) > 1).. pos(c,i) =E= pos(c,i-1) + 0.5 * step * (vel(c,i) + vel(c,i-1));
+vel_eqn(c,i)$(ord(i) > 1).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) + v_dot(c,i-1));
 
 
 * ============================================
@@ -386,9 +386,10 @@ vel_eqn(c,i).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) + v_dot(c,i-1)
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-v_dot.fx(c,h)$(not (ord(h) <= card(h) - 1)) = 0;
 piL_pos.fx(c,h)$(not has_pos_lo(c,h)) = 0;
 piL_vel.fx(c,h)$(not has_vel_lo(c,h)) = 0;
+nu_pos_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
+nu_vel_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

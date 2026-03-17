@@ -613,14 +613,14 @@ class TestCategoryLists:
         assert len(TRANSLATE_ERROR_CATEGORIES) == 13
 
     def test_solve_category_count(self) -> None:
-        """Test that there are 17 solve outcome categories."""
-        # 6 PATH status + 1 PATH syntax + 4 model status + 6 comparison = 17
-        assert len(SOLVE_OUTCOME_CATEGORIES) == 17
+        """Test that there are 18 solve outcome categories."""
+        # 6 PATH status + 1 PATH syntax + 4 model status + 7 comparison = 18
+        assert len(SOLVE_OUTCOME_CATEGORIES) == 18
 
     def test_all_categories_count(self) -> None:
-        """Test that there are 47 + 2 (timeout, internal_error) = 49 total categories."""
-        # 17 parse + 13 translate + 17 solve + 2 generic = 49
-        assert len(ALL_CATEGORIES) == 49
+        """Test that there are 48 + 2 (timeout, internal_error) = 50 total categories."""
+        # 17 parse + 13 translate + 18 solve + 2 generic = 50
+        assert len(ALL_CATEGORIES) == 50
 
     def test_no_duplicate_categories(self) -> None:
         """Test that there are no duplicate category names."""

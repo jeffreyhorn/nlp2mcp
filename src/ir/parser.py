@@ -4472,6 +4472,10 @@ class _ModelBuilder:
                         # Build list of member lists for positions that need expansion
                         # For non-expanding positions, use the literal index
                         dim_values: list[list[str]] = []
+                        # Issue #1105: Track which expanding positions use the same
+                        # underlying set (or alias), so repeated-index assignments
+                        # like P(i,j,j) only generate diagonal entries.
+                        symbol_positions: dict[str, list[int]] = {}
                         for pos, idx in enumerate(indices):
                             if pos in expand_positions:
                                 members = expand_set_defs[pos].members
@@ -4479,13 +4483,52 @@ class _ModelBuilder:
                                     # Empty set: nothing to expand, skip entire assignment
                                     return
                                 dim_values.append(members)
+                                symbol_positions.setdefault(idx.lower(), []).append(pos)
                             else:
                                 # Sprint 18 Day 2: Strip quotes from literal index for canonical storage
                                 stripped_idx = _strip_quotes_from_indices((idx,))[0]
                                 dim_values.append([stripped_idx])
 
-                        for combo in product(*dim_values):
-                            param.values[combo] = value
+                        # Issue #1105: Check for repeated index symbols (diagonal pattern).
+                        # Port of the same logic from _handle_variable_bounds_assignment (#1021).
+                        repeated_groups = [
+                            positions
+                            for positions in symbol_positions.values()
+                            if len(positions) > 1
+                        ]
+                        if repeated_groups:
+                            # Build slot mapping: positions sharing the same symbol
+                            # get the same slot so their values are linked.
+                            pos_to_slot: dict[int, str | int] = {}
+                            for sym_key, positions in symbol_positions.items():
+                                for p in positions:
+                                    pos_to_slot[p] = sym_key
+                            unique_slots: list[str | int] = []
+                            seen_slots: set[str | int] = set()
+                            for p in range(len(dim_values)):
+                                slot: str | int = pos_to_slot.get(p, p)
+                                if slot not in seen_slots:
+                                    unique_slots.append(slot)
+                                    seen_slots.add(slot)
+                                if p not in pos_to_slot:
+                                    pos_to_slot[p] = slot
+                            slot_to_idx = {s: i for i, s in enumerate(unique_slots)}
+                            unique_member_lists = []
+                            for s in unique_slots:
+                                if isinstance(s, str) and s in symbol_positions:
+                                    unique_member_lists.append(dim_values[symbol_positions[s][0]])
+                                else:
+                                    assert isinstance(s, int)
+                                    unique_member_lists.append(dim_values[s])
+                            for base_comb in product(*unique_member_lists):
+                                combo = tuple(
+                                    base_comb[slot_to_idx[pos_to_slot[p]]]
+                                    for p in range(len(dim_values))
+                                )
+                                param.values[combo] = value
+                        else:
+                            for combo in product(*dim_values):
+                                param.values[combo] = value
                         return
 
                 # Issue #726: When compact multi-dim set indices are used (literal count

@@ -23,6 +23,7 @@ Sets
 Alias(s, sp);
 Alias(s, spp);
 Alias(i, j);
+Alias(s, s__kkt1);
 
 Parameters
     pi(s,i,sp,j,spp)
@@ -45,6 +46,7 @@ Scalars
     h /0.32/
 ;
 
+pi(s,i,sp,j,sp) = pr(i,j);
 lev(s) = 3 * (ord(s) - 1);
 p(s,sp,i) = (k / (q - dis(i) - d - (lev(sp) - lev(s)))) ** (1 / e);
 c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e)) / (1 - e)) + p(s,sp,i) * (lev(sp) - lev(s)) + h * lev(sp);
@@ -62,11 +64,12 @@ c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e
 
 Variables
     pvcost
-    nu_constr(s,i)
+    nu_constr(sp,j)
 ;
 
 Positive Variables
     z(s,i,sp)
+    lam_equil(s,sp)
     piL_z(s,i,sp)
 ;
 
@@ -91,6 +94,7 @@ z.l(s,i,sp) = 1;
 
 Equations
     stat_z(s,i,sp)
+    comp_equil(s,spp)
     comp_lo_z(s,i,sp)
     constr(sp,j)
     cost
@@ -101,9 +105,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum(spp, ((-1) * (b * pi(s,i,s,i,spp))) * nu_constr(s,i)) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s__kkt1,j,sp)) * nu_constr(s__kkt1,j)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
+comp_equil(s,spp).. ((-1) * (z(s,"disrupted",spp) * (ord(spp) - ord(s)))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_z(s,i,sp).. z(s,i,sp) - 0 =G= 0;
@@ -112,6 +117,15 @@ comp_lo_z(s,i,sp).. z(s,i,sp) - 0 =G= 0;
 constr(sp,j).. sum(spp, z(sp,j,spp)) - b * sum((s,i,spp), pi(s,i,sp,j,spp) * z(s,i,spp)) =E= beta;
 cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_equil.fx(s,spp)$(ord(s) = ord(spp)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -128,6 +142,7 @@ cost.. pvcost =E= sum((s,i,spp), c(s,spp,i) * z(s,i,spp));
 
 Model mcp_model /
     stat_z.z,
+    comp_equil.lam_equil,
     constr.nu_constr,
     cost.pvcost,
     comp_lo_z.piL_z

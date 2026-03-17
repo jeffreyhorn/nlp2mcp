@@ -112,6 +112,7 @@ COMPARE_STATUS_MISMATCH = "compare_status_mismatch"
 COMPARE_NLP_FAILED = "compare_nlp_failed"
 COMPARE_MCP_FAILED = "compare_mcp_failed"
 COMPARE_BOTH_INFEASIBLE = "compare_both_infeasible"
+COMPARE_MULTI_SOLVE_SKIP = "compare_multi_solve_skip"
 
 # =============================================================================
 # Generic Categories
@@ -178,6 +179,7 @@ SOLVE_OUTCOME_CATEGORIES = [
     COMPARE_NLP_FAILED,
     COMPARE_MCP_FAILED,
     COMPARE_BOTH_INFEASIBLE,
+    COMPARE_MULTI_SOLVE_SKIP,
 ]
 
 ALL_CATEGORIES = (

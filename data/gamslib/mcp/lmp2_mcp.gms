@@ -27,10 +27,6 @@ Sets
 
 Parameters
     cases(c,*)
-    cc(p,nn)
-    f(p)
-    A(mm,nn)
-    b(mm)
     rep(c,*)
 ;
 
@@ -40,6 +36,15 @@ Scalars
     NodMin /0/
     Nodmax /0/
 ;
+
+ResMin = inf ;
+Resmax = 0 ;
+NodMin = inf ;
+Nodmax = 0 ;
+rep('c1','MinResUsd') = ResMin ;
+rep('c1','MaxResUsd') = ResMax ;
+rep('c1','MinNodUsd') = nodMin ;
+rep('c1','MaxNodUsd') = nodMax ;
 
 * ============================================
 * Variables (Primal + Multipliers)

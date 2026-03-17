@@ -45,13 +45,6 @@ Variables
     nu_losseq(t)
     nu_flow(tt)
     nu_dischar(tt)
-    nu_v_fx_0
-    nu_v_fx_1
-    nu_v_fx_2
-    nu_v_fx_3
-    nu_v_fx_4
-    nu_v_fx_5
-    nu_v_fx_6
 ;
 
 Positive Variables
@@ -75,13 +68,7 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-v.fx('0') = 100000;
-v.fx('1') = 100000;
-v.fx('2') = 100000;
-v.fx('3') = 100000;
-v.fx('4') = 100000;
-v.fx('5') = 100000;
-v.fx('6') = 100000;
+v.fx(tt)$(ord(tt) = 1) = 100000;
 
 * ============================================
 * Variable Initialization
@@ -165,13 +152,6 @@ Equations
     dischar(t)
     flow(tt)
     losseq(t)
-    v_fx_0
-    v_fx_1
-    v_fx_2
-    v_fx_3
-    v_fx_4
-    v_fx_5
-    v_fx_6
 ;
 
 * ============================================
@@ -183,7 +163,7 @@ stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4
 stat_loss(t).. nu_losseq(t) + lam_demcons(t) - piL_loss(t) =E= 0;
 stat_q(tt)$(t(tt)).. ((-1) * (n * (-1))) * nu_flow(tt) + nu_dischar(tt) - piL_q(tt) =E= 0;
 stat_thermal(t).. 1.15 * n * card(t) * (8 + 0.0032 * thermal(t)) - lam_demcons(t) - piL_thermal(t) + piU_thermal(t) =E= 0;
-stat_v(tt).. nu_flow(tt) + ((-1) * nu_flow(tt+1))$(ord(tt) <= card(tt) - 1) + nu_v_fx_0$(sameas(tt, '0')) + nu_v_fx_1$(sameas(tt, '1')) + nu_v_fx_2$(sameas(tt, '2')) + nu_v_fx_3$(sameas(tt, '3')) + nu_v_fx_4$(sameas(tt, '4')) + nu_v_fx_5$(sameas(tt, '5')) + nu_v_fx_6$(sameas(tt, '6')) - piL_v(tt) + piU_v(tt) =E= 0;
+stat_v(tt).. nu_flow(tt) + ((-1) * nu_flow(tt+1))$(ord(tt) <= card(tt) - 1) - piL_v(tt) + piU_v(tt) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons(t).. thermal(t) + hydro(t) - (load(t) + loss(t)) =G= 0;
@@ -203,15 +183,8 @@ comp_up_v(tt)$(has_v_up(tt)).. v_up_param(tt) - v(tt) =G= 0;
 * Original equality equations
 costfn.. cost =E= 1.15 * n * card(t) * sum(t, 500 + 8 * thermal(t) + 0.0016 * sqr(thermal(t)));
 losseq(t).. loss(t) =E= losscof * power(hydro(t), 2);
-flow(tt).. v(tt) =E= v(tt-1) + (2000 - q(tt)) * n;
+flow(tt)$(ord(tt) > 1).. v(tt) =E= v(tt-1) + (2000 - q(tt)) * n;
 dischar(t).. q(t) =E= 330 + 4.97 * hydro(t);
-v_fx_0.. v("0") - 100000 =E= 0;
-v_fx_1.. v("1") - 100000 =E= 0;
-v_fx_2.. v("2") - 100000 =E= 0;
-v_fx_3.. v("3") - 100000 =E= 0;
-v_fx_4.. v("4") - 100000 =E= 0;
-v_fx_5.. v("5") - 100000 =E= 0;
-v_fx_6.. v("6") - 100000 =E= 0;
 
 
 * ============================================
@@ -224,6 +197,7 @@ v_fx_6.. v("6") - 100000 =E= 0;
 q.fx(tt)$(not (t(tt))) = 0;
 piL_q.fx(tt)$(not (t(tt))) = 0;
 piU_v.fx(tt)$(not has_v_up(tt)) = 0;
+nu_flow.fx(tt)$(not (ord(tt) > 1)) = 0;
 nu_dischar.fx(tt)$(not (t(tt))) = 0;
 
 * ============================================
@@ -250,13 +224,6 @@ Model mcp_model /
     dischar.nu_dischar,
     flow.nu_flow,
     losseq.nu_losseq,
-    v_fx_0.nu_v_fx_0,
-    v_fx_1.nu_v_fx_1,
-    v_fx_2.nu_v_fx_2,
-    v_fx_3.nu_v_fx_3,
-    v_fx_4.nu_v_fx_4,
-    v_fx_5.nu_v_fx_5,
-    v_fx_6.nu_v_fx_6,
     comp_lo_hydro.piL_hydro,
     comp_lo_loss.piL_loss,
     comp_lo_q.piL_q,

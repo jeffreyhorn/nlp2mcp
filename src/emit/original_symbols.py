@@ -266,6 +266,13 @@ def _sanitize_set_element(element: str) -> str:
     if len(element) >= 4 and element.startswith("''") and element.endswith("''"):
         element = "'" + element[2:-2] + "'"
 
+    # Normalize double-quoted elements to single-quoted
+    # GAMS allows both "sc-mill" and 'sc-mill' as quoted labels.
+    # The parser/IR may store elements with double quotes (e.g., from
+    # variable bound assignments like xca.up(g,"sc-mill")).
+    if len(element) >= 2 and element.startswith('"') and element.endswith('"'):
+        element = "'" + element[1:-1] + "'"
+
     # Handle pre-quoted elements from the parser
     # If element is already wrapped in single quotes, strip them for validation
     # and return with quotes preserved
@@ -300,6 +307,14 @@ def _sanitize_set_element(element: str) -> str:
             f"Set element '{element}' contains unsafe characters that could cause "
             f"GAMS injection. Dangerous characters: {dangerous_chars & set(element)}"
         )
+
+    # GUSS dict sets use three-component dot-separated elements where the
+    # last component may be an empty quoted string (e.g., rapscenarios.scenario.'').
+    # The parser stores this as a trailing dot: "rapscenarios.scenario."
+    # Restore the empty component so GAMS interprets it as a 3-tuple, not a
+    # quoted single label.  (Issue #910)
+    if element.endswith("."):
+        return element + "''"
 
     # Check if element needs quoting (spaces, +, -)
     # Elements with spaces (e.g., 'SAE 10' stripped to 'SAE 10') need re-quoting
@@ -791,7 +806,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
             # Format tuple keys as GAMS syntax: ("i1", "j2") → "i1.j2"
             if param_def.values:
                 domain_size = len(domain)
-                data_parts = []
+                # Issue #913: Use dict for last-write-wins deduplication.
+                # Table data and computed assignments may create entries with
+                # different key representations (e.g., ('upper.fuel-oil', 'sulfur')
+                # vs ('upper', 'fuel-oil', 'sulfur')) that expand to the same
+                # normalized key. The dict ensures only the last value is emitted.
+                data_by_key: dict[str, str] = {}
                 for key_tuple, value in param_def.values.items():
                     # Expand key to match domain size (handles table data with dotted row headers)
                     expanded_key = _expand_table_key(key_tuple, domain_size)
@@ -818,11 +838,12 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                     # This ensures parameter data keys match set element quoting
                     sanitized_keys = [_sanitize_set_element(k) for k in expanded_key]
                     key_str = ".".join(sanitized_keys)
-                    data_parts.append(f"{key_str} {_format_param_value(value)}")
+                    data_by_key[key_str] = f"{key_str} {_format_param_value(value)}"
 
                 # Quote symbol names that contain special characters (Issue #665)
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
+                data_parts = list(data_by_key.values())
                 if data_parts:
                     # Emit parameter with data
                     data_str = ", ".join(data_parts)
@@ -834,6 +855,13 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
+                # Issue #917: Skip parameters with no values AND no expressions.
+                # These are typically loop-initialized reporting parameters
+                # (e.g., Util_lic(t) = Util.l inside a solve loop) that serve
+                # no purpose in the single-solve MCP. Emitting empty declarations
+                # causes GAMS $141 ("Symbol declared but no values assigned").
+                if not param_def.expressions:
+                    continue
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
@@ -1269,7 +1297,7 @@ def emit_computed_parameter_assignments(
     if varref_filter == "only_varref_attr":
         eligible: list[str] = []
         for pname, pdef in model_ir.params.items():
-            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+            if (pname in PREDEFINED_GAMS_CONSTANTS and not pdef.domain) or not pdef.expressions:
                 continue
             if not pdef.domain:
                 if any(len(k) > 0 for k, _ in pdef.expressions):
@@ -1281,7 +1309,7 @@ def emit_computed_parameter_assignments(
         # Issue #860: Topologically sort regular (non-calibration) parameters too.
         eligible = []
         for pname, pdef in model_ir.params.items():
-            if pname in PREDEFINED_GAMS_CONSTANTS or not pdef.expressions:
+            if (pname in PREDEFINED_GAMS_CONSTANTS and not pdef.domain) or not pdef.expressions:
                 continue
             if not pdef.domain:
                 if any(len(k) > 0 for k, _ in pdef.expressions):
@@ -1301,8 +1329,10 @@ def emit_computed_parameter_assignments(
         param_def = model_ir.params.get(param_name)
         if param_def is None:
             continue
-        # Skip predefined constants
-        if param_name in PREDEFINED_GAMS_CONSTANTS:
+        # Skip predefined constants — but only if the parameter has no domain.
+        # Issue #914: Models may declare indexed parameters whose name collides
+        # with a built-in constant (e.g., pi(s,i,sp,j,spp) in markov).
+        if param_name in PREDEFINED_GAMS_CONSTANTS and not param_def.domain:
             continue
 
         # Issue #860: Apply only_params / exclude_params filters
@@ -1691,7 +1721,7 @@ def emit_interleaved_params_and_sets(
         param_def = model_ir.params.get(param_name)
         if param_def is None:
             continue
-        if param_name in PREDEFINED_GAMS_CONSTANTS:
+        if param_name in PREDEFINED_GAMS_CONSTANTS and not param_def.domain:
             continue
         # Filter calibration params in no_varref_attr mode
         if varref_filter == "no_varref_attr" and param_name.lower() in calibration_params:
@@ -2768,6 +2798,175 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
         lines.append(_loop_tree_to_gams(loop_stmt.raw_node))
 
     return "\n\n".join(lines)
+
+
+def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
+    """Emit parameter assignments from before the first solve in solve-containing loops.
+
+    Issue #1101/#1102: Multi-solve loops like ``loop(t, p(i) = pt(i,t); solve ...;)``
+    contain pre-solve parameter assignments that are needed for the MCP output.
+    The loop itself is skipped (it contains a solve), but the pre-solve
+    parameter assignments must be emitted with the loop index substituted
+    by the first element of its set.
+
+    Args:
+        model_ir: Model IR with loop_statements and sets
+
+    Returns:
+        GAMS assignment statements, or empty string if none found
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    if not model_ir.loop_statements:
+        return ""
+
+    param_names = {name.lower() for name in model_ir.params}
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+
+    def _lhs_name(stmt: Tree) -> str | None:
+        if not stmt.children:
+            return None
+        lhs = stmt.children[0]
+        while isinstance(lhs, Tree) and lhs.data in ("lvalue", "symbol_indexed", "symbol_plain"):
+            lhs = lhs.children[0]
+        if isinstance(lhs, Token) and lhs.type == "ID":
+            return str(lhs).lower()
+        return None
+
+    def _tree_to_gams_subst(node: object, subst: dict[str, str]) -> str:
+        """Like _loop_tree_to_gams but substitutes loop index tokens."""
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() in subst:
+                return subst[str(node).lower()]
+            return str(node)
+        if not isinstance(node, Tree):
+            return str(node)
+        data = str(node.data)
+        if data == "index_simple":
+            base = node.children[0]
+            if isinstance(base, Token) and base.type == "ID" and str(base).lower() in subst:
+                val = subst[str(base).lower()]
+                if len(node.children) > 1:
+                    suffix = _tree_to_gams_subst(node.children[1], subst)
+                    return f"{val}{suffix}"
+                return val
+        # Fall through to _loop_tree_to_gams for all other cases,
+        # but we need recursion with substitution — re-dispatch children.
+        return _loop_tree_to_gams_subst_dispatch(node, subst)
+
+    def _loop_tree_to_gams_subst_dispatch(node: Tree, subst: dict[str, str]) -> str:
+        """Dispatch to _loop_tree_to_gams logic but with token substitution."""
+        data = str(node.data)
+        if data == "id_list":
+            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data in ("index_list", "arg_list"):
+            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "index_simple":
+            base = _tree_to_gams_subst(node.children[0], subst)
+            if len(node.children) > 1:
+                suffix = _tree_to_gams_subst(node.children[1], subst)
+                return f"{base}{suffix}"
+            return base
+        if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
+            return "".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "index_subset":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            idx = _tree_to_gams_subst(node.children[1], subst)
+            base = f"{name}({idx})"
+            if len(node.children) > 2:
+                suffix = _tree_to_gams_subst(node.children[2], subst)
+                return f"{base}{suffix}"
+            return base
+        if data == "offset_paren":
+            return f"({_tree_to_gams_subst(node.children[0], subst)})"
+        if data == "symbol_indexed":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            idx = _tree_to_gams_subst(node.children[1], subst)
+            return f"{name}({idx})"
+        if data in ("symbol_plain", "lvalue", "number", "funccall"):
+            return _tree_to_gams_subst(node.children[0], subst)
+        if data == "func_call":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            if len(node.children) > 1:
+                args = _tree_to_gams_subst(node.children[1], subst)
+                return f"{name}({args})"
+            return f"{name}()"
+        if data in ("binop", "unaryop"):
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "condition":
+            children = [c for c in node.children if isinstance(c, (Tree, Token))]
+            parts: list[str] = []
+            for c in children:
+                if isinstance(c, Tree) and c.data == "expr":
+                    parts.append(f"({_tree_to_gams_subst(c, subst)})")
+                else:
+                    parts.append(_tree_to_gams_subst(c, subst))
+            return "".join(parts)
+        if data == "assign":
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "conditional_assign_general":
+            lhs = _tree_to_gams_subst(node.children[0], subst)
+            cond = _tree_to_gams_subst(node.children[1], subst)
+            rest = " ".join(_tree_to_gams_subst(c, subst) for c in node.children[2:])
+            return f"{lhs}{cond} {rest}"
+        if data == "expr":
+            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        # Fallback: join children
+        return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+
+    assign_lines: list[str] = []
+    emitted_params: set[str] = set()
+    for loop_stmt in model_ir.loop_statements:
+        if not isinstance(loop_stmt, LoopStatement):
+            continue
+        if not _loop_contains_solve(loop_stmt):
+            continue
+        if not loop_stmt.indices:
+            continue
+
+        # Build substitution: each loop index -> first element of its set
+        subst: dict[str, str] = {}
+        for idx_name in loop_stmt.indices:
+            idx_lower = idx_name.lower()
+            sdef = model_ir.sets.get(idx_lower)
+            if sdef and sdef.members:
+                first_elem = sdef.members[0]
+                subst[idx_lower] = f"'{first_elem}'"
+
+        if not subst:
+            continue
+
+        # Extract pre-solve param assignments
+        for stmt in loop_stmt.body_stmts:
+            if not isinstance(stmt, Tree):
+                break
+            if "solve" in str(stmt.data):
+                break
+            if str(stmt.data) not in _ASSIGN_TYPES:
+                continue
+            name = _lhs_name(stmt)
+            if name is None or name not in param_names:
+                continue
+            # Emit this assignment with loop index substituted
+            gams_text = _tree_to_gams_subst(stmt, subst)
+            assign_lines.append(gams_text)
+            emitted_params.add(name)
+
+    if not assign_lines:
+        return ""
+
+    # Emit declarations for params that were skipped by Issue #917 logic
+    # (no values, no expressions — only assigned inside solve loops)
+    decl_lines: list[str] = []
+    for pname in sorted(emitted_params):
+        pdef = model_ir.params.get(pname)
+        if pdef and not pdef.values and not pdef.expressions and pdef.domain:
+            domain_str = ",".join(pdef.domain)
+            decl_lines.append(f"Parameter {pname}({domain_str});")
+
+    return "\n".join(decl_lines + assign_lines)
 
 
 def get_var_level_loop_varnames(model_ir: ModelIR) -> set[str]:

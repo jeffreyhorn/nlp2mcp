@@ -124,7 +124,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(k)$(ord(k) < card(k)).. sum(i, (2 * cosomega(i,k) * 1$(ord(i) < card(i)) * lam_passband_up_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * 1$(ord(i) < card(i)))) * lam_passband_lo_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * 1$(ord(i) < card(i)))) * lam_stopband_bnds(i))$(omega_stop(i))) + sum(i, (2 * cosomega(i,k) * 1$(ord(i) < card(i)) * lam_stopband_bnds2(i))$(omega_stop(i))) =E= 0;
+stat_h(k)$(ord(k) < card(k)).. sum(i, (2 * cosomega(i,k) * 1$(ord(k) < card(k)) * lam_passband_up_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * 1$(ord(k) < card(k)))) * lam_passband_lo_bnds(i))$(omega_pass(i))) + sum(i, (((-1) * (2 * cosomega(i,k) * 1$(ord(k) < card(k)))) * lam_stopband_bnds(i))$(omega_stop(i))) + sum(i, (2 * cosomega(i,k) * 1$(ord(k) < card(k)) * lam_stopband_bnds2(i))$(omega_stop(i))) =E= 0;
 stat_t.. 1 + nu_cone_rhs - nu_cone_lhs + sum(i$(omega_pass(i)), (-1) * lam_passband_up_bnds(i)) - piL_t =E= 0;
 stat_u.. ((-1) * nu_cone_rhs) - nu_cone_lhs + sum(i$(omega_pass(i)), lam_passband_lo_bnds(i)) - piL_u =E= 0;
 stat_v.. nu_v_fx + 2 * v * lam_so =E= 0;

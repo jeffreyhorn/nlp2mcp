@@ -98,8 +98,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(i).. ((-1) * (0.5 * sin(0) * r(i))) + nu_r_fx_i25$(sameas(i, 'i25')) + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_r(i) + piU_r(i) =E= 0;
-stat_theta(i).. ((-1) * (0.5 * sqr(r(i)) * cos(0) * (-1))) + nu_theta_fx_i25$(sameas(i, 'i25')) + lam_ordered(i) + ((-1) * lam_ordered(i-1))$(ord(i) > 1) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_theta(i) + piU_theta(i) =E= 0;
+stat_r(i).. ((-1) * (0.5 * sin(0) * r(i) * 1$(j(i)))) + nu_r_fx_i25$(sameas(i, 'i25')) + sum(j, ((2 * r(i) - cos(theta(j) - theta(i)) * r(j) * 2) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_r(i) + piU_r(i) =E= 0;
+stat_theta(i).. ((-1) * (0.5 * sqr(r(i)) * cos(0) * (-1) * 1$(j(i)))) + nu_theta_fx_i25$(sameas(i, 'i25')) + lam_ordered(i) + ((-1) * lam_ordered(i-1))$(ord(i) > 1) + sum(j, (((-1) * (2 * r(i) * r(j) * ((-1) * (sin(theta(j) - theta(i)))) * (-1))) * lam_distance(i,j))$(ord(j) > ord(i))) - piL_theta(i) + piU_theta(i) =E= 0;
 
 * Inequality complementarity equations
 comp_distance(i,j)$(ord(j) > ord(i)).. ((-1) * (sqr(r(i)) + sqr(r(j)) - 2 * r(i) * r(j) * cos(theta(j) - theta(i)) - 1)) =G= 0;
@@ -114,7 +114,7 @@ comp_up_r(i).. 1 - r(i) =G= 0;
 comp_up_theta(i).. 3.141592653589793 - theta(i) =G= 0;
 
 * Original equality equations
-obj.. polygon_area =E= 0.5 * sum(i, r(i+1) * r(i) * sin(theta(i+1) - theta(i)));
+obj.. polygon_area =E= 0.5 * sum(i$(j(i)), r(i+1) * r(i) * sin(theta(i+1) - theta(i)));
 r_fx_i25.. r("i25") - 0 =E= 0;
 theta_fx_i25.. theta("i25") - 3.141592653589793 =E= 0;
 

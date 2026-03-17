@@ -77,7 +77,6 @@ c.l(i) = 1;
 Equations
     stat_b(i)
     stat_c(i)
-    stat_util
     stat_x(i)
     comp_lo_b(i)
     comp_lo_c(i)
@@ -94,7 +93,6 @@ Equations
 * Stationarity equations
 stat_b(i).. -1 + nu_rev(i) - piL_b(i) =E= 0;
 stat_c(i).. 1 + nu_pc(i) - piL_c(i) =E= 0;
-stat_util.. 0 =E= 0;
 stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + ((-1) * theta(i)) * nu_pc(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
@@ -124,7 +122,6 @@ pc(i).. c(i) - theta(i) * x(i) =E= 0;
 Model mcp_model /
     stat_b.b,
     stat_c.c,
-    stat_util.util,
     stat_x.x,
     obj.Util,
     pc.nu_pc,

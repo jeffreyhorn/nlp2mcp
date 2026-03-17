@@ -229,7 +229,7 @@ comp_up_r(i).. 2 - r(i) =G= 0;
 
 * Original equality equations
 obj.. area =E= pi * R_v / 100 * sum(i, r(i));
-eqrdiff(i).. rdiff(i) =E= r(i+1) - r(i);
+eqrdiff(i)$(ord(i) <= card(i) - 1).. rdiff(i) =E= r(i+1) - r(i);
 
 
 * ============================================
@@ -243,6 +243,7 @@ rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge3.fx(i)$(not (ord(i) > 1)) = 0;
 lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0;
+nu_eqrdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -42,7 +42,7 @@ from src.ir.ast import (
     VarRef,
 )
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import EquationDef, Rel
+from src.ir.symbols import AliasDef, EquationDef, Rel
 from src.kkt.kkt_system import KKTSystem
 from src.kkt.naming import (
     create_eq_multiplier_name,
@@ -1517,6 +1517,52 @@ def _preserve_subset_var_indices(
     return None
 
 
+def _is_related_to_eq_domain(
+    target_set: str,
+    equation_domain: tuple[str, ...],
+    model_ir: ModelIR | None,
+) -> bool:
+    """Check if target_set is related to any set in the equation domain.
+
+    Returns True if target_set is an alias of, superset of, or shares an
+    alias root with any set in the equation domain.  Used to distinguish
+    between truly independent sets (like 'lim' vs. equation domain (cf,q))
+    and related sets (like 'mp' which aliases 'm' in the equation domain).
+    """
+    if not model_ir or not equation_domain:
+        return False
+
+    # Resolve alias target of target_set
+    target_lower = target_set.lower()
+    target_alias = model_ir.aliases.get(target_set) or model_ir.aliases.get(target_lower)
+    target_root = target_lower
+    if target_alias is not None:
+        t = target_alias.target if hasattr(target_alias, "target") else target_alias
+        if isinstance(t, str):
+            target_root = t.lower()
+
+    # Check if target_root matches any equation domain set or its alias root
+    for eq_set in equation_domain:
+        eq_lower = eq_set.lower()
+        eq_alias = model_ir.aliases.get(eq_set) or model_ir.aliases.get(eq_lower)
+        eq_root = eq_lower
+        if eq_alias is not None:
+            t = eq_alias.target if hasattr(eq_alias, "target") else eq_alias
+            if isinstance(t, str):
+                eq_root = t.lower()
+        if target_root == eq_root:
+            return True
+        # Check if target_set is a superset of eq_set
+        eq_set_def = model_ir.sets.get(eq_set) or model_ir.sets.get(eq_lower)
+        if eq_set_def and hasattr(eq_set_def, "domain") and eq_set_def.domain:
+            if target_lower in {p.lower() for p in eq_set_def.domain}:
+                return True
+            if target_root in {p.lower() for p in eq_set_def.domain}:
+                return True
+
+    return False
+
+
 def _replace_matching_indices(
     indices: tuple[str, ...],
     element_to_set: Mapping[str, str],
@@ -1724,6 +1770,20 @@ def _replace_matching_indices(
                             and target_set.lower() not in eq_domain_lower
                         ):
                             new_indices.append(element_to_set[idx])
+                        elif (
+                            equation_domain
+                            and target_set.lower() not in eq_domain_lower
+                            and not target_is_subset_of_eq_domain
+                            and not _is_related_to_eq_domain(target_set, equation_domain, model_ir)
+                        ):
+                            # Issue #1099: The declared domain set is completely
+                            # independent of the equation domain (not in it, not a
+                            # subset of it, not an alias of any eq domain set, not
+                            # a superset).  The concrete element (e.g., "upper"
+                            # from set lim, or a quoted literal like '"upper"') is
+                            # a fixed literal in the equation condition — preserve
+                            # it as-is rather than replacing with the set name.
+                            new_indices.append(idx)
                         else:
                             new_indices.append(target_set)
         elif idx in element_to_set:
@@ -1830,6 +1890,45 @@ def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
         current = target
 
     return current
+
+
+def _get_or_create_fresh_alias(
+    root_set: str,
+    used_names: set[str],
+    model_ir: ModelIR,
+) -> str:
+    """Find an existing unused alias or create a fresh one for *root_set*.
+
+    Issue #1104: In dimension-mismatch stationarity, when constraint-domain
+    indices are aliases of variable-domain indices, the summation variable
+    needs a distinct name that doesn't shadow the outer equation domain.
+
+    Searches existing aliases of *root_set* first.  If all are in *used_names*,
+    creates a new alias ``<root_set>__kkt<N>`` and registers it in the model IR.
+
+    Args:
+        root_set: Canonical (non-alias) base set name.
+        used_names: Set of names already in scope (var_domain, mult_domain,
+            other aliases used in the expression) — all **lowercased**.
+        model_ir: Model IR (may be mutated to register a new alias).
+
+    Returns:
+        A lowercase alias name suitable for use as a summation index.
+    """
+    # Search existing aliases targeting root_set
+    for aname, adef in model_ir.aliases.items():
+        target = adef.target if hasattr(adef, "target") else str(adef)
+        if target.lower() == root_set.lower() and aname.lower() not in used_names:
+            return aname.lower()
+
+    # Create a fresh alias
+    counter = 1
+    while True:
+        candidate = f"{root_set}__kkt{counter}"
+        if candidate.lower() not in used_names and candidate.lower() not in model_ir.aliases:
+            model_ir.aliases[candidate] = AliasDef(name=candidate, target=root_set)
+            return candidate
+        counter += 1
 
 
 def _find_matching_subset(parent_set: str, values: set[str], model_ir: ModelIR) -> str | None:
@@ -2288,16 +2387,52 @@ def _compute_index_offset_key(
         # equation index matches, so entries with different alignments are
         # grouped separately. Use a large sentinel offset for the non-matching
         # positions to distinguish groups.
+        #
+        # Issue #1099/#1100: For dimension-mismatch, use domain/alias-based
+        # matching instead of element-value string matching. Element matching
+        # fails when independent sets share element labels (marco: "hydro"
+        # in both m and p) or aliases share all elements (markov: s/sp/spp).
+        #
+        # All entries for the same eq→var relationship should be grouped
+        # together (single offset_key). The downstream _match_subset_domain()
+        # and Sum-wrapping logic correctly handles the multiplier indexing.
         if len(eq_indices) < len(var_indices):
-            # Find which var position(s) the eq indices match
             offsets_list: list[int] = [_SENTINEL_UNMATCHED] * len(var_indices)
-            used_eq: set[int] = set()
-            for vi, ve in enumerate(var_indices):
-                for ei, ee in enumerate(eq_indices):
-                    if ei not in used_eq and ee.lower() == ve.lower():
+
+            # Use domain-level matching to determine which variable positions
+            # correspond to equation positions (alias + subset resolution).
+            eq_canons = [_resolve_alias_target(d, model_ir) for d in eq_domain]
+            var_canons = [_resolve_alias_target(d, model_ir) for d in var_domain]
+
+            def _canon_or_parent(set_name: str) -> str:
+                """Get canonical set or its parent if it's a 1-D subset."""
+                canon = _resolve_alias_target(set_name, model_ir)
+                sdef = model_ir.sets.get(canon)
+                if sdef and hasattr(sdef, "domain") and len(sdef.domain) == 1:
+                    return _resolve_alias_target(str(sdef.domain[0]), model_ir)
+                return canon
+
+            eq_roots = [_canon_or_parent(d) for d in eq_domain]
+            var_roots = [_canon_or_parent(d) for d in var_domain]
+
+            used_var: set[int] = set()
+            for ei in range(len(eq_domain)):
+                # First pass: prefer exact canonical match (same set/alias)
+                matched = False
+                for vi in range(len(var_domain)):
+                    if vi not in used_var and eq_canons[ei] == var_canons[vi]:
                         offsets_list[vi] = 0
-                        used_eq.add(ei)
+                        used_var.add(vi)
+                        matched = True
                         break
+                if not matched:
+                    # Second pass: match via common root (subset relationships)
+                    for vi in range(len(var_domain)):
+                        if vi not in used_var and eq_roots[ei] == var_roots[vi]:
+                            offsets_list[vi] = 0
+                            used_var.add(vi)
+                            break
+
             return tuple(offsets_list)
         # More equation dims than variable dims — return zeros
         return (0,) * len(var_indices)
@@ -2594,13 +2729,11 @@ def _add_indexed_jacobian_terms(
                     has_offset = any(o != 0 for o in offset_key)
                     mult_ref: Expr
                     if is_dim_mismatch:
-                        # Extract the variable domain names at matched positions
-                        matched_var_dims = tuple(
-                            var_domain[i]
-                            for i, o in enumerate(offset_key)
-                            if o == 0 and i < len(var_domain)
-                        )
-                        mult_ref = MultiplierRef(mult_base_name, matched_var_dims)
+                        # Issue #1099/#1100: Use the equation's own domain for
+                        # the multiplier. The downstream _match_subset_domain()
+                        # and Sum-wrapping logic handles renaming subset indices
+                        # to superset and wrapping disjoint indices in sums.
+                        mult_ref = MultiplierRef(mult_base_name, mult_domain)
                     elif has_offset:
                         # Build multiplier with shifted indices
                         mult_ref = _build_offset_multiplier(
@@ -2652,7 +2785,115 @@ def _add_indexed_jacobian_terms(
                     # cases like ('ii','j') vs ('i','j') where some indices
                     # overlap by name but others are subset/alias-related.
                     subset_rename = _match_subset_domain(mult_domain, var_domain, kkt.model_ir)
-                    if subset_rename is not None:
+
+                    # Issue #1104: For dimension-mismatch with alias-only
+                    # renames, the standard _rewrite_subset_to_superset is
+                    # WRONG: it collapses constraint-domain indices (sp,j)
+                    # onto variable-domain names (s,i), destroying the
+                    # independent summation structure.  Instead, create fresh
+                    # aliases for colliding mult indices and wrap in a Sum.
+                    _did_dim_mismatch_alias_fix = False
+                    if is_dim_mismatch and subset_rename:
+                        # Check if ALL renames are pure alias renames
+                        all_alias = True
+                        for src_name, tgt_name in subset_rename.items():
+                            src_canon = _resolve_alias_target(src_name, kkt.model_ir)
+                            tgt_canon = _resolve_alias_target(tgt_name, kkt.model_ir)
+                            if src_canon != tgt_canon:
+                                all_alias = False
+                                break
+
+                        # Issue #1104: Check if applying the rename would
+                        # corrupt the derivative.  This happens when a renamed
+                        # mult index appears as a FREE index in the derivative
+                        # with a different meaning (declared-domain position).
+                        # E.g., constr(sp,j) → z(s,i,sp): derivative has
+                        # pi(s,i,sp,j,spp) where sp/j are constraint-domain
+                        # names from pi's declared domain.  Renaming sp→s
+                        # and j→i would produce pi(s,i,s,i,spp) — wrong.
+                        rename_corrupts_deriv = False
+                        if all_alias and subset_rename:
+                            free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                            for src_name in subset_rename:
+                                if src_name.lower() in free_in_deriv:
+                                    rename_corrupts_deriv = True
+                                    break
+
+                        if all_alias and rename_corrupts_deriv:
+                            _did_dim_mismatch_alias_fix = True
+                            # Build a set of all names in scope (lowercased)
+                            used_names = (
+                                {d.lower() for d in var_domain}
+                                | {d.lower() for d in mult_domain}
+                                | {a.lower() for a in kkt.model_ir.aliases}
+                                | {s.lower() for s in kkt.model_ir.sets}
+                            )
+
+                            # Identify which mult_domain indices are RENAMED
+                            # by subset_rename (i.e., are independent iteration
+                            # variables that should be summed over) vs SHARED
+                            # with var_domain (should remain as-is).
+                            renamed_mult = {k.lower() for k in subset_rename}
+
+                            # For renamed mult indices: if the mult index name
+                            # already collides with a var_domain name, we need
+                            # a fresh alias to avoid GAMS variable shadowing.
+                            # If it doesn't collide, keep it as a sum variable.
+                            var_domain_lower = {v.lower() for v in var_domain}
+                            fresh_rename: dict[str, str] = {}
+                            sum_indices_list: list[str] = []
+                            for md_idx in mult_domain:
+                                if md_idx.lower() in renamed_mult:
+                                    # This is an independent constraint iteration
+                                    # variable. Check for name collision.
+                                    if md_idx.lower() in var_domain_lower:
+                                        root = _resolve_alias_target(md_idx, kkt.model_ir)
+                                        fresh = _get_or_create_fresh_alias(
+                                            root, used_names, kkt.model_ir
+                                        )
+                                        fresh_rename[md_idx.lower()] = fresh
+                                        sum_indices_list.append(fresh)
+                                        used_names.add(fresh.lower())
+                                    else:
+                                        # No collision — use as-is
+                                        sum_indices_list.append(md_idx)
+                                # else: shared index, no sum needed
+
+                            # Also fix alias-domain names from pi's declared
+                            # domain that should map to the var_domain index at
+                            # unmatched positions.  E.g., pi has declared
+                            # domain (..., spp) but position 4 should map to
+                            # var_domain[2] = sp.  The alias_remap maps
+                            # spp → sp but prefer_declared_domain=True in
+                            # _replace_indices_in_expr ignores the ChainMap.
+                            # Post-fix: rename those aliases → var_domain name.
+                            alias_fix: dict[str, str] = {}
+                            for vi, vdom in enumerate(var_domain):
+                                if vi < len(offset_key) and offset_key[vi] == _SENTINEL_UNMATCHED:
+                                    root = _resolve_alias_target(vdom, kkt.model_ir)
+                                    for aname in list(kkt.model_ir.aliases):
+                                        aroot = _resolve_alias_target(aname, kkt.model_ir)
+                                        if (
+                                            aroot == root
+                                            and aname.lower() != vdom.lower()
+                                            and aname.lower() not in var_domain_lower
+                                            and aname.lower() not in fresh_rename
+                                            and aname.lower() not in set(fresh_rename.values())
+                                            and aname.lower()
+                                            not in {s.lower() for s in sum_indices_list}
+                                        ):
+                                            alias_fix[aname.lower()] = vdom
+
+                            # Combine fresh_rename + alias_fix and rewrite
+                            combined_rename = {**fresh_rename, **alias_fix}
+                            if combined_rename:
+                                term = _rewrite_subset_to_superset(term, combined_rename)
+
+                            # Wrap in Sum over the independent mult indices
+                            if sum_indices_list:
+                                term = Sum(tuple(sum_indices_list), term)
+
+                    if not _did_dim_mismatch_alias_fix and subset_rename is not None:
                         if subset_rename:
                             # Rewrite the term's indices from subset to superset.
                             # No subset guard needed: the constraint's own dollar
@@ -2714,31 +2955,34 @@ def _add_indexed_jacobian_terms(
                                             new_dom,
                                         )
                         # else: empty rename_map means identity match, no rewrite needed
-                    elif mult_domain == var_domain:
-                        # Exact match: direct term, no sum needed
-                        pass
-                    elif mult_domain_set.issubset(var_domain_set):
-                        # Subset: constraint domain is contained in variable domain
-                        # e.g., supply(i) contributes to stat_x(i,j) with direct term lam_supply(i)
-                        # No sum needed - the i index is shared
-                        pass
-                    elif not mult_domain_set.intersection(var_domain_set):
-                        # Truly disjoint: constraint has indices independent
-                        # of variable. Need to sum over the constraint's domain.
-                        term = Sum(mult_domain, term)
-                    else:
-                        # Partial overlap: domains share some indices but each has unique ones
-                        # This happens when a constraint sums over a variable using different indices.
-                        # Example: stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
-                        #   - Variable s has domain ('i', 'k')
-                        #   - Constraint stiffness has domain ('j', 'k')
-                        #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
-                        # The stationarity term should sum over the extra multiplier indices:
-                        #   sum(j, derivative * nu_stiffness(j,k))
-                        extra_mult_indices = mult_domain_set - var_domain_set
-                        sum_indices = tuple(idx for idx in mult_domain if idx in extra_mult_indices)
-                        if sum_indices:
-                            term = Sum(sum_indices, term)
+                    elif not _did_dim_mismatch_alias_fix:
+                        if mult_domain == var_domain:
+                            # Exact match: direct term, no sum needed
+                            pass
+                        elif mult_domain_set.issubset(var_domain_set):
+                            # Subset: constraint domain is contained in variable domain
+                            # e.g., supply(i) contributes to stat_x(i,j) with direct term lam_supply(i)
+                            # No sum needed - the i index is shared
+                            pass
+                        elif not mult_domain_set.intersection(var_domain_set):
+                            # Truly disjoint: constraint has indices independent
+                            # of variable. Need to sum over the constraint's domain.
+                            term = Sum(mult_domain, term)
+                        else:
+                            # Partial overlap: domains share some indices but each has unique ones
+                            # This happens when a constraint sums over a variable using different indices.
+                            # Example: stiffness(j,k).. sum(i, s(i,k)*b(j,i)) =E= f(j,k)
+                            #   - Variable s has domain ('i', 'k')
+                            #   - Constraint stiffness has domain ('j', 'k')
+                            #   - Shared: 'k', Extra in mult: 'j', Extra in var: 'i'
+                            # The stationarity term should sum over the extra multiplier indices:
+                            #   sum(j, derivative * nu_stiffness(j,k))
+                            extra_mult_indices = mult_domain_set - var_domain_set
+                            sum_indices = tuple(
+                                idx for idx in mult_domain if idx in extra_mult_indices
+                            )
+                            if sum_indices:
+                                term = Sum(sum_indices, term)
 
                     # Issue #670: After domain-based sum wrapping, detect any remaining
                     # free indices in the derivative expression that are not controlled by
@@ -2746,12 +2990,15 @@ def _add_indexed_jacobian_terms(
                     # These arise when the derivative contains indices from the original
                     # constraint's inner sum that are outside both domains (cross-indexed
                     # sum pattern). Wrap them in an additional Sum to avoid GAMS Error 149.
-                    controlled = var_domain_set | mult_domain_set
-                    free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
-                    uncontrolled = free_in_deriv - controlled
-                    if uncontrolled:
-                        sum_indices = tuple(sorted(uncontrolled))
-                        term = Sum(sum_indices, term)
+                    # Skip when _did_dim_mismatch_alias_fix already handled Sum wrapping
+                    # and renamed the derivative indices.
+                    if not _did_dim_mismatch_alias_fix:
+                        controlled = var_domain_set | mult_domain_set
+                        free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
+                        uncontrolled = free_in_deriv - controlled
+                        if uncontrolled:
+                            sum_indices = tuple(sorted(uncontrolled))
+                            term = Sum(sum_indices, term)
 
                     expr = Binary("+", expr, term)
         else:

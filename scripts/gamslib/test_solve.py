@@ -55,6 +55,7 @@ import math
 from scripts.gamslib.error_taxonomy import (
     COMPARE_BOTH_INFEASIBLE,
     COMPARE_MCP_FAILED,
+    COMPARE_MULTI_SOLVE_SKIP,
     COMPARE_NLP_FAILED,
     COMPARE_OBJECTIVE_MATCH,
     COMPARE_OBJECTIVE_MISMATCH,
@@ -804,6 +805,16 @@ def compare_solutions(
     mcp_infeasible = mcp_model_status in (4, 5, 6, 19)
 
     # Decision tree
+    # Case 0: Multi-solve model — NLP reference is from a different solve iteration
+    if model.get("multi_solve"):
+        result["comparison_status"] = "skipped"
+        result["comparison_result"] = COMPARE_MULTI_SOLVE_SKIP
+        result["notes"] = (
+            "Multi-solve model: NLP reference captures a different solve iteration "
+            "than the MCP formulation — objective comparison not meaningful"
+        )
+        return result
+
     # Case 7: NLP solve failed (no convexity data or failed solve)
     if not convexity or convexity.get("status") in ("error", "excluded", "license_limited"):
         result["comparison_status"] = "skipped"

@@ -167,7 +167,7 @@ comp_up_i(t)$(i0 * (1 + ac) ** (ord(t) - 1) < inf).. i0 * (1 + ac) ** (ord(t) - 
 
 * Original equality equations
 cc(t).. al(t) * k(t) ** b =E= c(t) + i(t);
-kk(t).. k(t+1) =E= k(t) + i(t);
+kk(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= k(t) + i(t);
 util.. utility =E= sum(t, beta(t) * log(c(t)));
 
 
@@ -179,6 +179,7 @@ util.. utility =E= sum(t, beta(t) * log(c(t)));
 * fixed for excluded instances to satisfy MCP matching.
 
 piU_i.fx(t)$(not (i0 * (1 + ac) ** (ord(t) - 1) < inf)) = 0;
+nu_kk.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 lam_tc.fx(t)$(not (tlast(t))) = 0;
 
 * ============================================

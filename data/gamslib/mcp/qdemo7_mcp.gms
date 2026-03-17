@@ -207,8 +207,8 @@ stat_rescost.. nu_ares - nu_acost =E= 0;
 stat_tcost.. 1 + nu_acost =E= 0;
 stat_thire(s).. ((-1) * trent) * nu_aplow - lam_plow(s) - piL_thire(s) =E= 0;
 stat_tlab(t).. ((-1) * twage) * nu_alab - lam_laborbal(t) - piL_tlab(t) =E= 0;
-stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$(sc(s,c)) * lam_plow(s)) - piL_xcrop(c) =E= 0;
-stat_xlive(r).. sum(t, llab * lam_laborbal(t)) + sum(cl, lio(cl,r) * lam_lclover) + sum(cl, lio(cl,r) * lam_lstraw) + sum(s, ((-1) * hpa) * lam_plow(s)) - piL_xlive(r) =E= 0;
+stat_xcrop(c).. ((-1) * miscost(c)) * nu_amisc + ((-1) * yield(c)) * nu_proc(c) + sum(t, a(t,c) * lam_landbal(t)) + sum(t, lc(t,c) * lam_laborbal(t)) + sum(s, 1$(sc(s,c)) * lam_plow(s)) + (((-1) * yield(c)) * lam_lclover)$(sameas(c, 'clover')) + (((-1) * straw) * lam_lstraw)$(sameas(c, 'wheat')) - piL_xcrop(c) =E= 0;
+stat_xlive(r).. sum(t, llab * lam_laborbal(t)) + lio("clover",r) * lam_lclover + lio("straw",r) * lam_lstraw + sum(s, ((-1) * hpa) * lam_plow(s)) - piL_xlive(r) =E= 0;
 
 * Inequality complementarity equations
 comp_laborbal(t).. ((-1) * (sum(c, xcrop(c) * lc(t,c)) + sum(r, xlive(r)) * llab - (flab(t) + tlab(t)))) =G= 0;

@@ -41,13 +41,10 @@ Parameters
     macrov0(macro)
     vbar1(i,jwt)
     vbar2(macro,jwt)
-    vbar3(i,j,jwt)
     wbar1(i,jwt)
     wbar2(macro,jwt) /gdpfc2.'1' 0.006172839506172839, gdp2.'1' 0.006172839506172839, gdpfc2.'2' 0.19753086419753085, gdp2.'2' 0.19753086419753085, gdpfc2.'3' 0.5925925925925926, gdp2.'3' 0.5925925925925926, gdpfc2.'4' 0.19753086419753085, gdp2.'4' 0.19753086419753085, gdpfc2.'5' 0.006172839506172839, gdp2.'5' 0.006172839506172839/
-    wbar3(i,j,jwt)
     sigmay1(i)
     sigmay2(macro)
-    sigmay3(i,j)
     NegSam(i,j)
     chkset(i,j)
     Macsam1(i,j)
@@ -150,6 +147,8 @@ Variables
     nu_SAMCOEF(i,j)
     nu_TSAMEQ(i,j)
     nu_ASAMEQ(i,j)
+    nu_GDPFCDEF
+    nu_GDPDEF
     nu_MACROEQ(macro)
     nu_ERROR1EQ(i)
     nu_ERROR2EQ(macro)
@@ -163,6 +162,16 @@ Positive Variables
     piL_w2(macro,jwt)
     piU_w2(macro,jwt)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+A.fx(ii,jj)$((not nonzero(ii,jj))) = 0;
+TSAM.fx(ii,jj)$((not nonzero(ii,jj))) = 0;
+W3.lo(ii,jj,jwt3)$(NONZERO(ii,jj)) = 0;
+W3.up(ii,jj,jwt3)$(NONZERO(ii,jj)) = 1;
+W3.fx(ii,jj,jwt3)$((not nonzero(ii,jj))) = 0;
 
 * ============================================
 * Variable Initialization
@@ -245,6 +254,8 @@ Equations
     ERROR1EQ(i)
     ERROR2EQ(macro)
     ERROR3EQ(i,i)
+    GDPDEF
+    GDPFCDEF
     MACROEQ(macro)
     ROWSUM(i)
     ROWSUMEQ(i)
@@ -264,8 +275,8 @@ stat_a(i,j)$(ii(i) and ii(j)).. (((-1) * y(j)) * nu_SAMCOEF(i,j))$(NONZERO(i,j))
 stat_err1(i)$(ii(i)).. ((-1) * nu_ROWSUMEQ(i)) + nu_ERROR1EQ(i) =E= 0;
 stat_err2(macro).. ((-1) * nu_MACROEQ(macro)) + nu_ERROR2EQ(macro) =E= 0;
 stat_err3(i,j)$(ii(i) and ii(j)).. ((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) * (abar0(i,j) * exp(err3(j,j)))) * nu_ASAMEQ(i,j))$(ICOEFF(i,j)) + nu_ERROR3EQ(i,j)$(NONZERO(i,j)) =E= 0;
-stat_macrov(macro).. nu_MACROEQ(macro) =E= 0;
-stat_tsam(i,j)$(ii(i) and ii(j)).. nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) =E= 0;
+stat_macrov(macro).. nu_GDPDEF$(sameas(macro, 'gdp2')) + nu_MACROEQ(macro) + nu_GDPFCDEF$(sameas(macro, 'gdpfc2')) =E= 0;
+stat_tsam(i,j)$(ii(i) and ii(j)).. nu_ROWSUM(i) + nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) + nu_GDPDEF$((sameas(i, 'ACT') or sameas(i, 'FAC') or sameas(i, 'GOV')) and (sameas(j, 'ACT') or sameas(j, 'COM') or sameas(j, 'GOV'))) + ((-1) * nu_GDPFCDEF)$(sameas(i, 'FAC') and sameas(j, 'ACT')) =E= 0;
 stat_w1(i,jwt)$(ii(i) and jwt1(jwt)).. ((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i) =E= 0;
 stat_w2(macro,jwt)$(jwt2(jwt)).. log(w2(macro,jwt) / wbar2(macro,jwt)) + 1 + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. (((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)) =E= 0;
@@ -284,6 +295,8 @@ COLSUM(jj).. sum(ii, tsam(ii,jj)) =E= y(jj);
 SAMCOEF(ii,jj)$(NONZERO(ii,jj)).. tsam(ii,jj) =E= a(ii,jj) * y(jj);
 TSAMEQ(ii,jj)$(IVAL(ii,jj)).. tsam(ii,jj) =E= sam0(ii,jj) + err3(ii,jj);
 ASAMEQ(ii,jj)$(ICOEFF(ii,jj)).. a(ii,jj) =E= abar0(ii,jj) * exp(err3(ii,jj));
+GDPFCDEF.. macrov("gdpfc2") =E= tsam("fac","act");
+GDPDEF.. macrov("gdp2") =E= tsam("fac","act") + tsam("gov","act") - tsam("act","gov") + tsam("gov","com");
 MACROEQ(macro).. macrov(macro) =E= macrov0(macro) + err2(macro);
 ERROR1EQ(ii).. err1(ii) =E= sum(jwt1, w1(ii,jwt1) * vbar1(ii,jwt1));
 ERROR2EQ(macro).. err2(macro) =E= sum(jwt2, w2(macro,jwt2) * vbar2(macro,jwt2));
@@ -363,6 +376,8 @@ Model mcp_model /
     ERROR1EQ.nu_ERROR1EQ,
     ERROR2EQ.nu_ERROR2EQ,
     ERROR3EQ.nu_ERROR3EQ,
+    GDPDEF.nu_GDPDEF,
+    GDPFCDEF.nu_GDPFCDEF,
     MACROEQ.nu_MACROEQ,
     ROWSUM.nu_ROWSUM,
     ROWSUMEQ.nu_ROWSUMEQ,

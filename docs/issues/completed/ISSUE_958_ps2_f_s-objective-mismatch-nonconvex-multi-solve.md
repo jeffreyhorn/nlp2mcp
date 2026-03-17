@@ -1,7 +1,7 @@
 # ps2_f_s: Objective Mismatch — Non-Convex Principal-Agent Model with Multi-Solve Warm-Start
 
 **GitHub Issue:** [#958](https://github.com/jeffreyhorn/nlp2mcp/issues/958)
-**Status:** OPEN
+**Status:** WON'T FIX — Expected behavior for non-convex models (multiple KKT points)
 **Model:** ps2_f_s (GAMSlib SEQ=358)
 **Error category:** `objective_mismatch`
 **MCP objective:** 0.861

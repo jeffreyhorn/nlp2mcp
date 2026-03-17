@@ -196,8 +196,17 @@ comp_lo_y(t).. y(t) - 1 =G= 0;
 * Original equality equations
 jd.. j =E= sum(t, dis(t-1) * c(t-1) ** (1 - eta));
 yd(t).. y(t) =E= alpha(t) * k(t) ** beta;
-kb(t).. k(t+1) =E= y(t) - c(t) + (1 - delt) * k(t);
+kb(t)$(ord(t) <= card(t) - 1).. k(t+1) =E= y(t) - c(t) + (1 - delt) * k(t);
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+nu_kb.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration

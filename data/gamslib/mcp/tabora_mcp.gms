@@ -188,11 +188,11 @@ Equations
 * Stationarity equations
 stat_cost(t).. ((-1) * (delt(t) * (-1))) + nu_cd(t) =E= 0;
 stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) + 1$(mc(m)) * lam_lb(t,m) - piL_lc(t,m) =E= 0;
-stat_mat(t).. sum(c, ((-1) * (1000 * matr * cr(c) / 1000000)) * nu_rd(t)) + sum(c, ((-1) * (yc(c) * matr)) * lam_mm(t)) + lam_matd1(t) + lam_matd2(t) - piL_mat(t) + piU_mat(t) =E= 0;
+stat_mat(t).. ((-1) * (1000 * matr * cr("maize") / 1000000)) * nu_rd(t) + ((-1) * (yc("maize") * matr)) * lam_mm(t) + lam_matd1(t) + lam_matd2(t) - piL_mat(t) + piU_mat(t) =E= 0;
 stat_rev(t).. ((-1) * delt(t)) + nu_rd(t) =E= 0;
 stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(m, ld("timber-1",m) * lam_lb(t,m)) - piL_v(t) =E= 0;
 stat_w(t,i).. ((-1) * labw(i)) * nu_lw(t) + ((-1) * (1000 * tr * yw * dist(i) / 1000000)) * nu_cd(t) + ((-1) * yw) * lam_wb(t) + lam_wa(i) - piL_w(t,i) =E= 0;
-stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) - piL_x(t,c) =E= 0;
+stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) + ((-1) * yc(c)) * lam_mm(t) - lam_matd2(t) + wrc * lam_wb(t) - lam_matd1(t) - piL_x(t,c) =E= 0;
 
 * Inequality complementarity equations
 comp_lb(t,m)$(ord(t) > 1).. ((-1) * (ld("timber-1",m) * v(t) + ld("timber-2",m) * v(t-1) + sum(c, ld(c,m) * x(t,c)) + lc(t,m)$(mc(m)) - labor(m))) =G= 0;
