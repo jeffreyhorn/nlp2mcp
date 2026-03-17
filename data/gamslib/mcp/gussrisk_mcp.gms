@@ -19,7 +19,7 @@ Sets
     stocks /buystock1, buystock2, buystock3, buystock4/
     events /event1, event2, event3, event4, event5, event6, event7, event8, event9, event10/
     rapscenarios /r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25/
-    dict /'rapscenarios.scenario.', rap.param.riskaver, invest.level.stockoutput, obj.level.objlevel, investav.marginal.investavshadow/
+    dict /rapscenarios.scenario.'', rap.param.riskaver, invest.level.stockoutput, obj.level.objlevel, investav.marginal.investavshadow/
 ;
 
 Alias(stocks, s);
