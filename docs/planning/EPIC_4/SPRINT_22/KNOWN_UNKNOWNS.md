@@ -2,8 +2,8 @@
 
 **Created:** 2026-03-05
 **Sprint:** 22 (Prep Task 1)
-**Status:** Complete — all prep tasks finished; KU-11/12/13/26 verified in Task 9
-**Last Updated:** 2026-03-06
+**Status:** Complete — all prep tasks finished; KU-11/12/13/26 verified in Task 9; Sprint 22 discoveries appended
+**Last Updated:** 2026-03-17
 
 ---
 
@@ -45,6 +45,10 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 | KU-24 | KKT Correctness | Fixing path_syntax_error models may shift them to model_infeasible | High | Some models have secondary KKT issues masked by syntax errors | Day 5 |
 | KU-25 | Starting Point | elec self-pair exclusion requires index-level filtering in emitter | Medium | Can filter `i != j` conditions during MCP emission | Day 2 |
 | KU-26 | Divergence Analysis | Solution divergence case studies require original NLP solve data | Medium | NLP `.lst` files available in `data/gamslib/raw/` for all models | Day 1 |
+| KU-27 | AD Engine | Alias-aware differentiation requires summation-context tracking | High | Naive fix works; needs iteration-context guard | Sprint 22 Day 11 |
+| KU-28 | KKT Correctness | Dollar-condition propagation through AD/stationarity pipeline | High | Gradient conditions extractable from DollarConditional nodes | Sprint 22 Day 12 |
+| KU-29 | Divergence Analysis | Non-convex models produce valid but different KKT solutions | Medium | Not a bug — inherent to MCP approach | Sprint 22 Day 10 |
+| KU-30 | Divergence Analysis | Multi-solve models produce incomparable NLP references | Medium | Reclassify as incomparable; skip comparison | Sprint 22 Day 9 |
 
 ---
 
@@ -588,6 +592,66 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 **Estimated Research Time:** 15min
 **Owner:** Task 4 (model_infeasible triage)
 **Verification Results:** CONFIRMED. orani is a linearized percentage-change CGE model — structurally incompatible with NLP→MCP conversion. Issue #765 investigation demonstrated: (1) excluding fixed variables from stationarity creates MCP count mismatch (13 unmatched variables), (2) even after fixing count mismatch, non-fixed variable stationarity equations are cascadingly infeasible, (3) variables represent percentage changes, not level values — a fundamentally different problem class. No other model_infeasible model has comparable fixed-variable density (orani has 54 `_fx_` references, highest among the 12 models in committed `gamslib_status.json` plus 3 from local reruns). Recommendation: add model class detection heuristic (>30% fixed variables + all linear equations → warning) rather than attempting conversion.
+
+---
+
+## Sprint 22 Discoveries (New Unknowns for Sprint 23)
+
+The following unknowns were discovered during Sprint 22 implementation. They are documented here for Sprint 23 planning.
+
+### KU-27: Alias-Aware Differentiation Requires Summation-Context Tracking
+
+**Priority:** High
+**Issue:** [#1111](https://github.com/jeffreyhorn/nlp2mcp/issues/1111)
+**Discovered:** Day 10–11 (qabel regression investigation, #1089)
+
+The AD engine's `_diff_varref` uses exact index-tuple matching: `d/d(x(n,k))` of `x(np,k)` returns 0 when `np` aliases `n`. This produces incomplete gradients for models with aliased indices in quadratic objectives (e.g., qabel's `sum((k,n,np), (x(n,k)-xtilde(n,k)) * w(n,np,k) * (x(np,k)-xtilde(np,k)))`).
+
+A naive alias-aware fix was attempted and **reverted** because it adds spurious `sameas` guards in summation contexts where aliased indices are independent iteration variables (regression in dispatch model).
+
+**Correct fix requires:** Passing active summation iteration indices through the `differentiate_expr` call chain so `_diff_varref` can distinguish "same variable via alias" from "independent iteration over same set."
+
+**Impact:** qabel objective mismatch (MCP=51133 vs NLP=46965, ~8.9%); potentially affects other models with aliased quadratic terms.
+
+---
+
+### KU-28: Dollar-Condition Propagation Through AD/Stationarity Pipeline
+
+**Priority:** High
+**Issue:** [#1112](https://github.com/jeffreyhorn/nlp2mcp/issues/1112)
+**Discovered:** Day 12 (sambal #862 and elec #983 investigation)
+
+When the AD engine differentiates a sum with a dollar condition (e.g., `sum((i,j)$xw(i,j), ...)`), the condition is embedded in the gradient expression as a `DollarConditional` multiplier but is never extracted to become an equation-level guard on the stationarity equation. This causes division by zero for excluded instances.
+
+**Concrete fix path:** Add `_extract_gradient_conditions()` to `src/ad/gradient.py`, store in `KKTSystem.gradient_conditions`, and check in `_find_variable_access_condition()` in stationarity.py.
+
+**Impact:** sambal (15 execution errors, division by zero); potentially affects other models with conditionally-summed objectives.
+
+---
+
+### KU-29: Non-Convex Models Produce Valid But Different KKT Solutions
+
+**Priority:** Medium
+**Issue:** [#1091](https://github.com/jeffreyhorn/nlp2mcp/issues/1091)
+**Discovered:** Day 9–10 (Category A/D divergence analysis)
+
+Multiple models (catmix, harker, mathopt1, qabel, ps* series) show objective mismatches because MCP/PATH finds a different valid KKT point than the NLP solver. For non-convex NLPs, multiple KKT stationary points exist, and the MCP formulation has no mechanism to prefer the same local optimum as the NLP solver.
+
+**Resolution:** These are **not bugs** — they are inherent to the MCP approach for non-convex models. Sprint 22 reclassified these as Category B (multi-KKT-point divergence). Match rate targets should account for this irreducible mismatch population.
+
+**Impact:** ~12 models are permanently "mismatch" due to non-convexity. Match rate ceiling is approximately 75–80% of solving models.
+
+---
+
+### KU-30: Multi-Solve Models Produce Incomparable References
+
+**Priority:** Medium
+**Issue:** [#1080](https://github.com/jeffreyhorn/nlp2mcp/issues/1080)
+**Discovered:** Day 9 (Category A divergence analysis)
+
+Models that perform multiple solves with modified parameters (senstran, aircraft, sparta) or use stochastic solvers (apl1p, apl1pca) produce NLP reference values from a different solve iteration than what the MCP formulation captures. The MCP converts only the final model state, while the NLP reference may capture an intermediate solve.
+
+**Resolution:** Reclassify as "incomparable" rather than "mismatch." Pipeline already updated to skip comparison for multi-solve models (PR #1103).
 
 ---
 
