@@ -503,7 +503,7 @@ to wrong columns. Fix: gap-midpoint matching with source_width for right-edge co
 | Metric | Baseline | Target | Stretch | Actual | Delta | Status |
 |---|---|---|---|---|---|---|
 | Parse success | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | 150/153 (98.0%) | −0.1% | :x: (narrow miss; same 3 failures, but corpus reduced from 157→153 lowers the percentage) |
-| Translate success | 136/154 (88.3%) | ≥ 139/154 | — | 141/150 (94.0%) | +5.7% | :white_check_mark: |
+| Translate success | 136/154 (88.3%) | ≥ 90.3% | — | 141/150 (94.0%) | +5.7% | :white_check_mark: |
 | Solve success | 65 | ≥ 75 | ≥ 85 | 80 | +15 | :white_check_mark: (stretch target: miss by 5) |
 | Match | 30 | ≥ 35 | ≥ 40 | 41 | +11 | :white_check_mark: (stretch target met!) |
 | path_syntax_error | 40 | ≤ 30 | ≤ 25 | 31 | −9 | :x: (miss by 1) |

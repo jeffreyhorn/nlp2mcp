@@ -44,7 +44,7 @@ This document catalogs assumptions and unknowns for Sprint 22 (Solve Improvement
 | KU-23 | Deferred Items | #765 (orani CGE incompatibility) is fundamentally unfixable | High | Model class detection + warning is the correct approach | Day 1 |
 | KU-24 | KKT Correctness | Fixing path_syntax_error models may shift them to model_infeasible | High | Some models have secondary KKT issues masked by syntax errors | Day 5 |
 | KU-25 | Starting Point | elec self-pair exclusion requires index-level filtering in emitter | Medium | Can filter `i != j` conditions during MCP emission | Day 2 |
-| KU-26 | Divergence Analysis | Solution divergence case studies require original NLP solve data | Medium | NLP `.lst` files available in `data/gamslib/raw/` for all models | Day 1 |
+| KU-26 | Divergence Analysis | Solution divergence case studies require original NLP solve data | Medium | `.lst` files local-only (not committed); `gamslib_status.json` has objective values | Day 1 |
 | KU-27 | AD Engine | Alias-aware differentiation requires summation-context tracking | High | Naive fix works; needs iteration-context guard | Sprint 22 Day 11 |
 | KU-28 | KKT Correctness | Dollar-condition propagation through AD/stationarity pipeline | High | Gradient conditions extractable from DollarConditional nodes | Sprint 22 Day 12 |
 | KU-29 | Divergence Analysis | Non-convex models produce valid but different KKT solutions | Medium | Not a bug — inherent to MCP approach | Sprint 22 Day 10 |

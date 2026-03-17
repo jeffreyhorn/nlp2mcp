@@ -394,9 +394,9 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 ---
 
-### Day 13 — Final Pipeline Retest + Metrics
+### Day 13 — Sprint Close Prep + Final Pipeline Retest
 
-**Theme:** Final full pipeline run; record definitive metrics
+**Theme:** Combined close prep and final metrics
 **Effort:** 1–2h
 
 | Task | Deliverable |
