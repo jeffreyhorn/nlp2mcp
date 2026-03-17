@@ -1,7 +1,7 @@
 # ps3_s_scp: Objective Mismatch — 3-Type Principal-Agent with SCP, Multi-Solve
 
 **GitHub Issue:** [#962](https://github.com/jeffreyhorn/nlp2mcp/issues/962)
-**Status:** OPEN
+**Status:** WON'T FIX — Expected behavior for non-convex models (multiple KKT points)
 **Model:** ps3_s_scp (GAMSlib SEQ=374)
 **Error category:** `objective_mismatch`
 **MCP objective:** -0.621

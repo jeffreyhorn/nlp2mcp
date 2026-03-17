@@ -1,7 +1,7 @@
 # ps3_s_gic: Objective Mismatch — 3-Type Principal-Agent with Generalized IC
 
 **GitHub Issue:** [#961](https://github.com/jeffreyhorn/nlp2mcp/issues/961)
-**Status:** OPEN
+**Status:** WON'T FIX — Expected behavior for non-convex models (multiple KKT points)
 **Model:** ps3_s_gic (GAMSlib SEQ=371)
 **Error category:** `objective_mismatch`
 **MCP objective:** 1.056
