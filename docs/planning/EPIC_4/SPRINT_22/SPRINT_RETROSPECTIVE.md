@@ -8,9 +8,9 @@
 
 ## Executive Summary
 
-Sprint 22 met 6 of 8 targets, with 3 exceeding stretch goals. Solve success rose from 65 to 89 (+24), match from 30 to 47 (+17, beating stretch ≥ 40 by 7), and path_syntax_error dropped from 40 to 20 (beating stretch ≤ 25 by 5). The sprint delivered across 6 workstreams: WS1 path_syntax_error subcategory C fixes (domain conditioning in stationarity), WS2 path_solve_terminated pre-solver fixes (objective equation identification, LHS conditional assignment, implicit lead/lag conditioning), WS3 model_infeasible KKT bug fixes (whouse lag conditioning, ibm1 mixed-bounds, sameas guard refactor), WS4 solution divergence investigation (7 Category A models analyzed, 4 reclassified as incomparable multi-solve), WS5 timeout quick win (60s→150s), and WS6 deferred #764 (mexss sameas guard). Day 12 delivered 8 quick wins (marco, digamma, hs62, etc.) that significantly boosted the definitive full pipeline numbers. 14 PRs merged with 4,209 tests passing.
+Sprint 22 met 6 of 8 targets, with 3 exceeding stretch goals. Solve success rose from 65 to 89 (+24), match from 30 to 47 (+17, beating stretch ≥ 40 by 7), and path_syntax_error dropped from 40 to 20 (beating stretch ≤ 25 by 5). The sprint delivered across 6 workstreams: WS1 path_syntax_error subcategory C fixes (domain conditioning in stationarity), WS2 path_solve_terminated pre-solver fixes (objective equation identification, LHS conditional assignment, implicit lead/lag conditioning), WS3 model_infeasible KKT bug fixes (whouse lag conditioning, ibm1 mixed-bounds, sameas guard refactor), WS4 solution divergence investigation (7 Category A models analyzed, 4 reclassified as incomparable multi-solve), WS5 timeout quick win (60s→150s), and WS6 deferred #764 (mexss sameas guard). Day 12 delivered 8 quick wins (marco, digamma, hs62, etc.) that significantly boosted the definitive full pipeline numbers. 15 PRs merged with 4,209 tests passing.
 
-**Key Outcome:** 89 models solve (up from 65). 47 models match (up from 30, +57%). path_syntax_error halved from 40 to 20. 6/8 targets met. Sprint 22 exceeded the PROJECT_PLAN.md Sprint 22 acceptance criteria for solve rate (63% vs ≥ 55%) and full pipeline (29% vs projected 50% — pipeline denominator change affects this).
+**Key Outcome:** 89 models solve (up from 65). 47 models match (up from 30, +57%). path_syntax_error halved from 40 to 20. 6/8 targets met. Sprint 22 exceeded the PROJECT_PLAN.md Sprint 22 acceptance criteria for solve rate (63.1% vs ≥ 55%) and parse rate (97.5% vs ≥ 85%). Full pipeline match rate reached 29.4% (47/160), up from 19.1% baseline but below the Rolling KPI projection of 50%.
 
 ---
 
@@ -24,21 +24,23 @@ Sprint 22 met 6 of 8 targets, with 3 exceeding stretch goals. Solve success rose
 4. :white_check_mark: Match ≥ 35 (achieved: 47, stretch ≥ 40 exceeded)
 5. :white_check_mark: path_syntax_error ≤ 30 (achieved: 20, stretch ≤ 25 exceeded)
 6. :x: path_solve_terminated ≤ 5 (achieved: 10, missed by 5)
-7. :white_check_mark: model_infeasible ≤ 12 (achieved: 12 in-scope after excluding 3 permanently excluded)
+7. :white_check_mark: model_infeasible ≤ 12 (achieved: 12 in-scope after excluding 3 permanently excluded¹)
 8. :white_check_mark: Tests ≥ 4,020 (achieved: 4,209)
 
 ### Metrics Summary
 
-| Metric | Baseline (Sprint 21) | Target | Stretch | Achieved | Status |
-|--------|----------------------|--------|---------|----------|--------|
+| Metric | Baseline (Sprint 22 Day 0) | Target | Stretch | Achieved | Status |
+|--------|----------------------------|--------|---------|----------|--------|
 | Parse Rate | 154/157 (98.1%) | ≥ 98.1% | ≥ 98.7% | **156/160 (97.5%)** | :x: Narrow miss |
 | Translate Rate | 136/154 (88.3%) | ≥ 90.3% | — | **141/156 (90.4%)** | :white_check_mark: Met |
 | Solve Success | 65 | ≥ 75 | ≥ 85 | **89** | :white_check_mark: Stretch exceeded |
 | Match | 30 | ≥ 35 | ≥ 40 | **47** | :white_check_mark: Stretch exceeded |
 | path_syntax_error | 40 | ≤ 30 | ≤ 25 | **20** | :white_check_mark: Stretch exceeded |
 | path_solve_terminated | 12 | ≤ 5 | ≤ 3 | **10** | :x: Missed |
-| model_infeasible | 15 | ≤ 12 | ≤ 10 | **12** (15 total; 3 excluded) | :white_check_mark: Met |
+| model_infeasible | 15 | ≤ 12 | ≤ 10 | **12** (15 total; 3 permanently excluded¹) | :white_check_mark: Met |
 | Tests | 3,957 | ≥ 4,020 | — | **4,209** | :white_check_mark: Met |
+
+¹ 4 models were declared permanently excluded on Day 7 (feasopt1, iobalance, meanvar, orani). meanvar later achieved model_optimal (solve success) and is no longer infeasible, so only 3 of the 4 appear in the model_infeasible count: feasopt1, iobalance, orani.
 
 ### Final Error Category Breakdown
 

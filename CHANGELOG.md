@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Metrics (Baseline → Final)
 - **Solve:** 65 → 89 (+24) | **Match:** 30 → 47 (+17) | **path_syntax_error:** 40 → 20 (−20)
-- **model_infeasible:** 15 → 12 in-scope (−3) | **Tests:** 3,957 → 4,209 (+252)
+- **model_infeasible:** 15 total (12 in-scope; 3 permanently excluded: feasopt1, iobalance, orani) | **Tests:** 3,957 → 4,209 (+252)
 - **Parse:** 154/157 → 156/160 (97.5%) | **Translate:** 136/154 → 141/156 (90.4%)
 
 #### Key Changes
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 24 issues labeled `sprint-23` for Sprint 23 backlog
 
 #### PRs
-#1007, #1052, #1064, #1076, #1079, #1082, #1083, #1092, #1094, #1095, #1096, #1097, #1103, #1113, #1114
+#1006, #1052, #1064, #1076, #1079, #1082, #1083, #1092, #1094, #1095, #1096, #1097, #1103, #1113, #1114
 
 ### Sprint 22 Day 1: WS5 Timeout + WS1 Subcategory C (Part 1) - 2026-03-06
 

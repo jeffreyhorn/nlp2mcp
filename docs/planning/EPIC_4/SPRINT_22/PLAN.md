@@ -425,7 +425,7 @@ The PATH Solver Tuning component from PROJECT_PLAN.md (4–6h) has been **invali
 
 **End of Day 14 criterion:** Retrospective written; CHANGELOG.md updated; Sprint 23 scope outlined.
 
-**Day 14 status:** COMPLETE — Retrospective written with 6 "what went well", 5 "what could be improved", 3 "what we'd do differently", and Sprint 23 recommendations with suggested targets. CHANGELOG.md updated with sprint summary. PROJECT_PLAN.md Rolling KPIs filled with Sprint 22 actuals. Sprint 23 scope outlined (5 priorities: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, translate failures).
+**Day 14 status:** COMPLETE — Retrospective written with 7 "what went well", 5 "what could be improved", 3 "what we'd do differently", and Sprint 23 recommendations with suggested targets. CHANGELOG.md updated with sprint summary. PROJECT_PLAN.md Rolling KPIs filled with Sprint 22 actuals. Sprint 23 scope outlined (5 priorities: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, translate failures).
 
 ---
 
