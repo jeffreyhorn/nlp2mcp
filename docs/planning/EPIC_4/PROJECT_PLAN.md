@@ -2,7 +2,7 @@
 
 This plan translates `GOALS.md` into sprint-ready guidance for Sprints 18–26 (two weeks each, with Sprint 18 expanded to three weeks based on prep task findings).
 
-**Baseline (v1.1.0 / Epic 3 Final):** Parse 61/160 (38.1%), Translate 42/61 (68.9%), Solve 12/42 (28.6%), Full Pipeline 12/160 (7.5%)
+**Baseline (v1.1.0 / Epic 3 Final):** Parse 61/160 (38.1%), Translate 42/61 (68.9%), Solve 12/42 (28.6%), Full Pipeline Match 12/160 (7.5%)
 
 ---
 
@@ -628,7 +628,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 # Sprint 23 (Weeks 11–12): Solve Rate Push & Error Category Reduction
 
-**Goal:** Push solve success from 89 to ≥ 100 and match from 47 to ≥ 55 by addressing the five priority areas identified in the Sprint 22 retrospective: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, and translate failures. Maintain parse rate. Apply process recommendations PR6–PR8.
+**Goal:** Push solve success from 89 to ≥ 100 and match from 47 to ≥ 55 by addressing the five priority areas identified in the Sprint 22 retrospective: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, and translate failures. Maintain parse rate. Apply Sprint 22 process recommendations: use full pipeline for all definitive metrics (PR6), track model_infeasible gross fixes and gross influx separately (PR7), and use absolute counts alongside percentages for parse success (PR8). See `SPRINT_RETROSPECTIVE.md` §New Recommendations for Sprint 23 for details.
 
 **Note:** Sprint 22 retrospective identified 24 issues labeled `sprint-23`. Priorities derived from Sprint 22 error category analysis and the suggested targets table.
 
@@ -816,7 +816,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Parse Rate:** ≥ 98% of valid corpus
 - **Translate Rate:** ≥ 95% of parsed models
 - **Solve Rate:** ≥ 75% of translated models
-- **Full Pipeline:** ≥ 40% of valid corpus
+- **Full Pipeline Match:** ≥ 40% of valid corpus
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
@@ -887,7 +887,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ### Pipeline Retest (~2h)
 - Full pipeline run with PATH feedback integration
 - Record final metrics
-- **Deliverable:** Updated metrics; expected full pipeline ≥ 50%
+- **Deliverable:** Updated metrics; expected full pipeline match ≥ 50%
 
 ## Deliverables
 - Regression-based performance benchmarks (replacing absolute thresholds)
@@ -902,7 +902,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Final Parse Rate:** ≥ 98% of valid corpus
 - **Final Translate Rate:** ≥ 95% of parsed models
 - **Final Solve Rate:** ≥ 75% of translated models
-- **Full Pipeline:** ≥ 50% of valid corpus
+- **Full Pipeline Match:** ≥ 50% of valid corpus
 - **Documentation:** Remaining failures documented; Epic 4 summary drafted
 - **Quality:** All quality gates pass
 
@@ -999,7 +999,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Final Parse Rate:** ≥ 98% of valid corpus (confirmed from Sprint 25)
 - **Final Translate Rate:** ≥ 95% of parsed models (confirmed from Sprint 25)
 - **Final Solve Rate:** ≥ 80% of translated models (confirmed from Sprint 25)
-- **Full Pipeline:** ≥ 50% of valid corpus (confirmed from Sprint 25)
+- **Full Pipeline Match:** ≥ 50% of valid corpus (confirmed from Sprint 25)
 - **Epic 5 Ready:** Draft project plan created; backlog prioritized
 - **Quality:** All quality gates pass on final release
 
@@ -1023,7 +1023,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 | Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | ≥97.5% | ≥98% | ≥98% | ≥98% |
 | Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | ≥93% | ≥95% | ≥95% | ≥95% |
 | Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | ≥70% | ≥75% | ≥75% | ≥80% |
-| Full Pipeline (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | ≥34% | ≥40% | ≥50% | ≥50% |
+| Full Pipeline Match (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | ≥34% | ≥40% | ≥50% | ≥50% |
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S26 targets are in-scope counts.
 
