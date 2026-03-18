@@ -44,7 +44,7 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 23 Known Unknowns List
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -81,11 +81,20 @@ Sprint 22 Known Unknowns (30 entries across 8 categories) proved highly effectiv
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` with 26 unknowns across 5 categories + 1 carryforward
+- Sprint 22 KU-27 → KU-12, KU-28 → KU-14, KU-29 → KU-16, KU-30 → KU-26
+- Task-to-Unknown mapping table in Appendix A assigns verification responsibility
+- Priority distribution: 5 Critical, 14 High, 6 Medium, 1 Low
 
 ### Result
 
-*To be completed.*
+26 unknowns documented across 6 sections:
+- **Category 1: path_solve_terminated Reduction** (5 KUs: KU-01–KU-05) — covers CGE incompatibility risk, dollar-condition dependencies, cascade to model_infeasible
+- **Category 2: model_infeasible Reduction** (6 KUs: KU-06–KU-11) — covers KKT bug classification, sameas pattern extension, influx budget, non-convexity
+- **Category 3: Match Rate Improvement** (6 KUs: KU-12–KU-17) — covers alias differentiation regression, dollar-condition scope, fix independence, non-convex ceiling
+- **Category 4: path_syntax_error Residual** (4 KUs: KU-18–KU-21) — covers aliasing mechanism, diverse B root causes, cascade risk, new subcategories
+- **Category 5: Translate Failures** (4 KUs: KU-22–KU-25) — covers compilation vs timeout, target feasibility, loop-body commonality
+- **Sprint 22 Carryforward** (1 KU: KU-26) — multi-solve incomparable classification stability
 
 ### Verification
 
@@ -95,27 +104,27 @@ ls docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
 
 # Verify minimum unknown count
 grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
-# Expected: ≥ 25
+# Expected: ≥ 25 → Actual: 26
 
 # Verify all 5 priority categories covered
 grep -c "^## Category" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
-# Expected: ≥ 5
+# Expected: ≥ 5 → Actual: 5 (+ 1 carryforward section)
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` with ≥ 25 unknowns across ≥ 5 categories
-- Summary table with ID, category, unknown, priority, assumption, verification deadline
-- Verification plan for Critical/High unknowns
+- :white_check_mark: `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` with 26 unknowns across 5 categories + 1 carryforward
+- :white_check_mark: Summary table with ID, category, unknown, priority, assumption, verification deadline
+- :white_check_mark: Verification plan for Critical/High unknowns (assigned to Tasks 2-7)
 
 ### Acceptance Criteria
 
-- [ ] Document created with ≥ 25 unknowns across ≥ 5 categories
-- [ ] All unknowns have assumption, verification method, priority
-- [ ] All Critical/High unknowns have verification deadline (Day 0-3)
-- [ ] Sprint 22 deferred KUs (KU-27, KU-28, KU-29, KU-30) carried forward
-- [ ] All 5 Sprint 23 priorities covered
-- [ ] Template for in-sprint updates defined
+- [x] Document created with ≥ 25 unknowns across ≥ 5 categories (26 unknowns, 5 categories + 1 carryforward)
+- [x] All unknowns have assumption, verification method, priority
+- [x] All Critical/High unknowns have verification deadline (assigned to Tasks 2-7)
+- [x] Sprint 22 deferred KUs (KU-27, KU-28, KU-29, KU-30) carried forward (→ KU-12, KU-14, KU-16, KU-26)
+- [x] All 5 Sprint 23 priorities covered
+- [x] Template for in-sprint updates defined (Appendix C verification status tracking table)
 
 ---
 
@@ -127,6 +136,7 @@ grep -c "^## Category" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-01, KU-02, KU-03, KU-04, KU-05
 
 ### Objective
 
@@ -188,6 +198,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
 - `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md` with root cause classification for all 10 models
 - Ranked fix priority list with effort estimates
 - Recommendation: which 5+ models to target in Sprint 23
+- Verification results for KU-01, KU-02, KU-03, KU-04, KU-05 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -197,6 +208,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
 - [ ] Fix effort estimated per model
 - [ ] Top 5+ highest-leverage models identified
 - [ ] Triage document created
+- [ ] KU-01, KU-02, KU-03, KU-04, KU-05 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -208,6 +220,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-06, KU-07, KU-08, KU-09, KU-10, KU-11
 
 ### Objective
 
@@ -264,6 +277,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
 - `docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md` with root cause classification for all 12 models
 - Gross fix candidates vs. likely permanent exclusions
 - Recommendation: which 4+ models to target in Sprint 23
+- Verification results for KU-06, KU-07, KU-08, KU-09, KU-10, KU-11 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -273,6 +287,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
 - [ ] Fix effort estimated per model
 - [ ] Top 4+ highest-leverage models identified
 - [ ] Permanent exclusion candidates flagged (per PR7 gross/influx tracking)
+- [ ] KU-06, KU-07, KU-08, KU-09, KU-10, KU-11 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -284,6 +299,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-12, KU-13, KU-15, KU-16, KU-17
 
 ### Objective
 
@@ -348,6 +364,7 @@ grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION
   - Proposed fix design with code locations
   - Regression risk assessment
   - Test plan
+- Verification results for KU-12, KU-13, KU-15, KU-16, KU-17 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -357,6 +374,7 @@ grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION
 - [ ] Affected models identified (both currently-failing and currently-passing)
 - [ ] Regression risk assessed (count of alias-using models that currently solve)
 - [ ] 2-3 test models identified for verification
+- [ ] KU-12, KU-13, KU-15, KU-16, KU-17 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -368,6 +386,7 @@ grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-14, KU-15
 
 ### Objective
 
@@ -430,6 +449,7 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
   - Interaction analysis with alias differentiation (#1111)
   - Regression risk assessment
   - Test plan
+- Verification results for KU-14, KU-15 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -439,6 +459,7 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
 - [ ] Interaction with alias differentiation (#1111) assessed
 - [ ] Affected models identified
 - [ ] Regression risk assessed (dollar conditions are common; quantify how many models use them)
+- [ ] KU-14, KU-15 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -450,6 +471,7 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-18, KU-19, KU-20, KU-21
 
 ### Objective
 
@@ -509,6 +531,7 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
   - Per-model root cause and error details
   - Fix effort estimates
   - Cross-reference with existing issues
+- Verification results for KU-18, KU-19, KU-20, KU-21 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -518,6 +541,7 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 - [ ] Fix effort estimated per model
 - [ ] Cross-category overlap checked (vs path_solve_terminated, model_infeasible)
 - [ ] Ranked fix priority created
+- [ ] KU-18, KU-19, KU-20, KU-21 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -529,6 +553,7 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-22, KU-23, KU-24, KU-25
 
 ### Objective
 
@@ -588,6 +613,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
   - Error messages for compilation failures
   - Cross-reference with GitHub issues
   - Ranked fix priority for the 4+ models needed to reach target
+- Verification results for KU-22, KU-23, KU-24, KU-25 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -596,6 +622,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 - [ ] Error messages captured for compilation failures
 - [ ] Cross-referenced with existing GitHub issues
 - [ ] Top 4+ highest-leverage fixes identified (to go from 15 → ≤ 11)
+- [ ] KU-22, KU-23, KU-24, KU-25 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -607,6 +634,7 @@ grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
+**Unknowns Verified:** KU-26
 
 ### Objective
 
@@ -668,6 +696,7 @@ ls -la data/gamslib/gamslib_status.json
   - Comparison with Sprint 22 final metrics
   - Confirmation of no regressions
 - Updated `data/gamslib/gamslib_status.json`
+- Verification results for KU-26 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
@@ -677,6 +706,7 @@ ls -la data/gamslib/gamslib_status.json
 - [ ] model_infeasible split into in-scope and permanently excluded (per PR7)
 - [ ] No regressions vs Sprint 22 final metrics confirmed
 - [ ] Baseline document created
+- [ ] KU-26 verification result recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -688,6 +718,7 @@ ls -la data/gamslib/gamslib_status.json
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (Known Unknowns identifies gaps)
+**Unknowns Verified:** (all remaining — cross-check for gaps)
 
 ### Objective
 
@@ -748,6 +779,7 @@ grep -c "PR[678]" docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
   - Mapping of all Sprint 22 retrospective items to Sprint 23 actions
   - Confirmation that PR6, PR7, PR8 are integrated into Sprint 23 process
   - Any gaps identified and addressed
+- Cross-check all KU verification results from Tasks 2-8
 
 ### Acceptance Criteria
 
@@ -757,6 +789,7 @@ grep -c "PR[678]" docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
 - [ ] PR6, PR7, PR8 confirmed in Sprint 23 process
 - [ ] Any deferred items documented with justification
 - [ ] Alignment document created
+- [ ] All KU verification results from Tasks 2-8 cross-checked for completeness
 
 ---
 
@@ -768,6 +801,7 @@ grep -c "PR[678]" docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1-9 (all prep tasks inform the plan)
+**Unknowns Verified:** (synthesis — all KU verification results incorporated into schedule)
 
 ### Objective
 
@@ -845,6 +879,7 @@ grep -c "Checkpoint" docs/planning/EPIC_4/SPRINT_23/PLAN.md
   - Issue-to-day mapping
 - `docs/planning/EPIC_4/SPRINT_23/prompts/PLAN_PROMPTS.md` with day-by-day execution prompts
 - `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` (initialized, empty)
+- All KU verification results synthesized into risk mitigation schedule
 
 ### Acceptance Criteria
 
@@ -856,6 +891,7 @@ grep -c "Checkpoint" docs/planning/EPIC_4/SPRINT_23/PLAN.md
 - [ ] Contingency plans for alias differentiation regressions and model_infeasible influx
 - [ ] PR6/PR7/PR8 process requirements integrated into plan
 - [ ] Sprint log initialized
+- [ ] All KU verification results from Tasks 2-9 incorporated into risk mitigation
 
 ---
 
