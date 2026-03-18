@@ -1,0 +1,974 @@
+# Sprint 23 Preparation Plan
+
+**Purpose:** Complete critical preparation tasks before Sprint 23 begins
+**Timeline:** Complete before Sprint 23 Day 1
+**Goal:** Set up Sprint 23 for success — Solve Rate Push & Error Category Reduction (solve 89 → ≥ 100, match 47 → ≥ 55)
+
+**Key Insight from Sprint 22:** Day 12 quick wins delivered outsized pipeline impact (+9 solve, +6 match) because targeted triage identified high-leverage fixes. Sprint 23 prep must replicate this triage-first approach across all 5 priority areas, and apply Sprint 22 process recommendations PR6 (full pipeline for definitive metrics), PR7 (gross fixes/influx tracking), and PR8 (absolute counts for parse).
+
+---
+
+## Executive Summary
+
+Sprint 23 targets the largest solve and match improvement in Epic 4 history: +11 solve (89 → 100) and +8 match (47 → 55). This requires coordinated work across 5 priority areas: path_solve_terminated (10 → ≤ 5), model_infeasible (12 → ≤ 8), match rate (47 → ≥ 55), path_syntax_error (20 → ≤ 15), and translate failures (15 → ≤ 11). The sprint also introduces two architectural AD changes (alias-aware differentiation #1111, dollar-condition propagation #1112) that carry regression risk.
+
+This prep plan focuses on:
+1. **Risk identification** — Known Unknowns for all 5 priority areas
+2. **Triage and classification** — Root cause analysis before implementation
+3. **Architectural investigation** — AD changes require design before code
+4. **Baseline establishment** — Full pipeline baseline per PR6
+5. **Sprint planning** — Detailed schedule with checkpoints
+
+---
+
+## Prep Task Overview
+
+| # | Task | Priority | Est. Time | Dependencies | Sprint Goal Addressed |
+|---|------|----------|-----------|--------------|----------------------|
+| 1 | Create Sprint 23 Known Unknowns List | Critical | 2-3h | None | All priorities — risk identification |
+| 2 | Triage path_solve_terminated Models (10) | Critical | 3-4h | None | Priority 1: path_solve_terminated ≤ 5 |
+| 3 | Triage model_infeasible Models (12) | Critical | 3-4h | None | Priority 2: model_infeasible ≤ 8 |
+| 4 | Investigate Alias-Aware Differentiation (#1111) | High | 3-4h | None | Priority 3: match ≥ 55 |
+| 5 | Investigate Dollar-Condition Propagation (#1112) | High | 3-4h | None | Priority 3: match ≥ 55 |
+| 6 | Triage path_syntax_error Subcategories G+B | High | 2-3h | None | Priority 4: path_syntax_error ≤ 15 |
+| 7 | Catalog and Classify Translate Failures (15) | Medium | 2h | None | Priority 5: translate ≥ 93% |
+| 8 | Run Full Pipeline Baseline (per PR6) | Critical | 1-2h | None | All priorities — baseline metrics |
+| 9 | Review Sprint 22 Retrospective Action Items | High | 1h | Task 1 | Process — ensure nothing missed |
+| 10 | Plan Sprint 23 Detailed Schedule | Critical | 3-4h | Tasks 1-9 | All priorities — sprint planning |
+
+**Total Estimated Time:** 24-32 hours (~3-4 working days)
+
+**Critical Path:** Tasks 1 + 8 → Tasks 2-7 (parallel) → Task 9 → Task 10
+
+---
+
+## Task 1: Create Sprint 23 Known Unknowns List
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Sprint planning
+**Dependencies:** None
+
+### Objective
+
+Create proactive list of assumptions and unknowns for Sprint 23 to prevent late discoveries during implementation. This is the first task because it surfaces risks that inform all other prep tasks.
+
+### Why This Matters
+
+Sprint 22 Known Unknowns (30 entries across 8 categories) proved highly effective: KU-24 (path_syntax_error → model_infeasible cascade) correctly predicted the net-zero model_infeasible result. KU-27 and KU-28 (alias differentiation, dollar-condition propagation) were discovered during Sprint 22 and deferred — they are now Sprint 23 Priority 3. Early documentation of unknowns prevents Issue #47-style emergencies.
+
+### Background
+
+- Sprint 22 Known Unknowns: `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` (30 KUs, 8 categories)
+- Sprint 21 Known Unknowns: `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` (27 KUs)
+- Sprint 22 Retrospective: `docs/planning/EPIC_4/SPRINT_22/SPRINT_RETROSPECTIVE.md`
+- 24 issues labeled `sprint-23` in GitHub
+
+### What Needs to Be Done
+
+1. **Review Sprint 22 deferred KUs** — KU-27 (alias-aware differentiation), KU-28 (dollar-condition propagation), KU-29 (non-convex multi-KKT), KU-30 (multi-solve incomparable) all carry forward
+2. **For each Priority area, brainstorm unknowns:**
+   - **Priority 1 (path_solve_terminated):** Are the 10 models truly MCP pairing/execution errors or PATH convergence? Will fixing pairing expose new infeasibilities?
+   - **Priority 2 (model_infeasible):** Can KKT bugs be fixed without introducing regressions? Will fixes cascade to other error categories?
+   - **Priority 3 (match rate):** Does alias-aware differentiation affect all indexed models or only alias-using ones? Does dollar-condition propagation require changes to the gradient, Jacobian, or both?
+   - **Priority 4 (path_syntax_error):** Are subcategory G (set index reuse) and B (domain violations) independent? Do the 7 target models share common patterns?
+   - **Priority 5 (translate failures):** Are timeouts fixable or inherent to model complexity? Will compilation fixes create new solve-stage errors?
+3. **Categorize by topic, prioritize by risk, define verification method**
+4. **Assign verification deadlines** (Day 0-1 for Critical, Day 2-3 for High)
+5. **Create document** following Sprint 22 KNOWN_UNKNOWNS.md format
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify document exists
+ls docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
+
+# Verify minimum unknown count
+grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
+# Expected: ≥ 25
+
+# Verify all 5 priority categories covered
+grep -c "^## Category" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
+# Expected: ≥ 5
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` with ≥ 25 unknowns across ≥ 5 categories
+- Summary table with ID, category, unknown, priority, assumption, verification deadline
+- Verification plan for Critical/High unknowns
+
+### Acceptance Criteria
+
+- [ ] Document created with ≥ 25 unknowns across ≥ 5 categories
+- [ ] All unknowns have assumption, verification method, priority
+- [ ] All Critical/High unknowns have verification deadline (Day 0-3)
+- [ ] Sprint 22 deferred KUs (KU-27, KU-28, KU-29, KU-30) carried forward
+- [ ] All 5 Sprint 23 priorities covered
+- [ ] Template for in-sprint updates defined
+
+---
+
+## Task 2: Triage path_solve_terminated Models (10)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Classify all 10 path_solve_terminated models by root cause to identify which are fixable in Sprint 23 and which require deeper architectural work or PATH author consultation.
+
+### Why This Matters
+
+Sprint 22 missed the path_solve_terminated target (achieved 10, target ≤ 5) because "most have genuine solver convergence issues or complex MCP pairing problems" (retrospective). Blind implementation wastes time. Triage-first identifies the 5+ highest-leverage models to fix.
+
+### Background
+
+- 10 models remain: dyncge, elec, etamac, fawley, gtm, maxmin, qsambal, rocket, sambal, twocge
+- Key issues: #862 (sambal), #983 (elec), #986 (lands)
+- Sprint 22 WS2 fixed 5 models (fdesign, trussm, fawley, springchain, whouse) in ~12h
+- Sprint 21 PATH convergence analysis (`docs/planning/EPIC_4/SPRINT_21/` Day 12) showed most terminated models have pre-solver issues, not PATH convergence
+
+### What Needs to Be Done
+
+1. **For each of the 10 models, run MCP generation and attempt solve:**
+   ```bash
+   python -m src.cli data/gamslib/raw/<model>.gms -o /tmp/<model>_mcp.gms
+   # Then run with GAMS if available to capture PATH output
+   ```
+2. **Classify root cause into one of:**
+   - **A: MCP pairing error** — wrong variable/equation pairing; fix in KKT builder or emitter
+   - **B: Execution error** — division by zero, NA values, domain errors; fix in emitter or starting points
+   - **C: PATH convergence** — genuine solver failure; may need reformulation or PATH author consultation
+   - **D: Pre-solver infeasibility** — PATH detects infeasibility before iteration; likely KKT formulation bug
+3. **For each model, record:**
+   - Root cause category (A/B/C/D)
+   - Specific error message from PATH/GAMS output
+   - Estimated fix effort (hours)
+   - Dependencies on other models or architectural changes
+   - Relevant GitHub issue number
+4. **Rank models by fix leverage** — prioritize models that also improve match count
+5. **Create triage document** with recommendation for Sprint 23 day assignment
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify triage document exists
+ls docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
+
+# Verify all 10 models covered
+grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
+# Expected: ≥ 10
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md` with root cause classification for all 10 models
+- Ranked fix priority list with effort estimates
+- Recommendation: which 5+ models to target in Sprint 23
+
+### Acceptance Criteria
+
+- [ ] All 10 models attempted (MCP generation + solve)
+- [ ] Each model classified as A (pairing), B (execution), C (convergence), or D (pre-solver)
+- [ ] Error messages captured for each model
+- [ ] Fix effort estimated per model
+- [ ] Top 5+ highest-leverage models identified
+- [ ] Triage document created
+
+---
+
+## Task 3: Triage model_infeasible Models (12)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Classify all 12 in-scope model_infeasible models by root cause to identify which are KKT formulation bugs (fixable) versus inherent MCP incompatibilities (permanent exclusions).
+
+### Why This Matters
+
+Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new entries). Sprint 22 retrospective recommends tracking gross fixes and influx separately (PR7). Without triage, Sprint 23 risks the same net-zero pattern.
+
+### Background
+
+- 12 in-scope models: bearing, chain, cpack, lnts, markov, mathopt3, pak, paperco, prolog, robustlp, sparta, spatequ
+- 3 permanently excluded: feasopt1, iobalance, orani
+- Key issues: #1049 (pak), #1070 (prolog), #1081 (sparta), #1110 (markov)
+- Sprint 22 WS3 fixed whouse, ibm1, uimp, mexss, pdi via sameas guard refactor and other KKT fixes
+- Sprint 22 deferred decision doc: `docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md`
+
+### What Needs to Be Done
+
+1. **For each of the 12 models, run MCP generation and capture PATH output:**
+   ```bash
+   python -m src.cli data/gamslib/raw/<model>.gms -o /tmp/<model>_mcp.gms
+   ```
+2. **Classify root cause:**
+   - **A: KKT formulation bug** — incorrect stationarity, missing multiplier terms, wrong signs
+   - **B: Structural infeasibility** — PATH preprocessor detects infeasibility (MODEL STATUS 4)
+   - **C: Inherent MCP incompatibility** — model class (CGE, multi-solve, etc.) doesn't convert cleanly
+   - **D: Missing feature** — requires grammar/IR feature not yet implemented
+3. **For models with filed issues (#1049, #1070, #1081, #1110, #1038), review issue description for root cause clues**
+4. **Estimate fix effort per model and identify dependencies**
+5. **Recommend which models to target** (Category A/B are highest leverage; C may be permanent exclusions)
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify triage document exists
+ls docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
+
+# Verify all 12 models covered
+grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
+# Expected: ≥ 12
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md` with root cause classification for all 12 models
+- Gross fix candidates vs. likely permanent exclusions
+- Recommendation: which 4+ models to target in Sprint 23
+
+### Acceptance Criteria
+
+- [ ] All 12 models attempted (MCP generation + review)
+- [ ] Each model classified as A (KKT bug), B (structural), C (incompatible), or D (missing feature)
+- [ ] Models with existing issues (#1049, #1070, #1081, #1110, #1038) cross-referenced
+- [ ] Fix effort estimated per model
+- [ ] Top 4+ highest-leverage models identified
+- [ ] Permanent exclusion candidates flagged (per PR7 gross/influx tracking)
+
+---
+
+## Task 4: Investigate Alias-Aware Differentiation (#1111)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** High
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Research the alias-aware differentiation architectural change needed for Sprint 23 Priority 3. Determine scope of impact, design approach, and regression risk before implementation.
+
+### Why This Matters
+
+Issue #1111 (alias-aware differentiation) is one of two architectural AD changes in Sprint 23. Sprint 22 KU-27 identified this during Day 11: "Naive fix works; needs iteration-context guard." A poorly designed fix could regress currently-solving models. Design-first prevents mid-sprint emergency refactoring.
+
+### Background
+
+- GitHub Issue: #1111 (AD engine: alias-aware differentiation with summation-context tracking)
+- Sprint 22 KU-27: Discovered Day 11, deferred to Sprint 23
+- Related research: `docs/research/multidimensional_indexing.md`, `docs/research/nested_subset_indexing_research.md`
+- AD engine: `src/ad/` (gradient computation, Jacobian computation)
+- Current behavior: AD engine treats aliased set indices as independent, producing incorrect derivatives when the same physical index is referenced through different alias names
+
+### What Needs to Be Done
+
+1. **Read Issue #1111 fully** — understand the specific failure case and proposed fix
+2. **Identify affected models** — which of the 42 mismatch models are affected by alias issues?
+   ```bash
+   # Search for alias usage in mismatch models
+   grep -l "alias" data/gamslib/raw/*.gms | head -20
+   ```
+3. **Map the AD pipeline** — trace how set indices flow through:
+   - `src/ad/` gradient/Jacobian computation
+   - `src/kkt/stationarity.py` stationarity equation generation
+   - `src/emit/` MCP emission
+4. **Design the fix** — document:
+   - Where alias resolution should happen (AD entry, mid-pipeline, or emission)
+   - What "summation-context tracking" means concretely
+   - How to detect when aliased indices refer to the same physical set
+   - Regression safeguards (which tests cover the affected code paths)
+5. **Identify test models** — find 2-3 models that demonstrate the bug and will verify the fix
+6. **Estimate regression risk** — how many currently-solving models use aliases?
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify investigation document exists
+ls docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md
+
+# Verify design includes regression analysis
+grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md
+# Expected: ≥ 1
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md` with:
+  - Root cause analysis
+  - Affected models list
+  - Proposed fix design with code locations
+  - Regression risk assessment
+  - Test plan
+
+### Acceptance Criteria
+
+- [ ] Issue #1111 fully understood with concrete failure case documented
+- [ ] AD pipeline traced for alias handling
+- [ ] Fix design documented with specific code locations in `src/ad/`
+- [ ] Affected models identified (both currently-failing and currently-passing)
+- [ ] Regression risk assessed (count of alias-using models that currently solve)
+- [ ] 2-3 test models identified for verification
+
+---
+
+## Task 5: Investigate Dollar-Condition Propagation (#1112)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** High
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Research the dollar-condition propagation architectural change needed for Sprint 23 Priority 3. Determine where conditions are lost in the AD pipeline and design the propagation mechanism.
+
+### Why This Matters
+
+Issue #1112 (dollar-condition propagation) is the second architectural AD change. Sprint 22 KU-28 identified this during Day 12: "Gradient conditions extractable from DollarConditional nodes." This affects match rate for models where conditional expressions produce different derivatives depending on the enclosing dollar condition.
+
+### Background
+
+- GitHub Issue: #1112 (KKT: Dollar-condition propagation through AD/stationarity pipeline)
+- Sprint 22 KU-28: Discovered Day 12, deferred to Sprint 23
+- Dollar conditions in GAMS: `expr$condition` or `$(condition)` syntax
+- `condition` rule in grammar: `DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)`
+- AD engine currently differentiates unconditionally, ignoring enclosing `$` conditions
+- Stationarity equations need condition guards to match the original model's conditional structure
+
+### What Needs to Be Done
+
+1. **Read Issue #1112 fully** — understand the specific failure case and examples
+2. **Trace dollar conditions through the pipeline:**
+   - How are `$`-conditions represented in the IR? (`DollarConditional` AST node?)
+   - Where in `src/ad/` are they encountered during differentiation?
+   - How should they propagate to stationarity equations in `src/kkt/stationarity.py`?
+   - How should they appear in the emitted MCP? (as `$` conditions on stationarity equations)
+3. **Identify affected models** — which mismatch models use dollar conditions in constraint definitions?
+4. **Design the propagation mechanism:**
+   - Should conditions be tracked as metadata on derivative expressions?
+   - Should the gradient/Jacobian carry condition annotations?
+   - How to combine multiple nested conditions?
+5. **Assess interaction with Task 4** (alias differentiation) — are the two changes independent or coupled?
+6. **Estimate regression risk** — dollar conditions are pervasive in GAMS models
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify investigation document exists
+ls docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md
+
+# Verify design addresses interaction with alias differentiation
+grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md
+# Expected: ≥ 1 mention
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md` with:
+  - Dollar-condition representation in the IR
+  - Pipeline trace showing where conditions are lost
+  - Proposed propagation mechanism design
+  - Interaction analysis with alias differentiation (#1111)
+  - Regression risk assessment
+  - Test plan
+
+### Acceptance Criteria
+
+- [ ] Issue #1112 fully understood with concrete failure case documented
+- [ ] Dollar-condition flow traced through IR → AD → KKT → Emit pipeline
+- [ ] Propagation mechanism designed with specific code locations
+- [ ] Interaction with alias differentiation (#1111) assessed
+- [ ] Affected models identified
+- [ ] Regression risk assessed (dollar conditions are common; quantify how many models use them)
+
+---
+
+## Task 6: Triage path_syntax_error Subcategories G+B
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** High
+**Estimated Time:** 2-3 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Identify the specific models in path_syntax_error subcategories G (set index reuse, 2 models) and B (domain violations, 5 models), verify root causes, and estimate fix effort for each.
+
+### Why This Matters
+
+Sprint 22 planned to fix subcategories G+B on Days 2-3 but redirected work to WS2/WS3. These 7 models are explicitly deferred to Sprint 23 Priority 4. Prep triage prevents discovering unexpected complexity during the sprint.
+
+### Background
+
+- 20 path_syntax_error models remain overall; Priority 4 targets the 7-model G+B subset
+- Subcategory G (set index reuse): 2 models — need aliasing or index renaming
+- Subcategory B (domain violations): 5 models — need domain conditioning fixes
+- Key issues: #956 (nonsharp), #1041 (cesam2), #882/#871 (camcge)
+- Sprint 22 KU-03 refuted the assumption that subcategory B models share a common emitter bug — "original 5 models dispersed; current B is cesam/cesam2 (new)"
+- Sprint 22 KU-04 verified aliasing mechanism is sound for subcategory G
+
+### What Needs to Be Done
+
+1. **Identify the specific 7 models** by running the pipeline on all 20 path_syntax_error models and categorizing the error type
+2. **For subcategory G models (2):**
+   - Examine the set index reuse pattern in the GAMS source
+   - Verify Sprint 22 KU-04 finding (aliasing mechanism works)
+   - Estimate fix effort
+3. **For subcategory B models (5):**
+   - Note Sprint 22 KU-03 finding — these are NOT a single emitter bug
+   - Classify each model's specific domain violation
+   - Review #956 (nonsharp), #1041 (cesam2), #882/#871 (camcge) for details
+   - Estimate fix effort per model
+4. **Check for overlap** — do any G+B models also appear in path_solve_terminated or model_infeasible lists?
+5. **Create ranked fix list** with dependencies
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify triage document exists
+ls docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md
+
+# Verify both subcategories covered
+grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md
+# Expected: ≥ 2
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` with:
+  - Named list of all 7 G+B models
+  - Per-model root cause and error details
+  - Fix effort estimates
+  - Cross-reference with existing issues
+
+### Acceptance Criteria
+
+- [ ] All 7 G+B models identified by name
+- [ ] Each model's specific error pattern documented
+- [ ] Sprint 22 KU-03 and KU-04 findings verified/updated
+- [ ] Fix effort estimated per model
+- [ ] Cross-category overlap checked (vs path_solve_terminated, model_infeasible)
+- [ ] Ranked fix priority created
+
+---
+
+## Task 7: Catalog and Classify Translate Failures (15)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Medium
+**Estimated Time:** 2 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Catalog all 15 translate failures, classify them as compilation errors vs. timeouts, and identify the highest-leverage fixes for Sprint 23 Priority 5.
+
+### Why This Matters
+
+Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing which models fail and why, the sprint risks spending time on intractable timeout models instead of quick compilation error fixes.
+
+### Background
+
+- 15 translate failures remain (141/156 = 90.4% translate rate)
+- Mix of compilation errors and timeout issues
+- Sprint 23 acceptance criterion: ≥ 93% of parsed models (≥ 145/156 assuming 156 parsed)
+- Pipeline retest script: `.venv/bin/python scripts/gamslib/run_full_test.py`
+- Related issues: #952 (lmp2 empty subsets), #953 (paperco loop body), #940 (mexls universal set), #1062 (tricp)
+
+### What Needs to Be Done
+
+1. **Run pipeline on all 156 parsed models and capture translate failures:**
+   ```bash
+   .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | grep -i "fail\|error\|timeout"
+   ```
+2. **For each failure, classify as:**
+   - **A: Compilation error** — GAMS can't compile the MCP output; fix in emitter/translator
+   - **B: Timeout** — Translation takes too long; may need recursion/complexity optimization
+   - **C: Missing IR feature** — Model uses grammar constructs not yet in the IR
+   - **D: Internal error** — Python exception during translation
+3. **For compilation errors, capture the specific GAMS error message**
+4. **Cross-reference with existing issues** (#952, #953, #940, #1062, etc.)
+5. **Rank by fix effort** — quick compilation fixes first, then investigate timeouts
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify catalog document exists
+ls docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
+
+# Verify all failures covered
+grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
+# Expected: ≥ 15
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md` with:
+  - Named list of all 15 failing models
+  - Classification (compilation error, timeout, missing feature, internal error)
+  - Error messages for compilation failures
+  - Cross-reference with GitHub issues
+  - Ranked fix priority for the 4+ models needed to reach target
+
+### Acceptance Criteria
+
+- [ ] All 15 translate failures identified by name
+- [ ] Each classified as compilation error, timeout, missing feature, or internal error
+- [ ] Error messages captured for compilation failures
+- [ ] Cross-referenced with existing GitHub issues
+- [ ] Top 4+ highest-leverage fixes identified (to go from 15 → ≤ 11)
+
+---
+
+## Task 8: Run Full Pipeline Baseline (per PR6)
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 1-2 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Development team
+**Dependencies:** None
+
+### Objective
+
+Establish the definitive Sprint 23 baseline using a full pipeline run (per Sprint 22 process recommendation PR6). This provides the starting metrics that all Sprint 23 progress is measured against.
+
+### Why This Matters
+
+Sprint 22 retrospective identified that partial pipeline (`--only-solve`) gave misleading intermediate metrics (Day 11 showed solve 80, match 41; full pipeline showed solve 89, match 47). PR6 mandates full pipeline for all definitive metrics. The Sprint 23 baseline must use the same methodology as checkpoints and final metrics.
+
+### Background
+
+- Sprint 22 final: parse 156/160, translate 141/156, solve 89/141, match 47/160
+- Pipeline script: `.venv/bin/python scripts/gamslib/run_full_test.py`
+- Status JSON: `data/gamslib/gamslib_status.json`
+- PR6: Use full pipeline for all definitive metrics
+- PR7: Track model_infeasible gross fixes and gross influx separately
+- PR8: Use absolute counts alongside percentages for parse success
+
+### What Needs to Be Done
+
+1. **Run full pipeline** (all stages, no `--only-*` flags):
+   ```bash
+   .venv/bin/python scripts/gamslib/run_full_test.py --quiet
+   ```
+2. **Record all metrics per PR6/PR7/PR8:**
+   - Parse: X/160 (Y%)
+   - Translate: X/Y (Z% of parsed)
+   - Solve: X (count) + X/Y (Z% of translated)
+   - Match: X (count) + X/160 (Y% of corpus)
+   - Error categories: path_syntax_error, path_solve_terminated, model_infeasible, path_solve_license (counts)
+   - model_infeasible breakdown: in-scope vs. permanently excluded
+3. **Compare against Sprint 22 final metrics** to confirm no regressions since merge
+4. **Save baseline metrics** for Sprint 23 checkpoint comparisons
+5. **Create baseline document** that will be referenced throughout Sprint 23
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify baseline document exists
+ls docs/planning/EPIC_4/SPRINT_23/BASELINE_METRICS.md
+
+# Verify gamslib_status.json is up to date
+ls -la data/gamslib/gamslib_status.json
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/BASELINE_METRICS.md` with:
+  - Full pipeline results (parse, translate, solve, match)
+  - Error category breakdown
+  - Comparison with Sprint 22 final metrics
+  - Confirmation of no regressions
+- Updated `data/gamslib/gamslib_status.json`
+
+### Acceptance Criteria
+
+- [ ] Full pipeline run completed (no `--only-*` flags)
+- [ ] All metrics recorded: parse, translate, solve, match, error categories
+- [ ] Metrics expressed as both absolute counts and percentages (per PR8)
+- [ ] model_infeasible split into in-scope and permanently excluded (per PR7)
+- [ ] No regressions vs Sprint 22 final metrics confirmed
+- [ ] Baseline document created
+
+---
+
+## Task 9: Review Sprint 22 Retrospective Action Items
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** High
+**Estimated Time:** 1 hour
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Sprint planning
+**Dependencies:** Task 1 (Known Unknowns identifies gaps)
+
+### Objective
+
+Verify that all Sprint 22 retrospective recommendations and action items are captured in Sprint 23 planning. Confirm nothing is missed.
+
+### Why This Matters
+
+Sprint 22 retrospective identified 5 "What Could Be Improved" items and 3 "What We'd Do Differently" items. Some are process changes (PR6-PR8), others are deferred technical work. All must be explicitly addressed or deferred with justification.
+
+### Background
+
+- Sprint 22 Retrospective: `docs/planning/EPIC_4/SPRINT_22/SPRINT_RETROSPECTIVE.md`
+- Process recommendations: PR6 (full pipeline), PR7 (gross fixes/influx), PR8 (absolute counts)
+- Sprint 22 deferred items: subcategories G+B, path_solve_terminated residual
+- Sprint 23 section in PROJECT_PLAN.md: lines 629-740
+
+### What Needs to Be Done
+
+1. **Read Sprint 22 Retrospective completely** — extract all action items and recommendations
+2. **Map each item to Sprint 23 tasks or process changes:**
+
+   | Sprint 22 Recommendation | Sprint 23 Action | Status |
+   |--------------------------|------------------|--------|
+   | PR6: Full pipeline for definitive metrics | Task 8 baseline + all checkpoints | Planned |
+   | PR7: Gross fixes/influx tracking | Acceptance criteria + reporting | Planned |
+   | PR8: Absolute counts for parse | Acceptance criteria + reporting | Planned |
+   | WS1 G+B deferred | Priority 4 | Planned |
+   | path_solve_terminated ≤ 5 | Priority 1 | Planned |
+   | model_infeasible influx budget | Priority 2 + PR7 | Planned |
+   | Full pipeline at checkpoints | Sprint 23 process | Planned |
+
+3. **Identify any gaps** — items not captured in Sprint 23 planning
+4. **Update Known Unknowns** (Task 1) if new risks found
+5. **Create alignment document**
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify alignment document exists
+ls docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
+
+# Verify all 3 process recommendations addressed
+grep -c "PR[678]" docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
+# Expected: ≥ 3
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md` with:
+  - Mapping of all Sprint 22 retrospective items to Sprint 23 actions
+  - Confirmation that PR6, PR7, PR8 are integrated into Sprint 23 process
+  - Any gaps identified and addressed
+
+### Acceptance Criteria
+
+- [ ] Sprint 22 Retrospective reviewed completely
+- [ ] All "What Could Be Improved" items mapped to Sprint 23 actions
+- [ ] All "What We'd Do Differently" items addressed
+- [ ] PR6, PR7, PR8 confirmed in Sprint 23 process
+- [ ] Any deferred items documented with justification
+- [ ] Alignment document created
+
+---
+
+## Task 10: Plan Sprint 23 Detailed Schedule
+
+**Status:** :large_blue_circle: NOT STARTED
+**Priority:** Critical
+**Estimated Time:** 3-4 hours
+**Deadline:** Before Sprint 23 Day 1
+**Owner:** Sprint planning
+**Dependencies:** Tasks 1-9 (all prep tasks inform the plan)
+
+### Objective
+
+Create detailed Sprint 23 plan with day-by-day schedule, checkpoints, and contingency plans, incorporating all findings from prep tasks.
+
+### Why This Matters
+
+Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprint days (Day 0-14). Without a detailed schedule, work will be unfocused and the ambitious targets (solve +11, match +8) are unlikely to be met. Sprint 22's structured approach (15-day schedule, 2 checkpoints, day-by-day prompts) was effective and should be replicated.
+
+### Background
+
+- Sprint 23 in PROJECT_PLAN.md: `docs/planning/EPIC_4/PROJECT_PLAN.md` lines 629-740
+- Sprint 22 Plan format: `docs/planning/EPIC_4/SPRINT_22/PLAN.md` (15-day schedule, 2 checkpoints)
+- Sprint 22 Prompts: `docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md` (day-by-day execution)
+- Estimated effort: 32-44 hours across 5 priorities
+- 24 GitHub issues labeled `sprint-23`
+
+### What Needs to Be Done
+
+1. **Synthesize all prep task findings** into a coherent sprint plan:
+   - Task 1 Known Unknowns → risk mitigation schedule
+   - Task 2 path_solve_terminated triage → Priority 1 day assignments
+   - Task 3 model_infeasible triage → Priority 2 day assignments
+   - Task 4 alias differentiation design → Priority 3 implementation plan
+   - Task 5 dollar-condition design → Priority 3 implementation plan
+   - Task 6 G+B triage → Priority 4 day assignments
+   - Task 7 translate catalog → Priority 5 day assignments
+   - Task 8 baseline → starting metrics for checkpoints
+   - Task 9 retrospective alignment → process requirements
+2. **Create 15-day schedule (Day 0-14)** with:
+   - Day-by-day tasks
+   - Which priority area each day addresses
+   - Expected metrics improvements per day
+   - Integration risks per day
+3. **Define 2 checkpoints:**
+   - Checkpoint 1 (Day 5): Expected metrics, GO/CONDITIONAL GO/NO-GO criteria
+   - Checkpoint 2 (Day 10): Expected metrics, GO/NO-GO criteria
+4. **Create day-by-day prompts** for execution (following Sprint 22 format)
+5. **Define contingency plans** for high-risk areas (alias differentiation regressions, model_infeasible influx)
+6. **Map 24 sprint-23 issues** to specific days
+
+### Changes
+
+*To be completed.*
+
+### Result
+
+*To be completed.*
+
+### Verification
+
+```bash
+# Verify plan document exists
+ls docs/planning/EPIC_4/SPRINT_23/PLAN.md
+
+# Verify prompts exist
+ls docs/planning/EPIC_4/SPRINT_23/prompts/PLAN_PROMPTS.md
+
+# Verify 15-day schedule
+grep -c "^## Day" docs/planning/EPIC_4/SPRINT_23/PLAN.md
+# Expected: ≥ 15 (Day 0 through Day 14)
+
+# Verify checkpoints defined
+grep -c "Checkpoint" docs/planning/EPIC_4/SPRINT_23/PLAN.md
+# Expected: ≥ 2
+```
+
+### Deliverables
+
+- `docs/planning/EPIC_4/SPRINT_23/PLAN.md` with:
+  - Sprint goals and acceptance criteria
+  - 15-day schedule (Day 0-14)
+  - 2 checkpoints with GO/NO-GO criteria
+  - Risk mitigation plan
+  - Issue-to-day mapping
+- `docs/planning/EPIC_4/SPRINT_23/prompts/PLAN_PROMPTS.md` with day-by-day execution prompts
+- `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` (initialized, empty)
+
+### Acceptance Criteria
+
+- [ ] Plan created with 15-day schedule (Day 0-14)
+- [ ] All 5 priority areas assigned to specific days
+- [ ] 2 checkpoints defined with expected metrics and GO/NO-GO criteria
+- [ ] Day-by-day prompts created
+- [ ] All 24 sprint-23 issues mapped to days or backlog
+- [ ] Contingency plans for alias differentiation regressions and model_infeasible influx
+- [ ] PR6/PR7/PR8 process requirements integrated into plan
+- [ ] Sprint log initialized
+
+---
+
+## Summary and Critical Path
+
+### Critical Path (Must Complete Before Sprint 23 Day 1)
+
+```
+Task 1 (Known Unknowns) ──┐
+                           │
+Task 8 (Full Pipeline)  ───┤
+                           │  ──→ Task 9 (Retro Alignment) ──→ Task 10 (Detailed Plan)
+Tasks 2-7 (Triage, in  ───┤
+  parallel)                │
+```
+
+**Minimum critical path time:** ~12-16 hours (2 working days)
+
+1. **Task 1: Known Unknowns** (2-3h) — informs risk identification for all other tasks
+2. **Task 8: Full Pipeline Baseline** (1-2h) — provides starting metrics; can run in parallel with Task 1
+3. **Tasks 2-7: Triage/Investigation** (17-23h total, but parallelizable) — provide findings for plan
+4. **Task 9: Retrospective Alignment** (1h) — confirms nothing missed
+5. **Task 10: Detailed Plan** (3-4h) — synthesizes all findings; MUST be last
+
+### Execution Phases
+
+**Phase 1: Research & Baseline (can be parallel)**
+- Task 1: Known Unknowns
+- Task 8: Full Pipeline Baseline
+
+**Phase 2: Triage & Investigation (can be parallel)**
+- Task 2: path_solve_terminated triage
+- Task 3: model_infeasible triage
+- Task 4: Alias differentiation investigation
+- Task 5: Dollar-condition investigation
+- Task 6: path_syntax_error G+B triage
+- Task 7: Translate failures catalog
+
+**Phase 3: Synthesis & Planning**
+- Task 9: Retrospective alignment
+- Task 10: Detailed schedule (depends on all above)
+
+### Total Estimated Time: 24-32 hours (~3-4 working days)
+
+---
+
+## Success Criteria for Prep Phase
+
+- [ ] Known Unknowns document created with ≥ 25 unknowns
+- [ ] All 10 path_solve_terminated models triaged with root cause
+- [ ] All 12 model_infeasible models triaged with root cause
+- [ ] Alias-aware differentiation (#1111) design documented
+- [ ] Dollar-condition propagation (#1112) design documented
+- [ ] 7 path_syntax_error G+B models triaged
+- [ ] 15 translate failures cataloged and classified
+- [ ] Full pipeline baseline established (per PR6)
+- [ ] Sprint 22 retrospective items confirmed in Sprint 23 plan
+- [ ] Sprint 23 PLAN.md completed with 15-day schedule and checkpoints
+
+**Overall Goal:** Sprint 23 begins with clear triage, validated designs, and a data-driven plan. No surprises.
+
+---
+
+## Appendix: Document Cross-References
+
+### Sprint Goals
+- `docs/planning/EPIC_4/PROJECT_PLAN.md` lines 629-740 — Sprint 23 definition
+- `docs/planning/EPIC_4/GOALS.md` — Epic 4 overarching goals
+
+### Prior Sprint Documentation
+- `docs/planning/EPIC_4/SPRINT_22/SPRINT_RETROSPECTIVE.md` — Sprint 22 retrospective with Sprint 23 recommendations
+- `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` — Sprint 22 Known Unknowns (KU-27, KU-28 carry forward)
+- `docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md` — Sprint 22 deferred items
+- `docs/planning/EPIC_4/SPRINT_22/PLAN.md` — Sprint 22 plan (template for Sprint 23)
+- `docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md` — Sprint 22 day-by-day prompts (template)
+
+### Research Documents
+- `docs/research/multidimensional_indexing.md` — Relevant to alias differentiation (#1111)
+- `docs/research/nested_subset_indexing_research.md` — Relevant to alias differentiation (#1111)
+
+### GitHub Issues (sprint-23 label, 24 total)
+- #1112: Dollar-condition propagation through AD/stationarity pipeline
+- #1111: Alias-aware differentiation with summation-context tracking
+- #1110: markov multi-pattern Jacobian
+- #1091: Reclassify Category D models as Category B
+- #1089: qabel regression
+- #1081: sparta KKT bug
+- #1070: prolog singular Jacobian
+- #1062: tricp sparse edge-set conditioning
+- #1061: tforss NA parameter propagation
+- #1049: pak incomplete stationarity
+- #1041: cesam2 empty equation
+- #1038: spatequ Jacobian domain mismatch
+- #986: lands NA values
+- #983: elec division by zero
+- #956: nonsharp compilation errors
+- #953: paperco loop body parameter
+- #952: lmp2 empty dynamic subsets
+- #945: launch per-instance stationarity
+- #940: mexls universal set
+- #919: sroute empty stationarity
+- #918: qdemo7 conditionally-absent variables
+- #882: camcge subset bound complementarity
+- #871: camcge stationarity subset conditioning
+- #862: sambal domain conditioning
+
+### Pipeline and Testing
+- `.venv/bin/python scripts/gamslib/run_full_test.py` — Full pipeline retest script
+- `data/gamslib/gamslib_status.json` — Pipeline status database
+- `data/gamslib/raw/` — GAMSlib model files (local only, not in CI)
+
+---
+
+**Document Created:** 2026-03-17
+**Sprint 23 Target Start:** TBD (after prep completion)
+**Next Steps:** Execute prep tasks in order, verify completion, begin Sprint 23
