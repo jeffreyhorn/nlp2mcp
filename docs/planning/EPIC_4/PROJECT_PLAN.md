@@ -687,7 +687,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Priority 4: path_syntax_error Residual (~4-6h)
 - **Deferred Subcategories G+B (3-4h)**
-  - 20 models remain from Sprint 22
+  - 20 path_syntax_error models remain overall from Sprint 22; this workstream targets the 7-model G+B subset
   - Fix set index reuse (subcategory G, 2 models) and domain violations (subcategory B, 5 models)
   - Key issues: #956 (nonsharp compilation errors), #1041 (cesam2 empty equation), #882/#871 (camcge subset conditioning)
   - Target: reduce from 20 to ≤ 15
@@ -731,7 +731,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **path_solve_terminated:** ≤ 5 (down from 10)
 - **model_infeasible:** ≤ 8 in-scope (down from 12)
 - **path_syntax_error:** ≤ 15 (down from 20)
-- **Translate:** ≥ 145/156 (93%, up from 90.4%)
+- **Translate:** ≥ 93% of parsed models (≥ 145/156 assuming 156 parsed; up from 90.4%)
 - **Parse:** ≥ 156/160 (maintain 97.5%)
 - **Tests:** ≥ 4,300 (up from 4,209)
 - **Quality:** All tests pass; all fixes have regression tests
@@ -998,7 +998,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Documentation:** All Epic 4 documentation complete and reviewed
 - **Final Parse Rate:** ≥ 98% of valid corpus (confirmed from Sprint 25)
 - **Final Translate Rate:** ≥ 95% of parsed models (confirmed from Sprint 25)
-- **Final Solve Rate:** ≥ 80% of translated models (confirmed from Sprint 25)
+- **Final Solve Rate:** ≥ 80% of translated models (Sprint 25 targets ≥ 75%; Sprint 26 raises to ≥ 80%)
 - **Full Pipeline Match:** ≥ 50% of valid corpus (confirmed from Sprint 25)
 - **Epic 5 Ready:** Draft project plan created; backlog prioritized
 - **Quality:** All quality gates pass on final release
