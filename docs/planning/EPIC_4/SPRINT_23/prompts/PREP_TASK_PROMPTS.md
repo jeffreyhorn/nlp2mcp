@@ -953,7 +953,7 @@ Update Task 10: status to COMPLETE, fill in Changes/Result, check off acceptance
 
 ### Update CHANGELOG.md
 
-Task 10 is the final prep task and consolidates ALL CHANGELOG entries (deferred from Tasks 2-9 to avoid parallel merge conflicts). Add ALL of the following under `### Sprint 23 Preparation`:
+Task 10 is the final prep task and consolidates ALL CHANGELOG entries (deferred from Tasks 2-9 to avoid parallel merge conflicts). **Append** the following bullets to the existing `### Sprint 23 Preparation` section (which already contains Prep Task 1 and plan-doc entries — preserve those):
 ```
 - Complete Prep Task 2: Triage 10 path_solve_terminated models
 - Complete Prep Task 3: Triage 12 model_infeasible models
