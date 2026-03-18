@@ -54,7 +54,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 | KU-23 | Translate Failures | Timeout models (#830 gastrans pattern) are architecturally intractable | Medium | Sprint 22 KU-22 confirmed gastrans needs architectural Jacobian changes | Task 7 |
 | KU-24 | Translate Failures | 4 compilation fixes are sufficient to reach ≥ 145/156 translate target | High | Need exactly 4 of 15 failures fixed; depends on failure type distribution | Task 7 |
 | KU-25 | Translate Failures | paperco (#953) and lmp2 (#952) loop-body issues share a common parser fix | Medium | Both involve loop body assignments not emitted; may share root cause | Task 7 |
-| KU-26 | Match Rate | Multi-solve models (senstran, aircraft, sparta) are correctly classified as incomparable | Low | Sprint 22 KU-30 confirmed; pipeline skips comparison | N/A |
+| KU-26 | Match Rate | Multi-solve models (senstran, aircraft, sparta) are correctly classified as incomparable | Low | Sprint 22 KU-30 confirmed; pipeline skips comparison | Task 8 |
 
 ---
 

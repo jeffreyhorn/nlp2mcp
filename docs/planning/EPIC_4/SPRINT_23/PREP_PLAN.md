@@ -33,10 +33,10 @@ This prep plan focuses on:
 | 6 | Triage path_syntax_error Subcategories G+B | High | 2-3h | None | Priority 4: path_syntax_error ≤ 15 |
 | 7 | Catalog and Classify Translate Failures (15) | Medium | 2h | None | Priority 5: translate ≥ 93% |
 | 8 | Run Full Pipeline Baseline (per PR6) | Critical | 1-2h | None | All priorities — baseline metrics |
-| 9 | Review Sprint 22 Retrospective Action Items | High | 1h | Task 1 | Process — ensure nothing missed |
+| 9 | Review Sprint 22 Retrospective Action Items | High | 1h | Tasks 1-8 | Process — ensure nothing missed |
 | 10 | Plan Sprint 23 Detailed Schedule | Critical | 3-4h | Tasks 1-9 | All priorities — sprint planning |
 
-**Total Estimated Time:** 24-32 hours (~3-4 working days)
+**Total Estimated Time:** 23-31 hours (~3-4 working days)
 
 **Critical Path:** Tasks 1 + 8 → Tasks 2-7 (parallel) → Task 9 → Task 10
 
@@ -717,7 +717,7 @@ ls -la data/gamslib/gamslib_status.json
 **Estimated Time:** 1 hour
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Sprint planning
-**Dependencies:** Task 1 (Known Unknowns identifies gaps)
+**Dependencies:** Tasks 1-8 (Known Unknowns identifies gaps; Tasks 2-8 provide KU verification results to cross-check)
 **Unknowns Verified:** (all remaining — cross-check for gaps)
 
 ### Objective
@@ -912,7 +912,7 @@ Tasks 2-7 (Triage, in  ───┤
 
 1. **Task 1: Known Unknowns** (2-3h) — informs risk identification for all other tasks
 2. **Task 8: Full Pipeline Baseline** (1-2h) — provides starting metrics; can run in parallel with Task 1
-3. **Tasks 2-7: Triage/Investigation** (17-23h total, but parallelizable) — provide findings for plan
+3. **Tasks 2-7: Triage/Investigation** (16-21h total, but parallelizable) — provide findings for plan
 4. **Task 9: Retrospective Alignment** (1h) — confirms nothing missed
 5. **Task 10: Detailed Plan** (3-4h) — synthesizes all findings; MUST be last
 
@@ -934,7 +934,7 @@ Tasks 2-7 (Triage, in  ───┤
 - Task 9: Retrospective alignment
 - Task 10: Detailed schedule (depends on all above)
 
-### Total Estimated Time: 24-32 hours (~3-4 working days)
+### Total Estimated Time: 23-31 hours (~3-4 working days)
 
 ---
 
