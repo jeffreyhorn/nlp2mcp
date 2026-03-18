@@ -299,7 +299,12 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-16** (Medium): Is the non-convex multi-KKT divergence population irreducible (~12 models)?
 - **KU-17** (High): Are verified-convex mismatch models fixable (guaranteed matches if KKT bugs fixed)?
 
-For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with one of:
+- `**Verification Results:** ✅ VERIFIED — <brief finding>`
+- `**Verification Results:** ❌ REFUTED — <brief finding>`
+- `**Verification Results:** ⚠️ PARTIALLY CONFIRMED — <brief finding>`
+
+Also update the Appendix C verification status tracking table with date, result, and action taken.
 
 ### Update PREP_PLAN.md
 
@@ -403,7 +408,12 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-14** (High): Does dollar-condition propagation require changes to gradient only, or also Jacobian?
 - **KU-15** (High): Are dollar-condition and alias fixes independent (no coupling)? *(Also verified in Task 4 — cross-check findings)*
 
-For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with one of:
+- `**Verification Results:** ✅ VERIFIED — <brief finding>`
+- `**Verification Results:** ❌ REFUTED — <brief finding>`
+- `**Verification Results:** ⚠️ PARTIALLY CONFIRMED — <brief finding>`
+
+Also update the Appendix C verification status tracking table with date, result, and action taken.
 
 ### Update PREP_PLAN.md
 
@@ -510,7 +520,12 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-20** (High): Will fixing 5 path_syntax_error models inflate model_infeasible?
 - **KU-21** (Medium): Are new Sprint 22 subcategories (K, GUSS, hyphenated labels) low-effort?
 
-For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with one of:
+- `**Verification Results:** ✅ VERIFIED — <brief finding>`
+- `**Verification Results:** ❌ REFUTED — <brief finding>`
+- `**Verification Results:** ⚠️ PARTIALLY CONFIRMED — <brief finding>`
+
+Also update the Appendix C verification status tracking table with date, result, and action taken.
 
 ### Update PREP_PLAN.md
 
@@ -621,7 +636,12 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-24** (High): Are 4 compilation fixes sufficient to reach ≥ 145/156 translate target?
 - **KU-25** (Medium): Do paperco (#953) and lmp2 (#952) loop-body issues share a common parser fix?
 
-For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with one of:
+- `**Verification Results:** ✅ VERIFIED — <brief finding>`
+- `**Verification Results:** ❌ REFUTED — <brief finding>`
+- `**Verification Results:** ⚠️ PARTIALLY CONFIRMED — <brief finding>`
+
+Also update the Appendix C verification status tracking table with date, result, and action taken.
 
 ### Update PREP_PLAN.md
 

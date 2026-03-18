@@ -602,9 +602,10 @@ Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing
 # Verify catalog document exists
 ls docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 
-# Verify all translate failures covered (count per-model headings)
-grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
-# Expected: ≥ 15 (each failure should have a dedicated ### heading with model name)
+# Verify all 15 translate failure models covered (check for per-model headings)
+for model in agreste ampl cesam ferts ganges gangesx gastrans iswnm korcge mexls mine nebrazil sarf srpchase turkpow; do
+  grep -qi "### .*$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING: $model"
+done
 ```
 
 ### Deliverables
