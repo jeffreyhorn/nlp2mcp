@@ -595,7 +595,7 @@ Catalog all 15 translate failures, classify them as compilation errors vs. timeo
 
 1. **Run pipeline on all 156 parsed models and capture translate failures:**
    ```bash
-   .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | grep -i "fail\|error\|timeout"
+   .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | grep -Ei 'fail|error|timeout'
    ```
 2. **For each failure, classify as:**
    - **A: Compilation error** — GAMS can't compile the MCP output; fix in emitter/translator

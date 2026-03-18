@@ -577,7 +577,7 @@ Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing
 
 1. **Run pipeline on all 156 parsed models and capture translate failures:**
    ```bash
-   .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | grep -i "fail\|error\|timeout"
+   .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | grep -Ei 'fail|error|timeout'
    ```
 2. **For each failure, classify as:**
    - **A: Compilation error** — GAMS can't compile the MCP output; fix in emitter/translator
