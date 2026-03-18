@@ -234,7 +234,7 @@ Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new
 
 - 12 in-scope models: bearing, chain, cpack, lnts, markov, mathopt3, pak, paperco, prolog, robustlp, sparta, spatequ
 - 3 permanently excluded: feasopt1, iobalance, orani
-- Key issues: #1049 (pak), #1070 (prolog), #1081 (sparta), #1110 (markov)
+- Key issues: #1049 (pak), #1070 (prolog), #1081 (sparta), #1110 (markov), #1038 (spatequ)
 - Sprint 22 WS3 fixed whouse, ibm1, uimp, mexss, pdi via sameas guard refactor and other KKT fixes
 - Sprint 22 deferred decision doc: `docs/planning/EPIC_4/SPRINT_22/DEFERRED_ISSUES_DECISION.md`
 

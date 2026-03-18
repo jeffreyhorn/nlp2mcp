@@ -37,7 +37,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 | KU-06 | model_infeasible | 12 in-scope models have fixable KKT formulation bugs | Critical | Most are KKT bugs, not inherent MCP incompatibilities | Task 3 |
 | KU-07 | model_infeasible | Sprint 22 sameas guard pattern applies to additional models | High | pak, spatequ, sparta may share the #764 pattern | Task 3 |
 | KU-08 | model_infeasible | model_infeasible influx from other fixes is manageable | Critical | Sprint 22 had net-zero (5 fixed, 5 entered); Sprint 23 budgets for influx | Task 3 |
-| KU-09 | model_infeasible | chain/rocket local infeasibility is non-convexity, not KKT bug | Medium | Confirmed in Sprint 22 KU-09; PATH ran to completion | Task 3 |
+| KU-09 | model_infeasible | chain local infeasibility is non-convexity, not KKT bug; rocket status uncertain | Medium | chain confirmed in Sprint 22 KU-09; rocket currently path_solve_terminated | Task 3 |
 | KU-10 | model_infeasible | markov multi-pattern Jacobian (#1110) is fixable in 3-4h | High | Single-representative derivative is the root cause | Task 3 |
 | KU-11 | model_infeasible | prolog singular Jacobian (#1070) is a CES demand formulation issue | Medium | May require reformulation beyond simple KKT fix | Task 3 |
 | KU-12 | Match Rate | Alias-aware differentiation can be implemented without regression | Critical | Sprint 22 naive fix regressed dispatch model; need iteration-context guard | Task 4 |
