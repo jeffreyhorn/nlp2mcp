@@ -252,7 +252,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 15min (confirmation only)
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-09 CONFIRMED (carryforward)
+**Prior Analysis:** Sprint 22 KU-09 confirmed chain only; rocket status has changed since then
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -320,7 +321,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 4 investigation)
 **Owner:** Task 4 (alias differentiation investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-27 (carryforward)
+**Prior Analysis:** Sprint 22 KU-27 identified this issue; deferred to Sprint 23
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -363,7 +365,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 5 investigation)
 **Owner:** Task 5 (dollar-condition investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-28 (carryforward)
+**Prior Analysis:** Sprint 22 KU-28 identified this issue; deferred to Sprint 23
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -406,7 +409,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 15min (confirmation)
 **Owner:** Task 4 (match rate analysis)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-29 (carryforward)
+**Prior Analysis:** Sprint 22 KU-29 confirmed ~12 non-convex models diverge; carryforward
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -452,7 +456,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-04 (carryforward)
+**Prior Analysis:** Sprint 22 KU-04 verified aliasing mechanism for most models; 2 remain
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -474,7 +479,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 6 (path_syntax_error G+B triage)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-03 (carryforward)
+**Prior Analysis:** Sprint 22 KU-03 refuted common-bug assumption; diverse root causes confirmed
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -561,7 +567,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 7 (translate failures catalog)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-22 (carryforward)
+**Prior Analysis:** Sprint 22 KU-22 confirmed gastrans needs architectural Jacobian changes
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
@@ -626,7 +633,8 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 10min (confirmation)
 **Owner:** Task 8 (baseline metrics)
-**Verification Results:** 🔍 Status: INCOMPLETE — Sprint 22 KU-30 (carryforward)
+**Prior Analysis:** Sprint 22 KU-30 confirmed incomparable classification; carryforward
+**Verification Results:** 🔍 Status: INCOMPLETE
 
 ---
 
