@@ -19,8 +19,8 @@ Classify all 10 path_solve_terminated models by root cause to identify which are
 ### Background
 
 - 10 models remain: dyncge, elec, etamac, fawley, gtm, maxmin, qsambal, rocket, sambal, twocge
-- Key issues: #862 (sambal), #983 (elec), #986 (lands)
-- Sprint 22 WS2 fixed 5 models (fdesign, trussm, fawley, springchain, whouse) in ~12h
+- Key issues: #862 (sambal), #983 (elec); #986 (lands) was fixed in Sprint 22 and is now model_optimal
+- Sprint 22 WS2 fixed 4 models (fdesign, trussm, springchain, whouse) in ~12h; fawley remains path_solve_terminated
 - Sprint 21 PATH convergence analysis showed most terminated models have pre-solver issues, not PATH convergence
 
 ### What Needs to Be Done

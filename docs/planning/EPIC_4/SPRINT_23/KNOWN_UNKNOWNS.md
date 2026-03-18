@@ -30,7 +30,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 | ID | Category | Unknown | Priority | Assumption | Verification Deadline |
 |----|----------|---------|----------|------------|-----------------------|
 | KU-01 | path_solve_terminated | 10 models are mostly MCP pairing/execution errors, not PATH convergence | Critical | Yes — Sprint 21 Day 12 analysis confirmed pre-solver failures | Task 2 |
-| KU-02 | path_solve_terminated | Fixing 5+ models is achievable in Sprint 23 timeframe | Critical | Yes — Sprint 22 WS2 fixed 5 in ~12h | Task 2 |
+| KU-02 | path_solve_terminated | Fixing 5+ models is achievable in Sprint 23 timeframe | Critical | Yes — Sprint 22 WS2 fixed 4 in ~12h | Task 2 |
 | KU-03 | path_solve_terminated | sambal/qsambal dollar-condition issues are fixable without #1112 | High | May require #1112 (dollar-condition propagation) first | Task 2 |
 | KU-04 | path_solve_terminated | dyncge/twocge CGE models will solve after KKT fixes | High | CGE models may be structurally incompatible like orani | Task 2 |
 | KU-05 | path_solve_terminated | Fixing path_solve_terminated won't cascade to model_infeasible | High | Some models may shift category when errors are resolved | Task 2 |
@@ -85,7 +85,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 ### KU-02: Fixing 5+ Models Is Achievable in Sprint 23
 
 **Priority:** Critical
-**Assumption:** Sprint 22 WS2 fixed 5 path_solve_terminated models (fdesign, trussm, fawley, springchain, whouse) in ~12h. Sprint 23 can replicate this pace for 5+ additional models, reducing from 10 to ≤ 5.
+**Assumption:** Sprint 22 WS2 fixed 4 path_solve_terminated models (fdesign, trussm, springchain, whouse) in ~12h; fawley remains path_solve_terminated. Sprint 23 can replicate this pace for 5+ additional models, reducing from 10 to ≤ 5.
 
 **Research Questions:**
 1. Were Sprint 22's WS2 fixes "low-hanging fruit" that won't repeat?
@@ -239,16 +239,16 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 ### KU-09: chain/rocket Are Genuinely Non-Convex Infeasibility
 
 **Priority:** Medium
-**Assumption:** chain and rocket are locally infeasible due to non-convexity, not KKT formulation bugs. Sprint 22 KU-09 confirmed they moved from path_solve_terminated to model_infeasible and PATH ran to Normal Completion.
+**Assumption:** chain is locally infeasible due to non-convexity, not a KKT formulation bug. Sprint 22 KU-09 confirmed chain moved from path_solve_terminated to model_infeasible (MODEL STATUS 5, PATH Normal Completion). However, rocket is currently still path_solve_terminated (parse error: no_solve_summary), not model_infeasible as previously assumed.
 
 **Research Questions:**
-1. Are chain and rocket convex or non-convex NLPs?
-2. Would warm-starting from NLP `.l` values change the outcome?
+1. Is chain convex or non-convex? Would warm-starting from NLP `.l` values change the outcome?
+2. Why is rocket still path_solve_terminated rather than model_infeasible? Is it a MCP syntax error or a different root cause?
 3. Are they candidates for permanent exclusion or re-investigation?
 
-**How to Verify:** Already verified in Sprint 22 KU-09. Confirm classification is still accurate.
+**How to Verify:** Confirm chain's model_infeasible classification is still accurate. Re-examine rocket's current path_solve_terminated status against Sprint 22 KU-09 findings.
 
-**Risk if Wrong:** Low — Sprint 22 analysis was thorough. If unexpectedly fixable, these are bonus solves.
+**Risk if Wrong:** Medium for rocket — if it was incorrectly assumed to be model_infeasible, triage work in Task 2 (path_solve_terminated) and Task 3 (model_infeasible) may need rebalancing.
 
 **Estimated Research Time:** 15min (confirmation only)
 **Owner:** Task 3 (model_infeasible triage)
