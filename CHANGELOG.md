@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 23 Preparation
+
+- Complete Sprint 23 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories + 1 carryforward section, covering path_solve_terminated, model_infeasible, match rate, path_syntax_error, and translate failures
+- Sprint 22 KU-27/KU-28/KU-29/KU-30 carried forward as Sprint 23 KU-12/KU-14/KU-16/KU-26
+- Task-to-Unknown mapping assigns verification responsibility to Prep Tasks 2-8
+- Updated PREP_PLAN.md Tasks 2-10 with Unknowns Verified metadata and acceptance criteria
+- Created PREP_TASK_PROMPTS.md with step-by-step execution prompts for Prep Tasks 2-10
+
 ### Sprint 22 Summary - 2026-03-17
 
 **Duration:** 15 days (Day 0 – Day 14) | **6/8 targets met, 3 exceeded stretch**
