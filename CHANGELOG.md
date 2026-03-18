@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sprint 22 KU-27/KU-28/KU-29/KU-30 carried forward as Sprint 23 KU-12/KU-14/KU-16/KU-26
 - Task-to-Unknown mapping assigns verification responsibility to Prep Tasks 2-8
 - Updated PREP_PLAN.md Tasks 2-10 with Unknowns Verified metadata and acceptance criteria
+- Created PREP_TASK_PROMPTS.md with step-by-step execution prompts for Prep Tasks 2-10
 
 ### Sprint 22 Summary - 2026-03-17
 
