@@ -378,7 +378,7 @@ Research the dollar-condition propagation architectural change needed for Sprint
 - Sprint 22 KU-28: Discovered Day 12, deferred to Sprint 23
 - Dollar conditions in GAMS: `expr$condition` or `$(condition)` syntax
 - `condition` rule in grammar: `DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)`
-- AD engine currently differentiates unconditionally, ignoring enclosing `$` conditions
+- AD engine preserves `DollarConditional` nodes during differentiation (returns `(df/dx)$cond`), but condition propagation/collection into KKT/stationarity domains is incomplete — objective-gradient scanning and stationarity emission lose these conditions
 - Stationarity equations need condition guards to match the original model's conditional structure
 - Concrete fix path proposed in Sprint 22 KU-28: Add `_extract_gradient_conditions()` to `src/ad/gradient.py`, store in `KKTSystem.gradient_conditions`, check in `_find_variable_access_condition()` in stationarity.py
 
@@ -386,7 +386,7 @@ Research the dollar-condition propagation architectural change needed for Sprint
 
 1. **Read Issue #1112 fully** — understand the specific failure case and examples
 2. **Trace dollar conditions through the pipeline:** IR representation (`DollarConditional` AST node?), `src/ad/` encounters during differentiation, propagation to stationarity equations, appearance in emitted MCP
-3. **Identify affected models** — which mismatch models use dollar conditions in constraint definitions?
+3. **Identify affected models** — which mismatch models use dollar conditions in objectives, constraint definitions, or other expressions that feed AD/stationarity?
 4. **Design the propagation mechanism:** metadata on derivative expressions, gradient/Jacobian condition annotations, combining multiple nested conditions
 5. **Assess interaction with Task 4** (alias differentiation) — are the two changes independent or coupled?
 6. **Estimate regression risk** — dollar conditions are pervasive in GAMS models

@@ -404,7 +404,7 @@ Issue #1112 (dollar-condition propagation) is the second architectural AD change
 - Sprint 22 KU-28: Discovered Day 12, deferred to Sprint 23
 - Dollar conditions in GAMS: `expr$condition` or `$(condition)` syntax
 - `condition` rule in grammar: `DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)`
-- AD engine currently differentiates unconditionally, ignoring enclosing `$` conditions
+- AD engine preserves `DollarConditional` nodes during differentiation (returns `(df/dx)$cond`), but condition propagation/collection into KKT/stationarity domains is incomplete — objective-gradient scanning and stationarity emission lose these conditions
 - Stationarity equations need condition guards to match the original model's conditional structure
 
 ### What Needs to Be Done
@@ -415,7 +415,7 @@ Issue #1112 (dollar-condition propagation) is the second architectural AD change
    - Where in `src/ad/` are they encountered during differentiation?
    - How should they propagate to stationarity equations in `src/kkt/stationarity.py`?
    - How should they appear in the emitted MCP? (as `$` conditions on stationarity equations)
-3. **Identify affected models** — which mismatch models use dollar conditions in constraint definitions?
+3. **Identify affected models** — which mismatch models use dollar conditions in objectives, constraint definitions, or other expressions that feed AD/stationarity?
 4. **Design the propagation mechanism:**
    - Should conditions be tracked as metadata on derivative expressions?
    - Should the gradient/Jacobian carry condition annotations?
@@ -942,7 +942,7 @@ Tasks 2-7 (Triage, in  ───┤
 
 ## Success Criteria for Prep Phase
 
-- [ ] Known Unknowns document created with ≥ 25 unknowns
+- [x] Known Unknowns document created with ≥ 25 unknowns
 - [ ] All 10 path_solve_terminated models triaged with root cause
 - [ ] All 12 model_infeasible models triaged with root cause
 - [ ] Alias-aware differentiation (#1111) design documented
