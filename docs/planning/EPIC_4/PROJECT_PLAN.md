@@ -614,7 +614,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - Updated pipeline metrics
 
 ## Acceptance Criteria
-- **path_solve_terminated:** Count reduced by ≥ 50% (from 11 to ≤ 5)
+- **path_solve_terminated:** Count reduced by ≥ 50% (from 12 to ≤ 5)
 - **Solve Rate:** ≥ 55% of translated models solve correctly
 - **Solution Analysis:** All solving models assessed for NLP/MCP match
 - **Case Studies:** At least 3 divergence cases documented for consultation
@@ -702,7 +702,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Compilation Error Fixes (2-3h)**
   - 15 translate failures remain (mix of compilation errors and timeout issues)
   - Fix highest-leverage compilation errors first
-  - Target: reduce from 15 to ≤ 10
+  - Target: reduce from 15 to ≤ 11 (consistent with acceptance criterion ≥ 145/156)
   - **Deliverable:** Translation fixes with tests
 
 - **Timeout Investigation (2-3h)**
@@ -1040,7 +1040,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 | Risk | Impact | Probability | Sprints Affected | Mitigation |
 |------|--------|-------------|------------------|------------|
-| Grammar refactoring regressions | HIGH | HIGH | 20, 22 | 3204+ test suite; golden files for 12 solving models; incremental changes |
+| Grammar refactoring regressions | HIGH | HIGH | 20, 22 | 4,200+ test suite; golden files for 12 solving models; incremental changes |
 | Stacked blockers in models | HIGH | HIGH | 20-25 | Track blockers removed, not just models unblocked |
 | MCP-NLP solution divergence | HIGH | MEDIUM | 24-26 | PATH author consultation; multiple forcing strategies |
 | PATH author availability | MEDIUM | MEDIUM | 25-26 | Self-contained case studies; batch questions; literature fallback |
