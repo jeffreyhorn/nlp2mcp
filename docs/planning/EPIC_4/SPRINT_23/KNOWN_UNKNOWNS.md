@@ -54,7 +54,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 | KU-23 | Translate Failures | Timeout models (#830 gastrans pattern) are architecturally intractable | Medium | Sprint 22 KU-22 confirmed gastrans needs architectural Jacobian changes | Task 7 |
 | KU-24 | Translate Failures | 4 compilation fixes are sufficient to reach ≥ 145/156 translate target | High | Need exactly 4 of 15 failures fixed; depends on failure type distribution | Task 7 |
 | KU-25 | Translate Failures | paperco (#953) and lmp2 (#952) loop-body issues share a common parser fix | Medium | Both involve loop body assignments not emitted; may share root cause | Task 7 |
-| KU-26 | Match Rate | Multi-solve models (senstran, aircraft, sparta) are correctly classified as incomparable | Low | Sprint 22 KU-30 confirmed; pipeline skips comparison | Task 8 |
+| KU-26 | Match Rate | Multi-solve models (senstran, aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn) are correctly classified as incomparable | Low | Sprint 22 KU-30 confirmed; pipeline skips comparison for multi_solve flag | Task 8 |
 
 ---
 
@@ -620,7 +620,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 ### KU-26: Multi-Solve Incomparable Classification Is Stable
 
 **Priority:** Low
-**Assumption:** Models classified as "incomparable" in Sprint 22 (senstran, aircraft, sparta for multi-solve; apl1p, apl1pca for stochastic) remain correctly classified. The pipeline already skips comparison for these models (PR #1103).
+**Assumption:** Models flagged `multi_solve: true` in gamslib_status.json (senstran, aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn) remain correctly classified as incomparable. The pipeline skips comparison for these models based on the multi_solve flag (PR #1103). Note: other models like sparta have comparison skipped for different reasons (solve failure), not the multi-solve mechanism.
 
 **Research Questions:**
 1. Has the list of incomparable models changed since Sprint 22?
