@@ -188,9 +188,10 @@ Sprint 22 missed the path_solve_terminated target (achieved 10, target ≤ 5) be
 # Verify triage document exists
 ls docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
 
-# Verify all 10 models covered
-grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md
-# Expected: ≥ 10
+# Verify all 10 models covered (check for per-model headings, not generic ### headings)
+for model in dyncge elec etamac fawley gtm maxmin qsambal rocket sambal twocge; do
+  grep -qi "### .*$model" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md || echo "MISSING: $model"
+done
 ```
 
 ### Deliverables
@@ -267,9 +268,10 @@ Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new
 # Verify triage document exists
 ls docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
 
-# Verify all 12 models covered
-grep -c "^### " docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md
-# Expected: ≥ 12
+# Verify all 12 models covered (check for per-model headings)
+for model in bearing chain cpack lnts markov mathopt3 pak paperco prolog robustlp sparta spatequ; do
+  grep -qi "### .*$model" docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md || echo "MISSING: $model"
+done
 ```
 
 ### Deliverables
@@ -600,9 +602,9 @@ Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing
 # Verify catalog document exists
 ls docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 
-# Verify all failures covered
+# Verify all translate failures covered (count per-model headings)
 grep -c "^### " docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
-# Expected: ≥ 15
+# Expected: ≥ 15 (each failure should have a dedicated ### heading with model name)
 ```
 
 ### Deliverables
