@@ -277,7 +277,7 @@ Research the alias-aware differentiation architectural change needed for Sprint 
 1. **Read Issue #1111 fully** — understand the specific failure case and proposed fix
 2. **Identify affected models** — which of the 42 mismatch models are affected by alias issues?
    ```bash
-   grep -l "alias" data/gamslib/raw/*.gms | head -20
+   grep -il "alias" data/gamslib/raw/*.gms | head -20
    ```
 3. **Map the AD pipeline** — trace how set indices flow through `src/ad/`, `src/kkt/stationarity.py`, `src/emit/`
 4. **Design the fix** — document where alias resolution should happen, what "summation-context tracking" means concretely, how to detect aliased indices, regression safeguards

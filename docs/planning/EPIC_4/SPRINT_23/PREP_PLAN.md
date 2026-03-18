@@ -325,7 +325,7 @@ Issue #1111 (alias-aware differentiation) is one of two architectural AD changes
 2. **Identify affected models** — which of the 42 mismatch models are affected by alias issues?
    ```bash
    # Search for alias usage in mismatch models
-   grep -l "alias" data/gamslib/raw/*.gms | head -20
+   grep -il "alias" data/gamslib/raw/*.gms | head -20
    ```
 3. **Map the AD pipeline** — trace how set indices flow through:
    - `src/ad/` gradient/Jacobian computation
