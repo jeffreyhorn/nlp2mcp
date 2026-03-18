@@ -56,10 +56,10 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-04** (High): Are dyncge/twocge CGE models structurally incompatible like orani?
 - **KU-05** (High): Will fixing path_solve_terminated cascade models to model_infeasible?
 
-For each unknown, update the `**Verification Results:**` field in KNOWN_UNKNOWNS.md with your findings. Use format:
-- `✅ VERIFIED — <brief finding>` if assumption confirmed
-- `❌ REFUTED — <brief finding>` if assumption wrong
-- `⚠️ PARTIALLY CONFIRMED — <brief finding>` if mixed result
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with one of:
+- `**Verification Results:** ✅ VERIFIED — <brief finding>`
+- `**Verification Results:** ❌ REFUTED — <brief finding>`
+- `**Verification Results:** ⚠️ PARTIALLY CONFIRMED — <brief finding>`
 
 Also update the Appendix C verification status tracking table with date, result, and action taken.
 
@@ -189,7 +189,7 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-10** (High): Is markov multi-pattern Jacobian (#1110) fixable in 3-4h?
 - **KU-11** (Medium): Is prolog CES demand singular Jacobian addressable?
 
-For each unknown, update the `**Verification Results:**` field in KNOWN_UNKNOWNS.md. Use format: `✅ VERIFIED`, `❌ REFUTED`, or `⚠️ PARTIALLY CONFIRMED` with findings. Also update Appendix C.
+For each unknown, replace the existing `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with `**Verification Results:** ✅ VERIFIED — ...`, `❌ REFUTED — ...`, or `⚠️ PARTIALLY CONFIRMED — ...`. Also update Appendix C.
 
 ### Update PREP_PLAN.md
 
@@ -299,7 +299,7 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-16** (Medium): Is the non-convex multi-KKT divergence population irreducible (~12 models)?
 - **KU-17** (High): Are verified-convex mismatch models fixable (guaranteed matches if KKT bugs fixed)?
 
-For each, update `**Verification Results:**` in KNOWN_UNKNOWNS.md and Appendix C.
+For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
 
 ### Update PREP_PLAN.md
 
@@ -403,7 +403,7 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-14** (High): Does dollar-condition propagation require changes to gradient only, or also Jacobian?
 - **KU-15** (High): Are dollar-condition and alias fixes independent (no coupling)? *(Also verified in Task 4 — cross-check findings)*
 
-For each, update `**Verification Results:**` in KNOWN_UNKNOWNS.md and Appendix C.
+For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
 
 ### Update PREP_PLAN.md
 
@@ -510,7 +510,7 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-20** (High): Will fixing 5 path_syntax_error models inflate model_infeasible?
 - **KU-21** (Medium): Are new Sprint 22 subcategories (K, GUSS, hyphenated labels) low-effort?
 
-For each, update `**Verification Results:**` in KNOWN_UNKNOWNS.md and Appendix C.
+For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
 
 ### Update PREP_PLAN.md
 
@@ -621,7 +621,7 @@ You MUST verify the following unknowns from `docs/planning/EPIC_4/SPRINT_23/KNOW
 - **KU-24** (High): Are 4 compilation fixes sufficient to reach ≥ 145/156 translate target?
 - **KU-25** (Medium): Do paperco (#953) and lmp2 (#952) loop-body issues share a common parser fix?
 
-For each, update `**Verification Results:**` in KNOWN_UNKNOWNS.md and Appendix C.
+For each, replace the `**Verification Results:** 🔍 Status: INCOMPLETE` line in KNOWN_UNKNOWNS.md with the appropriate status (✅ VERIFIED/❌ REFUTED/⚠️ PARTIALLY CONFIRMED). Also update Appendix C.
 
 ### Update PREP_PLAN.md
 

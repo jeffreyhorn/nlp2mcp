@@ -57,11 +57,11 @@ Create proactive list of assumptions and unknowns for Sprint 23 to prevent late 
 
 ### Why This Matters
 
-Sprint 22 Known Unknowns (30 entries across 8 categories) proved highly effective: KU-24 (path_syntax_error → model_infeasible cascade) correctly predicted the net-zero model_infeasible result. KU-27 and KU-28 (alias differentiation, dollar-condition propagation) were discovered during Sprint 22 and deferred — they are now Sprint 23 Priority 3. Early documentation of unknowns prevents Issue #47-style emergencies.
+Sprint 22 Known Unknowns (30 entries: 26 across 7 categories + 4 in-sprint discoveries) proved highly effective: KU-24 (path_syntax_error → model_infeasible cascade) correctly predicted the net-zero model_infeasible result. KU-27 and KU-28 (alias differentiation, dollar-condition propagation) were discovered during Sprint 22 and deferred — they are now Sprint 23 Priority 3. Early documentation of unknowns prevents Issue #47-style emergencies.
 
 ### Background
 
-- Sprint 22 Known Unknowns: `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` (30 KUs, 8 categories)
+- Sprint 22 Known Unknowns: `docs/planning/EPIC_4/SPRINT_22/KNOWN_UNKNOWNS.md` (30 KUs: 26 in 7 categories + 4 in-sprint discoveries)
 - Sprint 21 Known Unknowns: `docs/planning/EPIC_4/SPRINT_21/KNOWN_UNKNOWNS.md` (27 KUs)
 - Sprint 22 Retrospective: `docs/planning/EPIC_4/SPRINT_22/SPRINT_RETROSPECTIVE.md`
 - 24 issues labeled `sprint-23` in GitHub
