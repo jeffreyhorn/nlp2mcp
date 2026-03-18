@@ -628,7 +628,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 # Sprint 23 (Weeks 11–12): Solve Rate Push & Error Category Reduction
 
-**Goal:** Push solve success from 89 to ≥ 100 and match from 47 to ≥ 55 by addressing the five priority areas identified in the Sprint 22 retrospective: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, and translate failures. Maintain parse rate. Apply Sprint 22 process recommendations: use full pipeline for all definitive metrics (PR6), track model_infeasible gross fixes and gross influx separately (PR7), and use absolute counts alongside percentages for parse success (PR8). See `SPRINT_RETROSPECTIVE.md` §New Recommendations for Sprint 23 for details.
+**Goal:** Push solve success from 89 to ≥ 100 and match from 47 to ≥ 55 by addressing the five priority areas identified in the Sprint 22 retrospective: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, and translate failures. Maintain parse rate. Apply Sprint 22 process recommendations: use full pipeline for all definitive metrics (PR6), track model_infeasible gross fixes and gross influx separately (PR7), and use absolute counts alongside percentages for parse success (PR8). See `SPRINT_22/SPRINT_RETROSPECTIVE.md` §New Recommendations for Sprint 23 for details.
 
 **Note:** Sprint 22 retrospective identified 24 issues labeled `sprint-23`. Priorities derived from Sprint 22 error category analysis and the suggested targets table.
 
@@ -1078,7 +1078,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ## Changelog
 
 - **2026-03-17:** Replaced Sprint 23 content with Sprint 22 retrospective recommendations (5 priorities: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, translate failures). Cascaded old S23→S24, S24→S25, S25→S26. Added S26 column to Rolling KPIs. Updated sprint dependencies.
-- **2026-03-17:** Sprint 22 final metrics recorded (6/8 targets met, 3 exceeded stretch: solve 89, match 47, path_syntax_error 20). Updated Rolling KPIs with Sprint 22 actuals and revised S23–S25 targets. 24 issues labeled `sprint-23` for Sprint 23 backlog.
+- **2026-03-17:** Sprint 22 final metrics recorded (6/8 targets met, 3 exceeded stretch: solve 89, match 47, path_syntax_error 20). Updated Rolling KPIs with Sprint 22 actuals and revised S23–S26 targets. 24 issues labeled `sprint-23` for Sprint 23 backlog.
 - **2026-02-06:** Reorganized sprints 18-25 after Sprint 18 scope expansion
   - Sprint 18 expanded to ~56h by pulling Sprint 19 items (emit_gams.py completion, lexer analysis, fix roadmap)
   - Content cascaded forward: S19←S20, S20←S21, S21←S22, S22←S23, S23←S24, S24←S25
