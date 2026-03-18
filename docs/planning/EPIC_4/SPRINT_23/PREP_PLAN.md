@@ -911,11 +911,12 @@ Tasks 2-7 (Triage, in  ───┤
   parallel)                │
 ```
 
-**Minimum critical path time:** ~12-16 hours (2 working days)
+**Critical path time (fully parallel):** ~9-12 hours — max(Task 1, Task 8) + max(Tasks 2-7) + Task 9 + Task 10 = (2-3h) + (3-4h) + 1h + (3-4h)
+**Critical path time (single person, sequential Tasks 2-7):** ~23-31 hours — Task 1 + Task 8 + Tasks 2-7 + Task 9 + Task 10
 
 1. **Task 1: Known Unknowns** (2-3h) — informs risk identification for all other tasks
 2. **Task 8: Full Pipeline Baseline** (1-2h) — provides starting metrics; can run in parallel with Task 1
-3. **Tasks 2-7: Triage/Investigation** (16-21h total, but parallelizable) — provide findings for plan
+3. **Tasks 2-7: Triage/Investigation** (16-21h sequential, or 3-4h if fully parallelized) — provide findings for plan
 4. **Task 9: Retrospective Alignment** (1h) — confirms nothing missed
 5. **Task 10: Detailed Plan** (3-4h) — synthesizes all findings; MUST be last
 

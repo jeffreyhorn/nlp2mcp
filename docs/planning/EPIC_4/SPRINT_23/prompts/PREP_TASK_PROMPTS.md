@@ -1,6 +1,6 @@
 # Sprint 23 Preparation Task Prompts
 
-**Purpose:** Step-by-step execution prompts for Sprint 23 Prep Tasks 2-10. Each prompt includes the full task objective, deliverables, Known Unknowns verification, PREP_PLAN.md updates, CHANGELOG.md updates, quality gate, and commit/PR instructions.
+**Purpose:** Step-by-step execution prompts for Sprint 23 Prep Tasks 2-10. Each prompt includes the full task objective, deliverables, Known Unknowns verification, PREP_PLAN.md updates, quality gate, and commit/PR instructions. CHANGELOG.md updates are deferred to Task 10 to avoid merge conflicts across parallel branches.
 
 **Usage:** Copy the prompt for the task you are executing into a new Claude Code session.
 
@@ -79,12 +79,9 @@ After completing the task, update `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md` 
    - [ ] Triage document created
    - [ ] KU-01, KU-02, KU-03, KU-04, KU-05 verification results recorded in KNOWN_UNKNOWNS.md
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add a bullet under the `### Sprint 23 Preparation` section in `CHANGELOG.md`:
-```
-- Complete Prep Task 2: Triage 10 path_solve_terminated models — classify root causes, rank fix priority, verify KU-01–KU-05
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -98,8 +95,7 @@ make typecheck && make lint && make format && make test
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 2: Triage path_solve_terminated models
 
 - Create TRIAGE_PATH_SOLVE_TERMINATED.md with root cause classification for all 10 models
@@ -198,12 +194,9 @@ Update `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md` Task 3:
 2. Fill in **Changes** and **Result** sections
 3. Check off all acceptance criteria
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 3: Triage 12 model_infeasible models — classify root causes, identify fix candidates vs. permanent exclusions, verify KU-06–KU-11
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -214,8 +207,7 @@ Research/documentation task. If any code changes: `make typecheck && make lint &
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 3: Triage model_infeasible models
 
 - Create TRIAGE_MODEL_INFEASIBLE.md with root cause classification for all 12 models
@@ -310,12 +302,9 @@ Also update the Appendix C verification status tracking table with date, result,
 
 Update Task 4: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 4: Investigate alias-aware differentiation (#1111) — design fix with summation-context tracking, assess regression risk, verify KU-12/KU-13/KU-15–KU-17
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -326,8 +315,7 @@ Research/documentation task. If any code changes: `make typecheck && make lint &
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 4: Investigate alias-aware differentiation
 
 - Create DESIGN_ALIAS_DIFFERENTIATION.md with root cause analysis and fix design
@@ -419,12 +407,9 @@ Also update the Appendix C verification status tracking table with date, result,
 
 Update Task 5: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 5: Investigate dollar-condition propagation (#1112) — design propagation mechanism, assess interaction with alias differentiation, verify KU-14/KU-15
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -435,8 +420,7 @@ Research/documentation task. If any code changes: `make typecheck && make lint &
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 5: Investigate dollar-condition propagation
 
 - Create DESIGN_DOLLAR_CONDITION_PROPAGATION.md with pipeline trace and propagation design
@@ -531,12 +515,9 @@ Also update the Appendix C verification status tracking table with date, result,
 
 Update Task 6: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 6: Triage path_syntax_error subcategories G+B — classify 7 models, estimate fix effort, verify KU-18–KU-21
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -547,8 +528,7 @@ Research/documentation task. If any code changes: `make typecheck && make lint &
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 6: Triage path_syntax_error G+B
 
 - Create TRIAGE_PATH_SYNTAX_ERROR_GB.md with per-model root cause for 7 G+B models
@@ -647,12 +627,9 @@ Also update the Appendix C verification status tracking table with date, result,
 
 Update Task 7: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 7: Catalog 15 translate failures — classify as compilation/timeout/missing feature/internal, rank fix priority, verify KU-22–KU-25
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -663,8 +640,7 @@ Research/documentation task. If any code changes: `make typecheck && make lint &
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 7: Catalog translate failures
 
 - Create CATALOG_TRANSLATE_FAILURES.md with classification for all 15 failures
@@ -757,12 +733,9 @@ Update `**Verification Results:**` in KNOWN_UNKNOWNS.md and Appendix C.
 
 Update Task 8: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 8: Run full pipeline baseline — establish Sprint 23 starting metrics per PR6/PR7/PR8, verify KU-26
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -774,8 +747,7 @@ No code changes expected. If any: `make typecheck && make lint && make format &&
 git add docs/planning/EPIC_4/SPRINT_23/BASELINE_METRICS.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
        docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       data/gamslib/gamslib_status.json \
-       CHANGELOG.md
+       data/gamslib/gamslib_status.json
 git commit -m "Complete Sprint 23 Prep Task 8: Run full pipeline baseline
 
 - Create BASELINE_METRICS.md with definitive Sprint 23 starting metrics
@@ -868,12 +840,9 @@ This task cross-checks ALL remaining KU verification results from Tasks 2-8. Ver
 
 Update Task 9: status to COMPLETE, fill in Changes/Result, check off acceptance criteria.
 
-### Update CHANGELOG.md
+### CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
-```
-- Complete Prep Task 9: Review Sprint 22 retrospective — confirm all action items captured in Sprint 23 planning, verify PR6/PR7/PR8 integration
-```
+**Do NOT update CHANGELOG.md in this branch.** Tasks 2-9 run on parallel branches; updating the same CHANGELOG section from each would create merge conflicts. CHANGELOG entries will be consolidated in Task 10's closeout PR.
 
 ### Quality Gate
 
@@ -884,8 +853,7 @@ Research/documentation task. No code changes expected.
 ```bash
 git add docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md \
        docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md \
-       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md \
-       CHANGELOG.md
+       docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md
 git commit -m "Complete Sprint 23 Prep Task 9: Review Sprint 22 retrospective
 
 - Create RETROSPECTIVE_ALIGNMENT.md mapping all retrospective items to Sprint 23 actions
@@ -985,8 +953,16 @@ Update Task 10: status to COMPLETE, fill in Changes/Result, check off acceptance
 
 ### Update CHANGELOG.md
 
-Add under `### Sprint 23 Preparation`:
+Task 10 is the final prep task and consolidates ALL CHANGELOG entries (deferred from Tasks 2-9 to avoid parallel merge conflicts). Add ALL of the following under `### Sprint 23 Preparation`:
 ```
+- Complete Prep Task 2: Triage 10 path_solve_terminated models
+- Complete Prep Task 3: Triage 12 model_infeasible models
+- Complete Prep Task 4: Investigate alias-aware differentiation (#1111)
+- Complete Prep Task 5: Investigate dollar-condition propagation (#1112)
+- Complete Prep Task 6: Triage path_syntax_error subcategories G+B
+- Complete Prep Task 7: Catalog 15 translate failures
+- Complete Prep Task 8: Run full pipeline baseline
+- Complete Prep Task 9: Review Sprint 22 retrospective action items
 - Complete Prep Task 10: Plan Sprint 23 detailed schedule — 15-day plan with 2 checkpoints, day-by-day prompts, issue mapping, contingency plans
 ```
 
