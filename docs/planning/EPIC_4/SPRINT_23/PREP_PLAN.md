@@ -149,7 +149,7 @@ Sprint 22 missed the path_solve_terminated target (achieved 10, target ≤ 5) be
 ### Background
 
 - 10 models remain: dyncge, elec, etamac, fawley, gtm, maxmin, qsambal, rocket, sambal, twocge
-- Key issues: #862 (sambal), #983 (elec); #986 (lands) was fixed in Sprint 22 and is now model_optimal
+- Key issues: #862 (sambal), #983 (elec)
 - Sprint 22 WS2 fixed 4 models (fdesign, trussm, springchain, whouse) in ~12h; fawley remains path_solve_terminated
 - Sprint 21 PATH convergence analysis (`docs/planning/EPIC_4/SPRINT_21/` Day 12) showed most terminated models have pre-solver issues, not PATH convergence
 
