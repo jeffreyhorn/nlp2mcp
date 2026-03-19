@@ -10,8 +10,8 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 - **All 12 models parse, translate, and generate MCP files successfully.** Failures occur at GAMS solve time.
 - **2 models have MCP pairing errors** (bearing, pak) — GAMS aborts before PATH runs due to unmatched equation/variable pairs. These are Category A (KKT formulation bugs).
-- **5 models have diagnosed KKT formulation bugs** with existing GitHub issues (markov #1110, spatequ #1038, pak #1049, paperco #953, sparta #1081). These are the highest-leverage fix targets.
-- **5 models are PATH convergence failures** on non-convex problems (chain, cpack, lnts, mathopt3, robustlp) — structurally correct MCP but PATH cannot find the KKT point from default initialization. These require warm-start infrastructure or are candidates for deferral.
+- **5 models have diagnosed issues** with existing GitHub issues and are the highest-leverage fix targets: 4 KKT bugs (markov #1110, spatequ #1038, pak #1049, sparta #1081) and 1 missing feature (paperco #953, loop body parameter extraction).
+- **6 models are PATH convergence failures** (robustlp, prolog, chain, cpack, lnts, mathopt3) — structurally correct MCP but PATH cannot find the KKT point from default initialization. Most are non-convex NLPs; robustlp is an LP that nearly converges (residual 3.6e-04). These require warm-start infrastructure or are candidates for deferral.
 - **0 models are inherently incompatible** (unlike orani in the permanent exclusion list).
 - **Recommendation:** Target 5-6 models in Sprint 23, reducing model_infeasible from 12 to 6-7 (gross fixes; influx tracking per PR7).
 

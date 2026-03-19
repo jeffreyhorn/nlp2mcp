@@ -210,7 +210,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Each of the three models has a DIFFERENT root cause pattern, not the same sameas guard pattern from Sprint 22: (1) pak (#1049) involves lead/lag Jacobian entries missing from stationarity — a temporal indexing issue, not scalar-constraint sameas. (2) spatequ (#1038) is a Jacobian domain mismatch where sum index binding fails for 3D variables in 2D equations — an index dimensionality issue. (3) sparta (#1081) is a bal4-specific KKT derivation bug. None directly extend the uimp/mexss sameas guard pattern from PR #1076. Sprint 22 knowledge helps establish debugging patterns but each model needs independent investigation (~3-4h each, not the ~2h that pattern reuse would allow).
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Each of the three models has a DIFFERENT root cause pattern, not the same guard pattern as Sprint 22: (1) pak (#1049) involves lead/lag Jacobian entries missing from stationarity — a temporal indexing issue, not a scalar-constraint guard. (2) spatequ (#1038) is a Jacobian domain mismatch where sum index binding fails for 3D variables in 2D equations — an index dimensionality issue. (3) sparta (#1081) is a bal4-specific KKT derivation bug. None directly extend the uimp/mexss pattern from PR #1076. Sprint 22 knowledge helps establish debugging patterns but each model needs independent investigation (~3-4h each, not the ~2h that pattern reuse would allow).
 
 ---
 
