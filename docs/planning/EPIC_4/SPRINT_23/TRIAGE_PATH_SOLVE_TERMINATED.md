@@ -24,7 +24,7 @@ All 10 path_solve_terminated models were analyzed by running MCP generation and 
 | maxmin | NLP | B | Division by zero: `1/sqrt(0)` from self-pair `n==nn` in stationarity | #939 ✅ (partial) | 2-3h | Yes |
 | fawley | LP | B | Division by zero: `1/sum(...)` where sum evaluates to 0 | (none) | 1-2h | Yes |
 | gtm | NLP | B | Division by zero + log(0): supply vars `s(i)` initialized at 0 | #827 | 2-3h | Yes |
-| rocket | NLP | B | `+-infinity * 0 undefined`: mass variable has no finite upper bound | (none) | 2-3h | Yes |
+| rocket | NLP | B | `+-infinity * 0 is undefined`: mass variable has no finite upper bound | (none) | 2-3h | Yes |
 | elec | NLP | C | PATH terminated: Solver Status 4, Model Status 6 (Intermediate Infeasible), 503 iterations | #983 | 3-4h | Maybe |
 | dyncge | NLP | A | MCP pairing: empty equation `eqpf2` with non-fixed multiplier (4 instances) | (none) | 3-5h | Uncertain |
 | twocge | NLP | A | MCP pairing: empty equations `eqpw` (4) + `eqw` (4), 8 total | #906, #970 | 4-6h | Uncertain |
