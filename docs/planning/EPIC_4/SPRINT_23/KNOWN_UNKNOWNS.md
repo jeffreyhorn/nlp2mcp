@@ -676,7 +676,7 @@ Use this template during Sprint 23 prep and execution to track verification resu
 
 | ID | Verified? | Date | Result | Action Taken |
 |----|-----------|------|--------|-------------|
-| KU-01 | ✅ | 2026-03-18 | VERIFIED: 9/10 pre-solver failures, 1 PATH convergence | Created TRIAGE_PATH_SOLVE_TERMINATED.md |
+| KU-01 | ✅ | 2026-03-18 | VERIFIED: 8/10 pre-solver failures, 1 already solved, 1 PATH convergence | Created TRIAGE_PATH_SOLVE_TERMINATED.md |
 | KU-02 | ✅ | 2026-03-18 | VERIFIED: 7 fixable models, 11-18h total effort | Ranked fix priority in triage doc |
 | KU-03 | ✅ | 2026-03-18 | VERIFIED: sambal/qsambal require #1112 | Scheduled Tier 2 (Days 5-7) |
 | KU-04 | ⚠️ | 2026-03-18 | PARTIAL: Not confirmed incompatible, but high cascade risk | Deferred to Tier 3 |

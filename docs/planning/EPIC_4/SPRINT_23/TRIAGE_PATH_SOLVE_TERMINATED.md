@@ -269,7 +269,7 @@ Models likely to cascade from path_solve_terminated → model_infeasible when pr
 | Model | Cascade Risk | Rationale |
 |-------|-------------|-----------|
 | etamac | None | Already solves optimally |
-| rocket | Medium | 11 nonconvex patterns; may be locally infeasible after inf*0 fix |
+| rocket | Medium | 11 nonconvex patterns; may be locally infeasible after infinite-bound suppression fix |
 | fawley | Low | LP model; linear MCP should solve cleanly |
 | gtm | Medium | Non-convex (log terms); PATH may fail after initialization fix |
 | maxmin | Medium | Non-convex (sqrt); PATH may not converge after self-pair fix |
