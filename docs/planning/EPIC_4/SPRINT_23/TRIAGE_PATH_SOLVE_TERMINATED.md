@@ -8,11 +8,11 @@
 
 All 10 path_solve_terminated models were analyzed by running MCP generation and examining GAMS solve output. Key findings:
 
-- **9 of 10 fail before PATH runs** due to execution errors (division by zero, domain violations, `inf*0` undefined). Only **elec** actually reaches PATH and fails convergence.
+- **9 of 10 fail before PATH runs** due to execution errors (6 models: division by zero, domain violations, `inf*0` undefined) or MCP pairing errors (2 models: empty equations). Only **elec** actually reaches PATH and fails convergence.
 - **1 model (etamac) already solves optimally** — issues #984, #1043, #1045 were fixed in Sprint 22. The gamslib_status.json is stale; a fresh GAMS run produces Solver Status 1 (Normal Completion), Model Status 1 (Optimal), obj=5.090.
-- **6 models are fixable in Sprint 23** with targeted effort (estimated 15-22h total).
+- **7 models are fixable in Sprint 23** with targeted effort (estimated 11-18h total for Tiers 1+2).
 - **2 CGE models (dyncge, twocge) have MCP pairing errors** requiring empty-equation investigation — moderate effort but high uncertainty.
-- The dominant root cause is **Category B: execution error** (7 of 10), mostly division-by-zero from missing dollar conditions or inadequate variable initialization.
+- The dominant root cause is **Category B: execution error** (6 of 10), mostly division-by-zero from missing dollar conditions or inadequate variable initialization.
 
 ## Root Cause Classification
 
