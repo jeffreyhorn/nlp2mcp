@@ -297,7 +297,7 @@ done
 ### Acceptance Criteria
 
 - [x] All 12 models attempted (MCP generation + review)
-- [x] Each model classified as A (KKT bug), B (structural), C (incompatible), or D (missing feature)
+- [x] Each model classified as A (KKT bug), B (PATH convergence / locally infeasible), C (incompatible), or D (missing feature)
 - [x] Models with existing issues (#1049, #1070, #1081, #1110, #1038) cross-referenced
 - [x] Fix effort estimated per model
 - [x] Top 4+ highest-leverage models identified
