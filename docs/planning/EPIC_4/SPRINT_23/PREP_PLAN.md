@@ -130,7 +130,7 @@ grep -c "^## Category" docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md
 
 ## Task 2: Triage path_solve_terminated Models (10)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -176,11 +176,17 @@ Sprint 22 missed the path_solve_terminated target (achieved 10, target ≤ 5) be
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SOLVE_TERMINATED.md` — root cause classification, per-model analysis, fix priority ranking, and Sprint 23 recommendations
+- Updated `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` — KU-01 through KU-05 verification results + Appendix C tracking table
 
 ### Result
 
-*To be completed.*
+**Key finding:** 8 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors). 1 model (etamac) already solves optimally (stale status). 1 model (elec) reaches PATH but fails convergence. Classification: 1 already solved, 6 execution errors (B), 2 MCP pairing errors (A), 1 PATH convergence (C), 0 pre-solver infeasibility (D).
+
+**Recommendation:** Target 7 models in Sprint 23 (Tiers 1+2), reducing path_solve_terminated from 10 to 3:
+- Tier 1 (Days 1-3, 5-8h): etamac (re-run), rocket, fawley, gtm — localized fixes
+- Tier 2 (Days 5-7, 6-10h): maxmin, sambal, qsambal — requires #1112 dollar-condition propagation
+- Tier 3 (deferred): elec (PATH convergence), dyncge/twocge (CGE, high cascade risk)
 
 ### Verification
 
@@ -203,13 +209,13 @@ done
 
 ### Acceptance Criteria
 
-- [ ] All 10 models attempted (MCP generation + solve)
-- [ ] Each model classified as A (pairing), B (execution), C (convergence), or D (pre-solver)
-- [ ] Error messages captured for each model
-- [ ] Fix effort estimated per model
-- [ ] Top 5+ highest-leverage models identified
-- [ ] Triage document created
-- [ ] KU-01, KU-02, KU-03, KU-04, KU-05 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] All 10 models attempted (MCP generation + solve)
+- [x] Each model classified as A (pairing), B (execution), C (convergence), or D (pre-solver)
+- [x] Error messages captured for each model
+- [x] Fix effort estimated per model
+- [x] Top 5+ highest-leverage models identified
+- [x] Triage document created
+- [x] KU-01, KU-02, KU-03, KU-04, KU-05 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
