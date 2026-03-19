@@ -221,7 +221,7 @@ done
 
 ## Task 3: Triage model_infeasible Models (12)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -262,11 +262,18 @@ Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/TRIAGE_MODEL_INFEASIBLE.md` with full root cause classification
+- Updated `KNOWN_UNKNOWNS.md` KU-06 through KU-11 verification results and Appendix C tracking table
 
 ### Result
 
-*To be completed.*
+- **Category distribution:** 5 KKT bugs (A), 6 PATH convergence (B), 0 incompatible (C), 1 missing feature (D)
+- **Tier 1 (Sprint 23 targets):** markov (#1110), pak (#1049), paperco (#953), sparta (#1081), spatequ (#1038) — 5 models, 14-19h
+- **Tier 2 (investigate mid-sprint):** bearing (#757), robustlp (#1105) — 2 models, 5-8h
+- **Tier 3 (deferred, needs warm-start):** prolog, chain, cpack, mathopt3, lnts — 5 models
+- **Permanent exclusion candidates:** None — all 12 have identifiable fix paths
+- **Key finding:** 2 models (bearing, pak) abort before PATH due to MCP pairing errors; 10 reach PATH but get MODEL STATUS 5
+- **KU verification:** KU-06 ⚠️ (5/6/1 split, not "primarily" KKT bugs), KU-07 ⚠️ (different root causes per model), KU-08 ⚠️ (need 4+ gross fixes), KU-09 ✅ (chain confirmed non-convex), KU-10 ✅ (markov well-diagnosed), KU-11 ⚠️ (CES singularity is structural)
 
 ### Verification
 
@@ -289,13 +296,13 @@ done
 
 ### Acceptance Criteria
 
-- [ ] All 12 models attempted (MCP generation + review)
-- [ ] Each model classified as A (KKT bug), B (structural), C (incompatible), or D (missing feature)
-- [ ] Models with existing issues (#1049, #1070, #1081, #1110, #1038) cross-referenced
-- [ ] Fix effort estimated per model
-- [ ] Top 4+ highest-leverage models identified
-- [ ] Permanent exclusion candidates flagged (per PR7 gross/influx tracking)
-- [ ] KU-06, KU-07, KU-08, KU-09, KU-10, KU-11 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] All 12 models attempted (MCP generation + review)
+- [x] Each model classified as A (KKT bug), B (structural), C (incompatible), or D (missing feature)
+- [x] Models with existing issues (#1049, #1070, #1081, #1110, #1038) cross-referenced
+- [x] Fix effort estimated per model
+- [x] Top 4+ highest-leverage models identified
+- [x] Permanent exclusion candidates flagged (per PR7 gross/influx tracking)
+- [x] KU-06, KU-07, KU-08, KU-09, KU-10, KU-11 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
