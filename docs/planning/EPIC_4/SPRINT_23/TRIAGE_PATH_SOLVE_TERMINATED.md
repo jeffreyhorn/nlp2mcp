@@ -54,13 +54,14 @@ All 10 path_solve_terminated models were analyzed by running MCP generation and 
 - #1043 (8 MCP pairing errors on `totalcap`) — fixed via stationarity domain fix
 - #1045 (locally infeasible) — fixed
 
-**Evidence:** `data/gamslib/mcp/etamac_mcp.lst` (dated 2026-03-11) shows:
+**Evidence:** Local GAMS run (2026-03-11) produced the following solve summary:
 ```
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 REPORT SUMMARY: 0 NONOPT, 0 INFEASIBLE, 0 UNBOUNDED
 nlp2mcp_obj_val = 5.090
 ```
+Note: `.lst` files are gitignored. To reproduce, run `gams data/gamslib/mcp/etamac_mcp.gms` locally. The committed MCP file (`data/gamslib/mcp/etamac_mcp.gms`) is the input; the pipeline's `gamslib_status.json` entry will be updated on the next full pipeline run.
 
 **Action:** Re-run pipeline to update gamslib_status.json. No code changes needed.
 
