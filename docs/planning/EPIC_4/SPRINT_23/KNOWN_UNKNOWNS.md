@@ -78,7 +78,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 2 triage)
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** ✅ VERIFIED — 9 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors, 1 already solved). Only elec (1 of 10) is a genuine PATH convergence failure. See TRIAGE_PATH_SOLVE_TERMINATED.md for full classification.
+**Verification Results:** ✅ VERIFIED — 8 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors). 1 model (etamac) already solves optimally. Only elec (1 of 10) is a genuine PATH convergence failure. See TRIAGE_PATH_SOLVE_TERMINATED.md for full classification.
 
 ---
 

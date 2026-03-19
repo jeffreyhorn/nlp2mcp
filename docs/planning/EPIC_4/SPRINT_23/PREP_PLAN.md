@@ -181,7 +181,7 @@ Sprint 22 missed the path_solve_terminated target (achieved 10, target ≤ 5) be
 
 ### Result
 
-**Key finding:** 9 of 10 models fail before PATH runs; only elec is a genuine PATH convergence issue. 1 model (etamac) already solves optimally (stale status). Classification: 1 already solved, 6 execution errors (B), 2 MCP pairing errors (A), 1 PATH convergence (C), 0 pre-solver infeasibility (D).
+**Key finding:** 8 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors). 1 model (etamac) already solves optimally (stale status). 1 model (elec) reaches PATH but fails convergence. Classification: 1 already solved, 6 execution errors (B), 2 MCP pairing errors (A), 1 PATH convergence (C), 0 pre-solver infeasibility (D).
 
 **Recommendation:** Target 7 models in Sprint 23 (Tiers 1+2), reducing path_solve_terminated from 10 to 3:
 - Tier 1 (Days 1-3, 5-8h): etamac (re-run), rocket, fawley, gtm — localized fixes
