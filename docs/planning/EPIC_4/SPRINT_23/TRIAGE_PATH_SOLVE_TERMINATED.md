@@ -154,7 +154,7 @@ nlp2mcp_obj_val = 5.090
 
 ### elec (Category C: PATH Convergence)
 
-**Type:** NLP | **GAMS Size:** 4 vars, 2 eqs
+**Type:** NLP | **GAMS Size:** 4 symbolic vars, 2 symbolic eqs | **MCP Instantiated:** 101 vars, 101 eqs (25 electrons: x/y/z/nu_ball indexed over i, plus scalar potential and obj)
 **Error:** Solver Status 4 (Terminated by Solver), Model Status 6 (Intermediate Infeasible)
 **Root Cause:** This is the only model that actually reaches PATH and fails convergence. PATH ran 503 iterations over 6.3 seconds but could not find a complementary solution. The electron placement problem is non-convex (W301 nonlinear equality, W304 division), and the KKT system may have multiple local solutions that PATH cannot navigate.
 
