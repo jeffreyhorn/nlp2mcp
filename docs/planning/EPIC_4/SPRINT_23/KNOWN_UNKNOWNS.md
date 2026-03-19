@@ -78,7 +78,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 2 triage)
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — 9 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors, 1 already solved). Only elec (1 of 10) is a genuine PATH convergence failure. See TRIAGE_PATH_SOLVE_TERMINATED.md for full classification.
 
 ---
 
@@ -100,7 +100,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min (review Sprint 22 WS2 effort data)
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — Triage identifies 7 fixable models: etamac (0h, already solved), rocket (2-3h), fawley (1-2h), gtm (2-3h), maxmin (2-3h), sambal (4-6h), qsambal (0-1h). Total estimated effort 11-18h. Tier 1 alone (etamac+rocket+fawley+gtm) delivers 4 fixes in 5-8h; adding Tier 2 (maxmin+sambal+qsambal) reaches 7 fixes. The ≤5 remaining target is achievable.
 
 ---
 
@@ -121,7 +121,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — sambal's division-by-zero stems from missing `$(xw(i,j))` dollar conditions on stationarity derivative terms. qsambal has the identical pattern (same model family, uses `$(xb(i,j) = na)` variant). Both require #1112 (dollar-condition propagation through AD/stationarity). A targeted model-specific fix is unlikely to work since the conditions are on individual expression terms within the objective, not on constraint domains. Scheduled for Tier 2 (Sprint 23 Days 5-7) after #1112 architectural work.
 
 ---
 
@@ -143,7 +143,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — dyncge and twocge are CGE models but their failure mode (empty stationarity equations / MCP pairing errors) differs from orani's structural incompatibility (linearized percentage-change formulation). dyncge has 37 nonconvex patterns and twocge has 37 nonconvex patterns, but neither shows the high fixed-variable density that characterized orani (54 `_fx_` references). Their current errors (Category A: empty equations) mask whether the underlying model is structurally incompatible. They are NOT confirmed incompatible like orani, but carry HIGH cascade risk — fixing the empty-equation bug may reveal model_infeasible status. Deferred to Tier 3 (investigate mid-sprint, don't commit to fix).
 
 ---
 
@@ -164,7 +164,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 2, 3 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Cascade risk is real but manageable. Estimated 2-3 of 10 models may cascade to model_infeasible: rocket (medium risk, 11 nonconvex patterns), gtm (medium risk, log/division terms), maxmin (medium risk, non-convex sqrt). CGE models (dyncge, twocge) have HIGH cascade risk but are deferred to Tier 3. Low-risk models (etamac already solved, fawley is LP, sambal/qsambal are small). Sprint 23 should track gross fixes and influx separately per PR7.
 
 ---
 
@@ -676,11 +676,11 @@ Use this template during Sprint 23 prep and execution to track verification resu
 
 | ID | Verified? | Date | Result | Action Taken |
 |----|-----------|------|--------|-------------|
-| KU-01 | | | | |
-| KU-02 | | | | |
-| KU-03 | | | | |
-| KU-04 | | | | |
-| KU-05 | | | | |
+| KU-01 | ✅ | 2026-03-18 | VERIFIED: 9/10 pre-solver failures, 1 PATH convergence | Created TRIAGE_PATH_SOLVE_TERMINATED.md |
+| KU-02 | ✅ | 2026-03-18 | VERIFIED: 7 fixable models, 11-18h total effort | Ranked fix priority in triage doc |
+| KU-03 | ✅ | 2026-03-18 | VERIFIED: sambal/qsambal require #1112 | Scheduled Tier 2 (Days 5-7) |
+| KU-04 | ⚠️ | 2026-03-18 | PARTIAL: Not confirmed incompatible, but high cascade risk | Deferred to Tier 3 |
+| KU-05 | ⚠️ | 2026-03-18 | PARTIAL: 2-3 models may cascade; track per PR7 | Track gross fixes vs influx |
 | KU-06 | | | | |
 | KU-07 | | | | |
 | KU-08 | | | | |
