@@ -73,7 +73,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 ### pak (Category A: KKT Formulation Bug)
 
-**Type:** LP | **GAMS Size:** 11 vars, 15 eqs | **MCP Instantiated:** 770 eqs, 777 vars
+**Type:** LP | **GAMS Size:** 11 vars, 15 eqs | **MCP Instantiated:** 777 vars, 770 eqs
 **Error:** GAMS solve aborted — unmatched MCP pair `comp_conl.lam_conl`; warnings about multiple defining equations for `ti` and `gnp`
 **Root Cause:** Incomplete stationarity for variable `s(t)`. Constraints involving `s` with lead/lag expressions are missing Jacobian entries. The terminal period `t='1985'` suggests missing transversality condition terms.
 
@@ -86,7 +86,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 ### bearing (Category A: KKT Formulation Bug)
 
-**Type:** NLP | **GAMS Size:** 14 vars, 13 eqs | **MCP Instantiated:** 44 eqs, 42 vars
+**Type:** NLP | **GAMS Size:** 14 vars, 13 eqs | **MCP Instantiated:** 42 vars, 44 eqs
 **Error:** GAMS solve aborted — 2 unmatched equations (`comp_radius.lam_radius`, `pumping_energy.nu_pumping_energy`), 8 unused variables
 **Root Cause:** MCP pairing mismatch. The equation/variable count is 44 vs 42, indicating 2 equations are generated without corresponding paired variables (or vice versa). The issue doc (#757) attributes this to extreme coefficient scaling (1e-6 to 1e8) and missing `.scale` emission, but the MCP pairing abort is a more fundamental structural issue that must be resolved before scaling matters.
 
@@ -187,7 +187,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 ### lnts (Category B: PATH Convergence)
 
-**Type:** NLP | **GAMS Size:** 4 vars, 4 eqs | **MCP Instantiated:** 567 eqs, 673 vars
+**Type:** NLP | **GAMS Size:** 4 vars, 4 eqs | **MCP Instantiated:** 673 vars, 567 eqs
 **Error:** Locally Infeasible (MODEL STATUS 5), 18,686 iterations, residual 1.71
 **Root Cause:** Particle steering optimal control (COPS benchmark) with many boundary conditions (7 `_fx_` equations, 106 fixed columns). 100 of 567 equations evaluate to zero at the default starting point, creating a degenerate initial Jacobian where PATH has no gradient information. The eq/var dimension mismatch (567 vs 673) suggests extra variables being generated.
 

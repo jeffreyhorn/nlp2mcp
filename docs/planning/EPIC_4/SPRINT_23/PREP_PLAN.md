@@ -253,7 +253,7 @@ Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new
    ```
 2. **Classify root cause:**
    - **A: KKT formulation bug** — incorrect stationarity, missing multiplier terms, wrong signs
-   - **B: Structural infeasibility** — PATH preprocessor detects infeasibility (MODEL STATUS 4)
+   - **B: PATH convergence / locally infeasible** — PATH runs but cannot find feasible point (MODEL STATUS 5)
    - **C: Inherent MCP incompatibility** — model class (CGE, multi-solve, etc.) doesn't convert cleanly
    - **D: Missing feature** — requires grammar/IR feature not yet implemented
 3. **For models with filed issues (#1049, #1070, #1081, #1110, #1038), review issue description for root cause clues**
@@ -267,7 +267,7 @@ Sprint 22 model_infeasible was net-zero despite significant work (5 fixed, 5 new
 
 ### Result
 
-- **Category distribution:** 5 KKT bugs (A), 6 PATH convergence/locally infeasible (B), 0 incompatible (C), 1 missing feature (D). Note: Category B was refined from "structural infeasibility (MODEL STATUS 4)" to "PATH convergence (MODEL STATUS 5)" since all 12 models have MODEL STATUS 5, not 4.
+- **Category distribution:** 5 KKT bugs (A), 6 PATH convergence/locally infeasible (B), 0 incompatible (C), 1 missing feature (D)
 - **Tier 1 (Sprint 23 targets):** markov (#1110), pak (#1049), paperco (#953), sparta (#1081), spatequ (#1038) — 5 models, 14-19h
 - **Tier 2 (investigate mid-sprint):** bearing (#757), robustlp (#1105) — 2 models, 5-8h
 - **Tier 3 (deferred, needs warm-start):** prolog, chain, cpack, mathopt3, lnts — 5 models
