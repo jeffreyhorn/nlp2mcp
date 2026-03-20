@@ -37,7 +37,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 | Category | Count | Models |
 |----------|-------|--------|
 | A: KKT formulation bug | 5 | markov, spatequ, pak, bearing, sparta |
-| B: PATH convergence / non-convex | 6 | robustlp, prolog, mathopt3, chain, cpack, lnts |
+| B: PATH convergence / locally infeasible | 6 | robustlp, prolog, mathopt3, chain, cpack, lnts |
 | C: Inherent MCP incompatibility | 0 | (none) |
 | D: Missing feature | 1 | paperco |
 
@@ -62,7 +62,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 **Type:** LP | **GAMS Size:** 8 vars, 14 eqs | **MCP Instantiated:** 125 vars, 131 eqs
 **Error:** Locally Infeasible (MODEL STATUS 5), 1,305 iterations, residual 260.0, 82 infeasible equations
-**Root Cause:** When a variable with domain `(r,c)` appears inside a `sum()` over a different index in an equation with domain `(r,c)`, the Jacobian derivative is incorrectly emitted as a sum over all equation instances. The KKT assembly's sum index binding fails to correctly map equation domain indices to the variable's domain indices when they have different dimensionality (3D variable `X(r,rr,c)` vs 2D equations).
+**Root Cause:** When a 3D variable `X(r,rr,c)` appears inside a `sum()` over a different index in an equation with domain `(r,c)` (i.e., the equation omits the `rr` index), the Jacobian derivative is incorrectly emitted as a sum over all equation instances. The KKT assembly's sum index binding fails to correctly map equation domain indices to the variable's domain indices when they have different dimensionality (3D variable `X(r,rr,c)` vs 2D equations `(r,c)`).
 
 **Issue:** #1038 (open) — well-diagnosed; depends on #1026 (model equation selection for MCP solves)
 **Dependencies:** #1026 must be fixed first; changes to `src/kkt/assemble.py`, `src/ad/constraint_jacobian.py`
@@ -201,7 +201,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 
 Models ranked by fix leverage (benefit vs. effort), considering diagnosed root causes and dependencies.
 
-### Tier 1: Diagnosed KKT Bugs (fix in Sprint 23)
+### Tier 1: Diagnosed Issues (fix in Sprint 23)
 
 | Priority | Model | Effort | Category | Notes |
 |----------|-------|--------|----------|-------|
@@ -241,7 +241,7 @@ Models ranked by fix leverage (benefit vs. effort), considering diagnosed root c
 ### Target: Fix 5 models (Tier 1), reducing gross model_infeasible by 5
 
 **Rationale:**
-- Tier 1 has 5 models with well-diagnosed KKT bugs and existing GitHub issues providing clear fix directions
+- Tier 1 has 5 models with well-diagnosed issues (4 KKT bugs and 1 missing feature) and existing GitHub issues providing clear fix directions
 - Total effort: 14-19h, fitting within the Priority 2 budget
 - All 5 are LP or LP-like models where KKT is linear complementarity — fixes should be reliable
 - markov (#1110) and spatequ (#1038) have the most detailed root cause analysis
