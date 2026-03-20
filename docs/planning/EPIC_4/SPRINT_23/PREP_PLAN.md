@@ -308,9 +308,9 @@ done
 
 ## Task 4: Investigate Alias-Aware Differentiation (#1111)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
-**Estimated Time:** 3-4 hours
+**Estimated Time:** 4-6 hours (investigation: ~2h, implementation per design doc: 4-6h)
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
@@ -354,11 +354,19 @@ Issue #1111 (alias-aware differentiation) is one of two architectural AD changes
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md` with full design: root cause analysis, summation-context tracking design, affected models list (21 alias mismatch + 8 matching alias models), regression risk assessment, test plan, and interaction analysis with #1112
+- Updated `KNOWN_UNKNOWNS.md` KU-12 through KU-17 verification results and Appendix C tracking table
 
 ### Result
 
-*To be completed.*
+- **Root cause:** `_diff_varref()` in `src/ad/derivative_rules.py` uses exact index-tuple matching; aliases are not recognized, producing incomplete gradients
+- **Naive fix failure:** Sprint 22 attempted unconditional alias matching, which was reverted because it incorrectly matches sum-bound alias iteration variables (dispatch regression)
+- **Proposed fix:** Add `bound_indices: frozenset[str]` keyword parameter to `differentiate_expr()`, threaded through `_diff_sum()` and `_diff_prod()`. `_diff_varref()` checks aliases only when the alias index is NOT in `bound_indices`. Fully backward compatible (keyword-only with default).
+- **Impact:** Of 36 total mismatch models (solving but not matching), 21 use aliases in sum expressions (58.3%). Alias models are 76% likely to mismatch vs. 30% for non-alias models. This is the highest-leverage match rate fix available. (Note: the task prompt references "42 mismatch models" which includes multi-solve skipped models; the 36 figure counts only single-solve mismatches.)
+- **Regression risk:** MEDIUM. 8 currently-matching alias models (including dispatch) must not regress. The `bound_indices` mechanism specifically handles dispatch's pattern. 56 non-alias solving models are unaffected.
+- **Independence:** #1111 and #1112 are fully independent — orthogonal AD pipeline aspects, no coupling
+- **Test models:** qabel (verify fix), dispatch (verify no regression), ps2_f (cross-check)
+- **KU verification:** KU-12 ⚠️ (design sound, needs implementation testing), KU-13 ✅ (selective by design), KU-15 ✅ (independent of #1112), KU-16 ⚠️ (8-12 irreducible non-convex), KU-17 ⚠️ (convex subset should match after fix)
 
 ### Verification
 
@@ -373,23 +381,18 @@ grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md` with:
-  - Root cause analysis
-  - Affected models list
-  - Proposed fix design with code locations
-  - Regression risk assessment
-  - Test plan
-- Verification results for KU-12, KU-13, KU-15, KU-16, KU-17 in KNOWN_UNKNOWNS.md Appendix C
+- :white_check_mark: `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md` with root cause analysis, affected models list, proposed fix design with code locations, regression risk assessment, test plan
+- :white_check_mark: Verification results for KU-12, KU-13, KU-15, KU-16, KU-17 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
-- [ ] Issue #1111 fully understood with concrete failure case documented
-- [ ] AD pipeline traced for alias handling
-- [ ] Fix design documented with specific code locations in `src/ad/`
-- [ ] Affected models identified (both currently-failing and currently-passing)
-- [ ] Regression risk assessed (count of alias-using models that currently solve)
-- [ ] 2-3 test models identified for verification
-- [ ] KU-12, KU-13, KU-15, KU-16, KU-17 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] Issue #1111 fully understood with concrete failure case documented
+- [x] AD pipeline traced for alias handling
+- [x] Fix design documented with specific code locations in `src/ad/`
+- [x] Affected models identified (both currently-failing and currently-passing)
+- [x] Regression risk assessed (count of alias-using models that currently solve)
+- [x] 2-3 test models identified for verification
+- [x] KU-12, KU-13, KU-15, KU-16, KU-17 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -960,7 +963,7 @@ Tasks 2-7 (Triage, in  ───┤
 - [x] Known Unknowns document created with ≥ 25 unknowns
 - [ ] All 10 path_solve_terminated models triaged with root cause
 - [ ] All 12 model_infeasible models triaged with root cause
-- [ ] Alias-aware differentiation (#1111) design documented
+- [x] Alias-aware differentiation (#1111) design documented
 - [ ] Dollar-condition propagation (#1112) design documented
 - [ ] 7 path_syntax_error G+B models triaged
 - [ ] 15 translate failures cataloged and classified

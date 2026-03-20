@@ -2,8 +2,8 @@
 
 **Created:** 2026-03-17
 **Sprint:** 23 (Prep Task 1)
-**Status:** Tasks 2-3 complete — verification results recorded for KU-01 through KU-11; KU-12+ pending
-**Last Updated:** 2026-03-19
+**Status:** Tasks 2-4 complete — verification results recorded for KU-01 through KU-17; KU-18+ pending
+**Last Updated:** 2026-03-20
 
 ---
 
@@ -322,7 +322,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 2h (part of Task 4 investigation)
 **Owner:** Task 4 (alias differentiation investigation)
 **Prior Analysis:** Sprint 22 KU-27 identified this issue; deferred to Sprint 23
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — The summation-context tracking design (threading `bound_indices` through `differentiate_expr`) specifically addresses the Sprint 22 dispatch regression by distinguishing bound vs. free alias indices. dispatch's `Alias(i,j); sum((i,j), ...)` pattern will correctly have `j` in `bound_indices`, preventing spurious `sameas` guards. Design is sound but full verification requires implementation and pipeline testing — edge cases in partial collapse and nested sums may emerge. See DESIGN_ALIAS_DIFFERENTIATION.md.
 
 ---
 
@@ -343,7 +343,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 4 (alias differentiation investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — The alias matching code path is only entered when (1) `config.model_ir.aliases` is non-empty AND (2) exact `_indices_match()` fails. For the 56 non-alias solving models, the fix produces identical output because their derivatives already match exactly. Of 89 solving models, 33 use aliases (37.1%); of these, 8 already match (unaffected) and 25 don't match (potential improvement). The fix is selective by design — `bound_indices` parameter defaults to `frozenset()` and only accumulates in Sum/Prod handlers.
 
 ---
 
@@ -388,7 +388,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 4, 5 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — The two fixes modify orthogonal aspects of the AD pipeline. #1111 adds `bound_indices` threading and alias-aware matching in `_diff_varref()`. #1112 modifies condition metadata propagation in `_diff_dollar_conditional()` and stationarity assembly. No shared data structures, no overlapping code paths, no ordering dependency. Both can be implemented and tested independently. Recommended order: #1111 first (higher leverage, 21 affected models vs. ~5 for #1112).
 
 ---
 
@@ -410,7 +410,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 15min (confirmation)
 **Owner:** Task 4 (match rate analysis)
 **Prior Analysis:** Sprint 22 KU-29 confirmed ~12 non-convex models diverge; carryforward
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Sprint 22 KU-29 identified ~12 non-convex models as permanently mismatching. Current data shows 36 total mismatch models (21 alias-using, 15 non-alias). Some alias mismatches overlap with the non-convex population (catmix, camshape, polygon, kand, cclinpts show large relative differences suggesting multi-KKT behavior). After the alias fix, the residual non-convex population should become clearer. Expected: 8-12 irreducible non-convex models, but the exact count may decrease if some "non-convex" mismatches are actually alias derivative bugs.
 
 ---
 
@@ -432,7 +432,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 4 (alias differentiation investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — For convex models, correct KKT derivatives guarantee a match (unique KKT point). The CGE models (irscge, lrgcge, moncge, stdcge) have small relative differences (1-2%) suggesting they may become matches with the alias fix. The ps* family (ps2_s, ps2_f_s, ps3_s variants) has differences of 0.5-9% consistent with partial derivative errors. However, without a formal convexity classification for each model, we cannot guarantee which are truly convex. The alias fix should convert the convex subset to matches; the non-convex subset will remain as multi-KKT divergence.
 
 ---
 
@@ -687,12 +687,12 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-09 | ✅ | 2026-03-19 | VERIFIED: chain is non-convex PATH failure; rocket is path_solve_terminated | Correct categorization confirmed |
 | KU-10 | ✅ | 2026-03-19 | VERIFIED: markov single-representative derivative; scoped 3-4h fix | Issue #1110 has full root cause |
 | KU-11 | ⚠️ | 2026-03-19 | PARTIAL: CES singularity is structural, not KKT bug; needs reformulation/warm-start | Deferred to Tier 3 |
-| KU-12 | | | | |
-| KU-13 | | | | |
+| KU-12 | ⚠️ | 2026-03-20 | PARTIAL: Design sound but needs implementation + pipeline testing | Created DESIGN_ALIAS_DIFFERENTIATION.md |
+| KU-13 | ✅ | 2026-03-20 | VERIFIED: Fix only enters alias path when aliases exist AND exact match fails | Selective by design |
 | KU-14 | | | | |
-| KU-15 | | | | |
-| KU-16 | | | | |
-| KU-17 | | | | |
+| KU-15 | ✅ | 2026-03-20 | VERIFIED: #1111 and #1112 modify orthogonal AD pipeline aspects; no coupling | Independent implementation confirmed |
+| KU-16 | ⚠️ | 2026-03-20 | PARTIAL: ~12 non-convex models, but some may be alias bugs; clearer after fix | Expected 8-12 irreducible |
+| KU-17 | ⚠️ | 2026-03-20 | PARTIAL: Convex models should match after alias fix; need formal convexity check | CGE + ps* family likely convex |
 | KU-18 | | | | |
 | KU-19 | | | | |
 | KU-20 | | | | |
