@@ -6,6 +6,8 @@
 
 **Key Insight from Sprint 22:** Day 12 quick wins delivered outsized pipeline impact (+9 solve, +6 match) because targeted triage identified high-leverage fixes. Sprint 23 prep must replicate this triage-first approach across all 5 priority areas, and apply Sprint 22 process recommendations PR6 (full pipeline for definitive metrics), PR7 (gross fixes/influx tracking), and PR8 (absolute counts for parse).
 
+**Branching:** All prep task branches should be created from `main` and PRs should target `main`.
+
 ---
 
 ## Executive Summary
