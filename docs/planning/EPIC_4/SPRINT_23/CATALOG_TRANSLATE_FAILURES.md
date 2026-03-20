@@ -84,7 +84,7 @@ All 4 models fail with `ValueError: Unknown expression type: LhsConditionalAssig
 - **LHS conditional:** Only updates records where condition is TRUE (others unchanged)
 - **RHS conditional:** Assigns 0 where condition is FALSE
 
-The node was introduced in Issue #1015 (shale model fix) and is correctly constructed during parsing. However, `expr_to_gams()` has no case handler for it — when the node reaches the emitter via certain code paths (e.g., computed parameter emission), it falls through to the catchall and raises `ValueError`.
+The node was introduced in Issue #1015 (shale model fix) and is correctly constructed during parsing. However, `expr_to_gams()` has no case handler for it — when the node reaches the emitter via emission paths that call `expr_to_gams()` directly on assignment expressions (for example, set assignment emission in `src/emit/original_symbols.py`), it falls through to the catchall and raises `ValueError`. Note: computed parameter emission already special-cases `LhsConditionalAssign` (Issue #1015), so the remaining failures come from other emission paths.
 
 #### Fix Approach
 
@@ -176,7 +176,8 @@ The 13 translate failures are a distinct, non-overlapping category.
 
 1. **Tier 1 (Days 1-2): Fix LhsConditionalAssign** — 2-3h, recovers 4 models → 147/156 (94.2%)
    - This alone exceeds the ≥ 145 target
-   - Single code change in `expr_to_gams.py` or `original_symbols.py`
+   - Single code change in the statement-level assignment emitter (e.g., in `original_symbols.py`)
+   - If `expr_to_gams.py` is touched, it must not silently implement RHS-`$` semantics; LHS-conditional logic must remain at the statement/assignment layer
 
 2. **Tier 2 (if time): Fix mine SetMembershipTest** — 2-3h, recovers 1 model → 148/156 (94.9%)
    - Independent of Tier 1
