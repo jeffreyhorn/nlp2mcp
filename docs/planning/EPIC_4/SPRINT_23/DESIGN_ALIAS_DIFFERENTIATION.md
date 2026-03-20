@@ -251,7 +251,7 @@ def _diff_varref(expr, wrt_var, wrt_indices, config, *, bound_indices=frozenset(
 def _alias_match(
     expr_indices: tuple[str | IndexOffset, ...],
     wrt_indices: tuple[str | IndexOffset, ...],
-    aliases: CaseInsensitiveDict[AliasDef],
+    aliases: CaseInsensitiveDict[AliasDef | str],
     bound_indices: frozenset[str],
 ) -> Expr | None:
     """Check if indices match through alias resolution.
