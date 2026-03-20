@@ -132,7 +132,7 @@ All 12 in-scope model_infeasible models were analyzed by running MCP generation,
 **Issue:** #1105 (closed — parameter expansion fix applied)
 **Dependencies:** None; may benefit from warm-start infrastructure
 **Fix Effort:** 2-3h
-**Fix Approach:** With residual at 3.6e-04, the KKT formulation is likely correct. Options: (1) improve `.l` initialization, (2) adjust PATH tolerances, (3) investigate if the remaining infeasibility is due to a secondary formulation issue. Since it's an LP, the MCP should have a unique solution — the near-convergence is encouraging.
+**Fix Approach:** With residual at 3.6e-04, the KKT formulation is likely correct. Options: (1) improve `.l` initialization, (2) adjust PATH tolerances, (3) investigate if the remaining infeasibility is due to a secondary formulation issue. Since it's an LP, the associated KKT/MCP system is typically well-posed (though not necessarily unique), so the near-convergence is encouraging.
 
 ---
 
