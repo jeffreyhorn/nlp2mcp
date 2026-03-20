@@ -240,6 +240,8 @@ def _diff_varref(expr, wrt_var, wrt_indices, config, *, bound_indices=frozenset(
     return Const(0.0)
 ```
 
+**Return type change:** The current `_diff_varref` has return type annotation `-> Const`. With this change, it may return a `Call("sameas", ...)` expression (a general `Expr`) via `_alias_match()`. The return type annotation must be updated from `-> Const` to `-> Expr`, and any downstream code that assumes a `Const` return (e.g., `isinstance` checks, `.value` access) must be reviewed.
+
 ### 4.4 `_alias_match()` Helper
 
 ```python
@@ -359,7 +361,11 @@ The fix is architecturally clean (additive parameter with default value), but th
 
 ### 5.3 Non-Alias Models (56 solving models)
 
-Zero risk. The alias matching code path is only entered when `config.model_ir.aliases` is non-empty AND exact matching fails. For non-alias models, the aliases dict is empty, so the code path is never entered.
+Zero risk. The "56 non-alias solving models" are models that do not declare any `Alias` statements. For these models, `model_ir.aliases` is empty, so the alias code path is never entered.
+
+**Taxonomy note:** The 33 "alias-using" solving models all declare at least one `Alias` statement, meaning their `model_ir.aliases` dict is non-empty. Of these 33, 8 currently match (including dispatch) and 21 mismatch. The remaining 4 are skipped (multi-solve). The key distinction is:
+- **No alias declarations** (56 models): `model_ir.aliases` is empty → alias code path unreachable
+- **Has alias declarations** (33 models): `model_ir.aliases` is non-empty → alias code path may be entered when exact `_indices_match()` fails
 
 ### 5.4 Regression Safeguards
 
@@ -448,7 +454,7 @@ Some models may need both alias and dollar-condition fixes. These will need to b
 
 ### KU-13 (High): Does the alias fix only affect alias-using models (selectivity)?
 
-**Result:** ✅ VERIFIED — The alias matching code path is only entered when (1) `config.model_ir.aliases` is non-empty, AND (2) exact `_indices_match()` fails. For the 56 non-alias solving models, condition (1) may still hold (aliases dict could be non-empty for models that declare aliases but don't use them in differentiated expressions), but condition (2) — exact match failure — is the primary gate. In practice, the fix will produce identical output for all currently-matching non-alias models because their derivatives already match exactly.
+**Result:** ✅ VERIFIED — The alias matching code path is only entered when (1) `config.model_ir.aliases` is non-empty, AND (2) exact `_indices_match()` fails. The 56 non-alias solving models have no `Alias` declarations, so `model_ir.aliases` is empty and condition (1) is never met — the alias code path is unreachable for these models. For the 33 alias-declaring models, condition (2) — exact match failure — is the secondary gate that determines whether alias matching is attempted. In practice, the fix will produce identical output for all currently-matching models because their derivatives already match exactly.
 
 ### KU-15 (High): Are alias and dollar-condition fixes independent (no coupling)?
 
