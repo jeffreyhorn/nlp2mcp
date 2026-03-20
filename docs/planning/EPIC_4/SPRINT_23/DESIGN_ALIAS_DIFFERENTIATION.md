@@ -125,14 +125,17 @@ These models mismatch for reasons unrelated to aliasing (dollar conditions, non-
 ```
 stationarity.py
   → gradient.py (compute_objective_gradient / compute_gradient_for_expression)
+    → derivative_rules.py (differentiate_expr)      ← objective gradients
   → constraint_jacobian.py (compute_constraint_jacobian)
-    → derivative_rules.py (differentiate_expr)
-      → _diff_varref()         ← ALIAS BUG HERE
-      → _diff_sum()            ← NEEDS TO TRACK BOUND INDICES
-      → _diff_prod()           ← NEEDS TO TRACK BOUND INDICES
-      → _diff_dollar_conditional()
-      → _diff_binary()
-      → _diff_call()
+    → derivative_rules.py (differentiate_expr)      ← constraint Jacobian
+
+derivative_rules.py (differentiate_expr)
+  → _diff_varref()         ← ALIAS BUG HERE
+  → _diff_sum()            ← NEEDS TO TRACK BOUND INDICES
+  → _diff_prod()           ← NEEDS TO TRACK BOUND INDICES
+  → _diff_dollar_conditional()
+  → _diff_binary()
+  → _diff_call()
 ```
 
 ### 3.2 Key Functions

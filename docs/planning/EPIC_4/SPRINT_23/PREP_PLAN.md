@@ -310,7 +310,7 @@ done
 
 **Status:** :white_check_mark: COMPLETE
 **Priority:** High
-**Estimated Time:** 3-4 hours
+**Estimated Time:** 4-6 hours (investigation: ~2h, implementation per design doc: 4-6h)
 **Deadline:** Before Sprint 23 Day 1
 **Owner:** Development team
 **Dependencies:** None
@@ -362,7 +362,7 @@ Issue #1111 (alias-aware differentiation) is one of two architectural AD changes
 - **Root cause:** `_diff_varref()` in `src/ad/derivative_rules.py` uses exact index-tuple matching; aliases are not recognized, producing incomplete gradients
 - **Naive fix failure:** Sprint 22 attempted unconditional alias matching, which was reverted because it incorrectly matches sum-bound alias iteration variables (dispatch regression)
 - **Proposed fix:** Add `bound_indices: frozenset[str]` keyword parameter to `differentiate_expr()`, threaded through `_diff_sum()` and `_diff_prod()`. `_diff_varref()` checks aliases only when the alias index is NOT in `bound_indices`. Fully backward compatible (keyword-only with default).
-- **Impact:** 21 mismatch models use aliases in sum expressions (58.3% of all mismatches). Alias models are 76% likely to mismatch vs. 30% for non-alias models. This is the highest-leverage match rate fix available.
+- **Impact:** Of 36 total mismatch models (solving but not matching), 21 use aliases in sum expressions (58.3%). Alias models are 76% likely to mismatch vs. 30% for non-alias models. This is the highest-leverage match rate fix available. (Note: the task prompt references "42 mismatch models" which includes multi-solve skipped models; the 36 figure counts only single-solve mismatches.)
 - **Regression risk:** MEDIUM. 8 currently-matching alias models (including dispatch) must not regress. The `bound_indices` mechanism specifically handles dispatch's pattern. 56 non-alias solving models are unaffected.
 - **Independence:** #1111 and #1112 are fully independent — orthogonal AD pipeline aspects, no coupling
 - **Test models:** qabel (verify fix), dispatch (verify no regression), ps2_f (cross-check)
