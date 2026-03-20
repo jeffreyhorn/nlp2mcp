@@ -10,7 +10,7 @@
 
 **Branch:** `planning/sprint23-task2`
 
-You are executing **Prep Task 2** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task2` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 2** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task2` (create from `main`).
 
 ### Objective
 
@@ -109,7 +109,7 @@ git push -u origin planning/sprint23-task2
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 2: Triage path_solve_terminated models" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 2: Triage path_solve_terminated models" --body "$(cat <<'EOF'
 ## Summary
 - Triage all 10 path_solve_terminated models by root cause (A: pairing, B: execution, C: convergence, D: pre-solver)
 - Rank fix priority with effort estimates for Sprint 23 Priority 1
@@ -137,7 +137,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task3`
 
-You are executing **Prep Task 3** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task3` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 3** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task3` (create from `main`).
 
 ### Objective
 
@@ -221,7 +221,7 @@ git push -u origin planning/sprint23-task3
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 3: Triage model_infeasible models" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 3: Triage model_infeasible models" --body "$(cat <<'EOF'
 ## Summary
 - Triage all 12 in-scope model_infeasible models by root cause
 - Identify gross fix candidates vs. permanent exclusions for Sprint 23 Priority 2
@@ -249,7 +249,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task4`
 
-You are executing **Prep Task 4** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task4` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 4** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task4` (create from `main`).
 
 ### Objective
 
@@ -329,7 +329,7 @@ git push -u origin planning/sprint23-task4
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 4: Investigate alias-aware differentiation (#1111)" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 4: Investigate alias-aware differentiation (#1111)" --body "$(cat <<'EOF'
 ## Summary
 - Research alias-aware differentiation architectural change for Sprint 23 Priority 3
 - Design summation-context tracking to distinguish alias-via-same-variable from independent iteration
@@ -359,7 +359,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task5`
 
-You are executing **Prep Task 5** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task5` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 5** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task5` (create from `main`).
 
 ### Objective
 
@@ -435,7 +435,7 @@ git push -u origin planning/sprint23-task5
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 5: Investigate dollar-condition propagation (#1112)" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 5: Investigate dollar-condition propagation (#1112)" --body "$(cat <<'EOF'
 ## Summary
 - Research dollar-condition propagation architectural change for Sprint 23 Priority 3
 - Trace where dollar conditions are lost in the AD pipeline
@@ -466,7 +466,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task6`
 
-You are executing **Prep Task 6** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task6` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 6** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task6` (create from `main`).
 
 ### Objective
 
@@ -542,7 +542,7 @@ git push -u origin planning/sprint23-task6
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 6: Triage path_syntax_error subcategories G+B" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 6: Triage path_syntax_error subcategories G+B" --body "$(cat <<'EOF'
 ## Summary
 - Triage 7 path_syntax_error models in subcategories G (set index reuse) and B (domain violations)
 - Per-model root cause classification and fix effort estimates
@@ -572,7 +572,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task7`
 
-You are executing **Prep Task 7** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task7` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 7** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task7` (create from `main`).
 
 ### Objective
 
@@ -654,7 +654,7 @@ git push -u origin planning/sprint23-task7
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 7: Catalog translate failures" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 7: Catalog translate failures" --body "$(cat <<'EOF'
 ## Summary
 - Catalog all 15 translate failures with classification and error details
 - Rank fix priority for Sprint 23 Priority 5 (target: 15 → ≤ 11)
@@ -683,7 +683,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task8`
 
-You are executing **Prep Task 8** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task8` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 8** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task8` (create from `main`).
 
 ### Objective
 
@@ -762,7 +762,7 @@ git push -u origin planning/sprint23-task8
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 8: Full pipeline baseline" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 8: Full pipeline baseline" --body "$(cat <<'EOF'
 ## Summary
 - Establish definitive Sprint 23 baseline with full pipeline run (per PR6)
 - Record all metrics per PR6/PR7/PR8
@@ -793,7 +793,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task9`
 
-You are executing **Prep Task 9** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task9` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 9** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task9` (create from `main`).
 
 ### Objective
 
@@ -866,7 +866,7 @@ git push -u origin planning/sprint23-task9
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 9: Review Sprint 22 retrospective" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 9: Review Sprint 22 retrospective" --body "$(cat <<'EOF'
 ## Summary
 - Map all Sprint 22 retrospective recommendations to Sprint 23 actions
 - Confirm PR6 (full pipeline), PR7 (gross/influx), PR8 (absolute counts) integration
@@ -895,7 +895,7 @@ Then wait for reviewer comments before proceeding.
 
 **Branch:** `planning/sprint23-task10`
 
-You are executing **Prep Task 10** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task10` (create from `planning/sprint23-prep`).
+You are executing **Prep Task 10** from `docs/planning/EPIC_4/SPRINT_23/PREP_PLAN.md`. Work on branch `planning/sprint23-task10` (create from `main`).
 
 **Important:** This task depends on Tasks 1-9. All prep tasks should be complete before starting this one.
 
@@ -992,7 +992,7 @@ git push -u origin planning/sprint23-task10
 ### Create Pull Request
 
 ```bash
-gh pr create --base planning/sprint23-prep --title "Sprint 23 Prep Task 10: Detailed schedule and day-by-day prompts" --body "$(cat <<'EOF'
+gh pr create --base main --title "Sprint 23 Prep Task 10: Detailed schedule and day-by-day prompts" --body "$(cat <<'EOF'
 ## Summary
 - Create Sprint 23 detailed plan with 15-day schedule (Day 0-14)
 - Define 2 checkpoints with GO/NO-GO criteria

@@ -2,8 +2,8 @@
 
 **Created:** 2026-03-17
 **Sprint:** 23 (Prep Task 1)
-**Status:** Initial — unknowns cataloged; verification pending during prep tasks
-**Last Updated:** 2026-03-17
+**Status:** Tasks 2-4 complete — verification results recorded for KU-01 through KU-17; KU-18+ pending
+**Last Updated:** 2026-03-20
 
 ---
 
@@ -78,7 +78,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 2 triage)
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — 8 of 10 models fail before PATH runs (6 execution errors, 2 MCP pairing errors). 1 model (etamac) already solves optimally. Only elec (1 of 10) is a genuine PATH convergence failure. See TRIAGE_PATH_SOLVE_TERMINATED.md for full classification.
 
 ---
 
@@ -100,7 +100,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min (review Sprint 22 WS2 effort data)
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — Triage identifies 7 fixable models: etamac (0h, already solved), rocket (2-3h), fawley (1-2h), gtm (2-3h), maxmin (2-3h), sambal (4-6h), qsambal (0-1h). Total estimated effort 11-18h. Tier 1 alone (etamac+rocket+fawley+gtm) delivers 4 fixes in 5-8h; adding Tier 2 (maxmin+sambal+qsambal) reaches 7 fixes. The ≤5 remaining target is achievable.
 
 ---
 
@@ -121,7 +121,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — sambal's division-by-zero stems from missing `$(xw(i,j))` dollar conditions on stationarity derivative terms. qsambal has the identical pattern (same model family, uses `$(xb(i,j) = na)` variant). Both require #1112 (dollar-condition propagation through AD/stationarity). A targeted model-specific fix is unlikely to work since the conditions are on individual expression terms within the objective, not on constraint domains. Scheduled for Tier 2 (Sprint 23 Days 5-7) after #1112 architectural work.
 
 ---
 
@@ -143,7 +143,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 2 (path_solve_terminated triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — dyncge and twocge are CGE models but their failure mode (empty stationarity equations / MCP pairing errors) differs from orani's structural incompatibility (linearized percentage-change formulation). dyncge has 37 nonconvex patterns and twocge has 37 nonconvex patterns, but neither shows the high fixed-variable density that characterized orani (54 `_fx_` references). Their current errors (Category A: empty equations) mask whether the underlying model is structurally incompatible. They are NOT confirmed incompatible like orani, but carry HIGH cascade risk — fixing the empty-equation bug may reveal model_infeasible status. Deferred to Tier 3 (investigate mid-sprint, don't commit to fix).
 
 ---
 
@@ -164,7 +164,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 2, 3 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Cascade risk is real but manageable. Estimated 2-3 of 10 models may cascade to model_infeasible: rocket (medium risk, 11 nonconvex patterns), gtm (medium risk, log/division terms), maxmin (medium risk, non-convex sqrt). CGE models (dyncge, twocge) have HIGH cascade risk but are deferred to Tier 3. Low-risk models (etamac already solved, fawley is LP, sambal/qsambal are small). Sprint 23 should track gross fixes and influx separately per PR7.
 
 ---
 
@@ -188,7 +188,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 3 triage)
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — The 12 models split 5/6/1 across Category A (KKT bugs), Category B (PATH convergence), and Category D (missing feature). 0 are inherently incompatible (Category C). The "primarily KKT bugs" assumption holds for diagnosed issues (5 of 12) but 6 models are PATH convergence failures on non-convex problems requiring warm-start infrastructure, not code fixes. The 5 KKT bugs (markov, spatequ, pak, bearing, sparta) plus 1 missing feature (paperco) are all fixable. The 6 PATH convergence models (robustlp, prolog, chain, cpack, lnts, mathopt3) need warm-start or improved initialization. No models require permanent exclusion.
 
 ---
 
@@ -210,7 +210,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Each of the three models has a DIFFERENT root cause pattern, not the same guard pattern as Sprint 22: (1) pak (#1049) involves lead/lag Jacobian entries missing from stationarity — a temporal indexing issue, not a scalar-constraint guard. (2) spatequ (#1038) is a Jacobian domain mismatch where sum index binding fails for 3D variables in 2D equations — an index dimensionality issue. (3) sparta (#1081) is a bal4-specific KKT derivation bug. None directly extend the uimp/mexss pattern from PR #1076. Sprint 22 knowledge helps establish debugging patterns but each model needs independent investigation (~3-4h each, not the ~2h that pattern reuse would allow).
 
 ---
 
@@ -232,7 +232,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 2, 3, 6 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Influx from path_solve_terminated fixes is estimated at 2-3 models (per KU-05). The ≤8 target requires 4+ gross fixes to absorb this influx. Tier 1 delivers 5 gross fixes (markov, pak, paperco, sparta, spatequ) costing 14-19h. Adding Tier 2 (bearing, robustlp) at 5-8h provides additional buffer. Sprint 22's 1:1 fix:influx ratio may repeat, so Sprint 23 should budget for 6-7 gross fixes to safely reach ≤8 net. Track gross fixes and influx separately per PR7.
 
 ---
 
@@ -253,7 +253,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 15min (confirmation only)
 **Owner:** Task 3 (model_infeasible triage)
 **Prior Analysis:** Sprint 22 KU-09 confirmed chain only; rocket status has changed since then
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — chain is confirmed model_infeasible (MODEL STATUS 5, Solver Status 1 Normal, 282 iterations, residual 0.11). It is a non-convex catenary benchmark (COPS) where PATH nearly converges but stalls — this is genuine non-convexity, not a KKT bug. rocket is confirmed path_solve_terminated (not model_infeasible) with `+-infinity * 0 is undefined` execution error in Task 2 triage. The two models are in different categories as expected.
 
 ---
 
@@ -275,7 +275,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — markov's infeasibility is caused by `_add_indexed_jacobian_terms()` using a single representative (diagonal) derivative for ALL constraint-variable pairings. For `constr(sp,j)` involving `z(sp,j,spp)`, diagonal entries have derivative `1 - b*pi(...)` but off-diagonal entries should be `-b*pi(...)` only. The fix requires per-pattern stationarity generation. Issue #1110 provides specific code-level root cause in `src/kkt/stationarity.py`. Estimated 3-4h, scoped to `_add_indexed_jacobian_terms()` modifications. No AD engine changes needed.
 
 ---
 
@@ -297,7 +297,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — prolog's singularity is structural, not a KKT assembly bug. The CES demand functions use fractional exponents (`y(h)**(epsi-1)`, `p(gp)**-(1+eta)`) that create singular Jacobian entries near variable bounds. PATH runs 8,060 iterations (residual 0.94) and fails. This is a numerical conditioning issue inherent to the CES model class — reformulation or warm-start from the NLP solution is needed, not a simple stationarity fix. May require clamping variables away from singularity boundaries or PATH parameter tuning. Classified as Category B (PATH convergence), Tier 3 (deferred).
 
 ---
 
@@ -322,7 +322,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 2h (part of Task 4 investigation)
 **Owner:** Task 4 (alias differentiation investigation)
 **Prior Analysis:** Sprint 22 KU-27 identified this issue; deferred to Sprint 23
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — The summation-context tracking design (threading `bound_indices` through `differentiate_expr`) specifically addresses the Sprint 22 dispatch regression by distinguishing bound vs. free alias indices. dispatch's `Alias(i,j); sum((i,j), ...)` pattern will correctly have `j` in `bound_indices`, preventing spurious `sameas` guards. Design is sound but full verification requires implementation and pipeline testing — edge cases in partial collapse and nested sums may emerge. See DESIGN_ALIAS_DIFFERENTIATION.md.
 
 ---
 
@@ -343,7 +343,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 4 (alias differentiation investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — The alias matching code path is only entered when (1) `config.model_ir.aliases` is non-empty AND (2) exact `_indices_match()` fails. For the 56 non-alias solving models, the fix produces identical output because their derivatives already match exactly. Of 89 solving models, 33 use aliases (37.1%); of these, 8 already match (unaffected) and 25 don't match (potential improvement). The fix is selective by design — `bound_indices` parameter defaults to `frozenset()` and only accumulates in Sum/Prod handlers.
 
 ---
 
@@ -388,7 +388,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 4, 5 (cross-referenced)
-**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
+**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first. Recommended order: #1111 first (higher leverage, 21 affected models vs. ~5 for #1112). See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
 
 ---
 
@@ -410,7 +410,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 15min (confirmation)
 **Owner:** Task 4 (match rate analysis)
 **Prior Analysis:** Sprint 22 KU-29 confirmed ~12 non-convex models diverge; carryforward
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Sprint 22 KU-29 identified ~12 non-convex models as permanently mismatching. Current data shows 36 total mismatch models (21 alias-using, 15 non-alias). Some alias mismatches overlap with the non-convex population (catmix, camshape, polygon, kand, cclinpts show large relative differences suggesting multi-KKT behavior). After the alias fix, the residual non-convex population should become clearer. Expected: 8-12 irreducible non-convex models, but the exact count may decrease if some "non-convex" mismatches are actually alias derivative bugs.
 
 ---
 
@@ -432,7 +432,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 4 (alias differentiation investigation)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — For convex models, correct KKT derivatives guarantee a match (unique KKT point). The CGE models (irscge, lrgcge, moncge, stdcge) have small relative differences (1-2%) suggesting they may become matches with the alias fix. The ps* family (ps2_s, ps2_f_s, ps3_s variants) has differences of 0.5-9% consistent with partial derivative errors. However, without a formal convexity classification for each model, we cannot guarantee which are truly convex. The alias fix should convert the convex subset to matches; the non-convex subset will remain as multi-KKT divergence.
 
 ---
 
@@ -676,23 +676,23 @@ Use this template during Sprint 23 prep and execution to track verification resu
 
 | ID | Verified? | Date | Result | Action Taken |
 |----|-----------|------|--------|-------------|
-| KU-01 | | | | |
-| KU-02 | | | | |
-| KU-03 | | | | |
-| KU-04 | | | | |
-| KU-05 | | | | |
-| KU-06 | | | | |
-| KU-07 | | | | |
-| KU-08 | | | | |
-| KU-09 | | | | |
-| KU-10 | | | | |
-| KU-11 | | | | |
-| KU-12 | | | | |
-| KU-13 | | | | |
-| KU-14 | Yes | 2026-03-20 | ❌ REFUTED — Requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23 scope) | Gradient-only fix designed in DESIGN_DOLLAR_CONDITION_PROPAGATION.md; Jacobian follow-up deferred |
-| KU-15 | Yes | 2026-03-20 | ✅ VERIFIED — Fixes are architecturally independent, no code overlap | Either fix can be implemented first; no integration risk |
-| KU-16 | | | | |
-| KU-17 | | | | |
+| KU-01 | ✅ | 2026-03-18 | VERIFIED: 8/10 pre-solver failures, 1 already solved, 1 PATH convergence | Created TRIAGE_PATH_SOLVE_TERMINATED.md |
+| KU-02 | ✅ | 2026-03-18 | VERIFIED: 7 fixable models, 11-18h total effort | Ranked fix priority in triage doc |
+| KU-03 | ✅ | 2026-03-18 | VERIFIED: sambal/qsambal require #1112 | Scheduled Tier 2 (Days 5-7) |
+| KU-04 | ⚠️ | 2026-03-18 | PARTIAL: Not confirmed incompatible, but high cascade risk | Deferred to Tier 3 |
+| KU-05 | ⚠️ | 2026-03-18 | PARTIAL: 2-3 models may cascade; track per PR7 | Track gross fixes vs influx |
+| KU-06 | ⚠️ | 2026-03-19 | PARTIAL: 5 KKT bugs + 1 missing feature + 6 PATH convergence; not "primarily" KKT | Created TRIAGE_MODEL_INFEASIBLE.md |
+| KU-07 | ⚠️ | 2026-03-19 | PARTIAL: pak/spatequ/sparta each have different root causes, not sameas guard extensions | Independent investigation needed per model |
+| KU-08 | ⚠️ | 2026-03-19 | PARTIAL: Need 4+ gross fixes for ≤8 target; Tier 1 delivers 5 | Track gross vs influx per PR7 |
+| KU-09 | ✅ | 2026-03-19 | VERIFIED: chain is non-convex PATH failure; rocket is path_solve_terminated | Correct categorization confirmed |
+| KU-10 | ✅ | 2026-03-19 | VERIFIED: markov single-representative derivative; scoped 3-4h fix | Issue #1110 has full root cause |
+| KU-11 | ⚠️ | 2026-03-19 | PARTIAL: CES singularity is structural, not KKT bug; needs reformulation/warm-start | Deferred to Tier 3 |
+| KU-12 | ⚠️ | 2026-03-20 | PARTIAL: Design sound but needs implementation + pipeline testing | Created DESIGN_ALIAS_DIFFERENTIATION.md |
+| KU-13 | ✅ | 2026-03-20 | VERIFIED: Fix only enters alias path when aliases exist AND exact match fails | Selective by design |
+| KU-14 | ❌ | 2026-03-20 | REFUTED: Requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23 scope) | Gradient-only fix designed in DESIGN_DOLLAR_CONDITION_PROPAGATION.md; Jacobian follow-up deferred |
+| KU-15 | ✅ | 2026-03-20 | VERIFIED: Fixes are architecturally independent, no code overlap | Either fix can be implemented first; no integration risk |
+| KU-16 | ⚠️ | 2026-03-20 | PARTIAL: ~12 non-convex models, but some may be alias bugs; clearer after fix | Expected 8-12 irreducible |
+| KU-17 | ⚠️ | 2026-03-20 | PARTIAL: Convex models should match after alias fix; need formal convexity check | CGE + ps* family likely convex |
 | KU-18 | | | | |
 | KU-19 | | | | |
 | KU-20 | | | | |
