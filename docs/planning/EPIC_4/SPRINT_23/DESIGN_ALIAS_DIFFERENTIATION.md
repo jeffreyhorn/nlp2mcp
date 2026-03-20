@@ -140,7 +140,7 @@ stationarity.py
 
 2. **`_diff_varref(expr, wrt_var, wrt_indices, config)`** — Lines 232-309. Uses `_indices_match()` for exact string comparison. **No alias awareness.**
 
-3. **`_diff_sum(expr, wrt_var, wrt_indices, config)`** — Lines 1592-2316. Handles sum collapse and partial index matching. **Does not track bound indices for alias purposes.** The sum's `index_sets` (e.g., `("i", "j")`) are the bound variables.
+3. **`_diff_sum(expr, wrt_var, wrt_indices, config)`** — Lines 1592-1762. Handles sum collapse and partial index matching. **Does not track bound indices for alias purposes.** The sum's `index_sets` (e.g., `("i", "j")`) are the bound variables.
 
 4. **`_diff_prod(expr, wrt_var, wrt_indices, config)`** — Similar to sum, uses product rule with iteration.
 
@@ -313,7 +313,7 @@ def _same_root_set(a: str, b: str, aliases: CaseInsensitiveDict[AliasDef]) -> bo
 |------|----------|--------|
 | `src/ad/derivative_rules.py:68-169` | `differentiate_expr()` | Add `bound_indices` kwarg, pass through to all `_diff_*` |
 | `src/ad/derivative_rules.py:232-309` | `_diff_varref()` | Add `bound_indices` kwarg, call `_alias_match()` |
-| `src/ad/derivative_rules.py:1592-2316` | `_diff_sum()` | Add `bound_indices` kwarg, augment with `expr.index_sets` before recursing |
+| `src/ad/derivative_rules.py:1592-1762` | `_diff_sum()` | Add `bound_indices` kwarg, augment with `expr.index_sets` before recursing |
 | `src/ad/derivative_rules.py` (new) | `_alias_match()` | New helper: alias-aware index matching with bound check |
 | `src/ad/derivative_rules.py` (new) | `_same_root_set()` | New helper: resolve alias chains to root set |
 | `src/ad/derivative_rules.py` | `_diff_prod()` | Add `bound_indices` kwarg, augment before recursing |
@@ -479,7 +479,7 @@ Some models may need both alias and dollar-condition fixes. These will need to b
 - **Sprint 22 KU-27:** Alias-aware differentiation deferred to Sprint 23
 - **Sprint 22 KU-29:** Non-convex multi-KKT divergence (~12 models)
 - **dispatch regression:** Sprint 22 naive fix reverted — `Alias(i,j); sum((i,j), p(i)*b(i,j)*p(j))` pattern
-- **Code:** `src/ad/derivative_rules.py` (2281 lines), `src/config.py` (Config.model_ir carries aliases)
+- **Code:** `src/ad/derivative_rules.py`, `src/config.py` (Config.model_ir carries aliases)
 
 ---
 
