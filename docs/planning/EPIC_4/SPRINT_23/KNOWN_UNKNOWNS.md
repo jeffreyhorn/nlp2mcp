@@ -452,7 +452,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **How to Verify:** Run MCP generation for the subcategory G model (srkandw). Check for $409 (uncontrolled set) or $149 errors indicating index conflicts.
 
-**Risk if Wrong:** Low — Sprint 22 verified the mechanism is sound. The remaining work is detection enhancement, estimated at 1-2h.
+**Risk if Wrong:** Low — Sprint 22 verified the aliasing mechanism is sound. The remaining work is a parser-level fix in `_handle_aggregation()` to stop incorrectly filtering subset domain indices, estimated at 2-3h.
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
@@ -468,7 +468,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Research Questions:**
 1. Which models constitute the current subcategory B?
-2. What specific GAMS error does each produce ($170, $141, $66, other)?
+2. What specific GAMS error does each produce ($171, $445, other actually observed codes)?
 3. Are cesam/cesam2 (Sprint 22 KU-03's current Subcat B) still the primary B models?
 4. Can any be grouped into sub-patterns for batch fixing?
 5. What is the total effort to fix all 4 (individual fixes vs. one general fix)?

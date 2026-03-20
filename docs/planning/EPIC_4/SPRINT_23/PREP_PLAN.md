@@ -978,7 +978,7 @@ Tasks 2-7 (Triage, in  ───┤
 - [ ] All 12 model_infeasible models triaged with root cause
 - [x] Alias-aware differentiation (#1111) design documented
 - [x] Dollar-condition propagation (#1112) design documented
-- [ ] 5 path_syntax_error G+B models triaged
+- [x] 5 path_syntax_error G+B models triaged
 - [ ] 15 translate failures cataloged and classified
 - [ ] Full pipeline baseline established (per PR6)
 - [ ] Sprint 22 retrospective items confirmed in Sprint 23 plan
