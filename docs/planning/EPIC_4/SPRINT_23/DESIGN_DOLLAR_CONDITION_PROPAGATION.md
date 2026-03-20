@@ -364,13 +364,13 @@ Binary("*", f'(x(i1)), _ensure_numeric_condition(cond))
 
 **Note:** In the current AD implementation, the `_diff_sum()` collapse path preserves the sum condition in **symbolic** index form (e.g. `xw(i,j)`), as documented in `src/ad/derivative_rules.py` (see Issue #1085). Gradient entries are therefore already annotated with symbolic conditions, so no index "de-concretization" helper is required.
 
-`_ensure_numeric_condition()` converts conditions to numeric form:
-- Simple `ParamRef`/`VarRef` → used directly (truthy = non-zero)
-- `SetMembershipTest` → wrapped as `DollarConditional(Const(1.0), cond)` to get 0/1
+`_ensure_numeric_condition()` converts conditions to numeric 0/1 form:
+- `Const` → used directly (folded to `Const(1.0)` or `Const(0.0)`)
+- Any non-`Const` condition (including `ParamRef`, `VarRef`, `SetMembershipTest`, etc.) → wrapped as `DollarConditional(Const(1.0), cond)` to get 0/1 semantics while preserving the symbolic condition inside `cond`
 
-So the gradient derivative for variable `x(i1)` looks like one of:
-- `Binary("*", deriv, ParamRef("xw", ("i", "j")))` — parameter condition (symbolic indices)
-- `Binary("*", deriv, DollarConditional(Const(1.0), cond))` — set membership condition
+So the gradient derivative for variable `x(i1)` always looks like:
+- `Binary("*", deriv, DollarConditional(Const(1.0), cond))`
+  where `cond` contains the original symbolic condition (e.g. a `ParamRef("xw", ("i", "j"))` or a `SetMembershipTest`).
 
 ### 7.2 Extraction Logic
 
@@ -401,14 +401,13 @@ def _extract_condition_from_expr(expr: Expr) -> Expr | None:
 def _is_condition_factor(expr: Expr) -> Expr | None:
     """Check if an expression is a condition factor from _ensure_numeric_condition.
 
+    Since _ensure_numeric_condition() wraps ALL non-Const conditions as
+    DollarConditional(Const(1.0), cond), this only needs to match that pattern.
+
     Returns the underlying condition, or None.
     """
-    # DollarConditional(Const(1.0), cond) — set membership condition
     if isinstance(expr, DollarConditional) and isinstance(expr.value_expr, Const) and expr.value_expr.value == 1.0:
         return expr.condition
-    # ParamRef/VarRef used directly as truthy condition
-    if isinstance(expr, (ParamRef, SetMembershipTest)):
-        return expr
     return None
 ```
 
