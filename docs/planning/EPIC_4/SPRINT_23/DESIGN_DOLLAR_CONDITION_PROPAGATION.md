@@ -261,7 +261,7 @@ High-occurrence models: andean (42), mexls (27), gancnsx (18), ganges (18), gang
 
 ### 4.4 Regression Risk
 
-**Low.** The change adds equation-level guards to stationarity equations, making them *more* restrictive (fewer instances evaluated). This cannot cause new incorrect evaluations — it can only prevent evaluations that would have been zero anyway. The main regression risk is:
+**Low.** The change adds equation-level guards to stationarity equations, making them *more* restrictive (fewer instances evaluated). Under the guard-safety criteria in §8.2, guards are only applied when all other stationarity terms are structurally zero when the guard is false — so guarded instances reduce to 0=0 and the KKT system is unchanged. The main regression risk is:
 
 1. **Over-extraction:** Extracting a condition from the gradient that doesn't belong at the equation level. Mitigated by requiring ALL gradient entries for a variable to share the same condition (consistent-condition check).
 
@@ -294,10 +294,11 @@ High-occurrence models: andean (42), mexls (27), gancnsx (18), ganges (18), gang
 
 **No shared data structures.** The alias fix uses `bound_indices: frozenset[str]` threaded through `differentiate_expr()`. The dollar-condition fix uses `gradient_conditions: dict[str, Expr]` stored on `KKTSystem`. These don't interact.
 
-**Implementation order:** Either fix can be implemented first. However, implementing #1112 first is slightly preferred because:
+**Implementation order:** Either fix can be implemented first from a technical standpoint. For sprint scheduling, implementing #1112 first is slightly preferred because:
 1. It has a simpler code footprint (3 localized changes vs. threading a parameter through the entire AD call stack)
 2. It unblocks sambal/qsambal immediately
-3. The alias fix's `bound_indices` changes to `differentiate_expr()` signature could cause merge conflicts if done simultaneously, but since #1112 doesn't touch `differentiate_expr()`, no conflict.
+
+However, if a different scheduling order is needed (e.g., #1111 first for higher leverage across 21 models), that is equally valid — the fixes are fully independent and won't conflict.
 
 ### 5.3 Models Requiring Both Fixes
 
@@ -377,10 +378,9 @@ So the gradient derivative for variable `x(i1)` always looks like:
 def _extract_condition_from_expr(expr: Expr) -> Expr | None:
     """Extract the condition from a gradient derivative expression.
 
-    Recognizes patterns:
-    1. Binary("*", value, condition_factor) — from _diff_sum collapse
-    2. DollarConditional(value, condition) — from _diff_dollar_conditional
-    3. Binary("*", DollarConditional(value, c1), c2) — combined
+    Recognizes patterns (top-level only, no conjunction/merging):
+    1. DollarConditional(value, condition) — from _diff_dollar_conditional
+    2. Binary("*", value, condition_factor) — from _diff_sum collapse
 
     Returns the condition expression, or None if no condition found.
     """

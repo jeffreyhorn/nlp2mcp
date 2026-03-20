@@ -458,7 +458,7 @@ Design proposes 3-file fix:
 2. `kkt_system.py`: Add `gradient_conditions: dict[str, Expr]` field
 3. `stationarity.py`: Add Stage 4 condition check in `build_stationarity_equations()` (~5-10 lines)
 
-Estimated effort: 4h. Primary targets: sambal, qsambal. 42 models use dollar conditions in corpus; regression risk LOW (guards only make equations more restrictive).
+Estimated effort: 4h. Primary targets: sambal, qsambal. 42 models use dollar conditions in corpus; regression risk LOW assuming guard-safety criteria from `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` (guards only safe when other stationarity terms are structurally zero when the guard is false, i.e., they only make equations more restrictive under those conditions).
 
 KU-14: REFUTED — requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23).
 KU-15: VERIFIED — alias (#1111) and dollar-condition (#1112) fixes are architecturally independent, modifying different files with no shared data structures.

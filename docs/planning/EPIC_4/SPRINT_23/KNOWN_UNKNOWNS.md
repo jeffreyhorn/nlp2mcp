@@ -388,7 +388,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 4, 5 (cross-referenced)
-**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first. Recommended order: #1111 first (higher leverage, 21 affected models vs. ~5 for #1112). See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
+**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first; to align with `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5.2, we will implement #1112 first (slightly lower integration risk), followed by #1111 within the same sprint. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
 
 ---
 
