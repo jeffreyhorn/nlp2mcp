@@ -3,9 +3,12 @@
 **Created:** 2026-03-20
 **Pipeline Run:** Full pipeline (no `--only-*` flags), per Sprint 22 PR6 recommendation
 **Branch:** `planning/sprint23-task8` (from main at `2c33989e`)
-**Commit:** main as of Sprint 22 merge
+**Commit:** `main @ 2c33989e` (Sprint 22 baseline merge)
 **Pipeline Script:** `scripts/gamslib/run_full_test.py --quiet`
 **Run Duration:** ~76 minutes (4564s)
+**GAMS Version:** not recorded for this run
+**PATH License:** not recorded for this run
+**nlp2mcp Version:** not recorded for this run
 
 ---
 

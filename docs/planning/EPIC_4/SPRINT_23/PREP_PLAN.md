@@ -734,7 +734,7 @@ Sprint 22 retrospective identified that partial pipeline (`--only-solve`) gave m
 - Solve: 89/139 (64.0%) — unchanged from Sprint 22
 - Match: 47/160 (29.4%) — unchanged from Sprint 22
 
-**Translate delta:** 17 failures vs Sprint 22's 15. Deterministic failures (6) are stable. 11 timeouts vs ~9 in Sprint 22 — 4 borderline models (clearlak, dinam, ferts, turkpow at 150.0-150.2s) fluctuate run-to-run.
+**Translate delta:** 17 failures vs Sprint 22's 15. Deterministic failures (6) are stable. 11 timeouts vs ~9 in Sprint 22. In the earlier Task 7 spot-check run, clearlak, ferts, and turkpow completed within the 150s limit and were marked as "recovered"; in this full baseline run they land at 150.0-150.2s and are recorded as timeouts, which accounts for the net -2 vs Sprint 22 (dinam is also borderline at 150.2s but does not change the Sprint 22 failure count).
 
 **No functional regressions detected.** Solve (89) and match (47) are identical to Sprint 22.
 
