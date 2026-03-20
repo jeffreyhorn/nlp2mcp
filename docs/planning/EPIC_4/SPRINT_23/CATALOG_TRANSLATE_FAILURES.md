@@ -3,19 +3,19 @@
 **Created:** 2026-03-20
 **Sprint:** 23 (Priority 5 — translate ≥ 93%)
 **Source:** Sprint 23 Prep Task 7
-**Pipeline Run:** 2026-03-20 (rerun of all 16 prior translate failures)
+**Pipeline Run:** 2026-03-20 (rerun of all 16 models ever flagged as translate failures)
 
 ---
 
 ## 1. Executive Summary
 
-The Sprint 23 prep plan estimated **15 translate failures** (141/156 = 90.4%). After rerunning the pipeline on all prior failures:
+The pipeline database contained **16 models** with prior translate failure records. After rerunning the pipeline on all 16:
 
 - **ferts** and **turkpow** already translate successfully (slow but under timeout)
 - **clearlak** recovered on rerun (marginal timeout at 150.0s → now completes in ~148s)
 - **Current count: 13 failures** (143/156 = 91.7% translate rate)
 
-Sprint 23 target: ≥ 145/156 (≥ 93%). This requires fixing **2 of 13** failures (not 4 of 15).
+Sprint 23 target: ≥ 145/156 (≥ 93%). This requires fixing **2 of 13** failures (not 4 of 16).
 
 ### Classification Summary
 
@@ -49,7 +49,7 @@ All timeout models hit or exceed the 150-second translation limit (subprocess `c
 
 **gastrans pattern (#830):** Sprint 22 KU-22 confirmed this requires architectural Jacobian changes (sparsity-aware computation or dynamic subset preservation). The dynamic subset fallback creates a combinatorial explosion: 0-member subsets expand to full parent sets, generating ~470K tuples for 7 equations.
 
-**Potential quick win:** srpchase has no filed issue and is small (3KB). It may be a borderline timeout like clearlak was — worth investigating whether a minor optimization would push it under 150s. All others are well over the limit.
+**Potential quick win:** srpchase has no issue filed and is small (3KB). It may be a borderline timeout like clearlak was — worth investigating whether a minor optimization would push it under 150s. The other timeout models are also at or just over the 150s threshold (150.0–150.2s), so run-to-run variance or system load could flip borderline outcomes.
 
 #### Timeout Root Cause Summary
 
@@ -203,14 +203,14 @@ The 13 translate failures are a distinct, non-overlapping category.
 | nebrazil | #932 | OPEN | Translation timeout (large LP with 4-dim variables) |
 | sarf | #885 | OPEN | Translation timeout — 369K instances, 452M Jacobian entries |
 | mexls | #940 | OPEN | Universal set `'*'` not found in ModelIR |
-| agreste | — | — | No issue filed (LhsConditionalAssign) |
-| ampl | — | — | No issue filed (LhsConditionalAssign) |
-| cesam | — | — | No issue filed (LhsConditionalAssign) |
-| korcge | — | — | No issue filed (LhsConditionalAssign) |
-| mine | — | — | No issue filed (SetMembershipTest eval) |
-| srpchase | — | — | No issue filed (timeout, small model) |
+| agreste | — | — | No issue filed yet (LhsConditionalAssign) |
+| ampl | — | — | No issue filed yet (LhsConditionalAssign) |
+| cesam | — | — | No issue filed yet (LhsConditionalAssign) |
+| korcge | — | — | No issue filed yet (LhsConditionalAssign) |
+| mine | — | — | No issue filed yet (SetMembershipTest eval) |
+| srpchase | — | — | No issue filed yet (timeout, small model) |
 
-**Note:** The 4 LhsConditionalAssign models and mine/srpchase have no filed issues. Consider filing issues for tracking.
+**Note:** The 4 LhsConditionalAssign models and mine/srpchase have no issues filed. Consider filing issues for tracking.
 
 ---
 

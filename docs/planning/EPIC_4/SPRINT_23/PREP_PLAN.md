@@ -647,12 +647,12 @@ ls docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 
 # Verify all 13 current failures covered in catalog tables
 for model in agreste ampl cesam ganges gangesx gastrans iswnm korcge mexls mine nebrazil sarf srpchase; do
-  grep -qi "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING: $model"
+  grep -qiw "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING: $model"
 done
 
 # Verify 3 recovered models documented in §6
 for model in ferts turkpow clearlak; do
-  grep -qi "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING recovered: $model"
+  grep -qiw "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING recovered: $model"
 done
 ```
 
