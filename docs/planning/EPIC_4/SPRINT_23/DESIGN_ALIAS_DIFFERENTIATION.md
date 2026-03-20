@@ -22,7 +22,7 @@ A naive fix (matching aliases unconditionally) was attempted in Sprint 22 and **
 
 ### 1.1 The Bug
 
-**File:** `src/ad/derivative_rules.py:232-304` (`_diff_varref`)
+**File:** `src/ad/derivative_rules.py:232-309` (`_diff_varref`)
 
 When differentiating `x(np, k)` with respect to `x(n, k)`, the current `_indices_match()` function performs exact string comparison. Since `"np" != "n"`, the derivative returns `Const(0.0)` even though `np` is an alias of `n` (both refer to the same underlying set).
 
@@ -129,7 +129,7 @@ stationarity.py
       → _diff_varref()         ← ALIAS BUG HERE
       → _diff_sum()            ← NEEDS TO TRACK BOUND INDICES
       → _diff_prod()           ← NEEDS TO TRACK BOUND INDICES
-      → _diff_dollar_cond()
+      → _diff_dollar_conditional()
       → _diff_binary()
       → _diff_call()
 ```
@@ -138,29 +138,40 @@ stationarity.py
 
 1. **`differentiate_expr(expr, wrt_var, wrt_indices, config)`** — Main dispatcher. Currently has 4 parameters. The `config` parameter carries `model_ir` (which has `aliases` dict).
 
-2. **`_diff_varref(expr, wrt_var, wrt_indices, config)`** — Lines 232-304. Uses `_indices_match()` for exact string comparison. **No alias awareness.**
+2. **`_diff_varref(expr, wrt_var, wrt_indices, config)`** — Lines 232-309. Uses `_indices_match()` for exact string comparison. **No alias awareness.**
 
-3. **`_diff_sum(expr, wrt_var, wrt_indices, config)`** — Lines 1592-1691. Handles sum collapse and partial index matching. **Does not track bound indices for alias purposes.** The sum's `index_sets` (e.g., `("i", "j")`) are the bound variables.
+3. **`_diff_sum(expr, wrt_var, wrt_indices, config)`** — Lines 1592-2316. Handles sum collapse and partial index matching. **Does not track bound indices for alias purposes.** The sum's `index_sets` (e.g., `("i", "j")`) are the bound variables.
 
 4. **`_diff_prod(expr, wrt_var, wrt_indices, config)`** — Similar to sum, uses product rule with iteration.
 
-5. **`Config.model_ir`** — `src/config.py:40`. The `Config` dataclass carries `model_ir: Any` which provides access to `model_ir.aliases` (dict mapping alias name to parent set name).
+5. **`Config.model_ir`** — `src/config.py:40`. The `Config` dataclass carries `model_ir: Any` which provides access to `model_ir.aliases` (`CaseInsensitiveDict[AliasDef]` — values have a `.target` attribute giving the parent set name). See `src/ir/model_ir.py:37` for the definition.
 
 ### 3.3 Alias Information in IR
 
 ```python
-# src/ir/symbols.py
-model_ir.aliases: dict[str, str]  # e.g., {"np": "n", "j": "i"}
+# src/ir/model_ir.py (ModelIR dataclass, line 37)
+aliases: CaseInsensitiveDict[AliasDef] = field(default_factory=CaseInsensitiveDict)
+
+# src/ir/symbols.py (AliasDef dataclass, line 58)
+@dataclass
+class AliasDef:
+    name: str        # e.g., "np"
+    target: str      # e.g., "n" — the parent set name
+    universe: str | None = None
 ```
 
-The `aliases` dict maps each alias name to its parent set name. To check if two indices reference the same set:
+`model_ir.aliases` is a `CaseInsensitiveDict[AliasDef]` — keys are alias names (case-insensitive), values are `AliasDef` objects with a `.target` attribute giving the parent set. For example, `model_ir.aliases["np"].target == "n"`. Note that in tests using plain strings, the code should access `.target` rather than treating the value as a string directly.
+
+To check if two indices reference the same set:
 
 ```python
-def same_root_set(a: str, b: str, aliases: dict[str, str]) -> bool:
-    root_a = aliases.get(a, a)  # resolve alias chain
-    root_b = aliases.get(b, b)
+def same_root_set(a: str, b: str, aliases: CaseInsensitiveDict[AliasDef]) -> bool:
+    root_a = aliases[a].target if a in aliases else a
+    root_b = aliases[b].target if b in aliases else b
     return root_a.lower() == root_b.lower()
 ```
+
+For multi-level alias chains (e.g., `Alias(n,np); Alias(np,npp)`), resolution must follow `.target` iteratively until a fixed point is reached.
 
 ---
 
@@ -232,7 +243,7 @@ def _diff_varref(expr, wrt_var, wrt_indices, config, *, bound_indices=frozenset(
 def _alias_match(
     expr_indices: tuple[str | IndexOffset, ...],
     wrt_indices: tuple[str | IndexOffset, ...],
-    aliases: dict[str, str],
+    aliases: CaseInsensitiveDict[AliasDef],
     bound_indices: frozenset[str],
 ) -> Expr | None:
     """Check if indices match through alias resolution.
@@ -282,15 +293,15 @@ def _alias_match(
 ### 4.5 `_same_root_set()` Helper
 
 ```python
-def _same_root_set(a: str, b: str, aliases: dict[str, str]) -> bool:
+def _same_root_set(a: str, b: str, aliases: CaseInsensitiveDict[AliasDef]) -> bool:
     """Check if two index names reference the same root set."""
     def resolve(name: str) -> str:
         seen = set()
-        while name.lower() in {k.lower() for k in aliases}:
+        while name in aliases:
             if name.lower() in seen:
                 break
             seen.add(name.lower())
-            name = next(v for k, v in aliases.items() if k.lower() == name.lower())
+            name = aliases[name].target
         return name.lower()
 
     return resolve(a) == resolve(b)
@@ -301,8 +312,8 @@ def _same_root_set(a: str, b: str, aliases: dict[str, str]) -> bool:
 | File | Function | Change |
 |------|----------|--------|
 | `src/ad/derivative_rules.py:68-169` | `differentiate_expr()` | Add `bound_indices` kwarg, pass through to all `_diff_*` |
-| `src/ad/derivative_rules.py:232-304` | `_diff_varref()` | Add `bound_indices` kwarg, call `_alias_match()` |
-| `src/ad/derivative_rules.py:1592-1691` | `_diff_sum()` | Add `bound_indices` kwarg, augment with `expr.index_sets` before recursing |
+| `src/ad/derivative_rules.py:232-309` | `_diff_varref()` | Add `bound_indices` kwarg, call `_alias_match()` |
+| `src/ad/derivative_rules.py:1592-2316` | `_diff_sum()` | Add `bound_indices` kwarg, augment with `expr.index_sets` before recursing |
 | `src/ad/derivative_rules.py` (new) | `_alias_match()` | New helper: alias-aware index matching with bound check |
 | `src/ad/derivative_rules.py` (new) | `_same_root_set()` | New helper: resolve alias chains to root set |
 | `src/ad/derivative_rules.py` | `_diff_prod()` | Add `bound_indices` kwarg, augment before recursing |

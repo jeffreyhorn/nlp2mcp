@@ -359,7 +359,7 @@ Issue #1111 (alias-aware differentiation) is one of two architectural AD changes
 
 ### Result
 
-- **Root cause:** `_diff_varref()` in `derivative_rules.py:232-304` uses exact index-tuple matching; aliases are not recognized, producing incomplete gradients
+- **Root cause:** `_diff_varref()` in `src/ad/derivative_rules.py` uses exact index-tuple matching; aliases are not recognized, producing incomplete gradients
 - **Naive fix failure:** Sprint 22 attempted unconditional alias matching, which was reverted because it incorrectly matches sum-bound alias iteration variables (dispatch regression)
 - **Proposed fix:** Add `bound_indices: frozenset[str]` keyword parameter to `differentiate_expr()`, threaded through `_diff_sum()` and `_diff_prod()`. `_diff_varref()` checks aliases only when the alias index is NOT in `bound_indices`. Fully backward compatible (keyword-only with default).
 - **Impact:** 21 mismatch models use aliases in sum expressions (58.3% of all mismatches). Alias models are 76% likely to mismatch vs. 30% for non-alias models. This is the highest-leverage match rate fix available.
