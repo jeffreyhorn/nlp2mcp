@@ -600,8 +600,8 @@ Sprint 23 targets reducing translate failures from 13 to ≤ 11 (≥ 145/156). W
 - Mix of timeouts (7), missing IR features (4), and internal errors (2) — no traditional compilation errors
 - Sprint 23 acceptance criterion: ≥ 93% of parsed models (≥ 145/156 assuming 156 parsed)
 - Pipeline retest script: `.venv/bin/python scripts/gamslib/run_full_test.py`
-- Related issues: #940 (mexls universal set), #1062 (tricp), #830 (gastrans Jacobian timeout), #885 (sarf timeout)
-- ~~#952 (lmp2), #953 (paperco)~~ — refuted by KU-25: these are NOT translate failures (both translate successfully; fail at solve)
+- Related issues: #940 (mexls universal set), #830 (gastrans Jacobian timeout), #885 (sarf timeout)
+- ~~#952 (lmp2), #953 (paperco), #1062 (tricp)~~ — not translate failures (lmp2/paperco refuted by KU-25; tricp is path_syntax_error Priority 4)
 
 ### What Needs to Be Done
 

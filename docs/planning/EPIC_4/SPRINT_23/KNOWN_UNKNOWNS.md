@@ -546,7 +546,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h (part of Task 7 catalog)
 **Owner:** Task 7 (translate failures catalog)
-**Verification Results:** ✅ VERIFIED — Of 13 remaining translate failures (not 15 — ferts, turkpow, clearlak recovered), the 6 non-timeout models (4 LhsConditionalAssign + 2 internal errors) are higher leverage than the 7 timeouts. The 4 LhsConditionalAssign models share a single root cause (missing `expr_to_gams()` handler, 2-3h fix) and would recover all 4 models. The 7 timeouts require architectural Jacobian changes. No compilation errors in the traditional sense — failures are either missing feature (C) or internal error (D), both fixable.
+**Verification Results:** ✅ VERIFIED — Of 13 remaining translate failures (not 15 — ferts, turkpow, clearlak recovered), the 6 non-timeout models (4 LhsConditionalAssign + 2 internal errors) are higher leverage than the 7 timeouts. The 4 LhsConditionalAssign models share a single root cause (missing statement-level emission support; currently falls through to `expr_to_gams()` and raises) and would recover all 4 models with a 2-3h fix. The 7 timeouts require architectural Jacobian changes. No compilation errors in the traditional sense — failures are either missing feature (C) or internal error (D), both fixable.
 
 ---
 

@@ -25,7 +25,7 @@ Sprint 23 target: ≥ 145/156 (≥ 93%). This requires fixing **2 of 13** failur
 | **C: Missing IR feature** (LhsConditionalAssign) | 4 | agreste, ampl, cesam, korcge | Fixable — add emitter support for LhsConditionalAssign |
 | **D: Internal error** | 2 | mexls, mine | Fixable — specific code fixes needed |
 
-**Key finding:** The 4 LhsConditionalAssign models share a single root cause (missing `expr_to_gams()` handler). Fixing this one handler would recover all 4, exceeding the ≥ 145 target by 4 models (→ 147/156 = 94.2%). The 2 internal errors are also individually fixable. The 7 timeouts are architecturally intractable in Sprint 23.
+**Key finding:** The 4 LhsConditionalAssign models share a single root cause (missing statement-level emission support, currently falling through to `expr_to_gams()` and raising). Fixing this emission path would recover all 4, exceeding the ≥ 145 target by 2 models (→ 147/156 = 94.2%). The 2 internal errors are also individually fixable. The 7 timeouts are architecturally intractable in Sprint 23.
 
 ---
 
@@ -90,10 +90,12 @@ The node was introduced in Issue #1015 (shale model fix) and is correctly constr
 
 Handle `LhsConditionalAssign` at the **statement/assignment emission layer**, not in `expr_to_gams()`. The LHS-conditional semantics (`lhs$(cond) = rhs`, where false leaves the record unchanged) must be preserved — simply emitting `rhs$cond` would produce RHS-dollar semantics (assigns 0 where false), which is semantically wrong.
 
-The fix should intercept `LhsConditionalAssign` nodes in the assignment emitter (e.g., `original_symbols.py` or `emit_assignments.py`) and emit the condition on the LHS:
+The fix should intercept `LhsConditionalAssign` nodes in the assignment emitter (e.g., `original_symbols.py` or `emit_assignments.py`) and emit the condition on the LHS, using the assignment's existing target/indices for the LHS and the `LhsConditionalAssign` node's `condition` and `rhs` fields:
 ```python
+# `target`/`indices` come from the surrounding assignment context;
+# `node` is a LhsConditionalAssign providing only `condition` and `rhs`.
 # Emit as: lhs$(condition) = rhs;
-lhs_str = emit_lhs(node.target, node.indices)
+lhs_str = emit_lhs(target, indices)
 cond_str = expr_to_gams(node.condition, ...)
 rhs_str = expr_to_gams(node.rhs, ...)
 emit(f"{lhs_str}$({cond_str}) = {rhs_str};")
