@@ -49,7 +49,7 @@
 
 | Model | Error Category | Notes |
 |-------|---------------|-------|
-| danwolfe | lexer_invalid_char | Stale result (excluded) |
+| danwolfe | lexer_invalid_char | Fresh result |
 | lop | lexer_invalid_char | Stale result (excluded) |
 | partssupply | lexer_invalid_char | Fresh result |
 | turkey | lexer_invalid_char | Fresh result |
