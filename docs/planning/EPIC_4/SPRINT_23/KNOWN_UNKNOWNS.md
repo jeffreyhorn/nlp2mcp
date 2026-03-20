@@ -445,18 +445,18 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Research Questions:**
 1. Have the detection gaps (nested reuse, case-insensitive) been addressed since Sprint 22?
-2. Which 2 specific subcategory G models need the enhanced detection?
+2. Which specific subcategory G model needs the enhanced detection?
 3. Does the `__` suffix naming convention still avoid collisions with user-defined identifiers?
-4. Can the fix be applied to just the 2 models, or does it require a general mechanism?
+4. Can the fix be applied to just srkandw, or does it require a general mechanism?
 5. What is the regression risk of enhancing index conflict detection?
 
-**How to Verify:** Run MCP generation for the 2 subcategory G models. Check for $409 (uncontrolled set) or $149 errors indicating index conflicts.
+**How to Verify:** Run MCP generation for the subcategory G model (srkandw). Check for $409 (uncontrolled set) or $149 errors indicating index conflicts.
 
 **Risk if Wrong:** Low — Sprint 22 verified the mechanism is sound. The remaining work is detection enhancement, estimated at 1-2h.
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
-**Prior Analysis:** Sprint 22 KU-04 verified aliasing mechanism for most models; 2 remain
+**Prior Analysis:** Sprint 22 KU-04 verified aliasing mechanism for most models; 1 remains (srkandw)
 **Verification Results:** ⚠️ PARTIALLY CONFIRMED — Only 1 subcategory G model remains (srkandw), not 2 as estimated. The `resolve_index_conflicts()` mechanism is sound for naming conflicts, but srkandw's bug is a different class: the parser incorrectly filters out a subset domain index (`n`) in `_handle_aggregation()` because it appears in the equation's free domain. This requires a parser-level fix, not just enhanced alias detection. Estimated fix: 2-3h.
 
 ---
@@ -464,14 +464,14 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 ### KU-19: Subcategory B Models Have Diverse Root Causes
 
 **Priority:** High
-**Assumption:** The 5 subcategory B models do NOT share a common emitter bug. Sprint 22 KU-03 explicitly refuted this assumption. Each model requires individual investigation and potentially different fix approaches.
+**Assumption:** The 4 subcategory B models (chenery, hhfair, otpop, shale) do NOT share a common emitter bug. Sprint 22 KU-03 explicitly refuted this assumption. Each model requires individual investigation and potentially different fix approaches.
 
 **Research Questions:**
-1. Which 5 models constitute the current subcategory B?
+1. Which models constitute the current subcategory B?
 2. What specific GAMS error does each produce ($170, $141, $66, other)?
 3. Are cesam/cesam2 (Sprint 22 KU-03's current Subcat B) still the primary B models?
 4. Can any be grouped into sub-patterns for batch fixing?
-5. What is the total effort to fix all 5 (individual fixes vs. one general fix)?
+5. What is the total effort to fix all 4 (individual fixes vs. one general fix)?
 
 **How to Verify:** Run MCP generation for each subcategory B model. Capture and classify GAMS error output.
 
@@ -487,17 +487,17 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 ### KU-20: path_syntax_error → model_infeasible Cascade Risk
 
 **Priority:** High
-**Assumption:** Fixing 5 path_syntax_error models (Priority 4) may shift some into model_infeasible, repeating Sprint 22's net-zero pattern. Sprint 22 KU-24 predicted 7-14 at-risk models; 5 actually shifted.
+**Assumption:** Fixing the 5 G+B path_syntax_error models (Priority 4) may shift some into model_infeasible, repeating Sprint 22's net-zero pattern. Sprint 22 KU-24 predicted 7-14 at-risk models; 5 actually shifted.
 
 **Research Questions:**
-1. Which of the 7 G+B target models are at highest risk of cascading to model_infeasible?
-2. Are any of the 7 CGE models (highest risk per Sprint 22 KU-24)?
+1. Which of the 5 G+B target models are at highest risk of cascading to model_infeasible?
+2. Are any of the 5 CGE models (highest risk per Sprint 22 KU-24)?
 3. Does the model_infeasible ≤ 8 target account for this influx?
 4. Should Priority 4 fixes be scheduled before Priority 2 (so influx is known before model_infeasible work)?
 
 **How to Verify:** After each path_syntax_error fix, run the model through the full pipeline to check for model_infeasible status.
 
-**Risk if Wrong:** If 3+ of the 7 G+B models cascade to model_infeasible, the influx may push model_infeasible above 8 unless compensating fixes are applied.
+**Risk if Wrong:** If 3+ of the 5 G+B models cascade to model_infeasible, the influx may push model_infeasible above 8 unless compensating fixes are applied.
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
@@ -649,7 +649,7 @@ This table maps each PREP_PLAN.md task to the unknowns it should verify during e
 | Task 3 (model_infeasible Triage) | KU-06, KU-07, KU-08, KU-09, KU-10, KU-11 | Run MCP generation for all 12 models; classify infeasibility source |
 | Task 4 (Alias Differentiation Investigation) | KU-12, KU-13, KU-15, KU-16, KU-17 | Trace AD pipeline; design summation-context tracking; count alias-using models |
 | Task 5 (Dollar-Condition Investigation) | KU-14, KU-15 | Trace DollarConditional through AD pipeline; assess gradient vs Jacobian scope |
-| Task 6 (path_syntax_error G+B Triage) | KU-18, KU-19, KU-20, KU-21 | Run MCP generation for 7 G+B models; classify error types per model |
+| Task 6 (path_syntax_error G+B Triage) | KU-18, KU-19, KU-20, KU-21 | Run MCP generation for 5 G+B models; classify error types per model |
 | Task 7 (Translate Failures Catalog) | KU-22, KU-23, KU-24, KU-25 | Run pipeline on all translate failures; classify as compilation/timeout/internal |
 | Task 8 (Full Pipeline Baseline) | KU-26 | Full pipeline run; confirm incomparable classifications; record baseline metrics |
 | Task 9 (Retrospective Alignment) | (all remaining) | Verify Sprint 22 process recommendations are integrated |

@@ -41,7 +41,7 @@ The discrepancy is because Sprint 22 fixed 3 of the original 4 subcategory G mod
 | 16 | sample | $140 | A (unknown symbol) | Unknown symbol reference |
 | 17 | saras | $140, $148 | A (unknown symbol) | Multiple missing params + dimension mismatches |
 | 18 | **shale** | **$171** | **B (domain violation)** | `$(cf(c) and t(tf))`: subset condition on stationarity equation domain |
-| 19 | **srkandw** | $2, $171, $311 | **G (set index reuse)** | `sum(()$(tn(n)), 1)`: empty sum domain from index filter bug |
+| 19 | **srkandw** | $2, $148, $171, $311 | **G (set index reuse)** | `sum(()$(tn(n)), 1)`: empty sum domain from index filter bug |
 | 20 | worst | $141 | A (missing data) | Unreferenced MCP variable ($483 in Sprint 22; now $141) |
 
 **Bold** = G+B target models.
@@ -86,7 +86,7 @@ leaf(n) = yes$(sum(()$(tn(n)), 1));
 leaf(n) = yes$(sum(n$(tn('time-2',n)), 1));
 ```
 
-**Secondary Bug:** `ord('0-default')` on line 63 produces $311 because GAMS requires `ord(set, position)` not `ord('literal')`. This is a separate preprocessor issue (ScenRedParms is GUSS-related post-solve code that should be stripped).
+**Secondary Bug:** `ord('0-default')` on line 63 produces $311 because in GAMS `ord()` is unary and expects a set element (for example, `ord(i)`), not a quoted literal like `'0-default'`. This is a separate preprocessor issue (ScenRedParms is GUSS-related post-solve code that should be stripped).
 
 **Fix Approach:** Modify `_handle_aggregation()` to NOT filter out indices that appear in subset specifications with literal co-indices. When `tn('time-2',n)` is encountered:
 1. Keep `n` in `sum_indices` (it's an iteration variable, not a filter)
@@ -135,7 +135,7 @@ stat_m(tl).. ... + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + ... =E= 0;
 
 **Root Cause:** `nu_budget(tl+1)` references the *next* element in ordered set `tl`. GAMS $171 fires because `tl+1` is not a valid literal member of the domain — it requires proper lag/lead syntax. The stationarity emitter generated `tl+1` as arithmetic, but GAMS wants structural set operations.
 
-**Fix Approach:** The IR's `IndexOffset` nodes need proper emission as GAMS lag/lead syntax (e.g., `nu_budget(tl+1)` → `nu_budget(tl+1)` with proper set ordering declarations, or the emitter needs to declare the offset relationship).
+**Fix Approach:** The IR's `IndexOffset(+1, tl)` nodes must **not** serialize to arithmetic on the index (current bad output: `nu_budget(tl+1)`). Instead, the emitter should introduce a lead index (e.g., an alias `tlp`) over ordered set `tl` and emit a successor-based reference such as `nu_budget(tlp)$(ord(tlp) = ord(tl) + 1)` (or an equivalent lag/lead form), so that "next-period" access is expressed via valid GAMS lag/lead semantics rather than `tl+1`.
 
 **Effort Estimate:** 2-3h (may need emitter changes for IndexOffset handling)
 

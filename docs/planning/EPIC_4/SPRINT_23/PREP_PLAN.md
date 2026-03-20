@@ -503,32 +503,31 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
 
 ### Objective
 
-Identify the specific models in path_syntax_error subcategories G (set index reuse, 2 models) and B (domain violations, 5 models), verify root causes, and estimate fix effort for each.
+Identify the specific models in path_syntax_error subcategories G (set index reuse) and B (domain violations), verify root causes, and estimate fix effort for each.
 
 ### Why This Matters
 
-Sprint 22 planned to fix subcategories G+B on Days 2-3 but redirected work to WS2/WS3. These 7 models are explicitly deferred to Sprint 23 Priority 4. Prep triage prevents discovering unexpected complexity during the sprint.
+Sprint 22 planned to fix subcategories G+B on Days 2-3 but redirected work to WS2/WS3. These models are explicitly deferred to Sprint 23 Priority 4. Prep triage prevents discovering unexpected complexity during the sprint.
 
 ### Background
 
-- 20 path_syntax_error models remain overall; Priority 4 targets the 7-model G+B subset
-- Subcategory G (set index reuse): 2 models — need aliasing or index renaming
-- Subcategory B (domain violations): 5 models — need domain conditioning fixes
+- 20 path_syntax_error models remain overall; Priority 4 targets the G+B subset
+- Subcategory G (set index reuse): 1 model (srkandw) — parser bug in `_handle_aggregation()`
+- Subcategory B (domain violations): 4 models (chenery, hhfair, otpop, shale) — diverse root causes
 - Key issues: #956 (nonsharp), #1041 (cesam2), #882/#871 (camcge)
 - Sprint 22 KU-03 refuted the assumption that subcategory B models share a common emitter bug — "original 5 models dispersed; current B is cesam/cesam2 (new)"
 - Sprint 22 KU-04 verified aliasing mechanism is sound for subcategory G
 
 ### What Needs to Be Done
 
-1. **Identify the specific 7 models** by running the pipeline on all 20 path_syntax_error models and categorizing the error type
-2. **For subcategory G models (2):**
+1. **Identify the specific G+B models** by running the pipeline on all 20 path_syntax_error models and categorizing the error type
+2. **For subcategory G model (srkandw):**
    - Examine the set index reuse pattern in the GAMS source
    - Verify Sprint 22 KU-04 finding (aliasing mechanism works)
    - Estimate fix effort
-3. **For subcategory B models (5):**
+3. **For subcategory B models (4: chenery, hhfair, otpop, shale):**
    - Note Sprint 22 KU-03 finding — these are NOT a single emitter bug
    - Classify each model's specific domain violation
-   - Review #956 (nonsharp), #1041 (cesam2), #882/#871 (camcge) for details
    - Estimate fix effort per model
 4. **Check for overlap** — do any G+B models also appear in path_solve_terminated or model_infeasible lists?
 5. **Create ranked fix list** with dependencies
@@ -979,7 +978,7 @@ Tasks 2-7 (Triage, in  ───┤
 - [ ] All 12 model_infeasible models triaged with root cause
 - [x] Alias-aware differentiation (#1111) design documented
 - [x] Dollar-condition propagation (#1112) design documented
-- [ ] 7 path_syntax_error G+B models triaged
+- [ ] 5 path_syntax_error G+B models triaged
 - [ ] 15 translate failures cataloged and classified
 - [ ] Full pipeline baseline established (per PR6)
 - [ ] Sprint 22 retrospective items confirmed in Sprint 23 plan
