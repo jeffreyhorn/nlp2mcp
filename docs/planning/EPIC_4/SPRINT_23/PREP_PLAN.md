@@ -578,7 +578,7 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 
 ## Task 7: Catalog and Classify Translate Failures (15)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Medium
 **Estimated Time:** 2 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -619,11 +619,25 @@ Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md` with full classification of all 13 remaining failures
+- Updated `KNOWN_UNKNOWNS.md` KU-22 (VERIFIED), KU-23 (VERIFIED), KU-24 (REFUTED), KU-25 (REFUTED)
+- Updated Appendix C verification tracking table
 
 ### Result
 
-*To be completed.*
+**Revised failure count:** 13 translate failures (not 15 as estimated):
+- ferts and turkpow already translate successfully (slow but under 150s timeout)
+- clearlak recovered on pipeline rerun (marginal timeout → now completes in ~148s)
+- Current baseline: 143/156 = 91.7% (not 141/156 = 90.4%)
+
+**Classification:** 7 timeout (B), 4 missing IR feature (C: LhsConditionalAssign), 2 internal error (D: mexls #940, mine SetMembershipTest)
+
+**Key finding:** The 4 LhsConditionalAssign models (agreste, ampl, cesam, korcge) share a single root cause — missing `expr_to_gams()` handler. A single 2-3h fix recovers all 4 → 147/156 (94.2%), exceeding the ≥ 145 target. The 7 timeouts are architecturally intractable (Jacobian computation bottleneck).
+
+**KU-24 REFUTED:** Only 2 fixes needed to reach target (not 4), because baseline is 143 not 141.
+**KU-25 REFUTED:** paperco/lmp2 are NOT translate failures — they translate successfully but fail at solve.
+
+Sprint 23 Priority 5 effort: **2-3h** (Tier 1: LhsConditionalAssign fix alone exceeds target).
 
 ### Verification
 
@@ -639,22 +653,17 @@ done
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md` with:
-  - Named list of all 15 failing models
-  - Classification (compilation error, timeout, missing feature, internal error)
-  - Error messages for compilation failures
-  - Cross-reference with GitHub issues
-  - Ranked fix priority for the 4+ models needed to reach target
-- Verification results for KU-22, KU-23, KU-24, KU-25 in KNOWN_UNKNOWNS.md Appendix C
+- :white_check_mark: `docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md` with classification for all 13 failures, error details, issue cross-references, ranked fix priority, recovered models list
+- :white_check_mark: Verification results for KU-22, KU-23, KU-24, KU-25 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
-- [ ] All 15 translate failures identified by name
-- [ ] Each classified as compilation error, timeout, missing feature, or internal error
-- [ ] Error messages captured for compilation failures
-- [ ] Cross-referenced with existing GitHub issues
-- [ ] Top 4+ highest-leverage fixes identified (to go from 15 → ≤ 11)
-- [ ] KU-22, KU-23, KU-24, KU-25 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] All 13 translate failures identified by name (revised from 15 — ferts, turkpow, clearlak recovered)
+- [x] Each classified as timeout (B), missing feature (C), or internal error (D)
+- [x] Error details captured for all failures (no compilation errors in traditional sense)
+- [x] Cross-referenced with existing GitHub issues (#830, #885, #929, #930, #931, #932, #940)
+- [x] Highest-leverage fix identified: LhsConditionalAssign handler recovers 4 models (2-3h)
+- [x] KU-22, KU-23, KU-24, KU-25 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -979,7 +988,7 @@ Tasks 2-7 (Triage, in  ───┤
 - [x] Alias-aware differentiation (#1111) design documented
 - [x] Dollar-condition propagation (#1112) design documented
 - [x] 5 path_syntax_error G+B models triaged
-- [ ] 15 translate failures cataloged and classified
+- [x] 13 translate failures cataloged and classified (revised from 15)
 - [ ] Full pipeline baseline established (per PR6)
 - [ ] Sprint 22 retrospective items confirmed in Sprint 23 plan
 - [ ] Sprint 23 PLAN.md completed with 15-day schedule and checkpoints
