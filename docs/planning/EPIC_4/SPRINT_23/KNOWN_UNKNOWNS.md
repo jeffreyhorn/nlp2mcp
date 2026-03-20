@@ -366,7 +366,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 2h (part of Task 5 investigation)
 **Owner:** Task 5 (dollar-condition investigation)
 **Prior Analysis:** Sprint 22 KU-28 identified this issue; deferred to Sprint 23
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ❌ REFUTED — Dollar-condition propagation requires changes to BOTH gradient AND (eventually) Jacobian. Gradient-only fix (adding `_extract_gradient_conditions()` to `gradient.py` + `gradient_conditions` field on `KKTSystem` + check in `build_stationarity_equations()`) is sufficient for Sprint 23 targets (sambal/qsambal). Jacobian condition extraction is a lower-priority follow-up for mixed-condition cases. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §3 and §9.
 
 ---
 
@@ -388,7 +388,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 4, 5 (cross-referenced)
-**Verification Results:** ✅ VERIFIED — The two fixes modify orthogonal aspects of the AD pipeline. #1111 adds `bound_indices` threading and alias-aware matching in `_diff_varref()`. #1112 modifies condition metadata propagation in `_diff_dollar_conditional()` and stationarity assembly. No shared data structures, no overlapping code paths, no ordering dependency. Both can be implemented and tested independently. Recommended order: #1111 first (higher leverage, 21 affected models vs. ~5 for #1112).
+**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first; to align with `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5.2, we will implement #1112 first (slightly lower integration risk), followed by #1111 within the same sprint. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
 
 ---
 
@@ -689,8 +689,8 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-11 | ⚠️ | 2026-03-19 | PARTIAL: CES singularity is structural, not KKT bug; needs reformulation/warm-start | Deferred to Tier 3 |
 | KU-12 | ⚠️ | 2026-03-20 | PARTIAL: Design sound but needs implementation + pipeline testing | Created DESIGN_ALIAS_DIFFERENTIATION.md |
 | KU-13 | ✅ | 2026-03-20 | VERIFIED: Fix only enters alias path when aliases exist AND exact match fails | Selective by design |
-| KU-14 | | | | |
-| KU-15 | ✅ | 2026-03-20 | VERIFIED: #1111 and #1112 modify orthogonal AD pipeline aspects; no coupling | Independent implementation confirmed |
+| KU-14 | ❌ | 2026-03-20 | REFUTED: Requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23 scope) | Gradient-only fix designed in DESIGN_DOLLAR_CONDITION_PROPAGATION.md; Jacobian follow-up deferred |
+| KU-15 | ✅ | 2026-03-20 | VERIFIED: Fixes are architecturally independent, no code overlap | Either fix can be implemented first; no integration risk |
 | KU-16 | ⚠️ | 2026-03-20 | PARTIAL: ~12 non-convex models, but some may be alias bugs; clearer after fix | Expected 8-12 irreducible |
 | KU-17 | ⚠️ | 2026-03-20 | PARTIAL: Convex models should match after alias fix; need formal convexity check | CGE + ps* family likely convex |
 | KU-18 | | | | |
