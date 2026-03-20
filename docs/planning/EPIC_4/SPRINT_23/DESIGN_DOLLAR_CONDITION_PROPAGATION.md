@@ -176,20 +176,19 @@ def _extract_gradient_conditions(
 
 **Logic:**
 1. For each non-zero gradient entry `(col_id, derivative)`:
-   - Walk the derivative expression tree
+   - Inspect only the **top level** of the derivative expression
    - If the top-level expression is `DollarConditional(value, cond)` → extract `cond`
-   - If the expression is `Binary("*", ..., _ensure_numeric_condition(cond))` → extract `cond`
-   - Handle nested cases: `DollarConditional(Binary("*", ...), cond)` etc.
+   - Else, if the top-level expression is `Binary("*", ..., DollarConditional(Const(1.0), cond))` → extract `cond`
+   - Do **not** attempt to combine multiple conditions or walk/merge nested condition trees; at most one guard is extracted from the top level
 2. Group by variable name
 3. Return only variables where ALL instances share a common condition structure (same as `_find_variable_access_condition()` does for equation bodies)
 
-**Condition extraction patterns** (from `_diff_sum` output):
+**Condition extraction patterns** (from `_diff_sum` output, top-level only):
 
 | Derivative Pattern | Extracted Condition |
 |---|---|
 | `DollarConditional(deriv, cond)` | `cond` |
-| `Binary("*", deriv, cond_factor)` where `cond_factor` is numeric condition | underlying condition of `cond_factor` |
-| `Binary("*", DollarConditional(d, c1), c2)` | `Binary("and", c1, c2)` or AND-conjunction |
+| `Binary("*", deriv, DollarConditional(Const(1.0), cond))` | `cond` (unwrapped from numeric condition wrapper) |
 
 ### 3.3 Step 2: Add `gradient_conditions` field to `KKTSystem`
 
@@ -221,7 +220,7 @@ if access_cond is None and var_name in kkt.gradient_conditions:
     access_cond = kkt.gradient_conditions[var_name]
 ```
 
-**Merging logic:** If `access_cond` was already found from equation analysis AND a gradient condition exists, combine with `Binary("and", access_cond, gradient_cond)`. In practice, this is unlikely — a variable is usually either fully conditioned in equations or conditioned only in the gradient — but the merger ensures correctness.
+**Merging logic:** Stage 4 is fallback-only. If no `access_cond` was found from equation analysis and a gradient condition exists, use that gradient condition as `access_cond`. If an `access_cond` already exists, Stage 4 does not modify it (no `AND`-merge is performed). In practice, a variable is usually either fully conditioned in equations or conditioned only in the gradient, so the fallback-only approach is sufficient.
 
 ### 3.5 Step 4: Handle Jacobian conditions (if needed)
 
@@ -334,7 +333,7 @@ This confirms the fixes can be tested independently.
 
 1. **Unit test: `_extract_gradient_conditions()`**
    - Test with gradient containing `DollarConditional` wrapper → extracts condition
-   - Test with gradient containing `Binary("*", deriv, cond)` → extracts condition
+   - Test with gradient containing `Binary("*", deriv, DollarConditional(Const(1.0), cond))` → extracts condition
    - Test with mixed (some entries conditioned, some not) → returns None
    - Test with all entries sharing same condition → returns condition
 
