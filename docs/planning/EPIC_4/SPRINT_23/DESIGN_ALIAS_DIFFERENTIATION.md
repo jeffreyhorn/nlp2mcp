@@ -161,18 +161,20 @@ class AliasDef:
     universe: str | None = None
 ```
 
-`model_ir.aliases` is a `CaseInsensitiveDict[AliasDef]` — keys are alias names (case-insensitive), values are `AliasDef` objects with a `.target` attribute giving the parent set. For example, `model_ir.aliases["np"].target == "n"`. Note that in tests using plain strings, the code should access `.target` rather than treating the value as a string directly.
+`model_ir.aliases` is conceptually a `CaseInsensitiveDict[AliasDef]` — keys are alias names (case-insensitive), values are `AliasDef` objects with a `.target` attribute giving the parent set. For example, `model_ir.aliases["np"].target == "n"`. **However, some tests/population paths currently assign plain strings as alias values** (e.g., `model.aliases["j"] = "i"` in `tests/integration/kkt/test_stationarity.py:874`), so the effective type is `CaseInsensitiveDict[AliasDef | str]`. Code that consumes `aliases` must therefore be robust to both shapes and resolve the target via `getattr(value, "target", value)` rather than assuming an `AliasDef`.
 
-To check if two indices reference the same set:
+To check if two indices reference the same set in a way that works with both `AliasDef` and `str` alias values:
 
 ```python
-def same_root_set(a: str, b: str, aliases: CaseInsensitiveDict[AliasDef]) -> bool:
-    root_a = aliases[a].target if a in aliases else a
-    root_b = aliases[b].target if b in aliases else b
-    return root_a.lower() == root_b.lower()
+def same_root_set(a: str, b: str, aliases) -> bool:
+    val_a = aliases[a] if a in aliases else a
+    val_b = aliases[b] if b in aliases else b
+    root_a = getattr(val_a, "target", val_a)
+    root_b = getattr(val_b, "target", val_b)
+    return str(root_a).lower() == str(root_b).lower()
 ```
 
-For multi-level alias chains (e.g., `Alias(n,np); Alias(np,npp)`), resolution must follow `.target` iteratively until a fixed point is reached.
+For multi-level alias chains (e.g., `Alias(n,np); Alias(np,npp)`), resolution must follow `.target` (or the string value) iteratively until a fixed point is reached.
 
 ---
 
@@ -294,15 +296,20 @@ def _alias_match(
 ### 4.5 `_same_root_set()` Helper
 
 ```python
-def _same_root_set(a: str, b: str, aliases: CaseInsensitiveDict[AliasDef]) -> bool:
-    """Check if two index names reference the same root set."""
+def _same_root_set(a: str, b: str, aliases) -> bool:
+    """Check if two index names reference the same root set.
+
+    Handles both AliasDef objects (with .target) and plain strings
+    (used in some tests).
+    """
     def resolve(name: str) -> str:
         seen = set()
         while name in aliases:
             if name.lower() in seen:
                 break
             seen.add(name.lower())
-            name = aliases[name].target
+            val = aliases[name]
+            name = getattr(val, "target", val)
         return name.lower()
 
     return resolve(a) == resolve(b)
