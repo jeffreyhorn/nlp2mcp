@@ -20,7 +20,7 @@
 
 **Retrospective finding:** Subcategories G (set index reuse) and B (domain violations) were planned for Days 2-3 but redirected to WS2/WS3. 6 subcategory G+B models left unaddressed. Should be carried into Sprint 23.
 
-**Sprint 23 action:** Prep Task 6 (TRIAGE_PATH_SYNTAX_ERROR_GB.md) completed triage. Revised count: 1 G + 4 B = 5 models (not 6). Sprint 23 Priority 4 targets these. PROJECT_PLAN.md §Priority 4 explicitly references deferred G+B.
+**Sprint 23 action:** Prep Task 6 (TRIAGE_PATH_SYNTAX_ERROR_GB.md) completed triage. Revised count: 1 G + 4 B = 5 models (not 6). Sprint 23 Priority 4 targets these; note that the G+B model counts in PROJECT_PLAN.md §Priority 4 are outdated (still showing the earlier 7-model subset), and the authoritative updated count is TRIAGE_PATH_SYNTAX_ERROR_GB.md (1 G + 4 B = 5).
 
 **Status:** ADDRESSED — carried forward as Priority 4 with full triage.
 
@@ -121,7 +121,7 @@ The retrospective §Sprint 23 Recommendations suggested targets. Here is the ali
 
 | Metric | Retro Suggestion | PROJECT_PLAN.md Target | PREP_PLAN.md / BASELINE_METRICS.md | Aligned? |
 |--------|-----------------|----------------------|-----------------------------------|----------|
-| Parse | ≥ 156/160 | ≥ 156/160 | Baseline: 156/160; Target ≥ 157/160 | Yes (PREP_PLAN raises to 157) |
+| Parse | ≥ 156/160 | ≥ 156/160 | Baseline: 156/160; Target ≥ 156/160 | Yes |
 | Translate | ≥ 145/156 (93%) | ≥ 145/156 (93%) | Baseline: 139/156 (89.1%); Gap: +6 | Yes |
 | Solve | ≥ 100 | ≥ 100 | Baseline: 89; Gap: +11 | Yes |
 | Match | ≥ 55 | ≥ 55 | Baseline: 47; Gap: +8 | Yes |
