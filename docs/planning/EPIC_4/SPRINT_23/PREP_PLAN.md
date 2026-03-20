@@ -493,7 +493,7 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
 
 ## Task 6: Triage path_syntax_error Subcategories G+B
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -535,11 +535,19 @@ Sprint 22 planned to fix subcategories G+B on Days 2-3 but redirected work to WS
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` with full triage of all 20 path_syntax_error models
+- Updated `KNOWN_UNKNOWNS.md` KU-18 (PARTIAL), KU-19 (VERIFIED), KU-20 (VERIFIED), KU-21 (PARTIAL)
+- Updated Appendix C verification tracking table
 
 ### Result
 
-*To be completed.*
+**Revised G+B counts:** 1 subcategory G + 4 subcategory B = **5 models** (not 7 as estimated):
+- **G:** srkandw — parser bug in `_handle_aggregation()` filters out subset domain index, producing empty sum domain
+- **B:** chenery (index shadowing), hhfair (offset arithmetic), otpop (alias-as-subset condition), shale (subset condition domain mismatch)
+
+Sprint 22 fixed 3/4 original G models and reclassified cesam, reducing the G+B target. All 4 B models have diverse root causes (KU-19 verified). No cross-category overlap with model_infeasible or path_solve_terminated (KU-20 verified: 0 CGE models, cascade risk 0-1).
+
+Total estimated effort: 9-14h (higher than 2-3h prep estimate; individual fixes, not batch-fixable). New subcategories (KU-21): gussrisk already fixed, gtm 1-2h, tricp NOT low-effort (4-6h).
 
 ### Verification
 
@@ -554,22 +562,18 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` with:
-  - Named list of all 7 G+B models
-  - Per-model root cause and error details
-  - Fix effort estimates
-  - Cross-reference with existing issues
-- Verification results for KU-18, KU-19, KU-20, KU-21 in KNOWN_UNKNOWNS.md Appendix C
+- :white_check_mark: `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` with full classification of all 20 path_syntax_error models, per-model root cause for 5 G+B models, fix effort estimates, cross-category overlap analysis
+- :white_check_mark: Verification results for KU-18, KU-19, KU-20, KU-21 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
-- [ ] All 7 G+B models identified by name
-- [ ] Each model's specific error pattern documented
-- [ ] Sprint 22 KU-03 and KU-04 findings verified/updated
-- [ ] Fix effort estimated per model
-- [ ] Cross-category overlap checked (vs path_solve_terminated, model_infeasible)
-- [ ] Ranked fix priority created
-- [ ] KU-18, KU-19, KU-20, KU-21 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] All G+B models identified by name (5 models: srkandw, chenery, hhfair, otpop, shale — revised from 7)
+- [x] Each model's specific error pattern documented (GAMS error codes + root cause analysis)
+- [x] Sprint 22 KU-03 and KU-04 findings verified/updated (KU-03 confirmed: diverse B causes; KU-04: mechanism sound but srkandw needs parser fix)
+- [x] Fix effort estimated per model (total 9-14h)
+- [x] Cross-category overlap checked (no overlap with model_infeasible or path_solve_terminated)
+- [x] Ranked fix priority created (5-tier ranking in triage doc §6)
+- [x] KU-18, KU-19, KU-20, KU-21 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 

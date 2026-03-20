@@ -457,7 +457,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
 **Prior Analysis:** Sprint 22 KU-04 verified aliasing mechanism for most models; 2 remain
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Only 1 subcategory G model remains (srkandw), not 2 as estimated. The `resolve_index_conflicts()` mechanism is sound for naming conflicts, but srkandw's bug is a different class: the parser incorrectly filters out a subset domain index (`n`) in `_handle_aggregation()` because it appears in the equation's free domain. This requires a parser-level fix, not just enhanced alias detection. Estimated fix: 2-3h.
 
 ---
 
@@ -480,7 +480,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 1.5h
 **Owner:** Task 6 (path_syntax_error G+B triage)
 **Prior Analysis:** Sprint 22 KU-03 refuted common-bug assumption; diverse root causes confirmed
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — 4 subcategory B models (not 5 — cesam2 is $140 not $171) have 4 distinct root causes: chenery (index shadowing), hhfair (offset arithmetic without lag/lead), otpop (alias-as-subset condition), shale (subset condition domain mismatch). No common emitter bug. Each requires individual investigation. Total effort: 7-11h for all 4.
 
 ---
 
@@ -501,7 +501,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED (low risk) — None of the 5 G+B models are CGE models (highest cascade risk per Sprint 22 KU-24). None overlap with model_infeasible (15) or path_solve_terminated (10). At most 1 model (shale) might cascade. Expected influx: 0-1 models, well within ≤ 3 budget.
 
 ---
 
@@ -522,7 +522,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 6 (path_syntax_error G+B triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — gussrisk (GUSS dict, Issue #910) already fixed (0h). gtm (hyphenated labels) likely 1-2h preprocessor fix — confirmed low-effort. tricp (subcategory K, Issue #1062) is NOT low-effort: 760 MCP errors from sparse edge-set conditioning, estimated 4-6h. Sprint 23 should target gtm but defer tricp unless budget allows.
 
 ---
 
@@ -693,10 +693,10 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-15 | ✅ | 2026-03-20 | VERIFIED: Fixes are architecturally independent, no code overlap | Either fix can be implemented first; no integration risk |
 | KU-16 | ⚠️ | 2026-03-20 | PARTIAL: ~12 non-convex models, but some may be alias bugs; clearer after fix | Expected 8-12 irreducible |
 | KU-17 | ⚠️ | 2026-03-20 | PARTIAL: Convex models should match after alias fix; need formal convexity check | CGE + ps* family likely convex |
-| KU-18 | | | | |
-| KU-19 | | | | |
-| KU-20 | | | | |
-| KU-21 | | | | |
+| KU-18 | ⚠️ | 2026-03-20 | PARTIAL: 1 G model (srkandw), not 2; parser bug, not alias detection | Created TRIAGE_PATH_SYNTAX_ERROR_GB.md |
+| KU-19 | ✅ | 2026-03-20 | VERIFIED: 4 B models with 4 distinct root causes; no common bug | Per-model root cause in triage doc |
+| KU-20 | ✅ | 2026-03-20 | VERIFIED: 0 CGE models in G+B; cascade risk 0-1 models | No overlap with model_infeasible |
+| KU-21 | ⚠️ | 2026-03-20 | PARTIAL: gussrisk fixed; gtm low-effort; tricp NOT low-effort (4-6h) | Defer tricp; target gtm |
 | KU-22 | | | | |
 | KU-23 | | | | |
 | KU-24 | | | | |
