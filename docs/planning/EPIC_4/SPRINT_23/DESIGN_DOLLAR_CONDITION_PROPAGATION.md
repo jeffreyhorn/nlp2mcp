@@ -136,7 +136,7 @@ The fix requires coordinated changes across 3 files to:
                    └─────────────────┘         │
                                                ▼
                    ┌─────────────────┐   gradient_conditions:
-                   │ kkt_system.py   │   dict[str, dict[tuple, Expr]]
+                   │ kkt_system.py   │   dict[str, Expr]
                    │                 │◄─── NEW field
                    │ KKTSystem       │
                    └─────────────────┘
@@ -161,7 +161,7 @@ The fix requires coordinated changes across 3 files to:
 ```python
 def _extract_gradient_conditions(
     gradient: GradientVector, model_ir: ModelIR
-) -> dict[str, dict[tuple[str, ...], Expr]]:
+) -> dict[str, Expr]:
     """Extract embedded dollar conditions from gradient expressions.
 
     Scans each non-zero gradient entry for DollarConditional wrappers
@@ -169,8 +169,8 @@ def _extract_gradient_conditions(
     introduced by _diff_sum() when a conditioned sum collapses.
 
     Returns:
-        Mapping: var_name -> {var_indices -> condition_expr}
-        Only includes entries where conditions were found.
+        Mapping: var_name -> condition_expr (single equation-level guard per variable).
+        Only includes variables where ALL gradient entries share the same condition.
     """
 ```
 
@@ -359,15 +359,17 @@ This confirms the fixes can be tested independently.
 When `_diff_sum()` collapses a conditioned sum `sum(i$cond, f(x))` w.r.t. `x(i1)`, it produces:
 
 ```python
-Binary("*", f'(x(i1)), _ensure_numeric_condition(cond(i1)))
+Binary("*", f'(x(i1)), _ensure_numeric_condition(cond))
 ```
 
-where `_ensure_numeric_condition()` converts conditions to numeric form:
+**Note:** In the current AD implementation, the `_diff_sum()` collapse path preserves the sum condition in **symbolic** index form (e.g. `xw(i,j)`), as documented in `src/ad/derivative_rules.py` (see Issue #1085). Gradient entries are therefore already annotated with symbolic conditions, so no index "de-concretization" helper is required.
+
+`_ensure_numeric_condition()` converts conditions to numeric form:
 - Simple `ParamRef`/`VarRef` → used directly (truthy = non-zero)
 - `SetMembershipTest` → wrapped as `DollarConditional(Const(1.0), cond)` to get 0/1
 
 So the gradient derivative for variable `x(i1)` looks like one of:
-- `Binary("*", deriv, ParamRef("xw", ("i1", "j1")))` — parameter condition
+- `Binary("*", deriv, ParamRef("xw", ("i", "j")))` — parameter condition (symbolic indices)
 - `Binary("*", deriv, DollarConditional(Const(1.0), cond))` — set membership condition
 
 ### 7.2 Extraction Logic
@@ -413,11 +415,15 @@ def _is_condition_factor(expr: Expr) -> Expr | None:
 ### 7.3 Per-Variable Aggregation
 
 ```python
+# Sentinel to mark variables that have at least one unconditional gradient entry,
+# meaning no common equation-level guard is possible.
+_NO_COMMON_CONDITION = object()
+
 def _extract_gradient_conditions(
     gradient: GradientVector, model_ir: ModelIR
 ) -> dict[str, Expr]:
     """Extract common conditions from gradient entries, grouped by variable."""
-    var_conditions: dict[str, list[Expr]] = {}
+    var_conditions: dict[str, object | list[Expr]] = {}
 
     for col_id in range(gradient.num_cols):
         derivative = gradient.get_derivative(col_id)
@@ -429,46 +435,42 @@ def _extract_gradient_conditions(
         if cond is None:
             # This variable has an unconditional gradient entry —
             # no common condition possible
-            var_conditions[var_name] = []  # sentinel: found unconditional
+            var_conditions[var_name] = _NO_COMMON_CONDITION
             continue
 
+        if var_conditions.get(var_name) is _NO_COMMON_CONDITION:
+            continue  # Already marked unconditional, skip
         if var_name not in var_conditions:
             var_conditions[var_name] = []
-        if var_conditions[var_name] is not None:  # not sentinel
-            var_conditions[var_name].append(cond)
+        var_conditions[var_name].append(cond)
 
-    # For each variable, check if all entries share a structurally identical condition
+    # For each variable, check if all entries share a structurally identical condition.
+    # Because _diff_sum() preserves conditions in symbolic index form (see Issue #1085),
+    # gradient entries already carry symbolic conditions like xw(i,j), so no
+    # concrete-to-symbolic reconstruction is needed.
     result: dict[str, Expr] = {}
     for var_name, conds in var_conditions.items():
-        if not conds:
-            continue  # No conditions or found unconditional entry
+        if conds is _NO_COMMON_CONDITION or not conds:
+            continue
         first = conds[0]
         if all(repr(c) == repr(first) for c in conds):
-            # All conditions match — generalize to symbolic form
-            # The conditions have concrete indices (e.g., xw("s1","s2"));
-            # we need the symbolic form (e.g., xw(i,j)) for the equation-level guard.
-            # Map concrete indices back to domain names.
-            var_def = model_ir.variables.get(var_name)
-            if var_def and var_def.domain:
-                symbolic_cond = _concretize_to_symbolic(first, gradient, col_id, var_def.domain)
-                if symbolic_cond is not None:
-                    result[var_name] = symbolic_cond
+            result[var_name] = first
     return result
 ```
 
-**Note:** The `_concretize_to_symbolic()` helper maps concrete index values back to symbolic domain variable names. This is needed because gradient entries use concrete indices (`xw("seattle","chicago")`) but the stationarity equation needs symbolic indices (`xw(i,j)`). The variable's domain tuple provides the mapping.
+### 7.4 Symbolic Condition Handling
 
-### 7.4 Symbolic Condition Reconstruction
+Because gradients already carry the sum's condition in symbolic form (per Issue #1085), the stationarity builder should:
 
-The gradient condition extraction recovers conditions with **concrete** index values (from the specific variable instance differentiated against). But the stationarity equation needs the **symbolic** form. Two approaches:
+- Read the symbolic condition directly from any gradient entry associated with the variable (e.g. `xw(i,j)`), and
+- Normalize/propagate that condition into the generated stationarity equation without attempting to remap concrete index values back to symbolic ones.
 
-**Approach A (Preferred): Extract from the Sum node's condition before collapse.**
-Instead of extracting from the collapsed derivative, capture the Sum's `condition` field *before* it is multiplied into the result. This means modifying `_diff_sum()` to also return/store the condition separately.
+This design deliberately avoids:
 
-**Approach B: Reconstruct symbolic form from first gradient entry.**
-Take the condition from any gradient entry and replace concrete index values with the variable's domain names. This requires knowing the index-to-domain mapping.
+- Modifying `_diff_sum()` solely to expose conditions, and
+- Post-hoc reconstruction of symbolic conditions from concrete index tuples.
 
-**Recommendation:** Approach A is cleaner but requires modifying the AD layer. Approach B is a post-hoc extraction that's more fragile. For Sprint 23, **Approach B is recommended** as it keeps the AD layer unchanged and the condition extraction is a separate, testable module.
+The `_extract_gradient_conditions()` function in §7.3 implements this directly: it reads the condition from gradient entries and, since all entries for a given variable share the same symbolic condition, uses it as-is for the equation-level guard.
 
 ---
 
