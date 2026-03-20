@@ -675,7 +675,7 @@ done
 
 ## Task 8: Run Full Pipeline Baseline (per PR6)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 1-2 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -719,11 +719,26 @@ Sprint 22 retrospective identified that partial pipeline (`--only-solve`) gave m
 
 ### Changes
 
-*To be completed.*
+- Ran full pipeline (`run_full_test.py --quiet`, no `--only-*` flags) on 147 candidate models
+- Created `docs/planning/EPIC_4/SPRINT_23/BASELINE_METRICS.md` with full metrics
+- Updated `data/gamslib/gamslib_status.json` (fresh results for all 147 candidates)
+- Verified KU-26 (multi-solve incomparable stability) — all 6 models confirmed stable
+- Updated KNOWN_UNKNOWNS.md: KU-26 marked VERIFIED with details in both body and Appendix C
+- Note: Pipeline regenerated MCP files for models whose translate status changed (e.g., borderline timeout models). These MCP file changes are excluded from this PR to keep it purely a baseline-recording commit; the status JSON captures the pipeline results.
 
 ### Result
 
-*To be completed.*
+**Sprint 23 Baseline (full corpus, 160 models):**
+- Parse: 156/160 (97.5%) — unchanged from Sprint 22
+- Translate: 139/156 (89.1%) — -2 vs Sprint 22 (borderline timeout variance)
+- Solve: 89/139 (64.0%) — unchanged from Sprint 22
+- Match: 47/160 (29.4%) — unchanged from Sprint 22
+
+**Translate delta:** 17 failures vs Sprint 22's 15. Deterministic failures (6) are stable. 11 timeouts vs ~9 in Sprint 22. In the earlier Task 7 spot-check run, clearlak, ferts, and turkpow completed within the 150s limit and were marked as "recovered"; in this full baseline run they land at 150.0-150.2s and are recorded as timeouts, which accounts for the net -2 vs Sprint 22 (dinam is also borderline at 150.2s but does not change the Sprint 22 failure count).
+
+**No functional regressions detected.** Solve (89) and match (47) are identical to Sprint 22.
+
+**KU-26:** VERIFIED — 6 multi-solve models (aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn, senstran) correctly flagged and skipped.
 
 ### Verification
 
@@ -747,13 +762,13 @@ ls -la data/gamslib/gamslib_status.json
 
 ### Acceptance Criteria
 
-- [ ] Full pipeline run completed (no `--only-*` flags)
-- [ ] All metrics recorded: parse, translate, solve, match, error categories
-- [ ] Metrics expressed as both absolute counts and percentages (per PR8)
-- [ ] model_infeasible split into in-scope and permanently excluded (per PR7)
-- [ ] No regressions vs Sprint 22 final metrics confirmed
-- [ ] Baseline document created
-- [ ] KU-26 verification result recorded in KNOWN_UNKNOWNS.md
+- [x] Full pipeline run completed (no `--only-*` flags)
+- [x] All metrics recorded: parse, translate, solve, match, error categories
+- [x] Metrics expressed as both absolute counts and percentages (per PR8)
+- [x] model_infeasible split into in-scope and permanently excluded (per PR7)
+- [x] No regressions vs Sprint 22 final metrics confirmed
+- [x] Baseline document created
+- [x] KU-26 verification result recorded in KNOWN_UNKNOWNS.md
 
 ---
 
