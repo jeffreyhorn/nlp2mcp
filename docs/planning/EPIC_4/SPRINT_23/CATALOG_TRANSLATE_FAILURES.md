@@ -3,7 +3,7 @@
 **Created:** 2026-03-20
 **Sprint:** 23 (Priority 5 — translate ≥ 93%)
 **Source:** Sprint 23 Prep Task 7
-**Pipeline Run:** 2026-03-20 (rerun of all 14 prior failures)
+**Pipeline Run:** 2026-03-20 (rerun of all 16 prior translate failures)
 
 ---
 
@@ -21,7 +21,7 @@ Sprint 23 target: ≥ 145/156 (≥ 93%). This requires fixing **2 of 13** failur
 
 | Category | Count | Models | Fixability |
 |----------|-------|--------|------------|
-| **B: Timeout** (>150s) | 7 | ganges, gangesx, gastrans, iswnm, nebrazil, sarf, srpchase | Mostly intractable without architectural changes |
+| **B: Timeout** (≥150s) | 7 | ganges, gangesx, gastrans, iswnm, nebrazil, sarf, srpchase | Mostly intractable without architectural changes |
 | **C: Missing IR feature** (LhsConditionalAssign) | 4 | agreste, ampl, cesam, korcge | Fixable — add emitter support for LhsConditionalAssign |
 | **D: Internal error** | 2 | mexls, mine | Fixable — specific code fixes needed |
 
@@ -33,7 +33,7 @@ Sprint 23 target: ≥ 145/156 (≥ 93%). This requires fixing **2 of 13** failur
 
 ### Category B: Timeout (7 models)
 
-All timeout models exceed the 150-second translation limit. The bottleneck is symbolic Jacobian computation in the KKT builder.
+All timeout models hit or exceed the 150-second translation limit (subprocess `communicate(timeout=150)`). The bottleneck is symbolic Jacobian computation in the KKT builder.
 
 | # | Model | Size | Time | Issue | Root Cause | LP? |
 |---|-------|------|------|-------|------------|-----|
@@ -88,16 +88,18 @@ The node was introduced in Issue #1015 (shale model fix) and is correctly constr
 
 #### Fix Approach
 
-Add a case handler in `src/emit/expr_to_gams.py` for `LhsConditionalAssign`:
+Handle `LhsConditionalAssign` at the **statement/assignment emission layer**, not in `expr_to_gams()`. The LHS-conditional semantics (`lhs$(cond) = rhs`, where false leaves the record unchanged) must be preserved — simply emitting `rhs$cond` would produce RHS-dollar semantics (assigns 0 where false), which is semantically wrong.
+
+The fix should intercept `LhsConditionalAssign` nodes in the assignment emitter (e.g., `original_symbols.py` or `emit_assignments.py`) and emit the condition on the LHS:
 ```python
-case LhsConditionalAssign(rhs=rhs, condition=cond):
-    # Emit as: rhs$condition (condition guards the assignment)
-    rhs_str = expr_to_gams(rhs, ...)
-    cond_str = expr_to_gams(cond, ...)
-    return f"({rhs_str})$({cond_str})"
+# Emit as: lhs$(condition) = rhs;
+lhs_str = emit_lhs(node.target, node.indices)
+cond_str = expr_to_gams(node.condition, ...)
+rhs_str = expr_to_gams(node.rhs, ...)
+emit(f"{lhs_str}$({cond_str}) = {rhs_str};")
 ```
 
-Or handle it upstream in `original_symbols.py` by decomposing the node before it reaches `expr_to_gams()`.
+This is consistent with the existing Issue #1015 handling that introduced the `LhsConditionalAssign` node.
 
 **Effort Estimate:** 2-3h (add handler + unit tests for all 4 models)
 

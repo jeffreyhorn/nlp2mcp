@@ -576,7 +576,7 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 
 ---
 
-## Task 7: Catalog and Classify Translate Failures (15)
+## Task 7: Catalog and Classify Translate Failures (13)
 
 **Status:** :white_check_mark: COMPLETE
 **Priority:** Medium
@@ -588,16 +588,16 @@ grep -c "Subcategory" docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB
 
 ### Objective
 
-Catalog all 15 translate failures, classify them as compilation errors vs. timeouts, and identify the highest-leverage fixes for Sprint 23 Priority 5.
+Catalog all translate failures (13 remaining after rerun; originally estimated 15), classify by root cause, and identify the highest-leverage fixes for Sprint 23 Priority 5.
 
 ### Why This Matters
 
-Sprint 23 targets reducing translate failures from 15 to ≤ 11. Without knowing which models fail and why, the sprint risks spending time on intractable timeout models instead of quick compilation error fixes.
+Sprint 23 targets reducing translate failures from 13 to ≤ 11 (≥ 145/156). Without knowing which models fail and why, the sprint risks spending time on intractable timeout models instead of quick fixable-error models.
 
 ### Background
 
-- 15 translate failures remain (141/156 = 90.4% translate rate)
-- Mix of compilation errors and timeout issues
+- 13 translate failures remain (143/156 = 91.7% translate rate; originally estimated 15 but 3 recovered on rerun)
+- Mix of timeouts (7), missing IR features (4), and internal errors (2) — no traditional compilation errors
 - Sprint 23 acceptance criterion: ≥ 93% of parsed models (≥ 145/156 assuming 156 parsed)
 - Pipeline retest script: `.venv/bin/python scripts/gamslib/run_full_test.py`
 - Related issues: #952 (lmp2 empty subsets), #953 (paperco loop body), #940 (mexls universal set), #1062 (tricp)
@@ -645,9 +645,14 @@ Sprint 23 Priority 5 effort: **2-3h** (Tier 1: LhsConditionalAssign fix alone ex
 # Verify catalog document exists
 ls docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md
 
-# Verify all 15 translate failure models covered (check for per-model headings)
-for model in agreste ampl cesam ferts ganges gangesx gastrans iswnm korcge mexls mine nebrazil sarf srpchase turkpow; do
-  grep -qi "### .*$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING: $model"
+# Verify all 13 current failures covered in catalog tables
+for model in agreste ampl cesam ganges gangesx gastrans iswnm korcge mexls mine nebrazil sarf srpchase; do
+  grep -qi "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING: $model"
+done
+
+# Verify 3 recovered models documented in §6
+for model in ferts turkpow clearlak; do
+  grep -qi "$model" docs/planning/EPIC_4/SPRINT_23/CATALOG_TRANSLATE_FAILURES.md || echo "MISSING recovered: $model"
 done
 ```
 
