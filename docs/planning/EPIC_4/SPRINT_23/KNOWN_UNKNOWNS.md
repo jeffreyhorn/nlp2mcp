@@ -366,7 +366,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 2h (part of Task 5 investigation)
 **Owner:** Task 5 (dollar-condition investigation)
 **Prior Analysis:** Sprint 22 KU-28 identified this issue; deferred to Sprint 23
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ❌ REFUTED — Dollar-condition propagation requires changes to BOTH gradient AND (eventually) Jacobian. Gradient-only fix (adding `_extract_gradient_conditions()` to `gradient.py` + `gradient_conditions` field on `KKTSystem` + check in `build_stationarity_equations()`) is sufficient for Sprint 23 targets (sambal/qsambal). Jacobian condition extraction is a lower-priority follow-up for mixed-condition cases. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §3 and §9.
 
 ---
 
@@ -388,7 +388,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 4, 5 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — The two fixes are architecturally independent. #1111 modifies `derivative_rules.py` only (`_diff_varref`, `_diff_sum`, `differentiate_expr` signature). #1112 modifies `gradient.py`, `kkt_system.py`, and `stationarity.py`. No shared data structures (`bound_indices` vs `gradient_conditions`), no shared affected models (alias: qabel/catmix/etc. vs dollar-cond: sambal/qsambal), no code overlap. Either can be implemented first. See `DESIGN_DOLLAR_CONDITION_PROPAGATION.md` §5 and `DESIGN_ALIAS_DIFFERENTIATION.md` §7.
 
 ---
 
@@ -689,8 +689,8 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-11 | | | | |
 | KU-12 | | | | |
 | KU-13 | | | | |
-| KU-14 | | | | |
-| KU-15 | | | | |
+| KU-14 | Yes | 2026-03-20 | ❌ REFUTED — Requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23 scope) | Gradient-only fix designed in DESIGN_DOLLAR_CONDITION_PROPAGATION.md; Jacobian follow-up deferred |
+| KU-15 | Yes | 2026-03-20 | ✅ VERIFIED — Fixes are architecturally independent, no code overlap | Either fix can be implemented first; no integration risk |
 | KU-16 | | | | |
 | KU-17 | | | | |
 | KU-18 | | | | |

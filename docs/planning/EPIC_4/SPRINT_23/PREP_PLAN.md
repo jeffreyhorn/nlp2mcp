@@ -382,7 +382,7 @@ grep -c "regression" docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION
 
 ## Task 5: Investigate Dollar-Condition Propagation (#1112)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -425,11 +425,25 @@ Issue #1112 (dollar-condition propagation) is the second architectural AD change
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md` with full pipeline trace and propagation design
+- Updated `KNOWN_UNKNOWNS.md` KU-14 (REFUTED) and KU-15 (VERIFIED) with detailed findings
+- Updated Appendix C verification tracking table with dates and results
 
 ### Result
 
-*To be completed.*
+Complete pipeline trace identified 2 gaps:
+- **GAP 1:** `compute_objective_gradient()` stores derivatives with embedded conditions but never extracts them
+- **GAP 2:** `_find_variable_access_condition()` scans equation bodies only, not gradient expressions
+
+Design proposes 3-file fix:
+1. `gradient.py`: Add `_extract_gradient_conditions()` (~40 lines) to extract `DollarConditional`/multiplicative conditions from gradient entries
+2. `kkt_system.py`: Add `gradient_conditions: dict[str, Expr]` field
+3. `stationarity.py`: Add Stage 4 condition check in `build_stationarity_equations()` (~5-10 lines)
+
+Estimated effort: 4h. Primary targets: sambal, qsambal. 42 models use dollar conditions in corpus; regression risk LOW (guards only make equations more restrictive).
+
+KU-14: REFUTED — requires both gradient AND Jacobian changes (gradient-only sufficient for Sprint 23).
+KU-15: VERIFIED — alias (#1111) and dollar-condition (#1112) fixes are architecturally independent, modifying different files with no shared data structures.
 
 ### Verification
 
@@ -444,24 +458,18 @@ grep -i "alias" docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATI
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md` with:
-  - Dollar-condition representation in the IR
-  - Pipeline trace showing where conditions are lost
-  - Proposed propagation mechanism design
-  - Interaction analysis with alias differentiation (#1111)
-  - Regression risk assessment
-  - Test plan
-- Verification results for KU-14, KU-15 in KNOWN_UNKNOWNS.md Appendix C
+- :white_check_mark: `docs/planning/EPIC_4/SPRINT_23/DESIGN_DOLLAR_CONDITION_PROPAGATION.md` with full pipeline trace, 2-gap analysis, 3-file propagation design, interaction analysis with #1111, regression risk assessment, and test plan
+- :white_check_mark: Verification results for KU-14, KU-15 in KNOWN_UNKNOWNS.md Appendix C
 
 ### Acceptance Criteria
 
-- [ ] Issue #1112 fully understood with concrete failure case documented
-- [ ] Dollar-condition flow traced through IR → AD → KKT → Emit pipeline
-- [ ] Propagation mechanism designed with specific code locations
-- [ ] Interaction with alias differentiation (#1111) assessed
-- [ ] Affected models identified
-- [ ] Regression risk assessed (dollar conditions are common; quantify how many models use them)
-- [ ] KU-14, KU-15 verification results recorded in KNOWN_UNKNOWNS.md
+- [x] Issue #1112 fully understood with concrete failure case documented (sambal `sum((i,j)$xw(i,j), .../xb(i,j))`)
+- [x] Dollar-condition flow traced through IR → AD → KKT → Emit pipeline (§2: 5-stage trace with 2 gaps identified)
+- [x] Propagation mechanism designed with specific code locations (§3: gradient.py:~277, kkt_system.py:~136, stationarity.py:~882)
+- [x] Interaction with alias differentiation (#1111) assessed (§5: independent, no code overlap)
+- [x] Affected models identified (§4: 2 primary targets, 42 models with dollar conditions in corpus)
+- [x] Regression risk assessed (§8: LOW — guards only make equations more restrictive; 42 models use dollar conditions)
+- [x] KU-14, KU-15 verification results recorded in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -948,7 +956,7 @@ Tasks 2-7 (Triage, in  ───┤
 - [ ] All 10 path_solve_terminated models triaged with root cause
 - [ ] All 12 model_infeasible models triaged with root cause
 - [ ] Alias-aware differentiation (#1111) design documented
-- [ ] Dollar-condition propagation (#1112) design documented
+- [x] Dollar-condition propagation (#1112) design documented
 - [ ] 7 path_syntax_error G+B models triaged
 - [ ] 15 translate failures cataloged and classified
 - [ ] Full pipeline baseline established (per PR6)
