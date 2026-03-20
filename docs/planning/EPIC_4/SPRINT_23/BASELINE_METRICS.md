@@ -132,7 +132,7 @@ egypt, glider, robot, sroute, tabora, tfordy, tricp
 All 6 multi-solve models are correctly flagged and skipped during comparison:
 - aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn, senstran
 - Flag introduced by PR #1103
-- Comparison pipeline checks `multi_solve: true` first (test_solve.py:809-816)
+- Comparison pipeline checks `multi_solve: true` first (`scripts/gamslib/test_solve.py:809-816`)
 - Flag is stable across runs
 
 ---

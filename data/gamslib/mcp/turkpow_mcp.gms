@@ -173,12 +173,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_hh(m,te)$(mh(m) and t(te)).. sum(v, ((-1) * (sigma(m) * mdatah(m,"capcost") * 1$(vs(te,v)))) * nu_ak(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_pr(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_cch(m,te)) + sum(v, ((-1) * (mdatah(m,"e-fact") * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) - piL_hh(m,te) =E= 0;
-stat_ht(m,v)$(mt(m)).. ((-1) * nu_cat(m)) + sum((mt,t), (((-1) * mdatat(mt,"avail")) * lam_cct(mt,v,t))$(vs(t,v))) - piL_ht(m,v) =E= 0;
+stat_hh(m,te)$(mh(m) and t(te)).. sum((labels,v), ((-1) * (sigma(m) * mdatah(m,labels) * 1$(vs(te,v)))) * nu_ak(te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_pr(te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_cch(m,te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) - piL_hh(m,te) =E= 0;
+stat_ht(m,v)$(mt(m)).. ((-1) * nu_cat(m)) + sum(labels, sum((mt,t), (((-1) * mdatat(mt,labels)) * lam_cct(mt,v,t))$(vs(t,v)))) - piL_ht(m,v) =E= 0;
 stat_htt(m)$(mt(m)).. nu_cat(m) =E= 0;
-stat_phic(te)$(t(te)).. sum(t$(sameas(t, te)), delta(t)) + nu_ak(te) =E= 0;
-stat_phio(te)$(t(te)).. sum(t$(sameas(t, te)), delta(t)) + nu_ao(te) =E= 0;
-stat_zh(m,b,t)$(mh(m)).. ((-1) * (mdatah(m,"opcost") * dur(b))) * nu_ao(t) + sum(bp, ((-1) * 1$(bs(bp,b))) * lam_db(b,t)) + lam_cch(m,t) + dur(b) * lam_ech(m,t) - piL_zh(m,b,t) =E= 0;
+stat_phic(te)$(t(te)).. nu_ak(te) =E= 0;
+stat_phio(te)$(t(te)).. nu_ao(te) =E= 0;
+stat_zh(m,b,t)$(mh(m)).. sum(labels, ((-1) * (mdatah(m,labels) * dur(b))) * nu_ao(t)) + ((-1) * 1$(bs(b,b))) * lam_db(b,t) + lam_cch(m,t) + dur(b) * lam_ech(m,t) - piL_zh(m,b,t) =E= 0;
 stat_zt(m,v,b,t)$(mt(m)).. lam_cct(m,v,t)$(vs(t,v)) - piL_zt(m,v,b,t) =E= 0;
 
 * Inequality complementarity equations

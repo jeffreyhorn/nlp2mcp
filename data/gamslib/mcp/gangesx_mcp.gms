@@ -56,7 +56,7 @@ Parameters
     gamma(i,r) /agricult.urban 2.228551, agricult.rural 2.037878, 'cons-good'.urban 0.300443, 'cons-good'.rural 0.332562, 'cap-good'.urban -0.02261, 'cap-good'.rural 0.002407, 'int-good'.urban 0.096637, 'int-good'.rural 0.128932, 'pub-infr'.urban 0.07928, 'pub-infr'.rural 0.092737, service.urban -0.59266, service.rural 0.064369/
     conpar(*,r) /alpha.urban 0.376842, alpha.rural 0.309118, beta.urban 0.76777, beta.rural 0.77814, pop.urban 122, pop.rural 458/
     baseprice(i,*) /agricult.pv00 1.005, agricult.v00 2616.0656, agricult.pk00 0.1258, agricult.pg00 1.0076, agricult.pc00 1.1483, agricult.pq00 1.0042, 'cons-good'.pv00 1.0155, 'cons-good'.v00 249.8925, 'cons-good'.pk00 0.232, 'cons-good'.pg00 1.1071, 'cons-good'.pc00 1.3423, 'cons-good'.pq00 1.0064, 'cap-good'.pv00 0.9617, 'cap-good'.v00 303.6711, 'cap-good'.pk00 0.1001, 'cap-good'.pg00 0.7277, 'cap-good'.pc00 1.3668, 'cap-good'.pq00 0.9763, 'int-good'.pv00 0.982, 'int-good'.v00 310.7917, 'int-good'.pk00 0.118, 'int-good'.pg00 0.9207, 'int-good'.pc00 1.3761, 'int-good'.pq00 0.9829, 'pub-infr'.pv00 1.05, 'pub-infr'.v00 157.2187, 'pub-infr'.pk00 0.0306, 'pub-infr'.pg00 1.2566, 'pub-infr'.pc00 1.0977, 'pub-infr'.pq00 1.0647, service.pv00 1.0045, service.v00 1443.4865, service.pk00 0.0691, service.pg00 1.0624, service.pc00 1.0023, service.pq00 1.0023/
-    series(*,years) /cg.'7374' 503.336, cg.'7475' 511.1, cg.'7576' 645.46, cg.'7677' 697.87, cg.'7778' 702.24, cg.'7879' 750.71, cg.'7980' 754.74, cg.'8081' 809.06, cg.'8182' 856.64, cg.'8283' 971.38, cg.'8384' 1008.49, xsa.'7374' 1, xsa.'7475' 0.9366, xsa.'7576' 1.1158, xsa.'7677' 0.9504, xsa.'7778' 1.1097, xsa.'7879' 1.0306, xsa.'7980' 0.8981, xsa.'8081' 1.1041, xsa.'8182' 1.0356, xsa.'8283' 0.9796, xsa.'8384' 1.1364, er.'7374' 7.791, er.'7475' 7.796, er.'7576' 8.653, er.'7677' 8.939, er.'7778' 8.563, er.'7879' 8.206, er.'7980' 8.076, er.'8081' 7.893, er.'8182' 8.929, er.'8283' 9.628, er.'8384' 10.312, usdefl.'7374' 1, usdefl.'7475' 1.0878, usdefl.'7576' 1.1862, usdefl.'7677' 1.2539, usdefl.'7778' 1.3274, usdefl.'7879' 1.4259, usdefl.'7980' 1.5469, usdefl.'8081' 1.6845, usdefl.'8182' 1.8422, usdefl.'8283' 1.9595, usdefl.'8384' 2.0354, indefl.'7374' 1, indefl.'7475' 1.1665, indefl.'7576' 1.1181, indefl.'7677' 1.1948, indefl.'7778' 1.2395, indefl.'7879' 1.2648, indefl.'7980' 1.4572, indefl.'8081' 1.6157, indefl.'8182' 1.7789, indefl.'8283' 1.9119, indefl.'8384' 2.1381, savf.'7374' 47.9, savf.'7475' 96.1, savf.'7576' 57.9, savf.'7677' -103.1, savf.'7778' -90.3, savf.'7879' -57.5, savf.'7980' -29.9, savf.'8081' 199.6, savf.'8182' 241.2, savf.'8283' 237, savf.'8384' 265, gtra.'7374' 47.7, gtra.'7475' 34, gtra.'7576' 49.1, gtra.'7677' 60.1, gtra.'7778' 69.7, gtra.'7879' 93.4, gtra.'7980' 100.8, gtra.'8081' 149, gtra.'8182' 184.2, gtra.'8283' 270.4, gtra.'8384' 270.4, gtrb.'7374' 90.9, gtrb.'7475' 115, gtrb.'7576' 135, gtrb.'7677' 154.7, gtrb.'7778' 176.2, gtrb.'7879' 200.5, gtrb.'7980' 239.2, gtrb.'8081' 283.5, gtrb.'8182' 331.1, gtrb.'8283' 400.5, gtrb.'8384' 400.5, nfi.'7374' -32.5, nfi.'7475' -29.1, nfi.'7576' -25.5, nfi.'7677' -23.3, nfi.'7778' -23.3, nfi.'7879' -15.6, nfi.'7980' 15.3, nfi.'8081' 29.8, nfi.'8182' -0.7, nfi.'8283' -68.1, nfi.'8384' -68.1, nct.'7374' 19.2, nct.'7475' 27.4, nct.'7576' 52.8, nct.'7677' 73.9, nct.'7778' 102.2, nct.'7879' 104.2, nct.'7980' 162.4, nct.'8081' 225.7, nct.'8182' 222.1, nct.'8283' 252.7, nct.'8384' 252.7, idshr.'7374' 0.7954, idshr.'7475' 0.7604, idshr.'7576' 0.8201, idshr.'7677' 0.8746, idshr.'7778' 0.9281, idshr.'7879' 0.828, idshr.'7980' 0.8111, idshr.'8081' 0.8253, idshr.'8182' 0.8346, idshr.'8283' 0.8575, idshr.'8384' 0.8583, const.'7374' 133.125, const.'7475' 134.88, const.'7576' 136.67, const.'7677' 138.47, const.'7778' 140.31, const.'7879' 142.17, const.'7980' 144.05, const.'8081' 145.96, const.'8182' 147.91, const.'8283' 149.885, const.'8384' 152.64, totlab.'7374' 65.09, totlab.'7475' 67.88, totlab.'7576' 70.75, totlab.'7677' 73.75, totlab.'7778' 76.84, totlab.'7879' 80.06, totlab.'7980' 83.39, totlab.'8081' 86.84, totlab.'8182' 90.43, totlab.'8283' 95.14, totlab.'8384' 97.1, pkvsa.'7374' 0.1807, pkvsa.'7475' 0.1537, pkvsa.'7576' 0.1511, pkvsa.'7677' 0.2071, pkvsa.'7778' 0.2071, pkvsa.'7879' 0.208, pkvsa.'7980' 0.1845, pkvsa.'8081' 0.1861, pkvsa.'8182' 0.1696, pkvsa.'8283' 0.1585, pkvsa.'8384' 0.1605, pkvni.'7374' 0.2909, pkvni.'7475' 0.3703, pkvni.'7576' 0.2967, pkvni.'7677' 0.2322, pkvni.'7778' 0.2752, pkvni.'7879' 0.2912, pkvni.'7980' 0.3356, pkvni.'8081' 0.2924, pkvni.'8182' 0.3038, pkvni.'8283' 0.2777, pkvni.'8384' 0.2725, pkvsi.'7374' 0.1167, pkvsi.'7475' 0.135, pkvsi.'7576' 0.1827, pkvsi.'7677' 0.1761, pkvsi.'7778' 0.183, pkvsi.'7879' 0.1504, pkvsi.'7980' 0.177, pkvsi.'8081' 0.1825, pkvsi.'8182' 0.1952, pkvsi.'8283' 0.2549, pkvsi.'8384' 0.2457, pkvss.'7374' 0.4117, pkvss.'7475' 0.3411, pkvss.'7576' 0.3695, pkvss.'7677' 0.3846, pkvss.'7778' 0.3346, pkvss.'7879' 0.3505, pkvss.'7980' 0.3029, pkvss.'8081' 0.339, pkvss.'8182' 0.3314, pkvss.'8283' 0.3092, pkvss.'8384' 0.3213, pim1.'7374' 1, pim1.'7475' 1.2582, pim1.'7576' 1.5165, pim1.'7677' 1.4615, pim1.'7778' 1.4451, pim1.'7879' 1.5495, pim1.'7980' 1.8956, pim1.'8081' 1.7261, pim1.'8182' 1.503, pim1.'8283' 1.3932, pim1.'8384' 1.3841, pim2.'7374' 1, pim2.'7475' 1.9203, pim2.'7576' 1.5072, pim2.'7677' 1.6667, pim2.'7778' 1.4783, pim2.'7879' 1.471, pim2.'7980' 1.8261, pim2.'8081' 1.1915, pim2.'8182' 1.3386, pim2.'8283' 1.1637, pim2.'8384' 1.294, pim3.'7374' 1, pim3.'7475' 1.3826, pim3.'7576' 1.8261, pim3.'7677' 2.0174, pim3.'7778' 1.7913, pim3.'7879' 2.2957, pim3.'7980' 2.7826, pim3.'8081' 1.9146, pim3.'8182' 1.6529, pim3.'8283' 1.6123, pim3.'8384' 1.5498, pim4.'7374' 1, pim4.'7475' 1.6423, pim4.'7576' 1.9238, pim4.'7677' 1.6655, pim4.'7778' 1.6548, pim4.'7879' 1.683, pim4.'7980' 1.989, pim4.'8081' 1.9275, pim4.'8182' 2.0165, pim4.'8283' 2.0239, pim4.'8384' 2.0025, pim5.'7374' 1, pim5.'7475' 2.2036, pim5.'7576' 2.482, pim5.'7677' 2.7695, pim5.'7778' 2.8593, pim5.'7879' 2.8533, pim5.'7980' 4.535, pim5.'8081' 6.8905, pim5.'8182' 8.1604, pim5.'8283' 7.7164, pim5.'8384' 6.9373, pim6.'7374' 1, pim6.'7475' 1, pim6.'7576' 1, pim6.'7677' 1, pim6.'7778' 1, pim6.'7879' 1, pim6.'7980' 1, pim6.'8081' 1, pim6.'8182' 1, pim6.'8283' 1, pim6.'8384' 1, pie1.'7374' 1, pie1.'7475' 1.3202, pie1.'7576' 1.3051, pie1.'7677' 1.3065, pie1.'7778' 1.9159, pie1.'7879' 1.3546, pie1.'7980' 0.8066, pie1.'8081' 1.3053, pie1.'8182' 1.5555, pie1.'8283' 1.2789, pie1.'8384' 1.2691, pie2.'7374' 1, pie2.'7475' 1.2412, pie2.'7576' 1.3048, pie2.'7677' 1.545, pie2.'7778' 1.8197, pie2.'7879' 1.8975, pie2.'7980' 1.9845, pie2.'8081' 2.0995, pie2.'8182' 2.2128, pie2.'8283' 2.1709, pie2.'8384' 2.0801, pie3.'7374' 1, pie3.'7475' 0.8929, pie3.'7576' 1.2857, pie3.'7677' 1.2929, pie3.'7778' 1.3857, pie3.'7879' 1.3286, pie3.'7980' 1.55, pie3.'8081' 1.3552, pie3.'8182' 1.6076, pie3.'8283' 1.5771, pie3.'8384' 1.5111, pie4.'7374' 1, pie4.'7475' 1.3776, pie4.'7576' 1.4375, pie4.'7677' 1.4746, pie4.'7778' 1.4763, pie4.'7879' 1.4986, pie4.'7980' 1.6509, pie4.'8081' 1.762, pie4.'8182' 2.0759, pie4.'8283' 2.0366, pie4.'8384' 1.9914, totpu.'7374' 122, totpu.'7475' 124.89, totpu.'7576' 129.9, totpu.'7677' 134.85, totpu.'7778' 140.05, totpu.'7879' 145.7, totpu.'7980' 151.39, totpu.'8081' 157.26, totpu.'8182' 163.23, totpu.'8283' 169.38, totpu.'8384' 175.89, totpr.'7374' 458, totpr.'7475' 468.11, totpr.'7576' 477.1, totpr.'7677' 485.15, totpr.'7778' 493.95, totpr.'7879' 503.3, totpr.'7980' 512.61, totpr.'8081' 521.74, totpr.'8182' 530.77, totpr.'8283' 539.62, totpr.'8384' 549.11, gdpmp.'7374' 5944.2, gdpmp.'8182' 8611.2, gdpmp.'8283' 9261.9, privc.'7374' 4340.3, privc.'7475' 4157.8, privc.'7576' 4311.7, privc.'7677' 4206.7, privc.'7778' 4847.8, privc.'7879' 4981, privc.'7980' 4479, privc.'8081' 4961.4, privc.'8182' 5280.9, privc.'8283' 5460.3, privc.'8384' 5940, gfi.'7374' 902.9, gfi.'7475' 917.9, gfi.'7576' 1182.3, gfi.'7677' 1314.2, gfi.'7778' 1394.7, gfi.'7879' 1481.2, gfi.'7980' 1456.4, gfi.'8081' 1610, gfi.'8182' 1715, gfi.'8283' 1785.1, gfi.'8384' 1895.1, invest.'7374' 1135.2, invest.'7475' 1207.2, invest.'7576' 1441.6, invest.'7677' 1502.6, invest.'7778' 1502.8, invest.'7879' 1788.9, invest.'7980' 1795.5, invest.'8081' 1950.9, invest.'8182' 2054.8, invest.'8283' 2081.8, invest.'8384' 2207.9, exports.'7374' 283, exports.'7475' 306, exports.'7576' 356.6, exports.'7677' 426.8, exports.'7778' 410.5, exports.'7879' 444, exports.'7980' 518.5, exports.'8081' 517, exports.'8182' 516.2, exports.'8283' 532.9, exports.'8384' 559.1, imports.'7374' 317.6, imports.'7475' 275.9, imports.'7576' 279.2, imports.'7677' 278.7, imports.'7778' 363.1, imports.'7879' 394.1, imports.'7980' 377.9, imports.'8081' 554.4, imports.'8182' 598.6, imports.'8283' 599.9, imports.'8384' 624.6, 'cns-curr'.'7374' 4340.3, 'gfi-curr'.'7374' 902.9, 'gfi-curr'.'7475' 1093, 'gfi-curr'.'7576' 1324.8, 'gfi-curr'.'7677' 1526.7, 'gfi-curr'.'7778' 1714.6, 'gfi-curr'.'7879' 1882.5, 'gfi-curr'.'7980' 2090.2, 'gfi-curr'.'8081' 2521.7, 'gfi-curr'.'8182' 2971.6, 'gfi-curr'.'8283' 2971.6, 'gfi-curr'.'8384' 2971.6, 'inv-curr'.'7374' 1135.2, 'inv-curr'.'7475' 1450.9, 'inv-curr'.'7576' 1641.8, 'inv-curr'.'7677' 1766.9, 'inv-curr'.'7778' 1854.8, 'inv-curr'.'7879' 2293.3, 'inv-curr'.'7980' 2622.8, 'inv-curr'.'8081' 3144.3, 'inv-curr'.'8182' 3668, 'inv-curr'.'8283' 3668, 'inv-curr'.'8384' 3668, 'gdpmp-curr'.'7374' 5944.2, 'gdpmp-curr'.'7475' 6968.1, 'gdpmp-curr'.'7576' 7202.3, 'gdpmp-curr'.'7677' 7586.7, 'gdpmp-curr'.'7778' 8716.1, 'gdpmp-curr'.'7879' 9610.3, 'gdpmp-curr'.'7980' 10120.4, 'gdpmp-curr'.'8081' 11989.6, 'gdpmp-curr'.'8182' 14161.5, 'gdpmp-curr'.'8283' 14161.5, 'gdpmp-curr'.'8384' 14161.5, 'exp-curr'.'7374' 283, 'exp-curr'.'7475' 383.5, 'exp-curr'.'7576' 481.2, 'exp-curr'.'7677' 613.9, 'exp-curr'.'7778' 663.6, 'exp-curr'.'7879' 711.5, 'exp-curr'.'7980' 838.1, 'exp-curr'.'8081' 902.9, 'exp-curr'.'8182' 1025.3, 'exp-curr'.'8283' 1025.3, 'exp-curr'.'8384' 1025.3, 'imp-curr'.'7374' 317.6, 'imp-curr'.'7475' 477.9, 'imp-curr'.'7576' 566.4, 'imp-curr'.'7677' 561.4, 'imp-curr'.'7778' 652.2, 'imp-curr'.'7879' 742.6, 'imp-curr'.'7980' 985.9, 'imp-curr'.'8081' 1357.9, 'imp-curr'.'8182' 1487.9, 'imp-curr'.'8283' 1487.9, 'imp-curr'.'8384' 1487.9, 'cns-defl'.'7374' 1, 'cns-defl'.'7475' 1.2019, 'cns-defl'.'7576' 1.1389, 'cns-defl'.'7677' 1.1759, 'cns-defl'.'7778' 1.2342, 'cns-defl'.'7879' 1.282, 'cns-defl'.'7980' 1.4608, 'cns-defl'.'8081' 1.6117, 'cns-defl'.'8182' 1.7851, 'cns-defl'.'8283' 1.7851, 'cns-defl'.'8384' 1.7851, gdpc.'7374' 5377.2, gdpc.'7475' 5423.5, gdpc.'7576' 5936, gdpc.'7677' 5981.1, gdpc.'7778' 6508, gdpc.'7879' 6882.3, gdpc.'7980' 6518, gdpc.'8081' 7030.2, gdpc.'8182' 7406.3, gdpc.'8283' 7534.4, gdpc.'8384' 7958.1, ax1.'7374' 1, ax1.'7475' 0.9677, ax1.'7576' 1.0504, ax1.'7677' 0.9931, ax1.'7778' 1.0141, ax1.'7879' 1.0149, ax1.'7980' 0.9884, ax1.'8081' 1.0823, ax1.'8182' 1.0238, ax1.'8283' 0.9726, ax1.'8384' 1.0623, ax2.'7374' 1, ax2.'7475' 1.2461, ax2.'7576' 1.2442, ax2.'7677' 1.2179, ax2.'7778' 1.306, ax2.'7879' 1.5719, ax2.'7980' 1.7899, ax2.'8081' 1.7452, ax2.'8182' 1.6679, ax2.'8283' 1.8441, ax2.'8384' 1.8293, ax3.'7374' 1, ax3.'7475' 1.1884, ax3.'7576' 1.3716, ax3.'7677' 1.643, ax3.'7778' 1.6913, ax3.'7879' 1.6744, ax3.'7980' 1.9078, ax3.'8081' 1.4786, ax3.'8182' 1.5309, ax3.'8283' 2.0376, ax3.'8384' 1.8724, ax4.'7374' 1, ax4.'7475' 0.752, ax4.'7576' 0.564, ax4.'7677' 0.7232, ax4.'7778' 0.8045, ax4.'7879' 0.8531, ax4.'7980' 0.6947, ax4.'8081' 0.5982, ax4.'8182' 0.6997, ax4.'8283' 0.7295, ax4.'8384' 0.711, ax5.'7374' 1, ax5.'7475' 0.7509, ax5.'7576' 0.5631, ax5.'7677' 0.6157, ax5.'7778' 0.6351, ax5.'7879' 0.5144, ax5.'7980' 0.3781, ax5.'8081' 0.4568, ax5.'8182' 0.5778, ax5.'8283' 0.5619, ax5.'8384' 0.7504, ax6.'7374' 1, ax6.'7475' 0.9837, ax6.'7576' 0.7377, ax6.'7677' 0.8285, ax6.'7778' 0.9107, ax6.'7879' 0.8105, ax6.'7980' 0.723, ax6.'8081' 0.7224, ax6.'8182' 0.774, ax6.'8283' 0.7775, ax6.'8384' 0.7132, exscale.'7374' 1, exscale.'7475' 0.9, exscale.'7576' 1.089, exscale.'7677' 1.1165, exscale.'7778' 1.0487, exscale.'7879' 1.054, exscale.'7980' 1.0337, exscale.'8081' 0.8801, exscale.'8182' 1.1469, exscale.'8283' 1.2994, exscale.'8384' 1.2439, betar.'7374' 1, betar.'7475' 1, betar.'7576' 1.0372, betar.'7677' 1.0554, betar.'7778' 1.1103, betar.'7879' 1.094, betar.'7980' 0.9958, betar.'8081' 0.9817, betar.'8182' 0.9359, betar.'8283' 0.9576, betar.'8384' 1.002, betau.'7374' 1, betau.'7475' 1, betau.'7576' 0.9, betau.'7677' 0.81, betau.'7778' 0.893, betau.'7879' 0.893, betau.'7980' 0.8037, betau.'8081' 0.8941, betau.'8182' 1.1175, betau.'8283' 1.1052, betau.'8384' 1.11, thetai.'7374' 0.12098, thetai.'7475' 0.53921, thetai.'7576' 0.16502, thetai.'7677' 0.14852, thetai.'7778' 0.16845, thetai.'7879' 0.19778, thetai.'7980' 0.16345, thetai.'8081' 0.12949, thetai.'8182' 0.17234, thetai.'8283' 0.18768/
+    series(*,years) /cg.'7374' 503.336, cg.'7475' 511.1, cg.'7576' 645.46, cg.'7677' 697.87, cg.'7778' 702.24, cg.'7879' 750.71, cg.'7980' 754.74, cg.'8081' 809.06, cg.'8182' 856.64, cg.'8283' 971.38, cg.'8384' 1008.49, xsa.'7374' 1, xsa.'7475' 0.9366, xsa.'7576' 1.1158, xsa.'7677' 0.9504, xsa.'7778' 1.1097, xsa.'7879' 1.0306, xsa.'7980' 0.8981, xsa.'8081' 1.1041, xsa.'8182' 1.0356, xsa.'8283' 0.9796, xsa.'8384' 1.1364, er.'7374' 7.791, er.'7475' 7.796, er.'7576' 8.653, er.'7677' 8.939, er.'7778' 8.563, er.'7879' 8.206, er.'7980' 8.076, er.'8081' 7.893, er.'8182' 8.929, er.'8283' 9.628, er.'8384' 10.312, usdefl.'7374' 1, usdefl.'7475' 1.0878, usdefl.'7576' 1.1862, usdefl.'7677' 1.2539, usdefl.'7778' 1.3274, usdefl.'7879' 1.4259, usdefl.'7980' 1.5469, usdefl.'8081' 1.6845, usdefl.'8182' 1.8422, usdefl.'8283' 1.9595, usdefl.'8384' 2.0354, indefl.'7374' 1, indefl.'7475' 1.1665, indefl.'7576' 1.1181, indefl.'7677' 1.1948, indefl.'7778' 1.2395, indefl.'7879' 1.2648, indefl.'7980' 1.4572, indefl.'8081' 1.6157, indefl.'8182' 1.7789, indefl.'8283' 1.9119, indefl.'8384' 2.1381, savf.'7374' 47.9, savf.'7475' 96.1, savf.'7576' 57.9, savf.'7677' -103.1, savf.'7778' -90.3, savf.'7879' -57.5, savf.'7980' -29.9, savf.'8081' 199.6, savf.'8182' 241.2, savf.'8283' 237, savf.'8384' 265, gtra.'7374' 47.7, gtra.'7475' 34, gtra.'7576' 49.1, gtra.'7677' 60.1, gtra.'7778' 69.7, gtra.'7879' 93.4, gtra.'7980' 100.8, gtra.'8081' 149, gtra.'8182' 184.2, gtra.'8283' 270.4, gtra.'8384' 270.4, gtrb.'7374' 90.9, gtrb.'7475' 115, gtrb.'7576' 135, gtrb.'7677' 154.7, gtrb.'7778' 176.2, gtrb.'7879' 200.5, gtrb.'7980' 239.2, gtrb.'8081' 283.5, gtrb.'8182' 331.1, gtrb.'8283' 400.5, gtrb.'8384' 400.5, nfi.'7374' -32.5, nfi.'7475' -29.1, nfi.'7576' -25.5, nfi.'7677' -23.3, nfi.'7778' -23.3, nfi.'7879' -15.6, nfi.'7980' 15.3, nfi.'8081' 29.8, nfi.'8182' -0.7, nfi.'8283' -68.1, nfi.'8384' -68.1, nct.'7374' 19.2, nct.'7475' 27.4, nct.'7576' 52.8, nct.'7677' 73.9, nct.'7778' 102.2, nct.'7879' 104.2, nct.'7980' 162.4, nct.'8081' 225.7, nct.'8182' 222.1, nct.'8283' 252.7, nct.'8384' 252.7, idshr.'7374' 0.7954, idshr.'7475' 0.7604, idshr.'7576' 0.8201, idshr.'7677' 0.8746, idshr.'7778' 0.9281, idshr.'7879' 0.828, idshr.'7980' 0.8111, idshr.'8081' 0.8253, idshr.'8182' 0.8346, idshr.'8283' 0.8575, idshr.'8384' 0.8583, const.'7374' 133.125, const.'7475' 134.88, const.'7576' 136.67, const.'7677' 138.47, const.'7778' 140.31, const.'7879' 142.17, const.'7980' 144.05, const.'8081' 145.96, const.'8182' 147.91, const.'8283' 149.885, const.'8384' 152.64, totlab.'7374' 65.09, totlab.'7475' 67.88, totlab.'7576' 70.75, totlab.'7677' 73.75, totlab.'7778' 76.84, totlab.'7879' 80.06, totlab.'7980' 83.39, totlab.'8081' 86.84, totlab.'8182' 90.43, totlab.'8283' 95.14, totlab.'8384' 97.1, pkvsa.'7374' 0.1807, pkvsa.'7475' 0.1537, pkvsa.'7576' 0.1511, pkvsa.'7677' 0.2071, pkvsa.'7778' 0.2071, pkvsa.'7879' 0.208, pkvsa.'7980' 0.1845, pkvsa.'8081' 0.1861, pkvsa.'8182' 0.1696, pkvsa.'8283' 0.1585, pkvsa.'8384' 0.1605, pkvni.'7374' 0.2909, pkvni.'7475' 0.3703, pkvni.'7576' 0.2967, pkvni.'7677' 0.2322, pkvni.'7778' 0.2752, pkvni.'7879' 0.2912, pkvni.'7980' 0.3356, pkvni.'8081' 0.2924, pkvni.'8182' 0.3038, pkvni.'8283' 0.2777, pkvni.'8384' 0.2725, pkvsi.'7374' 0.1167, pkvsi.'7475' 0.135, pkvsi.'7576' 0.1827, pkvsi.'7677' 0.1761, pkvsi.'7778' 0.183, pkvsi.'7879' 0.1504, pkvsi.'7980' 0.177, pkvsi.'8081' 0.1825, pkvsi.'8182' 0.1952, pkvsi.'8283' 0.2549, pkvsi.'8384' 0.2457, pkvss.'7374' 0.4117, pkvss.'7475' 0.3411, pkvss.'7576' 0.3695, pkvss.'7677' 0.3846, pkvss.'7778' 0.3346, pkvss.'7879' 0.3505, pkvss.'7980' 0.3029, pkvss.'8081' 0.339, pkvss.'8182' 0.3314, pkvss.'8283' 0.3092, pkvss.'8384' 0.3213, pim1.'7374' 1, pim1.'7475' 1.2582, pim1.'7576' 1.5165, pim1.'7677' 1.4615, pim1.'7778' 1.4451, pim1.'7879' 1.5495, pim1.'7980' 1.8956, pim1.'8081' 1.7261, pim1.'8182' 1.503, pim1.'8283' 1.3932, pim1.'8384' 1.3841, pim2.'7374' 1, pim2.'7475' 1.9203, pim2.'7576' 1.5072, pim2.'7677' 1.6667, pim2.'7778' 1.4783, pim2.'7879' 1.471, pim2.'7980' 1.8261, pim2.'8081' 1.1915, pim2.'8182' 1.3386, pim2.'8283' 1.1637, pim2.'8384' 1.294, pim3.'7374' 1, pim3.'7475' 1.3826, pim3.'7576' 1.8261, pim3.'7677' 2.0174, pim3.'7778' 1.7913, pim3.'7879' 2.2957, pim3.'7980' 2.7826, pim3.'8081' 1.9146, pim3.'8182' 1.6529, pim3.'8283' 1.6123, pim3.'8384' 1.5498, pim4.'7374' 1, pim4.'7475' 1.6423, pim4.'7576' 1.9238, pim4.'7677' 1.6655, pim4.'7778' 1.6548, pim4.'7879' 1.683, pim4.'7980' 1.989, pim4.'8081' 1.9275, pim4.'8182' 2.0165, pim4.'8283' 2.0239, pim4.'8384' 2.0025, pim5.'7374' 1, pim5.'7475' 2.2036, pim5.'7576' 2.482, pim5.'7677' 2.7695, pim5.'7778' 2.8593, pim5.'7879' 2.8533, pim5.'7980' 4.535, pim5.'8081' 6.8905, pim5.'8182' 8.1604, pim5.'8283' 7.7164, pim5.'8384' 6.9373, pim6.'7374' 1, pim6.'7475' 1, pim6.'7576' 1, pim6.'7677' 1, pim6.'7778' 1, pim6.'7879' 1, pim6.'7980' 1, pim6.'8081' 1, pim6.'8182' 1, pim6.'8283' 1, pim6.'8384' 1, pie1.'7374' 1, pie1.'7475' 1.3202, pie1.'7576' 1.3051, pie1.'7677' 1.3065, pie1.'7778' 1.9159, pie1.'7879' 1.3546, pie1.'7980' 0.8066, pie1.'8081' 1.3053, pie1.'8182' 1.5555, pie1.'8283' 1.2789, pie1.'8384' 1.2691, pie2.'7374' 1, pie2.'7475' 1.2412, pie2.'7576' 1.3048, pie2.'7677' 1.545, pie2.'7778' 1.8197, pie2.'7879' 1.8975, pie2.'7980' 1.9845, pie2.'8081' 2.0995, pie2.'8182' 2.2128, pie2.'8283' 2.1709, pie2.'8384' 2.0801, pie3.'7374' 1, pie3.'7475' 0.8929, pie3.'7576' 1.2857, pie3.'7677' 1.2929, pie3.'7778' 1.3857, pie3.'7879' 1.3286, pie3.'7980' 1.55, pie3.'8081' 1.3552, pie3.'8182' 1.6076, pie3.'8283' 1.5771, pie3.'8384' 1.5111, pie4.'7374' 1, pie4.'7475' 1.3776, pie4.'7576' 1.4375, pie4.'7677' 1.4746, pie4.'7778' 1.4763, pie4.'7879' 1.4986, pie4.'7980' 1.6509, pie4.'8081' 1.762, pie4.'8182' 2.0759, pie4.'8283' 2.0366, pie4.'8384' 1.9914, totpu.'7374' 122, totpu.'7475' 124.89, totpu.'7576' 129.9, totpu.'7677' 134.85, totpu.'7778' 140.05, totpu.'7879' 145.7, totpu.'7980' 151.39, totpu.'8081' 157.26, totpu.'8182' 163.23, totpu.'8283' 169.38, totpu.'8384' 175.89, totpr.'7374' 458, totpr.'7475' 468.11, totpr.'7576' 477.1, totpr.'7677' 485.15, totpr.'7778' 493.95, totpr.'7879' 503.3, totpr.'7980' 512.61, totpr.'8081' 521.74, totpr.'8182' 530.77, totpr.'8283' 539.62, totpr.'8384' 549.11, gdpmp.'7374' 5944.2, gdpmp.'8283' 8611.2, gdpmp.'8384' 9261.9, privc.'7374' 4340.3, privc.'7475' 4157.8, privc.'7576' 4311.7, privc.'7677' 4206.7, privc.'7778' 4847.8, privc.'7879' 4981, privc.'7980' 4479, privc.'8081' 4961.4, privc.'8182' 5280.9, privc.'8283' 5460.3, privc.'8384' 5940, gfi.'7374' 902.9, gfi.'7475' 917.9, gfi.'7576' 1182.3, gfi.'7677' 1314.2, gfi.'7778' 1394.7, gfi.'7879' 1481.2, gfi.'7980' 1456.4, gfi.'8081' 1610, gfi.'8182' 1715, gfi.'8283' 1785.1, gfi.'8384' 1895.1, invest.'7374' 1135.2, invest.'7475' 1207.2, invest.'7576' 1441.6, invest.'7677' 1502.6, invest.'7778' 1502.8, invest.'7879' 1788.9, invest.'7980' 1795.5, invest.'8081' 1950.9, invest.'8182' 2054.8, invest.'8283' 2081.8, invest.'8384' 2207.9, exports.'7374' 283, exports.'7475' 306, exports.'7576' 356.6, exports.'7677' 426.8, exports.'7778' 410.5, exports.'7879' 444, exports.'7980' 518.5, exports.'8081' 517, exports.'8182' 516.2, exports.'8283' 532.9, exports.'8384' 559.1, imports.'7374' 317.6, imports.'7475' 275.9, imports.'7576' 279.2, imports.'7677' 278.7, imports.'7778' 363.1, imports.'7879' 394.1, imports.'7980' 377.9, imports.'8081' 554.4, imports.'8182' 598.6, imports.'8283' 599.9, imports.'8384' 624.6, 'cns-curr'.'7374' 4340.3, 'gfi-curr'.'7374' 902.9, 'gfi-curr'.'7475' 1093, 'gfi-curr'.'7576' 1324.8, 'gfi-curr'.'7677' 1526.7, 'gfi-curr'.'7778' 1714.6, 'gfi-curr'.'7879' 1882.5, 'gfi-curr'.'7980' 2090.2, 'gfi-curr'.'8081' 2521.7, 'gfi-curr'.'8182' 2971.6, 'gfi-curr'.'8283' 2971.6, 'gfi-curr'.'8384' 2971.6, 'inv-curr'.'7374' 1135.2, 'inv-curr'.'7475' 1450.9, 'inv-curr'.'7576' 1641.8, 'inv-curr'.'7677' 1766.9, 'inv-curr'.'7778' 1854.8, 'inv-curr'.'7879' 2293.3, 'inv-curr'.'7980' 2622.8, 'inv-curr'.'8081' 3144.3, 'inv-curr'.'8182' 3668, 'inv-curr'.'8283' 3668, 'inv-curr'.'8384' 3668, 'gdpmp-curr'.'7374' 5944.2, 'gdpmp-curr'.'7475' 6968.1, 'gdpmp-curr'.'7576' 7202.3, 'gdpmp-curr'.'7677' 7586.7, 'gdpmp-curr'.'7778' 8716.1, 'gdpmp-curr'.'7879' 9610.3, 'gdpmp-curr'.'7980' 10120.4, 'gdpmp-curr'.'8081' 11989.6, 'gdpmp-curr'.'8182' 14161.5, 'gdpmp-curr'.'8283' 14161.5, 'gdpmp-curr'.'8384' 14161.5, 'exp-curr'.'7374' 283, 'exp-curr'.'7475' 383.5, 'exp-curr'.'7576' 481.2, 'exp-curr'.'7677' 613.9, 'exp-curr'.'7778' 663.6, 'exp-curr'.'7879' 711.5, 'exp-curr'.'7980' 838.1, 'exp-curr'.'8081' 902.9, 'exp-curr'.'8182' 1025.3, 'exp-curr'.'8283' 1025.3, 'exp-curr'.'8384' 1025.3, 'imp-curr'.'7374' 317.6, 'imp-curr'.'7475' 477.9, 'imp-curr'.'7576' 566.4, 'imp-curr'.'7677' 561.4, 'imp-curr'.'7778' 652.2, 'imp-curr'.'7879' 742.6, 'imp-curr'.'7980' 985.9, 'imp-curr'.'8081' 1357.9, 'imp-curr'.'8182' 1487.9, 'imp-curr'.'8283' 1487.9, 'imp-curr'.'8384' 1487.9, 'cns-defl'.'7374' 1, 'cns-defl'.'7475' 1.2019, 'cns-defl'.'7576' 1.1389, 'cns-defl'.'7677' 1.1759, 'cns-defl'.'7778' 1.2342, 'cns-defl'.'7879' 1.282, 'cns-defl'.'7980' 1.4608, 'cns-defl'.'8081' 1.6117, 'cns-defl'.'8182' 1.7851, 'cns-defl'.'8283' 1.7851, 'cns-defl'.'8384' 1.7851, gdpc.'7374' 5377.2, gdpc.'7475' 5423.5, gdpc.'7576' 5936, gdpc.'7677' 5981.1, gdpc.'7778' 6508, gdpc.'7879' 6882.3, gdpc.'7980' 6518, gdpc.'8081' 7030.2, gdpc.'8182' 7406.3, gdpc.'8283' 7534.4, gdpc.'8384' 7958.1, ax1.'7374' 1, ax1.'7475' 0.9677, ax1.'7576' 1.0504, ax1.'7677' 0.9931, ax1.'7778' 1.0141, ax1.'7879' 1.0149, ax1.'7980' 0.9884, ax1.'8081' 1.0823, ax1.'8182' 1.0238, ax1.'8283' 0.9726, ax1.'8384' 1.0623, ax2.'7374' 1, ax2.'7475' 1.2461, ax2.'7576' 1.2442, ax2.'7677' 1.2179, ax2.'7778' 1.306, ax2.'7879' 1.5719, ax2.'7980' 1.7899, ax2.'8081' 1.7452, ax2.'8182' 1.6679, ax2.'8283' 1.8441, ax2.'8384' 1.8293, ax3.'7374' 1, ax3.'7475' 1.1884, ax3.'7576' 1.3716, ax3.'7677' 1.643, ax3.'7778' 1.6913, ax3.'7879' 1.6744, ax3.'7980' 1.9078, ax3.'8081' 1.4786, ax3.'8182' 1.5309, ax3.'8283' 2.0376, ax3.'8384' 1.8724, ax4.'7374' 1, ax4.'7475' 0.752, ax4.'7576' 0.564, ax4.'7677' 0.7232, ax4.'7778' 0.8045, ax4.'7879' 0.8531, ax4.'7980' 0.6947, ax4.'8081' 0.5982, ax4.'8182' 0.6997, ax4.'8283' 0.7295, ax4.'8384' 0.711, ax5.'7374' 1, ax5.'7475' 0.7509, ax5.'7576' 0.5631, ax5.'7677' 0.6157, ax5.'7778' 0.6351, ax5.'7879' 0.5144, ax5.'7980' 0.3781, ax5.'8081' 0.4568, ax5.'8182' 0.5778, ax5.'8283' 0.5619, ax5.'8384' 0.7504, ax6.'7374' 1, ax6.'7475' 0.9837, ax6.'7576' 0.7377, ax6.'7677' 0.8285, ax6.'7778' 0.9107, ax6.'7879' 0.8105, ax6.'7980' 0.723, ax6.'8081' 0.7224, ax6.'8182' 0.774, ax6.'8283' 0.7775, ax6.'8384' 0.7132, exscale.'7374' 1, exscale.'7475' 0.9, exscale.'7576' 1.089, exscale.'7677' 1.1165, exscale.'7778' 1.0487, exscale.'7879' 1.054, exscale.'7980' 1.0337, exscale.'8081' 0.8801, exscale.'8182' 1.1469, exscale.'8283' 1.2994, exscale.'8384' 1.2439, betar.'7374' 1, betar.'7475' 1, betar.'7576' 1.0372, betar.'7677' 1.0554, betar.'7778' 1.1103, betar.'7879' 1.094, betar.'7980' 0.9958, betar.'8081' 0.9817, betar.'8182' 0.9359, betar.'8283' 0.9576, betar.'8384' 1.002, betau.'7374' 1, betau.'7475' 1, betau.'7576' 0.9, betau.'7677' 0.81, betau.'7778' 0.893, betau.'7879' 0.893, betau.'7980' 0.8037, betau.'8081' 0.8941, betau.'8182' 1.1175, betau.'8283' 1.1052, betau.'8384' 1.11, thetai.'7475' 0.12098, thetai.'7576' 0.53921, thetai.'7677' 0.16502, thetai.'7778' 0.14852, thetai.'7879' 0.16845, thetai.'7980' 0.19778, thetai.'8081' 0.16345, thetai.'8182' 0.12949, thetai.'8283' 0.17234, thetai.'8384' 0.18768/
     pie(i) /agricult 1, 'cons-good' 1, 'cap-good' 1, 'int-good' 1, 'pub-infr' 1, service 1/
     pim(i) /agricult 1, 'cons-good' 1, 'cap-good' 1, 'int-good' 1, 'pub-infr' 1, service 1/
     dw(r) /rural 11.163208, urban 74/
@@ -100,12 +100,22 @@ Parameters
     alpha(r)
     pop(r)
     eta(i)
+    rcons(*,acv)
+    rcurr(*,acv)
+    pim0(i)
     pnm0(i)
+    pc0(i)
+    v0(i)
+    pv0(i)
+    pls0(r)
+    pk0(i)
     pq0(i)
     ax0(i)
     beta0(r)
     pim00(i)
     pnm00(i)
+    k00(i)
+    mc00(r)
     v00(i)
     pv00(i)
     pc00(i)
@@ -114,6 +124,33 @@ Parameters
     w00(r)
     pk00(i)
     pq00(i)
+    c00(r)
+    cg0(i)
+    ytotal(*,*,*)
+    conex(*,r)
+    pcinc(*,r)
+    savrat(*,r)
+    totco(*,*)
+    shrco(i,r)
+    elsup(*)
+    elcon(*,*,*)
+    ut1(r)
+    ut0(r)
+    cli(*)
+    dsapq(*)
+    deprec0(i)
+    gva(*)
+    gdp(*)
+    grthr(acv)
+    dflnacb(i)
+    relnacb0(i)
+    relnacb(i)
+    chgnacb(i)
+    xparm(*,*)
+    match(*,*)
+    parm(*,*)
+    pkv(i)
+    chgv(i)
 ;
 
 Scalars
@@ -358,8 +395,6 @@ Variables
     nu_yinfr(i)
     nu_gtrdet
     nu_wtrdet
-    nu_fgtrdet
-    nu_fwtrdet
     nu_fyself(i)
     nu_fywage(i)
     nu_fycap(i)
@@ -389,6 +424,12 @@ Variables
     nu_qexp
     nu_qimp
     nu_qgdpmp
+    nu_ls_fx_agricult
+    nu_ls_fx_cons_good_e1e25cc5
+    nu_ls_fx_cap_good_04720e89
+    nu_ls_fx_int_good_71fc43da
+    nu_ls_fx_pub_infr_644e4788
+    nu_ls_fx_service
     nu_y_fx_ynonp_agricult
     nu_y_fx_ynonp_cons_good_e1e25cc5
     nu_y_fx_ynonp_cap_good_04720e89
@@ -404,6 +445,11 @@ Variables
     nu_savf_fx
     nu_exscale_fx
     nu_taum_fx_cap_good_04720e89
+    nu_taum_fx_agricult
+    nu_taum_fx_cons_good_e1e25cc5
+    nu_taum_fx_int_good_71fc43da
+    nu_taum_fx_pub_infr_644e4788
+    nu_taum_fx_service
 ;
 
 Positive Variables
@@ -443,6 +489,12 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+ls.fx('agricult') = 0;
+ls.fx('cap-good') = 0;
+ls.fx('cons-good') = 0;
+ls.fx('int-good') = 0;
+ls.fx('pub-infr') = 0;
+ls.fx('service') = 0;
 w.fx(r) = dw(r);
 y.fx('ynonp','agricult') = 0;
 y.fx('ynonp','cap-good') = 0;
@@ -456,8 +508,12 @@ fy.fx('ynonp','cons-good') = 0;
 fy.fx('ynonp','int-good') = 0;
 fy.fx('ynonp','pub-infr') = 0;
 fy.fx('ynonp','service') = 0;
-taum.fx(i)$((not im(i))) = 0;
+taum.fx('agricult') = 0;
 taum.fx('cap-good') = 0;
+taum.fx('cons-good') = 0;
+taum.fx('int-good') = 0;
+taum.fx('pub-infr') = 0;
+taum.fx('service') = 0;
 
 * ============================================
 * Variable Initialization
@@ -691,8 +747,7 @@ $offImplicitAssign
 
 $onImplicitAssign
 g.fx(i) = g.l(i);
-m.fx(i)$((not sc(i))) = m.l(i);
-ls.fx(i)$((not ls.l(i))) = 0;
+m.fx(i) = m.l(i);
 ls.fx(sa) = ls.l(sa);
 ax.fx(i) = ax.l(i);
 tnd.fx(i) = tnd.l(i);
@@ -832,14 +887,12 @@ Equations
     exscale_fx
     fbudget
     fddef(i)
-    fgtrdet
     firstn(i)
     firstq(sc)
     firsts(i)
     firstv(i)
     firstx(i)
     firstz(i)
-    fwtrdet
     fy_fx_ynonp_agricult
     fy_fx_ynonp_cap_good_04720e89
     fy_fx_ynonp_cons_good_e1e25cc5
@@ -857,6 +910,12 @@ Equations
     invsav
     les(i,r)
     lmclear
+    ls_fx_agricult
+    ls_fx_cap_good_04720e89
+    ls_fx_cons_good_e1e25cc5
+    ls_fx_int_good_71fc43da
+    ls_fx_pub_infr_644e4788
+    ls_fx_service
     margdet
     mean(r)
     meanc(r)
@@ -883,7 +942,12 @@ Equations
     qinv
     savf_fx
     supply(i)
+    taum_fx_agricult
     taum_fx_cap_good_04720e89
+    taum_fx_cons_good_e1e25cc5
+    taum_fx_int_good_71fc43da
+    taum_fx_pub_infr_644e4788
+    taum_fx_service
     taumdet(i)
     utildef(r)
     valuen(i)
@@ -918,7 +982,7 @@ Alias(r, r__);
 * Stationarity equations
 stat_ax(i).. ((-1) * ((deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) ** ((-1) / rhox(i)))) * nu_prodx(i) =E= 0;
 stat_beta(r).. ((-1) * (log(ym(r)))) * nu_meanc(r) =E= 0;
-stat_ch(i,r).. (cpi(r) - pc(i)) * nu_cpidet(r) + pc(i) * nu_les(i,r) + pc(i) * nu_hbudget(r) - nu_fddef(i) + ((-1) * (prod(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)) * sum(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r) * ac(i__,r) / (ch(i__,r) - gamma(i__, r) * pop(r)) / (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)))) * nu_utildef(r) + ((-1) * pc00(i)) * nu_qcns - piL_ch(i,r) =E= 0;
+stat_ch(i,r).. (cpi(r) - pc(i)) * nu_cpidet(r) + pc(i) * nu_les(i,r) + pc(i) * nu_hbudget(r) - nu_fddef(i) + ((-1) * (prod(i__, (ch(i__,r) - gamma(i, r) * pop(r)) ** ac(i__,r)) * sum(i__, (ch(i__,r) - gamma(i, r) * pop(r)) ** ac(i__,r) * ac(i__,r) / (ch(i__,r) - gamma(i, r) * pop(r)) / (ch(i__,r) - gamma(i, r) * pop(r)) ** ac(i__,r)))) * nu_utildef(r) + ((-1) * pc00(i)) * nu_qcns - piL_ch(i,r) =E= 0;
 stat_cpi(r).. sum(i, ch(i,r)) * nu_cpidet(r) =E= 0;
 stat_deprec(i).. nu_qdep(i) + ((-1) * (sum(j, pc(j) * aid(j)) * sum(j, pc00(j) * aid(j)) * idshr / sqr(sum(j, pc(j) * aid(j))))) * nu_qgfi + ((-1) * (sum(j, pc(j) * aid(j)) * sum(j, pc00(j) * aid(j)) * dstshr / sqr(sum(j, pc(j) * aid(j))))) * nu_qchs =E= 0;
 stat_deprec00(i).. nu_qdep00(i) - nu_qgdp =E= 0;
@@ -926,15 +990,15 @@ stat_dst(i).. nu_dstdet(i) - nu_equil(i) + ((-1) * pq(i)) * nu_invsav + ((-1) * 
 stat_ex(i)$(ie(i)).. nu_export(i) + ((-1) * 1$(ie(i))) * nu_equil(i) =E= 0;
 stat_exscale.. sum(ie, ((-1) * ((er00 * pie(ie) / (pq(ie) * (1 + trmx(ie)))) ** eta(ie) * aex(ie))) * nu_export(ie)) + nu_exscale_fx =E= 0;
 stat_fd(i).. nu_fddef(i) + ((-1) * (trmd(i) * pq(i))) * nu_margdet - nu_equil(i) - piL_fd(i) =E= 0;
-stat_fgtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) + nu_fgtrdet$(sameas(ty, 'ynonp')) =E= 0;
-stat_fwtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) + nu_fwtrdet$(sameas(ty, 'ynonp')) =E= 0;
-stat_fy(ty,i).. nu_fycap(i) + sum(r, ((-1) * ayi(i,r)) * nu_fyhdef(ty,r)) + nu_fyinfr(i) + nu_fy_fx_ynonp_agricult$(sameas(ty, 'ynonp') and sameas(i, 'agricult')) + nu_fy_fx_ynonp_cap_good_04720e89$(sameas(ty, 'ynonp') and sameas(i, 'cap-good')) + nu_fy_fx_ynonp_cons_good_e1e25cc5$(sameas(ty, 'ynonp') and sameas(i, 'cons-good')) + nu_fy_fx_ynonp_int_good_71fc43da$(sameas(ty, 'ynonp') and sameas(i, 'int-good')) + nu_fy_fx_ynonp_pub_infr_644e4788$(sameas(ty, 'ynonp') and sameas(i, 'pub-infr')) + nu_fy_fx_ynonp_service$(sameas(ty, 'ynonp') and sameas(i, 'service')) + nu_fyself(i) + nu_fywage(i) =E= 0;
+stat_fgtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) =E= 0;
+stat_fwtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) =E= 0;
+stat_fy(ty,i).. sum(r, ((-1) * ayi(i,r)) * nu_fyhdef(ty,r)) + nu_fy_fx_ynonp_agricult$(sameas(ty, 'ynonp') and sameas(i, 'agricult')) + nu_fy_fx_ynonp_cap_good_04720e89$(sameas(ty, 'ynonp') and sameas(i, 'cap-good')) + nu_fy_fx_ynonp_cons_good_e1e25cc5$(sameas(ty, 'ynonp') and sameas(i, 'cons-good')) + nu_fy_fx_ynonp_int_good_71fc43da$(sameas(ty, 'ynonp') and sameas(i, 'int-good')) + nu_fy_fx_ynonp_pub_infr_644e4788$(sameas(ty, 'ynonp') and sameas(i, 'pub-infr')) + nu_fy_fx_ynonp_service$(sameas(ty, 'ynonp') and sameas(i, 'service')) =E= 0;
 stat_fyh(ty,r).. nu_fyhdef(ty,r) - nu_mean(r) =E= 0;
 stat_g(i).. ((-1) * pg(i)) * nu_valuex(i) + ((-1) * (ax(i) * (deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) ** ((-1) / rhox(i)) * (-1) / rhox(i) / (deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) * (1 - deltax(i)) * g(i) ** ((-1) * rhox(i)) * ((-1) * rhox(i)) / g(i))) * nu_prodx(i) + ((-1) * ((pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) ** sigmax(i))) * nu_firstx(i) + ((-1) * ((1 - thetai) * pg(i))) * nu_yinfr(i) + ((-1) * ((1 - thetai) * pg00(i))) * nu_fyinfr(i) + ((-1) * 1$(si(i))) * nu_equil(i) + (((-1) * 1$(si(i))) * nu_equil(i+2))$(ord(i) <= card(i) - 2) + (((-1) * 1$(si(i))) * nu_equil(i+1))$(ord(i) <= card(i) - 1) + (((-1) * 1$(si(i))) * nu_equil(i+3))$(ord(i) <= card(i) - 3) + (((-1) * 1$(si(i))) * nu_equil(i+4))$(ord(i) <= card(i) - 4) + (((-1) * 1$(si(i))) * nu_equil(i+5))$(ord(i) <= card(i) - 5) + (((-1) * 1$(si(i))) * nu_equil(i-2))$(ord(i) > 2) + (((-1) * 1$(si(i))) * nu_equil(i-1))$(ord(i) > 1) + (((-1) * 1$(si(i))) * nu_equil(i-3))$(ord(i) > 3) + (((-1) * 1$(si(i))) * nu_equil(i-4))$(ord(i) > 4) + (((-1) * 1$(si(i))) * nu_equil(i-5))$(ord(i) > 5) + (thetai * pg(i) - sum(si, pq(si))) * nu_invsav - piL_g(i) =E= 0;
-stat_gtr(ty).. sum(r, ((-1) * ayt(r)) * nu_yhdef(ty,r)) + nu_gtrdet$(sameas(ty, 'ynonp')) =E= 0;
+stat_gtr(ty).. sum(r, ((-1) * ayt(r)) * nu_yhdef(ty,r)) =E= 0;
 stat_id(i).. nu_iddet(i) - nu_fddef(i) + ((-1) * pc(i)) * nu_invsav + ((-1) * pc00(i)) * nu_qgfi =E= 0;
 stat_invtot.. ((-1) * ksi) + sum(i, ((-1) * (aid(i) * idshr)) * nu_iddet(i)) + sum(i, ((-1) * (adst(i) * dstshr)) * nu_dstdet(i)) =E= 0;
-stat_ls(i).. ((-1) * sum(r$(ri(r,i)), pls(r))) * nu_values(i) + ((-1) * (as(i) * (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) ** ((-1) / rhos(i)) * (-1) / rhos(i) / (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) * ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)) * ((-1) * rhos(i)) / ls(i))$((not si(i))))) * nu_prods(i) + (((-1) * ((sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i))) * nu_firsts(i))$((not si(i))) + ((-1) * 1$((not sa(i)))) * nu_lmclear + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls(r)))) * nu_yself(i) + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls00(r)))) * nu_fyself(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls00(r))) * nu_qdep00(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls(r))) * nu_qdep(i) - piL_ls(i) =E= 0;
+stat_ls(i).. ((-1) * sum(r$(ri(r,i)), pls(r))) * nu_values(i) + ((-1) * (as(i) * (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) ** ((-1) / rhos(i)) * (-1) / rhos(i) / (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) * ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)) * ((-1) * rhos(i)) / ls(i))$((not si(i))))) * nu_prods(i) + (((-1) * ((sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i))) * nu_firsts(i))$((not si(i))) + ((-1) * 1$((not sa(i)))) * nu_lmclear + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls(r)))) * nu_yself(i) + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls00(r)))) * nu_fyself(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls00(r))) * nu_qdep00(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls(r))) * nu_qdep(i) + nu_ls_fx_agricult$(sameas(i, 'agricult')) + nu_ls_fx_cap_good_04720e89$(sameas(i, 'cap-good')) + nu_ls_fx_cons_good_e1e25cc5$(sameas(i, 'cons-good')) + nu_ls_fx_int_good_71fc43da$(sameas(i, 'int-good')) + nu_ls_fx_pub_infr_644e4788$(sameas(i, 'pub-infr')) + nu_ls_fx_service$(sameas(i, 'service')) - piL_ls(i) =E= 0;
 stat_lw(i).. ((-1) * sum(r$(ri(r,i)), w(r))) * nu_valuev(i) + ((-1) * (av(i) * (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) ** ((-1) / rhov(i)) * (-1) / rhov(i) / (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) * (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i)) * ((-1) * rhov(i)) / lw(i))) * nu_prodv(i) + ((-1) * ((sum(r$(ri(r,i)), w(r)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i))) * nu_firstv(i) + ((-1) * 1$((not sa(i)))) * nu_lmclear + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), w(r)))) * nu_ywage(i) + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), w00(r)))) * nu_fywage(i) - piL_lw(i) =E= 0;
 stat_m(i).. ((-1) * pm(i)$(im(i))) * nu_valueq(i) + (((-1) * 1$(im(i))) * nu_supply(i))$((not sc(i))) + ((-1) * (pim(i) * trmm(i))$(im(i))) * nu_margdet + ((-1) * ((1 + trmm(i)) * pim00(i))$(im(i))) * nu_qimp + ((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / m(i))) * nu_prodq(i) + ((-1) * ((pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i))) * nu_firstq(i) - piL_m(i) =E= 0;
 stat_marg.. sum(ss, pq(ss)) * nu_margdet + sum(i, ((-1) * 1$(ss(i))) * nu_equil(i)) =E= 0;
@@ -953,7 +1017,7 @@ stat_oinv.. nu_qinv - nu_qgdpmp =E= 0;
 stat_pc(i).. nu_pcdet(i) + sum(r, ((-1) * ch(i,r)) * nu_cpidet(r)) + sum(r, (ch(i,r) - pop(r) * (gamma(i, r) + ac(i,r) * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * sum(j, (pc(j) / pc00(j)) ** ac(j,r) * ac(j,r) / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,r)))) * nu_les(i,r)) + sum(r, ch(i,r) * nu_hbudget(r)) + sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) * nu_fbudget + (sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) - id(i)) * nu_invsav - piL_pc(i) =E= 0;
 stat_pg(i).. ((-1) * g(i)) * nu_valuex(i) + ((-1) * (g(i) * (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) ** sigmax(i) * sigmax(i) / (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) * pz(i) * (1 - deltax(i)) * deltax(i) / sqr(pz(i) * (1 - deltax(i))))) * nu_firstx(i) + ((-1) * ((1 - thetai) * g(i))) * nu_yinfr(i) + thetai * g(i) * nu_invsav - piL_pg(i) =E= 0;
 stat_pk(i).. ((-1) * k(i)) * nu_values(i) + (((-1) * (ls(i) * (sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i) * sigmas(i) / (sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) * ((-1) * (sum(r$(ri(r,i)), pls(r)) * deltas(i) * (1 - deltas(i)))) / sqr(pk(i) * (1 - deltas(i))))) * nu_firsts(i))$((not si(i))) + ((-1) * ((1 - tk(i)) * (1 - thetak(i)) * k(i))) * nu_ycap(i) + k(i) * thetak(i) * nu_invsav + ((-1) * (depp(i) * k(i))) * nu_qdep(i) - piL_pk(i) =E= 0;
-stat_pls(r)$(sum(i, 1$(ri(r,i)))).. sum(i, ((-1) * (ls(i) * 1$(ri(r,i)))) * nu_values(i)) + sum(i, (((-1) * (ls(i) * (sum(r__$(ri(r__,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i) * sigmas(i) / (sum(r__$(ri(r__,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) * pk(i) * (1 - deltas(i)) * deltas(i) * 1$(ri(r,i)) / sqr(pk(i) * (1 - deltas(i))))) * nu_firsts(i))$((not si(i)))) + sum(i, ((-1) * ((1 - tw(i)) * ls(i) * 1$(ri(r,i)))) * nu_yself(i)) + sum(i, ((-1) * (depl(i) * ls(i) * 1$(ri(r,i)))) * nu_qdep(i)) - piL_pls(r) =E= 0;
+stat_pls(r)$(sum(i, 1$(ri(r,i)))).. sum(i, ((-1) * (ls(i) * 1$(ri(r,i)))) * nu_values(i)) + sum(i, (((-1) * (ls(i) * (sum(r__$(ri(r,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i) * sigmas(i) / (sum(r__$(ri(r,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) * pk(i) * (1 - deltas(i)) * deltas(i) * 1$(ri(r,i)) / sqr(pk(i) * (1 - deltas(i))))) * nu_firsts(i))$((not si(i)))) + sum(i, ((-1) * ((1 - tw(i)) * ls(i) * 1$(ri(r,i)))) * nu_yself(i)) + sum(i, ((-1) * (depl(i) * ls(i) * 1$(ri(r,i)))) * nu_qdep(i)) - piL_pls(r) =E= 0;
 stat_pm(i).. ((-1) * m(i)$(im(i))) * nu_valueq(i) + nu_pmdef(i) + nu_taumdet(i)$((not sc(i))) + ((-1) * (m(i) * (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i) * sigmaq(i) / (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) * px(i) * (1 - deltaq(i)) * deltaq(i) / sqr(px(i) * (1 - deltaq(i))))) * nu_firstq(i) - piL_pm(i) =E= 0;
 stat_pn(i).. ((-1) * n(i)) * nu_valuez(i) + ((-1) * (n(i) * (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) ** sigmaz(i) * sigmaz(i) / (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) * pv(i) * (1 - deltaz(i)) * deltaz(i) / sqr(pv(i) * (1 - deltaz(i))))) * nu_firstz(i) + n(i) * nu_valuen(i) - piL_pn(i) =E= 0;
 stat_pnd(i).. ((-1) * nd(i)) * nu_valuen(i) + ((-1) * (nm(i) * (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) ** sigman(i) * sigman(i) / (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) * ((-1) * (deltan(i) * pnm(i) * (1 - deltan(i)))) / sqr((1 - deltan(i)) * pnd(i)))) * nu_firstn(i) + nu_pnddet(i) - piL_pnd(i) =E= 0;
@@ -968,7 +1032,7 @@ stat_s(i).. ps(i) * nu_values(i) + nu_prods(i) + ((-1) * ps(i)) * nu_valuev(i) +
 stat_savf.. sum(i, pc00(i) * aid(i)) * sum(i, pc(i) * aid(i)) * er00 / er * 1 / usdefl ** 1 / sqr(sum(i, pc00(i) * aid(i))) * nu_fbudget + sum(i, pc00(i) * aid(i)) * sum(i, pc(i) * aid(i)) * er00 / er * 1 / usdefl ** 1 / sqr(sum(i, pc00(i) * aid(i))) * nu_invsav + nu_savf_fx =E= 0;
 stat_savg.. nu_invsav =E= 0;
 stat_savh(r).. nu_hbudget(r) + nu_invsav =E= 0;
-stat_taum(i)$(im(i)).. ((-1) * pim(i)) * nu_pmdef(i) + nu_taum_fx_cap_good_04720e89$(sameas(i, 'cap-good')) =E= 0;
+stat_taum(i)$(im(i)).. ((-1) * pim(i)) * nu_pmdef(i) + nu_taum_fx_agricult$(sameas(i, 'agricult')) + nu_taum_fx_cap_good_04720e89$(sameas(i, 'cap-good')) + nu_taum_fx_cons_good_e1e25cc5$(sameas(i, 'cons-good')) + nu_taum_fx_int_good_71fc43da$(sameas(i, 'int-good')) + nu_taum_fx_pub_infr_644e4788$(sameas(i, 'pub-infr')) + nu_taum_fx_service$(sameas(i, 'service')) =E= 0;
 stat_tfd(i).. ((-1) * pq(i)) * nu_pcdet(i) =E= 0;
 stat_tfm(i)$(im(i)).. ((-1) * pim(i)) * nu_pmdef(i) =E= 0;
 stat_thetai.. sum(i, ((-1) * (pg(i) * g(i) * (-1))) * nu_yinfr(i)) + sum(i, ((-1) * (pg00(i) * g(i) * (-1))) * nu_fyinfr(i)) + sum(i, pg(i) * g(i)) * nu_invsav =E= 0;
@@ -978,10 +1042,10 @@ stat_tnm(i).. sum(j, ((-1) * (am(i,j) * pim(i))) * nu_pnmdet(i)) + sum(j, (((-1)
 stat_tw(i).. ((-1) * (sum(r$(ri(r,i)), pls(r)) * ls(i) * (-1))) * nu_yself(i) + ((-1) * (sum(r$(ri(r,i)), w(r)) * lw(i) * (-1))) * nu_ywage(i) + ((-1) * (sum(r$(ri(r,i)), pls00(r)) * ls(i) * (-1))) * nu_fyself(i) + ((-1) * (sum(r$(ri(r,i)), w00(r)) * lw(i) * (-1))) * nu_fywage(i) =E= 0;
 stat_util(r).. ((-1) * (psi * (pop(r)$(mu = 1) + (1 / mu * pop(r) * util(r) ** mu * mu / util(r))$(mu <> 0 and mu <> 1) + (pop(r) * 1 / util(r))$((not mu))))) + pop(r) * nu_utildef(r) =E= 0;
 stat_v(i).. ((-1) * pv(i)) * nu_valuez(i) + ((-1) * (az(i) * (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) ** ((-1) / rhoz(i)) * (-1) / rhoz(i) / (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) * deltaz(i) * v(i) ** ((-1) * rhoz(i)) * ((-1) * rhoz(i)) / v(i))) * nu_prodz(i) + nu_firstz(i) + pv(i) * nu_valuev(i) + nu_prodv(i) + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (gtra + gtrb) / indefl * pv(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_gtrdet + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (nct + nfi) * er00 / er / usdefl * pv(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_wtrdet + ((-1) * pv00(i)) * nu_qgdp - piL_v(i) =E= 0;
-stat_w(r).. sum(i, ((-1) * (lw(i) * 1$(ri(r,i)))) * nu_valuev(i)) + sum(i, ((-1) * (lw(i) * (sum(r__$(ri(r__,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i) * sigmav(i) / (sum(r__$(ri(r__,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) * ps(i) * (1 - deltav(i)) * deltav(i) * 1$(ri(r,i)) / sqr(ps(i) * (1 - deltav(i))))) * nu_firstv(i)) + sum(i, ((-1) * ((1 - tw(i)) * lw(i) * 1$(ri(r,i)))) * nu_ywage(i)) - piL_w(r) =E= 0;
-stat_wtr(ty).. sum(r, ((-1) * ayt(r)) * nu_yhdef(ty,r)) + nu_fbudget + nu_wtrdet$(sameas(ty, 'ynonp')) =E= 0;
+stat_w(r).. sum(i, ((-1) * (lw(i) * 1$(ri(r,i)))) * nu_valuev(i)) + sum(i, ((-1) * (lw(i) * (sum(r__$(ri(r,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i) * sigmav(i) / (sum(r__$(ri(r,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) * ps(i) * (1 - deltav(i)) * deltav(i) * 1$(ri(r,i)) / sqr(ps(i) * (1 - deltav(i))))) * nu_firstv(i)) + sum(i, ((-1) * ((1 - tw(i)) * lw(i) * 1$(ri(r,i)))) * nu_ywage(i)) - piL_w(r) =E= 0;
+stat_wtr(ty).. sum(r, ((-1) * ayt(r)) * nu_yhdef(ty,r)) + nu_fbudget =E= 0;
 stat_x(i).. ((-1) * px(i)) * nu_valueq(i) + ((-1) * nu_supply(i))$((not sc(i))) + px(i) * nu_valuex(i) + nu_prodx(i) + ((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * deltaq(i) * x(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / x(i))) * nu_prodq(i) + nu_firstq(i) - piL_x(i) =E= 0;
-stat_y(ty,i).. nu_ycap(i) + sum(r, ((-1) * ayi(i,r)) * nu_yhdef(ty,r)) + nu_yinfr(i) + nu_y_fx_ynonp_agricult$(sameas(ty, 'ynonp') and sameas(i, 'agricult')) + nu_y_fx_ynonp_cap_good_04720e89$(sameas(ty, 'ynonp') and sameas(i, 'cap-good')) + nu_y_fx_ynonp_cons_good_e1e25cc5$(sameas(ty, 'ynonp') and sameas(i, 'cons-good')) + nu_y_fx_ynonp_int_good_71fc43da$(sameas(ty, 'ynonp') and sameas(i, 'int-good')) + nu_y_fx_ynonp_pub_infr_644e4788$(sameas(ty, 'ynonp') and sameas(i, 'pub-infr')) + nu_y_fx_ynonp_service$(sameas(ty, 'ynonp') and sameas(i, 'service')) + nu_yself(i) + nu_ywage(i) =E= 0;
+stat_y(ty,i).. sum(r, ((-1) * ayi(i,r)) * nu_yhdef(ty,r)) + nu_y_fx_ynonp_agricult$(sameas(ty, 'ynonp') and sameas(i, 'agricult')) + nu_y_fx_ynonp_cap_good_04720e89$(sameas(ty, 'ynonp') and sameas(i, 'cap-good')) + nu_y_fx_ynonp_cons_good_e1e25cc5$(sameas(ty, 'ynonp') and sameas(i, 'cons-good')) + nu_y_fx_ynonp_int_good_71fc43da$(sameas(ty, 'ynonp') and sameas(i, 'int-good')) + nu_y_fx_ynonp_pub_infr_644e4788$(sameas(ty, 'ynonp') and sameas(i, 'pub-infr')) + nu_y_fx_ynonp_service$(sameas(ty, 'ynonp') and sameas(i, 'service')) =E= 0;
 stat_yh(ty,r).. nu_yhdef(ty,r) - nu_hbudget(r) =E= 0;
 stat_ym(r).. pop(r) * nu_mean(r) + ((-1) * (beta(r) * 1 / ym(r))) * nu_meanc(r) - piL_ym(r) =E= 0;
 stat_z(i).. ((-1) * pz(i)) * nu_valuex(i) + ((-1) * (ax(i) * (deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) ** ((-1) / rhox(i)) * (-1) / rhox(i) / (deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) * deltax(i) * z(i) ** ((-1) * rhox(i)) * ((-1) * rhox(i)) / z(i))) * nu_prodx(i) + nu_firstx(i) + pz(i) * nu_valuez(i) + nu_prodz(i) - piL_z(i) =E= 0;
@@ -1050,8 +1114,6 @@ ycap(i).. y("ycap",i) =E= pk(i) * k(i) * (1 - thetak(i)) * (1 - tk(i));
 yinfr(i).. y("yinfr",i) =E= pg(i) * g(i) * (1 - thetai);
 gtrdet.. gtr("ynonp") =E= (gtra + gtrb) / indefl * sum(i, pv(i) * v(i)) / sum(i, pv00(i) * v00(i));
 wtrdet.. wtr("ynonp") =E= (nct + nfi) * er00 / er / usdefl * sum(i, pv(i) * v(i)) / sum(i, pv00(i) * v00(i));
-fgtrdet.. fgtr("ynonp") =E= (gtra + gtrb) / indefl;
-fwtrdet.. fwtr("ynonp") =E= (nct + nfi) * er00 / er / usdefl;
 fyself(i).. fy("yself",i) =E= sum(r$(ri(r,i)), pls00(r)) * ls(i) * (1 - tw(i));
 fywage(i).. fy("ywage",i) =E= sum(r$(ri(r,i)), w00(r)) * lw(i) * (1 - tw(i));
 fycap(i).. fy("ycap",i) =E= pk00(i) * k(i) * (1 - thetak(i)) * (1 - tk(i));
@@ -1082,6 +1144,12 @@ qinv.. oinv =E= ogfi + ochs;
 qexp.. oexp =E= sum(ie, ex(ie) * pq00(ie) * (1 + trmx(ie)));
 qimp.. oimp =E= sum(i, (m(i) * pim00(i) * (1 + trmm(i)))$(im(i)) + nm(i) * pnm00(i));
 qgdpmp.. ogdpmp =E= ocns + sum(i, pc00(i) * cg(i)) + oinv + oexp - oimp;
+ls_fx_agricult.. ls("agricult") - 0 =E= 0;
+ls_fx_cons_good_e1e25cc5.. ls("cons-good") - 0 =E= 0;
+ls_fx_cap_good_04720e89.. ls("cap-good") - 0 =E= 0;
+ls_fx_int_good_71fc43da.. ls("int-good") - 0 =E= 0;
+ls_fx_pub_infr_644e4788.. ls("pub-infr") - 0 =E= 0;
+ls_fx_service.. ls("service") - 0 =E= 0;
 y_fx_ynonp_agricult.. y("ynonp","agricult") - 0 =E= 0;
 y_fx_ynonp_cons_good_e1e25cc5.. y("ynonp","cons-good") - 0 =E= 0;
 y_fx_ynonp_cap_good_04720e89.. y("ynonp","cap-good") - 0 =E= 0;
@@ -1097,6 +1165,11 @@ fy_fx_ynonp_service.. fy("ynonp","service") - 0 =E= 0;
 savf_fx.. savf - 47.9 =E= 0;
 exscale_fx.. exscale - 1 =E= 0;
 taum_fx_cap_good_04720e89.. taum("cap-good") - 0 =E= 0;
+taum_fx_agricult.. taum("agricult") - 0 =E= 0;
+taum_fx_cons_good_e1e25cc5.. taum("cons-good") - 0 =E= 0;
+taum_fx_int_good_71fc43da.. taum("int-good") - 0 =E= 0;
+taum_fx_pub_infr_644e4788.. taum("pub-infr") - 0 =E= 0;
+taum_fx_service.. taum("service") - 0 =E= 0;
 
 
 * ============================================
@@ -1214,14 +1287,12 @@ Model mcp_model /
     exscale_fx.nu_exscale_fx,
     fbudget.nu_fbudget,
     fddef.nu_fddef,
-    fgtrdet.nu_fgtrdet,
     firstn.nu_firstn,
     firstq.nu_firstq,
     firsts.nu_firsts,
     firstv.nu_firstv,
     firstx.nu_firstx,
     firstz.nu_firstz,
-    fwtrdet.nu_fwtrdet,
     fy_fx_ynonp_agricult.nu_fy_fx_ynonp_agricult,
     fy_fx_ynonp_cap_good_04720e89.nu_fy_fx_ynonp_cap_good_04720e89,
     fy_fx_ynonp_cons_good_e1e25cc5.nu_fy_fx_ynonp_cons_good_e1e25cc5,
@@ -1239,6 +1310,12 @@ Model mcp_model /
     invsav.nu_invsav,
     les.nu_les,
     lmclear.nu_lmclear,
+    ls_fx_agricult.nu_ls_fx_agricult,
+    ls_fx_cap_good_04720e89.nu_ls_fx_cap_good_04720e89,
+    ls_fx_cons_good_e1e25cc5.nu_ls_fx_cons_good_e1e25cc5,
+    ls_fx_int_good_71fc43da.nu_ls_fx_int_good_71fc43da,
+    ls_fx_pub_infr_644e4788.nu_ls_fx_pub_infr_644e4788,
+    ls_fx_service.nu_ls_fx_service,
     margdet.nu_margdet,
     mean.nu_mean,
     meanc.nu_meanc,
@@ -1265,7 +1342,12 @@ Model mcp_model /
     qinv.nu_qinv,
     savf_fx.nu_savf_fx,
     supply.nu_supply,
+    taum_fx_agricult.nu_taum_fx_agricult,
     taum_fx_cap_good_04720e89.nu_taum_fx_cap_good_04720e89,
+    taum_fx_cons_good_e1e25cc5.nu_taum_fx_cons_good_e1e25cc5,
+    taum_fx_int_good_71fc43da.nu_taum_fx_int_good_71fc43da,
+    taum_fx_pub_infr_644e4788.nu_taum_fx_pub_infr_644e4788,
+    taum_fx_service.nu_taum_fx_service,
     taumdet.nu_taumdet,
     utildef.nu_utildef,
     valuen.nu_valuen,

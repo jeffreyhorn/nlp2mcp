@@ -724,6 +724,7 @@ Sprint 22 retrospective identified that partial pipeline (`--only-solve`) gave m
 - Updated `data/gamslib/gamslib_status.json` (fresh results for all 147 candidates)
 - Verified KU-26 (multi-solve incomparable stability) — all 6 models confirmed stable
 - Updated KNOWN_UNKNOWNS.md: KU-26 marked VERIFIED with details in both body and Appendix C
+- Note: Pipeline regenerated MCP files for models whose translate status changed (e.g., borderline timeout models). These MCP file changes are excluded from this PR to keep it purely a baseline-recording commit; the status JSON captures the pipeline results.
 
 ### Result
 
