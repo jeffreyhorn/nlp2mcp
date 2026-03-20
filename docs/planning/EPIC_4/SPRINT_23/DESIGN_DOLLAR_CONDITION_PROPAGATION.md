@@ -485,10 +485,10 @@ The `_extract_gradient_conditions()` function in §7.3 implements this directly:
 
 ### 8.2 Model Impact Risk: VERY LOW
 
-- Only adds equation-level guards (more restrictive, never less)
-- Cannot cause new incorrect evaluations
-- Cannot cause new infeasibilities (guarded instances would evaluate to 0=0 anyway)
-- Can only *fix* existing division-by-zero or domain errors
+- When applied under the "apply guard only when safe" criteria (Sections 4–6), this change only adds equation-level guards that are more restrictive, never less
+- Under those criteria, it is not expected to cause new incorrect evaluations
+- Under those criteria, it is not expected to introduce new infeasibilities, because guarded instances are constructed so that all other stationarity terms are structurally zero when the guard is false and the equation reduces to 0=0
+- The intended effect is to *fix* existing division-by-zero or domain errors; violating the guard-safety criteria could change the KKT system and must be avoided by implementation checks
 
 ### 8.3 Performance Risk: NEGLIGIBLE
 
