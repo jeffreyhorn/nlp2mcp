@@ -2,8 +2,8 @@
 
 **Created:** 2026-03-17
 **Sprint:** 23 (Prep Task 1)
-**Status:** Initial — unknowns cataloged; verification pending during prep tasks
-**Last Updated:** 2026-03-17
+**Status:** Tasks 2-3 complete — verification results recorded for KU-01 through KU-11; KU-12+ pending
+**Last Updated:** 2026-03-19
 
 ---
 
@@ -188,7 +188,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 2h (part of Task 3 triage)
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — The 12 models split 5/6/1 across Category A (KKT bugs), Category B (PATH convergence), and Category D (missing feature). 0 are inherently incompatible (Category C). The "primarily KKT bugs" assumption holds for diagnosed issues (5 of 12) but 6 models are PATH convergence failures on non-convex problems requiring warm-start infrastructure, not code fixes. The 5 KKT bugs (markov, spatequ, pak, bearing, sparta) plus 1 missing feature (paperco) are all fixable. The 6 PATH convergence models (robustlp, prolog, chain, cpack, lnts, mathopt3) need warm-start or improved initialization. No models require permanent exclusion.
 
 ---
 
@@ -210,7 +210,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Each of the three models has a DIFFERENT root cause pattern, not the same guard pattern as Sprint 22: (1) pak (#1049) involves lead/lag Jacobian entries missing from stationarity — a temporal indexing issue, not a scalar-constraint guard. (2) spatequ (#1038) is a Jacobian domain mismatch where sum index binding fails for 3D variables in 2D equations — an index dimensionality issue. (3) sparta (#1081) is a bal4-specific KKT derivation bug. None directly extend the uimp/mexss pattern from PR #1076. Sprint 22 knowledge helps establish debugging patterns but each model needs independent investigation (~3-4h each, not the ~2h that pattern reuse would allow).
 
 ---
 
@@ -232,7 +232,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Tasks 2, 3, 6 (cross-referenced)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — Influx from path_solve_terminated fixes is estimated at 2-3 models (per KU-05). The ≤8 target requires 4+ gross fixes to absorb this influx. Tier 1 delivers 5 gross fixes (markov, pak, paperco, sparta, spatequ) costing 14-19h. Adding Tier 2 (bearing, robustlp) at 5-8h provides additional buffer. Sprint 22's 1:1 fix:influx ratio may repeat, so Sprint 23 should budget for 6-7 gross fixes to safely reach ≤8 net. Track gross fixes and influx separately per PR7.
 
 ---
 
@@ -253,7 +253,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 15min (confirmation only)
 **Owner:** Task 3 (model_infeasible triage)
 **Prior Analysis:** Sprint 22 KU-09 confirmed chain only; rocket status has changed since then
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — chain is confirmed model_infeasible (MODEL STATUS 5, Solver Status 1 Normal, 282 iterations, residual 0.11). It is a non-convex catenary benchmark (COPS) where PATH nearly converges but stalls — this is genuine non-convexity, not a KKT bug. rocket is confirmed path_solve_terminated (not model_infeasible) with `+-infinity * 0 is undefined` execution error in Task 2 triage. The two models are in different categories as expected.
 
 ---
 
@@ -275,7 +275,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1.5h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — markov's infeasibility is caused by `_add_indexed_jacobian_terms()` using a single representative (diagonal) derivative for ALL constraint-variable pairings. For `constr(sp,j)` involving `z(sp,j,spp)`, diagonal entries have derivative `1 - b*pi(...)` but off-diagonal entries should be `-b*pi(...)` only. The fix requires per-pattern stationarity generation. Issue #1110 provides specific code-level root cause in `src/kkt/stationarity.py`. Estimated 3-4h, scoped to `_add_indexed_jacobian_terms()` modifications. No AD engine changes needed.
 
 ---
 
@@ -297,7 +297,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 3 (model_infeasible triage)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ⚠️ PARTIALLY CONFIRMED — prolog's singularity is structural, not a KKT assembly bug. The CES demand functions use fractional exponents (`y(h)**(epsi-1)`, `p(gp)**-(1+eta)`) that create singular Jacobian entries near variable bounds. PATH runs 8,060 iterations (residual 0.94) and fails. This is a numerical conditioning issue inherent to the CES model class — reformulation or warm-start from the NLP solution is needed, not a simple stationarity fix. May require clamping variables away from singularity boundaries or PATH parameter tuning. Classified as Category B (PATH convergence), Tier 3 (deferred).
 
 ---
 
@@ -681,12 +681,12 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-03 | ✅ | 2026-03-18 | VERIFIED: sambal/qsambal require #1112 | Scheduled Tier 2 (Days 5-7) |
 | KU-04 | ⚠️ | 2026-03-18 | PARTIAL: Not confirmed incompatible, but high cascade risk | Deferred to Tier 3 |
 | KU-05 | ⚠️ | 2026-03-18 | PARTIAL: 2-3 models may cascade; track per PR7 | Track gross fixes vs influx |
-| KU-06 | | | | |
-| KU-07 | | | | |
-| KU-08 | | | | |
-| KU-09 | | | | |
-| KU-10 | | | | |
-| KU-11 | | | | |
+| KU-06 | ⚠️ | 2026-03-19 | PARTIAL: 5 KKT bugs + 1 missing feature + 6 PATH convergence; not "primarily" KKT | Created TRIAGE_MODEL_INFEASIBLE.md |
+| KU-07 | ⚠️ | 2026-03-19 | PARTIAL: pak/spatequ/sparta each have different root causes, not sameas guard extensions | Independent investigation needed per model |
+| KU-08 | ⚠️ | 2026-03-19 | PARTIAL: Need 4+ gross fixes for ≤8 target; Tier 1 delivers 5 | Track gross vs influx per PR7 |
+| KU-09 | ✅ | 2026-03-19 | VERIFIED: chain is non-convex PATH failure; rocket is path_solve_terminated | Correct categorization confirmed |
+| KU-10 | ✅ | 2026-03-19 | VERIFIED: markov single-representative derivative; scoped 3-4h fix | Issue #1110 has full root cause |
+| KU-11 | ⚠️ | 2026-03-19 | PARTIAL: CES singularity is structural, not KKT bug; needs reformulation/warm-start | Deferred to Tier 3 |
 | KU-12 | | | | |
 | KU-13 | | | | |
 | KU-14 | | | | |
