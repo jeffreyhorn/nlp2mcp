@@ -634,7 +634,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 10min (confirmation)
 **Owner:** Task 8 (baseline metrics)
 **Prior Analysis:** Sprint 22 KU-30 confirmed incomparable classification; carryforward
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** VERIFIED — All 6 multi-solve models confirmed (aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn, senstran). Flag set via `"multi_solve": true` in gamslib_status.json, introduced by PR #1103. Comparison pipeline correctly skips these models (`compare_multi_solve_skip`). Flag is stable across runs. No models incorrectly flagged or missed.
 
 ---
 
@@ -701,7 +701,7 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-23 | ✅ | 2026-03-20 | VERIFIED: All 7 timeouts are Jacobian computation bottleneck; 3 are LP models | Architectural change needed; beyond Sprint 23 |
 | KU-24 | ❌ | 2026-03-20 | REFUTED: Baseline is 143/156 (not 141); only 2 fixes needed, not 4 | LhsConditionalAssign alone reaches 147/156 |
 | KU-25 | ❌ | 2026-03-20 | REFUTED: paperco/lmp2 are NOT translate failures; both translate successfully | They fail at solve stage (different priorities) |
-| KU-26 | | | | |
+| KU-26 | ✅ | 2026-03-20 | VERIFIED: All 6 multi-solve models stable (aircraft, apl1p, apl1pca, ps10_s_mn, ps5_s_mn, senstran). Flag via PR #1103. | No changes needed |
 
 ---
 
