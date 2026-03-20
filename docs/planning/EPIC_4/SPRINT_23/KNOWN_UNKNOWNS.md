@@ -2,7 +2,7 @@
 
 **Created:** 2026-03-17
 **Sprint:** 23 (Prep Task 1)
-**Status:** Tasks 2-4 complete — verification results recorded for KU-01 through KU-17; KU-18+ pending
+**Status:** Tasks 2-7 complete — verification results recorded for KU-01 through KU-25; KU-26 pending (Task 8)
 **Last Updated:** 2026-03-20
 
 ---
@@ -546,7 +546,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h (part of Task 7 catalog)
 **Owner:** Task 7 (translate failures catalog)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — Of 13 remaining translate failures (not 15 — ferts, turkpow, clearlak recovered), the 6 non-timeout models (4 LhsConditionalAssign + 2 internal errors) are higher leverage than the 7 timeouts. The 4 LhsConditionalAssign models share a single root cause (missing statement-level emission support; currently falls through to `expr_to_gams()` and raises) and would recover all 4 models with a 2-3h fix. The 7 timeouts require architectural Jacobian changes. No compilation errors in the traditional sense — failures are either missing feature (C) or internal error (D), both fixable.
 
 ---
 
@@ -568,7 +568,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 **Estimated Research Time:** 1h
 **Owner:** Task 7 (translate failures catalog)
 **Prior Analysis:** Sprint 22 KU-22 confirmed gastrans needs architectural Jacobian changes
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ✅ VERIFIED — All 7 timeout models involve symbolic Jacobian computation as the bottleneck. Root causes: large multi-dimensional domains (ganges/gangesx/nebrazil), dynamic subset fallback explosion (gastrans #830), high-dimensional variables (sarf #885, iswnm #931), scenario tree expansion (srpchase). 3 of 7 are LP models (iswnm, nebrazil, sarf) where symbolic differentiation is unnecessary — an "LP shortcut" would help but is architectural. clearlak was borderline and recovered on rerun (150.0s → ~148s). No simple optimizations will fix the remaining 7.
 
 ---
 
@@ -590,7 +590,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 1h
 **Owner:** Task 7 (translate failures catalog)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ❌ REFUTED — The baseline is 143/156 (not 141/156): ferts, turkpow, and clearlak already translate successfully. Only 2 fixes are needed to reach ≥ 145/156 (not 4). The single LhsConditionalAssign fix (2-3h) recovers 4 models → 147/156 (94.2%), exceeding the target by 2. The referenced issues #952 (lmp2) and #953 (paperco) are NOT translate failures — they translate successfully but fail at the solve stage.
 
 ---
 
@@ -611,7 +611,7 @@ This document catalogs assumptions and unknowns for Sprint 23 (Solve Rate Push &
 
 **Estimated Research Time:** 30min
 **Owner:** Task 7 (translate failures catalog)
-**Verification Results:** 🔍 Status: INCOMPLETE
+**Verification Results:** ❌ REFUTED — paperco and lmp2 are NOT translate failures. Both translate successfully: paperco → model_infeasible (MODEL STATUS 5), lmp2 → path_syntax_error (compilation_error). Their loop-body issues (#953, #952) affect MCP output correctness at the solve stage, not translation. These models belong to Priority 2 (model_infeasible) and Priority 4 (path_syntax_error) respectively, not Priority 5 (translate).
 
 ---
 
@@ -697,10 +697,10 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-19 | ✅ | 2026-03-20 | VERIFIED: 4 B models with 4 distinct root causes; no common bug | Per-model root cause in triage doc |
 | KU-20 | ✅ | 2026-03-20 | VERIFIED: 0 CGE models in G+B; cascade risk 0-1 models | No overlap with model_infeasible |
 | KU-21 | ⚠️ | 2026-03-20 | PARTIAL: gussrisk fixed; gtm low-effort; tricp NOT low-effort (4-6h) | Defer tricp; target gtm |
-| KU-22 | | | | |
-| KU-23 | | | | |
-| KU-24 | | | | |
-| KU-25 | | | | |
+| KU-22 | ✅ | 2026-03-20 | VERIFIED: 6 non-timeout models (C+D) are higher leverage than 7 timeouts (B) | LhsConditionalAssign fix recovers 4 models |
+| KU-23 | ✅ | 2026-03-20 | VERIFIED: All 7 timeouts are Jacobian computation bottleneck; 3 are LP models | Architectural change needed; beyond Sprint 23 |
+| KU-24 | ❌ | 2026-03-20 | REFUTED: Baseline is 143/156 (not 141); only 2 fixes needed, not 4 | LhsConditionalAssign alone reaches 147/156 |
+| KU-25 | ❌ | 2026-03-20 | REFUTED: paperco/lmp2 are NOT translate failures; both translate successfully | They fail at solve stage (different priorities) |
 | KU-26 | | | | |
 
 ---
