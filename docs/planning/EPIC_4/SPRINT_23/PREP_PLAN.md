@@ -600,7 +600,8 @@ Sprint 23 targets reducing translate failures from 13 to ≤ 11 (≥ 145/156). W
 - Mix of timeouts (7), missing IR features (4), and internal errors (2) — no traditional compilation errors
 - Sprint 23 acceptance criterion: ≥ 93% of parsed models (≥ 145/156 assuming 156 parsed)
 - Pipeline retest script: `.venv/bin/python scripts/gamslib/run_full_test.py`
-- Related issues: #952 (lmp2 empty subsets), #953 (paperco loop body), #940 (mexls universal set), #1062 (tricp)
+- Related issues: #940 (mexls universal set), #1062 (tricp), #830 (gastrans Jacobian timeout), #885 (sarf timeout)
+- ~~#952 (lmp2), #953 (paperco)~~ — refuted by KU-25: these are NOT translate failures (both translate successfully; fail at solve)
 
 ### What Needs to Be Done
 
@@ -632,7 +633,7 @@ Sprint 23 targets reducing translate failures from 13 to ≤ 11 (≥ 145/156). W
 
 **Classification:** 7 timeout (B), 4 missing IR feature (C: LhsConditionalAssign), 2 internal error (D: mexls #940, mine SetMembershipTest)
 
-**Key finding:** The 4 LhsConditionalAssign models (agreste, ampl, cesam, korcge) share a single root cause — missing `expr_to_gams()` handler. A single 2-3h fix recovers all 4 → 147/156 (94.2%), exceeding the ≥ 145 target. The 7 timeouts are architecturally intractable (Jacobian computation bottleneck).
+**Key finding:** The 4 LhsConditionalAssign models (agreste, ampl, cesam, korcge) share a single root cause — missing statement-level emission support for LhsConditionalAssign (currently falls through to `expr_to_gams()` and raises). A single 2-3h fix recovers all 4 → 147/156 (94.2%), exceeding the ≥ 145 target. The 7 timeouts are architecturally intractable (Jacobian computation bottleneck).
 
 **KU-24 REFUTED:** Only 2 fixes needed to reach target (not 4), because baseline is 143 not 141.
 **KU-25 REFUTED:** paperco/lmp2 are NOT translate failures — they translate successfully but fail at solve.
