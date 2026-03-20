@@ -93,7 +93,7 @@ Sprint 22 had 141/156 (15 failures). This run has 139/156 (17 failures). Net: **
 | Category | Count | Sprint 22 | Delta | Notes |
 |----------|-------|-----------|-------|-------|
 | model_optimal | 89 | 89 | +0 | |
-| path_syntax_error | 18 | 20 | -2 | 2 fewer due to scope narrowing (excluded models) |
+| path_syntax_error | 18 | 20 | -2 | |
 | model_infeasible | 15 | 15 | +0 | 12 in-scope + 3 excluded |
 | path_solve_terminated | 10 | 10 | +0 | |
 | path_solve_license | 7 | 7 | +0 | |
@@ -151,7 +151,7 @@ All 6 multi-solve models are correctly flagged and skipped during comparison:
 | Solve | 89 | 89 | Stable |
 | Match | 47 | 47 | Stable |
 | model_infeasible (in-scope) | 12 | 12 | Stable |
-| path_syntax_error | 18-20 | 18 | Stable (scope narrowing) |
+| path_syntax_error | 18-20 | 18 | Stable |
 | path_solve_terminated | 10 | 10 | Stable |
 | path_solve_license | 7 | 7 | Stable |
 
