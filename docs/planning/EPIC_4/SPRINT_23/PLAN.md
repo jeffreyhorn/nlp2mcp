@@ -2,7 +2,7 @@
 
 **Created:** 2026-03-20
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Effort:** Budget ~32–44 hours (~2.1–2.9h/day effective capacity)
+**Effort:** Estimate ~36–48 hours; Budget ~32–44 hours (~2.1–2.9h/day effective capacity)
 **Risk Level:** MEDIUM
 **Baseline:** `main @ 2c33989e` — parse 156/160 (97.5%), translate 139/156 (89.1%), solve 89/139 (64.0%), match 47/160 (29.4%), tests 4,209
 

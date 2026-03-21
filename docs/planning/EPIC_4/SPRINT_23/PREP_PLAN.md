@@ -887,7 +887,7 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
 - Sprint 22 Plan format: `docs/planning/EPIC_4/SPRINT_22/PLAN.md` (15-day schedule, 2 checkpoints)
 - Sprint 22 Prompts: `docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md` (day-by-day execution)
 - Estimated effort: 32-44 hours across 5 priorities
-- 24 GitHub issues labeled `sprint-23`
+- 32 GitHub issues labeled `sprint-23` (24 open + 8 closed)
 
 ### What Needs to Be Done
 
