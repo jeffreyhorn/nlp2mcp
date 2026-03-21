@@ -108,8 +108,8 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 | Priority | Model | Subcategory | Fix | Effort | Days |
 |---|---|---|---|---|---|
 | 1 | srkandw | G | Parser `_handle_aggregation()` subset domain filter | 2-3h | 8 |
-| 2 | chenery | B | Extend `resolve_index_conflicts()` for condition-scope | 1-2h | 9-10 |
-| 3 | shale | B | Domain analysis + stationarity condition fix | 2-3h | 10 |
+| 2 | chenery | B | Extend `resolve_index_conflicts()` for condition-scope | 1-2h | 9 |
+| 3 | shale | B | Domain analysis + stationarity condition fix | 2-3h | 9 |
 | 4 | otpop | B | Alias-as-subset condition investigation | 2-3h | 10-11 |
 | 5 | hhfair | B | IndexOffset emission fix (lag/lead syntax) | 2-3h | 11 |
 
