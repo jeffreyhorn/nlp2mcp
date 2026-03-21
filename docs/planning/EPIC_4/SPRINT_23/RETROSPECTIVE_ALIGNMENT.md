@@ -119,18 +119,18 @@
 
 The retrospective §Sprint 23 Recommendations suggested targets. Here is the alignment:
 
-| Metric | Retro Suggestion | PROJECT_PLAN.md Target | PREP_PLAN.md / BASELINE_METRICS.md | Aligned? |
-|--------|-----------------|----------------------|-----------------------------------|----------|
-| Parse | ≥ 156/160 | ≥ 156/160 | Baseline: 156/160; Target ≥ 156/160 | Yes |
-| Translate | ≥ 145/156 (93%) | ≥ 145/156 (93%) | Baseline: 139/156 (89.1%); Gap: +6 | Yes |
-| Solve | ≥ 100 | ≥ 100 | Baseline: 89; Gap: +11 | Yes |
-| Match | ≥ 55 | ≥ 55 | Baseline: 47; Gap: +8 | Yes |
-| path_syntax_error | ≤ 15 | ≤ 15 | Baseline: 18; Gap: -3 | Yes |
-| path_solve_terminated | ≤ 5 | ≤ 5 | Baseline: 10; Gap: -5 | Yes |
-| model_infeasible | ≤ 8 (in-scope) | ≤ 8 (in-scope) | Baseline: 12; Gap: -4 | Yes |
-| Tests | ≥ 4,300 | ≥ 4,300 | Baseline: 4,209; Gap: +91 | Yes |
+| Metric | Retro Suggestion | PROJECT_PLAN.md Target | BASELINE_METRICS.md (Baseline → Target) | Aligned? |
+|--------|-----------------|----------------------|----------------------------------------|----------|
+| Parse | ≥ 156/160 | ≥ 156/160 | 156/160 → ≥ 156/160 | Yes |
+| Translate | ≥ 145/156 (93%) | ≥ 145/156 (93%) | 139/156 → ≥ 145/156 | Yes |
+| Solve | ≥ 100 | ≥ 100 | 89 → ≥ 100 | Yes |
+| Match | ≥ 55 | ≥ 55 | 47 → ≥ 55 | Yes |
+| path_syntax_error | ≤ 15 | ≤ 15 | 18 → ≤ 15 | Yes |
+| path_solve_terminated | ≤ 5 | ≤ 5 | 10 → ≤ 5 | Yes |
+| model_infeasible | ≤ 8 (in-scope) | ≤ 8 (in-scope) | 12 → ≤ 8 | Yes |
+| Tests | ≥ 4,300 | ≥ 4,300 | 4,209 → ≥ 4,300 | Yes |
 
-**All suggested targets are aligned between the retrospective, PROJECT_PLAN.md, and Sprint 23 planning.**
+**All suggested targets are aligned between the retrospective, PROJECT_PLAN.md, and BASELINE_METRICS.md.**
 
 ---
 

@@ -159,17 +159,20 @@ All 6 multi-solve models are correctly flagged and skipped during comparison:
 
 ---
 
-## 8. Sprint 23 Targets (from PREP_PLAN.md)
+## 8. Sprint 23 Targets (from PROJECT_PLAN.md)
 
-| Priority | Metric | Baseline | Target | Gap |
-|----------|--------|----------|--------|-----|
-| P1 | Parse | 156/160 (97.5%) | >= 157/160 (98.1%) | Need +1 |
-| P2 | Match | 47/160 (29.4%) | >= 55/160 (34.4%) | Need +8 |
-| P3 | Solve | 89 (64.0%) | >= 95 (68.3%) | Need +6 |
-| P4 | path_syntax_error | 18 | <= 14 | Need -4 |
-| P5 | Translate | 139/156 (89.1%) | >= 145/156 (93.0%) | Need +6 |
+| Metric | Baseline | Target | Gap |
+|--------|----------|--------|-----|
+| Parse | 156/160 (97.5%) | >= 156/160 (97.5%) | Maintain |
+| Translate | 139/156 (89.1%) | >= 145/156 (93.0%) | Need +6 |
+| Solve | 89 (64.0%) | >= 100 | Need +11 |
+| Match | 47/160 (29.4%) | >= 55/160 (34.4%) | Need +8 |
+| path_syntax_error | 18 | <= 15 | Need -3 |
+| path_solve_terminated | 10 | <= 5 | Need -5 |
+| model_infeasible (in-scope) | 12 | <= 8 | Need -4 |
+| Tests | 4,209 | >= 4,300 | Need +91 |
 
-**Note:** Translate baseline is 139 (not 141 as Sprint 22 final) due to borderline timeout variance. The Tier 1 LhsConditionalAssign fix (+4 models) still reaches 143 (not 145). Additional work may be needed: mine fix (+1 → 144) and/or mexls fix (+1 → 145) to meet P5 target from this baseline.
+**Note:** Translate baseline is 139 (not 141 as Sprint 22 final) due to borderline timeout variance. The Tier 1 LhsConditionalAssign fix (+4 models) reaches 143 (not 145). Additional work needed: mine fix (+1 → 144) and/or mexls fix (+1 → 145) to meet the >= 145 target from this baseline.
 
 ---
 
