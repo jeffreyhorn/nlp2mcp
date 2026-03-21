@@ -832,7 +832,7 @@ Sprint 22 retrospective identified 5 "What Could Be Improved" items and 3 "What 
 - 5 continuing recommendations (PR1-PR5): PR3 upgraded to PR6; all others continue
 - 8 suggested targets: all aligned between retrospective, PROJECT_PLAN.md, and Sprint 23 planning
 - 7 deferred items: 6 addressed, 1 intentionally deferred (non-convex multi-KKT, KU-16)
-- 26/26 KUs verified: 12 VERIFIED, 11 PARTIAL (residual risks documented), 3 REFUTED
+- 26/26 KUs resolved: 12 VERIFIED, 11 PARTIAL (residual risks documented), 3 REFUTED
 - 3 minor observations (non-blocking): translate baseline discrepancy explained, PST target calibration backed by triage, effort estimate inflation noted for Task 10
 
 ### Verification

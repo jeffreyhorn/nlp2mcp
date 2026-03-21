@@ -164,7 +164,7 @@ Sprint 22 also reviewed Sprint 20's process recommendations (PR1-PR5). Status fo
 
 ## 7. KU Verification Cross-Check (Tasks 2-8)
 
-All 26 KUs have been verified through Tasks 2-8. Appendix C in KNOWN_UNKNOWNS.md is complete.
+All 26 KUs have been evaluated through Tasks 2-8. Appendix C in KNOWN_UNKNOWNS.md is complete.
 
 ### Verification Summary
 
@@ -174,7 +174,7 @@ All 26 KUs have been verified through Tasks 2-8. Appendix C in KNOWN_UNKNOWNS.md
 | ⚠️ PARTIAL | 11 | KU-04, KU-05, KU-06, KU-07, KU-08, KU-11, KU-12, KU-16, KU-17, KU-18, KU-21 |
 | ❌ REFUTED | 3 | KU-14, KU-24, KU-25 |
 
-**Total: 26/26 verified (no INCOMPLETE entries remain)**
+**Total: 26/26 resolved (no INCOMPLETE entries remain)**
 
 ### PARTIAL KUs — Risk Assessment
 
@@ -206,7 +206,7 @@ PARTIAL status means the unknown was investigated but the original assumption wa
 | Task 7 (Translate Failures) | KU-22, KU-23, KU-24, KU-25 | All 4 | ✅ |
 | Task 8 (Full Pipeline Baseline) | KU-26 | 1 | ✅ |
 
-**All 26 KUs verified. No gaps found.**
+**All 26 KUs resolved. No gaps found.**
 
 ---
 

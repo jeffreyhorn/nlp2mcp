@@ -2,7 +2,7 @@
 
 **Created:** 2026-03-17
 **Sprint:** 23 (Prep Task 1)
-**Status:** Tasks 2-8 complete — all 26 KUs verified (12 VERIFIED, 11 PARTIAL, 3 REFUTED)
+**Status:** Tasks 2-8 complete — all 26 KUs evaluated (12 VERIFIED, 11 PARTIAL, 3 REFUTED)
 **Last Updated:** 2026-03-20
 
 ---
