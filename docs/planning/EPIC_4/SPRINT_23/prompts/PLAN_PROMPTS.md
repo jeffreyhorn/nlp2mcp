@@ -3,7 +3,7 @@
 This file contains comprehensive prompts for each day of Sprint 23 (Days 0–14). Each prompt is designed to be used when starting work on that specific day.
 
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Estimated Effort:** ~32–44 hours (~2.1–2.9h/day effective capacity)
+**Estimated Effort:** ~36–48 hours (budget: 32–44h; ~2.4–3.2h/day effective capacity)
 **Baseline:** parse 156/160 (97.5%), translate 139/156 (89.1%), solve 89 (64.0%), match 47/160 (29.4%), tests 4,209
 
 ---

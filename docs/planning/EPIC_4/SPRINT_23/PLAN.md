@@ -152,7 +152,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
 **Theme:** Verify clean baseline, internalize the plan, confirm all tests pass
-**Effort:** 1-1.5h
+**Effort:** 2-2.5h
 
 | Task | Deliverable |
 |---|---|
