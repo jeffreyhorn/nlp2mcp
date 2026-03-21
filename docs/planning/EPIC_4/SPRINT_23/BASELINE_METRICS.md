@@ -165,7 +165,7 @@ All 6 multi-solve models are correctly flagged and skipped during comparison:
 |--------|----------|--------|-----|
 | Parse | 156/160 (97.5%) | >= 156/160 (97.5%) | Maintain |
 | Translate | 139/156 (89.1%) | >= 145/156 (93.0%) | Need +6 |
-| Solve | 89 (64.0%) | >= 100 | Need +11 |
+| Solve | 89 | >= 100 | Need +11 |
 | Match | 47/160 (29.4%) | >= 55/160 (34.4%) | Need +8 |
 | path_syntax_error | 18 | <= 15 | Need -3 |
 | path_solve_terminated | 10 | <= 5 | Need -5 |
