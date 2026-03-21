@@ -42,7 +42,7 @@ This file contains comprehensive prompts for each day of Sprint 23 (Days 0–14)
 
 **Deliverables:**
 - `make test` passing (4,209 tests)
-- `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` filled with baseline metrics
+- `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` baseline metrics verified against BASELINE_METRICS.md
 - Pipeline baseline confirmed
 
 **Quality Checks:**
@@ -56,7 +56,7 @@ You do NOT need to do this if all changes you are committing or pushing are docu
 
 **Completion Criteria:**
 - [ ] `make test` passes (4,209 tests)
-- [ ] SPRINT_LOG.md filled with baseline metrics
+- [ ] SPRINT_LOG.md baseline metrics verified/updated if needed
 - [ ] Pipeline baseline confirmed
 - [ ] Mark Day 0 as complete in PLAN.md
 - [ ] Log progress to CHANGELOG.md
