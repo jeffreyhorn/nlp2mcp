@@ -1,8 +1,8 @@
 # Sprint 23 Log
 
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Start Date:** TBD (after prep completion)
-**Baseline Commit:** `main @ 2c33989e`
+**Start Date:** 2026-03-21
+**Baseline Commit:** `main @ 89ff673e`
 
 ---
 
@@ -73,13 +73,34 @@
 
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| `make test` baseline | |
-| SPRINT_LOG.md initialized | |
-| Pipeline baseline confirmed | |
+| `make test` baseline | ✅ 4,209 passed, 10 skipped, 1 xfailed |
+| SPRINT_LOG.md initialized | ✅ Baseline metrics verified against BASELINE_METRICS.md |
+| Issue mapping confirmed | ✅ 24 open issues match PLAN.md table |
+| Pipeline baseline confirmed | ✅ All metrics match BASELINE_METRICS.md (see below) |
+
+**Pipeline Results (147-scope):**
+
+| Stage | This Run | Baseline | Match |
+|---|---|---|---|
+| Parse | 144/147 (98.0%) | 144/147 (98.0%) | ✅ |
+| Translate | 127/144 (88.2%) | 127/144 (88.2%) | ✅ |
+| Solve | 81/127 (63.8%) | 81/127 (63.8%) | ✅ |
+| Match | 47/147 (32.0%) | 47/147 (32.0%) | ✅ |
+
+**Solve Error Categories:**
+
+| Category | This Run | Baseline | Match |
+|---|---|---|---|
+| path_syntax_error | 17 | 17 (147-scope) | ✅ |
+| model_infeasible | 12 | 12 | ✅ |
+| path_solve_terminated | 10 | 10 | ✅ |
+| path_solve_license | 7 | 7 | ✅ |
+
+**Pipeline Duration:** 5077s (~85 min)
 
 ---
 
