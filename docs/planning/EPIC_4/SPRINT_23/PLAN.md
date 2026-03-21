@@ -72,11 +72,11 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 | Tier | Model | Category | Fix | Effort | Days |
 |---|---|---|---|---|---|
-| 1 | markov | A (KKT) | Multi-pattern Jacobian fix (#1110) | 3-4h | 6-7 |
-| 1 | pak | A (KKT) | Lead/lag Jacobian entries (#1049) | 3-4h | 6-7 |
-| 1 | paperco | D (feature) | Loop body parameter extraction (#953) | 3-4h | 8 |
-| 1 | sparta | A (KKT) | bal4 KKT derivation (#1081) | 2-3h | 8 |
-| 1 | spatequ | A (KKT) | Jacobian domain mismatch (#1038) | 3-4h | 9 |
+| 1 | markov | A (KKT) | Multi-pattern Jacobian fix (#1110) | 3-4h | 6 |
+| 1 | pak | A (KKT) | Lead/lag Jacobian entries (#1049) | 3-4h | 6 |
+| 1 | paperco | D (feature) | Loop body parameter extraction (#953) | 3-4h | 7 |
+| 1 | sparta | A (KKT) | bal4 KKT derivation (#1081) | 2-3h | 7 |
+| 1 | spatequ | A (KKT) | Jacobian domain mismatch (#1038) | 3-4h | 8 |
 | 2 | bearing | A (KKT) | MCP pairing mismatch (#757) | 3-5h | 11+ |
 | 2 | robustlp | B (PATH) | Near-feasible initialization | 2-3h | 11+ |
 
@@ -268,7 +268,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 6 — WS2: model_infeasible Tier 1, Part 1 (markov, pak)
 
 **Theme:** Begin model_infeasible KKT bug fixes
-**Effort:** 3-4h
+**Effort:** 6-8h (markov 3-4h, pak 3-4h, tests/smoke-tests overlapping)
 
 | Task | Files | Deliverable |
 |---|---|---|
@@ -284,7 +284,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 7 — WS2: model_infeasible Tier 1, Part 2 (paperco, sparta)
 
 **Theme:** Continue model_infeasible fixes
-**Effort:** 3-4h
+**Effort:** 6-7h
 
 | Task | Files | Deliverable |
 |---|---|---|
@@ -300,7 +300,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 8 — WS2: model_infeasible Tier 1, Part 3 (spatequ) + WS4 Begin
 
 **Theme:** Complete model_infeasible Tier 1; begin path_syntax_error G+B
-**Effort:** 3-4h
+**Effort:** 5-7h
 
 | Task | Files | Deliverable |
 |---|---|---|
@@ -315,7 +315,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 9 — WS4: path_syntax_error G+B (chenery, shale)
 
 **Theme:** Continue path_syntax_error fixes
-**Effort:** 2-3h
+**Effort:** 4-5h
 
 | Task | Files | Deliverable |
 |---|---|---|

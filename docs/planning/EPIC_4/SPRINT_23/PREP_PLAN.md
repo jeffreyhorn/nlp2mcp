@@ -974,7 +974,7 @@ grep -c "Checkpoint" docs/planning/EPIC_4/SPRINT_23/PLAN.md
 - [x] All 5 priority areas assigned to specific days
 - [x] 2 checkpoints defined with expected metrics and GO/NO-GO criteria
 - [x] Day-by-day prompts created
-- [x] All 24 sprint-23 issues mapped to days or backlog (19 open + 7 closed; 12 backlog)
+- [x] All 32 sprint-23 issues mapped to days or backlog (24 open + 8 closed)
 - [x] Contingency plans for alias differentiation regressions and model_infeasible influx (4 contingency plans)
 - [x] PR6/PR7/PR8 process requirements integrated into plan
 - [x] Sprint log initialized

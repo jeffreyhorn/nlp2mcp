@@ -439,7 +439,7 @@ gh pr create --title "Sprint 23 Day 5: Checkpoint 1 + sambal/qsambal verificatio
 - Read GitHub issue #1049 (pak) — detailed root cause
 - Read `src/kkt/stationarity.py` — understand `_add_indexed_jacobian_terms()`
 
-**Tasks to Complete (~3-4 hours):**
+**Tasks to Complete (~6-8 hours):**
 
 1. **Fix markov (#1110)** (3-4h)
    - Root cause: stationarity builder uses single representative derivative for all constraint-variable pairings
@@ -493,7 +493,7 @@ gh pr create --title "Sprint 23 Day 6: Fix markov (#1110) and pak (#1049)" \
 - Read GitHub issue #1081 (sparta) — bal4 KKT bug
 - Read `src/ir/parser.py` — understand `_handle_loop_stmt()`
 
-**Tasks to Complete (~3-4 hours):**
+**Tasks to Complete (~6-7 hours):**
 
 1. **Fix paperco (#953)** (3-4h)
    - Root cause: parameter `pp(p)` assigned inside `loop(scenario, ...)` body not extracted
@@ -546,7 +546,7 @@ gh pr create --title "Sprint 23 Day 7: Fix paperco (#953) and sparta (#1081)" \
 - Read `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` (srkandw section)
 - Read GitHub issue #1038 (spatequ)
 
-**Tasks to Complete (~3-4 hours):**
+**Tasks to Complete (~5-7 hours):**
 
 1. **Fix spatequ (#1038)** (3-4h)
    - Root cause: sum index binding fails for 3D variable `X(r,rr,c)` vs 2D equation `(r,c)`
@@ -596,7 +596,7 @@ gh pr create --title "Sprint 23 Day 8: Fix spatequ (#1038) + srkandw (subcategor
 - Day 8 PR must be merged
 - Read `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` (chenery, shale sections)
 
-**Tasks to Complete (~2-3 hours):**
+**Tasks to Complete (~4-5 hours):**
 
 1. **Fix chenery (subcategory B)** (1-2h)
    - Root cause: `t` used as both sum loop index and in condition `$(t(i))`
