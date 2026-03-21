@@ -27,7 +27,7 @@
 
 ### WS1: path_solve_terminated Reduction (10 → ≤ 5)
 - **Target:** path_solve_terminated ≤ 5
-- **Tier 1 (Days 1-2):** etamac (re-run), rocket (INF bounds), fawley (zero-denom guard), gtm (variable clamping)
+- **Tier 1 (Days 1-2):** rocket (INF bounds), fawley (zero-denom guard), gtm (variable clamping)
 - **Tier 2 (Days 4-5):** maxmin (self-pair #939), sambal (#862, #1112), qsambal (inherits sambal)
 - **Deferred:** elec (#983), dyncge, twocge (CGE)
 - **Effort:** ~11-18h
@@ -48,7 +48,8 @@
 ### WS4: path_syntax_error Residual (18 → ≤ 15)
 - **Target:** path_syntax_error ≤ 15
 - **G (Day 8):** srkandw (parser aggregation)
-- **B (Days 9-10):** chenery (index shadowing), shale (subset domain), otpop (alias-as-subset), hhfair (IndexOffset)
+- **B (Day 9):** chenery (index shadowing), shale (subset domain)
+- **B (Days 10-11):** otpop (alias-as-subset), hhfair (IndexOffset)
 - **Effort:** ~9-14h
 
 ### WS5: Translate Failures (139 → ≥ 145)

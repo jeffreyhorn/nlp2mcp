@@ -27,7 +27,7 @@ This file contains comprehensive prompts for each day of Sprint 23 (Days 0–14)
 
 2. **Initialize SPRINT_LOG.md** (0.25h)
    - Open `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md`
-   - Fill in baseline metrics from BASELINE_METRICS.md
+   - Verify baseline metrics against BASELINE_METRICS.md (template is pre-populated)
    - Record the baseline commit: `main @ 2c33989e`
 
 3. **Run baseline pipeline** (1.5h — ~76 min per PR6)
