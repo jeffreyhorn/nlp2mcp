@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task-to-Unknown mapping assigns verification responsibility to Prep Tasks 2-8
 - Updated PREP_PLAN.md Tasks 2-10 with Unknowns Verified metadata and acceptance criteria
 - Created PREP_TASK_PROMPTS.md with step-by-step execution prompts for Prep Tasks 2-10
+- Triage path_solve_terminated (Task 2): classified 10 models into 3 tiers — 1 already solved (etamac), 6 execution errors, 2 MCP pairing, 1 PATH convergence; verified KU-01 through KU-05
+- Triage model_infeasible (Task 3): classified 12 in-scope models — 5 KKT bugs (A), 6 PATH convergence (B), 1 missing feature (D); Tier 1 targets 5 models; verified KU-06 through KU-11
+- Design alias-aware differentiation #1111 (Task 4): `bound_indices` parameter threading, `_alias_match()`/`_same_root_set()` helpers, sameas guard generation; 21 alias mismatch models, dispatch regression canary; verified KU-12/13/15/16/17
+- Design dollar-condition propagation #1112 (Task 5): gradient condition extraction from `DollarConditional` nodes, `gradient_conditions` field on `KKTSystem`, Stage 4 fallback check; targets sambal/qsambal; verified KU-14/15
+- Triage path_syntax_error G+B (Task 6): revised count 1G + 4B = 5 models (srkandw, chenery, shale, otpop, hhfair); verified KU-18 through KU-21
+- Catalog translate failures (Task 7): 13 failures classified — 7 timeout, 4 LhsConditionalAssign (C), 2 internal error (D); Tier 1 LhsConditionalAssign fix yields +4; verified KU-22 through KU-25
+- Full pipeline baseline (Task 8): parse 156/160, translate 139/156, solve 89, match 47, path_syntax_error 18, path_solve_terminated 10, model_infeasible 12; verified KU-26
+- Sprint 22 retrospective alignment (Task 9): all 5 WCI items, 3 WDD items, 3 process recommendations (PR6-PR8) addressed; 26/26 KUs resolved; no critical gaps
+- Sprint 23 detailed schedule (Task 10): 15-day plan with 5 workstreams, 2 checkpoints (Day 5/Day 10), 4 contingency plans, risk register, 32 sprint-23 issues mapped (24 open + 8 closed); day-by-day execution prompts for all 15 days; SPRINT_LOG.md initialized
 
 ### Sprint 22 Summary - 2026-03-17
 

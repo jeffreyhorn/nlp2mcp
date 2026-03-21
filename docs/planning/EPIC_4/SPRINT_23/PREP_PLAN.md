@@ -865,7 +865,7 @@ grep -c "PR[678]" docs/planning/EPIC_4/SPRINT_23/RETROSPECTIVE_ALIGNMENT.md
 
 ## Task 10: Plan Sprint 23 Detailed Schedule
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 23 Day 1
@@ -887,7 +887,7 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
 - Sprint 22 Plan format: `docs/planning/EPIC_4/SPRINT_22/PLAN.md` (15-day schedule, 2 checkpoints)
 - Sprint 22 Prompts: `docs/planning/EPIC_4/SPRINT_22/prompts/PLAN_PROMPTS.md` (day-by-day execution)
 - Estimated effort: 32-44 hours across 5 priorities
-- 24 GitHub issues labeled `sprint-23`
+- 32 GitHub issues labeled `sprint-23` (24 open + 8 closed)
 
 ### What Needs to Be Done
 
@@ -911,15 +911,32 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
    - Checkpoint 2 (Day 10): Expected metrics, GO/NO-GO criteria
 4. **Create day-by-day prompts** for execution (following Sprint 22 format)
 5. **Define contingency plans** for high-risk areas (alias differentiation regressions, model_infeasible influx)
-6. **Map 24 sprint-23 issues** to specific days
+6. **Map 32 sprint-23 issues (24 open + 8 closed)** to specific days
 
 ### Changes
 
-*To be completed.*
+- Created `docs/planning/EPIC_4/SPRINT_23/PLAN.md` with 15-day schedule (Day 0-14), 5 workstreams, 2 checkpoints, 4 contingency plans, issue-to-day mapping for all 32 sprint-23 issues (24 open + 8 closed), risk register, and acceptance criteria
+- Created `docs/planning/EPIC_4/SPRINT_23/prompts/PLAN_PROMPTS.md` with day-by-day execution prompts for all 15 days
+- Initialized `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` with baseline metrics, workstream-to-issue mapping, model_infeasible gross/influx tracking table (PR7), and day-by-day progress template
+- Updated CHANGELOG.md with consolidated prep task entries (Tasks 2-10)
 
 ### Result
 
-*To be completed.*
+**Sprint 23 plan synthesizes all 9 prep task findings into a coherent 15-day schedule:**
+
+- **5 workstreams** mapped to specific days: WS1 path_solve_terminated (Days 1, 4-5), WS2 model_infeasible (Days 6-8), WS3 match rate (Days 2-5), WS4 path_syntax_error (Days 8-10), WS5 translate (Day 1)
+- **2 checkpoints** with GO/CONDITIONAL GO/NO-GO criteria: Checkpoint 1 (Day 5) targets solve ≥ 95, match ≥ 50; Checkpoint 2 (Day 10) targets solve ≥ 98, match ≥ 53
+- **Issue mapping:** All 32 sprint-23 issues (24 open + 8 closed) mapped: 10 scheduled to Sprint 23 days, 14 deferred/backlog, 8 closed (Sprint 22 fixes)
+- **Schedule key decisions:**
+  - #1111 alias differentiation on Days 2-3 (highest leverage: 21 mismatch models)
+  - #1112 dollar-condition propagation on Days 4-5 (unblocks sambal/qsambal)
+  - WS5 LhsConditionalAssign on Day 1 (quick win: +4 translate, 2-3h)
+  - WS2 Tier 1 on Days 6-8 (5 diagnosed KKT bugs)
+  - WS4 G+B on Days 8-10 (5 individual fixes)
+- **4 contingency plans:** alias regression revert, model_infeasible influx budget, #1112 over-extraction, WS4 effort overflow
+- **Process requirements integrated:** PR6 (full pipeline at checkpoints), PR7 (gross/influx tracking table in SPRINT_LOG), PR8 (absolute counts in all metrics)
+- **Risk register:** 4 risks tracked with probability, impact, and mitigation
+- **Estimated effort:** 36-48h (slightly above 32-44h budget at upper end; contingency: defer WS4 models 4-5 and WS2 Tier 2)
 
 ### Verification
 
@@ -953,15 +970,15 @@ grep -c "Checkpoint" docs/planning/EPIC_4/SPRINT_23/PLAN.md
 
 ### Acceptance Criteria
 
-- [ ] Plan created with 15-day schedule (Day 0-14)
-- [ ] All 5 priority areas assigned to specific days
-- [ ] 2 checkpoints defined with expected metrics and GO/NO-GO criteria
-- [ ] Day-by-day prompts created
-- [ ] All 24 sprint-23 issues mapped to days or backlog
-- [ ] Contingency plans for alias differentiation regressions and model_infeasible influx
-- [ ] PR6/PR7/PR8 process requirements integrated into plan
-- [ ] Sprint log initialized
-- [ ] All KU verification results from Tasks 2-9 incorporated into risk mitigation
+- [x] Plan created with 15-day schedule (Day 0-14)
+- [x] All 5 priority areas assigned to specific days
+- [x] 2 checkpoints defined with expected metrics and GO/NO-GO criteria
+- [x] Day-by-day prompts created
+- [x] All 32 sprint-23 issues mapped to days or backlog (24 open + 8 closed)
+- [x] Contingency plans for alias differentiation regressions and model_infeasible influx (4 contingency plans)
+- [x] PR6/PR7/PR8 process requirements integrated into plan
+- [x] Sprint log initialized
+- [x] All KU verification results from Tasks 2-9 incorporated into risk mitigation (4-item risk register)
 
 ---
 
@@ -1012,15 +1029,15 @@ Tasks 2-7 (Triage, in  ───┤
 ## Success Criteria for Prep Phase
 
 - [x] Known Unknowns document created with ≥ 25 unknowns
-- [ ] All 10 path_solve_terminated models triaged with root cause
-- [ ] All 12 model_infeasible models triaged with root cause
+- [x] All 10 path_solve_terminated models triaged with root cause
+- [x] All 12 model_infeasible models triaged with root cause
 - [x] Alias-aware differentiation (#1111) design documented
 - [x] Dollar-condition propagation (#1112) design documented
 - [x] 5 path_syntax_error G+B models triaged
 - [x] 13 translate failures cataloged and classified (revised from 15)
-- [ ] Full pipeline baseline established (per PR6)
-- [ ] Sprint 22 retrospective items confirmed in Sprint 23 plan
-- [ ] Sprint 23 PLAN.md completed with 15-day schedule and checkpoints
+- [x] Full pipeline baseline established (per PR6)
+- [x] Sprint 22 retrospective items confirmed in Sprint 23 plan
+- [x] Sprint 23 PLAN.md completed with 15-day schedule and checkpoints
 
 **Overall Goal:** Sprint 23 begins with clear triage, validated designs, and a data-driven plan. No surprises.
 
