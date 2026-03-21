@@ -911,7 +911,7 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
    - Checkpoint 2 (Day 10): Expected metrics, GO/NO-GO criteria
 4. **Create day-by-day prompts** for execution (following Sprint 22 format)
 5. **Define contingency plans** for high-risk areas (alias differentiation regressions, model_infeasible influx)
-6. **Map 24 sprint-23 issues** to specific days
+6. **Map 32 sprint-23 issues (24 open + 8 closed)** to specific days
 
 ### Changes
 
