@@ -180,7 +180,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 **End of Day 1 criterion:** rocket, fawley, gtm advance past execution errors; 4 translate models recover; ≥ 6 new tests.
 
-**Expected metrics shift:** path_solve_terminated -3 (etamac re-run + rocket + fawley + gtm = -4, but some may cascade); translate +4.
+**Expected metrics shift:** path_solve_terminated -3 to -4 (etamac re-run + rocket + fawley + gtm; net may vary with cascades); translate +4.
 
 ---
 
@@ -546,7 +546,7 @@ Issues not targeted in Sprint 23 (defer to Sprint 24): #871, #882, #918, #919, #
 **Impact:** HIGH (loss of match count)
 **Mitigation:** Run dispatch first; full pipeline regression before merge; Contingency 1
 
-### Risk 2: model_infeasible Influx from PST Fixes (KU-05)
+### Risk 2: model_infeasible Influx from path_solve_terminated Fixes (KU-05)
 **Status:** MEDIUM — 2-3 models expected to cascade
 **Probability:** 70% (Task 2 identified rocket, gtm, maxmin as medium cascade risk)
 **Impact:** MEDIUM (net reduction less than expected)

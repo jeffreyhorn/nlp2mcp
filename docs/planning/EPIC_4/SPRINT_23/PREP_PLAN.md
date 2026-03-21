@@ -915,7 +915,7 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
 
 ### Changes
 
-- Created `docs/planning/EPIC_4/SPRINT_23/PLAN.md` with 15-day schedule (Day 0-14), 5 workstreams, 2 checkpoints, 4 contingency plans, issue-to-day mapping for all 24 sprint-23 issues, risk register, and acceptance criteria
+- Created `docs/planning/EPIC_4/SPRINT_23/PLAN.md` with 15-day schedule (Day 0-14), 5 workstreams, 2 checkpoints, 4 contingency plans, issue-to-day mapping for all 32 sprint-23 issues (24 open + 8 closed), risk register, and acceptance criteria
 - Created `docs/planning/EPIC_4/SPRINT_23/prompts/PLAN_PROMPTS.md` with day-by-day execution prompts for all 15 days
 - Initialized `docs/planning/EPIC_4/SPRINT_23/SPRINT_LOG.md` with baseline metrics, workstream-to-issue mapping, model_infeasible gross/influx tracking table (PR7), and day-by-day progress template
 - Updated CHANGELOG.md with consolidated prep task entries (Tasks 2-10)
