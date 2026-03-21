@@ -159,7 +159,9 @@ All 6 multi-solve models are correctly flagged and skipped during comparison:
 
 ---
 
-## 8. Sprint 23 Targets (from PROJECT_PLAN.md)
+## 8. Sprint 23 Targets
+
+_Baseline values are from this pipeline run; targets are from `PROJECT_PLAN.md`._
 
 | Metric | Baseline | Target | Gap |
 |--------|----------|--------|-----|
