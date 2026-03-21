@@ -926,7 +926,7 @@ Sprint 23 has 5 priority areas and 32-44 hours of estimated work across 15 sprin
 
 - **5 workstreams** mapped to specific days: WS1 path_solve_terminated (Days 1, 4-5), WS2 model_infeasible (Days 6-8), WS3 match rate (Days 2-5), WS4 path_syntax_error (Days 8-10), WS5 translate (Day 1)
 - **2 checkpoints** with GO/CONDITIONAL GO/NO-GO criteria: Checkpoint 1 (Day 5) targets solve ≥ 95, match ≥ 50; Checkpoint 2 (Day 10) targets solve ≥ 98, match ≥ 53
-- **Issue mapping:** 19 open + 7 closed sprint-23 issues mapped to days or backlog; 12 issues deferred to Sprint 24 backlog
+- **Issue mapping:** All 32 sprint-23 issues (24 open + 8 closed) mapped: 10 scheduled to Sprint 23 days, 14 deferred/backlog, 8 closed (Sprint 22 fixes)
 - **Schedule key decisions:**
   - #1111 alias differentiation on Days 2-3 (highest leverage: 21 mismatch models)
   - #1112 dollar-condition propagation on Days 4-5 (unblocks sambal/qsambal)

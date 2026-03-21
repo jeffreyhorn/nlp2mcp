@@ -19,7 +19,7 @@ This file contains comprehensive prompts for each day of Sprint 23 (Days 0–14)
 - Read `docs/planning/EPIC_4/SPRINT_23/BASELINE_METRICS.md` — exact baseline numbers at commit `main @ 2c33989e`
 - Read `docs/planning/EPIC_4/SPRINT_23/KNOWN_UNKNOWNS.md` — note KU-05 (cascade risk), KU-12 (alias regression risk)
 
-**Tasks to Complete (~1-1.5 hours):**
+**Tasks to Complete (~2-2.5 hours):**
 
 1. **Verify baseline** (0.25h)
    - Run `make test` — must show 4,209 passed
@@ -30,7 +30,7 @@ This file contains comprehensive prompts for each day of Sprint 23 (Days 0–14)
    - Fill in baseline metrics from BASELINE_METRICS.md
    - Record the baseline commit: `main @ 2c33989e`
 
-3. **Run baseline pipeline** (0.5h — ~76 min per PR6)
+3. **Run baseline pipeline** (1.5h — ~76 min per PR6)
    - Run `.venv/bin/python scripts/gamslib/run_full_test.py --quiet`
    - Confirm parse 156/160, solve 89, match 47
    - Note translate count (may vary ±2-4 due to borderline timeouts)
@@ -91,7 +91,7 @@ After committing and pushing all changes:
 - Read `src/emit/original_symbols.py` — understand LhsConditionalAssign emission paths
 - Read `src/kkt/stationarity.py` — understand bound complementarity generation
 
-**Tasks to Complete (~3-4 hours):**
+**Tasks to Complete (~5-7 hours):**
 
 1. **WS1: Fix rocket (2-3h combined with fawley/gtm)**
    - In the KKT emitter, suppress `piU_*` variables and `comp_up_*` equations for variables where upper bound is `+INF`

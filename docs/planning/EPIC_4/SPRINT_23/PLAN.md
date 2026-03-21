@@ -15,7 +15,7 @@ Sprint 23 targets the largest combined solve and match improvement in Epic 4 his
 - **WS1: path_solve_terminated reduction** (10 → ≤ 5) — fix 7 models via execution error fixes + dollar-condition propagation (#1112)
 - **WS2: model_infeasible reduction** (12 → ≤ 8) — fix 5 Tier 1 models with diagnosed KKT bugs
 - **WS3: Match rate improvement** (47 → ≥ 55) — alias-aware differentiation (#1111) targeting 21 mismatch models
-- **WS4: path_syntax_error residual** (18 → ≤ 15) — fix 5 G+B models + LhsConditionalAssign translate fix
+- **WS4: path_syntax_error residual** (18 → ≤ 15) — fix 5 G+B models via parser and emitter fixes
 - **WS5: Translate failures** (139 → ≥ 145) — LhsConditionalAssign emission fix recovers 4 models
 
 The sprint introduces two architectural AD changes (#1111 alias differentiation, #1112 dollar-condition propagation) that are architecturally independent (different files, no shared data structures) but carry regression risk. The schedule places #1111 early (Days 2-3) to maximize match rate leverage, followed by #1112 (Days 4-5) to unblock sambal/qsambal.
@@ -107,7 +107,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 | Priority | Model | Subcategory | Fix | Effort | Days |
 |---|---|---|---|---|---|
-| 1 | srkandw | G | Parser `_handle_aggregation()` subset domain filter | 2-3h | 9-10 |
+| 1 | srkandw | G | Parser `_handle_aggregation()` subset domain filter | 2-3h | 8 |
 | 2 | chenery | B | Extend `resolve_index_conflicts()` for condition-scope | 1-2h | 9-10 |
 | 3 | shale | B | Domain analysis + stationarity condition fix | 2-3h | 10 |
 | 4 | otpop | B | Alias-as-subset condition investigation | 2-3h | 10-11 |
@@ -168,7 +168,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 ### Day 1 — WS1 Tier 1: Quick Wins (rocket, fawley, gtm) + WS5 Tier 1 (LhsConditionalAssign)
 
 **Theme:** Execution error fixes + translate fix; low-risk, high-leverage
-**Effort:** 3-4h
+**Effort:** 5-7h
 
 | Task | Files | Deliverable |
 |---|---|---|
@@ -490,7 +490,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 ## Issue-to-Day Mapping
 
-### Open Issues (19)
+### Open Issues (24)
 
 | Issue | Title | Priority | Day(s) | Status |
 |---|---|---|---|---|
@@ -519,7 +519,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 | #871 | camcge stationarity subset conditioning | — | — (backlog) | OPEN |
 | #862 | sambal domain conditioning | WS1/WS3 | 4-5 | OPEN |
 
-### Closed Issues (7)
+### Closed Issues (8)
 
 | Issue | Title | Notes |
 |---|---|---|
@@ -534,7 +534,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 ### Backlog (Not Scheduled)
 
-Issues not targeted in Sprint 23 (defer to Sprint 24): #986, #956, #952, #945, #919, #918, #882, #871, #1041, #1061, #1062, #1070.
+Issues not targeted in Sprint 23 (defer to Sprint 24): #871, #882, #918, #919, #945, #952, #956, #983, #986, #1041, #1061, #1062, #1070, #1091.
 
 ---
 

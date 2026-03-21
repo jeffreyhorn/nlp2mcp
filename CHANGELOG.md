@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Catalog translate failures (Task 7): 13 failures classified — 7 timeout, 4 LhsConditionalAssign (C), 2 internal error (D); Tier 1 LhsConditionalAssign fix yields +4; verified KU-22 through KU-25
 - Full pipeline baseline (Task 8): parse 156/160, translate 139/156, solve 89, match 47, path_syntax_error 18, path_solve_terminated 10, model_infeasible 12; verified KU-26
 - Sprint 22 retrospective alignment (Task 9): all 5 WCI items, 3 WDD items, 3 process recommendations (PR6-PR8) addressed; 26/26 KUs resolved; no critical gaps
-- Sprint 23 detailed schedule (Task 10): 15-day plan with 5 workstreams, 2 checkpoints (Day 5/Day 10), 4 contingency plans, risk register, 19 open + 7 closed issue mapping; day-by-day execution prompts for all 15 days; SPRINT_LOG.md initialized
+- Sprint 23 detailed schedule (Task 10): 15-day plan with 5 workstreams, 2 checkpoints (Day 5/Day 10), 4 contingency plans, risk register, 32 sprint-23 issues mapped (24 open + 8 closed); day-by-day execution prompts for all 15 days; SPRINT_LOG.md initialized
 
 ### Sprint 22 Summary - 2026-03-17
 
