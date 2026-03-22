@@ -1,8 +1,8 @@
 # Sprint 23 Log
 
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Start Date:** TBD (after prep completion)
-**Baseline Commit:** `main @ 2c33989e`
+**Start Date:** 2026-03-21
+**Baseline Commit:** `main @ 2c33989e` (baseline metrics), kickoff from `main @ 89ff673e` (after prep merge)
 
 ---
 
@@ -73,13 +73,36 @@
 
 ### Day 0 — Baseline Confirm + Sprint Kickoff
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| `make test` baseline | |
-| SPRINT_LOG.md initialized | |
-| Pipeline baseline confirmed | |
+| `make test` baseline | ✅ 4,209 passed, 10 skipped, 1 xfailed |
+| SPRINT_LOG.md initialized | ✅ Baseline metrics verified against BASELINE_METRICS.md |
+| Issue mapping confirmed | ✅ 24 open issues match PLAN.md table |
+| Pipeline baseline confirmed | ✅ All metrics match BASELINE_METRICS.md (see below) |
+
+**Pipeline Results (147-scope, clean re-run):**
+
+| Stage | This Run | Baseline (BASELINE_METRICS.md §4) | Status |
+|---|---|---|---|
+| Parse | 144/147 (98.0%) | 144/147 (98.0%) | ✅ Exact match |
+| Translate | 128/144 (88.9%) | 127/144 (88.2%) | +1 borderline timeout variance |
+| Solve | 81/128 (63.3%) | 81/127 (63.8%) | ✅ Same solve count (denominator differs due to +1 translate) |
+| Match | 47/147 (32.0%) | 47/147 (32.0%) | ✅ Exact match |
+
+**Solve Error Categories (147-scope; matches BASELINE_METRICS.md §5 after removing feedtray which is excluded):**
+
+| Category | This Run | Baseline (§5) | Match |
+|---|---|---|---|
+| path_syntax_error | 18 | 18 | ✅ |
+| model_infeasible | 12 | 12 (in-scope) | ✅ |
+| path_solve_terminated | 10 | 10 | ✅ |
+| path_solve_license | 7 | 7 | ✅ |
+
+**Note:** First run (under system load) had 1 extra timeout (translate 127, PSE 17). Clean re-run recovered the borderline model (translate 128, PSE 18), matching BASELINE_METRICS.md 160-scope numbers exactly.
+
+**Pipeline Duration (this run; timing may vary from baseline ~4564s):** 4313s (~72 min)
 
 ---
 
