@@ -42,8 +42,11 @@ def _bound_expr(bound_def: BoundDef) -> Expr:
     """Return the bound as an Expr: uses bound_def.expr if set, else Const(value).
 
     If the bound expression is a LhsConditionalAssign, extract only the RHS
-    value — the LHS condition is handled at the emitter level for bound
-    assignments, not in the KKT equation expressions.
+    value for use in KKT equation bodies (e.g., ``x - lo =G= 0``).  The LHS
+    condition is *not* lost — it is separately incorporated into the guard /
+    condition of the complementarity equation by the callers (lo_guard /
+    up_guard generation), ensuring the equation is only active where the
+    conditional assignment fired.
     """
     if bound_def.expr is not None:
         expr = bound_def.expr
@@ -297,8 +300,13 @@ def build_complementarity_pairs(
             if bound_def.expr is not None:
                 guard_expr = bound_def.expr
                 if isinstance(guard_expr, LhsConditionalAssign):
-                    guard_expr = guard_expr.rhs
-                lo_guard = Binary(">", guard_expr, Const(float("-inf")))
+                    # Preserve the assignment condition: only generate
+                    # complementarity equations where the conditional
+                    # assignment is active and the resulting bound is > -INF.
+                    rhs_guard = Binary(">", guard_expr.rhs, Const(float("-inf")))
+                    lo_guard = Binary("and", guard_expr.condition, rhs_guard)
+                else:
+                    lo_guard = Binary(">", guard_expr, Const(float("-inf")))
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
@@ -432,8 +440,13 @@ def build_complementarity_pairs(
             if bound_def.expr is not None:
                 guard_expr = bound_def.expr
                 if isinstance(guard_expr, LhsConditionalAssign):
-                    guard_expr = guard_expr.rhs
-                up_guard = Binary("<", guard_expr, Const(float("inf")))
+                    # Preserve the assignment condition: only generate
+                    # complementarity equations where the conditional
+                    # assignment is active and the resulting bound is < INF.
+                    rhs_guard = Binary("<", guard_expr.rhs, Const(float("inf")))
+                    up_guard = Binary("and", guard_expr.condition, rhs_guard)
+                else:
+                    up_guard = Binary("<", guard_expr, Const(float("inf")))
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0

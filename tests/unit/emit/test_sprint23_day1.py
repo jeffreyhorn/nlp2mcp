@@ -1,12 +1,14 @@
-"""Sprint 23 Day 1 unit tests.
+"""Sprint 23 Day 1 tests — unit and integration.
 
-Tests for:
+Unit tests (in-memory, no I/O):
 1. LhsConditionalAssign in expr_to_gams (fallback to RHS)
 2. LhsConditionalAssign stripping in _bound_expr
+
+Integration tests (subprocess translation of GAMSlib models):
 3. Expression-based bounds emitted for complementarity variables
 4. Priority 3 POSITIVE init clamping to .up
 5. execError reset after computed parameters
-6. LhsConditionalAssign guard stripping in complementarity
+6. LhsConditionalAssign translate recovery
 """
 
 import os
@@ -164,4 +166,4 @@ class TestLhsConditionalTranslateRecovery:
         if not os.path.exists(gms_path):
             pytest.skip(f"{model}.gms not available")
         code = _translate_model(gms_path)
-        assert "Solve mcp_model using MCP;" in code
+        assert "Solve mcp_model using MCP" in code
