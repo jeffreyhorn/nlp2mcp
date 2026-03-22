@@ -1108,6 +1108,13 @@ def _build_indexed_gradient_term(
     only depends on d(l) with l ⊂ n), the first instance may have a zero
     gradient.  Scanning for a non-zero representative ensures the gradient
     term is not incorrectly set to zero.
+
+    Issue #1131: When only a strict subset of instances have non-zero
+    gradients, the gradient term must be guarded with a sameas() condition
+    so it applies only to those instances.  Without this, the gradient
+    constant (e.g., -1 from the objective) is applied to ALL instances of
+    the indexed stationarity equation, making it infeasible for the
+    instances that should have zero gradient.
     """
     if not instances:
         return Const(0.0)
@@ -1115,16 +1122,26 @@ def _build_indexed_gradient_term(
     # Issue #1086: Find a representative instance with non-zero gradient.
     # The first instance may have zero gradient if the objective only
     # depends on a subset of the variable's domain.
+    # Also collect ALL non-zero instances for the sameas guard (Issue #1131).
+    nonzero_instances: list[tuple[int, tuple[str, ...]]] = []
     col_id, var_indices = instances[0]
     grad_component = kkt.gradient.get_derivative(col_id)
 
-    if grad_component is None or (isinstance(grad_component, Const) and grad_component.value == 0):
-        for c_id, _v_idx in instances[1:]:
-            gc = kkt.gradient.get_derivative(c_id)
-            if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
+    if grad_component is not None and not (
+        isinstance(grad_component, Const) and grad_component.value == 0
+    ):
+        nonzero_instances.append((col_id, var_indices))
+    else:
+        grad_component = None  # Normalize to None for the search below
+
+    for c_id, v_idx in instances[1 if grad_component is None else 0 :]:
+        gc = kkt.gradient.get_derivative(c_id)
+        if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
+            if grad_component is None:
                 col_id = c_id
                 grad_component = gc
-                break
+            if (c_id, v_idx) not in nonzero_instances:
+                nonzero_instances.append((c_id, v_idx))
 
     if grad_component is None:
         return Const(0.0)
@@ -1135,9 +1152,89 @@ def _build_indexed_gradient_term(
 
     # Replace element-specific indices with domain indices in the gradient
     # Issue #620: Pass domain as equation_domain for subset/superset substitution
-    return _replace_indices_in_expr(
+    expr = _replace_indices_in_expr(
         grad_component, domain, element_to_set, kkt.model_ir, equation_domain=domain
     )
+
+    # Issue #1131: If only a strict subset of instances have non-zero
+    # gradients, guard with sameas() so the gradient applies only to those.
+    # E.g., for objective "ht('h50')", the gradient is -1 only for h50;
+    # without the guard, stat_ht(h) would have -1 for ALL h.
+    if len(nonzero_instances) < len(instances) and nonzero_instances:
+        guard = _build_sameas_guard_for_instances(domain, nonzero_instances, instances, kkt)
+        if guard is not None:
+            expr = DollarConditional(value_expr=expr, condition=guard)
+
+    return expr
+
+
+def _build_sameas_guard_for_instances(
+    domain: tuple[str, ...],
+    nonzero_instances: list[tuple[int, tuple[str, ...]]],
+    all_instances: list[tuple[int, tuple[str, ...]]],
+    kkt: KKTSystem,
+) -> Expr | None:
+    """Build a sameas guard that selects only the non-zero instances.
+
+    For each dimension, if the non-zero instances use only a strict subset
+    of elements, emit a sameas(dim, 'element') condition (or OR-disjunction
+    for multiple elements).
+
+    Returns None if no guard is needed (all instances are covered).
+    """
+    ndim = len(domain)
+    if ndim == 0:
+        return None
+
+    # Collect per-dimension elements from non-zero vs all instances
+    per_dim_nonzero: list[dict[str, str]] = [{} for _ in range(ndim)]  # lc -> orig
+    per_dim_all: list[set[str]] = [set() for _ in range(ndim)]
+
+    for _, idx in nonzero_instances:
+        for d, v in enumerate(idx):
+            lc = v.lower()
+            if lc not in per_dim_nonzero[d]:
+                per_dim_nonzero[d][lc] = v  # first-seen casing
+
+    for _, idx in all_instances:
+        for d, v in enumerate(idx):
+            per_dim_all[d].add(v.lower())
+
+    # Build per-dimension guards
+    dim_guards: list[Expr] = []
+    for d in range(ndim):
+        nz_lc = set(per_dim_nonzero[d].keys())
+        if nz_lc >= per_dim_all[d]:
+            continue  # This dimension is fully covered
+
+        dom_idx = domain[d]
+        if len(nz_lc) == 1:
+            lc_val = next(iter(nz_lc))
+            orig_val = per_dim_nonzero[d][lc_val]
+            dim_guards.append(
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
+            )
+        else:
+            # Multiple values — OR of sameas
+            or_parts: list[Expr] = []
+            for lc_val in sorted(nz_lc):
+                orig_val = per_dim_nonzero[d][lc_val]
+                or_parts.append(
+                    Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
+                )
+            or_expr: Expr = or_parts[0]
+            for part in or_parts[1:]:
+                or_expr = Binary("or", or_expr, part)
+            dim_guards.append(or_expr)
+
+    if not dim_guards:
+        return None
+
+    # AND together all dimension guards
+    result: Expr = dim_guards[0]
+    for g in dim_guards[1:]:
+        result = Binary("and", result, g)
+    return result
 
 
 def _build_element_to_set_mapping(
