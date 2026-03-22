@@ -84,12 +84,12 @@
 
 **Pipeline Results (147-scope, clean re-run):**
 
-| Stage | This Run | Baseline | Match |
+| Stage | This Run | Baseline (BASELINE_METRICS.md §4) | Status |
 |---|---|---|---|
-| Parse | 144/147 (98.0%) | 144/147 (98.0%) | ✅ |
-| Translate | 128/144 (88.9%) | 127-128/144 | ✅ |
-| Solve | 81/128 (63.3%) | 81 | ✅ |
-| Match | 47/147 (32.0%) | 47/147 (32.0%) | ✅ |
+| Parse | 144/147 (98.0%) | 144/147 (98.0%) | ✅ Exact match |
+| Translate | 128/144 (88.9%) | 127/144 (88.2%) | +1 borderline timeout variance |
+| Solve | 81/128 (63.3%) | 81/127 (63.8%) | ✅ Same solve count (denominator differs due to +1 translate) |
+| Match | 47/147 (32.0%) | 47/147 (32.0%) | ✅ Exact match |
 
 **Solve Error Categories (147-scope; matches BASELINE_METRICS.md §5 after removing feedtray which is excluded):**
 
