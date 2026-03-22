@@ -16,7 +16,17 @@ Key features:
 from __future__ import annotations
 
 from src.ad.index_mapping import enumerate_variable_instances
-from src.ir.ast import Binary, Const, Expr, ParamRef, SetMembershipTest, SymbolRef, Unary, VarRef
+from src.ir.ast import (
+    Binary,
+    Const,
+    Expr,
+    LhsConditionalAssign,
+    ParamRef,
+    SetMembershipTest,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 from src.ir.symbols import EquationDef, Rel
 from src.kkt.kkt_system import ComplementarityPair, KKTSystem
 from src.kkt.naming import (
@@ -29,9 +39,20 @@ from src.kkt.reformulation import MINMAX_MAX_CONSTRAINT_PREFIX
 
 
 def _bound_expr(bound_def: BoundDef) -> Expr:
-    """Return the bound as an Expr: uses bound_def.expr if set, else Const(value)."""
+    """Return the bound as an Expr: uses bound_def.expr if set, else Const(value).
+
+    If the bound expression is a LhsConditionalAssign, extract only the RHS
+    value for use in KKT equation bodies (e.g., ``x - lo =G= 0``).  The LHS
+    condition is *not* lost — it is separately incorporated into the guard /
+    condition of the complementarity equation by the callers (lo_guard /
+    up_guard generation), ensuring the equation is only active where the
+    conditional assignment fired.
+    """
     if bound_def.expr is not None:
-        return bound_def.expr
+        expr = bound_def.expr
+        if isinstance(expr, LhsConditionalAssign):
+            return expr.rhs
+        return expr
     return Const(bound_def.value)
 
 
@@ -277,7 +298,15 @@ def build_complementarity_pairs(
             # Applies to both indexed and scalar variables.
             lo_guard: Expr | None = None
             if bound_def.expr is not None:
-                lo_guard = Binary(">", bound_def.expr, Const(float("-inf")))
+                guard_expr = bound_def.expr
+                if isinstance(guard_expr, LhsConditionalAssign):
+                    # Preserve the assignment condition: only generate
+                    # complementarity equations where the conditional
+                    # assignment is active and the resulting bound is > -INF.
+                    rhs_guard = Binary(">", guard_expr.rhs, Const(float("-inf")))
+                    lo_guard = Binary("and", guard_expr.condition, rhs_guard)
+                else:
+                    lo_guard = Binary(">", guard_expr, Const(float("-inf")))
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_lo_x(i).. x(i) - lo =G= 0
@@ -409,7 +438,15 @@ def build_complementarity_pairs(
             # Applies to both indexed and scalar variables.
             up_guard: Expr | None = None
             if bound_def.expr is not None:
-                up_guard = Binary("<", bound_def.expr, Const(float("inf")))
+                guard_expr = bound_def.expr
+                if isinstance(guard_expr, LhsConditionalAssign):
+                    # Preserve the assignment condition: only generate
+                    # complementarity equations where the conditional
+                    # assignment is active and the resulting bound is < INF.
+                    rhs_guard = Binary("<", guard_expr.rhs, Const(float("inf")))
+                    up_guard = Binary("and", guard_expr.condition, rhs_guard)
+                else:
+                    up_guard = Binary("<", guard_expr, Const(float("inf")))
 
             if var_domain:
                 # Indexed variable: create indexed equation comp_up_x(i).. up - x(i) =G= 0

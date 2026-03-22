@@ -661,6 +661,16 @@ def expr_to_gams(
                 return f"{set_name}({indices_str})"
             return set_name
 
+        case LhsConditionalAssign(rhs=rhs_expr):
+            # LhsConditionalAssign in expression context: emit only the RHS.
+            # The LHS condition is handled at the assignment/statement level
+            # (e.g., in emit_gams.py bound emission or original_symbols.py).
+            # When this node reaches expr_to_gams() directly (e.g., via KKT
+            # equation expressions), only the value matters, not the condition.
+            return expr_to_gams(
+                rhs_expr, parent_op=parent_op, is_right=is_right, domain_vars=domain_vars
+            )
+
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
