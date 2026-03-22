@@ -1040,12 +1040,17 @@ def emit_gams_mcp(
             sections.append("execseed = 12345;")
             sections.append("")
         sections.append(computed_params_code)
-        # Reset execution error counter after computed parameters.
-        # Division-by-zero or other domain errors in parameter assignments
-        # (e.g., fawley bp(k,p) = 1/sum(...) where the sum is 0 for some
-        # tuples) are non-fatal: the offending parameter entries get UNDF
-        # and are unused by the model.  Without this reset, GAMS refuses
-        # to execute the subsequent SOLVE statement.
+        sections.append("")
+
+    # Reset execution error counter after computed parameters.
+    # Division-by-zero or other domain errors in parameter assignments
+    # (e.g., fawley bp(k,p) = 1/sum(...) where the sum is 0 for some
+    # tuples) are non-fatal: the offending parameter entries get UNDF
+    # and are unused by the model.  Without this reset, GAMS refuses
+    # to execute the subsequent SOLVE statement.
+    # Emit whenever any computed-parameter code was emitted across both
+    # passes (interleaved/early pass or the main computed_params_code pass).
+    if computed_params_code or early_params:
         sections.append("execError = 0;")
         sections.append("")
 
