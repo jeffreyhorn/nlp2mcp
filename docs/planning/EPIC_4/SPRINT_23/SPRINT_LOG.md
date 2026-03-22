@@ -2,7 +2,7 @@
 
 **Sprint Duration:** 15 days (Day 0 – Day 14)
 **Start Date:** 2026-03-21
-**Baseline Commit:** `main @ 89ff673e`
+**Baseline Commit:** `main @ 2c33989e` (baseline metrics), kickoff from `main @ 89ff673e` (after prep merge)
 
 ---
 
@@ -91,18 +91,18 @@
 | Solve | 81/128 (63.3%) | 81 | ✅ |
 | Match | 47/147 (32.0%) | 47/147 (32.0%) | ✅ |
 
-**Solve Error Categories:**
+**Solve Error Categories (147-scope; matches BASELINE_METRICS.md §5 after removing feedtray which is excluded):**
 
-| Category | This Run | Baseline | Match |
+| Category | This Run | Baseline (§5) | Match |
 |---|---|---|---|
 | path_syntax_error | 18 | 18 | ✅ |
-| model_infeasible | 12 | 12 | ✅ |
+| model_infeasible | 12 | 12 (in-scope) | ✅ |
 | path_solve_terminated | 10 | 10 | ✅ |
 | path_solve_license | 7 | 7 | ✅ |
 
 **Note:** First run (under system load) had 1 extra timeout (translate 127, PSE 17). Clean re-run recovered the borderline model (translate 128, PSE 18), matching BASELINE_METRICS.md 160-scope numbers exactly.
 
-**Pipeline Duration:** 4313s (~72 min)
+**Pipeline Duration (this run; timing may vary from baseline ~4564s):** 4313s (~72 min)
 
 ---
 
