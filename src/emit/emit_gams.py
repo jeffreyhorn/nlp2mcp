@@ -1040,6 +1040,13 @@ def emit_gams_mcp(
             sections.append("execseed = 12345;")
             sections.append("")
         sections.append(computed_params_code)
+        # Reset execution error counter after computed parameters.
+        # Division-by-zero or other domain errors in parameter assignments
+        # (e.g., fawley bp(k,p) = 1/sum(...) where the sum is 0 for some
+        # tuples) are non-fatal: the offending parameter entries get UNDF
+        # and are unused by the model.  Without this reset, GAMS refuses
+        # to execute the subsequent SOLVE statement.
+        sections.append("execError = 0;")
         sections.append("")
 
     # Issue #1025: Emit loop statements that contain parameter assignments
@@ -1107,9 +1114,15 @@ def emit_gams_mcp(
         for kind in ("lo", "up", "fx"):
             # Skip .lo/.up for variables with explicit bound complementarity
             # to avoid double-bounding in the MCP (bounds enforced by comp_lo/comp_up).
-            if kind == "lo" and var_name.lower() in _vars_with_lo_comp:
+            # Exception: expression-based bounds must still be emitted so that
+            # .l initialization expressions referencing .up()/.lo() resolve to
+            # the correct values instead of +-inf (Issue: rocket model fix).
+            has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
+                getattr(var_def, f"{kind}_expr_map", None)
+            )
+            if kind == "lo" and var_name.lower() in _vars_with_lo_comp and not has_expr_bound:
                 continue
-            if kind == "up" and var_name.lower() in _vars_with_up_comp:
+            if kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound:
                 continue
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
@@ -1283,8 +1296,14 @@ def emit_gams_mcp(
                 if var_def.domain:
                     domain_str = ",".join(var_def.domain)
                     lines.append(f"{var_name}.l({domain_str}) = 1;")
+                    # Clamp default init to upper bound to prevent domain
+                    # errors when .up < 1 (e.g., gtm s(i) where supc < 1).
+                    lines.append(
+                        f"{var_name}.l({domain_str}) = min({var_name}.l({domain_str}), {var_name}.up({domain_str}));"
+                    )
                 else:
                     lines.append(f"{var_name}.l = 1;")
+                    lines.append(f"{var_name}.l = min({var_name}.l, {var_name}.up);")
 
         # Issue #984: Clamp expression-based .l to .lo bounds.
         # When .l is set via an expression (Priority 1b) that may evaluate to 0,
