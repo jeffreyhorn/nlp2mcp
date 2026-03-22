@@ -1176,65 +1176,24 @@ def _build_sameas_guard_for_instances(
 ) -> Expr | None:
     """Build a sameas guard that selects only the non-zero instances.
 
-    For each dimension, if the non-zero instances use only a strict subset
-    of elements, emit a sameas(dim, 'element') condition (or OR-disjunction
-    for multiple elements).
-
     Returns None if no guard is needed (all instances are covered).
+
+    This delegates to _build_tuple_or_guard() which builds exact
+    OR-of-ANDs guards over the non-zero index tuples, avoiding the
+    Cartesian over-approximation that per-dimension guards would produce
+    for multi-dimensional variables.
     """
     ndim = len(domain)
     if ndim == 0:
         return None
 
-    # Collect per-dimension elements from non-zero vs all instances
-    per_dim_nonzero: list[dict[str, str]] = [{} for _ in range(ndim)]  # lc -> orig
-    per_dim_all: list[set[str]] = [set() for _ in range(ndim)]
-
-    for _, idx in nonzero_instances:
-        for d, v in enumerate(idx):
-            lc = v.lower()
-            if lc not in per_dim_nonzero[d]:
-                per_dim_nonzero[d][lc] = v  # first-seen casing
-
-    for _, idx in all_instances:
-        for d, v in enumerate(idx):
-            per_dim_all[d].add(v.lower())
-
-    # Build per-dimension guards
-    dim_guards: list[Expr] = []
-    for d in range(ndim):
-        nz_lc = set(per_dim_nonzero[d].keys())
-        if nz_lc >= per_dim_all[d]:
-            continue  # This dimension is fully covered
-
-        dom_idx = domain[d]
-        if len(nz_lc) == 1:
-            lc_val = next(iter(nz_lc))
-            orig_val = per_dim_nonzero[d][lc_val]
-            dim_guards.append(
-                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
-            )
-        else:
-            # Multiple values — OR of sameas
-            or_parts: list[Expr] = []
-            for lc_val in sorted(nz_lc):
-                orig_val = per_dim_nonzero[d][lc_val]
-                or_parts.append(
-                    Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
-                )
-            or_expr: Expr = or_parts[0]
-            for part in or_parts[1:]:
-                or_expr = Binary("or", or_expr, part)
-            dim_guards.append(or_expr)
-
-    if not dim_guards:
+    nonzero_idx_set = {idx for _, idx in nonzero_instances}
+    all_idx_set = {idx for _, idx in all_instances}
+    if nonzero_idx_set >= all_idx_set:
         return None
 
-    # AND together all dimension guards
-    result: Expr = dim_guards[0]
-    for g in dim_guards[1:]:
-        result = Binary("and", result, g)
-    return result
+    instance_indices = [idx for _, idx in nonzero_instances]
+    return _build_tuple_or_guard(domain, instance_indices)
 
 
 def _build_element_to_set_mapping(
