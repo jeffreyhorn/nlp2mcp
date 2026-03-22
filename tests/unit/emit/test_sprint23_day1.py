@@ -112,7 +112,7 @@ def _translate_model(gms_path: str) -> str:
             os.unlink(out_path)
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestExprBasedBoundsForComplementarity:
     """Expression-based bounds must be emitted even for complementarity vars."""
 
@@ -125,7 +125,7 @@ class TestExprBasedBoundsForComplementarity:
         assert "t.up(h) = T_c * m_0 * g_0;" in code
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestPositiveInitClamping:
     """Priority 3 POSITIVE default init should be clamped to .up."""
 
@@ -139,7 +139,7 @@ class TestPositiveInitClamping:
         assert "s.l(i) = min(s.l(i), s.up(i));" in code
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestExecErrorReset:
     """execError = 0 should appear after computed parameter assignments."""
 
@@ -153,7 +153,7 @@ class TestExecErrorReset:
         assert "execError = 0;" in code
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 class TestLhsConditionalTranslateRecovery:
     """Models that previously failed with LhsConditionalAssign should translate."""
 
