@@ -22,7 +22,7 @@ from src.ad.derivative_rules import (
     differentiate_expr,
 )
 from src.config import Config
-from src.ir.ast import Binary, Call, Const, Sum, VarRef
+from src.ir.ast import Binary, Call, Const, IndexOffset, Sum, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, SetDef
 
@@ -131,6 +131,24 @@ class TestAliasMatch:
         assert result is not None
         assert isinstance(result, Binary)
         assert result.op == "*"
+
+    def test_index_offset_not_alias_matched(self):
+        """IndexOffset dimensions must not alias-match by base name alone.
+
+        x(t+1) vs x(t) should return None, not Const(1.0).
+        """
+        aliases = {"tp": AliasDef("tp", "t")}
+        offset = IndexOffset("t", Const(1.0), False)
+        # Same base but different structure: t+1 vs t
+        result = _alias_match((offset,), ("t",), aliases, frozenset())
+        assert result is None
+
+    def test_identical_index_offset_matches(self):
+        """Structurally identical IndexOffsets should match."""
+        aliases = {"tp": AliasDef("tp", "t")}
+        offset = IndexOffset("t", Const(1.0), False)
+        result = _alias_match((offset,), (offset,), aliases, frozenset())
+        assert isinstance(result, Const) and result.value == 1.0
 
 
 # ============================================================================

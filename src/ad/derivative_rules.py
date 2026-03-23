@@ -273,9 +273,17 @@ def _alias_match(
 
     guards: list[Expr] = []
     for expr_idx, wrt_idx in zip(expr_indices, wrt_indices, strict=True):
-        # Extract base strings for comparison
-        expr_str = expr_idx if isinstance(expr_idx, str) else expr_idx.base
-        wrt_str = wrt_idx if isinstance(wrt_idx, str) else wrt_idx.base
+        # IndexOffset dimensions (lead/lag like t+1) require full structural
+        # equality — alias matching by base name alone would incorrectly treat
+        # x(t+1) as matching x(t).
+        if isinstance(expr_idx, IndexOffset) or isinstance(wrt_idx, IndexOffset):
+            if expr_idx == wrt_idx:
+                continue  # Structurally identical offset
+            return None  # Different offsets or mixed str/IndexOffset — no match
+
+        # Both are plain strings — extract for comparison
+        expr_str: str = expr_idx
+        wrt_str: str = wrt_idx
 
         # Exact match (with quote normalization)
         if _strip_quotes(expr_str).lower() == _strip_quotes(wrt_str).lower():
