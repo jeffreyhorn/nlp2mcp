@@ -1124,6 +1124,7 @@ def _build_indexed_gradient_term(
     # depends on a subset of the variable's domain.
     # Also collect ALL non-zero instances for the sameas guard (Issue #1131).
     nonzero_instances: list[tuple[int, tuple[str, ...]]] = []
+    seen_nz: set[tuple[int, tuple[str, ...]]] = set()
     col_id, var_indices = instances[0]
     grad_component = kkt.gradient.get_derivative(col_id)
 
@@ -1131,6 +1132,7 @@ def _build_indexed_gradient_term(
         isinstance(grad_component, Const) and grad_component.value == 0
     ):
         nonzero_instances.append((col_id, var_indices))
+        seen_nz.add((col_id, var_indices))
     else:
         grad_component = None  # Normalize to None for the search below
 
@@ -1140,8 +1142,9 @@ def _build_indexed_gradient_term(
             if grad_component is None:
                 col_id = c_id
                 grad_component = gc
-            if (c_id, v_idx) not in nonzero_instances:
+            if (c_id, v_idx) not in seen_nz:
                 nonzero_instances.append((c_id, v_idx))
+                seen_nz.add((c_id, v_idx))
 
     if grad_component is None:
         return Const(0.0)
