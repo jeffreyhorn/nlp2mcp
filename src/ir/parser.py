@@ -589,8 +589,8 @@ def _domain_list_condition(node: Tree) -> Expr | None:
     Multiple nested domain elements are AND-combined via Binary("and", ...).
 
     Examples:
-        - low(n,nn)       -> SetMembershipTest('low', ('n', 'nn'))
-        - i, low(n,nn), k -> SetMembershipTest('low', ('n', 'nn'))
+        - low(n,nn)       -> SetMembershipTest('low', (SymbolRef('n'), SymbolRef('nn')))
+        - i, low(n,nn), k -> SetMembershipTest('low', (SymbolRef('n'), SymbolRef('nn')))
         - i, j            -> None (no nested domains)
     """
     conditions: list[Expr] = []

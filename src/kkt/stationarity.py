@@ -424,6 +424,35 @@ def _find_variable_access_condition(
     return None
 
 
+def _has_unconditioned_access(
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> bool:
+    """Check if a variable has any unconditioned access in the model equations.
+
+    Returns True if the variable appears in at least one equation without an
+    enclosing dollar condition.  This is used to gate Stage 4 gradient-condition
+    fallback: when a variable is accessed unconditionally in some constraint,
+    adding an equation-level guard from gradient conditions would incorrectly
+    suppress stationarity instances required by those unconditioned constraints.
+    """
+    if not var_domain:
+        return False
+
+    var_domain_set = set(var_domain)
+    for _eq_name, eq_def in model_ir.equations.items():
+        lhs, rhs = eq_def.lhs_rhs
+        for side_expr in (lhs, rhs):
+            conditions = _collect_access_conditions(
+                side_expr, var_name, var_domain_set, has_enclosing_condition=False
+            )
+            if conditions is not None and not conditions:
+                # Variable found with no enclosing condition
+                return True
+    return False
+
+
 def _find_variable_subset_condition(
     var_name: str,
     var_domain: tuple[str, ...],
@@ -885,8 +914,13 @@ def build_stationarity_equations(
             # conditioned sum (e.g., sum((i,j)$xw(i,j), ...)), the gradient
             # carries an embedded condition that should become an equation-level
             # guard on the stationarity equation.
+            # Only apply when there are NO unconditioned accesses — if a
+            # constraint references the variable without a dollar condition,
+            # those stationarity instances are genuinely required and must not
+            # be suppressed by a gradient-derived guard.
             if access_cond is None and var_name in kkt.gradient_conditions:
-                access_cond = kkt.gradient_conditions[var_name]
+                if not _has_unconditioned_access(var_name, var_def.domain, kkt.model_ir):
+                    access_cond = kkt.gradient_conditions[var_name]
 
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
