@@ -2545,10 +2545,20 @@ class _ModelBuilder:
 
             for header_idx, data_start, data_end in section_bounds:
                 sec_hdr_line_num, sec_hdr_tokens = sorted_lines[header_idx]
+                # Issue #1130: For section 0, the header line (sorted_lines[0])
+                # may contain continuation tokens merged from '+' lines.  These
+                # belong to later sections and must be excluded so the gap-
+                # midpoint column matching uses only this section's headers.
+                if header_idx == 0 and continuation_col_offsets:
+                    sec_hdr_tokens = [
+                        t for t in sec_hdr_tokens if id(t) not in continuation_col_offsets
+                    ]
                 # Build the column-label list for this section, merging dotted
                 # compound headers (same logic as main path).
                 sec_col_headers = _merge_dotted_col_headers(
-                    sec_hdr_tokens, source_lines=source_lines
+                    sec_hdr_tokens,
+                    source_lines=source_lines,
+                    continuation_col_offsets=continuation_col_offsets,
                 )
 
                 # Process data lines in this section
@@ -2587,6 +2597,14 @@ class _ModelBuilder:
                         if id(val_tok) in row_label_token_ids:
                             continue
                         val_col = getattr(val_tok, "column", 0) or 0
+                        # Apply continuation column offset if this token
+                        # came from a continuation line (same as non-section path).
+                        if continuation_col_offsets and id(val_tok) in continuation_col_offsets:
+                            val_col += continuation_col_offsets[id(val_tok)]
+                        # Issue #1130: Use token center for matching so that
+                        # right-aligned values (e.g., "-1.0" spanning cols 37-40
+                        # under a header at col 40) are correctly matched.
+                        val_col += len(str(val_tok)) / 2
                         # Issue #1074: Gap-midpoint range matching — each
                         # column owns the range between the midpoints of
                         # the gaps on either side.
@@ -2607,7 +2625,7 @@ class _ModelBuilder:
                                 range_end = (this_right + next_start) / 2
                             else:
                                 range_end = float("inf")
-                            if range_start <= val_col <= range_end:
+                            if range_start <= val_col < range_end:
                                 best_col_label = col_label
                                 break
                         # Fallback: closest unused column by distance

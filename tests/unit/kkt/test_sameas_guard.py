@@ -23,6 +23,7 @@ from src.ir.model_ir import ModelIR
 from src.ir.symbols import SetDef
 from src.kkt.stationarity import (
     _build_sameas_guard,
+    _build_sameas_guard_for_instances,
     _find_matching_subset,
     _quote_sameas_uel,
 )
@@ -264,3 +265,127 @@ class TestQuoteSameasUel:
 
     def test_whitespace_stripped(self):
         assert _quote_sameas_uel("  steel  ") == "'steel'"
+
+
+class TestBuildSameasGuardForInstances:
+    """Tests for _build_sameas_guard_for_instances() (Issue #1131).
+
+    This function builds a sameas guard for partial-instance gradient terms.
+    When the objective references only a subset of an indexed variable's
+    instances (e.g., obj = ht('h50')), the gradient is non-zero only for
+    those instances.  The guard ensures the gradient term is applied only
+    where it should be.
+    """
+
+    def test_single_nonzero_instance_produces_sameas(self):
+        """obj = ht('h50') over ht(h) → sameas(h,'h50')."""
+        model_ir = ModelIR()
+        domain = ("h",)
+        all_inst = [(0, ("h1",)), (1, ("h2",)), (2, ("h50",))]
+        nz_inst = [(2, ("h50",))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        assert isinstance(guard, Call)
+        assert guard.func == "sameas"
+
+    def test_all_instances_nonzero_returns_none(self):
+        """When every instance has a non-zero gradient, no guard is needed."""
+        model_ir = ModelIR()
+        domain = ("h",)
+        all_inst = [(0, ("h1",)), (1, ("h2",))]
+        nz_inst = [(0, ("h1",)), (1, ("h2",))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is None
+
+    def test_multidim_partial_guard_and_conjunction(self):
+        """Partial coverage in both dims → AND of per-dimension sameas."""
+        model_ir = ModelIR()
+        domain = ("i", "j")
+        all_inst = [
+            (0, ("a", "x")),
+            (1, ("a", "y")),
+            (2, ("b", "x")),
+            (3, ("b", "y")),
+        ]
+        nz_inst = [
+            (
+                0,
+                (
+                    "a",
+                    "x",
+                ),
+            )
+        ]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        assert isinstance(guard, Binary)
+        assert guard.op == "and"
+
+    def test_non_cartesian_falls_back_to_tuple_or(self):
+        """Non-Cartesian nonzero set → OR-of-ANDs fallback."""
+        model_ir = ModelIR()
+        domain = ("i", "j")
+        all_inst = [
+            (0, ("a", "x")),
+            (1, ("a", "y")),
+            (2, ("b", "x")),
+            (3, ("b", "y")),
+        ]
+        # (a,x) and (b,y) — covers all per-dim values but not Cartesian
+        nz_inst = [(0, ("a", "x")), (3, ("b", "y"))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        # Should be OR of two AND-conjunctions (tuple-or fallback)
+        assert isinstance(guard, Binary)
+        assert guard.op == "or"
+
+    def test_non_cartesian_partial_dim_falls_back_to_tuple_or(self):
+        """Non-Cartesian tuples with partial per-dim coverage → tuple-or fallback.
+
+        nonzero={(a,x),(c,y)} over all={(a,x),(a,y),(b,x),(b,y),(c,x),(c,y)}.
+        Per-dim: i needs {a,c} (partial), j needs {x,y} (full).
+        A naive per-dim AND guard (i in {a,c}) would also enable (a,y) and
+        (c,x), which have zero gradient.  Must fall back to tuple-or.
+        """
+        model_ir = ModelIR()
+        domain = ("i", "j")
+        all_inst = [
+            (0, ("a", "x")),
+            (1, ("a", "y")),
+            (2, ("b", "x")),
+            (3, ("b", "y")),
+            (4, ("c", "x")),
+            (5, ("c", "y")),
+        ]
+        # Non-Cartesian: (a,x) and (c,y) — i={a,c}, j={x,y} but NOT a×{x,y}∩c×{x,y}
+        nz_inst = [(0, ("a", "x")), (5, ("c", "y"))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        # Must be OR of two AND-conjunctions (tuple-or), NOT a single-dim guard
+        assert isinstance(guard, Binary)
+        assert guard.op == "or"
+
+    def test_subset_detection_with_named_subset(self):
+        """Named subset match uses SetMembershipTest instead of OR-of-sameas."""
+        model_ir = ModelIR()
+        model_ir.sets["c"] = SetDef(name="c", members=["steel", "copper", "aluminum"])
+        model_ir.sets["cf"] = SetDef(name="cf", members=["steel", "copper"], domain=("c",))
+        domain = ("c",)
+        all_inst = [(0, ("steel",)), (1, ("copper",)), (2, ("aluminum",))]
+        nz_inst = [(0, ("steel",)), (1, ("copper",))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        assert isinstance(guard, SetMembershipTest)
+        assert guard.set_name == "cf"
+
+    def test_empty_domain_returns_none(self):
+        """Scalar variable (no domain) → no guard."""
+        model_ir = ModelIR()
+        guard = _build_sameas_guard_for_instances((), [(0, ())], [(0, ()), (1, ())], model_ir)
+        assert guard is None

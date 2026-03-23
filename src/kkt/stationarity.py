@@ -1108,6 +1108,13 @@ def _build_indexed_gradient_term(
     only depends on d(l) with l ⊂ n), the first instance may have a zero
     gradient.  Scanning for a non-zero representative ensures the gradient
     term is not incorrectly set to zero.
+
+    Issue #1131: When only a strict subset of instances have non-zero
+    gradients, the gradient term must be guarded with a sameas() condition
+    so it applies only to those instances.  Without this, the gradient
+    constant (e.g., -1 from the objective) is applied to ALL instances of
+    the indexed stationarity equation, making it infeasible for the
+    instances that should have zero gradient.
     """
     if not instances:
         return Const(0.0)
@@ -1115,16 +1122,29 @@ def _build_indexed_gradient_term(
     # Issue #1086: Find a representative instance with non-zero gradient.
     # The first instance may have zero gradient if the objective only
     # depends on a subset of the variable's domain.
+    # Also collect ALL non-zero instances for the sameas guard (Issue #1131).
+    nonzero_instances: list[tuple[int, tuple[str, ...]]] = []
+    seen_nz: set[tuple[int, tuple[str, ...]]] = set()
     col_id, var_indices = instances[0]
     grad_component = kkt.gradient.get_derivative(col_id)
 
-    if grad_component is None or (isinstance(grad_component, Const) and grad_component.value == 0):
-        for c_id, _v_idx in instances[1:]:
-            gc = kkt.gradient.get_derivative(c_id)
-            if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
+    if grad_component is not None and not (
+        isinstance(grad_component, Const) and grad_component.value == 0
+    ):
+        nonzero_instances.append((col_id, var_indices))
+        seen_nz.add((col_id, var_indices))
+    else:
+        grad_component = None  # Normalize to None for the search below
+
+    for c_id, v_idx in instances[1:]:
+        gc = kkt.gradient.get_derivative(c_id)
+        if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
+            if grad_component is None:
                 col_id = c_id
                 grad_component = gc
-                break
+            if (c_id, v_idx) not in seen_nz:
+                nonzero_instances.append((c_id, v_idx))
+                seen_nz.add((c_id, v_idx))
 
     if grad_component is None:
         return Const(0.0)
@@ -1135,9 +1155,129 @@ def _build_indexed_gradient_term(
 
     # Replace element-specific indices with domain indices in the gradient
     # Issue #620: Pass domain as equation_domain for subset/superset substitution
-    return _replace_indices_in_expr(
+    expr = _replace_indices_in_expr(
         grad_component, domain, element_to_set, kkt.model_ir, equation_domain=domain
     )
+
+    # Issue #1131: If only a strict subset of instances have non-zero
+    # gradients, guard with sameas() so the gradient applies only to those.
+    # E.g., for objective "ht('h50')", the gradient is -1 only for h50;
+    # without the guard, stat_ht(h) would have -1 for ALL h.
+    if len(nonzero_instances) < len(instances) and nonzero_instances:
+        guard = _build_sameas_guard_for_instances(
+            domain, nonzero_instances, instances, kkt.model_ir
+        )
+        if guard is not None:
+            expr = DollarConditional(value_expr=expr, condition=guard)
+
+    return expr
+
+
+def _build_sameas_guard_for_instances(
+    domain: tuple[str, ...],
+    nonzero_instances: list[tuple[int, tuple[str, ...]]],
+    all_instances: list[tuple[int, tuple[str, ...]]],
+    model_ir: ModelIR,
+) -> Expr | None:
+    """Build a sameas guard that selects only the non-zero instances.
+
+    Returns None if no guard is needed (all instances are covered).
+
+    Uses per-dimension factorization with named-subset detection when
+    possible (compact output for 1D or Cartesian cases), falling back to
+    exact OR-of-ANDs via _build_tuple_or_guard() when the non-zero
+    entries don't form a Cartesian product over the instance space.
+    """
+    ndim = len(domain)
+    if ndim == 0:
+        return None
+
+    nonzero_indices = [idx for _, idx in nonzero_instances]
+
+    nonzero_idx_set = {tuple(v.lower() for v in idx) for idx in nonzero_indices}
+    all_idx_set = {tuple(v.lower() for v in idx) for _, idx in all_instances}
+    if nonzero_idx_set >= all_idx_set:
+        return None
+
+    # Per-dimension analysis: collect unique elements per dimension
+    per_dim_nz_lc: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_all_lc: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_nz_orig: list[dict[str, str]] = [{} for _ in range(ndim)]
+
+    for idx in nonzero_indices:
+        for d, v in enumerate(idx):
+            lc = v.lower()
+            per_dim_nz_lc[d].add(lc)
+            if lc not in per_dim_nz_orig[d]:
+                per_dim_nz_orig[d][lc] = v
+
+    for _, idx in all_instances:
+        for d, v in enumerate(idx):
+            per_dim_all_lc[d].add(v.lower())
+
+    # Build per-dimension guards (with named-subset detection)
+    dim_guards: list[Expr] = []
+    for d in range(ndim):
+        if per_dim_nz_lc[d] >= per_dim_all_lc[d]:
+            continue  # This dimension is fully covered
+
+        dom_idx = domain[d]
+        nz_lc = per_dim_nz_lc[d]
+
+        if len(nz_lc) == 1:
+            lc_val = next(iter(nz_lc))
+            orig_val = per_dim_nz_orig[d][lc_val]
+            dim_guards.append(
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
+            )
+        else:
+            # Try to find a matching named subset
+            subset_name = _find_matching_subset(dom_idx, nz_lc, model_ir)
+            if subset_name is not None:
+                dim_guards.append(SetMembershipTest(subset_name, (SymbolRef(dom_idx),)))
+            else:
+                or_parts: list[Expr] = []
+                for lc_val in sorted(nz_lc):
+                    orig_val = per_dim_nz_orig[d][lc_val]
+                    or_parts.append(
+                        Call(
+                            "sameas",
+                            (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))),
+                        )
+                    )
+                or_expr: Expr = or_parts[0]
+                for part in or_parts[1:]:
+                    or_expr = Binary("or", or_expr, part)
+                dim_guards.append(or_expr)
+
+    if not dim_guards:
+        # Per-dimension says fully covered but tuple-level may not be
+        # (non-Cartesian entries). Fall back to exact tuple matching.
+        if nonzero_idx_set >= all_idx_set:
+            return None
+        return _build_tuple_or_guard(domain, nonzero_indices)
+
+    # Validate that per-dimension factorization is exact: the Cartesian
+    # product of per-dim selections must equal the nonzero set.  If the
+    # nonzero tuples are non-Cartesian, the AND of per-dim guards would
+    # over-select (enabling zero-gradient instances).  Fall back to
+    # exact tuple-OR in that case.
+    # Filter existing tuples through per-dim selections (O(|all_instances|))
+    # instead of materializing the full Cartesian product which can explode.
+    selected_lc = [
+        per_dim_nz_lc[d] if per_dim_nz_lc[d] < per_dim_all_lc[d] else per_dim_all_lc[d]
+        for d in range(ndim)
+    ]
+    filtered_idx_set = {
+        idx for idx in all_idx_set if all(idx[d] in selected_lc[d] for d in range(ndim))
+    }
+    if filtered_idx_set != nonzero_idx_set:
+        return _build_tuple_or_guard(domain, nonzero_indices)
+
+    guard: Expr = dim_guards[0]
+    for dg in dim_guards[1:]:
+        guard = Binary("and", guard, dg)
+    return guard
 
 
 def _build_element_to_set_mapping(
