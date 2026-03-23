@@ -23,27 +23,32 @@ from src.kkt.stationarity import build_stationarity_equations
 class TestStationarityGradientConditionFallback:
     """Stage 4: gradient-derived condition applied to stationarity equations."""
 
-    def test_gradient_condition_applied_when_no_constraint_access(self, manual_index_mapping):
-        """Gradient condition used when variable only appears in objective."""
+    def test_gradient_condition_applied_via_stage4(self, manual_index_mapping):
+        """Stage 4 gradient condition used when Stages 1-3 find nothing.
+
+        x appears only in model.objective.expr (not in any equation body),
+        so _find_variable_access_condition (Stage 1) won't find it in any
+        equation.  Stages 2-3 also return None.  Stage 4 should apply the
+        gradient-derived condition from kkt.gradient_conditions.
+        """
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
         model.sets["i"] = ["a", "b"]
 
-        # obj =e= sum(i$xw(i), x(i))  — x accessed only in objective
-        # Use Sum with condition (not DollarConditional body) so _collect_access_conditions
-        # detects the conditioned access pattern
+        # Put x in objective.expr so it's counted as referenced, but NOT in
+        # any equation body — this ensures Stages 1-3 return None.
+        model.objective.expr = Sum(
+            index_sets=("i",),
+            condition=ParamRef("xw", ("i",)),
+            body=VarRef("x", ("i",)),
+        )
+
+        # objdef references only obj (not x)
         model.equations["objdef"] = EquationDef(
             name="objdef",
             domain=(),
             relation=Rel.EQ,
-            lhs_rhs=(
-                VarRef("obj", ()),
-                Sum(
-                    index_sets=("i",),
-                    condition=ParamRef("xw", ("i",)),
-                    body=VarRef("x", ("i",)),
-                ),
-            ),
+            lhs_rhs=(VarRef("obj", ()), Const(0.0)),
         )
 
         model.variables["obj"] = VariableDef(name="obj", domain=())
@@ -78,24 +83,23 @@ class TestStationarityGradientConditionFallback:
         assert "xw" in repr(stat_eq.condition)
 
     def test_gradient_condition_skipped_when_unconditioned_access(self, manual_index_mapping):
-        """Gradient condition NOT used when variable has unconditioned constraint access."""
+        """Stage 4 gradient condition NOT used when variable has unconditioned access."""
         model = ModelIR()
         model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
         model.sets["i"] = ["a", "b"]
 
-        # obj =e= sum(i$xw(i), x(i))  — conditioned in objective
+        # Put x in objective.expr (not in objdef body)
+        model.objective.expr = Sum(
+            index_sets=("i",),
+            condition=ParamRef("xw", ("i",)),
+            body=VarRef("x", ("i",)),
+        )
+
         model.equations["objdef"] = EquationDef(
             name="objdef",
             domain=(),
             relation=Rel.EQ,
-            lhs_rhs=(
-                VarRef("obj", ()),
-                Sum(
-                    index_sets=("i",),
-                    condition=ParamRef("xw", ("i",)),
-                    body=VarRef("x", ("i",)),
-                ),
-            ),
+            lhs_rhs=(VarRef("obj", ()), Const(0.0)),
         )
 
         # eq1(i).. x(i) =e= 1  — UNCONDITIONED access in constraint

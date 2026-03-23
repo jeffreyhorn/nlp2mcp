@@ -70,6 +70,6 @@ Solve dummy using NLP minimizing x;
         eq = ir.equations.get("eq1")
         assert eq is not None
         assert eq.condition is not None
-        # Should be Binary("and", ParamRef("low",...), ...)
+        # Should be Binary("and", SetMembershipTest("low", ...), ...)
         assert "low" in repr(eq.condition)
         assert "active" in repr(eq.condition)
