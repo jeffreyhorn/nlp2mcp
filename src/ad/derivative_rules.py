@@ -2088,6 +2088,13 @@ def _partial_collapse_sum(
     - Differentiate body using symbolic indices for matched dimensions
     - Result: sum(cg, [differentiated body with i->p1])
 
+    Alias-aware matching (#1111): When multiple sum indices from the same
+    alias group can match the same wrt index, all valid matchings are
+    enumerated and their derivatives are summed. For example, in
+    sum((k,n,np), x(n,k)*W(n,np,k)*x(np,k)) w.r.t. x('consumpt','q1')
+    where Alias(n,np), both n→consumpt and np→consumpt are valid, producing
+    two collapse paths whose sum gives the correct gradient (B + B^T)x.
+
     Args:
         expr: Sum expression with more indices than wrt_indices
         wrt_var: Variable name to differentiate with respect to
@@ -2103,111 +2110,153 @@ def _partial_collapse_sum(
     """
     sum_index_sets = expr.index_sets
 
-    # Find which sum indices match wrt_indices
-    matched_sum_indices: list[str] = []
-    matched_concrete: list[str | IndexOffset] = []
-    remaining_sum_indices: list[str] = []
+    # Build a list of candidate sum indices for each wrt index position.
+    # Each wrt index may match multiple sum indices (e.g., both n and np
+    # when Alias(n,np) and both are in the sum).
+    candidates_per_wrt: list[list[int]] = []  # indices into sum_index_sets
+    for wrt_idx in wrt_indices:
+        check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
+        cands: list[int] = []
+        for si, sum_idx in enumerate(sum_index_sets):
+            if _is_concrete_instance_of(check_str, sum_idx, config):
+                cands.append(si)
+        candidates_per_wrt.append(cands)
 
-    # First, try positional matching (most common case in GAMS models).
-    # This handles cases where sum indices are ordered to match variable indices,
-    # e.g., sum((i,j), x(i,j)) w.r.t. x('p1','q1') -> i matches p1, j matches q1.
-    # Positional matching avoids ambiguity when multiple indices could match.
-    positional_match = True
-    for i, wrt_idx in enumerate(wrt_indices):
-        if i < len(sum_index_sets):
-            check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
-            if not _is_concrete_instance_of(check_str, sum_index_sets[i], config):
-                positional_match = False
-                break
-        else:
-            positional_match = False
-            break
+    # If any wrt index has no candidates, no valid matching exists
+    if any(len(c) == 0 for c in candidates_per_wrt):
+        return None
 
-    if positional_match:
-        # Use positional matching
-        matched_sum_indices = list(sum_index_sets[: len(wrt_indices)])
+    # Enumerate all valid matchings (each sum index used at most once).
+    # For most models this produces exactly one matching. For alias cases
+    # (like qabel: Alias(n,np) in sum((k,n,np),...)), it produces multiple
+    # matchings whose derivatives must be summed for the correct gradient.
+    all_matchings = _enumerate_matchings(candidates_per_wrt)
+
+    if not all_matchings:
+        return None
+
+    # Compute derivative for each valid matching and accumulate results
+    accumulated: Expr | None = None
+
+    # Get aliases for potential renaming of remaining sum indices
+    aliases: Any = None
+    if config is not None and config.model_ir is not None:
+        aliases = getattr(config.model_ir, "aliases", None)
+
+    for matching in all_matchings:
+        # matching[i] = index into sum_index_sets for wrt position i
+        matched_sum_indices = [sum_index_sets[matching[i]] for i in range(len(wrt_indices))]
         matched_concrete = list(wrt_indices)
-        remaining_sum_indices = list(sum_index_sets[len(wrt_indices) :])
-    else:
-        # Fall back to searching for matches (handles reordered indices)
-        wrt_indices_used = [False] * len(wrt_indices)
+        matched_set = set(matching)
+        remaining_sum_indices = [
+            sum_index_sets[si] for si in range(len(sum_index_sets)) if si not in matched_set
+        ]
 
-        for sum_idx in sum_index_sets:
-            found_match = False
-            for i, wrt_idx in enumerate(wrt_indices):
-                check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
-                if not wrt_indices_used[i] and _is_concrete_instance_of(check_str, sum_idx, config):
-                    matched_sum_indices.append(sum_idx)
-                    matched_concrete.append(wrt_idx)
-                    wrt_indices_used[i] = True
-                    found_match = True
-                    break
-            if not found_match:
-                remaining_sum_indices.append(sum_idx)
+        # Issue #1111: Rename remaining sum indices that share an alias root
+        # with any matched sum index. After substitution, the matched indices
+        # become concrete values that _replace_indices_in_expr will map back to
+        # domain names. If a remaining sum index has the same domain name (via
+        # alias), the emitter can't distinguish sum-variable-i from domain-i.
+        # Renaming at the AD level (e.g., i → i__) avoids this ambiguity.
+        working_body = expr.body
+        working_condition = expr.condition
+        final_remaining = list(remaining_sum_indices)
+        matched_lower = {m.lower() for m in matched_sum_indices}
+        for ri, ridx in enumerate(remaining_sum_indices):
+            needs_rename = ridx.lower() in matched_lower
+            if not needs_rename and aliases:
+                # Check alias root: if remaining shares root with any matched
+                for midx in matched_sum_indices:
+                    if _same_root_set(ridx, midx, aliases):
+                        needs_rename = True
+                        break
+            if needs_rename:
+                new_name = ridx + "__"
+                while new_name.lower() in matched_lower or new_name in sum_index_sets:
+                    new_name += "_"
+                # Rename in body and condition
+                working_body = _substitute_sum_indices(working_body, (ridx,), (new_name,))
+                if working_condition is not None:
+                    working_condition = _substitute_sum_indices(
+                        working_condition, (ridx,), (new_name,)
+                    )
+                final_remaining[ri] = new_name
 
-    # If no matches found, return None to fall through to normal case
-    if not matched_sum_indices:
-        return None
+        # Build symbolic wrt: for each wrt position, use the matched sum index name
+        wrt_to_symbolic: list[str | IndexOffset] = []
+        for wi, wrt_idx in enumerate(wrt_indices):
+            sym_name = matched_sum_indices[wi]
+            if isinstance(wrt_idx, IndexOffset):
+                wrt_to_symbolic.append(IndexOffset(sym_name, wrt_idx.offset, wrt_idx.circular))
+            else:
+                wrt_to_symbolic.append(sym_name)
 
-    # All wrt_indices should have been matched
-    # For positional matching, this is guaranteed if we got here
-    # For fallback matching, check that all wrt_indices were used
-    if len(matched_concrete) != len(wrt_indices):
-        # Some wrt_indices didn't match any sum index - this shouldn't happen
-        # for valid differentiation, but fall through to normal case
-        return None
+        symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
+        # Augment bound_indices with remaining (uncollapsed) sum indices
+        new_bound = bound_indices | frozenset(final_remaining)
+        body_derivative = differentiate_expr(
+            working_body, wrt_var, symbolic_wrt, config, bound_indices=new_bound
+        )
 
-    # Differentiate the body using symbolic indices for matched dimensions
-    # This allows x(i) to match when we use ('i',) as wrt_indices
-    # For IndexOffset wrt_indices, build symbolic indices that mirror the structure:
-    # e.g., wrt=(IndexOffset("t1",1),), sum_idx="t" → symbolic=(IndexOffset("t",1),)
-    # Build positional mapping: for each wrt_indices position, find
-    # which matched_concrete entry corresponds to it, then use the
-    # paired matched_sum_indices entry as the symbolic name.
-    # A positional approach (rather than a dict) handles duplicate
-    # concrete values correctly (e.g., x(a,a) where both map to 'a').
-    wrt_to_symbolic: list[str | IndexOffset] = []
-    used_match_positions: set[int] = set()
-    for idx in wrt_indices:
-        for mi, (conc, sum_idx) in enumerate(
-            zip(matched_concrete, matched_sum_indices, strict=True)
-        ):
-            if mi in used_match_positions:
-                continue
-            if conc == idx:
-                if isinstance(idx, IndexOffset):
-                    wrt_to_symbolic.append(IndexOffset(sum_idx, idx.offset, idx.circular))
-                else:
-                    wrt_to_symbolic.append(sum_idx)
-                used_match_positions.add(mi)
-                break
+        # Skip zero derivatives (common for non-matching alias paths)
+        if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
+            continue
 
-    symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
-    # Augment bound_indices with remaining (uncollapsed) sum indices
-    new_bound = bound_indices | frozenset(remaining_sum_indices)
-    body_derivative = differentiate_expr(
-        expr.body, wrt_var, symbolic_wrt, config, bound_indices=new_bound
-    )
+        # Substitute matched sum indices with their concrete values
+        result_body = _substitute_sum_indices(
+            body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
+        )
 
-    # Substitute matched sum indices with their concrete values
-    result_body = _substitute_sum_indices(
-        body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
-    )
+        # If there are remaining sum indices, wrap in a Sum (preserving condition)
+        if final_remaining:
+            term: Expr = Sum(tuple(final_remaining), result_body, working_condition)
+        else:
+            # Issue #720: Preserve dollar condition when sum fully collapses.
+            # Multiply by condition rather than using DollarConditional.
+            # Issue #1085: Keep the condition in symbolic form (using sum index
+            # names, not concrete values) so that _replace_indices_in_expr can
+            # correctly map them to the stationarity domain.
+            if expr.condition is not None:
+                result_body = Binary("*", result_body, _ensure_numeric_condition(expr.condition))
+            term = result_body
 
-    # If there are remaining sum indices, wrap in a Sum (preserving condition)
-    if remaining_sum_indices:
-        return Sum(tuple(remaining_sum_indices), result_body, expr.condition)
-    else:
-        # Issue #720: Preserve dollar condition when sum fully collapses.
-        # Multiply by condition rather than using DollarConditional.
-        # Issue #1085: Keep the condition in symbolic form (using sum index
-        # names, not concrete values) so that _replace_indices_in_expr can
-        # correctly map them to the stationarity domain.  Substituting
-        # concrete values (e.g., ord('0')) causes ambiguity when the element
-        # belongs to multiple sets.
-        if expr.condition is not None:
-            result_body = Binary("*", result_body, _ensure_numeric_condition(expr.condition))
-        return result_body
+        # Accumulate with addition
+        if accumulated is None:
+            accumulated = term
+        else:
+            accumulated = Binary("+", accumulated, term)
+
+    return accumulated
+
+
+def _enumerate_matchings(
+    candidates_per_wrt: list[list[int]],
+) -> list[tuple[int, ...]]:
+    """Enumerate all valid matchings of wrt positions to sum indices.
+
+    Each matching assigns one sum index to each wrt position such that no
+    sum index is used twice. Returns a list of tuples where tuple[i] is the
+    sum index assigned to wrt position i.
+
+    Uses backtracking for correctness; the search space is tiny in practice
+    (typically 1-3 candidates per position, 1-3 positions).
+    """
+    result: list[tuple[int, ...]] = []
+
+    def _backtrack(pos: int, used: set[int], current: list[int]) -> None:
+        if pos == len(candidates_per_wrt):
+            result.append(tuple(current))
+            return
+        for si in candidates_per_wrt[pos]:
+            if si not in used:
+                current.append(si)
+                used.add(si)
+                _backtrack(pos + 1, used, current)
+                current.pop()
+                used.discard(si)
+
+    _backtrack(0, set(), [])
+    return result
 
 
 def _sum_should_collapse(

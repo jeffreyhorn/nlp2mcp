@@ -1522,14 +1522,22 @@ def _replace_indices_in_expr(
             )
             return Call(func, new_args)
         case Sum(index_sets, body, condition) | Prod(index_sets, body, condition):
-            # Recursively process body and condition to replace element-specific indices
-            new_body = _replace_indices_in_expr(
-                body, domain, element_to_set, model_ir, equation_domain
-            )
-            new_condition = (
-                _replace_indices_in_expr(
-                    condition, domain, element_to_set, model_ir, equation_domain
+            # Protect sum/prod index variables from being replaced.
+            # AD-generated indices like "j__" or "i__" are not in the model's
+            # element_to_set mapping, so _replace_matching_indices falls through
+            # to a default path that replaces them with the declared domain
+            # target_set. Adding them as self-mappings prevents this.
+            inner_e2s = element_to_set
+            if element_to_set is not None and index_sets:
+                # ChainMap overlays self-mappings for sum indices on the base mapping.
+                # The base is read-only here (only lookups, no mutations), so the
+                # cast is safe even when element_to_set is a Mapping.
+                inner_e2s = ChainMap(
+                    {idx: idx for idx in index_sets}, element_to_set  # type: ignore[arg-type]
                 )
+            new_body = _replace_indices_in_expr(body, domain, inner_e2s, model_ir, equation_domain)
+            new_condition = (
+                _replace_indices_in_expr(condition, domain, inner_e2s, model_ir, equation_domain)
                 if condition is not None
                 else None
             )
@@ -1762,6 +1770,7 @@ def _replace_matching_indices(
     # Build superset-to-subset mapping from equation domain if available.
     # For each set in the equation domain, check if it's a subset of another set.
     # E.g., if equation domain is ("i",) and i has domain=("s",), then s -> i.
+    eq_domain_lower: set[str] = {s.lower() for s in equation_domain} if equation_domain else set()
     superset_to_subset: dict[str, str] = {}
     if equation_domain and model_ir:
         for eq_set in equation_domain:
@@ -1869,6 +1878,17 @@ def _replace_matching_indices(
                             ):
                                 # mapped is a subset of target_set — use subset
                                 new_indices.append(mapped)
+                            elif (
+                                eq_domain_lower
+                                and mapped.lower() in eq_domain_lower
+                                and _shares_alias_root(mapped, target_set, model_ir)
+                            ):
+                                # Issue #1111: When the constraint-specific mapping
+                                # gives the equation domain index (e.g., p1 → i) but
+                                # the declared domain at this position is an alias
+                                # (e.g., j), prefer the equation domain index.
+                                # Using the alias creates an uncontrolled free index.
+                                new_indices.append(mapped)
                             else:
                                 new_indices.append(target_set)
                         else:
@@ -1886,9 +1906,6 @@ def _replace_matching_indices(
                         # narrower declared domain is intentional (e.g. c(p,t) declared
                         # over t which is a subset of tt in stat_x(p,tt)).
                         target_is_subset_of_eq_domain = False
-                        eq_domain_lower = (
-                            {s.lower() for s in equation_domain} if equation_domain else set()
-                        )
                         if (
                             equation_domain
                             and model_ir
@@ -2030,6 +2047,11 @@ def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
         current = target
 
     return current
+
+
+def _shares_alias_root(name_a: str, name_b: str, model_ir: ModelIR) -> bool:
+    """Return True if two set/alias names resolve to the same canonical root."""
+    return _resolve_alias_target(name_a, model_ir) == _resolve_alias_target(name_b, model_ir)
 
 
 def _get_or_create_fresh_alias(

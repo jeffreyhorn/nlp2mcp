@@ -11,6 +11,13 @@ Also handles automatic domain restriction inference for lead/lag expressions:
 - Lag expressions (t - n) with maximum negative offset magnitude n require: $(ord(t) > n)
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.ir.model_ir import ModelIR
+
 from src.emit.expr_to_gams import (
     expr_to_gams,
     resolve_index_conflicts,
@@ -425,6 +432,76 @@ def emit_normalized_equation_def(eq_name: str, norm_eq: NormalizedEquation) -> s
         return f"{eq_name}.. {expr_gams} {rel_gams} 0;"
 
 
+def _collect_ad_generated_aliases(
+    expr: Expr,
+    model_ir: ModelIR,
+) -> dict[str, list[str]]:
+    """Collect AD-generated sum index aliases that need GAMS Alias declarations.
+
+    The AD layer renames remaining sum indices to avoid collisions with matched
+    indices (e.g., i → i__, j → j__). These are not known sets or aliases in
+    the model_ir, so they need explicit Alias declarations to be valid in GAMS.
+
+    Returns a dict mapping canonical base set name (lowercase) to list of
+    generated alias names (e.g., {"i": ["i__", "j__"]}).
+    """
+    known: set[str] = set()
+    for s in model_ir.sets:
+        known.add(s.lower())
+    for a in model_ir.aliases:
+        known.add(a.lower())
+
+    result: dict[str, list[str]] = {}
+
+    def _resolve_root(name: str) -> str:
+        """Resolve alias to its root set name (lowercase)."""
+        current = name.lower()
+        seen: set[str] = set()
+        while current not in seen:
+            seen.add(current)
+            alias_def = model_ir.aliases.get(current)
+            if alias_def is None:
+                break
+            target = (
+                alias_def.target.lower() if hasattr(alias_def, "target") else str(alias_def).lower()
+            )
+            if target == current:
+                break
+            current = target
+        return current
+
+    def _walk(e: Expr) -> None:
+        if isinstance(e, (Sum, Prod)):
+            for idx in e.index_sets:
+                if idx.lower() not in known:
+                    # Try to find the base set by stripping __ suffix
+                    base = idx
+                    while base.endswith("_"):
+                        base = base[:-1]
+                    if base and base.lower() in known:
+                        root = _resolve_root(base)
+                        existing = result.setdefault(root, [])
+                        if idx not in existing:
+                            existing.append(idx)
+            _walk(e.body)
+            if e.condition is not None:
+                _walk(e.condition)
+        elif isinstance(e, Binary):
+            _walk(e.left)
+            _walk(e.right)
+        elif isinstance(e, Unary):
+            _walk(e.child)
+        elif isinstance(e, Call):
+            for arg in e.args:
+                _walk(arg)
+        elif isinstance(e, DollarConditional):
+            _walk(e.value_expr)
+            _walk(e.condition)
+
+    _walk(expr)
+    return result
+
+
 def emit_equation_definitions(
     kkt: KKTSystem, suppressed_fx_equations: set[str] | None = None
 ) -> tuple[str, dict[str, list[str]]]:
@@ -559,5 +636,15 @@ def emit_equation_definitions(
                 norm_eq = kkt.model_ir.normalized_bounds[eq_name]
                 lines.append(emit_normalized_equation_def(eq_name, norm_eq))
         lines.append("")
+
+    # Issue #1111: Collect AD-generated sum index aliases (e.g., i__, j__)
+    # that need GAMS Alias declarations. These are created by the AD layer's
+    # alias-aware partial collapse when differentiating expressions like
+    # sum((i,j), p(i)*b(i,j)*p(j)) where Alias(i,j).
+    if kkt.stationarity:
+        for eq_def in kkt.stationarity.values():
+            for side_expr in eq_def.lhs_rhs:
+                ad_aliases = _collect_ad_generated_aliases(side_expr, kkt.model_ir)
+                _merge_alias_dicts(all_aliases, ad_aliases)
 
     return "\n".join(lines), all_aliases
