@@ -1136,7 +1136,7 @@ def _build_indexed_gradient_term(
     else:
         grad_component = None  # Normalize to None for the search below
 
-    for c_id, v_idx in instances[1 if grad_component is None else 0 :]:
+    for c_id, v_idx in instances[1:]:
         gc = kkt.gradient.get_derivative(c_id)
         if gc is not None and not (isinstance(gc, Const) and gc.value == 0):
             if grad_component is None:
