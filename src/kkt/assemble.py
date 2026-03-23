@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 
-from src.ad.gradient import GradientVector, _extract_gradient_conditions
+from src.ad.gradient import GradientVector, extract_gradient_conditions
 from src.ad.jacobian import JacobianStructure
 from src.config import Config
 from src.ir.model_ir import ModelIR
@@ -150,7 +150,7 @@ def assemble_kkt_system(
     )
 
     # Issue #1112: Extract dollar conditions from gradient expressions
-    kkt.gradient_conditions = _extract_gradient_conditions(gradient)
+    kkt.gradient_conditions = extract_gradient_conditions(gradient)
 
     # Step 5: Build complementarity pairs FIRST (needed by stationarity)
     # Must be done before stationarity: the stationarity builder needs to check the `negated` flag in

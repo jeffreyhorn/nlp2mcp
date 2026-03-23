@@ -33,7 +33,8 @@ Solve dummy using NLP minimizing x;
         assert eq is not None
         assert eq.domain == ("n", "nn")
         assert eq.condition is not None
-        assert repr(eq.condition) == "ParamRef(low(n,nn))"
+        assert "SetMembershipTest" in repr(eq.condition)
+        assert "low" in repr(eq.condition)
 
     def test_simple_domain_no_condition(self):
         """eq(i,j).. does NOT create a condition."""

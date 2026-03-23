@@ -316,7 +316,7 @@ def _extract_condition_from_expr(expr: Expr) -> Expr | None:
     return None
 
 
-def _extract_gradient_conditions(gradient: GradientVector) -> dict[str, Expr]:
+def extract_gradient_conditions(gradient: GradientVector) -> dict[str, Expr]:
     """Extract embedded dollar conditions from gradient expressions.
 
     Scans each non-zero gradient entry for DollarConditional wrappers

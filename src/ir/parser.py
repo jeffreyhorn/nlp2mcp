@@ -582,14 +582,15 @@ def _domain_list_condition(node: Tree) -> Expr | None:
     """Extract implicit set-membership conditions from nested domain elements.
 
     When a domain element is `set_name(n,nn)` (e.g., `low(n,nn)`), the equation
-    is restricted to members of `set_name`. This function returns a ParamRef
-    condition representing that restriction, or None if no nested domains exist.
+    is restricted to members of `set_name`. This function returns a
+    SetMembershipTest condition representing that restriction, or None if no
+    nested domains exist.
 
-    Multiple nested domain elements are AND-combined via multiplication.
+    Multiple nested domain elements are AND-combined via Binary("and", ...).
 
     Examples:
-        - low(n,nn)       -> ParamRef('low', ('n', 'nn'))
-        - i, low(n,nn), k -> ParamRef('low', ('n', 'nn'))
+        - low(n,nn)       -> SetMembershipTest('low', ('n', 'nn'))
+        - i, low(n,nn), k -> SetMembershipTest('low', ('n', 'nn'))
         - i, j            -> None (no nested domains)
     """
     conditions: list[Expr] = []
@@ -605,13 +606,13 @@ def _domain_list_condition(node: Tree) -> Expr | None:
                 # Nested domain: set_name(indices) — extract set membership condition
                 set_name = _token_text(first_child)
                 indices = tuple(_extract_domain_indices(second_child))
-                conditions.append(ParamRef(set_name, indices))
+                conditions.append(SetMembershipTest(set_name, tuple(SymbolRef(i) for i in indices)))
 
     if not conditions:
         return None
     result = conditions[0]
     for cond in conditions[1:]:
-        result = Binary("*", result, cond)
+        result = Binary("and", result, cond)
     return result
 
 

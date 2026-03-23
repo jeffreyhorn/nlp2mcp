@@ -1,4 +1,4 @@
-"""Tests for _extract_gradient_conditions() — Issue #1112.
+"""Tests for extract_gradient_conditions() — Issue #1112.
 
 Dollar-condition propagation: extract equation-level guards from gradient
 expressions that contain embedded DollarConditional or multiplicative
@@ -11,8 +11,8 @@ import pytest
 
 from src.ad.gradient import (
     _extract_condition_from_expr,
-    _extract_gradient_conditions,
     _is_condition_factor,
+    extract_gradient_conditions,
 )
 from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import GradientVector
@@ -111,7 +111,7 @@ class TestExtractConditionFromExpr:
 
 @pytest.mark.unit
 class TestExtractGradientConditions:
-    """Test _extract_gradient_conditions aggregation."""
+    """Test extract_gradient_conditions aggregation."""
 
     def test_all_entries_same_condition(self):
         """When all gradient entries share the same condition, return it."""
@@ -126,7 +126,7 @@ class TestExtractGradientConditions:
                 ],
             }
         )
-        result = _extract_gradient_conditions(gradient)
+        result = extract_gradient_conditions(gradient)
         assert "x" in result
         assert repr(result["x"]) == repr(cond)
 
@@ -142,7 +142,7 @@ class TestExtractGradientConditions:
                 ],
             }
         )
-        result = _extract_gradient_conditions(gradient)
+        result = extract_gradient_conditions(gradient)
         assert "x" not in result
 
     def test_zero_entries_skipped(self):
@@ -158,7 +158,7 @@ class TestExtractGradientConditions:
                 ],
             }
         )
-        result = _extract_gradient_conditions(gradient)
+        result = extract_gradient_conditions(gradient)
         assert "x" in result
 
     def test_different_conditions_no_common(self):
@@ -175,7 +175,7 @@ class TestExtractGradientConditions:
                 ],
             }
         )
-        result = _extract_gradient_conditions(gradient)
+        result = extract_gradient_conditions(gradient)
         assert "x" not in result
 
     def test_multiple_variables(self):
@@ -197,7 +197,7 @@ class TestExtractGradientConditions:
                 ],
             }
         )
-        result = _extract_gradient_conditions(gradient)
+        result = extract_gradient_conditions(gradient)
         assert "x" in result
         assert "t" in result
         assert "y" not in result
