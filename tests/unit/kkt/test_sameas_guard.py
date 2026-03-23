@@ -343,6 +343,33 @@ class TestBuildSameasGuardForInstances:
         assert isinstance(guard, Binary)
         assert guard.op == "or"
 
+    def test_non_cartesian_partial_dim_falls_back_to_tuple_or(self):
+        """Non-Cartesian tuples with partial per-dim coverage → tuple-or fallback.
+
+        nonzero={(a,x),(c,y)} over all={(a,x),(a,y),(b,x),(b,y),(c,x),(c,y)}.
+        Per-dim: i needs {a,c} (partial), j needs {x,y} (full).
+        A naive per-dim AND guard (i in {a,c}) would also enable (a,y) and
+        (c,x), which have zero gradient.  Must fall back to tuple-or.
+        """
+        model_ir = ModelIR()
+        domain = ("i", "j")
+        all_inst = [
+            (0, ("a", "x")),
+            (1, ("a", "y")),
+            (2, ("b", "x")),
+            (3, ("b", "y")),
+            (4, ("c", "x")),
+            (5, ("c", "y")),
+        ]
+        # Non-Cartesian: (a,x) and (c,y) — i={a,c}, j={x,y} but NOT a×{x,y}∩c×{x,y}
+        nz_inst = [(0, ("a", "x")), (5, ("c", "y"))]
+
+        guard = _build_sameas_guard_for_instances(domain, nz_inst, all_inst, model_ir)
+        assert guard is not None
+        # Must be OR of two AND-conjunctions (tuple-or), NOT a single-dim guard
+        assert isinstance(guard, Binary)
+        assert guard.op == "or"
+
     def test_subset_detection_with_named_subset(self):
         """Named subset match uses SetMembershipTest instead of OR-of-sameas."""
         model_ir = ModelIR()
