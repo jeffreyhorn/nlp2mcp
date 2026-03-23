@@ -272,6 +272,7 @@ def _alias_match(
         return None
 
     guards: list[Expr] = []
+    bound_lower = {b.lower() for b in bound_indices}
     for expr_idx, wrt_idx in zip(expr_indices, wrt_indices, strict=True):
         # IndexOffset dimensions (lead/lag like t+1) require full structural
         # equality — alias matching by base name alone would incorrectly treat
@@ -295,7 +296,7 @@ def _alias_match(
 
         # Same root set, but different names — alias relationship
         # Check if the expr index is a bound iteration variable
-        if expr_str.lower() in {b.lower() for b in bound_indices}:
+        if expr_str.lower() in bound_lower:
             return None  # Bound variable: independent iteration, no match
 
         # Free alias variable: generate sameas() guard

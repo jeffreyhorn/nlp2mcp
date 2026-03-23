@@ -75,8 +75,14 @@ class TestSameRootSet:
         assert _same_root_set("n", "k", aliases) is False
 
     def test_case_insensitive(self):
-        aliases = {"NP": AliasDef("NP", "n")}
-        assert _same_root_set("n", "NP", aliases) is True
+        """Root set comparison is case-insensitive (resolve returns .lower()).
+
+        Note: case-insensitive dict *lookup* is provided by ModelIR.aliases
+        (CaseInsensitiveDict). Here we test that the resolved root names are
+        compared case-insensitively — "N" and "n" resolve to the same root.
+        """
+        aliases = {"np": AliasDef("np", "N")}  # target is uppercase "N"
+        assert _same_root_set("n", "np", aliases) is True
 
     def test_plain_string_aliases(self):
         """Some test setups use plain strings instead of AliasDef objects."""
@@ -190,6 +196,8 @@ class TestAliasDifferentiation:
         result = differentiate_expr(expr, "p", ("i",), config)
         # Result: sum(j, 0) — the sum is preserved with zero body derivative
         assert isinstance(result, Sum)
+        assert isinstance(result.body, Const)
+        assert result.body.value == 0.0
 
     def test_dispatch_pattern_no_spurious_match(self):
         """dispatch: Alias(i,j); sum((i,j), p(i)*b(i,j)*p(j)) w.r.t. p(i).
