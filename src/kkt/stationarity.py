@@ -880,6 +880,14 @@ def build_stationarity_equations(
                     lead_lag_conditions=lead_lag_conditions,
                 )
 
+            # Stage 4 (Issue #1112): Check gradient conditions.
+            # If the objective gradient for this variable was computed from a
+            # conditioned sum (e.g., sum((i,j)$xw(i,j), ...)), the gradient
+            # carries an embedded condition that should become an equation-level
+            # guard on the stationarity equation.
+            if access_cond is None and var_name in kkt.gradient_conditions:
+                access_cond = kkt.gradient_conditions[var_name]
+
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=var_def.domain,  # Use same domain as variable

@@ -70,7 +70,7 @@ if TYPE_CHECKING:
     from ..ir.ast import Expr
     from ..ir.model_ir import ModelIR
 
-from ..ir.ast import Unary
+from ..ir.ast import Binary, Const, DollarConditional, Unary
 from ..ir.symbols import ObjSense
 from .ad_core import apply_simplification, get_simplification_mode
 from .derivative_rules import differentiate_expr
@@ -274,6 +274,92 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
             gradient.set_derivative(col_id, derivative)
 
     return gradient
+
+
+# ---------------------------------------------------------------------------
+# Issue #1112: Dollar-condition extraction from gradient expressions
+# ---------------------------------------------------------------------------
+
+
+def _is_condition_factor(expr: Expr) -> Expr | None:
+    """Check if expr is a condition factor from _ensure_numeric_condition().
+
+    _ensure_numeric_condition() wraps non-Const conditions as
+    DollarConditional(Const(1.0), cond). Returns the underlying condition,
+    or None if expr doesn't match that pattern.
+    """
+    if (
+        isinstance(expr, DollarConditional)
+        and isinstance(expr.value_expr, Const)
+        and expr.value_expr.value == 1.0
+    ):
+        return expr.condition
+    return None
+
+
+def _extract_condition_from_expr(expr: Expr) -> Expr | None:
+    """Extract the condition from a gradient derivative expression (top-level only).
+
+    Recognizes patterns produced by _diff_sum collapse and _diff_dollar_conditional:
+    1. DollarConditional(value, condition)
+    2. Binary("*", value, DollarConditional(Const(1.0), cond))
+    """
+    if isinstance(expr, DollarConditional):
+        return expr.condition
+    if isinstance(expr, Binary) and expr.op == "*":
+        right_cond = _is_condition_factor(expr.right)
+        if right_cond is not None:
+            return right_cond
+        left_cond = _is_condition_factor(expr.left)
+        if left_cond is not None:
+            return left_cond
+    return None
+
+
+def _extract_gradient_conditions(gradient: GradientVector) -> dict[str, Expr]:
+    """Extract embedded dollar conditions from gradient expressions.
+
+    Scans each non-zero gradient entry for DollarConditional wrappers
+    or multiplicative condition factors introduced by _diff_sum() when
+    a conditioned sum collapses.
+
+    Returns:
+        Mapping: var_name -> condition_expr for variables where ALL
+        gradient entries share the same condition (by repr equality).
+    """
+    if gradient.index_mapping is None:
+        return {}
+
+    var_conditions: dict[str, list[Expr] | None] = {}
+    # None sentinel means "unconditional entry seen — no common condition"
+
+    for col_id in range(gradient.num_cols):
+        derivative = gradient.get_derivative(col_id)
+        if derivative is None or (isinstance(derivative, Const) and derivative.value == 0):
+            continue
+
+        var_name, _indices = gradient.index_mapping.col_to_var[col_id]
+        cond = _extract_condition_from_expr(derivative)
+        if cond is None:
+            var_conditions[var_name] = None
+            continue
+
+        if var_conditions.get(var_name) is None and var_name in var_conditions:
+            continue
+        if var_name not in var_conditions:
+            var_conditions[var_name] = []
+        conds_list = var_conditions[var_name]
+        if conds_list is not None:
+            conds_list.append(cond)
+
+    result: dict[str, Expr] = {}
+    for var_name, conds in var_conditions.items():
+        if conds is None or not conds:
+            continue
+        first = conds[0]
+        if all(repr(c) == repr(first) for c in conds):
+            result[var_name] = first
+    return result
 
 
 def compute_gradient_for_expression(

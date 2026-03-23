@@ -578,6 +578,43 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
     return tuple(identifiers)
 
 
+def _domain_list_condition(node: Tree) -> Expr | None:
+    """Extract implicit set-membership conditions from nested domain elements.
+
+    When a domain element is `set_name(n,nn)` (e.g., `low(n,nn)`), the equation
+    is restricted to members of `set_name`. This function returns a ParamRef
+    condition representing that restriction, or None if no nested domains exist.
+
+    Multiple nested domain elements are AND-combined via multiplication.
+
+    Examples:
+        - low(n,nn)       -> ParamRef('low', ('n', 'nn'))
+        - i, low(n,nn), k -> ParamRef('low', ('n', 'nn'))
+        - i, j            -> None (no nested domains)
+    """
+    conditions: list[Expr] = []
+    for domain_elem in node.children:
+        if not isinstance(domain_elem, Tree) or domain_elem.data != "domain_element":
+            continue
+        if not domain_elem.children:
+            continue
+        first_child = domain_elem.children[0]
+        if isinstance(first_child, Token) and len(domain_elem.children) == 2:
+            second_child = domain_elem.children[1]
+            if isinstance(second_child, Tree) and second_child.data == "index_list":
+                # Nested domain: set_name(indices) — extract set membership condition
+                set_name = _token_text(first_child)
+                indices = tuple(_extract_domain_indices(second_child))
+                conditions.append(ParamRef(set_name, indices))
+
+    if not conditions:
+        return None
+    result = conditions[0]
+    for cond in conditions[1:]:
+        result = Binary("*", result, cond)
+    return result
+
+
 def _domain_list_has_offset(node: Tree) -> bool:
     """Check if any domain element has a *linear* lead/lag offset (e.g., i+1, t-1).
 
@@ -3406,6 +3443,10 @@ class _ModelBuilder:
 
         # Extract condition if present
         # Children: [ID, id_list, condition?, expr, REL_K, expr]
+        # Issue #1112: Extract implicit domain restriction from nested domain
+        # elements (e.g., low(n,nn) -> ParamRef('low', ('n', 'nn'))).
+        domain_cond = _domain_list_condition(domain_list_node)
+
         condition_node = next(
             (c for c in node.children[2:] if isinstance(c, Tree) and c.data == "condition"), None
         )
@@ -3416,6 +3457,12 @@ class _ModelBuilder:
             condition_expr = self._expr_with_context(
                 condition_node.children[1], f"equation '{name}' condition", domain
             )
+
+        # Combine domain condition with explicit condition if both present
+        if domain_cond is not None and condition_expr is not None:
+            condition_expr = Binary("and", domain_cond, condition_expr)
+        elif domain_cond is not None:
+            condition_expr = domain_cond
 
         # Find expr nodes, skipping optional condition
         expr_nodes = [c for c in node.children[2:] if isinstance(c, Tree) and c.data != "condition"]
