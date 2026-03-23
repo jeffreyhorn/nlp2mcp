@@ -43,7 +43,7 @@ Backward Compatibility:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ..config import Config
@@ -70,6 +70,8 @@ def differentiate_expr(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Main dispatcher for symbolic differentiation with index-aware matching.
@@ -133,35 +135,37 @@ def differentiate_expr(
     """
     # Day 1: Constants and variable references
     if isinstance(expr, Const):
-        return _diff_const(expr, wrt_var, wrt_indices, config)
+        return _diff_const(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif isinstance(expr, VarRef):
-        return _diff_varref(expr, wrt_var, wrt_indices, config)
+        return _diff_varref(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif isinstance(expr, SymbolRef):
-        return _diff_symbolref(expr, wrt_var, wrt_indices, config)
+        return _diff_symbolref(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif isinstance(expr, ParamRef):
-        return _diff_paramref(expr, wrt_var, wrt_indices, config)
+        return _diff_paramref(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Day 2: Binary and Unary operations
     elif isinstance(expr, Binary):
-        return _diff_binary(expr, wrt_var, wrt_indices, config)
+        return _diff_binary(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif isinstance(expr, Unary):
-        return _diff_unary(expr, wrt_var, wrt_indices, config)
+        return _diff_unary(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Day 3: Function calls (power, exp, log, sqrt, trig)
     elif isinstance(expr, Call):
-        return _diff_call(expr, wrt_var, wrt_indices, config)
+        return _diff_call(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Dollar conditional: d/dx[f$g] = (df/dx)$g
     elif isinstance(expr, DollarConditional):
-        return _diff_dollar_conditional(expr, wrt_var, wrt_indices, config)
+        return _diff_dollar_conditional(
+            expr, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
 
     # Day 5: Sum aggregations
     elif isinstance(expr, Sum):
-        return _diff_sum(expr, wrt_var, wrt_indices, config)
+        return _diff_sum(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Sprint 17 Day 6: Prod aggregations
     elif isinstance(expr, Prod):
-        return _diff_prod(expr, wrt_var, wrt_indices, config)
+        return _diff_prod(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     raise TypeError(
         f"Differentiation not yet implemented for {type(expr).__name__}. "
@@ -179,6 +183,8 @@ def _diff_const(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Const:
     """
     Derivative of a constant.
@@ -229,12 +235,91 @@ def _indices_match(
     return True
 
 
+def _same_root_set(a: str, b: str, aliases: Any) -> bool:
+    """Check if two index names reference the same root set via alias chains.
+
+    Handles both AliasDef objects (with .target) and plain strings
+    (used in some tests).
+    """
+
+    def resolve(name: str) -> str:
+        seen: set[str] = set()
+        while name in aliases:
+            if name.lower() in seen:
+                break
+            seen.add(name.lower())
+            val = aliases[name]
+            name = getattr(val, "target", val)
+        return name.lower()
+
+    return resolve(a) == resolve(b)
+
+
+def _alias_match(
+    expr_indices: tuple[str | IndexOffset, ...],
+    wrt_indices: tuple[str | IndexOffset, ...],
+    aliases: Any,
+    bound_indices: frozenset[str],
+) -> Expr | None:
+    """Check if indices match through alias resolution.
+
+    Returns:
+        - None if no alias match possible
+        - Const(1.0) if indices match after alias resolution (all matched)
+        - A sameas() guard expression if alias dimensions need runtime matching
+    """
+    if len(expr_indices) != len(wrt_indices):
+        return None
+
+    guards: list[Expr] = []
+    bound_lower = {b.lower() for b in bound_indices}
+    for expr_idx, wrt_idx in zip(expr_indices, wrt_indices, strict=True):
+        # IndexOffset dimensions (lead/lag like t+1) require full structural
+        # equality — alias matching by base name alone would incorrectly treat
+        # x(t+1) as matching x(t).
+        if isinstance(expr_idx, IndexOffset) or isinstance(wrt_idx, IndexOffset):
+            if expr_idx == wrt_idx:
+                continue  # Structurally identical offset
+            return None  # Different offsets or mixed str/IndexOffset — no match
+
+        # Both are plain strings — extract for comparison
+        expr_str: str = expr_idx
+        wrt_str: str = wrt_idx
+
+        # Exact match (with quote normalization)
+        if _strip_quotes(expr_str).lower() == _strip_quotes(wrt_str).lower():
+            continue
+
+        # Check if both reference the same root set
+        if not _same_root_set(expr_str, wrt_str, aliases):
+            return None  # Different sets, no alias relationship
+
+        # Same root set, but different names — alias relationship
+        # Check if the expr index is a bound iteration variable
+        if expr_str.lower() in bound_lower:
+            return None  # Bound variable: independent iteration, no match
+
+        # Free alias variable: generate sameas() guard
+        guards.append(Call("sameas", (SymbolRef(expr_str), SymbolRef(wrt_str))))
+
+    if not guards:
+        return Const(1.0)  # All dimensions matched exactly or via alias
+
+    # Combine guards with multiplication (AND semantics)
+    result: Expr = guards[0]
+    for g in guards[1:]:
+        result = Binary("*", result, g)
+    return result
+
+
 def _diff_varref(
     expr: VarRef,
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
-) -> Const:
+    *,
+    bound_indices: frozenset[str] = frozenset(),
+) -> Expr:
     """
     Derivative of a variable reference with index-aware matching.
 
@@ -250,15 +335,20 @@ def _diff_varref(
     - If wrt_indices is provided: Exact index tuple matching required
       - d/dx(i1) x(i1) = 1 (exact match)
       - d/dx(i1) x(i2) = 0 (index mismatch)
+    - Alias-aware matching (#1111): When exact match fails, check if indices
+      refer to the same root set via aliases. Free alias indices produce
+      sameas() guards; bound alias indices (from enclosing Sum/Prod) return 0.
 
     Args:
         expr: Variable reference
         wrt_var: Variable name to differentiate with respect to
         wrt_indices: Optional index tuple for specific variable instance.
                      None means differentiating w.r.t. scalar variable (no indices).
+        bound_indices: Indices bound by enclosing Sum/Prod (not eligible for alias match)
 
     Returns:
-        Const(1.0) if variable matches (name and indices), Const(0.0) otherwise
+        Const(1.0) if variable matches, Const(0.0) if not, or a sameas() guard
+        expression for alias matches.
 
     Examples:
         >>> # Scalar variables (backward compatible)
@@ -305,8 +395,17 @@ def _diff_varref(
     # use unquoted form ('disrupted'). Normalize before comparison.
     if _indices_match(expr.indices, wrt_indices):
         return Const(1.0)
-    else:
-        return Const(0.0)
+
+    # Issue #1111: Alias-aware matching — when exact match fails, check if
+    # indices refer to the same root set via aliases.
+    if config is not None and config.model_ir is not None:
+        aliases = getattr(config.model_ir, "aliases", None)
+        if aliases:
+            guard = _alias_match(expr.indices, wrt_indices, aliases, bound_indices)
+            if guard is not None:
+                return guard
+
+    return Const(0.0)
 
 
 def _diff_symbolref(
@@ -314,6 +413,8 @@ def _diff_symbolref(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Const:
     """
     Derivative of a scalar symbol reference.
@@ -365,6 +466,8 @@ def _diff_paramref(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Const:
     """
     Derivative of a parameter reference.
@@ -400,6 +503,8 @@ def _diff_binary(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of binary operations.
@@ -438,22 +543,30 @@ def _diff_binary(
 
     if op == "+":
         # Sum rule: d(a+b)/dx = da/dx + db/dx
-        left_deriv = differentiate_expr(expr.left, wrt_var, wrt_indices, config)
-        right_deriv = differentiate_expr(expr.right, wrt_var, wrt_indices, config)
+        left_deriv = differentiate_expr(
+            expr.left, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
+        right_deriv = differentiate_expr(
+            expr.right, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
         return Binary("+", left_deriv, right_deriv)
 
     elif op == "-":
         # Difference rule: d(a-b)/dx = da/dx - db/dx
-        left_deriv = differentiate_expr(expr.left, wrt_var, wrt_indices, config)
-        right_deriv = differentiate_expr(expr.right, wrt_var, wrt_indices, config)
+        left_deriv = differentiate_expr(
+            expr.left, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
+        right_deriv = differentiate_expr(
+            expr.right, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
         return Binary("-", left_deriv, right_deriv)
 
     elif op == "*":
         # Product rule: d(a*b)/dx = b*(da/dx) + a*(db/dx)
         a = expr.left
         b = expr.right
-        da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
-        db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+        da_dx = differentiate_expr(a, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+        db_dx = differentiate_expr(b, wrt_var, wrt_indices, config, bound_indices=bound_indices)
         # b * da/dx
         term1 = Binary("*", b, da_dx)
         # a * db/dx
@@ -464,8 +577,8 @@ def _diff_binary(
         # Quotient rule: d(a/b)/dx = (b*(da/dx) - a*(db/dx))/b²
         a = expr.left
         b = expr.right
-        da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
-        db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+        da_dx = differentiate_expr(a, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+        db_dx = differentiate_expr(b, wrt_var, wrt_indices, config, bound_indices=bound_indices)
         # b * da/dx
         term1 = Binary("*", b, da_dx)
         # a * db/dx
@@ -482,7 +595,7 @@ def _diff_binary(
         base = expr.left
         exponent = expr.right
         power_call = Call("power", (base, exponent))
-        return _diff_power(power_call, wrt_var, wrt_indices, config)
+        return _diff_power(power_call, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     else:
         raise ValueError(
@@ -496,6 +609,8 @@ def _diff_unary(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of unary operations.
@@ -530,11 +645,15 @@ def _diff_unary(
 
     if op == "+":
         # Unary plus: d(+a)/dx = da/dx
-        return differentiate_expr(expr.child, wrt_var, wrt_indices, config)
+        return differentiate_expr(
+            expr.child, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
 
     elif op == "-":
         # Unary minus: d(-a)/dx = -da/dx
-        child_deriv = differentiate_expr(expr.child, wrt_var, wrt_indices, config)
+        child_deriv = differentiate_expr(
+            expr.child, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
         return Unary("-", child_deriv)
 
     else:
@@ -553,6 +672,8 @@ def _diff_call(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of function calls using chain rule.
@@ -595,37 +716,37 @@ def _diff_call(
             return Const(0.0)
 
     if func == "power":
-        return _diff_power(expr, wrt_var, wrt_indices, config)
+        return _diff_power(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "exp":
-        return _diff_exp(expr, wrt_var, wrt_indices, config)
+        return _diff_exp(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "log":
-        return _diff_log(expr, wrt_var, wrt_indices, config)
+        return _diff_log(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "log10":
-        return _diff_log10(expr, wrt_var, wrt_indices, config)
+        return _diff_log10(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "log2":
-        return _diff_log2(expr, wrt_var, wrt_indices, config)
+        return _diff_log2(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "sqrt":
-        return _diff_sqrt(expr, wrt_var, wrt_indices, config)
+        return _diff_sqrt(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "sin":
-        return _diff_sin(expr, wrt_var, wrt_indices, config)
+        return _diff_sin(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "cos":
-        return _diff_cos(expr, wrt_var, wrt_indices, config)
+        return _diff_cos(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "tan":
-        return _diff_tan(expr, wrt_var, wrt_indices, config)
+        return _diff_tan(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "abs":
-        return _diff_abs(expr, wrt_var, wrt_indices, config)
+        return _diff_abs(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "sqr":
-        return _diff_sqr(expr, wrt_var, wrt_indices, config)
+        return _diff_sqr(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "errorf":
-        return _diff_errorf(expr, wrt_var, wrt_indices, config)
+        return _diff_errorf(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func in ("gamma", "loggamma"):
-        return _diff_gamma(expr, wrt_var, wrt_indices, config)
+        return _diff_gamma(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "smin":
-        return _diff_smin(expr, wrt_var, wrt_indices, config)
+        return _diff_smin(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "smax":
-        return _diff_smax(expr, wrt_var, wrt_indices, config)
+        return _diff_smax(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "signpower":
-        return _diff_signpower(expr, wrt_var, wrt_indices, config)
+        return _diff_signpower(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func in ("sameas", "card", "ord"):
         # GAMS set operations: constant with respect to decision variables.
         # sameas(a,b) = Kronecker delta (0 or 1 based on set element identity)
@@ -638,9 +759,9 @@ def _diff_call(
         # Derivative is always 0.
         return Const(0.0)
     elif func == "betareg":
-        return _diff_betareg(expr, wrt_var, wrt_indices, config)
+        return _diff_betareg(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     elif func == "centropy":
-        return _diff_centropy(expr, wrt_var, wrt_indices, config)
+        return _diff_centropy(expr, wrt_var, wrt_indices, config, bound_indices=bound_indices)
     else:
         # Future: Other functions
         raise ValueError(
@@ -656,6 +777,8 @@ def _diff_power(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of power function: power(base, exponent).
@@ -692,7 +815,7 @@ def _diff_power(
     if isinstance(exponent, Const):
         # Power rule: d(a^n)/dx = n * a^(n-1) * da/dx
         n = exponent.value
-        da_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
+        da_dx = differentiate_expr(base, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
         # n * a^(n-1)
         n_minus_1 = Const(n - 1.0)
@@ -704,8 +827,10 @@ def _diff_power(
 
     else:
         # General case: d(a^b)/dx = a^b * (b/a * da/dx + ln(a) * db/dx)
-        da_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
-        db_dx = differentiate_expr(exponent, wrt_var, wrt_indices, config)
+        da_dx = differentiate_expr(base, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+        db_dx = differentiate_expr(
+            exponent, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
 
         # a^b — use Binary("**") instead of Call("power") because the exponent
         # may be a variable, and GAMS power() requires a constant exponent.
@@ -736,6 +861,8 @@ def _diff_exp(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of exponential function: exp(x).
@@ -763,7 +890,7 @@ def _diff_exp(
         raise ValueError(f"exp() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # exp(arg) * darg/dx
     return Binary("*", Call("exp", (arg,)), darg_dx)
@@ -774,6 +901,8 @@ def _diff_log(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of natural logarithm: log(x).
@@ -801,7 +930,7 @@ def _diff_log(
         raise ValueError(f"log() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # 1/arg
     one_over_arg = Binary("/", Const(1.0), arg)
@@ -815,6 +944,8 @@ def _diff_log10(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of base-10 logarithm: log10(x).
@@ -838,7 +969,7 @@ def _diff_log10(
         raise ValueError(f"log10() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # ln(10) ≈ 2.302585092994046
     ln10 = Const(2.302585092994046)
@@ -856,6 +987,8 @@ def _diff_log2(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of base-2 logarithm: log2(x).
@@ -879,7 +1012,7 @@ def _diff_log2(
         raise ValueError(f"log2() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # ln(2) ≈ 0.6931471805599453
     ln2 = Const(0.6931471805599453)
@@ -897,6 +1030,8 @@ def _diff_sqrt(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of square root: sqrt(x).
@@ -925,7 +1060,7 @@ def _diff_sqrt(
         raise ValueError(f"sqrt() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # sqrt(arg)
     sqrt_arg = Call("sqrt", (arg,))
@@ -945,6 +1080,8 @@ def _diff_sqr(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of square function: sqr(x).
@@ -973,7 +1110,7 @@ def _diff_sqr(
         raise ValueError(f"sqr() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # 2 * arg
     two_times_arg = Binary("*", Const(2.0), arg)
@@ -992,6 +1129,8 @@ def _diff_errorf(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of GAMS error function: errorf(x).
@@ -1016,7 +1155,7 @@ def _diff_errorf(
         raise ValueError(f"errorf() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # 2 / sqrt(pi)
     # pi = 3.14159265358979...;  2/sqrt(pi) ≈ 1.1283791670955126
@@ -1042,6 +1181,8 @@ def _diff_gamma(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """Derivative of gamma(u) and loggamma(u).
 
@@ -1066,7 +1207,7 @@ def _diff_gamma(
         raise ValueError(f"{func}() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     digamma_u = Call("digamma__", (arg,))
 
@@ -1089,6 +1230,8 @@ def _diff_sin(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of sine function: sin(x).
@@ -1116,7 +1259,7 @@ def _diff_sin(
         raise ValueError(f"sin() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # cos(arg) * darg/dx
     return Binary("*", Call("cos", (arg,)), darg_dx)
@@ -1127,6 +1270,8 @@ def _diff_cos(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of cosine function: cos(x).
@@ -1154,7 +1299,7 @@ def _diff_cos(
         raise ValueError(f"cos() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # -sin(arg)
     neg_sin_arg = Unary("-", Call("sin", (arg,)))
@@ -1168,6 +1313,8 @@ def _diff_tan(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of tangent function: tan(x).
@@ -1200,7 +1347,7 @@ def _diff_tan(
         raise ValueError(f"tan() expects 1 argument, got {len(expr.args)}")
 
     arg = expr.args[0]
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # cos(arg)
     cos_arg = Call("cos", (arg,))
@@ -1220,6 +1367,8 @@ def _diff_abs(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of absolute value function: abs(x).
@@ -1286,7 +1435,7 @@ def _diff_abs(
     derivative_without_chain = Binary("/", arg, sqrt_arg_squared_plus_eps)
 
     # Apply chain rule: multiply by dx/dx
-    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config)
+    darg_dx = differentiate_expr(arg, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # (x / sqrt(x² + ε)) * darg/dx
     return Binary("*", derivative_without_chain, darg_dx)
@@ -1297,6 +1446,8 @@ def _diff_signpower(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of signpower function: signpower(x, n) = sign(x) * |x|^n.
@@ -1338,7 +1489,7 @@ def _diff_signpower(
 
     # d/dx signpower(x, n) = n * abs(x)^(n-1) * dx/dx
     # Use smooth approximation: abs(x) ≈ sqrt(x² + ε) for differentiability at x=0
-    dbase_dx = differentiate_expr(base, wrt_var, wrt_indices, config)
+    dbase_dx = differentiate_expr(base, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     epsilon = Const(config.smooth_abs_epsilon)
 
@@ -1371,6 +1522,8 @@ def _diff_smin(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of smooth minimum function: smin(a, b).
@@ -1409,8 +1562,8 @@ def _diff_smin(
 
     a = expr.args[0]
     b = expr.args[1]
-    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
-    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Smoothing parameter τ (smaller = closer to true min, but less smooth)
     tau = Const(0.01)
@@ -1447,6 +1600,8 @@ def _diff_smax(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of smooth maximum function: smax(a, b).
@@ -1485,8 +1640,8 @@ def _diff_smax(
 
     a = expr.args[0]
     b = expr.args[1]
-    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config)
-    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config)
+    da_dx = differentiate_expr(a, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    db_dx = differentiate_expr(b, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # Smoothing parameter τ (smaller = closer to true max, but less smooth)
     tau = Const(0.01)
@@ -1528,6 +1683,8 @@ def _diff_dollar_conditional(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of dollar conditional: value_expr$condition
@@ -1563,7 +1720,9 @@ def _diff_dollar_conditional(
         >>> # result is DollarConditional(Const(0), ParamRef("rn", ("n",)))
     """
     # Differentiate the value expression
-    dvalue_dx = differentiate_expr(expr.value_expr, wrt_var, wrt_indices, config)
+    dvalue_dx = differentiate_expr(
+        expr.value_expr, wrt_var, wrt_indices, config, bound_indices=bound_indices
+    )
 
     # Keep the condition unchanged (it acts as a constant multiplier)
     return DollarConditional(dvalue_dx, expr.condition)
@@ -1594,6 +1753,8 @@ def _diff_sum(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of sum aggregation: sum(indices, body_expr).
@@ -1662,7 +1823,9 @@ def _diff_sum(
             )
             for sum_idx, wrt_idx in zip(expr.index_sets, wrt_indices, strict=True)
         )
-        body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_indices, config)
+        body_derivative = differentiate_expr(
+            expr.body, wrt_var, symbolic_indices, config, bound_indices=bound_indices
+        )
         # Substitute sum indices with concrete indices in result
         result = _substitute_sum_indices(body_derivative, expr.index_sets, wrt_indices)
         # Issue #720: Preserve dollar condition when sum collapses.
@@ -1712,7 +1875,9 @@ def _diff_sum(
                         else sum_idx
                     )
                     symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
-                    body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
+                    body_derivative = differentiate_expr(
+                        expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
+                    )
                     if not (isinstance(body_derivative, Const) and body_derivative.value == 0.0):
                         result_body = _substitute_sum_indices(
                             body_derivative, (sum_idx,), (wrt_idx,)
@@ -1729,7 +1894,7 @@ def _diff_sum(
             if matched_indices and partial_symbolic_wrt is not None:
                 # Found a match - use position-preserving symbolic_wrt for differentiation
                 body_derivative = differentiate_expr(
-                    expr.body, wrt_var, partial_symbolic_wrt, config
+                    expr.body, wrt_var, partial_symbolic_wrt, config, bound_indices=bound_indices
                 )
                 # Substitute matched sum indices with their concrete values in the result
                 result_body = _substitute_sum_indices(
@@ -1751,12 +1916,19 @@ def _diff_sum(
     # - Differentiate body using symbolic "i" for matched dimension
     # - Result: sum(cg, y(cg) * 1) with i->p1 substituted
     if wrt_indices is not None and len(wrt_indices) < len(expr.index_sets):
-        partial_result = _partial_collapse_sum(expr, wrt_var, wrt_indices, config)
+        partial_result = _partial_collapse_sum(
+            expr, wrt_var, wrt_indices, config, bound_indices=bound_indices
+        )
         if partial_result is not None:
             return partial_result
 
     # Normal case: differentiate the body expression, passing wrt_indices through
-    body_derivative = differentiate_expr(expr.body, wrt_var, wrt_indices, config)
+    # Augment bound_indices with this sum's index_sets — these are iteration variables
+    # that should NOT be treated as free alias indices during alias-aware matching.
+    new_bound = bound_indices | frozenset(expr.index_sets)
+    body_derivative = differentiate_expr(
+        expr.body, wrt_var, wrt_indices, config, bound_indices=new_bound
+    )
 
     # Return a new Sum with the same index sets, differentiated body, and condition
     return Sum(expr.index_sets, body_derivative, expr.condition)
@@ -1903,6 +2075,8 @@ def _partial_collapse_sum(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...],
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr | None:
     """
     Handle partial collapse when sum has more indices than wrt_indices.
@@ -2009,7 +2183,11 @@ def _partial_collapse_sum(
                 break
 
     symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
-    body_derivative = differentiate_expr(expr.body, wrt_var, symbolic_wrt, config)
+    # Augment bound_indices with remaining (uncollapsed) sum indices
+    new_bound = bound_indices | frozenset(remaining_sum_indices)
+    body_derivative = differentiate_expr(
+        expr.body, wrt_var, symbolic_wrt, config, bound_indices=new_bound
+    )
 
     # Substitute matched sum indices with their concrete values
     result_body = _substitute_sum_indices(
@@ -2319,6 +2497,8 @@ def _diff_prod(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Differentiate a product aggregation: prod(i, f(i)).
@@ -2394,7 +2574,12 @@ def _diff_prod(
                 effective_wrt = symbolic_wrt
 
     # Differentiate the body expression using effective (possibly symbolic) indices
-    body_derivative = differentiate_expr(expr.body, wrt_var, effective_wrt, config)
+    # Augment bound_indices with this prod's index_sets — these are iteration variables
+    # that should NOT be treated as free alias indices during alias-aware matching.
+    new_bound = bound_indices | frozenset(expr.index_sets)
+    body_derivative = differentiate_expr(
+        expr.body, wrt_var, effective_wrt, config, bound_indices=new_bound
+    )
 
     # If body derivative is zero, the whole product derivative is zero
     if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
@@ -2420,6 +2605,8 @@ def _diff_betareg(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of betareg(x, a, b) — the regularized incomplete Beta function.
@@ -2442,7 +2629,7 @@ def _diff_betareg(
     a = expr.args[1]
     b = expr.args[2]
 
-    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config)
+    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     # If x doesn't depend on wrt_var, derivative is 0
     if isinstance(dx_dwrt, Const) and dx_dwrt.value == 0.0:
@@ -2484,6 +2671,8 @@ def _diff_centropy(
     wrt_var: str,
     wrt_indices: tuple[str | IndexOffset, ...] | None = None,
     config: Config | None = None,
+    *,
+    bound_indices: frozenset[str] = frozenset(),
 ) -> Expr:
     """
     Derivative of centropy(x, y) — the GAMS cross-entropy function.
@@ -2506,8 +2695,8 @@ def _diff_centropy(
     x = expr.args[0]
     y = expr.args[1]
 
-    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config)
-    dy_dwrt = differentiate_expr(y, wrt_var, wrt_indices, config)
+    dx_dwrt = differentiate_expr(x, wrt_var, wrt_indices, config, bound_indices=bound_indices)
+    dy_dwrt = differentiate_expr(y, wrt_var, wrt_indices, config, bound_indices=bound_indices)
 
     x_depends = not (isinstance(dx_dwrt, Const) and dx_dwrt.value == 0.0)
     y_depends = not (isinstance(dy_dwrt, Const) and dy_dwrt.value == 0.0)
