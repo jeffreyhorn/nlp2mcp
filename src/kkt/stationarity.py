@@ -1262,14 +1262,16 @@ def _build_sameas_guard_for_instances(
     # nonzero tuples are non-Cartesian, the AND of per-dim guards would
     # over-select (enabling zero-gradient instances).  Fall back to
     # exact tuple-OR in that case.
-    from itertools import product as cart_product
-
+    # Filter existing tuples through per-dim selections (O(|all_instances|))
+    # instead of materializing the full Cartesian product which can explode.
     selected_lc = [
         per_dim_nz_lc[d] if per_dim_nz_lc[d] < per_dim_all_lc[d] else per_dim_all_lc[d]
         for d in range(ndim)
     ]
-    cartesian = set(cart_product(*selected_lc))
-    if cartesian != nonzero_idx_set:
+    filtered_idx_set = {
+        idx for idx in all_idx_set if all(idx[d] in selected_lc[d] for d in range(ndim))
+    }
+    if filtered_idx_set != nonzero_idx_set:
         return _build_tuple_or_guard(domain, nonzero_indices)
 
     guard: Expr = dim_guards[0]
