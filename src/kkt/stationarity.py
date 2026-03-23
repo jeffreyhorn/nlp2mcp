@@ -1161,7 +1161,9 @@ def _build_indexed_gradient_term(
     # E.g., for objective "ht('h50')", the gradient is -1 only for h50;
     # without the guard, stat_ht(h) would have -1 for ALL h.
     if len(nonzero_instances) < len(instances) and nonzero_instances:
-        guard = _build_sameas_guard_for_instances(domain, nonzero_instances, instances, kkt)
+        guard = _build_sameas_guard_for_instances(
+            domain, nonzero_instances, instances, kkt.model_ir
+        )
         if guard is not None:
             expr = DollarConditional(value_expr=expr, condition=guard)
 
@@ -1172,28 +1174,90 @@ def _build_sameas_guard_for_instances(
     domain: tuple[str, ...],
     nonzero_instances: list[tuple[int, tuple[str, ...]]],
     all_instances: list[tuple[int, tuple[str, ...]]],
-    kkt: KKTSystem,
+    model_ir: ModelIR,
 ) -> Expr | None:
     """Build a sameas guard that selects only the non-zero instances.
 
     Returns None if no guard is needed (all instances are covered).
 
-    This delegates to _build_tuple_or_guard() which builds exact
-    OR-of-ANDs guards over the non-zero index tuples, avoiding the
-    Cartesian over-approximation that per-dimension guards would produce
-    for multi-dimensional variables.
+    Uses per-dimension factorization with named-subset detection when
+    possible (compact output for 1D or Cartesian cases), falling back to
+    exact OR-of-ANDs via _build_tuple_or_guard() when the non-zero
+    entries don't form a Cartesian product over the instance space.
     """
     ndim = len(domain)
     if ndim == 0:
         return None
 
-    nonzero_idx_set = {idx for _, idx in nonzero_instances}
-    all_idx_set = {idx for _, idx in all_instances}
+    nonzero_indices = [idx for _, idx in nonzero_instances]
+
+    nonzero_idx_set = {tuple(v.lower() for v in idx) for idx in nonzero_indices}
+    all_idx_set = {tuple(v.lower() for v in idx) for _, idx in all_instances}
     if nonzero_idx_set >= all_idx_set:
         return None
 
-    instance_indices = [idx for _, idx in nonzero_instances]
-    return _build_tuple_or_guard(domain, instance_indices)
+    # Per-dimension analysis: collect unique elements per dimension
+    per_dim_nz_lc: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_all_lc: list[set[str]] = [set() for _ in range(ndim)]
+    per_dim_nz_orig: list[dict[str, str]] = [{} for _ in range(ndim)]
+
+    for idx in nonzero_indices:
+        for d, v in enumerate(idx):
+            lc = v.lower()
+            per_dim_nz_lc[d].add(lc)
+            if lc not in per_dim_nz_orig[d]:
+                per_dim_nz_orig[d][lc] = v
+
+    for _, idx in all_instances:
+        for d, v in enumerate(idx):
+            per_dim_all_lc[d].add(v.lower())
+
+    # Build per-dimension guards (with named-subset detection)
+    dim_guards: list[Expr] = []
+    for d in range(ndim):
+        if per_dim_nz_lc[d] >= per_dim_all_lc[d]:
+            continue  # This dimension is fully covered
+
+        dom_idx = domain[d]
+        nz_lc = per_dim_nz_lc[d]
+
+        if len(nz_lc) == 1:
+            lc_val = next(iter(nz_lc))
+            orig_val = per_dim_nz_orig[d][lc_val]
+            dim_guards.append(
+                Call("sameas", (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))))
+            )
+        else:
+            # Try to find a matching named subset
+            subset_name = _find_matching_subset(dom_idx, nz_lc, model_ir)
+            if subset_name is not None:
+                dim_guards.append(SetMembershipTest(subset_name, (SymbolRef(dom_idx),)))
+            else:
+                or_parts: list[Expr] = []
+                for lc_val in sorted(nz_lc):
+                    orig_val = per_dim_nz_orig[d][lc_val]
+                    or_parts.append(
+                        Call(
+                            "sameas",
+                            (SymbolRef(dom_idx), SymbolRef(_quote_sameas_uel(orig_val))),
+                        )
+                    )
+                or_expr: Expr = or_parts[0]
+                for part in or_parts[1:]:
+                    or_expr = Binary("or", or_expr, part)
+                dim_guards.append(or_expr)
+
+    if not dim_guards:
+        # Per-dimension says fully covered but tuple-level may not be
+        # (non-Cartesian entries). Fall back to exact tuple matching.
+        if nonzero_idx_set >= all_idx_set:
+            return None
+        return _build_tuple_or_guard(domain, nonzero_indices)
+
+    guard: Expr = dim_guards[0]
+    for dg in dim_guards[1:]:
+        guard = Binary("and", guard, dg)
+    return guard
 
 
 def _build_element_to_set_mapping(

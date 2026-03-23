@@ -3379,6 +3379,72 @@ class TestHyphenatedIdentifiers:
         assert model.params["dempr"].values[("25-bond-wt", "demand")] == 20000.0
 
 
+class TestTableContinuationSectionBased:
+    """Test section-based table parsing with continuation headers (Issue #1130).
+
+    When a table has both continuation (+) lines and secondary column headers,
+    the section-based path is triggered.  Right-aligned values near column
+    boundaries must map to the correct column.
+    """
+
+    def test_continuation_table_column_alignment(self):
+        """Right-aligned value under narrow gap maps to correct column.
+
+        Mirrors the fawley model's ap(c,p) table layout.  The continuation
+        line must have >= 2 ID tokens to trigger the section-based path.
+
+        Note: parse_model_text() doesn't include normalize_table_continuations()
+        in its pipeline, so we preprocess first via preprocess_text() to match
+        the real file-based parsing flow.
+        """
+        from src.ir.preprocessor import preprocess_text
+
+        # fmt: off
+        # Exact spacing from fawley model — raw GAMS with '+' continuation
+        text = (
+            "Set\n"
+            "   c / arabian-l, arabian-h, brega, lv-naphtha, iv-naphtha,\n"
+            "       v-heat-oil, vacuum-dst, butane, reformate, cc-naph-l /;\n"
+            "Set\n"
+            "   p / d-arab-l, d-arab-h, d-brega, reform, ho-low-s /;\n"
+            "\n"
+            "Table ap(c,p) 'process yields  (proportion weight of crude feed)'\n"
+            "               d-arab-l  d-arab-h  d-brega\n"
+            "   arabian-l     -1.0\n"
+            "   arabian-h               -1.0\n"
+            "   brega                            -1.0\n"
+            "   lv-naphtha      .035      .030     .045\n"
+            "   iv-naphtha      .100      .075     .135\n"
+            "   v-heat-oil      .390      .300     .430\n"
+            "\n"
+            "      +        reform  ho-low-s\n"
+            "   iv-naphtha   -1.\n"
+            "   v-heat-oil            -1.\n"
+            "   butane         .02      .02\n"
+            "   reformate      .90\n"
+            "   cc-naph-l               .275 ;\n"
+        )
+        # fmt: on
+        model = parser.parse_model_text(preprocess_text(text))
+        assert "ap" in model.params
+        vals = model.params["ap"].values
+        # Critical: brega must map to d-brega, not d-arab-h
+        assert ("brega", "d-brega") in vals
+        assert vals[("brega", "d-brega")] == -1.0
+        assert ("arabian-l", "d-arab-l") in vals
+        assert vals[("arabian-l", "d-arab-l")] == -1.0
+        assert ("arabian-h", "d-arab-h") in vals
+        assert vals[("arabian-h", "d-arab-h")] == -1.0
+        # Continuation section values
+        assert ("iv-naphtha", "reform") in vals
+        assert vals[("iv-naphtha", "reform")] == -1.0
+        assert ("v-heat-oil", "ho-low-s") in vals
+        assert vals[("v-heat-oil", "ho-low-s")] == -1.0
+        # Verify intermediate values parsed correctly
+        assert vals[("lv-naphtha", "d-arab-l")] == pytest.approx(0.035)
+        assert vals[("lv-naphtha", "d-brega")] == pytest.approx(0.045)
+
+
 class TestAttributeAssignments:
     """Test variable/parameter/model attribute assignments (Issue #389).
 
