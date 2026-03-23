@@ -3445,7 +3445,7 @@ class _ModelBuilder:
         # Extract condition if present
         # Children: [ID, id_list, condition?, expr, REL_K, expr]
         # Issue #1112: Extract implicit domain restriction from nested domain
-        # elements (e.g., low(n,nn) -> ParamRef('low', ('n', 'nn'))).
+        # elements (e.g., low(n,nn) -> SetMembershipTest(...)).
         domain_cond = _domain_list_condition(domain_list_node)
 
         condition_node = next(

@@ -17,7 +17,7 @@ class TestDomainConditionExtraction:
     """Test that nested domain elements generate equation conditions."""
 
     def test_nested_domain_creates_condition(self):
-        """eq(low(n,nn)).. creates condition ParamRef('low', ('n', 'nn'))."""
+        """eq(low(n,nn)).. creates a SetMembershipTest condition on 'low(n,nn)'."""
         gams = """
 Set n / a, b, c /;
 Set low(n,n);
@@ -53,7 +53,7 @@ Solve dummy using NLP minimizing z;
         assert eq.condition is None
 
     def test_nested_domain_with_explicit_condition(self):
-        """eq(low(n,nn))$active(n).. combines both conditions."""
+        """eq(low(n,nn))$active(n).. combines SetMembershipTest and explicit condition."""
         gams = """
 Set n / a, b, c /;
 Set low(n,n);

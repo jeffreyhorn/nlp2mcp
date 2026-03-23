@@ -303,14 +303,19 @@ def _extract_condition_from_expr(expr: Expr) -> Expr | None:
     Recognizes patterns produced by _diff_sum collapse and _diff_dollar_conditional:
     1. DollarConditional(value, condition)
     2. Binary("*", value, DollarConditional(Const(1.0), cond))
+    3. Unary("-"/"+", <pattern 1 or 2>) — from MAX objective negation
     """
-    if isinstance(expr, DollarConditional):
-        return expr.condition
-    if isinstance(expr, Binary) and expr.op == "*":
-        right_cond = _is_condition_factor(expr.right)
+    # Peel Unary("-") / Unary("+") wrappers added by MAX objective negation
+    inner = expr
+    while isinstance(inner, Unary) and inner.op in ("-", "+"):
+        inner = inner.child
+    if isinstance(inner, DollarConditional):
+        return inner.condition
+    if isinstance(inner, Binary) and inner.op == "*":
+        right_cond = _is_condition_factor(inner.right)
         if right_cond is not None:
             return right_cond
-        left_cond = _is_condition_factor(expr.left)
+        left_cond = _is_condition_factor(inner.left)
         if left_cond is not None:
             return left_cond
     return None
