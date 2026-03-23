@@ -2130,7 +2130,7 @@ def _partial_collapse_sum(
     # For most models this produces exactly one matching. For alias cases
     # (like qabel: Alias(n,np) in sum((k,n,np),...)), it produces multiple
     # matchings whose derivatives must be summed for the correct gradient.
-    all_matchings = _enumerate_matchings(candidates_per_wrt, len(sum_index_sets))
+    all_matchings = _enumerate_matchings(candidates_per_wrt)
 
     if not all_matchings:
         return None
@@ -2231,7 +2231,6 @@ def _partial_collapse_sum(
 
 def _enumerate_matchings(
     candidates_per_wrt: list[list[int]],
-    num_sum_indices: int,
 ) -> list[tuple[int, ...]]:
     """Enumerate all valid matchings of wrt positions to sum indices.
 

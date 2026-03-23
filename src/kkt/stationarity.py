@@ -1770,6 +1770,7 @@ def _replace_matching_indices(
     # Build superset-to-subset mapping from equation domain if available.
     # For each set in the equation domain, check if it's a subset of another set.
     # E.g., if equation domain is ("i",) and i has domain=("s",), then s -> i.
+    eq_domain_lower: set[str] = {s.lower() for s in equation_domain} if equation_domain else set()
     superset_to_subset: dict[str, str] = {}
     if equation_domain and model_ir:
         for eq_set in equation_domain:
@@ -1878,8 +1879,8 @@ def _replace_matching_indices(
                                 # mapped is a subset of target_set — use subset
                                 new_indices.append(mapped)
                             elif (
-                                equation_domain
-                                and mapped.lower() in {s.lower() for s in equation_domain}
+                                eq_domain_lower
+                                and mapped.lower() in eq_domain_lower
                                 and _shares_alias_root(mapped, target_set, model_ir)
                             ):
                                 # Issue #1111: When the constraint-specific mapping
@@ -1905,9 +1906,6 @@ def _replace_matching_indices(
                         # narrower declared domain is intentional (e.g. c(p,t) declared
                         # over t which is a subset of tt in stat_x(p,tt)).
                         target_is_subset_of_eq_domain = False
-                        eq_domain_lower = (
-                            {s.lower() for s in equation_domain} if equation_domain else set()
-                        )
                         if (
                             equation_domain
                             and model_ir
