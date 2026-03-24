@@ -141,6 +141,8 @@ xie(i) = E0(i) ** (1 - phi(i)) / (E0(i) ** (1 - phi(i)) + D0(i) ** (1 - phi(i)))
 gamma(i) = Q0(i) / (deltam(i) * M0(i) ** eta(i) + deltad(i) * D0(i) ** eta(i)) ** (1 / eta(i));
 theta(i) = Z0(i) / (xie(i) * E0(i) ** phi(i) + xid(i) * D0(i) ** phi(i)) ** (1 / phi(i));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -431,7 +433,7 @@ stat_pq(i).. ((-1) * ax(i,i)) * nu_eqpzs(i) + (((-1) * ax(i,i)) * nu_eqpzs(i+1))
 stat_pwe(i).. ((-1) * epsilon) * nu_eqpe(i) + e(i) * nu_eqepsilon + ((-1) * ((pwe(i) / pWe0(i)) ** ((-1) * sigma(i)) * ((-1) * sigma(i)) / (pwe(i) / pWe0(i)) * 1 / pWe0(i) ** 1)) * nu_eqfe(i) - piL_pwe(i) =E= 0;
 stat_pwm(i).. ((-1) * epsilon) * nu_eqpm(i) + ((-1) * m(i)) * nu_eqepsilon + ((-1) * ((pwm(i) / pWm0(i)) ** psi(i) * psi(i) / (pwm(i) / pWm0(i)) * 1 / pWm0(i) ** 1)) * nu_eqfm(i) - piL_pwm(i) =E= 0;
 stat_py(j).. sum(h, ((-1) * (pf(h) * y(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) + ((-1) * ay(j)) * nu_eqpzs(j) - piL_py(j) =E= 0;
-stat_pz(j).. nu_eqpzs(j) + sum(i, ((-1) * (z(j) * tauz(i))) * nu_eqTz(j)) + ((-1) * (z(j) * (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) * pe(j) * theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) / sqr(pe(j)))) * nu_eqE(j) + ((-1) * (z(j) * (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) * pd(j) * theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) / sqr(pd(j)))) * nu_eqDs(j) - piL_pz(j) =E= 0;
+stat_pz(j).. nu_eqpzs(j) + ((-1) * (z(j) * tauz(j))) * nu_eqTz(j) + ((-1) * (z(j) * (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) * pe(j) * theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) / sqr(pe(j)))) * nu_eqE(j) + ((-1) * (z(j) * (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))) * 1 / (1 - phi(j)) / (theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) * pd(j) * theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) / sqr(pd(j)))) * nu_eqDs(j) - piL_pz(j) =E= 0;
 stat_q(i).. nu_eqpqs(i) + ((-1) * ((gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1 + taum(i)) * pm(i))) ** (1 / (1 - eta(i))))) * nu_eqM(i) + ((-1) * ((gamma(i) ** eta(i) * deltad(i) * pq(i) / pd(i)) ** (1 / (1 - eta(i))))) * nu_eqD(i) + nu_eqpqd(i) - piL_q(i) =E= 0;
 stat_sg.. sum(i, ((-1) * (pq(i) * mu(i) * (-1) / sqr(pq(i)))) * nu_eqXg(i)) + sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSg - piL_sg =E= 0;
 stat_sp.. sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSp + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_sp =E= 0;
@@ -443,7 +445,7 @@ stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;
 stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * sum(i__, xp(i__) ** alpha(i__) * alpha(i__) / xp(i__) / xp(i__) ** alpha(i__)))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
 stat_xv(i).. nu_eqXv(i) - nu_eqpqd(i) - piL_xv(i) =E= 0;
 stat_y(j).. nu_eqpy(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * py(j) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_eqY(j) - piL_y(j) =E= 0;
-stat_z(j).. sum(i, ((-1) * ax(i,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + sum(i, ((-1) * (tauz(i) * pz(j))) * nu_eqTz(j)) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;
+stat_z(j).. sum(i, ((-1) * ax(j,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + ((-1) * (tauz(j) * pz(j))) * nu_eqTz(j) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(i).. d(i) - 1e-05 =G= 0;

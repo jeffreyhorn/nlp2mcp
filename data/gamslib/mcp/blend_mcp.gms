@@ -59,6 +59,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 v.l(alloy) = 1;
+v.l(alloy) = min(v.l(alloy), v.up(alloy));
 
 * ============================================
 * Equations

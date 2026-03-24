@@ -70,7 +70,9 @@ x.l('eff') = 0.0001;
 x.l('inf') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
+b.l(i) = min(b.l(i), b.up(i));
 w.l(i) = 1;
+w.l(i) = min(w.l(i), w.up(i));
 
 * ============================================
 * Equations

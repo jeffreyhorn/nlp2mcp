@@ -71,7 +71,9 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 tk.l(i,k) = 1;
+tk.l(i,k) = min(tk.l(i,k), tk.up(i,k));
 t.l(i) = 1;
+t.l(i) = min(t.l(i), t.up(i));
 sigma.l(i,k) = uniform(0.1, 1);
 sigma.l(i,k) = min(max(sigma.l(i,k), 1e-6), sigma.up(i,k));
 

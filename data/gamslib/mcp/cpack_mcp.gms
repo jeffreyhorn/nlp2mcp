@@ -96,13 +96,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r.. -1 + sum(i, ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe(i)) + sum((i,j), 4 * 2 * r * lam_nooverlap(i,j)) - piL_r + piU_r =E= 0;
-stat_x(i).. 2 * x(i) * lam_circumscribe(i) + sum(j, ((-1) * (2 * (x(i) - x(j)))) * lam_nooverlap(i,j)) - piL_x(i) + piU_x(i) =E= 0;
-stat_y(i).. 2 * y(i) * lam_circumscribe(i) + sum(j, ((-1) * (2 * (y(i) - y(j)))) * lam_nooverlap(i,j)) - piL_y(i) + piU_y(i) =E= 0;
+stat_r.. -1 + sum(i, ((-1) * (2 * (1 - r) * (-1))) * lam_circumscribe(i)) + sum((i,j)$(ij(i,j)), 4 * 2 * r * lam_nooverlap(i,j)) - piL_r + piU_r =E= 0;
+stat_x(i).. 2 * x(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (x(i) - x(j)))) * lam_nooverlap(i,j))$(ij(i,j))) - piL_x(i) + piU_x(i) =E= 0;
+stat_y(i).. 2 * y(i) * lam_circumscribe(i) + sum(j, (((-1) * (2 * (y(i) - y(j)))) * lam_nooverlap(i,j))$(ij(i,j))) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
 comp_circumscribe(i).. sqr(1 - r) - (sqr(x(i)) + sqr(y(i))) =G= 0;
-comp_nooverlap(i,j).. sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 4 * sqr(r) =G= 0;
+comp_nooverlap(i,j)$(ij(i,j)).. sqr(x(i) - x(j)) + sqr(y(i) - y(j)) - 4 * sqr(r) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_r.. r - 0.05 =G= 0;
@@ -114,6 +114,15 @@ comp_up_r.. 0.4 - r =G= 0;
 comp_up_x(i).. 1 - x(i) =G= 0;
 comp_up_y(i).. 1 - y(i) =G= 0;
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+lam_nooverlap.fx(i,j)$(not (ij(i,j))) = 0;
 
 * ============================================
 * Model MCP Declaration

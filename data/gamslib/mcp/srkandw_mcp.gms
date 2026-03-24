@@ -60,6 +60,8 @@ prob(n)$(tn("time-1",n)) = stdat(n,"prob");
 prob(n)$(tn("time-2",n)) = sum(nn$(tree(nn,n)), stdat(nn,"prob") * stdat(n,"prob"));
 sprob(n) = prob(n);
 
+execError = 0;
+
 ScenRedParms('reduction_method') = ord('0-default') - 1 ;
 
 * ============================================
@@ -96,7 +98,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,t) = 1;
+x.l(i,t) = min(x.l(i,t), x.up(i,t));
 y.l(j,t,n) = 1;
+y.l(j,t,n) = min(y.l(j,t,n), y.up(j,t,n));
 
 * ============================================
 * Equations
@@ -121,12 +125,12 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,t).. c(i) + lam_bal + sum((j,sn), ((-1) * a(j,i)) * lam_dembalx(j,t,sn)) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. ((-1) * lam_dembalx(j,t,n)) + sum(nn, (eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1)) - piL_y(j,t,n) =E= 0;
+stat_x(i,t).. c(i) + lam_bal + sum((j,sn), (((-1) * a(j,i)) * lam_dembalx(j,t,sn))$(tn(t,sn))) - piL_x(i,t) =E= 0;
+stat_y(j,t,n).. ((-1) * lam_dembalx(j,t,n))$(tn(t,n)) + sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1))$(tn(t,n))) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
-comp_dembalx(j,t,sn)$(ord(t) > 1).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - (dem(j,sn) + eps * sum(nn$(tree(nn,sn)), y(j,t-1,nn))) =G= 0;
+comp_dembalx(j,t,sn)$((tn(t,sn)) and (ord(t) > 1)).. sum(i, a(j,i) * x(i,t)) + y(j,t,sn) - (dem(j,sn) + eps * sum(nn$(tree(nn,sn)), y(j,t-1,nn))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,t).. x(i,t) - 0 =G= 0;
@@ -143,6 +147,7 @@ obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,sn)$(tn(t,sn)), sprob(sn) * 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+lam_dembalx.fx(j,t,sn)$(not (tn(t,sn))) = 0;
 lam_dembalx.fx(j,t,sn)$(not (ord(t) > 1)) = 0;
 lam_dembalx.fx(j,t,n)$(not (sn(n))) = 0;
 

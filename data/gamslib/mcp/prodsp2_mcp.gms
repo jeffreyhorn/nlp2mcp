@@ -41,6 +41,8 @@ execseed = 12345;
 
 t2(j,i) = (trand(j,"min",i) + trand(j,"max",i)) / 2;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -75,7 +77,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i) = 1;
+x.l(i) = min(x.l(i), x.up(i));
 v2.l(j) = 1;
+v2.l(j) = min(v2.l(j), v2.up(j));
 
 * ============================================
 * Equations

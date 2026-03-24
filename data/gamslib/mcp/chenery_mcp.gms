@@ -63,6 +63,8 @@ del(i) = pdat("medium","a","distr",i);
 efy(i) = pdat("medium","a","effic",i);
 rho(i)$(sig(i) <> 0) = 1 / sig(i) - 1;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

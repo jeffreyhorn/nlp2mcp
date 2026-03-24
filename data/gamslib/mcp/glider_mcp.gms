@@ -344,7 +344,7 @@ Equations
 stat_cl(h).. ((-1) * (sqr(v(h)) * S * rho * 0.5 * c1 * 2 * cl(h))) * nu_Ddef(h) + ((-1) * (sqr(v(h)) * S * rho * 0.5)) * nu_Ldef(h) - piL_cl(h) + piU_cl(h) =E= 0;
 stat_d(h).. nu_Ddef(h) + ((-1) * (m * ((-1) * (v(h) * vel("x",h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * w(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
 stat_l(h).. nu_Ldef(h) + ((-1) * (m * v(h) * w(h) * (-1) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * v(h) * vel("x",h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
-stat_pos(c,h).. -1 + ((-1) * (2 * (pos(c,h) / r_0 - 2.5) * 1 / r_0 ** 1)) * nu_rdef(h) + nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
+stat_pos(c,h).. -1$(sameas(c, 'x') and sameas(h, 'h50')) + ((-1) * (2 * (pos(c,h) / r_0 - 2.5) * 1 / r_0 ** 1)) * nu_rdef(h) + nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
 stat_r(h).. nu_rdef(h) + ((-1) * (((-1) * (exp(((-1) * r(h))) * u_c)) - u_c * (1 - r(h)) * exp(((-1) * r(h))))) * nu_udef(h) =E= 0;
 stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * (vel(c,i) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * (v_dot(c,i) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
 stat_t_f.. nu_tf_eqn =E= 0;

@@ -38,6 +38,8 @@ Scalars
 ds(j,s) = d(j);
 ds("mode-1",s) = dvar(s);
 
+execError = 0;
+
 d('mode-1') = dvar('s-1') ;
 
 * ============================================
@@ -76,7 +78,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i) = 1;
+x.l(i) = min(x.l(i), x.up(i));
 ys.l(i,j,s) = 1;
+ys.l(i,j,s) = min(ys.l(i,j,s), ys.up(i,j,s));
 
 * ============================================
 * Equations

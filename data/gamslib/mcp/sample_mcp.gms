@@ -37,6 +37,8 @@ w(h) = data(h,"pop") / tpop;
 k1(h,j) = sqr(w(h)) * data(h,j);
 k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -58,6 +60,12 @@ Positive Variables
     piL_nr(h)
     piU_nr(h)
 ;
+
+* ============================================
+* Variable Bounds
+* ============================================
+
+nr.lo(h) = 1 / data(h,"pop");
 
 * ============================================
 * Variable Initialization

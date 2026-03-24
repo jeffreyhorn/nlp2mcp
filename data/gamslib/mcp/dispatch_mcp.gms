@@ -62,6 +62,13 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+p.lo(i) = gendata(i,"lowlim");
+p.up(i) = gendata(i,"upplim");
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -71,6 +78,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 p.l(i) = 1;
+p.l(i) = min(p.l(i), p.up(i));
 
 * ============================================
 * Equations
@@ -94,9 +102,14 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, j__);
+Alias(i, i__);
+
 * Stationarity equations
 stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * sum(j, p(j) * b(i,j)) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons - piL_p(i) + piU_p(i) =E= 0;
+stat_p(i).. 100 * b0(i) / 10000 + 100 * (sum(j__, p(j__) * b(i,j__)) + sum(i__, p(i__) * b(i__,i))) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons - piL_p(i) + piU_p(i) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;

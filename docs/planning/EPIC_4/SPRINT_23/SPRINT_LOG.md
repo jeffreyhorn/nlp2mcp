@@ -66,6 +66,13 @@
 | Event | Day | Model | Direction | Running In-Scope |
 |---|---|---|---|---|
 | Baseline | 0 | — | — | 12 |
+| Gross fix | 1-4 | cpack | OUT (now solving) | 11 |
+| Gross fix | 1-4 | prolog | OUT (now solving) | 10 |
+| Influx | 1-4 | agreste | IN (was translate fail, now MI) | 11 |
+| Influx | 1-4 | cesam | IN (was translate fail, now MI) | 12 |
+| Influx | 1-4 | korcge | IN (was translate fail, now MI) | 13 |
+| Influx | 1-4 | rocket | IN (was PST, now MI) | 14 |
+| Checkpoint 1 | 5 | — | — | **14** |
 
 ---
 
@@ -108,67 +115,132 @@
 
 ### Day 1 — WS1 Tier 1 Quick Wins + WS5 LhsConditionalAssign
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (PRs #1123, #1125, #1128, #1130 merged)
 
 | Task | Status |
 |---|---|
-| rocket INF bound suppression | |
-| fawley zero-denominator guard | |
-| gtm variable initialization clamping | |
-| LhsConditionalAssign emission (agreste, ampl, cesam, korcge) | |
+| rocket INF bound suppression | ✅ Fixed expression-based bound guard |
+| fawley zero-denominator guard | ✅ Added `$onImplicitAssign` wrapping |
+| gtm variable initialization clamping | ✅ Extended Priority 3 clamping |
+| LhsConditionalAssign emission (agreste, ampl, cesam, korcge) | ✅ Added expr_to_gams case (+4 translate) |
 
 ---
 
 ### Day 2 — WS3 Alias Differentiation (#1111, Part 1)
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (PR #1134 merged)
 
 | Task | Status |
 |---|---|
-| `_same_root_set()` and `_alias_match()` helpers | |
-| `bound_indices` parameter threading | |
-| Sum/Prod bound_indices augmentation | |
-| Alias-aware `_diff_varref()` matching | |
-| Unit tests (≥ 5) | |
+| `_same_root_set()` and `_alias_match()` helpers | ✅ |
+| `bound_indices` parameter threading | ✅ |
+| Sum/Prod bound_indices augmentation | ✅ |
+| Alias-aware `_diff_varref()` matching | ✅ |
+| Unit tests (≥ 5) | ✅ |
 
 ---
 
 ### Day 3 — WS3 Alias Differentiation Integration
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (PR #1139 merged)
 
 | Task | Status |
 |---|---|
-| qabel integration test | |
-| dispatch regression test | |
-| 8 matching alias models check | |
-| Pipeline solve retest | |
+| qabel integration test | ✅ |
+| dispatch regression test | ✅ No regression |
+| 8 matching alias models check | ✅ |
+| Pipeline solve retest | ✅ |
 
 ---
 
 ### Day 4 — WS3 Dollar-Condition (#1112) + WS1 maxmin
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (PR #1148 merged)
 
 | Task | Status |
 |---|---|
-| `_extract_gradient_conditions()` | |
-| `gradient_conditions` field on KKTSystem | |
-| Stage 4 condition check | |
-| maxmin self-pair fix | |
+| `_extract_gradient_conditions()` | ✅ Extracts DollarConditional + multiplicative conditions |
+| `gradient_conditions` field on KKTSystem | ✅ |
+| Stage 4 condition check in stationarity | ✅ With `_has_unconditioned_access()` guard |
+| maxmin self-pair fix | ✅ (completed in earlier sprint) |
+| Domain condition extraction from nested eq domains | ✅ SetMembershipTest preserved |
+| Unary peeling for MAX-objective negation | ✅ |
+| enumerate_equation_instances() warn-once fix | ✅ |
 
 ---
 
 ### Day 5 — Checkpoint 1 + sambal/qsambal
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Full pipeline retest (PR6) | |
-| Checkpoint 1 evaluation | |
-| sambal verification | |
-| qsambal verification | |
+| Full pipeline retest (PR6) | ✅ 3738s (~62 min) |
+| Checkpoint 1 evaluation | ✅ **CONDITIONAL GO** (see below) |
+| sambal verification | ✅ stat_x has $(xw(i,j)) guard from #1112; stat_t NA issue persists (separate) |
+| qsambal verification | ✅ Same pattern as sambal |
+
+#### Checkpoint 1 Results
+
+**Pipeline Results (147-scope):**
+
+| Stage | Baseline (Day 0) | Day 5 | Delta |
+|---|---|---|---|
+| Parse | 144/147 (98.0%) | 144/147 (98.0%) | +0 |
+| Translate | 128/144 (88.9%) | 133/144 (92.4%) | **+5** |
+| Solve | 81/128 (63.3%) | 84/133 (63.2%) | **+3** |
+| Match | 47/147 (32.0%) | 48/147 (32.7%) | **+1** |
+
+**Full Corpus (160 denominator):**
+
+| Stage | Baseline | Day 5 | Delta |
+|---|---|---|---|
+| Parse | 156/160 (97.5%) | 156/160 (97.5%) | +0 |
+| Translate | 139/156 (89.1%) | 145/156 (93.0%) | **+6** |
+| Solve | 89 (64.0%) | 92 (63.4%) | **+3** |
+| Match | 47/160 (29.4%) | 48/160 (30.0%) | **+1** |
+
+**Solve Error Categories (147-scope):**
+
+| Category | Baseline | Day 5 | Delta |
+|---|---|---|---|
+| path_syntax_error | 18 | 21 | +3 (influx from newly-translating models) |
+| model_infeasible | 12 | 14 | +2 (2 gross fixes, 4 influx) |
+| path_solve_terminated | 10 | 8 | **-2** (maxmin, rocket resolved) |
+| path_solve_license | 7 | 6 | -1 |
+
+**Checkpoint 1 GO/NO-GO Evaluation:**
+
+| Criterion | GO | CONDITIONAL | Current | Decision |
+|---|---|---|---|---|
+| Solve | ≥ 95 | ≥ 92 | **92** | CONDITIONAL GO |
+| Match | ≥ 50 | ≥ 48 | **48** | CONDITIONAL GO |
+| PST | ≤ 7 | ≤ 8 | **8** | CONDITIONAL GO |
+| Translate | ≥ 143 | ≥ 141 | **145** | **GO** |
+| Tests | All pass | — | 4,273 pass | **GO** |
+| #1111 PR | Merged | Open | Open (issue) | CONDITIONAL |
+
+**Overall Decision: CONDITIONAL GO**
+
+Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thresholds. #1111 alias differentiation PR was merged but the issue remains open for further work.
+
+**Key Improvements Days 1-4:**
+- +6 translate: 4 LhsConditionalAssign fixed (agreste, ampl, cesam, korcge) + 2 borderline timeout recovery (dinam, ferts)
+- +3 solve: cpack (MI→solve), prolog (MI→solve), maxmin (PST→solve)
+- +1 match: ampl (new translate→solve→match)
+- -2 PST: maxmin (now solving), rocket (PST→MI)
+
+**model_infeasible Accounting (PR7):**
+- Gross fixes: 2 (cpack, prolog left MI)
+- Influx: 4 (agreste, cesam, korcge from translate-fail; rocket from PST)
+- Net: +2 (12 → 14)
+- PSE influx: +3 (camshape, dinam/ferts/tricp from borderline timeout → translate → PSE)
+
+**sambal/qsambal Verification:**
+- stat_x(i,j) now has equation-level `$(xw(i,j))` guard from #1112 dollar-condition propagation
+- stat_t(i) still has NA data errors — `tb(h1)=NA` evaluates NA in `tb(i)*tw(i)*...` before the `1$(tw(i))` multiplicative guard can zero it out
+- sambal/qsambal remain in path_solve_terminated (2 data errors prevent solve)
+- Fix requires expression-level zero-guarding or equation-level `$(tw(i))` guard for stat_t (separate from #1112)
 
 ---
 

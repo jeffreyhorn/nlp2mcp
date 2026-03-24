@@ -31,6 +31,8 @@ wa(w) = td(w,"avail");
 tm(t) = td("target",t);
 mv(t) = td("damage",t);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

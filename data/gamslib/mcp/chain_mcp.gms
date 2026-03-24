@@ -34,6 +34,8 @@ Scalars
 n = card(nh) - 1;
 h = tf / n;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

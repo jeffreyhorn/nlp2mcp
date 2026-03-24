@@ -37,6 +37,8 @@ Parameters
 
 deltb(j,h) = (dd(j,h) - dd(j,h-1))$(dd(j,h));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -72,6 +74,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+y.up(j,h) = deltb(j,h);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -81,10 +89,15 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,j) = 1;
+x.l(i,j) = min(x.l(i,j), x.up(i,j));
 y.l(j,h) = 1;
+y.l(j,h) = min(y.l(j,h), y.up(j,h));
 b.l(j,h) = 1;
+b.l(j,h) = min(b.l(j,h), b.up(j,h));
 oc.l = 1;
+oc.l = min(oc.l, oc.up);
 bc.l = 1;
+bc.l = min(bc.l, bc.up);
 
 * ============================================
 * Equations

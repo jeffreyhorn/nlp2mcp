@@ -36,6 +36,8 @@ $onImplicitAssign
 r(i,ip) = yes$(darc(i,ip));
 $offImplicitAssign
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -67,6 +69,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,ip,ipp) = 1;
+x.l(i,ip,ipp) = min(x.l(i,ip,ipp), x.up(i,ip,ipp));
 
 * ============================================
 * Equations
@@ -88,7 +91,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(i,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
+stat_x(i,ip,ipp).. darc(i,ip) + (1$(darc(ip,ipp)) * lam_nb(i,ip))$((not sameas(i, ipp))) - piL_x(i,ip,ipp) =E= 0;
 
 * Inequality complementarity equations
 comp_nb(i,ip)$((not sameas(i, ip))).. sum(ipp$(darc(ipp,ip)), x(i,ipp,ip)) - (sum(ipp$(darc(ip,ipp)), x(i,ip,ipp)) + 1) =G= 0;

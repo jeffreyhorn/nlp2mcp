@@ -26,6 +26,8 @@ Parameters
 
 demand(to) = 1 + 2.3 * 1.015 ** (ord(to) - 1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -192,7 +194,7 @@ stat_cs(t).. ((-1) * ((1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7) * log(1.
 stat_d(t)$(to(t)).. nu_req(t) + nu_deq(t) + ((-1) * (p(t) - 250 / r(t))) * nu_drev(t) - piL_d(t) =E= 0;
 stat_p(t)$(to(t)).. 0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + ((-1) * d(t)) * nu_drev(t) - piL_p(t) =E= 0;
 stat_r(t).. nu_req(t) + ((-1) * nu_req(t+1))$(ord(t) <= card(t) - 1) + nu_r_fx_1974$(sameas(t, '1974')) + ((-1) * (d(t) * ((-1) * ((-250) / sqr(r(t)))))) * nu_drev(t) - piL_r(t) =E= 0;
-stat_rev(t)$(to(t)).. ((-1) * (1.05 ** (1 - ord(t)))) + nu_drev(t) =E= 0;
+stat_rev(t)$(to(t)).. (((-1) * (1.05 ** (1 - ord(t)))))$(to(t)) + nu_drev(t) =E= 0;
 stat_s(t).. nu_seq(t) + ((-0.75) * nu_seq(t+1))$(ord(t) <= card(t) - 1) - nu_cseq(t) + nu_s_fx_1974$(sameas(t, '1974')) + nu_deq(t) - piL_s(t) =E= 0;
 stat_td(t).. nu_tdeq(t) + ((-0.87) * nu_tdeq(t+1))$(ord(t) <= card(t) - 1) + nu_td_fx_1974$(sameas(t, '1974')) - nu_deq(t) - piL_td(t) =E= 0;
 

@@ -67,6 +67,8 @@ eta(g,gp,h) = ((-1) * (gamma(gp, h))) * p0(gp) * beta(g,h) / p0(g) / x0(g,h);
 eta(g,g,h) = gamma(g, h) * (1 - beta(g,h)) / x0(g,h) - 1;
 an(g,h) = x0(g,h) / prod(gp, p0(gp) ** eta(g,gp,h)) / y0(h) ** epsi(g,h);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -121,6 +123,7 @@ x.l(i,h) = min(max(x.l(i,h), 1e-6), x.up(i,h));
 r.l(k) = r0;
 r.l(k) = min(max(r.l(k), 1e-6), r.up(k));
 q.l(i,t) = 1;
+q.l(i,t) = min(q.l(i,t), q.up(i,t));
 y.l(h) = y0(h);
 y.l(h) = min(max(y.l(h), 1e-6), y.up(h));
 
@@ -157,10 +160,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_p(i).. ((-1) * sum(h, x(i,h))) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(j, sum(t, (1 - a(i,j)) * lam_mp(i,t))) - piL_p(i) =E= 0;
-stat_q(i,t).. sum(j, ((-1) * (1 - a(i,j))) * lam_cb(i)) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
+stat_p(i).. (((-1) * sum(h, x(i,h))))$(g(i)) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(t, (1 - a(i,i)) * lam_mp(i,t)) - piL_p(i) =E= 0;
+stat_q(i,t).. ((-1) * (1 - a(i,i))) * lam_cb(i) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
 stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) - piL_r(k) =E= 0;
-stat_x(i,h).. ((-1) * p(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
+stat_x(i,h).. (((-1) * p(i)))$(g(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
 stat_y(h).. sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
 
 * Inequality complementarity equations

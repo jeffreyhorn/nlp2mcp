@@ -48,6 +48,8 @@ $offImplicitAssign
 
 c(i,j) = f * d(i,j) / 1000;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

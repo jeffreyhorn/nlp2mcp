@@ -29,6 +29,8 @@ Parameters
 
 gplus(c) = gibbs(c) + log(750 * 0.07031);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

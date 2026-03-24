@@ -44,6 +44,8 @@ average = sum(i, x(i)) / n;
 stdev = sqrt(sum(i, sqr(x(i) - average)) / (n - 1));
 tmp = average * (1 - average) / sqr(stdev) - 1;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

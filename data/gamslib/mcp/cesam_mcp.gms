@@ -121,6 +121,8 @@ vbar2(macro,"2") = (-1) * sigmay2(macro);
 vbar2(macro,"4") = 1 * sigmay2(macro);
 vbar2(macro,"5") = 3 * sigmay2(macro);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -170,168 +172,10 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-A.fx('ACT','ACT') = 0;
-A.fx('ACT','CAP') = 0;
-A.fx('ACT','COM') = 0;
-A.fx('ACT','ENT') = 0;
-A.fx('ACT','FAC') = 0;
-A.fx('ACT','GIN') = 0;
-A.fx('ACT','GRE') = 0;
-A.fx('ACT','HOU') = 0;
-A.fx('ACT','ROW') = 0;
-A.fx('CAP','ACT') = 0;
-A.fx('CAP','CAP') = 0;
-A.fx('CAP','COM') = 0;
-A.fx('CAP','ENT') = 0;
-A.fx('CAP','FAC') = 0;
-A.fx('CAP','GIN') = 0;
-A.fx('CAP','GRE') = 0;
-A.fx('CAP','HOU') = 0;
-A.fx('CAP','ROW') = 0;
-A.fx('COM','ACT') = 0;
-A.fx('COM','CAP') = 0;
-A.fx('COM','COM') = 0;
-A.fx('COM','ENT') = 0;
-A.fx('COM','FAC') = 0;
-A.fx('COM','GIN') = 0;
-A.fx('COM','GRE') = 0;
-A.fx('COM','HOU') = 0;
-A.fx('COM','ROW') = 0;
-A.fx('ENT','ACT') = 0;
-A.fx('ENT','CAP') = 0;
-A.fx('ENT','COM') = 0;
-A.fx('ENT','ENT') = 0;
-A.fx('ENT','FAC') = 0;
-A.fx('ENT','GIN') = 0;
-A.fx('ENT','GRE') = 0;
-A.fx('ENT','HOU') = 0;
-A.fx('ENT','ROW') = 0;
-A.fx('FAC','ACT') = 0;
-A.fx('FAC','CAP') = 0;
-A.fx('FAC','COM') = 0;
-A.fx('FAC','ENT') = 0;
-A.fx('FAC','FAC') = 0;
-A.fx('FAC','GIN') = 0;
-A.fx('FAC','GRE') = 0;
-A.fx('FAC','HOU') = 0;
-A.fx('FAC','ROW') = 0;
-A.fx('GIN','ACT') = 0;
-A.fx('GIN','CAP') = 0;
-A.fx('GIN','COM') = 0;
-A.fx('GIN','ENT') = 0;
-A.fx('GIN','FAC') = 0;
-A.fx('GIN','GIN') = 0;
-A.fx('GIN','GRE') = 0;
-A.fx('GIN','HOU') = 0;
-A.fx('GIN','ROW') = 0;
-A.fx('GRE','ACT') = 0;
-A.fx('GRE','CAP') = 0;
-A.fx('GRE','COM') = 0;
-A.fx('GRE','ENT') = 0;
-A.fx('GRE','FAC') = 0;
-A.fx('GRE','GIN') = 0;
-A.fx('GRE','GRE') = 0;
-A.fx('GRE','HOU') = 0;
-A.fx('GRE','ROW') = 0;
-A.fx('HOU','ACT') = 0;
-A.fx('HOU','CAP') = 0;
-A.fx('HOU','COM') = 0;
-A.fx('HOU','ENT') = 0;
-A.fx('HOU','FAC') = 0;
-A.fx('HOU','GIN') = 0;
-A.fx('HOU','GRE') = 0;
-A.fx('HOU','HOU') = 0;
-A.fx('HOU','ROW') = 0;
-A.fx('ROW','ACT') = 0;
-A.fx('ROW','CAP') = 0;
-A.fx('ROW','COM') = 0;
-A.fx('ROW','ENT') = 0;
-A.fx('ROW','FAC') = 0;
-A.fx('ROW','GIN') = 0;
-A.fx('ROW','GRE') = 0;
-A.fx('ROW','HOU') = 0;
-A.fx('ROW','ROW') = 0;
-TSAM.fx('ACT','ACT') = 0;
-TSAM.fx('ACT','CAP') = 0;
-TSAM.fx('ACT','COM') = 0;
-TSAM.fx('ACT','ENT') = 0;
-TSAM.fx('ACT','FAC') = 0;
-TSAM.fx('ACT','GIN') = 0;
-TSAM.fx('ACT','GRE') = 0;
-TSAM.fx('ACT','HOU') = 0;
-TSAM.fx('ACT','ROW') = 0;
-TSAM.fx('CAP','ACT') = 0;
-TSAM.fx('CAP','CAP') = 0;
-TSAM.fx('CAP','COM') = 0;
-TSAM.fx('CAP','ENT') = 0;
-TSAM.fx('CAP','FAC') = 0;
-TSAM.fx('CAP','GIN') = 0;
-TSAM.fx('CAP','GRE') = 0;
-TSAM.fx('CAP','HOU') = 0;
-TSAM.fx('CAP','ROW') = 0;
-TSAM.fx('COM','ACT') = 0;
-TSAM.fx('COM','CAP') = 0;
-TSAM.fx('COM','COM') = 0;
-TSAM.fx('COM','ENT') = 0;
-TSAM.fx('COM','FAC') = 0;
-TSAM.fx('COM','GIN') = 0;
-TSAM.fx('COM','GRE') = 0;
-TSAM.fx('COM','HOU') = 0;
-TSAM.fx('COM','ROW') = 0;
-TSAM.fx('ENT','ACT') = 0;
-TSAM.fx('ENT','CAP') = 0;
-TSAM.fx('ENT','COM') = 0;
-TSAM.fx('ENT','ENT') = 0;
-TSAM.fx('ENT','FAC') = 0;
-TSAM.fx('ENT','GIN') = 0;
-TSAM.fx('ENT','GRE') = 0;
-TSAM.fx('ENT','HOU') = 0;
-TSAM.fx('ENT','ROW') = 0;
-TSAM.fx('FAC','ACT') = 0;
-TSAM.fx('FAC','CAP') = 0;
-TSAM.fx('FAC','COM') = 0;
-TSAM.fx('FAC','ENT') = 0;
-TSAM.fx('FAC','FAC') = 0;
-TSAM.fx('FAC','GIN') = 0;
-TSAM.fx('FAC','GRE') = 0;
-TSAM.fx('FAC','HOU') = 0;
-TSAM.fx('FAC','ROW') = 0;
-TSAM.fx('GIN','ACT') = 0;
-TSAM.fx('GIN','CAP') = 0;
-TSAM.fx('GIN','COM') = 0;
-TSAM.fx('GIN','ENT') = 0;
-TSAM.fx('GIN','FAC') = 0;
-TSAM.fx('GIN','GIN') = 0;
-TSAM.fx('GIN','GRE') = 0;
-TSAM.fx('GIN','HOU') = 0;
-TSAM.fx('GIN','ROW') = 0;
-TSAM.fx('GRE','ACT') = 0;
-TSAM.fx('GRE','CAP') = 0;
-TSAM.fx('GRE','COM') = 0;
-TSAM.fx('GRE','ENT') = 0;
-TSAM.fx('GRE','FAC') = 0;
-TSAM.fx('GRE','GIN') = 0;
-TSAM.fx('GRE','GRE') = 0;
-TSAM.fx('GRE','HOU') = 0;
-TSAM.fx('GRE','ROW') = 0;
-TSAM.fx('HOU','ACT') = 0;
-TSAM.fx('HOU','CAP') = 0;
-TSAM.fx('HOU','COM') = 0;
-TSAM.fx('HOU','ENT') = 0;
-TSAM.fx('HOU','FAC') = 0;
-TSAM.fx('HOU','GIN') = 0;
-TSAM.fx('HOU','GRE') = 0;
-TSAM.fx('HOU','HOU') = 0;
-TSAM.fx('HOU','ROW') = 0;
-TSAM.fx('ROW','ACT') = 0;
-TSAM.fx('ROW','CAP') = 0;
-TSAM.fx('ROW','COM') = 0;
-TSAM.fx('ROW','ENT') = 0;
-TSAM.fx('ROW','FAC') = 0;
-TSAM.fx('ROW','GIN') = 0;
-TSAM.fx('ROW','GRE') = 0;
-TSAM.fx('ROW','HOU') = 0;
-TSAM.fx('ROW','ROW') = 0;
+A.lo(ii,jj)$(nonzero(ii,jj)) = 0;
+A.up(ii,jj)$(nonzero(ii,jj)) = 1;
+A.fx(ii,jj)$((not nonzero(ii,jj))) = 0;
+TSAM.fx(ii,jj)$((not nonzero(ii,jj))) = 0;
 X.fx(ii) = TARGET0(ii);
 GDPFC.fx = GDPFC0;
 GDP.fx = GDP0;
@@ -409,25 +253,25 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,ii)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
+stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
 stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) - nu_COLSUM(ii) =E= 0;
-stat_err2(macro).. nu_ERROR2EQ(macro) =E= 0;
+stat_err2(macro).. ((-1) * nu_GDPDEF)$(sameas(macro, 'gdp2')) + nu_ERROR2EQ(macro) + ((-1) * nu_GDPFCDEF)$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_COLSUM(ii) - piL_tsam(ii,jj) =E= 0;
+stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_ROWSUM(ii)$((not sameas(ii, "ROW"))) + nu_COLSUM(ii) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
 stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
 stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) - nu_COLSUM(ii) =E= 0;
 stat_y(ii).. nu_SAMEQ(ii) + ((-1) * nu_ROWSUM(ii))$((not sameas(ii, "ROW"))) =E= 0;
 
 * Lower bound complementarity equations
-comp_lo_a(ii,jj).. a(ii,jj) - 0 =G= 0;
+comp_lo_a(ii,jj)$(nonzero(ii,jj) and 0 > -inf).. a(ii,jj) - 0 =G= 0;
 comp_lo_tsam(ii,jj).. tsam(ii,jj) - 0 =G= 0;
 comp_lo_w1(ii,jwt).. w1(ii,jwt) - 0 =G= 0;
 comp_lo_w2(macro,jwt).. w2(macro,jwt) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_a(ii,jj).. 1 - a(ii,jj) =G= 0;
+comp_up_a(ii,jj)$(nonzero(ii,jj) and 1 < inf).. 1 - a(ii,jj) =G= 0;
 comp_up_w1(ii,jwt).. 1 - w1(ii,jwt) =G= 0;
 comp_up_w2(macro,jwt).. 1 - w2(macro,jwt) =G= 0;
 
@@ -452,6 +296,8 @@ SUMW2(macro).. sum(jwt, w2(macro,jwt)) =E= 1;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+piL_a.fx(ii,jj)$(not (nonzero(ii,jj) and 0 > -inf)) = 0;
+piU_a.fx(ii,jj)$(not (nonzero(ii,jj) and 1 < inf)) = 0;
 nu_ROWSUM.fx(ii)$(not ((not sameas(ii, "ROW")))) = 0;
 nu_SAMMAKE.fx(ii,jj)$(not (nonzero(ii,jj))) = 0;
 

@@ -43,6 +43,8 @@ $onImplicitAssign
 arc(n,np) = pairs(n,np,"kappa");
 $offImplicitAssign
 
+execError = 0;
+
 objold = harkoli objVal ;
 
 * ============================================
@@ -82,6 +84,7 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 t.l(n,np) = 1;
+t.l(n,np) = min(t.l(n,np), t.up(n,np));
 d.l('one') = 25.0;
 d.l('two') = 25.0;
 d.l('three') = 25.0;
@@ -116,9 +119,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_d(n)$(l(n)).. sum(l$(sameas(l, n)), ((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * 2 * d(n)))) + ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
-stat_s(n)$(l(n)).. sum(l$(sameas(l, n)), coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n)) + 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
-stat_t(n,np).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) + ((-1) * 1$(arc(n,np))) * nu_nbal(n) - piL_t(n,np) =E= 0;
+stat_d(n)$(l(n)).. sum(l$(sameas(l, n)), (((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * 2 * d(n))))$(l(n))) + ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
+stat_s(n)$(l(n)).. sum(l$(sameas(l, n)), (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n))$(l(n))) + 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
+stat_t(n,np)$(arc(n,np)).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) + ((-1) * 1$(arc(n,np))) * nu_nbal(n) - piL_t(n,np) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(n).. d(n) - 0 =G= 0;
@@ -142,6 +145,8 @@ d.fx(n)$(not (l(n))) = 0;
 piL_d.fx(n)$(not (l(n))) = 0;
 s.fx(n)$(not (l(n))) = 0;
 piL_s.fx(n)$(not (l(n))) = 0;
+t.fx(n,np)$(not (arc(n,np))) = 0;
+piL_t.fx(n,np)$(not (arc(n,np))) = 0;
 
 * ============================================
 * Model MCP Declaration

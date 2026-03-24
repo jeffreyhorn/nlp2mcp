@@ -56,8 +56,11 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x1.l = 1;
+x1.l = min(x1.l, x1.up);
 x2.l = 1;
+x2.l = min(x2.l, x2.up);
 x3.l = 1;
+x3.l = min(x3.l, x3.up);
 
 * ============================================
 * Equations

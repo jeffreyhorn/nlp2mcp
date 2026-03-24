@@ -61,6 +61,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+e.lo(t) = req(t);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -70,6 +76,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(t,l) = 1;
+x.l(t,l) = min(x.l(t,l), x.up(t,l));
 
 * ============================================
 * Equations

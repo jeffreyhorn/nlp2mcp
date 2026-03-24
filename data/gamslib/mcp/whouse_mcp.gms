@@ -65,8 +65,11 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 stock.l(t) = 1;
+stock.l(t) = min(stock.l(t), stock.up(t));
 sell.l(t) = 1;
+sell.l(t) = min(sell.l(t), sell.up(t));
 buy.l(t) = 1;
+buy.l(t) = min(buy.l(t), buy.up(t));
 
 * ============================================
 * Equations

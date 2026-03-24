@@ -42,6 +42,8 @@ $offImplicitAssign
 
 d_theta = 2 * pi / (5 * (100 + 1));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -73,6 +75,10 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+r.lo('i1') = max(((-1) * alpha) * d_theta + R_min, r.lo("i1"));
+r.lo('i100') = max(R_max - alpha * d_theta, r.lo("i100"));
+r.up('i1') = min(R_min / (2 * cos(d_theta) - 1), r.up("i1"));
+r.up('i100') = min(R_max + alpha * d_theta, r.up("i100"));
 rdiff.lo(i(j)) = ((-1) * alpha) * d_theta;
 rdiff.up(i(j)) = alpha * d_theta;
 
@@ -212,14 +218,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(i).. ((-1) * (pi * R_v / 100)) + nu_eqrdiff(i) + ((-1) * nu_eqrdiff(i-1))$(ord(i) > 1) + ((-1) * r(i)) * lam_convexity(i) + ((((-1) * r(i)) + 2 * cos(d_theta) * r(i)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1) + ((((-1) * r(i)) + 2 * cos(d_theta) * r(i)) * lam_convexity(i-1))$(ord(i) > 1) + (((-1) * R_min) - r(i)) * lam_convex_edge1(i) + ((((-1) * r(i)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1) + ((-1) * R_max) * lam_convex_edge3(i) + ((((-1) * r(i)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1) + ((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i) - piL_r(i) + piU_r(i) =E= 0;
-stat_rdiff(i)$(ord(i) <= card(i) - 1).. nu_eqrdiff(i) =E= 0;
+stat_r(i).. ((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrdiff(i-1))$(ord(i) > 1))$(j(i)) + (((-1) * r(i)) * lam_convexity(i))$(middle(i)) + (((((-1) * r(i)) + 2 * cos(d_theta) * r(i)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i)) + (((((-1) * r(i)) + 2 * cos(d_theta) * r(i)) * lam_convexity(i-1))$(ord(i) > 1))$(middle(i)) + ((((-1) * R_min) - r(i)) * lam_convex_edge1(i))$(first(i)) + (((((-1) * r(i)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1))$(first(i)) + (((-1) * R_max) * lam_convex_edge3(i))$(last(i)) + (((((-1) * r(i)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1))$(last(i)) + (((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i))$(last(i)) - piL_r(i) + piU_r(i) =E= 0;
+stat_rdiff(i)$(j(i)).. nu_eqrdiff(i)$(j(i)) =E= 0;
 
 * Inequality complementarity equations
-comp_convex_edge1(i)$(ord(i) <= card(i) - 1).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
-comp_convex_edge3(i)$(ord(i) > 1).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * R_max + 2 * r(i-1) * R_max * cos(d_theta))) =G= 0;
-comp_convex_edge4(i).. ((-1) * ((-2) * R_max * r(i) + 2 * sqr(r(i)) * cos(d_theta))) =G= 0;
-comp_convexity(i)$((ord(i) <= card(i) - 1) and (ord(i) > 1)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * r(i+1) + 2 * r(i-1) * r(i+1) * cos(d_theta))) =G= 0;
+comp_convex_edge1(i)$((first(i)) and (ord(i) <= card(i) - 1)).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
+comp_convex_edge3(i)$((last(i)) and (ord(i) > 1)).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * R_max + 2 * r(i-1) * R_max * cos(d_theta))) =G= 0;
+comp_convex_edge4(i)$(last(i)).. ((-1) * ((-2) * R_max * r(i) + 2 * sqr(r(i)) * cos(d_theta))) =G= 0;
+comp_convexity(i)$((middle(i)) and ((ord(i) <= card(i) - 1) and (ord(i) > 1))).. ((-1) * (((-1) * r(i-1)) * r(i) - r(i) * r(i+1) + 2 * r(i-1) * r(i+1) * cos(d_theta))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_r(i).. r(i) - 1 =G= 0;
@@ -229,7 +235,7 @@ comp_up_r(i).. 2 - r(i) =G= 0;
 
 * Original equality equations
 obj.. area =E= pi * R_v / 100 * sum(i, r(i));
-eqrdiff(i)$(ord(i) <= card(i) - 1).. rdiff(i) =E= r(i+1) - r(i);
+eqrdiff(i)$((j(i)) and (ord(i) <= card(i) - 1)).. rdiff(i) =E= r(i+1) - r(i);
 
 
 * ============================================
@@ -239,10 +245,15 @@ eqrdiff(i)$(ord(i) <= card(i) - 1).. rdiff(i) =E= r(i+1) - r(i);
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
+rdiff.fx(i)$(not (j(i))) = 0;
+lam_convex_edge1.fx(i)$(not (first(i))) = 0;
+lam_convex_edge3.fx(i)$(not (last(i))) = 0;
+lam_convex_edge4.fx(i)$(not (last(i))) = 0;
+lam_convexity.fx(i)$(not (middle(i))) = 0;
 lam_convex_edge1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge3.fx(i)$(not (ord(i) > 1)) = 0;
 lam_convexity.fx(i)$(not ((ord(i) <= card(i) - 1) and (ord(i) > 1))) = 0;
+nu_eqrdiff.fx(i)$(not (j(i))) = 0;
 nu_eqrdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================

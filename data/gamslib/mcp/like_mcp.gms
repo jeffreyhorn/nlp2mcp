@@ -34,6 +34,8 @@ y(i) = data("pressure",i);
 w(i) = data("frequency",i);
 c = 1 / sqrt(2 * 3.14159);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

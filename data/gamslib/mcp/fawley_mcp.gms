@@ -39,7 +39,7 @@ Parameters
     crdat(cr,*) /'arabian-l'.supply 110, 'arabian-l'.price 35, 'arabian-l'.transport 24.15, 'arabian-l'.gravity 0.858, 'arabian-h'.supply 165, 'arabian-h'.price 34, 'arabian-h'.transport 24.15, 'arabian-h'.gravity 0.886, brega.supply 80, brega.price 42, brega.transport 10.05, brega.gravity 0.823/
     ddat(cf,*) /'motor-gas'.demand 40, 'motor-gas'.price 430, 'jet-fuel'.demand 20, 'jet-fuel'.price 300, 'heat-oil'.demand 50, 'heat-oil'.price 315, 'fuel-oil'.demand 145, 'fuel-oil'.price 250/
     kdat(k,*) /pipestill.capacity 65, pipestill.'oper-cost' 0.15, pipestill.'oper-days' 31, reformer.capacity 7.5, reformer.'oper-cost' 0.6, reformer.'oper-days' 28, 'c-cracker'.capacity 8, 'c-cracker'.'oper-cost' 0.65, 'c-cracker'.'oper-days' 28/
-    ap(c,p) /'arabian-l'.'d-arab-l' -1, 'arabian-h'.'d-arab-h' -1, brega.'d-arab-h' -1, 'lv-naphtha'.'d-arab-l' 0.035, 'lv-naphtha'.'d-arab-h' 0.03, 'lv-naphtha'.'d-brega' 0.045, 'iv-naphtha'.'d-arab-l' 0.1, 'iv-naphtha'.'d-arab-h' 0.075, 'iv-naphtha'.'d-brega' 0.135, 'v-heat-oil'.'d-arab-l' 0.39, 'v-heat-oil'.'d-arab-h' 0.3, 'v-heat-oil'.'d-brega' 0.43, 'vacuum-dst'.'d-arab-l' 0.285, 'vacuum-dst'.'d-arab-h' 0.23, 'vacuum-dst'.'d-brega' 0.28, 'res-arab-l'.'d-arab-l' 0.165, 'res-arab-h'.'d-arab-h' 0.335, 'res-brega'.'d-brega' 0.1, 'iv-naphtha'.reform -1, 'v-heat-oil'.'ho-low-s' -1, 'v-heat-oil'.'ho-high-s' -1, 'vacuum-dst'.'vd-low-s' -1, 'vacuum-dst'.'vd-high-s' -1, butane.reform 0.02, butane.'ho-low-s' 0.02, butane.'ho-high-s' 0.0325, butane.'vd-low-s' 0.05, butane.'vd-high-s' 0.06, reformate.reform 0.9, 'cc-naph-l'.'ho-low-s' 0.275, 'cc-naph-l'.'vd-low-s' 0.325, 'cc-naph-h'.'ho-high-s' 0.3775, 'cc-naph-h'.'vd-high-s' 0.45, 'cc-dist'.'ho-low-s' 0.68, 'cc-dist'.'ho-high-s' 0.555, 'cc-dist'.'vd-low-s' 0.585, 'cc-dist'.'vd-high-s' 0.44, 'fuel-equiv'.reform 0.08, 'fuel-equiv'.'ho-low-s' 0.025, 'fuel-equiv'.'ho-high-s' 0.035, 'fuel-equiv'.'vd-low-s' 0.04, 'fuel-equiv'.'vd-high-s' 0.05/
+    ap(c,p) /'arabian-l'.'d-arab-l' -1, 'arabian-h'.'d-arab-h' -1, brega.'d-brega' -1, 'lv-naphtha'.'d-arab-l' 0.035, 'lv-naphtha'.'d-arab-h' 0.03, 'lv-naphtha'.'d-brega' 0.045, 'iv-naphtha'.'d-arab-l' 0.1, 'iv-naphtha'.'d-arab-h' 0.075, 'iv-naphtha'.'d-brega' 0.135, 'v-heat-oil'.'d-arab-l' 0.39, 'v-heat-oil'.'d-arab-h' 0.3, 'v-heat-oil'.'d-brega' 0.43, 'vacuum-dst'.'d-arab-l' 0.285, 'vacuum-dst'.'d-arab-h' 0.23, 'vacuum-dst'.'d-brega' 0.28, 'res-arab-l'.'d-arab-l' 0.165, 'res-arab-h'.'d-arab-h' 0.335, 'res-brega'.'d-brega' 0.1, 'iv-naphtha'.reform -1, 'v-heat-oil'.'ho-low-s' -1, 'v-heat-oil'.'ho-high-s' -1, 'vacuum-dst'.'vd-low-s' -1, 'vacuum-dst'.'vd-high-s' -1, butane.reform 0.02, butane.'ho-low-s' 0.02, butane.'ho-high-s' 0.0325, butane.'vd-low-s' 0.05, butane.'vd-high-s' 0.06, reformate.reform 0.9, 'cc-naph-l'.'ho-low-s' 0.275, 'cc-naph-l'.'vd-low-s' 0.325, 'cc-naph-h'.'ho-high-s' 0.3775, 'cc-naph-h'.'vd-high-s' 0.45, 'cc-dist'.'ho-low-s' 0.68, 'cc-dist'.'ho-high-s' 0.555, 'cc-dist'.'vd-low-s' 0.585, 'cc-dist'.'vd-high-s' 0.44, 'fuel-equiv'.reform 0.08, 'fuel-equiv'.'ho-low-s' 0.025, 'fuel-equiv'.'ho-high-s' 0.035, 'fuel-equiv'.'vd-low-s' 0.04, 'fuel-equiv'.'vd-high-s' 0.05/
     recipes(cf,c,r) /'heat-oil'.'v-heat-oil'.'recipe-1' 1, 'heat-oil'.'cc-dist'.'recipe-2' 1, 'jet-fuel'.'lv-naphtha'.'recipe-2' 0.2, 'jet-fuel'.'iv-naphtha'.'recipe-1' 0.3, 'jet-fuel'.'iv-naphtha'.'recipe-3' 0.1, 'jet-fuel'.'v-heat-oil'.'recipe-1' 0.7, 'jet-fuel'.'v-heat-oil'.'recipe-2' 0.8, 'jet-fuel'.'v-heat-oil'.'recipe-3' 0.1, 'jet-fuel'.'cc-dist'.'recipe-3' 0.8/
     at(c,tr) /'lv-naphtha'.'tr-1' -1, butane.'tr-1' -1, 'fuel-equiv'.'tr-1' 1.11, 'fuel-equiv'.'tr-2' 1.07/
     specs(cf,l,s) /'motor-gas'.lower.rvp 10, 'motor-gas'.lower.ron 99, 'motor-gas'.upper.'pct-212f' 60, 'fuel-oil'.upper.sulfur 3, 'fuel-oil'.upper.vbn 37.5/
@@ -75,6 +75,8 @@ oc(k) = kdat(k,"oper-cost") * m3tob;
 pcr(cr) = crdat(cr,"price") * m3tob / crdat(cr,"gravity");
 char(c,'volume')$(prop(c,"gravity")) = 1 / prop(c,"gravity");
 bp(k,p)$(kuse(k,p)) = 1 / sum(c$(ap(c,p) < 0), ((-1) * ap(c,p)) * prop(c,"gravity"));
+
+execError = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -132,6 +134,7 @@ Positive Variables
 * ============================================
 
 u.up(cr) = crdat(cr,"supply");
+cap.up(k) = kp(k);
 sales.fx(cf) = ddat(cf,"demand");
 
 * ============================================
@@ -144,15 +147,25 @@ sales.fx(cf) = ddat(cf,"demand");
 * POSITIVE variables are set to 1.
 
 u.l(c) = 1;
+u.l(c) = min(u.l(c), u.up(c));
 z.l(p) = 1;
+z.l(p) = min(z.l(p), z.up(p));
 cap.l(k) = 1;
+cap.l(k) = min(cap.l(k), cap.up(k));
 trans.l(tr) = 1;
+trans.l(tr) = min(trans.l(tr), trans.up(tr));
 import.l(c) = 1;
+import.l(c) = min(import.l(c), import.up(c));
 bq.l(c,cf) = 1;
+bq.l(c,cf) = min(bq.l(c,cf), bq.up(c,cf));
 rb.l(cf,r) = 1;
+rb.l(cf,r) = min(rb.l(cf,r), rb.up(cf,r));
 q.l(cf,m) = 1;
+q.l(cf,m) = min(q.l(cf,m), q.up(cf,m));
 ov.l(cf,l,s) = 1;
+ov.l(cf,l,s) = min(ov.l(cf,l,s), ov.up(cf,l,s));
 sales.l(cf) = 1;
+sales.l(cf) = min(sales.l(cf), sales.up(cf));
 
 * ============================================
 * Equations

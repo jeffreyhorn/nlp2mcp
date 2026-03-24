@@ -44,6 +44,8 @@ Parameters
 
 atc(cr,ci,q)$(at(ci,q)) = at(ci,q);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -94,10 +96,15 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 z.l(cr,p) = 1;
+z.l(cr,p) = min(z.l(cr,p), z.up(cr,p));
 x.l(cf) = 1;
+x.l(cf) = min(x.l(cf), x.up(cf));
 u.l(cr) = 1;
+u.l(cr) = min(u.l(cr), u.up(cr));
 ui.l(cr,ci) = 1;
+ui.l(cr,ci) = min(ui.l(cr,ci), ui.up(cr,ci));
 w.l(cr,ci,cf) = 1;
+w.l(cr,ci,cf) = min(w.l(cr,ci,cf), w.up(cr,ci,cf));
 
 * ============================================
 * Equations

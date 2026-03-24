@@ -188,6 +188,8 @@ NF(r,f) = bas_nf(r,f);
 FLC(r,'f1',res)$(fix(res)) = 0.725 * bas_nf(r,"f1") * Bas_FLC(r,"f1",res) / nf(r,"f1");
 FLC(r,f,res) = bas_FLC(r,f,res);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -225,7 +227,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 ncx.l = 1;
+ncx.l = min(ncx.l, ncx.up);
 nlx.l = 1;
+nlx.l = min(nlx.l, nlx.up);
 
 * Variable Scaling
 ncx.scale(r,f,"dry","wmaize") = 10;

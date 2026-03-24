@@ -49,6 +49,8 @@ Scalars
 
 age(at) = 10 * ord(at);
 
+execError = 0;
+
 rho = rhoval('rho-03') ;
 
 * ============================================
@@ -101,8 +103,11 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 v.l(s,k,at) = 1;
+v.l(s,k,at) = min(v.l(s,k,at), v.up(s,k,at));
 z.l(p) = 1;
+z.l(p) = min(z.l(p), z.up(p));
 x.l(c) = 1;
+x.l(c) = min(x.l(c), x.up(c));
 
 * ============================================
 * Equations

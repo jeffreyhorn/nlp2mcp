@@ -55,6 +55,8 @@ $offImplicitAssign
 pre2("stage-3") = pre2("stage-3") * 10 ** pre3("stage-3");
 pre4("stage-3") = pre4("stage-3") * 10 ** pre5("stage-3");
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

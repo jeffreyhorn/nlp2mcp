@@ -44,6 +44,8 @@ Scalars
 mean(s) = sum(e, returns(e,s)) / card(e);
 covar(s,sp) = sum(e, (returns(e,sp) - mean(sp)) * (returns(e,s) - mean(s))) / card(e);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -75,6 +77,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 invest.l(stocks) = 1;
+invest.l(stocks) = min(invest.l(stocks), invest.up(stocks));
 
 * ============================================
 * Equations
@@ -95,8 +98,13 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(stocks, sp__);
+Alias(stocks, s__);
+
 * Stationarity equations
-stat_invest(stocks).. ((-1) * (mean(stocks) - rap * sum(sp, invest(sp) * covar(stocks,sp)))) + prices(stocks) * lam_investav - piL_invest(stocks) =E= 0;
+stat_invest(stocks).. ((-1) * (mean(stocks) - rap * (sum(sp__, invest(sp__) * covar(stocks,sp__)) + sum(s__, invest(s__) * covar(s__,stocks))))) + prices(stocks) * lam_investav - piL_invest(stocks) =E= 0;
 
 * Inequality complementarity equations
 comp_investav.. ((-1) * (sum(s, prices(s) * invest(s)) - funds)) =G= 0;

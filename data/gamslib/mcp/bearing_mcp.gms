@@ -40,6 +40,8 @@ Scalars
 C1 = oil_constants("SAE 20","C1");
 cn = oil_constants("SAE 20","n");
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

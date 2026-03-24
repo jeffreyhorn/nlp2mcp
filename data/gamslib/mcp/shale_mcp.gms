@@ -52,7 +52,7 @@ Alias(t, tp);
 Alias(tf, tfp);
 
 Parameters
-    a(c,p) /'sur-water'.'buy-h2o-s' -1, 'grnd-water'.'buy-h2o-g' -1, 'mo-water'.'buy-h2o-m' -1, water.'buy-h2o-s' 1, water.'buy-h2o-g' 1, water.'buy-h2o-m' 1, 'shale-25'.'mining-25' -1, 'shale-30'.'mining-30' -1, 'shale-35'.'mining-35' -1, water.'mining-25' -0.5, water.'mining-30' -0.5, water.'mining-35' -0.5, 'mined-25'.'mining-25' 1, 'mined-30'.'mining-30' 1, 'mined-35'.'mining-35' 1, part.'mining-25' 2.66, part.'mining-30' 2.66, part.'mining-35' 2.66, 'mined-25'.'ret-25' -1, 'mined-30'.'ret-30' -1, 'mined-35'.'ret-30' -1, water.'ret-25' -1.04, water.'ret-30' -1.04, water.'ret-35' -1.04, 'shale-oil'.'ret-25' 0.5952, 'shale-oil'.'ret-30' 0.7143, 'shale-oil'.'ret-35' 0.8333, spentshale.'ret-25' 0.87, spentshale.'ret-30' 0.85, spentshale.'ret-35' 0.82, part.'ret-25' 1.85, part.'ret-30' 1.8, part.'ret-35' 1.75, so2.'ret-25' 0.0177, so2.'ret-30' 0.0213, so2.'ret-35' 0.0248, 'shale-oil'.upgrading -1, water.upgrading -0.2, syncrude.upgrading 0.84, 'misc-act-i'.upgrading 0.84, 'misc-act-i'.miscell -1, lpg.upgrading 0.077, ammonia.upgrading 0.0019, sulfur.upgrading 0.0024, coke.upgrading 0.0091, part.upgrading 0.0018, so2.upgrading 5.9, spentshale.'dispose-c' -1, spentshale.'dispose-u' -1, spentshale.'dispose-d' -1, water.'dispose-c' -1.18, water.'dispose-u' -1, water.'dispose-d' -0.43, 'can-space'.'dispose-c' 0.82, 'mine-fill'.'dispose-u' 0.82, 'spoil-dist'.'dispose-d' 1, part.'dispose-c' 0.245, part.'dispose-u' 0.082, part.'part-50' -1, part.'so2-50' -1, part.'so2-90' -1, part.'so2-95' -1, part.'part-99' -1, so2.'so2-50' -1, so2.'part-90' -1, so2.'part-95' -1, so2.'so2-95' -1, so2.'so2-99' -1, 'part-red'.'part-50' 0.5, 'part-red'.'part-90' 0.1, 'part-red'.'so2-90' 0.05, 'part-red'.'so2-95' 0.01, 'part-red'.'so2-99' 0.005, 'so2-red'.'so2-50' 0.5, 'so2-red'.'so2-90' 0.1, 'so2-red'.'part-95' 0.05, 'so2-red'.'part-99' 0.01, 'so2-red'.'part-99pt5' 0.005/
+    a(c,p) /'sur-water'.'buy-h2o-s' -1, 'grnd-water'.'buy-h2o-g' -1, 'mo-water'.'buy-h2o-m' -1, water.'buy-h2o-s' 1, water.'buy-h2o-g' 1, water.'buy-h2o-m' 1, 'shale-25'.'mining-25' -1, 'shale-30'.'mining-30' -1, 'shale-35'.'mining-35' -1, water.'mining-25' -0.5, water.'mining-30' -0.5, water.'mining-35' -0.5, 'mined-25'.'mining-25' 1, 'mined-30'.'mining-30' 1, 'mined-35'.'mining-35' 1, part.'mining-25' 2.66, part.'mining-30' 2.66, part.'mining-35' 2.66, 'mined-25'.'ret-25' -1, 'mined-30'.'ret-30' -1, 'mined-35'.'ret-35' -1, water.'ret-25' -1.04, water.'ret-30' -1.04, water.'ret-35' -1.04, 'shale-oil'.'ret-25' 0.5952, 'shale-oil'.'ret-30' 0.7143, 'shale-oil'.'ret-35' 0.8333, spentshale.'ret-25' 0.87, spentshale.'ret-30' 0.85, spentshale.'ret-35' 0.82, part.'ret-25' 1.85, part.'ret-30' 1.8, part.'ret-35' 1.75, so2.'ret-25' 0.0177, so2.'ret-30' 0.0213, so2.'ret-35' 0.0248, 'shale-oil'.upgrading -1, water.upgrading -0.2, syncrude.upgrading 0.84, 'misc-act-i'.upgrading 0.84, 'misc-act-i'.miscell -1, lpg.upgrading 0.077, ammonia.upgrading 0.0019, sulfur.upgrading 0.0024, coke.upgrading 0.0091, part.upgrading 0.0018, so2.upgrading 5.9, spentshale.'dispose-c' -1, spentshale.'dispose-u' -1, spentshale.'dispose-d' -1, water.'dispose-c' -1.18, water.'dispose-u' -1, water.'dispose-d' -0.43, 'can-space'.'dispose-c' 0.82, 'mine-fill'.'dispose-u' 0.82, 'spoil-dist'.'dispose-d' 1, part.'dispose-c' 0.245, part.'dispose-u' 0.082, part.'part-50' -1, part.'part-90' -1, part.'so2-90' -1, part.'so2-95' -1, part.'so2-99' -1, so2.'so2-50' -1, so2.'part-90' -1, so2.'part-95' -1, so2.'part-99' -1, so2.'part-99pt5' -1, 'part-red'.'part-50' 0.5, 'part-red'.'part-90' 0.1, 'part-red'.'part-95' 0.05, 'part-red'.'so2-95' 0.01, 'part-red'.'so2-99' 0.005, 'so2-red'.'so2-50' 0.5, 'so2-red'.'so2-90' 0.1, 'so2-red'.'part-95' 0.05, 'so2-red'.'part-99' 0.01, 'so2-red'.'part-99pt5' 0.005/
     b(m,p) /'mine-25'.'mining-25' 1, 'mine-30'.'mining-30' 1, 'mine-35'.'mining-35' 1, 'retort-25'.'ret-25' 1, 'retort-30'.'ret-30' 1, 'retort-35'.'ret-35' 1, 'h2o-s-eq'.'buy-h2o-s' 1, 'h2o-g-eq'.'buy-h2o-g' 1, 'h2o-m-eq'.'buy-h2o-m' 1, 'disp-c-eq'.'dispose-c' 1, 'disp-u-eq'.'dispose-u' 1, 'disp-d-eq'.'dispose-d' 1, upgrader.upgrading 1, 'misc-eq'.miscell 1, 'part-50-eq'.'part-50' 1, 'part-90-eq'.'part-90' 1, 'part-95-eq'.'part-95' 1, 'part-99-eq'.'so2-95' 1, 'p-99pt5-eq'.'so2-99' 1, 'so2-50-eq'.'so2-50' 1, 'so2-90-eq'.'so2-90' 1, 'so2-95-eq'.'part-95' 1, 'so2-99-eq'.'part-99' 1, 's-99pt5-eq'.'part-99pt5' 1/
     prm(c) /'sur-water' 24, 'grnd-water' 120, 'mo-water' 2/
     rw1(c) /'sur-water' 300, 'mo-water' 9999999/
@@ -170,6 +170,8 @@ dg(crg,i) = prg * bbgcum(crg,i) + 0.5 * sqr(bbgcum(crg,i)) * (prm(crg) - 1) * pr
 drd(crr,i,t) = dr(crr,i,t) - dr(crr,i-1,t);
 dgd(crg,i) = dg(crg,i) - dg(crg,i-1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -248,13 +250,21 @@ uug.up(crg,i) = bbg(crg);
 * POSITIVE variables are set to 1.
 
 z.l(p,tf) = 1;
+z.l(p,tf) = min(z.l(p,tf), z.up(p,tf));
 x.l(c,tf) = 1;
+x.l(c,tf) = min(x.l(c,tf), x.up(c,tf));
 us.l(c,tf) = 1;
+us.l(c,tf) = min(us.l(c,tf), us.up(c,tf));
 ur.l(c,t) = 1;
+ur.l(c,t) = min(ur.l(c,t), ur.up(c,t));
 ug.l(c) = 1;
+ug.l(c) = min(ug.l(c), ug.up(c));
 h.l(m,tf) = 1;
+h.l(m,tf) = min(h.l(m,tf), h.up(m,tf));
 uur.l(c,i,tf) = 1;
+uur.l(c,i,tf) = min(uur.l(c,i,tf), uur.up(c,i,tf));
 uug.l(c,i) = 1;
+uug.l(c,i) = min(uug.l(c,i), uug.up(c,i));
 
 * ============================================
 * Equations
@@ -318,11 +328,11 @@ Equations
 * Stationarity equations
 stat_h(m,tf)$(sum(t, 1$(ts(t,tf)))).. ((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf) + ((-1) * 1$(ts(tf,tf))) * lam_cpu(m,tf) - piL_h(m,tf) =E= 0;
 stat_phig.. 1 + nu_agw =E= 0;
-stat_phik(tf)$(t(tf)).. ((-1) * (theta * del(tf) * (-1))) + nu_acap(tf) =E= 0;
-stat_phio(tf)$(t(tf)).. ((-1) * (theta * del(tf) * (-1))) + nu_aopc(tf) =E= 0;
-stat_phir(tf)$(t(tf)).. ((-1) * (theta * del(tf) * (-1))) + nu_arw(tf) =E= 0;
-stat_phiy(tf)$(t(tf)).. ((-1) * (theta * del(tf) * (-1))) + nu_aroy(tf) =E= 0;
-stat_r(tf)$(t(tf)).. ((-1) * (theta * del(tf))) + nu_arev(tf) =E= 0;
+stat_phik(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_acap(tf) =E= 0;
+stat_phio(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aopc(tf) =E= 0;
+stat_phir(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_arw(tf) =E= 0;
+stat_phiy(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aroy(tf) =E= 0;
+stat_r(tf)$(t(tf)).. (((-1) * (theta * del(tf))))$(t(tf)) + nu_arev(tf) =E= 0;
 stat_ug(c)$(crg(c)).. nu_mgw(c) + nu_mgwb(c) - piL_ug(c) =E= 0;
 stat_ur(c,t)$(crr(c)).. nu_mrw(c,t) + nu_mrwb(c,t) - piL_ur(c,t) =E= 0;
 stat_us(c,tf)$(crs(c) and t(tf)).. nu_msu(c,tf) + theta * lam_cs(c) - piL_us(c,tf) =E= 0;

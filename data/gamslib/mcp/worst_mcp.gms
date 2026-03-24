@@ -62,6 +62,15 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+r.lo(t) = tdata(t,"rmin");
+r.up(t) = tdata(t,"rmax");
+q.lo(t) = tdata(t,"qmin");
+q.up(t) = tdata(t,"qmax");
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -80,7 +89,9 @@ f.l('9020063','jun') = max(f.l('9020063','jun'), 0.001);
 f.l('9020063','oct') = max(f.l('9020063','oct'), 0.001);
 f.l('9020063','jan') = max(f.l('9020063','jan'), 0.001);
 c.l(i,j,t) = 1;
+c.l(i,j,t) = min(c.l(i,j,t), c.up(i,j,t));
 p.l(i,j,t) = 1;
+p.l(i,j,t) = min(p.l(i,j,t), p.up(i,j,t));
 r.l(t) = (r.lo(t) + r.up(t)) / 2;
 r.l(t) = min(max(r.l(t), 1e-6), r.up(t));
 q.l(t) = (q.lo(t) + q.up(t)) / 2;

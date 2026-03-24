@@ -42,6 +42,8 @@ a("summer",j,l) = av(l,j);
 a("winter",j,l) = av(l,j) + 10;
 c(i,j,k,l) = tc(l,k) + tcadd(i,j)$(tc(l,k));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -74,6 +76,13 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+y.up(i,k) = h(k);
+z.lo(i,k) = d(i,k);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -83,7 +92,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,j,k,l) = 1;
+x.l(i,j,k,l) = min(x.l(i,j,k,l), x.up(i,j,k,l));
 y.l(i,k) = 1;
+y.l(i,k) = min(y.l(i,k), y.up(i,k));
 
 * ============================================
 * Equations

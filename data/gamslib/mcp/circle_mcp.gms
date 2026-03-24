@@ -41,6 +41,8 @@ xmax = smax(i, x(i));
 ymin = smin(i, y(i));
 ymax = smax(i, y(i));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

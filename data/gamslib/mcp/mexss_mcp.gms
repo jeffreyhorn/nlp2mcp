@@ -56,6 +56,8 @@ pd(c) = prices(c,"domestic");
 pv(c) = prices(c,"import");
 pe(c) = prices(c,"export");
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -108,10 +110,15 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 z.l(p,i) = 1;
+z.l(p,i) = min(z.l(p,i), z.up(p,i));
 x.l(c,i,j) = 1;
+x.l(c,i,j) = min(x.l(c,i,j), x.up(c,i,j));
 u.l(c,i) = 1;
+u.l(c,i) = min(u.l(c,i), u.up(c,i));
 v.l(c,j) = 1;
+v.l(c,j) = min(v.l(c,j), v.up(c,j));
 e.l(c,i) = 1;
+e.l(c,i) = min(e.l(c,i), e.up(c,i));
 
 * ============================================
 * Equations

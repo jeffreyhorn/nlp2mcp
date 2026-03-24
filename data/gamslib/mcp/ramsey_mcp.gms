@@ -47,6 +47,8 @@ beta(t) = bet ** ord(t);
 beta(tlast) = beta(tlast) / (1 - bet);
 al(t) = a * (1 + g) ** ((1 - b) * (ord(t) - 1));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -80,6 +82,7 @@ Positive Variables
 * ============================================
 
 k.fx(tfirst) = k.lo(tfirst);
+i.up(t) = i0 * (1 + ac) ** (ord(t) - 1);
 
 * ============================================
 * Variable Initialization

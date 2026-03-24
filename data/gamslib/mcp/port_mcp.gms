@@ -60,6 +60,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 investment.l(b) = 1;
+investment.l(b) = min(investment.l(b), investment.up(b));
 
 * ============================================
 * Equations

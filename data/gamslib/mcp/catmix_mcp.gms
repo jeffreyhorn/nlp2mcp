@@ -31,6 +31,8 @@ Scalars
 
 h = tf / 100;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -75,6 +77,7 @@ x2.fx('0') = 0;
 * POSITIVE variables are set to 1.
 
 u.l(nh) = 1;
+u.l(nh) = min(u.l(nh), u.up(nh));
 x1.l('0') = 1.0;
 x1.l('1') = 1.0;
 x1.l('2') = 1.0;
@@ -203,9 +206,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_u(nh).. ((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh) + (((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh-1))$(ord(nh) > 1) + ((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh) + (((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh-1))$(ord(nh) > 1) - piL_u(nh) + piU_u(nh) =E= 0;
-stat_x1(nh).. 1 + ((-1) * (1 - h / 2 * u(nh))) * nu_ode1(nh) + ((1 - h / 2 * u(nh) * (-1)) * nu_ode1(nh-1))$(ord(nh) > 1) + ((-1) * (h / 2 * u(nh))) * nu_ode2(nh) + (((-1) * (h / 2 * u(nh))) * nu_ode2(nh-1))$(ord(nh) > 1) + nu_x1_fx_0$(sameas(nh, '0')) =E= 0;
-stat_x2(nh).. 1 + ((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh) + (((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh-1))$(ord(nh) > 1) + ((-1) * (1 + h / 2 * (u(nh) * (-10) - (1 - u(nh))))) * nu_ode2(nh) + ((1 - h / 2 * (u(nh) * (-10) - (1 - u(nh)))) * nu_ode2(nh-1))$(ord(nh) > 1) + nu_x2_fx_0$(sameas(nh, '0')) =E= 0;
+stat_u(nh).. (((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh))$(nh(nh)) + ((((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh))$(nh(nh)) + ((((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) - piL_u(nh) + piU_u(nh) =E= 0;
+stat_x1(nh)$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')).. 1$(sameas(nh, '100')) + (((-1) * (1 - h / 2 * u(nh))) * nu_ode1(nh))$(nh(nh)) + (((1 - h / 2 * u(nh) * (-1)) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (h / 2 * u(nh))) * nu_ode2(nh))$(nh(nh)) + ((((-1) * (h / 2 * u(nh))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) + nu_x1_fx_0$(sameas(nh, '0')) =E= 0;
+stat_x2(nh)$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')).. 1$(sameas(nh, '100')) + (((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh))$(nh(nh)) + ((((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (1 + h / 2 * (u(nh) * (-10) - (1 - u(nh))))) * nu_ode2(nh))$(nh(nh)) + (((1 - h / 2 * (u(nh) * (-10) - (1 - u(nh)))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) + nu_x2_fx_0$(sameas(nh, '0')) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_u(nh).. u(nh) - 0 =G= 0;
@@ -215,8 +218,8 @@ comp_up_u(nh).. 1 - u(nh) =G= 0;
 
 * Original equality equations
 defobj.. obj =E= -1 + x1("100") + x2("100") + alpha * h * sum(i$(nh(i)), sqr(u(i+1) - u(i)));
-ode1(i)$(ord(i) <= card(i) - 1).. x1(i+1) =E= x1(i) + h / 2 * (u(i) * (10 * x2(i) - x1(i)) + u(i+1) * (10 * x2(i+1) - x1(i+1)));
-ode2(i)$(ord(i) <= card(i) - 1).. x2(i+1) =E= x2(i) + h / 2 * (u(i) * (x1(i) - 10 * x2(i)) - (1 - u(i)) * x2(i) + u(i+1) * (x1(i+1) - 10 * x2(i+1)) - (1 - u(i+1)) * x2(i+1));
+ode1(i)$((nh(i)) and (ord(i) <= card(i) - 1)).. x1(i+1) =E= x1(i) + h / 2 * (u(i) * (10 * x2(i) - x1(i)) + u(i+1) * (10 * x2(i+1) - x1(i+1)));
+ode2(i)$((nh(i)) and (ord(i) <= card(i) - 1)).. x2(i+1) =E= x2(i) + h / 2 * (u(i) * (x1(i) - 10 * x2(i)) - (1 - u(i)) * x2(i) + u(i+1) * (x1(i+1) - 10 * x2(i+1)) - (1 - u(i+1)) * x2(i+1));
 x1_fx_0.. x1("0") - 1 =E= 0;
 x2_fx_0.. x2("0") - 0 =E= 0;
 
@@ -228,6 +231,10 @@ x2_fx_0.. x2("0") - 0 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+x1.fx(nh)$(not (sameas(nh, '100') or nh(nh) or sameas(nh, '0'))) = 0;
+x2.fx(nh)$(not (sameas(nh, '100') or nh(nh) or sameas(nh, '0'))) = 0;
+nu_ode1.fx(i)$(not (nh(i))) = 0;
+nu_ode2.fx(i)$(not (nh(i))) = 0;
 nu_ode1.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 nu_ode2.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 

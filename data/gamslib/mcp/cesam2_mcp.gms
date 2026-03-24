@@ -33,7 +33,7 @@ Alias(i, j);
 Alias(ii, jj);
 
 Parameters
-    SAM(i,j) /ACT.COM 14827.424, COM.ACT 7917.504, FAC.ACT 9805.414, ENT.FAC 3699.706, HOU.COM 6000, HOU.FAC 3300, GOV.ACT 733.6, GOV.COM 357.4, GOV.FAC 74.4, GOV.ENT 165.2, CAP.ENT 150, ROW.COM 5573.815, Total.ACT 18456.518, Total.COM 20758.639, Total.FAC 9805.414, Total.ENT 3732.706, ACT.HOU 2101.049, ACT.GOV -0.327, COM.HOU 6953.332, COM.GOV 1564.5, COM.GIN 2518.5, COM.CAP 2597.798, ENT.GOV 33, HOU.GOV 29.6, GOV.HOU 139.5, CAP.HOU 649.156, CAP.GOV -356.673, CAP.GIN -406.2, Total.HOU 9643.037, Total.GOV 1470.1, Total.GIN 1712.3, Total.CAP 2197.798, ACT.ROW 1488.157, ACT.Total 18416.303, COM.Total 20751.634, FAC.Total 9805.414, ENT.Total 3732.706, HOU.ROW 200, HOU.Total 9687.915, GOV.Total 1470.1, GIN.ROW 1712.3, GIN.Total 1712.3, CAP.ROW 2163.857, CAP.Total 2200.14, ROW.Total 5573.815, Total.ROW 5573.815/
+    SAM(i,j) /ACT.COM 14827.424, COM.ACT 7917.504, FAC.ACT 9805.414, ENT.FAC 3699.706, HOU.FAC 6000, HOU.ENT 3300, GOV.ACT 733.6, GOV.COM 357.4, GOV.FAC 74.4, GOV.ENT 165.2, CAP.ENT 150, ROW.COM 5573.815, Total.ACT 18456.518, Total.COM 20758.639, Total.FAC 9805.414, Total.ENT 3732.706, ACT.HOU 2101.049, ACT.GOV -0.327, COM.HOU 6953.332, COM.GOV 1564.5, COM.GIN 2518.5, COM.CAP 2597.798, ENT.GOV 33, HOU.GOV 29.6, GOV.HOU 139.5, CAP.HOU 649.156, CAP.GOV -356.673, CAP.GIN -406.2, Total.HOU 9643.037, Total.GOV 1470.1, Total.GIN 1712.3, Total.CAP 2197.798, ACT.ROW 1488.157, ACT.Total 18416.303, COM.Total 20751.634, FAC.Total 9805.414, ENT.Total 3732.706, HOU.ROW 200, HOU.Total 9687.915, GOV.Total 1470.1, GIN.ROW 1712.3, GIN.Total 1712.3, CAP.ROW 2163.857, CAP.Total 2200.14, ROW.Total 5573.815, Total.ROW 5573.815/
     SAM0(i,j)
     SAMBALCHK(i)
     Abar0(i,j)
@@ -106,6 +106,8 @@ vbar2(macro,"1") = (-3) * sigmay2(macro);
 vbar2(macro,"2") = (-1.5) * sigmay2(macro);
 vbar2(macro,"4") = 1.5 * sigmay2(macro);
 vbar2(macro,"5") = 3 * sigmay2(macro);
+
+execError = 0;
 
 loop((ii,jj)$NONZERO(ii,jj),
    sigmay3(ii,jj)$ival(ii,jj) = stderr3 * ABS(sam0(ii,jj)) ;
@@ -278,7 +280,7 @@ stat_err3(i,j)$(ii(i) and ii(j)).. ((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) 
 stat_macrov(macro).. nu_GDPDEF$(sameas(macro, 'gdp2')) + nu_MACROEQ(macro) + nu_GDPFCDEF$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_tsam(i,j)$(ii(i) and ii(j)).. nu_ROWSUM(i) + nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) + nu_GDPDEF$((sameas(i, 'ACT') or sameas(i, 'FAC') or sameas(i, 'GOV')) and (sameas(j, 'ACT') or sameas(j, 'COM') or sameas(j, 'GOV'))) + ((-1) * nu_GDPFCDEF)$(sameas(i, 'FAC') and sameas(j, 'ACT')) =E= 0;
 stat_w1(i,jwt)$(ii(i) and jwt1(jwt)).. ((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i) =E= 0;
-stat_w2(macro,jwt)$(jwt2(jwt)).. log(w2(macro,jwt) / wbar2(macro,jwt)) + 1 + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
+stat_w2(macro,jwt)$(jwt2(jwt)).. (log(w2(macro,jwt) / wbar2(macro,jwt)) + 1)$(jwt2(jwt)) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. (((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)) =E= 0;
 stat_y(i)$(ii(i)).. nu_ROWSUMEQ(i) - nu_ROWSUM(i) - nu_COLSUM(i) + sum((ii,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii,jj))$(NONZERO(ii,jj))) =E= 0;
 

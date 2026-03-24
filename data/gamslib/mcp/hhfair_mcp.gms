@@ -43,6 +43,8 @@ Scalars
 
 ufact(t) = lambda ** (ord(t) - 1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

@@ -81,8 +81,11 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(g) = 1;
+x.l(g) = min(x.l(g), x.up(g));
 y.l(g,dl) = 1;
+y.l(g,dl) = min(y.l(g,dl), y.up(g,dl));
 s.l(dl) = 1;
+s.l(dl) = min(s.l(dl), s.up(dl));
 
 * ============================================
 * Equations

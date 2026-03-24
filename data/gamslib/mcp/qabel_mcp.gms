@@ -51,6 +51,8 @@ utilde(m,k) = uinit(m) * 1.0075 ** (ord(k) - 1);
 w(n,np,ku) = wk(n,np);
 w(n,np,kt) = 100 * wk(n,np);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -105,9 +107,14 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(n, np__);
+Alias(n, n__);
+
 * Stationarity equations
 stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
-stat_x(n,k).. 0.5 * sum(np, (x(np,k) - xtilde(np,k)) * w(n,np,k)) + sum(np, ((-1) * a(n,np)) * nu_stateq(n,k)) + sum(np, (((-1) * a(n,np)) * nu_stateq(n+1,k))$(ord(n) <= card(n) - 1)) + nu_stateq(n,k-1)$(ord(k) > 1) + sum(np, (((-1) * a(n,np)) * nu_stateq(n-1,k))$(ord(n) > 1)) =E= 0;
+stat_x(n,k).. 0.5 * (sum(np__, (x(np__,k) - xtilde(np__,k)) * w(n,np__,k)) + sum(n__, (x(n__,k) - xtilde(n__,k)) * w(n__,n,k))) + ((-1) * a(n,n)) * nu_stateq(n,k) + (((-1) * a(n,n)) * nu_stateq(n+1,k))$(ord(n) <= card(n) - 1) + nu_stateq(n,k-1)$(ord(k) > 1) + (((-1) * a(n,n)) * nu_stateq(n-1,k))$(ord(n) > 1) =E= 0;
 
 * Original equality equations
 criterion.. j =E= 0.5 * sum((k,n,np), (x(n,k) - xtilde(n,k)) * w(n,np,k) * (x(np,k) - xtilde(np,k))) + 0.5 * sum((ku,m,mp), (u(m,ku) - utilde(m,ku)) * lambda(m,mp) * (u(mp,ku) - utilde(mp,ku)));
