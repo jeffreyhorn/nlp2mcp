@@ -437,6 +437,11 @@ def _has_unconditioned_access(
     adding an equation-level guard from gradient conditions would incorrectly
     suppress stationarity instances required by those unconditioned constraints.
 
+    Equation-level conditions (``eq(i)$cond..``) are treated as enclosing
+    guards: a variable referenced unconditionally in the body of a conditioned
+    equation is NOT considered an unconditioned access, since the equation-level
+    guard protects all references within it.
+
     For scalar variables (empty domain), returns True conservatively — the
     domain-overlap heuristic in _collect_access_conditions doesn't apply, so
     we assume unconditioned access to prevent incorrect guard application.
@@ -447,13 +452,19 @@ def _has_unconditioned_access(
     var_domain_set = set(var_domain)
     for _eq_name, eq_def in model_ir.equations.items():
         lhs, rhs = eq_def.lhs_rhs
+        # Equation-level condition (eq(i)$cond..) acts as enclosing guard
+        eq_has_condition = eq_def.condition is not None
         for side_expr in (lhs, rhs):
             conditions = _collect_access_conditions(
-                side_expr, var_name, var_domain_set, has_enclosing_condition=False
+                side_expr,
+                var_name,
+                var_domain_set,
+                has_enclosing_condition=eq_has_condition,
             )
             if conditions is not None and not conditions:
-                # Variable found with no enclosing condition
-                return True
+                # Variable found with no enclosing condition (body or eq-level)
+                if not eq_has_condition:
+                    return True
     return False
 
 
