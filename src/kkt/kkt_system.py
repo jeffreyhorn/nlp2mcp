@@ -134,6 +134,12 @@ class KKTSystem:
     # Used by the emitter to generate .fx statements for excluded instances.
     stationarity_conditions: dict[str, Expr] = field(default_factory=dict)
 
+    # Issue #1112: Dollar conditions extracted from gradient expressions.
+    # Maps var_name -> condition Expr for variables whose objective gradient
+    # was computed from a conditioned sum. Used by the stationarity builder
+    # to add equation-level guards.
+    gradient_conditions: dict[str, Expr] = field(default_factory=dict)
+
     # Issue #742: Variables actually referenced in equations/objective.
     # Populated by build_stationarity_equations() so the emitter can exclude
     # unreferenced variables (e.g., dumshr, dumtg) from declarations and MCP pairs.

@@ -424,6 +424,50 @@ def _find_variable_access_condition(
     return None
 
 
+def _has_unconditioned_access(
+    var_name: str,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> bool:
+    """Check if a variable has any unconditioned access in the model equations.
+
+    Returns True if the variable appears in at least one equation without an
+    enclosing dollar condition.  This is used to gate Stage 4 gradient-condition
+    fallback: when a variable is accessed unconditionally in some constraint,
+    adding an equation-level guard from gradient conditions would incorrectly
+    suppress stationarity instances required by those unconditioned constraints.
+
+    Equation-level conditions (``eq(i)$cond..``) are treated as enclosing
+    guards: a variable referenced unconditionally in the body of a conditioned
+    equation is NOT considered an unconditioned access, since the equation-level
+    guard protects all references within it.
+
+    For scalar variables (empty domain), returns True conservatively — the
+    domain-overlap heuristic in _collect_access_conditions doesn't apply, so
+    we assume unconditioned access to prevent incorrect guard application.
+    """
+    if not var_domain:
+        return True
+
+    var_domain_set = set(var_domain)
+    for _eq_name, eq_def in model_ir.equations.items():
+        lhs, rhs = eq_def.lhs_rhs
+        # Equation-level condition (eq(i)$cond..) acts as enclosing guard
+        eq_has_condition = eq_def.condition is not None
+        for side_expr in (lhs, rhs):
+            conditions = _collect_access_conditions(
+                side_expr,
+                var_name,
+                var_domain_set,
+                has_enclosing_condition=eq_has_condition,
+            )
+            if conditions is not None and not conditions:
+                # Variable found with no enclosing condition (body or eq-level)
+                if not eq_has_condition:
+                    return True
+    return False
+
+
 def _find_variable_subset_condition(
     var_name: str,
     var_domain: tuple[str, ...],
@@ -819,6 +863,10 @@ def build_stationarity_equations(
     # detect when ALL terms are conditional and add a domain restriction.
     lead_lag_conditions = _compute_lead_lag_conditions(kkt.model_ir)
 
+    # Cache for _has_unconditioned_access to avoid re-walking equation ASTs
+    # for each variable that reaches Stage 4.
+    unconditioned_cache: dict[str, bool] = {}
+
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
         # Get variable definition to determine domain
@@ -879,6 +927,26 @@ def build_stationarity_equations(
                     kkt.model_ir,
                     lead_lag_conditions=lead_lag_conditions,
                 )
+
+            # Stage 4 (Issue #1112): Check gradient conditions.
+            # If the objective gradient for this variable was computed from a
+            # conditioned sum (e.g., sum((i,j)$xw(i,j), ...)), the gradient
+            # carries an embedded condition that should become an equation-level
+            # guard on the stationarity equation.
+            # Only apply when there are NO unconditioned accesses — if a
+            # constraint references the variable without a dollar condition,
+            # those stationarity instances are genuinely required and must not
+            # be suppressed by a gradient-derived guard.
+            # Note: this block is inside `if var_def.domain:` so scalar
+            # variables are structurally excluded.  _has_unconditioned_access
+            # also conservatively returns True for empty domains as a safeguard.
+            if access_cond is None and var_name in kkt.gradient_conditions:
+                if var_name not in unconditioned_cache:
+                    unconditioned_cache[var_name] = _has_unconditioned_access(
+                        var_name, var_def.domain, kkt.model_ir
+                    )
+                if not unconditioned_cache[var_name]:
+                    access_cond = kkt.gradient_conditions[var_name]
 
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
