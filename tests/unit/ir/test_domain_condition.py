@@ -1,8 +1,11 @@
 """Tests for domain condition extraction from nested equation domains.
 
 Issue #1112: When an equation is defined with a restricted domain like
-`eq(low(n,nn))..`, the parser should extract `low(n,nn)` as a condition
-on the equation, rather than discarding the set restriction.
+`eq(low(n,nn))..`, the parser extracts `low(n,nn)` as a SetMembershipTest
+condition on the equation so the emitter can generate a `$(low(n,nn))` guard.
+The condition cannot be evaluated at compile time by condition_eval, but
+enumerate_equation_instances() handles this gracefully (warns once per equation,
+includes all instances).
 """
 
 from __future__ import annotations
@@ -16,13 +19,8 @@ from src.ir.parser import parse_model_text
 class TestDomainConditionExtraction:
     """Test that nested domain elements generate equation conditions."""
 
-    def test_nested_domain_skips_pure_set_membership(self):
-        """eq(low(n,nn)).. does NOT attach a SetMembershipTest as equation condition.
-
-        Pure SetMembershipTest domain conditions are skipped to avoid
-        condition_eval warnings per equation instance (it can't evaluate
-        set membership at compile time).
-        """
+    def test_nested_domain_creates_condition(self):
+        """eq(low(n,nn)).. creates a SetMembershipTest condition on 'low(n,nn)'."""
         gams = """
 Set n / a, b, c /;
 Set low(n,n);
@@ -37,7 +35,9 @@ Solve dummy using NLP minimizing x;
         eq = ir.equations.get("eq1")
         assert eq is not None
         assert eq.domain == ("n", "nn")
-        assert eq.condition is None
+        assert eq.condition is not None
+        assert "SetMembershipTest" in repr(eq.condition)
+        assert "low" in repr(eq.condition)
 
     def test_simple_domain_no_condition(self):
         """eq(i,j).. does NOT create a condition."""
@@ -56,11 +56,7 @@ Solve dummy using NLP minimizing z;
         assert eq.condition is None
 
     def test_nested_domain_with_explicit_condition(self):
-        """eq(low(n,nn))$active(n).. keeps only the explicit $ condition.
-
-        The SetMembershipTest domain condition is skipped (condition_eval
-        can't evaluate it), but the explicit $active(n) condition is preserved.
-        """
+        """eq(low(n,nn))$active(n).. combines SetMembershipTest and explicit condition."""
         gams = """
 Set n / a, b, c /;
 Set low(n,n);
@@ -77,4 +73,6 @@ Solve dummy using NLP minimizing x;
         eq = ir.equations.get("eq1")
         assert eq is not None
         assert eq.condition is not None
+        # Should be Binary("and", SetMembershipTest("low", ...), ...)
+        assert "low" in repr(eq.condition)
         assert "active" in repr(eq.condition)

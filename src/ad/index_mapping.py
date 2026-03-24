@@ -386,21 +386,25 @@ def enumerate_equation_instances(
         full_count = len(instances)
         filtered_instances = []
         had_eval_error = False
+        first_error: Exception | None = None
         for indices in instances:
             try:
                 if evaluate_condition(condition, eq_domain, indices, model_ir):
                     filtered_instances.append(indices)
             except Exception as e:
-                # Log warning but continue (could make this configurable)
-                import warnings
-
                 had_eval_error = True
-                warnings.warn(
-                    f"Failed to evaluate condition for {eq_name}{indices}: {e}. "
-                    f"Including instance by default.",
-                    stacklevel=2,
-                )
+                if first_error is None:
+                    first_error = e
                 filtered_instances.append(indices)
+        # Warn once per equation (not per instance) to avoid log spam
+        if had_eval_error:
+            import warnings
+
+            warnings.warn(
+                f"Failed to evaluate condition for equation '{eq_name}': "
+                f"{first_error}. Including unevaluable instances by default.",
+                stacklevel=2,
+            )
         # Issue #877: If condition filtering removed ALL instances but at least
         # one evaluation raised an exception, the condition couldn't be reliably
         # evaluated at compile time (e.g. parameter data keys don't match domain

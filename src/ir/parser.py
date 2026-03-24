@@ -3460,13 +3460,12 @@ class _ModelBuilder:
             )
 
         # Combine domain condition with explicit condition if both present.
-        # Note: _domain_list_condition() may return a SetMembershipTest(...), which
-        # condition_eval cannot handle at compile time.  Attaching such a condition
-        # would cause enumerate_equation_instances() to emit a warning per equation
-        # instance before ignoring the condition for filtering anyway.  To avoid that
-        # log spam and performance hit, skip pure SetMembershipTest domain conditions;
-        # explicit $ conditions are still honored.
-        if domain_cond is not None and not isinstance(domain_cond, SetMembershipTest):
+        # SetMembershipTest conditions (from nested domains like low(n,nn)) cannot
+        # be evaluated at compile time by condition_eval, but are preserved here so
+        # the emitter can generate equation-level $(low(n,nn)) guards in the output.
+        # enumerate_equation_instances() warns once per equation (not per instance)
+        # when condition evaluation fails, then includes all instances.
+        if domain_cond is not None:
             if condition_expr is not None:
                 condition_expr = Binary("and", domain_cond, condition_expr)
             else:
