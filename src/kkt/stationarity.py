@@ -436,9 +436,13 @@ def _has_unconditioned_access(
     fallback: when a variable is accessed unconditionally in some constraint,
     adding an equation-level guard from gradient conditions would incorrectly
     suppress stationarity instances required by those unconditioned constraints.
+
+    For scalar variables (empty domain), returns True conservatively — the
+    domain-overlap heuristic in _collect_access_conditions doesn't apply, so
+    we assume unconditioned access to prevent incorrect guard application.
     """
     if not var_domain:
-        return False
+        return True
 
     var_domain_set = set(var_domain)
     for _eq_name, eq_def in model_ir.equations.items():
@@ -918,6 +922,9 @@ def build_stationarity_equations(
             # constraint references the variable without a dollar condition,
             # those stationarity instances are genuinely required and must not
             # be suppressed by a gradient-derived guard.
+            # Note: this block is inside `if var_def.domain:` so scalar
+            # variables are structurally excluded.  _has_unconditioned_access
+            # also conservatively returns True for empty domains as a safeguard.
             if access_cond is None and var_name in kkt.gradient_conditions:
                 if not _has_unconditioned_access(var_name, var_def.domain, kkt.model_ir):
                     access_cond = kkt.gradient_conditions[var_name]
