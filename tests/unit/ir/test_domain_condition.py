@@ -16,8 +16,13 @@ from src.ir.parser import parse_model_text
 class TestDomainConditionExtraction:
     """Test that nested domain elements generate equation conditions."""
 
-    def test_nested_domain_creates_condition(self):
-        """eq(low(n,nn)).. creates a SetMembershipTest condition on 'low(n,nn)'."""
+    def test_nested_domain_skips_pure_set_membership(self):
+        """eq(low(n,nn)).. does NOT attach a SetMembershipTest as equation condition.
+
+        Pure SetMembershipTest domain conditions are skipped to avoid
+        condition_eval warnings per equation instance (it can't evaluate
+        set membership at compile time).
+        """
         gams = """
 Set n / a, b, c /;
 Set low(n,n);
@@ -32,9 +37,7 @@ Solve dummy using NLP minimizing x;
         eq = ir.equations.get("eq1")
         assert eq is not None
         assert eq.domain == ("n", "nn")
-        assert eq.condition is not None
-        assert "SetMembershipTest" in repr(eq.condition)
-        assert "low" in repr(eq.condition)
+        assert eq.condition is None
 
     def test_simple_domain_no_condition(self):
         """eq(i,j).. does NOT create a condition."""
@@ -53,7 +56,11 @@ Solve dummy using NLP minimizing z;
         assert eq.condition is None
 
     def test_nested_domain_with_explicit_condition(self):
-        """eq(low(n,nn))$active(n).. combines SetMembershipTest and explicit condition."""
+        """eq(low(n,nn))$active(n).. keeps only the explicit $ condition.
+
+        The SetMembershipTest domain condition is skipped (condition_eval
+        can't evaluate it), but the explicit $active(n) condition is preserved.
+        """
         gams = """
 Set n / a, b, c /;
 Set low(n,n);
@@ -70,6 +77,4 @@ Solve dummy using NLP minimizing x;
         eq = ir.equations.get("eq1")
         assert eq is not None
         assert eq.condition is not None
-        # Should be Binary("and", SetMembershipTest("low", ...), ...)
-        assert "low" in repr(eq.condition)
         assert "active" in repr(eq.condition)

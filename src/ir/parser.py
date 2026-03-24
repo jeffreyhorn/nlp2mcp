@@ -3459,11 +3459,18 @@ class _ModelBuilder:
                 condition_node.children[1], f"equation '{name}' condition", domain
             )
 
-        # Combine domain condition with explicit condition if both present
-        if domain_cond is not None and condition_expr is not None:
-            condition_expr = Binary("and", domain_cond, condition_expr)
-        elif domain_cond is not None:
-            condition_expr = domain_cond
+        # Combine domain condition with explicit condition if both present.
+        # Note: _domain_list_condition() may return a SetMembershipTest(...), which
+        # condition_eval cannot handle at compile time.  Attaching such a condition
+        # would cause enumerate_equation_instances() to emit a warning per equation
+        # instance before ignoring the condition for filtering anyway.  To avoid that
+        # log spam and performance hit, skip pure SetMembershipTest domain conditions;
+        # explicit $ conditions are still honored.
+        if domain_cond is not None and not isinstance(domain_cond, SetMembershipTest):
+            if condition_expr is not None:
+                condition_expr = Binary("and", domain_cond, condition_expr)
+            else:
+                condition_expr = domain_cond
 
         # Find expr nodes, skipping optional condition
         expr_nodes = [c for c in node.children[2:] if isinstance(c, Tree) and c.data != "condition"]

@@ -78,9 +78,8 @@ class TestStationarityGradientConditionFallback:
 
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
-        # Stage 4 should apply the gradient condition
-        assert stat_eq.condition is not None
-        assert "xw" in repr(stat_eq.condition)
+        # Stage 4 should apply the exact gradient condition object
+        assert stat_eq.condition is kkt.gradient_conditions["x"]
 
     def test_gradient_condition_skipped_when_unconditioned_access(self, manual_index_mapping):
         """Stage 4 gradient condition NOT used when variable has unconditioned access."""

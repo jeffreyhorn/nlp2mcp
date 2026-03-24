@@ -16,7 +16,7 @@ from src.ad.gradient import (
 )
 from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import GradientVector
-from src.ir.ast import Binary, Const, DollarConditional, ParamRef, VarRef
+from src.ir.ast import Binary, Const, DollarConditional, ParamRef, Unary, VarRef
 
 
 def _make_gradient(entries: dict[str, list[tuple[tuple[str, ...], object]]]) -> GradientVector:
@@ -107,6 +107,28 @@ class TestExtractConditionFromExpr:
         factor = DollarConditional(Const(1.0), cond)
         expr = Binary("+", Const(1.0), factor)
         assert _extract_condition_from_expr(expr) is None
+
+    def test_unary_neg_dollar_conditional(self):
+        """Unary("-", DollarConditional(deriv, cond)) extracts cond (MAX objective)."""
+        cond = ParamRef("xw", ("i",))
+        deriv = VarRef("x", ("i",))
+        expr = Unary("-", DollarConditional(deriv, cond))
+        assert _extract_condition_from_expr(expr) is cond
+
+    def test_unary_neg_multiplicative(self):
+        """Unary("-", Binary("*", deriv, 1$cond)) extracts cond (MAX objective)."""
+        cond = ParamRef("xw", ("i",))
+        factor = DollarConditional(Const(1.0), cond)
+        inner = Binary("*", Const(2.0), factor)
+        expr = Unary("-", inner)
+        assert _extract_condition_from_expr(expr) is cond
+
+    def test_nested_unary(self):
+        """Unary("-", Unary("+", DollarConditional(...))) peels both layers."""
+        cond = ParamRef("tw", ("i",))
+        deriv = VarRef("t", ("i",))
+        expr = Unary("-", Unary("+", DollarConditional(deriv, cond)))
+        assert _extract_condition_from_expr(expr) is cond
 
 
 @pytest.mark.unit

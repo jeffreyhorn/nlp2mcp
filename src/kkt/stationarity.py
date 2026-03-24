@@ -852,6 +852,10 @@ def build_stationarity_equations(
     # detect when ALL terms are conditional and add a domain restriction.
     lead_lag_conditions = _compute_lead_lag_conditions(kkt.model_ir)
 
+    # Cache for _has_unconditioned_access to avoid re-walking equation ASTs
+    # for each variable that reaches Stage 4.
+    unconditioned_cache: dict[str, bool] = {}
+
     # For each variable, generate either indexed or scalar stationarity equation
     for var_name, instances in var_groups.items():
         # Get variable definition to determine domain
@@ -926,7 +930,11 @@ def build_stationarity_equations(
             # variables are structurally excluded.  _has_unconditioned_access
             # also conservatively returns True for empty domains as a safeguard.
             if access_cond is None and var_name in kkt.gradient_conditions:
-                if not _has_unconditioned_access(var_name, var_def.domain, kkt.model_ir):
+                if var_name not in unconditioned_cache:
+                    unconditioned_cache[var_name] = _has_unconditioned_access(
+                        var_name, var_def.domain, kkt.model_ir
+                    )
+                if not unconditioned_cache[var_name]:
                     access_cond = kkt.gradient_conditions[var_name]
 
             stationarity[stat_name] = EquationDef(
