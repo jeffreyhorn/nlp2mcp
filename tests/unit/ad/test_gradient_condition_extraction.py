@@ -16,10 +16,10 @@ from src.ad.gradient import (
 )
 from src.ad.index_mapping import IndexMapping
 from src.ad.jacobian import GradientVector
-from src.ir.ast import Binary, Const, DollarConditional, ParamRef, Unary, VarRef
+from src.ir.ast import Binary, Const, DollarConditional, Expr, ParamRef, Unary, VarRef
 
 
-def _make_gradient(entries: dict[str, list[tuple[tuple[str, ...], object]]]) -> GradientVector:
+def _make_gradient(entries: dict[str, list[tuple[tuple[str, ...], Expr]]]) -> GradientVector:
     """Build a GradientVector from a dict of var_name -> [(indices, derivative), ...].
 
     Creates a minimal IndexMapping and populates the gradient.
