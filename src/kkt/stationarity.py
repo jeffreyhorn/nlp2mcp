@@ -2795,6 +2795,166 @@ def _build_offset_multiplier(
     return MultiplierRef(mult_base_name, tuple(new_indices))
 
 
+def _subtract_and_cancel(a: Expr, b: Expr) -> Expr:
+    """Compute *a* − *b*, cancelling structurally equal additive terms.
+
+    Decomposes both expressions into sums of signed terms, removes
+    matching pairs, and reconstructs the result.  This handles the
+    Kronecker-delta pattern where ``a = 1 + X`` and ``b = X``, giving
+    ``a − b = 1`` even when the simplifier can't reduce the AST.
+    """
+
+    def _collect_terms(e: Expr, sign: int, out: list[tuple[int, Expr]]) -> None:
+        """Flatten additive structure into (sign, term) pairs."""
+        if isinstance(e, Binary) and e.op == "+":
+            _collect_terms(e.left, sign, out)
+            _collect_terms(e.right, sign, out)
+        elif isinstance(e, Binary) and e.op == "-":
+            _collect_terms(e.left, sign, out)
+            _collect_terms(e.right, -sign, out)
+        elif isinstance(e, Unary) and e.op == "-":
+            _collect_terms(e.child, -sign, out)
+        else:
+            out.append((sign, e))
+
+    terms_a: list[tuple[int, Expr]] = []
+    _collect_terms(a, +1, terms_a)
+    terms_b: list[tuple[int, Expr]] = []
+    _collect_terms(b, -1, terms_b)  # subtract b
+
+    all_terms = terms_a + terms_b
+
+    # Cancel matching (sign, expr) pairs.
+    remaining: list[tuple[int, Expr]] = []
+    cancelled: list[bool] = [False] * len(all_terms)
+    for i in range(len(all_terms)):
+        if cancelled[i]:
+            continue
+        found = False
+        for j in range(i + 1, len(all_terms)):
+            if cancelled[j]:
+                continue
+            si, ei = all_terms[i]
+            sj, ej = all_terms[j]
+            if si == -sj and ei == ej:
+                cancelled[i] = True
+                cancelled[j] = True
+                found = True
+                break
+        if not found:
+            remaining.append(all_terms[i])
+
+    if not remaining:
+        return Const(0.0)
+
+    # Reconstruct expression from remaining terms.
+    result: Expr | None = None
+    for sign, term in remaining:
+        signed = term if sign == +1 else Unary("-", term)
+        if result is None:
+            result = signed
+        else:
+            result = Binary("+", result, signed)
+
+    return result if result is not None else Const(0.0)
+
+
+def _substitute_elements(expr: Expr, subs: dict[str, str]) -> Expr:
+    """Replace concrete element names in an AST according to *subs*.
+
+    This performs a shallow structural copy, replacing string index
+    values inside ``ParamRef``, ``VarRef``, ``SymbolRef`` etc.
+    """
+    if not subs:
+        return expr
+
+    def _sub_idx(idx: str | IndexOffset) -> str | IndexOffset:
+        if isinstance(idx, IndexOffset):
+            new_base = subs.get(idx.base, idx.base)
+            if new_base == idx.base:
+                return idx
+            return IndexOffset(new_base, idx.offset, idx.circular)
+        return subs.get(idx, idx)
+
+    def _walk(e: Expr) -> Expr:
+        if isinstance(e, Const):
+            return e
+        if isinstance(e, SymbolRef):
+            # SymbolRef is a scalar — no indices to substitute.
+            return e
+        if isinstance(e, ParamRef):
+            new_indices = tuple(_sub_idx(i) for i in e.indices) if e.indices else e.indices
+            if new_indices == e.indices:
+                return e
+            return ParamRef(e.name, new_indices)
+        if isinstance(e, VarRef):
+            new_indices = tuple(_sub_idx(i) for i in e.indices) if e.indices else e.indices
+            if new_indices == e.indices:
+                return e
+            return VarRef(e.name, new_indices, e.attribute)
+        if isinstance(e, Binary):
+            return Binary(e.op, _walk(e.left), _walk(e.right))
+        if isinstance(e, Unary):
+            return Unary(e.op, _walk(e.child))
+        if isinstance(e, Call):
+            return Call(e.func, tuple(_walk(a) for a in e.args))
+        if isinstance(e, Sum):
+            return Sum(
+                e.index_sets,
+                _walk(e.body),
+                _walk(e.condition) if e.condition else None,
+            )
+        if isinstance(e, DollarConditional):
+            return DollarConditional(_walk(e.value_expr), _walk(e.condition))
+        # Fallback: return unchanged
+        return e
+
+    return _walk(expr)
+
+
+def _derivative_structure_key(expr: Expr) -> str:
+    """Compute a structural fingerprint of a derivative AST.
+
+    Issue #1110: Captures the AST *shape* — node types, operators, param/set
+    names — but replaces concrete index tuples with arity counts, so that
+    entries differing only in element values produce the same key while
+    structurally different trees (e.g. ``Binary('+', Const(1), X)`` vs ``X``)
+    produce different keys.
+    """
+
+    def _walk(e: Expr) -> str:
+        if isinstance(e, Const):
+            return f"C({e.value})"
+        if isinstance(e, SymbolRef):
+            return f"S({e.name})"
+        if isinstance(e, ParamRef):
+            arity = len(e.indices) if e.indices else 0
+            return f"P({e.name},{arity})"
+        if isinstance(e, VarRef):
+            arity = len(e.indices) if e.indices else 0
+            return f"V({e.name},{arity})"
+        if isinstance(e, MultiplierRef):
+            arity = len(e.indices) if e.indices else 0
+            return f"M({e.name},{arity})"
+        if isinstance(e, Binary):
+            return f"B({e.op},{_walk(e.left)},{_walk(e.right)})"
+        if isinstance(e, Unary):
+            return f"U({e.op},{_walk(e.child)})"
+        if isinstance(e, Call):
+            args = ",".join(_walk(a) for a in e.args)
+            return f"F({e.func},{args})"
+        if isinstance(e, Sum):
+            body = _walk(e.body)
+            n = len(e.index_sets) if e.index_sets else 0
+            cond = _walk(e.condition) if e.condition else ""
+            return f"Sum({n},{body},{cond})"
+        if isinstance(e, DollarConditional):
+            return f"DC({_walk(e.value_expr)},{_walk(e.condition)})"
+        return type(e).__name__
+
+    return _walk(expr)
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -2890,6 +3050,123 @@ def _add_indexed_jacobian_terms(
                                 break
                     derivative = jacobian.get_derivative(group_row_id, group_col_id)
                     _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
+
+                    # Issue #1110: Detect multi-pattern Jacobian entries.
+                    # When a constraint body references a variable both directly
+                    # AND inside a sum, diagonal (eq-idx matches var-idx) and
+                    # off-diagonal entries have structurally different derivatives.
+                    # Use the majority pattern for the main sum and add a
+                    # separate correction term for the minority pattern.
+                    _multi_pattern_correction: Expr | None = None
+                    if len(group_entries) > 1:
+                        rep_key = _derivative_structure_key(derivative)
+                        # Sub-group by structure key
+                        _sg: dict[str, list[tuple[int, int]]] = {}
+                        for _rid, _cid in group_entries:
+                            _d = jacobian.get_derivative(_rid, _cid)
+                            _k = _derivative_structure_key(_d)
+                            _sg.setdefault(_k, []).append((_rid, _cid))
+                        if len(_sg) > 1:
+                            # Multiple patterns detected.  Use the majority
+                            # pattern for the full sum (it will be correct for
+                            # most entries) and emit a correction for the minority.
+                            sorted_groups = sorted(
+                                _sg.items(),
+                                key=lambda kv: len(kv[1]),
+                                reverse=True,
+                            )
+                            majority_key, majority_entries = sorted_groups[0]
+                            minority_key, minority_entries = sorted_groups[1]
+                            # Use majority representative for the main term
+                            if majority_key != rep_key:
+                                # Current representative is from the minority;
+                                # switch to a majority entry.
+                                _mr, _mc = majority_entries[0]
+                                # Prefer entry with distinct var indices (same
+                                # logic as Issue #1086 above).
+                                if any(o == _SENTINEL_UNMATCHED for o in offset_key):
+                                    for __r, __c in majority_entries:
+                                        __vidx = jacobian.index_mapping.col_to_var[__c][1]
+                                        if len(set(__vidx)) == len(__vidx):
+                                            _mr, _mc = __r, __c
+                                            break
+                                group_row_id, group_col_id = _mr, _mc
+                                derivative = jacobian.get_derivative(group_row_id, group_col_id)
+                                _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
+                            # Build correction for the minority entries.
+                            # The minority entries (diagonal) have a derivative
+                            # that differs from the majority (off-diagonal).
+                            # Find a paired diagonal+off-diagonal entry for the
+                            # SAME variable instance.  This avoids element-collision
+                            # problems with element-to-set mapping: both entries
+                            # share the same var_indices, so only the eq_indices
+                            # differ.
+                            paired_min: tuple[int, int] | None = None
+                            paired_maj: tuple[int, int] | None = None
+                            for _mrid, _mcid in minority_entries:
+                                for _arid, _acid in majority_entries:
+                                    if _mcid == _acid:
+                                        paired_min = (_mrid, _mcid)
+                                        paired_maj = (_arid, _acid)
+                                        break
+                                if paired_min is not None:
+                                    break
+                            if paired_min is not None and paired_maj is not None:
+                                min_d = jacobian.get_derivative(*paired_min)
+                                maj_d = jacobian.get_derivative(*paired_maj)
+                                # Compute correction = min_d - maj_d evaluated
+                                # at the diagonal point.  We substitute the
+                                # majority eq indices with the minority eq indices
+                                # in maj_d so both derivatives are at the same
+                                # concrete point, then subtract.
+                                _, _pmin_eq_idx = jacobian.index_mapping.row_to_eq[paired_min[0]]
+                                _, _pmaj_eq_idx = jacobian.index_mapping.row_to_eq[paired_maj[0]]
+                                # Build maj→min element substitution for differing
+                                # eq positions only.
+                                _elem_sub: dict[str, str] = {}
+                                for ei in range(min(len(_pmin_eq_idx), len(_pmaj_eq_idx))):
+                                    if _pmaj_eq_idx[ei] != _pmin_eq_idx[ei]:
+                                        _elem_sub[_pmaj_eq_idx[ei]] = _pmin_eq_idx[ei]
+                                # Substitute in maj_d AST to align with min_d.
+                                maj_d_aligned = _substitute_elements(maj_d, _elem_sub)
+                                # Now subtract: both at the same concrete point.
+                                # Collect additive terms and cancel matching pairs.
+                                raw_correction = _subtract_and_cancel(
+                                    min_d,
+                                    maj_d_aligned,
+                                )
+                                if not (
+                                    isinstance(raw_correction, Const)
+                                    and raw_correction.value == 0.0
+                                ):
+                                    # Now replace concrete elements → domain names
+                                    # for the final correction expression.
+                                    # Use standard index replacement on raw_correction.
+                                    indexed_correction = _replace_indices_in_expr(
+                                        raw_correction,
+                                        var_domain,
+                                        element_to_set,
+                                        kkt.model_ir,
+                                        equation_domain=var_domain,
+                                    )
+                                    # Multiplier uses variable-domain indices at
+                                    # matched positions (where diagonal eq≡var).
+                                    corr_mult_domain = tuple(
+                                        var_domain[vi]
+                                        for vi, o in enumerate(offset_key)
+                                        if vi < len(var_domain) and o != _SENTINEL_UNMATCHED
+                                    )
+                                    if not corr_mult_domain:
+                                        corr_mult_domain = mult_domain
+                                    corr_mult = MultiplierRef(
+                                        name_func(eq_name_base),
+                                        corr_mult_domain,
+                                    )
+                                    _multi_pattern_correction = Binary(
+                                        "*",
+                                        indexed_correction,
+                                        corr_mult,
+                                    )
 
                     # Issue #649: Build constraint-specific element-to-set mapping.
                     # When a constraint has multiple indices from the same underlying set
@@ -3231,6 +3508,11 @@ def _add_indexed_jacobian_terms(
                             term = Sum(sum_indices, term)
 
                     expr = Binary("+", expr, term)
+
+                    # Issue #1110: Add the diagonal correction term if
+                    # multi-pattern was detected earlier.
+                    if _multi_pattern_correction is not None:
+                        expr = Binary("+", expr, _multi_pattern_correction)
         else:
             # Scalar constraint
             mult_name = name_func(eq_name_base)
