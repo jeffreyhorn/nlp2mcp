@@ -114,10 +114,12 @@ def test_literal_subset_preserves_sum_index(tmp_path):
     assert any(
         isinstance(idx, SymbolRef) and idx.name == "n" for idx in smt_tn.indices
     ), "SetMembershipTest for 'tn' should include 'n' as an index"
-    # Also verify the quoted literal co-index is preserved (not dropped)
+    # Also verify the quoted literal co-index is preserved (not dropped).
+    # The parser may normalize quotes, so accept unquoted and both quote styles.
+    literal_names = {"time-2", "'time-2'", '"time-2"'}
     assert any(
-        isinstance(idx, SymbolRef) and ("time-2" in idx.name) for idx in smt_tn.indices
-    ), "SetMembershipTest for 'tn' should include the 'time-2' literal"
+        isinstance(idx, SymbolRef) and idx.name in literal_names for idx in smt_tn.indices
+    ), "SetMembershipTest for 'tn' should include the 'time-2' literal co-index"
 
 
 def test_literal_subset_set_membership_has_literal(tmp_path):

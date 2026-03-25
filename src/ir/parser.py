@@ -951,7 +951,7 @@ def _process_index_expr(
     if index_node.data == "index_subset":
         # For subset indexing like aij(as,i,j), return SubsetIndex
         # Child 0: subset name (ID), Child 1: index_list with index_simple nodes
-        subset_name = _token_text(index_node.children[0]).lower()
+        subset_name = _token_text(index_node.children[0])
         index_list_node = index_node.children[1]
 
         # Extract string indices from the nested index_list
@@ -961,7 +961,7 @@ def _process_index_expr(
             if isinstance(child, Tree):
                 if child.data == "index_simple":
                     # index_simple has ID as first child
-                    inner_indices.append(_token_text(child.children[0]).lower())
+                    inner_indices.append(_token_text(child.children[0]))
                 elif child.data == "index_string":
                     # Issue #566: index_string has STRING as first child
                     # Sprint 18 Day 2: Preserve quotes for element literals
@@ -996,7 +996,7 @@ def _process_index_expr(
                     )
             elif isinstance(child, Token):
                 # Direct token (fallback)
-                inner_indices.append(_token_text(child).lower())
+                inner_indices.append(_token_text(child))
 
         # Sprint 12 Issue #455: Return SubsetIndex to preserve full information
         # This allows _expand_variable_indices to properly handle bounds like
@@ -1009,16 +1009,15 @@ def _process_index_expr(
 
     # PR #658: For quoted IDs (element literals), preserve quotes but strip whitespace
     # E.g., '"rating  "' → '"rating"'
-    # GAMS is case-insensitive, so non-quoted identifiers are lowercased.
     if base_token.type == "ID" and len(token_str) >= 2:
         if token_str.startswith('"') and token_str.endswith('"'):
             base = f'"{token_str[1:-1].strip()}"'
         elif token_str.startswith("'") and token_str.endswith("'"):
             base = f'"{token_str[1:-1].strip()}"'  # Normalize to double quotes
         else:
-            base = _token_text(base_token).lower()
+            base = _token_text(base_token)
     else:
-        base = _token_text(base_token).lower()
+        base = _token_text(base_token)
 
     # No suffix? Just return the base identifier
     if len(index_node.children) == 1:
@@ -1037,12 +1036,12 @@ def _process_index_expr(
         if offset_node.type == "NUMBER":
             offset_expr = Const(float(offset_node))
         else:
-            offset_expr = SymbolRef(_token_text(offset_node).lower())
+            offset_expr = SymbolRef(_token_text(offset_node))
     elif offset_node.data == "offset_number":
         offset_value = float(offset_node.children[0])
         offset_expr = Const(offset_value)
     elif offset_node.data == "offset_variable":
-        offset_name = _token_text(offset_node.children[0]).lower()
+        offset_name = _token_text(offset_node.children[0])
         offset_expr = SymbolRef(offset_name)
     elif offset_node.data == "offset_func":
         # Function call or indexed parameter offset: t-ord(l), t+li(k), etc.
@@ -6064,6 +6063,11 @@ class _ModelBuilder:
         free_domain: Sequence[str],
         node: Tree | Token | None = None,
     ) -> Expr:
+        # GAMS is case-insensitive: build a lowercase→canonical mapping for
+        # free_domain so that uppercase tokens (e.g., R from SX(R,C)..) can
+        # be matched and normalized to the canonical lowercase domain name.
+        _fd_lower: dict[str, str] = {d.lower(): d for d in free_domain}
+
         # Sprint 11 Day 2 Extended: Expand set references in indices
         # When we see dist(low) where low is a 2D set, expand to dist(n,nn)
         #
@@ -6080,8 +6084,8 @@ class _ModelBuilder:
                 expanded_indices.extend(idx.indices)
                 continue
             # Skip IndexOffset objects - only expand plain string identifiers
-            if isinstance(idx, str) and idx in self.model.sets:
-                set_def = self.model.sets[idx]
+            if isinstance(idx, str) and idx.lower() in self.model.sets:
+                set_def = self.model.sets[idx.lower()]
                 # Check if this set's members are domain indices (other sets) or element values
                 # E.g., low(n,n) has members ['n', 'n'] - domain indices (should expand)
                 # E.g., d has members ['x', 'y'] - element values (should NOT expand)
@@ -6139,15 +6143,19 @@ class _ModelBuilder:
                     else:
                         # Can't expand, keep as-is
                         expanded_indices.append(idx)
-                elif idx in free_domain:
-                    # Set that's in domain - don't expand
+                elif idx.lower() in _fd_lower:
+                    # Set that's in domain - don't expand, normalize to domain casing
                     # E.g., n in point(n,d) where domain is (n,nn)
-                    expanded_indices.append(idx)
+                    expanded_indices.append(_fd_lower[idx.lower()])
                 else:
                     # Set with element values or single-dim not in domain - don't expand
                     expanded_indices.append(idx)
+            elif isinstance(idx, str) and idx.lower() in _fd_lower:
+                # Not a set, but is a domain variable (e.g., alias RR in free_domain)
+                # Normalize to canonical domain casing
+                expanded_indices.append(_fd_lower[idx.lower()])
             else:
-                # Not a set reference, keep as-is
+                # Not a set reference or domain variable, keep as-is
                 expanded_indices.append(idx)
 
         idx_tuple = tuple(expanded_indices)
@@ -6190,15 +6198,16 @@ class _ModelBuilder:
             object.__setattr__(expr, "index_values", idx_tuple)
             return self._attach_domain(expr, free_domain)
         # Check if it's a domain index (e.g., 'i' in a condition like ord(i))
-        if not idx_tuple and name in free_domain:
-            # It's a reference to a domain index variable
-            return self._attach_domain(SymbolRef(name), free_domain)
+        # GAMS is case-insensitive: normalize to canonical domain casing
+        if not idx_tuple and name.lower() in _fd_lower:
+            canon_name = _fd_lower[name.lower()]
+            return self._attach_domain(SymbolRef(canon_name), free_domain)
         # Issue #560: Check if it's an alias that's in free_domain
         # When an alias like 'hp' is used as a sum domain (sum(hp$..., expr)),
         # references to 'hp' inside the expression should resolve correctly
-        if not idx_tuple and name in self.model.aliases:
+        if not idx_tuple and name.lower() in self.model.aliases:
             # It's an alias - treat as a domain index reference
-            return self._attach_domain(SymbolRef(name), free_domain)
+            return self._attach_domain(SymbolRef(name.lower()), free_domain)
         # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
         # These are case-insensitive
         name_lower = name.lower()
@@ -6207,7 +6216,7 @@ class _ModelBuilder:
         # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
         # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
         # Issue #560: Also check aliases - they can be used like sets
-        if (name in self.model.sets or name in self.model.aliases) and idx_tuple:
+        if (name.lower() in self.model.sets or name.lower() in self.model.aliases) and idx_tuple:
             # Set membership test - use dedicated SetMembershipTest node
             # This represents the boolean check "is idx_tuple in set 'name'"
             from src.ir.ast import SetMembershipTest
@@ -6217,8 +6226,8 @@ class _ModelBuilder:
             # If an index is not in free_domain, treat it as a literal element name.
             index_exprs: list[Expr] = []
             for i in idx_tuple:
-                if isinstance(i, str) and i in free_domain:
-                    index_exprs.append(SymbolRef(i))
+                if isinstance(i, str) and i.lower() in _fd_lower:
+                    index_exprs.append(SymbolRef(_fd_lower[i.lower()]))
                 elif isinstance(i, str):
                     # Treat as literal element name - wrap in SymbolRef for consistency
                     # This handles cases like rn('a') where 'a' is a literal element

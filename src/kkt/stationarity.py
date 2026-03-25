@@ -3114,6 +3114,7 @@ def _add_indexed_jacobian_terms(
                 # corresponding to the sum variable (e.g., (-1,999,0), (0,999,0),
                 # (1,999,0)). This is NOT lead/lag but sum iteration — consolidate
                 # all groups into a single zero-offset group.
+                _original_sentinel_positions: set[int] | None = None
                 if len(offset_groups) > 1:
                     has_sentinel = any(
                         any(o == _SENTINEL_UNMATCHED for o in k) for k in offset_groups
@@ -3170,6 +3171,11 @@ def _add_indexed_jacobian_terms(
                                 for ge in offset_groups.values():
                                     all_entries.extend(ge)
                                 offset_groups = {consolidated_key: all_entries}
+                                # Store original sentinel positions for the
+                                # multiplier remap — these are the positions where
+                                # the equation's domain indices should NOT map
+                                # (they are the equation's own sum variable).
+                                _original_sentinel_positions = sentinel_positions
 
                 for offset_key, group_entries in offset_groups.items():
                     # Issue #1086: For dimension-mismatch groups, prefer a
@@ -3516,21 +3522,38 @@ def _add_indexed_jacobian_terms(
                         var_roots_local = [
                             _resolve_alias_target(d, kkt.model_ir) for d in var_domain
                         ]
+                        # For sum-binding consolidated cases, prefer original
+                        # sentinel positions (the eq's matched dims in the var)
+                        # over varying positions (sum iteration artifacts).
+                        prefer_positions = _original_sentinel_positions or set()
                         used_var_pos: set[int] = set()
                         for ei, eq_root in enumerate(mult_roots):
+                            # Pass 1: prefer original sentinel positions
+                            matched = False
                             for vi, var_root in enumerate(var_roots_local):
-                                if vi not in used_var_pos and eq_root == var_root:
-                                    # For the consolidated sum-binding case,
-                                    # prefer positions that are NOT sentinel
-                                    # (the sentinel positions are sum-iteration
-                                    # vars, not matched dims).
-                                    if offset_key[vi] != _SENTINEL_UNMATCHED:
+                                if (
+                                    vi not in used_var_pos
+                                    and eq_root == var_root
+                                    and vi in prefer_positions
+                                ):
+                                    eq_to_var_pos[ei] = vi
+                                    used_var_pos.add(vi)
+                                    matched = True
+                                    break
+                            if not matched:
+                                # Pass 2: non-sentinel positions
+                                for vi, var_root in enumerate(var_roots_local):
+                                    if (
+                                        vi not in used_var_pos
+                                        and eq_root == var_root
+                                        and offset_key[vi] != _SENTINEL_UNMATCHED
+                                    ):
                                         eq_to_var_pos[ei] = vi
                                         used_var_pos.add(vi)
+                                        matched = True
                                         break
-                            else:
-                                # No non-sentinel match found; try sentinel
-                                # positions as fallback (permutation case).
+                            if not matched:
+                                # Pass 3: any remaining position
                                 for vi, var_root in enumerate(var_roots_local):
                                     if vi not in used_var_pos and eq_root == var_root:
                                         eq_to_var_pos[ei] = vi
