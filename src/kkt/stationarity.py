@@ -3028,11 +3028,9 @@ def _add_indexed_jacobian_terms(
                     # nu_totalcap(t+1) is invalid when t is the last element.
                     # Wrap the term in a DollarConditional to prevent out-of-bounds.
                     if has_real_offset and is_dim_mismatch:
-                        real_offsets_for_guard = tuple(
-                            o if o != _SENTINEL_UNMATCHED else 0
-                            for o in offset_key[: len(mult_domain)]
-                        )
-                        offset_guard = _build_offset_guard(mult_domain, real_offsets_for_guard)
+                        # Use the same aligned offsets as for the multiplier,
+                        # so guards apply to the actual matched dimensions.
+                        offset_guard = _build_offset_guard(mult_domain, real_offsets)
                         if offset_guard is not None:
                             term = DollarConditional(value_expr=term, condition=offset_guard)
 

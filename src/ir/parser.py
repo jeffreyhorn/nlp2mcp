@@ -4039,7 +4039,10 @@ class _ModelBuilder:
                     if suffix == "_expr":
                         pre_expr_bounds[vname][attr] = val
                     else:
-                        pre_expr_bounds[vname][attr] = dict(val) if val else {}
+                        if val is None:
+                            pre_expr_bounds[vname][attr] = None
+                        else:
+                            pre_expr_bounds[vname][attr] = dict(val)
 
         for stmt in body_stmts:
             if not isinstance(stmt, Tree):
@@ -4095,9 +4098,10 @@ class _ModelBuilder:
                     val = new_map.get(key)
                     if isinstance(val, Expr):
                         del new_map[key]
-                # If we emptied a map that didn't exist before, reset to None
+                # If we emptied a map that didn't exist before, reset to
+                # empty dict (not None) so downstream code can safely iterate.
                 if not new_map and old_map is None:
-                    setattr(vdef, map_attr, None)
+                    setattr(vdef, map_attr, {})
 
     def _resolve_loop_body_expr_bounds(self) -> None:
         """Resolve expression-based bounds to numeric values where possible.
@@ -4115,7 +4119,7 @@ class _ModelBuilder:
         from src.ir.ast import ParamRef
 
         for var_def in self.model.variables.values():
-            for kind in ("lo", "up"):
+            for kind in ("lo", "up", "fx"):
                 expr_map = getattr(var_def, f"{kind}_expr_map", None)
                 if not expr_map:
                     continue

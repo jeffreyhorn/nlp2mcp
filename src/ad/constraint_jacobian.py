@@ -359,10 +359,13 @@ def _expand_sums_with_unresolved_offsets(
             else None
         )
 
-        # Check if the body contains unresolved IndexOffset nodes
-        # that reference any of the sum's index variables
+        # Check if the body or condition contains unresolved IndexOffset
+        # nodes that reference any of the sum's index variables
         sum_vars = set(expr.index_sets)
-        if _has_unresolved_sum_offsets(new_body, sum_vars):
+        has_unresolved = _has_unresolved_sum_offsets(new_body, sum_vars) or (
+            new_cond is not None and _has_unresolved_sum_offsets(new_cond, sum_vars)
+        )
+        if has_unresolved:
             # Expand this sum by iterating over domain members
             expanded = _expand_sum_body(
                 expr.index_sets, new_body, new_cond, model_ir, _domain_cache
@@ -466,7 +469,13 @@ def _has_unresolved_sum_offsets(expr: Expr, sum_vars: set[str]) -> bool:
         if isinstance(e, DollarConditional):
             return _check(e.value_expr) or _check(e.condition)
         if isinstance(e, SetMembershipTest):
-            return _check(e.element_expr) if hasattr(e, "element_expr") else False
+            for smt_idx in e.indices:
+                if isinstance(smt_idx, IndexOffset) and not isinstance(smt_idx.offset, Const):
+                    if _offset_refs_sum_var(smt_idx.offset):
+                        return True
+                if _check(smt_idx):
+                    return True
+            return False
         return False
 
     return _check(expr)
@@ -483,7 +492,7 @@ def _expand_sum_body(
 
     Returns a Binary(+, ...) chain of expanded terms, or None if expansion fails.
     """
-    from ..ir.ast import Binary, Const
+    from ..ir.ast import Binary, Const, DollarConditional
 
     if len(index_sets) != 1:
         # Multi-index expansion is complex; skip for now
@@ -508,12 +517,12 @@ def _expand_sum_body(
         term = _substitute_single_index(body, sum_var, member)
         # Resolve IndexOffsets in the substituted term
         term = _resolve_index_offsets(term, model_ir, _domain_cache)
-        # Apply condition if present
+        # Apply condition if present — use DollarConditional to preserve
+        # GAMS $ semantics (skip undefined terms rather than multiply by 0)
         if condition is not None:
             cond_sub = _substitute_single_index(condition, sum_var, member)
             cond_resolved = _resolve_index_offsets(cond_sub, model_ir, _domain_cache)
-            # Multiply by condition value (0 or 1)
-            term = Binary("*", term, cond_resolved)
+            term = DollarConditional(value_expr=term, condition=cond_resolved)
         terms.append(term)
 
     if not terms:
