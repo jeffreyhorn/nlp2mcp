@@ -3984,16 +3984,15 @@ class _ModelBuilder:
         # Issue #749: Extract solve info from loop body so the objective
         # is recorded even when the Solve statement is inside a loop.
         # Issue #810: Recurse into nested loops to find solve at any depth.
-        if self.model.objective is None:
-            solve_node = self._find_solve_in_loop_body(body_stmts)
-            if solve_node is not None:
-                self._handle_solve(solve_node)
+        solve_node = self._find_solve_in_loop_body(body_stmts)
+        if self.model.objective is None and solve_node is not None:
+            self._handle_solve(solve_node)
 
         # Issue #953: Extract pre-solve variable bound assignments from
         # solve-containing loops so the KKT pipeline knows about them.
         # Without this, bounds like purchase.up(p) = psdat(scenario,p,'p')
         # are invisible to the partition/complementarity/stationarity builders.
-        if self._find_solve_in_loop_body(body_stmts) is not None:
+        if solve_node is not None:
             self._extract_loop_body_var_bounds(indices, body_stmts)
 
     def _extract_loop_body_var_bounds(

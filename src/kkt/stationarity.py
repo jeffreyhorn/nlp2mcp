@@ -3010,14 +3010,33 @@ def _add_indexed_jacobian_terms(
                         # offset is applied to the correct equation index.
                         try:
                             var_pos_by_dim = {dim: i for i, dim in enumerate(var_domain)}
+                            # Also build alias-root lookup for robust matching
+                            var_root_to_pos: dict[str, int] = {}
+                            for i, vd in enumerate(var_domain):
+                                try:
+                                    vroot = _resolve_alias_target(vd, kkt.model_ir)
+                                except Exception:
+                                    vroot = vd.lower()
+                                var_root_to_pos.setdefault(vroot, i)
                             real_offsets_list: list[int] = []
-                            for dim in mult_domain:
-                                var_pos = var_pos_by_dim.get(dim)
+                            mapping_failed = False
+                            for mult_dim in mult_domain:
+                                var_pos = var_pos_by_dim.get(mult_dim)
                                 if var_pos is None:
-                                    real_offsets_list.append(0)
-                                else:
-                                    o = offset_key[var_pos]
-                                    real_offsets_list.append(0 if o == _SENTINEL_UNMATCHED else o)
+                                    # Try alias root matching
+                                    try:
+                                        mult_root = _resolve_alias_target(mult_dim, kkt.model_ir)
+                                    except Exception:
+                                        mult_root = mult_dim.lower()
+                                    var_pos = var_root_to_pos.get(mult_root)
+                                if var_pos is None:
+                                    # Cannot align — fall back to non-sentinel extraction
+                                    mapping_failed = True
+                                    break
+                                o = offset_key[var_pos]
+                                real_offsets_list.append(0 if o == _SENTINEL_UNMATCHED else o)
+                            if mapping_failed:
+                                raise ValueError("Cannot align equation/variable domains")
                             real_offsets = tuple(real_offsets_list)
                         except Exception:
                             # Fallback to non-sentinel extraction
