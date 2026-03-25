@@ -130,6 +130,68 @@ def _resolve_index_offsets(
         _domain_cache[domain_set_name] = result
         return result
 
+    def _try_eval_offset(offset_expr) -> Const | None:
+        """Try to evaluate a non-Const offset expression to a Const.
+
+        Handles common GAMS intrinsics like ``ord(element)`` and ``card(set)``
+        when the argument resolves to a concrete set element or set name, and
+        negated forms like ``Unary('-', Call('ord', ...))``.
+        """
+        from ..ir.ast import Call, SymbolRef, Unary
+
+        if isinstance(offset_expr, Const):
+            return offset_expr
+
+        # Handle Unary('-', inner) — e.g. -ord(l) after l is substituted
+        if isinstance(offset_expr, Unary) and offset_expr.op == "-":
+            inner_val = _try_eval_offset(offset_expr.child)
+            if inner_val is not None:
+                return Const(-inner_val.value)
+            return None
+
+        # Handle Binary('+'/'-'/'*', ...) for expressions like 1 - ord(l)
+        if isinstance(offset_expr, Binary):
+            left_val = _try_eval_offset(offset_expr.left)
+            right_val = _try_eval_offset(offset_expr.right)
+            if left_val is not None and right_val is not None:
+                lv, rv = left_val.value, right_val.value
+                if offset_expr.op == "+":
+                    return Const(lv + rv)
+                elif offset_expr.op == "-":
+                    return Const(lv - rv)
+                elif offset_expr.op == "*":
+                    return Const(lv * rv)
+            return None
+
+        if not isinstance(offset_expr, Call):
+            return None
+
+        func_lower = offset_expr.func.lower()
+
+        if func_lower == "ord" and len(offset_expr.args) == 1:
+            arg = offset_expr.args[0]
+            if isinstance(arg, SymbolRef):
+                elem_name = arg.name
+                # Search all sets for this element to find its 1-based position
+                for sdef in model_ir.sets.values():
+                    domain_info = _get_domain_members(sdef.name)
+                    if domain_info is None:
+                        continue
+                    members, pos_map = domain_info
+                    if elem_name in pos_map:
+                        return Const(float(pos_map[elem_name] + 1))  # 1-based
+                return None
+
+        if func_lower == "card" and len(offset_expr.args) == 1:
+            arg = offset_expr.args[0]
+            if isinstance(arg, SymbolRef):
+                domain_info = _get_domain_members(arg.name)
+                if domain_info is not None:
+                    return Const(float(len(domain_info[0])))
+                return None
+
+        return None
+
     def _resolve_idx(idx, domain_set_name: str | None):
         """Resolve a single index if it's an IndexOffset with a concrete base."""
         if not isinstance(idx, IndexOffset):
@@ -137,9 +199,15 @@ def _resolve_index_offsets(
         base = idx.base
         offset_expr = idx.offset
         # Only resolve if the base looks like a concrete element (not a symbolic name)
-        # and the offset is a numeric constant
+        # and the offset is a numeric constant.
+        # Try to evaluate symbolic offsets like ord(element) or -ord(element)
+        # to a Const first.
         if not isinstance(offset_expr, Const):
-            return idx, True  # Can't resolve non-constant offset
+            evaluated = _try_eval_offset(offset_expr)
+            if evaluated is not None:
+                offset_expr = evaluated
+            else:
+                return idx, True  # Can't resolve non-constant offset
         if domain_set_name is None:
             return idx, True  # No domain to resolve against
         # Look up domain members (cached)
@@ -245,6 +313,313 @@ def _resolve_index_offsets(
 
     # Other expression types pass through unchanged
     return expr
+
+
+def _expand_sums_with_unresolved_offsets(
+    expr: Expr,
+    model_ir: ModelIR,
+    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None] | None = None,
+) -> Expr:
+    """Expand Sum nodes whose bodies contain unresolved IndexOffset nodes.
+
+    Issue #1081: When a sum body like ``sum(l, x(t,l) - x(t-ord(l),l))``
+    contains IndexOffset nodes that reference the sum variable (e.g.,
+    ``ord(l)``), they can't be resolved while the sum variable is symbolic.
+    This function expands such sums into explicit terms by iterating over
+    the sum domain's members:
+
+        x(t,'len-1') - x(t-1,'len-1') + x(t,'len-2') - x(t-2,'len-2') + ...
+
+    After expansion, each term has a concrete value for the sum variable,
+    so ``_resolve_index_offsets`` can resolve the offsets.
+
+    Only expands sums where the body contains IndexOffset nodes with
+    non-Const offsets (typically ``Call('ord', ...)`` referencing sum vars).
+    """
+    from ..ir.ast import Binary, Call, Prod, Sum, Unary
+
+    if _domain_cache is None:
+        _domain_cache = {}
+
+    if isinstance(expr, Sum):
+        # First, recursively process the body
+        new_body = _expand_sums_with_unresolved_offsets(expr.body, model_ir, _domain_cache)
+        new_cond = (
+            _expand_sums_with_unresolved_offsets(expr.condition, model_ir, _domain_cache)
+            if expr.condition is not None
+            else None
+        )
+
+        # Check if the body contains unresolved IndexOffset nodes
+        # that reference any of the sum's index variables
+        sum_vars = set(expr.index_sets)
+        if _has_unresolved_sum_offsets(new_body, sum_vars):
+            # Expand this sum by iterating over domain members
+            expanded = _expand_sum_body(
+                expr.index_sets, new_body, new_cond, model_ir, _domain_cache
+            )
+            if expanded is not None:
+                return expanded
+
+        # No expansion needed — rebuild with processed children
+        if new_body is expr.body and new_cond is expr.condition:
+            return expr
+        return Sum(expr.index_sets, new_body, new_cond)
+
+    if isinstance(expr, Binary):
+        new_left = _expand_sums_with_unresolved_offsets(expr.left, model_ir, _domain_cache)
+        new_right = _expand_sums_with_unresolved_offsets(expr.right, model_ir, _domain_cache)
+        if new_left is expr.left and new_right is expr.right:
+            return expr
+        return Binary(expr.op, new_left, new_right)
+
+    if isinstance(expr, Unary):
+        new_child = _expand_sums_with_unresolved_offsets(expr.child, model_ir, _domain_cache)
+        if new_child is expr.child:
+            return expr
+        return Unary(expr.op, new_child)
+
+    if isinstance(expr, Call):
+        new_args = tuple(
+            _expand_sums_with_unresolved_offsets(arg, model_ir, _domain_cache) for arg in expr.args
+        )
+        if all(n is o for n, o in zip(new_args, expr.args, strict=True)):
+            return expr
+        return Call(expr.func, new_args)
+
+    if isinstance(expr, Prod):
+        new_body = _expand_sums_with_unresolved_offsets(expr.body, model_ir, _domain_cache)
+        new_cond = (
+            _expand_sums_with_unresolved_offsets(expr.condition, model_ir, _domain_cache)
+            if expr.condition is not None
+            else None
+        )
+        if new_body is expr.body and new_cond is expr.condition:
+            return expr
+        return Prod(expr.index_sets, new_body, new_cond)
+
+    # Leaf nodes (Const, ParamRef, VarRef, etc.) pass through unchanged
+    return expr
+
+
+def _has_unresolved_sum_offsets(expr: Expr, sum_vars: set[str]) -> bool:
+    """Check if an expression contains IndexOffset nodes referencing sum variables.
+
+    Returns True if any VarRef or ParamRef index contains an IndexOffset
+    whose offset is a non-Const expression referencing a sum variable
+    (e.g., ``Call('ord', (SymbolRef('l'),))`` when ``l`` is a sum variable).
+    """
+    from ..ir.ast import (
+        Binary,
+        Call,
+        DollarConditional,
+        ParamRef,
+        Prod,
+        SetMembershipTest,
+        Sum,
+        SymbolRef,
+        Unary,
+        VarRef,
+    )
+
+    def _offset_refs_sum_var(offset: Expr) -> bool:
+        """Check if an offset expression references any sum variable."""
+        if isinstance(offset, Const):
+            return False
+        if isinstance(offset, SymbolRef):
+            return offset.name.lower() in {v.lower() for v in sum_vars}
+        if isinstance(offset, Call):
+            return any(_offset_refs_sum_var(arg) for arg in offset.args)
+        if isinstance(offset, Binary):
+            return _offset_refs_sum_var(offset.left) or _offset_refs_sum_var(offset.right)
+        if isinstance(offset, Unary):
+            return _offset_refs_sum_var(offset.child)
+        return False
+
+    def _check(e: Expr) -> bool:
+        if isinstance(e, (VarRef, ParamRef)):
+            if e.indices:
+                for idx in e.indices:
+                    if isinstance(idx, IndexOffset) and not isinstance(idx.offset, Const):
+                        if _offset_refs_sum_var(idx.offset):
+                            return True
+            return False
+        if isinstance(e, Binary):
+            return _check(e.left) or _check(e.right)
+        if isinstance(e, Unary):
+            return _check(e.child)
+        if isinstance(e, Sum):
+            return _check(e.body) or (e.condition is not None and _check(e.condition))
+        if isinstance(e, Prod):
+            return _check(e.body) or (e.condition is not None and _check(e.condition))
+        if isinstance(e, Call):
+            return any(_check(arg) for arg in e.args)
+        if isinstance(e, DollarConditional):
+            return _check(e.value_expr) or _check(e.condition)
+        if isinstance(e, SetMembershipTest):
+            return _check(e.element_expr) if hasattr(e, "element_expr") else False
+        return False
+
+    return _check(expr)
+
+
+def _expand_sum_body(
+    index_sets: tuple[str, ...],
+    body: Expr,
+    condition: Expr | None,
+    model_ir: ModelIR,
+    _domain_cache: dict[str, tuple[list[str], dict[str, int]] | None],
+) -> Expr | None:
+    """Expand a Sum by iterating over concrete domain members.
+
+    Returns a Binary(+, ...) chain of expanded terms, or None if expansion fails.
+    """
+    from ..ir.ast import Binary, Const
+
+    if len(index_sets) != 1:
+        # Multi-index expansion is complex; skip for now
+        return None
+
+    sum_var = index_sets[0]
+    # Resolve domain members for the sum variable
+    try:
+        members, _ = resolve_set_members(sum_var, model_ir)
+    except (ValueError, KeyError):
+        return None
+    if not members:
+        return None
+
+    terms: list[Expr] = []
+    for member in members:
+        # Substitute sum variable with concrete member
+        term = _substitute_single_index(body, sum_var, member)
+        # Resolve IndexOffsets in the substituted term
+        term = _resolve_index_offsets(term, model_ir, _domain_cache)
+        # Apply condition if present
+        if condition is not None:
+            cond_sub = _substitute_single_index(condition, sum_var, member)
+            cond_resolved = _resolve_index_offsets(cond_sub, model_ir, _domain_cache)
+            # Multiply by condition value (0 or 1)
+            term = Binary("*", term, cond_resolved)
+        terms.append(term)
+
+    if not terms:
+        return Const(0.0)
+
+    # Build addition chain
+    result = terms[0]
+    for t in terms[1:]:
+        result = Binary("+", result, t)
+    return result
+
+
+def _substitute_single_index(expr: Expr, var_name: str, value: str) -> Expr:
+    """Substitute a single index variable with a concrete value in an expression.
+
+    Replaces occurrences of ``var_name`` in VarRef/ParamRef indices and
+    SymbolRef nodes, and evaluates Call('ord', ...) for the substituted value.
+    """
+    from ..ir.ast import (
+        Binary,
+        Call,
+        DollarConditional,
+        ParamRef,
+        Prod,
+        SetMembershipTest,
+        Sum,
+        SymbolRef,
+        Unary,
+        VarRef,
+    )
+
+    var_lower = var_name.lower()
+
+    def _sub_index(idx):
+        """Substitute in a single index."""
+        if isinstance(idx, str):
+            if idx.lower() == var_lower:
+                return value
+            return idx
+        if isinstance(idx, IndexOffset):
+            new_base = value if idx.base.lower() == var_lower else idx.base
+            new_offset = _sub(idx.offset)
+            return IndexOffset(new_base, new_offset, idx.circular)
+        return idx
+
+    def _sub(e: Expr) -> Expr:
+        if isinstance(e, SymbolRef):
+            if e.name.lower() == var_lower:
+                return SymbolRef(value)
+            return e
+
+        if isinstance(e, VarRef):
+            if e.indices:
+                new_indices = tuple(_sub_index(idx) for idx in e.indices)
+                if new_indices != e.indices:
+                    return VarRef(e.name, new_indices, e.attribute)
+            return e
+
+        if isinstance(e, ParamRef):
+            if e.indices:
+                new_indices = tuple(_sub_index(idx) for idx in e.indices)
+                if new_indices != e.indices:
+                    return ParamRef(e.name, new_indices)
+            return e
+
+        if isinstance(e, Binary):
+            new_left = _sub(e.left)
+            new_right = _sub(e.right)
+            if new_left is e.left and new_right is e.right:
+                return e
+            return Binary(e.op, new_left, new_right)
+
+        if isinstance(e, Unary):
+            new_child = _sub(e.child)
+            if new_child is e.child:
+                return e
+            return Unary(e.op, new_child)
+
+        if isinstance(e, Call):
+            new_args = tuple(_sub(arg) for arg in e.args)
+            if all(n is o for n, o in zip(new_args, e.args, strict=True)):
+                return e
+            return Call(e.func, new_args)
+
+        if isinstance(e, Sum):
+            # Don't substitute into nested sums that rebind the same variable
+            if var_lower in {s.lower() for s in e.index_sets}:
+                return e
+            new_body = _sub(e.body)
+            new_cond = _sub(e.condition) if e.condition is not None else None
+            if new_body is e.body and new_cond is e.condition:
+                return e
+            return Sum(e.index_sets, new_body, new_cond)
+
+        if isinstance(e, Prod):
+            if var_lower in {s.lower() for s in e.index_sets}:
+                return e
+            new_body = _sub(e.body)
+            new_cond = _sub(e.condition) if e.condition is not None else None
+            if new_body is e.body and new_cond is e.condition:
+                return e
+            return Prod(e.index_sets, new_body, new_cond)
+
+        if isinstance(e, DollarConditional):
+            new_val = _sub(e.value_expr)
+            new_cond = _sub(e.condition)
+            if new_val is e.value_expr and new_cond is e.condition:
+                return e
+            return DollarConditional(new_val, new_cond)
+
+        if isinstance(e, SetMembershipTest):
+            new_indices = tuple(_sub(idx) for idx in e.indices)
+            if all(n is o for n, o in zip(new_indices, e.indices, strict=True)):
+                return e
+            return SetMembershipTest(e.set_name, new_indices)
+
+        return e
+
+    return _sub(expr)
 
 
 def compute_constraint_jacobian(
@@ -558,6 +933,14 @@ def _compute_equality_jacobian(
                 # This resolves it to k("1995") so differentiation can match var instances.
                 constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
+                # Issue #1081: Expand sums with unresolved IndexOffset nodes.
+                # When a sum body contains offsets like ord(l) that reference the
+                # sum variable, expand the sum into explicit terms so each term
+                # can have its IndexOffset resolved to a concrete element.
+                constraint_expr = _expand_sums_with_unresolved_offsets(
+                    constraint_expr, model_ir, resolve_cache
+                )
+
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
                 # Sparsity check: skip variables not referenced in this equation
@@ -661,6 +1044,11 @@ def _compute_inequality_jacobian(
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
                 # Issue #1045: Resolve IndexOffset nodes to concrete domain elements
                 constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
+
+                # Issue #1081: Expand sums with unresolved IndexOffset nodes
+                constraint_expr = _expand_sums_with_unresolved_offsets(
+                    constraint_expr, model_ir, resolve_cache
+                )
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:

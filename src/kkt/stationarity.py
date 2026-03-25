@@ -2611,6 +2611,22 @@ def _compute_index_offset_key(
     """
     from ..ad.index_mapping import resolve_set_members
 
+    if _domain_cache is None:
+        _domain_cache = {}
+
+    def _resolve_cached(set_name: str) -> tuple[str, dict[str, int]] | None:
+        """Resolve a set name to (underlying_set_name, {member: position}) with caching."""
+        if set_name in _domain_cache:
+            return _domain_cache[set_name]
+        try:
+            members, resolved_name = resolve_set_members(set_name, model_ir)
+            pos_map = {m: i for i, m in enumerate(members)}
+            result = (resolved_name, pos_map)
+        except (ValueError, KeyError):
+            result = None
+        _domain_cache[set_name] = result
+        return result
+
     if len(eq_indices) != len(var_indices):
         # Issue #1086: Different dimensionality (e.g., 1D equation nbal(n)
         # with 2D variable t(n,np)). Determine which variable position the
@@ -2623,9 +2639,9 @@ def _compute_index_offset_key(
         # fails when independent sets share element labels (marco: "hydro"
         # in both m and p) or aliases share all elements (markov: s/sp/spp).
         #
-        # All entries for the same eq→var relationship should be grouped
-        # together (single offset_key). The downstream _match_subset_domain()
-        # and Sum-wrapping logic correctly handles the multiplier indexing.
+        # Issue #1081: For matched positions, compute the actual positional
+        # offset (not just 0) so lead/lag entries are grouped separately.
+        # E.g., bal4('5') → x('2','len-3') has offset 3 in position 0.
         if len(eq_indices) < len(var_indices):
             offsets_list: list[int] = [_SENTINEL_UNMATCHED] * len(var_indices)
 
@@ -2645,13 +2661,35 @@ def _compute_index_offset_key(
             eq_roots = [_canon_or_parent(d) for d in eq_domain]
             var_roots = [_canon_or_parent(d) for d in var_domain]
 
+            def _compute_offset_at(ei: int, vi: int) -> int:
+                """Compute positional offset for matched eq/var position."""
+                eq_elem = eq_indices[ei]
+                var_elem = var_indices[vi]
+                if eq_elem == var_elem:
+                    return 0
+                eq_set = eq_domain[ei]
+                var_set = var_domain[vi]
+                eq_info = _resolve_cached(eq_set)
+                var_info = _resolve_cached(var_set)
+                if eq_info is None or var_info is None:
+                    return 0
+                eq_resolved, eq_pos_map = eq_info
+                var_resolved, var_pos_map = var_info
+                if eq_resolved != var_resolved:
+                    return 0
+                eq_pos = eq_pos_map.get(eq_elem)
+                var_pos = var_pos_map.get(var_elem)
+                if eq_pos is not None and var_pos is not None:
+                    return eq_pos - var_pos
+                return 0
+
             used_var: set[int] = set()
             for ei in range(len(eq_domain)):
                 # First pass: prefer exact canonical match (same set/alias)
                 matched = False
                 for vi in range(len(var_domain)):
                     if vi not in used_var and eq_canons[ei] == var_canons[vi]:
-                        offsets_list[vi] = 0
+                        offsets_list[vi] = _compute_offset_at(ei, vi)
                         used_var.add(vi)
                         matched = True
                         break
@@ -2659,29 +2697,13 @@ def _compute_index_offset_key(
                     # Second pass: match via common root (subset relationships)
                     for vi in range(len(var_domain)):
                         if vi not in used_var and eq_roots[ei] == var_roots[vi]:
-                            offsets_list[vi] = 0
+                            offsets_list[vi] = _compute_offset_at(ei, vi)
                             used_var.add(vi)
                             break
 
             return tuple(offsets_list)
         # More equation dims than variable dims — return zeros
         return (0,) * len(var_indices)
-
-    if _domain_cache is None:
-        _domain_cache = {}
-
-    def _resolve_cached(set_name: str) -> tuple[str, dict[str, int]] | None:
-        """Resolve a set name to (underlying_set_name, {member: position}) with caching."""
-        if set_name in _domain_cache:
-            return _domain_cache[set_name]
-        try:
-            members, resolved_name = resolve_set_members(set_name, model_ir)
-            pos_map = {m: i for i, m in enumerate(members)}
-            result = (resolved_name, pos_map)
-        except (ValueError, KeyError):
-            result = None
-        _domain_cache[set_name] = result
-        return result
 
     offsets: list[int] = []
     for i, (eq_elem, var_elem) in enumerate(zip(eq_indices, var_indices, strict=True)):
@@ -2956,9 +2978,27 @@ def _add_indexed_jacobian_terms(
                     # affecting k(t), the multiplier should be nu_totalcap(t-1), not
                     # nu_totalcap(t). We encode this via the positional `offset_key`
                     # and build an IndexOffset-based multiplier in `_build_offset_multiplier()`.
+                    # Issue #1081: For dimension-mismatch, extract the real
+                    # (non-sentinel) offsets to detect lead/lag patterns. E.g.,
+                    # bal4(t) → x(t,l) with offset_key=(3, SENTINEL) means the
+                    # matched dimension has offset 3.
                     has_offset = any(o != 0 for o in offset_key)
+                    has_real_offset = any(o != 0 and o != _SENTINEL_UNMATCHED for o in offset_key)
                     mult_ref: Expr
-                    if is_dim_mismatch:
+                    if is_dim_mismatch and has_real_offset:
+                        # Issue #1081: dimension-mismatch WITH lead/lag offset.
+                        # Build the multiplier with offset in matched positions,
+                        # using the equation's own domain.
+                        real_offsets = tuple(
+                            o if o != _SENTINEL_UNMATCHED else 0
+                            for o in offset_key[: len(mult_domain)]
+                        )
+                        mult_ref = _build_offset_multiplier(
+                            mult_base_name,
+                            mult_domain,
+                            real_offsets,
+                        )
+                    elif is_dim_mismatch:
                         # Issue #1099/#1100: Use the equation's own domain for
                         # the multiplier. The downstream _match_subset_domain()
                         # and Sum-wrapping logic handles renaming subset indices
@@ -2979,7 +3019,48 @@ def _add_indexed_jacobian_terms(
                     # nu_totalcap(t-1) is invalid when t is the first element,
                     # nu_totalcap(t+1) is invalid when t is the last element.
                     # Wrap the term in a DollarConditional to prevent out-of-bounds.
-                    if has_offset and not is_dim_mismatch:
+                    if has_real_offset and is_dim_mismatch:
+                        real_offsets_for_guard = tuple(
+                            o if o != _SENTINEL_UNMATCHED else 0
+                            for o in offset_key[: len(mult_domain)]
+                        )
+                        offset_guard = _build_offset_guard(mult_domain, real_offsets_for_guard)
+                        if offset_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=offset_guard)
+
+                        # Issue #1081: For dimension-mismatch with lead/lag,
+                        # the offset is determined by the unmatched dimension.
+                        # E.g., bal4(t) → x(t,l): offset k applies when
+                        # ord(l) = k. Add an ord() guard on each unmatched
+                        # dimension to restrict the term to the correct slice.
+                        for vi, off in enumerate(offset_key):
+                            if off == _SENTINEL_UNMATCHED and vi < len(var_domain):
+                                continue
+                            # For matched positions with non-zero real offset,
+                            # find the unmatched position(s) and determine
+                            # which element ord produces this offset.
+                        # Determine the real offset magnitude (from matched positions)
+                        real_offset_val = 0
+                        for off in offset_key:
+                            if off != _SENTINEL_UNMATCHED and off != 0:
+                                real_offset_val = off
+                                break
+                        if real_offset_val != 0:
+                            # Find unmatched positions and add ord() guard
+                            for vi, off in enumerate(offset_key):
+                                if off == _SENTINEL_UNMATCHED and vi < len(var_domain):
+                                    unmatched_dom = var_domain[vi]
+                                    # Guard: ord(l) = abs(real_offset_val)
+                                    ord_guard = Binary(
+                                        "=",
+                                        Call(
+                                            "ord",
+                                            (SymbolRef(unmatched_dom),),
+                                        ),
+                                        Const(float(abs(real_offset_val))),
+                                    )
+                                    term = DollarConditional(value_expr=term, condition=ord_guard)
+                    elif has_offset and not is_dim_mismatch:
                         offset_guard = _build_offset_guard(mult_domain, offset_key)
                         if offset_guard is not None:
                             term = DollarConditional(value_expr=term, condition=offset_guard)
