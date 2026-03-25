@@ -628,6 +628,12 @@ def _substitute_single_index(expr: Expr, var_name: str, value: str) -> Expr:
             return Unary(e.op, new_child)
 
         if isinstance(e, Call):
+            # card() is a set-level intrinsic — its argument is a set name,
+            # not an element, so don't substitute the sum index variable.
+            # ord() is element-dependent and should be substituted normally.
+            _SET_LEVEL_INTRINSICS = {"card"}
+            if e.func.lower() in _SET_LEVEL_INTRINSICS:
+                return e
             new_args = tuple(_sub(arg) for arg in e.args)
             if all(n is o for n, o in zip(new_args, e.args, strict=True)):
                 return e
