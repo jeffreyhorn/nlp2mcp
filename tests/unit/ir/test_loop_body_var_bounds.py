@@ -65,13 +65,21 @@ class TestLoopBodyVarBoundExtraction:
         # The parser should extract bounds using the first loop iteration (s='s1')
         # x.up('p1') = bnd('s1','p1') = 10
         # x.up('p2') = bnd('s1','p2') = 20
-        # Check that upper bounds are set (either in up_map or up)
-        has_up = (
-            (hasattr(xdef, "up_map") and xdef.up_map)
-            or (hasattr(xdef, "up") and xdef.up is not None and xdef.up != float("inf"))
-            or (hasattr(xdef, "up_expr_map") and xdef.up_expr_map)
-        )
-        assert has_up, f"x should have upper bounds from loop body, got {xdef}"
+        # Verify numeric per-element bounds were created
+        assert hasattr(xdef, "up_map"), "xdef should have an up_map for per-element upper bounds"
+        up_map = xdef.up_map
+        assert up_map, "up_map should not be empty after extracting loop-body bounds"
+        assert (
+            up_map.get(("p1",)) == 10
+        ), f"Expected upper bound 10 for p1, got {up_map.get(('p1',))}"
+        assert (
+            up_map.get(("p2",)) == 20
+        ), f"Expected upper bound 20 for p2, got {up_map.get(('p2',))}"
+        # After resolving bounds, expression-based upper bounds should be cleared
+        if hasattr(xdef, "up_expr_map"):
+            assert (
+                not xdef.up_expr_map
+            ), f"up_expr_map should be empty after resolution, got {xdef.up_expr_map}"
 
 
 _LOOP_BOUNDS_NO_SOLVE = """\

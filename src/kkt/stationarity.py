@@ -2989,10 +2989,18 @@ def _add_indexed_jacobian_terms(
                         # Issue #1081: dimension-mismatch WITH lead/lag offset.
                         # Build the multiplier with offset in matched positions,
                         # using the equation's own domain.
-                        real_offsets = tuple(
-                            o if o != _SENTINEL_UNMATCHED else 0
-                            for o in offset_key[: len(mult_domain)]
-                        )
+                        # Extract offsets for matched (non-sentinel) positions
+                        # rather than slicing by position, in case the matched
+                        # dimension is not in the leading positions of var_domain.
+                        non_sentinel_offsets = [o for o in offset_key if o != _SENTINEL_UNMATCHED]
+                        if len(non_sentinel_offsets) == len(mult_domain):
+                            real_offsets = tuple(non_sentinel_offsets)
+                        else:
+                            # Fallback to positional slicing if shapes don't align
+                            real_offsets = tuple(
+                                0 if o == _SENTINEL_UNMATCHED else o
+                                for o in offset_key[: len(mult_domain)]
+                            )
                         mult_ref = _build_offset_multiplier(
                             mult_base_name,
                             mult_domain,
@@ -3033,12 +3041,6 @@ def _add_indexed_jacobian_terms(
                         # E.g., bal4(t) → x(t,l): offset k applies when
                         # ord(l) = k. Add an ord() guard on each unmatched
                         # dimension to restrict the term to the correct slice.
-                        for vi, off in enumerate(offset_key):
-                            if off == _SENTINEL_UNMATCHED and vi < len(var_domain):
-                                continue
-                            # For matched positions with non-zero real offset,
-                            # find the unmatched position(s) and determine
-                            # which element ord produces this offset.
                         # Determine the real offset magnitude (from matched positions)
                         real_offset_val = 0
                         for off in offset_key:

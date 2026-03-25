@@ -172,14 +172,23 @@ def _resolve_index_offsets(
             arg = offset_expr.args[0]
             if isinstance(arg, SymbolRef):
                 elem_name = arg.name
-                # Search all sets for this element to find its 1-based position
+                # Search all sets for this element to find its 1-based position.
+                # If the element appears in multiple sets at different positions,
+                # treat as ambiguous and leave unresolved.
+                matches: list[int] = []
                 for sdef in model_ir.sets.values():
                     domain_info = _get_domain_members(sdef.name)
                     if domain_info is None:
                         continue
                     members, pos_map = domain_info
                     if elem_name in pos_map:
-                        return Const(float(pos_map[elem_name] + 1))  # 1-based
+                        matches.append(pos_map[elem_name])
+                if len(matches) == 1:
+                    return Const(float(matches[0] + 1))  # 1-based
+                if len(matches) > 1 and len(set(matches)) == 1:
+                    # Same position in all matching sets — unambiguous
+                    return Const(float(matches[0] + 1))  # 1-based
+                # 0 matches or ambiguous positions — leave unresolved
                 return None
 
         if func_lower == "card" and len(offset_expr.args) == 1:
@@ -480,6 +489,8 @@ def _expand_sum_body(
         # Multi-index expansion is complex; skip for now
         return None
 
+    _MAX_SUM_EXPANSION = 500  # Safety limit to avoid pathological AST blow-up
+
     sum_var = index_sets[0]
     # Resolve domain members for the sum variable
     try:
@@ -488,6 +499,8 @@ def _expand_sum_body(
         return None
     if not members:
         return None
+    if len(members) > _MAX_SUM_EXPANSION:
+        return None  # Too many members; keep Sum unexpanded
 
     terms: list[Expr] = []
     for member in members:

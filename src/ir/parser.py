@@ -4068,18 +4068,36 @@ class _ModelBuilder:
         # 2-element keys like ('scenario-1', 'pulp-1.p') instead of 3-element).
         self._resolve_loop_body_expr_bounds()
 
-        # Clean up: any NEW scalar expression bounds that weren't resolved
-        # to numeric values must be cleared.  They contain substituted loop
-        # index values (e.g., ord("'s1'")) which are invalid GAMS.
+        # Clean up: any NEW scalar or indexed expression bounds that weren't
+        # resolved to numeric values must be cleared.  They contain substituted
+        # loop index values (e.g., ord("'s1'")) which are invalid GAMS.
         for vname, vdef in self.model.variables.items():
             pre = pre_expr_bounds.get(vname, {})
             for kind in ("lo", "up", "fx"):
+                # Scalar expression bounds
                 scalar_attr = f"{kind}_expr"
                 old_val = pre.get(scalar_attr)
                 new_val = getattr(vdef, scalar_attr, None)
                 if new_val is not None and new_val is not old_val:
-                    # New expression bound from loop body — clear it
+                    # New scalar expression bound from loop body — clear it
                     setattr(vdef, scalar_attr, None)
+
+                # Indexed expression bounds (per-element expression map)
+                map_attr = f"{kind}_expr_map"
+                old_map = pre.get(map_attr)
+                new_map = getattr(vdef, map_attr, None)
+                if not new_map:
+                    continue
+                old_keys = set(old_map.keys()) if isinstance(old_map, dict) else set()
+                new_keys = set(new_map.keys()) - old_keys
+                # Remove newly introduced entries that are still expression ASTs
+                for key in list(new_keys):
+                    val = new_map.get(key)
+                    if isinstance(val, Expr):
+                        del new_map[key]
+                # If we emptied a map that didn't exist before, reset to None
+                if not new_map and old_map is None:
+                    setattr(vdef, map_attr, None)
 
     def _resolve_loop_body_expr_bounds(self) -> None:
         """Resolve expression-based bounds to numeric values where possible.
