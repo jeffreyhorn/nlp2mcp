@@ -3005,18 +3005,32 @@ def _add_indexed_jacobian_terms(
                         # Issue #1081: dimension-mismatch WITH lead/lag offset.
                         # Build the multiplier with offset in matched positions,
                         # using the equation's own domain.
-                        # Extract offsets for matched (non-sentinel) positions
-                        # rather than slicing by position, in case the matched
-                        # dimension is not in the leading positions of var_domain.
-                        non_sentinel_offsets = [o for o in offset_key if o != _SENTINEL_UNMATCHED]
-                        if len(non_sentinel_offsets) == len(mult_domain):
-                            real_offsets = tuple(non_sentinel_offsets)
-                        else:
-                            # Fallback to positional slicing if shapes don't align
-                            real_offsets = tuple(
-                                0 if o == _SENTINEL_UNMATCHED else o
-                                for o in offset_key[: len(mult_domain)]
-                            )
+                        # Map offsets from var_domain order (offset_key) into
+                        # mult_domain (equation-domain) order so that each
+                        # offset is applied to the correct equation index.
+                        try:
+                            var_pos_by_dim = {dim: i for i, dim in enumerate(var_domain)}
+                            real_offsets_list: list[int] = []
+                            for dim in mult_domain:
+                                var_pos = var_pos_by_dim.get(dim)
+                                if var_pos is None:
+                                    real_offsets_list.append(0)
+                                else:
+                                    o = offset_key[var_pos]
+                                    real_offsets_list.append(0 if o == _SENTINEL_UNMATCHED else o)
+                            real_offsets = tuple(real_offsets_list)
+                        except Exception:
+                            # Fallback to non-sentinel extraction
+                            non_sentinel_offsets = [
+                                o for o in offset_key if o != _SENTINEL_UNMATCHED
+                            ]
+                            if len(non_sentinel_offsets) == len(mult_domain):
+                                real_offsets = tuple(non_sentinel_offsets)
+                            else:
+                                real_offsets = tuple(
+                                    0 if o == _SENTINEL_UNMATCHED else o
+                                    for o in offset_key[: len(mult_domain)]
+                                )
                         mult_ref = _build_offset_multiplier(
                             mult_base_name,
                             mult_domain,

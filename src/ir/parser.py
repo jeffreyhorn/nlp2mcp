@@ -4321,7 +4321,7 @@ class _ModelBuilder:
         if isinstance(node, Token):
             if node.type == "ID" and str(node).lower() in subst:
                 elem = subst[str(node).lower()]
-                return Token("QUOTED_STRING", f"'{elem}'")
+                return Token("ID", f"'{elem}'")
             return node
         # Tree node — recursively substitute children
         new_children = [
