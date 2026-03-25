@@ -51,6 +51,8 @@ lev(s) = 3 * (ord(s) - 1);
 p(s,sp,i) = (k / (q - dis(i) - d - (lev(sp) - lev(s)))) ** (1 / e);
 c(s,sp,i) = g * (d * (p(s,sp,i) - pn) + k * (p(s,sp,i) ** (1 - e) - pn ** (1 - e)) / (1 - e)) + p(s,sp,i) * (lev(sp) - lev(s)) + h * lev(sp);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -83,6 +85,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 z.l(s,i,sp) = 1;
+z.l(s,i,sp) = min(z.l(s,i,sp), z.up(s,i,sp));
 
 * ============================================
 * Equations
@@ -105,7 +108,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s__kkt1,j,sp)) * nu_constr(s__kkt1,j)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s,i,s__kkt1)) * nu_constr(s__kkt1,j)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
 comp_equil(s,spp).. ((-1) * (z(s,"disrupted",spp) * (ord(spp) - ord(s)))) =G= 0;

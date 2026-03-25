@@ -274,6 +274,8 @@ wn(g,c,t,s,w,m)$(wn(g,c,t,s,w,m) < 0) = 0;
 gtw1(g,m) = gtw(g,m) * wcdeleff(g,m);
 wr(g,m) = sum(i, wdiv(i,g,m) * (1 - wlu("mb",i,g,m))) * cnldeleff(g,m) * 1000;
 
+execError = 0;
+
 loop(psr,
    psc(c) = pri("price",psr,c) ;
    pp = pri1("protein",psr) ;
@@ -391,6 +393,8 @@ Positive Variables
 * ============================================
 
 xca.up(g,'sc-mill') = areac(g,"sra") / 1000;
+esl.up(g,m) = flab(g,"lh");
+efl.up(g,m) = flab(g,"fh");
 
 * ============================================
 * Variable Initialization
@@ -402,28 +406,51 @@ xca.up(g,'sc-mill') = areac(g,"sra") / 1000;
 * POSITIVE variables are set to 1.
 
 dr.l(g) = 1;
+dr.l(g) = min(dr.l(g), dr.up(g));
 inj.l(g) = 1;
+inj.l(g) = min(inj.l(g), inj.up(g));
 tw.l(g,m) = 1;
+tw.l(g,m) = min(tw.l(g,m), tw.up(g,m));
 ts.l(g,m) = 1;
+ts.l(g,m) = min(ts.l(g,m), ts.up(g,m));
 scc.l(g,c) = 1;
+scc.l(g,c) = min(scc.l(g,c), scc.up(g,c));
 ccc.l(g,c) = 1;
+ccc.l(g,c) = min(ccc.l(g,c), ccc.up(g,c));
 pcc.l(g,c) = 1;
+pcc.l(g,c) = min(pcc.l(g,c), pcc.up(g,c));
 slc.l(g,q) = 1;
+slc.l(g,q) = min(slc.l(g,q), slc.up(g,q));
 clc.l(g,q) = 1;
+clc.l(g,q) = min(clc.l(g,q), clc.up(g,q));
 plc.l(g,q) = 1;
+plc.l(g,q) = min(plc.l(g,q), plc.up(g,q));
 acost.l(g) = 1;
+acost.l(g) = min(acost.l(g), acost.up(g));
 x.l(g,c,t,s,w) = 1;
+x.l(g,c,t,s,w) = min(x.l(g,c,t,s,w), x.up(g,c,t,s,w));
 xca.l(g,c) = 1;
+xca.l(g,c) = min(xca.l(g,c), xca.up(g,c));
 animal.l(g,l) = 1;
+animal.l(g,l) = min(animal.l(g,l), animal.up(g,l));
 ppc.l = 1;
+ppc.l = min(ppc.l, ppc.up);
 esl.l(g,m) = 1;
+esl.l(g,m) = min(esl.l(g,m), esl.up(g,m));
 itw.l(g) = 1;
+itw.l(g) = min(itw.l(g), itw.up(g));
 itr.l(g) = 1;
+itr.l(g) = min(itr.l(g), itr.up(g));
 efl.l(g,m) = 1;
+efl.l(g,m) = min(efl.l(g,m), efl.up(g,m));
 pdev.l(g,y) = 1;
+pdev.l(g,y) = min(pdev.l(g,y), pdev.up(g,y));
 ndev.l(g,y) = 1;
+ndev.l(g,y) = min(ndev.l(g,y), ndev.up(g,y));
 slkland.l(g,m) = 1;
+slkland.l(g,m) = min(slkland.l(g,m), slkland.up(g,m));
 slkwater.l(g,m) = 1;
+slkwater.l(g,m) = min(slkwater.l(g,m), slkwater.up(g,m));
 
 * ============================================
 * Equations

@@ -124,6 +124,8 @@ incr(cn) = (qmax(cn) - qmin(cn)) / (card(g) - 1);
 qs(cn,g) = qmin(cn) + incr(cn) * (ord(g) - 1);
 ws(cn,g) = alpha(cn) * qs(cn,g) + 0.5 * beta(cn) * sqr(qs(cn,g));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -178,6 +180,9 @@ Positive Variables
 * ============================================
 
 xcrop.up(r,cup) = upbnds(cup,r);
+imports.up(c) = tlimit(c,"imports");
+exports.up(c) = tlimit(c,"exports");
+flab.up(r,tm) = agrreg(r,"farmers") * 0.4;
 
 * ============================================
 * Variable Initialization
@@ -189,15 +194,25 @@ xcrop.up(r,cup) = upbnds(cup,r);
 * POSITIVE variables are set to 1.
 
 xcrop.l(r,c) = 1;
+xcrop.l(r,c) = min(xcrop.l(r,c), xcrop.up(r,c));
 imports.l(c) = 1;
+imports.l(c) = min(imports.l(c), imports.up(c));
 exports.l(c) = 1;
+exports.l(c) = min(exports.l(c), exports.up(c));
 natq.l(c,g) = 1;
+natq.l(c,g) = min(natq.l(c,g), natq.up(c,g));
 anut.l(nt,r) = 1;
+anut.l(nt,r) = min(anut.l(nt,r), anut.up(nt,r));
 sales.l(c) = 1;
+sales.l(c) = min(sales.l(c), sales.up(c));
 trans.l(c,r,rp) = 1;
+trans.l(c,r,rp) = min(trans.l(c,r,rp), trans.up(c,r,rp));
 fodder.l(r,c) = 1;
+fodder.l(r,c) = min(fodder.l(r,c), fodder.up(r,c));
 tlab.l(r,tm) = 1;
+tlab.l(r,tm) = min(tlab.l(r,tm), tlab.up(r,tm));
 flab.l(r,tm) = 1;
+flab.l(r,tm) = min(flab.l(r,tm), flab.up(r,tm));
 
 * ============================================
 * Equations
@@ -255,7 +270,7 @@ stat_imports(c)$(cn(c)).. nu_demb(c) - piL_imports(c) + piU_imports(c) =E= 0;
 stat_natq(c,g)$(cn(c)).. ((-1) * qs(c,g)) * nu_demb(c) + nu_conv(c) - piL_natq(c,g) =E= 0;
 stat_sales(c)$(cn(c)).. (1 - los(c)) * nu_demb(c) + lam_comb(c) - piL_sales(c) =E= 0;
 stat_tlab(r,tm).. 2 * day * regwagm(r,tm) - lam_labbal(r,tm) - piL_tlab(r,tm) =E= 0;
-stat_trans(c,r,rp).. stran(r,rp) + ((-1) * (1$(tranc(r,rp)))$(ct(c))) * nu_fodb(r,c) - piL_trans(c,r,rp) =E= 0;
+stat_trans(c,r,rp).. stran(r,rp)$(ct(c)) + ((-1) * (1$(tranc(rp,rp)))$(ct(c))) * nu_fodb(r,c) - piL_trans(c,r,rp) =E= 0;
 stat_xcrop(r,c).. netcs(c,r) + ((-1) * sum(z$(zr(z,r)), feed(c,z))) * nu_fodb(r,c) + ((-1) * yld(c,c,r)) * lam_comb(c) + sum(s, 1$(sv(s,c)) * lam_vegetb(s,r)) - piL_xcrop(r,c) =E= 0;
 
 * Inequality complementarity equations

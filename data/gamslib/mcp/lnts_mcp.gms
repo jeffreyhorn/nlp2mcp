@@ -63,6 +63,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+u.lo(h) = ((-1) * pi) / 2;
+u.up(h) = pi / 2;
 y.fx('y1','h0') = 0;
 y.fx('y2','h0') = 0;
 y.fx('y2','h50') = 5;

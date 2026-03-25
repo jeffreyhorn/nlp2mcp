@@ -35,6 +35,8 @@ g1 = gamma(alpha + beta) / (gamma(alpha) * gamma(beta));
 g2 = gamma(alpha + 1) * gamma(beta) / gamma(alpha + beta + 1);
 g3 = g1 * g2;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

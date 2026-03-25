@@ -89,6 +89,8 @@ avl(t,t-2) = 1;
 delt(t) = (1 + rho) ** ((-10) * (ord(t) - 1));
 sgm = rho / (1 - (1 + rho) ** ((-1) * life));
 
+execError = 0;
+
 loop(at,
    yv(t,t+ord(at),s,cl,k) = ymf(at,k,s,cl)
 );
@@ -153,11 +155,17 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 w.l(s,k,u,te) = 1;
+w.l(s,k,u,te) = min(w.l(s,k,u,te), w.up(s,k,u,te));
 v.l(s,k,t,te) = 1;
+v.l(s,k,t,te) = min(v.l(s,k,t,te), v.up(s,k,t,te));
 r.l(c,te) = 1;
+r.l(c,te) = min(r.l(c,te), r.up(c,te));
 z.l(p,t) = 1;
+z.l(p,t) = min(z.l(p,t), z.up(p,t));
 h.l(m,t) = 1;
+h.l(m,t) = min(h.l(m,t), h.up(m,t));
 x.l(c,t) = 1;
+x.l(c,t) = min(x.l(c,t), x.up(c,t));
 
 * ============================================
 * Equations

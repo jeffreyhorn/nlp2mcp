@@ -33,6 +33,8 @@ tw(i)$(tb(i) = na) = 0;
 xw(i,j) = 1$(xb(i,j));
 xw(i,j)$(xb(i,j) = na) = 0;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -85,13 +87,22 @@ Equations
 
 * Stationarity equations
 stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i__kkt1)) =E= 0;
+stat_x(i,j)$(xw(i,j)).. xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i__kkt1)) =E= 0;
 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
 cbal(j).. t(j) =E= sum(i$(xb(i,j)), x(i,j));
 devsqr.. dev =E= sum((i,j)$(xw(i,j)), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i)), tw(i) * sqr(tb(i) - t(i)) / tb(i));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+x.fx(i,j)$(not (xw(i,j))) = 0;
 
 * ============================================
 * Model MCP Declaration

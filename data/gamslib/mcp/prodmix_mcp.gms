@@ -57,6 +57,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 mix.l(desk) = 1;
+mix.l(desk) = min(mix.l(desk), mix.up(desk));
 
 * ============================================
 * Equations

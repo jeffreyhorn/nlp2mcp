@@ -64,7 +64,9 @@ Positive Variables
 x.l('inf') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
+b.l(i) = min(b.l(i), b.up(i));
 c.l(i) = 1;
+c.l(i) = min(c.l(i), c.up(i));
 
 * ============================================
 * Equations

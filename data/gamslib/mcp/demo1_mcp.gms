@@ -85,9 +85,13 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 xcrop.l(c) = 1;
+xcrop.l(c) = min(xcrop.l(c), xcrop.up(c));
 flab.l(t) = 1;
+flab.l(t) = min(flab.l(t), flab.up(t));
 fout.l(t) = 1;
+fout.l(t) = min(fout.l(t), fout.up(t));
 tlab.l(t) = 1;
+tlab.l(t) = min(tlab.l(t), tlab.up(t));
 
 * ============================================
 * Equations

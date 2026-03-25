@@ -54,6 +54,8 @@ Scalars
 watavail(t) = fsize * waf(t);
 crev(c) = ((-1) * cprice(c)) * cinput("yield","annual",c);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -115,12 +117,19 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 xcrop.l(c) = 1;
+xcrop.l(c) = min(xcrop.l(c), xcrop.up(c));
 wpurchase.l(t) = 1;
+wpurchase.l(t) = min(wpurchase.l(t), wpurchase.up(t));
 xrations.l(n,t) = 1;
+xrations.l(n,t) = min(xrations.l(n,t), xrations.up(n,t));
 xlabor.l(t) = 1;
+xlabor.l(t) = min(xlabor.l(t), xlabor.up(t));
 xtransf.l(n,t) = 1;
+xtransf.l(n,t) = min(xtransf.l(n,t), xtransf.up(n,t));
 dhire.l = 1;
+dhire.l = min(dhire.l, dhire.up);
 xlivestk.l(h) = 1;
+xlivestk.l(h) = min(xlivestk.l(h), xlivestk.up(h));
 
 * ============================================
 * Bound Mask Sets (partial bound coverage)

@@ -44,6 +44,8 @@ Z0(j) = sum(h, F0(h,j));
 beta(h,j) = F0(h,j) / sum(k, F0(k,j));
 b(j) = Z0(j) / prod(h, F0(h,j) ** beta(h,j));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

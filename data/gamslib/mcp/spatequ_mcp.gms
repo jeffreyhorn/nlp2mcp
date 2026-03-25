@@ -90,7 +90,9 @@ X.fx('Reg3','Reg3','Com2') = 0;
 * POSITIVE variables are set to 1.
 
 X.l(r,rr,c) = 1;
+X.l(r,rr,c) = min(X.l(r,rr,c), X.up(r,rr,c));
 P.l(r,c) = 1;
+P.l(r,c) = min(P.l(r,c), P.up(r,c));
 
 * ============================================
 * Equations
@@ -126,13 +128,9 @@ Equations
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(cc, cc__);
-
 * Stationarity equations
 stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
-stat_p(r,c).. sum(cc, ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,cc) + sum(cc__, BetadSq(r,c,cc__) * p(r,cc__)))) * nu_DEMINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetadSq(r,c,cc))) * nu_DEMINT(r,c-1))$(ord(c) > 1)) + sum(cc, ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,cc) + sum(cc__, BetasSq(r,c,cc__) * p(r,cc__)))) * nu_SUPINT(r,c)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c+1))$(ord(c) <= card(c) - 1)) + sum(cc, (((-1) * (p(r,c) * BetasSq(r,c,cc))) * nu_SUPINT(r,c-1))$(ord(c) > 1)) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
+stat_p(r,c).. ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,c) + sum(cc, BetadSq(r,c,cc) * p(r,cc)))) * nu_DEMINT(r,c) + (((-1) * (p(r,c) * BetadSq(r,c,c))) * nu_DEMINT(r,c+1))$(ord(c) <= card(c) - 1) + (((-1) * (p(r,c) * BetadSq(r,c,c))) * nu_DEMINT(r,c-1))$(ord(c) > 1) + ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,c) + sum(cc, BetasSq(r,c,cc) * p(r,cc)))) * nu_SUPINT(r,c) + (((-1) * (p(r,c) * BetasSq(r,c,c))) * nu_SUPINT(r,c+1))$(ord(c) <= card(c) - 1) + (((-1) * (p(r,c) * BetasSq(r,c,c))) * nu_SUPINT(r,c-1))$(ord(c) > 1) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
 stat_qd(r,c).. ((-1) * nu_DEM(r,c)) + nu_SDBAL(c) - nu_DX(r,c) =E= 0;
 stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SDBAL(c) - nu_SX(R,C) =E= 0;
 stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;

@@ -47,6 +47,8 @@ a = y0 / k0 ** beta;
 dis(t) = (1 + rho) ** (1 - ord(t)) / (1 - eta);
 alpha(t) = a * (1 + r * (1 - beta) + z) ** (ord(t) - 1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

@@ -43,6 +43,8 @@ omega(i) = (ord(i) - 1) * step;
 cosomega(i,k) = cos((ord(k) - 1 - (n - 1) / 2) * omega(i));
 cosomega(i,k)$(abs(cosomega(i,k)) < 1e-13) = 0;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -88,8 +90,11 @@ Positive Variables
 
 t.l = 1.0;
 v3.l = 1;
+v3.l = min(v3.l, v3.up);
 u.l = 1;
+u.l = min(u.l, u.up);
 v.l = 1;
+v.l = min(v.l, v.up);
 
 * ============================================
 * Equations

@@ -35,6 +35,8 @@ Scalars
 
 L0 = 2 * sqrt(sqr(a_x - b_x) + sqr(a_y - b_y)) / 10;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -95,8 +97,11 @@ y.fx('n10') = -1;
 x.l(n) = (ord(n) - 1) / 10 * b_x + ord(n) / 10 * a_x;
 y.l(n) = (ord(n) - 1) / 10 * b_y + ord(n) / 10 * a_y;
 t_L0.l(n) = 1;
+t_L0.l(n) = min(t_L0.l(n), t_L0.up(n));
 t.l(n) = 1;
+t.l(n) = min(t.l(n), t.up(n));
 v.l = 1;
+v.l = min(v.l, v.up);
 
 * ============================================
 * Equations

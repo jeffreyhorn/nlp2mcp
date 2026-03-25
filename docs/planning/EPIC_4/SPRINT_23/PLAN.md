@@ -263,6 +263,8 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 **End of Day 5 criterion:** Checkpoint 1 evaluated; sambal + qsambal advance past execution errors.
 
+**Day 5 Status:** COMPLETE — CONDITIONAL GO. stat_x guard works; stat_t NA issue persists (separate fix needed).
+
 ---
 
 ### Day 6 — WS2: model_infeasible Tier 1, Part 1 (markov, pak)

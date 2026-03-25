@@ -40,6 +40,8 @@ Scalars
 
 theta(i) = ord(i) / card(i);
 
+execError = 0;
+
 loop(t,
    pt(i,t) = uniform(0,1) ;
 );
@@ -96,7 +98,9 @@ x.l('8') = 0.0001;
 x.l('9') = 0.0001;
 x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
 b.l(i) = 1;
+b.l(i) = min(b.l(i), b.up(i));
 w.l(i) = 1;
+w.l(i) = min(w.l(i), w.up(i));
 
 * ============================================
 * Equations

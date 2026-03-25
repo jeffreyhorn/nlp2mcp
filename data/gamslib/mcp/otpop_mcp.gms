@@ -62,6 +62,8 @@ con = g / pb ** b / (pb - ph);
 xb(t) = xb74 + 3 * min(y(t) - 1974, 6) + 0.9 * max(y(t) - 1980, 0);
 db(t) = db74 * (1 + g) ** (ord(t) - 1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -132,6 +134,7 @@ p.fx(th) = phis(th);
 * POSITIVE variables are set to 1.
 
 x.l(tt) = 1;
+x.l(tt) = min(x.l(tt), x.up(tt));
 p.l('1965') = 1.0;
 p.l('1966') = 1.0;
 p.l('1967') = 1.0;

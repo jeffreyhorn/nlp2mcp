@@ -74,6 +74,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 lam.l(ss) = 1;
+lam.l(ss) = min(lam.l(ss), lam.up(ss));
 
 * ============================================
 * Equations

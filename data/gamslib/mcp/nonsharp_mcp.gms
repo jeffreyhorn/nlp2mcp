@@ -84,6 +84,8 @@ $offImplicitAssign
 totfeed = sum(cp, feed(cp));
 xinit(cp) = feed(cp) / totfeed;
 
+execError = 0;
+
 Parameter ma1(km,col);
 Parameter ma2(km,col,stm);
 Parameter ma3(km,col,cp);
@@ -155,8 +157,12 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+finit.up(col) = totfeed;
+fin.up(col) = totfeed;
+f.up(col,stm) = totfeed;
 fint.up(savinter(colp,col,stm)) = totfeed;
 fpr.up(savprst(col,stm,pr)) = totfeed;
+cfin.up(col,cp) = feed(cp);
 
 * ============================================
 * Variable Initialization
@@ -202,7 +208,9 @@ cfin.l('col-2','b') = 20.0;
 cfin.l('col-2','c') = 20.0;
 cfin.l(col,cp) = min(max(cfin.l(col,cp), 1e-6), cfin.up(col,cp));
 xin.l(col,cp) = 1;
+xin.l(col,cp) = min(xin.l(col,cp), xin.up(col,cp));
 x.l(col,stm,cp) = 1;
+x.l(col,stm,cp) = min(x.l(col,stm,cp), x.up(col,stm,cp));
 rec.l('col-1','top','a') = 0.85;
 rec.l('col-1','top','b') = 0.85;
 rec.l('col-1','top','c') = 0.85;
@@ -217,6 +225,7 @@ rec.l('col-2','bot','b') = 0.85;
 rec.l('col-2','bot','c') = 0.85;
 rec.l(col,stm,cp) = min(max(rec.l(col,stm,cp), 1e-6), rec.up(col,stm,cp));
 saint.l(col) = 1;
+saint.l(col) = min(saint.l(col), saint.up(col));
 
 * ============================================
 * Bound Parameters (non-uniform bounds)
@@ -282,17 +291,17 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_cfin(col,cp).. ((-1) * nu_mixbal(col,cp)) + nu_colbal(col,cp) + sum(stm, rec(col,stm,cp) * nu_keybal(col,stm,cp)) - nu_cfloin(col,cp) - piL_cfin(col,cp) + piU_cfin(col,cp) =E= 0;
-stat_f(col,stm).. ((-1) * nu_spblcol(col,stm)) + sum(cp, ((-1) * x(col,stm,cp)) * nu_colbal(col,cp)) + sum(cp, ((-1) * x(col,stm,cp)) * nu_keybal(col,stm,cp)) - piL_f(col,stm) + piU_f(col,stm) =E= 0;
+stat_cfin(col,cp).. ((-1) * nu_mixbal(col,cp))$(acol(col)) + nu_colbal(col,cp)$(acol(col)) + sum(stm, (rec(col,stm,cp) * nu_keybal(col,stm,cp))$(key(col,stm,cp))) + ((-1) * nu_cfloin(col,cp))$(acol(col)) - piL_cfin(col,cp) + piU_cfin(col,cp) =E= 0;
+stat_f(col,stm).. ((-1) * nu_spblcol(col,stm))$(acol(col)) + sum(cp, (((-1) * x(col,stm,cp)) * nu_colbal(col,cp))$(acol(col))) + sum(cp, (((-1) * x(col,stm,cp)) * nu_keybal(col,stm,cp))$(key(col,stm,cp))) - piL_f(col,stm) + piU_f(col,stm) =E= 0;
 stat_fby(pr).. nu_spblinit + sum(cp, (xinit(cp) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fby(pr) + piU_fby(pr) =E= 0;
-stat_fin(col).. sum(cp, xin(col,cp) * nu_cfloin(col,cp)) + lam_lintcon(col) - piL_fin(col) + piU_fin(col) =E= 0;
-stat_finit(col).. 1$(acol(col)) * nu_spblinit + sum(cp, xinit(cp) * nu_mixbal(col,cp)) - piL_finit(col) + piU_finit(col) =E= 0;
-stat_fint(colp,col,stm).. sum(col__kkt1, 1$(inter(col__kkt1,col__kkt1,stm)) * nu_spblcol(col__kkt1,stm)) - piL_fint(colp,col,stm) =E= 0;
-stat_fpr(col,stm,pr)$(prstream(col,stm,pr)).. 1$(prstream(col,stm,pr)) * nu_spblcol(col,stm) + sum(cp, (x(col,stm,cp) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fpr(col,stm,pr) =E= 0;
-stat_rec(col,stm,cp).. cfin(col,cp) * nu_keybal(col,stm,cp) - piL_rec(col,stm,cp) + piU_rec(col,stm,cp) =E= 0;
+stat_fin(col).. sum(cp, (xin(col,cp) * nu_cfloin(col,cp))$(acol(col))) + lam_lintcon(col) - piL_fin(col) + piU_fin(col) =E= 0;
+stat_finit(col).. 1$(acol(col)) * nu_spblinit + sum(cp, (xinit(cp) * nu_mixbal(col,cp))$(acol(col))) - piL_finit(col) + piU_finit(col) =E= 0;
+stat_fint(colp,col,stm).. sum(col__kkt1, (1$(inter(col__kkt1,col__kkt1,stm)) * nu_spblcol(col__kkt1,stm))$(acol(col__kkt1))) - piL_fint(colp,col,stm) =E= 0;
+stat_fpr(col,stm,pr)$(prstream(col,stm,pr)).. (1$(prstream(col,stm,pr)) * nu_spblcol(col,stm))$(acol(col)) + sum(cp, (x(col,stm,cp) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fpr(col,stm,pr) =E= 0;
+stat_rec(col,stm,cp).. (cfin(col,cp) * nu_keybal(col,stm,cp))$(key(col,stm,cp)) - piL_rec(col,stm,cp) + piU_rec(col,stm,cp) =E= 0;
 stat_saint(col).. 1 - lam_lintcon(col) - piL_saint(col) =E= 0;
-stat_x(col,stm,cp).. sum(colp, fint(col,col,stm) * 1$(inter(col,colp,stm)) * nu_mixbal(col,cp)) + ((-1) * f(col,stm)) * nu_colbal(col,cp) + ((-1) * f(col,stm)) * nu_keybal(col,stm,cp) + sum(pr, (fpr(col,stm,pr) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) + nu_molsum(col,stm) + nu_dist(col,stm,cp) - piL_x(col,stm,cp) =E= 0;
-stat_xin(col,cp).. fin(col) * nu_cfloin(col,cp) + nu_molsumin(col) - piL_xin(col,cp) =E= 0;
+stat_x(col,stm,cp).. sum(colp, (fint(col,col,stm) * 1$(inter(col,colp,stm)) * nu_mixbal(col,cp))$(acol(col))) + (((-1) * f(col,stm)) * nu_colbal(col,cp))$(acol(col)) + (((-1) * f(col,stm)) * nu_keybal(col,stm,cp))$(key(col,stm,cp)) + sum(pr, (fpr(col,stm,pr) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) + nu_molsum(col,stm)$(acol(col)) + nu_dist(col,stm,cp)$(link(col,stm,cp)) - piL_x(col,stm,cp) =E= 0;
+stat_xin(col,cp).. (fin(col) * nu_cfloin(col,cp))$(acol(col)) + nu_molsumin(col)$(acol(col)) - piL_xin(col,cp) =E= 0;
 
 * Inequality complementarity equations
 comp_lintcon(col).. ((-1) * (fin(col) - totfeed * yp(col) - saint(col))) =G= 0;
@@ -320,15 +329,15 @@ comp_up_rec(col,stm,cp).. 1 - rec(col,stm,cp) =G= 0;
 
 * Original equality equations
 spblinit.. sum(col$(acol(col)), finit(col)) + sum(pr, fby(pr)) =E= totfeed;
-spblcol(col,stm).. sum(colp$(inter(colp,col,stm)), fint(colp,col,stm)) + sum(pr$(prstream(col,stm,pr)), fpr(col,stm,pr)) - f(col,stm) =E= 0;
-mixbal(col,cp).. finit(col) * xinit(cp) + sum((colp,stm)$(inter(col,colp,stm)), fint(col,colp,stm) * x(colp,stm,cp)) - cfin(col,cp) =E= 0;
-colbal(col,cp).. cfin(col,cp) - sum(stm, f(col,stm) * x(col,stm,cp)) =E= 0;
-keybal(col,stm,cp).. cfin(col,cp) * rec(col,stm,cp) - f(col,stm) * x(col,stm,cp) =E= 0;
+spblcol(col,stm)$(acol(col)).. sum(colp$(inter(colp,col,stm)), fint(colp,col,stm)) + sum(pr$(prstream(col,stm,pr)), fpr(col,stm,pr)) - f(col,stm) =E= 0;
+mixbal(col,cp)$(acol(col)).. finit(col) * xinit(cp) + sum((colp,stm)$(inter(col,colp,stm)), fint(col,colp,stm) * x(colp,stm,cp)) - cfin(col,cp) =E= 0;
+colbal(col,cp)$(acol(col)).. cfin(col,cp) - sum(stm, f(col,stm) * x(col,stm,cp)) =E= 0;
+keybal(col,stm,cp)$(key(col,stm,cp)).. cfin(col,cp) * rec(col,stm,cp) - f(col,stm) * x(col,stm,cp) =E= 0;
 probal(pr,cp)$(ord(pr) <> np).. sum((col,stm)$(prstream(col,stm,pr)), fpr(col,stm,pr) * x(col,stm,cp)) + fby(pr) * xinit(cp) - out(cp,pr) =E= 0;
-cfloin(col,cp).. fin(col) * xin(col,cp) - cfin(col,cp) =E= 0;
-molsum(col,stm).. sum(cp, x(col,stm,cp)) - 1 =E= 0;
-molsumin(col).. sum(cp, xin(col,cp)) - 1 =E= 0;
-dist(col,stm,cp).. x(col,stm,cp) =E= 0;
+cfloin(col,cp)$(acol(col)).. fin(col) * xin(col,cp) - cfin(col,cp) =E= 0;
+molsum(col,stm)$(acol(col)).. sum(cp, x(col,stm,cp)) - 1 =E= 0;
+molsumin(col)$(acol(col)).. sum(cp, xin(col,cp)) - 1 =E= 0;
+dist(col,stm,cp)$(link(col,stm,cp)).. x(col,stm,cp) =E= 0;
 infeas.. alp =E= sum(col, saint(col));
 
 
@@ -345,7 +354,15 @@ piU_cfin.fx(col,cp)$(not (feed(cp) < inf)) = 0;
 piU_f.fx(col,stm)$(not (totfeed < inf)) = 0;
 piU_fin.fx(col)$(not (totfeed < inf)) = 0;
 piU_finit.fx(col)$(not (totfeed < inf)) = 0;
+nu_cfloin.fx(col,cp)$(not (acol(col))) = 0;
+nu_colbal.fx(col,cp)$(not (acol(col))) = 0;
+nu_dist.fx(col,stm,cp)$(not (link(col,stm,cp))) = 0;
+nu_keybal.fx(col,stm,cp)$(not (key(col,stm,cp))) = 0;
+nu_mixbal.fx(col,cp)$(not (acol(col))) = 0;
+nu_molsum.fx(col,stm)$(not (acol(col))) = 0;
+nu_molsumin.fx(col)$(not (acol(col))) = 0;
 nu_probal.fx(pr,cp)$(not (ord(pr) <> np)) = 0;
+nu_spblcol.fx(col,stm)$(not (acol(col))) = 0;
 
 * ============================================
 * Model MCP Declaration

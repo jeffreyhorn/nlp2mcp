@@ -60,6 +60,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+s.up(r,tl)$(ord(tl) = 1) = b(r);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -69,7 +75,9 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(p,tl) = 1;
+x.l(p,tl) = min(x.l(p,tl), x.up(p,tl));
 s.l(r,tl) = 1;
+s.l(r,tl) = min(s.l(r,tl), s.up(r,tl));
 
 * ============================================
 * Equations
@@ -96,7 +104,7 @@ Equations
 
 * Stationarity equations
 stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
-stat_x(p,tl)$(t(tl)).. sum(t$(sameas(t, tl)), ((-1) * c(p,t))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl) =E= 0;
+stat_x(p,tl)$(t(tl)).. sum(t$(sameas(t, tl)), (((-1) * c(p,t)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -106,10 +114,10 @@ comp_lo_s(r,tl).. s(r,tl) - 0 =G= 0;
 comp_lo_x(p,tl).. x(p,tl) - 0 =G= 0;
 
 * Upper bound complementarity equations
-comp_up_s(r,tl)$(b(r) < inf).. b(r) - s(r,tl) =G= 0;
+comp_up_s(r,tl)$(ord(tl) = 1 and b(r) < inf).. b(r) - s(r,tl) =G= 0;
 
 * Original equality equations
-balance(r,tl).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
+balance(r,tl)$(ord(tl) <= card(tl) - 1).. s(r,tl+1) =E= s(r,tl) - sum(p, a(r,p) * x(p,tl));
 obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl))) * s(r,tl));
 
 
@@ -122,7 +130,8 @@ obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(t
 
 x.fx(p,tl)$(not (t(tl))) = 0;
 piL_x.fx(p,tl)$(not (t(tl))) = 0;
-piU_s.fx(r,tl)$(not (b(r) < inf)) = 0;
+piU_s.fx(r,tl)$(not (ord(tl) = 1 and b(r) < inf)) = 0;
+nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
 lam_limit.fx(tl)$(not (t(tl))) = 0;
 
 * ============================================

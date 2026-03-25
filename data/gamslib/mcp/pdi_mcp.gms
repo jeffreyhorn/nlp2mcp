@@ -43,6 +43,8 @@ $offImplicitAssign
 pc(p,m) = pfd(p,"prod-cost") + floor(2 ** (ord(m) - 1) / 2);
 pco(p,m) = pfd(p,"over-cost") + ord(m) - (ord(m) < card(m));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -92,6 +94,17 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+pn.lo(p,m) = pfd(p,"min-prod");
+pn.up(p,m) = pfd(p,"max-prod");
+po.up(p,m) = pfd(p,"over-prod");
+dm.lo(c) = czd(c,"min-demand");
+dm.up(c) = czd(c,"max-demand");
+h.up(d,m) = dcd(d,"max-invent");
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -102,15 +115,20 @@ Positive Variables
 * clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
 x.l(p,d,m) = 1;
+x.l(p,d,m) = min(x.l(p,d,m), x.up(p,d,m));
 y.l(d,c,m) = 1;
+y.l(d,c,m) = min(y.l(d,c,m), y.up(d,c,m));
 pn.l(p,m) = 1;
+pn.l(p,m) = min(pn.l(p,m), pn.up(p,m));
 po.l(p,m) = 1;
+po.l(p,m) = min(po.l(p,m), po.up(p,m));
 s.l('east','april') = 200.0;
 s.l('south','april') = 200.0;
 s.l('west','april') = 200.0;
 s.l('north','april') = 200.0;
 s.l(d,m) = min(max(s.l(d,m), 1e-6), s.up(d,m));
 h.l(d,m) = 1;
+h.l(d,m) = min(h.l(d,m), h.up(d,m));
 
 * ============================================
 * Bound Parameters (non-uniform bounds)

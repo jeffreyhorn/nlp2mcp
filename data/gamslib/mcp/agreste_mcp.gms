@@ -43,8 +43,8 @@ Parameters
     price(c) /'cotton-h' 1.9, banana 4, 'sugar-cane' 35, 'beans-arr' 2.5, 'beans-cor' 1.5, oranges 10, manioc 0.17, corn 0.15, sisal 1/
     ravg(c)
     prdev(c,ty)
-    yield(p,c,s) /'crop-02'.'cotton-h'.medium 848, 'crop-02'.'cotton-h'.good 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.medium 251, 'crop-25'.'beans-cor'.good 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.medium 269, 'crop-29'.'cotton-h'.good 149, 'crop-29'.'beans-arr'.medium 285, 'crop-29'.'beans-arr'.good 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.medium 403, 'crop-30'.'cotton-h'.good 133, 'crop-30'.'beans-cor'.medium 115, 'crop-30'.'beans-cor'.good 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.medium 274, 'crop-33'.'beans-arr'.good 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.medium 288, 'crop-36'.'beans-arr'.good 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328/
-    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.sprouts 1, 'crop-15'.seeds 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.fertilizer 4, 'crop-29'.seeds 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.sprouts 6, 'crop-36'.seeds 1/
+    yield(p,c,s) /'crop-02'.'cotton-h'.good 848, 'crop-02'.'cotton-h'.medium 569, 'crop-05'.banana.good 221, 'crop-05'.banana.medium 174, 'crop-10'.'sugar-cane'.medium 45, 'crop-10'.'sugar-cane'.good 30, 'crop-15'.oranges.good 92, 'crop-16'.manioc.good 4456, 'crop-16'.manioc.medium 3964, 'crop-17'.corn.good 725, 'crop-17'.corn.medium 563, 'crop-19'.sisal.good 2244, 'crop-19'.sisal.medium 1666, 'crop-25'.'beans-cor'.good 251, 'crop-25'.'beans-cor'.medium 211, 'crop-25'.corn.good 373, 'crop-25'.corn.medium 264, 'crop-29'.'cotton-h'.good 269, 'crop-29'.'cotton-h'.medium 149, 'crop-29'.'beans-arr'.good 285, 'crop-29'.'beans-arr'.medium 221, 'crop-29'.corn.good 536, 'crop-29'.corn.medium 544, 'crop-30'.'cotton-h'.good 403, 'crop-30'.'cotton-h'.medium 133, 'crop-30'.'beans-cor'.good 115, 'crop-30'.'beans-cor'.medium 352, 'crop-30'.corn.good 361, 'crop-30'.corn.medium 212, 'crop-33'.'beans-arr'.good 274, 'crop-33'.'beans-arr'.medium 260, 'crop-33'.corn.good 594, 'crop-33'.corn.medium 442, 'crop-36'.'beans-arr'.good 288, 'crop-36'.'beans-arr'.medium 287, 'crop-36'.manioc.good 3408, 'crop-36'.manioc.medium 1031, 'crop-36'.corn.good 503, 'crop-36'.corn.medium 328/
+    techc(p,km) /'crop-02'.fertilizer 31, 'crop-02'.seeds 91, 'crop-05'.sprouts 45, 'crop-10'.fertilizer 36, 'crop-15'.fertilizer 106, 'crop-15'.seeds 1, 'crop-15'.sprouts 184, 'crop-16'.fertilizer 20, 'crop-17'.fertilizer 42, 'crop-17'.seeds 55, 'crop-29'.equipment 4, 'crop-29'.fertilizer 22, 'crop-29'.sprouts 19, 'crop-30'.seeds 27, 'crop-33'.equipment 11, 'crop-33'.fertilizer 42, 'crop-36'.fertilizer 98, 'crop-36'.seeds 6, 'crop-36'.sprouts 1/
     pcost(p)
     a(p) /'crop-02' 1, 'crop-05' 1, 'crop-10' 1, 'crop-15' 1, 'crop-16' 1, 'crop-17' 1, 'crop-19' 1, 'crop-25' 1, 'crop-29' 1, 'crop-30' 1, 'crop-33' 1, 'crop-36' 1/
 ;
@@ -70,6 +70,8 @@ ravg(c) = sum(ty, crev(c,ty)) / card(ty);
 pcost(p) = sum(km, techc(p,km));
 a(p)$(sum(s, yield(p,"cotton-h",s))) = 0;
 prdev(c,ty)$(ravg(c)) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
+
+execError = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -132,6 +134,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+xcrop.up(p,s)$(xcropl(p,s)) = xcropl(p,s);
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -141,15 +149,25 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 xcrop.l(p,s) = 1;
+xcrop.l(p,s) = min(xcrop.l(p,s), xcrop.up(p,s));
 xliver.l(r) = 1;
+xliver.l(r) = min(xliver.l(r), xliver.up(r));
 lswitch.l(s) = 1;
+lswitch.l(s) = min(lswitch.l(s), lswitch.up(s));
 cons.l(dr) = 1;
+cons.l(dr) = min(cons.l(dr), cons.up(dr));
 sales.l(c) = 1;
+sales.l(c) = min(sales.l(c), sales.up(c));
 flab.l(tm) = 1;
+flab.l(tm) = min(flab.l(tm), flab.up(tm));
 tlab.l(tm) = 1;
+tlab.l(tm) = min(tlab.l(tm), tlab.up(tm));
 plab.l = 1;
+plab.l = min(plab.l, plab.up);
 pdev.l(ty) = 1;
+pdev.l(ty) = min(pdev.l(ty), pdev.up(ty));
 ndev.l(ty) = 1;
+ndev.l(ty) = min(ndev.l(ty), ndev.up(ty));
 
 * ============================================
 * Equations
@@ -248,7 +266,7 @@ comp_lo_xliver(r).. xliver(r) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_flab(tm).. 70.5 - flab(tm) =G= 0;
-comp_up_xcrop(p,s)$(xcropl(p,s) < inf).. xcropl(p,s) - xcrop(p,s) =G= 0;
+comp_up_xcrop(p,s)$(xcropl(p,s) and xcropl(p,s) < inf).. xcropl(p,s) - xcrop(p,s) =G= 0;
 
 * Original equality equations
 lbal.. xlive =E= sum(r, xliver(r));
@@ -270,7 +288,7 @@ income.. yfarm =E= revenue + vsc * sum(dr, cons(dr)) - labcost - rationr - vetco
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-piU_xcrop.fx(p,s)$(not (xcropl(p,s) < inf)) = 0;
+piU_xcrop.fx(p,s)$(not (xcropl(p,s) and xcropl(p,s) < inf)) = 0;
 
 * ============================================
 * Model MCP Declaration

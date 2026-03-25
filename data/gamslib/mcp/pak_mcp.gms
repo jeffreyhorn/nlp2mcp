@@ -56,6 +56,8 @@ delt(t) = (1 + rho) ** ((-1) * (ord(t)));
 dis = (1 + r) ** ((-1) * (card(t))) * (1 - alpha) * (1 + g) / (r - g);
 e(t) = eb * (1 + ee) ** ord(t);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -115,6 +117,7 @@ i.fx('1962','non-traded') = 4.564;
 i.fx('1962','traded') = 0;
 ks.fx('1962','non-traded') = 0;
 ks.fx('1962','traded') = 0;
+f.up(t) = inf$(card(t) - ord(t) >= num);
 c.fx('1962') = 33.999;
 
 * ============================================
@@ -127,8 +130,11 @@ c.fx('1962') = 33.999;
 * POSITIVE variables are set to 1.
 
 v.l(t,j) = 1;
+v.l(t,j) = min(v.l(t,j), v.up(t,j));
 i.l(te,j) = 1;
+i.l(te,j) = min(i.l(te,j), i.up(te,j));
 s.l(t) = 1;
+s.l(t) = min(s.l(t), s.up(t));
 
 * ============================================
 * Equations
@@ -180,10 +186,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(te).. sum(t$(sameas(t, te)), ((-1) * delt(t))) + nu_c_fx_1962$(sameas(te, '1962')) - nu_incd(te) + (1 + p) * lam_conl(te) + ((-1) * lam_conl(te-1))$(ord(te) > 1) =E= 0;
+stat_c(te).. sum(t$(sameas(t, te)), (((-1) * delt(t)))$(t(te))) + nu_c_fx_1962$(sameas(te, '1962')) - nu_incd(te) + (1 + p) * lam_conl(te) + ((-1) * lam_conl(te-1))$(ord(te) > 1) =E= 0;
 stat_f(t).. ((-1) * nu_invd(t)) + nu_tgap(t) + nu_incd(t) + ((-1) * delt(t)) * nu_taid + lam_fup(t) + piU_f(t) =E= 0;
 stat_fb.. gama + nu_taid =E= 0;
-stat_gnp(t).. ((-1) * (d * dis)) + nu_gnpd(t) + nu_incd(t) + ((-1) * alpha) * lam_savl(t) + mgnp * lam_impl(t) + ((-1) * q) * lam_fup(t) =E= 0;
+stat_gnp(t).. (((-1) * (d * dis)))$(sameas(t, '1985')) + nu_gnpd(t) + nu_incd(t) + ((-1) * alpha) * lam_savl(t) + mgnp * lam_impl(t) + ((-1) * q) * lam_fup(t) =E= 0;
 stat_i(te,j).. ((-1) * nu_invt(te)) - nu_kbal(te,j) + nu_i_fx_1962_non_traded_683f00ae$(sameas(te, '1962') and sameas(j, 'non-traded')) + nu_i_fx_1962_traded$(sameas(te, '1962') and sameas(j, 'traded')) - piL_i(te,j) =E= 0;
 stat_ks(te,j).. ((-1) * nu_kbal(te,j)) + nu_kbal(te-1,j)$(ord(te) > 1) + nu_ks_fx_1962_non_traded_683f00ae$(sameas(te, '1962') and sameas(j, 'non-traded')) + nu_ks_fx_1962_traded$(sameas(te, '1962') and sameas(j, 'traded')) + ((-1) * (1 / k(j))) * lam_capb(te,j) =E= 0;
 stat_m(t).. ((-1) * nu_tgap(t)) - lam_impl(t) =E= 0;

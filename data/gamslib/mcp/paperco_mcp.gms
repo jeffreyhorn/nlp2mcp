@@ -80,6 +80,13 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+paper.lo(q) = sdat(q,"lower");
+paper.up(q) = sdat(q,"upper");
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -89,12 +96,19 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 logs.l(l) = 1;
+logs.l(l) = min(logs.l(l), logs.up(l));
 xw.l(w,p) = 1;
+xw.l(w,p) = min(xw.l(w,p), xw.up(w,p));
 pulp.l(p) = 1;
+pulp.l(p) = min(pulp.l(p), pulp.up(p));
 xp.l(p,q) = 1;
+xp.l(p,q) = min(xp.l(p,q), xp.up(p,q));
 paper.l(q) = 1;
+paper.l(q) = min(paper.l(q), paper.up(q));
 sales.l(p) = 1;
+sales.l(p) = min(sales.l(p), sales.up(p));
 purchase.l(p) = 1;
+purchase.l(p) = min(purchase.l(p), purchase.up(p));
 
 * ============================================
 * Equations

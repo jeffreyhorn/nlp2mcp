@@ -72,7 +72,9 @@ s.up(r,'1') = misc("max-stock",r);
 * POSITIVE variables are set to 1.
 
 x.l(p,tt) = 1;
+x.l(p,tt) = min(x.l(p,tt), x.up(p,tt));
 s.l(r,tt) = 1;
+s.l(r,tt) = min(s.l(r,tt), s.up(r,tt));
 
 * ============================================
 * Equations
@@ -98,7 +100,7 @@ Equations
 
 * Stationarity equations
 stat_s(r,tt).. misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt) =E= 0;
-stat_x(p,tt)$(t(tt)).. sum(t$(sameas(t, tt)), ((-1) * c(p,t))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt) - piL_x(p,tt) =E= 0;
+stat_x(p,tt)$(t(tt)).. sum(t$(sameas(t, tt)), (((-1) * c(p,t)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt) - piL_x(p,tt) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;

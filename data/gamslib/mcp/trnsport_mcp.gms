@@ -33,6 +33,8 @@ Scalars
 
 c(i,j) = f * d(i,j) / 1000;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -65,6 +67,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,j) = 1;
+x.l(i,j) = min(x.l(i,j), x.up(i,j));
 
 * ============================================
 * Equations

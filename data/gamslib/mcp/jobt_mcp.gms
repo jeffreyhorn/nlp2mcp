@@ -75,11 +75,17 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 p.l(t) = 1;
+p.l(t) = min(p.l(t), p.up(t));
 s.l(t) = 1;
+s.l(t) = min(s.l(t), s.up(t));
 u.l(t) = 1;
+u.l(t) = min(u.l(t), u.up(t));
 w.l(t) = 1;
+w.l(t) = min(w.l(t), w.up(t));
 h.l(t) = 1;
+h.l(t) = min(h.l(t), h.up(t));
 f.l(t) = 1;
+f.l(t) = min(f.l(t), f.up(t));
 
 * ============================================
 * Equations

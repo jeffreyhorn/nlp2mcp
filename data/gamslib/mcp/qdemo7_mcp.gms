@@ -69,6 +69,8 @@ $offImplicitAssign
 pe(ce) = demdat(ce,"exp-p");
 pm(cm) = demdat(cm,"imp-p");
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -124,6 +126,12 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+flab.up(t) = famlab * fnum;
+
+* ============================================
 * Variable Initialization
 * ============================================
 
@@ -133,14 +141,23 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 xcrop.l(c) = 1;
+xcrop.l(c) = min(xcrop.l(c), xcrop.up(c));
 flab.l(t) = 1;
+flab.l(t) = min(flab.l(t), flab.up(t));
 tlab.l(t) = 1;
+tlab.l(t) = min(tlab.l(t), tlab.up(t));
 xlive.l(r) = 1;
+xlive.l(r) = min(xlive.l(r), xlive.up(r));
 natprod.l(c) = 1;
+natprod.l(c) = min(natprod.l(c), natprod.up(c));
 thire.l(s) = 1;
+thire.l(s) = min(thire.l(s), thire.up(s));
 natcon.l(c) = 1;
+natcon.l(c) = min(natcon.l(c), natcon.up(c));
 exports.l(c) = 1;
+exports.l(c) = min(exports.l(c), exports.up(c));
 imports.l(c) = 1;
+imports.l(c) = min(imports.l(c), imports.up(c));
 
 * ============================================
 * Equations

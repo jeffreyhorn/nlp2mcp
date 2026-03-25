@@ -47,6 +47,8 @@ y(n) = round(y(n), 6);
 w(m+floor((ord(n)-1)/k),n) = 1 - mod(ord(n) - 1, k) / k;
 w(m+1,n) = 1 - w(m,n);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

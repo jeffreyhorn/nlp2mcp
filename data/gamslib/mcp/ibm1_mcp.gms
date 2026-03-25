@@ -62,6 +62,15 @@ Positive Variables
 ;
 
 * ============================================
+* Variable Bounds
+* ============================================
+
+x.lo(s) = sup(s,"min-use");
+x.up(s) = sup(s,"inventory");
+bc.lo(e) = bspec(e,"minimum");
+bc.up(e) = bspec(e,"maximum");
+
+* ============================================
 * Equations
 * ============================================
 

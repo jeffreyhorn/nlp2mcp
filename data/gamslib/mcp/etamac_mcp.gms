@@ -83,6 +83,8 @@ dfact(tlast) = dfact(tlast) / (1 - dfactcurr(tlast));
 aconst = (y0 ** rho - bconst * e0 ** (rho * elvs) * n0 ** (rho * (1 - elvs))) / k0 ** (rho * kpvs);
 ln(tfirst) = l(tfirst) - spda ** ninit;
 
+execError = 0;
+
 loop(t,
    dfact(t+1) = dfact(t) * dfactcurr(t+1) ** nyper ;
    l(t+1) = l(t) * 1 + grow(t+1) ** nyper ;
@@ -147,6 +149,11 @@ Positive Variables
 * ============================================
 
 k.fx(tfirst) = k0 * spda ** ninit + knew(tfirst);
+kn.lo(t) = tol * i0 * ipm(t);
+y.lo(t) = y0;
+yn.lo(t) = tol * y0 * ln(t);
+en.lo(t) = tol * e0 * ln(t);
+nn.lo(t) = tol * n0 * ln(t);
 
 * ============================================
 * Variable Initialization

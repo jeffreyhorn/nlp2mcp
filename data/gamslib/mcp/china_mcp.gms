@@ -164,6 +164,8 @@ syield("rapes-c",s,f) = 0.8 * syield("rapeseed",s,f);
 sys(s,f) = sum(c, cdata(c,"straw-y") * syield(c,s,f));
 sys(s,f) = sys(s,f) - syield("e-rice",s,f) * cdata("e-rice","straw-y");
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -213,6 +215,7 @@ Positive Variables
 * ============================================
 
 purchase.up(cp)$(purdata(cp,"quantity")) = purdata(cp,"quantity");
+sales.lo(cs) = cdata(cs,"quota-sale");
 
 * ============================================
 * Variable Initialization
@@ -224,13 +227,21 @@ purchase.up(cp)$(purdata(cp,"quantity")) = purdata(cp,"quantity");
 * POSITIVE variables are set to 1.
 
 xcrop.l(s,f) = 1;
+xcrop.l(s,f) = min(xcrop.l(s,f), xcrop.up(s,f));
 xupland.l(ca) = 1;
+xupland.l(ca) = min(xupland.l(ca), xupland.up(ca));
 xpig.l(p) = 1;
+xpig.l(p) = min(xpig.l(p), xpig.up(p));
 xfeed.l(g) = 1;
+xfeed.l(g) = min(xfeed.l(g), xfeed.up(g));
 xfert.l(ca) = 1;
+xfert.l(ca) = min(xfert.l(ca), xfert.up(ca));
 purchase.l(ca) = 1;
+purchase.l(ca) = min(purchase.l(ca), purchase.up(ca));
 sales.l(ca) = 1;
+sales.l(ca) = min(sales.l(ca), sales.up(ca));
 aqsales.l(ca) = 1;
+aqsales.l(ca) = min(aqsales.l(ca), aqsales.up(ca));
 
 * ============================================
 * Equations
@@ -275,10 +286,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_aqsales(ca)$(cs(ca)).. ((-1) * aqsprice(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$(cs(ca)) - piL_aqsales(ca) =E= 0;
+stat_aqsales(ca)$(cs(ca)).. (((-1) * aqsprice(ca)))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$(cs(ca)) - piL_aqsales(ca) =E= 0;
 stat_ccost.. 1 + nu_cdef =E= 0;
 stat_purchase(ca)$(cp(ca)).. (((-1) * purdata(ca,"price")) * nu_cdef)$(cp(ca)) + ((-1) * 1$(cp(ca))) * lam_mb(ca) + lam_chemn$(sameas(ca, 'amm-bi')) - piL_purchase(ca) =E= 0;
-stat_sales(ca)$(cs(ca)).. ((-1) * cdata(ca,"proc-price")) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca) =E= 0;
+stat_sales(ca)$(cs(ca)).. (((-1) * cdata(ca,"proc-price")))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca) =E= 0;
 stat_xcrop(s,f)$(ss(s,f)).. ((-1) * (cxcrop(s) * 1$(ss(s,f)))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$(ss(s,f)))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$(ss(s,f)) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$(ss(s,f)) * lam_fert(en)) + ((-1) * (schem(s) * 1$(ss(s,f)))) * lam_chemn + 1$(ss(s,f)) * lam_landp + ((-1) * ((0.84 * mcp(s,"gm-seeds") - 0.16 * mcp(s,"g-manure")) * 1$(ss(s,f)))) * lam_gmseed - piL_xcrop(s,f) =E= 0;
 stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) - piL_xfeed(g) =E= 0;
 stat_xfert(ca)$(cf(ca)).. sum(cf, ((-1) * cxfert(cf)) * nu_cdef)$(cf(ca)) + sum(cf, crec(ca,cf) * lam_mb(ca)) + sum(cf, (crec(ca,cf) * lam_mb(ca-2))$(ord(ca) > 2)) + sum(cf, (crec(ca,cf) * lam_mb(ca+11))$(ord(ca) <= card(ca) - 11)) + sum(cf, (crec(ca,cf) * lam_mb(ca+13))$(ord(ca) <= card(ca) - 13)) + sum(cf, (crec(ca,cf) * lam_mb(ca-7))$(ord(ca) > 7)) + sum(cf, (crec(ca,cf) * lam_mb(ca+10))$(ord(ca) <= card(ca) - 10)) + sum(cf, (crec(ca,cf) * lam_mb(ca+12))$(ord(ca) <= card(ca) - 12)) + sum(cf, (crec(ca,cf) * lam_mb(ca+8))$(ord(ca) <= card(ca) - 8)) + sum(cf, (crec(ca,cf) * lam_mb(ca-3))$(ord(ca) > 3)) + sum(cf, (crec(ca,cf) * lam_mb(ca+15))$(ord(ca) <= card(ca) - 15)) + sum(cf, (crec(ca,cf) * lam_mb(ca+17))$(ord(ca) <= card(ca) - 17)) + sum(cf, (crec(ca,cf) * lam_mb(ca+5))$(ord(ca) <= card(ca) - 5)) + sum(cf, (crec(ca,cf) * lam_mb(ca+7))$(ord(ca) <= card(ca) - 7)) + sum(cf, (crec(ca,cf) * lam_mb(ca+21))$(ord(ca) <= card(ca) - 21)) + sum(cf, (crec(ca,cf) * lam_mb(ca+1))$(ord(ca) <= card(ca) - 1)) + sum(cf, (crec(ca,cf) * lam_mb(ca+3))$(ord(ca) <= card(ca) - 3)) + sum(cf, (crec(ca,cf) * lam_mb(ca-1))$(ord(ca) > 1)) + sum(cf, (crec(ca,cf) * lam_mb(ca-4))$(ord(ca) > 4)) + sum(cf, (crec(ca,cf) * lam_mb(ca+14))$(ord(ca) <= card(ca) - 14)) + sum(cf, (crec(ca,cf) * lam_mb(ca+4))$(ord(ca) <= card(ca) - 4)) + sum(cf, (crec(ca,cf) * lam_mb(ca+18))$(ord(ca) <= card(ca) - 18)) + sum(cf, (crec(ca,cf) * lam_mb(ca+9))$(ord(ca) <= card(ca) - 9)) + sum(cf, (crec(ca,cf) * lam_mb(ca+6))$(ord(ca) <= card(ca) - 6)) + sum(cf, (crec(ca,cf) * lam_mb(ca-6))$(ord(ca) > 6)) + sum(cf, (crec(ca,cf) * lam_mb(ca+2))$(ord(ca) <= card(ca) - 2)) + sum(cf, (crec(ca,cf) * lam_mb(ca+19))$(ord(ca) <= card(ca) - 19)) + sum(cf, (crec(ca,cf) * lam_mb(ca+16))$(ord(ca) <= card(ca) - 16)) + sum(cf, (crec(ca,cf) * lam_mb(ca+20))$(ord(ca) <= card(ca) - 20)) + sum(cf, (crec(ca,cf) * lam_mb(ca-5))$(ord(ca) > 5)) + sum(cf, (crec(ca,cf) * lam_mb(ca+23))$(ord(ca) <= card(ca) - 23)) + sum(cf, (crec(ca,cf) * lam_mb(ca+22))$(ord(ca) <= card(ca) - 22)) + sum(cf, (crec(ca,cf) * lam_mb(ca-11))$(ord(ca) > 11)) + sum(cf, (crec(ca,cf) * lam_mb(ca-13))$(ord(ca) > 13)) + sum(cf, (crec(ca,cf) * lam_mb(ca-18))$(ord(ca) > 18)) + sum(cf, (crec(ca,cf) * lam_mb(ca-14))$(ord(ca) > 14)) + sum(cf, (crec(ca,cf) * lam_mb(ca-10))$(ord(ca) > 10)) + sum(cf, (crec(ca,cf) * lam_mb(ca-8))$(ord(ca) > 8)) + sum(cf, (crec(ca,cf) * lam_mb(ca-12))$(ord(ca) > 12)) + sum(cf, (crec(ca,cf) * lam_mb(ca-15))$(ord(ca) > 15)) + sum(cf, (crec(ca,cf) * lam_mb(ca-17))$(ord(ca) > 17)) + sum(cf, (crec(ca,cf) * lam_mb(ca-9))$(ord(ca) > 9)) + sum(cf, (crec(ca,cf) * lam_mb(ca-16))$(ord(ca) > 16)) + sum(cf, (crec(ca,cf) * lam_mb(ca-19))$(ord(ca) > 19)) + sum(cf, (crec(ca,cf) * lam_mb(ca+25))$(ord(ca) <= card(ca) - 25)) + sum(cf, (crec(ca,cf) * lam_mb(ca+24))$(ord(ca) <= card(ca) - 24)) + sum(cf, (crec(ca,cf) * lam_mb(ca-21))$(ord(ca) > 21)) + sum(cf, (crec(ca,cf) * lam_mb(ca-20))$(ord(ca) > 20)) + sum(cf, (crec(ca,cf) * lam_mb(ca-25))$(ord(ca) > 25)) + sum(cf, (crec(ca,cf) * lam_mb(ca-22))$(ord(ca) > 22)) + sum(cf, (crec(ca,cf) * lam_mb(ca-24))$(ord(ca) > 24)) + sum(cf, (crec(ca,cf) * lam_mb(ca-23))$(ord(ca) > 23)) + sum(cf, sum(en, ((-1) * (0.01 * enc(cf,en))) * lam_fert(en))) - piL_xfert(ca) =E= 0;

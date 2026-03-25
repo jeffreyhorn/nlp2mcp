@@ -37,6 +37,8 @@ execseed = 12345;
 theta(i) = 2 * pi * uniform(0, 1);
 phi(i) = pi * uniform(0, 1);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -88,10 +90,15 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(i, j__);
+Alias(i, i__);
+
 * Stationarity equations
-stat_x(i).. sum(j$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (x(i) - x(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * x(i) * nu_ball(i) =E= 0;
-stat_y(i).. sum(j$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (y(i) - y(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * y(i) * nu_ball(i) =E= 0;
-stat_z(i).. sum(j$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j)))) * 2 * (z(i) - z(j)))) / sqr(sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))))) + 2 * z(i) * nu_ball(i) =E= 0;
+stat_x(i).. sum(j, sum(j__$(ut(i,i)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__)))) * 2 * (x(i) - x(j__)))) / sqr(sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__))))) + sum(i__$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))) * 2 * (x(i__) - x(i)) * (-1))) / sqr(sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))))) + 2 * x(i) * nu_ball(i) =E= 0;
+stat_y(i).. sum(j, sum(j__$(ut(i,i)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__)))) * 2 * (y(i) - y(j__)))) / sqr(sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__))))) + sum(i__$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))) * 2 * (y(i__) - y(i)) * (-1))) / sqr(sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))))) + 2 * y(i) * nu_ball(i) =E= 0;
+stat_z(i).. sum(j, sum(j__$(ut(i,i)), ((-1) * (1 / (2 * sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__)))) * 2 * (z(i) - z(j__)))) / sqr(sqrt(sqr(x(i) - x(j__)) + sqr(y(i) - y(j__)) + sqr(z(i) - z(j__))))) + sum(i__$(ut(i,j)), ((-1) * (1 / (2 * sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))) * 2 * (z(i__) - z(i)) * (-1))) / sqr(sqrt(sqr(x(i__) - x(i)) + sqr(y(i__) - y(i)) + sqr(z(i__) - z(i)))))) + 2 * z(i) * nu_ball(i) =E= 0;
 
 * Original equality equations
 obj.. potential =E= sum((i,j)$(ut(i,j)), 1 / sqrt(sqr(x(i) - x(j)) + sqr(y(i) - y(j)) + sqr(z(i) - z(j))));

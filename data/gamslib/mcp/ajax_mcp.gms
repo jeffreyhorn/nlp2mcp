@@ -61,6 +61,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 outp.l(g,m) = 1;
+outp.l(g,m) = min(outp.l(g,m), outp.up(g,m));
 
 * ============================================
 * Equations

@@ -37,6 +37,8 @@ $offImplicitAssign
 
 a(i,k)$(ord(i) > ord(k)) = 0;
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -67,6 +69,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(i,jj) = 1;
+x.l(i,jj) = min(x.l(i,jj), x.up(i,jj));
 
 * ============================================
 * Equations

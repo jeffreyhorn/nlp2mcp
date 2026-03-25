@@ -79,6 +79,8 @@ labw(i) = yw * labwc * whd / (whd - 2 * dist(i) / ws);
 cr(c) = yc(c) * pc(c);
 vr(t) = tr * sr * sum(a$(ord(t) + ord(a) > card(t)), yv(a) * delta(a));
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -129,10 +131,15 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 w.l(t,i) = 1;
+w.l(t,i) = min(w.l(t,i), w.up(t,i));
 v.l(t) = 1;
+v.l(t) = min(v.l(t), v.up(t));
 x.l(t,c) = 1;
+x.l(t,c) = min(x.l(t,c), x.up(t,c));
 mat.l(t) = 1;
+mat.l(t) = min(mat.l(t), mat.up(t));
 lc.l(t,m) = 1;
+lc.l(t,m) = min(lc.l(t,m), lc.up(t,m));
 
 * ============================================
 * Bound Mask Sets (partial bound coverage)
