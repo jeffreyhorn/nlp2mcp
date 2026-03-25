@@ -3094,13 +3094,28 @@ def _add_indexed_jacobian_terms(
                     _multi_pattern_correction: Expr | None = None
                     if len(group_entries) > 1:
                         rep_key = _derivative_structure_key(derivative)
-                        # Sub-group by structure key
-                        _sg: dict[str, list[tuple[int, int]]] = {}
+                        # Short-circuit: scan for any entry with a different
+                        # structure key before building the full sub-group map.
+                        # In the common single-pattern case this avoids
+                        # computing _derivative_structure_key for every entry.
+                        _has_second_pattern = False
                         for _rid, _cid in group_entries:
+                            if _rid == group_row_id and _cid == group_col_id:
+                                continue
                             _d = jacobian.get_derivative(_rid, _cid)
                             _k = _derivative_structure_key(_d)
-                            _sg.setdefault(_k, []).append((_rid, _cid))
-                        if len(_sg) > 1:
+                            if _k != rep_key:
+                                _has_second_pattern = True
+                                break
+                        _sg: dict[str, list[tuple[int, int]]] | None = None
+                        if _has_second_pattern:
+                            # Build the full sub-group map only when needed.
+                            _sg = {}
+                            for _rid, _cid in group_entries:
+                                _d = jacobian.get_derivative(_rid, _cid)
+                                _k = _derivative_structure_key(_d)
+                                _sg.setdefault(_k, []).append((_rid, _cid))
+                        if _sg is not None and len(_sg) > 1:
                             # Multiple patterns detected.  Use the majority
                             # pattern for the full sum (it will be correct for
                             # most entries) and emit a correction for the minority.
@@ -3178,55 +3193,70 @@ def _add_indexed_jacobian_terms(
                                     paired_maj[1]
                                 ]
                                 _var_labels = {str(v) for v in _paired_var_idx}
-                                if _elem_sub and _elem_sub.keys() & _var_labels:
-                                    _elem_sub = {}  # unsafe — fall through to no correction
-                                # Substitute in maj_d AST to align with min_d.
-                                maj_d_aligned = _substitute_elements(maj_d, _elem_sub)
-                                # Now subtract: both at the same concrete point.
-                                # Collect additive terms and cancel matching pairs.
-                                raw_correction = _subtract_and_cancel(
-                                    min_d,
-                                    maj_d_aligned,
-                                )
-                                if not (
-                                    isinstance(raw_correction, Const)
-                                    and raw_correction.value == 0.0
-                                ):
-                                    # Now replace concrete elements → domain names
-                                    # for the final correction expression.
-                                    # Use standard index replacement on raw_correction.
-                                    indexed_correction = _replace_indices_in_expr(
-                                        raw_correction,
-                                        var_domain,
-                                        element_to_set,
-                                        kkt.model_ir,
-                                        equation_domain=var_domain,
+                                _unsafe_sub = bool(_elem_sub and _elem_sub.keys() & _var_labels)
+                                if _unsafe_sub:
+                                    # Unsafe: substitution keys collide with var
+                                    # labels — bail out of correction entirely
+                                    # rather than proceeding with unaligned
+                                    # subtraction that would produce wrong terms.
+                                    import warnings
+
+                                    warnings.warn(
+                                        f"Multi-pattern Jacobian: skipping correction "
+                                        f"for {eq_name_base}/{var_name} because "
+                                        f"element substitution keys overlap with var "
+                                        f"indices (would cause accidental rewrites).",
+                                        stacklevel=2,
                                     )
-                                    # Correction multiplier uses variable-domain indices
-                                    # at matched positions (where diagonal eq≡var).
-                                    # We use var_domain (not mult_domain) because the
-                                    # correction applies at the specific point where
-                                    # eq and var indices coincide (the diagonal),
-                                    # indexed by the variable's own domain names.
-                                    # For offset groups with lead/lag, the offset is
-                                    # already zero at matched positions (offset_key[vi]==0),
-                                    # so no offset adjustment is needed.
-                                    corr_mult_domain = tuple(
-                                        var_domain[vi]
-                                        for vi, o in enumerate(offset_key)
-                                        if vi < len(var_domain) and o != _SENTINEL_UNMATCHED
+                                if not _unsafe_sub:
+                                    # Substitute in maj_d AST to align with min_d.
+                                    maj_d_aligned = _substitute_elements(maj_d, _elem_sub)
+                                    # Now subtract: both at the same concrete point.
+                                    # Collect additive terms and cancel matching pairs.
+                                    raw_correction = _subtract_and_cancel(
+                                        min_d,
+                                        maj_d_aligned,
                                     )
-                                    if not corr_mult_domain:
-                                        corr_mult_domain = mult_domain
-                                    corr_mult = MultiplierRef(
-                                        name_func(eq_name_base),
-                                        corr_mult_domain,
-                                    )
-                                    _multi_pattern_correction = Binary(
-                                        "*",
-                                        indexed_correction,
-                                        corr_mult,
-                                    )
+                                    if not (
+                                        isinstance(raw_correction, Const)
+                                        and raw_correction.value == 0.0
+                                    ):
+                                        # Now replace concrete elements → domain names
+                                        # for the final correction expression.
+                                        # Use standard index replacement on raw_correction.
+                                        indexed_correction = _replace_indices_in_expr(
+                                            raw_correction,
+                                            var_domain,
+                                            element_to_set,
+                                            kkt.model_ir,
+                                            equation_domain=var_domain,
+                                        )
+                                        # Correction multiplier uses variable-domain
+                                        # indices at matched positions (diagonal eq≡var).
+                                        # We use var_domain (not mult_domain) because the
+                                        # correction applies at the specific point where
+                                        # eq and var indices coincide (the diagonal),
+                                        # indexed by the variable's own domain names.
+                                        # For offset groups with lead/lag, the offset is
+                                        # already zero at matched positions
+                                        # (offset_key[vi]==0), so no offset adjustment
+                                        # is needed.
+                                        corr_mult_domain = tuple(
+                                            var_domain[vi]
+                                            for vi, o in enumerate(offset_key)
+                                            if vi < len(var_domain) and o != _SENTINEL_UNMATCHED
+                                        )
+                                        if not corr_mult_domain:
+                                            corr_mult_domain = mult_domain
+                                        corr_mult = MultiplierRef(
+                                            name_func(eq_name_base),
+                                            corr_mult_domain,
+                                        )
+                                        _multi_pattern_correction = Binary(
+                                            "*",
+                                            indexed_correction,
+                                            corr_mult,
+                                        )
 
                     # Issue #649: Build constraint-specific element-to-set mapping.
                     # When a constraint has multiple indices from the same underlying set
