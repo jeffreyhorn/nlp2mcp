@@ -3147,8 +3147,13 @@ def _add_indexed_jacobian_terms(
                             fixed_positions = non_sentinel_positions - varying_positions
                             # If ALL fixed positions have zero offset, this is a
                             # pure sum-binding pattern — consolidate.
-                            if varying_positions and all(
-                                all(k[pos] == 0 for pos in fixed_positions) for k in offset_groups
+                            if (
+                                varying_positions
+                                and fixed_positions
+                                and all(
+                                    all(k[pos] == 0 for pos in fixed_positions)
+                                    for k in offset_groups
+                                )
                             ):
                                 # Consolidate: merge all entries under a single key.
                                 # Mark varying positions as sentinel (they correspond to

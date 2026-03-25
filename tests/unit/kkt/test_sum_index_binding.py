@@ -1,8 +1,9 @@
-"""Tests for sum index binding in stationarity equations.
+"""Tests for sum index binding as implemented by `_compute_index_offset_key`.
 
-Issue #1038: When a 3D variable x(r,rr,c) appears in a 2D equation DX(r,c)
-via sum(rr, X(rr,r,c)), the stationarity builder should emit nu_DX(rr,c)
-(with swapped indices), not nu_DX(r,c) with lead/lag guards.
+These tests cover the index-offset and sentinel behavior needed for Issue #1038:
+when a 3D variable x(r, rr, c) appears in a 2D equation DX(r, c) via
+sum(rr, X(rr, r, c)), the helper must correctly remap indices so the
+stationarity builder can emit the appropriate multipliers.
 """
 
 from src.kkt.stationarity import _SENTINEL_UNMATCHED, _compute_index_offset_key

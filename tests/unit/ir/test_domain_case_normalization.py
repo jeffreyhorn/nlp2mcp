@@ -49,10 +49,10 @@ solve m using lp minimizing x;
     lhs, rhs = eq.lhs_rhs
     from src.ir.ast import VarRef
 
-    if isinstance(lhs, VarRef):
-        assert all(
-            idx == idx.lower() for idx in lhs.indices if isinstance(idx, str)
-        ), f"VarRef indices should be lowercase: {lhs.indices}"
+    assert isinstance(lhs, VarRef), f"Expected VarRef on LHS, got {type(lhs)}"
+    assert all(
+        idx == idx.lower() for idx in lhs.indices if isinstance(idx, str)
+    ), f"VarRef indices should be lowercase: {lhs.indices}"
 
 
 def test_sum_index_lowercased(tmp_path):
