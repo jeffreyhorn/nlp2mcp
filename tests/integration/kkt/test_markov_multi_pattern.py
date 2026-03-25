@@ -14,13 +14,23 @@ import tempfile
 
 import pytest
 
+pytestmark = [pytest.mark.integration, pytest.mark.slow]
+
 
 class TestMarkovMultiPatternIntegration:
     """Integration test using the markov GAMSlib model."""
 
     @pytest.fixture
     def markov_gms(self):
-        """Path to markov.gms; skip if not available."""
+        """Path to markov.gms; skip if not available.
+
+        Uses the real markov model because the multi-pattern Jacobian
+        requires a constraint with both a direct VarRef and a summed
+        VarRef to the same variable — a structure that's difficult to
+        reproduce with an inline minimal fixture without also needing
+        the full AD + KKT pipeline to generate the correct stat_z.
+        Skipped in CI where raw GAMSlib files are absent.
+        """
         path = os.path.join("data", "gamslib", "raw", "markov.gms")
         if not os.path.exists(path):
             pytest.skip("markov.gms not available (CI)")

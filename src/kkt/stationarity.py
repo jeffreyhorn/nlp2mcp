@@ -3166,6 +3166,15 @@ def _add_indexed_jacobian_terms(
                                 for ei in range(min(len(_pmin_eq_idx), len(_pmaj_eq_idx))):
                                     if _pmaj_eq_idx[ei] != _pmin_eq_idx[ei]:
                                         _elem_sub[_pmaj_eq_idx[ei]] = _pmin_eq_idx[ei]
+                                # Guard: if any substitution key also appears in the
+                                # paired var indices, the substitution would cause
+                                # accidental rewrites.  Skip correction in that case.
+                                _, _paired_var_idx = jacobian.index_mapping.col_to_var[
+                                    paired_maj[1]
+                                ]
+                                _var_labels = {str(v) for v in _paired_var_idx}
+                                if _elem_sub and _elem_sub.keys() & _var_labels:
+                                    _elem_sub = {}  # unsafe — fall through to no correction
                                 # Substitute in maj_d AST to align with min_d.
                                 maj_d_aligned = _substitute_elements(maj_d, _elem_sub)
                                 # Now subtract: both at the same concrete point.
