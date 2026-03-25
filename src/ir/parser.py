@@ -4296,9 +4296,12 @@ class _ModelBuilder:
                 for rk in resolved_keys:
                     expr_map.pop(rk, None)
 
-                # If all resolved values are the same, store as scalar bound
+                # If all resolved values are the same, promote to scalar bound
+                # and clear per-element entries to avoid duplicate constraints
                 if all_resolved_values and len(set(all_resolved_values)) == 1:
                     setattr(var_def, kind, all_resolved_values[0])
+                    bound_map = getattr(var_def, f"{kind}_map")
+                    bound_map.clear()
 
     @staticmethod
     def _substitute_loop_index_tokens(node: Tree | Token, subst: dict[str, str]) -> Tree | Token:
