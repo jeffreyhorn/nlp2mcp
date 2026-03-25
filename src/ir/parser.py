@@ -4017,10 +4017,17 @@ class _ModelBuilder:
         This handles cases like ``psdat('scenario-1', p, 'p')`` where the
         parameter uses compound keys internally.
         """
-        # Build substitution: loop index name → first element of its set
+        # Build substitution: loop index name → first element of its set.
+        # Use alias-aware resolution so loop indices over aliases are handled.
         subst: dict[str, str] = {}
         for idx_name in loop_indices:
             sdef = self.model.sets.get(idx_name.lower()) or self.model.sets.get(idx_name)
+            if not sdef or not sdef.members:
+                # Try resolving as an alias
+                adef = self.model.aliases.get(idx_name.lower()) or self.model.aliases.get(idx_name)
+                if adef:
+                    target = adef.target if hasattr(adef, "target") else str(adef)
+                    sdef = self.model.sets.get(target.lower()) if isinstance(target, str) else None
             if sdef and sdef.members:
                 subst[idx_name.lower()] = sdef.members[0]
 
