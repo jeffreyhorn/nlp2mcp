@@ -16,6 +16,7 @@ from src.ir.ast import (
     DollarConditional,
     ParamRef,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
@@ -79,6 +80,18 @@ class TestDerivativeStructureKey:
         s2 = Sum(("j",), Binary("+", VarRef("x", ("j",)), Const(1.0)))
         assert _derivative_structure_key(s1) == _derivative_structure_key(s2)
 
+    def test_symbolref_normalized(self):
+        """SymbolRef with different names → same key (normalized)."""
+        a = SymbolRef("element_a")
+        b = SymbolRef("element_b")
+        assert _derivative_structure_key(a) == _derivative_structure_key(b)
+
+    def test_symbolref_in_expr(self):
+        """SymbolRef inside Binary doesn't affect structural key."""
+        a = Binary("+", SymbolRef("x"), Const(1.0))
+        b = Binary("+", SymbolRef("y"), Const(1.0))
+        assert _derivative_structure_key(a) == _derivative_structure_key(b)
+
 
 # ── _substitute_elements ─────────────────────────────────────────────
 
@@ -127,6 +140,18 @@ class TestSubstituteElements:
         expr = VarRef("x", ("old",), "l")
         result = _substitute_elements(expr, {"old": "new"})
         assert result == VarRef("x", ("new",), "l")
+
+    def test_symbolref_name_substitution(self):
+        """SymbolRef name is substituted when it matches."""
+        expr = SymbolRef("old_element")
+        result = _substitute_elements(expr, {"old_element": "new_element"})
+        assert result == SymbolRef("new_element")
+
+    def test_symbolref_no_match(self):
+        """SymbolRef unchanged when name doesn't match."""
+        expr = SymbolRef("foo")
+        result = _substitute_elements(expr, {"bar": "baz"})
+        assert result is expr
 
 
 # ── _subtract_and_cancel ─────────────────────────────────────────────

@@ -2880,8 +2880,11 @@ def _substitute_elements(expr: Expr, subs: dict[str, str]) -> Expr:
         if isinstance(e, Const):
             return e
         if isinstance(e, SymbolRef):
-            # SymbolRef is a scalar — no indices to substitute.
-            return e
+            # Apply substitution to the symbol name; SymbolRef has no indices.
+            new_name = subs.get(e.name, e.name)
+            if new_name == e.name:
+                return e
+            return SymbolRef(new_name)
         if isinstance(e, ParamRef):
             new_indices = tuple(_sub_idx(i) for i in e.indices) if e.indices else e.indices
             if new_indices == e.indices:
@@ -2944,7 +2947,9 @@ def _derivative_structure_key(expr: Expr) -> str:
         if isinstance(e, Const):
             return f"C({e.value})"
         if isinstance(e, SymbolRef):
-            return f"S({e.name})"
+            # Normalize to ignore concrete element labels so fingerprints
+            # depend only on structure/shape, not values.
+            return "S(*)"
         if isinstance(e, ParamRef):
             arity = len(e.indices) if e.indices else 0
             return f"P({e.name},{arity})"
