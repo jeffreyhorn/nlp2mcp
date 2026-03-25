@@ -4174,53 +4174,101 @@ class _ModelBuilder:
         """
         from src.ir.ast import ParamRef
 
+        def _try_resolve_param_ref(
+            param_expr: ParamRef,
+        ) -> float | None:
+            """Try to resolve a ParamRef with all-literal indices to a numeric value."""
+            param_name = param_expr.name.lower()
+            pdef = self.model.params.get(param_name) or self.model.params.get(param_expr.name)
+            if pdef is None or not pdef.values:
+                return None
+            key_parts = [str(idx).strip("'\"") for idx in param_expr.indices]
+            key_tuple = tuple(key_parts)
+            val = pdef.values.get(key_tuple)
+            # Try compound-key format (merge adjacent dims with '.')
+            if val is None and len(key_parts) >= 2:
+                for merge_start in range(len(key_parts) - 1):
+                    compound = list(key_parts)
+                    merged = compound[merge_start] + "." + compound[merge_start + 1]
+                    trial = compound[:merge_start] + [merged] + compound[merge_start + 2 :]
+                    val = pdef.values.get(tuple(trial))
+                    if val is not None:
+                        break
+            return val
+
         for var_def in self.model.variables.values():
             for kind in ("lo", "up", "fx"):
                 expr_map = getattr(var_def, f"{kind}_expr_map", None)
                 scalar_expr = getattr(var_def, f"{kind}_expr", None)
 
-                # Decide which expression form to try to resolve:
-                #  - Prefer the per-index map when present and singular (existing behavior).
-                #  - Otherwise, fall back to a scalar ParamRef expression, treating it as
-                #    a "scalar map" over an empty domain so we can reuse the same logic.
-                is_scalar_path = False
-                if expr_map:
-                    # Only handle the common case: single entry whose key matches domain
-                    if len(expr_map) != 1:
+                # Path 1: scalar expression bound (ParamRef with all-literal indices)
+                if (
+                    not expr_map
+                    and isinstance(scalar_expr, ParamRef)
+                    and getattr(scalar_expr, "indices", None)
+                ):
+                    val = _try_resolve_param_ref(scalar_expr)
+                    if val is not None:
+                        setattr(var_def, kind, val)
+                        setattr(var_def, f"{kind}_expr", None)
+                    continue
+
+                # Path 2: indexed expression map — resolve each entry independently
+                if not expr_map:
+                    continue
+
+                resolved_keys: list[object] = []
+                bound_map = getattr(var_def, f"{kind}_map")
+                all_resolved_values: list[float] = []
+
+                for map_key, map_expr in list(expr_map.items()):
+                    if not isinstance(map_expr, ParamRef) or not map_expr.indices:
                         continue
-                    domain_key, expr = next(iter(expr_map.items()))
-                elif isinstance(scalar_expr, ParamRef) and getattr(scalar_expr, "indices", None):
-                    domain_key = ()
-                    expr = scalar_expr
-                    is_scalar_path = True
-                else:
-                    continue
-                if not isinstance(expr, ParamRef) or not expr.indices:
-                    continue
 
-                # Try to resolve each domain member's value
-                param_name = expr.name.lower()
-                pdef = self.model.params.get(param_name) or self.model.params.get(expr.name)
-                if pdef is None or not pdef.values:
-                    continue
+                    # Determine which ParamRef indices are domain variables vs literals
+                    domain_key = map_key if isinstance(map_key, tuple) else (map_key,)
+                    domain_set_names = {str(d).lower() for d in domain_key}
+                    literal_indices: dict[int, str] = {}
+                    domain_indices: dict[int, str] = {}
+                    for i, idx in enumerate(map_expr.indices):
+                        idx_str = str(idx)
+                        if idx_str.lower() in domain_set_names:
+                            domain_indices[i] = idx_str.lower()
+                        else:
+                            literal_indices[i] = idx_str.strip("'\"")
 
-                # Find which indices are domain variables vs literals
-                # domain_key tells us the variable's domain (e.g., ('p',))
-                domain_set_names = {str(d).lower() for d in domain_key}
-                literal_indices: dict[int, str] = {}
-                domain_indices: dict[int, str] = {}
-                for i, idx in enumerate(expr.indices):
-                    idx_str = str(idx)
-                    if idx_str.lower() in domain_set_names:
-                        domain_indices[i] = idx_str.lower()
-                    else:
-                        # Literal element (e.g., 'scenario-1', 'p')
-                        literal_indices[i] = idx_str.strip("'\"")
-
-                if not domain_indices:
-                    if is_scalar_path:
+                    if not domain_indices:
                         # All indices are literals — try direct lookup
-                        key_parts = [literal_indices[i] for i in sorted(literal_indices)]
+                        val = _try_resolve_param_ref(map_expr)
+                        if val is not None:
+                            bound_map[map_key] = val
+                            resolved_keys.append(map_key)
+                            all_resolved_values.append(val)
+                        continue
+
+                    # Single-domain case (most common): iterate over set members
+                    if len(domain_indices) != 1:
+                        continue
+
+                    param_name = map_expr.name.lower()
+                    pdef = self.model.params.get(param_name) or self.model.params.get(map_expr.name)
+                    if pdef is None or not pdef.values:
+                        continue
+
+                    dom_pos, dom_name = next(iter(domain_indices.items()))
+                    sdef = self.model.sets.get(dom_name)
+                    if not sdef or not sdef.members:
+                        continue
+
+                    entry_resolved: dict[tuple[str, ...], float] = {}
+                    for member in sdef.members:
+                        key_parts: list[str] = []
+                        for i in range(len(map_expr.indices)):
+                            if i == dom_pos:
+                                key_parts.append(member)
+                            elif i in literal_indices:
+                                key_parts.append(literal_indices[i])
+
                         key_tuple = tuple(key_parts)
                         val = pdef.values.get(key_tuple)
                         # Try compound-key format
@@ -4234,82 +4282,23 @@ class _ModelBuilder:
                                 val = pdef.values.get(tuple(trial))
                                 if val is not None:
                                     break
-                        if val is not None:
-                            setattr(var_def, kind, val)
-                            setattr(var_def, f"{kind}_expr", None)
-                    continue
-
-                # Get members of the domain set(s)
-                domain_members: dict[str, list[str]] = {}
-                for _pos, set_name in domain_indices.items():
-                    sdef = self.model.sets.get(set_name)
-                    if sdef and sdef.members:
-                        domain_members[set_name] = sdef.members
-
-                if not domain_members:
-                    continue
-
-                # Try to look up values for each domain member
-                # Build compound keys to match internal storage
-                resolved_values: dict[tuple[str, ...], float] = {}
-                all_same = True
-                first_val = None
-
-                # For simplicity, handle the single-domain case (most common)
-                if len(domain_indices) == 1:
-                    dom_pos, dom_name = next(iter(domain_indices.items()))
-                    members = domain_members.get(dom_name, [])
-                    for member in members:
-                        # Build lookup key with compound elements
-                        # Try different key formats to handle compound storage
-                        key_parts: list[str] = []
-                        for i in range(len(expr.indices)):
-                            if i == dom_pos:
-                                key_parts.append(member)
-                            elif i in literal_indices:
-                                key_parts.append(literal_indices[i])
-
-                        # Try 3-key lookup first
-                        key_tuple = tuple(key_parts)
-                        val = pdef.values.get(key_tuple)
-
-                        # Try compound-key format (merge adjacent dims with '.')
-                        if val is None and len(key_parts) >= 2:
-                            for merge_start in range(len(key_parts) - 1):
-                                compound = list(key_parts)
-                                merged = compound[merge_start] + "." + compound[merge_start + 1]
-                                trial = (
-                                    compound[:merge_start] + [merged] + compound[merge_start + 2 :]
-                                )
-                                val = pdef.values.get(tuple(trial))
-                                if val is not None:
-                                    break
-
                         if val is None:
-                            # Default to 0.0 (GAMS convention for missing entries)
                             val = 0.0
+                        entry_resolved[(member,)] = val
 
-                        resolved_values[(member,)] = val
-                        if first_val is None:
-                            first_val = val
-                        elif val != first_val:
-                            all_same = False
+                    if entry_resolved:
+                        for ek, ev in entry_resolved.items():
+                            bound_map[ek] = ev
+                            all_resolved_values.append(ev)
+                        resolved_keys.append(map_key)
 
-                    if resolved_values:
-                        # Clear the expression-based bound
-                        if is_scalar_path:
-                            setattr(var_def, f"{kind}_expr", None)
-                        else:
-                            expr_map.clear()
+                # Remove resolved entries from expr_map
+                for rk in resolved_keys:
+                    expr_map.pop(rk, None)
 
-                        if all_same and first_val is not None:
-                            # All members have same value → scalar bound
-                            setattr(var_def, kind, first_val)
-                        else:
-                            # Per-element bounds
-                            bound_map = getattr(var_def, f"{kind}_map")
-                            for key, val in resolved_values.items():
-                                bound_map[key] = val
+                # If all resolved values are the same, store as scalar bound
+                if all_resolved_values and len(set(all_resolved_values)) == 1:
+                    setattr(var_def, kind, all_resolved_values[0])
 
     @staticmethod
     def _substitute_loop_index_tokens(node: Tree | Token, subst: dict[str, str]) -> Tree | Token:
