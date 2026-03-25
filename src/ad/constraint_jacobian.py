@@ -515,17 +515,17 @@ def _expand_sum_body(
         """Check if expression still contains IndexOffset nodes with non-Const offsets."""
         if isinstance(e, IndexOffset) and not isinstance(e.offset, Const):
             return True
-        for child in (
-            getattr(e, a, None)
-            for a in ("left", "right", "operand", "value_expr", "condition", "body", "expr")
-        ):
+        # Traverse single-child attributes
+        for a in ("left", "right", "child", "value_expr", "condition", "body", "expr"):
+            child = getattr(e, a, None)
             if isinstance(child, Expr) and _has_unresolved_index_offsets(child):
                 return True
-        for attr in ("indices",):
-            indices = getattr(e, attr, None)
-            if indices:
-                for idx in indices:
-                    if isinstance(idx, Expr) and _has_unresolved_index_offsets(idx):
+        # Traverse tuple/list attributes (Call.args, indices, etc.)
+        for a in ("args", "indices"):
+            items = getattr(e, a, None)
+            if items:
+                for item in items:
+                    if isinstance(item, Expr) and _has_unresolved_index_offsets(item):
                         return True
         return False
 
