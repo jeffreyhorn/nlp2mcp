@@ -1,0 +1,81 @@
+"""Tests for domain case normalization in equation/variable definitions.
+
+Issue: GAMS is case-insensitive, but the parser preserved uppercase from
+the definition head (e.g., SX(R,C).. produced domain ('R','C') instead of
+('r','c')), causing Jacobian mismatches.
+"""
+
+from src.ir.parser import parse_model_file
+
+
+def test_equation_domain_lowercased(tmp_path):
+    """Equation definition with uppercase indices should produce lowercase domain."""
+    gams = """\
+Set r / r1, r2 /;
+Set c / c1, c2 /;
+Variable x(r,c);
+Equation eq(r,c);
+eq(R,C).. x(R,C) =e= 0;
+Model m / eq /;
+solve m using lp minimizing x;
+"""
+    gams_file = tmp_path / "test_case.gms"
+    gams_file.write_text(gams)
+    model = parse_model_file(str(gams_file))
+
+    eq = model.equations.get("eq")
+    assert eq is not None
+    # Domain should be lowercase regardless of source casing
+    assert eq.domain == ("r", "c"), f"Expected ('r', 'c'), got {eq.domain}"
+
+
+def test_variable_indices_lowercased_in_expressions(tmp_path):
+    """Variable references in expressions should have lowercase indices."""
+    gams = """\
+Set r / r1, r2 /;
+Variable x(r);
+Equation eq(r);
+eq(R).. x(R) =e= 0;
+Model m / eq /;
+solve m using lp minimizing x;
+"""
+    gams_file = tmp_path / "test_case2.gms"
+    gams_file.write_text(gams)
+    model = parse_model_file(str(gams_file))
+
+    eq = model.equations.get("eq")
+    assert eq is not None
+    # The LHS should reference x with lowercase index
+    lhs, rhs = eq.lhs_rhs
+    from src.ir.ast import VarRef
+
+    if isinstance(lhs, VarRef):
+        assert all(
+            idx == idx.lower() for idx in lhs.indices if isinstance(idx, str)
+        ), f"VarRef indices should be lowercase: {lhs.indices}"
+
+
+def test_sum_index_lowercased(tmp_path):
+    """Sum iteration variables from uppercase source should be lowercase."""
+    gams = """\
+Set r / r1, r2 /;
+Alias(r, rr);
+Variable x(r,rr);
+Equation eq(r);
+eq(R).. sum(RR, x(R,RR)) =e= 0;
+Model m / eq /;
+solve m using lp minimizing x;
+"""
+    gams_file = tmp_path / "test_case3.gms"
+    gams_file.write_text(gams)
+    model = parse_model_file(str(gams_file))
+
+    eq = model.equations.get("eq")
+    assert eq is not None
+    lhs, _ = eq.lhs_rhs
+    from src.ir.ast import Sum
+
+    assert isinstance(lhs, Sum), f"Expected Sum, got {type(lhs)}"
+    # Sum index sets should be lowercase
+    for idx_set in lhs.index_sets:
+        assert idx_set == idx_set.lower(), f"Sum index '{idx_set}' should be lowercase"

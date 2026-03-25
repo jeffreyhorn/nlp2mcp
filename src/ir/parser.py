@@ -575,7 +575,9 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
                         elif second_child.data == "index_list":
                             identifiers.extend(_extract_domain_indices(second_child))
 
-    return tuple(identifiers)
+    # GAMS is case-insensitive; normalize domain identifiers to lowercase
+    # so equation/variable domains match regardless of source casing.
+    return tuple(i.lower() for i in identifiers)
 
 
 def _domain_list_condition(node: Tree) -> Expr | None:
@@ -643,6 +645,8 @@ def _domain_list_has_offset(node: Tree) -> bool:
 def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     """Recursively extract base identifiers from index_list for domain tracking.
 
+    GAMS is case-insensitive, so all identifiers are normalized to lowercase.
+
     Examples:
         - i          -> ['i']
         - i+1        -> ['i']
@@ -652,7 +656,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     identifiers = []
     for child in index_list_node.children:
         if isinstance(child, Token):
-            identifiers.append(_token_text(child))
+            identifiers.append(_token_text(child).lower())
         elif isinstance(child, Tree):
             # index_list contains index_expr nodes, which are transformed to index_simple, index_subset, or index_string
             if child.data == "index_simple":
@@ -669,7 +673,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                         or (tok_val[0] == '"' and tok_val[-1] == '"')
                     ):
                         continue
-                    identifiers.append(_token_text(tok))
+                    identifiers.append(_token_text(tok).lower())
             elif child.data == "index_subset":
                 # index_subset: ID "(" index_list ")" lag_lead_suffix?
                 # Recursively extract from the nested index_list
@@ -945,7 +949,7 @@ def _process_index_expr(
     if index_node.data == "index_subset":
         # For subset indexing like aij(as,i,j), return SubsetIndex
         # Child 0: subset name (ID), Child 1: index_list with index_simple nodes
-        subset_name = _token_text(index_node.children[0])
+        subset_name = _token_text(index_node.children[0]).lower()
         index_list_node = index_node.children[1]
 
         # Extract string indices from the nested index_list
@@ -955,7 +959,7 @@ def _process_index_expr(
             if isinstance(child, Tree):
                 if child.data == "index_simple":
                     # index_simple has ID as first child
-                    inner_indices.append(_token_text(child.children[0]))
+                    inner_indices.append(_token_text(child.children[0]).lower())
                 elif child.data == "index_string":
                     # Issue #566: index_string has STRING as first child
                     # Sprint 18 Day 2: Preserve quotes for element literals
@@ -990,7 +994,7 @@ def _process_index_expr(
                     )
             elif isinstance(child, Token):
                 # Direct token (fallback)
-                inner_indices.append(_token_text(child))
+                inner_indices.append(_token_text(child).lower())
 
         # Sprint 12 Issue #455: Return SubsetIndex to preserve full information
         # This allows _expand_variable_indices to properly handle bounds like
@@ -1003,15 +1007,16 @@ def _process_index_expr(
 
     # PR #658: For quoted IDs (element literals), preserve quotes but strip whitespace
     # E.g., '"rating  "' → '"rating"'
+    # GAMS is case-insensitive, so non-quoted identifiers are lowercased.
     if base_token.type == "ID" and len(token_str) >= 2:
         if token_str.startswith('"') and token_str.endswith('"'):
             base = f'"{token_str[1:-1].strip()}"'
         elif token_str.startswith("'") and token_str.endswith("'"):
             base = f'"{token_str[1:-1].strip()}"'  # Normalize to double quotes
         else:
-            base = _token_text(base_token)
+            base = _token_text(base_token).lower()
     else:
-        base = _token_text(base_token)
+        base = _token_text(base_token).lower()
 
     # No suffix? Just return the base identifier
     if len(index_node.children) == 1:
@@ -1030,12 +1035,12 @@ def _process_index_expr(
         if offset_node.type == "NUMBER":
             offset_expr = Const(float(offset_node))
         else:
-            offset_expr = SymbolRef(_token_text(offset_node))
+            offset_expr = SymbolRef(_token_text(offset_node).lower())
     elif offset_node.data == "offset_number":
         offset_value = float(offset_node.children[0])
         offset_expr = Const(offset_value)
     elif offset_node.data == "offset_variable":
-        offset_name = _token_text(offset_node.children[0])
+        offset_name = _token_text(offset_node.children[0]).lower()
         offset_expr = SymbolRef(offset_name)
     elif offset_node.data == "offset_func":
         # Function call or indexed parameter offset: t-ord(l), t+li(k), etc.
@@ -5226,20 +5231,43 @@ class _ModelBuilder:
         # _extract_domain_indices but we need it to generate a SetMembershipTest
         # condition restricting the sum to valid set members.
         # Collect (set_name, child_indices) for each index_subset found.
-        subset_domain_info: list[tuple[str, list[str]]] = []
+        # (set_name, extracted_indices, has_literal_co_indices, all_raw_indices)
+        subset_domain_info: list[tuple[str, list[str], bool, list[str]]] = []
         if index_list_node.data != "id_list":
             for child in index_list_node.children:
                 if isinstance(child, Tree) and child.data == "index_subset":
                     # First Token child is the set name
                     set_name = None
                     child_indices: list[str] = []
+                    all_raw_indices: list[str] = []
                     for subchild in child.children:
                         if isinstance(subchild, Token) and set_name is None:
                             set_name = _token_text(subchild)
                         elif isinstance(subchild, Tree) and subchild.data == "index_list":
                             child_indices = _extract_domain_indices(subchild)
+                            # Collect ALL indices including literals.
+                            # Preserve quotes on literal elements (e.g., 'time-2')
+                            # so they emit correctly in GAMS SetMembershipTest.
+                            for idx_child in subchild.children:
+                                if isinstance(idx_child, Token):
+                                    all_raw_indices.append(_token_text(idx_child))
+                                elif isinstance(idx_child, Tree) and idx_child.children:
+                                    tok = idx_child.children[0]
+                                    if isinstance(tok, Token):
+                                        tok_val = str(tok)
+                                        is_quoted = len(tok_val) >= 2 and (
+                                            (tok_val[0] == "'" and tok_val[-1] == "'")
+                                            or (tok_val[0] == '"' and tok_val[-1] == '"')
+                                        )
+                                        if is_quoted:
+                                            all_raw_indices.append(tok_val)
+                                        else:
+                                            all_raw_indices.append(_token_text(tok))
                     if set_name and child_indices:
-                        subset_domain_info.append((set_name, child_indices))
+                        has_literals = len(all_raw_indices) > len(child_indices)
+                        subset_domain_info.append(
+                            (set_name, child_indices, has_literals, all_raw_indices)
+                        )
 
         # Use explicit names for error messages
         aggregation_name = "sum" if aggregation_class is Sum else "prod"
@@ -5338,7 +5366,16 @@ class _ModelBuilder:
         # Also track which indices from index_subset are already in the
         # enclosing free_domain — they are filters, not new iteration variables.
         subset_filter_indices: set[str] = set()
-        for set_name, child_idxs in subset_domain_info:
+        # Subsets with literal co-indices need special SetMembershipTest handling
+        literal_subset_conditions: list[tuple[str, list[str]]] = []
+        for set_name, child_idxs, has_literal_co_indices, all_raw_idxs in subset_domain_info:
+            if has_literal_co_indices:
+                # When a subset has literal co-indices (e.g., tn('time-2',n)),
+                # don't filter any indices — they're all needed as iteration vars.
+                # Build the SetMembershipTest from the full raw indices (including
+                # literals) later, bypassing the position-based multidim_set_conditions.
+                literal_subset_conditions.append((set_name, all_raw_idxs))
+                continue
             # Find position of first child index in expanded_indices
             try:
                 start_pos = expanded_indices.index(child_idxs[0])
@@ -5376,21 +5413,32 @@ class _ModelBuilder:
         # E.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...)
         # Use the actual expanded iterator symbols (which may have alias
         # substitutions) rather than the raw domain tuple.
+        all_set_conds: list[Expr] = []
         if multidim_set_conditions:
-            conds: list[Expr] = []
             for set_name, start_pos, count in multidim_set_conditions:
                 set_iterators = tuple(
                     SymbolRef(expanded_indices[i]) for i in range(start_pos, start_pos + count)
                 )
-                conds.append(
+                all_set_conds.append(
                     SetMembershipTest(
                         set_name=set_name,
                         indices=set_iterators,
                     )
                 )
-            # Build combined set-membership condition
-            set_cond: Expr = conds[0]
-            for c in conds[1:]:
+        # Handle subsets with literal co-indices (e.g., tn('time-2',n)).
+        # Build SetMembershipTest from full raw indices including literals.
+        if literal_subset_conditions:
+            for set_name, raw_idxs in literal_subset_conditions:
+                set_iterators = tuple(SymbolRef(idx) for idx in raw_idxs)
+                all_set_conds.append(
+                    SetMembershipTest(
+                        set_name=set_name,
+                        indices=set_iterators,
+                    )
+                )
+        if all_set_conds:
+            set_cond: Expr = all_set_conds[0]
+            for c in all_set_conds[1:]:
                 set_cond = Binary("and", set_cond, c)
             # Combine with any existing condition from the parse tree
             if condition_expr is not None:

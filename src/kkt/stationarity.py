@@ -3108,6 +3108,64 @@ def _add_indexed_jacobian_terms(
                         offset_groups[offset_key] = []
                     offset_groups[offset_key].append((entry_row_id, entry_col_id))
 
+                # Issue #1038: Detect sum-index-binding pattern in dim-mismatch.
+                # When a 3D variable x(r,rr,c) appears in a 2D equation DX(r,c)
+                # via sum(rr, X(rr,r,c)), the offset keys vary in the position
+                # corresponding to the sum variable (e.g., (-1,999,0), (0,999,0),
+                # (1,999,0)). This is NOT lead/lag but sum iteration — consolidate
+                # all groups into a single zero-offset group.
+                if len(offset_groups) > 1:
+                    has_sentinel = any(
+                        any(o == _SENTINEL_UNMATCHED for o in k) for k in offset_groups
+                    )
+                    if has_sentinel:
+                        # Find positions that are sentinel (unmatched) and non-sentinel
+                        sample_key = next(iter(offset_groups))
+                        sentinel_positions = {
+                            i for i, o in enumerate(sample_key) if o == _SENTINEL_UNMATCHED
+                        }
+                        non_sentinel_positions = {
+                            i for i in range(len(sample_key)) if i not in sentinel_positions
+                        }
+                        # Check if all offset keys agree on sentinel positions and
+                        # differ only on non-sentinel positions
+                        sentinels_consistent = all(
+                            all(k[i] == _SENTINEL_UNMATCHED for i in sentinel_positions)
+                            for k in offset_groups
+                        )
+                        if sentinels_consistent and non_sentinel_positions:
+                            # Check if the varying position overlaps with positions
+                            # that should be "sum-bound" rather than offset.
+                            # If offsets vary in a non-sentinel position, it means
+                            # the equation's sum variable ranges over different
+                            # concrete elements — consolidate to zero offset.
+                            varying_positions = set()
+                            for pos in non_sentinel_positions:
+                                vals = {k[pos] for k in offset_groups}
+                                if len(vals) > 1:
+                                    varying_positions.add(pos)
+                            fixed_positions = non_sentinel_positions - varying_positions
+                            # If ALL fixed positions have zero offset, this is a
+                            # pure sum-binding pattern — consolidate.
+                            if varying_positions and all(
+                                all(k[pos] == 0 for pos in fixed_positions) for k in offset_groups
+                            ):
+                                # Consolidate: merge all entries under a single key.
+                                # Mark varying positions as sentinel (they correspond to
+                                # the equation's sum variable, not a matched dimension).
+                                consolidated_key = tuple(
+                                    (
+                                        _SENTINEL_UNMATCHED
+                                        if i in sentinel_positions or i in varying_positions
+                                        else 0
+                                    )
+                                    for i in range(len(sample_key))
+                                )
+                                all_entries: list[tuple[int, int]] = []
+                                for ge in offset_groups.values():
+                                    all_entries.extend(ge)
+                                offset_groups = {consolidated_key: all_entries}
+
                 for offset_key, group_entries in offset_groups.items():
                     # Issue #1086: For dimension-mismatch groups, prefer a
                     # representative entry with distinct variable indices so
@@ -3439,7 +3497,29 @@ def _add_indexed_jacobian_terms(
                         # the multiplier. The downstream _match_subset_domain()
                         # and Sum-wrapping logic handles renaming subset indices
                         # to superset and wrapping disjoint indices in sums.
-                        mult_ref = MultiplierRef(mult_base_name, mult_domain)
+                        #
+                        # Issue #1038: When the equation domain and variable domain
+                        # share the same base set name but at different positions
+                        # (e.g., DX(r,c) and x(r,rr,c) where DX's r maps to x's
+                        # rr position via sum(rr, X(rr,r,c))), we need to map the
+                        # equation domain to the VARIABLE domain at the correct
+                        # positions. Use the representative entry's concrete elements
+                        # to determine which var positions the eq elements occupy.
+                        _, rep_eq_idx = jacobian.index_mapping.row_to_eq[group_row_id]
+                        _, rep_var_idx_for_mult = jacobian.index_mapping.col_to_var[group_col_id]
+                        eq_to_var_pos: dict[int, int] = {}
+                        for ei, eq_elem in enumerate(rep_eq_idx):
+                            for vi, var_elem in enumerate(rep_var_idx_for_mult):
+                                if eq_elem == var_elem and vi not in eq_to_var_pos.values():
+                                    eq_to_var_pos[ei] = vi
+                                    break
+                        if len(eq_to_var_pos) == len(mult_domain):
+                            remapped_domain = tuple(
+                                var_domain[eq_to_var_pos[ei]] for ei in range(len(mult_domain))
+                            )
+                            mult_ref = MultiplierRef(mult_base_name, remapped_domain)
+                        else:
+                            mult_ref = MultiplierRef(mult_base_name, mult_domain)
                     elif has_offset:
                         # Build multiplier with shifted indices
                         mult_ref = _build_offset_multiplier(
