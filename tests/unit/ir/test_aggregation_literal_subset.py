@@ -114,6 +114,10 @@ def test_literal_subset_preserves_sum_index(tmp_path):
     assert any(
         isinstance(idx, SymbolRef) and idx.name == "n" for idx in smt_tn.indices
     ), "SetMembershipTest for 'tn' should include 'n' as an index"
+    # Also verify the quoted literal co-index is preserved (not dropped)
+    assert any(
+        isinstance(idx, SymbolRef) and ("time-2" in idx.name) for idx in smt_tn.indices
+    ), "SetMembershipTest for 'tn' should include the 'time-2' literal"
 
 
 def test_literal_subset_set_membership_has_literal(tmp_path):

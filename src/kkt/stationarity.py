@@ -3508,16 +3508,34 @@ def _add_indexed_jacobian_terms(
                         # (e.g., DX(r,c) and x(r,rr,c) where DX's r maps to x's
                         # rr position via sum(rr, X(rr,r,c))), we need to map the
                         # equation domain to the VARIABLE domain at the correct
-                        # positions. Use the representative entry's concrete elements
-                        # to determine which var positions the eq elements occupy.
-                        _, rep_eq_idx = jacobian.index_mapping.row_to_eq[group_row_id]
-                        _, rep_var_idx_for_mult = jacobian.index_mapping.col_to_var[group_col_id]
+                        # positions. Use domain/alias-root matching (not concrete
+                        # element labels) to avoid collisions when different sets
+                        # share labels or aliases share all elements.
                         eq_to_var_pos: dict[int, int] = {}
-                        for ei, eq_elem in enumerate(rep_eq_idx):
-                            for vi, var_elem in enumerate(rep_var_idx_for_mult):
-                                if eq_elem == var_elem and vi not in eq_to_var_pos.values():
-                                    eq_to_var_pos[ei] = vi
-                                    break
+                        mult_roots = [_resolve_alias_target(d, kkt.model_ir) for d in mult_domain]
+                        var_roots_local = [
+                            _resolve_alias_target(d, kkt.model_ir) for d in var_domain
+                        ]
+                        used_var_pos: set[int] = set()
+                        for ei, eq_root in enumerate(mult_roots):
+                            for vi, var_root in enumerate(var_roots_local):
+                                if vi not in used_var_pos and eq_root == var_root:
+                                    # For the consolidated sum-binding case,
+                                    # prefer positions that are NOT sentinel
+                                    # (the sentinel positions are sum-iteration
+                                    # vars, not matched dims).
+                                    if offset_key[vi] != _SENTINEL_UNMATCHED:
+                                        eq_to_var_pos[ei] = vi
+                                        used_var_pos.add(vi)
+                                        break
+                            else:
+                                # No non-sentinel match found; try sentinel
+                                # positions as fallback (permutation case).
+                                for vi, var_root in enumerate(var_roots_local):
+                                    if vi not in used_var_pos and eq_root == var_root:
+                                        eq_to_var_pos[ei] = vi
+                                        used_var_pos.add(vi)
+                                        break
                         if len(eq_to_var_pos) == len(mult_domain):
                             remapped_domain = tuple(
                                 var_domain[eq_to_var_pos[ei]] for ei in range(len(mult_domain))

@@ -5379,10 +5379,20 @@ class _ModelBuilder:
                 literal_subset_conditions.append((set_name, all_raw_idxs))
                 # Still mark non-literal indices that are in free_domain as
                 # filter indices so they are not re-bound in the Sum (avoids
-                # GAMS $125 "set under control already").
+                # GAMS $125 "set under control already"), but only if doing so
+                # does not eliminate all aggregation indices (which would lead
+                # to an empty Sum iterator domain).
+                temp_new_filters: set[str] = set()
                 for raw_idx in all_raw_idxs:
                     if raw_idx in free_domain:
-                        subset_filter_indices.add(raw_idx)
+                        temp_new_filters.add(raw_idx)
+                if temp_new_filters:
+                    prospective_filters = subset_filter_indices | temp_new_filters
+                    prospective_sum_indices = [
+                        idx for idx in expanded_indices if idx not in prospective_filters
+                    ]
+                    if prospective_sum_indices:
+                        subset_filter_indices |= temp_new_filters
                 continue
             # Find position of first child index in expanded_indices
             try:
