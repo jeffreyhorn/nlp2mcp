@@ -3984,10 +3984,353 @@ class _ModelBuilder:
         # Issue #749: Extract solve info from loop body so the objective
         # is recorded even when the Solve statement is inside a loop.
         # Issue #810: Recurse into nested loops to find solve at any depth.
-        if self.model.objective is None:
-            solve_node = self._find_solve_in_loop_body(body_stmts)
-            if solve_node is not None:
-                self._handle_solve(solve_node)
+        solve_node = self._find_solve_in_loop_body(body_stmts)
+        if self.model.objective is None and solve_node is not None:
+            self._handle_solve(solve_node)
+
+        # Issue #953: Extract pre-solve variable bound assignments from
+        # solve-containing loops so the KKT pipeline knows about them.
+        # Without this, bounds like purchase.up(p) = psdat(scenario,p,'p')
+        # are invisible to the partition/complementarity/stationarity builders.
+        if solve_node is not None:
+            self._extract_loop_body_var_bounds(indices, body_stmts)
+
+    def _extract_loop_body_var_bounds(
+        self, loop_indices: tuple[str, ...], body_stmts: list[Tree]
+    ) -> None:
+        """Extract variable bound assignments from pre-solve loop body statements.
+
+        Issue #953: Solve-containing loops like::
+
+            loop(scenario,
+               purchase.up(p) = psdat(scenario,p,'p');
+               solve wood maximizing profit using lp;
+            );
+
+        contain variable bound assignments that the KKT pipeline needs.
+        We substitute each loop index with the first element of its set
+        and process the assignment through the normal ``_handle_assign``
+        path so that the bound is stored in ``VariableDef``.
+
+        After ``_handle_assign`` stores expression-based bounds, we attempt
+        to resolve them to numeric values using direct parameter lookup.
+        This handles cases like ``psdat('scenario-1', p, 'p')`` where the
+        parameter uses compound keys internally.
+        """
+        # Build substitution: loop index name → first element of its set.
+        # Use alias-aware resolution so loop indices over aliases are handled.
+        subst: dict[str, str] = {}
+        for idx_name in loop_indices:
+            sdef = self.model.sets.get(idx_name.lower()) or self.model.sets.get(idx_name)
+            if not sdef or not sdef.members:
+                # Try resolving as an alias
+                adef = self.model.aliases.get(idx_name.lower()) or self.model.aliases.get(idx_name)
+                if adef:
+                    target = adef.target if hasattr(adef, "target") else str(adef)
+                    sdef = self.model.sets.get(target.lower()) if isinstance(target, str) else None
+            if sdef and sdef.members:
+                subst[idx_name.lower()] = sdef.members[0]
+
+        if not subst:
+            return
+
+        # Snapshot existing expression bounds so we only clean up NEW ones
+        pre_expr_bounds: dict[str, dict[str, object]] = {}
+        for vname, vdef in self.model.variables.items():
+            pre_expr_bounds[vname] = {}
+            for kind in ("lo", "up", "fx"):
+                for suffix in ("_expr", "_expr_map"):
+                    attr = f"{kind}{suffix}"
+                    val = getattr(vdef, attr, None)
+                    if suffix == "_expr":
+                        pre_expr_bounds[vname][attr] = val
+                    else:
+                        if val is None:
+                            pre_expr_bounds[vname][attr] = None
+                        else:
+                            pre_expr_bounds[vname][attr] = dict(val)
+
+        for stmt in body_stmts:
+            if not isinstance(stmt, Tree):
+                break
+            if "solve" in str(stmt.data):
+                break
+            if str(stmt.data) != "assign":
+                continue
+            # Check if this is a variable bound assignment
+            lvalue = stmt.children[0] if stmt.children else None
+            if isinstance(lvalue, Tree) and lvalue.data == "lvalue":
+                target = next((c for c in lvalue.children if isinstance(c, (Tree, Token))), None)
+                if isinstance(target, Tree) and target.data in ("bound_indexed", "bound_scalar"):
+                    # This is a variable bound assignment — process it with substituted tree
+                    modified = self._substitute_loop_index_tokens(stmt, subst)
+                    try:
+                        self._handle_assign(modified)
+                    except (ParserSemanticError, AttributeError, IndexError):
+                        # If parsing fails (e.g., complex expressions), skip silently.
+                        # The bound won't be available to KKT but the model can still
+                        # be processed (just missing this bound's multiplier).
+                        pass
+
+        # Temporarily hide any pre-existing expression bounds so that
+        # _resolve_loop_body_expr_bounds() only operates on bounds that were
+        # introduced or modified by this loop-body scan.
+        hidden_pre_expr_bounds: dict[str, dict[str, object]] = {}
+        for vname, vdef in self.model.variables.items():
+            pre = pre_expr_bounds.get(vname, {})
+            hidden_for_var: dict[str, object] = {}
+            for kind in ("lo", "up", "fx"):
+                # Scalar expression bounds
+                scalar_attr = f"{kind}_expr"
+                pre_scalar = pre.get(scalar_attr)
+                cur_scalar = getattr(vdef, scalar_attr, None)
+                # If the scalar expression bound is unchanged since the snapshot,
+                # hide it from the resolver.
+                if pre_scalar is not None and cur_scalar is pre_scalar:
+                    hidden_for_var[scalar_attr] = pre_scalar
+                    setattr(vdef, scalar_attr, None)
+
+                # Indexed expression bounds (per-element expression map)
+                map_attr = f"{kind}_expr_map"
+                pre_map = pre.get(map_attr)
+                cur_map = getattr(vdef, map_attr, None)
+                if isinstance(pre_map, dict) and isinstance(cur_map, dict) and pre_map:
+                    removed_keys: dict[object, object] = {}
+                    # Remove only keys that are unchanged since the snapshot.
+                    for key in list(pre_map.keys()):
+                        if key in cur_map and cur_map[key] is pre_map[key]:
+                            removed_keys[key] = pre_map[key]
+                            del cur_map[key]
+                    if removed_keys:
+                        existing_hidden_map = hidden_for_var.get(map_attr)
+                        if isinstance(existing_hidden_map, dict):
+                            existing_hidden_map.update(removed_keys)
+                        else:
+                            hidden_for_var[map_attr] = removed_keys
+            if hidden_for_var:
+                hidden_pre_expr_bounds[vname] = hidden_for_var
+
+        # Post-process: try to resolve expression-based bounds to numeric values.
+        # This handles parameters with compound keys (e.g., psdat stored with
+        # 2-element keys like ('scenario-1', 'pulp-1.p') instead of 3-element).
+        self._resolve_loop_body_expr_bounds()
+
+        # Restore any pre-existing expression bounds that we temporarily hid
+        # from _resolve_loop_body_expr_bounds().
+        for vname, hidden in hidden_pre_expr_bounds.items():
+            vdef = self.model.variables.get(vname)
+            if vdef is None:
+                continue
+            for attr, val in hidden.items():
+                if attr.endswith("_expr_map"):
+                    cur_map = getattr(vdef, attr, None)
+                    if cur_map is None:
+                        setattr(vdef, attr, dict(val))  # type: ignore[call-overload]
+                    else:
+                        cur_map.update(val)  # type: ignore[arg-type]
+                else:
+                    # Scalar expression bound
+                    if getattr(vdef, attr, None) is None:
+                        setattr(vdef, attr, val)
+
+        # Clean up: any NEW scalar or indexed expression bounds that weren't
+        # resolved to numeric values must be cleared.  They contain substituted
+        # loop index values (e.g., ord("'s1'")) which are invalid GAMS.
+        for vname, vdef in self.model.variables.items():
+            pre = pre_expr_bounds.get(vname, {})
+            for kind in ("lo", "up", "fx"):
+                # Scalar expression bounds
+                scalar_attr = f"{kind}_expr"
+                old_val = pre.get(scalar_attr)
+                new_val = getattr(vdef, scalar_attr, None)
+                if new_val is not None and new_val is not old_val:
+                    # New scalar expression bound from loop body — clear it
+                    setattr(vdef, scalar_attr, None)
+
+                # Indexed expression bounds (per-element expression map)
+                map_attr = f"{kind}_expr_map"
+                old_map = pre.get(map_attr)
+                new_map = getattr(vdef, map_attr, None)
+                if not new_map:
+                    continue
+                old_keys = set(old_map.keys()) if isinstance(old_map, dict) else set()
+                new_keys = set(new_map.keys()) - old_keys
+                # Remove newly introduced entries that are still expression ASTs
+                for key in list(new_keys):
+                    val = new_map.get(key)
+                    if isinstance(val, Expr):
+                        del new_map[key]
+                # If we emptied a map that didn't exist before, reset to
+                # empty dict (not None) so downstream code can safely iterate.
+                if not new_map and old_map is None:
+                    setattr(vdef, map_attr, {})
+
+    def _resolve_loop_body_expr_bounds(self) -> None:
+        """Resolve expression-based bounds to numeric values where possible.
+
+        When a bound expression is a simple ParamRef like ``psdat('scenario-1', p, 'p')``,
+        try to look up the parameter values directly. If ALL domain members evaluate
+        to the same constant, store as a scalar numeric bound instead of an expression.
+        Otherwise, store per-element numeric bounds in the bound map.
+
+        This resolves the compound-key issue where ``psdat('scenario-1', 'pulp-1', 'p')``
+        is stored internally as ``('scenario-1', 'pulp-1.p')`` — the expression emitter
+        can't resolve this 3-argument reference against 2-key storage, but we can do
+        the lookup manually here.
+        """
+        from src.ir.ast import ParamRef
+
+        def _try_resolve_param_ref(
+            param_expr: ParamRef,
+        ) -> float | None:
+            """Try to resolve a ParamRef with all-literal indices to a numeric value."""
+            param_name = param_expr.name.lower()
+            pdef = self.model.params.get(param_name) or self.model.params.get(param_expr.name)
+            if pdef is None or not pdef.values:
+                return None
+            key_parts = [str(idx).strip("'\"") for idx in param_expr.indices]
+            key_tuple = tuple(key_parts)
+            val = pdef.values.get(key_tuple)
+            # Try compound-key format (merge adjacent dims with '.')
+            if val is None and len(key_parts) >= 2:
+                for merge_start in range(len(key_parts) - 1):
+                    compound = list(key_parts)
+                    merged = compound[merge_start] + "." + compound[merge_start + 1]
+                    trial = compound[:merge_start] + [merged] + compound[merge_start + 2 :]
+                    val = pdef.values.get(tuple(trial))
+                    if val is not None:
+                        break
+            return val
+
+        for var_def in self.model.variables.values():
+            for kind in ("lo", "up", "fx"):
+                expr_map = getattr(var_def, f"{kind}_expr_map", None)
+                scalar_expr = getattr(var_def, f"{kind}_expr", None)
+
+                # Path 1: scalar expression bound (ParamRef with all-literal indices)
+                if (
+                    not expr_map
+                    and isinstance(scalar_expr, ParamRef)
+                    and getattr(scalar_expr, "indices", None)
+                ):
+                    val = _try_resolve_param_ref(scalar_expr)
+                    if val is not None:
+                        setattr(var_def, kind, val)
+                        setattr(var_def, f"{kind}_expr", None)
+                    continue
+
+                # Path 2: indexed expression map — resolve each entry independently
+                if not expr_map:
+                    continue
+
+                resolved_keys: list[object] = []
+                bound_map = getattr(var_def, f"{kind}_map")
+                all_resolved_values: list[float] = []
+
+                for map_key, map_expr in list(expr_map.items()):
+                    if not isinstance(map_expr, ParamRef) or not map_expr.indices:
+                        continue
+
+                    # Determine which ParamRef indices are domain variables vs literals
+                    domain_key = map_key if isinstance(map_key, tuple) else (map_key,)
+                    domain_set_names = {str(d).lower() for d in domain_key}
+                    literal_indices: dict[int, str] = {}
+                    domain_indices: dict[int, str] = {}
+                    for i, idx in enumerate(map_expr.indices):
+                        idx_str = str(idx)
+                        if idx_str.lower() in domain_set_names:
+                            domain_indices[i] = idx_str.lower()
+                        else:
+                            literal_indices[i] = idx_str.strip("'\"")
+
+                    if not domain_indices:
+                        # All indices are literals — try direct lookup
+                        val = _try_resolve_param_ref(map_expr)
+                        if val is not None:
+                            bound_map[map_key] = val
+                            resolved_keys.append(map_key)
+                            all_resolved_values.append(val)
+                        continue
+
+                    # Single-domain case (most common): iterate over set members
+                    if len(domain_indices) != 1:
+                        continue
+
+                    param_name = map_expr.name.lower()
+                    pdef = self.model.params.get(param_name) or self.model.params.get(map_expr.name)
+                    if pdef is None or not pdef.values:
+                        continue
+
+                    dom_pos, dom_name = next(iter(domain_indices.items()))
+                    sdef = self.model.sets.get(dom_name)
+                    if not sdef or not sdef.members:
+                        continue
+
+                    entry_resolved: dict[tuple[str, ...], float] = {}
+                    for member in sdef.members:
+                        key_parts: list[str] = []
+                        for i in range(len(map_expr.indices)):
+                            if i == dom_pos:
+                                key_parts.append(member)
+                            elif i in literal_indices:
+                                key_parts.append(literal_indices[i])
+
+                        key_tuple = tuple(key_parts)
+                        val = pdef.values.get(key_tuple)
+                        # Try compound-key format
+                        if val is None and len(key_parts) >= 2:
+                            for merge_start in range(len(key_parts) - 1):
+                                compound = list(key_parts)
+                                merged = compound[merge_start] + "." + compound[merge_start + 1]
+                                trial = (
+                                    compound[:merge_start] + [merged] + compound[merge_start + 2 :]
+                                )
+                                val = pdef.values.get(tuple(trial))
+                                if val is not None:
+                                    break
+                        if val is None:
+                            val = 0.0
+                        entry_resolved[(member,)] = val
+
+                    if entry_resolved:
+                        for ek, ev in entry_resolved.items():
+                            bound_map[ek] = ev
+                            all_resolved_values.append(ev)
+                        resolved_keys.append(map_key)
+
+                # Remove resolved entries from expr_map
+                for rk in resolved_keys:
+                    expr_map.pop(rk, None)
+
+                # If all resolved values are the same, promote to scalar bound
+                # and clear per-element entries to avoid duplicate constraints
+                if all_resolved_values and len(set(all_resolved_values)) == 1:
+                    setattr(var_def, kind, all_resolved_values[0])
+                    bound_map = getattr(var_def, f"{kind}_map")
+                    bound_map.clear()
+
+    @staticmethod
+    def _substitute_loop_index_tokens(node: Tree | Token, subst: dict[str, str]) -> Tree | Token:
+        """Return a deep copy of a Lark Tree with loop index tokens substituted.
+
+        Replaces ID tokens whose lowered text matches a key in ``subst``
+        with a new token containing the quoted first-element value.
+        """
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() in subst:
+                elem = subst[str(node).lower()]
+                return Token("ID", f"'{elem}'")
+            return node
+        # Tree node — recursively substitute children
+        new_children = [
+            (
+                _ModelBuilder._substitute_loop_index_tokens(child, subst)
+                if isinstance(child, (Tree, Token))
+                else child
+            )
+            for child in node.children
+        ]
+        return Tree(node.data, new_children, node.meta)
 
     @staticmethod
     def _find_solve_in_loop_body(stmts: list[Tree]) -> Tree | None:
