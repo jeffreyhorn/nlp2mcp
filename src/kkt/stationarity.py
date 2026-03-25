@@ -2906,6 +2906,24 @@ def _substitute_elements(expr: Expr, subs: dict[str, str]) -> Expr:
             )
         if isinstance(e, DollarConditional):
             return DollarConditional(_walk(e.value_expr), _walk(e.condition))
+        if isinstance(e, Prod):
+            return Prod(
+                e.index_sets,
+                _walk(e.body),
+                _walk(e.condition) if e.condition else None,
+            )
+        if isinstance(e, SetMembershipTest):
+            return SetMembershipTest(e.set_name, tuple(_walk(a) for a in e.indices))
+        if isinstance(e, MultiplierRef):
+            new_indices = tuple(_sub_idx(i) for i in e.indices) if e.indices else e.indices
+            if new_indices == e.indices:
+                return e
+            return MultiplierRef(e.name, new_indices)
+        if isinstance(e, EquationRef):
+            new_indices = tuple(_sub_idx(i) for i in e.indices) if e.indices else e.indices
+            if new_indices == e.indices:
+                return e
+            return EquationRef(e.name, new_indices, e.attribute)
         # Fallback: return unchanged
         return e
 
@@ -2950,6 +2968,17 @@ def _derivative_structure_key(expr: Expr) -> str:
             return f"Sum({n},{body},{cond})"
         if isinstance(e, DollarConditional):
             return f"DC({_walk(e.value_expr)},{_walk(e.condition)})"
+        if isinstance(e, Prod):
+            body = _walk(e.body)
+            n = len(e.index_sets) if e.index_sets else 0
+            cond = _walk(e.condition) if e.condition else ""
+            return f"Prod({n},{body},{cond})"
+        if isinstance(e, SetMembershipTest):
+            n = len(e.indices) if e.indices else 0
+            return f"SMT({e.set_name},{n})"
+        if isinstance(e, EquationRef):
+            arity = len(e.indices) if e.indices else 0
+            return f"EQ({e.name},{arity},{e.attribute})"
         return type(e).__name__
 
     return _walk(expr)
@@ -3076,7 +3105,17 @@ def _add_indexed_jacobian_terms(
                                 reverse=True,
                             )
                             majority_key, majority_entries = sorted_groups[0]
-                            minority_key, minority_entries = sorted_groups[1]
+                            _minority_key, minority_entries = sorted_groups[1]
+                            if len(sorted_groups) > 2:
+                                import warnings
+
+                                warnings.warn(
+                                    f"Multi-pattern Jacobian: {len(sorted_groups)} derivative "
+                                    f"patterns detected for {eq_name_base}/{var_name}; "
+                                    f"only majority + first minority handled. "
+                                    f"Remaining patterns ignored.",
+                                    stacklevel=2,
+                                )
                             # Use majority representative for the main term
                             if majority_key != rep_key:
                                 # Current representative is from the minority;

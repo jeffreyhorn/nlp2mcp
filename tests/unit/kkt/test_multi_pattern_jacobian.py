@@ -206,6 +206,8 @@ class TestMarkovMultiPatternIntegration:
             + nu_constr(s,i)
         separating the diagonal correction from the off-diagonal sum.
         """
+        import os
+        import re
         import subprocess
         import sys
         import tempfile
@@ -213,16 +215,19 @@ class TestMarkovMultiPatternIntegration:
         with tempfile.NamedTemporaryFile(suffix=".gms", mode="w", delete=False) as f:
             output_path = f.name
 
-        result = subprocess.run(
-            [sys.executable, "-m", "src.cli", markov_gms, "-o", output_path],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-        assert result.returncode == 0, f"CLI failed: {result.stderr}"
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "src.cli", markov_gms, "-o", output_path],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            assert result.returncode == 0, f"CLI failed: {result.stderr}"
 
-        with open(output_path) as f:
-            content = f.read()
+            with open(output_path) as f:
+                content = f.read()
+        finally:
+            os.remove(output_path)
 
         # Find stat_z equation
         for line in content.splitlines():
@@ -240,11 +245,11 @@ class TestMarkovMultiPatternIntegration:
 
         # The sum should use the off-diagonal derivative (no +1 Kronecker).
         # It should NOT contain "(1 - b * pi" inside the sum.
-        import re
-
         sum_match = re.search(r"sum\([^)]+\),\s*(.+?)\s*\*\s*nu_constr\(s__kkt1", stat_z)
-        if sum_match:
-            sum_deriv = sum_match.group(1)
-            assert (
-                "1 -" not in sum_deriv and "1 +" not in sum_deriv
-            ), f"Sum derivative should be pure off-diagonal (no Kronecker delta), got: {sum_deriv}"
+        assert (
+            sum_match is not None
+        ), f"Expected sum(...) * nu_constr(s__kkt1,...) pattern in stat_z, got:\n{stat_z}"
+        sum_deriv = sum_match.group(1)
+        assert (
+            "1 -" not in sum_deriv and "1 +" not in sum_deriv
+        ), f"Sum derivative should be pure off-diagonal (no Kronecker delta), got: {sum_deriv}"
