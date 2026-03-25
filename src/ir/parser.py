@@ -4177,12 +4177,24 @@ class _ModelBuilder:
         for var_def in self.model.variables.values():
             for kind in ("lo", "up", "fx"):
                 expr_map = getattr(var_def, f"{kind}_expr_map", None)
-                if not expr_map:
+                scalar_expr = getattr(var_def, f"{kind}_expr", None)
+
+                # Decide which expression form to try to resolve:
+                #  - Prefer the per-index map when present and singular (existing behavior).
+                #  - Otherwise, fall back to a scalar ParamRef expression, treating it as
+                #    a "scalar map" over an empty domain so we can reuse the same logic.
+                is_scalar_path = False
+                if expr_map:
+                    # Only handle the common case: single entry whose key matches domain
+                    if len(expr_map) != 1:
+                        continue
+                    domain_key, expr = next(iter(expr_map.items()))
+                elif isinstance(scalar_expr, ParamRef) and getattr(scalar_expr, "indices", None):
+                    domain_key = ()
+                    expr = scalar_expr
+                    is_scalar_path = True
+                else:
                     continue
-                # Only handle the common case: single entry whose key matches domain
-                if len(expr_map) != 1:
-                    continue
-                domain_key, expr = next(iter(expr_map.items()))
                 if not isinstance(expr, ParamRef) or not expr.indices:
                     continue
 
@@ -4206,6 +4218,25 @@ class _ModelBuilder:
                         literal_indices[i] = idx_str.strip("'\"")
 
                 if not domain_indices:
+                    if is_scalar_path:
+                        # All indices are literals — try direct lookup
+                        key_parts = [literal_indices[i] for i in sorted(literal_indices)]
+                        key_tuple = tuple(key_parts)
+                        val = pdef.values.get(key_tuple)
+                        # Try compound-key format
+                        if val is None and len(key_parts) >= 2:
+                            for merge_start in range(len(key_parts) - 1):
+                                compound = list(key_parts)
+                                merged = compound[merge_start] + "." + compound[merge_start + 1]
+                                trial = (
+                                    compound[:merge_start] + [merged] + compound[merge_start + 2 :]
+                                )
+                                val = pdef.values.get(tuple(trial))
+                                if val is not None:
+                                    break
+                        if val is not None:
+                            setattr(var_def, kind, val)
+                            setattr(var_def, f"{kind}_expr", None)
                     continue
 
                 # Get members of the domain set(s)
@@ -4266,7 +4297,10 @@ class _ModelBuilder:
 
                     if resolved_values:
                         # Clear the expression-based bound
-                        expr_map.clear()
+                        if is_scalar_path:
+                            setattr(var_def, f"{kind}_expr", None)
+                        else:
+                            expr_map.clear()
 
                         if all_same and first_val is not None:
                             # All members have same value → scalar bound

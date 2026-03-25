@@ -511,17 +511,42 @@ def _expand_sum_body(
     if len(members) > _MAX_SUM_EXPANSION:
         return None  # Too many members; keep Sum unexpanded
 
+    def _has_unresolved_index_offsets(e: Expr) -> bool:
+        """Check if expression still contains IndexOffset nodes with non-Const offsets."""
+        if isinstance(e, IndexOffset) and not isinstance(e.offset, Const):
+            return True
+        for child in (
+            getattr(e, a, None)
+            for a in ("left", "right", "operand", "value_expr", "condition", "body", "expr")
+        ):
+            if isinstance(child, Expr) and _has_unresolved_index_offsets(child):
+                return True
+        for attr in ("indices",):
+            indices = getattr(e, attr, None)
+            if indices:
+                for idx in indices:
+                    if isinstance(idx, Expr) and _has_unresolved_index_offsets(idx):
+                        return True
+        return False
+
     terms: list[Expr] = []
     for member in members:
         # Substitute sum variable with concrete member
         term = _substitute_single_index(body, sum_var, member)
         # Resolve IndexOffsets in the substituted term
         term = _resolve_index_offsets(term, model_ir, _domain_cache)
+        # If unresolved IndexOffset nodes remain after resolution (e.g.,
+        # ord() couldn't be evaluated), abort expansion to preserve the
+        # original Sum form rather than emitting invalid concrete offsets.
+        if _has_unresolved_index_offsets(term):
+            return None
         # Apply condition if present — use DollarConditional to preserve
         # GAMS $ semantics (skip undefined terms rather than multiply by 0)
         if condition is not None:
             cond_sub = _substitute_single_index(condition, sum_var, member)
             cond_resolved = _resolve_index_offsets(cond_sub, model_ir, _domain_cache)
+            if _has_unresolved_index_offsets(cond_resolved):
+                return None
             term = DollarConditional(value_expr=term, condition=cond_resolved)
         terms.append(term)
 

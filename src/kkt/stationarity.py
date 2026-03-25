@@ -2673,13 +2673,28 @@ def _compute_index_offset_key(
                 var_info = _resolve_cached(var_set)
                 if eq_info is None or var_info is None:
                     return 0
-                # We only care about the member position maps here; the resolved
-                # set names may legitimately differ for subset/parent pairs that
-                # share the same underlying member ordering.
-                _, eq_pos_map = eq_info
-                _, var_pos_map = var_info
-                eq_pos = eq_pos_map.get(eq_elem)
-                var_pos = var_pos_map.get(var_elem)
+                eq_resolved, eq_pos_map = eq_info
+                var_resolved, var_pos_map = var_info
+                if eq_resolved == var_resolved:
+                    eq_pos = eq_pos_map.get(eq_elem)
+                    var_pos = var_pos_map.get(var_elem)
+                    if eq_pos is not None and var_pos is not None:
+                        return eq_pos - var_pos
+                    return 0
+
+                # Fallback: when the resolved names differ but both positions
+                # come from the same root set (e.g., dynamic subset vs parent),
+                # compute the offset using the root set's ordering.
+                if eq_roots[ei] != var_roots[vi]:
+                    return 0
+
+                root_name = eq_roots[ei]
+                root_info = _resolve_cached(root_name)
+                if root_info is None:
+                    return 0
+                _, root_pos_map = root_info
+                eq_pos = root_pos_map.get(eq_elem)
+                var_pos = root_pos_map.get(var_elem)
                 if eq_pos is not None and var_pos is not None:
                     return eq_pos - var_pos
                 return 0
