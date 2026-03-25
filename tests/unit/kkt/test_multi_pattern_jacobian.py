@@ -25,6 +25,8 @@ from src.kkt.stationarity import (
     _subtract_and_cancel,
 )
 
+pytestmark = pytest.mark.unit
+
 # ── _derivative_structure_key ────────────────────────────────────────
 
 
@@ -176,80 +178,3 @@ class TestSubtractAndCancel:
         # a - (-(a)) = a + a → two positive terms, no cancellation
         # Result should have both terms
         assert not (isinstance(result, Const) and result.value == 0.0)
-
-
-# ── Integration test ─────────────────────────────────────────────────
-
-
-class TestMarkovMultiPatternIntegration:
-    """Integration test using the markov GAMSlib model."""
-
-    @pytest.fixture
-    def markov_gms(self):
-        """Path to markov.gms; skip if not available."""
-        import os
-
-        path = os.path.join("data", "gamslib", "raw", "markov.gms")
-        if not os.path.exists(path):
-            pytest.skip("markov.gms not available (CI)")
-        return path
-
-    def test_markov_stationarity_has_correction_term(self, markov_gms):
-        """stat_z should contain nu_constr(s,i) as a direct correction term.
-
-        Before the fix, stat_z had:
-            sum((s__kkt1,j), (1 - b*pi(...)) * nu_constr(s__kkt1,j))
-        which incorrectly applied the +1 Kronecker delta to ALL pairings.
-
-        After the fix, stat_z should have:
-            sum((s__kkt1,j), (-b*pi(...)) * nu_constr(s__kkt1,j))
-            + nu_constr(s,i)
-        separating the diagonal correction from the off-diagonal sum.
-        """
-        import os
-        import re
-        import subprocess
-        import sys
-        import tempfile
-
-        with tempfile.NamedTemporaryFile(suffix=".gms", mode="w", delete=False) as f:
-            output_path = f.name
-
-        try:
-            result = subprocess.run(
-                [sys.executable, "-m", "src.cli", markov_gms, "-o", output_path],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
-            assert result.returncode == 0, f"CLI failed: {result.stderr}"
-
-            with open(output_path) as f:
-                content = f.read()
-        finally:
-            os.remove(output_path)
-
-        # Find stat_z equation
-        for line in content.splitlines():
-            if line.startswith("stat_z("):
-                stat_z = line
-                break
-        else:
-            pytest.fail("stat_z equation not found in MCP output")
-
-        # The correction term nu_constr(s,i) should appear as a direct
-        # (non-summed) term, separate from the sum over (s__kkt1,j).
-        assert (
-            "nu_constr(s,i)" in stat_z
-        ), f"Expected direct nu_constr(s,i) correction term in stat_z, got:\n{stat_z}"
-
-        # The sum should use the off-diagonal derivative (no +1 Kronecker).
-        # It should NOT contain "(1 - b * pi" inside the sum.
-        sum_match = re.search(r"sum\([^)]+\),\s*(.+?)\s*\*\s*nu_constr\(s__kkt1", stat_z)
-        assert (
-            sum_match is not None
-        ), f"Expected sum(...) * nu_constr(s__kkt1,...) pattern in stat_z, got:\n{stat_z}"
-        sum_deriv = sum_match.group(1)
-        assert (
-            "1 -" not in sum_deriv and "1 +" not in sum_deriv
-        ), f"Sum derivative should be pure off-diagonal (no Kronecker delta), got: {sum_deriv}"

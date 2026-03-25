@@ -3188,8 +3188,15 @@ def _add_indexed_jacobian_terms(
                                         kkt.model_ir,
                                         equation_domain=var_domain,
                                     )
-                                    # Multiplier uses variable-domain indices at
-                                    # matched positions (where diagonal eq≡var).
+                                    # Correction multiplier uses variable-domain indices
+                                    # at matched positions (where diagonal eq≡var).
+                                    # We use var_domain (not mult_domain) because the
+                                    # correction applies at the specific point where
+                                    # eq and var indices coincide (the diagonal),
+                                    # indexed by the variable's own domain names.
+                                    # For offset groups with lead/lag, the offset is
+                                    # already zero at matched positions (offset_key[vi]==0),
+                                    # so no offset adjustment is needed.
                                     corr_mult_domain = tuple(
                                         var_domain[vi]
                                         for vi, o in enumerate(offset_key)
