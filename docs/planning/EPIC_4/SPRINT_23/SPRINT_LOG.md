@@ -246,12 +246,25 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 ### Day 6 — WS2 markov + pak
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (markov fixed, pak deferred)
 
 | Task | Status |
 |---|---|
-| markov multi-pattern Jacobian (#1110) | |
-| pak lead/lag Jacobian (#1049) | |
+| markov multi-pattern Jacobian (#1110) | ✅ Fixed: multi-pattern detection + correction term |
+| pak lead/lag Jacobian (#1049) | ⏭️ Deferred: 3 interacting bugs (subset domain, gradient template, quoted strings) — separate PR |
+| Unit tests (24 new) | ✅ _derivative_structure_key, _substitute_elements, _subtract_and_cancel, integration |
+| Quality checks | ✅ 4,294 passed, 10 skipped, 1 xfailed; typecheck/lint/format clean |
+
+**markov Fix Details:**
+- Root cause: `_add_indexed_jacobian_terms()` picked one representative Jacobian entry and generalized its derivative to ALL constraint-variable pairings. For `constr(sp,j)`, diagonal (sp=s, j=i) has derivative `1 - b*pi(...)` while off-diagonal has `-b*pi(...)`. The `+1` Kronecker delta was incorrectly applied to all entries.
+- Fix: Added multi-pattern detection via `_derivative_structure_key()` fingerprinting. When multiple structural patterns exist, the majority pattern drives the sum and a correction term is added for the minority (diagonal) pattern. Three new helpers: `_subtract_and_cancel()`, `_substitute_elements()`, `_derivative_structure_key()`.
+- Result: `stat_z(s,i)` now correctly contains `nu_constr(s,i) + sum((s__kkt1,j), (-b*pi(...)) * nu_constr(s__kkt1,j))` — diagonal correction separated from off-diagonal sum.
+- GAMS verification: markov MCP solves successfully (obj=2571.794).
+
+**pak Investigation Summary:**
+- 3 interacting bugs identified: (1) subset/superset domain mismatch (t⊂te), (2) first-instance gradient template, (3) quoted string literal mismatch ('1985' vs "1985").
+- MCP obj=950.913 vs LP optimal=1075.547 confirms structural incorrectness.
+- Requires deep architectural changes — deferred to dedicated PR.
 
 ---
 
