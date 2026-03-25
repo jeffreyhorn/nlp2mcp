@@ -539,7 +539,8 @@ def _substitute_single_index(expr: Expr, var_name: str, value: str) -> Expr:
     """Substitute a single index variable with a concrete value in an expression.
 
     Replaces occurrences of ``var_name`` in VarRef/ParamRef indices and
-    SymbolRef nodes, and evaluates Call('ord', ...) for the substituted value.
+    SymbolRef nodes. Function calls such as Call('ord', ...) are left
+    unchanged here and may be evaluated later during index offset resolution.
     """
     from ..ir.ast import (
         Binary,

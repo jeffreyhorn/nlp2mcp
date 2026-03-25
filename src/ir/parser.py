@@ -4167,7 +4167,6 @@ class _ModelBuilder:
                 resolved_values: dict[tuple[str, ...], float] = {}
                 all_same = True
                 first_val = None
-                success = True
 
                 # For simplicity, handle the single-domain case (most common)
                 if len(domain_indices) == 1:
@@ -4209,7 +4208,7 @@ class _ModelBuilder:
                         elif val != first_val:
                             all_same = False
 
-                    if success and resolved_values:
+                    if resolved_values:
                         # Clear the expression-based bound
                         expr_map.clear()
 
