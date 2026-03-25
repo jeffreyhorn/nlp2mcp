@@ -4066,10 +4066,66 @@ class _ModelBuilder:
                         # be processed (just missing this bound's multiplier).
                         pass
 
+        # Temporarily hide any pre-existing expression bounds so that
+        # _resolve_loop_body_expr_bounds() only operates on bounds that were
+        # introduced or modified by this loop-body scan.
+        hidden_pre_expr_bounds: dict[str, dict[str, object]] = {}
+        for vname, vdef in self.model.variables.items():
+            pre = pre_expr_bounds.get(vname, {})
+            hidden_for_var: dict[str, object] = {}
+            for kind in ("lo", "up", "fx"):
+                # Scalar expression bounds
+                scalar_attr = f"{kind}_expr"
+                pre_scalar = pre.get(scalar_attr)
+                cur_scalar = getattr(vdef, scalar_attr, None)
+                # If the scalar expression bound is unchanged since the snapshot,
+                # hide it from the resolver.
+                if pre_scalar is not None and cur_scalar is pre_scalar:
+                    hidden_for_var[scalar_attr] = pre_scalar
+                    setattr(vdef, scalar_attr, None)
+
+                # Indexed expression bounds (per-element expression map)
+                map_attr = f"{kind}_expr_map"
+                pre_map = pre.get(map_attr)
+                cur_map = getattr(vdef, map_attr, None)
+                if isinstance(pre_map, dict) and isinstance(cur_map, dict) and pre_map:
+                    removed_keys: dict[object, object] = {}
+                    # Remove only keys that are unchanged since the snapshot.
+                    for key in list(pre_map.keys()):
+                        if key in cur_map and cur_map[key] is pre_map[key]:
+                            removed_keys[key] = pre_map[key]
+                            del cur_map[key]
+                    if removed_keys:
+                        existing_hidden_map = hidden_for_var.get(map_attr)
+                        if isinstance(existing_hidden_map, dict):
+                            existing_hidden_map.update(removed_keys)
+                        else:
+                            hidden_for_var[map_attr] = removed_keys
+            if hidden_for_var:
+                hidden_pre_expr_bounds[vname] = hidden_for_var
+
         # Post-process: try to resolve expression-based bounds to numeric values.
         # This handles parameters with compound keys (e.g., psdat stored with
         # 2-element keys like ('scenario-1', 'pulp-1.p') instead of 3-element).
         self._resolve_loop_body_expr_bounds()
+
+        # Restore any pre-existing expression bounds that we temporarily hid
+        # from _resolve_loop_body_expr_bounds().
+        for vname, hidden in hidden_pre_expr_bounds.items():
+            vdef = self.model.variables.get(vname)
+            if vdef is None:
+                continue
+            for attr, val in hidden.items():
+                if attr.endswith("_expr_map"):
+                    cur_map = getattr(vdef, attr, None)
+                    if cur_map is None:
+                        setattr(vdef, attr, dict(val))  # type: ignore[call-overload]
+                    else:
+                        cur_map.update(val)  # type: ignore[arg-type]
+                else:
+                    # Scalar expression bound
+                    if getattr(vdef, attr, None) is None:
+                        setattr(vdef, attr, val)
 
         # Clean up: any NEW scalar or indexed expression bounds that weren't
         # resolved to numeric values must be cleared.  They contain substituted

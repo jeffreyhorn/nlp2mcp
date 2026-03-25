@@ -2673,10 +2673,11 @@ def _compute_index_offset_key(
                 var_info = _resolve_cached(var_set)
                 if eq_info is None or var_info is None:
                     return 0
-                eq_resolved, eq_pos_map = eq_info
-                var_resolved, var_pos_map = var_info
-                if eq_resolved != var_resolved:
-                    return 0
+                # We only care about the member position maps here; the resolved
+                # set names may legitimately differ for subset/parent pairs that
+                # share the same underlying member ordering.
+                _, eq_pos_map = eq_info
+                _, var_pos_map = var_info
                 eq_pos = eq_pos_map.get(eq_elem)
                 var_pos = var_pos_map.get(var_elem)
                 if eq_pos is not None and var_pos is not None:
