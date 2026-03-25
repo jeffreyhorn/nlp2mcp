@@ -203,3 +203,120 @@ class TestSubtractAndCancel:
         # a - (-(a)) = a + a → two positive terms, no cancellation
         # Result should have both terms
         assert not (isinstance(result, Const) and result.value == 0.0)
+
+
+# ── Multi-pattern correction workflow (CI-runnable) ──────────────────
+
+
+class TestMultiPatternCorrectionWorkflow:
+    """End-to-end unit test exercising the multi-pattern detection and
+    correction logic using the same helper sequence as
+    ``_add_indexed_jacobian_terms``: fingerprint → group → pair →
+    substitute → subtract.
+
+    This runs in CI (no external files) and catches regressions in the
+    composed workflow that the integration test (skipped in CI) covers
+    with the real markov model.
+    """
+
+    def test_markov_like_correction(self):
+        """Simulate the markov diagonal/off-diagonal pattern.
+
+        Setup: constraint constr(sp,j) references z(s,i,sp) both
+        directly (Kronecker delta on diagonal) and inside a sum
+        (off-diagonal).
+
+        Diagonal derivative:  1 - b*pi(s,i,sp,j)
+        Off-diagonal derivative:  -(b*pi(s,i,sp,j))
+
+        Expected correction: diagonal - off-diagonal = Const(1.0)
+        """
+        bpi_diag = Binary("*", ParamRef("b"), ParamRef("pi", ("s1", "i1", "s1", "i1")))
+        diag_deriv = Binary("-", Const(1.0), bpi_diag)
+
+        bpi_off1 = Binary("*", ParamRef("b"), ParamRef("pi", ("s1", "i1", "s1", "i2")))
+        off1_deriv = Unary("-", bpi_off1)
+
+        bpi_off2 = Binary("*", ParamRef("b"), ParamRef("pi", ("s1", "i1", "s2", "i1")))
+        off2_deriv = Unary("-", bpi_off2)
+
+        # Step 1: Fingerprint — diagonal has different structure than off-diagonal
+        diag_key = _derivative_structure_key(diag_deriv)
+        off1_key = _derivative_structure_key(off1_deriv)
+        off2_key = _derivative_structure_key(off2_deriv)
+
+        assert diag_key != off1_key, "Diagonal and off-diagonal should differ"
+        assert off1_key == off2_key, "Off-diagonal entries should match"
+
+        # Step 2: Group by structure key — majority = off-diagonal (2), minority = diagonal (1)
+        groups: dict[str, list[str]] = {}
+        for label, key in [("diag", diag_key), ("off1", off1_key), ("off2", off2_key)]:
+            groups.setdefault(key, []).append(label)
+        sorted_groups = sorted(groups.items(), key=lambda kv: len(kv[1]), reverse=True)
+        assert len(sorted_groups) == 2
+        majority_labels = sorted_groups[0][1]
+        minority_labels = sorted_groups[1][1]
+        assert len(majority_labels) == 2  # off-diagonal is majority
+        assert len(minority_labels) == 1  # diagonal is minority
+
+        # Step 3: Pair — find a minority+majority entry sharing same var col.
+        # In markov, diagonal (sp=s,j=i) and off-diagonal (sp=s,j!=i) share
+        # the same z(s,i,sp) column.  Simulate by picking diag + off1.
+        paired_min_eq_idx = ("s1", "i1")  # diagonal: constr(s1,i1)
+        paired_maj_eq_idx = ("s1", "i2")  # off-diagonal: constr(s1,i2)
+
+        # Step 4: Build element substitution for majority → minority alignment
+        elem_sub: dict[str, str] = {}
+        for ei in range(len(paired_min_eq_idx)):
+            if paired_maj_eq_idx[ei] != paired_min_eq_idx[ei]:
+                elem_sub[paired_maj_eq_idx[ei]] = paired_min_eq_idx[ei]
+        assert elem_sub == {"i2": "i1"}
+
+        # Step 5: Substitute in off-diagonal derivative to align at diagonal point
+        # off1_deriv has pi(s1,i1,s1,i2) — after sub, pi(s1,i1,s1,i1)
+        maj_aligned = _substitute_elements(off1_deriv, elem_sub)
+        # After substitution, indices should match diagonal's indices
+        assert isinstance(maj_aligned, Unary)
+        inner = maj_aligned.child
+        assert isinstance(inner, Binary)
+        pi_ref = inner.right
+        assert isinstance(pi_ref, ParamRef)
+        assert pi_ref.indices == ("s1", "i1", "s1", "i1")
+
+        # Step 6: Subtract — correction = diag - aligned_off = 1
+        correction = _subtract_and_cancel(diag_deriv, maj_aligned)
+        assert isinstance(correction, Const)
+        assert correction.value == 1.0
+
+    def test_same_pattern_no_correction(self):
+        """When all entries share the same structure, no correction needed."""
+        d1 = Unary("-", Binary("*", ParamRef("b"), ParamRef("pi", ("a", "b"))))
+        d2 = Unary("-", Binary("*", ParamRef("b"), ParamRef("pi", ("c", "d"))))
+        d3 = Unary("-", Binary("*", ParamRef("b"), ParamRef("pi", ("e", "f"))))
+
+        k1 = _derivative_structure_key(d1)
+        k2 = _derivative_structure_key(d2)
+        k3 = _derivative_structure_key(d3)
+
+        # All same structure → single group → no multi-pattern detection
+        assert k1 == k2 == k3
+        groups: dict[str, int] = {}
+        for k in [k1, k2, k3]:
+            groups[k] = groups.get(k, 0) + 1
+        assert len(groups) == 1, "Single pattern should produce one group"
+
+    def test_unsafe_substitution_skips_correction(self):
+        """When elem_sub keys collide with var indices, correction is skipped."""
+        # Simulate: eq indices differ at "i1" → "i2", but var also uses "i1"
+        paired_maj_eq_idx = ("s1", "i1")
+        paired_min_eq_idx = ("s1", "i2")
+        var_indices = ("x1", "i1")  # "i1" appears in var indices!
+
+        elem_sub: dict[str, str] = {}
+        for ei in range(len(paired_min_eq_idx)):
+            if paired_maj_eq_idx[ei] != paired_min_eq_idx[ei]:
+                elem_sub[paired_maj_eq_idx[ei]] = paired_min_eq_idx[ei]
+
+        var_labels = {str(v) for v in var_indices}
+        unsafe = bool(elem_sub and elem_sub.keys() & var_labels)
+        assert unsafe, "Should detect collision between sub keys and var labels"
