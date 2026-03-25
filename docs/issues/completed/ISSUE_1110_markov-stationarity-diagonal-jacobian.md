@@ -64,7 +64,7 @@ The diagonal correction `nu_constr(s,i)` is correctly separated from the off-dia
 ### Files Changed
 
 - `src/kkt/stationarity.py` — Added `_derivative_structure_key()`, `_substitute_elements()`, `_subtract_and_cancel()` helpers; multi-pattern detection/correction logic in `_add_indexed_jacobian_terms()`
-- `tests/unit/kkt/test_multi_pattern_jacobian.py` — 20 unit tests
+- `tests/unit/kkt/test_multi_pattern_jacobian.py` — 24 unit tests
 - `tests/integration/kkt/test_markov_multi_pattern.py` — 1 integration test
 
 ## Impact

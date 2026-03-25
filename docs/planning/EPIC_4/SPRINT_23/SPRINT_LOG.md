@@ -252,7 +252,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 |---|---|
 | markov multi-pattern Jacobian (#1110) | ✅ Fixed: multi-pattern detection + correction term |
 | pak lead/lag Jacobian (#1049) | ⏭️ Deferred: 3 interacting bugs (subset domain, gradient template, quoted strings) — separate PR |
-| Unit tests (21 new) | ✅ _derivative_structure_key, _substitute_elements, _subtract_and_cancel, integration |
+| Unit tests (24 new) | ✅ _derivative_structure_key, _substitute_elements, _subtract_and_cancel, integration |
 | Quality checks | ✅ 4,294 passed, 10 skipped, 1 xfailed; typecheck/lint/format clean |
 
 **markov Fix Details:**
