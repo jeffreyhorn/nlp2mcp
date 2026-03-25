@@ -3170,7 +3170,19 @@ def _add_indexed_jacobian_terms(
                                         break
                                 if paired_min is not None:
                                     break
-                            if paired_min is not None and paired_maj is not None:
+                            if paired_min is None or paired_maj is None:
+                                import warnings
+
+                                warnings.warn(
+                                    f"Multi-pattern Jacobian: detected {len(_sg)} "
+                                    f"derivative patterns for {eq_name_base}/"
+                                    f"{var_name} but could not pair a minority "
+                                    f"entry with a majority entry sharing the "
+                                    f"same column. Correction term skipped; "
+                                    f"minority entries may be inaccurate.",
+                                    stacklevel=2,
+                                )
+                            else:
                                 min_d = jacobian.get_derivative(*paired_min)
                                 maj_d = jacobian.get_derivative(*paired_maj)
                                 # Compute correction = min_d - maj_d evaluated
