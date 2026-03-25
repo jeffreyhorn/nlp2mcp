@@ -2614,7 +2614,7 @@ class TestCaseInsensitivity:
         model = parser.parse_model_text(text)
         assert "myset" in model.sets
         assert "p" in model.params
-        assert model.params["p"].domain == ("MYSET",)  # Case preserved as written
+        assert model.params["p"].domain == ("myset",)  # Normalized to lowercase
 
     def test_equation_case_insensitive_reference(self):
         """Test equation declared and referenced with different cases."""

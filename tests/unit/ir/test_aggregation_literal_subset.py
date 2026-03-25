@@ -85,28 +85,35 @@ def _find_sum_in_expr(expr) -> Sum | None:
 
 
 def test_literal_subset_preserves_sum_index(tmp_path):
-    """sum(tn('time-2',n), 1) in leaf(n) should keep n as sum index."""
+    """sum(tn('time-2',n), 1) in leaf(n) should produce a SetMembershipTest with the literal."""
     gams_file = tmp_path / "test_lit_subset.gms"
     gams_file.write_text(_build_model_with_literal_subset())
     model = parse_model_file(str(gams_file))
 
-    leaf_def = model.sets.get("leaf")
-    assert leaf_def is not None, "Set 'leaf' should exist in model"
+    # Check the set_assignments for 'leaf' — the parser records dynamic
+    # set assignments like leaf(n)$(sum(...)) = yes there.
+    assignments = getattr(model, "set_assignments", None)
+    assert assignments is not None, "Model should have set_assignments"
 
-    # The leaf set should have an assignment condition containing a Sum
-    # with 'n' as index and tn('time-2',n) as condition.
-    # Check the set's expression if available, or check equations that
-    # reference it.
-    obj_eq = model.equations.get("obj")
-    assert obj_eq is not None, "Equation 'obj' should exist"
+    leaf_assignments = [a for a in assignments if a.set_name == "leaf"]
+    assert leaf_assignments, "Expected at least one assignment for set 'leaf'"
 
-    # Find the Sum in the objective equation's LHS
-    lhs, _ = obj_eq.lhs_rhs
-    sum_node = _find_sum_in_expr(lhs)
-    assert sum_node is not None, "Expected a Sum node in obj equation"
-    assert (
-        "n" in sum_node.index_sets
-    ), f"Sum should have 'n' in index_sets, got {sum_node.index_sets}"
+    leaf_assignment = leaf_assignments[0]
+    # Walk the assignment to find the embedded Sum expression
+    sum_node = _find_sum_in_expr(leaf_assignment.expr)
+    assert sum_node is not None, "Expected a Sum node in leaf set assignment"
+
+    # The Sum's condition should reference tn with the literal
+    smt_tn = None
+    if getattr(sum_node, "condition", None) is not None:
+        smt_tn = _find_smt_in_expr(sum_node.condition, "tn")
+    if smt_tn is None:
+        smt_tn = _find_smt_in_expr(sum_node.body, "tn")
+
+    assert smt_tn is not None, "Expected SetMembershipTest for 'tn' in Sum"
+    assert any(
+        isinstance(idx, SymbolRef) and idx.name == "n" for idx in smt_tn.indices
+    ), "SetMembershipTest for 'tn' should include 'n' as an index"
 
 
 def test_literal_subset_set_membership_has_literal(tmp_path):

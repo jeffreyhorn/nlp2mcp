@@ -29,6 +29,26 @@ solve m using lp minimizing x;
     assert eq.domain == ("r", "c"), f"Expected ('r', 'c'), got {eq.domain}"
 
 
+def test_variable_declaration_domain_lowercased(tmp_path):
+    """Variable declaration with uppercase domain sets should produce lowercase domain."""
+    gams = """\
+Set r / r1, r2 /;
+Set c / c1, c2 /;
+Variable x(R,C);
+Equation eq(r,c);
+eq(r,c).. x(r,c) =e= 0;
+Model m / eq /;
+solve m using lp minimizing x;
+"""
+    gams_file = tmp_path / "test_var_decl_domain.gms"
+    gams_file.write_text(gams)
+    model = parse_model_file(str(gams_file))
+
+    var = model.variables.get("x")
+    assert var is not None
+    assert var.domain == ("r", "c"), f"Expected ('r', 'c'), got {var.domain}"
+
+
 def test_variable_indices_lowercased_in_expressions(tmp_path):
     """Variable references in expressions should have lowercase indices."""
     gams = """\

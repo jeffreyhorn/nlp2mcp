@@ -514,6 +514,8 @@ def _id_list(node: Tree) -> tuple[str, ...]:
 def _id_or_wildcard_list(node: Tree) -> tuple[str, ...]:
     """Extract IDs or wildcards from id_or_wildcard_list.
 
+    GAMS is case-insensitive, so identifiers are normalized to lowercase.
+
     Handles the grammar rule:
         id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
         id_or_wildcard: ID | "*"
@@ -521,12 +523,12 @@ def _id_or_wildcard_list(node: Tree) -> tuple[str, ...]:
     result = []
     for child in node.children:
         if isinstance(child, Token):
-            result.append(_token_text(child))
+            result.append(_token_text(child).lower())
         elif isinstance(child, Tree) and child.data == "id_or_wildcard":
             # Extract the token from id_or_wildcard rule
             for token in child.children:
                 if isinstance(token, Token):
-                    result.append(_token_text(token))
+                    result.append(_token_text(token).lower())
     return tuple(result)
 
 
@@ -5242,15 +5244,16 @@ class _ModelBuilder:
                     all_raw_indices: list[str] = []
                     for subchild in child.children:
                         if isinstance(subchild, Token) and set_name is None:
-                            set_name = _token_text(subchild)
+                            set_name = _token_text(subchild).lower()
                         elif isinstance(subchild, Tree) and subchild.data == "index_list":
                             child_indices = _extract_domain_indices(subchild)
                             # Collect ALL indices including literals.
                             # Preserve quotes on literal elements (e.g., 'time-2')
                             # so they emit correctly in GAMS SetMembershipTest.
+                            # Lowercase non-quoted identifiers for consistency.
                             for idx_child in subchild.children:
                                 if isinstance(idx_child, Token):
-                                    all_raw_indices.append(_token_text(idx_child))
+                                    all_raw_indices.append(_token_text(idx_child).lower())
                                 elif isinstance(idx_child, Tree) and idx_child.children:
                                     tok = idx_child.children[0]
                                     if isinstance(tok, Token):
@@ -5262,7 +5265,7 @@ class _ModelBuilder:
                                         if is_quoted:
                                             all_raw_indices.append(tok_val)
                                         else:
-                                            all_raw_indices.append(_token_text(tok))
+                                            all_raw_indices.append(_token_text(tok).lower())
                     if set_name and child_indices:
                         has_literals = len(all_raw_indices) > len(child_indices)
                         subset_domain_info.append(
@@ -5371,10 +5374,15 @@ class _ModelBuilder:
         for set_name, child_idxs, has_literal_co_indices, all_raw_idxs in subset_domain_info:
             if has_literal_co_indices:
                 # When a subset has literal co-indices (e.g., tn('time-2',n)),
-                # don't filter any indices — they're all needed as iteration vars.
-                # Build the SetMembershipTest from the full raw indices (including
+                # build the SetMembershipTest from the full raw indices (including
                 # literals) later, bypassing the position-based multidim_set_conditions.
                 literal_subset_conditions.append((set_name, all_raw_idxs))
+                # Still mark non-literal indices that are in free_domain as
+                # filter indices so they are not re-bound in the Sum (avoids
+                # GAMS $125 "set under control already").
+                for raw_idx in all_raw_idxs:
+                    if raw_idx in free_domain:
+                        subset_filter_indices.add(raw_idx)
                 continue
             # Find position of first child index in expanded_indices
             try:
