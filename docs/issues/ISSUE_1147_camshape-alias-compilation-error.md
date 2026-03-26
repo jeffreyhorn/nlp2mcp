@@ -1,8 +1,8 @@
 # camshape: Alias-Related MCP Compilation Error
 
 **GitHub Issue:** [#1147](https://github.com/jeffreyhorn/nlp2mcp/issues/1147)
-**Status:** OPEN
-**Severity:** High — MCP fails to compile (path_syntax_error)
+**Status:** PARTIALLY FIXED
+**Severity:** Medium — MCP compiles but has unmatched equation pairing
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** camshape
@@ -68,4 +68,17 @@ invalid syntax, likely caused by:
 
 - `src/emit/equations.py` — `_collect_ad_generated_aliases`
 - `src/emit/expr_to_gams.py` — `resolve_index_conflicts`
+- `src/emit/emit_gams.py` — Variable bounds emission
 - `data/gamslib/raw/camshape.gms` — Source model
+
+---
+
+## Fix Applied (Partial)
+
+**Root cause of compilation error ($141):** The emitter did not emit numeric per-element bounds from `lo_map`/`up_map` for variables. Domain-wide bounds like `r.lo(i) = R_min` were parsed and stored as per-element values in `lo_map`, but never emitted. Expression bounds in `lo_expr_map` (e.g., `r.lo('i1') = max(expr, r.lo("i1"))`) referenced the unassigned `r.lo("i1")` on the RHS, causing GAMS $141.
+
+**Fix:** Added `lo_map`/`up_map` emission in `emit_gams.py` inside the `for kind in ("lo", "up", "fx")` loop, BEFORE expression bounds. The emitter always writes per-index numeric bounds (e.g., `r.lo('i1') = 1;`), even when all values are identical, to preserve the semantics of sparse maps. This ensures base bounds exist before expression overrides reference them.
+
+**Result:** camshape MCP now compiles with 0 GAMS syntax/compilation errors ($141 resolved).
+
+**Remaining issue:** MCP has unmatched equation pairing error: `stat_rdiff.rdiff has unmatched equation`. This is a separate MCP dimension mismatch where `rdiff` is declared over full domain `i` but bounds are only assigned over the subset `i(j+1)`, so the stationarity equation domain does not match the effective bound domain. This requires separate investigation.

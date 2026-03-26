@@ -1129,6 +1129,23 @@ def emit_gams_mcp(
                 continue
             if kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound:
                 continue
+            # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
+            # BEFORE expression bounds, so expression bounds that reference
+            # the base value on the RHS (e.g., r.lo('i1') = max(expr, r.lo('i1')))
+            # see the correct base value. Always emit per-index (not domain-wide)
+            # because *_map may be sparse and promoting would change semantics.
+            if kind in ("lo", "up"):
+                bound_map = getattr(var_def, f"{kind}_map", None)
+                if bound_map:
+                    for indices, val in sorted(bound_map.items()):
+                        idx_str = _format_map_indices(indices)
+                        if isinstance(val, (int, float)) and math.isfinite(val):
+                            int_val = int(val)
+                            val_str = str(int_val) if val == int_val else str(val)
+                        else:
+                            val_str = str(val)
+                        bound_lines.append(f"{var_name}.{kind}({idx_str}) = {val_str};")
+
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
             if expr_map:
@@ -1193,6 +1210,7 @@ def emit_gams_mcp(
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
+
     if bound_lines:
         if add_comments:
             sections.append("* ============================================")
