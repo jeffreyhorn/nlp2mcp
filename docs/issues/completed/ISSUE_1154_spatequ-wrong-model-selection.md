@@ -1,7 +1,7 @@
 # spatequ: Wrong Model/Objective Selection for KKT Conversion
 
 **GitHub Issue:** [#1154](https://github.com/jeffreyhorn/nlp2mcp/issues/1154)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — produces incorrect KKT system, model infeasible (MODEL STATUS 5)
 **Date:** 2026-03-25
 **Affected Models:** spatequ (and potentially any GAMS file with multiple model/solve statements)
@@ -91,6 +91,20 @@ Two complementary fixes needed:
 2. **KKT Assembly**: The stationarity builder should only include constraints that are in `model.model_equations`, ignoring equations defined but not in the selected model. This is a safety net even if the parser fix is correct.
 
 **Effort estimate:** 2-3 hours
+
+---
+
+## Fix Applied
+
+Two changes:
+
+1. **`src/ir/parser.py` — `_handle_solve()`**: Store per-model objectives in `_solve_objectives` dict alongside the existing last-wins behavior. This preserves all solve info for later reconciliation.
+
+2. **`src/ir/normalize.py` — `normalize_model()`**: Added reconciliation at the start. When the current model's equation list references another model by name (e.g., `P2R3_NonLinear / P2R3_Linear, DEMINT, SUPINT, OBJECT /`), detect that it's a superset and switch to the referenced sub-model if that sub-model has a stored objective. This correctly selects `P2R3_Linear` with `minimize TC` for spatequ.
+
+**Result:** spatequ MCP now uses only the 7 LP model equations (DEM, SUP, SDBAL, PDIF, TRANSCOST, SX, DX) with `minimize TC`. The stationarity equations no longer reference `nu_DEMINT` or `nu_SUPINT`.
+
+**Note:** spatequ still shows MODEL STATUS 5 (infeasible) due to a separate issue with incomplete Jacobian entries for `p(r,c)` inside `sum(cc, BetaD(r,c,cc)*p(r,c))` — the alias `cc` vs `c` differentiation is not fully handled.
 
 ---
 

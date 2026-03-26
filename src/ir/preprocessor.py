@@ -1099,6 +1099,14 @@ def strip_unsupported_directives(source: str) -> str:
                 in_put_statement = True
             continue
 
+        # Issue #1155: Strip ScenRedParms/ScenRedReport assignment statements.
+        # These are scenred library-specific and may contain invalid GAMS
+        # like ord('0-default') which causes $311 compilation errors.
+        # Only match assignments (with =), not declarations/data blocks.
+        if re.match(r"(?i)^scenred(parms|report)\s*\([^)]*\)\s*=", stripped):
+            filtered.append(f"* Stripped: {stripped}")
+            continue
+
         # Sprint 9 Day 6: if/elseif/else, abort, and compile-time constants now fully supported
         # No longer stripping these statements - they are parsed by the grammar
 

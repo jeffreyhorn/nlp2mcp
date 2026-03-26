@@ -154,6 +154,40 @@ def normalize_model(
     normalization to avoid issues with finding it after equations are restructured.
     See GitHub Issue #19 for details.
     """
+    # Issue #1154: When multiple solves use different models, the last non-MCP
+    # solve wins. But if the last solve's model is a superset of an earlier
+    # solve's model (i.e., it references the earlier model plus extras), the
+    # tool should prefer the simpler (earlier) model for KKT conversion.
+    # This handles spatequ where P2R3_NonLinear references P2R3_Linear.
+    _solve_objectives = ir._solve_objectives
+    if _solve_objectives and ir.model_name and len(_solve_objectives) > 1:
+        current_eqs = ir.model_equation_map.get(ir.model_name.lower(), [])
+        # Resolve the current model's full equation set for comparison.
+        saved_name = ir.model_name
+        current_resolved = ir.get_solved_model_equations() or []
+        current_resolved_lower = {eq.lower() for eq in current_resolved}
+        ir.model_name = saved_name  # restore (get_solved_model_equations is read-only)
+        # Check if the current model is a strict superset of a referenced
+        # sub-model. Only switch when the referenced model's equations form
+        # a proper subset (avoids alias models like "MODEL B / A /").
+        for eq in current_eqs:
+            ref_lower = eq.lower()
+            if (
+                ref_lower in ir.model_equation_map
+                and ref_lower not in ir.equations
+                and ref_lower in _solve_objectives
+            ):
+                # Resolve the candidate sub-model's equations
+                saved_name2 = ir.model_name
+                ir.model_name = ref_lower
+                ref_resolved = ir.get_solved_model_equations() or []
+                ref_resolved_lower = {ref_eq.lower() for ref_eq in ref_resolved}
+                ir.model_name = saved_name2
+                if ref_resolved_lower and ref_resolved_lower < current_resolved_lower:
+                    ir.model_name = eq
+                    ir.objective = _solve_objectives[ref_lower]
+                    break
+
     # Issue #1033: Compute model equation set BEFORE objective extraction
     # so that only equations in the solved model are considered.
     model_eq_set: set[str] | None = None
@@ -187,10 +221,10 @@ def normalize_model(
     ir.equalities.clear()
     ir.inequalities.clear()
 
-    for name, eq in ir.equations.items():
+    for name, eq_def in ir.equations.items():  # type: ignore[assignment]
         if model_eq_set is not None and name.lower() not in model_eq_set:
             continue
-        n = normalize_equation(eq)
+        n = normalize_equation(eq_def)  # type: ignore[arg-type]
         norm[name] = n
         if n.relation == Rel.EQ:
             ir.equalities.append(name)

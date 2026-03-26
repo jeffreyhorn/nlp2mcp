@@ -1,7 +1,7 @@
 # srkandw: Multiple GAMS Compilation Errors in Generated MCP
 
 **GitHub Issue:** [#1155](https://github.com/jeffreyhorn/nlp2mcp/issues/1155)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — generated MCP does not compile
 **Date:** 2026-03-25
 **Affected Models:** srkandw
@@ -105,3 +105,17 @@ Three separate issues:
 3. For $141: Fix objective value capture in the emitter epilogue. (~0.5h)
 
 **Total effort estimate:** 3-4 hours
+
+---
+
+## Fix Applied
+
+All three sub-issues resolved:
+
+1. **$125 (empty Sum emission)**: In `src/emit/expr_to_gams.py`, added handling for `Sum` with empty `index_sets` — collapses to `body$condition` instead of invalid `sum(()$..., body)`. The parser correctly filters `n` from sum_indices (avoiding GAMS set-control conflict), and the emitter now renders the resulting degenerate Sum as a conditional expression.
+
+2. **$311 (ScenRedParms stripping)**: In `src/ir/preprocessor.py`, added stripping for lines that assign to `ScenRedParms(...)` or `ScenRedReport(...)`. These scenred-library-specific assignments may contain invalid GAMS like `ord('0-default')` and are not part of the mathematical model.
+
+3. **$141 (cost.l)**: This was a cascading error caused by $125/$311. Once those are fixed, `cost.l` works correctly because the model compiles and the variable is properly declared.
+
+**Result:** srkandw MCP compiles with 0 errors, GAMS MODEL STATUS 1 (Optimal).

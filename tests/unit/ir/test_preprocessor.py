@@ -1982,3 +1982,31 @@ class TestEvalDirective:
         """_safe_eval_arithmetic should return non-numeric expressions as-is."""
         assert _safe_eval_arithmetic("hello") == "hello"
         assert _safe_eval_arithmetic("foo+bar") == "foo+bar"
+
+
+class TestScenRedParmsStripping:
+    """Issue #1155: Strip ScenRedParms/ScenRedReport assignments."""
+
+    def test_scenredparms_stripped(self):
+        """ScenRedParms assignments should be stripped."""
+        source = "ScenRedParms('reduction_method') = ord('0-default') - 1;\n"
+        result = strip_unsupported_directives(source)
+        assert "ScenRedParms" not in result or result.strip().startswith("*")
+
+    def test_scenredreport_stripped(self):
+        """ScenRedReport assignments should be stripped."""
+        source = "ScenRedReport('some_key') = 42;\n"
+        result = strip_unsupported_directives(source)
+        assert "ScenRedReport" not in result or result.strip().startswith("*")
+
+    def test_mixed_case_stripped(self):
+        """Case-insensitive stripping of scenred parameters."""
+        source = "scenredparms('red_num_leaves') = ord(run);\n"
+        result = strip_unsupported_directives(source)
+        assert "scenredparms" not in result or result.strip().startswith("*")
+
+    def test_non_scenred_preserved(self):
+        """Other parameter assignments should not be stripped."""
+        source = "myParam('key') = 42;\n"
+        result = strip_unsupported_directives(source)
+        assert "myParam" in result
