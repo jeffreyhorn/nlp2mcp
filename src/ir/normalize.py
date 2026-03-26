@@ -162,21 +162,28 @@ def normalize_model(
     _solve_objectives = ir._solve_objectives
     if _solve_objectives and ir.model_name and len(_solve_objectives) > 1:
         current_eqs = ir.model_equation_map.get(ir.model_name.lower(), [])
-        # Check if the current model references another model by name.
-        # Treat an entry as a model reference only if it is not also an equation.
-        refs_other_model = any(
-            (ref_lower := eq.lower()) in ir.model_equation_map and ref_lower not in ir.equations
-            for eq in current_eqs
-        )
-        if refs_other_model:
-            # Find the referenced sub-model and use it instead
-            for eq in current_eqs:
-                ref_lower = eq.lower()
-                if (
-                    ref_lower in ir.model_equation_map
-                    and ref_lower not in ir.equations
-                    and ref_lower in _solve_objectives
-                ):
+        # Resolve the current model's full equation set for comparison.
+        saved_name = ir.model_name
+        current_resolved = ir.get_solved_model_equations() or []
+        current_resolved_lower = {eq.lower() for eq in current_resolved}
+        ir.model_name = saved_name  # restore (get_solved_model_equations is read-only)
+        # Check if the current model is a strict superset of a referenced
+        # sub-model. Only switch when the referenced model's equations form
+        # a proper subset (avoids alias models like "MODEL B / A /").
+        for eq in current_eqs:
+            ref_lower = eq.lower()
+            if (
+                ref_lower in ir.model_equation_map
+                and ref_lower not in ir.equations
+                and ref_lower in _solve_objectives
+            ):
+                # Resolve the candidate sub-model's equations
+                saved_name2 = ir.model_name
+                ir.model_name = ref_lower
+                ref_resolved = ir.get_solved_model_equations() or []
+                ref_resolved_lower = {ref_eq.lower() for ref_eq in ref_resolved}
+                ir.model_name = saved_name2
+                if ref_resolved_lower and ref_resolved_lower < current_resolved_lower:
                     ir.model_name = eq
                     ir.objective = _solve_objectives[ref_lower]
                     break
