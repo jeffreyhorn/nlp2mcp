@@ -1748,6 +1748,26 @@ def _ensure_numeric_condition(cond: Expr) -> Expr:
     return DollarConditional(Const(1.0), cond)
 
 
+def _is_structurally_zero(expr: Expr) -> bool:
+    """Check if an expression is structurally zero (recursively).
+
+    Issue #1157: The simple `isinstance(expr, Const) and expr.value == 0`
+    check misses expressions like `Binary("+", Binary("*", x, Const(0.0)), Binary("*", y, Const(0.0)))`
+    which are semantically zero but not syntactically Const(0.0).
+    """
+    if isinstance(expr, Const):
+        return expr.value == 0.0
+    if isinstance(expr, Binary):
+        if expr.op in ("+", "-"):
+            return _is_structurally_zero(expr.left) and _is_structurally_zero(expr.right)
+        if expr.op == "*":
+            return _is_structurally_zero(expr.left) or _is_structurally_zero(expr.right)
+    if isinstance(expr, Unary):
+        if expr.op == "-":
+            return _is_structurally_zero(expr.child)
+    return False
+
+
 def _diff_sum(
     expr: Sum,
     wrt_var: str,
@@ -1878,7 +1898,7 @@ def _diff_sum(
                     body_derivative = differentiate_expr(
                         expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
                     )
-                    if not (isinstance(body_derivative, Const) and body_derivative.value == 0.0):
+                    if not _is_structurally_zero(body_derivative):
                         result_body = _substitute_sum_indices(
                             body_derivative, (sum_idx,), (wrt_idx,)
                         )
