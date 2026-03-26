@@ -81,4 +81,4 @@ invalid syntax, likely caused by:
 
 **Result:** camshape MCP now compiles with 0 GAMS syntax/compilation errors ($141 resolved).
 
-**Remaining issue:** MCP has unmatched equation pairing error: `stat_rdiff.rdiff has unmatched equation`. This is a separate MCP dimension mismatch where `rdiff` is declared with subset domain `i(j+1)` and the stationarity equation domain doesn't match. This requires separate investigation.
+**Remaining issue:** MCP has unmatched equation pairing error: `stat_rdiff.rdiff has unmatched equation`. This is a separate MCP dimension mismatch where `rdiff` is declared over full domain `i` but bounds are only assigned over the subset `i(j+1)`, so the stationarity equation domain does not match the effective bound domain. This requires separate investigation.

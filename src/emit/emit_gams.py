@@ -1139,7 +1139,11 @@ def emit_gams_mcp(
                 if bound_map:
                     for indices, val in sorted(bound_map.items()):
                         idx_str = _format_map_indices(indices)
-                        val_str = str(int(val)) if val == int(val) else str(val)
+                        if isinstance(val, (int, float)) and math.isfinite(val):
+                            int_val = int(val)
+                            val_str = str(int_val) if val == int_val else str(val)
+                        else:
+                            val_str = str(val)
                         bound_lines.append(f"{var_name}.{kind}({idx_str}) = {val_str};")
 
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
