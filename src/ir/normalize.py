@@ -163,9 +163,7 @@ def normalize_model(
     if _solve_objectives and ir.model_name and len(_solve_objectives) > 1:
         current_eqs = ir.model_equation_map.get(ir.model_name.lower(), [])
         # Check if the current model references another model by name
-        refs_other_model = any(
-            eq.lower() in ir.model_equation_map for eq in current_eqs
-        )
+        refs_other_model = any(eq.lower() in ir.model_equation_map for eq in current_eqs)
         if refs_other_model:
             # Find the referenced sub-model and use it instead
             for eq in current_eqs:
@@ -207,10 +205,10 @@ def normalize_model(
     ir.equalities.clear()
     ir.inequalities.clear()
 
-    for name, eq in ir.equations.items():
+    for name, eq in ir.equations.items():  # type: ignore[assignment]
         if model_eq_set is not None and name.lower() not in model_eq_set:
             continue
-        n = normalize_equation(eq)
+        n = normalize_equation(eq)  # type: ignore[arg-type]
         norm[name] = n
         if n.relation == Rel.EQ:
             ir.equalities.append(name)

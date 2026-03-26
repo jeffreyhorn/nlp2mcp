@@ -127,14 +127,14 @@ def test_literal_subset_preserves_sum_index(tmp_path):
         "n" not in sum_node.index_sets
     ), f"Sum should not rebind 'n' as iterator (avoids $125), got index_sets={sum_node.index_sets}"
 
-    # Guard: when all sum indices are filtered, the Sum has empty index_sets,
-    # which we currently emit as invalid GAMS (ISSUE_1155).
-    # TODO(ISSUE_1155): Once empty-Sum emission is fixed, change this to
-    # a hard assertion that no empty-index Sum is present in the IR.
-    if not sum_node.index_sets:
-        import pytest
+    # Issue #1155: Empty Sum(index_sets=()) is collapsed to body$condition
+    # during emission. Verify the rendered form doesn't contain sum(()$...).
+    from src.emit.expr_to_gams import expr_to_gams
 
-        pytest.xfail("ISSUE_1155: empty Sum(index_sets=()) emits invalid GAMS")
+    rendered = expr_to_gams(leaf_assignment.expr)
+    assert (
+        "sum(()$" not in rendered and "sum(()," not in rendered
+    ), f"Emitted leaf assignment contains invalid sum(()...): {rendered}"
 
 
 def test_literal_subset_set_membership_has_literal(tmp_path):

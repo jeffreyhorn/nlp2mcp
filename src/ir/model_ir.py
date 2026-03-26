@@ -67,6 +67,8 @@ class ModelIR:
     model_equation_map: dict[str, list[str]] = field(default_factory=dict)
     model_name: str | None = None
     objective: ObjectiveIR | None = None  # filled after parsing Solve
+    # Issue #1154: Per-model objectives for reconciliation when multiple solves exist
+    _solve_objectives: dict[str, ObjectiveIR] = field(default_factory=dict, repr=False)
 
     # Convenience lookups (to be populated during normalization)
     equalities: list[str] = field(default_factory=list)  # equation names =e=

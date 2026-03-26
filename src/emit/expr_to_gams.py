@@ -559,6 +559,15 @@ def expr_to_gams(
             return f"({result})" if needs_parens else result
 
         case Sum(index_sets, body, condition):
+            # Issue #1155: Empty index_sets means all sum indices were filtered
+            # (e.g., literal co-index subset where outer domain controls all vars).
+            # Collapse to body$condition instead of invalid sum(()$..., body).
+            if not index_sets:
+                body_str = expr_to_gams(body, domain_vars=domain_vars)
+                if condition is not None:
+                    cond_str = expr_to_gams(condition, domain_vars=domain_vars)
+                    return f"({body_str}${cond_str})"
+                return body_str
             # GAMS: sum(i$cond, body) or sum((i,j), body)
             extended_domain_vars = domain_vars | frozenset(index_sets)
             body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
