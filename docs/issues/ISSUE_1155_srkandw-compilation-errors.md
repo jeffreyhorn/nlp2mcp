@@ -12,7 +12,7 @@
 
 The generated MCP for srkandw has three compilation errors that prevent GAMS from solving it:
 
-1. **$125 "Set is under control already"** (line 54): `leaf(n) = yes$(sum(n$(tn('time-2',n)), 1));` — GAMS rejects using `n` as both the outer set control variable in `leaf(n)` and as a sum index in `sum(n$(...), 1)`.
+1. **$125 "Set is under control already"** (line 54): `leaf(n) = yes$(sum(n$(tn('time-2',n)), 1));` — GAMS rejects using `n` as both the outer set control variable in `leaf(n)` and as a sum index in `sum(n$(...), 1)`. **Note:** PR #1153 partially addressed this by preserving the literal co-index and filtering `n` from sum_indices, but the emitted form may still produce an empty `Sum(index_sets=())` which needs to be collapsed to a non-iterating conditional or the original subset-domain form.
 
 2. **$311 "ord function needs second argument"** (line 65): `ScenRedParms('reduction_method') = ord('0-default') - 1;` — `ord()` with a quoted literal is invalid GAMS. This is GUSS-related post-solve code that should be stripped during preprocessing.
 

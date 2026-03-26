@@ -121,6 +121,12 @@ def test_literal_subset_preserves_sum_index(tmp_path):
         isinstance(idx, SymbolRef) and idx.name in literal_names for idx in smt_tn.indices
     ), "SetMembershipTest for 'tn' should include the 'time-2' literal co-index"
 
+    # The Sum should NOT rebind 'n' as an iterator when 'n' is already
+    # controlled by leaf(n) — that would cause GAMS $125.
+    assert (
+        "n" not in sum_node.index_sets
+    ), f"Sum should not rebind 'n' as iterator (avoids $125), got index_sets={sum_node.index_sets}"
+
 
 def test_literal_subset_set_membership_has_literal(tmp_path):
     """Parsed model with obj$leaf should contain SetMembershipTest for leaf(n)."""

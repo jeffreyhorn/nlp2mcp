@@ -66,7 +66,7 @@ solve m using lp minimizing x;
     eq = model.equations.get("eq")
     assert eq is not None
     # The LHS should reference x with lowercase index
-    lhs, rhs = eq.lhs_rhs
+    lhs, _ = eq.lhs_rhs
     from src.ir.ast import VarRef
 
     assert isinstance(lhs, VarRef), f"Expected VarRef on LHS, got {type(lhs)}"
