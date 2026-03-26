@@ -1,7 +1,7 @@
 # spatequ: Jacobian Missing Derivatives for Variables Inside Sum with Alias Index
 
 **GitHub Issue:** [#1157](https://github.com/jeffreyhorn/nlp2mcp/issues/1157)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — produces incorrect KKT system, model infeasible (MODEL STATUS 5)
 **Date:** 2026-03-26
 **Affected Models:** spatequ (and potentially any model where a variable appears inside a sum over an alias of the variable's own domain)
@@ -110,6 +110,16 @@ Both have `p(r,c)` inside `sum(cc, ...)` where `cc` is `Alias(c,cc)`.
 3. Add a unit test: `d/dp(R1,C1) [sum(cc, B(R1,C1,cc)*p(R1,C1))]` should equal `sum(cc, B(R1,C1,cc))`.
 
 **Effort estimate:** 2-3 hours
+
+---
+
+## Fix Applied
+
+**Root cause:** In `_diff_sum()` (derivative_rules.py), the partial index match path for single-index sums incorrectly collapsed the sum when the differentiation target variable (`p(Reg1,Com1)`) didn't actually depend on the sum index (`cc`). The zero-check `isinstance(body_derivative, Const) and body_derivative.value == 0.0` only caught bare `Const(0)` but not structurally-zero expressions like `Binary(+, Binary(*, x, 0), Binary(*, y, 0))`.
+
+**Fix:** Added `_is_structurally_zero()` helper that recursively checks if an expression is zero through addition/subtraction of zeros and multiplication by zero. Used this in the partial match loop to correctly detect that the collapsed derivative is zero and fall through to the normal case, which preserves the Sum structure and correctly differentiates the body.
+
+**Result:** spatequ now compiles with 0 errors and solves with MODEL STATUS 1 (Optimal). The stationarity equation `stat_p(r,c)` correctly includes `sum(cc, BetaD(r,c,cc)) * nu_DEM(r,c)` and `sum(cc, BetaS(r,c,cc)) * nu_SUP(r,c)` terms.
 
 ---
 
