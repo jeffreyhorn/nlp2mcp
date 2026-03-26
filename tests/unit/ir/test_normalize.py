@@ -6,7 +6,7 @@ from textwrap import dedent
 from src.ir import parser
 from src.ir.ast import Binary, Const, VarRef
 from src.ir.normalize import normalize_model
-from src.ir.symbols import Rel
+from src.ir.symbols import ObjSense, Rel
 
 
 def test_normalize_exports_expected_names():
@@ -404,3 +404,53 @@ def test_normalize_skips_indexed_objective_equations():
     # Expression should be Const(5) from scalar_eq
     assert isinstance(model.objective.expr, Const)
     assert model.objective.expr.value == 5.0
+
+
+def test_multi_solve_superset_model_reconciliation():
+    """Issue #1154: When a superset model references a sub-model, prefer the sub-model."""
+    from src.ir.model_ir import ModelIR, ObjectiveIR
+    from src.ir.normalize import normalize_model
+    from src.ir.symbols import EquationDef, Rel, SetDef, VariableDef
+
+    model = ModelIR()
+    model.sets["r"] = SetDef(name="r", domain=(), members=["r1"])
+    model.variables["x"] = VariableDef(name="x", domain=())
+    model.variables["tc"] = VariableDef(name="tc", domain=())
+    model.variables["obj"] = VariableDef(name="obj", domain=())
+
+    # Two equations
+    model.add_equation(
+        EquationDef(
+            name="eq1",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("tc", ()), Const(0.0)),
+        )
+    )
+    model.add_equation(
+        EquationDef(
+            name="eq2",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Const(0.0)),
+        )
+    )
+
+    # sub_model has eq1 only; super_model references sub_model + eq2
+    model.model_equation_map["sub_model"] = ["eq1"]
+    model.model_equation_map["super_model"] = ["sub_model", "eq2"]
+
+    # Last solve used super_model with max obj
+    model.model_name = "super_model"
+    model.objective = ObjectiveIR(sense=ObjSense.MAX, objvar="obj")
+    model._solve_objectives = {
+        "sub_model": ObjectiveIR(sense=ObjSense.MIN, objvar="tc"),
+        "super_model": ObjectiveIR(sense=ObjSense.MAX, objvar="obj"),
+    }
+
+    normalize_model(model)
+
+    # Should reconcile to sub_model with min tc
+    assert model.model_name.lower() == "sub_model"
+    assert model.objective.objvar.lower() == "tc"
+    assert model.objective.sense == ObjSense.MIN

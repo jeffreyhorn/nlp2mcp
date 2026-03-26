@@ -217,8 +217,8 @@ def _create_eq_multipliers(
     auxiliary_count = 0
 
     for eq_name in equalities:
-        # Skip objective-defining equation if specified
-        if skip_equation and eq_name == skip_equation:
+        # Skip objective-defining equation if specified (case-insensitive)
+        if skip_equation and eq_name.lower() == skip_equation.lower():
             logger.info(f"Skipping multiplier for objective-defining equation: {eq_name}")
             continue
 

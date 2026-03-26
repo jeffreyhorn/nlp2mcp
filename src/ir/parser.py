@@ -3549,15 +3549,11 @@ class _ModelBuilder:
         if objvar:
             # Issue #1154: Store all non-MCP solve info. After parsing,
             # the last one wins (original behavior). The reconciliation
-            # with model_equations happens in get_solved_model_equations.
+            # with model_equations happens in normalize_model().
             self.model.model_name = name
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
             # Track per-model objectives for later reconciliation
-            if not hasattr(self.model, "_solve_objectives"):
-                self.model._solve_objectives = {}
-            self.model._solve_objectives[name.lower()] = ObjectiveIR(
-                sense=sense, objvar=objvar
-            )
+            self.model._solve_objectives[name.lower()] = ObjectiveIR(sense=sense, objvar=objvar)
         elif is_mcp_cns and self.model.objective is not None:
             # Issue #1026: MCP/CNS solves have no objective by design.
             # Don't update model_name — preserve the previous NLP model name
