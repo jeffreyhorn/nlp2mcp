@@ -570,7 +570,20 @@ def test_diff_sum_variable_constant_wrt_alias_index():
     # Differentiate w.r.t. p(Reg1, Com1)
     result = differentiate_expr(sum_expr, "p", ("Reg1", "Com1"), config)
 
-    # Result should be a Sum (not collapsed) with non-zero body
+    # Result should be a Sum (not collapsed) with correct, non-zero body
     assert isinstance(result, Sum), f"Expected Sum, got {type(result).__name__}: {result}"
     assert result.index_sets == ("cc",)
     assert not _is_structurally_zero(result.body), "Body derivative should not be zero"
+
+    # Body is product rule: BetaD * dp/dp + p * dBetaD/dp = BetaD * 1 + p * 0
+    # Structured as Binary(+, Binary(*, p, 0), Binary(*, BetaD, 1))
+    assert isinstance(result.body, Binary), f"Expected Binary body, got {type(result.body)}"
+    # The non-zero term should contain BetaD(Reg1,Com1,cc) * Const(1.0)
+    right_term = result.body.right
+    assert isinstance(right_term, Binary) and right_term.op == "*"
+    assert isinstance(right_term.left, ParamRef)
+    assert right_term.left.name == "BetaD"
+    assert right_term.left.indices == ("Reg1", "Com1", "cc")
+    from src.ir.ast import Const
+
+    assert isinstance(right_term.right, Const) and right_term.right.value == 1.0

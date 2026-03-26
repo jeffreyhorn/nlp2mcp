@@ -1752,7 +1752,7 @@ def _is_structurally_zero(expr: Expr) -> bool:
     """Check if an expression is structurally zero (recursively).
 
     Issue #1157: The simple `isinstance(expr, Const) and expr.value == 0`
-    check misses expressions like `Binary(+, Binary(*, x, 0), Binary(*, y, 0))`
+    check misses expressions like `Binary("+", Binary("*", x, 0), Binary("*", y, 0))`
     which are semantically zero but not syntactically Const(0).
     """
     if isinstance(expr, Const):
