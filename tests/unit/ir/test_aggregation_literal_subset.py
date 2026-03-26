@@ -127,6 +127,19 @@ def test_literal_subset_preserves_sum_index(tmp_path):
         "n" not in sum_node.index_sets
     ), f"Sum should not rebind 'n' as iterator (avoids $125), got index_sets={sum_node.index_sets}"
 
+    # Guard: rendering the leaf assignment should not produce sum(()$...
+    # which is invalid GAMS. This is a known limitation (ISSUE_1155) —
+    # when all sum indices are filtered, the Sum has empty index_sets.
+    # TODO(ISSUE_1155): Once empty-Sum emission is fixed, change this to
+    # a hard assertion that sum(()$...) does NOT appear.
+    from src.emit.expr_to_gams import expr_to_gams
+
+    rendered = expr_to_gams(leaf_assignment.expr)
+    if "sum(()$" in rendered or "sum(()," in rendered:
+        import pytest
+
+        pytest.xfail("ISSUE_1155: empty Sum(index_sets=()) emits invalid GAMS")
+
 
 def test_literal_subset_set_membership_has_literal(tmp_path):
     """Parsed model with obj$leaf should contain SetMembershipTest for leaf(n)."""

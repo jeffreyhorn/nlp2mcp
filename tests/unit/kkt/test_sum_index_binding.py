@@ -12,14 +12,13 @@ from src.kkt.stationarity import _SENTINEL_UNMATCHED, _compute_index_offset_key
 def _make_model_ir():
     """Build minimal ModelIR with sets r and alias rr."""
     from src.ir.model_ir import ModelIR, SetDef
+    from src.ir.symbols import AliasDef
 
     model = ModelIR()
     model.sets["r"] = SetDef(name="r", domain=(), members=["Reg1", "Reg2", "Reg3"])
     model.sets["c"] = SetDef(name="c", domain=(), members=["Com1", "Com2"])
     # rr is alias of r
-    from types import SimpleNamespace
-
-    model.aliases["rr"] = SimpleNamespace(target="r")
+    model.aliases["rr"] = AliasDef(name="rr", target="r")
     return model
 
 

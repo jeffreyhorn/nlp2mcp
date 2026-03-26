@@ -3171,10 +3171,13 @@ def _add_indexed_jacobian_terms(
                                 for ge in offset_groups.values():
                                     all_entries.extend(ge)
                                 offset_groups = {consolidated_key: all_entries}
-                                # Store original sentinel positions for the
-                                # multiplier remap — these are the positions where
-                                # the equation's domain indices should NOT map
-                                # (they are the equation's own sum variable).
+                                # Store the original sentinel positions (before
+                                # consolidation) for the multiplier remap. These
+                                # mark dimensions that appeared unmatched in the raw
+                                # offset keys but are expected to correspond to the
+                                # equation's own indexed domain; later remapping
+                                # logic preferentially maps equation-domain indices
+                                # back into these positions when possible.
                                 _original_sentinel_positions = sentinel_positions
 
                 for offset_key, group_entries in offset_groups.items():
