@@ -1132,21 +1132,15 @@ def emit_gams_mcp(
             # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
             # BEFORE expression bounds, so expression bounds that reference
             # the base value on the RHS (e.g., r.lo('i1') = max(expr, r.lo('i1')))
-            # see the correct base value.
+            # see the correct base value. Always emit per-index (not domain-wide)
+            # because *_map may be sparse and promoting would change semantics.
             if kind in ("lo", "up"):
                 bound_map = getattr(var_def, f"{kind}_map", None)
                 if bound_map:
-                    vals = list(bound_map.values())
-                    if vals and all(v == vals[0] for v in vals) and var_def.domain:
-                        val = vals[0]
+                    for indices, val in sorted(bound_map.items()):
+                        idx_str = _format_map_indices(indices)
                         val_str = str(int(val)) if val == int(val) else str(val)
-                        domain_str = ",".join(var_def.domain)
-                        bound_lines.append(f"{var_name}.{kind}({domain_str}) = {val_str};")
-                    else:
-                        for indices, val in sorted(bound_map.items()):
-                            idx_str = _format_map_indices(indices)
-                            val_str = str(int(val)) if val == int(val) else str(val)
-                            bound_lines.append(f"{var_name}.{kind}({idx_str}) = {val_str};")
+                        bound_lines.append(f"{var_name}.{kind}({idx_str}) = {val_str};")
 
             scalar_expr = getattr(var_def, f"{kind}_expr", None)
             expr_map = getattr(var_def, f"{kind}_expr_map", None)
