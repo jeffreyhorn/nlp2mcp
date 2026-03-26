@@ -13,11 +13,12 @@ def test_equation_domain_lowercased(tmp_path):
     gams = """\
 Set r / r1, r2 /;
 Set c / c1, c2 /;
-Variable x(r,c);
-Equation eq(r,c);
+Variable x(r,c), obj;
+Equation eq(r,c), objdef;
 eq(R,C).. x(R,C) =e= 0;
-Model m / eq /;
-solve m using lp minimizing x;
+objdef.. obj =e= sum((r,c), x(r,c));
+Model m / eq, objdef /;
+solve m using lp minimizing obj;
 """
     gams_file = tmp_path / "test_case.gms"
     gams_file.write_text(gams)
@@ -34,11 +35,12 @@ def test_variable_declaration_domain_lowercased(tmp_path):
     gams = """\
 Set r / r1, r2 /;
 Set c / c1, c2 /;
-Variable x(R,C);
-Equation eq(r,c);
+Variable x(R,C), obj;
+Equation eq(r,c), objdef;
 eq(r,c).. x(r,c) =e= 0;
-Model m / eq /;
-solve m using lp minimizing x;
+objdef.. obj =e= sum((r,c), x(r,c));
+Model m / eq, objdef /;
+solve m using lp minimizing obj;
 """
     gams_file = tmp_path / "test_var_decl_domain.gms"
     gams_file.write_text(gams)
@@ -53,11 +55,12 @@ def test_variable_indices_lowercased_in_expressions(tmp_path):
     """Variable references in expressions should have lowercase indices."""
     gams = """\
 Set r / r1, r2 /;
-Variable x(r);
-Equation eq(r);
+Variable x(r), obj;
+Equation eq(r), objdef;
 eq(R).. x(R) =e= 0;
-Model m / eq /;
-solve m using lp minimizing x;
+objdef.. obj =e= sum(r, x(r));
+Model m / eq, objdef /;
+solve m using lp minimizing obj;
 """
     gams_file = tmp_path / "test_case2.gms"
     gams_file.write_text(gams)
@@ -80,11 +83,12 @@ def test_sum_index_lowercased(tmp_path):
     gams = """\
 Set r / r1, r2 /;
 Alias(r, rr);
-Variable x(r,rr);
-Equation eq(r);
+Variable x(r,rr), obj;
+Equation eq(r), objdef;
 eq(R).. sum(RR, x(R,RR)) =e= 0;
-Model m / eq /;
-solve m using lp minimizing x;
+objdef.. obj =e= sum((r,rr), x(r,rr));
+Model m / eq, objdef /;
+solve m using lp minimizing obj;
 """
     gams_file = tmp_path / "test_case3.gms"
     gams_file.write_text(gams)
