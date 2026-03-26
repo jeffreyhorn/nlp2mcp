@@ -514,6 +514,8 @@ def _id_list(node: Tree) -> tuple[str, ...]:
 def _id_or_wildcard_list(node: Tree) -> tuple[str, ...]:
     """Extract IDs or wildcards from id_or_wildcard_list.
 
+    GAMS is case-insensitive, so identifiers are normalized to lowercase.
+
     Handles the grammar rule:
         id_or_wildcard_list: id_or_wildcard ("," id_or_wildcard)*
         id_or_wildcard: ID | "*"
@@ -521,12 +523,12 @@ def _id_or_wildcard_list(node: Tree) -> tuple[str, ...]:
     result = []
     for child in node.children:
         if isinstance(child, Token):
-            result.append(_token_text(child))
+            result.append(_token_text(child).lower())
         elif isinstance(child, Tree) and child.data == "id_or_wildcard":
             # Extract the token from id_or_wildcard rule
             for token in child.children:
                 if isinstance(token, Token):
-                    result.append(_token_text(token))
+                    result.append(_token_text(token).lower())
     return tuple(result)
 
 
@@ -575,7 +577,9 @@ def _domain_list(node: Tree) -> tuple[str, ...]:
                         elif second_child.data == "index_list":
                             identifiers.extend(_extract_domain_indices(second_child))
 
-    return tuple(identifiers)
+    # GAMS is case-insensitive; normalize domain identifiers to lowercase
+    # so equation/variable domains match regardless of source casing.
+    return tuple(i.lower() for i in identifiers)
 
 
 def _domain_list_condition(node: Tree) -> Expr | None:
@@ -643,6 +647,8 @@ def _domain_list_has_offset(node: Tree) -> bool:
 def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     """Recursively extract base identifiers from index_list for domain tracking.
 
+    GAMS is case-insensitive, so all identifiers are normalized to lowercase.
+
     Examples:
         - i          -> ['i']
         - i+1        -> ['i']
@@ -652,7 +658,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
     identifiers = []
     for child in index_list_node.children:
         if isinstance(child, Token):
-            identifiers.append(_token_text(child))
+            identifiers.append(_token_text(child).lower())
         elif isinstance(child, Tree):
             # index_list contains index_expr nodes, which are transformed to index_simple, index_subset, or index_string
             if child.data == "index_simple":
@@ -669,7 +675,7 @@ def _extract_domain_indices(index_list_node: Tree) -> list[str]:
                         or (tok_val[0] == '"' and tok_val[-1] == '"')
                     ):
                         continue
-                    identifiers.append(_token_text(tok))
+                    identifiers.append(_token_text(tok).lower())
             elif child.data == "index_subset":
                 # index_subset: ID "(" index_list ")" lag_lead_suffix?
                 # Recursively extract from the nested index_list
@@ -5226,20 +5232,44 @@ class _ModelBuilder:
         # _extract_domain_indices but we need it to generate a SetMembershipTest
         # condition restricting the sum to valid set members.
         # Collect (set_name, child_indices) for each index_subset found.
-        subset_domain_info: list[tuple[str, list[str]]] = []
+        # (set_name, extracted_indices, has_literal_co_indices, all_raw_indices)
+        subset_domain_info: list[tuple[str, list[str], bool, list[str]]] = []
         if index_list_node.data != "id_list":
             for child in index_list_node.children:
                 if isinstance(child, Tree) and child.data == "index_subset":
                     # First Token child is the set name
                     set_name = None
                     child_indices: list[str] = []
+                    all_raw_indices: list[str] = []
                     for subchild in child.children:
                         if isinstance(subchild, Token) and set_name is None:
-                            set_name = _token_text(subchild)
+                            set_name = _token_text(subchild).lower()
                         elif isinstance(subchild, Tree) and subchild.data == "index_list":
                             child_indices = _extract_domain_indices(subchild)
+                            # Collect ALL indices including literals.
+                            # Preserve quotes on literal elements (e.g., 'time-2')
+                            # so they emit correctly in GAMS SetMembershipTest.
+                            # Lowercase non-quoted identifiers for consistency.
+                            for idx_child in subchild.children:
+                                if isinstance(idx_child, Token):
+                                    all_raw_indices.append(_token_text(idx_child).lower())
+                                elif isinstance(idx_child, Tree) and idx_child.children:
+                                    tok = idx_child.children[0]
+                                    if isinstance(tok, Token):
+                                        tok_val = str(tok)
+                                        is_quoted = len(tok_val) >= 2 and (
+                                            (tok_val[0] == "'" and tok_val[-1] == "'")
+                                            or (tok_val[0] == '"' and tok_val[-1] == '"')
+                                        )
+                                        if is_quoted:
+                                            all_raw_indices.append(tok_val)
+                                        else:
+                                            all_raw_indices.append(_token_text(tok).lower())
                     if set_name and child_indices:
-                        subset_domain_info.append((set_name, child_indices))
+                        has_literals = len(all_raw_indices) > len(child_indices)
+                        subset_domain_info.append(
+                            (set_name, child_indices, has_literals, all_raw_indices)
+                        )
 
         # Use explicit names for error messages
         aggregation_name = "sum" if aggregation_class is Sum else "prod"
@@ -5338,7 +5368,21 @@ class _ModelBuilder:
         # Also track which indices from index_subset are already in the
         # enclosing free_domain — they are filters, not new iteration variables.
         subset_filter_indices: set[str] = set()
-        for set_name, child_idxs in subset_domain_info:
+        # Subsets with literal co-indices need special SetMembershipTest handling
+        literal_subset_conditions: list[tuple[str, list[str]]] = []
+        for set_name, child_idxs, has_literal_co_indices, all_raw_idxs in subset_domain_info:
+            if has_literal_co_indices:
+                # When a subset has literal co-indices (e.g., tn('time-2',n)),
+                # build the SetMembershipTest from the full raw indices (including
+                # literals) later, bypassing the position-based multidim_set_conditions.
+                literal_subset_conditions.append((set_name, all_raw_idxs))
+                # Always filter free-domain indices to avoid re-binding
+                # (GAMS $125 "set under control already"). Downstream logic
+                # handles degenerate/non-iterating aggregations explicitly.
+                for raw_idx in all_raw_idxs:
+                    if raw_idx in free_domain:
+                        subset_filter_indices.add(raw_idx)
+                continue
             # Find position of first child index in expanded_indices
             try:
                 start_pos = expanded_indices.index(child_idxs[0])
@@ -5376,21 +5420,32 @@ class _ModelBuilder:
         # E.g., sum(arc,...) → sum((n,np)$(arc(n,np)),...)
         # Use the actual expanded iterator symbols (which may have alias
         # substitutions) rather than the raw domain tuple.
+        all_set_conds: list[Expr] = []
         if multidim_set_conditions:
-            conds: list[Expr] = []
             for set_name, start_pos, count in multidim_set_conditions:
                 set_iterators = tuple(
                     SymbolRef(expanded_indices[i]) for i in range(start_pos, start_pos + count)
                 )
-                conds.append(
+                all_set_conds.append(
                     SetMembershipTest(
                         set_name=set_name,
                         indices=set_iterators,
                     )
                 )
-            # Build combined set-membership condition
-            set_cond: Expr = conds[0]
-            for c in conds[1:]:
+        # Handle subsets with literal co-indices (e.g., tn('time-2',n)).
+        # Build SetMembershipTest from full raw indices including literals.
+        if literal_subset_conditions:
+            for set_name, raw_idxs in literal_subset_conditions:
+                set_iterators = tuple(SymbolRef(idx) for idx in raw_idxs)
+                all_set_conds.append(
+                    SetMembershipTest(
+                        set_name=set_name,
+                        indices=set_iterators,
+                    )
+                )
+        if all_set_conds:
+            set_cond: Expr = all_set_conds[0]
+            for c in all_set_conds[1:]:
                 set_cond = Binary("and", set_cond, c)
             # Combine with any existing condition from the parse tree
             if condition_expr is not None:
@@ -5998,6 +6053,11 @@ class _ModelBuilder:
         free_domain: Sequence[str],
         node: Tree | Token | None = None,
     ) -> Expr:
+        # GAMS is case-insensitive: build a lowercase→canonical mapping for
+        # free_domain so that uppercase tokens (e.g., R from SX(R,C)..) can
+        # be matched and normalized to the canonical lowercase domain name.
+        _fd_lower: dict[str, str] = {d.lower(): d for d in free_domain}
+
         # Sprint 11 Day 2 Extended: Expand set references in indices
         # When we see dist(low) where low is a 2D set, expand to dist(n,nn)
         #
@@ -6014,8 +6074,8 @@ class _ModelBuilder:
                 expanded_indices.extend(idx.indices)
                 continue
             # Skip IndexOffset objects - only expand plain string identifiers
-            if isinstance(idx, str) and idx in self.model.sets:
-                set_def = self.model.sets[idx]
+            if isinstance(idx, str) and idx.lower() in self.model.sets:
+                set_def = self.model.sets[idx.lower()]
                 # Check if this set's members are domain indices (other sets) or element values
                 # E.g., low(n,n) has members ['n', 'n'] - domain indices (should expand)
                 # E.g., d has members ['x', 'y'] - element values (should NOT expand)
@@ -6073,15 +6133,19 @@ class _ModelBuilder:
                     else:
                         # Can't expand, keep as-is
                         expanded_indices.append(idx)
-                elif idx in free_domain:
-                    # Set that's in domain - don't expand
+                elif idx.lower() in _fd_lower:
+                    # Set that's in domain - don't expand, normalize to domain casing
                     # E.g., n in point(n,d) where domain is (n,nn)
-                    expanded_indices.append(idx)
+                    expanded_indices.append(_fd_lower[idx.lower()])
                 else:
                     # Set with element values or single-dim not in domain - don't expand
                     expanded_indices.append(idx)
+            elif isinstance(idx, str) and idx.lower() in _fd_lower:
+                # Not a set, but is a domain variable (e.g., alias RR in free_domain)
+                # Normalize to canonical domain casing
+                expanded_indices.append(_fd_lower[idx.lower()])
             else:
-                # Not a set reference, keep as-is
+                # Not a set reference or domain variable, keep as-is
                 expanded_indices.append(idx)
 
         idx_tuple = tuple(expanded_indices)
@@ -6124,15 +6188,16 @@ class _ModelBuilder:
             object.__setattr__(expr, "index_values", idx_tuple)
             return self._attach_domain(expr, free_domain)
         # Check if it's a domain index (e.g., 'i' in a condition like ord(i))
-        if not idx_tuple and name in free_domain:
-            # It's a reference to a domain index variable
-            return self._attach_domain(SymbolRef(name), free_domain)
+        # GAMS is case-insensitive: normalize to canonical domain casing
+        if not idx_tuple and name.lower() in _fd_lower:
+            canon_name = _fd_lower[name.lower()]
+            return self._attach_domain(SymbolRef(canon_name), free_domain)
         # Issue #560: Check if it's an alias that's in free_domain
         # When an alias like 'hp' is used as a sum domain (sum(hp$..., expr)),
         # references to 'hp' inside the expression should resolve correctly
-        if not idx_tuple and name in self.model.aliases:
+        if not idx_tuple and name.lower() in self.model.aliases:
             # It's an alias - treat as a domain index reference
-            return self._attach_domain(SymbolRef(name), free_domain)
+            return self._attach_domain(SymbolRef(name.lower()), free_domain)
         # Check if it's a GAMS predefined constant (yes, no, inf, eps, na, undf)
         # These are case-insensitive
         name_lower = name.lower()
@@ -6141,7 +6206,7 @@ class _ModelBuilder:
         # Issue #428: Check if it's a set membership test (e.g., rn(n) in a condition)
         # In GAMS, set(index) in a conditional context returns 1 if index is in set, 0 otherwise
         # Issue #560: Also check aliases - they can be used like sets
-        if (name in self.model.sets or name in self.model.aliases) and idx_tuple:
+        if (name.lower() in self.model.sets or name.lower() in self.model.aliases) and idx_tuple:
             # Set membership test - use dedicated SetMembershipTest node
             # This represents the boolean check "is idx_tuple in set 'name'"
             from src.ir.ast import SetMembershipTest
@@ -6151,8 +6216,8 @@ class _ModelBuilder:
             # If an index is not in free_domain, treat it as a literal element name.
             index_exprs: list[Expr] = []
             for i in idx_tuple:
-                if isinstance(i, str) and i in free_domain:
-                    index_exprs.append(SymbolRef(i))
+                if isinstance(i, str) and i.lower() in _fd_lower:
+                    index_exprs.append(SymbolRef(_fd_lower[i.lower()]))
                 elif isinstance(i, str):
                     # Treat as literal element name - wrap in SymbolRef for consistency
                     # This handles cases like rn('a') where 'a' is a literal element
