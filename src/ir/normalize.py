@@ -154,6 +154,26 @@ def normalize_model(
     normalization to avoid issues with finding it after equations are restructured.
     See GitHub Issue #19 for details.
     """
+    # Issue #1154: When multiple solves use different models, the last non-MCP
+    # solve wins. But if the last solve's model is a superset of an earlier
+    # solve's model (i.e., it references the earlier model plus extras), the
+    # tool should prefer the simpler (earlier) model for KKT conversion.
+    # This handles spatequ where P2R3_NonLinear references P2R3_Linear.
+    _solve_objectives = getattr(ir, "_solve_objectives", {})
+    if _solve_objectives and ir.model_name and len(_solve_objectives) > 1:
+        current_eqs = ir.model_equation_map.get(ir.model_name.lower(), [])
+        # Check if the current model references another model by name
+        refs_other_model = any(
+            eq.lower() in ir.model_equation_map for eq in current_eqs
+        )
+        if refs_other_model:
+            # Find the referenced sub-model and use it instead
+            for eq in current_eqs:
+                if eq.lower() in ir.model_equation_map and eq.lower() in _solve_objectives:
+                    ir.model_name = eq
+                    ir.objective = _solve_objectives[eq.lower()]
+                    break
+
     # Issue #1033: Compute model equation set BEFORE objective extraction
     # so that only equations in the solved model are considered.
     model_eq_set: set[str] | None = None
