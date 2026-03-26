@@ -567,7 +567,8 @@ def expr_to_gams(
                 if condition is not None:
                     cond_str = expr_to_gams(condition, domain_vars=domain_vars)
                     return f"({body_str}$({cond_str}))"
-                return body_str
+                # Preserve Sum precedence when collapsing to bare body.
+                return f"({body_str})"
             # GAMS: sum(i$cond, body) or sum((i,j), body)
             extended_domain_vars = domain_vars | frozenset(index_sets)
             body_str = expr_to_gams(body, domain_vars=extended_domain_vars)
@@ -581,7 +582,8 @@ def expr_to_gams(
                 if condition is not None:
                     cond_str = expr_to_gams(condition, domain_vars=domain_vars)
                     return f"({body_str}$({cond_str}))"
-                return body_str
+                # Preserve Prod precedence when collapsing to bare body.
+                return f"({body_str})"
             # GAMS: prod(i$cond, body) or prod((i,j), body) — Issue #709
             extended_domain_vars = domain_vars | frozenset(index_sets)
             body_str = expr_to_gams(body, domain_vars=extended_domain_vars)

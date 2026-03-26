@@ -1099,10 +1099,11 @@ def strip_unsupported_directives(source: str) -> str:
                 in_put_statement = True
             continue
 
-        # Issue #1155: Strip ScenRedParms/ScenRedReport assignments.
+        # Issue #1155: Strip ScenRedParms/ScenRedReport assignment statements.
         # These are scenred library-specific and may contain invalid GAMS
         # like ord('0-default') which causes $311 compilation errors.
-        if re.match(r"(?i)^scenred(parms|report)\s*\(", stripped):
+        # Only match assignments (with =), not declarations/data blocks.
+        if re.match(r"(?i)^scenred(parms|report)\s*\([^)]*\)\s*=", stripped):
             filtered.append(f"* Stripped: {stripped}")
             continue
 
