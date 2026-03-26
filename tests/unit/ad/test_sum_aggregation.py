@@ -547,8 +547,8 @@ def test_diff_sum_variable_constant_wrt_alias_index():
     from src.ad.derivative_rules import _is_structurally_zero, differentiate_expr
     from src.config import Config
     from src.ir.ast import Binary, ParamRef, Sum, VarRef
-    from src.ir.model_ir import ModelIR, SetDef
-    from src.ir.symbols import AliasDef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
 
     # Build minimal model with sets r, c and alias cc
     model = ModelIR()
