@@ -534,3 +534,43 @@ class TestPartialCollapseDollarConditions:
         assert dc.condition.name == "mh"
         # Condition stays symbolic (i,j not i1,j1)
         assert dc.condition.indices == ("i", "j")
+
+
+def test_diff_sum_variable_constant_wrt_alias_index():
+    """Issue #1157: d/dp(R1,C1) [sum(cc, B(R1,C1,cc)*p(R1,C1))] should preserve the sum.
+
+    When variable p(R1,C1) doesn't depend on the sum index cc (an alias of c),
+    the derivative should pass through the sum: sum(cc, B(R1,C1,cc) * 1).
+    Previously, the partial-index-match path incorrectly collapsed the sum
+    because its zero-check missed structurally-zero expressions.
+    """
+    from src.ad.derivative_rules import _is_structurally_zero, differentiate_expr
+    from src.config import Config
+    from src.ir.ast import Binary, ParamRef, Sum, VarRef
+    from src.ir.model_ir import ModelIR, SetDef
+    from src.ir.symbols import AliasDef
+
+    # Build minimal model with sets r, c and alias cc
+    model = ModelIR()
+    model.sets["r"] = SetDef(name="r", domain=(), members=["Reg1", "Reg2"])
+    model.sets["c"] = SetDef(name="c", domain=(), members=["Com1", "Com2"])
+    model.aliases["cc"] = AliasDef(name="cc", target="c")
+
+    config = Config()
+    config.model_ir = model
+
+    # sum(cc, BetaD(Reg1,Com1,cc) * p(Reg1,Com1))
+    body = Binary(
+        "*",
+        ParamRef("BetaD", ("Reg1", "Com1", "cc")),
+        VarRef("p", ("Reg1", "Com1")),
+    )
+    sum_expr = Sum(("cc",), body, None)
+
+    # Differentiate w.r.t. p(Reg1, Com1)
+    result = differentiate_expr(sum_expr, "p", ("Reg1", "Com1"), config)
+
+    # Result should be a Sum (not collapsed) with non-zero body
+    assert isinstance(result, Sum), f"Expected Sum, got {type(result).__name__}: {result}"
+    assert result.index_sets == ("cc",)
+    assert not _is_structurally_zero(result.body), "Body derivative should not be zero"
