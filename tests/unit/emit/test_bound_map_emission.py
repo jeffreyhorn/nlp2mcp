@@ -27,36 +27,38 @@ solve m using nlp minimizing obj;
 
     import sys
 
+    old_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(50000)
+    try:
+        from src.ad.constraint_jacobian import compute_constraint_jacobian
+        from src.ad.gradient import compute_objective_gradient
+        from src.emit.emit_gams import emit_gams_mcp
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
+        from src.kkt.assemble import assemble_kkt_system
 
-    # Generate MCP
-    from src.ad.constraint_jacobian import compute_constraint_jacobian
-    from src.ad.gradient import compute_objective_gradient
-    from src.emit.emit_gams import emit_gams_mcp
-    from src.ir.normalize import normalize_model
-    from src.ir.parser import parse_model_file
-    from src.kkt.assemble import assemble_kkt_system
+        model = parse_model_file(str(gams_file))
+        normalize_model(model)
+        j_eq, j_ineq = compute_constraint_jacobian(model)
+        grad = compute_objective_gradient(model)
+        kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
+        result = emit_gams_mcp(kkt)
 
-    model = parse_model_file(str(gams_file))
-    normalize_model(model)
-    j_eq, j_ineq = compute_constraint_jacobian(model)
-    grad = compute_objective_gradient(model)
-    kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
-    result = emit_gams_mcp(kkt)
+        # Check that numeric lo bounds appear before expression lo bounds
+        lines = result.split("\n")
+        lo_map_line = None
+        lo_expr_line = None
+        for i, line in enumerate(lines):
+            if "x.lo(" in line and "= 1;" in line and lo_map_line is None:
+                lo_map_line = i
+            if "x.lo(" in line and "max(" in line and lo_expr_line is None:
+                lo_expr_line = i
 
-    # Check that numeric lo bounds appear before expression lo bounds
-    lines = result.split("\n")
-    lo_map_line = None
-    lo_expr_line = None
-    for i, line in enumerate(lines):
-        if "x.lo(" in line and "= 1;" in line and lo_map_line is None:
-            lo_map_line = i
-        if "x.lo(" in line and "max(" in line and lo_expr_line is None:
-            lo_expr_line = i
-
-    assert lo_map_line is not None, "Expected numeric x.lo bounds in output"
-    if lo_expr_line is not None:
-        assert lo_map_line < lo_expr_line, (
-            f"Numeric lo bound (line {lo_map_line}) should appear before "
-            f"expression lo bound (line {lo_expr_line})"
-        )
+        assert lo_map_line is not None, "Expected numeric x.lo bounds in output"
+        if lo_expr_line is not None:
+            assert lo_map_line < lo_expr_line, (
+                f"Numeric lo bound (line {lo_map_line}) should appear before "
+                f"expression lo bound (line {lo_expr_line})"
+            )
+    finally:
+        sys.setrecursionlimit(old_limit)

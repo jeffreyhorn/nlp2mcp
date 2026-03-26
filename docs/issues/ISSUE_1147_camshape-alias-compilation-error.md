@@ -77,7 +77,7 @@ invalid syntax, likely caused by:
 
 **Root cause of compilation error ($141):** The emitter did not emit numeric per-element bounds from `lo_map`/`up_map` for variables. Domain-wide bounds like `r.lo(i) = R_min` were parsed and stored as per-element values in `lo_map`, but never emitted. Expression bounds in `lo_expr_map` (e.g., `r.lo('i1') = max(expr, r.lo("i1"))`) referenced the unassigned `r.lo("i1")` on the RHS, causing GAMS $141.
 
-**Fix:** Added `lo_map`/`up_map` emission in `emit_gams.py` inside the `for kind in ("lo", "up", "fx")` loop, BEFORE expression bounds. When all values are identical, emits as domain-wide `r.lo(i) = 1;`. This ensures base bounds exist before expression overrides reference them.
+**Fix:** Added `lo_map`/`up_map` emission in `emit_gams.py` inside the `for kind in ("lo", "up", "fx")` loop, BEFORE expression bounds. The emitter always writes per-index numeric bounds (e.g., `r.lo('i1') = 1;`), even when all values are identical, to preserve the semantics of sparse maps. This ensures base bounds exist before expression overrides reference them.
 
 **Result:** camshape MCP now compiles with 0 GAMS syntax/compilation errors ($141 resolved).
 

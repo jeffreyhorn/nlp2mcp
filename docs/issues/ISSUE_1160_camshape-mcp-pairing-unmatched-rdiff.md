@@ -31,13 +31,13 @@ gams /tmp/camshape_mcp.gms lo=2
 
 ## Root Cause Analysis
 
-The `rdiff` variable in camshape is declared with a subset domain:
+The `rdiff` variable in camshape is declared over the full domain `i`:
 
 ```gams
 Variable rdiff(i);
 ```
 
-But `rdiff` is only assigned bounds via a subset:
+However, `rdiff` only has bounds assigned via a subset restriction:
 
 ```gams
 rdiff.lo(i(j+1)) = -alpha*d_theta;
