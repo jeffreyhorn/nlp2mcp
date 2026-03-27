@@ -89,12 +89,12 @@ The stationarity builder needs to preserve subset domain indices for parameters 
 
 **Only valid GAMS form:** `stat_e(t).. alp(t) * ... =E= 0;` — equation iterates over `t`. But this requires the stationarity equation domain to be `t` (not `i`), which breaks MCP pairing with variable `e(i)`.
 
-**Resolution:** The stationarity condition must go on the equation HEAD (not body) for equations with subset-domain parameters. With head condition `stat_e(i)$(t(i)).. alp(i) * ... =E= 0;`, GAMS accepts `alp(i)` because the condition restricts `i` to `t`. However, this re-introduces the MCP pairing mismatch from #1147.
+**Resolution:** Head conditions do **not** resolve the subset-domain violation. Even with a head condition like `stat_e(i)$(t(i)).. alp(i) * ... =E= 0;`, GAMS still raises $171 because the symbol `alp(i)` is checked against its declared domain before the dollar condition is applied. The code generator must therefore avoid producing `alp(i)` when `alp` is declared over `t`.
 
 **What must be done:**
-1. Selectively keep condition on HEAD (not body) when the stationarity expression contains parameters declared over strict subsets of the equation domain
-2. For those equations, generate `.fx` for excluded instances to resolve the MCP pairing (restoring PR #1147's original approach for these specific cases)
-3. This requires detecting subset-domain parameters in the stationarity expression and routing them through the head-condition path
+1. Detect parameters and variables in the stationarity expression that are declared over strict subsets of the equation domain (e.g., `alp(t)` where the equation is over `i` with `Set t(i)`)
+2. For such cases, generate stationarity equations whose domain matches the subset (e.g., `stat_e(t).. alp(t) * ... =E= 0;`) or otherwise restructure the generated model so that each indexed symbol is only ever used with indices consistent with its declared domain
+3. Preserve MCP pairing for the original variable domain (e.g., `e(i)`) by introducing the necessary mappings or fixings, rather than by relying on head conditions to mask domain violations
 
 ---
 
