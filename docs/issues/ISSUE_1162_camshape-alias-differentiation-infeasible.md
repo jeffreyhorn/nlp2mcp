@@ -81,4 +81,12 @@ Additionally, the warning `Multi-pattern Jacobian: detected 2 derivative pattern
 
 **Remaining issue:** Cross-constraint terms introduce higher-order offsets (`r(i+2)`, `r(i-2)`) that need boundary guards for MCP pairing. The `.fx` generation doesn't account for the new offset range, causing unmatched equations.
 
-**What must be done:** Extend `.fx` boundary generation to account for ALL lead/lag offsets in the full stationarity expression, or emit per-term offset guards.
+**Second attempt:** Position-aware offset substitution (only apply to matching domain positions). Still caused himmel16 regression because `maxdist(i,j)` w.r.t. `x(i3)` incorrectly offsets `x(j4)` — the alias dimension `j` is a separate equation dimension, not a lead/lag of `i`. The offset substitution cannot distinguish "same-dimension offset" from "different-dimension alias" without tracking which equation dimension each element came from.
+
+**What must be done:**
+1. Track the equation dimension origin of each element in the derivative expression (not just the set membership)
+2. Only apply offset substitution for elements from the SAME equation dimension as the representative variable index
+3. Extend `.fx` boundary generation for all lead/lag offsets
+4. Handle per-term offset guards for out-of-range access
+
+This requires a deeper architectural change to carry dimension provenance through the stationarity assembly pipeline.
