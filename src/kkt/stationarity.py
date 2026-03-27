@@ -3624,10 +3624,19 @@ def _add_indexed_jacobian_terms(
                     # element-to-set replacement. Only applies when the equation
                     # uses linear (not circular) offsets — circular offsets wrap
                     # around and the element-to-set mapping handles them correctly.
-                    _eq_def = kkt.model_ir.equations.get(eq_name_base)
-                    _has_circular = _eq_def is not None and _expr_has_circular_offset(
-                        Binary("-", _eq_def.lhs_rhs[0], _eq_def.lhs_rhs[1])
-                    )
+                    # Cache circular-offset detection per equation base name
+                    if "_eq_circular_cache" not in locals():
+                        _eq_circular_cache: dict[str, bool] = {}
+                    _has_circular = _eq_circular_cache.get(eq_name_base)
+                    if _has_circular is None:
+                        _eq_def = kkt.model_ir.equations.get(eq_name_base)
+                        _has_circular = bool(
+                            _eq_def is not None
+                            and _expr_has_circular_offset(
+                                Binary("-", _eq_def.lhs_rhs[0], _eq_def.lhs_rhs[1])
+                            )
+                        )
+                        _eq_circular_cache[eq_name_base] = _has_circular
                     if not _has_circular:
                         _, _rep_var_idx = jacobian.index_mapping.col_to_var[group_col_id]
                         derivative = _apply_offset_substitution(
