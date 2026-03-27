@@ -81,12 +81,11 @@ Additionally, the warning `Multi-pattern Jacobian: detected 2 derivative pattern
 
 **Remaining issue:** Cross-constraint terms introduce higher-order offsets (`r(i+2)`, `r(i-2)`) that need boundary guards for MCP pairing. The `.fx` generation doesn't account for the new offset range, causing unmatched equations.
 
-**Second attempt:** Position-aware offset substitution (only apply to matching domain positions). Still caused himmel16 regression because `maxdist(i,j)` w.r.t. `x(i3)` incorrectly offsets `x(j4)` — the alias dimension `j` is a separate equation dimension, not a lead/lag of `i`. The offset substitution cannot distinguish "same-dimension offset" from "different-dimension alias" without tracking which equation dimension each element came from.
+**Third attempt (successful for core fix):** Three key guards:
+1. **Equation-index guard:** Only offset elements NOT in the representative equation indices (those are constraint dimensions, not offsets)
+2. **Circular-offset guard:** Skip offset substitution for equations with circular offsets (`++`/`--`) since element-to-set wrapping handles them correctly
+3. **Non-circular IndexOffset preservation:** In `_replace_indices_in_expr`, skip element-to-set conversion for VarRef/ParamRef with non-circular IndexOffset (preserves `r(i-1)`)
 
-**What must be done:**
-1. Track the equation dimension origin of each element in the derivative expression (not just the set membership)
-2. Only apply offset substitution for elements from the SAME equation dimension as the representative variable index
-3. Extend `.fx` boundary generation for all lead/lag offsets
-4. Handle per-term offset guards for out-of-range access
+**Result:** Convexity terms correctly emit `r(i-1)` and `r(i+1)`. himmel16 (circular offsets) passes. No regressions (4330 tests).
 
-This requires a deeper architectural change to carry dimension provenance through the stationarity assembly pipeline.
+**Remaining:** camshape still has unmatched MCP pairings (`comp_convex_edge1`, `comp_convex_edge3`, `comp_convex_edge4`, `comp_lo_r`) from higher-order offsets (`r(i+2)`, `r(i-2)`) in cross-constraint stationarity terms that need boundary guards beyond what `infer_lead_lag_condition` currently computes.
