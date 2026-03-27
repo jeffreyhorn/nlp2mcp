@@ -953,6 +953,8 @@ def build_stationarity_equations(
             # cover the same domain. Instead, wrap the body in a DollarConditional
             # so excluded instances become 0 =E= 0 (trivially satisfied).
             if access_cond is not None:
+                # Note: wrapping after simplification means 0$cond won't be
+                # folded here, but downstream emission handles this gracefully.
                 stat_expr = DollarConditional(stat_expr, access_cond)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
@@ -962,11 +964,10 @@ def build_stationarity_equations(
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
-            # Issue #1147/#1160: Store the access condition for the emitter to
-            # use when generating .fx for excluded primal variable instances.
-            # The condition is on the body (not head) so the equation covers
-            # all instances, but excluded primal instances must still be fixed
-            # so the MCP solver sees them as inactive.
+            # Issue #1147/#1160: Store the access condition for the emitter.
+            # The condition is on the body (not head) for MCP pairing, but
+            # stationarity_conditions is still populated so the emitter can
+            # generate .fx for excluded primal instances and their multipliers.
             if access_cond is not None:
                 kkt.stationarity_conditions[var_name] = access_cond
         else:

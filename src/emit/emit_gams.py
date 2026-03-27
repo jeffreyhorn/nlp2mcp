@@ -1628,27 +1628,41 @@ def emit_gams_mcp(
 
     # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
     # for some instances because all constraint terms are conditioned away.
-    # Check equality constraints that reference each conditioned variable —
-    # if those constraints have lead/lag that excludes some instances,
-    # the primal variable must be fixed for those excluded instances.
+    # Precompute per-equality referenced vars and lead/lag conditions once.
     from src.ad.constraint_jacobian import find_variables_in_expr
+
+    _eq_cache: list[tuple[set[str], str | None, tuple[str, ...]]] = []
+    for eq_name in kkt.model_ir.equalities:
+        eq_def = kkt.model_ir.equations.get(eq_name)
+        if eq_def is None or not eq_def.domain:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        refs = find_variables_in_expr(Binary("-", lhs, rhs))
+        cond = infer_lead_lag_condition(eq_def)
+        if cond is not None:
+            _eq_cache.append((refs, cond, eq_def.domain))
 
     for var_name in sorted(kkt.stationarity_conditions):
         var_def = kkt.model_ir.variables.get(var_name)
         if not var_def or not var_def.domain:
             continue
         domain_str = ",".join(var_def.domain)
-        for eq_name in kkt.model_ir.equalities:
-            eq_def = kkt.model_ir.equations.get(eq_name)
-            if eq_def is None:
+        for refs, cond, eq_domain in _eq_cache:
+            if var_name not in refs:
                 continue
-            lhs, rhs = eq_def.lhs_rhs
-            referenced = find_variables_in_expr(Binary("-", lhs, rhs))
-            if var_name not in referenced:
+            # Only apply when equation domain matches variable domain
+            if eq_domain != var_def.domain:
                 continue
-            inferred_cond = infer_lead_lag_condition(eq_def)
-            if inferred_cond is not None:
-                fx_lines.append(f"{var_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+            # Use same finite fixing value as section 1
+            if var_def.fx is not None and math.isfinite(var_def.fx):
+                fix_val = var_def.fx
+            elif var_def.lo is not None and math.isfinite(var_def.lo):
+                fix_val = var_def.lo
+            elif var_def.up is not None and math.isfinite(var_def.up):
+                fix_val = var_def.up
+            else:
+                fix_val = 0
+            fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond})) = {fix_val};")
 
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):

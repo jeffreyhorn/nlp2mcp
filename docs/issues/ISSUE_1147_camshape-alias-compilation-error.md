@@ -81,6 +81,6 @@ invalid syntax, likely caused by:
 
 **Result:** camshape MCP now compiles with 0 GAMS syntax/compilation errors ($141 resolved).
 
-**Additional fix (stationarity condition):** Moved stationarity access conditions from equation head to body via DollarConditional. Previously `stat_rdiff(i)$(j(i))..` caused MCP pairing mismatch because conditioned equation had fewer instances than the paired variable. Now emits `stat_rdiff(i).. (body)$(j(i)) =E= 0;` — equation covers all instances, excluded ones become `0=0`. Also removed `stationarity_conditions` storage to prevent `.fx` generation for excluded primal instances.
+**Additional fix (stationarity condition):** Moved stationarity access conditions from equation head to body via DollarConditional. Previously `stat_rdiff(i)$(j(i))..` caused MCP pairing mismatch because the conditioned equation had fewer instances than the paired variable. It now emits `stat_rdiff(i).. (body)$(j(i)) =E= 0;` — the equation is defined over all instances, and excluded ones become `0 = 0`. Note: `stationarity_conditions` is still stored and consumed by the emitter, which continues to generate `.fx` lines for the associated multipliers.
 
 **Remaining issue:** MCP still has unmatched equation pairing: `stat_rdiff.rdiff` — now caused by `nu_eqrdiff.fx` fixing multiplier instances for the conditional constraint equation `eqrdiff`. This is tracked in ISSUE_1160.
