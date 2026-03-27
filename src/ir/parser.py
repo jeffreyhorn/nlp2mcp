@@ -3604,9 +3604,9 @@ class _ModelBuilder:
                             refs.append(_token_text(tok))
                 elif child.data == "model_subtraction":
                     # Model subtraction (m - n) cannot be implemented with flat
-                    # equation-name lists. Accept it gracefully by treating both
-                    # names as model references (the second will be ignored during
-                    # equation resolution, which is conservative but not misleading).
+                    # equation-name lists. For now, treat both names as model
+                    # references, so their equations are effectively unioned during
+                    # model resolution (an approximation of true subtraction).
                     for tok in child.children:
                         if isinstance(tok, Token):
                             refs.append(_token_text(tok))

@@ -2827,7 +2827,7 @@ def expand_table_column_groups(source: str) -> str:
             # Don't expand function calls or index lists
             def _expand_group(m: re.Match) -> str:
                 content = m.group(1)
-                # Only expand if ALL items are simple identifiers (no dots, parens, etc.)
+                # Only expand if ALL items are simple identifiers: letters/digits/_, '*', '.', or '-'
                 items = [i.strip() for i in content.split(",")]
                 if all(re.match(r"^['\"]?[\w*.-]+['\"]?$", i) for i in items):
                     return "  ".join(items)
