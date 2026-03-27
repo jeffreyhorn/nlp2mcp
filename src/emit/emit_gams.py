@@ -1965,9 +1965,11 @@ def emit_gams_mcp(
         stat_eq = kkt.stationarity.get(stat_name)
         if stat_eq is None:
             continue
-        # Only fix if the stationarity equation is conditioned (dollar condition)
-        # or if the variable has a stationarity condition (subset access pattern)
-        needs_fix = stat_eq.condition is not None or var_name in kkt.stationarity_conditions
+        # Only fix if the stationarity equation HEAD is conditioned (dollar condition).
+        # Issue #1147: When the condition was moved to the body (for MCP pairing
+        # compatibility), don't generate .fx — the equation covers all instances
+        # and the body handles exclusion via DollarConditional.
+        needs_fix = stat_eq.condition is not None
         if not needs_fix:
             continue
 

@@ -948,18 +948,26 @@ def build_stationarity_equations(
                 if not unconditioned_cache[var_name]:
                     access_cond = kkt.gradient_conditions[var_name]
 
+            # Issue #1147: For MCP compatibility, don't put the access condition
+            # on the equation head — GAMS MCP requires equation and variable to
+            # cover the same domain. Instead, wrap the body in a DollarConditional
+            # so excluded instances become 0 =E= 0 (trivially satisfied).
+            if access_cond is not None:
+                stat_expr = DollarConditional(stat_expr, access_cond)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=var_def.domain,  # Use same domain as variable
                 relation=Rel.EQ,
-                condition=access_cond,
+                condition=None,  # No equation-level condition for MCP pairing
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
-            # Store the condition on the KKT system for the emitter to use
-            # when generating .fx statements for excluded variable instances
-            if access_cond is not None:
-                kkt.stationarity_conditions[var_name] = access_cond
+            # Issue #1147: The access condition is now embedded in the body
+            # via DollarConditional (not the equation head), so we do NOT
+            # store it in stationarity_conditions. This prevents the emitter
+            # from generating .fx for excluded instances, which would cause
+            # MCP pairing mismatches (equation covers all instances but
+            # fixed variables are removed from the MCP).
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:
