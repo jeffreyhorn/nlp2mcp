@@ -1629,7 +1629,7 @@ def emit_gams_mcp(
     # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
     # for some instances because all constraint terms are conditioned away.
     # Precompute per-equality referenced vars and lead/lag conditions once.
-    from src.ad.constraint_jacobian import find_variables_in_expr
+    from src.ad.sparsity import find_variables_in_expr
 
     _eq_cache: list[tuple[set[str], str, tuple[str, ...]]] = []
     for eq_name in kkt.model_ir.equalities:
