@@ -1,7 +1,7 @@
 # camshape: MCP Pairing Error — stat_rdiff.rdiff Unmatched Equation
 
 **GitHub Issue:** [#1160](https://github.com/jeffreyhorn/nlp2mcp/issues/1160)
-**Status:** OPEN
+**Status:** FIXED
 **Severity:** High — MCP solve aborted (EXECERROR)
 **Date:** 2026-03-26
 **Affected Models:** camshape
@@ -81,3 +81,22 @@ The stationarity equation `stat_rdiff` should either:
 4. Alternatively, fix the variable instances to exclude elements without bounds
 
 **Effort estimate:** 3-4 hours
+
+---
+
+## Investigation (2026-03-26)
+
+After PR #1161 (moving stationarity conditions to body), the `stat_rdiff.rdiff` pairing error persists but for a different reason than originally diagnosed.
+
+**Updated root cause:** The actual equation/variable count mismatch (601 eq vs 603 var, 2 projected) comes from multiplier `.fx` lines fixing excluded instances of conditional constraint multipliers (`nu_eqrdiff`, `lam_convexity`, etc.). These `.fx` reduce the variable count without correspondingly reducing equation count.
+
+The `rdiff` variable itself has no KKT-level bounds because `rdiff.lo(i(j))` and `rdiff.up(i(j))` use `SubsetIndex(i(j))` which the KKT pipeline skips: `"Variable 'rdiff' lo_expr_map key (SubsetIndex(i(j)),) contains IndexOffset/SubsetIndex; only plain-string domain indices are supported in KKT pipeline. Skipping."` This means no `comp_lo_rdiff`/`comp_up_rdiff` equations are generated.
+
+**Fix applied:** Added section 1b in the emitter's `.fx` generation that checks equality constraints referencing conditioned primal variables for lead/lag conditions. When `eqrdiff(i)$((j(i)) and (ord(i) <= card(i) - 1))` has a lead/lag condition `ord(i) <= card(i) - 1` that excludes terminal instances, the emitter now generates `rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0` to fix `rdiff(i100)`.
+
+Combined with PR #1161's stationarity condition-to-body approach, the MCP pairing mismatch is fully resolved:
+- `stat_rdiff(i)` — 100 instances (unconditional, body handles condition via DollarConditional)
+- `rdiff(i)` — 100 instances, with `rdiff(i100)` fixed to 0
+- Both `stat_rdiff` and `rdiff` have 99 active + 1 fixed instances → balanced
+
+**Result:** camshape MCP compiles with 0 errors and no unmatched equation pairing. MODEL STATUS 5 (Locally Infeasible) — the remaining infeasibility is from alias differentiation issues (tracked in parent issue #1111), not the MCP pairing.

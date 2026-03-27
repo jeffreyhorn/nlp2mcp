@@ -78,8 +78,11 @@ class TestStationarityGradientConditionFallback:
 
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
-        # Stage 4 should apply the exact gradient condition object
-        assert stat_eq.condition is kkt.gradient_conditions["x"]
+        # Issue #1147: Condition moved to body (DollarConditional) for MCP pairing
+        assert stat_eq.condition is None
+        lhs = stat_eq.lhs_rhs[0]
+        assert isinstance(lhs, DollarConditional)
+        assert lhs.condition is kkt.gradient_conditions["x"]
 
     def test_gradient_condition_skipped_when_unconditioned_access(self, manual_index_mapping):
         """Stage 4 gradient condition NOT used when variable has unconditioned access."""
@@ -208,6 +211,8 @@ class TestStationarityGradientConditionFallback:
 
         assert "stat_x" in stationarity
         stat_eq = stationarity["stat_x"]
-        # Stage 4 SHOULD apply: eq1's equation-level $active(i) means x is
-        # not accessed unconditionally, so the gradient condition is safe
-        assert stat_eq.condition is kkt.gradient_conditions["x"]
+        # Issue #1147: Condition moved to body (DollarConditional) for MCP pairing
+        assert stat_eq.condition is None
+        lhs = stat_eq.lhs_rhs[0]
+        assert isinstance(lhs, DollarConditional)
+        assert lhs.condition is kkt.gradient_conditions["x"]

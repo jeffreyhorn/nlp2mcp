@@ -948,16 +948,26 @@ def build_stationarity_equations(
                 if not unconditioned_cache[var_name]:
                     access_cond = kkt.gradient_conditions[var_name]
 
+            # Issue #1147: For MCP compatibility, don't put the access condition
+            # on the equation head — GAMS MCP requires equation and variable to
+            # cover the same domain. Instead, wrap the body in a DollarConditional
+            # so excluded instances become 0 =E= 0 (trivially satisfied).
+            if access_cond is not None:
+                # Note: wrapping after simplification means 0$cond won't be
+                # folded here, but downstream emission handles this gracefully.
+                stat_expr = DollarConditional(stat_expr, access_cond)
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=var_def.domain,  # Use same domain as variable
                 relation=Rel.EQ,
-                condition=access_cond,
+                condition=None,  # No equation-level condition for MCP pairing
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
-            # Store the condition on the KKT system for the emitter to use
-            # when generating .fx statements for excluded variable instances
+            # Issue #1147/#1160: Store the access condition for the emitter.
+            # The condition is on the body (not head) for MCP pairing, but
+            # stationarity_conditions is still populated so the emitter can
+            # generate .fx for excluded primal instances and their multipliers.
             if access_cond is not None:
                 kkt.stationarity_conditions[var_name] = access_cond
         else:
@@ -1468,6 +1478,134 @@ def _build_constraint_element_mapping(
     return ChainMap(overrides, base_element_to_set)
 
 
+def _expr_has_circular_offset(expr: Expr) -> bool:
+    """Check if an expression contains any circular IndexOffset (++/--)."""
+    if isinstance(expr, IndexOffset):
+        return expr.circular
+    # Explicitly scan indices on reference-like nodes
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in expr.indices:
+            if isinstance(idx, IndexOffset) and idx.circular:
+                return True
+    # Walk all dataclass fields to cover all AST node types generically
+    # (Binary, Unary, Call, Sum, Prod, DollarConditional, LhsConditionalAssign, etc.)
+    from dataclasses import fields as dc_fields
+
+    for f in dc_fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name, None)
+        if isinstance(val, IndexOffset) and val.circular:
+            return True
+        if isinstance(val, Expr) and _expr_has_circular_offset(val):
+            return True
+        if isinstance(val, (tuple, list)):
+            for item in val:
+                if isinstance(item, IndexOffset) and item.circular:
+                    return True
+                if isinstance(item, Expr) and _expr_has_circular_offset(item):
+                    return True
+    return False
+
+
+def _apply_offset_substitution(
+    expr: Expr,
+    rep_var_indices: tuple[str, ...],
+    rep_eq_indices: tuple[str, ...],
+    var_domain: tuple[str, ...],
+    element_to_set: Mapping[str, str],
+    model_ir: ModelIR,
+) -> Expr:
+    """Replace offset elements in derivative with IndexOffset nodes.
+
+    Issue #1162: When a derivative references elements at positional offsets
+    from the representative (e.g., r(i4) when rep is r(i5)), convert the
+    element to IndexOffset(domain_var, offset) so downstream replacement
+    produces r(i-1) instead of r(i).
+
+    Only applies to elements that are:
+    1. In the same set as the representative variable index
+    2. NOT in the representative equation indices (those are constraint
+       dimensions, not lead/lag offsets — e.g., j4 in maxdist(i3,j4))
+    """
+    from src.ad.index_mapping import resolve_set_members
+
+    # Build reference: domain_var → (ref_element, pos_map, ref_position)
+    # Use pos_map for O(1) lookups instead of repeated members.index()
+    ref_info: dict[str, tuple[str, dict[str, int], int]] = {}
+    for _vi, (elem, dvar) in enumerate(zip(rep_var_indices, var_domain, strict=False)):
+        set_name = element_to_set.get(elem)
+        if set_name is None:
+            continue
+        try:
+            members, _ = resolve_set_members(set_name, model_ir)
+        except (ValueError, KeyError):
+            continue
+        pos_map = {m: i for i, m in enumerate(members)}
+        if elem in pos_map:
+            ref_info[dvar] = (elem, pos_map, pos_map[elem])
+
+    if not ref_info:
+        return expr
+
+    # Elements from the equation indices are constraint dimensions, not offsets
+    eq_elements = set(rep_eq_indices)
+
+    def _sub(e: Expr) -> Expr:
+        if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
+            if not e.indices:
+                return e
+            new_indices: list[str | IndexOffset] = []
+            changed = False
+            for idx in e.indices:
+                if isinstance(idx, str) and idx not in eq_elements:
+                    mapped = element_to_set.get(idx)
+                    if mapped and mapped in ref_info:
+                        ref_elem, pos_map, ref_pos = ref_info[mapped]
+                        if idx != ref_elem and idx in pos_map:
+                            offset = pos_map[idx] - ref_pos
+                            if offset != 0:
+                                new_indices.append(IndexOffset(mapped, Const(float(offset)), False))
+                                changed = True
+                                continue
+                new_indices.append(idx)
+            if not changed:
+                return e
+            if isinstance(e, VarRef):
+                return VarRef(e.name, tuple(new_indices), e.attribute)
+            if isinstance(e, ParamRef):
+                return ParamRef(e.name, tuple(new_indices))
+            return MultiplierRef(e.name, tuple(new_indices))
+        if isinstance(e, Binary):
+            nl, nr = _sub(e.left), _sub(e.right)
+            return e if nl is e.left and nr is e.right else Binary(e.op, nl, nr)
+        if isinstance(e, Unary):
+            nc = _sub(e.child)
+            return e if nc is e.child else Unary(e.op, nc)
+        if isinstance(e, Call):
+            na = tuple(_sub(a) for a in e.args)
+            return e if all(n is o for n, o in zip(na, e.args, strict=True)) else Call(e.func, na)
+        if isinstance(e, DollarConditional):
+            nv, nc = _sub(e.value_expr), _sub(e.condition)
+            return e if nv is e.value_expr and nc is e.condition else DollarConditional(nv, nc)
+        if isinstance(e, Sum):
+            nb = _sub(e.body)
+            ncond = _sub(e.condition) if e.condition else None
+            return e if nb is e.body and ncond is e.condition else Sum(e.index_sets, nb, ncond)
+        if isinstance(e, Prod):
+            nb = _sub(e.body)
+            ncond = _sub(e.condition) if e.condition else None
+            return e if nb is e.body and ncond is e.condition else Prod(e.index_sets, nb, ncond)
+        if isinstance(e, SetMembershipTest):
+            na = tuple(_sub(a) for a in e.indices)
+            return (
+                e
+                if all(n is o for n, o in zip(na, e.indices, strict=True))
+                else SetMembershipTest(e.set_name, na)
+            )
+        return e
+
+    return _sub(expr)
+
+
 def _replace_indices_in_expr(
     expr: Expr,
     domain: tuple[str, ...],
@@ -1506,6 +1644,33 @@ def _replace_indices_in_expr(
         case VarRef() as var_ref:
             if var_ref.indices and domain:
                 if element_to_set:
+                    # Issue #1162: If indices contain non-circular IndexOffset,
+                    # replace only the string indices and preserve IndexOffset as-is.
+                    has_linear_offset = any(
+                        isinstance(i, IndexOffset) and not i.circular for i in var_ref.indices
+                    )
+                    if has_linear_offset:
+                        var_domain_decl = None
+                        if model_ir and var_ref.name in model_ir.variables:
+                            var_domain_decl = model_ir.variables[var_ref.name].domain
+                        str_only = tuple(
+                            str(idx) if isinstance(idx, str) else "__IO__"
+                            for idx in var_ref.indices
+                        )
+                        replaced = _replace_matching_indices(
+                            str_only,
+                            element_to_set,
+                            declared_domain=var_domain_decl,
+                            equation_domain=equation_domain,
+                            model_ir=model_ir,
+                        )
+                        new_idx: list[str | IndexOffset] = []
+                        for orig, rep in zip(var_ref.indices, replaced, strict=True):
+                            if isinstance(orig, IndexOffset) and not orig.circular:
+                                new_idx.append(orig)
+                            else:
+                                new_idx.append(rep)
+                        return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
                     # Replace each index that maps to a set in the domain
                     str_indices = var_ref.indices_as_strings()
                     # Use variable domain for disambiguation if available
@@ -1537,6 +1702,34 @@ def _replace_indices_in_expr(
         case ParamRef() as param_ref:
             if param_ref.indices and domain:
                 if element_to_set:
+                    # Issue #1162: Mixed-index replacement for non-circular IndexOffset.
+                    # Use _replace_matching_indices for string indices to preserve
+                    # declared_domain disambiguation (Issue #572).
+                    if any(
+                        isinstance(i, IndexOffset) and not i.circular for i in param_ref.indices
+                    ):
+                        param_domain = None
+                        if model_ir and param_ref.name in model_ir.params:
+                            param_domain = model_ir.params[param_ref.name].domain
+                        str_only = tuple(
+                            str(idx) if isinstance(idx, str) else "__IO__"
+                            for idx in param_ref.indices
+                        )
+                        replaced = _replace_matching_indices(
+                            str_only,
+                            element_to_set,
+                            declared_domain=param_domain,
+                            equation_domain=equation_domain,
+                            model_ir=model_ir,
+                            prefer_declared_domain=True,
+                        )
+                        new_idx_p: list[str | IndexOffset] = []
+                        for orig, rep in zip(param_ref.indices, replaced, strict=True):
+                            if isinstance(orig, IndexOffset) and not orig.circular:
+                                new_idx_p.append(orig)
+                            else:
+                                new_idx_p.append(rep)
+                        return ParamRef(param_ref.name, tuple(new_idx_p))
                     str_indices = param_ref.indices_as_strings()
                     # Use parameter domain for disambiguation (Issue #572)
                     # For parameters, prefer_declared_domain=True ensures the parameter's
@@ -1646,7 +1839,7 @@ def _replace_indices_in_expr(
             # Build equation domain set for checking if element came from equation index
             eq_domain_lower = {d.lower() for d in equation_domain} if equation_domain else set()
             new_idx_list: list[Expr] = []
-            for pos, idx in enumerate(smt.indices):
+            for pos, idx in enumerate(smt.indices):  # type: ignore[assignment]
                 if (
                     smt_domain
                     and model_ir is not None
@@ -1673,12 +1866,12 @@ def _replace_indices_in_expr(
                 else:
                     new_idx_list.append(
                         _replace_indices_in_expr(
-                            idx, domain, element_to_set, model_ir, equation_domain
+                            idx, domain, element_to_set, model_ir, equation_domain  # type: ignore[arg-type]
                         )
                     )
-            new_idx = tuple(new_idx_list)
+            new_idx = tuple(new_idx_list)  # type: ignore[assignment]
             if new_idx != smt.indices:
-                return SetMembershipTest(smt.set_name, new_idx)
+                return SetMembershipTest(smt.set_name, new_idx)  # type: ignore[arg-type]
             return expr
         case _:
             return expr
@@ -3425,6 +3618,34 @@ def _add_indexed_jacobian_terms(
                     else:
                         constraint_element_to_set = _build_constraint_element_mapping(
                             element_to_set, group_eq_indices, mult_domain
+                        )
+
+                    # Issue #1162: Convert offset elements to IndexOffset before
+                    # element-to-set replacement. Only applies when the equation
+                    # uses linear (not circular) offsets — circular offsets wrap
+                    # around and the element-to-set mapping handles them correctly.
+                    # Cache circular-offset detection per equation base name
+                    if "_eq_circular_cache" not in locals():
+                        _eq_circular_cache: dict[str, bool] = {}
+                    _has_circular = _eq_circular_cache.get(eq_name_base)
+                    if _has_circular is None:
+                        _eq_def = kkt.model_ir.equations.get(eq_name_base)
+                        _has_circular = bool(
+                            _eq_def is not None
+                            and _expr_has_circular_offset(
+                                Binary("-", _eq_def.lhs_rhs[0], _eq_def.lhs_rhs[1])
+                            )
+                        )
+                        _eq_circular_cache[eq_name_base] = _has_circular
+                    if not _has_circular:
+                        _, _rep_var_idx = jacobian.index_mapping.col_to_var[group_col_id]
+                        derivative = _apply_offset_substitution(
+                            derivative,
+                            _rep_var_idx,
+                            group_eq_indices,
+                            var_domain,
+                            constraint_element_to_set,
+                            kkt.model_ir,
                         )
 
                     # Replace indices in derivative expression using constraint-aware mapping

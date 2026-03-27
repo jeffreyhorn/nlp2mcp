@@ -1626,6 +1626,54 @@ def emit_gams_mcp(
                 if ref_mults is None or comp_pair_up.variable in ref_mults:
                     fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
+    # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
+    # for some instances because all constraint terms are conditioned away.
+    # Precompute per-equality referenced vars and lead/lag conditions once.
+    from src.ad.sparsity import find_variables_in_expr
+
+    _eq_cache: list[tuple[set[str], str, tuple[str, ...]]] = []
+    for eq_name in kkt.model_ir.equalities:
+        eq_def = kkt.model_ir.equations.get(eq_name)
+        if eq_def is None or not eq_def.domain:
+            continue
+        lhs, rhs = eq_def.lhs_rhs
+        refs = find_variables_in_expr(Binary("-", lhs, rhs))
+        cond = infer_lead_lag_condition(eq_def)
+        if cond is not None:
+            _eq_cache.append((refs, cond, eq_def.domain))
+
+    for var_name in sorted(kkt.stationarity_conditions):
+        var_def = kkt.model_ir.variables.get(var_name)
+        if not var_def or not var_def.domain:
+            continue
+        domain_str = ",".join(var_def.domain)
+        # Collect all inferred lead/lag conditions for this variable
+        var_conds: list[str] = []
+        for refs, cond, eq_domain in _eq_cache:
+            if var_name not in refs:
+                continue
+            if eq_domain != var_def.domain:
+                continue
+            if cond not in var_conds:
+                var_conds.append(cond)
+        if not var_conds:
+            continue
+        # Use same finite fixing value as section 1
+        if var_def.fx is not None and math.isfinite(var_def.fx):
+            fix_val = var_def.fx
+        elif var_def.lo is not None and math.isfinite(var_def.lo):
+            fix_val = var_def.lo
+        elif var_def.up is not None and math.isfinite(var_def.up):
+            fix_val = var_def.up
+        else:
+            fix_val = 0
+        # Combine conditions with OR (active when ANY condition holds)
+        if len(var_conds) == 1:
+            combined = var_conds[0]
+        else:
+            combined = " or ".join(f"({c})" for c in var_conds)
+        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({combined})) = {fix_val};")
+
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:
@@ -1965,8 +2013,9 @@ def emit_gams_mcp(
         stat_eq = kkt.stationarity.get(stat_name)
         if stat_eq is None:
             continue
-        # Only fix if the stationarity equation is conditioned (dollar condition)
-        # or if the variable has a stationarity condition (subset access pattern)
+        # Fix if the stationarity equation HEAD is conditioned OR if the variable
+        # has a stationarity condition (subset access pattern — Issue #1147 moved
+        # the condition to the body, but .fx is still needed for excluded instances).
         needs_fix = stat_eq.condition is not None or var_name in kkt.stationarity_conditions
         if not needs_fix:
             continue
