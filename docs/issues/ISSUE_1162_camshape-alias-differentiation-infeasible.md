@@ -70,3 +70,15 @@ Additionally, the warning `Multi-pattern Jacobian: detected 2 derivative pattern
 4. This is related to parent issue #1111 (Alias-Aware Differentiation) — the alias matching should NOT match across different offset positions
 
 **Effort estimate:** 4-6 hours (deep AD investigation)
+
+---
+
+## Investigation and Partial Fix (2026-03-26)
+
+**Finding 1:** The AD differentiation IS correct at concrete level. The bug is in `_replace_indices_in_expr` in the stationarity builder — element-to-set replacement collapses offsets.
+
+**Partial fix:** Added `_apply_offset_substitution()` and IndexOffset preservation in `_replace_indices_in_expr`. Convexity terms now correctly show `r(i-1)` and `r(i+1)`.
+
+**Remaining issue:** Cross-constraint terms introduce higher-order offsets (`r(i+2)`, `r(i-2)`) that need boundary guards for MCP pairing. The `.fx` generation doesn't account for the new offset range, causing unmatched equations.
+
+**What must be done:** Extend `.fx` boundary generation to account for ALL lead/lag offsets in the full stationarity expression, or emit per-term offset guards.
