@@ -1482,22 +1482,26 @@ def _expr_has_circular_offset(expr: Expr) -> bool:
     """Check if an expression contains any circular IndexOffset (++/--)."""
     if isinstance(expr, IndexOffset):
         return expr.circular
+    # Explicitly scan indices on reference-like nodes
     if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
         for idx in expr.indices:
             if isinstance(idx, IndexOffset) and idx.circular:
                 return True
-    # Generic walk over child attributes
-    for attr in ("left", "right", "child", "body", "value_expr", "condition"):
-        child = getattr(expr, attr, None)
-        if isinstance(child, Expr) and _expr_has_circular_offset(child):
+    # Walk all dataclass fields to cover all AST node types generically
+    # (Binary, Unary, Call, Sum, Prod, DollarConditional, LhsConditionalAssign, etc.)
+    from dataclasses import fields as dc_fields
+
+    for f in dc_fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name, None)
+        if isinstance(val, IndexOffset) and val.circular:
             return True
-    for attr in ("args", "indices"):
-        items = getattr(expr, attr, None)
-        if items:
-            for item in items:
-                if isinstance(item, Expr) and _expr_has_circular_offset(item):
-                    return True
+        if isinstance(val, Expr) and _expr_has_circular_offset(val):
+            return True
+        if isinstance(val, (tuple, list)):
+            for item in val:
                 if isinstance(item, IndexOffset) and item.circular:
+                    return True
+                if isinstance(item, Expr) and _expr_has_circular_offset(item):
                     return True
     return False
 
@@ -1646,15 +1650,26 @@ def _replace_indices_in_expr(
                         isinstance(i, IndexOffset) and not i.circular for i in var_ref.indices
                     )
                     if has_linear_offset:
+                        var_domain_decl = None
+                        if model_ir and var_ref.name in model_ir.variables:
+                            var_domain_decl = model_ir.variables[var_ref.name].domain
+                        str_only = tuple(
+                            str(idx) if isinstance(idx, str) else "__IO__"
+                            for idx in var_ref.indices
+                        )
+                        replaced = _replace_matching_indices(
+                            str_only,
+                            element_to_set,
+                            declared_domain=var_domain_decl,
+                            equation_domain=equation_domain,
+                            model_ir=model_ir,
+                        )
                         new_idx: list[str | IndexOffset] = []
-                        for idx in var_ref.indices:
-                            if isinstance(idx, IndexOffset) and not idx.circular:
-                                new_idx.append(idx)
-                            elif isinstance(idx, str):
-                                mapped = element_to_set.get(idx, idx)
-                                new_idx.append(mapped)
+                        for orig, rep in zip(var_ref.indices, replaced, strict=True):
+                            if isinstance(orig, IndexOffset) and not orig.circular:
+                                new_idx.append(orig)
                             else:
-                                new_idx.append(idx)
+                                new_idx.append(rep)
                         return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
                     # Replace each index that maps to a set in the domain
                     str_indices = var_ref.indices_as_strings()
