@@ -1631,7 +1631,7 @@ def emit_gams_mcp(
     # Precompute per-equality referenced vars and lead/lag conditions once.
     from src.ad.constraint_jacobian import find_variables_in_expr
 
-    _eq_cache: list[tuple[set[str], str | None, tuple[str, ...]]] = []
+    _eq_cache: list[tuple[set[str], str, tuple[str, ...]]] = []
     for eq_name in kkt.model_ir.equalities:
         eq_def = kkt.model_ir.equations.get(eq_name)
         if eq_def is None or not eq_def.domain:
@@ -1647,22 +1647,32 @@ def emit_gams_mcp(
         if not var_def or not var_def.domain:
             continue
         domain_str = ",".join(var_def.domain)
+        # Collect all inferred lead/lag conditions for this variable
+        var_conds: list[str] = []
         for refs, cond, eq_domain in _eq_cache:
             if var_name not in refs:
                 continue
-            # Only apply when equation domain matches variable domain
             if eq_domain != var_def.domain:
                 continue
-            # Use same finite fixing value as section 1
-            if var_def.fx is not None and math.isfinite(var_def.fx):
-                fix_val = var_def.fx
-            elif var_def.lo is not None and math.isfinite(var_def.lo):
-                fix_val = var_def.lo
-            elif var_def.up is not None and math.isfinite(var_def.up):
-                fix_val = var_def.up
-            else:
-                fix_val = 0
-            fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond})) = {fix_val};")
+            if cond not in var_conds:
+                var_conds.append(cond)
+        if not var_conds:
+            continue
+        # Use same finite fixing value as section 1
+        if var_def.fx is not None and math.isfinite(var_def.fx):
+            fix_val = var_def.fx
+        elif var_def.lo is not None and math.isfinite(var_def.lo):
+            fix_val = var_def.lo
+        elif var_def.up is not None and math.isfinite(var_def.up):
+            fix_val = var_def.up
+        else:
+            fix_val = 0
+        # Combine conditions with OR (active when ANY condition holds)
+        if len(var_conds) == 1:
+            combined = var_conds[0]
+        else:
+            combined = " or ".join(f"({c})" for c in var_conds)
+        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({combined})) = {fix_val};")
 
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):

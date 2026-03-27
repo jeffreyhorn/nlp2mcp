@@ -1687,18 +1687,33 @@ def _replace_indices_in_expr(
         case ParamRef() as param_ref:
             if param_ref.indices and domain:
                 if element_to_set:
-                    # Issue #1162: Mixed-index replacement for non-circular IndexOffset
+                    # Issue #1162: Mixed-index replacement for non-circular IndexOffset.
+                    # Use _replace_matching_indices for string indices to preserve
+                    # declared_domain disambiguation (Issue #572).
                     if any(
                         isinstance(i, IndexOffset) and not i.circular for i in param_ref.indices
                     ):
+                        param_domain = None
+                        if model_ir and param_ref.name in model_ir.params:
+                            param_domain = model_ir.params[param_ref.name].domain
+                        str_only = tuple(
+                            str(idx) if isinstance(idx, str) else "__IO__"
+                            for idx in param_ref.indices
+                        )
+                        replaced = _replace_matching_indices(
+                            str_only,
+                            element_to_set,
+                            declared_domain=param_domain,
+                            equation_domain=equation_domain,
+                            model_ir=model_ir,
+                            prefer_declared_domain=True,
+                        )
                         new_idx_p: list[str | IndexOffset] = []
-                        for idx in param_ref.indices:
-                            if isinstance(idx, IndexOffset) and not idx.circular:
-                                new_idx_p.append(idx)
-                            elif isinstance(idx, str):
-                                new_idx_p.append(element_to_set.get(idx, idx))
+                        for orig, rep in zip(param_ref.indices, replaced, strict=True):
+                            if isinstance(orig, IndexOffset) and not orig.circular:
+                                new_idx_p.append(orig)
                             else:
-                                new_idx_p.append(idx)
+                                new_idx_p.append(rep)
                         return ParamRef(param_ref.name, tuple(new_idx_p))
                     str_indices = param_ref.indices_as_strings()
                     # Use parameter domain for disambiguation (Issue #572)
