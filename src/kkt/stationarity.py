@@ -962,12 +962,13 @@ def build_stationarity_equations(
                 lhs_rhs=(stat_expr, Const(0.0)),
             )
 
-            # Issue #1147: The access condition is now embedded in the body
-            # via DollarConditional (not the equation head), so we do NOT
-            # store it in stationarity_conditions. This prevents the emitter
-            # from generating .fx for excluded instances, which would cause
-            # MCP pairing mismatches (equation covers all instances but
-            # fixed variables are removed from the MCP).
+            # Issue #1147/#1160: Store the access condition for the emitter to
+            # use when generating .fx for excluded primal variable instances.
+            # The condition is on the body (not head) so the equation covers
+            # all instances, but excluded primal instances must still be fixed
+            # so the MCP solver sees them as inactive.
+            if access_cond is not None:
+                kkt.stationarity_conditions[var_name] = access_cond
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:

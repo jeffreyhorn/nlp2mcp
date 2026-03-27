@@ -1626,6 +1626,30 @@ def emit_gams_mcp(
                 if ref_mults is None or comp_pair_up.variable in ref_mults:
                     fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
+    # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
+    # for some instances because all constraint terms are conditioned away.
+    # Check equality constraints that reference each conditioned variable —
+    # if those constraints have lead/lag that excludes some instances,
+    # the primal variable must be fixed for those excluded instances.
+    from src.ad.constraint_jacobian import find_variables_in_expr
+
+    for var_name in sorted(kkt.stationarity_conditions):
+        var_def = kkt.model_ir.variables.get(var_name)
+        if not var_def or not var_def.domain:
+            continue
+        domain_str = ",".join(var_def.domain)
+        for eq_name in kkt.model_ir.equalities:
+            eq_def = kkt.model_ir.equations.get(eq_name)
+            if eq_def is None:
+                continue
+            lhs, rhs = eq_def.lhs_rhs
+            referenced = find_variables_in_expr(Binary("-", lhs, rhs))
+            if var_name not in referenced:
+                continue
+            inferred_cond = infer_lead_lag_condition(eq_def)
+            if inferred_cond is not None:
+                fx_lines.append(f"{var_name}.fx({domain_str})$(not ({inferred_cond})) = 0;")
+
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:
