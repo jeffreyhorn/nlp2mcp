@@ -3593,6 +3593,17 @@ class _ModelBuilder:
                     refs.append(_token_text(child.children[0]))
                 elif child.data == "model_all_except":
                     has_all_except = True
+                elif child.data == "model_composition":
+                    # / m + mn / — add both model names as refs
+                    for tok in child.children:
+                        if isinstance(tok, Token):
+                            refs.append(_token_text(tok))
+                elif child.data == "model_subtraction":
+                    # / m - mn / — add first model, exclude second
+                    # For now, treat like all-except with first model as base
+                    for tok in child.children:
+                        if isinstance(tok, Token):
+                            refs.append(_token_text(tok))
             elif isinstance(child, Token) and child.type == "ID":
                 # Backward compatibility: direct ID tokens
                 refs.append(_token_text(child))
@@ -7262,7 +7273,10 @@ class _ModelBuilder:
 
         if self.model.model_equations and not self.model.model_uses_all:
             for eq_name in self.model.model_equations:
-                if eq_name not in self.model.equations:
+                if (
+                    eq_name not in self.model.equations
+                    and eq_name.lower() not in self.model.model_equation_map
+                ):
                     raise self._error(f"Model references unknown equation '{eq_name}'")
 
         # Note: We don't validate that model_name matches declared_model because:

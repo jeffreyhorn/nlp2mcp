@@ -2760,6 +2760,84 @@ def join_multiline_table_row_parens(source: str) -> str:
     return "\n".join(result)
 
 
+def expand_table_column_groups(source: str) -> str:
+    """Expand parenthesized column groups in table headers.
+
+    Issue #896: GAMS allows `(a,b,c)` in table column headers to indicate
+    that all grouped columns share the same data values. For example:
+
+        Table eval(*,c)
+            wheat  corn  (chickpea,drybean,lentil)  sugarbeet
+        product   .72   .78                          .3
+
+    This expands to:
+
+        Table eval(*,c)
+            wheat  corn  chickpea  drybean  lentil  sugarbeet
+        product   .72   .78                                  .3
+
+    The function replaces `(id,id,...)` patterns in table header lines
+    with space-separated individual column names.
+    """
+    import re
+
+    lines = source.split("\n")
+    result = []
+    in_table = False
+
+    table_decl_line = False
+    for line in lines:
+        stripped = line.strip().lower()
+        if stripped.startswith("table ") or stripped.startswith("table\t"):
+            in_table = True
+            table_decl_line = True
+        elif in_table and stripped and not stripped.startswith("*"):
+            if any(
+                stripped.startswith(kw)
+                for kw in (
+                    "set ",
+                    "parameter ",
+                    "variable ",
+                    "equation ",
+                    "model ",
+                    "solve ",
+                    "scalar ",
+                    "table ",
+                    "alias(",
+                    "display ",
+                    "option ",
+                    "file ",
+                    "put ",
+                )
+            ):
+                in_table = False
+            table_decl_line = False
+        else:
+            table_decl_line = False
+
+        # Only expand groups inside table body (NOT the declaration line)
+        if in_table and not table_decl_line and "(" in line and "," in line:
+            # Expand (a,b,c) groups — but only in table context
+            # Don't expand function calls or index lists
+            def _expand_group(m: re.Match) -> str:
+                content = m.group(1)
+                # Only expand if ALL items are simple identifiers (no dots, parens, etc.)
+                items = [i.strip() for i in content.split(",")]
+                if all(re.match(r"^['\"]?[\w*.-]+['\"]?$", i) for i in items):
+                    return "  ".join(items)
+                return m.group(0)
+
+            line = re.sub(r"\(([^()]+)\)", _expand_group, line)
+
+        # Detect end of table (semicolon)
+        if in_table and ";" in line:
+            in_table = False
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
 def expand_tuple_only_table_rows(source: str) -> str:
     """Expand (a,b,c) tuple-only row labels in tables to individual rows.
 
@@ -3492,6 +3570,10 @@ def _preprocess_content(content: str) -> str:
     # Step 15b: Expand (a,b,c) tuple-only row labels in tables
     # Must run after normalize_special_identifiers (which quotes hyphenated IDs)
     content = expand_tuple_only_table_rows(content)
+
+    # Step 15d: Expand parenthesized column groups in table headers
+    # e.g., (chickpea,drybean,lentil) → chickpea  drybean  lentil
+    content = expand_table_column_groups(content)
 
     # Step 15c: Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
     # Must run after 15b (tuple-only labels already handled, this handles the rest)

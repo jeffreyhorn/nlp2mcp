@@ -39,8 +39,8 @@ Table eval(*,c) 'energy values in starch equivalent (kg per kg)'
 2. The table header parser expects plain identifiers separated by whitespace, not parenthesized groups
 3. The data rows have blank entries for the grouped columns, and a single value applies to all members of the group
 
-## Fix Approach
+## Fix Applied
 
-1. Extend the table header parser to recognize `(id, id, ...)` as a column group
-2. When processing data rows, expand grouped columns so each member gets the same value
-3. Alternatively, preprocess the table to expand grouped headers into individual columns
+Added `expand_table_column_groups()` preprocessor function that expands `(a,b,c)` patterns in table body lines (not declaration lines) to space-separated individual column names. Integrated as step 15d in the preprocessing pipeline.
+
+turkey now parses successfully (35 equations detected).
