@@ -818,6 +818,30 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
     return aliases_needed
 
 
+def _collect_condition_set_names(expr: Expr) -> frozenset[str]:
+    """Collect set names from SetMembershipTest nodes in a condition expression.
+
+    Returns lowercase set names that Sum/Prod indices should not shadow.
+    For example, $(t(i)) → {'t'}, $(cf(c) and t(tf)) → {'cf', 't'}.
+    """
+    names: set[str] = set()
+
+    def _walk(e: Expr) -> None:
+        if isinstance(e, SetMembershipTest):
+            names.add(e.set_name.lower())
+        if isinstance(e, Binary):
+            _walk(e.left)
+            _walk(e.right)
+        if isinstance(e, Unary):
+            _walk(e.child)
+        if isinstance(e, DollarConditional):
+            _walk(e.value_expr)
+            _walk(e.condition)
+
+    _walk(expr)
+    return frozenset(names)
+
+
 def resolve_index_conflicts(
     expr: Expr, equation_domain: tuple[str, ...]
 ) -> tuple[Expr, dict[str, list[str]]]:
@@ -894,7 +918,11 @@ def resolve_index_conflicts(
                 return Call(func, new_args)
 
             case DollarConditional(value_expr, condition):
-                new_value = _resolve(value_expr, active_aliases, bound_lower)
+                # Issue chenery: Collect set names from condition so Sum indices
+                # inside value_expr that shadow condition set names get renamed.
+                cond_set_names = _collect_condition_set_names(condition)
+                expanded_bound = bound_lower | cond_set_names
+                new_value = _resolve(value_expr, active_aliases, expanded_bound)
                 new_condition = _resolve(condition, active_aliases, bound_lower)
                 return DollarConditional(new_value, new_condition)
 
