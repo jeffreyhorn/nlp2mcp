@@ -2785,12 +2785,14 @@ def expand_table_column_groups(source: str) -> str:
     result = []
     in_table = False
 
-    table_decl_line = False
+    table_header_line = False  # True only for the header line (first content after decl)
+    saw_table_decl = False
     for line in lines:
         stripped = line.strip().lower()
         if stripped.startswith("table ") or stripped.startswith("table\t"):
             in_table = True
-            table_decl_line = True
+            saw_table_decl = True
+            table_header_line = False
         elif in_table and stripped and not stripped.startswith("*"):
             if any(
                 stripped.startswith(kw)
@@ -2811,12 +2813,18 @@ def expand_table_column_groups(source: str) -> str:
                 )
             ):
                 in_table = False
-            table_decl_line = False
+                saw_table_decl = False
+            elif saw_table_decl:
+                # First non-empty non-comment line after Table decl = header
+                table_header_line = True
+                saw_table_decl = False
+            else:
+                table_header_line = False
         else:
-            table_decl_line = False
+            table_header_line = False
 
-        # Only expand groups inside table body (NOT the declaration line)
-        if in_table and not table_decl_line and "(" in line and "," in line:
+        # Only expand groups on the table HEADER line (not data rows)
+        if table_header_line and "(" in line and "," in line:
             # Expand (a,b,c) groups — but only in table context
             # Don't expand function calls or index lists
             def _expand_group(m: re.Match) -> str:
@@ -3571,13 +3579,15 @@ def _preprocess_content(content: str) -> str:
     # Must run after normalize_special_identifiers (which quotes hyphenated IDs)
     content = expand_tuple_only_table_rows(content)
 
-    # Step 15d: Expand parenthesized column groups in table headers
-    # e.g., (chickpea,drybean,lentil) → chickpea  drybean  lentil
-    content = expand_table_column_groups(content)
-
     # Step 15c: Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
     # Must run after 15b (tuple-only labels already handled, this handles the rest)
     content = expand_multi_segment_tuple_row_labels(content)
+
+    # Step 15d: Expand parenthesized column groups in table headers
+    # e.g., (chickpea,drybean,lentil) → chickpea  drybean  lentil
+    # Must run AFTER multi-segment row label expansion (15c) to avoid
+    # rewriting (a,b) patterns in row labels.
+    content = expand_table_column_groups(content)
 
     # Step 16: Normalize double commas to single commas (Issue #565)
     # This must happen after all other data normalization

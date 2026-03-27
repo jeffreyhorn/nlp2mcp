@@ -3599,8 +3599,10 @@ class _ModelBuilder:
                         if isinstance(tok, Token):
                             refs.append(_token_text(tok))
                 elif child.data == "model_subtraction":
-                    # / m - mn / — add first model, exclude second
-                    # For now, treat like all-except with first model as base
+                    # Model subtraction (m - n) cannot be implemented with flat
+                    # equation-name lists. Accept it gracefully by treating both
+                    # names as model references (the second will be ignored during
+                    # equation resolution, which is conservative but not misleading).
                     for tok in child.children:
                         if isinstance(tok, Token):
                             refs.append(_token_text(tok))
