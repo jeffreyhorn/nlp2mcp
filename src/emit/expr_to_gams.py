@@ -751,6 +751,11 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
     1. Sum/Prod index collides with equation domain (case-insensitive)
     2. Inner Sum/Prod index collides with outer Sum/Prod index (nested reuse)
 
+    Note: This function does NOT detect condition-scope shadowing (where a
+    Sum index shadows a set name used in a DollarConditional condition).
+    That pattern is handled by resolve_index_conflicts() which uses
+    _collect_condition_set_names() to expand the bound set.
+
     Args:
         expr: Expression to analyze
         equation_domain: Tuple of index names used in the equation's domain
@@ -824,19 +829,22 @@ def _collect_condition_set_names(expr: Expr) -> frozenset[str]:
     Returns lowercase set names that Sum/Prod indices should not shadow.
     For example, $(t(i)) → {'t'}, $(cf(c) and t(tf)) → {'cf', 't'}.
     """
+    from dataclasses import fields as dc_fields
+
     names: set[str] = set()
 
     def _walk(e: Expr) -> None:
         if isinstance(e, SetMembershipTest):
             names.add(e.set_name.lower())
-        if isinstance(e, Binary):
-            _walk(e.left)
-            _walk(e.right)
-        if isinstance(e, Unary):
-            _walk(e.child)
-        if isinstance(e, DollarConditional):
-            _walk(e.value_expr)
-            _walk(e.condition)
+        # Traverse all dataclass fields generically
+        for f in dc_fields(e):  # type: ignore[arg-type]
+            val = getattr(e, f.name, None)
+            if isinstance(val, Expr):
+                _walk(val)
+            elif isinstance(val, (tuple, list)):
+                for item in val:
+                    if isinstance(item, Expr):
+                        _walk(item)
 
     _walk(expr)
     return frozenset(names)

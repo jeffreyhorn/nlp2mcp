@@ -1206,3 +1206,42 @@ class TestNegativeExponentParenthesization:
         result = expr_to_gams(expr, domain_vars=frozenset(["s"]))
         assert "** (-0.9904)" in result
         assert "** -" not in result
+
+
+def test_resolve_index_conflicts_condition_scope_shadowing():
+    """Issue chenery: Sum index shadowing set name in DollarConditional condition.
+
+    Pattern: DollarConditional(Sum(("t",), h(t) * lam), SetMembershipTest("t", (SymbolRef("i"),)))
+    The sum index "t" should be renamed to avoid shadowing the "t" in $(t(i)).
+    """
+    from src.emit.expr_to_gams import resolve_index_conflicts
+    from src.ir.ast import (
+        Binary,
+        DollarConditional,
+        SetMembershipTest,
+        Sum,
+        SymbolRef,
+        VarRef,
+    )
+
+    # sum(t, h(t) * lam_tb) $ (t(i))
+    body = Sum(
+        ("t",),
+        Binary("*", VarRef("h", ("t",)), VarRef("lam_tb", ())),
+        None,
+    )
+    condition = SetMembershipTest("t", (SymbolRef("i"),))
+    expr = DollarConditional(body, condition)
+
+    resolved, aliases = resolve_index_conflicts(expr, ("i",))
+
+    # The sum index "t" should be renamed (not shadow the condition set name)
+    assert isinstance(resolved, DollarConditional)
+    inner_sum = resolved.value_expr
+    assert isinstance(inner_sum, Sum)
+    assert "t" not in inner_sum.index_sets, (
+        f"Sum index 't' should be renamed to avoid shadowing condition set, "
+        f"got index_sets={inner_sum.index_sets}"
+    )
+    # Alias should be generated
+    assert "t" in aliases, f"Expected alias for 't', got aliases={aliases}"
