@@ -2064,6 +2064,33 @@ class TestTableColumnGroupExpansion:
         # The data row (x,y) should NOT be expanded — it's a row label
         assert "(x,y)" in expanded
 
+    def test_spaced_column_group_preserves_alignment(self):
+        """Spaced column groups should be expanded without shifting later columns."""
+        source = """Table eval(*,c)
+                 wheat  corn  (chickpea, drybean, lentil)  sugarbeet
+   product         .72   .78                                   .3 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        # Capture the original column position of 'sugarbeet'
+        original_header = source.splitlines()[1]
+        original_sugarbeet_idx = original_header.index("sugarbeet")
+
+        expanded = expand_table_column_groups(source)
+
+        # Header line after expansion
+        expanded_header = expanded.splitlines()[1]
+        expanded_sugarbeet_idx = expanded_header.index("sugarbeet")
+
+        # Column group should be expanded and spaced form removed
+        assert "chickpea" in expanded_header
+        assert "drybean" in expanded_header
+        assert "lentil" in expanded_header
+        assert "(chickpea, drybean, lentil)" not in expanded
+
+        # Alignment of subsequent columns must be preserved
+        assert original_sugarbeet_idx == expanded_sugarbeet_idx
+
     def test_table_domain_not_expanded(self):
         """Table declaration domain (*,c) should NOT be expanded."""
         source = """Table eval(*,c)

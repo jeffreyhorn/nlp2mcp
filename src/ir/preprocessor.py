@@ -2792,23 +2792,10 @@ def expand_table_column_groups(source: str) -> str:
             saw_table_decl = True
             table_header_line = False
         elif in_table and stripped and not stripped.startswith("*"):
-            if any(
-                stripped.startswith(kw)
-                for kw in (
-                    "set ",
-                    "parameter ",
-                    "variable ",
-                    "equation ",
-                    "model ",
-                    "solve ",
-                    "scalar ",
-                    "table ",
-                    "alias(",
-                    "display ",
-                    "option ",
-                    "file ",
-                    "put ",
-                )
+            if re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b",
+                stripped,
+                re.IGNORECASE,
             ):
                 in_table = False
                 saw_table_decl = False
@@ -2830,7 +2817,12 @@ def expand_table_column_groups(source: str) -> str:
                 # Only expand if ALL items are simple identifiers: letters/digits/_, '*', '.', or '-'
                 items = [i.strip() for i in content.split(",")]
                 if all(re.match(r"^['\"]?[\w*.-]+['\"]?$", i) for i in items):
-                    return "  ".join(items)
+                    # Preserve original substring width to avoid shifting subsequent columns.
+                    original = m.group(0)
+                    expanded = "  ".join(items)
+                    if len(expanded) < len(original):
+                        expanded = expanded + " " * (len(original) - len(expanded))
+                    return expanded
                 return m.group(0)
 
             line = re.sub(r"\(([^()]+)\)", _expand_group, line)
