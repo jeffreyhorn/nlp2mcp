@@ -73,6 +73,31 @@ The stationarity builder needs to preserve subset domain indices for parameters 
 
 ---
 
+## Investigation (2026-03-27)
+
+**Attempt 1:** Modified `_replace_matching_indices` to detect when declared domain is a subset of equation domain → returns subset name `t` instead of superset `i`. Successfully produces `alp(t)`.
+
+**Result:** GAMS $149 "Uncontrolled set entered as constant" — `t` is not in the equation domain `(i,)` so GAMS rejects it.
+
+**Attempt 2:** Modified `_rewrite_subset_to_superset` to skip ParamRef rewriting when parameter's declared domain matches the subset. Successfully preserves `alp(t)` through the full pipeline.
+
+**Result:** Same $149 — GAMS cannot accept `alp(t)` in equation `stat_e(i)` because `t` is uncontrolled.
+
+**Catch-22:** GAMS rejects BOTH:
+- `alp(i)` → $171 (domain violation: `alp` declared over subset `t`, not `i`)
+- `alp(t)` → $149 (uncontrolled set: `t` not in equation domain `(i,)`)
+
+**Only valid GAMS form:** `stat_e(t).. alp(t) * ... =E= 0;` — equation iterates over `t`. But this requires the stationarity equation domain to be `t` (not `i`), which breaks MCP pairing with variable `e(i)`.
+
+**Resolution:** The stationarity condition must go on the equation HEAD (not body) for equations with subset-domain parameters. With head condition `stat_e(i)$(t(i)).. alp(i) * ... =E= 0;`, GAMS accepts `alp(i)` because the condition restricts `i` to `t`. However, this re-introduces the MCP pairing mismatch from #1147.
+
+**What must be done:**
+1. Selectively keep condition on HEAD (not body) when the stationarity expression contains parameters declared over strict subsets of the equation domain
+2. For those equations, generate `.fx` for excluded instances to resolve the MCP pairing (restoring PR #1147's original approach for these specific cases)
+3. This requires detecting subset-domain parameters in the stationarity expression and routing them through the head-condition path
+
+---
+
 ## Related Issues
 
 - PR #1163: Fixed sum-index-vs-condition shadowing (partial fix for chenery)
