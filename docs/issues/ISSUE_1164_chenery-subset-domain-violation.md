@@ -59,17 +59,42 @@ eq(t).. x(t) + alp(t) =e= 0;          # OK (equation domain matches)
 
 ---
 
-## Fix Approach
+## Fix Approach (Initial Hypothesis — Superseded)
 
-The stationarity builder needs to preserve subset domain indices for parameters and variables declared over subsets:
+> **Note:** The approach below was an initial hypothesis that was disproven during investigation. Simply rewriting `alp(i)` to `alp(t)` inside `stat_e(i)` leads to GAMS $149 (uncontrolled set). See the Investigation section below for the actual findings and the correct path forward.
 
-1. **In `_replace_matching_indices`:** When a parameter's declared domain position uses a subset (e.g., `t`) and the element-to-set mapping returns the superset (e.g., `i`), use the subset name instead.
+~~The stationarity builder needs to preserve subset domain indices for parameters and variables declared over subsets:~~
 
-2. **Alternative:** In `_replace_indices_in_expr`, for ParamRef/VarRef, check if the declared domain at each position is a subset of the equation domain. If so, use the subset name (parameter's declared domain variable) instead of the superset (equation's domain variable).
+~~1. In `_replace_matching_indices`: use subset name instead of superset.~~
+~~2. Alternative: check declared domain and use subset name.~~
+~~3. Key check: `model_ir.sets[t].domain == ('i',)`~~
 
-3. **Key check:** `model_ir.sets[t].domain == ('i',)` → `t` is a subset of `i`. When replacing indices for a ParamRef declared over `(t,)`, use `t` instead of `i`.
+**Effort estimate:** 3-5 hours (revised upward — requires domain restructuring, not just index rewriting)
 
-**Effort estimate:** 2-3 hours
+---
+
+## Investigation (2026-03-27)
+
+**Attempt 1:** Modified `_replace_matching_indices` to detect when declared domain is a subset of equation domain → returns subset name `t` instead of superset `i`. Successfully produces `alp(t)`.
+
+**Result:** GAMS $149 "Uncontrolled set entered as constant" — `t` is not in the equation domain `(i,)` so GAMS rejects it.
+
+**Attempt 2:** Modified `_rewrite_subset_to_superset` to skip ParamRef rewriting when parameter's declared domain matches the subset. Successfully preserves `alp(t)` through the full pipeline.
+
+**Result:** Same $149 — GAMS cannot accept `alp(t)` in equation `stat_e(i)` because `t` is uncontrolled.
+
+**Catch-22:** GAMS rejects BOTH:
+- `alp(i)` → $171 (domain violation: `alp` declared over subset `t`, not `i`)
+- `alp(t)` → $149 (uncontrolled set: `t` not in equation domain `(i,)`)
+
+**Only valid GAMS form:** `stat_e(t).. alp(t) * ... =E= 0;` — equation iterates over `t`. But this requires the stationarity equation domain to be `t` (not `i`), which breaks MCP pairing with variable `e(i)`.
+
+**Resolution:** Head conditions do **not** resolve the subset-domain violation. Even with a head condition like `stat_e(i)$(t(i)).. alp(i) * ... =E= 0;`, GAMS still raises $171 because the symbol `alp(i)` is checked against its declared domain before the dollar condition is applied. The code generator must therefore avoid producing `alp(i)` when `alp` is declared over `t`.
+
+**What must be done:**
+1. Detect parameters and variables in the stationarity expression that are declared over strict subsets of the equation domain (e.g., `alp(t)` where the equation is over `i` with `Set t(i)`)
+2. For such cases, generate stationarity equations whose domain matches the subset (e.g., `stat_e(t).. alp(t) * ... =E= 0;`) or otherwise restructure the generated model so that each indexed symbol is only ever used with indices consistent with its declared domain
+3. Preserve MCP pairing for the original variable domain (e.g., `e(i)`) by introducing the necessary mappings or fixings while keeping all symbols indexed by their declared domains — **do not** attempt to fix the issue by merely rewriting `alp(i)` to `alp(t)` inside `stat_e(i)`, which leads to GAMS $149 (uncontrolled set)
 
 ---
 
