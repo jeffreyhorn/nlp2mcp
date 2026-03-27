@@ -751,6 +751,11 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
     1. Sum/Prod index collides with equation domain (case-insensitive)
     2. Inner Sum/Prod index collides with outer Sum/Prod index (nested reuse)
 
+    Note: This function does NOT detect condition-scope shadowing (where a
+    Sum index shadows a set name used in a DollarConditional condition).
+    That pattern is handled by resolve_index_conflicts() which uses
+    _collect_condition_set_names() to expand the bound set.
+
     Args:
         expr: Expression to analyze
         equation_domain: Tuple of index names used in the equation's domain
@@ -816,6 +821,33 @@ def collect_index_aliases(expr: Expr, equation_domain: tuple[str, ...]) -> set[s
 
     _collect(expr, frozenset())
     return aliases_needed
+
+
+def _collect_condition_set_names(expr: Expr) -> frozenset[str]:
+    """Collect set names from SetMembershipTest nodes in a condition expression.
+
+    Returns lowercase set names that Sum/Prod indices should not shadow.
+    For example, $(t(i)) → {'t'}, $(cf(c) and t(tf)) → {'cf', 't'}.
+    """
+    from dataclasses import fields as dc_fields
+
+    names: set[str] = set()
+
+    def _walk(e: Expr) -> None:
+        if isinstance(e, SetMembershipTest):
+            names.add(e.set_name.lower())
+        # Traverse all dataclass fields generically
+        for f in dc_fields(e):  # type: ignore[arg-type]
+            val = getattr(e, f.name, None)
+            if isinstance(val, Expr):
+                _walk(val)
+            elif isinstance(val, (tuple, list)):
+                for item in val:
+                    if isinstance(item, Expr):
+                        _walk(item)
+
+    _walk(expr)
+    return frozenset(names)
 
 
 def resolve_index_conflicts(
@@ -894,7 +926,11 @@ def resolve_index_conflicts(
                 return Call(func, new_args)
 
             case DollarConditional(value_expr, condition):
-                new_value = _resolve(value_expr, active_aliases, bound_lower)
+                # Issue chenery: Collect set names from condition so Sum indices
+                # inside value_expr that shadow condition set names get renamed.
+                cond_set_names = _collect_condition_set_names(condition)
+                expanded_bound = bound_lower | cond_set_names
+                new_value = _resolve(value_expr, active_aliases, expanded_bound)
                 new_condition = _resolve(condition, active_aliases, bound_lower)
                 return DollarConditional(new_value, new_condition)
 
