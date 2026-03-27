@@ -1480,22 +1480,25 @@ def _build_constraint_element_mapping(
 
 def _expr_has_circular_offset(expr: Expr) -> bool:
     """Check if an expression contains any circular IndexOffset (++/--)."""
+    if isinstance(expr, IndexOffset):
+        return expr.circular
     if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
-        return any(isinstance(i, IndexOffset) and i.circular for i in expr.indices)
-    if isinstance(expr, Binary):
-        return _expr_has_circular_offset(expr.left) or _expr_has_circular_offset(expr.right)
-    if isinstance(expr, Unary):
-        return _expr_has_circular_offset(expr.child)
-    if isinstance(expr, Call):
-        return any(_expr_has_circular_offset(a) for a in expr.args)
-    if isinstance(expr, Sum):
-        return _expr_has_circular_offset(expr.body) or (
-            expr.condition is not None and _expr_has_circular_offset(expr.condition)
-        )
-    if isinstance(expr, DollarConditional):
-        return _expr_has_circular_offset(expr.value_expr) or _expr_has_circular_offset(
-            expr.condition
-        )
+        for idx in expr.indices:
+            if isinstance(idx, IndexOffset) and idx.circular:
+                return True
+    # Generic walk over child attributes
+    for attr in ("left", "right", "child", "body", "value_expr", "condition"):
+        child = getattr(expr, attr, None)
+        if isinstance(child, Expr) and _expr_has_circular_offset(child):
+            return True
+    for attr in ("args", "indices"):
+        items = getattr(expr, attr, None)
+        if items:
+            for item in items:
+                if isinstance(item, Expr) and _expr_has_circular_offset(item):
+                    return True
+                if isinstance(item, IndexOffset) and item.circular:
+                    return True
     return False
 
 
@@ -1521,8 +1524,9 @@ def _apply_offset_substitution(
     """
     from src.ad.index_mapping import resolve_set_members
 
-    # Build reference: domain_var → (ref_element, members_list, ref_position)
-    ref_info: dict[str, tuple[str, list[str], int]] = {}
+    # Build reference: domain_var → (ref_element, pos_map, ref_position)
+    # Use pos_map for O(1) lookups instead of repeated members.index()
+    ref_info: dict[str, tuple[str, dict[str, int], int]] = {}
     for _vi, (elem, dvar) in enumerate(zip(rep_var_indices, var_domain, strict=False)):
         set_name = element_to_set.get(elem)
         if set_name is None:
@@ -1531,8 +1535,9 @@ def _apply_offset_substitution(
             members, _ = resolve_set_members(set_name, model_ir)
         except (ValueError, KeyError):
             continue
-        if elem in members:
-            ref_info[dvar] = (elem, members, members.index(elem))
+        pos_map = {m: i for i, m in enumerate(members)}
+        if elem in pos_map:
+            ref_info[dvar] = (elem, pos_map, pos_map[elem])
 
     if not ref_info:
         return expr
@@ -1550,9 +1555,9 @@ def _apply_offset_substitution(
                 if isinstance(idx, str) and idx not in eq_elements:
                     mapped = element_to_set.get(idx)
                     if mapped and mapped in ref_info:
-                        ref_elem, members, ref_pos = ref_info[mapped]
-                        if idx != ref_elem and idx in members:
-                            offset = members.index(idx) - ref_pos
+                        ref_elem, pos_map, ref_pos = ref_info[mapped]
+                        if idx != ref_elem and idx in pos_map:
+                            offset = pos_map[idx] - ref_pos
                             if offset != 0:
                                 new_indices.append(IndexOffset(mapped, Const(float(offset)), False))
                                 changed = True
@@ -1581,6 +1586,17 @@ def _apply_offset_substitution(
             nb = _sub(e.body)
             ncond = _sub(e.condition) if e.condition else None
             return e if nb is e.body and ncond is e.condition else Sum(e.index_sets, nb, ncond)
+        if isinstance(e, Prod):
+            nb = _sub(e.body)
+            ncond = _sub(e.condition) if e.condition else None
+            return e if nb is e.body and ncond is e.condition else Prod(e.index_sets, nb, ncond)
+        if isinstance(e, SetMembershipTest):
+            na = tuple(_sub(a) for a in e.indices)
+            return (
+                e
+                if all(n is o for n, o in zip(na, e.indices, strict=True))
+                else SetMembershipTest(e.set_name, na)
+            )
         return e
 
     return _sub(expr)
@@ -1623,11 +1639,23 @@ def _replace_indices_in_expr(
             return expr
         case VarRef() as var_ref:
             if var_ref.indices and domain:
-                # Issue #1162: Preserve non-circular IndexOffset from offset
-                # substitution — they encode lead/lag that must not be collapsed.
-                if any(isinstance(i, IndexOffset) and not i.circular for i in var_ref.indices):
-                    return expr
                 if element_to_set:
+                    # Issue #1162: If indices contain non-circular IndexOffset,
+                    # replace only the string indices and preserve IndexOffset as-is.
+                    has_linear_offset = any(
+                        isinstance(i, IndexOffset) and not i.circular for i in var_ref.indices
+                    )
+                    if has_linear_offset:
+                        new_idx: list[str | IndexOffset] = []
+                        for idx in var_ref.indices:
+                            if isinstance(idx, IndexOffset) and not idx.circular:
+                                new_idx.append(idx)
+                            elif isinstance(idx, str):
+                                mapped = element_to_set.get(idx, idx)
+                                new_idx.append(mapped)
+                            else:
+                                new_idx.append(idx)
+                        return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
                     # Replace each index that maps to a set in the domain
                     str_indices = var_ref.indices_as_strings()
                     # Use variable domain for disambiguation if available
@@ -1658,9 +1686,20 @@ def _replace_indices_in_expr(
             return expr
         case ParamRef() as param_ref:
             if param_ref.indices and domain:
-                if any(isinstance(i, IndexOffset) and not i.circular for i in param_ref.indices):
-                    return expr
                 if element_to_set:
+                    # Issue #1162: Mixed-index replacement for non-circular IndexOffset
+                    if any(
+                        isinstance(i, IndexOffset) and not i.circular for i in param_ref.indices
+                    ):
+                        new_idx_p: list[str | IndexOffset] = []
+                        for idx in param_ref.indices:
+                            if isinstance(idx, IndexOffset) and not idx.circular:
+                                new_idx_p.append(idx)
+                            elif isinstance(idx, str):
+                                new_idx_p.append(element_to_set.get(idx, idx))
+                            else:
+                                new_idx_p.append(idx)
+                        return ParamRef(param_ref.name, tuple(new_idx_p))
                     str_indices = param_ref.indices_as_strings()
                     # Use parameter domain for disambiguation (Issue #572)
                     # For parameters, prefer_declared_domain=True ensures the parameter's
@@ -1770,7 +1809,7 @@ def _replace_indices_in_expr(
             # Build equation domain set for checking if element came from equation index
             eq_domain_lower = {d.lower() for d in equation_domain} if equation_domain else set()
             new_idx_list: list[Expr] = []
-            for pos, idx in enumerate(smt.indices):
+            for pos, idx in enumerate(smt.indices):  # type: ignore[assignment]
                 if (
                     smt_domain
                     and model_ir is not None
@@ -1797,12 +1836,12 @@ def _replace_indices_in_expr(
                 else:
                     new_idx_list.append(
                         _replace_indices_in_expr(
-                            idx, domain, element_to_set, model_ir, equation_domain
+                            idx, domain, element_to_set, model_ir, equation_domain  # type: ignore[arg-type]
                         )
                     )
-            new_idx = tuple(new_idx_list)
+            new_idx = tuple(new_idx_list)  # type: ignore[assignment]
             if new_idx != smt.indices:
-                return SetMembershipTest(smt.set_name, new_idx)
+                return SetMembershipTest(smt.set_name, new_idx)  # type: ignore[arg-type]
             return expr
         case _:
             return expr
