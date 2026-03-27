@@ -3593,6 +3593,10 @@ class _ModelBuilder:
                     refs.append(_token_text(child.children[0]))
                 elif child.data == "model_all_except":
                     has_all_except = True
+                    # Note: exclusion IDs are not yet extracted — `/ all - eq1 /`
+                    # is treated as `/ all /`. True exclusion would require
+                    # collecting the subtracted IDs and filtering them out of
+                    # the equation list during model resolution.
                 elif child.data == "model_composition":
                     # / m + mn / — add both model names as refs
                     for tok in child.children:

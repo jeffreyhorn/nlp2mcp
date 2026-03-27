@@ -2779,8 +2779,6 @@ def expand_table_column_groups(source: str) -> str:
     The function replaces `(id,id,...)` patterns in table header lines
     with space-separated individual column names.
     """
-    import re
-
     lines = source.split("\n")
     result = []
     in_table = False
@@ -2837,9 +2835,11 @@ def expand_table_column_groups(source: str) -> str:
 
             line = re.sub(r"\(([^()]+)\)", _expand_group, line)
 
-        # Detect end of table (semicolon)
-        if in_table and ";" in line:
-            in_table = False
+        # Detect end of table (semicolon outside quotes)
+        if in_table:
+            unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", "", line)
+            if ";" in unquoted:
+                in_table = False
 
         result.append(line)
 
@@ -3466,8 +3466,10 @@ def _preprocess_content(content: str) -> str:
     13. Normalize multi-line continuations (add missing commas)
     14. Insert missing semicolons before block keywords
     15. Quote identifiers with special characters (-, +) in data blocks
+    15a. Join multi-line parenthesized table row labels onto one line
     15b. Expand tuple-only table rows: (a,b,c) vals → individual rows
     15c. Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
+    15d. Expand parenthesized column groups in table headers
     16. Normalize double commas to single commas
 
     Args:
