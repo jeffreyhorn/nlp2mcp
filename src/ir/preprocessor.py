@@ -2778,6 +2778,13 @@ def expand_table_column_groups(source: str) -> str:
 
     The function replaces `(id,id,...)` patterns in table header lines
     with space-separated individual column names.
+
+    NOTE: This function only rewrites header lines. In GAMS, a single data
+    value beneath a grouped column header is replicated across all expanded
+    columns. That replication is handled downstream by ``_handle_table_block()``
+    in the parser, not here. If the parser does not yet replicate values for
+    expanded groups, data rows beneath grouped headers will only populate the
+    first expanded column (others default to 0.0).
     """
     lines = source.split("\n")
     result = []
