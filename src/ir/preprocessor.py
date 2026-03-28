@@ -2779,12 +2779,13 @@ def expand_table_column_groups(source: str) -> str:
     The function replaces `(id,id,...)` patterns in table header lines
     with space-separated individual column names.
 
-    NOTE: This function only rewrites header lines. In GAMS, a single data
-    value beneath a grouped column header is replicated across all expanded
-    columns. That replication is handled downstream by ``_handle_table_block()``
-    in the parser, not here. If the parser does not yet replicate values for
-    expanded groups, data rows beneath grouped headers will only populate the
-    first expanded column (others default to 0.0).
+    NOTE: This function only rewrites header lines. In GAMS, the intended
+    semantics are that a single data value beneath a grouped column header
+    is replicated across all expanded columns. As of now, that replication
+    is **not** performed here, nor by the downstream ``_handle_table_block()``
+    parser routine (see issue #896). Consequently, a single value token under
+    a grouped header will populate only the first expanded column while the
+    others default to 0.0 in the current implementation.
     """
     lines = source.split("\n")
     result = []
@@ -2793,8 +2794,8 @@ def expand_table_column_groups(source: str) -> str:
     table_header_line = False  # True only for the header line (first content after decl)
     saw_table_decl = False
     for line in lines:
-        stripped = line.strip().lower()
-        if stripped.startswith("table ") or stripped.startswith("table\t"):
+        stripped = line.strip()
+        if re.match(r"^table\b", stripped, re.IGNORECASE):
             in_table = True
             saw_table_decl = True
             table_header_line = False
@@ -2844,11 +2845,9 @@ def expand_table_column_groups(source: str) -> str:
 
             line = re.sub(r"\(([^()]+)\)", _expand_group, line)
 
-        # Detect end of table (semicolon outside quotes)
-        if in_table:
-            unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", "", line)
-            if ";" in unquoted:
-                in_table = False
+        # Detect end of table (semicolon outside quotes, escape-aware)
+        if in_table and _has_statement_ending_semicolon(line):
+            in_table = False
 
         result.append(line)
 
