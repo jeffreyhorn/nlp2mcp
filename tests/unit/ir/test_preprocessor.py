@@ -2091,6 +2091,29 @@ class TestTableColumnGroupExpansion:
         # Alignment of subsequent columns must be preserved
         assert original_sugarbeet_idx == expanded_sugarbeet_idx
 
+    def test_four_item_column_group_preserves_alignment(self):
+        """4+ item groups should not grow beyond original width."""
+        source = """Table t(*,c)
+                 a  (b,c,d,e)  f
+   row1         1             2 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        original_header = source.splitlines()[1]
+        original_f_idx = original_header.index("  f")
+
+        expanded = expand_table_column_groups(source)
+        expanded_header = expanded.splitlines()[1]
+        expanded_f_idx = expanded_header.index("  f")
+
+        assert "b" in expanded_header
+        assert "c" in expanded_header
+        assert "d" in expanded_header
+        assert "e" in expanded_header
+        assert "(b,c,d,e)" not in expanded_header
+        # Alignment must be preserved
+        assert original_f_idx == expanded_f_idx
+
     def test_table_domain_not_expanded(self):
         """Table declaration domain (*,c) should NOT be expanded."""
         source = """Table eval(*,c)

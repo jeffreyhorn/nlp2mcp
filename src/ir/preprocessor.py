@@ -2819,7 +2819,16 @@ def expand_table_column_groups(source: str) -> str:
                 if all(re.match(r"^['\"]?[\w*.-]+['\"]?$", i) for i in items):
                     # Preserve original substring width to avoid shifting subsequent columns.
                     original = m.group(0)
+                    # First try with two spaces between items.
                     expanded = "  ".join(items)
+                    # If that would grow beyond the original width, switch to single spaces.
+                    if len(expanded) > len(original):
+                        expanded = " ".join(items)
+                    # If still too wide, fall back to replacing only punctuation with spaces,
+                    # which guarantees the same length as the original substring.
+                    if len(expanded) > len(original):
+                        expanded = re.sub(r"[(),]", " ", original)
+                    # If shorter, right-pad with spaces to preserve width.
                     if len(expanded) < len(original):
                         expanded = expanded + " " * (len(original) - len(expanded))
                     return expanded
