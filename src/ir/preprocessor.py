@@ -2799,6 +2799,7 @@ def expand_table_column_groups(source: str) -> str:
             ):
                 in_table = False
                 saw_table_decl = False
+                table_header_line = False
             elif saw_table_decl:
                 # First non-empty non-comment line after Table decl = header
                 table_header_line = True

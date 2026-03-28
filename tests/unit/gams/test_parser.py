@@ -123,7 +123,7 @@ def test_model_references_unknown_equation():
         Solve m using NLP minimizing z;
         """)
 
-    with pytest.raises(parser.ParserSemanticError, match="unknown equation 'missing'"):
+    with pytest.raises(parser.ParserSemanticError, match="unknown equation or model 'missing'"):
         parser.parse_model_text(text)
 
 

@@ -7283,7 +7283,7 @@ class _ModelBuilder:
                     eq_name not in self.model.equations
                     and eq_name.lower() not in self.model.model_equation_map
                 ):
-                    raise self._error(f"Model references unknown equation '{eq_name}'")
+                    raise self._error(f"Model references unknown equation or model '{eq_name}'")
 
         # Note: We don't validate that model_name matches declared_model because:
         # 1. Multi-model declarations can declare multiple models, but we only store the first
