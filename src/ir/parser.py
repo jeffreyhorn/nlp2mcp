@@ -3593,20 +3593,26 @@ class _ModelBuilder:
                     refs.append(_token_text(child.children[0]))
                 elif child.data == "model_all_except":
                     has_all_except = True
-                    # Note: exclusion IDs are not yet extracted — `/ all - eq1 /`
-                    # is treated as `/ all /`. True exclusion would require
-                    # collecting the subtracted IDs and filtering them out of
-                    # the equation list during model resolution.
+                    # Collect exclusion IDs for `/ all - eq1 ... /` semantics.
+                    # The caller interprets (refs, uses_all=True) as
+                    # "all equations except refs".
+                    for grandchild in child.children:
+                        if isinstance(grandchild, Token) and grandchild.type == "ID":
+                            refs.append(_token_text(grandchild))
                 elif child.data == "model_composition":
                     # / m + mn / — add both model names as refs
                     for tok in child.children:
                         if isinstance(tok, Token):
                             refs.append(_token_text(tok))
                 elif child.data == "model_subtraction":
-                    # Model subtraction (m - n) cannot be implemented with flat
-                    # equation-name lists. For now, treat both names as model
-                    # references, so their equations are effectively unioned during
-                    # model resolution (an approximation of true subtraction).
+                    # Model subtraction (m - n) requires set-difference
+                    # semantics that cannot be represented with flat
+                    # equation-name lists. Log warning and treat as union.
+                    import logging
+
+                    logging.getLogger(__name__).warning(
+                        "Model subtraction (m - n) not fully supported; " "treating as union"
+                    )
                     for tok in child.children:
                         if isinstance(tok, Token):
                             refs.append(_token_text(tok))
@@ -3638,7 +3644,12 @@ class _ModelBuilder:
         self.model.model_uses_all = uses_all
         # Issue #1033: Store per-model equation list
         if uses_all:
-            self.model.model_equation_map[name.lower()] = list(self.model.equations.keys())
+            all_eqs = list(self.model.equations.keys())
+            if refs:
+                # `/ all - eq1 - eq2 /` — exclude listed equations
+                excluded = {r.lower() for r in refs}
+                all_eqs = [e for e in all_eqs if e.lower() not in excluded]
+            self.model.model_equation_map[name.lower()] = all_eqs
         else:
             self.model.model_equation_map[name.lower()] = refs
 

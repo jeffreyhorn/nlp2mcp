@@ -9,16 +9,22 @@ class TestSubcatL:
     def test_model_all_except_single(self):
         """Test model with single exclusion: Model m / all - eq1 /;"""
         source = """
+        Variables x;
         Equations eq1, eq2;
+        eq1.. x =e= 0;
+        eq2.. x =e= 1;
         Model m / all - eq1 /;
         """
         result = parse_text(source)
         assert result is not None
-        # Verify IR builder sets model_uses_all flag
+        # Verify IR builder sets model_uses_all flag and collects exclusions
         ir = parse_model_text(source)
         assert ir.declared_model == "m"
-        assert ir.model_equations == []
+        assert ir.model_equations == ["eq1"]  # excluded IDs
         assert ir.model_uses_all is True
+        # model_equation_map should have all equations minus excluded
+        assert "eq1" not in ir.model_equation_map["m"]
+        assert "eq2" in ir.model_equation_map["m"]
 
     def test_model_all_except_multiple(self):
         """Test model with multiple exclusions: Model m / all - eq1 - eq2 /;"""
