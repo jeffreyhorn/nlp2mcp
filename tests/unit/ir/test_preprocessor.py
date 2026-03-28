@@ -2036,6 +2036,10 @@ solve m2 using nlp minimizing obj;
         assert "m1" in refs
         assert "eq2" in refs
 
+        # Verify that the solved model's equation list expands model references.
+        solved_equations = model.get_solved_model_equations()
+        assert solved_equations == ["eq1", "objdef", "eq2"]
+
 
 class TestTableColumnGroupExpansion:
     """Issue #896: Expand (a,b,c) column groups in table headers."""
