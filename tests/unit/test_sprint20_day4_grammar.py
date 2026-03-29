@@ -20,7 +20,7 @@ class TestSubcatL:
         # Verify IR builder sets model_uses_all flag and collects exclusions
         ir = parse_model_text(source)
         assert ir.declared_model == "m"
-        assert ir.model_equations == ["eq1"]  # excluded IDs
+        assert ir.model_equations == []  # empty for uses_all (exclusions in map)
         assert ir.model_uses_all is True
         # model_equation_map should have all equations minus excluded
         assert "eq1" not in ir.model_equation_map["m"]

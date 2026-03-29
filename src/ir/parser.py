@@ -3641,7 +3641,10 @@ class _ModelBuilder:
 
         refs, uses_all = self._extract_model_refs(ref_list)
         self.model.declared_model = name
-        self.model.model_equations = refs
+        # Keep model_equations empty for uses_all models (exclusions are
+        # applied in model_equation_map). This prevents get_solved_model_equations()
+        # from returning the excluded IDs as the equation list.
+        self.model.model_equations = [] if uses_all else refs
         self.model.model_uses_all = uses_all
         # Issue #1033: Store per-model equation list
         if uses_all:
