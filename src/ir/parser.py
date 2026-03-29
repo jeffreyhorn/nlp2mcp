@@ -3708,9 +3708,11 @@ class _ModelBuilder:
             if item_ref_list is not None:
                 item_refs, item_uses_all = self._extract_model_refs(item_ref_list)
                 if item_uses_all:
-                    self.model.model_equation_map[item_name.lower()] = list(
-                        self.model.equations.keys()
-                    )
+                    all_eqs = list(self.model.equations.keys())
+                    if item_refs:
+                        excluded = {r.lower() for r in item_refs}
+                        all_eqs = [e for e in all_eqs if e.lower() not in excluded]
+                    self.model.model_equation_map[item_name.lower()] = all_eqs
                 else:
                     self.model.model_equation_map[item_name.lower()] = item_refs
             else:
@@ -3725,7 +3727,8 @@ class _ModelBuilder:
         )
         if ref_list is not None:
             refs, uses_all = self._extract_model_refs(ref_list)
-            self.model.model_equations = refs
+            # Keep model_equations empty for uses_all (exclusions in map)
+            self.model.model_equations = [] if uses_all else refs
             self.model.model_uses_all = uses_all
         else:
             self.model.model_equations = []
