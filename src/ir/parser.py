@@ -3652,6 +3652,14 @@ class _ModelBuilder:
             if refs:
                 # `/ all - eq1 - eq2 /` — exclude listed equations
                 excluded = {r.lower() for r in refs}
+                known = {e.lower() for e in all_eqs}
+                unknown = excluded - known
+                if unknown:
+                    logger.warning(
+                        "Model '%s' excludes unknown equation(s): %s",
+                        name,
+                        ", ".join(sorted(unknown)),
+                    )
                 all_eqs = [e for e in all_eqs if e.lower() not in excluded]
             self.model.model_equation_map[name.lower()] = all_eqs
         else:
