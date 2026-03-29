@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 import sys
@@ -61,6 +62,8 @@ from .symbols import (
     VariableDef,
     VarKind,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ParserSemanticError(ValueError):
@@ -3602,19 +3605,17 @@ class _ModelBuilder:
                 elif child.data == "model_composition":
                     # / m + mn / — add both model names as refs
                     for tok in child.children:
-                        if isinstance(tok, Token):
+                        if isinstance(tok, Token) and tok.type == "ID":
                             refs.append(_token_text(tok))
                 elif child.data == "model_subtraction":
                     # Model subtraction (m - n) requires set-difference
                     # semantics that cannot be represented with flat
                     # equation-name lists. Log warning and treat as union.
-                    import logging
-
-                    logging.getLogger(__name__).warning(
+                    logger.warning(
                         "Model subtraction (m - n) not fully supported; " "treating as union"
                     )
                     for tok in child.children:
-                        if isinstance(tok, Token):
+                        if isinstance(tok, Token) and tok.type == "ID":
                             refs.append(_token_text(tok))
             elif isinstance(child, Token) and child.type == "ID":
                 # Backward compatibility: direct ID tokens
