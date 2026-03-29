@@ -55,3 +55,9 @@ Same as ganges — sparsity-aware Jacobian, increased timeout, or instance thres
 - ganges: Parent model, same timeout
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, iswnm, nebrazil: Same timeout category
+
+---
+
+## Progress (2026-03-29)
+
+LP fast path implemented (PR #1152) but does not apply to this NLP model. The timeout requires either a sparsity-aware Jacobian or increased timeout limits.

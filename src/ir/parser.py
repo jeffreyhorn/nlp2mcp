@@ -3521,17 +3521,20 @@ class _ModelBuilder:
         # Grammar variant 2: "Solve"i ID "using"i solver_type obj_sense ID SEMI
         #   Children: [ID, solver_type, obj_sense, ID, SEMI]
 
-        # Skip solver_type (Tree) or bare MCP_CNS_SOLVER token (no-objective variant)
+        # Extract solver_type (Tree) or bare MCP_CNS_SOLVER token (no-objective variant)
+        solver_type_str: str | None = None
         if idx < len(node.children):
             child = node.children[idx]
             if isinstance(child, Tree) and child.data == "solver_type":
                 # Check if the solver_type is MCP/CNS
                 if child.children and isinstance(child.children[0], Token):
+                    solver_type_str = str(child.children[0]).upper()
                     if child.children[0].type == "MCP_CNS_SOLVER":
                         is_mcp_cns = True
                 idx += 1
             elif isinstance(child, Token) and child.type == "MCP_CNS_SOLVER":
                 is_mcp_cns = True
+                solver_type_str = str(child).upper()
                 idx += 1
 
         # Look for obj_sense
@@ -3544,12 +3547,18 @@ class _ModelBuilder:
             sense = ObjSense.MIN if sense_token.type == "MINIMIZING_K" else ObjSense.MAX
             idx += 1
 
-        # Skip solver_type if it appears after obj_sense
+        # Capture solver_type if it appears after obj_sense
         if (
             idx < len(node.children)
             and isinstance(node.children[idx], Tree)
             and node.children[idx].data == "solver_type"
         ):
+            if (
+                solver_type_str is None
+                and node.children[idx].children
+                and isinstance(node.children[idx].children[0], Token)
+            ):
+                solver_type_str = str(node.children[idx].children[0]).upper()
             idx += 1
 
         if (
@@ -3558,11 +3567,25 @@ class _ModelBuilder:
             and node.children[idx].type == "ID"
         ):
             objvar = _token_text(node.children[idx])
+            idx += 1
+
+        # Capture solver_type if it appears after objvar (variant 1/2 in grammar)
+        if (
+            solver_type_str is None
+            and idx < len(node.children)
+            and isinstance(node.children[idx], Tree)
+            and node.children[idx].data == "solver_type"
+            and node.children[idx].children
+            and isinstance(node.children[idx].children[0], Token)
+        ):
+            solver_type_str = str(node.children[idx].children[0]).upper()
+
         if objvar:
             # Issue #1154: Store all non-MCP solve info. After parsing,
             # the last one wins (original behavior). The reconciliation
             # with model_equations happens in normalize_model().
             self.model.model_name = name
+            self.model.solve_type = solver_type_str
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
             # Track per-model objectives for later reconciliation
             self.model._solve_objectives[name.lower()] = ObjectiveIR(sense=sense, objvar=objvar)

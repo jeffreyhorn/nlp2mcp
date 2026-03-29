@@ -73,3 +73,9 @@ Despite having only 6 variables and 3 equations, the model uses dense 2-dimensio
 
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, ganges, gangesx, iswnm, nebrazil: Same timeout category
+
+---
+
+## Progress (2026-03-29)
+
+LP fast path implemented (PR #1152) but does not apply to this QCP model. The timeout requires either a sparsity-aware Jacobian or increased timeout limits.

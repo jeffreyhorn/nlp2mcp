@@ -80,3 +80,11 @@ The model has 11 variables and 11 equations but with multi-dimensional domains (
 
 - #885 (sarf): Same timeout pattern
 - dinam, ferts, ganges, gangesx, iswnm, nebrazil: Same LP/NLP timeout category
+
+---
+
+## Progress (2026-03-29)
+
+**Translation timeout: FIXED** by LP fast path (PR #1152). Added `solve_type` field to ModelIR and use basic simplification instead of advanced for LP models, reducing differentiation overhead.
+
+Translation now completes successfully. However, the generated MCP has secondary compilation errors ($140 unknown symbol, $149/$171 dimension/domain issues) that are separate blocking issues requiring further investigation.

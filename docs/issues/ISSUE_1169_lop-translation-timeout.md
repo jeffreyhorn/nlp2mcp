@@ -46,3 +46,9 @@ This is part of the broader LP timeout family (L2 in ISSUE_FIX_OPPORTUNITIES.md)
 
 - #926–#933: Translation timeouts (LP/NLP) — same class of issue
 - L2 in Sprint 23 ISSUE_FIX_OPPORTUNITIES.md
+
+---
+
+## Progress (2026-03-29)
+
+LP fast path implemented (PR #1152, basic simplification for LP models) but does not resolve this model's timeout. The differentiation itself (not simplification) is the bottleneck — despite the model being LP, the expression structure creates too many variable/equation instance combinations. Needs a coefficient extraction approach that handles sum-bound indices, or a sparsity-aware Jacobian.

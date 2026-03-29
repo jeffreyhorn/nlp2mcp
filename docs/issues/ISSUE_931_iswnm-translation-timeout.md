@@ -68,3 +68,9 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 - indus: Related model (same Indus basin system)
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, ganges, gangesx, nebrazil: Same LP/NLP timeout category
+
+---
+
+## Progress (2026-03-29)
+
+LP fast path implemented (PR #1152, basic simplification for LP models) but does not resolve this model's timeout. The differentiation itself (not simplification) is the bottleneck — the 3-dimensional variable `f(n,n1,m)` over large network sets creates too many variable/equation instances. Needs a coefficient extraction approach that handles sum-bound indices, or a sparsity-aware Jacobian.
