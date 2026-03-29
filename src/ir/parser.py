@@ -3652,8 +3652,8 @@ class _ModelBuilder:
             if refs:
                 # `/ all - eq1 - eq2 /` — exclude listed equations
                 excluded = {r.lower() for r in refs}
-                known = {e.lower() for e in all_eqs}
-                unknown = excluded - known
+                # Use _declared_equations (includes declared-but-not-yet-defined)
+                unknown = excluded - self._declared_equations
                 if unknown:
                     raise self._error(
                         f"Model '{name}' excludes unknown equation(s): "
@@ -3710,8 +3710,8 @@ class _ModelBuilder:
                     all_eqs = list(self.model.equations.keys())
                     if item_refs:
                         excluded = {r.lower() for r in item_refs}
-                        known = {e.lower() for e in all_eqs}
-                        unknown = excluded - known
+                        # Use _declared_equations (includes declared-but-not-yet-defined)
+                        unknown = excluded - self._declared_equations
                         if unknown:
                             raise self._error(
                                 f"Model '{item_name}' excludes unknown equation(s): "
