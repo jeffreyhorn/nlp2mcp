@@ -16,7 +16,7 @@ The ps5_s_mn model uses a `loop(t, ...)` with embedded `solve` statements that p
 
 ## Fix
 
-The Issue #917 fix in `src/emit/original_symbols.py` (lines 858-864) already handles this case: parameters with no values AND no expressions are skipped during emission. The problematic parameters (`Util_lic`, `Util_lic2`, `MN_lic`, `MN_lic2`, `x_lic`, `x_lic2`) are no longer emitted in the MCP.
+The Issue #917 fix in the `emit_original_parameters` logic in `src/emit/original_symbols.py` already handles this case: parameters with no values AND no expressions are skipped during emission. The problematic parameters (`Util_lic`, `Util_lic2`, `MN_lic`, `MN_lic2`, `x_lic`, `x_lic2`) are no longer emitted in the MCP.
 
 **Results:**
 - Parse: OK
