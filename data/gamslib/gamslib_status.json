@@ -28,9 +28,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:14.015996+00:00",
+        "parse_date": "2026-03-25T01:58:10.292705+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1742,
+        "parse_time_seconds": 1.7549,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -104,9 +104,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:25.128709+00:00",
+        "parse_date": "2026-03-25T01:58:23.158148+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.7886,
+        "parse_time_seconds": 12.779,
         "variables_count": 18,
         "equations_count": 14
       },
@@ -171,9 +171,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:37.151821+00:00",
+        "parse_date": "2026-03-25T01:58:25.286273+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4383,
+        "parse_time_seconds": 2.1249,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -290,9 +290,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:40.242446+00:00",
+        "parse_date": "2026-03-25T01:58:26.201184+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6206,
+        "parse_time_seconds": 0.912,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -390,9 +390,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:42.927897+00:00",
+        "parse_date": "2026-03-25T01:58:27.231582+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7336,
+        "parse_time_seconds": 1.0273,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -466,9 +466,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:45.585984+00:00",
+        "parse_date": "2026-03-25T01:58:27.789833+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3816,
+        "parse_time_seconds": 0.5552,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -563,9 +563,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:48.550904+00:00",
+        "parse_date": "2026-03-25T01:58:29.803434+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3219,
+        "parse_time_seconds": 2.0106,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -640,9 +640,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:52.093972+00:00",
+        "parse_date": "2026-03-25T01:58:31.349812+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0318,
+        "parse_time_seconds": 1.5436,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -738,9 +738,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:55.357285+00:00",
+        "parse_date": "2026-03-25T01:58:32.873265+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9996,
+        "parse_time_seconds": 1.5196,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -805,9 +805,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:25:59.061461+00:00",
+        "parse_date": "2026-03-25T01:58:33.775699+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5965,
+        "parse_time_seconds": 0.8992,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -881,9 +881,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:26:14.713211+00:00",
+        "parse_date": "2026-03-25T01:58:54.438911+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 13.7681,
+        "parse_time_seconds": 20.6189,
         "variables_count": 38,
         "equations_count": 34
       },
@@ -948,9 +948,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:26:32.702780+00:00",
+        "parse_date": "2026-03-25T01:58:55.346921+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.594,
+        "parse_time_seconds": 0.905,
         "variables_count": 3,
         "equations_count": 6
       },
@@ -1015,9 +1015,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:26:44.965945+00:00",
+        "parse_date": "2026-03-25T01:58:55.914947+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3454,
+        "parse_time_seconds": 0.565,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -1091,9 +1091,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:27:10.185389+00:00",
+        "parse_date": "2026-03-25T01:58:56.488432+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3729,
+        "parse_time_seconds": 0.57,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1167,9 +1167,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:27:20.644846+00:00",
+        "parse_date": "2026-03-25T01:59:09.220637+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.3929,
+        "parse_time_seconds": 12.7286,
         "variables_count": 21,
         "equations_count": 21
       },
@@ -1234,9 +1234,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:27:38.159816+00:00",
+        "parse_date": "2026-03-25T01:59:18.900157+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.2969,
+        "parse_time_seconds": 9.6758,
         "variables_count": 11,
         "equations_count": 16
       },
@@ -1301,9 +1301,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:27:57.300583+00:00",
+        "parse_date": "2026-03-25T01:59:19.577684+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4636,
+        "parse_time_seconds": 0.674,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1368,9 +1368,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:02.521830+00:00",
+        "parse_date": "2026-03-25T01:59:21.026772+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.058,
+        "parse_time_seconds": 1.4461,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -1468,9 +1468,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:05.283610+00:00",
+        "parse_date": "2026-03-25T01:59:21.689386+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4239,
+        "parse_time_seconds": 0.6595,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1544,9 +1544,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:09.030552+00:00",
+        "parse_date": "2026-03-25T01:59:24.875494+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0288,
+        "parse_time_seconds": 3.1821,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1611,9 +1611,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:19.773255+00:00",
+        "parse_date": "2026-03-25T01:59:35.792639+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.4947,
+        "parse_time_seconds": 10.8764,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -1678,9 +1678,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:31.316213+00:00",
+        "parse_date": "2026-03-25T01:59:36.724811+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7301,
+        "parse_time_seconds": 0.9293,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -1778,9 +1778,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:28:34.603666+00:00",
+        "parse_date": "2026-03-25T01:59:38.611485+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.466,
+        "parse_time_seconds": 1.8827,
         "variables_count": 5,
         "equations_count": 2
       },
@@ -1834,9 +1834,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:31:04.944444+00:00",
+        "parse_date": "2026-03-25T01:59:39.063509+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3078,
+        "parse_time_seconds": 0.4471,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1910,9 +1910,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-03-24T22:31:08.653623+00:00",
+        "parse_date": "2026-03-25T01:59:41.383361+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6348,
+        "parse_time_seconds": 2.3166,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 219, column 1: Unexpected character: ')'\n  );\n  ^\n\nSuggestion: This character is not valid in this context"
@@ -1956,9 +1956,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:31:09.499777+00:00",
+        "parse_date": "2026-03-25T01:59:42.658035+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8436,
+        "parse_time_seconds": 1.2714,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -2023,9 +2023,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:31:13.335749+00:00",
+        "parse_date": "2026-03-25T01:59:45.601585+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9608,
+        "parse_time_seconds": 2.9403,
         "variables_count": 9,
         "equations_count": 8
       },
@@ -2123,9 +2123,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:32:20.484965+00:00",
+        "parse_date": "2026-03-25T02:01:23.228498+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 63.811,
+        "parse_time_seconds": 97.6211,
         "variables_count": 22,
         "equations_count": 19
       },
@@ -2190,9 +2190,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:34:02.957682+00:00",
+        "parse_date": "2026-03-25T02:01:26.426188+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.5185,
+        "parse_time_seconds": 3.1946,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -2287,9 +2287,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:34:12.266367+00:00",
+        "parse_date": "2026-03-25T02:01:36.780647+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.1261,
+        "parse_time_seconds": 10.3503,
         "variables_count": 31,
         "equations_count": 29
       },
@@ -2354,9 +2354,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:34:47.518738+00:00",
+        "parse_date": "2026-03-25T02:02:14.029656+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 26.0934,
+        "parse_time_seconds": 37.2038,
         "variables_count": 11,
         "equations_count": 11
       },
@@ -2421,9 +2421,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:35:47.322661+00:00",
+        "parse_date": "2026-03-25T02:02:14.581428+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4099,
+        "parse_time_seconds": 0.5485,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -2554,9 +2554,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:35:53.546911+00:00",
+        "parse_date": "2026-03-25T02:02:18.660181+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.9848,
+        "parse_time_seconds": 4.0756,
         "variables_count": 12,
         "equations_count": 13
       },
@@ -2621,9 +2621,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:36:03.699891+00:00",
+        "parse_date": "2026-03-25T02:02:24.842530+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.7629,
+        "parse_time_seconds": 6.1785,
         "variables_count": 15,
         "equations_count": 10
       },
@@ -2688,9 +2688,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:36:09.609858+00:00",
+        "parse_date": "2026-03-25T02:02:25.828092+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6593,
+        "parse_time_seconds": 0.9825,
         "variables_count": 6,
         "equations_count": 7
       },
@@ -2899,9 +2899,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:36:27.006649+00:00",
+        "parse_date": "2026-03-25T02:02:43.499834+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 12.6982,
+        "parse_time_seconds": 17.6668,
         "variables_count": 11,
         "equations_count": 8
       },
@@ -2989,9 +2989,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:42:47.225314+00:00",
+        "parse_date": "2026-03-25T02:06:53.256589+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 244.7431,
+        "parse_time_seconds": 249.7479,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -3045,9 +3045,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:49:17.998944+00:00",
+        "parse_date": "2026-03-25T02:10:40.880635+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 240.5484,
+        "parse_time_seconds": 227.6155,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -3122,9 +3122,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:51:59.761046+00:00",
+        "parse_date": "2026-03-25T02:10:51.642547+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 11.5564,
+        "parse_time_seconds": 10.7576,
         "variables_count": 7,
         "equations_count": 11
       },
@@ -3178,9 +3178,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:54:31.902815+00:00",
+        "parse_date": "2026-03-25T02:10:53.635198+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0772,
+        "parse_time_seconds": 1.9883,
         "variables_count": 13,
         "equations_count": 12
       },
@@ -3266,9 +3266,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:17.782112+00:00",
+        "parse_date": "2026-03-25T02:10:59.673812+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.9357,
+        "parse_time_seconds": 5.9879,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3402,9 +3402,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:28.191435+00:00",
+        "parse_date": "2026-03-25T02:11:01.777274+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0211,
+        "parse_time_seconds": 2.1004,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -3478,9 +3478,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:34.189727+00:00",
+        "parse_date": "2026-03-25T02:11:04.266483+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0167,
+        "parse_time_seconds": 2.4846,
         "variables_count": 5,
         "equations_count": 7
       },
@@ -3545,9 +3545,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:39.145681+00:00",
+        "parse_date": "2026-03-25T02:11:05.570136+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1309,
+        "parse_time_seconds": 1.2983,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -3612,9 +3612,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:42.428098+00:00",
+        "parse_date": "2026-03-25T02:11:05.886515+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2849,
+        "parse_time_seconds": 0.3119,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -3688,9 +3688,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:45.380107+00:00",
+        "parse_date": "2026-03-25T02:11:06.582770+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6396,
+        "parse_time_seconds": 0.6914,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -3764,9 +3764,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:48.531473+00:00",
+        "parse_date": "2026-03-25T02:11:07.145363+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5599,
+        "parse_time_seconds": 0.5583,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -3840,9 +3840,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:51.690661+00:00",
+        "parse_date": "2026-03-25T02:11:07.666181+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.505,
+        "parse_time_seconds": 0.5166,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -3916,9 +3916,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:54.601004+00:00",
+        "parse_date": "2026-03-25T02:11:08.121005+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4097,
+        "parse_time_seconds": 0.4508,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3992,9 +3992,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:55:57.654168+00:00",
+        "parse_date": "2026-03-25T02:11:08.687912+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5563,
+        "parse_time_seconds": 0.563,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -4068,9 +4068,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:56:02.319340+00:00",
+        "parse_date": "2026-03-25T02:11:10.682531+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9053,
+        "parse_time_seconds": 1.9513,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -4168,9 +4168,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:56:08.051245+00:00",
+        "parse_date": "2026-03-25T02:11:12.471923+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7779,
+        "parse_time_seconds": 1.7859,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4244,9 +4244,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:56:48.454092+00:00",
+        "parse_date": "2026-03-25T02:11:46.592782+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 36.4636,
+        "parse_time_seconds": 34.1138,
         "variables_count": 27,
         "equations_count": 22
       },
@@ -4399,9 +4399,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:58:13.065649+00:00",
+        "parse_date": "2026-03-25T02:11:54.814718+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.3649,
+        "parse_time_seconds": 8.2185,
         "variables_count": 25,
         "equations_count": 25
       },
@@ -4475,9 +4475,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T22:58:53.396177+00:00",
+        "parse_date": "2026-03-25T02:12:25.607326+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 31.0145,
+        "parse_time_seconds": 30.7874,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -4552,9 +4552,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:01:23.985988+00:00",
+        "parse_date": "2026-03-25T02:12:26.093010+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5091,
+        "parse_time_seconds": 0.4829,
         "variables_count": 7,
         "equations_count": 4
       },
@@ -4628,9 +4628,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:01:27.877786+00:00",
+        "parse_date": "2026-03-25T02:12:27.406347+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3404,
+        "parse_time_seconds": 1.3094,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -4704,9 +4704,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:01:41.539331+00:00",
+        "parse_date": "2026-03-25T02:12:36.605357+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 9.4955,
+        "parse_time_seconds": 9.1958,
         "variables_count": 44,
         "equations_count": 38
       },
@@ -4792,9 +4792,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:01:54.701246+00:00",
+        "parse_date": "2026-03-25T02:12:37.582596+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0177,
+        "parse_time_seconds": 0.9731,
         "variables_count": 4,
         "equations_count": 8
       },
@@ -4868,9 +4868,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:00.490652+00:00",
+        "parse_date": "2026-03-25T02:12:40.228234+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.7317,
+        "parse_time_seconds": 2.6426,
         "variables_count": 15,
         "equations_count": 11
       },
@@ -4944,9 +4944,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:06.262907+00:00",
+        "parse_date": "2026-03-25T02:12:40.731555+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4721,
+        "parse_time_seconds": 0.4605,
         "variables_count": 5,
         "equations_count": 3
       },
@@ -5020,9 +5020,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:11.556396+00:00",
+        "parse_date": "2026-03-25T02:12:43.633028+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.8319,
+        "parse_time_seconds": 2.8981,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -5120,9 +5120,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:17.590758+00:00",
+        "parse_date": "2026-03-25T02:12:44.900221+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.24,
+        "parse_time_seconds": 1.2626,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5211,9 +5211,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:24.875360+00:00",
+        "parse_date": "2026-03-25T02:12:45.452261+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5423,
+        "parse_time_seconds": 0.548,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -5325,9 +5325,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:02:52.907468+00:00",
+        "parse_date": "2026-03-25T02:12:52.814076+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.014,
+        "parse_time_seconds": 7.3578,
         "variables_count": 27,
         "equations_count": 27
       },
@@ -5401,9 +5401,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:04.945567+00:00",
+        "parse_date": "2026-03-25T02:12:55.081625+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.4455,
+        "parse_time_seconds": 2.2635,
         "variables_count": 9,
         "equations_count": 11
       },
@@ -5477,9 +5477,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:10.850726+00:00",
+        "parse_date": "2026-03-25T02:12:55.985547+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9258,
+        "parse_time_seconds": 0.9003,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -5544,9 +5544,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:16.358727+00:00",
+        "parse_date": "2026-03-25T02:12:56.423194+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4434,
+        "parse_time_seconds": 0.4326,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5620,9 +5620,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:19.124707+00:00",
+        "parse_date": "2026-03-25T02:12:56.766966+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3687,
+        "parse_time_seconds": 0.3398,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5696,9 +5696,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:22.406435+00:00",
+        "parse_date": "2026-03-25T02:12:57.607096+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8841,
+        "parse_time_seconds": 0.8361,
         "variables_count": 7,
         "equations_count": 8
       },
@@ -5763,9 +5763,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:29.680472+00:00",
+        "parse_date": "2026-03-25T02:12:58.439072+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8237,
+        "parse_time_seconds": 0.793,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5860,9 +5860,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:03:33.435807+00:00",
+        "parse_date": "2026-03-25T02:12:59.337127+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9562,
+        "parse_time_seconds": 0.895,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -6033,9 +6033,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:04:15.918184+00:00",
+        "parse_date": "2026-03-25T02:13:37.314894+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 37.7811,
+        "parse_time_seconds": 37.9739,
         "variables_count": 17,
         "equations_count": 16
       },
@@ -6089,9 +6089,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:04:59.839406+00:00",
+        "parse_date": "2026-03-25T02:13:39.253457+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0759,
+        "parse_time_seconds": 1.935,
         "variables_count": 10,
         "equations_count": 11
       },
@@ -6165,9 +6165,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:05.057199+00:00",
+        "parse_date": "2026-03-25T02:13:39.618627+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4054,
+        "parse_time_seconds": 0.3621,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -6241,9 +6241,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:09.906705+00:00",
+        "parse_date": "2026-03-25T02:13:41.769318+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.4027,
+        "parse_time_seconds": 2.1452,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -6338,9 +6338,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:17.131345+00:00",
+        "parse_date": "2026-03-25T02:13:44.355848+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.9108,
+        "parse_time_seconds": 2.5831,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -6394,9 +6394,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:21.410401+00:00",
+        "parse_date": "2026-03-25T02:13:44.982702+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.701,
+        "parse_time_seconds": 0.6242,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -6515,9 +6515,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:25.068615+00:00",
+        "parse_date": "2026-03-25T02:13:45.696994+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7886,
+        "parse_time_seconds": 0.711,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -6591,9 +6591,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:28.159834+00:00",
+        "parse_date": "2026-03-25T02:13:46.122691+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4453,
+        "parse_time_seconds": 0.4215,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -6667,9 +6667,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:05:38.715674+00:00",
+        "parse_date": "2026-03-25T02:13:53.241804+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.8108,
+        "parse_time_seconds": 7.0813,
         "variables_count": 26,
         "equations_count": 26
       },
@@ -6764,9 +6764,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:06:09.570935+00:00",
+        "parse_date": "2026-03-25T02:14:13.520327+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 20.7466,
+        "parse_time_seconds": 20.2741,
         "variables_count": 29,
         "equations_count": 25
       },
@@ -6820,9 +6820,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:08:40.663501+00:00",
+        "parse_date": "2026-03-25T02:14:14.373683+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.996,
+        "parse_time_seconds": 0.8486,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -6917,9 +6917,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:08:50.708517+00:00",
+        "parse_date": "2026-03-25T02:14:20.524943+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.8088,
+        "parse_time_seconds": 6.1478,
         "variables_count": 15,
         "equations_count": 18
       },
@@ -7051,9 +7051,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:00.974568+00:00",
+        "parse_date": "2026-03-25T02:14:22.454549+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.3362,
+        "parse_time_seconds": 1.9262,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -7118,9 +7118,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:08.688938+00:00",
+        "parse_date": "2026-03-25T02:14:24.167124+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9876,
+        "parse_time_seconds": 1.7089,
         "variables_count": 11,
         "equations_count": 15
       },
@@ -7185,9 +7185,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:19.176439+00:00",
+        "parse_date": "2026-03-25T02:14:26.269277+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.5349,
+        "parse_time_seconds": 2.0987,
         "variables_count": 13,
         "equations_count": 13
       },
@@ -7261,9 +7261,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:25.520339+00:00",
+        "parse_date": "2026-03-25T02:14:27.408590+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4479,
+        "parse_time_seconds": 1.1355,
         "variables_count": 8,
         "equations_count": 5
       },
@@ -7328,9 +7328,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-03-24T23:09:30.511739+00:00",
+        "parse_date": "2026-03-25T02:14:28.164486+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0413,
+        "parse_time_seconds": 0.7527,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 125, column 53: Unexpected character: '+'\n  Model m_mn 'parts supply model w/ monotonicity' / m + mn /;\n                                                      ^\n\nSuggestion: This character is not valid in this context"
@@ -7374,9 +7374,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:32.731432+00:00",
+        "parse_date": "2026-03-25T02:14:29.927217+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.215,
+        "parse_time_seconds": 1.7575,
         "variables_count": 12,
         "equations_count": 9
       },
@@ -7471,9 +7471,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:38.902728+00:00",
+        "parse_date": "2026-03-25T02:14:30.775881+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9258,
+        "parse_time_seconds": 0.8092,
         "variables_count": 8,
         "equations_count": 7
       },
@@ -7568,9 +7568,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:09:52.758809+00:00",
+        "parse_date": "2026-03-25T02:14:38.643475+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.8435,
+        "parse_time_seconds": 7.8639,
         "variables_count": 5,
         "equations_count": 6
       },
@@ -7644,9 +7644,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:05.701240+00:00",
+        "parse_date": "2026-03-25T02:14:39.118476+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7523,
+        "parse_time_seconds": 0.472,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -7762,9 +7762,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:17.259973+00:00",
+        "parse_date": "2026-03-25T02:14:39.629308+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6756,
+        "parse_time_seconds": 0.5072,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -7838,9 +7838,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:22.453202+00:00",
+        "parse_date": "2026-03-25T02:14:41.095220+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0027,
+        "parse_time_seconds": 1.4632,
         "variables_count": 15,
         "equations_count": 12
       },
@@ -7914,9 +7914,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:27.143565+00:00",
+        "parse_date": "2026-03-25T02:14:41.713660+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7215,
+        "parse_time_seconds": 0.6149,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -7990,9 +7990,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:30.796172+00:00",
+        "parse_date": "2026-03-25T02:14:42.056808+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4344,
+        "parse_time_seconds": 0.3397,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -8087,9 +8087,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:36.266255+00:00",
+        "parse_date": "2026-03-25T02:14:44.132547+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.4778,
+        "parse_time_seconds": 2.0728,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -8163,9 +8163,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:44.989606+00:00",
+        "parse_date": "2026-03-25T02:14:47.163900+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.9508,
+        "parse_time_seconds": 3.0281,
         "variables_count": 6,
         "equations_count": 9
       },
@@ -8317,9 +8317,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:53.852148+00:00",
+        "parse_date": "2026-03-25T02:14:49.815158+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.9513,
+        "parse_time_seconds": 2.6465,
         "variables_count": 4,
         "equations_count": 7
       },
@@ -8394,9 +8394,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:10:59.481391+00:00",
+        "parse_date": "2026-03-25T02:14:50.162735+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3963,
+        "parse_time_seconds": 0.305,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8470,9 +8470,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:02.618727+00:00",
+        "parse_date": "2026-03-25T02:14:50.619538+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5087,
+        "parse_time_seconds": 0.4528,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8546,9 +8546,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:06.138645+00:00",
+        "parse_date": "2026-03-25T02:14:51.195247+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6393,
+        "parse_time_seconds": 0.5718,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8778,9 +8778,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:09.168382+00:00",
+        "parse_date": "2026-03-25T02:14:51.500729+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.345,
+        "parse_time_seconds": 0.3021,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -9166,9 +9166,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:14.367500+00:00",
+        "parse_date": "2026-03-25T02:14:53.914451+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.5608,
+        "parse_time_seconds": 2.4094,
         "variables_count": 4,
         "equations_count": 7
       },
@@ -9243,9 +9243,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:20.069729+00:00",
+        "parse_date": "2026-03-25T02:14:54.922658+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0449,
+        "parse_time_seconds": 1.0051,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -9364,9 +9364,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:37.932714+00:00",
+        "parse_date": "2026-03-25T02:14:59.191234+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.3466,
+        "parse_time_seconds": 4.2645,
         "variables_count": 20,
         "equations_count": 13
       },
@@ -9608,9 +9608,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:45.152663+00:00",
+        "parse_date": "2026-03-25T02:14:59.909130+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.741,
+        "parse_time_seconds": 0.7144,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -9675,9 +9675,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:11:55.543730+00:00",
+        "parse_date": "2026-03-25T02:15:07.859333+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.7563,
+        "parse_time_seconds": 7.9465,
         "variables_count": 27,
         "equations_count": 28
       },
@@ -9751,9 +9751,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:06.757762+00:00",
+        "parse_date": "2026-03-25T02:15:08.703316+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.88,
+        "parse_time_seconds": 0.841,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -9818,9 +9818,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:09.787886+00:00",
+        "parse_date": "2026-03-25T02:15:08.929676+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.205,
+        "parse_time_seconds": 0.1807,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -9894,9 +9894,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:12.529382+00:00",
+        "parse_date": "2026-03-25T02:15:09.473485+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.5616,
+        "parse_time_seconds": 0.5385,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -9970,9 +9970,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:16.980530+00:00",
+        "parse_date": "2026-03-25T02:15:11.322347+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.8228,
+        "parse_time_seconds": 1.8443,
         "variables_count": 13,
         "equations_count": 9
       },
@@ -10037,9 +10037,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:34.266667+00:00",
+        "parse_date": "2026-03-25T02:15:12.094482+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8859,
+        "parse_time_seconds": 0.7677,
         "variables_count": 6,
         "equations_count": 7
       },
@@ -10104,9 +10104,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:12:39.264916+00:00",
+        "parse_date": "2026-03-25T02:15:13.249267+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1291,
+        "parse_time_seconds": 1.1519,
         "variables_count": 8,
         "equations_count": 6
       },
@@ -10171,9 +10171,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:13:04.332505+00:00",
+        "parse_date": "2026-03-25T02:15:14.024303+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7815,
+        "parse_time_seconds": 0.7719,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -10238,9 +10238,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:13:07.933165+00:00",
+        "parse_date": "2026-03-25T02:15:14.864127+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8771,
+        "parse_time_seconds": 0.8345,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -10305,9 +10305,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:13:39.465844+00:00",
+        "parse_date": "2026-03-25T02:15:43.392247+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 28.9247,
+        "parse_time_seconds": 28.5211,
         "variables_count": 21,
         "equations_count": 40
       },
@@ -10372,9 +10372,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:14:20.820750+00:00",
+        "parse_date": "2026-03-25T02:15:58.347310+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 13.4133,
+        "parse_time_seconds": 14.9517,
         "variables_count": 10,
         "equations_count": 16
       },
@@ -10470,9 +10470,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:16:52.380494+00:00",
+        "parse_date": "2026-03-25T02:16:00.185623+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4572,
+        "parse_time_seconds": 1.8342,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -10547,9 +10547,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:05.922183+00:00",
+        "parse_date": "2026-03-25T02:16:13.876239+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 10.9512,
+        "parse_time_seconds": 13.6511,
         "variables_count": 15,
         "equations_count": 22
       },
@@ -10614,9 +10614,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:24.838004+00:00",
+        "parse_date": "2026-03-25T02:16:15.023417+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9148,
+        "parse_time_seconds": 1.1423,
         "variables_count": 7,
         "equations_count": 8
       },
@@ -10711,9 +10711,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:28.021315+00:00",
+        "parse_date": "2026-03-25T02:16:15.852897+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7122,
+        "parse_time_seconds": 0.8235,
         "variables_count": 5,
         "equations_count": 4
       },
@@ -10787,9 +10787,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:31.730791+00:00",
+        "parse_date": "2026-03-25T02:16:17.324771+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.342,
+        "parse_time_seconds": 1.4689,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -10854,9 +10854,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:35.456642+00:00",
+        "parse_date": "2026-03-25T02:16:18.984500+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.322,
+        "parse_time_seconds": 1.6559,
         "variables_count": 8,
         "equations_count": 14
       },
@@ -10984,9 +10984,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:40.049110+00:00",
+        "parse_date": "2026-03-25T02:16:20.278260+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9897,
+        "parse_time_seconds": 1.289,
         "variables_count": 7,
         "equations_count": 7
       },
@@ -11060,9 +11060,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:43.361099+00:00",
+        "parse_date": "2026-03-25T02:16:21.275797+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7617,
+        "parse_time_seconds": 0.9918,
         "variables_count": 9,
         "equations_count": 6
       },
@@ -11160,9 +11160,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:47.464284+00:00",
+        "parse_date": "2026-03-25T02:16:23.343258+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6683,
+        "parse_time_seconds": 2.0638,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -11227,9 +11227,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:17:51.671018+00:00",
+        "parse_date": "2026-03-25T02:16:23.903297+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.458,
+        "parse_time_seconds": 0.5567,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -11294,9 +11294,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:18:05.605189+00:00",
+        "parse_date": "2026-03-25T02:16:24.739102+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6875,
+        "parse_time_seconds": 0.8327,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -11350,9 +11350,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:20:41.832357+00:00",
+        "parse_date": "2026-03-25T02:16:32.512660+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.1212,
+        "parse_time_seconds": 7.7309,
         "variables_count": 25,
         "equations_count": 25
       },
@@ -11447,9 +11447,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:20:52.959785+00:00",
+        "parse_date": "2026-03-25T02:16:35.791310+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6198,
+        "parse_time_seconds": 3.2753,
         "variables_count": 8,
         "equations_count": 11
       },
@@ -11514,9 +11514,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:21:53.721122+00:00",
+        "parse_date": "2026-03-25T02:16:41.205515+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.801,
+        "parse_time_seconds": 5.4093,
         "variables_count": 12,
         "equations_count": 16
       },
@@ -11581,9 +11581,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:22:49.439781+00:00",
+        "parse_date": "2026-03-25T02:16:43.306920+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.2955,
+        "parse_time_seconds": 2.0972,
         "variables_count": 11,
         "equations_count": 10
       },
@@ -11699,9 +11699,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:22:55.535688+00:00",
+        "parse_date": "2026-03-25T02:16:44.915136+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.633,
+        "parse_time_seconds": 1.6024,
         "variables_count": 6,
         "equations_count": 3
       },
@@ -11766,9 +11766,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:24:00.611022+00:00",
+        "parse_date": "2026-03-25T02:16:45.227069+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2677,
+        "parse_time_seconds": 0.3085,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -11887,9 +11887,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:24:02.833644+00:00",
+        "parse_date": "2026-03-25T02:16:45.646855+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3171,
+        "parse_time_seconds": 0.415,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -11963,9 +11963,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:24:06.120192+00:00",
+        "parse_date": "2026-03-25T02:16:47.415394+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3903,
+        "parse_time_seconds": 1.765,
         "variables_count": 6,
         "equations_count": 11
       },
@@ -12060,9 +12060,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:24:09.664586+00:00",
+        "parse_date": "2026-03-25T02:16:48.215767+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6367,
+        "parse_time_seconds": 0.7961,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -12136,9 +12136,9 @@
       },
       "nlp2mcp_parse": {
         "status": "failure",
-        "parse_date": "2026-03-24T23:24:15.710409+00:00",
+        "parse_date": "2026-03-25T02:16:52.963164+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.7392,
+        "parse_time_seconds": 4.7422,
         "error": {
           "category": "lexer_invalid_char",
           "message": "Error: Parse error at line 201, column 54: Unexpected character: 's'\n  wheat  corn  rye  barley  (chickpea,drybean,lentil)  sugarbeet  alfalfa  fodder\n                                                       ^\n\nSuggestion: This character is not valid in this context"
@@ -12182,9 +12182,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:24:21.117006+00:00",
+        "parse_date": "2026-03-25T02:16:59.629689+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.3702,
+        "parse_time_seconds": 6.6242,
         "variables_count": 8,
         "equations_count": 11
       },
@@ -12238,9 +12238,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:26:57.655457+00:00",
+        "parse_date": "2026-03-25T02:17:07.759923+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.4923,
+        "parse_time_seconds": 8.1253,
         "variables_count": 28,
         "equations_count": 28
       },
@@ -12305,9 +12305,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:27:07.844831+00:00",
+        "parse_date": "2026-03-25T02:17:09.213910+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2834,
+        "parse_time_seconds": 1.451,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -12381,9 +12381,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:27:10.866524+00:00",
+        "parse_date": "2026-03-25T02:17:09.602715+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.3424,
+        "parse_time_seconds": 0.3856,
         "variables_count": 6,
         "equations_count": 6
       },
@@ -12457,9 +12457,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:27:17.682723+00:00",
+        "parse_date": "2026-03-25T02:17:15.441020+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.036,
+        "parse_time_seconds": 5.8322,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -12533,9 +12533,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:27:25.097248+00:00",
+        "parse_date": "2026-03-25T02:17:15.742269+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.2577,
+        "parse_time_seconds": 0.2972,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -12609,9 +12609,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-03-24T23:27:28.479772+00:00",
+        "parse_date": "2026-03-25T02:17:17.542306+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5371,
+        "parse_time_seconds": 1.7945,
         "variables_count": 8,
         "equations_count": 6
       },

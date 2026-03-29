@@ -392,14 +392,19 @@ def parse_text(source: str) -> Tree:
         raise enhanced_error from e
 
 
-def parse_file(path: str | Path) -> Tree:
-    """Parse a GAMS source file and return the parse tree.
+def parse_tree(path: str | Path) -> Tree:
+    """Parse a GAMS source file and return the parse tree (no IR building).
 
     This function preprocesses the file (expanding includes, macros, and
-    stripping unsupported directives) before parsing.
+    stripping unsupported directives) before parsing. For a full ModelIR,
+    use ``parse_model_file()`` instead.
     """
     preprocessed = preprocess_gams_file(path)
     return parse_text(preprocessed)
+
+
+# Backward-compatible alias — prefer parse_tree() for new code.
+parse_file = parse_tree
 
 
 def parse_model_text(source: str) -> ModelIR:

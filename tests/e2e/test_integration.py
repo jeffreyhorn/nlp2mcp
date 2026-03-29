@@ -82,7 +82,7 @@ import pytest
 #   https://github.com/jeffreyhorn/nlp2mcp/issues/20
 from src.ad.api import compute_derivatives
 from src.ir.normalize import normalize_model
-from src.ir.parser import parse_file, parse_model_file
+from src.ir.parser import parse_model_file, parse_tree
 
 pytestmark = pytest.mark.e2e
 
@@ -721,27 +721,27 @@ class TestGAMSLibParsing:
 
     def test_circle_gms_parses(self):
         """Test circle.gms parses successfully (preprocessor + quick wins)."""
-        tree = parse_file(self.GAMSLIB_DIR / "circle.gms")
+        tree = parse_tree(self.GAMSLIB_DIR / "circle.gms")
         assert tree is not None
 
     def test_trig_gms_parses(self):
         """Test trig.gms parses successfully (multiple scalars)."""
-        tree = parse_file(self.GAMSLIB_DIR / "trig.gms")
+        tree = parse_tree(self.GAMSLIB_DIR / "trig.gms")
         assert tree is not None
 
     def test_mathopt1_gms_parses(self):
         """Test mathopt1.gms parses successfully (Models keyword)."""
-        tree = parse_file(self.GAMSLIB_DIR / "mathopt1.gms")
+        tree = parse_tree(self.GAMSLIB_DIR / "mathopt1.gms")
         assert tree is not None
 
     def test_rbrock_gms_parses(self):
         """Test rbrock.gms parses successfully (existing features)."""
-        tree = parse_file(self.GAMSLIB_DIR / "rbrock.gms")
+        tree = parse_tree(self.GAMSLIB_DIR / "rbrock.gms")
         assert tree is not None
 
     def test_mhw4d_gms_parses(self):
         """Test mhw4d.gms parses successfully (existing features)."""
-        tree = parse_file(self.GAMSLIB_DIR / "mhw4d.gms")
+        tree = parse_tree(self.GAMSLIB_DIR / "mhw4d.gms")
         assert tree is not None
 
     @pytest.mark.slow
@@ -764,7 +764,7 @@ class TestGAMSLibParsing:
         failed_models = []
         for model in models:
             try:
-                parse_file(self.GAMSLIB_DIR / model)
+                parse_tree(self.GAMSLIB_DIR / model)
                 passed_models.append(model)
             except Exception as e:
                 # Log failures for debugging

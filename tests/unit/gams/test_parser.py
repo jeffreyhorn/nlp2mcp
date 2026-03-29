@@ -15,7 +15,7 @@ from src.utils.errors import ParseError
 
 def test_simple_nlp_parses_into_program_tree():
     repo_root = Path(__file__).resolve().parents[3]
-    tree = parser.parse_file(repo_root / "examples" / "simple_nlp.gms")
+    tree = parser.parse_tree(repo_root / "examples" / "simple_nlp.gms")
     assert tree.data == "program"
     assert not list(tree.find_data("_ambig"))
 
