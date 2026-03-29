@@ -4,6 +4,7 @@
 **Model:** lop (GAMSlib SEQ=192, "Line Optimization")
 **Error category:** `lexer_invalid_char`
 **Error message:** `Unexpected character: 'S'` at line 208, column 1
+**Status:** FIXED (already resolved by prior grammar/parser improvements)
 
 ## Description
 
@@ -31,8 +32,11 @@ Set ll(s,s) 'starting point of each line' / #s.#s /;
 2. The `= no` assignment syntax (used to exclude elements) is not supported
 3. `abort$card(...)` with a dollar-condition on `abort` may also be unsupported
 
-## Fix Approach
+## Fix
 
-1. Verify which specific construct causes the first failure at line 208
-2. Add support for subset declarations with `#s.#s` notation if needed
-3. Add `= no` / `= yes` to set element assignment syntax in the grammar
+The parse error was already resolved by prior grammar and parser improvements in earlier sprints (subset declarations, `#s.#s` notation, `= no` assignment syntax). The model now parses successfully:
+
+- **Parse:** OK (18 sets, 9 variables, 12 equations)
+- **Translation:** Not applicable — lop uses LP/MIP solve types (`solve sp minimzing spobj using lp`, `solve lopdt maximizing obj using mip`), not NLP. MCP conversion is not applicable for this model type.
+
+No code changes required.
