@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 import sys
@@ -61,6 +62,8 @@ from .symbols import (
     VariableDef,
     VarKind,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ParserSemanticError(ValueError):
@@ -3593,6 +3596,27 @@ class _ModelBuilder:
                     refs.append(_token_text(child.children[0]))
                 elif child.data == "model_all_except":
                     has_all_except = True
+                    # Collect exclusion IDs for `/ all - eq1 ... /` semantics.
+                    # The caller interprets (refs, uses_all=True) as
+                    # "all equations except refs".
+                    for grandchild in child.children:
+                        if isinstance(grandchild, Token) and grandchild.type == "ID":
+                            refs.append(_token_text(grandchild))
+                elif child.data == "model_composition":
+                    # / m + mn / — add both model names as refs
+                    for tok in child.children:
+                        if isinstance(tok, Token) and tok.type == "ID":
+                            refs.append(_token_text(tok))
+                elif child.data == "model_subtraction":
+                    # Model subtraction (m - n) requires set-difference
+                    # semantics that cannot be represented with flat
+                    # equation-name lists. Log warning and treat as union.
+                    logger.warning(
+                        "Model subtraction (m - n) not fully supported; " "treating as union"
+                    )
+                    for tok in child.children:
+                        if isinstance(tok, Token) and tok.type == "ID":
+                            refs.append(_token_text(tok))
             elif isinstance(child, Token) and child.type == "ID":
                 # Backward compatibility: direct ID tokens
                 refs.append(_token_text(child))
@@ -3617,11 +3641,26 @@ class _ModelBuilder:
 
         refs, uses_all = self._extract_model_refs(ref_list)
         self.model.declared_model = name
-        self.model.model_equations = refs
+        # Keep model_equations empty for uses_all models (exclusions are
+        # applied in model_equation_map). This prevents get_solved_model_equations()
+        # from returning the excluded IDs as the equation list.
+        self.model.model_equations = [] if uses_all else refs
         self.model.model_uses_all = uses_all
         # Issue #1033: Store per-model equation list
         if uses_all:
-            self.model.model_equation_map[name.lower()] = list(self.model.equations.keys())
+            all_eqs = list(self.model.equations.keys())
+            if refs:
+                # `/ all - eq1 - eq2 /` — exclude listed equations
+                excluded = {r.lower() for r in refs}
+                # Use _declared_equations (includes declared-but-not-yet-defined)
+                unknown = excluded - self._declared_equations
+                if unknown:
+                    raise self._error(
+                        f"Model '{name}' excludes unknown equation(s): "
+                        f"{', '.join(sorted(unknown))}"
+                    )
+                all_eqs = [e for e in all_eqs if e.lower() not in excluded]
+            self.model.model_equation_map[name.lower()] = all_eqs
         else:
             self.model.model_equation_map[name.lower()] = refs
 
@@ -3668,9 +3707,18 @@ class _ModelBuilder:
             if item_ref_list is not None:
                 item_refs, item_uses_all = self._extract_model_refs(item_ref_list)
                 if item_uses_all:
-                    self.model.model_equation_map[item_name.lower()] = list(
-                        self.model.equations.keys()
-                    )
+                    all_eqs = list(self.model.equations.keys())
+                    if item_refs:
+                        excluded = {r.lower() for r in item_refs}
+                        # Use _declared_equations (includes declared-but-not-yet-defined)
+                        unknown = excluded - self._declared_equations
+                        if unknown:
+                            raise self._error(
+                                f"Model '{item_name}' excludes unknown equation(s): "
+                                f"{', '.join(sorted(unknown))}"
+                            )
+                        all_eqs = [e for e in all_eqs if e.lower() not in excluded]
+                    self.model.model_equation_map[item_name.lower()] = all_eqs
                 else:
                     self.model.model_equation_map[item_name.lower()] = item_refs
             else:
@@ -3685,7 +3733,8 @@ class _ModelBuilder:
         )
         if ref_list is not None:
             refs, uses_all = self._extract_model_refs(ref_list)
-            self.model.model_equations = refs
+            # Keep model_equations empty for uses_all (exclusions in map)
+            self.model.model_equations = [] if uses_all else refs
             self.model.model_uses_all = uses_all
         else:
             self.model.model_equations = []
@@ -7260,10 +7309,23 @@ class _ModelBuilder:
         for equation in self.model.equations.values():
             self._ensure_sets(equation.domain, f"equation '{equation.name}' domain")
 
-        if self.model.model_equations and not self.model.model_uses_all:
-            for eq_name in self.model.model_equations:
-                if eq_name not in self.model.equations:
-                    raise self._error(f"Model references unknown equation '{eq_name}'")
+        # Validate equation refs for the solved model.
+        # Prefer model_equation_map for the solved model when available,
+        # since model_equations can be stale with multiple Model statements.
+        solved_model_key = self.model.model_name.lower() if self.model.model_name else None
+        if solved_model_key and solved_model_key in self.model.model_equation_map:
+            refs_to_validate = self.model.model_equation_map[solved_model_key]
+        else:
+            # Fall back to model_equations when the solved model key is missing
+            # from model_equation_map or when no solved model is specified.
+            refs_to_validate = self.model.model_equations
+        if refs_to_validate:
+            for eq_name in refs_to_validate:
+                if (
+                    eq_name not in self.model.equations
+                    and eq_name.lower() not in self.model.model_equation_map
+                ):
+                    raise self._error(f"Model references unknown equation or model '{eq_name}'")
 
         # Note: We don't validate that model_name matches declared_model because:
         # 1. Multi-model declarations can declare multiple models, but we only store the first

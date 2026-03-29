@@ -39,8 +39,10 @@ Model m_mn 'parts supply model w/ monotonicity' / m + mn /;
 3. The `-` operator for model exclusion (e.g., `/ all - mn /`) is also likely unsupported
 4. Conditional `$if` directives inside model definitions add further complexity
 
-## Fix Approach
+## Fix Applied
 
-1. Extend the `model_defn` grammar rule to support `+` and `-` operators between model/equation names
-2. Handle `/ all - eq_name /` exclusion syntax
-3. Verify preprocessor handles `$if` directives inside model definition blocks
+1. Extended `model_ref` grammar rule with `model_composition` (`ID "+" ID`) and `model_subtraction` (`ID "-" ID`) alternatives
+2. Added handling in `_extract_model_refs()` to extract model names from composition/subtraction nodes
+3. Updated validation to allow model names (from `model_equation_map`) in addition to equation names in model ref lists
+
+partssupply now parses successfully (7 equations detected).

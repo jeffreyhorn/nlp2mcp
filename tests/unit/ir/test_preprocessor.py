@@ -2010,3 +2010,121 @@ class TestScenRedParmsStripping:
         source = "myParam('key') = 42;\n"
         result = strip_unsupported_directives(source)
         assert "myParam" in result
+
+
+class TestModelCompositionGrammar:
+    """Issue #892: Model composition syntax / m + mn /."""
+
+    def test_model_composition_parses(self):
+        """Model definition with + composition should parse."""
+        from src.ir.parser import parse_model_text
+
+        text = """
+Set i / a, b /;
+Variable x(i), obj;
+Equation eq1(i), eq2(i), objdef;
+eq1(i).. x(i) =g= 0;
+eq2(i).. x(i) =l= 1;
+objdef.. obj =e= sum(i, x(i));
+Model m1 / eq1, objdef /;
+Model m2 / m1 + eq2 /;
+solve m2 using nlp minimizing obj;
+"""
+        model = parse_model_text(text)
+        assert "m2" in model.model_equation_map
+        refs = model.model_equation_map["m2"]
+        assert "m1" in refs
+        assert "eq2" in refs
+
+        # Verify that the solved model's equation list expands model references.
+        solved_equations = model.get_solved_model_equations()
+        assert solved_equations == ["eq1", "objdef", "eq2"]
+
+
+class TestTableColumnGroupExpansion:
+    """Issue #896: Expand (a,b,c) column groups in table headers."""
+
+    def test_column_group_expanded(self):
+        """Parenthesized column groups in table header should be expanded."""
+        source = """Table eval(*,c)
+                 wheat  corn  (chickpea,drybean,lentil)  sugarbeet
+   product         .72   .78                                   .3 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        expanded = expand_table_column_groups(source)
+        assert "chickpea  drybean  lentil" in expanded
+        assert "(chickpea,drybean,lentil)" not in expanded
+
+    def test_data_rows_not_expanded(self):
+        """Parenthesized groups in data rows should NOT be expanded."""
+        source = """Table t(i,j)
+             a  b  c
+   (x,y)    1  2  3 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        expanded = expand_table_column_groups(source)
+        # The data row (x,y) should NOT be expanded — it's a row label
+        assert "(x,y)" in expanded
+
+    def test_spaced_column_group_preserves_alignment(self):
+        """Spaced column groups should be expanded without shifting later columns."""
+        source = """Table eval(*,c)
+                 wheat  corn  (chickpea, drybean, lentil)  sugarbeet
+   product         .72   .78                                   .3 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        # Capture the original column position of 'sugarbeet'
+        original_header = source.splitlines()[1]
+        original_sugarbeet_idx = original_header.index("sugarbeet")
+
+        expanded = expand_table_column_groups(source)
+
+        # Header line after expansion
+        expanded_header = expanded.splitlines()[1]
+        expanded_sugarbeet_idx = expanded_header.index("sugarbeet")
+
+        # Column group should be expanded and spaced form removed
+        assert "chickpea" in expanded_header
+        assert "drybean" in expanded_header
+        assert "lentil" in expanded_header
+        assert "(chickpea, drybean, lentil)" not in expanded
+
+        # Alignment of subsequent columns must be preserved
+        assert original_sugarbeet_idx == expanded_sugarbeet_idx
+
+    def test_four_item_column_group_preserves_alignment(self):
+        """4+ item groups should not grow beyond original width."""
+        source = """Table t(*,c)
+                 a  (b,c,d,e)  f
+   row1         1             2 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        original_header = source.splitlines()[1]
+        original_f_idx = original_header.index("  f")
+
+        expanded = expand_table_column_groups(source)
+        expanded_header = expanded.splitlines()[1]
+        expanded_f_idx = expanded_header.index("  f")
+
+        assert "b" in expanded_header
+        assert "c" in expanded_header
+        assert "d" in expanded_header
+        assert "e" in expanded_header
+        assert "(b,c,d,e)" not in expanded_header
+        # Alignment must be preserved
+        assert original_f_idx == expanded_f_idx
+
+    def test_table_domain_not_expanded(self):
+        """Table declaration domain (*,c) should NOT be expanded."""
+        source = """Table eval(*,c)
+             wheat  corn
+   product    .72   .78 ;
+"""
+        from src.ir.preprocessor import expand_table_column_groups
+
+        expanded = expand_table_column_groups(source)
+        assert "(*,c)" in expanded

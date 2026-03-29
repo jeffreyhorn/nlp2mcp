@@ -2760,6 +2760,100 @@ def join_multiline_table_row_parens(source: str) -> str:
     return "\n".join(result)
 
 
+def expand_table_column_groups(source: str) -> str:
+    """Expand parenthesized column groups in table headers.
+
+    Issue #896: GAMS allows `(a,b,c)` in table column headers to indicate
+    that all grouped columns share the same data values. For example:
+
+        Table eval(*,c)
+            wheat  corn  (chickpea,drybean,lentil)  sugarbeet
+        product   .72   .78                          .3
+
+    This expands to:
+
+        Table eval(*,c)
+            wheat  corn  chickpea  drybean  lentil  sugarbeet
+        product   .72   .78                                  .3
+
+    The function replaces `(id,id,...)` patterns in table header lines
+    with space-separated individual column names.
+
+    NOTE: This function only rewrites header lines. In GAMS, the intended
+    semantics are that a single data value beneath a grouped column header
+    is replicated across all expanded columns. As of now, that replication
+    is **not** performed here, nor by the downstream ``_handle_table_block()``
+    parser routine (see issue #896). Consequently, a single value token under
+    a grouped header will populate only the first expanded column while the
+    others default to 0.0 in the current implementation.
+    """
+    lines = source.split("\n")
+    result = []
+    in_table = False
+
+    table_header_line = False  # True only for the header line (first content after decl)
+    saw_table_decl = False
+    for line in lines:
+        stripped = line.strip()
+        if re.match(r"^table\b", stripped, re.IGNORECASE):
+            in_table = True
+            saw_table_decl = True
+            table_header_line = False
+        elif in_table and stripped and not stripped.startswith("*"):
+            if re.match(
+                r"^(?:" + "|".join(BLOCK_KEYWORDS) + r")\b",
+                stripped,
+                re.IGNORECASE,
+            ):
+                in_table = False
+                saw_table_decl = False
+                table_header_line = False
+            elif saw_table_decl:
+                # First non-empty non-comment line after Table decl = header
+                table_header_line = True
+                saw_table_decl = False
+            else:
+                table_header_line = False
+        else:
+            table_header_line = False
+
+        # Only expand groups on the table HEADER line (not data rows)
+        if table_header_line and "(" in line and "," in line:
+            # Expand (a,b,c) groups — but only in table context
+            # Don't expand function calls or index lists
+            def _expand_group(m: re.Match) -> str:
+                content = m.group(1)
+                # Only expand if ALL items are simple identifiers: letters/digits/_, '*', '.', or '-'
+                items = [i.strip() for i in content.split(",")]
+                if all(re.match(r"^['\"]?[\w*.-]+['\"]?$", i) for i in items):
+                    # Preserve original substring width to avoid shifting subsequent columns.
+                    original = m.group(0)
+                    # First try with two spaces between items.
+                    expanded = "  ".join(items)
+                    # If that would grow beyond the original width, switch to single spaces.
+                    if len(expanded) > len(original):
+                        expanded = " ".join(items)
+                    # If still too wide, fall back to replacing only punctuation with spaces,
+                    # which guarantees the same length as the original substring.
+                    if len(expanded) > len(original):
+                        expanded = re.sub(r"[(),]", " ", original)
+                    # If shorter, right-pad with spaces to preserve width.
+                    if len(expanded) < len(original):
+                        expanded = expanded + " " * (len(original) - len(expanded))
+                    return expanded
+                return m.group(0)
+
+            line = re.sub(r"\(([^()]+)\)", _expand_group, line)
+
+        # Detect end of table (semicolon outside quotes, escape-aware)
+        if in_table and _has_statement_ending_semicolon(line):
+            in_table = False
+
+        result.append(line)
+
+    return "\n".join(result)
+
+
 def expand_tuple_only_table_rows(source: str) -> str:
     """Expand (a,b,c) tuple-only row labels in tables to individual rows.
 
@@ -3380,8 +3474,10 @@ def _preprocess_content(content: str) -> str:
     13. Normalize multi-line continuations (add missing commas)
     14. Insert missing semicolons before block keywords
     15. Quote identifiers with special characters (-, +) in data blocks
+    15a. Join multi-line parenthesized table row labels onto one line
     15b. Expand tuple-only table rows: (a,b,c) vals → individual rows
     15c. Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
+    15d. Expand parenthesized column groups in table headers
     16. Normalize double commas to single commas
 
     Args:
@@ -3496,6 +3592,12 @@ def _preprocess_content(content: str) -> str:
     # Step 15c: Expand multi-segment tuple row labels: a.(b,c).d, a.b.(c*e), etc.
     # Must run after 15b (tuple-only labels already handled, this handles the rest)
     content = expand_multi_segment_tuple_row_labels(content)
+
+    # Step 15d: Expand parenthesized column groups in table headers
+    # e.g., (chickpea,drybean,lentil) → chickpea  drybean  lentil
+    # Must run AFTER multi-segment row label expansion (15c) to avoid
+    # rewriting (a,b) patterns in row labels.
+    content = expand_table_column_groups(content)
 
     # Step 16: Normalize double commas to single commas (Issue #565)
     # This must happen after all other data normalization

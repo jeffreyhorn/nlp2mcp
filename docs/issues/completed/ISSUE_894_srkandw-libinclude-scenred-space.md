@@ -4,7 +4,7 @@
 **Model:** srkandw (GAMSlib SEQ=353, "Stochastic Programming Scenario Reduction")
 **Error category:** `internal_error` (previously `lexer_invalid_char`)
 **Error message:** `Unknown set or alias 'time-2' referenced in sum indices` at line 61
-**Status:** PARTIALLY RESOLVED — `$libInclude` stripping works; remaining error is a parser bug with quoted set elements (#975)
+**Status:** FIXED — All blockers resolved. Model parses, generates MCP, solves optimally (MODEL STATUS 1).
 
 ## Description
 

@@ -484,6 +484,8 @@ model_decl_item: ID STRING? "/" model_ref_list "/"
 // Sprint 20 Day 4 (Subcat L): Support `all - eqname` exclusion and dotted model.attr references
 model_ref_list: model_ref (","? model_ref)*
 model_ref: "all"i ("-" ID)+                    -> model_all_except
+         | ID "+" ID                           -> model_composition
+         | ID "-" ID                           -> model_subtraction
          | ID "." ID                           -> model_dotted_ref
          | ID                                  -> model_simple_ref
 
