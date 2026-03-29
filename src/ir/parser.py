@@ -7300,8 +7300,17 @@ class _ModelBuilder:
         for equation in self.model.equations.values():
             self._ensure_sets(equation.domain, f"equation '{equation.name}' domain")
 
-        if self.model.model_equations and not self.model.model_uses_all:
-            for eq_name in self.model.model_equations:
+        # Validate equation refs for the solved model.
+        # Prefer model_equation_map for the solved model when available,
+        # since model_equations can be stale with multiple Model statements.
+        solved_model_key = self.model.model_name.lower() if self.model.model_name else None
+        refs_to_validate = (
+            self.model.model_equation_map.get(solved_model_key, [])
+            if solved_model_key
+            else self.model.model_equations
+        )
+        if refs_to_validate and not self.model.model_uses_all:
+            for eq_name in refs_to_validate:
                 if (
                     eq_name not in self.model.equations
                     and eq_name.lower() not in self.model.model_equation_map
