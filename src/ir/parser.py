@@ -3655,10 +3655,9 @@ class _ModelBuilder:
                 known = {e.lower() for e in all_eqs}
                 unknown = excluded - known
                 if unknown:
-                    logger.warning(
-                        "Model '%s' excludes unknown equation(s): %s",
-                        name,
-                        ", ".join(sorted(unknown)),
+                    raise self._error(
+                        f"Model '{name}' excludes unknown equation(s): "
+                        f"{', '.join(sorted(unknown))}"
                     )
                 all_eqs = [e for e in all_eqs if e.lower() not in excluded]
             self.model.model_equation_map[name.lower()] = all_eqs
@@ -3714,10 +3713,9 @@ class _ModelBuilder:
                         known = {e.lower() for e in all_eqs}
                         unknown = excluded - known
                         if unknown:
-                            logger.warning(
-                                "Model '%s' excludes unknown equation(s): %s",
-                                item_name,
-                                ", ".join(sorted(unknown)),
+                            raise self._error(
+                                f"Model '{item_name}' excludes unknown equation(s): "
+                                f"{', '.join(sorted(unknown))}"
                             )
                         all_eqs = [e for e in all_eqs if e.lower() not in excluded]
                     self.model.model_equation_map[item_name.lower()] = all_eqs
