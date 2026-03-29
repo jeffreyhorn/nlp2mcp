@@ -5,7 +5,7 @@ from pathlib import Path
 
 from lark import Token, Tree
 
-from src.ir.parser import parse_file
+from src.ir.parser import parse_tree
 
 
 def debug_token_positions():
@@ -13,7 +13,7 @@ def debug_token_positions():
     gms_file = Path(__file__).parent / "test_sparse_table.gms"
 
     print(f"Parsing: {gms_file}\n")
-    tree = parse_file(str(gms_file))
+    tree = parse_tree(str(gms_file))
 
     # Find the table_block node
     def find_table_blocks(node):

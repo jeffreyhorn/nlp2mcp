@@ -248,7 +248,7 @@ See `PROJECT_PLAN.md` for detailed sprint breakdown.
 
 ### Debugging parser issues
 1. Check grammar syntax: `python -c "from src.ir.parser import _build_lark; _build_lark()"`
-2. Print parse tree: Use `parse_file()` and inspect tree
+2. Print parse tree: Use `parse_tree()` and inspect tree
 3. Use `pytest -xvs` for verbose test output with immediate stop on failure
 
 ## Questions & Support
