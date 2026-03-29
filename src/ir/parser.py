@@ -7309,7 +7309,7 @@ class _ModelBuilder:
             if solved_model_key
             else self.model.model_equations
         )
-        if refs_to_validate and not self.model.model_uses_all:
+        if refs_to_validate:
             for eq_name in refs_to_validate:
                 if (
                     eq_name not in self.model.equations
