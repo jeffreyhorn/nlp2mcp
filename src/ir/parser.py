@@ -403,8 +403,12 @@ def parse_tree(path: str | Path) -> Tree:
     return parse_text(preprocessed)
 
 
-# Backward-compatible alias — prefer parse_tree() for new code.
-parse_file = parse_tree
+def parse_file(path: str | Path) -> Tree:
+    """Backward-compatible alias for ``parse_tree()``.
+
+    Prefer ``parse_tree()`` for new code.
+    """
+    return parse_tree(path)
 
 
 def parse_model_text(source: str) -> ModelIR:
