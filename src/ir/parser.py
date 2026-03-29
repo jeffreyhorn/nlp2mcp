@@ -3711,6 +3711,14 @@ class _ModelBuilder:
                     all_eqs = list(self.model.equations.keys())
                     if item_refs:
                         excluded = {r.lower() for r in item_refs}
+                        known = {e.lower() for e in all_eqs}
+                        unknown = excluded - known
+                        if unknown:
+                            logger.warning(
+                                "Model '%s' excludes unknown equation(s): %s",
+                                item_name,
+                                ", ".join(sorted(unknown)),
+                            )
                         all_eqs = [e for e in all_eqs if e.lower() not in excluded]
                     self.model.model_equation_map[item_name.lower()] = all_eqs
                 else:
@@ -7307,11 +7315,12 @@ class _ModelBuilder:
         # Prefer model_equation_map for the solved model when available,
         # since model_equations can be stale with multiple Model statements.
         solved_model_key = self.model.model_name.lower() if self.model.model_name else None
-        refs_to_validate = (
-            self.model.model_equation_map.get(solved_model_key, [])
-            if solved_model_key
-            else self.model.model_equations
-        )
+        if solved_model_key and solved_model_key in self.model.model_equation_map:
+            refs_to_validate = self.model.model_equation_map[solved_model_key]
+        else:
+            # Fall back to model_equations when the solved model key is missing
+            # from model_equation_map or when no solved model is specified.
+            refs_to_validate = self.model.model_equations
         if refs_to_validate:
             for eq_name in refs_to_validate:
                 if (
