@@ -24,7 +24,7 @@ The pipeline uses `parse_model_file`, which exercises the full IR builder. A mod
 Applied **Option B** from the proposed fixes: renamed `parse_file` to `parse_tree` for clarity.
 
 Changes:
-1. **`src/ir/parser.py`**: Renamed `parse_file()` to `parse_tree()` with updated docstring that points users to `parse_model_file()` for full ModelIR. Added `parse_file = parse_tree` backward-compatible alias.
+1. **`src/ir/parser.py`**: Renamed `parse_file()` to `parse_tree()` with updated docstring that points users to `parse_model_file()` for full ModelIR. Added a `parse_file()` wrapper that delegates to `parse_tree()` to preserve existing `parse_file` metadata while maintaining backward compatibility.
 2. **`tests/e2e/test_integration.py`**: Updated import and all calls to use `parse_tree`.
 3. **`tests/unit/gams/test_parser.py`**: Updated call to use `parse_tree`.
 4. **`tests/research/table_verification/debug_token_positions.py`**: Updated import and call.
