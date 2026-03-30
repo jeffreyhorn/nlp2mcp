@@ -127,7 +127,11 @@ def emit_variables(kkt: KKTSystem) -> str:
             and var_name.lower() not in kkt.referenced_variables
         ):
             continue
-        var_groups[var_def.kind].append((var_name, var_def.domain))
+        # Issue #1164/#1175: Use widened domain if variable needs it
+        domain = var_def.domain
+        if kkt.var_domain_widenings and var_name.lower() in kkt.var_domain_widenings:
+            domain = kkt.var_domain_widenings[var_name.lower()]
+        var_groups[var_def.kind].append((var_name, domain))
 
     # Add multipliers to appropriate groups
     # Skip multipliers that were simplified away from stationarity equations

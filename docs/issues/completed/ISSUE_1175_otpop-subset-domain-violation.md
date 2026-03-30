@@ -38,6 +38,10 @@ The fundamental issue: GAMS requires every set index in an equation to be either
 
 Neither `db(tt)` ($171) nor `db(t)` ($149) satisfies both requirements without restructuring the equation.
 
+## Fix Applied (2026-03-30)
+
+**$171 FIXED** via parameter domain widening (PR #1176). The emitter now declares `db` and `del` over `tt` (superset) instead of `t` (subset). Remaining errors ($145/$148) are from malformed `pd(1966-l)` index expression — a separate issue in the stationarity builder's handling of concrete element offsets.
+
 ## Related Issues
 
 - #1164: chenery/shale subset domain violation (same catch-22)

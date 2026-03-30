@@ -1020,7 +1020,157 @@ def build_stationarity_equations(
         _collect_multiplier_refs(lhs, referenced_mults)
     kkt.referenced_multipliers = referenced_mults
 
+    # Issue #1164/#1175: Detect parameters declared over subsets that are
+    # used in stationarity equations over supersets. These need domain widening
+    # to avoid GAMS $171 domain violations.
+    _detect_symbol_domain_widenings(kkt, stationarity)
+
     return stationarity
+
+
+def _detect_symbol_domain_widenings(
+    kkt: KKTSystem,
+    stationarity: dict[str, EquationDef],
+) -> None:
+    """Detect parameters and variables needing domain widening.
+
+    When a parameter like alp(t) (declared over subset t⊂i) is used in
+    stat_e(i), the emitter must declare alp over i to avoid $171.
+    Same for variables like n(t) used in stat_m(tl).
+
+    Keys are stored in lowercase for case-insensitive matching with
+    CaseInsensitiveDict keys in the emitter.
+    """
+    model_ir = kkt.model_ir
+    param_widenings: dict[str, tuple[str, ...]] = {}
+    var_widenings: dict[str, tuple[str, ...]] = {}
+
+    for _eq_name, eq_def in stationarity.items():
+        eq_domain = eq_def.domain
+        if not eq_domain:
+            continue
+
+        # Collect ParamRef and VarRef names from the stationarity body
+        param_refs: set[str] = set()
+        var_refs: set[str] = set()
+        lhs, _ = eq_def.lhs_rhs
+        _collect_param_refs(lhs, param_refs)
+        _collect_var_refs(lhs, var_refs)
+
+        # Check parameters — accumulate widenings across equations
+        for pname in param_refs:
+            key = pname.lower()
+            existing = param_widenings.get(key)
+            if existing is not None:
+                base_domain = existing
+            else:
+                pdef = model_ir.params.get(pname)
+                if not pdef or not pdef.domain:
+                    continue
+                base_domain = pdef.domain
+            widened = _compute_widened_domain(base_domain, eq_domain, model_ir)
+            if widened is not None:
+                param_widenings[key] = widened
+
+        # Check variables — accumulate widenings across equations
+        for vname in var_refs:
+            key = vname.lower()
+            existing = var_widenings.get(key)
+            if existing is not None:
+                base_domain = existing
+            else:
+                vdef = model_ir.variables.get(vname)
+                if not vdef or not vdef.domain:
+                    continue
+                base_domain = vdef.domain
+            widened = _compute_widened_domain(base_domain, eq_domain, model_ir)
+            if widened is not None:
+                var_widenings[key] = widened
+
+    kkt.param_domain_widenings = param_widenings
+    kkt.var_domain_widenings = var_widenings
+
+
+def _resolve_set_root(name: str, model_ir: ModelIR) -> str:
+    """Resolve alias chains to the root set name."""
+    seen: set[str] = set()
+    current = name
+    while current.lower() not in seen:
+        seen.add(current.lower())
+        alias_def = model_ir.aliases.get(current)
+        if alias_def is not None:
+            current = alias_def.target
+        else:
+            break
+    return current
+
+
+def _is_subset_of(child_set: str, parent_set: str, model_ir: ModelIR) -> bool:
+    """Check if child_set is a (possibly nested) subset of parent_set.
+
+    Walks the parent chain transitively: if child_set's domain contains
+    an intermediate set that is itself a subset of parent_set, the
+    relationship is recognized. Resolves aliases at each step.
+    """
+    parent_root = _resolve_set_root(parent_set, model_ir).lower()
+    visited: set[str] = set()
+    stack = [_resolve_set_root(child_set, model_ir).lower()]
+    while stack:
+        current = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        if current == parent_root:
+            return True
+        current_def = model_ir.sets.get(current)
+        if current_def and hasattr(current_def, "domain") and current_def.domain:
+            for p in current_def.domain:
+                stack.append(_resolve_set_root(p, model_ir).lower())
+    return False
+
+
+def _compute_widened_domain(
+    symbol_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> tuple[str, ...] | None:
+    """Compute widened domain if symbol domain is a strict subset of eq domain.
+
+    Handles alias chains and nested subsets: walks the parent chain
+    transitively to detect indirect subset relationships.
+
+    Returns the widened domain tuple, or None if no widening is needed.
+    """
+    if len(symbol_domain) != len(eq_domain):
+        return None
+    needs_widening = False
+    widened = list(symbol_domain)
+    for k, (sdim, edim) in enumerate(zip(symbol_domain, eq_domain, strict=True)):
+        sdim_root = _resolve_set_root(sdim, model_ir)
+        edim_root = _resolve_set_root(edim, model_ir)
+        if sdim_root.lower() == edim_root.lower():
+            continue  # Same root set, no widening needed
+        # Check if sdim is a (possibly nested) subset of edim
+        if _is_subset_of(sdim, edim, model_ir):
+            widened[k] = edim
+            needs_widening = True
+    return tuple(widened) if needs_widening else None
+
+
+def _collect_param_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all ParamRef names."""
+    if isinstance(expr, ParamRef):
+        result.add(expr.name)
+    for child in expr.children():
+        _collect_param_refs(child, result)
+
+
+def _collect_var_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all VarRef names (no attribute)."""
+    if isinstance(expr, VarRef) and not expr.attribute:
+        result.add(expr.name)
+    for child in expr.children():
+        _collect_var_refs(child, result)
 
 
 def _collect_multiplier_refs(expr: Expr, result: set[str]) -> None:

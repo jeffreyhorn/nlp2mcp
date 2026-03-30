@@ -708,7 +708,10 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
     return tuple(expanded)
 
 
-def emit_original_parameters(model_ir: ModelIR) -> str:
+def emit_original_parameters(
+    model_ir: ModelIR,
+    param_domain_widenings: dict[str, tuple[str, ...]] | None = None,
+) -> str:
     """Emit Parameters and Scalars with their data.
 
     Uses ParameterDef.domain and .values (Finding #3: actual IR fields).
@@ -800,7 +803,11 @@ def emit_original_parameters(model_ir: ModelIR) -> str:
     if parameters:
         lines.append("Parameters")
         for param_name, param_def in parameters.items():
-            domain = list(param_def.domain)
+            # Issue #1164/#1175: Use widened domain if parameter needs it
+            if param_domain_widenings and param_name.lower() in param_domain_widenings:
+                domain = list(param_domain_widenings[param_name.lower()])
+            else:
+                domain = list(param_def.domain)
 
             # Use ParameterDef.values (Finding #3)
             # Format tuple keys as GAMS syntax: ("i1", "j2") → "i1.j2"

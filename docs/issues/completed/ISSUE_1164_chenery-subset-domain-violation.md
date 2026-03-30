@@ -98,6 +98,13 @@ eq(t).. x(t) + alp(t) =e= 0;          # OK (equation domain matches)
 
 ---
 
+## Fix Applied (2026-03-30)
+
+**$171 FIXED** via parameter/variable domain widening (PR #1176). Instead of restructuring the equation domain, the emitter now declares subset-declared parameters over the superset domain. Also fixed $445 (negative constant in DollarConditional not parenthesized).
+
+- chenery: Compiles and solves (MODEL STATUS 5, Locally Infeasible — may need further investigation)
+- shale: Compiles clean (license limit for solve)
+
 ## Related Issues
 
 - PR #1163: Fixed sum-index-vs-condition shadowing (partial fix for chenery)
