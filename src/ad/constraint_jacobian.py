@@ -1012,8 +1012,8 @@ def _compute_equality_jacobian(
                     # Differentiate constraint w.r.t. this specific variable instance
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # LP fast path: use basic simplification (constant folding only)
-                    # instead of expensive advanced simplification
+                    # LP fast path: use basic simplification (identity/zero
+                    # elimination) instead of expensive advanced simplification
                     effective_mode = "basic" if use_lp_fast_path else simp_mode
                     derivative = apply_simplification(derivative, effective_mode)
 
@@ -1126,8 +1126,8 @@ def _compute_inequality_jacobian(
                     # Differentiate constraint w.r.t. this specific variable instance
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # LP fast path: use basic simplification (constant folding only)
-                    # instead of expensive advanced simplification
+                    # LP fast path: use basic simplification (identity/zero
+                    # elimination) instead of expensive advanced simplification
                     effective_mode = "basic" if use_lp_fast_path else simp_mode
                     derivative = apply_simplification(derivative, effective_mode)
 

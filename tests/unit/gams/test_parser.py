@@ -146,7 +146,7 @@ def test_solve_type_captured():
 
 
 def test_solve_type_mcp_cns_is_none():
-    """MCP/CNS solves have no objective and solve_type should be None."""
+    """A standalone MCP/CNS solve (no prior NLP solve) leaves solve_type as None."""
     text = dedent("""
         Variables x;
         Equations e;
