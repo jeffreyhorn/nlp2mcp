@@ -80,3 +80,13 @@ The model has 11 variables and 11 equations but with multi-dimensional domains (
 
 - #885 (sarf): Same timeout pattern
 - dinam, ferts, ganges, gangesx, iswnm, nebrazil: Same LP/NLP timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Translation timeout: FIXED** by LP fast path (PR #1172). MCP compiles cleanly (0 errors).
+
+**Current blocker: Demo license limit.** The MCP has 3,470 equations which exceeds the demo license limit of 1,000 rows/columns for nonlinear model types. The model is structurally correct but cannot be solved without a full GAMS license.
+
+Parse: ~71s | Translate: ~137s | Compile: OK | Solve: FAIL (license)

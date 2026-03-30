@@ -266,8 +266,10 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
                 # max f(x) = min -f(x), so gradient is -∇f
                 derivative = Unary("-", derivative)
 
-            # Simplify derivative expression based on config
-            mode = get_simplification_mode(config)
+            # LP fast path: use basic simplification (constant folding only)
+            # instead of expensive advanced simplification
+            is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
+            mode = "basic" if is_lp else get_simplification_mode(config)
             derivative = apply_simplification(derivative, mode)
 
             # Store in gradient vector

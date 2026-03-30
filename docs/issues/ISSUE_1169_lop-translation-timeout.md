@@ -46,3 +46,11 @@ This is part of the broader LP timeout family (L2 in ISSUE_FIX_OPPORTUNITIES.md)
 
 - #926–#933: Translation timeouts (LP/NLP) — same class of issue
 - L2 in Sprint 23 ISSUE_FIX_OPPORTUNITIES.md
+
+---
+
+## Current Status (2026-03-29)
+
+**Current blocker: Translation timeout (>300s).** LP fast path (PR #1172, basic simplification) implemented but differentiation itself is the bottleneck. Despite the model being LP with only 3 equations in the solved model `evaldt`, the expression structure creates too many variable/equation instance combinations. Needs coefficient extraction with sum-bound index handling, or a sparsity-aware Jacobian.
+
+Parse: ~46s | Translate: TIMEOUT | Compile: N/A | Solve: N/A

@@ -62,3 +62,18 @@ The model is a large dynamic multi-sectoral LP. Applying symbolic KKT differenti
 - #885 (sarf): Same timeout pattern from combinatorial explosion
 - #830 (gastrans): Jacobian timeout from dynamic subset conditions
 - egypt, ferts, ganges, gangesx, iswnm, nebrazil: Same LP/NLP timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Translation timeout: FIXED** by LP fast path (PR #1172). Added `solve_type` field to ModelIR and use basic simplification instead of advanced for LP models.
+
+**Current blocker: MCP compilation errors (11 errors)**
+- $140 Unknown symbol (`rhotp` — computed parameter not declared/emitted in MCP)
+- $148 Dimension mismatch
+- $149 Uncontrolled set entered as constant
+- $171 Domain violation for set
+- $141/$257 cascading from above
+
+Parse: ~173s | Translate: completes | Compile: FAIL | Solve: N/A

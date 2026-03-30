@@ -68,3 +68,11 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, ganges, gangesx, iswnm: Same LP/NLP timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Current blocker: Translation timeout (>300s).** LP fast path (PR #1172, basic simplification) implemented but differentiation itself is the bottleneck — 29 variables (including 4-dimensional `xcrop`) and 25 equations over 37 sets create too many instances. Needs coefficient extraction or sparsity-aware Jacobian.
+
+Parse: ~38s | Translate: TIMEOUT | Compile: N/A | Solve: N/A

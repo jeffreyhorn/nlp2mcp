@@ -73,3 +73,18 @@ Despite having only 6 variables and 3 equations, the model uses dense 2-dimensio
 
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, ganges, gangesx, iswnm, nebrazil: Same timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Translation timeout: FIXED** (with increased 300s timeout). Translation now completes at ~135s.
+
+**Current blocker: MCP compilation errors (10 errors)**
+- $148 Dimension mismatch (2 occurrences)
+- $149 Uncontrolled set entered as constant (6 occurrences)
+- $141/$257 cascading from above
+
+These are index domain errors in the generated MCP, likely related to equation index domains not being properly propagated.
+
+Parse: fast | Translate: ~135s | Compile: FAIL | Solve: N/A
