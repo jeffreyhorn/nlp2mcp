@@ -129,8 +129,8 @@ def emit_variables(kkt: KKTSystem) -> str:
             continue
         # Issue #1164/#1175: Use widened domain if variable needs it
         domain = var_def.domain
-        if kkt.var_domain_widenings and var_name in kkt.var_domain_widenings:
-            domain = kkt.var_domain_widenings[var_name]
+        if kkt.var_domain_widenings and var_name.lower() in kkt.var_domain_widenings:
+            domain = kkt.var_domain_widenings[var_name.lower()]
         var_groups[var_def.kind].append((var_name, domain))
 
     # Add multipliers to appropriate groups

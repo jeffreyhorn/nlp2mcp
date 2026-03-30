@@ -1023,12 +1023,12 @@ def build_stationarity_equations(
     # Issue #1164/#1175: Detect parameters declared over subsets that are
     # used in stationarity equations over supersets. These need domain widening
     # to avoid GAMS $171 domain violations.
-    _detect_param_domain_widenings(kkt, stationarity)
+    _detect_symbol_domain_widenings(kkt, stationarity)
 
     return stationarity
 
 
-def _detect_param_domain_widenings(
+def _detect_symbol_domain_widenings(
     kkt: KKTSystem,
     stationarity: dict[str, EquationDef],
 ) -> None:
@@ -1037,6 +1037,9 @@ def _detect_param_domain_widenings(
     When a parameter like alp(t) (declared over subset t⊂i) is used in
     stat_e(i), the emitter must declare alp over i to avoid $171.
     Same for variables like n(t) used in stat_m(tl).
+
+    Keys are stored in lowercase for case-insensitive matching with
+    CaseInsensitiveDict keys in the emitter.
     """
     model_ir = kkt.model_ir
     param_widenings: dict[str, tuple[str, ...]] = {}
@@ -1056,28 +1059,45 @@ def _detect_param_domain_widenings(
 
         # Check parameters
         for pname in param_refs:
-            if pname in param_widenings:
+            key = pname.lower()
+            if key in param_widenings:
+                # Merge: take the widest domain seen across equations
                 continue
             pdef = model_ir.params.get(pname)
             if not pdef or not pdef.domain:
                 continue
             widened = _compute_widened_domain(pdef.domain, eq_domain, model_ir)
             if widened is not None:
-                param_widenings[pname] = widened
+                param_widenings[key] = widened
 
         # Check variables
         for vname in var_refs:
-            if vname in var_widenings:
+            key = vname.lower()
+            if key in var_widenings:
                 continue
             vdef = model_ir.variables.get(vname)
             if not vdef or not vdef.domain:
                 continue
             widened = _compute_widened_domain(vdef.domain, eq_domain, model_ir)
             if widened is not None:
-                var_widenings[vname] = widened
+                var_widenings[key] = widened
 
     kkt.param_domain_widenings = param_widenings
     kkt.var_domain_widenings = var_widenings
+
+
+def _resolve_set_root(name: str, model_ir: ModelIR) -> str:
+    """Resolve alias chains to the root set name."""
+    seen: set[str] = set()
+    current = name
+    while current.lower() not in seen:
+        seen.add(current.lower())
+        alias_def = model_ir.aliases.get(current)
+        if alias_def is not None:
+            current = alias_def.target
+        else:
+            break
+    return current
 
 
 def _compute_widened_domain(
@@ -1087,6 +1107,9 @@ def _compute_widened_domain(
 ) -> tuple[str, ...] | None:
     """Compute widened domain if symbol domain is a strict subset of eq domain.
 
+    Handles alias chains: if sdim aliases a set whose parent is edim (or an
+    alias of edim), the subset relationship is recognized.
+
     Returns the widened domain tuple, or None if no widening is needed.
     """
     if len(symbol_domain) != len(eq_domain):
@@ -1094,15 +1117,20 @@ def _compute_widened_domain(
     needs_widening = False
     widened = list(symbol_domain)
     for k, (sdim, edim) in enumerate(zip(symbol_domain, eq_domain, strict=True)):
-        if sdim.lower() == edim.lower():
-            continue
-        # Check if sdim is a subset of edim
-        sdim_def = model_ir.sets.get(sdim)
+        # Resolve aliases to root set names for comparison
+        sdim_root = _resolve_set_root(sdim, model_ir)
+        edim_root = _resolve_set_root(edim, model_ir)
+        if sdim_root.lower() == edim_root.lower():
+            continue  # Same root set, no widening needed
+        # Check if sdim (or its alias root) is a subset of edim (or its alias root)
+        sdim_def = model_ir.sets.get(sdim_root)
         if (
             sdim_def
             and hasattr(sdim_def, "domain")
             and sdim_def.domain
-            and any(p.lower() == edim.lower() for p in sdim_def.domain)
+            and any(
+                _resolve_set_root(p, model_ir).lower() == edim_root.lower() for p in sdim_def.domain
+            )
         ):
             widened[k] = edim
             needs_widening = True

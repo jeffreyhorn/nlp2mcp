@@ -804,8 +804,8 @@ def emit_original_parameters(
         lines.append("Parameters")
         for param_name, param_def in parameters.items():
             # Issue #1164/#1175: Use widened domain if parameter needs it
-            if param_domain_widenings and param_name in param_domain_widenings:
-                domain = list(param_domain_widenings[param_name])
+            if param_domain_widenings and param_name.lower() in param_domain_widenings:
+                domain = list(param_domain_widenings[param_name.lower()])
             else:
                 domain = list(param_def.domain)
 
