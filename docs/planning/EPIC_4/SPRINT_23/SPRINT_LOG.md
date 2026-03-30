@@ -303,14 +303,46 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 ### Day 10 — Checkpoint 2 + WS4 remaining
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Full pipeline retest (PR6) | |
-| Checkpoint 2 evaluation | |
-| otpop alias-as-subset (if GO) | |
-| hhfair IndexOffset (if GO) | |
+| Full pipeline retest (PR6) | ✅ Complete (147 models, 5458s) |
+| Checkpoint 2 evaluation | ✅ CONDITIONAL NO-GO (see below) |
+| otpop alias-as-subset (if GO) | ⏭️ Deferred — subset-superset domain mismatch (#1164 class) |
+| hhfair IndexOffset (if GO) | ⏭️ Deferred — same subset-superset domain mismatch |
+
+#### Checkpoint 2 Results (2026-03-30)
+
+| Stage | Count | % | Baseline | Delta |
+|---|---|---|---|---|
+| Parse | 146/147 | 99.3% | 144/147 (98.0%) | +2 |
+| Translate | 138/147 | 94.5% | 128/147 (87.1%) | +10 |
+| Solve | 85/138 | 61.6% | 81/128 (63.3%) | +4 |
+| Match | 49/147 | 33.3% | 47/147 (32.0%) | +2 |
+
+| Error Category | Count | Baseline | Delta |
+|---|---|---|---|
+| path_syntax_error | 28 | 18 | +10 (influx from new translating models) |
+| model_infeasible | 10 | 12 | -2 (improved) |
+| path_solve_terminated | 9 | 10 | -1 |
+| path_solve_license | 6 | 7 | -1 |
+| translate timeout | 6 | ~17 | ~-11 (LP fast path) |
+
+#### Checkpoint 2 GO/NO-GO Evaluation
+
+| Criterion | Threshold | Actual | Status |
+|---|---|---|---|
+| Solve ≥ 98 | 98 | 85 | ❌ Below |
+| Match ≥ 53 | 53 | 49 | ❌ Below |
+| path_solve_terminated ≤ 5 | 5 | 9 | ❌ Above |
+| model_infeasible ≤ 9 | 9 | 10 | ❌ Above |
+| path_syntax_error ≤ 16 | 16 | 28 | ❌ Above (influx) |
+| Tests pass | Yes | 4,358 passed | ✅ |
+
+**Decision: CONDITIONAL NO-GO.** Absolute metrics improved (translate +10, solve +4, match +2, model_infeasible -2), but thresholds not met. The path_syntax_error increase from 18→28 is entirely influx from newly-translating models (LP fast path brought 10 models into translation that previously timed out). These are pre-existing compilation errors now visible.
+
+**otpop and hhfair analysis:** Both have subset-superset domain mismatch in stationarity equations — same class as chenery/shale (#1164). The stationarity equation iterates over the superset but references variables/parameters declared over subsets. This requires the domain restructuring approach identified in #1164, which is a 3-5h effort per model. Deferred to buffer days.
 
 ---
 
