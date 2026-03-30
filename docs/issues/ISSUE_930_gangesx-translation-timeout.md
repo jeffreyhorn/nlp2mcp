@@ -60,6 +60,6 @@ Same as ganges — sparsity-aware Jacobian, increased timeout, or instance thres
 
 ## Current Status (2026-03-29)
 
-**Current blocker: Parse timeout (>300s).** The Earley parser cannot handle this NLP model within 300s. LP fast path (PR #1172) does not apply to NLP models.
+**Current blocker: Translation timeout (>300s).** Model parses successfully (slow, but completes). LP fast path (PR #1172) does not apply to NLP models. Needs sparsity-aware Jacobian or increased timeout.
 
-Parse: TIMEOUT | Translate: N/A | Compile: N/A | Solve: N/A
+Parse: OK (slow) | Translate: TIMEOUT | Compile: N/A | Solve: N/A
