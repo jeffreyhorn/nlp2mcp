@@ -59,3 +59,11 @@ The ganges model is a large NLP macroeconomic model with many multi-dimensional 
 - gangesx: Sister model (same framework, tracking variant), same timeout
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ferts, iswnm, nebrazil: Same timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Current blocker: Translation timeout (>300s).** Model parses successfully (slow, but completes). LP fast path (PR #1172) does not apply to NLP models. Needs sparsity-aware Jacobian or increased timeout.
+
+Parse: OK (slow) | Translate: TIMEOUT | Compile: N/A | Solve: N/A

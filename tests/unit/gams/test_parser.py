@@ -127,6 +127,37 @@ def test_model_references_unknown_equation():
         parser.parse_model_text(text)
 
 
+def test_solve_type_captured():
+    """solve_type should be captured from the solve statement."""
+    for stmt, expected in [
+        ("solve m using lp minimizing z;", "LP"),
+        ("solve m minimizing z using nlp;", "NLP"),
+        ("solve m using qcp minimizing z;", "QCP"),
+    ]:
+        text = dedent(f"""
+            Variables z;
+            Equations obj;
+            obj.. z =e= 0;
+            Model m / all /;
+            {stmt}
+        """)
+        ir = parser.parse_model_text(text)
+        assert ir.solve_type == expected, f"Expected {expected} for '{stmt}', got {ir.solve_type}"
+
+
+def test_solve_type_mcp_cns_is_none():
+    """A standalone MCP/CNS solve (no prior NLP solve) leaves solve_type as None."""
+    text = dedent("""
+        Variables x;
+        Equations e;
+        e.. x =g= 0;
+        Model m / all /;
+        solve m using mcp;
+    """)
+    ir = parser.parse_model_text(text)
+    assert ir.solve_type is None
+
+
 def test_alias_expansion_allows_domain_usage():
     text = dedent("""
         Sets

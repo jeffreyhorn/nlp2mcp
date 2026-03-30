@@ -71,3 +71,18 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 
 - #885 (sarf): Same timeout pattern
 - dinam, egypt, ganges, gangesx, iswnm, nebrazil: Same LP/NLP timeout category
+
+---
+
+## Current Status (2026-03-29)
+
+**Translation timeout: FIXED** by LP fast path (PR #1172).
+
+**Current blocker: Generated identifier names exceed 63-char GAMS limit (26 errors)**
+- $109 Identifier too long (18 occurrences) — hash-suffixed variable names like `nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5` exceed the 63-character GAMS limit
+- $108 Suffix identifier too long (4 occurrences)
+- $141/$257 cascading from above
+
+Fix: Truncate or shorten the naming scheme for generated MCP variables when element names are long.
+
+Parse: ~35s | Translate: completes | Compile: FAIL | Solve: N/A

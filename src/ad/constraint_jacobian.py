@@ -937,6 +937,9 @@ def _compute_equality_jacobian(
 
     simp_mode = get_simplification_mode(config)
 
+    # LP fast path: use basic simplification instead of advanced for LP models
+    use_lp_fast_path = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
+
     for eq_name in model_ir.equalities:
         # Prefer normalized equations if provided, otherwise fall back to original
         eq_def: EquationDef | NormalizedEquation
@@ -1009,8 +1012,12 @@ def _compute_equality_jacobian(
                     # Differentiate constraint w.r.t. this specific variable instance
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # Simplify derivative expression based on config
-                    derivative = apply_simplification(derivative, simp_mode)
+                    # LP fast path: cap at basic simplification (identity/zero
+                    # elimination), but respect "none" from config
+                    effective_mode = simp_mode
+                    if use_lp_fast_path and simp_mode != "none":
+                        effective_mode = "basic"
+                    derivative = apply_simplification(derivative, effective_mode)
 
                     # Store in Jacobian only if non-zero
                     if not _is_zero_const(derivative):
@@ -1052,6 +1059,9 @@ def _compute_inequality_jacobian(
         var_instances_cache = _precompute_variable_instances(model_ir)
 
     simp_mode = get_simplification_mode(config)
+
+    # LP fast path: use basic simplification instead of advanced for LP models
+    use_lp_fast_path = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
 
     for eq_name in model_ir.inequalities:
         # Prefer normalized equation if provided, otherwise fall back to original
@@ -1118,8 +1128,12 @@ def _compute_inequality_jacobian(
                     # Differentiate constraint w.r.t. this specific variable instance
                     derivative = differentiate_expr(constraint_expr, var_name, var_indices, config)
 
-                    # Simplify derivative expression based on config
-                    derivative = apply_simplification(derivative, simp_mode)
+                    # LP fast path: cap at basic simplification (identity/zero
+                    # elimination), but respect "none" from config
+                    effective_mode = simp_mode
+                    if use_lp_fast_path and simp_mode != "none":
+                        effective_mode = "basic"
+                    derivative = apply_simplification(derivative, effective_mode)
 
                     # Store in Jacobian only if non-zero
                     if not _is_zero_const(derivative):
@@ -1163,6 +1177,9 @@ def _compute_bound_jacobian(
 
     simp_mode = get_simplification_mode(config)
 
+    # LP fast path: cap at basic simplification, but respect "none"
+    use_lp_fast_path = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
+
     for bound_name, norm_eq in sorted(model_ir.normalized_bounds.items()):
         # Skip if this bound is already in inequalities (processed by _compute_inequality_jacobian)
         if bound_name in model_ir.inequalities:
@@ -1195,8 +1212,11 @@ def _compute_bound_jacobian(
                 # Differentiate bound constraint w.r.t. this variable instance
                 derivative = differentiate_expr(bound_expr, var_name, var_indices, config)
 
-                # Simplify derivative expression based on config
-                derivative = apply_simplification(derivative, simp_mode)
+                # LP fast path: cap at basic simplification, but respect "none"
+                effective_mode = simp_mode
+                if use_lp_fast_path and simp_mode != "none":
+                    effective_mode = "basic"
+                derivative = apply_simplification(derivative, effective_mode)
 
                 # Store in Jacobian only if non-zero
                 if not _is_zero_const(derivative):
