@@ -659,7 +659,10 @@ def expr_to_gams(
             value_str = expr_to_gams(value_expr, domain_vars=domain_vars)
             condition_str = expr_to_gams(condition, domain_vars=domain_vars)
             # Parenthesize value if it's a complex expression to avoid precedence issues
-            if isinstance(value_expr, (Binary, Unary, DollarConditional)):
+            # Also parenthesize negative constants to avoid "+-1$" patterns ($445)
+            if isinstance(value_expr, (Binary, Unary, DollarConditional)) or (
+                isinstance(value_expr, Const) and value_expr.value < 0
+            ):
                 value_str = f"({value_str})"
             # Issue #1003: Always parenthesize the dollar condition.
             # GAMS requires $(cond) when the condition is a function-like
