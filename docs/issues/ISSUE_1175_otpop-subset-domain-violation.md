@@ -18,7 +18,7 @@ Additionally, `stat_d(tt)` contains `pd(1966-l)` which is a malformed index expr
 
 Same as chenery/shale issue #1164: `_rewrite_subset_to_superset` rewrites `t → tt` for all index references in stationarity equations, but this causes $171 for parameters declared over the subset. Reverting the rewrite causes $149 instead.
 
-The proper fix requires restructuring the stationarity equation domain to match the subset, or wrapping subset-declared parameter references in `sum(t$(t(tt)), ...)` to control the subset index.
+The proper fix requires restructuring the stationarity equation domain to match the subset (e.g., `stat_p(t)` instead of `stat_p(tt)`), with `.fx` for superset-only multiplier instances.
 
 ## Reproduction
 

@@ -45,7 +45,7 @@ done
 **Sets:** `tf = {1985-89..2005-09}`, `t(tf) = {1990-94..2005-09}`, `c = {24 commodities}`, `cf(c) = {final products}`
 
 **Error ($171):**
-- `stat_x(c,tf).. ((−1) * pf(c,tf)) * nu_arev(tf) + ...$(cf(c) and t(tf)) =E= 0;` — `pf` declared as `Parameter pf(c,t)` where `t(tf)`
+- `stat_x(c,tf).. ((-1) * pf(c,tf)) * nu_arev(tf) + ...$(cf(c) and t(tf)) =E= 0;` — `pf` declared as `Parameter pf(c,t)` where `t(tf)`
 
 **MCP pairing:** `stat_x(c,tf)` pairs with variable `x(c,tf)` (declared over superset `tf`)
 
@@ -138,12 +138,14 @@ Called at line 4011 with `subset_rename = {t: tt}` (or equivalent). This rewrite
 
 ### Step 1: Add `_preserve_subset_param_indices` (30 min)
 
-Add a function analogous to `_preserve_subset_var_indices` for ParamRef in `_replace_indices_in_expr`. This handles Path A.
+Add subset preservation for ParamRef in `_replace_indices_in_expr`, analogous to the existing VarRef handling. This handles Path A. Reuse the existing `_preserve_subset_var_indices` function (which works for any domain tuple, not just variables):
 
 ```python
 # In _replace_indices_in_expr, ParamRef case (around line 1733):
 if param_domain and equation_domain and model_ir:
-    preserved = _preserve_subset_var_indices(param_domain, equation_domain, model_ir)
+    preserved = _preserve_subset_var_indices(
+        param_domain, equation_domain, model_ir
+    )
     if preserved is not None:
         return ParamRef(param_ref.name, preserved)
 ```

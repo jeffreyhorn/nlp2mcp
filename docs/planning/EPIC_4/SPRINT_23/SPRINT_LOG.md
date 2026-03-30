@@ -338,7 +338,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | path_solve_terminated ≤ 5 | 5 | 9 | ❌ Above |
 | model_infeasible ≤ 9 | 9 | 10 | ⚠️ Borderline |
 | path_syntax_error ≤ 16 | 16 | 28 | ❌ Above (influx) |
-| Tests pass | Yes | 4358 passed | ✅ |
+| Tests pass | Yes | 4,358 passed | ✅ |
 
 **Decision: CONDITIONAL NO-GO.** Absolute metrics improved (translate +10, solve +4, match +2, model_infeasible -2), but thresholds not met. The path_syntax_error increase from 18→28 is entirely influx from newly-translating models (LP fast path brought 10+ models into translation that previously timed out). These are pre-existing compilation errors now visible.
 
