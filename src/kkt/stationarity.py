@@ -1105,6 +1105,30 @@ def _resolve_set_root(name: str, model_ir: ModelIR) -> str:
     return current
 
 
+def _is_subset_of(child_set: str, parent_set: str, model_ir: ModelIR) -> bool:
+    """Check if child_set is a (possibly nested) subset of parent_set.
+
+    Walks the parent chain transitively: if child_set's domain contains
+    an intermediate set that is itself a subset of parent_set, the
+    relationship is recognized. Resolves aliases at each step.
+    """
+    parent_root = _resolve_set_root(parent_set, model_ir).lower()
+    visited: set[str] = set()
+    stack = [_resolve_set_root(child_set, model_ir).lower()]
+    while stack:
+        current = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        if current == parent_root:
+            return True
+        current_def = model_ir.sets.get(current)
+        if current_def and hasattr(current_def, "domain") and current_def.domain:
+            for p in current_def.domain:
+                stack.append(_resolve_set_root(p, model_ir).lower())
+    return False
+
+
 def _compute_widened_domain(
     symbol_domain: tuple[str, ...],
     eq_domain: tuple[str, ...],
@@ -1112,8 +1136,8 @@ def _compute_widened_domain(
 ) -> tuple[str, ...] | None:
     """Compute widened domain if symbol domain is a strict subset of eq domain.
 
-    Handles alias chains: if sdim aliases a set whose parent is edim (or an
-    alias of edim), the subset relationship is recognized.
+    Handles alias chains and nested subsets: walks the parent chain
+    transitively to detect indirect subset relationships.
 
     Returns the widened domain tuple, or None if no widening is needed.
     """
@@ -1122,21 +1146,12 @@ def _compute_widened_domain(
     needs_widening = False
     widened = list(symbol_domain)
     for k, (sdim, edim) in enumerate(zip(symbol_domain, eq_domain, strict=True)):
-        # Resolve aliases to root set names for comparison
         sdim_root = _resolve_set_root(sdim, model_ir)
         edim_root = _resolve_set_root(edim, model_ir)
         if sdim_root.lower() == edim_root.lower():
             continue  # Same root set, no widening needed
-        # Check if sdim (or its alias root) is a subset of edim (or its alias root)
-        sdim_def = model_ir.sets.get(sdim_root)
-        if (
-            sdim_def
-            and hasattr(sdim_def, "domain")
-            and sdim_def.domain
-            and any(
-                _resolve_set_root(p, model_ir).lower() == edim_root.lower() for p in sdim_def.domain
-            )
-        ):
+        # Check if sdim is a (possibly nested) subset of edim
+        if _is_subset_of(sdim, edim, model_ir):
             widened[k] = edim
             needs_widening = True
     return tuple(widened) if needs_widening else None
