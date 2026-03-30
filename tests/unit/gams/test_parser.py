@@ -145,6 +145,19 @@ def test_solve_type_captured():
         assert ir.solve_type == expected, f"Expected {expected} for '{stmt}', got {ir.solve_type}"
 
 
+def test_solve_type_mcp_cns_is_none():
+    """MCP/CNS solves have no objective and solve_type should be None."""
+    text = dedent("""
+        Variables x;
+        Equations e;
+        e.. x =g= 0;
+        Model m / all /;
+        solve m using mcp;
+    """)
+    ir = parser.parse_model_text(text)
+    assert ir.solve_type is None
+
+
 def test_alias_expansion_allows_domain_usage():
     text = dedent("""
         Sets
