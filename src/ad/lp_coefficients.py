@@ -76,9 +76,13 @@ def _var_matches(ref: VarRef, wrt_var: str, wrt_indices: tuple | None) -> bool:
 
 
 def _expr_has_any_var(expr: Expr) -> bool:
-    """Check if expression contains any decision variable reference."""
-    if isinstance(expr, SymbolRef):
-        return True  # Could be a scalar variable
+    """Check if expression contains any decision variable reference.
+
+    Note: ``SymbolRef`` is ambiguous (variable or parameter without indices).
+    By the time this helper is called, scalar parameters should be ``ParamRef``.
+    Remaining ``SymbolRef`` is conservatively treated as non-variable to avoid
+    misclassifying constant-like symbols as decision variables.
+    """
     if isinstance(expr, VarRef):
         return not expr.attribute
     if isinstance(expr, (Const, ParamRef)):
