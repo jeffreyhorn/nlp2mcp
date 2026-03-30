@@ -73,3 +73,7 @@ complexity.
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`, `_diff_varref`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/himmel16.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates and solves to Optimal but objective does not match the NLP reference. Same alias differentiation root cause as qabel/abel (#1137), complicated by cyclic offsets.

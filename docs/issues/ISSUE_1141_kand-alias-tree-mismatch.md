@@ -78,3 +78,7 @@ role (child/neighbor node in the tree). The AD engine likely fails to:
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`, `_build_element_to_set_mapping`
 - `data/gamslib/raw/kand.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates and solves to Optimal but objective does not match the NLP reference. Same alias differentiation root cause as qabel/abel (#1137): `_alias_match` in `derivative_rules.py` incorrectly handles alias-bound indices in sum contexts.

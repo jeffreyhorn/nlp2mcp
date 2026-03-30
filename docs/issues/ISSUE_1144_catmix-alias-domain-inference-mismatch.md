@@ -107,3 +107,7 @@ equations with only lag offsets (negative, like `t-1`).
 - `src/ir/parser.py` — `_domain_list()`, `_handle_eqn_def_domain()` — domain qualifier lost
 - `src/emit/equations.py:469` — `skip_lead_lag_inference=True` for all equalities
 - `data/gamslib/raw/catmix.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates but MCP compilation fails with $145/$148 errors. Stationarity equations have malformed expressions (`u(0+1)`) and misplaced parentheses. This is a domain inference regression from PR #1076 (`skip_lead_lag_inference=True`), not an alias differentiation issue.

@@ -90,3 +90,7 @@ The residual mismatch likely comes from one or more of:
 - `src/emit/equations.py` — `_collect_ad_generated_aliases`
 - `data/gamslib/raw/qabel.gms` — Source model
 - `data/gamslib/raw/abel.gms` — Source model (variant of qabel)
+
+## Current Status (2026-03-30)
+
+Both abel and qabel translate and solve to MODEL STATUS 1 Optimal, but objective values do not match the NLP reference. The alias differentiation in quadratic forms produces incorrect KKT conditions. Root cause identified: `_alias_match` in `derivative_rules.py` incorrectly handles alias-bound indices in sum contexts.

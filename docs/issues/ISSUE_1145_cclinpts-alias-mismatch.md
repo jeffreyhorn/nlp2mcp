@@ -71,3 +71,7 @@ computation is substantially wrong, likely due to:
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`, `_diff_varref`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/cclinpts.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates but MCP compilation fails with $120/$149/$171 errors. Similar to polygon (#1143): literal elements used with arithmetic offsets in stationarity equations.
