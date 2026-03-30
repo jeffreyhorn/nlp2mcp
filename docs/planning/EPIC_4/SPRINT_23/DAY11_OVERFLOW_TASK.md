@@ -175,7 +175,7 @@ This is the most complex step because it affects MCP pairing and multiplier decl
   ```bash
   for m in chenery shale otpop hhfair; do
     python -m src.cli data/gamslib/raw/$m.gms -o /tmp/${m}_mcp.gms --skip-convexity-check
-    (cd /tmp && gams ${m}_mcp.gms lo=2 2>&1) | grep -F -c '$171'
+    (cd /tmp && gams ${m}_mcp.gms lo=2 2>&1) | grep -F -c '$171' || true
   done
   ```
 - Verify MCP compiles (zero $171 errors)
