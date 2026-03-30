@@ -28,6 +28,7 @@ from ..ir.ast import (
     ParamRef,
     Prod,
     Sum,
+    SymbolRef,
     Unary,
     VarRef,
 )
@@ -76,6 +77,8 @@ def _var_matches(ref: VarRef, wrt_var: str, wrt_indices: tuple | None) -> bool:
 
 def _expr_has_any_var(expr: Expr) -> bool:
     """Check if expression contains any decision variable reference."""
+    if isinstance(expr, SymbolRef):
+        return True  # Could be a scalar variable
     if isinstance(expr, VarRef):
         return not expr.attribute
     if isinstance(expr, (Const, ParamRef)):
@@ -97,6 +100,8 @@ def _expr_has_any_var(expr: Expr) -> bool:
 
 def _expr_has_var(expr: Expr, wrt_var: str) -> bool:
     """Quick check if expression references the target variable at all."""
+    if isinstance(expr, SymbolRef):
+        return expr.name.lower() == wrt_var.lower()
     if isinstance(expr, VarRef):
         # Variable attribute refs (x.l, x.lo) are constants, not decision variables
         return not expr.attribute and expr.name.lower() == wrt_var.lower()
@@ -131,6 +136,12 @@ def _extract(
     """Recursively extract the coefficient of wrt_var in a linear expression."""
     # Constants and parameters have zero coefficient
     if isinstance(expr, (Const, ParamRef)):
+        return _ZERO
+
+    # SymbolRef: scalar variable reference (matches when wrt_indices is None)
+    if isinstance(expr, SymbolRef):
+        if wrt_indices is None and expr.name.lower() == wrt_var.lower():
+            return _ONE
         return _ZERO
 
     # Variable reference: coefficient is 1 if it matches, 0 otherwise
