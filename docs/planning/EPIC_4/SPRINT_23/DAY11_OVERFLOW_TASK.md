@@ -136,7 +136,7 @@ Called at line 4011 with `subset_rename = {t: tt}` (or equivalent). This rewrite
 
 ## 6. Implementation Plan (Option A)
 
-### Step 1: Add `_preserve_subset_param_indices` (30 min)
+### Step 1: Preserve subset indices for ParamRef (30 min)
 
 Add subset preservation for ParamRef in `_replace_indices_in_expr`, analogous to the existing VarRef handling. This handles Path A. Reuse the existing `_preserve_subset_var_indices` function (which works for any domain tuple, not just variables):
 
@@ -202,5 +202,5 @@ This is the most complex step because it affects MCP pairing and multiplier decl
 - [ ] shale compiles with zero $171 errors
 - [ ] otpop $171 error on `db(tt)` resolved (other errors may remain from `pd(1966-l)`)
 - [ ] hhfair $171 error on `n(tl)` resolved
-- [ ] All 4358+ existing tests pass
+- [ ] All 4,358+ existing tests pass
 - [ ] No regressions in currently-solving models

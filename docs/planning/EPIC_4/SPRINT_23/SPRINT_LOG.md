@@ -327,7 +327,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | model_infeasible | 10 | 12 | -2 (improved) |
 | path_solve_terminated | 9 | 10 | -1 |
 | path_solve_license | 6 | 7 | -1 |
-| translate timeout | 6 | ~17 | -11 (LP fast path) |
+| translate timeout | 6 | ~17 | ~-11 (LP fast path) |
 
 #### Checkpoint 2 GO/NO-GO Evaluation
 
@@ -340,7 +340,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | path_syntax_error ≤ 16 | 16 | 28 | ❌ Above (influx) |
 | Tests pass | Yes | 4,358 passed | ✅ |
 
-**Decision: CONDITIONAL NO-GO.** Absolute metrics improved (translate +10, solve +4, match +2, model_infeasible -2), but thresholds not met. The path_syntax_error increase from 18→28 is entirely influx from newly-translating models (LP fast path brought 10+ models into translation that previously timed out). These are pre-existing compilation errors now visible.
+**Decision: CONDITIONAL NO-GO.** Absolute metrics improved (translate +10, solve +4, match +2, model_infeasible -2), but thresholds not met. The path_syntax_error increase from 18→28 is entirely influx from newly-translating models (LP fast path brought 10 models into translation that previously timed out). These are pre-existing compilation errors now visible.
 
 **otpop and hhfair analysis:** Both have subset-superset domain mismatch in stationarity equations — same class as chenery/shale (#1164). The stationarity equation iterates over the superset but references variables/parameters declared over subsets. This requires the domain restructuring approach identified in #1164, which is a 3-5h effort per model. Deferred to buffer days.
 
