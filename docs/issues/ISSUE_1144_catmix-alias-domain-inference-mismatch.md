@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1144](https://github.com/jeffreyhorn/nlp2mcp/issues/1144)
 **Status:** OPEN
-**Severity:** High — model_infeasible (was model_optimal)
+**Severity:** High — MCP compilation failure (was model_infeasible, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** catmix

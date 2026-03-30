@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
 **Status:** OPEN
-**Severity:** Critical — objective mismatch (100%)
+**Severity:** Critical — MCP compilation failure (was objective mismatch, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** polygon

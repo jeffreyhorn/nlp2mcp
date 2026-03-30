@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1145](https://github.com/jeffreyhorn/nlp2mcp/issues/1145)
 **Status:** OPEN
-**Severity:** High — objective mismatch (69.9%)
+**Severity:** High — MCP compilation failure (was objective mismatch, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** cclinpts
