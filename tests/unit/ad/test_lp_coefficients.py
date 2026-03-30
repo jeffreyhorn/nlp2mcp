@@ -109,3 +109,21 @@ class TestExtractLinearCoefficient:
         expr = Binary("*", VarRef("x", ()), VarRef("x", ()))
         result = extract_linear_coefficient(expr, "x", None)
         assert isinstance(result, Const) and result.value == 0.0
+
+    def test_product_of_different_vars_returns_zero(self):
+        """d/dx (x*y) = 0 (bilinear, not linear)"""
+        expr = Binary("*", VarRef("x", ()), VarRef("y", ()))
+        result = extract_linear_coefficient(expr, "x", None)
+        assert isinstance(result, Const) and result.value == 0.0
+
+    def test_division_by_var_returns_zero(self):
+        """d/dx (x/y) = 0 (non-linear)"""
+        expr = Binary("/", VarRef("x", ()), VarRef("y", ()))
+        result = extract_linear_coefficient(expr, "x", None)
+        assert isinstance(result, Const) and result.value == 0.0
+
+    def test_var_attribute_treated_as_constant(self):
+        """d/dx (x.l * x) = x.l (attribute ref is constant)"""
+        expr = Binary("*", VarRef("x", (), attribute="l"), VarRef("x", ()))
+        result = extract_linear_coefficient(expr, "x", None)
+        assert isinstance(result, VarRef) and result.attribute == "l"

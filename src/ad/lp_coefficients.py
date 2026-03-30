@@ -74,6 +74,27 @@ def _var_matches(ref: VarRef, wrt_var: str, wrt_indices: tuple | None) -> bool:
     return True
 
 
+def _expr_has_any_var(expr: Expr) -> bool:
+    """Check if expression contains any decision variable reference."""
+    if isinstance(expr, VarRef):
+        return not expr.attribute
+    if isinstance(expr, (Const, ParamRef)):
+        return False
+    if isinstance(expr, Binary):
+        return _expr_has_any_var(expr.left) or _expr_has_any_var(expr.right)
+    if isinstance(expr, Unary):
+        return _expr_has_any_var(expr.child)
+    if isinstance(expr, Sum):
+        return _expr_has_any_var(expr.body)
+    if isinstance(expr, Prod):
+        return _expr_has_any_var(expr.body)
+    if isinstance(expr, DollarConditional):
+        return _expr_has_any_var(expr.value_expr)
+    if isinstance(expr, Call):
+        return any(_expr_has_any_var(a) for a in expr.args)
+    return False
+
+
 def _expr_has_var(expr: Expr, wrt_var: str) -> bool:
     """Quick check if expression references the target variable at all."""
     if isinstance(expr, VarRef):
@@ -147,7 +168,10 @@ def _extract(
             if not l_has and not r_has:
                 return _ZERO
             if l_has and not r_has:
-                # d(f*c)/dx = c * df/dx
+                # d(f*c)/dx = c * df/dx — but c must not contain other vars
+                if _expr_has_any_var(expr.right):
+                    _logger.warning("Non-linear term: product of %s with another variable", wrt_var)
+                    return _ZERO
                 coeff = _extract(expr.left, wrt_var, wrt_indices)
                 if isinstance(coeff, Const) and coeff.value == 0.0:
                     return _ZERO
@@ -155,7 +179,10 @@ def _extract(
                     return expr.right
                 return Binary("*", expr.right, coeff)
             if r_has and not l_has:
-                # d(c*f)/dx = c * df/dx
+                # d(c*f)/dx = c * df/dx — but c must not contain other vars
+                if _expr_has_any_var(expr.left):
+                    _logger.warning("Non-linear term: product of %s with another variable", wrt_var)
+                    return _ZERO
                 coeff = _extract(expr.right, wrt_var, wrt_indices)
                 if isinstance(coeff, Const) and coeff.value == 0.0:
                     return _ZERO
@@ -167,11 +194,11 @@ def _extract(
             return _ZERO
 
         if expr.op == "/":
-            # For linear: f/c where c is constant
+            # For linear: f/c where c has no decision variables
             if not _expr_has_var(expr.left, wrt_var):
                 return _ZERO
-            if _expr_has_var(expr.right, wrt_var):
-                _logger.warning("Non-linear term: division by expression containing %s", wrt_var)
+            if _expr_has_any_var(expr.right):
+                _logger.warning("Non-linear term: division by expression containing a variable")
                 return _ZERO
             coeff = _extract(expr.left, wrt_var, wrt_indices)
             if isinstance(coeff, Const) and coeff.value == 0.0:
