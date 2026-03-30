@@ -22,7 +22,7 @@ The **only valid GAMS form** is: `stat_e(t).. alp(t) * ... =E= 0` — the equati
 # All four models translate but fail GAMS compilation:
 for model in chenery shale otpop hhfair; do
   python -m src.cli data/gamslib/raw/${model}.gms -o /tmp/${model}_mcp.gms --skip-convexity-check
-  (cd /tmp && gams ${model}_mcp.gms lo=2) 2>&1 | grep '$171'
+  (cd /tmp && gams ${model}_mcp.gms lo=2) 2>&1 | grep -F '$171'
 done
 ```
 
@@ -175,7 +175,7 @@ This is the most complex step because it affects MCP pairing and multiplier decl
   ```bash
   for m in chenery shale otpop hhfair; do
     python -m src.cli data/gamslib/raw/$m.gms -o /tmp/${m}_mcp.gms --skip-convexity-check
-    (cd /tmp && gams ${m}_mcp.gms lo=2 2>&1) | grep -c '$171'
+    (cd /tmp && gams ${m}_mcp.gms lo=2 2>&1) | grep -F -c '$171'
   done
   ```
 - Verify MCP compiles (zero $171 errors)
