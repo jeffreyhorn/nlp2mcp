@@ -186,6 +186,9 @@ def normalize_model(
                 if ref_resolved_lower and ref_resolved_lower < current_resolved_lower:
                     ir.model_name = eq
                     ir.objective = _solve_objectives[ref_lower]
+                    # Reconcile solve_type when switching models
+                    if ref_lower in ir._solve_types:
+                        ir.solve_type = ir._solve_types[ref_lower]
                     break
 
     # Issue #1033: Compute model equation set BEFORE objective extraction

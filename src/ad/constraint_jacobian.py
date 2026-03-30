@@ -937,7 +937,7 @@ def _compute_equality_jacobian(
 
     simp_mode = get_simplification_mode(config)
 
-    # LP fast path: use coefficient extraction instead of symbolic differentiation
+    # LP fast path: use basic simplification instead of advanced for LP models
     use_lp_fast_path = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
 
     for eq_name in model_ir.equalities:
@@ -1058,7 +1058,7 @@ def _compute_inequality_jacobian(
 
     simp_mode = get_simplification_mode(config)
 
-    # LP fast path: use coefficient extraction instead of symbolic differentiation
+    # LP fast path: use basic simplification instead of advanced for LP models
     use_lp_fast_path = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
 
     for eq_name in model_ir.inequalities:

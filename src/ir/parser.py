@@ -3587,8 +3587,10 @@ class _ModelBuilder:
             self.model.model_name = name
             self.model.solve_type = solver_type_str
             self.model.objective = ObjectiveIR(sense=sense, objvar=objvar)
-            # Track per-model objectives for later reconciliation
+            # Track per-model objectives and solve types for later reconciliation
             self.model._solve_objectives[name.lower()] = ObjectiveIR(sense=sense, objvar=objvar)
+            if solver_type_str:
+                self.model._solve_types[name.lower()] = solver_type_str
         elif is_mcp_cns and self.model.objective is not None:
             # Issue #1026: MCP/CNS solves have no objective by design.
             # Don't update model_name — preserve the previous NLP model name

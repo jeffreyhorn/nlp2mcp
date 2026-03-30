@@ -1,10 +1,16 @@
 """LP-specific coefficient extraction for linear expressions.
 
 For LP models, all equation bodies are linear in the variables, so all
-partial derivatives are constants (coefficients). Instead of full symbolic
-differentiation, we extract coefficients directly from the expression tree
-in a single pass. This is O(n) in the expression size, avoiding the
-intermediate AST construction and simplification overhead.
+partial derivatives are constants (coefficients). This module extracts
+coefficients directly from the expression tree by recursively walking
+the AST. The cost is proportional to the expression tree size, avoiding
+the intermediate AST construction and simplification overhead of full
+symbolic differentiation.
+
+Note: This module is not yet wired into the main Jacobian pipeline
+(the LP fast path currently uses basic simplification instead of
+advanced). It is prepared for future use when sum-bound index handling
+is implemented.
 """
 
 from __future__ import annotations
@@ -80,8 +86,8 @@ def _expr_has_var(expr: Expr, wrt_var: str) -> bool:
         return _expr_has_var(expr.value_expr, wrt_var)
     if isinstance(expr, Call):
         return any(_expr_has_var(a, wrt_var) for a in expr.args)
-    # For unknown types, be conservative
-    return True
+    # Unknown types: return False (consistent with _extract returning zero)
+    return False
 
 
 _ZERO = Const(0.0)
@@ -102,12 +108,14 @@ def _extract(
     if isinstance(expr, VarRef):
         return _ONE if _var_matches(expr, wrt_var, wrt_indices) else _ZERO
 
-    # Unary negation: -f → -coeff(f)
+    # Unary operators: -f → -coeff(f), +f → coeff(f)
     if isinstance(expr, Unary) and expr.op == "-":
         inner = _extract(expr.child, wrt_var, wrt_indices)
         if isinstance(inner, Const) and inner.value == 0.0:
             return _ZERO
         return Unary("-", inner)
+    if isinstance(expr, Unary) and expr.op == "+":
+        return _extract(expr.child, wrt_var, wrt_indices)
 
     # Binary operations
     if isinstance(expr, Binary):
@@ -193,7 +201,7 @@ def _extract(
         return DollarConditional(value_expr=body_coeff, condition=expr.condition)
 
     # Function calls (e.g., abs, sqrt) — if var is inside, not linear
-    if isinstance(expr, (Unary, Call)):
+    if isinstance(expr, Call):
         return _ZERO
 
     # Unknown expression type — conservatively return zero
