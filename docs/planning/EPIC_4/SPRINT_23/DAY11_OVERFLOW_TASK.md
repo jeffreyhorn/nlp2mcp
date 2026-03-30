@@ -67,7 +67,7 @@ done
 **Error ($171):**
 - `stat_m(tl).. ... + n(tl) * nu_timemoney(tl) + ... =E= 0;` — `n` declared as `Variable n(t)` where `t(tl)`
 
-**Note:** This is a **VarRef** (not ParamRef). The `_preserve_subset_var_indices` function (line 1880) should protect it, but `_rewrite_subset_to_superset` (called at line 4011) rewrites `n(t)` → `n(tl)` afterward.
+**Note:** This is a **VarRef** (not ParamRef). The `_preserve_subset_var_indices` function should protect it, but `_rewrite_subset_to_superset` (called later in `_add_indexed_jacobian_terms`) rewrites `n(t)` → `n(tl)` afterward.
 
 **MCP pairing:** `stat_m(tl)` pairs with variable `m(tl)` (declared over superset `tl`)
 
@@ -84,7 +84,7 @@ Two code paths contribute:
 
 ### Path B: `_rewrite_subset_to_superset` (line 2688)
 
-Called at line 4011 with `subset_rename = {t: tt}` (or equivalent). This rewrites **ALL** index references (VarRef, ParamRef, MultiplierRef) from subset to superset. Even if Path A correctly preserves subset indices, Path B overwrites them.
+Called in `_add_indexed_jacobian_terms` with `subset_rename = {t: tt}` (or equivalent). This rewrites **ALL** index references (VarRef, ParamRef, MultiplierRef) from subset to superset. Even if Path A correctly preserves subset indices, Path B overwrites them.
 
 **Both paths must be fixed.**
 

@@ -336,7 +336,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | Solve ≥ 98 | 98 | 85 | ❌ Below |
 | Match ≥ 53 | 53 | 49 | ❌ Below |
 | path_solve_terminated ≤ 5 | 5 | 9 | ❌ Above |
-| model_infeasible ≤ 9 | 9 | 10 | ⚠️ Borderline |
+| model_infeasible ≤ 9 | 9 | 10 | ❌ Above |
 | path_syntax_error ≤ 16 | 16 | 28 | ❌ Above (influx) |
 | Tests pass | Yes | 4,358 passed | ✅ |
 
