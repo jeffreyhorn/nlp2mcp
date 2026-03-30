@@ -913,7 +913,7 @@ def emit_gams_mcp(
         sections.append(f"Acronym {', '.join(acronym_names)};")
         sections.append("")
 
-    params_code = emit_original_parameters(kkt.model_ir)
+    params_code = emit_original_parameters(kkt.model_ir, kkt.param_domain_widenings)
     if params_code:
         sections.append(params_code)
         sections.append("")

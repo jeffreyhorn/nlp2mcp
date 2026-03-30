@@ -1020,7 +1020,109 @@ def build_stationarity_equations(
         _collect_multiplier_refs(lhs, referenced_mults)
     kkt.referenced_multipliers = referenced_mults
 
+    # Issue #1164/#1175: Detect parameters declared over subsets that are
+    # used in stationarity equations over supersets. These need domain widening
+    # to avoid GAMS $171 domain violations.
+    _detect_param_domain_widenings(kkt, stationarity)
+
     return stationarity
+
+
+def _detect_param_domain_widenings(
+    kkt: KKTSystem,
+    stationarity: dict[str, EquationDef],
+) -> None:
+    """Detect parameters and variables needing domain widening.
+
+    When a parameter like alp(t) (declared over subset t⊂i) is used in
+    stat_e(i), the emitter must declare alp over i to avoid $171.
+    Same for variables like n(t) used in stat_m(tl).
+    """
+    model_ir = kkt.model_ir
+    param_widenings: dict[str, tuple[str, ...]] = {}
+    var_widenings: dict[str, tuple[str, ...]] = {}
+
+    for _eq_name, eq_def in stationarity.items():
+        eq_domain = eq_def.domain
+        if not eq_domain:
+            continue
+
+        # Collect ParamRef and VarRef names from the stationarity body
+        param_refs: set[str] = set()
+        var_refs: set[str] = set()
+        lhs, _ = eq_def.lhs_rhs
+        _collect_param_refs(lhs, param_refs)
+        _collect_var_refs(lhs, var_refs)
+
+        # Check parameters
+        for pname in param_refs:
+            if pname in param_widenings:
+                continue
+            pdef = model_ir.params.get(pname)
+            if not pdef or not pdef.domain:
+                continue
+            widened = _compute_widened_domain(pdef.domain, eq_domain, model_ir)
+            if widened is not None:
+                param_widenings[pname] = widened
+
+        # Check variables
+        for vname in var_refs:
+            if vname in var_widenings:
+                continue
+            vdef = model_ir.variables.get(vname)
+            if not vdef or not vdef.domain:
+                continue
+            widened = _compute_widened_domain(vdef.domain, eq_domain, model_ir)
+            if widened is not None:
+                var_widenings[vname] = widened
+
+    kkt.param_domain_widenings = param_widenings
+    kkt.var_domain_widenings = var_widenings
+
+
+def _compute_widened_domain(
+    symbol_domain: tuple[str, ...],
+    eq_domain: tuple[str, ...],
+    model_ir: ModelIR,
+) -> tuple[str, ...] | None:
+    """Compute widened domain if symbol domain is a strict subset of eq domain.
+
+    Returns the widened domain tuple, or None if no widening is needed.
+    """
+    if len(symbol_domain) != len(eq_domain):
+        return None
+    needs_widening = False
+    widened = list(symbol_domain)
+    for k, (sdim, edim) in enumerate(zip(symbol_domain, eq_domain, strict=True)):
+        if sdim.lower() == edim.lower():
+            continue
+        # Check if sdim is a subset of edim
+        sdim_def = model_ir.sets.get(sdim)
+        if (
+            sdim_def
+            and hasattr(sdim_def, "domain")
+            and sdim_def.domain
+            and any(p.lower() == edim.lower() for p in sdim_def.domain)
+        ):
+            widened[k] = edim
+            needs_widening = True
+    return tuple(widened) if needs_widening else None
+
+
+def _collect_param_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all ParamRef names."""
+    if isinstance(expr, ParamRef):
+        result.add(expr.name)
+    for child in expr.children():
+        _collect_param_refs(child, result)
+
+
+def _collect_var_refs(expr: Expr, result: set[str]) -> None:
+    """Walk an expression tree and collect all VarRef names (no attribute)."""
+    if isinstance(expr, VarRef) and not expr.attribute:
+        result.add(expr.name)
+    for child in expr.children():
+        _collect_var_refs(child, result)
 
 
 def _collect_multiplier_refs(expr: Expr, result: set[str]) -> None:

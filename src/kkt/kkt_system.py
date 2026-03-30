@@ -182,6 +182,14 @@ class KKTSystem:
         default_factory=dict
     )
 
+    # Issue #1164/#1175: Parameter and variable domain widenings.
+    # When a parameter/variable declared over a subset (e.g., alp(t) where t⊂i)
+    # is used in a stationarity equation over the superset (stat_e(i)),
+    # the emitter must declare the symbol over the superset to avoid $171.
+    # Maps symbol_name -> widened_domain.
+    param_domain_widenings: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    var_domain_widenings: dict[str, tuple[str, ...]] = field(default_factory=dict)
+
     # Issue #1053: Multiplier domain widenings.
     # When a multiplier's domain is widened from a subset to its parent set
     # (e.g., nu_e2 from (j) to (i) because j⊂i), the emitter must fix
