@@ -1057,29 +1057,33 @@ def _detect_symbol_domain_widenings(
         _collect_param_refs(lhs, param_refs)
         _collect_var_refs(lhs, var_refs)
 
-        # Check parameters
+        # Check parameters — accumulate widenings across equations
         for pname in param_refs:
             key = pname.lower()
-            if key in param_widenings:
-                # First match wins — in practice all stationarity equations
-                # for the same variable share the same domain.
-                continue
-            pdef = model_ir.params.get(pname)
-            if not pdef or not pdef.domain:
-                continue
-            widened = _compute_widened_domain(pdef.domain, eq_domain, model_ir)
+            existing = param_widenings.get(key)
+            if existing is not None:
+                base_domain = existing
+            else:
+                pdef = model_ir.params.get(pname)
+                if not pdef or not pdef.domain:
+                    continue
+                base_domain = pdef.domain
+            widened = _compute_widened_domain(base_domain, eq_domain, model_ir)
             if widened is not None:
                 param_widenings[key] = widened
 
-        # Check variables
+        # Check variables — accumulate widenings across equations
         for vname in var_refs:
             key = vname.lower()
-            if key in var_widenings:
-                continue
-            vdef = model_ir.variables.get(vname)
-            if not vdef or not vdef.domain:
-                continue
-            widened = _compute_widened_domain(vdef.domain, eq_domain, model_ir)
+            existing = var_widenings.get(key)
+            if existing is not None:
+                base_domain = existing
+            else:
+                vdef = model_ir.variables.get(vname)
+                if not vdef or not vdef.domain:
+                    continue
+                base_domain = vdef.domain
+            widened = _compute_widened_domain(base_domain, eq_domain, model_ir)
             if widened is not None:
                 var_widenings[key] = widened
 
