@@ -21,9 +21,17 @@ python -m src.cli data/gamslib/raw/chenery.gms -o /tmp/chenery_mcp.gms --skip-co
 
 The stationarity equations iterate over `i = {light-ind, food+agr, heavy-ind, services}` but parameters `alp(t)` and `xsi(t)` are only meaningful for `t = {light-ind, food+agr, heavy-ind}`. Domain widening declares them over `i`, so the `services` element gets zero values. This may create contradictory KKT conditions for the `services` instance.
 
+## Investigation (2026-03-30)
+
+`.fx` statements correctly zero out multipliers for out-of-subset instances (e.g., `nu_dg.fx(i)$(not (t(i))) = 0;`). The infeasibility is structural — the KKT conditions are mathematically wrong.
+
+Specific finding: `stat_y(i)` equations have `=E= 1` on the RHS but LHS is 0 at the initial point, with INFES=1. The `1` appears to be from the objective gradient coefficient for `y`. The `comp_mb` equations also show large infeasibilities (50-110).
+
+This suggests the stationarity equations themselves are incorrectly constructed — possibly the objective gradient term or the constraint Jacobian entries for `y` are wrong. The domain widening may have introduced zero entries where non-zero coefficients should exist.
+
 ## Fix Approach
 
-Investigate whether the stationarity equations for `services` (the superset-only element) need special handling:
-1. Check if `.fx` statements correctly zero out multipliers for out-of-subset instances
-2. Verify that the dollar conditions on stationarity terms properly exclude out-of-subset elements
-3. May need to add explicit `.fx` for primal variables or multipliers at `services`
+1. Compare the generated KKT equations against manually-derived KKT for chenery
+2. Check if the objective gradient for `y` is correct (should it be 1?)
+3. Verify Jacobian entries for `comp_mb` constraint w.r.t. `y` variables
+4. The infeasibility may require fixing the stationarity builder's handling of the objective function in models with subset-domain variables

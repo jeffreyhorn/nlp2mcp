@@ -29,8 +29,19 @@ The stationarity equations involve complex expressions with powers and divisions
 
 The `execError = 0` at line 46 clears pre-existing errors, but new errors are generated during equation evaluation at lines 46-261.
 
+## Investigation (2026-03-30)
+
+The stationarity equations involve CES utility function derivatives with expressions like `(th - l(t) - n(t)) ** ((-1) * a2)` and `c(t) ** ((-1) * a2)`. Variable initialization exists for `a`, `c`, `l`, `m` but NOT for `n`.
+
+The key issue: `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0` which is NOT in subset `t`. At `tl=0`:
+- `n(tl)` was domain-widened from `n(t)` to `n(tl)` — at `tl=0`, `n('0')` has no data (default 0)
+- `nu_timemoney(tl)` at `tl=0` may also be undefined
+- The expression evaluation at out-of-subset elements likely triggers the EXECERROR
+
+The EXECERROR is a consequence of domain widening: the equation iterates over `tl` (superset) but some terms only have valid data for `t` (subset). The dollar conditions `$(t(tl))` guard the stationarity terms, but GAMS may still attempt to evaluate all terms before applying the condition.
+
 ## Fix Approach
 
-1. Check which stationarity equation triggers the EXECERROR (add `option execErr = 0;` or `$onError` directives)
-2. Investigate if variable initialization (`.l` values) prevents division by zero
-3. May need to add better initial point or guards against zero denominators in the emitted MCP
+1. Add `.fx` for out-of-subset equation instances: `stat_m.fx(tl)$(not t(tl)) = 0;` would skip evaluation at `tl=0`
+2. Or wrap the entire stationarity body in a conditional to prevent evaluation at out-of-subset elements
+3. May need to initialize widened variables at out-of-subset elements to safe values

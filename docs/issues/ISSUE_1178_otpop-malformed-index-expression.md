@@ -29,9 +29,19 @@ The stationarity builder's element-to-set substitution incorrectly handles cases
 
 After substituting concrete elements, the arithmetic expressions become malformed because literal year values replace symbolic set variables.
 
+## Investigation (2026-03-30)
+
+The malformed expressions come from two equations in the original model:
+- `adef(tt)$tp(tt).. as(tt) =e= as(tt-1) + con*d(tt-1)*(pd(tt-l)-ph);` — `pd(tt-l)` where `l = ord(n)-1`
+- `zdef.. z =e= v*sum(t, .365*(xb(t) - x(t))*p(t + (card(t) - ord(t))))` — `p(t + (card(t) - ord(t)))` is a "reverse time" access pattern
+
+Both involve complex index arithmetic that the stationarity builder's concrete element substitution cannot handle. After substitution, `tt` becomes `1966` (a literal year), producing `pd(1966-l)` and `p(1974+(card(t)-ord(t)))`.
+
 ## Fix Approach
 
-The stationarity builder needs to:
-1. Detect when a concrete element is used with arithmetic offset in a ParamRef/VarRef index
-2. Preserve the original symbolic expression structure (e.g., keep `tt-l` rather than substituting `1966-l`)
-3. Handle complex lead/lag patterns like `t + (card(t) - ord(t))` by preserving the symbolic form
+These are deep issues in the stationarity builder's handling of IndexOffset/arithmetic indices:
+1. The `pd(tt-l)` pattern requires understanding that `l` is a loop variable from `sum(n, ...)` — it's not a simple offset
+2. The `p(t + (card(t) - ord(t)))` pattern is a "time reversal" that needs special handling
+3. Both require preserving the symbolic structure through differentiation, which is architecturally complex
+
+This is related to the broader issue of how the AD pipeline handles non-trivial index arithmetic in differentiated expressions.
