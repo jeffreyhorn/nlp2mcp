@@ -266,10 +266,13 @@ def compute_objective_gradient(model_ir: ModelIR, config: Config | None = None) 
                 # max f(x) = min -f(x), so gradient is -∇f
                 derivative = Unary("-", derivative)
 
-            # LP fast path: use basic simplification (identity/zero
-            # elimination) instead of expensive advanced simplification
+            # LP fast path: cap simplification at basic (identity/zero
+            # elimination) instead of expensive advanced simplification,
+            # but still respect an explicit "none" mode from config.
             is_lp = model_ir.solve_type is not None and model_ir.solve_type.upper() == "LP"
-            mode = "basic" if is_lp else get_simplification_mode(config)
+            mode = get_simplification_mode(config)
+            if is_lp and mode != "none":
+                mode = "basic"
             derivative = apply_simplification(derivative, mode)
 
             # Store in gradient vector
