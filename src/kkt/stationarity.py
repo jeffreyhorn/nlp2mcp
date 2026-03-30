@@ -1061,7 +1061,8 @@ def _detect_symbol_domain_widenings(
         for pname in param_refs:
             key = pname.lower()
             if key in param_widenings:
-                # Merge: take the widest domain seen across equations
+                # First match wins — in practice all stationarity equations
+                # for the same variable share the same domain.
                 continue
             pdef = model_ir.params.get(pname)
             if not pdef or not pdef.domain:
