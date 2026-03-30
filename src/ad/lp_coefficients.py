@@ -3,9 +3,10 @@
 For LP models, all equation bodies are linear in the variables, so all
 partial derivatives are constants (coefficients). This module extracts
 coefficients directly from the expression tree by recursively walking
-the AST. The cost is proportional to the expression tree size, avoiding
-the intermediate AST construction and simplification overhead of full
-symbolic differentiation.
+the AST. This is typically faster than full symbolic differentiation
+since it avoids intermediate AST construction and advanced
+simplification, though repeated subtree checks can make worst-case
+cost superlinear.
 
 Note: This module is not yet wired into the main Jacobian pipeline
 (the LP fast path currently uses basic simplification instead of
@@ -56,6 +57,9 @@ def extract_linear_coefficient(
 
 def _var_matches(ref: VarRef, wrt_var: str, wrt_indices: tuple | None) -> bool:
     """Check if a VarRef matches the target variable and indices."""
+    # Variable attribute refs (x.l, x.lo, x.up) are constants, not decision variables
+    if ref.attribute:
+        return False
     if ref.name.lower() != wrt_var.lower():
         return False
     if wrt_indices is None:
@@ -73,7 +77,8 @@ def _var_matches(ref: VarRef, wrt_var: str, wrt_indices: tuple | None) -> bool:
 def _expr_has_var(expr: Expr, wrt_var: str) -> bool:
     """Quick check if expression references the target variable at all."""
     if isinstance(expr, VarRef):
-        return expr.name.lower() == wrt_var.lower()
+        # Variable attribute refs (x.l, x.lo) are constants, not decision variables
+        return not expr.attribute and expr.name.lower() == wrt_var.lower()
     if isinstance(expr, (Const, ParamRef)):
         return False
     if isinstance(expr, Binary):
