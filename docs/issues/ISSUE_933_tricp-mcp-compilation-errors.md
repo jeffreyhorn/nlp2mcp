@@ -76,6 +76,15 @@ Despite having only 6 variables and 3 equations, the model uses dense 2-dimensio
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-LP fast path implemented (PR #1152) but does not apply to this QCP model. The timeout requires either a sparsity-aware Jacobian or increased timeout limits.
+**Translation timeout: FIXED** (with increased 300s timeout). Translation now completes at ~135s.
+
+**Current blocker: MCP compilation errors (10 errors)**
+- $148 Dimension mismatch (2 occurrences)
+- $149 Uncontrolled set entered as constant (6 occurrences)
+- $141/$257 cascading from above
+
+These are index domain errors in the generated MCP, likely related to equation index domains not being properly propagated.
+
+Parse: fast | Translate: ~135s | Compile: FAIL | Solve: N/A

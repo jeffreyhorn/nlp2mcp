@@ -74,8 +74,15 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-**Translation timeout: FIXED** by LP fast path (PR #1152). Added `solve_type` field to ModelIR and use basic simplification instead of advanced for LP models, reducing differentiation overhead.
+**Translation timeout: FIXED** by LP fast path (PR #1172).
 
-Translation now completes successfully. However, the generated MCP has secondary compilation errors ($140 unknown symbol, $149/$171 dimension/domain issues) that are separate blocking issues requiring further investigation.
+**Current blocker: Generated identifier names exceed 63-char GAMS limit (26 errors)**
+- $109 Identifier too long (18 occurrences) — hash-suffixed variable names like `nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5` exceed the 63-character GAMS limit
+- $108 Suffix identifier too long (4 occurrences)
+- $141/$257 cascading from above
+
+Fix: Truncate or shorten the naming scheme for generated MCP variables when element names are long.
+
+Parse: ~35s | Translate: completes | Compile: FAIL | Solve: N/A

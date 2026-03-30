@@ -65,8 +65,15 @@ The model is a large dynamic multi-sectoral LP. Applying symbolic KKT differenti
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-**Translation timeout: FIXED** by LP fast path (PR #1152). Added `solve_type` field to ModelIR and use basic simplification instead of advanced for LP models, reducing differentiation overhead.
+**Translation timeout: FIXED** by LP fast path (PR #1172). Added `solve_type` field to ModelIR and use basic simplification instead of advanced for LP models.
 
-Translation now completes successfully. However, the generated MCP has secondary compilation errors ($140 unknown symbol, $149/$171 dimension/domain issues) that are separate blocking issues requiring further investigation.
+**Current blocker: MCP compilation errors (11 errors)**
+- $140 Unknown symbol (`rhotp` — computed parameter not declared/emitted in MCP)
+- $148 Dimension mismatch
+- $149 Uncontrolled set entered as constant
+- $171 Domain violation for set
+- $141/$257 cascading from above
+
+Parse: ~173s | Translate: completes | Compile: FAIL | Solve: N/A

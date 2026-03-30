@@ -49,6 +49,8 @@ This is part of the broader LP timeout family (L2 in ISSUE_FIX_OPPORTUNITIES.md)
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-LP fast path implemented (PR #1152, basic simplification for LP models) but does not resolve this model's timeout. The differentiation itself (not simplification) is the bottleneck — despite the model being LP, the expression structure creates too many variable/equation instance combinations. Needs a coefficient extraction approach that handles sum-bound indices, or a sparsity-aware Jacobian.
+**Current blocker: Translation timeout (>300s).** LP fast path (PR #1172, basic simplification) implemented but differentiation itself is the bottleneck. Despite the model being LP with only 3 equations in the solved model `evaldt`, the expression structure creates too many variable/equation instance combinations. Needs coefficient extraction with sum-bound index handling, or a sparsity-aware Jacobian.
+
+Parse: ~46s | Translate: TIMEOUT | Compile: N/A | Solve: N/A

@@ -71,6 +71,8 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-LP fast path implemented (PR #1152, basic simplification for LP models) but does not resolve this model's timeout. The differentiation itself (not simplification) is the bottleneck — the 3-dimensional variable `f(n,n1,m)` over large network sets creates too many variable/equation instances. Needs a coefficient extraction approach that handles sum-bound indices, or a sparsity-aware Jacobian.
+**Current blocker: Translation timeout (>300s).** LP fast path (PR #1172, basic simplification) implemented but differentiation itself is the bottleneck — the 3-dimensional variable `f(n,n1,m)` over large network sets creates too many variable/equation instances. Needs coefficient extraction with sum-bound index handling, or a sparsity-aware Jacobian.
+
+Parse: ~58s | Translate: TIMEOUT | Compile: N/A | Solve: N/A

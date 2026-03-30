@@ -71,6 +71,8 @@ Same as other LP timeout models — LP-specific fast path, sparsity-aware Jacobi
 
 ---
 
-## Progress (2026-03-29)
+## Current Status (2026-03-29)
 
-LP fast path implemented (PR #1152, basic simplification for LP models) but does not resolve this model's timeout. The differentiation itself (not simplification) is the bottleneck — the model has 29 variables (including 4-dimensional `xcrop`) and 25 equations over 37 sets, creating too many variable/equation instances. Needs a coefficient extraction approach or a sparsity-aware Jacobian.
+**Current blocker: Translation timeout (>300s).** LP fast path (PR #1172, basic simplification) implemented but differentiation itself is the bottleneck — 29 variables (including 4-dimensional `xcrop`) and 25 equations over 37 sets create too many instances. Needs coefficient extraction or sparsity-aware Jacobian.
+
+Parse: ~38s | Translate: TIMEOUT | Compile: N/A | Solve: N/A
