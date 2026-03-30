@@ -15,6 +15,8 @@ is implemented.
 
 from __future__ import annotations
 
+import logging
+
 from ..ir.ast import (
     Binary,
     Call,
@@ -90,6 +92,7 @@ def _expr_has_var(expr: Expr, wrt_var: str) -> bool:
     return False
 
 
+_logger = logging.getLogger(__name__)
 _ZERO = Const(0.0)
 _ONE = Const(1.0)
 
@@ -154,7 +157,8 @@ def _extract(
                 if isinstance(coeff, Const) and coeff.value == 1.0:
                     return expr.left
                 return Binary("*", expr.left, coeff)
-            # Both sides have the variable — not linear, fall through
+            # Both sides have the variable — not linear
+            _logger.warning("Non-linear term detected: both sides of '*' contain %s", wrt_var)
             return _ZERO
 
         if expr.op == "/":
@@ -162,7 +166,8 @@ def _extract(
             if not _expr_has_var(expr.left, wrt_var):
                 return _ZERO
             if _expr_has_var(expr.right, wrt_var):
-                return _ZERO  # Not linear
+                _logger.warning("Non-linear term: division by expression containing %s", wrt_var)
+                return _ZERO
             coeff = _extract(expr.left, wrt_var, wrt_indices)
             if isinstance(coeff, Const) and coeff.value == 0.0:
                 return _ZERO
