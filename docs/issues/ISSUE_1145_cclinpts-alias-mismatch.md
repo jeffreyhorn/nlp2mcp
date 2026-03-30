@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1145](https://github.com/jeffreyhorn/nlp2mcp/issues/1145)
 **Status:** OPEN
-**Severity:** High — objective mismatch (69.9%)
+**Severity:** High — MCP compilation failure (was objective mismatch, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** cclinpts
@@ -71,3 +71,7 @@ computation is substantially wrong, likely due to:
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`, `_diff_varref`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/cclinpts.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates but MCP compilation fails with $120/$149/$171 errors. Similar to polygon (#1143): literal elements used with arithmetic offsets in stationarity equations.

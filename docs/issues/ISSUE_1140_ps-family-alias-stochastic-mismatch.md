@@ -88,3 +88,7 @@ gradients when aliased indices appear in cross-scenario coupling terms.
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/ps2_s.gms` — Simplest PS variant (2 scenarios)
 - `data/gamslib/raw/ps10_s.gms` — Largest PS variant (10 scenarios)
+
+## Current Status (2026-03-30)
+
+ps2_s, ps3_s, and ps10_s all translate, compile, and solve to Optimal. ps4_s and ps5_s files were not found in gamslib. Objective match needs verification with correct reference values.

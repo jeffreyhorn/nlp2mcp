@@ -81,3 +81,11 @@ complex patterns:
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/irscge.gms` — Simplest CGE variant
 - `data/gamslib/raw/stdcge.gms` — Standard CGE template
+
+## Current Status (2026-03-30)
+
+- **splcge**: SOLVED — full pipeline success, objective matches reference.
+- **camcge**: Compiles but fails $141 — zero-valued param `te(i) = 0` is dropped.
+- **cesam2**: Compiles but fails $140 — undeclared loop-scoped params (`sigmay3`, `vbar3`, `wbar3`).
+
+The camcge and cesam2 failures are not alias-related.

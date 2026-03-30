@@ -68,3 +68,7 @@ multi-matching fix should apply. Possible reasons for residual mismatch:
 
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`
 - `data/gamslib/raw/meanvar.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates and solves to MODEL STATUS 1 Optimal, but objective does not match the NLP reference. Same alias differentiation root cause as qabel/abel (#1137): `_alias_match` in `derivative_rules.py` incorrectly handles alias-bound indices in sum contexts.

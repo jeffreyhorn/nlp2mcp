@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1144](https://github.com/jeffreyhorn/nlp2mcp/issues/1144)
 **Status:** OPEN
-**Severity:** High — model_infeasible (was model_optimal)
+**Severity:** High — MCP compilation failure (was model_infeasible, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** catmix
@@ -107,3 +107,7 @@ equations with only lag offsets (negative, like `t-1`).
 - `src/ir/parser.py` — `_domain_list()`, `_handle_eqn_def_domain()` — domain qualifier lost
 - `src/emit/equations.py:469` — `skip_lead_lag_inference=True` for all equalities
 - `data/gamslib/raw/catmix.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates but MCP compilation fails with $145/$148 errors. Stationarity equations have malformed expressions (`u(0+1)`) and misplaced parentheses. This is a domain inference regression from PR #1076 (`skip_lead_lag_inference=True`), not an alias differentiation issue.

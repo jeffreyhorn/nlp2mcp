@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1143](https://github.com/jeffreyhorn/nlp2mcp/issues/1143)
 **Status:** OPEN
-**Severity:** Critical — objective mismatch (100%)
+**Severity:** Critical — MCP compilation failure (was objective mismatch, now compile errors)
 **Date:** 2026-03-23
 **Parent Issue:** #1111 (Alias-Aware Differentiation)
 **Affected Models:** polygon
@@ -82,3 +82,7 @@ degenerate to `0 = 0` or trivially satisfied conditions. This can happen when:
 - `src/ad/derivative_rules.py` — `_partial_collapse_sum`, `_diff_varref`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
 - `data/gamslib/raw/polygon.gms` — Source model
+
+## Current Status (2026-03-30)
+
+Translates but MCP compilation fails with $120/$149/$171 errors. Stationarity equations use literal elements with arithmetic offsets (e.g., `theta(i1+1)`) and unknown alias sets. This is distinct from the standard alias differentiation root cause.
