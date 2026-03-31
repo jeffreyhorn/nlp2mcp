@@ -693,6 +693,7 @@ abort_cond_atom: func_call
 // Issue #889: Added display$condition variants
 display_stmt: "display"i DOLLAR "(" expr ")" display_item (","? display_item)* SEMI  -> display_cond_paren
             | "display"i DOLLAR "[" expr "]" display_item (","? display_item)* SEMI   -> display_cond_square
+            | "display"i DOLLAR func_call display_item (","? display_item)* SEMI      -> display_cond_func
             | "display"i display_item (","? display_item)* SEMI
 
 display_item: expr
@@ -704,6 +705,7 @@ abort_stmt: abort_base SEMI
 // Sprint 17 Day 6: Made comma optional to support whitespace/newline separation
 display_stmt_nosemi: "display"i DOLLAR "(" expr ")" display_item (","? display_item)*  -> display_cond_paren_nosemi
                    | "display"i DOLLAR "[" expr "]" display_item (","? display_item)*   -> display_cond_square_nosemi
+                   | "display"i DOLLAR func_call display_item (","? display_item)*      -> display_cond_func_nosemi
                    | "display"i display_item (","? display_item)*
 
 abort_stmt_nosemi: abort_base
@@ -812,7 +814,7 @@ arg_list: expr ("," expr)*
 // Tokens & basics
 // ---------------------------
 
-FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniformInt|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas|errorf|sign|centropy|mapval|betareg)\b/
+FUNCNAME: /(?i:abs|exp|log10|log2|log|sqrt|sin|cos|tan|min|max|power|signpower|sqr|ord|card|uniformInt|uniform|normal|gamma|loggamma|psi|round|mod|ceil|floor|sameas|errorf|sign|centropy|mapval|betareg|handlecollect|handledelete|handlestatus|handlesubmit|sleep)\b/
 // Sprint 19 Day 11: smax/smin moved out of FUNCNAME to support aggregation index domain syntax
 SMAX_K: /(?i:smax)\b/
 SMIN_K: /(?i:smin)\b/
