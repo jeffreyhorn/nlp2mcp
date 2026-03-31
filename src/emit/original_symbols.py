@@ -708,9 +708,54 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
     return tuple(expanded)
 
 
+def _collect_loop_referenced_params(model_ir: ModelIR) -> set[str]:
+    """Collect parameter names referenced in non-solve loop statement bodies.
+
+    Issue #1182: Parameters assigned inside loops (e.g., kdem(k) = uniform(...))
+    need to be declared even if they have no static values/expressions.
+
+    Skips loops containing solve statements, since those are typically
+    not emitted and declaring their params can cause $141.
+
+    Returns a lowercase set of parameter names.
+    """
+    from lark import Token, Tree
+
+    param_names_lower = {p.lower() for p in model_ir.params}
+    result: set[str] = set()
+
+    def _collect_ids(node: Tree | Token) -> None:
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() in param_names_lower:
+                result.add(str(node).lower())
+        elif isinstance(node, Tree):
+            for c in node.children:
+                _collect_ids(c)
+
+    for loop_stmt in model_ir.loop_statements:
+        if not hasattr(loop_stmt, "body_stmts"):
+            continue
+        # Match emit_loop_statements() filters exactly:
+        # skip if no raw_node, while_stmt, contains solve, or non-param-assign body
+        if getattr(loop_stmt, "raw_node", None) is None:
+            continue
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
+            continue
+        if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_param_assigns(loop_stmt, param_names_lower):
+            continue
+        for stmt in loop_stmt.body_stmts:
+            if isinstance(stmt, (Tree, Token)):
+                _collect_ids(stmt)
+
+    return result
+
+
 def emit_original_parameters(
     model_ir: ModelIR,
     param_domain_widenings: dict[str, tuple[str, ...]] | None = None,
+    model_relevant_params: set[str] | None = None,
 ) -> str:
     """Emit Parameters and Scalars with their data.
 
@@ -799,6 +844,9 @@ def emit_original_parameters(
         s.lower() for s in model_ir.aliases.keys()
     }
 
+    # Issue #1182: Precompute loop-referenced params (O(loop_tree_size) once)
+    loop_referenced_params = _collect_loop_referenced_params(model_ir)
+
     # Emit Parameters
     if parameters:
         lines.append("Parameters")
@@ -862,13 +910,19 @@ def emit_original_parameters(
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
-                # Issue #917: Skip parameters with no values AND no expressions.
-                # These are typically loop-initialized reporting parameters
-                # (e.g., Util_lic(t) = Util.l inside a solve loop) that serve
-                # no purpose in the single-solve MCP. Emitting empty declarations
-                # causes GAMS $141 ("Symbol declared but no values assigned").
+                # Issue #917: Skip parameters with no values AND no expressions,
+                # UNLESS they're referenced in model equations or loop
+                # statements (Issue #1182). Loop-initialized reporting
+                # parameters are skipped, but parameters used in equations
+                # or pre-solve loops must be declared.
                 if not param_def.expressions:
-                    continue
+                    is_model_relevant = (
+                        model_relevant_params is not None
+                        and param_name.lower() in model_relevant_params
+                    )
+                    is_loop_referenced = param_name.lower() in loop_referenced_params
+                    if not is_model_relevant and not is_loop_referenced:
+                        continue
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
@@ -2504,12 +2558,27 @@ def _loop_tree_to_gams(node: object) -> str:
         return f"({inner})"
     # sum(domain, expr), prod(domain, expr), smax(domain, expr), smin(domain, expr)
     if data in ("sum", "prod", "smax", "smin"):
-        domain = _loop_tree_to_gams(node.children[0])
-        body = _loop_tree_to_gams(node.children[1])
+        # Skip leading keyword token (SUM_K, PROD_K, etc.) if present
+        tree_children = [c for c in node.children if isinstance(c, Tree)]
+        if len(tree_children) >= 2:
+            domain = _loop_tree_to_gams(tree_children[0])
+            body = _loop_tree_to_gams(tree_children[1])
+        else:
+            domain = _loop_tree_to_gams(node.children[0])
+            body = _loop_tree_to_gams(node.children[1])
         return f"{data}({domain}, {body})"
     # sum_domain variants: index_spec, tuple_domain, tuple_domain_cond
     if data == "sum_domain":
         return _loop_tree_to_gams(node.children[0])
+    if data == "index_spec":
+        # index_spec: index_list [DOLLAR condition]
+        # Emit as "i$(cond)" or just "i" if no condition
+        idx_parts: list[Tree] = [c for c in node.children if isinstance(c, Tree)]
+        idx = _loop_tree_to_gams(idx_parts[0])
+        if len(idx_parts) >= 2:
+            cond = _loop_tree_to_gams(idx_parts[1])
+            return f"{idx}$({cond})"
+        return idx
     if data == "tuple_domain":
         return f"({_loop_tree_to_gams(node.children[0])})"
     if data == "tuple_domain_cond":

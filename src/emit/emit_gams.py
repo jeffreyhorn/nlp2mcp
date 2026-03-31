@@ -913,7 +913,12 @@ def emit_gams_mcp(
         sections.append(f"Acronym {', '.join(acronym_names)};")
         sections.append("")
 
-    params_code = emit_original_parameters(kkt.model_ir, kkt.param_domain_widenings)
+    # Compute model-relevant params early so emit_original_parameters can
+    # keep loop-initialized parameters that are used in model equations (#1182)
+    model_relevant_params = _collect_model_relevant_params(kkt.model_ir)
+    params_code = emit_original_parameters(
+        kkt.model_ir, kkt.param_domain_widenings, model_relevant_params
+    )
     if params_code:
         sections.append(params_code)
         sections.append("")
@@ -947,7 +952,7 @@ def emit_gams_mcp(
     # solution values) must not be emitted as computed assignments before the
     # MCP solve.  Compute the complement set and merge it into exclude_params
     # for all computed parameter emission calls.
-    model_relevant_params = _collect_model_relevant_params(kkt.model_ir)
+    # model_relevant_params already computed above for emit_original_parameters
     non_model_params: set[str] | None = None
     if model_relevant_params is not None:
         all_params_lower = {p.lower() for p in kkt.model_ir.params}
