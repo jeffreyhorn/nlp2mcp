@@ -191,15 +191,12 @@ def resolve_set_members(
         return (set_def.members, set_or_alias_name)
 
     # Issue #940: Handle GAMS universal set '*' — contains all elements
-    # from all declared sets in the model. Cache as a synthetic '*' entry
-    # in model_ir.sets so subsequent calls are O(1).
+    # from all declared sets in the model. Cached on the ModelIR instance
+    # to avoid recomputing on each call.
     if set_or_alias_name == "*":
-        if "*" in model_ir.sets:
-            cached = model_ir.sets["*"]
-            if isinstance(cached, (list, tuple)):
-                return (list(cached), "*")
-            if hasattr(cached, "members"):
-                return (cached.members, "*")
+        cached = getattr(model_ir, "_universal_set_cache", None)
+        if cached is not None:
+            return (list(cached), "*")
         all_elements: list[str] = []
         seen: set[str] = set()
         for sdef in model_ir.sets.values():
@@ -214,8 +211,8 @@ def resolve_set_members(
                 if elem not in seen:
                     seen.add(elem)
                     all_elements.append(elem)
-        # Cache for subsequent calls (list used for test compat)
-        model_ir.sets["*"] = all_elements  # type: ignore[assignment]
+        # Cache on instance (not in sets dict to avoid breaking downstream code)
+        model_ir._universal_set_cache = all_elements  # type: ignore[attr-defined]
         return (all_elements, "*")
 
     raise ValueError(
