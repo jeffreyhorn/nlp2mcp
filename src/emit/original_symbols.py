@@ -735,8 +735,15 @@ def _collect_loop_referenced_params(model_ir: ModelIR) -> set[str]:
     for loop_stmt in model_ir.loop_statements:
         if not hasattr(loop_stmt, "body_stmts"):
             continue
-        # Skip loops containing solve statements (matches emitter's filter)
+        # Match emit_loop_statements() filters exactly:
+        # skip if no raw_node, while_stmt, contains solve, or non-param-assign body
+        if getattr(loop_stmt, "raw_node", None) is None:
+            continue
+        if getattr(loop_stmt.raw_node, "data", None) == "while_stmt":
+            continue
         if _loop_contains_solve(loop_stmt):
+            continue
+        if not _loop_body_only_param_assigns(loop_stmt, param_names_lower):
             continue
         for stmt in loop_stmt.body_stmts:
             if isinstance(stmt, (Tree, Token)):
