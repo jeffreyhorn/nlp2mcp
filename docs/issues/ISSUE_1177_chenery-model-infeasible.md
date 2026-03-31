@@ -25,7 +25,7 @@ The stationarity equations iterate over `i = {light-ind, food+agr, heavy-ind, se
 
 `.fx` statements correctly zero out multipliers for out-of-subset instances (e.g., `nu_dg.fx(i)$(not (t(i))) = 0;`). The infeasibility is structural — the KKT conditions are mathematically wrong.
 
-Specific finding: `stat_y(i)` equations have `=E= 1` on the RHS but LHS is 0 at the initial point, with INFES=1. The `1` appears to be from the objective gradient coefficient for `y`. The `comp_mb` equations also show large infeasibilities (50-110).
+Specific finding: `stat_y(i)` equations contain a constant 1 term (e.g., `-1 + ... =E= 0`) but LHS evaluates to 0 at the initial point, with INFES=1. The constant appears to be from the objective gradient coefficient for `y`. The `comp_mb` equations also show large infeasibilities (50-110).
 
 This suggests the stationarity equations themselves are incorrectly constructed — possibly the objective gradient term or the constraint Jacobian entries for `y` are wrong. The domain widening may have introduced zero entries where non-zero coefficients should exist.
 
