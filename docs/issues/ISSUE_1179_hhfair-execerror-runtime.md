@@ -42,6 +42,6 @@ The EXECERROR is a consequence of domain widening: the equation iterates over `t
 
 ## Fix Approach
 
-1. Add `.fx` for out-of-subset equation instances: `stat_m.fx(tl)$(not t(tl)) = 0;` would skip evaluation at `tl=0`
-2. Or wrap the entire stationarity body in a conditional to prevent evaluation at out-of-subset elements
-3. May need to initialize widened variables at out-of-subset elements to safe values
+1. Restrict the stationarity equation domain so it is only generated where data are valid, e.g., add a `$(t(tl))` condition on the equation definition so `tl=0` is excluded entirely
+2. Alternatively, fix the paired variable/multiplier at out-of-subset elements, e.g., `m.fx(tl)$(not t(tl)) = 0;` (`.fx` is a variable attribute, not an equation attribute)
+3. May need to initialize widened variables at out-of-subset elements to safe values to avoid domain violations during evaluation
