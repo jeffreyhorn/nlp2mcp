@@ -196,11 +196,17 @@ def resolve_set_members(
         all_elements: list[str] = []
         seen: set[str] = set()
         for sdef in model_ir.sets.values():
-            if hasattr(sdef, "members") and sdef.members:
-                for elem in sdef.members:
-                    if elem not in seen:
-                        seen.add(elem)
-                        all_elements.append(elem)
+            # Support both SetDef objects and plain list/tuple/set (test compat)
+            if isinstance(sdef, (list, tuple, set)):
+                members = list(sdef)
+            elif hasattr(sdef, "members") and sdef.members:
+                members = sdef.members
+            else:
+                continue
+            for elem in members:
+                if elem not in seen:
+                    seen.add(elem)
+                    all_elements.append(elem)
         return (all_elements, "*")
 
     raise ValueError(

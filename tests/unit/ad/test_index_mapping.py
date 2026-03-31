@@ -326,3 +326,20 @@ class TestIndexMapping:
         assert mapping.get_row_id("g", ()) is None
         assert mapping.get_var_instance(999) is None
         assert mapping.get_eq_instance(999) is None
+
+
+def test_resolve_universal_set_star():
+    """Issue #940: resolve_set_members('*') returns union of all set elements."""
+    from src.ad.index_mapping import resolve_set_members
+    from src.ir.model_ir import ModelIR
+
+    model = ModelIR()
+    # Use list-backed sets for test compatibility
+    model.sets["i"] = ["a", "b", "c"]
+    model.sets["j"] = ["b", "c", "d"]
+
+    members, resolved_name = resolve_set_members("*", model)
+    assert resolved_name == "*"
+    assert set(members) == {"a", "b", "c", "d"}
+    # Order preserved: first seen wins
+    assert members == ["a", "b", "c", "d"]
