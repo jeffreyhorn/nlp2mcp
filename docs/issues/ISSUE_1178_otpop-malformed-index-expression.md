@@ -24,18 +24,18 @@ python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --skip-convex
 ## Root Cause
 
 The stationarity builder's element-to-set substitution incorrectly handles cases where:
-- A parameter index involves arithmetic on the set variable (e.g., `tt-l` where `l` is `ord(n)-1`)
-- A variable index uses complex lead/lag expressions (e.g., `t + (card(t) - ord(t))`)
+- A parameter index involves lead/lag with a scalar constant (e.g., `pd(tt-l)` where `l /4/` is a scalar)
+- A variable index uses complex lead/lag expressions (e.g., `p(t + (card(t) - ord(t)))`)
 
 After substituting concrete elements, the arithmetic expressions become malformed because literal year values replace symbolic set variables.
 
 ## Investigation (2026-03-30)
 
 The malformed expressions come from two equations in the original model:
-- `adef(tt)$tp(tt).. as(tt) =e= as(tt-1) + con*d(tt-1)*(pd(tt-l)-ph);` — `pd(tt-l)` where `l = ord(n)-1`
-- `zdef.. z =e= v*sum(t, .365*(xb(t) - x(t))*p(t + (card(t) - ord(t))))` — `p(t + (card(t) - ord(t)))` is a "reverse time" access pattern
+- `adef(tt)$tp(tt).. as(tt) =e= as(tt-1) + con*d(tt-1)*(pd(tt-l)-ph);` — `pd(tt-l)` where `l /4/` is a scalar constant (investment lag)
+- `zdef.. z =e= v*sum(t, .365*(xb(t) - x(t))*p(t + (card(t) - ord(t))));` — `p(t + (card(t) - ord(t)))` is a "reverse time" access pattern
 
-Both involve complex index arithmetic that the stationarity builder's concrete element substitution cannot handle. After substitution, `tt` becomes `1966` (a literal year), producing `pd(1966-l)` and `p(1974+(card(t)-ord(t)))`.
+Both involve index arithmetic that the stationarity builder's concrete element substitution cannot handle. After substitution, `tt` becomes `1966` (a literal year), producing `pd(1966-l)` and `p(1974+(card(t)-ord(t)))`.
 
 ## Fix Approach
 
