@@ -33,12 +33,11 @@ The `execError = 0` at line 46 clears pre-existing errors, but new errors are ge
 
 The stationarity equations involve CES utility function derivatives with expressions like `(th - l(t) - n(t)) ** ((-1) * a2)` and `c(t) ** ((-1) * a2)`. Variable initialization exists for `a`, `c`, `l`, `m`, and `u`, but NOT for `n` (and several other variables remain at their default initial values).
 
-The key issue: `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0` which is NOT in subset `t`. At `tl=0`:
+The key structural detail is that `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0`, which is NOT in subset `t`. At `tl=0`:
 - `n(tl)` was domain-widened from `n(t)` to `n(tl)` — at `tl=0`, `n('0')` has no data (default 0)
 - `nu_timemoney(tl)` at `tl=0` is declared over `tl` and fixed to 0 for out-of-subset instances, so it is defined but zero
-- The EXECERROR likely comes from evaluating the unguarded terms in the equation body at `tl=0` — while dollar-conditioned terms are zeroed out, unconditioned terms (like `n(tl) * nu_timemoney(tl)`) are still evaluated and may reference widened variables with incompatible initial values
 
-The EXECERROR is a consequence of domain widening: the equation iterates over `tl` (superset) and while dollar-conditioned terms correctly zero out at `tl=0`, unconditioned terms in the stationarity body may produce runtime errors when widened variables have default-zero values that cause domain issues in other parts of the expression.
+A plausible hypothesis is that EXECERROR arises from a domain/undefined-instance issue when evaluating equations at `tl=0`. However, in the checked-in generated model, the only `tl`-indexed unconditioned stationarity equation `stat_m(tl)` is linear, contains no divisions or powers, and `n(tl)` appears only in a simple product term. This suggests the precise EXECERROR trigger is still unknown. The next step is to inspect the GAMS listing/log to identify the exact equation/subexpression that raises EXECERROR.
 
 ## Fix Approach
 
