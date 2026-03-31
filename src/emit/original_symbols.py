@@ -708,31 +708,45 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
     return tuple(expanded)
 
 
-def _is_referenced_in_loops(param_name: str, model_ir: ModelIR) -> bool:
-    """Check if a parameter is referenced in any loop statement body.
+def _collect_loop_referenced_params(model_ir: ModelIR) -> set[str]:
+    """Collect parameter names referenced in non-solve loop statement bodies.
 
     Issue #1182: Parameters assigned inside loops (e.g., kdem(k) = uniform(...))
     need to be declared even if they have no static values/expressions.
+
+    Skips loops containing solve statements, since those are typically
+    not emitted and declaring their params can cause $141.
+
+    Returns a lowercase set of parameter names.
     """
     from lark import Token, Tree
 
-    pname_lower = param_name.lower()
+    param_names_lower = {p.lower() for p in model_ir.params}
+    result: set[str] = set()
 
-    def _check_tree(node: Tree | Token) -> bool:
+    def _collect_ids(node: Tree | Token) -> None:
         if isinstance(node, Token):
-            if node.type == "ID" and str(node).lower() == pname_lower:
-                return True
-            return False
-        if isinstance(node, Tree):
-            return any(_check_tree(c) for c in node.children)
-        return False
+            if node.type == "ID" and str(node).lower() in param_names_lower:
+                result.add(str(node).lower())
+        elif isinstance(node, Tree):
+            for c in node.children:
+                _collect_ids(c)
 
     for loop_stmt in model_ir.loop_statements:
-        if hasattr(loop_stmt, "body_stmts"):
-            for stmt in loop_stmt.body_stmts:
-                if isinstance(stmt, (Tree, Token)) and _check_tree(stmt):
-                    return True
-    return False
+        if not hasattr(loop_stmt, "body_stmts"):
+            continue
+        # Skip loops containing solve statements
+        if any(
+            isinstance(s, Tree) and "solve" in str(s.data)
+            for s in loop_stmt.body_stmts
+            if isinstance(s, Tree)
+        ):
+            continue
+        for stmt in loop_stmt.body_stmts:
+            if isinstance(stmt, (Tree, Token)):
+                _collect_ids(stmt)
+
+    return result
 
 
 def emit_original_parameters(
@@ -827,6 +841,9 @@ def emit_original_parameters(
         s.lower() for s in model_ir.aliases.keys()
     }
 
+    # Issue #1182: Precompute loop-referenced params (O(loop_tree_size) once)
+    loop_referenced_params = _collect_loop_referenced_params(model_ir)
+
     # Emit Parameters
     if parameters:
         lines.append("Parameters")
@@ -900,7 +917,7 @@ def emit_original_parameters(
                         model_relevant_params is not None
                         and param_name.lower() in model_relevant_params
                     )
-                    is_loop_referenced = _is_referenced_in_loops(param_name, model_ir)
+                    is_loop_referenced = param_name.lower() in loop_referenced_params
                     if not is_model_relevant and not is_loop_referenced:
                         continue
                 quoted_domain = [_quote_symbol(d) for d in domain]
