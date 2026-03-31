@@ -29,8 +29,18 @@ The stationarity equations involve complex expressions with powers and divisions
 
 The `execError = 0` at line 46 clears pre-existing errors, but new errors are generated during equation evaluation at lines 46-261.
 
+## Investigation (2026-03-30)
+
+The stationarity equations involve CES utility function derivatives with expressions like `(th - l(t) - n(t)) ** ((-1) * a2)` and `c(t) ** ((-1) * a2)`. Variable initialization exists for `a`, `c`, `l`, `m`, and `u`, but NOT for `n` (and several other variables remain at their default initial values).
+
+The key structural detail is that `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0`, which is NOT in subset `t`. At `tl=0`:
+- `n(tl)` was domain-widened from `n(t)` to `n(tl)` — at `tl=0`, `n('0')` has no data (default 0)
+- `nu_timemoney(tl)` at `tl=0` is declared over `tl` and fixed to 0 for out-of-subset instances, so it is defined but zero
+
+A plausible hypothesis is that EXECERROR arises from a domain/undefined-instance issue when evaluating equations at `tl=0`. However, in the checked-in generated model, the only `tl`-indexed unconditioned stationarity equation `stat_m(tl)` is linear, contains no divisions or powers, and `n(tl)` appears only in a simple product term. This suggests the precise EXECERROR trigger is still unknown. The next step is to inspect the GAMS listing/log to identify the exact equation/subexpression that raises EXECERROR.
+
 ## Fix Approach
 
-1. Check which stationarity equation triggers the EXECERROR (add `option execErr = 0;` or `$onError` directives)
-2. Investigate if variable initialization (`.l` values) prevents division by zero
-3. May need to add better initial point or guards against zero denominators in the emitted MCP
+1. Restrict the stationarity equation domain so it is only generated where data are valid, e.g., add a `$(t(tl))` condition on the equation definition so `tl=0` is excluded entirely
+2. Alternatively, fix the paired variable/multiplier at out-of-subset elements, e.g., `m.fx(tl)$(not t(tl)) = 0;` (`.fx` is a variable attribute, not an equation attribute)
+3. May need to initialize widened variables at out-of-subset elements to safe values to avoid domain violations during evaluation
