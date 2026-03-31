@@ -190,6 +190,31 @@ def resolve_set_members(
             )
         return (set_def.members, set_or_alias_name)
 
+    # Issue #940: Handle GAMS universal set '*' — contains all elements
+    # from all declared sets in the model. Cached on the ModelIR instance
+    # to avoid recomputing on each call.
+    if set_or_alias_name == "*":
+        cached = getattr(model_ir, "_universal_set_cache", None)
+        if cached is not None:
+            return (list(cached), "*")
+        all_elements: list[str] = []
+        seen: set[str] = set()
+        for sdef in model_ir.sets.values():
+            # Support both SetDef objects and plain list/tuple/set (test compat)
+            if isinstance(sdef, (list, tuple, set, frozenset)):
+                members = list(sdef)
+            elif hasattr(sdef, "members") and sdef.members:
+                members = sdef.members
+            else:
+                continue
+            for elem in members:
+                if elem not in seen:
+                    seen.add(elem)
+                    all_elements.append(elem)
+        # Cache on instance (not in sets dict to avoid breaking downstream code)
+        model_ir._universal_set_cache = all_elements  # type: ignore[attr-defined]
+        return (all_elements, "*")
+
     raise ValueError(
         f"Set or alias '{set_or_alias_name}' not found in ModelIR. "
         f"Available sets: {list(model_ir.sets.keys())}, "
