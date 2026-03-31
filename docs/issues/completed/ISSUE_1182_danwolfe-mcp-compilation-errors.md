@@ -8,7 +8,7 @@
 
 Three issues fixed:
 
-1. **$140 Unknown symbol (kdem, bal, ebal, h)**: Parameters assigned inside loops but with no static values/expressions were skipped by Issue #917 logic. Added `_is_referenced_in_loops()` helper that checks if a parameter appears in any loop statement body tree. Parameters referenced in loops are now declared even without static data.
+1. **$140 Unknown symbol (kdem, bal, ebal, h)**: Parameters assigned inside loops but with no static values/expressions were skipped by Issue #917 logic. Added `_collect_loop_referenced_params()` that precomputes a set of parameter names referenced in non-solve loop body trees. Parameters in this set are declared even without static data.
 
 2. **Malformed `sum(sum, ...)`**: `_loop_tree_to_gams` emitted the `SUM_K` keyword token as the domain argument. Fixed by filtering to Tree children only, skipping leading keyword tokens.
 

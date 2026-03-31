@@ -735,12 +735,8 @@ def _collect_loop_referenced_params(model_ir: ModelIR) -> set[str]:
     for loop_stmt in model_ir.loop_statements:
         if not hasattr(loop_stmt, "body_stmts"):
             continue
-        # Skip loops containing solve statements
-        if any(
-            isinstance(s, Tree) and "solve" in str(s.data)
-            for s in loop_stmt.body_stmts
-            if isinstance(s, Tree)
-        ):
+        # Skip loops containing solve statements (matches emitter's filter)
+        if _loop_contains_solve(loop_stmt):
             continue
         for stmt in loop_stmt.body_stmts:
             if isinstance(stmt, (Tree, Token)):
