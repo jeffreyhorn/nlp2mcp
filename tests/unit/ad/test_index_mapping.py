@@ -330,9 +330,6 @@ class TestIndexMapping:
 
 def test_resolve_universal_set_star():
     """Issue #940: resolve_set_members('*') returns union of all set elements."""
-    from src.ad.index_mapping import resolve_set_members
-    from src.ir.model_ir import ModelIR
-
     model = ModelIR()
     # Use list-backed sets for test compatibility
     model.sets["i"] = ["a", "b", "c"]

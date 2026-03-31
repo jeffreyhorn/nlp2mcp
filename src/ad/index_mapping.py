@@ -197,7 +197,7 @@ def resolve_set_members(
         seen: set[str] = set()
         for sdef in model_ir.sets.values():
             # Support both SetDef objects and plain list/tuple/set (test compat)
-            if isinstance(sdef, (list, tuple, set)):
+            if isinstance(sdef, (list, tuple, set, frozenset)):
                 members = list(sdef)
             elif hasattr(sdef, "members") and sdef.members:
                 members = sdef.members
