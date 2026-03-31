@@ -31,7 +31,7 @@ The `execError = 0` at line 46 clears pre-existing errors, but new errors are ge
 
 ## Investigation (2026-03-30)
 
-The stationarity equations involve CES utility function derivatives with expressions like `(th - l(t) - n(t)) ** ((-1) * a2)` and `c(t) ** ((-1) * a2)`. Variable initialization exists for `a`, `c`, `l`, `m` but NOT for `n`.
+The stationarity equations involve CES utility function derivatives with expressions like `(th - l(t) - n(t)) ** ((-1) * a2)` and `c(t) ** ((-1) * a2)`. Variable initialization exists for `a`, `c`, `l`, `m`, and `u`, but NOT for `n` (and several other variables remain at their default initial values).
 
 The key issue: `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0` which is NOT in subset `t`. At `tl=0`:
 - `n(tl)` was domain-widened from `n(t)` to `n(tl)` — at `tl=0`, `n('0')` has no data (default 0)
