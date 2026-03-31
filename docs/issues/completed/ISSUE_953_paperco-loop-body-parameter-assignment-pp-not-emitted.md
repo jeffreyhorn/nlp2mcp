@@ -1,17 +1,15 @@
 # paperco: Loop Body Parameter Assignment `pp(p)` Not Emitted
 
 **GitHub Issue:** [#953](https://github.com/jeffreyhorn/nlp2mcp/issues/953)
-**Status:** FIXED (resolved by PRs #1183 and prior loop emission improvements)
+**Status:** FIXED (resolved by existing `emit_pre_solve_param_assignments`)
 **Model:** paperco (GAMSlib)
 
 ## Fix
 
-The $66 compilation error was resolved by two prior fixes:
+The $66 compilation error was resolved by the existing `emit_pre_solve_param_assignments` function in `src/emit/original_symbols.py`, which extracts pre-solve parameter assignments from solve-containing loops. It emits `pp(p) = ppdat('scenario-1', p)` as a separate `Parameter pp(p);` declaration with assignment before the MCP solve.
 
-1. **PR #1183** (`_collect_loop_referenced_params`): Parameters referenced in loop body trees are now declared even without static data. `pp(p)` is now included in the Parameters block.
+Note: `_collect_loop_referenced_params` (PR #1183) does NOT apply here because it explicitly skips loops containing solve statements. The fix is entirely from the pre-solve assignment extraction path.
 
-2. **`emit_pre_solve_param_assignments`**: Extracts pre-solve parameter assignments from loop bodies. `pp(p) = ppdat('scenario-1', p)` is correctly emitted from the first iteration's assignment.
-
-**Result:** paperco compiles and solves to MODEL STATUS 1 Optimal. Objective mismatch is expected — the original model runs 3 scenarios and the reference uses the last; the MCP captures scenario-1 values.
+**Result:** paperco compiles and solves to MODEL STATUS 1 Optimal (verified 2026-03-31). Objective mismatch with reference is expected — the original model runs 3 scenarios and the reference uses the last iteration; the MCP captures scenario-1 values.
 
 No additional code changes needed.
