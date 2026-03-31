@@ -190,6 +190,19 @@ def resolve_set_members(
             )
         return (set_def.members, set_or_alias_name)
 
+    # Issue #940: Handle GAMS universal set '*' — contains all elements
+    # from all declared sets in the model.
+    if set_or_alias_name == "*":
+        all_elements: list[str] = []
+        seen: set[str] = set()
+        for sdef in model_ir.sets.values():
+            if hasattr(sdef, "members") and sdef.members:
+                for elem in sdef.members:
+                    if elem not in seen:
+                        seen.add(elem)
+                        all_elements.append(elem)
+        return (all_elements, "*")
+
     raise ValueError(
         f"Set or alias '{set_or_alias_name}' not found in ModelIR. "
         f"Available sets: {list(model_ir.sets.keys())}, "
