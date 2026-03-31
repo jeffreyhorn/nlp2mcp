@@ -9,7 +9,7 @@
 
 After fixing $171 via domain widening, otpop still has compilation errors from malformed index expressions in stationarity equations:
 
-1. `stat_d(tt)`: `pd(1966-l)` — literal year `1966` with subtraction of variable `l`. The original GAMS has `pd(tt-l)` inside a sum over `n` where `l = ord(n)-1`, but after concrete element substitution, it became `pd(1966-l)` which is nonsensical.
+1. `stat_d(tt)`: `pd(1966-l)` — literal year `1966` with subtraction of scalar `l` (`l /4/`, investment lag). The original GAMS has `pd(tt-l)` which is a lead/lag offset by the scalar constant `l`, but after concrete element substitution `tt` became `1966`, producing `pd(1966-l)` which GAMS cannot parse as a valid index.
 
 2. `stat_x(tt)`: `p(1974+(card(t)-ord(t)))` — complex arithmetic expression used as an index. The original has `p(t + (card(t) - ord(t)))` which uses GAMS lead/lag arithmetic, but after substitution the `t` became `1974` (a literal element).
 
@@ -40,7 +40,7 @@ Both involve index arithmetic that the stationarity builder's concrete element s
 ## Fix Approach
 
 These are deep issues in the stationarity builder's handling of IndexOffset/arithmetic indices:
-1. The `pd(tt-l)` pattern requires understanding that `l` is a loop variable from `sum(n, ...)` — it's not a simple offset
+1. The `pd(tt-l)` pattern uses a scalar constant `l /4/` as a lead/lag offset — the stationarity builder must preserve the symbolic `tt-l` form rather than substituting a concrete year
 2. The `p(t + (card(t) - ord(t)))` pattern is a "time reversal" that needs special handling
 3. Both require preserving the symbolic structure through differentiation, which is architecturally complex
 
