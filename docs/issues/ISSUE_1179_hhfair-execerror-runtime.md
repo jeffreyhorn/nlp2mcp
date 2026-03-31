@@ -35,10 +35,10 @@ The stationarity equations involve CES utility function derivatives with express
 
 The key issue: `stat_m(tl)` iterates over `tl = {0,1,2,3}` including `tl=0` which is NOT in subset `t`. At `tl=0`:
 - `n(tl)` was domain-widened from `n(t)` to `n(tl)` — at `tl=0`, `n('0')` has no data (default 0)
-- `nu_timemoney(tl)` at `tl=0` may also be undefined
-- The expression evaluation at out-of-subset elements likely triggers the EXECERROR
+- `nu_timemoney(tl)` at `tl=0` is declared over `tl` and fixed to 0 for out-of-subset instances, so it is defined but zero
+- The EXECERROR likely comes from evaluating the unguarded terms in the equation body at `tl=0` — while dollar-conditioned terms are zeroed out, unconditioned terms (like `n(tl) * nu_timemoney(tl)`) are still evaluated and may reference widened variables with incompatible initial values
 
-The EXECERROR is a consequence of domain widening: the equation iterates over `tl` (superset) but some terms only have valid data for `t` (subset). The dollar conditions `$(t(tl))` guard the stationarity terms, but GAMS may still attempt to evaluate all terms before applying the condition.
+The EXECERROR is a consequence of domain widening: the equation iterates over `tl` (superset) and while dollar-conditioned terms correctly zero out at `tl=0`, unconditioned terms in the stationarity body may produce runtime errors when widened variables have default-zero values that cause domain issues in other parts of the expression.
 
 ## Fix Approach
 
