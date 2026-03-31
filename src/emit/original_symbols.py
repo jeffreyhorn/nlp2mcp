@@ -708,9 +708,37 @@ def _expand_table_key(key_tuple: tuple[str, ...], domain_size: int) -> tuple[str
     return tuple(expanded)
 
 
+def _is_referenced_in_loops(param_name: str, model_ir: ModelIR) -> bool:
+    """Check if a parameter is referenced in any loop statement body.
+
+    Issue #1182: Parameters assigned inside loops (e.g., kdem(k) = uniform(...))
+    need to be declared even if they have no static values/expressions.
+    """
+    from lark import Token, Tree
+
+    pname_lower = param_name.lower()
+
+    def _check_tree(node: Tree | Token) -> bool:
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() == pname_lower:
+                return True
+            return False
+        if isinstance(node, Tree):
+            return any(_check_tree(c) for c in node.children)
+        return False
+
+    for loop_stmt in model_ir.loop_statements:
+        if hasattr(loop_stmt, "body_stmts"):
+            for stmt in loop_stmt.body_stmts:
+                if isinstance(stmt, (Tree, Token)) and _check_tree(stmt):
+                    return True
+    return False
+
+
 def emit_original_parameters(
     model_ir: ModelIR,
     param_domain_widenings: dict[str, tuple[str, ...]] | None = None,
+    model_relevant_params: set[str] | None = None,
 ) -> str:
     """Emit Parameters and Scalars with their data.
 
@@ -862,13 +890,19 @@ def emit_original_parameters(
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
                 # (PR #658 review: removed scalar-with-indexed-expressions promotion)
-                # Issue #917: Skip parameters with no values AND no expressions.
-                # These are typically loop-initialized reporting parameters
-                # (e.g., Util_lic(t) = Util.l inside a solve loop) that serve
-                # no purpose in the single-solve MCP. Emitting empty declarations
-                # causes GAMS $141 ("Symbol declared but no values assigned").
+                # Issue #917: Skip parameters with no values AND no expressions,
+                # UNLESS they're referenced in model equations or loop
+                # statements (Issue #1182). Loop-initialized reporting
+                # parameters are skipped, but parameters used in equations
+                # or pre-solve loops must be declared.
                 if not param_def.expressions:
-                    continue
+                    is_model_relevant = (
+                        model_relevant_params is not None
+                        and param_name.lower() in model_relevant_params
+                    )
+                    is_loop_referenced = _is_referenced_in_loops(param_name, model_ir)
+                    if not is_model_relevant and not is_loop_referenced:
+                        continue
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
@@ -2504,12 +2538,27 @@ def _loop_tree_to_gams(node: object) -> str:
         return f"({inner})"
     # sum(domain, expr), prod(domain, expr), smax(domain, expr), smin(domain, expr)
     if data in ("sum", "prod", "smax", "smin"):
-        domain = _loop_tree_to_gams(node.children[0])
-        body = _loop_tree_to_gams(node.children[1])
+        # Skip leading keyword token (SUM_K, PROD_K, etc.) if present
+        tree_children = [c for c in node.children if isinstance(c, Tree)]
+        if len(tree_children) >= 2:
+            domain = _loop_tree_to_gams(tree_children[0])
+            body = _loop_tree_to_gams(tree_children[1])
+        else:
+            domain = _loop_tree_to_gams(node.children[0])
+            body = _loop_tree_to_gams(node.children[1])
         return f"{data}({domain}, {body})"
     # sum_domain variants: index_spec, tuple_domain, tuple_domain_cond
     if data == "sum_domain":
         return _loop_tree_to_gams(node.children[0])
+    if data == "index_spec":
+        # index_spec: index_list [DOLLAR condition]
+        # Emit as "i$(cond)" or just "i" if no condition
+        idx_parts: list[Tree] = [c for c in node.children if isinstance(c, Tree)]
+        idx = _loop_tree_to_gams(idx_parts[0])
+        if len(idx_parts) >= 2:
+            cond = _loop_tree_to_gams(idx_parts[1])
+            return f"{idx}$({cond})"
+        return idx
     if data == "tuple_domain":
         return f"({_loop_tree_to_gams(node.children[0])})"
     if data == "tuple_domain_cond":
