@@ -912,9 +912,12 @@ def emit_original_parameters(
                     lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
                     # Issue #871: When all values were zero and skipped by Issue #967,
                     # emit explicit "param(domain) = 0;" after the Parameters block
-                    # to avoid $141 for model-relevant parameters.
+                    # to avoid $141. Only for model-relevant parameters to avoid
+                    # emitting unnecessary zeros for post-solve reporting params.
                     if all(
                         isinstance(v, (int, float)) and v == 0 for v in param_def.values.values()
+                    ) and (
+                        model_relevant_params is None or param_name.lower() in model_relevant_params
                     ):
                         all_zero_params.append((param_name, domain))
             else:
