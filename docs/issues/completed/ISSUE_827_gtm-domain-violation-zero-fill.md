@@ -206,3 +206,15 @@ parameter pass.
 | `emit_original_parameters()` | `original_symbols.py:706-740` | No domain validation on emit |
 | `emit_computed_parameter_assignments()` | `original_symbols.py:839-946` | Topological sort only for calibration params |
 | `_collect_param_refs()` | `original_symbols.py:825-836` | Dependency collection (works for all params) |
+
+---
+
+## Progress (2026-04-01)
+
+**Compilation errors: FIXED.** All 28 compilation errors ($170 domain violations, $141 unassigned symbols) have been resolved by accumulated fixes across prior PRs. The model now compiles cleanly.
+
+**New blocker: Runtime errors.** EXECERROR=3 at solve time:
+- Division by zero in `stat_s(mexico)`, `stat_s(alberta-bc)`, `stat_s(atlantic)` — likely from supply function derivatives evaluated at zero
+- Infeasibilities in `stat_d` and `stat_x` equations — KKT conditions may be structurally incorrect
+
+These are separate issues from the original $170/$141 problems.
