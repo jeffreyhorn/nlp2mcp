@@ -88,3 +88,15 @@ Despite having only 6 variables and 3 equations, the model uses dense 2-dimensio
 These are index domain errors in the generated MCP, likely related to equation index domains not being properly propagated.
 
 Parse: fast | Translate: ~135s | Compile: FAIL | Solve: N/A
+
+## Investigation (2026-04-01)
+
+The compilation errors stem from three distinct issues in the stationarity builder:
+
+1. **$148 on `stat_r(n)`**: `nu_eq1(n)` and `lam_eq2(n)` — dimension mismatch. These multipliers are declared over `(n,n)` (from `eq1(e(i,j))` and `eq2(n,n)`) but referenced with single index `(n)` in the stationarity equation. The stationarity builder incorrectly collapses a 2D multiplier to 1D.
+
+2. **$149 on `stat_sln(n,n)` and `stat_slp(n,n)`**: `$(e(n,i))` — uncontrolled `i`. The condition from the original equation `eq1(e(i,j))` uses index variables `i,j` which are not controlled in the stationarity equation domain `(n,n)`. The condition should be remapped to use the stationarity domain variables.
+
+3. **$149 on `.fx` statements**: Same uncontrolled `i` issue — `sln.fx(n,n)$(not (e(n,i))) = 0` should remap the condition indices to the stationarity domain (e.g., using distinct alias indices for the two `n` positions).
+
+**Fix requires:** The stationarity builder's condition propagation needs to remap equation domain indices (`i,j` from `eq1(e(i,j))`) to the stationarity equation domain (`n,n` from `stat_slp(n,n)`).

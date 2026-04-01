@@ -68,8 +68,9 @@ The fix should either:
 ```bash
 python -m src.cli data/gamslib/raw/tricp.gms -o /tmp/tricp_mcp.gms
 gams /tmp/tricp_mcp.gms lo=2
-# 760 execution errors: "Unmatched variable not free or fixed"
-# SOLVE ABORTED, EXECERROR = 760
+# NOTE: As of 2026-04-01, compilation fails first with $148/$149 errors
+# (see ISSUE_933). The 760 unmatched-variable errors described below
+# were observed on an earlier version before the compilation errors appeared.
 ```
 
 ---
@@ -92,3 +93,11 @@ This is similar to the multiplier domain widening pattern but in reverse — her
 - #1056 tricp: smax emission dimension mismatch (FIXED — separate compilation issue)
 - #933 tricp: translation timeout (resolved by timeout increase)
 - This is a domain/conditioning issue in the stationarity builder, not the expression emitter
+
+---
+
+## Progress (2026-04-01)
+
+**Blocked by compilation errors.** The tricp MCP has $148/$149 compilation errors (dimension mismatch, uncontrolled set) from the stationarity equations that must be fixed before the unmatched variable issue can be addressed. These compilation errors are tracked in [ISSUE_933_tricp-mcp-compilation-errors.md](ISSUE_933_tricp-mcp-compilation-errors.md).
+
+The 760 unmatched variable errors described above may still exist but cannot be verified until the compilation errors are resolved.
