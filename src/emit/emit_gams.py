@@ -177,7 +177,7 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
 
 def _expr_references_set(expr: Expr, set_name: str) -> bool:
     """Check if an expression tree references a set name (in conditions)."""
-    from ..ir.ast import SetMembershipTest
+    from ..ir.ast import MultiplierRef, ParamRef, SetMembershipTest, VarRef
 
     target = set_name.lower()
     stack: list[Expr] = [expr]
@@ -187,9 +187,16 @@ def _expr_references_set(expr: Expr, set_name: str) -> bool:
             if hasattr(node, "set_name") and isinstance(node.set_name, str):
                 if node.set_name.lower() == target:
                     return True
+        # Traverse children()
         children = getattr(node, "children", None)
         if callable(children):
             stack.extend(children())
+        # Also traverse indices for VarRef/ParamRef/MultiplierRef
+        # (children() does not expose indices)
+        if isinstance(node, (VarRef, ParamRef, MultiplierRef)):
+            for idx in node.indices:
+                if isinstance(idx, Expr):
+                    stack.append(idx)
     return False
 
 
