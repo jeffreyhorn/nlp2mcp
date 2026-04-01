@@ -97,6 +97,6 @@ This is similar to the multiplier domain widening pattern but in reverse — her
 
 ## Progress (2026-04-01)
 
-**Blocked by compilation errors.** The tricp MCP has $148/$149 compilation errors (dimension mismatch, uncontrolled set) from the stationarity equations that must be fixed before the unmatched variable issue can be addressed. These compilation errors are tracked in `ISSUE_933_tricp-mcp-compilation-errors.md`.
+**Blocked by compilation errors.** The tricp MCP has $148/$149 compilation errors (dimension mismatch, uncontrolled set) from the stationarity equations that must be fixed before the unmatched variable issue can be addressed. These compilation errors are tracked in [ISSUE_933_tricp-mcp-compilation-errors.md](ISSUE_933_tricp-mcp-compilation-errors.md).
 
 The 760 unmatched variable errors described above may still exist but cannot be verified until the compilation errors are resolved.
