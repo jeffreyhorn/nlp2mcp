@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1192](https://github.com/jeffreyhorn/nlp2mcp/issues/1192)
 **Model:** gtm (GAMSlib SEQ=127, "Gas Trade Model")
-**Error category:** `path_syntax_error` (EXECERROR=3, solve aborted)
+**Error category:** `gams_error` (EXECERROR=3, solve aborted)
 **Previous blocker:** $170/$141 compilation errors (fixed by accumulated prior fixes)
 **Severity:** High — compiles cleanly but solve aborted
 
