@@ -168,8 +168,10 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
             parent = set_def.domain[0]
             lines.append(f"{set_name}({parent}) = yes;")
     if lines:
+        sections.append("$onImplicitAssign")
         sections.append("* Populate empty dynamic subsets for stationarity conditions")
         sections.extend(lines)
+        sections.append("$offImplicitAssign")
         sections.append("")
 
 
@@ -177,13 +179,17 @@ def _expr_references_set(expr: Expr, set_name: str) -> bool:
     """Check if an expression tree references a set name (in conditions)."""
     from ..ir.ast import SetMembershipTest
 
-    if isinstance(expr, SetMembershipTest):
-        if hasattr(expr, "set_name") and expr.set_name.lower() == set_name.lower():
-            return True
-    # Check string representation as fallback for condition references
-    expr_str = repr(expr)
-    if set_name.lower() in expr_str.lower():
-        return True
+    target = set_name.lower()
+    stack: list[Expr] = [expr]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, SetMembershipTest):
+            if hasattr(node, "set_name") and isinstance(node.set_name, str):
+                if node.set_name.lower() == target:
+                    return True
+        children = getattr(node, "children", None)
+        if callable(children):
+            stack.extend(children())
     return False
 
 
