@@ -94,3 +94,9 @@ condition-detection pipeline for other models.
 
 - **Issue #764** (mexss): Similar accounting variable / stationarity conditioning issue
 - **Issue #826** (decomp): Related empty stationarity equation issue
+
+---
+
+## Status (2026-04-01)
+
+Retested: sambal translates and compiles cleanly but PATH solver terminates (path_solve_terminated). Bug 1 remains — the dollar condition from the objective sum is not propagated to stationarity equations, causing division by zero for unconditioned instances. The fix requires the 3-file architectural change described above (~4-6h effort).
