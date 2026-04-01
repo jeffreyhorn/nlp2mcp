@@ -139,6 +139,54 @@ $macro digamma__(x) (digamma__asy((x)+8) - 1/((x)+7) - 1/((x)+6) - 1/((x)+5) - 1
 """
 
 
+def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
+    """Populate empty dynamic subsets used in stationarity conditions.
+
+    Issue #952: Dynamic subsets like n(nn) may have no static members but
+    are used in dollar conditions on stationarity equations (e.g.,
+    $(n(nn))). Populate them with all parent set members so the conditions
+    evaluate correctly.
+    """
+    model_ir = kkt.model_ir
+    lines: list[str] = []
+    for set_name, set_def in model_ir.sets.items():
+        # Only process dynamic subsets (have domain, no members)
+        if not hasattr(set_def, "domain") or not set_def.domain:
+            continue
+        if hasattr(set_def, "members") and set_def.members:
+            continue
+        # Check if this subset is referenced in any stationarity equation
+        if not kkt.stationarity:
+            continue
+        is_referenced = False
+        for eq_def in kkt.stationarity.values():
+            lhs, _ = eq_def.lhs_rhs
+            if _expr_references_set(lhs, set_name):
+                is_referenced = True
+                break
+        if is_referenced and len(set_def.domain) == 1:
+            parent = set_def.domain[0]
+            lines.append(f"{set_name}({parent}) = yes;")
+    if lines:
+        sections.append("* Populate empty dynamic subsets for stationarity conditions")
+        sections.extend(lines)
+        sections.append("")
+
+
+def _expr_references_set(expr: Expr, set_name: str) -> bool:
+    """Check if an expression tree references a set name (in conditions)."""
+    from ..ir.ast import SetMembershipTest
+
+    if isinstance(expr, SetMembershipTest):
+        if hasattr(expr, "set_name") and expr.set_name.lower() == set_name.lower():
+            return True
+    # Check string representation as fallback for condition references
+    expr_str = repr(expr)
+    if set_name.lower() in expr_str.lower():
+        return True
+    return False
+
+
 def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
     """Collect parameter names relevant to the solved model.
 
@@ -905,6 +953,12 @@ def emit_gams_mcp(
         if aliases_by_phase[phase_idx]:
             sections.append(aliases_by_phase[phase_idx])
             sections.append("")
+
+    # Issue #952: Populate empty dynamic subsets that are used in stationarity
+    # conditions. When a dynamic subset like n(nn) has no static members but
+    # appears in dollar conditions on stationarity equations, populate it with
+    # all parent set members as a conservative default.
+    _emit_dynamic_subset_defaults(kkt, sections)
 
     # Issue #877: Emit Acronym declarations before parameters so that
     # acronym values in parameter data are recognized correctly
