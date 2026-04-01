@@ -78,3 +78,11 @@ in stationarity sums.
 - **Issue #764** (mexss): Accounting variable stationarity conditioning
 - **Issue #826** (decomp): Empty stationarity equation from domain issues
 - **NEW**: Jacobian domain index propagation bug (rhot(i) vs rhot(it) in stationarity sums)
+
+---
+
+## Progress (2026-04-01)
+
+**$141 fix:** Added explicit zero assignments for parameters with all-zero values (e.g., `te(i) = 0;`). Issue #967's sparse zero skip caused these to be undeclared. camcge now compiles cleanly (0 compilation errors).
+
+**Remaining:** EXECERROR=4 at runtime (division by zero in stationarity equations from `rhot(i)` vs `rhot(it)` domain mismatch). This is the same Jacobian domain index propagation issue documented above.

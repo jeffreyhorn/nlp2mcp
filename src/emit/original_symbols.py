@@ -847,6 +847,9 @@ def emit_original_parameters(
     # Issue #1182: Precompute loop-referenced params (O(loop_tree_size) once)
     loop_referenced_params = _collect_loop_referenced_params(model_ir)
 
+    # Track parameters with all-zero values for explicit assignment
+    all_zero_params: list[tuple[str, list[str]]] = []
+
     # Emit Parameters
     if parameters:
         lines.append("Parameters")
@@ -904,8 +907,16 @@ def emit_original_parameters(
                     data_str = ", ".join(data_parts)
                     lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
                 else:
-                    # All data entries were filtered out as malformed - emit declaration only
+                    # All data entries were filtered out (e.g., all zeros) -
+                    # emit declaration only, but track for explicit zero assignment
                     lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
+                    # Issue #871: When all values were zero and skipped by Issue #967,
+                    # emit explicit "param(domain) = 0;" after the Parameters block
+                    # to avoid $141 for model-relevant parameters.
+                    if all(
+                        isinstance(v, (int, float)) and v == 0 for v in param_def.values.values()
+                    ):
+                        all_zero_params.append((param_name, domain))
             else:
                 # Parameter declared but no data - must have domain since
                 # parameters dict only contains entries with non-empty domain
@@ -927,6 +938,14 @@ def emit_original_parameters(
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
         lines.append(";")
+
+    # Issue #871: Emit explicit zero assignments for all-zero parameters
+    # to avoid $141 when the model references them.
+    if all_zero_params:
+        lines.append("")
+        for pname, pdomain in all_zero_params:
+            quoted_dom = ",".join(_quote_symbol(d) for d in pdomain)
+            lines.append(f"{_quote_symbol(pname)}({quoted_dom}) = 0;")
 
     # Emit Scalars (skip predefined GAMS constants and description-only entries)
     if scalars:
