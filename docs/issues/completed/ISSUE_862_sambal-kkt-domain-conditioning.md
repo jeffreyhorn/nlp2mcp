@@ -1,11 +1,11 @@
 # Sambal: KKT Stationarity Domain Conditioning + Wrong Index Reference
 
 **GitHub Issue:** [#862](https://github.com/jeffreyhorn/nlp2mcp/issues/862)
-**Status:** PARTIALLY RESOLVED — Bug 2 fixed, Bug 1 requires architectural AD changes
-**Severity:** Medium — Model translates but execution errors abort solve (division by zero)
+**Status:** FIXED — Both bugs resolved. New blocker (NA values) tracked in #1195.
+**Severity:** Medium — Model translates but execution errors abort solve
 **Date:** 2026-02-24
-**Partially Resolved:** 2026-02-24
-**Last Updated:** 2026-03-17
+**Fixed:** 2026-04-01
+**Last Updated:** 2026-04-01
 **Affected Models:** sambal
 
 ---
@@ -94,3 +94,13 @@ condition-detection pipeline for other models.
 
 - **Issue #764** (mexss): Similar accounting variable / stationarity conditioning issue
 - **Issue #826** (decomp): Related empty stationarity equation issue
+
+---
+
+## Status (2026-04-01)
+
+**Bug 1 (dollar condition) IS now fixed.** The `extract_gradient_conditions` infrastructure was already implemented in a prior sprint and the condition `$(xw(i,j))` is correctly applied to `stat_x(i,j)`.
+
+**New blocker: NA values in stationarity equations.** `stat_t(h1)` has "RHS value NA" — some parameter used in the stationarity equation for `t` has NA values. Additionally, `cbal` equations show infeasibilities. The EXECERROR=2 is from the NA values, not the missing dollar condition.
+
+This is a separate issue from the original Bug 1 — it's related to Issue #986 (NA parameter handling in equations).
