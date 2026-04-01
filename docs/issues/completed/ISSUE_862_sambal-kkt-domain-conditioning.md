@@ -1,11 +1,11 @@
 # Sambal: KKT Stationarity Domain Conditioning + Wrong Index Reference
 
 **GitHub Issue:** [#862](https://github.com/jeffreyhorn/nlp2mcp/issues/862)
-**Status:** PARTIALLY RESOLVED — Bug 2 fixed, Bug 1 requires architectural AD changes
-**Severity:** Medium — Model translates but execution errors abort solve (division by zero)
+**Status:** FIXED — Both bugs resolved. New blocker (NA values) tracked in #1195.
+**Severity:** Medium — Model translates but execution errors abort solve
 **Date:** 2026-02-24
-**Partially Resolved:** 2026-02-24
-**Last Updated:** 2026-03-17
+**Fixed:** 2026-04-01
+**Last Updated:** 2026-04-01
 **Affected Models:** sambal
 
 ---

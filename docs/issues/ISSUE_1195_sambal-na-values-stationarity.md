@@ -8,7 +8,7 @@
 
 ## Description
 
-After fixing the dollar condition propagation (Bug 1 in #862) and the wrong index reference (Bug 2), sambal compiles cleanly but GAMS aborts with EXECERROR=2 due to "RHS value NA" in stationarity equations.
+After fixing the dollar condition propagation (Bug 1 in #862, via `extract_gradient_conditions` infrastructure in `src/ad/gradient.py` and `src/kkt/assemble.py`) and the wrong index reference (Bug 2), sambal compiles cleanly but GAMS aborts with EXECERROR=2 due to "RHS value NA" in stationarity equations.
 
 ## Errors
 
