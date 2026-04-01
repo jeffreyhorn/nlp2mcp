@@ -8,8 +8,8 @@
 
 ## Resolution
 
-The compilation errors ($120/$340 from unquoted element labels) were fixed by `_quote_literal_indices()` in normalize.py. The PATH convergence issue (division by zero in stationarity equations) has also been resolved by accumulated fixes.
+The compilation errors ($120/$340 from unquoted element labels) were fixed by `_quote_literal_indices()` in `src/ir/normalize.py` (added in Sprint 22). The PATH convergence issue (division by zero in stationarity equations) has also been resolved by accumulated fixes.
 
-**Result:** maxmin compiles cleanly (0 errors) and solves to MODEL STATUS 1 Optimal (SOLVER STATUS 1). Objective mismatch with reference is present — likely due to domain condition propagation affecting KKT accuracy for set-filtered sums.
+**Result:** maxmin compiles cleanly (0 errors) and solves to MODEL STATUS 1 Optimal (SOLVER STATUS 1). Objective mismatch with reference is observed but root cause has not been investigated.
 
 The smin() arity issue noted in the original report does not affect the solved model (`maxmin1a`).
