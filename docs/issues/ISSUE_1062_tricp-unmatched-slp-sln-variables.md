@@ -68,8 +68,9 @@ The fix should either:
 ```bash
 python -m src.cli data/gamslib/raw/tricp.gms -o /tmp/tricp_mcp.gms
 gams /tmp/tricp_mcp.gms lo=2
-# 760 execution errors: "Unmatched variable not free or fixed"
-# SOLVE ABORTED, EXECERROR = 760
+# NOTE: As of 2026-04-01, compilation fails first with $148/$149 errors
+# (see ISSUE_933). The 760 unmatched-variable errors described below
+# were observed on an earlier version before the compilation errors appeared.
 ```
 
 ---

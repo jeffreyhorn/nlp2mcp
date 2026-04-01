@@ -97,6 +97,6 @@ The compilation errors stem from three distinct issues in the stationarity build
 
 2. **$149 on `stat_sln(n,n)` and `stat_slp(n,n)`**: `$(e(n,i))` — uncontrolled `i`. The condition from the original equation `eq1(e(i,j))` uses index variables `i,j` which are not controlled in the stationarity equation domain `(n,n)`. The condition should be remapped to use the stationarity domain variables.
 
-3. **$149 on `.fx` statements**: Same uncontrolled `i` issue — `sln.fx(n,n)$(not (e(n,i))) = 0` should use `$(not (e(n,n)))` or equivalent.
+3. **$149 on `.fx` statements**: Same uncontrolled `i` issue — `sln.fx(n,n)$(not (e(n,i))) = 0` should remap the condition indices to the stationarity domain (e.g., using distinct alias indices for the two `n` positions).
 
 **Fix requires:** The stationarity builder's condition propagation needs to remap equation domain indices (`i,j` from `eq1(e(i,j))`) to the stationarity equation domain (`n,n` from `stat_slp(n,n)`).
