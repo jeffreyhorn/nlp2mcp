@@ -110,6 +110,12 @@ Add `$onImplicitAssign` directive to suppress the $141 warning. This doesn't act
 
 ---
 
+## Progress (2026-03-31)
+
+**Partial fix:** Added `_emit_dynamic_subset_defaults` in `emit_gams.py` that populates empty dynamic subsets used in stationarity conditions with `set(parent) = yes;`. This resolves the $141 error on `n(nn)` and `m(mm)`.
+
+**Remaining:** $66 error on `cc(p,nn)` — the stochastic parameter assigned inside the nested solve loop (`cc(p,n) = uniform(0,1)`) has no emitted values. The `emit_pre_solve_param_assignments` doesn't extract from nested loops where the solve is in an inner loop. The parameters `cc`, `f`, `A`, `b` all use `uniform()` and have no deterministic values.
+
 ## Notes
 
 - The `lmp2` model uses stochastic data (`uniform(0,1)`) in a multi-scenario loop, meaning there is no single "correct" parameter value — each loop iteration generates random data
