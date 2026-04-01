@@ -166,7 +166,7 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
                 break
         if is_referenced and len(set_def.domain) == 1:
             parent = set_def.domain[0]
-            lines.append(f"{set_name}({parent}) = yes;")
+            lines.append(f"{_quote_symbol(set_name)}({_quote_symbol(parent)}) = yes;")
     if lines:
         sections.append("$onImplicitAssign")
         sections.append("* Populate empty dynamic subsets for stationarity conditions")
