@@ -148,6 +148,15 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
     evaluate correctly.
     """
     model_ir = kkt.model_ir
+    if not kkt.stationarity:
+        return
+
+    # Precompute all set names referenced in stationarity equations (one scan)
+    referenced_sets: set[str] = set()
+    for eq_def in kkt.stationarity.values():
+        lhs, _ = eq_def.lhs_rhs
+        _collect_referenced_set_names(lhs, referenced_sets)
+
     lines: list[str] = []
     for set_name, set_def in model_ir.sets.items():
         # Only process dynamic subsets (have domain, no members)
@@ -155,16 +164,9 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
             continue
         if hasattr(set_def, "members") and set_def.members:
             continue
-        # Check if this subset is referenced in any stationarity equation
-        if not kkt.stationarity:
+        if set_name.lower() not in referenced_sets:
             continue
-        is_referenced = False
-        for eq_def in kkt.stationarity.values():
-            lhs, _ = eq_def.lhs_rhs
-            if _expr_references_set(lhs, set_name):
-                is_referenced = True
-                break
-        if is_referenced and len(set_def.domain) == 1:
+        if len(set_def.domain) == 1:
             parent = set_def.domain[0]
             lines.append(f"{_quote_symbol(set_name)}({_quote_symbol(parent)}) = yes;")
     if lines:
@@ -175,18 +177,14 @@ def _emit_dynamic_subset_defaults(kkt: KKTSystem, sections: list[str]) -> None:
         sections.append("")
 
 
-def _expr_references_set(expr: Expr, set_name: str) -> bool:
-    """Check if an expression tree references a set name (in conditions)."""
-    from ..ir.ast import MultiplierRef, ParamRef, SetMembershipTest, VarRef
-
-    target = set_name.lower()
+def _collect_referenced_set_names(expr: Expr, result: set[str]) -> None:
+    """Collect all set names from SetMembershipTest nodes in an expression tree."""
     stack: list[Expr] = [expr]
     while stack:
         node = stack.pop()
         if isinstance(node, SetMembershipTest):
             if hasattr(node, "set_name") and isinstance(node.set_name, str):
-                if node.set_name.lower() == target:
-                    return True
+                result.add(node.set_name.lower())
         # Traverse children()
         children = getattr(node, "children", None)
         if callable(children):
@@ -197,7 +195,6 @@ def _expr_references_set(expr: Expr, set_name: str) -> bool:
             for idx in node.indices:
                 if isinstance(idx, Expr):
                     stack.append(idx)
-    return False
 
 
 def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
