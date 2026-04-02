@@ -61,7 +61,7 @@ Variables
     c(t)
     l(t)
     m(tl)
-    n(t)
+    n(tl)
     obj
     s(tl)
     tax(t)
@@ -168,7 +168,7 @@ stat_c(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n
 stat_l(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + ((-1) * w) * nu_income(t) + lam_dom2(t) - piL_l(t) + piU_l(t) =E= 0;
 stat_m(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_m_fx_0$(sameas(tl, '0')) + n(tl) * nu_timemoney(tl) + sum(tt, nu_terminal(tt)) - lam_dom1(tl) =E= 0;
 stat_n(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + (m(t) - gamma1 * p * c(t)) * nu_timemoney(t) + lam_dom2(t) =E= 0;
-stat_s(tl)$(t(tl)).. nu_budget(tl) + nu_savings(tl) =E= 0;
+stat_s(tl).. (nu_budget(tl) + nu_savings(tl))$(t(tl)) =E= 0;
 stat_tax(t).. nu_taxes(t) + nu_savings(t) =E= 0;
 stat_u(t).. ((-1) * (prod(t__, u(t__) ** ufact(t__)) * sum(t__, u(t__) ** ufact(t__) * ufact(t__) / u(t__) / u(t__) ** ufact(t__)))) + nu_utility(t) - piL_u(t) =E= 0;
 stat_y(t).. nu_income(t) + ((-1) * d) * nu_taxes(t) - nu_savings(t) =E= 0;
@@ -206,6 +206,7 @@ m_fx_0.. m("0") - 100 =E= 0;
 * fixed for excluded instances to satisfy MCP matching.
 
 s.fx(tl)$(not (t(tl))) = 0;
+s.fx(tl)$(not (ord(tl) > 1)) = 0;
 nu_budget.fx(tl)$(not (ord(tl) > 1)) = 0;
 lam_dom1.fx(tl)$(not (t(tl))) = 0;
 nu_income.fx(tl)$(not (t(tl))) = 0;

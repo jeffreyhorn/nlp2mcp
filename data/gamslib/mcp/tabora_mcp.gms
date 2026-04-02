@@ -111,6 +111,7 @@ Positive Variables
     lam_wa(i)
     lam_lb(t,m)
     lam_mm(t)
+    lam_ttb(t)
     lam_matd1(t)
     lam_matd2(t)
     piL_w(t,i)
@@ -174,6 +175,7 @@ Equations
     comp_matd1(t)
     comp_matd2(t)
     comp_mm(t)
+    comp_ttb(t)
     comp_wa(i)
     comp_wb(t)
     comp_lo_lc(t,m)
@@ -194,18 +196,19 @@ Equations
 
 * Stationarity equations
 stat_cost(t).. ((-1) * (delt(t) * (-1))) + nu_cd(t) =E= 0;
-stat_lc(t,m)$(mc(m)).. nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) + 1$(mc(m)) * lam_lb(t,m) - piL_lc(t,m) =E= 0;
+stat_lc(t,m).. (nu_lw(t) + ((-1) * (1000 * resw * whd / 1000000)) * nu_cd(t) + 1$(mc(m)) * lam_lb(t,m) - piL_lc(t,m))$(mc(m)) =E= 0;
 stat_mat(t).. ((-1) * (1000 * matr * cr("maize") / 1000000)) * nu_rd(t) + ((-1) * (yc("maize") * matr)) * lam_mm(t) + lam_matd1(t) + lam_matd2(t) - piL_mat(t) + piU_mat(t) =E= 0;
 stat_rev(t).. ((-1) * delt(t)) + nu_rd(t) =E= 0;
-stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(m, ld("timber-1",m) * lam_lb(t,m)) - piL_v(t) =E= 0;
+stat_v(t).. ((-1) * (delt(t) * 1000 * vr(t) / 1000000)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+1))$(ord(t) <= card(t) - 1)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+2))$(ord(t) <= card(t) - 2)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+3))$(ord(t) <= card(t) - 3)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+4))$(ord(t) <= card(t) - 4)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+5))$(ord(t) <= card(t) - 5)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+6))$(ord(t) <= card(t) - 6)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+7))$(ord(t) <= card(t) - 7)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+8))$(ord(t) <= card(t) - 8)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+9))$(ord(t) <= card(t) - 9)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+10))$(ord(t) <= card(t) - 10)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+11))$(ord(t) <= card(t) - 11)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+12))$(ord(t) <= card(t) - 12)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+13))$(ord(t) <= card(t) - 13)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+14))$(ord(t) <= card(t) - 14)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+15))$(ord(t) <= card(t) - 15)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+16))$(ord(t) <= card(t) - 16)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+17))$(ord(t) <= card(t) - 17)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+18))$(ord(t) <= card(t) - 18)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+19))$(ord(t) <= card(t) - 19)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+20))$(ord(t) <= card(t) - 20)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+21))$(ord(t) <= card(t) - 21)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+22))$(ord(t) <= card(t) - 22)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+23))$(ord(t) <= card(t) - 23)) + sum(a, (((-1) * (labvc * yv(a))) * nu_lw(t+24))$(ord(t) <= card(t) - 24)) + ((-1) * (1000 * tc / 1000000)) * nu_cd(t) + sum(a, (((-1) * yv(a)) * lam_wb(t+1))$(ord(t) <= card(t) - 1)) + sum(a, (((-1) * yv(a)) * lam_wb(t+2))$(ord(t) <= card(t) - 2)) + sum(a, (((-1) * yv(a)) * lam_wb(t+3))$(ord(t) <= card(t) - 3)) + sum(a, (((-1) * yv(a)) * lam_wb(t+4))$(ord(t) <= card(t) - 4)) + sum(a, (((-1) * yv(a)) * lam_wb(t+5))$(ord(t) <= card(t) - 5)) + sum(a, (((-1) * yv(a)) * lam_wb(t+6))$(ord(t) <= card(t) - 6)) + sum(a, (((-1) * yv(a)) * lam_wb(t+7))$(ord(t) <= card(t) - 7)) + sum(a, (((-1) * yv(a)) * lam_wb(t+8))$(ord(t) <= card(t) - 8)) + sum(a, (((-1) * yv(a)) * lam_wb(t+9))$(ord(t) <= card(t) - 9)) + sum(a, (((-1) * yv(a)) * lam_wb(t+10))$(ord(t) <= card(t) - 10)) + sum(a, (((-1) * yv(a)) * lam_wb(t+11))$(ord(t) <= card(t) - 11)) + sum(a, (((-1) * yv(a)) * lam_wb(t+12))$(ord(t) <= card(t) - 12)) + sum(a, (((-1) * yv(a)) * lam_wb(t+13))$(ord(t) <= card(t) - 13)) + sum(a, (((-1) * yv(a)) * lam_wb(t+14))$(ord(t) <= card(t) - 14)) + sum(a, (((-1) * yv(a)) * lam_wb(t+15))$(ord(t) <= card(t) - 15)) + sum(a, (((-1) * yv(a)) * lam_wb(t+16))$(ord(t) <= card(t) - 16)) + sum(a, (((-1) * yv(a)) * lam_wb(t+17))$(ord(t) <= card(t) - 17)) + sum(a, (((-1) * yv(a)) * lam_wb(t+18))$(ord(t) <= card(t) - 18)) + sum(a, (((-1) * yv(a)) * lam_wb(t+19))$(ord(t) <= card(t) - 19)) + sum(a, (((-1) * yv(a)) * lam_wb(t+20))$(ord(t) <= card(t) - 20)) + sum(a, (((-1) * yv(a)) * lam_wb(t+21))$(ord(t) <= card(t) - 21)) + sum(a, (((-1) * yv(a)) * lam_wb(t+22))$(ord(t) <= card(t) - 22)) + sum(a, (((-1) * yv(a)) * lam_wb(t+23))$(ord(t) <= card(t) - 23)) + sum(a, (((-1) * yv(a)) * lam_wb(t+24))$(ord(t) <= card(t) - 24)) + sum(m, ld("timber-1",m) * lam_lb(t,m)) + sum(a, (yv(a) * lam_ttb(t-6))$(ord(t) > 6)) + sum(a, (yv(a) * lam_ttb(t-7))$(ord(t) > 7)) + sum(a, (yv(a) * lam_ttb(t-8))$(ord(t) > 8)) + sum(a, (yv(a) * lam_ttb(t-9))$(ord(t) > 9)) + sum(a, (yv(a) * lam_ttb(t-10))$(ord(t) > 10)) + sum(a, (yv(a) * lam_ttb(t-11))$(ord(t) > 11)) + sum(a, (yv(a) * lam_ttb(t-12))$(ord(t) > 12)) + sum(a, (yv(a) * lam_ttb(t-13))$(ord(t) > 13)) + sum(a, (yv(a) * lam_ttb(t-14))$(ord(t) > 14)) + sum(a, (yv(a) * lam_ttb(t-15))$(ord(t) > 15)) + sum(a, (yv(a) * lam_ttb(t-16))$(ord(t) > 16)) + sum(a, (yv(a) * lam_ttb(t-17))$(ord(t) > 17)) + sum(a, (yv(a) * lam_ttb(t-18))$(ord(t) > 18)) + sum(a, (yv(a) * lam_ttb(t-19))$(ord(t) > 19)) + sum(a, (yv(a) * lam_ttb(t-20))$(ord(t) > 20)) + sum(a, (yv(a) * lam_ttb(t-21))$(ord(t) > 21)) + sum(a, (yv(a) * lam_ttb(t-22))$(ord(t) > 22)) + sum(a, (yv(a) * lam_ttb(t-23))$(ord(t) > 23)) + sum(a, (yv(a) * lam_ttb(t-24))$(ord(t) > 24)) + sum(a, (yv(a) * lam_ttb(t-25))$(ord(t) > 25)) + sum(a, (yv(a) * lam_ttb(t-26))$(ord(t) > 26)) + sum(a, (yv(a) * lam_ttb(t-27))$(ord(t) > 27)) + sum(a, (yv(a) * lam_ttb(t-28))$(ord(t) > 28)) + sum(a, (yv(a) * lam_ttb(t-29))$(ord(t) > 29)) - piL_v(t) =E= 0;
 stat_w(t,i).. ((-1) * labw(i)) * nu_lw(t) + ((-1) * (1000 * tr * yw * dist(i) / 1000000)) * nu_cd(t) + ((-1) * yw) * lam_wb(t) + lam_wa(i) - piL_w(t,i) =E= 0;
-stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) + ((-1) * yc(c)) * lam_mm(t) - lam_matd2(t) + wrc * lam_wb(t) - lam_matd1(t) - piL_x(t,c) =E= 0;
+stat_x(t,c).. ((-1) * (1000 * cr(c) / 1000000)) * nu_rd(t) + ((-1) * (1000 * cc(c) / 1000000)) * nu_cd(t) + sum(m, ld(c,m) * lam_lb(t,m)) + ((-1) * yc(c)) * lam_mm(t) - lam_matd2(t) + wrc * lam_wb(t) + (((-1) * lam_matd1(t+1))$(ord(t) <= card(t) - 1))$(ord(c) = 1) - piL_x(t,c) =E= 0;
 
 * Inequality complementarity equations
 comp_lb(t,m)$(ord(t) > 1).. ((-1) * (ld("timber-1",m) * v(t) + ld("timber-2",m) * v(t-1) + sum(c, ld(c,m) * x(t,c)) + lc(t,m)$(mc(m)) - labor(m))) =G= 0;
 comp_matd1(t)$(ord(t) > 1).. ((-1) * (mat(t) - x(t-1,"tobacco"))) =G= 0;
 comp_matd2(t).. ((-1) * (mat(t) - x(t,"maize"))) =G= 0;
 comp_mm(t).. yc("maize") * (x(t,"maize") + matr * mat(t)) - dmaize =G= 0;
+comp_ttb(t).. ((-1) * (sum(a, yv(a) * v(t+(card(t)-ord(a)))) - wr)) =G= 0;
 comp_wa(i).. ((-1) * (sum(t, w(t,i)) - fa(i))) =G= 0;
 comp_wb(t).. yw * sum(i, w(t,i)) + sum(a, yv(a) * v(t-ord(a))) - (wrc * x(t,"tobacco") + dwr * nfam) =G= 0;
 
@@ -264,6 +267,7 @@ Model mcp_model /
     comp_matd1.lam_matd1,
     comp_matd2.lam_matd2,
     comp_mm.lam_mm,
+    comp_ttb.lam_ttb,
     comp_wa.lam_wa,
     comp_wb.lam_wb,
     cd.nu_cd,

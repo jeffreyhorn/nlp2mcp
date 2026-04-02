@@ -34,7 +34,7 @@ Parameters
     a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6/
     b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6/
-    pd(cf) /pulp 147, sawnwood 70/
+    pd(c) /pulp 147, sawnwood 70/
     nu(m) /'pulp-mill' 37.8, 'saw-mill' 61.5/
     age(at)
     rhoval(rhoset) /'rho-03' 0.03, 'rho-05' 0.05, 'rho-07' 0.07, 'rho-10' 0.1/
@@ -147,6 +147,10 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(cf, cf__);
+
 * Stationarity equations
 stat_h(m).. ((-1) * nu_cap(m)) + ((-1) * (rho / (1 - (1 + rho) ** ((-1) * life)) * nu(m))) * nu_ainvc =E= 0;
 stat_phik.. 1 + nu_ainvc =E= 0;
@@ -154,9 +158,9 @@ stat_phil.. 1 + nu_acutc =E= 0;
 stat_phip.. 1 + nu_aplnt =E= 0;
 stat_phir.. 1 + nu_aproc =E= 0;
 stat_phix.. -1 + nu_asales =E= 0;
-stat_r(c)$(cl(c)).. nu_lbal(c) + (((-1) * muc) * nu_acutc)$(cl(c)) + ((-1) * 1$(cl(c))) * lam_bal(c) =E= 0;
+stat_r(c).. (nu_lbal(c) + (((-1) * muc) * nu_acutc)$(cl(c)) + ((-1) * 1$(cl(c))) * lam_bal(c))$(cl(c)) =E= 0;
 stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) - piL_v(s,k,at) =E= 0;
-stat_x(c)$(cf(c)).. sum(cf, ((-1) * pd(cf)) * nu_asales)$(cf(c)) + 1$(cf(c)) * lam_bal(c) - piL_x(c) =E= 0;
+stat_x(c).. (sum(cf__, ((-1) * pd(cf__)) * nu_asales)$(cf(c)) + 1$(cf(c)) * lam_bal(c) - piL_x(c))$(cf(c)) =E= 0;
 stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) - piL_z(p) =E= 0;
 
 * Inequality complementarity equations

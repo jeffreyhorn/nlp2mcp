@@ -101,7 +101,7 @@ Equations
 
 * Stationarity equations
 stat_e(t).. nu_bal4(t) + ((-1) * nu_bal4(t+1))$(ord(t) <= card(t) - 1) - piL_e(t) =E= 0;
-stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) - piL_x(t,l) =E= 0;
+stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) + (nu_bal4(t+1)$(ord(t) <= card(t) - 1))$(ord(l) = 1) + (nu_bal4(t+2)$(ord(t) <= card(t) - 2))$(ord(l) = 2) + (nu_bal4(t+3)$(ord(t) <= card(t) - 3))$(ord(l) = 3) + (nu_bal4(t+4)$(ord(t) <= card(t) - 4))$(ord(l) = 4) - piL_x(t,l) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_e(t)$(req(t) > -inf).. e(t) - req(t) =G= 0;

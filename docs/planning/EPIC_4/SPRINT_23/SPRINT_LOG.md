@@ -357,7 +357,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 |---|---|
 | Unfinished tasks from Days 1-10 | ✅ All addressed (see PRs #1167-#1197) |
 | Stretch: mexls universal set (#940) | ✅ Fixed (PR #1184) |
-| Stretch: mine SetMembershipTest (#1133) | ⏭️ Investigated, ~2-4h effort deferred |
+| Stretch: mine SetMembershipTest (#1133) | ⏭️ Evaluation support implemented; remaining ~2-4h mining work deferred |
 | Subset-superset domain widening (#1164/#1175) | ✅ Fixed (PR #1176) |
 | LP fast path for translation timeouts | ✅ Implemented (PR #1172) |
 | Grammar: grid computing functions (#955) | ✅ Fixed (PR #1181) |
@@ -377,10 +377,10 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 | Stage | Baseline | Final | Delta |
 |---|---|---|---|
-| Parse | 144/147 (98.0%) | **147/147 (100.0%)** | **+3** |
-| Translate | 128/147 (87.1%) | **135/147 (91.8%)** | **+7** |
-| Solve | 81/128 (63.3%) | **86/135 (63.7%)** | **+5** |
-| Match | 47/147 (32.0%) | **49/147 (33.3%)** | **+2** |
+| Parse | 144/147 (98.0%) | **147/147 (100.0%)** | **+3** (numerator) |
+| Translate | 128/147 (87.1%) | **135/147 (91.8%)** | **+7** (numerator) |
+| Solve | 81/128 (63.3%) | **86/135 (63.7%)** | **+5** (numerator; denominator also +7) |
+| Match | 47/147 (32.0%) | **49/147 (33.3%)** | **+2** (numerator) |
 | Tests | 4,209 | 4,359 | **+150** |
 
 | Error Category | Baseline | Final | Delta |
@@ -389,7 +389,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | model_infeasible | 12 | 11 | -1 |
 | path_solve_terminated | 10 | 12 | +2 |
 | path_solve_license | 7 | 8 | +1 |
-| translate timeout | ~17 | 11 | ~-6 |
+| translate timeout | ~17 | 11 | ≈-6 |
 
 ---
 

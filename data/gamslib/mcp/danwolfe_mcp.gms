@@ -16,32 +16,67 @@ $offText
 * ============================================
 
 Sets
-    i /lab, h1, h2, p1, p2/
+    i /n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15, n16, n17, n18, n19, n20/
+    k /k1, k2, k3, k4, k5/
+    e(i,i)
+    p /p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23, p24, p25, p26, p27, p28, p29, p30, p31, p32, p33, p34, p35, p36, p37, p38, p39, p40, p41, p42, p43, p44, p45, p46, p47, p48, p49, p50, p51, p52, p53, p54, p55, p56, p57, p58, p59, p60, p61, p62, p63, p64, p65, p66, p67, p68, p69, p70, p71, p72, p73, p74, p75, p76, p77, p78, p79, p80, p81, p82, p83, p84, p85, p86, p87, p88, p89, p90, p91, p92, p93, p94, p95, p96, p97, p98, p99, p100/
+    ap(k,p)
+    nextp(k,p)
 ;
 
 Alias(i, j);
-Alias(i, i__kkt1);
-Alias(i, i__kkt2);
-Alias(i, i__kkt3);
-Alias(i, i__kkt4);
-Alias(i, i__kkt5);
-Alias(i, i__kkt6);
-Alias(i, i__kkt7);
-Alias(i, i__kkt8);
-Alias(i, i__kkt9);
 
-Parameters
-    xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55/
-    tb(i) /lab 220, h1 na, h2 na, p1 190, p2 105/
-    tw(i) /lab 1, h1 1, h2 1, p1 1, p2 1/
-    xw(i,j)
+Sets
+    pe(k,p,i,j)
 ;
 
-tw(i)$(mapval(tb(i)) = mapval(na)) = 0;
-xw(i,j) = 1$(xb(i,j));
-xw(i,j)$(mapval(xb(i,j)) = mapval(na)) = 0;
+Parameters
+    cost(i,j)
+    bal(k,i)
+    kdem(k)
+    cap(i,j)
+    xsingle(k,i,j)
+    pcost(k,p)
+    xserial(k,i,j)
+    xgrid(k,i,j)
+;
+
+Scalars
+    inum /0/
+    edgedensity /0.3/
+    done /0/
+    iter /0/
+;
+
+$onImplicitAssign
+e(i,j) = uniform(0, 1) < edgedensity;
+e(i,i) = 0;
+ap(k,p) = 0;
+pe(k,p,e) = 0;
+nextp(k,p) = 0;
+nextp(k,"p1") = 1;
+ap(k,p) = 0;
+pe(k,p,e) = 0;
+nextp(k,p) = 0;
+nextp(k,"p1") = 1;
+$offImplicitAssign
+
+* Fix random seed for deterministic MCP evaluation
+execseed = 12345;
+
+cost(e) = uniform(1, 10);
+cap(e) = uniform(50, 100) * log(card(k));
 
 execError = 0;
+
+loop(k,
+   kdem(k) = uniform(50,150) ;
+   inum = uniformInt(1,card(i)) ;
+   bal(k,i)$ord(i) = inum = kdem(k) ;
+   inum = uniformInt(1,card(i)) ;
+   bal(k,i)$ord(i) = inum = bal(k,i) - kdem(k) ;
+   kdem(k) = sum(i$(bal(k,i) > 0), bal(k,i)) ;
+);
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -55,11 +90,12 @@ execError = 0;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x(i,j)
-    t(i)
-    dev
-    nu_rbal(i)
-    nu_cbal(i)
+    z
+;
+
+Positive Variables
+    x(k,i,j)
+    piL_x(k,i,j)
 ;
 
 * ============================================
@@ -69,9 +105,10 @@ Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables are set to 1.
 
-x.l(i,j) = xb(i,j)$(xw(i,j));
-t.l(i) = tb(i)$(tw(i));
+x.l(k,i,j) = 1;
+x.l(k,i,j) = min(x.l(k,i,j), x.up(k,i,j));
 
 * ============================================
 * Equations
@@ -82,11 +119,9 @@ t.l(i) = tb(i)$(tw(i));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_t(i)
-    stat_x(i,j)
-    cbal(j)
-    devsqr
-    rbal(i)
+    stat_x(k,i,j)
+    comp_lo_x(k,i,j)
+    defobj
 ;
 
 * ============================================
@@ -94,23 +129,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i)) + sum(i__kkt2, (((-1) * 1$(xb(i,i__kkt2))) * nu_cbal(i__kkt2))$(ord(i__kkt2) = 1)) + sum(i__kkt3, (((-1) * 1$(xb(i,i__kkt3))) * nu_cbal(i__kkt3))$(ord(i__kkt3) = 1)) + sum(i__kkt4, (((-1) * 1$(xb(i,i__kkt4))) * nu_cbal(i__kkt4))$(ord(i__kkt4) = 2)) + sum(i__kkt5, (((-1) * 1$(xb(i,i__kkt5))) * nu_cbal(i__kkt5))$(ord(i__kkt5) = 3)) + sum(i__kkt6, (((-1) * 1$(xb(i,i__kkt6))) * nu_cbal(i__kkt6))$(ord(i__kkt6) = 2)) + sum(i__kkt7, (((-1) * 1$(xb(i,i__kkt7))) * nu_cbal(i__kkt7))$(ord(i__kkt7) = 4)) + sum(i__kkt8, (((-1) * 1$(xb(i,i__kkt8))) * nu_cbal(i__kkt8))$(ord(i__kkt8) = 3)) + sum(i__kkt9, (((-1) * 1$(xb(i,i__kkt9))) * nu_cbal(i__kkt9))$(ord(i__kkt9) = 4)))$(xw(i,j)) =E= 0;
+stat_x(k,i,j).. cost(i,j) * 1$(e(i,j)) - piL_x(k,i,j) =E= 0;
+
+* Inequality complementarity equations
+
+* Lower bound complementarity equations
+comp_lo_x(k,i,j).. x(k,i,j) - 0 =G= 0;
 
 * Original equality equations
-rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
-cbal(j).. t(j) =E= sum(i$(xb(i,j)), x(i,j));
-devsqr.. dev =E= sum((i,j)$(xw(i,j)), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i)), tw(i) * sqr(tb(i) - t(i)) / tb(i));
+defobj.. z =E= sum((k,i,j)$(e(i,j)), cost(i,j) * x(k,i,j));
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-x.fx(i,j)$(not (xw(i,j))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -126,11 +154,9 @@ x.fx(i,j)$(not (xw(i,j))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_t.t,
     stat_x.x,
-    cbal.nu_cbal,
-    devsqr.dev,
-    rbal.nu_rbal
+    defobj.z,
+    comp_lo_x.piL_x
 /;
 
 * ============================================
@@ -140,5 +166,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = dev.l;
+nlp2mcp_obj_val = z.l;
 Display nlp2mcp_obj_val;

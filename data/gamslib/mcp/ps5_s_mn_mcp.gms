@@ -25,6 +25,7 @@ Alias(i, j);
 Parameters
     theta(i)
     pt(i,t)
+    p(i)
     F(i,t)
     noMHRC0(i,t)
     noMHRC(t)

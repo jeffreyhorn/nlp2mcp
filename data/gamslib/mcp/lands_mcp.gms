@@ -111,7 +111,7 @@ stat_x(i).. c(i) - lam_mincap + c(i) * lam_bbal + sum(s, (-1) * lam_powbals(i,s)
 stat_ys(i,j,s).. prob(s) * f(i,j) + lam_powbals(i,s) - lam_dembals(j,s) - piL_ys(i,j,s) =E= 0;
 
 * Inequality complementarity equations
-comp_bbal.. ((-1) * (sum(i, c(i) * x(I)) - b)) =G= 0;
+comp_bbal.. ((-1) * (sum(i, c(i) * x(i)) - b)) =G= 0;
 comp_dembals(j,s).. sum(i, ys(i,j,s)) - ds(j,s) =G= 0;
 comp_mincap.. sum(i, x(i)) - m =G= 0;
 comp_powbals(i,s).. ((-1) * (sum(j, ys(i,j,s)) - x(i))) =G= 0;

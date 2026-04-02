@@ -45,19 +45,13 @@ Parameters
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    DINT(r,c)
-    SINT(r,c)
     TC
     Qd(r,c)
     Qs(r,c)
-    OBJ
     nu_DEM(r,c)
-    nu_DEMINT(r,c)
     nu_SUP(r,c)
-    nu_SUPINT(r,c)
     nu_SDBAL(c)
-    nu_TRANSCOST
-    nu_SX(R,C)
+    nu_SX(r,c)
     nu_DX(r,c)
 ;
 
@@ -103,24 +97,18 @@ P.l(r,c) = min(P.l(r,c), P.up(r,c));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_dint(r,c)
     stat_p(r,c)
     stat_qd(r,c)
     stat_qs(r,c)
-    stat_sint(r,c)
-    stat_tc
     stat_x(r,rr,c)
     comp_PDIF(r,rr,c)
     comp_lo_p(r,c)
     comp_lo_x(r,rr,c)
     DEM(r,c)
-    DEMINT(r,c)
     DX(r,c)
-    OBJECT
     SDBAL(c)
     SUP(r,c)
-    SUPINT(r,c)
-    SX(R,C)
+    SX(r,c)
     TRANSCOST
 ;
 
@@ -129,13 +117,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_dint(r,c).. -1 + nu_DEMINT(r,c) =E= 0;
-stat_p(r,c).. ((-1) * (AlphaD(r,c) + p(r,c) * BetadSq(r,c,c) + sum(cc, BetadSq(r,c,cc) * p(r,cc)))) * nu_DEMINT(r,c) + (((-1) * (p(r,c) * BetadSq(r,c,c))) * nu_DEMINT(r,c+1))$(ord(c) <= card(c) - 1) + (((-1) * (p(r,c) * BetadSq(r,c,c))) * nu_DEMINT(r,c-1))$(ord(c) > 1) + ((-1) * (AlphaS(r,c) + p(r,c) * BetasSq(r,c,c) + sum(cc, BetasSq(r,c,cc) * p(r,cc)))) * nu_SUPINT(r,c) + (((-1) * (p(r,c) * BetasSq(r,c,c))) * nu_SUPINT(r,c+1))$(ord(c) <= card(c) - 1) + (((-1) * (p(r,c) * BetasSq(r,c,c))) * nu_SUPINT(r,c-1))$(ord(c) > 1) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
+stat_p(r,c).. sum(cc, BetaD(r,c,cc)) * nu_DEM(r,c) + sum(cc, BetaS(r,c,cc)) * nu_SUP(r,c) + sum(rr, lam_PDIF(r,rr,c)) - piL_p(r,c) =E= 0;
 stat_qd(r,c).. ((-1) * nu_DEM(r,c)) + nu_SDBAL(c) - nu_DX(r,c) =E= 0;
-stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SDBAL(c) - nu_SX(R,C) =E= 0;
-stat_sint(r,c).. 1 + nu_SUPINT(r,c) =E= 0;
-stat_tc.. 1 + nu_TRANSCOST =E= 0;
-stat_x(r,rr,c).. ((-1) * TCost(r,rr,c)) * nu_TRANSCOST + nu_SX(R,C) + nu_DX(r,c) - piL_x(r,rr,c) =E= 0;
+stat_qs(r,c).. ((-1) * nu_SUP(r,c)) - nu_SDBAL(c) - nu_SX(r,c) =E= 0;
+stat_x(r,rr,c).. TCost(r,rr,c) + nu_SX(r,c) + nu_DX(rr,c) - piL_x(r,rr,c) =E= 0;
 
 * Inequality complementarity equations
 comp_PDIF(r,rr,c).. ((-1) * (p(r,c) - p(rr,c) - TCost(r,rr,c))) =G= 0;
@@ -146,13 +131,10 @@ comp_lo_x(r,rr,c).. x(r,rr,c) - 0 =G= 0;
 
 * Original equality equations
 DEM(r,c).. AlphaD(r,c) + sum(cc, BetaD(r,c,cc) * p(r,c)) =E= qd(r,c);
-DEMINT(r,c).. dint(r,c) =E= AlphaD(r,c) * p(r,c) + sum(cc, BetadSq(r,c,cc) * p(r,cc)) * p(r,c);
 SUP(r,c).. AlphaS(r,c) + sum(cc, BetaS(r,c,cc) * p(r,c)) =E= qs(r,c);
-SUPINT(r,c).. sint(r,c) =E= AlphaS(r,c) * p(r,c) + sum(cc, BetasSq(r,c,cc) * p(r,cc)) * p(r,c);
 SDBAL(c).. sum(r, qd(r,c)) =E= sum(r, qs(r,c));
 TRANSCOST.. tc =E= sum((r,rr,c), x(r,rr,c) * TCost(r,rr,c));
-OBJECT.. obj =E= sum((r,c), dint(r,c) - sint(r,c)) - tc;
-SX(R,C).. sum(RR, x(R,RR,C)) =E= qs(R,C);
+SX(r,c).. sum(rr, x(r,rr,c)) =E= qs(r,c);
 DX(r,c).. sum(rr, x(rr,r,c)) =E= qd(r,c);
 
 
@@ -179,23 +161,17 @@ lam_PDIF.fx(r,rr,c)$(ord(r) = ord(rr)) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_dint.dint,
     stat_p.p,
     stat_qd.qd,
     stat_qs.qs,
-    stat_sint.sint,
-    stat_tc.tc,
     stat_x.x,
     comp_PDIF.lam_PDIF,
     DEM.nu_DEM,
-    DEMINT.nu_DEMINT,
     DX.nu_DX,
-    OBJECT.OBJ,
     SDBAL.nu_SDBAL,
     SUP.nu_SUP,
-    SUPINT.nu_SUPINT,
     SX.nu_SX,
-    TRANSCOST.nu_TRANSCOST,
+    TRANSCOST.TC,
     comp_lo_p.piL_p,
     comp_lo_x.piL_x
 /;
@@ -207,5 +183,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = OBJ.l;
+nlp2mcp_obj_val = TC.l;
 Display nlp2mcp_obj_val;

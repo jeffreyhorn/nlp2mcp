@@ -27,7 +27,7 @@ Parameters
     d(r) /iron 0.03, nickel 0.025/
     f(r) /iron 0.02, nickel -0.01/
     a(r,p) /iron.nuts 0.79, iron.bolts 0.83, iron.washers 0.92, nickel.nuts 0.21, nickel.bolts 0.17, nickel.washers 0.08/
-    c(p,t) /nuts.'1' 1.73, nuts.'2' 1.8, nuts.'3' 1.6, nuts.'4' 2.2, bolts.'1' 1.82, bolts.'2' 1.9, bolts.'3' 1.7, bolts.'4' 0.95, washers.'1' 1.05, washers.'2' 1.1, washers.'3' 0.95, washers.'4' 1.33/
+    c(p,tl) /nuts.'1' 1.73, nuts.'2' 1.8, nuts.'3' 1.6, nuts.'4' 2.2, bolts.'1' 1.82, bolts.'2' 1.9, bolts.'3' 1.7, bolts.'4' 0.95, washers.'1' 1.05, washers.'2' 1.1, washers.'3' 0.95, washers.'4' 1.33/
 ;
 
 Scalars
@@ -102,9 +102,13 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(t, t__);
+
 * Stationarity equations
 stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
-stat_x(p,tl)$(t(tl)).. sum(t$(sameas(t, tl)), (((-1) * c(p,t)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl) =E= 0;
+stat_x(p,tl).. (sum(t__$(sameas(t__, tl)), (((-1) * c(p,t__)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl))$(t(tl)) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;

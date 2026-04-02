@@ -23,6 +23,11 @@ Sets
 
 Alias(i, k);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+j(jj) = yes;
+$offImplicitAssign
+
 Parameters
     a(i,k) /'act-1'.'act-3' 2, 'act-1'.'act-4' 4, 'act-1'.'act-5' 3, 'act-2'.'act-3' 6, 'act-2'.'act-4' 2, 'act-2'.'act-5' 3, 'act-3'.'act-1' 2, 'act-3'.'act-2' 6, 'act-3'.'act-4' 5, 'act-3'.'act-5' 3, 'act-4'.'act-1' 4, 'act-4'.'act-2' 2, 'act-4'.'act-3' 5, 'act-4'.'act-4' 3, 'act-5'.'act-1' 3, 'act-5'.'act-2' 3, 'act-5'.'act-3' 3, 'act-5'.'act-4' 3/
 ;
@@ -90,7 +95,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,jj)$(j(jj)).. ((-1) * piL_x(i,jj)) =E= 0;
+stat_x(i,jj).. (((-1) * piL_x(i,jj)))$(j(jj)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i,jj).. x(i,jj) - 0 =G= 0;

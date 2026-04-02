@@ -118,10 +118,14 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(l, l__);
+
 * Stationarity equations
-stat_d(n)$(l(n)).. sum(l$(sameas(l, n)), (((-1) * (coefs(l,"rho") - pm * coefs(l,"eta") * 2 * d(n))))$(l(n))) + ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n) =E= 0;
-stat_s(n)$(l(n)).. sum(l$(sameas(l, n)), (coefs(l,"alpha") + 2 * coefs(l,"beta") * s(n))$(l(n))) + 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n) =E= 0;
-stat_t(n,np)$(arc(n,np)).. (pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) + ((-1) * 1$(arc(n,np))) * nu_nbal(n) - piL_t(n,np) =E= 0;
+stat_d(n).. (sum(l__$(sameas(l__, n)), (((-1) * (coefs(l__,"rho") - pm * coefs(l__,"eta") * 2 * d(n))))$(l(n))) + ((-1) * 1$(l(n))) * nu_nbal(n) + nu_bal$(l(n)) - piL_d(n))$(l(n)) =E= 0;
+stat_s(n).. (sum(l__$(sameas(l__, n)), (coefs(l__,"alpha") + 2 * coefs(l__,"beta") * s(n))$(l(n))) + 1$(l(n)) * nu_nbal(n) + ((-1) * nu_bal)$(l(n)) - piL_s(n))$(l(n)) =E= 0;
+stat_t(n,np).. ((pairs(n,np,"kappa") + 3 * tm * pairs(n,np,"nu") * power(t(n,np), 2)) * 1$(arc(n,np)) + ((-1) * 1$(arc(n,np))) * nu_nbal(n) + ((1$(arc(np,np)) * nu_nbal(n-1))$(ord(n) > 1))$(ord(np) = 1) + ((1$(arc(np,np)) * nu_nbal(n-4))$(ord(n) > 4))$(ord(np) = 4) + ((1$(arc(np,np)) * nu_nbal(n+1))$(ord(n) <= card(n) - 1))$(ord(np) = 1) + ((1$(arc(np,np)) * nu_nbal(n-2))$(ord(n) > 2))$(ord(np) = 2) + ((1$(arc(np,np)) * nu_nbal(n-3))$(ord(n) > 3))$(ord(np) = 3) + ((1$(arc(np,np)) * nu_nbal(n+2))$(ord(n) <= card(n) - 2))$(ord(np) = 2) + ((1$(arc(np,np)) * nu_nbal(n+4))$(ord(n) <= card(n) - 4))$(ord(np) = 4) + ((1$(arc(np,np)) * nu_nbal(n+3))$(ord(n) <= card(n) - 3))$(ord(np) = 3) + ((1$(arc(np,np)) * nu_nbal(n+5))$(ord(n) <= card(n) - 5))$(ord(np) = 5) + ((1$(arc(np,np)) * nu_nbal(n-5))$(ord(n) > 5))$(ord(np) = 5) - piL_t(n,np))$(arc(n,np)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(n).. d(n) - 0 =G= 0;

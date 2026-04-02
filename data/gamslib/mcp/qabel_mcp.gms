@@ -27,6 +27,11 @@ Sets
 Alias(n, np);
 Alias(m, mp);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+ku(k) = yes;
+$offImplicitAssign
+
 Parameters
     a(n,np) /consumpt.consumpt 0.914, consumpt.invest -0.016, invest.consumpt 0.097, invest.invest 0.424/
     b(n,m) /consumpt.'gov-expend' 0.305, consumpt.money 0.424, invest.'gov-expend' -0.101, invest.money 1.459/
@@ -113,7 +118,7 @@ Alias(n, np__);
 Alias(n, n__);
 
 * Stationarity equations
-stat_u(m,k)$(ku(k)).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k)) =E= 0;
+stat_u(m,k).. sum(n, ((-1) * b(n,m)) * nu_stateq(n,k))$(ku(k)) =E= 0;
 stat_x(n,k).. 0.5 * (sum(np__, (x(np__,k) - xtilde(np__,k)) * w(n,np__,k)) + sum(n__, (x(n__,k) - xtilde(n__,k)) * w(n__,n,k))) + ((-1) * a(n,n)) * nu_stateq(n,k) + (((-1) * a(n,n)) * nu_stateq(n+1,k))$(ord(n) <= card(n) - 1) + nu_stateq(n,k-1)$(ord(k) > 1) + (((-1) * a(n,n)) * nu_stateq(n-1,k))$(ord(n) > 1) =E= 0;
 
 * Original equality equations

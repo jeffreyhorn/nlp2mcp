@@ -153,7 +153,7 @@ Equations
 * Stationarity equations
 stat_d(j).. ((-1) * (dema(j) * d(j) ** demb(j) * demb(j) / d(j))) + lam_db(j) - piL_d(j) =E= 0;
 stat_s(i).. supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i) =E= 0;
-stat_x(i,j)$(ij(i,j)).. utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j) =E= 0;
+stat_x(i,j).. (utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j))$(ij(i,j)) =E= 0;
 
 * Inequality complementarity equations
 comp_db(j).. sum(i$(ij(i,j)), x(i,j)) - d(j) =G= 0;

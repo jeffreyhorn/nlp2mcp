@@ -197,8 +197,8 @@ stat_production.. 1 + nu_ap =E= 0;
 stat_revenue.. -1 + nu_ar =E= 0;
 stat_s(d,m).. nu_hb(d,m) + ((-1) * dcd(d,"hold-cost")) * nu_ah + ((-1) * nu_ib(d,m+1))$(ord(m) <= card(m) - 1) - piL_s(d,m) =E= 0;
 stat_transport.. 1 + nu_at =E= 0;
-stat_x(p,d,m)$(pd(p,d)).. ((-1) * 1$(pd(p,d))) * nu_ib(d,m) + ((-1) * 1$(pd(p,d))) * nu_pb(p,m) + ((-1) * (fdec(p,d) * 1$(pd(p,d)))) * nu_at - piL_x(p,d,m) =E= 0;
-stat_y(d,c,m)$(dc(d,c)).. 1$(dc(d,c)) * nu_hb(d,m) + 1$(dc(d,c)) * nu_db(c,m) + ((-1) * (revfac(m) * czd(c,"revenue") * 1$(dc(d,c)))) * nu_ar + ((-1) * (sdec(d,c) * 1$(dc(d,c)))) * nu_at - piL_y(d,c,m) =E= 0;
+stat_x(p,d,m).. (((-1) * 1$(pd(p,d))) * nu_ib(d,m) + ((-1) * 1$(pd(p,d))) * nu_pb(p,m) + ((-1) * (fdec(p,d) * 1$(pd(p,d)))) * nu_at - piL_x(p,d,m))$(pd(p,d)) =E= 0;
+stat_y(d,c,m).. (1$(dc(d,c)) * nu_hb(d,m) + 1$(dc(d,c)) * nu_db(c,m) + ((-1) * (revfac(m) * czd(c,"revenue") * 1$(dc(d,c)))) * nu_ar + ((-1) * (sdec(d,c) * 1$(dc(d,c)))) * nu_at - piL_y(d,c,m))$(dc(d,c)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_dm(c)$(czd(c,"min-demand") > -inf).. dm(c) - czd(c,"min-demand") =G= 0;

@@ -27,6 +27,13 @@ Sets
     cm(c)
 ;
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+cn(c) = yes;
+ce(c) = yes;
+cm(c) = yes;
+$offImplicitAssign
+
 Parameters
     a(t,c) /jan.wheat 1, jan.clover 1, jan.beans 1, jan.onions 1, feb.wheat 1, feb.clover 1, feb.beans 1, feb.onions 1, mar.wheat 1, mar.clover 0.5, mar.beans 1, mar.onions 1, mar.cotton 0.5, apr.wheat 1, apr.beans 1, apr.onions 1, apr.cotton 1, may.wheat 1, may.onions 0.25, may.cotton 1, may.maize 0.25, jun.cotton 1, jun.maize 1, jul.cotton 1, jul.maize 1, jul.tomato 0.75, aug.cotton 1, aug.maize 1, aug.tomato 1, sep.cotton 1, sep.maize 1, sep.tomato 1, oct.cotton 1, oct.maize 0.5, oct.tomato 1, nov.wheat 0.5, nov.clover 0.25, nov.beans 0.25, nov.onions 0.5, nov.cotton 0.75, nov.tomato 0.75, dec.wheat 1, dec.clover 1, dec.beans 1, dec.onions 1/
     lc(t,c) /jan.wheat 1.72, jan.clover 4.5, jan.beans 0.75, jan.onions 5.16, feb.wheat 0.5, feb.clover 1, feb.beans 0.75, feb.onions 5, mar.wheat 1, mar.clover 8, mar.beans 0.75, mar.onions 5, mar.cotton 5, apr.wheat 1, apr.beans 16, apr.onions 19.58, apr.cotton 5, may.wheat 17.16, may.onions 2.42, may.cotton 9, may.maize 4.3, jun.wheat 2.34, jun.cotton 2, jun.maize 5.04, jul.cotton 1.5, jul.maize 7.16, jul.tomato 17, aug.cotton 2, aug.maize 7.97, aug.tomato 15, sep.cotton 1, sep.maize 4.41, sep.tomato 12, oct.cotton 26, oct.maize 1.12, oct.tomato 7, nov.wheat 2.43, nov.clover 2.5, nov.beans 7.5, nov.onions 11.16, nov.cotton 12, nov.tomato 6, dec.wheat 1.35, dec.clover 7.5, dec.beans 0.75, dec.onions 4.68/
@@ -217,7 +224,7 @@ stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_fl
 stat_imports(c).. ((-1) * 1$(cm(c))) * nu_dem(c) - piL_imports(c) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
-stat_natcon(c)$(cn(c)).. nu_dem(c) - piL_natcon(c) =E= 0;
+stat_natcon(c).. (nu_dem(c) - piL_natcon(c))$(cn(c)) =E= 0;
 stat_natprod(c).. nu_proc(c) - nu_dem(c) - piL_natprod(c) =E= 0;
 stat_pcost.. nu_aplow - nu_acost =E= 0;
 stat_rescost.. nu_ares - nu_acost =E= 0;

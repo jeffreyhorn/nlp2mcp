@@ -30,9 +30,9 @@ Parameters
     ddat(lmh,*,i) /low.ynot.'light-ind' 100, low.ynot.'food+agr' 230, low.ynot.'heavy-ind' 220, low.ynot.services 450, medium.ynot.'light-ind' 100, medium.ynot.'food+agr' 230, medium.ynot.'heavy-ind' 220, medium.ynot.services 450, high.ynot.'light-ind' 100, high.ynot.'food+agr' 230, high.ynot.'heavy-ind' 220, high.ynot.services 450, medium.'p-elas'.'light-ind' -0.674, medium.'p-elas'.'food+agr' -0.246, medium.'p-elas'.'heavy-ind' -0.587, medium.'p-elas'.services -0.352, high.'p-elas'.'light-ind' -1, high.'p-elas'.'food+agr' -1, high.'p-elas'.'heavy-ind' -1, high.'p-elas'.services -1/
     tdat(lmh,*,t) /medium.alp.'light-ind' 0.005, medium.alp.'food+agr' 0.001, medium.alp.'heavy-ind' 0.01, high.alp.'light-ind' 0.0025, high.alp.'food+agr' 0.0005, high.alp.'heavy-ind' 0.00178, medium.gam.'light-ind' 1, medium.gam.'food+agr' 1.1, medium.gam.'heavy-ind' 1, high.gam.'light-ind' 1, high.gam.'food+agr' 1.1, high.gam.'heavy-ind' 1, medium.xsi.'light-ind' 0.005, medium.xsi.'food+agr' 0.0157, medium.xsi.'heavy-ind' 0.00178, high.xsi.'light-ind' 0.005, high.xsi.'food+agr' 0.0157, high.xsi.'heavy-ind' 0.00178/
     mew(t) /'light-ind' 1, 'food+agr' 1, 'heavy-ind' 1/
-    xsi(t)
+    xsi(i)
     gam(t)
-    alp(t)
+    alp(i)
     ynot(i)
     sig(i)
     thet(i)
@@ -102,8 +102,8 @@ Positive Variables
     k(i)
     e(i)
     m(i)
-    g(t)
-    h(t)
+    g(i)
+    h(i)
     lam_mb(i)
     lam_tb
     lam_lc
@@ -279,13 +279,17 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(t, t__);
+
 * Stationarity equations
-stat_e(i)$(t(i)).. alp(i) * nu_dh(i) + 1$(t(i)) * lam_mb(i) + sum(t, ((-1) * h(t)) * lam_tb)$(t(i)) - piL_e(i) + piU_e(i) =E= 0;
+stat_e(i).. (alp(i) * nu_dh(i) + 1$(t(i)) * lam_mb(i) + sum(t__, ((-1) * h(t__)) * lam_tb)$(t(i)) - piL_e(i) + piU_e(i))$(t(i)) =E= 0;
 stat_g(t).. nu_dg(t) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
 stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
-stat_m(i)$(t(i)).. ((-1) * xsi(i)) * nu_dg(i) + -1$(t(i)) * lam_mb(i) + sum(t, g(t) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i) =E= 0;
+stat_m(i).. (((-1) * xsi(i)) * nu_dg(i) + (-1)$(t(i)) * lam_mb(i) + sum(t__, g(t__) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i))$(t(i)) =E= 0;
 stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
 stat_pi.. nu_fpr - piL_pi + piU_pi =E= 0;

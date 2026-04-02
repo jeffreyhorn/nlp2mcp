@@ -74,6 +74,8 @@ dur(b) = sum(bp$(bs(b,bp)), dd(bp,"duration")) / sum(bp, dd(bp,"duration"));
 opcostt(m,v,t)$(vs(t,v)) = mdatat(m,"opcost") * (1 + mdatat(m,"opcost-g")) ** length(v);
 capcostt(m,v,t)$(vs(t,v)) = mdatat(m,"capcost") * (1 + mdatat(m,"capcost-g")) ** length(v);
 
+execError = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -117,7 +119,9 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+hh.lo(mh,t) = hlo(mh,t);
 hh.up(mh,t) = hup(mh,t);
+ht.lo(mt,t) = tlo(mt,t);
 ht.up(mt,t) = tup(mt,t);
 htt.up(mt) = mdatat(mt,"maxcap");
 
@@ -131,9 +135,13 @@ htt.up(mt) = mdatat(mt,"maxcap");
 * POSITIVE variables are set to 1.
 
 hh.l(m,te) = 1;
+hh.l(m,te) = min(hh.l(m,te), hh.up(m,te));
 ht.l(m,v) = 1;
+ht.l(m,v) = min(ht.l(m,v), ht.up(m,v));
 zh.l(m,b,t) = 1;
+zh.l(m,b,t) = min(zh.l(m,b,t), zh.up(m,b,t));
 zt.l(m,v,b,t) = 1;
+zt.l(m,v,b,t) = min(zt.l(m,v,b,t), zt.up(m,v,b,t));
 
 * ============================================
 * Equations
@@ -172,14 +180,19 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(mt, mt__);
+Alias(t, t__);
+
 * Stationarity equations
-stat_hh(m,te)$(mh(m) and t(te)).. sum((labels,v), ((-1) * (sigma(m) * mdatah(m,labels) * 1$(vs(te,v)))) * nu_ak(te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_pr(te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_cch(m,te)) + sum((labels,v), ((-1) * (mdatah(m,labels) * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) - piL_hh(m,te) =E= 0;
-stat_ht(m,v)$(mt(m)).. ((-1) * nu_cat(m)) + sum(labels, sum((mt,t), (((-1) * mdatat(mt,labels)) * lam_cct(mt,v,t))$(vs(t,v)))) - piL_ht(m,v) =E= 0;
-stat_htt(m)$(mt(m)).. nu_cat(m) =E= 0;
-stat_phic(te)$(t(te)).. nu_ak(te) =E= 0;
-stat_phio(te)$(t(te)).. nu_ao(te) =E= 0;
-stat_zh(m,b,t)$(mh(m)).. sum(labels, ((-1) * (mdatah(m,labels) * dur(b))) * nu_ao(t)) + ((-1) * 1$(bs(b,b))) * lam_db(b,t) + lam_cch(m,t) + dur(b) * lam_ech(m,t) - piL_zh(m,b,t) =E= 0;
-stat_zt(m,v,b,t)$(mt(m)).. lam_cct(m,v,t)$(vs(t,v)) - piL_zt(m,v,b,t) =E= 0;
+stat_hh(m,te).. (sum(v, ((-1) * (sigma(m) * mdatah(m,"capcost") * 1$(vs(te,v)))) * nu_ak(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_pr(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_cch(m,te)) + sum(v, ((-1) * (mdatah(m,"e-fact") * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) - piL_hh(m,te))$(mh(m) and t(te)) =E= 0;
+stat_ht(m,v).. (((-1) * nu_cat(m)) + sum((mt__,t), (((-1) * mdatat(mt__,"avail")) * lam_cct(mt__,v,t))$(vs(t,v))) - piL_ht(m,v))$(mt(m)) =E= 0;
+stat_htt(m).. nu_cat(m)$(mt(m)) =E= 0;
+stat_phic(te).. (sum(t__$(sameas(t__, te)), delta(t__)$(t(te))) + nu_ak(te))$(t(te)) =E= 0;
+stat_phio(te).. (sum(t__$(sameas(t__, te)), delta(t__)$(t(te))) + nu_ao(te))$(t(te)) =E= 0;
+stat_zh(m,b,t).. (((-1) * (mdatah(m,"opcost") * dur(b))) * nu_ao(t) + ((-1) * 1$(bs(b,b))) * lam_db(b,t) + lam_cch(m,t) + dur(b) * lam_ech(m,t) - piL_zh(m,b,t))$(mh(m)) =E= 0;
+stat_zt(m,v,b,t).. (lam_cct(m,v,t)$(vs(t,v)) - piL_zt(m,v,b,t))$(mt(m)) =E= 0;
 
 * Inequality complementarity equations
 comp_cch(mh,t).. ((-1) * (sum(b, zh(mh,b,t)) - mdatah(mh,"avail") * (mdatah(mh,"initcap") + sum(v$(vs(t,v)), hh(mh,v))))) =G= 0;

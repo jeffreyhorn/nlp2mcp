@@ -32,6 +32,11 @@ Sets
 Alias(i, j);
 Alias(ii, jj);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+ii(i) = yes;
+$offImplicitAssign
+
 Parameters
     SAM(i,j) /ACT.COM 14827.424, COM.ACT 7917.504, FAC.ACT 9805.414, ENT.FAC 3699.706, HOU.FAC 6000, HOU.ENT 3300, GOV.ACT 733.6, GOV.COM 357.4, GOV.FAC 74.4, GOV.ENT 165.2, CAP.ENT 150, ROW.COM 5573.815, Total.ACT 18456.518, Total.COM 20758.639, Total.FAC 9805.414, Total.ENT 3732.706, ACT.HOU 2101.049, ACT.GOV -0.327, COM.HOU 6953.332, COM.GOV 1564.5, COM.GIN 2518.5, COM.CAP 2597.798, ENT.GOV 33, HOU.GOV 29.6, GOV.HOU 139.5, CAP.HOU 649.156, CAP.GOV -356.673, CAP.GIN -406.2, Total.HOU 9643.037, Total.GOV 1470.1, Total.GIN 1712.3, Total.CAP 2197.798, ACT.ROW 1488.157, ACT.Total 18416.303, COM.Total 20751.634, FAC.Total 9805.414, ENT.Total 3732.706, HOU.ROW 200, HOU.Total 9687.915, GOV.Total 1470.1, GIN.ROW 1712.3, GIN.Total 1712.3, CAP.ROW 2163.857, CAP.Total 2200.14, ROW.Total 5573.815, Total.ROW 5573.815/
     SAM0(i,j)
@@ -41,10 +46,13 @@ Parameters
     macrov0(macro)
     vbar1(i,jwt)
     vbar2(macro,jwt)
+    vbar3(i,j,jwt)
     wbar1(i,jwt)
     wbar2(macro,jwt) /gdpfc2.'1' 0.006172839506172839, gdp2.'1' 0.006172839506172839, gdpfc2.'2' 0.19753086419753085, gdp2.'2' 0.19753086419753085, gdpfc2.'3' 0.5925925925925926, gdp2.'3' 0.5925925925925926, gdpfc2.'4' 0.19753086419753085, gdp2.'4' 0.19753086419753085, gdpfc2.'5' 0.006172839506172839, gdp2.'5' 0.006172839506172839/
+    wbar3(i,j,jwt)
     sigmay1(i)
     sigmay2(macro)
+    sigmay3(i,j)
     NegSam(i,j)
     chkset(i,j)
     Macsam1(i,j)
@@ -53,6 +61,9 @@ Parameters
     Diffrnce(i,j)
     ANEW(i,j)
 ;
+
+vbar1(i,jwt) = 0;
+vbar2(macro,jwt) = 0;
 
 Scalars
     stderr1 /0.05/
@@ -272,17 +283,21 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(ii, ii__);
+
 * Stationarity equations
-stat_a(i,j)$(ii(i) and ii(j)).. (((-1) * y(j)) * nu_SAMCOEF(i,j))$(NONZERO(i,j)) + nu_ASAMEQ(i,j)$(ICOEFF(i,j)) =E= 0;
-stat_err1(i)$(ii(i)).. ((-1) * nu_ROWSUMEQ(i)) + nu_ERROR1EQ(i) =E= 0;
+stat_a(i,j).. ((((-1) * y(j)) * nu_SAMCOEF(i,j))$(NONZERO(i,j)) + nu_ASAMEQ(i,j)$(ICOEFF(i,j)))$(ii(i) and ii(j)) =E= 0;
+stat_err1(i).. (((-1) * nu_ROWSUMEQ(i)) + nu_ERROR1EQ(i))$(ii(i)) =E= 0;
 stat_err2(macro).. ((-1) * nu_MACROEQ(macro)) + nu_ERROR2EQ(macro) =E= 0;
-stat_err3(i,j)$(ii(i) and ii(j)).. ((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) * (abar0(i,j) * exp(err3(j,j)))) * nu_ASAMEQ(i,j))$(ICOEFF(i,j)) + nu_ERROR3EQ(i,j)$(NONZERO(i,j)) =E= 0;
+stat_err3(i,j).. (((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) * (abar0(i,j) * exp(err3(j,j)))) * nu_ASAMEQ(i,j))$(ICOEFF(i,j)) + nu_ERROR3EQ(i,j)$(NONZERO(i,j)))$(ii(i) and ii(j)) =E= 0;
 stat_macrov(macro).. nu_GDPDEF$(sameas(macro, 'gdp2')) + nu_MACROEQ(macro) + nu_GDPFCDEF$(sameas(macro, 'gdpfc2')) =E= 0;
-stat_tsam(i,j)$(ii(i) and ii(j)).. nu_ROWSUM(i) + nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) + nu_GDPDEF$((sameas(i, 'ACT') or sameas(i, 'FAC') or sameas(i, 'GOV')) and (sameas(j, 'ACT') or sameas(j, 'COM') or sameas(j, 'GOV'))) + ((-1) * nu_GDPFCDEF)$(sameas(i, 'FAC') and sameas(j, 'ACT')) =E= 0;
-stat_w1(i,jwt)$(ii(i) and jwt1(jwt)).. ((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i) =E= 0;
-stat_w2(macro,jwt)$(jwt2(jwt)).. (log(w2(macro,jwt) / wbar2(macro,jwt)) + 1)$(jwt2(jwt)) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
-stat_w3(i,j,jwt)$(ii(i) and ii(j) and jwt3(jwt)).. (((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)) =E= 0;
-stat_y(i)$(ii(i)).. nu_ROWSUMEQ(i) - nu_ROWSUM(i) - nu_COLSUM(i) + sum((ii,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii,jj))$(NONZERO(ii,jj))) =E= 0;
+stat_tsam(i,j).. (nu_ROWSUM(i) + nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) + nu_GDPDEF$((sameas(i, 'ACT') or sameas(i, 'FAC') or sameas(i, 'GOV')) and (sameas(j, 'ACT') or sameas(j, 'COM') or sameas(j, 'GOV'))) + ((-1) * nu_GDPFCDEF)$(sameas(i, 'FAC') and sameas(j, 'ACT')))$(ii(i) and ii(j)) =E= 0;
+stat_w1(i,jwt).. (((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i))$(ii(i) and jwt1(jwt)) =E= 0;
+stat_w2(macro,jwt).. ((log(w2(macro,jwt) / wbar2(macro,jwt)) + 1)$(jwt2(jwt)) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt))$(jwt2(jwt)) =E= 0;
+stat_w3(i,j,jwt).. ((((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)))$(ii(i) and ii(j) and jwt3(jwt)) =E= 0;
+stat_y(i).. (nu_ROWSUMEQ(i) - nu_ROWSUM(i) - nu_COLSUM(i) + sum((ii__,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii__,jj))$(NONZERO(ii__,jj))))$(ii(i)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_w2(macro,jwt)$(has_w2_lo(macro,jwt)).. w2(macro,jwt) - w2_lo_param(macro,jwt) =G= 0;

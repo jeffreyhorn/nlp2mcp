@@ -37,34 +37,6 @@ class ConditionCycleError(ConditionEvaluationError):
     pass
 
 
-def _resolve_index_value(
-    expr: Expr,
-    domain_sets: tuple[str, ...],
-    index_values: tuple[str, ...],
-    model_ir: ModelIR,
-) -> str | None:
-    """Resolve an index expression to a concrete string value."""
-    if isinstance(expr, SymbolRef):
-        # Map symbolic index to concrete value via domain_sets
-        name_lower = expr.name.lower()
-        for ds, iv in zip(domain_sets, index_values, strict=False):
-            if ds.lower() == name_lower:
-                return iv
-            # Also check aliases
-            if ds.lower() in {
-                a.name.lower() for a in model_ir.aliases.values() if a.target.lower() == name_lower
-            }:
-                return iv
-            if name_lower in {
-                a.name.lower() for a in model_ir.aliases.values() if a.target.lower() == ds.lower()
-            }:
-                return iv
-        return None
-    if isinstance(expr, Const):
-        return str(int(expr.value)) if expr.value == int(expr.value) else str(expr.value)
-    return None
-
-
 def evaluate_condition(
     condition: Expr,
     domain_sets: tuple[str, ...],
@@ -380,6 +352,15 @@ def _eval_expr(
                 member_key.append(str(resolved))
         # Check membership
         members = sdef.members if hasattr(sdef, "members") else list(sdef)
+        # If we have no members at compile time, this may be a dynamic subset
+        # (e.g. set defined by assignment like `low(n,nn) = ord(n) > ord(nn);`)
+        # Treat as unevaluable so enumeration falls back to including all
+        # instances and letting GAMS evaluate the $ guard at runtime.
+        if not members and getattr(sdef, "domain", None):
+            raise ConditionEvaluationError(
+                f"Set membership for '{sname}' cannot be evaluated statically "
+                "because the set has no concrete members at compile time"
+            )
         if len(member_key) == 1:
             return 1.0 if member_key[0] in members else 0.0
         # Multi-dimensional: check as dotted key or tuple

@@ -93,7 +93,7 @@ Equations
 Alias(w, w__);
 
 * Stationarity equations
-stat_x(w,t)$(td(w,t)).. ((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) + 1$(td(w,t)) * lam_maxw(w) + (((-1) * 1$(td(w,t))) * lam_minw(t))$(tm(t)) - piL_x(w,t) =E= 0;
+stat_x(w,t).. (((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) + 1$(td(w,t)) * lam_maxw(w) + (((-1) * 1$(td(w,t))) * lam_minw(t))$(tm(t)) - piL_x(w,t))$(td(w,t)) =E= 0;
 
 * Inequality complementarity equations
 comp_maxw(w).. ((-1) * (sum(t$(td(w,t)), x(w,t)) - wa(w))) =G= 0;

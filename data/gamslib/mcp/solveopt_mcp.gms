@@ -76,7 +76,7 @@ Equations
 
 * Stationarity equations
 stat_x1(i).. 1 - lam_e1(i) + piU_x1(i) =E= 0;
-stat_x2(i)$(j(i)).. nu_e2(i) + piU_x2(i) =E= 0;
+stat_x2(i).. (nu_e2(i) + piU_x2(i))$(j(i)) =E= 0;
 stat_x3(i).. piU_x3(i) =E= 0;
 stat_x4(i).. 1$(0) * lam_e1(i) + piU_x4(i) =E= 0;
 

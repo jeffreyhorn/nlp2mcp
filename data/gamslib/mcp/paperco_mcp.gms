@@ -30,6 +30,7 @@ Parameters
     cp(p,q) /'pulp-1'.kraft 40, 'pulp-1'.newsprint 60, 'pulp-1'.printing 70, 'pulp-2'.kraft 55, 'pulp-2'.newsprint 50, 'pulp-2'.printing 45/
     sdat(q,*) /kraft.lower 18, kraft.upper 25, newsprint.lower 12, newsprint.upper 15, printing.upper 7/
     pq(q) /kraft 265, newsprint 275, printing 310/
+    pp(p)
     pc(w) /ground 18, chips 16/
     psdat(scenario,p,*) /'scenario-2'.'pulp-1'.s 3, 'scenario-2'.'pulp-2'.s 3, 'scenario-3'.'pulp-1'.s 6, 'scenario-3'.'pulp-2'.s 10/
     ppdat(scenario,p) /'scenario-1'.'pulp-1' 120, 'scenario-1'.'pulp-2' 140, 'scenario-2'.'pulp-1' 120, 'scenario-2'.'pulp-2' 140, 'scenario-3'.'pulp-1' 120, 'scenario-3'.'pulp-2' 150/
@@ -77,6 +78,8 @@ Positive Variables
     piL_sales(p)
     piL_purchase(p)
     piU_paper(q)
+    piU_sales(p)
+    piU_purchase(p)
 ;
 
 * ============================================
@@ -134,6 +137,8 @@ Equations
     comp_lo_xp(p,q)
     comp_lo_xw(w,p)
     comp_up_paper(q)
+    comp_up_purchase(p)
+    comp_up_sales(p)
     logbal
     obj
     pbal(p)
@@ -149,8 +154,8 @@ Equations
 stat_logs(l).. plog + 0.97 * nu_logbal - piL_logs(l) =E= 0;
 stat_paper(q).. ((-1) * pq(q)) + sum(p, ((-1) * aq(p,q)) * nu_qbal(p,q)) - piL_paper(q) + piU_paper(q) =E= 0;
 stat_pulp(p).. sum(w, ((-1) * ap(w,p)) * nu_wbal(w,p)) - nu_pbal(p) - piL_pulp(p) =E= 0;
-stat_purchase(p).. pp(p) - nu_pbal(p) - piL_purchase(p) =E= 0;
-stat_sales(p).. ((-1) * pp(p)) + nu_pbal(p) - piL_sales(p) =E= 0;
+stat_purchase(p).. pp(p) - nu_pbal(p) - piL_purchase(p) + piU_purchase(p) =E= 0;
+stat_sales(p).. ((-1) * pp(p)) + nu_pbal(p) - piL_sales(p) + piU_sales(p) =E= 0;
 stat_xp(p,q).. cp(p,q) + nu_pbal(p) + nu_qbal(p,q) - piL_xp(p,q) =E= 0;
 stat_xw(w,p).. cw(w,p) + pc(w) - nu_logbal + nu_wbal(w,p) - piL_xw(w,p) =E= 0;
 
@@ -165,6 +170,8 @@ comp_lo_xw(w,p).. xw(w,p) - 0 =G= 0;
 
 * Upper bound complementarity equations
 comp_up_paper(q)$(sdat(q,"upper") < inf).. sdat(q,"upper") - paper(q) =G= 0;
+comp_up_purchase(p).. 0 - purchase(p) =G= 0;
+comp_up_sales(p).. 0 - sales(p) =G= 0;
 
 * Original equality equations
 logbal.. 0.97 * sum(l, logs(l)) =E= sum((w,p), xw(w,p));
@@ -217,7 +224,9 @@ Model mcp_model /
     comp_lo_sales.piL_sales,
     comp_lo_xp.piL_xp,
     comp_lo_xw.piL_xw,
-    comp_up_paper.piU_paper
+    comp_up_paper.piU_paper,
+    comp_up_purchase.piU_purchase,
+    comp_up_sales.piU_sales
 /;
 
 * ============================================
