@@ -21,7 +21,7 @@ The original model declares:
 Parameter d(j) 'energy demand' / mode-1 na, mode-2 3, mode-3 2 /;
 ```
 
-The `d("mode-1") = na` was intentional — the value is dynamically assigned in a loop before each solve:
+The `d('mode-1') = na` was intentional — the value is dynamically assigned in a loop before each solve:
 ```gams
 loop(s, d('mode-1') = dvar(s); solve det minimizing cost using lp; ...);
 ```
