@@ -380,6 +380,7 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 **Theme:** File issues for deferred items; update documentation
 **Effort:** 1-2h
+**Day 12 Status:** COMPLETE
 
 | Task | Deliverable |
 |---|---|
