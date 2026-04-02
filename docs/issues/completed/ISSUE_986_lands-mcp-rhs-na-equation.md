@@ -37,3 +37,12 @@ The original equation `dembal(j).. sum(i, y(i,j)) =g= d(j);` had **no dollar con
 The NA-related execution error was resolved by accumulated fixes across multiple PRs. lands now achieves full pipeline success: parses, translates, compiles cleanly, solves to MODEL STATUS 1 Optimal, and matches the reference objective.
 
 No additional code changes needed.
+
+---
+
+## Files
+
+- MCP file: `data/gamslib/mcp/lands_mcp.gms`
+- Original GAMS model: `data/gamslib/raw/lands.gms`
+- Parser data extraction: `src/ir/parser.py`
+- Emitter: `src/emit/emit_gams.py`
