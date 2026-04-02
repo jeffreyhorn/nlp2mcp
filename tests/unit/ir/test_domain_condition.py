@@ -10,12 +10,11 @@ includes all instances).
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from src.ir.ast import SetMembershipTest, SymbolRef
 from src.ir.condition_eval import ConditionEvaluationError, evaluate_condition
+from src.ir.model_ir import ModelIR
 from src.ir.parser import parse_model_text
 from src.ir.symbols import AliasDef, SetDef
 
@@ -84,11 +83,12 @@ Solve dummy using NLP minimizing x;
 
 
 def _make_model_ir(sets=None, aliases=None):
-    """Create a minimal mock ModelIR for condition evaluation tests."""
-    ir = MagicMock()
-    ir.sets = sets or {}
-    ir.aliases = aliases or {}
-    ir.parameters = {}
+    """Create a real ModelIR for condition evaluation tests."""
+    ir = ModelIR()
+    if sets:
+        ir.sets.update(sets)
+    if aliases:
+        ir.aliases.update(aliases)
     return ir
 
 
