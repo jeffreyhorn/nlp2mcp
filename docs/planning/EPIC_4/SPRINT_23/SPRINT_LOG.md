@@ -410,7 +410,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 - #1199 — bearing: MCP model infeasible (incorrect Jacobian entries)
 - #1195 — sambal: NA values in stationarity equations
 - #1192 — gtm: Runtime division by zero in stationarity
-- #1185 — mexls: Translation timeout persists for large LP (PR with same number landed partial fix)
+- #1185 — mexls: Translation timeout persists for large LP
 - #1179 — hhfair: Runtime EXECERROR during model generation
 - #1178 — otpop: Malformed index expressions ($145/$148)
 - #1177 — chenery: MCP locally infeasible after $171 fix
@@ -435,7 +435,6 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | #1181 | Fix danwolfe grammar/compilation | #1182 |
 | #1183 | Fix danwolfe MCP compilation | — |
 | #1184 | Fix mexls universal set | #940 |
-| #1185 | Fix mexls translation timeout | — |
 | #1186 | Fix condition_eval for mine | #1133 (partial) |
 | #1187 | Fix dynamic subset defaults | #952 |
 | #1188 | Fix all-zero parameter emission | #871 |
