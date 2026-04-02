@@ -764,7 +764,7 @@ Use this template during Sprint 23 prep and execution to track verification resu
 | KU-28 | Dynamic `.up` bounds not resolved by KKT generator | paperco generates `comp_up_purchase(p).. 0 - purchase(p) =G= 0` (upper=0 for positive vars) | Unfiled — known limitation |
 | KU-29 | Concrete element offsets in stationarity (e.g. `i1+1`, `s1-1`) | polygon, cclinpts generate invalid GAMS indexing | Unfiled — stationarity builder limitation |
 | KU-30 | SetMembershipTest evaluation for dynamic subsets | Sets defined by assignment have empty `members` at compile time; now raises error to fall back to GAMS evaluation | Addressed in PR #1198 |
-| KU-31 | LP fast path doesn't fully eliminate translation timeouts | lop, mexls still timeout at 300s despite LP fast path | #1169, #1185 |
+| KU-31 | LP fast path doesn't fully eliminate translation timeouts | lop, mexls still timeout at 300s despite LP fast path | #1169; PR #1185 landed, but remaining mexls timeouts need a separate follow-up issue |
 | KU-32 | Emitter generates duplicate `.fx` statements | springchain has overlapping fixation blocks from multiple stationarity conditions | Unfiled — emit deduplication needed |
 
 ### Key Lessons Learned

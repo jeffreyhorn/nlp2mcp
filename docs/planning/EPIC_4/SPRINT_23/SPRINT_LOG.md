@@ -402,7 +402,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | File deferred issues (sprint-24 label) | ✅ 20 issues labeled sprint-24 |
 | Update KNOWN_UNKNOWNS.md | ✅ Updated with Sprint 23 discoveries |
 | Update SPRINT_LOG.md | ✅ Day 12 documented |
-| Run `make test` | ✅ 4,364 passed |
+| Run `make test` | ✅ 4,364 passed, 10 skipped, 1 xfailed |
 
 #### Deferred Items (sprint-24 label)
 
@@ -410,7 +410,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 - #1199 — bearing: MCP model infeasible (incorrect Jacobian entries)
 - #1195 — sambal: NA values in stationarity equations
 - #1192 — gtm: Runtime division by zero in stationarity
-- #1185 — mexls: Translation timeout (large LP)
+- mexls: PR #1185 landed but translation timeout persists for large LP; needs follow-up issue
 - #1179 — hhfair: Runtime EXECERROR during model generation
 - #1178 — otpop: Malformed index expressions ($145/$148)
 - #1177 — chenery: MCP locally infeasible after $171 fix
