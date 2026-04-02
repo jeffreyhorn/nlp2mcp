@@ -42,6 +42,12 @@ Alias(i, j);
 Alias(ty, tz);
 Alias(manufact, manuf);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+im(i) = yes;
+ie(i) = yes;
+$offImplicitAssign
+
 Parameters
     dat(datvar,i) /'return-cap'.agricult 64493.3, 'return-cap'.'cons-good' 6406.5, 'return-cap'.'cap-good' 5434.4, 'return-cap'.'int-good' 8567.9, 'return-cap'.'pub-infr' 4401.9, 'return-cap'.service 27677.2, 'self-empl'.agricult 148431, 'self-empl'.'cons-good' 4937.3, 'self-empl'.'cap-good' 13714.3, 'self-empl'.'int-good' 6488.8, 'self-empl'.'pub-infr' 38411.1, 'wage-labor'.agricult 48364.6, 'wage-labor'.'cons-good' 12560.5, 'wage-labor'.'cap-good' 16267.7, 'wage-labor'.'int-good' 17072.2, 'wage-labor'.'pub-infr' 9941.2, 'wage-labor'.service 73786, 'dom-inter'.agricult 77681.1, 'dom-inter'.'cons-good' 68904, 'dom-inter'.'cap-good' 54658.1, 'dom-inter'.'int-good' 47254, 'dom-inter'.'pub-infr' 6872.7, 'dom-inter'.service 48988.9, 'imp-inter'.agricult 2356, 'imp-inter'.'cons-good' 3201.3, 'imp-inter'.'cap-good' 2307.3, 'imp-inter'.'int-good' 9801.7, 'imp-inter'.'pub-infr' 1.3, 'imp-inter'.service 572, 'pub-cons'.agricult 816.9, 'pub-cons'.'cons-good' 544, 'pub-cons'.'cap-good' 4730.1, 'pub-cons'.'int-good' 4423.9, 'pub-cons'.'pub-infr' 2986.2, 'pub-cons'.service 36832.5, 'fix-inv'.agricult 623.9, 'fix-inv'.'cons-good' 139.5, 'fix-inv'.'cap-good' 76198.8, 'fix-inv'.'int-good' 2970.4, 'fix-inv'.'pub-infr' 252.1, 'fix-inv'.service 5076.3, 'change-sto'.agricult 7092.5, 'change-sto'.'cons-good' 5944.2, 'change-sto'.'cap-good' 1756.4, 'change-sto'.'int-good' 6073.7, 'change-sto'.'pub-infr' 272.2, 'cons-imp'.agricult 3159.9, 'cons-imp'.'cons-good' 504.3, 'cons-imp'.'cap-good' 5235.6, 'cons-imp'.'int-good' 4170.9, xvoli.agricult 2977.8, xvoli.'cons-good' 10046.2, xvoli.'cap-good' 990.9, xvoli.'int-good' 5984/
     rate(*,i) /'dep-prof'.agricult 0.0729, 'dep-prof'.'cons-good' 0.2369, 'dep-prof'.'cap-good' 0.4319, 'dep-prof'.'int-good' 0.1921, 'dep-prof'.'pub-infr' 0.7191, 'dep-prof'.service 0.3166, 'dep-lab'.agricult 0.0106, 'dep-lab'.'cons-good' 0.0832, 'dep-lab'.'cap-good' 0.0094, 'dep-lab'.'int-good' 0.0958, 'dep-lab'.'pub-infr' 0.0761, 'taxrat-dom'.agricult 0.0212, 'taxrat-dom'.'cons-good' 0.0865, 'taxrat-dom'.'cap-good' 0.0972, 'taxrat-dom'.'int-good' 0.1212, 'taxrat-dom'.'pub-infr' 0.1268, 'taxrat-dom'.service 0.1056, 'taxrat-imp'.agricult 0.3134, 'taxrat-imp'.'cons-good' 0.1629, 'taxrat-imp'.'cap-good' 0.4247, 'taxrat-imp'.'int-good' 0.279, 'taxrat-imp'.'pub-infr' 0.8461, 'taxrat-imp'.service 0.6715, 'taxrfd-dom'.agricult -0.0013, 'taxrfd-dom'.'cons-good' 0.32, 'taxrfd-dom'.'cap-good' 0.4, 'taxrfd-dom'.'int-good' 0.4, 'taxrfd-imp'.agricult 0.0731, 'taxrfd-imp'.'cons-good' 0.6728, 'taxrfd-imp'.'cap-good' 0.3781, 'taxrfd-imp'.'int-good' 0.7236, 'tradm-fd'.agricult 0.1448, 'tradm-fd'.'cons-good' 0.01368, 'tradm-fd'.'int-good' 0.03103, 'tradm-exp'.agricult 0.16257, 'tradm-exp'.'cons-good' 0.5, 'tradm-exp'.'cap-good' 0.3346, 'tradm-exp'.'int-good' 0.13017, 'tradm-imp'.'cap-good' 0.5, 'tradm-imp'.'int-good' 0.0713/
@@ -64,7 +70,7 @@ Parameters
     k(i)
     dg(i)
     dsa(i)
-    aq(sc)
+    aq(i)
     az(i)
     an(i)
     as(i)
@@ -79,19 +85,19 @@ Parameters
     aid(i)
     adst(i)
     cg(i)
-    deltaq(sc)
+    deltaq(i)
     deltax(i)
     deltaz(i)
     deltan(i)
     deltas(i)
     deltav(i)
-    sigmaq(sc) /'cap-good' 0.9/
+    sigmaq(i) /'cap-good' 0.9/
     sigmax(i)
     sigmaz(i)
     sigman(i)
     sigmav(i)
     sigmas(i)
-    rhoq(sc)
+    rhoq(i)
     rhox(i)
     rhoz(i)
     rhon(i)
@@ -115,6 +121,8 @@ Parameters
     pk00(i)
     pq00(i)
 ;
+
+dsa(i) = 0;
 
 Scalars
     nct /19.2/

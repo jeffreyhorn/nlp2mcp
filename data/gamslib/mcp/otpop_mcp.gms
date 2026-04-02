@@ -199,8 +199,8 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_as(tt).. nu_adef(tt)$(tp(tt)) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + p(tt) ** b * nu_sup(tt) =E= 0;
-stat_d(tt).. ((((-1) * ((pd(1966-l) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_dem(tt) - nu_sup(tt) =E= 0;
+stat_as(tt).. p(tt) ** b * nu_sup(tt) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_adef(tt)$(tp(tt)) =E= 0;
+stat_d(tt).. nu_dem(tt) - nu_sup(tt) + ((((-1) * ((pd(1975-l) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
 stat_p(tt).. sum(n, ((-1) * alpha(n)) * nu_pdef(tt)) + sum(n, (((-1) * alpha(n)) * nu_pdef(tt+1))$(ord(tt) <= card(tt) - 1)) + sum(n, (((-1) * alpha(n)) * nu_pdef(tt+2))$(ord(tt) <= card(tt) - 2)) + ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) =E= 0;

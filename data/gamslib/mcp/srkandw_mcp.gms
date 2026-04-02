@@ -123,7 +123,7 @@ Equations
 
 * Stationarity equations
 stat_x(i,t).. c(i) + lam_bal + sum((j,sn), (((-1) * a(j,i)) * lam_dembalx(j,t,sn))$(tn(t,sn))) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. ((-1) * lam_dembalx(j,t,n))$(tn(t,n)) + sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1))$(tn(t,n))) - piL_y(j,t,n) =E= 0;
+stat_y(j,t,n).. sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1))$(tn(t,n))) + ((-1) * lam_dembalx(j,t,n))$(tn(t,n)) - piL_y(j,t,n) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
