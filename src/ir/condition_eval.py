@@ -350,24 +350,26 @@ def _eval_expr(
                 # Try evaluating as expression
                 resolved = _eval_expr(idx_expr, index_map, model_ir, _visiting)
                 member_key.append(str(resolved))
-        # Check membership
-        members = sdef.members if hasattr(sdef, "members") else list(sdef)
+        # Check membership — convert to set for O(1) lookups since conditions
+        # are evaluated many times during domain enumeration
+        members_list = sdef.members if hasattr(sdef, "members") else list(sdef)
         # If we have no members at compile time, this may be a dynamic subset
         # (e.g. set defined by assignment like `low(n,nn) = ord(n) > ord(nn);`)
         # Treat as unevaluable so enumeration falls back to including all
         # instances and letting GAMS evaluate the $ guard at runtime.
-        if not members and getattr(sdef, "domain", None):
+        if not members_list and getattr(sdef, "domain", None):
             raise ConditionEvaluationError(
                 f"Set membership for '{sname}' cannot be evaluated statically "
                 "because the set has no concrete members at compile time"
             )
+        members_set = set(members_list)
         if len(member_key) == 1:
-            return 1.0 if member_key[0] in members else 0.0
+            return 1.0 if member_key[0] in members_set else 0.0
         # Multi-dimensional: check as dotted key or tuple
         dotted = ".".join(member_key)
-        if dotted in members:
+        if dotted in members_set:
             return 1.0
-        if tuple(member_key) in members:
+        if tuple(member_key) in members_set:
             return 1.0
         return 0.0
 

@@ -19,6 +19,8 @@ Multiple constraint equations also show large infeasibilities, suggesting the KK
 
 ## Reproduction
 
+**Note:** Requires a locally downloaded GAMSlib `bearing.gms` file (not versioned in repo).
+
 ```bash
 python -m src.cli data/gamslib/raw/bearing.gms -o /tmp/bearing_mcp.gms --skip-convexity-check
 (cd /tmp && gams bearing_mcp.gms lo=2)
