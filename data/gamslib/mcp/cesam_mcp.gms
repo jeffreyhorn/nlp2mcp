@@ -61,6 +61,10 @@ Parameters
     ANEW(i,j)
 ;
 
+vbar1(i,jwt) = 0;
+vbar2(macro,jwt) = 0;
+redsam(i,j) = 0;
+
 Scalars
     epsilon /1e-05/
     gdp0 /0/
@@ -258,7 +262,7 @@ stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(
 stat_err2(macro).. ((-1) * nu_GDPDEF)$(sameas(macro, 'gdp2')) + nu_ERROR2EQ(macro) + ((-1) * nu_GDPFCDEF)$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_ROWSUM(ii)$((not sameas(ii, "ROW"))) + nu_COLSUM(ii) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
+stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_ROWSUM(ii)$((not sameas(ii, "ROW"))) + nu_COLSUM(ii) + 2 * nu_COLSUM(ii)$(ord(ii) = 7) + 2 * nu_COLSUM(ii)$(ord(ii) = 1) + 2 * nu_COLSUM(ii)$(ord(ii) = 3) + 2 * nu_COLSUM(ii)$(ord(ii) = 2) + 2 * nu_COLSUM(ii)$(ord(ii) = 6) + 2 * nu_COLSUM(ii)$(ord(ii) = 5) + 2 * nu_COLSUM(ii)$(ord(ii) = 4) + 2 * nu_COLSUM(ii)$(ord(ii) = 8) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
 stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
 stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
 stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) - nu_COLSUM(ii) =E= 0;

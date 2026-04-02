@@ -161,14 +161,14 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(c,i)$(cf(c)).. (((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel')) + lam_mbf(c,i) + lam_me(c) - piL_e(c,i) =E= 0;
+stat_e(c,i).. ((((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel')) + lam_mbf(c,i) + lam_me(c) - piL_e(c,i))$(cf(c)) =E= 0;
 stat_phieps.. -1 + nu_aeps =E= 0;
 stat_philam.. 1 + nu_alam =E= 0;
 stat_phipi.. 1 + nu_api =E= 0;
 stat_phipsi.. 1 + nu_apsi =E= 0;
-stat_u(c,i)$(cr(c)).. (((-1) * pd(c)) * nu_apsi)$(cr(c)) - lam_mbr(c,i) - piL_u(c,i) =E= 0;
-stat_v(c,j)$(cf(c)).. (((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel')) - lam_mr(c,j) - piL_v(c,j) =E= 0;
-stat_x(c,i,j)$(cf(c)).. (((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel')) + lam_mbf(c,i) - lam_mr(c,j) - piL_x(c,i,j) =E= 0;
+stat_u(c,i).. ((((-1) * pd(c)) * nu_apsi)$(cr(c)) - lam_mbr(c,i) - piL_u(c,i))$(cr(c)) =E= 0;
+stat_v(c,j).. ((((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel')) - lam_mr(c,j) - piL_v(c,j))$(cf(c)) =E= 0;
+stat_x(c,i,j).. ((((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel')) + lam_mbf(c,i) - lam_mr(c,j) - piL_x(c,i,j))$(cf(c)) =E= 0;
 stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
 
 * Inequality complementarity equations

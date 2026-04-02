@@ -16,32 +16,43 @@ $offText
 * ============================================
 
 Sets
-    i /lab, h1, h2, p1, p2/
+    i /'1', '2'/
+    t /'1'/
 ;
 
 Alias(i, j);
-Alias(i, i__kkt1);
-Alias(i, i__kkt2);
-Alias(i, i__kkt3);
-Alias(i, i__kkt4);
-Alias(i, i__kkt5);
-Alias(i, i__kkt6);
-Alias(i, i__kkt7);
-Alias(i, i__kkt8);
-Alias(i, i__kkt9);
 
 Parameters
-    xb(i,j) /lab.h1 15, lab.h2 3, lab.p1 130, lab.p2 80, h1.lab na, h2.lab na, p1.h1 15, p1.h2 130, p1.p2 20, p2.h1 25, p2.h2 40, p2.p1 55/
-    tb(i) /lab 220, h1 na, h2 na, p1 190, p2 105/
-    tw(i) /lab 1, h1 1, h2 1, p1 1, p2 1/
-    xw(i,j)
+    theta(i)
+    pt(i,t)
+    p(i)
+    MN_lic(t)
+    MN_lic2(t)
+    Util_gap(t)
+    F(i,t)
+    noMHRC0(i,t)
+    noMHRC(t)
 ;
 
-tw(i)$(mapval(tb(i)) = mapval(na)) = 0;
-xw(i,j) = 1$(xb(i,j));
-xw(i,j)$(mapval(xb(i,j)) = mapval(na)) = 0;
+Scalars
+    ru /0/
+    p_noMHRC /0/
+    p_noMN_lic /0/
+    p_Util_gap /0/
+;
+
+theta(i) = ord(i) / card(i);
+p(i) = 1 / card(i);
 
 execError = 0;
+
+loop(t,
+   pt(i,t) = uniform(0,1)
+);
+
+Parameter icweight(i);
+p(i) = pt(i,'1') ;
+icweight(i) = theta(i) $ not 0 + 1 - theta(i) + sqr(theta(i)) $ 0 ;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -55,11 +66,18 @@ execError = 0;
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    x(i,j)
-    t(i)
-    dev
-    nu_rbal(i)
-    nu_cbal(i)
+    Util
+    nu_rev(i)
+;
+
+Positive Variables
+    x(i)
+    b(i)
+    w(i)
+    lam_pc(i)
+    piL_x(i)
+    piL_b(i)
+    piL_w(i)
 ;
 
 * ============================================
@@ -69,9 +87,16 @@ Variables
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* POSITIVE variables with explicit .l values are
+* clamped to min(max(value, 1e-6), upper_bound). Others are set to 1.
 
-x.l(i,j) = xb(i,j)$(xw(i,j));
-t.l(i) = tb(i)$(tw(i));
+x.l('1') = 0.0001;
+x.l('2') = 0.0001;
+x.l(i) = min(max(x.l(i), 1e-6), x.up(i));
+b.l(i) = 1;
+b.l(i) = min(b.l(i), b.up(i));
+w.l(i) = 1;
+w.l(i) = min(w.l(i), w.up(i));
 
 * ============================================
 * Equations
@@ -82,11 +107,15 @@ t.l(i) = tb(i)$(tw(i));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_t(i)
-    stat_x(i,j)
-    cbal(j)
-    devsqr
-    rbal(i)
+    stat_b(i)
+    stat_w(i)
+    stat_x(i)
+    comp_pc(i)
+    comp_lo_b(i)
+    comp_lo_w(i)
+    comp_lo_x(i)
+    obj
+    rev(i)
 ;
 
 * ============================================
@@ -94,23 +123,22 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i)) + sum(i__kkt2, (((-1) * 1$(xb(i,i__kkt2))) * nu_cbal(i__kkt2))$(ord(i__kkt2) = 1)) + sum(i__kkt3, (((-1) * 1$(xb(i,i__kkt3))) * nu_cbal(i__kkt3))$(ord(i__kkt3) = 1)) + sum(i__kkt4, (((-1) * 1$(xb(i,i__kkt4))) * nu_cbal(i__kkt4))$(ord(i__kkt4) = 2)) + sum(i__kkt5, (((-1) * 1$(xb(i,i__kkt5))) * nu_cbal(i__kkt5))$(ord(i__kkt5) = 3)) + sum(i__kkt6, (((-1) * 1$(xb(i,i__kkt6))) * nu_cbal(i__kkt6))$(ord(i__kkt6) = 2)) + sum(i__kkt7, (((-1) * 1$(xb(i,i__kkt7))) * nu_cbal(i__kkt7))$(ord(i__kkt7) = 4)) + sum(i__kkt8, (((-1) * 1$(xb(i,i__kkt8))) * nu_cbal(i__kkt8))$(ord(i__kkt8) = 3)) + sum(i__kkt9, (((-1) * 1$(xb(i,i__kkt9))) * nu_cbal(i__kkt9))$(ord(i__kkt9) = 4)))$(xw(i,j)) =E= 0;
+stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
+stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - piL_w(i) =E= 0;
+stat_x(i).. ((-1) * (1 / (2 * sqrt(x(i))))) * nu_rev(i) + theta(i) * lam_pc(i) - piL_x(i) =E= 0;
+
+* Inequality complementarity equations
+comp_pc(i).. w(i) - theta(i) * x(i) - ru =G= 0;
+
+* Lower bound complementarity equations
+comp_lo_b(i).. b(i) - 0 =G= 0;
+comp_lo_w(i).. w(i) - 0 =G= 0;
+comp_lo_x(i).. x(i) - 0.0001 =G= 0;
 
 * Original equality equations
-rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
-cbal(j).. t(j) =E= sum(i$(xb(i,j)), x(i,j));
-devsqr.. dev =E= sum((i,j)$(xw(i,j)), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i)), tw(i) * sqr(tb(i) - t(i)) / tb(i));
+obj.. util =E= sum(i, p(i) * (b(i) - w(i)));
+rev(i).. b(i) =E= sqrt(x(i));
 
-
-* ============================================
-* Fix inactive variable instances
-* ============================================
-
-* Variables whose paired MCP equation is conditioned must be
-* fixed for excluded instances to satisfy MCP matching.
-
-x.fx(i,j)$(not (xw(i,j))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -126,11 +154,15 @@ x.fx(i,j)$(not (xw(i,j))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_t.t,
+    stat_b.b,
+    stat_w.w,
     stat_x.x,
-    cbal.nu_cbal,
-    devsqr.dev,
-    rbal.nu_rbal
+    comp_pc.lam_pc,
+    obj.Util,
+    rev.nu_rev,
+    comp_lo_b.piL_b,
+    comp_lo_w.piL_w,
+    comp_lo_x.piL_x
 /;
 
 * ============================================
@@ -140,5 +172,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = dev.l;
+nlp2mcp_obj_val = Util.l;
 Display nlp2mcp_obj_val;

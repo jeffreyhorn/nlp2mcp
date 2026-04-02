@@ -35,6 +35,12 @@ Sets
     tr /'tr-1', 'tr-2'/
 ;
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+cfq(cf) = yes;
+cfr(cf) = yes;
+$offImplicitAssign
+
 Parameters
     crdat(cr,*) /'arabian-l'.supply 110, 'arabian-l'.price 35, 'arabian-l'.transport 24.15, 'arabian-l'.gravity 0.858, 'arabian-h'.supply 165, 'arabian-h'.price 34, 'arabian-h'.transport 24.15, 'arabian-h'.gravity 0.886, brega.supply 80, brega.price 42, brega.transport 10.05, brega.gravity 0.823/
     ddat(cf,*) /'motor-gas'.demand 40, 'motor-gas'.price 430, 'jet-fuel'.demand 20, 'jet-fuel'.price 300, 'heat-oil'.demand 50, 'heat-oil'.price 315, 'fuel-oil'.demand 145, 'fuel-oil'.price 250/
@@ -48,7 +54,7 @@ Parameters
     bp(k,p)
     kp(k)
     oc(k)
-    pcr(cr)
+    pcr(c)
     pimp(c) /'fuel-imp' 245/
     invent(c) /'cc-naph-l' -0.58, reformate 1.65/
     dir(l) /lower -1, upper 1/
@@ -216,20 +222,25 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(cfq, cfq__);
+Alias(cr, cr__);
+
 * Stationarity equations
-stat_bq(c,cf)$(cfq(cf)).. sum((cfq,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq,m))$(cfm(cfq,m))) - piL_bq(c,cf) =E= 0;
+stat_bq(c,cf).. (sum((cfq__,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
 stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
-stat_import(c)$(ci(c)).. 1$(ci(c)) * nu_mbal(c) + (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c) =E= 0;
-stat_ov(cf,l,s)$(cfq(cf)).. ((-1) * piL_ov(cf,l,s)) =E= 0;
+stat_import(c).. (1$(ci(c)) * nu_mbal(c) + (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c))$(ci(c)) =E= 0;
+stat_ov(cf,l,s).. (((-1) * piL_ov(cf,l,s)))$(cfq(cf)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m)$(cfq(cf)).. nu_pbal(cf,m)$(cfm(cf,m)) + ((-1) * 1$(cfq(cf))) * nu_dbal(cf) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m) =E= 0;
-stat_rb(cf,r)$(cfr(cf)).. ((-1) * piL_rb(cf,r)) =E= 0;
+stat_q(cf,m).. (nu_pbal(cf,m)$(cfm(cf,m)) + ((-1) * 1$(cfq(cf))) * nu_dbal(cf) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
+stat_rb(cf,r).. (((-1) * piL_rb(cf,r)))$(cfr(cf)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c)$(cr(c)).. 1$(cr(c)) * nu_mbal(c) + sum(cr, ((-1) * pcr(cr)) * nu_dpur)$(cr(c)) + sum(cr, ((-1) * crdat(cr,"transport")) * nu_dtran)$(cr(c)) - piL_u(c) =E= 0;
+stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c))$(cr(c)) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations

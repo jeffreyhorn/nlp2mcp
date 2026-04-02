@@ -22,6 +22,11 @@ Sets
     s(ss)
 ;
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+s(ss) = yes;
+$offImplicitAssign
+
 Parameters
     c(i,j) /'plant-1'.'term-1' 3, 'plant-1'.'term-2' 6, 'plant-1'.'term-3' 6, 'plant-1'.'term-4' 5, 'plant-2'.'term-1' 8, 'plant-2'.'term-2' 1, 'plant-2'.'term-3' 3, 'plant-2'.'term-4' 6/
     t(i,j) /'plant-1'.'term-3' 2, 'plant-2'.'term-2' 2/
@@ -95,7 +100,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_lam(ss)$(s(ss)).. ((-1) * piL_lam(ss)) =E= 0;
+stat_lam(ss).. (((-1) * piL_lam(ss)))$(s(ss)) =E= 0;
 
 * Inequality complementarity equations
 

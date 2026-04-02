@@ -24,6 +24,50 @@ Alias(s, sp);
 Alias(s, spp);
 Alias(i, j);
 Alias(s, s__kkt1);
+Alias(s, s__kkt2);
+Alias(s, s__kkt3);
+Alias(s, s__kkt4);
+Alias(s, s__kkt5);
+Alias(s, s__kkt6);
+Alias(s, s__kkt7);
+Alias(s, s__kkt8);
+Alias(s, s__kkt9);
+Alias(s, s__kkt10);
+Alias(s, s__kkt11);
+Alias(s, s__kkt12);
+Alias(s, s__kkt13);
+Alias(s, s__kkt14);
+Alias(s, s__kkt15);
+Alias(s, s__kkt16);
+Alias(s, s__kkt17);
+Alias(s, s__kkt18);
+Alias(s, s__kkt19);
+Alias(s, s__kkt20);
+Alias(s, s__kkt21);
+Alias(s, s__kkt22);
+Alias(s, s__kkt23);
+Alias(s, s__kkt24);
+Alias(s, s__kkt25);
+Alias(s, s__kkt26);
+Alias(s, s__kkt27);
+Alias(s, s__kkt28);
+Alias(s, s__kkt29);
+Alias(s, s__kkt30);
+Alias(s, s__kkt31);
+Alias(s, s__kkt32);
+Alias(s, s__kkt33);
+Alias(s, s__kkt34);
+Alias(s, s__kkt35);
+Alias(s, s__kkt36);
+Alias(s, s__kkt37);
+Alias(s, s__kkt38);
+Alias(s, s__kkt39);
+Alias(s, s__kkt40);
+Alias(s, s__kkt41);
+Alias(s, s__kkt42);
+Alias(s, s__kkt43);
+Alias(s, s__kkt44);
+Alias(s, s__kkt45);
 
 Parameters
     pi(s,i,sp,j,spp)
@@ -108,7 +152,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s,i,s__kkt1)) * nu_constr(s__kkt1,j)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
+stat_z(s,i,sp).. c(s,sp,i) + sum((s__kkt1,j), (1 - b * pi(s,i,s,i,s__kkt1)) * nu_constr(s,i)) + sum((s__kkt2,j), ((((-1) * (b * pi(s,i,s,i,s__kkt2))) * nu_constr(s__kkt2,j-1))$(ord(j) > 1))$(ord(s__kkt2) = 1)) + sum((s__kkt3,j), (((-1) * (b * pi(s,i,s__kkt3,i,s__kkt3))) * nu_constr(s__kkt3,j))$(ord(s__kkt3) = 1)) + sum((s__kkt4,j), ((((-1) * (b * pi(s,i,s__kkt4,i,s__kkt4))) * nu_constr(s__kkt4,j-1))$(ord(j) > 1))$(ord(s__kkt4) = 1)) + sum((s__kkt5,j), (((-1) * (b * pi(s,i,s__kkt5,i,s__kkt5))) * nu_constr(s__kkt5,j))$(ord(s__kkt5) = 2)) + sum((s__kkt6,j), ((((-1) * (b * pi(s,i,s__kkt6,i,s__kkt6))) * nu_constr(s__kkt6,j-1))$(ord(j) > 1))$(ord(s__kkt6) = 2)) + sum((s__kkt7,j), (((-1) * (b * pi(s,i,s__kkt7,i,s__kkt7))) * nu_constr(s__kkt7,j))$(ord(s__kkt7) = 3)) + sum((s__kkt8,j), ((((-1) * (b * pi(s,i,s__kkt8,i,s__kkt8))) * nu_constr(s__kkt8,j-1))$(ord(j) > 1))$(ord(s__kkt8) = 3)) + sum((s__kkt9,j), (((-1) * (b * pi(s,i,s__kkt9,i,s__kkt9))) * nu_constr(s__kkt9,j))$(ord(s__kkt9) = 3)) + sum((s__kkt10,j), ((((-1) * (b * pi(s,i,s__kkt10,i,s__kkt10))) * nu_constr(s__kkt10,j-1))$(ord(j) > 1))$(ord(s__kkt10) = 3)) + sum((s__kkt11,j), (((-1) * (b * pi(s,i,s__kkt11,i,s__kkt11))) * nu_constr(s__kkt11,j))$(ord(s__kkt11) = 2)) + sum((s__kkt12,j), ((((-1) * (b * pi(s,i,s__kkt12,i,s__kkt12))) * nu_constr(s__kkt12,j-1))$(ord(j) > 1))$(ord(s__kkt12) = 2)) + sum((s__kkt13,j), (((-1) * (b * pi(s,i,s__kkt13,i,s__kkt13))) * nu_constr(s__kkt13,j))$(ord(s__kkt13) = 1)) + sum((s__kkt14,j), ((((-1) * (b * pi(s,i,s__kkt14,i,s__kkt14))) * nu_constr(s__kkt14,j-1))$(ord(j) > 1))$(ord(s__kkt14) = 1)) + sum((s__kkt15,j), (((-1) * (b * pi(s,i,s__kkt15,i,s__kkt15))) * nu_constr(s__kkt15,j))$(ord(s__kkt15) = 4)) + sum((s__kkt16,j), ((((-1) * (b * pi(s,i,s__kkt16,i,s__kkt16))) * nu_constr(s__kkt16,j-1))$(ord(j) > 1))$(ord(s__kkt16) = 4)) + sum((s__kkt17,j), ((((-1) * (b * pi(s,i,s,i,s__kkt17))) * nu_constr(s__kkt17,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt17) = 1)) + sum((s__kkt18,j), ((((-1) * (b * pi(s,i,s__kkt18,i,s__kkt18))) * nu_constr(s__kkt18,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt18) = 1)) + sum((s__kkt19,j), ((((-1) * (b * pi(s,i,s__kkt19,i,s__kkt19))) * nu_constr(s__kkt19,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt19) = 2)) + sum((s__kkt20,j), ((((-1) * (b * pi(s,i,s__kkt20,i,s__kkt20))) * nu_constr(s__kkt20,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt20) = 3)) + sum((s__kkt21,j), ((((-1) * (b * pi(s,i,s__kkt21,i,s__kkt21))) * nu_constr(s__kkt21,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt21) = 3)) + sum((s__kkt22,j), ((((-1) * (b * pi(s,i,s__kkt22,i,s__kkt22))) * nu_constr(s__kkt22,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt22) = 2)) + sum((s__kkt23,j), ((((-1) * (b * pi(s,i,s__kkt23,i,s__kkt23))) * nu_constr(s__kkt23,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt23) = 1)) + sum((s__kkt24,j), ((((-1) * (b * pi(s,i,s__kkt24,i,s__kkt24))) * nu_constr(s__kkt24,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt24) = 4)) + sum((s__kkt25,j), (((-1) * (b * pi(s,i,s__kkt25,i,s__kkt25))) * nu_constr(s__kkt25,j))$(ord(s__kkt25) = 5)) + sum((s__kkt26,j), ((((-1) * (b * pi(s,i,s__kkt26,i,s__kkt26))) * nu_constr(s__kkt26,j-1))$(ord(j) > 1))$(ord(s__kkt26) = 5)) + sum((s__kkt27,j), ((((-1) * (b * pi(s,i,s__kkt27,i,s__kkt27))) * nu_constr(s__kkt27,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt27) = 5)) + sum((s__kkt28,j), (((-1) * (b * pi(s,i,s__kkt28,i,s__kkt28))) * nu_constr(s__kkt28,j))$(ord(s__kkt28) = 6)) + sum((s__kkt29,j), ((((-1) * (b * pi(s,i,s__kkt29,i,s__kkt29))) * nu_constr(s__kkt29,j-1))$(ord(j) > 1))$(ord(s__kkt29) = 6)) + sum((s__kkt30,j), ((((-1) * (b * pi(s,i,s__kkt30,i,s__kkt30))) * nu_constr(s__kkt30,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt30) = 6)) + sum((s__kkt31,j), (((-1) * (b * pi(s,i,s__kkt31,i,s__kkt31))) * nu_constr(s__kkt31,j))$(ord(s__kkt31) = 7)) + sum((s__kkt32,j), ((((-1) * (b * pi(s,i,s__kkt32,i,s__kkt32))) * nu_constr(s__kkt32,j-1))$(ord(j) > 1))$(ord(s__kkt32) = 7)) + sum((s__kkt33,j), ((((-1) * (b * pi(s,i,s__kkt33,i,s__kkt33))) * nu_constr(s__kkt33,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt33) = 7)) + sum((s__kkt34,j), (((-1) * (b * pi(s,i,s__kkt34,i,s__kkt34))) * nu_constr(s__kkt34,j))$(ord(s__kkt34) = 4)) + sum((s__kkt35,j), ((((-1) * (b * pi(s,i,s__kkt35,i,s__kkt35))) * nu_constr(s__kkt35,j-1))$(ord(j) > 1))$(ord(s__kkt35) = 4)) + sum((s__kkt36,j), (((-1) * (b * pi(s,i,s__kkt36,i,s__kkt36))) * nu_constr(s__kkt36,j))$(ord(s__kkt36) = 5)) + sum((s__kkt37,j), ((((-1) * (b * pi(s,i,s__kkt37,i,s__kkt37))) * nu_constr(s__kkt37,j-1))$(ord(j) > 1))$(ord(s__kkt37) = 5)) + sum((s__kkt38,j), (((-1) * (b * pi(s,i,s__kkt38,i,s__kkt38))) * nu_constr(s__kkt38,j))$(ord(s__kkt38) = 6)) + sum((s__kkt39,j), ((((-1) * (b * pi(s,i,s__kkt39,i,s__kkt39))) * nu_constr(s__kkt39,j-1))$(ord(j) > 1))$(ord(s__kkt39) = 6)) + sum((s__kkt40,j), ((((-1) * (b * pi(s,i,s__kkt40,i,s__kkt40))) * nu_constr(s__kkt40,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt40) = 4)) + sum((s__kkt41,j), ((((-1) * (b * pi(s,i,s__kkt41,i,s__kkt41))) * nu_constr(s__kkt41,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt41) = 5)) + sum((s__kkt42,j), ((((-1) * (b * pi(s,i,s__kkt42,i,s__kkt42))) * nu_constr(s__kkt42,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt42) = 6)) + sum((s__kkt43,j), (((-1) * (b * pi(s,i,s__kkt43,i,s__kkt43))) * nu_constr(s__kkt43,j))$(ord(s__kkt43) = 7)) + sum((s__kkt44,j), ((((-1) * (b * pi(s,i,s__kkt44,i,s__kkt44))) * nu_constr(s__kkt44,j-1))$(ord(j) > 1))$(ord(s__kkt44) = 7)) + sum((s__kkt45,j), ((((-1) * (b * pi(s,i,s__kkt45,i,s__kkt45))) * nu_constr(s__kkt45,j+1))$(ord(j) <= card(j) - 1))$(ord(s__kkt45) = 7)) + (ord(sp) - ord(s)) * lam_equil(s,sp) - piL_z(s,i,sp) =E= 0;
 
 * Inequality complementarity equations
 comp_equil(s,spp).. ((-1) * (z(s,"disrupted",spp) * (ord(spp) - ord(s)))) =G= 0;

@@ -55,6 +55,11 @@ Sets
     gg(g,gn) /'poly-17+19'.'poly-18', 'poly-17+19'.pl15, 'poly-17+19'.pl22, 'poly-18'.'poly-17+19', 'poly-18'.pl16/
 ;
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+cnf(c) = yes;
+$offImplicitAssign
+
 Parameters
     lando(c,t,m) /basmati.bullock.may 1, basmati.bullock.jun 1, basmati.bullock.jul 1, basmati.bullock.aug 1, basmati.bullock.sep 1, basmati.bullock.oct 1, basmati.'semi-mech'.may 1, basmati.'semi-mech'.jun 1, basmati.'semi-mech'.jul 1, basmati.'semi-mech'.aug 1, basmati.'semi-mech'.sep 1, basmati.'semi-mech'.oct 1, irri.bullock.apr 1, irri.bullock.may 1, irri.bullock.jun 1, irri.bullock.jul 1, irri.bullock.aug 1, irri.bullock.sep 1, irri.'semi-mech'.apr 1, irri.'semi-mech'.may 1, irri.'semi-mech'.jun 1, irri.'semi-mech'.jul 1, irri.'semi-mech'.aug 1, irri.'semi-mech'.sep 1, berseem.bullock.jan 1, berseem.bullock.feb 1, berseem.bullock.mar 1, berseem.bullock.apr 1, berseem.bullock.may 1, berseem.bullock.sep 0.5, berseem.bullock.oct 1, berseem.bullock.nov 1, berseem.bullock.dec 1, berseem.'semi-mech'.jan 1, berseem.'semi-mech'.feb 1, berseem.'semi-mech'.mar 1, berseem.'semi-mech'.apr 1, berseem.'semi-mech'.may 1, berseem.'semi-mech'.sep 0.25, berseem.'semi-mech'.oct 1, berseem.'semi-mech'.nov 1, berseem.'semi-mech'.dec 1, gram.bullock.jan 1, gram.bullock.feb 1, gram.bullock.mar 1, gram.bullock.sep 0.5, gram.bullock.oct 1, gram.bullock.nov 1, gram.bullock.dec 1, gram.'semi-mech'.jan 1, gram.'semi-mech'.feb 1, gram.'semi-mech'.mar 1, gram.'semi-mech'.sep 0.25, gram.'semi-mech'.oct 1, gram.'semi-mech'.nov 1, gram.'semi-mech'.dec 1, sorghum.bullock.mar 0.5, sorghum.bullock.apr 0.5, sorghum.bullock.may 0.5, sorghum.bullock.jun 1, sorghum.bullock.jul 1, sorghum.bullock.aug 1, sorghum.bullock.sep 0.5, sorghum.bullock.oct 0.5, sorghum.'semi-mech'.mar 0.5, sorghum.'semi-mech'.apr 0.5, sorghum.'semi-mech'.may 0.5, sorghum.'semi-mech'.jun 1, sorghum.'semi-mech'.jul 1, sorghum.'semi-mech'.aug 1, sorghum.'semi-mech'.sep 0.5, sorghum.'semi-mech'.oct 0.5, maiz.bullock.jun 0.5, maiz.bullock.jul 1, maiz.bullock.aug 1, maiz.bullock.sep 1, maiz.bullock.oct 1, maiz.bullock.nov 1, maiz.bullock.dec 0.5, maiz.'semi-mech'.jul 1, maiz.'semi-mech'.aug 1, maiz.'semi-mech'.sep 1, maiz.'semi-mech'.oct 1, maiz.'semi-mech'.nov 1, maiz.'semi-mech'.dec 0.5, mustard.bullock.jan 1, mustard.bullock.feb 1, mustard.bullock.mar 1, mustard.bullock.oct 1, mustard.bullock.nov 1, mustard.bullock.dec 1, mustard.'semi-mech'.jan 1, mustard.'semi-mech'.feb 1, mustard.'semi-mech'.mar 1, mustard.'semi-mech'.oct 1, mustard.'semi-mech'.nov 1, mustard.'semi-mech'.dec 1, 'sc-mill'.bullock.jan 1, 'sc-mill'.bullock.feb 1, 'sc-mill'.bullock.mar 1, 'sc-mill'.bullock.apr 1, 'sc-mill'.bullock.may 1, 'sc-mill'.bullock.jun 1, 'sc-mill'.bullock.jul 1, 'sc-mill'.bullock.aug 1, 'sc-mill'.bullock.sep 1, 'sc-mill'.bullock.oct 1, 'sc-mill'.bullock.nov 1, 'sc-mill'.bullock.dec 1, 'sc-mill'.'semi-mech'.jan 1, 'sc-mill'.'semi-mech'.feb 1, 'sc-mill'.'semi-mech'.mar 1, 'sc-mill'.'semi-mech'.apr 1, 'sc-mill'.'semi-mech'.may 1, 'sc-mill'.'semi-mech'.jun 1, 'sc-mill'.'semi-mech'.jul 1, 'sc-mill'.'semi-mech'.aug 1, 'sc-mill'.'semi-mech'.sep 1, 'sc-mill'.'semi-mech'.oct 1, 'sc-mill'.'semi-mech'.nov 1, 'sc-mill'.'semi-mech'.dec 1, 'sc-gur'.bullock.jan 1, 'sc-gur'.bullock.feb 1, 'sc-gur'.bullock.mar 1, 'sc-gur'.bullock.apr 1, 'sc-gur'.bullock.may 1, 'sc-gur'.bullock.jun 1, 'sc-gur'.bullock.jul 1, 'sc-gur'.bullock.aug 1, 'sc-gur'.bullock.sep 1, 'sc-gur'.bullock.oct 1, 'sc-gur'.bullock.nov 1, 'sc-gur'.bullock.dec 1, 'sc-gur'.'semi-mech'.jan 1, 'sc-gur'.'semi-mech'.feb 1, 'sc-gur'.'semi-mech'.mar 1, 'sc-gur'.'semi-mech'.apr 1, 'sc-gur'.'semi-mech'.may 1, 'sc-gur'.'semi-mech'.jun 1, 'sc-gur'.'semi-mech'.jul 1, 'sc-gur'.'semi-mech'.aug 1, 'sc-gur'.'semi-mech'.sep 1, 'sc-gur'.'semi-mech'.oct 1, 'sc-gur'.'semi-mech'.nov 1, 'sc-gur'.'semi-mech'.dec 1/
     landcw(cw,t,s,w,m) /cotton.bullock.'el-plant'.standard.apr 0.5, cotton.bullock.'el-plant'.standard.may 1, cotton.bullock.'el-plant'.standard.jun 1, cotton.bullock.'el-plant'.standard.jul 1, cotton.bullock.'el-plant'.standard.aug 1, cotton.bullock.'el-plant'.standard.sep 1, cotton.bullock.'el-plant'.standard.oct 1, cotton.bullock.'el-plant'.standard.nov 1, cotton.bullock.'el-plant'.standard.dec 0.5, cotton.'semi-mech'.'la-plant'.standard.jun 1, cotton.'semi-mech'.'la-plant'.standard.jul 1, cotton.'semi-mech'.'la-plant'.standard.aug 1, cotton.'semi-mech'.'la-plant'.standard.sep 1, cotton.'semi-mech'.'la-plant'.standard.oct 1, cotton.'semi-mech'.'la-plant'.standard.nov 1, cotton.'semi-mech'.'la-plant'.standard.dec 0.5, wheat.'semi-mech'.'la-plant'.january.jan 1, wheat.'semi-mech'.'la-plant'.january.feb 1, wheat.'semi-mech'.'la-plant'.january.mar 1, wheat.'semi-mech'.'la-plant'.january.apr 1, wheat.'semi-mech'.'la-plant'.january.dec 1/
@@ -79,7 +84,14 @@ Parameters
     liveprc(q,ps) /'buff-milk'.'76-77' 1.25, 'buff-milk'.'80-81' 1.562, 'buff-milk'.'85-86' 1.562, 'catl-milk'.'76-77' 0.95, 'catl-milk'.'80-81' 1.188, 'catl-milk'.'85-86' 1.188, meat.'76-77' 2.5, meat.'80-81' 3.125, meat.'85-86' 3.125/
     wageps(m,ps) /jan.'76-77' 0.75, jan.'80-81' 0.975, jan.'85-86' 0.975, feb.'76-77' 0.75, feb.'80-81' 0.975, feb.'85-86' 0.975, mar.'76-77' 0.75, mar.'80-81' 0.975, mar.'85-86' 0.975, jun.'76-77' 0.75, jun.'80-81' 0.975, jun.'85-86' 0.975, jul.'76-77' 0.75, jul.'80-81' 0.975, jul.'85-86' 0.975, aug.'76-77' 0.75, aug.'80-81' 0.975, aug.'85-86' 0.975, sep.'76-77' 0.75, sep.'80-81' 0.975, sep.'85-86' 0.975, dec.'76-77' 0.75, dec.'80-81' 0.975, dec.'85-86' 0.975, apr.'76-77' 1.5, apr.'80-81' 1.95, apr.'85-86' 1.95, may.'76-77' 1.5, may.'80-81' 1.95, may.'85-86' 1.95, oct.'76-77' 1.5, oct.'80-81' 1.95, oct.'85-86' 1.95, nov.'76-77' 1.5, nov.'80-81' 1.95, nov.'85-86' 1.95/
     pbc(c)
+    psc(c)
     pbq(q)
+    psq(q)
+    dev(c,y)
+    wcapchng(c)
+    yldchng(c)
+    misc(p1)
+    wage(m)
     gammafrt(c) /basmati 0.153, cotton 0.0795, irri 0.246, 'sc-mill' 0.179, 'sc-gur' 0.179, wheat 0.101/
     nit(c,t,s,w)
     yc(c,t,s,w)
@@ -103,8 +115,10 @@ Parameters
     rep2(t,s,w,c,*)
     fpop(dis) /'rahim-kh' 846897/
     plab(hht) /fh 1, lh 0.49/
+    flab(g,hht)
     flabps(ps,g,hht)
     popadj(ps) /'76-77' 1.1048, '80-81' 1.1965, '85-86' na/
+    pop(g)
     popps(g,ps)
     alab(dis,hht,labs,int) /'rahim-kh'.fh.men.fulltime 217336, 'rahim-kh'.fh.men.parttime 11446, 'rahim-kh'.fh.men.occasional 8202, 'rahim-kh'.fh.women.fulltime 65647, 'rahim-kh'.fh.women.parttime 84106, 'rahim-kh'.fh.women.occasional 10039, 'rahim-kh'.lh.men.fulltime 20528, 'rahim-kh'.lh.men.parttime 7207, 'rahim-kh'.lh.men.occasional 782, 'rahim-kh'.lh.women.fulltime 5030, 'rahim-kh'.lh.women.parttime 11299, 'rahim-kh'.lh.women.occasional 783/
     labint(labs,int) /men.fulltime 0.9, men.parttime 0.5, men.occasional 0.1, women.fulltime 0.6, women.parttime 0.3, women.occasional 0.06/
@@ -170,6 +184,14 @@ Parameters
     rep5(g,*,*)
     rep6(g,*)
 ;
+
+gfd(g,sea) = 0;
+gdp(g,sea) = 0;
+lwcaptl(l) = 0;
+delgw(g) = 0;
+ntw(g) = 0;
+ntr(g) = 0;
+gtw(g,m) = 0;
 
 Scalars
     fc /82.286/
@@ -547,11 +569,11 @@ stat_clc(g,q).. ((-1) * psq(q)) * nu_inbl(g) - nu_cmbq(g,q) - lam_cblq(g,q) - pi
 stat_dr(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) + ((-1) * 1$(sg(g))) * nu_gwbl(g) - piL_dr(g) =E= 0;
 stat_efl(g,m).. (-1) * nu_labr(g,m) - piL_efl(g,m) + piU_efl(g,m) =E= 0;
 stat_esl(g,m).. ((-1) * wage(m)) * nu_cost(g) - nu_labr(g,m) - piL_esl(g,m) + piU_esl(g,m) =E= 0;
-stat_inj(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) + ((-1) * -1$(sg(g))) * nu_gwbl(g) - piL_inj(g) =E= 0;
+stat_inj(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) + ((-1) * (-1)$(sg(g))) * nu_gwbl(g) - piL_inj(g) =E= 0;
 stat_itr(g).. ((-1) * misc("trinvt")) * nu_cost(g) + sum(m, ((-1) * trcap) * lam_trcp(g,m)) - piL_itr(g) =E= 0;
 stat_itw(g).. ((-1) * misc("twinvt")$(fsg(g))) * nu_cost(g) + sum(m, (((-1) * twcap) * lam_tbcp(g,m))$(fsg(g))) - piL_itw(g) =E= 0;
 stat_ndev(g,y).. ((-1) * (1000 * ((-1) * (card(y) * r(g) * kl / sqr(card(y)))) / 1000000)) + nu_ddev(g,y) - piL_ndev(g,y) =E= 0;
-stat_pcc(g,c)$(cc(c)).. ((-1) * (((-1) * pbc(c)) * 1$(cc(c)))) * nu_inbl(g) + (pbc(c) - psc(c)) * 1$(cc(c)) * nu_nfin(g) + (((-1) * -1$(cc(c))) * nu_cmbc(g,c))$(cnf(c)) - piL_pcc(g,c) =E= 0;
+stat_pcc(g,c).. (((-1) * (((-1) * pbc(c)) * 1$(cc(c)))) * nu_inbl(g) + (pbc(c) - psc(c)) * 1$(cc(c)) * nu_nfin(g) + (((-1) * (-1)$(cc(c))) * nu_cmbc(g,c))$(cnf(c)) - piL_pcc(g,c))$(cc(c)) =E= 0;
 stat_pdev(g,y).. ((-1) * (1000 * ((-1) * (card(y) * r(g) * kl / sqr(card(y)))) / 1000000)) - nu_ddev(g,y) - piL_pdev(g,y) =E= 0;
 stat_plc(g,q).. pbq(q) * nu_inbl(g) + ((-1) * (pbq(q) - psq(q))) * nu_nfin(g) + nu_cmbq(g,q) - piL_plc(g,q) =E= 0;
 stat_ppc.. ((-1) * piL_ppc) =E= 0;

@@ -80,7 +80,7 @@ Parameters
     muz(te)
     b0(id,j) /agri.agri 0.934, mine.mine 0.124, petrol.petrol 0.004, food.food 0.048, text.text 0.047, wood.wood 0.154, chem.chem 0.102, 'n-met'.'n-met' 0.088, 'b-met'.'b-met' 0.352, mach.agri 0.207, mach.mine 0.261, mach.petrol 0.395, mach.food 0.197, mach.text 0.155, mach.wood 0.3, mach.chem 0.203, mach.'n-met' 0.319, mach.'b-met' 0.263, mach.mach 0.176, mach.const 0.085, mach.elec 0.886, mach.comm 0.189, mach.trans 1.634, mach.serv 0.273, const.agri 0.588, const.mine 0.331, const.petrol 0.615, const.food 0.299, const.text 0.145, const.wood 0.296, const.chem 0.232, const.'n-met' 0.447, const.'b-met' 0.275, const.mach 0.235, const.const 0.015, const.elec 2.109, const.comm 0.169, const.trans 5.173, const.serv 2.328, elec.const 0.462, comm.agri 0.224, comm.mine 0.204, comm.petrol 0.378, comm.food 0.193, comm.text 0.194, comm.wood 0.307, comm.chem 0.294, comm.'n-met' 0.279, comm.'b-met' 0.348, comm.mach 0.234, comm.const 0.07, comm.elec 0.707, comm.comm 0.126, comm.trans 1.363, comm.serv 0.199, trans.comm 0.159, serv.agri 0.039, serv.comm 0.196, serv.trans 0.154, imp.agri 0.262, imp.mine 0.1, imp.petrol 0.339, imp.food 0.183, imp.text 0.264, imp.wood 0.316, imp.chem 0.455, imp.'n-met' 0.202, imp.'b-met' 0.497, imp.mach 0.336, imp.const 0.042, imp.elec 0.369, imp.comm 0.011, imp.trans 0.835, imp.serv 0.055/
     b(id,j,te)
-    k(j,te)
+    k(jd,te)
     bk(id,j,te)
     lreq0(s,j)
     lreq(s,j,te)
@@ -114,6 +114,9 @@ Parameters
     w2b(te)
     w3(te) /'1989' 1/
 ;
+
+w2a(te) = 0;
+w2b(te) = 0;
 
 Scalars
     interval /3/
@@ -422,28 +425,33 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(j, j__);
+Alias(t, t__);
+
 * Stationarity equations
 stat_con(te).. ((-1) * w1(te)) + ((-1 - gamma) * nu_h(te))$(t(te)) + ((((-1) * (gamma * (-1))) * nu_h(te+1))$(ord(te) <= card(te) - 1))$(t(te)) + (nu_h(te-1)$(ord(te) > 1))$(t(te)) + ((-1) * (w2a(te) + w2b(te))) * nu_obj2 + ((-1) * w3(te)) * nu_obj3 + nu_con_fx_1968$(sameas(te, '1968')) + sum(inc, apc(inc,te)) * nu_fexch(te) + nu_ggdp(te) + sum((i,t), apc(i,t) * lam_mb(i,t)) + sum(i, (apc(i,te) * (-1) * lam_tic(i,te))$(ord(te) > last)) - piL_con(te) =E= 0;
-stat_e(i,te)$(im(i) and t(te)).. ((-1) * nu_exdef(te)) + 1$(im(i)) * lam_mb(i,te) - piL_e(i,te) =E= 0;
-stat_ea(te)$(t(te)).. pvv * nu_exdef(te) - nu_fexch(te) + sum((i,t), csm(i) * lam_mb(i,t)) - piL_ea(te) =E= 0;
+stat_e(i,te).. (((-1) * nu_exdef(te)) + 1$(im(i)) * lam_mb(i,te) - piL_e(i,te))$(im(i) and t(te)) =E= 0;
+stat_ea(te).. (pvv * nu_exdef(te) - nu_fexch(te) + sum((i,t__), csm(i) * lam_mb(i,t__)) - piL_ea(te))$(t(te)) =E= 0;
 stat_ed(s,te).. ((-1) * piL_ed(s,te)) =E= 0;
 stat_em(te).. sum(tp, ((-1) * 1$(ts(te,tp))) * nu_exdef(te)) + sum(tep, sum((i,t), es(i) * zmi(t,te) * 1$(ts(t,tep)) * lam_mb(i,t))) - piL_em(te) =E= 0;
-stat_fc(te)$(t(te)).. (-1) * nu_fgap(te) - piL_fc(te) =E= 0;
-stat_fdp(te)$(t(te)).. sum(tp, (-1 + pci * 1$(ts2(te,tp))) * nu_fgap(te)) + lam_ffdp$(t(te)) - piL_fdp(te) =E= 0;
+stat_fc(te).. ((-1) * nu_fgap(te) - piL_fc(te))$(t(te)) =E= 0;
+stat_fdp(te).. (sum(tp, pci * 1$(ts2(te,tp)) * nu_fgap(te)) - nu_fgap(te) + lam_ffdp$(t(te)) - piL_fdp(te))$(t(te)) =E= 0;
 stat_gdp(te).. nu_gdp_fx_1968$(sameas(te, '1968')) - nu_ggdp(te) + (((-1) * mps) * lam_dsc(te))$(t(te)) + ((((-1) * (mps * (-1))) * lam_dsc(te+1))$(ord(te) <= card(te) - 1))$(t(te)) - piL_gdp(te) =E= 0;
 stat_infdp.. sum(t, nu_fgap(t)) + nu_infdp_fx =E= 0;
 stat_inv(te).. ((-1) * nu_ginv(te))$(ord(te) <= last) + nu_inv_fx_1968$(sameas(te, '1968')) + nu_gsav(te) - piL_inv(te) =E= 0;
-stat_ka(te).. sum((s,t), ((-1) * (alr(t) * interval * 1$(ts2(t,te)))$(sun(s))) * nu_drql(s,t)) + sum(tep, sum(s, (((-1) * (interval * alr(te) * 1$(ts2(te,tep)))$(sun(s))) * nu_trql(s,te))$(ord(te) > last))) + nu_ginv(te)$(ord(te) <= last) + sum(inc, bk(inc,"agri",te)) * nu_fexch(te) + sum((i,t), bk(i,"agri",t) * lam_mb(i,t)) - piL_ka(te) =E= 0;
+stat_ka(te).. sum((s,t), ((-1) * (alr(t) * interval * 1$(ts2(t,te)))$(sun(s))) * nu_drql(s,t)) + (((-1) * (alr(te) * (1 + interval * 1$(ts2(te,te))))$(sun(s))) + (alr(te) * interval * 1$(ts2(te,te)))$(sun(s))) * nu_drql(te) + sum(tep, sum(s, (((-1) * (interval * alr(te) * 1$(ts2(te,tep)))$(sun(s))) * nu_trql(s,te))$(ord(te) > last))) + nu_ginv(te)$(ord(te) <= last) + sum(inc, bk(inc,"agri",te)) * nu_fexch(te) + sum((i,t), bk(i,"agri",t) * lam_mb(i,t)) - piL_ka(te) =E= 0;
 stat_ld(s,te).. (((-1) * ldg(s,s)) * lam_ldsc(s,te))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-2,te))$(ord(s) > 2))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+1,te))$(ord(s) <= card(s) - 1))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-1,te))$(ord(s) > 1))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+2,te))$(ord(s) <= card(s) - 2))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+3,te))$(ord(s) <= card(s) - 3))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s+4,te))$(ord(s) <= card(s) - 4))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-3,te))$(ord(s) > 3))$(ord(te) > initial) + ((((-1) * ldg(s,s)) * lam_ldsc(s-4,te))$(ord(s) > 4))$(ord(te) > initial) - piL_ld(s,te) =E= 0;
 stat_max2.. nu_obj2 =E= 0;
 stat_max3.. nu_obj3 =E= 0;
-stat_rgap(te)$(t(te)).. ((-1) * nu_fexch(te)) + nu_fgap(te) - nu_gsav(te) =E= 0;
-stat_rql(s,te)$(t(te)).. ((-1) * nu_drql(s,te)) + ((-1) * nu_trql(s,te))$(ord(te) > last) + lam_ldsc(s,te)$(ord(te) > initial) - piL_rql(s,te) =E= 0;
+stat_rgap(te).. (((-1) * nu_fexch(te)) + nu_fgap(te) - nu_gsav(te))$(t(te)) =E= 0;
+stat_rql(s,te).. (((-1) * nu_drql(s,te)) + ((-1) * nu_trql(s,te))$(ord(te) > last) + lam_ldsc(s,te)$(ord(te) > initial) - piL_rql(s,te))$(t(te)) =E= 0;
 stat_sav(te).. nu_sav_fx_1968$(sameas(te, '1968')) - nu_gsav(te) + nu_ggdp(te) + lam_dsc(te)$(t(te)) + (((-1) * lam_dsc(te+1))$(ord(te) <= card(te) - 1))$(t(te)) - piL_sav(te) =E= 0;
-stat_ul(s,te)$(t(te)).. sum((i,t), ssr(i,s) * lam_mb(i,t)) + (((-1) * lugt(s,s,te)) * lam_ldsc(s,te))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-2,te))$(ord(s) > 2))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+1,te))$(ord(s) <= card(s) - 1))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-1,te))$(ord(s) > 1))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+2,te))$(ord(s) <= card(s) - 2))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+3,te))$(ord(s) <= card(s) - 3))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+4,te))$(ord(s) <= card(s) - 4))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-3,te))$(ord(s) > 3))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-4,te))$(ord(s) > 4))$(ord(te) > initial) - piL_ul(s,te) =E= 0;
-stat_v(jd,te)$(j(jd)).. sum(j, (k(j,te) * nu_ginv(te))$(ord(te) <= last)) + sum(j, sum(inc, b(inc,j,te)) * nu_fexch(te)) + sum(j, sum(s, ((lreq(s,j,te) * interval * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) + ((-1) * (interval * 1$(ts2(te,te)))) * lam_cap(jd,te) + sum(j, sum((i,t), b(i,j,t) * lam_mb(i,t))) + sum(j, sum(i, (((gv3 * b(i,j,te) - interval * ((-1) * a(i,jd,te))) * lam_tic(i,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) - piL_v(jd,te) =E= 0;
-stat_x(jd,te)$(j(jd)).. sum(j, sum((s,t), lreq(s,j,t) * nu_drql(s,t))) + sum(inc, a(inc,jd,te)) * nu_fexch(te) + sum(j, sum(s, ((lreq(s,j,te) * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) + sum((i,t), a(i,jd,t) * lam_mb(i,t)) + lam_cap(jd,te) - piL_x(jd,te) =E= 0;
-stat_zt(te)$(t(te)).. ((-1) * nu_fexch(te)) + sum((i,t), apz(i,t) * lam_mb(i,t)) - piL_zt(te) =E= 0;
+stat_ul(s,te).. (sum((i,t__), ssr(i,s) * lam_mb(i,t__)) + (((-1) * lugt(s,s,te)) * lam_ldsc(s,te))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-2,te))$(ord(s) > 2))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+1,te))$(ord(s) <= card(s) - 1))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-1,te))$(ord(s) > 1))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+2,te))$(ord(s) <= card(s) - 2))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+3,te))$(ord(s) <= card(s) - 3))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s+4,te))$(ord(s) <= card(s) - 4))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-3,te))$(ord(s) > 3))$(ord(te) > initial) + ((((-1) * lugt(s,s,te)) * lam_ldsc(s-4,te))$(ord(s) > 4))$(ord(te) > initial) - piL_ul(s,te))$(t(te)) =E= 0;
+stat_v(jd,te).. (sum(j__, (k(j__,te) * nu_ginv(te))$(ord(te) <= last)) + sum(j__, sum(inc, b(inc,j__,te)) * nu_fexch(te)) + sum(j__, sum(s, ((lreq(s,j__,te) * interval * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) + ((-1) * (interval * 1$(ts2(te,te)))) * lam_cap(jd,te) + sum(j__, sum((i,t), b(i,j__,t) * lam_mb(i,t))) + sum(j__, sum(i, (((gv3 * b(i,j__,te) - interval * ((-1) * a(i,jd,te))) * lam_tic(i,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) - piL_v(jd,te))$(j(jd)) =E= 0;
+stat_x(jd,te).. (sum(j__, sum((s,t), lreq(s,j__,t) * nu_drql(s,t))) + sum(inc, a(inc,jd,te)) * nu_fexch(te) + sum(j__, sum(s, ((lreq(s,j__,te) * nu_trql(s,te+1))$(ord(te) <= card(te) - 1))$(ord(te) > last))) + sum((i,t), a(i,jd,t) * lam_mb(i,t)) + lam_cap(jd,te) - piL_x(jd,te))$(j(jd)) =E= 0;
+stat_zt(te).. (((-1) * nu_fexch(te)) + sum((i,t__), apz(i,t__) * lam_mb(i,t__)) - piL_zt(te))$(t(te)) =E= 0;
 
 * Inequality complementarity equations
 comp_cap(j,t).. ((-1) * (x(j,t) - (x0(j) + interval * sum(te$(ts2(t,te)), v(j,te))))) =G= 0;
@@ -518,6 +526,7 @@ x.fx(jd,te)$(not (j(jd))) = 0;
 piL_x.fx(jd,te)$(not (j(jd))) = 0;
 zt.fx(te)$(not (t(te))) = 0;
 piL_zt.fx(te)$(not (t(te))) = 0;
+rql.fx(s,te)$(not (ord(te) > 1)) = 0;
 lam_dsc.fx(te)$(not (t(te))) = 0;
 lam_ldsc.fx(s,te)$(not (ord(te) > initial)) = 0;
 lam_tic.fx(i,te)$(not (ord(te) > last)) = 0;

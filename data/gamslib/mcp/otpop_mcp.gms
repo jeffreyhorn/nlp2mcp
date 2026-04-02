@@ -24,10 +24,10 @@ Sets
 ;
 
 Parameters
-    db(t)
+    db(tt)
     xb(t)
     rd(t)
-    del(t)
+    del(tt)
     alpha(n) /'1' 0.5, '2' 0.3, '3' 0.2/
     phis(tt) /'1965' 3.5, '1966' 3.5, '1967' 3.5, '1968' 3.5, '1969' 3.5, '1970' 3.5, '1971' 3.5, '1972' 4, '1973' 7, '1974' 10/
     y(tt)
@@ -194,13 +194,17 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(t, t__);
+
 * Stationarity equations
 stat_as(tt).. nu_adef(tt)$(tp(tt)) + (((-1) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + p(tt) ** b * nu_sup(tt) =E= 0;
-stat_d(tt).. ((((-1) * ((pd(tt) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_dem(tt) - nu_sup(tt) =E= 0;
+stat_d(tt).. ((((-1) * ((pd(1966-l) - ph) * con)) * nu_adef(tt+1))$(ord(tt) <= card(tt) - 1))$(tp(tt)) + nu_dem(tt) - nu_sup(tt) =E= 0;
 stat_k.. -1 + nu_kdef =E= 0;
-stat_p(tt).. ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t, ((-1) * (del(t) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
+stat_p(tt).. sum(n, ((-1) * alpha(n)) * nu_pdef(tt)) + sum(n, (((-1) * alpha(n)) * nu_pdef(tt+1))$(ord(tt) <= card(tt) - 1)) + sum(n, (((-1) * alpha(n)) * nu_pdef(tt+2))$(ord(tt) <= card(tt) - 2)) + ((-1) * (db(tt) * p(tt) ** ((-1) * a) * ((-1) * a) / p(tt))) * nu_dem(tt) + as(tt) * p(tt) ** b * b / p(tt) * nu_sup(tt) + sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
 stat_pd(tt).. nu_pdef(tt) =E= 0;
-stat_x(tt)$(t(tt)).. nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt) + sum(t, ((-1) * (del(t) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt)) + (((-1) * (v * p(tt) * (-0.365))) * nu_zdef)$(t(tt)) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt) =E= 0;
+stat_x(tt).. (nu_x_fx_1965$(sameas(tt, '1965')) + nu_x_fx_1966$(sameas(tt, '1966')) + nu_x_fx_1967$(sameas(tt, '1967')) + nu_x_fx_1968$(sameas(tt, '1968')) + nu_x_fx_1969$(sameas(tt, '1969')) + nu_x_fx_1970$(sameas(tt, '1970')) + nu_x_fx_1971$(sameas(tt, '1971')) + nu_x_fx_1972$(sameas(tt, '1972')) + nu_x_fx_1973$(sameas(tt, '1973')) + nu_sup(tt) + sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt)) + sum(t__, ((-1) * (v * p(1974+(card(t)-ord(t))) * (-0.365))) * nu_zdef)$(t(tt)) + nu_x_fx_1974$(sameas(tt, '1974')) - piL_x(tt))$(t(tt)) =E= 0;
 stat_z.. -1 + nu_zdef =E= 0;
 
 * Lower bound complementarity equations

@@ -39,6 +39,11 @@ Sets
 Alias(col, colp);
 Alias(col, col__kkt1);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+acol(col) = yes;
+$offImplicitAssign
+
 Parameters
     feed(cp) /a 100, b 100, c 100/
     cost(col) /'col-1' 0.23947, 'col-2' 0.75835/
@@ -297,10 +302,10 @@ stat_fby(pr).. nu_spblinit + sum(cp, (xinit(cp) * nu_probal(pr,cp))$(ord(pr) <> 
 stat_fin(col).. sum(cp, (xin(col,cp) * nu_cfloin(col,cp))$(acol(col))) + lam_lintcon(col) - piL_fin(col) + piU_fin(col) =E= 0;
 stat_finit(col).. 1$(acol(col)) * nu_spblinit + sum(cp, (xinit(cp) * nu_mixbal(col,cp))$(acol(col))) - piL_finit(col) + piU_finit(col) =E= 0;
 stat_fint(colp,col,stm).. sum(col__kkt1, (1$(inter(col__kkt1,col__kkt1,stm)) * nu_spblcol(col__kkt1,stm))$(acol(col__kkt1))) - piL_fint(colp,col,stm) =E= 0;
-stat_fpr(col,stm,pr)$(prstream(col,stm,pr)).. (1$(prstream(col,stm,pr)) * nu_spblcol(col,stm))$(acol(col)) + sum(cp, (x(col,stm,cp) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fpr(col,stm,pr) =E= 0;
+stat_fpr(col,stm,pr).. ((1$(prstream(col,stm,pr)) * nu_spblcol(col,stm))$(acol(col)) + sum(cp, (x(col,stm,cp) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) - piL_fpr(col,stm,pr))$(prstream(col,stm,pr)) =E= 0;
 stat_rec(col,stm,cp).. (cfin(col,cp) * nu_keybal(col,stm,cp))$(key(col,stm,cp)) - piL_rec(col,stm,cp) + piU_rec(col,stm,cp) =E= 0;
 stat_saint(col).. 1 - lam_lintcon(col) - piL_saint(col) =E= 0;
-stat_x(col,stm,cp).. sum(colp, (fint(col,col,stm) * 1$(inter(col,colp,stm)) * nu_mixbal(col,cp))$(acol(col))) + (((-1) * f(col,stm)) * nu_colbal(col,cp))$(acol(col)) + (((-1) * f(col,stm)) * nu_keybal(col,stm,cp))$(key(col,stm,cp)) + sum(pr, (fpr(col,stm,pr) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) + nu_molsum(col,stm)$(acol(col)) + nu_dist(col,stm,cp)$(link(col,stm,cp)) - piL_x(col,stm,cp) =E= 0;
+stat_x(col,stm,cp).. (fint(col,col,stm) * 1$(inter(col,col,stm)) * nu_mixbal(col,cp))$(acol(col)) + (((-1) * f(col,stm)) * nu_colbal(col,cp))$(acol(col)) + (((-1) * f(col,stm)) * nu_keybal(col,stm,cp))$(key(col,stm,cp)) + sum(pr, (fpr(col,stm,pr) * 1$(prstream(col,stm,pr)) * nu_probal(pr,cp))$(ord(pr) <> np)) + nu_molsum(col,stm)$(acol(col)) + nu_dist(col,stm,cp)$(link(col,stm,cp)) - piL_x(col,stm,cp) =E= 0;
 stat_xin(col,cp).. (fin(col) * nu_cfloin(col,cp))$(acol(col)) + nu_molsumin(col)$(acol(col)) - piL_xin(col,cp) =E= 0;
 
 * Inequality complementarity equations

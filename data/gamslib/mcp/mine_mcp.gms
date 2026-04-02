@@ -40,8 +40,10 @@ Scalars
     value /200000/
 ;
 
+$onImplicitAssign
 c(l,i,j) = yes$(ord(l) + ord(i) <= card(l) and ord(l) + ord(j) <= card(l));
 d(l,i,j) = yes$(ord(l) + ord(i) <= card(l) + 1 and ord(l) + ord(j) <= card(l) + 1);
+$offImplicitAssign
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -74,6 +76,7 @@ Positive Variables
 * POSITIVE variables are set to 1.
 
 x.l(l,i,j) = 1;
+x.l(l,i,j) = min(x.l(l,i,j), x.up(l,i,j));
 
 * ============================================
 * Equations
@@ -95,7 +98,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(l,i,j).. ((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$d(l,i,j))) - piL_x(l,i,j) + piU_x(l,i,j) =E= 0;
+stat_x(l,i,j).. (((-1) * ((conc(l,i,j) * value / 100 - cost(l)) * 1$(d(l,i,j)))) - piL_x(l,i,j) + piU_x(l,i,j))$(d(l,i,j)) =E= 0;
 
 * Inequality complementarity equations
 
@@ -108,6 +111,17 @@ comp_up_x(l,i,j).. 1 - x(l,i,j) =G= 0;
 * Original equality equations
 def.. profit =E= sum((l,i,j)$(d(l,i,j)), (conc(l,i,j) * value / 100 - cost(l)) * x(l,i,j));
 
+
+* ============================================
+* Fix inactive variable instances
+* ============================================
+
+* Variables whose paired MCP equation is conditioned must be
+* fixed for excluded instances to satisfy MCP matching.
+
+x.fx(l,i,j)$(not (d(l,i,j))) = 0;
+piL_x.fx(l,i,j)$(not (d(l,i,j))) = 0;
+piU_x.fx(l,i,j)$(not (d(l,i,j))) = 0;
 
 * ============================================
 * Model MCP Declaration

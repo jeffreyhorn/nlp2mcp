@@ -25,8 +25,16 @@ Sets
     i /i1, i2, i3, i4, i5/
 ;
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+n(nn) = yes;
+$offImplicitAssign
+
 Parameters
     cases(c,*)
+    cc(p,nn)
+    A(mm,nn)
+    b(mm)
     rep(c,*)
 ;
 
@@ -93,7 +101,7 @@ Equations
 Alias(p, p__);
 
 * Stationarity equations
-stat_x(nn)$(n(nn)).. ((-1) * piL_x(nn)) =E= 0;
+stat_x(nn).. (((-1) * piL_x(nn)))$(n(nn)) =E= 0;
 stat_y(p).. prod(p__, y(p__)) * sum(p__, 1 / y(p__)) + nu_Products(p) =E= 0;
 
 * Inequality complementarity equations

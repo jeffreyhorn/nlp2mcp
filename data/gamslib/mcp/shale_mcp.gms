@@ -73,7 +73,7 @@ Parameters
     bga(c) /'grnd-water' 20/
     bd(c) /'can-space' 6780/
     indcap(tf) /'1990-94' 4, '1995-99' 5, '2000-04' 6, '2005-09' 6/
-    pf(c,t)
+    pf(c,tf)
     bs(c)
     br(c)
     bg(c)
@@ -326,19 +326,19 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_h(m,tf)$(sum(t, 1$(ts(t,tf)))).. ((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf) + ((-1) * 1$(ts(tf,tf))) * lam_cpu(m,tf) - piL_h(m,tf) =E= 0;
+stat_h(m,tf).. (((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf+1))$(ord(tf) <= card(tf) - 1))$(ord(m) = 1) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf+2))$(ord(tf) <= card(tf) - 2))$(ord(m) = 2) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf+3))$(ord(tf) <= card(tf) - 3))$(ord(m) = 3) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf+4))$(ord(tf) <= card(tf) - 4))$(ord(m) = 4) + ((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf-1))$(ord(tf) > 1))$(ord(m) = 1) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf-2))$(ord(tf) > 2))$(ord(m) = 2) + ((((-1) * (sigma * nu(m) * 1$(ts(tf,tf)))) * nu_acap(tf-3))$(ord(tf) > 3))$(ord(m) = 3) + ((-1) * 1$(ts(tf,tf))) * lam_cpu(m,tf) - piL_h(m,tf))$(sum(t, 1$(ts(t,tf)))) =E= 0;
 stat_phig.. 1 + nu_agw =E= 0;
-stat_phik(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_acap(tf) =E= 0;
-stat_phio(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aopc(tf) =E= 0;
-stat_phir(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_arw(tf) =E= 0;
-stat_phiy(tf)$(t(tf)).. (((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aroy(tf) =E= 0;
-stat_r(tf)$(t(tf)).. (((-1) * (theta * del(tf))))$(t(tf)) + nu_arev(tf) =E= 0;
-stat_ug(c)$(crg(c)).. nu_mgw(c) + nu_mgwb(c) - piL_ug(c) =E= 0;
-stat_ur(c,t)$(crr(c)).. nu_mrw(c,t) + nu_mrwb(c,t) - piL_ur(c,t) =E= 0;
-stat_us(c,tf)$(crs(c) and t(tf)).. nu_msu(c,tf) + theta * lam_cs(c) - piL_us(c,tf) =E= 0;
-stat_uug(c,i)$(crg(c)).. ((-1) * nu_mgwb(c)) + (((-1) * (bbg(c) * dgd(c,i) / sqr(bbg(c)))) * nu_agw)$(sameas(c, 'grnd-water')) - piL_uug(c,i) =E= 0;
-stat_uur(c,i,tf)$(crr(c) and t(tf)).. ((-1) * nu_mrwb(c,tf)) + ((-1) * (bbr(c) * drd(c,i,tf) / sqr(bbr(c)))) * nu_arw(tf) - piL_uur(c,i,tf) =E= 0;
-stat_x(c,tf)$(cf(c) and t(tf)).. ((-1) * nu_mf(c,tf)) + ((-1) * pf(c,tf)) * nu_arev(tf) - lam_cind(tf) - piL_x(c,tf) =E= 0;
+stat_phik(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_acap(tf))$(t(tf)) =E= 0;
+stat_phio(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aopc(tf))$(t(tf)) =E= 0;
+stat_phir(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_arw(tf))$(t(tf)) =E= 0;
+stat_phiy(tf).. ((((-1) * (theta * del(tf) * (-1))))$(t(tf)) + nu_aroy(tf))$(t(tf)) =E= 0;
+stat_r(tf).. ((((-1) * (theta * del(tf))))$(t(tf)) + nu_arev(tf))$(t(tf)) =E= 0;
+stat_ug(c).. (nu_mgw(c) + nu_mgwb(c) - piL_ug(c))$(crg(c)) =E= 0;
+stat_ur(c,t).. (nu_mrw(c,t) + nu_mrwb(c,t) - piL_ur(c,t))$(crr(c)) =E= 0;
+stat_us(c,tf).. (nu_msu(c,tf) + theta * lam_cs(c) - piL_us(c,tf))$(crs(c) and t(tf)) =E= 0;
+stat_uug(c,i).. (((-1) * nu_mgwb(c)) + (((-1) * (bbg(c) * dgd(c,i) / (bbg(c) * bbg(c)))) * nu_agw)$(sameas(c, 'grnd-water')) - piL_uug(c,i))$(crg(c)) =E= 0;
+stat_uur(c,i,tf).. (((-1) * nu_mrwb(c,tf)) + ((-1) * (bbr(c) * drd(c,i,tf) / sqr(bbr(c)))) * nu_arw(tf) - piL_uur(c,i,tf))$(crr(c) and t(tf)) =E= 0;
+stat_x(c,tf).. (((-1) * nu_mf(c,tf)) + ((-1) * pf(c,tf)) * nu_arev(tf) + (((-1) * lam_cind(tf+1))$(ord(tf) <= card(tf) - 1))$(ord(c) = 1) + lam_cind(tf) - piL_x(c,tf))$(cf(c) and t(tf)) =E= 0;
 stat_z(p,tf).. sum((crs,t), a(crs,p) * nu_msu(crs,t)) + sum((crr,t), a(crr,p) * nu_mrw(crr,t)) + sum(c, sum(crg, a(c,p) * nu_mgw(crg))) + sum((ci,t), a(ci,p) * nu_mi(ci,t)) + sum((cf,t), a(cf,p) * nu_mf(cf,t)) + ((-1) * (ps * a("syncrude",p))) * nu_aroy(tf) + ((-1) * opc(p)) * nu_aopc(tf) + nu_mnmr$(sameas(p, 'dispose-u') and t1(tf)) + sum(c, sum(cc, theta * a(c,p) * lam_cdc(cc))) + sum((er,t), ebm * a(er,p) * lam_cae(er,t)) + sum((m,t), b(m,p) * lam_cpu(m,t)) + lam_mmr3$((sameas(p, 'dispose-u') or sameas(p, 'mining-25') or sameas(p, 'mining-30') or sameas(p, 'mining-35')) and (sameas(tf, '1990-94') or sameas(tf, '2000-04'))) + lam_mmr4$((sameas(p, 'dispose-u') or sameas(p, 'mining-25') or sameas(p, 'mining-30') or sameas(p, 'mining-35')) and t(tf)) - piL_z(p,tf) =E= 0;
 
 * Inequality complementarity equations

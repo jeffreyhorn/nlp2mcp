@@ -9,7 +9,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .ast import Binary, Call, Const, Expr, ParamRef, SymbolRef, Unary, VarRef
+from .ast import (
+    Binary,
+    Call,
+    Const,
+    Expr,
+    ParamRef,
+    SetMembershipTest,
+    SymbolRef,
+    Unary,
+    VarRef,
+)
 
 if TYPE_CHECKING:
     from .model_ir import ModelIR
@@ -306,6 +316,66 @@ def _eval_expr(
             raise ConditionEvaluationError("card() argument must be a set reference")
 
         raise ConditionEvaluationError(f"Unsupported function '{func_name}' in condition")
+
+    # Issue #1133: SetMembershipTest — check if index values are members of a set
+    # Example: cfm(cfq,m) tests if (cfq_val, m_val) is in set cfm
+    if isinstance(expr, SetMembershipTest):
+        sname = expr.set_name
+        # Resolve the set (may be an alias)
+        sdef = model_ir.sets.get(sname)
+        if sdef is None and sname in model_ir.aliases:
+            target = model_ir.aliases[sname].target
+            sdef = model_ir.sets.get(target)
+        if sdef is None:
+            raise ConditionEvaluationError(
+                f"Set '{sname}' not found in ModelIR for SetMembershipTest"
+            )
+        # Resolve index expressions to concrete values via index_map
+        member_key: list[str] = []
+        for idx_expr in expr.indices:
+            if isinstance(idx_expr, SymbolRef):
+                val = index_map.get(idx_expr.name) or index_map.get(idx_expr.name.lower())
+                if val is None:
+                    # Try alias resolution
+                    for k, v in index_map.items():
+                        if k.lower() == idx_expr.name.lower():
+                            val = v
+                            break
+                if val is None:
+                    raise ConditionEvaluationError(
+                        f"Could not resolve index '{idx_expr.name}' for set '{sname}'"
+                    )
+                member_key.append(val)
+            else:
+                # Try evaluating as expression
+                resolved = _eval_expr(idx_expr, index_map, model_ir, _visiting)
+                member_key.append(str(resolved))
+        # Check membership — use cached set for O(1) lookups since conditions
+        # are evaluated many times during domain enumeration
+        members_list = sdef.members if hasattr(sdef, "members") else list(sdef)
+        # If we have no members at compile time, this may be a dynamic subset
+        # (e.g. set defined by assignment like `low(n,nn) = ord(n) > ord(nn);`)
+        # Treat as unevaluable so enumeration falls back to including all
+        # instances and letting GAMS evaluate the $ guard at runtime.
+        if not members_list and getattr(sdef, "domain", None):
+            raise ConditionEvaluationError(
+                f"Set membership for '{sname}' cannot be evaluated statically "
+                "because the set has no concrete members at compile time"
+            )
+        # Cache set on SetDef to avoid repeated O(n) conversion
+        members_set: set[str] = getattr(sdef, "_members_set", None)  # type: ignore[assignment]
+        if members_set is None:
+            members_set = set(members_list)
+            object.__setattr__(sdef, "_members_set", members_set)
+        if len(member_key) == 1:
+            return 1.0 if member_key[0] in members_set else 0.0
+        # Multi-dimensional: check as dotted key or tuple
+        dotted = ".".join(member_key)
+        if dotted in members_set:
+            return 1.0
+        if tuple(member_key) in members_set:
+            return 1.0
+        return 0.0
 
     raise ConditionEvaluationError(
         f"Unsupported expression type {type(expr).__name__} in condition"

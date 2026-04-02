@@ -85,6 +85,8 @@ Parameters
     dTm(i)
 ;
 
+taum(i) = 0;
+
 Scalars
     Sp0 /0/
     Sg0 /0/
@@ -115,7 +117,7 @@ Sp0 = SAM("INV","HOH");
 Sg0 = SAM("INV","GOV");
 Td0 = SAM("GOV","HOH");
 Tz0(j) = SAM("IDT",j);
-Tm0(j) = SAM("TRF",J);
+Tm0(j) = SAM("TRF",j);
 Sf = SAM("INV","EXT");
 alpha(i) = Xp0(i) / sum(j, Xp0(j));
 mu(i) = Xg0(i) / sum(j, Xg0(j));

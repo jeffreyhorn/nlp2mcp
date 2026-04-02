@@ -39,7 +39,6 @@ Parameters
     dem(j,n)
     prob(n) /'n-0' 1/
     sprob(n)
-    ScenRedParms(*)
 ;
 
 Scalars
@@ -51,7 +50,7 @@ Scalars
 ;
 
 $onImplicitAssign
-leaf(n) = yes$(sum(()$(tn(n)), 1));
+leaf(n) = yes$(((1)$(tn('time-2',n))));
 sn(n) = 1;
 $offImplicitAssign
 
@@ -61,8 +60,6 @@ prob(n)$(tn("time-2",n)) = sum(nn$(tree(nn,n)), stdat(nn,"prob") * stdat(n,"prob
 sprob(n) = prob(n);
 
 execError = 0;
-
-ScenRedParms('reduction_method') = ord('0-default') - 1 ;
 
 * ============================================
 * Variables (Primal + Multipliers)

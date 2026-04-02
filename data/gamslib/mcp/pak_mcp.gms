@@ -23,7 +23,7 @@ Sets
 
 Parameters
     k(j) /'non-traded' 3, traded 4.5/
-    delt(t)
+    delt(te)
     vb(j) /'non-traded' 37.38/
     e(t)
 ;

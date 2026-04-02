@@ -24,7 +24,7 @@ Sets
 
 Parameters
     a(r,p) /scrap.low 5, scrap.medium 3, scrap.high 1, new.low 1, new.medium 2, new.high 3/
-    c(p,t) /low.'1' 25, low.'2' 20, low.'3' 10, medium.'1' 50, medium.'2' 50, medium.'3' 50, high.'1' 75, high.'2' 80, high.'3' 100/
+    c(p,tt) /low.'1' 25, low.'2' 20, low.'3' 10, medium.'1' 50, medium.'2' 50, medium.'3' 50, high.'1' 75, high.'2' 80, high.'3' 100/
     misc(*,r) /'max-stock'.scrap 400, 'max-stock'.new 275, 'storage-c'.scrap 0.5, 'storage-c'.new 2, 'res-value'.scrap 15, 'res-value'.new 25/
 ;
 
@@ -98,9 +98,13 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(t, t__);
+
 * Stationarity equations
 stat_s(r,tt).. misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt) =E= 0;
-stat_x(p,tt)$(t(tt)).. sum(t$(sameas(t, tt)), (((-1) * c(p,t)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt) - piL_x(p,tt) =E= 0;
+stat_x(p,tt).. (sum(t__$(sameas(t__, tt)), (((-1) * c(p,t__)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt) - piL_x(p,tt))$(t(tt)) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;

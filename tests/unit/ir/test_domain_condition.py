@@ -12,7 +12,11 @@ from __future__ import annotations
 
 import pytest
 
+from src.ir.ast import SetMembershipTest, SymbolRef
+from src.ir.condition_eval import ConditionEvaluationError, evaluate_condition
+from src.ir.model_ir import ModelIR
 from src.ir.parser import parse_model_text
+from src.ir.symbols import AliasDef, SetDef
 
 
 @pytest.mark.unit
@@ -76,3 +80,64 @@ Solve dummy using NLP minimizing x;
         # Should be Binary("and", SetMembershipTest("low", ...), ...)
         assert "low" in repr(eq.condition)
         assert "active" in repr(eq.condition)
+
+
+def _make_model_ir(sets=None, aliases=None):
+    """Create a real ModelIR for condition evaluation tests."""
+    ir = ModelIR()
+    if sets:
+        ir.sets.update(sets)
+    if aliases:
+        ir.aliases.update(aliases)
+    return ir
+
+
+@pytest.mark.unit
+class TestSetMembershipTestEvaluation:
+    """Test evaluate_condition() with SetMembershipTest expressions."""
+
+    def test_member_found_returns_true(self):
+        """Element that is in the set returns True."""
+        model_ir = _make_model_ir(sets={"cf": SetDef(name="cf", members=["coal", "gas", "oil"])})
+        cond = SetMembershipTest(set_name="cf", indices=(SymbolRef("c"),))
+        result = evaluate_condition(
+            cond, domain_sets=("c",), index_values=("coal",), model_ir=model_ir
+        )
+        assert result is True
+
+    def test_member_not_found_returns_false(self):
+        """Element not in the set returns False."""
+        model_ir = _make_model_ir(sets={"cf": SetDef(name="cf", members=["coal", "gas", "oil"])})
+        cond = SetMembershipTest(set_name="cf", indices=(SymbolRef("c"),))
+        result = evaluate_condition(
+            cond, domain_sets=("c",), index_values=("nuclear",), model_ir=model_ir
+        )
+        assert result is False
+
+    def test_alias_resolved_to_target_set(self):
+        """SetMembershipTest on an alias resolves to the target set."""
+        model_ir = _make_model_ir(
+            sets={"t": SetDef(name="t", members=["1990", "1995", "2000"])},
+            aliases={"tt": AliasDef(name="tt", target="t")},
+        )
+        cond = SetMembershipTest(set_name="tt", indices=(SymbolRef("i"),))
+        result = evaluate_condition(
+            cond, domain_sets=("i",), index_values=("1995",), model_ir=model_ir
+        )
+        assert result is True
+
+    def test_dynamic_subset_raises_error(self):
+        """Set with domain but no members raises ConditionEvaluationError."""
+        model_ir = _make_model_ir(sets={"low": SetDef(name="low", members=[], domain=("n",))})
+        cond = SetMembershipTest(set_name="low", indices=(SymbolRef("n"),))
+        with pytest.raises(ConditionEvaluationError, match="cannot be evaluated"):
+            evaluate_condition(cond, domain_sets=("n",), index_values=("a",), model_ir=model_ir)
+
+    def test_empty_set_no_domain_returns_false(self):
+        """Genuinely empty set (no domain) returns False."""
+        model_ir = _make_model_ir(sets={"empty": SetDef(name="empty", members=[])})
+        cond = SetMembershipTest(set_name="empty", indices=(SymbolRef("i"),))
+        result = evaluate_condition(
+            cond, domain_sets=("i",), index_values=("x",), model_ir=model_ir
+        )
+        assert result is False

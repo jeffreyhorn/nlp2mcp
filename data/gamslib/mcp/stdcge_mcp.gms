@@ -84,6 +84,8 @@ Parameters
     dTm(i)
 ;
 
+taum(i) = 0;
+
 Scalars
     Sp0 /0/
     Sg0 /0/
@@ -113,7 +115,7 @@ Sp0 = SAM("INV","HOH");
 Sg0 = SAM("INV","GOV");
 Td0 = SAM("GOV","HOH");
 Tz0(j) = SAM("IDT",j);
-Tm0(j) = SAM("TRF",J);
+Tm0(j) = SAM("TRF",j);
 FF(h) = SAM("HOH",h);
 Sf = SAM("INV","EXT");
 eta(i) = (sigma(i) - 1) / sigma(i);
