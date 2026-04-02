@@ -760,7 +760,7 @@ Use this template during Sprint 23 prep and execution to track verification resu
 
 | ID | Discovery | Impact | Sprint 24 Issue |
 |---|---|---|---|
-| KU-27 | Subset-superset domain widening causes $171 in generated MCP | Fixed via domain widening (PR #1176), but chenery still infeasible after fix | #1177 |
+| KU-27 | Subset-superset domain mismatch (missing widening) leads to $171 in generated MCP | Fixed via domain widening (PR #1176), but chenery still infeasible after fix | #1177 |
 | KU-28 | Dynamic `.up` bounds not resolved by KKT generator | paperco generates `comp_up_purchase(p).. 0 - purchase(p) =G= 0` (upper=0 for positive vars) | Unfiled — known limitation |
 | KU-29 | Concrete element offsets in stationarity (e.g. `i1+1`, `s1-1`) | polygon, cclinpts generate invalid GAMS indexing | Unfiled — stationarity builder limitation |
 | KU-30 | SetMembershipTest evaluation for dynamic subsets | Sets defined by assignment have empty `members` at compile time; now raises error to fall back to GAMS evaluation | Addressed in PR #1198 |
