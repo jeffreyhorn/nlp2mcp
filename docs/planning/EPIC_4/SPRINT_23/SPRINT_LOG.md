@@ -373,6 +373,24 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 **Issues closed this sprint (Days 7-11):** #827, #862, #890, #939, #940, #944, #953, #955, #956, #986, #1030, #1164, #1175, #1182
 
+#### Final Pipeline Results (2026-04-01)
+
+| Stage | Baseline | Final | Delta |
+|---|---|---|---|
+| Parse | 144/147 (98.0%) | **147/147 (100.0%)** | **+3** |
+| Translate | 128/147 (87.1%) | **135/147 (91.8%)** | **+7** |
+| Solve | 81/128 (63.3%) | **86/135 (63.7%)** | **+5** |
+| Match | 47/147 (32.0%) | **49/147 (33.3%)** | **+2** |
+| Tests | 4,209 | 4,359 | **+150** |
+
+| Error Category | Baseline | Final | Delta |
+|---|---|---|---|
+| path_syntax_error | 18 | 18 | 0 |
+| model_infeasible | 12 | 11 | -1 |
+| path_solve_terminated | 10 | 12 | +2 |
+| path_solve_license | 7 | 8 | +1 |
+| translate timeout | ~17 | 11 | ~-6 |
+
 ---
 
 ### Day 12 — Sprint Close Prep
