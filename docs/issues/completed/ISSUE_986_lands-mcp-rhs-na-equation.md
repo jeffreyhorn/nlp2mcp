@@ -10,7 +10,7 @@
 
 ## Problem Summary
 
-The lands model (stochastic programming, land allocation) parsed and translated to MCP successfully, but GAMS aborted during equation generation with `RHS value NA in equation` for `comp_dembal(mode-1)`. The parameter `d("mode-1")` was explicitly declared as NA in the original model, and the equation had no dollar condition to filter it out.
+The lands model (stochastic programming, land allocation) parsed and translated to MCP successfully, but GAMS aborted during equation generation with `RHS value NA in equation` for `comp_dembal(mode-1)`. The parameter `d('mode-1')` was explicitly declared as NA in the original model, and the equation had no dollar condition to filter it out.
 
 ---
 
