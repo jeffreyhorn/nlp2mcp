@@ -376,10 +376,11 @@ The sprint introduces two architectural AD changes (#1111 alias differentiation,
 
 ---
 
-### Day 12 — Sprint Close Prep: Issues + Documentation ✅
+### Day 12 — Sprint Close Prep: Issues + Documentation
 
 **Theme:** File issues for deferred items; update documentation
 **Effort:** 1-2h
+**Day 12 Status:** COMPLETE
 
 | Task | Deliverable |
 |---|---|

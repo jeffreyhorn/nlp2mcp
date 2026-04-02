@@ -446,7 +446,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 | #1194 | Fix sambal dollar condition | #862 |
 | #1196 | Fix lands full pipeline | — |
 | #1197 | Fix fawley compilation | #1133 (partial) |
-| #1198 | Day 11 buffer + SetMembershipTest | #1199 (filed) |
+| #1198 | Day 11 buffer + SetMembershipTest; filed #1199 | — |
 
 ---
 
