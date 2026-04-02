@@ -751,4 +751,26 @@ Use this template during Sprint 23 prep and execution to track verification resu
 **Document Created:** 2026-03-17
 **Total Unknowns:** 26 (across 5 categories + 1 carryforward)
 **Sprint 22 Carryforward:** 4 KUs (KU-27→KU-12, KU-28→KU-14, KU-29→KU-16, KU-30→KU-26)
-**Next Steps:** Verify unknowns during prep Tasks 2-8; update Appendix C with results
+
+---
+
+## Sprint 23 End-of-Sprint Discoveries (2026-04-02)
+
+### New Unknowns Surfaced During Sprint 23
+
+| ID | Discovery | Impact | Sprint 24 Issue |
+|---|---|---|---|
+| KU-27 | Subset-superset domain widening causes $171 in generated MCP | Fixed via domain narrowing (PR #1176), but chenery still infeasible after fix | #1177 |
+| KU-28 | Dynamic `.up` bounds not resolved by KKT generator | paperco generates `comp_up_purchase(p).. 0 - purchase(p) =G= 0` (upper=0 for positive vars) | Unfiled — known limitation |
+| KU-29 | Concrete element offsets in stationarity (e.g. `i1+1`, `s1-1`) | polygon, cclinpts generate invalid GAMS indexing | Unfiled — stationarity builder limitation |
+| KU-30 | SetMembershipTest evaluation for dynamic subsets | Sets defined by assignment have empty `members` at compile time; now raises error to fall back to GAMS evaluation | Addressed in PR #1198 |
+| KU-31 | LP fast path doesn't fully eliminate translation timeouts | lop, mexls still timeout at 300s despite LP fast path | #1169, #1185 |
+| KU-32 | Emitter generates duplicate `.fx` statements | springchain has overlapping fixation blocks from multiple stationarity conditions | Unfiled — emit deduplication needed |
+
+### Key Lessons Learned
+
+1. **Alias differentiation (#1111 family) remains the single largest blocker** — 12 open issues, affects ~20 models. Sprint 24 should prioritize this as WS1.
+2. **Subset-superset domain widening was a higher-impact fix than expected** — unlocked 4 models (chenery, shale, otpop, hhfair) from $171 errors.
+3. **LP fast path for translation timeouts was effective** — recovered 7 models from timeout, but some large LPs still exceed 300s.
+4. **Parse rate reached 100%** (147/147) — no more parse failures in the pipeline scope.
+5. **Translate influx masked solve improvements** — 7 new translates added 2 new path_solve_terminated, offsetting solve gains.

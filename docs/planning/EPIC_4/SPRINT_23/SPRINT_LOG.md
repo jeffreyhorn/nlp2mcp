@@ -395,13 +395,58 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 ### Day 12 — Sprint Close Prep
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| File deferred issues (sprint-24 label) | |
-| Update KNOWN_UNKNOWNS.md | |
-| Update SPRINT_LOG.md | |
+| File deferred issues (sprint-24 label) | ✅ 20 issues labeled sprint-24 |
+| Update KNOWN_UNKNOWNS.md | ✅ Updated with Sprint 23 discoveries |
+| Update SPRINT_LOG.md | ✅ Day 12 documented |
+| Run `make test` | ✅ 4,364 passed |
+
+#### Deferred Items (sprint-24 label)
+
+**New discoveries from Sprint 23:**
+- #1199 — bearing: MCP model infeasible (incorrect Jacobian entries)
+- #1195 — sambal: NA values in stationarity equations
+- #1192 — gtm: Runtime division by zero in stationarity
+- #1185 — mexls: Translation timeout (large LP)
+- #1179 — hhfair: Runtime EXECERROR during model generation
+- #1178 — otpop: Malformed index expressions ($145/$148)
+- #1177 — chenery: MCP locally infeasible after $171 fix
+- #1169 — lop: Translation timeout during MCP generation
+
+**Alias differentiation (#1111 family) — 12 issues:**
+- #1150, #1147, #1146, #1145, #1144, #1143, #1142, #1141, #1140, #1139, #1138, #1137
+
+#### Sprint 23 PRs Merged (Days 7-12)
+
+| PR | Title | Issues Closed |
+|---|---|---|
+| #1167 | Fix grammar: model composition, table column groups | #892, #894, #896 |
+| #1168 | Fix lop parse error | #890 |
+| #1170 | Unify parse_file entry points | #1030 |
+| #1171 | Fix grid computing grammar | #955 |
+| #1172 | LP fast path for translation timeouts | #926-#932, #1169 (partial) |
+| #1173 | Alias-aware differentiation | #944 |
+| #1174 | Checkpoint 2 + subset-superset domain fix | #1164, #1175 |
+| #1176 | Subset-superset domain widening | — |
+| #1180 | Fix otpop/hhfair/chenery/shale $171 errors | — |
+| #1181 | Fix danwolfe grammar/compilation | #1182 |
+| #1183 | Fix danwolfe MCP compilation | — |
+| #1184 | Fix mexls universal set | #940 |
+| #1185 | Fix mexls translation timeout | — |
+| #1186 | Fix condition_eval for mine | #1133 (partial) |
+| #1187 | Fix dynamic subset defaults | #952 |
+| #1188 | Fix all-zero parameter emission | #871 |
+| #1189 | Fix nonsharp/paperco/lands/maxmin | #956, #953, #986, #939 |
+| #1190 | Fix pindyck compilation | — |
+| #1191 | Fix gtm compilation errors | #827 |
+| #1193 | Fix maxmin compilation + solve | — |
+| #1194 | Fix sambal dollar condition | #862 |
+| #1196 | Fix lands full pipeline | — |
+| #1197 | Fix fawley compilation | #1133 (partial) |
+| #1198 | Day 11 buffer + SetMembershipTest | #1199 (filed) |
 
 ---
 
