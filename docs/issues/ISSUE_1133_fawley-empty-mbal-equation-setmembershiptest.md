@@ -127,3 +127,13 @@ gams /tmp/fawley_mcp.gms lo=2
 | `src/ad/index_mapping.py` ~lines 393-403 | Fallback includes all instances on condition failure |
 | `src/emit/emit_gams.py` | MCP equation pairing — could detect/skip empty equations |
 | `src/kkt/stationarity.py` | KKT assembly — could skip equations with unresolvable conditions |
+
+---
+
+## Status (2026-04-01)
+
+Retested: same error persists — "MCP pair mbal.nu_mbal has empty equation but associated variable is NOT fixed". The `SetMembershipTest` condition evaluation in `condition_eval.py` still does not support 2D set membership tests.
+
+The `_emit_dynamic_subset_defaults` fix (PR #1187) now populates empty dynamic subsets, but the `cfm(cfq,m)` set is runtime-computed (not a simple empty subset), so it doesn't benefit.
+
+**Fix requires:** Either add `SetMembershipTest` support in `condition_eval.py` (Approach 1) or detect empty MCP equations at emission time and fix the associated multiplier (Approach 2). Both are ~2-4h efforts.
