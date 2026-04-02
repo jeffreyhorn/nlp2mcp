@@ -350,7 +350,7 @@ def _eval_expr(
                 # Try evaluating as expression
                 resolved = _eval_expr(idx_expr, index_map, model_ir, _visiting)
                 member_key.append(str(resolved))
-        # Check membership — convert to set for O(1) lookups since conditions
+        # Check membership — use cached set for O(1) lookups since conditions
         # are evaluated many times during domain enumeration
         members_list = sdef.members if hasattr(sdef, "members") else list(sdef)
         # If we have no members at compile time, this may be a dynamic subset
@@ -362,7 +362,11 @@ def _eval_expr(
                 f"Set membership for '{sname}' cannot be evaluated statically "
                 "because the set has no concrete members at compile time"
             )
-        members_set = set(members_list)
+        # Cache set on SetDef to avoid repeated O(n) conversion
+        members_set: set[str] = getattr(sdef, "_members_set", None)  # type: ignore[assignment]
+        if members_set is None:
+            members_set = set(members_list)
+            object.__setattr__(sdef, "_members_set", members_set)
         if len(member_key) == 1:
             return 1.0 if member_key[0] in members_set else 0.0
         # Multi-dimensional: check as dotted key or tuple
