@@ -184,7 +184,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Generated MCPs compile but give wrong results; hard-to-debug correctness issues
 **Estimated Research Time:** 1-2h
 **Owner:** Task 3
-**Verification Results:** :white_check_mark: Status: VERIFIED — `_alias_match()` already generates `sameas()` guards via `Call("sameas", (SymbolRef(expr_str), SymbolRef(wrt_str)))`. Guards are combined via `Binary("*", ...)` for multi-dimension aliases. The emitter handles `sameas()` as a standard GAMS built-in. **No additional design needed for guard generation.**
+**Verification Results:** :warning: Status: PARTIALLY VERIFIED — Implementation confirmed: `_alias_match()` generates `sameas()` guards via `Call("sameas", (SymbolRef(expr_str), SymbolRef(wrt_str)))`. Guards are combined via `Binary("*", ...)` for multi-dimension aliases, and the emitter handles `sameas()` as a standard GAMS built-in. **Guard generation verified. GAMS compile/runtime validation for numeric, string, and dotted elements, plus compile-time benchmarking with/without guards, remains pending.**
 
 ### KU-06: Incremental vs. Big-Bang Rollout
 

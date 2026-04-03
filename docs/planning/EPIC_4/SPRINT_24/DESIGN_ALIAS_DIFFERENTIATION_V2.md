@@ -113,6 +113,8 @@ if isinstance(expr_idx, IndexOffset) or isinstance(wrt_idx, IndexOffset):
 
 ### Golden-File Tests (49 Matching Models)
 
+**Prerequisite:** Ensure raw GAMS models are available locally (`data/gamslib/raw/*.gms` is gitignored; download via `scripts/gamslib/download_models.py` if not present).
+
 Generate and store stationarity equations before any changes:
 ```bash
 for model in $(python -c "
