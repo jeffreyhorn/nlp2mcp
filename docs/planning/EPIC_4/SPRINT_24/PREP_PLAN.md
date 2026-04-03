@@ -257,11 +257,11 @@ Alias differentiation is a significant AD architectural change that affects deri
 ### Changes
 
 - Created `docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md` with architecture status, per-pattern design, regression test plan, and incremental rollout strategy
-- Updated KNOWN_UNKNOWNS.md with verification results for KU-05 (VERIFIED), KU-06 (VERIFIED), KU-26 (VERIFIED)
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-05 (PARTIALLY VERIFIED), KU-06 (VERIFIED), KU-26 (VERIFIED)
 
 ### Result
 
-**Key Discovery:** The core alias differentiation architecture is **already fully implemented** (Sprint 23 PR #1173). `bound_indices`, `_alias_match()`, `_same_root_set()` are all wired through the derivative chain. Sprint 24's work is debugging edge cases in the existing implementation, not building new architecture. Estimated effort: 11-17h (within 14-18h budget).
+**Key Discovery:** The core alias differentiation architecture is **already fully implemented** (Sprint 23 PRs #1135/#1136). `bound_indices`, `_alias_match()`, `_same_root_set()` are all wired through the derivative chain. Sprint 24's work is debugging edge cases in the existing implementation, not building new architecture. Estimated effort: 11-17h (within 14-18h budget).
 
 Incremental rollout recommended: Phase 1 debug Pattern A (Days 1-3) → Phase 2 validate (Days 3-5) → Phase 3 Pattern C offset-alias (Days 5-7) → Phase 4 investigate B/D (Days 7-9).
 
@@ -290,7 +290,7 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 - [x] Regression test plan covers all 49 matching models (canary + golden-file + pipeline)
 - [x] Rollout strategy defined with decision criteria (4-phase incremental)
 - [x] Design reviewed against Sprint 23 implementation (found already complete)
-- [x] KU-03, KU-05, KU-06, KU-26 verified and updated in KNOWN_UNKNOWNS.md
+- [x] KU-03 (verified), KU-05 (partially verified — runtime pending), KU-06 (verified), KU-26 (verified) updated in KNOWN_UNKNOWNS.md
 
 ---
 

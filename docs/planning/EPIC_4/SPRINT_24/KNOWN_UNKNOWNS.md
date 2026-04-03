@@ -616,7 +616,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Effort exceeds 18h; compress or defer Priority 2-4 work
 **Estimated Research Time:** 0.5h (assess after Tasks 2-3)
 **Owner:** Task 3
-**Verification Results:** :white_check_mark: Status: VERIFIED — Architecture is already implemented (Sprint 23 PR #1173). Sprint 24 effort is debugging/extending edge cases, not building from scratch. Estimated 11-17h total (debug Pattern A 4-6h, validate 2-3h, Pattern C 2-3h, B/D investigation 2-3h, pipeline regression 1-2h). **Within the 14-18h PROJECT_PLAN estimate.**
+**Verification Results:** :white_check_mark: Status: VERIFIED — Architecture is already implemented (Sprint 23 PRs #1135/#1136). Sprint 24 effort is debugging/extending edge cases, not building from scratch. Estimated 11-17h total (debug Pattern A 4-6h, validate 2-3h, Pattern C 2-3h, B/D investigation 2-3h, pipeline regression 1-2h). **Within the 14-18h PROJECT_PLAN estimate.**
 
 ---
 

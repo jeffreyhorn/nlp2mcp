@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-**Key Finding: The core alias differentiation architecture is already implemented.** Sprint 23 PR #1173 implemented the `bound_indices` parameter threading, `_alias_match()` helper, and `_same_root_set()` resolver across the entire derivative chain. The mechanism is wired from `differentiate_expr()` through `_diff_sum()`, `_diff_varref()`, and `_partial_collapse_sum()`.
+**Key Finding: The core alias differentiation architecture is already implemented.** Sprint 23 PRs #1135/#1136 implemented the `bound_indices` parameter threading, `_alias_match()` helper, and `_same_root_set()` resolver across the entire derivative chain. The mechanism is wired from `differentiate_expr()` through `_diff_sum()`, `_diff_varref()`, and `_partial_collapse_sum()`.
 
 Sprint 24's alias differentiation work should focus on:
 1. **Verifying** the existing implementation against all 12 issues
