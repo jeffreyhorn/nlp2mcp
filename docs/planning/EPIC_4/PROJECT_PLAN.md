@@ -1106,9 +1106,9 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — |
 | lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | 0 | 0 | 0 | 0 |
 | internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | 0 | 0 | 0 | 0 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | ≤15 | ≤10 | ≤5 | ≤5 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | ≤15 | ≤10 | ≤5 | maintain ≤5 |
 | path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | ≤10 | ≤8 | ≤5 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | ≤8 | ≤5 | ≤5 | ≤5 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | ≤8 | ≤5 | maintain ≤5 | maintain ≤5 |
 | Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | ≥100% | ≥100% | ≥100% | ≥100% |
 | Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | ≥97% | ≥97% | ≥97% | ≥97% |
 | Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | ≥66% | ≥68% | ≥75% | ≥80% |
