@@ -144,7 +144,7 @@ Alias differentiation is Sprint 24's Priority 1 and the single highest-leverage 
 
 ### Background
 
-- Sprint 23 alias-aware differentiation: PR #1173 (partial fix)
+- Sprint 23 alias-aware differentiation: PRs #1135/#1136 (implementation)
 - Design document: `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md`
 - Key source files: `src/ad/derivative_rules.py`, `src/kkt/stationarity.py`
 - 12 open issues: #1137 (qabel/abel), #1138 (CGE models), #1139 (meanvar), #1140 (PS-family), #1141 (kand), #1142 (launch), #1143 (polygon), #1144 (catmix), #1145 (cclinpts), #1146 (himmel16), #1147 (camshape), #1150 (AD regression)
@@ -232,7 +232,7 @@ Alias differentiation is a significant AD architectural change that affects deri
 ### Background
 
 - Sprint 23 design: `docs/planning/EPIC_4/SPRINT_23/DESIGN_ALIAS_DIFFERENTIATION.md`
-- Sprint 23 partial implementation: PR #1173
+- Sprint 23 implementation: PRs #1135/#1136
 - Key source files: `src/ad/derivative_rules.py` (`_diff_varref`, `_diff_sum`, `_partial_collapse_sum`), `src/kkt/stationarity.py` (`_replace_indices_in_expr`, `_add_indexed_jacobian_terms`)
 - Task 2 root cause classification provides the pattern inventory
 
