@@ -463,7 +463,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 **Scope note:** Pipeline runs 147 models (NLP/QCP/LP scope). Original targets were set against 160-model scope (including 13 MIP/other models later excluded). Both scopes shown where applicable.
 
-| Stage | Baseline (147-run) | Final (147-run) | Delta | Target (160-scope) | Met? |
+| Stage | Baseline (147-run) | Final (147-run) | Delta | Target (original scope) | Met? |
 |---|---|---|---|---|---|
 | Parse | 144/147 (98.0%) | **147/147 (100.0%)** | +3 | ≥156/160 (97.5%) | ✅ 147/147=100% run; 147/160=91.9% total |
 | Translate | 128/147 (87.1%) | **140/147 (95.2%)** | +12 | ≥145/156 (93.0%) | ⚠️ 140/147=95.2% run; 140/156=89.7% original scope |
@@ -490,7 +490,7 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 #### Acceptance Criteria Summary
 
-| Criterion | Target (160-scope) | Actual (147-run) | Actual (160-scope) | Status |
+| Criterion | Target (original scope) | Actual (147-run) | Actual (original scope) | Status |
 |---|---|---|---|---|
 | Parse | ≥156/160 (97.5%) | 147/147 (100.0%) | 147/160 (91.9%) | ⚠️ 100% of run scope; below 160-scope target |
 | Translate | ≥145/156 (93.0%) | 140/147 (95.2%) | 140/156 (89.7%) | ❌ MISSED on original scope |
