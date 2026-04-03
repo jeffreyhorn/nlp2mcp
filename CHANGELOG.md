@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 23 Summary - 2026-04-02
+
+**Duration:** 15 days (Day 0 – Day 14) | **1/8 original-scope criteria met (Tests)**
+
+#### Metrics (Baseline → Final, 147-run scope)
+- **Parse:** 144/147 → 147/147 (100.0%) | **Translate:** 128/147 → 140/147 (95.2%, +12)
+- **Solve:** 81 → 86 (+5) | **Match:** 47 → 49 (+2) | **Tests:** 4,209 → 4,364 (+155)
+- **path_syntax_error:** 18 → 23 (+5 influx) | **path_solve_terminated:** 10 → 12 (+2 influx)
+- **model_infeasible:** 12 → 11 (-1 net; 1 gross fix, 0 influx)
+
+#### Key Changes
+- LP fast path for symbolic differentiation — recovers 7 translation timeouts (PR #1172)
+- Subset-superset domain widening — fixes $171 compilation errors for 4 models (PR #1176)
+- SetMembershipTest evaluation in condition_eval.py — recovers mine translate (PR #1198)
+- Alias-aware differentiation improvements (PR #1173)
+- Parse 100%: lop grammar fix, model composition/subtraction, grid computing functions
+- Unify parse_file entry points (parse_model_file, parse_model_text) (PR #1170)
+- Pipeline timeout increased to 300s for large models
+- 14 issues closed during buffer/overflow (Days 7-11)
+- 20 issues labeled sprint-24 for deferred work
+
+#### PRs Merged
+#1167, #1168, #1170, #1171, #1172, #1173, #1174, #1176, #1180, #1181, #1183, #1184, #1186, #1187, #1188, #1189, #1190, #1191, #1193, #1194, #1196, #1197, #1198, #1200, #1201
+
 ### Sprint 23 Preparation
 
 - Complete Sprint 23 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories + 1 carryforward section, covering path_solve_terminated, model_infeasible, match rate, path_syntax_error, and translate failures

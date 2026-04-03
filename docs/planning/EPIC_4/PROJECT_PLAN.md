@@ -1012,20 +1012,22 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 | S24 | S25 | S26 |
-|--------|-----|-----|-----|--------------|--------------|-----|-----|-----|-----|
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 | S25 | S26 |
+|--------|-----|-----|-----|--------------|--------------|--------------|-----|-----|-----|
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | <8 | <5 | <5 | <5 |
-| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | <5 | <3 | <3 | <3 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | ≤15 | ≤10 | ≤5 | ≤5 |
-| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | ≤5 | ≤3 | ≤3 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | **12**² | ≤8 | ≤5 | ≤5 | ≤5 |
-| Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | ≥97.5% | ≥98% | ≥98% | ≥98% |
-| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | ≥93% | ≥95% | ≥95% | ≥95% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | ≥70% | ≥75% | ≥75% | ≥80% |
-| Full Pipeline Match (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | ≥34% | ≥40% | ≥50% | ≥50% |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | <5 | <5 | <5 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | <3 | <3 | <3 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | ≤15 | ≤10 | ≤5 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | ≤10 | ≤5 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | ≤8 | ≤5 | ≤5 |
+| Parse Rate (valid corpus) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | ≥100% | ≥100% | ≥100% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | ≥97% | ≥97% | ≥97% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | ≥68% | ≥75% | ≥80% |
+| Full Pipeline Match (valid corpus) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | ≥37% | ≥45% | ≥50% |
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S26 targets are in-scope counts.
+
+³ Sprint 23 pipeline scope changed from 160 to 147 models (13 MIP/other models excluded). Parse and match percentages are relative to the 147-run scope. lexer_invalid_char dropped to 0 because the 4 unparseable models were excluded from the 147-model scope.
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
