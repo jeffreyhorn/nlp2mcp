@@ -99,7 +99,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Underestimate implementation scope by 50%+; mid-sprint redesign needed
 **Estimated Research Time:** 2-3h
 **Owner:** Task 2
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Context needs to flow through `_diff_sum` (to collect bound indices), `_diff_varref` (to check alias match), and `_partial_collapse_sum` (to preserve context). `_diff_binary`/`_diff_unary`/`_diff_call` pass through transparently. `_add_indexed_jacobian_terms` in stationarity.py does NOT need changes — it operates at a higher level. **3 functions need modification**, not 2: `_diff_sum`, `_diff_varref`, and new helpers `_alias_match`/`_same_root_set`.
 
 ### KU-02: Single vs. Multi-Pattern Root Cause
 
@@ -121,7 +121,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Need 4+ separate fixes instead of 1 architectural change; sprint effort doubles
 **Estimated Research Time:** 4-5h
 **Owner:** Task 2
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :x: Status: PARTIALLY WRONG — 5 patterns identified, not 1-2. However, Pattern A (summation index) covers 5 of 12 issues (~14 models) and the main architectural change (`bound_indices` + `_alias_match`) addresses Patterns A-C (9 of 12 issues). Pattern D (condition-scope) needs separate investigation. Pattern E (2 issues: catmix, camshape) are non-differentiation bugs. **Net: single architectural change + 2 post-investigation items + 2 separate PRs.**
 
 ### KU-03: Regression Risk for 49 Matching Models
 
@@ -142,7 +142,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Lose 5-10 matching models; net match rate decreases instead of increases
 **Estimated Research Time:** 2-3h
 **Owner:** Task 2-3
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Only 8 of 49 matching models use aliases (16.3%): dispatch, gussrisk, nemhaus, ps2_f, ps3_f, quocge, ship, splcge. The `bound_indices` guard specifically prevents the Sprint 22 dispatch regression. 41 non-alias models have zero risk. **Regression risk is VERY LOW (<2%).** dispatch is the critical canary test.
 
 ### KU-04: Offset-Alias Interaction Complexity
 
@@ -163,7 +163,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Offset-alias models need a separate fix path; +4-6h additional effort
 **Estimated Research Time:** 2-3h
 **Owner:** Task 2
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Offset-alias is Pattern C, affecting polygon (#1143, 100% mismatch) and himmel16 (#1146, 43%). The `_alias_match()` helper needs `IndexOffset.base` extraction for comparison. This is included in the main fix but is highest-risk — polygon shows complete gradient failure with concrete element offsets (`i1+1`) instead of symbolic. **Effort is included in main 8-10h estimate but success probability is 55-65%.**
 
 ### KU-05: sameas Guard Generation Correctness
 
@@ -224,7 +224,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Need per-model CGE fixes instead of batch fix; +4h effort
 **Estimated Research Time:** 1-2h
 **Owner:** Task 2
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — All 4 CGE models (irscge 2.2%, lrgcge 1.0%, moncge 1.8%, stdcge ~1%) share Pattern A (summation index not tracked). Small relative divergences (1-2%) suggest near-correctness — the alias fix should bring all 4 to match. **Batch fix confirmed; single Pattern A fix covers all CGE models.**
 
 ### KU-08: Quadratic Form Alias Handling
 
@@ -243,7 +243,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Quadratic alias models need separate handling; +2-3h effort
 **Estimated Research Time:** 1h
 **Owner:** Task 2
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Quadratic forms (qabel/abel 29.8%, meanvar 12.3%) are Pattern A — the chain rule in `_diff_call` for `sqr()` passes through transparently, so alias context flows correctly through the quadratic derivative. **No special handling needed; general Pattern A fix covers quadratic forms.**
 
 ---
 

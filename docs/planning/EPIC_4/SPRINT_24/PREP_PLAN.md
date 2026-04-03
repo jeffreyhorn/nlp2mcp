@@ -126,13 +126,13 @@ grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
 
 ## Task 2: Analyze Alias Differentiation Root Causes (#1111 Family)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 4-5 hours
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas to investigate)
-**Unknowns to Verify:** KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
+**Unknowns Verified:** KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
 
 ### Objective
 
@@ -169,11 +169,19 @@ Alias differentiation is Sprint 24's Priority 1 and the single highest-leverage 
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md` with per-issue classification
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-01 (VERIFIED), KU-02 (PARTIALLY WRONG), KU-03 (VERIFIED), KU-04 (VERIFIED), KU-07 (VERIFIED), KU-08 (VERIFIED)
 
 ### Result
 
-*To be completed*
+5 root cause patterns identified across 12 issues:
+- **Pattern A (summation index):** 5 issues, ~14 models — main architectural fix
+- **Pattern B (root-set mapping):** 1 issue (kand) — post-investigation
+- **Pattern C (offset-alias):** 2 issues (polygon, himmel16) — included in main fix, high risk
+- **Pattern D (condition-scope):** 1 issue (launch) — post-investigation
+- **Pattern E (non-differentiation):** 2 issues (catmix, camshape) — separate PRs
+
+Main fix (Patterns A-C): 8-10h. Regression risk: VERY LOW (<2%, 8 of 49 matching use aliases).
 
 ### Verification
 
@@ -194,12 +202,12 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 
 ### Acceptance Criteria
 
-- [ ] All 12 alias-differentiation issues classified by root cause
-- [ ] Common patterns identified and named
-- [ ] Regression risk for 49 currently-matching models assessed
-- [ ] Fix effort estimated per pattern
-- [ ] Analysis informs Task 3 design
-- [ ] KU-01, KU-02, KU-03, KU-04, KU-07, KU-08 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 12 alias-differentiation issues classified by root cause
+- [x] Common patterns identified and named (5 patterns: A-E)
+- [x] Regression risk for 49 currently-matching models assessed (8 use aliases, <2% risk)
+- [x] Fix effort estimated per pattern (8-10h main, +4h post-investigation)
+- [x] Analysis informs Task 3 design
+- [x] KU-01, KU-02, KU-03, KU-04, KU-07, KU-08 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
