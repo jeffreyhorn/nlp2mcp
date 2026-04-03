@@ -872,19 +872,19 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Final Parse Fixes (2-3h)**
   - Address any remaining parse failures that are fixable
   - Implement GAMS preprocessing for intractable patterns if needed
-  - Target: parse rate ≥ 98% of valid corpus
+  - Target: maintain 100% parse rate of pipeline scope
   - **Deliverable:** Final parse fixes
 
 - **Final Translation Fixes (2-3h)**
   - Address remaining translation blockers
   - Handle newly-discovered patterns from late-arriving parsed models
-  - Target: translate rate ≥ 95% of parsed models
+  - Target: translate rate ≥ 97% of parsed models
   - **Deliverable:** Final translation fixes
 
 - **Final Solve Fixes (2h)**
   - Address any remaining solvable `path_syntax_error` or `path_solve_terminated` models
   - Apply solution forcing strategies to divergent models
-  - Target: solve rate ≥ 75% of translated models
+  - Target: solve rate ≥ 68% of translated models
   - **Deliverable:** Final solve fixes
 
 ### Pipeline Retest (~2h)
@@ -976,7 +976,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ### Pipeline Retest (~2h)
 - Full pipeline run with PATH feedback integration
 - Record final metrics
-- **Deliverable:** Updated metrics; expected full pipeline match ≥ 50%
+- **Deliverable:** Updated metrics; expected full pipeline match ≥ 45%
 
 ## Deliverables
 - Regression-based performance benchmarks (replacing absolute thresholds)
