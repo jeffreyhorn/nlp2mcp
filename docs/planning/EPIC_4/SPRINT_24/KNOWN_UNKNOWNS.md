@@ -184,7 +184,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Generated MCPs compile but give wrong results; hard-to-debug correctness issues
 **Estimated Research Time:** 1-2h
 **Owner:** Task 3
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :warning: Status: PARTIALLY VERIFIED — Implementation confirmed: `_alias_match()` generates `sameas()` guards via `Call("sameas", (SymbolRef(expr_str), SymbolRef(wrt_str)))`. Guards are combined via `Binary("*", ...)` for multi-dimension aliases, and the emitter handles `sameas()` as a standard GAMS built-in. **Guard generation verified. GAMS compile/runtime validation for numeric, string, and dotted elements, plus compile-time benchmarking with/without guards, remains pending.**
 
 ### KU-06: Incremental vs. Big-Bang Rollout
 
@@ -205,7 +205,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Intermediate states cause cascading regressions; must do all-or-nothing
 **Estimated Research Time:** 1-2h
 **Owner:** Task 3
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Incremental rollout is feasible. The architecture is already implemented; Sprint 24 work is debugging edge cases. Pattern A can be debugged independently of Pattern C (offset-alias). Recommended: Phase 1 (Pattern A debug, Days 1-3) → Phase 2 (validate, Days 3-5) → Phase 3 (Pattern C, Days 5-7) → Phase 4 (B/D investigation, Days 7-9). **Decision criteria: proceed if 0 regressions and ≥2 models improve per phase.**
 
 ### KU-07: CGE Model Alias Patterns
 
@@ -616,7 +616,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Effort exceeds 18h; compress or defer Priority 2-4 work
 **Estimated Research Time:** 0.5h (assess after Tasks 2-3)
 **Owner:** Task 3
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Architecture is already implemented (Sprint 23 PRs #1135/#1136). Sprint 24 effort is debugging/extending edge cases, not building from scratch. Estimated 11-17h total (debug Pattern A 4-6h, validate 2-3h, Pattern C 2-3h, B/D investigation 2-3h, pipeline regression 1-2h). **Within the 14-18h PROJECT_PLAN estimate.**
 
 ---
 
