@@ -28,7 +28,7 @@ This prep plan focuses on:
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint Goal Addressed |
 |---|------|----------|-----------|--------------|----------------------|
-| 1 | Create Sprint 24 Known Unknowns List | Critical | 2-3h | None | All priorities — risk identification | ✅ |
+| 1 | Create Sprint 24 Known Unknowns List | Critical | 2-3h | None | All priorities — risk identification |
 | 2 | Analyze Alias Differentiation Root Causes (#1111 Family) | Critical | 4-5h | Task 1 | Priority 1: alias differentiation (~20 models) |
 | 3 | Design Alias Differentiation Architecture | Critical | 3-4h | Task 2 | Priority 1: summation-context tracking design |
 | 4 | Triage path_syntax_error Models (23) | High | 3-4h | Task 1 | Priority 2: path_syntax_error ≤ 15 |
@@ -132,7 +132,7 @@ grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas to investigate)
-**Unknowns Verified:** KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
+**Unknowns to Verify:** KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
 
 ### Objective
 
@@ -211,7 +211,7 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 2 (root cause analysis informs architecture)
-**Unknowns Verified:** KU-03, KU-05, KU-06, KU-26
+**Unknowns to Verify:** KU-03, KU-05, KU-06, KU-26
 
 ### Objective
 
@@ -291,7 +291,7 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas)
-**Unknowns Verified:** KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
+**Unknowns to Verify:** KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
 
 ### Objective
 
@@ -368,7 +368,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas)
-**Unknowns Verified:** KU-14, KU-15, KU-16, KU-17, KU-18
+**Unknowns to Verify:** KU-14, KU-15, KU-16, KU-17, KU-18
 
 ### Objective
 
@@ -439,7 +439,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXIST
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
-**Unknowns Verified:** KU-19, KU-20, KU-21
+**Unknowns to Verify:** KU-19, KU-20, KU-21
 
 ### Objective
 
@@ -511,7 +511,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
-**Unknowns Verified:** KU-25
+**Unknowns to Verify:** KU-25
 
 ### Objective
 
@@ -579,7 +579,7 @@ git diff --stat data/gamslib/gamslib_status.json | head -3
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1-7 (review after all research/analysis is complete)
-**Unknowns Verified:** (validates PR9/PR10/PR11 compliance — cross-cutting process check)
+**Unknowns to Verify:** (validates PR9/PR10/PR11 compliance — cross-cutting process check)
 
 ### Objective
 
@@ -646,7 +646,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/RETROSPECTIVE_ALIGNMENT.md && echo "EXIST
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1-8 (all prep research must be complete)
-**Unknowns Verified:** (integrates all verified unknowns into schedule)
+**Unknowns to Verify:** (integrates all verified unknowns into schedule)
 
 ### Objective
 

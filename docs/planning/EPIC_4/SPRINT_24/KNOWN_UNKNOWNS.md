@@ -276,7 +276,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Assumption:** Some path_syntax_error models fail because incorrect derivatives generate invalid GAMS code; fixing aliases will eliminate those errors.
 
 **Research Questions:**
-1. How many of the 24 path_syntax_error models use aliases?
+1. How many of the 23 path_syntax_error models use aliases?
 2. Which models have compilation errors in stationarity equations (vs. original equations)?
 3. Does fixing the derivative change the equation structure enough to eliminate syntax errors?
 4. Can we identify the overlap without implementing the full alias fix?
@@ -359,7 +359,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Assumption:** Several model_infeasible models are infeasible because of incorrect Jacobian entries from alias differentiation errors, and fixing aliases will recover them.
 
 **Research Questions:**
-1. Which of the 14 model_infeasible models use aliases?
+1. Which of the 11 model_infeasible models use aliases?
 2. Do bearing (#1199) and chenery (#1177) have alias-related Jacobian errors?
 3. How many model_infeasible models would move to model_optimal with correct derivatives?
 4. Is catmix (#1144) a model_infeasible caused by alias regression?
