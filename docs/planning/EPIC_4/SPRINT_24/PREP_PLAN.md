@@ -294,9 +294,9 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 
 ---
 
-## Task 4: Triage path_syntax_error Models (23)
+## Task 4: Triage path_syntax_error Models (24)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -337,37 +337,36 @@ path_syntax_error increased from 18 to 23 during Sprint 23 due to translate infl
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md` with 24-model classification
+- Updated KNOWN_UNKNOWNS.md: KU-09 (WRONG), KU-10 (VERIFIED), KU-11 (VERIFIED), KU-12 (VERIFIED), KU-13 (still INCOMPLETE), KU-22 (VERIFIED), KU-23 (VERIFIED)
 
 ### Result
 
-*To be completed*
+24 models classified into 7 subcategories (up from 20 in Sprint 23). New subcategory H (concrete element offsets) is the dominant new pattern with 8 models — all use aliases. 15 of 24 models (62.5%) use aliases. Priority fix: subcategory H batch fix (4-6h) + 2-3 subcategory A models → ≤ 15 target achievable.
 
 ### Verification
 
 ```bash
-# Verify triage document exists
 test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md && echo "EXISTS" || echo "MISSING"
-# Should classify all 23 models
 grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 ```
 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md` with per-model classification
-- Subcategory distribution table
-- Fix priority ranking (which 8+ to target)
-- Overlap analysis with alias differentiation
-- Updated KNOWN_UNKNOWNS.md with verification results for KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
+- Subcategory distribution table (7 subcategories)
+- Fix priority ranking (Tier 1: H batch fix, Tier 2: A quick fixes, Tier 3: other)
+- Alias overlap analysis (15/24 = 62.5%)
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-09–KU-13, KU-22, KU-23
 
 ### Acceptance Criteria
 
-- [ ] All 23 path_syntax_error models classified by subcategory
-- [ ] 5 influx models identified and classified
-- [ ] Fix effort estimated per subcategory
-- [ ] Overlap with alias differentiation documented
-- [ ] Priority ranking for ≤ 15 target
-- [ ] KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 24 path_syntax_error models classified by subcategory
+- [x] 11 influx models identified and classified (up from expected 5)
+- [x] Fix effort estimated per subcategory
+- [x] Overlap with alias differentiation documented (62.5% use aliases)
+- [x] Priority ranking for ≤ 15 target (H batch fix + 2-3 A models)
+- [x] KU-09–KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md (KU-13 deferred to implementation)
 
 ---
 
