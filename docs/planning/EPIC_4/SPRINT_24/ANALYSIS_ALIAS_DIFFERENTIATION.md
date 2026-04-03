@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-All 12 alias-differentiation issues were classified into 5 root cause patterns. The dominant pattern (A: summation index not tracked) accounts for 5 of 12 issues and ~14 models. The Sprint 23 design document's `bound_indices` mechanism directly addresses Patterns A-C. Patterns D and E require separate fixes. Regression risk is very low (<2%) — only 8 of 49 matching models use aliases, and the `bound_indices` guard specifically prevents the Sprint 22 dispatch regression.
+All 12 alias-differentiation issues were classified into 5 root cause patterns. The dominant pattern (A: summation index not tracked) accounts for 5 of 12 issues and ~14 models. The Sprint 23 design document's `bound_indices` mechanism directly addresses Patterns A-C. Patterns D and E require separate fixes. Regression risk is very low — only 8 of 49 matching models use aliases (16.3%), and the `bound_indices` guard specifically prevents the known regression vector, and the `bound_indices` guard specifically prevents the Sprint 22 dispatch regression.
 
 **Key Finding:** A single architectural change (summation-context tracking via `bound_indices` in `_diff_varref`) addresses 8-9 of 12 issues. 2 issues (#1144, #1147) are non-differentiation bugs requiring separate fixes.
 
@@ -133,7 +133,7 @@ Of 49 currently-matching models, **8 use aliases** (16.3%):
 - Sprint 22 naive fix broke this because `j` incorrectly matched `i`
 - The `bound_indices` mechanism specifically prevents this: when `j` is bound (sum variable), no alias match is generated
 
-### Risk Level: VERY LOW (<2%)
+### Risk Level: VERY LOW
 
 - **41 non-alias matching models:** Zero risk — alias code path unreachable
 - **8 alias matching models:** Protected by `bound_indices` guard

@@ -204,7 +204,7 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 
 - [x] All 12 alias-differentiation issues classified by root cause
 - [x] Common patterns identified and named (5 patterns: A-E)
-- [x] Regression risk for 49 currently-matching models assessed (8 use aliases, <2% risk)
+- [x] Regression risk for 49 currently-matching models assessed (8 use aliases, very low risk)
 - [x] Fix effort estimated per pattern (8-10h main, +4h post-investigation)
 - [x] Analysis informs Task 3 design
 - [x] KU-01, KU-02, KU-03, KU-04, KU-07, KU-08 verified and updated in KNOWN_UNKNOWNS.md

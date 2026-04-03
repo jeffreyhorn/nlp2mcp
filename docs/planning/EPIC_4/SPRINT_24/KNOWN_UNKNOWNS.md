@@ -99,7 +99,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Underestimate implementation scope by 50%+; mid-sprint redesign needed
 **Estimated Research Time:** 2-3h
 **Owner:** Task 2
-**Verification Results:** :white_check_mark: Status: VERIFIED — Context needs to flow through `_diff_sum` (to collect bound indices), `_diff_varref` (to check alias match), and `_partial_collapse_sum` (to preserve context). `_diff_binary`/`_diff_unary`/`_diff_call` pass through transparently. `_add_indexed_jacobian_terms` in stationarity.py does NOT need changes — it operates at a higher level. **3 functions need modification**, not 2: `_diff_sum`, `_diff_varref`, and new helpers `_alias_match`/`_same_root_set`.
+**Verification Results:** :white_check_mark: Status: VERIFIED — Context needs to flow through `_diff_sum` (to collect bound indices), `_diff_varref` (to check alias match), and `_partial_collapse_sum` (to preserve context). `_diff_binary`/`_diff_unary`/`_diff_call` pass through transparently. `_add_indexed_jacobian_terms` in stationarity.py does NOT need changes — it operates at a higher level. **3 existing functions need modification**: `_diff_sum`, `_diff_varref`, and `_partial_collapse_sum`. **2 new helpers should be added**: `_alias_match` and `_same_root_set`.
 
 ### KU-02: Single vs. Multi-Pattern Root Cause
 
@@ -142,7 +142,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Lose 5-10 matching models; net match rate decreases instead of increases
 **Estimated Research Time:** 2-3h
 **Owner:** Task 2-3
-**Verification Results:** :white_check_mark: Status: VERIFIED — Only 8 of 49 matching models use aliases (16.3%): dispatch, gussrisk, nemhaus, ps2_f, ps3_f, quocge, ship, splcge. The `bound_indices` guard specifically prevents the Sprint 22 dispatch regression. 41 non-alias models have zero risk. **Regression risk is VERY LOW (<2%).** dispatch is the critical canary test.
+**Verification Results:** :white_check_mark: Status: VERIFIED — Only 8 of 49 matching models use aliases (16.3%): dispatch, gussrisk, nemhaus, ps2_f, ps3_f, quocge, ship, splcge. The `bound_indices` guard specifically prevents the Sprint 22 dispatch regression. 41 non-alias models have zero risk. **Regression risk is VERY LOW** — 8 exposed models are all protected by the bound_indices guard. dispatch is the critical canary test.
 
 ### KU-04: Offset-Alias Interaction Complexity
 
