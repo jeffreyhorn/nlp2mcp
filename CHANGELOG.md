@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Complete Sprint 24 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories (Alias Differentiation, path_syntax_error, model_infeasible, Translation Timeout, Sprint 23 Carryforward) + 2 cross-cutting
 - Sprint 23 KU-28/KU-29/KU-32 carried forward as Sprint 24 KU-22/KU-23/KU-24
 - Task-to-Unknown mapping assigns verification responsibility to Prep Tasks 2-9
-- Updated PREP_PLAN.md Tasks 2-9 with Unknowns Verified metadata and acceptance criteria
+- Updated PREP_PLAN.md Tasks 2-9 with "Unknowns to Verify" metadata and acceptance criteria
 - Created Sprint 24 PREP_PLAN.md with 9 preparation tasks (21-29h estimated)
 
 ### Sprint 23 Summary - 2026-04-02

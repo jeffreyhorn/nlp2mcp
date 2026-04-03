@@ -40,8 +40,8 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 
 - **Total Unknowns:** 26
 - **Priority Distribution:** 7 Critical (27%), 10 High (38%), 7 Medium (27%), 2 Low (8%)
-- **Estimated Total Research Time:** 29-38 hours
-- **Categories:** 4 major + 1 carryforward
+- **Estimated Total Research Time:** 21-29 hours
+- **Categories:** 4 major + 1 cross-cutting + 1 carryforward
 
 ---
 
