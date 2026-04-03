@@ -121,7 +121,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Need 4+ separate fixes instead of 1 architectural change; sprint effort doubles
 **Estimated Research Time:** 4-5h
 **Owner:** Task 2
-**Verification Results:** :x: Status: PARTIALLY WRONG — 5 patterns identified, not 1-2. However, Pattern A (summation index) covers 5 of 12 issues (~14 models) and the main architectural change (`bound_indices` + `_alias_match`) addresses Patterns A-C (9 of 12 issues). Pattern D (condition-scope) needs separate investigation. Pattern E (2 issues: catmix, camshape) are non-differentiation bugs. **Net: single architectural change + 2 post-investigation items + 2 separate PRs.**
+**Verification Results:** :x: Status: PARTIALLY WRONG — 5 patterns identified, not 1-2. However, Pattern A (summation index) covers 6 of 12 issues (~14 models) and the main architectural change (`bound_indices` + `_alias_match`) addresses Patterns A-C (10 of 12 issues). Pattern D (condition-scope, 1 issue) needs separate investigation. Pattern E (2 issues: catmix, camshape) are non-differentiation bugs. **Net: single architectural change covers 10/12 + 1 post-investigation item + 2 separate PRs.**
 
 ### KU-03: Regression Risk for 49 Matching Models
 

@@ -175,7 +175,7 @@ Alias differentiation is Sprint 24's Priority 1 and the single highest-leverage 
 ### Result
 
 5 root cause patterns identified across 12 issues:
-- **Pattern A (summation index):** 5 issues, ~14 models — main architectural fix
+- **Pattern A (summation index):** 6 issues (#1137-#1140, #1145, #1150), ~14 models — main architectural fix
 - **Pattern B (root-set mapping):** 1 issue (kand) — post-investigation
 - **Pattern C (offset-alias):** 2 issues (polygon, himmel16) — included in main fix, high risk
 - **Pattern D (condition-scope):** 1 issue (launch) — post-investigation

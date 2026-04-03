@@ -10,7 +10,7 @@
 
 All 12 alias-differentiation issues were classified into 5 root cause patterns. The dominant pattern (A: summation index not tracked) accounts for 5 of 12 issues and ~14 models. The Sprint 23 design document's `bound_indices` mechanism directly addresses Patterns A-C. Patterns D and E require separate fixes. Regression risk is very low — only 8 of 49 matching models use aliases (16.3%), and the `bound_indices` guard specifically prevents the known regression vector, and the `bound_indices` guard specifically prevents the Sprint 22 dispatch regression.
 
-**Key Finding:** A single architectural change (summation-context tracking via `bound_indices` in `_diff_varref`) addresses 8-9 of 12 issues. 2 issues (#1144, #1147) are non-differentiation bugs requiring separate fixes.
+**Key Finding:** A single architectural change (summation-context tracking via `bound_indices` in `_diff_varref`) addresses 10 of 12 issues (Patterns A-C). 2 issues (#1144, #1147) are non-differentiation bugs requiring separate fixes.
 
 ---
 
@@ -18,7 +18,7 @@ All 12 alias-differentiation issues were classified into 5 root cause patterns. 
 
 ### Pattern A: Summation Index Not Tracked Through Derivative Chain
 
-**Issues:** #1137 (qabel/abel), #1138 (CGE models), #1139 (meanvar), #1140 (PS-family), #1145 (cclinpts)
+**Issues:** #1137 (qabel/abel), #1138 (CGE models), #1139 (meanvar), #1140 (PS-family), #1145 (cclinpts), #1150 (AD regression)
 **Models:** ~14 (qabel, abel, irscge, lrgcge, moncge, stdcge, meanvar, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps5_s_mn, ps10_s_mn, cclinpts)
 **Fix Success Estimate:** 75-85%
 
@@ -90,7 +90,7 @@ All 12 alias-differentiation issues were classified into 5 root cause patterns. 
 
 | Issue | Model(s) | Pattern | Rel. Diff | Fix Prob. | Effort |
 |-------|----------|---------|-----------|-----------|--------|
-| #1137 | qabel, abel | A | 29.8% | 85% | Included in main fix |
+| #1137 | qabel, abel | A | 8.9-29.8% | 85% | Included in main fix |
 | #1138 | irscge, lrgcge, moncge, stdcge | A | 1.0-2.2% | 80% | Included in main fix |
 | #1139 | meanvar | A | 12.3% | 75% | Included in main fix |
 | #1140 | ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps5_s_mn, ps10_s_mn | A | 0.5-27% | 75% | Included in main fix |
