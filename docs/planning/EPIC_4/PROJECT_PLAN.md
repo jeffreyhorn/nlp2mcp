@@ -743,7 +743,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 # Sprint 24 (Weeks 13–14): Alias Differentiation & Error Category Reduction
 
-**Goal:** Address the single largest blocker (alias-aware differentiation #1111 family, ~20 models) and reduce error categories. Push solve from 86 to ≥ 95, match from 49 to ≥ 55. Apply Sprint 23 process recommendations: set targets against actual pipeline scope (PR9), budget for error category influx (PR10), prioritize highest-leverage architectural fix in Days 1-5 (PR11).
+**Goal:** Address the single largest blocker (alias-aware differentiation #1111 family, ~20 models) and reduce error categories. Push solve from 86 to ≥ 95, match from 49 to ≥ 55. Apply Sprint 23 process recommendations by setting targets against actual pipeline scope, budgeting for error category influx, and prioritizing the highest-leverage architectural fix in Days 1-5. (See `SPRINT_23/SPRINT_RETROSPECTIVE.md` §New Recommendations PR9–PR11 for details.)
 
 **Note:** Sprint 23 retrospective identified 20 issues labeled `sprint-24`. Alias differentiation is Priority 1 (highest leverage for both solve and match improvements).
 
