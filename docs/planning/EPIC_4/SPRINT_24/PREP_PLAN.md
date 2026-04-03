@@ -28,7 +28,7 @@ This prep plan focuses on:
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint Goal Addressed |
 |---|------|----------|-----------|--------------|----------------------|
-| 1 | Create Sprint 24 Known Unknowns List | Critical | 2-3h | None | All priorities — risk identification |
+| 1 | Create Sprint 24 Known Unknowns List | Critical | 2-3h | None | All priorities — risk identification | ✅ |
 | 2 | Analyze Alias Differentiation Root Causes (#1111 Family) | Critical | 4-5h | Task 1 | Priority 1: alias differentiation (~20 models) |
 | 3 | Design Alias Differentiation Architecture | Critical | 3-4h | Task 2 | Priority 1: summation-context tracking design |
 | 4 | Triage path_syntax_error Models (23) | High | 3-4h | Task 1 | Priority 2: path_syntax_error ≤ 15 |
@@ -48,7 +48,7 @@ Tasks 6 and 7 are independent and can run in parallel with any other task.
 
 ## Task 1: Create Sprint 24 Known Unknowns List
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -84,11 +84,20 @@ Sprint 23 Known Unknowns (32 entries: 26 original + 6 end-of-sprint discoveries)
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md` with 26 unknowns across 5 categories + cross-cutting
+- Sprint 23 KU-28 → KU-22, KU-29 → KU-23, KU-32 → KU-24
+- Task-to-Unknown mapping table in Appendix A assigns verification responsibility
+- Priority distribution: 7 Critical (27%), 10 High (38%), 7 Medium (27%), 2 Low (8%)
 
 ### Result
 
-*To be completed*
+26 unknowns documented across 6 sections:
+- **Category 1: Alias-Aware Differentiation** (8 KUs: KU-01–KU-08) — covers summation-context scope, multi-pattern root cause, regression risk, offset-alias, sameas guards, rollout strategy, CGE patterns, quadratic forms
+- **Category 2: path_syntax_error Reduction** (5 KUs: KU-09–KU-13) — covers influx patterns, alias overlap, concrete offsets, batch fixes, error influx from alias fix
+- **Category 3: model_infeasible Reduction** (5 KUs: KU-14–KU-18) — covers Jacobian overlap, bearing, chenery, influx risk, Category B fixability
+- **Category 4: Translation Timeout & Internal Error** (3 KUs: KU-19–KU-21) — covers intractability, sparse Jacobian, internal error
+- **Sprint 23 Carryforward** (3 KUs: KU-22–KU-24) — dynamic bounds, concrete offsets, duplicate `.fx`
+- **Cross-cutting** (2 KUs: KU-25–KU-26) — error influx budget, effort estimate
 
 ### Verification
 
@@ -97,21 +106,21 @@ Sprint 23 Known Unknowns (32 entries: 26 original + 6 end-of-sprint discoveries)
 test -f docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md && echo "EXISTS" || echo "MISSING"
 wc -l docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
 # Should have ≥ 20 unknowns
-grep -c "^| KU-" docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
+grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md` with ≥ 20 unknowns across 4+ categories
-- Task-to-Unknown mapping table
+- `docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md` with 26 unknowns across 5 categories
+- Task-to-Unknown mapping table (Appendix A)
 - Verification deadline assignments
 
 ### Acceptance Criteria
 
-- [ ] ≥ 20 unknowns documented
-- [ ] All 4 priority areas have at least 3 unknowns each
-- [ ] Sprint 23 carryforward KUs mapped to Sprint 24 numbers
-- [ ] Verification deadlines assigned (Day 0-1 for Critical, Day 2-3 for High)
+- [x] ≥ 20 unknowns documented (26 created)
+- [x] All 4 priority areas have at least 3 unknowns each (8, 5, 5, 3)
+- [x] Sprint 23 carryforward KUs mapped to Sprint 24 numbers (KU-22, KU-23, KU-24)
+- [x] Verification deadlines assigned (Day 0-1 for Critical, Day 2-3 for High)
 
 ---
 
@@ -123,6 +132,7 @@ grep -c "^| KU-" docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas to investigate)
+**Unknowns Verified:** KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
 
 ### Objective
 
@@ -180,6 +190,7 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 - Pattern distribution table (how many issues per pattern)
 - Regression risk assessment for currently-matching models
 - Effort estimate per pattern
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-01, KU-02, KU-03, KU-04, KU-07, KU-08
 
 ### Acceptance Criteria
 
@@ -188,6 +199,7 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 - [ ] Regression risk for 49 currently-matching models assessed
 - [ ] Fix effort estimated per pattern
 - [ ] Analysis informs Task 3 design
+- [ ] KU-01, KU-02, KU-03, KU-04, KU-07, KU-08 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -199,6 +211,7 @@ grep -c "^| #11" docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.m
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 2 (root cause analysis informs architecture)
+**Unknowns Verified:** KU-03, KU-05, KU-06, KU-26
 
 ### Objective
 
@@ -257,6 +270,7 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
   - Regression test plan
   - Rollout strategy (incremental vs. big-bang)
 - File-level change inventory (which files, which functions)
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-03, KU-05, KU-06, KU-26
 
 ### Acceptance Criteria
 
@@ -265,6 +279,7 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 - [ ] Regression test plan covers all 49 matching models
 - [ ] Rollout strategy defined with decision criteria
 - [ ] Design reviewed against Sprint 23 partial implementation
+- [ ] KU-03, KU-05, KU-06, KU-26 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -276,6 +291,7 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas)
+**Unknowns Verified:** KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
 
 ### Objective
 
@@ -331,6 +347,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 - Subcategory distribution table
 - Fix priority ranking (which 8+ to target)
 - Overlap analysis with alias differentiation
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
 
 ### Acceptance Criteria
 
@@ -339,6 +356,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 - [ ] Fix effort estimated per subcategory
 - [ ] Overlap with alias differentiation documented
 - [ ] Priority ranking for ≤ 15 target
+- [ ] KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -350,6 +368,7 @@ grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs risk areas)
+**Unknowns Verified:** KU-14, KU-15, KU-16, KU-17, KU-18
 
 ### Objective
 
@@ -400,6 +419,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXIST
 - Root cause analysis for 4 new issues
 - Overlap analysis with alias differentiation
 - Priority ranking for ≤ 8 target
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-14, KU-15, KU-16, KU-17, KU-18
 
 ### Acceptance Criteria
 
@@ -407,6 +427,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXIST
 - [ ] 4 new issues (#1177, #1192, #1195, #1199) root-caused
 - [ ] Overlap with alias differentiation documented
 - [ ] At least 3 models identified as fixable targets
+- [ ] KU-14, KU-15, KU-16, KU-17, KU-18 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -418,6 +439,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXIST
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** KU-19, KU-20, KU-21
 
 ### Objective
 
@@ -469,6 +491,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 - `docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md` with per-model analysis
 - Bottleneck classification table
 - Feasibility assessment for Sprint 24 fixes
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-19, KU-20, KU-21
 
 ### Acceptance Criteria
 
@@ -476,6 +499,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 - [ ] Bottleneck classified per model
 - [ ] Internal error model root-caused
 - [ ] Feasibility of optimization estimated
+- [ ] KU-19, KU-20, KU-21 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -487,6 +511,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** KU-25
 
 ### Objective
 
@@ -533,6 +558,7 @@ git diff --stat data/gamslib/gamslib_status.json | head -3
 - `docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md` with full pipeline metrics
 - Updated `data/gamslib/gamslib_status.json`
 - Comparison to Sprint 23 final metrics
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-25
 
 ### Acceptance Criteria
 
@@ -541,6 +567,7 @@ git diff --stat data/gamslib/gamslib_status.json | head -3
 - [ ] Absolute counts and percentages included (PR8)
 - [ ] Comparison to Sprint 23 final documented
 - [ ] gamslib_status.json committed
+- [ ] KU-25 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -552,6 +579,7 @@ git diff --stat data/gamslib/gamslib_status.json | head -3
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1-7 (review after all research/analysis is complete)
+**Unknowns Verified:** (validates PR9/PR10/PR11 compliance — cross-cutting process check)
 
 ### Objective
 
@@ -618,6 +646,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/RETROSPECTIVE_ALIGNMENT.md && echo "EXIST
 **Deadline:** Before Sprint 24 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1-8 (all prep research must be complete)
+**Unknowns Verified:** (integrates all verified unknowns into schedule)
 
 ### Objective
 
