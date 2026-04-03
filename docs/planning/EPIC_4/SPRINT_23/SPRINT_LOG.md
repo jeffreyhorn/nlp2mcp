@@ -451,13 +451,57 @@ Translate exceeded GO threshold. Solve, Match, and PST all meet CONDITIONAL thre
 
 ### Day 13 — Final Pipeline Retest
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Final full pipeline (PR6) | |
-| Acceptance criteria evaluation | |
-| model_infeasible final accounting (PR7) | |
+| Final full pipeline (PR6) | ✅ Completed (147 models, 5674s) |
+| Acceptance criteria evaluation | ✅ See below |
+| model_infeasible final accounting (PR7) | ✅ See below |
+
+#### Definitive Final Pipeline Results (2026-04-02)
+
+**Scope note:** Pipeline runs 147 models (NLP/QCP/LP scope). Original targets were set against 160-model scope (including 13 MIP/other models later excluded). Both scopes shown where applicable.
+
+| Stage | Baseline (147-run) | Final (147-run) | Delta | Target (original scope) | Met? |
+|---|---|---|---|---|---|
+| Parse | 144/147 (98.0%) | **147/147 (100.0%)** | +3 | ≥156/160 (97.5%) | ✅ 147/147=100% run; 147/160=91.9% total |
+| Translate | 128/147 (87.1%) | **140/147 (95.2%)** | +12 | ≥145/156 (93.0%) | ⚠️ 140/147=95.2% run; 140/156=89.7% original scope |
+| Solve | 81/128 (63.3%) | **86/140 (61.4%)** | +5 | ≥100 | ❌ MISSED (86 vs 100) |
+| Match | 47/147 (32.0%) | **49/147 (33.3%)** | +2 | ≥55/160 (34.4%) | ❌ MISSED (49 vs 55) |
+| Tests | 4,209 | **4,364** | +155 | ≥4,300 | ✅ EXCEEDED |
+
+| Error Category | Baseline | Final | Delta | Target | Met? |
+|---|---|---|---|---|---|
+| path_syntax_error | 18 | **23** | +5 | ≤15 | ❌ MISSED (influx from new translates) |
+| path_solve_terminated | 10 | **12** | +2 | ≤5 | ❌ MISSED (influx) |
+| model_infeasible | 12 | **11** | -1 | ≤8 | ❌ MISSED (11 vs 8) |
+| path_solve_license | 7 | **8** | +1 | — | N/A |
+| translate timeout | ~17 | **6** | ≈-11 | — | N/A |
+| translate internal_error | 0 | **1** | +1 | — | N/A |
+
+#### model_infeasible Accounting (PR7)
+
+- **Baseline:** 12 models
+- **Gross fixes:** 1 (mine recovered via SetMembershipTest)
+- **Gross influx:** 0 (no new models entered infeasible)
+- **Net change:** -1 (12 → 11)
+- **Final:** 11 models
+
+#### Acceptance Criteria Summary
+
+| Criterion | Target (original scope) | Actual (147-run) | Actual (original scope) | Status |
+|---|---|---|---|---|
+| Parse | ≥156/160 (97.5%) | 147/147 (100.0%) | 147/160 (91.9%) | ⚠️ 100% of run scope; below 160-scope target |
+| Translate | ≥145/156 (93.0%) | 140/147 (95.2%) | 140/156 (89.7%) | ❌ MISSED on original scope |
+| Solve | ≥100 | 86/140 (61.4%) | 86/160 (53.8%) | ❌ MISSED |
+| Match | ≥55 | 49/147 (33.3%) | 49/160 (30.6%) | ❌ MISSED |
+| path_syntax_error | ≤15 | 23 | 23 | ❌ MISSED |
+| path_solve_terminated | ≤5 | 12 | 12 | ❌ MISSED |
+| model_infeasible | ≤8 | 11 | 11 | ❌ MISSED |
+| Tests | ≥4,300 | 4,364 | 4,364 | ✅ EXCEEDED |
+
+**Overall:** 1/8 criteria met (Tests). Parse and Translate closed strongly on the 147-run scope (100% and 95.2%), but missed the original 160/156-scope targets. Solve/Match/error-category targets missed primarily due to translate influx — 12 new translates brought 5 new path_syntax_error and 2 new path_solve_terminated, masking solve improvements.
 
 ---
 

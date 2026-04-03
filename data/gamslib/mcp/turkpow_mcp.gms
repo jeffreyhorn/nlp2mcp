@@ -31,6 +31,11 @@ Sets
 Alias(t, v);
 Alias(b, bp);
 
+$onImplicitAssign
+* Populate empty dynamic subsets for stationarity conditions
+mt(m) = yes;
+$offImplicitAssign
+
 Parameters
     mdatah(m,labels) /'hydro-1'.avail 0.9, 'hydro-1'.'e-fact' 0.4, 'hydro-1'.opcost 0.09, 'hydro-1'.capcost 1.4, 'hydro-1'.life 50, 'hydro-1'.maxcap 684, 'hydro-2'.avail 0.9, 'hydro-2'.'e-fact' 0.4, 'hydro-2'.opcost 0.09, 'hydro-2'.capcost 4, 'hydro-2'.life 50, 'hydro-2'.maxcap 1484, 'hydro-3'.avail 0.9, 'hydro-3'.'e-fact' 0.4, 'hydro-3'.opcost 0.09, 'hydro-3'.capcost 6.5, 'hydro-3'.life 50, 'hydro-3'.maxcap 844, 'hydro-4'.avail 0.9, 'hydro-4'.'e-fact' 0.4, 'hydro-4'.opcost 0.09, 'hydro-4'.capcost 7, 'hydro-4'.life 50, 'hydro-4'.maxcap 250, 'hydro-5'.initcap 1829, 'hydro-5'.avail 0.9, 'hydro-5'.'e-fact' 0.6, 'hydro-5'.opcost 0.09, 'hydro-5'.capcost 3, 'hydro-5'.life 50, 'hydro-5'.maxcap 2000, 'hydro-6'.avail 0.9, 'hydro-6'.'e-fact' 0.6, 'hydro-6'.opcost 0.09, 'hydro-6'.capcost 6.8, 'hydro-6'.life 50, 'hydro-6'.maxcap 814, 'hydro-7'.avail 0.9, 'hydro-7'.'e-fact' 0.8, 'hydro-7'.opcost 0.09, 'hydro-7'.capcost 4.3, 'hydro-7'.life 50, 'hydro-7'.maxcap 890, 'hydro-8'.avail 0.9, 'hydro-8'.'e-fact' 0.4, 'hydro-8'.opcost 0.09, 'hydro-8'.capcost 2.7, 'hydro-8'.life 50, 'hydro-8'.maxcap 1366, 'hydro-9'.avail 0.9, 'hydro-9'.'e-fact' 0.4, 'hydro-9'.opcost 0.09, 'hydro-9'.capcost 4.6, 'hydro-9'.life 50, 'hydro-9'.maxcap 656, 'hydro-10'.avail 0.9, 'hydro-10'.'e-fact' 0.4, 'hydro-10'.opcost 0.09, 'hydro-10'.capcost 6.1, 'hydro-10'.life 50, 'hydro-10'.maxcap 192, 'hydro-11'.avail 0.9, 'hydro-11'.'e-fact' 0.6, 'hydro-11'.opcost 0.09, 'hydro-11'.capcost 3.9, 'hydro-11'.life 50, 'hydro-11'.maxcap 1002, 'hydro-12'.avail 0.9, 'hydro-12'.'e-fact' 0.6, 'hydro-12'.opcost 0.09, 'hydro-12'.capcost 5.6, 'hydro-12'.life 50, 'hydro-12'.maxcap 947, 'hydro-13'.avail 0.9, 'hydro-13'.'e-fact' 0.8, 'hydro-13'.opcost 0.09, 'hydro-13'.capcost 6.1, 'hydro-13'.life 50, 'hydro-13'.maxcap 81/
     mdatat(m,labels) /'lignite-1'.initcap 960, 'lignite-1'.avail 0.8, 'lignite-1'.opcost 0.6, 'lignite-1'.'opcost-g' -0.005, 'lignite-1'.capcost 5, 'lignite-1'.'capcost-g' -0.01, 'lignite-1'.life 30, 'lignite-2'.avail 0.8, 'lignite-2'.opcost 0.2, 'lignite-2'.'opcost-g' -0.005, 'lignite-2'.capcost 7, 'lignite-2'.'capcost-g' -0.01, 'lignite-2'.life 30, 'lignite-2'.maxcap 2500, 'lignite-3'.avail 0.8, 'lignite-3'.opcost 0.2, 'lignite-3'.'opcost-g' -0.005, 'lignite-3'.capcost 7, 'lignite-3'.'capcost-g' -0.01, 'lignite-3'.life 30, 'lignite-3'.maxcap 3500, 'lignite-3'.'.9' 0.8, 'lignite-3'.initcap 0.3, 'lignite-3'.'-.005' -0.005, 'lignite-3'.'4.5' 9, 'lignite-3'.'-.01' -0.02, 'lignite-3'.'30' 30, 'lignite-3'.'inf' inf/
@@ -45,9 +50,9 @@ Parameters
     opcostt(m,v,t)
     capcostt(m,v,t)
     sigma(m)
-    delta(t)
+    delta(te)
     bs(b,b)
-    vs(t,v)
+    vs(t,te)
     kit(m,v)
 ;
 
