@@ -25,10 +25,10 @@ Sprint 24's alias differentiation work should focus on:
 | Component | File | Status |
 |-----------|------|--------|
 | `bound_indices` parameter | `derivative_rules.py:74` | Implemented as keyword-only `frozenset[str]` |
-| Threading through all diff functions | Lines 138-168 | All 11 diff functions receive `bound_indices` |
+| Threading through all diff functions | Lines 138-168 | All diff handlers (10 primary + specialized) receive `bound_indices` |
 | `_same_root_set()` | Lines 238-255 | Implemented with cycle detection |
 | `_alias_match()` | Lines 258-312 | Implemented with bound-index guard |
-| `_diff_sum()` bound augmentation | Line ~1800 | Augments `bound_indices` with sum's `index_sets` |
+| `_diff_sum()` bound augmentation | Lines 1946-1948 | Augments `bound_indices` with sum's `index_sets` |
 | `_diff_varref()` alias check | Lines 395-410 | Calls `_alias_match()` when exact match fails |
 | `_partial_collapse_sum()` alias matching | Lines 2093-2250 | Uses `_same_root_set()` for index matching |
 
