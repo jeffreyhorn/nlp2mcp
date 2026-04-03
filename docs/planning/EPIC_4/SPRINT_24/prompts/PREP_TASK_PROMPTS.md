@@ -8,7 +8,7 @@ Step-by-step execution prompts for Sprint 24 preparation tasks 2-9.
 
 ## Task 2 Prompt: Analyze Alias Differentiation Root Causes (#1111 Family)
 
-on a new branch `planning/sprint24-task2`,
+**Branch:** `planning/sprint24-task2`
 
 **Objective:** Classify all 12 alias-differentiation issues (#1137-#1147, #1150) by root cause pattern. Determine whether a single architectural fix addresses most/all, or if multiple distinct fixes are needed. This analysis directly informs the architecture design in Task 3.
 
@@ -51,7 +51,7 @@ on a new branch `planning/sprint24-task2`,
    - Fill in Changes and Result sections with summary of findings
    - Check off all acceptance criteria
 
-9. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 2: Analyze alias differentiation root causes — N patterns identified across 12 issues"
+9. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR to avoid merge conflicts across parallel prep branches.
 
 **Quality Gate:** Run `make typecheck && make lint && make format && make test` if any Python code was modified.
 
@@ -70,7 +70,7 @@ Then wait for reviewer comments.
 
 ## Task 3 Prompt: Design Alias Differentiation Architecture
 
-on a new branch `planning/sprint24-task3`,
+**Branch:** `planning/sprint24-task3`
 
 **Objective:** Design the architectural changes to `_diff_varref`, `_partial_collapse_sum`, and related AD functions needed to fix alias-aware differentiation. Produce a design document with file-level change specifications, regression test plan, and rollout strategy.
 
@@ -114,7 +114,7 @@ on a new branch `planning/sprint24-task3`,
    - Fill in Changes and Result sections
    - Check off all acceptance criteria
 
-9. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 3: Design alias differentiation architecture v2"
+9. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** Run `make typecheck && make lint && make format && make test` if any Python code was modified.
 
@@ -133,7 +133,7 @@ Then wait for reviewer comments.
 
 ## Task 4 Prompt: Triage path_syntax_error Models (23)
 
-on a new branch `planning/sprint24-task4`,
+**Branch:** `planning/sprint24-task4`
 
 **Objective:** Classify all 23 path_syntax_error models by error subcategory and estimate fix effort. Identify which models are highest-leverage and which overlap with alias differentiation.
 
@@ -174,7 +174,7 @@ on a new branch `planning/sprint24-task4`,
     - Fill in Changes and Result sections
     - Check off all acceptance criteria
 
-11. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 4: Triage path_syntax_error models — N models classified across M subcategories"
+11. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** Run `make typecheck && make lint && make format && make test` if any Python code was modified.
 
@@ -193,7 +193,7 @@ Then wait for reviewer comments.
 
 ## Task 5 Prompt: Triage model_infeasible Models (11)
 
-on a new branch `planning/sprint24-task5`,
+**Branch:** `planning/sprint24-task5`
 
 **Objective:** Update the model_infeasible classification, incorporating Sprint 23 discoveries. Identify fixable models and overlap with alias differentiation.
 
@@ -231,7 +231,7 @@ on a new branch `planning/sprint24-task5`,
    - Fill in Changes and Result sections
    - Check off all acceptance criteria
 
-10. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 5: Triage model_infeasible models — N models classified, M fixable targets identified"
+10. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** Run `make typecheck && make lint && make format && make test` if any Python code was modified.
 
@@ -250,7 +250,7 @@ Then wait for reviewer comments.
 
 ## Task 6 Prompt: Investigate Translation Timeouts (6 models)
 
-on a new branch `planning/sprint24-task6`,
+**Branch:** `planning/sprint24-task6`
 
 **Objective:** Analyze the 6 remaining translation timeout models to determine fixability within Sprint 24. Also triage the 1 internal_error model.
 
@@ -289,7 +289,7 @@ on a new branch `planning/sprint24-task6`,
    - Fill in Changes and Result sections
    - Check off all acceptance criteria
 
-9. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 6: Investigate translation timeouts — N models profiled, M potentially fixable"
+9. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** Run `make typecheck && make lint && make format && make test` if any Python code was modified.
 
@@ -308,7 +308,7 @@ Then wait for reviewer comments.
 
 ## Task 7 Prompt: Run Full Pipeline Baseline (per PR6)
 
-on a new branch `planning/sprint24-task7`,
+**Branch:** `planning/sprint24-task7`
 
 **Objective:** Run the full pipeline to establish definitive Sprint 24 baseline metrics, following Sprint 23 process recommendation PR6.
 
@@ -341,7 +341,7 @@ on a new branch `planning/sprint24-task7`,
    - Fill in Changes and Result sections
    - Check off all acceptance criteria
 
-9. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 7: Full pipeline baseline — parse N/N, translate N/N, solve N/N, match N/N"
+9. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** No Python code changes expected; skip quality gate unless code was modified.
 
@@ -360,7 +360,7 @@ Then wait for reviewer comments.
 
 ## Task 8 Prompt: Review Sprint 23 Retrospective Action Items
 
-on a new branch `planning/sprint24-task8`,
+**Branch:** `planning/sprint24-task8`
 
 **Objective:** Verify that all Sprint 23 retrospective action items, process recommendations (PR9-PR11), and deferred items are addressed in the Sprint 24 prep plan.
 
@@ -390,7 +390,7 @@ on a new branch `planning/sprint24-task8`,
    - Fill in Changes and Result sections
    - Check off all acceptance criteria
 
-10. Update `CHANGELOG.md` with entry: "Complete Sprint 24 Prep Task 8: Review Sprint 23 retrospective — N/N items addressed, PR9/PR10/PR11 compliance verified"
+10. Do **not** update `CHANGELOG.md` in this task branch — defer to Task 9 or a closeout PR.
 
 **Quality Gate:** No Python code changes expected; skip quality gate unless code was modified.
 
@@ -409,7 +409,7 @@ Then wait for reviewer comments.
 
 ## Task 9 Prompt: Plan Sprint 24 Detailed Schedule
 
-on a new branch `planning/sprint24-task9`,
+**Branch:** `planning/sprint24-task9`
 
 **Objective:** Create the Sprint 24 detailed schedule (Day 0-14) with daily task assignments, checkpoints, contingency plans, and day-by-day execution prompts. Integrate all prep task findings.
 
