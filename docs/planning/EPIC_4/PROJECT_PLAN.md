@@ -1027,7 +1027,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S26 targets are in-scope counts.
 
-³ Sprint 23 pipeline scope changed from 160 to 147 models (13 MIP/other models excluded). Parse and match percentages are relative to the 147-run scope. lexer_invalid_char dropped to 0 because the 4 unparseable models were excluded from the 147-model scope.
+³ Sprint 23 pipeline scope changed from 160 to 147 models (13 MIP/other models excluded). Parse and match percentages are relative to the 147-run scope, so excluded models are not counted in that denominator. The `lexer_invalid_char` count dropping to 0 in Sprint 23 primarily reflects parse fixes on models that remained in scope, rather than all lexer failures being removed by scope exclusion.
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
