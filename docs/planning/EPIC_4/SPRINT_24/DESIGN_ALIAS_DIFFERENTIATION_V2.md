@@ -64,17 +64,16 @@ Sprint 24's alias differentiation work should focus on:
    - `bound_indices` being over-inclusive (marking free aliases as bound)
    - Index normalization issues (case sensitivity, quote handling)
 
-**Likely Root Cause:** The `_diff_sum()` adds ALL sum index_sets to `bound_indices`, but some of those may be the differentiation target's own indices. When differentiating `sum((k,n,np), f(x(n,k), x(np,k)))` w.r.t. `x(n,k)`:
-- `bound_indices` = `{k, n, np}` (all sum variables)
-- When checking `x(np,k)` against `x(n,k)`:
-  - `np` is in `bound_indices` → `_alias_match` returns `None`
-  - This is **correct for independent iteration** but **wrong when we're differentiating the full sum**
+**Likely Root Cause:** The issue is not that `_alias_match()` blocks bound indices — that guard is correct. In practice, `differentiate_expr()` is called for a concrete variable instance (e.g., `indices=('consumpt','q1')`), and `_partial_collapse_sum()` is responsible for enumerating valid sum-index matchings before differentiating the collapsed body.
+- Inside `_diff_sum()`, sum indices `{k, n, np}` are added to `bound_indices`
+- `_alias_match()` returning `None` for bound `np` is expected behavior
+- The question is: did `_partial_collapse_sum()` enumerate the correct substitutions/collapses so the relevant concrete term was exposed before alias matching?
 
-**Fix Approach:** The partial collapse logic should handle this — `_partial_collapse_sum()` substitutes the wrt_indices for the matching sum variables and then differentiates the body with the remaining indices still bound. Verify this path is executing correctly.
+**Fix Approach:** Verify the partial-collapse path end-to-end. For Pattern A, debug whether `_partial_collapse_sum()` generates all valid matchings/substitutions for sum indices, and then differentiates the resulting body correctly. If mismatches remain, investigate concrete-index normalization or over-inclusive `bound_indices` propagation rather than weakening the bound-index guard.
 
 ### Pattern C: Offset + Alias Interaction (2 issues)
 
-**Current State:** `_alias_match()` handles `IndexOffset` via structural equality only (line ~268):
+**Current State:** `_alias_match()` handles `IndexOffset` via structural equality only (`src/ad/derivative_rules.py:280-283`):
 ```python
 if isinstance(expr_idx, IndexOffset) or isinstance(wrt_idx, IndexOffset):
     if expr_idx == wrt_idx:
