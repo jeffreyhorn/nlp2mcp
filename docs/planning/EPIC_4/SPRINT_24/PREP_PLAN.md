@@ -310,13 +310,13 @@ Classify all 24 path_syntax_error models by error subcategory and estimate fix e
 
 ### Why This Matters
 
-path_syntax_error increased from 18 to 24 during Sprint 23 due to translate influx. 5 newly-translating models entered this category. Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 8 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
+path_syntax_error increased from 18 to 24 during Sprint 23 due to translate influx. 11 new models entered this category (from translate recovery/pipeline changes). Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 8 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
 
 ### Background
 
 - Sprint 23 final: 24 path_syntax_error models (pipeline retest count)
 - Sprint 22 triage: `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` (subcategories G+B)
-- Sprint 23 fixed: nonsharp (#956), danwolfe (#1182), fawley (#1133), but 5 new influx
+- Sprint 23 fixed: nonsharp (#956), danwolfe (#1182), fawley (#1133), but 11 new influx
 - Known subcategories from Sprint 22: A (uncontrolled set), B (domain violations), C (gradient conditions), G (set index reuse)
 
 ### What Needs to Be Done
@@ -329,7 +329,7 @@ path_syntax_error increased from 18 to 24 during Sprint 23 due to translate infl
    done
    ```
 2. **Classify each model by error subcategory** (A/B/C/G/new)
-3. **Identify the 5 influx models** and determine if they share patterns with existing errors
+3. **Identify the influx models** and determine if they share patterns with existing errors
 4. **Estimate fix effort per subcategory** and per model
 5. **Identify models that alias differentiation (Priority 1) may fix automatically**
 6. **Prioritize: which 8+ models to fix for the ≤ 15 target**

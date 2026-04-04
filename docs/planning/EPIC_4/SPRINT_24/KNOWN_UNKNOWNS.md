@@ -268,7 +268,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** New subcategories require new fix patterns; influx models are harder than expected
 **Estimated Research Time:** 2-3h
 **Owner:** Task 4
-**Verification Results:** :x: Status: WRONG — Influx models do NOT share a single pattern. 11 new models span 4 subcategories: H (concrete offsets, 8 models), A (missing data, 2), C (dynamic sets, 1). The dominant new pattern is subcategory H (concrete element offsets like set(i+1)), which was not in the Sprint 23 triage.
+**Verification Results:** :x: Status: WRONG — Influx models do NOT share a single pattern. 11 new models span 3 subcategories: H (concrete offsets, 8 models), A (missing data, 2), C (dynamic sets, 1). The dominant new pattern is subcategory H (concrete element offsets like set(i+1)), which was not in the Sprint 23 triage.
 
 ### KU-10: Alias Differentiation Fixes path_syntax_error Overlap
 
@@ -276,7 +276,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Assumption:** Some path_syntax_error models fail because incorrect derivatives generate invalid GAMS code; fixing aliases will eliminate those errors.
 
 **Research Questions:**
-1. How many of the 23 path_syntax_error models use aliases?
+1. How many of the 24 path_syntax_error models use aliases?
 2. Which models have compilation errors in stationarity equations (vs. original equations)?
 3. Does fixing the derivative change the equation structure enough to eliminate syntax errors?
 4. Can we identify the overlap without implementing the full alias fix?
