@@ -61,7 +61,7 @@ Sprint 24 focuses on alias-aware differentiation as the single highest-leverage 
 
 **Regression canary:** dispatch must match before/after every phase.
 
-### WS2: path_syntax_error Reduction (24 → ≤ 15)
+### WS2: path_syntax_error Reduction (23 → ≤ 15)
 **Effort:** ~8-12h
 **Target:** Fix 9+ models
 **Source:** [TRIAGE_PATH_SYNTAX_ERROR](./TRIAGE_PATH_SYNTAX_ERROR.md)

@@ -694,7 +694,7 @@ Sprint 23's structured 15-day schedule with 2 checkpoints and day-by-day prompts
    - Checkpoint 2 (Day 10): Error category progress, GO/NO-GO for close
 4. **Define GO/NO-GO criteria** at each checkpoint
 5. **Create contingency plans** for common risks (alias diff regression, error influx, etc.)
-6. **Budget error influx** per PR10 (~40% of newly-translating models → solve errors)
+6. **Budget error influx** per PR10 (50-60% of newly-translating models → solve errors, revised from 40%)
 7. **Create day-by-day execution prompts**
 8. **Initialize SPRINT_LOG.md**
 

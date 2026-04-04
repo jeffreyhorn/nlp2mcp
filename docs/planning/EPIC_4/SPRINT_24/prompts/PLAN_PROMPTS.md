@@ -12,11 +12,14 @@ Step-by-step execution prompts for Sprint 24 Days 0-14.
 
 **Objective:** Verify baseline, generate golden files, set up regression canary.
 
+**Prerequisites:**
+- Ensure `data/gamslib/raw/` is populated (gitignored; download via `python scripts/gamslib/download_models.py` if missing)
+
 **Tasks to Complete (~1-2 hours):**
 
 1. **Verify baseline metrics** match BASELINE_METRICS.md (parse 147/147, translate 140/147, solve 86, match 49)
 2. **Generate golden-file stationarity output** for all 49 matching models:
-   - For each matching model, translate and save MCP: `python -m src.cli data/gamslib/raw/{model}.gms -o data/gamslib/golden/{model}_mcp.gms --skip-convexity-check`
+   - For each matching model, translate and save MCP to temp: `python -m src.cli data/gamslib/raw/{model}.gms -o /tmp/gamslib-golden/{model}_mcp.gms --skip-convexity-check`
 3. **Set up dispatch regression canary test** — verify dispatch currently matches
 4. **Initialize SPRINT_LOG.md** Day 0 entry
 
