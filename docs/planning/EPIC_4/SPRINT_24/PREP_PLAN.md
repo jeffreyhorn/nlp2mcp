@@ -294,9 +294,9 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 
 ---
 
-## Task 4: Triage path_syntax_error Models (23)
+## Task 4: Triage path_syntax_error Models (24)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 3-4 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -306,22 +306,22 @@ wc -l docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md
 
 ### Objective
 
-Classify all 23 path_syntax_error models by error subcategory and estimate fix effort. Identify which models are highest-leverage (shared root cause, overlap with alias differentiation, etc.).
+Classify all 24 path_syntax_error models by error subcategory and estimate fix effort. Identify which models are highest-leverage (shared root cause, overlap with alias differentiation, etc.).
 
 ### Why This Matters
 
-path_syntax_error increased from 18 to 23 during Sprint 23 due to translate influx. 5 newly-translating models entered this category. Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 8 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
+path_syntax_error rose from 18 in the Sprint 23 baseline to 24 in the Sprint 24 prep baseline retest, driven by translate-related influx. 11 new models entered this category (from translate recovery/pipeline changes). Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 9 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
 
 ### Background
 
-- Sprint 23 final: 23 path_syntax_error models
+- Sprint 24 prep baseline retest: 24 path_syntax_error models (up from 18 in Sprint 23 baseline)
 - Sprint 22 triage: `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` (subcategories G+B)
-- Sprint 23 fixed: nonsharp (#956), danwolfe (#1182), fawley (#1133), but 5 new influx
+- Sprint 23 fixed: nonsharp (#956), danwolfe (#1182), fawley (#1133), but 11 new influx
 - Known subcategories from Sprint 22: A (uncontrolled set), B (domain violations), C (gradient conditions), G (set index reuse)
 
 ### What Needs to Be Done
 
-1. **Run pipeline on all 23 path_syntax_error models** to capture current error messages:
+1. **Run pipeline on all 24 path_syntax_error models** to capture current error messages:
    ```bash
    for model in <list>; do
      python -m src.cli data/gamslib/raw/${model}.gms -o /tmp/${model}_mcp.gms --skip-convexity-check
@@ -329,7 +329,7 @@ path_syntax_error increased from 18 to 23 during Sprint 23 due to translate infl
    done
    ```
 2. **Classify each model by error subcategory** (A/B/C/G/new)
-3. **Identify the 5 influx models** and determine if they share patterns with existing errors
+3. **Identify the influx models** and determine if they share patterns with existing errors
 4. **Estimate fix effort per subcategory** and per model
 5. **Identify models that alias differentiation (Priority 1) may fix automatically**
 6. **Prioritize: which 8+ models to fix for the ≤ 15 target**
@@ -337,37 +337,37 @@ path_syntax_error increased from 18 to 23 during Sprint 23 due to translate infl
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md` with 24-model classification
+- Updated KNOWN_UNKNOWNS.md: KU-09 (WRONG), KU-10 (VERIFIED), KU-11 (VERIFIED), KU-12 (VERIFIED), KU-13 (still INCOMPLETE), KU-22 (VERIFIED), KU-23 (VERIFIED)
 
 ### Result
 
-*To be completed*
+24 models classified into 7 subcategories (up from 20 in Sprint 23). New subcategory H (concrete element offsets) is the dominant new pattern with 8 models — all use aliases. 18 of 24 models (75%) use aliases. Priority fix: subcategory H batch fix (4-6h) + 2-3 subcategory A models → ≤ 15 target achievable.
 
 ### Verification
 
 ```bash
-# Verify triage document exists
 test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md && echo "EXISTS" || echo "MISSING"
-# Should classify all 23 models
-grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
+# Count model rows in alias overlap table (should be 24)
+grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 ```
 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md` with per-model classification
-- Subcategory distribution table
-- Fix priority ranking (which 8+ to target)
-- Overlap analysis with alias differentiation
-- Updated KNOWN_UNKNOWNS.md with verification results for KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23
+- Subcategory distribution table (7 subcategories)
+- Fix priority ranking (Tier 1: H batch fix, Tier 2: A quick fixes, Tier 3: other)
+- Alias overlap analysis (18/24 = 75%)
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-09–KU-13, KU-22, KU-23
 
 ### Acceptance Criteria
 
-- [ ] All 23 path_syntax_error models classified by subcategory
-- [ ] 5 influx models identified and classified
-- [ ] Fix effort estimated per subcategory
-- [ ] Overlap with alias differentiation documented
-- [ ] Priority ranking for ≤ 15 target
-- [ ] KU-09, KU-10, KU-11, KU-12, KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 24 path_syntax_error models classified by subcategory
+- [x] 11 influx models identified and classified (up from expected 5)
+- [x] Fix effort estimated per subcategory
+- [x] Overlap with alias differentiation documented (75% use aliases)
+- [x] Priority ranking for ≤ 15 target (H batch fix + 2-3 A models)
+- [x] KU-09–KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md (KU-13 deferred to implementation)
 
 ---
 

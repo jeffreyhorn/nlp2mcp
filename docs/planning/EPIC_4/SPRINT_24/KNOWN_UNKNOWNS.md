@@ -268,7 +268,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** New subcategories require new fix patterns; influx models are harder than expected
 **Estimated Research Time:** 2-3h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :x: Status: WRONG — Influx models do NOT share a single pattern. 11 new models span 3 subcategories: H (concrete offsets, 8 models), A (missing data, 2), C (dynamic sets, 1). The dominant new pattern is subcategory H (concrete element offsets like set(i+1)), which was not in the Sprint 23 triage.
 
 ### KU-10: Alias Differentiation Fixes path_syntax_error Overlap
 
@@ -276,7 +276,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Assumption:** Some path_syntax_error models fail because incorrect derivatives generate invalid GAMS code; fixing aliases will eliminate those errors.
 
 **Research Questions:**
-1. How many of the 23 path_syntax_error models use aliases?
+1. How many of the 24 path_syntax_error models use aliases?
 2. Which models have compilation errors in stationarity equations (vs. original equations)?
 3. Does fixing the derivative change the equation structure enough to eliminate syntax errors?
 4. Can we identify the overlap without implementing the full alias fix?
@@ -288,7 +288,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** No overlap — all 8+ fixes must come from dedicated path_syntax_error work
 **Estimated Research Time:** 1-2h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — 18 of 24 (75%) path_syntax_error models use aliases. All 8 subcategory H models have aliases. Alias differentiation may fix some indirectly by improving derivative accuracy, but the primary fix for subcategory H is IndexOffset handling in set domains, not alias matching.
 
 ### KU-11: Concrete Element Offset Fixability
 
@@ -309,7 +309,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Architectural change needed in stationarity builder; +6-8h effort
 **Estimated Research Time:** 2h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — 8 models affected by concrete element offsets (subcategory H). The fix is in the stationarity builder/emitter handling of IndexOffset in set domain contexts (e.g., nh(i+1)). Single architectural fix estimated at 4-6h. This is the highest-leverage subcategory for the ≤15 target.
 
 ### KU-12: Uncontrolled Set Reference Batch Fix
 
@@ -328,7 +328,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Multiple subcategory A patterns; need per-model fixes
 **Estimated Research Time:** 1h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Subcategory A (missing data) has 9 models but they do NOT share a single uncontrolled-set pattern. Each has different missing parameters/subsets. Batch fix not feasible; per-model fixes needed (2-3h each). Small models (decomp, ramsey, worst) are best candidates.
 
 ### KU-13: Error Influx from Alias Differentiation
 
@@ -347,7 +347,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Alias fix creates 3-5 new path_syntax_error; net improvement is less than expected
 **Estimated Research Time:** 1h (verify during implementation)
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :mag: Status: INCOMPLETE — Cannot verify until alias differentiation is implemented. However, the 8 subcategory H models already have compilation errors, so alias fixes are unlikely to make them worse. Risk is primarily for currently-clean models gaining new errors from changed derivatives.
 
 ---
 
@@ -535,7 +535,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Dynamic bounds require runtime evaluation; can't be resolved at compile time
 **Estimated Research Time:** 1-2h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Dynamic bounds affect paperco (model_infeasible) and potentially other models. The KKT generator defaults upper bounds to 0 for positive variables when .up is set in a loop. Fix requires resolving loop-body assignments at parse time or deferring to GAMS evaluation. Effort: 3-4h.
 
 ### KU-23: Concrete Element Offsets in Stationarity (Sprint 23 KU-29)
 
@@ -554,7 +554,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Element-to-index mapping is ambiguous; manual per-model mapping needed
 **Estimated Research Time:** 1-2h
 **Owner:** Task 4
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Concrete element offsets (i1+1, s1-1) affect 8 path_syntax_error models (subcategory H, including polygon), with cclinpts also affected in the stationarity output. The element-to-index mapping is available via element_to_set but not applied consistently in _apply_offset_substitution. Fix is in stationarity.py, estimated 4-6h.
 
 ### KU-24: Duplicate `.fx` Emission (Sprint 23 KU-32)
 
