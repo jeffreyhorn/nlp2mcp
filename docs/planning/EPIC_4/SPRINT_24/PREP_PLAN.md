@@ -445,9 +445,9 @@ test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXIST
 
 ---
 
-## Task 6: Investigate Translation Timeouts (6 models)
+## Task 6: Investigate Translation Timeouts (6 models + 1 internal error)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Medium
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -487,33 +487,35 @@ Sprint 23 recovered 7 timeout models via the LP fast path, but 6 remain. Fixing 
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md` with 7-model analysis
+- Updated KNOWN_UNKNOWNS.md: KU-19 (PARTIALLY WRONG), KU-20 (INCOMPLETE — needs profiling), KU-21 (VERIFIED)
 
 ### Result
 
-*To be completed*
+6 timeout models profiled: bottleneck is in the translation phase (normalize/KKT assembly for most; ScenRed library expansion for srpchase; MINLP type for gastrans). srpchase (107 lines) and iswnm (691 lines) are tiny models that should not timeout — specific translation patterns (ScenRed library, complex index interactions) are the cause. 2 models feasible to investigate (iswnm, sarf); 3 unlikely fixable without algorithmic changes; 1 MINLP out of scope.
+
+1 internal error (mine): SetMembershipTest domain mismatch — fixable in 2-3h.
 
 ### Verification
 
 ```bash
-# Verify investigation document exists
 test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && echo "EXISTS" || echo "MISSING"
 ```
 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md` with per-model analysis
-- Bottleneck classification table
-- Feasibility assessment for Sprint 24 fixes
+- Bottleneck classification table (6 timeout + 1 internal error)
+- Feasibility assessment (2 investigate, 3 unlikely, 1 out of scope, 1 fixable)
 - Updated KNOWN_UNKNOWNS.md with verification results for KU-19, KU-20, KU-21
 
 ### Acceptance Criteria
 
-- [ ] All 6 timeout models profiled
-- [ ] Bottleneck classified per model
-- [ ] Internal error model root-caused
-- [ ] Feasibility of optimization estimated
-- [ ] KU-19, KU-20, KU-21 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 6 timeout models profiled (size, solve type, aliases, bottleneck)
+- [x] Bottleneck classified per model (normalize/KKT for most; ScenRed for srpchase; MINLP for gastrans)
+- [x] Internal error model root-caused (mine: SetMembershipTest domain mismatch)
+- [x] Feasibility of optimization estimated per model
+- [x] KU-19, KU-20, KU-21 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

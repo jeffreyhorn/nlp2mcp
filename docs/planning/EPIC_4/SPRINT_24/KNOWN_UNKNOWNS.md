@@ -473,7 +473,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Models are tractable with simple optimization; missed +3 translates
 **Estimated Research Time:** 2-3h
 **Owner:** Task 6
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :x: Status: PARTIALLY WRONG — Not all timeout models are fundamentally intractable. srpchase (107 lines, 3 eqs) and iswnm (691 lines, 2 eqs) are tiny models that should translate quickly. The bottleneck is likely specific translation patterns (ScenRed library, complex index interactions), not model size. 2 models (iswnm, sarf) are worth investigating; 3 (mexls, nebrazil, srpchase) may need algorithmic changes; 1 (gastrans) is MINLP and out of scope.
 
 ### KU-20: Sparse Jacobian Feasibility
 
@@ -493,7 +493,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Most entries are non-zero; sparse approach doesn't help
 **Estimated Research Time:** 2h
 **Owner:** Task 6
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :mag: Status: INCOMPLETE — Cannot determine sparsity without detailed profiling. The 6 timeout models have 2-25 equations, suggesting the bottleneck is not Jacobian density but translation-phase patterns (normalize/KKT assembly for most; ScenRed library expansion for srpchase; MINLP type for gastrans). Sparse Jacobian may not be the right optimization; profiling the specific bottleneck per model is needed first.
 
 ### KU-21: Internal Error Root Cause
 
@@ -512,7 +512,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Internal error is a deep architectural issue; not fixable in Sprint 24
 **Estimated Research Time:** 1h
 **Owner:** Task 6
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — mine has SetMembershipTest evaluation failure for dynamic set c(l,i,j) defined via conditional assignment. The equation pr(k,l+1,i,j)$c(l,i,j) has 4 domain indices vs 3 condition indices, causing a domain mismatch in enumeration. Fix: handle index count mismatch in equation instance enumeration. Effort: 2-3h. Fixable in Sprint 24.
 
 ---
 
