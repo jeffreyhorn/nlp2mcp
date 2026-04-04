@@ -554,7 +554,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Element-to-index mapping is ambiguous; manual per-model mapping needed
 **Estimated Research Time:** 1-2h
 **Owner:** Task 4
-**Verification Results:** :white_check_mark: Status: VERIFIED — Concrete element offsets (i1+1, s1-1) affect 8 path_syntax_error models (subcategory H) plus polygon and cclinpts in the stationarity output. The element-to-index mapping is available via element_to_set but not applied consistently in _apply_offset_substitution. Fix is in stationarity.py, estimated 4-6h.
+**Verification Results:** :white_check_mark: Status: VERIFIED — Concrete element offsets (i1+1, s1-1) affect 8 path_syntax_error models (subcategory H, including polygon), with cclinpts also affected in the stationarity output. The element-to-index mapping is available via element_to_set but not applied consistently in _apply_offset_substitution. Fix is in stationarity.py, estimated 4-6h.
 
 ### KU-24: Duplicate `.fx` Emission (Sprint 23 KU-32)
 
