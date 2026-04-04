@@ -596,7 +596,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Under-budget influx → targets appear missed; over-budget → overly conservative targets
 **Estimated Research Time:** 0.5h
 **Owner:** Task 7
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :x: Status: WRONG — Sprint 23 actual influx rate was 58.3% (7 new solve errors from 12 new translates), not ~40% as PR10 estimated. Sprint 24 should budget for 50-60% influx rate. If alias differentiation recovers 3 new translates, expect ~2 new solve errors.
 
 ### KU-26: Alias Differentiation Effort Estimate
 
