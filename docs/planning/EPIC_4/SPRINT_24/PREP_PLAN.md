@@ -348,7 +348,8 @@ path_syntax_error increased from 18 to 24 during Sprint 23 due to translate infl
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md && echo "EXISTS" || echo "MISSING"
-grep -c "^|" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
+# Count model rows in alias overlap table (should be 24)
+grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 ```
 
 ### Deliverables
