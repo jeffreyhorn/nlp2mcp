@@ -566,7 +566,8 @@ Baseline identical to Sprint 23 Day 13 final — no code changes between sprints
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md && echo "EXISTS" || echo "MISSING"
-git diff --stat data/gamslib/gamslib_status.json | head -3
+python3 -c "import json; data=json.load(open('data/gamslib/gamslib_status.json')); print('updated_date:', data.get('updated_date', '<missing>'))"
+git log -1 --format="last_commit %cs %h" -- data/gamslib/gamslib_status.json
 ```
 
 ### Deliverables
