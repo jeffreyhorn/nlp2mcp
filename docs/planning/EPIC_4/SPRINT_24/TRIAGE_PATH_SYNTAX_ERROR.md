@@ -24,7 +24,7 @@
 | **C** (Dynamic Sets) | 2 | clearlak, turkey | Uninitialized dynamic subsets ($352/$149) | 3-4h per model |
 | **G** (Index Reuse) | 1 | prolog | Set index reuse (possible regression) | 2h |
 | **H** (Concrete Offsets) | 8 | catmix, ferts, ganges, gangesx, partssupply, polygon, tricp, turkpow | Set(index±const) not handled ($171+) | 4-6h (batch fix) |
-| **T** (Translate Fail) | 1 | feedtray | LhsConditionalAssign not in IR | 3-4h |
+| **T** (Translate Fail) | 1 | feedtray | Missing downstream handling for LhsConditionalAssign in translation/stationarity pipeline | 3-4h |
 
 ---
 
@@ -102,5 +102,5 @@ Most new entries are from translate recovery — models that now successfully tr
 1. **Fix Subcategory H first** (8 models, single architectural fix) — highest leverage
 2. **Fix 1-2 Subcategory A models** (decomp, ramsey, or worst) — small/simple
 3. **Investigate prolog regression** — may be quick fix
-4. **Total target:** 9-11 models fixed → 24 - 11 = 13 (below ≤ 15 target)
+4. **Total target:** 9-11 models fixed → 24 - (9 to 11) = 13-15 (meets or beats ≤ 15 target)
 5. **Alias differentiation (Priority 1) may automatically fix some** — monitor during implementation
