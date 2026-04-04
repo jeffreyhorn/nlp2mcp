@@ -19,6 +19,7 @@ Step-by-step execution prompts for Sprint 24 Days 0-14.
 
 1. **Verify baseline metrics** match BASELINE_METRICS.md (parse 147/147, translate 140/147, solve 86, match 49)
 2. **Generate golden-file stationarity output** for all 49 matching models:
+   - Create output directory: `mkdir -p /tmp/gamslib-golden`
    - For each matching model, translate and save MCP to temp: `python -m src.cli data/gamslib/raw/{model}.gms -o /tmp/gamslib-golden/{model}_mcp.gms --skip-convexity-check`
 3. **Set up dispatch regression canary test** — verify dispatch currently matches
 4. **Initialize SPRINT_LOG.md** Day 0 entry
