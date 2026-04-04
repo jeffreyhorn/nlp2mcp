@@ -288,7 +288,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** No overlap — all 8+ fixes must come from dedicated path_syntax_error work
 **Estimated Research Time:** 1-2h
 **Owner:** Task 4
-**Verification Results:** :white_check_mark: Status: VERIFIED — 15 of 24 (62.5%) path_syntax_error models use aliases. All 8 subcategory H models have aliases. Alias differentiation may fix some indirectly by improving derivative accuracy, but the primary fix for subcategory H is IndexOffset handling in set domains, not alias matching.
+**Verification Results:** :white_check_mark: Status: VERIFIED — 18 of 24 (75%) path_syntax_error models use aliases. All 8 subcategory H models have aliases. Alias differentiation may fix some indirectly by improving derivative accuracy, but the primary fix for subcategory H is IndexOffset handling in set domains, not alias matching.
 
 ### KU-11: Concrete Element Offset Fixability
 

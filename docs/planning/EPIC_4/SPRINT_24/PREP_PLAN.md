@@ -342,7 +342,7 @@ path_syntax_error rose from 18 in the Sprint 23 baseline to 24 in the Sprint 24 
 
 ### Result
 
-24 models classified into 7 subcategories (up from 20 in Sprint 23). New subcategory H (concrete element offsets) is the dominant new pattern with 8 models — all use aliases. 15 of 24 models (62.5%) use aliases. Priority fix: subcategory H batch fix (4-6h) + 2-3 subcategory A models → ≤ 15 target achievable.
+24 models classified into 7 subcategories (up from 20 in Sprint 23). New subcategory H (concrete element offsets) is the dominant new pattern with 8 models — all use aliases. 18 of 24 models (75%) use aliases. Priority fix: subcategory H batch fix (4-6h) + 2-3 subcategory A models → ≤ 15 target achievable.
 
 ### Verification
 
@@ -365,7 +365,7 @@ grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 - [x] All 24 path_syntax_error models classified by subcategory
 - [x] 11 influx models identified and classified (up from expected 5)
 - [x] Fix effort estimated per subcategory
-- [x] Overlap with alias differentiation documented (62.5% use aliases)
+- [x] Overlap with alias differentiation documented (75% use aliases)
 - [x] Priority ranking for ≤ 15 target (H batch fix + 2-3 A models)
 - [x] KU-09–KU-13, KU-22, KU-23 verified and updated in KNOWN_UNKNOWNS.md (KU-13 deferred to implementation)
 

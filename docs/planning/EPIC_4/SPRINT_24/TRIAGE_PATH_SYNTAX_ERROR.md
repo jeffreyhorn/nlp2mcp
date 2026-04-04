@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-24 models currently fail with path_syntax_error (up from 20 in Sprint 23 baseline). 11 new models entered the category (from translate recovery/pipeline changes), while 7 were fully resolved (china partially improved but still failing). A major new subcategory (H: concrete element offsets) affects 8 models and is the highest-priority fix target. 15 of 24 models (62.5%) use aliases, confirming significant overlap with alias differentiation (Priority 1).
+24 models currently fail with path_syntax_error (up from 20 in Sprint 23 baseline). 11 new models entered the category (from translate recovery/pipeline changes), while 7 were fully resolved (china partially improved but still failing). A major new subcategory (H: concrete element offsets) affects 8 models and is the highest-priority fix target. 18 of 24 models (75%) use aliases, confirming significant overlap with alias differentiation (Priority 1).
 
 **Target:** Reduce from 24 to ≤ 15 (fix at least 9 models).
 
@@ -57,7 +57,7 @@
 | turkpow | Yes | Yes — offset+alias |
 | worst | No | No |
 
-**15 of 24 models use aliases (62.5%).** All 8 subcategory H models have aliases.
+**18 of 24 models use aliases (75%).** All 8 subcategory H models have aliases.
 
 ---
 
