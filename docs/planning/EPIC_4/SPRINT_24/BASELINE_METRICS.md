@@ -12,7 +12,7 @@
 | Stage | Count | Rate | Notes |
 |---|---|---|---|
 | Parse | 147/147 | 100.0% | No failures |
-| Translate | 140/147 | 95.2% | 6 timeout, 1 internal_error |
+| Translate | 140/147 | 95.2% | 6 timeouts, 1 internal_error |
 | Solve | 86/140 | 61.4% | Of translated models |
 | Match | 49/147 | 33.3% | Of all models |
 
