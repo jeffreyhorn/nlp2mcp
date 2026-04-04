@@ -512,7 +512,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 ### Acceptance Criteria
 
 - [x] All 6 timeout models profiled (size, solve type, aliases, bottleneck)
-- [x] Bottleneck classified per model (normalize/KKT, not parse)
+- [x] Bottleneck classified per model (normalize/KKT for most; ScenRed for srpchase; MINLP for gastrans)
 - [x] Internal error model root-caused (mine: SetMembershipTest domain mismatch)
 - [x] Feasibility of optimization estimated per model
 - [x] KU-19, KU-20, KU-21 verified and updated in KNOWN_UNKNOWNS.md
