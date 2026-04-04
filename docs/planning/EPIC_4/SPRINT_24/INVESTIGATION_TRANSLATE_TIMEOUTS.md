@@ -29,8 +29,8 @@
 |---|---|---|---|
 | gastrans | MINLP type | `signpower()` discontinuous derivatives | Unlikely — MINLP out of scope |
 | iswnm | Normalize/KKT | Multi-dimensional indexed conditions | Investigate — small model |
-| mexls | Normalize/KKT | 44 sets, complex indexing | Investigate — may be combinatorial |
-| nebrazil | Normalize/KKT | 37 sets, multi-alias | Investigate — similar to mexls |
+| mexls | Normalize/KKT | 44 sets, complex indexing | Unlikely — may need algorithmic changes |
+| nebrazil | Normalize/KKT | 37 sets, multi-alias | Unlikely — similar complexity to mexls |
 | sarf | Normalize/KKT | Dense equation structure | Investigate |
 | srpchase | Stochastic lib | ScenRed library (DIM=1000) | Unlikely — library expansion |
 
@@ -68,7 +68,7 @@ concrete members at compile time.
 
 **Root Cause:** Set `c` is defined dynamically via:
 ```gams
-c(l,i,j) = yes$((ord(l) + ord(i)) <= card(l) and (ord(l) + ord(j)) <= card(l));
+c(l,i,j) = yes$((ord(l) + ord(i) <= card(l)) and (ord(l) + ord(j) <= card(l)));
 ```
 
 The Sprint 23 `SetMembershipTest` evaluation (PR #1198) correctly raises `ConditionEvaluationError` for dynamic sets with no compile-time members. The fallback includes all instances, but the equation domain mismatch (`pr(k,l+1,i,j)` has 4 indices vs `c(l,i,j)` has 3) causes a downstream error.
