@@ -357,7 +357,7 @@ grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 - `docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md` with per-model classification
 - Subcategory distribution table (7 subcategories)
 - Fix priority ranking (Tier 1: H batch fix, Tier 2: A quick fixes, Tier 3: other)
-- Alias overlap analysis (15/24 = 62.5%)
+- Alias overlap analysis (18/24 = 75%)
 - Updated KNOWN_UNKNOWNS.md with verification results for KU-09–KU-13, KU-22, KU-23
 
 ### Acceptance Criteria
