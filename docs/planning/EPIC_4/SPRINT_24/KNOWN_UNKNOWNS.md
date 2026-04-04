@@ -359,7 +359,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Assumption:** Several model_infeasible models are infeasible because of incorrect Jacobian entries from alias differentiation errors, and fixing aliases will recover them.
 
 **Research Questions:**
-1. Which of the 11 model_infeasible models use aliases?
+1. Which of the 14 model_infeasible models use aliases?
 2. Do bearing (#1199) and chenery (#1177) have alias-related Jacobian errors?
 3. How many model_infeasible models would move to model_optimal with correct derivatives?
 4. Is catmix (#1144) a model_infeasible caused by alias regression?
@@ -435,7 +435,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 ### KU-18: Category B Models Fixable Without PATH Changes
 
 **Priority:** Low
-**Assumption:** Category B model_infeasible models (PATH convergence failures: chain, cpack, mathopt3, lnts, robustlp) cannot be fixed by code changes alone and require PATH parameter tuning or warm-starting.
+**Assumption:** Category B model_infeasible models (PATH convergence failures: chain, lnts, mathopt3, robustlp, agreste) cannot be fixed by code changes alone and require PATH parameter tuning or warm-starting.
 
 **Research Questions:**
 1. Does warm-starting from the NLP solution help any Category B models?

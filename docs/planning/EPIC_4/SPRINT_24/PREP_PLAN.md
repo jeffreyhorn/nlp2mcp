@@ -387,7 +387,7 @@ Update the model_infeasible classification from Sprint 23, incorporating new dis
 
 ### Why This Matters
 
-model_infeasible dropped only 1 model in Sprint 23 (12 → 11). The ≤ 8 target requires fixing at least 3 models. Several issues (#1199 bearing Jacobian, #1195 sambal NA values) require Jacobian accuracy improvements that may overlap with alias differentiation fixes.
+model_infeasible rose from 12 to 14 in the Sprint 24 prep baseline retest (6 fixed, 8 new influx). The ≤ 8 target requires fixing or excluding at least 6 models. Several models (chenery, cesam, korcge) have alias-related Jacobian issues that may overlap with alias differentiation fixes.
 
 ### Background
 
@@ -398,15 +398,15 @@ model_infeasible dropped only 1 model in Sprint 23 (12 → 11). The ≤ 8 target
 
 ### What Needs to Be Done
 
-1. **Update model list** — confirm current 11 infeasible models
+1. **Update model list** — confirm current 14 infeasible models
 2. **For each model, classify root cause:**
    - KKT formulation bug (fixable)
    - Jacobian accuracy (may overlap with alias differentiation)
    - Inherent MCP incompatibility (not fixable)
    - Missing feature (deferred)
-3. **For new issues (#1177, #1192, #1195, #1199), perform root cause analysis**
+3. **For new models (agreste, cesam, chenery, feasopt1, iobalance, korcge, orani, rocket), perform root cause analysis**
 4. **Identify overlap with alias differentiation** — which models improve when derivatives are more accurate?
-5. **Prioritize: which 3+ models to target for ≤ 8 goal**
+5. **Prioritize: which 6+ models to fix/exclude for ≤ 8 goal**
 6. **Track gross fixes/influx budget** per PR7
 
 ### Changes
