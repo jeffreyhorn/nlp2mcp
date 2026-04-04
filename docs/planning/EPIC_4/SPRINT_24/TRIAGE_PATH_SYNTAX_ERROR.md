@@ -79,7 +79,7 @@ Small models with straightforward missing data initialization. Fix 2-3 to reach 
 - prolog (G): Investigate regression — may be quick fix
 - otpop (B): Domain violation — investigated in Sprint 23
 - clearlak (C): Dynamic sets — complex
-- feedtray (T): Translate fail — needs IR extension
+- feedtray (T): Translate fail — needs downstream handling for LhsConditionalAssign
 
 ---
 
