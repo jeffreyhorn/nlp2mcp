@@ -39,6 +39,8 @@
 | path_solve_terminated | 12 | 12 | 0 |
 | model_infeasible | 11 | 11 | 0 |
 | path_solve_license | 8 | 8 | 0 |
+| timeout (translate) | 6 | 6 | 0 |
+| internal_error (translate) | 1 | 1 | 0 |
 
 **No changes from Sprint 23 final.** Baseline is identical — no code changes between Sprint 23 close and Sprint 24 prep.
 
