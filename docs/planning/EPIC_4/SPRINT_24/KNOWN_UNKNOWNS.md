@@ -493,7 +493,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Most entries are non-zero; sparse approach doesn't help
 **Estimated Research Time:** 2h
 **Owner:** Task 6
-**Verification Results:** :mag: Status: INCOMPLETE — Cannot determine sparsity without detailed profiling. The 6 timeout models have 2-25 equations, suggesting the bottleneck is not Jacobian density but normalize/KKT assembly time. Sparse Jacobian may not be the right optimization; profiling the normalize phase is needed first to identify the actual bottleneck.
+**Verification Results:** :mag: Status: INCOMPLETE — Cannot determine sparsity without detailed profiling. The 6 timeout models have 2-25 equations, suggesting the bottleneck is not Jacobian density but translation-phase patterns (normalize/KKT assembly for most; ScenRed library expansion for srpchase; MINLP type for gastrans). Sparse Jacobian may not be the right optimization; profiling the specific bottleneck per model is needed first.
 
 ### KU-21: Internal Error Root Cause
 

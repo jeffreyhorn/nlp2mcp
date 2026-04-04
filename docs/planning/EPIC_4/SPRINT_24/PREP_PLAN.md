@@ -492,7 +492,7 @@ Sprint 23 recovered 7 timeout models via the LP fast path, but 6 remain. Fixing 
 
 ### Result
 
-6 timeout models profiled: bottleneck is normalize/KKT assembly (not parse, not model size). srpchase (107 lines) and iswnm (691 lines) are tiny models that should not timeout — specific translation patterns (ScenRed library, complex index interactions) are the cause. 2 models feasible to investigate (iswnm, sarf); 3 unlikely fixable without algorithmic changes; 1 MINLP out of scope.
+6 timeout models profiled: bottleneck is in the translation phase (normalize/KKT assembly for most; ScenRed library expansion for srpchase; MINLP type for gastrans). srpchase (107 lines) and iswnm (691 lines) are tiny models that should not timeout — specific translation patterns (ScenRed library, complex index interactions) are the cause. 2 models feasible to investigate (iswnm, sarf); 3 unlikely fixable without algorithmic changes; 1 MINLP out of scope.
 
 1 internal error (mine): SetMembershipTest domain mismatch — fixable in 2-3h.
 
