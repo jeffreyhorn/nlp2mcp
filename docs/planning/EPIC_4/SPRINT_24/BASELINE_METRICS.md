@@ -22,10 +22,10 @@
 |---|---|---|
 | path_syntax_error | 23 | (see TRIAGE_PATH_SYNTAX_ERROR.md) |
 | path_solve_terminated | 12 | |
-| model_infeasible | 11 | (see TRIAGE_MODEL_INFEASIBLE.md — note: pipeline counts 11, triage doc counts 14 due to different classification) |
+| model_infeasible | 11 | (see TRIAGE_MODEL_INFEASIBLE.md — triage doc lists 14 including 3 permanent exclusion candidates: orani, feasopt1, iobalance) |
 | path_solve_license | 8 | |
 | translate timeout | 6 | (see INVESTIGATION_TRANSLATE_TIMEOUTS.md) |
-| translate internal_error | 1 | mine |
+| translate internal_error | 1 | `mine` (SEQ=166, "Design of an Open Pit Mine") |
 
 ## Comparison to Sprint 23 Final (Day 13)
 
