@@ -42,7 +42,7 @@
 
 **No changes from Sprint 23 final.** Baseline is identical — no code changes between Sprint 23 close and Sprint 24 prep.
 
-## Sprint 24 Targets (from PROJECT_PLAN.md)
+## Sprint 24 Targets (from `docs/planning/EPIC_4/PROJECT_PLAN.md`)
 
 | Metric | Baseline | Target | Gap |
 |---|---|---|---|
