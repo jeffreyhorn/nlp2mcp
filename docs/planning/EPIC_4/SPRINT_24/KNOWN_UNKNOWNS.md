@@ -371,7 +371,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** No overlap — dedicated Jacobian fixes needed for all 6+ models
 **Estimated Research Time:** 2h
 **Owner:** Task 5
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — 4 of 14 model_infeasible models have HIGH alias-fix potential (cesam, chenery, korcge, chain). Fixing alias differentiation could recover 3-4 models from infeasibility. The overlap is significant — 8/14 (57%) use aliases, and 3 of the top-priority Category A fixes are alias-related.
 
 ### KU-15: bearing Jacobian Completeness
 
@@ -391,7 +391,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** bearing requires warm-start or PATH parameter tuning, not a code fix
 **Estimated Research Time:** 2-3h
 **Owner:** Task 5
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — bearing has MCP pairing mismatch (44 equations vs 42 variables). The issue is in MCP pairing/stationarity construction, not derivative accuracy. bearing does NOT use aliases — this is a separate KKT formulation bug (#757, #1199). Fix effort: 3-5h dedicated work.
 
 ### KU-16: chenery Post-$171 Fix Root Cause
 
@@ -410,7 +410,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** chenery needs domain widening reversal or alternative approach; blocks ≤ 8 target
 **Estimated Research Time:** 1-2h
 **Owner:** Task 5
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — chenery uses Alias(j) and has division by zero in stat_pi stationarity equation. The $171 domain widening fix (PR #1176) resolved compilation but exposed a derivative accuracy bug. The infeasibility is alias-related (#1177). Fix via alias differentiation (Priority 1).
 
 ### KU-17: New Influx from Alias Differentiation
 
@@ -430,7 +430,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Lose 3-5 solving models to infeasibility; net solve decrease
 **Estimated Research Time:** 1h (verify during implementation)
 **Owner:** Task 5
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :mag: Status: INCOMPLETE — Cannot verify until alias differentiation is implemented. However, 8/14 current infeasible models already use aliases with known issues. The risk is that fixing derivatives for currently-solving alias models could change their equation structure enough to cause infeasibility. Canary test (dispatch) and golden-file regression plan mitigate this risk.
 
 ### KU-18: Category B Models Fixable Without PATH Changes
 
@@ -449,7 +449,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 **Risk if Wrong:** Some Category B models are easily fixable; missed opportunity for ≤ 8 target
 **Estimated Research Time:** 2h
 **Owner:** Task 5
-**Verification Results:** :mag: Status: INCOMPLETE
+**Verification Results:** :white_check_mark: Status: VERIFIED — Category B models (chain, lnts, mathopt3, robustlp, agreste) generally cannot be fixed by code changes alone. robustlp is extremely near-feasible (3.6e-04 residual) and may improve with initialization changes. chain is near-feasible (0.11) and may benefit from alias AD fix. Others need warm-start infrastructure or PATH parameter tuning. Recommendation: defer to Sprint 25+.
 
 ---
 

@@ -371,9 +371,9 @@ grep -c "^| [a-z]" docs/planning/EPIC_4/SPRINT_24/TRIAGE_PATH_SYNTAX_ERROR.md
 
 ---
 
-## Task 5: Triage model_infeasible Models (11)
+## Task 5: Triage model_infeasible Models (14)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** High
 **Estimated Time:** 2-3 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -411,34 +411,37 @@ model_infeasible dropped only 1 model in Sprint 23 (12 → 11). The ≤ 8 target
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md` with 14-model classification
+- Updated KNOWN_UNKNOWNS.md: KU-14 (VERIFIED), KU-15 (VERIFIED), KU-16 (VERIFIED), KU-17 (INCOMPLETE — deferred), KU-18 (VERIFIED)
 
 ### Result
 
-*To be completed*
+14 models classified (up from 12 in Sprint 23): 6 Category A (KKT bugs), 5 Category B (PATH convergence), 3 Category C (structural incompatibility). 8/14 (57%) use aliases; 4 have HIGH alias-fix potential. Target ≤ 8 achievable via: exclude 3 Category C + fix 3 alias-related Category A = 14 - 6 = 8.
+
+Gross fixes/influx: 6 Sprint 23 models fixed, 8 new models entered (net +2).
 
 ### Verification
 
 ```bash
-# Verify triage document exists
 test -f docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md && echo "EXISTS" || echo "MISSING"
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md` with updated classification
-- Root cause analysis for 4 new issues
-- Overlap analysis with alias differentiation
-- Priority ranking for ≤ 8 target
-- Updated KNOWN_UNKNOWNS.md with verification results for KU-14, KU-15, KU-16, KU-17, KU-18
+- `docs/planning/EPIC_4/SPRINT_24/TRIAGE_MODEL_INFEASIBLE.md` with per-model classification
+- Root cause analysis for 8 new models (not just 4 — composition changed)
+- Alias overlap analysis (4 HIGH, 1 MEDIUM, 2 LOW, 1 NONE among alias-using)
+- Priority ranking (Tier 1: exclude 3, Tier 2: fix 3 alias A, Tier 3: fix 3 lead/lag A)
+- Gross fixes/influx budget per PR7
+- Updated KNOWN_UNKNOWNS.md with verification results for KU-14–KU-18
 
 ### Acceptance Criteria
 
-- [ ] All 11 model_infeasible models classified
-- [ ] 4 new issues (#1177, #1192, #1195, #1199) root-caused
-- [ ] Overlap with alias differentiation documented
-- [ ] At least 3 models identified as fixable targets
-- [ ] KU-14, KU-15, KU-16, KU-17, KU-18 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 14 model_infeasible models classified (up from expected 11)
+- [x] New models root-caused (8 new, not 4 — composition changed significantly)
+- [x] Overlap with alias differentiation documented (4 HIGH potential)
+- [x] At least 3 models identified as fixable targets (6 Category A fixable + 3 excludable)
+- [x] KU-14–KU-18 verified and updated in KNOWN_UNKNOWNS.md (KU-17 deferred to implementation)
 
 ---
 
