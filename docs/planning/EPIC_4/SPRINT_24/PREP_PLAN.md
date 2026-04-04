@@ -310,11 +310,11 @@ Classify all 24 path_syntax_error models by error subcategory and estimate fix e
 
 ### Why This Matters
 
-path_syntax_error increased from 18 to 24 during Sprint 23 due to translate influx. 11 new models entered this category (from translate recovery/pipeline changes). Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 8 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
+path_syntax_error rose from 18 in the Sprint 23 baseline to 24 in the Sprint 24 prep baseline retest, driven by translate-related influx. 11 new models entered this category (from translate recovery/pipeline changes). Understanding the subcategory distribution is essential for targeting the ≤ 15 goal — we need to fix at least 9 models. Some may be fixed automatically by alias differentiation (Priority 1), reducing the dedicated effort needed.
 
 ### Background
 
-- Sprint 23 final: 24 path_syntax_error models (pipeline retest count)
+- Sprint 24 prep baseline retest: 24 path_syntax_error models (up from 18 in Sprint 23 baseline)
 - Sprint 22 triage: `docs/planning/EPIC_4/SPRINT_23/TRIAGE_PATH_SYNTAX_ERROR_GB.md` (subcategories G+B)
 - Sprint 23 fixed: nonsharp (#956), danwolfe (#1182), fawley (#1133), but 11 new influx
 - Known subcategories from Sprint 22: A (uncontrolled set), B (domain violations), C (gradient conditions), G (set index reuse)
