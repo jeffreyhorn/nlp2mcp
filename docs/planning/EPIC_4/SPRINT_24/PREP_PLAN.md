@@ -521,7 +521,7 @@ test -f docs/planning/EPIC_4/SPRINT_24/INVESTIGATION_TRANSLATE_TIMEOUTS.md && ec
 
 ## Task 7: Run Full Pipeline Baseline (per PR6)
 
-**Status:** :large_blue_circle: NOT STARTED
+**Status:** :white_check_mark: COMPLETE
 **Priority:** Critical
 **Estimated Time:** 1-2 hours
 **Deadline:** Before Sprint 24 Day 1
@@ -554,36 +554,38 @@ The Sprint 23 Day 13 final retest provides baseline numbers, but code may have c
 
 ### Changes
 
-*To be completed*
+- Created `docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md` with full pipeline metrics
+- Updated `data/gamslib/gamslib_status.json` with fresh pipeline run
+- Updated KNOWN_UNKNOWNS.md: KU-25 (WRONG — actual influx 58%, not 40%)
 
 ### Result
 
-*To be completed*
+Baseline identical to Sprint 23 Day 13 final — no code changes between sprints. Parse 147/147 (100%), translate 140/147 (95.2%), solve 86/140 (61.4%), match 49/147 (33.3%). Error influx rate from Sprint 23 was 58.3% (7/12), higher than PR10's ~40% estimate. Sprint 24 should budget 50-60%.
 
 ### Verification
 
 ```bash
-# Verify baseline document exists
 test -f docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md && echo "EXISTS" || echo "MISSING"
-# Verify status.json is current
-git diff --stat data/gamslib/gamslib_status.json | head -3
+python3 -c "import json; data=json.load(open('data/gamslib/gamslib_status.json')); print('updated_date:', data.get('updated_date', '<missing>'))"
+git log -1 --format="last_commit %cs %h" -- data/gamslib/gamslib_status.json
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md` with full pipeline metrics
+- `docs/planning/EPIC_4/SPRINT_24/BASELINE_METRICS.md` with full pipeline metrics and target gaps
 - Updated `data/gamslib/gamslib_status.json`
-- Comparison to Sprint 23 final metrics
+- Comparison to Sprint 23 final (identical — 0 deltas)
+- Error influx rate analysis (58.3% actual vs 40% PR10 estimate)
 - Updated KNOWN_UNKNOWNS.md with verification results for KU-25
 
 ### Acceptance Criteria
 
-- [ ] Full pipeline run completed
-- [ ] All metrics recorded (parse, translate, solve, match, error categories)
-- [ ] Absolute counts and percentages included (PR8)
-- [ ] Comparison to Sprint 23 final documented
-- [ ] gamslib_status.json committed
-- [ ] KU-25 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Full pipeline run completed (4641s, 147 models)
+- [x] All metrics recorded (parse, translate, solve, match, error categories)
+- [x] Absolute counts and percentages included (PR8)
+- [x] Comparison to Sprint 23 final documented (identical)
+- [x] gamslib_status.json committed
+- [x] KU-25 verified and updated in KNOWN_UNKNOWNS.md (WRONG — 58% not 40%)
 
 ---
 
