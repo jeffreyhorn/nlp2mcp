@@ -85,12 +85,12 @@ Small models with straightforward missing data initialization. Fix 2-3 to reach 
 
 ## Sprint 23 Changes
 
-**Resolved since Sprint 23 baseline (7 models):**
+**Resolved since Sprint 23 triage run (7 of 20 models):**
 - camcge, cesam2, chenery, hhfair, nonsharp, shale, srkandw
 
 **Note:** china was partially improved but still fails (subcategory A).
 
-**New since Sprint 23 baseline (11 models):**
+**New since Sprint 23 triage run (11 models):**
 - catmix, cclinpts, ferts, ganges, gangesx, lmp2, partssupply, polygon, tricp, turkey, turkpow
 
 Most new entries are from translate recovery — models that now successfully translate but have compilation errors in the generated MCP.
