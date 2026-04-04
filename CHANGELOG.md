@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 24 Preparation
 
-- Complete Sprint 24 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories (Alias Differentiation, path_syntax_error, model_infeasible, Translation Timeout, Sprint 23 Carryforward) + 2 cross-cutting KUs
-- Sprint 23 KU-28/KU-29/KU-32 carried forward as Sprint 24 KU-22/KU-23/KU-24
-- Task-to-Unknown mapping assigns verification responsibility to Prep Tasks 2-9
-- Created Sprint 24 PREP_PLAN.md with 9 preparation tasks (21-29h estimated), including "Unknowns to Verify" metadata and acceptance criteria for Tasks 2-9
-- Created Sprint 24 prep task execution prompts (PREP_TASK_PROMPTS.md) for Tasks 2-9
+- Complete Sprint 24 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories + 2 cross-cutting KUs
+- Analyze alias differentiation root causes (Prep Task 2): 5 patterns across 12 issues; architecture already implemented
+- Design alias differentiation v2 (Prep Task 3): 4-phase incremental rollout; focus on debugging existing implementation
+- Triage path_syntax_error (Prep Task 4): 24 models in 7 subcategories; new subcategory H (concrete offsets, 8 models)
+- Triage model_infeasible (Prep Task 5): 14 models; 6 Category A fixable, 5 Category B deferred, 3 Category C exclude
+- Investigate translation timeouts (Prep Task 6): 6 timeout + 1 internal error (`mine`); bottleneck is translation patterns not size
+- Full pipeline baseline (Prep Task 7): identical to Sprint 23 final; error influx rate 58% (not 40%)
+- Review Sprint 23 retrospective (Prep Task 8): all items addressed, PR6-PR11 compliant
+- Plan Sprint 24 detailed schedule (Prep Task 9): 15-day plan with 5 workstreams, 2 checkpoints, day-by-day prompts
 
 ### Sprint 23 Summary - 2026-04-02
 
