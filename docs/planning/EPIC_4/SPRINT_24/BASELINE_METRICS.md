@@ -3,7 +3,7 @@
 **Date:** 2026-04-04
 **Pipeline:** `scripts/gamslib/run_full_test.py --quiet`
 **Duration:** 4641s (~77 min)
-**Models:** 147/147
+**Models (pipeline scope):** 147/147
 
 ---
 
@@ -24,8 +24,8 @@
 | path_solve_terminated | 12 | |
 | model_infeasible | 11 | (see TRIAGE_MODEL_INFEASIBLE.md — triage doc lists 14 including 3 permanent exclusion candidates: orani, feasopt1, iobalance) |
 | path_solve_license | 8 | |
-| translate timeout | 6 | (see INVESTIGATION_TRANSLATE_TIMEOUTS.md) |
-| translate internal_error | 1 | `mine` (SEQ=166, "Design of an Open Pit Mine") |
+| timeout | 6 | (translate stage; see INVESTIGATION_TRANSLATE_TIMEOUTS.md) |
+| internal_error | 1 | (translate stage) `mine` (SEQ=166, "Design of an Open Pit Mine") |
 
 ## Comparison to Sprint 23 Final (Day 13)
 
