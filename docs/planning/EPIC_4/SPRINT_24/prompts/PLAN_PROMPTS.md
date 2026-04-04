@@ -36,7 +36,7 @@ Step-by-step execution prompts for Sprint 24 Days 0-14.
 **Prerequisites:**
 - Read `docs/planning/EPIC_4/SPRINT_24/PLAN.md` — Day 1 section
 - Read `docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md` — investigation strategy
-- Key source files: `src/ad/derivative_rules.py` (lines 258-312 `_alias_match`, lines 1946-1948 `_diff_sum`, lines 2093-2250 `_partial_collapse_sum`)
+- Key source files: `src/ad/derivative_rules.py` (lines 258-312 `_alias_match`, lines ~1771+ `_diff_sum` with bound augmentation at 1946-1948, lines 2093-2250 `_partial_collapse_sum`)
 
 **Tasks to Complete (~3-4 hours):**
 
