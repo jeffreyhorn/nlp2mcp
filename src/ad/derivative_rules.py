@@ -1917,41 +1917,51 @@ def _diff_sum(
                     # set names when the variable in the body uses symbolic free
                     # indices that correspond to those concrete values.
                     if var_indices_in_body:
-                        if var_indices_in_body:
-                            new_wrt = list(symbolic_wrt)
-                            for j, wj in enumerate(new_wrt):
-                                if j == i:
-                                    continue  # Already symbolic (the sum index)
-                                if isinstance(wj, IndexOffset):
-                                    continue
-                                # Check if position j in any body VarRef has a symbolic
-                                # index that this concrete value is an instance of
-                                for var_idx_tuple in var_indices_in_body:
-                                    if j < len(var_idx_tuple):
-                                        body_idx = var_idx_tuple[j]
-                                        if (
-                                            isinstance(body_idx, str)
-                                            and body_idx != wj
-                                            and _is_concrete_instance_of(wj, body_idx, config)
-                                        ):
-                                            new_wrt[j] = body_idx
-                                            break
-                            symbolic_wrt = tuple(new_wrt)
+                        new_wrt = list(symbolic_wrt)
+                        for j, wj in enumerate(new_wrt):
+                            if j == i:
+                                continue  # Already symbolic (the sum index)
+                            if isinstance(wj, IndexOffset):
+                                continue
+                            # Check if position j in any body VarRef has a symbolic
+                            # index that this concrete value is an instance of
+                            for var_idx_tuple in var_indices_in_body:
+                                if j < len(var_idx_tuple):
+                                    body_idx = var_idx_tuple[j]
+                                    if (
+                                        isinstance(body_idx, str)
+                                        and body_idx != wj
+                                        and _is_concrete_instance_of(wj, body_idx, config)
+                                    ):
+                                        new_wrt[j] = body_idx
+                                        break
+                        symbolic_wrt = tuple(new_wrt)
                     body_derivative = differentiate_expr(
                         expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
                     )
                     if not _is_structurally_zero(body_derivative):
-                        # Build full substitution: sum index + any other symbolic→concrete
+                        # Build full substitution: sum index + any other symbolic→concrete.
+                        # Guard against duplicate symbolic indices because
+                        # _substitute_sum_indices() builds a mapping, and duplicates
+                        # would overwrite earlier entries.
                         all_sym: list[str] = [sum_idx]
                         all_concrete: list[str | IndexOffset] = [wrt_idx]
+                        seen_sym: set[str] = {sum_idx}
+                        duplicate_sym = False
                         for j, (sym_j, orig_j) in enumerate(
                             zip(symbolic_wrt, wrt_indices, strict=True)
                         ):
                             if j == i:
-                                continue  # Already handled above
+                                continue
                             if sym_j != orig_j and isinstance(sym_j, str):
+                                if sym_j in seen_sym:
+                                    duplicate_sym = True
+                                    break
+                                seen_sym.add(sym_j)
                                 all_sym.append(sym_j)
                                 all_concrete.append(orig_j)
+                        if duplicate_sym:
+                            continue
                         result_body = _substitute_sum_indices(
                             body_derivative, tuple(all_sym), tuple(all_concrete)
                         )

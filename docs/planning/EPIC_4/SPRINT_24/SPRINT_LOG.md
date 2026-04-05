@@ -83,7 +83,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 **Fix:** In `_diff_sum` single-index collapse path (line ~1897), remaining concrete wrt indices are now converted to symbolic set names when they match free indices in the sum body's VarRef. This enables `sum(np, a(n,np)*x(np,k))` w.r.t. `x(consumpt,q1)` to correctly produce `a(n,consumpt)` instead of 0.
 
-**Note:** The constraint Jacobian transpose sum issue (Day 1/2 finding — `a(n,n)` instead of `sum(n', a(n',n))`) is a separate deeper issue in `_replace_indices_in_expr`. This AD fix is a prerequisite step.
+**Note:** The constraint Jacobian transpose sum issue (Day 1/2 finding — `a(n,n)` instead of `sum(n', a(n',n))`) primarily points to `build_stationarity_equations` where a single representative instance is used instead of summing over all relevant constraint instances. This AD fix is a prerequisite step.
 
 ---
 
