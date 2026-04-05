@@ -54,13 +54,19 @@
 
 ### Day 2 — WS1 Phase 1: Fix Pattern A
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS
 
 | Task | Status |
 |---|---|
-| Implement Pattern A edge case fix | |
-| Validate qabel improvement | |
-| Dispatch canary + golden-file regression | |
+| Implement Pattern A edge case fix | ⏳ Root cause confirmed deeper than expected |
+| Validate qabel improvement | Blocked on fix |
+| Dispatch canary + golden-file regression | Pending |
+
+**Day 2 Finding:** The root cause is confirmed at a deeper level than initially thought. `_add_indexed_jacobian_terms` picks ONE representative constraint instance to compute the derivative, then generalizes. With alias cross-terms (`sum(np, a(n,np)*x(np,k))`), different constraint instances produce structurally different derivatives:
+- `stateq(consumpt,q1)` w.r.t. `x(consumpt,q1)` → `a(consumpt,consumpt)` → `a(n,n)` ✓
+- `stateq(invest,q1)` w.r.t. `x(consumpt,q1)` → `a(invest,consumpt)` → `a(np,n)` ✗ (MISSING)
+
+The fix requires either (a) summing over ALL constraint instances instead of using a single representative, or (b) detecting alias cross-terms and generating a sum over the constraint domain. Both are significant changes to `build_stationarity_equations`.
 
 ---
 
