@@ -95,15 +95,21 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ---
 
-### Day 4 — WS1 Phase 2 Continue
+### Day 4 — WS1: Debug Jacobian Transpose Assembly
 
-**Status:** NOT STARTED
+**Status:** COMPLETE (analysis)
 
 | Task | Status |
 |---|---|
-| Fix secondary issues | |
-| Quality gate | |
-| PR for WS1 Phase 1-2 | |
+| Trace Jacobian transpose assembly for qabel | ✅ |
+| Identify root cause in _replace_indices_in_expr | ✅ |
+| Quality gate | N/A (no code changes) |
+
+**Day 4 Finding:** The cross-terms ARE being generated via offset groups (`n+1`, `n-1` offsets in the first dimension). The issue is more specific than expected: `_replace_indices_in_expr` maps `a(invest,consumpt)` → `a(n,n)` instead of `a(n+1,n)` or `a(n-1,n)`. The offset information exists in the `offset_key` but isn't used by `_replace_indices_in_expr` to generate the correct offset-based replacement.
+
+**Root cause narrowed:** The fix is in how `_replace_indices_in_expr` handles elements from the constraint's domain when there's a non-zero offset between the constraint instance and the variable instance. Currently it maps all elements of set `n` to `n`, but when the constraint instance is offset by ±1 from the variable instance, the replacement should be `n±1`.
+
+**Next step:** Modify `_replace_indices_in_expr` (or the constraint element mapping) to incorporate offset information when replacing ParamRef indices. The `offset_key` is available at the call site (line ~3803) but not passed through.
 
 ---
 
