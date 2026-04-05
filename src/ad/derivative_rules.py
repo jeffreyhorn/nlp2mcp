@@ -235,6 +235,29 @@ def _indices_match(
     return True
 
 
+def _find_var_indices_in_body(expr: Expr, var_name: str) -> list[tuple[str | IndexOffset, ...]]:
+    """Find all VarRef(var_name) index tuples in an expression tree.
+
+    Used to guide concrete→symbolic index conversion in _diff_sum's
+    single-index collapse path.
+    """
+    results: list[tuple[str | IndexOffset, ...]] = []
+    if isinstance(expr, VarRef) and expr.name == var_name:
+        results.append(expr.indices)
+    for attr_name in ("left", "right", "operand", "body", "value_expr", "condition"):
+        child = getattr(expr, attr_name, None)
+        if child is not None and hasattr(child, "__dataclass_fields__"):
+            results.extend(_find_var_indices_in_body(child, var_name))
+    # Also check tuple fields like Sum.index_sets won't contain Expr, but
+    # arguments in Call might
+    args = getattr(expr, "args", None)
+    if args is not None and isinstance(args, tuple):
+        for arg in args:
+            if hasattr(arg, "__dataclass_fields__"):
+                results.extend(_find_var_indices_in_body(arg, var_name))
+    return results
+
+
 def _same_root_set(a: str, b: str, aliases: Any) -> bool:
     """Check if two index names reference the same root set via alias chains.
 
@@ -1895,12 +1918,55 @@ def _diff_sum(
                         else sum_idx
                     )
                     symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
+                    # Issue #1111: Convert remaining concrete wrt indices to symbolic
+                    # set names when the variable in the body uses symbolic free
+                    # indices that correspond to those concrete values. This handles
+                    # cases like sum(np, a(n,np)*x(np,k)) w.r.t. x(consumpt,q1)
+                    # where the sum only binds np but k is a free index. Without
+                    # this, symbolic_wrt = (np, q1) fails to match x(np, k) because
+                    # q1 != k. Converting q1→k makes the match succeed.
+                    # Only apply when the body contains VarRef(wrt_var) with
+                    # symbolic indices that need this mapping.
+                    if config is not None and config.model_ir is not None:
+                        # Find VarRef(wrt_var) indices in the body to guide conversion
+                        var_indices_in_body = _find_var_indices_in_body(expr.body, wrt_var)
+                        if var_indices_in_body:
+                            new_wrt = list(symbolic_wrt)
+                            for j, wj in enumerate(new_wrt):
+                                if j == i:
+                                    continue  # Already symbolic (the sum index)
+                                if isinstance(wj, IndexOffset):
+                                    continue
+                                # Check if position j in any body VarRef has a symbolic
+                                # index that this concrete value is an instance of
+                                for var_idx_tuple in var_indices_in_body:
+                                    if j < len(var_idx_tuple):
+                                        body_idx = var_idx_tuple[j]
+                                        if (
+                                            isinstance(body_idx, str)
+                                            and body_idx != wj
+                                            and _is_concrete_instance_of(wj, body_idx, config)
+                                        ):
+                                            new_wrt[j] = body_idx
+                                            break
+                            symbolic_wrt = tuple(new_wrt)
                     body_derivative = differentiate_expr(
                         expr.body, wrt_var, symbolic_wrt, config, bound_indices=bound_indices
                     )
                     if not _is_structurally_zero(body_derivative):
+                        # Build full substitution: sum index + any other symbolic→concrete
+                        all_sym: list[str] = [sum_idx]
+                        all_concrete: list[str | IndexOffset] = [wrt_idx]
+                        for j, (sym_j, orig_j) in enumerate(
+                            zip(symbolic_wrt, wrt_indices, strict=True)
+                        ):
+                            if j == i:
+                                continue  # Already handled above
+                            if sym_j != orig_j and isinstance(sym_j, str):
+                                all_sym.append(sym_j)
+                                all_concrete.append(orig_j)
                         result_body = _substitute_sum_indices(
-                            body_derivative, (sum_idx,), (wrt_idx,)
+                            body_derivative, tuple(all_sym), tuple(all_concrete)
                         )
                         if expr.condition is not None:
                             result_body = Binary(

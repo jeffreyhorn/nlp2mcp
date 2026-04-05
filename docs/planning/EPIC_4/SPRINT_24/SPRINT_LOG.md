@@ -70,15 +70,20 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ---
 
-### Day 3 — WS1 Phase 2: Validate Pattern A
+### Day 3 — WS1: Fix AD Single-Index Sum Collapse
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Test all Pattern A models | |
-| Full pipeline regression | |
-| Document improvements | |
+| Implement AD fix for single-index sum concrete→symbolic conversion | ✅ |
+| Run dispatch canary | ✅ (trivial newline diff only) |
+| Run quality gate | ✅ 4364 passed, 0 failed |
+| Run golden-file comparison | Pending full pipeline retest |
+
+**Fix:** In `_diff_sum` single-index collapse path (line ~1897), remaining concrete wrt indices are now converted to symbolic set names when they match free indices in the sum body's VarRef. This enables `sum(np, a(n,np)*x(np,k))` w.r.t. `x(consumpt,q1)` to correctly produce `a(n,consumpt)` instead of 0.
+
+**Note:** The constraint Jacobian transpose sum issue (Day 1/2 finding — `a(n,n)` instead of `sum(n', a(n',n))`) is a separate deeper issue in `_replace_indices_in_expr`. This AD fix is a prerequisite step.
 
 ---
 
