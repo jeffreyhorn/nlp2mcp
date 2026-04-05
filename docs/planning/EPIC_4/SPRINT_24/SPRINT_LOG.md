@@ -109,7 +109,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 **Root cause narrowed:** The fix is in how `_replace_indices_in_expr` handles elements from the constraint's domain when there's a non-zero offset between the constraint instance and the variable instance. Currently it maps all elements of set `n` to `n`, but when the constraint instance is offset by ±1 from the variable instance, the replacement should be `n±1`.
 
-**Next step:** Modify `_replace_indices_in_expr` (or the constraint element mapping) to incorporate offset information when replacing ParamRef indices. The `offset_key` is available at the call site (line ~3803) but not passed through.
+**Fix implemented:** Added `_apply_alias_offset_to_deriv` post-processing step after `_replace_indices_in_expr`. For alias cross-term offset groups (detected via `_body_has_alias_sum`), ParamRef indices at positions matching the constraint's declared domain are replaced with IndexOffset(set_name, offset). Result: `a(n,n) * nu(n+1,k)` → `a(n+1,n) * nu(n+1,k)`. All 4365 tests pass, dispatch canary verified.
 
 ---
 
