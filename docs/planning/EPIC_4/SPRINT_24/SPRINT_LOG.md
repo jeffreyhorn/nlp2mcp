@@ -37,14 +37,18 @@
 
 ### Day 1 — WS1 Phase 1: Debug Pattern A
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Debug logging in _diff_varref/_partial_collapse_sum | |
-| Trace qabel derivative computation | |
-| Identify edge case | |
-| Dispatch canary test | |
+| Debug logging in _diff_varref/_partial_collapse_sum | ✅ Traced via Python inspection |
+| Trace qabel derivative computation | ✅ Found root cause |
+| Identify edge case | ✅ See findings below |
+| Dispatch canary test | ✅ dispatch still matches |
+
+**Root Cause Finding:** The alias differentiation bug is NOT in `_diff_varref` or `_alias_match` — the AD engine correctly computes derivatives. The bug is in the **Jacobian transpose assembly** in `build_stationarity_equations` (lines ~4010-4090). When the constraint domain matches the variable domain (e.g., both `(n,k)`), the code assumes a direct term (no sum). But when the constraint body contains `sum(np, a(n,np)*x(np,k))` where `np` aliases `n`, the derivative creates a cross-term `a(n',n)` that requires summing over the constraint index `n'`. The matching-domain assumption is wrong for alias cross-terms.
+
+**Impact:** This affects ALL Pattern A models — the fix is in `build_stationarity_equations`, not in the AD engine. The `_alias_match`/`bound_indices` mechanism is correct but operates at the wrong level for this bug.
 
 ---
 
