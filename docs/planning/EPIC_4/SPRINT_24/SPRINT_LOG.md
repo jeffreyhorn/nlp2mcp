@@ -25,13 +25,13 @@
 
 ### Day 0 — Setup
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Verify baseline metrics | |
-| Generate golden files for 49 matching models | |
-| Set up dispatch regression canary | |
+| Verify baseline metrics | ✅ parse 147/147, translate 140/147, solve 86, match 49 |
+| Generate golden files for 49 matching models | ✅ 49/49 generated in /tmp/gamslib-golden/ |
+| Set up dispatch regression canary | ✅ dispatch matches (rel_diff 5e-05) |
 
 ---
 
