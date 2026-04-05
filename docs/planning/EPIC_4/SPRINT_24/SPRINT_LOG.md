@@ -79,7 +79,15 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 | Implement AD fix for single-index sum concrete→symbolic conversion | ✅ |
 | Run dispatch canary | ✅ (trivial newline diff only) |
 | Run quality gate | ✅ 4364 passed, 0 failed |
-| Run golden-file comparison | Pending full pipeline retest |
+| Test all Pattern A models | ✅ See findings below |
+
+**Pattern A Model Testing Results:**
+- **qabel:** stat_u gained 60+ lag terms, stat_x has more Jacobian entries. Stationarity significantly changed.
+- **meanvar:** stat_x now includes cross-term `sum(i__, x(i__)*q(i__,i))` — the quadratic transpose. Solves cleanly but MCP objective still 0.027 (12.3% mismatch from NLP 0.0308). Solve result unchanged.
+- **abel, irscge, lrgcge, moncge, stdcge, cclinpts:** No stationarity changes detected (different alias patterns may not trigger the single-index path).
+- **ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps5_s_mn, ps10_s_mn:** No changes detected.
+
+**Assessment:** The AD fix correctly adds cross-terms for some models (qabel, meanvar) but the deeper Jacobian transpose issue (`a(n,n)` instead of `sum(n', a(n',n))`) still dominates. Most Pattern A models don't trigger the single-index sum path — they use multi-index sums handled by `_partial_collapse_sum` which has its own (separate) limitation.
 
 **Fix:** In `_diff_sum` single-index collapse path (line ~1897), remaining concrete wrt indices are now converted to symbolic set names when they match free indices in the sum body's VarRef. This enables `sum(np, a(n,np)*x(np,k))` w.r.t. `x(consumpt,q1)` to correctly produce `a(n,consumpt)` instead of 0.
 
