@@ -244,17 +244,8 @@ def _find_var_indices_in_body(expr: Expr, var_name: str) -> list[tuple[str | Ind
     results: list[tuple[str | IndexOffset, ...]] = []
     if isinstance(expr, VarRef) and expr.name == var_name:
         results.append(expr.indices)
-    for attr_name in ("left", "right", "operand", "body", "value_expr", "condition"):
-        child = getattr(expr, attr_name, None)
-        if child is not None and hasattr(child, "__dataclass_fields__"):
-            results.extend(_find_var_indices_in_body(child, var_name))
-    # Also check tuple fields like Sum.index_sets won't contain Expr, but
-    # arguments in Call might
-    args = getattr(expr, "args", None)
-    if args is not None and isinstance(args, tuple):
-        for arg in args:
-            if hasattr(arg, "__dataclass_fields__"):
-                results.extend(_find_var_indices_in_body(arg, var_name))
+    for child in expr.children():
+        results.extend(_find_var_indices_in_body(child, var_name))
     return results
 
 
@@ -1909,6 +1900,10 @@ def _diff_sum(
         # and return the first non-zero derivative.
         if len(expr.index_sets) == 1:
             sum_idx = expr.index_sets[0]
+            # Issue #1111: Pre-compute VarRef indices in body (once, outside loop)
+            var_indices_in_body: list[tuple[str | IndexOffset, ...]] = []
+            if config is not None and config.model_ir is not None:
+                var_indices_in_body = _find_var_indices_in_body(expr.body, wrt_var)
             for i, wrt_idx in enumerate(wrt_indices):
                 check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
                 if _is_concrete_instance_of(check_str, sum_idx, config):
@@ -1920,16 +1915,8 @@ def _diff_sum(
                     symbolic_wrt = wrt_indices[:i] + (sym_idx,) + wrt_indices[i + 1 :]
                     # Issue #1111: Convert remaining concrete wrt indices to symbolic
                     # set names when the variable in the body uses symbolic free
-                    # indices that correspond to those concrete values. This handles
-                    # cases like sum(np, a(n,np)*x(np,k)) w.r.t. x(consumpt,q1)
-                    # where the sum only binds np but k is a free index. Without
-                    # this, symbolic_wrt = (np, q1) fails to match x(np, k) because
-                    # q1 != k. Converting q1→k makes the match succeed.
-                    # Only apply when the body contains VarRef(wrt_var) with
-                    # symbolic indices that need this mapping.
-                    if config is not None and config.model_ir is not None:
-                        # Find VarRef(wrt_var) indices in the body to guide conversion
-                        var_indices_in_body = _find_var_indices_in_body(expr.body, wrt_var)
+                    # indices that correspond to those concrete values.
+                    if var_indices_in_body:
                         if var_indices_in_body:
                             new_wrt = list(symbolic_wrt)
                             for j, wj in enumerate(new_wrt):

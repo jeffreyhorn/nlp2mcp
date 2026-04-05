@@ -587,3 +587,49 @@ def test_diff_sum_variable_constant_wrt_alias_index():
     from src.ir.ast import Const
 
     assert isinstance(right_term.right, Const) and right_term.right.value == 1.0
+
+
+def test_diff_sum_single_index_concrete_symbolic_conversion():
+    """Issue #1111: d/dx(consumpt,q1) sum(np, a(n,np)*x(np,k)) should produce a(n,consumpt).
+
+    When the sum has fewer indices than wrt_indices, concrete wrt indices
+    that correspond to free symbolic indices in the body should be converted
+    to symbolic form so that VarRef matching succeeds.
+    """
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model = ModelIR()
+    model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
+    model.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2", "q3"])
+    model.aliases["np"] = AliasDef(name="np", target="n")
+
+    config = Config()
+    config.model_ir = model
+
+    # sum(np, a(n,np)*x(np,k))
+    body = Binary("*", ParamRef("a", ("n", "np")), VarRef("x", ("np", "k")))
+    sum_expr = Sum(("np",), body, None)
+
+    # d/dx(consumpt, q1) should produce a(n, consumpt) (not zero)
+    result = differentiate_expr(sum_expr, "x", ("consumpt", "q1"), config)
+
+    # Result should NOT be structurally zero
+    from src.ad.derivative_rules import _is_structurally_zero
+
+    assert not _is_structurally_zero(result), f"Expected non-zero derivative, got: {result}"
+
+    # The result should contain ParamRef a(n, consumpt)
+    def _find_paramref(expr, name):
+        if isinstance(expr, ParamRef) and expr.name == name:
+            return expr
+        for child in expr.children():
+            found = _find_paramref(child, name)
+            if found:
+                return found
+        return None
+
+    a_ref = _find_paramref(result, "a")
+    assert a_ref is not None, "Expected ParamRef 'a' in result"
+    assert a_ref.indices == ("n", "consumpt"), f"Expected a(n, consumpt), got a{a_ref.indices}"
