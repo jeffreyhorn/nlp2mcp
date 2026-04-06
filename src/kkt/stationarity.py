@@ -1680,7 +1680,7 @@ def _apply_alias_offset_to_deriv(
             declared_domain = param_def.domain
             new_indices: list[str | IndexOffset] = list(expr.indices)
             changed = False
-            applied_positions: set[str] = set()
+            applied_positions: set[int] = set()  # Track by param index position
             for pi, idx in enumerate(new_indices):
                 if isinstance(idx, str):
                     # Canonicalize to root set for offset_map lookup
@@ -1696,11 +1696,19 @@ def _apply_alias_offset_to_deriv(
                             if isinstance(decl, str)
                             else ""
                         )
-                        if _decl_root == _idx_root:
+                        # Only apply when declared domain is the ROOT set itself
+                        # (not an alias). This prevents a(n,np) domain=(n,np)
+                        # from applying offset to BOTH positions when both
+                        # resolve to the same root.
+                        if (
+                            _decl_root == _idx_root
+                            and isinstance(decl, str)
+                            and decl.lower() == _idx_root
+                        ):
                             # This is the constraint's domain position — apply offset.
                             # Use an ALIAS of the set as the IndexOffset base to avoid
                             # GAMS Error 125 (equation domain index reused in lead/lag).
-                            if _idx_root not in applied_positions:
+                            if pi not in applied_positions:
                                 off = offset_map[_idx_root]
                                 # Find an alias for this set. Prefer the alias
                                 # that appears as a Sum index in the constraint
@@ -1719,7 +1727,7 @@ def _apply_alias_offset_to_deriv(
                                     offset_base, Const(float(off)), circular=False
                                 )
                                 changed = True
-                                applied_positions.add(_idx_root)
+                                applied_positions.add(pi)
             if changed:
                 return ParamRef(expr.name, tuple(new_indices))
         return expr
@@ -3966,13 +3974,19 @@ def _add_indexed_jacobian_terms(
                             _alias_sum_cache[eq_name_base] = _cached
                         if _cached:
                             # Build offset map using canonical root names
-                            _off_map: dict[str, int] = {}
+                            # Build offset map. If multiple positions resolve
+                            # to the same root with different offsets, skip
+                            # (ambiguous — can't determine correct position).
+                            _root_offsets: dict[str, set[int]] = {}
                             for _pi, _ov in enumerate(offset_key):
                                 if _ov != 0 and _pi < len(mult_domain):
                                     _canon = _resolve_alias_target(
                                         mult_domain[_pi], kkt.model_ir
                                     ).lower()
-                                    _off_map[_canon] = _ov
+                                    _root_offsets.setdefault(_canon, set()).add(_ov)
+                            _off_map: dict[str, int] = {
+                                r: next(iter(vs)) for r, vs in _root_offsets.items() if len(vs) == 1
+                            }
                             if _off_map:
                                 # Single-pass: collect all alias names used as
                                 # Sum.index_sets in the body, then pick preferred.
