@@ -1665,10 +1665,11 @@ def _apply_alias_offset_to_deriv(
     """Apply alias offsets to ParamRef indices in a derivative expression.
 
     Issue #1111: When a constraint has sum(alias, ...) and the Jacobian entry
-    is from an offset group, the derivative a(n,n) should become a(n+1,n) where
-    position 0 has offset 1. This function uses the parameter's declared domain
-    to determine which index position corresponds to the constraint domain at
-    the offset position, and replaces that index with IndexOffset.
+    is from an offset group, the derivative a(n,n) should become a(np+1,n)
+    where position 0 has offset 1 and np is an alias of n. Uses the
+    parameter's declared domain to determine which index position corresponds
+    to the constraint domain, and replaces with IndexOffset(alias, offset)
+    to avoid GAMS Error 125 (domain index reused in lead/lag).
 
     Only the FIRST occurrence of the offset domain variable in each ParamRef is
     replaced (matching the constraint domain position, not the variable position).
@@ -1752,59 +1753,6 @@ def _body_has_alias_sum(expr: Expr, alias_names: set[str]) -> bool:
         if _body_has_alias_sum(child, alias_names):
             return True
     return False
-
-
-def _replace_offset_markers(
-    expr: Expr,
-    markers: dict[str, tuple[str, int]],
-) -> Expr:
-    """Replace offset marker strings with IndexOffset nodes in an expression.
-
-    Issue #1111: When alias cross-terms produce derivatives with constraint-domain
-    elements at non-zero offsets, marker strings like '__kkt_off_n_1' are inserted
-    during index replacement. This function converts them to proper IndexOffset
-    nodes (e.g., IndexOffset('n', 1)).
-    """
-    import dataclasses as _dc
-
-    if isinstance(expr, (ParamRef, VarRef, MultiplierRef)):
-        new_indices: list[str | IndexOffset] = []
-        changed = False
-        for idx in expr.indices:
-            if isinstance(idx, str) and idx in markers:
-                sn, off = markers[idx]
-                new_indices.append(IndexOffset(sn, Const(float(off)), circular=False))
-                changed = True
-            else:
-                new_indices.append(idx)
-        if changed:
-            return _dc.replace(expr, indices=tuple(new_indices))  # type: ignore[type-var]
-        return expr
-    # Generic recursive traversal via dataclass fields
-    changed = False
-    updates: dict[str, object] = {}
-    for f in _dc.fields(expr):  # type: ignore[arg-type]
-        val = getattr(expr, f.name)
-        if hasattr(val, "__dataclass_fields__"):
-            new_val = _replace_offset_markers(val, markers)
-            if new_val is not val:
-                updates[f.name] = new_val
-                changed = True
-        elif isinstance(val, tuple):
-            new_items = tuple(
-                (
-                    _replace_offset_markers(item, markers)
-                    if hasattr(item, "__dataclass_fields__")
-                    else item
-                )
-                for item in val
-            )
-            if new_items != val:
-                updates[f.name] = new_items
-                changed = True
-    if changed:
-        return _dc.replace(expr, **updates)  # type: ignore[type-var]
-    return expr
 
 
 def _apply_offset_substitution(

@@ -111,7 +111,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 **Fix implemented:** Added `_apply_alias_offset_to_deriv` post-processing step. For alias cross-term offset groups, ParamRef indices are replaced with IndexOffset. Result: `a(n,n) * nu(n+1,k)` → `a(n+1,n) * nu(n+1,k)`. All 4365 tests pass, dispatch canary verified.
 
-**Remaining issue:** GAMS Error 125 ("equation domain index reused in sum") on qabel, abel, irscge, lrgcge, moncge, stdcge. The `a(n+1,n)` syntax reuses `n` as both the equation domain index and inside an IndexOffset, which GAMS disallows. meanvar solves (no offset terms) but objective still mismatches. Fix needs GAMS syntax workaround (fresh alias for the offset index).
+**GAMS Error 125 resolved:** The `a(n+1,n)` syntax was replaced with `a(np+1,n)` using the model's existing alias `np` as the IndexOffset base, avoiding Error 125. qabel and abel now compile and solve (MODEL STATUS 1 Optimal). CGE models (irscge, lrgcge, moncge, stdcge) still have Error 125 due to different alias resolution patterns — needs further investigation.
 
 ---
 
