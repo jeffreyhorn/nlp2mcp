@@ -1660,6 +1660,7 @@ def _apply_alias_offset_to_deriv(
     expr: Expr,
     offset_map: dict[str, int],
     model_ir: ModelIR,
+    preferred_aliases: dict[str, str] | None = None,
 ) -> Expr:
     """Apply alias offsets to ParamRef indices in a derivative expression.
 
@@ -1691,13 +1692,19 @@ def _apply_alias_offset_to_deriv(
                             # GAMS Error 125 (equation domain index reused in lead/lag).
                             if idx.lower() not in applied_positions:
                                 off = offset_map[idx.lower()]
-                                # Find an existing alias for this set
+                                # Find an alias for this set. Prefer the alias
+                                # that appears as a Sum index in the constraint
+                                # body (passed via preferred_aliases) to avoid
+                                # picking an unrelated alias.
                                 offset_base = idx  # fallback
-                                for aname, adef in model_ir.aliases.items():
-                                    atgt = getattr(adef, "target", adef)
-                                    if isinstance(atgt, str) and atgt.lower() == idx.lower():
-                                        offset_base = aname
-                                        break
+                                if preferred_aliases and idx.lower() in preferred_aliases:
+                                    offset_base = preferred_aliases[idx.lower()]
+                                else:
+                                    for aname, adef in model_ir.aliases.items():
+                                        atgt = getattr(adef, "target", adef)
+                                        if isinstance(atgt, str) and atgt.lower() == idx.lower():
+                                            offset_base = aname
+                                            break
                                 new_indices[pi] = IndexOffset(
                                     offset_base, Const(float(off)), circular=False
                                 )
@@ -1714,14 +1721,14 @@ def _apply_alias_offset_to_deriv(
     for f in _dc.fields(expr):  # type: ignore[arg-type]
         val = getattr(expr, f.name)
         if hasattr(val, "__dataclass_fields__"):
-            new_val = _apply_alias_offset_to_deriv(val, offset_map, model_ir)
+            new_val = _apply_alias_offset_to_deriv(val, offset_map, model_ir, preferred_aliases)
             if new_val is not val:
                 updates[f.name] = new_val
                 changed = True
         elif isinstance(val, tuple):
             new_items = tuple(
                 (
-                    _apply_alias_offset_to_deriv(item, offset_map, model_ir)
+                    _apply_alias_offset_to_deriv(item, offset_map, model_ir, preferred_aliases)
                     if hasattr(item, "__dataclass_fields__")
                     else item
                 )
@@ -3990,8 +3997,28 @@ def _add_indexed_jacobian_terms(
                                 if _ov != 0 and _pi < len(mult_domain):
                                     _off_map[mult_domain[_pi].lower()] = _ov
                             if _off_map:
+                                # Build preferred alias map: for each offset domain,
+                                # find the alias used as a Sum index in the body.
+                                _pref: dict[str, str] = {}
+                                _eq_def_pa = kkt.model_ir.equations.get(eq_name_base)
+                                if _eq_def_pa is not None:
+                                    _body_pa = Binary(
+                                        "-",
+                                        _eq_def_pa.lhs_rhs[0],
+                                        _eq_def_pa.lhs_rhs[1],
+                                    )
+                                    for dom_name in _off_map:
+                                        for _an, _ad in kkt.model_ir.aliases.items():
+                                            _at = getattr(_ad, "target", _ad)
+                                            if (
+                                                isinstance(_at, str)
+                                                and _at.lower() == dom_name
+                                                and _body_has_alias_sum(_body_pa, {_an.lower()})
+                                            ):
+                                                _pref[dom_name] = _an
+                                                break
                                 indexed_deriv = _apply_alias_offset_to_deriv(
-                                    indexed_deriv, _off_map, kkt.model_ir
+                                    indexed_deriv, _off_map, kkt.model_ir, _pref
                                 )
 
                     # Get base multiplier name (without element suffixes)
