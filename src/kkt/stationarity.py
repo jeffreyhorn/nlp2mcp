@@ -1682,24 +1682,33 @@ def _apply_alias_offset_to_deriv(
             changed = False
             applied_positions: set[str] = set()
             for pi, idx in enumerate(new_indices):
-                if isinstance(idx, str) and idx.lower() in offset_map:
+                if isinstance(idx, str):
+                    # Canonicalize to root set for offset_map lookup
+                    _idx_root = _resolve_alias_target(idx, model_ir).lower()
+                    if _idx_root not in offset_map:
+                        continue
                     # Check if this param position's declared domain matches
                     # the offset domain (constraint domain, not alias)
                     if pi < len(declared_domain):
                         decl = declared_domain[pi]
-                        if isinstance(decl, str) and decl.lower() == idx.lower():
+                        _decl_root = (
+                            _resolve_alias_target(decl, model_ir).lower()
+                            if isinstance(decl, str)
+                            else ""
+                        )
+                        if _decl_root == _idx_root:
                             # This is the constraint's domain position — apply offset.
                             # Use an ALIAS of the set as the IndexOffset base to avoid
                             # GAMS Error 125 (equation domain index reused in lead/lag).
-                            if idx.lower() not in applied_positions:
-                                off = offset_map[idx.lower()]
+                            if _idx_root not in applied_positions:
+                                off = offset_map[_idx_root]
                                 # Find an alias for this set. Prefer the alias
                                 # that appears as a Sum index in the constraint
                                 # body (passed via preferred_aliases) to avoid
                                 # picking an unrelated alias.
                                 offset_base = idx  # fallback
-                                if preferred_aliases and idx.lower() in preferred_aliases:
-                                    offset_base = preferred_aliases[idx.lower()]
+                                if preferred_aliases and _idx_root in preferred_aliases:
+                                    offset_base = preferred_aliases[_idx_root]
                                 else:
                                     for aname, adef in model_ir.aliases.items():
                                         atgt = getattr(adef, "target", adef)
@@ -1710,7 +1719,7 @@ def _apply_alias_offset_to_deriv(
                                     offset_base, Const(float(off)), circular=False
                                 )
                                 changed = True
-                                applied_positions.add(idx.lower())
+                                applied_positions.add(_idx_root)
             if changed:
                 return ParamRef(expr.name, tuple(new_indices))
         return expr
@@ -1741,6 +1750,16 @@ def _apply_alias_offset_to_deriv(
     if changed:
         return _dc.replace(expr, **updates)  # type: ignore[type-var]
     return expr
+
+
+def _collect_sum_alias_indices(expr: Expr, result: set[str]) -> None:
+    """Collect all index names used in Sum.index_sets (single traversal)."""
+    if isinstance(expr, Sum):
+        for idx in expr.index_sets:
+            if isinstance(idx, str):
+                result.add(idx.lower())
+    for child in expr.children():
+        _collect_sum_alias_indices(child, result)
 
 
 def _body_has_alias_sum(expr: Expr, alias_names: set[str]) -> bool:
@@ -3928,43 +3947,60 @@ def _add_indexed_jacobian_terms(
                                     _eq_def_body.lhs_rhs[0],
                                     _eq_def_body.lhs_rhs[1],
                                 )
-                                _dom_lower = {d.lower() for d in mult_domain}
+                                # Canonicalize mult_domain to root set names
+                                _dom_roots = {
+                                    _resolve_alias_target(d, kkt.model_ir).lower()
+                                    for d in mult_domain
+                                }
                                 _alias_names: set[str] = set()
                                 for _a, _adef in kkt.model_ir.aliases.items():
                                     _tgt = getattr(_adef, "target", _adef)
-                                    if isinstance(_tgt, str) and _tgt.lower() in _dom_lower:
+                                    if isinstance(_tgt, str) and _tgt.lower() in _dom_roots:
+                                        _alias_names.add(_a.lower())
+                                    # Also include mult_domain names that ARE aliases
+                                    if _a.lower() in {d.lower() for d in mult_domain}:
                                         _alias_names.add(_a.lower())
                                 _cached = _body_has_alias_sum(_body_expr, _alias_names)
                             else:
                                 _cached = False
                             _alias_sum_cache[eq_name_base] = _cached
                         if _cached:
-                            # Build offset map: mult_domain position → offset value
+                            # Build offset map using canonical root names
                             _off_map: dict[str, int] = {}
                             for _pi, _ov in enumerate(offset_key):
                                 if _ov != 0 and _pi < len(mult_domain):
-                                    _off_map[mult_domain[_pi].lower()] = _ov
+                                    _canon = _resolve_alias_target(
+                                        mult_domain[_pi], kkt.model_ir
+                                    ).lower()
+                                    _off_map[_canon] = _ov
                             if _off_map:
-                                # Build preferred alias map: for each offset domain,
-                                # find the alias used as a Sum index in the body.
+                                # Single-pass: collect all alias names used as
+                                # Sum.index_sets in the body, then pick preferred.
+                                if "_body_sum_aliases_cache" not in locals():
+                                    _body_sum_aliases_cache: dict[str, set[str]] = {}
+                                _bsa = _body_sum_aliases_cache.get(eq_name_base)
+                                if _bsa is None:
+                                    _eq_def_pa = kkt.model_ir.equations.get(eq_name_base)
+                                    _bsa = set()
+                                    if _eq_def_pa is not None:
+                                        _body_pa = Binary(
+                                            "-",
+                                            _eq_def_pa.lhs_rhs[0],
+                                            _eq_def_pa.lhs_rhs[1],
+                                        )
+                                        _collect_sum_alias_indices(_body_pa, _bsa)
+                                    _body_sum_aliases_cache[eq_name_base] = _bsa
                                 _pref: dict[str, str] = {}
-                                _eq_def_pa = kkt.model_ir.equations.get(eq_name_base)
-                                if _eq_def_pa is not None:
-                                    _body_pa = Binary(
-                                        "-",
-                                        _eq_def_pa.lhs_rhs[0],
-                                        _eq_def_pa.lhs_rhs[1],
-                                    )
-                                    for dom_name in _off_map:
-                                        for _an, _ad in kkt.model_ir.aliases.items():
-                                            _at = getattr(_ad, "target", _ad)
-                                            if (
-                                                isinstance(_at, str)
-                                                and _at.lower() == dom_name
-                                                and _body_has_alias_sum(_body_pa, {_an.lower()})
-                                            ):
-                                                _pref[dom_name] = _an
-                                                break
+                                for dom_root in _off_map:
+                                    for _an, _ad in kkt.model_ir.aliases.items():
+                                        _at = getattr(_ad, "target", _ad)
+                                        if (
+                                            isinstance(_at, str)
+                                            and _at.lower() == dom_root
+                                            and _an.lower() in _bsa
+                                        ):
+                                            _pref[dom_root] = _an
+                                            break
                                 indexed_deriv = _apply_alias_offset_to_deriv(
                                     indexed_deriv, _off_map, kkt.model_ir, _pref
                                 )
