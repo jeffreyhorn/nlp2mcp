@@ -1686,11 +1686,20 @@ def _apply_alias_offset_to_deriv(
                     if pi < len(declared_domain):
                         decl = declared_domain[pi]
                         if isinstance(decl, str) and decl.lower() == idx.lower():
-                            # This is the constraint's domain position — apply offset
+                            # This is the constraint's domain position — apply offset.
+                            # Use an ALIAS of the set as the IndexOffset base to avoid
+                            # GAMS Error 125 (equation domain index reused in lead/lag).
                             if idx.lower() not in applied_positions:
                                 off = offset_map[idx.lower()]
+                                # Find an existing alias for this set
+                                offset_base = idx  # fallback
+                                for aname, adef in model_ir.aliases.items():
+                                    atgt = getattr(adef, "target", adef)
+                                    if isinstance(atgt, str) and atgt.lower() == idx.lower():
+                                        offset_base = aname
+                                        break
                                 new_indices[pi] = IndexOffset(
-                                    idx, Const(float(off)), circular=False
+                                    offset_base, Const(float(off)), circular=False
                                 )
                                 changed = True
                                 applied_positions.add(idx.lower())
