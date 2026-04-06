@@ -109,7 +109,9 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 **Root cause narrowed:** The fix is in how `_replace_indices_in_expr` handles elements from the constraint's domain when there's a non-zero offset between the constraint instance and the variable instance. Currently it maps all elements of set `n` to `n`, but when the constraint instance is offset by ±1 from the variable instance, the replacement should be `n±1`.
 
-**Fix implemented:** Added `_apply_alias_offset_to_deriv` post-processing step after `_replace_indices_in_expr`. For alias cross-term offset groups (detected via `_body_has_alias_sum`), ParamRef indices at positions matching the constraint's declared domain are replaced with IndexOffset(set_name, offset). Result: `a(n,n) * nu(n+1,k)` → `a(n+1,n) * nu(n+1,k)`. All 4365 tests pass, dispatch canary verified.
+**Fix implemented:** Added `_apply_alias_offset_to_deriv` post-processing step. For alias cross-term offset groups, ParamRef indices are replaced with IndexOffset. Result: `a(n,n) * nu(n+1,k)` → `a(n+1,n) * nu(n+1,k)`. All 4365 tests pass, dispatch canary verified.
+
+**Remaining issue:** GAMS Error 125 ("equation domain index reused in sum") on qabel, abel, irscge, lrgcge, moncge, stdcge. The `a(n+1,n)` syntax reuses `n` as both the equation domain index and inside an IndexOffset, which GAMS disallows. meanvar solves (no offset terms) but objective still mismatches. Fix needs GAMS syntax workaround (fresh alias for the offset index).
 
 ---
 
