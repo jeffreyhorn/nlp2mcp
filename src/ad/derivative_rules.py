@@ -235,6 +235,16 @@ def _indices_match(
     return True
 
 
+def _collect_bound_indices(expr: Expr, result: set[str]) -> None:
+    """Collect all index names bound by Sum/Prod in an expression."""
+    if isinstance(expr, (Sum, Prod)):
+        for idx in expr.index_sets:
+            if isinstance(idx, str):
+                result.add(idx)
+    for child in expr.children():
+        _collect_bound_indices(child, result)
+
+
 def _find_var_indices_in_body(expr: Expr, var_name: str) -> list[tuple[str | IndexOffset, ...]]:
     """Find all VarRef(var_name) index tuples in an expression tree.
 
@@ -1916,7 +1926,11 @@ def _diff_sum(
                     # Issue #1111: Convert remaining concrete wrt indices to symbolic
                     # set names when the variable in the body uses symbolic free
                     # indices that correspond to those concrete values.
+                    # Collect all bound indices (from inner sums/prods) to avoid
+                    # converting to a bound variable.
                     if var_indices_in_body:
+                        _body_bound: set[str] = {sum_idx}
+                        _collect_bound_indices(expr.body, _body_bound)
                         new_wrt = list(symbolic_wrt)
                         for j, wj in enumerate(new_wrt):
                             if j == i:
@@ -1924,18 +1938,16 @@ def _diff_sum(
                             if isinstance(wj, IndexOffset):
                                 continue
                             # Check if position j in any body VarRef has a symbolic
-                            # index that this concrete value is an instance of.
-                            # Skip if the body index IS the sum's own iteration
-                            # variable — converting to it would prevent proper
-                            # sum collapse (e.g., sum(cr, z(cr,p)) should collapse,
-                            # not become sum(cr, d/dz(cr,p) z(cr,p))).
+                            # FREE index that this concrete value is an instance of.
+                            # Skip bound indices (from this or inner sums) to avoid
+                            # converting to a sum iteration variable.
                             for var_idx_tuple in var_indices_in_body:
                                 if j < len(var_idx_tuple):
                                     body_idx = var_idx_tuple[j]
                                     if (
                                         isinstance(body_idx, str)
                                         and body_idx != wj
-                                        and body_idx != sum_idx
+                                        and body_idx not in _body_bound
                                         and _is_concrete_instance_of(wj, body_idx, config)
                                     ):
                                         new_wrt[j] = body_idx
