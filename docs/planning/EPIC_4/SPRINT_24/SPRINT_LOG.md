@@ -135,7 +135,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 **Decision:** NO-GO — 3 regressions in matching models from alias offset fix. The `_body_has_alias_sum` guard is too broad; it triggers on constraints that contain alias sums but where the specific offset group is a regular lead/lag, not an alias cross-term. Need to narrow the guard before proceeding.
 
-**Action:** Revert or narrow the alias offset fix to eliminate false positives. The fix is mathematically correct for qabel/abel but incorrectly applies to marco/paklive/quocge.
+**Action:** Narrowed guard with `_var_inside_alias_sum` + co-index check. quocge regression fixed. marco/paklive regressions from separate issue (emitter `resolve_index_conflicts` introducing spurious `sum(cr__, 1)`) — needs further investigation.
 
 ---
 

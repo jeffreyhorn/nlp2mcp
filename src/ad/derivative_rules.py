@@ -1924,13 +1924,18 @@ def _diff_sum(
                             if isinstance(wj, IndexOffset):
                                 continue
                             # Check if position j in any body VarRef has a symbolic
-                            # index that this concrete value is an instance of
+                            # index that this concrete value is an instance of.
+                            # Skip if the body index IS the sum's own iteration
+                            # variable — converting to it would prevent proper
+                            # sum collapse (e.g., sum(cr, z(cr,p)) should collapse,
+                            # not become sum(cr, d/dz(cr,p) z(cr,p))).
                             for var_idx_tuple in var_indices_in_body:
                                 if j < len(var_idx_tuple):
                                     body_idx = var_idx_tuple[j]
                                     if (
                                         isinstance(body_idx, str)
                                         and body_idx != wj
+                                        and body_idx != sum_idx
                                         and _is_concrete_instance_of(wj, body_idx, config)
                                     ):
                                         new_wrt[j] = body_idx
