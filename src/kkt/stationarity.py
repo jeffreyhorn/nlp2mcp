@@ -1706,28 +1706,32 @@ def _apply_alias_offset_to_deriv(
             if changed:
                 return ParamRef(expr.name, tuple(new_indices))
         return expr
-    if isinstance(expr, Binary):
-        new_left = _apply_alias_offset_to_deriv(expr.left, offset_map, model_ir)
-        new_right = _apply_alias_offset_to_deriv(expr.right, offset_map, model_ir)
-        if new_left is expr.left and new_right is expr.right:
-            return expr
-        return Binary(expr.op, new_left, new_right)
-    if isinstance(expr, Unary):
-        new_child = _apply_alias_offset_to_deriv(expr.child, offset_map, model_ir)
-        if new_child is expr.child:
-            return expr
-        return Unary(expr.op, new_child)
-    if isinstance(expr, Sum):
-        new_body = _apply_alias_offset_to_deriv(expr.body, offset_map, model_ir)
-        if new_body is expr.body:
-            return expr
-        return Sum(expr.index_sets, new_body, expr.condition)
-    if isinstance(expr, DollarConditional):
-        new_val = _apply_alias_offset_to_deriv(expr.value_expr, offset_map, model_ir)
-        new_cond = _apply_alias_offset_to_deriv(expr.condition, offset_map, model_ir)
-        if new_val is expr.value_expr and new_cond is expr.condition:
-            return expr
-        return DollarConditional(value_expr=new_val, condition=new_cond)
+    # Generic recursive traversal via dataclass fields
+    import dataclasses as _dc
+
+    changed = False
+    updates: dict[str, object] = {}
+    for f in _dc.fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name)
+        if hasattr(val, "__dataclass_fields__"):
+            new_val = _apply_alias_offset_to_deriv(val, offset_map, model_ir)
+            if new_val is not val:
+                updates[f.name] = new_val
+                changed = True
+        elif isinstance(val, tuple):
+            new_items = tuple(
+                (
+                    _apply_alias_offset_to_deriv(item, offset_map, model_ir)
+                    if hasattr(item, "__dataclass_fields__")
+                    else item
+                )
+                for item in val
+            )
+            if new_items != val:
+                updates[f.name] = new_items
+                changed = True
+    if changed:
+        return _dc.replace(expr, **updates)  # type: ignore[type-var]
     return expr
 
 
@@ -1754,47 +1758,45 @@ def _replace_offset_markers(
     during index replacement. This function converts them to proper IndexOffset
     nodes (e.g., IndexOffset('n', 1)).
     """
+    import dataclasses as _dc
+
     if isinstance(expr, (ParamRef, VarRef, MultiplierRef)):
         new_indices: list[str | IndexOffset] = []
         changed = False
         for idx in expr.indices:
             if isinstance(idx, str) and idx in markers:
-                set_name, offset = markers[idx]
-                new_indices.append(IndexOffset(set_name, Const(float(offset)), circular=False))
+                sn, off = markers[idx]
+                new_indices.append(IndexOffset(sn, Const(float(off)), circular=False))
                 changed = True
             else:
                 new_indices.append(idx)
         if changed:
-            return type(expr)(expr.name, tuple(new_indices))
+            return _dc.replace(expr, indices=tuple(new_indices))  # type: ignore[type-var]
         return expr
-    if isinstance(expr, Binary):
-        new_left = _replace_offset_markers(expr.left, markers)
-        new_right = _replace_offset_markers(expr.right, markers)
-        if new_left is expr.left and new_right is expr.right:
-            return expr
-        return Binary(expr.op, new_left, new_right)
-    if isinstance(expr, Unary):
-        new_child = _replace_offset_markers(expr.child, markers)
-        if new_child is expr.child:
-            return expr
-        return Unary(expr.op, new_child)
-    if isinstance(expr, Sum):
-        new_body = _replace_offset_markers(expr.body, markers)
-        if new_body is expr.body:
-            return expr
-        return Sum(expr.index_sets, new_body, expr.condition)
-    if isinstance(expr, DollarConditional):
-        new_val = _replace_offset_markers(expr.value_expr, markers)
-        new_cond = _replace_offset_markers(expr.condition, markers)
-        if new_val is expr.value_expr and new_cond is expr.condition:
-            return expr
-        return DollarConditional(value_expr=new_val, condition=new_cond)
-    if isinstance(expr, Call):
-        new_args = tuple(
-            _replace_offset_markers(a, markers) if hasattr(a, "__dataclass_fields__") else a
-            for a in expr.args
-        )
-        return Call(expr.func, new_args)
+    # Generic recursive traversal via dataclass fields
+    changed = False
+    updates: dict[str, object] = {}
+    for f in _dc.fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name)
+        if hasattr(val, "__dataclass_fields__"):
+            new_val = _replace_offset_markers(val, markers)
+            if new_val is not val:
+                updates[f.name] = new_val
+                changed = True
+        elif isinstance(val, tuple):
+            new_items = tuple(
+                (
+                    _replace_offset_markers(item, markers)
+                    if hasattr(item, "__dataclass_fields__")
+                    else item
+                )
+                for item in val
+            )
+            if new_items != val:
+                updates[f.name] = new_items
+                changed = True
+    if changed:
+        return _dc.replace(expr, **updates)  # type: ignore[type-var]
     return expr
 
 
@@ -3958,27 +3960,39 @@ def _add_indexed_jacobian_terms(
                     # body contains a sum over an alias of the offset-position domain.
                     _has_offset_early = any(o != 0 for o in offset_key)
                     if not is_dim_mismatch and _has_offset_early:
-                        _eq_def_body = kkt.model_ir.equations.get(eq_name_base)
-                        if _eq_def_body is not None:
-                            _body_expr = Binary(
-                                "-", _eq_def_body.lhs_rhs[0], _eq_def_body.lhs_rhs[1]
-                            )
-                            _dom_lower = {d.lower() for d in mult_domain}
-                            _alias_names: set[str] = set()
-                            for _a, _adef in kkt.model_ir.aliases.items():
-                                _tgt = getattr(_adef, "target", _adef)
-                                if isinstance(_tgt, str) and _tgt.lower() in _dom_lower:
-                                    _alias_names.add(_a.lower())
-                            if _body_has_alias_sum(_body_expr, _alias_names):
-                                # Build offset map: mult_domain position → offset value
-                                _off_map: dict[str, int] = {}
-                                for _pi, _ov in enumerate(offset_key):
-                                    if _ov != 0 and _pi < len(mult_domain):
-                                        _off_map[mult_domain[_pi].lower()] = _ov
-                                if _off_map:
-                                    indexed_deriv = _apply_alias_offset_to_deriv(
-                                        indexed_deriv, _off_map, kkt.model_ir
-                                    )
+                        # Cache alias-sum detection per eq_name_base to avoid
+                        # repeated body traversal across offset groups.
+                        if "_alias_sum_cache" not in locals():
+                            _alias_sum_cache: dict[str, bool] = {}
+                        _cached = _alias_sum_cache.get(eq_name_base)
+                        if _cached is None:
+                            _eq_def_body = kkt.model_ir.equations.get(eq_name_base)
+                            if _eq_def_body is not None:
+                                _body_expr = Binary(
+                                    "-",
+                                    _eq_def_body.lhs_rhs[0],
+                                    _eq_def_body.lhs_rhs[1],
+                                )
+                                _dom_lower = {d.lower() for d in mult_domain}
+                                _alias_names: set[str] = set()
+                                for _a, _adef in kkt.model_ir.aliases.items():
+                                    _tgt = getattr(_adef, "target", _adef)
+                                    if isinstance(_tgt, str) and _tgt.lower() in _dom_lower:
+                                        _alias_names.add(_a.lower())
+                                _cached = _body_has_alias_sum(_body_expr, _alias_names)
+                            else:
+                                _cached = False
+                            _alias_sum_cache[eq_name_base] = _cached
+                        if _cached:
+                            # Build offset map: mult_domain position → offset value
+                            _off_map: dict[str, int] = {}
+                            for _pi, _ov in enumerate(offset_key):
+                                if _ov != 0 and _pi < len(mult_domain):
+                                    _off_map[mult_domain[_pi].lower()] = _ov
+                            if _off_map:
+                                indexed_deriv = _apply_alias_offset_to_deriv(
+                                    indexed_deriv, _off_map, kkt.model_ir
+                                )
 
                     # Get base multiplier name (without element suffixes)
                     mult_base_name = name_func(eq_name_base)

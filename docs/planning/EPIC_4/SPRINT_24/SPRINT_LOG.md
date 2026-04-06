@@ -103,7 +103,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 |---|---|
 | Trace Jacobian transpose assembly for qabel | ✅ |
 | Identify root cause in _replace_indices_in_expr | ✅ |
-| Quality gate | N/A (no code changes) |
+| Quality gate | ✅ 4365 passed (code changes in stationarity.py) |
 
 **Day 4 Finding:** The cross-terms ARE being generated via offset groups (`n+1`, `n-1` offsets in the first dimension). The issue is more specific than expected: `_replace_indices_in_expr` maps `a(invest,consumpt)` → `a(n,n)` instead of `a(n+1,n)` or `a(n-1,n)`. The offset information exists in the `offset_key` but isn't used by `_replace_indices_in_expr` to generate the correct offset-based replacement.
 
