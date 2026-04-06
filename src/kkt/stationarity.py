@@ -1787,7 +1787,6 @@ def _var_inside_alias_sum(
     expr: Expr,
     var_name: str,
     alias_names: set[str],
-    eq_domain: set[str] | None = None,
 ) -> bool:
     """Check if variable var_name appears as a cross-term inside an alias Sum.
 
@@ -1806,7 +1805,7 @@ def _var_inside_alias_sum(
         if alias_idx and _var_has_alias_coindex(expr.body, var_name, alias_idx):
             return True
     for child in expr.children():
-        if _var_inside_alias_sum(child, var_name, alias_names, eq_domain):
+        if _var_inside_alias_sum(child, var_name, alias_names):
             return True
     return False
 
@@ -1823,17 +1822,6 @@ def _var_has_alias_coindex(expr: Expr, var_name: str, alias_idx: set[str]) -> bo
     for child in expr.children():
         if _var_has_alias_coindex(child, var_name, alias_idx):
             return True
-    return False
-
-
-def _expr_contains_var(expr: Expr, var_name: str) -> bool:
-    """Check if expression contains VarRef with given name."""
-    if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
-        return True
-    for child in expr.children():
-        if _expr_contains_var(child, var_name):
-            return True
-    return False
     return False
 
 

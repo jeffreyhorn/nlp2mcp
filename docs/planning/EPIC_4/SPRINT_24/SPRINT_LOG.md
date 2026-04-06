@@ -131,7 +131,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 |---|---|---|---|---|
 | Alias regression | 0 | ≤ 1 | > 1 | **3 (marco, paklive, quocge)** |
 | Pattern A improvement | ≥ 3 | ≥ 1 | 0 | 2 (qabel, abel now compile+solve) |
-| Tests | All pass | All pass | Failures | 4369 pass |
+| Tests | All pass | All pass | Failures | 4369 passed |
 
 **Decision:** GO — All 3 regressions fixed (quocge: co-index guard, marco/paklive: bound-index guard). The `_body_has_alias_sum` guard is too broad; it triggers on constraints that contain alias sums but where the specific offset group is a regular lead/lag, not an alias cross-term. Need to narrow the guard before proceeding.
 

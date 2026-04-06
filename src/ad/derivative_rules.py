@@ -1910,10 +1910,12 @@ def _diff_sum(
         # and return the first non-zero derivative.
         if len(expr.index_sets) == 1:
             sum_idx = expr.index_sets[0]
-            # Issue #1111: Pre-compute VarRef indices in body (once, outside loop)
+            # Issue #1111: Pre-compute VarRef indices and bound indices (once)
             var_indices_in_body: list[tuple[str | IndexOffset, ...]] = []
+            _body_bound: set[str] = {sum_idx}
             if config is not None and config.model_ir is not None:
                 var_indices_in_body = _find_var_indices_in_body(expr.body, wrt_var)
+                _collect_bound_indices(expr.body, _body_bound)
             for i, wrt_idx in enumerate(wrt_indices):
                 check_str = wrt_idx.base if isinstance(wrt_idx, IndexOffset) else wrt_idx
                 if _is_concrete_instance_of(check_str, sum_idx, config):
@@ -1929,8 +1931,6 @@ def _diff_sum(
                     # Collect all bound indices (from inner sums/prods) to avoid
                     # converting to a bound variable.
                     if var_indices_in_body:
-                        _body_bound: set[str] = {sum_idx}
-                        _collect_bound_indices(expr.body, _body_bound)
                         new_wrt = list(symbolic_wrt)
                         for j, wj in enumerate(new_wrt):
                             if j == i:
