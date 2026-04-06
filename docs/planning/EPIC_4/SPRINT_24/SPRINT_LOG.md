@@ -115,25 +115,27 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ---
 
-### Day 5 — Checkpoint 1 + WS1 Phase 3 + WS2
+### Day 5 — Checkpoint 1
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Checkpoint 1 evaluation | |
-| Begin offset-alias fix (polygon, himmel16) | |
-| Begin subcategory H batch fix | |
+| Checkpoint 1 evaluation | ✅ NO-GO (3 regressions) |
+| Begin offset-alias fix | Blocked by checkpoint |
+| Begin subcategory H batch fix | Blocked by checkpoint |
 
 #### Checkpoint 1 (Day 5)
 
-| Criterion | GO | CONDITIONAL GO | NO-GO |
-|---|---|---|---|
-| Alias regression | 0 | ≤ 1 | > 1 |
-| Pattern A improvement | ≥ 3 | ≥ 1 | 0 |
-| Tests | All pass | All pass | Failures |
+| Criterion | GO | CONDITIONAL GO | NO-GO | Actual |
+|---|---|---|---|---|
+| Alias regression | 0 | ≤ 1 | > 1 | **3 (marco, paklive, quocge)** |
+| Pattern A improvement | ≥ 3 | ≥ 1 | 0 | 2 (qabel, abel now compile+solve) |
+| Tests | All pass | All pass | Failures | 4369 pass |
 
-**Decision:** _pending_
+**Decision:** NO-GO — 3 regressions in matching models from alias offset fix. The `_body_has_alias_sum` guard is too broad; it triggers on constraints that contain alias sums but where the specific offset group is a regular lead/lag, not an alias cross-term. Need to narrow the guard before proceeding.
+
+**Action:** Revert or narrow the alias offset fix to eliminate false positives. The fix is mathematically correct for qabel/abel but incorrectly applies to marco/paklive/quocge.
 
 ---
 
