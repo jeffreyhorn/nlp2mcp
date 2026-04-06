@@ -1783,6 +1783,48 @@ def _body_has_alias_sum(expr: Expr, alias_names: set[str]) -> bool:
     return False
 
 
+def _var_inside_alias_sum(
+    expr: Expr,
+    var_name: str,
+    alias_names: set[str],
+) -> bool:
+    """Check if variable var_name appears as a cross-term inside an alias Sum.
+
+    More specific than _body_has_alias_sum: verifies variable uses the alias
+    as a co-index (alongside other indices), not as the sole index.
+
+    qabel: sum(np, a(n,np)*x(np,k)) — x(np,k) has alias np + free k → True
+    quocge: sum(j, RT(j)) — RT(j) has only alias j → False
+    """
+    if isinstance(expr, Sum):
+        alias_idx = {
+            idx.lower()
+            for idx in expr.index_sets
+            if isinstance(idx, str) and idx.lower() in alias_names
+        }
+        if alias_idx and _var_has_alias_coindex(expr.body, var_name, alias_idx):
+            return True
+    for child in expr.children():
+        if _var_inside_alias_sum(child, var_name, alias_names):
+            return True
+    return False
+
+
+def _var_has_alias_coindex(expr: Expr, var_name: str, alias_idx: set[str]) -> bool:
+    """Check if VarRef(var_name) uses an alias index alongside other indices."""
+    if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
+        has_alias = any(isinstance(i, str) and i.lower() in alias_idx for i in expr.indices)
+        has_other = any(
+            (isinstance(i, str) and i.lower() not in alias_idx) or isinstance(i, IndexOffset)
+            for i in expr.indices
+        )
+        return has_alias and has_other
+    for child in expr.children():
+        if _var_has_alias_coindex(child, var_name, alias_idx):
+            return True
+    return False
+
+
 def _apply_offset_substitution(
     expr: Expr,
     rep_var_indices: tuple[str, ...],
@@ -3946,8 +3988,9 @@ def _add_indexed_jacobian_terms(
                         # Cache alias-sum detection per eq_name_base to avoid
                         # repeated body traversal across offset groups.
                         if "_alias_sum_cache" not in locals():
-                            _alias_sum_cache: dict[str, bool] = {}
-                        _cached = _alias_sum_cache.get(eq_name_base)
+                            _alias_sum_cache: dict[tuple[str, str], bool] = {}
+                        _cache_key = (eq_name_base, var_name)
+                        _cached = _alias_sum_cache.get(_cache_key)
                         if _cached is None:
                             _eq_def_body = kkt.model_ir.equations.get(eq_name_base)
                             if _eq_def_body is not None:
@@ -3970,10 +4013,17 @@ def _add_indexed_jacobian_terms(
                                     # Also include mult_domain names that ARE aliases
                                     if _a.lower() in _mult_dom_lower:
                                         _alias_names.add(_a.lower())
-                                _cached = _body_has_alias_sum(_body_expr, _alias_names)
+                                # Use the targeted check: variable must be
+                                # INSIDE the alias sum, not just anywhere in
+                                # the constraint body. This prevents false
+                                # positives for constraints with alias sums
+                                # that don't involve the differentiated variable
+                                # (e.g., quocge's eqXp has sum(j,...) but rt
+                                # is outside that sum).
+                                _cached = _var_inside_alias_sum(_body_expr, var_name, _alias_names)
                             else:
                                 _cached = False
-                            _alias_sum_cache[eq_name_base] = _cached
+                            _alias_sum_cache[_cache_key] = _cached
                         if _cached:
                             # Build offset map using canonical root names
                             # Build offset map. If multiple positions resolve

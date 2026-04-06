@@ -633,3 +633,46 @@ def test_diff_sum_single_index_concrete_symbolic_conversion():
     a_ref = _find_paramref(result, "a")
     assert a_ref is not None, "Expected ParamRef 'a' in result"
     assert a_ref.indices == ("n", "consumpt"), f"Expected a(n, consumpt), got a{a_ref.indices}"
+
+
+def test_diff_nested_sum_no_spurious_inner_sum():
+    """Regression test: d/dz(cr1,p1) sum(p, op(p)*sum(cr, z(cr,p))) should NOT
+    produce sum(cr, 1) — the inner sum over cr should collapse, not persist.
+
+    This was a regression in marco/paklive where the concrete→symbolic
+    conversion incorrectly mapped cr1→cr (inner sum's bound variable),
+    preventing proper sum collapse and introducing a spurious card(cr) factor.
+    """
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import SetDef
+
+    model = ModelIR()
+    model.sets["cr"] = SetDef(name="cr", domain=(), members=["mid-c", "w-tex"])
+    model.sets["p"] = SetDef(name="p", domain=(), members=["a-dist", "n-reform"])
+
+    config = Config()
+    config.model_ir = model
+
+    # sum(p, op(p) * sum(cr, z(cr,p)))
+    inner_sum = Sum(("cr",), VarRef("z", ("cr", "p")), None)
+    body = Binary("*", ParamRef("op", ("p",)), inner_sum)
+    outer_sum = Sum(("p",), body, None)
+
+    # d/dz(mid-c, a-dist) should produce op(a-dist) (scalar, no sum(cr,...))
+    result = differentiate_expr(outer_sum, "z", ("mid-c", "a-dist"), config)
+
+    # The result should NOT contain Sum((cr), Const(1.0)) — the bad pattern where
+    # the inner sum's bound variable was spuriously converted to a symbolic index.
+    # Note: Sum((cr), VarRef(...)) from the product rule's zero-valued term is harmless.
+    def _has_spurious_sum_cr_const(expr):
+        if isinstance(expr, Sum) and "cr" in expr.index_sets and isinstance(expr.body, Const):
+            return True
+        for child in expr.children():
+            if _has_spurious_sum_cr_const(child):
+                return True
+        return False
+
+    assert not _has_spurious_sum_cr_const(result), (
+        f"Result contains spurious sum(cr, const): {result}"
+    )

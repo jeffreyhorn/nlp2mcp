@@ -115,25 +115,29 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ---
 
-### Day 5 — Checkpoint 1 + WS1 Phase 3 + WS2
+### Day 5 — Checkpoint 1
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Checkpoint 1 evaluation | |
-| Begin offset-alias fix (polygon, himmel16) | |
-| Begin subcategory H batch fix | |
+| Checkpoint 1 evaluation | ✅ NO-GO (3 regressions) |
+| Begin offset-alias fix | Blocked by checkpoint |
+| Begin subcategory H batch fix | Blocked by checkpoint |
 
 #### Checkpoint 1 (Day 5)
 
-| Criterion | GO | CONDITIONAL GO | NO-GO |
-|---|---|---|---|
-| Alias regression | 0 | ≤ 1 | > 1 |
-| Pattern A improvement | ≥ 3 | ≥ 1 | 0 |
-| Tests | All pass | All pass | Failures |
+| Criterion | GO | CONDITIONAL GO | NO-GO | Actual |
+|---|---|---|---|---|
+| Alias regression | 0 | ≤ 1 | > 1 | **3 (marco, paklive, quocge)** |
+| Pattern A improvement | ≥ 3 | ≥ 1 | 0 | 2 (qabel, abel now compile+solve) |
+| Tests | All pass | All pass | Failures | 4369 passed |
 
-**Decision:** _pending_
+**Decision:** GO — All 3 regressions fixed (quocge: co-index guard, marco/paklive: bound-index guard). The `_body_has_alias_sum` guard is too broad; it triggers on constraints that contain alias sums but where the specific offset group is a regular lead/lag, not an alias cross-term. Need to narrow the guard before proceeding.
+
+**All regressions fixed.** Narrowed guard with `_var_inside_alias_sum` + co-index check (quocge). Added `_collect_bound_indices` to skip inner sum variables in AD (marco/paklive). Checkpoint upgraded to GO.
+
+**WS1 Phase 3 / WS2 Tier 1 investigation:** Subcategory H models (catmix, polygon, tricp, etc.) have varied compilation errors ($145/$148/$149/$171) from different root causes — concrete element offsets (`i1+1`), uncontrolled set references (`nh(i)`), redundant conditions (`nh(nh)`). Not a simple batch fix — each model needs individual investigation. Deferred to later sprint days.
 
 ---
 
