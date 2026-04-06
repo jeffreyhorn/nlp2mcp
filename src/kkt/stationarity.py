@@ -1656,6 +1656,157 @@ def _expr_has_circular_offset(expr: Expr) -> bool:
     return False
 
 
+def _apply_alias_offset_to_deriv(
+    expr: Expr,
+    offset_map: dict[str, int],
+    model_ir: ModelIR,
+    preferred_aliases: dict[str, str] | None = None,
+) -> Expr:
+    """Apply alias offsets to ParamRef indices in a derivative expression.
+
+    Issue #1111: When a constraint has sum(alias, ...) and the Jacobian entry
+    is from an offset group, the derivative a(n,n) should become a(n+1,n) where
+    position 0 has offset 1. This function uses the parameter's declared domain
+    to determine which index position corresponds to the constraint domain at
+    the offset position, and replaces that index with IndexOffset.
+
+    Only the FIRST occurrence of the offset domain variable in each ParamRef is
+    replaced (matching the constraint domain position, not the variable position).
+    """
+    if isinstance(expr, ParamRef):
+        param_def = model_ir.params.get(expr.name)
+        if param_def is not None and hasattr(param_def, "domain"):
+            declared_domain = param_def.domain
+            new_indices: list[str | IndexOffset] = list(expr.indices)
+            changed = False
+            applied_positions: set[str] = set()
+            for pi, idx in enumerate(new_indices):
+                if isinstance(idx, str) and idx.lower() in offset_map:
+                    # Check if this param position's declared domain matches
+                    # the offset domain (constraint domain, not alias)
+                    if pi < len(declared_domain):
+                        decl = declared_domain[pi]
+                        if isinstance(decl, str) and decl.lower() == idx.lower():
+                            # This is the constraint's domain position — apply offset.
+                            # Use an ALIAS of the set as the IndexOffset base to avoid
+                            # GAMS Error 125 (equation domain index reused in lead/lag).
+                            if idx.lower() not in applied_positions:
+                                off = offset_map[idx.lower()]
+                                # Find an alias for this set. Prefer the alias
+                                # that appears as a Sum index in the constraint
+                                # body (passed via preferred_aliases) to avoid
+                                # picking an unrelated alias.
+                                offset_base = idx  # fallback
+                                if preferred_aliases and idx.lower() in preferred_aliases:
+                                    offset_base = preferred_aliases[idx.lower()]
+                                else:
+                                    for aname, adef in model_ir.aliases.items():
+                                        atgt = getattr(adef, "target", adef)
+                                        if isinstance(atgt, str) and atgt.lower() == idx.lower():
+                                            offset_base = aname
+                                            break
+                                new_indices[pi] = IndexOffset(
+                                    offset_base, Const(float(off)), circular=False
+                                )
+                                changed = True
+                                applied_positions.add(idx.lower())
+            if changed:
+                return ParamRef(expr.name, tuple(new_indices))
+        return expr
+    # Generic recursive traversal via dataclass fields
+    import dataclasses as _dc
+
+    changed = False
+    updates: dict[str, object] = {}
+    for f in _dc.fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name)
+        if hasattr(val, "__dataclass_fields__"):
+            new_val = _apply_alias_offset_to_deriv(val, offset_map, model_ir, preferred_aliases)
+            if new_val is not val:
+                updates[f.name] = new_val
+                changed = True
+        elif isinstance(val, tuple):
+            new_items = tuple(
+                (
+                    _apply_alias_offset_to_deriv(item, offset_map, model_ir, preferred_aliases)
+                    if hasattr(item, "__dataclass_fields__")
+                    else item
+                )
+                for item in val
+            )
+            if new_items != val:
+                updates[f.name] = new_items
+                changed = True
+    if changed:
+        return _dc.replace(expr, **updates)  # type: ignore[type-var]
+    return expr
+
+
+def _body_has_alias_sum(expr: Expr, alias_names: set[str]) -> bool:
+    """Check if an expression contains a Sum whose iteration index is an alias."""
+    if isinstance(expr, Sum):
+        for idx in expr.index_sets:
+            if isinstance(idx, str) and idx.lower() in alias_names:
+                return True
+    for child in expr.children():
+        if _body_has_alias_sum(child, alias_names):
+            return True
+    return False
+
+
+def _replace_offset_markers(
+    expr: Expr,
+    markers: dict[str, tuple[str, int]],
+) -> Expr:
+    """Replace offset marker strings with IndexOffset nodes in an expression.
+
+    Issue #1111: When alias cross-terms produce derivatives with constraint-domain
+    elements at non-zero offsets, marker strings like '__kkt_off_n_1' are inserted
+    during index replacement. This function converts them to proper IndexOffset
+    nodes (e.g., IndexOffset('n', 1)).
+    """
+    import dataclasses as _dc
+
+    if isinstance(expr, (ParamRef, VarRef, MultiplierRef)):
+        new_indices: list[str | IndexOffset] = []
+        changed = False
+        for idx in expr.indices:
+            if isinstance(idx, str) and idx in markers:
+                sn, off = markers[idx]
+                new_indices.append(IndexOffset(sn, Const(float(off)), circular=False))
+                changed = True
+            else:
+                new_indices.append(idx)
+        if changed:
+            return _dc.replace(expr, indices=tuple(new_indices))  # type: ignore[type-var]
+        return expr
+    # Generic recursive traversal via dataclass fields
+    changed = False
+    updates: dict[str, object] = {}
+    for f in _dc.fields(expr):  # type: ignore[arg-type]
+        val = getattr(expr, f.name)
+        if hasattr(val, "__dataclass_fields__"):
+            new_val = _replace_offset_markers(val, markers)
+            if new_val is not val:
+                updates[f.name] = new_val
+                changed = True
+        elif isinstance(val, tuple):
+            new_items = tuple(
+                (
+                    _replace_offset_markers(item, markers)
+                    if hasattr(item, "__dataclass_fields__")
+                    else item
+                )
+                for item in val
+            )
+            if new_items != val:
+                updates[f.name] = new_items
+                changed = True
+    if changed:
+        return _dc.replace(expr, **updates)  # type: ignore[type-var]
+    return expr
+
+
 def _apply_offset_substitution(
     expr: Expr,
     rep_var_indices: tuple[str, ...],
@@ -3807,6 +3958,68 @@ def _add_indexed_jacobian_terms(
                         kkt.model_ir,
                         equation_domain=var_domain,
                     )
+
+                    # Issue #1111: For alias cross-terms in offset groups, the
+                    # indexed_deriv may contain a(n,n) where the first n should
+                    # be a(n+1,n) based on the offset. Post-process to apply
+                    # offset to ParamRef indices that correspond to the constraint's
+                    # domain at offset positions. Only applies when the constraint
+                    # body contains a sum over an alias of the offset-position domain.
+                    _has_offset_early = any(o != 0 for o in offset_key)
+                    if not is_dim_mismatch and _has_offset_early:
+                        # Cache alias-sum detection per eq_name_base to avoid
+                        # repeated body traversal across offset groups.
+                        if "_alias_sum_cache" not in locals():
+                            _alias_sum_cache: dict[str, bool] = {}
+                        _cached = _alias_sum_cache.get(eq_name_base)
+                        if _cached is None:
+                            _eq_def_body = kkt.model_ir.equations.get(eq_name_base)
+                            if _eq_def_body is not None:
+                                _body_expr = Binary(
+                                    "-",
+                                    _eq_def_body.lhs_rhs[0],
+                                    _eq_def_body.lhs_rhs[1],
+                                )
+                                _dom_lower = {d.lower() for d in mult_domain}
+                                _alias_names: set[str] = set()
+                                for _a, _adef in kkt.model_ir.aliases.items():
+                                    _tgt = getattr(_adef, "target", _adef)
+                                    if isinstance(_tgt, str) and _tgt.lower() in _dom_lower:
+                                        _alias_names.add(_a.lower())
+                                _cached = _body_has_alias_sum(_body_expr, _alias_names)
+                            else:
+                                _cached = False
+                            _alias_sum_cache[eq_name_base] = _cached
+                        if _cached:
+                            # Build offset map: mult_domain position → offset value
+                            _off_map: dict[str, int] = {}
+                            for _pi, _ov in enumerate(offset_key):
+                                if _ov != 0 and _pi < len(mult_domain):
+                                    _off_map[mult_domain[_pi].lower()] = _ov
+                            if _off_map:
+                                # Build preferred alias map: for each offset domain,
+                                # find the alias used as a Sum index in the body.
+                                _pref: dict[str, str] = {}
+                                _eq_def_pa = kkt.model_ir.equations.get(eq_name_base)
+                                if _eq_def_pa is not None:
+                                    _body_pa = Binary(
+                                        "-",
+                                        _eq_def_pa.lhs_rhs[0],
+                                        _eq_def_pa.lhs_rhs[1],
+                                    )
+                                    for dom_name in _off_map:
+                                        for _an, _ad in kkt.model_ir.aliases.items():
+                                            _at = getattr(_ad, "target", _ad)
+                                            if (
+                                                isinstance(_at, str)
+                                                and _at.lower() == dom_name
+                                                and _body_has_alias_sum(_body_pa, {_an.lower()})
+                                            ):
+                                                _pref[dom_name] = _an
+                                                break
+                                indexed_deriv = _apply_alias_offset_to_deriv(
+                                    indexed_deriv, _off_map, kkt.model_ir, _pref
+                                )
 
                     # Get base multiplier name (without element suffixes)
                     mult_base_name = name_func(eq_name_base)
