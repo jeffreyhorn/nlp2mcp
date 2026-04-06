@@ -1671,8 +1671,9 @@ def _apply_alias_offset_to_deriv(
     to the constraint domain, and replaces with IndexOffset(alias, offset)
     to avoid GAMS Error 125 (domain index reused in lead/lag).
 
-    Only the FIRST occurrence of the offset domain variable in each ParamRef is
-    replaced (matching the constraint domain position, not the variable position).
+    Any ParamRef index position whose declared domain resolves to a root set
+    present in ``offset_map`` may be replaced. Positions where the declared
+    domain is an alias (not the root name directly) are skipped.
     """
     if isinstance(expr, ParamRef):
         param_def = model_ir.params.get(expr.name)
@@ -3960,13 +3961,14 @@ def _add_indexed_jacobian_terms(
                                     _resolve_alias_target(d, kkt.model_ir).lower()
                                     for d in mult_domain
                                 }
+                                _mult_dom_lower = {d.lower() for d in mult_domain}
                                 _alias_names: set[str] = set()
                                 for _a, _adef in kkt.model_ir.aliases.items():
                                     _tgt = getattr(_adef, "target", _adef)
                                     if isinstance(_tgt, str) and _tgt.lower() in _dom_roots:
                                         _alias_names.add(_a.lower())
                                     # Also include mult_domain names that ARE aliases
-                                    if _a.lower() in {d.lower() for d in mult_domain}:
+                                    if _a.lower() in _mult_dom_lower:
                                         _alias_names.add(_a.lower())
                                 _cached = _body_has_alias_sum(_body_expr, _alias_names)
                             else:
