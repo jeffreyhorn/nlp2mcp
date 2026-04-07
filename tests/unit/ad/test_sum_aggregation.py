@@ -673,6 +673,6 @@ def test_diff_nested_sum_no_spurious_inner_sum():
                 return True
         return False
 
-    assert not _has_spurious_sum_cr_const(result), (
-        f"Result contains spurious sum(cr, const): {result}"
-    )
+    assert not _has_spurious_sum_cr_const(
+        result
+    ), f"Result contains spurious sum(cr, const): {result}"

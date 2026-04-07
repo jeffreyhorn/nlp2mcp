@@ -1984,9 +1984,19 @@ def _replace_indices_in_expr(
                             model_ir=model_ir,
                         )
                         new_idx: list[str | IndexOffset] = []
-                        for orig, rep in zip(var_ref.indices, replaced, strict=True):
+                        for pos, (orig, rep) in enumerate(
+                            zip(var_ref.indices, replaced, strict=True)
+                        ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                new_idx.append(orig)
+                                # Map concrete element base to set name.
+                                # E.g., IndexOffset("i1", 1) → IndexOffset("i", 1)
+                                # when variable r(i) has declared domain ("i",).
+                                new_base = orig.base
+                                if var_domain_decl and pos < len(var_domain_decl):
+                                    new_base = var_domain_decl[pos]
+                                elif orig.base in element_to_set:
+                                    new_base = element_to_set[orig.base]
+                                new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx.append(rep)
                         return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
@@ -2043,9 +2053,17 @@ def _replace_indices_in_expr(
                             prefer_declared_domain=True,
                         )
                         new_idx_p: list[str | IndexOffset] = []
-                        for orig, rep in zip(param_ref.indices, replaced, strict=True):
+                        for pos, (orig, rep) in enumerate(
+                            zip(param_ref.indices, replaced, strict=True)
+                        ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                new_idx_p.append(orig)
+                                # Map concrete element base to set name.
+                                new_base = orig.base
+                                if param_domain and pos < len(param_domain):
+                                    new_base = param_domain[pos]
+                                elif orig.base in element_to_set:
+                                    new_base = element_to_set[orig.base]
+                                new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx_p.append(rep)
                         return ParamRef(param_ref.name, tuple(new_idx_p))
