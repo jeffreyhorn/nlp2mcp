@@ -77,6 +77,22 @@ class TestReplaceIndicesIndexOffset:
         assert isinstance(idx, IndexOffset)
         assert idx.base == "tp", f"Expected base 'tp' (preserved), got '{idx.base}'"
 
+    def test_paramref_concrete_element_base_remapped_to_declared_domain(self):
+        """IndexOffset("1990", 1) in avl(1990+1, tp) should become IndexOffset("t", 1)."""
+        ir = _make_tfordy_ir()
+        domain = ("t",)
+        instances = [(0, ("1990",)), (1, ("1991",))]
+        e2s = _build_element_to_set(ir, domain, instances)
+
+        expr = ParamRef("avl", (IndexOffset("1990", Const(1.0), False), "tp"))
+        result = _replace_indices_in_expr(expr, domain, e2s, ir, equation_domain=domain)
+
+        assert isinstance(result, ParamRef)
+        idx = result.indices[0]
+        assert isinstance(idx, IndexOffset)
+        assert idx.base == "t", f"Expected base 't', got '{idx.base}'"
+        assert idx.offset == Const(1.0)
+
     def test_set_name_base_preserved(self):
         """IndexOffset("i", 1) should remain IndexOffset("i", 1)."""
         ir = _make_polygon_ir()
