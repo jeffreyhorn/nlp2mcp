@@ -376,6 +376,17 @@ def _collect_varref_names(expr: Expr) -> set[str]:
     return names
 
 
+def _expr_references_attribute(expr: Expr, var_name: str, attr: str) -> bool:
+    """Check if an expression references a variable attribute (e.g., k.lo)."""
+    if isinstance(expr, VarRef):
+        if expr.name.lower() == var_name.lower() and expr.attribute == attr:
+            return True
+    for child in expr.children():
+        if _expr_references_attribute(child, var_name, attr):
+            return True
+    return False
+
+
 def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     """Substitute all occurrences of an index name in an expression AST.
 
@@ -1194,9 +1205,29 @@ def emit_gams_mcp(
             has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
                 getattr(var_def, f"{kind}_expr_map", None)
             )
-            if kind == "lo" and var_name.lower() in _vars_with_lo_comp and not has_expr_bound:
+            # Check if any fx_expr_map references this bound attribute (e.g.,
+            # k.fx(tfirst) = k.lo(tfirst) needs k.lo to be emitted).
+            fx_refs_bound = False
+            if kind in ("lo", "up"):
+                fx_em = getattr(var_def, "fx_expr_map", None)
+                if fx_em:
+                    for fx_expr in fx_em.values():
+                        if _expr_references_attribute(fx_expr, var_name, kind):
+                            fx_refs_bound = True
+                            break
+            if (
+                kind == "lo"
+                and var_name.lower() in _vars_with_lo_comp
+                and not has_expr_bound
+                and not fx_refs_bound
+            ):
                 continue
-            if kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound:
+            if (
+                kind == "up"
+                and var_name.lower() in _vars_with_up_comp
+                and not has_expr_bound
+                and not fx_refs_bound
+            ):
                 continue
             # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
             # BEFORE expression bounds, so expression bounds that reference
