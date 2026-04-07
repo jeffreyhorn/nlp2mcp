@@ -151,7 +151,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 | Complete subcategory H batch fix | ✅ 3 models fixed (polygon, catmix, cclinpts) |
 | Run regression tests | ✅ 4370 passed, dispatch canary OK (obj=7.955) |
 | Quality gate | ✅ typecheck + lint + format + test pass |
-| Full pipeline retest | ✅ 147/147 parse, 140/147 translate, solve 94, match 49 |
+| Full pipeline retest | ✅ 147/147 parse, 140/147 translate, solve 86, match 49 |
 
 **Root Cause Found:** In `_replace_indices_in_expr` (stationarity.py), when handling non-circular IndexOffset indices, the IndexOffset was preserved as-is without mapping its base from a concrete element to the set name. For example, `IndexOffset("i1", Const(1))` (emitting `i1+1`) was not being converted to `IndexOffset("i", Const(1))` (emitting `i+1`).
 

@@ -493,8 +493,8 @@ stat_q(i,r).. nu_eqpqs(i,r) + ((-1) * ((gamma(i, r) ** eta(i) * deltam(i,r) * pq
 stat_sg(r).. sum(i, ((-1) * (pq(i,r) * mu(i,r) * (-1) / sqr(pq(i,r)))) * nu_eqXg(i,r)) + sum(i, ((-1) * (pq(i,r) * lambda(i,r) / sqr(pq(i,r)))) * nu_eqXv(i,r)) + nu_eqSg(r) - piL_sg(r) =E= 0;
 stat_sp(r).. sum(i, ((-1) * (pq(i,r) * lambda(i,r) / sqr(pq(i,r)))) * nu_eqXv(i,r)) + nu_eqSp(r) + sum(i, ((-1) * (pq(i,r) * alpha(i,r) * (-1) / sqr(pq(i,r)))) * nu_eqXp(i,r)) - piL_sp(r) =E= 0;
 stat_td(r).. nu_eqTd(r) + sum(i, ((-1) * (pq(i,r) * mu(i,r) / sqr(pq(i,r)))) * nu_eqXg(i,r)) + ((-1) * ssg(r)) * nu_eqSg(r) + sum(i, ((-1) * (pq(i,r) * alpha(i,r) * (-1) / sqr(pq(i,r)))) * nu_eqXp(i,r)) - piL_td(r) =E= 0;
-stat_tm(i,r).. nu_eqTm(i,r) + ((-1) * (pq(i,r) * mu(i,r) / sqr(pq(i,r)))) * nu_eqXg(i,r) + sum(j, (((-1) * (pq(i,r) * mu(j+1,r) / sqr(pq(i,r)))) * nu_eqXg(i+1,r))$(ord(i) <= card(i) - 1)) + sum(j, (((-1) * (pq(i,r) * mu(j-1,r) / sqr(pq(i,r)))) * nu_eqXg(i-1,r))$(ord(i) > 1)) + ((-1) * ssg(r)) * nu_eqSg(r) - piL_tm(i,r) =E= 0;
-stat_tz(j,r)$((ord(j) <= card(j) - 1) and (ord(j) > 1)).. nu_eqTz(j,r) + ((-1) * (pq(j,r) * mu(j,r) / sqr(pq(j,r)))) * nu_eqXg(j,r) + (((-1) * (pq(j,r) * mu(j+1,r) / sqr(pq(j,r)))) * nu_eqXg(j+1,r))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j,r) * mu(j-1,r) / sqr(pq(j,r)))) * nu_eqXg(j-1,r))$(ord(j) > 1) + ((-1) * ssg(r)) * nu_eqSg(r) - piL_tz(j,r) =E= 0;
+stat_tm(i,r).. nu_eqTm(i,r) + ((-1) * (pq(i,r) * mu(i,r) / sqr(pq(i,r)))) * nu_eqXg(i,r) + (((-1) * (pq(i,r) * mu(i,r) / sqr(pq(i,r)))) * nu_eqXg(i+1,r))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i,r) * mu(i,r) / sqr(pq(i,r)))) * nu_eqXg(i-1,r))$(ord(i) > 1) + ((-1) * ssg(r)) * nu_eqSg(r) - piL_tm(i,r) =E= 0;
+stat_tz(j,r).. nu_eqTz(j,r) + ((-1) * (pq(j,r) * mu(j,r) / sqr(pq(j,r)))) * nu_eqXg(j,r) + (((-1) * (pq(j,r) * mu(j,r) / sqr(pq(j,r)))) * nu_eqXg(j+1,r))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j,r) * mu(j,r) / sqr(pq(j,r)))) * nu_eqXg(j-1,r))$(ord(j) > 1) + ((-1) * ssg(r)) * nu_eqSg(r) - piL_tz(j,r) =E= 0;
 stat_uu(r).. -1 + nu_eqUU(r) =E= 0;
 stat_x(i,j,r).. nu_eqX(i,j,r) - nu_eqpqd(i,r) - piL_x(i,j,r) =E= 0;
 stat_xg(i,r).. nu_eqXg(i,r) - nu_eqpqd(i,r) - piL_xg(i,r) =E= 0;

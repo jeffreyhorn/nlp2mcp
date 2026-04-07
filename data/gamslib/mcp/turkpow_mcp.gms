@@ -191,8 +191,8 @@ Alias(mt, mt__);
 Alias(t, t__);
 
 * Stationarity equations
-stat_hh(m,te).. (sum(v, ((-1) * (sigma(m) * mdatah(m,"capcost") * 1$(vs(te,v)))) * nu_ak(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_pr(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_cch(m,te)) + sum(v, ((-1) * (mdatah(m,"e-fact") * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) + (lam_rch(m-9)$(ord(m) > 9))$(ord(te) = 9) + (lam_rch(m-10)$(ord(m) > 10))$(ord(te) = 10) + (lam_rch(m-11)$(ord(m) > 11))$(ord(te) = 11) + (lam_rch(m-12)$(ord(m) > 12))$(ord(te) = 12) - piL_hh(m,te))$(mh(m) and t(te)) =E= 0;
-stat_ht(m,v).. (((-1) * nu_cat(m)) + (((-1) * nu_cat(m-9))$(ord(m) > 9))$(ord(v) = 9) + (((-1) * nu_cat(m-10))$(ord(m) > 10))$(ord(v) = 10) + (((-1) * nu_cat(m-11))$(ord(m) > 11))$(ord(v) = 11) + (((-1) * nu_cat(m-12))$(ord(m) > 12))$(ord(v) = 12) + sum((mt__,t), (((-1) * mdatat(mt__,"avail")) * lam_cct(mt__,v,t))$(vs(t,v))) - piL_ht(m,v))$(mt(m)) =E= 0;
+stat_hh(m,te).. (sum(v, ((-1) * (sigma(m) * mdatah(m,"capcost") * 1$(vs(te,v)))) * nu_ak(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_pr(te)) + sum(v, ((-1) * (mdatah(m,"avail") * 1$(vs(te,v)))) * lam_cch(m,te)) + sum(v, ((-1) * (mdatah(m,"e-fact") * 1$(vs(te,v)))) * lam_ech(m,te)) + sum(v, 1$(vs(te,v)) * lam_hcc(te)) + lam_rch(m) - piL_hh(m,te))$(mh(m) and t(te)) =E= 0;
+stat_ht(m,v).. (((-1) * nu_cat(m)) + sum((mt__,t), (((-1) * mdatat(mt__,"avail")) * lam_cct(mt__,v,t))$(vs(t,v))) - piL_ht(m,v))$(mt(m)) =E= 0;
 stat_htt(m).. nu_cat(m)$(mt(m)) =E= 0;
 stat_phic(te).. (sum(t__$(sameas(t__, te)), delta(t__)$(t(te))) + nu_ak(te))$(t(te)) =E= 0;
 stat_phio(te).. (sum(t__$(sameas(t__, te)), delta(t__)$(t(te))) + nu_ao(te))$(t(te)) =E= 0;

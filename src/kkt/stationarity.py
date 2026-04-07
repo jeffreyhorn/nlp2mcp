@@ -1988,14 +1988,20 @@ def _replace_indices_in_expr(
                             zip(var_ref.indices, replaced, strict=True)
                         ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                # Map concrete element base to set name.
+                                # Map only concrete element bases to the declared
+                                # domain/set name.
                                 # E.g., IndexOffset("i1", 1) → IndexOffset("i", 1)
                                 # when variable r(i) has declared domain ("i",).
+                                # Preserve symbolic bases that are not concrete
+                                # elements so we don't over-rewrite valid offset
+                                # expressions (e.g., alias-based tp+1).
                                 new_base = orig.base
-                                if var_domain_decl and pos < len(var_domain_decl):
-                                    new_base = var_domain_decl[pos]
-                                elif orig.base in element_to_set:
-                                    new_base = element_to_set[orig.base]
+                                mapped = element_to_set.get(orig.base)
+                                if mapped is not None and mapped != orig.base:
+                                    if var_domain_decl and pos < len(var_domain_decl):
+                                        new_base = var_domain_decl[pos]
+                                    else:
+                                        new_base = mapped
                                 new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx.append(rep)
@@ -2057,12 +2063,14 @@ def _replace_indices_in_expr(
                             zip(param_ref.indices, replaced, strict=True)
                         ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                # Map concrete element base to set name.
+                                # Map only concrete element bases to set name.
                                 new_base = orig.base
-                                if param_domain and pos < len(param_domain):
-                                    new_base = param_domain[pos]
-                                elif orig.base in element_to_set:
-                                    new_base = element_to_set[orig.base]
+                                mapped = element_to_set.get(orig.base)
+                                if mapped is not None and mapped != orig.base:
+                                    if param_domain and pos < len(param_domain):
+                                        new_base = param_domain[pos]
+                                    else:
+                                        new_base = mapped
                                 new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx_p.append(rep)

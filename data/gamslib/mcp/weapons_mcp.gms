@@ -93,7 +93,7 @@ Equations
 Alias(w, w__);
 
 * Stationarity equations
-stat_x(w,t).. (((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) + 1$(td(w,t)) * lam_maxw(w) + (((-1) * 1$(td(w,t))) * lam_minw(t))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-9))$(ord(t) > 9))$(ord(w) = 9))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-10))$(ord(t) > 10))$(ord(w) = 10))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-11))$(ord(t) > 11))$(ord(w) = 11))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-12))$(ord(t) > 12))$(ord(w) = 12))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-13))$(ord(t) > 13))$(ord(w) = 13))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-14))$(ord(t) > 14))$(ord(w) = 14))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-15))$(ord(t) > 15))$(ord(w) = 15))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-16))$(ord(t) > 16))$(ord(w) = 16))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-17))$(ord(t) > 17))$(ord(w) = 17))$(tm(t)) + (((((-1) * 1$(td(w,t))) * lam_minw(t-18))$(ord(t) > 18))$(ord(w) = 18))$(tm(t)) - piL_x(w,t))$(td(w,t)) =E= 0;
+stat_x(w,t).. (((-1) * (mv(t) * ((-1) * (prod(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t)) * sum(w__$(td(w__,t)), (1 - td(w__,t)) ** x(w__,t) * log(1 - td(w__,t)) / (1 - td(w__,t)) ** x(w__,t)))))) + 1$(td(w,t)) * lam_maxw(w) + (((-1) * 1$(td(w,t))) * lam_minw(t))$(tm(t)) - piL_x(w,t))$(td(w,t)) =E= 0;
 
 * Inequality complementarity equations
 comp_maxw(w).. ((-1) * (sum(t$(td(w,t)), x(w,t)) - wa(w))) =G= 0;
