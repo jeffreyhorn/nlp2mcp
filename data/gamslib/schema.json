@@ -395,6 +395,18 @@
         "error": {
           "$ref": "#/definitions/error_detail",
           "description": "Structured error details if status is 'failure'"
+        },
+        "permanent_exclusion": {
+          "type": "object",
+          "description": "Permanent exclusion metadata for models structurally incompatible with MCP formulation",
+          "properties": {
+            "reason": { "type": "string" },
+            "category": { "type": "string" },
+            "excluded_date": { "type": "string", "format": "date-time" },
+            "sprint": { "type": "integer" }
+          },
+          "required": ["reason", "category"],
+          "additionalProperties": false
         }
       }
     },
@@ -633,7 +645,8 @@
         "model_optimal",
         "model_locally_optimal",
         "model_infeasible",
-        "model_unbounded"
+        "model_unbounded",
+        "permanent_exclusion"
       ]
     },
     "solve_outcome_category": {
@@ -650,7 +663,8 @@
         "model_optimal",
         "model_locally_optimal",
         "model_infeasible",
-        "model_unbounded"
+        "model_unbounded",
+        "permanent_exclusion"
       ]
     },
     "comparison_result_category": {

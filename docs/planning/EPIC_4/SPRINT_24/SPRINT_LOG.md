@@ -176,13 +176,24 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ### Day 7 — WS2 Complete + WS3 Tier 1
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Complete remaining WS2 fixes | |
-| Exclude Category C models (orani, feasopt1, iobalance) | |
-| Check alias fix impact on chenery/cesam/korcge | |
+| Complete remaining WS2 fixes | ⏭️ Deferred — remaining 21 path_syntax_error models have different root causes |
+| Exclude Category C models (orani, feasopt1, iobalance) | ✅ Marked as permanent_exclusion in gamslib_status.json |
+| Check alias fix impact on chenery/cesam/korcge | ✅ Checked — all 3 still model_infeasible (deeper KKT bugs) |
+
+**WS3 Tier 1 — Permanent Exclusions:**
+- **orani**: Percentage-change model; structural incompatibility with MCP formulation (#765)
+- **feasopt1**: GAMS feasibility test model; structural incompatibility
+- **iobalance**: Balance model; structural incompatibility
+- model_infeasible: 14 → 11 (3 moved to permanent_exclusion)
+
+**WS2 Tier 2 — chenery/cesam/korcge:**
+- All three regenerated with current code, all still Locally Infeasible (MODEL STATUS 5)
+- Root causes are deeper KKT formulation bugs (division by zero, alias AD, CGE gradient mismatch), not resolved by the IndexOffset base fix
+- Deferred to later sprint days
 
 ---
 

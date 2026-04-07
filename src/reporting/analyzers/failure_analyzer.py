@@ -56,6 +56,7 @@ DEFAULT_EFFORT_HOURS: dict[str, float] = {
     "model_locally_optimal": 0.0,  # Not an error
     "model_infeasible": 4.0,
     "model_unbounded": 4.0,
+    "permanent_exclusion": 0.0,  # Structurally incompatible; not fixable
 }
 
 # Categories that are not fixable in nlp2mcp
@@ -65,6 +66,7 @@ NON_FIXABLE_CATEGORIES: set[str] = {
     "model_locally_optimal",
     "path_solve_normal",
     "timeout",
+    "permanent_exclusion",
 }
 
 

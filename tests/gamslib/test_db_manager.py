@@ -37,7 +37,7 @@ from scripts.gamslib.db_manager import (  # noqa: E402
 def sample_database() -> dict:
     """Create a sample valid database."""
     return {
-        "schema_version": "2.0.0",
+        "schema_version": "2.1.0",
         "created_date": "2026-01-01T00:00:00Z",
         "updated_date": "2026-01-01T00:00:00Z",
         "total_models": 2,
@@ -102,7 +102,7 @@ class TestLoadDatabase:
     def test_load_valid_database(self, temp_database: Path) -> None:
         """Test loading a valid database file."""
         data = load_database(temp_database)
-        assert data["schema_version"] == "2.0.0"
+        assert data["schema_version"] == "2.1.0"
         assert len(data["models"]) == 2
 
     def test_load_nonexistent_database(self, tmp_path: Path) -> None:
@@ -134,7 +134,7 @@ class TestSaveDatabase:
         assert db_path.exists()
         with open(db_path) as f:
             loaded = json.load(f)
-        assert loaded["schema_version"] == "2.0.0"
+        assert loaded["schema_version"] == "2.1.0"
         assert len(loaded["models"]) == 2
 
     def test_save_database_creates_directory(self, tmp_path: Path, sample_database: dict) -> None:
@@ -178,7 +178,7 @@ class TestValidateDatabase:
     def test_invalid_model_type(self, sample_schema: dict) -> None:
         """Test validation fails for invalid model type."""
         invalid_db = {
-            "schema_version": "2.0.0",
+            "schema_version": "2.1.0",
             "models": [
                 {
                     "model_id": "test",
@@ -194,7 +194,7 @@ class TestValidateDatabase:
     def test_missing_required_field(self, sample_schema: dict) -> None:
         """Test validation fails for missing required field."""
         invalid_db = {
-            "schema_version": "2.0.0",
+            "schema_version": "2.1.0",
             "models": [
                 {
                     "model_id": "test",
@@ -208,7 +208,7 @@ class TestValidateDatabase:
     def test_invalid_convexity_status(self, sample_schema: dict) -> None:
         """Test validation fails for invalid convexity status."""
         invalid_db = {
-            "schema_version": "2.0.0",
+            "schema_version": "2.1.0",
             "models": [
                 {
                     "model_id": "test",

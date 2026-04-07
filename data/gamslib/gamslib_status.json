@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.0.0",
+  "schema_version": "2.1.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-04-04T20:31:12Z",
+  "updated_date": "2026-04-07T15:24:59Z",
   "total_models": 219,
   "models": [
     {
@@ -2803,10 +2803,16 @@
         "objective_value": 171.306,
         "solve_time_seconds": 0.5741,
         "iterations": 373,
-        "outcome_category": "model_infeasible",
+        "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
+        },
+        "permanent_exclusion": {
+          "reason": "GAMS feasibility test model; structural incompatibility with MCP formulation",
+          "category": "C_structural_incompatibility",
+          "excluded_date": "2026-04-07T15:24:59.641450+00:00",
+          "sprint": 24
         }
       },
       "solution_comparison": {
@@ -4393,10 +4399,16 @@
         "objective_value": 9.277,
         "solve_time_seconds": 1.6441,
         "iterations": 2918,
-        "outcome_category": "model_infeasible",
+        "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
+        },
+        "permanent_exclusion": {
+          "reason": "Balance model; structural incompatibility with MCP formulation",
+          "category": "C_structural_incompatibility",
+          "excluded_date": "2026-04-07T15:24:59.641541+00:00",
+          "sprint": 24
         }
       },
       "solution_comparison": {
@@ -7069,10 +7081,16 @@
         "objective_value": -0.784,
         "solve_time_seconds": 0.759,
         "iterations": 116,
-        "outcome_category": "model_infeasible",
+        "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
+        },
+        "permanent_exclusion": {
+          "reason": "Percentage-change model; structural incompatibility with MCP formulation (#765)",
+          "category": "C_structural_incompatibility",
+          "excluded_date": "2026-04-07T15:24:59.636799+00:00",
+          "sprint": 24
         }
       },
       "solution_comparison": {
