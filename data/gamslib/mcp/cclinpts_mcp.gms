@@ -135,8 +135,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_b(j).. ((-1) * (((-1) * ((fb(j) - fb(s1-1)) * 1$((not last(j))))) + 0.5 * (fb(j) - fb(s1-1)) * 1$((not first(j))))) + ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$(sameas(j, 's1')) + nu_b_fx_s30$(sameas(j, 's30')) - piL_b(j) + piU_b(j) =E= 0;
-stat_fb(j).. ((-1) * (0.5 * (b(j) - b(s1-1)) * 1$((not first(j))))) + nu_FBCalc(j) =E= 0;
+stat_b(j)$(ord(j) > 1).. ((-1) * (((-1) * ((fb(j) - fb(j-1)) * 1$((not last(j))))) + 0.5 * (fb(j) - fb(j-1)) * 1$((not first(j))))) + ((-1) * ((1 - gamma) * b(j) ** (1 - gamma) * (1 - gamma) / b(j) / sqr(1 - gamma))) * nu_FBCalc(j) + nu_b_fx_s1$(sameas(j, 's1')) + nu_b_fx_s30$(sameas(j, 's30')) - piL_b(j) + piU_b(j) =E= 0;
+stat_fb(j)$(ord(j) > 1).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j))))) + nu_FBCalc(j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_b(j).. b(j) - 5 =G= 0;

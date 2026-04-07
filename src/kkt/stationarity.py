@@ -1984,9 +1984,29 @@ def _replace_indices_in_expr(
                             model_ir=model_ir,
                         )
                         new_idx: list[str | IndexOffset] = []
-                        for orig, rep in zip(var_ref.indices, replaced, strict=True):
+                        for pos, (orig, rep) in enumerate(
+                            zip(var_ref.indices, replaced, strict=True)
+                        ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                new_idx.append(orig)
+                                # Map only concrete element bases to the declared
+                                # domain/set name.
+                                # E.g., IndexOffset("i1", 1) → IndexOffset("i", 1)
+                                # when variable r(i) has declared domain ("i",).
+                                # Preserve symbolic bases that are not concrete
+                                # elements so we don't over-rewrite valid offset
+                                # expressions (e.g., alias-based tp+1).
+                                new_base = orig.base
+                                mapped = element_to_set.get(orig.base)
+                                if mapped is not None and mapped != orig.base:
+                                    if var_domain_decl and pos < len(var_domain_decl):
+                                        declared_base = var_domain_decl[pos]
+                                        if declared_base != "*":
+                                            new_base = declared_base
+                                        else:
+                                            new_base = mapped
+                                    else:
+                                        new_base = mapped
+                                new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx.append(rep)
                         return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
@@ -2043,9 +2063,26 @@ def _replace_indices_in_expr(
                             prefer_declared_domain=True,
                         )
                         new_idx_p: list[str | IndexOffset] = []
-                        for orig, rep in zip(param_ref.indices, replaced, strict=True):
+                        for pos, (orig, rep) in enumerate(
+                            zip(param_ref.indices, replaced, strict=True)
+                        ):
                             if isinstance(orig, IndexOffset) and not orig.circular:
-                                new_idx_p.append(orig)
+                                # Map only concrete element bases to set name.
+                                new_base = orig.base
+                                mapped = element_to_set.get(orig.base)
+                                if mapped is not None and mapped != orig.base:
+                                    if param_domain and pos < len(param_domain):
+                                        declared_base = param_domain[pos]
+                                        # Wildcard-declared parameter dimensions are
+                                        # matching metadata, not concrete IndexOffset
+                                        # bases. Use element_to_set mapping instead.
+                                        if declared_base != "*":
+                                            new_base = declared_base
+                                        else:
+                                            new_base = mapped
+                                    else:
+                                        new_base = mapped
+                                new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
                             else:
                                 new_idx_p.append(rep)
                         return ParamRef(param_ref.name, tuple(new_idx_p))
