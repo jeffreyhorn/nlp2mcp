@@ -739,7 +739,7 @@ def validate_model_entry(model: dict[str, Any], schema: dict[str, Any]) -> list[
     # Create a validator with the full schema to resolve $ref
     # We wrap the model in a database structure to validate against the full schema
     test_database = {
-        "schema_version": "2.0.0",
+        "schema_version": "2.1.0",
         "models": [model],
     }
 
