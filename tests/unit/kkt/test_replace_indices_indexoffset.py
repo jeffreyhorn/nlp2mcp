@@ -111,10 +111,10 @@ class TestReplaceIndicesIndexOffset:
     def test_paramref_wildcard_domain_uses_element_mapping(self):
         """IndexOffset at wildcard position should use element_to_set, not '*'.
 
-        ParamRef with domain=("*","c") and IndexOffset("c1",1) at pos 1
-        (where declared domain is "c") works fine. The critical case is
-        IndexOffset at pos 0 where declared domain is "*" — must fall back
-        to element_to_set mapping, not produce IndexOffset("*",1).
+        This test covers a ParamRef with domain=("*", "c") where the
+        IndexOffset appears at pos 0, the wildcard-declared dimension.
+        In that case, replacement must fall back to element_to_set
+        mapping and must not produce IndexOffset("*",1).
         """
         ir = ModelIR()
         ir.sets["c"] = SetDef(name="c", members=["c1", "c2", "c3"])
