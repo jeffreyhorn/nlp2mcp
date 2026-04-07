@@ -2805,7 +2805,7 @@
         "iterations": 373,
         "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
         },
         "permanent_exclusion": {
@@ -4401,7 +4401,7 @@
         "iterations": 2918,
         "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
         },
         "permanent_exclusion": {
@@ -7083,7 +7083,7 @@
         "iterations": 116,
         "outcome_category": "permanent_exclusion",
         "error": {
-          "category": "model_infeasible",
+          "category": "permanent_exclusion",
           "message": "Model: Locally Infeasible"
         },
         "permanent_exclusion": {
