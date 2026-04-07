@@ -1999,7 +1999,11 @@ def _replace_indices_in_expr(
                                 mapped = element_to_set.get(orig.base)
                                 if mapped is not None and mapped != orig.base:
                                     if var_domain_decl and pos < len(var_domain_decl):
-                                        new_base = var_domain_decl[pos]
+                                        declared_base = var_domain_decl[pos]
+                                        if declared_base != "*":
+                                            new_base = declared_base
+                                        else:
+                                            new_base = mapped
                                     else:
                                         new_base = mapped
                                 new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
@@ -2068,7 +2072,14 @@ def _replace_indices_in_expr(
                                 mapped = element_to_set.get(orig.base)
                                 if mapped is not None and mapped != orig.base:
                                     if param_domain and pos < len(param_domain):
-                                        new_base = param_domain[pos]
+                                        declared_base = param_domain[pos]
+                                        # Wildcard-declared parameter dimensions are
+                                        # matching metadata, not concrete IndexOffset
+                                        # bases. Use element_to_set mapping instead.
+                                        if declared_base != "*":
+                                            new_base = declared_base
+                                        else:
+                                            new_base = mapped
                                     else:
                                         new_base = mapped
                                 new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
