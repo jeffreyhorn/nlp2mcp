@@ -109,15 +109,22 @@ class TestReplaceIndicesIndexOffset:
         assert idx.base == "i", f"Expected base 'i' (preserved), got '{idx.base}'"
 
     def test_paramref_wildcard_domain_uses_element_mapping(self):
-        """ParamRef with wildcard domain("c","*") should not produce IndexOffset("*",1)."""
+        """IndexOffset at wildcard position should use element_to_set, not '*'.
+
+        ParamRef with domain=("*","c") and IndexOffset("c1",1) at pos 1
+        (where declared domain is "c") works fine. The critical case is
+        IndexOffset at pos 0 where declared domain is "*" — must fall back
+        to element_to_set mapping, not produce IndexOffset("*",1).
+        """
         ir = ModelIR()
         ir.sets["c"] = SetDef(name="c", members=["c1", "c2", "c3"])
-        ir.params["data"] = ParameterDef(name="data", domain=("c", "*"))
+        ir.params["data"] = ParameterDef(name="data", domain=("*", "c"))
         domain = ("c",)
         instances = [(0, ("c1",)), (1, ("c2",))]
         e2s = _build_element_to_set(ir, domain, instances)
 
-        expr = ParamRef("data", (IndexOffset("c1", Const(1.0), False), "cost"))
+        # IndexOffset at pos 0 where declared domain is "*"
+        expr = ParamRef("data", (IndexOffset("c1", Const(1.0), False), "c2"))
         result = _replace_indices_in_expr(expr, domain, e2s, ir, equation_domain=domain)
 
         assert isinstance(result, ParamRef)
