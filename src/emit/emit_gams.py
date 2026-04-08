@@ -1205,11 +1205,16 @@ def emit_gams_mcp(
             has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
                 getattr(var_def, f"{kind}_expr_map", None)
             )
-            # Check if any scalar or indexed .fx expression references this
-            # bound attribute (e.g., k.fx = k.lo or k.fx(tfirst) = k.lo(tfirst));
-            # if so, the bound must still be emitted.
-            fx_refs_bound = False
-            if kind in ("lo", "up"):
+            # Only compute fx_refs_bound when suppression would actually
+            # trigger (variable has complementarity and no expression bound).
+            is_suppression_candidate = (
+                kind == "lo" and var_name.lower() in _vars_with_lo_comp and not has_expr_bound
+            ) or (kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound)
+            if is_suppression_candidate:
+                # Check if any scalar or indexed .fx expression references
+                # this bound attribute (e.g., k.fx = k.lo or
+                # k.fx(tfirst) = k.lo(tfirst)); if so, still emit the bound.
+                fx_refs_bound = False
                 fx_scalar = getattr(var_def, "fx_expr", None)
                 if fx_scalar is not None and _expr_references_attribute(fx_scalar, var_name, kind):
                     fx_refs_bound = True
@@ -1220,20 +1225,8 @@ def emit_gams_mcp(
                             if _expr_references_attribute(fx_expr_val, var_name, kind):
                                 fx_refs_bound = True
                                 break
-            if (
-                kind == "lo"
-                and var_name.lower() in _vars_with_lo_comp
-                and not has_expr_bound
-                and not fx_refs_bound
-            ):
-                continue
-            if (
-                kind == "up"
-                and var_name.lower() in _vars_with_up_comp
-                and not has_expr_bound
-                and not fx_refs_bound
-            ):
-                continue
+                if not fx_refs_bound:
+                    continue
             # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
             # BEFORE expression bounds, so expression bounds that reference
             # the base value on the RHS (e.g., r.lo('i1') = max(expr, r.lo('i1')))
