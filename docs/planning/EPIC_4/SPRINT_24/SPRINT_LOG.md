@@ -199,12 +199,21 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ### Day 8 — WS2 Tier 2 + WS4
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Fix decomp, ramsey, worst | |
-| Fix mine internal error | |
+| Fix ramsey | ✅ MODEL STATUS 1 Optimal — emit .lo bounds when referenced by .fx expressions |
+| Fix decomp | ⏭️ Multi-solve Benders model; requires loop/marginal support — deferred |
+| Fix worst | ⏭️ Conditioned equation zero-gradient; requires conditioned stationarity fix — deferred |
+| Fix mine | ⏭️ ParamRef index offsets (li(k) in x(l,i+li(k),j+lj(k))) unsupported — deferred |
+
+**ramsey fix:** In `emit_gams.py`, `.lo`/`.up` bound emission was suppressed for variables with complementarity equations. But `k.fx(tfirst) = k.lo(tfirst)` needs `k.lo` to be accessible. Added `_expr_references_attribute()` check: if any `.fx` expression references the bound attribute, emit the bound values even for complementarity variables. Result: ramsey compiles and solves optimally (MODEL STATUS 1).
+
+**Deferred models:**
+- **decomp**: Multi-solve Benders decomposition with `ctank = -tbal.m` (equation marginal in loop). Not compatible with single MCP reformulation.
+- **worst**: Variables d1/d2 only appear in conditioned equations (dd1/dd2). Stationarity produces 0=0, causing MCP pairing error 483. Needs conditioned equation gradient fix.
+- **mine**: Uses `x(l, i+li(k), j+lj(k))` — parameter-valued index offsets not supported.
 
 ---
 

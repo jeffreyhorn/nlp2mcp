@@ -376,6 +376,17 @@ def _collect_varref_names(expr: Expr) -> set[str]:
     return names
 
 
+def _expr_references_attribute(expr: Expr, var_name: str, attr: str) -> bool:
+    """Check if an expression references a variable attribute (e.g., k.lo)."""
+    if isinstance(expr, VarRef):
+        if expr.name.lower() == var_name.lower() and expr.attribute == attr:
+            return True
+    for child in expr.children():
+        if _expr_references_attribute(child, var_name, attr):
+            return True
+    return False
+
+
 def _substitute_index(expr: Expr, old_idx: str, new_idx: str) -> Expr:
     """Substitute all occurrences of an index name in an expression AST.
 
@@ -1185,6 +1196,26 @@ def emit_gams_mcp(
             and var_name.lower() not in kkt.referenced_variables
         ):
             continue
+        # Precompute which bound attributes (.lo/.up) are referenced by .fx
+        # expressions for this variable, to avoid redundant traversal per kind.
+        _fx_refs: dict[str, bool] = {}
+        vn_lo = var_name.lower() in _vars_with_lo_comp
+        vn_up = var_name.lower() in _vars_with_up_comp
+        if vn_lo or vn_up:
+            for _bk in ("lo", "up"):
+                found = False
+                fx_scalar = getattr(var_def, "fx_expr", None)
+                if fx_scalar is not None and _expr_references_attribute(fx_scalar, var_name, _bk):
+                    found = True
+                else:
+                    fx_em = getattr(var_def, "fx_expr_map", None)
+                    if fx_em:
+                        for fx_expr_val in fx_em.values():
+                            if _expr_references_attribute(fx_expr_val, var_name, _bk):
+                                found = True
+                                break
+                _fx_refs[_bk] = found
+
         for kind in ("lo", "up", "fx"):
             # Skip .lo/.up for variables with explicit bound complementarity
             # to avoid double-bounding in the MCP (bounds enforced by comp_lo/comp_up).
@@ -1194,9 +1225,9 @@ def emit_gams_mcp(
             has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
                 getattr(var_def, f"{kind}_expr_map", None)
             )
-            if kind == "lo" and var_name.lower() in _vars_with_lo_comp and not has_expr_bound:
+            if kind == "lo" and vn_lo and not has_expr_bound and not _fx_refs.get("lo", False):
                 continue
-            if kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound:
+            if kind == "up" and vn_up and not has_expr_bound and not _fx_refs.get("up", False):
                 continue
             # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
             # BEFORE expression bounds, so expression bounds that reference
