@@ -37,11 +37,18 @@ The malformed expressions come from two equations in the original model:
 
 Both involve index arithmetic that the stationarity builder's concrete element substitution cannot handle. After substitution, `tt` becomes `1966` (a literal year), producing `pd(1966-l)` and `p(1974+(card(t)-ord(t)))`.
 
-## Fix Approach
+## Fix (Sprint 24)
 
-These are deep issues in the stationarity builder's handling of IndexOffset/arithmetic indices:
-1. The `pd(tt-l)` pattern uses a scalar constant `l /4/` as a lead/lag offset — the stationarity builder must preserve the symbolic `tt-l` form rather than substituting a concrete year
-2. The `p(t + (card(t) - ord(t)))` pattern is a "time reversal" that needs special handling
-3. Both require preserving the symbolic structure through differentiation, which is architecturally complex
+**Status: PARTIALLY FIXED** — compilation errors resolved, model now reaches solve stage.
 
-This is related to the broader issue of how the AD pipeline handles non-trivial index arithmetic in differentiated expressions.
+Three changes fixed the `p(t + (card(t) - ord(t)))` compilation error ($154):
+
+1. **`_apply_index_substitution` in `derivative_rules.py`**: Added `IndexOffset` case to recurse into offset expressions during sum index substitution. Previously IndexOffset was passed through unchanged, so `SymbolRef("t")` inside the offset wasn't substituted.
+
+2. **`_replace_indices_in_expr` in `stationarity.py`**: Added `ord()` argument remapping for concrete elements and subset set names. When `ord(t)` appears after sum collapse where `t` is a subset of `tt` (the equation domain), it's remapped to `ord(tt)` so the set is controlled.
+
+3. **IndexOffset offset processing**: VarRef/ParamRef `has_linear_offset` paths now recurse `_replace_indices_in_expr` into the offset expression, fixing concrete elements inside `card()`/`ord()`.
+
+**Result:** otpop compiles without errors. EXECERROR=9 (MCP pairing issues for `stat_d`) is a separate pre-existing problem — the `pd(tt-l)` pattern still needs work.
+
+**Remaining:** The `pd(tt-l)` pattern (scalar constant `l /4/` as lead/lag offset) still causes MCP pairing issues but no longer causes compilation errors.

@@ -2006,7 +2006,12 @@ def _replace_indices_in_expr(
                                             new_base = mapped
                                     else:
                                         new_base = mapped
-                                new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
+                                # Also process the offset expression to fix
+                                # concrete elements inside card/ord calls.
+                                new_offset = _replace_indices_in_expr(
+                                    orig.offset, domain, element_to_set, model_ir, equation_domain
+                                )
+                                new_idx.append(IndexOffset(new_base, new_offset, orig.circular))
                             else:
                                 new_idx.append(rep)
                         return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
@@ -2082,7 +2087,10 @@ def _replace_indices_in_expr(
                                             new_base = mapped
                                     else:
                                         new_base = mapped
-                                new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
+                                new_offset = _replace_indices_in_expr(
+                                    orig.offset, domain, element_to_set, model_ir, equation_domain
+                                )
+                                new_idx_p.append(IndexOffset(new_base, new_offset, orig.circular))
                             else:
                                 new_idx_p.append(rep)
                         return ParamRef(param_ref.name, tuple(new_idx_p))
@@ -2133,6 +2141,57 @@ def _replace_indices_in_expr(
             )
             return Unary(op, new_child)
         case Call(func, args):
+            if func == "ord" and element_to_set and equation_domain and model_ir:
+                # ord() requires a controlled set name. After sum collapse,
+                # the argument may be a concrete element (e.g., "1974") that
+                # needs mapping to the equation domain variable.
+                # Only remap concrete elements or subset set names —
+                # preserve set/alias names that may be controlled by an
+                # enclosing sum (e.g., ord(j) in sum(j, ...)).
+                new_args_list: list[Expr] = []
+                for arg in args:
+                    if isinstance(arg, SymbolRef):
+                        name = arg.name
+                        is_set_or_alias = (
+                            name in model_ir.sets or name in model_ir.aliases
+                        )
+                        if not is_set_or_alias and name in element_to_set:
+                            # Concrete element → map to equation domain
+                            mapped_set = element_to_set[name]
+                            replacement = mapped_set
+                            for dvar in equation_domain:
+                                if dvar == mapped_set:
+                                    replacement = dvar
+                                    break
+                                # Check subset relationship
+                                sdef = model_ir.sets.get(mapped_set)
+                                if sdef and sdef.domain and dvar in sdef.domain:
+                                    replacement = dvar
+                                    break
+                            new_args_list.append(SymbolRef(replacement))
+                        elif is_set_or_alias:
+                            # Set/alias name — check if it's a subset not
+                            # controlled in this scope (e.g., ord(t) where
+                            # t ⊂ tt and tt is the equation domain).
+                            sdef = model_ir.sets.get(name)
+                            if sdef and sdef.domain:
+                                for dvar in equation_domain:
+                                    if dvar in sdef.domain:
+                                        new_args_list.append(SymbolRef(dvar))
+                                        break
+                                else:
+                                    new_args_list.append(arg)
+                            else:
+                                new_args_list.append(arg)
+                        else:
+                            new_args_list.append(arg)
+                    else:
+                        new_args_list.append(
+                            _replace_indices_in_expr(
+                                arg, domain, element_to_set, model_ir, equation_domain
+                            )
+                        )
+                return Call(func, tuple(new_args_list))
             new_args = tuple(
                 _replace_indices_in_expr(arg, domain, element_to_set, model_ir, equation_domain)
                 for arg in args

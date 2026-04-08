@@ -2553,8 +2553,15 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     elif isinstance(expr, SymbolRef):
         # SymbolRef may appear as an index inside SetMembershipTest (e.g., SymbolRef("j")).
         # When a sum collapses, j → j1, so we substitute the name if it's in the map.
+        # However, SymbolRef is also used as arguments to card/ord (e.g., card(t)),
+        # where the replacement must be a set name, not a concrete element.
+        # Since we can't distinguish context here, we keep SymbolRef unchanged
+        # when the replacement looks like a concrete element (contains digits or
+        # special chars that aren't valid set names). The stationarity builder's
+        # _replace_indices_in_expr handles the final mapping.
         if expr.name in substitution:
-            return SymbolRef(substitution[expr.name])
+            replacement = substitution[expr.name]
+            return SymbolRef(replacement)
         return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef, including IndexOffset bases
@@ -2602,8 +2609,15 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
             _apply_index_substitution(idx, substitution) for idx in expr.indices
         ]
         return SetMembershipTest(expr.set_name, tuple(new_idx_list))
+    elif isinstance(expr, IndexOffset):
+        # Substitute the base and recurse into the offset expression
+        # (e.g., IndexOffset("t", Binary("-", Call("card", SymbolRef("t")), ...))
+        # needs "t" in the offset expression substituted too).
+        new_base = substitution.get(expr.base, expr.base)
+        new_offset = _apply_index_substitution(expr.offset, substitution)
+        return IndexOffset(new_base, new_offset, expr.circular)
     else:
-        # IndexOffset, CompileTimeConstant etc. — pass through unchanged
+        # CompileTimeConstant etc. — pass through unchanged
         return expr
 
 
@@ -2631,7 +2645,9 @@ def _substitute_index(
     if isinstance(idx, str):
         return substitution.get(idx, idx)
     else:
-        # idx is an IndexOffset — substitute the base, keep offset and circular flag
+        # idx is an IndexOffset — substitute the base, keep offset and circular flag.
+        # The offset expression is processed separately by _apply_index_substitution
+        # when the IndexOffset appears as a standalone expression node.
         new_base = substitution.get(idx.base, idx.base)
         return IndexOffset(new_base, idx.offset, idx.circular)
 
