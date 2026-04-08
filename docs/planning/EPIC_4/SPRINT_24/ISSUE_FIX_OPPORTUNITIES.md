@@ -7,18 +7,24 @@
 
 ---
 
-## Current Pipeline Breakdown
+## Current Pipeline Breakdown (147-model scope)
 
-| Category | Count | Models |
-|----------|-------|--------|
-| model_optimal | 94 | (working) |
+The 147-model pipeline breaks down into mutually exclusive terminal buckets:
+
+| Terminal Bucket | Count | Details |
+|-----------------|-------|---------|
+| translate failure (timeout) | 6 | gastrans, iswnm, mexls, nebrazil, sarf, srpchase |
+| translate failure (internal_error) | 1 | mine |
 | path_syntax_error | 21 | china, clearlak, decomp, dinam, feedtray, ferts, ganges, gangesx, harker, indus, lmp2, otpop, partssupply, prolog, ramsey, sample, saras, tricp, turkey, turkpow, worst |
-| path_solve_terminated | 15 | camcge, camshape, catmix, cclinpts, cesam2, dyncge, elec, etamac, fawley, gtm, hhfair, polygon, qsambal, sambal, twocge |
-| model_infeasible | 11 | agreste, bearing, cesam, chain, chenery, korcge, lnts, mathopt3, pak, robustlp, rocket |
+| path_solve_terminated | 12 | camcge, camshape, catmix, cclinpts, cesam2, dyncge, elec, etamac, fawley, polygon, qsambal, sambal |
 | path_solve_license | 8 | danwolfe, egypt, glider, robot, shale, sroute, tabora, tfordy |
+| model_infeasible | 11 | agreste, bearing, cesam, chain, chenery, korcge, lnts, mathopt3, pak, robustlp, rocket |
 | permanent_exclusion | 3 | orani, feasopt1, iobalance |
-| translate_timeout | 6 | gastrans, iswnm, mexls, nebrazil, sarf, srpchase |
-| translate_internal_error | 1 | mine |
+| model_optimal / mismatch | 36 | (solve OK but objective doesn't match NLP, includes gtm, hhfair, twocge, kand, launch, etc.) |
+| model_optimal / match | 49 | (fully working) |
+
+_Note: `solve 86` = model_optimal total (match + mismatch); `match 49` = comparison success.
+The `mcp_solve.outcome_category` field in gamslib_status.json uses names like `path_syntax_error`, `model_optimal`, etc. Translation failures use `nlp2mcp_translate.error.category` = `timeout` or `internal_error`._
 
 ---
 
@@ -28,7 +34,7 @@ High-confidence fixes with clear diagnosis, single-file changes, minimal regress
 
 | Priority | Issue | Model(s) | Current Status | Problem | Fix Description | Models Promoted |
 |----------|-------|----------|----------------|---------|-----------------|-----------------|
-| **E1** | #1178 | otpop | path_syntax_error | Malformed index expression in emitter | Fix index expression emission for specific pattern. Single emitter fix. | **1** (→ solve) |
+| **E1** | #1178 | otpop | path_syntax_error | Stationarity builder mishandles concrete element substitution / index arithmetic | Fix stationarity generation to preserve symbolic index structure and handle IndexOffset / concrete-element substitution correctly. | **1** (→ solve) |
 | **E2** | #1179 | hhfair | path_solve_terminated | EXECERROR at runtime | Fix runtime execution error in pre-solve assignments. Emitter fix. | **1** (→ solve) |
 | **E3** | #1192 | gtm | path_solve_terminated | Division by zero at runtime | Fix zero-division guard in emitted code. Emitter fix. | **1** (→ solve) |
 | **E4** | #1195 | sambal, qsambal | path_solve_terminated | NA values in stationarity | Emit `$(param <> na)` guards for NA parameter values. | **2** (→ solve) |
@@ -67,7 +73,7 @@ Larger scope, multiple interacting systems, or deep architectural changes.
 | **L5** | #1222 | decomp | path_syntax_error | Multi-solve Benders — equation marginals | Support `.m` attribute or detect multi-solve and skip. | **1** (→ solve or exclude) |
 | **L6** | #1224 | mine | translate_internal_error | ParamRef index offsets (li(k)) | Support parameter-valued offsets or concrete expansion. | **1** (→ translate) |
 | **L7** | #1228 | iswnm | translate_timeout | Empty set nb → instance explosion | Short-circuit unevaluable conditions with empty result instead of include-all. | **1** (→ translate) |
-| **L8** | #1225 | kand | path_syntax_error (mismatch) | Multi-solve model — comparison target wrong | Fix comparison pipeline to use correct solve, or mark as multi-solve. | **1** (→ match) |
+| **L8** | #1225 | kand | model_optimal / mismatch | Multi-solve model — comparison target wrong | Fix comparison pipeline to use correct solve, or mark as multi-solve. | **1** (→ match) |
 | **L9** | #871/#882 | camcge | path_solve_terminated | Division by zero + subset bound complementarity | Multiple interacting bugs. Partially fixed. | **1** (→ solve) |
 
 ---
