@@ -1196,6 +1196,26 @@ def emit_gams_mcp(
             and var_name.lower() not in kkt.referenced_variables
         ):
             continue
+        # Precompute which bound attributes (.lo/.up) are referenced by .fx
+        # expressions for this variable, to avoid redundant traversal per kind.
+        _fx_refs: dict[str, bool] = {}
+        vn_lo = var_name.lower() in _vars_with_lo_comp
+        vn_up = var_name.lower() in _vars_with_up_comp
+        if vn_lo or vn_up:
+            for _bk in ("lo", "up"):
+                found = False
+                fx_scalar = getattr(var_def, "fx_expr", None)
+                if fx_scalar is not None and _expr_references_attribute(fx_scalar, var_name, _bk):
+                    found = True
+                else:
+                    fx_em = getattr(var_def, "fx_expr_map", None)
+                    if fx_em:
+                        for fx_expr_val in fx_em.values():
+                            if _expr_references_attribute(fx_expr_val, var_name, _bk):
+                                found = True
+                                break
+                _fx_refs[_bk] = found
+
         for kind in ("lo", "up", "fx"):
             # Skip .lo/.up for variables with explicit bound complementarity
             # to avoid double-bounding in the MCP (bounds enforced by comp_lo/comp_up).
@@ -1205,28 +1225,10 @@ def emit_gams_mcp(
             has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
                 getattr(var_def, f"{kind}_expr_map", None)
             )
-            # Only compute fx_refs_bound when suppression would actually
-            # trigger (variable has complementarity and no expression bound).
-            is_suppression_candidate = (
-                kind == "lo" and var_name.lower() in _vars_with_lo_comp and not has_expr_bound
-            ) or (kind == "up" and var_name.lower() in _vars_with_up_comp and not has_expr_bound)
-            if is_suppression_candidate:
-                # Check if any scalar or indexed .fx expression references
-                # this bound attribute (e.g., k.fx = k.lo or
-                # k.fx(tfirst) = k.lo(tfirst)); if so, still emit the bound.
-                fx_refs_bound = False
-                fx_scalar = getattr(var_def, "fx_expr", None)
-                if fx_scalar is not None and _expr_references_attribute(fx_scalar, var_name, kind):
-                    fx_refs_bound = True
-                else:
-                    fx_em = getattr(var_def, "fx_expr_map", None)
-                    if fx_em:
-                        for fx_expr_val in fx_em.values():
-                            if _expr_references_attribute(fx_expr_val, var_name, kind):
-                                fx_refs_bound = True
-                                break
-                if not fx_refs_bound:
-                    continue
+            if kind == "lo" and vn_lo and not has_expr_bound and not _fx_refs.get("lo", False):
+                continue
+            if kind == "up" and vn_up and not has_expr_bound and not _fx_refs.get("up", False):
+                continue
             # Issue #1147: Emit numeric per-element bounds from lo_map/up_map
             # BEFORE expression bounds, so expression bounds that reference
             # the base value on the RHS (e.g., r.lo('i1') = max(expr, r.lo('i1')))
