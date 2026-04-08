@@ -2158,23 +2158,21 @@ def _replace_indices_in_expr(
                     return getattr(adef, "target", None) if adef else None
 
                 def _remap_to_equation_domain(name: str) -> str | None:
-                    """Map a set/subset/alias name to the equation domain var."""
+                    """Map a set/subset/alias name to the equation domain var.
+
+                    Uses _is_subset_of for transitive + alias-aware subset
+                    checks, consistent with the rest of the stationarity builder.
+                    """
                     if name in equation_domain:
                         return name
-                    sdef = model_ir.sets.get(name)
-                    if sdef and getattr(sdef, "domain", None):
-                        for dvar in equation_domain:
-                            if dvar in sdef.domain:
-                                return dvar
                     alias_target = _resolve_alias(name)
-                    if alias_target:
-                        if alias_target in equation_domain:
-                            return alias_target
-                        sdef2 = model_ir.sets.get(alias_target)
-                        if sdef2 and getattr(sdef2, "domain", None):
-                            for dvar in equation_domain:
-                                if dvar in sdef2.domain:
-                                    return dvar
+                    if alias_target and alias_target in equation_domain:
+                        return alias_target
+                    for dvar in equation_domain:
+                        if _is_subset_of(name, dvar, model_ir):
+                            return dvar
+                        if alias_target and _is_subset_of(alias_target, dvar, model_ir):
+                            return dvar
                     return None
 
                 new_args_list: list[Expr] = []

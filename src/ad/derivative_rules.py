@@ -2627,11 +2627,13 @@ def _substitute_index(
     """Substitute a single index entry (string or IndexOffset) using the given mapping.
 
     For plain string indices, looks up the substitution directly.
-    For IndexOffset nodes, substitutes the base identifier while preserving
-    the offset expression and circular flag intact — the offset itself
-    (e.g., Const(1) in ``t+1``) is not subject to index substitution.
+    For IndexOffset nodes, substitutes the base identifier AND recurses into
+    the offset expression via _apply_index_substitution. This ensures that
+    SymbolRef/Call nodes inside complex offsets (e.g., ``card(t) - ord(t)``)
+    are also substituted during sum collapse.
 
     Sprint 19 Day 12: Extended _apply_index_substitution to support IndexOffset.
+    Sprint 24 Day 10: Extended to recurse into offset expressions (#1178).
 
     Examples:
         >>> _substitute_index("i", {"i": "i1"})
