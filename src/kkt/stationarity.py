@@ -530,6 +530,10 @@ def _find_variable_subset_condition(
     # None means "seen the declared domain index (no substitution)"
     pos_subsets: dict[int, set[str] | None] = {}
 
+    # Mutable closure container: set to True when the current equation has a
+    # condition that restricts its domain (e.g., $tp(tt)). Used by IndexOffset.
+    _eq_ctx: dict[str, bool] = {"has_condition": False}
+
     def _walk_expr(
         expr: Expr,
         skip_declared_at: frozenset[str] = frozenset(),
@@ -553,9 +557,12 @@ def _find_variable_subset_condition(
                     # Issue #1043: An IndexOffset like k(t+1) means the
                     # variable is accessed across the range of the declared
                     # domain — this IS evidence of full-domain usage.
+                    # Exception (#1232): if the equation has a domain-restricting
+                    # condition (e.g., $tp(tt)), the IndexOffset only covers the
+                    # conditioned subset, not the full domain.
                     io_base = _resolve(actual_idx.base.lower())
                     decl_lower_io = _resolve(decl_idx.lower())
-                    if io_base == decl_lower_io:
+                    if io_base == decl_lower_io and not _eq_ctx["has_condition"]:
                         pos_subsets[pos] = None  # full-domain evidence
                     continue
                 if not isinstance(actual_idx, str):
@@ -648,6 +655,7 @@ def _find_variable_subset_condition(
             if eq_def.condition is not None:
                 _collect_leads(eq_def.condition, domain_lower)
         skip = frozenset(restricted_by_eq)
+        _eq_ctx["has_condition"] = eq_def.condition is not None
         for side in eq_def.lhs_rhs:
             if _walk_expr(side, skip):
                 found_any = True

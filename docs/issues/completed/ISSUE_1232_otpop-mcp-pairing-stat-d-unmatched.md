@@ -1,7 +1,7 @@
 # otpop: MCP Pairing Error — stat_d Unmatched (d not referenced)
 
 **GitHub Issue:** [#1232](https://github.com/jeffreyhorn/nlp2mcp/issues/1232)
-**Status:** OPEN
+**Status:** FIXED (Sprint 24)
 **Severity:** Medium — Model compiles but EXECERROR=9 from 9 unmatched MCP pairs
 **Date:** 2026-04-08
 **Last Updated:** 2026-04-08
@@ -95,6 +95,21 @@ gams /tmp/otpop_mcp.gms lo=0
 - `data/gamslib/raw/otpop.gms` — Original model (136 lines)
 
 ---
+
+## Fix (Sprint 24)
+
+In `_find_variable_subset_condition`, IndexOffset accesses inside conditioned
+equations (e.g., `d(tt-1)` in `adef(tt)$tp(tt)`) were treated as full-domain
+evidence, overriding the subset detection from `dem(t)` and `sup(t)`.
+
+**Fix:** Added `_eq_ctx["has_condition"]` flag. When an equation has a domain-
+restricting condition, its IndexOffset accesses don't override subset evidence.
+This allows the stationarity builder to correctly detect that `d(tt)` is only
+accessed in `t(tt)` subset and condition `stat_d(tt)` accordingly.
+
+**Result:** otpop advances from path_solve_terminated (EXECERROR=9) to
+model_infeasible (MODEL STATUS 5, PATH attempts solve). The 9 unmatched MCP
+pairs are resolved.
 
 ## Related Issues
 
