@@ -224,15 +224,15 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 | Task | Status |
 |---|---|
 | Investigate kand (Pattern B) | ✅ #1225 — Multi-solve model, comparison target mismatch |
-| Investigate launch (Pattern D) | ✅ #1226 — Alias(s,ss) stationarity mismatch (20.9%) |
+| Investigate launch (Pattern D) | ✅ #1226 — Alias(s,ss) stationarity mismatch (~17.3% pipeline relative_difference) |
 | Investigate prolog regression | ✅ #1227 — Multiplier dimension mismatch lam_mp(i) vs lam_mp(i,t) |
-| Profile iswnm timeout | ✅ #1228 — Parse 74s, Jacobian/KKT timeout (empty set nb → instance explosion) |
+| Profile iswnm timeout | ✅ #1228 — Parse ~30s (pipeline), Jacobian/KKT timeout (empty set nb → instance explosion) |
 
 **Findings:**
 - **kand**: Solves MODEL STATUS 1 but MCP obj=195 vs NLP obj=2613. Not an alias bug — kand has two models (kand, kandsp); nlp2mcp reformulates the last solve (kandsp) but the NLP comparison uses the first model. Multi-solve limitation.
-- **launch**: Solves MODEL STATUS 1 but MCP obj=2731.7 vs NLP obj=2257.8 (20.9% mismatch). Single solve with Alias(s,ss) — alias-related Jacobian/stationarity error in the same family as other CGE/alias models.
+- **launch**: Solves MODEL STATUS 1 but MCP obj=2731.7 vs NLP obj=2257.8 (~17.3% pipeline relative_difference). Single solve with Alias(s,ss) — alias-related Jacobian/stationarity error in the same family as other CGE/alias models.
 - **prolog**: GAMS Error 148 — `lam_mp` appears with 1 index (`lam_mp(i)`) and 2 indices (`lam_mp(i,t)`) in the same equation. The stationarity builder generates a spurious collapsed-dimension multiplier reference.
-- **iswnm**: Parse takes 74s. Set `nb` has 0 concrete members, causing `SetMembershipTest` condition on equation `nbal` to be unevaluable. The instance enumerator includes all instances by default, producing a massive Cartesian product that times out.
+- **iswnm**: Parse takes ~30s (pipeline, hardware-dependent). Set `nb` has 0 concrete members, causing `SetMembershipTest` condition on equation `nbal` to be unevaluable. The instance enumerator includes all instances by default, producing a massive Cartesian product that times out.
 
 ---
 

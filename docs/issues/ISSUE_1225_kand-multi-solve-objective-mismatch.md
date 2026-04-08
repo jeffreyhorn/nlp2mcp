@@ -14,7 +14,7 @@
 The kand model (Kandler's Structural Optimization, GAMSlib) contains TWO solve
 statements for two different models:
 
-1. `model kand / all /;` — the full NLP model
+1. `model kand / all /;` — the full LP model
 2. `model kandsp / obj, bal, dembalx /;` — a subproblem (sparse subset of equations)
 
 nlp2mcp reformulates the LAST solve statement (`kandsp`), but the comparison
@@ -24,7 +24,7 @@ different from `kand`, producing a different (correct for kandsp) objective.
 
 | Metric | Value |
 |--------|-------|
-| NLP Objective (kand) | 2613.0 |
+| LP Objective (kand) | 2613.0 |
 | MCP Objective (kandsp) | 195.0 |
 | Relative Difference | 92.5% |
 
@@ -40,8 +40,8 @@ analysis, or auxiliary computation — not the primary model whose objective is
 used for comparison.
 
 In kand.gms:
-- First solve: `solve kand using nlp minimizing z;` (full model, all equations)
-- Second solve: `solve kandsp using nlp minimizing z;` (subproblem: obj, bal, dembalx only)
+- First solve: `solve kand using lp minimizing z;` (full model, all equations)
+- Second solve: `solve kandsp using lp minimizing z;` (subproblem: obj, bal, dembalx only)
 
 The comparison reference objective (2613.0) comes from the first solve (`kand`),
 but the MCP is built from the second solve (`kandsp`), which naturally produces
@@ -66,7 +66,7 @@ gams /tmp/kand_mcp.gms lo=2
 - **Aliases**: `Alias(n, nn)`
 - **Model 1**: `kand / all /` — full model with all equations
 - **Model 2**: `kandsp / obj, bal, dembalx /` — subproblem with 3 equations
-- **Solve type**: NLP
+- **Solve type**: LP (gamslib_type: LP)
 
 ---
 

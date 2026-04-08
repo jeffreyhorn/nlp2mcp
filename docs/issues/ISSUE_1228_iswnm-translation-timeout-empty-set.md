@@ -12,7 +12,7 @@
 ## Problem Summary
 
 The iswnm model (Indus Surface Water Network Submodule, GAMSlib SEQ=164) parses
-successfully (~74s) but times out during Jacobian/KKT translation (>300s). The
+successfully (~30s pipeline, hardware-dependent) but times out during Jacobian/KKT translation (>300s). The
 root cause is that set `nb` has 0 members, which creates an unevaluable
 `SetMembershipTest` condition on equation `nbal`. When the instance enumerator
 cannot evaluate a condition, it conservatively includes ALL instances by default,
@@ -20,7 +20,7 @@ leading to a massive Cartesian product explosion.
 
 | Metric | Value |
 |--------|-------|
-| Parse Time | ~74s |
+| Parse Time | ~30s (pipeline) / ~74s (local, hardware-dependent) |
 | Translate Time | TIMEOUT (>300s) |
 | Variables | 4 |
 | Equations | 2 |
@@ -54,7 +54,7 @@ computation becomes intractable.
 
 ```bash
 python -m src.cli data/gamslib/raw/iswnm.gms -o /tmp/iswnm_mcp.gms
-# Parse: ~74s (succeeds)
+# Parse: ~30s pipeline / ~74s local (hardware-dependent, succeeds)
 # Translate: TIMEOUT after 300s
 ```
 

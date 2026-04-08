@@ -20,7 +20,7 @@ in the stationarity equations.
 |--------|-------|
 | NLP Objective | 2257.7976 |
 | MCP Objective | 2731.711 |
-| Relative Difference | 20.9% |
+| Relative Difference | ~17.3% (diff/MCP obj) or ~20.9% (diff/NLP obj) |
 | Model Status | 1 (Optimal) |
 
 The MCP solves cleanly (Optimal status), meaning the KKT system is structurally
