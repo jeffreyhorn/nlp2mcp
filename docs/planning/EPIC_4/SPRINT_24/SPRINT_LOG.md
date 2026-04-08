@@ -226,7 +226,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 | Investigate kand (Pattern B) | ✅ #1225 — Multi-solve model, comparison target mismatch |
 | Investigate launch (Pattern D) | ✅ #1226 — Alias(s,ss) stationarity mismatch (~17.3% pipeline relative_difference) |
 | Investigate prolog regression | ✅ #1227 — Multiplier dimension mismatch lam_mp(i) vs lam_mp(i,t) |
-| Profile iswnm timeout | ✅ #1228 — Parse ~30s (pipeline), Jacobian/KKT timeout (empty set nb → instance explosion) |
+| Profile iswnm timeout | ✅ #1228 — Parse ~30s (pipeline), Jacobian/KKT timeout (`nb` has 0 concrete members → unevaluable `SetMembershipTest` → include-all enumeration) |
 
 **Findings:**
 - **kand**: Solves MODEL STATUS 1 but MCP obj=195 vs NLP obj=2613. Not an alias bug — kand has two models (kand, kandsp); nlp2mcp reformulates the last solve (kandsp) but the NLP comparison uses the first model. Multi-solve limitation.
