@@ -1205,16 +1205,21 @@ def emit_gams_mcp(
             has_expr_bound = getattr(var_def, f"{kind}_expr", None) is not None or bool(
                 getattr(var_def, f"{kind}_expr_map", None)
             )
-            # Check if any fx_expr_map references this bound attribute (e.g.,
-            # k.fx(tfirst) = k.lo(tfirst) needs k.lo to be emitted).
+            # Check if any scalar or indexed .fx expression references this
+            # bound attribute (e.g., k.fx = k.lo or k.fx(tfirst) = k.lo(tfirst));
+            # if so, the bound must still be emitted.
             fx_refs_bound = False
             if kind in ("lo", "up"):
-                fx_em = getattr(var_def, "fx_expr_map", None)
-                if fx_em:
-                    for fx_expr in fx_em.values():
-                        if _expr_references_attribute(fx_expr, var_name, kind):
-                            fx_refs_bound = True
-                            break
+                fx_scalar = getattr(var_def, "fx_expr", None)
+                if fx_scalar is not None and _expr_references_attribute(fx_scalar, var_name, kind):
+                    fx_refs_bound = True
+                else:
+                    fx_em = getattr(var_def, "fx_expr_map", None)
+                    if fx_em:
+                        for fx_expr_val in fx_em.values():
+                            if _expr_references_attribute(fx_expr_val, var_name, kind):
+                                fx_refs_bound = True
+                                break
             if (
                 kind == "lo"
                 and var_name.lower() in _vars_with_lo_comp
