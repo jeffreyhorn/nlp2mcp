@@ -10,7 +10,7 @@ while preserving symbolic bases (set names and aliases) as-is.
 
 import pytest
 
-from src.ir.ast import Const, IndexOffset, ParamRef, VarRef
+from src.ir.ast import Binary, Call, Const, IndexOffset, ParamRef, SymbolRef, VarRef
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import AliasDef, ParameterDef, SetDef, VariableDef
 from src.kkt.stationarity import _replace_indices_in_expr
@@ -132,3 +132,36 @@ class TestReplaceIndicesIndexOffset:
         assert isinstance(idx, IndexOffset)
         assert idx.base != "*", "Wildcard '*' must not appear as IndexOffset base"
         assert idx.base == "c", f"Expected base 'c' (from element_to_set), got '{idx.base}'"
+
+    def test_ord_subset_remapped_to_equation_domain(self):
+        """ord(t) where t ⊂ tt should become ord(tt) when equation domain is tt.
+
+        This is the otpop pattern: sum(t, ... p(t + (card(t) - ord(t))))
+        collapses and produces p(tt + (card(t) - ord(t))). The ord(t) must
+        become ord(tt) since tt is the controlled equation domain variable.
+        """
+        ir = ModelIR()
+        ir.sets["tt"] = SetDef(name="tt", members=[str(y) for y in range(1965, 1991)])
+        ir.sets["t"] = SetDef(name="t", members=[str(y) for y in range(1974, 1991)], domain=("tt",))
+        ir.variables["p"] = VariableDef(name="p", domain=("tt",))
+        domain = ("tt",)
+        instances = [(i, (str(1965 + i),)) for i in range(26)]
+        e2s = _build_element_to_set(ir, domain, instances)
+
+        # Simulate: p(tt + (card(t) - ord(t))) as a VarRef with IndexOffset
+        # whose offset contains Call("ord", SymbolRef("t"))
+        offset_expr = Binary("-", Call("card", (SymbolRef("t"),)), Call("ord", (SymbolRef("t"),)))
+        expr = VarRef("p", (IndexOffset("tt", offset_expr, False),))
+        result = _replace_indices_in_expr(expr, domain, e2s, ir, equation_domain=domain)
+
+        assert isinstance(result, VarRef)
+        idx = result.indices[0]
+        assert isinstance(idx, IndexOffset)
+        # card(t) stays as card(t) — card doesn't require a controlled set
+        # ord(t) should become ord(tt) — tt is the equation domain
+        assert isinstance(idx.offset, Binary)
+        ord_call = idx.offset.right
+        assert isinstance(ord_call, Call)
+        assert ord_call.func == "ord"
+        assert isinstance(ord_call.args[0], SymbolRef)
+        assert ord_call.args[0].name == "tt", f"Expected ord(tt), got ord({ord_call.args[0].name})"

@@ -2551,8 +2551,14 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     if isinstance(expr, Const):
         return expr
     elif isinstance(expr, SymbolRef):
-        # SymbolRef may appear as an index inside SetMembershipTest (e.g., SymbolRef("j")).
-        # When a sum collapses, j → j1, so we substitute the name if it's in the map.
+        # When a sum collapses, j → j1, substitute the name whenever it is
+        # present in the index-substitution map.
+        #
+        # Note: this helper does not distinguish SymbolRef-by-context (for
+        # example, an index-like SymbolRef versus a SymbolRef passed to
+        # card/ord); it applies the provided mapping uniformly and leaves
+        # any higher-level validation or context-specific handling to the
+        # caller (e.g., _replace_indices_in_expr fixes card/ord arguments).
         if expr.name in substitution:
             return SymbolRef(substitution[expr.name])
         return expr
@@ -2602,8 +2608,15 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
             _apply_index_substitution(idx, substitution) for idx in expr.indices
         ]
         return SetMembershipTest(expr.set_name, tuple(new_idx_list))
+    elif isinstance(expr, IndexOffset):
+        # Substitute the base and recurse into the offset expression
+        # (e.g., IndexOffset("t", Binary("-", Call("card", SymbolRef("t")), ...))
+        # needs "t" in the offset expression substituted too).
+        new_base = substitution.get(expr.base, expr.base)
+        new_offset = _apply_index_substitution(expr.offset, substitution)
+        return IndexOffset(new_base, new_offset, expr.circular)
     else:
-        # IndexOffset, CompileTimeConstant etc. — pass through unchanged
+        # CompileTimeConstant etc. — pass through unchanged
         return expr
 
 
@@ -2614,11 +2627,13 @@ def _substitute_index(
     """Substitute a single index entry (string or IndexOffset) using the given mapping.
 
     For plain string indices, looks up the substitution directly.
-    For IndexOffset nodes, substitutes the base identifier while preserving
-    the offset expression and circular flag intact — the offset itself
-    (e.g., Const(1) in ``t+1``) is not subject to index substitution.
+    For IndexOffset nodes, substitutes the base identifier AND recurses into
+    the offset expression via _apply_index_substitution. This ensures that
+    SymbolRef/Call nodes inside complex offsets (e.g., ``card(t) - ord(t)``)
+    are also substituted during sum collapse.
 
     Sprint 19 Day 12: Extended _apply_index_substitution to support IndexOffset.
+    Sprint 24 Day 10: Extended to recurse into offset expressions (#1178).
 
     Examples:
         >>> _substitute_index("i", {"i": "i1"})
@@ -2631,9 +2646,12 @@ def _substitute_index(
     if isinstance(idx, str):
         return substitution.get(idx, idx)
     else:
-        # idx is an IndexOffset — substitute the base, keep offset and circular flag
+        # idx is an IndexOffset — substitute the base and recurse into offset.
+        # The offset may contain SymbolRef/Call nodes referencing sum indices
+        # (e.g., card(t) - ord(t)) that need substitution after sum collapse.
         new_base = substitution.get(idx.base, idx.base)
-        return IndexOffset(new_base, idx.offset, idx.circular)
+        new_offset = _apply_index_substitution(idx.offset, substitution)
+        return IndexOffset(new_base, new_offset, idx.circular)
 
 
 # ============================================================================

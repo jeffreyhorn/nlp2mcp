@@ -2006,7 +2006,12 @@ def _replace_indices_in_expr(
                                             new_base = mapped
                                     else:
                                         new_base = mapped
-                                new_idx.append(IndexOffset(new_base, orig.offset, orig.circular))
+                                # Also process the offset expression to fix
+                                # concrete elements inside card/ord calls.
+                                new_offset = _replace_indices_in_expr(
+                                    orig.offset, domain, element_to_set, model_ir, equation_domain
+                                )
+                                new_idx.append(IndexOffset(new_base, new_offset, orig.circular))
                             else:
                                 new_idx.append(rep)
                         return VarRef(var_ref.name, tuple(new_idx), var_ref.attribute)
@@ -2082,7 +2087,10 @@ def _replace_indices_in_expr(
                                             new_base = mapped
                                     else:
                                         new_base = mapped
-                                new_idx_p.append(IndexOffset(new_base, orig.offset, orig.circular))
+                                new_offset = _replace_indices_in_expr(
+                                    orig.offset, domain, element_to_set, model_ir, equation_domain
+                                )
+                                new_idx_p.append(IndexOffset(new_base, new_offset, orig.circular))
                             else:
                                 new_idx_p.append(rep)
                         return ParamRef(param_ref.name, tuple(new_idx_p))
@@ -2133,6 +2141,73 @@ def _replace_indices_in_expr(
             )
             return Unary(op, new_child)
         case Call(func, args):
+            if func == "ord" and element_to_set and equation_domain and model_ir:
+                # ord() requires a controlled set name. After sum collapse,
+                # the argument may be a concrete element or a subset set
+                # name that isn't controlled in the equation scope.
+                # Remap to the equation domain variable when appropriate,
+                # but skip names that are bound by an enclosing Sum/Prod.
+                bound_index_names: set[str] = set()
+                if isinstance(element_to_set, ChainMap):
+                    # In Sum/Prod recursion, the first ChainMap layer tracks
+                    # bound indices that are controlled in this scope.
+                    bound_index_names = set(element_to_set.maps[0])
+
+                def _resolve_alias(name: str) -> str | None:
+                    adef = model_ir.aliases.get(name)
+                    return getattr(adef, "target", None) if adef else None
+
+                def _remap_to_equation_domain(name: str) -> str | None:
+                    """Map a set/subset/alias name to the equation domain var.
+
+                    Uses _is_subset_of for transitive + alias-aware subset
+                    checks, consistent with the rest of the stationarity builder.
+                    """
+                    if name in equation_domain:
+                        return name
+                    alias_target = _resolve_alias(name)
+                    if alias_target and alias_target in equation_domain:
+                        return alias_target
+                    for dvar in equation_domain:
+                        if _is_subset_of(name, dvar, model_ir):
+                            return dvar
+                        if alias_target and _is_subset_of(alias_target, dvar, model_ir):
+                            return dvar
+                    return None
+
+                new_args_list: list[Expr] = []
+                for arg in args:
+                    if isinstance(arg, SymbolRef):
+                        name = arg.name
+                        # Skip bound indices (controlled by enclosing sum)
+                        if name in bound_index_names:
+                            new_args_list.append(arg)
+                            continue
+                        is_set_or_alias = name in model_ir.sets or name in model_ir.aliases
+                        if not is_set_or_alias and name in element_to_set:
+                            # Concrete element → map to equation domain
+                            mapped_set = element_to_set[name]
+                            replacement = _remap_to_equation_domain(mapped_set)
+                            new_args_list.append(SymbolRef(replacement or mapped_set))
+                        elif is_set_or_alias:
+                            # Aliases of the equation domain (e.g., j→i where
+                            # i is the domain) are likely controlled sum vars.
+                            # Only remap true subsets, not aliases.
+                            alias_target = _resolve_alias(name)
+                            if alias_target and alias_target in equation_domain:
+                                new_args_list.append(arg)
+                            else:
+                                replacement = _remap_to_equation_domain(name)
+                                new_args_list.append(SymbolRef(replacement) if replacement else arg)
+                        else:
+                            new_args_list.append(arg)
+                    else:
+                        new_args_list.append(
+                            _replace_indices_in_expr(
+                                arg, domain, element_to_set, model_ir, equation_domain
+                            )
+                        )
+                return Call(func, tuple(new_args_list))
             new_args = tuple(
                 _replace_indices_in_expr(arg, domain, element_to_set, model_ir, equation_domain)
                 for arg in args
