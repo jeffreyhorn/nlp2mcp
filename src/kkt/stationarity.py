@@ -2143,46 +2143,64 @@ def _replace_indices_in_expr(
         case Call(func, args):
             if func == "ord" and element_to_set and equation_domain and model_ir:
                 # ord() requires a controlled set name. After sum collapse,
-                # the argument may be a concrete element (e.g., "1974") that
-                # needs mapping to the equation domain variable.
-                # Only remap concrete elements or subset set names —
-                # preserve set/alias names that may be controlled by an
-                # enclosing sum (e.g., ord(j) in sum(j, ...)).
+                # the argument may be a concrete element or a subset set
+                # name that isn't controlled in the equation scope.
+                # Remap to the equation domain variable when appropriate,
+                # but skip names that are bound by an enclosing Sum/Prod.
+                bound_index_names: set[str] = set()
+                if isinstance(element_to_set, ChainMap):
+                    # In Sum/Prod recursion, the first ChainMap layer tracks
+                    # bound indices that are controlled in this scope.
+                    bound_index_names = set(element_to_set.maps[0])
+
+                def _resolve_alias(name: str) -> str | None:
+                    adef = model_ir.aliases.get(name)
+                    return getattr(adef, "target", None) if adef else None
+
+                def _remap_to_equation_domain(name: str) -> str | None:
+                    """Map a set/subset/alias name to the equation domain var."""
+                    if name in equation_domain:
+                        return name
+                    sdef = model_ir.sets.get(name)
+                    if sdef and getattr(sdef, "domain", None):
+                        for dvar in equation_domain:
+                            if dvar in sdef.domain:
+                                return dvar
+                    alias_target = _resolve_alias(name)
+                    if alias_target:
+                        if alias_target in equation_domain:
+                            return alias_target
+                        sdef2 = model_ir.sets.get(alias_target)
+                        if sdef2 and getattr(sdef2, "domain", None):
+                            for dvar in equation_domain:
+                                if dvar in sdef2.domain:
+                                    return dvar
+                    return None
+
                 new_args_list: list[Expr] = []
                 for arg in args:
                     if isinstance(arg, SymbolRef):
                         name = arg.name
-                        is_set_or_alias = (
-                            name in model_ir.sets or name in model_ir.aliases
-                        )
+                        # Skip bound indices (controlled by enclosing sum)
+                        if name in bound_index_names:
+                            new_args_list.append(arg)
+                            continue
+                        is_set_or_alias = name in model_ir.sets or name in model_ir.aliases
                         if not is_set_or_alias and name in element_to_set:
                             # Concrete element → map to equation domain
                             mapped_set = element_to_set[name]
-                            replacement = mapped_set
-                            for dvar in equation_domain:
-                                if dvar == mapped_set:
-                                    replacement = dvar
-                                    break
-                                # Check subset relationship
-                                sdef = model_ir.sets.get(mapped_set)
-                                if sdef and sdef.domain and dvar in sdef.domain:
-                                    replacement = dvar
-                                    break
-                            new_args_list.append(SymbolRef(replacement))
+                            replacement = _remap_to_equation_domain(mapped_set)
+                            new_args_list.append(SymbolRef(replacement or mapped_set))
                         elif is_set_or_alias:
-                            # Set/alias name — check if it's a subset not
-                            # controlled in this scope (e.g., ord(t) where
-                            # t ⊂ tt and tt is the equation domain).
-                            sdef = model_ir.sets.get(name)
-                            if sdef and sdef.domain:
-                                for dvar in equation_domain:
-                                    if dvar in sdef.domain:
-                                        new_args_list.append(SymbolRef(dvar))
-                                        break
-                                else:
-                                    new_args_list.append(arg)
-                            else:
+                            # Aliases of the equation domain (e.g., j→i where
+                            # i is the domain) are likely controlled sum vars.
+                            # Only remap true subsets, not aliases.
+                            alias_target = _resolve_alias(name)
+                            if alias_target and alias_target in equation_domain:
                                 new_args_list.append(arg)
+                            else:
+                                replacement = _remap_to_equation_domain(name)
+                                new_args_list.append(SymbolRef(replacement) if replacement else arg)
                         else:
                             new_args_list.append(arg)
                     else:

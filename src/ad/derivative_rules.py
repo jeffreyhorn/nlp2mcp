@@ -2551,17 +2551,16 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
     if isinstance(expr, Const):
         return expr
     elif isinstance(expr, SymbolRef):
-        # SymbolRef may appear as an index inside SetMembershipTest (e.g., SymbolRef("j")).
-        # When a sum collapses, j → j1, so we substitute the name if it's in the map.
-        # However, SymbolRef is also used as arguments to card/ord (e.g., card(t)),
-        # where the replacement must be a set name, not a concrete element.
-        # Since we can't distinguish context here, we keep SymbolRef unchanged
-        # when the replacement looks like a concrete element (contains digits or
-        # special chars that aren't valid set names). The stationarity builder's
-        # _replace_indices_in_expr handles the final mapping.
+        # When a sum collapses, j → j1, substitute the name whenever it is
+        # present in the index-substitution map.
+        #
+        # Note: this helper does not distinguish SymbolRef-by-context (for
+        # example, an index-like SymbolRef versus a SymbolRef passed to
+        # card/ord); it applies the provided mapping uniformly and leaves
+        # any higher-level validation or context-specific handling to the
+        # caller (e.g., _replace_indices_in_expr fixes card/ord arguments).
         if expr.name in substitution:
-            replacement = substitution[expr.name]
-            return SymbolRef(replacement)
+            return SymbolRef(substitution[expr.name])
         return expr
     elif isinstance(expr, VarRef):
         # Substitute indices in VarRef, including IndexOffset bases
@@ -2645,11 +2644,12 @@ def _substitute_index(
     if isinstance(idx, str):
         return substitution.get(idx, idx)
     else:
-        # idx is an IndexOffset — substitute the base, keep offset and circular flag.
-        # The offset expression is processed separately by _apply_index_substitution
-        # when the IndexOffset appears as a standalone expression node.
+        # idx is an IndexOffset — substitute the base and recurse into offset.
+        # The offset may contain SymbolRef/Call nodes referencing sum indices
+        # (e.g., card(t) - ord(t)) that need substitution after sum collapse.
         new_base = substitution.get(idx.base, idx.base)
-        return IndexOffset(new_base, idx.offset, idx.circular)
+        new_offset = _apply_index_substitution(idx.offset, substitution)
+        return IndexOffset(new_base, new_offset, idx.circular)
 
 
 # ============================================================================

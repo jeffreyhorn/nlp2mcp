@@ -94,14 +94,24 @@ class TestSubstituteIndex:
         assert result.base == "t"
         assert result.offset == Const(2.0)
 
-    def test_index_offset_with_symbol_offset_preserved(self):
-        """IndexOffset with SymbolRef offset: offset is never substituted."""
+    def test_index_offset_with_symbol_offset_substituted(self):
+        """IndexOffset with SymbolRef offset: offset IS substituted."""
         offset = SymbolRef("lag")
         idx = IndexOffset("t", offset, False)
         result = _substitute_index(idx, {"t": "t5", "lag": "lag2"})
         assert isinstance(result, IndexOffset)
         assert result.base == "t5"
-        # offset is preserved as-is — it is not a sum index
+        # offset SymbolRef is substituted when the name is in the map
+        assert isinstance(result.offset, SymbolRef)
+        assert result.offset.name == "lag2"
+
+    def test_index_offset_offset_unchanged_when_not_in_map(self):
+        """IndexOffset offset preserved when SymbolRef not in substitution map."""
+        offset = SymbolRef("lag")
+        idx = IndexOffset("t", offset, False)
+        result = _substitute_index(idx, {"t": "t5"})
+        assert isinstance(result, IndexOffset)
+        assert result.base == "t5"
         assert result.offset is offset
 
     def test_index_offset_negative_offset_preserved(self):
