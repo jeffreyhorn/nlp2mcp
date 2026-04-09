@@ -72,9 +72,23 @@ The 66 remaining unmatched variables are from `stat_tsam` missing `nu_COLSUM(j)`
 
 ---
 
-## Remaining Work (separate issue)
+## Sprint 24 Update
 
-The 66 unmatched free variables need investigation of the Jacobian builder's constraint-variable relationship detection for COLSUM/ROWSUM equations. This is tracked separately as it affects derivative propagation more broadly.
+**Improved:** Empty equation detector (#1133 fix) reduced unmatched from 66 to 4.
+The remaining 4 unmatched variables are `ERR3(ACT,ACT)`, `ERR3(FAC,FAC)`,
+`ERR3(ENT,ENT)`, and one other diagonal instance. These are diagonal elements
+of `err3(i,j)` where:
+- `stat_err3(i,j)` references `err3(j,j)` (diagonal only)
+- For diagonal instances like `(ACT,ACT)`, ALL terms (`$ICOEFF`, `$IVAL`,
+  `$NONZERO`) are false because SAM matrices don't have self-referencing entries
+- The empty equation detector can't prove these are empty because `NONZERO`,
+  `ICOEFF`, `IVAL` are runtime-computed dynamic sets
+
+**NOT FIXED** — requires either:
+1. Support for evaluating runtime-computed set conditions in the detector
+2. Detecting that `err3(j,j)` (same-index-repeated) only contributes to
+   equations where the corresponding diagonal condition is active
+3. A GAMS-side runtime check that fixes variables for truly empty equations
 
 ---
 
