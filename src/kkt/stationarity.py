@@ -655,7 +655,24 @@ def _find_variable_subset_condition(
             if eq_def.condition is not None:
                 _collect_leads(eq_def.condition, domain_lower)
         skip = frozenset(restricted_by_eq)
-        _eq_ctx["has_condition"] = eq_def.condition is not None
+        # Check if the equation condition restricts the domain (references
+        # a domain index via SetMembershipTest, e.g., $tp(tt)). Scalar
+        # conditions like $p>0 don't restrict the domain.
+        _eq_ctx["has_condition"] = False
+        if eq_def.condition is not None and eq_def.domain:
+            domain_lower_set = {d.lower() for d in eq_def.domain}
+
+            def _cond_refs_domain(e: Expr) -> bool:
+                if isinstance(e, SetMembershipTest):
+                    for idx in e.indices:
+                        if isinstance(idx, SymbolRef) and idx.name.lower() in domain_lower_set:
+                            return True
+                for c in e.children():
+                    if _cond_refs_domain(c):
+                        return True
+                return False
+
+            _eq_ctx["has_condition"] = _cond_refs_domain(eq_def.condition)
         for side in eq_def.lhs_rhs:
             if _walk_expr(side, skip):
                 found_any = True
