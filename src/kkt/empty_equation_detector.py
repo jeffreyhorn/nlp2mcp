@@ -342,17 +342,35 @@ def _get_nonzero_index(
     if not domain or not values:
         return None
 
-    # Find which parameter domain positions correspond to equation indices
+    # Find which parameter domain positions correspond to equation indices.
+    # Must be one-to-one: prefer exact name matches before alias-target matches.
     pos_map: dict[int, str] = {}  # param_pos → eq_index_name
-    for idx_name in index_map:
-        idx_root = _resolve_alias_target(idx_name, model_ir)
-        for pos, d in enumerate(domain):
-            d_root = _resolve_alias_target(d, model_ir)
-            if d_root == idx_root:
-                pos_map[pos] = idx_name
-                break
+    used_positions: set[int] = set()
+    domain_lower = [str(d).lower() for d in domain]
+    domain_roots = [_resolve_alias_target(str(d), model_ir) for d in domain]
 
-    if not pos_map:
+    for idx_name in sorted(index_map.keys()):
+        idx_lower = idx_name.lower()
+        idx_root = _resolve_alias_target(idx_name, model_ir)
+
+        # Prefer exact name match
+        exact = [
+            p for p, dl in enumerate(domain_lower) if p not in used_positions and dl == idx_lower
+        ]
+        if len(exact) == 1:
+            pos_map[exact[0]] = idx_name
+            used_positions.add(exact[0])
+        else:
+            # Fall back to alias-target match
+            alias = [
+                p for p, dr in enumerate(domain_roots) if p not in used_positions and dr == idx_root
+            ]
+            if len(alias) != 1:
+                return None  # Ambiguous or no match → unknown
+            pos_map[alias[0]] = idx_name
+            used_positions.add(alias[0])
+
+    if len(pos_map) != len(index_map):
         return None
 
     # Build index: for each nonzero entry, extract the equation-domain values
