@@ -52,6 +52,10 @@ The model has complex mathematical features that may cause AD/KKT errors:
 
 ## Reproduction
 
+**Prerequisite:** GAMSlib raw sources must be downloaded into `data/gamslib/raw/`
+(not checked in; run `python scripts/gamslib/download_models.py` or obtain
+`hhfair.gms` from https://www.gams.com/latest/gamslib_ml/hhfair.128).
+
 ```bash
 .venv/bin/python -m src.cli data/gamslib/raw/hhfair.gms -o /tmp/hhfair_mcp.gms --quiet
 gams /tmp/hhfair_mcp.gms lo=0
