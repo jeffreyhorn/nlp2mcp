@@ -3442,16 +3442,14 @@ def _fix_multiplier_dimensions(expr: Expr, kkt: KKTSystem) -> Expr:
     for mult_def in list(kkt.multipliers_eq.values()) + list(kkt.multipliers_ineq.values()):
         mult_dims[mult_def.name] = mult_def.domain
 
-    return _fix_mult_dims_recursive(expr, mult_dims, inside_sum=False)
+    return _fix_mult_dims_recursive(expr, mult_dims)
 
 
-def _fix_mult_dims_recursive(
-    expr: Expr, mult_dims: dict[str, tuple[str, ...]], *, inside_sum: bool
-) -> Expr:
+def _fix_mult_dims_recursive(expr: Expr, mult_dims: dict[str, tuple[str, ...]]) -> Expr:
     """Recursively fix MultiplierRef dimension mismatches in additive terms."""
     if isinstance(expr, Binary) and expr.op in ("+", "-"):
-        new_left = _fix_mult_dims_recursive(expr.left, mult_dims, inside_sum=inside_sum)
-        new_right = _fix_mult_dims_recursive(expr.right, mult_dims, inside_sum=inside_sum)
+        new_left = _fix_mult_dims_recursive(expr.left, mult_dims)
+        new_right = _fix_mult_dims_recursive(expr.right, mult_dims)
         if new_left is not expr.left or new_right is not expr.right:
             return Binary(expr.op, new_left, new_right)
         return expr
@@ -3459,7 +3457,7 @@ def _fix_mult_dims_recursive(
         # Don't fix inside sums — they already handle extra dimensions
         return expr
     elif isinstance(expr, DollarConditional):
-        new_val = _fix_mult_dims_recursive(expr.value_expr, mult_dims, inside_sum=inside_sum)
+        new_val = _fix_mult_dims_recursive(expr.value_expr, mult_dims)
         if new_val is not expr.value_expr:
             return DollarConditional(new_val, expr.condition)
         return expr
@@ -3468,12 +3466,19 @@ def _fix_mult_dims_recursive(
     bad_mult = _find_bad_multiplier(expr, mult_dims)
     if bad_mult:
         mult_name, actual_indices, declared_domain = bad_mult
-        # Find missing dimensions
-        actual_set = set(actual_indices) if actual_indices else set()
-        missing = tuple(d for d in declared_domain if d not in actual_set)
+        # Extract base names from IndexOffset for comparison
+        actual_bases: set[str] = set()
+        for idx in actual_indices:
+            if isinstance(idx, str):
+                actual_bases.add(idx)
+            elif isinstance(idx, IndexOffset):
+                actual_bases.add(idx.base)
+        missing = tuple(d for d in declared_domain if d not in actual_bases)
         if missing:
-            # Fix the MultiplierRef inside the expression
-            fixed_expr = _replace_mult_indices(expr, mult_name, declared_domain)
+            # Extend the MultiplierRef indices with missing dimensions
+            # (preserving existing indices including IndexOffsets)
+            new_indices = tuple(actual_indices) + missing
+            fixed_expr = _replace_mult_indices(expr, mult_name, new_indices)
             return Sum(missing, fixed_expr)
     return expr
 

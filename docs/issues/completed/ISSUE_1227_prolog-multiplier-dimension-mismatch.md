@@ -1,8 +1,8 @@
 # prolog: Multiplier Dimension Mismatch — lam_mp Missing Index t
 
 **GitHub Issue:** [#1227](https://github.com/jeffreyhorn/nlp2mcp/issues/1227)
-**Status:** OPEN
-**Severity:** High — GAMS Error 148 (compilation failure)
+**Status:** FIXED
+**Severity:** High — was GAMS Error 148 (now resolved)
 **Date:** 2026-04-06
 **Affected Models:** prolog
 **Supersedes:** #1070 (originally described as CES singular Jacobian)
