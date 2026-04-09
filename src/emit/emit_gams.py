@@ -2270,6 +2270,44 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
+    # Issue #1195: Replace NA parameter values with 1 to prevent
+    # "RHS value NA" and division-by-zero errors in stationarity equations.
+    # GAMS NA propagates through multiplication (NA * 0 = NA), so parameters
+    # with NA entries can cause equation evaluation to fail even when
+    # conditioned terms evaluate to 0. Using 1 (not 0) avoids division-by-zero
+    # in denominators like sqr(tb(i)) where tb contained NA. In models such as
+    # sambal/qsambal, the relevant conditions (e.g., $(tw(i))) are meant to
+    # exclude NA-affected instances from active stationarity terms. However,
+    # this emitted assignment mutates parameter data globally, so we only rely
+    # on it to avoid GAMS NA/div-by-zero evaluation failures, not as a general
+    # guarantee that replacing NA with 1 is behavior-preserving.
+    # Note: This scans parameter values to detect NaN. If emission time
+    # becomes an issue for large models, consider tracking has_na per
+    # parameter during parsing/emission and reusing it here.
+    na_cleanup_lines: list[str] = []
+    for pname, pdef in kkt.model_ir.params.items():
+        # Skip the predefined 'na' constant so mapval(na) semantics aren't broken
+        if pname == "na" or not hasattr(pdef, "values") or not pdef.values:
+            continue
+        has_na = any(isinstance(v, float) and math.isnan(v) for v in pdef.values.values())
+        if has_na:
+            quoted_pname = _quote_symbol(pname)
+            if pdef.domain:
+                domain_str = ",".join(_quote_symbol(d) for d in pdef.domain)
+                na_cleanup_lines.append(
+                    f"{quoted_pname}({domain_str})$(mapval({quoted_pname}({domain_str})) = mapval(na)) = 1;"
+                )
+            else:
+                na_cleanup_lines.append(
+                    f"{quoted_pname}$(mapval({quoted_pname}) = mapval(na)) = 1;"
+                )
+    if na_cleanup_lines:
+        sections.append("")
+        if add_comments:
+            sections.append("* Clear NA parameter values to prevent evaluation errors")
+        sections.extend(na_cleanup_lines)
+        sections.append("")
+
     solve_code = emit_solve(model_name)
     sections.append(solve_code)
 

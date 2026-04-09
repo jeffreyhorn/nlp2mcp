@@ -37,11 +37,24 @@ python -m src.cli data/gamslib/raw/sambal.gms -o /tmp/sambal_mcp.gms --skip-conv
 # "RHS value NA in equation below is illegal" on stat_t
 ```
 
-## Fix Approach
+## Fix (Sprint 24)
 
-1. Identify which parameter(s) in the `stat_t` stationarity expression contain NA values
-2. Add `$(param <> na)` guards on terms that reference NA-containing parameters
-3. Or filter out NA-valued parameter entries during emission
+**Status: FIXED** — sambal and qsambal now solve MODEL STATUS 1 Optimal.
+
+**Root Cause Detail:** Parameters `tb(i)` and `xb(i,j)` contain GAMS NA values
+(`nan` in IR). The stationarity equation `stat_t(i)` has terms like
+`tb(i) * ... / sqr(tb(i)) * 1$(tw(i))`. Even though `tw(h1) = 0` zeros out
+the condition, GAMS evaluates `tb(i) = NA` first, producing NA propagation
+through multiplication (`NA * 0 = NA`), and division by zero (`/ sqr(NA)`).
+
+**Fix:** Added NA parameter cleanup in `emit_gams.py` before the solve
+statement. For each parameter with NA values (`nan` in `pdef.values`),
+emits `param(domain)$(mapval(param(domain)) = mapval(na)) = 1;`. Setting
+NA entries to 1 (not 0) avoids both NA propagation AND division-by-zero
+in denominators like `/ sqr(tb(i))`.
+
+**Result:** sambal and qsambal both advance from path_solve_terminated
+(EXECERROR=2) to model_optimal (MODEL STATUS 1 Optimal).
 
 ## Related Issues
 
