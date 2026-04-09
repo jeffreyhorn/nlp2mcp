@@ -3437,10 +3437,13 @@ def _fix_multiplier_dimensions(expr: Expr, kkt: KKTSystem) -> Expr:
     breaking expression structure inside sums that already handle
     the extra dimensions correctly.
     """
-    # Collect declared multiplier dimensions
-    mult_dims: dict[str, tuple[str, ...]] = {}
-    for mult_def in list(kkt.multipliers_eq.values()) + list(kkt.multipliers_ineq.values()):
-        mult_dims[mult_def.name] = mult_def.domain
+    # Use cached mult_dims if available, otherwise build it
+    mult_dims: dict[str, tuple[str, ...]] | None = getattr(kkt, "_mult_dims_cache", None)
+    if mult_dims is None:
+        mult_dims = {}
+        for mult_def in list(kkt.multipliers_eq.values()) + list(kkt.multipliers_ineq.values()):
+            mult_dims[mult_def.name] = mult_def.domain
+        object.__setattr__(kkt, "_mult_dims_cache", mult_dims)
 
     return _fix_mult_dims_recursive(expr, mult_dims)
 
