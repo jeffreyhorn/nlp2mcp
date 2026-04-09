@@ -155,3 +155,56 @@ class TestIndexOffsetSubsetDetection:
         assert result is not None
         assert isinstance(result, SetMembershipTest)
         assert result.set_name == "tfirst"
+
+    def test_conditioned_offset_does_not_override_subset(self):
+        """IndexOffset in a domain-conditioned equation shouldn't override subset.
+
+        Issue #1232 (otpop pattern): variable d(tt) is accessed as d(t) in
+        unconditioned equations (subset evidence) and as d(tt-1) in a
+        conditioned equation adef(tt)$tp(tt). The conditioned IndexOffset
+        should NOT suppress the subset guard since it only covers the
+        conditioned portion of the domain.
+        """
+        model = ModelIR()
+        model.sets["tt"] = SetDef(name="tt", members=[str(y) for y in range(1965, 1991)])
+        model.sets["t"] = SetDef(
+            name="t", domain=("tt",), members=[str(y) for y in range(1974, 1991)]
+        )
+        model.sets["tp"] = SetDef(
+            name="tp", domain=("tt",), members=[str(y) for y in range(1975, 1991)]
+        )
+
+        # sup(t).. d(t) =E= expr  (subset access, unconditioned)
+        eq1 = EquationDef(
+            name="sup",
+            domain=("t",),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("d", indices=("t",)), Const(0)),
+        )
+        model.equations["sup"] = eq1
+
+        # adef(tt)$tp(tt).. d(tt-1) =E= expr  (IndexOffset, conditioned)
+        eq2 = EquationDef(
+            name="adef",
+            domain=("tt",),
+            relation=Rel.EQ,
+            lhs_rhs=(
+                VarRef(
+                    "d",
+                    indices=(IndexOffset("tt", Const(-1), circular=False),),
+                ),
+                Const(0),
+            ),
+            condition=SetMembershipTest("tp", (SymbolRef("tt"),)),
+        )
+        model.equations["adef"] = eq2
+
+        result = _find_variable_subset_condition("d", ("tt",), model)
+
+        # The conditioned IndexOffset should NOT override subset evidence
+        assert result is not None, (
+            "Expected subset condition t(tt) but got None — conditioned "
+            "IndexOffset in adef should not suppress subset detection"
+        )
+        assert isinstance(result, SetMembershipTest)
+        assert result.set_name == "t"
