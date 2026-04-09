@@ -21,11 +21,13 @@ After resolving all 28 compilation errors, gtm compiles cleanly but GAMS aborts 
 
 Additionally, `stat_d` and `stat_x` equations show infeasibilities (nonzero RHS at the initial point).
 
-## Root Cause
+## Root Cause (Initial Hypothesis — Superseded)
 
-The supply function in gtm involves expressions like `supa(i) * s(i) ** supb(i)` where `supb` contains negative exponents. When `s(i)` is at its initial value (likely 0 or 1), the derivative `d/ds(supa * s^supb) = supa * supb * s^(supb-1)` can produce division by zero if `supb - 1 < 0` and `s = 0`.
-
-The stationarity equation `stat_s(i)` contains these derivative terms. At the default initial point, the evaluation fails for regions where the supply function parameters create a singularity.
+~~The supply function involves `supa(i) * s(i) ** supb(i)` where negative
+exponents cause division by zero.~~ This was the initial hypothesis. The
+confirmed root cause is in the "Root Cause Detail" section below: three
+regions have `supc(i) = 0`, making the `log((supc-s)/supc)` supply function
+and its derivative `supb/(supc-s)` undefined.
 
 ## Reproduction
 
@@ -75,8 +77,8 @@ with degenerate supply functions.
    to skip zero-capacity regions. Requires parameter-value-aware conditioning
    in the stationarity builder.
 
-4. **General expression guards**: Wrap `1/(supc-s)` in `$(supc > 0)` or
-   use `ifthen(supc > 0, ..., 0)`. This is a general solution but requires
+4. **General expression guards**: Use GAMS conditional-term syntax such as
+   `(1/(supc-s))$(supc > 0)`. This is a general solution but requires
    significant emitter/IR changes.
 
 ## Related Issues
