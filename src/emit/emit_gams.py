@@ -2278,12 +2278,15 @@ def emit_gams_mcp(
     # in denominators like sqr(tb(i)) where tb contained NA. The original
     # model's conditions (e.g., $tw(i)) already exclude NA-affected instances,
     # so the replacement value only affects inactive stationarity terms.
+    # Note: This scans parameter values to detect NaN. If emission time
+    # becomes an issue for large models, consider tracking has_na per
+    # parameter during parsing/emission and reusing it here.
     na_cleanup_lines: list[str] = []
     for pname, pdef in kkt.model_ir.params.items():
-        if not hasattr(pdef, "values") or not pdef.values:
+        if not hasattr(pdef, "values") or not pdef.values or not pdef.domain:
             continue
         has_na = any(isinstance(v, float) and math.isnan(v) for v in pdef.values.values())
-        if has_na and pdef.domain:
+        if has_na:
             quoted_pname = _quote_symbol(pname)
             domain_str = ",".join(_quote_symbol(d) for d in pdef.domain)
             na_cleanup_lines.append(
