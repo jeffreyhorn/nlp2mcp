@@ -66,23 +66,31 @@ Extended `emit_interleaved_params_and_sets()` to detect "index-blocked params" �
 
 **Before**: $141 compilation error (never reached solve)
 
-**After**: Compiles and reaches solver. 447 equations generated (up from 167 NONE-affected). 66 unmatched free variables remain.
-
-The 66 remaining unmatched variables are from `stat_tsam` missing `nu_COLSUM(j)` and `nu_ROWSUM(i)` Jacobian contributions. The COLSUM equation is indexed by `(jj,)` while variable TSAM has domain `(i, j)` — both `i` and `j` resolve to the same canonical set `i`. Position-aware matching maps `jj -> i` (position 0), which is correct for this position. The missing terms are a separate Jacobian builder issue where the constraint's contribution to the stationarity equation isn't being generated at all (the constraint-variable relationship isn't detected by the derivative propagation).
+**After (Sprint 23)**: Compiles and reaches solver. 447 equations generated
+(up from 167 NONE-affected). 66 unmatched free variables from `stat_tsam`
+missing `nu_COLSUM(j)` and `nu_ROWSUM(i)` Jacobian contributions and from
+empty diagonal equation instances.
 
 ---
 
 ## Sprint 24 Update
 
 **Improved:** Empty equation detector (#1133 fix) reduced unmatched from 66 to 4.
+The 62 previously unmatched variables from `stat_tsam` / COLSUM / ROWSUM
+Jacobian issues were resolved by the static coefficient sparsity analysis
+detecting empty equation instances and fixing their multipliers.
+
 The remaining 4 unmatched variables are `ERR3(ACT,ACT)`, `ERR3(FAC,FAC)`,
-`ERR3(ENT,ENT)`, and one other diagonal instance. These are diagonal elements
-of `err3(i,j)` where:
+`ERR3(ENT,ENT)`, and `ERR3(HOU,HOU)`. These are diagonal elements of
+`err3(i,j)` where:
 - `stat_err3(i,j)` references `err3(j,j)` (diagonal only)
-- For diagonal instances like `(ACT,ACT)`, ALL terms (`$ICOEFF`, `$IVAL`,
-  `$NONZERO`) are false because SAM matrices don't have self-referencing entries
-- The empty equation detector can't prove these are empty because `NONZERO`,
-  `ICOEFF`, `IVAL` are runtime-computed dynamic sets
+- For diagonal instances like `(ACT,ACT)`, all terms guarded by
+  dollar-conditions based on the runtime-computed sets `NONZERO`, `ICOEFF`,
+  and `IVAL` evaluate to false because SAM matrices don't have
+  self-referencing entries
+- The empty equation detector can't prove these are empty because
+  `NONZERO`, `ICOEFF`, `IVAL` have no static members at compile time
+  (populated via runtime assignment like `NONZERO(ii,jj) = yes$(Abar0(ii,jj))`)
 
 **NOT FIXED** — requires either:
 1. Support for evaluating runtime-computed set conditions in the detector
