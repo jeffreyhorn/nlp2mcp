@@ -136,4 +136,19 @@ Retested: same error persists — "MCP pair mbal.nu_mbal has empty equation but 
 
 The `_emit_dynamic_subset_defaults` fix (PR #1187) now populates empty dynamic subsets, but the `cfm(cfq,m)` set is runtime-computed (not a simple empty subset), so it doesn't benefit.
 
-**Fix requires:** Either add `SetMembershipTest` support in `condition_eval.py` (Approach 1) or detect empty MCP equations at emission time and fix the associated multiplier (Approach 2). Both are ~2-4h efforts.
+**Sprint 24 Investigation (NOT FIXED):**
+
+Tested multiple GAMS-side approaches — none work:
+- `holdFixed = 1`: Only handles fixed variables, not empty equations
+- `execError = 0` before/after solve: GAMS regenerates error during model gen
+- `$onEmpty` directive: Doesn't affect MCP empty equation detection
+- `option domlim`: Controls solver-level violations only
+
+The ONLY fix is explicit `.fx = 0` for multipliers of empty equations.
+Confirmed that `nu_mbal.fx('vacuum-res') = 0` resolves the error and the
+model reaches PATH (MODEL STATUS 5).
+
+**Fix requires:** Detect at emission time which equation instances have no
+variable references (all coefficient sums are zero) and emit `.fx = 0` for
+their multipliers. This requires runtime evaluation or data-flow analysis
+of equation bodies — estimated ~4-6h effort.
