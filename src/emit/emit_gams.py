@@ -2286,15 +2286,21 @@ def emit_gams_mcp(
     # parameter during parsing/emission and reusing it here.
     na_cleanup_lines: list[str] = []
     for pname, pdef in kkt.model_ir.params.items():
-        if not hasattr(pdef, "values") or not pdef.values or not pdef.domain:
+        # Skip the predefined 'na' constant so mapval(na) semantics aren't broken
+        if pname == "na" or not hasattr(pdef, "values") or not pdef.values:
             continue
         has_na = any(isinstance(v, float) and math.isnan(v) for v in pdef.values.values())
         if has_na:
             quoted_pname = _quote_symbol(pname)
-            domain_str = ",".join(_quote_symbol(d) for d in pdef.domain)
-            na_cleanup_lines.append(
-                f"{quoted_pname}({domain_str})$(mapval({quoted_pname}({domain_str})) = mapval(na)) = 1;"
-            )
+            if pdef.domain:
+                domain_str = ",".join(_quote_symbol(d) for d in pdef.domain)
+                na_cleanup_lines.append(
+                    f"{quoted_pname}({domain_str})$(mapval({quoted_pname}({domain_str})) = mapval(na)) = 1;"
+                )
+            else:
+                na_cleanup_lines.append(
+                    f"{quoted_pname}$(mapval({quoted_pname}) = mapval(na)) = 1;"
+                )
     if na_cleanup_lines:
         sections.append("")
         if add_comments:
