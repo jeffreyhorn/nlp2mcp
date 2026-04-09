@@ -1774,6 +1774,67 @@ def emit_gams_mcp(
             combined = " or ".join(f"({c})" for c in var_conds)
         fx_lines.append(f"{var_name}.fx({domain_str})$(not ({combined})) = {fix_val};")
 
+    # 1c. Issue #1179: Fix domain-widened primal variables for out-of-subset instances.
+    # When a variable's domain is widened (e.g., n(t) → n(tl) where t ⊂ tl),
+    # the stationarity equation stays over the original subset. The extra
+    # instances (tl elements not in t) need to be fixed.
+    # Even when a variable has a stationarity-condition fix, that fix is emitted
+    # over the original subset domain. If the symbol was declared over a widened
+    # domain, we still need an additional fix for out-of-subset instances.
+    if kkt.var_domain_widenings:
+        for var_name_lower, widened_domain in sorted(kkt.var_domain_widenings.items()):
+            var_def = kkt.model_ir.variables.get(var_name_lower)
+            if not var_def:
+                for vn, vd in kkt.model_ir.variables.items():
+                    if vn.lower() == var_name_lower:
+                        var_def = vd
+                        var_name_lower = vn
+                        break
+            if not var_def or not var_def.domain:
+                continue
+            var_orig_domain = var_def.domain
+            if var_orig_domain == widened_domain:
+                continue
+            # Build a combined condition over ALL widened positions.
+            # Only emit orig_d(wide_d) when orig_d is declared directly
+            # over wide_d; transitive subset relationships do not form a
+            # valid GAMS domain reference in this syntax.
+            widened_conds: list[str] = []
+            for _pos, (orig_d, wide_d) in enumerate(
+                zip(var_orig_domain, widened_domain, strict=False)
+            ):
+                if orig_d.lower() == wide_d.lower():
+                    continue
+                set_def = kkt.model_ir.sets.get(orig_d)
+                # Resolve alias if orig_d is not a direct set
+                if set_def is None:
+                    alias_def = kkt.model_ir.aliases.get(orig_d)
+                    if alias_def is not None:
+                        alias_target = getattr(alias_def, "target", None)
+                        if alias_target:
+                            set_def = kkt.model_ir.sets.get(alias_target)
+                set_domain = getattr(set_def, "domain", None) if set_def is not None else None
+                is_direct_subset = (
+                    set_domain is not None
+                    and len(set_domain) == 1
+                    and set_domain[0].lower() == wide_d.lower()
+                )
+                if is_direct_subset:
+                    widened_conds.append(f"{orig_d}({wide_d})")
+            if widened_conds:
+                domain_str = ",".join(widened_domain)
+                cond = " and ".join(f"({part})" for part in widened_conds)
+                # Choose fixing value: prefer fx, then lo, then up, else 0
+                if var_def.fx is not None and math.isfinite(var_def.fx):
+                    fix_val = var_def.fx
+                elif var_def.lo is not None and math.isfinite(var_def.lo):
+                    fix_val = var_def.lo
+                elif var_def.up is not None and math.isfinite(var_def.up):
+                    fix_val = var_def.up
+                else:
+                    fix_val = 0
+                fx_lines.append(f"{var_name_lower}.fx({domain_str})$(not ({cond})) = {fix_val};")
+
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:
