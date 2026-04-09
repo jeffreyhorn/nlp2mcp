@@ -21,11 +21,13 @@ After resolving all 28 compilation errors, gtm compiles cleanly but GAMS aborts 
 
 Additionally, `stat_d` and `stat_x` equations show infeasibilities (nonzero RHS at the initial point).
 
-## Root Cause
+## Root Cause (Initial Hypothesis — Superseded)
 
-The supply function in gtm involves expressions like `supa(i) * s(i) ** supb(i)` where `supb` contains negative exponents. When `s(i)` is at its initial value (likely 0 or 1), the derivative `d/ds(supa * s^supb) = supa * supb * s^(supb-1)` can produce division by zero if `supb - 1 < 0` and `s = 0`.
-
-The stationarity equation `stat_s(i)` contains these derivative terms. At the default initial point, the evaluation fails for regions where the supply function parameters create a singularity.
+~~The supply function involves `supa(i) * s(i) ** supb(i)` where negative
+exponents cause division by zero.~~ This was the initial hypothesis. The
+confirmed root cause is in the "Root Cause Detail" section below: three
+regions have `supc(i) = 0`, making the `log((supc-s)/supc)` supply function
+and its derivative `supb/(supc-s)` undefined.
 
 ## Reproduction
 
@@ -35,11 +37,49 @@ python -m src.cli data/gamslib/raw/gtm.gms -o /tmp/gtm_mcp.gms --skip-convexity-
 # SOLVE ABORTED, EXECERROR = 3
 ```
 
-## Fix Approach
+## Investigation (Sprint 24)
 
-1. Check if better variable initialization (`.l` values) avoids the singularity
-2. May need to add guards against zero denominators in the emitted stationarity expressions
-3. Related to the general problem of division-by-zero in nonlinear KKT conditions at default initial points
+**Status: NOT FIXED** — requires model-specific initialization or expression guards.
+
+### Root Cause Detail
+
+For three supply regions (mexico, alberta-bc, atlantic), `supc(i) = 0` because
+`sdat(i, "limit")` is not defined and `supc(i)$(supc(i) = inf) = 100` doesn't
+trigger. This makes the supply function `supa*s - supb*log((supc-s)/supc)`
+and its derivative `supb/(supc - s)` undefined at the initial point `s = 0`.
+
+The original NLP avoids this because `s.up(i) = 0.99 * supc(i) = 0` forces
+`s(i) = 0`, and GAMS skips equation evaluation for fixed variables. But the
+MCP stationarity equations evaluate at all domain instances, including those
+with degenerate supply functions.
+
+### Approaches Tried
+
+1. **`option domlim = 100`**: Only controls solver-level domain violations,
+   not equation-generation-time errors. GAMS still aborts with EXECERROR=3.
+
+2. **`execError = 0` before solve**: Clears the counter but GAMS regenerates
+   errors during equation listing for the Solve statement.
+
+3. **`model.domlim = 100`**: Same as option-level, doesn't prevent abort.
+
+### What Would Fix It
+
+1. **Emit `$onUndf` directive**: Would need to be emitted as a GAMS directive
+   (starting with `$`) BEFORE the equation definitions, not as a GAMS statement.
+   This requires changes to the emitter's directive handling.
+
+2. **Model-specific variable initialization**: Add `s.l(i) = sdat(i,"ref-q1")`
+   which provides feasible starting values. Requires the emitter to detect
+   supply parameters and emit appropriate initialization.
+
+3. **Conditional stationarity**: Add `$(supc(i) > 0)` condition on `stat_s(i)`
+   to skip zero-capacity regions. Requires parameter-value-aware conditioning
+   in the stationarity builder.
+
+4. **General expression guards**: Use GAMS conditional-term syntax such as
+   `(1/(supc-s))$(supc > 0)`. This is a general solution but requires
+   significant emitter/IR changes.
 
 ## Related Issues
 
