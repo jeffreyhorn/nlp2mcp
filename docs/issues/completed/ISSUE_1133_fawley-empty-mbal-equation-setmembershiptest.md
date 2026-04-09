@@ -148,7 +148,14 @@ The ONLY fix is explicit `.fx = 0` for multipliers of empty equations.
 Confirmed that `nu_mbal.fx('vacuum-res') = 0` resolves the error and the
 model reaches PATH (MODEL STATUS 5).
 
-**Fix requires:** Detect at emission time which equation instances have no
-variable references (all coefficient sums are zero) and emit `.fx = 0` for
-their multipliers. This requires runtime evaluation or data-flow analysis
-of equation bodies — estimated ~4-6h effort.
+**FIXED (Sprint 24):** Implemented static coefficient sparsity analysis in
+`src/kkt/empty_equation_detector.py`. For each equality equation, analyzes
+the AST to find variable references with their conditions and coefficient
+parameters. Detects instances where ALL variable terms have zero coefficients
+(sparse parameter data) or are excluded by set membership conditions.
+
+The emitter (`emit_gams.py`) now calls `detect_empty_equation_instances()`
+and emits `.fx = 0` for multipliers of detected empty instances.
+
+**Result:** fawley advances from path_solve_terminated (EXECERROR=1) to
+model_infeasible (MODEL STATUS 5, PATH attempts solve).

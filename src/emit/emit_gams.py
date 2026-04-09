@@ -2238,6 +2238,28 @@ def emit_gams_mcp(
         sections.extend(fx_lines)
         sections.append("")
 
+    # Issue #1133: Fix equality multipliers for empty equation instances.
+    # Detect equation instances where no variable appears (all coefficients
+    # are zero due to sparse data). GAMS MCP refuses to pass empty equations
+    # to PATH, so we must fix the associated multiplier to 0.
+    from src.kkt.empty_equation_detector import detect_empty_equation_instances
+
+    empty_eq_instances = detect_empty_equation_instances(kkt.model_ir)
+    if empty_eq_instances:
+        empty_fx_lines: list[str] = []
+        for eq_name, instances in sorted(empty_eq_instances.items()):
+            mult_name = create_eq_multiplier_name(eq_name)
+            if ref_mults is not None and mult_name not in ref_mults:
+                continue
+            for inst in sorted(instances):
+                idx_str = ",".join(f"'{v}'" for v in inst)
+                empty_fx_lines.append(f"{mult_name}.fx({idx_str}) = 0;")
+        if empty_fx_lines:
+            if add_comments:
+                sections.append("* Fix multipliers for empty equation instances (no variables)")
+            sections.extend(empty_fx_lines)
+            sections.append("")
+
     # Model MCP
     if add_comments:
         sections.append("* ============================================")
