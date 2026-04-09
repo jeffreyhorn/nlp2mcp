@@ -111,7 +111,9 @@ may not follow a simple set membership pattern.
 
 ### Step 3: Handle Edge Cases (~1h)
 
-- **Parameters with no values dict:** Treat as all-zero (no coverage)
+- **Parameters with no values dict:** Treat missing or empty `ParameterDef.values`
+  as unknown, and conservatively assume coverage (don't mark as empty based on
+  that parameter alone)
 - **Dynamic subsets in conditions:** If set members are unknown, conservatively
   assume coverage (don't mark as empty)
 - **Nested sums:** `sum((i,j), coeff(c,i,j)*v(i,j))` — check 2D sparsity
