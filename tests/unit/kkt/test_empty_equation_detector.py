@@ -61,7 +61,7 @@ def _make_fawley_like_model() -> ModelIR:
         relation=Rel.EQ,
         lhs_rhs=(eq_body_lhs, Const(0.0)),
     )
-    ir.equalities = {"mbal"}
+    ir.equalities = ["mbal"]
 
     return ir
 

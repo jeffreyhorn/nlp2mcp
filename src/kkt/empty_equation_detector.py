@@ -303,27 +303,80 @@ def _all_coefficients_zero(
         if pdef is None or not hasattr(pdef, "values") or not pdef.values:
             return False  # Unknown/missing data → conservatively not all-zero
 
-        # Check if any entry with matching equation-domain indices is nonzero
-        for key, val in pdef.values.items():
-            if not isinstance(key, tuple):
-                key = (key,)
-            # Check if this entry matches the equation instance
-            matches_instance = True
-            for idx_name, idx_val in index_map.items():
-                # Find which position in the parameter key corresponds
-                # to this equation index (resolve aliases for matching)
-                idx_root = _resolve_alias_target(idx_name, model_ir)
-                if pdef.domain:
-                    for pos, d in enumerate(pdef.domain):
-                        d_root = _resolve_alias_target(d, model_ir)
-                        if d_root == idx_root and pos < len(key):
-                            if key[pos] != idx_val:
-                                matches_instance = False
-                                break
-            if matches_instance and val != 0:
-                return False  # Found nonzero coefficient → not all zero
+        # Build a pre-indexed set of equation-domain values that have nonzero
+        # entries, keyed by the matched domain positions. This makes per-instance
+        # checks O(1) instead of scanning the full values dict.
+        nonzero_index = _get_nonzero_index(pdef, index_map, model_ir)
+        if nonzero_index is None:
+            return False  # Can't index → conservatively not all-zero
+
+        # Check if this instance's index values appear in nonzero entries
+        inst_key = tuple(index_map[k] for k in sorted(index_map))
+        if inst_key in nonzero_index:
+            return False  # Found nonzero coefficient
 
     return True  # All coefficients are zero
+
+
+# Cache for pre-indexed nonzero entries per parameter
+_nonzero_cache: dict[tuple[str, tuple[str, ...]], set[tuple[str, ...]]] = {}
+
+
+def _get_nonzero_index(
+    pdef: object,
+    index_map: dict[str, str],
+    model_ir: ModelIR,
+) -> set[tuple[str, ...]] | None:
+    """Build a set of equation-instance keys that have nonzero parameter entries.
+
+    Returns None if the parameter can't be indexed by the equation domain.
+    """
+    pname = getattr(pdef, "name", "")
+    eq_keys = tuple(sorted(index_map.keys()))
+    cache_key = (pname, eq_keys)
+    if cache_key in _nonzero_cache:
+        return _nonzero_cache[cache_key]
+
+    domain = getattr(pdef, "domain", None)
+    values = getattr(pdef, "values", None)
+    if not domain or not values:
+        return None
+
+    # Find which parameter domain positions correspond to equation indices
+    pos_map: dict[int, str] = {}  # param_pos → eq_index_name
+    for idx_name in index_map:
+        idx_root = _resolve_alias_target(idx_name, model_ir)
+        for pos, d in enumerate(domain):
+            d_root = _resolve_alias_target(d, model_ir)
+            if d_root == idx_root:
+                pos_map[pos] = idx_name
+                break
+
+    if not pos_map:
+        return None
+
+    # Build index: for each nonzero entry, extract the equation-domain values
+    result: set[tuple[str, ...]] = set()
+    sorted_eq_keys = sorted(index_map.keys())
+    for key, val in values.items():
+        if val == 0:
+            continue
+        if not isinstance(key, tuple):
+            key = (key,)
+        # Extract the equation-domain portion of this key
+        eq_vals: dict[str, str] = {}
+        valid = True
+        for param_pos, eq_idx_name in pos_map.items():
+            if param_pos < len(key):
+                eq_vals[eq_idx_name] = key[param_pos]
+            else:
+                valid = False
+                break
+        if valid and len(eq_vals) == len(sorted_eq_keys):
+            result.add(tuple(eq_vals[k] for k in sorted_eq_keys))
+
+    _nonzero_cache[cache_key] = result
+    return result
 
 
 def _resolve_set_members(set_name: str, model_ir: ModelIR) -> list[str]:

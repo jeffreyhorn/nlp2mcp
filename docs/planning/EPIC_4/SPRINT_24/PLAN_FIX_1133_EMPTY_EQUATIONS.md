@@ -189,4 +189,4 @@ This is unlikely but possible. The static analysis approach avoids this.
 | `src/kkt/empty_equation_detector.py` | NEW — static analysis (Phase 2) |
 | `src/emit/emit_gams.py` | Emit `.fx = 0` for detected empty instances |
 | `tests/unit/kkt/test_empty_equation_detector.py` | NEW — unit tests |
-| `tests/unit/emit/test_empty_eq_fx.py` | NEW — emission test |
+| `tests/unit/emit/test_empty_eq_fx_emission.py` | NEW — emission test |
