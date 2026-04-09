@@ -2275,9 +2275,12 @@ def emit_gams_mcp(
     # GAMS NA propagates through multiplication (NA * 0 = NA), so parameters
     # with NA entries can cause equation evaluation to fail even when
     # conditioned terms evaluate to 0. Using 1 (not 0) avoids division-by-zero
-    # in denominators like sqr(tb(i)) where tb contained NA. The original
-    # model's conditions (e.g., $tw(i)) already exclude NA-affected instances,
-    # so the replacement value only affects inactive stationarity terms.
+    # in denominators like sqr(tb(i)) where tb contained NA. In models such as
+    # sambal/qsambal, the relevant conditions (e.g., $tw(i)) are meant to
+    # exclude NA-affected instances from active stationarity terms. However,
+    # this emitted assignment mutates parameter data globally, so we only rely
+    # on it to avoid GAMS NA/div-by-zero evaluation failures, not as a general
+    # guarantee that replacing NA with 1 is behavior-preserving.
     # Note: This scans parameter values to detect NaN. If emission time
     # becomes an issue for large models, consider tracking has_na per
     # parameter during parsing/emission and reusing it here.
