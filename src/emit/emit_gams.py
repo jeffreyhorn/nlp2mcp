@@ -2262,8 +2262,12 @@ def emit_gams_mcp(
             if ref_mults is not None and mult_name not in ref_mults:
                 continue
             for inst in sorted(instances):
-                idx_str = _format_map_indices(inst)
-                empty_fx_lines.append(f"{mult_name}.fx({idx_str}) = 0;")
+                if inst:
+                    idx_str = _format_map_indices(inst)
+                    empty_fx_lines.append(f"{mult_name}.fx({idx_str}) = 0;")
+                else:
+                    # Scalar equation
+                    empty_fx_lines.append(f"{mult_name}.fx = 0;")
         if empty_fx_lines:
             if add_comments:
                 sections.append("* Fix multipliers for empty equation instances (no variables)")
