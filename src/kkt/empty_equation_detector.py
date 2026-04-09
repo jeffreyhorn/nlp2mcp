@@ -25,6 +25,17 @@ from src.ir.ast import (
 from src.ir.model_ir import ModelIR
 
 
+def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
+    """Resolve a set/alias name to its canonical target (lowercase)."""
+    lower = name.lower()
+    adef = model_ir.aliases.get(name) or model_ir.aliases.get(lower)
+    if adef:
+        target = getattr(adef, "target", None)
+        if target:
+            return target.lower()
+    return lower
+
+
 def detect_empty_equation_instances(
     model_ir: ModelIR,
     relevant_equations: set[str] | None = None,
@@ -300,10 +311,12 @@ def _all_coefficients_zero(
             matches_instance = True
             for idx_name, idx_val in index_map.items():
                 # Find which position in the parameter key corresponds
-                # to this equation index
+                # to this equation index (resolve aliases for matching)
+                idx_root = _resolve_alias_target(idx_name, model_ir)
                 if pdef.domain:
                     for pos, d in enumerate(pdef.domain):
-                        if d.lower() == idx_name.lower() and pos < len(key):
+                        d_root = _resolve_alias_target(d, model_ir)
+                        if d_root == idx_root and pos < len(key):
                             if key[pos] != idx_val:
                                 matches_instance = False
                                 break
