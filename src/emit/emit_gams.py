@@ -2270,21 +2270,24 @@ def emit_gams_mcp(
         sections.append("* ============================================")
         sections.append("")
 
-    # Issue #1195: Replace NA parameter values with 0 to prevent
-    # "RHS value NA" errors in stationarity equations. GAMS NA propagates
-    # through multiplication (NA * 0 = NA), so parameters with NA entries
-    # can cause equation evaluation to fail even when conditioned terms
-    # evaluate to 0. Clearing NA to 0 is safe because the original model's
-    # conditions (e.g., $tw(i)) already exclude NA-affected instances.
+    # Issue #1195: Replace NA parameter values with 1 to prevent
+    # "RHS value NA" and division-by-zero errors in stationarity equations.
+    # GAMS NA propagates through multiplication (NA * 0 = NA), so parameters
+    # with NA entries can cause equation evaluation to fail even when
+    # conditioned terms evaluate to 0. Using 1 (not 0) avoids division-by-zero
+    # in denominators like sqr(tb(i)) where tb contained NA. The original
+    # model's conditions (e.g., $tw(i)) already exclude NA-affected instances,
+    # so the replacement value only affects inactive stationarity terms.
     na_cleanup_lines: list[str] = []
     for pname, pdef in kkt.model_ir.params.items():
         if not hasattr(pdef, "values") or not pdef.values:
             continue
         has_na = any(isinstance(v, float) and math.isnan(v) for v in pdef.values.values())
         if has_na and pdef.domain:
-            domain_str = ",".join(pdef.domain)
+            quoted_pname = _quote_symbol(pname)
+            domain_str = ",".join(_quote_symbol(d) for d in pdef.domain)
             na_cleanup_lines.append(
-                f"{pname}({domain_str})$(mapval({pname}({domain_str})) = mapval(na)) = 1;"
+                f"{quoted_pname}({domain_str})$(mapval({quoted_pname}({domain_str})) = mapval(na)) = 1;"
             )
     if na_cleanup_lines:
         sections.append("")
