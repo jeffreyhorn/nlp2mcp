@@ -663,9 +663,23 @@ def _find_variable_subset_condition(
             domain_lower_set = {d.lower() for d in eq_def.domain}
 
             def _cond_refs_domain(e: Expr) -> bool:
+                # SetMembershipTest: $tp(tt), $active(i)
                 if isinstance(e, SetMembershipTest):
                     for idx in e.indices:
                         if isinstance(idx, SymbolRef) and idx.name.lower() in domain_lower_set:
+                            return True
+                # SymbolRef directly: ord(i), card(i)
+                if isinstance(e, SymbolRef) and e.name.lower() in domain_lower_set:
+                    return True
+                # VarRef/ParamRef/MultiplierRef indices (not yielded by children())
+                if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
+                    for ref_idx in e.indices or ():
+                        if isinstance(ref_idx, str) and ref_idx.lower() in domain_lower_set:
+                            return True
+                        if (
+                            isinstance(ref_idx, IndexOffset)
+                            and ref_idx.base.lower() in domain_lower_set
+                        ):
                             return True
                 for c in e.children():
                     if _cond_refs_domain(c):
