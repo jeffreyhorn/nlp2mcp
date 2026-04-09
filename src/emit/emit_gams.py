@@ -1795,12 +1795,24 @@ def emit_gams_mcp(
             var_orig_domain = var_def.domain
             if var_orig_domain == widened_domain:
                 continue
-            # Build a combined condition over ALL widened positions
+            # Build a combined condition over ALL widened positions.
+            # Only emit orig_d(wide_d) when orig_d is declared directly
+            # over wide_d; transitive subset relationships do not form a
+            # valid GAMS domain reference in this syntax.
             widened_conds: list[str] = []
             for _pos, (orig_d, wide_d) in enumerate(
                 zip(var_orig_domain, widened_domain, strict=False)
             ):
-                if orig_d.lower() != wide_d.lower():
+                if orig_d.lower() == wide_d.lower():
+                    continue
+                set_def = kkt.model_ir.sets.get(orig_d)
+                set_domain = getattr(set_def, "domain", None) if set_def is not None else None
+                is_direct_subset = (
+                    set_domain is not None
+                    and len(set_domain) == 1
+                    and set_domain[0].lower() == wide_d.lower()
+                )
+                if is_direct_subset:
                     widened_conds.append(f"{orig_d}({wide_d})")
             if widened_conds:
                 domain_str = ",".join(widened_domain)
