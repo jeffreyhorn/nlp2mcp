@@ -3073,6 +3073,13 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
         if not subst:
             continue
 
+        def _inner_loop_has_solve(loop_node: Tree) -> bool:
+            """Check if a loop_stmt tree contains a solve anywhere."""
+            for c in loop_node.iter_subtrees():
+                if "solve" in str(c.data):
+                    return True
+            return False
+
         # Extract pre-solve param assignments (including from inner loops)
         def _extract_pre_solve(stmts: list, sub: dict[str, str]) -> None:
             for stmt in stmts:
@@ -3098,6 +3105,10 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
                                 child for child in c.children if isinstance(child, Tree)
                             ]
                     _extract_pre_solve(inner_body_stmts, inner_sub)
+                    # If the inner loop contains a solve, any subsequent
+                    # outer statements are post-solve — stop scanning.
+                    if _inner_loop_has_solve(stmt):
+                        break
                     continue
                 if str(stmt.data) not in _ASSIGN_TYPES:
                     continue
