@@ -1,7 +1,7 @@
 # lmp2: Empty Dynamic Subsets and Loop Body Assignments Not Emitted
 
 **GitHub Issue:** [#952](https://github.com/jeffreyhorn/nlp2mcp/issues/952)
-**Status:** OPEN
+**Status:** COMPLETED
 **Severity:** High — 3 compilation errors block solve
 **Date:** 2026-02-27
 **Affected Models:** lmp2
