@@ -2244,7 +2244,17 @@ def emit_gams_mcp(
     # to PATH, so we must fix the associated multiplier to 0.
     from src.kkt.empty_equation_detector import detect_empty_equation_instances
 
-    empty_eq_instances = detect_empty_equation_instances(kkt.model_ir)
+    # Only analyze equations whose multipliers will actually be emitted
+    relevant_eqs: set[str] | None = None
+    if ref_mults is not None:
+        relevant_eqs = set()
+        for eq_name in kkt.model_ir.equalities:
+            mult_name = create_eq_multiplier_name(eq_name)
+            if mult_name in ref_mults:
+                relevant_eqs.add(eq_name)
+    empty_eq_instances = detect_empty_equation_instances(
+        kkt.model_ir, relevant_equations=relevant_eqs
+    )
     if empty_eq_instances:
         empty_fx_lines: list[str] = []
         for eq_name, instances in sorted(empty_eq_instances.items()):
@@ -2252,7 +2262,7 @@ def emit_gams_mcp(
             if ref_mults is not None and mult_name not in ref_mults:
                 continue
             for inst in sorted(instances):
-                idx_str = ",".join(f"'{v}'" for v in inst)
+                idx_str = _format_map_indices(inst)
                 empty_fx_lines.append(f"{mult_name}.fx({idx_str}) = 0;")
         if empty_fx_lines:
             if add_comments:

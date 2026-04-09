@@ -27,6 +27,7 @@ from src.ir.model_ir import ModelIR
 
 def detect_empty_equation_instances(
     model_ir: ModelIR,
+    relevant_equations: set[str] | None = None,
 ) -> dict[str, set[tuple[str, ...]]]:
     """Find equation instances where no variable appears (all coefficients zero).
 
@@ -44,6 +45,8 @@ def detect_empty_equation_instances(
     result: dict[str, set[tuple[str, ...]]] = {}
 
     for eq_name in model_ir.equalities:
+        if relevant_equations is not None and eq_name not in relevant_equations:
+            continue
         eq_def = model_ir.equations.get(eq_name)
         if eq_def is None or not eq_def.domain:
             continue
@@ -53,7 +56,7 @@ def detect_empty_equation_instances(
         body = Binary("-", lhs, rhs)
 
         # Collect all VarRef nodes with their access context
-        var_accesses = _collect_variable_accesses(body, eq_def.domain)
+        var_accesses = _collect_variable_accesses(body)
 
         if not var_accesses:
             # No variables at all — entire equation is empty for all instances
@@ -99,7 +102,6 @@ class _VarAccess:
 
 def _collect_variable_accesses(
     expr: Expr,
-    eq_domain: tuple[str, ...],
     conditions: list[Expr] | None = None,
     sum_indices: list[str] | None = None,
     sum_coeffs: list[str] | None = None,
@@ -135,33 +137,23 @@ def _collect_variable_accesses(
         # Look for ParamRef coefficients in the body
         _find_param_coeffs(expr.body, new_sum_coeffs)
         results.extend(
-            _collect_variable_accesses(
-                expr.body, eq_domain, new_conditions, new_sum_indices, new_sum_coeffs
-            )
+            _collect_variable_accesses(expr.body, new_conditions, new_sum_indices, new_sum_coeffs)
         )
     elif isinstance(expr, DollarConditional):
         new_conditions = conditions + [expr.condition]
         results.extend(
-            _collect_variable_accesses(
-                expr.value_expr, eq_domain, new_conditions, sum_indices, sum_coeffs
-            )
+            _collect_variable_accesses(expr.value_expr, new_conditions, sum_indices, sum_coeffs)
         )
     elif isinstance(expr, Binary):
         # For multiplication, track ParamRef as coefficient
         new_coeffs = list(sum_coeffs)
         if expr.op == "*":
             _find_param_coeffs(expr, new_coeffs)
-        results.extend(
-            _collect_variable_accesses(expr.left, eq_domain, conditions, sum_indices, new_coeffs)
-        )
-        results.extend(
-            _collect_variable_accesses(expr.right, eq_domain, conditions, sum_indices, new_coeffs)
-        )
+        results.extend(_collect_variable_accesses(expr.left, conditions, sum_indices, new_coeffs))
+        results.extend(_collect_variable_accesses(expr.right, conditions, sum_indices, new_coeffs))
     else:
         for child in expr.children():
-            results.extend(
-                _collect_variable_accesses(child, eq_domain, conditions, sum_indices, sum_coeffs)
-            )
+            results.extend(_collect_variable_accesses(child, conditions, sum_indices, sum_coeffs))
 
     return results
 
@@ -293,7 +285,7 @@ def _all_coefficients_zero(
     for pname in access.sum_coeffs:
         pdef = model_ir.params.get(pname)
         if pdef is None or not hasattr(pdef, "values") or not pdef.values:
-            continue  # No data → could be nonzero at runtime
+            return False  # Unknown/missing data → conservatively not all-zero
 
         # Check if any entry with matching equation-domain indices is nonzero
         for key, val in pdef.values.items():
@@ -316,6 +308,25 @@ def _all_coefficients_zero(
     return True  # All coefficients are zero
 
 
+def _resolve_set_members(set_name: str, model_ir: ModelIR) -> list[str]:
+    """Resolve set members, falling back to parent set for dynamic subsets."""
+    sdef = model_ir.sets.get(set_name)
+    if sdef is None:
+        adef = model_ir.aliases.get(set_name)
+        if adef:
+            sdef = model_ir.sets.get(getattr(adef, "target", ""))
+    if sdef is None:
+        return []
+    members = list(sdef.members) if hasattr(sdef, "members") else []
+    if not members and getattr(sdef, "domain", None):
+        # Dynamic subset — fall back to parent set
+        for parent in sdef.domain:
+            parent_members = _resolve_set_members(parent, model_ir)
+            if parent_members:
+                return parent_members
+    return members
+
+
 def _enumerate_domain_instances(
     domain: tuple[str, ...],
     model_ir: ModelIR,
@@ -324,18 +335,14 @@ def _enumerate_domain_instances(
     if not domain:
         return set()
 
-    # Get members for each domain dimension
+    # Get members for each domain dimension, falling back to parent set
+    # for dynamic subsets (consistent with resolve_set_members behavior).
     dim_members: list[list[str]] = []
     for d in domain:
-        sdef = model_ir.sets.get(d)
-        if sdef is None:
-            # Check alias
-            adef = model_ir.aliases.get(d)
-            if adef:
-                sdef = model_ir.sets.get(getattr(adef, "target", ""))
-        if sdef is None or not hasattr(sdef, "members") or not sdef.members:
+        members = _resolve_set_members(d, model_ir)
+        if not members:
             return set()  # Can't enumerate → return empty
-        dim_members.append(list(sdef.members))
+        dim_members.append(members)
 
     # Cartesian product
     if len(dim_members) == 1:
