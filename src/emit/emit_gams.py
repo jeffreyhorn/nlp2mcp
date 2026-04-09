@@ -1774,6 +1774,44 @@ def emit_gams_mcp(
             combined = " or ".join(f"({c})" for c in var_conds)
         fx_lines.append(f"{var_name}.fx({domain_str})$(not ({combined})) = {fix_val};")
 
+    # 1c. Issue #1179: Fix domain-widened primal variables for out-of-subset instances.
+    # When a variable's domain is widened (e.g., n(t) → n(tl) where t ⊂ tl),
+    # the stationarity equation stays over the original subset. The extra
+    # instances (tl elements not in t) need to be fixed.
+    if kkt.var_domain_widenings:
+        for var_name_lower, widened_domain in sorted(kkt.var_domain_widenings.items()):
+            var_def = kkt.model_ir.variables.get(var_name_lower)
+            if not var_def:
+                # Try case-insensitive lookup
+                for vn, vd in kkt.model_ir.variables.items():
+                    if vn.lower() == var_name_lower:
+                        var_def = vd
+                        var_name_lower = vn
+                        break
+            if not var_def or not var_def.domain:
+                continue
+            var_orig_domain = var_def.domain
+            if var_orig_domain == widened_domain:
+                continue
+            # Already handled by stationarity_conditions?
+            if var_name_lower in kkt.stationarity_conditions:
+                continue
+            # Find which positions were widened and build the condition
+            for _pos, (orig_d, wide_d) in enumerate(
+                zip(var_orig_domain, widened_domain, strict=False)
+            ):
+                if orig_d.lower() != wide_d.lower():
+                    # orig_d is a subset of wide_d — fix instances not in orig_d
+                    domain_str = ",".join(widened_domain)
+                    cond = f"{orig_d}({wide_d})"
+                    fix_val = 0
+                    if var_def.lo is not None and math.isfinite(var_def.lo):
+                        fix_val = var_def.lo
+                    fx_lines.append(
+                        f"{var_name_lower}.fx({domain_str})$(not ({cond})) = {fix_val};"
+                    )
+                    break  # Only handle first widened position
+
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
         if ref_mults is not None and comp_pair.variable not in ref_mults:

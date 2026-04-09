@@ -39,8 +39,20 @@ The key structural detail is that `stat_m(tl)` iterates over `tl = {0,1,2,3}` in
 
 A plausible hypothesis is that EXECERROR arises from a domain/undefined-instance issue when evaluating equations at `tl=0`. However, in the checked-in generated model, the only `tl`-indexed unconditioned stationarity equation `stat_m(tl)` is linear, contains no divisions or powers, and `n(tl)` appears only in a simple product term. This suggests the precise EXECERROR trigger is still unknown. The next step is to inspect the GAMS listing/log to identify the exact equation/subexpression that raises EXECERROR.
 
-## Fix Approach
+## Fix (Sprint 24)
 
-1. Restrict the stationarity equation domain so it is only generated where data are valid, e.g., add a `$(t(tl))` condition on the equation definition so `tl=0` is excluded entirely
-2. Alternatively, fix the paired variable/multiplier at out-of-subset elements, e.g., `m.fx(tl)$(not t(tl)) = 0;` (`.fx` is a variable attribute, not an equation attribute)
-3. May need to initialize widened variables at out-of-subset elements to safe values to avoid domain violations during evaluation
+**Status: FIXED** — hhfair now solves MODEL STATUS 1 Optimal.
+
+**Root Cause:** Variable `n(t)` was domain-widened to `n(tl)` by the emitter,
+but the stationarity equation `stat_n(t)` stayed over subset `t`. This left
+`n(0)` as an unmatched free variable in the MCP (0 ∈ tl but 0 ∉ t).
+
+**Fix:** In emit_gams.py section 1c, added domain-widened variable fixing.
+When a variable's domain is widened (e.g., `n(t)` → `n(tl)`), the emitter
+now emits `n.fx(tl)$(not (t(tl))) = 0;` to fix out-of-subset instances.
+This is applied to all widened variables not already handled by
+stationarity_conditions.
+
+**Result:** hhfair advances from path_solve_terminated (EXECERROR=1) to
+model_optimal (MODEL STATUS 1). MCP obj=54.885 vs NLP obj=87.159
+(objective mismatch — separate issue).
