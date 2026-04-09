@@ -2276,7 +2276,7 @@ def emit_gams_mcp(
     # with NA entries can cause equation evaluation to fail even when
     # conditioned terms evaluate to 0. Using 1 (not 0) avoids division-by-zero
     # in denominators like sqr(tb(i)) where tb contained NA. In models such as
-    # sambal/qsambal, the relevant conditions (e.g., $tw(i)) are meant to
+    # sambal/qsambal, the relevant conditions (e.g., $(tw(i))) are meant to
     # exclude NA-affected instances from active stationarity terms. However,
     # this emitted assignment mutates parameter data globally, so we only rely
     # on it to avoid GAMS NA/div-by-zero evaluation failures, not as a general
