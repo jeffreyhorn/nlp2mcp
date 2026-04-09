@@ -136,4 +136,26 @@ Retested: same error persists — "MCP pair mbal.nu_mbal has empty equation but 
 
 The `_emit_dynamic_subset_defaults` fix (PR #1187) now populates empty dynamic subsets, but the `cfm(cfq,m)` set is runtime-computed (not a simple empty subset), so it doesn't benefit.
 
-**Fix requires:** Either add `SetMembershipTest` support in `condition_eval.py` (Approach 1) or detect empty MCP equations at emission time and fix the associated multiplier (Approach 2). Both are ~2-4h efforts.
+**Sprint 24 Investigation (NOT FIXED):**
+
+Tested multiple GAMS-side approaches — none work:
+- `holdFixed = 1`: Only handles fixed variables, not empty equations
+- `execError = 0` before/after solve: GAMS regenerates error during model gen
+- `$onEmpty` directive: Doesn't affect MCP empty equation detection
+- `option domlim`: Controls solver-level violations only
+
+The ONLY fix is explicit `.fx = 0` for multipliers of empty equations.
+Confirmed that `nu_mbal.fx('vacuum-res') = 0` resolves the error and the
+model reaches PATH (MODEL STATUS 5).
+
+**FIXED (Sprint 24):** Implemented static coefficient sparsity analysis in
+`src/kkt/empty_equation_detector.py`. For each equality equation, analyzes
+the AST to find variable references with their conditions and coefficient
+parameters. Detects instances where ALL variable terms have zero coefficients
+(sparse parameter data) or are excluded by set membership conditions.
+
+The emitter (`emit_gams.py`) now calls `detect_empty_equation_instances()`
+and emits `.fx = 0` for multipliers of detected empty instances.
+
+**Result:** fawley advances from path_solve_terminated (EXECERROR=1) to
+model_infeasible (MODEL STATUS 5, PATH attempts solve).
