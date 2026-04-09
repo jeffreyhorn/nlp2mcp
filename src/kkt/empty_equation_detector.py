@@ -165,6 +165,11 @@ def _find_param_coeffs(expr: Expr, coeffs: list[str]) -> None:
     elif isinstance(expr, Binary) and expr.op == "*":
         _find_param_coeffs(expr.left, coeffs)
         _find_param_coeffs(expr.right, coeffs)
+    elif isinstance(expr, Binary) and expr.op == "/":
+        _find_param_coeffs(expr.left, coeffs)
+    elif hasattr(expr, "child"):
+        # Unary('-') and similar: descend into child
+        _find_param_coeffs(expr.child, coeffs)  # type: ignore[attr-defined]
 
 
 def _instance_has_any_variable(
