@@ -1,8 +1,8 @@
 # camcge: Subset Bound Complementarity and Fix-Equation MCP Matching
 
 **GitHub Issue:** [#882](https://github.com/jeffreyhorn/nlp2mcp/issues/882)
-**Status:** OPEN
-**Severity:** High — Model compiles but 12 MCP matching errors block solve
+**Status:** FIXED
+**Severity:** High — was 12 MCP matching errors (now resolved)
 **Date:** 2026-02-25
 **Affected Models:** camcge
 
