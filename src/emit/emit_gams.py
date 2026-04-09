@@ -1806,6 +1806,13 @@ def emit_gams_mcp(
                 if orig_d.lower() == wide_d.lower():
                     continue
                 set_def = kkt.model_ir.sets.get(orig_d)
+                # Resolve alias if orig_d is not a direct set
+                if set_def is None:
+                    alias_def = kkt.model_ir.aliases.get(orig_d)
+                    if alias_def is not None:
+                        alias_target = getattr(alias_def, "target", None)
+                        if alias_target:
+                            set_def = kkt.model_ir.sets.get(alias_target)
                 set_domain = getattr(set_def, "domain", None) if set_def is not None else None
                 is_direct_subset = (
                     set_domain is not None

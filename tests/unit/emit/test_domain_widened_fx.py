@@ -49,10 +49,16 @@ solve m using nlp minimizing obj;
 
         result = emit_gams_mcp(kkt)
 
-        # Should contain the .fx line for out-of-subset instances
-        assert "n.fx(tl)$(not" in result or "n.fx(tl)$(not (t(tl)))" in result, (
-            "Expected n.fx(tl)$(not (t(tl))) = 0 for domain-widened variable; "
-            f"fx lines: {[line for line in result.splitlines() if '.fx' in line and 'n.' in line.lower()]}"
+        # Should contain the .fx line for out-of-subset instances with
+        # widened domain, subset guard, and zero fix value.
+        n_fx_lines = [
+            line for line in result.splitlines() if ".fx" in line and "n.fx" in line.lower()
+        ]
+        assert any(
+            "n.fx(tl)$" in line and "t(tl)" in line and "= 0" in line for line in n_fx_lines
+        ), (
+            "Expected an n.fx line for the widened domain with the subset guard "
+            f"and a zero fix value; fx lines: {n_fx_lines}"
         )
     finally:
         sys.setrecursionlimit(old_limit)
