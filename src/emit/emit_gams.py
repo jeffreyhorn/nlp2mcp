@@ -1778,11 +1778,13 @@ def emit_gams_mcp(
     # When a variable's domain is widened (e.g., n(t) → n(tl) where t ⊂ tl),
     # the stationarity equation stays over the original subset. The extra
     # instances (tl elements not in t) need to be fixed.
+    # Even when a variable has a stationarity-condition fix, that fix is emitted
+    # over the original subset domain. If the symbol was declared over a widened
+    # domain, we still need an additional fix for out-of-subset instances.
     if kkt.var_domain_widenings:
         for var_name_lower, widened_domain in sorted(kkt.var_domain_widenings.items()):
             var_def = kkt.model_ir.variables.get(var_name_lower)
             if not var_def:
-                # Try case-insensitive lookup
                 for vn, vd in kkt.model_ir.variables.items():
                     if vn.lower() == var_name_lower:
                         var_def = vd
@@ -1793,24 +1795,26 @@ def emit_gams_mcp(
             var_orig_domain = var_def.domain
             if var_orig_domain == widened_domain:
                 continue
-            # Already handled by stationarity_conditions?
-            if var_name_lower in kkt.stationarity_conditions:
-                continue
-            # Find which positions were widened and build the condition
+            # Build a combined condition over ALL widened positions
+            widened_conds: list[str] = []
             for _pos, (orig_d, wide_d) in enumerate(
                 zip(var_orig_domain, widened_domain, strict=False)
             ):
                 if orig_d.lower() != wide_d.lower():
-                    # orig_d is a subset of wide_d — fix instances not in orig_d
-                    domain_str = ",".join(widened_domain)
-                    cond = f"{orig_d}({wide_d})"
+                    widened_conds.append(f"{orig_d}({wide_d})")
+            if widened_conds:
+                domain_str = ",".join(widened_domain)
+                cond = " and ".join(f"({part})" for part in widened_conds)
+                # Choose fixing value: prefer fx, then lo, then up, else 0
+                if var_def.fx is not None and math.isfinite(var_def.fx):
+                    fix_val = var_def.fx
+                elif var_def.lo is not None and math.isfinite(var_def.lo):
+                    fix_val = var_def.lo
+                elif var_def.up is not None and math.isfinite(var_def.up):
+                    fix_val = var_def.up
+                else:
                     fix_val = 0
-                    if var_def.lo is not None and math.isfinite(var_def.lo):
-                        fix_val = var_def.lo
-                    fx_lines.append(
-                        f"{var_name_lower}.fx({domain_str})$(not ({cond})) = {fix_val};"
-                    )
-                    break  # Only handle first widened position
+                fx_lines.append(f"{var_name_lower}.fx({domain_str})$(not ({cond})) = {fix_val};")
 
     # 2. Fix multipliers whose complementarity equation has a condition
     for _eq_name, comp_pair in sorted(kkt.complementarity_ineq.items()):
