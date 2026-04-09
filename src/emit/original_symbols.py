@@ -2991,17 +2991,42 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
                 args = _tree_to_gams_subst(node.children[1], subst)
                 return f"{name}({args})"
             return f"{name}()"
+        if data in ("sum", "prod", "smax", "smin"):
+            tree_children = [c for c in node.children if isinstance(c, Tree)]
+            if len(tree_children) >= 2:
+                domain_part = _tree_to_gams_subst(tree_children[0], subst)
+                expr_part = _tree_to_gams_subst(tree_children[1], subst)
+            else:
+                domain_part = _tree_to_gams_subst(node.children[0], subst)
+                expr_part = _tree_to_gams_subst(node.children[1], subst)
+            return f"{data}({domain_part}, {expr_part})"
+        if data == "sum_domain":
+            return _tree_to_gams_subst(node.children[0], subst)
+        if data == "index_spec":
+            idx_parts = [c for c in node.children if isinstance(c, Tree)]
+            idx = _tree_to_gams_subst(idx_parts[0], subst)
+            if len(idx_parts) >= 2:
+                cond = _tree_to_gams_subst(idx_parts[1], subst)
+                return f"{idx}$({cond})"
+            return idx
+        if data == "tuple_domain_cond":
+            trees = [c for c in node.children if isinstance(c, Tree)]
+            idx_part = f"({_tree_to_gams_subst(trees[0], subst)})" if trees else ""
+            cond_part = f"({_tree_to_gams_subst(trees[1], subst)})" if len(trees) > 1 else ""
+            return f"{idx_part}${cond_part}"
+        if data == "tuple_domain":
+            return f"({_tree_to_gams_subst(node.children[0], subst)})"
         if data in ("binop", "unaryop"):
             return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
         if data == "condition":
             children = [c for c in node.children if isinstance(c, (Tree, Token))]
-            parts: list[str] = []
+            parts_c: list[str] = []
             for c in children:
                 if isinstance(c, Tree) and c.data == "expr":
-                    parts.append(f"({_tree_to_gams_subst(c, subst)})")
+                    parts_c.append(f"({_tree_to_gams_subst(c, subst)})")
                 else:
-                    parts.append(_tree_to_gams_subst(c, subst))
-            return "".join(parts)
+                    parts_c.append(_tree_to_gams_subst(c, subst))
+            return "".join(parts_c)
         if data == "assign":
             return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
         if data == "conditional_assign_general":
@@ -3033,24 +3058,68 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
                 first_elem = sdef.members[0]
                 subst[idx_lower] = f"'{first_elem}'"
 
+        # Also substitute dynamic subsets with their parent sets
+        # (e.g., m → mm, n → nn) since the subsets may not be
+        # populated when these assignments execute.
+        for set_name, sdef in model_ir.sets.items():
+            if (
+                sdef.domain
+                and len(sdef.domain) == 1
+                and not sdef.members
+                and set_name.lower() not in subst
+            ):
+                subst[set_name.lower()] = sdef.domain[0]
+
         if not subst:
             continue
 
-        # Extract pre-solve param assignments
-        for stmt in loop_stmt.body_stmts:
-            if not isinstance(stmt, Tree):
-                break
-            if "solve" in str(stmt.data):
-                break
-            if str(stmt.data) not in _ASSIGN_TYPES:
-                continue
-            name = _lhs_name(stmt)
-            if name is None or name not in param_names:
-                continue
-            # Emit this assignment with loop index substituted
-            gams_text = _tree_to_gams_subst(stmt, subst)
-            assign_lines.append(gams_text)
-            emitted_params.add(name)
+        def _inner_loop_has_solve(loop_node: Tree) -> bool:
+            """Check if a loop_stmt tree contains a solve anywhere."""
+            for c in loop_node.iter_subtrees():
+                if "solve" in str(c.data):
+                    return True
+            return False
+
+        # Extract pre-solve param assignments (including from inner loops)
+        def _extract_pre_solve(stmts: list, sub: dict[str, str]) -> None:
+            for stmt in stmts:
+                if not isinstance(stmt, Tree):
+                    break
+                if "solve" in str(stmt.data):
+                    break
+                # Recurse into inner loops
+                if str(stmt.data) == "loop_stmt":
+                    # Find the loop_body subtree and id_list for the index
+                    inner_sub = dict(sub)
+                    inner_body_stmts: list = []
+                    for c in stmt.children:
+                        if isinstance(c, Tree) and c.data == "id_list":
+                            for tok in c.children:
+                                if isinstance(tok, Token) and tok.type == "ID":
+                                    inner_idx = str(tok).lower()
+                                    inner_sdef = model_ir.sets.get(inner_idx)
+                                    if inner_sdef and inner_sdef.members:
+                                        inner_sub[inner_idx] = f"'{inner_sdef.members[0]}'"
+                        elif isinstance(c, Tree) and c.data == "loop_body":
+                            inner_body_stmts = [
+                                child for child in c.children if isinstance(child, Tree)
+                            ]
+                    _extract_pre_solve(inner_body_stmts, inner_sub)
+                    # If the inner loop contains a solve, any subsequent
+                    # outer statements are post-solve — stop scanning.
+                    if _inner_loop_has_solve(stmt):
+                        break
+                    continue
+                if str(stmt.data) not in _ASSIGN_TYPES:
+                    continue
+                name = _lhs_name(stmt)
+                if name is None or name not in param_names:
+                    continue
+                gams_text = _tree_to_gams_subst(stmt, sub)
+                assign_lines.append(gams_text)
+                emitted_params.add(name)
+
+        _extract_pre_solve(loop_stmt.body_stmts, subst)
 
     if not assign_lines:
         return ""
