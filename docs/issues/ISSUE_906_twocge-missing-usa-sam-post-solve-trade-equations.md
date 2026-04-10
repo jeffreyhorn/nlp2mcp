@@ -90,6 +90,32 @@ grep -c '^\*\*\*\* ' /tmp/twocge_mcp.lst  # 32 (28 exec + 4 meta)
 2. **Post-solve code ordering**: The emitter should place post-solve parameter assignments after the solve statement, not before.
 3. **Trade equations with cross-index conditioning**: Investigate whether `eqpw(i,r,rr)` with `$(ord(r) <> ord(rr))` is handled by KKT derivation. These may need special support for multi-region equilibrium conditions.
 
+## Sprint 24 Investigation
+
+**Status: NOT FIXED** — errors changed from runtime (28 EXECERROR) to
+compilation (Error 140/154/198/651).
+
+The trade equations `eqpw(i,r,rr)` and `eqw(i,r,rr)` with condition
+`$(ord(r) <> ord(rr))` produce stationarity terms like:
+```
+sum(rr, 1$(ord(JPN) <> ord(JPN)) * nu_eqw(i,r,rr))
+```
+
+The `ord(JPN)` is invalid GAMS (Error 651: ord needs a 1D set, not a
+concrete element). The `_replace_indices_in_expr` ord() handler maps
+the set element `JPN` to itself instead of the equation domain name `r`.
+
+This is the same class as the otpop ord() fix (#1178) but for a different
+code path — the concrete element substitution in stationarity equation
+assembly uses `JPN` (from single-instance evaluation) instead of the
+symbolic set name.
+
+**Remaining issues:**
+1. `ord(JPN)` → should be `ord(r)` or `ord(rr)` (compilation fix)
+2. Missing USA SAM continuation data (parser issue)
+3. Post-solve code ordering (emitter issue)
+
 ## Related Issues
 
 - Issue #901 — twocge dotted table column headers (RESOLVED by Day 7 dotted column header fix)
+- Issue #1178 — otpop ord() remapping (FIXED, related pattern)
