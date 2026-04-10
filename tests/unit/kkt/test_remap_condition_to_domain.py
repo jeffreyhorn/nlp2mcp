@@ -33,12 +33,14 @@ class TestRemapConditionToDomain:
         assert result is cond  # Unchanged
 
     def test_case_insensitive_match(self):
-        """E(N,I) with domain (n,n) → E(n,n) (case-insensitive)."""
+        """E(N,I) with domain (n,n) → E(N,n): N preserved, I replaced."""
         cond = SetMembershipTest("E", (SymbolRef("N"), SymbolRef("I")))
         result = _remap_condition_to_domain(cond, ("n", "n"))
 
         assert isinstance(result, SetMembershipTest)
-        # N is in domain (case-insensitive match), I is not → replaced
+        # N matches domain 'n' case-insensitively → preserved as-is
+        assert result.indices[0].name == "N"
+        # I not in domain → replaced with domain[1] = 'n'
         assert result.indices[1].name == "n"
 
     def test_non_smt_condition_unchanged(self):
