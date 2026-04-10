@@ -1,10 +1,10 @@
 # worst: Conditioned Equation Variables Produce Zero Stationarity
 
 **GitHub Issue:** [#1223](https://github.com/jeffreyhorn/nlp2mcp/issues/1223)
-**Status:** OPEN — KKT formulation bug (conditioned equation gradient)
-**Severity:** Medium — Variables d1/d2 get trivial 0=0 stationarity equations
+**Status:** FIXED
+**Severity:** Medium — was 0=0 stationarity (now resolved)
 **Date:** 2026-04-07
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-10
 **Affected Models:** worst
 
 ---
@@ -96,29 +96,27 @@ grep "stat_d1\|stat_d2" /tmp/worst_mcp.gms
 
 ---
 
-## Sprint 24 Investigation (NOT FIXED)
+## FIXED (Sprint 24)
 
-**Root cause confirmed:** The `errorf` derivative IS implemented. The issue is
-that `callval`, `putval`, `dd1`, `dd2` equations ALL have 0 instances from
-condition evaluation — NOT because the conditions are unevaluable (no error),
-but because the condition evaluator produces False for all instances.
+**Root cause:** The `errorf` derivative IS implemented correctly. The issue was
+that `callval`, `putval`, `dd1`, `dd2` equations ALL had 0 instances from
+condition evaluation because the condition evaluator couldn't match dotted
+parameter keys. `pdata.values` stores keys like `('9000011.jun.1', 'type')`
+(dotted) but the evaluator constructed `('9000011', 'jun', '1', 'type')`
+(individual elements).
 
-The condition `pdata(i,t,j,"type") = call` involves a 4D parameter with dotted
-keys: `pdata.values` stores keys like `('9000011.jun.1', 'type')` — the first
-3 dimensions are dotted together. The condition evaluator constructs a lookup
-key from the individual indices `('9000011', 'jun', '1', 'type')` which doesn't
-match the dotted format.
+Added `_try_dotted_key_lookup` in `condition_eval.py` that progressively
+joins indices from the left with `.` to match the parser's Table format.
+For `pdata(i,t,j,"type")` at `('9000011','jun','1')`:
+- Direct lookup: `('9000011','jun','1','type')` — fails
+- Dotted fallback: `('9000011.jun.1','type')` — matches!
 
-With 0 instances for all conditioned equations, no Jacobian entries are generated
-for `d1`/`d2`, producing zero stationarity.
+**Result:** worst compiles and solves to MODEL STATUS 1 Optimal.
+MCP obj=20,800,200 vs NLP obj=20,941,622 (~0.7% mismatch).
+All conditioned equations now have correct instances:
+- callval: 5, putval: 3, dd1: 8, dd2: 8, futval: 5
 
-**Fix requires:** Improve the condition evaluator's parameter value lookup to
-handle dotted multi-dimensional keys. When `pdata(i,t,j,"type")` is evaluated
-at indices `('9000011', 'jun', '1')`, the evaluator should try both:
-- 4-tuple key: `('9000011', 'jun', '1', 'type')`
-- Dotted key: `('9000011.jun.1', 'type')`
-
-This is a ~2-4h fix in `src/ir/condition_eval.py`.
+**Files modified:** `src/ir/condition_eval.py`, `tests/unit/ir/test_condition_eval_dotted.py`
 
 ## Files Involved
 

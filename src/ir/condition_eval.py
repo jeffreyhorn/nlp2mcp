@@ -31,6 +31,48 @@ class ConditionEvaluationError(Exception):
     pass
 
 
+def _try_dotted_key_lookup(param: object, concrete_indices: tuple[str, ...]) -> float | str | None:
+    """Try looking up a parameter value using dotted key variants.
+
+    Issue #1223: Table parameters with * domain store row headers as dotted
+    strings (e.g., ('9000011.jun.1', 'type') for pdata(i,t,j,*)). This
+    function tries progressively joining indices from the left to match.
+
+    Returns the parameter value if found, or None if no match.
+    """
+    values = getattr(param, "values", None)
+    if not values:
+        return None
+
+    domain = getattr(param, "domain", None)
+
+    # Prefer the star-domain split position when available: the parser
+    # collapses all indices before '*' into one dotted label.
+    if domain and "*" in domain:
+        star_pos = list(domain).index("*")
+        if star_pos >= 2 and len(concrete_indices) > star_pos:
+            dotted_prefix = ".".join(concrete_indices[:star_pos])
+            remaining = concrete_indices[star_pos:]
+            candidate = (dotted_prefix,) + remaining
+            if candidate in values:
+                return values[candidate]
+
+    # Fallback: try joining first N indices with '.' for N from 2 to len-1
+    for split_pos in range(2, len(concrete_indices)):
+        dotted_prefix = ".".join(concrete_indices[:split_pos])
+        remaining = concrete_indices[split_pos:]
+        candidate = (dotted_prefix,) + remaining
+        if candidate in values:
+            return values[candidate]
+
+    # Also try joining ALL indices as a single-element tuple
+    full_dotted = ".".join(concrete_indices)
+    if (full_dotted,) in values:
+        return values[(full_dotted,)]
+
+    return None
+
+
 class ConditionCycleError(ConditionEvaluationError):
     """Raised when a cycle is detected in expression-based parameter resolution."""
 
@@ -155,6 +197,19 @@ def _eval_expr(
         # Look up parameter value
         if concrete_indices in param.values:
             return param.values[concrete_indices]
+
+        # Issue #1223: Dotted-key fallback for Table parameters with * domain.
+        # The parser's Table handler collapses multi-dimensional row headers
+        # into dotted strings (e.g., '9000011.jun.1') producing 2-tuple keys
+        # like ('9000011.jun.1', 'type') for a 4D parameter pdata(i,t,j,*).
+        # The condition evaluator constructs individual-element tuples
+        # ('9000011', 'jun', '1', 'type') which don't match. Try joining
+        # indices before the * position with '.' to construct the dotted key.
+        if param.domain and len(concrete_indices) > 1:
+            dotted_val = _try_dotted_key_lookup(param, concrete_indices)
+            if dotted_val is not None:
+                return dotted_val
+
         # Issue #1057: If the parameter has expression-based values, try to
         # evaluate the expression recursively. E.g., tm(t) = td("target",t)
         # can be resolved if td has static values.
