@@ -52,7 +52,10 @@ eqpw(i,r,rr)..  (pWe(i,r) - pWm(i,rr))$(ord(r) <> ord(rr)) =e= 0;
 eqw(i,r,rr)..   (E(i,r) - M(i,rr))$(ord(r) <> ord(rr)) =e= 0;
 ```
 
-These cross-country trade equations are not present in the emitted MCP. They use a third index `rr` with `ord(r) <> ord(rr)` conditioning, which may not be handled by the KKT derivation.
+These cross-country trade equations were initially missing from the emitted MCP
+(as of Sprint 21). They are now emitted in the stationarity equations (as of
+Sprint 24), but the `$(ord(r) <> ord(rr))` condition produces empty equations
+when `r = rr` (same country), causing MCP pairing errors.
 
 ## Reproduction
 
@@ -90,6 +93,48 @@ grep -c '^\*\*\*\* ' /tmp/twocge_mcp.lst  # 32 (28 exec + 4 meta)
 2. **Post-solve code ordering**: The emitter should place post-solve parameter assignments after the solve statement, not before.
 3. **Trade equations with cross-index conditioning**: Investigate whether `eqpw(i,r,rr)` with `$(ord(r) <> ord(rr))` is handled by KKT derivation. These may need special support for multi-region equilibrium conditions.
 
+## Sprint 24 Investigation
+
+**Status: NOT FIXED** — errors changed from runtime (28 EXECERROR) to
+compilation (Error 140/154/198/651).
+
+The trade equations `eqpw(i,r,rr)` and `eqw(i,r,rr)` with condition
+`$(ord(r) <> ord(rr))` produce stationarity terms like:
+```
+sum(rr, 1$(ord(JPN) <> ord(JPN)) * nu_eqw(i,r,rr))
+```
+
+The `ord(JPN)` is invalid GAMS (Error 651: ord needs a 1D set, not a
+concrete element). The `_replace_indices_in_expr` ord() handler maps
+the set element `JPN` to itself instead of the equation domain name `r`.
+
+### Fix 2: ord(JPN) compilation error (Sprint 24 Day 10)
+
+Root cause: `ord()` requires a set index variable (e.g., `r` or `rr`), not
+a set element label (e.g., `JPN`). In the `_replace_indices_in_expr` ord()
+handler, element labels like `JPN` in the ChainMap overlay were being
+treated as "bound indices" and preserved as-is. The fix: only treat
+set/alias names as bound — element labels should be remapped to the
+equation domain variable.
+
+Changed the `bound_index_names` check to also verify the name is a set
+or alias before skipping.
+
+**Result:** Compilation errors ($140/$154/$198/$651) resolved.
+
+### Remaining: 8 empty equation MCP errors
+
+`eqpw(i,r,rr)` and `eqw(i,r,rr)` with `$(ord(r) <> ord(rr))` produce
+empty equations when `r = rr` (same country). The multipliers for these
+instances need to be fixed to 0. The empty equation detector can't handle
+`ord()` comparison conditions.
+
+**Summary of all 3 original issues:**
+1. ✅ Missing USA SAM continuation data — FIXED (by prior parser improvements)
+2. ✅ `ord(JPN)` compilation error — FIXED (bound index check tightened)
+3. ✅ Post-solve code ordering — FIXED (by prior emitter improvements)
+
 ## Related Issues
 
 - Issue #901 — twocge dotted table column headers (RESOLVED by Day 7 dotted column header fix)
+- Issue #1178 — otpop ord() remapping (FIXED, related pattern)

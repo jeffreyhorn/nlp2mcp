@@ -2265,8 +2265,11 @@ def _replace_indices_in_expr(
                         name = arg.name
                         # Skip bound indices (controlled by enclosing sum)
                         if name in bound_index_names:
-                            new_args_list.append(arg)
-                            continue
+                            # Only skip if it's a set/alias name, not a concrete
+                            # element that happens to be in the ChainMap overlay.
+                            if name in model_ir.sets or name in model_ir.aliases:
+                                new_args_list.append(arg)
+                                continue
                         is_set_or_alias = name in model_ir.sets or name in model_ir.aliases
                         if not is_set_or_alias and name in element_to_set:
                             # Concrete element → map to equation domain
