@@ -2580,19 +2580,6 @@ def _apply_index_substitution(expr: Expr, substitution: dict[str, str]) -> Expr:
         new_child = _apply_index_substitution(expr.child, substitution)
         return Unary(expr.op, new_child)
     elif isinstance(expr, Call):
-        if expr.func in ("card", "ord"):
-            # Issue #906: Don't substitute SymbolRef arguments inside
-            # card/ord — these require set names, not concrete elements.
-            # The downstream _replace_indices_in_expr handles remapping
-            # concrete elements back to domain names, but it's safer to
-            # preserve symbolic names here to avoid ord(JPN) errors.
-            new_args_list: list[Expr] = []
-            for arg in expr.args:
-                if isinstance(arg, SymbolRef) and arg.name in substitution:
-                    new_args_list.append(arg)  # Keep symbolic name
-                else:
-                    new_args_list.append(_apply_index_substitution(arg, substitution))
-            return Call(expr.func, tuple(new_args_list))
         # Recursively substitute in all arguments
         new_args = tuple(_apply_index_substitution(arg, substitution) for arg in expr.args)
         return Call(expr.func, new_args)

@@ -52,7 +52,10 @@ eqpw(i,r,rr)..  (pWe(i,r) - pWm(i,rr))$(ord(r) <> ord(rr)) =e= 0;
 eqw(i,r,rr)..   (E(i,r) - M(i,rr))$(ord(r) <> ord(rr)) =e= 0;
 ```
 
-These cross-country trade equations are not present in the emitted MCP. They use a third index `rr` with `ord(r) <> ord(rr)` conditioning, which may not be handled by the KKT derivation.
+These cross-country trade equations were initially missing from the emitted MCP
+(as of Sprint 21). They are now emitted in the stationarity equations (as of
+Sprint 24), but the `$(ord(r) <> ord(rr))` condition produces empty equations
+when `r = rr` (same country), causing MCP pairing errors.
 
 ## Reproduction
 
@@ -107,10 +110,12 @@ the set element `JPN` to itself instead of the equation domain name `r`.
 
 ### Fix 2: ord(JPN) compilation error (Sprint 24 Day 10)
 
-Root cause: In the `_replace_indices_in_expr` ord() handler, concrete
-elements like `JPN` were being treated as "bound indices" (via ChainMap
-detection) and preserved as-is. The fix: only treat set/alias names as
-bound — concrete elements should still be remapped to the equation domain.
+Root cause: `ord()` requires a set index variable (e.g., `r` or `rr`), not
+a set element label (e.g., `JPN`). In the `_replace_indices_in_expr` ord()
+handler, element labels like `JPN` in the ChainMap overlay were being
+treated as "bound indices" and preserved as-is. The fix: only treat
+set/alias names as bound — element labels should be remapped to the
+equation domain variable.
 
 Changed the `bound_index_names` check to also verify the name is a set
 or alias before skipping.

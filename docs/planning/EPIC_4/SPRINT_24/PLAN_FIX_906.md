@@ -145,6 +145,9 @@ instead of the equation domain.
 
 ## Reproduction
 
+**Prerequisite:** GAMSlib raw sources must be downloaded into `data/gamslib/raw/`
+(run `python scripts/gamslib/download_models.py`).
+
 ```bash
 .venv/bin/python -m src.cli data/gamslib/raw/twocge.gms -o /tmp/twocge_mcp.gms --quiet
 gams /tmp/twocge_mcp.gms lo=0
