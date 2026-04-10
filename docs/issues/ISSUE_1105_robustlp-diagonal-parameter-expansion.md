@@ -35,6 +35,14 @@ The SOCP complementarity structure creates a nonlinear landscape that PATH strug
 
 This is a known `path_solve_terminated` category issue requiring warm-start infrastructure (deferred).
 
+## Sprint 24 Retest
+
+Retested after accumulated Sprint 24 fixes. No change — PATH still returns
+MODEL STATUS 5 (Locally Infeasible) with 12 infeasible rows, 4285 iterations.
+The cold-start convergence issue is not affected by KKT/stationarity fixes.
+
+**NOT FIXED** — warm-start infrastructure required (deferred).
+
 ## Related Issues
 
 - #1021: Variable bounds diagonal expansion fix (same pattern, already resolved — ported from)
