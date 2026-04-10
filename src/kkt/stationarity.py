@@ -3506,8 +3506,14 @@ def _find_bad_multiplier(
     return None
 
 
-def _replace_mult_indices(expr: Expr, mult_name: str, new_indices: tuple[str, ...]) -> Expr:
-    """Replace a MultiplierRef's indices with the declared domain."""
+def _replace_mult_indices(
+    expr: Expr, mult_name: str, new_indices: tuple[str | IndexOffset, ...]
+) -> Expr:
+    """Replace a MultiplierRef's indices with the given tuple.
+
+    The new_indices may contain both plain strings and IndexOffset objects
+    (existing offsets are preserved from the original indices).
+    """
     if isinstance(expr, MultiplierRef) and expr.name == mult_name:
         return MultiplierRef(expr.name, new_indices)
     if isinstance(expr, Binary):
