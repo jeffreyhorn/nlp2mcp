@@ -21,11 +21,17 @@ comparison may not be valid.
 
 ## Reproduction
 
+Before fix (historical):
 ```bash
 python -m src.cli data/gamslib/raw/sparta.gms -o /tmp/sparta_mcp.gms
 gams /tmp/sparta_mcp.gms lo=2
-# **** SOLVER STATUS     1 Normal Completion
 # **** MODEL STATUS      5 Locally Infeasible
+```
+
+After fix (Sprint 24):
+```bash
+# **** MODEL STATUS      1 Optimal
+# nlp2mcp_obj_val = 3466.380 (matches NLP)
 ```
 
 ---
@@ -50,9 +56,8 @@ structures (bal1 through bal4 — stock vs. flow formulations).
 
 ## Root Cause
 
-Not yet determined. The infeasibility suggests one of:
-1. Incorrect KKT conditions for the bal4 constraint structure
-2. Missing or incorrect domain conditioning on stationarity equations
+Resolved by accumulated Sprint 24 fixes; no single isolated root cause
+was identified. The infeasibility was likely caused by one or more of:
 3. Lead/lag reference handling specific to the bal4 formulation
 
 ---
@@ -75,8 +80,8 @@ From Sprint 22 Day 9 Category A divergence investigation. Full analysis in
 
 ## FIXED (Sprint 24)
 
-Resolved by accumulated Sprint 24 fixes (multiplier dimension fix #1227,
-empty equation detector #1133, ord() handler improvements, stationarity
+Resolved by accumulated Sprint 24 fixes (multiplier dimension fix PR #1246,
+empty equation detector PR #1240, ord() handler improvements, stationarity
 condition fixes).
 
 **Result:** sparta compiles and solves to MODEL STATUS 1 Optimal.
