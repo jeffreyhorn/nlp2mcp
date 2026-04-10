@@ -52,10 +52,10 @@ def _try_dotted_key_lookup(param: object, concrete_indices: tuple[str, ...]) -> 
         if candidate in values:
             return values[candidate]
 
-    # Also try joining ALL indices (single dotted string key)
+    # Also try joining ALL indices as a single-element tuple
     full_dotted = ".".join(concrete_indices)
-    if full_dotted in values:
-        return values[full_dotted]
+    if (full_dotted,) in values:
+        return values[(full_dotted,)]
 
     return None
 

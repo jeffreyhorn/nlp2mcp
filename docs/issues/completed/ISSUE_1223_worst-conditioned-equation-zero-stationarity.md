@@ -1,10 +1,10 @@
 # worst: Conditioned Equation Variables Produce Zero Stationarity
 
 **GitHub Issue:** [#1223](https://github.com/jeffreyhorn/nlp2mcp/issues/1223)
-**Status:** OPEN — KKT formulation bug (conditioned equation gradient)
-**Severity:** Medium — Variables d1/d2 get trivial 0=0 stationarity equations
+**Status:** FIXED
+**Severity:** Medium — was 0=0 stationarity (now resolved)
 **Date:** 2026-04-07
-**Last Updated:** 2026-04-07
+**Last Updated:** 2026-04-10
 **Affected Models:** worst
 
 ---
@@ -96,23 +96,14 @@ grep "stat_d1\|stat_d2" /tmp/worst_mcp.gms
 
 ---
 
-## Sprint 24 Investigation (NOT FIXED)
-
-**Root cause confirmed:** The `errorf` derivative IS implemented. The issue is
-that `callval`, `putval`, `dd1`, `dd2` equations ALL have 0 instances from
-condition evaluation — NOT because the conditions are unevaluable (no error),
-but because the condition evaluator produces False for all instances.
-
-The condition `pdata(i,t,j,"type") = call` involves a 4D parameter with dotted
-keys: `pdata.values` stores keys like `('9000011.jun.1', 'type')` — the first
-3 dimensions are dotted together. The condition evaluator constructs a lookup
-key from the individual indices `('9000011', 'jun', '1', 'type')` which doesn't
-match the dotted format.
-
-With 0 instances for all conditioned equations, no Jacobian entries are generated
-for `d1`/`d2`, producing zero stationarity.
-
 ## FIXED (Sprint 24)
+
+**Root cause:** The `errorf` derivative IS implemented correctly. The issue was
+that `callval`, `putval`, `dd1`, `dd2` equations ALL had 0 instances from
+condition evaluation because the condition evaluator couldn't match dotted
+parameter keys. `pdata.values` stores keys like `('9000011.jun.1', 'type')`
+(dotted) but the evaluator constructed `('9000011', 'jun', '1', 'type')`
+(individual elements).
 
 Added `_try_dotted_key_lookup` in `condition_eval.py` that progressively
 joins indices from the left with `.` to match the parser's Table format.

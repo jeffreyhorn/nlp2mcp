@@ -57,10 +57,10 @@ class TestDottedKeyLookup:
         assert result is None
 
     def test_full_dotted_string(self):
-        """All indices dotted into single string."""
+        """All indices dotted into single-element tuple."""
         param = _FakeParam(
             domain=("i", "j"),
-            values={"a.b": 99.0},
+            values={("a.b",): 99.0},
         )
         result = _try_dotted_key_lookup(param, ("a", "b"))
         assert result == 99.0
