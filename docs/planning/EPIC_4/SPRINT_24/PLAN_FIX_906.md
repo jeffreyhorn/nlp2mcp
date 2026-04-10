@@ -33,7 +33,8 @@ Four stationarity equations contain `ord(JPN) <> ord(JPN)`:
 ### GAMS Errors
 
 - **Error 651**: `ord` can only be referenced with a 1-dimensional set
-  (`JPN` is an element, not a set)
+  (substituted element label `JPN` where a controlled set index variable
+  like `r` is required)
 - **Error 140**: Unknown symbol
 - **Error 154**: Set for 'ord' is not controlled
 - **Error 198**: Set used in 'ord' is not ordered
