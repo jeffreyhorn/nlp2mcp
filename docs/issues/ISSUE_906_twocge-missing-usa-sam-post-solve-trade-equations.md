@@ -105,15 +105,29 @@ The `ord(JPN)` is invalid GAMS (Error 651: ord needs a 1D set, not a
 concrete element). The `_replace_indices_in_expr` ord() handler maps
 the set element `JPN` to itself instead of the equation domain name `r`.
 
-This is the same class as the otpop ord() fix (#1178) but for a different
-code path — the concrete element substitution in stationarity equation
-assembly uses `JPN` (from single-instance evaluation) instead of the
-symbolic set name.
+### Fix 2: ord(JPN) compilation error (Sprint 24 Day 10)
 
-**Remaining issues:**
-1. `ord(JPN)` → should be `ord(r)` or `ord(rr)` (compilation fix)
-2. Missing USA SAM continuation data (parser issue)
-3. Post-solve code ordering (emitter issue)
+Root cause: In the `_replace_indices_in_expr` ord() handler, concrete
+elements like `JPN` were being treated as "bound indices" (via ChainMap
+detection) and preserved as-is. The fix: only treat set/alias names as
+bound — concrete elements should still be remapped to the equation domain.
+
+Changed the `bound_index_names` check to also verify the name is a set
+or alias before skipping.
+
+**Result:** Compilation errors ($140/$154/$198/$651) resolved.
+
+### Remaining: 8 empty equation MCP errors
+
+`eqpw(i,r,rr)` and `eqw(i,r,rr)` with `$(ord(r) <> ord(rr))` produce
+empty equations when `r = rr` (same country). The multipliers for these
+instances need to be fixed to 0. The empty equation detector can't handle
+`ord()` comparison conditions.
+
+**Summary of all 3 original issues:**
+1. ✅ Missing USA SAM continuation data — FIXED (by prior parser improvements)
+2. ✅ `ord(JPN)` compilation error — FIXED (bound index check tightened)
+3. ✅ Post-solve code ordering — FIXED (by prior emitter improvements)
 
 ## Related Issues
 
