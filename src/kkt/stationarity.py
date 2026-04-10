@@ -340,6 +340,38 @@ def _extract_all_conditioned_guard(
     return combined
 
 
+def _remap_condition_to_domain(cond: Expr, var_domain: tuple[str, ...], model_ir: ModelIR) -> Expr:
+    """Remap condition indices to match the variable's domain.
+
+    Issue #1062: Gradient conditions may use equation-context indices
+    (e.g., SetMembershipTest(e, (n, i))) that don't match the variable
+    domain (e.g., (n, n)). Replace non-domain SymbolRef indices with
+    the variable's domain index at the corresponding position.
+    """
+    if not isinstance(cond, SetMembershipTest) or not var_domain:
+        return cond
+
+    new_indices: list[Expr] = []
+    domain_set = set(var_domain)
+    for pos, idx in enumerate(cond.indices):
+        if isinstance(idx, SymbolRef) and idx.name not in domain_set:
+            # This index is from the equation context, not the variable domain.
+            # Replace with the variable domain index at this position.
+            if pos < len(var_domain):
+                new_indices.append(SymbolRef(var_domain[pos]))
+            else:
+                new_indices.append(idx)
+        else:
+            new_indices.append(idx)
+
+    if any(
+        isinstance(n, SymbolRef) and isinstance(o, SymbolRef) and n.name != o.name
+        for n, o in zip(new_indices, cond.indices, strict=False)
+    ):
+        return SetMembershipTest(cond.set_name, tuple(new_indices))
+    return cond
+
+
 def _find_variable_access_condition(
     var_name: str,
     var_domain: tuple[str, ...],
@@ -986,6 +1018,14 @@ def build_stationarity_equations(
                     )
                 if not unconditioned_cache[var_name]:
                     access_cond = kkt.gradient_conditions[var_name]
+                    # Issue #1062: Remap condition indices to variable domain.
+                    # The gradient condition may use equation-context indices
+                    # (e.g., e(n,i)) that don't match the variable domain
+                    # (e.g., (n,n)). Replace any non-domain indices with the
+                    # variable's domain indices at the corresponding position.
+                    access_cond = _remap_condition_to_domain(
+                        access_cond, var_def.domain, kkt.model_ir
+                    )
 
             # Issue #1147: For MCP compatibility, don't put the access condition
             # on the equation head — GAMS MCP requires equation and variable to

@@ -96,8 +96,28 @@ This is similar to the multiplier domain widening pattern but in reverse — her
 
 ---
 
-## Progress (2026-04-01)
+## Sprint 24 Progress
 
-**Blocked by compilation errors.** The tricp MCP has $148/$149 compilation errors (dimension mismatch, uncontrolled set) from the stationarity equations that must be fixed before the unmatched variable issue can be addressed. These compilation errors are tracked in [ISSUE_933_tricp-mcp-compilation-errors.md](ISSUE_933_tricp-mcp-compilation-errors.md).
+### Fix 1: Gradient condition index remapping (compilation fix)
+Added `_remap_condition_to_domain` in `stationarity.py` that remaps gradient
+condition indices to the variable's domain. `SetMembershipTest(e, (n, i))` →
+`SetMembershipTest(e, (n, n))` when the variable domain is `(n, n)`.
 
-The 760 unmatched variable errors described above may still exist but cannot be verified until the compilation errors are resolved.
+**Result:** Compilation errors ($149) resolved. Unmatched variables reduced
+from 760 to 108.
+
+### Remaining: 108 unmatched variables
+The 108 remaining unmatched variables are EDGE instances of `slp`/`slp`
+where the stationarity equation `stat_slp(n,n)` is valid but doesn't
+reference variable `slp`. This is because `slp` has derivative = 1 in
+`eq1` (linear coefficient), so the stationarity reduces to
+`nu_eq1 + bounds = 0` — the variable itself doesn't appear.
+
+**NOT FIXED** — this is a fundamental MCP formulation issue where variables
+with unit-coefficient derivatives produce stationarity equations that
+don't reference the paired variable. GAMS MCP requires the paired
+variable to appear in the equation.
+
+Possible fix: add `0*slp(n,n)` dummy term to force the variable reference
+in the stationarity equation, or use a different MCP formulation for
+linear variables.
