@@ -96,9 +96,34 @@ grep "stat_d1\|stat_d2" /tmp/worst_mcp.gms
 
 ---
 
+## Sprint 24 Investigation (NOT FIXED)
+
+**Root cause confirmed:** The `errorf` derivative IS implemented. The issue is
+that `callval`, `putval`, `dd1`, `dd2` equations ALL have 0 instances from
+condition evaluation — NOT because the conditions are unevaluable (no error),
+but because the condition evaluator produces False for all instances.
+
+The condition `pdata(i,t,j,"type") = call` involves a 4D parameter with dotted
+keys: `pdata.values` stores keys like `('9000011.jun.1', 'type')` — the first
+3 dimensions are dotted together. The condition evaluator constructs a lookup
+key from the individual indices `('9000011', 'jun', '1', 'type')` which doesn't
+match the dotted format.
+
+With 0 instances for all conditioned equations, no Jacobian entries are generated
+for `d1`/`d2`, producing zero stationarity.
+
+**Fix requires:** Improve the condition evaluator's parameter value lookup to
+handle dotted multi-dimensional keys. When `pdata(i,t,j,"type")` is evaluated
+at indices `('9000011', 'jun', '1')`, the evaluator should try both:
+- 4-tuple key: `('9000011', 'jun', '1', 'type')`
+- Dotted key: `('9000011.jun.1', 'type')`
+
+This is a ~2-4h fix in `src/ir/condition_eval.py`.
+
 ## Files Involved
 
-- `src/ad/derivative_rules.py` — Function differentiation (errorf support)
-- `src/kkt/stationarity.py` — Stationarity equation builder
+- `src/ir/condition_eval.py` — Parameter value lookup (dotted key handling)
+- `src/ad/index_mapping.py` — enumerate_equation_instances
+- `src/ad/derivative_rules.py` — errorf derivative (WORKS correctly)
 - `src/ad/constraint_jacobian.py` — Jacobian term generation
 - `data/gamslib/raw/worst.gms` — Original model (152 lines)
