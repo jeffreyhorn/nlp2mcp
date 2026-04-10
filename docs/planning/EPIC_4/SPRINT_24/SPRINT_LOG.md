@@ -238,12 +238,12 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 ### Day 10 — Checkpoint 2
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 
 | Task | Status |
 |---|---|
-| Checkpoint 2 evaluation | |
-| Fix bearing/pak/rocket (if time) | |
+| Checkpoint 2 evaluation | ✅ CONDITIONAL GO — solve 94 (GO), match 49 (missed by 3), pse 12 (GO) |
+| Fix bearing/pak/rocket | ⏭️ Deferred — all MODEL STATUS 5 with deep KKT issues (3-6h each) |
 
 #### Checkpoint 2 (Day 10)
 
