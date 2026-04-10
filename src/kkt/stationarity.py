@@ -995,6 +995,13 @@ def build_stationarity_equations(
                 # Note: wrapping after simplification means 0$cond won't be
                 # folded here, but downstream emission handles this gracefully.
                 stat_expr = DollarConditional(stat_expr, access_cond)
+            # Issue #1227: Fix MultiplierRef dimension mismatches.
+            # When a constraint has more indices than the variable (e.g.,
+            # mp(i,t) → stat_p(i)), some MultiplierRef nodes may have fewer
+            # indices than declared. Wrap these in a Sum over the missing
+            # dimensions to produce valid GAMS.
+            stat_expr = _fix_multiplier_dimensions(stat_expr, kkt)
+
             stationarity[stat_name] = EquationDef(
                 name=stat_name,
                 domain=var_def.domain,  # Use same domain as variable
@@ -3415,6 +3422,114 @@ def _compute_index_offset_key(
             offsets.append(0)
 
     return tuple(offsets)
+
+
+def _fix_multiplier_dimensions(expr: Expr, kkt: KKTSystem) -> Expr:
+    """Fix MultiplierRef nodes whose indices don't match declared dimensions.
+
+    Issue #1227: When a constraint has more dimensions than the variable
+    (e.g., mp(i,t) → stat_p(i)), some code paths produce MultiplierRef
+    with fewer indices than declared. This post-processing step finds such
+    mismatches and wraps the offending term in a Sum over the missing
+    dimensions.
+
+    Only fixes top-level additive terms (Binary(+/-) tree) to avoid
+    breaking expression structure inside sums that already handle
+    the extra dimensions correctly.
+    """
+    # Use cached mult_dims if available, otherwise build it
+    mult_dims: dict[str, tuple[str, ...]] | None = getattr(kkt, "_mult_dims_cache", None)
+    if mult_dims is None:
+        mult_dims = {}
+        for mult_def in list(kkt.multipliers_eq.values()) + list(kkt.multipliers_ineq.values()):
+            mult_dims[mult_def.name] = mult_def.domain
+        object.__setattr__(kkt, "_mult_dims_cache", mult_dims)
+
+    return _fix_mult_dims_recursive(expr, mult_dims)
+
+
+def _fix_mult_dims_recursive(expr: Expr, mult_dims: dict[str, tuple[str, ...]]) -> Expr:
+    """Recursively fix MultiplierRef dimension mismatches in additive terms."""
+    if isinstance(expr, Binary) and expr.op in ("+", "-"):
+        new_left = _fix_mult_dims_recursive(expr.left, mult_dims)
+        new_right = _fix_mult_dims_recursive(expr.right, mult_dims)
+        if new_left is not expr.left or new_right is not expr.right:
+            return Binary(expr.op, new_left, new_right)
+        return expr
+    elif isinstance(expr, Sum):
+        # Don't fix inside sums — they already handle extra dimensions
+        return expr
+    elif isinstance(expr, DollarConditional):
+        new_val = _fix_mult_dims_recursive(expr.value_expr, mult_dims)
+        if new_val is not expr.value_expr:
+            return DollarConditional(new_val, expr.condition)
+        return expr
+
+    # Check if this term contains a MultiplierRef with wrong dimensions
+    bad_mult = _find_bad_multiplier(expr, mult_dims)
+    if bad_mult:
+        mult_name, actual_indices, declared_domain = bad_mult
+        # Extract base names from IndexOffset for comparison
+        actual_bases: set[str] = set()
+        for idx in actual_indices:
+            if isinstance(idx, str):
+                actual_bases.add(idx)
+            elif isinstance(idx, IndexOffset):
+                actual_bases.add(idx.base)
+        missing = tuple(d for d in declared_domain if d not in actual_bases)
+        if missing:
+            # Extend the MultiplierRef indices with missing dimensions
+            # (preserving existing indices including IndexOffsets)
+            new_indices = tuple(actual_indices) + missing
+            fixed_expr = _replace_mult_indices(expr, mult_name, new_indices)
+            return Sum(missing, fixed_expr)
+    return expr
+
+
+def _find_bad_multiplier(
+    expr: Expr, mult_dims: dict[str, tuple[str, ...]]
+) -> tuple[str, tuple, tuple[str, ...]] | None:
+    """Find a MultiplierRef with fewer indices than declared."""
+    if isinstance(expr, MultiplierRef):
+        declared = mult_dims.get(expr.name)
+        if declared and len(expr.indices) < len(declared):
+            return (expr.name, expr.indices, declared)
+    if isinstance(expr, Binary):
+        result = _find_bad_multiplier(expr.left, mult_dims)
+        if result:
+            return result
+        return _find_bad_multiplier(expr.right, mult_dims)
+    if isinstance(expr, Unary):
+        return _find_bad_multiplier(expr.child, mult_dims)
+    if isinstance(expr, DollarConditional):
+        return _find_bad_multiplier(expr.value_expr, mult_dims)
+    return None
+
+
+def _replace_mult_indices(
+    expr: Expr, mult_name: str, new_indices: tuple[str | IndexOffset, ...]
+) -> Expr:
+    """Replace a MultiplierRef's indices with the given tuple.
+
+    The new_indices may contain both plain strings and IndexOffset objects
+    (existing offsets are preserved from the original indices).
+    """
+    if isinstance(expr, MultiplierRef) and expr.name == mult_name:
+        return MultiplierRef(expr.name, new_indices)
+    if isinstance(expr, Binary):
+        new_left = _replace_mult_indices(expr.left, mult_name, new_indices)
+        new_right = _replace_mult_indices(expr.right, mult_name, new_indices)
+        if new_left is not expr.left or new_right is not expr.right:
+            return Binary(expr.op, new_left, new_right)
+    if isinstance(expr, Unary):
+        new_child = _replace_mult_indices(expr.child, mult_name, new_indices)
+        if new_child is not expr.child:
+            return Unary(expr.op, new_child)
+    if isinstance(expr, DollarConditional):
+        new_val = _replace_mult_indices(expr.value_expr, mult_name, new_indices)
+        if new_val is not expr.value_expr:
+            return DollarConditional(new_val, expr.condition)
+    return expr
 
 
 def _build_offset_guard(
