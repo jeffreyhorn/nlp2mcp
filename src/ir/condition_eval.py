@@ -44,7 +44,20 @@ def _try_dotted_key_lookup(param: object, concrete_indices: tuple[str, ...]) -> 
     if not values:
         return None
 
-    # Try joining first N indices with '.' for N from 2 to len-1
+    domain = getattr(param, "domain", None)
+
+    # Prefer the star-domain split position when available: the parser
+    # collapses all indices before '*' into one dotted label.
+    if domain and "*" in domain:
+        star_pos = list(domain).index("*")
+        if star_pos >= 2 and len(concrete_indices) > star_pos:
+            dotted_prefix = ".".join(concrete_indices[:star_pos])
+            remaining = concrete_indices[star_pos:]
+            candidate = (dotted_prefix,) + remaining
+            if candidate in values:
+                return values[candidate]
+
+    # Fallback: try joining first N indices with '.' for N from 2 to len-1
     for split_pos in range(2, len(concrete_indices)):
         dotted_prefix = ".".join(concrete_indices[:split_pos])
         remaining = concrete_indices[split_pos:]
