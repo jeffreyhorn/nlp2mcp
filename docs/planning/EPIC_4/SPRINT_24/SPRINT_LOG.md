@@ -254,7 +254,23 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 | path_syntax_error | ≤ 18 | ≤ 20 | > 23 |
 | Tests | All pass | All pass | Failures |
 
-**Decision:** _pending_
+**Actual Results:**
+
+| Criterion | GO | Actual | Assessment |
+|---|---|---|---|
+| Solve | ≥ 92 | **94** (102 model_optimal) | **GO** ✅ |
+| Match | ≥ 52 | **49** | CONDITIONAL GO (missed by 3) |
+| path_syntax_error | ≤ 18 | **12** | **GO** ✅ |
+| Tests | All pass | **4400 passed** | **GO** ✅ |
+
+**Decision:** CONDITIONAL GO — solve and path_syntax_error exceed targets,
+match missed by 3 (49 vs 52). The 8 newly solving models all have objective
+mismatches (53 mismatch total). Key improvements:
+- path_syntax_error: 21 → 12 (-9 models fixed)
+- model_optimal: 94 → 102 (+8 newly solving)
+- model_infeasible: 14 → 11 (-3 via permanent_exclusion)
+- translate: 140 → 137 (3 new timeouts from processing overhead)
+- Tests: 4364 → 4400 (+36 new tests)
 
 ---
 
