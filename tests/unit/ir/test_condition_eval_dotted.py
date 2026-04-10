@@ -51,9 +51,9 @@ class TestDottedKeyLookup:
             domain=("i", "j"),
             values={("a", "b"): 1.0},
         )
-        # This would match directly, but _try_dotted_key_lookup tries dotted
+        # _try_dotted_key_lookup tries partial dotting (range(2,2) is empty)
+        # and full dotting (("a.b",)), but neither matches ("a","b").
         result = _try_dotted_key_lookup(param, ("a", "b"))
-        # With only 2 indices, no dotting is possible (range(2,2) is empty)
         assert result is None
 
     def test_full_dotted_string(self):
