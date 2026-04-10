@@ -340,7 +340,7 @@ def _extract_all_conditioned_guard(
     return combined
 
 
-def _remap_condition_to_domain(cond: Expr, var_domain: tuple[str, ...], model_ir: ModelIR) -> Expr:
+def _remap_condition_to_domain(cond: Expr, var_domain: tuple[str, ...]) -> Expr:
     """Remap condition indices to match the variable's domain.
 
     Issue #1062: Gradient conditions may use equation-context indices
@@ -352,9 +352,9 @@ def _remap_condition_to_domain(cond: Expr, var_domain: tuple[str, ...], model_ir
         return cond
 
     new_indices: list[Expr] = []
-    domain_set = set(var_domain)
+    domain_lower = {d.lower() for d in var_domain}
     for pos, idx in enumerate(cond.indices):
-        if isinstance(idx, SymbolRef) and idx.name not in domain_set:
+        if isinstance(idx, SymbolRef) and idx.name.lower() not in domain_lower:
             # This index is from the equation context, not the variable domain.
             # Replace with the variable domain index at this position.
             if pos < len(var_domain):
@@ -1023,9 +1023,7 @@ def build_stationarity_equations(
                     # (e.g., e(n,i)) that don't match the variable domain
                     # (e.g., (n,n)). Replace any non-domain indices with the
                     # variable's domain indices at the corresponding position.
-                    access_cond = _remap_condition_to_domain(
-                        access_cond, var_def.domain, kkt.model_ir
-                    )
+                    access_cond = _remap_condition_to_domain(access_cond, var_def.domain)
 
             # Issue #1147: For MCP compatibility, don't put the access condition
             # on the equation head — GAMS MCP requires equation and variable to

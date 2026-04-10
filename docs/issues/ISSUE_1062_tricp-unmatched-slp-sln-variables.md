@@ -107,7 +107,7 @@ condition indices to the variable's domain. `SetMembershipTest(e, (n, i))` →
 from 760 to 108.
 
 ### Remaining: 108 unmatched variables
-The 108 remaining unmatched variables are EDGE instances of `slp`/`slp`
+The 108 remaining unmatched variables are EDGE instances of `slp`/`sln`
 where the stationarity equation `stat_slp(n,n)` is valid but doesn't
 reference variable `slp`. This is because `slp` has derivative = 1 in
 `eq1` (linear coefficient), so the stationarity reduces to
