@@ -258,18 +258,23 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 | Criterion | GO | Actual | Assessment |
 |---|---|---|---|
-| Solve | ≥ 92 | **94** (102 model_optimal) | **GO** ✅ |
-| Match | ≥ 52 | **49** | CONDITIONAL GO (missed by 3) |
+| Solve (PATH succeeds) | ≥ 92 | **94** | **GO** ✅ |
+| Match (obj matches NLP) | ≥ 52 | **49** | NO-GO (missed by 3) |
 | path_syntax_error | ≤ 18 | **12** | **GO** ✅ |
 | Tests | All pass | **4400 passed** | **GO** ✅ |
 
-**Decision:** CONDITIONAL GO — solve and path_syntax_error exceed targets,
-match missed by 3 (49 vs 52). The 8 newly solving models all have objective
-mismatches (53 mismatch total). Key improvements:
-- path_syntax_error: 21 → 12 (-9 models fixed)
+_Note: 102 models reach `model_optimal` (PATH solves), but only 94 count
+as "solve success" per the pipeline metric (excluding license-limited).
+Match counts only models where MCP and NLP objectives agree._
+
+**Decision:** CONDITIONAL GO — solve and path_syntax_error exceed GO targets.
+Match is NO-GO (49 < 50), but the gap is small and the 8 newly solving models
+all have objective mismatches that need derivative/alias investigation. Key
+improvements from Sprint 24:
+- path_syntax_error: 21 → 12 (-9 models)
 - model_optimal: 94 → 102 (+8 newly solving)
 - model_infeasible: 14 → 11 (-3 via permanent_exclusion)
-- translate: 140 → 137 (3 new timeouts from processing overhead)
+- translate: 140/147 → 137/147 (3 new timeouts from processing overhead)
 - Tests: 4364 → 4400 (+36 new tests)
 
 ---
