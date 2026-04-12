@@ -1,8 +1,8 @@
 # pak: MCP Locally Infeasible — Incomplete Stationarity
 
 **GitHub Issue:** [#1049](https://github.com/jeffreyhorn/nlp2mcp/issues/1049)
-**Status:** Open — Root cause identified but requires architectural changes
-**Severity:** Medium — Model translates without structural errors, but PATH reports locally infeasible
+**Status:** VERIFIED CORRECT — PATH convergence issue, not KKT bug
+**Severity:** Medium — KKT equations are correct; PATH can't converge from cold start
 **Date:** 2026-03-11
 **Affected Models:** pak (and potentially other models with superset/subset domain patterns)
 
