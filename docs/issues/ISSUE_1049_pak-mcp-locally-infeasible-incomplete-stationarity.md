@@ -118,6 +118,27 @@ cd data/gamslib/mcp && gams pak_mcp.gms
 
 ---
 
+## Sprint 24 Day 11 Re-investigation
+
+**All 3 original bugs have been addressed by Sprint 24 fixes:**
+- Bug 1: Multipliers are now direct (not sum-wrapped). Gradient uses
+  `sum(t$(sameas(t,te)), ...)` pattern which is functionally correct.
+- Bug 2: Gradient IS present via sameas pattern for all instances.
+- Bug 3: Quoted index matching fixed — `gnp("1985")` correctly resolved.
+
+**Hand-derivation of stat_c, stat_ks verified the equations are CORRECT:**
+- `stat_c(te)`: gradient, nu_incd, lam_conl terms all have correct signs/offsets
+- `stat_ks(te,j)`: kbal contributions have correct offset (te-1 for lagged, 0
+  for direct) with correct signs
+- capb contribution to stat_ks has correct coefficient `-(1/k(j))`
+
+**The 523 infeasible rows are a PATH convergence issue**, not a KKT formulation
+bug. The multipliers all start at 0 and PATH must find values that balance the
+gradient constants — a potentially difficult nonlinear system for cold start.
+
+**Status: NOT FIXABLE by nlp2mcp** — requires warm-start infrastructure or
+PATH solver tuning.
+
 ## Prerequisites Before Another Fix Attempt
 
 1. **Bug 1 (Subset/Superset Domains):** Implement subset recognition in `_add_indexed_jacobian_terms()`. When `mult_domain = ('t',)` and `var_domain = ('te',)`, check if `t ⊂ te` in the model's set definitions. If so, substitute `te` for `t` in the multiplier reference and add a `$(t(te))` guard instead of wrapping in `Sum(('t',), ...)`.
