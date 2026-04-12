@@ -817,7 +817,7 @@ def run_pipeline(
                     if stats["solve_errors"]:
                         stats["solve_errors"].pop()
                     model["mcp_solve"]["presolve_required"] = True
-                    model["mcp_solve"]["mcp_file"] = str(presolve_path)
+                    model["mcp_solve"]["mcp_file_used"] = str(presolve_path)
                     model["mcp_solve"]["outcome_category"] = (
                         "model_optimal_presolve"
                     )

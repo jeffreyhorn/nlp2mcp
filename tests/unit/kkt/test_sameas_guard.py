@@ -426,6 +426,11 @@ class TestIndexedConstraintSameasGuard:
         # should only restrict the j-dimension to 'traded' via sameas(j,'traded').
         assert isinstance(guard, Call)
         assert guard.func == "sameas"
+        assert len(guard.args) == 2
+        assert guard.args[0].__class__.__name__ == "SymbolRef"
+        assert getattr(guard.args[0], "name", None) == "j"
+        assert guard.args[1].__class__.__name__ == "SymbolRef"
+        assert getattr(guard.args[1], "name", None) == _quote_sameas_uel("traded")
 
     def test_full_coverage_indexed_no_guard(self):
         """When all variable instances appear in entries, no guard is needed."""

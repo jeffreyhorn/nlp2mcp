@@ -416,8 +416,11 @@ class TestFullGAMSEmission:
         assert "$include" in output
         assert "test_model.gms" in output
 
-        # Dual transfer lines should be present
-        assert "nu_objdef.l" in output or ".m" in output
+        # Dual transfer line should be present (bound multiplier for x with lo=0).
+        # This minimal model has no equality multipliers (objdef is the
+        # objective-defining equation paired directly with obj), so the
+        # transfer is the lower-bound multiplier piL_x.
+        assert "piL_x.l$(abs(x.l - x.lo) < 1e-6 and x.m > 0) = x.m;" in output
 
         # Pre-solve should appear before the solve statement
         onmulti_pos = output.index("$onMultiR")
