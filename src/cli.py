@@ -120,6 +120,12 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default="text",
     help="Diagnostic output format: text (default) or json (schema v1.0.0)",
 )
+@click.option(
+    "--nlp-presolve",
+    is_flag=True,
+    default=False,
+    help="Add NLP pre-solve step to warm-start MCP dual variables (helps non-convex models)",
+)
 def main(
     input_file,
     output,
@@ -137,6 +143,7 @@ def main(
     skip_convexity_check,
     diagnostics,
     output_format,
+    nlp_presolve,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -465,13 +472,23 @@ def main(
         if diag_report:
             with DiagnosticContext(diag_report, Stage.MCP_GENERATION) as ctx:
                 gams_code = emit_gams_mcp(
-                    kkt, model_name=model_name, add_comments=add_comments, config=config
+                    kkt,
+                    model_name=model_name,
+                    add_comments=add_comments,
+                    config=config,
+                    nlp_presolve=nlp_presolve,
+                    source_file=input_file if nlp_presolve else None,
                 )
                 ctx.add_detail("output_lines", gams_code.count("\n") + 1)
                 ctx.add_detail("output_bytes", len(gams_code.encode("utf-8")))
         else:
             gams_code = emit_gams_mcp(
-                kkt, model_name=model_name, add_comments=add_comments, config=config
+                kkt,
+                model_name=model_name,
+                add_comments=add_comments,
+                config=config,
+                nlp_presolve=nlp_presolve,
+                source_file=input_file if nlp_presolve else None,
             )
 
         # Step 7: Write output
