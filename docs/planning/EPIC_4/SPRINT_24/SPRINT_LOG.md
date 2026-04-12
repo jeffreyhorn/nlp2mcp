@@ -242,7 +242,7 @@ The fix requires either (a) summing over ALL constraint instances instead of usi
 
 | Task | Status |
 |---|---|
-| Checkpoint 2 evaluation | ✅ CONDITIONAL GO — solve 94 (GO), match 49 (missed by 3), pse 12 (GO) |
+| Checkpoint 2 evaluation | ✅ CONDITIONAL GO — solve 94 (GO), match 49 (missed GO by 3), path_syntax_error 12 (GO) |
 | Fix bearing/pak/rocket | ⏭️ Deferred — all MODEL STATUS 5 with deep KKT issues (3-6h each) |
 
 #### Checkpoint 2 (Day 10)
