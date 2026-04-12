@@ -149,6 +149,9 @@ nlp2mcp input.gms -o output.gms --no-comments
 
 # Show excluded duplicate bounds
 nlp2mcp input.gms -o output.gms --show-excluded
+
+# NLP pre-solve for non-convex models (warm-start MCP duals)
+nlp2mcp input.gms -o output.gms --nlp-presolve
 ```
 
 **CLI Options:**
@@ -164,6 +167,7 @@ nlp2mcp input.gms -o output.gms --show-excluded
 - `--simplification {none,basic,advanced,aggressive}`: Expression simplification mode (default: advanced)
 - `--smooth-abs`: Enable smooth abs() approximation via sqrt(x²+ε)
 - `--smooth-abs-epsilon FLOAT`: Epsilon for abs smoothing (default: 1e-6)
+- `--nlp-presolve`: Solve the original NLP first to warm-start MCP dual variables (helps non-convex models converge)
 - `--help`: Show help message
 
 ### Expression Simplification
