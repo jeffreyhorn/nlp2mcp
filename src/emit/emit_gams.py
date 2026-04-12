@@ -889,7 +889,6 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
-    model_name: str,
     add_comments: bool,
     source_file: str | None = None,
 ) -> None:
@@ -931,17 +930,20 @@ def _emit_nlp_presolve(
     # $onMultiR allows redefinition of symbols already declared in the MCP.
     from pathlib import Path
 
-    abs_path = str(Path(source_file).resolve())
+    abs_path = Path(source_file).resolve().as_posix()
+    escaped_include_path = abs_path.replace('"', '""')
     sections.append("$onMultiR")
-    sections.append(f"$include {abs_path}")
+    sections.append(f'$include "{escaped_include_path}"')
     sections.append("$offMulti")
     sections.append("")
 
     if add_comments:
         sections.append("* Transfer NLP duals to MCP multiplier initialization")
 
-    # Transfer duals: equality multipliers use original eq name,
-    # inequality multipliers use comp_<name> equation marginal
+    # Transfer duals from the original NLP equations: equality multipliers
+    # use the original equation marginal directly, while inequality
+    # multipliers use the original inequality equation marginal with abs()
+    # so the initialized MCP multiplier is nonnegative.
     for eq_name in nlp_eqs:
         eq_def = kkt.model_ir.equations.get(eq_name)
         domain_str = ""
@@ -2420,7 +2422,7 @@ def emit_gams_mcp(
     # first, then transfers the primal levels and equation marginals to
     # the MCP multiplier variables.
     if nlp_presolve:
-        _emit_nlp_presolve(sections, kkt, model_name, add_comments, source_file)
+        _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
     # Solve statement
     if add_comments:

@@ -389,3 +389,61 @@ class TestBuildSameasGuardForInstances:
         model_ir = ModelIR()
         guard = _build_sameas_guard_for_instances((), [(0, ())], [(0, ()), (1, ())], model_ir)
         assert guard is None
+
+
+class TestIndexedConstraintSameasGuard:
+    """Tests for sameas guard in the indexed-constraint path (Issue #1049).
+
+    When an indexed constraint references a variable with a fixed literal index
+    in a dimension the variable has free (e.g., tgap(t) references v(t,'traded')
+    where v has domain (t,j)), the multiplier term in stat_v(t,j) must be
+    guarded with $(sameas(j,'traded')).
+    """
+
+    def test_fixed_literal_index_produces_sameas(self):
+        """Variable v(t,j) with constraint referencing v(t,'traded') → sameas(j,'traded')."""
+        kkt = _make_kkt()
+        # Variable v(t,j) has instances: (t1,traded), (t1,domestic), (t2,traded), (t2,domestic)
+        instances = [
+            (10, ("t1", "traded")),
+            (11, ("t1", "domestic")),
+            (12, ("t2", "traded")),
+            (13, ("t2", "domestic")),
+        ]
+        # Indexed constraint tgap(t) only references v(t,'traded'):
+        # group_entries for t1 → col 10, t2 → col 12
+        entries = [(0, 10), (1, 12)]
+        kkt.gradient.index_mapping.col_to_var = {
+            10: ("v", ("t1", "traded")),
+            11: ("v", ("t1", "domestic")),
+            12: ("v", ("t2", "traded")),
+            13: ("v", ("t2", "domestic")),
+        }
+
+        guard = _build_sameas_guard(("t", "j"), instances, entries, kkt)
+        assert guard is not None
+        # The t-dimension is fully covered (t1, t2 both present), so the guard
+        # should only restrict the j-dimension to 'traded' via sameas(j,'traded').
+        assert isinstance(guard, Call)
+        assert guard.func == "sameas"
+
+    def test_full_coverage_indexed_no_guard(self):
+        """When all variable instances appear in entries, no guard is needed."""
+        kkt = _make_kkt()
+        instances = [
+            (10, ("t1", "traded")),
+            (11, ("t1", "domestic")),
+            (12, ("t2", "traded")),
+            (13, ("t2", "domestic")),
+        ]
+        # All four instances covered
+        entries = [(0, 10), (1, 11), (2, 12), (3, 13)]
+        kkt.gradient.index_mapping.col_to_var = {
+            10: ("v", ("t1", "traded")),
+            11: ("v", ("t1", "domestic")),
+            12: ("v", ("t2", "traded")),
+            13: ("v", ("t2", "domestic")),
+        }
+
+        guard = _build_sameas_guard(("t", "j"), instances, entries, kkt)
+        assert guard is None

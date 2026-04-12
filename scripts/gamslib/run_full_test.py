@@ -794,10 +794,19 @@ def run_pipeline(
             )
 
             if retry_translate["status"] == "success":
+                # Save original mcp_solve before retry overwrites it
+                original_mcp_solve = model["mcp_solve"].copy()
+
                 # Re-solve with pre-solve MCP
                 retry_result = run_solve_stage(
                     model, presolve_path, args, stats
                 )
+
+                # Remove retry timing entry — we keep only the
+                # cold-start time so counts stay consistent.
+                if stats["solve_times"] and stats["solve_times"][-1][0] == model_id:
+                    stats["solve_times"].pop()
+
                 if retry_result["status"] == "success":
                     stats["presolve_retry_success"] += 1
                     # Correct the double-count: the initial fail already
@@ -808,6 +817,7 @@ def run_pipeline(
                     if stats["solve_errors"]:
                         stats["solve_errors"].pop()
                     model["mcp_solve"]["presolve_required"] = True
+                    model["mcp_solve"]["mcp_file"] = str(presolve_path)
                     model["mcp_solve"]["outcome_category"] = (
                         "model_optimal_presolve"
                     )
@@ -820,6 +830,10 @@ def run_pipeline(
                             f"objective={obj_str}"
                         )
                 else:
+                    # Retry failed — restore original mcp_solve so the
+                    # database records the initial cold-start failure,
+                    # not the retry failure.
+                    model["mcp_solve"] = original_mcp_solve
                     # Undo the extra failure count from the retry solve
                     stats["solve_failure"] -= 1
                     if stats["solve_errors"]:

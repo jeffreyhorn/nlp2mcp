@@ -7,7 +7,6 @@ to MCP multiplier variables.
 
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -155,19 +154,16 @@ class TestNLPPresolveOutput:
         """Pre-solve block includes the original source file."""
         assert "$include" in presolve_output
         # The include should reference an absolute path
-        include_lines = [
-            line for line in presolve_output.splitlines() if "$include" in line
-        ]
+        include_lines = [line for line in presolve_output.splitlines() if "$include" in line]
         assert len(include_lines) >= 1
-        # The path should be absolute
-        include_path = include_lines[0].split("$include")[1].strip()
+        # The path should be absolute and quoted
+        include_raw = include_lines[0].split("$include")[1].strip()
+        include_path = include_raw.strip('"')
         assert Path(include_path).is_absolute() or include_path.startswith("/")
 
     def test_include_references_source_file(self, presolve_output):
         """$include references the original .gms source file."""
-        include_lines = [
-            line for line in presolve_output.splitlines() if "$include" in line
-        ]
+        include_lines = [line for line in presolve_output.splitlines() if "$include" in line]
         # Should reference the simple_nlp.gms file
         assert any("simple_nlp.gms" in line for line in include_lines)
 
@@ -194,7 +190,11 @@ class TestNLPPresolveOutput:
         """Pre-solve block transfers variable marginals to bound multipliers (if any)."""
         # The simple_nlp model may not have bound multipliers.
         # Just verify the section header is present.
-        assert "bound multipliers" in presolve_output.lower() or "piL_" in presolve_output or "Transfer variable" in presolve_output
+        assert (
+            "bound multipliers" in presolve_output.lower()
+            or "piL_" in presolve_output
+            or "Transfer variable" in presolve_output
+        )
 
 
 @pytest.mark.integration
@@ -427,9 +427,7 @@ class TestNLPPresolveEmitFunction:
         J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=idx)
         kkt = assemble_kkt_system(model, grad, J_eq, J_ineq)
 
-        output = emit_gams_mcp(
-            kkt, nlp_presolve=True, source_file="examples/simple_nlp.gms"
-        )
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file="examples/simple_nlp.gms")
         assert "$onMultiR" in output
         assert "$include" in output
         assert "simple_nlp.gms" in output
@@ -582,9 +580,7 @@ class TestNLPPresolveGAMSSolve:
         if shutil.which("gams") is None:
             pytest.skip("GAMS not available")
 
-    def test_bearing_solves_with_presolve(
-        self, gamslib_dir, gams_available, tmp_path
-    ):
+    def test_bearing_solves_with_presolve(self, gamslib_dir, gams_available, tmp_path):
         """bearing solves to MODEL STATUS 1 with --nlp-presolve."""
         input_file = gamslib_dir / "bearing.gms"
         if not input_file.exists():
@@ -613,6 +609,11 @@ class TestNLPPresolveGAMSSolve:
             text=True,
             cwd=str(tmp_path),
         )
+        assert gams_result.returncode == 0, (
+            "GAMS solve failed.\n"
+            f"stdout:\n{gams_result.stdout}\n"
+            f"stderr:\n{gams_result.stderr}"
+        )
 
         # Check listing file
         lst_file = output_file.with_suffix(".lst")
@@ -620,19 +621,15 @@ class TestNLPPresolveGAMSSolve:
         lst_content = lst_file.read_text()
 
         # Should have MODEL STATUS 1 Optimal for the MCP solve
-        status_lines = [
-            line
-            for line in lst_content.splitlines()
-            if "MODEL STATUS" in line
-        ]
-        assert len(status_lines) >= 2, (
-            f"Expected at least 2 MODEL STATUS lines (NLP + MCP), got {len(status_lines)}"
-        )
+        status_lines = [line for line in lst_content.splitlines() if "MODEL STATUS" in line]
+        assert (
+            len(status_lines) >= 2
+        ), f"Expected at least 2 MODEL STATUS lines (NLP + MCP), got {len(status_lines)}"
         # Last status should be the MCP solve
         last_status = status_lines[-1]
-        assert "1 Optimal" in last_status, (
-            f"MCP should be MODEL STATUS 1 Optimal, got: {last_status}"
-        )
+        assert (
+            "1 Optimal" in last_status
+        ), f"MCP should be MODEL STATUS 1 Optimal, got: {last_status}"
 
         # Check objective value matches NLP
         obj_lines = [
@@ -642,13 +639,9 @@ class TestNLPPresolveGAMSSolve:
         ]
         assert len(obj_lines) >= 1
         obj_val = float(obj_lines[-1].split("=")[-1].strip())
-        assert abs(obj_val - 19517.332) < 1.0, (
-            f"Objective should be ~19517.332, got {obj_val}"
-        )
+        assert abs(obj_val - 19517.332) < 1.0, f"Objective should be ~19517.332, got {obj_val}"
 
-    def test_bearing_fails_without_presolve(
-        self, gamslib_dir, gams_available, tmp_path
-    ):
+    def test_bearing_fails_without_presolve(self, gamslib_dir, gams_available, tmp_path):
         """bearing without --nlp-presolve gives MODEL STATUS 5 (Locally Infeasible)."""
         input_file = gamslib_dir / "bearing.gms"
         if not input_file.exists():
@@ -682,11 +675,7 @@ class TestNLPPresolveGAMSSolve:
         lst_content = lst_file.read_text()
 
         # Should be MODEL STATUS 5 (Locally Infeasible) without pre-solve
-        status_lines = [
-            line
-            for line in lst_content.splitlines()
-            if "MODEL STATUS" in line
-        ]
-        assert any("5 Locally Infeasible" in line for line in status_lines), (
-            f"Expected Locally Infeasible without pre-solve, got: {status_lines}"
-        )
+        status_lines = [line for line in lst_content.splitlines() if "MODEL STATUS" in line]
+        assert any(
+            "5 Locally Infeasible" in line for line in status_lines
+        ), f"Expected Locally Infeasible without pre-solve, got: {status_lines}"

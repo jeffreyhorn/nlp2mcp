@@ -189,3 +189,38 @@ class TestCLI:
         content = output_file.read_text()
         # Should have variable kind preservation
         assert "Variables" in content or "Positive Variables" in content
+
+    def test_cli_nlp_presolve_flag(self, tmp_path):
+        """Test --nlp-presolve flag emits pre-solve include and dual transfer lines."""
+        runner = CliRunner()
+        output_file = tmp_path / "output.gms"
+
+        result = runner.invoke(
+            main,
+            [
+                "examples/simple_nlp.gms",
+                "-o",
+                str(output_file),
+                "--nlp-presolve",
+            ],
+        )
+
+        assert result.exit_code == 0, f"CLI failed: {result.output}"
+        content = output_file.read_text()
+
+        # Pre-solve block should include $onMultiR, $include, and $offMulti
+        assert "$onMultiR" in content
+        assert "$include" in content
+        assert "$offMulti" in content
+
+        # Include path should be quoted
+        include_lines = [line for line in content.splitlines() if "$include" in line]
+        assert any('"' in line for line in include_lines), "Expected quoted $include path"
+
+    def test_cli_help_lists_nlp_presolve(self):
+        """Test --help lists the --nlp-presolve option."""
+        runner = CliRunner()
+        result = runner.invoke(main, ["--help"])
+
+        assert result.exit_code == 0
+        assert "--nlp-presolve" in result.output

@@ -379,3 +379,79 @@ class TestFullGAMSEmission:
         # Verify correct ordering: set i -> Alias j -> set ij
         assert pos_set_i < pos_alias_j, "Set i must come before Alias j"
         assert pos_alias_j < pos_set_ij, "Alias j must come before set ij"
+
+    def test_emit_nlp_presolve_block(self, manual_index_mapping):
+        """Test that nlp_presolve=True emits the pre-solve include/transfer block."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Binary("^", VarRef("x", ()), Const(2.0))),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=(), lo=0.0)
+
+        model.equalities = ["objdef"]
+        model.model_equations = ["objdef"]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        gradient.set_derivative(1, Binary("*", Const(2.0), VarRef("x", ())))
+
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file="/tmp/test_model.gms")
+
+        # Pre-solve block should be present
+        assert "$onMultiR" in output
+        assert "$offMulti" in output
+        assert "$include" in output
+        assert "test_model.gms" in output
+
+        # Dual transfer lines should be present
+        assert "nu_objdef.l" in output or ".m" in output
+
+        # Pre-solve should appear before the solve statement
+        onmulti_pos = output.index("$onMultiR")
+        solve_pos = output.index("Solve mcp_model using MCP")
+        assert onmulti_pos < solve_pos
+
+    def test_emit_no_presolve_by_default(self, manual_index_mapping):
+        """Test that nlp_presolve=False (default) does not emit pre-solve block."""
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+
+        model.equations["objdef"] = EquationDef(
+            name="objdef",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(VarRef("obj", ()), Binary("^", VarRef("x", ()), Const(2.0))),
+        )
+
+        model.variables["obj"] = VariableDef(name="obj", domain=())
+        model.variables["x"] = VariableDef(name="x", domain=(), lo=0.0)
+
+        model.equalities = ["objdef"]
+
+        index_mapping = manual_index_mapping([("obj", ()), ("x", ())])
+
+        gradient = GradientVector(num_cols=2, index_mapping=index_mapping)
+        gradient.set_derivative(1, Binary("*", Const(2.0), VarRef("x", ())))
+
+        J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+        J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=index_mapping)
+
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
+
+        output = emit_gams_mcp(kkt)
+
+        assert "$onMultiR" not in output
+        assert "$include" not in output
