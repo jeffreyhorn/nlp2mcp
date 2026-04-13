@@ -594,6 +594,9 @@ def main(
             else:
                 click.echo(diag_report.to_text(), err=True)
 
+    except click.ClickException:
+        raise
+
     except FileNotFoundError as e:
         click.echo(f"Error: File not found - {e}", err=True)
         sys.exit(1)

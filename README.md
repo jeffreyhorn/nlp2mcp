@@ -168,7 +168,7 @@ nlp2mcp input.gms -o output.gms --nlp-presolve
 - `--smooth-abs`: Enable smooth abs() approximation via sqrt(x²+ε)
 - `--smooth-abs-epsilon FLOAT`: Epsilon for abs smoothing (default: 1e-6)
 - `--nlp-presolve`: Solve the original NLP first to warm-start MCP dual variables (helps non-convex models converge)
-- `--check-convexity-numerical`: Run computational convexity test (requires `-o` and GAMS; compares cold-start vs warm-start objectives to detect non-convexity)
+- `--check-convexity-numerical`: Run computational convexity test (requires `-o`, GAMS, and a source checkout; compares cold-start vs warm-start objectives to detect non-convexity)
 - `--help`: Show help message
 
 ### Expression Simplification

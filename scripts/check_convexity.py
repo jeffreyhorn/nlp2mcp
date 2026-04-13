@@ -8,7 +8,7 @@ provably non-convex.
 
 Usage:
     python scripts/check_convexity.py examples/simple_nlp.gms
-    python scripts/check_convexity.py data/gamslib/raw/bearing.gms --timeout 120
+    python scripts/check_convexity.py examples/simple_nlp.gms --timeout 120
 """
 
 from __future__ import annotations

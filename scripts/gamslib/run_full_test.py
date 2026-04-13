@@ -729,7 +729,9 @@ def _run_convexity_check(
     if cvx.is_nonconvex:
         stats["convexity_nonconvex"] = stats.get("convexity_nonconvex", 0) + 1
     else:
-        stats["convexity_consistent"] = stats.get("convexity_consistent", 0) + 1
+        stats["convexity_not_proven_nonconvex"] = (
+            stats.get("convexity_not_proven_nonconvex", 0) + 1
+        )
 
     if args.verbose:
         logger.info(f"    [CONVEXITY] {cvx.conclusion}")
