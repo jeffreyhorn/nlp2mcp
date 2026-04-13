@@ -12,7 +12,18 @@ pytestmark = pytest.mark.unit
 
 
 def _ok(model_status: int, objective_value: float | None = None) -> dict:
-    """Build a successful solve result dict."""
+    """Build a solve result dict matching the real solver output shape.
+
+    For model_status 4/5 (infeasible), mirrors solve_mcp which returns
+    status="failure" with solver_status=1 (solver completed normally).
+    """
+    if model_status in {4, 5}:
+        return {
+            "status": "failure",
+            "solver_status": 1,
+            "model_status": model_status,
+            "objective_value": None,
+        }
     return {
         "status": "success",
         "solver_status": 1,
@@ -22,7 +33,7 @@ def _ok(model_status: int, objective_value: float | None = None) -> dict:
 
 
 def _fail(model_status: int | None = None, **extra) -> dict:
-    """Build a failed/missing solve result dict."""
+    """Build a failed/missing solve result dict (abnormal termination)."""
     return {
         "status": "failure",
         "solver_status": None,

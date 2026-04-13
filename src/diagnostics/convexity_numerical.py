@@ -101,19 +101,18 @@ def _compare_results(
     - Optimal: model_status in (1, 2)  — Optimal or Locally Optimal
     - Infeasible: model_status in (4, 5) — Infeasible or Locally Infeasible
 
-    A solve is only trusted for these classifications when it also has a
-    successful overall solve outcome (status="success" and solver_status=1
-    with no reported error).
+    Trust levels:
+    - Optimal (proof path): requires status="success", solver_status=1,
+      and no error.  This is strict to prevent false non-convexity proofs.
+    - Infeasible: requires solver_status=1 (solver completed normally) and
+      model_status in {4,5}.  The overall status may be "failure" since
+      solve_mcp reports infeasible models as failures.
     """
     _OPTIMAL = {1, 2}
     _INFEASIBLE = {4, 5}
 
-    def _solve_succeeded(result: dict[str, Any]) -> bool:
-        """Return True only for results that indicate a successful solve.
-
-        Requires both status="success" and solver_status=1 with no error.
-        Missing fields are treated as failure (conservative).
-        """
+    def _solve_optimal(result: dict[str, Any]) -> bool:
+        """Strict check: trust as optimal only for fully successful solves."""
         if result.get("status") != "success":
             return False
         if result.get("solver_status") != 1:
@@ -122,18 +121,19 @@ def _compare_results(
             return False
         return True
 
+    def _solver_completed(result: dict[str, Any]) -> bool:
+        """Solver ran to completion (solver_status=1), even if model is infeasible."""
+        return result.get("solver_status") == 1
+
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")
     obj_cold = cold_result.get("objective_value")
     obj_warm = warm_result.get("objective_value")
 
-    cold_success = _solve_succeeded(cold_result)
-    warm_success = _solve_succeeded(warm_result)
-
-    cold_optimal = cold_success and status_cold in _OPTIMAL
-    warm_optimal = warm_success and status_warm in _OPTIMAL
-    cold_infeasible = cold_success and status_cold in _INFEASIBLE
-    warm_infeasible = warm_success and status_warm in _INFEASIBLE
+    cold_optimal = _solve_optimal(cold_result) and status_cold in _OPTIMAL
+    warm_optimal = _solve_optimal(warm_result) and status_warm in _OPTIMAL
+    cold_infeasible = _solver_completed(cold_result) and status_cold in _INFEASIBLE
+    warm_infeasible = _solver_completed(warm_result) and status_warm in _INFEASIBLE
 
     # Both optimal with objectives available
     if cold_optimal and warm_optimal and obj_cold is not None and obj_warm is not None:
