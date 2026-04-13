@@ -547,10 +547,11 @@ def main(
                     nlp_presolve=True,
                     source_file=input_file,
                 )
-                warm_path.write_text(warm_code)
+                warm_path.write_text(warm_code, encoding="utf-8")
 
-                # If --nlp-presolve was set, the output IS the warm file;
-                # we need a cold version too.
+                # Generate the warm-start MCP used by the numerical convexity check.
+                # If the main output already used --nlp-presolve, we generate a
+                # temporary cold-start MCP below for the cold/warm comparison.
                 if nlp_presolve:
                     cold_path_tmp = Path(tmpdir) / "cold_mcp.gms"
                     cold_code = emit_gams_mcp(
@@ -560,7 +561,7 @@ def main(
                         config=config,
                         nlp_presolve=False,
                     )
-                    cold_path_tmp.write_text(cold_code)
+                    cold_path_tmp.write_text(cold_code, encoding="utf-8")
                     cvx_result = _run_check(cold_path_tmp, warm_path)
                 else:
                     cvx_result = _run_check(cold_path, warm_path)

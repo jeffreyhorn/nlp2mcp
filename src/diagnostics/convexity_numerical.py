@@ -145,7 +145,7 @@ def _compare_results(
                 abs_diff=abs_diff,
                 rel_diff=rel_diff,
                 conclusion=(
-                    f"Consistent: same KKT point "
+                    f"Consistent objectives "
                     f"(cold={obj_cold:.6g}, warm={obj_warm:.6g}) "
                     f"— convexity not disproven"
                 ),

@@ -2,8 +2,9 @@
 """Computational convexity test via dual KKT comparison.
 
 Generates two MCP files (cold-start and warm-start), solves both with
-PATH, and compares objective values.  If both reach STATUS 1 with
-different objectives, the problem is provably non-convex.
+PATH, and compares objective values.  If both reach STATUS 1 or 2
+(Optimal/Locally Optimal) with different objectives, the problem is
+provably non-convex.
 
 Usage:
     python scripts/check_convexity.py examples/simple_nlp.gms
@@ -95,7 +96,7 @@ def main() -> int:
             import shutil as sh
 
             sh.rmtree(tmpdir, ignore_errors=True)
-        else:
+        elif not args.quiet:
             print(f"\nGenerated files kept in: {tmpdir}")
 
 
