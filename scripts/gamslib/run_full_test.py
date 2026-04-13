@@ -670,6 +670,83 @@ def _determine_stages(args: argparse.Namespace) -> list[str]:
     return stages
 
 
+def _run_convexity_check(
+    model: dict[str, Any],
+    model_path: Path,
+    mcp_path: Path,
+    cold_result: dict[str, Any],
+    args: argparse.Namespace,
+    stats: dict[str, Any],
+    existing_warm_result: dict[str, Any] | None = None,
+) -> None:
+    """Run computational convexity check after the cold-start solve attempt.
+
+    Generates a warm-start MCP (with --nlp-presolve), solves it, and
+    compares the preserved cold-start result with the warm-start result.
+    The cold-start result may represent either a successful or failed solve;
+    differing KKT points/objectives can still provide evidence of non-convexity.
+
+    If ``existing_warm_result`` is provided (e.g., from a presolve retry
+    that already solved the warm-start MCP), it is reused to avoid a
+    redundant GAMS/PATH call.
+    """
+    from src.diagnostics.convexity_numerical import check_convexity_from_results
+
+    model_id = model.get("model_id", "unknown")
+
+    if args.verbose:
+        logger.info("    [CONVEXITY] Running computational convexity check...")
+
+    # Generate warm-start MCP
+    presolve_path = mcp_path.with_name(f"{model_id}_mcp_presolve.gms")
+
+    # Re-use existing presolve file if the model already needed it
+    if not presolve_path.exists():
+        translate_func = get_translate_function()
+        retry_translate = translate_func(
+            model_path, presolve_path, nlp_presolve=True
+        )
+        if retry_translate["status"] != "success":
+            if args.verbose:
+                logger.info("    [CONVEXITY] Warm-start translation failed, skipping")
+            return
+
+    # Reuse existing warm-start result if available (e.g., from presolve retry)
+    if existing_warm_result is not None:
+        warm_result = existing_warm_result
+        if args.verbose:
+            logger.info("    [CONVEXITY] Reusing existing warm-start solve result")
+    else:
+        solve_func = get_solve_function()
+        warm_result = solve_func(presolve_path, timeout=60)
+
+    # Compare
+    cvx = check_convexity_from_results(cold_result, warm_result)
+
+    # Record in model database
+    model["convexity_numerical"] = {
+        "obj_cold": cvx.obj_cold,
+        "obj_warm": cvx.obj_warm,
+        "status_cold": cvx.status_cold,
+        "status_warm": cvx.status_warm,
+        "is_nonconvex": cvx.is_nonconvex,
+        "abs_diff": cvx.abs_diff,
+        "rel_diff": cvx.rel_diff,
+        "conclusion": cvx.conclusion,
+    }
+
+    # Update stats
+    if cvx.is_nonconvex:
+        stats["convexity_nonconvex"] = stats.get("convexity_nonconvex", 0) + 1
+    else:
+        stats["convexity_not_proven_nonconvex"] = (
+            stats.get("convexity_not_proven_nonconvex", 0) + 1
+        )
+
+    if args.verbose:
+        logger.info(f"    [CONVEXITY] {cvx.conclusion}")
+
+
 def run_pipeline(
     model: dict[str, Any],
     database: dict[str, Any],
@@ -771,6 +848,8 @@ def run_pipeline(
             return
 
         result = run_solve_stage(model, mcp_path, args, stats)
+        cold_result = result  # Preserve for convexity check before retry overwrites
+        warm_retry_result = None  # Set if presolve retry succeeds
 
         # Two-pass retry: if STATUS 5 (Locally Infeasible), re-translate
         # with --nlp-presolve and re-solve.  This warm-starts MCP dual
@@ -822,6 +901,7 @@ def run_pipeline(
                         "model_optimal_presolve"
                     )
                     result = retry_result
+                    warm_retry_result = retry_result
                     if args.verbose:
                         obj = retry_result.get("objective_value")
                         obj_str = f"{obj:.6g}" if obj is not None else "N/A"
@@ -851,6 +931,13 @@ def run_pipeline(
             if run_compare:
                 mark_cascade_not_tested(model, "solve", stats)
             return
+
+    # Stage 3b: Computational convexity check (optional)
+    if run_solve and getattr(args, "check_convexity", False):
+        _run_convexity_check(
+            model, model_path, mcp_path, cold_result, args, stats,
+            existing_warm_result=warm_retry_result,
+        )
 
     # Stage 4: Compare
     if run_compare:
@@ -1356,6 +1443,14 @@ def main() -> int:
         "--only-solve",
         action="store_true",
         help="Run only solve stage (requires translate success)",
+    )
+
+    # Features
+    feature_group = parser.add_argument_group("Features")
+    feature_group.add_argument(
+        "--check-convexity",
+        action="store_true",
+        help="Run computational convexity test after the cold-start solve attempt, including models with failed cold solves",
     )
 
     # Convenience

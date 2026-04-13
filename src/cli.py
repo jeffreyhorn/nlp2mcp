@@ -126,6 +126,12 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default=False,
     help="Add NLP pre-solve step to warm-start MCP dual variables (helps non-convex models)",
 )
+@click.option(
+    "--check-convexity-numerical",
+    is_flag=True,
+    default=False,
+    help="Run computational convexity test: solve cold-start and warm-start MCP, compare objectives",
+)
 def main(
     input_file,
     output,
@@ -144,6 +150,7 @@ def main(
     diagnostics,
     output_format,
     nlp_presolve,
+    check_convexity_numerical,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -181,6 +188,10 @@ def main(
         diag_report = create_report(Path(input_file).name)
 
     try:
+        # Validate option combinations early, before any work is done
+        if check_convexity_numerical and not output:
+            raise click.UsageError("--check-convexity-numerical requires -o OUTPUT")
+
         # Determine verbosity level (quiet overrides verbose)
         verbosity_level = 0 if quiet else verbose
 
@@ -494,7 +505,7 @@ def main(
         # Step 7: Write output
         if output:
             output_path = Path(output)
-            output_path.write_text(gams_code)
+            output_path.write_text(gams_code, encoding="utf-8")
             click.echo(f"✓ Generated MCP: {output}")
 
             if verbose >= 2:
@@ -506,6 +517,73 @@ def main(
         if verbose:
             click.echo("✓ Conversion complete")
 
+        # Step 8: Computational convexity check (optional)
+        if check_convexity_numerical:
+            import tempfile
+
+            from src.diagnostics.convexity_numerical import (
+                check_convexity_numerical as _run_check,
+            )
+
+            cold_path = Path(output)
+
+            # Generate the warm-start MCP used by the numerical convexity check.
+            # If the main output already used --nlp-presolve, we generate a
+            # temporary cold-start MCP below for the cold/warm comparison.
+            with tempfile.TemporaryDirectory(prefix="nlp2mcp_cvx_") as tmpdir:
+                warm_path = Path(tmpdir) / "warm_mcp.gms"
+                warm_code = emit_gams_mcp(
+                    kkt,
+                    model_name=model_name,
+                    add_comments=add_comments,
+                    config=config,
+                    nlp_presolve=True,
+                    source_file=input_file,
+                )
+                warm_path.write_text(warm_code, encoding="utf-8")
+
+                try:
+                    if nlp_presolve:
+                        cold_path_tmp = Path(tmpdir) / "cold_mcp.gms"
+                        cold_code = emit_gams_mcp(
+                            kkt,
+                            model_name=model_name,
+                            add_comments=add_comments,
+                            config=config,
+                            nlp_presolve=False,
+                        )
+                        cold_path_tmp.write_text(cold_code, encoding="utf-8")
+                        cvx_result = _run_check(cold_path_tmp, warm_path)
+                    else:
+                        cvx_result = _run_check(cold_path, warm_path)
+                except ImportError:
+                    click.echo(
+                        "Error: --check-convexity-numerical requires the MCP "
+                        "solve helper (scripts.gamslib.test_solve), which is "
+                        "only available from a source checkout.",
+                        err=True,
+                    )
+                    sys.exit(1)
+
+            if not quiet:
+                click.echo("")
+                click.echo("Computational Convexity Check:")
+                _s_cold = (
+                    f"STATUS {cvx_result.status_cold}"
+                    if cvx_result.status_cold is not None
+                    else "no solve"
+                )
+                _s_warm = (
+                    f"STATUS {cvx_result.status_warm}"
+                    if cvx_result.status_warm is not None
+                    else "no solve"
+                )
+                _o_cold = f"{cvx_result.obj_cold:.6g}" if cvx_result.obj_cold is not None else "N/A"
+                _o_warm = f"{cvx_result.obj_warm:.6g}" if cvx_result.obj_warm is not None else "N/A"
+                click.echo(f"  Cold-start MCP:  {_s_cold}, obj = {_o_cold}")
+                click.echo(f"  Warm-start MCP:  {_s_warm}, obj = {_o_warm}")
+                click.echo(f"  {cvx_result.conclusion}")
+
         # Output diagnostics report if requested
         if diag_report:
             import json
@@ -514,6 +592,9 @@ def main(
                 click.echo(json.dumps(diag_report.to_json_v1(), indent=2), err=True)
             else:
                 click.echo(diag_report.to_text(), err=True)
+
+    except click.ClickException:
+        raise
 
     except FileNotFoundError as e:
         click.echo(f"Error: File not found - {e}", err=True)

@@ -159,6 +159,10 @@
         "multi_solve": {
           "type": "boolean",
           "description": "True if the original model contains multiple solve statements or loop-based solves, making NLP reference objective incomparable with MCP"
+        },
+        "convexity_numerical": {
+          "$ref": "#/definitions/convexity_numerical_result",
+          "description": "Results from computational convexity test (dual KKT comparison)"
         }
       }
     },
@@ -223,6 +227,45 @@
         "error": {
           "type": "string",
           "description": "Error message if status is 'error' or 'license_limited'"
+        }
+      }
+    },
+    "convexity_numerical_result": {
+      "type": "object",
+      "description": "Results from computational convexity test via dual KKT comparison",
+      "additionalProperties": false,
+      "properties": {
+        "obj_cold": {
+          "type": ["number", "null"],
+          "description": "Objective value from cold-start MCP solve"
+        },
+        "obj_warm": {
+          "type": ["number", "null"],
+          "description": "Objective value from warm-start MCP solve"
+        },
+        "status_cold": {
+          "type": ["integer", "null"],
+          "description": "GAMS model status from cold-start solve"
+        },
+        "status_warm": {
+          "type": ["integer", "null"],
+          "description": "GAMS model status from warm-start solve"
+        },
+        "is_nonconvex": {
+          "type": "boolean",
+          "description": "True if proven non-convex (two distinct KKT points found)"
+        },
+        "abs_diff": {
+          "type": ["number", "null"],
+          "description": "Absolute difference between objectives"
+        },
+        "rel_diff": {
+          "type": ["number", "null"],
+          "description": "Relative difference between objectives"
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "Human-readable conclusion of the convexity test"
         }
       }
     },
