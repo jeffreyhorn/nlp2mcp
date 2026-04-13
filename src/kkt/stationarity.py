@@ -3934,28 +3934,28 @@ def _add_indexed_jacobian_terms(
                 # v_eqn(h-1) creates a Jacobian row for the boundary
                 # instance (h0), that row may have dense derivatives
                 # against all variable instances, producing many single-
-                # entry offset groups.  Structural offsets recur across
-                # nearly all equation rows; spurious boundary offsets are
-                # typically confined to a single row.  Filter using row
-                # coverage rather than raw entry count so valid lead/lag
-                # offsets are preserved when they appear broadly.
+                # entry offset groups.  Structural offsets can legitimately
+                # appear in only a small number of rows (including boundary-
+                # only lead/lag terms), so do not broadly prune low-coverage
+                # groups.  Instead, only drop the specific degenerate case:
+                # many singleton-coverage groups that all originate from the
+                # same equation row.
                 if len(offset_groups) > 2:
-                    row_coverage_by_group = {
-                        key: len({r for r, _ in group_entries})
+                    rows_by_group = {
+                        key: {r for r, _ in group_entries}
                         for key, group_entries in offset_groups.items()
                     }
-                    max_row_coverage = max(row_coverage_by_group.values())
-                    singleton_row_groups = sum(
-                        1 for cov in row_coverage_by_group.values() if cov == 1
-                    )
-                    if max_row_coverage >= 2 and singleton_row_groups:
-                        structural_min_coverage = max(2, max_row_coverage - 1)
+                    singleton_groups = {
+                        key: next(iter(group_rows))
+                        for key, group_rows in rows_by_group.items()
+                        if len(group_rows) == 1
+                    }
+                    singleton_rows = set(singleton_groups.values())
+                    if len(singleton_groups) >= 2 and len(singleton_rows) == 1:
                         filtered = {
-                            k: v
-                            for k, v in offset_groups.items()
-                            if row_coverage_by_group[k] >= structural_min_coverage
+                            k: v for k, v in offset_groups.items() if k not in singleton_groups
                         }
-                        if len(filtered) >= 2 and len(filtered) < len(offset_groups):
+                        if filtered:
                             offset_groups = filtered
 
                 # Issue #1038: Detect sum-index-binding pattern in dim-mismatch.
