@@ -1,8 +1,10 @@
 # Plan: Fix rocket Jacobian Explosion (#1134)
 
 **Goal:** Fix the dense Jacobian bug so rocket's stationarity equations
-are sparse (2–3 `nu_v_eqn` terms per variable, not 52), enabling
-cold-start PATH convergence without requiring `--nlp-presolve`.
+are sparse and mathematically correct (2–3 `nu_v_eqn` terms per
+variable, not 52). A secondary stretch goal is to re-test whether this
+structural fix improves cold-start PATH behavior without requiring
+`--nlp-presolve`, but that is not the primary success criterion.
 
 **Issue:** [#1134](https://github.com/jeffreyhorn/nlp2mcp/issues/1134)
 **Estimated effort:** 3–5 hours
