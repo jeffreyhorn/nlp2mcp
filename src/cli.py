@@ -521,9 +521,18 @@ def main(
         if check_convexity_numerical:
             import tempfile
 
-            from src.diagnostics.convexity_numerical import (
-                check_convexity_numerical as _run_check,
-            )
+            try:
+                from src.diagnostics.convexity_numerical import (
+                    check_convexity_numerical as _run_check,
+                )
+            except ImportError:
+                click.echo(
+                    "Error: --check-convexity-numerical requires the MCP solve "
+                    "helper (scripts.gamslib.test_solve), which is only available "
+                    "from a source checkout.",
+                    err=True,
+                )
+                sys.exit(1)
 
             cold_path = Path(output)
 

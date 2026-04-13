@@ -678,10 +678,12 @@ def _run_convexity_check(
     args: argparse.Namespace,
     stats: dict[str, Any],
 ) -> None:
-    """Run computational convexity check after a successful cold-start solve.
+    """Run computational convexity check after the cold-start solve attempt.
 
     Generates a warm-start MCP (with --nlp-presolve), solves it, and
-    compares objective values.  Two distinct KKT points prove non-convexity.
+    compares the preserved cold-start result with the warm-start result.
+    The cold-start result may represent either a successful or failed solve;
+    differing KKT points/objectives can still provide evidence of non-convexity.
     """
     from src.diagnostics.convexity_numerical import check_convexity_from_results
 

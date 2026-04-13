@@ -13,7 +13,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -38,16 +37,6 @@ def main() -> int:
     if not input_path.exists():
         print(f"Error: {input_path} not found", file=sys.stderr)
         return 1
-
-    # Check GAMS is available
-    if not shutil.which("gams"):
-        gams_paths = [
-            "/Library/Frameworks/GAMS.framework/Versions/53/Resources/gams",
-            "/Library/Frameworks/GAMS.framework/Versions/Current/Resources/gams",
-        ]
-        if not any(Path(p).exists() for p in gams_paths):
-            print("Error: GAMS not found on PATH", file=sys.stderr)
-            return 1
 
     from scripts.gamslib.batch_translate import translate_single_model
     from src.diagnostics.convexity_numerical import check_convexity_numerical

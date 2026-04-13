@@ -8,8 +8,8 @@ The test runs two independent MCP solves:
 1. Cold-start: PATH solves from default initialization (duals = 0).
 2. Warm-start: NLP pre-solve provides primal + dual initialization.
 
-If both reach STATUS 1 (Optimal) with different objectives, the problem
-is provably non-convex.
+If both reach STATUS 1 or 2 (Optimal/Locally Optimal) with different
+objectives, the problem is provably non-convex.
 """
 
 from __future__ import annotations
