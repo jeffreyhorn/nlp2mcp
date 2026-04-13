@@ -75,8 +75,9 @@ The AD pipeline works in two phases:
 
 1. **Jacobian computation** (`src/ad/constraint_jacobian.py`): Substitutes
    symbolic indices with concrete elements (h→h27), resolves offsets
-   (h27−1→h26), then differentiates.  The **concrete-level Jacobian is
-   correct** — only truly non-zero entries are stored.
+   (h27−1→h26), then differentiates.  The concrete Jacobian is **mostly
+   correct** for interior rows, but the degenerate boundary row `v_eqn(h0)`
+   produces dense derivatives against all variable instances.
 
 2. **Stationarity assembly** (`src/kkt/stationarity.py`,
    `_add_indexed_jacobian_terms()`): Reconstructs indexed equations from
@@ -84,9 +85,11 @@ The AD pipeline works in two phases:
    equation rows and collects non-zero entries.  It then groups entries by
    offset pattern and emits one term per group.
 
-The problem is in phase 2: when the code finds non-zero entry
-`∂v_eqn(h20)/∂g(h27)`, it computes the offset as `h27 − h20 = +7` and
-emits `nu_v_eqn(h-7)`.  But this entry only exists because **one specific
+The problem spans both phases: the boundary row `v_eqn(h0)` has dense
+derivatives (phase 1), and the assembly (phase 2) treats each resulting
+singleton offset group as a structural dependency.  When the code finds
+non-zero entry `∂v_eqn(h0)/∂g(h27)`, it computes offset `h0 − h27 = −27`
+and emits `nu_v_eqn(h-27)`.  This entry exists because **one specific
 concrete instance** happened to have a cross-reference — the equation
 `v_eqn(h20)` references `g(h20)` and `g(h19)`, not `g(h27)`.  The
 concrete Jacobian correctly has `∂v_eqn(h20)/∂g(h27) = 0`, but

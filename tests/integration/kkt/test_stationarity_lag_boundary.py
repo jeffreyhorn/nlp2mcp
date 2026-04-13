@@ -3,8 +3,8 @@
 When a lag-indexed equation like v_eqn(h-1) creates a Jacobian row for the
 boundary instance (h0), that row may have dense derivatives against all
 variable instances, producing many singleton offset groups.  The filter in
-_add_indexed_jacobian_terms() should discard these boundary artifacts while
-preserving legitimate structural offsets.
+_filter_boundary_singleton_offset_groups() should discard these boundary
+artifacts while preserving legitimate structural offsets.
 """
 
 from __future__ import annotations
@@ -15,49 +15,27 @@ import pytest
 from click.testing import CliRunner
 
 from src.cli import main
+from src.kkt.stationarity import _filter_boundary_singleton_offset_groups
 
 pytestmark = pytest.mark.integration
 
 
 class TestBoundaryOffsetFilter:
-    """Unit-level test for the singleton-row filter logic (Issue #1134).
-
-    Simulates the offset_groups dict that would be produced by a boundary
-    row (all singletons from the same degenerate row_id) and verifies the
-    filter removes them while preserving structural offsets.
-    """
+    """Test _filter_boundary_singleton_offset_groups() directly."""
 
     def test_filter_removes_same_row_singletons(self):
         """Many singleton groups from the same row should be filtered."""
-        # Simulate: offset 0 has 50 entries from 50 rows,
-        # offset +1 has 49 entries from 49 rows,
-        # offsets -1..-50 each have 1 entry from row_id=0 (boundary)
         offset_groups: dict[tuple[int, ...], list[tuple[int, int]]] = {}
-        offset_groups[(0,)] = [(r, r) for r in range(1, 51)]  # 50 entries, 50 rows
-        offset_groups[(1,)] = [(r, r + 1) for r in range(1, 50)]  # 49 entries, 49 rows
+        offset_groups[(0,)] = [(r, r) for r in range(1, 51)]
+        offset_groups[(1,)] = [(r, r + 1) for r in range(1, 50)]
         for k in range(1, 51):
-            offset_groups[(-k,)] = [(0, k)]  # 1 entry from row 0
+            offset_groups[(-k,)] = [(0, k)]  # all from row 0
 
-        assert len(offset_groups) == 52  # 2 structural + 50 spurious
+        assert len(offset_groups) == 52
 
-        # Apply the same filter logic as in _add_indexed_jacobian_terms
-        rows_by_group = {key: {r for r, _ in entries} for key, entries in offset_groups.items()}
-        singleton_groups = {
-            key: next(iter(group_rows))
-            for key, group_rows in rows_by_group.items()
-            if len(group_rows) == 1
-        }
-        singleton_rows = set(singleton_groups.values())
+        filtered = _filter_boundary_singleton_offset_groups(offset_groups)
 
-        assert len(singleton_groups) == 50  # 50 spurious singletons
-        assert singleton_rows == {0}  # all from row 0
-
-        if len(singleton_groups) >= 2 and len(singleton_rows) == 1:
-            filtered = {k: v for k, v in offset_groups.items() if k not in singleton_groups}
-        else:
-            filtered = offset_groups
-
-        assert len(filtered) == 2  # only structural offsets remain
+        assert len(filtered) == 2
         assert (0,) in filtered
         assert (1,) in filtered
 
@@ -67,22 +45,21 @@ class TestBoundaryOffsetFilter:
         offset_groups[(0,)] = [(r, r) for r in range(10)]
         offset_groups[(1,)] = [(r, r + 1) for r in range(9)]
         offset_groups[(-1,)] = [(5, 4)]  # singleton from row 5
-        offset_groups[(-2,)] = [(7, 5)]  # singleton from row 7 (different!)
+        offset_groups[(-2,)] = [(7, 5)]  # singleton from row 7
 
-        rows_by_group = {key: {r for r, _ in entries} for key, entries in offset_groups.items()}
-        singleton_groups = {
-            key: next(iter(group_rows))
-            for key, group_rows in rows_by_group.items()
-            if len(group_rows) == 1
+        filtered = _filter_boundary_singleton_offset_groups(offset_groups)
+
+        # Singletons from different rows — all preserved
+        assert len(filtered) == 4
+
+    def test_filter_noop_when_two_or_fewer_groups(self):
+        """With ≤2 groups, filter is a no-op."""
+        offset_groups: dict[tuple[int, ...], list[tuple[int, int]]] = {
+            (0,): [(1, 1), (2, 2)],
+            (1,): [(0, 1)],
         }
-        singleton_rows = set(singleton_groups.values())
-
-        # Singletons come from different rows — should NOT filter
-        assert len(singleton_rows) == 2  # rows 5 and 7
-        assert not (len(singleton_groups) >= 2 and len(singleton_rows) == 1)
-
-        # All groups preserved
-        assert len(offset_groups) == 4
+        filtered = _filter_boundary_singleton_offset_groups(offset_groups)
+        assert filtered is offset_groups  # same object, untouched
 
 
 class TestRocketLagBoundaryFilter:

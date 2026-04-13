@@ -153,10 +153,30 @@ gams /tmp/rocket_mcp.gms lo=2
 
 ---
 
+## Resolution (Sprint 24, PR #1257)
+
+**Root cause:** The concrete Jacobian correctly computes only 2 non-zero
+entries per row for `v_eqn/g` (offsets 0 and +1), but the boundary row
+`v_eqn(h0)` has dense derivatives against all `g(h)` instances due to
+how the AD engine handles the degenerate boundary case.  Each of these
+51 dense entries creates a singleton offset group (offset −1 through −50),
+all originating from the same row (h0).
+
+**Fix:** Added `_filter_boundary_singleton_offset_groups()` in
+`src/kkt/stationarity.py`.  When multiple singleton-coverage offset groups
+all originate from the same equation row, they are identified as boundary
+artifacts and removed.  Legitimate lead/lag offsets from distinct rows are
+preserved.
+
+**Result:** `stat_g/d/m/t/v(h)` reduced from 52 to 2 `nu_v_eqn` terms.
+With `--nlp-presolve`: STATUS 2, obj=1.0128 (exact NLP match).
+
+---
+
 ## Files to Investigate
 
 | File | Relevance |
 |------|-----------|
 | `src/ad/constraint_jacobian.py` | Jacobian computation — lag-domain handling |
-| `src/kkt/stationarity.py` | `_add_indexed_jacobian_terms()` — assembles J^T*nu terms |
+| `src/kkt/stationarity.py` | `_add_indexed_jacobian_terms()` — assembles J^T*nu terms; `_filter_boundary_singleton_offset_groups()` — the fix |
 | `src/ad/derivative_rules.py` | `_diff_varref()` — index matching for derivatives |
