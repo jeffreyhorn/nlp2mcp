@@ -100,19 +100,38 @@ def _compare_results(
     Status sets aligned with pipeline conventions in test_solve.py:
     - Optimal: model_status in (1, 2)  — Optimal or Locally Optimal
     - Infeasible: model_status in (4, 5) — Infeasible or Locally Infeasible
+
+    A solve is only trusted for these classifications when it also has a
+    successful overall solve outcome (status="success" and solver_status=1
+    with no reported error).
     """
     _OPTIMAL = {1, 2}
     _INFEASIBLE = {4, 5}
+
+    def _solve_succeeded(result: dict[str, Any]) -> bool:
+        """Return True only for results that indicate a successful solve."""
+        solve_status = result.get("status")
+        if isinstance(solve_status, str) and solve_status.lower() != "success":
+            return False
+        solver_status = result.get("solver_status")
+        if solver_status is not None and solver_status != 1:
+            return False
+        if result.get("error"):
+            return False
+        return True
 
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")
     obj_cold = cold_result.get("objective_value")
     obj_warm = warm_result.get("objective_value")
 
-    cold_optimal = status_cold in _OPTIMAL
-    warm_optimal = status_warm in _OPTIMAL
-    cold_infeasible = status_cold in _INFEASIBLE
-    warm_infeasible = status_warm in _INFEASIBLE
+    cold_success = _solve_succeeded(cold_result)
+    warm_success = _solve_succeeded(warm_result)
+
+    cold_optimal = cold_success and status_cold in _OPTIMAL
+    warm_optimal = warm_success and status_warm in _OPTIMAL
+    cold_infeasible = cold_success and status_cold in _INFEASIBLE
+    warm_infeasible = warm_success and status_warm in _INFEASIBLE
 
     # Both optimal with objectives available
     if cold_optimal and warm_optimal and obj_cold is not None and obj_warm is not None:
@@ -198,9 +217,17 @@ def _compare_results(
             ),
         )
 
-    # One or both failed to solve
+    # One or both failed to solve — include error details for debugging
     cold_status_str = f"STATUS {status_cold}" if status_cold is not None else "no solve"
     warm_status_str = f"STATUS {status_warm}" if status_warm is not None else "no solve"
+    details = []
+    cold_err = cold_result.get("error") or cold_result.get("outcome_category")
+    warm_err = warm_result.get("error") or warm_result.get("outcome_category")
+    if cold_err:
+        details.append(f"cold error: {cold_err}")
+    if warm_err:
+        details.append(f"warm error: {warm_err}")
+    detail_str = f" ({'; '.join(details)})" if details else ""
     return ConvexityResult(
         is_nonconvex=False,
         obj_cold=obj_cold,
@@ -209,5 +236,5 @@ def _compare_results(
         status_warm=status_warm,
         abs_diff=None,
         rel_diff=None,
-        conclusion=(f"Inconclusive: cold={cold_status_str}, warm={warm_status_str}"),
+        conclusion=(f"Inconclusive: cold={cold_status_str}, warm={warm_status_str}{detail_str}"),
     )
