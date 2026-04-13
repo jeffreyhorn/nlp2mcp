@@ -188,6 +188,10 @@ def main(
         diag_report = create_report(Path(input_file).name)
 
     try:
+        # Validate option combinations early, before any work is done
+        if check_convexity_numerical and not output:
+            raise click.UsageError("--check-convexity-numerical requires -o OUTPUT")
+
         # Determine verbosity level (quiet overrides verbose)
         verbosity_level = 0 if quiet else verbose
 
@@ -515,13 +519,6 @@ def main(
 
         # Step 8: Computational convexity check (optional)
         if check_convexity_numerical:
-            if not output:
-                click.echo(
-                    "Error: --check-convexity-numerical requires -o OUTPUT",
-                    err=True,
-                )
-                sys.exit(1)
-
             import tempfile
 
             from src.diagnostics.convexity_numerical import (

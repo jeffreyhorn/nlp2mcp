@@ -834,6 +834,7 @@ def run_pipeline(
             return
 
         result = run_solve_stage(model, mcp_path, args, stats)
+        cold_result = result  # Preserve for convexity check before retry overwrites
 
         # Two-pass retry: if STATUS 5 (Locally Infeasible), re-translate
         # with --nlp-presolve and re-solve.  This warm-starts MCP dual
@@ -917,7 +918,7 @@ def run_pipeline(
 
     # Stage 3b: Computational convexity check (optional)
     if run_solve and getattr(args, "check_convexity", False):
-        _run_convexity_check(model, model_path, mcp_path, result, args, stats)
+        _run_convexity_check(model, model_path, mcp_path, cold_result, args, stats)
 
     # Stage 4: Compare
     if run_compare:

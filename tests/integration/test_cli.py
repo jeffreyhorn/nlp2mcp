@@ -234,7 +234,7 @@ class TestCLI:
         assert "--check-convexity-numerical" in result.output
 
     def test_cli_check_convexity_requires_output(self):
-        """--check-convexity-numerical without -o should fail."""
+        """--check-convexity-numerical without -o should fail early (no MCP output)."""
         runner = CliRunner()
         result = runner.invoke(
             main,
@@ -245,3 +245,6 @@ class TestCLI:
         )
         # Should fail because -o is required
         assert result.exit_code != 0
+        # Should fail early — no MCP code printed to stdout
+        assert "Solve" not in result.output
+        assert "--check-convexity-numerical requires -o" in result.output
