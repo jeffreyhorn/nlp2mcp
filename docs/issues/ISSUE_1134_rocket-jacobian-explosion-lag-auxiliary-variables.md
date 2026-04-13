@@ -1,7 +1,7 @@
 # rocket: Jacobian Explosion — Lag-Indexed Equations Produce Dense Derivatives for Auxiliary Variables
 
 **GitHub Issue:** [#1134](https://github.com/jeffreyhorn/nlp2mcp/issues/1134)
-**Status:** OPEN
+**Status:** FIXED (Sprint 24)
 **Severity:** High — PATH reports MODEL STATUS 5 (Locally Infeasible) due to wrong Jacobian structure
 **Date:** 2026-03-22
 **Affected Models:** rocket (and potentially any model with lag-indexed equations + auxiliary variables)

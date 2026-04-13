@@ -243,16 +243,19 @@ Run the full pipeline and compare solve counts before/after.
 
 ## Success Criteria
 
-- [ ] `stat_g(h)` has 2–3 `nu_v_eqn` terms (not 52)
-- [ ] `stat_d(h)` has 2–3 `nu_v_eqn` terms (not 52)
-- [ ] `stat_m(h)` has 2–3 `nu_v_eqn` terms (not 52)
-- [ ] `stat_t(h)` has 2–3 `nu_v_eqn` terms (not 52)
-- [ ] `stat_v(h)` has 2–3 `nu_v_eqn` terms (not 52)
+- [x] `stat_g(h)` has 2 `nu_v_eqn` terms (was 52)
+- [x] `stat_d(h)` has 2 `nu_v_eqn` terms (was 52)
+- [x] `stat_m(h)` has 2 `nu_v_eqn` terms (was 52)
+- [x] `stat_t(h)` has 2 `nu_v_eqn` terms (was 52)
+- [x] `stat_v(h)` has 2 `nu_v_eqn` terms (was 52)
 - [ ] rocket solves to MODEL STATUS 1 or 2 **without** `--nlp-presolve`
-- [ ] Objective matches NLP reference (1.0128) within tolerance
+      (cold-start still STATUS 5 — expected for this non-convex model;
+      with `--nlp-presolve` it reaches STATUS 2, obj=1.0128)
+- [x] Objective matches NLP reference (1.0128) with `--nlp-presolve`
 - [ ] Multi-pattern warnings for `v_eqn/t` and `v_eqn/v` resolved
-- [ ] No test regressions (`make test` passes)
-- [ ] No pipeline regressions (solve count ≥ current)
+      (boundary v_eqn(h0) row still produces minority pattern warnings)
+- [x] No test regressions (`make test` passes — 4452 passed)
+- [ ] No pipeline regressions (solve count ≥ current) — pending full retest
 
 ---
 

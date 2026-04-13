@@ -3929,6 +3929,27 @@ def _add_indexed_jacobian_terms(
                         offset_groups[offset_key] = []
                     offset_groups[offset_key].append((entry_row_id, entry_col_id))
 
+                # Issue #1134: Filter spurious offset groups from boundary
+                # rows of lag-indexed equations.  When an equation like
+                # v_eqn(h-1) creates a Jacobian row for the boundary
+                # instance (h0), that row may have dense derivatives
+                # against all variable instances, producing many single-
+                # entry offset groups.  Structural offsets (like 0 and +1
+                # for a lag-1 equation) have entries proportional to the
+                # number of equation instances; spurious boundary offsets
+                # have very few (typically 1).  Filter offset groups whose
+                # entry count is below a threshold relative to the maximum
+                # group size.
+                if len(offset_groups) > 2:
+                    max_group_size = max(len(g) for g in offset_groups.values())
+                    # Threshold: at least 10% of the largest group, minimum 2.
+                    # Structural lag offsets have ~N-1 entries (N = instances);
+                    # boundary artifacts have exactly 1.
+                    min_threshold = max(2, max_group_size // 10)
+                    filtered = {k: v for k, v in offset_groups.items() if len(v) >= min_threshold}
+                    if filtered:
+                        offset_groups = filtered
+
                 # Issue #1038: Detect sum-index-binding pattern in dim-mismatch.
                 # When a 3D variable x(r,rr,c) appears in a 2D equation DX(r,c)
                 # via sum(rr, X(rr,r,c)), the offset keys vary in the position
