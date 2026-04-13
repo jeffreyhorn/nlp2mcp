@@ -3848,6 +3848,42 @@ def _derivative_structure_key(expr: Expr) -> str:
     return _walk(expr)
 
 
+def _filter_boundary_singleton_offset_groups(
+    offset_groups: dict[tuple[int, ...], list[tuple[int, int]]],
+) -> dict[tuple[int, ...], list[tuple[int, int]]]:
+    """Filter spurious singleton offset groups from a degenerate boundary row.
+
+    Issue #1134: When a lag-indexed equation (e.g., v_eqn(h-1)) creates a
+    Jacobian row for the boundary instance (h0), that row may have dense
+    derivatives against all variable instances, producing many singleton-
+    coverage offset groups.  Structural offsets can legitimately appear in
+    only a small number of rows, so this filter only removes singletons
+    when multiple of them all originate from the **same** equation row
+    (the degenerate boundary pattern).
+
+    Returns the filtered dict (may be the same object if nothing was removed).
+    """
+    if len(offset_groups) <= 2:
+        return offset_groups
+
+    rows_by_group = {
+        key: {r for r, _ in group_entries} for key, group_entries in offset_groups.items()
+    }
+    singleton_groups = {
+        key: next(iter(group_rows))
+        for key, group_rows in rows_by_group.items()
+        if len(group_rows) == 1
+    }
+    singleton_rows = set(singleton_groups.values())
+
+    if len(singleton_groups) >= 2 and len(singleton_rows) == 1:
+        filtered = {k: v for k, v in offset_groups.items() if k not in singleton_groups}
+        if filtered:
+            return filtered
+
+    return offset_groups
+
+
 def _add_indexed_jacobian_terms(
     expr: Expr,
     kkt: KKTSystem,
@@ -3928,6 +3964,10 @@ def _add_indexed_jacobian_terms(
                     if offset_key not in offset_groups:
                         offset_groups[offset_key] = []
                     offset_groups[offset_key].append((entry_row_id, entry_col_id))
+
+                # Issue #1134: Filter spurious singleton offset groups from
+                # a degenerate boundary row (see helper docstring).
+                offset_groups = _filter_boundary_singleton_offset_groups(offset_groups)
 
                 # Issue #1038: Detect sum-index-binding pattern in dim-mismatch.
                 # When a 3D variable x(r,rr,c) appears in a 2D equation DX(r,c)
