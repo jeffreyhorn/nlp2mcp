@@ -66,6 +66,7 @@ from src.kkt.naming import (
     create_bound_lo_multiplier_name,
     create_bound_up_multiplier_name,
     create_eq_multiplier_name,
+    create_ineq_multiplier_name,
 )
 from src.kkt.objective import extract_objective_info
 
@@ -885,11 +886,127 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     return suppressed
 
 
+def _emit_nlp_presolve(
+    sections: list[str],
+    kkt: KKTSystem,
+    add_comments: bool,
+    source_file: str | None = None,
+) -> None:
+    """Emit NLP pre-solve block to warm-start MCP dual variables.
+
+    Includes and solves the original NLP model, then transfers equation
+    marginals to the corresponding MCP multiplier variables.  This gives
+    PATH a good starting point for non-convex models where cold-start
+    initialization fails.
+
+    The approach re-solves the original NLP (via ``$include``) because
+    the MCP's comp_* equation forms can confuse NLP solvers.
+    """
+    if not source_file:
+        return
+
+    obj_info = extract_objective_info(kkt.model_ir)
+    if not obj_info.objvar:
+        return
+
+    # Collect original model equations (not generated fix/bound equations)
+    nlp_eqs = kkt.model_ir.get_solved_model_equations()
+    if not nlp_eqs:
+        return
+
+    # Build sets of equality/inequality names for sign handling
+    eq_set = set(kkt.model_ir.equalities)
+    ineq_set = set(kkt.model_ir.inequalities)
+
+    if add_comments:
+        sections.append("* ============================================")
+        sections.append("* NLP Pre-Solve (warm-start for MCP duals)")
+        sections.append("* ============================================")
+        sections.append("")
+
+    # Use $include to solve the original NLP model. This ensures the NLP
+    # solver uses the original equation forms (=L=/=G=) rather than the
+    # MCP's comp_* (negated =G=) forms, which can confuse NLP solvers.
+    # $onMultiR allows redefinition of symbols already declared in the MCP.
+    from pathlib import Path
+
+    abs_path = Path(source_file).resolve().as_posix()
+    escaped_include_path = abs_path.replace('"', '""')
+    sections.append("$onMultiR")
+    sections.append(f'$include "{escaped_include_path}"')
+    sections.append("$offMulti")
+    sections.append("")
+
+    if add_comments:
+        sections.append("* Transfer NLP duals to MCP multiplier initialization")
+
+    # Transfer duals from the original NLP equations: equality multipliers
+    # use the original equation marginal directly, while inequality
+    # multipliers use the original inequality equation marginal with abs()
+    # so the initialized MCP multiplier is nonnegative.
+    for eq_name in nlp_eqs:
+        eq_def = kkt.model_ir.equations.get(eq_name)
+        domain_str = ""
+        if eq_def and eq_def.domain:
+            domain_str = f"({','.join(_quote_symbol(d) for d in eq_def.domain)})"
+
+        if eq_name in eq_set:
+            mult_name = create_eq_multiplier_name(eq_name)
+            if mult_name in kkt.multipliers_eq:
+                qeq = _quote_symbol(eq_name)
+                qm = _quote_symbol(mult_name)
+                sections.append(f"{qm}.l{domain_str} = {qeq}.m{domain_str};")
+        elif eq_name in ineq_set:
+            mult_name = create_ineq_multiplier_name(eq_name)
+            if mult_name in kkt.multipliers_ineq:
+                qeq = _quote_symbol(eq_name)
+                qm = _quote_symbol(mult_name)
+                # Original inequality marginals: use abs() since GAMS
+                # ≤ marginals are ≥ 0 and ≥ marginals are ≤ 0 but
+                # MCP λ must be ≥ 0.
+                sections.append(f"{qm}.l{domain_str} = abs({qeq}.m{domain_str});")
+
+    # Transfer bound multipliers from variable marginals
+    sections.append("")
+    if add_comments:
+        sections.append("* Transfer variable marginals to bound multipliers")
+    for var_name in kkt.multipliers_bounds_lo:
+        vname = var_name if isinstance(var_name, str) else var_name[0]
+        mult_name = create_bound_lo_multiplier_name(vname)
+        qv = _quote_symbol(vname)
+        qm = _quote_symbol(mult_name)
+        var_def = kkt.model_ir.variables.get(vname)
+        domain_str = ""
+        if var_def and var_def.domain:
+            domain_str = f"({','.join(_quote_symbol(d) for d in var_def.domain)})"
+        sections.append(
+            f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.lo{domain_str}) < 1e-6 and {qv}.m{domain_str} > 0)"
+            f" = {qv}.m{domain_str};"
+        )
+    for var_name in kkt.multipliers_bounds_up:
+        vname = var_name if isinstance(var_name, str) else var_name[0]
+        mult_name = create_bound_up_multiplier_name(vname)
+        qv = _quote_symbol(vname)
+        qm = _quote_symbol(mult_name)
+        var_def = kkt.model_ir.variables.get(vname)
+        domain_str = ""
+        if var_def and var_def.domain:
+            domain_str = f"({','.join(_quote_symbol(d) for d in var_def.domain)})"
+        sections.append(
+            f"{qm}.l{domain_str}$(abs({qv}.l{domain_str} - {qv}.up{domain_str}) < 1e-6 and {qv}.m{domain_str} < 0)"
+            f" = -({qv}.m{domain_str});"
+        )
+
+    sections.append("")
+
+
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
     add_comments: bool = True,
     config: Config | None = None,
+    nlp_presolve: bool = False,
+    source_file: str | None = None,
 ) -> str:
     """Generate complete GAMS MCP code from KKT system.
 
@@ -2298,6 +2415,14 @@ def emit_gams_mcp(
     if scale_lines:
         sections.append(f"{model_name}.scaleOpt = 1;")
         sections.append("")
+
+    # Issue #757/#1199: NLP pre-solve to warm-start MCP dual variables.
+    # For non-convex models, PATH needs both primal and dual initialization
+    # close to the NLP solution to converge. This solves the original NLP
+    # first, then transfers the primal levels and equation marginals to
+    # the MCP multiplier variables.
+    if nlp_presolve:
+        _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
     # Solve statement
     if add_comments:

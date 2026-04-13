@@ -396,6 +396,10 @@
           "$ref": "#/definitions/error_detail",
           "description": "Structured error details if status is 'failure'"
         },
+        "presolve_required": {
+          "type": "boolean",
+          "description": "True if the model required --nlp-presolve to solve (cold start failed with STATUS 5)"
+        },
         "permanent_exclusion": {
           "type": "object",
           "description": "Permanent exclusion metadata for models structurally incompatible with MCP formulation",
@@ -661,6 +665,7 @@
         "path_solve_license",
         "path_syntax_error",
         "model_optimal",
+        "model_optimal_presolve",
         "model_locally_optimal",
         "model_infeasible",
         "model_unbounded",

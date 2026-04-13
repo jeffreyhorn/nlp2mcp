@@ -211,6 +211,28 @@ Customize epsilon:
 nlp2mcp my_model.gms -o output.gms --smooth-abs --smooth-abs-epsilon 1e-8
 ```
 
+### 7. NLP Pre-Solve for Non-Convex Models
+
+If the MCP returns MODEL STATUS 5 (Locally Infeasible) for a non-convex model,
+the PATH solver likely needs better initialization. The `--nlp-presolve` flag
+solves the original NLP first and transfers the primal and dual solution to
+warm-start the MCP multipliers:
+
+```bash
+nlp2mcp my_model.gms -o output.gms --nlp-presolve
+```
+
+This works by including and solving the original GAMS file before the MCP solve.
+The NLP marginals are transferred to the MCP dual variables (`nu_*`, `lam_*`,
+`piL_*`, `piU_*`), giving PATH a starting point near the KKT solution.
+
+**When to use:** Non-convex models with bilinear terms, wide coefficient ranges,
+or models that produce convexity warnings (W301, W303, W305). The flag is opt-in
+and has no effect on the MCP equations themselves — it only affects initialization.
+
+**Requirement:** The original source file must be accessible at GAMS solve time
+(the generated MCP uses `$include` to reference it).
+
 ## Understanding Error Messages (v0.6.0+)
 
 nlp2mcp provides structured error messages with codes and documentation links.

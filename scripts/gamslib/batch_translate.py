@@ -217,12 +217,16 @@ def report_filter_summary(
 # =============================================================================
 
 
-def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any]:
+def translate_single_model(
+    model_path: Path, output_path: Path, *, nlp_presolve: bool = False
+) -> dict[str, Any]:
     """Translate a single GAMS model to MCP format.
 
     Args:
         model_path: Path to the .gms file
         output_path: Path where MCP output should be written
+        nlp_presolve: If True, add --nlp-presolve flag to warm-start
+            MCP dual variables from an NLP pre-solve step
 
     Returns:
         Dictionary with translation results:
@@ -248,6 +252,8 @@ def translate_single_model(model_path: Path, output_path: Path) -> dict[str, Any
             str(output_path),
             "--quiet",
         ]
+        if nlp_presolve:
+            cmd.append("--nlp-presolve")
 
         proc = subprocess.Popen(
             cmd,

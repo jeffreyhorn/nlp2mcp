@@ -430,6 +430,7 @@ Options:
                                  Expression simplification (default: advanced)
   --smooth-abs                   Enable abs() smoothing
   --smooth-abs-epsilon FLOAT     Epsilon for abs smoothing (default: 1e-6)
+  --nlp-presolve                 NLP pre-solve to warm-start MCP duals
   --help                         Show this message and exit
 ```
 
@@ -439,6 +440,7 @@ Options:
 - `--stats` respects verbosity settings
 - `--smooth-abs` required for models with `abs()`
 - `--scale` is opt-in (default: none)
+- `--nlp-presolve` requires the original source file to be accessible at GAMS solve time
 
 ---
 

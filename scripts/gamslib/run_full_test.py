@@ -771,6 +771,82 @@ def run_pipeline(
             return
 
         result = run_solve_stage(model, mcp_path, args, stats)
+
+        # Two-pass retry: if STATUS 5 (Locally Infeasible), re-translate
+        # with --nlp-presolve and re-solve.  This warm-starts MCP dual
+        # variables from an NLP pre-solve, which helps non-convex models.
+        if (
+            result["status"] != "success"
+            and result.get("model_status") == 5
+            and not getattr(args, "no_presolve_retry", False)
+        ):
+            stats["presolve_retry_attempted"] += 1
+            if args.verbose:
+                logger.info(
+                    "    [RETRY] STATUS 5 — retrying with --nlp-presolve..."
+                )
+
+            # Re-translate with --nlp-presolve
+            presolve_path = mcp_path.with_name(f"{model_id}_mcp_presolve.gms")
+            translate_func = get_translate_function()
+            retry_translate = translate_func(
+                model_path, presolve_path, nlp_presolve=True
+            )
+
+            if retry_translate["status"] == "success":
+                # Save original mcp_solve before retry overwrites it
+                original_mcp_solve = model["mcp_solve"].copy()
+
+                # Re-solve with pre-solve MCP
+                retry_result = run_solve_stage(
+                    model, presolve_path, args, stats
+                )
+
+                # Remove retry timing entry — we keep only the
+                # cold-start time so counts stay consistent.
+                if stats["solve_times"] and stats["solve_times"][-1][0] == model_id:
+                    stats["solve_times"].pop()
+
+                if retry_result["status"] == "success":
+                    stats["presolve_retry_success"] += 1
+                    # Correct the double-count: the initial fail already
+                    # incremented solve_failure, and the retry success
+                    # incremented solve_success.  Undo the initial failure
+                    # so the model counts as one success, not both.
+                    stats["solve_failure"] -= 1
+                    if stats["solve_errors"]:
+                        stats["solve_errors"].pop()
+                    model["mcp_solve"]["presolve_required"] = True
+                    model["mcp_solve"]["mcp_file_used"] = str(presolve_path)
+                    model["mcp_solve"]["outcome_category"] = (
+                        "model_optimal_presolve"
+                    )
+                    result = retry_result
+                    if args.verbose:
+                        obj = retry_result.get("objective_value")
+                        obj_str = f"{obj:.6g}" if obj is not None else "N/A"
+                        logger.info(
+                            f"    [RETRY] SUCCESS with --nlp-presolve: "
+                            f"objective={obj_str}"
+                        )
+                else:
+                    # Retry failed — restore original mcp_solve so the
+                    # database records the initial cold-start failure,
+                    # not the retry failure.
+                    model["mcp_solve"] = original_mcp_solve
+                    # Undo the extra failure count from the retry solve
+                    stats["solve_failure"] -= 1
+                    if stats["solve_errors"]:
+                        stats["solve_errors"].pop()
+                    if args.verbose:
+                        logger.info(
+                            f"    [RETRY] Still failed: "
+                            f"{retry_result.get('outcome_category')}"
+                        )
+            else:
+                if args.verbose:
+                    logger.info("    [RETRY] Re-translate with --nlp-presolve failed")
+
         if result["status"] != "success":
             if run_compare:
                 mark_cascade_not_tested(model, "solve", stats)
@@ -897,6 +973,9 @@ def run_full_test(args: argparse.Namespace) -> dict[str, Any]:
         "solve_cascade_skip": 0,
         "solve_times": [],
         "solve_errors": [],
+        # Pre-solve retry stats
+        "presolve_retry_attempted": 0,
+        "presolve_retry_success": 0,
         # Compare stats
         "compare_match": 0,
         "compare_mismatch": 0,
@@ -1034,7 +1113,7 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
     if not args.only_parse and not args.only_translate:
         solve_total = stats["solve_success"] + stats["solve_failure"]
         if solve_total > 0:
-            summary["solve"] = {
+            solve_summary: dict[str, Any] = {
                 "attempted": solve_total,
                 "success": stats["solve_success"],
                 "failure": stats["solve_failure"],
@@ -1043,6 +1122,13 @@ def generate_summary(stats: dict[str, Any], args: argparse.Namespace) -> dict[st
                 "timing": compute_timing_stats(stats.get("solve_times", [])),
                 "error_breakdown": dict(Counter(stats.get("solve_errors", []))),
             }
+            # Pre-solve retry stats
+            if stats.get("presolve_retry_attempted", 0) > 0:
+                solve_summary["presolve_retry"] = {
+                    "attempted": stats["presolve_retry_attempted"],
+                    "success": stats["presolve_retry_success"],
+                }
+            summary["solve"] = solve_summary
 
         # Compare statistics
         compare_total = stats["compare_match"] + stats["compare_mismatch"]
@@ -1138,6 +1224,12 @@ def print_summary(stats: dict[str, Any], args: argparse.Namespace) -> None:
             print("  Error breakdown:")
             for cat, count in sorted(s["error_breakdown"].items(), key=lambda x: -x[1]):
                 print(f"    {cat}: {count}")
+        if s.get("presolve_retry"):
+            pr = s["presolve_retry"]
+            print(
+                f"  Pre-solve retry: {pr['success']}/{pr['attempted']} "
+                f"recovered from STATUS 5"
+            )
 
     # Compare results
     if "compare" in summary:

@@ -2966,12 +2966,14 @@ def _build_sameas_guard(
     entries: list[tuple[int, int]],
     kkt: KKTSystem,
 ) -> Expr | None:
-    """Build a guard condition for scalar-constraint multiplier terms.
+    """Build a sameas guard for multiplier terms referencing partial variable instances.
 
-    Issue #767 / #764: When a scalar constraint references only a subset of
-    an indexed variable's instances, the multiplier term must be guarded so
-    that it only appears for the relevant instances in the stationarity
-    equation.
+    Issue #767 / #764 / #1049: When a constraint (scalar or indexed) references
+    only a subset of an indexed variable's instances, the multiplier term must
+    be guarded so that it only appears for the relevant instances in the
+    stationarity equation.  Used from both the scalar-constraint path and the
+    indexed-constraint path (via ``group_entries`` in
+    ``_add_indexed_jacobian_terms``).
 
     The original implementation used only ``entries[0]`` which is correct for
     the single-entry ``.fx`` case but wrong when multiple entries exist (e.g.
@@ -4808,6 +4810,24 @@ def _add_indexed_jacobian_terms(
                         if uncontrolled:
                             sum_indices = tuple(sorted(uncontrolled))
                             term = Sum(sum_indices, term)
+
+                    # Issue #1049: Guard multiplier terms with $(sameas(...))
+                    # when the constraint references the variable with a fixed
+                    # literal index in a dimension that the variable has free.
+                    # Example: tgap(t) references v(t,"traded"), so stat_v(t,j)
+                    # should have nu_tgap(t)$(sameas(j,'traded')), not nu_tgap(t).
+                    # Only apply when the variable has MORE dimensions than the
+                    # constraint (indicating fixed literal indices, not domain
+                    # subset restrictions which are handled by multiplier .fx).
+                    # Mirrors the scalar-constraint guard (Issue #767/#764).
+                    if (
+                        var_domain
+                        and len(var_domain) > len(mult_domain)
+                        and len(group_entries) < len(instances)
+                    ):
+                        guard = _build_sameas_guard(var_domain, instances, group_entries, kkt)
+                        if guard is not None:
+                            term = DollarConditional(value_expr=term, condition=guard)
 
                     expr = Binary("+", expr, term)
 
