@@ -563,10 +563,14 @@ def main(
                 click.echo("")
                 click.echo("Computational Convexity Check:")
                 _s_cold = (
-                    f"STATUS {cvx_result.status_cold}" if cvx_result.status_cold else "no solve"
+                    f"STATUS {cvx_result.status_cold}"
+                    if cvx_result.status_cold is not None
+                    else "no solve"
                 )
                 _s_warm = (
-                    f"STATUS {cvx_result.status_warm}" if cvx_result.status_warm else "no solve"
+                    f"STATUS {cvx_result.status_warm}"
+                    if cvx_result.status_warm is not None
+                    else "no solve"
                 )
                 _o_cold = f"{cvx_result.obj_cold:.6g}" if cvx_result.obj_cold is not None else "N/A"
                 _o_warm = f"{cvx_result.obj_warm:.6g}" if cvx_result.obj_warm is not None else "N/A"

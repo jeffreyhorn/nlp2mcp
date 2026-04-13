@@ -63,7 +63,15 @@ def check_convexity_numerical(
     Returns:
         ConvexityResult with the comparison outcome.
     """
-    from scripts.gamslib.test_solve import solve_mcp
+    try:
+        from scripts.gamslib.test_solve import solve_mcp
+    except ImportError as exc:
+        raise ImportError(
+            "check_convexity_numerical() requires the MCP solve helper "
+            "'scripts.gamslib.test_solve.solve_mcp', which is only available "
+            "when running from a source checkout that includes scripts/. "
+            "It is not included in the installed package distribution."
+        ) from exc
 
     cold_result = solve_mcp(Path(mcp_cold_path), timeout=timeout)
     warm_result = solve_mcp(Path(mcp_warm_path), timeout=timeout)
@@ -87,14 +95,27 @@ def _compare_results(
     warm_result: dict[str, Any],
     rel_tol: float = 1e-4,
 ) -> ConvexityResult:
-    """Compare cold-start and warm-start solve results."""
+    """Compare cold-start and warm-start solve results.
+
+    Status sets aligned with pipeline conventions in test_solve.py:
+    - Optimal: model_status in (1, 2)  — Optimal or Locally Optimal
+    - Infeasible: model_status in (4, 5) — Infeasible or Locally Infeasible
+    """
+    _OPTIMAL = {1, 2}
+    _INFEASIBLE = {4, 5}
+
     status_cold = cold_result.get("model_status")
     status_warm = warm_result.get("model_status")
     obj_cold = cold_result.get("objective_value")
     obj_warm = warm_result.get("objective_value")
 
-    # Both STATUS 1 with objectives available
-    if status_cold == 1 and status_warm == 1 and obj_cold is not None and obj_warm is not None:
+    cold_optimal = status_cold in _OPTIMAL
+    warm_optimal = status_warm in _OPTIMAL
+    cold_infeasible = status_cold in _INFEASIBLE
+    warm_infeasible = status_warm in _INFEASIBLE
+
+    # Both optimal with objectives available
+    if cold_optimal and warm_optimal and obj_cold is not None and obj_warm is not None:
         abs_diff = abs(obj_cold - obj_warm)
         denom = max(abs(obj_cold), abs(obj_warm), 1.0)
         rel_diff = abs_diff / denom
@@ -130,8 +151,8 @@ def _compare_results(
                 ),
             )
 
-    # STATUS 5 cold, STATUS 1 warm
-    if status_cold == 5 and status_warm == 1:
+    # Cold infeasible, warm optimal
+    if cold_infeasible and warm_optimal:
         return ConvexityResult(
             is_nonconvex=False,
             obj_cold=obj_cold,
@@ -141,12 +162,13 @@ def _compare_results(
             abs_diff=None,
             rel_diff=None,
             conclusion=(
-                "Likely non-convex: cold start infeasible (STATUS 5), " "warm start optimal"
+                f"Likely non-convex: cold start infeasible (STATUS {status_cold}), "
+                "warm start optimal"
             ),
         )
 
-    # STATUS 1 cold, STATUS 5 warm
-    if status_cold == 1 and status_warm == 5:
+    # Cold optimal, warm infeasible
+    if cold_optimal and warm_infeasible:
         return ConvexityResult(
             is_nonconvex=False,
             obj_cold=obj_cold,
@@ -155,11 +177,13 @@ def _compare_results(
             status_warm=status_warm,
             abs_diff=None,
             rel_diff=None,
-            conclusion=("Unusual: cold start optimal, warm start infeasible (STATUS 5)"),
+            conclusion=(
+                f"Unusual: cold start optimal, warm start infeasible (STATUS {status_warm})"
+            ),
         )
 
-    # Both STATUS 5
-    if status_cold == 5 and status_warm == 5:
+    # Both infeasible
+    if cold_infeasible and warm_infeasible:
         return ConvexityResult(
             is_nonconvex=False,
             obj_cold=obj_cold,
@@ -168,12 +192,15 @@ def _compare_results(
             status_warm=status_warm,
             abs_diff=None,
             rel_diff=None,
-            conclusion="Inconclusive: both solves infeasible (STATUS 5)",
+            conclusion=(
+                f"Inconclusive: both solves infeasible "
+                f"(cold STATUS {status_cold}, warm STATUS {status_warm})"
+            ),
         )
 
     # One or both failed to solve
-    cold_status_str = f"STATUS {status_cold}" if status_cold else "no solve"
-    warm_status_str = f"STATUS {status_warm}" if status_warm else "no solve"
+    cold_status_str = f"STATUS {status_cold}" if status_cold is not None else "no solve"
+    warm_status_str = f"STATUS {status_warm}" if status_warm is not None else "no solve"
     return ConvexityResult(
         is_nonconvex=False,
         obj_cold=obj_cold,

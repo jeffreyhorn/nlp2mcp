@@ -59,6 +59,38 @@ class TestCompareResults:
         assert not result.is_nonconvex
         assert "Inconclusive" in result.conclusion
 
+    def test_status_2_locally_optimal_treated_as_optimal(self):
+        """STATUS 2 (Locally Optimal) should be treated as optimal."""
+        cold = {"model_status": 2, "objective_value": 100.0}
+        warm = {"model_status": 1, "objective_value": 200.0}
+        result = _compare_results(cold, warm)
+        assert result.is_nonconvex
+        assert "Non-convex" in result.conclusion
+
+    def test_both_status_2_same_objective(self):
+        """Both STATUS 2 with same objective → consistent."""
+        cold = {"model_status": 2, "objective_value": 7.955}
+        warm = {"model_status": 2, "objective_value": 7.955}
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex
+        assert "Consistent" in result.conclusion
+
+    def test_status_4_infeasible_cold_warm_optimal(self):
+        """STATUS 4 (Infeasible) cold, STATUS 1 warm → likely non-convex."""
+        cold = {"model_status": 4, "objective_value": None}
+        warm = {"model_status": 1, "objective_value": 100.0}
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex
+        assert "Likely non-convex" in result.conclusion
+
+    def test_status_4_and_5_both_infeasible(self):
+        """STATUS 4 cold, STATUS 5 warm → both infeasible."""
+        cold = {"model_status": 4, "objective_value": None}
+        warm = {"model_status": 5, "objective_value": None}
+        result = _compare_results(cold, warm)
+        assert not result.is_nonconvex
+        assert "Inconclusive" in result.conclusion
+
     def test_no_solve_results(self):
         """Missing model_status → inconclusive."""
         cold = {"model_status": None, "objective_value": None}

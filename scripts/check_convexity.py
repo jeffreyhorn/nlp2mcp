@@ -84,8 +84,8 @@ def main() -> int:
 
         if not args.quiet:
             print("Computational Convexity Check:")
-            cold_status = f"STATUS {result.status_cold}" if result.status_cold else "no solve"
-            warm_status = f"STATUS {result.status_warm}" if result.status_warm else "no solve"
+            cold_status = f"STATUS {result.status_cold}" if result.status_cold is not None else "no solve"
+            warm_status = f"STATUS {result.status_warm}" if result.status_warm is not None else "no solve"
             cold_obj = f"{result.obj_cold:.6g}" if result.obj_cold is not None else "N/A"
             warm_obj = f"{result.obj_warm:.6g}" if result.obj_warm is not None else "N/A"
             print(f"  Cold-start MCP:  {cold_status}, obj = {cold_obj}")
