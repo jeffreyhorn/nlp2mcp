@@ -505,7 +505,7 @@ def main(
         # Step 7: Write output
         if output:
             output_path = Path(output)
-            output_path.write_text(gams_code)
+            output_path.write_text(gams_code, encoding="utf-8")
             click.echo(f"✓ Generated MCP: {output}")
 
             if verbose >= 2:
