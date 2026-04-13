@@ -109,12 +109,14 @@ def _compare_results(
     _INFEASIBLE = {4, 5}
 
     def _solve_succeeded(result: dict[str, Any]) -> bool:
-        """Return True only for results that indicate a successful solve."""
-        solve_status = result.get("status")
-        if isinstance(solve_status, str) and solve_status.lower() != "success":
+        """Return True only for results that indicate a successful solve.
+
+        Requires both status="success" and solver_status=1 with no error.
+        Missing fields are treated as failure (conservative).
+        """
+        if result.get("status") != "success":
             return False
-        solver_status = result.get("solver_status")
-        if solver_status is not None and solver_status != 1:
+        if result.get("solver_status") != 1:
             return False
         if result.get("error"):
             return False

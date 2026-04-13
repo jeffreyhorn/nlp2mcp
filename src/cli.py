@@ -521,22 +521,15 @@ def main(
         if check_convexity_numerical:
             import tempfile
 
-            try:
-                from src.diagnostics.convexity_numerical import (
-                    check_convexity_numerical as _run_check,
-                )
-            except ImportError:
-                click.echo(
-                    "Error: --check-convexity-numerical requires the MCP solve "
-                    "helper (scripts.gamslib.test_solve), which is only available "
-                    "from a source checkout.",
-                    err=True,
-                )
-                sys.exit(1)
+            from src.diagnostics.convexity_numerical import (
+                check_convexity_numerical as _run_check,
+            )
 
             cold_path = Path(output)
 
-            # Generate warm-start MCP if not already using --nlp-presolve
+            # Generate the warm-start MCP used by the numerical convexity check.
+            # If the main output already used --nlp-presolve, we generate a
+            # temporary cold-start MCP below for the cold/warm comparison.
             with tempfile.TemporaryDirectory(prefix="nlp2mcp_cvx_") as tmpdir:
                 warm_path = Path(tmpdir) / "warm_mcp.gms"
                 warm_code = emit_gams_mcp(
@@ -549,22 +542,28 @@ def main(
                 )
                 warm_path.write_text(warm_code, encoding="utf-8")
 
-                # Generate the warm-start MCP used by the numerical convexity check.
-                # If the main output already used --nlp-presolve, we generate a
-                # temporary cold-start MCP below for the cold/warm comparison.
-                if nlp_presolve:
-                    cold_path_tmp = Path(tmpdir) / "cold_mcp.gms"
-                    cold_code = emit_gams_mcp(
-                        kkt,
-                        model_name=model_name,
-                        add_comments=add_comments,
-                        config=config,
-                        nlp_presolve=False,
+                try:
+                    if nlp_presolve:
+                        cold_path_tmp = Path(tmpdir) / "cold_mcp.gms"
+                        cold_code = emit_gams_mcp(
+                            kkt,
+                            model_name=model_name,
+                            add_comments=add_comments,
+                            config=config,
+                            nlp_presolve=False,
+                        )
+                        cold_path_tmp.write_text(cold_code, encoding="utf-8")
+                        cvx_result = _run_check(cold_path_tmp, warm_path)
+                    else:
+                        cvx_result = _run_check(cold_path, warm_path)
+                except ImportError:
+                    click.echo(
+                        "Error: --check-convexity-numerical requires the MCP "
+                        "solve helper (scripts.gamslib.test_solve), which is "
+                        "only available from a source checkout.",
+                        err=True,
                     )
-                    cold_path_tmp.write_text(cold_code, encoding="utf-8")
-                    cvx_result = _run_check(cold_path_tmp, warm_path)
-                else:
-                    cvx_result = _run_check(cold_path, warm_path)
+                    sys.exit(1)
 
             if not quiet:
                 click.echo("")

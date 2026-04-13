@@ -1450,7 +1450,7 @@ def main() -> int:
     feature_group.add_argument(
         "--check-convexity",
         action="store_true",
-        help="Run computational convexity test on successfully solved models",
+        help="Run computational convexity test after the cold-start solve attempt, including models with failed cold solves",
     )
 
     # Convenience

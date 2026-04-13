@@ -180,6 +180,16 @@ class TestCompareResults:
         assert "GAMS executable not found" in result.conclusion
         assert "Timeout after 60 seconds" in result.conclusion
 
+    def test_missing_fields_not_trusted(self):
+        """Result dicts missing status/solver_status should not be trusted."""
+        # Bare dict with just model_status — missing status and solver_status
+        cold = {"model_status": 1, "objective_value": 100.0}
+        warm = {"model_status": 1, "objective_value": 200.0}
+        result = _compare_results(cold, warm)
+        # Should NOT be proven non-convex — missing fields mean untrusted
+        assert not result.is_nonconvex
+        assert "Inconclusive" in result.conclusion
+
 
 class TestCheckConvexityFromResults:
     """Tests for the public check_convexity_from_results wrapper."""
