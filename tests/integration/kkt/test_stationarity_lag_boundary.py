@@ -62,6 +62,7 @@ class TestBoundaryOffsetFilter:
         assert filtered is offset_groups  # same object, untouched
 
 
+@pytest.mark.slow
 class TestRocketLagBoundaryFilter:
     """End-to-end: rocket stationarity should be sparse (requires raw model)."""
 
