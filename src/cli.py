@@ -126,6 +126,12 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default=False,
     help="Add NLP pre-solve step to warm-start MCP dual variables (helps non-convex models)",
 )
+@click.option(
+    "--check-convexity-numerical",
+    is_flag=True,
+    default=False,
+    help="Run computational convexity test: solve cold-start and warm-start MCP, compare objectives",
+)
 def main(
     input_file,
     output,
@@ -144,6 +150,7 @@ def main(
     diagnostics,
     output_format,
     nlp_presolve,
+    check_convexity_numerical,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -505,6 +512,67 @@ def main(
 
         if verbose:
             click.echo("✓ Conversion complete")
+
+        # Step 8: Computational convexity check (optional)
+        if check_convexity_numerical:
+            if not output:
+                click.echo(
+                    "Error: --check-convexity-numerical requires -o OUTPUT",
+                    err=True,
+                )
+                sys.exit(1)
+
+            import tempfile
+
+            from src.diagnostics.convexity_numerical import (
+                check_convexity_numerical as _run_check,
+            )
+
+            cold_path = Path(output)
+
+            # Generate warm-start MCP if not already using --nlp-presolve
+            with tempfile.TemporaryDirectory(prefix="nlp2mcp_cvx_") as tmpdir:
+                warm_path = Path(tmpdir) / "warm_mcp.gms"
+                warm_code = emit_gams_mcp(
+                    kkt,
+                    model_name=model_name,
+                    add_comments=add_comments,
+                    config=config,
+                    nlp_presolve=True,
+                    source_file=input_file,
+                )
+                warm_path.write_text(warm_code)
+
+                # If --nlp-presolve was set, the output IS the warm file;
+                # we need a cold version too.
+                if nlp_presolve:
+                    cold_path_tmp = Path(tmpdir) / "cold_mcp.gms"
+                    cold_code = emit_gams_mcp(
+                        kkt,
+                        model_name=model_name,
+                        add_comments=add_comments,
+                        config=config,
+                        nlp_presolve=False,
+                    )
+                    cold_path_tmp.write_text(cold_code)
+                    cvx_result = _run_check(cold_path_tmp, warm_path)
+                else:
+                    cvx_result = _run_check(cold_path, warm_path)
+
+            if not quiet:
+                click.echo("")
+                click.echo("Computational Convexity Check:")
+                _s_cold = (
+                    f"STATUS {cvx_result.status_cold}" if cvx_result.status_cold else "no solve"
+                )
+                _s_warm = (
+                    f"STATUS {cvx_result.status_warm}" if cvx_result.status_warm else "no solve"
+                )
+                _o_cold = f"{cvx_result.obj_cold:.6g}" if cvx_result.obj_cold is not None else "N/A"
+                _o_warm = f"{cvx_result.obj_warm:.6g}" if cvx_result.obj_warm is not None else "N/A"
+                click.echo(f"  Cold-start MCP:  {_s_cold}, obj = {_o_cold}")
+                click.echo(f"  Warm-start MCP:  {_s_warm}, obj = {_o_warm}")
+                click.echo(f"  {cvx_result.conclusion}")
 
         # Output diagnostics report if requested
         if diag_report:

@@ -224,3 +224,24 @@ class TestCLI:
 
         assert result.exit_code == 0
         assert "--nlp-presolve" in result.output
+
+    def test_cli_help_lists_check_convexity_numerical(self):
+        """Test --help lists the --check-convexity-numerical option."""
+        runner = CliRunner()
+        result = runner.invoke(main, ["--help"])
+
+        assert result.exit_code == 0
+        assert "--check-convexity-numerical" in result.output
+
+    def test_cli_check_convexity_requires_output(self):
+        """--check-convexity-numerical without -o should fail."""
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            [
+                "examples/simple_nlp.gms",
+                "--check-convexity-numerical",
+            ],
+        )
+        # Should fail because -o is required
+        assert result.exit_code != 0
