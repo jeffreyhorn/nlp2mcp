@@ -677,6 +677,7 @@ def _run_convexity_check(
     cold_result: dict[str, Any],
     args: argparse.Namespace,
     stats: dict[str, Any],
+    existing_warm_result: dict[str, Any] | None = None,
 ) -> None:
     """Run computational convexity check after the cold-start solve attempt.
 
@@ -684,6 +685,10 @@ def _run_convexity_check(
     compares the preserved cold-start result with the warm-start result.
     The cold-start result may represent either a successful or failed solve;
     differing KKT points/objectives can still provide evidence of non-convexity.
+
+    If ``existing_warm_result`` is provided (e.g., from a presolve retry
+    that already solved the warm-start MCP), it is reused to avoid a
+    redundant GAMS/PATH call.
     """
     from src.diagnostics.convexity_numerical import check_convexity_from_results
 
@@ -706,9 +711,14 @@ def _run_convexity_check(
                 logger.info("    [CONVEXITY] Warm-start translation failed, skipping")
             return
 
-    # Solve warm-start MCP
-    solve_func = get_solve_function()
-    warm_result = solve_func(presolve_path, timeout=60)
+    # Reuse existing warm-start result if available (e.g., from presolve retry)
+    if existing_warm_result is not None:
+        warm_result = existing_warm_result
+        if args.verbose:
+            logger.info("    [CONVEXITY] Reusing existing warm-start solve result")
+    else:
+        solve_func = get_solve_function()
+        warm_result = solve_func(presolve_path, timeout=60)
 
     # Compare
     cvx = check_convexity_from_results(cold_result, warm_result)
@@ -839,6 +849,7 @@ def run_pipeline(
 
         result = run_solve_stage(model, mcp_path, args, stats)
         cold_result = result  # Preserve for convexity check before retry overwrites
+        warm_retry_result = None  # Set if presolve retry succeeds
 
         # Two-pass retry: if STATUS 5 (Locally Infeasible), re-translate
         # with --nlp-presolve and re-solve.  This warm-starts MCP dual
@@ -890,6 +901,7 @@ def run_pipeline(
                         "model_optimal_presolve"
                     )
                     result = retry_result
+                    warm_retry_result = retry_result
                     if args.verbose:
                         obj = retry_result.get("objective_value")
                         obj_str = f"{obj:.6g}" if obj is not None else "N/A"
@@ -922,7 +934,10 @@ def run_pipeline(
 
     # Stage 3b: Computational convexity check (optional)
     if run_solve and getattr(args, "check_convexity", False):
-        _run_convexity_check(model, model_path, mcp_path, cold_result, args, stats)
+        _run_convexity_check(
+            model, model_path, mcp_path, cold_result, args, stats,
+            existing_warm_result=warm_retry_result,
+        )
 
     # Stage 4: Compare
     if run_compare:
