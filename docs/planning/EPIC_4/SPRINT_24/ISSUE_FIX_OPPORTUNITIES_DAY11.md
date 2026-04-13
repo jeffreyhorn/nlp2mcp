@@ -10,37 +10,39 @@ pipeline stage they'd advance and the approximate number of models affected.
 
 ## Tier 1: High Impact, Low Effort (1–2h each)
 
-### 1. Widen comparison tolerance for close mismatches
-**Models advanced:** 13 (from mismatch → match)
-**Effort:** 30 min
+### 1. Classify close-mismatch models correctly (not a tolerance fix)
+**Models advanced:** 2–3 genuine tolerance matches, rest need investigation
+**Effort:** 1–2h
 **Stage:** Compare
 
 13 models solve to STATUS 1/2 with objectives within 3% of the NLP
-reference but are classified as mismatches.  Several are CGE models that
-all converge to MCP obj ≈ 25.508 (a known CGE equilibrium normalization
-artifact), and others are non-convex models finding a different local
-KKT point.
+reference.  However, blanket-widening the tolerance is **not legitimate**
+— most of these are genuinely different solutions, not numerical noise:
 
-| Model | rel_diff | Notes |
-|-------|---------|-------|
-| mingamma | 0.41% | Essentially matching |
-| ps2_f_s | 0.51% | Non-convex stochastic |
-| ps2_s | 0.51% | Non-convex stochastic |
-| worst | 0.68% | Large absolute values |
-| chakra | 0.71% | Close |
-| lrgcge | 1.01% | CGE ≈ 25.508 |
-| ps3_s_scp | 1.62% | Non-convex |
-| moncge | 1.82% | CGE ≈ 25.508 |
-| weapons | 2.03% | Close |
-| ps3_s_mn | 2.16% | Non-convex |
-| irscge | 2.24% | CGE ≈ 25.508 |
-| stdcge | 2.24% | CGE ≈ 25.508 |
-| like | 2.59% | Close |
+| Model | rel_diff | Diagnosis |
+|-------|---------|-----------|
+| mingamma | 0.41% | **Genuine tolerance candidate** — essentially matching |
+| ps2_f_s | 0.51% | Different local KKT point (non-convex stochastic) — correct MCP behavior |
+| ps2_s | 0.51% | Different local KKT point (non-convex stochastic) — correct MCP behavior |
+| worst | 0.68% | **Genuine tolerance candidate** — large absolute values, small relative diff |
+| chakra | 0.71% | **Genuine tolerance candidate** — close |
+| lrgcge | 1.01% | CGE normalization artifact — MCP finds different equilibrium (obj ≈ 25.508) |
+| ps3_s_scp | 1.62% | Different local KKT point (non-convex) — correct MCP behavior |
+| moncge | 1.82% | CGE normalization artifact (obj ≈ 25.508) |
+| weapons | 2.03% | Needs investigation |
+| ps3_s_mn | 2.16% | Different local KKT point (non-convex) — correct MCP behavior |
+| irscge | 2.24% | CGE normalization artifact (obj ≈ 25.508) |
+| stdcge | 2.24% | CGE normalization artifact (obj ≈ 25.508) |
+| like | 2.59% | Needs investigation |
 
-**Fix:** Increase `DEFAULT_RTOL` from 0.2% to 3% in `scripts/gamslib/test_solve.py`,
-or add a separate tolerance tier for "close match" vs "exact match" in
-the comparison logic.  The CGE models may also benefit from a dedicated
-CGE normalization check.
+**Fix:** Do NOT blanket-widen tolerance.  Instead:
+- Modest tolerance increase (0.2% → 1%) for 2–3 genuine numerical cases
+  (mingamma, worst, chakra)
+- Add a "different KKT point" comparison outcome for non-convex models
+  that find valid but different local optima (ps2/ps3 family)
+- Investigate CGE models (irscge, lrgcge, moncge, stdcge) for
+  normalization issues — these may need a CGE-specific comparison
+- Investigate weapons and like individually
 
 ---
 
@@ -185,14 +187,16 @@ dynamic domain extensions).  These are correctly excluded.
 
 | Priority | Action | Models Advanced | Effort |
 |----------|--------|----------------|--------|
-| **1** | Widen comparison tolerance to 3% | +13 match | 30 min |
-| **2** | Fix harker/fawley/china compilation | +3 solve | 3–4h |
-| **3** | Fix division-by-zero guards | +4 solve | 4h |
-| **4** | Fix cclinpts MCP pairing | +1 solve | 1h |
-| **5** | Investigate STATUS 5 models with presolve | +2–4 solve | 4h |
-| **6** | Fix sambal/qsambal stationarity | +2 match | 2h |
+| **1** | Fix compilation errors (harker/fawley/china) | +3 solve | 3–4h |
+| **2** | Fix division-by-zero guards (camcge/elec/lmp2/gtm) | +4 solve | 4h |
+| **3** | Fix cclinpts MCP pairing | +1 solve | 1h |
+| **4** | Modest tolerance increase (0.2% → 1%) | +2–3 match | 30 min |
+| **5** | Add "different KKT point" outcome for non-convex | +4–5 reclassified | 1h |
+| **6** | Investigate STATUS 5 models with presolve | +2–4 solve | 4h |
+| **7** | Fix sambal/qsambal stationarity | +2 match | 2h |
 
-**Best single action:** Widening comparison tolerance advances 13 models
-in 30 minutes — by far the highest ROI.
+**Best single action:** Fixing compilation errors in harker/fawley/china
+advances 3 models from syntax_error to potentially solving, and may
+uncover patterns that fix the other 8 syntax_error models too.
 
-**Total potential:** +13 match, +8–12 solve from ~15h of work.
+**Total potential:** +2–3 match, +10–12 solve, +4–5 reclassified from ~15h.
