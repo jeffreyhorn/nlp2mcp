@@ -1062,10 +1062,10 @@ def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
                 result["error"] = f"Parse error: {parsed['error_type']}"
             elif solver_status != 1:
                 result["error"] = (
-                    f"Solver: {SOLVER_STATUS_DESCRIPTIONS.get(solver_status, 'Unknown')}"
+                    f"Solver: {SOLVER_STATUS_DESCRIPTIONS.get(solver_status or 0, 'Unknown')}"
                 )
             elif model_status not in (1, 2):
-                result["error"] = f"Model: {MODEL_STATUS_DESCRIPTIONS.get(model_status, 'Unknown')}"
+                result["error"] = f"Model: {MODEL_STATUS_DESCRIPTIONS.get(model_status or 0, 'Unknown')}"
             else:
                 result["error"] = "Unknown error"
 
