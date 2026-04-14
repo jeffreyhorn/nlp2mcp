@@ -3116,9 +3116,9 @@ class TestLoopAttrAccessEmission:
         idx = Tree("index_list", [Tree("index_simple", [Token("ID", "i")])])
         node = Tree(
             "attr_access_indexed",
-            [Token("ID", "x"), Token("ID", "l"), idx],
+            [Token("ID", "x"), Token("ID", "scaleOpt"), idx],
         )
-        assert _loop_tree_to_gams(node) == "x.l(i)"
+        assert _loop_tree_to_gams(node) == "x.scaleOpt(i)"
 
     def test_set_attr_emits_dot(self):
         """set_attr node should emit 'i.ord'."""
@@ -3178,7 +3178,7 @@ class TestLoopAttrAccessEmission:
         assert "objVal" not in result
 
     def test_non_model_attr_not_filtered(self):
-        """Non-model attr_access (e.g., x.l) should still be emitted."""
+        """Non-model attr_access (e.g., x.scaleOpt) should still be emitted."""
         from lark import Token, Tree
 
         from src.emit.original_symbols import emit_pre_solve_param_assignments
@@ -3191,7 +3191,7 @@ class TestLoopAttrAccessEmission:
                 Token("EQUALS", "="),
                 Tree(
                     "attr_access",
-                    [Token("ID", "x"), Token("ID", "l")],
+                    [Token("ID", "x"), Token("ID", "scaleOpt")],
                 ),
                 Token("SEMICOLON", ";"),
             ],
@@ -3223,4 +3223,4 @@ class TestLoopAttrAccessEmission:
 
         result = emit_pre_solve_param_assignments(model)
         assert "myparam" in result
-        assert "x.l" in result
+        assert "x.scaleOpt" in result
