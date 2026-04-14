@@ -55,7 +55,9 @@ reference.  However, blanket-widening the tolerance is **not legitimate**
 
 | Model | Error Type | Root Cause |
 |-------|-----------|-----------|
-| china, fawley, harker, turkey | Error 125/141/161 | Alias reuse in sum, unknown symbols, conflicting dimensions |
+| harker | Error 140 (Unknown symbol) | Missing declaration in emission |
+| china, turkey | Error 161 (Conflicting dimensions) | Set/alias dimension mismatch in emission |
+| fawley | Error 125 (Alias reuse in sum) | Alias reuse + stationarity all zeros |
 | cesam, indus, saras, sample | execError/compilation | Various emission bugs |
 | decomp | compilation | Multi-solve Benders (Issue #1222) |
 | partssupply | compilation | Model composition syntax (Issue #892) |
@@ -64,10 +66,10 @@ reference.  However, blanket-widening the tolerance is **not legitimate**
 **Highest-value targets:**
 - **harker** (Error 140 "Unknown symbol"): likely a missing declaration in
   emission — small fix, 1 model
-- **fawley** (stationarity all zeros): stationarity equations have `=E= -1`
-  with LHS=0 — may be an emission issue with scalar equations
 - **china/turkey** (Error 161 "Conflicting dimensions"): likely a set/alias
   dimension mismatch in emission
+- **fawley** (Error 125 + stationarity all zeros): stationarity equations
+  have `=E= -1` with LHS=0 — may be an emission issue with scalar equations
 
 ---
 
