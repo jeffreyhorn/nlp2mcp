@@ -95,9 +95,11 @@ the equation is empty.
 
 **Option B: IR-level detection (more robust)**
 
-Add a helper in `src/kkt/` that uses the Jacobian structure to identify
-empty equation instances, and store them in the KKTSystem. The emitter
-then reads this list and emits `.fx` statements.
+Add a helper in `src/kkt/empty_equation_detector.py` that analyzes
+equation bodies together with coefficient sparsity to identify empty
+equation instances. The emitter calls this helper directly and emits
+`.fx` statements from the returned results, without storing them in the
+`KKTSystem`.
 
 ### Implemented: Option B (IR-level detection)
 
@@ -122,6 +124,8 @@ for eq_name, instances in sorted(empty_eq_instances.items()):
         if inst:
             idx_str = _format_map_indices(inst)
             lines.append(f"{mult_name}.fx({idx_str}) = 0;")
+        else:
+            lines.append(f"{mult_name}.fx = 0;")
 ```
 
 ---
