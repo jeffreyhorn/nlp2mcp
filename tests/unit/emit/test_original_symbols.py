@@ -3093,3 +3093,134 @@ class TestVarLevelLoopStatements:
             )
         ]
         assert emit_var_level_loop_statements(model) == ""
+
+
+class TestLoopAttrAccessEmission:
+    """Tests for attr_access handling in loop body emission (Issue: harker fix)."""
+
+    def test_attr_access_emits_dot(self):
+        """attr_access node should emit 'model.attr', not 'model attr'."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = Tree("attr_access", [Token("ID", "harkoli"), Token("ID", "objVal")])
+        assert _loop_tree_to_gams(node) == "harkoli.objVal"
+
+    def test_attr_access_indexed_emits_dot_with_indices(self):
+        """attr_access_indexed should emit 'model.attr(idx)'."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        idx = Tree("index_list", [Tree("index_simple", [Token("ID", "i")])])
+        node = Tree(
+            "attr_access_indexed",
+            [Token("ID", "x"), Token("ID", "scaleOpt"), idx],
+        )
+        assert _loop_tree_to_gams(node) == "x.scaleOpt(i)"
+
+    def test_set_attr_emits_dot(self):
+        """set_attr node should emit 'i.ord'."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        node = Tree("set_attr", [Token("ID", "i"), Token("SET_ATTR_K", "ord")])
+        assert _loop_tree_to_gams(node) == "i.ord"
+
+    def test_model_attr_assignment_filtered(self):
+        """Assignments referencing model attributes should be skipped."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_pre_solve_param_assignments
+        from src.ir.symbols import LoopStatement
+
+        assign = Tree(
+            "assign",
+            [
+                Tree("lvalue", [Token("ID", "objold")]),
+                Token("EQUALS", "="),
+                Tree(
+                    "attr_access",
+                    [Token("ID", "m"), Token("ID", "objVal")],
+                ),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+
+        model = ModelIR()
+        model.sets["iter"] = SetDef(name="iter", domain=(), members=["i1", "i2"])
+        model.params["objold"] = ParameterDef(name="objold", domain=(), values={(): 0.0})
+        model.model_equation_map["m"] = ["eq1"]
+
+        solve = Tree("solve", [Token("ID", "m")])
+        body = Tree("loop_body", [assign, solve])
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Token("LOOP", "loop"),
+                Tree("id_list", [Token("ID", "iter")]),
+                body,
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("iter",),
+                body_stmts=[assign, solve],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+
+        result = emit_pre_solve_param_assignments(model)
+        assert "objold" not in result
+        assert "objVal" not in result
+
+    def test_non_model_attr_not_filtered(self):
+        """Non-model attr_access (e.g., x.scaleOpt) should still be emitted."""
+        from lark import Token, Tree
+
+        from src.emit.original_symbols import emit_pre_solve_param_assignments
+        from src.ir.symbols import LoopStatement
+
+        assign = Tree(
+            "assign",
+            [
+                Tree("lvalue", [Token("ID", "myparam")]),
+                Token("EQUALS", "="),
+                Tree(
+                    "attr_access",
+                    [Token("ID", "x"), Token("ID", "scaleOpt")],
+                ),
+                Token("SEMICOLON", ";"),
+            ],
+        )
+
+        model = ModelIR()
+        model.sets["iter"] = SetDef(name="iter", domain=(), members=["i1"])
+        model.params["myparam"] = ParameterDef(name="myparam", domain=(), values={(): 0.0})
+        model.model_equation_map["mymodel"] = ["eq1"]
+
+        solve = Tree("solve", [Token("ID", "mymodel")])
+        body = Tree("loop_body", [assign, solve])
+        loop_node = Tree(
+            "loop_stmt",
+            [
+                Token("LOOP", "loop"),
+                Tree("id_list", [Token("ID", "iter")]),
+                body,
+            ],
+        )
+        model.loop_statements = [
+            LoopStatement(
+                indices=("iter",),
+                body_stmts=[assign, solve],
+                location=None,
+                raw_node=loop_node,
+            )
+        ]
+
+        result = emit_pre_solve_param_assignments(model)
+        assert "myparam" in result
+        assert "x.scaleOpt" in result

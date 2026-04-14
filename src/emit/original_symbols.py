@@ -3016,6 +3016,13 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
             return f"{idx_part}${cond_part}"
         if data == "tuple_domain":
             return f"({_tree_to_gams_subst(node.children[0], subst)})"
+        if data in ("set_attr", "attr_access"):
+            return ".".join(_tree_to_gams_subst(c, subst) for c in node.children)
+        if data == "attr_access_indexed":
+            name = _tree_to_gams_subst(node.children[0], subst)
+            attr = _tree_to_gams_subst(node.children[1], subst)
+            idx = _tree_to_gams_subst(node.children[2], subst)
+            return f"{name}.{attr}({idx})"
         if data in ("binop", "unaryop"):
             return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
         if data == "condition":
@@ -3080,6 +3087,29 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
                     return True
             return False
 
+        def _tree_has_model_attr(node: object) -> bool:
+            """Check if a tree contains a model attribute reference.
+
+            Model attribute references (e.g., harkoli.objVal) depend on
+            a prior solve result and should not be emitted as standalone
+            pre-solve assignments in the MCP context.
+            """
+            if not isinstance(node, Tree):
+                return False
+            if str(node.data) in ("attr_access", "attr_access_indexed"):
+                # Check if first child is a model name
+                if node.children and isinstance(node.children[0], Token):
+                    ref = str(node.children[0]).lower()
+                    if ref in model_names:
+                        return True
+            return any(_tree_has_model_attr(c) for c in node.children)
+
+        model_names = {
+            name.lower()
+            for name in list(model_ir.model_equation_map.keys())
+            + ([model_ir.model_name] if model_ir.model_name else [])
+        }
+
         # Extract pre-solve param assignments (including from inner loops)
         def _extract_pre_solve(stmts: list, sub: dict[str, str]) -> None:
             for stmt in stmts:
@@ -3114,6 +3144,11 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
                     continue
                 name = _lhs_name(stmt)
                 if name is None or name not in param_names:
+                    continue
+                # Skip assignments that reference model attributes
+                # (e.g., objold = harkoli.objVal) — these depend on a
+                # prior solve result and are meaningless in the MCP context.
+                if _tree_has_model_attr(stmt):
                     continue
                 gams_text = _tree_to_gams_subst(stmt, sub)
                 assign_lines.append(gams_text)
