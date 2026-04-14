@@ -7,6 +7,9 @@ solving.
 **Estimated effort:** 2–3 hours
 **Models unblocked:** fawley (and potentially other models with empty
 equation instances due to sparse data)
+**Code fix:** Landed in PR #1240 (`detect_empty_equation_instances` in
+`src/kkt/empty_equation_detector.py`). This document records the
+analysis and design that led to the fix.
 
 ---
 
@@ -96,20 +99,20 @@ Add a helper in `src/kkt/` that uses the Jacobian structure to identify
 empty equation instances, and store them in the KKTSystem. The emitter
 then reads this list and emits `.fx` statements.
 
-### Recommended: Option A
+### Implemented: Option B (IR-level detection)
 
-It's the simplest path — the Jacobian already has the information. For
-each equation in the MCP, check which instances have Jacobian rows with
-at least one non-zero derivative.  Instances with no non-zero entries
-get their multiplier fixed to 0.
+Option A (Jacobian scanning) was initially prototyped but replaced with
+Option B: a dedicated `detect_empty_equation_instances()` module in
+`src/kkt/empty_equation_detector.py`. This analyzes equation bodies
+directly to identify instances where all variable coefficients are zero,
+which is more robust than Jacobian row scanning and avoids O(n×m) cost.
+
+The emitter uses `_format_map_indices()` for proper UEL quoting and
+filters by `kkt.referenced_multipliers` to avoid referencing undeclared
+variables.
 
 ```python
-# Actual implementation uses detect_empty_equation_instances() from
-# src/kkt/empty_equation_detector.py, which analyzes equation bodies
-# directly rather than scanning the Jacobian. The emitter uses
-# _format_map_indices() for proper UEL quoting/escaping.
-#
-# In emit_gams_mcp(), the existing Issue #1133 block:
+# In emit_gams_mcp(), the Issue #1133 block:
 empty_eq_instances = detect_empty_equation_instances(
     kkt.model_ir, relevant_equations=relevant_eqs
 )
