@@ -13,10 +13,10 @@ analysis and design that led to the fix.
 
 ---
 
-## Current State
+## Pre-fix State (Before PR #1240)
 
-fawley translates successfully but GAMS aborts the SOLVE with
-`EXECERROR = 1`:
+Before the fix landed in PR #1240, fawley translated successfully but
+GAMS aborted the SOLVE with `EXECERROR = 1`:
 
 ```
 **** MCP pair mbal.nu_mbal has empty equation but associated variable is NOT fixed
@@ -72,8 +72,9 @@ This `.fx` statement is not emitted.
 
 ### Approach: Detect and fix multipliers for empty equation instances
 
-After assembling the KKT system and before emission, scan each equality
-equation instance for empty bodies.  For instances where all variable
+During GAMS emission, after emitting the equation definitions and
+before emitting the model statement, scan each equality equation
+instance for empty bodies.  For instances where all variable
 coefficients are zero (the equation reduces to a constant), fix the
 corresponding multiplier to zero.
 
