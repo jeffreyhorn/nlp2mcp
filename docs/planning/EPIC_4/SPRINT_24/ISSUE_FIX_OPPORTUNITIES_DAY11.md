@@ -94,21 +94,22 @@ denominator.
 
 ## Tier 2: Medium Impact, Medium Effort (2–4h each)
 
-### 4. Fix 4 models with STATUS 5 (Locally Infeasible)
+### 4. Fix 4 models with STATUS 4/5 (Infeasible / Locally Infeasible)
 **Models advanced:** up to 4 (from infeasible → solving with presolve)
 **Effort:** 2h each (diagnosis + presolve retry)
 **Stage:** Solve
 
 | Model | Status | Issue |
 |-------|--------|-------|
-| agreste | STATUS 5 | Non-convex, may respond to presolve retry |
-| chain | STATUS 5 | Lag-indexed (like rocket), may benefit from #1134 fix |
-| korcge | STATUS 5 | CGE model |
-| lnts | STATUS 4 | Infeasible — structural issue |
+| agreste | STATUS 5 (Locally Infeasible) | Non-convex, may respond to presolve retry |
+| chain | STATUS 5 (Locally Infeasible) | Lag-indexed (like rocket), may benefit from #1134 fix |
+| korcge | STATUS 5 (Locally Infeasible) | CGE model |
+| lnts | STATUS 4 (Infeasible) | Structural infeasibility — may indicate KKT bug |
 
 The pipeline's two-pass retry (`--nlp-presolve`) already handles STATUS 5
-automatically.  If these models don't respond to warm-start, the KKT
-structure may need investigation (similar to rocket #1134 or bearing #757).
+automatically.  STATUS 4 (lnts) indicates a stricter infeasibility that
+warm-start alone may not resolve — the KKT structure may need
+investigation (similar to rocket #1134 or bearing #757).
 
 ---
 
