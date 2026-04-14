@@ -3096,7 +3096,7 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
             """
             if not isinstance(node, Tree):
                 return False
-            if str(node.data) == "attr_access":
+            if str(node.data) in ("attr_access", "attr_access_indexed"):
                 # Check if first child is a model name
                 if node.children and isinstance(node.children[0], Token):
                     ref = str(node.children[0]).lower()
