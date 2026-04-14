@@ -1000,42 +1000,6 @@ def _emit_nlp_presolve(
     sections.append("")
 
 
-def _emit_empty_equation_fixes(kkt: KKTSystem) -> list[str]:
-    """Emit .fx=0 for multipliers of empty equation instances.
-
-    Issue #1133: When an indexed equation evaluates to 0=0 for certain
-    domain elements (all variable coefficients are zero), GAMS requires
-    the corresponding MCP multiplier to be fixed.  Detect empty instances
-    by scanning the equality Jacobian for rows with no non-zero entries.
-    """
-    if kkt.J_eq is None or kkt.J_eq.index_mapping is None:
-        return []
-
-    # Collect equation instances that have at least one non-zero Jacobian entry
-    nonempty_rows: set[int] = set()
-    for row_id in range(kkt.J_eq.num_rows):
-        for col_id in range(kkt.J_eq.index_mapping.num_vars):
-            if kkt.J_eq.get_derivative(row_id, col_id) is not None:
-                nonempty_rows.add(row_id)
-                break
-
-    # Find empty rows and emit .fx for their multipliers
-    lines: list[str] = []
-    for row_id in range(kkt.J_eq.num_rows):
-        if row_id in nonempty_rows:
-            continue
-        eq_name, eq_indices = kkt.J_eq.index_mapping.row_to_eq[row_id]
-        if not eq_indices:
-            continue  # scalar equations — can't have partial empty instances
-        mult_name = create_eq_multiplier_name(eq_name)
-        if mult_name not in kkt.multipliers_eq:
-            continue
-        idx_str = ",".join(f"'{i}'" for i in eq_indices)
-        lines.append(f"{_quote_symbol(mult_name)}.fx({idx_str}) = 0;")
-
-    return lines
-
-
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
@@ -2446,19 +2410,6 @@ def emit_gams_mcp(
     model_code = emit_model_mcp(kkt, model_name, suppressed_fx_equations=suppressed_fx)
     sections.append(model_code)
     sections.append("")
-
-    # Issue #1133: Fix multipliers for empty equation instances.
-    # When an indexed equation evaluates to 0=0 for some domain elements
-    # (e.g., mbal('vacuum-res') in fawley where no process/blend data
-    # exists), GAMS requires the corresponding multiplier to be .fx=0.
-    # Detect via Jacobian sparsity: if no row in J_eq has non-zero
-    # derivatives for a given equation instance, it's empty.
-    empty_eq_fix_lines = _emit_empty_equation_fixes(kkt)
-    if empty_eq_fix_lines:
-        if add_comments:
-            sections.append("* Fix multipliers for empty equation instances")
-        sections.extend(empty_eq_fix_lines)
-        sections.append("")
 
     # Issue #835: Enable scaleOpt when any variable has .scale attributes
     if scale_lines:

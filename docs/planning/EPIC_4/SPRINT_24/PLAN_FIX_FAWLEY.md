@@ -104,24 +104,21 @@ at least one non-zero derivative.  Instances with no non-zero entries
 get their multiplier fixed to 0.
 
 ```python
-# In emit_gams_mcp(), after equation definitions:
-for eq_name in kkt.multipliers_eq:
+# Actual implementation uses detect_empty_equation_instances() from
+# src/kkt/empty_equation_detector.py, which analyzes equation bodies
+# directly rather than scanning the Jacobian. The emitter uses
+# _format_map_indices() for proper UEL quoting/escaping.
+#
+# In emit_gams_mcp(), the existing Issue #1133 block:
+empty_eq_instances = detect_empty_equation_instances(
+    kkt.model_ir, relevant_equations=relevant_eqs
+)
+for eq_name, instances in sorted(empty_eq_instances.items()):
     mult_name = create_eq_multiplier_name(eq_name)
-    eq_def = kkt.model_ir.equations.get(eq_name)
-    if not eq_def or not eq_def.domain:
-        continue  # scalar equations can't have empty instances
-    # Find equation instances with no Jacobian entries
-    for row_id in range(kkt.J_eq.num_rows):
-        rname, ridx = kkt.J_eq.index_mapping.row_to_eq[row_id]
-        if rname != eq_name:
-            continue
-        has_nonzero = any(
-            kkt.J_eq.get_derivative(row_id, col_id) is not None
-            for col_id in range(kkt.J_eq.index_mapping.num_vars)
-        )
-        if not has_nonzero:
-            idx_str = ",".join(f"'{i}'" for i in ridx)
-            sections.append(f"{mult_name}.fx({idx_str}) = 0;")
+    for inst in sorted(instances):
+        if inst:
+            idx_str = _format_map_indices(inst)
+            lines.append(f"{mult_name}.fx({idx_str}) = 0;")
 ```
 
 ---
@@ -159,22 +156,24 @@ grep "nu_mbal.fx" /tmp/fawley_mcp.gms
 # Compile and solve
 gams /tmp/fawley_mcp.gms lo=3 o=/tmp/fawley_solve.lst
 grep "MODEL STATUS" /tmp/fawley_solve.lst
-# Expected: MODEL STATUS 1 Optimal
+# Current result: MODEL STATUS 5 (Locally Infeasible) on cold start.
+# The empty equation fix resolves the EXECERROR abort; STATUS 5 is a
+# separate convergence issue for this LP-as-MCP model.
 
 grep "nlp2mcp_obj_val" /tmp/fawley_solve.lst | grep "="
-# Expected: ~2899.25 (matching NLP reference)
+# Expected: ~2899.25 if solve succeeds; STATUS 5 yields a non-optimal point
 ```
 
 ---
 
 ## Success Criteria
 
-- [ ] `nu_mbal.fx('vacuum-res') = 0;` emitted in the MCP file
-- [ ] GAMS compilation succeeds (no EXECERROR)
-- [ ] fawley solves to MODEL STATUS 1 or 2
+- [x] `nu_mbal.fx('vacuum-res') = 0;` emitted in the MCP file
+- [x] GAMS compilation succeeds (no EXECERROR)
+- [ ] fawley solves to MODEL STATUS 1 or 2 (stretch goal — may need presolve)
 - [ ] Objective matches NLP reference (2899.25) within tolerance
-- [ ] No test regressions (`make test` passes)
-- [ ] Other models with empty equation instances unaffected or improved
+- [x] No test regressions (`make test` passes)
+- [x] Other models with empty equation instances unaffected or improved
 
 ---
 
