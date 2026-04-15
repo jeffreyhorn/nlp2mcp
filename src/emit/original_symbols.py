@@ -591,9 +591,29 @@ def emit_original_sets(
     # Partition sets into lists by phase, preserving original order
     phase_sets: list[list[tuple[str, SetDef]]] = [[] for _ in range(max_phase)]
 
+    referenced_sets: set[str] = set()
+    for eq_def in model_ir.equations.values():
+        for d in eq_def.domain:
+            referenced_sets.add(d.lower())
+    for var_def in model_ir.variables.values():
+        for d in var_def.domain:
+            referenced_sets.add(d.lower())
+    for pdef in model_ir.params.values():
+        for d in pdef.domain:
+            if d != "*":
+                referenced_sets.add(d.lower())
+    for sdef in model_ir.sets.values():
+        for d in sdef.domain:
+            referenced_sets.add(d.lower())
+
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
-        if not set_def.domain and set_def.members and any("." in str(m) for m in set_def.members):
+        if (
+            not set_def.domain
+            and set_def.members
+            and any("." in str(m) for m in set_def.members)
+            and set_name_lower not in referenced_sets
+        ):
             continue
         phase = set_phases.get(set_name_lower, 1)
         phase_sets[phase - 1].append((set_name, set_def))

@@ -1924,10 +1924,14 @@ def _apply_offset_substitution(
     element to IndexOffset(domain_var, offset) so downstream replacement
     produces r(i-1) instead of r(i).
 
-    Only applies to elements that are:
-    1. In the same set as the representative variable index
-    2. NOT in the representative equation indices (those are constraint
-       dimensions, not lead/lag offsets — e.g., j4 in maxdist(i3,j4))
+    Applies to ALL string indices whose element_to_set mapping matches a
+    variable domain set in ref_info.  Equation indices from different
+    domain sets are naturally excluded because they map to sets not in
+    ref_info (which is built from var_domain only).  Equation indices
+    from the SAME domain set as the variable ARE eligible for offset
+    substitution — this is required for subset-superset patterns (e.g.,
+    mb(ca) → xfert(ca) where crec(ca_eq, ca_var) needs the equation
+    element converted to an offset expression).
     """
     from src.ad.index_mapping import resolve_set_members
 
@@ -4841,7 +4845,7 @@ def _add_indexed_jacobian_terms(
                     # Skip when _did_dim_mismatch_alias_fix already handled Sum wrapping
                     # and renamed the derivative indices.
                     if not _did_dim_mismatch_alias_fix:
-                        controlled = var_domain_set | mult_domain_set
+                        controlled = {d.lower() for d in var_domain_set | mult_domain_set}
                         free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
                         uncontrolled = free_in_deriv - controlled
                         if uncontrolled:
