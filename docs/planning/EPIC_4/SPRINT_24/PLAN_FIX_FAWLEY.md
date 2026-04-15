@@ -158,6 +158,9 @@ RHS=-1), but PATH solves them trivially. **This is not a bug.**
 
 ## Verification
 
+**Prerequisite:** Raw GAMSlib sources are gitignored. Download them first:
+`python scripts/gamslib/download_models.py`
+
 ```bash
 python -m src.cli data/gamslib/raw/fawley.gms -o /tmp/fawley_mcp.gms --quiet
 
