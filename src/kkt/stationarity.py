@@ -1949,9 +1949,6 @@ def _apply_offset_substitution(
     if not ref_info:
         return expr
 
-    # Elements from the equation indices are constraint dimensions, not offsets
-    eq_elements = set(rep_eq_indices)
-
     def _sub(e: Expr) -> Expr:
         if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
             if not e.indices:
@@ -1959,7 +1956,7 @@ def _apply_offset_substitution(
             new_indices: list[str | IndexOffset] = []
             changed = False
             for idx in e.indices:
-                if isinstance(idx, str) and idx not in eq_elements:
+                if isinstance(idx, str):
                     mapped = element_to_set.get(idx)
                     if mapped and mapped in ref_info:
                         ref_elem, pos_map, ref_pos = ref_info[mapped]
@@ -4849,6 +4846,21 @@ def _add_indexed_jacobian_terms(
                         uncontrolled = free_in_deriv - controlled
                         if uncontrolled:
                             sum_indices = tuple(sorted(uncontrolled))
+                            sameas_conds: list[Expr] = []
+                            for free_idx in sum_indices:
+                                free_def = kkt.model_ir.sets.get(free_idx)
+                                if free_def and hasattr(free_def, "domain") and free_def.domain:
+                                    for parent in free_def.domain:
+                                        if parent.lower() in controlled:
+                                            sameas_conds.append(
+                                                Call("sameas", (SymbolRef(free_idx), SymbolRef(parent)))
+                                            )
+                                            break
+                            if sameas_conds:
+                                guard: Expr = sameas_conds[0]
+                                for sc in sameas_conds[1:]:
+                                    guard = Binary("and", guard, sc)
+                                term = DollarConditional(value_expr=term, condition=guard)
                             term = Sum(sum_indices, term)
 
                     # Issue #1049: Guard multiplier terms with $(sameas(...))

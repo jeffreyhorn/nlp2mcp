@@ -593,6 +593,12 @@ def emit_original_sets(
 
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
+        if (
+            not set_def.domain
+            and set_def.members
+            and any("." in str(m) for m in set_def.members)
+        ):
+            continue
         phase = set_phases.get(set_name_lower, 1)
         phase_sets[phase - 1].append((set_name, set_def))
 
@@ -1044,6 +1050,48 @@ def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
 
         missing.update(all_first_labels - emitted_first_labels)
 
+    wildcard_params: dict[str, tuple[set[int], set[str]]] = {}
+    for pname, pdef in model_ir.params.items():
+        domain = list(pdef.domain)
+        if not domain:
+            continue
+        wc_positions = {i for i, d in enumerate(domain) if d == "*"}
+        if not wc_positions:
+            continue
+        data_labels: set[str] = set()
+        dsize = len(domain)
+        for key_tuple, value in pdef.values.items():
+            if isinstance(value, (int, float)) and value == 0:
+                continue
+            expanded = _expand_table_key(key_tuple, dsize)
+            if expanded is None:
+                continue
+            for pos in wc_positions:
+                if pos < len(expanded):
+                    data_labels.add(expanded[pos].lower())
+        wildcard_params[pname.lower()] = (wc_positions, data_labels)
+
+    if wildcard_params:
+
+        def _collect_wc_refs(expr: Expr) -> None:
+            if isinstance(expr, ParamRef):
+                plow = expr.name.lower()
+                if plow in wildcard_params:
+                    wc_pos, data_labs = wildcard_params[plow]
+                    for pos in wc_pos:
+                        if pos < len(expr.indices):
+                            idx = expr.indices[pos]
+                            if isinstance(idx, str):
+                                raw = idx.strip("'\"")
+                                if raw.lower() not in data_labs:
+                                    missing.add(raw)
+            for child in expr.children():
+                _collect_wc_refs(child)
+
+        for pdef in model_ir.params.values():
+            for _, expr in pdef.expressions:
+                _collect_wc_refs(expr)
+
     return missing
 
 
@@ -1284,9 +1332,10 @@ def _topological_sort_statements(
             for i in indices:
                 sorted_stmts.append(stmts[i])
             emitted_phases.add(pkey)
-            # Mark param as defined once its LAST phase is emitted
-            if pkey == last_phase_key[pname_low]:
-                defined.add(pname_low)
+            # Mark param as defined once any phase is emitted so that
+            # other parameters in a cycle can proceed (the emitted phase
+            # provides enough values for downstream reads).
+            defined.add(pname_low)
         remaining = still_blocked
 
     return sorted_stmts
