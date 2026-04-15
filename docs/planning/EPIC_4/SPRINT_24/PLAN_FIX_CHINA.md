@@ -202,7 +202,7 @@ indices during Jacobian transposition for subset-domain variables.
 ## Verification
 
 **Prerequisite:** Raw GAMSlib sources are gitignored. Download them
-first: `python scripts/gamslib/download_models.py`
+first: `python scripts/gamslib/download_models.py --model china`
 
 ```bash
 # Generate MCP
