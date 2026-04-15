@@ -49,7 +49,8 @@ mbal(c).. u(c)$(cr(c)) + sum(p, ap(c,p)*z(p)) + sum(tr, at(c,tr)*trans(tr))
 
 For `vacuum-res`: `cr('vacuum-res')` is false, no `ap('vacuum-res',p)`
 entries exist, no `at('vacuum-res',tr)` entries, no `bposs` entries,
-no `recipes` entries → all terms are zero.
+no `recipes` entries, and `invent(c)` is a parameter (not a variable)
+with value zero for `vacuum-res` → all terms are zero.
 
 ---
 
@@ -115,12 +116,15 @@ filters by `kkt.referenced_multipliers` to avoid referencing undeclared
 variables.
 
 ```python
-# In emit_gams_mcp(), the Issue #1133 block:
+# In emit_gams_mcp(), the Issue #1133 block (simplified;
+# full version also filters by referenced_multipliers):
 empty_eq_instances = detect_empty_equation_instances(
     kkt.model_ir, relevant_equations=relevant_eqs
 )
 for eq_name, instances in sorted(empty_eq_instances.items()):
     mult_name = create_eq_multiplier_name(eq_name)
+    if ref_mults is not None and mult_name not in ref_mults:
+        continue
     for inst in sorted(instances):
         if inst:
             idx_str = _format_map_indices(inst)
