@@ -1,0 +1,209 @@
+# Plan: Fix fawley MCP EXECERROR (Empty Equation + Unfixed Multiplier)
+
+**Goal:** Fix the GAMS execution error that prevents fawley's MCP from
+solving.
+
+**Issue:** #1133 (fawley: Empty mbal equation for vacuum-res)
+**Estimated effort:** 2–3 hours
+**Models unblocked:** fawley (and potentially other models with empty
+equation instances due to sparse data)
+**Code fix:** Landed in PR #1240 (`detect_empty_equation_instances` in
+`src/kkt/empty_equation_detector.py`). This document records the
+analysis and design that led to the fix.
+
+---
+
+## Pre-fix State (Before PR #1240)
+
+Before the fix landed in PR #1240, fawley translated successfully but
+GAMS aborted the SOLVE with `EXECERROR = 1`:
+
+```
+**** MCP pair mbal.nu_mbal has empty equation but associated variable is NOT fixed
+     nu_mbal(vacuum-res)
+**** SOLVE from line 350 ABORTED, EXECERROR = 1
+```
+
+The element `vacuum-res` appears in set `c` but has no entries in any
+process yield table, blend possibility, or recipe.  The equation
+`mbal('vacuum-res')` evaluates to `0 =E= 0` (all coefficients zero),
+making it an empty equation.  GAMS requires that the multiplier variable
+for an empty MCP equation be fixed (`.fx = 0`), otherwise it aborts.
+
+---
+
+## Model Structure
+
+Fawley is a refinery blending LP with:
+- 18 commodities (`c`), 8 processes (`p`), 3 transport modes (`tr`)
+- 4 product types (`cf`), 3 crude types (`cr`), 1 import (`ci`)
+- Objective: maximize `profit` (scalar, via chain of defining equations)
+
+The `mbal(c)` equation tracks material balance for each commodity:
+```gams
+mbal(c).. u(c)$(cr(c)) + sum(p, ap(c,p)*z(p)) + sum(tr, at(c,tr)*trans(tr))
+          + import(c)$(ci(c))
+    =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c)
+         + sum((cfr,r), recipes(cfr,c,r)*rb(cfr,r));
+```
+
+For `vacuum-res`: `cr('vacuum-res')` is false, no `ap('vacuum-res',p)`
+entries exist, no `at('vacuum-res',tr)` entries, no `bposs` entries,
+no `recipes` entries, and `invent(c)` is a parameter (not a variable)
+with value zero for `vacuum-res` → all terms are zero.
+
+---
+
+## Root Cause
+
+The emitter pairs `mbal(c)` with `nu_mbal(c)` in the MCP model
+statement for ALL elements of `c`, including `vacuum-res`.  When the
+equation body evaluates to `0 =E= 0`, GAMS requires the multiplier
+to be fixed:
+
+```gams
+nu_mbal.fx('vacuum-res') = 0;
+```
+
+This `.fx` statement is not emitted.
+
+---
+
+## Fix Strategy
+
+### Approach: Detect and fix multipliers for empty equation instances
+
+During GAMS emission, after emitting the equation definitions and
+before emitting the model statement, scan each equality equation
+instance for empty bodies.  For instances where all variable
+coefficients are zero (the equation reduces to a constant), fix the
+corresponding multiplier to zero.
+
+**Implementation options:**
+
+**Option A: Emission-time detection (simplest)**
+
+In `src/emit/emit_gams.py`, after the equation definitions are emitted
+and before the model statement, add a pass that:
+
+1. For each indexed equality equation, evaluate which instances have
+   non-zero variable coefficients
+2. For instances where the body is all-zero, emit
+   `nu_<eq>.fx(<element>) = 0;`
+
+This can use the Jacobian to check: if no row in `J_eq` corresponds to
+a given equation instance, or if all derivatives in that row are zero,
+the equation is empty.
+
+**Option B: IR-level detection (more robust)**
+
+Add a helper in `src/kkt/empty_equation_detector.py` that analyzes
+equation bodies together with coefficient sparsity to identify empty
+equation instances. The emitter calls this helper directly and emits
+`.fx` statements from the returned results, without storing them in the
+`KKTSystem`.
+
+### Implemented: Option B (IR-level detection)
+
+Option A (Jacobian scanning) was initially prototyped but replaced with
+Option B: a dedicated `detect_empty_equation_instances()` module in
+`src/kkt/empty_equation_detector.py`. This analyzes equation bodies
+directly to identify instances where all variable coefficients are zero,
+which is more robust than Jacobian row scanning and avoids O(n×m) cost.
+
+The emitter uses `_format_map_indices()` for proper UEL quoting and
+filters by `kkt.referenced_multipliers` to avoid referencing undeclared
+variables.
+
+```python
+# In emit_gams_mcp(), the Issue #1133 block (simplified;
+# full version also filters by referenced_multipliers):
+empty_eq_instances = detect_empty_equation_instances(
+    kkt.model_ir, relevant_equations=relevant_eqs
+)
+for eq_name, instances in sorted(empty_eq_instances.items()):
+    mult_name = create_eq_multiplier_name(eq_name)
+    if ref_mults is not None and mult_name not in ref_mults:
+        continue
+    for inst in sorted(instances):
+        if inst:
+            idx_str = _format_map_indices(inst)
+            lines.append(f"{mult_name}.fx({idx_str}) = 0;")
+        else:
+            lines.append(f"{mult_name}.fx = 0;")
+```
+
+---
+
+## Secondary Issue: Stationarity Equations Look Trivial
+
+The stationarity equations for scalar intermediate variables
+(`purchase`, `recurrent`, `revenue`, `transport`) look trivial:
+
+```gams
+stat_purchase.. 1 + nu_dpur =E= 0;
+stat_revenue.. -1 + nu_drev =E= 0;
+```
+
+These are **actually correct** — they solve to `nu_dpur = -1` and
+`nu_drev = 1`. The constant term is the objective gradient (negated
+for MAX), and the multiplier term is from the defining equation's
+Jacobian. These equations constrain the multipliers to specific values,
+which is correct for scalar variables defined by a single equation.
+
+At initialization (`nu_dpur.l = 0`), they appear infeasible (LHS=0,
+RHS=-1), but PATH solves them trivially. **This is not a bug.**
+
+---
+
+## Verification
+
+**Prerequisite:** Raw GAMSlib sources are gitignored. Download them first:
+`python scripts/gamslib/download_models.py`
+
+```bash
+python -m src.cli data/gamslib/raw/fawley.gms -o /tmp/fawley_mcp.gms --quiet
+
+# Check the .fx statement is emitted
+grep "nu_mbal.fx" /tmp/fawley_mcp.gms
+# Expected: nu_mbal.fx('vacuum-res') = 0;
+
+# Compile and solve
+gams /tmp/fawley_mcp.gms lo=3 o=/tmp/fawley_solve.lst
+grep "MODEL STATUS" /tmp/fawley_solve.lst
+# Current result: MODEL STATUS 5 (Locally Infeasible) on cold start.
+# The empty equation fix resolves the EXECERROR abort; STATUS 5 is a
+# separate convergence issue for this LP-as-MCP model.
+
+grep "nlp2mcp_obj_val" /tmp/fawley_solve.lst | grep "="
+# Expected: ~2899.25 if solve succeeds; STATUS 5 yields a non-optimal point
+```
+
+---
+
+## Success Criteria
+
+- [x] `nu_mbal.fx('vacuum-res') = 0;` emitted in the MCP file
+- [x] GAMS compilation succeeds (no EXECERROR)
+- [ ] fawley solves to MODEL STATUS 1 or 2 (stretch goal — may need presolve)
+- [ ] Objective matches NLP reference (2899.25) within tolerance
+- [x] No test regressions (`make test` passes)
+- [x] Other models with empty equation instances unaffected or improved
+
+---
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/emit/emit_gams.py` | Add empty-equation multiplier fixing after equation definitions |
+| `tests/` | Add test for empty equation multiplier fixing |
+| `docs/issues/completed/ISSUE_1133*` | Update status to FIXED |
+
+---
+
+## Related Issues
+
+- **#1133**: fawley empty mbal equation (this fix)
+- **#1130** (FIXED): fawley table column alignment
+- **#1041**: cesam2 empty equation (similar pattern, different model)
