@@ -7,7 +7,7 @@ optimality.
 as `path_syntax_error` (`compilation_error`)
 **Estimated effort:** 4–6 hours (3 distinct issues)
 **Models potentially unblocked:** china, turkey (same Error 141 ordering/uninitialized-symbol category)
-**NLP reference objective:** 40,561.5739
+**NLP reference objective:** 40561.5739
 
 ---
 
@@ -232,7 +232,7 @@ grep "nlp2mcp_obj_val" /tmp/china_solve.lst | grep "="
 - [ ] No unmatched variable errors (empty inequality instances fixed)
 - [ ] Stationarity equations have correct Jacobian coefficients
 - [ ] china solves to MODEL STATUS 1 or 2
-- [ ] Objective matches NLP reference (40,561.5739) within tolerance
+- [ ] Objective matches NLP reference (40561.5739) within tolerance
 - [ ] No test regressions (`make test` passes)
 - [ ] turkey model also checked for similar improvements
 
