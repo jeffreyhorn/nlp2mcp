@@ -4,7 +4,7 @@
 optimality.
 
 **Related issue reference:** Sprint 24 Day 11 triage — china classified
-as `path_syntax_error` (compilation_error)
+as `path_syntax_error` (`compilation_error`)
 **Estimated effort:** 4–6 hours (3 distinct issues)
 **Models potentially unblocked:** china, turkey (same Error 141 ordering/uninitialized-symbol category)
 **NLP reference objective:** 40,561.5739
@@ -255,7 +255,9 @@ variables in sums handle the Jacobian transpose.
 
 - **Issue #1133** (fawley): Same empty-equation pattern but for
   equalities — already fixed
-- **turkey model**: Classified with china under Error 161; likely has
-  similar subset/alias dimension issues
+- **turkey model**: Classified with china under the same
+  `path_syntax_error` / `compilation_error` triage status; the shared
+  compilation blocker is Error 141 (ordering/uninitialized-symbol), so
+  turkey likely has similar subset/alias dimension issues
 - **Sprint 24 Day 11 triage**: china listed as `path_syntax_error`
   with 1–2h estimate (underestimate given Issue 3)
