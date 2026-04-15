@@ -314,12 +314,11 @@ def _all_coefficients_zero(
         has_exprs = hasattr(pdef, "expressions") and pdef.expressions
         if not has_values and not has_exprs:
             return False
-        if not has_values and has_exprs:
+        if has_exprs:
             if _computed_param_covers_instance(pdef, index_map, model_ir):
                 return False
-            continue
-        if not has_values:
-            return False
+            if not has_values:
+                continue
 
         nonzero_index = _get_nonzero_index(pdef, index_map, model_ir)
         if nonzero_index is None:
@@ -486,7 +485,6 @@ def _param_ref_is_zero(
                 inner_map[dname] = resolved_strs[i]
                 inner_map[dname.lower()] = resolved_strs[i]
 
-        any_covers = False
         for expr_tuple in pdef.expressions:
             if not isinstance(expr_tuple, tuple) or len(expr_tuple) < 2:
                 return False
@@ -498,14 +496,17 @@ def _param_ref_is_zero(
                 dom = getattr(pdef, "domain", None) or [None] * (j + 1)
                 if j < len(dom) and dom[j] is not None:
                     expected = inner_map.get(dom[j]) or inner_map.get(str(dom[j]).lower())
-                    if expected and not _assign_index_matches(aidx, expected, model_ir):
+                    if (
+                        expected
+                        and isinstance(aidx, str)
+                        and not _assign_index_matches(aidx, expected, model_ir)
+                    ):
                         covers = False
                         break
             if covers:
-                any_covers = True
                 if not _expr_has_zero_factor(expr_tuple[1], inner_map, model_ir, depth + 1):
                     return False
-        return any_covers
+        return True
 
     return False
 
