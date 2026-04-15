@@ -59,8 +59,8 @@ syield("rapes-c",s,f) = .8*syield("rapeseed",s,f);
 ```
 
 The topological sort in `emit_computed_parameter_assignments()` (in
-`src/emit/original_symbols.py`) reorders these so `syield("straw") =
-sys(s,f)` appears before `sys` is computed.  This is a cyclic
+`src/emit/original_symbols.py`) reorders these so
+`syield("straw") = sys(s,f)` appears before `sys` is computed.  This is a cyclic
 dependency at the parameter level (`sys` reads `syield`, then `syield`
 reads `sys`), but the statement-level sort should split `syield` into
 phases at the `sys` dependency boundary.
