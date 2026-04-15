@@ -6,14 +6,14 @@ optimality.
 **Related issue reference:** Sprint 24 Day 11 triage — china classified
 as `path_syntax_error` (compilation_error)
 **Estimated effort:** 4–6 hours (3 distinct issues)
-**Models potentially unblocked:** china, turkey (same Error 161 category)
+**Models potentially unblocked:** china, turkey (same Error 141 ordering/uninitialized-symbol category)
 **NLP reference objective:** 40,561.5739
 
 ---
 
 ## Pre-fix State
 
-The china model (Organic Fertilizer Use in Intensive Farming, SEQ=56)
+The china model (Organic Fertilizer Use in Intensive Farming, SEQ=59)
 parses and translates successfully, but the generated MCP file fails to
 compile in GAMS with Error 141:
 
@@ -208,8 +208,9 @@ first: `python scripts/gamslib/download_models.py`
 # Generate MCP
 python -m src.cli data/gamslib/raw/china.gms -o /tmp/china_mcp.gms --quiet
 
-# Check no warnings about domain mismatch (Issue 1)
-# Should not see "sys" used before defined
+# Check Issue 1 (parameter assignment ordering / Error 141)
+# Confirm `sys(s,f)` is assigned before any use; should not see
+# "sys" used before defined during compilation
 
 # Compile
 gams /tmp/china_mcp.gms lo=3 o=/tmp/china_solve.lst
