@@ -593,11 +593,7 @@ def emit_original_sets(
 
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
-        if (
-            not set_def.domain
-            and set_def.members
-            and any("." in str(m) for m in set_def.members)
-        ):
+        if not set_def.domain and set_def.members and any("." in str(m) for m in set_def.members):
             continue
         phase = set_phases.get(set_name_lower, 1)
         phase_sets[phase - 1].append((set_name, set_def))
@@ -1081,10 +1077,21 @@ def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
                     for pos in wc_pos:
                         if pos < len(expr.indices):
                             idx = expr.indices[pos]
-                            if isinstance(idx, str):
-                                raw = idx.strip("'\"")
-                                if raw.lower() not in data_labs:
-                                    missing.add(raw)
+                            if not isinstance(idx, str):
+                                continue
+                            stripped = idx.strip()
+                            is_quoted = (
+                                len(stripped) >= 2
+                                and stripped[0] == stripped[-1]
+                                and stripped[0] in {"'", '"'}
+                            )
+                            if not is_quoted:
+                                continue
+                            raw = stripped[1:-1]
+                            if raw.lower() in sets_and_aliases_lower:
+                                continue
+                            if raw.lower() not in data_labs:
+                                missing.add(raw)
             for child in expr.children():
                 _collect_wc_refs(child)
 
@@ -1240,7 +1247,6 @@ def _topological_sort_statements(
 
     # phase_key = "param:N" where N is the phase number for that param
     phases: list[tuple[str, str, list[int], set[str]]] = []  # (key, param, indices, deps)
-    last_phase_key: dict[str, str] = {}  # param -> key of its last phase
 
     for pname_low, chain in param_chains.items():
         # cum_deps tracks all external dependencies seen so far across all
@@ -1256,7 +1262,6 @@ def _topological_sort_statements(
                 # New dependency boundary — close current phase
                 pkey = f"{pname_low}:{phase_num}"
                 phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
-                last_phase_key[pname_low] = pkey
                 phase_num += 1
                 phase_indices = []
             cum_deps |= stmt_reads[i]
@@ -1264,7 +1269,6 @@ def _topological_sort_statements(
         if phase_indices:
             pkey = f"{pname_low}:{phase_num}"
             phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
-            last_phase_key[pname_low] = pkey
 
     # Kahn's-style sort at the phase level.
     # A phase is ready when its deps are satisfied AND all prior phases of

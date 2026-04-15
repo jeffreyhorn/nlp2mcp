@@ -359,9 +359,7 @@ def _computed_param_covers_instance(
             eq_pos_map[exact[0]] = idx_name
             used.add(exact[0])
         else:
-            alias = [
-                p for p, dr in enumerate(domain_roots) if p not in used and dr == idx_root
-            ]
+            alias = [p for p, dr in enumerate(domain_roots) if p not in used and dr == idx_root]
             if len(alias) == 1:
                 eq_pos_map[alias[0]] = idx_name
                 used.add(alias[0])
@@ -382,6 +380,9 @@ def _computed_param_covers_instance(
             if param_pos >= len(assign_indices):
                 break
             assign_idx = assign_indices[param_pos]
+            if not isinstance(assign_idx, str):
+                covers = True
+                break
             eq_value = index_map[eq_idx_name]
             if not _assign_index_matches(assign_idx, eq_value, model_ir):
                 covers = False
@@ -468,18 +469,20 @@ def _param_ref_is_zero(
     if any(r is None for r in resolved):
         return False
 
+    resolved_strs: list[str] = [r for r in resolved if r is not None]
+
     if hasattr(pdef, "values") and pdef.values:
         key: str | tuple[str, ...] = (
-            tuple(resolved) if len(resolved) > 1 else resolved[0]  # type: ignore[assignment]
+            tuple(resolved_strs) if len(resolved_strs) > 1 else resolved_strs[0]
         )
         return pdef.values.get(key, 0) == 0
 
     if hasattr(pdef, "expressions") and pdef.expressions:
         inner_map = dict(val_map)
         for i, dname in enumerate(getattr(pdef, "domain", None) or []):
-            if i < len(resolved):
-                inner_map[dname] = resolved[i]  # type: ignore[assignment]
-                inner_map[dname.lower()] = resolved[i]  # type: ignore[assignment]
+            if i < len(resolved_strs):
+                inner_map[dname] = resolved_strs[i]
+                inner_map[dname.lower()] = resolved_strs[i]
 
         any_covers = False
         for expr_tuple in pdef.expressions:
@@ -490,7 +493,7 @@ def _param_ref_is_zero(
                 return False
             covers = True
             for j, aidx in enumerate(assign_indices):
-                dom = (getattr(pdef, "domain", None) or [None] * (j + 1))
+                dom = getattr(pdef, "domain", None) or [None] * (j + 1)
                 if j < len(dom) and dom[j] is not None:
                     expected = inner_map.get(dom[j]) or inner_map.get(str(dom[j]).lower())
                     if expected and not _assign_index_matches(aidx, expected, model_ir):

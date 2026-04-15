@@ -1557,6 +1557,50 @@ class TestCollectMissingParamLabels:
         missing = collect_missing_param_labels(model)
         assert missing == set()
 
+    def test_wildcard_last_dim_quoted_literal_all_zero(self):
+        """Quoted literal at non-first wildcard position with all-zero data is missing."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model.params["tbl"] = ParameterDef(
+            name="tbl",
+            domain=("i", "*"),
+            values={("a", "col1"): 1.0, ("b", "col2"): 0.0},
+        )
+        model.params["out"] = ParameterDef(
+            name="out",
+            domain=("i",),
+            values={},
+            expressions=[
+                (
+                    ("i",),
+                    Binary("-", ParamRef("tbl", ("i", '"col1"')), ParamRef("tbl", ("i", '"col2"'))),
+                ),
+            ],
+        )
+        missing = collect_missing_param_labels(model)
+        assert "col2" in missing
+
+    def test_wildcard_index_variable_not_treated_as_missing(self):
+        """Set/index variable at wildcard position should NOT be flagged as missing."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model.sets["j"] = SetDef(name="j", members=["x", "y"])
+        model.params["tbl"] = ParameterDef(
+            name="tbl",
+            domain=("i", "*"),
+            values={("a", "x"): 1.0},
+        )
+        model.params["out"] = ParameterDef(
+            name="out",
+            domain=("i",),
+            values={},
+            expressions=[
+                (("i",), ParamRef("tbl", ("i", "j"))),
+            ],
+        )
+        missing = collect_missing_param_labels(model)
+        assert "j" not in missing
+
 
 @pytest.mark.unit
 class TestSubsetValueAssignments:

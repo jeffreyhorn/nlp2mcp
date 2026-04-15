@@ -2391,13 +2391,14 @@ def emit_gams_mcp(
             sections.append("")
 
     # Also fix inequality multipliers for empty equation instances.
-    relevant_ineqs: set[str] | None = None
+    relevant_ineqs: set[str] = set()
     if ref_mults is not None:
-        relevant_ineqs = set()
         for eq_name in kkt.model_ir.inequalities:
             mult_name = create_ineq_multiplier_name(eq_name)
             if mult_name in ref_mults:
                 relevant_ineqs.add(eq_name)
+    else:
+        relevant_ineqs = set(kkt.model_ir.inequalities)
     empty_ineq_instances = detect_empty_equation_instances(
         kkt.model_ir,
         relevant_equations=relevant_ineqs,
@@ -2417,9 +2418,7 @@ def emit_gams_mcp(
                     empty_ineq_fx.append(f"{mult_name}.fx = 0;")
         if empty_ineq_fx:
             if add_comments:
-                sections.append(
-                    "* Fix multipliers for empty inequality instances (no variables)"
-                )
+                sections.append("* Fix multipliers for empty inequality instances (no variables)")
             sections.extend(empty_ineq_fx)
             sections.append("")
 

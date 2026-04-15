@@ -4853,7 +4853,10 @@ def _add_indexed_jacobian_terms(
                                     for parent in free_def.domain:
                                         if parent.lower() in controlled:
                                             sameas_conds.append(
-                                                Call("sameas", (SymbolRef(free_idx), SymbolRef(parent)))
+                                                Call(
+                                                    "sameas",
+                                                    (SymbolRef(free_idx), SymbolRef(parent)),
+                                                )
                                             )
                                             break
                             if sameas_conds:
@@ -4877,9 +4880,11 @@ def _add_indexed_jacobian_terms(
                         and len(var_domain) > len(mult_domain)
                         and len(group_entries) < len(instances)
                     ):
-                        guard = _build_sameas_guard(var_domain, instances, group_entries, kkt)
-                        if guard is not None:
-                            term = DollarConditional(value_expr=term, condition=guard)
+                        sameas_guard = _build_sameas_guard(
+                            var_domain, instances, group_entries, kkt
+                        )
+                        if sameas_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=sameas_guard)
 
                     expr = Binary("+", expr, term)
 
@@ -4915,9 +4920,9 @@ def _add_indexed_jacobian_terms(
                 # nonzero Jacobian entry.  Handles both single-entry (.fx) and
                 # multi-entry (scalar equation summing over a subset) cases.
                 if var_domain and len(entries) < len(instances):
-                    guard = _build_sameas_guard(var_domain, instances, entries, kkt)
-                    if guard is not None:
-                        term = DollarConditional(value_expr=term, condition=guard)
+                    sameas_guard = _build_sameas_guard(var_domain, instances, entries, kkt)
+                    if sameas_guard is not None:
+                        term = DollarConditional(value_expr=term, condition=sameas_guard)
 
                 expr = Binary("+", expr, term)
 
