@@ -606,6 +606,22 @@ def emit_original_sets(
         for d in sdef.domain:
             referenced_sets.add(d.lower())
 
+    def _collect_set_refs(expr: Expr) -> None:
+        if isinstance(expr, SetMembershipTest):
+            referenced_sets.add(expr.set_name.lower())
+        for child in expr.children():
+            _collect_set_refs(child)
+
+    for eq_def in model_ir.equations.values():
+        if eq_def.lhs_rhs:
+            for side in eq_def.lhs_rhs:
+                _collect_set_refs(side)
+        if eq_def.condition is not None:
+            _collect_set_refs(eq_def.condition)
+    for pdef in model_ir.params.values():
+        for _, expr in pdef.expressions:
+            _collect_set_refs(expr)
+
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
         if (

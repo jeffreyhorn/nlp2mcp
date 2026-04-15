@@ -472,14 +472,12 @@ def _param_ref_is_zero(
     resolved_strs: list[str] = [r for r in resolved if r is not None]
 
     if hasattr(pdef, "values") and pdef.values:
-        key: str | tuple[str, ...]
-        if not resolved_strs:
-            key = ()
-        elif len(resolved_strs) > 1:
-            key = tuple(resolved_strs)
-        else:
-            key = resolved_strs[0]
-        return pdef.values.get(key, 0) == 0
+        key: tuple[str, ...] = tuple(resolved_strs)
+        if key in pdef.values:
+            return pdef.values.get(key, 0) == 0
+        if len(resolved_strs) == 1:
+            return pdef.values.get(resolved_strs[0], 0) == 0
+        return True
 
     if hasattr(pdef, "expressions") and pdef.expressions:
         inner_map = dict(val_map)
