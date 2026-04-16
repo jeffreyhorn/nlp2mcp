@@ -1924,10 +1924,14 @@ def _apply_offset_substitution(
     element to IndexOffset(domain_var, offset) so downstream replacement
     produces r(i-1) instead of r(i).
 
-    Only applies to elements that are:
-    1. In the same set as the representative variable index
-    2. NOT in the representative equation indices (those are constraint
-       dimensions, not lead/lag offsets — e.g., j4 in maxdist(i3,j4))
+    Applies to ALL string indices whose element_to_set mapping matches a
+    variable domain set in ref_info.  Equation indices from different
+    domain sets are naturally excluded because they map to sets not in
+    ref_info (which is built from var_domain only).  Equation indices
+    from the SAME domain set as the variable ARE eligible for offset
+    substitution — this is required for subset-superset patterns (e.g.,
+    mb(ca) → xfert(ca) where crec(ca_eq, ca_var) needs the equation
+    element converted to an offset expression).
     """
     from src.ad.index_mapping import resolve_set_members
 
@@ -1949,9 +1953,6 @@ def _apply_offset_substitution(
     if not ref_info:
         return expr
 
-    # Elements from the equation indices are constraint dimensions, not offsets
-    eq_elements = set(rep_eq_indices)
-
     def _sub(e: Expr) -> Expr:
         if isinstance(e, (VarRef, ParamRef, MultiplierRef)):
             if not e.indices:
@@ -1959,7 +1960,7 @@ def _apply_offset_substitution(
             new_indices: list[str | IndexOffset] = []
             changed = False
             for idx in e.indices:
-                if isinstance(idx, str) and idx not in eq_elements:
+                if isinstance(idx, str):
                     mapped = element_to_set.get(idx)
                     if mapped and mapped in ref_info:
                         ref_elem, pos_map, ref_pos = ref_info[mapped]
@@ -4844,11 +4845,29 @@ def _add_indexed_jacobian_terms(
                     # Skip when _did_dim_mismatch_alias_fix already handled Sum wrapping
                     # and renamed the derivative indices.
                     if not _did_dim_mismatch_alias_fix:
-                        controlled = var_domain_set | mult_domain_set
+                        controlled = {d.lower() for d in var_domain_set | mult_domain_set}
                         free_in_deriv = _collect_free_indices(indexed_deriv, kkt.model_ir)
                         uncontrolled = free_in_deriv - controlled
                         if uncontrolled:
                             sum_indices = tuple(sorted(uncontrolled))
+                            sameas_conds: list[Expr] = []
+                            for free_idx in sum_indices:
+                                free_def = kkt.model_ir.sets.get(free_idx)
+                                if free_def and hasattr(free_def, "domain") and free_def.domain:
+                                    for parent in free_def.domain:
+                                        if parent.lower() in controlled:
+                                            sameas_conds.append(
+                                                Call(
+                                                    "sameas",
+                                                    (SymbolRef(free_idx), SymbolRef(parent)),
+                                                )
+                                            )
+                                            break
+                            if sameas_conds:
+                                guard: Expr = sameas_conds[0]
+                                for sc in sameas_conds[1:]:
+                                    guard = Binary("and", guard, sc)
+                                term = DollarConditional(value_expr=term, condition=guard)
                             term = Sum(sum_indices, term)
 
                     # Issue #1049: Guard multiplier terms with $(sameas(...))
@@ -4865,9 +4884,11 @@ def _add_indexed_jacobian_terms(
                         and len(var_domain) > len(mult_domain)
                         and len(group_entries) < len(instances)
                     ):
-                        guard = _build_sameas_guard(var_domain, instances, group_entries, kkt)
-                        if guard is not None:
-                            term = DollarConditional(value_expr=term, condition=guard)
+                        sameas_guard = _build_sameas_guard(
+                            var_domain, instances, group_entries, kkt
+                        )
+                        if sameas_guard is not None:
+                            term = DollarConditional(value_expr=term, condition=sameas_guard)
 
                     expr = Binary("+", expr, term)
 
@@ -4903,9 +4924,9 @@ def _add_indexed_jacobian_terms(
                 # nonzero Jacobian entry.  Handles both single-entry (.fx) and
                 # multi-entry (scalar equation summing over a subset) cases.
                 if var_domain and len(entries) < len(instances):
-                    guard = _build_sameas_guard(var_domain, instances, entries, kkt)
-                    if guard is not None:
-                        term = DollarConditional(value_expr=term, condition=guard)
+                    sameas_guard = _build_sameas_guard(var_domain, instances, entries, kkt)
+                    if sameas_guard is not None:
+                        term = DollarConditional(value_expr=term, condition=sameas_guard)
 
                 expr = Binary("+", expr, term)
 

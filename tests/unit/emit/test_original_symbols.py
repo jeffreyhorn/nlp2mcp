@@ -822,6 +822,51 @@ class TestEmitComputedParameterAssignments:
         assert "y(i) =" in result
         assert "x(i) + 1" in result
 
+    def test_multi_phase_cycle_ordering(self):
+        """Parameters in a cycle with multiple phases are ordered correctly.
+
+        syield depends on sys, sys depends on syield — a cycle. The topological
+        sort should split syield into phases at the sys dependency boundary and
+        mark the param as defined after any phase, allowing the cycle to proceed.
+        """
+        model = ModelIR()
+        model.sets["s"] = SetDef(name="s", members=["s1"])
+        model.sets["f"] = SetDef(name="f", members=["normal"])
+        model.sets["c"] = SetDef(name="c", members=["wheat"])
+
+        # sys(s,f) = sum(c, syield(c,s,f))  [reads syield]
+        expr_sys = ParamRef("syield", ("c", "s", "f"))
+        model.params["sys"] = ParameterDef(
+            name="sys",
+            domain=("s", "f"),
+            values={},
+            expressions=[(("s", "f"), expr_sys)],
+        )
+        # syield phase 0: syield(c,s,f) = mcp(s,c)  [no dep on sys]
+        # syield phase 1: syield("straw",s,f) = sys(s,f)  [reads sys]
+        expr_phase0 = ParamRef("mcp", ("s", "c"))
+        expr_phase1 = ParamRef("sys", ("s", "f"))
+        model.params["syield"] = ParameterDef(
+            name="syield",
+            domain=("c", "s", "f"),
+            values={},
+            expressions=[
+                (("c", "s", '"normal"'), expr_phase0),
+                (('"straw"', "s", "f"), expr_phase1),
+            ],
+        )
+        model.params["mcp"] = ParameterDef(
+            name="mcp", domain=("s", "c"), values={("s1", "wheat"): 1.0}
+        )
+
+        result = emit_computed_parameter_assignments(model)
+        lines = [ln.strip() for ln in result.strip().splitlines() if ln.strip()]
+        # syield phase 0 must come before sys (so sys can read syield)
+        # sys must come before syield phase 1 (which reads sys)
+        syield_first = next(i for i, ln in enumerate(lines) if "syield" in ln.lower())
+        sys_line = next(i for i, ln in enumerate(lines) if ln.lower().startswith("sys("))
+        assert syield_first < sys_line, "syield phase 0 should precede sys"
+
 
 @pytest.mark.unit
 class TestSetElementQuoting:
@@ -1556,6 +1601,50 @@ class TestCollectMissingParamLabels:
         )
         missing = collect_missing_param_labels(model)
         assert missing == set()
+
+    def test_wildcard_last_dim_quoted_literal_all_zero(self):
+        """Quoted literal at non-first wildcard position with all-zero data is missing."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model.params["tbl"] = ParameterDef(
+            name="tbl",
+            domain=("i", "*"),
+            values={("a", "col1"): 1.0, ("b", "col2"): 0.0},
+        )
+        model.params["out"] = ParameterDef(
+            name="out",
+            domain=("i",),
+            values={},
+            expressions=[
+                (
+                    ("i",),
+                    Binary("-", ParamRef("tbl", ("i", '"col1"')), ParamRef("tbl", ("i", '"col2"'))),
+                ),
+            ],
+        )
+        missing = collect_missing_param_labels(model)
+        assert "col2" in missing
+
+    def test_wildcard_index_variable_not_treated_as_missing(self):
+        """Set/index variable at wildcard position should NOT be flagged as missing."""
+        model = ModelIR()
+        model.sets["i"] = SetDef(name="i", members=["a", "b"])
+        model.sets["j"] = SetDef(name="j", members=["x", "y"])
+        model.params["tbl"] = ParameterDef(
+            name="tbl",
+            domain=("i", "*"),
+            values={("a", "x"): 1.0},
+        )
+        model.params["out"] = ParameterDef(
+            name="out",
+            domain=("i",),
+            values={},
+            expressions=[
+                (("i",), ParamRef("tbl", ("i", "j"))),
+            ],
+        )
+        missing = collect_missing_param_labels(model)
+        assert "j" not in missing
 
 
 @pytest.mark.unit

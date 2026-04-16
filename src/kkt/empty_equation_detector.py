@@ -39,15 +39,19 @@ def _resolve_alias_target(name: str, model_ir: ModelIR) -> str:
 def detect_empty_equation_instances(
     model_ir: ModelIR,
     relevant_equations: set[str] | None = None,
+    include_inequalities: bool = False,
 ) -> dict[str, set[tuple[str, ...]]]:
     """Find equation instances where no variable appears (all coefficients zero).
 
-    For each equality equation, checks every domain instance to see if ALL
-    variable-referencing terms have zero coefficients. Returns a mapping from
-    equation name to the set of domain-value tuples that are empty.
+    For each equality (and optionally inequality) equation, checks every
+    domain instance to see if ALL variable-referencing terms have zero
+    coefficients. Returns a mapping from equation name to the set of
+    domain-value tuples that are empty.
 
     Args:
         model_ir: Model IR with equations, sets, parameters
+        relevant_equations: If provided, only check these equations.
+        include_inequalities: If True, also scan inequality equations.
 
     Returns:
         Dict mapping equation name → set of empty instance tuples.
@@ -55,7 +59,11 @@ def detect_empty_equation_instances(
     """
     result: dict[str, set[tuple[str, ...]]] = {}
 
-    for eq_name in model_ir.equalities:
+    eq_names = list(model_ir.equalities)
+    if include_inequalities:
+        eq_names.extend(model_ir.inequalities)
+
+    for eq_name in eq_names:
         if relevant_equations is not None and eq_name not in relevant_equations:
             continue
         eq_def = model_ir.equations.get(eq_name)
@@ -300,22 +308,217 @@ def _all_coefficients_zero(
     """
     for pname in access.sum_coeffs:
         pdef = model_ir.params.get(pname)
-        if pdef is None or not hasattr(pdef, "values") or not pdef.values:
-            return False  # Unknown/missing data → conservatively not all-zero
+        if pdef is None:
+            return False
+        has_values = hasattr(pdef, "values") and pdef.values
+        has_exprs = hasattr(pdef, "expressions") and pdef.expressions
+        if not has_values and not has_exprs:
+            return False
+        if has_exprs:
+            if _computed_param_covers_instance(pdef, index_map, model_ir):
+                return False
+            if not has_values:
+                continue
 
-        # Build a pre-indexed set of equation-domain values that have nonzero
-        # entries, keyed by the matched domain positions. This makes per-instance
-        # checks O(1) instead of scanning the full values dict.
         nonzero_index = _get_nonzero_index(pdef, index_map, model_ir)
         if nonzero_index is None:
-            return False  # Can't index → conservatively not all-zero
-
-        # Check if this instance's index values appear in nonzero entries
+            return False
         inst_key = tuple(index_map[k] for k in sorted(index_map))
         if inst_key in nonzero_index:
-            return False  # Found nonzero coefficient
+            return False
 
-    return True  # All coefficients are zero
+    return True
+
+
+def _computed_param_covers_instance(
+    pdef: object,
+    index_map: dict[str, str],
+    model_ir: ModelIR,
+) -> bool:
+    """Check if any assignment expression of a computed parameter could produce
+    a nonzero value for the given equation instance.
+
+    Returns True (could be nonzero) if unsure.
+    """
+    domain = getattr(pdef, "domain", None)
+    expressions = getattr(pdef, "expressions", None)
+    if not domain or not expressions:
+        return True
+
+    domain_lower = [str(d).lower() for d in domain]
+    domain_roots = [_resolve_alias_target(str(d), model_ir) for d in domain]
+
+    eq_pos_map: dict[int, str] = {}
+    used: set[int] = set()
+    for idx_name in sorted(index_map.keys()):
+        idx_lower = idx_name.lower()
+        idx_root = _resolve_alias_target(idx_name, model_ir)
+        exact = [p for p, dl in enumerate(domain_lower) if p not in used and dl == idx_lower]
+        if len(exact) == 1:
+            eq_pos_map[exact[0]] = idx_name
+            used.add(exact[0])
+        else:
+            alias = [p for p, dr in enumerate(domain_roots) if p not in used and dr == idx_root]
+            if len(alias) == 1:
+                eq_pos_map[alias[0]] = idx_name
+                used.add(alias[0])
+
+    if not eq_pos_map:
+        return True
+
+    for expr_tuple in expressions:
+        if not isinstance(expr_tuple, tuple) or len(expr_tuple) < 2:
+            return True
+        assign_indices = expr_tuple[0]
+        if not isinstance(assign_indices, tuple):
+            return True
+
+        covers = True
+        val_map: dict[str, str] = {}
+        for param_pos, eq_idx_name in eq_pos_map.items():
+            if param_pos >= len(assign_indices):
+                return True
+            assign_idx = assign_indices[param_pos]
+            if not isinstance(assign_idx, str):
+                return True
+            eq_value = index_map[eq_idx_name]
+            if not _assign_index_matches(assign_idx, eq_value, model_ir):
+                covers = False
+                break
+            val_map[assign_idx] = eq_value
+            val_map[assign_idx.lower()] = eq_value
+        if covers:
+            if _expr_has_zero_factor(expr_tuple[1], val_map, model_ir):
+                continue
+            return True
+
+    return False
+
+
+_lowered_members_cache: dict[str, frozenset[str]] = {}
+
+
+def _assign_index_matches(assign_idx: str, eq_value: str, model_ir: ModelIR) -> bool:
+    """Check if an assignment index pattern matches a specific element value.
+
+    String literal → exact match. Set name → membership check. Otherwise wildcard.
+    """
+    if (assign_idx.startswith('"') and assign_idx.endswith('"')) or (
+        assign_idx.startswith("'") and assign_idx.endswith("'")
+    ):
+        return assign_idx[1:-1].lower() == eq_value.lower()
+
+    sdef = model_ir.sets.get(assign_idx)
+    if sdef is None:
+        adef = model_ir.aliases.get(assign_idx)
+        if adef:
+            sdef = model_ir.sets.get(getattr(adef, "target", ""))
+
+    if sdef is not None:
+        cache_key = getattr(sdef, "name", assign_idx).lower()
+        if cache_key not in _lowered_members_cache:
+            members = list(sdef.members) if hasattr(sdef, "members") and sdef.members else []
+            if members:
+                _lowered_members_cache[cache_key] = frozenset(m.lower() for m in members)
+            elif getattr(sdef, "domain", None):
+                for parent in sdef.domain:
+                    parent_members = _resolve_set_members(parent, model_ir)
+                    if parent_members:
+                        _lowered_members_cache[cache_key] = frozenset(
+                            m.lower() for m in parent_members
+                        )
+                        break
+        cached = _lowered_members_cache.get(cache_key)
+        if cached:
+            return eq_value.lower() in cached
+        return True
+
+    return True
+
+
+def _expr_has_zero_factor(
+    expr: Expr, val_map: dict[str, str], model_ir: ModelIR, depth: int = 0
+) -> bool:
+    """Check if a multiplicative expression has a provably-zero factor."""
+    if depth > 3:
+        return False
+    if isinstance(expr, Binary):
+        if expr.op == "*":
+            return _expr_has_zero_factor(
+                expr.left, val_map, model_ir, depth
+            ) or _expr_has_zero_factor(expr.right, val_map, model_ir, depth)
+        if expr.op == "/":
+            return _expr_has_zero_factor(expr.left, val_map, model_ir, depth)
+    if isinstance(expr, ParamRef):
+        return _param_ref_is_zero(expr, val_map, model_ir, depth)
+    return False
+
+
+def _param_ref_is_zero(
+    pref: ParamRef, val_map: dict[str, str], model_ir: ModelIR, depth: int
+) -> bool:
+    """Check if a ParamRef evaluates to zero for the bound index values."""
+    pdef = model_ir.params.get(pref.name)
+    if pdef is None:
+        return False
+
+    resolved: list[str | None] = []
+    for idx in pref.indices:
+        if isinstance(idx, str):
+            if (idx.startswith('"') and idx.endswith('"')) or (
+                idx.startswith("'") and idx.endswith("'")
+            ):
+                resolved.append(idx[1:-1])
+            else:
+                val = val_map.get(idx) or val_map.get(idx.lower())
+                resolved.append(val)
+        else:
+            resolved.append(None)
+
+    if any(r is None for r in resolved):
+        return False
+
+    resolved_strs: list[str] = [r for r in resolved if r is not None]
+
+    if hasattr(pdef, "values") and pdef.values:
+        key: tuple[str, ...] = tuple(resolved_strs)
+        if key in pdef.values:
+            return pdef.values.get(key, 0) == 0
+        if len(resolved_strs) == 1:
+            return pdef.values.get(resolved_strs[0], 0) == 0
+        return True
+
+    if hasattr(pdef, "expressions") and pdef.expressions:
+        inner_map = dict(val_map)
+        for i, dname in enumerate(getattr(pdef, "domain", None) or []):
+            if i < len(resolved_strs):
+                inner_map[dname] = resolved_strs[i]
+                inner_map[dname.lower()] = resolved_strs[i]
+
+        for expr_tuple in pdef.expressions:
+            if not isinstance(expr_tuple, tuple) or len(expr_tuple) < 2:
+                return False
+            assign_indices = expr_tuple[0]
+            if not isinstance(assign_indices, tuple):
+                return False
+            covers = True
+            for j, aidx in enumerate(assign_indices):
+                dom = getattr(pdef, "domain", None) or [None] * (j + 1)
+                if j < len(dom) and dom[j] is not None:
+                    expected = inner_map.get(dom[j]) or inner_map.get(str(dom[j]).lower())
+                    if (
+                        expected
+                        and isinstance(aidx, str)
+                        and not _assign_index_matches(aidx, expected, model_ir)
+                    ):
+                        covers = False
+                        break
+            if covers:
+                if not _expr_has_zero_factor(expr_tuple[1], inner_map, model_ir, depth + 1):
+                    return False
+        return True
+
+    return False
 
 
 # Cache for pre-indexed nonzero entries per parameter

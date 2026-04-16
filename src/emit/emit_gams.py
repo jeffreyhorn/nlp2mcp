@@ -2383,12 +2383,43 @@ def emit_gams_mcp(
                     idx_str = _format_map_indices(inst)
                     empty_fx_lines.append(f"{mult_name}.fx({idx_str}) = 0;")
                 else:
-                    # Scalar equation
                     empty_fx_lines.append(f"{mult_name}.fx = 0;")
         if empty_fx_lines:
             if add_comments:
                 sections.append("* Fix multipliers for empty equation instances (no variables)")
             sections.extend(empty_fx_lines)
+            sections.append("")
+
+    # Also fix inequality multipliers for empty equation instances.
+    relevant_ineqs: set[str] = set()
+    if ref_mults is not None:
+        for eq_name in kkt.model_ir.inequalities:
+            mult_name = create_ineq_multiplier_name(eq_name)
+            if mult_name in ref_mults:
+                relevant_ineqs.add(eq_name)
+    else:
+        relevant_ineqs = set(kkt.model_ir.inequalities)
+    empty_ineq_instances = detect_empty_equation_instances(
+        kkt.model_ir,
+        relevant_equations=relevant_ineqs,
+        include_inequalities=True,
+    )
+    if empty_ineq_instances:
+        empty_ineq_fx: list[str] = []
+        for eq_name, instances in sorted(empty_ineq_instances.items()):
+            mult_name = create_ineq_multiplier_name(eq_name)
+            if ref_mults is not None and mult_name not in ref_mults:
+                continue
+            for inst in sorted(instances):
+                if inst:
+                    idx_str = _format_map_indices(inst)
+                    empty_ineq_fx.append(f"{mult_name}.fx({idx_str}) = 0;")
+                else:
+                    empty_ineq_fx.append(f"{mult_name}.fx = 0;")
+        if empty_ineq_fx:
+            if add_comments:
+                sections.append("* Fix multipliers for empty inequality instances (no variables)")
+            sections.extend(empty_ineq_fx)
             sections.append("")
 
     # Model MCP

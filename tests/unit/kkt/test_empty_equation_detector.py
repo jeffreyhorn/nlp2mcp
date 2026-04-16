@@ -118,3 +118,62 @@ class TestEmptyEquationDetector:
         # With filter including mbal
         result = detect_empty_equation_instances(ir, relevant_equations={"mbal"})
         assert "mbal" in result
+
+    def test_include_inequalities_scans_inequalities(self):
+        """include_inequalities=True should scan ModelIR.inequalities."""
+        ir = _make_fawley_like_model()
+        # Move mbal to inequalities
+        ir.equalities = []
+        ir.inequalities = ["mbal"]
+        ir.equations["mbal"] = EquationDef(
+            name="mbal",
+            domain=("c",),
+            relation=Rel.GE,
+            lhs_rhs=ir.equations["mbal"].lhs_rhs,
+        )
+
+        # Without include_inequalities — should find nothing
+        result = detect_empty_equation_instances(ir)
+        assert "mbal" not in result
+
+        # With include_inequalities — should find vacuum-res
+        result = detect_empty_equation_instances(ir, include_inequalities=True)
+        assert "mbal" in result
+        assert ("vacuum-res",) in result["mbal"]
+
+    def test_computed_param_expressions_detect_empty(self):
+        """Coefficient params with expressions (no .values) should be analyzed."""
+        ir = ModelIR()
+        ir.sets["ca"] = SetDef(name="ca", members=["wheat", "seed"])
+        ir.sets["cf"] = SetDef(name="cf", domain=("ca",), members=["wheat"])
+
+        from src.ir.symbols import VariableDef
+
+        ir.variables["x"] = VariableDef(name="x", domain=("ca",))
+
+        # Computed coefficient: coeff(ca, cf) assigned only for cf members
+        ir.params["coeff"] = ParameterDef(
+            name="coeff",
+            domain=("ca", "cf"),
+            values={},
+            expressions=[(("cf", "ca"), Binary("*", Const(1.0), Const(1.0)))],
+        )
+
+        # Equation: eq(ca).. sum(cf, coeff(ca,cf)*x(cf)) =G= 0
+        eq_lhs = Sum(
+            ("cf",),
+            Binary("*", ParamRef("coeff", ("ca", "cf")), VarRef("x", ("cf",))),
+        )
+        ir.equations["eq"] = EquationDef(
+            name="eq",
+            domain=("ca",),
+            relation=Rel.GE,
+            lhs_rhs=(eq_lhs, Const(0.0)),
+        )
+        ir.inequalities = ["eq"]
+
+        result = detect_empty_equation_instances(ir, include_inequalities=True)
+        assert "eq" in result
+        # "seed" is not in cf, so the assignment doesn't cover it
+        assert ("seed",) in result["eq"]
+        assert ("wheat",) not in result["eq"]

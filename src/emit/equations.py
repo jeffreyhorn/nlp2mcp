@@ -546,7 +546,7 @@ def emit_equation_definitions(
         lines.append("* Stationarity equations")
         for eq_name in sorted(kkt.stationarity.keys()):
             eq_def = kkt.stationarity[eq_name]
-            eq_str, aliases = emit_equation_def(eq_name, eq_def)
+            eq_str, aliases = emit_equation_def(eq_name, eq_def, skip_lead_lag_inference=True)
             lines.append(eq_str)
             _merge_alias_dicts(all_aliases, aliases)
         lines.append("")

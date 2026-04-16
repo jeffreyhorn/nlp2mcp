@@ -591,8 +591,46 @@ def emit_original_sets(
     # Partition sets into lists by phase, preserving original order
     phase_sets: list[list[tuple[str, SetDef]]] = [[] for _ in range(max_phase)]
 
+    referenced_sets: set[str] = set()
+    for eq_def in model_ir.equations.values():
+        for d in eq_def.domain:
+            referenced_sets.add(d.lower())
+    for var_def in model_ir.variables.values():
+        for d in var_def.domain:
+            referenced_sets.add(d.lower())
+    for pdef in model_ir.params.values():
+        for d in pdef.domain:
+            if d != "*":
+                referenced_sets.add(d.lower())
+    for sdef in model_ir.sets.values():
+        for d in sdef.domain:
+            referenced_sets.add(d.lower())
+
+    def _collect_set_refs(expr: Expr) -> None:
+        if isinstance(expr, SetMembershipTest):
+            referenced_sets.add(expr.set_name.lower())
+        for child in expr.children():
+            _collect_set_refs(child)
+
+    for eq_def in model_ir.equations.values():
+        if eq_def.lhs_rhs:
+            for side in eq_def.lhs_rhs:
+                _collect_set_refs(side)
+        if eq_def.condition is not None:
+            _collect_set_refs(eq_def.condition)
+    for pdef in model_ir.params.values():
+        for _, expr in pdef.expressions:
+            _collect_set_refs(expr)
+
     for set_name, set_def in model_ir.sets.items():
         set_name_lower = set_name.lower()
+        if (
+            not set_def.domain
+            and set_def.members
+            and any("." in str(m) for m in set_def.members)
+            and set_name_lower not in referenced_sets
+        ):
+            continue
         phase = set_phases.get(set_name_lower, 1)
         phase_sets[phase - 1].append((set_name, set_def))
 
@@ -1044,6 +1082,60 @@ def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
 
         missing.update(all_first_labels - emitted_first_labels)
 
+    wildcard_params: dict[str, tuple[set[int], set[str]]] = {}
+    for pname, pdef in model_ir.params.items():
+        domain = list(pdef.domain)
+        if not domain:
+            continue
+        wc_positions = {i for i, d in enumerate(domain) if d == "*"}
+        if not wc_positions:
+            continue
+        data_labels: set[str] = set()
+        dsize = len(domain)
+        for key_tuple, value in pdef.values.items():
+            if isinstance(value, (int, float)) and value == 0:
+                continue
+            normalized_key = key_tuple if isinstance(key_tuple, tuple) else (key_tuple,)
+            expanded = _expand_table_key(normalized_key, dsize)
+            if expanded is None:
+                continue
+            for pos in wc_positions:
+                if pos < len(expanded):
+                    data_labels.add(expanded[pos].lower())
+        wildcard_params[pname.lower()] = (wc_positions, data_labels)
+
+    if wildcard_params:
+
+        def _collect_wc_refs(expr: Expr) -> None:
+            if isinstance(expr, ParamRef):
+                plow = expr.name.lower()
+                if plow in wildcard_params:
+                    wc_pos, data_labs = wildcard_params[plow]
+                    for pos in wc_pos:
+                        if pos < len(expr.indices):
+                            idx = expr.indices[pos]
+                            if not isinstance(idx, str):
+                                continue
+                            stripped = idx.strip()
+                            is_quoted = (
+                                len(stripped) >= 2
+                                and stripped[0] == stripped[-1]
+                                and stripped[0] in {"'", '"'}
+                            )
+                            if not is_quoted:
+                                continue
+                            raw = stripped[1:-1]
+                            if raw.lower() in sets_and_aliases_lower:
+                                continue
+                            if raw.lower() not in data_labs:
+                                missing.add(raw)
+            for child in expr.children():
+                _collect_wc_refs(child)
+
+        for pdef in model_ir.params.values():
+            for _, expr in pdef.expressions:
+                _collect_wc_refs(expr)
+
     return missing
 
 
@@ -1192,7 +1284,6 @@ def _topological_sort_statements(
 
     # phase_key = "param:N" where N is the phase number for that param
     phases: list[tuple[str, str, list[int], set[str]]] = []  # (key, param, indices, deps)
-    last_phase_key: dict[str, str] = {}  # param -> key of its last phase
 
     for pname_low, chain in param_chains.items():
         # cum_deps tracks all external dependencies seen so far across all
@@ -1208,7 +1299,6 @@ def _topological_sort_statements(
                 # New dependency boundary — close current phase
                 pkey = f"{pname_low}:{phase_num}"
                 phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
-                last_phase_key[pname_low] = pkey
                 phase_num += 1
                 phase_indices = []
             cum_deps |= stmt_reads[i]
@@ -1216,7 +1306,6 @@ def _topological_sort_statements(
         if phase_indices:
             pkey = f"{pname_low}:{phase_num}"
             phases.append((pkey, pname_low, list(phase_indices), set(cum_deps)))
-            last_phase_key[pname_low] = pkey
 
     # Kahn's-style sort at the phase level.
     # A phase is ready when its deps are satisfied AND all prior phases of
@@ -1284,9 +1373,10 @@ def _topological_sort_statements(
             for i in indices:
                 sorted_stmts.append(stmts[i])
             emitted_phases.add(pkey)
-            # Mark param as defined once its LAST phase is emitted
-            if pkey == last_phase_key[pname_low]:
-                defined.add(pname_low)
+            # Mark param as defined once any phase is emitted so that
+            # other parameters in a cycle can proceed (the emitted phase
+            # provides enough values for downstream reads).
+            defined.add(pname_low)
         remaining = still_blocked
 
     return sorted_stmts
