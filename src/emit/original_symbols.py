@@ -1095,7 +1095,8 @@ def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
         for key_tuple, value in pdef.values.items():
             if isinstance(value, (int, float)) and value == 0:
                 continue
-            expanded = _expand_table_key(key_tuple, dsize)
+            normalized_key = key_tuple if isinstance(key_tuple, tuple) else (key_tuple,)
+            expanded = _expand_table_key(normalized_key, dsize)
             if expanded is None:
                 continue
             for pos in wc_positions:

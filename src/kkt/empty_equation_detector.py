@@ -377,11 +377,10 @@ def _computed_param_covers_instance(
         val_map: dict[str, str] = {}
         for param_pos, eq_idx_name in eq_pos_map.items():
             if param_pos >= len(assign_indices):
-                break
+                return True
             assign_idx = assign_indices[param_pos]
             if not isinstance(assign_idx, str):
-                covers = True
-                break
+                return True
             eq_value = index_map[eq_idx_name]
             if not _assign_index_matches(assign_idx, eq_value, model_ir):
                 covers = False
@@ -394,6 +393,9 @@ def _computed_param_covers_instance(
             return True
 
     return False
+
+
+_lowered_members_cache: dict[str, frozenset[str]] = {}
 
 
 def _assign_index_matches(assign_idx: str, eq_value: str, model_ir: ModelIR) -> bool:
@@ -413,14 +415,22 @@ def _assign_index_matches(assign_idx: str, eq_value: str, model_ir: ModelIR) -> 
             sdef = model_ir.sets.get(getattr(adef, "target", ""))
 
     if sdef is not None:
-        members = list(sdef.members) if hasattr(sdef, "members") and sdef.members else []
-        if members:
-            return eq_value.lower() in {m.lower() for m in members}
-        if getattr(sdef, "domain", None):
-            for parent in sdef.domain:
-                parent_members = _resolve_set_members(parent, model_ir)
-                if parent_members:
-                    return eq_value.lower() in {m.lower() for m in parent_members}
+        cache_key = getattr(sdef, "name", assign_idx).lower()
+        if cache_key not in _lowered_members_cache:
+            members = list(sdef.members) if hasattr(sdef, "members") and sdef.members else []
+            if members:
+                _lowered_members_cache[cache_key] = frozenset(m.lower() for m in members)
+            elif getattr(sdef, "domain", None):
+                for parent in sdef.domain:
+                    parent_members = _resolve_set_members(parent, model_ir)
+                    if parent_members:
+                        _lowered_members_cache[cache_key] = frozenset(
+                            m.lower() for m in parent_members
+                        )
+                        break
+        cached = _lowered_members_cache.get(cache_key)
+        if cached:
+            return eq_value.lower() in cached
         return True
 
     return True

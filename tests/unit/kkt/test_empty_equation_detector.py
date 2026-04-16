@@ -159,7 +159,7 @@ class TestEmptyEquationDetector:
             expressions=[(("cf", "ca"), Binary("*", Const(1.0), Const(1.0)))],
         )
 
-        # Equation: eq(ca).. sum(cf, coeff(ca,cf)*x(cf)) =E= 0
+        # Equation: eq(ca).. sum(cf, coeff(ca,cf)*x(cf)) =G= 0
         eq_lhs = Sum(
             ("cf",),
             Binary("*", ParamRef("coeff", ("ca", "cf")), VarRef("x", ("cf",))),
