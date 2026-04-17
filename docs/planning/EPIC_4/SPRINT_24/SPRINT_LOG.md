@@ -291,6 +291,36 @@ improvements from Sprint 24:
 
 ---
 
+### Day — feedtray / MINLP exclusion (PLAN_FIX_FEEDTRAY)
+
+**Status:** COMPLETE
+**Branch:** `sprint24-plan-fix-feedtray`
+
+| Task | Status |
+|---|---|
+| Phase 0 — audit MINLP leakage in `gamslib_status.json` | ✅ `AUDIT_MINLP_LEAKAGE.md` |
+| Phase 1 — `validate_continuous()` guard + CLI integration + 24 unit tests | ✅ `src/validation/discreteness.py`, `tests/unit/validation/test_discreteness.py`; new exit code `EXIT_MINLP_OUT_OF_SCOPE = 3`; `--allow-discrete` escape hatch |
+| Phase 2 — schema 2.1.0 → 2.2.0 migration | ✅ `scripts/gamslib/migrate_schema_v2.2.0.py` applied |
+| Phase 3 — hygiene verification | ✅ feedtray refused at exit 3; abel.gms still translates; candidate set drops 4 mis-cataloged MINLPs (gastrans, nemhaus, nonsharp, trnspwl) |
+| Phase 4 — pipeline retest + log entry | ✅ Tests 3599 passed, 5 skipped, 0 new failures; pipeline parse 143/143 (100%) on cleaned candidate set |
+
+**Key findings (audit):**
+- 6 excluded models carried stale `nlp2mcp_*` / `mcp_solve` / `solution_comparison` blocks from a pre-gate pipeline run.
+- 14 models cataloged as NLP/QCP/LP whose source is actually MINLP/MIP/MIQCP. Four (`gastrans`, `nemhaus`, `nonsharp`, `trnspwl`) had `convexity.status: "likely_convex"` and were *active candidates* in the parse batch.
+- 0 models honestly cataloged as MINLP/MIP/MIQCP — the GAMSlib catalog field is unreliable as a discreteness gate.
+
+**Migration counts (v2.1.0 → v2.2.0):**
+- 14 MINLP-excluded (new `pipeline_status: skipped/minlp_out_of_scope`)
+- 7 legacy-excluded (existing exclusions, reason preserved as `legacy_excluded`)
+- 14 `gamslib_type` corrections (with `original_gamslib_type` preserved)
+- 198 in-scope models unchanged
+
+**Candidate set delta:**
+- Before: 147 candidate models (4 of which were MINLPs slipping through the convexity gate)
+- After: 143 candidate models (the 4 MINLPs now correctly excluded; matches `convexity.status ∈ {verified_convex, likely_convex}` minus `pipeline_status: skipped`)
+
+---
+
 ### Day 12 — Sprint Close Prep
 
 **Status:** NOT STARTED

@@ -278,6 +278,11 @@ def get_candidate_models(database: dict[str, Any]) -> list[dict[str, Any]]:
     """
     candidates = []
     for model in database.get("models", []):
+        # Schema 2.2.0: explicit per-model skip overrides convexity status.
+        # Catches MINLPs whose convexity verifier reported "likely_convex"
+        # before the discrete-source detector existed.
+        if (model.get("pipeline_status") or {}).get("status") == "skipped":
+            continue
         status = model.get("convexity", {}).get("status")
         if status in ("verified_convex", "likely_convex"):
             candidates.append(model)

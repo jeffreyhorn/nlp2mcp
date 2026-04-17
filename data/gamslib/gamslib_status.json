@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.1.0",
+  "schema_version": "2.2.0",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-04-07T15:24:59Z",
+  "updated_date": "2026-04-16T23:02:17Z",
   "total_models": 219,
   "models": [
     {
@@ -28,9 +28,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:52:50.976570+00:00",
+        "parse_date": "2026-04-16T23:16:44.618028+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.8164,
+        "parse_time_seconds": 4.4999,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -104,9 +104,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:53:27.582886+00:00",
+        "parse_date": "2026-04-16T23:17:22.644497+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 29.9756,
+        "parse_time_seconds": 37.7278,
         "variables_count": 18,
         "equations_count": 14
       },
@@ -171,9 +171,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:54:44.803241+00:00",
+        "parse_date": "2026-04-16T23:17:28.772610+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.6679,
+        "parse_time_seconds": 6.1067,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -290,9 +290,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:54:55.882259+00:00",
+        "parse_date": "2026-04-16T23:17:31.817108+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0561,
+        "parse_time_seconds": 3.0279,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -345,7 +345,7 @@
     {
       "model_id": "alan",
       "model_name": "A Quadratic Programming Model for Portfolio Analysis",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MINLP",
       "sequence_number": 8,
       "source_url": "https://www.gams.com/latest/gamslib_ml/alan.8",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_alan.html",
@@ -363,7 +363,15 @@
         "model_status": 4,
         "objective_value": 2.9821,
         "solve_time_seconds": 3.004,
-        "error": "Model is Infeasible"
+        "error": "Model is Infeasible",
+        "reason": "minlp_out_of_scope"
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model is Infeasible"
       }
     },
     {
@@ -390,9 +398,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:55:03.908944+00:00",
+        "parse_date": "2026-04-16T23:17:34.680022+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.3853,
+        "parse_time_seconds": 2.8475,
         "variables_count": 15,
         "equations_count": 8
       },
@@ -466,9 +474,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:55:11.961758+00:00",
+        "parse_date": "2026-04-16T23:17:36.257869+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2828,
+        "parse_time_seconds": 1.5605,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -521,7 +529,7 @@
     {
       "model_id": "andean",
       "model_name": "Andean Fertilizer Model",
-      "gamslib_type": "LP",
+      "gamslib_type": "MIP",
       "sequence_number": 14,
       "source_url": "https://www.gams.com/latest/gamslib_ml/andean.14",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_andean.html",
@@ -533,10 +541,19 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:57:34Z",
         "solve_time_seconds": 0.657,
-        "error": "Model exceeds demo license limits"
+        "error": "Model exceeds demo license limits",
+        "reason": "minlp_out_of_scope",
+        "original_status": "error"
+      },
+      "original_gamslib_type": "LP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model exceeds demo license limits"
       }
     },
     {
@@ -563,9 +580,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:55:21.719322+00:00",
+        "parse_date": "2026-04-16T23:17:41.456845+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.5485,
+        "parse_time_seconds": 5.1913,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -640,9 +657,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:55:34.405248+00:00",
+        "parse_date": "2026-04-16T23:17:45.089926+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.569,
+        "parse_time_seconds": 3.6247,
         "variables_count": 4,
         "equations_count": 5
       },
@@ -738,9 +755,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:55:45.658707+00:00",
+        "parse_date": "2026-04-16T23:17:48.677939+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.5921,
+        "parse_time_seconds": 3.5805,
         "variables_count": 14,
         "equations_count": 13
       },
@@ -815,9 +832,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:56:12.062752+00:00",
+        "parse_date": "2026-04-16T23:17:50.835483+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6191,
+        "parse_time_seconds": 2.1466,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -891,9 +908,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:57:13.798449+00:00",
+        "parse_date": "2026-04-16T23:18:41.956886+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 50.78,
+        "parse_time_seconds": 51.0216,
         "variables_count": 38,
         "equations_count": 34
       },
@@ -958,9 +975,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:58:18.863160+00:00",
+        "parse_date": "2026-04-16T23:18:44.240947+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0473,
+        "parse_time_seconds": 2.277,
         "variables_count": 3,
         "equations_count": 6
       },
@@ -1025,9 +1042,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T06:59:04.363853+00:00",
+        "parse_date": "2026-04-16T23:18:45.470785+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3222,
+        "parse_time_seconds": 1.2248,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -1092,9 +1109,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:00:43.489306+00:00",
+        "parse_date": "2026-04-16T23:18:46.712201+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4711,
+        "parse_time_seconds": 1.2376,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1159,9 +1176,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:01:20.674954+00:00",
+        "parse_date": "2026-04-16T23:19:12.978176+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 28.9334,
+        "parse_time_seconds": 26.2511,
         "variables_count": 21,
         "equations_count": 21
       },
@@ -1226,9 +1243,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:02:59.747438+00:00",
+        "parse_date": "2026-04-16T23:19:33.533635+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 23.3246,
+        "parse_time_seconds": 20.5499,
         "variables_count": 11,
         "equations_count": 16
       },
@@ -1293,9 +1310,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:04:14.214081+00:00",
+        "parse_date": "2026-04-16T23:19:34.936351+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5634,
+        "parse_time_seconds": 1.3939,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1360,9 +1377,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:04:43.565368+00:00",
+        "parse_date": "2026-04-16T23:19:37.613962+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.2384,
+        "parse_time_seconds": 2.6731,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -1460,9 +1477,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:04:54.432056+00:00",
+        "parse_date": "2026-04-16T23:19:38.828297+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4881,
+        "parse_time_seconds": 1.2054,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -1536,9 +1553,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:05:07.203241+00:00",
+        "parse_date": "2026-04-16T23:19:45.344778+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.725,
+        "parse_time_seconds": 6.5107,
         "variables_count": 15,
         "equations_count": 14
       },
@@ -1612,9 +1629,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:05:49.070780+00:00",
+        "parse_date": "2026-04-16T23:20:07.833994+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 25.0183,
+        "parse_time_seconds": 22.3929,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -1679,9 +1696,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:06:31.204741+00:00",
+        "parse_date": "2026-04-16T23:20:08.839361+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4094,
+        "parse_time_seconds": 0.9994,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -1752,7 +1769,14 @@
         "model_status": 5,
         "objective_value": 9.1606,
         "solve_time_seconds": 0.316,
-        "error": "Model is Locally Infeasible"
+        "error": "Model is Locally Infeasible",
+        "reason": "legacy_excluded"
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model is Locally Infeasible"
       }
     },
     {
@@ -1779,9 +1803,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:06:42.403991+00:00",
+        "parse_date": "2026-04-16T23:20:13.156954+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.462,
+        "parse_time_seconds": 4.3104,
         "variables_count": 5,
         "equations_count": 2
       },
@@ -1835,9 +1859,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:11:43.490252+00:00",
+        "parse_date": "2026-04-16T23:20:13.931601+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.015,
+        "parse_time_seconds": 0.7683,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -1911,9 +1935,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:11:57.570975+00:00",
+        "parse_date": "2026-04-16T23:20:19.727997+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.8968,
+        "parse_time_seconds": 5.7923,
         "variables_count": 5,
         "equations_count": 8
       },
@@ -1978,9 +2002,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:14:17.874402+00:00",
+        "parse_date": "2026-04-16T23:20:22.363700+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.3407,
+        "parse_time_seconds": 2.6258,
         "variables_count": 6,
         "equations_count": 8
       },
@@ -2045,9 +2069,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:14:32.778430+00:00",
+        "parse_date": "2026-04-16T23:20:28.558671+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.0113,
+        "parse_time_seconds": 6.1895,
         "variables_count": 9,
         "equations_count": 8
       },
@@ -2145,9 +2169,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:18:32.941589+00:00",
+        "parse_date": "2026-04-16T23:23:52.168437+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 228.7446,
+        "parse_time_seconds": 203.5947,
         "variables_count": 22,
         "equations_count": 19
       },
@@ -2201,9 +2225,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:23:35.550096+00:00",
+        "parse_date": "2026-04-16T23:23:53.965081+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.3245,
+        "parse_time_seconds": 1.7883,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -2298,9 +2322,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:24:12.514082+00:00",
+        "parse_date": "2026-04-16T23:24:15.986374+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 29.8693,
+        "parse_time_seconds": 22.0143,
         "variables_count": 31,
         "equations_count": 29
       },
@@ -2365,9 +2389,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:26:09.251561+00:00",
+        "parse_date": "2026-04-16T23:25:24.409789+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 87.3593,
+        "parse_time_seconds": 68.3563,
         "variables_count": 11,
         "equations_count": 11
       },
@@ -2432,9 +2456,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:30:03.024549+00:00",
+        "parse_date": "2026-04-16T23:25:25.436727+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3341,
+        "parse_time_seconds": 1.0209,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -2538,7 +2562,14 @@
         "model_status": 4,
         "objective_value": -3315000.0001,
         "solve_time_seconds": 15.813,
-        "error": "Model is Infeasible"
+        "error": "Model is Infeasible",
+        "reason": "legacy_excluded"
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model is Infeasible"
       }
     },
     {
@@ -2565,9 +2596,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:30:22.608052+00:00",
+        "parse_date": "2026-04-16T23:25:32.219593+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 9.4917,
+        "parse_time_seconds": 6.7762,
         "variables_count": 12,
         "equations_count": 13
       },
@@ -2632,9 +2663,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:30:52.779840+00:00",
+        "parse_date": "2026-04-16T23:25:42.298655+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 13.3183,
+        "parse_time_seconds": 10.073,
         "variables_count": 15,
         "equations_count": 10
       },
@@ -2699,9 +2730,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:31:32.480403+00:00",
+        "parse_date": "2026-04-16T23:25:44.368342+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.8435,
+        "parse_time_seconds": 2.0628,
         "variables_count": 6,
         "equations_count": 7
       },
@@ -2771,63 +2802,26 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 96.75,
-        "solve_time_seconds": 1.127
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-03-13T00:16:48.098449+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.7274,
-        "variables_count": 2,
-        "equations_count": 3
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-03-13T01:21:52.115726+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 3.7946,
-        "output_file": "data/gamslib/mcp/feasopt1_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-03-13T01:58:11.384778+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 171.306,
-        "solve_time_seconds": 0.5741,
-        "iterations": 373,
-        "outcome_category": "permanent_exclusion",
-        "error": {
-          "category": "permanent_exclusion",
-          "message": "Model: Locally Infeasible"
-        },
-        "permanent_exclusion": {
-          "reason": "GAMS feasibility test model; structural incompatibility with MCP formulation",
-          "category": "C_structural_incompatibility",
-          "excluded_date": "2026-04-07T15:24:59.641450+00:00",
-          "sprint": 24
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-03-13T01:58:11.384856+00:00",
-        "notes": "Skipped due to solve failure"
+        "solve_time_seconds": 1.127,
+        "reason": "legacy_excluded"
       },
       "model_statistics": {
         "variables": 2,
         "equations": 3,
         "parameters": 0,
         "sets": 2
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Excluded by earlier pipeline; reason not recorded."
       }
     },
     {
       "model_id": "feedtray",
       "model_name": "Optimum Feed Plate Location",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MINLP",
       "sequence_number": 108,
       "source_url": "https://www.gams.com/latest/gamslib_ml/feedtray.108",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_feedtray.html",
@@ -2845,51 +2839,21 @@
         "model_status": 2,
         "objective_value": 13.406,
         "solve_time_seconds": 0.497,
-        "error": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation"
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-02-25T05:41:41.285007+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.011,
-        "variables_count": 13,
-        "equations_count": 18
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-02-25T05:41:47.149628+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.8183,
-        "output_file": "data/gamslib/mcp/feedtray_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-02-25T05:41:47.335744+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.1666,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-02-25T05:41:47.335998+00:00",
-        "notes": "Skipped due to solve failure"
+        "error": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation",
+        "reason": "minlp_out_of_scope"
       },
       "model_statistics": {
         "variables": 13,
         "equations": 18,
         "parameters": 0,
         "sets": 9
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses MINLP solve (binary variable yf); discrete models are not suitable for KKT/MCP transformation"
       }
     },
     {
@@ -2916,9 +2880,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:32:24.437951+00:00",
+        "parse_date": "2026-04-16T23:26:14.052892+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 40.8633,
+        "parse_time_seconds": 29.6779,
         "variables_count": 11,
         "equations_count": 8
       },
@@ -2995,9 +2959,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T07:46:55.163155+00:00",
+        "parse_date": "2026-04-16T23:35:30.088811+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 570.589,
+        "parse_time_seconds": 556.0127,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -3051,9 +3015,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:01:06.327803+00:00",
+        "parse_date": "2026-04-16T23:43:30.734660+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 550.8437,
+        "parse_time_seconds": 480.6215,
         "variables_count": 74,
         "equations_count": 68
       },
@@ -3107,7 +3071,7 @@
     {
       "model_id": "gastrans",
       "model_name": "Gas Transmission Problem - Belgium",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MINLP",
       "sequence_number": 127,
       "source_url": "https://www.gams.com/latest/gamslib_ml/gastrans.127",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gastrans.html",
@@ -3119,20 +3083,14 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "likely_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:58:23Z",
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 89.0858,
-        "solve_time_seconds": 0.352
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-12T08:06:23.842931+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 17.2149,
-        "variables_count": 7,
-        "equations_count": 11
+        "solve_time_seconds": 0.352,
+        "reason": "minlp_out_of_scope",
+        "original_status": "likely_convex"
       },
       "model_statistics": {
         "variables": 7,
@@ -3140,24 +3098,12 @@
         "parameters": 0,
         "sets": 7
       },
-      "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-04-12T08:11:23.956583+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 300.0936,
-        "error": {
-          "category": "timeout",
-          "message": "Translation timeout after 300 seconds"
-        }
-      },
-      "mcp_solve": {
-        "status": "not_tested",
-        "solve_date": "2026-04-12T08:11:23.975380+00:00"
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-04-12T08:11:23.975380+00:00",
-        "notes": "Skipped due to translate failure"
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses discrete solver class: MINLP"
       }
     },
     {
@@ -3184,9 +3130,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:11:27.997298+00:00",
+        "parse_date": "2026-04-16T23:43:33.779832+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.018,
+        "parse_time_seconds": 3.0361,
         "variables_count": 13,
         "equations_count": 12
       },
@@ -3230,7 +3176,7 @@
     {
       "model_id": "gqapsdp",
       "model_name": "SDP Convexifications of the Generalized Quadratic Assignment Problem",
-      "gamslib_type": "LP",
+      "gamslib_type": "RMIQCP",
       "sequence_number": 134,
       "source_url": "https://www.gams.com/latest/gamslib_ml/gqapsdp.134",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gqapsdp.html",
@@ -3242,10 +3188,19 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:58:25Z",
         "solve_time_seconds": 0.219,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "reason": "minlp_out_of_scope",
+        "original_status": "error"
+      },
+      "original_gamslib_type": "LP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "GAMS compilation error"
       }
     },
     {
@@ -3272,9 +3227,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:13:12.195504+00:00",
+        "parse_date": "2026-04-16T23:43:53.942789+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 13.8193,
+        "parse_time_seconds": 20.144,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -3408,9 +3363,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:13:34.189581+00:00",
+        "parse_date": "2026-04-16T23:43:57.456534+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.179,
+        "parse_time_seconds": 3.4464,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -3484,9 +3439,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:13:46.508067+00:00",
+        "parse_date": "2026-04-16T23:44:01.115387+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.4934,
+        "parse_time_seconds": 3.6542,
         "variables_count": 5,
         "equations_count": 7
       },
@@ -3551,9 +3506,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:13:57.250736+00:00",
+        "parse_date": "2026-04-16T23:44:03.288883+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.5491,
+        "parse_time_seconds": 2.1642,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -3627,9 +3582,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:05.010809+00:00",
+        "parse_date": "2026-04-16T23:44:03.812431+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7406,
+        "parse_time_seconds": 0.5183,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -3703,9 +3658,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:11.188318+00:00",
+        "parse_date": "2026-04-16T23:44:05.086294+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5272,
+        "parse_time_seconds": 1.2623,
         "variables_count": 10,
         "equations_count": 5
       },
@@ -3779,9 +3734,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:19.867680+00:00",
+        "parse_date": "2026-04-16T23:44:06.147494+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7723,
+        "parse_time_seconds": 1.0553,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -3855,9 +3810,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:30.002043+00:00",
+        "parse_date": "2026-04-16T23:44:07.034204+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3992,
+        "parse_time_seconds": 0.8821,
         "variables_count": 9,
         "equations_count": 9
       },
@@ -3931,9 +3886,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:39.802482+00:00",
+        "parse_date": "2026-04-16T23:44:07.737917+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.4219,
+        "parse_time_seconds": 0.698,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -4007,9 +3962,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:14:51.310129+00:00",
+        "parse_date": "2026-04-16T23:44:08.714332+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9102,
+        "parse_time_seconds": 0.9718,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -4083,9 +4038,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:15:05.104173+00:00",
+        "parse_date": "2026-04-16T23:44:12.197822+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.7229,
+        "parse_time_seconds": 3.4763,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -4183,9 +4138,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:15:18.320313+00:00",
+        "parse_date": "2026-04-16T23:44:15.392545+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.9829,
+        "parse_time_seconds": 3.1272,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -4259,9 +4214,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:17:01.004610+00:00",
+        "parse_date": "2026-04-16T23:45:24.711251+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 94.7795,
+        "parse_time_seconds": 69.3089,
         "variables_count": 27,
         "equations_count": 22
       },
@@ -4343,57 +4298,20 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 7.6203,
-        "solve_time_seconds": 1.188
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-03-13T00:37:52.219546+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.338,
-        "variables_count": 7,
-        "equations_count": 14
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-03-13T01:32:57.714569+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 4.1624,
-        "output_file": "data/gamslib/mcp/iobalance_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-03-13T01:58:22.834672+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 9.277,
-        "solve_time_seconds": 1.6441,
-        "iterations": 2918,
-        "outcome_category": "permanent_exclusion",
-        "error": {
-          "category": "permanent_exclusion",
-          "message": "Model: Locally Infeasible"
-        },
-        "permanent_exclusion": {
-          "reason": "Balance model; structural incompatibility with MCP formulation",
-          "category": "C_structural_incompatibility",
-          "excluded_date": "2026-04-07T15:24:59.641541+00:00",
-          "sprint": 24
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-03-13T01:58:22.834751+00:00",
-        "notes": "Skipped due to solve failure"
+        "solve_time_seconds": 1.188,
+        "reason": "legacy_excluded"
       },
       "model_statistics": {
         "variables": 7,
         "equations": 14,
         "parameters": 0,
         "sets": 1
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Excluded by earlier pipeline; reason not recorded."
       }
     },
     {
@@ -4420,9 +4338,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:19:54.424258+00:00",
+        "parse_date": "2026-04-16T23:45:42.680797+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 15.0532,
+        "parse_time_seconds": 17.9608,
         "variables_count": 25,
         "equations_count": 25
       },
@@ -4496,9 +4414,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:21:23.340584+00:00",
+        "parse_date": "2026-04-16T23:46:48.528763+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 69.1112,
+        "parse_time_seconds": 65.8335,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -4573,9 +4491,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:26:29.132014+00:00",
+        "parse_date": "2026-04-16T23:46:49.691760+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.9305,
+        "parse_time_seconds": 1.1574,
         "variables_count": 7,
         "equations_count": 4
       },
@@ -4649,9 +4567,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:26:42.265903+00:00",
+        "parse_date": "2026-04-16T23:46:52.580396+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.3139,
+        "parse_time_seconds": 2.881,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -4725,9 +4643,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:27:16.978065+00:00",
+        "parse_date": "2026-04-16T23:47:11.379326+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 25.2536,
+        "parse_time_seconds": 18.7911,
         "variables_count": 44,
         "equations_count": 38
       },
@@ -4771,7 +4689,7 @@
     {
       "model_id": "kqkpsdp",
       "model_name": "SDP Convexifications of the Cardinality constraint Quadratic Knapsack Problem",
-      "gamslib_type": "LP",
+      "gamslib_type": "RMIQCP",
       "sequence_number": 180,
       "source_url": "https://www.gams.com/latest/gamslib_ml/kqkpsdp.180",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_kqkpsdp.html",
@@ -4783,10 +4701,19 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:58:42Z",
         "solve_time_seconds": 0.238,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "reason": "minlp_out_of_scope",
+        "original_status": "error"
+      },
+      "original_gamslib_type": "LP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "GAMS compilation error"
       }
     },
     {
@@ -4813,9 +4740,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:28:09.874556+00:00",
+        "parse_date": "2026-04-16T23:47:13.441118+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.1588,
+        "parse_time_seconds": 2.0565,
         "variables_count": 4,
         "equations_count": 8
       },
@@ -4889,9 +4816,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:28:23.084447+00:00",
+        "parse_date": "2026-04-16T23:47:19.911266+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.5338,
+        "parse_time_seconds": 6.4629,
         "variables_count": 15,
         "equations_count": 11
       },
@@ -4965,9 +4892,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:28:36.590779+00:00",
+        "parse_date": "2026-04-16T23:47:21.245904+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0912,
+        "parse_time_seconds": 1.321,
         "variables_count": 5,
         "equations_count": 3
       },
@@ -5041,9 +4968,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:28:49.148804+00:00",
+        "parse_date": "2026-04-16T23:47:28.960341+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.058,
+        "parse_time_seconds": 7.6285,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -5141,9 +5068,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:29:04.027103+00:00",
+        "parse_date": "2026-04-16T23:47:32.083417+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.4444,
+        "parse_time_seconds": 3.1173,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5232,9 +5159,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:29:24.785186+00:00",
+        "parse_date": "2026-04-16T23:47:33.433845+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5696,
+        "parse_time_seconds": 1.3416,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -5278,7 +5205,7 @@
     {
       "model_id": "lop",
       "model_name": "Line Optimization",
-      "gamslib_type": "LP",
+      "gamslib_type": "MIP",
       "sequence_number": 192,
       "source_url": "https://www.gams.com/latest/gamslib_ml/lop.192",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html",
@@ -5296,30 +5223,15 @@
         "model_status": 1,
         "objective_value": 20244.0,
         "solve_time_seconds": 11.461,
-        "error": "Model uses MIP solve statements (not NLP). Additionally, dynamic subset fallback causes combinatorial explosion in constraint count (546 inequalities, 529 bounds), making Jacobian computation infeasible."
+        "error": "Model uses MIP solve statements (not NLP). Additionally, dynamic subset fallback causes combinatorial explosion in constraint count (546 inequalities, 529 bounds), making Jacobian computation infeasible.",
+        "reason": "minlp_out_of_scope"
       },
-      "nlp2mcp_parse": {
-        "status": "failure",
-        "parse_date": "2026-02-14T01:16:27.570682+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.6507,
-        "error": {
-          "category": "lexer_invalid_char",
-          "message": "Error: Parse error at line 208, column 1: Parse error at line 208, column 1: Unexpected character: 'S'\n  Set ll(s,s) 'station pair represening a line';\n  ^\n  Set ll(s,s) 'station pair represening a line';\n  ^\n\nSuggestion: This character is not valid in this context\n\nMissing semicolon at end of line 207. Add ';' after: * Lines are symetric, so delete one half of them"
-        }
-      },
-      "nlp2mcp_translate": {
-        "status": "not_tested",
-        "translate_date": "2026-02-12T04:34:38.951432+00:00"
-      },
-      "mcp_solve": {
-        "status": "not_tested",
-        "solve_date": "2026-02-12T04:34:38.951432+00:00"
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-02-12T04:34:38.951432+00:00",
-        "notes": "Skipped due to parse failure"
+      "original_gamslib_type": "LP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses MIP solve statements (not NLP). Additionally, dynamic subset fallback causes combinatorial explosion in constraint count (546 inequalities, 529 bounds), making Jacobian computation infeasible."
       }
     },
     {
@@ -5346,9 +5258,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:30:25.296045+00:00",
+        "parse_date": "2026-04-16T23:47:52.898527+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 16.4602,
+        "parse_time_seconds": 19.457,
         "variables_count": 27,
         "equations_count": 27
       },
@@ -5422,9 +5334,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:30:51.333420+00:00",
+        "parse_date": "2026-04-16T23:47:58.420735+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.2394,
+        "parse_time_seconds": 5.5143,
         "variables_count": 9,
         "equations_count": 11
       },
@@ -5498,9 +5410,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:31:03.734466+00:00",
+        "parse_date": "2026-04-16T23:48:00.924867+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.8147,
+        "parse_time_seconds": 2.4959,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -5574,9 +5486,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:31:17.519494+00:00",
+        "parse_date": "2026-04-16T23:48:02.042683+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2499,
+        "parse_time_seconds": 1.1131,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5650,9 +5562,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:31:25.442457+00:00",
+        "parse_date": "2026-04-16T23:48:03.315515+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0173,
+        "parse_time_seconds": 1.2575,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5726,9 +5638,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:31:35.719591+00:00",
+        "parse_date": "2026-04-16T23:48:05.806946+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.3499,
+        "parse_time_seconds": 2.4814,
         "variables_count": 7,
         "equations_count": 8
       },
@@ -5803,9 +5715,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:31:58.035417+00:00",
+        "parse_date": "2026-04-16T23:48:07.601998+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7719,
+        "parse_time_seconds": 1.7882,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -5858,7 +5770,7 @@
     {
       "model_id": "maxcut",
       "model_name": "Goemans/Williamson Randomized Approximation Algorithm for MaxCut",
-      "gamslib_type": "LP",
+      "gamslib_type": "MIP",
       "sequence_number": 205,
       "source_url": "https://www.gams.com/latest/gamslib_ml/maxcut.205",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_maxcut.html",
@@ -5870,10 +5782,19 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:23Z",
         "solve_time_seconds": 0.244,
-        "error": "No solve summary found in listing file"
+        "error": "No solve summary found in listing file",
+        "reason": "minlp_out_of_scope",
+        "original_status": "error"
+      },
+      "original_gamslib_type": "LP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "No solve summary found in listing file"
       }
     },
     {
@@ -5900,9 +5821,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:32:05.996910+00:00",
+        "parse_date": "2026-04-16T23:48:09.735678+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.1626,
+        "parse_time_seconds": 2.0434,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -5972,60 +5893,20 @@
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 0.0308,
-        "solve_time_seconds": 1.509
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-03-13T00:42:24.791994+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0998,
-        "variables_count": 4,
-        "equations_count": 6
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-03-13T01:37:16.313549+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 3.8247,
-        "output_file": "data/gamslib/mcp/meanvar_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "success",
-        "solve_date": "2026-03-13T01:58:43.323150+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 1,
-        "model_status_text": "Optimal",
-        "objective_value": 0.027,
-        "solve_time_seconds": 1.9934,
-        "iterations": 1902,
-        "outcome_category": "model_optimal"
-      },
-      "solution_comparison": {
-        "comparison_status": "mismatch",
-        "comparison_date": "2026-03-13T01:58:43.323261+00:00",
-        "nlp_objective": 0.0308,
-        "mcp_objective": 0.027,
-        "absolute_difference": 0.0038000000000000013,
-        "relative_difference": 0.12337662337662342,
-        "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 0.002,
-        "nlp_solver_status": 1,
-        "nlp_model_status": 2,
-        "mcp_solver_status": 1,
-        "mcp_model_status": 1,
-        "status_match": true,
-        "comparison_result": "compare_objective_mismatch",
-        "notes": "Mismatch: diff=3.80e-03 > tolerance=6.16e-05"
+        "solve_time_seconds": 1.509,
+        "reason": "legacy_excluded"
       },
       "model_statistics": {
         "variables": 4,
         "equations": 6,
         "parameters": 0,
         "sets": 5
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Excluded by earlier pipeline; reason not recorded."
       }
     },
     {
@@ -6073,9 +5954,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:33:53.654525+00:00",
+        "parse_date": "2026-04-16T23:49:44.843082+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 97.2813,
+        "parse_time_seconds": 95.0924,
         "variables_count": 17,
         "equations_count": 16
       },
@@ -6129,9 +6010,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:38:58.733629+00:00",
+        "parse_date": "2026-04-16T23:49:49.576896+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.8226,
+        "parse_time_seconds": 4.7215,
         "variables_count": 10,
         "equations_count": 11
       },
@@ -6205,9 +6086,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:39:10.080844+00:00",
+        "parse_date": "2026-04-16T23:49:50.467206+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.9158,
+        "parse_time_seconds": 0.8792,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -6281,9 +6162,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:39:23.297159+00:00",
+        "parse_date": "2026-04-16T23:49:55.384145+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 8.3062,
+        "parse_time_seconds": 4.9092,
         "variables_count": 6,
         "equations_count": 4
       },
@@ -6378,9 +6259,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:39:37.187415+00:00",
+        "parse_date": "2026-04-16T23:49:58.093417+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.1169,
+        "parse_time_seconds": 2.7037,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -6434,9 +6315,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:39:47.933514+00:00",
+        "parse_date": "2026-04-16T23:49:59.647000+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7089,
+        "parse_time_seconds": 1.5479,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -6489,7 +6370,7 @@
     {
       "model_id": "minlphi",
       "model_name": "Heat Integrated Distillation Sequences",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MIP",
       "sequence_number": 218,
       "source_url": "https://www.gams.com/latest/gamslib_ml/minlphi.218",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphi.html",
@@ -6501,13 +6382,22 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "unknown",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:29Z",
         "solver_status": 1,
         "model_status": 10,
         "objective_value": 316.6927,
         "solve_time_seconds": 0.969,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "reason": "minlp_out_of_scope",
+        "original_status": "unknown"
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Unexpected status combination"
       }
     },
     {
@@ -6555,9 +6445,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:39:55.669848+00:00",
+        "parse_date": "2026-04-16T23:50:01.103117+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.8334,
+        "parse_time_seconds": 1.4498,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -6631,9 +6521,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:40:02.645047+00:00",
+        "parse_date": "2026-04-16T23:50:02.337770+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.1871,
+        "parse_time_seconds": 1.2234,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -6707,9 +6597,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:40:25.779134+00:00",
+        "parse_date": "2026-04-16T23:50:21.089676+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 17.3191,
+        "parse_time_seconds": 18.7363,
         "variables_count": 26,
         "equations_count": 26
       },
@@ -6804,9 +6694,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:41:33.456181+00:00",
+        "parse_date": "2026-04-16T23:51:06.068496+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 45.8043,
+        "parse_time_seconds": 44.8956,
         "variables_count": 29,
         "equations_count": 25
       },
@@ -6839,7 +6729,7 @@
     {
       "model_id": "nemhaus",
       "model_name": "Scheduling to Minimize Interaction Cost",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MIP",
       "sequence_number": 231,
       "source_url": "https://www.gams.com/latest/gamslib_ml/nemhaus.231",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_nemhaus.html",
@@ -6851,65 +6741,27 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "likely_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:33Z",
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.0,
-        "solve_time_seconds": 1.462
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-12T08:46:36.978773+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.8536,
-        "variables_count": 4,
-        "equations_count": 5
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-04-12T08:46:42.730769+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.7421,
-        "output_file": "data/gamslib/mcp/nemhaus_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "success",
-        "solve_date": "2026-04-12T08:46:45.586714+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 1,
-        "model_status_text": "Optimal",
-        "objective_value": 0.0,
-        "solve_time_seconds": 2.8204,
-        "iterations": 0,
-        "outcome_category": "model_optimal"
-      },
-      "solution_comparison": {
-        "comparison_status": "match",
-        "comparison_date": "2026-04-12T08:46:45.589025+00:00",
-        "nlp_objective": 0.0,
-        "mcp_objective": 0.0,
-        "absolute_difference": 0.0,
-        "relative_difference": 0.0,
-        "objective_match": true,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 0.002,
-        "nlp_solver_status": 1,
-        "nlp_model_status": 1,
-        "mcp_solver_status": 1,
-        "mcp_model_status": 1,
-        "status_match": true,
-        "comparison_result": "compare_objective_match",
-        "notes": "Match within tolerance (diff=0.00e+00, tol=1.00e-08)"
+        "solve_time_seconds": 1.462,
+        "reason": "minlp_out_of_scope",
+        "original_status": "likely_convex"
       },
       "model_statistics": {
         "variables": 4,
         "equations": 5,
         "parameters": 0,
         "sets": 3
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses discrete solver class: MIP"
       }
     },
     {
@@ -6936,7 +6788,7 @@
     {
       "model_id": "nonsharp",
       "model_name": "Synthesis of General Distillation Sequences",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MIP",
       "sequence_number": 233,
       "source_url": "https://www.gams.com/latest/gamslib_ml/nonsharp.233",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_nonsharp.html",
@@ -6948,65 +6800,27 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "likely_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T14:59:35Z",
         "solver_status": 1,
         "model_status": 1,
         "objective_value": 0.8938,
-        "solve_time_seconds": 1.303
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-12T08:47:02.712705+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 17.1202,
-        "variables_count": 15,
-        "equations_count": 18
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-04-12T08:47:19.181279+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 16.4543,
-        "output_file": "data/gamslib/mcp/nonsharp_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "success",
-        "solve_date": "2026-04-12T08:47:21.223359+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 1,
-        "model_status_text": "Optimal",
-        "objective_value": 0.0,
-        "solve_time_seconds": 1.9572,
-        "iterations": 4121,
-        "outcome_category": "model_optimal"
-      },
-      "solution_comparison": {
-        "comparison_status": "mismatch",
-        "comparison_date": "2026-04-12T08:47:21.224511+00:00",
-        "nlp_objective": 0.8938,
-        "mcp_objective": 0.0,
-        "absolute_difference": 0.8938,
-        "relative_difference": 1.0,
-        "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 0.002,
-        "nlp_solver_status": 1,
-        "nlp_model_status": 1,
-        "mcp_solver_status": 1,
-        "mcp_model_status": 1,
-        "status_match": true,
-        "comparison_result": "compare_objective_mismatch",
-        "notes": "Mismatch: diff=8.94e-01 > tolerance=1.79e-03"
+        "solve_time_seconds": 1.303,
+        "reason": "minlp_out_of_scope",
+        "original_status": "likely_convex"
       },
       "model_statistics": {
         "variables": 15,
         "equations": 18,
         "parameters": 0,
         "sets": 18
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses discrete solver class: MIP"
       }
     },
     {
@@ -7029,15 +6843,8 @@
         "solver_status": 1,
         "model_status": 1,
         "objective_value": -1.6032,
-        "solve_time_seconds": 0.364
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-03-13T00:46:51.839954+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6155,
-        "variables_count": 25,
-        "equations_count": 19
+        "solve_time_seconds": 0.364,
+        "reason": "legacy_excluded"
       },
       "model_statistics": {
         "variables": 25,
@@ -7045,41 +6852,11 @@
         "parameters": 0,
         "sets": 8
       },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-03-13T01:41:24.030131+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 6.2271,
-        "output_file": "data/gamslib/mcp/orani_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-03-13T01:58:49.553879+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": -0.784,
-        "solve_time_seconds": 0.759,
-        "iterations": 116,
-        "outcome_category": "permanent_exclusion",
-        "error": {
-          "category": "permanent_exclusion",
-          "message": "Model: Locally Infeasible"
-        },
-        "permanent_exclusion": {
-          "reason": "Percentage-change model; structural incompatibility with MCP formulation (#765)",
-          "category": "C_structural_incompatibility",
-          "excluded_date": "2026-04-07T15:24:59.636799+00:00",
-          "sprint": 24
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-03-13T01:58:49.553962+00:00",
-        "notes": "Skipped due to solve failure"
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Excluded by earlier pipeline; reason not recorded."
       }
     },
     {
@@ -7106,9 +6883,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:47:25.559677+00:00",
+        "parse_date": "2026-04-16T23:51:09.855904+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.3331,
+        "parse_time_seconds": 3.7806,
         "variables_count": 10,
         "equations_count": 10
       },
@@ -7182,9 +6959,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:47:39.839263+00:00",
+        "parse_date": "2026-04-16T23:51:13.550445+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.0137,
+        "parse_time_seconds": 3.6895,
         "variables_count": 11,
         "equations_count": 15
       },
@@ -7258,9 +7035,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:47:58.768050+00:00",
+        "parse_date": "2026-04-16T23:51:20.400303+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.9826,
+        "parse_time_seconds": 6.8442,
         "variables_count": 13,
         "equations_count": 13
       },
@@ -7334,9 +7111,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:48:10.432113+00:00",
+        "parse_date": "2026-04-16T23:51:22.921214+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.7935,
+        "parse_time_seconds": 2.5164,
         "variables_count": 8,
         "equations_count": 5
       },
@@ -7410,9 +7187,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:48:23.025026+00:00",
+        "parse_date": "2026-04-16T23:51:28.829353+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.1844,
+        "parse_time_seconds": 5.9013,
         "variables_count": 4,
         "equations_count": 7
       },
@@ -7477,9 +7254,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:48:36.701011+00:00",
+        "parse_date": "2026-04-16T23:51:33.217191+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.2163,
+        "parse_time_seconds": 4.3832,
         "variables_count": 12,
         "equations_count": 9
       },
@@ -7574,9 +7351,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:48:48.247362+00:00",
+        "parse_date": "2026-04-16T23:51:35.018123+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.0515,
+        "parse_time_seconds": 1.7947,
         "variables_count": 8,
         "equations_count": 7
       },
@@ -7671,9 +7448,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:49:16.885619+00:00",
+        "parse_date": "2026-04-16T23:51:54.368395+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 19.4358,
+        "parse_time_seconds": 19.3425,
         "variables_count": 5,
         "equations_count": 6
       },
@@ -7747,9 +7524,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:49:45.308024+00:00",
+        "parse_date": "2026-04-16T23:51:55.742954+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3121,
+        "parse_time_seconds": 1.3617,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -7856,9 +7633,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:06.445702+00:00",
+        "parse_date": "2026-04-16T23:51:57.403684+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3076,
+        "parse_time_seconds": 1.5342,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -7932,9 +7709,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:15.077942+00:00",
+        "parse_date": "2026-04-16T23:52:01.558945+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.3055,
+        "parse_time_seconds": 4.1447,
         "variables_count": 15,
         "equations_count": 12
       },
@@ -8008,9 +7785,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:23.367706+00:00",
+        "parse_date": "2026-04-16T23:52:03.789142+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.5502,
+        "parse_time_seconds": 2.2215,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -8084,9 +7861,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:29.494704+00:00",
+        "parse_date": "2026-04-16T23:52:04.873334+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.6735,
+        "parse_time_seconds": 1.0685,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -8181,9 +7958,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:38.914598+00:00",
+        "parse_date": "2026-04-16T23:52:15.646732+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.8613,
+        "parse_time_seconds": 10.7586,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -8257,9 +8034,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:50:53.854627+00:00",
+        "parse_date": "2026-04-16T23:52:24.080933+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 6.4621,
+        "parse_time_seconds": 8.4182,
         "variables_count": 6,
         "equations_count": 9
       },
@@ -8411,9 +8188,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:10.042905+00:00",
+        "parse_date": "2026-04-16T23:52:31.276772+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.63,
+        "parse_time_seconds": 7.1873,
         "variables_count": 4,
         "equations_count": 7
       },
@@ -8488,9 +8265,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:20.641317+00:00",
+        "parse_date": "2026-04-16T23:52:32.130772+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8891,
+        "parse_time_seconds": 0.8469,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8564,9 +8341,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:26.304438+00:00",
+        "parse_date": "2026-04-16T23:52:33.428024+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0495,
+        "parse_time_seconds": 1.2919,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8640,9 +8417,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:32.168025+00:00",
+        "parse_date": "2026-04-16T23:52:35.060588+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.0355,
+        "parse_time_seconds": 1.6197,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -8872,9 +8649,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:38.021715+00:00",
+        "parse_date": "2026-04-16T23:52:36.065361+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.889,
+        "parse_time_seconds": 0.8976,
         "variables_count": 4,
         "equations_count": 3
       },
@@ -9260,9 +9037,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:48.033178+00:00",
+        "parse_date": "2026-04-16T23:52:41.978552+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.294,
+        "parse_time_seconds": 5.9052,
         "variables_count": 4,
         "equations_count": 7
       },
@@ -9337,9 +9114,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:51:59.630536+00:00",
+        "parse_date": "2026-04-16T23:52:44.547968+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.2309,
+        "parse_time_seconds": 2.5633,
         "variables_count": 3,
         "equations_count": 2
       },
@@ -9392,7 +9169,7 @@
     {
       "model_id": "qalan",
       "model_name": "A Quadratic Programming Model for Portfolio Analysis QCP",
-      "gamslib_type": "QCP",
+      "gamslib_type": "MIQCP",
       "sequence_number": 290,
       "source_url": "https://www.gams.com/latest/gamslib_ml/qalan.290",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qalan.html",
@@ -9404,13 +9181,22 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "unknown",
+        "status": "excluded",
         "verification_date": "2026-01-01T15:00:54Z",
         "solver_status": 1,
         "model_status": 8,
         "objective_value": 2.925,
         "solve_time_seconds": 0.784,
-        "error": "Unexpected status combination"
+        "error": "Unexpected status combination",
+        "reason": "minlp_out_of_scope",
+        "original_status": "unknown"
+      },
+      "original_gamslib_type": "QCP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Unexpected status combination"
       }
     },
     {
@@ -9458,9 +9244,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:52:48.456669+00:00",
+        "parse_date": "2026-04-16T23:52:54.984739+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 9.3555,
+        "parse_time_seconds": 10.4292,
         "variables_count": 20,
         "equations_count": 13
       },
@@ -9702,9 +9488,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:53:04.410982+00:00",
+        "parse_date": "2026-04-16T23:52:56.899495+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.1235,
+        "parse_time_seconds": 1.9077,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -9778,9 +9564,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:53:27.215906+00:00",
+        "parse_date": "2026-04-16T23:53:14.182949+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 16.9573,
+        "parse_time_seconds": 17.2768,
         "variables_count": 27,
         "equations_count": 28
       },
@@ -9854,9 +9640,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:53:51.002763+00:00",
+        "parse_date": "2026-04-16T23:53:16.121906+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.9034,
+        "parse_time_seconds": 1.929,
         "variables_count": 4,
         "equations_count": 4
       },
@@ -9930,9 +9716,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:53:57.668507+00:00",
+        "parse_date": "2026-04-16T23:53:16.489650+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.4031,
+        "parse_time_seconds": 0.3616,
         "variables_count": 3,
         "equations_count": 1
       },
@@ -10006,9 +9792,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:54:03.443356+00:00",
+        "parse_date": "2026-04-16T23:53:18.308181+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.3364,
+        "parse_time_seconds": 1.8073,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -10082,9 +9868,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:54:11.804196+00:00",
+        "parse_date": "2026-04-16T23:53:21.975190+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.1292,
+        "parse_time_seconds": 3.6588,
         "variables_count": 13,
         "equations_count": 9
       },
@@ -10149,9 +9935,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:54:51.208547+00:00",
+        "parse_date": "2026-04-16T23:53:24.116838+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.946,
+        "parse_time_seconds": 2.0377,
         "variables_count": 6,
         "equations_count": 7
       },
@@ -10226,9 +10012,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:55:09.218361+00:00",
+        "parse_date": "2026-04-16T23:53:26.454645+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.353,
+        "parse_time_seconds": 2.3265,
         "variables_count": 8,
         "equations_count": 6
       },
@@ -10303,9 +10089,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:56:54.853604+00:00",
+        "parse_date": "2026-04-16T23:53:27.994966+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.6984,
+        "parse_time_seconds": 1.5342,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -10379,9 +10165,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:57:02.723666+00:00",
+        "parse_date": "2026-04-16T23:53:29.969574+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7459,
+        "parse_time_seconds": 1.9642,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -10446,9 +10232,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:58:14.300116+00:00",
+        "parse_date": "2026-04-16T23:54:32.003826+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 66.1078,
+        "parse_time_seconds": 62.0215,
         "variables_count": 21,
         "equations_count": 40
       },
@@ -10513,9 +10299,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T08:59:55.623377+00:00",
+        "parse_date": "2026-04-16T23:55:06.416275+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 33.9972,
+        "parse_time_seconds": 34.4031,
         "variables_count": 10,
         "equations_count": 16
       },
@@ -10611,9 +10397,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:04:59.567379+00:00",
+        "parse_date": "2026-04-16T23:55:09.034078+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.7788,
+        "parse_time_seconds": 2.6108,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -10688,9 +10474,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:05:39.781164+00:00",
+        "parse_date": "2026-04-16T23:55:41.637794+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 32.8331,
+        "parse_time_seconds": 32.5913,
         "variables_count": 15,
         "equations_count": 22
       },
@@ -10755,9 +10541,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:06:47.902006+00:00",
+        "parse_date": "2026-04-16T23:55:44.626536+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.7377,
+        "parse_time_seconds": 2.9726,
         "variables_count": 7,
         "equations_count": 8
       },
@@ -10852,9 +10638,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:06:57.584010+00:00",
+        "parse_date": "2026-04-16T23:55:46.717146+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.1987,
+        "parse_time_seconds": 2.0837,
         "variables_count": 5,
         "equations_count": 4
       },
@@ -10928,9 +10714,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:07:08.912275+00:00",
+        "parse_date": "2026-04-16T23:55:49.165415+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.3277,
+        "parse_time_seconds": 2.3311,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -11004,9 +10790,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:07:20.675029+00:00",
+        "parse_date": "2026-04-16T23:55:55.321145+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.0993,
+        "parse_time_seconds": 6.1516,
         "variables_count": 8,
         "equations_count": 14
       },
@@ -11143,9 +10929,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:07:32.156950+00:00",
+        "parse_date": "2026-04-16T23:55:58.626268+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.017,
+        "parse_time_seconds": 3.2981,
         "variables_count": 7,
         "equations_count": 7
       },
@@ -11219,9 +11005,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:07:41.975309+00:00",
+        "parse_date": "2026-04-16T23:56:01.325592+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.385,
+        "parse_time_seconds": 2.6856,
         "variables_count": 9,
         "equations_count": 6
       },
@@ -11319,9 +11105,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:07:53.665385+00:00",
+        "parse_date": "2026-04-16T23:56:06.825593+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.8718,
+        "parse_time_seconds": 5.4929,
         "variables_count": 3,
         "equations_count": 4
       },
@@ -11395,9 +11181,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:08:04.917561+00:00",
+        "parse_date": "2026-04-16T23:56:07.947765+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2337,
+        "parse_time_seconds": 1.1072,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -11462,9 +11248,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:08:49.014600+00:00",
+        "parse_date": "2026-04-16T23:56:10.182066+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.1991,
+        "parse_time_seconds": 2.2287,
         "variables_count": 3,
         "equations_count": 3
       },
@@ -11518,9 +11304,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:14:07.429305+00:00",
+        "parse_date": "2026-04-16T23:56:31.865565+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 17.6952,
+        "parse_time_seconds": 21.6751,
         "variables_count": 25,
         "equations_count": 25
       },
@@ -11615,9 +11401,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:14:37.644872+00:00",
+        "parse_date": "2026-04-16T23:56:40.298573+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 7.0711,
+        "parse_time_seconds": 8.4259,
         "variables_count": 8,
         "equations_count": 11
       },
@@ -11682,9 +11468,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:19:28.848014+00:00",
+        "parse_date": "2026-04-16T23:56:53.812667+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 12.2259,
+        "parse_time_seconds": 13.5072,
         "variables_count": 12,
         "equations_count": 16
       },
@@ -11749,9 +11535,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:21:19.602646+00:00",
+        "parse_date": "2026-04-16T23:57:00.605183+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.6302,
+        "parse_time_seconds": 6.6614,
         "variables_count": 11,
         "equations_count": 10
       },
@@ -11867,9 +11653,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:21:32.578655+00:00",
+        "parse_date": "2026-04-16T23:57:06.072274+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.6904,
+        "parse_time_seconds": 5.4591,
         "variables_count": 6,
         "equations_count": 3
       },
@@ -11934,9 +11720,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:22:11.539313+00:00",
+        "parse_date": "2026-04-16T23:57:06.842672+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.7295,
+        "parse_time_seconds": 0.755,
         "variables_count": 2,
         "equations_count": 2
       },
@@ -12007,7 +11793,14 @@
         "model_status": 5,
         "objective_value": 0.1052,
         "solve_time_seconds": 0.5,
-        "error": "Model is Locally Infeasible"
+        "error": "Model is Locally Infeasible",
+        "reason": "legacy_excluded"
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "legacy_excluded",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model is Locally Infeasible"
       }
     },
     {
@@ -12055,9 +11848,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:22:20.996577+00:00",
+        "parse_date": "2026-04-16T23:57:07.955525+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.231,
+        "parse_time_seconds": 1.1085,
         "variables_count": 2,
         "equations_count": 3
       },
@@ -12110,7 +11903,7 @@
     {
       "model_id": "trnspwl",
       "model_name": "A Transportation Problem with discretized economies of scale",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MIP",
       "sequence_number": 385,
       "source_url": "https://www.gams.com/latest/gamslib_ml/trnspwl.385",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html",
@@ -12122,71 +11915,33 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "likely_convex",
+        "status": "excluded",
         "verification_date": "2026-01-01T15:02:12Z",
         "solver_status": 1,
         "model_status": 2,
         "objective_value": 8.7958,
-        "solve_time_seconds": 1.311
-      },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-12T09:22:30.226864+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.8915,
-        "variables_count": 6,
-        "equations_count": 11
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-04-12T09:22:36.904867+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 6.6679,
-        "output_file": "data/gamslib/mcp/trnspwl_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "success",
-        "solve_date": "2026-04-12T09:22:38.579054+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": 1,
-        "solver_status_text": "Normal Completion",
-        "model_status": 1,
-        "model_status_text": "Optimal",
-        "objective_value": 12.748,
-        "solve_time_seconds": 1.6317,
-        "iterations": 24,
-        "outcome_category": "model_optimal"
-      },
-      "solution_comparison": {
-        "comparison_status": "mismatch",
-        "comparison_date": "2026-04-12T09:22:38.580176+00:00",
-        "nlp_objective": 8.7958,
-        "mcp_objective": 12.748,
-        "absolute_difference": 3.9521999999999995,
-        "relative_difference": 0.3100251019767806,
-        "objective_match": false,
-        "tolerance_absolute": 1e-08,
-        "tolerance_relative": 0.002,
-        "nlp_solver_status": 1,
-        "nlp_model_status": 2,
-        "mcp_solver_status": 1,
-        "mcp_model_status": 1,
-        "status_match": true,
-        "comparison_result": "compare_objective_mismatch",
-        "notes": "Mismatch: diff=3.95e+00 > tolerance=2.55e-02"
+        "solve_time_seconds": 1.311,
+        "reason": "minlp_out_of_scope",
+        "original_status": "likely_convex"
       },
       "model_statistics": {
         "variables": 6,
         "equations": 11,
         "parameters": 0,
         "sets": 5
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "Model uses discrete solver class: MIP"
       }
     },
     {
       "model_id": "trnspwlx",
       "model_name": "A Transportation Problem with Piecewise Linear Functions",
-      "gamslib_type": "NLP",
+      "gamslib_type": "MIP",
       "sequence_number": 386,
       "source_url": "https://www.gams.com/latest/gamslib_ml/trnspwlx.386",
       "web_page_url": "https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwlx.html",
@@ -12198,10 +11953,19 @@
       "migrated_from": "catalog.json",
       "migration_date": "2026-01-26T16:07:08Z",
       "convexity": {
-        "status": "error",
+        "status": "excluded",
         "verification_date": "2026-01-01T15:02:13Z",
         "solve_time_seconds": 0.212,
-        "error": "GAMS compilation error"
+        "error": "GAMS compilation error",
+        "reason": "minlp_out_of_scope",
+        "original_status": "error"
+      },
+      "original_gamslib_type": "NLP",
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "minlp_out_of_scope",
+        "marked_date": "2026-04-16T23:02:17Z",
+        "details": "GAMS compilation error"
       }
     },
     {
@@ -12228,9 +11992,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:22:40.348960+00:00",
+        "parse_date": "2026-04-16T23:57:10.216836+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.7673,
+        "parse_time_seconds": 2.2562,
         "variables_count": 5,
         "equations_count": 5
       },
@@ -12304,9 +12068,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:25:54.026819+00:00",
+        "parse_date": "2026-04-17T00:00:40.570974+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 185.9509,
+        "parse_time_seconds": 210.34,
         "variables_count": 31,
         "equations_count": 35
       },
@@ -12371,9 +12135,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:30:03.151032+00:00",
+        "parse_date": "2026-04-17T00:00:57.942714+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 15.7227,
+        "parse_time_seconds": 17.3549,
         "variables_count": 8,
         "equations_count": 11
       },
@@ -12427,9 +12191,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:35:34.454770+00:00",
+        "parse_date": "2026-04-17T00:01:25.296790+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 30.9543,
+        "parse_time_seconds": 27.3483,
         "variables_count": 28,
         "equations_count": 28
       },
@@ -12494,9 +12258,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:36:01.622528+00:00",
+        "parse_date": "2026-04-17T00:01:27.630357+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6514,
+        "parse_time_seconds": 2.3234,
         "variables_count": 6,
         "equations_count": 5
       },
@@ -12570,9 +12334,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:36:09.740386+00:00",
+        "parse_date": "2026-04-17T00:01:28.315121+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 0.8401,
+        "parse_time_seconds": 0.6774,
         "variables_count": 6,
         "equations_count": 6
       },
@@ -12646,9 +12410,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:36:30.079296+00:00",
+        "parse_date": "2026-04-17T00:01:43.120930+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 14.178,
+        "parse_time_seconds": 14.7137,
         "variables_count": 3,
         "equations_count": 5
       },
@@ -12722,9 +12486,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:36:50.070712+00:00",
+        "parse_date": "2026-04-17T00:01:43.844269+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.2475,
+        "parse_time_seconds": 0.7175,
         "variables_count": 4,
         "equations_count": 2
       },
@@ -12798,9 +12562,9 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-04-12T09:36:58.836423+00:00",
+        "parse_date": "2026-04-17T00:01:47.441315+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 3.6677,
+        "parse_time_seconds": 3.5916,
         "variables_count": 8,
         "equations_count": 6
       },
@@ -12851,5 +12615,13 @@
       }
     }
   ],
-  "gams_version": "51.3.0"
+  "gams_version": "51.3.0",
+  "_migration_summary": {
+    "to_version": "2.2.0",
+    "applied_at": "2026-04-16T23:02:17Z",
+    "minlp_excluded": 14,
+    "legacy_excluded": 7,
+    "in_scope": 198,
+    "type_corrected": 14
+  }
 }

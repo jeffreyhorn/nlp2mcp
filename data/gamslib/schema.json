@@ -37,6 +37,11 @@
       "items": {
         "$ref": "#/definitions/model_entry"
       }
+    },
+    "_migration_summary": {
+      "type": "object",
+      "description": "Bookkeeping block written by schema migrations (e.g., migrate_schema_v2.2.0.py). Informational only; not consumed by the pipeline.",
+      "additionalProperties": true
     }
   },
   "definitions": {
@@ -75,9 +80,37 @@
             "DNLP",
             "MPEC",
             "RMPEC",
-            "EMP"
+            "EMP",
+            "RMIP",
+            "RMINLP",
+            "RMIQCP"
           ],
-          "description": "GAMS model type classification"
+          "description": "GAMS model type classification. Schema 2.2.0: RMIP/RMINLP/RMIQCP added for models whose source-level solve-clause is relaxed-discrete; set by migrate_schema_v2.2.0.py when the raw .gms disagrees with the GAMSlib catalog."
+        },
+        "original_gamslib_type": {
+          "type": "string",
+          "enum": [
+            "LP",
+            "NLP",
+            "QCP",
+            "MIP",
+            "MINLP",
+            "MIQCP",
+            "MCP",
+            "CNS",
+            "DNLP",
+            "MPEC",
+            "RMPEC",
+            "EMP",
+            "RMIP",
+            "RMINLP",
+            "RMIQCP"
+          ],
+          "description": "Schema 2.2.0: Preserves the original GAMSlib catalog value of gamslib_type when the migration corrects it against the raw source. Absent when catalog and source agree."
+        },
+        "pipeline_status": {
+          "$ref": "#/definitions/pipeline_status",
+          "description": "Schema 2.2.0: Unified per-model pipeline state. When present with status='skipped', nlp2mcp will refuse to parse/translate/solve this model; replaces stale nlp2mcp_*/mcp_solve/solution_comparison blocks for excluded models."
         },
         "source_url": {
           "type": "string",
@@ -227,6 +260,52 @@
         "error": {
           "type": "string",
           "description": "Error message if status is 'error' or 'license_limited'"
+        },
+        "error_message": {
+          "type": "string",
+          "description": "Legacy alias for 'error'; preserved for pre-2.2.0 entries."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Schema 2.2.0: Canonical exclusion-reason keyword (e.g., 'minlp_out_of_scope', 'legacy_excluded'). Mirrors pipeline_status.reason so consumers that already read convexity see the same value."
+        },
+        "original_status": {
+          "type": "string",
+          "description": "Schema 2.2.0: Preserves the original convexity.status when the migration promotes a model to 'excluded' (e.g., a mis-cataloged MINLP that had previously been classified 'likely_convex')."
+        },
+        "timed_out": {
+          "type": "boolean",
+          "description": "True if the convexity check timed out."
+        }
+      }
+    },
+    "pipeline_status": {
+      "type": "object",
+      "description": "Schema 2.2.0: Per-model pipeline state. Authoritative 'skip' signal for models that nlp2mcp must not process (MINLP/MIP out of scope, or legacy-excluded with no recorded reason).",
+      "required": ["status"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["skipped", "in_scope"],
+          "description": "'skipped' means nlp2mcp refuses to parse/translate/solve this model; 'in_scope' is the default for continuous NLPs."
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "minlp_out_of_scope",
+            "legacy_excluded"
+          ],
+          "description": "Canonical exclusion-reason keyword. 'minlp_out_of_scope' for discrete solver classes; 'legacy_excluded' for pre-taxonomy excludes with no recorded reason."
+        },
+        "marked_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 UTC timestamp when the pipeline_status was applied."
+        },
+        "details": {
+          "type": "string",
+          "description": "Human-readable explanation copied from convexity.error when available, else a synthesized message."
         }
       }
     },
