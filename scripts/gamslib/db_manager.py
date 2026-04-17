@@ -249,7 +249,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     if args.empty:
         # Create empty database
         database = {
-            "schema_version": "2.1.0",
+            "schema_version": "2.2.0",
             "created_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_date": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "total_models": 0,

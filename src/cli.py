@@ -31,8 +31,13 @@ from src.kkt.scaling import byvar_scaling, curtis_reid_scaling
 from src.kkt.sqr_reformulation import reformulate_sqr_equalities
 from src.logging_config import setup_logging
 from src.utils.error_codes import get_error_info
+from src.validation.discreteness import MINLPNotSupportedError, validate_continuous
 from src.validation.model import validate_model_structure
 from src.validation.numerical import validate_jacobian_entries, validate_parameter_values
+
+# Distinct exit code so callers (CI, batch scripts) can distinguish
+# "model is out of scope" from generic translation failures.
+EXIT_MINLP_OUT_OF_SCOPE = 3
 
 
 @click.command()
@@ -132,6 +137,16 @@ from src.validation.numerical import validate_jacobian_entries, validate_paramet
     default=False,
     help="Run computational convexity test: solve cold-start and warm-start MCP, compare objectives",
 )
+@click.option(
+    "--allow-discrete",
+    is_flag=True,
+    default=False,
+    help=(
+        "Force translation of MINLP/MIP models (development/debugging only). "
+        "The generated MCP file will fail GAMS compilation because PATH "
+        "rejects discrete variables."
+    ),
+)
 def main(
     input_file,
     output,
@@ -151,6 +166,7 @@ def main(
     output_format,
     nlp_presolve,
     check_convexity_numerical,
+    allow_discrete,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -233,6 +249,22 @@ def main(
             if verbose:
                 click.echo("Validating parameters...")
             validate_parameter_values(model)
+
+        # Discreteness gate: refuse MINLP/MIP input. nlp2mcp's KKT
+        # transform is for continuous models; PATH rejects discrete vars.
+        if allow_discrete:
+            from src.validation.discreteness import scan_discreteness
+
+            report = scan_discreteness(model)
+            if report.is_discrete:
+                click.secho(
+                    "Warning: --allow-discrete bypassing discreteness gate; "
+                    "the generated MCP will fail GAMS compilation.",
+                    fg="yellow",
+                    err=True,
+                )
+        else:
+            validate_continuous(model)
 
         # Step 1.7: Check for convexity warnings (Sprint 6 Day 4)
         if not skip_convexity_check:
@@ -595,6 +627,10 @@ def main(
 
     except click.ClickException:
         raise
+
+    except MINLPNotSupportedError as e:
+        click.echo(str(e), err=True)
+        sys.exit(EXIT_MINLP_OUT_OF_SCOPE)
 
     except FileNotFoundError as e:
         click.echo(f"Error: File not found - {e}", err=True)

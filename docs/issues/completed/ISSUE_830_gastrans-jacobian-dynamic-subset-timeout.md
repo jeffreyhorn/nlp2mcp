@@ -1,10 +1,72 @@
 # Gastrans MCP: Jacobian Computation Timeout — Dynamic Subset Fallback Combinatorial Explosion
 
 **GitHub Issue:** [#830](https://github.com/jeffreyhorn/nlp2mcp/issues/830)
-**Status:** OPEN
-**Severity:** High — Model cannot complete NLP→MCP translation (pipeline hangs at Jacobian)
-**Date:** 2026-02-22
+**Status:** CLOSED — won't fix (out of scope)
+**Closed:** 2026-04-16 (Sprint 24, branch `sprint24-plan-fix-feedtray`)
+**Resolution:** Model is MINLP and is out of scope for nlp2mcp. See "Closure Note" below.
+**Severity (when open):** High — Model cannot complete NLP→MCP translation (pipeline hangs at Jacobian)
+**Date opened:** 2026-02-22
 **Affected Models:** gastrans (and potentially any model with large dynamic subsets)
+
+---
+
+## Closure Note (2026-04-16)
+
+This issue is closed as **out of scope**. The gastrans model is
+MINLP, not NLP:
+
+```
+$ grep -nE "(Binary|using\s+minlp)" data/gamslib/raw/gastrans.gms
+196:Binary Variable b;
+233:solve three using minlp min sc;
+```
+
+GAMSlib catalogs gastrans as `NLP`, and `convexity.status` was
+`likely_convex` — both wrong. The audit in
+`docs/planning/EPIC_4/SPRINT_24/AUDIT_MINLP_LEAKAGE.md` identified
+gastrans (along with `nemhaus`, `nonsharp`, `trnspwl`, and
+`feedtray`) as MINLPs slipping through the convexity gate.
+
+nlp2mcp transforms continuous NLPs to MCP via KKT conditions, and
+PATH (the MCP solver) rejects discrete variables outright (GAMS
+Error 65). Relaxation, fixed-binary substitution, and MPEC
+re-encoding are all out of scope; see
+`/Users/jeff/.claude/projects/-Users-jeff-experiments-nlp2mcp/memory/feedback_minlp_scope.md`.
+
+**Resolution applied:**
+
+- `data/gamslib/gamslib_status.json` — `gastrans.gamslib_type` set
+  to `MINLP` (was `NLP`, preserved under `original_gamslib_type`),
+  `pipeline_status: { status: "skipped", reason:
+  "minlp_out_of_scope" }`, stale `nlp2mcp_*`/`mcp_solve` blocks
+  removed (schema 2.1.0 → 2.2.0 migration).
+- `src/validation/discreteness.py` — `validate_continuous()` now
+  refuses MINLP/MIP input at the CLI with a distinct exit code
+  (`EXIT_MINLP_OUT_OF_SCOPE = 3`). Reproducer below now exits 3
+  without writing an MCP file:
+
+  ```bash
+  $ python -m src.cli data/gamslib/raw/gastrans.gms -o /tmp/x.gms
+  Error: Model is MINLP/MIP and is out of scope for nlp2mcp …
+  $ echo $?
+  3
+  ```
+
+- `scripts/gamslib/batch_parse.py::get_candidate_models()` —
+  honors `pipeline_status: skipped`; gastrans is no longer a
+  pipeline candidate.
+
+The Jacobian-timeout symptom described below is real, but it
+manifested only because nlp2mcp was incorrectly attempting to
+translate an MINLP. With the discreteness gate in place, the
+symptom can no longer trigger from this model. If a *continuous*
+NLP exhibits the same dynamic-subset-fallback explosion, it should
+be filed as a fresh issue with that model as the reproducer.
+
+The original report is preserved verbatim below for historical
+context.
+
+---
 
 ---
 
