@@ -156,18 +156,19 @@ def migrate_model(model: dict[str, Any], marked_date: str) -> dict[str, Any]:
         )
 
     # 2. Decide pipeline_status. Models are skipped if either:
-    #    - Source is MINLP/MIP/MIQCP (out of scope), or
-    #    - convexity.status is already "excluded" (preserve existing call)
+    #    - Source declares any discrete signal (MIP/MINLP/MIQCP/RMIP/RMINLP/
+    #      RMIQCP — all out of scope for nlp2mcp), or
+    #    - convexity.status is already "excluded" (preserve existing call).
     convexity = model.get("convexity") or {}
     convexity_status = convexity.get("status")
-    is_minlp = source_solve_type is not None
+    is_discrete = source_solve_type is not None
     is_excluded = convexity_status == "excluded"
 
-    if not (is_minlp or is_excluded):
+    if not (is_discrete or is_excluded):
         # In-scope continuous model — nothing to do.
         return model
 
-    if is_minlp:
+    if is_discrete:
         reason = REASON_MINLP
         details = (
             convexity.get("error")
@@ -175,7 +176,7 @@ def migrate_model(model: dict[str, Any], marked_date: str) -> dict[str, Any]:
             or f"Model uses discrete solver class: {source_solve_type}"
         )
     else:
-        # Excluded but not MINLP — preserve original error if present.
+        # Excluded but no discrete signal — preserve original error if present.
         original_error = convexity.get("error") or convexity.get("error_message")
         if original_error and "MINLP" in original_error.upper():
             reason = REASON_MINLP
@@ -193,9 +194,10 @@ def migrate_model(model: dict[str, Any], marked_date: str) -> dict[str, Any]:
     # 4. Mirror the reason on the convexity block for downstream consumers.
     if convexity:
         convexity["reason"] = reason
-        # Promote convexity.status to "excluded" for newly-detected MINLPs
-        # whose convexity block reports something else (e.g. "likely_convex").
-        if is_minlp and convexity_status != "excluded":
+        # Promote convexity.status to "excluded" for newly-detected discrete
+        # models whose convexity block reports something else (e.g.
+        # "likely_convex" for the mis-cataloged MINLPs in Bucket B).
+        if is_discrete and convexity_status != "excluded":
             convexity.setdefault("original_status", convexity_status)
             convexity["status"] = "excluded"
 
@@ -204,8 +206,13 @@ def migrate_model(model: dict[str, Any], marked_date: str) -> dict[str, Any]:
 
     if stripped:
         logger.debug("  %s: removed stale %s; reason=%s", model_id, stripped, reason)
-    elif is_minlp and convexity_status != "excluded":
-        logger.debug("  %s: newly excluded as MINLP (was %s)", model_id, convexity_status)
+    elif is_discrete and convexity_status != "excluded":
+        logger.debug(
+            "  %s: newly excluded as discrete (%s; was convexity.status=%s)",
+            model_id,
+            source_solve_type,
+            convexity_status,
+        )
 
     return model
 

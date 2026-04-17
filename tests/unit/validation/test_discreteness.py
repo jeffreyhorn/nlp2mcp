@@ -175,3 +175,25 @@ def test_error_includes_actionable_suggestion():
     text = str(err)
     assert "--allow-discrete" in text
     assert "out of scope" in text.lower()
+
+
+@pytest.mark.parametrize(
+    "solve_type",
+    ["MIP", "MINLP", "MIQCP", "RMIP", "RMINLP", "RMIQCP"],
+)
+def test_error_message_uses_detected_solve_type_in_headline(solve_type):
+    """Headline must name the actual detected class, not hard-code MINLP/MIP."""
+    ir = _ir_with_var(VarKind.CONTINUOUS, solve_type=solve_type)
+    err = MINLPNotSupportedError(scan_discreteness(ir))
+    text = str(err)
+    assert f"Model is {solve_type}" in text
+    assert f"Mark this model as {solve_type}" in text
+
+
+def test_error_message_falls_back_to_generic_when_only_var_kind():
+    """When only discrete vars (no solve_type), use generic phrasing."""
+    ir = _ir_with_var(VarKind.BINARY, solve_type="NLP")
+    err = MINLPNotSupportedError(scan_discreteness(ir))
+    text = str(err)
+    assert "discrete (MIP/MINLP/MIQCP/...)" in text
+    assert "discrete (out of scope)" in text

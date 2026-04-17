@@ -83,16 +83,21 @@ class MINLPNotSupportedError(UserError):
         if report.solve_type:
             parts.append(f"discrete solve clause: using {report.solve_type}")
         detail = "; ".join(parts) if parts else "discrete signal detected"
+        # Use the detected solve_type when present so the message reflects the
+        # actual class (MIP, MINLP, MIQCP, RMIP, RMINLP, RMIQCP); otherwise
+        # fall back to the generic "discrete (MIP/MINLP/MIQCP/...)" phrasing.
+        model_class = report.solve_type or "discrete (MIP/MINLP/MIQCP/...)"
+        status_label = report.solve_type or "discrete (out of scope)"
         message = (
-            "Model is MINLP/MIP and is out of scope for nlp2mcp "
+            f"Model is {model_class} and is out of scope for nlp2mcp "
             f"(NLP→MCP via KKT). Detected: {detail}."
         )
         suggestion = (
             "nlp2mcp transforms continuous NLPs to MCP via KKT conditions, "
             "and MCP/PATH cannot accept discrete variables. Mark this model "
-            "as MINLP/MIP in data/gamslib/gamslib_status.json and exclude "
-            "it from the pipeline. To force translation anyway (for "
-            "development/debugging only), pass --allow-discrete; the "
+            f"as {status_label} in data/gamslib/gamslib_status.json and "
+            "exclude it from the pipeline. To force translation anyway "
+            "(for development/debugging only), pass --allow-discrete; the "
             "generated MCP file will fail GAMS compilation."
         )
         super().__init__(message, suggestion)
