@@ -31,7 +31,8 @@ nlp2mcp transforms continuous NLPs to MCP via KKT conditions, and
 PATH (the MCP solver) rejects discrete variables outright (GAMS
 Error 65). Relaxation, fixed-binary substitution, and MPEC
 re-encoding are all out of scope; see
-`/Users/jeff/.claude/projects/-Users-jeff-experiments-nlp2mcp/memory/feedback_minlp_scope.md`.
+[`docs/planning/EPIC_4/SPRINT_24/PLAN_FIX_FEEDTRAY.md`](../../planning/EPIC_4/SPRINT_24/PLAN_FIX_FEEDTRAY.md)
+for the full scope rationale.
 
 **Resolution applied:**
 

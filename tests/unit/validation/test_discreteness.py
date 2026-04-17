@@ -197,3 +197,22 @@ def test_error_message_falls_back_to_generic_when_only_var_kind():
     text = str(err)
     assert "discrete (MIP/MINLP/MIQCP/...)" in text
     assert "discrete (out of scope)" in text
+
+
+def test_failure_clause_is_definite_when_discrete_vars_present():
+    """PATH rejects discrete primal vars (Error 65) — failure is guaranteed."""
+    ir = _ir_with_var(VarKind.BINARY, solve_type="MINLP")
+    err = MINLPNotSupportedError(scan_discreteness(ir))
+    text = str(err)
+    assert "the generated MCP file will fail GAMS compilation" in text
+
+
+def test_failure_clause_is_qualified_when_only_solve_type_triggers():
+    """A solve_type-only trigger may still produce a compilable MCP."""
+    ir = _ir_with_var(VarKind.CONTINUOUS, solve_type="MINLP")
+    err = MINLPNotSupportedError(scan_discreteness(ir))
+    text = str(err)
+    assert "the generated MCP file may fail GAMS compilation" in text
+    assert "expected when discrete primal variables are present" in text
+    # Must NOT include the definite "will fail" wording for this case.
+    assert "the generated MCP file will fail GAMS compilation" not in text

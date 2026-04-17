@@ -143,8 +143,10 @@ EXIT_MINLP_OUT_OF_SCOPE = 3
     default=False,
     help=(
         "Force translation of MINLP/MIP models (development/debugging only). "
-        "The generated MCP file will fail GAMS compilation because PATH "
-        "rejects discrete variables."
+        "The generated MCP file may fail GAMS compilation; failure is "
+        "expected when discrete primal variables are present (PATH rejects "
+        "discrete variables) and is possible when the gate fired only on "
+        "the model's solve_type clause."
     ),
 )
 def main(
@@ -257,9 +259,18 @@ def main(
 
             report = scan_discreteness(model)
             if report.is_discrete:
+                # The gate can fire on solve_type alone (without any discrete
+                # VarKind in the IR), in which case the resulting MCP can
+                # actually compile cleanly. Failure is *guaranteed* only when
+                # the IR contains discrete primal variables.
+                will_fail = bool(report.discrete_vars)
+                tail = (
+                    "the generated MCP will fail GAMS compilation."
+                    if will_fail
+                    else "the generated MCP may fail GAMS compilation."
+                )
                 click.secho(
-                    "Warning: --allow-discrete bypassing discreteness gate; "
-                    "the generated MCP will fail GAMS compilation.",
+                    f"Warning: --allow-discrete bypassing discreteness gate; {tail}",
                     fg="yellow",
                     err=True,
                 )

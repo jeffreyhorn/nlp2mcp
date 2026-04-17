@@ -88,6 +88,16 @@ class MINLPNotSupportedError(UserError):
         # fall back to the generic "discrete (MIP/MINLP/MIQCP/...)" phrasing.
         model_class = report.solve_type or "discrete (MIP/MINLP/MIQCP/...)"
         status_label = report.solve_type or "discrete (out of scope)"
+        # Compilation-failure guarantee depends on the trigger. PATH rejects
+        # discrete *primal variables* outright (GAMS Error 65); a model that
+        # tripped the gate only on its solve_type clause may still compile.
+        if report.discrete_vars:
+            failure_clause = "the generated MCP file will fail GAMS compilation"
+        else:
+            failure_clause = (
+                "the generated MCP file may fail GAMS compilation "
+                "(failure is expected when discrete primal variables are present)"
+            )
         message = (
             f"Model is {model_class} and is out of scope for nlp2mcp "
             f"(NLP→MCP via KKT). Detected: {detail}."
@@ -97,8 +107,8 @@ class MINLPNotSupportedError(UserError):
             "and MCP/PATH cannot accept discrete variables. Mark this model "
             f"as {status_label} in data/gamslib/gamslib_status.json and "
             "exclude it from the pipeline. To force translation anyway "
-            "(for development/debugging only), pass --allow-discrete; the "
-            "generated MCP file will fail GAMS compilation."
+            f"(for development/debugging only), pass --allow-discrete; "
+            f"{failure_clause}."
         )
         super().__init__(message, suggestion)
 
