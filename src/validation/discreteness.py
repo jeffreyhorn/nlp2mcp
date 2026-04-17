@@ -77,9 +77,7 @@ class MINLPNotSupportedError(UserError):
         if report.discrete_vars:
             shown = ", ".join(f"{n} ({k})" for n, k in report.discrete_vars[:5])
             extra = (
-                f" (+{len(report.discrete_vars) - 5} more)"
-                if len(report.discrete_vars) > 5
-                else ""
+                f" (+{len(report.discrete_vars) - 5} more)" if len(report.discrete_vars) > 5 else ""
             )
             parts.append(f"discrete primal variables: {shown}{extra}")
         if report.solve_type:

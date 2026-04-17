@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from src.ir.model_ir import ModelIR
-from src.ir.symbols import VarKind, VariableDef
+from src.ir.symbols import VariableDef, VarKind
 from src.validation.discreteness import (
     DISCRETE_SOLVE_TYPES,
     DISCRETE_VAR_KINDS,
@@ -36,9 +36,7 @@ def _ir_with_var(kind: VarKind, *, solve_type: str | None = "NLP") -> ModelIR:
 
 
 def test_discrete_solve_types_are_uppercase_strings():
-    assert DISCRETE_SOLVE_TYPES == frozenset(
-        {"MIP", "MINLP", "MIQCP", "RMIP", "RMINLP", "RMIQCP"}
-    )
+    assert DISCRETE_SOLVE_TYPES == frozenset({"MIP", "MINLP", "MIQCP", "RMIP", "RMINLP", "RMIQCP"})
 
 
 def test_discrete_var_kinds_are_the_four_discrete_kinds():
@@ -165,9 +163,7 @@ def test_error_message_names_the_solve_type():
 def test_error_message_truncates_long_var_lists():
     ir = ModelIR()
     for k in range(10):
-        ir.variables[f"y{k}"] = VariableDef(
-            name=f"y{k}", domain=(), kind=VarKind.BINARY
-        )
+        ir.variables[f"y{k}"] = VariableDef(name=f"y{k}", domain=(), kind=VarKind.BINARY)
     ir.solve_type = "NLP"
     err = MINLPNotSupportedError(scan_discreteness(ir))
     assert "+5 more" in str(err)
