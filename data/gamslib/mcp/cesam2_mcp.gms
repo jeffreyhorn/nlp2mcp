@@ -295,8 +295,8 @@ stat_err3(i,j).. (((-1) * nu_TSAMEQ(i,j))$(IVAL(i,j)) + (((-1) * (abar0(i,j) * e
 stat_macrov(macro).. nu_GDPDEF$(sameas(macro, 'gdp2')) + nu_MACROEQ(macro) + nu_GDPFCDEF$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_tsam(i,j).. (nu_ROWSUM(i) + nu_SAMCOEF(i,j)$(NONZERO(i,j)) + nu_TSAMEQ(i,j)$(IVAL(i,j)) + nu_GDPDEF$((sameas(i, 'ACT') or sameas(i, 'FAC') or sameas(i, 'GOV')) and (sameas(j, 'ACT') or sameas(j, 'COM') or sameas(j, 'GOV'))) + ((-1) * nu_GDPFCDEF)$(sameas(i, 'FAC') and sameas(j, 'ACT')))$(ii(i) and ii(j)) =E= 0;
 stat_w1(i,jwt).. (((-1) * vbar1(i,jwt)) * nu_ERROR1EQ(i) + nu_SUMW1(i))$(ii(i) and jwt1(jwt)) =E= 0;
-stat_w2(macro,jwt).. ((log(w2(macro,jwt) / wbar2(macro,jwt)) + 1)$(jwt2(jwt)) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt))$(jwt2(jwt)) =E= 0;
-stat_w3(i,j,jwt).. ((((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)) + nu_SUMW3(i,j)$(NONZERO(i,j)))$(ii(i) and ii(j) and jwt3(jwt)) =E= 0;
+stat_w2(macro,jwt).. ((log(w2(macro,jwt) + delta) - log(wbar2(macro,jwt) + delta) + w2(macro,jwt) * 1 / (w2(macro,jwt) + delta))$(jwt2(jwt)) + (((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro))$(jwt2(jwt)) + nu_SUMW2(macro)$(jwt2(jwt)) - piL_w2(macro,jwt) + piU_w2(macro,jwt))$(jwt2(jwt)) =E= 0;
+stat_w3(i,j,jwt).. (((((-1) * vbar3(i,j,jwt)) * nu_ERROR3EQ(i,j))$(NONZERO(i,j)))$(jwt3(jwt)) + (nu_SUMW3(i,j)$(NONZERO(i,j)))$(jwt3(jwt)))$(ii(i) and ii(j) and jwt3(jwt)) =E= 0;
 stat_y(i).. (nu_ROWSUMEQ(i) - nu_ROWSUM(i) - nu_COLSUM(i) + sum((ii__,jj), (((-1) * a(jj,jj)) * nu_SAMCOEF(ii__,jj))$(NONZERO(ii__,jj))))$(ii(i)) =E= 0;
 
 * Lower bound complementarity equations
@@ -321,7 +321,7 @@ ERROR3EQ(ii,jj)$(NONZERO(ii,jj)).. err3(ii,jj) =E= sum(jwt3, w3(ii,jj,jwt3) * vb
 SUMW1(ii).. sum(jwt1, w1(ii,jwt1)) =E= 1;
 SUMW2(macro).. sum(jwt2, w2(macro,jwt2)) =E= 1;
 SUMW3(ii,jj)$(NONZERO(ii,jj)).. sum(jwt3, w3(ii,jj,jwt3)) =E= 1;
-ENTROPY.. dentropy =E= sum((ii,jj,jwt3)$(nonzero(ii,jj)), centropy(w3(ii,jj,jwt3), wbar3(ii,jj,jwt3))) + sum((ii,jwt1), centropy(w1(ii,jwt1), wbar1(ii,jwt1))) + sum((macro,jwt2), centropy(w2(macro,jwt2), wbar2(macro,jwt2)));
+ENTROPY.. dentropy =E= sum((ii,jj,jwt3)$(nonzero(ii,jj)), w3(ii,jj,jwt3) * (log(w3(ii,jj,jwt3) + delta) - log(wbar3(ii,jj,jwt3) + delta))) + sum((ii,jwt1), w1(ii,jwt1) * (log(w1(ii,jwt1) + delta) - log(wbar1(ii,jwt1) + delta))) + sum((macro,jwt2), w2(macro,jwt2) * (log(w2(macro,jwt2) + delta) - log(wbar2(macro,jwt2) + delta)));
 
 
 * ============================================

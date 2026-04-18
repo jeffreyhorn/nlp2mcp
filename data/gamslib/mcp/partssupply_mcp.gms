@@ -23,9 +23,9 @@ Sets
 Alias(i, j);
 
 Parameters
-    theta(i)
+    theta(i) /'1' 0.2, '2' 0.3/
     pt(i,t)
-    p(i)
+    p(i) /'1' 0.2, '2' 0.8/
     MN_lic(t)
     MN_lic2(t)
     Util_gap(t)
@@ -41,18 +41,13 @@ Scalars
     p_Util_gap /0/
 ;
 
-theta(i) = ord(i) / card(i);
-p(i) = 1 / card(i);
-
-execError = 0;
-
 loop(t,
    pt(i,t) = uniform(0,1)
 );
 
 Parameter icweight(i);
 p(i) = pt(i,'1') ;
-icweight(i) = theta(i) $ not 0 + 1 - theta(i) + sqr(theta(i)) $ 0 ;
+icweight(i) = theta(i)$(not 0) + (1 - theta(i) + sqr(theta(i)))$(0) ;
 
 * ============================================
 * Variables (Primal + Multipliers)

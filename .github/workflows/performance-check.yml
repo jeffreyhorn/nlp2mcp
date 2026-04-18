@@ -26,16 +26,19 @@ jobs:
           duration=$((end_time - start_time))
           echo "Fast test duration: ${duration}s"
 
-          # Check budget (40s limit, 37s warning)
+          # Check budget (45s limit, 42s warning)
           # Budget raised from 35s→40s in Sprint 20: test count grew 3,579→3,715
           # (+3.8%) and several tests gained heavier assertions/fixtures.
-          if [ $duration -gt 40 ]; then
-            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 40s)"
+          # Budget raised from 40s→45s in Sprint 24: test count grew 3,715→4,435
+          # (+19.4%) after partssupply + feedtray fix waves added regression
+          # coverage.
+          if [ $duration -gt 45 ]; then
+            echo "❌ BUDGET EXCEEDED: Fast tests took ${duration}s (budget: 45s)"
             exit 1
-          elif [ $duration -gt 37 ]; then
-            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 40s budget)"
+          elif [ $duration -gt 42 ]; then
+            echo "⚠️  WARNING: Fast tests took ${duration}s (approaching 45s budget)"
             exit 0
           else
-            echo "✅ Within budget: ${duration}s / 40s"
+            echo "✅ Within budget: ${duration}s / 45s"
             exit 0
           fi

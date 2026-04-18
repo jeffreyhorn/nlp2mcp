@@ -3113,6 +3113,34 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
             attr = _tree_to_gams_subst(node.children[1], subst)
             idx = _tree_to_gams_subst(node.children[2], subst)
             return f"{name}.{attr}({idx})"
+        if data in ("dollar_cond", "dollar_cond_paren"):
+            # children: [lhs_tree, DOLLAR token, rhs_tree] — skip the DOLLAR token.
+            # For dollar_cond_paren the original "("/")" around the RHS are silent
+            # in the grammar; we re-emit them. We also re-wrap the LHS in parens
+            # when it's a compound expression, because the grammar atom rule
+            # "(" expr ")" is inlined (silent parens), and without re-wrapping
+            # a group like "(1 - a + b)$(c)" would emit as "1 - a + b$(c)",
+            # which GAMS parses as "1 - a + (b$(c))" due to $-precedence.
+            tree_children = [c for c in node.children if isinstance(c, Tree)]
+            lhs_tree = tree_children[0]
+            rhs_tree = tree_children[1]
+            lhs = _tree_to_gams_subst(lhs_tree, subst)
+            rhs = _tree_to_gams_subst(rhs_tree, subst)
+            if str(lhs_tree.data) in ("binop", "unaryop", "expr"):
+                lhs = f"({lhs})"
+            return f"{lhs}$({rhs})"
+        if data == "bracket_expr":
+            return f"[{_tree_to_gams_subst(node.children[0], subst)}]"
+        if data == "brace_expr":
+            return f"{{{_tree_to_gams_subst(node.children[0], subst)}}}"
+        if data == "yes_cond":
+            return f"yes{_tree_to_gams_subst(node.children[0], subst)}"
+        if data == "no_cond":
+            return f"no{_tree_to_gams_subst(node.children[0], subst)}"
+        if data == "yes_value":
+            return "yes"
+        if data == "no_value":
+            return "no"
         if data in ("binop", "unaryop"):
             return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
         if data == "condition":
