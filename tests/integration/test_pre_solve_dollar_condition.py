@@ -85,6 +85,7 @@ def test_pre_solve_bare_dollar_cond_wraps_rhs():
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 def test_pre_solve_partssupply_icweight_line_is_gams_valid():
     """End-to-end: translate the real partssupply source and assert the
     ``icweight`` assignment emitted from the solve-loop has no ``$ not``
