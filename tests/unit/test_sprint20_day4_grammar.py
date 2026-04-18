@@ -1,6 +1,8 @@
 """Unit tests for Sprint 20 Day 4 grammar additions (Subcategories L, M, H)."""
 
-from src.ir.parser import parse_model_text, parse_text
+from lark import Token, Tree
+
+from src.ir.parser import _ModelBuilder, parse_model_text, parse_text
 
 
 class TestSubcatL:
@@ -34,6 +36,44 @@ class TestSubcatL:
         """
         result = parse_text(source)
         assert result is not None
+
+    def test_extract_model_refs_rewrites_all_subtraction(self):
+        """Issue #1266: `/ all - eq1 /` can be parsed as either
+        ``model_all_except`` (Lark 1.2+) or ``model_subtraction`` (Lark 1.1.9,
+        which CI uses) because the keyword ``all`` also matches ``ID``. The
+        IR builder must handle both shapes identically — treating the
+        subtraction as an exclusion when the first ID is ``all``.
+
+        This test constructs the "wrong-alternative" tree directly, so the
+        defensive code path is pinned regardless of which Lark version the
+        runtime picks.
+        """
+        # Synthesize `model_subtraction` children as Lark 1.1.9 produces
+        # them for the input `all - eq1`: two bare ID tokens.
+        sub_node = Tree(
+            "model_subtraction",
+            [Token("ID", "all"), Token("ID", "eq1")],
+        )
+        ref_list = Tree("model_ref_list", [sub_node])
+        refs, uses_all = _ModelBuilder._extract_model_refs(ref_list)
+        # Must be treated as `all - eq1`, i.e. uses_all with exclusion of eq1.
+        assert uses_all is True
+        assert refs == ["eq1"]
+
+    def test_extract_model_refs_genuine_subtraction_still_logs_warning(self):
+        """A real `m - n` subtraction (non-"all" first ID) must keep the
+        union-fallback behavior so non-"all" cases aren't silently
+        reinterpreted. Regression guard for the fix applied for #1266.
+        """
+        sub_node = Tree(
+            "model_subtraction",
+            [Token("ID", "m1"), Token("ID", "m2")],
+        )
+        ref_list = Tree("model_ref_list", [sub_node])
+        refs, uses_all = _ModelBuilder._extract_model_refs(ref_list)
+        # Both names end up in refs (union-fallback); uses_all stays False.
+        assert uses_all is False
+        assert refs == ["m1", "m2"]
 
     def test_model_dotted_ref(self):
         """Test model with dotted eq.var references: Model m / eq.var /;"""

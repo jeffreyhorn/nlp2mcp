@@ -1,11 +1,11 @@
 # test_model_all_except_single: Reliable CI Failure Under Full-Suite xdist Parallelism
 
 **GitHub Issue:** [#1266](https://github.com/jeffreyhorn/nlp2mcp/issues/1266)
-**Status:** OPEN — Reproducibly failing on CI; passes locally
+**Status:** RESOLVED — root cause identified as a Lark-version-dependent grammar ambiguity (not xdist/parser state); fixed defensively in the IR builder
 **Severity:** Medium — Test-only; does not block merges (main has no required status checks), but masks future regressions and poisons CI signal for every PR
 **Date:** 2026-04-18
-**Last Updated:** 2026-04-18
-**Affected Area:** `src.ir.parser` shared state under `pytest -n auto`
+**Resolved:** 2026-04-18
+**Affected Area:** `src.ir.parser._extract_model_refs` — model-subtraction vs. all-exclusion disambiguation
 
 ---
 
@@ -170,5 +170,87 @@ broken has concrete costs:
 
 - `tests/unit/test_sprint20_day4_grammar.py` (lines 6–27) — the failing test
 - `src/ir/parser.py` — the source of the error (lines 423, 1307, 7362 along
-  the call stack; the shared-state leak is somewhere in this file)
+  the call stack)
 - `.github/workflows/ci.yml` — the CI workflow running `pytest -n auto`
+
+---
+
+## Resolution
+
+### Actual root cause (the original hypothesis was wrong)
+
+The issue had **nothing to do with xdist, parser caching, or shared module
+state**. It is a Lark-version-dependent grammar ambiguity.
+
+The grammar rule for a model reference is:
+
+```lark
+model_ref: "all"i ("-" ID)+                    -> model_all_except
+         | ID "+" ID                           -> model_composition
+         | ID "-" ID                           -> model_subtraction
+         | ID "." ID                           -> model_dotted_ref
+         | ID                                  -> model_simple_ref
+```
+
+The input `all - eq1` is *grammatically ambiguous*: the keyword `all`
+also satisfies `ID`, so the input matches both `model_all_except` and
+`model_subtraction`. The Earley parser's `ambiguity="resolve"` setting
+picks one alternative:
+
+- **Lark 1.2+ (local dev: 1.3.1)**: picks `model_all_except` (the
+  grammar-preferred form). `_extract_model_refs` handles it correctly
+  and the test passes.
+- **Lark 1.1.9 (pinned in `requirements.txt`, used in CI)**: picks
+  `model_subtraction` with children `[ID("all"), ID("eq1")]`. The
+  old `_extract_model_refs` branch for `model_subtraction` blindly
+  pushed both IDs into `refs`, so `"all"` ended up as a treated-as-
+  equation name, which `_ModelBuilder._validate()` then rejected with
+  `Model references unknown equation or model 'all'`.
+
+OS/Python-version differences were a red herring; the only thing that
+mattered was which Lark was installed. `pyproject.toml` says
+`"lark>=1.1.9"`, which lets local installs pull the newer release,
+while CI uses `requirements.txt` with `lark==1.1.9`.
+
+### Reproduction (local, with the CI-pinned Lark version)
+
+```bash
+pip install "lark==1.1.9"
+.venv/bin/python -m pytest \
+  tests/unit/test_sprint20_day4_grammar.py::TestSubcatL::test_model_all_except_single -v
+# → FAILED with the identical CI error signature, no xdist needed
+```
+
+### Fix
+
+`_extract_model_refs` now rewrites the `model_subtraction` case to
+`model_all_except` semantics when the first ID is `all`
+(case-insensitive). The code path is version-independent: it works
+the same whether Lark picks `model_all_except` or `model_subtraction`
+for the ambiguous input.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `src/ir/parser.py::_extract_model_refs` | Rewrite `model_subtraction` → exclusion semantics when first ID is `all`; genuine `m - n` subtraction still logs the "treating as union" warning |
+| `tests/unit/test_sprint20_day4_grammar.py` | Two new regression tests that construct synthetic `model_subtraction` trees directly, so the defensive code path is pinned regardless of which Lark version the runtime picks: `test_extract_model_refs_rewrites_all_subtraction` (the `all - eq1` case) and `test_extract_model_refs_genuine_subtraction_still_logs_warning` (a real `m - n` non-"all" case) |
+
+### Verification
+
+Under **Lark 1.1.9** (the CI-pinned version):
+- `tests/unit/test_sprint20_day4_grammar.py` — 14/14 pass (was 12/12 with 1 failing under 1.1.9)
+- `make typecheck`, `make lint`, `make format` — clean
+- `make test` (full fast suite) — **4522 passed, 10 skipped, 1 xfailed** (previously 4520; +2 new regression tests)
+
+### Alternatives considered
+
+- **Grammar rewrite** (reorder or add explicit priority to
+  `model_all_except` vs `model_subtraction`): would fix the
+  disambiguation at the parser level but is more invasive and risks
+  cascading to other ambiguous rules. The IR-builder fix is
+  confined and explicit.
+- **Pin Lark to 1.2+ in `pyproject.toml` / `requirements.txt`**:
+  would resolve this specific case but leaves the codebase fragile
+  to future Lark disambiguation changes. The defensive code path
+  is robust to either alternative.

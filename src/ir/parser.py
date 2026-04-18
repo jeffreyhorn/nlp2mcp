@@ -3642,14 +3642,32 @@ class _ModelBuilder:
                         if isinstance(tok, Token) and tok.type == "ID":
                             refs.append(_token_text(tok))
                 elif child.data == "model_subtraction":
-                    # Model subtraction (m - n) requires set-difference
-                    # semantics that cannot be represented with flat
-                    # equation-name lists. Log warning and treat as union.
-                    logger.warning(
-                        "Model subtraction (m - n) not fully supported; " "treating as union"
-                    )
-                    for tok in child.children:
-                        if isinstance(tok, Token) and tok.type == "ID":
+                    # Lark-version-dependent ambiguity: `/ all - eq1 /` can
+                    # legitimately match either the `model_all_except`
+                    # rule (`"all"i ("-" ID)+`) or the generic
+                    # `model_subtraction` rule (`ID "-" ID`), because the
+                    # keyword `all` also satisfies `ID`. Lark 1.2+ picks
+                    # `model_all_except` (the grammar-preferred form);
+                    # Lark 1.1.9 picks `model_subtraction`. Rewrite the
+                    # subtraction into exclusion semantics when the first
+                    # ID is `all`, so the behavior is independent of
+                    # which alternative the parser chose.
+                    sub_ids = [
+                        tok for tok in child.children if isinstance(tok, Token) and tok.type == "ID"
+                    ]
+                    if sub_ids and _token_text(sub_ids[0]).lower() == "all":
+                        has_all_except = True
+                        for tok in sub_ids[1:]:
+                            refs.append(_token_text(tok))
+                    else:
+                        # Genuine model subtraction (m - n): set-difference
+                        # semantics that can't be represented with flat
+                        # equation-name lists. Log warning and treat as
+                        # union.
+                        logger.warning(
+                            "Model subtraction (m - n) not fully supported; treating as union"
+                        )
+                        for tok in sub_ids:
                             refs.append(_token_text(tok))
             elif isinstance(child, Token) and child.type == "ID":
                 # Backward compatibility: direct ID tokens
