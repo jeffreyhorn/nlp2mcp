@@ -266,8 +266,11 @@ def process_conditionals(source: str, macros: dict[str, str]) -> str:
                 i += 1
                 continue
 
-            # Evaluate new condition (only if previous condition was false)
-            new_condition = _evaluate_if_condition(stripped.replace("$elseif", "$if", 1), macros)
+            # Evaluate new condition (only if previous condition was false).
+            # Use case-insensitive rewrite so mixed-case authors ($elseIf,
+            # $ElseIf, $ELSEIF) are all handled uniformly.
+            rewritten = re.sub(r"^\$elseif", "$if", stripped, count=1, flags=re.IGNORECASE)
+            new_condition = _evaluate_if_condition(rewritten, macros)
 
             # Include this block if: previous condition was false AND new condition is true
             parent_including = True if not conditional_stack else conditional_stack[-1][2]
@@ -421,8 +424,13 @@ def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
     """
     stripped = condition_line.strip()
 
-    # Normalize $ifI / $ifE to $if for uniform matching
-    stripped = re.sub(r"^\$if[ie]", "$if", stripped, count=1, flags=re.IGNORECASE)
+    # Normalize $ifI / $ifE / $ifThen / $ifThenI / $ifThenE to $if for uniform
+    # matching. $ifThen is the block-style variant of $if (requires $endIf);
+    # $ifThenI / $ifThenE are the case-insensitive / case-sensitive string-
+    # comparison variants. All share the same condition semantics.
+    stripped = re.sub(
+        r"^\$if(?:then)?[ie]?", "$if", stripped, count=1, flags=re.IGNORECASE
+    )
 
     # Pattern: $if set varname
     match = re.match(r"\$if\s+set\s+(\w+)", stripped, re.IGNORECASE)

@@ -321,6 +321,33 @@ improvements from Sprint 24:
 
 ---
 
+### Day — partssupply parse/translate/solve fix (PLAN_FIX_PARTSSUPPLY)
+
+**Status:** COMPLETE
+**Branch:** `sprint24-plan-fix-partssupply`
+
+| Task | Status |
+|---|---|
+| Phase 0 — audit `$ifThen`/`$elseIf` blast radius | ✅ `AUDIT_IFTHEN_MISCOMPILE.md` — 15 corpus hits, only `partssupply` + `cesam2` in-scope, no accidental-success cases |
+| Phase 1 — fix `_loop_tree_to_gams_subst_dispatch` (missing `dollar_cond` / `dollar_cond_paren` / `bracket_expr` / `brace_expr` / `yes_cond` / `no_cond` / `yes_value` / `no_value` handlers) | ✅ `src/emit/original_symbols.py`; 3 new integration tests |
+| Phase 2 — fix `_evaluate_if_condition` normalization (`$ifThen` / `$elseIf` mixed-case) | ✅ `src/ir/preprocessor.py`; 6 new unit tests |
+| Phase 3 — end-to-end verify partssupply | ✅ MCP `Util.l = 0.917` vs NLP `Util.l = 0.9167` (delta 3e-4, within 1e-3 tolerance) |
+| Phase 4 — status JSON update | ✅ `partssupply` now `translate=success`, `solve=success`, `comparison=match` |
+
+**Key bugs fixed:**
+1. **Emitter parity.** `_loop_tree_to_gams_subst_dispatch` (the variant of `_loop_tree_to_gams` that substitutes loop indices for pre-solve parameter assignments) lacked rule handlers for `dollar_cond` / `dollar_cond_paren`, so `$`-conditionals fell through to the generic space-joiner and the grammar's silent `"("` / `")"` tokens were lost. Fixed by adding dedicated handlers (including `bracket_expr` / `brace_expr` / `yes`/`no` parity handlers already present in the sibling dispatcher). LHS of `dollar_cond_paren` is re-parenthesized when it's a compound expression, because the atom rule `"(" expr ")"` is silent in the grammar and would otherwise lose grouping around expressions like `(1 - a + sqr(a))$(cond)`.
+2. **Preprocessor conditional evaluation.** `_evaluate_if_condition` only normalized `$ifI` / `$ifE` — not `$ifThen` / `$ifThenI` / `$ifThenE` — so every `$ifThen` block silently evaluated to `False`. `$elseIf` rewrite used case-sensitive `str.replace`, missing mixed-case (`$elseIf`, `$ElseIf`). Fixed the normalization regex to `\$if(?:then)?[ie]?` and switched the `$elseif` rewrite to case-insensitive `re.sub`.
+
+**partssupply before/after:**
+- Before: GAMS Error 445 on line 55 (`icweight(i) = theta(i) $ not 0 + 1 - theta(i) + sqr(theta(i)) $ 0 ;`); even with 445 fixed, `theta` was initialized from the wrong `$else` fallback (`ord(i)/card(i)` instead of `{1→0.2, 2→0.3}`), giving `Util.l ≈ 0.297`.
+- After: GAMS compiles cleanly, PATH converges, `Util.l = 0.917 ≈ NLP 0.9167`.
+
+**Corpus impact (beyond `partssupply`):**
+- `cesam2` (the only other in-scope NLP using `$ifThen`/`$elseIf`): solve still fails (`path_solve_terminated`) — pre-existing unrelated issue, not regressed.
+- Tests: 4530 → 4539 passed (9 new tests, 0 regressions; 1 pre-existing failure on `test_markov_stationarity_has_correction_term` unchanged by this work).
+
+---
+
 ### Day 12 — Sprint Close Prep
 
 **Status:** NOT STARTED

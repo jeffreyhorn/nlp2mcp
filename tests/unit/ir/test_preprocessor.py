@@ -2128,3 +2128,123 @@ class TestTableColumnGroupExpansion:
 
         expanded = expand_table_column_groups(source)
         assert "(*,c)" in expanded
+
+
+class TestIfThenElseIf:
+    """Regression: ``$ifThen`` and ``$elseIf`` must evaluate their conditions.
+
+    Pre-fix, ``_evaluate_if_condition`` only normalized ``$if[ie]`` — not
+    ``$ifThen`` — so every ``$ifThen`` block silently evaluated to ``False``.
+    ``$elseIf`` was rewritten to ``$if`` with a case-sensitive ``str.replace``
+    that missed mixed-case (``$elseIf``, ``$ElseIf``, etc.), so every such
+    branch also evaluated ``False`` and the ``$else`` fallback always won.
+    Effect on ``partssupply.gms``: the wrong-branch parameters were emitted
+    and the MCP solved a different NLP than the source intended.
+    """
+
+    def _block(self, body):
+        """Build a 3-way $ifThen/$elseIf/$else block with shared body format."""
+        return body
+
+    def test_ifthen_true_branch_emitted(self):
+        source = """$set n 1
+$ifThen %n% == 1
+theta = 0.2;
+$elseIf %n% == 2
+theta = 0.3;
+$else
+theta = 0.0;
+$endIf"""
+        out = preprocess_text(source)
+        assert "theta = 0.2;" in out
+        # Other branches commented out
+        assert "* [Excluded: theta = 0.3;]" in out
+        assert "* [Excluded: theta = 0.0;]" in out
+
+    def test_elseif_true_branch_emitted(self):
+        source = """$set n 2
+$ifThen %n% == 1
+theta = 0.2;
+$elseIf %n% == 2
+theta = 0.3;
+$else
+theta = 0.0;
+$endIf"""
+        out = preprocess_text(source)
+        # Correct branch is live; all others excluded
+        assert "theta = 0.3;" in out
+        assert "* [Excluded: theta = 0.2;]" in out
+        assert "* [Excluded: theta = 0.0;]" in out
+
+    def test_else_fallback_emitted_when_no_branch_matches(self):
+        source = """$set n 9
+$ifThen %n% == 1
+theta = 0.2;
+$elseIf %n% == 2
+theta = 0.3;
+$else
+theta = 0.0;
+$endIf"""
+        out = preprocess_text(source)
+        assert "theta = 0.0;" in out
+        assert "* [Excluded: theta = 0.2;]" in out
+        assert "* [Excluded: theta = 0.3;]" in out
+
+    def test_mixed_case_elseif_handled(self):
+        """``$elseIf`` (mixed case) must be treated as ``$elseif``.
+
+        GAMSlib authors typically write ``$elseIf`` / ``$ElseIf``; the
+        pre-fix case-sensitive replace missed them and they silently
+        evaluated to False.
+        """
+        for keyword in ("$elseif", "$elseIf", "$ElseIf", "$ELSEIF"):
+            source = f"""$set n 2
+$ifThen %n% == 1
+theta = 0.2;
+{keyword} %n% == 2
+theta = 0.3;
+$else
+theta = 0.0;
+$endIf"""
+            out = preprocess_text(source)
+            assert "theta = 0.3;" in out, f"mixed-case failed for {keyword!r}"
+
+    def test_ifthen_case_insensitive(self):
+        """``$IfThen`` / ``$IFTHEN`` must also evaluate — normalization
+        is case-insensitive.
+        """
+        for keyword in ("$ifThen", "$IfThen", "$IFTHEN", "$ifthen"):
+            source = f"""$set n 1
+{keyword} %n% == 1
+theta = 0.2;
+$else
+theta = 0.0;
+$endIf"""
+            out = preprocess_text(source)
+            assert "theta = 0.2;" in out, f"keyword {keyword!r} did not take true branch"
+            assert "* [Excluded: theta = 0.0;]" in out
+
+    def test_partssupply_three_way_branch_on_nsupplier_2(self):
+        """Mirrors the exact shape in ``data/gamslib/raw/partssupply.gms``:
+        a 3-way ``$ifThen/$elseIf/$elseIf/$else`` chain switching on
+        ``%nsupplier%``, with the default ``nsupplier=2`` picking the
+        second ``$elseIf``.
+        """
+        source = """$if not set nsupplier $set nsupplier 2
+$ifThen %nsupplier% == 1
+Parameter theta(i) / 1 0.2 /;
+$elseIf %nsupplier% == 2
+Parameter theta(i) / 1 0.2, 2 0.3 /
+         p(i)     / 1 0.2, 2 0.8 /;
+$elseIf %nsupplier% == 3
+Parameter theta(i) / 1 0.1, 2 0.2, 3 0.3 /;
+$else
+theta(i) = ord(i)/card(i);
+$endIf"""
+        out = preprocess_text(source)
+        # nsupplier=2 branch is live:
+        assert "theta(i) / 1 0.2, 2 0.3 /" in out
+        assert "p(i)     / 1 0.2, 2 0.8 /" in out
+        # Other branches (and the $else fallback) commented out:
+        assert "* [Excluded: Parameter theta(i) / 1 0.2 /;]" in out
+        assert "* [Excluded: theta(i) = ord(i)/card(i);]" in out
