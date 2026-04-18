@@ -425,12 +425,11 @@ def _evaluate_if_condition(condition_line: str, macros: dict[str, str]) -> bool:
     stripped = condition_line.strip()
 
     # Normalize $ifI / $ifE / $ifThen / $ifThenI / $ifThenE to $if for uniform
-    # matching. $ifThen is the block-style variant of $if (requires $endIf);
-    # $ifThenI / $ifThenE are the case-insensitive / case-sensitive string-
-    # comparison variants. All share the same condition semantics.
-    stripped = re.sub(
-        r"^\$if(?:then)?[ie]?", "$if", stripped, count=1, flags=re.IGNORECASE
-    )
+    # matching. $ifThen is the block-style variant of $if (requires $endIf).
+    # In GAMS, the I/E variants differ for string-comparison case sensitivity;
+    # this evaluator currently treats them the same by normalizing all of them
+    # to $if before matching supported condition forms.
+    stripped = re.sub(r"^\$if(?:then)?[ie]?", "$if", stripped, count=1, flags=re.IGNORECASE)
 
     # Pattern: $if set varname
     match = re.match(r"\$if\s+set\s+(\w+)", stripped, re.IGNORECASE)

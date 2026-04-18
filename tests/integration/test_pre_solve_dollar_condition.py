@@ -98,19 +98,23 @@ def test_pre_solve_partssupply_icweight_line_is_gams_valid():
 
     import sys
 
+    old_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(50000)
 
     from src.ir.parser import parse_model_file
 
-    model = parse_model_file(src)
-    emitted = emit_pre_solve_param_assignments(model)
-    # icweight assignment must be present and well-parenthesized.
-    icw_lines = [ln for ln in emitted.splitlines() if ln.lstrip().startswith("icweight")]
-    assert icw_lines, "icweight assignment was not emitted"
-    icw = icw_lines[0]
-    # Error-445 fingerprints:
-    assert "$ not" not in icw
-    assert "sqr(theta(i)) $" not in icw
-    # Expected shape:
-    assert "theta(i)$(not 0)" in icw
-    assert "(1 - theta(i) + sqr(theta(i)))$(0)" in icw
+    try:
+        model = parse_model_file(src)
+        emitted = emit_pre_solve_param_assignments(model)
+        # icweight assignment must be present and well-parenthesized.
+        icw_lines = [ln for ln in emitted.splitlines() if ln.lstrip().startswith("icweight")]
+        assert icw_lines, "icweight assignment was not emitted"
+        icw = icw_lines[0]
+        # Error-445 fingerprints:
+        assert "$ not" not in icw
+        assert "sqr(theta(i)) $" not in icw
+        # Expected shape:
+        assert "theta(i)$(not 0)" in icw
+        assert "(1 - theta(i) + sqr(theta(i)))$(0)" in icw
+    finally:
+        sys.setrecursionlimit(old_limit)
