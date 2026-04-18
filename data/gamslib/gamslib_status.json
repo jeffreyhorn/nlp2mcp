@@ -1943,7 +1943,7 @@
         "status": "skipped",
         "reason": "multi_solve_driver_out_of_scope",
         "marked_date": "2026-04-18T17:44:43Z",
-        "details": "Multi-solve driver script (declared models: ['master', 'mcf', 'pricing']; solve targets: ['master', 'mcf', 'pricing']; equation-marginal feedback: mdefbal.m, mdefbal.m). Out of scope for single-NLP KKT."
+        "details": "Multi-solve driver script (declared models: ['master', 'mcf', 'pricing']; solve targets: ['master', 'mcf', 'pricing']; equation-marginal feedback: mdefbal.m). Out of scope for single-NLP KKT."
       }
     },
     {
@@ -1978,7 +1978,7 @@
         "status": "skipped",
         "reason": "multi_solve_driver_out_of_scope",
         "marked_date": "2026-04-18T17:44:43Z",
-        "details": "Multi-solve driver script (declared models: ['master', 'sub']; solve targets: ['master', 'sub']; equation-marginal feedback: tbal.m, convex.m, tbal.m). Out of scope for single-NLP KKT."
+        "details": "Multi-solve driver script (declared models: ['master', 'sub']; solve targets: ['master', 'sub']; equation-marginal feedback: tbal.m, convex.m). Out of scope for single-NLP KKT."
       }
     },
     {
