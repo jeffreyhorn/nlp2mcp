@@ -253,10 +253,18 @@ def migrate_database(database: dict[str, Any], marked_date: str) -> dict[str, An
     return database
 
 
-def create_backup(source_path: Path, archive_path: Path) -> Path:
+def create_backup(source_path: Path, archive_path: Path, source_version: str) -> Path:
+    """Archive the current database before an in-place migration.
+
+    ``source_version`` is tagged into the filename so backups made from
+    a fresh v2.2.0 input vs. an idempotent re-run on an already-v2.2.1
+    database can be told apart at a glance. Unknown versions fall back
+    to ``vunknown``.
+    """
     archive_path.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
-    backup_name = f"gamslib_status_v2.2.0_backup_{timestamp}.json"
+    version_tag = source_version.replace("/", "_") if source_version else "unknown"
+    backup_name = f"gamslib_status_v{version_tag}_backup_{timestamp}.json"
     backup_path = archive_path / backup_name
     logger.info("Creating backup: %s", backup_path)
     backup_path.write_bytes(source_path.read_bytes())
@@ -296,7 +304,7 @@ def main() -> int:
         return 1
 
     if not args.dry_run and not args.no_backup:
-        create_backup(args.database, ARCHIVE_PATH)
+        create_backup(args.database, ARCHIVE_PATH, current_version)
 
     marked_date = get_utc_timestamp()
     migrated = migrate_database(database, marked_date)

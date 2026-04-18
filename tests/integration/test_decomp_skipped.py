@@ -36,13 +36,10 @@ from textwrap import dedent
 import pytest
 from click.testing import CliRunner
 
-from src.cli import main
+from src.cli import EXIT_MULTI_SOLVE_OUT_OF_SCOPE, main
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RAW = PROJECT_ROOT / "data" / "gamslib" / "raw"
-
-# Keep in sync with src/cli.py.
-EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4
 
 # ---------------------------------------------------------------------------
 # Synthetic fixtures — minimal GAMS sources that exercise the gate without
