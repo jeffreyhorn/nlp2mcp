@@ -1,5 +1,7 @@
 """Unit tests for Sprint 20 Day 4 grammar additions (Subcategories L, M, H)."""
 
+import logging
+
 from lark import Token, Tree
 
 from src.ir.parser import _ModelBuilder, parse_model_text, parse_text
@@ -60,20 +62,29 @@ class TestSubcatL:
         assert uses_all is True
         assert refs == ["eq1"]
 
-    def test_extract_model_refs_genuine_subtraction_still_logs_warning(self):
+    def test_extract_model_refs_genuine_subtraction_still_logs_warning(self, caplog):
         """A real `m - n` subtraction (non-"all" first ID) must keep the
-        union-fallback behavior so non-"all" cases aren't silently
-        reinterpreted. Regression guard for the fix applied for #1266.
+        union-fallback behavior AND emit the "treating as union" warning
+        so users know the result isn't true set-difference semantics.
+        Regression guard for the fix applied for #1266.
         """
         sub_node = Tree(
             "model_subtraction",
             [Token("ID", "m1"), Token("ID", "m2")],
         )
         ref_list = Tree("model_ref_list", [sub_node])
-        refs, uses_all = _ModelBuilder._extract_model_refs(ref_list)
+        with caplog.at_level(logging.WARNING, logger="src.ir.parser"):
+            refs, uses_all = _ModelBuilder._extract_model_refs(ref_list)
         # Both names end up in refs (union-fallback); uses_all stays False.
         assert uses_all is False
         assert refs == ["m1", "m2"]
+        # And the "treating as union" warning must have been emitted so
+        # genuine `m - n` semantics aren't silently downgraded.
+        warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
+        assert any(
+            "Model subtraction" in r.getMessage() and "treating as union" in r.getMessage()
+            for r in warning_records
+        ), f"expected 'treating as union' warning; got {[r.getMessage() for r in warning_records]}"
 
     def test_model_dotted_ref(self):
         """Test model with dotted eq.var references: Model m / eq.var /;"""
