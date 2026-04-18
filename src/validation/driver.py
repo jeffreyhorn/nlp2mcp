@@ -210,10 +210,19 @@ def scan_multi_solve_driver(model_ir: ModelIR) -> MultiSolveReport:
         for stmt in loop_stmt.body_stmts or []:
             _collect_equation_marginals(stmt, equation_names, equation_marginals)
 
+    # Deduplicate equation-marginal references while preserving first-seen
+    # order. A single `eq.m` read inside a loop body is emitted once per
+    # AST traversal but can still repeat across sibling statements; we only
+    # care about *which* equation duals feed the iteration, not how often.
+    # Keeping the list unique yields stable user-facing messages
+    # (e.g., "tbal.m" rather than "tbal.m, tbal.m") and stable
+    # `pipeline_status.details` rows in the status DB.
+    deduped_marginals = list(dict.fromkeys(equation_marginals))
+
     return MultiSolveReport(
         declared_models=declared,
         solve_targets=sorted(solve_targets),
-        equation_marginals=equation_marginals,
+        equation_marginals=deduped_marginals,
     )
 
 

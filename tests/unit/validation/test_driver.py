@@ -66,9 +66,10 @@ def _assign_from_bound(lhs: str, rhs_tree: Tree) -> Tree:
 
 def _ir_with_declared_models(*names: str) -> ModelIR:
     ir = ModelIR()
-    # ModelIR.declared_models is set[str] or list[str] depending on version.
-    # We assign a list of the provided names.
-    ir.declared_models = list(names)
+    # ModelIR.declared_models is set[str]; populate via the declared_model
+    # setter so _first_declared_model is also wired correctly.
+    for name in names:
+        ir.declared_model = name
     return ir
 
 
@@ -206,6 +207,36 @@ def test_scan_two_models_two_solves_no_marginal_is_not_driver():
     ir.loop_statements.append(loop)
     report = scan_multi_solve_driver(ir)
     assert report.is_driver is False
+
+
+def test_scan_deduplicates_equation_marginals_first_seen_order():
+    """Repeated ``eq.m`` reads (same equation, multiple loop statements)
+    should appear once in the report, preserving first-seen order. Keeps
+    user-facing messages and status-DB ``pipeline_status.details`` clean
+    (the emitter previously produced strings like ``tbal.m, tbal.m``).
+    """
+    ir = _ir_with_declared_models("sub", "master")
+    _add_equation(ir, "tbal")
+    _add_equation(ir, "convex")
+    _add_solve_objective(ir, "sub")
+    _add_solve_objective(ir, "master")
+    loop = LoopStatement(
+        indices=("ss",),
+        body_stmts=[
+            _assign_from_bound("p1", _bound_scalar("tbal", "m")),
+            _assign_from_bound("p2", _bound_scalar("convex", "m")),
+            _assign_from_bound("p3", _bound_scalar("tbal", "m")),  # dup
+            _solve("sub"),
+            _solve("master"),
+        ],
+        location=None,
+        raw_node=None,
+    )
+    ir.loop_statements.append(loop)
+    report = scan_multi_solve_driver(ir)
+    assert report.is_driver is True
+    # Deduplicated and in first-seen order.
+    assert report.equation_marginals == [("tbal", "m"), ("convex", "m")]
 
 
 def test_scan_counts_nested_loop_solves():
