@@ -379,13 +379,37 @@ This rules out the critical false-positive classes:
 
 ### Day 12 — Sprint Close Prep
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `sprint24-day12-close-prep`
 
 | Task | Status |
 |---|---|
-| File deferred issues (sprint-25 label) | |
-| Update KNOWN_UNKNOWNS.md | |
-| Update SPRINT_LOG.md | |
+| File deferred issues (sprint-25 label) | ✅ 4 new issues filed (#1268–#1271); 15 open sprint-24 issues relabeled sprint-25 |
+| Update KNOWN_UNKNOWNS.md | ✅ 6 end-of-sprint discoveries logged (KU-27..KU-32) |
+| Update SPRINT_LOG.md | ✅ |
+| Run `make test` | ✅ 4522 passed, 10 skipped, 1 xfailed (no regressions from Day 11) |
+
+**New Sprint 25 tracking issues filed:**
+
+| # | Title | From |
+|---|---|---|
+| #1268 | decomp: add `attr_access` handlers to `_loop_tree_to_gams_subst_dispatch` | PLAN_FIX_DECOMP "Why Not Fix" §1 |
+| #1269 | decomp: KKT assembly drops `tbal`/`convex` gradients under multi-model `_solve_objectives` | PLAN_FIX_DECOMP "Why Not Fix" §2 |
+| #1270 | Multi-solve gate: extend detector for saras-style top-level `eq.m` feedback | SPRINT_LOG Day 8 "Known gap" |
+| #1271 | Refactor: collapse `_loop_tree_to_gams` / `_loop_tree_to_gams_subst_dispatch` into one dispatcher | PLAN_FIX_PARTSSUPPLY §"Refactor opportunity" |
+
+**Relabeled sprint-24 → sprint-25 (15 open):**
+- **Alias differentiation carryforward (12):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150, #1177
+- **Translation timeouts / runtime bugs (3):** #1169 (lop), #1185 (mexls), #1192 (gtm)
+
+**Key end-of-sprint discoveries (full detail in `KNOWN_UNKNOWNS.md`):**
+
+- **KU-27** — Lark 1.1.9 vs 1.2+ grammar disambiguation for `/ all - eq1 /`. Fixed defensively in PR #1267; audit similar `"keyword"i | ID`-style rules during Sprint 25 grammar work.
+- **KU-28** — `requirements.txt` pins vs `pyproject.toml` lower-bounds produce silent CI/local divergences. Process note: `pip install -r requirements.txt` first when debugging CI-only failures.
+- **KU-29** — Multi-solve gate doesn't catch saras-style top-level marginal reads (→ #1270).
+- **KU-30** — Emitter dispatcher duplication (→ #1271).
+- **KU-31** — decomp emitter/assembly bugs that would affect future single-model multi-solve cases (→ #1268, #1269).
+- **KU-32** — `sameas()` guard validation across GAMS element types (subsumed into open alias issues).
 
 ---
 
