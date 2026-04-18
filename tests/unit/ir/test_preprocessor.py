@@ -2142,10 +2142,6 @@ class TestIfThenElseIf:
     and the MCP solved a different NLP than the source intended.
     """
 
-    def _block(self, body):
-        """Build a 3-way $ifThen/$elseIf/$else block with shared body format."""
-        return body
-
     def test_ifthen_true_branch_emitted(self):
         source = """$set n 1
 $ifThen %n% == 1
