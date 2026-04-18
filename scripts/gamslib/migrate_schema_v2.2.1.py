@@ -110,9 +110,16 @@ def _cheap_prefilter(path: Path) -> bool:
     n_models = len(_RE_MODEL_DECL.findall(src))
     if n_models < 2:
         return False
-    # Only count solve statements outside line comments.
+    # Only count solve statements outside line comments. In GAMS, `*`
+    # is a comment delimiter *only* when it is the first non-whitespace
+    # character on a line — `2*x` (multiplication) does not start a
+    # comment. Splitting on the first `*` anywhere would incorrectly
+    # strip inline multiplication and undercount solves, producing
+    # false negatives that skip legitimate driver scripts.
     n_solves = sum(
-        1 for line in src.splitlines() if _RE_SOLVE.search(line.split("*", 1)[0])
+        1
+        for line in src.splitlines()
+        if not line.lstrip().startswith("*") and _RE_SOLVE.search(line)
     )
     return n_solves >= 2
 

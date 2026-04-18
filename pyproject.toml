@@ -49,7 +49,11 @@ classifiers = [
 dependencies = [
     "lark>=1.1.9",
     "numpy>=1.24.0",  # For finite-difference validation and numeric operations
-    "click>=8.0.0",  # For command-line interface
+    # click>=8.2.0 required: CLI tests rely on CliRunner's per-stream
+    # `result.stderr` access (stdout and stderr are always separated in
+    # 8.2+). Older 8.0/8.1 needed `mix_stderr=False`, which was removed
+    # in 8.2, so there's no single call shape that works across both.
+    "click>=8.2.0",  # For command-line interface
     "tomli>=2.0.0; python_version<'3.11'",  # TOML parser backport for Python < 3.11
     "Jinja2>=3.1.0",  # For report template rendering
     "tabulate>=0.9.0",  # For table generation in reports
