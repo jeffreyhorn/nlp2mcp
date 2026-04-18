@@ -1,7 +1,7 @@
 {
-  "schema_version": "2.2.0",
+  "schema_version": "2.2.1",
   "created_date": "2026-01-26T16:07:08Z",
-  "updated_date": "2026-04-16T23:02:17Z",
+  "updated_date": "2026-04-18T17:44:43Z",
   "total_models": 219,
   "models": [
     {
@@ -1933,49 +1933,17 @@
         "objective_value": 3359.4684,
         "solve_time_seconds": 9.54
       },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-16T23:20:19.727997+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 5.7923,
-        "variables_count": 5,
-        "equations_count": 8
-      },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-04-12T07:14:13.605355+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 136.0232,
-        "output_file": "data/gamslib/mcp/danwolfe_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-04-12T07:14:14.531471+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.8803,
-        "iterations": null,
-        "outcome_category": "path_solve_license",
-        "error": {
-          "category": "path_solve_license",
-          "message": "Parse error: license_limit"
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-04-12T07:14:14.532487+00:00",
-        "notes": "Skipped due to solve failure"
-      },
       "model_statistics": {
         "variables": 5,
         "equations": 8,
         "parameters": 0,
         "sets": 7
+      },
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "multi_solve_driver_out_of_scope",
+        "marked_date": "2026-04-18T17:44:43Z",
+        "details": "Multi-solve driver script (declared models: ['master', 'mcf', 'pricing']; solve targets: ['master', 'mcf', 'pricing']; equation-marginal feedback: mdefbal.m, mdefbal.m). Out of scope for single-NLP KKT."
       }
     },
     {
@@ -2000,49 +1968,17 @@
         "objective_value": 60.0,
         "solve_time_seconds": 1.445
       },
-      "nlp2mcp_parse": {
-        "status": "success",
-        "parse_date": "2026-04-16T23:20:22.363700+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 2.6258,
-        "variables_count": 6,
-        "equations_count": 8
-      },
       "model_statistics": {
         "variables": 6,
         "equations": 8,
         "parameters": 0,
         "sets": 4
       },
-      "nlp2mcp_translate": {
-        "status": "success",
-        "translate_date": "2026-04-12T07:14:24.082021+00:00",
-        "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 6.1923,
-        "output_file": "data/gamslib/mcp/decomp_mcp.gms"
-      },
-      "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-04-12T07:14:24.764463+00:00",
-        "solver": "PATH",
-        "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.6478,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
-      },
-      "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-04-12T07:14:24.765246+00:00",
-        "notes": "Skipped due to solve failure"
+      "pipeline_status": {
+        "status": "skipped",
+        "reason": "multi_solve_driver_out_of_scope",
+        "marked_date": "2026-04-18T17:44:43Z",
+        "details": "Multi-solve driver script (declared models: ['master', 'sub']; solve targets: ['master', 'sub']; equation-marginal feedback: tbal.m, convex.m, tbal.m). Out of scope for single-NLP KKT."
       }
     },
     {
@@ -12632,5 +12568,10 @@
     "legacy_excluded": 7,
     "in_scope": 198,
     "type_corrected": 14
+  },
+  "_migration_summary_v2_2_1": {
+    "to_version": "2.2.1",
+    "applied_at": "2026-04-18T17:44:43Z",
+    "multi_solve_excluded": 2
   }
 }

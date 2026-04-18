@@ -32,12 +32,18 @@ from src.kkt.sqr_reformulation import reformulate_sqr_equalities
 from src.logging_config import setup_logging
 from src.utils.error_codes import get_error_info
 from src.validation.discreteness import MINLPNotSupportedError, validate_continuous
+from src.validation.driver import (
+    MultiSolveDriverError,
+    scan_multi_solve_driver,
+    validate_single_optimization,
+)
 from src.validation.model import validate_model_structure
 from src.validation.numerical import validate_jacobian_entries, validate_parameter_values
 
 # Distinct exit code so callers (CI, batch scripts) can distinguish
 # "model is out of scope" from generic translation failures.
 EXIT_MINLP_OUT_OF_SCOPE = 3
+EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4
 
 
 @click.command()
@@ -149,6 +155,18 @@ EXIT_MINLP_OUT_OF_SCOPE = 3
         "the model's solve_type clause."
     ),
 )
+@click.option(
+    "--allow-multi-solve",
+    is_flag=True,
+    default=False,
+    help=(
+        "Force translation of multi-solve driver scripts (Dantzig–Wolfe, "
+        "column generation, Benders') for development/debugging only. "
+        "The generated MCP represents a single KKT snapshot, not the "
+        "driver's converged fixed point, and is unlikely to match the "
+        "reference objective."
+    ),
+)
 def main(
     input_file,
     output,
@@ -169,6 +187,7 @@ def main(
     nlp_presolve,
     check_convexity_numerical,
     allow_discrete,
+    allow_multi_solve,
 ):
     """Convert GAMS NLP model to MCP format using KKT conditions.
 
@@ -276,6 +295,22 @@ def main(
                 )
         else:
             validate_continuous(model)
+
+        # Multi-solve-driver gate (Sprint 24, PLAN_FIX_DECOMP).
+        # Refuse driver scripts (Dantzig–Wolfe / column generation /
+        # primal-dual) that cannot be represented as a single KKT.
+        if allow_multi_solve:
+            ms_report = scan_multi_solve_driver(model)
+            if ms_report.is_driver:
+                click.secho(
+                    "Warning: --allow-multi-solve bypassing multi-solve-driver "
+                    "gate; the generated MCP represents a single KKT snapshot "
+                    "and will likely not match the driver's converged objective.",
+                    fg="yellow",
+                    err=True,
+                )
+        else:
+            validate_single_optimization(model)
 
         # Step 1.7: Check for convexity warnings (Sprint 6 Day 4)
         if not skip_convexity_check:
@@ -642,6 +677,10 @@ def main(
     except MINLPNotSupportedError as e:
         click.echo(str(e), err=True)
         sys.exit(EXIT_MINLP_OUT_OF_SCOPE)
+
+    except MultiSolveDriverError as e:
+        click.echo(str(e), err=True)
+        sys.exit(EXIT_MULTI_SOLVE_OUT_OF_SCOPE)
 
     except FileNotFoundError as e:
         click.echo(f"Error: File not found - {e}", err=True)

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/jeffreyhorn/nlp2mcp/data/gamslib/schema.json",
   "title": "GAMSLIB Model Status Database",
-  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.2.0)",
+  "description": "Schema for tracking GAMSLIB model status through the nlp2mcp pipeline (v2.2.1)",
   "type": "object",
   "required": ["schema_version", "models"],
   "additionalProperties": false,
@@ -41,6 +41,11 @@
     "_migration_summary": {
       "type": "object",
       "description": "Bookkeeping block written by schema migrations (e.g., migrate_schema_v2.2.0.py). Informational only; not consumed by the pipeline.",
+      "additionalProperties": true
+    },
+    "_migration_summary_v2_2_1": {
+      "type": "object",
+      "description": "Bookkeeping block written by migrate_schema_v2.2.1.py (multi-solve-driver exclusion pass). Informational only; not consumed by the pipeline.",
       "additionalProperties": true
     }
   },
@@ -294,9 +299,10 @@
           "type": "string",
           "enum": [
             "minlp_out_of_scope",
+            "multi_solve_driver_out_of_scope",
             "legacy_excluded"
           ],
-          "description": "Canonical exclusion-reason keyword. 'minlp_out_of_scope' for discrete solver classes; 'legacy_excluded' for pre-taxonomy excludes with no recorded reason."
+          "description": "Canonical exclusion-reason keyword. 'minlp_out_of_scope' for discrete solver classes; 'multi_solve_driver_out_of_scope' (v2.2.1) for Dantzig-Wolfe / column-generation / primal-dual driver scripts; 'legacy_excluded' for pre-taxonomy excludes with no recorded reason."
         },
         "marked_date": {
           "type": "string",
