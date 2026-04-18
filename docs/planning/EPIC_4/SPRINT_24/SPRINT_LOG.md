@@ -348,6 +348,35 @@ improvements from Sprint 24:
 
 ---
 
+### Day — decomp / multi-solve-driver exclusion (PLAN_FIX_DECOMP)
+
+**Status:** COMPLETE
+**Branch:** `sprint24-plan-fix-decomp`
+
+| Task | Status |
+|---|---|
+| Phase 0 — audit multi-solve-driver patterns in corpus | ✅ `AUDIT_MULTI_SOLVE_DRIVERS.md` — 2 in-scope hits (`decomp`, `danwolfe`); no accidental-success regressions; `partssupply` and `ibm1` confirmed *not* flagged |
+| Phase 1 — `validate_single_optimization()` gate + CLI integration + 10 unit tests + 3 integration tests | ✅ `src/validation/driver.py`, `tests/unit/validation/test_driver.py`, `tests/integration/test_decomp_skipped.py`; new exit code `EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4`; `--allow-multi-solve` escape hatch |
+| Phase 2 — `multi_solve_driver_out_of_scope` exclusion-reason keyword | ✅ added to `migrate_schema_v2.2.1.py`'s taxonomy |
+| Phase 3 — schema 2.2.0 → 2.2.1 migration | ✅ `scripts/gamslib/migrate_schema_v2.2.1.py` applied — `decomp` and `danwolfe` now `pipeline_status: skipped` with stale translate/solve blocks stripped |
+| Phase 4 — tests + ibm1 regression guard | ✅ 13 tests (10 unit + 3 integration); all pass |
+| Phase 5 — end-to-end verification + SPRINT_LOG | ✅ direct CLI on `decomp`/`danwolfe` exits 4 with a clear message; `--allow-multi-solve` succeeds with a warning; `ibm1`/`partssupply` continue to translate; `make test` green |
+
+**Key design decision:** the gate requires a **three-condition conjunction**, not just "multiple solves":
+1. `len(declared_models) ≥ 2`
+2. `len(solve_targets) ≥ 2` (distinct model names across all `solve` statements, scanned on the raw Lark tree to catch loop-nested solves that the parser drops from `_solve_objectives`)
+3. `≥ 1 equation marginal` (`eq.m`) accessed inside a solve-containing `loop`, where `eq` is a declared `Equation`
+
+This rules out the critical false-positive classes:
+- `ibm1` — 1 model, 5 solves on it → fails condition 1.
+- `partssupply` — 2 models, 2 targets, but loop body reads `util.l` / `x.l` (variable levels, not equation duals) → fails condition 3.
+
+**Known gap (deferred):** `saras`-style two-stage calibration reads `eq.m` at *top level* between solves (not inside a solve-containing loop). The strict rule misses it. Broadening to "anywhere in source" risks false positives on post-solve reporting. Left as a Sprint-25 follow-up; `decomp` and `danwolfe` are the immediate DW targets and match the strict rule cleanly.
+
+**Why not fix the underlying translator bugs for `decomp`?** Documented in the plan's "Why Not Fix The Emission Bugs" section: even if the `.m`-stripping emitter bug, missing `tbal`/`convex` KKT assembly, and incomplete `stat_lam` stationarity were all fixed, the single-MCP result would only represent one snapshot of the Dantzig–Wolfe iteration, not the converged `mobj = 60` fixed point recorded in the catalog. That catalog value is the *algorithm's* answer, not any single optimization's answer. The two emitter/assembler bugs are tracked as deferred Sprint-25 items for future single-model multi-solve scenarios.
+
+---
+
 ### Day 12 — Sprint Close Prep
 
 **Status:** NOT STARTED
