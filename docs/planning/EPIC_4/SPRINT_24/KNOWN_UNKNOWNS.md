@@ -727,7 +727,7 @@ Unknowns surfaced during Sprint 24 execution that were not in the initial 26-ite
 **Priority:** Medium
 **Discovery:** The multi-solve-driver gate excludes `decomp` and `danwolfe` (PR #1265), but two real emitter/assembly bugs surfaced during that investigation and would affect any future **single-model multi-solve** scenario (which the gate does NOT catch):
 
-1. `_loop_tree_to_gams_subst_dispatch` missing `attr_access` / `attr_access_indexed` handlers → emits `ctank = - tbal m` instead of `ctank = -tbal.m` (#1268).
+1. `_loop_tree_to_gams_subst_dispatch` missing `bound_scalar` / `bound_indexed` handlers → emits `ctank = - tbal m` instead of `ctank = -tbal.m` for reads of `.l` / `.m` / `.lo` / `.up` / `.fx` (which the grammar tokenizes as `BOUND_K`, NOT `attr_access`) (#1268).
 2. KKT assembly drops gradient terms for equations belonging to non-selected models when `_solve_objectives` has multiple entries (#1269).
 
 **Tracking:** #1268 (emitter), #1269 (assembly)
@@ -747,11 +747,12 @@ Unknowns surfaced during Sprint 24 execution that were not in the initial 26-ite
 
 15 open issues previously labeled `sprint-24` were relabeled `sprint-25`:
 
-- **Alias differentiation carryforward (12):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150, #1177
+- **Alias differentiation carryforward (11):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150
+- **`model_infeasible` carryforward (1):** #1177 (chenery — root cause is alias-related per KU-16, but the issue doc categorizes it as `model_infeasible` / post-$171 domain widening)
 - **Translation timeouts (3):** #1169 (lop), #1185 (mexls), #1192 (gtm)
 
 Plus 4 newly-filed Sprint 25 tracking issues:
-- #1268 — decomp emitter `attr_access` handlers (KU-31 #1)
+- #1268 — decomp emitter `bound_scalar` / `bound_indexed` handlers (KU-31 #1)
 - #1269 — decomp KKT assembly multi-model gradient drop (KU-31 #2)
 - #1270 — saras-style multi-solve gate extension (KU-29)
 - #1271 — emitter dispatcher unification (KU-30)
