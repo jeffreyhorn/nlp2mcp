@@ -184,7 +184,7 @@ Most are small-to-medium-effort; collectively they are the leverage point for th
 
 ### Priority 3: Translation Timeout — Algorithmic, Not Budgetary (#1169, #1185, #1192)
 
-5 remaining hard timeouts (iswnm, mexls, nebrazil, sarf, srpchase) need algorithmic improvements, not further budget increases. KU-19 / KU-20 in SPRINT_24 / SPRINT_24 KNOWN_UNKNOWNS.md call out profiling + sparse Jacobian as candidate directions. Low near-term Match leverage per the addendum finding; prioritize after #1275–#1283.
+5 remaining hard timeouts (iswnm, mexls, nebrazil, sarf, srpchase) need algorithmic improvements, not further budget increases. KU-19 / KU-20 in `docs/planning/EPIC_4/SPRINT_24/KNOWN_UNKNOWNS.md` call out profiling + sparse Jacobian as candidate directions. Low near-term Match leverage per the addendum finding; prioritize after #1275–#1283.
 
 ### Priority 4: Multi-Solve Gate Extension (#1270)
 
