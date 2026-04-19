@@ -1209,7 +1209,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 | model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | ≤5 | ≤5 | maintain ≤5 | maintain ≤5 |
 | Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | ≥100% | ≥100% | ≥100% | ≥100% |
 | Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | ≥96% | ≥96% | ≥97% | ≥97% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | ≥77% | ≥76% | ≥78% | ≥80% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | ≥76% | ≥76% | ≥78% | ≥80% |
 | Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | ≥43% | ≥43% | ≥48% | ≥52% |
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S28 targets are in-scope counts.

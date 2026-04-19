@@ -132,7 +132,7 @@ Created `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns acro
 - **Category 5: Translation Timeout — Algorithmic** (4 KUs, 5.1–5.4) — tractability per model, stage-level profiling, sparse Jacobian feasibility, `srpchase` distinctness.
 - **Category 6: Pipeline Retest + Determinism** (3 KUs, 6.1–6.3) — scope-freeze durability, PYTHONHASHSEED sample size, alias-AD influx assumption.
 
-Priority distribution: Critical 7 (26%), High 11 (41%), Medium 7 (26%), Low 2 (7%). Total estimated research time: 30–36 hours spread across prep Tasks 2–11.
+Priority distribution: Critical 7 (26%), High 11 (41%), Medium 7 (26%), Low 2 (7%). Research is performed across prep Tasks 2–11; the authoritative task-time budget is 21–31 hours for Tasks 2–11 (per the §Prep Task Overview table). Individual per-KU estimates in KNOWN_UNKNOWNS.md sum higher because many unknowns are verified in parallel within a single task (e.g., Task 2 verifies 7 unknowns simultaneously during one code-audit pass).
 
 Sprint 24 carryforward KUs (KU-29, KU-30, KU-32, KU-13/17) are mapped into Sprint 25 unknown numbers in the document's Appendix.
 
