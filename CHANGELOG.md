@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Key Changes
 - Multi-solve driver gate — refuses Dantzig–Wolfe / column-generation scripts pre-translation; excludes `decomp` + `danwolfe` cleanly with a new exit code `EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4`, `--allow-multi-solve` dev escape hatch, and v2.2.1 schema taxonomy entry (PR #1265)
-- Partssupply `$ifThen` / `dollar_cond` / `bracket_expr` / `brace_expr` / `yes_cond` / `no_cond` emitter handlers added to the substituting dispatcher (PR #1264)
-- Turkey, china, feedtray, fawley, harker, rocket per-model fixes (PRs #1257–#1263)
+- `partssupply` `$ifThen` / `dollar_cond` / `bracket_expr` / `brace_expr` / `yes_cond` / `no_cond` emitter handlers added to the substituting dispatcher (PR #1264)
+- `turkey`, `china`, `feedtray`, `fawley`, `harker`, `rocket` per-model fixes (PRs #1257–#1263)
 - Lark 1.1.9 vs 1.2+ grammar-ambiguity root-cause fix — defensive `_extract_model_refs` rewrite in `src/ir/parser.py` unblocks CI green for the first time in 5+ main merges (PR #1267)
 - Schema v2.2.0 → v2.2.1 migration with new exclusion-reason keyword `multi_solve_driver_out_of_scope` (`scripts/gamslib/migrate_schema_v2.2.1.py`)
 - Pipeline timeouts doubled (translate 300s → 600s, solve 60s → 120s, compile-check 30s → 60s); 5 of 10 translate timeouts recovered — all 5 to path_syntax_error due to latent emitter bugs (PR #1274 + Day 13 Addendum PR #1282)
