@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document identifies assumptions and unknowns for Sprint 25 **before** implementation begins. Sprint 25 carries forward the dominant workstream from Sprints 23 and 24 (alias-aware differentiation for ~20 models) and also clears the emitter/stationarity bug backlog surfaced by the Sprint 24 Day 13 review (8 tracked issues plus 1 non-determinism bug). Smaller priorities cover the multi-solve gate extension, a dispatcher refactor, and algorithmic attacks on 5 remaining hard translation timeouts.
+This document identifies assumptions and unknowns for Sprint 25 **before** implementation begins. Sprint 25 carries forward the dominant workstream from Sprints 23 and 24 (alias-aware differentiation for ~20 models) and also clears the emitter/stationarity bug backlog surfaced by the Sprint 24 Day 13 review (8 tracked issues, including the #1283 non-determinism bug). Smaller priorities cover the multi-solve gate extension, a dispatcher refactor, and algorithmic attacks on 5 remaining hard translation timeouts.
 
 **Sprint 25 Scope** (per `docs/planning/EPIC_4/PROJECT_PLAN.md` §Sprint 25, Weeks 15–16):
 
@@ -151,7 +151,7 @@ Prep Task 2 (Alias-AD carryforward audit).
 
 ### Priority
 
-**Critical** — Regressions on the 54-model baseline directly harm Match; a single regression undoes half of the sprint's Match gains.
+**Critical** — Regressions on the 54-model baseline directly harm Match (target 54 → ≥62, +8). Budget: **≤1 regression tolerated** (which still yields net +7 toward target); ≥2 regressions put the ≥62 target at serious risk and trigger the "stop the sprint" procedure in Task 6's rollout design.
 
 ### Assumption
 

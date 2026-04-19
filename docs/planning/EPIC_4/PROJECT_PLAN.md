@@ -842,7 +842,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Architectural Fix Completion (16-22h)**
   - Complete the summation-context / alias-match work started in Sprint 24
   - 11 open issues affecting ~20 models (CGE family, PS-family, cclinpts, polygon, himmel16, catmix, camshape, kand, launch, qabel/abel, meanvar, plus #1150 sum-index collapse)
-  - KU-29 / KU-30 / KU-31 / KU-32 in `SPRINT_24/KNOWN_UNKNOWNS.md` capture open sub-questions
+  - Sprint 24 alias-AD KUs (KU-01..KU-08 in `SPRINT_24/KNOWN_UNKNOWNS.md`) capture the prep-phase classification and design context; `SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md` and `SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md` document the Pattern A/B/C/D rollout. The Sprint 24 end-of-sprint KU that carries directly into Priority 1 is KU-32 (sameas guard runtime validation) — now tracked as Sprint 25 Unknown 1.5.
   - **Deliverable:** Alias-AD fix with comprehensive tests; dispatch canary + 54-model golden-file regression
 - **Per-Pattern Validation (6-8h)**
   - Verify Pattern A (CGE, quadratic): 6 models
@@ -1000,10 +1000,10 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ## Acceptance Criteria
 - **PATH Consultation:** Document submitted to Ferris/Dirkse with reproducible cases
 - **Solution Forcing:** At least 2 strategies implemented and tested
-- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 24)
-- **Translate Rate:** ≥ 97% of parsed models (maintain from Sprint 24)
-- **Solve Rate:** ≥ 68% of translated models (up from Sprint 24's ~66%)
-- **Full Pipeline Match:** ≥ 40% of pipeline scope (up from Sprint 24's ≥ 37%)
+- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 25)
+- **Translate Rate:** ≥ 96% of parsed models (maintain from Sprint 25; S27 steps up to ≥ 97% per Rolling KPIs)
+- **Solve Rate:** ≥ 76% of translated models (aligned with Rolling KPIs S26 target; S27/S28 continue the ramp to ≥ 78% / ≥ 80%)
+- **Full Pipeline Match:** ≥ 43% of pipeline scope (maintain from Sprint 25's ≥ 43%)
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours

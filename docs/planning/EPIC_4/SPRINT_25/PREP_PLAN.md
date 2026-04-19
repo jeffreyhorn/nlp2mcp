@@ -141,8 +141,9 @@ Sprint 24 carryforward KUs (KU-29, KU-30, KU-32, KU-13/17) are mapped into Sprin
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md && echo "EXISTS" || echo "MISSING"
 wc -l docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
-grep -c "^## Unknown " docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
-# Result: 28 matches (27 actual unknowns + 1 template header)
+# Count only numbered unknowns (exclude the template header "Unknown X.Y: ...")
+grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
+# Expected: 27
 ```
 
 ### Deliverables
