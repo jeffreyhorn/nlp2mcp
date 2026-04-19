@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Sprint 24 met **6 of 8** acceptance criteria, a substantial improvement over Sprint 23 (1/8). The sprint's highest-leverage wins were in **error-category reduction** rather than raw solve/match rate: `path_syntax_error` dropped 23 → 6 under the original Day 13 retest (then 11 after the doubled-timeout re-retest influx), `path_solve_terminated` hit exactly 10, and `model_infeasible` hit exactly 8 (down from a baseline of 14, with **zero gross influx** — substantially outperforming the PR10 50–60% influx budget). The multi-solve-driver exclusion (decomp, danwolfe) landed cleanly as a pre-translation gate. The alias-differentiation workstream made progress but the core #1111 family (now 12 open issues relabeled `sprint-25`) was not resolved. Translate and Match were the two misses — Translate 135/143 (94.4%) vs target ≥97%, Match 54 vs target ≥55 (one short).
+Sprint 24 met **6 of 8** acceptance criteria, a substantial improvement over Sprint 23 (1/8). The sprint's highest-leverage wins were in **error-category reduction** rather than raw solve/match rate: `path_syntax_error` dropped 23 → 6 under the original Day 13 retest (then 11 after the doubled-timeout re-retest influx), `path_solve_terminated` hit exactly 10, and `model_infeasible` hit exactly 8 (down from a baseline of 14, with **zero gross influx** — substantially outperforming the PR10 50–60% influx budget). The multi-solve-driver exclusion (decomp, danwolfe) landed cleanly as a pre-translation gate. The alias-differentiation workstream made progress but the core #1111 family (now 11 open issues relabeled `sprint-25`: #1138–#1147, #1150) was not resolved. Translate and Match were the two misses — Translate 135/143 (94.4%) vs target ≥97%, Match 54 vs target ≥55 (one short).
 
 **Key Outcome:** 99 models solve (up from 86). 54 models match (up from 49). Parse 100% on the 143-model pipeline scope. Translate 94.4% (135/143) under the doubled-timeout re-retest. 20 PRs merged. 4,522 tests passing (+158 from baseline). Doubled-timeout experiment confirmed that translation-timeout work alone is lower-leverage than expected — the 5 recovered translates all hit `path_syntax_error` at PATH compile because of emitter/stationarity bugs in the same family that Sprint 25's alias / offset / emitter-dedup issues target.
 
@@ -51,21 +51,27 @@ Targets were set against the 147-model baseline; acceptance percentages are eval
 
 ### Final Error Category Breakdown
 
-**Translate failures (8 out of 143 parsed):**
+**Translate failures (baseline 7 → Day 13 Addendum 8 out of 143 parsed):**
 
-| Category | Baseline | Day 13 (pre-bump) | Day 13 Addendum (post-bump) | Delta vs baseline |
+Baseline values below are the end-of-Sprint-23 counts from `SPRINT_23/SPRINT_RETROSPECTIVE.md` (147-pipeline scope), since Sprint 24 inherited the Sprint 23 final state as its Day 0.
+
+| Category | Baseline (end of S23, 147-scope) | Day 13 (pre-bump, 143-scope) | Day 13 Addendum (post-bump, 143-scope) | Delta vs baseline |
 |----------|----------|-------------------|------------------------------|---------------------|
-| timeout | 10 | 10 | **5** | −5 |
+| timeout | 6 | 10 | **5** | −1 |
 | internal_error | 1 | 3 | 3 | +2 |
 
-**Solve failures (36 out of 135 translated):**
+The `timeout` row spiked to 10 during Sprint 24 (two models that had been on the edge of the 300s budget in Sprint 23 regressed under the then-current parser state) before the PR #1274 timeout doubling brought it back down to 5. The `internal_error` delta of +2 is tracked (mostly `mine` re-surfacing after the SetMembershipTest fix from Sprint 23 regressed under interactions with Sprint 24 work).
 
-| Category | Baseline | Day 13 | Day 13 Addendum | Delta vs baseline |
+**Solve failures (baseline 54 → Day 13 Addendum 36 out of 135 translated):**
+
+Baseline values below are the end-of-Sprint-23 counts on the 147-pipeline scope. Sprint 24's pipeline-scope `model_infeasible` baseline is **11**; the **14** used elsewhere in this retrospective is the triage-scope baseline from PLAN.md, which includes models outside the 147-scope that later moved into the 143-scope (see footnote ⁵ in PROJECT_PLAN.md Rolling KPIs).
+
+| Category | Baseline (end of S23, 147-scope) | Day 13 | Day 13 Addendum | Delta vs baseline |
 |----------|----------|--------|------------------|---------------------|
 | path_syntax_error | 23 | 6 | 11 | −12 |
 | path_solve_terminated | 12 | 10 | 10 | −2 |
-| model_infeasible | 14 | 8 | 8 | −6 |
-| path_solve_license | 7 | 7 | 7 | 0 |
+| model_infeasible | 11 | 8 | 8 | −3 (pipeline-scope) / −6 (triage-scope) |
+| path_solve_license | 8 | 7 | 7 | −1 |
 
 ### model_infeasible Accounting (PR7)
 
