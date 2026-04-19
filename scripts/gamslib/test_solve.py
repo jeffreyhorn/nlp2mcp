@@ -908,12 +908,12 @@ def compare_solutions(
     return result
 
 
-def solve_mcp(mcp_path: Path, timeout: int = 60) -> dict[str, Any]:
+def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
     """Solve an MCP model using PATH solver.
 
     Args:
         mcp_path: Path to the MCP .gms file
-        timeout: Maximum solve time in seconds (default: 60)
+        timeout: Maximum solve time in seconds (default: 120)
 
     Returns:
         Dictionary with solve results:
@@ -1306,7 +1306,7 @@ def run_batch_solve(args: argparse.Namespace) -> int:
             continue
 
         # Solve MCP
-        result = solve_mcp(mcp_file, timeout=60)
+        result = solve_mcp(mcp_file, timeout=120)
 
         if args.verbose:
             logger.info(f"  Status: {result['status']}")

@@ -186,10 +186,10 @@ class TestCompareResults:
     def test_error_details_in_fallback_conclusion(self):
         """When solves fail, error details should appear in the conclusion."""
         cold = _fail(error="GAMS executable not found")
-        warm = _fail(error="Timeout after 60 seconds")
+        warm = _fail(error="Timeout after 120 seconds")
         result = _compare_results(cold, warm)
         assert "GAMS executable not found" in result.conclusion
-        assert "Timeout after 60 seconds" in result.conclusion
+        assert "Timeout after 120 seconds" in result.conclusion
 
     def test_missing_fields_not_trusted(self):
         """Result dicts missing status/solver_status should not be trusted."""

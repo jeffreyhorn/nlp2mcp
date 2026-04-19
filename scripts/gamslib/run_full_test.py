@@ -500,7 +500,7 @@ def run_solve_stage(
     if args.verbose:
         logger.info("    [SOLVE] Starting...")
 
-    result = solve_func(mcp_path, timeout=60)
+    result = solve_func(mcp_path, timeout=120)
 
     # Update model in database
     solve_date = datetime.now(UTC).isoformat()
@@ -718,7 +718,7 @@ def _run_convexity_check(
             logger.info("    [CONVEXITY] Reusing existing warm-start solve result")
     else:
         solve_func = get_solve_function()
-        warm_result = solve_func(presolve_path, timeout=60)
+        warm_result = solve_func(presolve_path, timeout=120)
 
     # Compare
     cvx = check_convexity_from_results(cold_result, warm_result)
