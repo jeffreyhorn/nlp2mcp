@@ -716,7 +716,7 @@ Unknowns surfaced during Sprint 24 execution that were not in the initial 26-ite
 ### KU-30: Emitter Dispatcher Duplication
 
 **Priority:** Medium
-**Discovery:** Two near-duplicate dispatchers in `src/emit/original_symbols.py` — `_loop_tree_to_gams` and `_loop_tree_to_gams_subst_dispatch`. Every new grammar-rule handler (`dollar_cond`, `bracket_expr`, `attr_access`, etc.) must be added in both places. Sprint 24 hit this repeatedly (PR #1264 for partssupply; will recur for the decomp attr_access fix in Sprint 25).
+**Discovery:** Two near-duplicate dispatchers in `src/emit/original_symbols.py` — `_loop_tree_to_gams` and `_loop_tree_to_gams_subst_dispatch`. Every new grammar-rule handler (`dollar_cond`, `bracket_expr`, `bound_scalar`, etc.) must be added in both places. Sprint 24 hit this repeatedly (PR #1264 for partssupply; will recur for the decomp `bound_scalar` / `bound_indexed` fix in Sprint 25 — #1268).
 
 **Resolution Plan:** Collapse into a single dispatcher that takes an optional `token_subst_map` parameter. Behavior identical under either call shape.
 

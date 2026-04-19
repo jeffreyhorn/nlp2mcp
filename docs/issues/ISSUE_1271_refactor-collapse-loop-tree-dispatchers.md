@@ -20,7 +20,7 @@
 Every time a new grammar rule needs emitter support, a handler must be added in **both** functions. This has repeatedly caused silent-correctness bugs where the substituting path falls behind the canonical path:
 
 - **Sprint 24 partssupply (PR #1264):** missing `dollar_cond` / `dollar_cond_paren` / `bracket_expr` / `brace_expr` / `yes_cond` / `no_cond` handlers. Fixed by copy-pasting from the canonical path.
-- **Sprint 25 decomp (#1268):** missing `attr_access` / `attr_access_indexed` handlers. Same class of bug.
+- **Sprint 25 decomp (#1268):** missing `bound_scalar` / `bound_indexed` handlers (the grammar's forms for `.l` / `.m` / `.lo` / `.up` / `.fx` reads, tokenized as `BOUND_K` — NOT `attr_access`, which the substituting dispatcher already handles). Same class of bug.
 
 Each occurrence takes 1–2 hours to diagnose and fix. They will keep recurring as the grammar grows.
 
