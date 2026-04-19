@@ -207,6 +207,7 @@ m_fx_0.. m("0") - 100 =E= 0;
 
 s.fx(tl)$(not (t(tl))) = 0;
 s.fx(tl)$(not (ord(tl) > 1)) = 0;
+n.fx(tl)$(not ((t(tl)))) = 0;
 nu_budget.fx(tl)$(not (ord(tl) > 1)) = 0;
 lam_dom1.fx(tl)$(not (t(tl))) = 0;
 nu_income.fx(tl)$(not (t(tl))) = 0;

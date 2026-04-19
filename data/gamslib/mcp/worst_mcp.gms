@@ -44,6 +44,11 @@ Variables
     pval
     d1(i,t,j)
     d2(i,t,j)
+    nu_futval(i,t,j)
+    nu_callval(i,t,j)
+    nu_putval(i,t,j)
+    nu_dd1(i,t,j)
+    nu_dd2(i,t,j)
 ;
 
 Positive Variables
@@ -120,6 +125,11 @@ Equations
     comp_lo_r(t)
     comp_up_q(t)
     comp_up_r(t)
+    callval(i,t,j)
+    dd1(i,t,j)
+    dd2(i,t,j)
+    futval(i,t,j)
+    putval(i,t,j)
     tpv
 ;
 
@@ -128,13 +138,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_c(i,j,t).. ((-1) * piL_c(i,j,t)) =E= 0;
-stat_d1(i,t,j).. 0 =E= 0;
-stat_d2(i,t,j).. 0 =E= 0;
-stat_f(i,t).. ((-1) * sum(j$(pdata(i,t,j,"nom")), 1$(pdata(i,t,j,"type") = future))) - piL_f(i,t) =E= 0;
-stat_p(i,j,t).. ((-1) * piL_p(i,j,t)) =E= 0;
-stat_q(t).. ((-1) * piL_q(t)) + piU_q(t) =E= 0;
-stat_r(t).. ((-1) * piL_r(t)) + piU_r(t) =E= 0;
+stat_c(i,j,t).. nu_callval(i,t,j)$(pdata(i,t,j,"type") = call) - piL_c(i,j,t) =E= 0;
+stat_d1(i,t,j).. ((((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * f(i,t) * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(d1(i,t,j))))))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call) + nu_dd1(i,t,j)$(pdata(i,t,j,"strike")) + ((-1) * nu_dd2(i,t,j))$(pdata(i,t,j,"strike")) + (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * ((-1) * (f(i,t) * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(((-1) * d1(i,t,j)))))) * (-1))))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto))$(pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto) =E= 0;
+stat_d2(i,t,j).. ((((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * ((-1) * (pdata(i,t,j,"strike") * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(d2(i,t,j))))))))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call) + nu_dd2(i,t,j)$(pdata(i,t,j,"strike")) + (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * pdata(i,t,j,"strike") * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(((-1) * d2(i,t,j)))))) * (-1))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto))$(pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto) =E= 0;
+stat_f(i,t).. ((-1) * sum(j$(pdata(i,t,j,"nom")), 1$(pdata(i,t,j,"type") = future))) + sum(j, nu_futval(i,t,j)$(pdata(i,t,j,"type") = future)) + sum(j, (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * errorf(d1(i,t,j)))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call)) + sum(j, (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * ((-1) * (errorf(((-1) * d1(i,t,j))))))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto)) + sum(j, (((-1) * (q(t) * sqrt(tdata(t,"term")) * 1 / (f(i,t) / pdata(i,t,j,"strike")) * 1 / pdata(i,t,j,"strike") ** 1 / sqr(q(t) * sqrt(tdata(t,"term"))))) * nu_dd1(i,t,j))$(pdata(i,t,j,"strike"))) - piL_f(i,t) =E= 0;
+stat_p(i,j,t).. nu_putval(i,t,j)$(pdata(i,t,j,"type") = puto) - piL_p(i,j,t) =E= 0;
+stat_q(t).. sum((i,j), (((-1) * ((q(t) * sqrt(tdata(t,"term")) * tdata(t,"term") * 0.5 * 2 * q(t) - (log(f(i,t) / pdata(i,t,j,"strike")) + 0.5 * sqr(q(t)) * tdata(t,"term")) * sqrt(tdata(t,"term"))) / sqr(q(t) * sqrt(tdata(t,"term"))))) * nu_dd1(i,t,j))$(pdata(i,t,j,"strike"))) + sum((i,j), (sqrt(tdata(t,"term")) * nu_dd2(i,t,j))$(pdata(i,t,j,"strike"))) - piL_q(t) + piU_q(t) =E= 0;
+stat_r(t).. sum((i,j), (((-1) * (f0(i,t) * exp(r(t) * tdata(t,"term")) * tdata(t,"term"))) * nu_futval(i,t,j))$(pdata(i,t,j,"type") = future)) + sum((i,j), (((-1) * ((f(i,t) * errorf(d1(i,t,j)) - pdata(i,t,j,"strike") * errorf(d2(i,t,j))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call)) + sum((i,j), (((-1) * ((pdata(i,t,j,"strike") * errorf(((-1) * d2(i,t,j))) - f(i,t) * errorf(((-1) * d1(i,t,j)))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto)) - piL_r(t) + piU_r(t) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_c(i,j,t).. c(i,j,t) - 0 =G= 0;
@@ -149,6 +159,11 @@ comp_up_r(t)$(tdata(t,"rmax") < inf).. tdata(t,"rmax") - r(t) =G= 0;
 
 * Original equality equations
 tpv.. pval =E= sum((i,t,j)$(pdata(i,t,j,"nom")), (f(i,t) - pdata(i,t,j,"price") * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = future) + (c(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = call) + (p(i,j,t) * pdata(i,t,j,"nom"))$(pdata(i,t,j,"type") = puto));
+futval(i,t,j)$(pdata(i,t,j,"type") = future).. f(i,t) =E= f0(i,t) * exp(r(t) * tdata(t,"term"));
+callval(i,t,j)$(pdata(i,t,j,"type") = call).. c(i,j,t) =E= exp(((-1) * r(t)) * tdata(t,"term")) * (f(i,t) * errorf(d1(i,t,j)) - pdata(i,t,j,"strike") * errorf(d2(i,t,j)));
+putval(i,t,j)$(pdata(i,t,j,"type") = puto).. p(i,j,t) =E= exp(((-1) * r(t)) * tdata(t,"term")) * (pdata(i,t,j,"strike") * errorf(((-1) * d2(i,t,j))) - f(i,t) * errorf(((-1) * d1(i,t,j))));
+dd1(i,t,j)$(pdata(i,t,j,"strike")).. d1(i,t,j) =E= (log(f(i,t) / pdata(i,t,j,"strike")) + 0.5 * sqr(q(t)) * tdata(t,"term")) / (q(t) * sqrt(tdata(t,"term")));
+dd2(i,t,j)$(pdata(i,t,j,"strike")).. d2(i,t,j) =E= d1(i,t,j) - q(t) * sqrt(tdata(t,"term"));
 
 
 * ============================================
@@ -158,10 +173,17 @@ tpv.. pval =E= sum((i,t,j)$(pdata(i,t,j,"nom")), (f(i,t) - pdata(i,t,j,"price") 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+d1.fx(i,t,j)$(not (pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto)) = 0;
+d2.fx(i,t,j)$(not (pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto)) = 0;
 piL_q.fx(t)$(not (tdata(t,"qmin") > -inf)) = 0;
 piL_r.fx(t)$(not (tdata(t,"rmin") > -inf)) = 0;
 piU_q.fx(t)$(not (tdata(t,"qmax") < inf)) = 0;
 piU_r.fx(t)$(not (tdata(t,"rmax") < inf)) = 0;
+nu_callval.fx(i,t,j)$(not (pdata(i,t,j,"type") = call)) = 0;
+nu_dd1.fx(i,t,j)$(not (pdata(i,t,j,"strike"))) = 0;
+nu_dd2.fx(i,t,j)$(not (pdata(i,t,j,"strike"))) = 0;
+nu_futval.fx(i,t,j)$(not (pdata(i,t,j,"type") = future)) = 0;
+nu_putval.fx(i,t,j)$(not (pdata(i,t,j,"type") = puto)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -184,6 +206,11 @@ Model mcp_model /
     stat_p.p,
     stat_q.q,
     stat_r.r,
+    callval.nu_callval,
+    dd1.nu_dd1,
+    dd2.nu_dd2,
+    futval.nu_futval,
+    putval.nu_putval,
     tpv.pval,
     comp_lo_c.piL_c,
     comp_lo_f.piL_f,

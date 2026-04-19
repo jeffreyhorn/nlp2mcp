@@ -238,6 +238,10 @@ Model mcp_model /
 * Solve Statement
 * ============================================
 
+
+* Clear NA parameter values to prevent evaluation errors
+rho$(mapval(rho) = mapval(na)) = 1;
+
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;

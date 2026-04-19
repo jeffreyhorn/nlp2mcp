@@ -180,6 +180,8 @@ Scalars
     landlr /21745.7/
 ;
 
+Set nlp2mcp_uel_registry / 'demand-pr', 'export-pr', 'farm-1979', 'import-pr', 'other-q', 'ref-price' /;
+
 $onImplicitAssign
 pricel(cl,l,ty) = pricetl(l,cl,ty) / exchrate;
 qdl(cl,l) = tradel(l,cl,"production") + tradel(l,cl,"import-q") - tradel(l,cl,"export-q") - tradel(l,cl,"other-q");
@@ -191,9 +193,9 @@ a(ca,r,"irr-good") = a5(ca,r);
 a(ca,r,"irr-poor") = a4(ca,r);
 a(ca,r+irrg,"irr-good") = a4(ca,r);
 pdl(cl,l) = 1000 * pricel(cl,l,"1979");
+roff(r,s) = sum(ca, a(ca,r,s));
 betal(cl,l)$(qdl(cl,l) * demandl(l,cl)) = pdl(cl,l) / qdl(cl,l) / demandl(l,cl);
 a(ca,r,s)$(roff(r,s)) = a(ca,r,s) / roff(r,s);
-roff(r,s) = sum(ca, a(ca,r,s));
 $offImplicitAssign
 
 $onImplicitAssign
@@ -579,7 +581,7 @@ stat_transfer(c).. ((-1) * nu_tgrain)$(cg(c)) + 1$(ctr(c)) * lam_mbalc(c) + (((-
 stat_treeland(ct).. ((-1) * nu_landbt(ct)) + sum(ty, 1000 * revdevc(ct,ty) / 1000000 * nu_ddev(ty)) - piL_treeland(ct) + piU_treeland(ct) =E= 0;
 stat_xcrop(s,r,pt).. sum(c, ((-1) * yieldc(c,s,r)) * nu_dprodc(c)) + 1$(sr(s,r)) * lam_landbc(s) + sum(tq, labc(s,r,pt,tq) * lam_labor(tq)) + sum((ds,tq), drc(s,r,ds,pt,tq) * lam_draftb(ds,tq)) + ((-1) * sum(ca, yieldf(ca,s,r) * eval("fodder",ca))) * lam_feedd - piL_xcrop(s,r,pt) =E= 0;
 stat_xlive(l).. sum(ty, 1000 * sum(cl$(cll(cl,l)), revdevl(cl,l,ty)) / 1000000 * nu_ddev(ty)) + ((-1) * lcostl(l)) * nu_alab + sum(tq, labl(l) * lam_labor(tq)) + sum((ds,tq), ((-1) * (1000 * dpower(ds,l) / 1000000)) * lam_draftb(ds,tq)) + sum(cl, (((-1) * (1000 * yieldl(cl,l) / 1000000)) * lam_mball(cl,l))$(cll(cl,l))) + ereq(l) * lam_totfeed(l) + sum(fclass, fmin(l,fclass) * ereq(l) * lam_minfeed(l,fclass)) + sum(fclass, ((-1) * (fmax(l,fclass) * ereq(l))) * lam_maxfeed(l,fclass)) - piL_xlive(l) + piU_xlive(l) =E= 0;
-stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + 1$(cpt(c,pt)) * nu_landbt(c) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
+stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + (1$(cpt(c,pt)) * nu_landbt(c))$(ct(c)) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
 
 * Inequality complementarity equations
 comp_draftb(ds,tq).. ((-1) * (sum((s,r,pt), drc(s,r,ds,pt,tq) * xcrop(s,r,pt)) + sum((ct,pt), drt(ct,ds,pt,tq) * xtree(ct,pt)) - (drsup(ds) + sum(l, dpower(ds,l) * xlive(l)) / 1000))) =G= 0;

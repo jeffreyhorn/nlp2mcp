@@ -344,14 +344,14 @@ Equations
 stat_cl(h).. ((-1) * (sqr(v(h)) * S * rho * 0.5 * c1 * 2 * cl(h))) * nu_Ddef(h) + ((-1) * (sqr(v(h)) * S * rho * 0.5)) * nu_Ldef(h) - piL_cl(h) + piU_cl(h) =E= 0;
 stat_d(h).. nu_Ddef(h) + ((-1) * (m * ((-1) * (v(h) * vel("x",h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * w(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
 stat_l(h).. nu_Ldef(h) + ((-1) * (m * v(h) * w(h) * (-1) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * v(h) * vel("x",h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
-stat_pos(c,h).. (-1)$(sameas(c, 'x') and sameas(h, 'h50')) + ((-1) * (2 * (pos(c,h) / r_0 - 2.5) * 1 / r_0 ** 1)) * nu_rdef(h) + nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
+stat_pos(c,h).. (-1)$(sameas(c, 'x') and sameas(h, 'h50')) + (((-1) * (2 * (pos(c,h) / r_0 - 2.5) * 1 / r_0 ** 1)) * nu_rdef(h))$(sameas(c, 'x')) + nu_pos_eqn(c,h) + ((-1) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) - piL_pos(c,h) =E= 0;
 stat_r(h).. nu_rdef(h) + ((-1) * (((-1) * (exp(((-1) * r(h))) * u_c)) - u_c * (1 - r(h)) * exp(((-1) * r(h))))) * nu_udef(h) =E= 0;
 stat_step.. ((-1) * nh) * nu_tf_eqn + sum((c,i), ((-1) * (vel(c,i) * 0.5)) * nu_pos_eqn(c,i)) + sum((c,i), ((-1) * (v_dot(c,i) * 0.5)) * nu_vel_eqn(c,i)) - piL_step =E= 0;
 stat_t_f.. nu_tf_eqn =E= 0;
 stat_u(h).. nu_udef(h) + nu_wdef(h) =E= 0;
 stat_v(h).. nu_vdef(h) + ((-1) * (0.5 * (c0 + c1 * sqr(cl(h))) * rho * S * 2 * v(h))) * nu_Ddef(h) + ((-1) * (0.5 * cl(h) * rho * S * 2 * v(h))) * nu_Ldef(h) + ((-1) * (m * (((-1) * (((-1) * l(h)) * w(h))) / sqr(v(h)) - ((-1) * (d(h) * vel("x",h))) / sqr(v(h))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * (((-1) * (l(h) * vel("x",h))) / sqr(v(h)) - ((-1) * (d(h) * w(h))) / sqr(v(h))) / sqr(m))) * nu_vy_dot_def(h) - piL_v(h) =E= 0;
-stat_v_dot(c,h).. nu_vx_dot_def(h) + ((-1) * (0.5 * step)) * nu_vel_eqn(c,h) + (((-1) * (0.5 * step)) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vy_dot_def(h) =E= 0;
-stat_vel(c,h).. ((-1) * (1 / (2 * sqrt(sqr(vel(c,h)) + sqr(w(h)))) * 2 * vel(c,h))) * nu_vdef(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * v(h) * l(h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h) + ((-1) * (0.5 * step)) * nu_pos_eqn(c,h) + (((-1) * (0.5 * step)) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vel_eqn(c,h) + ((-1) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) - nu_wdef(h) - piL_vel(c,h) =E= 0;
+stat_v_dot(c,h).. (nu_vx_dot_def(h)$(sameas(c, 'x')) + ((-1) * (0.5 * step)) * nu_vel_eqn(c,h) + (((-1) * (0.5 * step)) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vy_dot_def(h)$(sameas(c, 'y')))$(sameas(c, 'x') or ord(h) <= card(h) - 1 or sameas(c, 'y')) =E= 0;
+stat_vel(c,h).. (((-1) * (1 / (2 * sqrt(sqr(vel(c,h)) + sqr(w(h)))) * 2 * vel(c,h))) * nu_vdef(h))$(sameas(c, 'x')) + (((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vx_dot_def(h))$(sameas(c, 'x')) + (((-1) * (m * v(h) * l(h) / sqr(v(h)) / sqr(m))) * nu_vy_dot_def(h))$(sameas(c, 'x')) + ((-1) * (0.5 * step)) * nu_pos_eqn(c,h) + (((-1) * (0.5 * step)) * nu_pos_eqn(c,h+1))$(ord(h) <= card(h) - 1) + nu_vel_eqn(c,h) + ((-1) * nu_vel_eqn(c,h+1))$(ord(h) <= card(h) - 1) + ((-1) * nu_wdef(h))$(sameas(c, 'y')) - piL_vel(c,h) =E= 0;
 stat_w(h).. nu_wdef(h) + ((-1) * (1 / (2 * sqrt(sqr(vel("x",h)) + sqr(w(h)))) * 2 * w(h))) * nu_vdef(h) + ((-1) * (m * v(h) * ((-1) * l(h)) / sqr(v(h)) / sqr(m))) * nu_vx_dot_def(h) + ((-1) * (m * ((-1) * (v(h) * d(h) / sqr(v(h)))) / sqr(m))) * nu_vy_dot_def(h) =E= 0;
 
 * Lower bound complementarity equations
@@ -386,6 +386,7 @@ vel_eqn(c,i)$(ord(i) > 1).. vel(c,i) =E= vel(c,i-1) + 0.5 * step * (v_dot(c,i) +
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+v_dot.fx(c,h)$(not (sameas(c, 'x') or ord(h) <= card(h) - 1 or sameas(c, 'y'))) = 0;
 piL_pos.fx(c,h)$(not has_pos_lo(c,h)) = 0;
 piL_vel.fx(c,h)$(not has_vel_lo(c,h)) = 0;
 nu_pos_eqn.fx(c,i)$(not (ord(i) > 1)) = 0;

@@ -45,14 +45,20 @@ Scalars
     Nodmax /0/
 ;
 
+Set nlp2mcp_uel_registry / AvgNodUsd, AvgResUsd /;
+
+Parameter a(mm,nn);
+Parameter b(mm);
+Parameter cc(p,nn);
+Parameter f(p);
 ResMin = inf ;
 Resmax = 0 ;
 NodMin = inf ;
 Nodmax = 0 ;
-rep('c1','MinResUsd') = ResMin ;
-rep('c1','MaxResUsd') = ResMax ;
-rep('c1','MinNodUsd') = nodMin ;
-rep('c1','MaxNodUsd') = nodMax ;
+f(p) = uniform(0,1) ;
+cc(p,nn) = uniform(0,1) ;
+A(mm,nn) = 2 * uniform(0,1) - 1 ;
+b(mm) = sum(nn, A(mm,nn)) + 2 * uniform(0,1) ;
 
 * ============================================
 * Variables (Primal + Multipliers)

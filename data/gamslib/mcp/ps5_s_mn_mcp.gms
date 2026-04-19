@@ -126,7 +126,7 @@ Equations
 * Stationarity equations
 stat_b(i).. ((-1) * p(i)) + nu_rev(i) - piL_b(i) =E= 0;
 stat_w(i).. ((-1) * (p(i) * (-1))) - lam_pc(i) - lam_licd(i) + lam_licd(i-1)$(ord(i) > 1) - piL_w(i) =E= 0;
-stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * (0.5 * x(i) ** (-0.5))) * nu_rev(i) + theta(i) * lam_pc(i) + theta(i) * lam_licd(i) + (((-1) * theta(i-1)) * lam_licd(i-1))$(ord(i) > 1) - piL_x(i) =E= 0;
 
 * Inequality complementarity equations
 comp_licd(i)$(ord(i) <= card(i) - 1).. w(i) - theta(i) * x(i) - (w(i+1) - theta(i) * x(i+1)) =G= 0;

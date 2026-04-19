@@ -232,7 +232,7 @@ stat_cons(dr).. ((-1) * vsc) + nu_cond + sum(c, cbndl(c,dr) * lam_mbalc(c)) - pi
 stat_cropcost.. 1 + nu_acrop + lam_awcc =E= 0;
 stat_flab(tm).. ((-1) * (dpm * fwage / sqr(dpm))) * nu_alab - lam_labc(tm) - piL_flab(tm) + piU_flab(tm) =E= 0;
 stat_labcost.. 1 + nu_alab =E= 0;
-stat_lswitch(s).. ldp(s,s) * lam_landb(s) + (ldp(s,s) * lam_landb(s+1))$(ord(s) <= card(s) - 1) + (ldp(s,s) * lam_landb(s+2))$(ord(s) <= card(s) - 2) + (ldp(s,s) * lam_landb(s-1))$(ord(s) > 1) + (ldp(s,s) * lam_landb(s-2))$(ord(s) > 2) - piL_lswitch(s) =E= 0;
+stat_lswitch(s).. ldp(s,s) * lam_landb(s) + (ldp(s+1,s) * lam_landb(s+1))$(ord(s) <= card(s) - 1) + (ldp(s+2,s) * lam_landb(s+2))$(ord(s) <= card(s) - 2) + (ldp(s-1,s) * lam_landb(s-1))$(ord(s) > 1) + (ldp(s-2,s) * lam_landb(s-2))$(ord(s) > 2) - piL_lswitch(s) =E= 0;
 stat_ndev(ty).. card(ty) * phi / sqr(card(ty)) + nu_ddev(ty) - piL_ndev(ty) =E= 0;
 stat_pdev(ty).. card(ty) * phi / sqr(card(ty)) - nu_ddev(ty) - piL_pdev(ty) =E= 0;
 stat_plab.. ((-1) * pwage) * nu_alab + sum(tm, ((-1) * dpm) * lam_labc(tm)) + pwage * lam_awcc - piL_plab =E= 0;

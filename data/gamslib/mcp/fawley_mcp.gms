@@ -104,6 +104,7 @@ Variables
     nu_mbal(c)
     nu_kbal(k)
     nu_dbal(cf)
+    nu_qsb(cf,l,s)
     nu_pbal(cf,m)
     nu_drev
     nu_doper
@@ -216,6 +217,7 @@ Equations
     kbal(k)
     mbal(c)
     pbal(cf,m)
+    qsb(cf,l,s)
 ;
 
 * ============================================
@@ -228,12 +230,12 @@ Alias(cfq, cfq__);
 Alias(cr, cr__);
 
 * Stationarity equations
-stat_bq(c,cf).. (sum((cfq__,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
+stat_bq(c,cf).. (sum((cfq__,l,s), (prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + sum((cfq__,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
 stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
 stat_import(c).. (1$(ci(c)) * nu_mbal(c) + (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c))$(ci(c)) =E= 0;
-stat_ov(cf,l,s).. (((-1) * piL_ov(cf,l,s)))$(cfq(cf)) =E= 0;
+stat_ov(cf,l,s).. ((dir(l) * nu_qsb(cf,l,s))$(specs(cf,l,s)) - piL_ov(cf,l,s))$(cfq(cf)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m).. (nu_pbal(cf,m)$(cfm(cf,m)) + ((-1) * 1$(cfq(cf))) * nu_dbal(cf) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
+stat_q(cf,m).. (sum((cfq__,l,s), (((-1) * (specs(cfq__,l,s) * 1$(ms(m,s)))) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + nu_pbal(cf,m)$(cfm(cf,m)) + (((-1) * 1$(cfq(cf))) * nu_dbal(cf))$(sameas(m, 'weight')) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
 stat_rb(cf,r).. (((-1) * piL_rb(cf,r)))$(cfr(cf)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
@@ -262,6 +264,7 @@ comp_up_cap(k)$(kp(k) < inf).. kp(k) - cap(k) =G= 0;
 mbal(c).. u(c)$(cr(c)) + sum(p, ap(c,p) * z(p)) + sum(tr, at(c,tr) * trans(tr)) + import(c)$(ci(c)) =E= sum(cfq$(bposs(cfq,c)), bq(c,cfq)) + invent(c) + sum((cfr,r), recipes(cfr,c,r) * rb(cfr,r));
 kbal(k).. cap(k) =E= sum(p, bp(k,p) * z(p));
 dbal(cf).. sales(cf) =E= q(cf,"weight")$(cfq(cf)) + sum((c,r), recipes(cf,c,r) * rb(cf,r))$(cfr(cf));
+qsb(cfq,l,s)$(specs(cfq,l,s)).. sum(c$(bposs(cfq,c)), prop(c,s) * sum(m$(ms(m,s)), char(c,m) * bq(c,cfq))) + dir(l) * ov(cfq,l,s) =E= sum(m$(ms(m,s)), specs(cfq,l,s) * q(cfq,m));
 pbal(cfq,m)$(cfm(cfq,m)).. q(cfq,m) =E= sum(c$(bposs(cfq,c)), char(c,m) * bq(c,cfq));
 drev.. revenue =E= sum(cf, ddat(cf,"price") * sales(cf));
 doper.. recurrent =E= sum(k, oc(k) * cap(k)) + ocpb * q("motor-gas","volume");
@@ -291,7 +294,12 @@ u.fx(c)$(not (cr(c))) = 0;
 piL_u.fx(c)$(not (cr(c))) = 0;
 piU_cap.fx(k)$(not (kp(k) < inf)) = 0;
 nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
+nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
+nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
+
+* Fix multipliers for empty equation instances (no variables)
+nu_mbal.fx('vacuum-res') = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -330,6 +338,7 @@ Model mcp_model /
     kbal.nu_kbal,
     mbal.nu_mbal,
     pbal.nu_pbal,
+    qsb.nu_qsb,
     comp_lo_bq.piL_bq,
     comp_lo_cap.piL_cap,
     comp_lo_import.piL_import,

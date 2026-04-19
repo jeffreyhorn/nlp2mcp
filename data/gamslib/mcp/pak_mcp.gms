@@ -195,7 +195,7 @@ stat_ks(te,j).. ((-1) * nu_kbal(te,j)) + nu_kbal(te-1,j)$(ord(te) > 1) + nu_ks_f
 stat_m(t).. ((-1) * nu_tgap(t)) - lam_impl(t) =E= 0;
 stat_s(t).. ((-1) * nu_invd(t)) + lam_savl(t) - piL_s(t) =E= 0;
 stat_ti(te).. nu_invt(te) + nu_invd(te) - nu_incd(te) + ((-1) * (1 + beta)) * lam_invu(te) + lam_invu(te-1)$(ord(te) > 1) + lam_invl(te) + ((-1) * lam_invl(te-1))$(ord(te) > 1) + mi * lam_impl(te) =E= 0;
-stat_v(t,j).. ((-1) * nu_gnpd(t)) + nu_tgap(t) + lam_capb(t,j) - piL_v(t,j) =E= 0;
+stat_v(t,j).. ((-1) * nu_gnpd(t)) + nu_tgap(t)$(sameas(j, 'traded')) + lam_capb(t,j) - piL_v(t,j) =E= 0;
 
 * Inequality complementarity equations
 comp_capb(t,j).. ((-1) * (v(t,j) - (vb(j) + 1 / k(j) * ks(t,j)))) =G= 0;

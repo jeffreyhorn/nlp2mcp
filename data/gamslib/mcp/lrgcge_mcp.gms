@@ -440,7 +440,7 @@ stat_q(i).. nu_eqpqs(i) + ((-1) * ((gamma(i) ** eta(i) * deltam(i) * pq(i) / ((1
 stat_sg.. sum(i, ((-1) * (pq(i) * mu(i) * (-1) / sqr(pq(i)))) * nu_eqXg(i)) + sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSg - piL_sg =E= 0;
 stat_sp.. sum(i, ((-1) * (pq(i) * lambda(i) / sqr(pq(i)))) * nu_eqXv(i)) + nu_eqSp + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_sp =E= 0;
 stat_td.. nu_eqTd + sum(i, ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i)) + ((-1) * ssg) * nu_eqSg + sum(i, ((-1) * (pq(i) * alpha(i) * (-1) / sqr(pq(i)))) * nu_eqXp(i)) - piL_td =E= 0;
-stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i-1))$(ord(i) > 1) + ((-1) * ssg) * nu_eqSg - piL_tm(i) =E= 0;
+stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + (((-1) * (pq(i+1) * mu(i+1) / sqr(pq(i+1)))) * nu_eqXg(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (pq(i-1) * mu(i-1) / sqr(pq(i-1)))) * nu_eqXg(i-1))$(ord(i) > 1) + ((-1) * ssg) * nu_eqSg - piL_tm(i) =E= 0;
 stat_tz(j).. nu_eqTz(j) + ((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j+1))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j-1))$(ord(j) > 1) + ((-1) * ssg) * nu_eqSg - piL_tz(j) =E= 0;
 stat_x(i,j).. nu_eqX(i,j) - nu_eqpqd(i) - piL_x(i,j) =E= 0;
 stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;

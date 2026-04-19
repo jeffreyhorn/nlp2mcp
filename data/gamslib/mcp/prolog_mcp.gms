@@ -160,10 +160,10 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_p(i).. (((-1) * sum(h, x(i,h))))$(g(i)) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(t, ((-1) * a(i,i)) * lam_mp(i,t)) + lam_mp(i) - piL_p(i) =E= 0;
-stat_q(i,t).. ((-1) * (1 - a(i,i))) * lam_cb(i) + ((a(i,i) * lam_cb(i+1))$(ord(i) <= card(i) - 1))$(ord(t) = 1) + ((a(i,i) * lam_cb(i+2))$(ord(i) <= card(i) - 2))$(ord(t) = 2) + ((a(i,i) * lam_cb(i-1))$(ord(i) > 1))$(ord(t) = 1) + ((a(i,i) * lam_cb(i-2))$(ord(i) > 2))$(ord(t) = 2) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
+stat_p(i).. (((-1) * sum(h, x(i,h))))$(g(i)) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(t, ((-1) * a(i,i+1)) * lam_mp(i,t)) + sum(t, lam_mp(i,t)) - piL_p(i) =E= 0;
+stat_q(i,t).. ((-1) * (1 - a(i,i))) * lam_cb(i) + (((a(i+1,i) * lam_cb(i+1))$(ord(i) <= card(i) - 1))$(ord(t) = 1))$(sameas(i, 'food') or sameas(i, 'h-industry')) + (((a(i+2,i) * lam_cb(i+2))$(ord(i) <= card(i) - 2))$(ord(t) = 2))$(sameas(i, 'food')) + (((a(i-1,i) * lam_cb(i-1))$(ord(i) > 1))$(ord(t) = 1))$(sameas(i, 'h-industry') or sameas(i, 'l-industry')) + (((a(i-2,i) * lam_cb(i-2))$(ord(i) > 2))$(ord(t) = 2))$(sameas(i, 'l-industry')) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
 stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) - piL_r(k) =E= 0;
-stat_x(i,h).. (((-1) * p(i)))$(g(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + p(i) * lam_bc(h) - piL_x(i,h) =E= 0;
+stat_x(i,h).. (((-1) * p(i)))$(g(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + (p(i) * lam_bc(h))$(g(i)) - piL_x(i,h) =E= 0;
 stat_y(h).. sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
 
 * Inequality complementarity equations
@@ -193,6 +193,10 @@ zdef.. z =E= sum((g,h), x(g,h) * p(g)) - sum(k, b(k) * r(k));
 * fixed for excluded instances to satisfy MCP matching.
 
 lam_dn.fx(i,h)$(not (g(i))) = 0;
+
+* Fix multipliers for empty inequality instances (no variables)
+lam_rc.fx('capital') = 0;
+lam_rc.fx('labor') = 0;
 
 * ============================================
 * Model MCP Declaration

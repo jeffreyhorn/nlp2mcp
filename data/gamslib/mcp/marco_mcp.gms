@@ -78,6 +78,7 @@ Positive Variables
     lam_mb(cr,ci)
     lam_cc(m)
     lam_lcp(cr)
+    lam_qlb(cf,q)
     lam_qub(cf,q)
     piL_z(cr,p)
     piL_x(cf)
@@ -127,6 +128,7 @@ Equations
     comp_lcp(cr)
     comp_mb(cr,ci)
     comp_mbr(cr)
+    comp_qlb(cf,q)
     comp_qub(cf,q)
     comp_lo_u(cr)
     comp_lo_ui(cr,ci)
@@ -150,8 +152,8 @@ stat_phir.. -1 + nu_arev =E= 0;
 stat_phiw.. 1 + nu_aoper =E= 0;
 stat_u(cr).. ((-1) * pr(cr)) * nu_amat - lam_mbr(cr) + lam_lcp(cr) - piL_u(cr) =E= 0;
 stat_ui(cr,ci).. (((-1) * 1$(cd(ci))) * lam_mb(cr,ci) - piL_ui(cr,ci))$(cd(ci)) =E= 0;
-stat_w(cr,ci,cf).. (((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) + sum(q, (atc(cr,ci,q) * 1$(bp(cf,ci)) * lam_qub(cf,q))$(qs("upper",cf,q))) - piL_w(cr,ci,cf))$(bp(cf,ci)) =E= 0;
-stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(q, (((-1) * qs("upper",cf,q)) * lam_qub(cf,q))$(qs("upper",cf,q))) - piL_x(cf) =E= 0;
+stat_w(cr,ci,cf).. (((-1) * 1$(bp(cf,ci))) * nu_bb(cf) + 1$(bp(cf,ci)) * lam_mb(cr,ci) + sum(q, (atc(cr,ci,q) * 1$(bp(cf,ci)) * lam_qub(cf,q))$(qs("upper",cf,q))) + sum(q, (((-1) * (atc(cr,ci,q) * 1$(bp(cf,ci)))) * lam_qlb(cf,q))$(qs("lower",cf,q)))$(sameas(cf, 'premium') or sameas(cf, 'regular')) - piL_w(cr,ci,cf))$(bp(cf,ci)) =E= 0;
+stat_x(cf).. nu_bb(cf) + ((-1) * pf(cf)) * nu_arev + sum(q, (((-1) * qs("upper",cf,q)) * lam_qub(cf,q))$(qs("upper",cf,q))) + sum(q, (qs("lower",cf,q) * lam_qlb(cf,q))$(qs("lower",cf,q))) - piL_x(cf) =E= 0;
 stat_z(cr,p).. ((-1) * op(p)) * nu_aoper + ((-1) * a(cr,cr,p)) * lam_mbr(cr) + sum(ci, ((-1) * a(cr,cr,p)) * lam_mb(cr,ci)) + sum(m, b(m,p) * lam_cc(m)) - piL_z(cr,p) =E= 0;
 
 * Inequality complementarity equations
@@ -159,6 +161,7 @@ comp_cc(m).. ((-1) * (sum(p, b(m,p) * sum(cr, z(cr,p))) - k(m))) =G= 0;
 comp_lcp(cr).. ((-1) * (u(cr) - ur(cr))) =G= 0;
 comp_mb(cr,ci).. sum(p, a(cr,ci,p) * z(cr,p)) + ui(cr,ci)$(cd(ci)) - sum(cf$(bp(cf,ci)), w(cr,ci,cf)) =G= 0;
 comp_mbr(cr).. sum(p, a(cr,"crude",p) * z(cr,p)) + u(cr) =G= 0;
+comp_qlb(cf,q)$(qs("lower",cf,q)).. sum((cr,ci)$(bp(cf,ci)), atc(cr,ci,q) * w(cr,ci,cf)) - qs("lower",cf,q) * x(cf) =G= 0;
 comp_qub(cf,q)$(qs("upper",cf,q)).. ((-1) * (sum((cr,ci)$(bp(cf,ci)), atc(cr,ci,q) * w(cr,ci,cf)) - qs("upper",cf,q) * x(cf))) =G= 0;
 
 * Lower bound complementarity equations
@@ -187,7 +190,11 @@ ui.fx(cr,ci)$(not (cd(ci))) = 0;
 piL_ui.fx(cr,ci)$(not (cd(ci))) = 0;
 w.fx(cr,ci,cf)$(not (bp(cf,ci))) = 0;
 piL_w.fx(cr,ci,cf)$(not (bp(cf,ci))) = 0;
+lam_qlb.fx(cf,q)$(not (qs("lower",cf,q))) = 0;
 lam_qub.fx(cf,q)$(not (qs("upper",cf,q))) = 0;
+
+* Fix multipliers for empty inequality instances (no variables)
+lam_cc.fx('hydro') = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -215,6 +222,7 @@ Model mcp_model /
     comp_lcp.lam_lcp,
     comp_mb.lam_mb,
     comp_mbr.lam_mbr,
+    comp_qlb.lam_qlb,
     comp_qub.lam_qub,
     amat.nu_amat,
     aoper.nu_aoper,

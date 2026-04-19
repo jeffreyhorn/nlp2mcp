@@ -416,13 +416,66 @@ This rules out the critical false-positive classes:
 
 ### Day 13 — Final Pipeline Retest
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
+**Branch:** `sprint24-day13-final-retest`
 
 | Task | Status |
 |---|---|
-| Final full pipeline (PR6) | |
-| Acceptance criteria evaluation | |
-| model_infeasible final accounting (PR7) | |
+| Final full pipeline (PR6) | ✅ `scripts/gamslib/run_full_test.py --quiet` — 143/143 models processed in 7887.9s (~2h11m) |
+| Acceptance criteria evaluation | ✅ 6 of 8 targets MET (see table below) |
+| model_infeasible final accounting (PR7) | ✅ 8 infeasible / 14 baseline → 6 net recoveries (Δ = -6) |
+| `make test` reference | ✅ 4,522 passed (from Day 12; unchanged — no code edits Day 13) |
+
+#### Final Definitive Metrics (per PR6, PR8)
+
+Pipeline scope: **143 in-scope models** after v2.2.1 exclusions (MINLP 14, legacy 7, multi-solve driver 2 = 23 total excluded from 219 corpus entries; `gamslib_status.json` reports 196 "in-scope" including models that parse but aren't eligible for the pipeline's convexity-gated run-loop, of which 143 are the convex-continuous set the runner iterates).
+
+| Metric | Baseline | Target | Stretch | **Actual** | Status |
+|---|---|---|---|---|---|
+| Parse | 147/147 (100%) | ≥ 147/147 | — | **143/143 (100%)** | ✅ MET (scope reduced from 147→143 by Sprint 24 exclusions; 100% on current scope) |
+| Translate | 140/147 (95.2%) | ≥ 143/147 (97%) | ≥ 145/147 | **130/143 (90.9%)** | ❌ NOT MET — 10 timeouts + 3 internal errors held the line below target |
+| Solve | 86 | ≥ 95 | ≥ 100 | **99** | ✅ MET |
+| Match | 49 | ≥ 55 | ≥ 60 | **54** | ❌ NOT MET (1 short of target) |
+| path_syntax_error | 23 | ≤ 15 | ≤ 12 | **6** | ✅ STRETCH MET (huge improvement from #1264/#1265 + alias fixes) |
+| path_solve_terminated | 12 | ≤ 10 | ≤ 8 | **10** | ✅ MET (target exactly) |
+| model_infeasible | 14 | ≤ 8 | ≤ 6 | **8** | ✅ MET (target exactly; stretch ≤6 NOT met). Baseline = 14, the triage-scope count from PLAN.md (the original PLAN row listed "11 (pipeline) / 14 (triage)"; Sprint 24's Δ accounting uses the triage count 14 because several baseline infeasibles were outside the 147-model pipeline scope but became pipeline-in-scope after the Sprint 24 exclusions reshaped the scope) |
+| Tests | 4,364 | ≥ 4,400 | — | **4,522** | ✅ MET (+158) |
+
+**Scoring: 6 / 8 targets MET (75%).**
+
+#### model_infeasible Final Accounting (per PR7)
+
+Absolute count: **8** (down from baseline **14** — Δ = −6 net improvement).
+
+Current 8 infeasible models:
+
+| Model | Convexity | Error | Category |
+|---|---|---|---|
+| agreste | verified_convex | status 5 (locally infeasible) | B — PATH convergence |
+| camshape | likely_convex | status 5 | alias-related (#1147 / #1162) |
+| cesam | likely_convex | status 4 (globally infeasible) | alias-related |
+| chain | likely_convex | status 5 | B — PATH convergence |
+| fawley | verified_convex | status 5 | B — PATH convergence |
+| korcge | likely_convex | status 5 | alias-related |
+| lnts | likely_convex | status 4 | B — PATH convergence |
+| robustlp | verified_convex | status 5 | B — near-feasible (residual ~3.6e-04) |
+
+**Gross fixes (baseline model_infeasible → now something else):** 6
+**Gross influx (baseline something else → now model_infeasible):** 0 (no net negative transitions — significantly better than the PR10 50–60% influx budget projected)
+**Net improvement:** −6
+
+Per-category outlook for Sprint 25:
+- **Alias-related (3):** camshape, cesam, korcge — tracked under alias-differentiation issues (#1138–#1147, #1150), expected to recover once alias-AD carryforward lands.
+- **PATH convergence / Category B (5):** agreste, chain, fawley, lnts, robustlp — all noted in KU-18 as likely requiring warm-start or PATH-parameter changes rather than a code fix. Deferred to Sprint 25.
+
+#### Error Influx Summary (per PR10 budget assessment)
+
+Sprint 24 influx was lower than the 50–60% budget: alias differentiation and path_syntax_error reductions did NOT produce the expected 2–3 new solve errors. path_syntax_error dropped from 23 → 6 (Δ = −17), path_solve_terminated from 12 → 10 (Δ = −2), model_infeasible from 14 → 8 (Δ = −6). All three error categories net-decreased, so the PR10 influx forecast over-estimated risk for this sprint.
+
+#### Remaining Gaps vs Targets
+
+- **Translate 130/143 (90.9%) vs target ≥97% (≥139/143 on the 143-scope, originally expressed as ≥143/147 on the baseline scope):** Δ = −9 models absolute / −6.1 percentage points below target. Dominated by 10 timeouts (`gastrans` MINLP excluded; remaining 10 tracked via #1169 lop, #1185 mexls, #1192 gtm, plus 7 others like iswnm, sarf, srpchase, nebrazil, ganges, gangesx, ferts) + 3 internal errors. Sprint 25 translation-timeout work (see KU-19, KU-20, and issues #1169 / #1185 / #1192) is the natural continuation.
+- **Match 54 (−1 from target 55):** one match short. The 11 open alias-differentiation issues relabeled `sprint-25` (#1138–#1147, #1150) remain the highest-leverage path to the next match gains.
 
 ---
 
