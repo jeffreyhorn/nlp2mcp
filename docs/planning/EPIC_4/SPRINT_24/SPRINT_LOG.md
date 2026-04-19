@@ -438,7 +438,7 @@ Pipeline scope: **143 in-scope models** after v2.2.1 exclusions (MINLP 14, legac
 | Match | 49 | ≥ 55 | ≥ 60 | **54** | ❌ NOT MET (1 short of target) |
 | path_syntax_error | 23 | ≤ 15 | ≤ 12 | **6** | ✅ STRETCH MET (huge improvement from #1264/#1265 + alias fixes) |
 | path_solve_terminated | 12 | ≤ 10 | ≤ 8 | **10** | ✅ MET (target exactly) |
-| model_infeasible | 11 / 14 | ≤ 8 | ≤ 6 | **8** | ✅ MET (target exactly; stretch ≤6 NOT met) |
+| model_infeasible | 14 | ≤ 8 | ≤ 6 | **8** | ✅ MET (target exactly; stretch ≤6 NOT met). Baseline = 14, the triage-scope count from PLAN.md (the original PLAN row listed "11 (pipeline) / 14 (triage)"; Sprint 24's Δ accounting uses the triage count 14 because several baseline infeasibles were outside the 147-model pipeline scope but became pipeline-in-scope after the Sprint 24 exclusions reshaped the scope) |
 | Tests | 4,364 | ≥ 4,400 | — | **4,522** | ✅ MET (+158) |
 
 **Scoring: 6 / 8 targets MET (75%).**
