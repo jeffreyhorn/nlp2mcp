@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 24 Summary - 2026-04-19
+
+**Duration:** 15 days (Day 0 – Day 14) | **6/8 acceptance criteria met**
+
+#### Metrics (Baseline → Final, 143-scope; pipeline scope narrowed from 147 via v2.2.1 exclusions)
+- **Parse:** 147/147 → 143/143 (100% of current scope) | **Translate:** 140/147 → 135/143 (94.4%, under doubled-timeout re-retest)
+- **Solve:** 86 → 99 (+13) | **Match:** 49 → 54 (+5) | **Tests:** 4,364 → 4,522 (+158)
+- **path_syntax_error:** 23 → 11 (−12) | **path_solve_terminated:** 12 → 10 (−2) | **model_infeasible:** 14 → 8 (−6 net; 6 gross fixes, 0 gross influx — dramatically under the PR10 50–60% influx budget)
+
+#### Key Changes
+- Multi-solve driver gate — refuses Dantzig–Wolfe / column-generation scripts pre-translation; excludes `decomp` + `danwolfe` cleanly with a new exit code `EXIT_MULTI_SOLVE_OUT_OF_SCOPE = 4`, `--allow-multi-solve` dev escape hatch, and v2.2.1 schema taxonomy entry (PR #1265)
+- `partssupply` `$ifThen` / `dollar_cond` / `bracket_expr` / `brace_expr` / `yes_cond` / `no_cond` emitter handlers added to the substituting dispatcher (PR #1264)
+- `turkey`, `china`, `feedtray`, `fawley`, `harker`, `rocket` per-model fixes (PRs #1257–#1263)
+- Lark 1.1.9 vs 1.2+ grammar-ambiguity root-cause fix — defensive `_extract_model_refs` rewrite in `src/ir/parser.py` unblocks CI green for the first time in 5+ main merges (PR #1267)
+- Schema v2.2.0 → v2.2.1 migration with new exclusion-reason keyword `multi_solve_driver_out_of_scope` (`scripts/gamslib/migrate_schema_v2.2.1.py`)
+- Pipeline timeouts doubled (translate 300s → 600s, solve 60s → 120s, compile-check 30s → 60s); 5 of 10 translate timeouts recovered — all 5 to path_syntax_error due to latent emitter bugs (PR #1274 + Day 13 Addendum PR #1282)
+
+#### Doubled-Timeout Re-Retest Finding (Day 13 Addendum)
+The re-retest under doubled timeouts produced **1:1 translate recovery → path_syntax_error influx**. Five previously-timing-out models (`ferts`, `ganges`, `gangesx`, `clearlak`, `turkpow`) now translate but all 5 hit PATH compile failure — evidence that these were timeout-excluded not because of near-the-edge tractability but because latent emitter/stationarity bugs slow their translation AND produce unsolvable MCPs when they do finish. Five models (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`) still time out at 600s and are genuinely intractable at current scale.
+
+#### Sprint 24 Known Issues (Tracked for Sprint 25, labeled `sprint-25`)
+- Alias-differentiation carryforward: #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150 (11 issues, ~20 models)
+- model_infeasible carryforward: #1177 (chenery)
+- Translation timeouts: #1169 (lop), #1185 (mexls), #1192 (gtm)
+- New emitter / translator bugs surfaced by Day 13 reviews: #1268 (decomp `bound_scalar` emitter), #1269 (decomp KKT assembly multi-model), #1270 (saras-style multi-solve gate extension), #1271 (dispatcher refactor), #1275 (presolve absolute $include paths), #1276 (fawley duplicate `.fx`), #1277 (twocge stat_tz mixed offsets), #1278 (twocge `ord(r) <> ord(r)` tautology), #1279 (robustlp `defobj(i)` scalar-equation widening), #1280 (mathopt4 unquoted UELs with dots), #1281 (lmp2 duplicate Parameter), #1283 (non-deterministic multi-row-label table parsing)
+
 ### Sprint 24 Preparation
 
 - Complete Sprint 24 Known Unknowns list (Prep Task 1): 26 unknowns across 5 categories + 2 cross-cutting KUs
