@@ -474,7 +474,7 @@ Sprint 24 influx was lower than the 50–60% budget: alias differentiation and p
 
 #### Remaining Gaps vs Targets
 
-- **Translate 130/143 (−13 from target 143/147):** dominated by 10 timeouts (`gastrans` MINLP excluded; remaining 10 tracked via #1169 lop, #1185 mexls, #1192 gtm, plus 7 others like iswnm, sarf, srpchase, nebrazil, ganges, gangesx, ferts) + 3 internal errors. Sprint 25 translation-timeout work (see KU-19, KU-20, and issues #1169 / #1185 / #1192) is the natural continuation.
+- **Translate 130/143 (90.9%) vs target ≥97% (≥139/143 on the 143-scope, originally expressed as ≥143/147 on the baseline scope):** Δ = −9 models absolute / −6.1 percentage points below target. Dominated by 10 timeouts (`gastrans` MINLP excluded; remaining 10 tracked via #1169 lop, #1185 mexls, #1192 gtm, plus 7 others like iswnm, sarf, srpchase, nebrazil, ganges, gangesx, ferts) + 3 internal errors. Sprint 25 translation-timeout work (see KU-19, KU-20, and issues #1169 / #1185 / #1192) is the natural continuation.
 - **Match 54 (−1 from target 55):** one match short. The 11 open alias-differentiation issues relabeled `sprint-25` (#1138–#1147, #1150) remain the highest-leverage path to the next match gains.
 
 ---
