@@ -153,6 +153,10 @@ Model mcp_model /
 * Solve Statement
 * ============================================
 
+
+* Clear NA parameter values to prevent evaluation errors
+d(j)$(mapval(d(j)) = mapval(na)) = 1;
+
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;

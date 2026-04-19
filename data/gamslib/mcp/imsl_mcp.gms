@@ -40,6 +40,8 @@ Scalars
     dualdev /0/
 ;
 
+Set nlp2mcp_uel_registry / dev, 'power-ser', 'sinus-fun' /;
+
 t(n) = (ord(n) - 1) / (card(n) - 1);
 k = (card(n) - 1) / (card(m) - 1);
 y(n) = sum(l, -1 ** (ord(l) - 1) * (t(n) * pi) ** (2 * ord(l) - 1) / prod(r$(ord(r) <= 2 * ord(l) - 1), ord(r)));

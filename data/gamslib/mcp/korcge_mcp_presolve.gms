@@ -636,6 +636,65 @@ Model mcp_model /
 /;
 
 * ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/korcge.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_pmdef.l(it) = pmdef.m(it);
+nu_pedef.l(it) = pedef.m(it);
+nu_absorption.l(i) = absorption.m(i);
+nu_sales.l(i) = sales.m(i);
+nu_actp.l(i) = actp.m(i);
+nu_pkdef.l(i) = pkdef.m(i);
+nu_pindexdef.l = pindexdef.m;
+nu_activity.l(i) = activity.m(i);
+nu_profitmax.l(i,lc) = profitmax.m(i,lc);
+nu_lmequil.l(lc) = lmequil.m(lc);
+nu_cet.l(it) = cet.m(it);
+nu_esupply.l(it) = esupply.m(it);
+nu_armington.l(it) = armington.m(it);
+nu_costmin.l(it) = costmin.m(it);
+nu_xxdsn.l(in) = xxdsn.m(in);
+nu_xsn.l(in) = xsn.m(in);
+nu_inteq.l(i) = inteq.m(i);
+nu_dsteq.l(i) = dsteq.m(i);
+nu_cdeq.l(i) = cdeq.m(i);
+nu_gdp.l = gdp.m;
+nu_labory.l = labory.m;
+nu_capitaly.l = capitaly.m;
+nu_hhsaveq.l = hhsaveq.m;
+nu_greq.l = greq.m;
+nu_gruse.l = gruse.m;
+nu_gdeq.l(i) = gdeq.m(i);
+nu_tariffdef.l = tariffdef.m;
+nu_indtaxdef.l = indtaxdef.m;
+nu_netsubdef.l = netsubdef.m;
+nu_premium.l = premium.m;
+nu_hhtaxdef.l = hhtaxdef.m;
+nu_depreq.l = depreq.m;
+nu_totsav.l = totsav.m;
+nu_prodinv.l(i) = prodinv.m(i);
+nu_ieq.l(i) = ieq.m(i);
+nu_caeq.l = caeq.m;
+nu_equil.l(i) = equil.m(i);
+
+* Transfer variable marginals to bound multipliers
+piL_pd.l(i)$(abs(pd.l(i) - pd.lo(i)) < 1e-6 and pd.m(i) > 0) = pd.m(i);
+piL_pk.l(i)$(abs(pk.l(i) - pk.lo(i)) < 1e-6 and pk.m(i) > 0) = pk.m(i);
+piL_px.l(i)$(abs(px.l(i) - px.lo(i)) < 1e-6 and px.m(i) > 0) = px.m(i);
+piL_p.l(i)$(abs(p.l(i) - p.lo(i)) < 1e-6 and p.m(i) > 0) = p.m(i);
+piL_x.l(i)$(abs(x.l(i) - x.lo(i)) < 1e-6 and x.m(i) > 0) = x.m(i);
+piL_xd.l(i)$(abs(xd.l(i) - xd.lo(i)) < 1e-6 and xd.m(i) > 0) = xd.m(i);
+piL_wa.l(lc)$(abs(wa.l(lc) - wa.lo(lc)) < 1e-6 and wa.m(lc) > 0) = wa.m(lc);
+piL_l.l(i,lc)$(abs(l.l(i,lc) - l.lo(i,lc)) < 1e-6 and l.m(i,lc) > 0) = l.m(i,lc);
+piL_int.l(i)$(abs(int.l(i) - int.lo(i)) < 1e-6 and int.m(i) > 0) = int.m(i);
+piL_y.l$(abs(y.l - y.lo) < 1e-6 and y.m > 0) = y.m;
+
+* ============================================
 * Solve Statement
 * ============================================
 

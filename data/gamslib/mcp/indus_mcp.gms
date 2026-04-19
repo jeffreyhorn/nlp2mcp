@@ -137,7 +137,7 @@ Parameters
     wpara1(*,*,m) /pevap.'poly-17+19'.jan 0.207, pevap.'poly-17+19'.feb 0.317, pevap.'poly-17+19'.mar 0.544, pevap.'poly-17+19'.apr 0.78, pevap.'poly-17+19'.may 0.977, pevap.'poly-17+19'.jun 1.111, pevap.'poly-17+19'.jul 1.026, pevap.'poly-17+19'.aug 0.913, pevap.'poly-17+19'.sep 0.799, pevap.'poly-17+19'.oct 0.556, pevap.'poly-17+19'.nov 0.336, pevap.'poly-17+19'.dec 0.439, pevap.'poly-18'.jan 0.2, pevap.'poly-18'.feb 0.314, pevap.'poly-18'.mar 0.529, pevap.'poly-18'.apr 0.771, pevap.'poly-18'.may 0.968, pevap.'poly-18'.jun 1.112, pevap.'poly-18'.jul 1.026, pevap.'poly-18'.aug 0.913, pevap.'poly-18'.sep 0.8, pevap.'poly-18'.oct 0.543, pevap.'poly-18'.nov 0.329, pevap.'poly-18'.dec 0.457, rain.'poly-17+19'.jan 21.51, rain.'poly-17+19'.feb 24.76, rain.'poly-17+19'.mar 29.32, rain.'poly-17+19'.apr 18.24, rain.'poly-17+19'.may 13.69, rain.'poly-17+19'.jun 18.24, rain.'poly-17+19'.jul 171.3, rain.'poly-17+19'.aug 143.3, rain.'poly-17+19'.sep 14.99, rain.'poly-17+19'.oct 0.978, rain.'poly-17+19'.nov 10.43, rain.'poly-17+19'.dec 11.73, rain.'poly-18'.jan 9.96, rain.'poly-18'.feb 11.31, rain.'poly-18'.mar 13.12, rain.'poly-18'.apr 8.15, rain.'poly-18'.may 6.34, rain.'poly-18'.jun 8.15, rain.'poly-18'.jul 75.12, rain.'poly-18'.aug 63.8, rain.'poly-18'.sep 6.79, rain.'poly-18'.oct 0.453, rain.'poly-18'.nov 4.98, rain.'poly-18'.dec 5.43, rivseep.'poly-17+19'.jan 1000, rivseep.'poly-17+19'.feb 1000, rivseep.'poly-17+19'.mar 1000, rivseep.'poly-17+19'.apr 1000, rivseep.'poly-17+19'.aug 2600, rivseep.'poly-17+19'.sep 4000, rivseep.'poly-17+19'.oct 5000, rivseep.'poly-17+19'.nov 4100, rivseep.'poly-17+19'.dec 2000/
     areac(g,*) /'poly-17+19'.twg 227000, 'poly-17+19'.trg1 274000, 'poly-17+19'.at 1173000, 'poly-17+19'.alg 862665.2, 'poly-17+19'.sra 511000, 'poly-17+19'.scoeff 0.25, 'poly-18'.trg1 117000, 'poly-18'.at 543000, 'poly-18'.alg 369713.6, 'poly-18'.sra 392000, 'poly-18'.scoeff 0.25/
     wpara(g,*) /'poly-17+19'.wamb 2624, 'poly-17+19'.wadm 2464, 'poly-17+19'.factor 3.4366, 'poly-17+19'.factor1 2.4335, 'poly-17+19'.mb 800, 'poly-17+19'.dm 542, 'poly-18'.wamb 46, 'poly-18'.wadm 452, 'poly-18'.factor 3.9044, 'poly-18'.factor1 9.0671, 'poly-18'.mb 201, 'poly-18'.dm 201/
-    wpara3(*,*,m) /zeta.wtrcrs.jan -0.075, zeta.wtrcrs.feb -0.075, zeta.wtrcrs.mar -0.075, zeta.wtrcrs.apr -0.0025, zeta.wtrcrs.jun 0.07, zeta.wtrcrs.jul 0.07, zeta.wtrcrs.aug 0.07, zeta.wtrcrs.sep -0.0025, zeta.wtrcrs.oct -0.075, zeta.wtrcrs.nov -0.075, zeta.wtrcrs.dec -0.075, zeta.fld.jan -0.048, zeta.fld.feb -0.048, zeta.fld.mar -0.048, zeta.fld.apr -0.0063, zeta.fld.jun 0.035, zeta.fld.jul 0.035, zeta.fld.aug 0.035, zeta.fld.sep -0.0063, zeta.fld.oct -0.048, zeta.fld.nov -0.048, zeta.fld.dec -0.048, gamma.wtrcrs.feb 0.025, gamma.wtrcrs.mar 0.025, gamma.wtrcrs.apr 0.025, gamma.wtrcrs.may 0.0525, gamma.wtrcrs.jun 0.08, gamma.wtrcrs.jul 0.08, gamma.wtrcrs.aug 0.08, gamma.wtrcrs.sep 0.0525, gamma.wtrcrs.oct 0.025, gamma.wtrcrs.nov 0.025, gamma.wtrcrs.dec 0.025, gamma.fld.feb 0.0475, gamma.fld.mar 0.0475, gamma.fld.apr 0.0475, gamma.fld.may 0.0563, gamma.fld.jun 0.065, gamma.fld.jul 0.065, gamma.fld.aug 0.065, gamma.fld.sep 0.0563, gamma.fld.oct 0.0475, gamma.fld.nov 0.0475, gamma.fld.dec 0.0475, hc.'poly-17+19'.jan 290.1, hc.'poly-17+19'.feb 290.2, hc.'poly-17+19'.mar 290.2, hc.'poly-17+19'.apr 290.6, hc.'poly-17+19'.may 291.5, hc.'poly-17+19'.jun 292, hc.'poly-17+19'.jul 292.3, hc.'poly-17+19'.aug 292.2, hc.'poly-17+19'.sep 292, hc.'poly-17+19'.oct 291.5, hc.'poly-17+19'.nov 290.6, hc.'poly-17+19'.dec 290.1, hc.'poly-18'.jan 285.1, hc.'poly-18'.feb 285.1, hc.'poly-18'.mar 285.2, hc.'poly-18'.apr 285.6, hc.'poly-18'.may 286.4, hc.'poly-18'.jun 286.9, hc.'poly-18'.jul 287.2, hc.'poly-18'.aug 287, hc.'poly-18'.sep 286.9, hc.'poly-18'.oct 286.4, hc.'poly-18'.nov 285.5, hc.'poly-18'.dec 285.1, cfw.'poly-17+19'.jan 4, cfw.'poly-17+19'.feb 4, cfw.'poly-17+19'.mar 4, cfw.'poly-17+19'.apr 4, cfw.'poly-17+19'.may 5, cfw.'poly-17+19'.jun 6, cfw.'poly-17+19'.jul 6, cfw.'poly-17+19'.aug 6, cfw.'poly-17+19'.sep 5, cfw.'poly-17+19'.oct 4, cfw.'poly-17+19'.nov 4, cfw.'poly-17+19'.dec 4, cfw.'poly-18'.jan 4, cfw.'poly-18'.feb 4, cfw.'poly-18'.mar 4, cfw.'poly-18'.apr 4, cfw.'poly-18'.may 5, cfw.'poly-18'.jun 6, cfw.'poly-18'.jul 6, cfw.'poly-18'.aug 6, cfw.'poly-18'.sep 5, cfw.'poly-18'.oct 4, cfw.'poly-18'.nov 4, cfw.'poly-18'.dec 4/
+    wpara3(*,*,m) /zeta.wtrcrs.jan -0.075, zeta.wtrcrs.feb -0.075, zeta.wtrcrs.mar -0.075, zeta.wtrcrs.apr -0.075, zeta.wtrcrs.may -0.0025, zeta.wtrcrs.jun 0.07, zeta.wtrcrs.jul 0.07, zeta.wtrcrs.aug 0.07, zeta.wtrcrs.sep -0.0025, zeta.wtrcrs.oct -0.075, zeta.wtrcrs.nov -0.075, zeta.wtrcrs.dec -0.075, zeta.fld.jan -0.048, zeta.fld.feb -0.048, zeta.fld.mar -0.048, zeta.fld.apr -0.048, zeta.fld.may -0.0063, zeta.fld.jun 0.035, zeta.fld.jul 0.035, zeta.fld.aug 0.035, zeta.fld.sep -0.0063, zeta.fld.oct -0.048, zeta.fld.nov -0.048, zeta.fld.dec -0.048, gamma.wtrcrs.feb 0.025, gamma.wtrcrs.mar 0.025, gamma.wtrcrs.apr 0.025, gamma.wtrcrs.may 0.0525, gamma.wtrcrs.jun 0.08, gamma.wtrcrs.jul 0.08, gamma.wtrcrs.aug 0.08, gamma.wtrcrs.sep 0.0525, gamma.wtrcrs.oct 0.025, gamma.wtrcrs.nov 0.025, gamma.wtrcrs.dec 0.025, gamma.fld.feb 0.0475, gamma.fld.mar 0.0475, gamma.fld.apr 0.0475, gamma.fld.may 0.0563, gamma.fld.jun 0.065, gamma.fld.jul 0.065, gamma.fld.aug 0.065, gamma.fld.sep 0.0563, gamma.fld.oct 0.0475, gamma.fld.nov 0.0475, gamma.fld.dec 0.0475, hc.'poly-17+19'.jan 290.1, hc.'poly-17+19'.feb 290.2, hc.'poly-17+19'.mar 290.2, hc.'poly-17+19'.apr 290.6, hc.'poly-17+19'.may 291.5, hc.'poly-17+19'.jun 292, hc.'poly-17+19'.jul 292.3, hc.'poly-17+19'.aug 292.2, hc.'poly-17+19'.sep 292, hc.'poly-17+19'.oct 291.5, hc.'poly-17+19'.nov 290.6, hc.'poly-17+19'.dec 290.1, hc.'poly-18'.jan 285.1, hc.'poly-18'.feb 285.1, hc.'poly-18'.mar 285.2, hc.'poly-18'.apr 285.6, hc.'poly-18'.may 286.4, hc.'poly-18'.jun 286.9, hc.'poly-18'.jul 287.2, hc.'poly-18'.aug 287, hc.'poly-18'.sep 286.9, hc.'poly-18'.oct 286.4, hc.'poly-18'.nov 285.5, hc.'poly-18'.dec 285.1, cfw.'poly-17+19'.jan 4, cfw.'poly-17+19'.feb 4, cfw.'poly-17+19'.mar 4, cfw.'poly-17+19'.apr 4, cfw.'poly-17+19'.may 5, cfw.'poly-17+19'.jun 6, cfw.'poly-17+19'.jul 6, cfw.'poly-17+19'.aug 6, cfw.'poly-17+19'.sep 5, cfw.'poly-17+19'.oct 4, cfw.'poly-17+19'.nov 4, cfw.'poly-17+19'.dec 4, cfw.'poly-18'.jan 4, cfw.'poly-18'.feb 4, cfw.'poly-18'.mar 4, cfw.'poly-18'.apr 4, cfw.'poly-18'.may 5, cfw.'poly-18'.jun 6, cfw.'poly-18'.jul 6, cfw.'poly-18'.aug 6, cfw.'poly-18'.sep 5, cfw.'poly-18'.oct 4, cfw.'poly-18'.nov 4, cfw.'poly-18'.dec 4/
     lw(*,g,ud) /length.'poly-17+19'.mc 300, length.'poly-17+19'.bc 775, length.'poly-17+19'.di 2135, length.'poly-17+19'.mi 1450, length.'poly-18'.bc 50, length.'poly-18'.di 300, length.'poly-18'.mi 300, width.'poly-17+19'.mc 150, width.'poly-17+19'.bc 80, width.'poly-17+19'.di 25, width.'poly-17+19'.mi 7, width.'poly-18'.bc 45, width.'poly-18'.di 25, width.'poly-18'.mi 7/
     pemax(g)
     rpe(g,m)
@@ -215,6 +215,8 @@ Scalars
     the1 /0.6/
 ;
 
+Set nlp2mcp_uel_registry / canal, gtw, rivseep, seepgtw /;
+
 $onImplicitAssign
 cnf(c) = 1;
 cnf(cf) = 0;
@@ -279,12 +281,12 @@ ws("mb",g,m) = wpara3("cfw",g,m) * phi1mb(g) * dephc(g,m) / wpara(g,"mb");
 fgc(g) = sum(v, fgc1(g,v));
 subirr(g,m) = wpara1("pevap",g,m) * (1 - the1) * fga(g);
 ws("dm",g,m) = wpara3("cfw",g,m) * phi1dm(g) * dephc(g,m) / wpara(g,"dm");
+wl(u,g,m) = ws(u,g,m) + we(u,g,m);
+seeprain(g) = sum(m, (1 - drc) * ((ws("fd",g,m) + 0.2) * (areac(g,"at") - areac(g,"alg")) + ws("fd",g,m) * areac(g,"alg")) * wpara1("rain",g,m) / areac(g,"at"));
 etgw(g) = sum(m, wpara1("pevap",g,m) * (wa(g) * fgc(g) + areac(g,"alg") * fga(g))) / 1000;
 ws("wc",g,m) = beta - alpha * rpe(g,m) + wpara3("zeta","wtrcrs",m);
 ws("pg",g,m) = 0.5 * ws("wc",g,m);
 ws("fd",g,m) = beta - alpha * rpe(g,m) + wpara3("zeta","fld",m);
-wl(u,g,m) = ws(u,g,m) + we(u,g,m);
-seeprain(g) = sum(m, (1 - drc) * ((ws("fd",g,m) + 0.2) * (areac(g,"at") - areac(g,"alg")) + ws("fd",g,m) * areac(g,"alg")) * wpara1("rain",g,m) / areac(g,"at"));
 wcdeleff(g,m) = (1 - wl("wc",g,m)) * (1 - wl("fd",g,m));
 twdeleff(g,m) = (1 - wl("pg",g,m)) * (1 - wl("fd",g,m));
 efr(g,m) = (1 - drc - wl("fd",g,m)) * wpara1("rain",g,m) * 1000 / areac(g,"at");
@@ -563,7 +565,7 @@ Equations
 
 * Stationarity equations
 stat_acost(g).. nu_inbl(g) + nu_cost(g) - piL_acost(g) =E= 0;
-stat_animal(g,l).. ((-1) * lwcaptl(l)) * nu_cost(g) + sum(q, yq(l,q) * nu_cmbq(g,q)) + sum(m, lbq(l,m) * nu_labr(g,m)) + sum(sea, livio(l,"tn") * lam_fdsp(g,sea)) + sum(sea, livio(l,"pr") * lam_slsk(g,sea)) + sum(sea, gr * livio(l,"tn") * lam_sgfd(g,sea)) + sum(m, ((-1) * bp(m)) * lam_bupw(g,m)) + lam_buca(g) - piL_animal(g,l) =E= 0;
+stat_animal(g,l).. ((-1) * lwcaptl(l)) * nu_cost(g) + sum(q, yq(l,q) * nu_cmbq(g,q)) + sum(m, lbq(l,m) * nu_labr(g,m)) + sum(sea, livio(l,"tn") * lam_fdsp(g,sea)) + sum(sea, livio(l,"pr") * lam_slsk(g,sea)) + sum(sea, gr * livio(l,"tn") * lam_sgfd(g,sea)) + sum(m, ((-1) * bp(m)) * lam_bupw(g,m)) + lam_buca(g)$(sameas(l, 'bullock') or sameas(l, 'cattle')) - piL_animal(g,l) =E= 0;
 stat_ccc(g,c).. ((-1) * (psc(c) * 1$(cc(c)))) * nu_inbl(g) + (((-1) * 1$(cc(c))) * nu_cmbc(g,c))$(cnf(c)) + ((-1) * lam_cblc(g,c))$(cc(c)) - piL_ccc(g,c) =E= 0;
 stat_clc(g,q).. ((-1) * psq(q)) * nu_inbl(g) - nu_cmbq(g,q) - lam_cblq(g,q) - piL_clc(g,q) =E= 0;
 stat_dr(g).. ((-1) * (1000 * ((-1) * cdrwell$(sg(g) / drcap)) / 1000000)) + ((-1) * 1$(sg(g))) * nu_gwbl(g) - piL_dr(g) =E= 0;
@@ -584,7 +586,7 @@ stat_slkwater(g,m).. nu_watr(g,m) - piL_slkwater(g,m) =E= 0;
 stat_ts(g,m).. ((-1) * misc("tropc")) * nu_cost(g) - nu_trpw(g,m) + lam_trcp(g,m) - piL_ts(g,m) =E= 0;
 stat_tw(g,m).. ((-1) * misc("twopc")) * nu_cost(g) + ((-1) * twdeleff(g,m)$(fsg(g))) * nu_watr(g,m) + ((ws("pg",g,m) + (1 - wl("pg",g,m)) * ws("fd",g,m))$(fsg(g)) - 1$(fsg(g))) * nu_gwbl(g) + lam_tbcp(g,m)$(fsg(g)) - piL_tw(g,m) =E= 0;
 stat_x(g,c,t,s,w).. ((-1) * cwcaptl(c,t,s,w)$(tech(c,t,s,w))) * nu_cost(g) + ((yc(c,t,s,w) * fc)$(tech(c,t,s,w)) * nu_cmbc(g,c))$(cnf(c)) + sum(m, tr(c,t,s,w,m)$(tech(c,t,s,w)) * nu_trpw(g,m)) + sum(m, labor(c,t,s,w,m)$(tech(c,t,s,w)) * nu_labr(g,m)) + sum(m, land(c,t,s,w,m)$(tech(c,t,s,w)) * nu_landc(g,m)) + ((-1) * 1$(tech(c,t,s,w))) * nu_cacr(g,c) + sum(m, wn(g,c,t,s,w,m)$(tech(c,t,s,w)) * nu_watr(g,m)) + sum(sea, ((-1) * (tdy(c,t,s,w,sea) + wtd(c,t,s,w,sea))$(tech(c,t,s,w))) * lam_fdsp(g,sea)) + sum(sea, ((-1) * (dpy(c,t,s,w,sea) + wdp(c,t,s,w,sea))$(tech(c,t,s,w))) * lam_slsk(g,sea)) + sum(sea, ((-1) * wtd(c,t,s,w,sea)$(tech(c,t,s,w))) * lam_sgfd(g,sea)) + sum(m, bpr(c,t,s,w,m)$(tech(c,t,s,w)) * lam_bupw(g,m)) - piL_x(g,c,t,s,w) =E= 0;
-stat_xca(g,c).. sum(y, dev(c,y) * nu_ddev(g,y)) + nu_cacr(g,c) + 1.5 * nu_gwbl(g) - piL_xca(g,c) =E= 0;
+stat_xca(g,c).. sum(y, dev(c,y) * nu_ddev(g,y)) + nu_cacr(g,c) + (1.5 * nu_gwbl(g))$(cri(c)) - piL_xca(g,c) =E= 0;
 stat_yfa(g).. -0.001 + nu_inbl(g) - nu_nfin(g) =E= 0;
 stat_yva(g).. nu_nfin(g) + sum(c, (betac(g,c) * lam_cblc(g,c))$(cc(c))) + sum(q, betaq(g,q) * lam_cblq(g,q)) =E= 0;
 
@@ -750,6 +752,11 @@ Model mcp_model /
 * ============================================
 * Solve Statement
 * ============================================
+
+
+* Clear NA parameter values to prevent evaluation errors
+pri1(p1,ps)$(mapval(pri1(p1,ps)) = mapval(na)) = 1;
+popadj(ps)$(mapval(popadj(ps)) = mapval(na)) = 1;
 
 Solve mcp_model using MCP;
 

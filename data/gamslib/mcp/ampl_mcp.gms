@@ -108,7 +108,7 @@ Alias(t, t__);
 
 * Stationarity equations
 stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
-stat_x(p,tl).. (sum(t__$(sameas(t__, tl)), (((-1) * c(p,t__)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl) - piL_x(p,tl))$(t(tl)) =E= 0;
+stat_x(p,tl).. (sum(t__$(sameas(t__, tl)), (((-1) * c(p,t__)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl)$(t(tl)) - piL_x(p,tl))$(t(tl)) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;

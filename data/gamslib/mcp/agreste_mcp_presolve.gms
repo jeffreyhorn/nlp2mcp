@@ -350,6 +350,43 @@ Model mcp_model /
 /;
 
 * ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/agreste.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+lam_landb.l(s) = abs(landb.m(s));
+nu_lbal.l = lbal.m;
+nu_rliv.l = rliv.m;
+lam_mbalc.l(c) = abs(mbalc.m(c));
+nu_dprod.l(c) = dprod.m(c);
+lam_labc.l(tm) = abs(labc.m(tm));
+nu_cond.l = cond.m;
+nu_ddev.l(ty) = ddev.m(ty);
+nu_arev.l = arev.m;
+nu_acrop.l = acrop.m;
+nu_alab.l = alab.m;
+lam_awcc.l = abs(awcc.m);
+nu_avet.l = avet.m;
+
+* Transfer variable marginals to bound multipliers
+piL_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.lo(p,s)) < 1e-6 and xcrop.m(p,s) > 0) = xcrop.m(p,s);
+piL_xliver.l(r)$(abs(xliver.l(r) - xliver.lo(r)) < 1e-6 and xliver.m(r) > 0) = xliver.m(r);
+piL_lswitch.l(s)$(abs(lswitch.l(s) - lswitch.lo(s)) < 1e-6 and lswitch.m(s) > 0) = lswitch.m(s);
+piL_cons.l(dr)$(abs(cons.l(dr) - cons.lo(dr)) < 1e-6 and cons.m(dr) > 0) = cons.m(dr);
+piL_sales.l(c)$(abs(sales.l(c) - sales.lo(c)) < 1e-6 and sales.m(c) > 0) = sales.m(c);
+piL_flab.l(tm)$(abs(flab.l(tm) - flab.lo(tm)) < 1e-6 and flab.m(tm) > 0) = flab.m(tm);
+piL_tlab.l(tm)$(abs(tlab.l(tm) - tlab.lo(tm)) < 1e-6 and tlab.m(tm) > 0) = tlab.m(tm);
+piL_plab.l$(abs(plab.l - plab.lo) < 1e-6 and plab.m > 0) = plab.m;
+piL_pdev.l(ty)$(abs(pdev.l(ty) - pdev.lo(ty)) < 1e-6 and pdev.m(ty) > 0) = pdev.m(ty);
+piL_ndev.l(ty)$(abs(ndev.l(ty) - ndev.lo(ty)) < 1e-6 and ndev.m(ty) > 0) = ndev.m(ty);
+piU_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.up(p,s)) < 1e-6 and xcrop.m(p,s) < 0) = -(xcrop.m(p,s));
+piU_flab.l(tm)$(abs(flab.l(tm) - flab.up(tm)) < 1e-6 and flab.m(tm) < 0) = -(flab.m(tm));
+
+* ============================================
 * Solve Statement
 * ============================================
 

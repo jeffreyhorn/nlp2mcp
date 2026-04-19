@@ -353,6 +353,38 @@ Model mcp_model /
 /;
 
 * ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/fawley.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_mbal.l(c) = mbal.m(c);
+nu_kbal.l(k) = kbal.m(k);
+nu_dbal.l(cf) = dbal.m(cf);
+nu_qsb.l(cfq,l,s) = qsb.m(cfq,l,s);
+nu_pbal.l(cfq,m) = pbal.m(cfq,m);
+nu_drev.l = drev.m;
+nu_doper.l = doper.m;
+nu_dpur.l = dpur.m;
+nu_dtran.l = dtran.m;
+
+* Transfer variable marginals to bound multipliers
+piL_u.l(c)$(abs(u.l(c) - u.lo(c)) < 1e-6 and u.m(c) > 0) = u.m(c);
+piL_z.l(p)$(abs(z.l(p) - z.lo(p)) < 1e-6 and z.m(p) > 0) = z.m(p);
+piL_cap.l(k)$(abs(cap.l(k) - cap.lo(k)) < 1e-6 and cap.m(k) > 0) = cap.m(k);
+piL_trans.l(tr)$(abs(trans.l(tr) - trans.lo(tr)) < 1e-6 and trans.m(tr) > 0) = trans.m(tr);
+piL_import.l(c)$(abs(import.l(c) - import.lo(c)) < 1e-6 and import.m(c) > 0) = import.m(c);
+piL_bq.l(c,cf)$(abs(bq.l(c,cf) - bq.lo(c,cf)) < 1e-6 and bq.m(c,cf) > 0) = bq.m(c,cf);
+piL_rb.l(cf,r)$(abs(rb.l(cf,r) - rb.lo(cf,r)) < 1e-6 and rb.m(cf,r) > 0) = rb.m(cf,r);
+piL_q.l(cf,m)$(abs(q.l(cf,m) - q.lo(cf,m)) < 1e-6 and q.m(cf,m) > 0) = q.m(cf,m);
+piL_ov.l(cf,l,s)$(abs(ov.l(cf,l,s) - ov.lo(cf,l,s)) < 1e-6 and ov.m(cf,l,s) > 0) = ov.m(cf,l,s);
+piL_sales.l(cf)$(abs(sales.l(cf) - sales.lo(cf)) < 1e-6 and sales.m(cf) > 0) = sales.m(cf);
+piU_cap.l(k)$(abs(cap.l(k) - cap.up(k)) < 1e-6 and cap.m(k) < 0) = -(cap.m(k));
+
+* ============================================
 * Solve Statement
 * ============================================
 

@@ -101,7 +101,7 @@ Equations
 
 * Stationarity equations
 stat_e(t).. nu_bal4(t) + ((-1) * nu_bal4(t+1))$(ord(t) <= card(t) - 1) - piL_e(t) =E= 0;
-stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) + (nu_bal4(t+1)$(ord(t) <= card(t) - 1))$(ord(l) = 1) + (nu_bal4(t+2)$(ord(t) <= card(t) - 2))$(ord(l) = 2) + (nu_bal4(t+3)$(ord(t) <= card(t) - 3))$(ord(l) = 3) + (nu_bal4(t+4)$(ord(t) <= card(t) - 4))$(ord(l) = 4) - piL_x(t,l) =E= 0;
+stat_x(t,l).. infl(t) * clen(l) - nu_bal4(t) + ((nu_bal4(t+1)$(ord(t) <= card(t) - 1))$(ord(l) = 1))$((sameas(t, '1') or sameas(t, '2') or sameas(t, '3') or sameas(t, '4') or sameas(t, '5') or sameas(t, '6') or sameas(t, '7') or sameas(t, '8') or sameas(t, '9')) and sameas(l, 'len-1')) + ((nu_bal4(t+2)$(ord(t) <= card(t) - 2))$(ord(l) = 2))$((sameas(t, '1') or sameas(t, '2') or sameas(t, '3') or sameas(t, '4') or sameas(t, '5') or sameas(t, '6') or sameas(t, '7') or sameas(t, '8')) and sameas(l, 'len-2')) + ((nu_bal4(t+3)$(ord(t) <= card(t) - 3))$(ord(l) = 3))$((sameas(t, '1') or sameas(t, '2') or sameas(t, '3') or sameas(t, '4') or sameas(t, '5') or sameas(t, '6') or sameas(t, '7')) and sameas(l, 'len-3')) + ((nu_bal4(t+4)$(ord(t) <= card(t) - 4))$(ord(l) = 4))$((sameas(t, '1') or sameas(t, '2') or sameas(t, '3') or sameas(t, '4') or sameas(t, '5') or sameas(t, '6')) and sameas(l, 'len-4')) - piL_x(t,l) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_e(t)$(req(t) > -inf).. e(t) - req(t) =G= 0;

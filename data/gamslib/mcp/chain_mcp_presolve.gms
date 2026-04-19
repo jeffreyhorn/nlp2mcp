@@ -16,21 +16,25 @@ $offText
 * ============================================
 
 Sets
-    p /low, medium, high/
-    r /scrap, new/
-    tt /'1', '2', '3', '4'/
-    t(tt) /'1', '2', '3'/
+    nh /i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31, i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47, i48, i49, i50/
 ;
 
-Parameters
-    a(r,p) /scrap.low 5, scrap.medium 3, scrap.high 1, new.low 1, new.medium 2, new.high 3/
-    c(p,tt) /low.'1' 25, low.'2' 20, low.'3' 10, medium.'1' 50, medium.'2' 50, medium.'3' 50, high.'1' 75, high.'2' 80, high.'3' 100/
-    misc(*,r) /'max-stock'.scrap 400, 'max-stock'.new 275, 'storage-c'.scrap 0.5, 'storage-c'.new 2, 'res-value'.scrap 15, 'res-value'.new 25/
-;
+Alias(nh, i);
 
 Scalars
-    m /40/
+    L /4/
+    a /1/
+    b /3/
+    tf /1/
+    h /0/
+    n /0/
+    tmin /0/
 ;
+
+n = card(nh) - 1;
+h = tf / n;
+
+execError = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -44,23 +48,21 @@ Scalars
 *   π^U (piU_*): Positive multipliers for upper bounds
 
 Variables
-    profit
-    nu_sb(r,tt)
-;
-
-Positive Variables
-    x(p,tt)
-    s(r,tt)
-    lam_cc(tt)
-    piL_x(p,tt)
-    piL_s(r,tt)
+    x(i)
+    u(i)
+    energy
+    nu_x_eqn(i)
+    nu_length_eqn
+    nu_x_fx_i0
+    nu_x_fx_i50
 ;
 
 * ============================================
 * Variable Bounds
 * ============================================
 
-s.up(r,'1') = misc("max-stock",r);
+x.fx('i0') = 1;
+x.fx('i50') = 3;
 
 * ============================================
 * Variable Initialization
@@ -69,12 +71,9 @@ s.up(r,'1') = misc("max-stock",r);
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
-* POSITIVE variables are set to 1.
 
-x.l(p,tt) = 1;
-x.l(p,tt) = min(x.l(p,tt), x.up(p,tt));
-s.l(r,tt) = 1;
-s.l(r,tt) = min(s.l(r,tt), s.up(r,tt));
+x.l(i) = 4 * abs(b - a) * (ord(i) - 1) / n * (0.5 * (ord(i) - 1) / n - tmin) + a;
+u.l(i) = 4 * abs(b - a) * ((ord(i) - 1) / n - tmin);
 
 * ============================================
 * Equations
@@ -85,37 +84,29 @@ s.l(r,tt) = min(s.l(r,tt), s.up(r,tt));
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_s(r,tt)
-    stat_x(p,tt)
-    comp_cc(t)
-    comp_lo_s(r,tt)
-    comp_lo_x(p,tt)
-    pd
-    sb(r,tt)
+    stat_u(i)
+    stat_x(i)
+    length_eqn
+    obj
+    x_eqn(i)
+    x_fx_i0
+    x_fx_i50
 ;
 
 * ============================================
 * Equation Definitions
 * ============================================
 
-* Index aliases to avoid 'Set is under control already' error
-* (GAMS Error 125 when equation domain index is reused in sum)
-Alias(t, t__);
-
 * Stationarity equations
-stat_s(r,tt).. misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt) =E= 0;
-stat_x(p,tt).. (sum(t__$(sameas(t__, tt)), (((-1) * c(p,t__)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt)$(t(tt)) - piL_x(p,tt))$(t(tt)) =E= 0;
-
-* Inequality complementarity equations
-comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
-
-* Lower bound complementarity equations
-comp_lo_s(r,tt).. s(r,tt) - 0 =G= 0;
-comp_lo_x(p,tt).. x(p,tt) - 0 =G= 0;
+stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + (((-1) * (0.5 * h)) * nu_x_eqn(i-1))$(ord(i) > 1) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) * nu_length_eqn =E= 0;
+stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) * 1$(nh(i)) - nu_x_eqn(i) + nu_x_eqn(i-1)$(ord(i) > 1) + nu_x_fx_i0$(sameas(i, 'i0')) + nu_x_fx_i50$(sameas(i, 'i50')) =E= 0;
 
 * Original equality equations
-sb(r,tt)$(ord(tt) <= card(tt) - 1).. s(r,tt+1) =E= s(r,tt) - sum(p, a(r,p) * x(p,tt));
-pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(r,t))) + sum(r, misc("res-value",r) * s(r,"4"));
+obj.. energy =E= 0.5 * h * sum(i$(nh(i)), x(i) * sqrt(1 + sqr(u(i))) + x(i+1) * sqrt(1 + sqr(u(i+1))));
+x_eqn(i)$(ord(i) <= card(i) - 1).. x(i+1) =E= x(i) + 0.5 * h * (u(i) + u(i+1));
+length_eqn.. 0.5 * h * sum(i$(nh(i)), sqrt(1 + sqr(u(i))) + sqrt(1 + sqr(u(i+1)))) =E= L;
+x_fx_i0.. x("i0") - 1 =E= 0;
+x_fx_i50.. x("i50") - 3 =E= 0;
 
 
 * ============================================
@@ -125,10 +116,7 @@ pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-x.fx(p,tt)$(not (t(tt))) = 0;
-piL_x.fx(p,tt)$(not (t(tt))) = 0;
-nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
-lam_cc.fx(tt)$(not (t(tt))) = 0;
+nu_x_eqn.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -144,14 +132,28 @@ lam_cc.fx(tt)$(not (t(tt))) = 0;
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_s.s,
+    stat_u.u,
     stat_x.x,
-    comp_cc.lam_cc,
-    pd.profit,
-    sb.nu_sb,
-    comp_lo_s.piL_s,
-    comp_lo_x.piL_x
+    length_eqn.nu_length_eqn,
+    obj.energy,
+    x_eqn.nu_x_eqn,
+    x_fx_i0.nu_x_fx_i0,
+    x_fx_i50.nu_x_fx_i50
 /;
+
+* ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/chain.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_x_eqn.l(i) = x_eqn.m(i);
+nu_length_eqn.l = length_eqn.m;
+
+* Transfer variable marginals to bound multipliers
 
 * ============================================
 * Solve Statement
@@ -160,5 +162,5 @@ Model mcp_model /
 Solve mcp_model using MCP;
 
 Scalar nlp2mcp_obj_val;
-nlp2mcp_obj_val = profit.l;
+nlp2mcp_obj_val = energy.l;
 Display nlp2mcp_obj_val;

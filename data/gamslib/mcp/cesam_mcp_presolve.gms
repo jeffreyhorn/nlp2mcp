@@ -119,11 +119,11 @@ vbar1(ii,"5") = 3 * sigmay1(ii);
 gdp0 = T1("fac","act") + T1("gre","act") - T1("act","gre") + T1("gre","com");
 gdpfc0 = T1("fac","act");
 sigmay2("gdpfc2") = 0.05 * gdpfc0;
+sigmay2("gdp2") = 0.05 * gdp0;
 vbar2(macro,"1") = (-3) * sigmay2(macro);
 vbar2(macro,"2") = (-1) * sigmay2(macro);
 vbar2(macro,"4") = 1 * sigmay2(macro);
 vbar2(macro,"5") = 3 * sigmay2(macro);
-sigmay2("gdp2") = 0.05 * gdp0;
 
 execError = 0;
 
@@ -348,6 +348,25 @@ Model mcp_model /
     comp_up_w1.piU_w1,
     comp_up_w2.piU_w2
 /;
+
+* ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/cesam.gms
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+
+* Transfer variable marginals to bound multipliers
+piL_a.l(ii,jj)$(abs(a.l(ii,jj) - a.lo(ii,jj)) < 1e-6 and a.m(ii,jj) > 0) = a.m(ii,jj);
+piL_tsam.l(ii,jj)$(abs(tsam.l(ii,jj) - tsam.lo(ii,jj)) < 1e-6 and tsam.m(ii,jj) > 0) = tsam.m(ii,jj);
+piL_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.lo(ii,jwt)) < 1e-6 and w1.m(ii,jwt) > 0) = w1.m(ii,jwt);
+piL_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.lo(macro,jwt)) < 1e-6 and w2.m(macro,jwt) > 0) = w2.m(macro,jwt);
+piU_a.l(ii,jj)$(abs(a.l(ii,jj) - a.up(ii,jj)) < 1e-6 and a.m(ii,jj) < 0) = -(a.m(ii,jj));
+piU_w1.l(ii,jwt)$(abs(w1.l(ii,jwt) - w1.up(ii,jwt)) < 1e-6 and w1.m(ii,jwt) < 0) = -(w1.m(ii,jwt));
+piU_w2.l(macro,jwt)$(abs(w2.l(macro,jwt) - w2.up(macro,jwt)) < 1e-6 and w2.m(macro,jwt) < 0) = -(w2.m(macro,jwt));
 
 * ============================================
 * Solve Statement

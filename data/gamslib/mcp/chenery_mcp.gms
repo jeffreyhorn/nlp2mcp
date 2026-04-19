@@ -88,6 +88,7 @@ Variables
     nu_kc
     nu_sup(i)
     nu_fpr
+    nu_dvv(i)
     nu_dl(i)
     nu_dk(i)
     nu_dv(i)
@@ -270,6 +271,7 @@ Equations
     dl(i)
     dty
     dv(i)
+    dvv(i)
     fpr
     kc
     sup(i)
@@ -290,13 +292,13 @@ stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
 stat_m(i).. (((-1) * xsi(i)) * nu_dg(i) + (-1)$(t(i)) * lam_mb(i) + sum(t__, g(t__) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i))$(t(i)) =E= 0;
-stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
+stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i+1)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i-1)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i+2)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i-2)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i+3)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i-3)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
-stat_pi.. nu_fpr - piL_pi + piU_pi =E= 0;
+stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / sqr(del(i)))) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;
 stat_pk.. ((-1) * (1 / plab ** 1)) * nu_fpr + sum(i, ((-1) * k(i)) * nu_dv(i)) - piL_pk + piU_pk =E= 0;
 stat_v(i).. ((-1) * nu_sup(i)) + nu_dv(i) - piL_v(i) + piU_v(i) =E= 0;
-stat_vv(i).. ((-1) * ((del(i) / vv(i) + 1 - del(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) / vv(i) + 1 - del(i)) * ((-1) * del(i)) / (vv(i) * vv(i)))$(sig(i) <> 0)) * nu_dl(i) + ((-1) * ((del(i) + (1 - del(i)) * vv(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) + (1 - del(i)) * vv(i)) * (1 - del(i)))$(sig(i) <> 0)) * nu_dk(i) - piL_vv(i) =E= 0;
-stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + (aio(i,i) * lam_mb(i+1))$(ord(i) <= card(i) - 1) + (aio(i,i) * lam_mb(i-1))$(ord(i) > 1) + (aio(i,i) * lam_mb(i+2))$(ord(i) <= card(i) - 2) + (aio(i,i) * lam_mb(i-2))$(ord(i) > 2) + (aio(i,i) * lam_mb(i+3))$(ord(i) <= card(i) - 3) + (aio(i,i) * lam_mb(i-3))$(ord(i) > 3) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
+stat_vv(i).. nu_dvv(i)$(sig(i) <> 0) + ((-1) * ((del(i) / vv(i) + 1 - del(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) / vv(i) + 1 - del(i)) * ((-1) * del(i)) / (vv(i) * vv(i)))$(sig(i) <> 0)) * nu_dl(i) + ((-1) * ((del(i) + (1 - del(i)) * vv(i)) ** (1 / rho(i)) * 1 / rho(i) / (del(i) + (1 - del(i)) * vv(i)) * (1 - del(i)))$(sig(i) <> 0)) * nu_dk(i) - piL_vv(i) =E= 0;
+stat_x(i).. k(i) * nu_kc + (aio(i,i) - 1) * lam_mb(i) + (aio(i+1,i) * lam_mb(i+1))$(ord(i) <= card(i) - 1) + (aio(i-1,i) * lam_mb(i-1))$(ord(i) > 1) + (aio(i+2,i) * lam_mb(i+2))$(ord(i) <= card(i) - 2) + (aio(i-2,i) * lam_mb(i-2))$(ord(i) > 2) + (aio(i+3,i) * lam_mb(i+3))$(ord(i) <= card(i) - 3) + (aio(i-3,i) * lam_mb(i-3))$(ord(i) > 3) + l(i) * lam_lc - piL_x(i) + piU_x(i) =E= 0;
 stat_y(i).. -1 + nu_dem(i) + lam_mb(i) - piL_y(i) + piU_y(i) =E= 0;
 
 * Inequality complementarity equations
@@ -342,6 +344,7 @@ dem(i).. y(i) =E= ynot(i) * (pd * p(i)) ** thet(i);
 kc.. sum(i, k(i) * x(i)) =E= kbar;
 sup(i).. p(i) =E= sum(j, aio(j,i) * p(j)) + v(i);
 fpr.. pi =E= pk / plab;
+dvv(i)$(sig(i) <> 0).. vv(i) =E= (pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i)));
 dl(i).. l(i) * efy(i) =E= ((del(i) / vv(i) + 1 - del(i)) ** (1 / rho(i)))$(sig(i) <> 0) + 1$(sig(i) = 0);
 dk(i).. k(i) * efy(i) =E= ((del(i) + (1 - del(i)) * vv(i)) ** (1 / rho(i)))$(sig(i) <> 0) + del(i)$(sig(i) = 0);
 dv(i).. v(i) =E= pk * k(i) + plab * l(i);
@@ -360,8 +363,11 @@ piU_e.fx(i)$(not (t(i))) = 0;
 m.fx(i)$(not (t(i))) = 0;
 piL_m.fx(i)$(not (t(i))) = 0;
 piU_m.fx(i)$(not (t(i))) = 0;
+g.fx(i)$(not ((t(i)))) = 0;
+h.fx(i)$(not ((t(i)))) = 0;
 piU_e.fx(i)$(not has_e_up(i)) = 0;
 piU_m.fx(i)$(not has_m_up(i)) = 0;
+nu_dvv.fx(i)$(not (sig(i) <> 0)) = 0;
 nu_dg.fx(i)$(not (t(i))) = 0;
 nu_dh.fx(i)$(not (t(i))) = 0;
 
@@ -403,6 +409,7 @@ Model mcp_model /
     dl.nu_dl,
     dty.td,
     dv.nu_dv,
+    dvv.nu_dvv,
     fpr.nu_fpr,
     kc.nu_kc,
     sup.nu_sup,

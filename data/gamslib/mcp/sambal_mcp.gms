@@ -95,7 +95,7 @@ Equations
 
 * Stationarity equations
 stat_t(i).. tb(i) * tw(i) * 2 * (tb(i) - t(i)) * (-1) / sqr(tb(i)) * 1$(tw(i)) + nu_rbal(i) + nu_cbal(i) =E= 0;
-stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i)) + sum(i__kkt2, (((-1) * 1$(xb(i,i__kkt2))) * nu_cbal(i__kkt2))$(ord(i__kkt2) = 1)) + sum(i__kkt3, (((-1) * 1$(xb(i,i__kkt3))) * nu_cbal(i__kkt3))$(ord(i__kkt3) = 1)) + sum(i__kkt4, (((-1) * 1$(xb(i,i__kkt4))) * nu_cbal(i__kkt4))$(ord(i__kkt4) = 2)) + sum(i__kkt5, (((-1) * 1$(xb(i,i__kkt5))) * nu_cbal(i__kkt5))$(ord(i__kkt5) = 3)) + sum(i__kkt6, (((-1) * 1$(xb(i,i__kkt6))) * nu_cbal(i__kkt6))$(ord(i__kkt6) = 2)) + sum(i__kkt7, (((-1) * 1$(xb(i,i__kkt7))) * nu_cbal(i__kkt7))$(ord(i__kkt7) = 4)) + sum(i__kkt8, (((-1) * 1$(xb(i,i__kkt8))) * nu_cbal(i__kkt8))$(ord(i__kkt8) = 3)) + sum(i__kkt9, (((-1) * 1$(xb(i,i__kkt9))) * nu_cbal(i__kkt9))$(ord(i__kkt9) = 4)))$(xw(i,j)) =E= 0;
+stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) * 1$(xw(i,j)) + ((-1) * 1$(xb(i,j))) * nu_rbal(i) + sum(i__kkt1, ((-1) * 1$(xb(i,i__kkt1))) * nu_cbal(i))$(sameas(i, 'h1') and sameas(j, 'h1') or sameas(i, 'h2') and sameas(j, 'h2') or sameas(i, 'lab') and sameas(j, 'lab') or sameas(i, 'p1') and sameas(j, 'p1') or sameas(i, 'p2') and sameas(j, 'p2')) + sum(i__kkt2, (((-1) * 1$(xb(i,i__kkt2))) * nu_cbal(i__kkt2))$(ord(i__kkt2) = 1))$((sameas(i, 'h1') or sameas(i, 'h2') or sameas(i, 'lab') or sameas(i, 'p1')) and (sameas(j, 'h1') or sameas(j, 'h2') or sameas(j, 'p1') or sameas(j, 'p2'))) + sum(i__kkt3, (((-1) * 1$(xb(i,i__kkt3))) * nu_cbal(i__kkt3))$(ord(i__kkt3) = 1))$((sameas(i, 'h1') or sameas(i, 'h2') or sameas(i, 'p1') or sameas(i, 'p2')) and (sameas(j, 'h1') or sameas(j, 'h2') or sameas(j, 'lab') or sameas(j, 'p1'))) + sum(i__kkt4, (((-1) * 1$(xb(i,i__kkt4))) * nu_cbal(i__kkt4))$(ord(i__kkt4) = 2))$((sameas(i, 'h1') or sameas(i, 'h2') or sameas(i, 'lab')) and (sameas(j, 'h2') or sameas(j, 'p1') or sameas(j, 'p2'))) + sum(i__kkt5, (((-1) * 1$(xb(i,i__kkt5))) * nu_cbal(i__kkt5))$(ord(i__kkt5) = 3))$((sameas(i, 'h1') or sameas(i, 'lab')) and (sameas(j, 'p1') or sameas(j, 'p2'))) + sum(i__kkt6, (((-1) * 1$(xb(i,i__kkt6))) * nu_cbal(i__kkt6))$(ord(i__kkt6) = 2))$((sameas(i, 'h2') or sameas(i, 'p1') or sameas(i, 'p2')) and (sameas(j, 'h1') or sameas(j, 'h2') or sameas(j, 'lab'))) + sum(i__kkt7, (((-1) * 1$(xb(i,i__kkt7))) * nu_cbal(i__kkt7))$(ord(i__kkt7) = 4))$(sameas(i, 'lab') and sameas(j, 'p2')) + sum(i__kkt8, (((-1) * 1$(xb(i,i__kkt8))) * nu_cbal(i__kkt8))$(ord(i__kkt8) = 3))$((sameas(i, 'p1') or sameas(i, 'p2')) and (sameas(j, 'h1') or sameas(j, 'lab'))) + sum(i__kkt9, (((-1) * 1$(xb(i,i__kkt9))) * nu_cbal(i__kkt9))$(ord(i__kkt9) = 4))$(sameas(i, 'p2') and sameas(j, 'lab')))$(xw(i,j)) =E= 0;
 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
@@ -136,6 +136,11 @@ Model mcp_model /
 * ============================================
 * Solve Statement
 * ============================================
+
+
+* Clear NA parameter values to prevent evaluation errors
+xb(i,j)$(mapval(xb(i,j)) = mapval(na)) = 1;
+tb(i)$(mapval(tb(i)) = mapval(na)) = 1;
 
 Solve mcp_model using MCP;
 

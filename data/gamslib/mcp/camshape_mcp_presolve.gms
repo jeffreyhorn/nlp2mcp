@@ -491,6 +491,25 @@ Model mcp_model /
 /;
 
 * ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/camshape.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+lam_convexity.l(i) = abs(convexity.m(i));
+lam_convex_edge1.l(i) = abs(convex_edge1.m(i));
+lam_convex_edge3.l(i) = abs(convex_edge3.m(i));
+lam_convex_edge4.l(i) = abs(convex_edge4.m(i));
+nu_eqrdiff.l(i) = eqrdiff.m(i);
+
+* Transfer variable marginals to bound multipliers
+piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i);
+piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i));
+
+* ============================================
 * Solve Statement
 * ============================================
 

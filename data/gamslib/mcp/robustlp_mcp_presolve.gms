@@ -135,6 +135,23 @@ Model mcp_model /
 /;
 
 * ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/robustlp.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_defobj.l(i) = defobj.m(i);
+lam_socpqcpcons.l(i) = abs(socpqcpcons.m(i));
+nu_defrhs.l(i) = defrhs.m(i);
+nu_defv.l(i,k) = defv.m(i,k);
+
+* Transfer variable marginals to bound multipliers
+piL_y.l(i)$(abs(y.l(i) - y.lo(i)) < 1e-6 and y.m(i) > 0) = y.m(i);
+
+* ============================================
 * Solve Statement
 * ============================================
 
