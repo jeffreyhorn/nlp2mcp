@@ -262,7 +262,7 @@ def translate_single_model(
             text=True,
         )
 
-        translate_timeout = 300  # seconds
+        translate_timeout = 600  # seconds (bumped 300 -> 600 to accommodate larger models)
         try:
             stdout, stderr = proc.communicate(timeout=translate_timeout)
             elapsed = time.perf_counter() - start_time
@@ -370,7 +370,7 @@ def validate_mcp_file(mcp_path: Path) -> dict[str, Any]:
             cmd,
             capture_output=True,
             text=True,
-            timeout=30,  # 30 second timeout for compile check
+            timeout=60,  # 60 second timeout for compile check (bumped 30 -> 60)
         )
 
         elapsed = time.perf_counter() - start_time
@@ -393,7 +393,7 @@ def validate_mcp_file(mcp_path: Path) -> dict[str, Any]:
         return {
             "valid": False,
             "validation_time_seconds": round(time.perf_counter() - start_time, 4),
-            "error": "Validation timeout after 30 seconds",
+            "error": "Validation timeout after 60 seconds",
         }
     except Exception as e:
         return {
