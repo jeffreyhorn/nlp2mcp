@@ -53,7 +53,7 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 25 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -119,34 +119,46 @@ Sprint 24's end-of-sprint discoveries (KU-27 through KU-32 in `docs/planning/EPI
 
 ### Changes
 
-_To be completed._
+Created `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns across 6 categories. Updated Tasks 2–11 of this PREP_PLAN with "Unknowns Verified" metadata lines mapping each prep task to the specific unknowns it researches. Added CHANGELOG.md entry summarizing Task 1 completion.
 
 ### Result
 
-_To be completed._
+27 unknowns documented across 6 categories:
+
+- **Category 1: Alias-AD Carryforward** (8 KUs, 1.1–1.8) — pattern classification, regression risk on 54 matching models, #1150 relationship, derivative-rule scope, sameas guards, offset-alias Pattern C, model_infeasible recovery, rollout strategy.
+- **Category 2: Emitter / Stationarity Backlog** (6 KUs, 2.1–2.6) — #1283 root cause, #1283 scope, presolve-path fixes (#1275), twocge subsume analysis (#1277/#1278), #1281 dedup safety, ganges-family leverage mapping.
+- **Category 3: Multi-Solve Gate Extension** (3 KUs, 3.1–3.3) — Approach A false-positive risk, beyond-saras coverage, partssupply regression.
+- **Category 4: Dispatcher Refactor** (3 KUs, 4.1–4.3) — equivalence verification, byte-diff baseline, translate-time overhead.
+- **Category 5: Translation Timeout — Algorithmic** (4 KUs, 5.1–5.4) — tractability per model, stage-level profiling, sparse Jacobian feasibility, `srpchase` distinctness.
+- **Category 6: Pipeline Retest + Determinism** (3 KUs, 6.1–6.3) — scope-freeze durability, PYTHONHASHSEED sample size, alias-AD influx assumption.
+
+Priority distribution: Critical 7 (26%), High 11 (41%), Medium 7 (26%), Low 2 (7%). Total estimated research time: 30–36 hours spread across prep Tasks 2–11.
+
+Sprint 24 carryforward KUs (KU-29, KU-30, KU-32, KU-13/17) are mapped into Sprint 25 unknown numbers in the document's Appendix.
 
 ### Verification
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md && echo "EXISTS" || echo "MISSING"
 wc -l docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
-grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
-# Target: ≥ 20 KUs across ≥ 5 categories
+grep -c "^## Unknown " docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
+# Result: 28 matches (27 actual unknowns + 1 template header)
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with ≥ 20 unknowns across ≥ 5 categories
+- `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns across 6 categories
 - Task-to-Unknown mapping table (Appendix)
-- Verification deadline assignments
+- "Unknowns Verified" metadata added to PREP_PLAN.md Tasks 2–11
+- CHANGELOG.md updated with Task 1 completion entry
 
 ### Acceptance Criteria
 
-- [ ] ≥ 20 unknowns documented
-- [ ] All 5 priority areas have at least 3 unknowns each
-- [ ] Sprint 24 carryforward KUs (KU-29, KU-30, KU-31, KU-32) mapped to Sprint 25 numbers
-- [ ] Verification deadlines assigned (Day 0–1 for Critical, Day 2–3 for High)
-- [ ] Task-to-Unknown mapping includes this prep plan's Tasks 2–11
+- [x] ≥ 20 unknowns documented (27 created)
+- [x] All 5 priority areas have at least 3 unknowns each (Category 1: 8, Category 2: 6, Category 3: 3, Category 4: 3, Category 5: 4, Category 6: 3)
+- [x] Sprint 24 carryforward KUs (KU-29, KU-30, KU-32, plus KU-13/17) mapped to Sprint 25 numbers (Appendix)
+- [x] Verification deadlines assigned (Day 0–1 for Critical, Day 2–3 for High)
+- [x] Task-to-Unknown mapping includes this prep plan's Tasks 2–11
 
 ---
 
@@ -158,6 +170,7 @@ grep -c "^### KU-" docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list informs which edge cases to look for)
+**Unknowns Verified:** 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8
 
 ### Objective
 
@@ -227,6 +240,7 @@ grep -cE "^### Pattern [A-E]:" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CAR
 - Pattern classification table for all 11 open issues
 - Landed-vs-stubbed inventory for `src/ad/` and `src/kkt/` alias-AD helpers
 - Canary test priority list (beyond `dispatch`)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8
 
 ### Acceptance Criteria
 
@@ -235,6 +249,7 @@ grep -cE "^### Pattern [A-E]:" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CAR
 - [ ] Inventory of Sprint 24 landed vs stubbed alias-AD work
 - [ ] Regression-risk canary list beyond `dispatch`
 - [ ] Cross-reference with KU-01, KU-04, KU-13, KU-17 from SPRINT_24/KNOWN_UNKNOWNS.md
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -246,6 +261,7 @@ grep -cE "^### Pattern [A-E]:" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CAR
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1 (KU list captures suspected root causes)
+**Unknowns Verified:** 2.1, 2.2
 
 ### Objective
 
@@ -316,6 +332,7 @@ grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
 - Minimum reproducer (smallest table that triggers it)
 - Narrowed root cause or ranked candidates
 - Proposed fix approach with regression-surface analysis
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2
 
 ### Acceptance Criteria
 
@@ -323,6 +340,7 @@ grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
 - [ ] Root cause narrowed to ≤ 2 specific code paths
 - [ ] Fix approach documented with expected behavior on other table patterns
 - [ ] Cross-reference to related KUs in Sprint 25 KNOWN_UNKNOWNS
+- [ ] Unknowns 2.1, 2.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -334,6 +352,7 @@ grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 2.3, 2.4, 2.5
 
 ### Objective
 
@@ -403,6 +422,7 @@ done
 - Shared-code-path map identifying subsume-opportunities
 - Proposed batch ordering with per-fix effort estimate
 - Cross-reference: which of #1277 / #1278 are subsumed by Task 2's alias-AD fix
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.3, 2.4, 2.5
 
 ### Acceptance Criteria
 
@@ -410,6 +430,7 @@ done
 - [ ] Shared-code-path analysis identifies ≥ 1 subsume opportunity
 - [ ] Fix order proposed as 3 batches with per-fix effort estimate
 - [ ] Total estimate reconciles with retrospective's 12–18h bound
+- [ ] Unknowns 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -421,6 +442,7 @@ done
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 4 (emitter catalog informs which fixes map to which models)
+**Unknowns Verified:** 2.6
 
 ### Objective
 
@@ -490,6 +512,7 @@ done
 - Leverage matrix (model × emitter-bug)
 - Any new emitter bugs filed as Sprint 25 tracking issues
 - Ranked fix priority by solve-unblocking leverage
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 2.6
 
 ### Acceptance Criteria
 
@@ -497,6 +520,7 @@ done
 - [ ] Every compile error mapped to a known bug or a new tracking issue
 - [ ] Leverage matrix identifies the highest-leverage single fix
 - [ ] Cross-reference with Task 4 catalog updated if new subsume opportunities appear
+- [ ] Unknown 2.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -508,6 +532,7 @@ done
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 2 (carryforward state informs rollout)
+**Unknowns Verified:** 1.5, 1.8 (integrates Task 2's findings on 1.1–1.4, 1.6, 1.7)
 
 ### Objective
 
@@ -578,6 +603,7 @@ grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
 - "Stop the sprint" trigger list
 - Parallel-work allocation for Priority 2 during alias-AD wait states
 - Regression-guard infrastructure design (golden files + canary list)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.5, 1.8
 
 ### Acceptance Criteria
 
@@ -587,6 +613,7 @@ grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
 - [ ] Regression-guard infrastructure specified (golden files, canary list, scripts)
 - [ ] Cross-reference with Task 2 Pattern classification
 - [ ] Cross-reference with Sprint 24 KU-03 and KU-17 (regression risks)
+- [ ] Unknowns 1.5, 1.8 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -598,6 +625,7 @@ grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 3.1, 3.2, 3.3, 4.1, 4.2, 4.3
 
 ### Objective
 
@@ -653,6 +681,7 @@ grep -c "^### #1270\|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRI
 - #1270 design: Approach A commit, corpus survey for saras-style patterns, test-fixture matrix
 - #1271 design: unified signature, caller inventory, byte-diff regression strategy
 - Day allocation for both items within the Sprint 25 schedule
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3
 
 ### Acceptance Criteria
 
@@ -660,6 +689,7 @@ grep -c "^### #1270\|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRI
 - [ ] #1270 corpus survey identifies which models (beyond `saras`) the extended gate will flag
 - [ ] #1271 byte-diff regression strategy specifies pre/post comparison across all 99 currently-translating models
 - [ ] Combined effort estimate ≤ 7h (aligns with retrospective bound)
+- [ ] Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -671,6 +701,7 @@ grep -c "^### #1270\|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRI
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 5.1, 5.2, 5.3, 5.4
 
 ### Objective
 
@@ -736,6 +767,7 @@ done
 - Per-model tractability classification
 - For tractable models: specific optimization proposal
 - Sprint 25 Priority 5 scope recommendation (fix N models or defer)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3, 5.4
 
 ### Acceptance Criteria
 
@@ -743,6 +775,7 @@ done
 - [ ] Each model classified as tractable / intractable / unclear
 - [ ] At least 1 model has a specific optimization proposal OR all 5 recommended for Sprint 26+ deferral
 - [ ] Cross-reference with KU-19, KU-20 from SPRINT_24/KNOWN_UNKNOWNS.md
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -754,6 +787,7 @@ done
 **Deadline:** Before Sprint 25 Day 0
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 6.1
 
 ### Objective
 
@@ -813,6 +847,7 @@ grep -E "Parse|Translate|Solve|Match|path_syntax|path_solve|model_infeasible" \
 - `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` — complete baseline snapshot
 - Frozen pipeline-scope declaration (v2.2.1 exclusions: 14 MINLP, 7 legacy, 2 multi-solve)
 - Confirmation that acceptance criteria denominator is 143 (locked)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.1
 
 ### Acceptance Criteria
 
@@ -820,6 +855,7 @@ grep -E "Parse|Translate|Solve|Match|path_syntax|path_solve|model_infeasible" \
 - [ ] All 8 acceptance-criteria metrics recorded
 - [ ] Scope-freeze decision documented with reasoning
 - [ ] Cross-reference with Sprint 24 PR15 recommendation
+- [ ] Unknown 6.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -831,6 +867,7 @@ grep -E "Parse|Translate|Solve|Match|path_syntax|path_solve|model_infeasible" \
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 3 (non-determinism investigation informs what to test)
+**Unknowns Verified:** 6.2
 
 ### Objective
 
@@ -898,6 +935,7 @@ grep -c "^## Scope\|^## Fixture Set\|^## Seed Set\|^## CI Integration" \
 - Fixture model list (5 models)
 - Seed set (fixed or random) with rationale
 - CI integration plan (file path, marker, workflow)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.2
 
 ### Acceptance Criteria
 
@@ -905,6 +943,7 @@ grep -c "^## Scope\|^## Fixture Set\|^## Seed Set\|^## CI Integration" \
 - [ ] ≥ 5 fixture models selected
 - [ ] Seed set defined
 - [ ] CI integration plan ready for Sprint 25 Day 2 implementation
+- [ ] Unknown 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -916,6 +955,7 @@ grep -c "^## Scope\|^## Fixture Set\|^## Seed Set\|^## CI Integration" \
 **Deadline:** Before Sprint 25 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Tasks 1–10 (all prep outputs inform the schedule)
+**Unknowns Verified:** 6.3 (integrates all verified unknowns from Tasks 2–10)
 
 ### Objective
 
@@ -978,6 +1018,7 @@ grep -c "^### Day " docs/planning/EPIC_4/SPRINT_25/PLAN.md
 - 2 checkpoint evaluation criteria (Day 5 and Day 10)
 - Parallel-work allocation for Priority 2 during alias-AD waits
 - Updated `SPRINT_25/PREP_PLAN.md` with final prep-task status
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.3
 
 ### Acceptance Criteria
 
@@ -986,6 +1027,7 @@ grep -c "^### Day " docs/planning/EPIC_4/SPRINT_25/PLAN.md
 - [ ] Day-by-day prompts match Sprint 24's format (1 prompt per day)
 - [ ] Parallel-work allocation covers Priority 2 emitter batches from Task 4
 - [ ] Cross-references with all 10 prior prep-task outputs
+- [ ] Unknown 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
