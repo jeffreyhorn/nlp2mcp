@@ -393,13 +393,14 @@ This rules out the critical false-positive classes:
 
 | # | Title | From |
 |---|---|---|
-| #1268 | decomp: add `attr_access` handlers to `_loop_tree_to_gams_subst_dispatch` | PLAN_FIX_DECOMP "Why Not Fix" §1 |
+| #1268 | decomp: add `bound_scalar` / `bound_indexed` handlers to `_loop_tree_to_gams_subst_dispatch` | PLAN_FIX_DECOMP "Why Not Fix" §1 |
 | #1269 | decomp: KKT assembly drops `tbal`/`convex` gradients under multi-model `_solve_objectives` | PLAN_FIX_DECOMP "Why Not Fix" §2 |
 | #1270 | Multi-solve gate: extend detector for saras-style top-level `eq.m` feedback | SPRINT_LOG Day 8 "Known gap" |
 | #1271 | Refactor: collapse `_loop_tree_to_gams` / `_loop_tree_to_gams_subst_dispatch` into one dispatcher | PLAN_FIX_PARTSSUPPLY §"Refactor opportunity" |
 
 **Relabeled sprint-24 → sprint-25 (15 open):**
-- **Alias differentiation carryforward (12):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150, #1177
+- **Alias differentiation carryforward (11):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150
+- **`model_infeasible` carryforward (1):** #1177 (chenery, post-$171 domain widening — root cause is alias-related per KU-16 but the issue is categorized as `model_infeasible` in its doc, so it's listed here rather than with the alias-differentiation bucket)
 - **Translation timeouts / runtime bugs (3):** #1169 (lop), #1185 (mexls), #1192 (gtm)
 
 **Key end-of-sprint discoveries (full detail in `KNOWN_UNKNOWNS.md`):**

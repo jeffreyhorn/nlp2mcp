@@ -679,7 +679,7 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 
 ## End-of-Sprint Discoveries (Day 12 Close Prep)
 
-Unknowns surfaced during Sprint 24 execution that were not in the initial 26-item set. These are logged here for Sprint 25 planning; each has a corresponding GitHub issue filed with the `sprint-25` label.
+Unknowns surfaced during Sprint 24 execution that were not in the initial 26-item set. These are logged here for Sprint 25 planning. Each entry's `Tracking:` line points to the authoritative record — a Sprint 25 GitHub issue where one was filed, an already-closed issue for discoveries resolved in-sprint (KU-27 → #1266), or this document itself for process notes that do not warrant a GitHub issue (KU-28).
 
 ### KU-27: Lark Grammar Ambiguity for `/ all - eq /`
 
@@ -699,7 +699,7 @@ Unknowns surfaced during Sprint 24 execution that were not in the initial 26-ite
 
 **How to apply in Sprint 25:** when debugging CI-only failures, `pip install -r requirements.txt` first to match the CI environment before assuming nondeterminism. Consider reconciling the two files (either keep `requirements.txt` as the single source of truth with ≥ constraints, or document the deliberate divergence).
 
-**Tracking:** No GitHub issue — captured as a process note in `MEMORY.md`.
+**Tracking:** No GitHub issue — captured in this Known Unknowns document as a process note.
 
 ### KU-29: Multi-Solve-Driver Gate — `saras`-Style Top-Level Marginal Reads
 

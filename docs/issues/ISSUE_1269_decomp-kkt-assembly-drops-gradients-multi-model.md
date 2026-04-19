@@ -84,10 +84,8 @@ Recommended: **emit KKT for exactly one solved model (the last `solve` statement
 
 After any fix:
 
-- `ibm1` (single declared model, 5 solves on it) must continue to translate and match.
-- `partssupply` (2 declared models, 2 distinct solve targets, no equation-marginal feedback) must continue to translate and match — this is the canary for the "multi-model without driver loop" pattern.
-
-Both are covered by `tests/integration/test_decomp_skipped.py::test_cli_does_not_flag_*`.
+- `ibm1` (single declared model, 5 solves on it) must continue to translate and match. Covered by `tests/integration/test_decomp_skipped.py::test_cli_does_not_flag_ibm1` and the synthetic-fixture companion `test_cli_does_not_flag_synthetic_single_model_multi_solve`, plus the unit-level guard `tests/unit/validation/test_driver.py::test_scan_single_model_multi_solve_is_not_driver`.
+- `partssupply` (2 declared models, 2 distinct solve targets, no equation-marginal feedback) must continue to translate and match — this is the canary for the "multi-model without driver loop" pattern. Covered by `tests/unit/validation/test_driver.py::test_scan_partssupply_style_variable_level_is_not_driver`. An integration-level CLI guard for `partssupply` is NOT currently in `tests/integration/test_decomp_skipped.py`; consider adding one as part of this fix so end-to-end parity matches the ibm1 coverage.
 
 ---
 
