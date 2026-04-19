@@ -80,7 +80,9 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 - Category 5 (Translation Timeout — Algorithmic): 4 unknowns
 - Category 6 (Pipeline Retest + Determinism): 3 unknowns
 
-**Estimated Research Time:** 18–27 hours (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets). Individual per-KU estimates below sum higher (~30–36h) because multiple unknowns are verified in parallel within a single task — the authoritative budget is the per-task total in PREP_PLAN.md.
+**Estimated Research Time:** 18–27 hours (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets).
+
+Note: the per-unknown `Estimated Research Time` fields in the detail sections below are work-item estimates used to scope individual investigations, not an additive total — multiple unknowns are verified in parallel within a single prep task (e.g., Task 2 covers 7 unknowns in one code-audit pass). The authoritative scheduling budget is the per-task total in PREP_PLAN.md.
 
 ---
 
