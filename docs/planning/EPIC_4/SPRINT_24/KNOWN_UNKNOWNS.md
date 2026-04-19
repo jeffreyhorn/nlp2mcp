@@ -2,8 +2,8 @@
 
 **Created:** 2026-04-03
 **Sprint:** 24 (Prep Task 1)
-**Status:** Initial — all unknowns pending verification
-**Last Updated:** 2026-04-03
+**Status:** End-of-sprint — all prep-time unknowns verified; new discoveries logged in §"End-of-Sprint Discoveries"
+**Last Updated:** 2026-04-18 (Day 12 close prep)
 
 ---
 
@@ -672,5 +672,87 @@ This document catalogs assumptions and unknowns for Sprint 24 (Alias Differentia
 ---
 
 **Document Created:** 2026-04-03
-**Total Unknowns:** 26
+**Total Unknowns:** 26 (prep) + 6 (end-of-sprint discoveries, KU-27..KU-32)
 **Sprint 23 Carryforward:** 3 KUs (Sprint 23 KU-28 → KU-22, KU-29 → KU-23, KU-32 → KU-24)
+
+---
+
+## End-of-Sprint Discoveries (Day 12 Close Prep)
+
+Unknowns surfaced during Sprint 24 execution that were not in the initial 26-item set. These are logged here for Sprint 25 planning. Each entry's `Tracking:` line points to the authoritative record — a Sprint 25 GitHub issue where one was filed, an already-closed issue for discoveries resolved in-sprint (KU-27 → #1266), or this document itself for process notes that do not warrant a GitHub issue (KU-28).
+
+### KU-27: Lark Grammar Ambiguity for `/ all - eq /`
+
+**Priority:** Resolved (defensive fix landed)
+**Discovery:** The test `test_model_all_except_single` failed reliably on CI but passed locally. Initial hypothesis (xdist parser shared state) was wrong. Root cause: Lark 1.1.9 (pinned in `requirements.txt`, used by CI) and Lark 1.2+ (installed locally via `pyproject.toml`'s `>=1.1.9`) disambiguate the input `all - eq1` differently. Lark 1.2+ picks `model_all_except`; 1.1.9 picks `model_subtraction` with children `[ID("all"), ID("eq1")]`.
+
+**Resolution:** `src/ir/parser.py::_extract_model_refs` now rewrites the `model_subtraction` tree to exclusion semantics when the first ID is `all` (case-insensitive). Version-independent. PR #1267 merged.
+
+**Lingering risk:** Whenever a grammar rule allows a keyword-like string (`"all"i`, etc.) in a position where `ID` also matches, Lark disambiguation may differ across versions. Audit similar rules during Sprint 25 grammar work.
+
+**Tracking:** #1266 (CLOSED)
+
+### KU-28: `requirements.txt` Pinning Divergence from `pyproject.toml`
+
+**Priority:** Medium — Process
+**Discovery:** `pyproject.toml` uses `>=` lower bounds (`lark>=1.1.9`, `click>=8.0.0`), while `requirements.txt` pins exact versions (`lark==1.1.9`, `pytest==7.4.4`). CI uses `requirements.txt`, local dev typically uses `pip install -e ".[dev]"`. This created a silent "CI fails, local passes" divergence on KU-27.
+
+**How to apply in Sprint 25:** when debugging CI-only failures, `pip install -r requirements.txt` first to match the CI environment before assuming nondeterminism. Consider reconciling the two files (either keep `requirements.txt` as the single source of truth with ≥ constraints, or document the deliberate divergence).
+
+**Tracking:** No GitHub issue — captured in this Known Unknowns document as a process note.
+
+### KU-29: Multi-Solve-Driver Gate — `saras`-Style Top-Level Marginal Reads
+
+**Priority:** High
+**Discovery:** The three-condition driver detector from PR #1265 correctly flags `decomp` and `danwolfe` (DW iteration with `eq.m` reads inside a solve-containing loop). It does **not** catch calibration scripts like `saras` where `eq.m` is read at top level between solves. Broadening to "anywhere in source" was rejected because it produces false positives on post-solve reporting.
+
+**How to Verify / Candidate Approaches:**
+- Cross-reference: flag `eq.m` reads whose receiving parameter later appears in another declared model's constraints (tighter false-positive profile).
+- Sequence awareness: flag reads that appear *between* two `solve` statements.
+- Explicit corpus allowlist in `gamslib_status.json` for known calibration scripts.
+
+**Tracking:** #1270 (`sprint-25`)
+
+### KU-30: Emitter Dispatcher Duplication
+
+**Priority:** Medium
+**Discovery:** Two near-duplicate dispatchers in `src/emit/original_symbols.py` — `_loop_tree_to_gams` and `_loop_tree_to_gams_subst_dispatch`. Every new grammar-rule handler (`dollar_cond`, `bracket_expr`, `bound_scalar`, etc.) must be added in both places. Sprint 24 hit this repeatedly (PR #1264 for partssupply; will recur for the decomp `bound_scalar` / `bound_indexed` fix in Sprint 25 — #1268).
+
+**Resolution Plan:** Collapse into a single dispatcher that takes an optional `token_subst_map` parameter. Behavior identical under either call shape.
+
+**Tracking:** #1271 (`sprint-25`)
+
+### KU-31: decomp Emitter/Assembly Bugs (Single-Model Multi-Solve Path)
+
+**Priority:** Medium
+**Discovery:** The multi-solve-driver gate excludes `decomp` and `danwolfe` (PR #1265), but two real emitter/assembly bugs surfaced during that investigation and would affect any future **single-model multi-solve** scenario (which the gate does NOT catch):
+
+1. `_loop_tree_to_gams_subst_dispatch` missing `bound_scalar` / `bound_indexed` handlers → emits `ctank = - tbal m` instead of `ctank = -tbal.m` for reads of `.l` / `.m` / `.lo` / `.up` / `.fx` (which the grammar tokenizes as `BOUND_K`, NOT `attr_access`) (#1268).
+2. KKT assembly drops gradient terms for equations belonging to non-selected models when `_solve_objectives` has multiple entries (#1269).
+
+**Tracking:** #1268 (emitter), #1269 (assembly)
+
+### KU-32: Validation Scope for `sameas()` Guards Across GAMS Element Types
+
+**Priority:** Low
+**Discovery:** KU-05 (`sameas` guard generation correctness) was only partially verified. The IR builder emits `sameas()` calls correctly and the emitter passes them through as GAMS built-ins, but *runtime* behavior across numeric / string / dotted element types and compile-time performance with/without guards on large models was not benchmarked.
+
+**How to Verify:** Compile a representative MCP from each GAMSlib category (CGE, alias-quadratic, CES with dotted elements) and confirm PATH produces identical results with and without guards. Benchmark compile time on the largest matching model.
+
+**Tracking:** Subsumed into Sprint 25 alias-differentiation follow-up (no dedicated issue; covered by the open alias issues #1138-#1147, #1150).
+
+---
+
+## Close-Prep Relabeling Summary (Day 12)
+
+15 open issues previously labeled `sprint-24` were relabeled `sprint-25`:
+
+- **Alias differentiation carryforward (11):** #1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150
+- **`model_infeasible` carryforward (1):** #1177 (chenery — root cause is alias-related per KU-16, but the issue doc categorizes it as `model_infeasible` / post-$171 domain widening)
+- **Translation timeouts (3):** #1169 (lop), #1185 (mexls), #1192 (gtm)
+
+Plus 4 newly-filed Sprint 25 tracking issues:
+- #1268 — decomp emitter `bound_scalar` / `bound_indexed` handlers (KU-31 #1)
+- #1269 — decomp KKT assembly multi-model gradient drop (KU-31 #2)
+- #1270 — saras-style multi-solve gate extension (KU-29)
+- #1271 — emitter dispatcher unification (KU-30)
