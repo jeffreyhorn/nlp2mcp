@@ -479,6 +479,68 @@ Sprint 24 influx was lower than the 50–60% budget: alias differentiation and p
 
 ---
 
+### Day 13 Addendum — Re-Retest Under Doubled Timeouts
+
+**Status:** COMPLETE
+**Branch:** `sprint24-day13-final-final-retest`
+**Trigger:** PR #1274 doubled the pipeline timeouts (translate 300s→600s, solve 60s→120s, compile-check 30s→60s). Re-ran the full pipeline to measure whether the extra budget recovers any of the 10 translate timeouts identified in the original Day 13 retest.
+
+Total run time: **7600s (~2h07m)** — actually slightly faster than the 7887s original retest, because several marginal translates that previously ran to the 300s timeout now finish inside the 600s window.
+
+#### Delta vs Original Day 13 Retest
+
+| Metric | Day 13 original | Day 13 addendum (doubled timeouts) | Δ |
+|---|---|---|---|
+| Parse | 143/143 (100%) | 143/143 (100%) | — |
+| **Translate** | **130/143 (90.9%)** | **135/143 (94.4%)** | **+5 ✨** |
+| &nbsp;&nbsp;→ timeout failures | 10 | **5** | −5 |
+| &nbsp;&nbsp;→ internal_error | 3 | 3 | — |
+| Solve | 99 | 99 | — |
+| Match | 54 | 54 | — |
+| **path_syntax_error** | 6 | **11** | **+5** |
+| path_solve_terminated | 10 | 10 | — |
+| model_infeasible | 8 | 8 | — |
+| path_solve_license | 7 | 7 | — |
+| Tests (unchanged; no code edits) | 4,522 | 4,522 | — |
+
+#### Key Finding: 1:1 Translate Recovery → path_syntax_error
+
+Exactly **5 translates recovered** under the doubled timeout:
+
+| Model | Previous state | Current state |
+|---|---|---|
+| `ferts` | translate=timeout | translate=success, solve=path_syntax_error |
+| `ganges` | translate=timeout | translate=success, solve=path_syntax_error |
+| `gangesx` | translate=timeout | translate=success, solve=path_syntax_error |
+| `clearlak` | translate=timeout | translate=success, solve=path_syntax_error |
+| `turkpow` | translate=timeout | translate=success, solve=path_syntax_error |
+
+All 5 newly-translating models hit `path_syntax_error` at the PATH compile step — **zero new solves, zero new matches**. The diff on `path_syntax_error` is exactly the same 5 models: 6 → 11.
+
+**Still timing out at 600s** (5): `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` — these remain genuinely intractable at the current scale; tracked under #1185 (mexls) + KU-19 (timeout-model investigation).
+
+#### Interpretation
+
+1. **Translate gap narrowed** from 90.9% → 94.4% (−6.1pp → −2.6pp below the 97% target). Still below target but meaningfully closer.
+2. **Zero downstream improvement** at the solve / match layer. Match count stays at 54; the translate recovery didn't expose any new matches — it exposed emitter / stationarity bugs in the recovered MCPs that PATH rejects.
+3. **Error-influx budget accounting (PR10):** all 5 new translates influxed directly to `path_syntax_error` — a 100% influx rate, at the high end of the original 50–60% forecast.
+4. **Sprint 25 implication:** the translation-timeout work (#1169 / #1185 / #1192, KU-19) is **lower-leverage than originally scoped** for near-term match gains. The 5 newly-translating models need emitter/stationarity fixes to actually solve — the same class of bugs tracked by #1275–#1281 and the alias-differentiation carryforward. Fixing the translator alone for ganges / gangesx / ferts / clearlak / turkpow will be necessary but not sufficient.
+
+#### Acceptance Criteria Revisited
+
+Scoring is unchanged: **6 / 8 targets MET (75%)**. Translate and Match are still the two misses. Specifically:
+
+- **Translate 135/143 (94.4%) vs target ≥97% (≥139/143):** Δ = −4 models / −2.6pp below target. Still NOT MET but the gap is smaller than the original Day 13's −9 models / −6.1pp.
+- **Match 54 (−1 from target 55):** unchanged.
+
+#### Artifacts
+
+- `data/gamslib/gamslib_status.json` — updated with re-retest results for all 143 in-scope models.
+- `data/gamslib/mcp/*.gms` — regenerated primary + presolve artifacts from the new run.
+- No source-code changes.
+
+---
+
 ### Day 14 — Sprint Close + Retrospective
 
 **Status:** NOT STARTED
