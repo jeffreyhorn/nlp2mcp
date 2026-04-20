@@ -4,7 +4,7 @@
 **Sprint:** 25 (Prep Task 3)
 **Issue:** [#1283](https://github.com/jeffreyhorn/nlp2mcp/issues/1283)
 **In-tree doc:** [`../../../issues/ISSUE_1283_parser-non-deterministic-multi-row-label-table.md`](../../../issues/ISSUE_1283_parser-non-deterministic-multi-row-label-table.md)
-**Related KU:** Sprint 24 KU-27 (Lark 1.1.9 vs 1.2+ grammar ambiguity — different bug, same "Earley ambiguity picks non-determinstically" family)
+**Related KU:** Sprint 24 KU-27 (Lark 1.1.9 vs 1.2+ grammar ambiguity — different bug, same "Earley ambiguity picks non-deterministically" family)
 
 ---
 
@@ -15,7 +15,7 @@ Root cause of #1283 is **Earley grammar ambiguity in the `table_row` / `simple_l
 1. One `table_row` with `simple_label(low, a)` + 3 `table_value` tokens (the intended parse).
 2. Four `table_row`s: `simple_label(low, a)` with 0 values, then each of `1`, `2`, `3` as its own zero-value `simple_label` row.
 
-Both parses satisfy `table_row: table_row_label table_value*` because `table_value*` accepts zero. With `ambiguity="resolve"` in [`src/ir/parser.py`](../../../../src/ir/parser.py) line 163, Lark picks one alternative per parse — but the selection is hash-seed-dependent. Under 20 `PYTHONHASHSEED` values (0–19) the distribution is **13 correct : 7 corrupted (35% corruption rate)**, with exactly 2 distinct outputs.
+Both parses satisfy `table_row: table_row_label table_value*` because `table_value*` accepts zero. With `ambiguity="resolve"` in [`src/ir/parser.py`](../../../../src/ir/parser.py) line 163, Lark picks one alternative per parse — but the selection is hash-seed-dependent. Under 20 `PYTHONHASHSEED` values (0–19) the distribution is **7 correct : 13 corrupted (65% corruption rate)**, with exactly 2 distinct outputs.
 
 The trigger is any `Table` block containing multi-row-label tuple expansions like `(low,medium,high).ynot`. The preprocessor ([`src/ir/preprocessor.py`](../../../../src/ir/preprocessor.py) `expand_tuple_only_table_rows`) expands the tuple label into per-label duplicate rows *before* parsing, so the actual Lark-visible input is two or three copies of `low.a 1 2 3`, `medium.a 1 2 3`, etc. — and each copy is individually ambiguous. Non-tuple tables aren't affected in practice because their row-label token is typically a text ID (not a bare NUMBER) and Lark's Earley heuristics reliably pick the longer-value parse.
 
@@ -37,23 +37,30 @@ mkdir -p /tmp/task3-sweep && rm -f /tmp/task3-sweep/*.gms
 for seed in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19; do
   PYTHONHASHSEED=$seed .venv/bin/python -m src.cli \
     data/gamslib/raw/chenery.gms \
-    -o /tmp/task3-sweep/chenery_${seed}.gms --quiet 2>&1 > /dev/null
+    -o /tmp/task3-sweep/chenery_${seed}.gms --quiet > /dev/null 2>&1
 done
+# Cross-platform hashing (works on macOS and Linux):
 cd /tmp/task3-sweep && for f in chenery_*.gms; do
-  printf "%s  %s\n" "$(md5 -q $f)" "$f"
+  printf "%s  %s\n" "$(shasum -a 256 "$f" | cut -d' ' -f1)" "$f"
 done | awk '{print $1}' | sort | uniq -c | sort -rn
+# macOS quick-local variant (optional): replace shasum line with `md5 -q "$f"`
+# Linux alternative: use `md5sum "$f" | cut -d' ' -f1`
 ```
 
 ### Observed results (20-seed sweep, 2026-04-20)
 
+Output of the reproduction recipe (SHA-256 hashes):
+
 ```
-13 da34fa8871ce5bcac46121f8d5973100  (CORRUPTED — 65% of runs)
- 7 cf8dbf3fc53fd71e6e6d90f6a20cc58e  (CORRECT — 35% of runs)
+13 008eab82075a6447d348be934055131b34fbc1d044dc3d2711bc3a86cee1aae9  (CORRUPTED — 65% of runs)
+ 7 e2feb2540bd3d8287be210c61fc50aa6e60f6f68280cf77fd016d5d7a14fb3e4  (CORRECT — 35% of runs)
 ```
 
-Exactly **2 distinct outputs**. Corrupted seeds: `0, 4, 6, 11, 12, 15, 18` (7). Correct seeds: `1, 2, 3, 5, 7, 8, 9, 10, 13, 14, 16, 17, 19` (13).
+For reference, the equivalent macOS `md5 -q` hashes are `da34fa8871ce5bcac46121f8d5973100` (corrupted) and `cf8dbf3fc53fd71e6e6d90f6a20cc58e` (correct).
 
-Note: the issue doc's original "2 correct + 1 corrupted per 3 runs" observation appears to have been the inverse of the true pattern (which is 13:7 on a 20-seed sweep for chenery). The direction of corruption majority may vary with Lark's internal tiebreak, but the existence of exactly 2 outputs is the stable property.
+Exactly **2 distinct outputs**. Corrupted seeds: `1, 2, 3, 5, 7, 8, 9, 10, 13, 14, 16, 17, 19` (13 seeds). Correct seeds: `0, 4, 6, 11, 12, 15, 18` (7 seeds).
+
+Note: the issue doc's original "2 correct + 1 corrupted per 3 runs" observation is in the same ballpark as the actual 35%-correct / 65%-corrupted ratio on this 20-seed sweep (the issue-doc observation was itself sampled from an unknown hash-seed distribution, likely dominated by unset/default `PYTHONHASHSEED`). The direction of corruption majority may vary with Lark's internal tiebreak heuristics, but the existence of exactly 2 outputs is the stable property.
 
 ### Corruption signature (chenery.gms)
 
@@ -179,7 +186,7 @@ Sprint 24 KU-27 resolved a *different* Earley ambiguity (`/ all - eq1 /` in mode
 
 | Model | Pattern | Current pipeline state | Determinism |
 |---|---|---|---|
-| `chenery` | `(low,medium,high).ynot` + `(medium,high).gam` / `.xsi` | translate=success, solve=success, compare=**mismatch** | **Non-deterministic (35% corrupt)** — confirmed |
+| `chenery` | `(low,medium,high).ynot` + `(medium,high).gam` / `.xsi` | translate=success, solve=success, compare=**mismatch** | **Non-deterministic (65% corrupt)** — confirmed |
 | `clearlak` | `(mar,apr).dry` | translate=success, solve=failure (path_syntax_error) | Likely affected — downstream failure masks it |
 | `indus` | `(basmati,irri).(bullock,semi-mech)` and others | translate=success, solve=failure (path_syntax_error) | Likely affected — downstream failure masks it |
 | `indus89` | Multiple, including 5-tuple cross-products | translate=None (pipeline never reached) | Likely affected — not currently in pipeline comparison |

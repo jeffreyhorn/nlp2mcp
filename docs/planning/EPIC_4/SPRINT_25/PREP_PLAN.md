@@ -332,7 +332,7 @@ The Sprint 24 Day 13 Addendum discovered that `chenery_mcp.gms` was intermittent
 
 ### Result
 
-- **Corruption rate (20-seed sweep on chenery):** 7/20 = **35% corruption**; exactly 2 distinct outputs (13 correct : 7 corrupted). Initial issue-doc observation ("1-in-3") was approximately right; the exact ratio varies with the seed range chosen but the 2-output structure is stable.
+- **Corruption rate (20-seed sweep on chenery):** 13/20 = **65% corruption**; exactly 2 distinct outputs (7 correct : 13 corrupted). Initial issue-doc observation ("2 correct per 3 runs") is inverted relative to this sweep's majority; the exact ratio varies with Lark's internal tiebreak heuristics, but the 2-output structure is stable.
 - **Minimum reproducer:** 11-line GAMS file with `(low,medium).a  1  2  3` table row — same 13:7 corruption distribution; rules out the hyphen/plus-sign hypothesis from the initial issue doc.
 - **Root cause narrowed to 1 grammar-level bug (not 2 code paths):** the `table_row_label` → `simple_label` → `dotted_label` rule chain in `src/gams/gams_grammar.lark` allows a bare `NUMBER` to parse as either a `table_value` (intended) or a `simple_label` row label (also valid). Earley finds two legal parses; `ambiguity="resolve"` picks one per run with Python-hash-seed-dependent tiebreak. This is the same family as Sprint 24 KU-27 (different ambiguous rule, same structural class).
 - **Affected corpus:** 4 models (chenery, clearlak, indus, indus89). Only chenery currently exhibits the bug at the pipeline comparison layer; the other 3 are masked by unrelated downstream failures.

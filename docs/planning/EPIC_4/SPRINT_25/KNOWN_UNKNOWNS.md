@@ -605,7 +605,7 @@ Prep Task 3.
 - **Verified by:** Task 3 (Parser Non-Determinism Investigation)
 - **Date:** 2026-04-20
 - **Findings:**
-  - 20-seed sweep (`PYTHONHASHSEED=0..19`) on chenery produces **exactly 2 distinct outputs** with a **13 correct : 7 corrupted (65% : 35%) split**.
+  - 20-seed sweep (`PYTHONHASHSEED=0..19`) on chenery produces **exactly 2 distinct outputs** with a **7 correct : 13 corrupted (35% : 65%) split**.
   - Root cause is **Earley grammar ambiguity**, not dict/set iteration order in parser Python code. The `table_row_label` grammar allows `simple_label: dotted_label` where `dotted_label: (ID | STRING | NUMBER) ...` — so a bare `NUMBER` can be either a `table_value` (intended) or a `simple_label` row label (also grammatically valid). For any data row like `low.a 1 2 3`, Earley finds two parses: (a) one `table_row` with 3 `table_value` children, (b) multiple 0-value `table_row`s with each NUMBER becoming its own row label.
   - Lark's `ambiguity="resolve"` picks one alternative, and the pick is hash-seed-dependent because Lark's internal `_ambig` child ordering relies on sets/dicts in current versions.
   - Confirmed by direct parser probe: seed=0 produces 3 `table_row` nodes (correct), seed=1 produces 9 `table_row` nodes (corrupted) for the minimum reproducer.
