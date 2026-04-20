@@ -237,14 +237,23 @@ matching = [
 ]
 
 env = os.environ | {"PYTHONHASHSEED": SEED}
+failed: list[tuple[str, int]] = []
 for mid in sorted(matching):
-    subprocess.run(
+    result = subprocess.run(
         [".venv/bin/python", "-m", "src.cli",
          f"data/gamslib/raw/{mid}.gms",
          "-o", str(OUT / f"{mid}_mcp.gms"),
          "--quiet"],
-        env=env, check=False,
+        env=env,
     )
+    if result.returncode != 0:
+        failed.append((mid, result.returncode))
+
+if failed:
+    print(f"FAILED: {len(failed)} of {len(matching)} models did not translate:")
+    for mid, rc in failed:
+        print(f"  {mid}: rc={rc}")
+    raise SystemExit(1)  # Fail fast — golden set is incomplete; do not mark as "usable"
 print(f"Generated {len(matching)} golden files at {OUT}")
 ```
 
