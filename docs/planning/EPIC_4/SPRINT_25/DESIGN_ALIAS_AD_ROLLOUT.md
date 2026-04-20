@@ -236,7 +236,8 @@ matching = [
     if (m.get("solution_comparison") or {}).get("comparison_status") == "match"
 ]
 
-env = os.environ | {"PYTHONHASHSEED": SEED}
+env = os.environ.copy()
+env["PYTHONHASHSEED"] = SEED
 failed: list[tuple[str, int]] = []
 for mid in sorted(matching):
     result = subprocess.run(
