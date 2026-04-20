@@ -669,7 +669,7 @@ test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md && echo "EXIST
 grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md
 # Expect ≥ 8
-# ACTUAL: 13 (4 Phase + 4 Gate + 5 Stop Trigger headings)
+# Example current output: 13 (4 Phase + 4 Gate + 5 Stop Trigger headings) — may drift if headings evolve
 ```
 
 ### Deliverables

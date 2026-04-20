@@ -222,7 +222,7 @@ Imported from [Task 2 audit §Section 5](AUDIT_ALIAS_AD_CARRYFORWARD.md):
 **Generation script** (sketch, to be added at `scripts/gamslib/generate_golden.py` if not already present):
 
 ```python
-import json, subprocess, os, hashlib
+import json, subprocess, os
 from pathlib import Path
 
 SEED = "0"  # PYTHONHASHSEED=0 to pin parser determinism (workaround for #1283 until Task 3's fix lands)
