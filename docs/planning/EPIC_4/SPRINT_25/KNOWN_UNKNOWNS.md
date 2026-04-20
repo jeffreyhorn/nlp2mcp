@@ -1565,7 +1565,7 @@ This table shows which Sprint 25 prep tasks verify which unknowns. Prep Task 11 
 | Task 2: Audit Alias-AD Carryforward State | 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 | Core alias-AD classification + regression risk analysis |
 | Task 3: Investigate Parser Non-Determinism (#1283) | 2.1, 2.2 | Root-cause #1283 and survey affected models |
 | Task 4: Categorize Emitter Bug Backlog (#1275–#1281) | 2.3, 2.4, 2.5 | Emitter-fix classification, subsume-opportunity analysis |
-| Task 5: Analyze Recovered-Translate Models (ganges family) | 2.6 | Per-model compile-error mapping; leverage matrix |
+| Task 5: Analyze Recovered-Translate Models | 2.6 | Per-model compile-error mapping; leverage matrix |
 | Task 6: Design Alias-AD Rollout Plan | 1.5, 1.8 | Sameas-guard validation, rollout-flag decision (integrates Task 2 findings on 1.1–1.4, 1.6, 1.7) |
 | Task 7: Scope Multi-Solve Gate + Dispatcher Refactor | 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 | Covers all of Categories 3 and 4 |
 | Task 8: Profile Hard Translation Timeouts | 5.1, 5.2, 5.3, 5.4 | Covers all of Category 5 |

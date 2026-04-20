@@ -35,7 +35,7 @@ This prep plan focuses on:
 | 2 | Audit Alias-AD Carryforward State | Critical | 3–4h | Task 1 | Priority 1: alias differentiation (~20 models) |
 | 3 | Investigate Parser Non-Determinism (#1283) | Critical | 2–3h | Task 1 | Priority 2 leader: #1283 fix blocks confident retest |
 | 4 | Categorize Emitter Bug Backlog (#1275–#1281) | High | 2–3h | Task 1 | Priority 2: emitter fixes (7 issues) |
-| 5 | Analyze Recovered-Translate Models (ganges family) | High | 2–3h | Task 4 | Priority 2: leverage mapping |
+| 5 | Analyze Recovered-Translate Models | High | 2–3h | Task 4 | Priority 2: leverage mapping |
 | 6 | Design Alias-AD Rollout Plan | Critical | 3–4h | Task 2 | Priority 1: Day 1–12 schedule |
 | 7 | Scope Multi-Solve Gate + Dispatcher Refactor | Medium | 2–3h | Task 1 | Priorities 3, 4 |
 | 8 | Profile Hard Translation Timeouts (5 models) | Low | 2–3h | None | Priority 5 (low leverage per PR13) |
@@ -126,7 +126,7 @@ Created `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns acro
 27 unknowns documented across 6 categories:
 
 - **Category 1: Alias-AD Carryforward** (8 KUs, 1.1–1.8) — pattern classification, regression risk on 54 matching models, #1150 relationship, derivative-rule scope, sameas guards, offset-alias Pattern C, model_infeasible recovery, rollout strategy.
-- **Category 2: Emitter / Stationarity Backlog** (6 KUs, 2.1–2.6) — #1283 root cause, #1283 scope, presolve-path fixes (#1275), twocge subsume analysis (#1277/#1278), #1281 dedup safety, ganges-family leverage mapping.
+- **Category 2: Emitter / Stationarity Backlog** (6 KUs, 2.1–2.6) — #1283 root cause, #1283 scope, presolve-path fixes (#1275), twocge subsume analysis (#1277/#1278), #1281 dedup safety, recovered-translate leverage mapping.
 - **Category 3: Multi-Solve Gate Extension** (3 KUs, 3.1–3.3) — Approach A false-positive risk, beyond-saras coverage, partssupply regression.
 - **Category 4: Dispatcher Refactor** (3 KUs, 4.1–4.3) — equivalence verification, byte-diff baseline, translate-time overhead.
 - **Category 5: Translation Timeout — Algorithmic** (4 KUs, 5.1–5.4) — tractability per model, stage-level profiling, sparse Jacobian feasibility, `srpchase` distinctness.
@@ -476,7 +476,7 @@ done
 
 ---
 
-## Task 5: Analyze Recovered-Translate Models (ganges family)
+## Task 5: Analyze Recovered-Translate Models
 
 **Status:** ✅ COMPLETE
 **Priority:** High
@@ -1110,7 +1110,7 @@ Sprint 25 preparation comprises 11 tasks spanning ~23–34 hours (3–4.5 workin
 - [ ] `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` classifies all 11 open alias issues by Pattern
 - [ ] `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` narrows #1283 to ≤ 2 code paths
 - [ ] `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` groups all 7 emitter issues by code path
-- [ ] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 ganges-family models to specific emitter bugs
+- [ ] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 recovered-translate models to specific emitter bugs
 - [ ] `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` has 4 phases with gates and stop triggers
 - [ ] `SPRINT_25/DESIGN_SMALL_PRIORITIES.md` commits to specific designs for #1270 and #1271
 - [ ] `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` classifies each of 5 timeout models

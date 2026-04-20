@@ -1,4 +1,4 @@
-# Analysis — Recovered-Translate Models (ganges family)
+# Analysis — Recovered-Translate Models (ganges, gangesx, ferts, clearlak, turkpow)
 
 **Created:** 2026-04-20
 **Sprint:** 25 (Prep Task 5)
@@ -128,10 +128,10 @@ The emitter's IR dependency-ordering pass does not model the set-initialization 
 **Result:** 18 errors; compile rejected.
 
 ```
-**** 170  Domain violation for element        (line 43 — parameter data mixed-index)
-**** 171  Domain violation for set            (line 196)
-**** 98   Non-blank character(s) beyond max input line length (80000) (line 207)
-**** 140  Unknown symbol                      (line 207)
+**** 170  Domain violation for element        (MCP line 43 — parameter data mixed-index)
+**** 171  Domain violation for set            (MCP line 196)
+**** 98   Non-blank character(s) beyond max input line length (80000) (MCP line 200 — the 144,454-char `stat_zt` line)
+**** 140  Unknown symbol                      (MCP line 200 — parser recovery from the overflow)
 **** 8, 37, 409  parse-recovery errors
 ```
 
