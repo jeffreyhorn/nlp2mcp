@@ -269,7 +269,7 @@ grep -cE "^### Pattern [A-E]" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARR
 
 ## Task 3: Investigate Parser Non-Determinism (#1283)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -322,11 +322,21 @@ The Sprint 24 Day 13 Addendum discovered that `chenery_mcp.gms` was intermittent
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` — 7-section investigation covering:
+  - Reliable reproduction recipe with `PYTHONHASHSEED=0..19` sweep
+  - Minimum reproducer: 2-row-label × 3-column table with plain-ID columns (no hyphens / plus signs)
+  - Root-cause narrowing via direct Lark parse-tree probes under `ambiguity="explicit"` + `ambiguity="resolve"`
+  - Fix-site map and Options A–E with regression-surface analysis
+  - Cross-reference to Sprint 24 KU-27 (same Earley-ambiguity family, different rule)
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Verification Results filled in for Unknowns 2.1 and 2.2.
 
 ### Result
 
-_To be completed._
+- **Corruption rate (20-seed sweep on chenery):** 7/20 = **35% corruption**; exactly 2 distinct outputs (13 correct : 7 corrupted). Initial issue-doc observation ("1-in-3") was approximately right; the exact ratio varies with the seed range chosen but the 2-output structure is stable.
+- **Minimum reproducer:** 11-line GAMS file with `(low,medium).a  1  2  3` table row — same 13:7 corruption distribution; rules out the hyphen/plus-sign hypothesis from the initial issue doc.
+- **Root cause narrowed to 1 grammar-level bug (not 2 code paths):** the `table_row_label` → `simple_label` → `dotted_label` rule chain in `src/gams/gams_grammar.lark` allows a bare `NUMBER` to parse as either a `table_value` (intended) or a `simple_label` row label (also valid). Earley finds two legal parses; `ambiguity="resolve"` picks one per run with Python-hash-seed-dependent tiebreak. This is the same family as Sprint 24 KU-27 (different ambiguous rule, same structural class).
+- **Affected corpus:** 4 models (chenery, clearlak, indus, indus89). Only chenery currently exhibits the bug at the pipeline comparison layer; the other 3 are masked by unrelated downstream failures.
+- **Proposed fix: Option D** (post-parse disambiguation in `_resolve_ambiguities()` that prefers the alternative packing the most `table_value` children into the fewest `table_row` nodes). Rationale: localized change, near-zero regression surface (only affects `_ambig` nodes containing `table_row`), direct precedent in Sprint 24 PR #1267's KU-27 defensive fix. Option E (PYTHONHASHSEED determinism regression test) is required as a complement.
 
 ### Verification
 
@@ -337,6 +347,7 @@ test -f docs/planning/EPIC_4/SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md &
 grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
     docs/planning/EPIC_4/SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md
 # Expect ≥ 3
+# ACTUAL: 3 (all required section headings present)
 ```
 
 ### Deliverables
@@ -350,11 +361,11 @@ grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
 
 ### Acceptance Criteria
 
-- [ ] Corruption rate measured across ≥ 10 `PYTHONHASHSEED` values
-- [ ] Root cause narrowed to ≤ 2 specific code paths
-- [ ] Fix approach documented with expected behavior on other table patterns
-- [ ] Cross-reference to related KUs in Sprint 25 KNOWN_UNKNOWNS
-- [ ] Unknowns 2.1, 2.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Corruption rate measured across ≥ 10 `PYTHONHASHSEED` values (measured across 20; 13:7 split)
+- [x] Root cause narrowed to ≤ 2 specific code paths (narrowed to 1: grammar-level Earley ambiguity in `table_row` → `simple_label` → `dotted_label`)
+- [x] Fix approach documented with expected behavior on other table patterns (Options A–E with regression-surface analysis; Option D recommended)
+- [x] Cross-reference to related KUs in Sprint 25 KNOWN_UNKNOWNS (KU-27 cross-referenced; SPRINT_25 KUs 2.1 and 2.2 updated)
+- [x] Unknowns 2.1, 2.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
