@@ -600,7 +600,23 @@ Prep Task 3.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with revision — root cause is different from the initial assumption)
+
+- **Verified by:** Task 3 (Parser Non-Determinism Investigation)
+- **Date:** 2026-04-20
+- **Findings:**
+  - 20-seed sweep (`PYTHONHASHSEED=0..19`) on chenery produces **exactly 2 distinct outputs** with a **7 correct : 13 corrupted (35% : 65%) split**.
+  - Root cause is **Earley grammar ambiguity**, not dict/set iteration order in parser Python code. The `table_row_label` grammar allows `simple_label: dotted_label` where `dotted_label: (ID | STRING | NUMBER) ...` — so a bare `NUMBER` can be either a `table_value` (intended) or a `simple_label` row label (also grammatically valid). For any data row like `low.a 1 2 3`, Earley finds two parses: (a) one `table_row` with 3 `table_value` children, (b) multiple 0-value `table_row`s with each NUMBER becoming its own row label.
+  - Lark's `ambiguity="resolve"` picks one alternative, and the pick is hash-seed-dependent because Lark's internal `_ambig` child ordering relies on sets/dicts in current versions.
+  - Confirmed by direct parser probe: seed=0 produces 3 `table_row` nodes (correct), seed=1 produces 9 `table_row` nodes (corrupted) for the minimum reproducer.
+  - Lark explicit-ambiguity mode (`ambiguity='explicit'`) shows the minimum-reproducer's top-level parse with 8 alternatives and further nested `_ambig` nodes — confirming this is grammar-level, not parser-code-level.
+  - Minimum reproducer: 2-row-label × 3-column table with plain-ID column names (no hyphens, no `+` signs); ruled out the initial hypothesis that `light-ind` / `food+agr` tokenization was involved.
+- **Evidence:**
+  - Full investigation: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Sections 1–3
+  - Minimum reproducer: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 2 (also saved at `/tmp/task3-sweep/minrepro_2.gms` during the investigation)
+  - Grammar rules: `src/gams/gams_grammar.lark` lines 320–343
+  - Parser ambiguity resolver: `src/ir/parser.py` lines 158–225 (`_build_lark` + `_resolve_ambiguities`)
+- **Decision:** Revised assumption — **root cause is Earley grammar ambiguity, not iteration order. Recommended fix is Option D (post-parse disambiguation in `_resolve_ambiguities()` that prefers the "greediest-value" alternative for `table_row` trees).** Option A (narrow dotted_label) would regress Issue #863's numeric-row-label support; Options B (rule priorities) and C (preprocessor rewrite) are higher-risk. A determinism regression test (Option E) is required alongside any chosen fix.
 
 ---
 
@@ -644,7 +660,22 @@ Prep Task 3.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (count +1 from initial assumption)
+
+- **Verified by:** Task 3 (Parser Non-Determinism Investigation)
+- **Date:** 2026-04-20
+- **Findings:**
+  - `grep -lE '^\s*\([a-zA-Z_][a-zA-Z0-9_, ]*\)\.' data/gamslib/raw/*.gms` identifies **4 corpus models** with multi-row-label tuple expansion at table-row column position: `chenery`, `clearlak`, `indus`, `indus89`. The initial assumption ("at most 3") was off by one; also the hypothesized CGE-family membership (twocge, korcge, stdcge) was wrong — none of those use `(a,b,c).col` tuple labels.
+  - Of the 4 affected models:
+    - `chenery` — translate=success, solve=success, compare=mismatch. **Non-determinism confirmed** via 20-seed sweep.
+    - `clearlak` — translate=success, solve=failure (`path_syntax_error`). Non-determinism likely but masked by downstream failure.
+    - `indus` — translate=success, solve=failure (`path_syntax_error`). Non-determinism likely but masked.
+    - `indus89` — translate=None (pipeline never reached — not currently exercised).
+  - `chenery` is the only model that exhibits the bug at the pipeline-comparison layer. The other 3 will need the fix to land first before their downstream failures can be reliably attributed.
+- **Evidence:**
+  - Corpus scope survey: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 4
+  - Status JSON snapshot: `data/gamslib/gamslib_status.json` (2026-04-19 / Day 13 Addendum)
+- **Decision:** Proceed with revised count: **4 models, not ≤3**. Since the root cause is grammar-level (not model-specific), a single fix in `_resolve_ambiguities()` covers all 4 simultaneously. PR12 byte-stability fixture should include chenery (authoritative canary) + the minimum reproducer from this investigation; the other 3 are lower-priority additions once their downstream failures clear.
 
 ---
 
