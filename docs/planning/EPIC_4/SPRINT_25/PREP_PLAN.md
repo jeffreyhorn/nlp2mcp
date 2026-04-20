@@ -165,7 +165,7 @@ grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKN
 
 ## Task 2: Audit Alias-AD Carryforward State
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -220,37 +220,50 @@ Sprint 24's Priority 1 was alias-AD, but the sprint ended with 11 issues deferre
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` — 7-section state-of-play document covering:
+  - Landed-vs-stubbed inventory for Sprint 23 base layer + Sprint 24 additions (helpers, guards, emitter fixes) in `src/ad/derivative_rules.py` and `src/kkt/stationarity.py` with exact line references.
+  - Full classification table for all 11 open alias issues (#1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150) including current reproduction state (translate/solve/compare/rel_diff) as of the Day 13 Addendum snapshot.
+  - Pattern A/B/C/D/E section headings with S24-vs-S25 deltas (Patterns B and D reclassified empty; Pattern E gained kand; Pattern A gained launch).
+  - Fix-site map from each active Pattern to specific source locations; subsume-opportunity graph; dependency graph (Pattern C depends on Pattern A).
+  - Canary-test priority ladder, Tier 0–Tier 5 (6 tiers: dispatch → alias-users → golden-file → Pattern A targets → Pattern C targets → infeasibility-adjacent informational).
+  - Cross-reference to Sprint 24 KU-01 / KU-04 / KU-13 / KU-17.
+  - Open questions explicitly routed to Task 6 (rollout design).
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Verification Results filled in for Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 (status changed from 🔍 INCOMPLETE → ✅ VERIFIED, with findings/evidence/decision sections). Unknown 1.5 remains INCOMPLETE because its verification activity is Task 6's remit.
 
 ### Result
 
-_To be completed._
+- **Pattern distribution (revised from Sprint 24):** Pattern A = 6 issues / ~16 comparison-scope models (#1138, #1139, #1140, #1142, #1145, #1150; #1140's authoritative list per ISSUE_1140 = ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, ps10_s); Pattern C = 2 issues (#1143, #1146); Pattern E = 3 issues (#1141, #1144, #1147) routed out of scope. Patterns B and D are empty.
+- **Pattern reclassifications from Sprint 24 Day 9 investigations:** kand (#1141) moved B → E (multi-solve comparison bug, not AD); launch (#1142) moved D → A (alias-family per Day 9 #1226).
+- **Landed inventory:** Sprint 23's `bound_indices`/`_alias_match`/`_same_root_set`/`_partial_collapse_sum` threading is fully in place. Sprint 24 added `_collect_bound_indices`, `_find_var_indices_in_body`, single-index sum-collapse concrete→symbolic recovery (Day 3), `_apply_alias_offset_to_deriv` (Day 4), `_body_has_alias_sum` + `_var_inside_alias_sum` + `_var_has_alias_coindex` narrowed guards (Day 5), and `_replace_indices_in_expr` IndexOffset.base emitter canonicalization (Day 6).
+- **Stubbed / not landed:** (1) multi-index partial-collapse concrete→symbolic (primary gap for Patterns A); (2) `IndexOffset.base` extraction in `_alias_match()` (Pattern C extension); (3) multi-position offset handling in `_apply_alias_offset_to_deriv`; (4) deep Jacobian-transpose assembly rewrite (representative-instance bug, Day 1–2 finding — out of first-round scope).
+- **Regression canary list (revised):** 10 alias-using matching models (not the 8 from Sprint 23 — nemhaus dropped via MINLP exclusion; partssupply / prolog / sparta joined). Primary canary: dispatch. Tier 1 list of 10 adds 9 alias-using models (quocge, partssupply, prolog, ps2_f, ps3_f, ship, sparta, splcge, gussrisk) + paklive (non-alias-using but included defensively, since Sprint 24 Day 5 regressed it via the same `_collect_bound_indices` path). marco no longer in matching set; dropped from canary list.
 
 ### Verification
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md && echo "EXISTS" || echo "MISSING"
 # Document must classify all 11 open issues by Pattern
-grep -cE "^### Pattern [A-E]:" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md
+grep -cE "^### Pattern [A-E]" docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md
 # Expect ≥ 4 Pattern headings with all 11 issues assigned
+# ACTUAL: 5 Pattern headings (A through E, B and D marked as closed/empty); all 11 issues in classification table
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` — state-of-play document
-- Pattern classification table for all 11 open issues
-- Landed-vs-stubbed inventory for `src/ad/` and `src/kkt/` alias-AD helpers
-- Canary test priority list (beyond `dispatch`)
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8
+- `docs/planning/EPIC_4/SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` — state-of-play document ✅
+- Pattern classification table for all 11 open issues ✅ (Section 2)
+- Landed-vs-stubbed inventory for `src/ad/` and `src/kkt/` alias-AD helpers ✅ (Section 1)
+- Canary test priority list (beyond `dispatch`) ✅ (Section 5)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 ✅
 
 ### Acceptance Criteria
 
-- [ ] All 11 open alias issues classified by Pattern (A/B/C/D/E)
-- [ ] For each issue, current reproduction state recorded (pass/near-pass/fail + signature)
-- [ ] Inventory of Sprint 24 landed vs stubbed alias-AD work
-- [ ] Regression-risk canary list beyond `dispatch`
-- [ ] Cross-reference with KU-01, KU-04, KU-13, KU-17 from SPRINT_24/KNOWN_UNKNOWNS.md
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 11 open alias issues classified by Pattern (A/B/C/D/E)
+- [x] For each issue, current reproduction state recorded (pass/near-pass/fail + signature)
+- [x] Inventory of Sprint 24 landed vs stubbed alias-AD work
+- [x] Regression-risk canary list beyond `dispatch`
+- [x] Cross-reference with KU-01, KU-04, KU-13, KU-17 from SPRINT_24/KNOWN_UNKNOWNS.md
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

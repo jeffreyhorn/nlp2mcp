@@ -145,7 +145,21 @@ Prep Task 2 (Alias-AD carryforward audit).
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with revision)
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - Sprint 24's 4-pattern classification (A/B/C/D) simplifies to 3 active patterns (A/C/E) after Day 9 investigations reclassified kand (#1141, was B → E) and launch (#1142, was D → A).
+  - Pattern distribution: **A = 6 issues (#1138, #1139, #1140, #1142, #1145, #1150)**, **C = 2 issues (#1143, #1146)**, **E = 3 issues (#1141, #1144, #1147)**. Patterns B and D are empty.
+  - Pattern A dominates (6 of 11 issues, ~16 comparison-scope models including ISSUE_1140's 7 PS-family models) — a single architectural change to the summation-context / multi-index partial-collapse path addresses them all. This matches the original assumption's "≥6 of 11 issues" threshold.
+  - Pattern C (#1143 polygon, #1146 himmel16) requires a separate `IndexOffset.base` extraction in `_alias_match()` (~2–3h incremental on top of A).
+  - Pattern E issues route out of alias-AD scope: #1141 → Priority 3 / multi-solve gate, #1144 → IR domain investigation (near-match at 0.2%), #1147 → post-fix empirical re-evaluation (now `model_infeasible`).
+- **Evidence:**
+  - Full classification table: `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2
+  - Day 9 reclassification: `SPRINT_24/SPRINT_LOG.md` Day 9 (#1225 for kand, #1226 for launch)
+  - Landed vs stubbed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1
+- **Decision:** Proceed with assumption — revised to **"Pattern A resolves 6 of 11 issues (≥ the assumed threshold); Pattern C needs a small incremental extension; Pattern E routes elsewhere."** Sprint 25 Priority 1's 12-day block is sufficient for Patterns A + C; B/D being empty shrinks the surface.
 
 ---
 
@@ -191,7 +205,21 @@ Prep Task 2 + Prep Task 6.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (partial — canary ladder produced; golden-file snapshot deferred to Task 6)
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - Re-verified alias-user set among the 54 matching models: **10 models** use aliases (not 8 as Sprint 23 reported). The +2 delta is: `nemhaus` dropped (MINLP-excluded via v2.2.0); `partssupply`, `prolog`, `sparta` joined the matching set during Sprint 24.
+  - Current alias-user canary list: `dispatch, gussrisk, partssupply, prolog, ps2_f, ps3_f, quocge, ship, sparta, splcge`.
+  - `marco` no longer in matching set (was a Sprint 24 Day 5 Checkpoint 1 regression candidate) — drop from canary ladder.
+  - `paklive` remains in matching set and remains a regression-sensitive canary (S24 Day 5 fix via `_collect_bound_indices`).
+  - Canary ladder produced: Tier 0 (dispatch), Tier 1 (9 alias users + paklive), Tier 2 (44 non-alias matching models via golden-file diff), Tier 3 (Pattern A targets), Tier 4 (Pattern C targets), Tier 5 (infeasibility-adjacent informational).
+  - Golden-file snapshot generation itself is deferred to Task 6's rollout design.
+- **Evidence:**
+  - Canary ladder: `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 5
+  - Alias-user re-verification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Appendix B + §Section 4
+- **Decision:** Proceed with assumption — revised to **"≤1 regression tolerated (still yields +7 toward +8 target); canary ladder has 6 tiers (Tier 0 – Tier 5); Task 6 will define the per-tier gate criteria and golden-file infrastructure."**
 
 ---
 
@@ -233,7 +261,19 @@ Prep Task 2 (audit + Pattern classification).
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - #1150 is classified as **Pattern A** alongside the #1137-family (qabel, abel in #1150; CGE/PS/meanvar in #1138–#1140). The root cause is the same upstream gap: the *multi-index partial-collapse* code path in `_partial_collapse_sum` does not apply the single-index `_find_var_indices_in_body`-guided concrete→symbolic free-index recovery that Day 3 added for single-index collapse.
+  - Sprint 24 Day 3's single-index fix (landed) *already* applies to qabel and abel. Their residual mismatches (rd 8.2% / 29.8%) are from other assembly instances not covered by single-index collapse — implying the multi-index gap is the same underlying bug for both #1150 and #1138/#1140.
+  - No evidence that #1150 needs a separate sub-workstream.
+- **Evidence:**
+  - Landed work inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (Sprint 24 Day 3 entry)
+  - Stubbed items: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (first "Stubbed" row: `_partial_collapse_sum` multi-index path)
+  - Pattern table: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2 (#1150 and #1138/#1140 all marked Pattern A)
+- **Decision:** Proceed with assumption — #1150 merges into the Pattern A fix scope. Close #1150 after the Pattern A main patch lands and qabel/abel residual mismatch clears.
 
 ---
 
@@ -275,7 +315,23 @@ Prep Task 2.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (revised)
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - Sprint 23/24 KU-01's answer (`_diff_sum`, `_diff_varref`, `_partial_collapse_sum` receive the summation-context; other `_diff_*` rules pass through transparently) **still holds**. `bound_indices` is threaded through every dispatch target (`src/ad/derivative_rules.py:138–168`) including `_diff_binary`, `_diff_unary`, `_diff_call`, `_diff_power`, `_diff_prod`, and all 15+ specialized function-diff rules.
+  - **Revision:** the code-change surface for Sprint 25 extends beyond the three KU-01 functions. Additional fix sites identified by this audit:
+    1. `_partial_collapse_sum` multi-index path (in `src/ad/derivative_rules.py`) — needs Day-3-equivalent concrete→symbolic recovery.
+    2. `_alias_match` in `src/ad/derivative_rules.py:304–307` — needs `IndexOffset.base` extraction for Pattern C.
+    3. `_apply_alias_offset_to_deriv` in `src/kkt/stationarity.py:1743` — multi-position offset handling (currently skipped at line 4389 when ambiguous).
+  - `_add_indexed_jacobian_terms` and the representative-instance Jacobian-transpose logic in `build_stationarity_equations` were identified as the *deeper* root cause (Sprint 24 Day 1–2) but are **out of scope** for the first Sprint 25 patch round (Task 6 to confirm).
+  - No evidence of new derivative rules added in Sprint 24 that break the threading.
+- **Evidence:**
+  - Sprint 24 landed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1
+  - Fix-site map: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 3 (Pattern A subsection)
+  - S24 SPRINT_LOG Day 1–3 on the Jacobian-transpose depth question
+- **Decision:** Proceed with revised assumption — **"primary fix sites are `_partial_collapse_sum`, `_alias_match`, `_apply_alias_offset_to_deriv`; the Jacobian-assembly rewrite is an open question for Task 6 scoping."**
 
 ---
 
@@ -364,7 +420,21 @@ Prep Task 2 + Prep Task 6.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - Pattern C **depends on Pattern A** landing first. Polygon and himmel16 currently translate successfully (Day 6 IndexOffset.base emitter fix landed) but their derivative math is wrong; the upstream `_partial_collapse_sum` gap blocks correct body differentiation *before* `_alias_match` is even reached for the offset case.
+  - The Sprint 24 KU-04 fix-success estimate (55–65%) assumes Pattern A already works. With Pattern A landed, Pattern C should be a small incremental extension: extend `_alias_match()` at `src/ad/derivative_rules.py:304–307` to handle the `IndexOffset` / plain-string mixed case by extracting `expr_idx.base` and calling `_same_root_set`, then emitting an offset-aware guard.
+  - #1277 twocge mixed-offset (`mu(j+1,r)` with `pq(j,r)`) uses the same code path; if Pattern C is extensible, twocge benefits as a side effect.
+  - Pattern C **can** be feature-flagged separately: Pattern A lands Day 1–3, Pattern C lands Day 5–7 (per Task 6's rollout plan).
+  - Polygon's 100% mismatch vs himmel16's 43% is consistent with a single underlying bug, where polygon's entire objective depends on the alias-offset expression and himmel16 has some offset-free terms that partially resolve correctly.
+- **Evidence:**
+  - Stubbed Pattern C fix site: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (second "Stubbed" row)
+  - Proposed fix code: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 3 (Pattern C subsection)
+  - Dependency on Pattern A: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 3 ("Subsumed-By Relationships")
+- **Decision:** Proceed with assumption — Pattern C is amenable to the same architectural family as Pattern A (summation-context), with an `IndexOffset.base` extension. Sequence: Pattern A Days 1–3 → Pattern C Days 5–7.
 
 ---
 
@@ -408,7 +478,23 @@ Prep Task 2.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with lowered probability)
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - Current state (Day 13 Addendum): **camshape** translates+reaches PATH but returns Locally Infeasible (status 5, objective 6.2 after 48,314 iters); **cesam** returns Infeasible (status 4, objective 0.0, 0 iters); **korcge** returns Locally Infeasible (status 5, objective 338.561 after 770 iters).
+  - Pattern classification: #1147 camshape is **Pattern E / A-adjacent** (not in the 11 open AD issues' direct Pattern A scope; recovery depends on whether Jacobian accuracy delta makes the initial point feasible). cesam and korcge are **not** in the 11 open AD issues — they're adjacent infeasibles attributed to alias-related assembly in Sprint 24 Day 7/13.
+  - **Recovery is plausible but not guaranteed:**
+    - cesam's STATUS 4 + objective=0 at iter 0 suggests a pre-PATH-iteration rejection, possibly Jacobian-sign or bound-setting issue that the alias-AD fix *could* address (recovery probability: moderate, ~40%).
+    - korcge's STATUS 5 after 770 iters suggests PATH rejects the trajectory — if alias-AD corrects cross-term coefficients, the trajectory could change (recovery probability: ~35%).
+    - camshape's STATUS 5 after 48k iters suggests PATH tried hard but failed — alias-AD fix may or may not resolve (recovery probability: ~40%).
+  - **Expected recoveries:** ~1 of 3. Meeting the Sprint 25 model_infeasible target (`8 → ≤5`, −3) is at risk via this path alone and needs a supplementary recovery source (Priority 2 emitter fixes may help via #1275–#1281, or the 5 Category B PATH-convergence models via warm-start).
+- **Evidence:**
+  - Current infeasibility signatures: `data/gamslib/gamslib_status.json` (extracted in Task 2 data-collection step)
+  - Sprint 24 Day 13 alias-related-infeasibility list: `SPRINT_24/SPRINT_LOG.md` Day 13 model_infeasible table
+  - Pattern E→A-adjacent classification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2 row for #1147
+- **Decision:** Revised assumption — **"~1 of 3 alias-related infeasibles will recover; meeting the −3 target will likely require secondary recoveries from Priority 2 emitter/stationarity fixes or Priority 1's Pattern A changing Jacobian numerics for models outside the 11-issue list."** Task 6's rollout design should include a mid-sprint checkpoint to re-run the infeasible trio and call the target.
 
 ---
 
@@ -452,7 +538,19 @@ Prep Task 6.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (partial — inventory captured; rollback decision deferred to Task 6)
+
+- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Date:** 2026-04-19
+- **Findings:**
+  - **Sprint 24 did land portions of the alias-AD fix that are already permanently enabled.** The `bound_indices` threading (Sprint 23), the Day 3 single-index sum collapse fix, the Day 4 `_apply_alias_offset_to_deriv` post-processing, and the Day 5 `_var_inside_alias_sum` narrowed guard are all live. This means "all or nothing" is inaccurate — we're partway through, and the canary-protected additions have been running since Sprint 24.
+  - Feature-flag feasibility: the Sprint 25 additions (multi-index partial-collapse recovery, `IndexOffset.base` in `_alias_match`) could in principle be gated on a CLI flag or env var, but doing so would double the test matrix (with-flag / without-flag paths) and give zero operational benefit — there's no "some users want the old behavior" case. `bound_indices` guard already prevents regressions in the alias-free models. Recommend **no feature flag**.
+  - **Rollback procedure:** git revert of the Sprint 25 PRs. Because the fixes are surgical (3 functions across 2 files), revert is clean. The Sprint 23 + Sprint 24 base layer remains intact. No database migration or state changes to worry about.
+  - Task 6 should document the per-checkpoint rollback step (Checkpoint 1 Day 5, Checkpoint 2 Day 10) with exact `git revert` commands.
+- **Evidence:**
+  - Landed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (confirms what's already live)
+  - Stubbed-vs-landed distinction: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (third subsection)
+- **Decision:** Revised assumption — **"no feature flag needed; rollback via git revert of the Sprint 25 PRs is the operational mechanism. Sprint 24 residue stays in place (it already passes all canary tests)."** Task 6 will codify the per-checkpoint revert procedure.
 
 ---
 
