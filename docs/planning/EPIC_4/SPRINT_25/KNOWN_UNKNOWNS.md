@@ -719,7 +719,20 @@ Prep Task 4.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with one file-path correction)
+
+- **Verified by:** Task 4 (Emitter Backlog Categorization)
+- **Date:** 2026-04-20
+- **Findings:**
+  - Assumption is CORRECT that all 3 presolve-path issues hit a **single emitter site**. File location is `src/emit/emit_gams.py:889–940` (`_emit_nlp_presolve`), **not** `src/emit/original_symbols.py` as the assumption stated.
+  - The exact buggy line is `src/emit/emit_gams.py:933`: `abs_path = Path(source_file).resolve().as_posix()` produces the absolute path that gets emitted unchanged in the `$include` directive at line 936.
+  - A single fix repo-relativizing the path covers all 3 models (robustlp, chain, mathopt3) and any other model whose solve retries via `--nlp-presolve`.
+  - No edge case found where a currently-in-scope model has its source file OUTSIDE the repo root — `Path(source_file).resolve()` is always under `data/gamslib/raw/` in pipeline runs.
+- **Evidence:**
+  - Fix site identified: `src/emit/emit_gams.py:889–940` (function `_emit_nlp_presolve`)
+  - Exact buggy line: `src/emit/emit_gams.py:933`
+  - Catalog entry: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 2.1 and §Section 1 row for #1275
+- **Decision:** Proceed with assumption — single code path confirmed; fix covers all 3 presolve-using models simultaneously. File-path expectation corrected to `src/emit/emit_gams.py`. Estimated fix time 2–3h (one-line core change + repo-relative path resolver helper + unit test + regression artifact regen).
 
 ---
 
@@ -763,7 +776,20 @@ Prep Task 4.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (partially)
+
+- **Verified by:** Task 4 (Emitter Backlog Categorization)
+- **Date:** 2026-04-20
+- **Findings:**
+  - **#1277 partially subsumed** by Task 2's Pattern C fix. The twocge `stat_tz` reproducer (verified on `data/gamslib/mcp/twocge_mcp.gms:497`) shows `pq(j,r) * mu(j+1,r) * nu_eqXg(j+1,r)` in the same offset group — some operands shifted, others not. This is the same family Task 2 §Section 3 classified as Pattern C (offset + alias). Pattern C's `_alias_match` extension addresses the derivative chain, but the stationarity assembly step (`_apply_alias_offset_to_deriv` at `src/kkt/stationarity.py:1743`, currently ParamRef-only) likely needs extension to cover VarRef operands in the offset group too. Task 2 §Section 1 "Stubbed / Not Landed" row 3 already flagged the multi-position offset gap; this catalog attaches #1277 to that stubbed item.
+  - **#1278 NOT subsumed** by Task 2. Verified: `twocge_mcp.gms` lines 479, 482, 488 contain `$(ord(r) <> ord(r))` tautological guards in `stat_e`, `stat_m`, `stat_pwe`; the original equations `eqpw` (line 559) and `eqw` (line 560) correctly use `$(ord(r) <> ord(rr))`. The bug is in instance-enumeration substitution rewriting the guard's `rr` alongside the body's `rr`. Separate code path from the derivative chain / `_alias_match` logic Task 2 touches — 3–4h dedicated fix required.
+  - twocge's sibling bugs #1251 (empty trade equations) and #906 (SAM data ordering) are out of Sprint 25 scope and not subsumed by either Task 2 or this catalog.
+- **Evidence:**
+  - #1277 reproducer: `grep -nE "^stat_tz.*mu\(j\+1.*pq\(j," data/gamslib/mcp/twocge_mcp.gms` → line 497 match
+  - #1278 reproducer: `grep -n "ord(r) <> ord(r)" data/gamslib/mcp/twocge_mcp.gms` → 3 hits on lines 479, 482, 488
+  - Classification table: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 1 rows for #1277, #1278
+  - Task 2 cross-reference: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 "Stubbed / Not Landed" row 3
+- **Decision:** Batch 3 (Days 5–7) plan: (a) validate #1277 post-Pattern-C, extend `_apply_alias_offset_to_deriv` if needed (~1–2h); (b) fix #1278 as a standalone substitution-preservation patch (~3–4h).
 
 ---
 
@@ -807,7 +833,22 @@ Prep Task 4.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with scope clarification)
+
+- **Verified by:** Task 4 (Emitter Backlog Categorization)
+- **Date:** 2026-04-20
+- **Findings:**
+  - **The assumption's "inlined source" phrasing is imprecise.** The actual mechanism that creates the duplicate declarations is `_emit_nlp_presolve` in `src/emit/emit_gams.py:889`, which emits `$include` wrapped in `$onMultiR ... $offMulti`. `$onMultiR` is intended to allow re-declaration of symbols — so the bug is narrower than "all Parameter declarations duplicated."
+  - **Current committed `data/gamslib/mcp/lmp2_mcp.gms` does not show duplicate Parameter declarations** (only 4 Parameter lines at rows 50–53, no redundancy). Reproduced locally with both `--nlp-presolve` and default modes — neither currently produces the duplicate pattern described in ISSUE_1281.
+  - **Pipeline status is nevertheless `path_solve_terminated` with "Parse error: no_solve_summary"** (per `gamslib_status.json`), so there IS a real compile-time failure. Candidate explanations: (a) the pipeline runs a regeneration path with a PYTHONHASHSEED value that triggers #1283 non-determinism and produces a different (broken) output; (b) GAMS compile rejects something non-obvious about the current `$onMultiR`/`$offMulti` scope interaction; (c) the duplicate-declaration bug only manifests on fresh regeneration after certain preprocessor state.
+  - **Dedup-safety check:** no currently-matching model in `src/emit/emit_gams.py`'s `_emit_nlp_presolve` path declares a Parameter twice intentionally. The proposed `_DeclaredSymbolTracker` helper (Task 4 catalog §Section 2.2) uses case-insensitive matching (GAMS identifiers are case-insensitive per spec) and operates on `(name, domain, condition)` tuples, which preserves any legitimate conditional-override pattern if one exists.
+  - **Scope for fix verification:** run `gams data/gamslib/mcp/lmp2_mcp.gms lo=2 2>&1` during Sprint 25 Day 1–2 trace to get the exact compile-error line; that governs whether the fix is straightforward dedup (likely) or something deeper (possible).
+- **Evidence:**
+  - Current committed file: `data/gamslib/mcp/lmp2_mcp.gms` lines 50–53 show only 4 Parameter declarations
+  - Local reproduction: `/tmp/task4-lmp2.gms` (default mode) and `/tmp/task4-lmp2-pre.gms` (`--nlp-presolve`) — neither shows duplicates in Parameter declarations
+  - Status JSON: `mcp_solve.outcome_category = "path_solve_terminated"`, `error.message = "Parse error: no_solve_summary"`
+  - Catalog entry: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 1 row for #1281, §Section 2.2 shared helper design
+- **Decision:** Proceed with fix as specified, with one added safety requirement — **Day 1–2 lmp2 trace required before coding the fix** to confirm which specific declaration triggers the parse error. `_DeclaredSymbolTracker` helper is safe to introduce regardless (shared with #1276). Dedup policy uses case-insensitive matching per GAMS spec; no risk of removing legitimate declarations that differ only in case.
 
 ---
 
