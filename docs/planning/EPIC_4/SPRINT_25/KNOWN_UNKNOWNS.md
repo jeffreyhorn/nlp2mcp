@@ -893,7 +893,29 @@ Prep Task 5.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (assumption inverted; new revised assumption documented below)
+
+- **Verified by:** Task 5 (Recovered-Translate Leverage Analysis)
+- **Date:** 2026-04-20
+- **Findings:**
+  - **Assumption was WRONG:** "At least 3 of the 5 ganges-family models are unblocked by some subset of emitter fixes (#1275–#1281)." Actual: **0 of the 5 models are unblocked by any of the existing tracked bugs (#1275–#1281, #1283).** Each model hits a distinct, previously-untracked bug.
+  - **All 5 require new issues** filed during this task: #1289 (ganges/gangesx calibration stripping, 2 models), #1290 (ferts identifier-length overflow, 1 model), #1291 (clearlak statement-ordering bug, 1 model), #1292 (turkpow `sameas()` 144k-char line overflow, 1 model).
+  - **Per-model compile errors verified** via GAMS `action=c` on `/tmp/task5-compile/`:
+    - ganges + gangesx: 16 × Error 66 each (undefined parameters from stripped calibration block)
+    - ferts: many × Error 109/108 (identifier 67 chars > 63 GAMS limit, e.g., `nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5`)
+    - clearlak: Error 352 (set uninitialized) + Error 149 + Error 141 (statement-ordering bug, deterministic — verified across `PYTHONHASHSEED=0,1,42`, all produce SHA-256 `d22483…`)
+    - turkpow: Error 98 (line >80k chars; line 200 = 144,454 chars) + cascading Error 170/140/8/37/409
+  - **Highest-leverage single fix:** #1289 unblocks 2 of 5 (ganges + gangesx).
+  - **Fix-minimal subset for ≥3 of 5:** #1289 + any one of {#1290, #1291, #1292}; cheapest pair is #1289 + #1292 (~5–8h total).
+  - **Fix-minimal subset for 5 of 5:** all four (#1289 + #1290 + #1291 + #1292), ~10–15h total.
+  - **Priority 2 leverage on Solve target (99 → ≥ 105):** existing Task 4 emitter bugs add 0 Solve gains from this set. Sprint 25 Solve target depends on the 4 new issues landing AND each unblocked MCP then PATH-solving cleanly. Realistic expected gain: 2–3 of 5 will reach `model_optimal` post-fix.
+- **Evidence:**
+  - Compile-check artifacts: `/tmp/task5-compile/<model>_mcp.lst` for all 5 models
+  - Detailed analysis: `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` §Sections 1–3
+  - clearlak determinism check: `shasum -a 256 /tmp/task5-clearlak-s{0,1,42}.gms` → all three identical
+  - New issues filed: #1289, #1290, #1291, #1292 (all `sprint-25` labelled)
+  - In-tree docs: `docs/issues/ISSUE_1289_*.md` through `ISSUE_1292_*.md`
+- **Decision:** **Revised assumption: 0 of the 5 recovered-translates are unblocked by existing emitter bugs; all 5 require the 4 new issues #1289–#1292 to be fixed.** Priority 2 scope expands from 13–18h (Task 4 baseline) to **23–33h** (Task 4 + this task's new issues). Sprint 25 planning decision required: should Priority 2 absorb the +10–15h, or should a subset of #1289–#1292 defer to Sprint 26? Recommended priority order if absorbed: **#1289 first** (highest single-fix leverage, 2 models) → #1292 (cheapest, 1–2h via line-wrap) → #1290 → #1291 (groups with #1279 in `src/ir/normalize.py`).
 
 ---
 
@@ -1543,7 +1565,7 @@ This table shows which Sprint 25 prep tasks verify which unknowns. Prep Task 11 
 | Task 2: Audit Alias-AD Carryforward State | 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 | Core alias-AD classification + regression risk analysis |
 | Task 3: Investigate Parser Non-Determinism (#1283) | 2.1, 2.2 | Root-cause #1283 and survey affected models |
 | Task 4: Categorize Emitter Bug Backlog (#1275–#1281) | 2.3, 2.4, 2.5 | Emitter-fix classification, subsume-opportunity analysis |
-| Task 5: Analyze Recovered-Translate Models (ganges family) | 2.6 | Per-model compile-error mapping; leverage matrix |
+| Task 5: Analyze Recovered-Translate Models | 2.6 | Per-model compile-error mapping; leverage matrix |
 | Task 6: Design Alias-AD Rollout Plan | 1.5, 1.8 | Sameas-guard validation, rollout-flag decision (integrates Task 2 findings on 1.1–1.4, 1.6, 1.7) |
 | Task 7: Scope Multi-Solve Gate + Dispatcher Refactor | 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 | Covers all of Categories 3 and 4 |
 | Task 8: Profile Hard Translation Timeouts | 5.1, 5.2, 5.3, 5.4 | Covers all of Category 5 |

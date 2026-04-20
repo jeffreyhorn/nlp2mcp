@@ -35,7 +35,7 @@ This prep plan focuses on:
 | 2 | Audit Alias-AD Carryforward State | Critical | 3–4h | Task 1 | Priority 1: alias differentiation (~20 models) |
 | 3 | Investigate Parser Non-Determinism (#1283) | Critical | 2–3h | Task 1 | Priority 2 leader: #1283 fix blocks confident retest |
 | 4 | Categorize Emitter Bug Backlog (#1275–#1281) | High | 2–3h | Task 1 | Priority 2: emitter fixes (7 issues) |
-| 5 | Analyze Recovered-Translate Models (ganges family) | High | 2–3h | Task 4 | Priority 2: leverage mapping |
+| 5 | Analyze Recovered-Translate Models | High | 2–3h | Task 4 | Priority 2: leverage mapping |
 | 6 | Design Alias-AD Rollout Plan | Critical | 3–4h | Task 2 | Priority 1: Day 1–12 schedule |
 | 7 | Scope Multi-Solve Gate + Dispatcher Refactor | Medium | 2–3h | Task 1 | Priorities 3, 4 |
 | 8 | Profile Hard Translation Timeouts (5 models) | Low | 2–3h | None | Priority 5 (low leverage per PR13) |
@@ -126,7 +126,7 @@ Created `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns acro
 27 unknowns documented across 6 categories:
 
 - **Category 1: Alias-AD Carryforward** (8 KUs, 1.1–1.8) — pattern classification, regression risk on 54 matching models, #1150 relationship, derivative-rule scope, sameas guards, offset-alias Pattern C, model_infeasible recovery, rollout strategy.
-- **Category 2: Emitter / Stationarity Backlog** (6 KUs, 2.1–2.6) — #1283 root cause, #1283 scope, presolve-path fixes (#1275), twocge subsume analysis (#1277/#1278), #1281 dedup safety, ganges-family leverage mapping.
+- **Category 2: Emitter / Stationarity Backlog** (6 KUs, 2.1–2.6) — #1283 root cause, #1283 scope, presolve-path fixes (#1275), twocge subsume analysis (#1277/#1278), #1281 dedup safety, recovered-translate leverage mapping.
 - **Category 3: Multi-Solve Gate Extension** (3 KUs, 3.1–3.3) — Approach A false-positive risk, beyond-saras coverage, partssupply regression.
 - **Category 4: Dispatcher Refactor** (3 KUs, 4.1–4.3) — equivalence verification, byte-diff baseline, translate-time overhead.
 - **Category 5: Translation Timeout — Algorithmic** (4 KUs, 5.1–5.4) — tractability per model, stage-level profiling, sparse Jacobian feasibility, `srpchase` distinctness.
@@ -476,9 +476,9 @@ done
 
 ---
 
-## Task 5: Analyze Recovered-Translate Models (ganges family)
+## Task 5: Analyze Recovered-Translate Models
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** High
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -531,11 +531,26 @@ The Sprint 24 Day 13 Addendum discovered that doubling translate timeouts recove
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` — 4-section analysis covering:
+  - Per-model compile-error captures via `gams <model>_mcp.gms action=c lo=2` for all 5 models
+  - 12-column leverage matrix (5 models × 8 existing tracked bugs + 4 new issues)
+  - Priority 2 scope reconciliation showing the 4 new issues add ~10–15h beyond Task 4's baseline
+  - Cross-references to Tasks 2, 3, 4 (alias-AD, parser non-determinism, emitter backlog)
+- Filed 4 new GitHub issues with `sprint-25` label: #1289 (ganges/gangesx), #1290 (ferts), #1291 (clearlak), #1292 (turkpow)
+- Created in-tree issue docs at `docs/issues/ISSUE_{1289,1290,1291,1292}_*.md`
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Unknown 2.6 marked **❌ WRONG** with revised assumption documented (assumption was inverted: 0 of 5 unblocked by existing bugs, not 3+).
 
 ### Result
 
-_To be completed._
+- **All 5 recovered-translate models hit distinct, previously-untracked compile errors.** None of #1275–#1281 or #1283 unblocks any of them.
+- **Compile errors per model:**
+  - `ganges` + `gangesx`: 16 × Error 66 (parameters declared but never assigned — calibration-from-`.l`-values block stripped by emitter)
+  - `ferts`: many × Error 109/108 (multiplier identifiers up to 67 chars > GAMS's 63-char limit)
+  - `clearlak`: Error 352/149/141 (statement-ordering bug hoists `sum(leaf, ...)` before `leaf(n) = yes$(...)` — verified deterministic across 3 hash seeds, NOT #1283)
+  - `turkpow`: Error 98 (line 200 of MCP = 144,454 chars; `stat_zt` emitted as one line with hundreds of `sameas()` cross-product clauses)
+- **Highest-leverage single fix:** [#1289](https://github.com/jeffreyhorn/nlp2mcp/issues/1289) (ganges calibration stripping) unblocks 2 of 5.
+- **Priority 2 scope expansion:** original Task 4 baseline 13–18h → revised **23–33h** (with 4 new issues #1289–#1292). Sprint 25 planning decision required — absorb the +10–15h or defer a subset to Sprint 26.
+- **Realistic Solve-target contribution:** if all 4 new issues land cleanly, expected gain is +2–3 of 5 (some unblocked MCPs will hit secondary failure modes). Combined with Priority 1's expected +1, this brings net Solve gain to +3–4 — just short of the +6 target unless contingencies break favorably.
 
 ### Verification
 
@@ -545,12 +560,13 @@ test -f docs/planning/EPIC_4/SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md && echo 
 for m in ganges gangesx ferts clearlak turkpow; do
     grep -q "\`$m\`" docs/planning/EPIC_4/SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md && echo "$m ✓" || echo "$m MISSING"
 done
+# ACTUAL: EXISTS + all 5 models present
 ```
 
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md`
-- Per-model compile-error list (for the 5 `ganges`-family models)
+- Per-model compile-error list (for the 5 recovered-translate models: `ganges`, `gangesx`, `ferts`, `clearlak`, `turkpow`)
 - Leverage matrix (model × emitter-bug)
 - Any new emitter bugs filed as Sprint 25 tracking issues
 - Ranked fix priority by solve-unblocking leverage
@@ -558,11 +574,11 @@ done
 
 ### Acceptance Criteria
 
-- [ ] All 5 models have their current MCP compile errors recorded
-- [ ] Every compile error mapped to a known bug or a new tracking issue
-- [ ] Leverage matrix identifies the highest-leverage single fix
-- [ ] Cross-reference with Task 4 catalog updated if new subsume opportunities appear
-- [ ] Unknown 2.6 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 5 models have their current MCP compile errors recorded (saved at `/tmp/task5-compile/<model>_mcp.lst`; summarized in §Section 1)
+- [x] Every compile error mapped to a known bug or a new tracking issue (4 new issues filed: #1289–#1292)
+- [x] Leverage matrix identifies the highest-leverage single fix (#1289 — unblocks 2 of 5 models)
+- [x] Cross-reference with Task 4 catalog updated if new subsume opportunities appear (§Section 4 cross-references; #1291 noted as adjacent to #1279 in `src/ir/normalize.py`)
+- [x] Unknown 2.6 verified (❌ WRONG — assumption inverted; revised in KNOWN_UNKNOWNS.md)
 
 ---
 
@@ -1094,7 +1110,7 @@ Sprint 25 preparation comprises 11 tasks spanning ~23–34 hours (3–4.5 workin
 - [ ] `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` classifies all 11 open alias issues by Pattern
 - [ ] `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` narrows #1283 to ≤ 2 code paths
 - [ ] `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` groups all 7 emitter issues by code path
-- [ ] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 ganges-family models to specific emitter bugs
+- [ ] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 recovered-translate models to specific emitter bugs
 - [ ] `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` has 4 phases with gates and stop triggers
 - [ ] `SPRINT_25/DESIGN_SMALL_PRIORITIES.md` commits to specific designs for #1270 and #1271
 - [ ] `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` classifies each of 5 timeout models
