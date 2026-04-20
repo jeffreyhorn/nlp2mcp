@@ -376,7 +376,20 @@ Prep Task 6 (rollout design).
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (test matrix designed; execution deferred to Sprint 25 Day 1–2)
+
+- **Verified by:** Task 6 (Alias-AD Rollout Plan)
+- **Date:** 2026-04-20
+- **Findings:**
+  - Designed a **20-test regression matrix** (5 element types × 4 scenarios) under `tests/unit/ad/test_sameas_guards.py` (new file in Sprint 25). Specified at `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` §Section 6.
+  - **Element types covered (rows):** numeric (`/1*5/`), string (`/'alpha', 'beta', 'gamma'/`), hyphenated (`/'light-ind', 'food-agr', 'heavy-ind'/`), plus-signed (`/'food+agr', 'energy+water'/`), dotted (`/'x1.l', 'x2.l', 'x3.l'/`).
+  - **Test scenarios covered (columns):** equal pair (TRUE), unequal pair (FALSE), cross-alias pair (TRUE on diagonal / FALSE off-diagonal), combined with dollar condition (no scope conflict).
+  - **Compile-time benchmark:** additional test runs `time gams twocge_mcp.gms action=c`; acceptance ≤ 60s (flag for investigation if > 90s) — addresses RQ #3.
+  - **Emitter quoting policy:** scenarios C/D/E require single-quote wrapping for non-identifier characters; this depends on ISSUE_1280 (UEL quoting) landing in Priority 2 Batch 1 (Day 1–2) as a prerequisite — addresses RQ #4.
+  - The matrix is design-complete; execution lands as the unit-test PR alongside Phase 1 Day 2 (per the rollout plan). The 5 element types × 4 scenarios should cover the GAMS-element-type space without leaving silent-correctness holes (RQ #1, #5).
+- **Evidence:**
+  - Full matrix design: `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` §Section 6 (rows in §6.1, columns in §6.2, benchmark in §6.3, coverage table in §6.4, quoting policy in §6.5)
+- **Decision:** Proceed with the 20-test matrix as the validation gate for `sameas()` correctness. Land alongside Phase 1 Day 2's PR. The quoting prerequisite (ISSUE_1280) is on the same Day 1–2 ship window, eliminating ordering risk.
 
 ---
 
@@ -538,9 +551,10 @@ Prep Task 6.
 
 ### Verification Results
 
-✅ **Status:** VERIFIED (partial — inventory captured; rollback decision deferred to Task 6)
+✅ **Status:** VERIFIED (Task 2 captured the inventory; Task 6 completes the rollback procedure)
 
-- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
+- **Verified by (initial):** Task 2 (Alias-AD Carryforward Audit) — 2026-04-19
+- **Verified by (rollback procedure):** Task 6 (Alias-AD Rollout Plan) — 2026-04-20
 - **Date:** 2026-04-19
 - **Findings:**
   - **Sprint 24 did land portions of the alias-AD fix that are already permanently enabled.** The `bound_indices` threading (Sprint 23), the Day 3 single-index sum collapse fix, the Day 4 `_apply_alias_offset_to_deriv` post-processing, and the Day 5 `_var_inside_alias_sum` narrowed guard are all live. This means "all or nothing" is inaccurate — we're partway through, and the canary-protected additions have been running since Sprint 24.
@@ -550,7 +564,7 @@ Prep Task 6.
 - **Evidence:**
   - Landed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (confirms what's already live)
   - Stubbed-vs-landed distinction: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (third subsection)
-- **Decision:** Revised assumption — **"no feature flag needed; rollback via git revert of the Sprint 25 PRs is the operational mechanism. Sprint 24 residue stays in place (it already passes all canary tests)."** Task 6 will codify the per-checkpoint revert procedure.
+- **Decision:** Revised assumption — **"no feature flag needed; rollback via git revert of the Sprint 25 PRs is the operational mechanism. Sprint 24 residue stays in place (it already passes all canary tests)."** Task 6 has codified the per-checkpoint revert procedure at `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` §Section 7. The procedure covers: per-PR rollout gates (§7.1), per-checkpoint git-revert command sequences for Phase 1 / Phase 2 / Phase 3 / Checkpoint 2 NO-GOs (§7.2), what does NOT roll back — Sprint 23/24 base layer + Priority 2/3/4/5 work (§7.3), and the communication procedure on rollback (§7.4 — SPRINT_LOG entry + `sprint-25-rollback` issue + KU update if scope > 1 PR).
 
 ---
 

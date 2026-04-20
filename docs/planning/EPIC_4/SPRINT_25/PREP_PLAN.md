@@ -584,7 +584,7 @@ done
 
 ## Task 6: Design Alias-AD Rollout Plan
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -637,11 +637,29 @@ Sprint 24's outcome was "Day 1 started but Days 4–7 lost to urgent fixes" beca
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` — 8-section rollout design covering:
+  - 4 phases (Phase 1 Days 1–3, Phase 2 Days 4–6, Phase 3 Days 7–9, Phase 4 Days 10–12) with day-by-day execution detail and target-model lists
+  - 4 quantitative gates (Phase 1, Checkpoint 1 / Phase 2, Phase 3, Checkpoint 2 / Phase 4) using Sprint 24's GO / CONDITIONAL GO / NO-GO template
+  - Regression-guard infrastructure: 5-tier canary ladder (Tier 0 dispatch → Tier 5 informational), 54-model golden-file generation script, per-model verification harness, `PYTHONHASHSEED=0` pinning until #1283 lands
+  - 5 stop-the-sprint triggers (golden-file regression budget, dispatch canary fail, Checkpoint 1 NO-GO, new path_syntax_error / model_infeasible, `make test` regression)
+  - Parallel-work allocation table mapping Priority 2 (emitter) Batches 1–3 + Task 5's new issues #1289–#1292 to specific days; Day 8 identified as highest-leverage (Phase 3 Pattern C + Batch 3 + #1289)
+  - 20-test `sameas()` guard regression matrix (5 element types × 4 scenarios) addressing Unknown 1.5
+  - All-or-nothing per-PR rollout decision + per-checkpoint git-revert rollback procedure addressing Unknown 1.8
+  - Pre-Sprint checklist (Appendix B) for Sprint 25 Day 0 readiness
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md`:
+  - Unknown 1.5: marked ✅ VERIFIED with the 20-test matrix design
+  - Unknown 1.8: rollback procedure now codified (status updated to reflect Task 6 completion of Task 2's deferred work)
 
 ### Result
 
-_To be completed._
+- **Phase 1 (Days 1–3):** Pattern A single-index validation (qabel, abel, launch) + multi-index `_partial_collapse_sum` recovery prototype. Gate at Day 3.
+- **Phase 2 (Days 4–6):** Pattern A across 6 issues (CGE, PS-family, cclinpts, #1150). Match delta target ≥ +3. Checkpoint 1 at Day 6.
+- **Phase 3 (Days 7–9):** Pattern C — extend `_alias_match()` with `IndexOffset.base`; validate polygon, himmel16, twocge `stat_tz` (#1277). Gate at Day 9.
+- **Phase 4 (Days 10–12):** Final regression sweep + Pattern E routing (#1141, #1144, #1147 routed out of scope). Checkpoint 2 at Day 10.
+- **Stop triggers (5):** (1) ≥ 2 golden-file regressions un-root-caused in 1 day; (2) dispatch canary fails; (3) Checkpoint 1 NO-GO; (4) new path_syntax_error / model_infeasible on a matching model; (5) `make test` regression.
+- **Rollout strategy:** all-or-nothing per PR (no feature flag — would double the test matrix for zero operational benefit); rollback via per-PR git revert.
+- **`sameas()` guard regression matrix:** 5 element types × 4 test scenarios = 20 unit tests under `tests/unit/ad/test_sameas_guards.py`, lands alongside Phase 1 Day 2 PR.
+- **Cumulative Match-target ladder:** Phase 1 (Day 3) baseline → Phase 2 ≥ +3 → Phase 3 ≥ +5 → Phase 4 ≥ +6; stretch ≥ +8 (full PROJECT_PLAN target).
 
 ### Verification
 
@@ -651,6 +669,7 @@ test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md && echo "EXIST
 grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md
 # Expect ≥ 8
+# ACTUAL: 13 (4 Phase + 4 Gate + 5 Stop Trigger headings)
 ```
 
 ### Deliverables
@@ -665,13 +684,13 @@ grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
 
 ### Acceptance Criteria
 
-- [ ] 4 phases mapped to 12 days (Days 1–12)
-- [ ] Each phase has at least one gate with a quantitative pass/fail criterion
-- [ ] ≥ 3 "stop the sprint" triggers defined
-- [ ] Regression-guard infrastructure specified (golden files, canary list, scripts)
-- [ ] Cross-reference with Task 2 Pattern classification
-- [ ] Cross-reference with Sprint 24 KU-03 and KU-17 (regression risks)
-- [ ] Unknowns 1.5, 1.8 verified and updated in KNOWN_UNKNOWNS.md
+- [x] 4 phases mapped to 12 days (Days 1–12) — Phase 1 (1–3), Phase 2 (4–6), Phase 3 (7–9), Phase 4 (10–12)
+- [x] Each phase has at least one gate with a quantitative pass/fail criterion (4 gates: Phase 1 Day 3, Checkpoint 1 Day 6, Phase 3 Day 9, Checkpoint 2 Day 10)
+- [x] ≥ 3 "stop the sprint" triggers defined (5 triggers documented in §Section 4)
+- [x] Regression-guard infrastructure specified (5-tier canary ladder, 54-model golden-file generation script, per-model verification harness, PYTHONHASHSEED pinning)
+- [x] Cross-reference with Task 2 Pattern classification (§Section 8 cross-reference table)
+- [x] Cross-reference with Sprint 24 KU-03 and KU-17 (regression risks) (§Section 8 cross-reference table)
+- [x] Unknowns 1.5, 1.8 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
