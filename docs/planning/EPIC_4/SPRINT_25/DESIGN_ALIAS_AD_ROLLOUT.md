@@ -349,7 +349,7 @@ A 5 × 4 = **20-test matrix** under `tests/unit/ad/test_sameas_guards.py` (new f
 
 ### Section 6.3 — Compile-time benchmark
 
-Additional benchmark test: emit a `sameas()`-guarded MCP for `twocge` (large CGE model with many sameas guards) and measure compile-step duration via `time gams <model>_mcp.gms action=c`. Acceptance: total compile time ≤ 60s on the standard development machine; flag for investigation if > 90s.
+Additional benchmark test: emit a `sameas()`-guarded MCP for `twocge` (large CGE model with many sameas guards) and measure compile-step duration via `time gams data/gamslib/mcp/twocge_mcp.gms action=c` (invoked from the repo root). Acceptance: total compile time ≤ 60s on the standard development machine; flag for investigation if > 90s.
 
 ### Section 6.4 — Coverage matrix
 
@@ -399,8 +399,8 @@ git push origin main
 **Phase 2 PR(s) fail Checkpoint 1 (Day 6):**
 
 ```bash
-# Identify all Phase 2 merge commits (Day 4 to Day 6)
-git log --oneline --merges main..origin/main | grep "Phase 2"
+# Identify all Phase 2 merge commits on main (filter to Day 4-Day 6 PR titles)
+git log --oneline --merges main | grep "Phase 2"
 # Revert each in reverse order
 git revert <phase-2-pr-3-sha> <phase-2-pr-2-sha> <phase-2-pr-1-sha>
 git push origin main
@@ -436,7 +436,7 @@ git push origin main
 
 On any rollback:
 
-1. Sprint lead posts to the SPRINT_25 SPRINT_LOG.md Day-N entry: rollback commit SHA, reason, residual scope.
+1. Sprint lead posts the rollback commit SHA, reason, and residual scope to the Day-N entry in the sibling `SPRINT_LOG.md` file for Sprint 25.
 2. File a `sprint-25-rollback` GitHub issue with the canary diff that triggered the rollback.
 3. If rollback exceeds 1 PR's worth of work, also update `KNOWN_UNKNOWNS.md` (sibling file in this directory) with a new "Newly Discovered" KU entry per the §How to Use This Document protocol.
 
