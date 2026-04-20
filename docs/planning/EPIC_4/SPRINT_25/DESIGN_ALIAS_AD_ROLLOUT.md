@@ -48,7 +48,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 - **Day 1**
   - Re-run dispatch canary to baseline.
-  - Generate golden-file snapshots for the 54 currently-matching models (script: `scripts/gamslib/generate_golden.py` — to be written if it doesn't exist; see §Section 3.3).
+  - Generate golden-file snapshots for the 54 currently-matching models (script: `scripts/gamslib/generate_golden.py` — to be written if it doesn't exist; see §Section 3.2).
   - Re-verify qabel, abel, launch reproductions; confirm rel_diff baseline (8.2%, 29.8%, 17.3% respectively per Task 2 §Section 2).
   - Spawn Priority 2 Batch 1 (#1275 + #1280) on a separate branch.
 
@@ -59,7 +59,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 - **Day 3**
   - Validate qabel/abel/launch under the new fix.
   - Run Tier 2 golden-file diff across the 44 non-alias matching models (expect zero changes).
-  - **Phase 1 gate evaluation** (see §Section 2.1).
+  - **Phase 1 gate evaluation** (see §Gate 1).
 
 **Target models for measurable improvement:** `qabel`, `abel`, `launch` — single-alias models where the fix can produce a clean rel_diff signal.
 
@@ -81,7 +81,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 - **Day 6** — **Checkpoint 1**
   - Full regression run: dispatch + Tier 1 + Tier 2 + Tier 3 (Pattern A targets).
-  - **Checkpoint 1 evaluation** (see §Section 2.2).
+  - **Checkpoint 1 evaluation** (see §Gate 2).
   - On GO: proceed to Phase 3.
   - On CONDITIONAL GO: address regression(s) on Day 6, re-evaluate end-of-day before proceeding.
   - On NO-GO: invoke stop-trigger #3.
@@ -108,7 +108,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 - **Day 9**
   - Run regression sweep (Tier 1 + Tier 2) — verify Pattern C didn't reintroduce Phase 1/2 regressions.
   - Re-evaluate camshape (#1147) and the alias-related infeasibility set (cesam, korcge) — Task 2 Tier 5 informational targets.
-  - **Phase 3 gate evaluation** (see §Section 2.3).
+  - **Phase 3 gate evaluation** (see §Gate 3).
 
 **Target models for measurable improvement:** polygon, himmel16, cclinpts, twocge (`stat_tz`).
 
@@ -120,7 +120,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 - **Day 10** — **Checkpoint 2**
   - Run full pipeline retest (`scripts/gamslib/run_full_test.py --quiet`).
-  - **Checkpoint 2 evaluation** (see §Section 2.4).
+  - **Checkpoint 2 evaluation** (see §Gate 4).
   - On GO: address only minor cleanup; freeze main branch for Day 12 prep.
   - On CONDITIONAL GO: prioritize the highest-leverage remaining issue.
   - On NO-GO: invoke stop-trigger #5; freeze and document residual scope for Sprint 26.
@@ -134,7 +134,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 - **Day 12** — Sprint Close Prep for alias-AD
   - File any newly-discovered alias-AD issues with `sprint-26` label.
-  - Update `SPRINT_25/SPRINT_LOG.md` Priority 1 section with final Match delta and per-pattern outcome.
+  - Update `SPRINT_LOG.md` (sibling file in this directory) Priority 1 section with final Match delta and per-pattern outcome.
   - Run `make test` final pass.
 
 **Match delta target by end of Phase 4:** ≥ +5 (Phase 2's +3 + Phase 3's +2 from polygon/himmel16). Stretch: ≥ +8 (full Sprint 25 PROJECT_PLAN target).
@@ -422,7 +422,7 @@ git push origin main
 # Selective revert based on which Phase regressed; use canary diff to
 # identify the offending PR. Do NOT cascade-revert all phases;
 # preserve as much landed work as is canary-clean.
-# Document residual scope for Sprint 26 in `SPRINT_25/SPRINT_LOG.md`
+# Document residual scope for Sprint 26 in `SPRINT_LOG.md`
 # Day 10 entry.
 ```
 
@@ -438,7 +438,7 @@ On any rollback:
 
 1. Sprint lead posts to the SPRINT_25 SPRINT_LOG.md Day-N entry: rollback commit SHA, reason, residual scope.
 2. File a `sprint-25-rollback` GitHub issue with the canary diff that triggered the rollback.
-3. If rollback exceeds 1 PR's worth of work, also update `SPRINT_25/KNOWN_UNKNOWNS.md` with a new "Newly Discovered" KU entry per the §How to Use This Document protocol.
+3. If rollback exceeds 1 PR's worth of work, also update `KNOWN_UNKNOWNS.md` (sibling file in this directory) with a new "Newly Discovered" KU entry per the §How to Use This Document protocol.
 
 ---
 
