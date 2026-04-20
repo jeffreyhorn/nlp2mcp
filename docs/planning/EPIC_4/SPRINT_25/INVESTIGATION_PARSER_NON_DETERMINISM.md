@@ -247,7 +247,7 @@ def _pick_alternative(ambig_node: Tree) -> Tree:
         # Count (table_value_count, -table_row_count) for tiebreak
         values = 0
         rows = 0
-        for sub in alt.iter_subtrees() if hasattr(alt, "iter_subtrees") else []:
+        for sub in (alt.iter_subtrees() if hasattr(alt, "iter_subtrees") else []):
             if sub.data == "table_row":
                 rows += 1
                 values += sum(1 for c in sub.children
