@@ -152,7 +152,7 @@ Prep Task 2 (Alias-AD carryforward audit).
 - **Findings:**
   - Sprint 24's 4-pattern classification (A/B/C/D) simplifies to 3 active patterns (A/C/E) after Day 9 investigations reclassified kand (#1141, was B → E) and launch (#1142, was D → A).
   - Pattern distribution: **A = 6 issues (#1138, #1139, #1140, #1142, #1145, #1150)**, **C = 2 issues (#1143, #1146)**, **E = 3 issues (#1141, #1144, #1147)**. Patterns B and D are empty.
-  - Pattern A dominates (6 of 11 issues, ~15 models) — a single architectural change to the summation-context / multi-index partial-collapse path addresses them all. This matches the original assumption's "≥6 of 11 issues" threshold.
+  - Pattern A dominates (6 of 11 issues, ~16 comparison-scope models including ISSUE_1140's 7 PS-family models) — a single architectural change to the summation-context / multi-index partial-collapse path addresses them all. This matches the original assumption's "≥6 of 11 issues" threshold.
   - Pattern C (#1143 polygon, #1146 himmel16) requires a separate `IndexOffset.base` extraction in `_alias_match()` (~2–3h incremental on top of A).
   - Pattern E issues route out of alias-AD scope: #1141 → Priority 3 / multi-solve gate, #1144 → IR domain investigation (near-match at 0.2%), #1147 → post-fix empirical re-evaluation (now `model_infeasible`).
 - **Evidence:**

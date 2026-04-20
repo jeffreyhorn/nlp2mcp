@@ -13,7 +13,7 @@ Sprint 23 landed the full `bound_indices`/`_alias_match`/`_same_root_set` thread
 
 After re-running reproductions against the current parser/AD/emitter state (Day 13 Addendum), the 11 open issues split cleanly into a smaller Pattern surface than Sprint 24 projected:
 
-- **Pattern A** (summation-index tracked through derivative chain): **6 issues / 15 models** — dominant.
+- **Pattern A** (summation-index tracked through derivative chain): **6 issues / ~16 models** (for Match-target accounting; 2 additional PS multi-solve-skip models are classified Pattern A by Sprint 24 ANALYSIS but out of comparison scope) — dominant.
 - **Pattern C** (offset + alias interaction, derivative-math subset): **2 issues / 2 models**.
 - **Pattern E** (non-differentiation — IR domain, multi-solve semantics, or infeasibility-adjacent): **3 issues / 3 models** — won't be fixed by the alias-AD work.
 - **Pattern B** and **Pattern D** as defined in Sprint 24 are now empty — `#1141 kand` reclassifies to Pattern E (multi-solve semantics, not AD) and `#1142 launch` reclassifies to Pattern A (alias-family per Day 9 investigation).
@@ -71,7 +71,7 @@ Classification columns: "S24 Pattern" is the original Sprint 24 Prep analysis; "
 |---|---|---|---|---|---|---|
 | #1138 | irscge, lrgcge, moncge, stdcge | A | **A** | translate✅ / solve✅ / compare=mismatch (all 4) | 1.0–2.2% | Tight mismatches; classic CGE alias cross-terms |
 | #1139 | meanvar | A | **A** | `pipeline_status: legacy_excluded` (as of 2026-04-16) | — | Still useful as *offline* test model; exclude from canary set |
-| #1140 | ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps5_s_mn, ps10_s_mn | A | **A** | translate✅ / solve✅ / compare=mismatch or skipped | 0.5–9.1% | ps5_s_mn/ps10_s_mn comparison=skipped (pipeline skips large PS variants) |
+| #1140 | Authoritative per ISSUE_1140: ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, ps10_s (7 models, all compare=mismatch). Sprint 24 ANALYSIS also classified ps5_s_mn, ps10_s_mn as Pattern A, but their pipeline `comparison_status=skipped` for "Multi-solve model: NLP reference captures a different solve iteration than the MCP formulation — objective comparison not meaningful" — out of Match-target accounting. | A | **A** | translate✅ / solve✅ / compare=mismatch (7) or compare=skipped (2 multi-solve) | 0.5–27.4% | Widest Pattern A rel-diff spread; ps10_s is the 27.4% high end, ps2_f_s/ps2_s are the 0.5% low end. Pattern A Match-target gains should be accounted against the 7 ISSUE_1140 models, not the Sprint 24 ANALYSIS superset. |
 | #1141 | kand | B | **E** ⚠ reclassified | translate✅ / solve✅ / compare=mismatch | 92.5% | **Not an alias-AD bug.** Day 9 investigation (#1225): kand has two models (kand, kandsp); nlp2mcp reformulates the last solve (kandsp) but the NLP comparison uses the first model. Multi-solve semantics — fix belongs in the pipeline comparator or the multi-solve gate, not AD. |
 | #1142 | launch | D | **A** ⚠ reclassified | translate✅ / solve✅ / compare=mismatch | 17.3% | **Reclassified from Pattern D → Pattern A.** Day 9 (#1226): launch uses `Alias(s,ss)`; Jacobian/stationarity bug is in the same family as other CGE/alias models. The original "condition-scope" Pattern D framing was a misdiagnosis. |
 | #1143 | polygon | C | **C** | translate✅ / solve✅ / compare=mismatch | 33.8% | Day 6 fixed the compile error (concrete `i1+1` → `i+1`). Derivative math still broken; current objective mismatch is 33.8%, and the suspected bad term is `theta(i+1)*r(i+1)*r(i)` (Sprint 24 Day 6 analysis classified this as a full failure of the specific offset-alias gradient term, even though the objective-level residual is 33.8%) → likely needs `IndexOffset.base` extraction in `_alias_match`. |
@@ -85,7 +85,7 @@ Classification columns: "S24 Pattern" is the original Sprint 24 Prep analysis; "
 
 | Pattern | S24 Count | S25 Count | Issues | Models |
 |---|---|---|---|---|
-| **A** (summation index) | 6 | **6** | #1138, #1139, #1140, #1142, #1145, #1150 | ~15 |
+| **A** (summation index) | 6 | **6** | #1138, #1139, #1140, #1142, #1145, #1150 | ~16 (+2 Sprint 24 ANALYSIS multi-solve-skip, out of comparison scope) |
 | **B** (root-set tree) | 1 | **0** | — | — |
 | **C** (offset + alias) | 2 | **2** | #1143, #1146 | 2 |
 | **D** (condition-scope) | 1 | **0** | — | — |
@@ -97,7 +97,7 @@ Classification columns: "S24 Pattern" is the original Sprint 24 Prep analysis; "
 
 ## Section 3 — Pattern → Architectural Fix Site Map
 
-### Pattern A (6 issues, ~15 models) → Primary fix site
+### Pattern A (6 issues, ~16 comparison-scope models) → Primary fix site
 
 **Symptom:** Constraint body contains `sum(alias, coefficient(n, alias)*x(alias, k))`. Differentiating w.r.t. `x(concrete_i, concrete_k)` must produce `coefficient(n, concrete_i)` at the correct offset position, but currently produces 0 or an incorrect symbolic term for the cross-term instances.
 
@@ -268,7 +268,7 @@ with open('data/gamslib/gamslib_status.json') as f:
 targets = {
     '#1138': ['irscge','lrgcge','moncge','stdcge'],
     '#1139': ['meanvar'],
-    '#1140': ['ps2_s','ps3_s','ps3_s_gic','ps3_s_mn','ps5_s_mn','ps10_s_mn'],
+    '#1140': ['ps2_f_s','ps2_s','ps3_s','ps3_s_gic','ps3_s_mn','ps3_s_scp','ps10_s','ps5_s_mn','ps10_s_mn'],  # ISSUE_1140 authoritative list (7) + Sprint 24 ANALYSIS multi-solve-skip superset (2)
     '#1141': ['kand'], '#1142': ['launch'], '#1143': ['polygon'],
     '#1144': ['catmix'], '#1145': ['cclinpts'], '#1146': ['himmel16'],
     '#1147': ['camshape'], '#1150': ['qabel','abel'],
