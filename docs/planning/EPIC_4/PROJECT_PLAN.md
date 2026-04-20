@@ -830,11 +830,109 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ---
 
-# Sprint 25 (Weeks 15–16): PATH Author Consultation & Solution Forcing
+# Sprint 25 (Weeks 15–16): Alias Differentiation Carryforward & Emitter Backlog
+
+**Goal:** Land the alias-aware differentiation fix (carryforward from Sprint 24's Priority 1 workstream) and clear the emitter / stationarity bug backlog surfaced by the Day 13 review round. Push Match from 54 to ≥ 62 and Solve from 99 to ≥ 105. Apply Sprint 24 process recommendations: start the highest-leverage architectural fix on Day 1 and defend the reserved time (PR11 reinforcement); budget 80–100% influx for previously-timeout-excluded translate recoveries (PR13); run byte-stability regression tests across multiple `PYTHONHASHSEED` values (PR12); run a mid-sprint "read the generated MCP" review pass (PR14); freeze pipeline scope before Day 0 (PR15). (See `SPRINT_24/SPRINT_RETROSPECTIVE.md` §Sprint 25 Recommendations and §New Recommendations PR12–PR15 for details.)
+
+**Note:** Sprint 24 retrospective identified 18+ issues labeled `sprint-25`. Alias-AD (#1138–#1147, #1150) is Priority 1 (highest leverage for Match); emitter backlog (#1275–#1281, #1283) is Priority 2 and the leverage point for the 5 "recovered translates that don't solve" from the Day 13 Addendum.
+
+## Components
+
+### Priority 1: Alias-Aware Differentiation Carryforward (#1138–#1147, #1150) (~24-32h)
+- **Architectural Fix Completion (16-22h)**
+  - Complete the summation-context / alias-match work started in Sprint 24
+  - 11 open issues affecting ~20 models (CGE family, PS-family, cclinpts, polygon, himmel16, catmix, camshape, kand, launch, qabel/abel, meanvar, plus #1150 sum-index collapse)
+  - Sprint 24 alias-AD KUs (KU-01..KU-08 in `SPRINT_24/KNOWN_UNKNOWNS.md`) capture the prep-phase classification and design context; `SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md` and `SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md` document the Pattern A/B/C/D rollout. The Sprint 24 end-of-sprint KU that carries directly into Priority 1 is KU-32 (sameas guard runtime validation) — now tracked as Sprint 25 Unknown 1.5.
+  - **Deliverable:** Alias-AD fix with comprehensive tests; dispatch canary + 54-model golden-file regression
+- **Per-Pattern Validation (6-8h)**
+  - Verify Pattern A (CGE, quadratic): 6 models
+  - Verify Pattern C (offset-alias): polygon, himmel16, cclinpts (tied to #1143, #1145, #1146)
+  - Verify Patterns B/D edge cases: kand (#1141), launch (#1142)
+  - **Deliverable:** Per-pattern verification report; updated MCP output files
+- **Impact Assessment (2h)**
+  - Track movements: mismatch → match, infeasible → optimal, path_syntax_error → match
+  - Document models that improve but don't fully resolve
+  - **Deliverable:** Impact assessment; updated `gamslib_status.json`
+
+### Priority 2: Emitter / Stationarity Bug Backlog (#1275–#1281, #1283) (~12-18h)
+- **Fix #1283 First — Non-Deterministic Table Parsing (3-5h)**
+  - Root-cause the non-determinism in multi-row-label tables like `(v1,v2,v3).col`
+  - May have been confounding #1177 chenery investigation throughout Sprint 24
+  - Add `PYTHONHASHSEED` variation test across 10 seeds (PR12)
+  - **Deliverable:** Deterministic parser; byte-stability regression test
+- **Emitter Bugs (7-10h total, parallelizable)**
+  - **#1275** — presolve `$include` absolute paths → repo-relative emission (2-3h)
+  - **#1276** — fawley duplicate `.fx` emission → emitter dedup (1-2h)
+  - **#1280** — mathopt4 unquoted UELs with dots → unconditional single-quoting (1-2h)
+  - **#1281** — lmp2 duplicate `Parameter` declarations → declared-symbol dedup (2-3h)
+  - **Deliverable:** 4 emitter fixes with regression tests
+- **Stationarity / KKT Bugs (2-3h, alias-AD adjacent)**
+  - **#1277** — twocge `stat_tz` mixed offsets → may be subsumed by Priority 1 alias-AD
+  - **#1278** — twocge `ord(r) <> ord(r)` tautology → index-substitution fix
+  - **#1279** — robustlp `defobj(i)` scalar-equation widening → equation-domain inference guard
+  - **Deliverable:** 3 stationarity fixes; chenery / twocge / robustlp verified solve-or-mismatch stable
+
+### Priority 3: Multi-Solve Gate Extension (#1270) (~2-3h)
+- **Extend Detector for saras-Style Top-Level `eq.m` Reads**
+  - Approach A (cross-reference): flag `eq.m` reads whose receiving parameter later appears in another model's constraint body
+  - Add saras + post-solve-reporting fixtures to detector test matrix
+  - Regression guard: `ibm1`, `partssupply` continue translating
+  - **Deliverable:** Updated `src/validation/driver.py`; saras flagged as driver
+
+### Priority 4: Dispatcher Refactor (#1271) (~4-6h)
+- **Collapse `_loop_tree_to_gams` and `_loop_tree_to_gams_subst_dispatch`**
+  - Single parameterized dispatcher with optional `token_subst_map`
+  - Byte-diff regression across all currently-solving MCPs
+  - Eliminates the recurring "handler in one but not the other" bug class
+  - **Deliverable:** Unified dispatcher; parity regression tests
+
+### Priority 5: Translation Timeout — Algorithmic (#1169, #1185, #1192) (~4-6h)
+- **Profile and Optimize Remaining 5 Timeouts (lower priority)**
+  - `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` still time out at 600s
+  - KU-19 / KU-20 in `SPRINT_24/KNOWN_UNKNOWNS.md` suggest profiling + sparse Jacobian
+  - Day 13 Addendum showed that translate recovery alone is low-leverage for Match; prioritize only after Priorities 1 and 2 land
+  - **Deliverable:** Profiling notes for each of the 5; at least one algorithmic fix landed if tractable
+
+### Pipeline Retest (~2h)
+- Full pipeline at each checkpoint and final (per PR6)
+- Run 3× with different `PYTHONHASHSEED` values to verify #1283 fix (PR12)
+- Track model_infeasible gross fixes and influx (per PR7)
+- Use absolute counts and percentages (per PR8)
+- Freeze scope before Day 0; no mid-sprint exclusions (PR15)
+- Mid-sprint "read the generated MCP" review pass on 5–10 randomly-sampled models (PR14)
+- **Deliverable:** Updated `gamslib_status.json`; comprehensive metrics report
+
+## Deliverables
+- Alias-aware differentiation fix (carryforward) with comprehensive tests
+- 7 emitter / stationarity bug fixes (#1275–#1281)
+- Non-deterministic parser fix (#1283) with byte-stability regression test
+- Multi-solve gate extension for saras-style patterns (#1270)
+- Unified loop-tree dispatcher (#1271)
+- Profiling notes + optional algorithmic fix for at least 1 of 5 hard timeouts
+- Updated pipeline metrics with full pipeline at all checkpoints, run under multiple hash seeds
+
+## Acceptance Criteria
+- **Solve:** ≥ 105 models solve (up from 99; +6 via alias AD)
+- **Match:** ≥ 62 models match (up from 54; +8 via alias AD)
+- **path_syntax_error:** ≤ 8 (down from 11; −3 via emitter fixes #1275–#1281)
+- **path_solve_terminated:** ≤ 8 (down from 10)
+- **model_infeasible:** ≤ 5 in-scope (down from 8; −3 via alias AD recovery)
+- **Translate:** ≥ 96% of parsed models (≥ 137/143; up from 94.4%)
+- **Parse:** ≥ 143/143 (maintain 100%)
+- **Tests:** ≥ 4,550 (up from 4,522)
+- **Determinism:** Full pipeline produces byte-identical output under at least 3 different `PYTHONHASHSEED` values (PR12 guard)
+- **Quality:** All tests pass; all fixes have regression tests
+
+**Estimated Effort:** 48-65 hours
+**Risk Level:** MEDIUM-HIGH (alias-AD is the third sprint attempting this architectural change; the failure mode is drift into Sprint 24's outcome — "partial progress, rest deferred." PR11 defense of the Day-1–12 block is critical. Emitter backlog is additive and partially parallelizable so low risk; the #1283 non-determinism fix has uncertain scope until root-caused.)
+
+---
+
+# Sprint 26 (Weeks 17–18): PATH Author Consultation & Solution Forcing
 
 **Goal:** Prepare and submit PATH author consultation document. Implement solution forcing strategies. Address remaining solve and translate failures across all pipeline stages.
 
-**Note:** Case studies from Sprint 22; consultation submission now in Sprint 25.
+**Note:** Case studies from Sprint 22; consultation submission now in Sprint 26.
 
 ## Components
 
@@ -902,10 +1000,10 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ## Acceptance Criteria
 - **PATH Consultation:** Document submitted to Ferris/Dirkse with reproducible cases
 - **Solution Forcing:** At least 2 strategies implemented and tested
-- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 24)
-- **Translate Rate:** ≥ 97% of parsed models (maintain from Sprint 24)
-- **Solve Rate:** ≥ 68% of translated models (up from Sprint 24's ~66%)
-- **Full Pipeline Match:** ≥ 40% of pipeline scope (up from Sprint 24's ≥ 37%)
+- **Parse Rate:** ≥ 100% of pipeline scope (maintain from Sprint 25)
+- **Translate Rate:** ≥ 96% of parsed models (maintain from Sprint 25; S27 steps up to ≥ 97% per Rolling KPIs)
+- **Solve Rate:** ≥ 76% of translated models (aligned with Rolling KPIs S26 target; S27/S28 continue the ramp to ≥ 78% / ≥ 80%)
+- **Full Pipeline Match:** ≥ 43% of pipeline scope (maintain from Sprint 25's ≥ 43%)
 - **Quality:** All tests pass; all fixes have regression tests
 
 **Estimated Effort:** 22-28 hours
@@ -913,11 +1011,11 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ---
 
-# Sprint 26 (Weeks 17–18): Quality, Performance & PATH Feedback Integration
+# Sprint 27 (Weeks 19–20): Quality, Performance & PATH Feedback Integration
 
 **Goal:** Stabilize performance benchmarks. Incorporate any PATH author feedback. Final comprehensive pipeline run. Begin documentation finalization.
 
-**Note:** PATH consultation submitted in Sprint 25; feedback integration now in Sprint 26.
+**Note:** PATH consultation submitted in Sprint 26; feedback integration now in Sprint 27.
 
 ## Components
 
@@ -989,9 +1087,9 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ## Acceptance Criteria
 - **Performance Benchmarks:** No flaky CI failures from benchmark tests
 - **Final Parse Rate:** ≥ 100% of pipeline scope (maintain)
-- **Final Translate Rate:** ≥ 97% of parsed models (maintain from Sprint 25)
-- **Final Solve Rate:** ≥ 75% of translated models (up from Sprint 25)
-- **Full Pipeline Match:** ≥ 45% of pipeline scope (up from Sprint 25)
+- **Final Translate Rate:** ≥ 97% of parsed models (maintain from Sprint 26)
+- **Final Solve Rate:** ≥ 75% of translated models (up from Sprint 26)
+- **Full Pipeline Match:** ≥ 45% of pipeline scope (up from Sprint 26)
 - **Documentation:** Remaining failures documented; Epic 4 summary drafted
 - **Quality:** All quality gates pass
 
@@ -1000,11 +1098,11 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ---
 
-# Sprint 27 (Weeks 19–20): v2.0.0 Release & Epic 5 Planning
+# Sprint 28 (Weeks 21–22): v2.0.0 Release & Epic 5 Planning
 
 **Goal:** Complete Epic 4 with v2.0.0 release. Finalize all documentation. Plan Epic 5 based on remaining failures and new opportunities.
 
-**Note:** Performance benchmarks and PATH feedback integration completed in Sprint 26; Sprint 27 focuses on release and forward planning.
+**Note:** Performance benchmarks and PATH feedback integration completed in Sprint 27; Sprint 28 focuses on release and forward planning.
 
 ## Components
 
@@ -1049,7 +1147,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Epic 5 Planning (~6-8h)
 - **Backlog Prioritization (2-3h)**
-  - Review REMAINING_FAILURES.md from Sprint 26
+  - Review REMAINING_FAILURES.md from Sprint 27
   - Prioritize remaining parse/translate/solve issues
   - Identify quick wins vs. major undertakings
   - **Deliverable:** Prioritized Epic 5 backlog
@@ -1063,7 +1161,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Epic 5 Project Plan Draft (2-3h)**
   - Create initial `docs/planning/EPIC_5/PROJECT_PLAN.md`
   - Define Epic 5 goals and success criteria
-  - Outline Sprint 28-32 high-level scope
+  - Outline Sprint 29-33 high-level scope
   - **Deliverable:** Draft Epic 5 PROJECT_PLAN.md
 
 ### Sprint Retrospective (~2h)
@@ -1085,10 +1183,10 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ## Acceptance Criteria
 - **Release:** v2.0.0 tagged, pushed, and GitHub release published
 - **Documentation:** All Epic 4 documentation complete and reviewed
-- **Final Parse Rate:** ≥ 100% of pipeline scope (confirmed from Sprint 26)
-- **Final Translate Rate:** ≥ 97% of parsed models (confirmed from Sprint 26)
-- **Final Solve Rate:** ≥ 80% of translated models (up from Sprint 26's ≥ 75%)
-- **Full Pipeline Match:** ≥ 50% of pipeline scope (up from Sprint 26's ≥ 45%)
+- **Final Parse Rate:** ≥ 100% of pipeline scope (confirmed from Sprint 27)
+- **Final Translate Rate:** ≥ 97% of parsed models (confirmed from Sprint 27)
+- **Final Solve Rate:** ≥ 80% of translated models (up from Sprint 27's ≥ 75%)
+- **Full Pipeline Match:** ≥ 50% of pipeline scope (up from Sprint 27's ≥ 45%)
 - **Epic 5 Ready:** Draft project plan created; backlog prioritized
 - **Quality:** All quality gates pass on final release
 
@@ -1101,20 +1199,20 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 | S26 | S27 |
-|--------|-----|-----|-----|--------------|--------------|--------------|--------------|-----|-----|-----|
-| Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | 0 | 0 | 0 |
-| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | 0 | 0 | 0 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | ≤8 | ≤5 | maintain ≤5 |
-| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | ≤8 | ≤5 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | ≤5 | maintain ≤5 | maintain ≤5 |
-| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | ≥100% | ≥100% | ≥100% |
-| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | ≥96% | ≥97% | ≥97% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | ≥76% | ≥78% | ≥80% |
-| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | ≥43% | ≥48% | ≥52% |
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 | S26 | S27 | S28 |
+|--------|-----|-----|-----|--------------|--------------|--------------|--------------|-----|-----|-----|-----|
+| Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — | — |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | 0 | 0 | 0 | 0 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | 0 | 0 | 0 | 0 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | ≤8 | ≤8 | ≤5 | maintain ≤5 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | ≤8 | ≤8 | ≤5 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | ≤5 | ≤5 | maintain ≤5 | maintain ≤5 |
+| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | ≥100% | ≥100% | ≥100% | ≥100% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | ≥96% | ≥96% | ≥97% | ≥97% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | ≥76% | ≥76% | ≥78% | ≥80% |
+| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | ≥43% | ≥43% | ≥48% | ≥52% |
 
-² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S27 targets are in-scope counts.
+² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S28 targets are in-scope counts.
 
 ³ Sprint 23 pipeline scope changed from 160 to 147 models (13 MIP/other models excluded). Parse and match percentages are relative to the 147-run scope, so excluded models are not counted in that denominator. The `lexer_invalid_char` count dropping to 0 in Sprint 23 primarily reflects parse fixes on models that remained in scope, rather than all lexer failures being removed by scope exclusion.
 
@@ -1151,7 +1249,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - GAMS software installed locally (with valid license)
 - PATH solver available (version 5.2+)
 - Internet access for GAMS team communication
-- PATH author availability (Michael Ferris, Steven Dirkse) — needed by Sprint 26
+- PATH author availability (Michael Ferris, Steven Dirkse) — needed by Sprint 27
 
 ### Internal Dependencies
 - Epic 3 deliverables: GAMSLIB infrastructure, pipeline scripts, reporting tools
@@ -1165,14 +1263,16 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - Sprint 21 depends on Sprint 20 (IndexOffset design feeds implementation)
 - Sprint 23 depends on Sprint 22 (error category analysis feeds targeted fixes)
 - Sprint 24 depends on Sprint 23 (alias differentiation priorities from retrospective)
-- Sprint 25 depends on Sprint 22 (case studies feed consultation document)
-- Sprint 26 depends on Sprint 25 (PATH feedback integration, performance benchmarks)
-- Sprint 27 depends on Sprint 26 (release preparation based on final metrics)
+- Sprint 25 depends on Sprint 24 (alias differentiation carryforward + emitter backlog from S24 retrospective)
+- Sprint 26 depends on Sprint 22 (case studies feed consultation document)
+- Sprint 27 depends on Sprint 26 (PATH feedback integration, performance benchmarks)
+- Sprint 28 depends on Sprint 27 (release preparation based on final metrics)
 
 ---
 
 ## Changelog
 
+- **2026-04-19:** Inserted new Sprint 25 (Alias Differentiation Carryforward & Emitter Backlog) based on Sprint 24 retrospective. Cascaded old S25→S26, S26→S27, S27→S28. Added S28 column to Rolling KPIs. Shifted sprint weeks (old S25 Weeks 15–16 → new S26 Weeks 17–18; old S26 → S27 Weeks 19–20; old S27 → S28 Weeks 21–22). Updated sprint dependencies, acceptance criteria, and cross-references. S25 targets from Sprint 24 retrospective §Suggested Sprint 25 Targets; components from §Sprint 25 Recommendations Priority 1–5.
 - **2026-04-03:** Inserted new Sprint 24 (Alias Differentiation & Error Category Reduction) based on Sprint 23 retrospective. Cascaded old S24→S25, S25→S26, S26→S27. Added S27 column to Rolling KPIs. Updated sprint dependencies, acceptance criteria, and risk table sprint references. S24 targets from Sprint 23 retrospective recommendations.
 - **2026-03-17:** Replaced Sprint 23 content with Sprint 22 retrospective recommendations (5 priorities: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, translate failures). Cascaded old S23→S24, S24→S25, S25→S26. Added S26 column to Rolling KPIs. Updated sprint dependencies.
 - **2026-03-17:** Sprint 22 final metrics recorded (6/8 targets met, 3 exceeded stretch: solve 89, match 47, path_syntax_error 20). Updated Rolling KPIs with Sprint 22 actuals and revised S23–S26 targets. 24 issues labeled `sprint-23` for Sprint 23 backlog.

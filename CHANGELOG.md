@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 25 Preparation
+
+- **Prep Task 1 COMPLETE (2026-04-19):** Created Sprint 25 Known Unknowns list at `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` with 27 unknowns across 6 categories (Alias-AD Carryforward 8; Emitter / Stationarity Backlog 6; Multi-Solve Gate Extension 3; Dispatcher Refactor 3; Translation Timeout — Algorithmic 4; Pipeline Retest + Determinism 3). Priority distribution: 7 Critical (26%), 11 High (41%), 7 Medium (26%), 2 Low (7%). Authoritative prep-task time budget: 21–31 hours for Tasks 2–11 (per `PREP_PLAN.md` §Prep Task Overview); individual per-KU estimates inside KNOWN_UNKNOWNS.md sum higher (~30–36h) because multiple unknowns are verified in parallel within a single task. Sprint 24 carryforward KUs (KU-29, KU-30, KU-32, KU-13/17) mapped into Sprint 25 unknown numbers in the document's Appendix. Task-to-Unknown mapping table assigns verification responsibility to each prep task; PREP_PLAN.md Tasks 2–11 updated with "Unknowns Verified" metadata in the task header, the deliverables section, and the acceptance criteria checklist.
+
 ### Sprint 24 Summary - 2026-04-19
 
 **Duration:** 15 days (Day 0 – Day 14) | **6/8 acceptance criteria met**
