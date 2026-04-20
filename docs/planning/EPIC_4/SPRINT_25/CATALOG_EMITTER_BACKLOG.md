@@ -27,10 +27,10 @@ The 7 Sprint 24 Day 13 review findings cluster into **3 code-path families**, no
 | Batch | Days | Issues | Effort | Rationale |
 |---|---|---|---|---|
 | 1 | Day 1–2 | #1275, #1280 | 3–5h | Quick emitter fixes with zero interaction with alias-AD; can ship alongside Priority 1 start |
-| 2 | Day 3–4 | #1279, #1276, #1281 | 7–9h | IR-normalize fix (#1279) unblocks robustlp; emitter-dedup pair (#1276, #1281) shares the symbol-tracker helper |
-| 3 | Day 5–7 | #1277 post-Pattern-C verification, #1278 | 2–4h | #1277 validated after Pattern C; #1278 fix is a standalone substitution-preservation patch |
+| 2 | Day 3–4 | #1279, #1276, #1281 | 6–9h | IR-normalize fix (#1279) unblocks robustlp; emitter-dedup pair (#1276, #1281) shares the symbol-tracker helper |
+| 3 | Day 5–7 | #1277 post-Pattern-C verification, #1278 | 4–6h | #1277 validated after Pattern C; #1278 fix is a standalone substitution-preservation patch |
 
-**Total:** 12–18h — matches the Sprint 24 retrospective's estimate bound.
+**Total:** 13–20h per-issue summation. The Sprint 24 retrospective set a 12–18h bound for this backlog; the low end (13h) falls inside that bound, while the high end (20h) exceeds it by ~2h as a contingency buffer for Batch 3 (primarily #1278's 3–4h substitution fix). See §Section 3 "Budget reconciliation" for the planning envelope.
 
 **Cross-reference to Task 2 alias-AD fix:**
 
@@ -172,8 +172,9 @@ Plumb through the multiplier-fixation emitter and the parameter-emission pass. R
 
 ### Budget reconciliation
 
-- Retrospective bound: 12–18h.
-- This plan: 13–20h (with Batch 3's upper end slightly over; realistically 13–17h if Pattern C lands clean).
+- **Retrospective bound:** 12–18h.
+- **Baseline expected effort:** 13–18h — fits within the retrospective's bound. This is the target execution envelope assuming Pattern C lands clean Day 5 and #1278 is 3h rather than 4h.
+- **Contingency / worst-case:** up to 20h only if Batch 3 needs the full #1277 extension AND #1278 lands at the 4h high end. The ~2h over-run risk is explicitly budgeted against Batch 3 flexibility (Days 5–7 has 3 days for 4–6h of work, giving ~1 day of slack).
 - **Parallelism opportunity:** Batches 1 and 2 fit within Days 1–4 with no dependencies on Priority 1's Pattern A work; Batch 3 is strictly gated on Pattern C. This lets the sprint lead dispatch Batch 1/2 to a separate contributor if available.
 
 ---

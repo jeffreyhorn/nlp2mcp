@@ -444,7 +444,7 @@ The retrospective estimates the emitter backlog at 12–18 hours — short, but 
   - Batch 1 (Days 1–2, 3–5h): #1275 (presolve absolute paths) + #1280 (unquoted UELs) — quick emitter wins, zero coupling to alias-AD.
   - Batch 2 (Days 3–4, 6–9h): #1279 (robustlp defobj widening) + #1276 (fawley .fx dedup, introduces `_DeclaredSymbolTracker`) + #1281 (lmp2 duplicate Parameter, reuses helper).
   - Batch 3 (Days 5–7, 4–6h): #1277 post-Pattern-C validation + #1278 standalone substitution fix.
-- **Total:** 13–20h, within the retrospective's 12–18h bound for the backlog.
+- **Total:** per-issue estimates sum to 13–20h. Baseline expected effort is **13–18h**, within the retrospective's 12–18h bound; the high end of 20h is a contingency buffer for Batch 3 if #1277's Pattern-C extension or #1278's substitution fix expand during implementation.
 
 ### Verification
 
@@ -471,7 +471,7 @@ done
 - [x] All 7 issues (#1275–#1281) classified by code path (4 emitter, 1 IR normalize, 2 stationarity/AD)
 - [x] Shared-code-path analysis identifies ≥ 1 subsume opportunity (2 identified: `_emit_nlp_presolve` cluster and emitter-idempotency helper)
 - [x] Fix order proposed as 3 batches with per-fix effort estimate (Batch 1: 3–5h, Batch 2: 6–9h, Batch 3: 4–6h)
-- [x] Total estimate reconciles with retrospective's 12–18h bound (catalog estimate: 13–20h, within bound)
+- [x] Total estimate reconciled against retrospective's 12–18h bound (catalog baseline: 13–18h within bound; per-issue summation range 13–20h with a +2h Batch 3 contingency documented)
 - [x] Unknowns 2.3, 2.4, 2.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
