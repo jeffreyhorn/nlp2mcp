@@ -2,8 +2,8 @@
 
 **Created:** 2026-04-19
 **Sprint:** 25 (Prep Task 2)
-**Predecessors:** `SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md`, `SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md`
-**Data sources:** `data/gamslib/gamslib_status.json` (Day 13 Addendum snapshot, 2026-04-19), `src/ad/derivative_rules.py`, `src/kkt/stationarity.py`, `SPRINT_24/SPRINT_LOG.md` Days 1–10
+**Predecessors:** [`../SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md`](../SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md), [`../SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md`](../SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md)
+**Data sources:** [`../../../../data/gamslib/gamslib_status.json`](../../../../data/gamslib/gamslib_status.json) (Day 13 Addendum snapshot, 2026-04-19), [`../../../../src/ad/derivative_rules.py`](../../../../src/ad/derivative_rules.py), [`../../../../src/kkt/stationarity.py`](../../../../src/kkt/stationarity.py), [`../SPRINT_24/SPRINT_LOG.md`](../SPRINT_24/SPRINT_LOG.md) Days 1–10
 
 ---
 
@@ -74,7 +74,7 @@ Classification columns: "S24 Pattern" is the original Sprint 24 Prep analysis; "
 | #1140 | ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps5_s_mn, ps10_s_mn | A | **A** | translate✅ / solve✅ / compare=mismatch or skipped | 0.5–9.1% | ps5_s_mn/ps10_s_mn comparison=skipped (pipeline skips large PS variants) |
 | #1141 | kand | B | **E** ⚠ reclassified | translate✅ / solve✅ / compare=mismatch | 92.5% | **Not an alias-AD bug.** Day 9 investigation (#1225): kand has two models (kand, kandsp); nlp2mcp reformulates the last solve (kandsp) but the NLP comparison uses the first model. Multi-solve semantics — fix belongs in the pipeline comparator or the multi-solve gate, not AD. |
 | #1142 | launch | D | **A** ⚠ reclassified | translate✅ / solve✅ / compare=mismatch | 17.3% | **Reclassified from Pattern D → Pattern A.** Day 9 (#1226): launch uses `Alias(s,ss)`; Jacobian/stationarity bug is in the same family as other CGE/alias models. The original "condition-scope" Pattern D framing was a misdiagnosis. |
-| #1143 | polygon | C | **C** | translate✅ / solve✅ / compare=mismatch | 33.8% | Day 6 fixed the compile error (concrete `i1+1` → `i+1`). Derivative math still broken — complete 100% gradient failure at `theta(i+1)*r(i+1)*r(i)` → needs `IndexOffset.base` extraction in `_alias_match`. |
+| #1143 | polygon | C | **C** | translate✅ / solve✅ / compare=mismatch | 33.8% | Day 6 fixed the compile error (concrete `i1+1` → `i+1`). Derivative math still broken; current objective mismatch is 33.8%, and the suspected bad term is `theta(i+1)*r(i+1)*r(i)` (Sprint 24 Day 6 analysis classified this as a full failure of the specific offset-alias gradient term, even though the objective-level residual is 33.8%) → likely needs `IndexOffset.base` extraction in `_alias_match`. |
 | #1144 | catmix | E | **E** | translate✅ / solve✅ / compare=mismatch | 0.2% | Day 6 fixed compile error (catmix `IndexOffset("0", 1)` → `IndexOffset("nh", 1)`). Remaining 0.2% is IR-level domain inference, not AD. Near-match; could qualify at a wider tolerance. |
 | #1145 | cclinpts | A | **A** | translate✅ / solve✅ / compare=mismatch | **100%** | Day 6 fixed compile error. Now solves but objective is the wrong sign/scale — likely the multi-index partial-collapse gap (see stubbed row in §1). |
 | #1146 | himmel16 | C | **C** | translate✅ / solve✅ / compare=mismatch | 43.0% | Circular offset (`++`) with alias interaction. Same fix site as polygon. |
@@ -223,7 +223,7 @@ The remaining 44 (= 54 − 10) matching models don't use aliases, so the alias-A
 
 **Tier 4 — Pattern-C validation (after Tier 3 passes):**
 
-13. `polygon` — 100% gradient failure; `IndexOffset.base` extraction target.
+13. `polygon` — 33.8% objective mismatch in the current snapshot; `IndexOffset.base` extraction target.
 14. `himmel16` — circular offset; same fix site, different offset style.
 
 **Tier 5 — Adjacent / infeasibility canaries (informational only; no block on regression):**

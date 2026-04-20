@@ -225,7 +225,7 @@ Sprint 24's Priority 1 was alias-AD, but the sprint ended with 11 issues deferre
   - Full classification table for all 11 open alias issues (#1138, #1139, #1140, #1141, #1142, #1143, #1144, #1145, #1146, #1147, #1150) including current reproduction state (translate/solve/compare/rel_diff) as of the Day 13 Addendum snapshot.
   - Pattern A/B/C/D/E section headings with S24-vs-S25 deltas (Patterns B and D reclassified empty; Pattern E gained kand; Pattern A gained launch).
   - Fix-site map from each active Pattern to specific source locations; subsume-opportunity graph; dependency graph (Pattern C depends on Pattern A).
-  - 5-tier canary-test priority ladder (dispatch → alias-users → golden-file → Pattern A targets → Pattern C targets → infeasibility-adjacent informational).
+  - Canary-test priority ladder, Tier 0–Tier 5 (6 tiers: dispatch → alias-users → golden-file → Pattern A targets → Pattern C targets → infeasibility-adjacent informational).
   - Cross-reference to Sprint 24 KU-01 / KU-04 / KU-13 / KU-17.
   - Open questions explicitly routed to Task 6 (rollout design).
 - Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Verification Results filled in for Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8 (status changed from 🔍 INCOMPLETE → ✅ VERIFIED, with findings/evidence/decision sections). Unknown 1.5 remains INCOMPLETE because its verification activity is Task 6's remit.

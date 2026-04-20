@@ -219,7 +219,7 @@ Prep Task 2 + Prep Task 6.
 - **Evidence:**
   - Canary ladder: `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 5
   - Alias-user re-verification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Appendix B + §Section 4
-- **Decision:** Proceed with assumption — revised to **"≤1 regression tolerated (still yields +7 toward +8 target); canary ladder has 5 tiers; Task 6 will define the per-tier gate criteria and golden-file infrastructure."**
+- **Decision:** Proceed with assumption — revised to **"≤1 regression tolerated (still yields +7 toward +8 target); canary ladder has 6 tiers (Tier 0 – Tier 5); Task 6 will define the per-tier gate criteria and golden-file infrastructure."**
 
 ---
 
