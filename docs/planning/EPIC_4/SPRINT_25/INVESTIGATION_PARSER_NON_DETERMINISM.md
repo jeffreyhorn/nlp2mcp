@@ -98,7 +98,7 @@ Solve m minimizing z using nlp;
 
 (Saved at `/tmp/task3-sweep/minrepro_2.gms` during this investigation.)
 
-20-seed sweep on the minimum reproducer produces the same 13:7 distribution — confirming the trigger is independent of hyphens, plus signs, or column-name special characters. The prior hypothesis that `light-ind`/`food+agr` tokenization was involved is **ruled out**.
+20-seed sweep on the minimum reproducer produces the same 7 correct : 13 corrupted distribution — confirming the trigger is independent of hyphens, plus signs, or column-name special characters. The prior hypothesis that `light-ind`/`food+agr` tokenization was involved is **ruled out**.
 
 ### Corruption signature (minimum reproducer)
 
@@ -172,7 +172,7 @@ The parser does **not** raise a validation error for this case because:
 
 `ambiguity="resolve"` in Lark 1.1.9 / 1.2.x uses rule priorities and earliest-start heuristics for tiebreak. When multiple valid `_ambig` alternatives have equal priority, Lark's internal data structures — which in current versions include hash-based sets/dicts in the Earley chart state — resolve the ambiguity in iteration order, and that order depends on Python's hash seed.
 
-Empirically: the 13:7 split suggests Lark is picking one of two specific alternatives roughly uniformly across the ambiguous node; the exact 13:7 vs 10:10 distribution is a function of how `PYTHONHASHSEED=0..19` happens to partition Lark's internal iteration.
+Empirically: the 7 correct : 13 corrupted split (i.e., 7:13 when stated "correct : corrupted", or equivalently 13:7 when stated "corrupted : correct") suggests Lark is picking one of two specific alternatives roughly uniformly across the ambiguous node; the exact 7:13 vs 10:10 distribution is a function of how `PYTHONHASHSEED=0..19` happens to partition Lark's internal iteration.
 
 ### 3.5 Relation to Sprint 24 KU-27
 
