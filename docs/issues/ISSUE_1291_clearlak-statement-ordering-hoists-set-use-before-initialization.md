@@ -12,7 +12,7 @@
 
 ## Problem Summary
 
-The emitter's statement-ordering logic hoists `tmp1 = sum(leaf, nprob(leaf));` (line 64 of the generated MCP) above the `leaf(n)$(ord(n) > ...) = yes;` assignment (line 69). The `sum(leaf, ...)` reads `leaf` before it's been assigned, producing GAMS compile errors:
+The emitter's statement-ordering logic hoists `tmp1 = sum(leaf, nprob(leaf));` (line 64 of the generated MCP) above the `leaf(n)$(ord(n) > ...) = yes;` assignment (line 68). The `sum(leaf, ...)` reads `leaf` before it's been assigned, producing GAMS compile errors:
 
 ```
 **** 352  Set has not been initialized         (leaf)
@@ -35,7 +35,7 @@ gams data/gamslib/mcp/clearlak_mcp.gms action=c lo=2
 
 **Generated MCP (clearlak_mcp.gms):**
 - Line 64: `tmp1 = sum(leaf, nprob(leaf));` (hoisted too early)
-- Line 69: `leaf(n) = yes$(ord(n) > ...);` (assigned too late)
+- Line 68: `leaf(n) = yes$(ord(n) > ...);` (assigned too late)
 
 ## Likely Root Cause
 

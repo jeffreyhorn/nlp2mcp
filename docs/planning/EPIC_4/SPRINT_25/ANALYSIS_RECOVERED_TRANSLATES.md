@@ -111,7 +111,7 @@ The hashes (`c8324d9c`, `4b0342d5`, `876cfd70` also seen) come from the syntheti
 
 Generated `data/gamslib/mcp/clearlak_mcp.gms` line ordering:
 - **Line 64:** `tmp1 = sum(leaf, nprob(leaf));` ← hoisted too early
-- **Line 69:** `leaf(n) = yes$(ord(n) > ...);` ← assignment comes AFTER the sum
+- **Line 68:** `leaf(n) = yes$(ord(n) > ...);` ← assignment comes AFTER the sum
 
 Original `data/gamslib/raw/clearlak.gms` line ordering:
 - **Line 72:** `leaf(n)$(ord(n) > ...) = yes;` ← assigned

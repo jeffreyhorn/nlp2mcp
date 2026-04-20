@@ -566,7 +566,7 @@ done
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md`
-- Per-model compile-error list (for the 5 `ganges`-family models)
+- Per-model compile-error list (for the 5 recovered-translate models: `ganges`, `gangesx`, `ferts`, `clearlak`, `turkpow`)
 - Leverage matrix (model × emitter-bug)
 - Any new emitter bugs filed as Sprint 25 tracking issues
 - Ranked fix priority by solve-unblocking leverage
