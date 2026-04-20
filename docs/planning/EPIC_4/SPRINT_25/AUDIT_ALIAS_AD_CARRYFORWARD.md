@@ -181,9 +181,9 @@ Re-verified against `data/gamslib/raw/*.gms` (`\balias\s*\(` case-insensitive). 
 
 **Dropped from S23 canary list:** `nemhaus` (now MINLP-excluded via v2.2.0 migration; no longer in pipeline scope).
 
-**Dropped regression candidates from S24 Day 5:** `marco` (no longer in matching set — now in `path_syntax_error` or similar; check status to confirm which).
+**Dropped regression candidates from S24 Day 5:** `marco` (no longer in matching set — current status JSON shows translate=success, solve=success, comparison=mismatch with `relative_difference=1.0`; tracked as a mismatch, not a canary candidate).
 
-### 41 Non-Alias Matching Models
+### 44 Non-Alias Matching Models
 
 The remaining 44 (= 54 − 10) matching models don't use aliases, so the alias-AD code path is unreachable by design. Risk of regression is near-zero for this subset, consistent with Sprint 24's Day 5 experience (regressions were confined to the alias-using matching models).
 
@@ -201,13 +201,13 @@ The remaining 44 (= 54 − 10) matching models don't use aliases, so the alias-A
 
 1. `dispatch` — guards `bound_indices`; Sprint 22 regression signature; must produce identical stationarity to pre-fix (trivial newline diff OK).
 
-**Tier 1 — Alias-using matching models (run all 9 after Tier 0):**
+**Tier 1 — 9 alias-using matching models + paklive (run all 10 after Tier 0):**
 
-2. `quocge` — regressed + re-fixed in S24 Day 5; most sensitive canary in the set.
-3. `paklive` — regressed + re-fixed in S24 Day 5 via `_collect_bound_indices`. (Not alias-using itself, but was caught up in Day 5 bound-index fix — included defensively.)
-4. `partssupply` — new matching model; verify S24 `$ifThen` fix remains matched.
-5. `prolog` — new matching model with alias; verify S24 multiplier-dimension fix holds.
-6. `sparta`, `gussrisk`, `ps2_f`, `ps3_f`, `ship`, `splcge` — remaining alias users.
+2. `quocge` — alias-using; regressed + re-fixed in S24 Day 5; most sensitive canary in the set.
+3. `paklive` — **not alias-using**; regressed + re-fixed in S24 Day 5 via `_collect_bound_indices`. Included defensively because the same bound-index fix path could regress it again.
+4. `partssupply` — alias-using (new matching model); verify S24 `$ifThen` fix remains matched.
+5. `prolog` — alias-using (new matching model); verify S24 multiplier-dimension fix holds.
+6. `sparta`, `gussrisk`, `ps2_f`, `ps3_f`, `ship`, `splcge` — remaining 6 alias users.
 
 **Tier 2 — Golden-file regression across the 44 non-alias matching models:**
 
