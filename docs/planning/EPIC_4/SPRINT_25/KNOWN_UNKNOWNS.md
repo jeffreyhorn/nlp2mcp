@@ -26,7 +26,7 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 
 **Sprint 24 Key Learning** (from `docs/planning/EPIC_4/SPRINT_24/SPRINT_RETROSPECTIVE.md` §What We'd Do Differently): alias-AD Day-1 start is necessary but not sufficient — it must also be *defended* against urgent-fix interruptions. Two consecutive sprints have deferred the core fix. Sprint 25 prep front-loads the architectural decisions (Task 2 audit + Task 6 rollout design) so Day 1 starts with a contract, not exploration.
 
-**Sprint 24 Carryforward KUs** (from `SPRINT_24/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
+**Sprint 24 Carryforward KUs** (from `../SPRINT_24/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
 
 - **KU-29** (saras-style multi-solve gate) → **Unknown 3.1 / 3.2** in this document
 - **KU-30** (dispatcher duplication) → **Unknown 4.1 / 4.2** in this document
@@ -157,7 +157,7 @@ Prep Task 2 (Alias-AD carryforward audit).
   - Pattern E issues route out of alias-AD scope: #1141 → Priority 3 / multi-solve gate, #1144 → IR domain investigation (near-match at 0.2%), #1147 → post-fix empirical re-evaluation (now `model_infeasible`).
 - **Evidence:**
   - Full classification table: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2
-  - Day 9 reclassification: `SPRINT_24/SPRINT_LOG.md` Day 9 (#1225 for kand, #1226 for launch)
+  - Day 9 reclassification: `../SPRINT_24/SPRINT_LOG.md` Day 9 (#1225 for kand, #1226 for launch)
   - Landed vs stubbed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1
 - **Decision:** Proceed with assumption — revised to **"Pattern A resolves 6 of 11 issues (≥ the assumed threshold); Pattern C needs a small incremental extension; Pattern E routes elsewhere."** Sprint 25 Priority 1's 12-day block is sufficient for Patterns A + C; B/D being empty shrinks the surface.
 
@@ -505,7 +505,7 @@ Prep Task 2.
   - **Expected recoveries:** ~1 of 3. Meeting the Sprint 25 model_infeasible target (`8 → ≤5`, −3) is at risk via this path alone and needs a supplementary recovery source (Priority 2 emitter fixes may help via #1275–#1281, or the 5 Category B PATH-convergence models via warm-start).
 - **Evidence:**
   - Current infeasibility signatures: `data/gamslib/gamslib_status.json` (extracted in Task 2 data-collection step)
-  - Sprint 24 Day 13 alias-related-infeasibility list: `SPRINT_24/SPRINT_LOG.md` Day 13 model_infeasible table
+  - Sprint 24 Day 13 alias-related-infeasibility list: `../SPRINT_24/SPRINT_LOG.md` Day 13 model_infeasible table
   - Pattern E→A-adjacent classification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2 row for #1147
 - **Decision:** Revised assumption — **"~1 of 3 alias-related infeasibles will recover; meeting the −3 target will likely require secondary recoveries from Priority 2 emitter/stationarity fixes or Priority 1's Pattern A changing Jacobian numerics for models outside the 11-issue list."** Task 6's rollout design should include a mid-sprint checkpoint to re-run the infeasible trio and call the target.
 

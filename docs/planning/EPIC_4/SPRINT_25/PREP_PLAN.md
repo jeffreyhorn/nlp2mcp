@@ -115,7 +115,7 @@ Sprint 24's end-of-sprint discoveries (KU-27 through KU-32 in `docs/planning/EPI
 
 4. **Assign verification deadlines** (Day 0–1 for Critical, Day 2–3 for High, Day 5+ for Medium/Low).
 
-5. **Create document** following `SPRINT_24/KNOWN_UNKNOWNS.md` format, including a Task-to-Unknown mapping table.
+5. **Create document** following `../SPRINT_24/KNOWN_UNKNOWNS.md` format, including a Task-to-Unknown mapping table.
 
 ### Changes
 
@@ -184,7 +184,7 @@ Sprint 24's Priority 1 was alias-AD, but the sprint ended with 11 issues deferre
 ### Background
 
 - Sprint 24 retrospective §What Could Be Improved #1: "Alias Differentiation Didn't Fully Land"
-- Sprint 24 Day 1–3 findings in `SPRINT_24/SPRINT_LOG.md` (Pattern A single-index sum collapse, Pattern C offset-alias, Pattern D condition-scope)
+- Sprint 24 Day 1–3 findings in `../SPRINT_24/SPRINT_LOG.md` (Pattern A single-index sum collapse, Pattern C offset-alias, Pattern D condition-scope)
 - Existing design doc: `docs/planning/EPIC_4/SPRINT_24/DESIGN_ALIAS_DIFFERENTIATION_V2.md`
 - Sprint 24 Day 5 Checkpoint 1 evaluation (3 regressions → fixed → GO with narrowed guards)
 - 11 open issues: #1138 (CGE), #1139 (meanvar), #1140 (PS-family), #1141 (kand), #1142 (launch), #1143 (polygon), #1144 (catmix), #1145 (cclinpts), #1146 (himmel16), #1147 (camshape), #1150 (AD regression)
@@ -653,7 +653,7 @@ Sprint 24's outcome was "Day 1 started but Days 4–7 lost to urgent fixes" beca
 ### Result
 
 - **Phase 1 (Days 1–3):** Pattern A single-index validation (qabel, abel, launch) + multi-index `_partial_collapse_sum` recovery prototype. Gate at Day 3.
-- **Phase 2 (Days 4–6):** Pattern A across 6 issues (CGE, PS-family, cclinpts, #1150). Match delta target ≥ +3. Checkpoint 1 at Day 6.
+- **Phase 2 (Days 4–6):** Pattern A across the 6-issue Task 2 audit set — **#1138** (CGE: irscge, lrgcge, moncge, stdcge), **#1139** (meanvar), **#1140** (PS-family), **#1142** (launch), **#1145** (cclinpts), **#1150** (qabel, abel). Match delta target ≥ +3. Checkpoint 1 at Day 6.
 - **Phase 3 (Days 7–9):** Pattern C — extend `_alias_match()` with `IndexOffset.base`; validate polygon, himmel16, twocge `stat_tz` (#1277). Gate at Day 9.
 - **Phase 4 (Days 10–12):** Final regression sweep + Pattern E routing (#1141, #1144, #1147 routed out of scope). Checkpoint 2 at Day 10.
 - **Stop triggers (5):** (1) ≥ 2 golden-file regressions un-root-caused in 1 day; (2) dispatch canary fails; (3) Checkpoint 1 NO-GO; (4) new path_syntax_error / model_infeasible on a matching model; (5) `make test` regression.

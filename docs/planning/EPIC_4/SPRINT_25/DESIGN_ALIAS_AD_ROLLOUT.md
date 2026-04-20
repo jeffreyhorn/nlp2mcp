@@ -16,7 +16,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 | Phase | Days | Target | Gate | Outcome on fail |
 |---|---|---|---|---|
 | 1 | 1–3 | Pattern A — single-index path validation (qabel, abel, launch) + `_partial_collapse_sum` multi-index recovery prototype | Tier 0 + Tier 1 canaries pass; ≥ 1 of {qabel, abel, launch} improves rel_diff by ≥ 50% | Stop, narrow scope, file investigation |
-| 2 | 4–6 | Pattern A across all 6 issues (#1138 CGE, #1140 PS-family, #1145 cclinpts, #1150) | Checkpoint 1 (Day 6): ≤ 1 regression on 54 matching models; ≥ 3 of 6 Pattern A issues show rel_diff improvement; net Match delta ≥ +3 | Stop, revert Phase 2 PRs, return to Phase 1 |
+| 2 | 4–6 | Pattern A across all 6 audit issues: #1138 (CGE), #1139 (meanvar), #1140 (PS-family), #1142 (launch), #1145 (cclinpts), #1150 (qabel, abel) | Checkpoint 1 (Day 6): ≤ 1 regression on 54 matching models; ≥ 3 of 6 Pattern A issues show rel_diff improvement; net Match delta ≥ +3 | Stop, revert Phase 2 PRs, return to Phase 1 |
 | 3 | 7–9 | Pattern C — extend `_alias_match()` with `IndexOffset.base`; revalidate polygon, himmel16; verify #1277 | Pattern C target rel_diff drops by ≥ 50% on at least one of polygon/himmel16; no Phase-1/2 regressions reintroduced | Stop, isolate Pattern C, leave A in-place |
 | 4 | 10–12 | Final regression sweep + Pattern E routing decisions (camshape post-fix re-eval; #1141, #1144 routed to other workstreams) + Checkpoint 2 | Match net ≥ +6 over baseline; path_syntax_error not regressed; full pipeline retest passes | Stop, scope down to landed work |
 
@@ -143,7 +143,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 ## Section 2 — Per-Phase Gate Definitions
 
-Each gate uses Sprint 24's GO / CONDITIONAL GO / NO-GO scoring template (`SPRINT_24/PLAN.md` §Day 5 Checkpoint 1), adapted with Sprint 25's quantitative thresholds.
+Each gate uses Sprint 24's GO / CONDITIONAL GO / NO-GO scoring template (`../SPRINT_24/PLAN.md` §Day 5 Checkpoint 1), adapted with Sprint 25's quantitative thresholds.
 
 ### Gate 1 — Phase 1 evaluation (Day 3)
 
