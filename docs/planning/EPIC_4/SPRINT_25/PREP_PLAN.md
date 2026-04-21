@@ -748,7 +748,7 @@ Sprint 24 demonstrated that "small" tasks can bleed scope when they're picked up
 
 - Created `docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md` — 4-section design covering:
   - **#1270 Multi-Solve Gate Extension:** Approach A (cross-reference) committed; corpus survey of 14 candidate models; 4-fixture test matrix (saras flag + 3 must-not-flag including partssupply); single-function code-site at `src/validation/driver.py:151–225`; effort estimate 3.5–4.5h
-  - **#1271 Dispatcher Refactor:** unified signature `_loop_tree_to_gams(node, *, token_subst=None)`; caller inventory (0 external imports of substituting variant; 4 test imports of canonical); 4-step refactor plan; byte-diff regression strategy across 135 currently-translating models; effort estimate 4–5h
+  - **#1271 Dispatcher Refactor:** unified signature `_loop_tree_to_gams(node, *, token_subst=None)`; caller inventory (0 external imports of substituting variant; multiple test imports of the canonical helper); 4-step refactor plan; byte-diff regression strategy across 135 currently-translating models; effort estimate 4–5h
   - Day allocation table (Option A: Day 11 default; Option B: Days 5–6 with second contributor)
   - Sprint 25 implementation checklist (Appendix A) — lift verbatim into the implementation PR description
 - Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Verification Results filled in for Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3.
