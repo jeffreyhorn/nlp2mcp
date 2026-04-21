@@ -344,7 +344,7 @@ The Sprint 24 Day 13 Addendum discovered that `chenery_mcp.gms` was intermittent
 test -f docs/planning/EPIC_4/SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md && echo "EXISTS" || echo "MISSING"
 
 # The investigation must have a reliable reproduction command and a narrowed root cause
-grep -c "^## Reliable Reproduction\|^## Narrowed Root Cause\|^## Proposed Fix" \
+grep -E -c "^## Reliable Reproduction|^## Narrowed Root Cause|^## Proposed Fix" \
     docs/planning/EPIC_4/SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md
 # Expect ≥ 3
 # ACTUAL: 3 (all required section headings present)
@@ -674,7 +674,7 @@ _(Task 6 is now COMPLETE. The bullets below were the initial sketch from pre-Tas
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md && echo "EXISTS" || echo "MISSING"
 # The design must have explicit phase gates
-grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
+grep -E -c "^### Phase [1-4]:|^### Gate|^### Stop Trigger" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md
 # Expect ≥ 8
 # Example current output: 13 (4 Phase + 4 Gate + 5 Stop Trigger headings) — may drift if headings evolve
@@ -756,7 +756,7 @@ _To be completed._
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md && echo "EXISTS" || echo "MISSING"
-grep -c "^### #1270\|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md
+grep -E -c "^### #1270|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md
 # Expect ≥ 2
 ```
 
@@ -1008,7 +1008,7 @@ _To be completed._
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md && echo "EXISTS" || echo "MISSING"
-grep -c "^## Scope\|^## Fixture Set\|^## Seed Set\|^## CI Integration" \
+grep -E -c "^## Scope|^## Fixture Set|^## Seed Set|^## CI Integration" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md
 # Expect ≥ 4
 ```

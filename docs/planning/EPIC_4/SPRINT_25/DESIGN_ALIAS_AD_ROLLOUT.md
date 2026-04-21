@@ -119,7 +119,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 **Day-by-day:**
 
 - **Day 10** — **Checkpoint 2**
-  - Run full pipeline retest (`scripts/gamslib/run_full_test.py --quiet`).
+  - Run full pipeline retest (`.venv/bin/python scripts/gamslib/run_full_test.py --quiet`).
   - **Checkpoint 2 evaluation** (see §Gate 4).
   - On GO: address only minor cleanup; freeze main branch for Day 12 prep.
   - On CONDITIONAL GO: prioritize the highest-leverage remaining issue.
@@ -137,7 +137,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
   - Update `SPRINT_LOG.md` (sibling file in this directory) Priority 1 section with final Match delta and per-pattern outcome.
   - Run `make test` final pass.
 
-**Match delta target by end of Phase 4:** ≥ +5 (Phase 2's +3 + Phase 3's +2 from polygon/himmel16). Stretch: ≥ +8 (full Sprint 25 PROJECT_PLAN target).
+**Match delta target by end of Phase 4:** ≥ +6 (aligned with Checkpoint 2 / Gate 4 GO criteria; builds on Phase 2's +3 + Phase 3's +2 + Phase 4 Pattern E re-evaluations / residual cleanup for ≥ +1 more). Stretch: ≥ +8 (full Sprint 25 PROJECT_PLAN target).
 
 ---
 
