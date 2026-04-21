@@ -555,7 +555,7 @@ Prep Task 6.
 
 - **Verified by (initial):** Task 2 (Alias-AD Carryforward Audit) — 2026-04-19
 - **Verified by (rollback procedure):** Task 6 (Alias-AD Rollout Plan) — 2026-04-20
-- **Date:** 2026-04-19
+- **Date:** 2026-04-20 (last updated; initial 2026-04-19)
 - **Findings:**
   - **Sprint 24 did land portions of the alias-AD fix that are already permanently enabled.** The `bound_indices` threading (Sprint 23), the Day 3 single-index sum collapse fix, the Day 4 `_apply_alias_offset_to_deriv` post-processing, and the Day 5 `_var_inside_alias_sum` narrowed guard are all live. This means "all or nothing" is inaccurate — we're partway through, and the canary-protected additions have been running since Sprint 24.
   - Feature-flag feasibility: the Sprint 25 additions (multi-index partial-collapse recovery, `IndexOffset.base` in `_alias_match`) could in principle be gated on a CLI flag or env var, but doing so would double the test matrix (with-flag / without-flag paths) and give zero operational benefit — there's no "some users want the old behavior" case. `bound_indices` guard already prevents regressions in the alias-free models. Recommend **no feature flag**.

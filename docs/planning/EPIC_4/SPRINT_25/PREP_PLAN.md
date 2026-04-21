@@ -640,7 +640,7 @@ Sprint 24's outcome was "Day 1 started but Days 4–7 lost to urgent fixes" beca
 - Created `docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` — 8-section rollout design covering:
   - 4 phases (Phase 1 Days 1–3, Phase 2 Days 4–6, Phase 3 Days 7–9, Phase 4 Days 10–12) with day-by-day execution detail and target-model lists
   - 4 quantitative gates (Phase 1, Checkpoint 1 / Phase 2, Phase 3, Checkpoint 2 / Phase 4) using Sprint 24's GO / CONDITIONAL GO / NO-GO template
-  - Regression-guard infrastructure: 5-tier canary ladder (Tier 0 dispatch → Tier 5 informational), 54-model golden-file generation script, per-model verification harness, `PYTHONHASHSEED=0` pinning until #1283 lands
+  - Regression-guard infrastructure: 6-tier canary ladder (Tier 0 dispatch → Tier 5 informational, i.e., tiers 0–5), 54-model golden-file generation script, per-model verification harness, `PYTHONHASHSEED=0` pinning until #1283 lands
   - 5 stop-the-sprint triggers (golden-file regression budget, dispatch canary fail, Checkpoint 1 NO-GO, new path_syntax_error / model_infeasible, `make test` regression)
   - Parallel-work allocation table mapping Priority 2 (emitter) Batches 1–3 + Task 5's new issues #1289–#1292 to specific days; Day 8 identified as highest-leverage (Phase 3 Pattern C + Batch 3 + #1289)
   - 20-test `sameas()` guard regression matrix (5 element types × 4 scenarios) addressing Unknown 1.5
@@ -687,7 +687,7 @@ grep -c "^### Phase [1-4]:\|^### Gate\|^### Stop Trigger" \
 - [x] 4 phases mapped to 12 days (Days 1–12) — Phase 1 (1–3), Phase 2 (4–6), Phase 3 (7–9), Phase 4 (10–12)
 - [x] Each phase has at least one gate with a quantitative pass/fail criterion (4 gates: Phase 1 Day 3, Checkpoint 1 Day 6, Phase 3 Day 9, Checkpoint 2 Day 10)
 - [x] ≥ 3 "stop the sprint" triggers defined (5 triggers documented in §Section 4)
-- [x] Regression-guard infrastructure specified (5-tier canary ladder, 54-model golden-file generation script, per-model verification harness, PYTHONHASHSEED pinning)
+- [x] Regression-guard infrastructure specified (6-tier canary ladder, Tier 0–Tier 5, 54-model golden-file generation script, per-model verification harness, PYTHONHASHSEED pinning)
 - [x] Cross-reference with Task 2 Pattern classification (§Section 8 cross-reference table)
 - [x] Cross-reference with Sprint 24 KU-03 and KU-17 (regression risks) (§Section 8 cross-reference table)
 - [x] Unknowns 1.5, 1.8 verified and updated in KNOWN_UNKNOWNS.md
