@@ -333,7 +333,9 @@ Script lives at `/tmp/task8-profile.py` during this prep task; paste below for p
 ```python
 """Stage-timing instrumentation for Task 8 hard-timeout profiling.
 
-Usage: PYTHONHASHSEED=0 python /tmp/task8-profile.py <model> <budget_seconds>
+Usage: PYTHONHASHSEED=0 .venv/bin/python /tmp/task8-profile.py <model> <budget_seconds>
+       (invoke from the repo root — the harness resolves models relative
+        to the current working directory as `data/gamslib/raw/<MODEL>.gms`)
 
 Writes JSON to stdout with per-stage timing.
 """
