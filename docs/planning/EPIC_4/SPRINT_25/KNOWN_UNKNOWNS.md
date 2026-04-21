@@ -1392,7 +1392,7 @@ Prep Task 8.
     - `parse+ir_build`: 1.2s (srpchase) – 51.1s (mexls); fast even for large files
     - `normalize`: all < 0.01s
     - `ad_gradient`: 0.25s (srpchase) – 28.6s (sarf); fast
-    - **`ad_jacobian`: 466.6s (srpchase completes) or >834s (others timeout)** — the dominant stage
+    - **`ad_jacobian`: 466.6s (srpchase completes) or >834s–>865s (others timeout before cut-off at 900s)** — the dominant stage
     - `kkt_assemble`: 32.2s for srpchase; others never reach
     - `emit_mcp`: 0.02s for srpchase; others never reach
   - **Growth pattern (RQ #2):** `ad_jacobian` grows roughly linearly with the combined workload proxy (affected equations) × (parent-set cardinality on fallback). That's **linear in the product**, which means it can appear super-linear in either factor considered alone when both increase together, but the observed fit here is linear in that combined product. For nebrazil (13 affected equations, 4 fallback subsets) the product is the largest of the 5.

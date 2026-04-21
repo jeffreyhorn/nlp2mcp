@@ -17,17 +17,17 @@
 | Model | Status | Total | Dominant stage | Stage time | Affected equations | Fallback subsets |
 |---|---|---|---|---|---|---|
 | `srpchase` | **COMPLETE** | 500s | `ad_jacobian` | 466.6s (93%) | 2 | 1 (`srn`→`n`, 1001 members) |
-| `iswnm` | timeout @ 900s | — | `ad_jacobian` | > 866s | 1 | 1 (`nb`) |
-| `sarf` | timeout @ 900s | — | `ad_jacobian` | > 853s | 3 | 2 (`taskposs`, `equipposs`) |
-| `mexls` | timeout @ 900s | — | `ad_jacobian` | > 836s | 3 | 3 (`mmpos`, `mrpos`, `mspos`) |
-| `nebrazil` | timeout @ 900s | — | `ad_jacobian` | > 861s | 13 | 4 (`fposs`, `cpossn`, …) |
+| `iswnm` | timeout @ 900s | — | `ad_jacobian` | > 865s | 1 | 1 (`nb`) |
+| `sarf` | timeout @ 900s | — | `ad_jacobian` | > 852s | 3 | 2 (`taskposs`, `equipposs`) |
+| `mexls` | timeout @ 900s | — | `ad_jacobian` | > 834s | 3 | 3 (`mmpos`, `mrpos`, `mspos`) |
+| `nebrazil` | timeout @ 900s | — | `ad_jacobian` | > 860s | 13 | 4 (`fposs`, `cpossn`, …) |
 
 **Tractability classification:**
 
 - **`srpchase`: TRACTABLE at 900s budget (completes in 500s).** At the current 600s pipeline cap it still times out; either a budget bump or a targeted optimization is needed to land it.
 - **`iswnm`, `sarf`, `mexls`, `nebrazil`: INTRACTABLE at current architecture.** All 4 still stuck inside `ad_jacobian` at the 900s mark, far from completion.
 
-**Priority 5 scope recommendation for Sprint 25:** **DEFER all 5 models to Sprint 26** pending an architectural fix to `SetMembershipTest` fallback handling. The targeted optimization (see §Section 3) is ~1–2 days of engineering work; it doesn't fit the Sprint 25 alias-AD focus and its 12–18h emitter backlog. Filing: `sprint-26` label on #1169, #1185, #1192 + new architectural issue for the fallback-handling fix.
+**Priority 5 scope recommendation for Sprint 25:** **DEFER all 5 models to Sprint 26** pending an architectural fix to `SetMembershipTest` fallback handling. The targeted optimization (see §Section 3) is ~1–2 days of engineering work; it doesn't fit the Sprint 25 alias-AD focus and its 12–18h emitter backlog. Filing (see §Section 4.2): open one new architectural issue for the fallback-handling fix, apply the `sprint-26` label to the still-open translate-timeout trackers #1185 and #1192, and reference/link #1169 (closed), #1185, #1192, and Sprint 24 ISSUE_1228 from the new issue.
 
 **Addresses:**
 
@@ -104,7 +104,7 @@ ELAPSED        899.6s (TIMEOUT)
 
 - Set `nb`: dynamic subset of `n`, **zero static members** — per Sprint 24 ISSUE_1228 this was the known root cause.
 - Affected equation: `nbal` (indexed over `n` × `m`)
-- Warnings: 4× "cannot be evaluated statically"; the fallback-subset warning originates in `src/ad/index_mapping.py` (`resolve_set_members`) and may appear at a `src/ad/constraint_jacobian.py` call site in the warning trace because of `warnings.warn(..., stacklevel=...)` behavior
+- Warnings: 4× "cannot be evaluated statically"; separately, the dynamic-subset fallback message ("Dynamic subset ...") is logged from `src/ad/index_mapping.py` by `resolve_set_members` via `logger.warning`. Any warning-trace call-site remapping to `src/ad/constraint_jacobian.py` applies to the `warnings.warn(..., stacklevel=2)` path from `enumerate_equation_instances`, not to that logger message.
 
 **Why it doesn't complete:** The fallback expands `nb → n` where `n` includes many members × `m` (months) → Cartesian explosion. Unlike srpchase, whose 2 affected equations each have small 1D target slots (1001 × 1 per equation), iswnm's `nbal` has a larger 2D index product.
 
@@ -159,7 +159,7 @@ preprocess       0.197s
 parse+ir_build  25.997s
 normalize        0.001s
 ad_gradient     12.933s
-ad_jacobian    >861s      ← stuck
+ad_jacobian    >860s      ← stuck
 ───────────────────────
 ELAPSED        899.5s (TIMEOUT)
 ```
@@ -337,12 +337,15 @@ import sys, time, signal, json
 sys.setrecursionlimit(50000)
 
 MODEL = sys.argv[1]
-BUDGET = float(sys.argv[2])
+# signal.alarm() only supports integer seconds, so budget must be an integer
+# number of seconds. Parsing as int here avoids the float->int truncation
+# mismatch between BUDGET and signal.alarm(int(BUDGET)).
+BUDGET = int(sys.argv[2])
 
 def _timeout(signum, frame):
     raise TimeoutError(f"budget {BUDGET}s exceeded")
 signal.signal(signal.SIGALRM, _timeout)
-signal.alarm(int(BUDGET))
+signal.alarm(BUDGET)
 
 from pathlib import Path
 from src.config import Config
