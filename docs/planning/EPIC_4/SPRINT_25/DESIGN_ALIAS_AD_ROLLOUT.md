@@ -448,7 +448,7 @@ git push origin main
 
 On any rollback:
 
-1. Sprint lead posts the rollback commit SHA, reason, and residual scope to the Day-N entry in the sibling `SPRINT_LOG.md` file for Sprint 25.
+1. Sprint lead posts the rollback commit SHA, reason, and residual scope to the Day-N entry in the sibling `SPRINT_LOG.md` file for Sprint 25. If `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` does not yet exist (it's created on Sprint 25 Day 1 during the Pre-Sprint checklist — see §Appendix B), create it first using `../SPRINT_24/SPRINT_LOG.md` as the template, then add the Day-N entry.
 2. File a `sprint-25-rollback` GitHub issue with the canary diff that triggered the rollback.
 3. If rollback exceeds 1 PR's worth of work, also update `KNOWN_UNKNOWNS.md` (sibling file in this directory) with a new "Newly Discovered" KU entry per the §How to Use This Document protocol.
 
@@ -507,3 +507,4 @@ Before Sprint 25 Day 1 begins:
 - [ ] Confirm Sprint 24 base layer code is intact: `grep -n "_alias_match\|_apply_alias_offset_to_deriv\|_var_inside_alias_sum" src/ad/derivative_rules.py src/kkt/stationarity.py` → all 3 helpers present
 - [ ] Sprint 25 PROJECT_PLAN target reaffirmed: Match 54 → ≥ 62, Solve 99 → ≥ 105
 - [ ] Sprint lead acknowledges the 5 stop-triggers and the per-PR gate criteria
+- [ ] Create `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` using `../SPRINT_24/SPRINT_LOG.md` as the template (prerequisite for §Section 7.4's rollback-communication step)
