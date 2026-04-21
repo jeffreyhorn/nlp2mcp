@@ -26,7 +26,7 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 
 **Sprint 24 Key Learning** (from `docs/planning/EPIC_4/SPRINT_24/SPRINT_RETROSPECTIVE.md` §What We'd Do Differently): alias-AD Day-1 start is necessary but not sufficient — it must also be *defended* against urgent-fix interruptions. Two consecutive sprints have deferred the core fix. Sprint 25 prep front-loads the architectural decisions (Task 2 audit + Task 6 rollout design) so Day 1 starts with a contract, not exploration.
 
-**Sprint 24 Carryforward KUs** (from `SPRINT_24/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
+**Sprint 24 Carryforward KUs** (from `../SPRINT_24/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
 
 - **KU-29** (saras-style multi-solve gate) → **Unknown 3.1 / 3.2** in this document
 - **KU-30** (dispatcher duplication) → **Unknown 4.1 / 4.2** in this document
@@ -127,7 +127,7 @@ The majority of the 11 open issues (#1138–#1147, #1150) fall into 2–3 distin
 - For each of the 11 issues, re-run the reproducer (`src.cli` on the corpus model) and record the current failure signature.
 - Group issues by the specific AD code path that fails.
 - Compare against the Sprint 24 Pattern A/B/C/D classification in `docs/planning/EPIC_4/SPRINT_24/ANALYSIS_ALIAS_DIFFERENTIATION.md`.
-- Produce a Pattern-per-issue table in `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md`.
+- Produce a Pattern-per-issue table in `AUDIT_ALIAS_AD_CARRYFORWARD.md`.
 
 ### Risk if Wrong
 
@@ -156,8 +156,8 @@ Prep Task 2 (Alias-AD carryforward audit).
   - Pattern C (#1143 polygon, #1146 himmel16) requires a separate `IndexOffset.base` extraction in `_alias_match()` (~2–3h incremental on top of A).
   - Pattern E issues route out of alias-AD scope: #1141 → Priority 3 / multi-solve gate, #1144 → IR domain investigation (near-match at 0.2%), #1147 → post-fix empirical re-evaluation (now `model_infeasible`).
 - **Evidence:**
-  - Full classification table: `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2
-  - Day 9 reclassification: `SPRINT_24/SPRINT_LOG.md` Day 9 (#1225 for kand, #1226 for launch)
+  - Full classification table: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2
+  - Day 9 reclassification: `../SPRINT_24/SPRINT_LOG.md` Day 9 (#1225 for kand, #1226 for launch)
   - Landed vs stubbed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1
 - **Decision:** Proceed with assumption — revised to **"Pattern A resolves 6 of 11 issues (≥ the assumed threshold); Pattern C needs a small incremental extension; Pattern E routes elsewhere."** Sprint 25 Priority 1's 12-day block is sufficient for Patterns A + C; B/D being empty shrinks the surface.
 
@@ -217,7 +217,7 @@ Prep Task 2 + Prep Task 6.
   - Canary ladder produced: Tier 0 (dispatch), Tier 1 (9 alias users + paklive), Tier 2 (44 non-alias matching models via golden-file diff), Tier 3 (Pattern A targets), Tier 4 (Pattern C targets), Tier 5 (infeasibility-adjacent informational).
   - Golden-file snapshot generation itself is deferred to Task 6's rollout design.
 - **Evidence:**
-  - Canary ladder: `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 5
+  - Canary ladder: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 5
   - Alias-user re-verification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Appendix B + §Section 4
 - **Decision:** Proceed with assumption — revised to **"≤1 regression tolerated (still yields +7 toward +8 target); canary ladder has 6 tiers (Tier 0 – Tier 5); Task 6 will define the per-tier gate criteria and golden-file infrastructure."**
 
@@ -376,7 +376,20 @@ Prep Task 6 (rollout design).
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (test matrix designed; execution deferred to Sprint 25 Day 1–2)
+
+- **Verified by:** Task 6 (Alias-AD Rollout Plan)
+- **Date:** 2026-04-20
+- **Findings:**
+  - Designed a **20-test regression matrix** (5 element types × 4 scenarios) under `tests/unit/ad/test_sameas_guards.py` (new file in Sprint 25). Specified at `DESIGN_ALIAS_AD_ROLLOUT.md` §Section 6.
+  - **Element types covered (rows):** numeric (`/1*5/`), string (`/'alpha', 'beta', 'gamma'/`), hyphenated (`/'light-ind', 'food-agr', 'heavy-ind'/`), plus-signed (`/'food+agr', 'energy+water'/`), dotted (`/'x1.l', 'x2.l', 'x3.l'/`).
+  - **Test scenarios covered (columns):** equal pair (TRUE), unequal pair (FALSE), cross-alias pair (TRUE on diagonal / FALSE off-diagonal), combined with dollar condition (no scope conflict).
+  - **Compile-time benchmark (local-only / optional):** the CI workflow doesn't install GAMS, so the compile benchmark is out of CI scope. Local invocation: `time gams data/gamslib/mcp/twocge_mcp.gms action=c` (from the repo root); acceptance ≤ 60s (flag for investigation if > 90s) — addresses RQ #3. The CI matrix itself asserts only string-level / parser-emitter-level properties of the emitted guards (no GAMS compile needed).
+  - **Emitter quoting policy:** scenarios C/D/E require single-quote wrapping for non-identifier characters; this depends on ISSUE_1280 (UEL quoting) landing in Priority 2 Batch 1 (Day 1–2) as a prerequisite — addresses RQ #4.
+  - The matrix is design-complete; execution lands as the unit-test PR alongside Phase 1 Day 2 (per the rollout plan). The 5 element types × 4 scenarios should cover the GAMS-element-type space without leaving silent-correctness holes (RQ #1, #5).
+- **Evidence:**
+  - Full matrix design: `DESIGN_ALIAS_AD_ROLLOUT.md` §Section 6 (rows in §6.1, columns in §6.2, benchmark in §6.3, coverage table in §6.4, quoting policy in §6.5)
+- **Decision:** Proceed with the 20-test matrix as the validation gate for `sameas()` correctness. Land alongside Phase 1 Day 2's PR. The quoting prerequisite (ISSUE_1280) is on the same Day 1–2 ship window, eliminating ordering risk.
 
 ---
 
@@ -492,7 +505,7 @@ Prep Task 2.
   - **Expected recoveries:** ~1 of 3. Meeting the Sprint 25 model_infeasible target (`8 → ≤5`, −3) is at risk via this path alone and needs a supplementary recovery source (Priority 2 emitter fixes may help via #1275–#1281, or the 5 Category B PATH-convergence models via warm-start).
 - **Evidence:**
   - Current infeasibility signatures: `data/gamslib/gamslib_status.json` (extracted in Task 2 data-collection step)
-  - Sprint 24 Day 13 alias-related-infeasibility list: `SPRINT_24/SPRINT_LOG.md` Day 13 model_infeasible table
+  - Sprint 24 Day 13 alias-related-infeasibility list: `../SPRINT_24/SPRINT_LOG.md` Day 13 model_infeasible table
   - Pattern E→A-adjacent classification: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 2 row for #1147
 - **Decision:** Revised assumption — **"~1 of 3 alias-related infeasibles will recover; meeting the −3 target will likely require secondary recoveries from Priority 2 emitter/stationarity fixes or Priority 1's Pattern A changing Jacobian numerics for models outside the 11-issue list."** Task 6's rollout design should include a mid-sprint checkpoint to re-run the infeasible trio and call the target.
 
@@ -538,10 +551,11 @@ Prep Task 6.
 
 ### Verification Results
 
-✅ **Status:** VERIFIED (partial — inventory captured; rollback decision deferred to Task 6)
+✅ **Status:** VERIFIED (Task 2 captured the inventory; Task 6 completes the rollback procedure)
 
-- **Verified by:** Task 2 (Alias-AD Carryforward Audit)
-- **Date:** 2026-04-19
+- **Verified by (initial):** Task 2 (Alias-AD Carryforward Audit) — 2026-04-19
+- **Verified by (rollback procedure):** Task 6 (Alias-AD Rollout Plan) — 2026-04-20
+- **Date:** 2026-04-20 (last updated; initial 2026-04-19)
 - **Findings:**
   - **Sprint 24 did land portions of the alias-AD fix that are already permanently enabled.** The `bound_indices` threading (Sprint 23), the Day 3 single-index sum collapse fix, the Day 4 `_apply_alias_offset_to_deriv` post-processing, and the Day 5 `_var_inside_alias_sum` narrowed guard are all live. This means "all or nothing" is inaccurate — we're partway through, and the canary-protected additions have been running since Sprint 24.
   - Feature-flag feasibility: the Sprint 25 additions (multi-index partial-collapse recovery, `IndexOffset.base` in `_alias_match`) could in principle be gated on a CLI flag or env var, but doing so would double the test matrix (with-flag / without-flag paths) and give zero operational benefit — there's no "some users want the old behavior" case. `bound_indices` guard already prevents regressions in the alias-free models. Recommend **no feature flag**.
@@ -550,7 +564,7 @@ Prep Task 6.
 - **Evidence:**
   - Landed inventory: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (confirms what's already live)
   - Stubbed-vs-landed distinction: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 (third subsection)
-- **Decision:** Revised assumption — **"no feature flag needed; rollback via git revert of the Sprint 25 PRs is the operational mechanism. Sprint 24 residue stays in place (it already passes all canary tests)."** Task 6 will codify the per-checkpoint revert procedure.
+- **Decision:** Revised assumption — **"no feature flag needed; rollback via git revert of the Sprint 25 PRs is the operational mechanism. Sprint 24 residue stays in place (it already passes all canary tests)."** Task 6 has codified the per-checkpoint revert procedure at `DESIGN_ALIAS_AD_ROLLOUT.md` §Section 7. The procedure covers: per-PR rollout gates (§7.1), per-checkpoint git-revert command sequences for Phase 1 / Phase 2 / Phase 3 / Checkpoint 2 NO-GOs (§7.2), what does NOT roll back — Sprint 23/24 base layer + Priority 2/3/4/5 work (§7.3), and the communication procedure on rollback (§7.4 — SPRINT_LOG entry + `sprint-25-rollback` issue + KU update if scope > 1 PR).
 
 ---
 
@@ -612,8 +626,8 @@ Prep Task 3.
   - Lark explicit-ambiguity mode (`ambiguity='explicit'`) shows the minimum-reproducer's top-level parse with 8 alternatives and further nested `_ambig` nodes — confirming this is grammar-level, not parser-code-level.
   - Minimum reproducer: 2-row-label × 3-column table with plain-ID column names (no hyphens, no `+` signs); ruled out the initial hypothesis that `light-ind` / `food+agr` tokenization was involved.
 - **Evidence:**
-  - Full investigation: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Sections 1–3
-  - Minimum reproducer: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 2 (also saved at `/tmp/task3-sweep/minrepro_2.gms` during the investigation)
+  - Full investigation: `INVESTIGATION_PARSER_NON_DETERMINISM.md` §Sections 1–3
+  - Minimum reproducer: `INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 2 (also saved at `/tmp/task3-sweep/minrepro_2.gms` during the investigation)
   - Grammar rules: `src/gams/gams_grammar.lark` lines 320–343
   - Parser ambiguity resolver: `src/ir/parser.py` lines 158–225 (`_build_lark` + `_resolve_ambiguities`)
 - **Decision:** Revised assumption — **root cause is Earley grammar ambiguity, not iteration order. Recommended fix is Option D (post-parse disambiguation in `_resolve_ambiguities()` that prefers the "greediest-value" alternative for `table_row` trees).** Option A (narrow dotted_label) would regress Issue #863's numeric-row-label support; Options B (rule priorities) and C (preprocessor rewrite) are higher-risk. A determinism regression test (Option E) is required alongside any chosen fix.
@@ -673,7 +687,7 @@ Prep Task 3.
     - `indus89` — translate=None (pipeline never reached — not currently exercised).
   - `chenery` is the only model that exhibits the bug at the pipeline-comparison layer. The other 3 will need the fix to land first before their downstream failures can be reliably attributed.
 - **Evidence:**
-  - Corpus scope survey: `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 4
+  - Corpus scope survey: `INVESTIGATION_PARSER_NON_DETERMINISM.md` §Section 4
   - Status JSON snapshot: `data/gamslib/gamslib_status.json` (2026-04-19 / Day 13 Addendum)
 - **Decision:** Proceed with revised count: **4 models, not ≤3**. Since the root cause is grammar-level (not model-specific), a single fix in `_resolve_ambiguities()` covers all 4 simultaneously. PR12 byte-stability fixture should include chenery (authoritative canary) + the minimum reproducer from this investigation; the other 3 are lower-priority additions once their downstream failures clear.
 
@@ -731,7 +745,7 @@ Prep Task 4.
 - **Evidence:**
   - Fix site identified: `src/emit/emit_gams.py:889–940` (function `_emit_nlp_presolve`)
   - Exact buggy line: `src/emit/emit_gams.py:933`
-  - Catalog entry: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 2.1 and §Section 1 row for #1275
+  - Catalog entry: `CATALOG_EMITTER_BACKLOG.md` §Section 2.1 and §Section 1 row for #1275
 - **Decision:** Proceed with assumption — single code path confirmed; fix covers all 3 presolve-using models simultaneously. File-path expectation corrected to `src/emit/emit_gams.py`. Estimated fix time 2–3h (one-line core change + repo-relative path resolver helper + unit test + regression artifact regen).
 
 ---
@@ -787,7 +801,7 @@ Prep Task 4.
 - **Evidence:**
   - #1277 reproducer: `grep -nE "^stat_tz.*mu\(j\+1.*pq\(j," data/gamslib/mcp/twocge_mcp.gms` → line 497 match
   - #1278 reproducer: `grep -n "ord(r) <> ord(r)" data/gamslib/mcp/twocge_mcp.gms` → 3 hits on lines 479, 482, 488
-  - Classification table: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 1 rows for #1277, #1278
+  - Classification table: `CATALOG_EMITTER_BACKLOG.md` §Section 1 rows for #1277, #1278
   - Task 2 cross-reference: `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Section 1 "Stubbed / Not Landed" row 3
 - **Decision:** Batch 3 (Days 5–7) plan: (a) validate #1277 post-Pattern-C, extend `_apply_alias_offset_to_deriv` if needed (~1–2h); (b) fix #1278 as a standalone substitution-preservation patch (~3–4h).
 
@@ -847,7 +861,7 @@ Prep Task 4.
   - Current committed file: `data/gamslib/mcp/lmp2_mcp.gms` lines 50–53 show only 4 Parameter declarations
   - Local reproduction: `/tmp/task4-lmp2.gms` (default mode) and `/tmp/task4-lmp2-pre.gms` (`--nlp-presolve`) — neither shows duplicates in Parameter declarations
   - Status JSON: `mcp_solve.outcome_category = "path_solve_terminated"`, `error.message = "Parse error: no_solve_summary"`
-  - Catalog entry: `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` §Section 1 row for #1281, §Section 2.2 shared helper design
+  - Catalog entry: `CATALOG_EMITTER_BACKLOG.md` §Section 1 row for #1281, §Section 2.2 shared helper design
 - **Decision:** Proceed with fix as specified, with one added safety requirement — **Day 1–2 lmp2 trace required before coding the fix** to confirm which specific declaration triggers the parse error. `_DeclaredSymbolTracker` helper is safe to introduce regardless (shared with #1276). Dedup policy uses case-insensitive matching per GAMS spec; no risk of removing legitimate declarations that differ only in case.
 
 ---
@@ -911,7 +925,7 @@ Prep Task 5.
   - **Priority 2 leverage on Solve target (99 → ≥ 105):** existing Task 4 emitter bugs add 0 Solve gains from this set. Sprint 25 Solve target depends on the 4 new issues landing AND each unblocked MCP then PATH-solving cleanly. Realistic expected gain: 2–3 of 5 will reach `model_optimal` post-fix.
 - **Evidence:**
   - Compile-check artifacts: `/tmp/task5-compile/<model>_mcp.lst` for all 5 models
-  - Detailed analysis: `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` §Sections 1–3
+  - Detailed analysis: `ANALYSIS_RECOVERED_TRANSLATES.md` §Sections 1–3
   - clearlak determinism check: `shasum -a 256 /tmp/task5-clearlak-s{0,1,42}.gms` → all three identical
   - New issues filed: #1289, #1290, #1291, #1292 (all `sprint-25` labelled)
   - In-tree docs: `docs/issues/ISSUE_1289_*.md` through `ISSUE_1292_*.md`
@@ -1379,7 +1393,7 @@ The 143-model scope (v2.2.1 exclusions: 14 MINLP, 7 legacy, 2 multi-solve driver
 
 **Verification activity:** Prep Task 9 (baseline + scope freeze).
 
-- Snapshot v2.2.1 exclusion list in `SPRINT_25/BASELINE_METRICS.md`.
+- Snapshot v2.2.1 exclusion list in `BASELINE_METRICS.md` (sibling file in this directory; to be created by Task 9).
 - Document policy for mid-sprint gate additions.
 
 ### Risk if Wrong
