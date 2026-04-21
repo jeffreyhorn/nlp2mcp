@@ -799,7 +799,7 @@ grep -E -c "^### #1270|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_P
 
 ### Objective
 
-Profile the 5 remaining hard translation timeouts (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`) under the 600s budget to identify whether the bottleneck is parsing, AD, KKT assembly, or emission. This directly determines whether Sprint 25's Priority 5 work is tractable (targeted optimization) or fundamentally intractable (requires algorithmic redesign out of Sprint 25 scope).
+Profile the 5 remaining hard translation timeouts (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`) using a **per-model 900s SIGALRM budget** (50% above the 600s pipeline cap — enough head-room to let the most-tractable model complete so we can attribute its time to stages, while still short enough to keep total profiling time bounded). Identify whether the bottleneck is parsing, AD, KKT assembly, or emission. This directly determines whether Sprint 25's Priority 5 work is tractable (targeted optimization) or fundamentally intractable (requires algorithmic redesign out of Sprint 25 scope).
 
 ### Why This Matters
 
@@ -822,10 +822,10 @@ Per the Sprint 24 retrospective §PR13 recommendation, translation-timeout work 
    - AD time (`build_stationarity_equations`)
    - KKT emit time (`emit_gams_mcp`)
 
-2. **Under a 600s budget, run each model 1× and record where the time goes:**
+2. **Under a 900s per-model SIGALRM budget, run each model 1× and record where the time goes** (budget raised above the 600s pipeline cap to let the most-tractable model complete; attribution to stages still works even for models that hit the budget):
    - Which stage dominates?
    - Is any stage growing super-linearly in model size?
-   - Where exactly does the 600s cap interrupt?
+   - Where exactly does the 600s pipeline cap (and then the 900s profiling cap) interrupt?
 
 3. **Classify each model:**
    - **Likely tractable** (< 30% over budget, clear single-stage bottleneck)

@@ -40,17 +40,19 @@
 
 ## Section 1 — Per-Model Stage Timing
 
-Reproduction recipe (after `git checkout <branch>` or on main post-merge):
+Reproduction recipe. **The profile harness is NOT committed**; it lived at `/tmp/task8-profile.py` during Task 8's prep run. To reproduce: first copy the harness from §Appendix A of this doc into `/tmp/task8-profile.py` (or any path of your choosing), then run the loop:
 
 ```bash
+# Step 1: save the harness at /tmp/task8-profile.py — copy the Python source from §Appendix A.
+# Step 2: run the profiler for each model under a 900s SIGALRM budget.
 mkdir -p /tmp/task8-profiles
 for m in srpchase iswnm sarf mexls nebrazil; do
-  PYTHONHASHSEED=0 .venv/bin/python scripts/task8_profile.py "$m" 900 \
+  PYTHONHASHSEED=0 .venv/bin/python /tmp/task8-profile.py "$m" 900 \
     > "/tmp/task8-profiles/${m}.json" 2>&1
 done
 ```
 
-(`scripts/task8_profile.py` — see Appendix A for the harness. Not committed; lives at `/tmp/task8-profile.py` during this prep task.)
+If Sprint 26's architectural fix on `enumerate_equation_instances` is pursued, move the harness to `scripts/task8_profile.py` (or similar) for a committed regression benchmark. Sprint 25 deliberately keeps it out of `scripts/` because Task 8 is a one-shot investigation, not an ongoing tool.
 
 ### 1.1 `srpchase` (COMPLETE @ 500s)
 

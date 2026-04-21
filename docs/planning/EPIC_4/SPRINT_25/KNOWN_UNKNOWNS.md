@@ -1395,7 +1395,7 @@ Prep Task 8.
     - **`ad_jacobian`: 466.6s (srpchase completes) or >834s (others timeout)** — the dominant stage
     - `kkt_assemble`: 32.2s for srpchase; others never reach
     - `emit_mcp`: 0.02s for srpchase; others never reach
-  - **Super-linear growth (RQ #2):** yes — `ad_jacobian` grows roughly linearly with the product (affected equations) × (parent-set cardinality on fallback). For nebrazil (13 affected equations) that product is the largest.
+  - **Growth pattern (RQ #2):** `ad_jacobian` grows roughly linearly with the combined workload proxy (affected equations) × (parent-set cardinality on fallback). That's **linear in the product**, which means it can appear super-linear in either factor considered alone when both increase together, but the observed fit here is linear in that combined product. For nebrazil (13 affected equations, 4 fallback subsets) the product is the largest of the 5.
   - **Memoization (RQ #3):** per-derivative memoization won't help because the bottleneck is enumerating which instances to compute (control-flow), not recomputing derivatives (data-level).
 - **Evidence:**
   - Per-model stage timings: `PROFILE_HARD_TIMEOUTS.md` §Section 1.1–1.5
