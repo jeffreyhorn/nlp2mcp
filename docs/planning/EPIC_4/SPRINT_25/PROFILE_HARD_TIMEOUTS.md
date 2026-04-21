@@ -43,6 +43,11 @@
 Reproduction recipe. **The profile harness is NOT committed**; it lived at `/tmp/task8-profile.py` during Task 8's prep run. To reproduce: first copy the harness from §Appendix A of this doc into `/tmp/task8-profile.py` (or any path of your choosing), then run the loop:
 
 ```bash
+# Step 0: run from the repo root. The harness resolves model paths as
+#         `data/gamslib/raw/<MODEL>.gms` relative to the current working
+#         directory, so it must be invoked from the repo root.
+cd /path/to/nlp2mcp   # or just `cd` to this checkout's root
+
 # Step 1: save the harness at /tmp/task8-profile.py — copy the Python source from §Appendix A.
 # Step 2: run the profiler for each model under a 900s SIGALRM budget.
 #         The harness prints JSON to stdout; Python warnings / nlp2mcp logs
@@ -401,6 +406,17 @@ try:
             "budget": BUDGET, "elapsed": round(time.perf_counter() - t0, 4),
             "stages_completed": [(name, round(el, 4)) for (name, _, el) in stages],
             "error": str(e),
+        }
+    except Exception as e:
+        # Catch-all so the harness always emits a well-formed artifact, even
+        # on missing model files / parse errors / import errors. Without this,
+        # the trailing `print(json.dumps(result, ...))` would raise NameError
+        # because `result` was never assigned.
+        result = {
+            "model": MODEL, "status": "error",
+            "elapsed": round(time.perf_counter() - t0, 4),
+            "stages_completed": [(name, round(el, 4)) for (name, _, el) in stages],
+            "error": f"{type(e).__name__}: {e}",
         }
 finally:
     # Cancel the SIGALRM on every exit path (including non-TimeoutError
