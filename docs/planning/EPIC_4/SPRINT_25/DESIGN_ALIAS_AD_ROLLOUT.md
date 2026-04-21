@@ -152,7 +152,7 @@ Each gate uses Sprint 24's GO / CONDITIONAL GO / NO-GO scoring template (`../SPR
 | dispatch canary | identical (or trivial newline diff) | trivial diff | non-trivial diff |
 | Tier 1 alias-user canaries (9 + paklive) | 0 regressions | ≤ 1 regression | > 1 regression |
 | Tier 2 golden files (44 non-alias matching) | identical | identical | any difference |
-| qabel rel_diff | drops ≤ 4% (≥ 50% improvement) | drops ≤ 6% | unchanged or worse |
+| Phase 1 target-model rel_diff improvement (≥ 1 of {qabel, abel, launch}) | ≥ 1 model improves by ≥ 50% (qabel 8.2% → ≤ 4.1%, abel 29.8% → ≤ 14.9%, or launch 17.3% → ≤ 8.65%) | ≥ 1 model improves by ≥ 25% | all three unchanged or worse |
 | Tests `make test` | all pass | all pass | any failure |
 
 **On GO:** proceed to Phase 2.
