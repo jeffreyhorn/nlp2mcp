@@ -109,7 +109,7 @@ ELAPSED        899.6s (TIMEOUT)
 
 - Set `nb`: dynamic subset of `n`, **zero static members** — per Sprint 24 ISSUE_1228 this was the known root cause.
 - Affected equation: `nbal` (indexed over `n` × `m`)
-- Warnings: 4× "cannot be evaluated statically"; separately, the dynamic-subset fallback message ("Dynamic subset ...") is logged from `src/ad/index_mapping.py` by `resolve_set_members` via `logger.warning`. Any warning-trace call-site remapping to `src/ad/constraint_jacobian.py` applies to the `warnings.warn(..., stacklevel=2)` path from `enumerate_equation_instances`, not to that logger message.
+- Warnings observed for `iswnm`: 4× "cannot be evaluated statically" via the `warnings.warn(..., stacklevel=2)` path from `enumerate_equation_instances` (the call-site therefore remaps to `src/ad/constraint_jacobian.py`). The separate `resolve_set_members` `logger.warning` fallback message (`"Dynamic subset ..."`) is **not** expected here because `nb` appears only inside a `$` condition — not as a domain set / member source — so `resolve_set_members` isn't invoked for it. See §2.2 for the per-model table that confirms this asymmetry.
 
 **Why it doesn't complete:** The fallback expands `nb → n` where `n` includes many members × `m` (months) → Cartesian explosion. Unlike srpchase, whose 2 affected equations each have small 1D target slots (1001 × 1 per equation), iswnm's `nbal` has a larger 2D index product.
 
@@ -195,11 +195,11 @@ Equation eq(i)$X(i);         /* equation guarded by dynamic-subset membership */
 eq(i)$X(i) .. <body> =e= 0;
 ```
 
-When `nlp2mcp` tries to enumerate the instances of `eq(i)` for differentiation, it evaluates the `$X(i)` condition at Python AD time. Because `X`'s membership is set dynamically (at GAMS runtime), `SetMembershipTest(X, (i))` **cannot be evaluated statically** — the check in [`src/ir/condition_eval.py`](../../../../src/ir/condition_eval.py) (`SetMembershipTest` evaluation path) **raises `ConditionEvaluationError`** with the message `Set membership for '<name>' cannot be evaluated statically`. The fallback in [`src/ad/index_mapping.py`](../../../../src/ad/index_mapping.py) happens when that exception is caught: `resolve_set_members` falls back to parent-set members, and `enumerate_equation_instances` **emits a `UserWarning`** (`Including unevaluable instances by default`) while **including all instances from the parent set** so the runtime condition survives in the emitted equation. Call sites in `src/ad/constraint_jacobian.py` invoke this behavior many times; the behavior itself lives in the two implementation files above.
+When `nlp2mcp` tries to enumerate the instances of `eq(i)` for differentiation, it eventually evaluates the `$X(i)` condition at Python AD time. Because `X`'s membership is set dynamically (at GAMS runtime), `SetMembershipTest(X, (i))` **cannot be evaluated statically** — the check in [`src/ir/condition_eval.py`](../../../../src/ir/condition_eval.py) (`SetMembershipTest` evaluation path) **raises `ConditionEvaluationError`** with the message `Set membership for '<name>' cannot be evaluated statically`. Separately, during equation-domain expansion in [`src/ad/index_mapping.py`](../../../../src/ad/index_mapping.py), `resolve_set_members` may already have fallen back to the parent set's members when building the cross product for a dynamic subset with no static members — this happens **before** condition filtering. Later, inside `enumerate_equation_instances`, the failed condition evaluation is caught and **emits a `UserWarning`** (`Including unevaluable instances by default`), causing the enumerator to **include those instances by default** so the runtime condition survives in the emitted equation. Call sites in `src/ad/constraint_jacobian.py` invoke this behavior many times; the behavior itself lives in the implementation files above.
 
 For `srpchase` this produces 1001 instances per equation (parent set `n`). For `nebrazil` with 13 affected equations and 4 fallback subsets, the product explodes.
 
-### 2.2 Warning signatures (confirmed in all 5)
+### 2.2 Warning signatures
 
 Every model's profile output contains:
 
@@ -218,14 +218,14 @@ Implementation sites (distinguishing exception origin vs warning emission; both 
 
 These implementation locations are called from many sites across `src/ad/constraint_jacobian.py` (the compute_constraint_jacobian rows/columns walk), so profiler stack traces will show `constraint_jacobian.py` call-site lines — but the **exception text originates in `condition_eval.py`** and the **warning / fallback behavior lives in `index_mapping.py`**. Line numbers above are approximate and may drift; use the function names (`resolve_set_members`, `enumerate_equation_instances`) as the stable reference.
 
-Total warnings per model:
+Total warnings per model. **The two signatures fire under different conditions:** `cannot be evaluated statically` is raised whenever a dynamic-subset `SetMembershipTest` inside a `$` condition fails to evaluate (so it fires for all 5 models — the behavior is shared). `Dynamic subset … no static members` fires only when `resolve_set_members` walks the subset **as a member source during equation-domain expansion** (not as a `$`-condition argument). srpchase and nebrazil use the subset in both roles, so they emit both signatures; iswnm, sarf, and mexls reference the subset only inside a `$` condition, so `resolve_set_members` doesn't get invoked for that subset and the logger signature isn't emitted. All 5 still hit the same bottleneck (the `warnings.warn` + include-all fallback path in `enumerate_equation_instances`).
 
-| Model | `cannot be evaluated statically` | `Dynamic subset … no static members` |
+| Model | `cannot be evaluated statically` (exception → `warnings.warn` trail) | `Dynamic subset … no static members` (`resolve_set_members` logger) |
 |---|---|---|
 | `srpchase` | 8 | 15 |
-| `iswnm` | 4 | (not emitted; different warning path) |
-| `sarf` | 10 | (not emitted) |
-| `mexls` | 9 | (not emitted) |
+| `iswnm` | 4 | (not emitted — subset only in `$` condition) |
+| `sarf` | 10 | (not emitted — same reason) |
+| `mexls` | 9 | (not emitted — same reason) |
 | `nebrazil` | 50 | 116 |
 
 ### 2.3 Why it's ONE bug, not five
