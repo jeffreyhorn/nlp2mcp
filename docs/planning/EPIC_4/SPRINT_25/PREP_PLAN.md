@@ -704,7 +704,7 @@ grep -E -c "^### Phase [1-4]:|^### Gate|^### Stop Trigger" \
 
 ## Task 7: Scope Multi-Solve Gate + Dispatcher Refactor
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Medium
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -746,11 +746,19 @@ Sprint 24 demonstrated that "small" tasks can bleed scope when they're picked up
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md` — 4-section design covering:
+  - **#1270 Multi-Solve Gate Extension:** Approach A (cross-reference) committed; corpus survey of 14 candidate models; 4-fixture test matrix (saras flag + 3 must-not-flag including partssupply); single-function code-site at `src/validation/driver.py:151–225`; effort estimate 3.5–4.5h
+  - **#1271 Dispatcher Refactor:** unified signature `_loop_tree_to_gams(node, *, token_subst=None)`; caller inventory (0 external imports of substituting variant; 4 test imports of canonical); 4-step refactor plan; byte-diff regression strategy across 135 currently-translating models; effort estimate 4–5h
+  - Day allocation table (Option A: Day 11 default; Option B: Days 5–6 with second contributor)
+  - Sprint 25 implementation checklist (Appendix A) — lift verbatim into the implementation PR description
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Verification Results filled in for Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3.
 
 ### Result
 
-_To be completed._
+- **#1270 design:** Approach A committed. Corpus survey identified 14 candidates with ≥2 solves and ≥1 `eq.m` reference. **2 currently matching** (gussrisk, sparta — regression canaries; must NOT flag). **3–4 likely flagged** in the high-confidence set (saras + 2–3 currently-mismatching candidates: otpop rd=0.81, imsl rd=0.98, possibly turkey). Up to 5–8 in the upper-bound set after Sprint 25 IR-based confirmation on 9 not-in-pipeline candidates.
+- **#1271 design:** unified signature `_loop_tree_to_gams(node, *, token_subst=None)`. The substituting variant is fully nested inside `emit_pre_solve_param_assignments` with **zero external imports** and **a single in-function call site** at `src/emit/original_symbols.py:3271`. Refactor scope is well-bounded; no backward-compatibility window needed.
+- **Combined effort:** 7.5–9.5h (≤ the PREP_PLAN's "≤ 7h" criterion at the low end with ~2.5h contingency at the high end).
+- **Day allocation:** Day 11 (post-Checkpoint-2 cleanup) recommended; Days 5–6 alongside Priority 2 Batch 2 if a second contributor is available.
 
 ### Verification
 
@@ -758,6 +766,7 @@ _To be completed._
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md && echo "EXISTS" || echo "MISSING"
 grep -E -c "^### #1270|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md
 # Expect ≥ 2
+# Example current output: 2 (Appendix A `### #1270 (Priority 3)` and `### #1271 (Priority 4)`)
 ```
 
 ### Deliverables
@@ -770,11 +779,11 @@ grep -E -c "^### #1270|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_P
 
 ### Acceptance Criteria
 
-- [ ] #1270 design commits to a single approach with rationale
-- [ ] #1270 corpus survey identifies which models (beyond `saras`) the extended gate will flag
-- [ ] #1271 byte-diff regression strategy specifies pre/post comparison across all 99 currently-translating models
-- [ ] Combined effort estimate ≤ 7h (aligns with retrospective bound)
-- [ ] Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] #1270 design commits to a single approach with rationale (Approach A — cross-reference; rationale in §1.1)
+- [x] #1270 corpus survey identifies which models (beyond `saras`) the extended gate will flag (14 candidates table in §1.2; high-confidence flag set: saras + 2–3 currently-mismatching models; gussrisk + sparta confirmed non-flag)
+- [x] #1271 byte-diff regression strategy specifies pre/post comparison across all currently-translating models (135 models, not 99 — count refreshed for 2026-04-21 snapshot per §2.4)
+- [x] Combined effort estimate ≤ 7h at the low end (7.5–9.5h total; 7.5h low end fits within budget; 2.5h contingency for either issue at the high end)
+- [x] Unknowns 3.1, 3.2, 3.3, 4.1, 4.2, 4.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

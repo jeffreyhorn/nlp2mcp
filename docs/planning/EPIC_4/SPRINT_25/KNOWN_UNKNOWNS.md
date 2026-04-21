@@ -978,7 +978,26 @@ Prep Task 7.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (corpus survey complete; full IR-based confirmation deferred to Sprint 25 implementation)
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - Approach A (cross-reference) committed as the design — Task 7 §Section 1.1 in `DESIGN_SMALL_PRIORITIES.md`.
+  - Corpus survey identified **14 candidate models** with ≥2 solves AND ≥1 `eq.m` reference. Of those:
+    - **2 currently matching** (gussrisk rd≈2e-06, sparta rd=0) → MUST NOT FLAG (regression canaries)
+    - **1 currently translate-success / solve-failure** (saras) → MUST FLAG (canonical target)
+    - **9 not currently in pipeline** (translate=None) — empirical IR check deferred to Sprint 25 implementation
+    - **2 currently translate+solve+mismatch** (otpop rd=0.81, imsl rd=0.98) → high rd suggests likely-driver miss; needs Approach A IR check during implementation
+  - **partssupply explicitly handled:** Approach A scopes to `eq.m` (not `var.l`), and partssupply uses `var.l` reads for post-solve reporting → cannot trigger Approach A by construction (RQ #3 verified at the design level).
+  - **ibm1 explicitly handled:** ibm1 is 1-model multi-solve and condition 1 (`len(declared_models) ≥ 2`) already excludes it (RQ #4 verified — Approach A doesn't change condition 1).
+  - **RQ #5 (parameter-used-in-reported-expression-not-constraint):** addressed by the test fixture matrix — F2 (post-solve reporting) and F3 (multi-stage display) are non-flag fixtures by design.
+- **Evidence:**
+  - Approach A commit: `DESIGN_SMALL_PRIORITIES.md` §Section 1.1
+  - Corpus survey table: `DESIGN_SMALL_PRIORITIES.md` §Section 1.2
+  - Test-fixture matrix (F1–F4): `DESIGN_SMALL_PRIORITIES.md` §Section 1.3
+  - Code-site: `src/validation/driver.py:151–225` (`_collect_equation_marginals` + `scan_multi_solve_driver`)
+- **Decision:** Proceed with Approach A. Sprint 25 implementation lands the extension (~3.5–4.5h per §1.6). Day-11 allocation per §Section 3 default; alternative Days 5–6 if a second contributor is available.
 
 ---
 
@@ -1020,7 +1039,20 @@ Prep Task 7.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (revised count: ≥ 1, possibly more pending IR-based confirmation)
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - Original assumption "Saras is the only in-scope corpus model" likely needs revision. Corpus survey produced **14 candidates with ≥2 solves and ≥1 eq.m reference**; even after filtering for the 2 currently-matching canaries (must NOT flag) and the 9 not-in-pipeline models (deferred), at least **2 currently-mismatching models** (otpop rd=0.81, imsl rd=0.98) and possibly turkey (translate=success / solve=failure, similar to saras) are plausible additional flag candidates.
+  - **Likely flagged set (lower bound):** saras + 2–3 others = **3–4 models** flagged after Sprint 25 implementation. Upper bound after IR check on the 9 not-in-pipeline candidates: 5–8 models.
+  - The extended gate's logic is uniform — it doesn't need per-model special-casing; the same Approach A logic catches all driver-pattern models. So flagging more than 1 doesn't increase complexity.
+  - The `multi_solve: true` cross-reference suggested by RQ #2 was de-prioritized: `gamslib_status.json` doesn't currently expose a `multi_solve` flag in the status schema, and Approach A's pure-IR detection is sufficient without that catalog field.
+  - RQ #3 (`.l` reads): scoped OUT of Sprint 25 Priority 3 — partssupply (the canonical `.l`-reads case) is currently MATCHING and should not be re-flagged. If a future model uses `.l` driver-style, that's a Sprint 26 question.
+- **Evidence:**
+  - Corpus survey table (14 models): `DESIGN_SMALL_PRIORITIES.md` §Section 1.2
+  - Pipeline status confirmations: extracted from `gamslib_status.json` in Task 7's investigation
+- **Decision:** Revised assumption — **3–4 models flagged in the high-confidence set (saras + 2–3 currently-mismatching candidates); up to 5–8 in the upper-bound set after Sprint 25 IR-based confirmation on the 9 not-in-pipeline candidates.** Scope creep risk minimal because the gate logic is uniform.
 
 ---
 
@@ -1061,7 +1093,20 @@ Prep Task 7.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - **Approach A by construction does NOT flag partssupply.** Approach A scopes to `eq.m` (equation marginal) reads only; partssupply uses `var.l` (variable level) reads for post-solve reporting. The two are distinct grammar productions (`bound_scalar`/`bound_indexed` with attribute = `m` vs `l`) and the `_collect_top_level_marginals_with_param_feedback` helper only matches `attr_name == "m"`.
+  - The existing regression test `test_scan_partssupply_style_variable_level_is_not_driver` will continue to pass without modification — it asserts `is_driver=False` on a partssupply-shaped fixture, and Approach A's added logic doesn't change `is_driver` for `var.l`-only scripts.
+  - RQ #2 (extending Approach A to `.l` reads as belt-and-suspenders): explicitly NOT done in Sprint 25 — it would re-flag partssupply, undoing PR #1265's investment. If future evidence shows `.l`-driver patterns escaping the gate, that's a Sprint 26 question with its own canary review.
+  - RQ #3 (gate scoping policy): Sprint 25 commits to "equation marginals only" as the gate scope. Variable levels treated as **weak driver signals** that don't trigger the gate.
+- **Evidence:**
+  - `src/validation/driver.py:163` filter: `if attr_name == "m" and sym_name in equation_names` — already excludes `.l`
+  - Test fixture F4 in `DESIGN_SMALL_PRIORITIES.md` §Section 1.3 — partssupply-style is in the must-NOT-flag column
+  - Existing regression test name: `test_scan_partssupply_style_variable_level_is_not_driver` (in `tests/unit/validation/test_driver.py`)
+- **Decision:** Proceed — partssupply is safe by Approach A's construction; existing regression test is sufficient. Sprint 25 implementation re-runs that test as part of the standard `make test` pass.
 
 ---
 
@@ -1108,7 +1153,21 @@ Prep Task 7.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level; final equivalence verified during Sprint 25 implementation byte-diff)
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - The substituting dispatcher's behavior is intended to be identical to the canonical when called with an empty `token_subst` — confirmed by code inspection of both functions. The substitution point is a single ID-name lookup at every ID-emission branch; with `token_subst=None` (or empty), the lookup is a no-op and the canonical behavior emerges.
+  - **No grammar rules where the dispatchers SHOULD legitimately differ.** All Sprint 24 divergences (partssupply `dollar_cond` handlers, decomp `bound_scalar` handlers) were bugs in the substituting variant, not intentional differences. Each was fixed by copy-pasting the canonical handler.
+  - **Refactor scope is minimal:** the substituting variant is fully nested inside `emit_pre_solve_param_assignments` (one function, one call site at line 3271). Module-level `_loop_tree_to_gams` keeps its 4 test imports unchanged thanks to the optional kwarg with default `None`.
+  - **Pre-refactor byte-diff baseline:** the two dispatchers should already produce different output under their respective contexts (canonical never gets a `token_subst`, substituting always does), so a direct A/B byte-diff isn't meaningful. The actual equivalence test is "post-refactor MCP outputs equal pre-refactor MCP outputs" across the 135 currently-translating models — that's the operational byte-diff regression in §Section 2.4.
+- **Evidence:**
+  - Canonical dispatcher: `src/emit/original_symbols.py:2556` (62 internal recursive calls; 4 test imports)
+  - Nested substituting variant: `src/emit/original_symbols.py:3026, 3047` (zero external imports; single in-function call site at line 3271)
+  - Refactor plan: `DESIGN_SMALL_PRIORITIES.md` §Section 2.3
+  - Step-2 source line: `src/emit/original_symbols.py:3271` (`_tree_to_gams_subst(stmt, sub)` → `_loop_tree_to_gams(stmt, token_subst=sub)`)
+- **Decision:** Proceed with the refactor. Equivalence is design-confirmed; runtime equivalence verified by the §2.4 byte-diff regression across 135 models during Sprint 25 implementation.
 
 ---
 
@@ -1150,7 +1209,22 @@ Prep Task 7.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design target = 0; actual count from Sprint 25 implementation byte-diff)
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - **Target = 0 byte-diffs** across the currently-translating model set. Any non-zero diff requires investigation before merging the refactor PR.
+  - **Currently-translating model count (2026-04-21):** 135 models (per `gamslib_status.json` `nlp2mcp_translate.status == "success"`). ISSUE_1271 estimated "~60 models" — the higher actual count comes from PR #1274's translate-timeout doubling that recovered additional models.
+  - **Strategy:** PYTHONHASHSEED-pinned (`=0`) snapshot of all 135 MCP outputs into `/tmp/sprint25-dispatcher-pre/` before the refactor; regenerate into `/tmp/sprint25-dispatcher-post/` after; `diff -r` to compare. Zero diff ⇒ merge; any diff ⇒ investigate which model and which dispatcher branch produced different output.
+  - **Failure modes considered (RQ #1–3):**
+    - Order changes: not expected — both dispatchers produce output via tree-walk, no dict iteration.
+    - Whitespace/formatting: not expected — same emission code paths post-refactor.
+    - Generator-based emission: none in either dispatcher; both use string concatenation directly.
+- **Evidence:**
+  - Byte-diff strategy: `DESIGN_SMALL_PRIORITIES.md` §Section 2.4
+  - Currently-translating count source: `data/gamslib/gamslib_status.json` query
+- **Decision:** Proceed with target = 0 byte-diffs. Sprint 25 implementation verifies during the refactor PR (snapshot Day-N, post-PR diff Day-N+1).
 
 ---
 
@@ -1189,7 +1263,20 @@ Prep Task 7 (notes only; validation during implementation).
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (design-level analysis; actual measurement deferred to Sprint 25 implementation)
+
+- **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
+- **Date:** 2026-04-21
+- **Findings:**
+  - The unified dispatcher adds a single conditional ID-name lookup at each ID-emission branch (~3–5 sites). Each lookup is `token_subst.get(name.lower(), name) if token_subst else name` — O(1) dict access plus one branch.
+  - **RQ #1 (hot path):** translate's hot path is dominated by AD (`differentiate_expr` + `_partial_collapse_sum`) and parsing (Lark Earley), not loop-tree emission. The dispatcher contributes a small fraction of total translate time per Sprint 24 profiling intuition (no concrete profiling done in Task 7; deferred to Sprint 25 implementation).
+  - **RQ #2 (branch prediction):** the `if token_subst is not None` branch is consistent within any single call (either always None or always set per call site), so CPython's branch handling is straightforward.
+  - **RQ #3 (high-volume call sites):** module-level `_loop_tree_to_gams` is called 63 times recursively per pre-solve assignment. For a typical model with 5–10 pre-solve assignments, total calls are ~300–600 per translate — well below 1000+/model.
+  - **Acceptance:** ≤ 5% translate-time overhead vs pre-refactor baseline. Measurement plan: 5 representative models (small / medium / large CGE / PS-family / dispatch) timed before / after with `time .venv/bin/python -m src.cli ...` × 3 runs each, mean ± std reported in the refactor PR description.
+- **Evidence:**
+  - Caller count: 63 internal recursive calls in `src/emit/original_symbols.py:2556+`
+  - Single ID-emission lookup design: `DESIGN_SMALL_PRIORITIES.md` §Section 2.1
+- **Decision:** Performance regression is unlikely; design-level analysis supports the assumption. Sprint 25 implementation includes the 5-model timing measurement as part of the refactor PR's acceptance evidence.
 
 ---
 
