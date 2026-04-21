@@ -815,12 +815,14 @@ Per the Sprint 24 retrospective §PR13 recommendation, translation-timeout work 
 
 ### What Needs to Be Done
 
-1. **For each of the 5 models, instrument stage timing:**
-   - Parse time (Lark)
-   - IR build time (`_ModelBuilder.build`)
-   - Normalize time (`normalize_model`)
-   - AD time (`build_stationarity_equations`)
-   - KKT emit time (`emit_gams_mcp`)
+1. **For each of the 5 models, instrument stage timing** (matching the 7 stages the profile harness actually measures — see `PROFILE_HARD_TIMEOUTS.md` §Appendix A for the exact sequence):
+   - `preprocess` (`preprocess_gams_file`)
+   - `parse+ir_build` (`parse_model_text` — Lark parse + IR build combined at the CLI entry)
+   - `normalize` (`normalize_model`)
+   - `ad_gradient` (`compute_objective_gradient`)
+   - `ad_jacobian` (`compute_constraint_jacobian`)
+   - `kkt_assemble` (`assemble_kkt_system` — stationarity assembly via `build_stationarity_equations` lives inside this stage)
+   - `emit_mcp` (`emit_gams_mcp`)
 
 2. **Under a 900s per-model SIGALRM budget, run each model 1× and record where the time goes** (budget raised above the 600s pipeline cap to let the most-tractable model complete; attribution to stages still works even for models that hit the budget):
    - Which stage dominates?
