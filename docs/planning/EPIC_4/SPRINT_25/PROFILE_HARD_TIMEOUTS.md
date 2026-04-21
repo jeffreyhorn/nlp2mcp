@@ -184,7 +184,7 @@ Equation eq(i)$X(i);         /* equation guarded by dynamic-subset membership */
 eq(i)$X(i) .. <body> =e= 0;
 ```
 
-When `nlp2mcp` tries to enumerate the instances of `eq(i)` for differentiation, it evaluates the `$X(i)` condition at compile time. Because `X`'s membership is set dynamically (at GAMS runtime), `SetMembershipTest(X, (i))` **cannot be evaluated statically**. The current fallback in [`src/ad/index_mapping.py:532`](../../../../src/ad/index_mapping.py#L532) and [`src/ad/constraint_jacobian.py:798,960,1247`](../../../../src/ad/constraint_jacobian.py#L798) is to **include all instances from the parent set** and let the runtime condition survive in the emitted equation.
+When `nlp2mcp` tries to enumerate the instances of `eq(i)` for differentiation, it evaluates the `$X(i)` condition at Python AD time. Because `X`'s membership is set dynamically (at GAMS runtime), `SetMembershipTest(X, (i))` **cannot be evaluated statically** — the check in [`src/ir/condition_eval.py`](../../../../src/ir/condition_eval.py) (`SetMembershipTest` evaluation path) logs this and returns a non-resolved result. The current fallback in [`src/ad/index_mapping.py`](../../../../src/ad/index_mapping.py) (inside `resolve_set_members`: falls back to parent-set members; inside `enumerate_equation_instances`: emits the "Including unevaluable instances by default" warning) is to **include all instances from the parent set** and let the runtime condition survive in the emitted equation. Call sites in `src/ad/constraint_jacobian.py` invoke this behavior many times; the behavior itself lives in the two implementation files above.
 
 For `srpchase` this produces 1001 instances per equation (parent set `n`). For `nebrazil` with 13 affected equations and 4 fallback subsets, the product explodes.
 
@@ -199,10 +199,13 @@ UserWarning: Failed to evaluate condition SetMembershipTest(<subset>, ...)
   Including unevaluable instances by default.
 ```
 
-Emitted by:
+Implementation sites (warnings raised at these specific locations, propagated through the `compute_constraint_jacobian` / `enumerate_equation_instances` call stack):
 
-- `src/ad/index_mapping.py:532` — during `enumerate_equation_instances`
-- `src/ad/constraint_jacobian.py:798, 960, 1247` — during `compute_constraint_jacobian` rows/columns walk
+- **"`cannot be evaluated statically`"** — implemented in `src/ir/condition_eval.py` (the `SetMembershipTest` static-evaluation path raises the warning when the subset has no concrete members at compile time; see around line 417 for the `Set membership for '<name>' cannot be evaluated statically` message, and line 265 for the more general condition-evaluation failure).
+- **"`Dynamic subset '<X>' has no static members; falling back to parent set '<parent>' (N members)`"** — implemented in `src/ad/index_mapping.py` inside `resolve_set_members` (around lines 177–178 and 279) when it walks a dynamic subset and falls back to its parent.
+- **"`Including unevaluable instances by default`"** — implemented in `src/ad/index_mapping.py` inside `enumerate_equation_instances` (around line 430). This is the fallback branch that produces the Cartesian expansion.
+
+These implementation locations are called from many sites across `src/ad/constraint_jacobian.py` (the compute_constraint_jacobian rows/columns walk), so profiler stack traces will show `constraint_jacobian.py` call-site lines — but the behavior lives in `condition_eval.py` and `index_mapping.py`. Line numbers above are approximate and may drift; use the function names (`resolve_set_members`, `enumerate_equation_instances`) as the stable reference.
 
 Total warnings per model:
 
@@ -259,7 +262,7 @@ Instead of enumerating at Python-side AD, emit pre-solve assignments like `jac(i
 - parse+ir_build: 1.2s
 - **ad_jacobian: 466.6s (93% of total)**
 
-ScenRed's `$libInclude scenred` does expand to a meaningful set cardinality (`n` = 1001 members, populated via the ScenRed library at GAMS compile time — which nlp2mcp's preprocessor handles successfully), but the cost is borne by `compute_constraint_jacobian`'s instance enumeration, not by the preprocessor or parser.
+ScenRed's `$libInclude scenred` is processed by GAMS at compile time, and the included ScenRed statements produce a meaningful set cardinality (`n` = 1001 members) during execution/runtime. nlp2mcp's preprocessor handles the `$libInclude` without difficulty; the cost is borne by `compute_constraint_jacobian`'s instance enumeration downstream, not by the preprocessor or parser.
 
 **Verdict on KU 5.4 (srpchase ScenRed preprocessor bottleneck): VERIFIED WRONG.** srpchase's bottleneck is the same `SetMembershipTest`-fallback pattern as the other 4. ScenRed is a scale amplifier (1001 members) but not a unique root cause.
 

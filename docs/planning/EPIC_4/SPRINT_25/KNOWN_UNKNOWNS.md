@@ -1400,7 +1400,7 @@ Prep Task 8.
 - **Evidence:**
   - Per-model stage timings: `PROFILE_HARD_TIMEOUTS.md` §Section 1.1–1.5
   - Stage-dominance table: `PROFILE_HARD_TIMEOUTS.md` §Executive Summary
-- **Decision:** Per-model bottleneck identified as **`compute_constraint_jacobian`'s `enumerate_equation_instances` fallback path** at `src/ad/index_mapping.py:532` and `src/ad/constraint_jacobian.py:798,960,1247`. Single fix site for all 5; see §Section 3.1 Option 1 in the profile doc.
+- **Decision:** Per-model bottleneck identified in the **`compute_constraint_jacobian` → `enumerate_equation_instances` fallback path**. Implementation sites: the include-unevaluable-instances fallback and the dynamic-subset parent-set expansion are both in `src/ad/index_mapping.py` (in `enumerate_equation_instances` and `resolve_set_members` respectively); the static `SetMembershipTest` failure originates in `src/ir/condition_eval.py`. Profiler stack traces will also show call sites in `src/ad/constraint_jacobian.py`, but the behavior is not implemented there. Single implementation area for all 5 models; see §Section 3.1 Option 1 in the profile doc.
 
 ---
 
