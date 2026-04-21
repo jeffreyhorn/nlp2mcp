@@ -1324,7 +1324,21 @@ Prep Task 8.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+
+- **Verified by:** Task 8 (Profile Hard Translation Timeouts)
+- **Date:** 2026-04-21
+- **Findings:**
+  - **1 of 5 tractable at 900s:** srpchase completes in **500s** (93% in `ad_jacobian`). Under the 600s pipeline cap it still times out.
+  - **4 of 5 intractable at 900s:** iswnm, sarf, mexls, nebrazil all hit the 900s budget still inside `ad_jacobian`. All 4 need far more than 900s.
+  - All 5 share ONE root cause: `SetMembershipTest` with dynamic subsets that have no static members → include-all enumeration fallback → Cartesian explosion in `compute_constraint_jacobian`.
+  - RQ #3 (srpchase ScenRed bottleneck): **WRONG.** Preprocessor takes 33ms; bottleneck is `ad_jacobian` at 466s (93% of total). ScenRed is a scale amplifier (expands `n` to 1001 members) but not a preprocessor-stage bottleneck.
+  - RQ #4 (iswnm `nb` empty-set): CONFIRMED. iswnm's `nb` dynamic subset has zero static members, matches Sprint 24 ISSUE_1228.
+- **Evidence:**
+  - Full profile data: `PROFILE_HARD_TIMEOUTS.md` §Section 1
+  - Root-cause analysis: `PROFILE_HARD_TIMEOUTS.md` §Section 2
+  - Raw JSON profiles: `/tmp/task8-profiles/{srpchase,iswnm,sarf,mexls,nebrazil}.json`
+- **Decision:** Revised assumption — **1 of 5 tractable at 900s (srpchase), 4 of 5 intractable**. Priority 5 recommendation: **DEFER all 5 to Sprint 26** pending a unified architectural fix to the `SetMembershipTest` fallback (Option 1 from §Section 3.1: short-circuit empty-fallback with a symbolic instance). See `PROFILE_HARD_TIMEOUTS.md` §Section 4 for full rationale.
 
 ---
 
@@ -1366,7 +1380,27 @@ Prep Task 8.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with revision — all 5 share the same stage, not stage-per-model)
+
+- **Verified by:** Task 8 (Profile Hard Translation Timeouts)
+- **Date:** 2026-04-21
+- **Findings:**
+  - Original assumption: "iswnm / nebrazil / mexls: KKT assembly / instance enumeration. sarf / srpchase: AD or IR build." **PARTIALLY WRONG** — the bottleneck stage is the same for ALL 5: `ad_jacobian` (`compute_constraint_jacobian` in `src/ad/constraint_jacobian.py`). The assumption split models across stages, but in fact the pattern is uniform.
+  - **All 5 interrupt inside `ad_jacobian`.** Parse+IR, normalize, and gradient all complete quickly (< 60s). Emission and KKT-assemble happen after (for srpchase only, the others don't get past ad_jacobian).
+  - **Stage-timing breakdown:**
+    - `preprocess`: all < 0.2s
+    - `parse+ir_build`: 1.2s (srpchase) – 51.1s (mexls); fast even for large files
+    - `normalize`: all < 0.01s
+    - `ad_gradient`: 0.25s (srpchase) – 28.6s (sarf); fast
+    - **`ad_jacobian`: 466.6s (srpchase completes) or >834s (others timeout)** — the dominant stage
+    - `kkt_assemble`: 32.2s for srpchase; others never reach
+    - `emit_mcp`: 0.02s for srpchase; others never reach
+  - **Super-linear growth (RQ #2):** yes — `ad_jacobian` grows roughly linearly with the product (affected equations) × (parent-set cardinality on fallback). For nebrazil (13 affected equations) that product is the largest.
+  - **Memoization (RQ #3):** per-derivative memoization won't help because the bottleneck is enumerating which instances to compute (control-flow), not recomputing derivatives (data-level).
+- **Evidence:**
+  - Per-model stage timings: `PROFILE_HARD_TIMEOUTS.md` §Section 1.1–1.5
+  - Stage-dominance table: `PROFILE_HARD_TIMEOUTS.md` §Executive Summary
+- **Decision:** Per-model bottleneck identified as **`compute_constraint_jacobian`'s `enumerate_equation_instances` fallback path** at `src/ad/index_mapping.py:532` and `src/ad/constraint_jacobian.py:798,960,1247`. Single fix site for all 5; see §Section 3.1 Option 1 in the profile doc.
 
 ---
 
@@ -1409,7 +1443,19 @@ Prep Task 8.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (sparse Jacobian is NOT a productive optimization for these 5 models)
+
+- **Verified by:** Task 8 (Profile Hard Translation Timeouts)
+- **Date:** 2026-04-21
+- **Findings:**
+  - **The bottleneck is instance ENUMERATION, not Jacobian density computation.** Sparse Jacobian storage formats (COO, CSR, etc.) save memory and iteration time over non-zero entries, but they don't change the enumeration step (deciding which rows × columns are even candidates for being non-zero).
+  - For all 5 models, > 90% of `ad_jacobian` time is spent in the fallback-enumeration path of `enumerate_equation_instances`. Even if every derivative computation were instantaneous, the enumeration itself dominates.
+  - Sparse Jacobian infrastructure (if added) would be orthogonal: a storage-level optimization that could help downstream tools (emitter, KKT assembly), but not the current bottleneck.
+  - **The right optimization is not sparse Jacobian but "lazy enumeration / runtime-preserved condition"** — see `PROFILE_HARD_TIMEOUTS.md` §Section 3.1 Option 1.
+- **Evidence:**
+  - Bottleneck stage-time dominance: `PROFILE_HARD_TIMEOUTS.md` §Section 1 (all 5 models)
+  - Root-cause explanation: `PROFILE_HARD_TIMEOUTS.md` §Section 3.2
+- **Decision:** **Do NOT invest in sparse Jacobian infrastructure as a Sprint 25 Priority 5 optimization.** The fix that actually addresses the bottleneck is architectural — short-circuit the empty-subset fallback in `enumerate_equation_instances`. Sparse storage could be pursued as an independent Sprint-26+ optimization for different reasons (downstream efficiency), but it does not help with the Priority 5 models' actual bottleneck.
 
 ---
 
@@ -1452,7 +1498,23 @@ Prep Task 8.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+❌ **Status:** WRONG (srpchase is NOT a preprocessor bottleneck; it's the same `ad_jacobian` pattern as the other 4)
+
+- **Verified by:** Task 8 (Profile Hard Translation Timeouts)
+- **Date:** 2026-04-21
+- **Findings:**
+  - Original assumption: "srpchase's bottleneck is ScenRed's macro expansion during parsing — a preprocessor-level issue." **WRONG.** Measured timings:
+    - `preprocess`: 33 ms (0.01% of total)
+    - `parse+ir_build`: 1.2s (0.24%)
+    - **`ad_jacobian`: 466.6s (93% of total)**
+  - ScenRed does drive a 1001-member `n` set, but the cost of that is **NOT in the preprocessor or parser** (they handle the `$libInclude scenred` and the generated statements without difficulty). The cost is downstream in `compute_constraint_jacobian` where the dynamic subsets `srn` and `leaf` (zero static members) trigger the same `SetMembershipTest` fallback as the other 4 models.
+  - **srpchase is NOT a fundamentally different bottleneck.** It's the same pattern, with scale pushed up by ScenRed. It's in fact the most tractable of the 5 because its affected-equation count (2) is smaller than the others (1, 3, 3, 13).
+  - RQ #3 (scope exclusion): **Do NOT scope-exclude srpchase.** It's a targetable optimization case, not a structural MINLP/multi-solve-driver incompatibility.
+  - RQ #4 (other ScenRed users): worth surveying in Sprint 26, but not a blocker for Sprint 25 since the architectural fix applies uniformly.
+- **Evidence:**
+  - Stage timings: `PROFILE_HARD_TIMEOUTS.md` §Section 1.1 (srpchase-specific)
+  - ScenRed/SetMembershipTest attribution: `PROFILE_HARD_TIMEOUTS.md` §Section 3.3
+- **Decision:** Revised assumption — **srpchase is not a preprocessor issue; it's the same `SetMembershipTest` fallback pattern as the other 4 models, just with a smaller affected-equation count (2 vs 1–13) that keeps total runtime under 900s.** The architectural fix proposed in `PROFILE_HARD_TIMEOUTS.md` §Section 3.1 Option 1 unblocks all 5 uniformly; srpchase does NOT need its own scope-exclusion or ScenRed-specific fix.
 
 ---
 

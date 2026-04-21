@@ -789,7 +789,7 @@ grep -E -c "^### #1270|^### #1271" docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_P
 
 ## Task 8: Profile Hard Translation Timeouts (5 models)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Low
 **Estimated Time:** 2–3 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -839,11 +839,25 @@ Per the Sprint 24 retrospective §PR13 recommendation, translation-timeout work 
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md` — 5-section profile report covering:
+  - Per-model stage timing (preprocess / parse+ir_build / normalize / ad_gradient / ad_jacobian / kkt_assemble / emit_mcp) for all 5 hard-timeout models under a 900s per-model SIGALRM budget
+  - Tractability classification (1 tractable at 900s, 4 intractable)
+  - Root-cause analysis: `SetMembershipTest` dynamic-subset fallback in `enumerate_equation_instances` — unified pattern across all 5
+  - Proposed optimization (Option 1: short-circuit empty fallback; Options 2–3 as alternatives)
+  - Priority 5 scope recommendation (DEFER all 5 to Sprint 26)
+  - Appendix A: complete profile harness `/tmp/task8-profile.py` for Sprint 26 regression benchmarking
+- Updated `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` — Unknowns 5.1, 5.2, 5.3, 5.4 verified (5.1 VERIFIED, 5.2 VERIFIED-revised, 5.3 WRONG, 5.4 WRONG).
 
 ### Result
 
-_To be completed._
+- **All 5 models profiled with stage-level timing** under 900s SIGALRM budget.
+- **srpchase: TRACTABLE (completes in 500s; 93% in `ad_jacobian`)** — not tractable at current 600s pipeline cap without either a budget bump or a targeted optimization.
+- **iswnm, sarf, mexls, nebrazil: INTRACTABLE at 900s** — all stuck inside `ad_jacobian` at the budget cap; all share the same root cause.
+- **Unified root cause:** `SetMembershipTest(dynamic_subset, ...)` where the subset has zero static members → `enumerate_equation_instances` falls back to parent-set include-all enumeration → Cartesian explosion. Same pattern as Sprint 24 ISSUE_1228 (iswnm), now confirmed for srpchase, sarf, mexls, nebrazil. Warning signatures: `cannot be evaluated statically` / `Dynamic subset … no static members` emitted by `src/ad/index_mapping.py:532` and `src/ad/constraint_jacobian.py:798,960,1247`.
+- **Unknown 5.3 WRONG:** sparse Jacobian doesn't help — the bottleneck is enumeration, not storage/compute.
+- **Unknown 5.4 WRONG:** srpchase is NOT a preprocessor issue (preprocess = 33 ms); it's the same `SetMembershipTest` fallback pattern.
+- **Priority 5 recommendation: DEFER all 5 to Sprint 26** pending an architectural fix to `enumerate_equation_instances`'s fallback path. Sprint 25 is already near budget-full (Priority 1 + Priority 2 + Task 5 new issues + Priorities 3/4 = ~30h+ of work). File new `sprint-26` architectural issue aggregating #1169, #1185, #1192, ISSUE_1228.
+- **Contingency:** if Priority 1–4 land ahead of schedule, Option 1 (short-circuit empty fallback, ~4–6h) could land on Day 11–12 as overflow work. Expected outcome: srpchase translates clean (~30s vs 500s), iswnm likely translates, sarf/mexls/nebrazil uncertain. Expected Sprint 25 Solve delta from this: 0–2 models — does not materially change the Solve-target math.
 
 ### Verification
 
@@ -852,6 +866,7 @@ test -f docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md && echo "EXISTS"
 for m in iswnm mexls nebrazil sarf srpchase; do
     grep -q "\`$m\`" docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md && echo "$m ✓" || echo "$m MISSING"
 done
+# Example output: EXISTS + all 5 models present
 ```
 
 ### Deliverables
@@ -865,11 +880,11 @@ done
 
 ### Acceptance Criteria
 
-- [ ] All 5 models profiled with stage-timing data
-- [ ] Each model classified as tractable / intractable / unclear
-- [ ] At least 1 model has a specific optimization proposal OR all 5 recommended for Sprint 26+ deferral
-- [ ] Cross-reference with KU-19, KU-20 from SPRINT_24/KNOWN_UNKNOWNS.md
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 5 models profiled with stage-timing data (artifacts in `/tmp/task8-profiles/<model>.json`; summarized in §Section 1)
+- [x] Each model classified as tractable / intractable / unclear (1 tractable: srpchase; 4 intractable: iswnm/sarf/mexls/nebrazil)
+- [x] At least 1 model has a specific optimization proposal (Option 1 short-circuit empty fallback applies to all 5; Options 2–3 alternative) AND all 5 recommended for Sprint 26+ deferral
+- [x] Cross-reference with KU-19, KU-20 from SPRINT_24/KNOWN_UNKNOWNS.md (§Section 5 cross-reference table)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md (5.1 VERIFIED, 5.2 VERIFIED-revised, 5.3 WRONG, 5.4 WRONG)
 
 ---
 
