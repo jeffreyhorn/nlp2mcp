@@ -98,7 +98,7 @@ ELAPSED        899.6s (TIMEOUT)
 
 - Set `nb`: dynamic subset of `n`, **zero static members** — per Sprint 24 ISSUE_1228 this was the known root cause.
 - Affected equation: `nbal` (indexed over `n` × `m`)
-- Warnings: 4× "cannot be evaluated statically"; fallback-subset warning emitted via `constraint_jacobian.py`
+- Warnings: 4× "cannot be evaluated statically"; the fallback-subset warning originates in `src/ad/index_mapping.py` (`resolve_set_members`) and may appear at a `src/ad/constraint_jacobian.py` call site in the warning trace because of `warnings.warn(..., stacklevel=...)` behavior
 
 **Why it doesn't complete:** The fallback expands `nb → n` where `n` includes many members × `m` (months) → Cartesian explosion. Unlike srpchase which has 1 affected equation with 2 small target slots, iswnm's `nbal` has a large index product.
 
@@ -327,7 +327,7 @@ Usage: PYTHONHASHSEED=0 python /tmp/task8-profile.py <model> <budget_seconds>
 Writes JSON to stdout with per-stage timing.
 """
 
-import sys, time, signal, traceback, json
+import sys, time, signal, json
 sys.setrecursionlimit(50000)
 
 MODEL = sys.argv[1]
@@ -357,42 +357,47 @@ def mark(name):
     stages.append((name, now, elapsed))
 
 try:
-    src_data = preprocess_gams_file(Path(f"data/gamslib/raw/{MODEL}.gms"))
-    mark("preprocess")
-    model = parse_model_text(src_data)
-    mark("parse+ir_build")
-    normalized_eqs, _ = normalize_model(model)
-    mark("normalize")
-    config = Config()
-    gradient = compute_objective_gradient(model, config)
-    mark("ad_gradient")
-    J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
-    mark("ad_jacobian")
-    kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq, config)
-    mark("kkt_assemble")
-    output = emit_gams_mcp(kkt, add_comments=False)
-    mark("emit_mcp")
-    stats = {
-        "eq_rows": J_eq.num_rows, "eq_cols": J_eq.num_cols,
-        "ineq_rows": J_ineq.num_rows, "ineq_cols": J_ineq.num_cols,
-        "gradient_cols": gradient.num_cols,
-        "n_stat_eqs": len(kkt.stationarity),
-        "output_lines": len(output.splitlines()),
-    }
-    result = {
-        "model": MODEL, "status": "complete",
-        "total": time.perf_counter() - t0,
-        "stages": [(name, round(el, 4)) for (name, _, el) in stages],
-        "stats": stats,
-    }
-except TimeoutError as e:
-    result = {
-        "model": MODEL, "status": "timeout",
-        "budget": BUDGET, "elapsed": round(time.perf_counter() - t0, 4),
-        "stages_completed": [(name, round(el, 4)) for (name, _, el) in stages],
-        "error": str(e),
-    }
+    try:
+        src_data = preprocess_gams_file(Path(f"data/gamslib/raw/{MODEL}.gms"))
+        mark("preprocess")
+        model = parse_model_text(src_data)
+        mark("parse+ir_build")
+        normalized_eqs, _ = normalize_model(model)
+        mark("normalize")
+        config = Config()
+        gradient = compute_objective_gradient(model, config)
+        mark("ad_gradient")
+        J_eq, J_ineq = compute_constraint_jacobian(model, normalized_eqs, config)
+        mark("ad_jacobian")
+        kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq, config)
+        mark("kkt_assemble")
+        output = emit_gams_mcp(kkt, add_comments=False)
+        mark("emit_mcp")
+        stats = {
+            "eq_rows": J_eq.num_rows, "eq_cols": J_eq.num_cols,
+            "ineq_rows": J_ineq.num_rows, "ineq_cols": J_ineq.num_cols,
+            "gradient_cols": gradient.num_cols,
+            "n_stat_eqs": len(kkt.stationarity),
+            "output_lines": len(output.splitlines()),
+        }
+        result = {
+            "model": MODEL, "status": "complete",
+            "total": time.perf_counter() - t0,
+            "stages": [(name, round(el, 4)) for (name, _, el) in stages],
+            "stats": stats,
+        }
+    except TimeoutError as e:
+        result = {
+            "model": MODEL, "status": "timeout",
+            "budget": BUDGET, "elapsed": round(time.perf_counter() - t0, 4),
+            "stages_completed": [(name, round(el, 4)) for (name, _, el) in stages],
+            "error": str(e),
+        }
+finally:
+    # Cancel the SIGALRM on every exit path (including non-TimeoutError
+    # exceptions) so the alarm can't fire during error reporting or JSON
+    # serialization.
+    signal.alarm(0)
 
-signal.alarm(0)
 print(json.dumps(result, default=str))
 ```
