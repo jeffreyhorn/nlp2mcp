@@ -611,29 +611,37 @@ Sprint 24's outcome was "Day 1 started but Days 4–7 lost to urgent fixes" beca
 
 ### What Needs to Be Done
 
-1. **Define phases** based on Task 2's Pattern classification:
-   - **Phase 1 (Days 1–3):** Complete Pattern A fix for the models where it's most clearly diagnosed (qabel, meanvar, CGE family)
-   - **Phase 2 (Days 3–6):** Validate Pattern A across all models; Pattern C (offset-alias) for polygon, himmel16, cclinpts
-   - **Phase 3 (Days 7–9):** Pattern B/D edge cases (kand, launch)
-   - **Phase 4 (Days 10–12):** #1150 distinct-sum-indices collapse; final regression sweep
+_(Task 6 is now COMPLETE. The bullets below were the initial sketch from pre-Task-2 planning; the finalized 4-phase plan is in §Result and `DESIGN_ALIAS_AD_ROLLOUT.md`. Some initial-sketch items changed based on Task 2's Pattern reclassification — notably Patterns B/D are empty, so the original Phase 3 was re-scoped to Pattern C; #1150 consolidates into Pattern A instead of a dedicated Phase 4; Checkpoint 1 shifts from Day 5 to Day 6.)_
 
-2. **Define per-phase gates** (pass → continue; fail → stop + investigate):
+**Finalized plan** (see §Result and `DESIGN_ALIAS_AD_ROLLOUT.md`):
+
+1. **Phases** based on Task 2's Pattern classification:
+   - **Phase 1 (Days 1–3):** Pattern A single-index validation (qabel, abel, launch) + multi-index `_partial_collapse_sum` recovery prototype
+   - **Phase 2 (Days 4–6):** Pattern A across the 6-issue audit set (#1138, #1139, #1140, #1142, #1145, #1150); Checkpoint 1 at Day 6
+   - **Phase 3 (Days 7–9):** Pattern C `IndexOffset.base` extraction (polygon, himmel16, twocge `stat_tz` #1277); Pattern B/D reclassified empty per Task 2
+   - **Phase 4 (Days 10–12):** Final regression sweep + Pattern E routing (#1141, #1144, #1147 routed out of scope); Checkpoint 2 at Day 10
+
+2. **Per-phase gates** (pass → continue; fail → stop + investigate):
    - Dispatch canary passes (non-negotiable)
    - Golden-file regression on 54 matching models passes
    - Target models for the phase show measurable improvement (mismatch → match or infeasible → optimal)
    - No new path_syntax_error or model_infeasible appears
+   - Full quantitative thresholds in `DESIGN_ALIAS_AD_ROLLOUT.md` §Gate 1–4
 
-3. **Define regression-guard infrastructure:**
+3. **Regression-guard infrastructure:**
    - Golden-file set for the 54 matching models (generate if not already present)
-   - Canary test list beyond `dispatch` (from Task 2 audit)
+   - 6-tier canary ladder beyond `dispatch` (from Task 2 audit §Section 5)
    - Per-model verification script that reports pass/near-pass/fail
+   - `PYTHONHASHSEED=0` pinning until Task 3's #1283 fix lands
 
-4. **Define "stop the sprint" triggers:**
+4. **"Stop the sprint" triggers** (5 documented in design doc §Section 4):
    - ≥ 2 golden-file regressions that can't be root-caused within 1 day
+   - dispatch canary fails
+   - Checkpoint 1 (Day 6) evaluation returns NO-GO
    - New path_syntax_error or model_infeasible on any currently-matching model
-   - Checkpoint 1 (Day 5) evaluation returns NO-GO on regression count
+   - `make test` regression
 
-5. **Allocate parallel work:** what Priority 2 (emitter) work runs on Days where alias-AD is in Phase-transition wait?
+5. **Parallel-work allocation:** Priority 2 (emitter) Batches 1–3 and Task 5's new issues #1289–#1292 mapped to specific days in `DESIGN_ALIAS_AD_ROLLOUT.md` §Section 5; Day 8 identified as highest-leverage.
 
 ### Changes
 
