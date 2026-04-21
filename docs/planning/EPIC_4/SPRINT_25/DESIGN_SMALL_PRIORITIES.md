@@ -193,9 +193,10 @@ if isinstance(node, Token) and node.type == "ID":
 **Module-level `_loop_tree_to_gams` (current canonical):**
 
 - Defined: [`src/emit/original_symbols.py:2556`](../../../../src/emit/original_symbols.py#L2556)
-- Internal recursive call sites: 63 (counted via grep, all inside the function body itself)
-- External callers (in `src/`): 0 direct calls (called via internal recursion only)
-- External callers (in `tests/`): 4 in `tests/unit/emit/test_original_symbols.py` (lines 2080, 2129, 2177, 2224)
+- Internal recursive call sites: many (inside the function body itself; exact grep count is implementation-dependent and not load-bearing for the refactor — the refactor preserves every existing call site by design)
+- Direct same-module callers (in `src/emit/original_symbols.py`): present (e.g., `emit_loop_statements` and other emission helpers around lines 2780, 2782, 2784, 2786, 2986, 3368) — these continue to work unchanged because the new `token_subst` kwarg is optional and defaults to `None` (canonical behavior)
+- Callers outside this module (elsewhere in `src/`): none
+- Test imports of `_loop_tree_to_gams`: many in `tests/unit/emit/test_original_symbols.py` (multiple test methods import the function locally) — all continue to work unchanged via the optional-kwarg default
 
 **Nested `_loop_tree_to_gams_subst_dispatch` (substituting variant):**
 
@@ -351,4 +352,4 @@ Lift this list verbatim into the Sprint 25 Day 11 (or Days 5–6) PR description
 - [ ] **Post-refactor regen + diff:** generate MCP outputs into `/tmp/sprint25-dispatcher-post/` and `diff -r` against pre-snapshot — must be empty
 - [ ] Quality gate: `make typecheck && make lint && make format && make test`
 - [ ] PR description includes: confirmation of zero byte-diffs across 135 models
-- [ ] CHANGELOG entry under `[Unreleased]` documenting the rename and parameter addition
+- [ ] CHANGELOG entry under `[Unreleased]` documenting the parameter addition / signature change (and the removal of the nested `_tree_to_gams_subst` / `_loop_tree_to_gams_subst_dispatch` helpers from `emit_pre_solve_param_assignments`)

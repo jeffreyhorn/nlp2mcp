@@ -1160,10 +1160,10 @@ Prep Task 7.
 - **Findings:**
   - The substituting dispatcher's behavior is intended to be identical to the canonical when called with an empty `token_subst` — confirmed by code inspection of both functions. The substitution point is a single ID-name lookup at every ID-emission branch; with `token_subst=None` (or empty), the lookup is a no-op and the canonical behavior emerges.
   - **No grammar rules where the dispatchers SHOULD legitimately differ.** All Sprint 24 divergences (partssupply `dollar_cond` handlers, decomp `bound_scalar` handlers) were bugs in the substituting variant, not intentional differences. Each was fixed by copy-pasting the canonical handler.
-  - **Refactor scope is minimal:** the substituting variant is fully nested inside `emit_pre_solve_param_assignments` (one function, one call site at line 3271). Module-level `_loop_tree_to_gams` keeps its 4 test imports unchanged thanks to the optional kwarg with default `None`.
+  - **Refactor scope is minimal:** the substituting variant is fully nested inside `emit_pre_solve_param_assignments` (one function, one call site at line 3271). Module-level `_loop_tree_to_gams` keeps its existing test imports and same-module callers unchanged thanks to the optional kwarg with default `None`.
   - **Pre-refactor byte-diff baseline:** the two dispatchers should already produce different output under their respective contexts (canonical never gets a `token_subst`, substituting always does), so a direct A/B byte-diff isn't meaningful. The actual equivalence test is "post-refactor MCP outputs equal pre-refactor MCP outputs" across the 135 currently-translating models — that's the operational byte-diff regression in §Section 2.4.
 - **Evidence:**
-  - Canonical dispatcher: `src/emit/original_symbols.py:2556` (62 internal recursive calls; 4 test imports)
+  - Canonical dispatcher: `src/emit/original_symbols.py:2556` (module-level dispatcher; multiple internal recursive sites and same-module direct callers; multiple test imports — exact counts implementation-dependent)
   - Nested substituting variant: `src/emit/original_symbols.py:3026, 3047` (zero external imports; single in-function call site at line 3271)
   - Refactor plan: `DESIGN_SMALL_PRIORITIES.md` §Section 2.3
   - Step-2 source line: `src/emit/original_symbols.py:3271` (`_tree_to_gams_subst(stmt, sub)` → `_loop_tree_to_gams(stmt, token_subst=sub)`)
@@ -1271,10 +1271,10 @@ Prep Task 7 (notes only; validation during implementation).
   - The unified dispatcher adds a single conditional ID-name lookup at each ID-emission branch (~3–5 sites). Each lookup is `token_subst.get(name.lower(), name) if token_subst else name` — O(1) dict access plus one branch.
   - **RQ #1 (hot path):** translate's hot path is dominated by AD (`differentiate_expr` + `_partial_collapse_sum`) and parsing (Lark Earley), not loop-tree emission. The dispatcher contributes a small fraction of total translate time per Sprint 24 profiling intuition (no concrete profiling done in Task 7; deferred to Sprint 25 implementation).
   - **RQ #2 (branch prediction):** the `if token_subst is not None` branch is consistent within any single call (either always None or always set per call site), so CPython's branch handling is straightforward.
-  - **RQ #3 (high-volume call sites):** module-level `_loop_tree_to_gams` is called 63 times recursively per pre-solve assignment. For a typical model with 5–10 pre-solve assignments, total calls are ~300–600 per translate — well below 1000+/model.
+  - **RQ #3 (high-volume call sites):** module-level `_loop_tree_to_gams` is invoked recursively at many internal dispatcher sites per pre-solve assignment, but the exact current count should be treated as implementation-dependent rather than fixed in this design note. For a typical model with 5–10 pre-solve assignments, dispatcher activity remains comfortably below the dominant translation costs (AD + parsing) and should be validated with timing during implementation rather than estimated from a hard-coded caller count.
   - **Acceptance:** ≤ 5% translate-time overhead vs pre-refactor baseline. Measurement plan: 5 representative models (small / medium / large CGE / PS-family / dispatch) timed before / after with `time .venv/bin/python -m src.cli ...` × 3 runs each, mean ± std reported in the refactor PR description.
 - **Evidence:**
-  - Caller count: 63 internal recursive calls in `src/emit/original_symbols.py:2556+`
+  - Dispatcher structure: multiple internal recursive `_loop_tree_to_gams(` call sites in `src/emit/original_symbols.py:2556+`; exact counting refreshed during Sprint 25 implementation profiling (no hard count in this design note).
   - Single ID-emission lookup design: `DESIGN_SMALL_PRIORITIES.md` §Section 2.1
 - **Decision:** Performance regression is unlikely; design-level analysis supports the assumption. Sprint 25 implementation includes the 5-model timing measurement as part of the refactor PR's acceptance evidence.
 
