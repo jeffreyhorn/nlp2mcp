@@ -12,7 +12,7 @@
 
 Sprint 25 Priorities 3 and 4 are both **mechanical, well-bounded changes** that benefit from 1–2 hours of design pre-work to lock scope before implementation. Both pre-design tasks are completed in this document.
 
-- **#1270 Multi-Solve Gate (Priority 3):** Approach A (cross-reference) committed. Corpus survey identifies **14 candidate models** with ≥2 solves and ≥1 `eq.m` reference; of those, **2 are currently matching** (gussrisk, sparta — must remain non-flagged) and **1 is currently translate-success / solve-failure** (saras — the canonical target). The extension is a single-function change in [`src/validation/driver.py`](../../../../src/validation/driver.py#L151) (`_collect_equation_marginals`) plus a new top-level pass and a parameter-usage-tracking helper. Estimated effort: **3–4h** including the saras integration test and partssupply regression guard.
+- **#1270 Multi-Solve Gate (Priority 3):** Approach A (cross-reference) committed. Corpus survey identifies **14 candidate models** with ≥2 solves and ≥1 `.m` (marginal) reference — equation-vs-variable marginal disambiguation deferred to the IR-based Sprint 25 implementation pass; of those, **2 are currently matching** (gussrisk, sparta — must remain non-flagged) and **1 is currently translate-success / solve-failure** (saras — the canonical target). The extension is a single-function change in [`src/validation/driver.py`](../../../../src/validation/driver.py#L151) (`_collect_equation_marginals`) plus a new top-level pass and a parameter-usage-tracking helper. Estimated effort: **3–4h** including the saras integration test and partssupply regression guard.
 
 - **#1271 Dispatcher Refactor (Priority 4):** Unified signature `_loop_tree_to_gams(node, *, token_subst=None)`. Caller inventory shows **only 1 external use site** for the substituting variant (`emit_pre_solve_param_assignments` line 3271), and the substituting dispatcher is **fully nested** inside that one function — so the refactor is well-bounded. Byte-diff regression strategy: snapshot all currently-translating models (translate=success per `gamslib_status.json`, ~135 models) before the refactor, regenerate after, expect zero diffs. Estimated effort: **4–6h** matching the issue doc's bound.
 
@@ -41,19 +41,23 @@ Sprint 25 Priorities 3 and 4 are both **mechanical, well-bounded changes** that 
 Corpus query (filtered to `pipeline_status` not `skipped`):
 
 ```python
-# Models with >=2 solve statements AND >=1 X.m reference (case-insensitive)
+# Models with >=2 solve statements AND >=1 `.m` attribute reference
+# (case-insensitive). Note: raw-text grep counts ANY `.m` reference —
+# both equation marginals AND variable marginals. Equation-vs-variable
+# disambiguation is deferred to the IR-based Sprint 25 implementation
+# pass; the candidate count here is an over-approximation.
 candidates = []
 for mid in in_scope_models:
     text = read(f'data/gamslib/raw/{mid}.gms')
     n_solves = count(re.findall(r'^\s*solve\b', text, re.IGNORECASE | re.MULTILINE))
-    em_refs = count(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*\.[mM][\s\(]', text))
-    if n_solves >= 2 and em_refs >= 1:
-        candidates.append((mid, n_solves, em_refs))
+    m_refs = count(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*\.[mM][\s\(]', text))
+    if n_solves >= 2 and m_refs >= 1:
+        candidates.append((mid, n_solves, m_refs))
 ```
 
-**Result: 14 candidates (2026-04-21 snapshot):**
+**Result: 14 candidates (2026-04-21 snapshot — regex-level over-approximation of equation marginals; Sprint 25 implementation re-runs against the IR to filter to equation-only matches):**
 
-| Model | Solves | `eq.m` refs | Current pipeline state | Approach A expected | Notes |
+| Model | Solves | `.m` refs | Current pipeline state | Approach A expected | Notes |
 |---|---|---|---|---|---|
 | `saras` | 7 | 16 | translate=success / solve=failure | **FLAG (target)** | Canonical case from ISSUE_1270 |
 | `msm` | 5 | 5 | not in pipeline | NEEDS EMPIRICAL CHECK | |

@@ -984,7 +984,7 @@ Prep Task 7.
 - **Date:** 2026-04-21
 - **Findings:**
   - Approach A (cross-reference) committed as the design — Task 7 §Section 1.1 in `DESIGN_SMALL_PRIORITIES.md`.
-  - Corpus survey identified **14 candidate models** with ≥2 solves AND ≥1 `eq.m` reference. Of those:
+  - Corpus survey identified **14 candidate models** with ≥2 solves AND ≥1 `.m` (marginal) reference — the regex heuristic counts any `.m` attribute (equation or variable marginal); equation-vs-variable disambiguation is deferred to the IR-based Sprint 25 implementation pass, so this count is an over-approximation. Of those:
     - **2 currently matching** (gussrisk rd≈2e-06, sparta rd=0) → MUST NOT FLAG (regression canaries)
     - **1 currently translate-success / solve-failure** (saras) → MUST FLAG (canonical target)
     - **9 not currently in pipeline** (translate=None) — empirical IR check deferred to Sprint 25 implementation
@@ -1044,7 +1044,7 @@ Prep Task 7.
 - **Verified by:** Task 7 (Multi-Solve Gate + Dispatcher Refactor scoping)
 - **Date:** 2026-04-21
 - **Findings:**
-  - Original assumption "Saras is the only in-scope corpus model" likely needs revision. Corpus survey produced **14 candidates with ≥2 solves and ≥1 eq.m reference**; even after filtering for the 2 currently-matching canaries (must NOT flag) and the 9 not-in-pipeline models (deferred), at least **2 currently-mismatching models** (otpop rd=0.81, imsl rd=0.98) and possibly turkey (translate=success / solve=failure, similar to saras) are plausible additional flag candidates.
+  - Original assumption "Saras is the only in-scope corpus model" likely needs revision. Corpus survey produced **14 candidates with ≥2 solves and ≥1 `.m` (marginal) reference** — equation-vs-variable marginal disambiguation deferred to the Sprint 25 IR-based implementation pass; the 14-count is therefore an over-approximation. Even after filtering for the 2 currently-matching canaries (must NOT flag) and the 9 not-in-pipeline models (deferred), at least **2 currently-mismatching models** (otpop rd=0.81, imsl rd=0.98) and possibly turkey (translate=success / solve=failure, similar to saras) are plausible additional flag candidates.
   - **Likely flagged set (lower bound):** saras + 2–3 others = **3–4 models** flagged after Sprint 25 implementation. Upper bound after IR check on the 9 not-in-pipeline candidates: 5–8 models.
   - The extended gate's logic is uniform — it doesn't need per-model special-casing; the same Approach A logic catches all driver-pattern models. So flagging more than 1 doesn't increase complexity.
   - The `multi_solve: true` cross-reference suggested by RQ #2 was de-prioritized: `gamslib_status.json` **does** expose a `multi_solve` boolean (`data/gamslib/schema.json:197–200` defines it as "True if the original model contains multiple solve statements or loop-based solves, making NLP reference objective incomparable with MCP"), but that field is broader than the specific saras-style multi-solve driver pattern needed here — it flags any model with multiple solves or loop-based solves regardless of dual-feedback semantics, and is not a dedicated `multi_solve_driver` classification. Approach A's pure-IR detection (which checks the additional condition that the receiving parameter feeds another model's constraint body) is therefore still needed to distinguish drivers from non-driver multi-solve patterns.
