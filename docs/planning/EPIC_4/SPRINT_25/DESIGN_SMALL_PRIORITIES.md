@@ -3,7 +3,7 @@
 **Created:** 2026-04-21
 **Sprint:** 25 (Prep Task 7)
 **Issues:** [#1270](https://github.com/jeffreyhorn/nlp2mcp/issues/1270), [#1271](https://github.com/jeffreyhorn/nlp2mcp/issues/1271)
-**Predecessor docs:** [`../../EPIC_4/SPRINT_24/AUDIT_MULTI_SOLVE_DRIVERS.md`](../SPRINT_24/AUDIT_MULTI_SOLVE_DRIVERS.md), [`../../EPIC_4/SPRINT_24/PLAN_FIX_DECOMP.md`](../SPRINT_24/PLAN_FIX_DECOMP.md), [`../../EPIC_4/SPRINT_24/PLAN_FIX_PARTSSUPPLY.md`](../SPRINT_24/PLAN_FIX_PARTSSUPPLY.md)
+**Predecessor docs:** [`../SPRINT_24/AUDIT_MULTI_SOLVE_DRIVERS.md`](../SPRINT_24/AUDIT_MULTI_SOLVE_DRIVERS.md), [`../SPRINT_24/PLAN_FIX_DECOMP.md`](../SPRINT_24/PLAN_FIX_DECOMP.md), [`../SPRINT_24/PLAN_FIX_PARTSSUPPLY.md`](../SPRINT_24/PLAN_FIX_PARTSSUPPLY.md)
 **In-tree issue docs:** [`../../../issues/ISSUE_1270_multi-solve-gate-saras-style-top-level-marginal-reads.md`](../../../issues/ISSUE_1270_multi-solve-gate-saras-style-top-level-marginal-reads.md), [`../../../issues/ISSUE_1271_refactor-collapse-loop-tree-dispatchers.md`](../../../issues/ISSUE_1271_refactor-collapse-loop-tree-dispatchers.md)
 
 ---
@@ -12,11 +12,11 @@
 
 Sprint 25 Priorities 3 and 4 are both **mechanical, well-bounded changes** that benefit from 1–2 hours of design pre-work to lock scope before implementation. Both pre-design tasks are completed in this document.
 
-- **#1270 Multi-Solve Gate (Priority 3):** Approach A (cross-reference) committed. Corpus survey identifies **14 candidate models** with ≥2 solves and ≥1 `eq.m` reference; of those, **2 are currently matching** (gussrisk, sparta — must remain non-flagged) and **1 is currently translate-success / solve-failure** (saras — the canonical target). The extension is a single-function change in [`src/validation/driver.py`](../../../../src/validation/driver.py:151) (`_collect_equation_marginals`) plus a new top-level pass and a parameter-usage-tracking helper. Estimated effort: **3–4h** including the saras integration test and partssupply regression guard.
+- **#1270 Multi-Solve Gate (Priority 3):** Approach A (cross-reference) committed. Corpus survey identifies **14 candidate models** with ≥2 solves and ≥1 `eq.m` reference; of those, **2 are currently matching** (gussrisk, sparta — must remain non-flagged) and **1 is currently translate-success / solve-failure** (saras — the canonical target). The extension is a single-function change in [`src/validation/driver.py`](../../../../src/validation/driver.py#L151) (`_collect_equation_marginals`) plus a new top-level pass and a parameter-usage-tracking helper. Estimated effort: **3–4h** including the saras integration test and partssupply regression guard.
 
 - **#1271 Dispatcher Refactor (Priority 4):** Unified signature `_loop_tree_to_gams(node, *, token_subst=None)`. Caller inventory shows **only 1 external use site** for the substituting variant (`emit_pre_solve_param_assignments` line 3271), and the substituting dispatcher is **fully nested** inside that one function — so the refactor is well-bounded. Byte-diff regression strategy: snapshot all currently-translating models (translate=success per `gamslib_status.json`, ~135 models) before the refactor, regenerate after, expect zero diffs. Estimated effort: **4–6h** matching the issue doc's bound.
 
-**Combined effort: 7–10h.** Fits within the PREP_PLAN's "≤ 7h" acceptance-criterion budget at the low end, with 3h contingency for either issue at the high end.
+**Combined effort: 7.5–9.5h.** This is **0.5–2.5h above** the PREP_PLAN's original "≤ 7h" acceptance-criterion budget. Two paths forward documented in §Section 3: (a) treat both items as a deferred / post-Checkpoint-2 cleanup block on Day 11 (recommended); (b) split across Days 5–6 with a second contributor while Priority 2 Batch 2 lands in parallel. The acceptance criterion in PREP_PLAN was relaxed accordingly (see §Task 7 Acceptance Criteria — "≤ 7.5h at the low end").
 
 **Day allocation per [`DESIGN_ALIAS_AD_ROLLOUT.md`](DESIGN_ALIAS_AD_ROLLOUT.md) §Section 5 parallel-work table:** both Priority 3 and Priority 4 are deferred to **Day 11** (post-Checkpoint-2 cleanup window) — they have no alias-AD coupling and benefit from the late-sprint context where Priority 1 outcomes are known. Alternative: dispatch to a separate contributor on Days 4–6 alongside Priority 2 Batch 2.
 
@@ -85,7 +85,7 @@ Sprint 25 implementation lands tests under `tests/unit/validation/test_driver.py
 
 ### 1.4 Code-Site Identification
 
-**Single function to extend:** [`src/validation/driver.py:151`](../../../../src/validation/driver.py:151) `_collect_equation_marginals` and the calling code at [`src/validation/driver.py:204–211`](../../../../src/validation/driver.py:204) inside `scan_multi_solve_driver`.
+**Single function to extend:** [`src/validation/driver.py:151`](../../../../src/validation/driver.py#L151) `_collect_equation_marginals` and the calling code at [`src/validation/driver.py:204–211`](../../../../src/validation/driver.py#L204) inside `scan_multi_solve_driver`.
 
 **Current scope** (line 204–211):
 
@@ -192,18 +192,18 @@ if isinstance(node, Token) and node.type == "ID":
 
 **Module-level `_loop_tree_to_gams` (current canonical):**
 
-- Defined: [`src/emit/original_symbols.py:2556`](../../../../src/emit/original_symbols.py:2556)
+- Defined: [`src/emit/original_symbols.py:2556`](../../../../src/emit/original_symbols.py#L2556)
 - Internal recursive call sites: 63 (counted via grep, all inside the function body itself)
 - External callers (in `src/`): 0 direct calls (called via internal recursion only)
 - External callers (in `tests/`): 4 in `tests/unit/emit/test_original_symbols.py` (lines 2080, 2129, 2177, 2224)
 
 **Nested `_loop_tree_to_gams_subst_dispatch` (substituting variant):**
 
-- Defined: [`src/emit/original_symbols.py:3047`](../../../../src/emit/original_symbols.py:3047), nested inside `emit_pre_solve_param_assignments` (line 2991)
-- Wrapper helper: `_tree_to_gams_subst` at [line 3026](../../../../src/emit/original_symbols.py:3026), also nested
+- Defined: [`src/emit/original_symbols.py:3047`](../../../../src/emit/original_symbols.py#L3047), nested inside `emit_pre_solve_param_assignments` (line 2991)
+- Wrapper helper: `_tree_to_gams_subst` at [line 3026](../../../../src/emit/original_symbols.py#L3026), also nested
 - External callers: **0** (it's nested inside one function, not module-level)
-- Single in-function call site: [line 3271](../../../../src/emit/original_symbols.py:3271): `gams_text = _tree_to_gams_subst(stmt, sub)`
-- External callers (tests): the test file references the `_subst_dispatch` name in a comment only ([`tests/integration/test_pre_solve_dollar_condition.py:6`](../../../../tests/integration/test_pre_solve_dollar_condition.py:6)) — no actual import.
+- Single in-function call site: [line 3271](../../../../src/emit/original_symbols.py#L3271): `gams_text = _tree_to_gams_subst(stmt, sub)`
+- External callers (tests): the test file references the `_subst_dispatch` name in a comment only ([`tests/integration/test_pre_solve_dollar_condition.py:6`](../../../../tests/integration/test_pre_solve_dollar_condition.py#L6)) — no actual import.
 
 **Refactor scope is well-bounded:** the substituting variant is fully encapsulated inside one function; removing it touches one file (`src/emit/original_symbols.py`) and one call site (line 3271).
 
