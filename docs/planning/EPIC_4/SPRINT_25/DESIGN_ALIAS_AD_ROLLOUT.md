@@ -32,7 +32,7 @@ Sprint 25 Priority 1's 12-day alias-AD block is structured as **4 sequential pha
 
 **Parallel-work allocation:** Priority 2 (emitter backlog) Batches 1–2 from `CATALOG_EMITTER_BACKLOG.md` run on Days 1–4 while alias-AD is in Phase 1–2 wait states. Batch 3 (post-Pattern-C work) runs on Days 7–9 alongside Phase 3.
 
-**`sameas` guard regression-test matrix** (Unknown 1.5): 5 element types × 4 test scenarios = **20 unit tests** under `tests/unit/ad/test_sameas_guards.py`, executed in CI as part of `make test`.
+**`sameas` guard regression-test matrix** (Unknown 1.5): 5 element types × 4 test scenarios = **20 unit tests** under `tests/unit/ad/test_sameas_guards.py`. In CI, these run only as string-level / parser-emitter-level assertions via `make test` (no GAMS/PATH-backed compile check — CI does not install GAMS). Any compile validation for emitted `sameas(...)` guards is local-only / optional when GAMS is available on the developer's machine.
 
 **Rollout strategy** (Unknown 1.8): **all-or-nothing per PR**, with per-checkpoint git-revert rollback. No feature flag.
 
@@ -336,7 +336,7 @@ Map Priority 2 (emitter backlog) batches from [`CATALOG_EMITTER_BACKLOG.md`](CAT
 
 ## Section 6 — `sameas()` Guard Regression-Test Matrix (Unknown 1.5)
 
-A 5 × 4 = **20-test matrix** under `tests/unit/ad/test_sameas_guards.py` (new file in Sprint 25). Each cell asserts: (a) the emitted MCP compiles under GAMS, (b) the `sameas()` guard evaluates to the expected boolean at the listed concrete pair, (c) the guard text matches the expected exact string.
+A 5 × 4 = **20-test matrix** under `tests/unit/ad/test_sameas_guards.py` (new file in Sprint 25). Each cell asserts **CI-safe properties only** (no GAMS compile required — the repo's CI workflow does not install GAMS/PATH): (a) the emitted `sameas()` guard text matches the expected exact string, including required single-quote wrapping / escaping for the element form; (b) the parser/emitter-level evaluation of the guard against the listed concrete pair yields the expected boolean via the `_alias_match()` / `_same_root_set()` helpers. **No GAMS compile is required in this unit-test matrix.** Separate compile-time validation runs as a local-only / optional step (see §Section 6.3).
 
 ### Section 6.1 — Element types (rows)
 
@@ -357,7 +357,9 @@ A 5 × 4 = **20-test matrix** under `tests/unit/ad/test_sameas_guards.py` (new f
 | **3** | Cross-alias pair: `sameas(np, n)` where `Alias(n, np)` and both bound to same set | Evaluates to TRUE on diagonal, FALSE off-diagonal |
 | **4** | Combined with dollar condition: `body$(sameas(np, n) and other_cond)` | Both conditions evaluated correctly; no scope conflict |
 
-### Section 6.3 — Compile-time benchmark
+### Section 6.3 — Compile-time benchmark (local-only / optional)
+
+**Out of CI scope.** This benchmark requires GAMS, which is not installed in the repo's CI workflow. Run locally when GAMS is available on the developer machine (or from a dedicated runner job if one is later added).
 
 Additional benchmark test: emit a `sameas()`-guarded MCP for `twocge` (large CGE model with many sameas guards) and measure compile-step duration via `time gams data/gamslib/mcp/twocge_mcp.gms action=c` (invoked from the repo root). Acceptance: total compile time ≤ 60s on the standard development machine; flag for investigation if > 90s.
 
