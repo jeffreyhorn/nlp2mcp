@@ -880,7 +880,7 @@ done
 
 ### Acceptance Criteria
 
-- [x] All 5 models profiled with stage-timing data (artifacts in `/tmp/task8-profiles/<model>.json`; summarized in §Section 1)
+- [x] All 5 models profiled with stage-timing data (artifacts in `/tmp/task8-profiles/<model>.{json,log}` — `.json` holds the profiler's pure JSON stdout, `.log` holds stderr warnings/log output; summarized in §Section 1)
 - [x] Each model classified as tractable / intractable / unclear (1 tractable: srpchase; 4 intractable: iswnm/sarf/mexls/nebrazil)
 - [x] At least 1 model has a specific optimization proposal (Option 1 short-circuit empty fallback applies to all 5; Options 2–3 alternative) AND all 5 recommended for Sprint 26+ deferral
 - [x] Cross-reference with KU-19, KU-20 from SPRINT_24/KNOWN_UNKNOWNS.md (§Section 5 cross-reference table)

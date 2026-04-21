@@ -1337,7 +1337,7 @@ Prep Task 8.
 - **Evidence:**
   - Full profile data: `PROFILE_HARD_TIMEOUTS.md` §Section 1
   - Root-cause analysis: `PROFILE_HARD_TIMEOUTS.md` §Section 2
-  - Raw JSON profiles: `/tmp/task8-profiles/{srpchase,iswnm,sarf,mexls,nebrazil}.json`
+  - Profiler artifacts: `/tmp/task8-profiles/{srpchase,iswnm,sarf,mexls,nebrazil}.json` (pure JSON, profiler stdout) paired with `.log` files (stderr — warnings + log output) per the reproduction recipe in `PROFILE_HARD_TIMEOUTS.md` §Section 1
 - **Decision:** Revised assumption — **1 of 5 tractable at 900s (srpchase), 4 of 5 intractable**. Priority 5 recommendation: **DEFER all 5 to Sprint 26** pending a unified architectural fix to the `SetMembershipTest` fallback (Option 1 from §Section 3.1: short-circuit empty-fallback with a symbolic instance). See `PROFILE_HARD_TIMEOUTS.md` §Section 4 for full rationale.
 
 ---

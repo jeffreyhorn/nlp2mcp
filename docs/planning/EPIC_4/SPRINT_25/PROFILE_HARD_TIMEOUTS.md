@@ -4,7 +4,7 @@
 **Sprint:** 25 (Prep Task 8)
 **Target models:** `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`
 **Measurement setup:** `PYTHONHASHSEED=0`, 900s per-model SIGALRM cap, one run per model, MacBook (local development machine)
-**Profile artifacts:** `/tmp/task8-profiles/<model>.json` for each of 5 models
+**Profile artifacts:** `/tmp/task8-profiles/<model>.json` (pure JSON profiler stdout) paired with `/tmp/task8-profiles/<model>.log` (stderr — warnings / log output) for each of 5 models
 
 ---
 
@@ -45,12 +45,18 @@ Reproduction recipe. **The profile harness is NOT committed**; it lived at `/tmp
 ```bash
 # Step 1: save the harness at /tmp/task8-profile.py — copy the Python source from §Appendix A.
 # Step 2: run the profiler for each model under a 900s SIGALRM budget.
+#         The harness prints JSON to stdout; Python warnings / nlp2mcp logs
+#         go to stderr. Keep them in separate files so the .json artifact is
+#         valid JSON and the .log artifact holds the warning trail.
 mkdir -p /tmp/task8-profiles
 for m in srpchase iswnm sarf mexls nebrazil; do
   PYTHONHASHSEED=0 .venv/bin/python /tmp/task8-profile.py "$m" 900 \
-    > "/tmp/task8-profiles/${m}.json" 2>&1
+    >  "/tmp/task8-profiles/${m}.json" \
+    2> "/tmp/task8-profiles/${m}.log"
 done
 ```
+
+After running: each `<model>.json` contains the profiler's JSON output (pure stdout); each `<model>.log` contains the per-stage `warnings.warn` / `logger.warning` trail (useful for post-hoc inspection of fallback-subset warnings).
 
 If Sprint 26's architectural fix on `enumerate_equation_instances` is pursued, move the harness to `scripts/task8_profile.py` (or similar) for a committed regression benchmark. Sprint 25 deliberately keeps it out of `scripts/` because Task 8 is a one-shot investigation, not an ongoing tool.
 
@@ -100,7 +106,7 @@ ELAPSED        899.6s (TIMEOUT)
 - Affected equation: `nbal` (indexed over `n` × `m`)
 - Warnings: 4× "cannot be evaluated statically"; the fallback-subset warning originates in `src/ad/index_mapping.py` (`resolve_set_members`) and may appear at a `src/ad/constraint_jacobian.py` call site in the warning trace because of `warnings.warn(..., stacklevel=...)` behavior
 
-**Why it doesn't complete:** The fallback expands `nb → n` where `n` includes many members × `m` (months) → Cartesian explosion. Unlike srpchase which has 1 affected equation with 2 small target slots, iswnm's `nbal` has a large index product.
+**Why it doesn't complete:** The fallback expands `nb → n` where `n` includes many members × `m` (months) → Cartesian explosion. Unlike srpchase, whose 2 affected equations each have small 1D target slots (1001 × 1 per equation), iswnm's `nbal` has a larger 2D index product.
 
 ### 1.3 `sarf` (TIMEOUT @ 900s)
 
