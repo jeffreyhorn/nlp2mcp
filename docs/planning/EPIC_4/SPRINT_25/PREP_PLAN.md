@@ -949,7 +949,7 @@ Sprint 24's Day-0 metrics came from the end of Sprint 23 (147-scope) but the pip
 ### Result
 
 - **Parse:** 143/143 (100%)
-- **Translate:** 135/143 success (94.4%); 8 failures = 5 timeouts + 2 multi-solve driver + 1 condition-eval
+- **Translate:** 135/143 success (94.4%); 8 failures = 5 timeouts + 2 multi-solve driver + 1 internal_error (condition-eval UserWarning)
 - **Solve:** 99/143 success (69.2%); 36 failures split into `path_syntax_error=11`, `path_solve_terminated=10`, `model_infeasible=8`, `path_solve_license=7`
 - **Match:** 54/143 (37.8% full-pipeline success)
 - **Scope frozen at 143** for Sprint 25; gate-driven additions allowed (tracked inside the 143 denominator as `translate.failure`); manual exclusion edits disallowed without retrospective decision.

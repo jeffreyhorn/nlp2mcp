@@ -126,7 +126,7 @@ Snapshot of `data/gamslib/gamslib_status.json` was taken prior to this retest (s
 
 ## 7. Acceptance Criteria (from PREP_PLAN §Task 9)
 
-- [x] Full pipeline run completed within 2h → **completed in ~2h15m** (acceptable; doubled-budget run. Tasks 8/10 unblock any budget-reduction work in-sprint.)
+- [x] Full pipeline run completed within doubled-budget allowance → **completed in ~2h15m** (acceptable. Tasks 8/10 unblock any budget-reduction work in-sprint.)
 - [x] All 8 acceptance-criteria metrics recorded → Parse / Translate / Solve / Match + 4 `outcome_category` counts in §2
 - [x] Scope-freeze decision documented with reasoning → §5
 - [x] Cross-reference with Sprint 24 PR15 recommendation → §1, §5
@@ -139,6 +139,6 @@ Snapshot of `data/gamslib/gamslib_status.json` was taken prior to this retest (s
 - `PREP_PLAN.md` §Task 9 — this task's specification.
 - `KNOWN_UNKNOWNS.md` §Unknown 6.1 — verification results recorded there.
 - `PROFILE_HARD_TIMEOUTS.md` — explains the 5 `timeout` translate failures.
-- `DESIGN_SMALL_PRIORITIES.md` — tracks `mine` (`ConditionEvaluationError`) as a small-priority candidate.
+- `DESIGN_SMALL_PRIORITIES.md` — tracks `mine` (`internal_error`; condition-eval UserWarning) as a small-priority candidate.
 - `INVESTIGATION_PARSER_NON_DETERMINISM.md` — explains the three byte-level diffs in §6.
 - Sprint 24 retrospective PR6 and PR15 recommendations in `EPIC_4/SPRINT_24/`.
