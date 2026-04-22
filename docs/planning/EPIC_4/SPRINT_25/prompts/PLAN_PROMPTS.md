@@ -192,7 +192,7 @@ done
 **Objective:** Extend `_alias_match` for `IndexOffset.base` (Pattern C). Land short WS2 fix #1292 turkpow line-wrap.
 
 **Prerequisites:**
-- Read `DESIGN_ALIAS_AD_ROLLOUT.md` §Phase 3.
+- Read `../DESIGN_ALIAS_AD_ROLLOUT.md` §Phase 3.
 - Key source: `src/ad/derivative_rules.py:304–307` (`_alias_match`).
 
 **Tasks to Complete (~4–5 hours):**
