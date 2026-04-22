@@ -981,7 +981,7 @@ grep -E "Parse|Translate|Solve|Match|path_syntax|path_solve|model_infeasible" \
 
 ## Task 10: Design Byte-Stability Test Infrastructure (PR12)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-04-21)
 **Priority:** High
 **Estimated Time:** 1–2 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -1033,37 +1033,45 @@ Sprint 24 only discovered `#1283` because a reviewer happened to spot the corrup
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md` with §§1–10 covering purpose, scope decision, statistical analysis (KU 6.2 verification), fixture set, seed set, assertion design, CI integration, and acceptance criteria.
+- Corrected KU 6.2's ~33% corruption-rate assumption and "~7 seeds for ≥95%" arithmetic; substituted Task 3's measured 65% rate and recomputed the binomial confidence table.
+- Updated `KNOWN_UNKNOWNS.md` §Unknown 6.2 → ✅ VERIFIED.
 
 ### Result
 
-_To be completed._
+- **Scope:** Option C (both per-commit Option A + nightly Option B).
+- **Fixtures (per-commit):** `chenery`, `indus89`, `abel`, `partssupply`, `ps2_f`.
+- **Seeds:** per-commit fixed `{0, 1, 42, 12345, 99999}`; nightly fixed `{0, 99999}`.
+- **Test file:** `tests/integration/test_pipeline_determinism.py` with `TestDeterminismFast` (per-commit) and `TestDeterminismFull` (`@pytest.mark.slow`, nightly).
+- **Marker:** add `determinism` to `[tool.pytest.ini_options] markers` in `pyproject.toml`.
+- **Nightly workflow:** new `.github/workflows/nightly.yml` (`schedule: cron "17 7 * * *"` + `workflow_dispatch`), 6h timeout, uploads diff artifacts on failure.
+- **Per-commit CI cost:** ≈ 60s (5 models × 5 seeds × ~2.5s/translate), fits the existing 5-minute fast-suite budget.
 
 ### Verification
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md && echo "EXISTS" || echo "MISSING"
-grep -E -c "^## Scope|^## Fixture Set|^## Seed Set|^## CI Integration" \
+grep -E -c "^## 2\. Scope Decision|^## 4\. Fixture Set|^## 5\. Seed Set|^## 7\. CI Integration Plan" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md
-# Expect ≥ 4
+# Expect 4
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md`
-- Test scope decision (Option A / B / C) with rationale
-- Fixture model list (5 models)
-- Seed set (fixed or random) with rationale
-- CI integration plan (file path, marker, workflow)
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.2
+- [x] `docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md`
+- [x] Test scope decision (Option C) with rationale
+- [x] Fixture model list (5 models)
+- [x] Seed set (fixed) with rationale
+- [x] CI integration plan (file path, marker, workflow)
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.2
 
 ### Acceptance Criteria
 
-- [ ] Scope decision made with rationale
-- [ ] ≥ 5 fixture models selected
-- [ ] Seed set defined
-- [ ] CI integration plan ready for Sprint 25 Day 2 implementation
-- [ ] Unknown 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Scope decision made with rationale
+- [x] ≥ 5 fixture models selected
+- [x] Seed set defined
+- [x] CI integration plan ready for Sprint 25 Day 2 implementation
+- [x] Unknown 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

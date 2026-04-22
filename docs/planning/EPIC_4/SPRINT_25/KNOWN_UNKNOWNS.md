@@ -1585,7 +1585,7 @@ Source: `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.
 ### Research Questions
 
 1. What fraction of seeds produced `#1283` corruption on chenery during the Sprint 24 Day 13 Addendum investigation (`~33%`)?
-2. With a 33% corruption rate, how many seeds are needed to hit confidence 0.95 that at least one seed catches it? (Answer: ~7 seeds.)
+2. With a 33% corruption rate, how many seeds are needed to hit confidence 0.95 that at least one seed catches it? (Original estimate "~7 seeds" was slightly optimistic; Verification Results below supersede it — the correct answer at p=0.33 is **N=8** for ≥95%.)
 3. Is there a CI wall-clock budget for the per-commit byte-stability test?
 4. Should the test rotate through a large seed pool (100+) and sample 5 each run, or fix the 5 for reproducibility?
 
@@ -1611,7 +1611,14 @@ Prep Task 10.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Prep Task 10, 2026-04-21)
+
+- **Observed corruption rate corrected:** Task 3's 20-seed sweep measured **65%** on chenery, not the ~33% KU 6.2 originally cited. The ~33% came from a small-sample (3-run) Day 13 Addendum observation.
+- **Binomial analysis:** 1 − (1 − p)^N. At p=0.65, N=5 → 99.5% confidence; at p=0.33, N=5 → 86.5% (KU 6.2's "~7 seeds for ≥95% at 33%" was slightly optimistic; actual answer at 33% is N=8 for ≥95%).
+- **Per-commit seed decision:** fixed 5 seeds `{0, 1, 42, 12345, 99999}` — sufficient at observed p=0.65; reproducibility preferred over random sampling because the test guards an invariant, not discovers new bugs.
+- **Nightly seed decision:** 2 seeds `{0, 99999}` on the full 143-model corpus — scope × seed-count product amortizes confidence across scope instead of per-model seed count.
+- **CI budget check:** per-commit ≈ 60s (fits the 5-min fast-suite budget), nightly ≈ 4h30m (fits a 6h `timeout-minutes` on a dedicated workflow).
+- **Decision:** Option C (per-commit + nightly). Source: `docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md` §3, §5, §8.
 
 ---
 
