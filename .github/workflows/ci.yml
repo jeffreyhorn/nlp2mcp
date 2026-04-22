@@ -28,6 +28,14 @@ jobs:
           pip install -e ".[dev]"
           pip install -r requirements.txt
 
+      - name: Download fast-suite determinism fixtures
+        run: |
+          # Populate data/gamslib/raw/ with the 5 models referenced by
+          # tests/integration/test_pipeline_determinism.py::TestDeterminismFast.
+          # Without this step those tests skip (raw/ is gitignored), and the
+          # #1283 regression signal is lost on per-PR CI.
+          ./scripts/download_gamslib_raw.sh --fast
+
       - name: Run fast test suite (parallel)
         run: |
           pytest -m "not slow" -n auto -v --tb=short

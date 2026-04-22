@@ -271,12 +271,33 @@ def _normalize_parsed_tables(node: Tree | Token) -> Tree | Token:
         return node
 
     # Walk bottom-up: children first, then rewrite table_block if applicable.
-    new_children: list[Tree | Token] = [
-        _normalize_parsed_tables(c) if isinstance(c, Tree) else c for c in node.children
-    ]
+    # Short-circuit to avoid reconstructing every Tree on parses that don't
+    # contain a corrupted table_block (i.e., the common case).
+    new_children: list[Tree | Token] = []
+    children_changed = False
+    for child in node.children:
+        if isinstance(child, Tree):
+            normalized_child = _normalize_parsed_tables(child)
+            if normalized_child is not child:
+                children_changed = True
+            new_children.append(normalized_child)
+        else:
+            new_children.append(child)
+
     if node.data == "table_block":
-        new_children = _collapse_corrupted_table_rows(new_children)
-    return Tree(node.data, new_children)
+        collapsed_children = _collapse_corrupted_table_rows(new_children)
+        if len(collapsed_children) != len(new_children) or any(
+            collapsed is not original
+            for collapsed, original in zip(collapsed_children, new_children, strict=True)
+        ):
+            return Tree(node.data, collapsed_children)
+        if children_changed:
+            return Tree(node.data, new_children)
+        return node
+
+    if children_changed:
+        return Tree(node.data, new_children)
+    return node
 
 
 def _score_table_row_alternative(alt: Tree | Token) -> tuple[int, int]:

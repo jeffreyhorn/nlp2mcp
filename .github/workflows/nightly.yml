@@ -27,6 +27,13 @@ jobs:
           pip install -e ".[dev]"
           pip install -r requirements.txt
 
+      - name: Download convex in-scope GAMSLIB raw sources
+        run: |
+          # Populate data/gamslib/raw/ from gams.com (the dir is gitignored).
+          # Required by tests/integration/test_pipeline_determinism.py —
+          # without this step the sweep would no-op (all fixtures missing).
+          ./scripts/download_gamslib_raw.sh
+
       - name: Run full-corpus determinism sweep
         run: |
           pytest -m "slow and determinism" -v --tb=short \

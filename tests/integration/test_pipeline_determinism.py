@@ -59,10 +59,15 @@ def _translate_to_bytes(model: str, seed: int) -> bytes:
 
     Returns the raw bytes of the emitted MCP file (via `Path.read_bytes()`) —
     no decoding, no text normalization.
+
+    Raises `FileNotFoundError` when the raw model is absent. Callers invoking
+    this from a worker thread must convert that to a pytest skip/fail in the
+    main thread — `pytest.skip()` raised from a worker thread propagates as a
+    regular exception and errors the test instead of skipping cleanly.
     """
     raw_path = RAW_DIR / f"{model}.gms"
     if not raw_path.is_file():
-        pytest.skip(f"raw/{model}.gms not present (data/gamslib/raw/ is gitignored)")
+        raise FileNotFoundError(f"raw/{model}.gms not present (data/gamslib/raw/ is gitignored)")
 
     env = os.environ.copy()
     env["PYTHONHASHSEED"] = str(seed)
@@ -147,6 +152,13 @@ class TestDeterminismFast:
 
     @pytest.mark.parametrize("model", FAST_FIXTURES)
     def test_byte_stability_across_hash_seeds(self, model: str) -> None:
+        # Precheck fixture presence on the main thread — `pytest.skip()` raised
+        # from a ThreadPoolExecutor worker propagates as a regular exception and
+        # errors the test instead of cleanly skipping.
+        raw_path = RAW_DIR / f"{model}.gms"
+        if not raw_path.is_file():
+            pytest.skip(f"raw/{model}.gms not present (data/gamslib/raw/ is gitignored)")
+
         # Run seeds in parallel threads so the CLI-startup overhead (~15s of
         # module imports + parser construction per subprocess) amortizes across
         # cores. Combined with pytest-xdist fanout across models, 5 fixtures ×
@@ -196,20 +208,27 @@ class TestDeterminismFull:
         if not models:
             pytest.skip("no convex in-scope models found in status JSON")
 
+        # Translate failures are out-of-scope for determinism — only compare
+        # models that successfully translate. Record and skip. `FileNotFoundError`
+        # covers missing raw fixtures (e.g., a runner with an incomplete corpus);
+        # `TimeoutExpired` covers models that exceed the 300s per-seed timeout
+        # on slower runners (both raised by `_translate_to_bytes`).
+        translate_failures = (
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+            FileNotFoundError,
+        )
         failures: list[tuple[str, str]] = []
         for model in models:
             try:
                 ref = _translate_to_bytes(model, NIGHTLY_SEEDS[0])
-            except subprocess.CalledProcessError as e:
-                # Translate failures are out-of-scope for determinism — only
-                # compare models that successfully translate under the reference
-                # seed. Record and skip.
+            except translate_failures as e:
                 failures.append((model, f"ref seed {NIGHTLY_SEEDS[0]} translate failed: {e}"))
                 continue
             for seed in NIGHTLY_SEEDS[1:]:
                 try:
                     other = _translate_to_bytes(model, seed)
-                except subprocess.CalledProcessError as e:
+                except translate_failures as e:
                     failures.append((model, f"seed {seed} translate failed: {e}"))
                     continue
                 if other != ref:
