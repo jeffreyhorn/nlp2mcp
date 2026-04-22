@@ -74,7 +74,7 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 1. **WS1:** Add debug logging to `_diff_varref` and `_partial_collapse_sum` (tag with `SPRINT25_DAY2`).
 2. **WS1:** Translate qabel: `python -m src.cli data/gamslib/raw/qabel.gms -o /tmp/qabel_mcp.gms --skip-convexity-check -vvv`. Trace the `sum(np, a(n,np)*x(np,k))` derivative w.r.t. `x(consumpt,q1)`.
 3. **WS1:** Identify the multi-index concrete→symbolic gap. Document findings in a scratch file under `/tmp/sprint25-phase1-findings.md` for tomorrow's prototype.
-4. **WS2:** Fix #1275 presolve absolute `$include` paths — convert absolute paths to `%gams.run%`-relative or to `$onInline`/`$offInline` pattern. Unit test.
+4. **WS2:** Fix #1275 presolve absolute `$include` paths at the emit site in `src/emit/emit_gams.py:933` (the `Path(source_file).resolve().as_posix()` call per `CATALOG_EMITTER_BACKLOG.md` Batch 1). Per the issue writeup and `CATALOG_EMITTER_BACKLOG.md`, emit a repo-relative path when the source is inside the repo (e.g., `$include data/gamslib/raw/<model>.gms`), or use a configurable macro such as `%NLP2MCP_SRC%` with a default like `data/gamslib/raw` so the presolve wrapper is portable across workstations and CI. Unit test under `tmp_path`.
 5. **Tier 0 dispatch canary:** `diff /tmp/sprint25-golden/dispatch_mcp.gms <(python -m src.cli data/gamslib/raw/dispatch.gms -o /dev/stdout --skip-convexity-check)` — MUST be empty.
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.
