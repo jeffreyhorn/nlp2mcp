@@ -1560,7 +1560,15 @@ Prep Task 9.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Prep Task 9, 2026-04-21)
+
+- **Scope held:** 143-model denominator confirmed at Day 0 retest; no new exclusions emerged during verification.
+- **v2.2.1 exclusion set** (23 total): 14 MINLP + 7 legacy + 2 multi-solve driver — recorded in `BASELINE_METRICS.md` §4 and frozen per §5.
+- **Multi-solve driver interaction:** The 2 driver-gate exclusions (`danwolfe`, `decomp`) remain in the 143 denominator and appear as `translate.failure / multi_solve_driver_out_of_scope`. This is intentional so gate effects are visible in Sprint 25 deltas.
+- **Policy resolution (Research Question 3):** Gate-driven additions during Sprint 25 are allowed automatically (they manifest as `translate.failure` inside the existing 143 denominator, not as a schema-level exclusion edit). Manual edits to `legacy_excluded` or MINLP sets require explicit retrospective decision.
+- **Sprint 25 Match target** uses **143 as the denominator** (locked).
+
+Source: `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.
 
 ---
 
