@@ -123,7 +123,7 @@ On mismatch, the test dumps:
 
 - Byte-identical: compare encoded bytes, e.g. `reference.encode("utf-8") == other.encode("utf-8")` (equivalently, read the output file via `Path(output_path).read_bytes()` and compare directly).
 - Whitespace-sensitive: trailing whitespace / newlines matter. #1283-class bugs can manifest as reordered lines, so whitespace normalization would mask real bugs.
-- UTF-8 consistent: `emit_gams_mcp` already uses ASCII-only output, so no encoding ambiguity.
+- UTF-8 consistent: `emit_gams_mcp` output is UTF-8 text and may include non-ASCII characters in comments (e.g., `∇`, `⊥`, `≥` when `add_comments` is enabled), so comparisons should be done as UTF-8 bytes (or directly via `Path.read_bytes()`), avoiding any text normalization.
 
 ---
 

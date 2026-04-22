@@ -1051,9 +1051,9 @@ Sprint 24 only discovered `#1283` because a reviewer happened to spot the corrup
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md && echo "EXISTS" || echo "MISSING"
-grep -E -c "^## Scope|^## Fixture Set|^## Seed Set|^## CI Integration" \
+grep -E -c "^## 2\. Scope Decision|^## 4\. Fixture Set|^## 5\. Seed Set|^## 7\. CI Integration Plan" \
     docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md
-# Expect ≥ 4
+# Expect 4
 ```
 
 ### Deliverables
