@@ -121,7 +121,7 @@ On mismatch, the test dumps:
 
 ### What counts as a match
 
-- Byte-identical: `bytes(reference) == bytes(other)`.
+- Byte-identical: compare encoded bytes, e.g. `reference.encode("utf-8") == other.encode("utf-8")` (equivalently, read the output file via `Path(output_path).read_bytes()` and compare directly).
 - Whitespace-sensitive: trailing whitespace / newlines matter. #1283-class bugs can manifest as reordered lines, so whitespace normalization would mask real bugs.
 - UTF-8 consistent: `emit_gams_mcp` already uses ASCII-only output, so no encoding ambiguity.
 
@@ -156,16 +156,18 @@ markers = [
 
 ### Subprocess invocation
 
-Seeds must be set via `PYTHONHASHSEED` environment variable **before** Python startup, so the test cannot `os.environ["PYTHONHASHSEED"] = ...` and then reuse the current interpreter. Each translation runs as a subprocess:
+Seeds must be set via `PYTHONHASHSEED` environment variable **before** Python startup, so the test cannot `os.environ["PYTHONHASHSEED"] = ...` and then reuse the current interpreter. Each translation runs as a subprocess and writes MCP output to a `.gms` file via `-o <path>` (the actual `src.cli` MCP-output option; `src.cli` does not have a `--format` flag for MCP output — `--format` is reserved for diagnostics only):
 
 ```python
 env = os.environ.copy()
 env["PYTHONHASHSEED"] = str(seed)
-result = subprocess.run(
-    [sys.executable, "-m", "src.cli", model_path, "--format", "gams"],
-    env=env, capture_output=True, text=True, check=True,
-)
-output_bytes = result.stdout.encode("utf-8")
+with tempfile.TemporaryDirectory() as tmpdir:
+    output_path = Path(tmpdir) / "model.gms"
+    subprocess.run(
+        [sys.executable, "-m", "src.cli", model_path, "-o", str(output_path)],
+        env=env, capture_output=True, text=True, check=True,
+    )
+    output_bytes = output_path.read_bytes()
 ```
 
 ### CI workflow wiring
