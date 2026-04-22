@@ -287,7 +287,7 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 
 ## Unknown 6.3 Verification Summary
 
-**Status:** ✅ VERIFIED via `SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 + `SPRINT_LOG.md` Days 3–5.
+**Status:** ✅ VERIFIED via `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 + `../SPRINT_24/SPRINT_LOG.md` Days 3–5.
 
 - Sprint 23 `_alias_match` / `_same_root_set` / `_partial_collapse_sum` base layer + Sprint 24 Day 3–5 single-index-sum-collapse fix landed qabel and abel from mismatch/IOerror → `model_optimal` + mismatch-value (eventually Match via subsequent fixes). **No new `path_syntax_error` observed** after the Sprint 24 Day 5 Error 125 `a(n+1,n)` episode was resolved in-PR via alias-substitution.
 - Final Sprint 24 Match delta: +5 (49 → 54); the 11 open alias-AD issues (#1138–#1147, #1150) are this sprint's highest-leverage remaining work.
@@ -302,4 +302,4 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 - Prep task deliverables (all merged to main): `AUDIT_ALIAS_AD_CARRYFORWARD.md`, `INVESTIGATION_PARSER_NON_DETERMINISM.md`, `CATALOG_EMITTER_BACKLOG.md`, `ANALYSIS_RECOVERED_TRANSLATES.md`, `DESIGN_ALIAS_AD_ROLLOUT.md`, `DESIGN_SMALL_PRIORITIES.md`, `PROFILE_HARD_TIMEOUTS.md`, `BASELINE_METRICS.md`, `DESIGN_DETERMINISM_TESTS.md`.
 - Day-by-day execution prompts: `prompts/PLAN_PROMPTS.md`.
 - Known unknowns + calibrated influx budgets: `KNOWN_UNKNOWNS.md`.
-- Sprint 24 templates: `EPIC_4/SPRINT_24/PLAN.md`, `EPIC_4/SPRINT_24/prompts/PLAN_PROMPTS.md`.
+- Sprint 24 templates: `../SPRINT_24/PLAN.md`, `../SPRINT_24/prompts/PLAN_PROMPTS.md`.
