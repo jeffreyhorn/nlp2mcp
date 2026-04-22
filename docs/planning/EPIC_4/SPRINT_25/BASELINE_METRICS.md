@@ -32,8 +32,8 @@ Sprint 24 ran with a mid-sprint scope shift (147 → 143 via the multi-solve dri
 
 ### 2.1 Translate breakdown
 
-- **135 success**
-- **8 failure:**
+- **135 successes**
+- **8 failures:**
   - 5 `timeout` (600s budget exceeded): `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` — all share the `SetMembershipTest` / `enumerate_equation_instances` Cartesian-explosion pattern profiled in `PROFILE_HARD_TIMEOUTS.md` (Prep Task 8).
   - 3 `internal_error`:
     - `danwolfe`, `decomp` — multi-solve driver scripts, gated out at translate time (Sprint 24 issue #1270 gate).
