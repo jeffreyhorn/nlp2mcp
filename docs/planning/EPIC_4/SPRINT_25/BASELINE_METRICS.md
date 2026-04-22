@@ -120,7 +120,7 @@ The v2.2.1 schema records **23 total exclusions**. Twenty-one are tagged in the 
 Snapshot of `data/gamslib/gamslib_status.json` was taken prior to this retest (stored at `/tmp/task9-status-pre.json`, not committed). Comparison of pre vs post across all 219 entries:
 
 - **Pipeline status fields (translate/solve/compare) identical for all 219 models.** No cascading status changes during the retest.
-- **Three emitted `.gms` files changed:** `data/gamslib/mcp/chenery_mcp.gms`, `indus_mcp.gms`, `turkey_mcp.gms` — all expected given parser non-determinism tracked as issue #1283 (see `INVESTIGATION_PARSER_NON_DETERMINISM.md`). These are not regressions; they are byte-level variance from Earley ambiguity. Determinism enforcement via PR12 (Prep Task 10) is the Sprint 25 remedy.
+- **Three emitted `.gms` files changed:** `data/gamslib/mcp/chenery_mcp.gms`, `indus_mcp.gms`, `turkey_mcp.gms` — consistent with parser non-determinism tracked as issue #1283 (see `INVESTIGATION_PARSER_NON_DETERMINISM.md`). These diffs should not be described as harmless byte-level variance: #1283 can change emitted numeric content (e.g., shifted/missing parameter assignments observed on chenery), so the regenerated artifacts may be semantically different or corrupted until determinism is enforced. The committed files are a single non-deterministic realization; the pre-retest `gamslib_status.json` `comparison_status` values captured in §2.3 reflect behavior against whichever realization was present at each run, so downstream metrics are not invalidated by the specific realization chosen. Determinism enforcement via PR12 (Prep Task 10) is the Sprint 25 remedy; until it lands, treat these committed artifacts as advisory rather than authoritative.
 
 ---
 
