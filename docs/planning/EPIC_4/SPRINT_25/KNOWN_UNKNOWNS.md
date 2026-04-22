@@ -1668,7 +1668,7 @@ Prep Task 11.
 - **Sprint 25 calibrated influx budgets (splits original PR10 into two sub-budgets):**
   - Alias-AD (Priority 1): **30%** — 1 per ~3 recoveries; absorbs one accidental emitter regression like the Sprint 24 Day 5 Error 125 episode.
   - Priority 2 recovered-translates (#1289–#1292, Task 5 models): **80–100%** — same category as PR13.
-  - Priority 2 existing-matching-model fixes (#1275, #1276, #1280, #1281, #1279): **10–20%** — accidental regression only.
+  - Priority 2 existing in-scope, non-timeout-recovered (#1275, #1276, #1280, #1281, #1279): **10–20%** — accidental regression only. Note: this bucket is NOT limited to currently-matching models — robustlp (#1279) is `model_infeasible` and mathopt4 (#1280) is `path_syntax_error` in baseline; the budget covers accidental regression on any in-scope model the fix touches.
   - Priority 3 multi-solve gate: **0%** by construction (gate excludes; cannot introduce new errors).
 - **Sprint 25 Match target calibrated against 30% alias-AD rate:** Task 6 cumulative ladder ≥+3/+5/+6 at each gate works with a one-model reserve for alias-AD influx.
 

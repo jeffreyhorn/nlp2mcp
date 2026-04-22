@@ -90,7 +90,7 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 **Tasks to Complete (~4–5 hours):**
 
 1. **WS1:** Implement multi-index concrete→symbolic recovery in `_partial_collapse_sum` (guard with `_find_var_indices_in_body` and `bound_indices`). Target: qabel `stat_x` now includes the correct cross-term `sum(n', a(n',n)*x(n',k))`.
-2. **WS1:** Validate qabel: translate → diff stationarity against Day 2 baseline → GAMS compile via `gams qabel_mcp.gms action=c` → PATH solve.
+2. **WS1:** Validate qabel: translate → diff stationarity against Day 2 baseline → GAMS compile via `gams /tmp/qabel_mcp.gms action=c` → PATH solve.
 3. **WS1:** Tier 0 dispatch canary + Tier 1 canary (quocge, partssupply, prolog) MUST still match.
 4. **WS2:** Fix #1280 (mathopt4 unquoted UEL dots) — quote synthetic element labels containing `.` in emitter.
 5. **Run golden-file regression** on all 54 matching models. Enumerate them from the frozen baseline status JSON, then diff each:

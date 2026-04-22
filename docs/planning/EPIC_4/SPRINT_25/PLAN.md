@@ -127,7 +127,7 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 |---|---|---|
 | Alias-AD (Priority 1) | **30%** | 1 per ~3 recoveries. Worst-case absorbs one accidental emitter regression like the Sprint 24 Day 5 Error 125 episode. Well below PR13's 100% because the failure mode is different. |
 | Priority 2 emitter (recovered-translates #1289–#1292) | **80–100%** | These are PR13's category — latent emitter bugs that also previously caused failure. Same dynamics expected. |
-| Priority 2 emitter (existing matching models — #1275, #1276, #1280, #1281, #1279) | **10–20%** | These fix bugs in currently-matching models; influx limited to accidental regression. |
+| Priority 2 emitter (existing in-scope, non-timeout-recovered — #1275, #1276, #1280, #1281, #1279) | **10–20%** | These fix bugs in models already in scope (some matching like fawley-adjacent canaries, others currently `model_infeasible` like robustlp/chain or `path_syntax_error` like mathopt4). The bucket is NOT limited to currently-matching models; the budget covers accidental regression on any in-scope model the fix touches. |
 | Priority 3 multi-solve gate | **0%** (by construction) | Gate only excludes; cannot introduce new errors on kept models. |
 
 **Verification Status:** Unknown 6.3 — ✅ VERIFIED via `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `../SPRINT_24/SPRINT_LOG.md` Days 3–5; PR10 split into two sub-budgets (alias-AD 30% vs emitter-recovered 80–100%).
