@@ -971,7 +971,7 @@ grep -E "Parse|Translate|Solve|Match|path_syntax|path_solve|model_infeasible" \
 
 ### Acceptance Criteria
 
-- [x] Full pipeline run completed within 2h (actual: ~2h15m; doubled-budget run, acceptable)
+- [x] Full pipeline run completed within doubled-budget allowance (~2h15m actual; acceptable — the original "within 2h" target predates the Sprint 24 PR #1274 timeout doubling)
 - [x] All 8 acceptance-criteria metrics recorded
 - [x] Scope-freeze decision documented with reasoning
 - [x] Cross-reference with Sprint 24 PR15 recommendation

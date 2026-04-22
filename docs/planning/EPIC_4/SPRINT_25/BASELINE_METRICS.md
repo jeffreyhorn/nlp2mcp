@@ -37,7 +37,7 @@ Sprint 24 ran with a mid-sprint scope shift (147 → 143 via the multi-solve dri
   - 5 `timeout` (600s budget exceeded): `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` — all share the `SetMembershipTest` / `enumerate_equation_instances` Cartesian-explosion pattern profiled in `PROFILE_HARD_TIMEOUTS.md` (Prep Task 8).
   - 3 `internal_error`:
     - `danwolfe`, `decomp` — multi-solve driver scripts, gated out at translate time (Sprint 24 issue #1270 gate).
-    - `mine` — `ConditionEvaluationError` during `enumerate_equation_instances` (dynamic-subset condition-eval failure; small priority candidate — see `DESIGN_SMALL_PRIORITIES.md`).
+    - `mine` — `internal_error` whose root message is a `UserWarning` from `src/ad/index_mapping.py` ("Failed to evaluate condition … SetMembershipTest … Set membership for 'c' cannot be evaluated statically because the set has no concrete members at compile time"). Same dynamic-subset family as the 5 timeouts; small priority candidate — see `DESIGN_SMALL_PRIORITIES.md`.
 
 Translate timing (success only): mean 24.0s, median 4.3s, p90 ≈ 92s. Top 10 slowest (s): 335.7, 332.2, 322.6, 296.0, 258.5, 173.0, 165.6, 128.0, 123.6, 101.1.
 
