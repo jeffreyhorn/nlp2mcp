@@ -46,7 +46,7 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 **Tasks to Complete (~4–6 hours):**
 
 1. **Option D fix:** Extend `_resolve_ambiguities()` with a greediest-value `table_row` heuristic — prefer the `_ambig` alternative that packs the most `table_value` children into the fewest `table_row` nodes. Unit test at `tests/unit/ir/test_resolve_ambiguities.py` covering a minimal `(low,medium,high).ynot` reproducer.
-2. **Verify fix via 20-seed sweep on chenery:** `for s in $(seq 0 19); do PYTHONHASHSEED=$s python -m src.cli data/gamslib/raw/chenery.gms -o /tmp/chenery_s${s}.gms --skip-convexity-check; done; md5sum /tmp/chenery_s*.gms` — expect 20/20 identical.
+2. **Verify fix via 20-seed sweep on chenery:** `for s in $(seq 0 19); do PYTHONHASHSEED=$s python -m src.cli data/gamslib/raw/chenery.gms -o /tmp/chenery_s${s}.gms --skip-convexity-check; done; shasum -a 256 /tmp/chenery_s*.gms` — expect 20/20 identical. (`shasum` is portable across macOS and Linux; on GNU-only systems substitute `sha256sum`.)
 3. **Register `determinism` pytest marker** in `pyproject.toml` under `[tool.pytest.ini_options] markers = [...]`.
 4. **Create `tests/integration/test_pipeline_determinism.py`** with `TestDeterminismFast` (5 fixtures × 5 seeds, `@pytest.mark.integration @pytest.mark.determinism`) and `TestDeterminismFull` (`@pytest.mark.slow @pytest.mark.determinism`). Use the subprocess pattern from `DESIGN_DETERMINISM_TESTS.md` §7 (`-o <path>` + `Path.read_bytes()`).
 5. **Create `.github/workflows/nightly.yml`** per `DESIGN_DETERMINISM_TESTS.md` §7 — mirrors ci.yml's dependency install sequence + adds `pip install -r requirements.txt`.
