@@ -1077,7 +1077,7 @@ grep -E -c "^## 2\. Scope Decision|^## 4\. Fixture Set|^## 5\. Seed Set|^## 7\. 
 
 ## Task 11: Plan Sprint 25 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE (2026-04-22)
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
 **Deadline:** Before Sprint 25 Day 1
@@ -1106,7 +1106,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 1. **Draft Sprint 25 schedule** at `docs/planning/EPIC_4/SPRINT_25/PLAN.md`:
    - Day 0: prep-task review, sprint kickoff, baseline snapshot
    - Days 1–12: Priority 1 alias-AD (per Task 6 rollout design) + parallel Priority 2 emitter work (per Task 4 catalog)
-   - Day 5: Checkpoint 1 (alias-AD Phase 1–2 complete, ≥ 3 models improved, 0 regressions)
+   - ~~Day 5~~ **Day 6** (superseded — see §Changes below): Checkpoint 1 (alias-AD Phase 1–2 complete, ≥ 3 models improved, 0 regressions)
    - Day 10: Checkpoint 2 (alias-AD Phase 3 complete, emitter backlog complete, ≥ 6 new matches)
    - Day 13: Final pipeline retest
    - Day 14: Sprint close + retrospective
@@ -1114,7 +1114,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 2. **Write day-by-day execution prompts** at `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (mirror Sprint 24's PLAN_PROMPTS.md format).
 
 3. **Define checkpoint evaluation criteria:**
-   - Checkpoint 1 (Day 5) GO / CONDITIONAL / NO-GO criteria
+   - Checkpoint 1 (~~Day 5~~ **Day 6** — see §Changes below) GO / CONDITIONAL / NO-GO criteria
    - Checkpoint 2 (Day 10) GO / CONDITIONAL / NO-GO criteria
 
 4. **Allocate parallel work:** map Priority 2 emitter batches (from Task 4) to specific days where alias-AD is in Phase-transition wait.
@@ -1123,11 +1123,21 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 
 ### Changes
 
-_To be completed._
+- Created `docs/planning/EPIC_4/SPRINT_25/PLAN.md` (15-day schedule, 4 phases, 2 checkpoints, 5 workstreams WS1–WS5, contingency plans, workstream-to-issue mapping).
+- Created `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (15 copy-paste-ready per-day prompts matching Sprint 24 template).
+- Re-calibrated PR10 influx budget via KU 6.3 — split into alias-AD 30% / emitter-recovered 80–100% / existing-matching 10–20% / multi-solve gate 0%. Historical evidence cited from `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `../SPRINT_24/SPRINT_LOG.md` Days 3–5.
+- Updated `KNOWN_UNKNOWNS.md` §Unknown 6.3 → ✅ VERIFIED.
+- Schedule shifts Checkpoint 1 from Day 5 (original PREP_PLAN stub) to Day 6 to accommodate Day 1 WS3 determinism landing (Option D + PR12) which was factored out of Task 3/Task 10 after prep completion and takes a full day ahead of any metric-affecting work. Any earlier Day 5 references to Checkpoint 1 in this Task 11 section (e.g., §What Needs to Be Done bullets 1 and 3) are superseded by the Day 6 schedule — the actual `PLAN.md` + `prompts/PLAN_PROMPTS.md` deliverables use Day 6 throughout.
 
 ### Result
 
-_To be completed._
+- **15 daily prompts** (Day 0 through Day 14) in `prompts/PLAN_PROMPTS.md`, each self-contained with branch name + objective + prerequisites + ordered task list + quality gate.
+- **Checkpoint 1 (Day 6):** 6 criteria with GO/CONDITIONAL/NO-GO thresholds including Tier 0 dispatch identity, Tier 1 canary regressions ≤1, ≥3 of 6 Pattern A issues improving ≥50%, Match Δ ≥+3, all tests pass, path_syntax_error ≤10.
+- **Checkpoint 2 (Day 10):** 6 criteria including Match ≥60 (Δ+6), Solve ≥102 (Δ+3), path_syntax_error ≤7, model_infeasible ≤7, Tier 0+1 canary intact, all tests pass.
+- **Parallel allocation:** WS2 Batch 1 runs parallel with WS1 Phase 1 (Days 2–3); WS2 Batch 2 + #1289 high-leverage day parallel with WS1 Phase 2 (Days 4–6); WS2 Batch 3 parallel with WS1 Phase 3/4 (Days 7–10).
+- **Day 1 WS3:** Option D grammar fix + PR12 test harness land together (Task 3 + Task 10 dependency-ordered before any metric-affecting PR).
+- **Day 11 WS4:** Priority 3 #1270 + Priority 4 #1271 (small-priorities post-Checkpoint-2).
+- **Sprint 26 carryforward:** 4–5 hard timeouts + `mine` internal_error + any un-landed Pattern E (#1141/1144/1147) deferred per Task 8 recommendation.
 
 ### Verification
 
@@ -1141,21 +1151,21 @@ grep -c "^### Day " docs/planning/EPIC_4/SPRINT_25/PLAN.md
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_25/PLAN.md` — 15-day detailed schedule
-- `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` — day-by-day execution prompts
-- 2 checkpoint evaluation criteria (Day 5 and Day 10)
-- Parallel-work allocation for Priority 2 during alias-AD waits
-- Updated `SPRINT_25/PREP_PLAN.md` with final prep-task status
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.3
+- [x] `docs/planning/EPIC_4/SPRINT_25/PLAN.md` — 15-day detailed schedule
+- [x] `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` — day-by-day execution prompts
+- [x] 2 checkpoint evaluation criteria (Day 6 and Day 10)
+- [x] Parallel-work allocation for Priority 2 during alias-AD waits
+- [x] Updated `SPRINT_25/PREP_PLAN.md` with final prep-task status (see §Summary below — all 11 tasks COMPLETE)
+- [x] Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.3
 
 ### Acceptance Criteria
 
-- [ ] Schedule covers all 15 days (Day 0 – Day 14)
-- [ ] 2 checkpoints defined with quantitative GO / NO-GO criteria
-- [ ] Day-by-day prompts match Sprint 24's format (1 prompt per day)
-- [ ] Parallel-work allocation covers Priority 2 emitter batches from Task 4
-- [ ] Cross-references with all 10 prior prep-task outputs
-- [ ] Unknown 6.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Schedule covers all 15 days (Day 0 – Day 14)
+- [x] 2 checkpoints defined with quantitative GO / NO-GO criteria
+- [x] Day-by-day prompts match Sprint 24's format (1 prompt per day)
+- [x] Parallel-work allocation covers Priority 2 emitter batches from Task 4
+- [x] Cross-references with all 10 prior prep-task outputs
+- [x] Unknown 6.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1175,18 +1185,36 @@ Sprint 25 preparation comprises 11 tasks spanning ~23–34 hours (3–4.5 workin
 
 ### Success Criteria for Prep Phase
 
-- [ ] All 11 prep tasks complete before Sprint 25 Day 1
-- [ ] `SPRINT_25/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 5 categories
-- [ ] `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` classifies all 11 open alias issues by Pattern
-- [ ] `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` narrows #1283 to ≤ 2 code paths
-- [ ] `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` groups all 7 emitter issues by code path
-- [ ] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 recovered-translate models to specific emitter bugs
-- [ ] `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` has 4 phases with gates and stop triggers
-- [ ] `SPRINT_25/DESIGN_SMALL_PRIORITIES.md` commits to specific designs for #1270 and #1271
-- [ ] `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` classifies each of 5 timeout models
-- [ ] `SPRINT_25/BASELINE_METRICS.md` records the frozen Day-0 baseline
-- [ ] `SPRINT_25/DESIGN_DETERMINISM_TESTS.md` specifies PR12 infrastructure
-- [ ] `SPRINT_25/PLAN.md` + `SPRINT_25/prompts/PLAN_PROMPTS.md` cover all 15 days
+- [x] **All 11 prep tasks complete** before Sprint 25 Day 1 (final task merged 2026-04-22)
+- [x] `SPRINT_25/KNOWN_UNKNOWNS.md` documents 27 unknowns across 6 categories
+- [x] `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` classifies all 11 open alias issues by Pattern (Pattern A: 6 issues, Pattern C: 2, Pattern E: 3; B/D empty post-Sprint-24 reclassification)
+- [x] `SPRINT_25/INVESTIGATION_PARSER_NON_DETERMINISM.md` narrows #1283 to 1 grammar-level bug (`table_row` → `simple_label` → `dotted_label` chain); corruption rate 65% on chenery
+- [x] `SPRINT_25/CATALOG_EMITTER_BACKLOG.md` groups all 7 emitter issues by code path (4 emitter, 1 IR normalize, 2 stationarity/AD)
+- [x] `SPRINT_25/ANALYSIS_RECOVERED_TRANSLATES.md` maps each of the 5 recovered-translate models to specific emitter bugs; 4 new issues filed (#1289–#1292)
+- [x] `SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` has 4 phases with gates and 5 stop triggers
+- [x] `SPRINT_25/DESIGN_SMALL_PRIORITIES.md` commits to specific designs for #1270 (Approach A cross-reference) and #1271 (unified `_loop_tree_to_gams` signature)
+- [x] `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` classifies each of 5 timeout models (unified `ad_jacobian` `SetMembershipTest` bottleneck; defer all 5 to Sprint 26)
+- [x] `SPRINT_25/BASELINE_METRICS.md` records the frozen Day-0 baseline (143 scope, Translate 135, Solve 99, Match 54)
+- [x] `SPRINT_25/DESIGN_DETERMINISM_TESTS.md` specifies PR12 infrastructure (Option C, 5 fixtures × 5 seeds per-commit, nightly 2 seeds × 143 corpus)
+- [x] `SPRINT_25/PLAN.md` + `SPRINT_25/prompts/PLAN_PROMPTS.md` cover all 15 days
+
+### Final Prep-Task Status
+
+| Task | Status | Date | Deliverable |
+|---|---|---|---|
+| 1 — Known Unknowns | ✅ COMPLETE | 2026-04-19 | `KNOWN_UNKNOWNS.md` |
+| 2 — Alias-AD carryforward audit | ✅ COMPLETE | 2026-04-19 | `AUDIT_ALIAS_AD_CARRYFORWARD.md` |
+| 3 — Parser non-determinism investigation | ✅ COMPLETE | 2026-04-20 | `INVESTIGATION_PARSER_NON_DETERMINISM.md` |
+| 4 — Emitter backlog catalog | ✅ COMPLETE | 2026-04-20 | `CATALOG_EMITTER_BACKLOG.md` |
+| 5 — Recovered-translate analysis | ✅ COMPLETE | 2026-04-20 | `ANALYSIS_RECOVERED_TRANSLATES.md` |
+| 6 — Alias-AD rollout design | ✅ COMPLETE | 2026-04-20 | `DESIGN_ALIAS_AD_ROLLOUT.md` |
+| 7 — Small priorities design | ✅ COMPLETE | 2026-04-21 | `DESIGN_SMALL_PRIORITIES.md` |
+| 8 — Hard-timeout profiling | ✅ COMPLETE | 2026-04-21 | `PROFILE_HARD_TIMEOUTS.md` |
+| 9 — Full pipeline baseline + scope freeze | ✅ COMPLETE | 2026-04-21 | `BASELINE_METRICS.md` |
+| 10 — Byte-stability test design | ✅ COMPLETE | 2026-04-21 | `DESIGN_DETERMINISM_TESTS.md` |
+| 11 — Sprint 25 detailed schedule | ✅ COMPLETE | 2026-04-22 | `PLAN.md` + `prompts/PLAN_PROMPTS.md` |
+
+**Sprint 25 is ready to kick off (Day 0 Setup prompt in `prompts/PLAN_PROMPTS.md`).**
 
 ### Critical-Path Summary
 
