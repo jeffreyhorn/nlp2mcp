@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-22
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Effort:** ~57.5–77.5 hours (Priority 1 19–26h + Priority 2 23–33h + Priorities 3–4 7.5–9.5h + Day 1 PR12 landing 2–3h + retest/close ~6h); Budget ~4–5.5h/day effective capacity
+**Effort:** ~59.5–80.5 hours (Priority 1 19–26h + Priority 2 23–33h + Priorities 3–4 7.5–9.5h + Day 1 determinism infrastructure 4–6h [Option D grammar fix + PR12 harness] + retest/close ~6h); Budget ~4.0–5.5h/day effective capacity
 **Risk Level:** MEDIUM-HIGH (alias-AD workstream has history of regressions; mitigated by 4-phase rollout + 4 quantitative gates + 5 stop-the-sprint triggers from `DESIGN_ALIAS_AD_ROLLOUT.md`)
 **Baseline:** `main @ fc038801` — Parse 143/143 (100%), Translate 135/143 (94.4%), Solve 99, Match 54, Tests 4,522 (Sprint 24 Day 14 final). Scope LOCKED at 143 per Sprint 24 retrospective PR15 and `BASELINE_METRICS.md` §5.
 
