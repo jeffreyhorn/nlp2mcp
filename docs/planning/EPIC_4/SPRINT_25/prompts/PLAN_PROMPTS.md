@@ -93,7 +93,24 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 2. **WS1:** Validate qabel: translate → diff stationarity against Day 2 baseline → GAMS compile via `gams qabel_mcp.gms action=c` → PATH solve.
 3. **WS1:** Tier 0 dispatch canary + Tier 1 canary (quocge, partssupply, prolog) MUST still match.
 4. **WS2:** Fix #1280 (mathopt4 unquoted UEL dots) — quote synthetic element labels containing `.` in emitter.
-5. **Run golden-file regression** on all 54 matching models: `for m in $(list_matching); do diff /tmp/sprint25-golden/${m}_mcp.gms <(python -m src.cli ... -o /dev/stdout); done`. No diffs expected.
+5. **Run golden-file regression** on all 54 matching models. Enumerate them from the frozen baseline status JSON, then diff each:
+
+   ```bash
+   MATCHING=$(python -c "
+   import json
+   from pathlib import Path
+   data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
+   print(' '.join(e['model_id'] for e in data['models']
+                  if (e.get('solution_comparison') or {}).get('comparison_status') == 'match'))
+   ")
+   for m in $MATCHING; do
+     diff /tmp/sprint25-golden/${m}_mcp.gms \
+       <(python -m src.cli data/gamslib/raw/$m.gms -o /dev/stdout --skip-convexity-check 2>/dev/null) \
+       && echo "✅ $m" || echo "❌ $m REGRESSED"
+   done
+   ```
+
+   No diffs expected.
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.
 
@@ -113,8 +130,8 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 1. **WS1:** Validate Phase 1 fix on abel, launch. Measure `stat_x` / `stat_u` line count change vs Day 0 golden. Document any Pattern A model that now matches.
 2. **WS1:** Run Tier 0 + Tier 1 canary. Run `make test`. Quality gate.
 3. **WS1:** **Gate 1 (Day 3 deferred into Day 4):** dispatch identical + ≤1 Tier 1 regression + ≥1 of 3 targets improves ≥50% → GO to Phase 2 Day 5.
-4. **WS2 #1289:** Fix ganges calibration-from-`.l` stripping in `src/emit/emit_gams.py` — the emitter currently strips `x.l(i) = <calibration expr>` assignments. Add a pre-emit pass that retains calibration assignments appearing before first `solve`. Verify ganges + gangesx translate → PATH compile → PATH solve → Match.
-5. **WS2:** Check whether #1289 causes any regression on the 54 matching set (it should not — the fix is additive for calibration-stripped models).
+4. **WS2 #1289:** Fix ganges calibration-from-`.l` stripping in `src/emit/emit_gams.py`. Per `ANALYSIS_RECOVERED_TRANSLATES.md` §1.2, the emitter currently strips calibration assignments like `deltas(i)$ls.l(i) = (k(i)/ls.l(i))**(1/sigmas(i))*...` because they reference `.l` values. For ganges/gangesx the pattern is "declare + initial-solve + calibrate + final-solve": the calibration must run **after** an initial NLP solve (typically supplied via `--nlp-presolve` `$include`). Update the stripping logic to retain post-initial-solve calibration assignments when the presolve flow will supply their `.l` values; preserve any pre-solve calibration assignments too if present. Verify ganges + gangesx translate → PATH compile → PATH solve → Match.
+5. **WS2:** Check whether the #1289 post-solve calibration-preservation change causes any regression on the 54 matching set (it should not — the fix is additive for calibration-stripped models).
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.
 
@@ -261,12 +278,32 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 
 **Tasks to Complete (~7.5–9.5 hours — may spill to Day 12 buffer):**
 
-1. **#1270 (3.5–4.5h):** Implement Approach A cross-reference in `_collect_top_level_marginals_with_param_feedback`. Fixture matrix:
-   - saras-style flag + post-solve reporting (MUST flag).
-   - multi-stage display (MUST flag).
-   - partssupply-style `var.l` (MUST NOT flag).
-   - gussrisk / sparta (MUST NOT flag — existing matching canaries).
-2. **#1271 (4–5h):** Unify signature `_loop_tree_to_gams(node, *, token_subst=None)`. Remove nested `_loop_tree_to_gams_subst_dispatch`. Byte-diff regression: `mkdir -p /tmp/pre /tmp/post; for m in $(list_135_translating); do PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/pre/${m}.gms --skip-convexity-check; done` → apply refactor → regen to `/tmp/post/` → `diff -r /tmp/pre /tmp/post` MUST be empty.
+1. **#1270 (3.5–4.5h):** Implement Approach A cross-reference in `_collect_top_level_marginals_with_param_feedback`. Fixture matrix (per `DESIGN_SMALL_PRIORITIES.md` fixture table — only F1 should flag):
+   - F1 saras-style feedback (MUST flag).
+   - F2 post-solve reporting (MUST NOT flag).
+   - F3 multi-stage display (MUST NOT flag).
+   - F4 partssupply-style `var.l` (MUST NOT flag).
+   - Canaries: gussrisk / sparta (MUST NOT flag — currently matching).
+2. **#1271 (4–5h):** Unify signature `_loop_tree_to_gams(node, *, token_subst=None)`. Remove nested `_loop_tree_to_gams_subst_dispatch`. Byte-diff regression — enumerate the 135 currently-translating models from the frozen baseline status JSON:
+
+   ```bash
+   TRANSLATING=$(python -c "
+   import json
+   from pathlib import Path
+   data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
+   print(' '.join(e['model_id'] for e in data['models']
+                  if (e.get('nlp2mcp_translate') or {}).get('status') == 'success'))
+   ")
+   mkdir -p /tmp/pre /tmp/post
+   for m in $TRANSLATING; do
+     PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/pre/${m}.gms --skip-convexity-check
+   done
+   # apply refactor
+   for m in $TRANSLATING; do
+     PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/post/${m}.gms --skip-convexity-check
+   done
+   diff -r /tmp/pre /tmp/post  # MUST be empty
+   ```
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.
 

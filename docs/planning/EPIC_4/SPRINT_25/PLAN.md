@@ -101,7 +101,7 @@ Sprint 25 executes Sprint 24's 11 alias-AD carryforward issues + 7 emitter backl
 **Effort:** ~7.5–9.5h combined (per `DESIGN_SMALL_PRIORITIES.md`).
 **Target:** saras-style model flagged by extended multi-solve gate; dispatcher refactor with zero byte-diff regression.
 
-- **#1270 gate extension (3.5–4.5h):** Approach A cross-reference — flag `eq.m` reads whose receiving parameter later appears in another declared model's constraint body. Code site `src/validation/driver.py:151–225`. 4-fixture test matrix. Canaries: `gussrisk, sparta` (MUST NOT flag); `saras` (MUST flag).
+- **#1270 gate extension (3.5–4.5h):** Approach A cross-reference — flag `eq.m` reads whose receiving parameter later appears in another declared model's constraint body. Code site `src/validation/driver.py:151–225`. 4-fixture test matrix with explicit expected outcomes: **only saras-style feedback cases flag**; post-solve reporting MUST NOT flag; multi-stage display MUST NOT flag; partssupply `var.l` MUST NOT flag. Canaries: `gussrisk, sparta` (MUST NOT flag — currently matching); `saras` (MUST flag).
 - **#1271 dispatcher refactor (4–5h):** Unified signature `_loop_tree_to_gams(node, *, token_subst=None)`. Byte-diff regression test: snapshot 135 currently-translating models pre-refactor (PYTHONHASHSEED=0), regenerate post, `diff -r` must be empty.
 
 ### WS5: Pipeline Retest and Close (Days 13–14)
