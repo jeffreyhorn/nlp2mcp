@@ -101,7 +101,7 @@ A random-seed rotation harness can be added later as a Sprint-26 nice-to-have if
 
 ### Per-seed assertion
 
-Each `(model, seed)` pair produces an MCP `.gms` output file via the subprocess invocation in §7. The test reads that file as UTF-8 **bytes** (`Path.read_bytes()`) and asserts that for a given model, every seed produces a byte-identical result to the first seed:
+Each `(model, seed)` pair produces an MCP `.gms` output file via the subprocess invocation in §7. The test reads that file as **raw bytes** (`Path.read_bytes()`, which returns the on-disk bytes without decoding — the file content happens to be UTF-8 text, but the assertion never decodes it). The test asserts that for a given model, every seed produces a byte-identical result to the first seed:
 
 ```python
 outputs: dict[int, bytes] = {seed: translate_to_bytes(model, seed) for seed in FAST_SEEDS}
