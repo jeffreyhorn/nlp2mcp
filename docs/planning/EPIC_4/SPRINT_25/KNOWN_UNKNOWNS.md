@@ -1661,7 +1661,18 @@ Prep Task 11.
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (Prep Task 11, 2026-04-22)
+
+- **PR13 "100% influx" applies only to previously-timeout-excluded models:** Sprint 24 Day 13 Addendum measured 5/5 of the newly-translating models (ganges, gangesx, ferts, clearlak, turkpow) going straight to `path_syntax_error`. These are latent-emitter-bug models whose translation was slow for the same reason their emission is broken. **Not representative** of alias-AD recoveries.
+- **Alias-AD recovery dynamics (historical data from Sprint 24):** Sprint 24 Days 3–5 single-index-sum-collapse fix recovered qabel and abel from mismatch / IOerror state to `model_optimal` + mismatch-value. Final Sprint 24 Match delta: +5 (49 → 54). **Zero new `path_syntax_error`** observed after the Sprint 24 Day 5 `a(n+1,n)` Error 125 episode was resolved in-PR via alias-substitution (`a(np+1,n)`). Alias-AD bugs produce valid-but-wrong MCPs (correct structure, wrong derivatives), a fundamentally different failure mode from timeout-recovery models.
+- **Sprint 25 calibrated influx budgets (splits original PR10 into two sub-budgets):**
+  - Alias-AD (Priority 1): **30%** — 1 per ~3 recoveries; absorbs one accidental emitter regression like the Sprint 24 Day 5 Error 125 episode.
+  - Priority 2 recovered-translates (#1289–#1292, Task 5 models): **80–100%** — same category as PR13.
+  - Priority 2 existing-matching-model fixes (#1275, #1276, #1280, #1281, #1279): **10–20%** — accidental regression only.
+  - Priority 3 multi-solve gate: **0%** by construction (gate excludes; cannot introduce new errors).
+- **Sprint 25 Match target calibrated against 30% alias-AD rate:** Task 6 cumulative ladder ≥+3/+5/+6 at each gate works with a one-model reserve for alias-AD influx.
+
+Source: `docs/planning/EPIC_4/SPRINT_25/PLAN.md` §Influx Calibration; `EPIC_4/SPRINT_24/SPRINT_RETROSPECTIVE.md` §2; `EPIC_4/SPRINT_24/SPRINT_LOG.md` Days 3–5.
 
 ---
 
