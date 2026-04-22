@@ -2,7 +2,7 @@
 
 **Created:** 2026-04-22
 **Sprint Duration:** 15 days (Day 0 – Day 14)
-**Effort:** ~37–52 hours (Priority 1 19–26h + Priority 2 23–33h + Priorities 3–4 7.5–9.5h + Day 1 PR12 landing 2–3h + retest/close ~6h); Budget ~2.5–3.5h/day effective capacity
+**Effort:** ~57.5–77.5 hours (Priority 1 19–26h + Priority 2 23–33h + Priorities 3–4 7.5–9.5h + Day 1 PR12 landing 2–3h + retest/close ~6h); Budget ~4–5.5h/day effective capacity
 **Risk Level:** MEDIUM-HIGH (alias-AD workstream has history of regressions; mitigated by 4-phase rollout + 4 quantitative gates + 5 stop-the-sprint triggers from `DESIGN_ALIAS_AD_ROLLOUT.md`)
 **Baseline:** `main @ fc038801` — Parse 143/143 (100%), Translate 135/143 (94.4%), Solve 99, Match 54, Tests 4,522 (Sprint 24 Day 14 final). Scope LOCKED at 143 per Sprint 24 retrospective PR15 and `BASELINE_METRICS.md` §5.
 
@@ -40,7 +40,7 @@ Sprint 25 executes Sprint 24's 11 alias-AD carryforward issues + 7 emitter backl
 | Translate | 135/143 (94.4%) | ≥ 135/143 | ≥ 137/143 | 5 timeouts + `mine` deferred to Sprint 26 per Task 8 (srpchase + iswnm recoverable if Option 1 fix lands Day 11 overflow). |
 | Solve | 99 | ≥ 102 | ≥ 105 | +3 via alias-AD (qabel/abel mismatched-value recoveries + 1 Pattern C); +1 via Priority 2 #1289 ganges unblock. |
 | Match | 54 | ≥ 60 | ≥ 62 | +6 via Task 6 Match ladder; Gate 4 threshold. |
-| path_syntax_error | 11 | ≤ 6 | ≤ 4 | Task 4 Batch 1 removes ~3 (#1275, #1280, #1291); Batch 2 removes ~2 (#1276, #1281); alias-AD influx ~1 budgeted. |
+| path_syntax_error | 11 | ≤ 6 | ≤ 4 | Task 4 Batch 1 removes ~2 (#1275, #1280); Batch 2 removes ~2 (#1276, #1281); Batch 3 removes ~1 (#1291 clearlak statement ordering, landed Day 9); alias-AD influx ~1 budgeted. |
 | path_solve_terminated | 10 | ≤ 9 | ≤ 8 | Pattern C (#1277 twocge offsets) removes 1; Priority 5 timeout work deferred. |
 | model_infeasible | 8 | ≤ 6 | ≤ 4 | Pattern A fixes may recover chenery (#1177) + partial CGE; Category B (cesam, fawley, korcge) remains hard. |
 | Tests | 4,522 | ≥ 4,560 | — | PR12 test harness adds 6 new tests + per-fix unit tests (~40 new). |
@@ -130,7 +130,7 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 | Priority 2 emitter (existing matching models — #1275, #1276, #1280, #1281, #1279) | **10–20%** | These fix bugs in currently-matching models; influx limited to accidental regression. |
 | Priority 3 multi-solve gate | **0%** (by construction) | Gate only excludes; cannot introduce new errors on kept models. |
 
-**Verification Status:** Unknown 6.3 — ✅ VERIFIED via `SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `SPRINT_LOG.md` Days 3–5; PR10 split into two sub-budgets (alias-AD 30% vs emitter-recovered 80–100%).
+**Verification Status:** Unknown 6.3 — ✅ VERIFIED via `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `../SPRINT_24/SPRINT_LOG.md` Days 3–5; PR10 split into two sub-budgets (alias-AD 30% vs emitter-recovered 80–100%).
 
 ---
 

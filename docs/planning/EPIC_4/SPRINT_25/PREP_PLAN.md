@@ -1125,7 +1125,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 
 - Created `docs/planning/EPIC_4/SPRINT_25/PLAN.md` (15-day schedule, 4 phases, 2 checkpoints, 5 workstreams WS1–WS5, contingency plans, workstream-to-issue mapping).
 - Created `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (15 copy-paste-ready per-day prompts matching Sprint 24 template).
-- Re-calibrated PR10 influx budget via KU 6.3 — split into alias-AD 30% / emitter-recovered 80–100% / existing-matching 10–20% / multi-solve gate 0%. Historical evidence cited from `EPIC_4/SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `EPIC_4/SPRINT_24/SPRINT_LOG.md` Days 3–5.
+- Re-calibrated PR10 influx budget via KU 6.3 — split into alias-AD 30% / emitter-recovered 80–100% / existing-matching 10–20% / multi-solve gate 0%. Historical evidence cited from `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `../SPRINT_24/SPRINT_LOG.md` Days 3–5.
 - Updated `KNOWN_UNKNOWNS.md` §Unknown 6.3 → ✅ VERIFIED.
 - Schedule shifts Checkpoint 1 from Day 5 (PREP_PLAN stub) to Day 6 to accommodate Day 1 WS3 determinism landing (Option D + PR12) which was factored out of Task 3/Task 10 after prep completion and takes a full day ahead of any metric-affecting work.
 

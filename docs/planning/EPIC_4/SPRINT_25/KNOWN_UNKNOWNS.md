@@ -1672,7 +1672,7 @@ Prep Task 11.
   - Priority 3 multi-solve gate: **0%** by construction (gate excludes; cannot introduce new errors).
 - **Sprint 25 Match target calibrated against 30% alias-AD rate:** Task 6 cumulative ladder ≥+3/+5/+6 at each gate works with a one-model reserve for alias-AD influx.
 
-Source: `docs/planning/EPIC_4/SPRINT_25/PLAN.md` §Influx Calibration; `EPIC_4/SPRINT_24/SPRINT_RETROSPECTIVE.md` §2; `EPIC_4/SPRINT_24/SPRINT_LOG.md` Days 3–5.
+Source: `docs/planning/EPIC_4/SPRINT_25/PLAN.md` §Influx Calibration; `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2; `../SPRINT_24/SPRINT_LOG.md` Days 3–5.
 
 ---
 
