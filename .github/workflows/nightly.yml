@@ -1,0 +1,41 @@
+name: Nightly determinism sweep
+
+on:
+  schedule:
+    - cron: "17 7 * * *"  # 07:17 UTC daily
+  workflow_dispatch:      # manual trigger
+
+jobs:
+  determinism-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install -r requirements.txt
+
+      - name: Run full-corpus determinism sweep
+        run: |
+          pytest -m "slow and determinism" -v --tb=short \
+            tests/integration/test_pipeline_determinism.py
+
+      - name: Upload diff artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: determinism-diffs
+          path: tests/artifacts/determinism/
+          retention-days: 30
