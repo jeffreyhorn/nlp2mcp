@@ -43,8 +43,8 @@ Translate timing (success only): mean 24.0s, median 4.3s, p90 ≈ 92s. Top 10 sl
 
 ### 2.2 Solve breakdown
 
-- **99 success** (includes 3 `model_optimal_presolve` recoveries: `bearing`, `mathopt3`, `rocket` — STATUS 5 retry with pre-solve).
-- **36 failure** (by `outcome_category`):
+- **99 successes** (includes 3 `model_optimal_presolve` recoveries: `bearing`, `mathopt3`, `rocket` — STATUS 5 retry with pre-solve).
+- **36 failures** (by `outcome_category`):
 
 | Category                 | Count | Models |
 |--------------------------|-------|--------|
@@ -98,7 +98,7 @@ The v2.2.1 schema records **23 total exclusions**. Twenty-one are tagged in the 
 ### 4.3 Multi-solve driver out-of-scope (2)
 
 `danwolfe`, `decomp`
-— Dantzig–Wolfe / Benders decomposition driver scripts. Convexity verification treats each inner solve as convex, so their `convexity.status = likely_convex` (included in the 143 denominator). The translate-time gate (issue #1270, shipped Sprint 24) rejects them because a single KKT transform cannot represent the converged solution of a multi-solve driver. **They are counted in the 143 denominator and show up as `translate.failure` with `internal_error.category = multi_solve_driver_out_of_scope`** — intentional, so the gate's effect is visible in the Sprint 25 baseline.
+— Dantzig–Wolfe / Benders decomposition driver scripts. Convexity verification treats each inner solve as convex, so their recorded baseline status is `convexity.status = verified_convex` (included in the 143 denominator). The translate-time gate (issue #1270, shipped Sprint 24) rejects them because a single KKT transform cannot represent the converged solution of a multi-solve driver. **They are counted in the 143 denominator and show up with `nlp2mcp_translate.error.category = internal_error` plus `pipeline_status.reason = multi_solve_driver_out_of_scope`** — intentional, so the gate's effect is visible in the Sprint 25 baseline.
 
 ---
 
