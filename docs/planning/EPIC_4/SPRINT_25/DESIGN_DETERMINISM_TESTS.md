@@ -197,7 +197,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+      - run: python -m pip install --upgrade pip
       - run: pip install -e ".[dev]"
+      - run: pip install -r requirements.txt
       - run: pytest -m "slow and determinism" -v --tb=short tests/integration/test_pipeline_determinism.py
       - uses: actions/upload-artifact@v4
         if: failure()
