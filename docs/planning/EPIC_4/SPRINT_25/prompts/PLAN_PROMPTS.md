@@ -96,18 +96,19 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 5. **Run golden-file regression** on all 54 matching models. Enumerate them from the frozen baseline status JSON, then diff each:
 
    ```bash
-   MATCHING=$(python -c "
-   import json
-   from pathlib import Path
-   data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
-   print(' '.join(e['model_id'] for e in data['models']
-                  if (e.get('solution_comparison') or {}).get('comparison_status') == 'match'))
-   ")
-   for m in $MATCHING; do
-     diff /tmp/sprint25-golden/${m}_mcp.gms \
-       <(python -m src.cli data/gamslib/raw/$m.gms -o /dev/stdout --skip-convexity-check 2>/dev/null) \
-       && echo "✅ $m" || echo "❌ $m REGRESSED"
-   done
+MATCHING=$(python - <<'PY'
+import json
+from pathlib import Path
+data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
+print(' '.join(e['model_id'] for e in data['models']
+               if (e.get('solution_comparison') or {}).get('comparison_status') == 'match'))
+PY
+)
+for m in $MATCHING; do
+  diff /tmp/sprint25-golden/${m}_mcp.gms \
+    <(python -m src.cli data/gamslib/raw/$m.gms -o /dev/stdout --skip-convexity-check 2>/dev/null) \
+    && echo "✅ $m" || echo "❌ $m REGRESSED"
+done
    ```
 
    No diffs expected.
@@ -287,22 +288,23 @@ Step-by-step execution prompts for Sprint 25 Days 0–14.
 2. **#1271 (4–5h):** Unify signature `_loop_tree_to_gams(node, *, token_subst=None)`. Remove nested `_loop_tree_to_gams_subst_dispatch`. Byte-diff regression — enumerate the 135 currently-translating models from the frozen baseline status JSON:
 
    ```bash
-   TRANSLATING=$(python -c "
-   import json
-   from pathlib import Path
-   data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
-   print(' '.join(e['model_id'] for e in data['models']
-                  if (e.get('nlp2mcp_translate') or {}).get('status') == 'success'))
-   ")
-   mkdir -p /tmp/pre /tmp/post
-   for m in $TRANSLATING; do
-     PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/pre/${m}.gms --skip-convexity-check
-   done
-   # apply refactor
-   for m in $TRANSLATING; do
-     PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/post/${m}.gms --skip-convexity-check
-   done
-   diff -r /tmp/pre /tmp/post  # MUST be empty
+TRANSLATING=$(python - <<'PY'
+import json
+from pathlib import Path
+data = json.loads(Path('data/gamslib/gamslib_status.json').read_text())
+print(' '.join(e['model_id'] for e in data['models']
+               if (e.get('nlp2mcp_translate') or {}).get('status') == 'success'))
+PY
+)
+mkdir -p /tmp/pre /tmp/post
+for m in $TRANSLATING; do
+  PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/pre/${m}.gms --skip-convexity-check
+done
+# apply refactor
+for m in $TRANSLATING; do
+  PYTHONHASHSEED=0 python -m src.cli data/gamslib/raw/$m.gms -o /tmp/post/${m}.gms --skip-convexity-check
+done
+diff -r /tmp/pre /tmp/post  # MUST be empty
    ```
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.

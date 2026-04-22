@@ -1106,7 +1106,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 1. **Draft Sprint 25 schedule** at `docs/planning/EPIC_4/SPRINT_25/PLAN.md`:
    - Day 0: prep-task review, sprint kickoff, baseline snapshot
    - Days 1–12: Priority 1 alias-AD (per Task 6 rollout design) + parallel Priority 2 emitter work (per Task 4 catalog)
-   - Day 5: Checkpoint 1 (alias-AD Phase 1–2 complete, ≥ 3 models improved, 0 regressions)
+   - ~~Day 5~~ **Day 6** (superseded — see §Changes below): Checkpoint 1 (alias-AD Phase 1–2 complete, ≥ 3 models improved, 0 regressions)
    - Day 10: Checkpoint 2 (alias-AD Phase 3 complete, emitter backlog complete, ≥ 6 new matches)
    - Day 13: Final pipeline retest
    - Day 14: Sprint close + retrospective
@@ -1114,7 +1114,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 2. **Write day-by-day execution prompts** at `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (mirror Sprint 24's PLAN_PROMPTS.md format).
 
 3. **Define checkpoint evaluation criteria:**
-   - Checkpoint 1 (Day 5) GO / CONDITIONAL / NO-GO criteria
+   - Checkpoint 1 (~~Day 5~~ **Day 6** — see §Changes below) GO / CONDITIONAL / NO-GO criteria
    - Checkpoint 2 (Day 10) GO / CONDITIONAL / NO-GO criteria
 
 4. **Allocate parallel work:** map Priority 2 emitter batches (from Task 4) to specific days where alias-AD is in Phase-transition wait.
@@ -1127,7 +1127,7 @@ The 15-day schedule with 2 checkpoints has been the single most effective planni
 - Created `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (15 copy-paste-ready per-day prompts matching Sprint 24 template).
 - Re-calibrated PR10 influx budget via KU 6.3 — split into alias-AD 30% / emitter-recovered 80–100% / existing-matching 10–20% / multi-solve gate 0%. Historical evidence cited from `../SPRINT_24/SPRINT_RETROSPECTIVE.md` §2 and `../SPRINT_24/SPRINT_LOG.md` Days 3–5.
 - Updated `KNOWN_UNKNOWNS.md` §Unknown 6.3 → ✅ VERIFIED.
-- Schedule shifts Checkpoint 1 from Day 5 (PREP_PLAN stub) to Day 6 to accommodate Day 1 WS3 determinism landing (Option D + PR12) which was factored out of Task 3/Task 10 after prep completion and takes a full day ahead of any metric-affecting work.
+- Schedule shifts Checkpoint 1 from Day 5 (original PREP_PLAN stub) to Day 6 to accommodate Day 1 WS3 determinism landing (Option D + PR12) which was factored out of Task 3/Task 10 after prep completion and takes a full day ahead of any metric-affecting work. Any earlier Day 5 references to Checkpoint 1 in this Task 11 section (e.g., §What Needs to Be Done bullets 1 and 3) are superseded by the Day 6 schedule — the actual `PLAN.md` + `prompts/PLAN_PROMPTS.md` deliverables use Day 6 throughout.
 
 ### Result
 
