@@ -123,9 +123,9 @@ On mismatch, the test dumps:
 
 ### What counts as a match
 
-- Byte-identical: compare encoded bytes, e.g. `reference.encode("utf-8") == other.encode("utf-8")` (equivalently, read the output file via `Path(output_path).read_bytes()` and compare directly).
+- Byte-identical: compare raw bytes directly, e.g. `reference == other`, where both values come from `Path(output_path).read_bytes()`. If an implementation instead keeps outputs as `str`, convert both sides with `.encode("utf-8")` before comparing.
 - Whitespace-sensitive: trailing whitespace / newlines matter. #1283-class bugs can manifest as reordered lines, so whitespace normalization would mask real bugs.
-- UTF-8 consistent: `emit_gams_mcp` output is UTF-8 text and may include non-ASCII characters in comments (e.g., `∇`, `⊥`, `≥` when `add_comments` is enabled), so comparisons should be done as UTF-8 bytes (or directly via `Path.read_bytes()`), avoiding any text normalization.
+- UTF-8 consistent: `emit_gams_mcp` output is UTF-8 text and may include non-ASCII characters in comments (e.g., `∇`, `⊥`, `≥` when `add_comments` is enabled), so the canonical comparison uses the raw bytes returned by `Path.read_bytes()`, avoiding any text normalization.
 
 ---
 
