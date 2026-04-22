@@ -101,22 +101,24 @@ A random-seed rotation harness can be added later as a Sprint-26 nice-to-have if
 
 ### Per-seed assertion
 
-Each `(model, seed)` pair produces an MCP `.gms` output (string, from `emit_gams_mcp(...)`). The test asserts that for a given model, **every seed produces the same byte string** as the first seed.
+Each `(model, seed)` pair produces an MCP `.gms` output file via the subprocess invocation in §7. The test reads that file as UTF-8 **bytes** (`Path.read_bytes()`) and asserts that for a given model, every seed produces a byte-identical result to the first seed:
 
 ```python
-outputs = {seed: translate(model, seed) for seed in FAST_SEEDS}
+outputs: dict[int, bytes] = {seed: translate_to_bytes(model, seed) for seed in FAST_SEEDS}
 reference = outputs[FAST_SEEDS[0]]
 for seed, out in outputs.items():
     assert out == reference, _format_determinism_failure(model, FAST_SEEDS[0], seed, reference, out)
 ```
+
+Here `translate_to_bytes(model, seed)` is the helper that runs the subprocess from §7 and returns `Path(output_path).read_bytes()` — so the comparison is consistently byte-level throughout.
 
 ### Failure-diagnostic format
 
 On mismatch, the test dumps:
 
 1. Model name + reference seed (always `FAST_SEEDS[0]`) + failing seed.
-2. Line count diff (`len(reference.splitlines())` vs `len(failing.splitlines())`).
-3. First N diff lines via `difflib.unified_diff` (capped at 40 lines to keep CI log readable; full diff written to an artifact file under `tests/artifacts/determinism/`).
+2. Line count diff on the decoded text (`len(reference.decode("utf-8").splitlines())` vs `len(failing.decode("utf-8").splitlines())`).
+3. First N diff lines via `difflib.unified_diff` on the decoded text (capped at 40 lines to keep CI log readable; the full raw bytes are written to an artifact file under `tests/artifacts/determinism/` for post-mortem review).
 4. The commit SHA (`os.environ.get("GITHUB_SHA", "local")`) to help bisect across commits.
 
 ### What counts as a match

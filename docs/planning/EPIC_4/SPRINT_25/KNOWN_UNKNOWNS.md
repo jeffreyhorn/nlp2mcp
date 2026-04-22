@@ -1585,7 +1585,7 @@ Source: `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.
 ### Research Questions
 
 1. What fraction of seeds produced `#1283` corruption on chenery during the Sprint 24 Day 13 Addendum investigation (`~33%`)?
-2. With a 33% corruption rate, how many seeds are needed to hit confidence 0.95 that at least one seed catches it? (Answer: ~7 seeds.)
+2. With a 33% corruption rate, how many seeds are needed to hit confidence 0.95 that at least one seed catches it? (Original estimate "~7 seeds" was slightly optimistic; Verification Results below supersede it — the correct answer at p=0.33 is **N=8** for ≥95%.)
 3. Is there a CI wall-clock budget for the per-commit byte-stability test?
 4. Should the test rotate through a large seed pool (100+) and sample 5 each run, or fix the 5 for reproducibility?
 
