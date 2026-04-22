@@ -82,12 +82,12 @@ Under the binomial model, the probability of **missing** a bug (all N seeds prod
 
 ### Nightly (Option B)
 
-- **Two seeds: 0 and 99999** (endpoints of the per-commit set, maximally-spread under typical PRNG tiebreak behavior).
+- **Two seeds: 0 and 99999** (endpoints of the fixed per-commit set; two distinct fixed seeds for comparison).
 - Rationale: two is the arithmetic minimum for a comparison, and we're running the full 143-model corpus — amortizing scope across seed count makes more sense than amortizing seed count across scope. Expected wall-clock: ~4h30m (2 × 2h15m baseline).
 
 ### Why not random seeds?
 
-Random-per-run seeds would theoretically broaden coverage across the ~2^64 seed space, but:
+Random-per-run seeds would theoretically broaden coverage across a large seed space, but:
 
 - Per-seed corruption rate is high (0.33–0.65); the marginal seed beyond N=5 is low-value on a known bug.
 - Flaky-seed debugging requires reproducibility — a failing random seed must be reported and pinned by the test harness, which adds complexity.
@@ -212,7 +212,7 @@ jobs:
 ### Implementation risk & mitigations
 
 - **Risk:** subprocess startup overhead inflates wall-clock. Mitigation: use `pytest-xdist` (`-n auto`) — each `(model, seed)` pair parallelizes independently since they're pure-function reads.
-- **Risk:** `src.cli --format gams` may not be the exact emit-entry-point in-use. Mitigation: verify during Day 1 implementation; if the CLI wraps additional logic, bypass the CLI by constructing `ModelIR → emit_gams_mcp` directly in-process per seed (subprocess still needed to isolate `PYTHONHASHSEED`).
+- **Risk:** the CLI entry point used for GAMS MCP emission (via `-o <path>`) may not be the exact emit-entry-point in use. Mitigation: verify during Day 1 implementation; if the CLI wraps additional logic, bypass the CLI by constructing `ModelIR → emit_gams_mcp` directly in-process per seed (subprocess still needed to isolate `PYTHONHASHSEED`).
 - **Risk:** #1283 is not fully fixed by Option D before the test lands, causing red CI on day 1. Mitigation: **the test MUST land after the Option D fix**; Sprint 25 Day 1 order is (1) Option D grammar fix, (2) PR12 test. This is enforced in the Day 1 prompts.
 
 ---
