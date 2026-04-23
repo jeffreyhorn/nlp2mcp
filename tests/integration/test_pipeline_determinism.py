@@ -183,63 +183,103 @@ class TestDeterminismFast:
 @pytest.mark.slow
 @pytest.mark.determinism
 class TestDeterminismFull:
-    """Nightly full-corpus byte-stability sweep: 143-model × 2 seeds ≈ 4h30m.
+    """Nightly full-corpus byte-stability sweep: ~135 models × 2 seeds ≈ 4h.
 
     Scheduled via `.github/workflows/nightly.yml` (cron "17 7 * * *"). Excluded
-    from the fast suite because the 143-model cross-product exceeds the 5-minute
-    per-commit CI budget.
+    from the fast suite because the 135-model cross-product exceeds the 5-minute
+    per-commit CI budget. Model count drifts over time as the baseline status
+    JSON is refreshed (convex ∩ not-skipped ∩ translate-success).
     """
 
     @staticmethod
     def _convex_models() -> list[str]:
-        """Enumerate the 143 convex in-scope models from the frozen baseline status."""
+        """Enumerate convex in-scope models whose baseline translate succeeded.
+
+        Filters applied (intersection):
+          1. `convexity.status` ∈ {likely_convex, verified_convex}
+          2. `pipeline_status.status != "skipped"` — excludes models explicitly
+             marked out-of-scope (e.g., multi-solve driver scripts like
+             `danwolfe`, minlp-out-of-scope, etc.) even if the solver landed on
+             a convex point.
+          3. `nlp2mcp_translate.status == "success"` — only test models that
+             actually translate under the baseline. A translate regression
+             shows up as a separate CI signal (e.g., gamslib-regression.yml)
+             and doesn't belong in the determinism harness.
+        """
         status_path = REPO_ROOT / "data" / "gamslib" / "gamslib_status.json"
         if not status_path.is_file():
             pytest.skip("data/gamslib/gamslib_status.json not present")
         data = json.loads(status_path.read_text())
-        return sorted(
-            e["model_id"]
-            for e in data["models"]
-            if (e.get("convexity") or {}).get("status") in ("likely_convex", "verified_convex")
-        )
+        selected: list[str] = []
+        for e in data["models"]:
+            if (e.get("convexity") or {}).get("status") not in (
+                "likely_convex",
+                "verified_convex",
+            ):
+                continue
+            if (e.get("pipeline_status") or {}).get("status") == "skipped":
+                continue
+            if (e.get("nlp2mcp_translate") or {}).get("status") != "success":
+                continue
+            selected.append(e["model_id"])
+        return sorted(selected)
 
     def test_full_corpus_byte_stability(self) -> None:
         models = self._convex_models()
         if not models:
             pytest.skip("no convex in-scope models found in status JSON")
 
-        # Translate failures are out-of-scope for determinism — only compare
-        # models that successfully translate. Record and skip. `FileNotFoundError`
-        # covers missing raw fixtures (e.g., a runner with an incomplete corpus);
-        # `TimeoutExpired` covers models that exceed the 300s per-seed timeout
-        # on slower runners (both raised by `_translate_to_bytes`).
-        translate_failures = (
+        # `FileNotFoundError` covers missing raw fixtures (an incomplete corpus
+        # on the runner); `TimeoutExpired` covers models exceeding the 300s
+        # per-seed translate budget; `CalledProcessError` is a CLI exit != 0.
+        # All three are treated as "translate noise" — NOT determinism bugs.
+        # We log them for visibility but only `pytest.fail()` on actual byte
+        # mismatches, so the nightly job's red/green signal reflects
+        # determinism regressions alone.
+        translate_exceptions = (
             subprocess.CalledProcessError,
             subprocess.TimeoutExpired,
             FileNotFoundError,
         )
-        failures: list[tuple[str, str]] = []
+        determinism_failures: list[tuple[str, str]] = []
+        translate_failures: list[tuple[str, str]] = []
         for model in models:
             try:
                 ref = _translate_to_bytes(model, NIGHTLY_SEEDS[0])
-            except translate_failures as e:
-                failures.append((model, f"ref seed {NIGHTLY_SEEDS[0]} translate failed: {e}"))
+            except translate_exceptions as e:
+                translate_failures.append(
+                    (model, f"ref seed {NIGHTLY_SEEDS[0]} translate failed: {e}")
+                )
                 continue
             for seed in NIGHTLY_SEEDS[1:]:
                 try:
                     other = _translate_to_bytes(model, seed)
-                except translate_failures as e:
-                    failures.append((model, f"seed {seed} translate failed: {e}"))
+                except translate_exceptions as e:
+                    translate_failures.append((model, f"seed {seed} translate failed: {e}"))
                     continue
                 if other != ref:
-                    failures.append(
+                    determinism_failures.append(
                         (
                             model,
                             _format_determinism_failure(model, NIGHTLY_SEEDS[0], seed, ref, other),
                         )
                     )
 
-        if failures:
-            header = f"\n{len(failures)} determinism failures across {len(models)} models:\n\n"
-            body = "\n\n---\n\n".join(f"## {m}\n{detail}" for m, detail in failures)
+        # Surface translate failures in captured stdout for nightly log review,
+        # but don't fail the test — they indicate translate regressions, not
+        # determinism bugs, and belong to a different signal.
+        if translate_failures:
+            print(
+                f"\n[determinism] {len(translate_failures)} translate failure(s) "
+                f"across {len(models)} models (informational — not determinism regressions):"
+            )
+            for model, detail in translate_failures:
+                print(f"  - {model}: {detail}")
+
+        if determinism_failures:
+            header = (
+                f"\n{len(determinism_failures)} determinism failures "
+                f"across {len(models)} models:\n\n"
+            )
+            body = "\n\n---\n\n".join(f"## {m}\n{detail}" for m, detail in determinism_failures)
             pytest.fail(header + body)

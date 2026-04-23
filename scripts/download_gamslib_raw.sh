@@ -68,8 +68,17 @@ fast_set = set(os.environ.get("FAST_LIST", "").split())
 data = json.loads(open(status_path).read())
 for e in data["models"]:
     if mode == "convex":
-        status = (e.get("convexity") or {}).get("status")
-        if status not in ("likely_convex", "verified_convex"):
+        # Must match TestDeterminismFull._convex_models(): convex AND not
+        # explicitly skipped AND baseline translate succeeded. Downloading
+        # additional models would just waste the runner's bandwidth since
+        # they'd be filtered out of the sweep anyway.
+        if (e.get("convexity") or {}).get("status") not in (
+            "likely_convex", "verified_convex",
+        ):
+            continue
+        if (e.get("pipeline_status") or {}).get("status") == "skipped":
+            continue
+        if (e.get("nlp2mcp_translate") or {}).get("status") != "success":
             continue
     elif mode == "fast":
         if e["model_id"] not in fast_set:
