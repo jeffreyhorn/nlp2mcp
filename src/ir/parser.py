@@ -266,38 +266,70 @@ def _normalize_parsed_tables(node: Tree | Token) -> Tree | Token:
     directly). `ambiguity="explicit"` was considered and rejected: the
     corpus has enough latent ambiguities that even a trivial model like
     `abel` expands to 12,513 `_ambig` nodes.
+
+    Uses iterative post-order traversal with an explicit stack so callers
+    without an elevated `sys.setrecursionlimit()` don't hit `RecursionError`
+    on deep parse trees (mirrors `_resolve_ambiguities`). Short-circuits by
+    returning the original node when no child subtree was modified, so
+    table-free parses allocate no new `Tree` objects.
     """
     if isinstance(node, Token):
         return node
 
-    # Walk bottom-up: children first, then rewrite table_block if applicable.
-    # Short-circuit to avoid reconstructing every Tree on parses that don't
-    # contain a corrupted table_block (i.e., the common case).
-    new_children: list[Tree | Token] = []
-    children_changed = False
-    for child in node.children:
-        if isinstance(child, Tree):
-            normalized_child = _normalize_parsed_tables(child)
-            if normalized_child is not child:
-                children_changed = True
-            new_children.append(normalized_child)
-        else:
-            new_children.append(child)
+    # Post-order iterative traversal: visit each Tree twice (first to push
+    # children, then to assemble). normalized[id(x)] holds the normalized
+    # replacement for x (or x itself if unchanged).
+    normalized: dict[int, Tree | Token] = {}
+    stack: list[tuple[Tree | Token, bool]] = [(node, False)]
 
-    if node.data == "table_block":
-        collapsed_children = _collapse_corrupted_table_rows(new_children)
-        if len(collapsed_children) != len(new_children) or any(
-            collapsed is not original
-            for collapsed, original in zip(collapsed_children, new_children, strict=True)
-        ):
-            return Tree(node.data, collapsed_children)
+    while stack:
+        current, is_return = stack.pop()
+
+        if isinstance(current, Token):
+            normalized[id(current)] = current
+            continue
+
+        if not is_return:
+            # First visit: schedule assembly, then push children.
+            stack.append((current, True))
+            for child in reversed(current.children):
+                if isinstance(child, Tree):
+                    stack.append((child, False))
+            continue
+
+        # Assembly visit: build normalized children list, tracking whether
+        # anything changed so we can skip rebuilding on unchanged subtrees.
+        children_changed = False
+        new_children: list[Tree | Token] = []
+        for child in current.children:
+            if isinstance(child, Tree):
+                replacement = normalized[id(child)]
+                if replacement is not child:
+                    children_changed = True
+                new_children.append(replacement)
+            else:
+                new_children.append(child)
+
+        if current.data == "table_block":
+            collapsed = _collapse_corrupted_table_rows(new_children)
+            collapse_changed = len(collapsed) != len(new_children) or any(
+                c is not o for c, o in zip(collapsed, new_children, strict=True)
+            )
+            if collapse_changed:
+                normalized[id(current)] = Tree(current.data, collapsed)
+                continue
+            if children_changed:
+                normalized[id(current)] = Tree(current.data, new_children)
+                continue
+            normalized[id(current)] = current
+            continue
+
         if children_changed:
-            return Tree(node.data, new_children)
-        return node
+            normalized[id(current)] = Tree(current.data, new_children)
+        else:
+            normalized[id(current)] = current
 
-    if children_changed:
-        return Tree(node.data, new_children)
-    return node
+    return normalized[id(node)]
 
 
 def _score_table_row_alternative(alt: Tree | Token) -> tuple[int, int]:

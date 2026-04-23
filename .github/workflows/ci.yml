@@ -44,7 +44,11 @@ jobs:
       - name: Run full test suite with coverage (parallel)
         run: |
           pip install pytest-cov
-          pytest tests/ -n auto --cov=src --cov-report=term-missing --tb=short
+          # Exclude `slow` — TestDeterminismFull sweeps the 143-model convex
+          # corpus and only runs in the nightly workflow (which populates the
+          # full raw/ dir). The per-PR coverage run uses the 5 fast fixtures
+          # already downloaded above.
+          pytest tests/ -m "not slow" -n auto --cov=src --cov-report=term-missing --tb=short
         timeout-minutes: 10
 
       - name: Generate JSON diagnostics for tier 1 models

@@ -88,14 +88,24 @@ echo "Downloading $TOTAL models (mode=$MODE) → $TARGET_DIR"
 
 # Resolve the real download URL for a given model by scraping the model's
 # landing page. Echoes "<url>" on success, empty on failure.
+#
+# The pipeline is wrapped in `|| true` so a `grep` no-match (exit 1) does not
+# trip `set -e` — we want per-model failures to be reported and skipped, not
+# to abort the entire download run.
 resolve_url() {
     local name="$1"
-    curl -fsS --max-time 15 --retry 2 \
-        "${BASE_URL}/libhtml/gamslib_${name}.html" 2>/dev/null \
-        | grep -oE 'Main file.*</p>' \
-        | grep -oE 'href="[^"]+"' \
-        | head -1 \
-        | sed "s/^href=\"\.\.\///; s/\"$//; s|^|${BASE_URL}/|"
+    local url
+    url="$(
+        curl -fsS --max-time 15 --retry 2 \
+            "${BASE_URL}/libhtml/gamslib_${name}.html" 2>/dev/null \
+            | grep -oE 'Main file.*</p>' \
+            | grep -oE 'href="[^"]+"' \
+            | head -1 \
+            | sed "s/^href=\"\.\.\///; s/\"$//; s|^|${BASE_URL}/|" \
+            || true
+    )"
+    printf '%s\n' "$url"
+    return 0
 }
 
 SUCCESS=0
