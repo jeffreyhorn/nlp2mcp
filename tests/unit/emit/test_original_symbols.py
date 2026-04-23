@@ -16,6 +16,7 @@ from src.emit.original_symbols import (
     _needs_quoting,
     _quote_assignment_index,
     _sanitize_set_element,
+    _sanitize_uel_element,
     collect_missing_param_labels,
     emit_computed_parameter_assignments,
     emit_interleaved_params_and_sets,
@@ -3313,3 +3314,59 @@ class TestLoopAttrAccessEmission:
         result = emit_pre_solve_param_assignments(model)
         assert "myparam" in result
         assert "x.scaleOpt" in result
+
+
+@pytest.mark.unit
+class TestSanitizeUelElement:
+    """#1280: `_sanitize_uel_element` unconditionally quotes UEL registry labels.
+
+    The generic `_sanitize_set_element` treats a dot as GAMS tuple notation
+    (so `x1.l` is left unquoted). That's wrong for the `nlp2mcp_uel_registry`
+    set whose members are LITERAL attribute-access strings produced by
+    zero-filtered parameter lookups — GAMS interprets them as tuple UELs and
+    either rejects the declaration or silently truncates to the first
+    component. The UEL-specific helper forces quoting.
+    """
+
+    def test_dotted_attribute_label_gets_quoted(self):
+        """`x1.l` → `'x1.l'` (the #1280 bug)."""
+        assert _sanitize_uel_element("x1.l") == "'x1.l'"
+        assert _sanitize_uel_element("x2.l") == "'x2.l'"
+        assert _sanitize_uel_element("y.m") == "'y.m'"
+
+    def test_plain_identifier_gets_quoted(self):
+        """Plain identifiers are still quoted (GAMS accepts 'foo' === foo)."""
+        assert _sanitize_uel_element("demand") == "'demand'"
+        assert _sanitize_uel_element("i1") == "'i1'"
+
+    def test_prequoted_element_passes_through(self):
+        """Already-quoted labels are returned as-is, not double-quoted."""
+        assert _sanitize_uel_element("'SAE 10'") == "'SAE 10'"
+        assert _sanitize_uel_element("'max-stock'") == "'max-stock'"
+
+    def test_element_with_hyphen_gets_single_quoted(self):
+        """Hyphenated labels (already quoted by the base sanitizer) stay as single-quoted."""
+        assert _sanitize_uel_element("gov-expend") == "'gov-expend'"
+
+    def test_element_with_plus_gets_single_quoted(self):
+        assert _sanitize_uel_element("food+agr") == "'food+agr'"
+
+    def test_reserved_constants_get_quoted(self):
+        """Reserved constants (already quoted by base) remain quoted, not double-quoted."""
+        assert _sanitize_uel_element("inf") == "'inf'"
+        assert _sanitize_uel_element("na") == "'na'"
+
+    def test_dangerous_chars_still_rejected(self):
+        """`_sanitize_uel_element` routes through `_sanitize_set_element` first,
+        so injection-dangerous characters are still rejected."""
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_uel_element("bad;element")
+        with pytest.raises(ValueError, match="unsafe characters"):
+            _sanitize_uel_element("bad/element")
+
+    def test_guss_trailing_dot_preserved(self):
+        """GUSS 3-tuple with empty trailing component (e.g.,
+        `rapscenarios.scenario.''`) must keep its `.''` structure — the UEL
+        helper should not re-quote that compound form.
+        """
+        assert _sanitize_uel_element("foo.") == "foo.''"

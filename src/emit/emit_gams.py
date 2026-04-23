@@ -20,6 +20,7 @@ from src.emit.original_symbols import (
     _quote_assignment_index,
     _quote_symbol,
     _sanitize_set_element,
+    _sanitize_uel_element,
     collect_missing_param_labels,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
@@ -1172,7 +1173,11 @@ def emit_gams_mcp(
     # re-introducing explicit zeros into parameter data.
     missing_labels = collect_missing_param_labels(kkt.model_ir)
     if missing_labels:
-        quoted = ", ".join(_sanitize_set_element(str(lab)) for lab in sorted(missing_labels))
+        # #1280: unconditionally single-quote UEL registry elements so that
+        # attribute-access labels like `x1.l` are treated as literal UELs by
+        # GAMS instead of being parsed as 2-tuple notation (which rejects the
+        # set declaration or silently truncates to `x1`).
+        quoted = ", ".join(_sanitize_uel_element(str(lab)) for lab in sorted(missing_labels))
         # Choose a unique name that doesn't collide with existing symbols.
         uel_name = "nlp2mcp_uel_registry"
         existing_lower = (

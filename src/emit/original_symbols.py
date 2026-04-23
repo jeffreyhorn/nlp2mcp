@@ -236,6 +236,34 @@ def _quote_assignment_index(
     return idx
 
 
+def _sanitize_uel_element(element: str) -> str:
+    """Sanitize a UEL registry element, unconditionally single-quoting the result.
+
+    The generic `_sanitize_set_element` treats a dot as GAMS tuple notation
+    (e.g., `upper.egypt` as a 2-tuple label) and so leaves `x1.l` unquoted.
+    That's the right call for ordinary set members, but the
+    `nlp2mcp_uel_registry` set (emit_gams.py) stores LITERAL attribute-access
+    strings (`x1.l`, `x2.l`) produced by zero-filtered parameter lookups. GAMS
+    interprets those as tuple UELs and either rejects the declaration or
+    silently truncates to the first component.
+
+    Fix per ISSUE_1280: run the element through the normal sanitizer (so the
+    dangerous-character rejection still applies) and then quote the result if
+    it wasn't already quoted. GAMS accepts `'foo'` identically to `foo` for
+    plain identifiers, so unconditional quoting has no downside.
+    """
+    sanitized = _sanitize_set_element(element)
+    # `_sanitize_set_element` returns a pre-quoted string unchanged and also
+    # quotes elements that contain spaces, `+`/`-`, or reserved constants.
+    if len(sanitized) >= 2 and sanitized.startswith("'") and sanitized.endswith("'"):
+        return sanitized
+    # GUSS trailing-dot case: `_sanitize_set_element` restores it as
+    # `foo.''` — leave that compound form intact.
+    if sanitized.endswith("''"):
+        return sanitized
+    return "'" + sanitized.replace("'", "''") + "'"
+
+
 def _sanitize_set_element(element: str) -> str:
     """Sanitize a set element name for safe GAMS emission.
 
