@@ -38,8 +38,9 @@ OPTIONS:
     --fast          Download only the 5 fixtures used by TestDeterminismFast
                     (chenery, abel, partssupply, ps2_f, himmel11)
 
-Default: convex in-scope models (likely_convex + verified_convex), the set
-targeted by TestDeterminismFull.
+Default: convex in-scope models (likely_convex + verified_convex) that are
+not skipped by pipeline_status and have nlp2mcp_translate.status == success;
+this is the set targeted by TestDeterminismFull.
 EOF
 }
 

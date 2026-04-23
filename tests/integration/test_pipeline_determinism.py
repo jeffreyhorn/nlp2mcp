@@ -20,6 +20,7 @@ scope / fixture / seed-set rationale.
 from __future__ import annotations
 
 import difflib
+import itertools
 import json
 import os
 import subprocess
@@ -131,7 +132,9 @@ def _format_determinism_failure(
         tofile=f"{model} seed={failing_seed}",
         n=3,
     )
-    diff_lines = list(diff_iter)[:40]
+    # Stream the diff and cap at 40 lines — on large mismatches the full diff
+    # can be huge, but we only show the first window.
+    diff_lines = list(itertools.islice(diff_iter, 40))
 
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
     ref_path = ARTIFACT_DIR / f"{model}_seed{reference_seed}.gms"
