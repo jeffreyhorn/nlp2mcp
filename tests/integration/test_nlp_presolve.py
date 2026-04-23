@@ -607,19 +607,19 @@ class TestNLPPresolveGAMSSolve:
         assert result.exit_code == 0
 
         # Solve with GAMS. After #1275 the emitted presolve wrapper uses a
-        # repo-relative `$include` path (e.g., `data/gamslib/raw/bearing.gms`),
-        # so GAMS must be invoked with the repo root as cwd for the include
-        # to resolve. We also route the listing file back to `tmp_path` via
-        # `o=` so the later `output_file.with_suffix('.lst')` assertion still
-        # finds it. This mirrors the intended usage: artifacts are portable
-        # when re-run from the repo root.
+        # repo-relative `$include` path (e.g., `data/gamslib/raw/bearing.gms`).
+        # Keep the solver hermetic by running under `cwd=tmp_path` (so scratch
+        # files, .lxi, .put, etc. all land in the pytest-owned tempdir) and
+        # pointing GAMS at the repo root via `idir=` so the relative include
+        # resolves against the repo instead of against tmp_path. The `.lst`
+        # path is still pinned via `o=` for the downstream assertion.
         repo_root = Path(__file__).resolve().parents[2]
         lst_file = output_file.with_suffix(".lst")
         gams_result = subprocess.run(
-            ["gams", str(output_file), "lo=0", f"o={lst_file}"],
+            ["gams", str(output_file), "lo=0", f"o={lst_file}", f"idir={repo_root}"],
             capture_output=True,
             text=True,
-            cwd=str(repo_root),
+            cwd=str(tmp_path),
         )
         assert gams_result.returncode == 0, (
             "GAMS solve failed.\n"

@@ -945,6 +945,11 @@ def _emit_nlp_presolve(
             f"that contains it) to enable pre-solve.",
             stacklevel=3,
         )
+        # Emit the omission banner regardless of `add_comments` — without it,
+        # a consumer of a `--no-comments` artifact would have no in-file
+        # indication that the warm-start was dropped, and only the Python-
+        # time warning survives. The banner is four `*`-commented lines so
+        # GAMS ignores them at compile time.
         if add_comments:
             sections.append("* ============================================")
             sections.append("* NLP Pre-Solve omitted: source file is outside the repo root")
@@ -953,6 +958,13 @@ def _emit_nlp_presolve(
                 "under the repo root to enable warm-start)."
             )
             sections.append("* ============================================")
+            sections.append("")
+        else:
+            # Minimal single-line omission marker for --no-comments mode.
+            sections.append(
+                "* #1275: NLP pre-solve omitted — source file is outside the "
+                "repo root (no portable $include path)."
+            )
             sections.append("")
         return
 
