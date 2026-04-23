@@ -70,7 +70,20 @@ if [ "$MODE" = "fast" ]; then
         echo "ERROR: fast-fixture manifest not found at $FAST_FIXTURES_MANIFEST" >&2
         exit 1
     fi
-    FAST_LIST="$(grep -v '^#' "$FAST_FIXTURES_MANIFEST" | tr '\n' ' ')"
+    # Mirror _load_fast_fixtures() in test_pipeline_determinism.py: strip
+    # leading/trailing whitespace, then skip blank lines and `#` comments
+    # (including indented ones). Using awk keeps both sides in true lockstep.
+    FAST_LIST="$(awk '
+        {
+            line = $0
+            sub(/^[[:space:]]+/, "", line)
+            sub(/[[:space:]]+$/, "", line)
+            if (line == "" || line ~ /^#/) {
+                next
+            }
+            printf "%s ", line
+        }
+    ' "$FAST_FIXTURES_MANIFEST")"
 else
     FAST_LIST=""
 fi
