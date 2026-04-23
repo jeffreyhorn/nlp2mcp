@@ -97,6 +97,7 @@ def _translate_to_bytes(model: str, seed: int, *, timeout: int) -> bytes:
                 "-o",
                 str(output_path),
                 "--skip-convexity-check",
+                "--quiet",
             ],
             env=env,
             capture_output=True,
@@ -252,10 +253,19 @@ class TestDeterminismFull:
         # `FileNotFoundError` covers missing raw fixtures (an incomplete corpus
         # on the runner); `TimeoutExpired` covers models exceeding the per-seed
         # translate budget (NIGHTLY_TRANSLATE_TIMEOUT_SEC); `CalledProcessError`
-        # is a CLI exit != 0. All three are treated as "translate noise" — NOT
-        # determinism bugs. We log them for visibility but only `pytest.fail()`
-        # on actual byte mismatches, so the nightly job's red/green signal
-        # reflects determinism regressions alone.
+        # is a CLI exit != 0.
+        #
+        # Failure categorization:
+        #   - ALL seeds fail     → translate noise (log only, don't fail test;
+        #                           indicates a model-level translate regression
+        #                           that other CI signals cover).
+        #   - SOME seeds fail    → hash-seed-dependent non-determinism (fail
+        #                           the test — this is exactly what the harness
+        #                           exists to catch).
+        #   - ALL seeds succeed,
+        #     byte mismatch      → hash-seed-dependent non-determinism (fail).
+        #   - ALL seeds succeed,
+        #     byte match         → ok.
         translate_exceptions = (
             subprocess.CalledProcessError,
             subprocess.TimeoutExpired,
@@ -264,35 +274,64 @@ class TestDeterminismFull:
         determinism_failures: list[tuple[str, str]] = []
         translate_failures: list[tuple[str, str]] = []
         for model in models:
-            try:
-                ref = _translate_to_bytes(
-                    model, NIGHTLY_SEEDS[0], timeout=NIGHTLY_TRANSLATE_TIMEOUT_SEC
-                )
-            except translate_exceptions as e:
-                translate_failures.append(
-                    (model, f"ref seed {NIGHTLY_SEEDS[0]} translate failed: {e}")
-                )
-                continue
-            for seed in NIGHTLY_SEEDS[1:]:
+            # Run every seed independently, collect (seed → bytes | Exception).
+            seed_results: dict[int, bytes | BaseException] = {}
+            for seed in NIGHTLY_SEEDS:
                 try:
-                    other = _translate_to_bytes(model, seed, timeout=NIGHTLY_TRANSLATE_TIMEOUT_SEC)
+                    seed_results[seed] = _translate_to_bytes(
+                        model, seed, timeout=NIGHTLY_TRANSLATE_TIMEOUT_SEC
+                    )
                 except translate_exceptions as e:
-                    translate_failures.append((model, f"seed {seed} translate failed: {e}"))
-                    continue
-                if other != ref:
+                    seed_results[seed] = e
+
+            succeeded = {s: r for s, r in seed_results.items() if isinstance(r, bytes)}
+            failed = {s: r for s, r in seed_results.items() if not isinstance(r, bytes)}
+
+            if not succeeded:
+                # All seeds failed — log as translate noise, don't fail test.
+                for seed, err in failed.items():
+                    translate_failures.append((model, f"seed {seed} translate failed: {err}"))
+                continue
+
+            if failed:
+                # Seed-dependent translate failure: the CLI's ability to even
+                # translate this model depends on PYTHONHASHSEED. That IS a
+                # determinism regression — fail the test.
+                ok_seeds = sorted(succeeded.keys())
+                for seed, err in failed.items():
                     determinism_failures.append(
                         (
                             model,
-                            _format_determinism_failure(model, NIGHTLY_SEEDS[0], seed, ref, other),
+                            f"seed-dependent translate failure: seed {seed} raised "
+                            f"{type(err).__name__}: {err} "
+                            f"while seeds {ok_seeds} translated successfully",
+                        )
+                    )
+                # Don't compare bytes when some seeds failed — the comparison
+                # signal is already noisy.
+                continue
+
+            # All seeds succeeded — compare byte outputs against the reference.
+            ref_seed = NIGHTLY_SEEDS[0]
+            ref = succeeded[ref_seed]
+            assert isinstance(ref, bytes)
+            for seed, out in succeeded.items():
+                if seed == ref_seed:
+                    continue
+                assert isinstance(out, bytes)
+                if out != ref:
+                    determinism_failures.append(
+                        (
+                            model,
+                            _format_determinism_failure(model, ref_seed, seed, ref, out),
                         )
                     )
 
-        # Surface translate failures in captured stdout for nightly log review,
-        # but don't fail the test — they indicate translate regressions, not
-        # determinism bugs, and belong to a different signal.
+        # Surface all-seed-failed translate noise in captured stdout for nightly
+        # log review — they indicate translate regressions, not determinism bugs.
         if translate_failures:
             print(
-                f"\n[determinism] {len(translate_failures)} translate failure(s) "
+                f"\n[determinism] {len(translate_failures)} all-seed translate failure(s) "
                 f"across {len(models)} models (informational — not determinism regressions):"
             )
             for model, detail in translate_failures:

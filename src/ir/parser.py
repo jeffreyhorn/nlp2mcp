@@ -332,16 +332,14 @@ def _normalize_parsed_tables(node: Tree | Token) -> Tree | Token:
 
     # Post-order iterative traversal: visit each Tree twice (first to push
     # children, then to assemble). normalized[id(x)] holds the normalized
-    # replacement for x (or x itself if unchanged).
-    normalized: dict[int, Tree | Token] = {}
-    stack: list[tuple[Tree | Token, bool]] = [(node, False)]
+    # replacement for x (or x itself if unchanged). Only Tree children are
+    # pushed; Token children are read directly off `current.children` during
+    # assembly without needing a normalized entry.
+    normalized: dict[int, Tree] = {}
+    stack: list[tuple[Tree, bool]] = [(node, False)]
 
     while stack:
         current, is_return = stack.pop()
-
-        if isinstance(current, Token):
-            normalized[id(current)] = current
-            continue
 
         if not is_return:
             # First visit: schedule assembly, then push children.
