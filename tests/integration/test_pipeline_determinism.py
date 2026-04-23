@@ -53,8 +53,17 @@ FAST_SEEDS: tuple[int, ...] = (0, 1, 42, 12345, 99999)
 
 NIGHTLY_SEEDS: tuple[int, ...] = (0, 99999)
 
+# Per-subprocess translate timeouts. Fast fixtures have baseline translate
+# times <10s, so a 60s budget is ~6× the expected worst case and still well
+# below the 5-min CI fast-suite step timeout — if a fast fixture hangs, the
+# subprocess raises TimeoutExpired first and pytest reports a clean failure
+# instead of GitHub Actions killing the whole step. Nightly uses a larger
+# budget because the full convex corpus includes models at 60-300s.
+FAST_TRANSLATE_TIMEOUT_SEC: int = 60
+NIGHTLY_TRANSLATE_TIMEOUT_SEC: int = 300
 
-def _translate_to_bytes(model: str, seed: int) -> bytes:
+
+def _translate_to_bytes(model: str, seed: int, *, timeout: int) -> bytes:
     """Run `python -m src.cli <model>.gms -o <tmp>` under PYTHONHASHSEED=seed.
 
     Returns the raw bytes of the emitted MCP file (via `Path.read_bytes()`) —
@@ -87,7 +96,7 @@ def _translate_to_bytes(model: str, seed: int) -> bytes:
             capture_output=True,
             text=True,
             check=True,
-            timeout=300,
+            timeout=timeout,
         )
         return output_path.read_bytes()
 
@@ -167,7 +176,10 @@ class TestDeterminismFast:
             outputs: dict[int, bytes] = dict(
                 zip(
                     FAST_SEEDS,
-                    pool.map(lambda s: _translate_to_bytes(model, s), FAST_SEEDS),
+                    pool.map(
+                        lambda s: _translate_to_bytes(model, s, timeout=FAST_TRANSLATE_TIMEOUT_SEC),
+                        FAST_SEEDS,
+                    ),
                     strict=True,
                 )
             )
@@ -230,12 +242,12 @@ class TestDeterminismFull:
             pytest.skip("no convex in-scope models found in status JSON")
 
         # `FileNotFoundError` covers missing raw fixtures (an incomplete corpus
-        # on the runner); `TimeoutExpired` covers models exceeding the 300s
-        # per-seed translate budget; `CalledProcessError` is a CLI exit != 0.
-        # All three are treated as "translate noise" — NOT determinism bugs.
-        # We log them for visibility but only `pytest.fail()` on actual byte
-        # mismatches, so the nightly job's red/green signal reflects
-        # determinism regressions alone.
+        # on the runner); `TimeoutExpired` covers models exceeding the per-seed
+        # translate budget (NIGHTLY_TRANSLATE_TIMEOUT_SEC); `CalledProcessError`
+        # is a CLI exit != 0. All three are treated as "translate noise" — NOT
+        # determinism bugs. We log them for visibility but only `pytest.fail()`
+        # on actual byte mismatches, so the nightly job's red/green signal
+        # reflects determinism regressions alone.
         translate_exceptions = (
             subprocess.CalledProcessError,
             subprocess.TimeoutExpired,
@@ -245,7 +257,9 @@ class TestDeterminismFull:
         translate_failures: list[tuple[str, str]] = []
         for model in models:
             try:
-                ref = _translate_to_bytes(model, NIGHTLY_SEEDS[0])
+                ref = _translate_to_bytes(
+                    model, NIGHTLY_SEEDS[0], timeout=NIGHTLY_TRANSLATE_TIMEOUT_SEC
+                )
             except translate_exceptions as e:
                 translate_failures.append(
                     (model, f"ref seed {NIGHTLY_SEEDS[0]} translate failed: {e}")
@@ -253,7 +267,7 @@ class TestDeterminismFull:
                 continue
             for seed in NIGHTLY_SEEDS[1:]:
                 try:
-                    other = _translate_to_bytes(model, seed)
+                    other = _translate_to_bytes(model, seed, timeout=NIGHTLY_TRANSLATE_TIMEOUT_SEC)
                 except translate_exceptions as e:
                     translate_failures.append((model, f"seed {seed} translate failed: {e}"))
                     continue
