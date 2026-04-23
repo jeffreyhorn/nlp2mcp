@@ -43,6 +43,8 @@ Backward Compatibility:
 
 from __future__ import annotations
 
+import os
+import sys
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -63,6 +65,36 @@ from ..ir.ast import (
     Unary,
     VarRef,
 )
+
+# SPRINT25_DAY2: Debug instrumentation for the Phase 1 investigation into
+# `_partial_collapse_sum` multi-index concrete→symbolic gap (qabel / #1089).
+# Gated on env var so the trace costs nothing in production; flip it on with
+# `SPRINT25_DAY2_DEBUG=1` when reproducing the qabel trace to inspect the
+# input/output of `_diff_varref` and `_partial_collapse_sum` at every call.
+#
+# Remove after Phase 1 prototype lands (Day 4 cleanup pass).
+#
+# IMPORTANT: every call site guards message construction with
+# `if _SPRINT25_DAY2_DEBUG:` before invoking `_sprint25_day2_log(...)`. These
+# helpers sit in the AD hot path (called hundreds of thousands of times on
+# qabel alone), so building `f"... {expr.body!r}"` unconditionally — even if
+# the helper drops the result — would be a real performance regression.
+_SPRINT25_DAY2_DEBUG = os.environ.get("SPRINT25_DAY2_DEBUG") == "1"
+
+
+def _sprint25_day2_log(tag: str, msg: str) -> None:
+    """Emit a `[SPRINT25_DAY2][<tag>]` trace line to stderr unconditionally.
+
+    This helper deliberately does NOT re-check `_SPRINT25_DAY2_DEBUG`: the
+    goal is zero cost when debug is off, which requires callers to short-
+    circuit message construction themselves. Every call site in this module
+    is therefore wrapped with `if _SPRINT25_DAY2_DEBUG:` — if a future
+    contributor adds a call without the guard, this helper WILL log
+    unconditionally (and the `f"... {expr.body!r}"` argument will also
+    evaluate unconditionally, defeating the zero-cost property). Keep the
+    guard at every call site.
+    """
+    print(f"[SPRINT25_DAY2][{tag}] {msg}", file=sys.stderr, flush=True)
 
 
 def differentiate_expr(
@@ -403,14 +435,28 @@ def _diff_varref(
     if expr.name != wrt_var:
         return Const(0.0)
 
+    # SPRINT25_DAY2: Trace entry — only logs when the name already matches,
+    # so the trace only shows candidate sites (not every VarRef in the model).
+    # Guards are at every call site so f-strings don't evaluate in production.
+    if _SPRINT25_DAY2_DEBUG:
+        _sprint25_day2_log(
+            "diff_varref",
+            f"enter name={expr.name!r} expr.indices={expr.indices!r} "
+            f"wrt_indices={wrt_indices!r} bound_indices={sorted(bound_indices)}",
+        )
+
     # Index matching
     if wrt_indices is None:
         # No indices specified: only match if expr is also scalar (no indices)
         # d/dx x = 1 (scalar matches scalar)
         # d/dx x(i) = 0 (indexed doesn't match scalar)
         if expr.indices == ():
+            if _SPRINT25_DAY2_DEBUG:
+                _sprint25_day2_log("diff_varref", "-> Const(1.0) [scalar match]")
             return Const(1.0)
         else:
+            if _SPRINT25_DAY2_DEBUG:
+                _sprint25_day2_log("diff_varref", "-> Const(0.0) [indexed vs scalar mismatch]")
             return Const(0.0)
 
     # Indices specified: must match (with quote normalization)
@@ -418,6 +464,8 @@ def _diff_varref(
     # quotes (e.g., '"disrupted"') while instance indices from set enumeration
     # use unquoted form ('disrupted'). Normalize before comparison.
     if _indices_match(expr.indices, wrt_indices):
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log("diff_varref", "-> Const(1.0) [exact index match]")
         return Const(1.0)
 
     # Issue #1111: Alias-aware matching — when exact match fails, check if
@@ -427,8 +475,12 @@ def _diff_varref(
         if aliases:
             guard = _alias_match(expr.indices, wrt_indices, aliases, bound_indices)
             if guard is not None:
+                if _SPRINT25_DAY2_DEBUG:
+                    _sprint25_day2_log("diff_varref", f"-> alias guard: {guard!r}")
                 return guard
 
+    if _SPRINT25_DAY2_DEBUG:
+        _sprint25_day2_log("diff_varref", "-> Const(0.0) [no match]")
     return Const(0.0)
 
 
@@ -2210,6 +2262,14 @@ def _partial_collapse_sum(
     """
     sum_index_sets = expr.index_sets
 
+    if _SPRINT25_DAY2_DEBUG:
+        _sprint25_day2_log(
+            "partial_collapse_sum",
+            f"enter wrt_var={wrt_var!r} wrt_indices={wrt_indices!r} "
+            f"sum_index_sets={sum_index_sets!r} bound_indices={sorted(bound_indices)} "
+            f"body={expr.body!r}",
+        )
+
     # Build a list of candidate sum indices for each wrt index position.
     # Each wrt index may match multiple sum indices (e.g., both n and np
     # when Alias(n,np) and both are in the sum).
@@ -2222,8 +2282,19 @@ def _partial_collapse_sum(
                 cands.append(si)
         candidates_per_wrt.append(cands)
 
+    if _SPRINT25_DAY2_DEBUG:
+        _sprint25_day2_log(
+            "partial_collapse_sum",
+            f"candidates_per_wrt={candidates_per_wrt} " f"(positions map to sum_index_sets[i])",
+        )
+
     # If any wrt index has no candidates, no valid matching exists
     if any(len(c) == 0 for c in candidates_per_wrt):
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log(
+                "partial_collapse_sum",
+                "-> None [some wrt position has no candidate sum index]",
+            )
         return None
 
     # Enumerate all valid matchings (each sum index used at most once).
@@ -2232,7 +2303,16 @@ def _partial_collapse_sum(
     # matchings whose derivatives must be summed for the correct gradient.
     all_matchings = _enumerate_matchings(candidates_per_wrt)
 
+    if _SPRINT25_DAY2_DEBUG:
+        _sprint25_day2_log(
+            "partial_collapse_sum",
+            f"all_matchings={all_matchings} "
+            f"(each is a tuple of sum_index_sets-positions, one per wrt position)",
+        )
+
     if not all_matchings:
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log("partial_collapse_sum", "-> None [no valid matching found]")
         return None
 
     # Compute derivative for each valid matching and accumulate results
@@ -2251,6 +2331,13 @@ def _partial_collapse_sum(
         remaining_sum_indices = [
             sum_index_sets[si] for si in range(len(sum_index_sets)) if si not in matched_set
         ]
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log(
+                "partial_collapse_sum",
+                f"matching={matching} matched_sum_indices={matched_sum_indices} "
+                f"matched_concrete={matched_concrete} "
+                f"remaining_sum_indices={remaining_sum_indices}",
+            )
 
         # Issue #1111: Rename remaining sum indices that share an alias root
         # with any matched sum index. After substitution, the matched indices
@@ -2294,18 +2381,37 @@ def _partial_collapse_sum(
         symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
         # Augment bound_indices with remaining (uncollapsed) sum indices
         new_bound = bound_indices | frozenset(final_remaining)
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log(
+                "partial_collapse_sum",
+                f"about to diff body with symbolic_wrt={symbolic_wrt!r} "
+                f"new_bound={sorted(new_bound)} final_remaining={final_remaining} "
+                f"working_body={working_body!r}",
+            )
         body_derivative = differentiate_expr(
             working_body, wrt_var, symbolic_wrt, config, bound_indices=new_bound
         )
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log(
+                "partial_collapse_sum",
+                f"body_derivative={body_derivative!r}",
+            )
 
         # Skip zero derivatives (common for non-matching alias paths)
         if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
+            if _SPRINT25_DAY2_DEBUG:
+                _sprint25_day2_log("partial_collapse_sum", "skip: body_derivative is Const(0.0)")
             continue
 
         # Substitute matched sum indices with their concrete values
         result_body = _substitute_sum_indices(
             body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
         )
+        if _SPRINT25_DAY2_DEBUG:
+            _sprint25_day2_log(
+                "partial_collapse_sum",
+                f"after substitute matched→concrete: result_body={result_body!r}",
+            )
 
         # If there are remaining sum indices, wrap in a Sum (preserving condition)
         if final_remaining:

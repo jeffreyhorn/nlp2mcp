@@ -5,8 +5,10 @@ GAMS MCP file from a KKT system.
 """
 
 import math
+import warnings
 from collections import deque
 from itertools import combinations
+from pathlib import Path
 from typing import cast
 
 from src.config import Config
@@ -69,6 +71,12 @@ from src.kkt.naming import (
     create_ineq_multiplier_name,
 )
 from src.kkt.objective import extract_objective_info
+
+# Repository root anchor for portable `$include` paths in emitted artifacts.
+# emit_gams.py lives at `<repo>/src/emit/emit_gams.py`, so parents[2] is the
+# repo root. Used by `_emit_nlp_presolve` to emit a repo-relative include
+# directive instead of a workstation-specific absolute path (#1275).
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _merge_exclude_params(*sets: set[str] | None) -> set[str] | None:
@@ -914,6 +922,52 @@ def _emit_nlp_presolve(
     if not nlp_eqs:
         return
 
+    # #1275: resolve the source path before committing any output to `sections`.
+    # If the source lives under the repo root we emit a portable
+    # `$include "<rel>"`. If it doesn't, there's no portable way to refer to
+    # it, AND the dual-transfer lines that follow would reference original
+    # equation names that only come into scope via the $include — so skipping
+    # only the include (keeping the transfers) would produce an un-runnable
+    # artifact. Emit a `UserWarning` + a short commented banner in the GAMS
+    # output explaining why the pre-solve block was dropped, then return.
+    # The banner keeps the artifact self-documenting (reviewers / downstream
+    # readers see the explanation inline) without breaking its runnability —
+    # GAMS ignores `*` comment lines.
+    src_path = Path(source_file).resolve()
+    try:
+        include_path = src_path.relative_to(_REPO_ROOT).as_posix()
+    except ValueError:
+        warnings.warn(
+            f"nlp-presolve source {source_file!r} is outside the repo root "
+            f"({_REPO_ROOT}); there is no portable $include path, so the "
+            f"NLP pre-solve warm-start block is being omitted entirely. "
+            f"Move the source under the repo root (or run from a checkout "
+            f"that contains it) to enable pre-solve.",
+            stacklevel=3,
+        )
+        # Emit the omission banner regardless of `add_comments` — without it,
+        # a consumer of a `--no-comments` artifact would have no in-file
+        # indication that the warm-start was dropped, and only the Python-
+        # time warning survives. The banner is four `*`-commented lines so
+        # GAMS ignores them at compile time.
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* NLP Pre-Solve omitted: source file is outside the repo root")
+            sections.append(
+                "* (#1275 — no portable $include path; re-run with the source "
+                "under the repo root to enable warm-start)."
+            )
+            sections.append("* ============================================")
+            sections.append("")
+        else:
+            # Minimal single-line omission marker for --no-comments mode.
+            sections.append(
+                "* #1275: NLP pre-solve omitted — source file is outside the "
+                "repo root (no portable $include path)."
+            )
+            sections.append("")
+        return
+
     # Build sets of equality/inequality names for sign handling
     eq_set = set(kkt.model_ir.equalities)
     ineq_set = set(kkt.model_ir.inequalities)
@@ -928,10 +982,7 @@ def _emit_nlp_presolve(
     # solver uses the original equation forms (=L=/=G=) rather than the
     # MCP's comp_* (negated =G=) forms, which can confuse NLP solvers.
     # $onMultiR allows redefinition of symbols already declared in the MCP.
-    from pathlib import Path
-
-    abs_path = Path(source_file).resolve().as_posix()
-    escaped_include_path = abs_path.replace('"', '""')
+    escaped_include_path = include_path.replace('"', '""')
     sections.append("$onMultiR")
     sections.append(f'$include "{escaped_include_path}"')
     sections.append("$offMulti")
