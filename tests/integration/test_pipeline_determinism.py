@@ -33,6 +33,9 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "data" / "gamslib" / "raw"
+# Mismatch artifacts land here on failure (reference + failing seed dumps).
+# `tests/artifacts/` is gitignored so local failing runs don't leak .gms files
+# into commits.
 ARTIFACT_DIR = REPO_ROOT / "tests" / "artifacts" / "determinism"
 
 # Per-commit fixtures — all with baseline translate time <10s so the
