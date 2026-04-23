@@ -9,7 +9,9 @@ Usage:
 - Per-commit (fast): `pytest -m "integration and determinism"`
   Runs `TestDeterminismFast` — 5 fixture models × 5 fixed seeds.
 - Nightly (slow): `pytest -m "slow and determinism"`
-  Runs `TestDeterminismFull` — the full 143-model convex corpus × 2 seeds.
+  Runs `TestDeterminismFull` — every convex in-scope translate-success
+  model (the filter intersection in `_convex_models()`, currently ~135)
+  × 2 seeds. Exact count drifts as the baseline status JSON is refreshed.
 
 See `docs/planning/EPIC_4/SPRINT_25/DESIGN_DETERMINISM_TESTS.md` for the full
 scope / fixture / seed-set rationale.
