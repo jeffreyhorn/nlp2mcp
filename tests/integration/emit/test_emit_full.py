@@ -408,13 +408,19 @@ class TestFullGAMSEmission:
 
         kkt = assemble_kkt_system(model, gradient, J_eq, J_ineq)
 
-        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file="/tmp/test_model.gms")
+        # #1275: the emitter skips the presolve block entirely when the
+        # source is outside the repo root (it has no portable $include
+        # path). Use an in-repo path so this test continues to exercise the
+        # presolve structure rather than the soft-skip branch.
+        output = emit_gams_mcp(
+            kkt, nlp_presolve=True, source_file="examples/simple_nlp.gms"
+        )
 
         # Pre-solve block should be present
         assert "$onMultiR" in output
         assert "$offMulti" in output
         assert "$include" in output
-        assert "test_model.gms" in output
+        assert "simple_nlp.gms" in output
 
         # Dual transfer line should be present (bound multiplier for x with lo=0).
         # This minimal model has no equality multipliers (objdef is the

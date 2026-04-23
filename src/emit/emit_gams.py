@@ -922,6 +922,28 @@ def _emit_nlp_presolve(
     if not nlp_eqs:
         return
 
+    # #1275: resolve the source path before committing any output to `sections`.
+    # If the source lives under the repo root we emit a portable
+    # `$include "<rel>"`. If it doesn't, there's no portable way to refer to
+    # it, AND the dual-transfer lines that follow would reference original
+    # equation names that only come into scope via the $include — so skipping
+    # only the include (keeping the transfers) would produce an un-runnable
+    # artifact. Emit a `UserWarning` and return, leaving the MCP itself
+    # runnable without the warm-start.
+    src_path = Path(source_file).resolve()
+    try:
+        include_path = src_path.relative_to(_REPO_ROOT).as_posix()
+    except ValueError:
+        warnings.warn(
+            f"nlp-presolve source {source_file!r} is outside the repo root "
+            f"({_REPO_ROOT}); there is no portable $include path, so the "
+            f"NLP pre-solve warm-start block is being omitted entirely. "
+            f"Move the source under the repo root (or run from a checkout "
+            f"that contains it) to enable pre-solve.",
+            stacklevel=3,
+        )
+        return
+
     # Build sets of equality/inequality names for sign handling
     eq_set = set(kkt.model_ir.equalities)
     ineq_set = set(kkt.model_ir.inequalities)
@@ -936,38 +958,9 @@ def _emit_nlp_presolve(
     # solver uses the original equation forms (=L=/=G=) rather than the
     # MCP's comp_* (negated =G=) forms, which can confuse NLP solvers.
     # $onMultiR allows redefinition of symbols already declared in the MCP.
-    #
-    # Emit a repo-relative include path when the source file lives under the
-    # repo root (#1275) so generated `_mcp_presolve.gms` artifacts remain
-    # portable across workstations and CI. Sources outside the repo root have
-    # no portable reference, so we emit a warning comment + commented-out
-    # absolute include — the artifact is then self-documenting about why it
-    # can't be re-run without manual edits.
-    src_path = Path(source_file).resolve()
-    try:
-        include_path = src_path.relative_to(_REPO_ROOT).as_posix()
-        include_is_portable = True
-    except ValueError:
-        include_path = src_path.as_posix()
-        include_is_portable = False
-
     escaped_include_path = include_path.replace('"', '""')
     sections.append("$onMultiR")
-    if include_is_portable:
-        sections.append(f'$include "{escaped_include_path}"')
-    else:
-        warnings.warn(
-            f"nlp-presolve source {source_file!r} is outside the repo root "
-            f"({_REPO_ROOT}); emitting a commented-out absolute $include that "
-            f"will need manual replacement before the pre-solve wrapper can "
-            f"be re-run on another machine.",
-            stacklevel=3,
-        )
-        sections.append(
-            "* #1275: source file is outside the repo root; edit the line "
-            "below to a portable path before re-running."
-        )
-        sections.append(f'*$include "{escaped_include_path}"')
+    sections.append(f'$include "{escaped_include_path}"')
     sections.append("$offMulti")
     sections.append("")
 

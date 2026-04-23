@@ -1,16 +1,19 @@
 """Unit tests for #1275: `$include` path portability in `_emit_nlp_presolve`.
 
-Emits an MCP with `nlp_presolve=True` against a synthetic model, then asserts
-the emitted `$include` directive is:
-  - repo-relative when the source file lives under the repo root, and
-  - commented out + accompanied by a `UserWarning` when the source is
-    outside the repo root (the artifact is then self-documenting about why
-    it can't be re-run verbatim).
+Emits an MCP with `nlp_presolve=True` against a synthetic model, then asserts:
+  - the emitted `$include` is repo-relative when the source lives under the
+    repo root, and
+  - when the source is outside the repo root, the ENTIRE pre-solve block
+    (banner, $onMultiR/$offMulti bookends, $include, dual transfers) is
+    skipped and a `UserWarning` fires. Skipping the whole block is
+    necessary because the dual-transfer assignments reference original
+    equation names that only come into scope via the `$include`; emitting
+    them without a working include produces a `.gms` that won't compile.
 
 Running the emitter end-to-end (rather than unit-testing a private helper)
 keeps the test resilient to internal refactors; the contract asserted here
 is the surface the issue report cares about (the text of the `$include`
-line in `<model>_mcp_presolve.gms`).
+line — or its absence — in `<model>_mcp_presolve.gms`).
 """
 
 from __future__ import annotations
@@ -89,15 +92,20 @@ class TestIncludePathPortability:
         include_line = _extract_include_line(output)
         assert "\\" not in include_line
 
-    def test_out_of_repo_source_emits_commented_include_with_warning(
+    def test_out_of_repo_source_skips_presolve_entirely_with_warning(
         self, tmp_path, manual_index_mapping
     ):
-        """Source outside repo root → commented `*$include ...` + UserWarning.
+        """Source outside repo root → NO pre-solve block + UserWarning.
 
-        The test uses `tmp_path` as the fake-external source location —
-        `tmp_path` is a pytest-guaranteed directory that is NOT under the
-        repo root, so it exercises the portability-reject branch without
-        depending on any specific OS layout.
+        The earlier draft commented out the `$include` but still emitted the
+        dual-transfer assignments. Those transfers reference original NLP
+        equation names that only come into scope via the `$include`, so the
+        resulting artifact wouldn't compile in GAMS without manual edits.
+        The emitter now takes the stricter "skip the whole warm-start"
+        branch — the MCP itself remains runnable without the pre-solve.
+
+        `tmp_path` is a pytest-guaranteed directory outside the repo, so it
+        exercises the reject branch without depending on any OS layout.
         """
         kkt = _toy_kkt(manual_index_mapping)
         external_source = tmp_path / "external_model.gms"
@@ -106,37 +114,24 @@ class TestIncludePathPortability:
         with pytest.warns(UserWarning, match="outside the repo root"):
             output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(external_source))
 
-        active_lines = [line for line in output.splitlines() if line.startswith("$include")]
-        assert (
-            active_lines == []
-        ), f"expected no active $include for out-of-repo source, got {active_lines!r}"
-        commented = [line for line in output.splitlines() if line.startswith("*$include")]
-        assert len(commented) == 1
-        # The emitter writes the absolute path via `Path.as_posix()`, which on
-        # Windows produces `C:/...` while `str(Path(...))` produces `C:\...`.
-        # Compare against the POSIX form on both sides so this test passes on
-        # Linux/macOS runners *and* Windows.
-        assert external_source.resolve().as_posix() in commented[0]
+        # Nothing presolve-related should be in the output: no include
+        # (active or commented), no $onMultiR/$offMulti bookends, no
+        # NLP-Pre-Solve banner, no dual transfer lines referencing
+        # original (undeclared) equation names.
+        for needle in ("$include", "$onMultiR", "$offMulti", "NLP Pre-Solve"):
+            assert (
+                needle not in output
+            ), f"expected no {needle!r} when source is outside repo root, got:\n{output}"
 
-    def test_includes_onmulti_directive_regardless_of_path_branch(
-        self, tmp_path, manual_index_mapping
-    ):
-        """Both the in-repo and out-of-repo paths preserve the $onMultiR /
-        $offMulti bookends (needed so the pre-solve block doesn't conflict
-        with the MCP's own symbol declarations).
+    def test_in_repo_source_includes_onmulti_bookends(self, manual_index_mapping):
+        """In-repo sources get the `$onMultiR` / `$offMulti` bookends around
+        the `$include`. These are needed so the pre-solve block can redefine
+        MCP symbols without conflict.
         """
         kkt = _toy_kkt(manual_index_mapping)
-        external_source = tmp_path / "external_model.gms"
-        external_source.write_text("* stub file\n")
+        source = REPO_ROOT / "examples" / "simple_nlp.gms"
 
-        with pytest.warns(UserWarning):
-            out_external = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(external_source))
-        out_in_repo = emit_gams_mcp(
-            kkt,
-            nlp_presolve=True,
-            source_file=str(REPO_ROOT / "examples" / "simple_nlp.gms"),
-        )
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(source))
 
-        for out in (out_external, out_in_repo):
-            assert "$onMultiR" in out
-            assert "$offMulti" in out
+        assert "$onMultiR" in output
+        assert "$offMulti" in output
