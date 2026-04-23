@@ -112,7 +112,11 @@ class TestIncludePathPortability:
         ), f"expected no active $include for out-of-repo source, got {active_lines!r}"
         commented = [line for line in output.splitlines() if line.startswith("*$include")]
         assert len(commented) == 1
-        assert str(external_source) in commented[0]
+        # The emitter writes the absolute path via `Path.as_posix()`, which on
+        # Windows produces `C:/...` while `str(Path(...))` produces `C:\...`.
+        # Compare against the POSIX form on both sides so this test passes on
+        # Linux/macOS runners *and* Windows.
+        assert external_source.resolve().as_posix() in commented[0]
 
     def test_includes_onmulti_directive_regardless_of_path_branch(
         self, tmp_path, manual_index_mapping
