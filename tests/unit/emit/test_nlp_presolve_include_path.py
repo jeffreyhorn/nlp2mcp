@@ -3,12 +3,14 @@
 Emits an MCP with `nlp_presolve=True` against a synthetic model, then asserts:
   - the emitted `$include` is repo-relative when the source lives under the
     repo root, and
-  - when the source is outside the repo root, the ENTIRE pre-solve block
-    (banner, $onMultiR/$offMulti bookends, $include, dual transfers) is
-    skipped and a `UserWarning` fires. Skipping the whole block is
-    necessary because the dual-transfer assignments reference original
-    equation names that only come into scope via the `$include`; emitting
-    them without a working include produces a `.gms` that won't compile.
+  - when the source is outside the repo root, the runnable pre-solve
+    content ($onMultiR/$offMulti bookends, $include, dual transfers) is
+    skipped and replaced with a short `*`-commented banner explaining the
+    omission. A `UserWarning` fires in parallel. Skipping the runnable
+    block is necessary because the dual-transfer assignments reference
+    original equation names that only come into scope via the `$include`;
+    emitting them without a working include would produce a `.gms` that
+    won't compile.
 
 Running the emitter end-to-end (rather than unit-testing a private helper)
 keeps the test resilient to internal refactors; the contract asserted here
@@ -133,13 +135,13 @@ class TestIncludePathPortability:
                 f"expected no active $include line when source is outside "
                 f"repo root, got: {line!r}"
             )
-            assert not stripped.startswith("*$include"), (
-                f"expected no commented $include line, got: {line!r}"
-            )
+            assert not stripped.startswith(
+                "*$include"
+            ), f"expected no commented $include line, got: {line!r}"
         for needle in ("$onMultiR", "$offMulti", "NLP Pre-Solve (warm-start for MCP duals)"):
-            assert needle not in output, (
-                f"expected no {needle!r} when source is outside repo root, got:\n{output}"
-            )
+            assert (
+                needle not in output
+            ), f"expected no {needle!r} when source is outside repo root, got:\n{output}"
 
         # But the emitted file DOES contain a short `*`-commented banner
         # explaining why the pre-solve block was omitted, so the artifact
