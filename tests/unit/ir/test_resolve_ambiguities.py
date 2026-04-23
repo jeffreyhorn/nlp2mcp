@@ -35,12 +35,16 @@ from src.ir.parser import (
 )
 
 
-def _num(value: str) -> Token:
-    return Token("NUMBER", value)
+def _num(value: str, line: int = 1) -> Token:
+    tok = Token("NUMBER", value)
+    tok.line = line
+    return tok
 
 
-def _id(value: str) -> Token:
-    return Token("ID", value)
+def _id(value: str, line: int = 1) -> Token:
+    tok = Token("ID", value)
+    tok.line = line
+    return tok
 
 
 def _correct_row() -> Tree:
@@ -175,30 +179,30 @@ class TestResolveAmbiguitiesEndToEnd:
         assert result.children[0].value == "a"
 
 
-def _label_row(label_id: str) -> Tree:
+def _label_row(label_id: str, line: int = 1) -> Tree:
     """Build a `table_row` with a simple ID row label and zero values."""
     return Tree(
         "table_row",
-        [Tree("simple_label", [Tree("dotted_label", [_id(label_id)])])],
+        [Tree("simple_label", [Tree("dotted_label", [_id(label_id, line=line)])])],
     )
 
 
-def _labeled_row_with_values(label_id: str, values: list[str]) -> Tree:
+def _labeled_row_with_values(label_id: str, values: list[str], line: int = 1) -> Tree:
     """Build a `table_row` with a simple ID row label and N `table_value` children."""
     return Tree(
         "table_row",
         [
-            Tree("simple_label", [Tree("dotted_label", [_id(label_id)])]),
-            *[Tree("table_value", [_num(v)]) for v in values],
+            Tree("simple_label", [Tree("dotted_label", [_id(label_id, line=line)])]),
+            *[Tree("table_value", [_num(v, line=line)]) for v in values],
         ],
     )
 
 
-def _corrupted_number_row(value: str) -> Tree:
+def _corrupted_number_row(value: str, line: int = 1) -> Tree:
     """Build a #1283-corrupted bare-NUMBER `table_row` (single NUMBER label, no values)."""
     return Tree(
         "table_row",
-        [Tree("simple_label", [Tree("dotted_label", [_num(value)])])],
+        [Tree("simple_label", [Tree("dotted_label", [_num(value, line=line)])])],
     )
 
 
@@ -298,6 +302,47 @@ class TestCollapseCorruptedTableRows:
         assert len(result) == 1
         inner = result[0].children[0]
         assert _is_bare_number_row(inner) is not None
+
+    def test_bare_number_on_different_line_not_collapsed(self):
+        """A bare-NUMBER row on a line AFTER the previous row is a legitimate
+        numeric row label (the values likely come on a continuation line) —
+        do NOT collapse it onto the previous row.
+        """
+        contents = [
+            _content(_labeled_row_with_values("foo", ["1.0"], line=49)),
+            _content(_corrupted_number_row("9000011", line=50)),
+        ]
+        result = _collapse_corrupted_table_rows(contents)
+        # Both rows preserved — different lines means not #1283 corruption.
+        assert len(result) == 2
+        prev_row = result[0].children[0]
+        prev_values = [
+            c for c in prev_row.children if isinstance(c, Tree) and c.data == "table_value"
+        ]
+        assert len(prev_values) == 1  # unchanged
+        assert _is_bare_number_row(result[1].children[0]) is not None
+
+    def test_bare_number_followed_by_continuation_not_collapsed(self):
+        """Bare-NUMBER row followed by a `table_continuation` is a legitimate
+        numeric row label whose values arrive on the `+` line — don't collapse.
+        """
+        continuation = Tree(
+            "table_continuation",
+            [Token("PLUS", "+"), Tree("table_value", [_num("2.0")])],
+        )
+        contents = [
+            _content(_labeled_row_with_values("foo", ["1.0"], line=1)),
+            _content(_corrupted_number_row("9000011", line=1)),  # same line → gate A passes
+            Tree("table_content", [continuation]),
+        ]
+        result = _collapse_corrupted_table_rows(contents)
+        # Even on the same line, gate B (next is continuation) prevents collapse.
+        assert len(result) == 3
+        prev_row = result[0].children[0]
+        prev_values = [
+            c for c in prev_row.children if isinstance(c, Tree) and c.data == "table_value"
+        ]
+        assert len(prev_values) == 1  # unchanged
 
 
 class TestNormalizeParsedTables:

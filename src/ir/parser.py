@@ -196,18 +196,54 @@ def _is_bare_number_row(row: Tree) -> Token | None:
     return tok
 
 
+def _last_token_line(node: Tree | Token) -> int | None:
+    """Return the source line of the last `Token` reachable from `node`, or None.
+
+    Used to distinguish #1283 corruption (bare-NUMBER row on the same physical
+    line as the previous real row) from legitimate bare-NUMBER row labels
+    (alone on their own line, possibly with values on a subsequent
+    `table_continuation`).
+    """
+    if isinstance(node, Token):
+        return getattr(node, "line", None)
+    if not isinstance(node, Tree):
+        return None
+    for child in reversed(node.children):
+        line = _last_token_line(child)
+        if line is not None:
+            return line
+    return None
+
+
+def _is_table_continuation_content(content: Tree | Token) -> bool:
+    """Return True iff `content` is a `table_content[table_continuation[...]]`."""
+    if not isinstance(content, Tree) or content.data != "table_content":
+        return False
+    if not content.children:
+        return False
+    first = content.children[0]
+    return isinstance(first, Tree) and first.data == "table_continuation"
+
+
 def _collapse_corrupted_table_rows(contents: list[Tree | Token]) -> list[Tree | Token]:
     """Collapse #1283 corrupted rows within a `table_block`'s `table_content` list.
 
     Scans for `table_content → table_row` children where the row is a bare-NUMBER
     orphan (per `_is_bare_number_row`) and merges those rows' NUMBER tokens into
-    the preceding real row as `table_value` children. If a bare-NUMBER orphan
-    has no preceding real row (i.e., it's the first content of the table), it is
-    left as-is — that leaves the original error intact for downstream reporting
-    rather than silently losing data.
+    the preceding real row as `table_value` children. Only collapses when the
+    bare-NUMBER token is on the **same physical line** as the previous real
+    row's last token AND the next `table_content` is not a `table_continuation`.
+    Both gates distinguish real #1283 corruption (orphan NUMBERs on the same
+    line as the row they were originally attached to) from legitimate patterns
+    like a numeric row label alone on its own line whose values arrive on the
+    next `+` continuation line.
+
+    If a bare-NUMBER orphan has no preceding real row (i.e., it's the first
+    content of the table), or fails either of the gates above, it is left as-is
+    — the original parse is preserved for downstream handling.
     """
     result: list[Tree | Token] = []
-    for content in contents:
+    for i, content in enumerate(contents):
         if not isinstance(content, Tree) or content.data != "table_content":
             result.append(content)
             continue
@@ -221,7 +257,15 @@ def _collapse_corrupted_table_rows(contents: list[Tree | Token]) -> list[Tree | 
             result.append(content)
             continue
 
-        # Bare-NUMBER orphan: try to attach to previous real row.
+        # Gate: the NEXT content must not be a `table_continuation`. If it is,
+        # the bare-NUMBER is likely a legitimate standalone row label whose
+        # values come on the continuation line — collapsing would wrongly
+        # attach the label to the previous row AND misroute the continuation.
+        if i + 1 < len(contents) and _is_table_continuation_content(contents[i + 1]):
+            result.append(content)
+            continue
+
+        # Locate the previous real (non-corrupted) row.
         prev_idx: int | None = None
         if result:
             prev_content = result[-1]
@@ -240,10 +284,20 @@ def _collapse_corrupted_table_rows(contents: list[Tree | Token]) -> list[Tree | 
             result.append(content)
             continue
 
-        # Rebuild the previous table_content with an extra table_value child on its row.
+        # Gate: the bare-NUMBER token must be on the same physical line as
+        # the previous row's last token. #1283 corruption produces orphans
+        # on the same line as the row they were meant to be values of;
+        # legitimate bare-NUMBER row labels are on their own separate line.
         prev_content = result[prev_idx]
         assert isinstance(prev_content, Tree)
         prev_row = prev_content.children[0]
+        prev_line = _last_token_line(prev_row)
+        tok_line = getattr(tok, "line", None)
+        if prev_line is None or tok_line is None or prev_line != tok_line:
+            result.append(content)
+            continue
+
+        # Rebuild the previous table_content with an extra table_value child on its row.
         assert isinstance(prev_row, Tree)
         new_row = Tree("table_row", [*prev_row.children, Tree("table_value", [tok])])
         result[prev_idx] = Tree("table_content", [new_row, *prev_content.children[1:]])
