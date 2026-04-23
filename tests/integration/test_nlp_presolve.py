@@ -151,15 +151,19 @@ class TestNLPPresolveOutput:
         assert "$offMulti" in presolve_output
 
     def test_has_include(self, presolve_output):
-        """Pre-solve block includes the original source file."""
+        """Pre-solve block includes the original source file via a
+        repo-relative path (#1275): absolute paths leak the developer's
+        workstation layout and make the emitted artifact non-portable.
+        """
         assert "$include" in presolve_output
-        # The include should reference an absolute path
-        include_lines = [line for line in presolve_output.splitlines() if "$include" in line]
-        assert len(include_lines) >= 1
-        # The path should be absolute and quoted
-        include_raw = include_lines[0].split("$include")[1].strip()
+        include_lines = [
+            line for line in presolve_output.splitlines() if line.startswith("$include")
+        ]
+        assert len(include_lines) == 1
+        include_raw = include_lines[0].split("$include", 1)[1].strip()
         include_path = include_raw.strip('"')
-        assert Path(include_path).is_absolute() or include_path.startswith("/")
+        assert not Path(include_path).is_absolute()
+        assert not include_path.startswith("/")
 
     def test_include_references_source_file(self, presolve_output):
         """$include references the original .gms source file."""
@@ -602,12 +606,20 @@ class TestNLPPresolveGAMSSolve:
         )
         assert result.exit_code == 0
 
-        # Solve with GAMS
+        # Solve with GAMS. After #1275 the emitted presolve wrapper uses a
+        # repo-relative `$include` path (e.g., `data/gamslib/raw/bearing.gms`),
+        # so GAMS must be invoked with the repo root as cwd for the include
+        # to resolve. We also route the listing file back to `tmp_path` via
+        # `o=` so the later `output_file.with_suffix('.lst')` assertion still
+        # finds it. This mirrors the intended usage: artifacts are portable
+        # when re-run from the repo root.
+        repo_root = Path(__file__).resolve().parents[2]
+        lst_file = output_file.with_suffix(".lst")
         gams_result = subprocess.run(
-            ["gams", str(output_file), "lo=0"],
+            ["gams", str(output_file), "lo=0", f"o={lst_file}"],
             capture_output=True,
             text=True,
-            cwd=str(tmp_path),
+            cwd=str(repo_root),
         )
         assert gams_result.returncode == 0, (
             "GAMS solve failed.\n"
@@ -615,8 +627,7 @@ class TestNLPPresolveGAMSSolve:
             f"stderr:\n{gams_result.stderr}"
         )
 
-        # Check listing file
-        lst_file = output_file.with_suffix(".lst")
+        # Check listing file (path was computed above and passed to GAMS via `o=`).
         assert lst_file.exists(), "GAMS listing file not created"
         lst_content = lst_file.read_text()
 

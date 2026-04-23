@@ -5,8 +5,10 @@ GAMS MCP file from a KKT system.
 """
 
 import math
+import warnings
 from collections import deque
 from itertools import combinations
+from pathlib import Path
 from typing import cast
 
 from src.config import Config
@@ -69,6 +71,12 @@ from src.kkt.naming import (
     create_ineq_multiplier_name,
 )
 from src.kkt.objective import extract_objective_info
+
+# Repository root anchor for portable `$include` paths in emitted artifacts.
+# emit_gams.py lives at `<repo>/src/emit/emit_gams.py`, so parents[2] is the
+# repo root. Used by `_emit_nlp_presolve` to emit a repo-relative include
+# directive instead of a workstation-specific absolute path (#1275).
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _merge_exclude_params(*sets: set[str] | None) -> set[str] | None:
@@ -928,12 +936,38 @@ def _emit_nlp_presolve(
     # solver uses the original equation forms (=L=/=G=) rather than the
     # MCP's comp_* (negated =G=) forms, which can confuse NLP solvers.
     # $onMultiR allows redefinition of symbols already declared in the MCP.
-    from pathlib import Path
+    #
+    # Emit a repo-relative include path when the source file lives under the
+    # repo root (#1275) so generated `_mcp_presolve.gms` artifacts remain
+    # portable across workstations and CI. Sources outside the repo root have
+    # no portable reference, so we emit a warning comment + commented-out
+    # absolute include — the artifact is then self-documenting about why it
+    # can't be re-run without manual edits.
+    src_path = Path(source_file).resolve()
+    try:
+        include_path = src_path.relative_to(_REPO_ROOT).as_posix()
+        include_is_portable = True
+    except ValueError:
+        include_path = src_path.as_posix()
+        include_is_portable = False
 
-    abs_path = Path(source_file).resolve().as_posix()
-    escaped_include_path = abs_path.replace('"', '""')
+    escaped_include_path = include_path.replace('"', '""')
     sections.append("$onMultiR")
-    sections.append(f'$include "{escaped_include_path}"')
+    if include_is_portable:
+        sections.append(f'$include "{escaped_include_path}"')
+    else:
+        warnings.warn(
+            f"nlp-presolve source {source_file!r} is outside the repo root "
+            f"({_REPO_ROOT}); emitting a commented-out absolute $include that "
+            f"will need manual replacement before the pre-solve wrapper can "
+            f"be re-run on another machine.",
+            stacklevel=3,
+        )
+        sections.append(
+            "* #1275: source file is outside the repo root; edit the line "
+            "below to a portable path before re-running."
+        )
+        sections.append(f'*$include "{escaped_include_path}"')
     sections.append("$offMulti")
     sections.append("")
 
