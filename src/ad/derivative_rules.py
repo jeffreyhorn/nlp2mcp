@@ -83,10 +83,16 @@ _SPRINT25_DAY2_DEBUG = os.environ.get("SPRINT25_DAY2_DEBUG") == "1"
 
 
 def _sprint25_day2_log(tag: str, msg: str) -> None:
-    """Emit a `[SPRINT25_DAY2][<tag>]` trace line to stderr.
+    """Emit a `[SPRINT25_DAY2][<tag>]` trace line to stderr unconditionally.
 
-    Callers MUST guard message construction with `if _SPRINT25_DAY2_DEBUG:`;
-    this helper does not re-check the flag so callers can't forget the guard.
+    This helper deliberately does NOT re-check `_SPRINT25_DAY2_DEBUG`: the
+    goal is zero cost when debug is off, which requires callers to short-
+    circuit message construction themselves. Every call site in this module
+    is therefore wrapped with `if _SPRINT25_DAY2_DEBUG:` — if a future
+    contributor adds a call without the guard, this helper WILL log
+    unconditionally (and the `f"... {expr.body!r}"` argument will also
+    evaluate unconditionally, defeating the zero-cost property). Keep the
+    guard at every call site.
     """
     print(f"[SPRINT25_DAY2][{tag}] {msg}", file=sys.stderr, flush=True)
 
