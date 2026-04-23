@@ -2443,20 +2443,35 @@ def _partial_collapse_sum(
         # Substitute the symbolic names that were actually used in the body
         # diff back to their concrete wrt values. This spans both the
         # `matched_sum_indices` (for positions where no recovery happened)
-        # and any body-free indices recovered above. We dedupe on symbolic
-        # name to avoid `_substitute_sum_indices` overwriting an earlier
-        # entry when alias matching mapped multiple wrt positions to the
-        # same body index.
+        # and any body-free indices recovered above. Two wrt positions may
+        # share the same symbolic name (alias matching can route them both
+        # through the same sum index): dedupe when the concrete values
+        # agree; skip the whole matching when they conflict, since
+        # `_substitute_sum_indices` uses a dict and would silently drop one
+        # side of the conflict. This mirrors the `duplicate_sym` guard in
+        # the single-index recovery path (derivative_rules.py:2012-2033).
         sub_sym: list[str] = []
         sub_concrete: list[str | IndexOffset] = []
-        seen_sym: set[str] = set()
+        seen_substitutions: dict[str, str | IndexOffset] = {}
+        invalid_substitution = False
         for sub_entry, sub_concrete_val in zip(symbolic_wrt, matched_concrete, strict=True):
             key = sub_entry.base if isinstance(sub_entry, IndexOffset) else sub_entry
-            if key in seen_sym:
+            if key in seen_substitutions:
+                if seen_substitutions[key] != sub_concrete_val:
+                    invalid_substitution = True
+                    if _SPRINT25_DAY2_DEBUG:
+                        _sprint25_day2_log(
+                            "partial_collapse_sum",
+                            "skip: conflicting duplicate symbolic substitution for "
+                            f"{key!r}: {seen_substitutions[key]!r} vs {sub_concrete_val!r}",
+                        )
+                    break
                 continue
-            seen_sym.add(key)
+            seen_substitutions[key] = sub_concrete_val
             sub_sym.append(key)
             sub_concrete.append(sub_concrete_val)
+        if invalid_substitution:
+            continue
         result_body = _substitute_sum_indices(body_derivative, tuple(sub_sym), tuple(sub_concrete))
         if _SPRINT25_DAY2_DEBUG:
             _sprint25_day2_log(

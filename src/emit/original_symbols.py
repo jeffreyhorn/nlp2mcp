@@ -237,7 +237,7 @@ def _quote_assignment_index(
 
 
 def _sanitize_uel_element(element: str) -> str:
-    """Sanitize a UEL registry element, unconditionally single-quoting the result.
+    """Sanitize a UEL registry element and single-quote scalar results.
 
     The generic `_sanitize_set_element` treats a dot as GAMS tuple notation
     (e.g., `upper.egypt` as a 2-tuple label) and so leaves `x1.l` unquoted.
@@ -251,6 +251,19 @@ def _sanitize_uel_element(element: str) -> str:
     dangerous-character rejection still applies) and then quote the result if
     it wasn't already quoted. GAMS accepts `'foo'` identically to `foo` for
     plain identifiers, so unconditional quoting has no downside.
+
+    Two outputs are passed through without wrapping in an outer pair of
+    single quotes:
+
+    - Already-quoted results from `_sanitize_set_element` (e.g., `'foo-bar'`
+      or `'SAE 10'`). Re-quoting would produce `''foo-bar''`.
+    - The GUSS 3-tuple trailing-dot form `foo.''`, which the base sanitizer
+      synthesises from a trailing-dot input. This is intentionally a tuple
+      reference — wrapping it in outer quotes would turn it into the label
+      `'foo.'''`, losing the 3-tuple semantics.
+
+    Callers that need literal quoting of every input should not rely on
+    this helper for the two shapes above.
     """
     sanitized = _sanitize_set_element(element)
     # `_sanitize_set_element` returns a pre-quoted string unchanged and also
