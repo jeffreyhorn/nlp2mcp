@@ -1,0 +1,10 @@
+# Per-commit fast-suite fixtures for TestDeterminismFast (PR12 / issue #1283).
+# One model_id per line. Both `tests/integration/test_pipeline_determinism.py`
+# (FAST_FIXTURES) and `scripts/download_gamslib_raw.sh --fast` read from here
+# so the CI download set and the pytest parametrize stay in lockstep.
+# Lines starting with `#` and blank lines are ignored.
+chenery
+abel
+partssupply
+ps2_f
+himmel11

@@ -38,8 +38,10 @@ RAW_DIR = REPO_ROOT / "data" / "gamslib" / "raw"
 # into commits.
 ARTIFACT_DIR = REPO_ROOT / "tests" / "artifacts" / "determinism"
 
-# Per-commit fixtures — all with baseline translate time <10s so the
-# parametrized 5-seed sweep stays within the ~60s fast-suite budget.
+# Per-commit fixture manifest — one model_id per line, shared with
+# `scripts/download_gamslib_raw.sh --fast` so CI download set and pytest
+# parametrize can't drift. Fixtures are all baseline translate time <10s, so
+# the parametrized 5-seed sweep stays within the ~60s fast-suite budget.
 #
 # `DESIGN_DETERMINISM_TESTS.md` §4 originally proposed `indus89` as the
 # "silent-corruption guard" (second most likely to trigger the #1283
@@ -51,10 +53,28 @@ ARTIFACT_DIR = REPO_ROOT / "tests" / "artifacts" / "determinism"
 #     the per-commit budget. Same for `clearlak` at 323s.
 #
 # Silent-corruption coverage is therefore deferred to `TestDeterminismFull`'s
-# nightly full-corpus sweep (2 seeds × 135 translating models) which catches
-# any #1283-class regression on `indus`, `clearlak`, or `indus89` (when
-# upstream convexity status changes).
-FAST_FIXTURES: tuple[str, ...] = ("chenery", "abel", "partssupply", "ps2_f", "himmel11")
+# nightly full-corpus sweep which catches any #1283-class regression on
+# `indus`, `clearlak`, or `indus89` (when upstream convexity status changes).
+_FAST_FIXTURES_MANIFEST = Path(__file__).with_name("determinism_fast_fixtures.txt")
+
+
+def _load_fast_fixtures() -> tuple[str, ...]:
+    """Read fixture model_ids from the shared manifest file.
+
+    Strips blank lines and `#`-prefixed comments. Same file is consumed by
+    `scripts/download_gamslib_raw.sh --fast`, so edits here automatically
+    flow to CI download selection.
+    """
+    names: list[str] = []
+    for raw in _FAST_FIXTURES_MANIFEST.read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        names.append(line)
+    return tuple(names)
+
+
+FAST_FIXTURES: tuple[str, ...] = _load_fast_fixtures()
 FAST_SEEDS: tuple[int, ...] = (0, 1, 42, 12345, 99999)
 
 NIGHTLY_SEEDS: tuple[int, ...] = (0, 99999)

@@ -30,30 +30,46 @@ jobs:
 
       - name: Restore fast-suite determinism fixture cache
         id: gamslib-raw-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: data/gamslib/raw/
-          # Key on the download script (which pins the fast fixture list) and
-          # the status JSON (which provides source URLs). Either change should
-          # invalidate the cache.
-          key: ${{ runner.os }}-gamslib-raw-fast-${{ hashFiles('scripts/download_gamslib_raw.sh', 'data/gamslib/gamslib_status.json') }}
+          # Key on the download script (which pins the fast fixture list),
+          # the shared manifest file (the actual list of fixture names), and
+          # the status JSON (which provides source URLs). Any of these changes
+          # should invalidate the cache.
+          key: ${{ runner.os }}-gamslib-raw-fast-${{ hashFiles('scripts/download_gamslib_raw.sh', 'tests/integration/determinism_fast_fixtures.txt', 'data/gamslib/gamslib_status.json') }}
 
       - name: Download fast-suite determinism fixtures
+        id: download-gamslib-raw
         if: steps.gamslib-raw-cache.outputs.cache-hit != 'true'
         run: |
-          # Populate data/gamslib/raw/ with the 5 models referenced by
-          # tests/integration/test_pipeline_determinism.py::TestDeterminismFast.
-          # On a cache miss we try to fetch from gams.com. If that fails
-          # (transient network/gams.com hiccup), emit a GitHub warning and
-          # set SKIP_DETERMINISM=1 — the next step filters the determinism
+          # Populate data/gamslib/raw/ with the fixtures from
+          # tests/integration/determinism_fast_fixtures.txt. On a cache miss
+          # we try to fetch from gams.com. If that fails (transient
+          # network/gams.com hiccup), emit a GitHub warning and set
+          # SKIP_DETERMINISM=1 — the next step filters the determinism
           # marker out so the job still passes. The signal we care about is
           # repo regressions, not external availability.
           if ./scripts/download_gamslib_raw.sh --fast; then
             echo "Downloaded fast-suite determinism fixtures."
+            echo "download-ok=true" >> "$GITHUB_OUTPUT"
           else
             echo "::warning::Failed to download fast-suite determinism fixtures from gams.com; skipping determinism tests in PR CI for this run."
             echo "SKIP_DETERMINISM=1" >> "$GITHUB_ENV"
+            echo "download-ok=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Save fast-suite determinism fixture cache
+        # Only save on a successful fresh download — don't poison the cache
+        # with a partially-downloaded fixture set that a future run would
+        # silently hit. Skipped entirely on cache-hit (nothing new to save).
+        if: |
+          steps.gamslib-raw-cache.outputs.cache-hit != 'true'
+          && steps.download-gamslib-raw.outputs.download-ok == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: data/gamslib/raw/
+          key: ${{ steps.gamslib-raw-cache.outputs.cache-primary-key }}
 
       - name: Run fast test suite (parallel)
         run: |

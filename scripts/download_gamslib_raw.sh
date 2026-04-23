@@ -22,9 +22,10 @@ BASE_URL="https://www.gams.com/latest/gamslib_ml"
 
 MODE="convex"
 
-# Fast-suite fixtures — must stay in sync with FAST_FIXTURES in
-# tests/integration/test_pipeline_determinism.py.
-FAST_FIXTURES=("chenery" "abel" "partssupply" "ps2_f" "himmel11")
+# Fast-suite fixtures — loaded from the shared manifest file so the shell
+# script and Python test can't drift out of sync. One model_id per line;
+# blanks and `#` comments are ignored.
+FAST_FIXTURES_MANIFEST="${REPO_ROOT}/tests/integration/determinism_fast_fixtures.txt"
 
 show_help() {
     cat << EOF
@@ -35,8 +36,9 @@ Download GAMSLIB raw .gms sources into data/gamslib/raw/.
 OPTIONS:
     --help          Show this help message
     --all           Download every model in the status JSON
-    --fast          Download only the 5 fixtures used by TestDeterminismFast
-                    (chenery, abel, partssupply, ps2_f, himmel11)
+    --fast          Download only the fixtures listed in
+                    tests/integration/determinism_fast_fixtures.txt
+                    (the same list TestDeterminismFast parametrizes over)
 
 Default: convex in-scope models (likely_convex + verified_convex) that are
 not skipped by pipeline_status and have nlp2mcp_translate.status == success;
@@ -60,8 +62,18 @@ fi
 
 mkdir -p "$TARGET_DIR"
 
-# Select model_ids by mode.
-FAST_LIST="${FAST_FIXTURES[*]}"
+# Select model_ids by mode. For --fast mode, load fixtures from the shared
+# manifest file so the shell script and the Python test read from the same
+# source of truth.
+if [ "$MODE" = "fast" ]; then
+    if [ ! -f "$FAST_FIXTURES_MANIFEST" ]; then
+        echo "ERROR: fast-fixture manifest not found at $FAST_FIXTURES_MANIFEST" >&2
+        exit 1
+    fi
+    FAST_LIST="$(grep -v '^#' "$FAST_FIXTURES_MANIFEST" | tr '\n' ' ')"
+else
+    FAST_LIST=""
+fi
 MODEL_IDS="$(FAST_LIST="$FAST_LIST" python3 - "$STATUS_JSON" "$MODE" <<'PYEOF'
 import json, os, sys
 status_path, mode = sys.argv[1], sys.argv[2]
