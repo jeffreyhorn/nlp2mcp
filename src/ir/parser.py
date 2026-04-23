@@ -164,12 +164,301 @@ def _build_lark() -> Lark:
     )
 
 
-def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
-    """Collapse Earley ambiguity nodes by picking the first alternative.
+def _is_bare_number_row(row: Tree) -> Token | None:
+    """Detect a `table_row` that is the #1283 corruption artifact.
 
-    With ambiguity="resolve" in the parser, ambiguity nodes are rare, but this
-    function handles any that do appear by consistently picking the first alternative.
-    This avoids exponential blowup in pathological grammar cases.
+    Returns the NUMBER token if the row matches the corruption pattern
+    (a single-NUMBER row label with zero `table_value` children) — i.e., a
+    numeric table value that Lark's Earley resolver mis-parsed as a new row
+    label. Returns None otherwise.
+
+    A legitimate bare-NUMBER row label (e.g., `9000011` from issue #863) is
+    distinguished by having one-or-more `table_value` children following the
+    label; corrupted rows have none.
+    """
+    if not isinstance(row, Tree) or row.data != "table_row":
+        return None
+    if len(row.children) != 1:
+        return None
+    label = row.children[0]
+    if not isinstance(label, Tree) or label.data != "simple_label":
+        return None
+    if len(label.children) != 1:
+        return None
+    dotted = label.children[0]
+    if not isinstance(dotted, Tree) or dotted.data != "dotted_label":
+        return None
+    if len(dotted.children) != 1:
+        return None
+    tok = dotted.children[0]
+    if not isinstance(tok, Token) or tok.type != "NUMBER":
+        return None
+    return tok
+
+
+def _last_token_line(node: Tree | Token) -> int | None:
+    """Return the source line of the last `Token` reachable from `node`, or None.
+
+    Used to distinguish #1283 corruption (bare-NUMBER row on the same physical
+    line as the previous real row) from legitimate bare-NUMBER row labels
+    (alone on their own line, possibly with values on a subsequent
+    `table_continuation`).
+    """
+    if isinstance(node, Token):
+        return getattr(node, "line", None)
+    if not isinstance(node, Tree):
+        return None
+    for child in reversed(node.children):
+        line = _last_token_line(child)
+        if line is not None:
+            return line
+    return None
+
+
+def _is_table_continuation_content(content: Tree | Token) -> bool:
+    """Return True iff `content` is a `table_content[table_continuation[...]]`."""
+    if not isinstance(content, Tree) or content.data != "table_content":
+        return False
+    if not content.children:
+        return False
+    first = content.children[0]
+    return isinstance(first, Tree) and first.data == "table_continuation"
+
+
+def _collapse_corrupted_table_rows(contents: list[Tree | Token]) -> list[Tree | Token]:
+    """Collapse #1283 corrupted rows within a `table_block`'s `table_content` list.
+
+    Scans for `table_content → table_row` children where the row is a bare-NUMBER
+    orphan (per `_is_bare_number_row`) and merges those rows' NUMBER tokens into
+    the preceding real row as `table_value` children. Only collapses when the
+    bare-NUMBER token is on the **same physical line** as the previous real
+    row's last token AND the next `table_content` is not a `table_continuation`.
+    Both gates distinguish real #1283 corruption (orphan NUMBERs on the same
+    line as the row they were originally attached to) from legitimate patterns
+    like a numeric row label alone on its own line whose values arrive on the
+    next `+` continuation line.
+
+    If a bare-NUMBER orphan has no preceding real row (i.e., it's the first
+    content of the table), or fails either of the gates above, it is left as-is
+    — the original parse is preserved for downstream handling.
+    """
+    result: list[Tree | Token] = []
+    for i, content in enumerate(contents):
+        if not isinstance(content, Tree) or content.data != "table_content":
+            result.append(content)
+            continue
+        if not content.children or not isinstance(content.children[0], Tree):
+            result.append(content)
+            continue
+
+        inner = content.children[0]
+        tok = _is_bare_number_row(inner) if inner.data == "table_row" else None
+        if tok is None:
+            result.append(content)
+            continue
+
+        # Gate: the NEXT content must not be a `table_continuation`. If it is,
+        # the bare-NUMBER is likely a legitimate standalone row label whose
+        # values come on the continuation line — collapsing would wrongly
+        # attach the label to the previous row AND misroute the continuation.
+        if i + 1 < len(contents) and _is_table_continuation_content(contents[i + 1]):
+            result.append(content)
+            continue
+
+        # Locate the previous real (non-corrupted) row.
+        prev_idx: int | None = None
+        if result:
+            prev_content = result[-1]
+            if (
+                isinstance(prev_content, Tree)
+                and prev_content.data == "table_content"
+                and prev_content.children
+                and isinstance(prev_content.children[0], Tree)
+                and prev_content.children[0].data == "table_row"
+                and _is_bare_number_row(prev_content.children[0]) is None
+            ):
+                prev_idx = len(result) - 1
+
+        if prev_idx is None:
+            # Orphan with no preceding real row; preserve as-is.
+            result.append(content)
+            continue
+
+        # Gate: the bare-NUMBER token must be on the same physical line as
+        # the previous row's last token. #1283 corruption produces orphans
+        # on the same line as the row they were meant to be values of;
+        # legitimate bare-NUMBER row labels are on their own separate line.
+        prev_content = result[prev_idx]
+        assert isinstance(prev_content, Tree)
+        prev_row = prev_content.children[0]
+        prev_line = _last_token_line(prev_row)
+        tok_line = getattr(tok, "line", None)
+        if prev_line is None or tok_line is None or prev_line != tok_line:
+            result.append(content)
+            continue
+
+        # Rebuild the previous table_content with an extra table_value child on its row.
+        assert isinstance(prev_row, Tree)
+        new_row = Tree("table_row", [*prev_row.children, Tree("table_value", [tok])])
+        result[prev_idx] = Tree("table_content", [new_row, *prev_content.children[1:]])
+    return result
+
+
+def _normalize_parsed_tables(node: Tree | Token) -> Tree | Token:
+    """Post-parse repair of #1283-corrupted table rows.
+
+    Lark's Earley parser with `ambiguity="resolve"` picks a parse forest leaf
+    with a hash-seed-dependent tiebreak. When the `table_row` / `simple_label`
+    / `dotted_label` rule chain produces a forest entry where row values are
+    reparsed as bare-NUMBER row labels (a 65% corruption rate on chenery per
+    Task 3's 20-seed sweep), this function walks the resolved tree and
+    reconstructs the intended `table_row` → `table_value*` structure inside
+    each `table_block`.
+
+    This post-parse approach is required because `ambiguity="resolve"` does
+    not emit `_ambig` nodes (Lark's internal resolver picks one alternative
+    directly). `ambiguity="explicit"` was considered and rejected: the
+    corpus has enough latent ambiguities that even a trivial model like
+    `abel` expands to 12,513 `_ambig` nodes.
+
+    Uses iterative post-order traversal with an explicit stack so callers
+    without an elevated `sys.setrecursionlimit()` don't hit `RecursionError`
+    on deep parse trees (mirrors `_resolve_ambiguities`). Short-circuits by
+    returning the original node when no child subtree was modified, so
+    table-free parses allocate no new `Tree` objects.
+    """
+    if isinstance(node, Token):
+        return node
+
+    # Post-order iterative traversal: visit each Tree twice (first to push
+    # children, then to assemble). normalized[id(x)] holds the normalized
+    # replacement for x (or x itself if unchanged). Only Tree children are
+    # pushed; Token children are read directly off `current.children` during
+    # assembly without needing a normalized entry.
+    normalized: dict[int, Tree] = {}
+    stack: list[tuple[Tree, bool]] = [(node, False)]
+
+    while stack:
+        current, is_return = stack.pop()
+
+        if not is_return:
+            # First visit: schedule assembly, then push children.
+            stack.append((current, True))
+            for child in reversed(current.children):
+                if isinstance(child, Tree):
+                    stack.append((child, False))
+            continue
+
+        # Assembly visit: build normalized children list, tracking whether
+        # anything changed so we can skip rebuilding on unchanged subtrees.
+        children_changed = False
+        new_children: list[Tree | Token] = []
+        for child in current.children:
+            if isinstance(child, Tree):
+                replacement = normalized[id(child)]
+                if replacement is not child:
+                    children_changed = True
+                new_children.append(replacement)
+            else:
+                new_children.append(child)
+
+        if current.data == "table_block":
+            collapsed = _collapse_corrupted_table_rows(new_children)
+            collapse_changed = len(collapsed) != len(new_children) or any(
+                c is not o for c, o in zip(collapsed, new_children, strict=True)
+            )
+            if collapse_changed:
+                normalized[id(current)] = Tree(current.data, collapsed)
+                continue
+            if children_changed:
+                normalized[id(current)] = Tree(current.data, new_children)
+                continue
+            normalized[id(current)] = current
+            continue
+
+        if children_changed:
+            normalized[id(current)] = Tree(current.data, new_children)
+        else:
+            normalized[id(current)] = current
+
+    return normalized[id(node)]
+
+
+def _score_table_row_alternative(alt: Tree | Token) -> tuple[int, int]:
+    """Score an _ambig alternative by its table_row packing density.
+
+    Returns (table_value_children_count, -table_row_node_count). The tuple is
+    designed for use as a max() key: the alternative packing the most
+    `table_value` children into the fewest `table_row` nodes wins.
+
+    This resolves issue #1283: under Earley ambiguity, `table_row_label` →
+    `simple_label` → `dotted_label` → bare `NUMBER` lets a row like `low.a 1 2 3`
+    parse as either 1 row with 3 values OR 4 rows with 0 values. The correct
+    parse (1 row) has score (3, -1); the corrupted parse has score (0, -4);
+    the first wins under max().
+
+    Alternatives containing zero table_row nodes score (0, 0) and tie; this
+    preserves the existing "pick first" behavior for non-table ambiguities.
+    """
+    if not isinstance(alt, Tree):
+        return (0, 0)
+
+    values = 0
+    rows = 0
+    for sub in alt.iter_subtrees():
+        if sub.data == "table_row":
+            rows += 1
+            values += sum(
+                1 for c in sub.children if isinstance(c, Tree) and c.data == "table_value"
+            )
+    return (values, -rows)
+
+
+def _pick_ambig_alternative(ambig: Tree) -> Tree | Token:
+    """Pick the best alternative from an `_ambig` node.
+
+    Uses the greediest-value heuristic (`_score_table_row_alternative`) when
+    any alternative contains `table_row` children; otherwise falls back to
+    the first alternative (the historical behavior).
+
+    This scope gating keeps the fix narrow: Option D for issue #1283 only
+    affects `_ambig` subtrees that contain `table_row` nodes. All other
+    ambiguity sites retain their prior first-child-wins resolution.
+    """
+    if not ambig.children:
+        return ambig
+
+    # Check whether any alternative contains a table_row — if not, keep the
+    # historical first-alternative behavior.
+    has_table_row = False
+    for alt in ambig.children:
+        if not isinstance(alt, Tree):
+            continue
+        for sub in alt.iter_subtrees():
+            if sub.data == "table_row":
+                has_table_row = True
+                break
+        if has_table_row:
+            break
+
+    if not has_table_row:
+        return ambig.children[0]
+
+    # Greediest-value: pack most table_value children into fewest table_row nodes.
+    return max(ambig.children, key=_score_table_row_alternative)
+
+
+def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
+    """Collapse Earley ambiguity nodes by picking a defensible alternative.
+
+    For non-`table_row` ambiguity sites, picks the first alternative (historical
+    behavior; avoids exponential blowup in pathological grammar cases).
+
+    For `_ambig` subtrees containing `table_row` nodes (issue #1283),
+    uses the greediest-value heuristic via `_pick_ambig_alternative`: prefer
+    the alternative packing the most `table_value` children into the fewest
+    `table_row` nodes. This eliminates the `PYTHONHASHSEED`-dependent
+    corruption observed at 65% of runs on chenery.
 
     Uses iterative approach with explicit stack to avoid Python recursion limits
     for large parse trees (e.g., models with 1000+ variables).
@@ -187,8 +476,12 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
     # Memory trade-off: Holds references to all nodes during traversal
     resolved = {}
 
+    # Map from _ambig node id to the pre-selected winning alternative. Computed on
+    # the first visit; read on the return visit to wire up the resolved tree.
+    ambig_winners: dict[int, Tree | Token] = {}
+
     # Stack for post-order traversal: (node, is_return_visit)
-    stack = [(node, False)]
+    stack: list[tuple[Tree | Token, bool]] = [(node, False)]
 
     while stack:
         current, is_return = stack.pop()
@@ -203,8 +496,8 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
                 if not current.children:
                     resolved[id(current)] = current
                 else:
-                    # Pick first alternative
-                    resolved[id(current)] = resolved[id(current.children[0])]
+                    winner = ambig_winners[id(current)]
+                    resolved[id(current)] = resolved[id(winner)]
             else:
                 # Reconstruct tree with resolved children
                 resolved_children = [resolved[id(child)] for child in current.children]
@@ -215,8 +508,11 @@ def _resolve_ambiguities(node: Tree | Token) -> Tree | Token:
 
             # Push children to stack
             if current.data == "_ambig" and current.children:
-                # Only process first child for ambiguity nodes
-                stack.append((current.children[0], False))
+                # Pick the best alternative now; only push the winner onto the stack
+                # to preserve the existing no-exponential-blowup invariant.
+                winner = _pick_ambig_alternative(current)
+                ambig_winners[id(current)] = winner
+                stack.append((winner, False))
             else:
                 # Process all children in reverse order (for left-to-right processing)
                 for child in reversed(current.children):
@@ -320,7 +616,8 @@ def parse_text(source: str) -> Tree:
     parser = _build_lark()
     try:
         raw = parser.parse(source)
-        return _resolve_ambiguities(raw)
+        resolved = _resolve_ambiguities(raw)
+        return _normalize_parsed_tables(resolved)
     except UnexpectedToken as e:
         # Extract source line and adjust column
         source_line, column = _extract_source_line_with_adjusted_column(source, e.line, e.column)

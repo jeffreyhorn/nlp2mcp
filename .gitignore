@@ -45,6 +45,7 @@ htmlcov/
 .tox/
 .mypy_cache/
 .ruff_cache/
+tests/artifacts/
 
 # Build tools
 *.egg-info/

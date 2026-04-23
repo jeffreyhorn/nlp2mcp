@@ -1,0 +1,56 @@
+name: Nightly determinism sweep
+
+on:
+  schedule:
+    - cron: "17 7 * * *"  # 07:17 UTC daily
+  workflow_dispatch:      # manual trigger
+
+jobs:
+  determinism-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install -r requirements.txt
+
+      - name: Download convex in-scope GAMSLIB raw sources
+        run: |
+          # Populate data/gamslib/raw/ from gams.com (the dir is gitignored).
+          # Required by tests/integration/test_pipeline_determinism.py —
+          # without this step the sweep would no-op (all fixtures missing).
+          #
+          # Don't fail the whole job on partial download failures: transient
+          # gams.com/network hiccups are not determinism regressions, and the
+          # test harness already treats missing fixtures as translate noise
+          # (FileNotFoundError → logged, doesn't fail the test). Surface the
+          # count via a GitHub warning so nightly review can see it.
+          if ! ./scripts/download_gamslib_raw.sh; then
+            echo "::warning::download_gamslib_raw.sh reported one or more download failures; continuing nightly sweep with any fixtures that were fetched."
+          fi
+
+      - name: Run full-corpus determinism sweep
+        run: |
+          pytest -m "slow and determinism" -v --tb=short \
+            tests/integration/test_pipeline_determinism.py
+
+      - name: Upload diff artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: determinism-diffs
+          path: tests/artifacts/determinism/
+          retention-days: 30
