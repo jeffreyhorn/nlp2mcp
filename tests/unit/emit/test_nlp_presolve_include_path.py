@@ -95,14 +95,18 @@ class TestIncludePathPortability:
     def test_out_of_repo_source_skips_presolve_entirely_with_warning(
         self, tmp_path, manual_index_mapping
     ):
-        """Source outside repo root → NO pre-solve block + UserWarning.
+        """Source outside repo root → NO runnable pre-solve content +
+        self-documenting commented banner + UserWarning.
 
         The earlier draft commented out the `$include` but still emitted the
         dual-transfer assignments. Those transfers reference original NLP
         equation names that only come into scope via the `$include`, so the
         resulting artifact wouldn't compile in GAMS without manual edits.
         The emitter now takes the stricter "skip the whole warm-start"
-        branch — the MCP itself remains runnable without the pre-solve.
+        branch — the MCP itself remains runnable, and a short `*`-commented
+        banner in the emitted file explains why the warm-start was dropped
+        (so a downstream reader of `<model>_mcp_presolve.gms` doesn't have
+        to cross-reference the Python warning).
 
         `tmp_path` is a pytest-guaranteed directory outside the repo, so it
         exercises the reject branch without depending on any OS layout.
@@ -114,14 +118,35 @@ class TestIncludePathPortability:
         with pytest.warns(UserWarning, match="outside the repo root"):
             output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(external_source))
 
-        # Nothing presolve-related should be in the output: no include
-        # (active or commented), no $onMultiR/$offMulti bookends, no
-        # NLP-Pre-Solve banner, no dual transfer lines referencing
-        # original (undeclared) equation names.
-        for needle in ("$include", "$onMultiR", "$offMulti", "NLP Pre-Solve"):
-            assert (
-                needle not in output
-            ), f"expected no {needle!r} when source is outside repo root, got:\n{output}"
+        # No runnable pre-solve content: no $include line (active OR
+        # commented), no $onMultiR/$offMulti bookends, and (crucially) no
+        # warm-start banner or dual-transfer assignments that would reference
+        # undeclared equation names.
+        #
+        # Line-prefix checks avoid false positives from the explanatory
+        # banner (which mentions `$include` as prose) and from any hypothetical
+        # substring matches elsewhere in the emitted GAMS.
+        output_lines = output.splitlines()
+        for line in output_lines:
+            stripped = line.lstrip()
+            assert not stripped.startswith("$include"), (
+                f"expected no active $include line when source is outside "
+                f"repo root, got: {line!r}"
+            )
+            assert not stripped.startswith("*$include"), (
+                f"expected no commented $include line, got: {line!r}"
+            )
+        for needle in ("$onMultiR", "$offMulti", "NLP Pre-Solve (warm-start for MCP duals)"):
+            assert needle not in output, (
+                f"expected no {needle!r} when source is outside repo root, got:\n{output}"
+            )
+
+        # But the emitted file DOES contain a short `*`-commented banner
+        # explaining why the pre-solve block was omitted, so the artifact
+        # remains self-documenting.
+        assert "NLP Pre-Solve omitted" in output
+        assert "outside the repo root" in output
+        assert "#1275" in output
 
     def test_in_repo_source_includes_onmulti_bookends(self, manual_index_mapping):
         """In-repo sources get the `$onMultiR` / `$offMulti` bookends around

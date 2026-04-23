@@ -928,8 +928,11 @@ def _emit_nlp_presolve(
     # it, AND the dual-transfer lines that follow would reference original
     # equation names that only come into scope via the $include — so skipping
     # only the include (keeping the transfers) would produce an un-runnable
-    # artifact. Emit a `UserWarning` and return, leaving the MCP itself
-    # runnable without the warm-start.
+    # artifact. Emit a `UserWarning` + a short commented banner in the GAMS
+    # output explaining why the pre-solve block was dropped, then return.
+    # The banner keeps the artifact self-documenting (reviewers / downstream
+    # readers see the explanation inline) without breaking its runnability —
+    # GAMS ignores `*` comment lines.
     src_path = Path(source_file).resolve()
     try:
         include_path = src_path.relative_to(_REPO_ROOT).as_posix()
@@ -942,6 +945,15 @@ def _emit_nlp_presolve(
             f"that contains it) to enable pre-solve.",
             stacklevel=3,
         )
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* NLP Pre-Solve omitted: source file is outside the repo root")
+            sections.append(
+                "* (#1275 — no portable $include path; re-run with the source "
+                "under the repo root to enable warm-start)."
+            )
+            sections.append("* ============================================")
+            sections.append("")
         return
 
     # Build sets of equality/inequality names for sign handling
