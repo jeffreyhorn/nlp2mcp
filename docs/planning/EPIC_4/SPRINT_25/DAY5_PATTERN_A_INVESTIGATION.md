@@ -119,7 +119,7 @@ Notes:
   specific set cardinality, but the strategy is fragile.
 
 I can't verify rightness at compile-time (the GAMS `action=c` compile on
-ganges/qabel/abel throws pre-existing Error 141 cascades on dual-transfer
+qabel/abel throws pre-existing Error 141 cascades on dual-transfer
 lines — unrelated to this analysis). A full PATH solve is the only
 ground truth for whether the current stat_x is numerically correct.
 

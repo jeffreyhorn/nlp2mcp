@@ -61,7 +61,7 @@ Sprint 25 originally scoped 11 alias-AD carryforward issues + 7 emitter backlog 
 | Parse | 143/143 (100%) | ≥ 143/143 | — | Invariant. |
 | Translate | 135/143 (94.4%) | ≥ 135/143 | ≥ 137/143 | 5 timeouts + `mine` deferred to Sprint 26. |
 | Solve | 99 | ≥ 100 | ≥ 102 | +1 from #1289 (landed Day 4 — ganges/gangesx unblock). Pattern C may add +1 (launch) if the fix passes regression. Pattern A Phase 2 dropped — previously projected +3 removed. |
-| Match | 54 | ≥ 56 | ≥ 58 | +2 from Pattern C on launch + qabel (IF Day 8 PATH solve shows emission bug, not nonconvex noise). +2 stretch if cohort sweep finds another Pattern-C-shaped bug. Pattern A Phase 2 dropped — previously projected +5 removed; the +6 Match ladder is no longer the gate. |
+| Match | 54 | ≥ 56 | ≥ 58 | +1 from Pattern C on launch (phantom-offset gate, Days 6–7). +1 potentially from qabel, contingent on the Day 8 PATH-solve reassessment exposing a recoverable emission bug rather than nonconvex-solver noise (a distinct workstream — not Pattern C). +2 stretch if the Day 7 cohort sweep surfaces another Pattern-C-shaped bug in #1138/1140/1142/1145/1150. Pattern A Phase 2 dropped — previously projected +5 removed; the +6 Match ladder is no longer the gate. |
 | path_syntax_error | 11 | ≤ 7 | ≤ 5 | #1275 + #1280 (DONE Days 2–3) removed ~2; Batch 2 (#1276, #1281) targets ~2 more; Batch 3 (#1290, #1291) ~1 more. |
 | path_solve_terminated | 10 | ≤ 9 | ≤ 8 | Pattern C (launch phantom-offset fix) may remove 1. |
 | model_infeasible | 8 | ≤ 7 | ≤ 5 | Pattern C fixes on alias-sum emissions may recover one CGE-family infeasible. |
