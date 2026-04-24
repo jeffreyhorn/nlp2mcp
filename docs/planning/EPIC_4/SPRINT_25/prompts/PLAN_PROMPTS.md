@@ -23,7 +23,7 @@ Days 0–5 have been executed. PR links:
 
 The Day 5 pivot DROPS the originally-planned Phase 2 broader Pattern A rollout and replaces it with Pattern C work (Days 6–7) plus a cohort sanity sweep and qabel/abel PATH-solve reassessment (Days 7–8). See `../PLAN.md` §"Day 5 Pivot" for full rationale.
 
-Original Day 0–5 prompts are preserved in git history at `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` on commit `fd1110d2` and earlier.
+Original Day 0–5 prompts are preserved in the file history of `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` on `main`; the merged PRs listed above (PR #1301–#1305) mark the relevant points in that history for locating the pre-revision version (`git log --follow -- docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md`).
 
 ---
 
