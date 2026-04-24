@@ -3373,8 +3373,9 @@ class TestSanitizeUelElement:
             _sanitize_uel_element("bad/element")
 
     def test_guss_trailing_dot_preserved(self):
-        """GUSS 3-tuple with empty trailing component (e.g.,
-        `rapscenarios.scenario.''`) must keep its `.''` structure — the UEL
-        helper should not re-quote that compound form.
+        """GUSS trailing-dot tuple form with an empty trailing component
+        (e.g., the 2-tuple `foo.''` asserted below, or the 3-tuple
+        `rapscenarios.scenario.''` from issue #910) must keep its `.''`
+        structure — the UEL helper should not re-quote that compound form.
         """
         assert _sanitize_uel_element("foo.") == "foo.''"
