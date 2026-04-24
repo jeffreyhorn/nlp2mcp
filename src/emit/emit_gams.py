@@ -2515,6 +2515,44 @@ def emit_gams_mcp(
     if nlp_presolve:
         _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
+    # Issue #1289: post-initial-solve calibration assignments that read `.l`
+    # values (e.g., `deltas(i)$ls.l(i) = (k(i)/ls.l(i))**(...)` in
+    # ganges/gangesx). These are stripped from the pre-Variables pass above
+    # (`varref_filter="no_varref_attr"`) because `.l` can't be referenced
+    # before Variables are declared. They can only run AFTER a solve has
+    # populated `.l` — in the `--nlp-presolve` flow that's the $include of
+    # the original NLP above. Without that include, `.l` is uninitialized
+    # and the calibration would produce UNDF / divide-by-zero, so we gate
+    # on `nlp_presolve` being active and the source file being portable
+    # (i.e., `_emit_nlp_presolve` actually emitted the include rather than
+    # falling into the #1275 soft-skip branch for an out-of-repo source).
+    if nlp_presolve and source_file is not None:
+        try:
+            Path(source_file).resolve().relative_to(_REPO_ROOT)
+            presolve_include_emitted = True
+        except ValueError:
+            presolve_include_emitted = False
+        if presolve_include_emitted:
+            calibration_code = emit_computed_parameter_assignments(
+                kkt.model_ir,
+                varref_filter="only_varref_attr",
+                exclude_params=_merge_exclude_params(
+                    early_params if early_params else None,
+                    non_model_params,
+                ),
+            )
+            if calibration_code:
+                if add_comments:
+                    sections.append("* ============================================")
+                    sections.append(
+                        "* Post-initial-solve calibration (#1289): parameters "
+                        "computed from `.l` values set by the pre-solve $include above."
+                    )
+                    sections.append("* ============================================")
+                    sections.append("")
+                sections.append(calibration_code)
+                sections.append("")
+
     # Solve statement
     if add_comments:
         sections.append("* ============================================")
