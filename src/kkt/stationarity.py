@@ -130,6 +130,153 @@ def _collect_lead_lag_offsets(
             _collect_lead_lag_offsets(child, domain_map, lead_offsets, lag_offsets, bound_indices)
 
 
+def _body_has_index_offset_on_sets(
+    expr: Expr,
+    target_canonical_sets: frozenset[str],
+    model_ir: ModelIR,
+    bound_indices: frozenset[str] = frozenset(),
+) -> bool:
+    """Return True iff ``expr`` contains any ``IndexOffset`` node whose base
+    index (after alias resolution) refers to one of ``target_canonical_sets``.
+
+    Both circular and non-circular `IndexOffset` nodes count. Circular offsets
+    (GAMS `t--1`) are still legitimate lead/lag patterns that require
+    per-offset multipliers (e.g. `paklive.gms`'s `nutbal(n,t).. ... +
+    eff(n)*xtransf(n,t--1) + ...`); the `circular` flag only affects whether
+    the offset wraps around the set, not whether a source-level offset
+    exists.
+
+    `bound_indices` holds indices currently bound by an enclosing `Sum`/`Prod`
+    so sum-local aliases don't falsely match when they shadow an equation
+    domain index.
+    """
+    if isinstance(expr, IndexOffset):
+        if isinstance(expr.base, str):
+            base_lower = expr.base.lower()
+            if base_lower not in bound_indices:
+                canonical = _resolve_alias_target(base_lower, model_ir)
+                if canonical in target_canonical_sets:
+                    return True
+
+    if isinstance(expr, (VarRef, ParamRef, EquationRef)):
+        for idx in expr.indices:
+            if isinstance(idx, IndexOffset) and _body_has_index_offset_on_sets(
+                idx, target_canonical_sets, model_ir, bound_indices
+            ):
+                return True
+
+    if isinstance(expr, (Sum, Prod)):
+        new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+        return any(
+            _body_has_index_offset_on_sets(child, target_canonical_sets, model_ir, new_bound)
+            for child in expr.children()
+        )
+
+    return any(
+        _body_has_index_offset_on_sets(child, target_canonical_sets, model_ir, bound_indices)
+        for child in expr.children()
+    )
+
+
+def _body_has_aliased_conditional_sum_over_sets(
+    expr: Expr,
+    target_canonical_sets: frozenset[str],
+    model_ir: ModelIR,
+    eq_domain_canonical: frozenset[str],
+    bound_indices: frozenset[str] = frozenset(),
+) -> bool:
+    """Return True iff ``expr`` contains a ``Sum`` whose summed index is an
+    alias of one of ``target_canonical_sets`` AND whose condition references at
+    least one index (directly or via alias) in ``eq_domain_canonical``.
+
+    Sprint 25 Day 6 (Pattern C Bug #1 — phantom ±N offsets on alias-only
+    conditional sums). This is the launch-shaped fingerprint:
+
+    ``dweight(s).. weight(s) =e= sum(ss$ge(ss,s), iweight(ss) + ...)``
+
+    where ``ss`` is an alias of the variable's domain set and the condition
+    ``ge(ss, s)`` ties the summed alias to the equation's domain ``s``. The
+    combination produces cross-element Jacobian entries that
+    ``_compute_index_offset_key`` interprets as lead/lag offsets, yielding
+    phantom ``nu_dweight(s±N)`` terms in the emission.
+
+    Plain alias iteration without an equation-domain-linked condition
+    (e.g. quocge's ``eqpzs(j).. pz(j) =e= ... + sum(i, ax(i,j)*pq(i))`` —
+    summed index ``i`` is the canonical set, no condition linking ``i`` to
+    ``j``) is NOT covered by this helper: those cases may have their own
+    emission issues, but they're NOT the Pattern C Bug #1 shape and are
+    preserved by the Day 6 gate so Tier 0/1 canaries remain byte-identical.
+    """
+    if isinstance(expr, Sum):
+        summed_canonicals = frozenset(
+            _resolve_alias_target(idx, model_ir) for idx in expr.index_sets
+        )
+        if (
+            summed_canonicals & target_canonical_sets
+            and expr.condition is not None
+            and _expr_mentions_indices_canonical(
+                expr.condition, eq_domain_canonical, model_ir, bound_indices
+            )
+        ):
+            return True
+
+    if isinstance(expr, (Sum, Prod)):
+        new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+        return any(
+            _body_has_aliased_conditional_sum_over_sets(
+                child, target_canonical_sets, model_ir, eq_domain_canonical, new_bound
+            )
+            for child in expr.children()
+        )
+
+    return any(
+        _body_has_aliased_conditional_sum_over_sets(
+            child, target_canonical_sets, model_ir, eq_domain_canonical, bound_indices
+        )
+        for child in expr.children()
+    )
+
+
+def _expr_mentions_indices_canonical(
+    expr: Expr,
+    target_canonical_sets: frozenset[str],
+    model_ir: ModelIR,
+    bound_indices: frozenset[str],
+) -> bool:
+    """Return True iff ``expr`` references any bare string index (outside of
+    ``bound_indices``) whose canonical set (after alias resolution) is in
+    ``target_canonical_sets``. Used by
+    ``_body_has_aliased_conditional_sum_over_sets`` to detect conditions that
+    link a summed alias to the equation's domain.
+    """
+    from src.ir.ast import SymbolRef
+
+    if isinstance(expr, SymbolRef):
+        name_lower = expr.name.lower()
+        if name_lower not in bound_indices:
+            canonical = _resolve_alias_target(name_lower, model_ir)
+            if canonical in target_canonical_sets:
+                return True
+
+    if isinstance(expr, (VarRef, ParamRef, EquationRef, IndexOffset)):
+        for idx in getattr(expr, "indices", ()):
+            if isinstance(idx, str) and idx.lower() not in bound_indices:
+                canonical = _resolve_alias_target(idx.lower(), model_ir)
+                if canonical in target_canonical_sets:
+                    return True
+        for child in expr.children():
+            if _expr_mentions_indices_canonical(
+                child, target_canonical_sets, model_ir, bound_indices
+            ):
+                return True
+        return False
+
+    return any(
+        _expr_mentions_indices_canonical(child, target_canonical_sets, model_ir, bound_indices)
+        for child in expr.children()
+    )
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -3942,6 +4089,61 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
+                # Sprint 25 Day 6 (Pattern C Bug #1): decide up-front whether
+                # non-zero offset groups are semantically legitimate for this
+                # (constraint, variable) pair. `_compute_index_offset_key`
+                # computes positional differences between eq and var instances
+                # regardless of source intent, so for a launch-shaped
+                # conditional alias sum (e.g. launch.gms's
+                # `dweight(s).. ... =e= sum(ss$ge(ss,s), iweight(ss) + ...)`)
+                # it invents ±N offsets that don't exist in the source. The
+                # gate below consolidates those spurious groups into a single
+                # zero-offset key iff BOTH (a) the source equation body has no
+                # `IndexOffset` on any index that (via alias resolution)
+                # refers to a set in the variable's domain, AND (b) the body
+                # contains an aliased conditional sum whose `$` condition
+                # references the equation's own domain — the launch-style
+                # fingerprint. Plain alias-iteration sums (e.g. quocge's
+                # `sum(i, ax(i,j)*pq(i))`, prolog's `sum(j, a(i,j)*q(j,t))`)
+                # lack the conditional link and are deliberately left alone,
+                # preserving existing Tier 0/1 canary outputs. Real lead/lag
+                # equations (e.g. paklive's `nutbal(n,t).. ... xtransf(n,t--1)`,
+                # twocge #1277, qabel/abel's stateq) retain the original
+                # per-offset grouping because condition (a) fails.
+                eq_def_for_gate = kkt.model_ir.equations.get(eq_name_base)
+                variable_canonical_sets = frozenset(
+                    _resolve_alias_target(d, kkt.model_ir) for d in var_domain
+                )
+                eq_domain_canonical = (
+                    frozenset(
+                        _resolve_alias_target(d, kkt.model_ir)
+                        for d in (eq_def_for_gate.domain or ())
+                    )
+                    if eq_def_for_gate is not None
+                    else frozenset()
+                )
+                allow_nonzero_offsets = True
+                if eq_def_for_gate is not None and variable_canonical_sets:
+                    lhs_expr, rhs_expr = eq_def_for_gate.lhs_rhs
+                    body_has_index_offset = _body_has_index_offset_on_sets(
+                        lhs_expr, variable_canonical_sets, kkt.model_ir
+                    ) or _body_has_index_offset_on_sets(
+                        rhs_expr, variable_canonical_sets, kkt.model_ir
+                    )
+                    body_has_cond_alias_sum = _body_has_aliased_conditional_sum_over_sets(
+                        lhs_expr,
+                        variable_canonical_sets,
+                        kkt.model_ir,
+                        eq_domain_canonical,
+                    ) or _body_has_aliased_conditional_sum_over_sets(
+                        rhs_expr,
+                        variable_canonical_sets,
+                        kkt.model_ir,
+                        eq_domain_canonical,
+                    )
+                    if not body_has_index_offset and body_has_cond_alias_sum:
+                        allow_nonzero_offsets = False
+
                 # Issue #1045: Sub-group entries by their index offset pattern.
                 # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),
                 # variable k has two distinct Jacobian patterns in the same constraint:
@@ -3962,6 +4164,13 @@ def _add_indexed_jacobian_terms(
                         kkt.model_ir,
                         _domain_cache=domain_cache,
                     )
+                    if not allow_nonzero_offsets and any(
+                        o != 0 and o != _SENTINEL_UNMATCHED for o in offset_key
+                    ):
+                        offset_key = tuple(
+                            0 if o != _SENTINEL_UNMATCHED else _SENTINEL_UNMATCHED
+                            for o in offset_key
+                        )
                     if offset_key not in offset_groups:
                         offset_groups[offset_key] = []
                     offset_groups[offset_key].append((entry_row_id, entry_col_id))
