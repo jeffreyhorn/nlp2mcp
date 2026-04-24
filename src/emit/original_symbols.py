@@ -257,10 +257,13 @@ def _sanitize_uel_element(element: str) -> str:
 
     - Already-quoted results from `_sanitize_set_element` (e.g., `'foo-bar'`
       or `'SAE 10'`). Re-quoting would produce `''foo-bar''`.
-    - The GUSS 3-tuple trailing-dot form `foo.''`, which the base sanitizer
-      synthesises from a trailing-dot input. This is intentionally a tuple
-      reference — wrapping it in outer quotes would turn it into the label
-      `'foo.'''`, losing the 3-tuple semantics.
+    - The GUSS trailing-dot tuple form (e.g., `foo.''` for a 2-tuple,
+      `rapscenarios.scenario.''` for a 3-tuple — see issue #910), which
+      the base sanitizer synthesises from a trailing-dot input. This is
+      intentionally a tuple reference with an empty trailing component —
+      wrapping it in outer quotes would turn it into the label
+      `'foo.'''` / `'rapscenarios.scenario.'''`, losing the tuple
+      semantics.
 
     Callers that need literal quoting of every input should not rely on
     this helper for the two shapes above.

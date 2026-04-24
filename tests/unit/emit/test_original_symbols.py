@@ -3330,9 +3330,10 @@ class TestSanitizeUelElement:
       - labels already wrapped in single quotes by the base sanitizer
         (e.g., `'foo-bar'`, `'SAE 10'`); re-quoting would produce
         `''foo-bar''`.
-      - the GUSS 3-tuple trailing-dot form `foo.''`; outer quotes would
-        collapse it to the scalar label `'foo.'''`, losing the tuple
-        semantics.
+      - the GUSS 3-tuple trailing-dot form `rapscenarios.scenario.''`
+        (see issue #910 for the canonical shape); outer quotes would
+        collapse it to the scalar label `'rapscenarios.scenario.'''`,
+        losing the tuple semantics.
     """
 
     def test_dotted_attribute_label_gets_quoted(self):
