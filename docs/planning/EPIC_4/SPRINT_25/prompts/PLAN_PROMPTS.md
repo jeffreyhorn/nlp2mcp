@@ -230,11 +230,11 @@ Original Day 0–5 prompts are preserved in the file history of `docs/planning/E
 
 **Prerequisites:**
 - Read `docs/planning/EPIC_4/SPRINT_25/DESIGN_SMALL_PRIORITIES.md`.
-- Key sources: `src/validation/driver.py:151–225` (#1270), `src/emit/original_symbols.py::emit_pre_solve_param_assignments` (nested `_loop_tree_to_gams_subst_dispatch`).
+- Key sources: `src/validation/driver.py::scan_multi_solve_driver` + its helper `_collect_equation_marginals` (#1270); `src/emit/original_symbols.py::emit_pre_solve_param_assignments` (nested `_loop_tree_to_gams_subst_dispatch`).
 
 **Tasks to Complete (~7.5–9.5 hours):**
 
-1. **#1270 (3.5–4.5h):** Implement Approach A cross-reference in `_collect_top_level_marginals_with_param_feedback`. 4-fixture test matrix (per `DESIGN_SMALL_PRIORITIES.md` fixture table — only F1 should flag):
+1. **#1270 (3.5–4.5h):** Implement Approach A cross-reference in `scan_multi_solve_driver` (with supporting changes in `_collect_equation_marginals`) in `src/validation/driver.py`. 4-fixture test matrix (per `DESIGN_SMALL_PRIORITIES.md` fixture table — only F1 should flag):
    - F1 saras-style feedback (MUST flag).
    - F2 post-solve reporting (MUST NOT flag).
    - F3 multi-stage display (MUST NOT flag).

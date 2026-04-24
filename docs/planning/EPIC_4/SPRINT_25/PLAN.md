@@ -122,7 +122,7 @@ Landed in PR #1301 (merged). Option D grammar fix in `src/ir/parser.py::_resolve
 **Effort:** ~7.5–9.5h combined (per `DESIGN_SMALL_PRIORITIES.md`).
 **Target:** saras-style model flagged by extended multi-solve gate; dispatcher refactor with zero byte-diff regression.
 
-- **#1270 gate extension (3.5–4.5h):** Approach A cross-reference — flag `eq.m` reads whose receiving parameter later appears in another declared model's constraint body. Code site `src/validation/driver.py:151–225`. 4-fixture test matrix with explicit expected outcomes.
+- **#1270 gate extension (3.5–4.5h):** Approach A cross-reference — flag `eq.m` reads whose receiving parameter later appears in another declared model's constraint body. Code sites: `src/validation/driver.py::scan_multi_solve_driver` and its helper `_collect_equation_marginals` (function-name anchors preferred over line ranges per the convention used elsewhere in the sprint docs). 4-fixture test matrix with explicit expected outcomes.
 - **#1271 dispatcher refactor (4–5h):** Unified signature `_loop_tree_to_gams(node, *, token_subst=None)`. Byte-diff regression test: snapshot 135 currently-translating models pre-refactor (PYTHONHASHSEED=0), regenerate post, `diff -r` must be empty.
 
 ### WS5: Pipeline Retest and Close (Days 14–15 — shifted from Days 13–14)
