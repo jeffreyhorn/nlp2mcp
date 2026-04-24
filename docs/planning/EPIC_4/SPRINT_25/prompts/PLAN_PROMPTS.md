@@ -19,7 +19,7 @@ Days 0–5 have been executed. PR links:
 - **Day 2** — WS1 Phase 1 Start + WS2 Batch 1 Start (#1275 presolve paths; trace instrumentation) → **PR #1302 (merged)**.
 - **Day 3** — WS1 Phase 1 Prototype + #1280 (unquoted UEL dots; `_partial_collapse_sum` multi-index mechanical port) → **PR #1303 (merged)**.
 - **Day 4** — WS1 Phase 1 Complete + WS2 Batch 2.5 (#1289 ganges calibration stripping) → **PR #1304 (merged)**.
-- **Day 5** — **Pattern A Investigation (pivot day)** — evidence-driven examination of qabel/abel/launch concluded none exhibit Pattern A. Launch has Pattern C phantom offsets in KKT stationarity; qabel/abel AD is byte-correct. → **PR #1305 (in flight)**; deliverable `DAY5_PATTERN_A_INVESTIGATION.md`.
+- **Day 5** — **Pattern A Investigation (pivot day)** — evidence-driven examination of qabel/abel/launch concluded none exhibit Pattern A. Launch has Pattern C phantom offsets in KKT stationarity; qabel/abel AD is byte-correct. → **PR #1305**; deliverable `DAY5_PATTERN_A_INVESTIGATION.md`.
 
 The Day 5 pivot DROPS the originally-planned Phase 2 broader Pattern A rollout and replaces it with Pattern C work (Days 6–7) plus a cohort sanity sweep and qabel/abel PATH-solve reassessment (Days 7–8). See `../PLAN.md` §"Day 5 Pivot" for full rationale.
 

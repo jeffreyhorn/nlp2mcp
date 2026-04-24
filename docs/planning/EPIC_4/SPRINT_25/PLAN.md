@@ -84,7 +84,7 @@ Sprint 25 originally scoped 11 alias-AD carryforward issues + 7 emitter backlog 
 | Phase | Focus | Issues | Days | Status |
 |---|---|---|---|---|
 | 1 | Pattern A single-index validation + `_partial_collapse_sum` multi-index mechanical port | — (architecture) | 2–4 | DONE — PR #1302, #1303 merged; no behavioral change on qabel/abel/launch (they were never Pattern-A-blocked, per Day 5 evidence). |
-| 1.5 | Day 5 evidence-driven investigation | — | 5 | DONE — PR #1305 (in flight); findings disprove Phase 2 hypothesis. |
+| 1.5 | Day 5 evidence-driven investigation | — | 5 | DONE — PR #1305; findings disprove Phase 2 hypothesis. |
 | 2 | ~~Pattern A across all 6 issues~~ **DROPPED** | ~~#1138, #1139, #1140, #1142, #1145, #1150~~ | — | DROPPED per Day 5 findings. |
 | 3 | Pattern C alias-of-IndexOffset handling in KKT stationarity + launch `stat_iweight` fix | New-issue (filed Day 6) + latent #1143, #1146, #1277 | 6–7 | NEW — replaces Phase 2. |
 | 3.5 | Pattern A cohort sanity sweep (confirm #1138, #1139, #1140, #1142, #1145, #1150 are not AD-blocked) | Inspection only | 7 | NEW — confirms Phase 2 drop. |
@@ -182,7 +182,7 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 - #1289 ganges/gangesx calibration-from-`.l` stripping landed. +1 Solve / +1 Match from ganges confirmed.
 - Gate 1 (Phase 2 GO/NO-GO) deferred to end of Day 5 pending investigation.
 
-### Day 5 — Pattern A Investigation — DONE (PR #1305, in flight)
+### Day 5 — Pattern A Investigation — DONE (PR #1305)
 - Evidence-driven investigation of all three Phase 1 targets.
 - **Finding:** None exhibit a Pattern A bug. qabel/abel criterion AD is byte-correct; launch's `stat_iweight` has phantom `s±N` offsets from KKT stationarity assembly (Pattern C).
 - **Gate 1 outcome:** NO-GO for Phase 2 in original shape. Pivot to Pattern C.

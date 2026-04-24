@@ -53,7 +53,7 @@ mismatches come from **KKT stationarity assembly**, not the AD layer:
   schedule in `PLAN.md`) manifesting during KKT assembly as an "expand
   the alias via ±N offsets" strategy.
 
-**Gate 2 (speculated Day 6+): NO-GO for Phase 2 in its original shape.**
+**Gate 1 (Phase 2 GO/NO-GO): NO-GO for Phase 2 in its original shape.**
 The Phase 1 hypothesis (`_partial_collapse_sum` recovery helps multi-index
 alias cases) is orthogonal to the actual bug surface. Defer the alias
 workstream to Pattern C. Phase 2's "broader Pattern A rollout" should be
