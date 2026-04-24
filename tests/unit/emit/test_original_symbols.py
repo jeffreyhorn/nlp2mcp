@@ -3318,14 +3318,21 @@ class TestLoopAttrAccessEmission:
 
 @pytest.mark.unit
 class TestSanitizeUelElement:
-    """#1280: `_sanitize_uel_element` unconditionally quotes UEL registry labels.
+    """#1280: `_sanitize_uel_element` quotes UEL registry labels with known exceptions.
 
     The generic `_sanitize_set_element` treats a dot as GAMS tuple notation
     (so `x1.l` is left unquoted). That's wrong for the `nlp2mcp_uel_registry`
     set whose members are LITERAL attribute-access strings produced by
     zero-filtered parameter lookups — GAMS interprets them as tuple UELs and
     either rejects the declaration or silently truncates to the first
-    component. The UEL-specific helper forces quoting.
+    component. The UEL-specific helper therefore forces quoting for ordinary
+    unquoted labels, while preserving two shapes as-is:
+      - labels already wrapped in single quotes by the base sanitizer
+        (e.g., `'foo-bar'`, `'SAE 10'`); re-quoting would produce
+        `''foo-bar''`.
+      - the GUSS 3-tuple trailing-dot form `foo.''`; outer quotes would
+        collapse it to the scalar label `'foo.'''`, losing the tuple
+        semantics.
     """
 
     def test_dotted_attribute_label_gets_quoted(self):

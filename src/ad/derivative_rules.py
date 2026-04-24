@@ -2441,35 +2441,57 @@ def _partial_collapse_sum(
             continue
 
         # Substitute the symbolic names that were actually used in the body
-        # diff back to their concrete wrt values. This spans both the
-        # `matched_sum_indices` (for positions where no recovery happened)
-        # and any body-free indices recovered above. Two wrt positions may
-        # share the same symbolic name (alias matching can route them both
-        # through the same sum index): dedupe when the concrete values
-        # agree; skip the whole matching when they conflict, since
-        # `_substitute_sum_indices` uses a dict and would silently drop one
-        # side of the conflict. This mirrors the `duplicate_sym` guard in
-        # the single-index recovery path (derivative_rules.py:2012-2033).
+        # diff back to their concrete wrt values. ALWAYS substitute the
+        # matched sum index names first (so that any `ParamRef(n,k)` or
+        # condition reference still carrying the original sum-index name
+        # gets rewritten — the recovery loop above only renames VarRef
+        # positions in `symbolic_wrt`, not occurrences elsewhere in the
+        # body). Then layer on substitutions for any recovered body-free
+        # names in `symbolic_wrt` that differ from the matched name.
+        #
+        # Two wrt positions may share the same symbolic name (alias matching
+        # can route them both through the same sum index): dedupe when the
+        # concrete values agree; skip the whole matching when they conflict,
+        # since `_substitute_sum_indices` uses a dict and would silently
+        # drop one side of the conflict. This mirrors the `duplicate_sym`
+        # guard in the single-index recovery path
+        # (derivative_rules.py:2012-2033).
         sub_sym: list[str] = []
         sub_concrete: list[str | IndexOffset] = []
         seen_substitutions: dict[str, str | IndexOffset] = {}
         invalid_substitution = False
-        for sub_entry, sub_concrete_val in zip(symbolic_wrt, matched_concrete, strict=True):
+
+        def _add_substitution(
+            sub_entry: str | IndexOffset,
+            sub_concrete_val: str | IndexOffset,
+        ) -> bool:
+            """Append (key, concrete) if not seen; return False on conflict."""
             key = sub_entry.base if isinstance(sub_entry, IndexOffset) else sub_entry
             if key in seen_substitutions:
                 if seen_substitutions[key] != sub_concrete_val:
-                    invalid_substitution = True
                     if _SPRINT25_DAY2_DEBUG:
                         _sprint25_day2_log(
                             "partial_collapse_sum",
                             "skip: conflicting duplicate symbolic substitution for "
                             f"{key!r}: {seen_substitutions[key]!r} vs {sub_concrete_val!r}",
                         )
-                    break
-                continue
+                    return False
+                return True
             seen_substitutions[key] = sub_concrete_val
             sub_sym.append(key)
             sub_concrete.append(sub_concrete_val)
+            return True
+
+        for matched_name, matched_value in zip(matched_sum_indices, matched_concrete, strict=True):
+            if not _add_substitution(matched_name, matched_value):
+                invalid_substitution = True
+                break
+        if invalid_substitution:
+            continue
+        for symbolic_name, symbolic_value in zip(symbolic_wrt, matched_concrete, strict=True):
+            if not _add_substitution(symbolic_name, symbolic_value):
+                invalid_substitution = True
+                break
         if invalid_substitution:
             continue
         result_body = _substitute_sum_indices(body_derivative, tuple(sub_sym), tuple(sub_concrete))

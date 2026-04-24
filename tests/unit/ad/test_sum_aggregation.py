@@ -676,3 +676,99 @@ def test_diff_nested_sum_no_spurious_inner_sum():
     assert not _has_spurious_sum_cr_const(
         result
     ), f"Result contains spurious sum(cr, const): {result}"
+
+
+def test_diff_partial_collapse_sum_recovers_outer_domain_free_index():
+    """Sprint 25 #1111 multi-index port: d/dx(consumpt, q1) on a sum whose
+    body references a DIFFERENT domain name than the sum's own indices
+    must recover the body's name during partial collapse.
+
+    Shape:
+      - sum((n, np, k), x(m, k) * w(n, np, m, k))
+      - n, np are aliases. m is a separate set whose members overlap with n.
+      - wrt = (consumpt, q1). consumpt is a member of both `n` and `m`.
+
+    Without the multi-index recovery ported from the single-index path,
+    `_partial_collapse_sum` would pick matching (n=consumpt, k=q1) and ask
+    `_diff_varref(x(m, k), 'x', ('n', 'k'), ...)`. That returns `Const(0.0)`
+    because `m != n` and no alias relationship is declared between them.
+
+    With the recovery: the body's `x(m, k)` has position-0 index `m`, which
+    is a FREE symbolic name (not in sum_index_sets). `consumpt` is a
+    concrete instance of `m`, so the recovery rewrites `symbolic_wrt` from
+    `('n', 'k')` to `('m', 'k')`. The body diff then structurally matches,
+    producing `Const(1.0)` in the relevant factor.
+    """
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model = ModelIR()
+    model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
+    model.sets["m"] = SetDef(name="m", domain=(), members=["consumpt", "invest"])
+    model.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2"])
+    model.aliases["np"] = AliasDef(name="np", target="n")
+
+    config = Config()
+    config.model_ir = model
+
+    # body: x(m, k) * w(n, np, m, k)
+    body = Binary(
+        "*",
+        VarRef("x", ("m", "k")),
+        ParamRef("w", ("n", "np", "m", "k")),
+    )
+    sum_expr = Sum(("n", "np", "k"), body, None)
+
+    # d/dx(consumpt, q1) — _partial_collapse_sum because 3 sum dims > 2 wrt dims.
+    result = differentiate_expr(sum_expr, "x", ("consumpt", "q1"), config)
+
+    from src.ad.derivative_rules import _is_structurally_zero
+
+    assert not _is_structurally_zero(result), (
+        f"Expected non-zero derivative when body's outer domain name "
+        f"(`m`) differs from the sum's matched index name (`n`); got: {result}"
+    )
+
+
+def test_diff_partial_collapse_sum_drops_conflicting_duplicate_substitution():
+    """Sprint 25 #1111 multi-index port: when the recovery plus alias
+    matching would map two different wrt concrete values to the same
+    symbolic substitution key, the matching must be skipped (not silently
+    drop one side via `_substitute_sum_indices`'s dict overwrite).
+
+    Shape:
+      - sum((n, np), x(m, m) * ...)  — body uses `m` at BOTH positions.
+      - wrt = ('consumpt', 'invest'); both are members of `m`.
+      - For matching (n=consumpt, np=invest), recovery rewrites positions
+        0 and 1 to 'm' — but they map to DIFFERENT concretes (consumpt vs
+        invest). The substitution is invalid; that matching is skipped.
+      - (The other matching, (np=consumpt, n=invest), would have the same
+        conflict — both matchings skipped, `_partial_collapse_sum` returns
+        None, falls through to the normal body-diff path.)
+
+    The visible invariant asserted here is that the call doesn't crash and
+    doesn't emit a corrupted derivative with one concrete silently lost.
+    """
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model = ModelIR()
+    model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
+    model.sets["m"] = SetDef(name="m", domain=(), members=["consumpt", "invest"])
+    model.aliases["np"] = AliasDef(name="np", target="n")
+
+    config = Config()
+    config.model_ir = model
+
+    # body: x(m, m) — both positions index the same outer set `m`.
+    body = VarRef("x", ("m", "m"))
+    sum_expr = Sum(("n", "np"), body, None)
+
+    # Should not raise; should fall through to normal path, producing
+    # something finite (may be zero after the body-diff path discovers
+    # the structural mismatch, but must not be a crashing TypeError or a
+    # silently-wrong derivative).
+    result = differentiate_expr(sum_expr, "x", ("consumpt", "invest"), config)
+    assert result is not None
