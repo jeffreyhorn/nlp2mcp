@@ -133,3 +133,132 @@ solve m using nlp minimizing z;
         "the Pattern C gate consolidates phantom-offset groups. "
         f"Full stat_iweight text:\n{stat_iweight_text}"
     )
+
+
+@pytest.mark.unit
+def test_helpers_unit_contracts():
+    """Unit-level contracts on the three Pattern C helpers, covering the
+    edge cases flagged in PR #1308 Copilot review:
+
+      1. `_body_has_index_offset_on_sets` must detect `IndexOffset` nodes
+         even when the offset's base is bound by an enclosing `Sum`
+         (e.g. `sum(ss, x(ss+1))` — `ss` aliases the variable's domain
+         AND `ss+1` is a legitimate source-level lead).
+      2. `_body_has_aliased_conditional_sum_over_sets` must NOT fire when
+         the sum's condition only references the summed index itself
+         (e.g. `sum(ss$(ord(ss) > 1), ...)`) — that condition doesn't
+         link the sum to the equation domain.
+      3. `_expr_mentions_indices_canonical` must recognize index mentions
+         that appear as `IndexOffset.base` (e.g. `ge(ss+1, s)` — the
+         `ss+1` is an `IndexOffset` whose base is the string `ss`).
+    """
+    from src.ir.ast import Binary, Call, Const, IndexOffset, Sum, SymbolRef, VarRef
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+    from src.kkt.stationarity import (
+        _body_has_aliased_conditional_sum_over_sets,
+        _body_has_index_offset_on_sets,
+        _expr_mentions_indices_canonical,
+    )
+
+    ir = ModelIR()
+    ir.sets["s"] = SetDef(name="s", members=["stage-1", "stage-2", "stage-3"])
+    ir.aliases["ss"] = AliasDef(name="ss", target="s")
+
+    target_sets = frozenset({"s"})
+
+    # --- Case 1: sum-bound IndexOffset must count. ---
+    # Mirrors `sum(ss, x(ss+1))`.
+    body_bound_offset = Sum(
+        index_sets=("ss",),
+        body=VarRef("x", (IndexOffset(base="ss", offset=Const(1.0), circular=False),)),
+    )
+    assert _body_has_index_offset_on_sets(body_bound_offset, target_sets, ir) is True, (
+        "Expected sum-bound IndexOffset on an aliased domain to be detected; "
+        "without this, sum(ss, x(ss+1)) would be misclassified as offset-free "
+        "and the Pattern C gate would wrongly collapse real lead/lag groups."
+    )
+
+    # --- Case 2: condition that only references the summed index must NOT
+    # be treated as referencing the equation domain. ---
+    # Mirrors `sum(ss$(ord(ss) > 1), ...)` within an eq over domain (s,).
+    body_sum_only_condition = Sum(
+        index_sets=("ss",),
+        body=VarRef("x", ("ss",)),
+        condition=Binary(">", Call("ord", (SymbolRef(name="ss"),)), Const(1.0)),
+    )
+    assert (
+        _body_has_aliased_conditional_sum_over_sets(
+            body_sum_only_condition,
+            target_sets,
+            ir,
+            eq_domain_canonical=frozenset({"s"}),
+        )
+        is False
+    ), (
+        "Sum whose condition only references its own summed index must NOT "
+        "trigger the Pattern C gate — the condition doesn't link the sum "
+        "to the equation's domain instance."
+    )
+
+    # But if the condition references a free equation-domain index in
+    # ADDITION to the summed index (the launch shape: `ge(ss, s)`), the
+    # gate MUST fire.
+    body_launch_shape = Sum(
+        index_sets=("ss",),
+        body=VarRef("iweight", ("ss",)),
+        condition=Call("ge", (SymbolRef(name="ss"), SymbolRef(name="s"))),
+    )
+    assert (
+        _body_has_aliased_conditional_sum_over_sets(
+            body_launch_shape,
+            target_sets,
+            ir,
+            eq_domain_canonical=frozenset({"s"}),
+        )
+        is True
+    ), "Launch-shape `sum(ss$ge(ss,s), ...)` must be detected by the gate."
+
+    # --- Case 3: IndexOffset.base must be recognized as an index mention. ---
+    # Mirrors a condition like `ge(ss+1, s)` inside a sum over ss where we
+    # want to detect that the condition also references `s` (equation domain)
+    # via the IndexOffset's base.
+    condition_with_offset = Call(
+        "ge",
+        (
+            IndexOffset(base="ss", offset=Const(1.0), circular=False),
+            SymbolRef(name="s"),
+        ),
+    )
+    # With `ss` bound (as it would be inside `sum(ss, ...)`), the `ss+1`
+    # mention is filtered out, but `s` remains free → condition is linked
+    # to the eq domain.
+    assert (
+        _expr_mentions_indices_canonical(
+            condition_with_offset,
+            target_canonical_sets=frozenset({"s"}),
+            model_ir=ir,
+            bound_indices=frozenset({"ss"}),
+        )
+        is True
+    ), "`ge(ss+1, s)` with ss bound must still report a link via the free `s`."
+
+    # And with neither ss nor s bound, a condition like `ord(ss+1)` must
+    # count as a mention via the IndexOffset base — otherwise nested
+    # lead/lag fingerprints slip past the gate.
+    condition_offset_only = Call(
+        "ord", (IndexOffset(base="ss", offset=Const(1.0), circular=False),)
+    )
+    assert (
+        _expr_mentions_indices_canonical(
+            condition_offset_only,
+            target_canonical_sets=frozenset({"s"}),
+            model_ir=ir,
+            bound_indices=frozenset(),
+        )
+        is True
+    ), (
+        "`ord(ss+1)` must count as a mention of the canonical set via "
+        "IndexOffset.base; otherwise the gate's condition-link check has "
+        "false negatives on nested lead/lag fingerprints."
+    )

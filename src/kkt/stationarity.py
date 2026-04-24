@@ -134,7 +134,6 @@ def _body_has_index_offset_on_sets(
     expr: Expr,
     target_canonical_sets: frozenset[str],
     model_ir: ModelIR,
-    bound_indices: frozenset[str] = frozenset(),
 ) -> bool:
     """Return True iff ``expr`` contains any ``IndexOffset`` node whose base
     index (after alias resolution) refers to one of ``target_canonical_sets``.
@@ -146,34 +145,30 @@ def _body_has_index_offset_on_sets(
     the offset wraps around the set, not whether a source-level offset
     exists.
 
-    `bound_indices` holds indices currently bound by an enclosing `Sum`/`Prod`
-    so sum-local aliases don't falsely match when they shadow an equation
-    domain index.
+    `IndexOffset` nodes are counted even when they appear inside a `Sum`/`Prod`
+    that binds the base index (e.g. `sum(ss, x(ss+1))` where `ss` aliases the
+    variable's domain). That case IS a legitimate source-level lead/lag and
+    must prevent the Pattern C gate from collapsing its offset groups. The
+    alias table is global, so whether the offset's base is sum-bound or not
+    doesn't change its canonical-set resolution — what matters is that the
+    source body contains a `±N` indexing operation on a set in
+    ``target_canonical_sets``.
     """
     if isinstance(expr, IndexOffset):
         if isinstance(expr.base, str):
-            base_lower = expr.base.lower()
-            if base_lower not in bound_indices:
-                canonical = _resolve_alias_target(base_lower, model_ir)
-                if canonical in target_canonical_sets:
-                    return True
+            canonical = _resolve_alias_target(expr.base.lower(), model_ir)
+            if canonical in target_canonical_sets:
+                return True
 
     if isinstance(expr, (VarRef, ParamRef, EquationRef)):
         for idx in expr.indices:
             if isinstance(idx, IndexOffset) and _body_has_index_offset_on_sets(
-                idx, target_canonical_sets, model_ir, bound_indices
+                idx, target_canonical_sets, model_ir
             ):
                 return True
 
-    if isinstance(expr, (Sum, Prod)):
-        new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
-        return any(
-            _body_has_index_offset_on_sets(child, target_canonical_sets, model_ir, new_bound)
-            for child in expr.children()
-        )
-
     return any(
-        _body_has_index_offset_on_sets(child, target_canonical_sets, model_ir, bound_indices)
+        _body_has_index_offset_on_sets(child, target_canonical_sets, model_ir)
         for child in expr.children()
     )
 
@@ -211,14 +206,21 @@ def _body_has_aliased_conditional_sum_over_sets(
         summed_canonicals = frozenset(
             _resolve_alias_target(idx, model_ir) for idx in expr.index_sets
         )
-        if (
-            summed_canonicals & target_canonical_sets
-            and expr.condition is not None
-            and _expr_mentions_indices_canonical(
-                expr.condition, eq_domain_canonical, model_ir, bound_indices
-            )
-        ):
-            return True
+        if summed_canonicals & target_canonical_sets and expr.condition is not None:
+            # The sum's own index variables must NOT count as references to
+            # the equation domain when scanning the condition — otherwise a
+            # condition like `sum(ss$(ord(ss) > 1), ...)` (which only
+            # references the summed alias, not the equation instance) would
+            # trivially pass the check, since `ss` canonical-resolves to the
+            # variable's domain set. The launch fingerprint requires the
+            # condition to reference an index that is FREE in the sum's
+            # scope — i.e., bound at the equation-domain level, not by this
+            # sum itself.
+            condition_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+            if _expr_mentions_indices_canonical(
+                expr.condition, eq_domain_canonical, model_ir, condition_bound
+            ):
+                return True
 
     if isinstance(expr, (Sum, Prod)):
         new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
@@ -248,6 +250,12 @@ def _expr_mentions_indices_canonical(
     ``target_canonical_sets``. Used by
     ``_body_has_aliased_conditional_sum_over_sets`` to detect conditions that
     link a summed alias to the equation's domain.
+
+    Also handles index references that appear as ``IndexOffset.base`` (e.g.
+    ``ge(ss+1, s)`` — the ``ss+1`` is an ``IndexOffset`` whose base is a
+    string index that should count as a mention). ``IndexOffset.children()``
+    only yields the numeric ``offset`` child, so the base name must be
+    inspected explicitly.
     """
     from src.ir.ast import SymbolRef
 
@@ -257,6 +265,14 @@ def _expr_mentions_indices_canonical(
             canonical = _resolve_alias_target(name_lower, model_ir)
             if canonical in target_canonical_sets:
                 return True
+
+    if isinstance(expr, IndexOffset):
+        if isinstance(expr.base, str):
+            base_lower = expr.base.lower()
+            if base_lower not in bound_indices:
+                canonical = _resolve_alias_target(base_lower, model_ir)
+                if canonical in target_canonical_sets:
+                    return True
 
     if isinstance(expr, (VarRef, ParamRef, EquationRef, IndexOffset)):
         for idx in getattr(expr, "indices", ()):
