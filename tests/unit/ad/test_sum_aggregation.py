@@ -738,18 +738,31 @@ def test_diff_partial_collapse_sum_drops_conflicting_duplicate_substitution():
     drop one side via `_substitute_sum_indices`'s dict overwrite).
 
     Shape:
-      - sum((n, np), x(m, m) * ...)  — body uses `m` at BOTH positions.
-      - wrt = ('consumpt', 'invest'); both are members of `m`.
-      - For matching (n=consumpt, np=invest), recovery rewrites positions
-        0 and 1 to 'm' — but they map to DIFFERENT concretes (consumpt vs
-        invest). The substitution is invalid; that matching is skipped.
-      - (The other matching, (np=consumpt, n=invest), would have the same
-        conflict — both matchings skipped, `_partial_collapse_sum` returns
-        None, falls through to the normal body-diff path.)
+      - `sum((n, np, k), x(m, m))` — 3 sum indices, 2 wrt indices, which
+        is required for `_partial_collapse_sum` to be invoked at all
+        (`_diff_sum`'s full-collapse path only fires when sum and wrt have
+        the same arity).
+      - body uses `m` at BOTH VarRef positions; `m` is a separate set
+        whose members are {consumpt, invest}.
+      - wrt = ('consumpt', 'invest').
+      - Both enumerated matchings ((n=consumpt, np=invest) and (np=consumpt,
+        n=invest)) hit the recovery, which rewrites `symbolic_wrt` to
+        `('m', 'm')`. The substitution-builder's second pass then tries to
+        map `m → consumpt` AND `m → invest` for the same matching — the
+        `_add_substitution` guard flags this as `invalid_substitution` and
+        the matching is skipped.
+      - Every matching is skipped → `_partial_collapse_sum` returns None,
+        `_diff_sum` falls through to the normal body-diff path (which also
+        can't match `x(m,m)` to `(consumpt, invest)` without the recovery),
+        and the overall derivative is structurally zero.
 
-    The visible invariant asserted here is that the call doesn't crash and
-    doesn't emit a corrupted derivative with one concrete silently lost.
+    The alternative behavior the guard prevents is one of the concretes
+    being silently lost by `_substitute_sum_indices`'s dict overwrite,
+    yielding a corrupted Sum result. This test asserts both that
+    `_partial_collapse_sum` returns None on the conflict and that the
+    top-level derivative is structurally zero.
     """
+    from src.ad.derivative_rules import _partial_collapse_sum
     from src.config import Config
     from src.ir.model_ir import ModelIR
     from src.ir.symbols import AliasDef, SetDef
@@ -757,6 +770,7 @@ def test_diff_partial_collapse_sum_drops_conflicting_duplicate_substitution():
     model = ModelIR()
     model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
     model.sets["m"] = SetDef(name="m", domain=(), members=["consumpt", "invest"])
+    model.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2"])
     model.aliases["np"] = AliasDef(name="np", target="n")
 
     config = Config()
@@ -764,11 +778,27 @@ def test_diff_partial_collapse_sum_drops_conflicting_duplicate_substitution():
 
     # body: x(m, m) — both positions index the same outer set `m`.
     body = VarRef("x", ("m", "m"))
-    sum_expr = Sum(("n", "np"), body, None)
+    sum_expr = Sum(("n", "np", "k"), body, None)
 
-    # Should not raise; should fall through to normal path, producing
-    # something finite (may be zero after the body-diff path discovers
-    # the structural mismatch, but must not be a crashing TypeError or a
-    # silently-wrong derivative).
+    # Direct check: `_partial_collapse_sum` returns None because every
+    # candidate matching hits the conflicting-duplicate guard.
+    partial_result = _partial_collapse_sum(sum_expr, "x", ("consumpt", "invest"), config)
+    assert partial_result is None, (
+        f"expected `_partial_collapse_sum` to skip all matchings on the "
+        f"conflicting duplicate and return None, got: {partial_result!r}"
+    )
+
+    # End-to-end via the public dispatcher: the normal-path fallback
+    # wraps the body diff in `Sum((n,np,k), <body diff>)`, and the body
+    # diff itself is zero because `x(m,m)` can't match `(consumpt, invest)`
+    # via alias matching either. The critical invariant is that no
+    # corrupted VarRef with one side partially substituted leaks through
+    # — the skip-on-conflict guard plus the normal-path fallback together
+    # must produce an expression whose body-diff position is `Const(0.0)`,
+    # not a silently-wrong `x(m, invest)` or `x(consumpt, m)`.
     result = differentiate_expr(sum_expr, "x", ("consumpt", "invest"), config)
-    assert result is not None
+    assert isinstance(result, Sum), f"expected Sum fallback, got: {result!r}"
+    assert isinstance(result.body, Const) and result.body.value == 0.0, (
+        f"expected Sum body to be Const(0.0) after all matchings skipped, "
+        f"got body={result.body!r}"
+    )
