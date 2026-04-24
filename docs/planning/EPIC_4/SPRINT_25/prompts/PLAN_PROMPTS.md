@@ -53,16 +53,19 @@ Original Day 0–5 prompts are preserved in the file history of `docs/planning/E
 2. **Reproduce minimally.** Add a new test in `tests/unit/kkt/test_pattern_c_alias_offset_gate.py`:
    - Build a synthetic IR mirroring `dweight(s).. weight(s) =e= sum(ss$ge(ss,s), iweight(ss) + pweight(ss)) + ...` — alias `ss` over `s`, conditional sum, no IndexOffset on `s`.
    - Assemble KKT stationarity for the equation.
-   - Assert the emitted `stat_iweight` body has NO `s+N`/`s-N` terms (only the identity alias case, i.e. a single `sum(ss, ...)` with `nu_dweight(s)`).
-   - Verify the test FAILS against current main (documents the bug) and will PASS against the prototype.
+   - Assert the emitted `stat_iweight` body has NO `s+N`/`s-N` terms. After the prototype lands, a single identity-offset `sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s))` term will remain; that term still exhibits the Day-5 Bug #2 (`mis-scoped $(ge(ss, s))` condition inside a `sum(ss, ...)` whose multiplier doesn't depend on `ss`) and is deliberately OUT OF SCOPE for Day 6 — see task 9 below.
+   - Verify the test FAILS against current main (documents Bug #1 — the phantom offsets) and will PASS against the prototype. The test should NOT over-specify the residual `sum(ss, ...)` multiplier argument, since Bug #2's fix may later change it.
 3. **Prototype the gate.** Two-sided approach:
    - Check the equation IR for actual `IndexOffset` nodes on the alias's base set before enumerating ±N offsets. If the body contains no IndexOffset on `s` (or whatever the alias base set is), skip ±N enumeration entirely.
    - If IndexOffsets do exist, preserve the current enumeration logic (so models like twocge #1277 aren't broken — see Day 10 for post-Pattern-C twocge re-validation).
-4. **Verify launch translates correctly.** Translate launch (`python -m src.cli data/gamslib/raw/launch.gms -o /tmp/launch_mcp.gms --skip-convexity-check`) and inspect `stat_iweight` — should now have only `iwf(s) * nu_diweight(s) + sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s))`.
+4. **Verify launch translates correctly.** Translate launch (`python -m src.cli data/gamslib/raw/launch.gms -o /tmp/launch_mcp.gms --skip-convexity-check`) and inspect `stat_iweight`:
+   - **Must hold post-prototype:** `iwf(s) * nu_diweight(s)` remains intact; ALL four phantom-offset `nu_dweight(s±N)` terms are gone; a single identity-offset alias-sum term remains.
+   - **Still-present Day-5 Bug #2 (expected and out of scope today):** the residual alias-sum term is `sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s))` — note the multiplier `nu_dweight(s)` does NOT depend on the summed index `ss`, so the `sum` degenerates into a spurious `card(ss-satisfying-ge)` factor. This mis-scoped condition is a separate defect from phantom-offset enumeration and is tracked via task 9.
 5. **Tier 0 dispatch canary:** `diff /tmp/sprint25-golden/dispatch_mcp.gms <(python -m src.cli data/gamslib/raw/dispatch.gms -o /dev/stdout --skip-convexity-check)` — MUST be empty.
 6. **Tier 1 canary:** run the Reference command at the bottom of this file on quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive. MUST match golden.
 7. **Do NOT run full 54-set regression today** — defer to Day 7 to isolate the prototype failure surface. A mid-prototype regression on a Tier 2 model is easier to triage on Day 7 when we also have the cohort-sweep data.
-8. **File a new GH issue** `pattern_c_phantom_offset_stat_iweight` — title "Pattern C: KKT stationarity emits phantom ±N offsets on alias-only conditional sums (launch)"; body references `DAY5_PATTERN_A_INVESTIGATION.md`.
+8. **File a new GH issue** `pattern_c_phantom_offset_stat_iweight` — title "Pattern C: KKT stationarity emits phantom ±N offsets on alias-only conditional sums (launch)"; body references `DAY5_PATTERN_A_INVESTIGATION.md` §Bug #1.
+9. **File a separate GH issue** `pattern_c_mis_scoped_alias_condition` — title "Pattern C Bug #2: KKT stationarity mis-scopes `$(ge(ss, s))` condition inside `sum(ss, ...)` where the multiplier is not indexed by `ss`"; body references `DAY5_PATTERN_A_INVESTIGATION.md` §Bug #2 and links to the Day 6 PR as the landing point for Bug #1. Target Sprint 25 Day 13 buffer or Sprint 26 carryforward depending on schedule.
 
 **Quality Checks:** `make typecheck && make lint && make format && make test`.
 
