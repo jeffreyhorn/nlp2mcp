@@ -162,3 +162,162 @@ class TestIncludePathPortability:
 
         assert "$onMultiR" in output
         assert "$offMulti" in output
+
+
+def _kkt_with_calibration_param(manual_index_mapping):
+    """Minimal KKT system whose ModelIR has one calibration parameter (a
+    parameter whose `expressions` RHS references a VarRef with `.l`). The
+    pre-Variables emission pass runs `emit_computed_parameter_assignments`
+    under `varref_filter="no_varref_attr"`, which skips this RHS because
+    it contains a `.l` attribute access; the #1289 deferred pass re-runs
+    the same emitter under `varref_filter="only_varref_attr"` after the
+    NLP `$include` populates `.l`, and that pass is the one expected to
+    emit the calibration assignment when `nlp_presolve=True` and the
+    source is in-repo.
+    """
+    from src.ir.ast import ParamRef
+    from src.ir.symbols import ParameterDef
+
+    model = ModelIR()
+    model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="z")
+    # Equation body uses `calib` so the param is model-relevant (not filtered
+    # out by the emitter's non-model-param exclusion at #1036).
+    model.equations["zdef"] = EquationDef(
+        name="zdef",
+        domain=(),
+        relation=Rel.EQ,
+        lhs_rhs=(
+            VarRef("z", ()),
+            Binary("+", Binary("^", VarRef("x", ()), Const(2.0)), ParamRef("calib", ())),
+        ),
+    )
+    model.variables["z"] = VariableDef(name="z", domain=())
+    model.variables["x"] = VariableDef(name="x", domain=(), lo=0.0)
+    model.equalities = ["zdef"]
+    model.model_equations = ["zdef"]
+    # `calib` mirrors the ganges pattern: declared without values, assigned
+    # from a variable's .l level after an initial solve. `VarRef.attribute`
+    # carries the `.l` access (see src/ir/ast.py:53).
+    model.params["calib"] = ParameterDef(
+        name="calib",
+        domain=(),
+        values={},
+        expressions=[((), VarRef("x", (), attribute="l"))],
+    )
+
+    idx = manual_index_mapping([("z", ()), ("x", ())])
+    grad = GradientVector(num_cols=2, index_mapping=idx)
+    grad.set_derivative(1, Binary("*", Const(2.0), VarRef("x", ())))
+    J_eq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=idx)
+    J_ineq = JacobianStructure(num_rows=0, num_cols=2, index_mapping=idx)
+    return assemble_kkt_system(model, grad, J_eq, J_ineq)
+
+
+class TestCalibrationDeferredEmission:
+    """#1289: post-initial-solve calibration assignments referencing `.l`
+    values must be emitted AFTER the `--nlp-presolve` $include (which
+    populates `.l` by running the original NLP) and BEFORE the MCP Solve.
+
+    Without the #1289 fix the emitter strips these assignments entirely
+    (they're filtered by `varref_filter="no_varref_attr"` in the pre-
+    Variables pass because `.l` can't be referenced before Variables are
+    declared), leaving parameters undefined at Solve time — GAMS then
+    raises Error 66 on every stationarity equation that reads them.
+    """
+
+    def test_calibration_emitted_with_presolve_and_in_repo_source(self, manual_index_mapping):
+        """`nlp_presolve=True` + in-repo source → calibration assignment
+        emitted with the #1289 banner.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+        source = REPO_ROOT / "examples" / "simple_nlp.gms"
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(source))
+
+        assert "Post-initial-solve calibration (#1289)" in output
+        # The calibration assignment itself should be present.
+        assert "calib = x.l" in output
+
+    def test_calibration_emitted_after_presolve_include(self, manual_index_mapping):
+        """The calibration must be emitted AFTER the `$include` (which
+        populates `.l`) and BEFORE the `Solve mcp_model` (which needs the
+        calibrated values).
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+        source = REPO_ROOT / "examples" / "simple_nlp.gms"
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(source))
+
+        include_pos = output.index("$include")
+        calib_pos = output.index("calib = x.l")
+        solve_pos = output.index("Solve mcp_model")
+        assert include_pos < calib_pos < solve_pos, (
+            f"expected $include < calibration < Solve; got positions "
+            f"include={include_pos} calib={calib_pos} solve={solve_pos}"
+        )
+
+    def test_calibration_skipped_without_presolve(self, manual_index_mapping):
+        """`nlp_presolve=False` → calibration is NOT emitted (without the
+        $include to populate `.l`, the calibration would divide by zero /
+        produce UNDF per the pre-existing #985 blanket-skip).
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+
+        output = emit_gams_mcp(kkt, nlp_presolve=False)
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
+
+    def test_calibration_skipped_when_source_outside_repo(self, tmp_path, manual_index_mapping):
+        """`nlp_presolve=True` but source outside repo root → the presolve
+        include is soft-skipped (#1275), so the calibration — which would
+        rely on the include populating `.l` — is also skipped. Otherwise
+        the emitted MCP would reference uninitialized `.l` values.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+        external_source = tmp_path / "external.gms"
+        external_source.write_text("* stub\n")
+
+        with pytest.warns(UserWarning, match="outside the repo root"):
+            output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(external_source))
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
+
+    def test_calibration_skipped_when_presolve_requested_but_no_source_file(
+        self, manual_index_mapping
+    ):
+        """`nlp_presolve=True` but `source_file=None` → `_emit_nlp_presolve`
+        early-returns without emitting the `$include`, so the post-solve
+        calibration must also be skipped (otherwise the emitted MCP would
+        reference uninitialized `.l` values at runtime).
+
+        Regression test for the gap flagged in PR #1304 review: the
+        original caller gated calibration on the repo-root check alone,
+        which passed when `source_file` was falsy (the relative_to check
+        was never reached), leaving calibration emitted without a
+        matching `$include`.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=None)
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
+
+    def test_calibration_skipped_when_no_solved_model_equations(self, manual_index_mapping):
+        """`nlp_presolve=True` + in-repo source, but no solved-model
+        equations → `_emit_nlp_presolve` early-returns (no dual-transfer
+        lines to emit), so the `$include` that would populate `.l` never
+        fires either. Calibration must therefore be skipped.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+        # Clear the list of solved-model equations so
+        # `get_solved_model_equations()` returns something falsy.
+        kkt.model_ir.model_equations = []
+        source = REPO_ROOT / "examples" / "simple_nlp.gms"
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(source))
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
