@@ -74,8 +74,8 @@ Expected derivative w.r.t. `x(n_row, k_row)`:
 
 ```text
 ∂j/∂x(n_row, k_row)
-  = 0.5 * (sum(np, w(n_row, np, k_row) * (x(np, k_row) - xt(np, k_row)))
-         + sum(n,  (x(n, k_row) - xt(n, k_row)) * w(n, n_row, k_row)))
+  = 0.5 * (sum(np, w(n_row, np, k_row) * (x(np, k_row) - xtilde(np, k_row)))
+         + sum(n,  (x(n, k_row) - xtilde(n, k_row)) * w(n, n_row, k_row)))
 ```
 
 Emitter output for abel's `stat_x(n, k)` criterion portion:
