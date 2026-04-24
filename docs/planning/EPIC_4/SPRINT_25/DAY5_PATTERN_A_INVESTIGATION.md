@@ -8,6 +8,26 @@ Phase 1 targets the Day 3 mechanical port of `_find_var_indices_in_body` into
 `/tmp/sprint25-day5/{qabel,abel,launch}_trace.stderr` (231k / 3k / ~21k lines)
 under `SPRINT25_DAY2_DEBUG=1`.
 
+## Repro
+
+The `/tmp/sprint25-day5/` paths below are ephemeral scratch; to regenerate
+the three traces + emitted MCPs:
+
+```bash
+mkdir -p /tmp/sprint25-day5
+for m in qabel abel launch; do
+  SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli \
+    data/gamslib/raw/${m}.gms \
+    -o /tmp/sprint25-day5/${m}_mcp.gms \
+    --skip-convexity-check --quiet \
+    2> /tmp/sprint25-day5/${m}_trace.stderr
+done
+```
+
+The `SPRINT25_DAY2_DEBUG=1` env var activates `[SPRINT25_DAY2]` trace
+lines in `src/ad/derivative_rules.py::_diff_varref` and
+`_partial_collapse_sum`; greppable by the `[SPRINT25_DAY2][<tag>]` prefix.
+
 ---
 
 ## TL;DR
@@ -108,7 +128,10 @@ fix in `_partial_collapse_sum` is irrelevant.**
 
 ## Evidence — launch's `stat_iweight` is malformed (NOT Pattern A)
 
-Source (`data/gamslib/raw/launch.gms:86`):
+Source — the `dweight` equation definition in `data/gamslib/raw/launch.gms`
+(the `data/gamslib/raw/` directory is gitignored; the file is downloaded
+via `scripts/download_gamslib_raw.sh`. Grep `^dweight\b` in the source to
+locate):
 
 ```gams
 dweight(s)..  weight(s) =e= sum(ss$ge(ss,s), iweight(ss) + pweight(ss))
@@ -139,7 +162,7 @@ Two bugs visible in the emission:
    **Pattern C** (alias-of-IndexOffset from the AUDIT) manifesting in the
    KKT stationarity emitter.
 
-2. **Misscoped `$(ge(ss, s))` condition inside an outer sum.** Each of
+2. **Mis-scoped `$(ge(ss, s))` condition inside an outer sum.** Each of
    the five `sum(ss, ...)` clauses still has `1$(ge(ss, s))` in the body
    referencing the sum variable `ss`. But the body multiplies by
    `nu_dweight(s+N)` (or `(s)`/`(s-N)`), which doesn't depend on `ss` at
@@ -198,10 +221,12 @@ Pattern C manifestation in launch's stat_iweight — the phantom
 `s+1..s+2, s-1..s-2` terms come from somewhere in KKT stationarity
 emission. Candidate locations to inspect:
 
-- `src/kkt/stationarity.py::_compute_lead_lag_conditions` (line ~59)
-  and `_collect_lead_lag_offsets` (line ~95) — these compute
-  IndexOffset-based domain restrictions; worth checking whether the
-  alias `ss` in a conditional sum is being coerced into offset form.
+- `src/kkt/stationarity.py::_compute_lead_lag_conditions`
+  and `_collect_lead_lag_offsets` — these compute IndexOffset-based
+  domain restrictions; worth checking whether the alias `ss` in a
+  conditional sum is being coerced into offset form. (Function names
+  used as stable references per the convention in
+  `docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md`.)
 - Anywhere stationarity emission iterates the equation body and
   enumerates alias bindings — grep for `card` + `ord` + alias name
   patterns on the emitter side.
