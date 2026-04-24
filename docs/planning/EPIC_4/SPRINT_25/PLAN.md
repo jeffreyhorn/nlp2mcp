@@ -106,7 +106,7 @@ Sprint 25 originally scoped 11 alias-AD carryforward issues + 7 emitter backlog 
 
 | Batch | Focus | Issues | Effort | Days | Status |
 |---|---|---|---|---|---|
-| 1 | presolve paths + UEL quoting | #1275, #1280 | 3–5h | 2–3 | DONE (PR #1301 / post-Day-2 commit). |
+| 1 | presolve paths + UEL quoting | #1275, #1280 | 3–5h | 2–3 | DONE — #1275 via PR #1302 (Day 2), #1280 via PR #1303 (Day 3). |
 | 2.5 | Ganges calibration stripping (highest-leverage single fix — unblocks ganges + gangesx) | #1289 | 4–6h | 4 | DONE (PR #1304). |
 | 2 | IR-normalize + emitter idempotency + turkpow line wrap | #1279, #1276, #1281, #1292 | 7–11h | 8–9 | PENDING — slipped from original Days 4–6 due to Day 5 pivot. |
 | 3 | AD / stationarity (post-Pattern-C) + ferts identifier length + clearlak statement ordering | #1277, #1278, #1290, #1291 | 8–12h | 10–11 | PENDING — #1277 gated on Pattern C landing Day 7. |
@@ -211,7 +211,7 @@ Alias-AD recoveries are a **different failure mode**: the MCP structure is synta
 
 **Tasks:**
 1. Run full 54-set golden-file regression with the Day 6 Pattern C prototype. Document any regressions (expected 0; Pattern C only fires when phantom-offset enumeration was already happening).
-2. Translate launch fresh → compile via `action=c` → PATH solve. Measure rel_diff against the baseline NLP solution. If rel_diff improves materially, +1 Match candidate for Day 14 pipeline retest.
+2. Translate launch fresh. First run compile-only (`gams /tmp/launch_mcp.gms action=c`) as a syntax/symbol sanity check. Then run a separate full PATH solve on the emitted MCP and measure rel_diff against the baseline NLP solution. If rel_diff improves materially, +1 Match candidate for Day 14 pipeline retest.
 3. Pattern A cohort sanity sweep: for each of the 6 models in #1138, #1139, #1140, #1142, #1145, #1150, capture the derivative-emission shape via `SPRINT25_DAY2_DEBUG=1` trace. Classify each as:
    - **Pattern A shape (AD-blocked):** `_partial_collapse_sum` rejects the body-index match → emits `0` for a known-nonzero derivative.
    - **Pattern C shape (phantom offsets):** derivative emission has ±N offsets that don't come from the source.

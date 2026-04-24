@@ -84,7 +84,11 @@ Original Day 0–5 prompts are preserved in git history at `docs/planning/EPIC_4
 **Tasks to Complete (~5–7 hours):**
 
 1. **Full 54-set golden-file regression with Day 6 prototype.** Enumerate matching models from the frozen baseline status JSON, then diff each (see `../PLAN.md` and the Sprint 24 prompts for the standard incantation). Expected 0 regressions; if regressions appear, classify by whether they involve alias-of-IndexOffset patterns — that tells you whether to narrow the Pattern C gate or widen it.
-2. **Full launch re-validation:** Translate launch fresh → `gams /tmp/launch_mcp.gms action=c` (compile-only) → PATH solve. Measure rel_diff against the baseline NLP solution. Document in `DAY7_COHORT_SWEEP.md`. If rel_diff materially improves (e.g., 0.17 → <0.01), mark launch as a Match candidate for Day 14 pipeline retest.
+2. **Full launch re-validation.** Translate launch fresh. Then run two separate GAMS invocations:
+   - First, a compile-only check: `gams /tmp/launch_mcp.gms action=c` — this verifies the emitted MCP parses and symbols resolve, but does NOT attempt a solve.
+   - Second, a full PATH solve: invoke GAMS without `action=c` (or with `action=ce` for compile+execute) so PATH actually runs and produces a solution. Measure rel_diff against the baseline NLP solution.
+
+   Document both steps in `DAY7_COHORT_SWEEP.md`. If rel_diff materially improves (e.g., 0.17 → <0.01), mark launch as a Match candidate for Day 14 pipeline retest.
 3. **Pattern A cohort sanity sweep** — for each of the 6 models in #1138, #1139, #1140, #1142, #1145, #1150:
    - Map the GH issue to the concrete model name (check `AUDIT_ALIAS_AD_CARRYFORWARD.md` §Pattern A rows).
    - Run `SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli data/gamslib/raw/<model>.gms -o /tmp/sprint25-day7/<model>_mcp.gms --skip-convexity-check --quiet 2> /tmp/sprint25-day7/<model>_trace.stderr`.

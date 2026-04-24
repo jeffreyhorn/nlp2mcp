@@ -177,7 +177,7 @@ The bugs are in KKT stationarity assembly, not AD.
 
 ## Gate decision — Sprint 25 shape
 
-Per the user's Day 4 decision to pivot WS1:
+Per the Day 5 investigation outcome, pivot WS1 to Pattern C:
 
 ### Day 5 outcome (today)
 Investigation complete. Phase 1 hypothesis disproved on all three
