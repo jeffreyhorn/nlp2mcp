@@ -7,6 +7,7 @@
 Reproduction: traces captured at `/tmp/sprint25-day7/cohort/<model>_{mcp.gms,trace.stderr}` via
 
 ```bash
+mkdir -p /tmp/sprint25-day7/cohort
 SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli data/gamslib/raw/<model>.gms \
   -o /tmp/sprint25-day7/cohort/<model>_mcp.gms --skip-convexity-check --quiet \
   2> /tmp/sprint25-day7/cohort/<model>_trace.stderr
@@ -36,9 +37,20 @@ SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli data/gamslib/raw/<model>.gms \
 
 ## Task 1 — Full 54-Set Golden-File Regression
 
+Prerequisite: a golden-file tree from a Day 0 run at
+`/tmp/sprint25-golden/<model>_mcp.gms` (created during the Sprint 25 Day 0
+setup step — see `prompts/PLAN_PROMPTS.md` §"Day 0 Prompt"). If it doesn't
+exist, regenerate from main before applying the Day 6 fix, then re-run
+this regression on the Day-6 branch.
+
 Command:
 
 ```bash
+mkdir -p /tmp/sprint25-day7/fullset
+if [ ! -d /tmp/sprint25-golden ]; then
+  echo "ERROR: /tmp/sprint25-golden missing — regenerate per Day 0 setup." >&2
+  exit 1
+fi
 MATCHING=($(python3 -c "import json, pathlib; d=json.loads(pathlib.Path('data/gamslib/gamslib_status.json').read_text()); \
   print(' '.join(e['model_id'] for e in d['models'] \
   if (e.get('solution_comparison') or {}).get('comparison_status') == 'match'))"))
