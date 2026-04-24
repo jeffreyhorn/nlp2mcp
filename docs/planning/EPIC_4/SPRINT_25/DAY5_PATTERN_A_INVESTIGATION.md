@@ -48,8 +48,10 @@ mismatches come from **KKT stationarity assembly**, not the AD layer:
   shifts on an alias that has none in the source. `stat_iweight` emits
   `nu_dweight(s+1)`, `(s+2)`, `(s-1)`, `(s-2)` — none of which appear in
   the original `dweight(s).. weight(s) =e= sum(ss$ge(ss,s), ...)`. This is
-  **Pattern C** (alias-of-IndexOffset, deferred Days 7–9) manifesting
-  during KKT assembly as an "expand the alias via ±N offsets" strategy.
+  **Pattern C** (alias-of-IndexOffset, originally deferred to Days 7–9
+  in the pre-pivot plan — now promoted to Day 6 per the revised Sprint 25
+  schedule in `PLAN.md`) manifesting during KKT assembly as an "expand
+  the alias via ±N offsets" strategy.
 
 **Gate 2 (speculated Day 6+): NO-GO for Phase 2 in its original shape.**
 The Phase 1 hypothesis (`_partial_collapse_sum` recovery helps multi-index
