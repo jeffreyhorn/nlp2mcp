@@ -167,9 +167,13 @@ class TestIncludePathPortability:
 def _kkt_with_calibration_param(manual_index_mapping):
     """Minimal KKT system whose ModelIR has one calibration parameter (a
     parameter whose `expressions` RHS references a VarRef with `.l`). The
-    pre-Variables emission pass filters this out (it's in the
-    `only_varref_attr` set); the #1289 deferred pass should emit it when
-    `nlp_presolve=True` and the source is in-repo.
+    pre-Variables emission pass runs `emit_computed_parameter_assignments`
+    under `varref_filter="no_varref_attr"`, which skips this RHS because
+    it contains a `.l` attribute access; the #1289 deferred pass re-runs
+    the same emitter under `varref_filter="only_varref_attr"` after the
+    NLP `$include` populates `.l`, and that pass is the one expected to
+    emit the calibration assignment when `nlp_presolve=True` and the
+    source is in-repo.
     """
     from src.ir.ast import ParamRef
     from src.ir.symbols import ParameterDef
@@ -270,8 +274,6 @@ class TestCalibrationDeferredEmission:
         rely on the include populating `.l` — is also skipped. Otherwise
         the emitted MCP would reference uninitialized `.l` values.
         """
-        import pytest
-
         kkt = _kkt_with_calibration_param(manual_index_mapping)
         external_source = tmp_path / "external.gms"
         external_source.write_text("* stub\n")
