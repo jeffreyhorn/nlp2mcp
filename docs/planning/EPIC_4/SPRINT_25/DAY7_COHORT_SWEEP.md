@@ -30,7 +30,7 @@ SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli data/gamslib/raw/<model>.gms \
 | #1140 | ps2_f_s (+ ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, ps10_s — 7 total) | **Other (AD-correct structure; multi-solve / stochastic dynamics)** | N/A | `stat_w(i)`, `stat_x(i)` emit plain `sum(j, ...)` without phantom offsets or zeros. No Pattern-A AD gap visible in the emission. Rel_diff (0.5%–27.4% per AUDIT) likely comes from scenario/multi-solve dynamics rather than the AD layer. Separate investigation needed — NOT Pattern A. |
 | #1142 | launch | **Pattern C Bug #1 (RESOLVED Day 6, PR #1308) + Bug #2 (pending #1307)** | Fires correctly; phantom ±N offsets on `nu_dweight` eliminated | See §Launch section below. Post-Day-6 emission has `iwf(s) * nu_diweight(s)` + single `sum(ss, ((-1) * 1$(ge(ss,s))) * nu_dweight(s))` term; Bug #2 (`nu_dweight(s)` inside `sum(ss, ...)` doesn't depend on `ss`) produces a spurious `card` factor, yielding Locally Infeasible solve. |
 | #1145 | cclinpts | **Other (offset-handling / condition-guard bug, not AD phantom)** | N/A | `stat_b(j)` / `stat_fb(j)` have legitimate `fb(j-1) * 1$(not last(j))` / `b(j-1) * 1$(not first(j))` offset terms matching the source body. 100% rel_diff suggests a condition-guard or sign bug downstream of AD, not a Pattern A gap. Separate investigation needed. |
-| #1150 | qabel | **Pattern C (massive enumeration — distinct variant)** | Does NOT fire (plain-alias path; source has `a(n±1,n)` so IndexOffset-present check blocks the gate) | `stat_x(n,k)` has enormous enumeration of offsets `k-9 .. k-68` with guards `$(ord(k) > N)`, plus `(n+1, k-N)` / `(n-1, k-N)` cross products — cardinality of k is ~68. Pre-existing since at least Day 5; unchanged by the Day 6 gate. This is a distinct Pattern C variant (large-k stateq enumeration) NOT touched by the launch-shaped gate. |
+| #1150 | qabel | **Pattern C (massive enumeration — distinct variant)** | Does NOT fire (plain-alias path; source has `a(n±1,n)` so IndexOffset-present check blocks the gate) | `stat_x(n,k)` has enormous enumeration of offsets `k-9 .. k-68` with guards `$(ord(k) > N)`, plus `(n+1, k-N)` / `(n-1, k-N)` cross products. qabel's set `k` is `q1*q%qmax%` with `qmax=75` default, so card(k)=75; the observed `k-9..k-68` range spans 60 non-contiguous offsets but doesn't reach the full -74 bound — probably constrained by the stateq equation's declared domain `stateq(n, k+1)` interacting with the stationarity assembly. Pre-existing since at least Day 5; unchanged by the Day 6 gate. This is a distinct Pattern C variant (large-k stateq enumeration) NOT touched by the launch-shaped gate. |
 | #1150 | abel | **Other (AD-correct structure; nonconvex/solver noise)** | N/A | `stat_x(n,k)` emits clean 4-term form matching the symmetric quadratic derivative (per Day 5 investigation). AD is byte-correct. Rel_diff 29.8% likely from stateq domain-shift convention or nonconvex-solver noise. |
 
 ---
@@ -55,12 +55,30 @@ MATCHING=($(python3 -c "import json, pathlib; d=json.loads(pathlib.Path('data/ga
   print(' '.join(e['model_id'] for e in d['models'] \
   if (e.get('solution_comparison') or {}).get('comparison_status') == 'match'))"))
 for m in "${MATCHING[@]}"; do
-  .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
-    -o /tmp/sprint25-day7/fullset/${m}_mcp.gms --skip-convexity-check --quiet > /dev/null 2>&1
-  diff -q /tmp/sprint25-golden/${m}_mcp.gms /tmp/sprint25-day7/fullset/${m}_mcp.gms > /dev/null 2>&1 \
-    && echo "✅ $m" || echo "❌ $m REGRESSED"
+  out=/tmp/sprint25-day7/fullset/${m}_mcp.gms
+  if ! .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
+       -o "$out" --skip-convexity-check --quiet > /dev/null 2>&1; then
+    echo "⚠️  $m TRANSLATE_FAILED"
+    continue
+  fi
+  if [ ! -s "$out" ]; then
+    echo "⚠️  $m NO_OUTPUT (translate succeeded but emitted file is missing/empty)"
+    continue
+  fi
+  diff -q /tmp/sprint25-golden/${m}_mcp.gms "$out" > /dev/null 2>&1
+  rc=$?
+  case $rc in
+    0) echo "✅ $m" ;;
+    1) echo "❌ $m REGRESSED" ;;
+    *) echo "⚠️  $m DIFF_ERROR (exit $rc — golden or output missing)" ;;
+  esac
 done
 ```
+
+`diff` returns 0 for identical, 1 for byte-diff, and ≥2 for file-access
+errors; splitting those lets a translate failure surface as
+`TRANSLATE_FAILED` / `NO_OUTPUT` / `DIFF_ERROR` rather than being
+silently misclassified as a byte-level `REGRESSED`.
 
 **Result: 54 PASS, 0 FAIL.** The Day 6 Pattern C gate produces byte-identical emissions for all 54 models in the matching set. The narrow "launch-shaped conditional alias sum" fingerprint means the gate only fires on the specific pattern documented in `DAY5_PATTERN_A_INVESTIGATION.md`; all other alias-iteration patterns (quocge, prolog, irscge, and everything in the Tier 0/1/2 canaries) are untouched.
 
@@ -180,7 +198,7 @@ This is **NOT a Pattern A AD gap** — it's a downstream emission/condition-hand
 
 ### #1150 qabel — Pattern C (massive enumeration variant)
 
-Emitted `stat_x(n,k)` has enumeration `nu_stateq(n, k-9)$(ord(k) > 9)` through `nu_stateq(n, k-68)` with cross-products by `(n±1, k-N)`. card(k) is ≈ 69 in qabel; the source body has stateq indexed by `(n, k+1)` at the LHS (one legitimate lead) plus `a(n±1, n)` param-level offsets, but the enumeration spans 68 lag values of k.
+Emitted `stat_x(n,k)` has enumeration `nu_stateq(n, k-9)$(ord(k) > 9)` through `nu_stateq(n, k-68)` with cross-products by `(n±1, k-N)`. qabel's set `k` is `q1*q%qmax%` with `qmax` defaulting to 75, so card(k)=75; the source body has stateq indexed by `(n, k+1)` at the LHS (one legitimate lead) plus `a(n±1, n)` param-level offsets, but the enumeration spans 60 non-contiguous lag values of k (from -9 to -68) which don't reach the full -74 lag bound — likely constrained by the stateq equation's declared domain interacting with the stationarity assembly.
 
 This is Pattern C-shaped (phantom lag enumeration driven by positional-offset Jacobian grouping), but NOT the launch shape — the source DOES have `a(n+1, n)` and `a(n-1, n)` IndexOffsets on `n`, so the Day 6 gate's Precondition (a) (no real IndexOffset on the variable's domain) fails → gate does NOT fire → emission unchanged. Pre-existing emission shape; unchanged from Day 5.
 
