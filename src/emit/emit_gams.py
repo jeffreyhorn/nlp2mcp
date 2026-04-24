@@ -900,7 +900,7 @@ def _emit_nlp_presolve(
     kkt: KKTSystem,
     add_comments: bool,
     source_file: str | None = None,
-) -> None:
+) -> bool:
     """Emit NLP pre-solve block to warm-start MCP dual variables.
 
     Includes and solves the original NLP model, then transfers equation
@@ -910,18 +910,25 @@ def _emit_nlp_presolve(
 
     The approach re-solves the original NLP (via ``$include``) because
     the MCP's comp_* equation forms can confuse NLP solvers.
+
+    Returns True iff the `$include`-based pre-solve block was actually
+    emitted (i.e., `.l` will be populated at runtime before the MCP
+    Solve). Callers that want to emit `.l`-referencing code (e.g., the
+    #1289 post-initial-solve calibration assignments) should gate on
+    this return value — an early-return path here means no `$include`,
+    so `.l` stays uninitialized.
     """
     if not source_file:
-        return
+        return False
 
     obj_info = extract_objective_info(kkt.model_ir)
     if not obj_info.objvar:
-        return
+        return False
 
     # Collect original model equations (not generated fix/bound equations)
     nlp_eqs = kkt.model_ir.get_solved_model_equations()
     if not nlp_eqs:
-        return
+        return False
 
     # #1275: resolve the source path before committing any output to `sections`.
     # If the source lives under the repo root we emit a portable
@@ -967,7 +974,7 @@ def _emit_nlp_presolve(
                 "repo root (no portable $include path)."
             )
             sections.append("")
-        return
+        return False
 
     # Build sets of equality/inequality names for sign handling
     eq_set = set(kkt.model_ir.equalities)
@@ -1050,6 +1057,7 @@ def _emit_nlp_presolve(
         )
 
     sections.append("")
+    return True
 
 
 def emit_gams_mcp(
@@ -2512,8 +2520,9 @@ def emit_gams_mcp(
     # close to the NLP solution to converge. This solves the original NLP
     # first, then transfers the primal levels and equation marginals to
     # the MCP multiplier variables.
+    presolve_include_emitted = False
     if nlp_presolve:
-        _emit_nlp_presolve(sections, kkt, add_comments, source_file)
+        presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
 
     # Issue #1289: post-initial-solve calibration assignments that read `.l`
     # values (e.g., `deltas(i)$ls.l(i) = (k(i)/ls.l(i))**(...)` in
@@ -2523,35 +2532,30 @@ def emit_gams_mcp(
     # populated `.l` — in the `--nlp-presolve` flow that's the $include of
     # the original NLP above. Without that include, `.l` is uninitialized
     # and the calibration would produce UNDF / divide-by-zero, so we gate
-    # on `nlp_presolve` being active and the source file being portable
-    # (i.e., `_emit_nlp_presolve` actually emitted the include rather than
-    # falling into the #1275 soft-skip branch for an out-of-repo source).
-    if nlp_presolve and source_file is not None:
-        try:
-            Path(source_file).resolve().relative_to(_REPO_ROOT)
-            presolve_include_emitted = True
-        except ValueError:
-            presolve_include_emitted = False
-        if presolve_include_emitted:
-            calibration_code = emit_computed_parameter_assignments(
-                kkt.model_ir,
-                varref_filter="only_varref_attr",
-                exclude_params=_merge_exclude_params(
-                    early_params if early_params else None,
-                    non_model_params,
-                ),
-            )
-            if calibration_code:
-                if add_comments:
-                    sections.append("* ============================================")
-                    sections.append(
-                        "* Post-initial-solve calibration (#1289): parameters "
-                        "computed from `.l` values set by the pre-solve $include above."
-                    )
-                    sections.append("* ============================================")
-                    sections.append("")
-                sections.append(calibration_code)
+    # on `_emit_nlp_presolve` having actually emitted the include. Its
+    # early-return paths cover: a falsy source file, a missing objective
+    # variable, a model with no solved equations, or a source outside the
+    # repo root (#1275 soft-skip banner branch).
+    if presolve_include_emitted:
+        calibration_code = emit_computed_parameter_assignments(
+            kkt.model_ir,
+            varref_filter="only_varref_attr",
+            exclude_params=_merge_exclude_params(
+                early_params if early_params else None,
+                non_model_params,
+            ),
+        )
+        if calibration_code:
+            if add_comments:
+                sections.append("* ============================================")
+                sections.append(
+                    "* Post-initial-solve calibration (#1289): parameters "
+                    "computed from `.l` values set by the pre-solve $include above."
+                )
+                sections.append("* ============================================")
                 sections.append("")
+            sections.append(calibration_code)
+            sections.append("")
 
     # Solve statement
     if add_comments:

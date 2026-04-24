@@ -281,3 +281,41 @@ class TestCalibrationDeferredEmission:
 
         assert "Post-initial-solve calibration" not in output
         assert "calib = x.l" not in output
+
+    def test_calibration_skipped_when_presolve_requested_but_no_source_file(
+        self, manual_index_mapping
+    ):
+        """`nlp_presolve=True` but `source_file=None` → `_emit_nlp_presolve`
+        early-returns without emitting the `$include`, so the post-solve
+        calibration must also be skipped (otherwise the emitted MCP would
+        reference uninitialized `.l` values at runtime).
+
+        Regression test for the gap flagged in PR #1304 review: the
+        original caller gated calibration on the repo-root check alone,
+        which passed when `source_file` was falsy (the relative_to check
+        was never reached), leaving calibration emitted without a
+        matching `$include`.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=None)
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
+
+    def test_calibration_skipped_when_no_solved_model_equations(self, manual_index_mapping):
+        """`nlp_presolve=True` + in-repo source, but no solved-model
+        equations → `_emit_nlp_presolve` early-returns (no dual-transfer
+        lines to emit), so the `$include` that would populate `.l` never
+        fires either. Calibration must therefore be skipped.
+        """
+        kkt = _kkt_with_calibration_param(manual_index_mapping)
+        # Clear the list of solved-model equations so
+        # `get_solved_model_equations()` returns something falsy.
+        kkt.model_ir.model_equations = []
+        source = REPO_ROOT / "examples" / "simple_nlp.gms"
+
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file=str(source))
+
+        assert "Post-initial-solve calibration" not in output
+        assert "calib = x.l" not in output
