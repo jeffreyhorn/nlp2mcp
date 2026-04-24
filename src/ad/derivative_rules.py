@@ -2325,8 +2325,10 @@ def _partial_collapse_sum(
 
     for matching in all_matchings:
         # matching[i] = index into sum_index_sets for wrt position i
-        matched_sum_indices = [sum_index_sets[matching[i]] for i in range(len(wrt_indices))]
-        matched_concrete = list(wrt_indices)
+        matched_sum_indices: list[str] = [
+            sum_index_sets[matching[i]] for i in range(len(wrt_indices))
+        ]
+        matched_concrete: list[str | IndexOffset] = list(wrt_indices)
         matched_set = set(matching)
         remaining_sum_indices = [
             sum_index_sets[si] for si in range(len(sum_index_sets)) if si not in matched_set
@@ -2369,7 +2371,7 @@ def _partial_collapse_sum(
                     )
                 final_remaining[ri] = new_name
 
-        # Build symbolic wrt: for each wrt position, use the matched sum index name
+        # Build symbolic wrt: for each wrt position, use the matched sum index name.
         wrt_to_symbolic: list[str | IndexOffset] = []
         for wi, wrt_idx in enumerate(wrt_indices):
             sym_name = matched_sum_indices[wi]
@@ -2377,6 +2379,41 @@ def _partial_collapse_sum(
                 wrt_to_symbolic.append(IndexOffset(sym_name, wrt_idx.offset, wrt_idx.circular))
             else:
                 wrt_to_symbolic.append(sym_name)
+
+        # Sprint 25 Phase 1 (#1111 multi-index port): when the body's VarRefs
+        # reference a FREE symbolic index that differs from the matched sum
+        # index name (possible under aliasing, e.g. sum((n,np), x(a,b)) where
+        # a,b are outer domain names that the concrete wrt values are
+        # instances of), prefer the body's free name over the matched sum
+        # index. Without this recovery the body-diff would return 0 because
+        # `x(a,b)` w.r.t. `(n, np)` doesn't structurally match and neither
+        # the standard indices_match nor _alias_match handle the case.
+        #
+        # This is the multi-index analog of the single-index path's
+        # `_find_var_indices_in_body` logic at lines 1985-2007.
+        var_indices_in_body: list[tuple[str | IndexOffset, ...]] = []
+        body_bound_for_recovery: set[str] = set(sum_index_sets) | set(final_remaining)
+        if config is not None and config.model_ir is not None:
+            var_indices_in_body = _find_var_indices_in_body(working_body, wrt_var)
+            _collect_bound_indices(working_body, body_bound_for_recovery)
+        if var_indices_in_body:
+            for wi, wrt_idx in enumerate(wrt_indices):
+                current_sym = wrt_to_symbolic[wi]
+                if isinstance(current_sym, IndexOffset):
+                    continue
+                if isinstance(wrt_idx, IndexOffset):
+                    continue
+                for var_idx_tuple in var_indices_in_body:
+                    if wi < len(var_idx_tuple):
+                        body_idx = var_idx_tuple[wi]
+                        if (
+                            isinstance(body_idx, str)
+                            and body_idx != current_sym
+                            and body_idx not in body_bound_for_recovery
+                            and _is_concrete_instance_of(wrt_idx, body_idx, config)
+                        ):
+                            wrt_to_symbolic[wi] = body_idx
+                            break
 
         symbolic_wrt: tuple[str | IndexOffset, ...] = tuple(wrt_to_symbolic)
         # Augment bound_indices with remaining (uncollapsed) sum indices
@@ -2403,10 +2440,61 @@ def _partial_collapse_sum(
                 _sprint25_day2_log("partial_collapse_sum", "skip: body_derivative is Const(0.0)")
             continue
 
-        # Substitute matched sum indices with their concrete values
-        result_body = _substitute_sum_indices(
-            body_derivative, tuple(matched_sum_indices), tuple(matched_concrete)
-        )
+        # Substitute the symbolic names that were actually used in the body
+        # diff back to their concrete wrt values. ALWAYS substitute the
+        # matched sum index names first (so that any `ParamRef(n,k)` or
+        # condition reference still carrying the original sum-index name
+        # gets rewritten — the recovery loop above only renames VarRef
+        # positions in `symbolic_wrt`, not occurrences elsewhere in the
+        # body). Then layer on substitutions for any recovered body-free
+        # names in `symbolic_wrt` that differ from the matched name.
+        #
+        # Two wrt positions may share the same symbolic name (alias matching
+        # can route them both through the same sum index): dedupe when the
+        # concrete values agree; skip the whole matching when they conflict,
+        # since `_substitute_sum_indices` uses a dict and would silently
+        # drop one side of the conflict. This mirrors the `duplicate_sym`
+        # guard in the single-index recovery path
+        # (derivative_rules.py:2012-2033).
+        sub_sym: list[str] = []
+        sub_concrete: list[str | IndexOffset] = []
+        seen_substitutions: dict[str, str | IndexOffset] = {}
+        invalid_substitution = False
+
+        def _add_substitution(
+            sub_entry: str | IndexOffset,
+            sub_concrete_val: str | IndexOffset,
+        ) -> bool:
+            """Append (key, concrete) if not seen; return False on conflict."""
+            key = sub_entry.base if isinstance(sub_entry, IndexOffset) else sub_entry
+            if key in seen_substitutions:
+                if seen_substitutions[key] != sub_concrete_val:
+                    if _SPRINT25_DAY2_DEBUG:
+                        _sprint25_day2_log(
+                            "partial_collapse_sum",
+                            "skip: conflicting duplicate symbolic substitution for "
+                            f"{key!r}: {seen_substitutions[key]!r} vs {sub_concrete_val!r}",
+                        )
+                    return False
+                return True
+            seen_substitutions[key] = sub_concrete_val
+            sub_sym.append(key)
+            sub_concrete.append(sub_concrete_val)
+            return True
+
+        for matched_name, matched_value in zip(matched_sum_indices, matched_concrete, strict=True):
+            if not _add_substitution(matched_name, matched_value):
+                invalid_substitution = True
+                break
+        if invalid_substitution:
+            continue
+        for symbolic_name, symbolic_value in zip(symbolic_wrt, matched_concrete, strict=True):
+            if not _add_substitution(symbolic_name, symbolic_value):
+                invalid_substitution = True
+                break
+        if invalid_substitution:
+            continue
+        result_body = _substitute_sum_indices(body_derivative, tuple(sub_sym), tuple(sub_concrete))
         if _SPRINT25_DAY2_DEBUG:
             _sprint25_day2_log(
                 "partial_collapse_sum",

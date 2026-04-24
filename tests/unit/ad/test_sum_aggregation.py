@@ -676,3 +676,129 @@ def test_diff_nested_sum_no_spurious_inner_sum():
     assert not _has_spurious_sum_cr_const(
         result
     ), f"Result contains spurious sum(cr, const): {result}"
+
+
+def test_diff_partial_collapse_sum_recovers_outer_domain_free_index():
+    """Sprint 25 #1111 multi-index port: d/dx(consumpt, q1) on a sum whose
+    body references a DIFFERENT domain name than the sum's own indices
+    must recover the body's name during partial collapse.
+
+    Shape:
+      - sum((n, np, k), x(m, k) * w(n, np, m, k))
+      - n, np are aliases. m is a separate set whose members overlap with n.
+      - wrt = (consumpt, q1). consumpt is a member of both `n` and `m`.
+
+    Without the multi-index recovery ported from the single-index path,
+    `_partial_collapse_sum` would pick matching (n=consumpt, k=q1) and ask
+    `_diff_varref(x(m, k), 'x', ('n', 'k'), ...)`. That returns `Const(0.0)`
+    because `m != n` and no alias relationship is declared between them.
+
+    With the recovery: the body's `x(m, k)` has position-0 index `m`, which
+    is a FREE symbolic name (not in sum_index_sets). `consumpt` is a
+    concrete instance of `m`, so the recovery rewrites `symbolic_wrt` from
+    `('n', 'k')` to `('m', 'k')`. The body diff then structurally matches,
+    producing `Const(1.0)` in the relevant factor.
+    """
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model = ModelIR()
+    model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
+    model.sets["m"] = SetDef(name="m", domain=(), members=["consumpt", "invest"])
+    model.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2"])
+    model.aliases["np"] = AliasDef(name="np", target="n")
+
+    config = Config()
+    config.model_ir = model
+
+    # body: x(m, k) * w(n, np, m, k)
+    body = Binary(
+        "*",
+        VarRef("x", ("m", "k")),
+        ParamRef("w", ("n", "np", "m", "k")),
+    )
+    sum_expr = Sum(("n", "np", "k"), body, None)
+
+    # d/dx(consumpt, q1) — _partial_collapse_sum because 3 sum dims > 2 wrt dims.
+    result = differentiate_expr(sum_expr, "x", ("consumpt", "q1"), config)
+
+    from src.ad.derivative_rules import _is_structurally_zero
+
+    assert not _is_structurally_zero(result), (
+        f"Expected non-zero derivative when body's outer domain name "
+        f"(`m`) differs from the sum's matched index name (`n`); got: {result}"
+    )
+
+
+def test_diff_partial_collapse_sum_drops_conflicting_duplicate_substitution():
+    """Sprint 25 #1111 multi-index port: when the recovery plus alias
+    matching would map two different wrt concrete values to the same
+    symbolic substitution key, the matching must be skipped (not silently
+    drop one side via `_substitute_sum_indices`'s dict overwrite).
+
+    Shape:
+      - `sum((n, np, k), x(m, m))` — 3 sum indices, 2 wrt indices, which
+        is required for `_partial_collapse_sum` to be invoked at all
+        (`_diff_sum`'s full-collapse path only fires when sum and wrt have
+        the same arity).
+      - body uses `m` at BOTH VarRef positions; `m` is a separate set
+        whose members are {consumpt, invest}.
+      - wrt = ('consumpt', 'invest').
+      - Both enumerated matchings ((n=consumpt, np=invest) and (np=consumpt,
+        n=invest)) hit the recovery, which rewrites `symbolic_wrt` to
+        `('m', 'm')`. The substitution-builder's second pass then tries to
+        map `m → consumpt` AND `m → invest` for the same matching — the
+        `_add_substitution` guard flags this as `invalid_substitution` and
+        the matching is skipped.
+      - Every matching is skipped → `_partial_collapse_sum` returns None,
+        `_diff_sum` falls through to the normal body-diff path (which also
+        can't match `x(m,m)` to `(consumpt, invest)` without the recovery),
+        and the overall derivative is structurally zero.
+
+    The alternative behavior the guard prevents is one of the concretes
+    being silently lost by `_substitute_sum_indices`'s dict overwrite,
+    yielding a corrupted Sum result. This test asserts both that
+    `_partial_collapse_sum` returns None on the conflict and that the
+    top-level derivative is structurally zero.
+    """
+    from src.ad.derivative_rules import _partial_collapse_sum
+    from src.config import Config
+    from src.ir.model_ir import ModelIR
+    from src.ir.symbols import AliasDef, SetDef
+
+    model = ModelIR()
+    model.sets["n"] = SetDef(name="n", domain=(), members=["consumpt", "invest"])
+    model.sets["m"] = SetDef(name="m", domain=(), members=["consumpt", "invest"])
+    model.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2"])
+    model.aliases["np"] = AliasDef(name="np", target="n")
+
+    config = Config()
+    config.model_ir = model
+
+    # body: x(m, m) — both positions index the same outer set `m`.
+    body = VarRef("x", ("m", "m"))
+    sum_expr = Sum(("n", "np", "k"), body, None)
+
+    # Direct check: `_partial_collapse_sum` returns None because every
+    # candidate matching hits the conflicting-duplicate guard.
+    partial_result = _partial_collapse_sum(sum_expr, "x", ("consumpt", "invest"), config)
+    assert partial_result is None, (
+        f"expected `_partial_collapse_sum` to skip all matchings on the "
+        f"conflicting duplicate and return None, got: {partial_result!r}"
+    )
+
+    # End-to-end via the public dispatcher: the normal-path fallback
+    # wraps the body diff in `Sum((n,np,k), <body diff>)`, and the body
+    # diff itself is zero because `x(m,m)` can't match `(consumpt, invest)`
+    # via alias matching either. The critical invariant is that no
+    # corrupted VarRef with one side partially substituted leaks through
+    # — the skip-on-conflict guard plus the normal-path fallback together
+    # must produce an expression whose body-diff position is `Const(0.0)`,
+    # not a silently-wrong `x(m, invest)` or `x(consumpt, m)`.
+    result = differentiate_expr(sum_expr, "x", ("consumpt", "invest"), config)
+    assert isinstance(result, Sum), f"expected Sum fallback, got: {result!r}"
+    assert isinstance(result.body, Const) and result.body.value == 0.0, (
+        f"expected Sum body to be Const(0.0) after all matchings skipped, "
+        f"got body={result.body!r}"
+    )

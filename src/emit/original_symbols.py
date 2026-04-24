@@ -236,6 +236,50 @@ def _quote_assignment_index(
     return idx
 
 
+def _sanitize_uel_element(element: str) -> str:
+    """Sanitize a UEL registry element and single-quote scalar results.
+
+    The generic `_sanitize_set_element` treats a dot as GAMS tuple notation
+    (e.g., `upper.egypt` as a 2-tuple label) and so leaves `x1.l` unquoted.
+    That's the right call for ordinary set members, but the
+    `nlp2mcp_uel_registry` set (emit_gams.py) stores LITERAL attribute-access
+    strings (`x1.l`, `x2.l`) produced by zero-filtered parameter lookups. GAMS
+    interprets those as tuple UELs and either rejects the declaration or
+    silently truncates to the first component.
+
+    Fix per ISSUE_1280: run the element through the normal sanitizer (so the
+    dangerous-character rejection still applies) and then quote the result if
+    it wasn't already quoted. GAMS accepts `'foo'` identically to `foo` for
+    plain identifiers, so unconditional quoting has no downside.
+
+    Two outputs are passed through without wrapping in an outer pair of
+    single quotes:
+
+    - Already-quoted results from `_sanitize_set_element` (e.g., `'foo-bar'`
+      or `'SAE 10'`). Re-quoting would produce `''foo-bar''`.
+    - The GUSS trailing-dot tuple form (e.g., `foo.''` for a 2-tuple,
+      `rapscenarios.scenario.''` for a 3-tuple — see issue #910), which
+      the base sanitizer synthesises from a trailing-dot input. This is
+      intentionally a tuple reference with an empty trailing component —
+      wrapping it in outer quotes would turn it into the label
+      `'foo.'''` / `'rapscenarios.scenario.'''`, losing the tuple
+      semantics.
+
+    Callers that need literal quoting of every input should not rely on
+    this helper for the two shapes above.
+    """
+    sanitized = _sanitize_set_element(element)
+    # `_sanitize_set_element` returns a pre-quoted string unchanged and also
+    # quotes elements that contain spaces, `+`/`-`, or reserved constants.
+    if len(sanitized) >= 2 and sanitized.startswith("'") and sanitized.endswith("'"):
+        return sanitized
+    # GUSS trailing-dot case: `_sanitize_set_element` restores it as
+    # `foo.''` — leave that compound form intact.
+    if sanitized.endswith("''"):
+        return sanitized
+    return "'" + sanitized.replace("'", "''") + "'"
+
+
 def _sanitize_set_element(element: str) -> str:
     """Sanitize a set element name for safe GAMS emission.
 

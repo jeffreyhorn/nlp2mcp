@@ -412,9 +412,7 @@ class TestFullGAMSEmission:
         # source is outside the repo root (it has no portable $include
         # path). Use an in-repo path so this test continues to exercise the
         # presolve structure rather than the soft-skip branch.
-        output = emit_gams_mcp(
-            kkt, nlp_presolve=True, source_file="examples/simple_nlp.gms"
-        )
+        output = emit_gams_mcp(kkt, nlp_presolve=True, source_file="examples/simple_nlp.gms")
 
         # Pre-solve block should be present
         assert "$onMultiR" in output
