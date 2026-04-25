@@ -14,9 +14,28 @@ This doc documents the bisection.
 
 ## TL;DR
 
-Both qabel and abel converge to **Model Status 1 Locally Optimal** under PATH (no infeasibility, no "other error"). The rel_diff vs the NLP baseline is material (qabel 8.88%, abel 29.77%), but **term-by-term hand-derivation shows the emitted `stat_x` is mathematically equivalent to the formal KKT** — including the `nu_stateq(n, k-1) $ (ord(k) > 1)` shift and the implicit `ord(k) < card(k)` guard via the `nu_stateq.fx` pinning. Conclusion: this is **NOT an emission bug**; the rel_diff comes from PATH and CONOPT finding different local optima on a non-convex (QCP) problem.
+Both qabel and abel converge to **Model Status 1 Locally Optimal** under PATH (no infeasibility). The rel_diff vs the NLP baseline is material (qabel 8.88%, abel 29.77%).
 
-Recommendation: mark #1150 (qabel/abel) as "non-bug; nonconvex-solver finds a different local optimum than the NLP solver." No emission fix; reclassify in `AUDIT_ALIAS_AD_CARRYFORWARD.md`.
+**Initial hypothesis (rejected):** "Both NLPs are non-convex (qcp) and PATH/CONOPT find different local optima — solver-noise, not an emission bug."
+
+**Multi-start NLP refuted that:** 5 randomized initial points each converged to the SAME NLP objective for both models (qabel: 46965.036 × 5; abel: 225.195 × 5). The NLPs have unique optima, so the rel_diff cannot be solver-noise.
+
+**Bisection found a real AD bug.** Inspecting the gradient output via `compute_objective_gradient`, the AD layer emits `Const(0.0)` for `u(m, k_v)` derivatives at every `k_v` — including those where the criterion's `sum(ku, ...)` aggregation is active (`ku` is a declared subset of `k`). The criterion's u-quadratic term is silently dropped by the AD when the sum's bound index is a SUBSET of the variable's declared domain (rather than the same name or an alias).
+
+Concretely, the criterion in both models is:
+
+```gams
+.5 * sum((k, n, np), (x(n,k) - xt(n,k))   * w(n,np,k)   * (x(np,k) - xt(np,k)))
++ .5 * sum((ku, m, mp), (u(m,ku) - ut(m,ku)) * lambda(m,mp) * (u(mp,ku) - ut(mp,ku)))
+```
+
+The x-quadratic (sum over `k`) is differentiated correctly — Day 5 verified the symmetric form is byte-for-byte right. But the u-quadratic (sum over the SUBSET `ku ⊆ k`) is dropped entirely.
+
+Filed as issue [#1311](https://github.com/jeffreyhorn/nlp2mcp/issues/1311). Likely fix area: `src/ad/derivative_rules.py::_diff_varref` and/or `src/ad/index_mapping.py` (subset-of-domain matching for sum binding). NOT a same-day fix — targeting Sprint 26 (or Day 13 buffer if schedule allows).
+
+**Recommendation update:** withdraw the "non-bug; nonconvex-solver-noise" reclassification of #1150. Keep #1150 open and add a status comment linking to #1311 (AD layer is the actual bug; fixing #1311 is expected to recover both qabel and abel).
+
+Effect on Sprint 25 Match target: Day 7's revised "≥54 baseline hold" projection still stands for the Day 14 retest (no Day-8 lever for +1 since the fix doesn't land in this PR). Sprint 26 carries a credible "+2 from #1311 fix" lever (qabel, abel) once the AD subset-domain bug is resolved.
 
 ---
 
@@ -145,27 +164,54 @@ The Day 8 prompt suggested using `--nlp-presolve` to warm-start the MCP from the
 
 This is the pre-existing Error 141 cascade on dual-transfer lines that Day 5 already documented for qabel/abel/ganges (action=c compile fails). Unrelated to this analysis — separate emit bug — so the presolve verification is unavailable. The hand-derivation is the alternative.
 
-## Why nonconvex-solver-noise is the accepted explanation
+## Why "nonconvex-solver-noise" was rejected
 
-abel.gms's solve statement is:
+The initial hypothesis seemed plausible: abel.gms uses `solve abel minimizing j using qcp;` (Quadratically Constrained Program), the matrix `w(n,np,k)` is highly anisotropic (`100 * wk` at the terminal period), and `lambda` is asymmetric in abel's source (`'money.gov-expend' 0.444` — off-diagonal). On those data alone, a "non-convex problem with multiple local optima" reading was reasonable.
 
-```gams
-solve abel minimizing j using qcp;
+Two checks falsified it:
+
+1. **Per-k convexity check.** `w(n,np,k)` is just diagonal-positive `wk = diag(0.0625, 1)` scaled by 1 or 100. PSD for every k. So the x-quadratic is convex. For abel, lambda's symmetric part has eigenvalues `[-0.047, 1.047]` (indefinite — non-convex in u). For qabel, lambda is diagonal-positive `diag(1, 0.444)` (convex in u). So qabel SHOULD be fully convex.
+
+2. **Multi-start NLP.** Five different initial points (x.l/u.l perturbed by ×0.5, ×1.5, ×2 in various combinations) all converged to the SAME NLP objective for both models:
+   - qabel: 46965.036 × 5 starts
+   - abel:  225.195   × 5 starts
+
+   For convex qabel, this is the expected behavior. For abel (with indefinite lambda), this means the dynamics-as-implicit-constraints make the effective optimization unique — the indefinite-lambda would only allow unbounded descent if the dynamics didn't pin u as a function of x's evolution.
+
+If the NLPs have unique optima and the MCP's KKT system represented those optima faithfully, the MCP solve would converge to the same objective. The 8.88% / 29.77% gap is therefore real evidence of a missing or wrong term in the KKT system — not solver behavior.
+
+## The actual bug — AD drops u-criterion gradient
+
+Direct inspection of `compute_objective_gradient`'s output for abel:
+
+```python
+from src.ad.gradient import compute_objective_gradient
+g = compute_objective_gradient(model)
+# Every u(m, k) entry returns Const(0.0):
+#   u(gov-expend, 1964-i) -> Const(0.0)
+#   ... including indices where ku(k) is yes
+# x entries return the correct symmetric quadratic form (Day 5 verified).
 ```
 
-`qcp` = Quadratically Constrained Program. The criterion has `w(n,np,k) * (x(n,k) - xt(n,k)) * (x(np,k) - xt(np,k))` — a quadratic form in `x`. The matrix `w` is set as `w(n,np,ku) = wk(n,np)` (interior periods, weight 1) and `w(n,np,kt) = 100 * wk(n,np)` (terminal period, weight 100). Highly anisotropic, **non-convex** in general because `w` and `lambda` are constructed without guaranteed positive-semidefiniteness.
+The criterion's u-quadratic term is silently dropped by the AD when the sum's bound index is a subset of the variable's declared domain:
 
-Both qabel and abel are "nonlinear least-squares-like" (track an `xtilde` reference trajectory subject to dynamics), and there can be many local minima. CONOPT solves the NLP from the initial point `x.l(n,k) = xinit(n)` (which is the steady-state init for k=q1 but a poor init for later k where the reference grows). PATH solves the MCP from the same init for primals plus zero init for multipliers — a different starting point in the KKT manifold.
+```gams
+* x is declared over (n, k); the x-quadratic sums (k, n, np) — bound `k` matches variable's `k`. Works.
+* u is declared over (m, k); the u-quadratic sums (ku, m, mp) — bound `ku` is a SUBSET of `k`. Fails.
+.5 * sum((ku, m, mp), (u(m, ku) - utilde(m, ku)) * lambda(m, mp) * (u(mp, ku) - utilde(mp, ku)))
+```
 
-The two solvers therefore reach different fixed points. Both are valid "local optima" of their respective formulations. Neither is incorrect.
+Filed as [#1311](https://github.com/jeffreyhorn/nlp2mcp/issues/1311). Fix is not in scope for Sprint 25 Day 8 (needs an audit of subset-domain handling in `src/ad/derivative_rules.py::_diff_varref` and/or `src/ad/index_mapping.py`, plus a corpus-wide check for other models with the same shape).
+
+**Note that `stat_x` IS still correct** (verified term-by-term against the formal KKT in §"Hand-derived KKT vs emitted `stat_x`"). The bug is specific to `stat_u`, which is missing the u-criterion contribution but has the correct stateq Lagrangian transpose.
 
 ## Recommendations
 
-1. **Reclassify #1150** in `AUDIT_ALIAS_AD_CARRYFORWARD.md`: from "Pattern A" to "non-bug; nonconvex-solver-noise". Reference this doc and the term-by-term hand-derivation as evidence. Keep the GH issue open with a status comment for traceability, but remove from the Pattern A target list.
-2. **Mark #1138 (irscge family)** similarly if a follow-up bisection reaches the same conclusion (the Day 7 sweep noted irscge has its own Pattern C variant separate from the AD layer; rel_diff there may also be solver-noise once the emission is normalized — needs separate verification).
-3. **Continue to track #1307** (Pattern C Bug #2) as the pending issue for launch's Locally Infeasible MCP. That's a real emission bug.
+1. **Do NOT reclassify #1150** as "non-bug; nonconvex-solver-noise" — that conclusion was wrong. Keep #1150 open with a status comment linking to #1311. Once #1311 lands, qabel and abel are expected to recover (rel_diff → near zero) and #1150 closes naturally.
+2. **Audit other models with `sum(subset, ...)` criterion shapes.** Issue #1311's body recommends a corpus-wide check. The Day 7 cohort's rel_diff classifications (e.g., #1138 irscge family, #1140 ps-family) may have been mis-attributed to "nonconvex" or "stochastic" when the actual cause is the same AD subset-domain bug. Out of scope for Day 8; flagged in #1311.
+3. **Continue to track #1307** (Pattern C Bug #2) as the pending issue for launch's Locally Infeasible MCP. That's a separate, also-real emission bug.
 
-Effect on Sprint 25 Match target: **no change** from Day 7's revised projection of "≥54 baseline hold". The Day 7 doc's optimistic "+1 contingent qabel via Day 8" line is now resolved as **+0** — qabel doesn't recover via a Day-8-feasible emission fix because no emission fix is needed.
+Effect on Sprint 25 Match target: **no change to the Day 14 retest** — #1311 is not landing in Sprint 25, so the Match target stays at Day 7's "≥54 baseline hold". For Sprint 26, #1311's expected impact is **+2 Match (qabel, abel) plus possibly more** depending on what the corpus audit surfaces.
 
 ## Files referenced
 
