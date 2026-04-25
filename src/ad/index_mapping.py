@@ -113,7 +113,11 @@ class IndexMapping:
 
 
 def resolve_set_members(
-    set_or_alias_name: str, model_ir: ModelIR, _visited: set[str] | None = None
+    set_or_alias_name: str,
+    model_ir: ModelIR,
+    _visited: set[str] | None = None,
+    *,
+    quiet: bool = False,
 ) -> tuple[list[str], str]:
     """
     Resolve a set or alias name to its concrete members.
@@ -125,6 +129,11 @@ def resolve_set_members(
     Args:
         set_or_alias_name: Name of set or alias
         model_ir: Model IR containing sets and aliases
+        quiet: When True, suppress the issue-#723 warnings about
+            dynamic-subset → parent fallback. Membership-check callers
+            (e.g., AD's `_is_concrete_instance_of`) can pass this; the
+            fallback is the expected behavior in that context, not a
+            model issue worth logging.
 
     Returns:
         Tuple of (members_list, resolved_set_name)
@@ -171,23 +180,27 @@ def resolve_set_members(
             for parent_name in set_def.domain:
                 if parent_name in _visited:
                     continue  # skip circular parent reference
-                parent_members, _ = resolve_set_members(parent_name, model_ir, _visited)
+                parent_members, _ = resolve_set_members(
+                    parent_name, model_ir, _visited, quiet=quiet
+                )
                 if parent_members:
-                    logger.warning(
-                        "Dynamic subset '%s' has no static members; "
-                        "falling back to parent set '%s' (%d members)",
-                        set_or_alias_name,
-                        parent_name,
-                        len(parent_members),
-                    )
+                    if not quiet:
+                        logger.warning(
+                            "Dynamic subset '%s' has no static members; "
+                            "falling back to parent set '%s' (%d members)",
+                            set_or_alias_name,
+                            parent_name,
+                            len(parent_members),
+                        )
                     return (parent_members, set_or_alias_name)
             # All parents tried but none had members
-            logger.warning(
-                "Dynamic subset '%s' has no static members and no parent set "
-                "with members (tried: %s). Returning empty member list.",
-                set_or_alias_name,
-                ", ".join(set_def.domain),
-            )
+            if not quiet:
+                logger.warning(
+                    "Dynamic subset '%s' has no static members and no parent set "
+                    "with members (tried: %s). Returning empty member list.",
+                    set_or_alias_name,
+                    ", ".join(set_def.domain),
+                )
         return (set_def.members, set_or_alias_name)
 
     # Issue #940: Handle GAMS universal set '*' — contains all elements

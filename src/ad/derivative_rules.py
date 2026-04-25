@@ -2651,35 +2651,36 @@ def _is_concrete_instance_of(
     # Strategy 1: Use model_ir for set membership lookup if available
     if config is not None and config.model_ir is not None:
         model_ir = config.model_ir
-        # Check if symbolic is a set name and concrete is a member
-        if symbolic in model_ir.sets:
-            set_def = model_ir.sets[symbolic]
-            # Handle both SetDef objects (normal case) and plain containers
-            # (e.g., when model_ir.sets is constructed programmatically without SetDef)
-            if isinstance(set_def, (list, tuple, set, frozenset)):
-                members = set_def
-            else:
-                members = set_def.members
-            # If symbolic is a known set, membership is definitive
-            if concrete in members:
-                return True
-            else:
-                # Not a member of known set - return False definitively
-                return False
-        # Also check aliases
-        if symbolic in model_ir.aliases:
+
+        # Resolve `symbolic` (set or alias) to its concrete members.
+        # `resolve_set_members` handles three cases uniformly:
+        #   - Plain set: returns its declared members.
+        #   - Alias: follows the alias chain to a concrete set.
+        #   - Dynamic subset (e.g. `Set ku(k); ku(k) = yes$(...)`): falls back
+        #     to the parent set's members per issue #723. This is critical for
+        #     issue #1311: a sum like `sum(ku, ...)` where `ku` is a dynamic
+        #     subset of `k` must accept any concrete element of `k` as a
+        #     candidate match. The runtime restriction (`$ku(k)`) is captured
+        #     by the emitter via the equation-level domain guard
+        #     (e.g., `stat_u(m,k)..  ... $(ku(k)) =E= 0`), so the AD layer can
+        #     freely substitute parent-set elements without losing
+        #     correctness.
+        if symbolic in model_ir.sets or symbolic in model_ir.aliases:
             from .index_mapping import resolve_set_members
 
             try:
-                members, _ = resolve_set_members(symbolic, model_ir)
-                # If symbolic is a known alias with resolvable members, membership is definitive
-                if concrete in members:
-                    return True
-                else:
-                    # Not a member of known alias - return False definitively
-                    return False
+                # `quiet=True`: suppress the issue-#723 warning when a
+                # dynamic-subset falls back to its parent. Membership-checks
+                # invoke this resolver per (sum_index, candidate_var_index)
+                # pair during AD, so the warning would fire dozens of times
+                # per equation and is not actionable here — the fallback is
+                # the desired behavior, not a model issue.
+                members, _ = resolve_set_members(symbolic, model_ir, quiet=True)
             except ValueError:
-                pass  # Fall through to heuristic if alias cannot be resolved
+                members = None  # Fall through to heuristic on resolution error.
+            if members is not None:
+                # Membership is definitive when the set/alias resolves.
+                return concrete in members
 
     # Strategy 2: Fallback heuristic (for backward compatibility)
     return (
