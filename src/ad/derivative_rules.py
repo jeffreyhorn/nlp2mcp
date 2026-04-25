@@ -2682,7 +2682,30 @@ def _is_concrete_instance_of(
                 # Membership is definitive when the set/alias resolves.
                 return concrete in members
 
-    # Strategy 2: Fallback heuristic (for backward compatibility)
+        # Issue #1312: When model_ir is available but `symbolic` is NOT a
+        # declared set or alias, the prefix-based heuristic below would
+        # spuriously match concrete values that share a string prefix —
+        # e.g., `_is_concrete_instance_of("q75", "q7", config)` returned True
+        # because `"q75".startswith("q7")` and the suffix `"5"` is a digit.
+        # That misclassification fired during qabel's `stat_u` differentiation:
+        # after substituting `eq_indices=(n, q7)` into the body `u(m, k)`,
+        # the symbolic body index `k` became literal `"q7"`, and the AD's
+        # single-index partial-collapse path (at #1086 / #1111) probed
+        # `_is_concrete_instance_of("q75", "q7", ...)` to decide whether the
+        # wrt-index `"q75"` could be re-symbolised through the body's `"q7"`.
+        # The spurious True caused the AD to treat ∂stateq(n,q7)/∂u(m,q75)
+        # as if k=q7 and k=q75 referred to the same instance, producing 60+
+        # phantom Jacobian entries and the post-#1311 1.4e17 blow-up.
+        #
+        # The heuristic is only meaningful when `symbolic` looks like a set
+        # name (e.g. `i` in `i1, i2, ...`). When model_ir is present and we
+        # know `symbolic` is not a registered set/alias, return False
+        # definitively rather than falling through. This keeps the heuristic
+        # available for legacy unit-test paths that pass `config=None`.
+        return False
+
+    # Strategy 2: Fallback heuristic (for backward compatibility when model_ir
+    # is unavailable, e.g. legacy unit tests that don't construct a Config).
     return (
         concrete.startswith(symbolic)
         and len(concrete) > len(symbolic)

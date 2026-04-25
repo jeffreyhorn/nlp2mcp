@@ -111,6 +111,54 @@ def test_alias_to_dynamic_subset_resolves_via_chain():
 
 
 @pytest.mark.unit
+def test_concrete_value_not_treated_as_symbolic_set_when_model_ir_present():
+    """Issue #1312 regression: when `model_ir` is available and `symbolic`
+    is NOT a registered set or alias, return False definitively rather than
+    falling through to the prefix-based heuristic.
+
+    Pre-fix, `_is_concrete_instance_of("q75", "q7", config)` returned True
+    via the heuristic (`"q75".startswith("q7")` and `"5".isdigit()`), even
+    though `q7` is itself a concrete element of set `k`, not a symbolic
+    set name. That spurious True caused qabel's stat_u/stat_x emission to
+    grow 60+ phantom stateq lag terms (`k-9 .. k-68`) post-#1311 and
+    blow up the MCP objective to ~1.4e17.
+
+    Post-fix: when model_ir is present, the heuristic only fires for known
+    sets/aliases. Two concrete values that share a digit-suffix prefix no
+    longer match.
+    """
+    ir = ModelIR()
+    ir.sets["k"] = SetDef(name="k", domain=(), members=["q1", "q2", "q7", "q75"])
+    config = Config(model_ir=ir)
+
+    # "q7" is a concrete element of `k`, not a set name. Pre-fix, the
+    # heuristic at the bottom of `_is_concrete_instance_of` returned True
+    # for ("q75", "q7"). Post-fix, the function returns False because "q7"
+    # is not a registered set/alias and model_ir is available.
+    assert _is_concrete_instance_of("q75", "q7", config) is False, (
+        "Pre-#1312 fix: returned True via prefix heuristic — `q75` starts "
+        "with `q7` and the suffix `5` is a digit. Post-fix: with model_ir "
+        "available, only registered sets/aliases activate the heuristic; "
+        "an unrecognized name (a concrete element like `q7`) returns False."
+    )
+
+    # Sanity: the legitimate symbolic case still works.
+    assert _is_concrete_instance_of("q1", "k", config) is True
+
+
+@pytest.mark.unit
+def test_concrete_prefix_heuristic_still_works_without_model_ir():
+    """The prefix-and-digit heuristic must stay available when model_ir is
+    NOT supplied, for legacy unit-test paths that don't construct a Config.
+    """
+    # No config: fall through to heuristic.
+    assert _is_concrete_instance_of("i1", "i", None) is True
+    assert _is_concrete_instance_of("j23", "j", None) is True
+    # Heuristic correctly rejects mismatched prefix.
+    assert _is_concrete_instance_of("j1", "i", None) is False
+
+
+@pytest.mark.unit
 def test_qabel_abel_criterion_u_gradient_end_to_end():
     """End-to-end check via the public AD entry: the criterion's u-quadratic
     gradient (`sum((ku, m, mp), ...)` with `ku ⊆ k`) must produce non-zero
