@@ -113,7 +113,11 @@ class IndexMapping:
 
 
 def resolve_set_members(
-    set_or_alias_name: str, model_ir: ModelIR, _visited: set[str] | None = None
+    set_or_alias_name: str,
+    model_ir: ModelIR,
+    _visited: set[str] | None = None,
+    *,
+    quiet: bool = False,
 ) -> tuple[list[str], str]:
     """
     Resolve a set or alias name to its concrete members.
@@ -125,6 +129,11 @@ def resolve_set_members(
     Args:
         set_or_alias_name: Name of set or alias
         model_ir: Model IR containing sets and aliases
+        quiet: When True, suppress the issue-#723 warnings about
+            dynamic-subset → parent fallback. Membership-check callers
+            (e.g., AD's `_is_concrete_instance_of`) can pass this; the
+            fallback is the expected behavior in that context, not a
+            model issue worth logging.
 
     Returns:
         Tuple of (members_list, resolved_set_name)
@@ -150,7 +159,7 @@ def resolve_set_members(
     # Check if it's an alias
     if set_or_alias_name in model_ir.aliases:
         alias_def = model_ir.aliases[set_or_alias_name]
-        return _resolve_alias(alias_def, model_ir, visited=set())
+        return _resolve_alias(alias_def, model_ir, visited=set(), quiet=quiet)
 
     # Direct set lookup
     if set_or_alias_name in model_ir.sets:
@@ -171,23 +180,27 @@ def resolve_set_members(
             for parent_name in set_def.domain:
                 if parent_name in _visited:
                     continue  # skip circular parent reference
-                parent_members, _ = resolve_set_members(parent_name, model_ir, _visited)
+                parent_members, _ = resolve_set_members(
+                    parent_name, model_ir, _visited, quiet=quiet
+                )
                 if parent_members:
-                    logger.warning(
-                        "Dynamic subset '%s' has no static members; "
-                        "falling back to parent set '%s' (%d members)",
-                        set_or_alias_name,
-                        parent_name,
-                        len(parent_members),
-                    )
+                    if not quiet:
+                        logger.warning(
+                            "Dynamic subset '%s' has no static members; "
+                            "falling back to parent set '%s' (%d members)",
+                            set_or_alias_name,
+                            parent_name,
+                            len(parent_members),
+                        )
                     return (parent_members, set_or_alias_name)
             # All parents tried but none had members
-            logger.warning(
-                "Dynamic subset '%s' has no static members and no parent set "
-                "with members (tried: %s). Returning empty member list.",
-                set_or_alias_name,
-                ", ".join(set_def.domain),
-            )
+            if not quiet:
+                logger.warning(
+                    "Dynamic subset '%s' has no static members and no parent set "
+                    "with members (tried: %s). Returning empty member list.",
+                    set_or_alias_name,
+                    ", ".join(set_def.domain),
+                )
         return (set_def.members, set_or_alias_name)
 
     # Issue #940: Handle GAMS universal set '*' — contains all elements
@@ -223,7 +236,11 @@ def resolve_set_members(
 
 
 def _resolve_alias(
-    alias_def: AliasDef, model_ir: ModelIR, visited: set[str]
+    alias_def: AliasDef,
+    model_ir: ModelIR,
+    visited: set[str],
+    *,
+    quiet: bool = False,
 ) -> tuple[list[str], str]:
     """
     Recursively resolve an alias to concrete members.
@@ -237,6 +254,10 @@ def _resolve_alias(
         alias_def: Alias definition to resolve
         model_ir: Model IR
         visited: Set of alias names already visited (for cycle detection)
+        quiet: When True, suppress the issue-#858 warning about an
+            alias→dynamic-subset fallback. Threaded through from
+            `resolve_set_members(quiet=...)` so AD membership-check
+            callers don't spam logs (see `resolve_set_members` docstring).
 
     Returns:
         Tuple of (members_list, target_set_name)
@@ -258,7 +279,9 @@ def _resolve_alias(
 
     # If target is an alias, recursively resolve
     if target_name in model_ir.aliases:
-        target_members, final_set = _resolve_alias(model_ir.aliases[target_name], model_ir, visited)
+        target_members, final_set = _resolve_alias(
+            model_ir.aliases[target_name], model_ir, visited, quiet=quiet
+        )
     # If target is a set, get its members
     elif target_name in model_ir.sets:
         set_def = model_ir.sets[target_name]
@@ -272,16 +295,17 @@ def _resolve_alias(
         # (same logic as resolve_set_members Issue #723 fallback).
         if not target_members and hasattr(set_def, "domain") and set_def.domain:
             for parent_name in set_def.domain:
-                parent_members, _ = resolve_set_members(parent_name, model_ir)
+                parent_members, _ = resolve_set_members(parent_name, model_ir, quiet=quiet)
                 if parent_members:
-                    logger.warning(
-                        "Alias '%s' targets dynamic subset '%s' with no members; "
-                        "falling back to parent set '%s' (%d members)",
-                        alias_def.name,
-                        target_name,
-                        parent_name,
-                        len(parent_members),
-                    )
+                    if not quiet:
+                        logger.warning(
+                            "Alias '%s' targets dynamic subset '%s' with no members; "
+                            "falling back to parent set '%s' (%d members)",
+                            alias_def.name,
+                            target_name,
+                            parent_name,
+                            len(parent_members),
+                        )
                     target_members = parent_members
                     break
     else:
@@ -293,7 +317,7 @@ def _resolve_alias(
 
     # Apply universe constraint if specified
     if alias_def.universe is not None:
-        universe_members, _ = resolve_set_members(alias_def.universe, model_ir)
+        universe_members, _ = resolve_set_members(alias_def.universe, model_ir, quiet=quiet)
         # Intersection: only keep members that are in universe
         target_members = [m for m in target_members if m in universe_members]
 

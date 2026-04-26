@@ -3642,14 +3642,34 @@ class _ModelBuilder:
                 self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
                 self._equation_domains[name.lower()] = domain  # Issue #373: case-insensitive
             elif child.data == "eqn_head_domain_list":
-                # Handle comma-separated with domain: Equations eq1, eq2(i,j);
-                # This is actually invalid GAMS syntax, but we handle it gracefully
+                # Handle comma-separated declaration where the parens attach to
+                # the LAST name only: e.g. `Equation defobj, cons(i);`. The
+                # grammar's `id_list "(" domain_list ")"` collapses the names
+                # into a flat id_list and the domain into a flat domain_list,
+                # losing the positional attachment — but GAMS semantics
+                # (validated against #1279 robustlp) treat earlier names as
+                # SCALAR and only the trailing name as carrying the domain.
+                # Pre-Sprint-25-Day-8, all names erroneously inherited the
+                # domain, producing card(domain) identical equation instances
+                # of an otherwise-scalar equation (robustlp's `defobj` was
+                # widened to `defobj(i)` with `card(i)` redundant copies).
+                #
+                # Note: an `eqn_head_mixed_list` covers the same input shape
+                # correctly via per-item domains, but Lark's Earley resolver
+                # deterministically picks `eqn_head_domain_list` here (no
+                # `_ambig` node is produced for the parse), so the fix has to
+                # land in this handler.
                 names = _id_list(child.children[0])
                 domain = _domain_list(child.children[1])  # Sprint 11 Day 1: Use _domain_list
                 self._ensure_sets(domain, "equation domain", child)
-                for name in names:
+                for i, name in enumerate(names):
                     self._declared_equations.add(name.lower())  # Issue #373: case-insensitive
-                    self._equation_domains[name.lower()] = domain  # Issue #373: case-insensitive
+                    if i == len(names) - 1:
+                        # Issue #1279: the trailing name is the one syntactically
+                        # paired with `(domain_list)`; preceding names are scalar.
+                        self._equation_domains[name.lower()] = domain
+                    else:
+                        self._equation_domains[name.lower()] = ()
             elif child.data == "eqn_head_mixed_list":
                 # Sprint 19 Day 11: Handle mixed list where each name may have its own domain
                 # e.g., "Equation lpcons(i), defdual(j);" or "Equation eq1, eq2(i);"
