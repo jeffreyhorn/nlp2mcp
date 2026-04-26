@@ -209,11 +209,26 @@ def test_qabel_abel_criterion_u_gradient_end_to_end():
                 u_zero_count += 1
 
         assert u_total_count > 0, "abel must declare a `u` variable"
-        assert u_zero_count == 0, (
+        # The regression invariant: pre-fix, EVERY u entry was Const(0.0);
+        # post-fix, at least some u entries must carry a non-zero symbolic
+        # gradient. We deliberately do NOT require every entry to be
+        # non-zero: the criterion's `sum((ku, m, mp), ...)` only iterates
+        # over `ku ⊆ k`, so for k values in `kt = k \ ku` (e.g., abel's
+        # terminal period `1965-iv`) the mathematical gradient IS zero.
+        # The current AD layer over-eagerly produces non-zero terms for
+        # every k value (correctness is recovered downstream by the
+        # equation-level `$(ku(k))` guard on `stat_u`), but if a future
+        # change tightens the AD to evaluate dynamic-subset membership
+        # precisely, this test must remain correct — hence the loose
+        # `< u_total_count` bound rather than `== 0`.
+        assert u_zero_count < u_total_count, (
             "Pre-#1311 fix: all u-gradient entries returned Const(0.0) because "
             "the criterion's `sum((ku, m, mp), ...)` failed to bind concrete k "
-            "elements to symbolic ku. Post-fix: every u entry must be a "
-            f"non-zero gradient expression. Got {u_zero_count}/{u_total_count} zero entries."
+            "elements to symbolic ku. Post-fix: at least some u entries must be "
+            "non-zero gradient expressions (mathematically, entries where "
+            "k ∈ ku must be non-zero; the regression bug zeroed them all). "
+            f"Got {u_zero_count}/{u_total_count} zero entries — every entry is "
+            "still zero, regression not fixed."
         )
     finally:
         sys.setrecursionlimit(old_limit)
