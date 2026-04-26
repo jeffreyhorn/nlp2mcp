@@ -345,20 +345,43 @@ _GAMS_LINE_WRAP_TARGET = 10000
 
 
 def _wrap_long_equation_line(eq_str: str) -> str:
-    """Insert newlines at natural operator boundaries when an equation line
-    exceeds GAMS's 80,000-char input limit.
+    """Best-effort wrap of equation lines that exceed GAMS's 80,000-char
+    input limit.
 
-    Splits at top-level boolean and arithmetic operators in priority order
-    (`or`, `and`, `+`, `-`) so the resulting chunks stay below
-    ``_GAMS_LINE_WRAP_TARGET`` characters. Splits use plain newlines (no
-    indentation); GAMS treats whitespace inside expressions and conditions
-    as transparent, so the wrapped form is semantically identical to the
-    single-line form.
+    Behavior — explicitly best-effort, NOT a strict per-line bound:
 
-    The function is a no-op for lines under
-    ``_GAMS_LINE_WRAP_THRESHOLD``, so common-case equations (which are far
-    below the threshold) are unaffected and Tier 0/1 canaries remain
-    byte-identical.
+    - For lines at or below ``_GAMS_LINE_WRAP_THRESHOLD`` (60,000 chars),
+      this function is a no-op. Common-case equations are unchanged and
+      Tier 0/1 canaries remain byte-identical.
+    - For lines above the threshold, we plain-string-split on spaced
+      operator tokens in priority order (`" or "`, `" and "`, `" + "`,
+      `" - "`) and greedily accumulate chunks until adding the next chunk
+      would exceed ``_GAMS_LINE_WRAP_TARGET`` (10,000 chars), at which
+      point we emit a newline and start a fresh continuation line.
+
+    Limitations of the plain-string split:
+
+    - Operator detection does NOT understand nesting or quoting: an
+      occurrence of `" or "` inside a string literal or a comment would
+      be treated the same as a top-level operator. In practice the
+      emitter doesn't produce literals containing those tokens, so this
+      hasn't bitten any model in the corpus, but it's a correctness
+      caveat.
+    - The wrap target is per-chunk, not per-line: a single un-splittable
+      chunk longer than ``_GAMS_LINE_WRAP_TARGET`` will exceed the
+      target. As a safety net we additionally guarantee that no chunk
+      exceeds GAMS's 80,000-char hard limit (`_GAMS_HARD_LINE_LIMIT`
+      below). If a chunk would exceed the hard limit even after the
+      best-effort split, we fall through to the next operator priority;
+      if all four operators fail to bring every chunk under the hard
+      limit, we return the input unchanged and let GAMS surface the
+      length error rather than emit a wrap that we can't prove safe.
+
+    The function is conservative: a single equation that genuinely cannot
+    be split at any of the four operators stays unchanged. In the
+    `emit_equation_def` call path this hasn't been observed, because
+    every equation over the threshold so far (turkpow's `stat_zt`) has
+    `or`-joined `sameas(...)` clauses available as split points.
     """
     if len(eq_str) <= _GAMS_LINE_WRAP_THRESHOLD:
         return eq_str
@@ -390,17 +413,32 @@ def _wrap_long_equation_line(eq_str: str) -> str:
                 current = current + sep + chunk
         wrapped.append(current)
         result = "".join(wrapped)
-        # If the chosen separator produced any wrap (i.e., the line is
-        # actually shorter now), use it. Otherwise fall through and try the
-        # next separator.
-        if "\n" in result:
-            return result
+        # If the chosen separator didn't produce any wrap (string contains
+        # no occurrences of this operator), try the next priority operator.
+        if "\n" not in result:
+            continue
+        # Hard-limit safety: verify that every line in the result is under
+        # GAMS's 80,000-char input limit. If one chunk is itself too long
+        # for this operator to split (e.g., a single huge `sameas(...)`
+        # cluster joined only by `+`), skip to the next priority operator
+        # and try a finer-grained split rather than emit an output we
+        # can't prove safe.
+        if max((len(line) for line in result.split("\n")), default=0) >= _GAMS_HARD_LINE_LIMIT:
+            continue
+        return result
 
-    # No suitable split point — return as-is and let GAMS surface the
-    # length error. (In practice this never fires for the emit_equation_def
-    # call path: any equation hitting the threshold has at least one of
-    # the four boolean/arithmetic operators in it.)
+    # No suitable split point produced a wrap that fits under the hard
+    # limit — return as-is and let GAMS surface the length error. In
+    # practice this never fires for the `emit_equation_def` call path,
+    # because every equation hitting the threshold so far has at least
+    # one usable boolean/arithmetic operator at top level.
     return eq_str
+
+
+# GAMS's hard input-line limit. `_wrap_long_equation_line` uses this as a
+# safety bound to verify that a best-effort wrap result won't be rejected
+# by GAMS even if individual chunks exceed the soft `_GAMS_LINE_WRAP_TARGET`.
+_GAMS_HARD_LINE_LIMIT = 80000
 
 
 def _quote_expr_indices(expr: Expr) -> Expr:

@@ -201,10 +201,27 @@ solve m using lp minimizing obj;
     finally:
         os.unlink(gms_path)
 
-    # Each emitted equation (stat_*, c, defobj) should fit on its own line —
-    # no wrap-induced newlines for short equations.
-    for line in output.splitlines():
-        if line.startswith(("stat_", "c(", "defobj")) and ".." in line:
-            assert not line.startswith(
-                "or "
-            ), f"Unexpected wrap continuation on a short equation: {line!r}"
+    lines = output.splitlines()
+
+    # Short equations must not trigger the line-wrap logic, so no line in
+    # the emitted output may begin with one of the wrap-continuation
+    # operators (`_wrap_long_equation_line` injects the operator at the
+    # start of each continuation chunk after a `\n`).
+    wrap_operator_prefixes = ("or ", "and ", "+ ", "- ")
+    continuation_lines = [line for line in lines if line.startswith(wrap_operator_prefixes)]
+    assert not continuation_lines, (
+        "Unexpected wrap-continuation line(s) for a short synthetic model: "
+        f"{continuation_lines!r}"
+    )
+
+    # Cross-check: each emitted equation definition must fit on a single
+    # line ending with `;` (not spilling across a continuation).
+    equation_lines = [
+        line for line in lines if line.startswith(("stat_", "c(", "defobj")) and ".." in line
+    ]
+    assert equation_lines, "Expected emitted equation definitions in output."
+    for line in equation_lines:
+        assert line.endswith(";"), (
+            "Short equation expected to remain on a single line ending with ';'; "
+            f"got line that doesn't end with ';': {line!r}"
+        )

@@ -856,15 +856,21 @@ def emit_original_parameters(
         model_ir: Model IR containing parameter definitions
         return_declared_names: When True, return a (gams_text, declared_names)
             tuple instead of just `gams_text`. The `declared_names` set
-            contains the lowercase names of all parameters that this function
-            actually emitted in the Parameters block (post-filter); callers
-            can pass this to `emit_pre_solve_param_assignments` to suppress
+            contains the lowercase names of all symbols that this function
+            actually emitted at top level — both Parameters (Parameters
+            block) and Scalars (Scalars block), post-filter. Callers can
+            pass this to `emit_pre_solve_param_assignments` to suppress
             redundant supplemental `Parameter X(domain);` declarations
-            (issue #1281). Defaults to False for backward compatibility.
+            (issue #1281). The set deliberately also covers scalar names
+            so that scalar-shaped declarations downstream of this call
+            don't redeclare them either. Defaults to False for backward
+            compatibility.
 
     Returns:
         GAMS Parameters and Scalars blocks as string, or a tuple of
         (string, declared_names_lowercase) if `return_declared_names=True`.
+        `declared_names_lowercase` includes BOTH parameter and scalar
+        names emitted by this function (per the kwarg description above).
 
     Example output:
         Parameters
