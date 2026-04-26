@@ -70,9 +70,9 @@ done
 | qabel | CONOPT (qcp) | 46965.0362 | PATH (mcp) | 1 Locally Optimal  | 51133.487 | 8.88%    |
 | abel  | CONOPT (qcp) | 225.1946   | PATH (mcp) | 1 Locally Optimal  | 158.150   | 29.77%   |
 
-Both MCP solves are **Optimal** — PATH converges to a fixed point of the KKT system. No infeasibility, no compile errors. The rel_diff is therefore not a "broken MCP" — it's a "different local optimum found."
+Both MCP solves return MODEL STATUS 1 in the sense that PATH converges to a fixed point of the emitted KKT system; there is no infeasibility or compile failure. **However, that does NOT establish that PATH merely found a different local optimum of the same problem.** Multi-start NLP (below) shows the underlying NLP has a unique optimum, so a material rel_diff is in fact direct evidence that the emitted MCP/KKT system differs from the intended one — which the bisection further down localizes to a missing AD term.
 
-(Notably, the signs disagree: qabel MCP > NLP, abel MCP < NLP. If the bug were a systematic sign error in the Lagrangian, both rel_diffs would lean the same direction. The opposite-direction signs are themselves evidence that no systematic sign-flip is present.)
+(The opposite-direction rel_diffs — qabel MCP > NLP, abel MCP < NLP — only rule out a single-uniform-sign-flip story; they're entirely consistent with a more localized AD emission defect, which is exactly what we find: the missing `u`-criterion gradient.)
 
 ## Hand-derived KKT vs emitted `stat_x`
 

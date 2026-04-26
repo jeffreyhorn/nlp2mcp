@@ -28,10 +28,27 @@ import sys
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _high_recursion_limit():
+    """Save/restore the global recursion limit around each test in this module.
+
+    The parser sets a process-wide limit of 50000 (per `src/cli.py`) for
+    deeply-nested GAMS models. These tests need the same headroom but must
+    not leak the elevated limit into the rest of the suite — pytest's
+    cross-test isolation is what keeps recursion-related regressions
+    detectable elsewhere.
+    """
+    old_limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(50000)
+    try:
+        yield
+    finally:
+        sys.setrecursionlimit(old_limit)
+
+
 @pytest.mark.unit
 def test_trailing_domain_does_not_widen_earlier_scalar_equation():
     """`Equation a, b(i);` must produce a scalar `a` and an `i`-domain `b`."""
-    sys.setrecursionlimit(50000)
     from src.ir.parser import parse_model_text
 
     text = """
@@ -61,7 +78,6 @@ Model m / defobj, cons /;
 @pytest.mark.unit
 def test_three_names_with_trailing_domain():
     """`Equation a, b, c(i);` → a scalar, b scalar, c(i)."""
-    sys.setrecursionlimit(50000)
     from src.ir.parser import parse_model_text
 
     text = """
@@ -86,7 +102,6 @@ def test_single_indexed_equation_unchanged():
     branch (`eqn_head_domain`) so the #1279 fix to `eqn_head_domain_list`
     doesn't regress it.
     """
-    sys.setrecursionlimit(50000)
     from src.ir.parser import parse_model_text
 
     text = """
@@ -104,7 +119,6 @@ solve m using lp minimizing z;
 @pytest.mark.unit
 def test_comma_separated_no_domain_all_scalar():
     """`Equation a, b;` → both names scalar (the no-domain comma case)."""
-    sys.setrecursionlimit(50000)
     from src.ir.parser import parse_model_text
 
     text = """
@@ -123,11 +137,9 @@ Model m / a, b /;
 def test_robustlp_defobj_emitted_scalar_end_to_end():
     """End-to-end check: parsing the full robustlp.gms produces a scalar
     `defobj` equation, NOT an `(i,)`-widened one. Skipped if the gamslib
-    sources aren't available locally (CI). Mirrors the gamslib-skip
-    convention used in `tests/unit/emit/test_nlp_presolve_include_path.py`
-    and elsewhere.
+    sources aren't available locally (CI) — mirrors other gamslib-skip
+    tests in the suite.
     """
-    sys.setrecursionlimit(50000)
     import os
 
     src = "data/gamslib/raw/robustlp.gms"

@@ -233,9 +233,16 @@ NONNEGATIVE_K: /(?i:nonnegative)\b/
 SOS1_K       : /(?i:sos1)\b/
 SOS2_K       : /(?i:sos2)\b/
 
-// NOTE: eqn_head_domain_list allows comma-separated equation names with domains,
-// e.g., "Equations eq1, eq2(i,j);". This is NOT valid GAMS syntax according to
-// the official specification, but we handle it gracefully to support user error recovery.
+// NOTE: eqn_head_domain_list matches comma-separated equation names where the
+// parens attach to the trailing name only — e.g., `Equation defobj, cons(i);`.
+// This IS valid GAMS syntax: the official semantics treat each name as having
+// its own domain (defobj scalar, cons over i). The grammar's `id_list "(" domain_list ")"`
+// pattern collapses this into a flat (id_list, domain_list) pair, losing the
+// positional attachment — so the post-parse handler at
+// `src/ir/parser.py::_handle_equations_block`'s `eqn_head_domain_list` branch
+// recovers the per-name attachment by treating the trailing name as the
+// domain-bearer (issue #1279, fixed Sprint 25 Day 8).
+//
 // Updated for Sprint 11 Day 1: Support nested/subset indexing like defdist(low(n,nn))
 // Sprint 19 Day 11: Added mixed_eqn_list for equations with individual domains per name,
 // e.g., "Equation lpcons(i), defdual(j);" — each name can have its own domain.

@@ -2677,7 +2677,12 @@ def _is_concrete_instance_of(
                 # the desired behavior, not a model issue.
                 members, _ = resolve_set_members(symbolic, model_ir, quiet=True)
             except ValueError:
-                members = None  # Fall through to heuristic on resolution error.
+                # Resolution failed (e.g. circular alias). With `model_ir`
+                # available we still treat the result as definitive — the
+                # bottom of this branch returns `False` rather than falling
+                # through to the heuristic, so an unresolvable known
+                # set/alias does NOT spuriously match via prefix.
+                members = None
             if members is not None:
                 # Membership is definitive when the set/alias resolves.
                 return concrete in members

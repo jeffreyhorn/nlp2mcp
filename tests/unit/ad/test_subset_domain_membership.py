@@ -181,31 +181,39 @@ def test_qabel_abel_criterion_u_gradient_end_to_end():
             "scripts/download_gamslib_raw.sh to populate the corpus."
         )
 
+    # Save/restore the global recursion limit to avoid leaking the elevated
+    # limit into other tests in the suite (see PR #1310 review feedback —
+    # sys.setrecursionlimit is process-wide and was leaking, masking
+    # recursion regressions elsewhere).
+    old_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(50000)
-    from src.ad.gradient import compute_objective_gradient
-    from src.ir.ast import Const
-    from src.ir.normalize import normalize_model
-    from src.ir.parser import parse_model_file
+    try:
+        from src.ad.gradient import compute_objective_gradient
+        from src.ir.ast import Const
+        from src.ir.normalize import normalize_model
+        from src.ir.parser import parse_model_file
 
-    model = parse_model_file(src)
-    normalize_model(model)
-    grad = compute_objective_gradient(model)
+        model = parse_model_file(src)
+        normalize_model(model)
+        grad = compute_objective_gradient(model)
 
-    u_zero_count = 0
-    u_total_count = 0
-    for col_id in range(grad.num_cols):
-        var_name, _ = grad.index_mapping.col_to_var[col_id]
-        if var_name != "u":
-            continue
-        u_total_count += 1
-        deriv = grad.get_derivative(col_id)
-        if isinstance(deriv, Const) and deriv.value == 0.0:
-            u_zero_count += 1
+        u_zero_count = 0
+        u_total_count = 0
+        for col_id in range(grad.num_cols):
+            var_name, _ = grad.index_mapping.col_to_var[col_id]
+            if var_name != "u":
+                continue
+            u_total_count += 1
+            deriv = grad.get_derivative(col_id)
+            if isinstance(deriv, Const) and deriv.value == 0.0:
+                u_zero_count += 1
 
-    assert u_total_count > 0, "abel must declare a `u` variable"
-    assert u_zero_count == 0, (
-        "Pre-#1311 fix: all u-gradient entries returned Const(0.0) because "
-        "the criterion's `sum((ku, m, mp), ...)` failed to bind concrete k "
-        "elements to symbolic ku. Post-fix: every u entry must be a "
-        f"non-zero gradient expression. Got {u_zero_count}/{u_total_count} zero entries."
-    )
+        assert u_total_count > 0, "abel must declare a `u` variable"
+        assert u_zero_count == 0, (
+            "Pre-#1311 fix: all u-gradient entries returned Const(0.0) because "
+            "the criterion's `sum((ku, m, mp), ...)` failed to bind concrete k "
+            "elements to symbolic ku. Post-fix: every u entry must be a "
+            f"non-zero gradient expression. Got {u_zero_count}/{u_total_count} zero entries."
+        )
+    finally:
+        sys.setrecursionlimit(old_limit)

@@ -25,7 +25,7 @@
         "model_status": 2,
         "objective_value": 225.1946,
         "solve_time_seconds": 0.373,
-        "non_convex_reason": "Indefinite lambda matrix in u-quadratic criterion (lambda(money,gov-expend)=0.444 makes the symmetric part have eigenvalues approximately [-0.047, 1.047]); MCP/PATH finds a different valid KKT stationary point than NLP/CONOPT does. Verified Sprint 25 Day 8 (PR #1310) — the structural emission is correct (matches qabel's clean form post-#1311+#1312); residual rel_diff is genuine non-convex KKT multi-stationary-point behavior.",
+        "non_convex_reason": "Indefinite lambda matrix in u-quadratic criterion (lambda(money,gov-expend)=0.444 makes the symmetric part have eigenvalues approximately [-0.047, 1.047]); MCP/PATH finds a different valid KKT stationary point than NLP/CONOPT does. Sprint 25 Day 8 (PR #1310) re-reviewed and confirmed: the structural emission is correct (matches qabel's clean form post-#1311+#1312); residual rel_diff is genuine non-convex KKT multi-stationary-point behavior. (Note: verification_date is the original solve check; updated_date below reflects when this non_convex classification was added.)",
         "updated_date": "2026-04-25"
       },
       "nlp2mcp_parse": {
