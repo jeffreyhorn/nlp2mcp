@@ -1168,9 +1168,22 @@ def emit_gams_mcp(
     # Compute model-relevant params early so emit_original_parameters can
     # keep loop-initialized parameters that are used in model equations (#1182)
     model_relevant_params = _collect_model_relevant_params(kkt.model_ir)
-    params_code = emit_original_parameters(
-        kkt.model_ir, kkt.param_domain_widenings, model_relevant_params
+    # Issue #1281: capture the set of parameter names that
+    # `emit_original_parameters` actually declares so we can suppress
+    # redundant supplemental `Parameter X(domain);` declarations
+    # downstream in `emit_pre_solve_param_assignments`. Without this,
+    # lmp2's `Parameter A(mm,nn);` etc. were emitted twice (once here,
+    # once in the pre-solve block) and triggered a GAMS
+    # symbol-redefinition compile error.
+    _params_result = emit_original_parameters(
+        kkt.model_ir,
+        kkt.param_domain_widenings,
+        model_relevant_params,
+        return_declared_names=True,
     )
+    # mypy can't narrow `str | tuple[...]` from the kwarg flag — assert here.
+    assert isinstance(_params_result, tuple)
+    params_code, declared_param_names = _params_result
     if params_code:
         sections.append(params_code)
         sections.append("")
@@ -1328,7 +1341,12 @@ def emit_gams_mcp(
 
     # Issue #1101/#1102: Emit pre-solve parameter assignments from solve-containing
     # loops (e.g., p(i) = pt(i,'1') from multi-solve loop models)
-    pre_solve_code = emit_pre_solve_param_assignments(kkt.model_ir)
+    # Issue #1281: pass declared_param_names so we suppress duplicate
+    # `Parameter X(domain);` declarations for symbols already in the upper
+    # Parameters block.
+    pre_solve_code = emit_pre_solve_param_assignments(
+        kkt.model_ir, already_declared_params=declared_param_names
+    )
     if pre_solve_code:
         sections.append(pre_solve_code)
         sections.append("")
@@ -2412,6 +2430,23 @@ def emit_gams_mcp(
                 fx_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
     if fx_lines:
+        # Issue #1276: deduplicate `.fx` lines. Several upstream paths (sections
+        # 2/2b/2c, 3/3a/3b, 4, 5, ...) can append the SAME `nu_X.fx(domain) =
+        # 0;` line for the same multiplier when an equation matches multiple
+        # classification predicates (e.g., explicit condition + head-domain
+        # offset). GAMS treats duplicate `.fx` assignments as last-write-wins,
+        # so the result is semantically correct but the artifact is noisy and
+        # the duplicates make auditing harder. A line-level dedup is safe here
+        # because every `.fx` line in `fx_lines` is fully self-contained and
+        # the order of fixations is irrelevant (each one is an independent
+        # constraint on its own multiplier).
+        seen_fx_lines: set[str] = set()
+        deduped_fx_lines: list[str] = []
+        for line in fx_lines:
+            if line in seen_fx_lines:
+                continue
+            seen_fx_lines.add(line)
+            deduped_fx_lines.append(line)
         if add_comments:
             sections.append("* ============================================")
             sections.append("* Fix inactive variable instances")
@@ -2420,7 +2455,7 @@ def emit_gams_mcp(
             sections.append("* Variables whose paired MCP equation is conditioned must be")
             sections.append("* fixed for excluded instances to satisfy MCP matching.")
             sections.append("")
-        sections.extend(fx_lines)
+        sections.extend(deduped_fx_lines)
         sections.append("")
 
     # Issue #1133: Fix equality multipliers for empty equation instances.

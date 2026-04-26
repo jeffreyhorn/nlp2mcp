@@ -323,7 +323,84 @@ def emit_equation_def(
         else:
             eq_str = f"{eq_name}.. {lhs_gams} {rel_gams} {rhs_gams};"
 
+    # Issue #1292: GAMS rejects input lines longer than 80,000 characters
+    # with `Error 98: Non-blank character(s) beyond max input line length`.
+    # Some emitted equations (e.g., turkpow's `stat_zt`, where the AD layer
+    # enumerates a Cartesian product of `sameas(...)` clauses) easily exceed
+    # this — turkpow's pre-fix line was 144,628 chars. Wrap at natural
+    # operator boundaries when the line is over the threshold; GAMS accepts
+    # newlines anywhere a space would be valid.
+    eq_str = _wrap_long_equation_line(eq_str)
+
     return eq_str, aliases
+
+
+# Issue #1292: GAMS's input-line limit is 80,000 chars. We use a conservative
+# threshold of 60,000 so a wrapped line still fits even after small upstream
+# additions (e.g., comment annotations) that the emitter or downstream tools
+# might splice in. Each wrapped chunk targets ~10,000 chars, which keeps the
+# emission readable in editors and well below GAMS's hard limit.
+_GAMS_LINE_WRAP_THRESHOLD = 60000
+_GAMS_LINE_WRAP_TARGET = 10000
+
+
+def _wrap_long_equation_line(eq_str: str) -> str:
+    """Insert newlines at natural operator boundaries when an equation line
+    exceeds GAMS's 80,000-char input limit.
+
+    Splits at top-level boolean and arithmetic operators in priority order
+    (`or`, `and`, `+`, `-`) so the resulting chunks stay below
+    ``_GAMS_LINE_WRAP_TARGET`` characters. Splits use plain newlines (no
+    indentation); GAMS treats whitespace inside expressions and conditions
+    as transparent, so the wrapped form is semantically identical to the
+    single-line form.
+
+    The function is a no-op for lines under
+    ``_GAMS_LINE_WRAP_THRESHOLD``, so common-case equations (which are far
+    below the threshold) are unaffected and Tier 0/1 canaries remain
+    byte-identical.
+    """
+    if len(eq_str) <= _GAMS_LINE_WRAP_THRESHOLD:
+        return eq_str
+
+    # Try operators in priority order: `or` is the dominant join in
+    # sameas-Cartesian-product cases (turkpow); `and` and ±arithmetic are
+    # fallbacks for other shapes. Each separator is bracketed in spaces so
+    # we don't split inside identifiers (e.g., `sameas` contains no spaces).
+    for sep in (" or ", " and ", " + ", " - "):
+        chunks = eq_str.split(sep)
+        if len(chunks) <= 1:
+            continue
+
+        # Greedy: accumulate chunks into the current line until adding the
+        # next chunk would exceed `_GAMS_LINE_WRAP_TARGET`. Then start a
+        # new line with `\n` + the separator's leading content (e.g.,
+        # `\nor `).
+        wrapped: list[str] = []
+        current = chunks[0]
+        for chunk in chunks[1:]:
+            # +len(sep) for the separator we'd add between current and chunk.
+            if len(current) + len(sep) + len(chunk) > _GAMS_LINE_WRAP_TARGET:
+                # Emit the current line and start a fresh one. The newline
+                # replaces the leading space of `sep`, so we keep the
+                # operator (e.g., `or`) at the start of the next line.
+                wrapped.append(current + "\n" + sep.lstrip())
+                current = chunk
+            else:
+                current = current + sep + chunk
+        wrapped.append(current)
+        result = "".join(wrapped)
+        # If the chosen separator produced any wrap (i.e., the line is
+        # actually shorter now), use it. Otherwise fall through and try the
+        # next separator.
+        if "\n" in result:
+            return result
+
+    # No suitable split point — return as-is and let GAMS surface the
+    # length error. (In practice this never fires for the emit_equation_def
+    # call path: any equation hitting the threshold has at least one of
+    # the four boolean/arithmetic operators in it.)
+    return eq_str
 
 
 def _quote_expr_indices(expr: Expr) -> Expr:

@@ -838,7 +838,9 @@ def emit_original_parameters(
     model_ir: ModelIR,
     param_domain_widenings: dict[str, tuple[str, ...]] | None = None,
     model_relevant_params: set[str] | None = None,
-) -> str:
+    *,
+    return_declared_names: bool = False,
+) -> str | tuple[str, set[str]]:
     """Emit Parameters and Scalars with their data.
 
     Uses ParameterDef.domain and .values (Finding #3: actual IR fields).
@@ -852,9 +854,17 @@ def emit_original_parameters(
 
     Args:
         model_ir: Model IR containing parameter definitions
+        return_declared_names: When True, return a (gams_text, declared_names)
+            tuple instead of just `gams_text`. The `declared_names` set
+            contains the lowercase names of all parameters that this function
+            actually emitted in the Parameters block (post-filter); callers
+            can pass this to `emit_pre_solve_param_assignments` to suppress
+            redundant supplemental `Parameter X(domain);` declarations
+            (issue #1281). Defaults to False for backward compatibility.
 
     Returns:
-        GAMS Parameters and Scalars blocks as string
+        GAMS Parameters and Scalars blocks as string, or a tuple of
+        (string, declared_names_lowercase) if `return_declared_names=True`.
 
     Example output:
         Parameters
@@ -866,8 +876,9 @@ def emit_original_parameters(
             discount /0.95/
         ;
     """
+    declared_names: set[str] = set()
     if not model_ir.params:
-        return ""
+        return ("", declared_names) if return_declared_names else ""
 
     # Separate scalars (empty domain) from parameters
     scalars = {}
@@ -988,10 +999,12 @@ def emit_original_parameters(
                     # Emit parameter with data
                     data_str = ", ".join(data_parts)
                     lines.append(f"    {_quote_symbol(param_name)}({domain_str}) /{data_str}/")
+                    declared_names.add(param_name.lower())
                 else:
                     # All data entries were filtered out (e.g., all zeros) -
                     # emit declaration only, but track for explicit zero assignment
                     lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
+                    declared_names.add(param_name.lower())
                     # Issue #871: When all values were zero and skipped by Issue #967,
                     # emit explicit "param(domain) = 0;" after the Parameters block
                     # to avoid $141. Only for model-relevant parameters to avoid
@@ -1022,6 +1035,7 @@ def emit_original_parameters(
                 quoted_domain = [_quote_symbol(d) for d in domain]
                 domain_str = ",".join(quoted_domain)
                 lines.append(f"    {_quote_symbol(param_name)}({domain_str})")
+                declared_names.add(param_name.lower())
         lines.append(";")
 
     # Issue #871: Emit explicit zero assignments for all-zero parameters
@@ -1074,9 +1088,11 @@ def emit_original_parameters(
                 # Scalars have values[()] = value (Finding #3)
                 value = scalar_def.values.get((), 0.0)
                 lines.append(f"    {scalar_name} /{_format_param_value(value)}/")
+                declared_names.add(scalar_name.lower())
             lines.append(";")
 
-    return "\n".join(lines)
+    gams_text = "\n".join(lines)
+    return (gams_text, declared_names) if return_declared_names else gams_text
 
 
 def collect_missing_param_labels(model_ir: ModelIR) -> set[str]:
@@ -3032,7 +3048,10 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
     return "\n\n".join(lines)
 
 
-def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
+def emit_pre_solve_param_assignments(
+    model_ir: ModelIR,
+    already_declared_params: set[str] | None = None,
+) -> str:
     """Emit parameter assignments from before the first solve in solve-containing loops.
 
     Issue #1101/#1102: Multi-solve loops like ``loop(t, p(i) = pt(i,t); solve ...;)``
@@ -3043,6 +3062,15 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
 
     Args:
         model_ir: Model IR with loop_statements and sets
+        already_declared_params: Optional set of lowercase parameter names
+            already declared by `emit_original_parameters`. Issue #1281: any
+            param in this set is skipped from the supplemental
+            `Parameter X(domain);` declaration block emitted at the end of
+            this function, since GAMS treats a redeclaration as a symbol
+            redefinition error (e.g., `Parameter A(mm,nn);` after
+            `Parameters ... A(mm,nn) ...;` triggered a compile failure on
+            lmp2). Defaults to None for backward compatibility — callers
+            that don't pass this preserve the pre-#1281 behavior.
 
     Returns:
         GAMS assignment statements, or empty string if none found
@@ -3323,8 +3351,20 @@ def emit_pre_solve_param_assignments(model_ir: ModelIR) -> str:
 
     # Emit declarations for params that were skipped by Issue #917 logic
     # (no values, no expressions — only assigned inside solve loops)
+    # Issue #1281: skip params already declared by `emit_original_parameters`
+    # (the upstream Parameters block). Without this filter, lmp2's
+    # `Parameter A(mm,nn);` etc. were emitted twice — once in the upstream
+    # block (because `A` is model-relevant) and once here — and the second
+    # declaration triggered a GAMS symbol-redefinition compile error.
     decl_lines: list[str] = []
+    skip_lower = (
+        {p.lower() for p in already_declared_params}
+        if already_declared_params is not None
+        else set()
+    )
     for pname in sorted(emitted_params):
+        if pname.lower() in skip_lower:
+            continue
         pdef = model_ir.params.get(pname)
         if pdef and not pdef.values and not pdef.expressions and pdef.domain:
             domain_str = ",".join(pdef.domain)
