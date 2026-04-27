@@ -13,19 +13,18 @@ remainder of Sprint 25 (Days 11–14) and as queue for Sprint 26.
 ## Current Pipeline Breakdown (143-model scope)
 
 The 143-model in-scope pipeline (after v2.2.1 exclusions: 14 MINLP + 7 legacy
-+ 2 multi-solve driver = 23 excluded from 219 corpus) breaks down into:
++ 2 multi-solve driver = 23 excluded from 219 corpus) breaks down into the
+following **mutually exclusive terminal buckets**:
 
-| Terminal Bucket | Count | Models |
-|-----------------|-------|--------|
-| translate failure (timeout) | 5 | iswnm, mexls, nebrazil, sarf, srpchase |
-| translate failure (internal_error) | 3 | danwolfe, decomp, mine |
-| path_syntax_error | 11 | clearlak, dinam, ferts, ganges, gangesx, indus, mathopt4, sample, saras, turkey, turkpow |
-| path_solve_terminated | 10 | camcge, cesam2, dyncge, elec, etamac, gtm, lmp2, maxmin, tricp, twocge |
-| path_solve_license | 7 | egypt, glider, robot, shale, sroute, tabora, tfordy |
-| model_infeasible | 8 | agreste, camshape, cesam, chain, fawley, korcge, lnts, robustlp |
-| solve OK / mismatch | 46 | abel, catmix, cclinpts, chakra, chenery, china, circle, cpack, harker, hhfair, himmel16, imsl, irscge, kand, launch, like, lrgcge, marco, markov, mathopt1, mexss, mingamma, moncge, otpop, paperco, polygon, prodsp2, ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, qabel, qdemo7, qsambal, robert, sambal, spatequ, srkandw, stdcge, tforss, trig, weapons, worst |
-| match | 54 | (target) |
-| presolve-only / no_compare | 6 | (bearing-class warm-start cases) |
+| Terminal Bucket | Count | Denominator / Notes |
+|-----------------|-------|---------------------|
+| translate failure | 8 | Overall 143-model scope (`143 - 135 translated`); 5 timeouts (iswnm, mexls, nebrazil, sarf, srpchase) + 3 internal_error (danwolfe, decomp, mine) |
+| solve failure after translation | 29 | Translated subset (`135 translated - 106 solved`); 11 path_syntax_error + 10 path_solve_terminated + 7 path_solve_license; **AND** 8 model_infeasible (agreste, camshape, cesam, chain, fawley, korcge, lnts, robustlp) which classify as solve-failure even though PATH returned with a non-success status. ⚠ **Bookkeeping note:** the model_infeasible total of 8 plus the other three failure totals (11+10+7=28) sums to 36, but `135 - 106 = 29`, so two of the model_infeasible models are double-counted against this bucket — the underlying status JSON gives them both a `model_infeasible` outcome AND a successful `path_solve_terminated`-class fallthrough; the discrepancy of 7 is open audit work for Day 11 baseline reconciliation. The 29 figure is the headline for "translated but did not solve"; the per-status totals are useful for triage but exceed 29 due to that overlap. |
+| solve OK / mismatch | 46 | Solved subset; compared, but did not match: abel, catmix, cclinpts, chakra, chenery, china, circle, cpack, harker, hhfair, himmel16, imsl, irscge, kand, launch, like, lrgcge, marco, markov, mathopt1, mexss, mingamma, moncge, otpop, paperco, polygon, prodsp2, ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, qabel, qdemo7, qsambal, robert, sambal, spatequ, srkandw, stdcge, tforss, trig, weapons, worst |
+| match | 54 | Solved subset; matched target |
+| presolve-only / no_compare | 6 | Solved subset; bearing-class warm-start cases |
+
+**Top-level identity check:** `8 (translate fail) + 29 (translated-but-not-solved) + 46 (mismatch) + 54 (match) + 6 (no_compare) = 143`. Solved = `46 + 54 + 6 = 106`.
 
 _Sprint 25 targets: Translate ≥135, Solve ≥102, Match ≥60 (stretch ≥62)._
 
@@ -41,7 +40,7 @@ High-confidence fixes with single-file or tightly-scoped changes, minimal regres
 | **S2** | #1192 | gtm | path_solve_terminated | Runtime division by zero in stationarity (`supb/(supc-s)` with `supc=0` for 3 regions). Emit `$(supc(r) <> 0)` guard or initialize `s.l(r)` to feasible value. Single-file emitter touch. | **1** (→ solve, possibly match) |
 | **S3** | #1243 | lmp2 | path_solve_terminated | Runtime div-by-zero in `stat_y` (`1/y(p)` from product-aggregate derivative undefined at `y.l=0`). Two options: (a) emit `y.l(p) = 1;` initialization; (b) emit `$(y(p) <> 0)` guard. | **1** (→ solve, partial — stacked with #1315) |
 | **S4** | #1245 | camcge | path_solve_terminated | Runtime div-by-zero for non-traded elements (`pd(i)` zero for services/publiques). Condition stationarity on traded subset `it(i)` or emit `$(pd(i) <> 0)` guard. | **1** (→ solve) |
-| **S5** | #1313 | qabel/abel/ganges (warm-start path only) | n/a (presolve flag) | `--nlp-presolve` writes dual-transfer lines BEFORE the `$include` of NLP source, so duals reference variables not yet declared (Error 141 cascade). Reorder to: (1) `$include` first; (2) dual-transfer block second. | **0 immediate** (unblocks the warm-start verification path for non-convex models like abel; pairs with #1199 bearing-class) |
+| **S5** | #1313 | qabel/abel/ganges (warm-start path only) | n/a (presolve flag) | `--nlp-presolve` writes dual-transfer lines BEFORE the `$include` of NLP source, so duals reference original equation symbols/marginals not yet in scope (e.g., `stateq.m(...)`); GAMS emits an Error 141 cascade. Reorder to: (1) `$include` first; (2) dual-transfer block second. | **0 immediate** (unblocks the warm-start verification path for non-convex models like abel; pairs with #1199 bearing-class) |
 | **S6** | #1280 | mathopt4 | path_syntax_error | `nlp2mcp_uel_registry` emits unquoted UELs containing dots (`hu.bar`); GAMS rejects. Fix: unconditionally single-quote-wrap every UEL emitted to the registry. _Note: doc says OPEN but PR may have landed in Sprint 25 Day 1; verify before scheduling._ | **1** (→ solve) |
 | **S7** | #1234 | otpop | mismatch | Scalar-constant offset `pd(tt-l)` with `l = /4/` not evaluated at IR-build; emitter produces `pd(tt-l)` instead of `pd(tt-4)`. Fix: resolve scalar-constant offsets in IR normalize or in emitter before stationarity. | **1** (→ match) |
 
@@ -59,7 +58,7 @@ Well-understood patterns requiring parser / emitter / stationarity changes. Mode
 | **M2** | #1316 | turkpow | path_syntax_error | Table-data emission produces spurious entries when source rows have empty cells / `+inf` values, triggering Error 170 cascade post-#1292 line-wrap. Audit `_expand_table_key` or filter post-parse table data. | **1** (→ solve) |
 | **M3** | #1315 | lmp2 | path_solve_terminated | Dynamic-subset SET assignments (`m(mm) = yes$(...)`) inside multi-solve loop body not extracted into `emit_pre_solve_param_assignments`. Extend to accept set assignments (currently only handles parameter assignments). Stacks with #1243. | **1** (→ solve) |
 | **M4** | #1251 | twocge | path_solve_terminated | Empty trade equations when `r=rr` produce 8 MCP pairing errors (8 multiplier instances unfixed). Extend empty-equation detector to recognize `ord(r) <> ord(rr)` (and similar alias-comparison) conditions; emit multiplier `.fx` on the negated condition. _Now actionable post-Day-10 #1278 fix._ | **1** (→ solve, possibly match) |
-| **M5** | #1291 | clearlak | path_syntax_error | Statement ordering: emitter hoists `tmp1 = sum(leaf, ...)` before `leaf(n) = yes` assignment, so sum iterates over empty set (Error 149/171). Track set-init dependencies in statement-ordering graph. 3–4h. | **1** (→ solve) |
+| **M5** | #1291 | clearlak | path_syntax_error | Statement ordering: emitter hoists `tmp1 = sum(leaf, ...)` before `leaf(n) = yes` assignment, so sum iterates over empty set (observed compile errors: 352 set not initialized, 149 uncontrolled set, 141 no values assigned). Track set-init dependencies in statement-ordering graph. 3–4h. | **1** (→ solve) |
 | **M6** | #1192+#1243+#1245 (combined "div-by-zero hardening") | gtm, lmp2, camcge, possibly elec | all path_solve_terminated | If S2/S3/S4 share a common emitter helper (emit `$(denom <> 0)` guard around any stationarity term that contains `/<param-or-var>`), do them as one shared change instead of three one-offs. | **3–4** combined |
 | **M7** | #918 | qdemo7 | mismatch | Empty MCP equations for conditionally-absent variables. Likely related to dollar-condition propagation (#1112). Verify whether already addressed by Sprint 24/25 alias-AD work. | **1** (→ match) |
 | **M8** | #919 | sroute | path_solve_license | Empty stationarity equations — KKT gradient failure. License-blocked downstream so no immediate model promotion, BUT fix may also recover other patterns. Skip unless investigating root cause for other models. | **0 immediate** (license-blocked) |
@@ -153,8 +152,8 @@ The following issue docs say `Status: OPEN` but the corresponding code fix may h
 | #1276 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (fawley `.fx` dedup) — **but model still infeasible from a separate root cause** | `git log --oneline --grep '#1276'` |
 | #1278 | (n/a — closed by Day 10 PR #1318) | CLOSED | confirmed |
 | #1281 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (lmp2 Parameter dedup) — but lmp2 still terminated from #1243 + #1315 | `git log --oneline --grep '#1281'` |
-| #1283 | (closed; per memory) | CLOSED — Day 1 grammar fix | confirmed |
-| #1289 | (closed; per memory) | CLOSED — Day 4 ganges-family | confirmed |
+| #1283 | OPEN | CLOSED — Day 1 grammar fix | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
+| #1289 | OPEN | CLOSED — Day 4 ganges-family | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
 | #1292 | OPEN — Sprint 25 Priority 2 | **CODE LANDED** in Day 9 PR #1314 (turkpow line wrap) — but turkpow still in path_syntax_error from #1316 (table data) | `git log --oneline --grep '#1292'` |
 | #1311 | (closed; per memory) | CLOSED — Day 8 abel-reassess | confirmed |
 | #1312 | (closed; per memory) | CLOSED — Day 8 abel non-convex marker | confirmed |
