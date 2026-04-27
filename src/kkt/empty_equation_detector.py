@@ -12,6 +12,8 @@ left as non-empty (safe default).
 
 from __future__ import annotations
 
+import weakref
+
 from src.ir.ast import (
     Binary,
     DollarConditional,
@@ -57,6 +59,39 @@ def detect_empty_equation_instances(
         Dict mapping equation name → set of empty instance tuples.
         Only includes equations that have at least one empty instance.
     """
+    # Clear module-level caches when the model_ir identity changes. Neither
+    # `_lowered_members_cache` (keyed by set name → resolved members) nor
+    # `_nonzero_cache` (keyed by `(parameter name, eq-key tuple)` → nonzero
+    # entries) is keyed by model identity, so stale entries from a previous
+    # translation would otherwise bleed into a subsequent translation that
+    # declares the same parameter/set names (and, for `_nonzero_cache`,
+    # the same eq-key tuples) with different values — causing
+    # `detect_empty_equation_instances` to incorrectly flag instances as
+    # empty (or miss legitimately empty ones).
+    #
+    # This was discovered Sprint 25 Day 9 when adding new
+    # `tests/unit/emit/test_batch2_emission_invariants.py` tests changed
+    # the xdist worker scheduling enough to expose the latent flake on
+    # `tests/unit/emit/test_empty_eq_fx_emission.py`.
+    #
+    # Track the last `model_ir` via a `weakref.ref` rather than `id()`.
+    # The weakref-based check is robust against `id` reuse after garbage
+    # collection: if the previous ModelIR has been GC'd, the weakref
+    # resolves to None and we treat that as "different model" and clear.
+    # If it's still alive, we compare via `is`, which is identity-stable
+    # for the lifetime of the reference. This preserves the caches'
+    # intra-translation utility — `emit_gams_mcp` calls this function
+    # twice per translation (equalities + inequalities) and both calls
+    # share cached results — while remaining correct even in long-lived
+    # processes (e.g., pytest-xdist workers running the full suite) where
+    # many short-lived ModelIRs would otherwise risk id collisions.
+    global _last_model_ir_ref
+    last_model = _last_model_ir_ref() if _last_model_ir_ref is not None else None
+    if last_model is not model_ir:
+        _lowered_members_cache.clear()
+        _nonzero_cache.clear()
+        _last_model_ir_ref = weakref.ref(model_ir)
+
     result: dict[str, set[tuple[str, ...]]] = {}
 
     eq_names = list(model_ir.equalities)
@@ -523,6 +558,16 @@ def _param_ref_is_zero(
 
 # Cache for pre-indexed nonzero entries per parameter
 _nonzero_cache: dict[tuple[str, tuple[str, ...]], set[tuple[str, ...]]] = {}
+
+# Weakref to the last `model_ir` whose entries populate the two caches
+# above. `detect_empty_equation_instances` clears the caches when invoked
+# with a different `model_ir` (compared by `is` via the weakref's
+# referent), preserving intra-translation cache reuse while preventing
+# cross-test/cross-translation leakage. The weakref guards against
+# `id()` reuse after garbage collection — a real risk in long-lived
+# processes (e.g., pytest-xdist workers running the full suite) where
+# many short-lived ModelIRs would otherwise risk id collisions.
+_last_model_ir_ref: weakref.ref[ModelIR] | None = None
 
 
 def _get_nonzero_index(
