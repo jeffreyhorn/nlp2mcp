@@ -168,13 +168,13 @@ solve M using nlp minimizing z;
 
     import re
 
-    eqw_cond_pattern = re.compile(r"ord\(r\)\s*<>\s*ord\(rr\)")
-    assert eqw_cond_pattern.search(stat_e), (
-        f"stat_e missing `ord(r) <> ord(rr)` on its eqw contribution:\n{stat_e}"
-    )
-    assert eqw_cond_pattern.search(stat_m), (
-        f"stat_m missing `ord(r) <> ord(rr)` on its eqw contribution:\n{stat_m}"
-    )
+    eqw_cond_pattern = re.compile(r"(?:ord\(r\)\s*<>\s*ord\(rr\)|ord\(rr\)\s*<>\s*ord\(r\))")
+    assert eqw_cond_pattern.search(
+        stat_e
+    ), f"stat_e missing `ord(r) <> ord(rr)` or `ord(rr) <> ord(r)` on its eqw contribution:\n{stat_e}"
+    assert eqw_cond_pattern.search(
+        stat_m
+    ), f"stat_m missing `ord(r) <> ord(rr)` or `ord(rr) <> ord(r)` on its eqw contribution:\n{stat_m}"
 
 
 @pytest.mark.integration
@@ -210,6 +210,6 @@ def test_twocge_no_ord_self_tautology():
         for line in output.splitlines()
         for m in re.finditer(r"ord\((\w+)\)\s*<>\s*ord\(\1\)", line)
     ]
-    assert not self_tautologies, (
-        f"twocge emission contains ord-self tautologies (the #1278 regression): {self_tautologies}"
-    )
+    assert (
+        not self_tautologies
+    ), f"twocge emission contains ord-self tautologies (the #1278 regression): {self_tautologies}"
