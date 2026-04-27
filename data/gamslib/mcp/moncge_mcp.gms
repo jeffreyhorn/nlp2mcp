@@ -437,7 +437,7 @@ stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;
 stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * sum(i__, xp(i__) ** alpha(i__) * alpha(i__) / xp(i__) / xp(i__) ** alpha(i__)))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
 stat_xv(i).. nu_eqXv(i) - nu_eqpqd(i) - piL_xv(i) =E= 0;
 stat_y(j).. nu_eqpy(j) + nu_eqY(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * py(j) / sqr(pf(h)))) * nu_eqF(h,j)) - piL_y(j) =E= 0;
-stat_z(j).. sum(i, ((-1) * ax(j,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + ((-1) * (tauz(j) * pz(j))) * nu_eqTz(j) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;
+stat_z(j).. sum(i, ((-1) * ax(i,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + ((-1) * (tauz(j) * pz(j))) * nu_eqTz(j) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_d(i).. d(i) - 1e-05 =G= 0;
