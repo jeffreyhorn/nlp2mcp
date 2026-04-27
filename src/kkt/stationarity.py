@@ -2438,8 +2438,26 @@ def _replace_indices_in_expr(
                         if not is_set_or_alias and name in element_to_set:
                             # Concrete element → map to equation domain
                             mapped_set = element_to_set[name]
-                            replacement = _remap_to_equation_domain(mapped_set)
-                            new_args_list.append(SymbolRef(replacement or mapped_set))
+                            # Issue #1278: When a constraint has multiple positions
+                            # over the same root set via aliases (e.g.,
+                            # eqw(i,r,rr) where rr aliases r), the constraint-
+                            # position override assigns the alias name (rr) at
+                            # the alias position. _remap_to_equation_domain would
+                            # then resolve the alias to its target (r), collapsing
+                            # `ord(r) <> ord(rr)` to the always-false tautology
+                            # `ord(r) <> ord(r)`. Keep the alias when its target
+                            # is already in the equation domain — the alias will
+                            # become a controlled sum index after Sum-wrapping.
+                            mapped_alias_target = _resolve_alias(mapped_set)
+                            if (
+                                mapped_alias_target
+                                and mapped_alias_target in equation_domain
+                                and mapped_set not in equation_domain
+                            ):
+                                new_args_list.append(SymbolRef(mapped_set))
+                            else:
+                                replacement = _remap_to_equation_domain(mapped_set)
+                                new_args_list.append(SymbolRef(replacement or mapped_set))
                         elif is_set_or_alias:
                             # Aliases of the equation domain (e.g., j→i where
                             # i is the domain) are likely controlled sum vars.
@@ -2476,7 +2494,8 @@ def _replace_indices_in_expr(
                 # The base is read-only here (only lookups, no mutations), so the
                 # cast is safe even when element_to_set is a Mapping.
                 inner_e2s = ChainMap(
-                    {idx: idx for idx in index_sets}, element_to_set  # type: ignore[arg-type]
+                    {idx: idx for idx in index_sets},
+                    element_to_set,  # type: ignore[arg-type]
                 )
             new_body = _replace_indices_in_expr(body, domain, inner_e2s, model_ir, equation_domain)
             new_condition = (
@@ -2548,7 +2567,11 @@ def _replace_indices_in_expr(
                 else:
                     new_idx_list.append(
                         _replace_indices_in_expr(
-                            idx, domain, element_to_set, model_ir, equation_domain  # type: ignore[arg-type]
+                            idx,
+                            domain,
+                            element_to_set,
+                            model_ir,
+                            equation_domain,  # type: ignore[arg-type]
                         )
                     )
             new_idx = tuple(new_idx_list)  # type: ignore[assignment]
@@ -4272,13 +4295,25 @@ def _add_indexed_jacobian_terms(
                     # representative entry with distinct variable indices so
                     # the element→domain mapping doesn't have key collisions
                     # (e.g., avoid t(five,five) where both map to the same key).
+                    # Issue #1278: Also prefer distinct EQUATION indices when
+                    # the constraint has more dims than the variable (e.g.,
+                    # eqw(i,r,rr) → e(i,r) where rr aliases r). Otherwise the
+                    # constraint-position override `overrides[elem]=domain`
+                    # collapses two positions onto the same key (e.g., JPN→r
+                    # gets overwritten to JPN→rr for eqw(BRD,JPN,JPN)),
+                    # producing a `ord(rr) <> ord(rr)` tautology in the lift.
                     group_row_id, group_col_id = group_entries[0]
-                    if any(o == _SENTINEL_UNMATCHED for o in offset_key) and len(group_entries) > 1:
+                    if len(group_entries) > 1:
+                        is_sentinel_dim_mismatch = any(o == _SENTINEL_UNMATCHED for o in offset_key)
                         for _rid, _cid in group_entries:
                             _, _vidx = jacobian.index_mapping.col_to_var[_cid]
-                            if len(set(_vidx)) == len(_vidx):
-                                group_row_id, group_col_id = _rid, _cid
-                                break
+                            _, _eidx = jacobian.index_mapping.row_to_eq[_rid]
+                            if is_sentinel_dim_mismatch and len(set(_vidx)) != len(_vidx):
+                                continue
+                            if len(set(_eidx)) != len(_eidx):
+                                continue
+                            group_row_id, group_col_id = _rid, _cid
+                            break
                     derivative = jacobian.get_derivative(group_row_id, group_col_id)
                     _, group_eq_indices = jacobian.index_mapping.row_to_eq[group_row_id]
 
