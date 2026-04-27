@@ -91,9 +91,18 @@ def test_fawley_no_duplicate_nu_fx_lines():
 
 @pytest.mark.integration
 def test_fix_inactive_block_has_no_duplicate_lines():
-    """Generalized #1276: across the entire emitted MCP, no `.fx` line
-    starting with `nu_`, `lam_`, `piL_`, or `piU_` should appear more than
-    once. The dedup logic in `emit_gams_mcp` makes this a strict invariant.
+    """Generalized #1276 regression: in the emitted MCP for fawley, no
+    multiplier `.fx` line starting with `nu_`, `lam_`, `piL_`, or `piU_`
+    should appear more than once.
+
+    Note: the #1276 dedup operates ONLY on the fix-inactive `fx_lines`
+    list inside `emit_gams_mcp`; other emission paths (e.g., the empty-
+    equation multiplier fixes appended to `sections` directly) are NOT
+    routed through that dedup. So this is a per-fawley test, not a
+    universal "no duplicate `.fx` line anywhere" invariant. Empirically
+    fawley exercises the dedup-relevant paths and has no overlap with
+    the empty-equation block, so the test is meaningful for that model
+    even though it doesn't generalize to a global invariant.
     """
     src = "data/gamslib/raw/fawley.gms"
     if not os.path.exists(src):

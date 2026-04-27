@@ -57,12 +57,13 @@ def detect_empty_equation_instances(
         Dict mapping equation name → set of empty instance tuples.
         Only includes equations that have at least one empty instance.
     """
-    # Clear module-level caches when the model_ir identity changes. Both
-    # `_lowered_members_cache` (set name → resolved members) and
-    # `_nonzero_cache` (parameter name + eq-key tuple → nonzero entries)
-    # are keyed by name only, so stale entries from a previous translation
-    # would otherwise bleed into a subsequent translation that declares
-    # the same name with different values — causing
+    # Clear module-level caches when the model_ir identity changes. Neither
+    # `_lowered_members_cache` (keyed by set name → resolved members) nor
+    # `_nonzero_cache` (keyed by `(parameter name, eq-key tuple)` → nonzero
+    # entries) is keyed by model identity, so stale entries from a previous
+    # translation would otherwise bleed into a subsequent translation that
+    # declares the same parameter/set names (and, for `_nonzero_cache`,
+    # the same eq-key tuples) with different values — causing
     # `detect_empty_equation_instances` to incorrectly flag instances as
     # empty (or miss legitimately empty ones).
     #
