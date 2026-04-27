@@ -14,8 +14,17 @@ three issues landed this day:
 
 Each test is structured to fail loudly on the pre-fix behavior and pass
 on the post-fix behavior. Where the bug surface needs the gamslib
-sources to reproduce (lmp2, turkpow), the test skips when the corpus
-isn't on the runner — mirroring other gamslib-skip tests in the suite.
+sources to reproduce (fawley, lmp2, turkpow), the test skips when the
+corpus isn't on the runner — mirroring other gamslib-skip tests in
+the suite.
+
+Markers: per `pyproject.toml`, the `unit` marker means "fast unit tests
+with no I/O". The fawley/lmp2/turkpow tests below read
+`data/gamslib/raw/*.gms` and run the full translate pipeline, so they
+are marked `integration` (and turkpow is additionally `slow` because
+its translation alone takes ~9 min on a typical workstation). Only
+`test_short_equations_unchanged_by_wrap` is a pure in-memory synthetic
+test and keeps the `unit` marker.
 """
 
 from __future__ import annotations
@@ -56,7 +65,7 @@ def _emit_mcp_for(gms_path: str) -> str:
     return emit_gams_mcp(kkt)
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_fawley_no_duplicate_nu_fx_lines():
     """#1276: fawley's emitted `.fx` lines for `nu_pbal` and `nu_qsb` must
     appear exactly once each. Pre-fix they appeared twice each because
@@ -80,7 +89,7 @@ def test_fawley_no_duplicate_nu_fx_lines():
     ), f"Expected exactly 1 nu_qsb.fx line; got {len(nu_qsb_fx)}: {nu_qsb_fx}"
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_fix_inactive_block_has_no_duplicate_lines():
     """Generalized #1276: across the entire emitted MCP, no `.fx` line
     starting with `nu_`, `lam_`, `piL_`, or `piU_` should appear more than
@@ -107,7 +116,7 @@ def test_fix_inactive_block_has_no_duplicate_lines():
     )
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 def test_lmp2_no_duplicate_parameter_declarations():
     """#1281: lmp2's supplemental `Parameter X(domain);` block must not
     redeclare params already in the upstream `Parameters` block. Pre-fix
@@ -144,7 +153,8 @@ def test_lmp2_no_duplicate_parameter_declarations():
     )
 
 
-@pytest.mark.unit
+@pytest.mark.integration
+@pytest.mark.slow
 def test_turkpow_max_line_length_under_gams_limit():
     """#1292: turkpow's `stat_zt` equation pre-fix was 144,628 chars on a
     single line, blowing past GAMS's 80,000-char input-line limit. The

@@ -1183,7 +1183,10 @@ def emit_gams_mcp(
     )
     # mypy can't narrow `str | tuple[...]` from the kwarg flag — assert here.
     assert isinstance(_params_result, tuple)
-    params_code, declared_param_names = _params_result
+    # `declared_symbol_names` (not `declared_param_names`) because
+    # `emit_original_parameters` populates the set with names from BOTH the
+    # Parameters block AND the Scalars block (per its docstring).
+    params_code, declared_symbol_names = _params_result
     if params_code:
         sections.append(params_code)
         sections.append("")
@@ -1341,11 +1344,11 @@ def emit_gams_mcp(
 
     # Issue #1101/#1102: Emit pre-solve parameter assignments from solve-containing
     # loops (e.g., p(i) = pt(i,'1') from multi-solve loop models)
-    # Issue #1281: pass declared_param_names so we suppress duplicate
+    # Issue #1281: pass declared_symbol_names so we suppress duplicate
     # `Parameter X(domain);` declarations for symbols already in the upper
-    # Parameters block.
+    # Parameters/Scalars blocks (case-insensitive).
     pre_solve_code = emit_pre_solve_param_assignments(
-        kkt.model_ir, already_declared_params=declared_param_names
+        kkt.model_ir, already_declared_symbols=declared_symbol_names
     )
     if pre_solve_code:
         sections.append(pre_solve_code)

@@ -3056,7 +3056,7 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
 
 def emit_pre_solve_param_assignments(
     model_ir: ModelIR,
-    already_declared_params: set[str] | None = None,
+    already_declared_symbols: set[str] | None = None,
 ) -> str:
     """Emit parameter assignments from before the first solve in solve-containing loops.
 
@@ -3068,15 +3068,17 @@ def emit_pre_solve_param_assignments(
 
     Args:
         model_ir: Model IR with loop_statements and sets
-        already_declared_params: Optional set of lowercase parameter names
-            already declared by `emit_original_parameters`. Issue #1281: any
-            param in this set is skipped from the supplemental
-            `Parameter X(domain);` declaration block emitted at the end of
-            this function, since GAMS treats a redeclaration as a symbol
-            redefinition error (e.g., `Parameter A(mm,nn);` after
-            `Parameters ... A(mm,nn) ...;` triggered a compile failure on
-            lmp2). Defaults to None for backward compatibility — callers
-            that don't pass this preserve the pre-#1281 behavior.
+        already_declared_symbols: Optional set of lowercase symbol names
+            already declared by `emit_original_parameters` — covers BOTH
+            Parameters-block and Scalars-block names (the upstream caller
+            passes the union). Issue #1281: any name in this set is
+            skipped from the supplemental `Parameter X(domain);`
+            declaration block emitted at the end of this function, since
+            GAMS treats a redeclaration as a symbol redefinition error
+            (e.g., `Parameter A(mm,nn);` after `Parameters ... A(mm,nn) ...;`
+            triggered a compile failure on lmp2). Defaults to None for
+            backward compatibility — callers that don't pass this preserve
+            the pre-#1281 behavior.
 
     Returns:
         GAMS assignment statements, or empty string if none found
@@ -3357,15 +3359,15 @@ def emit_pre_solve_param_assignments(
 
     # Emit declarations for params that were skipped by Issue #917 logic
     # (no values, no expressions — only assigned inside solve loops)
-    # Issue #1281: skip params already declared by `emit_original_parameters`
-    # (the upstream Parameters block). Without this filter, lmp2's
+    # Issue #1281: skip symbols already declared by `emit_original_parameters`
+    # (the upstream Parameters / Scalars blocks). Without this filter, lmp2's
     # `Parameter A(mm,nn);` etc. were emitted twice — once in the upstream
     # block (because `A` is model-relevant) and once here — and the second
     # declaration triggered a GAMS symbol-redefinition compile error.
     decl_lines: list[str] = []
     skip_lower = (
-        {p.lower() for p in already_declared_params}
-        if already_declared_params is not None
+        {s.lower() for s in already_declared_symbols}
+        if already_declared_symbols is not None
         else set()
     )
     for pname in sorted(emitted_params):

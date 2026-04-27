@@ -57,22 +57,33 @@ def detect_empty_equation_instances(
         Dict mapping equation name → set of empty instance tuples.
         Only includes equations that have at least one empty instance.
     """
-    # Clear module-level caches at the start of each top-level invocation.
-    # Without this, stale entries from a previous translation (e.g.,
-    # `_nonzero_cache[("ap", ("c",))]` populated by a test fixture with one
-    # `Parameter ap(c,p)` shape) bleed into a subsequent translation that
-    # declares the same parameter name with different values, causing
+    # Clear module-level caches when the model_ir identity changes. Both
+    # `_lowered_members_cache` (set name → resolved members) and
+    # `_nonzero_cache` (parameter name + eq-key tuple → nonzero entries)
+    # are keyed by name only, so stale entries from a previous translation
+    # would otherwise bleed into a subsequent translation that declares
+    # the same name with different values — causing
     # `detect_empty_equation_instances` to incorrectly flag instances as
     # empty (or miss legitimately empty ones).
     #
     # This was discovered Sprint 25 Day 9 when adding new
-    # `tests/unit/emit/test_batch2_emission_invariants.py` tests changed the
-    # xdist worker scheduling enough to expose the latent flake on
-    # `tests/unit/emit/test_empty_eq_fx_emission.py`. The caches are still
-    # useful within a single translation (one model, multiple equations),
-    # so we reset them at the function boundary rather than removing them.
-    _lowered_members_cache.clear()
-    _nonzero_cache.clear()
+    # `tests/unit/emit/test_batch2_emission_invariants.py` tests changed
+    # the xdist worker scheduling enough to expose the latent flake on
+    # `tests/unit/emit/test_empty_eq_fx_emission.py`.
+    #
+    # Keying the invalidation on `id(model_ir)` (rather than clearing on
+    # every call) preserves the caches' intra-translation utility:
+    # `emit_gams_mcp` calls this function twice per translation (once for
+    # equalities, once for inequalities) and benefits from cache reuse
+    # across those two calls. The id-comparison is sound because Python
+    # only reuses an id after the original object is garbage-collected,
+    # and the caller (`emit_gams_mcp`) holds a reference to `model_ir`
+    # throughout the translation.
+    global _last_model_ir_id
+    if _last_model_ir_id != id(model_ir):
+        _lowered_members_cache.clear()
+        _nonzero_cache.clear()
+        _last_model_ir_id = id(model_ir)
 
     result: dict[str, set[tuple[str, ...]]] = {}
 
@@ -540,6 +551,12 @@ def _param_ref_is_zero(
 
 # Cache for pre-indexed nonzero entries per parameter
 _nonzero_cache: dict[tuple[str, tuple[str, ...]], set[tuple[str, ...]]] = {}
+
+# Identity of the model_ir whose entries currently populate the two caches
+# above. `detect_empty_equation_instances` clears the caches when invoked
+# with a different model_ir id, preserving intra-translation cache reuse
+# while preventing cross-test/cross-translation leakage.
+_last_model_ir_id: int | None = None
 
 
 def _get_nonzero_index(
