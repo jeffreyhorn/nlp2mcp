@@ -154,12 +154,12 @@ The following issue docs say `Status: OPEN` but the corresponding code fix may h
 
 | Issue | Doc says | Likely actual | Verification command |
 |-------|----------|---------------|----------------------|
-| #1276 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (fawley `.fx` dedup) — **but model still infeasible from a separate root cause** | `git log --oneline --grep '#1276'` |
+| #1276 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (fawley `.fx` dedup); ⚠ checked-in `data/gamslib/mcp/fawley_mcp.gms` is **STALE** — still shows duplicate `nu_pbal.fx` / `nu_qsb.fx` lines (296/298 and 297/299) because the artifact was not regenerated post-merge. Re-emitting fawley locally with current main produces the deduped output. **Model still infeasible from a separate root cause.** Action item: regenerate the checked-in MCP in a follow-up housekeeping PR. | `git log --oneline --grep '#1276'`; verify with `python -c "from src.emit.emit_gams import ...; emit fawley locally"` |
 | #1278 | OPEN | CLOSED — fixed by Day 10 PR #1318 | issue doc `ISSUE_1278_*.md` exists and still says `Status: OPEN`; GitHub issue is closed. Doc itself is stale and needs updating in a follow-up. |
-| #1281 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (lmp2 Parameter dedup) — but lmp2 still terminated from #1243 + #1315 | `git log --oneline --grep '#1281'` |
+| #1281 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (lmp2 Parameter dedup); ⚠ checked-in `data/gamslib/mcp/lmp2_mcp.gms` is **STALE** — still shows case-insensitive duplicate `Parameter A/a, b, cc` redeclarations because the artifact was not regenerated post-merge. lmp2 also still terminates from separate root causes (#1243 + #1315). Action item: regenerate the checked-in MCP in a follow-up housekeeping PR. | `git log --oneline --grep '#1281'` |
 | #1283 | OPEN | CLOSED — Day 1 grammar fix | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
 | #1289 | OPEN | CLOSED — Day 4 ganges-family | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
-| #1292 | OPEN — Sprint 25 Priority 2 | **CODE LANDED** in Day 9 PR #1314 (turkpow line wrap) — but turkpow still in path_syntax_error from #1316 (table data) | `git log --oneline --grep '#1292'` |
+| #1292 | OPEN — Sprint 25 Priority 2 | **CODE LANDED** in Day 9 PR #1314 (turkpow line wrap); ⚠ checked-in `data/gamslib/mcp/turkpow_mcp.gms` is **STALE** — still has `stat_zt` emitted as one 144,454-char line at line 200 because the artifact was not regenerated post-merge. turkpow also still has path_syntax_error from a separate root cause #1316 (table data). Action item: regenerate the checked-in MCP in a follow-up housekeeping PR. | `git log --oneline --grep '#1292'` |
 | #1311 | (closed; per memory) | CLOSED — Day 8 abel-reassess | confirmed |
 | #1312 | (closed; per memory) | CLOSED — Day 8 abel non-convex marker | confirmed |
 | #1280 | OPEN | uncertain — may have landed in a Day 1–2 PR; needs audit | `git log --oneline --grep '#1280' src/emit/` |
@@ -176,7 +176,7 @@ the alias-AD family as the highest-leverage areas. Status of those Sprint 24 pic
 | Sprint 24 pick | Sprint 25 status |
 |----------------|------------------|
 | harker (Error 140) | **FIXED** (Day 6 Pattern C side-effect; harker now solves OK but `mismatch`) |
-| fawley (Error 125 + zero stationarity) | partial — `.fx` dedup fixed (#1276); still `model_infeasible` from a separate root cause |
+| fawley (Error 125 + zero stationarity) | partial — `.fx` dedup code fix landed in main (#1276; checked-in MCP artifact stale, regen pending); still `model_infeasible` from a separate root cause |
 | china/turkey (Error 161 dimension) | **FIXED** for china; turkey still `path_syntax_error` |
 | div-by-zero (camcge/elec/lmp2/gtm) | UNCHANGED — same 4 candidates listed as S2/S4/S3 above |
 | cclinpts MCP pairing | partial — alias-class issue, queued under L1 |
