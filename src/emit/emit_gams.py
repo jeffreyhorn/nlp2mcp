@@ -1932,6 +1932,46 @@ def emit_gams_mcp(
                 if ref_mults is None or comp_pair_up.variable in ref_mults:
                     fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
+    # 1a. Issue #1192: Fix primal variables whose stationarity body is
+    # wrapped in a parameter-bounds-collapse guard `var.up(d) - var.lo(d) > eps`.
+    # When the guard is FALSE, the variable is implicitly fixed by its
+    # collapsed bounds and the stationarity row collapses to `0 =E= 0`;
+    # we emit the corresponding `.fx(d)$(not cond) = lo` to ensure GAMS
+    # treats it as fixed (and skips equation evaluation involving it,
+    # mirroring the original NLP semantics for `s.up = 0.99 * supc = 0`
+    # in gtm). This is tracked SEPARATELY from `stationarity_conditions`
+    # so the lead/lag section 1b loop below does NOT fire for variables
+    # whose only condition is a runtime bounds-collapse guard.
+    for var_name, bounds_cond_expr in sorted(kkt.stationarity_bounds_conditions.items()):
+        var_def = kkt.model_ir.variables.get(var_name)
+        if var_def is None or not var_def.domain:
+            continue
+        domain_str = ",".join(var_def.domain)
+        domain_vars = frozenset(var_def.domain)
+        cond_gams = expr_to_gams(bounds_cond_expr, domain_vars=domain_vars)
+        # Fix value mirrors section 1: prefer fx, then lo, then up, else 0.
+        if var_def.fx is not None and math.isfinite(var_def.fx):
+            fix_val = var_def.fx
+        elif var_def.lo is not None and math.isfinite(var_def.lo):
+            fix_val = var_def.lo
+        elif var_def.up is not None and math.isfinite(var_def.up):
+            fix_val = var_def.up
+        else:
+            fix_val = 0
+        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_val};")
+        # Also fix the bound multipliers for the same condition, to keep
+        # MCP matching consistent (mirrors section 1 behavior).
+        piL_name = create_bound_lo_multiplier_name(var_name)
+        if (var_name, ()) in kkt.complementarity_bounds_lo:
+            comp_pair_lo = kkt.complementarity_bounds_lo[(var_name, ())]
+            if ref_mults is None or comp_pair_lo.variable in ref_mults:
+                fx_lines.append(f"{piL_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+        piU_name = create_bound_up_multiplier_name(var_name)
+        if (var_name, ()) in kkt.complementarity_bounds_up:
+            comp_pair_up = kkt.complementarity_bounds_up[(var_name, ())]
+            if ref_mults is None or comp_pair_up.variable in ref_mults:
+                fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
     # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
     # for some instances because all constraint terms are conditioned away.
     # Precompute per-equality referenced vars and lead/lag conditions once.

@@ -152,8 +152,8 @@ Equations
 
 * Stationarity equations
 stat_d(j).. ((-1) * (dema(j) * d(j) ** demb(j) * demb(j) / d(j))) + lam_db(j) - piL_d(j) =E= 0;
-stat_s(i).. supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i) =E= 0;
-stat_x(i,j).. (utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j))$(ij(i,j)) =E= 0;
+stat_s(i).. (supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i))$(s.up(i) - s.lo(i) > 1e-10) =E= 0;
+stat_x(i,j).. (utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j))$(ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_db(j).. sum(i$(ij(i,j)), x(i,j)) - d(j) =G= 0;
@@ -179,9 +179,12 @@ bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i, supa(i) * s(i) - s
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-x.fx(i,j)$(not (ij(i,j))) = 0;
-piL_x.fx(i,j)$(not (ij(i,j))) = 0;
-piU_x.fx(i,j)$(not (ij(i,j))) = 0;
+s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+piL_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+piU_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+piL_x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+piU_x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
 piU_s.fx(i)$(not (0.99 * supc(i) < inf)) = 0;
 piU_x.fx(i,j)$(not (pc(i,j) < inf)) = 0;
 
