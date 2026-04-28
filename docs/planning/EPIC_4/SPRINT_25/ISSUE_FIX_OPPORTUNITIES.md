@@ -12,14 +12,19 @@ remainder of Sprint 25 (Days 11–14) and as queue for Sprint 26.
 
 ## Current Pipeline Breakdown (143-model scope)
 
-The 143-model in-scope pipeline (after v2.2.1 exclusions: 14 MINLP + 7 legacy
-+ 2 multi-solve driver = 23 excluded from 219 corpus) breaks down into the
-following **mutually exclusive terminal buckets**:
+The breakdown below uses the **143-model Sprint 25 active working set**. For
+corpus context, the v2.2.1 exclusions (14 MINLP + 7 legacy + 2 multi-solve
+driver = 23) reduce the 219-model corpus to 196 post-migration candidates; the
+143-model scope here is the narrower working set tracked by this pipeline view
+(53 of the 196 fall into additional gating beyond v2.2.1 — verified-non-NLP /
+parse-not-attempted classes — and are not in the active Sprint 25 retest loop;
+see `BASELINE_METRICS.md` for the full scope-reduction lineage).
+These are the following **mutually exclusive terminal buckets**:
 
 | Terminal Bucket | Count | Denominator / Notes |
 |-----------------|-------|---------------------|
 | translate failure | 8 | Overall 143-model scope (`143 - 135 translated`); 5 timeouts (iswnm, mexls, nebrazil, sarf, srpchase) + 3 internal_error (danwolfe, decomp, mine) |
-| solve failure after translation | 29 | Translated subset (`135 translated - 106 solved`); 11 path_syntax_error + 10 path_solve_terminated + 7 path_solve_license; **AND** 8 model_infeasible (agreste, camshape, cesam, chain, fawley, korcge, lnts, robustlp) which classify as solve-failure even though PATH returned with a non-success status. ⚠ **Bookkeeping note:** the model_infeasible total of 8 plus the other three failure totals (11+10+7=28) sums to 36, but `135 - 106 = 29`, so two of the model_infeasible models are double-counted against this bucket — the underlying status JSON gives them both a `model_infeasible` outcome AND a successful `path_solve_terminated`-class fallthrough; the discrepancy of 7 is open audit work for Day 11 baseline reconciliation. The 29 figure is the headline for "translated but did not solve"; the per-status totals are useful for triage but exceed 29 due to that overlap. |
+| solve failure after translation | 29 | Translated subset (`135 translated - 106 solved`); 11 path_syntax_error + 10 path_solve_terminated + 7 path_solve_license; **AND** 8 model_infeasible (agreste, camshape, cesam, chain, fawley, korcge, lnts, robustlp) which classify as solve-failure even though PATH returned with a non-success status. ⚠ **Bookkeeping note:** the model_infeasible total of 8 plus the other three failure totals (11+10+7=28) sums to 36, but `135 - 106 = 29`, so the per-status subtotals currently overcount this bucket by 7 due to overlapping classifications in the status JSON. Some models appear in both `model_infeasible` and another solve-failure status, and the exact overlap remains open audit work for Day 11 baseline reconciliation. The 29 figure is the headline for "translated but did not solve"; the per-status totals are useful for triage but exceed 29 due to that overlap. |
 | solve OK / mismatch | 46 | Solved subset; compared, but did not match: abel, catmix, cclinpts, chakra, chenery, china, circle, cpack, harker, hhfair, himmel16, imsl, irscge, kand, launch, like, lrgcge, marco, markov, mathopt1, mexss, mingamma, moncge, otpop, paperco, polygon, prodsp2, ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp, qabel, qdemo7, qsambal, robert, sambal, spatequ, srkandw, stdcge, tforss, trig, weapons, worst |
 | match | 54 | Solved subset; matched target |
 | presolve-only / no_compare | 6 | Solved subset; bearing-class warm-start cases |
