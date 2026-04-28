@@ -1,6 +1,6 @@
 # Sprint 25 — Issue Fix Opportunities (Prioritized)
 
-**Generated:** 2026-04-27 (Day 11 baseline, post-Day-10 #1278 merge)
+**Generated:** 2026-04-27 (Day 11 baseline, post-Day-10 PR #1318 merge that closed issue #1278)
 **Open issues:** 73 in GitHub + 74 docs in `docs/issues/ISSUE_*.md` (some docs are
 stale-OPEN for already-merged code fixes — see "Stale doc status" table at the end)
 **Current pipeline (143-scope):** parse 143/143, translate 135/143, solve 106, match 54
@@ -46,7 +46,7 @@ High-confidence fixes with single-file or tightly-scoped changes, minimal regres
 | **S3** | #1243 | lmp2 | path_solve_terminated | Runtime div-by-zero in `stat_y` (`1/y(p)` from product-aggregate derivative undefined at `y.l=0`). Two options: (a) emit `y.l(p) = 1;` initialization; (b) emit `$(y(p) <> 0)` guard. | **1** (→ solve, partial — stacked with #1315) |
 | **S4** | #1245 | camcge | path_solve_terminated | Runtime div-by-zero for non-traded elements (`pd(i)` zero for services/publiques). Condition stationarity on traded subset `it(i)` or emit `$(pd(i) <> 0)` guard. | **1** (→ solve) |
 | **S5** | #1313 | qabel/abel/ganges (warm-start path only) | n/a (presolve flag) | `--nlp-presolve` writes dual-transfer lines BEFORE the `$include` of NLP source, so duals reference original equation symbols/marginals not yet in scope (e.g., `stateq.m(...)`); GAMS emits an Error 141 cascade. Reorder to: (1) `$include` first; (2) dual-transfer block second. | **0 immediate** (unblocks the warm-start verification path for non-convex models like abel; pairs with #1199 bearing-class) |
-| **S6** | #1280 | mathopt4 | path_syntax_error | `nlp2mcp_uel_registry` emits unquoted UELs containing dots (`hu.bar`); GAMS rejects. Fix: unconditionally single-quote-wrap every UEL emitted to the registry. _Note: doc says OPEN but PR may have landed in Sprint 25 Day 1; verify before scheduling._ | **1** (→ solve) |
+| **S6** | #1280 | mathopt4 | path_syntax_error | `nlp2mcp_uel_registry` emits unquoted UELs containing dots (e.g., `x1.l` / `x2.l`); GAMS rejects. Fix: unconditionally single-quote-wrap every UEL emitted to the registry. _Note: doc says OPEN but PR may have landed in Sprint 25 Day 1; verify before scheduling._ | **1** (→ solve) |
 | **S7** | #1234 | otpop | mismatch | Scalar-constant offset `pd(tt-l)` with `l = /4/` not evaluated at IR-build; emitter produces `pd(tt-l)` instead of `pd(tt-4)`. Fix: resolve scalar-constant offsets in IR normalize or in emitter before stationarity. | **1** (→ match) |
 
 **Subtotal:** ~7–10h, **+4–5 solve, +1 match** (plus 2 emitter-hardening side benefits).
@@ -87,7 +87,7 @@ Larger architectural changes, deep AD/IR/emitter coupling, or open-ended investi
 | **L3** | #1144 + #1147 (alias domain inference + compilation) | catmix, camshape | model_infeasible (catmix mismatch in earlier classification, now infeasible) | Alias domain inference regression: variables with aliased domains lose position info. Pattern A may subsume; verify after L1 lands. | **2** (→ solve / match) |
 | **L4** | #1150 | (general AD regression class) | indirectly affects ~5+ alias-using models | AD engine: alias-aware differentiation collapses distinct sum indices in nested sums. Couples with L1; should be tested as part of Pattern A regression matrix. | **0 direct** (force multiplier for L1) |
 | **L5** | #1112 | (general dollar-condition class) | indirectly affects ~5+ models with `$`-conditions | KKT: dollar-condition propagation through AD/stationarity pipeline. Affects M7 (#918 qdemo7), M9 (#1239 sambal), and possibly more mismatch cases where dollar-conditioned terms are silently dropped from the gradient. ~6–10h scoping + fix + regression. | **2–4** (→ match) |
-| **L6** | #885 + #929 + #930 + #931 + #932 (translate timeouts) | sarf, ganges, gangesx, iswnm, nebrazil, mexls (#1185), srpchase | translate_timeout | All 5 hard-timeouts share the same root cause per PROFILE_HARD_TIMEOUTS.md: `SetMembershipTest` dynamic-subset fallback in `enumerate_equation_instances`. Unified Option-1 fix (short-circuit empty-subset fallback) per Sprint 25 Prep Task 8 design. ~4–6h coding + 2h regression on all 5 — fits Sprint 25 stretch. | **5** (→ translate; downstream solve gain ≤2 per Task 8 estimate) |
+| **L6** | #885 + #929 + #930 + #931 + #932 (translate timeouts) | sarf, ganges, gangesx, nebrazil, srpchase (5 current 143-scope); plus iswnm (#1228) and mexls (#1185) as related carry-forward cases | translate_timeout | All 5 current 143-scope hard-timeouts share the same root cause per PROFILE_HARD_TIMEOUTS.md: `SetMembershipTest` dynamic-subset fallback in `enumerate_equation_instances`. Unified Option-1 fix (short-circuit empty-subset fallback) per Sprint 25 Prep Task 8 design. ~4–6h coding + 2h regression on those 5 — fits Sprint 25 stretch. | **5** (→ translate; downstream solve gain ≤2 per Task 8 estimate) |
 | **L7** | #1062 + #933 + #1038 (KKT structural pattern) | tricp, spatequ | path_solve_terminated / mismatch | Sparse edge-set conditioning in stationarity (760 unmatched slp/sln in tricp, similar in spatequ). Architectural; condition stationarity on edge set. ~6–8h. | **2** (→ solve/match) |
 | **L8** | #1224 | mine | translate_internal_error | Parameter-valued index offsets (`i+li(k)`) unsupported. Either enumerate concrete instances at IR-build (combinatorial in worst case) or extend the IR's `IndexOffset` to accept `ParamRef`. ~6–8h. | **1** (→ translate) |
 | **L9** | #1228 | iswnm | translate_timeout | Same family as L6; deferred to Sprint 26 per PROFILE_HARD_TIMEOUTS.md. Listed separately since the doc describes the iswnm-specific empty-set diagnosis. | (covered by L6) |
@@ -155,7 +155,7 @@ The following issue docs say `Status: OPEN` but the corresponding code fix may h
 | Issue | Doc says | Likely actual | Verification command |
 |-------|----------|---------------|----------------------|
 | #1276 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (fawley `.fx` dedup) — **but model still infeasible from a separate root cause** | `git log --oneline --grep '#1276'` |
-| #1278 | (n/a — closed by Day 10 PR #1318) | CLOSED | confirmed |
+| #1278 | OPEN | CLOSED — fixed by Day 10 PR #1318 | issue doc `ISSUE_1278_*.md` exists and still says `Status: OPEN`; GitHub issue is closed. Doc itself is stale and needs updating in a follow-up. |
 | #1281 | OPEN — Deferred to Sprint 25 | **CODE LANDED** in Day 9 PR #1314 (lmp2 Parameter dedup) — but lmp2 still terminated from #1243 + #1315 | `git log --oneline --grep '#1281'` |
 | #1283 | OPEN | CLOSED — Day 1 grammar fix | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
 | #1289 | OPEN | CLOSED — Day 4 ganges-family | confirmed (GitHub issue closed; doc still says OPEN — needs same-PR or follow-up doc update) |
