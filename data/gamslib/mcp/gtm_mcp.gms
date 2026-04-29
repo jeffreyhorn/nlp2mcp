@@ -169,7 +169,7 @@ comp_up_s(i)$(0.99 * supc(i) < inf).. 0.99 * supc(i) - s(i) =G= 0;
 comp_up_x(i,j)$(pc(i,j) < inf).. pc(i,j) - x(i,j) =G= 0;
 
 * Original equality equations
-bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i, supa(i) * s(i) - supb(i) * log((supc(i) - s(i)) / supc(i))) - sum((i,j)$(ij(i,j)), utc(i,j) * x(i,j));
+bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i$(supc(i) <> 0), supa(i) * s(i) - supb(i) * log((supc(i) - s(i)) / supc(i))) - sum((i,j)$(ij(i,j)), utc(i,j) * x(i,j));
 
 
 * ============================================
@@ -179,12 +179,15 @@ bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i, supa(i) * s(i) - s
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+x.fx(i,j)$(not (ij(i,j))) = 0;
+piL_x.fx(i,j)$(not (ij(i,j))) = 0;
+piU_x.fx(i,j)$(not (ij(i,j))) = 0;
 s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
 piL_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
 piU_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
-x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
-piL_x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
-piU_x.fx(i,j)$(not (ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+piL_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+piU_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
 piU_s.fx(i)$(not (0.99 * supc(i) < inf)) = 0;
 piU_x.fx(i,j)$(not (pc(i,j) < inf)) = 0;
 
