@@ -140,12 +140,12 @@ def test_multiple_offending_params_emit_in_sorted_order():
 
     # Two cleanup lines, sorted alphabetically: supa first, supb second.
     assert len(lines) == 2, f"Expected 2 cleanup lines; got {len(lines)}: {lines}"
-    assert lines[0].startswith("supa("), (
-        f"Expected `supa` line first (alphabetical); got: {lines[0]}"
-    )
-    assert lines[1].startswith("supb("), (
-        f"Expected `supb` line second (alphabetical); got: {lines[1]}"
-    )
+    assert lines[0].startswith(
+        "supa("
+    ), f"Expected `supa` line first (alphabetical); got: {lines[0]}"
+    assert lines[1].startswith(
+        "supb("
+    ), f"Expected `supb` line second (alphabetical); got: {lines[1]}"
 
 
 @pytest.mark.unit

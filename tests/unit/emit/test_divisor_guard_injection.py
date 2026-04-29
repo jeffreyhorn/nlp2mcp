@@ -122,19 +122,19 @@ def test_existing_sum_condition_preserved_and_extended():
     # The new condition should be a Binary("and", ..., ...) combining
     # the old condition with the new guard.
     new_cond = rewritten.condition
-    assert isinstance(new_cond, Binary) and new_cond.op == "and", (
-        f"Expected Binary('and', ...) condition; got {new_cond!r}"
-    )
+    assert (
+        isinstance(new_cond, Binary) and new_cond.op == "and"
+    ), f"Expected Binary('and', ...) condition; got {new_cond!r}"
 
     # One side should be the original cond (or contain it).
     sides_repr = (repr(new_cond.left), repr(new_cond.right))
-    assert any("VarRef(x" in s for s in sides_repr), (
-        f"Expected original cond (x > 0) preserved in one side; got {new_cond!r}"
-    )
+    assert any(
+        "VarRef(x" in s for s in sides_repr
+    ), f"Expected original cond (x > 0) preserved in one side; got {new_cond!r}"
     # The other side should contain the new guard p <> 0.
-    assert any("ParamRef(p" in s and "<>" in s for s in sides_repr), (
-        f"Expected new guard `p <> 0` preserved in one side; got {new_cond!r}"
-    )
+    assert any(
+        "ParamRef(p" in s and "<>" in s for s in sides_repr
+    ), f"Expected new guard `p <> 0` preserved in one side; got {new_cond!r}"
 
 
 @pytest.mark.unit
@@ -165,9 +165,9 @@ def test_scalar_param_in_divisor_not_guarded():
     rewritten = _inject_divisor_guards(sum_expr)
 
     # No condition added.
-    assert rewritten is sum_expr or rewritten.condition is None, (
-        f"Expected no guard for scalar ParamRef in divisor; got condition={rewritten.condition!r}"
-    )
+    assert (
+        rewritten is sum_expr or rewritten.condition is None
+    ), f"Expected no guard for scalar ParamRef in divisor; got condition={rewritten.condition!r}"
 
 
 @pytest.mark.unit

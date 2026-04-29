@@ -65,12 +65,12 @@ def test_gtm_emits_supb_supa_na_cleanup():
 
     output = _emit_mcp_for(src)
 
-    assert "supb(i)$(NOT (supb(i) > -inf and supb(i) < inf)) = 0;" in output, (
-        "Expected NA-cleanup line for `supb(i)` (division-based assignment)."
-    )
-    assert "supa(i)$(NOT (supa(i) > -inf and supa(i) < inf)) = 0;" in output, (
-        "Expected NA-cleanup line for `supa(i)` (division-based assignment)."
-    )
+    assert (
+        "supb(i)$(NOT (supb(i) > -inf and supb(i) < inf)) = 0;" in output
+    ), "Expected NA-cleanup line for `supb(i)` (division-based assignment)."
+    assert (
+        "supa(i)$(NOT (supa(i) > -inf and supa(i) < inf)) = 0;" in output
+    ), "Expected NA-cleanup line for `supa(i)` (division-based assignment)."
 
 
 @pytest.mark.integration
@@ -88,9 +88,9 @@ def test_gtm_supc_no_cleanup_data_driven():
 
     # supc cleanup line should NOT be present (no division in its
     # assignment expressions).
-    assert "supc(i)$(NOT (supc(i) > -inf and supc(i) < inf))" not in output, (
-        "supc(i) is data-driven (no division in assignment); should not receive a cleanup line."
-    )
+    assert (
+        "supc(i)$(NOT (supc(i) > -inf and supc(i) < inf))" not in output
+    ), "supc(i) is data-driven (no division in assignment); should not receive a cleanup line."
 
 
 @pytest.mark.integration

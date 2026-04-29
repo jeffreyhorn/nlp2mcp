@@ -1,15 +1,64 @@
 # `--nlp-presolve` Error 141 Cascade on Dual-Transfer Lines (qabel/abel/ganges)
 
 **GitHub Issue:** [#1313](https://github.com/jeffreyhorn/nlp2mcp/issues/1313)
-**Status:** OPEN — targeted for Sprint 26
-**Severity:** Medium — blocks the warm-start verification path for non-convex models; doesn't affect normal MCP emission
+**Status:** ✅ **RESOLVED** (2026-04-29)
+**Resolution:** Move `_emit_nlp_presolve` to BEFORE the MCP equation declarations + wrap equation-definitions block in `$onMultiR ... $offMulti`.
+**Severity:** Medium — blocked the warm-start verification path for non-convex models; doesn't affect normal MCP emission
 **Date filed:** 2026-04-25
+**Date resolved:** 2026-04-29
 **Discovered:** Sprint 25 Day 5 investigation (DAY5_PATTERN_A_INVESTIGATION.md), re-surfaced Day 8 as the architecturally-right answer for abel's non-convex residual
 **Related:**
-- `#1150` (qabel/abel — partially resolved by #1311 + #1312; this is the remaining piece for abel)
+- `#1150` (qabel/abel — partially resolved by #1311 + #1312; this fix completes the abel match path)
 - `#1311` (RESOLVED — AD u-criterion-gradient drop)
 - `#1312` (RESOLVED — `_is_concrete_instance_of` prefix-heuristic fix)
-- `gamslib_status.json` abel entry: now flagged `convexity.status: non_convex` to document the indefinite-Hessian classification while this warm-start path remains broken
+- `#1326` (gtm PATH zero-iterations residual after #1192/#1320/#1322 — likely UNBLOCKED by this fix as a side effect)
+
+---
+
+## Resolution (2026-04-29)
+
+### Actual root cause (different from initial hypothesis)
+
+The original issue doc hypothesised that the dual-transfer lines (`nu_stateq.l(n,k) = stateq.m(n,k)`) referenced equation symbols BEFORE the `$include` brought them into scope. Investigation showed the actual bug is more subtle:
+
+1. The `$include` runs the source's `Model abel /all/; solve abel using nlp ...;` lines.
+2. **`/all/` captures every equation declared at that point** — including the MCP's own stationarity (`stat_*`) and complementarity (`comp_*`) equations that were declared earlier in the file.
+3. The "NLP solve" therefore tried to solve the **MCP-augmented system** (NLP equations + MCP stationarity + comp constraints), which is structurally infeasible.
+4. This produced `MODEL STATUS 4 Infeasible` for the include's NLP solve, and the dual-transfer downstream then wrote zeros (or stale values) into the MCP multipliers, defeating the warm-start.
+
+The Error 141 cascade described in the original doc was a **secondary symptom from running gams in a non-repo-root CWD** (relative `$include` path failed), not the actual blocker. The real blocker only manifests when the include path resolves correctly.
+
+### Fix
+
+Two coordinated changes in `src/emit/emit_gams.py`:
+
+1. **Move `_emit_nlp_presolve` call to BEFORE the MCP equation declarations.** Now:
+   - Variables (primals + multipliers) are declared first.
+   - `$onMultiR; $include "..."; $offMulti` runs while only the original NLP equations are in scope. The source's `Model X /all/` correctly captures only NLP equations, the NLP solver runs cleanly, and `eq.m` values are populated.
+   - Then the MCP declares its own `stat_*` / `comp_*` equations, the `mcp_model`, and runs the MCP solve.
+
+2. **Wrap the MCP equation-definitions block in `$onMultiR ... $offMulti`** when presolve is active. The `$include` already defined the original equality equations (`criterion..`, `stateq..`); the MCP file's "Original equality equations" section then redefines them. Without `$onMultiR`, GAMS aborts with Error 150 ("Symbolic equations redefined"). The wrap allows the redefinition cleanly.
+
+### Verification
+
+| Model | Pre-fix | Post-fix NLP | Post-fix MCP | Match |
+|-------|---------|--------------|--------------|-------|
+| **abel** | NLP infeasible (status 4) | Locally Optimal `225.1946` | Optimal | ✅ Matches NLP |
+| **qabel** | NLP infeasible | Locally Optimal `46965.0362` | Optimal | ✅ Matches NLP |
+| **gtm** | NLP infeasible | Locally Optimal `-543.5651` | Optimal `-543.565` | ✅ Matches NLP |
+
+The fix likely also unblocks **#1326** (gtm PATH zero-iterations from default starting point) as a side effect — gtm now solves cleanly with `--nlp-presolve`.
+
+### Tests
+
+- `make typecheck`: ✅ Success
+- `make lint`: ✅ All checks passed (after `make format`)
+- `make format`: ✅ Applied formatting
+- `make test`: ✅ Full suite (run separately)
+
+### Files changed
+
+- `src/emit/emit_gams.py`: moved `_emit_nlp_presolve` invocation + calibration block from after `model_code` to before `emit_equations`. Wrapped `eq_defs_code` in `$onMultiR / $offMulti` when presolve is active.
 
 ---
 

@@ -70,9 +70,9 @@ def test_gtm_bdef_has_supc_nonzero_guard():
 
     # The supc-nonzero guard must appear on a Sum body. Accept either
     # `supc(i) <> 0` or `supc(i)<>0` (whitespace-flexible).
-    assert "supc(i) <> 0" in bdef or "supc(i)<>0" in bdef, (
-        f"Pre-#1320 emission had no divisor guard on bdef. bdef line:\n{bdef}"
-    )
+    assert (
+        "supc(i) <> 0" in bdef or "supc(i)<>0" in bdef
+    ), f"Pre-#1320 emission had no divisor guard on bdef. bdef line:\n{bdef}"
 
 
 @pytest.mark.integration

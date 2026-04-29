@@ -159,6 +159,6 @@ solve M using nlp maximizing z;
     stat_x_lines = [line for line in output.splitlines() if line.startswith("stat_x")]
     assert stat_x_lines, "Expected `stat_x` equation."
     stat_body = "\n".join(stat_x_lines)
-    assert "x.up(i)" in stat_body and "x.lo(i)" in stat_body, (
-        f"stat_x body must be wrapped in the bounds-collapse guard.\n\nstat_x lines:\n{stat_body}"
-    )
+    assert (
+        "x.up(i)" in stat_body and "x.lo(i)" in stat_body
+    ), f"stat_x body must be wrapped in the bounds-collapse guard.\n\nstat_x lines:\n{stat_body}"

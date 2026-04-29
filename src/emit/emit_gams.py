@@ -1867,6 +1867,48 @@ def emit_gams_mcp(
                 sections.append(f"{param_name}({idx_str}) = {val_str};")
             sections.append("")
 
+    # Issue #1313: NLP pre-solve must be emitted BEFORE the MCP equation
+    # declarations. The original NLP source's `$include` ends with
+    # `Model <name> / all /; solve <name> using nlp ...;`. The `/all/`
+    # scope picks up every equation declared at the time of the model
+    # statement. If MCP equations (stat_*, comp_*, ...) are already
+    # declared, they get included in the model and the "NLP solve"
+    # actually tries to solve the MCP-augmented system — which is
+    # structurally infeasible and aborts with `MODEL STATUS 4`. By
+    # emitting the include here (after Variables / bounds / init /
+    # bound_params, but BEFORE Equations declaration), only the
+    # original NLP equations are in scope when `/all/` is captured,
+    # and the source's NLP solve runs cleanly.
+    presolve_include_emitted = False
+    if nlp_presolve:
+        presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
+
+    # Issue #1289: post-initial-solve calibration assignments that read
+    # `.l` values must come AFTER the presolve (which populates `.l`)
+    # and BEFORE MCP equation definitions (which may use the calibrated
+    # parameters). Because we just moved the presolve earlier (#1313),
+    # the calibration moves with it.
+    if presolve_include_emitted:
+        calibration_code = emit_computed_parameter_assignments(
+            kkt.model_ir,
+            varref_filter="only_varref_attr",
+            exclude_params=_merge_exclude_params(
+                early_params if early_params else None,
+                non_model_params,
+            ),
+        )
+        if calibration_code:
+            if add_comments:
+                sections.append("* ============================================")
+                sections.append(
+                    "* Post-initial-solve calibration (#1289): parameters "
+                    "computed from `.l` values set by the pre-solve $include above."
+                )
+                sections.append("* ============================================")
+                sections.append("")
+            sections.append(calibration_code)
+            sections.append("")
+
     # Equations
     if add_comments:
         sections.append("* ============================================")
@@ -1904,7 +1946,17 @@ def emit_gams_mcp(
                 sections.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
         sections.append("")
 
+    # Issue #1313: When --nlp-presolve is active, the $include above already
+    # defined the original equality equations (criterion.., stateq..) as
+    # part of the source's solve flow. The MCP file then re-emits them
+    # in the "Original equality equations" section below. Wrap the whole
+    # equation-definitions block in `$onMultiR ... $offMulti` so GAMS
+    # accepts the redefinition (Error 150 otherwise).
+    if presolve_include_emitted:
+        sections.append("$onMultiR")
     sections.append(eq_defs_code)
+    if presolve_include_emitted:
+        sections.append("$offMulti")
     sections.append("")
 
     # Issue #724: Fix variables whose paired MCP equation has a dollar condition.
@@ -2608,47 +2660,12 @@ def emit_gams_mcp(
         sections.append(f"{model_name}.scaleOpt = 1;")
         sections.append("")
 
-    # Issue #757/#1199: NLP pre-solve to warm-start MCP dual variables.
-    # For non-convex models, PATH needs both primal and dual initialization
-    # close to the NLP solution to converge. This solves the original NLP
-    # first, then transfers the primal levels and equation marginals to
-    # the MCP multiplier variables.
-    presolve_include_emitted = False
-    if nlp_presolve:
-        presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
-
-    # Issue #1289: post-initial-solve calibration assignments that read `.l`
-    # values (e.g., `deltas(i)$ls.l(i) = (k(i)/ls.l(i))**(...)` in
-    # ganges/gangesx). These are stripped from the pre-Variables pass above
-    # (`varref_filter="no_varref_attr"`) because `.l` can't be referenced
-    # before Variables are declared. They can only run AFTER a solve has
-    # populated `.l` — in the `--nlp-presolve` flow that's the $include of
-    # the original NLP above. Without that include, `.l` is uninitialized
-    # and the calibration would produce UNDF / divide-by-zero, so we gate
-    # on `_emit_nlp_presolve` having actually emitted the include. Its
-    # early-return paths cover: a falsy source file, a missing objective
-    # variable, a model with no solved equations, or a source outside the
-    # repo root (#1275 soft-skip banner branch).
-    if presolve_include_emitted:
-        calibration_code = emit_computed_parameter_assignments(
-            kkt.model_ir,
-            varref_filter="only_varref_attr",
-            exclude_params=_merge_exclude_params(
-                early_params if early_params else None,
-                non_model_params,
-            ),
-        )
-        if calibration_code:
-            if add_comments:
-                sections.append("* ============================================")
-                sections.append(
-                    "* Post-initial-solve calibration (#1289): parameters "
-                    "computed from `.l` values set by the pre-solve $include above."
-                )
-                sections.append("* ============================================")
-                sections.append("")
-            sections.append(calibration_code)
-            sections.append("")
+    # Issue #757/#1199 + #1313: NLP pre-solve has been moved to BEFORE the
+    # MCP equation declarations (above) so the source's `Model X /all/`
+    # picks up only original NLP equations, not the MCP-augmented set.
+    # This block now only emits the warm-start primal initialization
+    # (variable .l values from the NLP solve are already in place via the
+    # $include block above; this is left intentionally empty as a marker).
 
     # Solve statement
     if add_comments:
