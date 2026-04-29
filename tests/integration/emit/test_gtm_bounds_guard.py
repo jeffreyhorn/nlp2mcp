@@ -88,8 +88,16 @@ def test_gtm_stat_s_has_bounds_guard():
 @pytest.mark.integration
 def test_gtm_s_fx_emits_for_collapsed_bounds():
     """gtm's `s` variable must have an `s.fx(i)$(not (s.up(i) -
-    s.lo(i) > 1e-10)) = 0` line so GAMS fixes the variable for the
-    three zero-supc regions.
+    s.lo(i) > 1e-10)) = s.lo(i)` line so GAMS fixes the variable to
+    its runtime collapsed bound for the three zero-supc regions.
+
+    The fix value is the runtime `s.lo(i)` attribute (NOT a hard-coded
+    0); the whole point of the bounds-collapse guard is that the
+    runtime `up == lo` value is parameter-driven and not known
+    statically. For gtm specifically `s` is a positive variable so
+    `s.lo(i) = 0` at the collapsed indices, but the test asserts the
+    runtime-attr form so it generalizes to non-zero collapsed bounds
+    (e.g., sparta's `e.lo(t) = req(t)`).
     """
     src = "data/gamslib/raw/gtm.gms"
     if not os.path.exists(src):
@@ -100,11 +108,22 @@ def test_gtm_s_fx_emits_for_collapsed_bounds():
     fx_lines = [line for line in output.splitlines() if line.startswith("s.fx(i)")]
     assert fx_lines, "Expected `s.fx(i)..` line in the gtm emission."
 
-    # At least one of them carries the bounds-collapse condition
-    assert any("s.up(i) - s.lo(i) > 1e-10" in line for line in fx_lines), (
-        "Expected at least one `s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0` "
+    # At least one of them carries the bounds-collapse condition.
+    bounds_fx_lines = [line for line in fx_lines if "s.up(i) - s.lo(i) > 1e-10" in line]
+    assert bounds_fx_lines, (
+        "Expected at least one `s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = s.lo(i)` "
         "line for the bounds-collapse fix.\n\n"
         "s.fx lines:\n" + "\n".join(fx_lines)
+    )
+
+    # Issue #1313 review: the .fx RHS must be a runtime attribute
+    # (`s.lo(i)` or `s.up(i)`), NOT a hard-coded `= 0`. This protects
+    # against regressions back to the compile-time-scalar form.
+    assert any("= s.lo(i)" in line or "= s.up(i)" in line for line in bounds_fx_lines), (
+        "Expected the bounds-collapse `.fx` assignment to fix to the "
+        "runtime collapsed bound attribute (`s.lo(i)` or `s.up(i)`), not "
+        "a compile-time scalar like `= 0`.\n\n"
+        "Bounds-collapse fix lines:\n" + "\n".join(bounds_fx_lines)
     )
 
 
