@@ -110,6 +110,114 @@ def has_stochastic_parameters(model_ir: ModelIR) -> bool:
     return False
 
 
+def _expr_contains_division(expr: Expr) -> bool:
+    """Return True if *expr* (or any subexpression) contains a `Binary("/")`.
+
+    Issue #1322: Used to identify parameter assignments whose RHS could
+    produce `NA` / `UNDF` at runtime via division by zero. When such
+    parameters appear in equation expressions, the NA values propagate
+    into PATH's symbolic Jacobian and produce gigantic coefficients
+    (e.g., gtm's `supb`/`supa` end up NA when `supc(i) = 0` from empty
+    source data, causing `MODEL STATUS 4 Infeasible` even after PR
+    #1321 closes the listing-time aborts).
+
+    Walks generic dataclass fields. Returns True on the first
+    `Binary("/")` encountered.
+    """
+    if isinstance(expr, Binary) and expr.op == "/":
+        return True
+    return any(_expr_contains_division(c) for c in expr.children())
+
+
+def _param_assignment_has_division(param_def: ParameterDef) -> bool:
+    """Return True if any of `param_def.expressions[*][1]` contains a
+    `Binary("/")` division at any depth.
+
+    Issue #1322: Used by `emit_post_assignment_na_cleanup` to identify
+    indexed parameters that may go NA at runtime from arithmetic with
+    bad inputs. Filtering on division-based assignments avoids cluttering
+    the MCP output with cleanup lines for parameters that can't go NA.
+    """
+    for _key, expr in param_def.expressions:
+        if _expr_contains_division(expr):
+            return True
+    return False
+
+
+def emit_post_assignment_na_cleanup(
+    model_ir: ModelIR,
+    model_relevant_params: set[str] | None = None,
+) -> str:
+    r"""Emit a sanity-cleanup section for indexed parameters whose pre-solve
+    assignments contain divisions that may produce `NA`/`UNDF` at runtime.
+
+    Issue #1322: After the original parameter assignments run, any
+    indexed parameter computed via `a/b` where `b` could be zero (often
+    because `b` itself is data-derived from a Table with empty cells)
+    ends up as `NA`. The MCP emitter passes these NA-valued parameters
+    into PATH's symbolic Jacobian, producing gigantic coefficients
+    (~1e30) that PATH cannot solve.
+
+    The cleanup uses GAMS' `\$(NOT (x > -inf and x < inf))` idiom to
+    detect `NA` / `UNDF` / `+inf` / `-inf` and reset to `0`. This is a
+    no-op for parameters with valid finite values, so it's safe to emit
+    even when the model doesn't have the NA pathology.
+
+    Filters:
+    - Only indexed parameters (scalar params have static NA-ness; not
+      our concern here).
+    - Only parameters whose `expressions` contain at least one
+      `Binary("/")` division (the typical NA-from-arithmetic vector).
+    - Only parameters in `model_relevant_params` if the filter is
+      provided (mirrors `emit_original_parameters`'s behavior).
+
+    Args:
+        model_ir: ModelIR with parameter definitions.
+        model_relevant_params: Optional lowercase names of parameters
+            actually referenced by the model's equations. When provided,
+            cleanup is restricted to those — mirrors
+            `emit_original_parameters`'s `model_relevant_params` filter.
+
+    Returns:
+        GAMS cleanup statements as a string, or empty string if no
+        parameters qualify.
+    """
+    cleanup_lines: list[str] = []
+    relevant_lower = (
+        {p.lower() for p in model_relevant_params} if model_relevant_params is not None else None
+    )
+
+    for name, param_def in sorted(model_ir.params.items()):
+        # Indexed only — scalar params don't have per-index NA.
+        if not param_def.domain:
+            continue
+        # Filter to model-relevant if the caller passed the set.
+        if relevant_lower is not None and name.lower() not in relevant_lower:
+            continue
+        # Only emit cleanup for parameters whose assignments contain
+        # division — that's the typical NA-from-arithmetic source.
+        if not _param_assignment_has_division(param_def):
+            continue
+
+        domain_str = ",".join(param_def.domain)
+        ref = f"{name}({domain_str})"
+        cleanup_lines.append(f"{ref}$(NOT ({ref} > -inf and {ref} < inf)) = 0;")
+
+    if not cleanup_lines:
+        return ""
+
+    header = (
+        "* Issue #1322: NA-cleanup for parameters with division-based "
+        "assignments.\n"
+        "* If `<param>(d)` ended up NA/UNDF/inf at runtime "
+        "(typically from\n"
+        "* zero-divisor arithmetic), reset to 0 so PATH's symbolic "
+        "Jacobian\n"
+        "* doesn't produce ~1e30 coefficients."
+    )
+    return header + "\n" + "\n".join(cleanup_lines)
+
+
 # Regex pattern for valid GAMS set element identifiers
 # Allows: letters, digits, underscores, hyphens, dots (for tuples like a.b), plus signs
 # Must start with letter or digit

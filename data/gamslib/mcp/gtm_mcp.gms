@@ -58,6 +58,15 @@ sdat(i,"sup-b") = supb(i);
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+dema(j)$(NOT (dema(j) > -inf and dema(j) < inf)) = 0;
+demb(j)$(NOT (demb(j) > -inf and demb(j) < inf)) = 0;
+supa(i)$(NOT (supa(i) > -inf and supa(i) < inf)) = 0;
+supb(i)$(NOT (supb(i) > -inf and supb(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

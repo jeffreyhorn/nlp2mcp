@@ -1354,6 +1354,21 @@ def emit_gams_mcp(
         sections.append(pre_solve_code)
         sections.append("")
 
+    # Issue #1322: NA-cleanup for indexed parameters whose pre-solve
+    # assignments contain divisions that may produce NA at runtime.
+    # Without this, NA values propagate into PATH's symbolic Jacobian as
+    # gigantic coefficients (~1e30), making the model numerically
+    # unsolvable even when listing-time aborts are gone (e.g., gtm's
+    # supb/supa go NA for the three zero-supc regions).
+    from src.emit.original_symbols import emit_post_assignment_na_cleanup
+
+    na_cleanup_code = emit_post_assignment_na_cleanup(
+        kkt.model_ir, model_relevant_params=model_relevant_params
+    )
+    if na_cleanup_code:
+        sections.append(na_cleanup_code)
+        sections.append("")
+
     # Variables (primal + multipliers)
     if add_comments:
         sections.append("* ============================================")
