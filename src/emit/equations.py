@@ -221,11 +221,205 @@ def _merge_alias_dicts(target: dict[str, list[str]], source: dict[str, list[str]
                 existing.append(a)
 
 
+# Issue #1320: Parameter-divisor $-condition rewrite for original-source
+# equations (e.g., gtm's `bdef` body has `log((supc-s)/supc)` which evaluates
+# to `log(0/0)` at GAMS model-listing time for indices where `supc(i) = 0`).
+# The injection adds `$(param(d) <> 0)` to the smallest enclosing Sum/Prod
+# whose body references the divisor parameter, so listing-time evaluation
+# skips degenerate rows.
+#
+# This pass is INDEPENDENT of #1192's bounds-aware stationarity guard
+# (PR #1321), which targets KKT-built `stat_*` equations. The bdef-side
+# rewrite targets parsed-source equations only and is invoked for them
+# specifically; KKT-built equations bypass it.
+
+# Function calls whose first argument is in a "log/sqrt-style domain
+# error" position when the argument can be zero. log(0) = -inf is a domain
+# error in GAMS model listing.
+_DIVISOR_LIKE_FUNCS: frozenset[str] = frozenset({"log", "log2", "log10"})
+
+
+def _collect_divisor_param_refs(expr: Expr) -> set[ParamRef]:
+    """Collect indexed `ParamRef` nodes that appear in a divisor or
+    domain-error-prone function-call argument position within `expr`.
+
+    Issue #1320: Used to identify parameters that must be guarded with
+    `$(param(d) <> 0)` to avoid GAMS model-listing-time div-by-zero or
+    log(0) errors.
+
+    A ParamRef is "divisor-like" if it appears as:
+    - The denominator of `Binary("/", numerator, denominator)`, OR
+      transitively inside the denominator via arithmetic, OR
+    - A subexpression of an argument to `log`/`log2`/`log10`.
+
+    Only INDEXED parameters (those with a non-empty `indices` tuple) are
+    returned, since scalar parameters that are zero would fail every
+    instance and are not the bug class we're fixing.
+    """
+    found: set[ParamRef] = set()
+
+    def _walk(e: Expr, in_divisor: bool = False) -> None:
+        if isinstance(e, ParamRef):
+            if in_divisor and e.indices:
+                found.add(e)
+            return
+        if isinstance(e, Binary):
+            if e.op == "/":
+                # Numerator: not in divisor position (recurse normally).
+                _walk(e.left, in_divisor=in_divisor)
+                # Denominator: in divisor position.
+                _walk(e.right, in_divisor=True)
+                return
+            # Other binary ops: propagate the in_divisor flag.
+            _walk(e.left, in_divisor=in_divisor)
+            _walk(e.right, in_divisor=in_divisor)
+            return
+        if isinstance(e, Unary):
+            _walk(e.child, in_divisor=in_divisor)
+            return
+        if isinstance(e, Call):
+            if e.func in _DIVISOR_LIKE_FUNCS:
+                # Argument(s) are in domain-error-prone position; treat
+                # ParamRefs there as divisor-like.
+                for arg in e.args:
+                    _walk(arg, in_divisor=True)
+                return
+            for arg in e.args:
+                _walk(arg, in_divisor=in_divisor)
+            return
+        if isinstance(e, (Sum, Prod)):
+            # Walk into the body (and condition, if present) without
+            # propagating in_divisor across the aggregator boundary —
+            # divisor-position is a syntactic property, not flow-through.
+            _walk(e.body, in_divisor=False)
+            if e.condition is not None:
+                _walk(e.condition, in_divisor=False)
+            return
+        if isinstance(e, DollarConditional):
+            _walk(e.value_expr, in_divisor=in_divisor)
+            _walk(e.condition, in_divisor=False)
+            return
+        # Generic fallback: walk dataclass fields, looking for Expr children.
+        import dataclasses as _dc
+
+        if not hasattr(e, "__dataclass_fields__"):
+            return
+        for f in _dc.fields(e):  # type: ignore[arg-type]
+            val = getattr(e, f.name, None)
+            if isinstance(val, Expr):
+                _walk(val, in_divisor=in_divisor)
+            elif isinstance(val, (tuple, list)):
+                for item in val:
+                    if isinstance(item, Expr):
+                        _walk(item, in_divisor=in_divisor)
+
+    _walk(expr)
+    return found
+
+
+def _build_param_nonzero_condition(param_refs: set[ParamRef]) -> Expr | None:
+    """Build a condition expression `(p1(d) <> 0) and (p2(d) <> 0) ...`
+    from a set of `ParamRef` nodes. Returns None if the set is empty.
+
+    Issue #1320: Used as the injected guard on a Sum/Prod whose body
+    contains divisor parameters that may be zero.
+    """
+    if not param_refs:
+        return None
+    # Sort by (name, indices) for deterministic AST output.
+    sorted_refs = sorted(param_refs, key=lambda p: (p.name, tuple(str(i) for i in p.indices)))
+    cond: Expr | None = None
+    for ref in sorted_refs:
+        # Reuse the ParamRef directly in the condition.
+        clause = Binary("<>", ref, Const(0.0))
+        cond = clause if cond is None else Binary("and", cond, clause)
+    return cond
+
+
+def _inject_divisor_guards(expr: Expr) -> Expr:
+    """Recursively rewrite `expr` so that every `Sum`/`Prod` whose body
+    contains divisor `ParamRef` nodes (per `_collect_divisor_param_refs`)
+    has its condition AND-extended with `$(param(d) <> 0)` for each such
+    parameter.
+
+    Issue #1320: Adds runtime $-conditions that prevent GAMS from
+    evaluating div-by-zero or log(0) terms at model-listing time. The
+    rewrite is mathematically equivalent to the original equation when
+    the divisor is non-zero, and excludes degenerate rows where it would
+    have produced UNDF/NA anyway.
+
+    Filters divisor parameters to those whose declared domain matches at
+    least one of the enclosing Sum/Prod's index variables — i.e., the
+    parameter's value varies with the iteration index. Scalar parameters
+    or parameters that don't co-iterate with the Sum's index are excluded
+    (their zero-ness is a static fact, not a per-iteration concern, and
+    the user can pre-guard those separately).
+    """
+    if isinstance(expr, (Sum, Prod)):
+        # First, recurse into the body and condition so nested Sums get
+        # their own guards.
+        new_body = _inject_divisor_guards(expr.body)
+        new_condition = (
+            _inject_divisor_guards(expr.condition) if expr.condition is not None else None
+        )
+
+        # Now collect divisor params in this Sum's body.
+        divisor_refs = _collect_divisor_param_refs(new_body)
+
+        # Filter to params whose indices reference at least one of this
+        # Sum's index_sets (case-insensitive).
+        index_set_lower = {idx.lower() for idx in expr.index_sets}
+        relevant_refs: set[ParamRef] = set()
+        for ref in divisor_refs:
+            for ridx in ref.indices:
+                ridx_str = ridx if isinstance(ridx, str) else getattr(ridx, "base", "")
+                if isinstance(ridx_str, str) and ridx_str.lower() in index_set_lower:
+                    relevant_refs.add(ref)
+                    break
+
+        guard = _build_param_nonzero_condition(relevant_refs)
+        if guard is not None:
+            if new_condition is None:
+                new_condition = guard
+            else:
+                new_condition = Binary("and", new_condition, guard)
+
+        if new_body is not expr.body or new_condition is not expr.condition:
+            return type(expr)(expr.index_sets, new_body, new_condition)
+        return expr
+
+    # Generic recursive walk for non-Sum/Prod nodes.
+    if isinstance(expr, Binary):
+        new_left = _inject_divisor_guards(expr.left)
+        new_right = _inject_divisor_guards(expr.right)
+        if new_left is not expr.left or new_right is not expr.right:
+            return Binary(expr.op, new_left, new_right)
+        return expr
+    if isinstance(expr, Unary):
+        new_child = _inject_divisor_guards(expr.child)
+        if new_child is not expr.child:
+            return Unary(expr.op, new_child)
+        return expr
+    if isinstance(expr, Call):
+        new_args = tuple(_inject_divisor_guards(a) for a in expr.args)
+        if any(n is not o for n, o in zip(new_args, expr.args, strict=True)):
+            return Call(expr.func, new_args)
+        return expr
+    if isinstance(expr, DollarConditional):
+        new_val = _inject_divisor_guards(expr.value_expr)
+        new_cond = _inject_divisor_guards(expr.condition)
+        if new_val is not expr.value_expr or new_cond is not expr.condition:
+            return DollarConditional(value_expr=new_val, condition=new_cond)
+        return expr
+    return expr
+
+
 def emit_equation_def(
     eq_name: str,
     eq_def: EquationDef,
     *,
     skip_lead_lag_inference: bool = False,
+    inject_divisor_guards: bool = False,
 ) -> tuple[str, dict[str, list[str]]]:
     """Emit a single equation definition in GAMS syntax.
 
@@ -240,6 +434,14 @@ def emit_equation_def(
             model equality equations where GAMS evaluates out-of-range lag
             references as 0 (default variable level) rather than skipping
             the equation instance.
+        inject_divisor_guards: Issue #1320. If True, scan the equation body
+            for `Sum`/`Prod` nodes whose body contains divisor `ParamRef`
+            nodes (denominator of `Binary("/", ...)`, argument of
+            `log`/`log2`/`log10`) and AND-extend each Sum's condition with
+            `(param(d) <> 0)` so GAMS skips listing-time evaluation of
+            degenerate rows. Should only be passed for original parsed
+            equations — KKT-built `stat_*` equations have their own guard
+            machinery (PR #1321 / #1192).
 
     Returns:
         Tuple of (GAMS equation definition string, dict mapping canonical
@@ -251,6 +453,17 @@ def emit_equation_def(
     """
     lhs, rhs = eq_def.lhs_rhs
     domain = eq_def.domain
+
+    # Issue #1320: Inject parameter-divisor $-condition guards on Sum/Prod
+    # bodies so GAMS skips listing-time evaluation of `1/p(i)` or `log(p(i))`
+    # for indices where `p(i) = 0`. Mathematically equivalent: those rows
+    # would have produced UNDF/NA anyway. Only applied when the caller
+    # explicitly requests it (parsed-source equations); KKT-built equations
+    # bypass to avoid double-conditioning with the bounds-aware guard from
+    # PR #1321.
+    if inject_divisor_guards:
+        lhs = _inject_divisor_guards(lhs)
+        rhs = _inject_divisor_guards(rhs)
 
     # Resolve index conflicts in expressions — also returns generated alias names
     aliases: dict[str, list[str]] = {}
@@ -740,10 +953,15 @@ def emit_equation_definitions(
             # Fixed variables (.fx) create equalities stored in normalized_bounds
             if eq_name in kkt.model_ir.equations:
                 eq_def = kkt.model_ir.equations[eq_name]
+                # Issue #1320: Original parsed equations need divisor-guard
+                # injection so GAMS doesn't abort at model-listing time on
+                # `1/p(i)` or `log(p(i))` for indices where `p(i) = 0`
+                # (e.g., gtm's `bdef` body has `log((supc-s)/supc)`).
                 eq_str, aliases = emit_equation_def(
                     eq_name,
                     eq_def,
                     skip_lead_lag_inference=not eq_def.has_head_domain_offset,
+                    inject_divisor_guards=True,
                 )
                 lines.append(eq_str)
                 _merge_alias_dicts(all_aliases, aliases)

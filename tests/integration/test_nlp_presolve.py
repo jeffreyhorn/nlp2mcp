@@ -184,11 +184,24 @@ class TestNLPPresolveOutput:
         solve_pos = presolve_output.index("Solve mcp_model using MCP")
         assert onmulti_pos < solve_pos
 
-    def test_presolve_after_model_declaration(self, presolve_output):
-        """Pre-solve block appears after Model statement."""
+    def test_presolve_before_model_declaration(self, presolve_output):
+        """Pre-solve block appears BEFORE Model statement.
+
+        Issue #1313: The `$include` of the original NLP source ends with
+        `Model X /all/; solve X using nlp ...;`. The `/all/` scope picks
+        up every equation declared at that point. To avoid the source's
+        NLP solve picking up the MCP's `stat_*` / `comp_*` equations
+        (which would make the NLP solve infeasible), the `$include`
+        must run BEFORE the MCP equations are declared and BEFORE
+        `Model mcp_model` is created.
+        """
         model_pos = presolve_output.index("Model mcp_model")
         onmulti_pos = presolve_output.index("$onMultiR")
-        assert model_pos < onmulti_pos
+        assert onmulti_pos < model_pos, (
+            "Issue #1313: presolve `$onMultiR ... $include` must come BEFORE "
+            "`Model mcp_model` so the source's `Model X /all/` only sees "
+            "original NLP equations."
+        )
 
     def test_has_bound_multiplier_transfers_if_bounds_exist(self, presolve_output):
         """Pre-solve block transfers variable marginals to bound multipliers (if any)."""

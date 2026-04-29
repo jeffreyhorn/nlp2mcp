@@ -58,6 +58,15 @@ sdat(i,"sup-b") = supb(i);
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+dema(j)$(NOT (dema(j) > -inf and dema(j) < inf)) = 0;
+demb(j)$(NOT (demb(j) > -inf and demb(j) < inf)) = 0;
+supa(i)$(NOT (supa(i) > -inf and supa(i) < inf)) = 0;
+supb(i)$(NOT (supb(i) > -inf and supb(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -152,8 +161,8 @@ Equations
 
 * Stationarity equations
 stat_d(j).. ((-1) * (dema(j) * d(j) ** demb(j) * demb(j) / d(j))) + lam_db(j) - piL_d(j) =E= 0;
-stat_s(i).. supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i) =E= 0;
-stat_x(i,j).. (utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j))$(ij(i,j)) =E= 0;
+stat_s(i).. (supa(i) - supb(i) * 1 / ((supc(i) - s(i)) / supc(i)) * supc(i) * (-1) / sqr(supc(i)) - lam_sb(i) - piL_s(i) + piU_s(i))$(s.up(i) - s.lo(i) > 1e-10) =E= 0;
+stat_x(i,j).. (utc(i,j) * 1$(ij(i,j)) + 1$(ij(i,j)) * lam_sb(i) + ((-1) * 1$(ij(i,j))) * lam_db(j) - piL_x(i,j) + piU_x(i,j))$(ij(i,j) and x.up(i,j) - x.lo(i,j) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_db(j).. sum(i$(ij(i,j)), x(i,j)) - d(j) =G= 0;
@@ -169,7 +178,7 @@ comp_up_s(i)$(0.99 * supc(i) < inf).. 0.99 * supc(i) - s(i) =G= 0;
 comp_up_x(i,j)$(pc(i,j) < inf).. pc(i,j) - x(i,j) =G= 0;
 
 * Original equality equations
-bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i, supa(i) * s(i) - supb(i) * log((supc(i) - s(i)) / supc(i))) - sum((i,j)$(ij(i,j)), utc(i,j) * x(i,j));
+bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i$(supc(i) <> 0), supa(i) * s(i) - supb(i) * log((supc(i) - s(i)) / supc(i))) - sum((i,j)$(ij(i,j)), utc(i,j) * x(i,j));
 
 
 * ============================================
@@ -182,6 +191,12 @@ bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i, supa(i) * s(i) - s
 x.fx(i,j)$(not (ij(i,j))) = 0;
 piL_x.fx(i,j)$(not (ij(i,j))) = 0;
 piU_x.fx(i,j)$(not (ij(i,j))) = 0;
+s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = s.lo(i);
+piL_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+piU_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = x.lo(i,j);
+piL_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+piU_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
 piU_s.fx(i)$(not (0.99 * supc(i) < inf)) = 0;
 piU_x.fx(i,j)$(not (pc(i,j) < inf)) = 0;
 

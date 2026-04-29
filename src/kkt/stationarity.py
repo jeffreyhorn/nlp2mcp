@@ -1031,6 +1031,87 @@ def _collect_access_conditions(
     return None
 
 
+def _expr_contains_param_ref(expr: Expr | None) -> bool:
+    """Return True if `expr` (or any subexpression) contains a ParamRef.
+
+    Issue #1192: Used to detect parameter-dependent variable bounds. When a
+    variable's `up_expr_map` / `lo_expr_map` references a parameter that may
+    be zero (e.g., `s.up(i) = 0.99 * supc(i)` with `supc(mexico) = 0`), the
+    stationarity equation can divide by zero at model-listing time. We need to
+    skip stationarity rows for those instances by guarding on the variable's
+    bounds.
+
+    Walks the expression tree via the AST traversal API (`Expr.children()`),
+    with explicit traversal of VarRef/ParamRef indices since they are stored
+    on those nodes outside the `children()` iterator. Returns True on the
+    first ParamRef encountered.
+    """
+    if expr is None:
+        return False
+    if isinstance(expr, ParamRef):
+        return True
+    if not isinstance(expr, Expr):
+        return False
+
+    for child in expr.children():
+        if _expr_contains_param_ref(child):
+            return True
+
+    # Indices on VarRef / ParamRef are stored on the dataclass but are NOT
+    # part of `children()` — walk them explicitly so a `ParamRef` inside an
+    # IndexOffset offset (e.g., `x(i+li(k))`) is detected.
+    if isinstance(expr, (VarRef, ParamRef)):
+        for idx in getattr(expr, "indices", ()) or ():
+            if isinstance(idx, ParamRef):
+                return True
+            if isinstance(idx, Expr) and _expr_contains_param_ref(idx):
+                return True
+    return False
+
+
+def _has_param_dependent_bounds(var_def) -> bool:
+    """Return True if `var_def` has any parameter-dependent .lo or .up bound.
+
+    Issue #1192: A variable whose upper or lower bound is computed from a
+    parameter expression (e.g., `s.up(i) = 0.99 * supc(i)`) can be implicitly
+    fixed at runtime when the parameter happens to evaluate to a value that
+    makes `up == lo`. The original NLP relies on GAMS skipping equation
+    evaluation for such fixed variables; the MCP must mirror that by
+    conditioning the stationarity equation on `var.up(d) - var.lo(d) > eps`.
+
+    Checks `up_expr`, `lo_expr`, `up_expr_map`, and `lo_expr_map` (but NOT
+    `fx_*`, since `fx` already implies fixed). Static numeric bounds in
+    `up`/`lo`/`up_map`/`lo_map` cannot collapse at runtime so are excluded.
+    """
+    if _expr_contains_param_ref(getattr(var_def, "up_expr", None)):
+        return True
+    if _expr_contains_param_ref(getattr(var_def, "lo_expr", None)):
+        return True
+    for expr in (getattr(var_def, "up_expr_map", {}) or {}).values():
+        if _expr_contains_param_ref(expr):
+            return True
+    for expr in (getattr(var_def, "lo_expr_map", {}) or {}).values():
+        if _expr_contains_param_ref(expr):
+            return True
+    return False
+
+
+def _build_var_bounds_active_condition(
+    var_name: str, domain: tuple[str, ...], eps: float = 1e-10
+) -> Expr:
+    """Construct an AST condition expressing `var.up(d) - var.lo(d) > eps`.
+
+    Issue #1192: Used as a stationarity-equation guard for variables with
+    parameter-dependent bounds. When the condition is false, the variable is
+    effectively fixed and the stationarity row should be skipped (and the
+    primal variable .fx'd via the existing fix-inactive emission).
+    """
+    indices = tuple(domain)
+    up_ref = VarRef(name=var_name, indices=indices, attribute="up")
+    lo_ref = VarRef(name=var_name, indices=indices, attribute="lo")
+    return Binary(">", Binary("-", up_ref, lo_ref), Const(float(eps)))
+
+
 def build_stationarity_equations(
     kkt: KKTSystem, config: Config | None = None
 ) -> dict[str, EquationDef]:
@@ -1188,14 +1269,46 @@ def build_stationarity_equations(
                     # variable's domain indices at the corresponding position.
                     access_cond = _remap_condition_to_domain(access_cond, var_def.domain)
 
+            # Issue #1192: If the variable has parameter-dependent bounds
+            # (e.g., gtm's `s.up(i) = 0.99 * supc(i)` with `supc(mexico) = 0`),
+            # the stationarity row can divide by zero at model-listing time
+            # for instances where the bound expression evaluates to an
+            # implicit fix. Add a runtime guard `var.up(d) - var.lo(d) > eps`
+            # so those rows are skipped and the corresponding primal variable
+            # is .fx'd via the existing fix-inactive emission.
+            #
+            # The bounds_cond is stored on a SEPARATE field
+            # (stationarity_bounds_conditions) rather than being merged into
+            # access_cond / stationarity_conditions, because the latter is
+            # consumed by the lead/lag fix-inactive path (section 1b in
+            # emit_gams) which would emit unwanted `.fx(d)$(not (lead_lag))`
+            # lines for variables whose only condition is the bounds guard
+            # (e.g., sparta's `e(t)` with `e.lo(t) = req(t)` would get
+            # `e.fx(t)$(not (ord(t) > 1)) = 0` despite no listing-time
+            # bounds-collapse).
+            bounds_cond: Expr | None = None
+            if _has_param_dependent_bounds(var_def):
+                bounds_cond = _build_var_bounds_active_condition(var_name, var_def.domain)
+
+            # Combine access_cond (from #724/#759/#877/#1112) and bounds_cond
+            # (from #1192) for the body-wrap only. AND order is significant:
+            # access first so the rendered string reads naturally.
+            combined_body_cond: Expr | None
+            if access_cond is not None and bounds_cond is not None:
+                combined_body_cond = Binary("and", access_cond, bounds_cond)
+            elif access_cond is not None:
+                combined_body_cond = access_cond
+            else:
+                combined_body_cond = bounds_cond
+
             # Issue #1147: For MCP compatibility, don't put the access condition
             # on the equation head — GAMS MCP requires equation and variable to
             # cover the same domain. Instead, wrap the body in a DollarConditional
             # so excluded instances become 0 =E= 0 (trivially satisfied).
-            if access_cond is not None:
+            if combined_body_cond is not None:
                 # Note: wrapping after simplification means 0$cond won't be
                 # folded here, but downstream emission handles this gracefully.
-                stat_expr = DollarConditional(stat_expr, access_cond)
+                stat_expr = DollarConditional(stat_expr, combined_body_cond)
             # Issue #1227: Fix MultiplierRef dimension mismatches.
             # When a constraint has more indices than the variable (e.g.,
             # mp(i,t) → stat_p(i)), some MultiplierRef nodes may have fewer
@@ -1217,6 +1330,12 @@ def build_stationarity_equations(
             # generate .fx for excluded primal instances and their multipliers.
             if access_cond is not None:
                 kkt.stationarity_conditions[var_name] = access_cond
+            # Issue #1192: Bounds-collapse guard is tracked separately so
+            # the emitter knows to emit `.fx(d)$(not (bounds_cond)) = ...`
+            # WITHOUT triggering the lead/lag fix-inactive path that
+            # `stationarity_conditions` activates. See note above.
+            if bounds_cond is not None:
+                kkt.stationarity_bounds_conditions[var_name] = bounds_cond
         else:
             # Scalar variable: generate scalar stationarity equation
             if len(instances) != 1:

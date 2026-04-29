@@ -1354,6 +1354,21 @@ def emit_gams_mcp(
         sections.append(pre_solve_code)
         sections.append("")
 
+    # Issue #1322: NA-cleanup for indexed parameters whose pre-solve
+    # assignments contain divisions that may produce NA at runtime.
+    # Without this, NA values propagate into PATH's symbolic Jacobian as
+    # gigantic coefficients (~1e30), making the model numerically
+    # unsolvable even when listing-time aborts are gone (e.g., gtm's
+    # supb/supa go NA for the three zero-supc regions).
+    from src.emit.original_symbols import emit_post_assignment_na_cleanup
+
+    na_cleanup_code = emit_post_assignment_na_cleanup(
+        kkt.model_ir, model_relevant_params=model_relevant_params
+    )
+    if na_cleanup_code:
+        sections.append(na_cleanup_code)
+        sections.append("")
+
     # Variables (primal + multipliers)
     if add_comments:
         sections.append("* ============================================")
@@ -1852,6 +1867,48 @@ def emit_gams_mcp(
                 sections.append(f"{param_name}({idx_str}) = {val_str};")
             sections.append("")
 
+    # Issue #1313: NLP pre-solve must be emitted BEFORE the MCP equation
+    # declarations. The original NLP source's `$include` ends with
+    # `Model <name> / all /; solve <name> using nlp ...;`. The `/all/`
+    # scope picks up every equation declared at the time of the model
+    # statement. If MCP equations (stat_*, comp_*, ...) are already
+    # declared, they get included in the model and the "NLP solve"
+    # actually tries to solve the MCP-augmented system — which is
+    # structurally infeasible and aborts with `MODEL STATUS 4`. By
+    # emitting the include here (after Variables / bounds / init /
+    # bound_params, but BEFORE Equations declaration), only the
+    # original NLP equations are in scope when `/all/` is captured,
+    # and the source's NLP solve runs cleanly.
+    presolve_include_emitted = False
+    if nlp_presolve:
+        presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
+
+    # Issue #1289: post-initial-solve calibration assignments that read
+    # `.l` values must come AFTER the presolve (which populates `.l`)
+    # and BEFORE MCP equation definitions (which may use the calibrated
+    # parameters). Because we just moved the presolve earlier (#1313),
+    # the calibration moves with it.
+    if presolve_include_emitted:
+        calibration_code = emit_computed_parameter_assignments(
+            kkt.model_ir,
+            varref_filter="only_varref_attr",
+            exclude_params=_merge_exclude_params(
+                early_params if early_params else None,
+                non_model_params,
+            ),
+        )
+        if calibration_code:
+            if add_comments:
+                sections.append("* ============================================")
+                sections.append(
+                    "* Post-initial-solve calibration (#1289): parameters "
+                    "computed from `.l` values set by the pre-solve $include above."
+                )
+                sections.append("* ============================================")
+                sections.append("")
+            sections.append(calibration_code)
+            sections.append("")
+
     # Equations
     if add_comments:
         sections.append("* ============================================")
@@ -1889,7 +1946,17 @@ def emit_gams_mcp(
                 sections.append(f"Alias({_quote_symbol(base)}, {_quote_symbol(alias_name)});")
         sections.append("")
 
+    # Issue #1313: When --nlp-presolve is active, the $include above already
+    # defined the original equality equations (criterion.., stateq..) as
+    # part of the source's solve flow. The MCP file then re-emits them
+    # in the "Original equality equations" section below. Wrap the whole
+    # equation-definitions block in `$onMultiR ... $offMulti` so GAMS
+    # accepts the redefinition (Error 150 otherwise).
+    if presolve_include_emitted:
+        sections.append("$onMultiR")
     sections.append(eq_defs_code)
+    if presolve_include_emitted:
+        sections.append("$offMulti")
     sections.append("")
 
     # Issue #724: Fix variables whose paired MCP equation has a dollar condition.
@@ -1931,6 +1998,61 @@ def emit_gams_mcp(
                 comp_pair_up = kkt.complementarity_bounds_up[(var_name, ())]
                 if ref_mults is None or comp_pair_up.variable in ref_mults:
                     fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+
+    # 1a. Issue #1192: Fix primal variables whose stationarity body is
+    # wrapped in a parameter-bounds-collapse guard `var.up(d) - var.lo(d) > eps`.
+    # When the guard is FALSE, the variable is implicitly fixed by its
+    # collapsed bounds and the stationarity row collapses to `0 =E= 0`;
+    # we emit the corresponding `.fx(d)$(not cond) = lo` to ensure GAMS
+    # treats it as fixed (and skips equation evaluation involving it,
+    # mirroring the original NLP semantics for `s.up = 0.99 * supc = 0`
+    # in gtm). This is tracked SEPARATELY from `stationarity_conditions`
+    # so the lead/lag section 1b loop below does NOT fire for variables
+    # whose only condition is a runtime bounds-collapse guard.
+    for var_name, bounds_cond_expr in sorted(kkt.stationarity_bounds_conditions.items()):
+        var_def = kkt.model_ir.variables.get(var_name)
+        if var_def is None or not var_def.domain:
+            continue
+        domain_str = ",".join(var_def.domain)
+        domain_vars = frozenset(var_def.domain)
+        cond_gams = expr_to_gams(bounds_cond_expr, domain_vars=domain_vars)
+        # Issue #1313/#1192 review: for runtime bounds-collapse guards,
+        # the correct fixing value is the *runtime* bound attribute
+        # (e.g., `v.lo(d)`), not a compile-time constant. The whole
+        # point of the guard is that the runtime value where `up == lo`
+        # may be parameter- or expression-driven and not known
+        # statically. Fixing to a hard-coded 0 (or to `var_def.lo`)
+        # would be wrong when the collapsed bound is non-zero (e.g.,
+        # sparta's `e.lo(t) = req(t)` where req is a positive
+        # parameter). Emit the fix value as a runtime attribute
+        # reference. Only fall back to a compile-time scalar when the
+        # variable has an explicit static `var_def.fx`.
+        if var_def.fx is not None and math.isfinite(var_def.fx):
+            fix_rhs: str = str(var_def.fx)
+        elif (
+            var_def.lo is not None
+            or var_def.lo_expr is not None
+            or var_def.lo_expr_map
+            or var_def.kind == VarKind.POSITIVE
+        ):
+            fix_rhs = f"{var_name}.lo({domain_str})"
+        elif var_def.up is not None or var_def.up_expr is not None or var_def.up_expr_map:
+            fix_rhs = f"{var_name}.up({domain_str})"
+        else:
+            fix_rhs = "0"
+        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_rhs};")
+        # Also fix the bound multipliers for the same condition, to keep
+        # MCP matching consistent (mirrors section 1 behavior).
+        piL_name = create_bound_lo_multiplier_name(var_name)
+        if (var_name, ()) in kkt.complementarity_bounds_lo:
+            comp_pair_lo = kkt.complementarity_bounds_lo[(var_name, ())]
+            if ref_mults is None or comp_pair_lo.variable in ref_mults:
+                fx_lines.append(f"{piL_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
+        piU_name = create_bound_up_multiplier_name(var_name)
+        if (var_name, ()) in kkt.complementarity_bounds_up:
+            comp_pair_up = kkt.complementarity_bounds_up[(var_name, ())]
+            if ref_mults is None or comp_pair_up.variable in ref_mults:
+                fx_lines.append(f"{piU_name}.fx({domain_str})$(not ({cond_gams})) = 0;")
 
     # 1b. Issue #1160: Fix primal variables whose stationarity is trivially zero
     # for some instances because all constraint terms are conditioned away.
@@ -2553,47 +2675,12 @@ def emit_gams_mcp(
         sections.append(f"{model_name}.scaleOpt = 1;")
         sections.append("")
 
-    # Issue #757/#1199: NLP pre-solve to warm-start MCP dual variables.
-    # For non-convex models, PATH needs both primal and dual initialization
-    # close to the NLP solution to converge. This solves the original NLP
-    # first, then transfers the primal levels and equation marginals to
-    # the MCP multiplier variables.
-    presolve_include_emitted = False
-    if nlp_presolve:
-        presolve_include_emitted = _emit_nlp_presolve(sections, kkt, add_comments, source_file)
-
-    # Issue #1289: post-initial-solve calibration assignments that read `.l`
-    # values (e.g., `deltas(i)$ls.l(i) = (k(i)/ls.l(i))**(...)` in
-    # ganges/gangesx). These are stripped from the pre-Variables pass above
-    # (`varref_filter="no_varref_attr"`) because `.l` can't be referenced
-    # before Variables are declared. They can only run AFTER a solve has
-    # populated `.l` — in the `--nlp-presolve` flow that's the $include of
-    # the original NLP above. Without that include, `.l` is uninitialized
-    # and the calibration would produce UNDF / divide-by-zero, so we gate
-    # on `_emit_nlp_presolve` having actually emitted the include. Its
-    # early-return paths cover: a falsy source file, a missing objective
-    # variable, a model with no solved equations, or a source outside the
-    # repo root (#1275 soft-skip banner branch).
-    if presolve_include_emitted:
-        calibration_code = emit_computed_parameter_assignments(
-            kkt.model_ir,
-            varref_filter="only_varref_attr",
-            exclude_params=_merge_exclude_params(
-                early_params if early_params else None,
-                non_model_params,
-            ),
-        )
-        if calibration_code:
-            if add_comments:
-                sections.append("* ============================================")
-                sections.append(
-                    "* Post-initial-solve calibration (#1289): parameters "
-                    "computed from `.l` values set by the pre-solve $include above."
-                )
-                sections.append("* ============================================")
-                sections.append("")
-            sections.append(calibration_code)
-            sections.append("")
+    # Issue #757/#1199 + #1313: NLP pre-solve has been moved to BEFORE the
+    # MCP equation declarations (above) so the source's `Model X /all/`
+    # picks up only original NLP equations, not the MCP-augmented set.
+    # This block now only emits the warm-start primal initialization
+    # (variable .l values from the NLP solve are already in place via the
+    # $include block above; this is left intentionally empty as a marker).
 
     # Solve statement
     if add_comments:

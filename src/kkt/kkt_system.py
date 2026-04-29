@@ -134,6 +134,17 @@ class KKTSystem:
     # Used by the emitter to generate .fx statements for excluded instances.
     stationarity_conditions: dict[str, Expr] = field(default_factory=dict)
 
+    # Issue #1192: Bounds-collapse guard conditions for variables with
+    # parameter-dependent .lo/.up bounds. Maps var_name -> condition Expr
+    # of the form `var.up(d) - var.lo(d) > eps`. Stored separately from
+    # `stationarity_conditions` so the lead/lag fix-inactive path
+    # (section 1b in emit_gams) does NOT fire for variables whose only
+    # condition is a runtime bounds-collapse guard. The body of the
+    # stationarity equation IS already wrapped in this condition by the
+    # builder; the emitter only needs to emit the corresponding
+    # `.fx(d)$(not (cond)) = ...` lines.
+    stationarity_bounds_conditions: dict[str, Expr] = field(default_factory=dict)
+
     # Issue #1112: Dollar conditions extracted from gradient expressions.
     # Maps var_name -> condition Expr for variables whose objective gradient
     # was computed from a conditioned sum. Used by the stationarity builder
