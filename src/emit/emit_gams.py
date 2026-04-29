@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import cast
 
 from src.config import Config
-from src.emit.equations import infer_lead_lag_condition
+from src.emit.equations import _collect_divisor_var_refs, infer_lead_lag_condition
 from src.emit.expr_to_gams import expr_to_gams
 from src.emit.model import emit_model_mcp, emit_solve
 from src.emit.original_symbols import (
@@ -1060,6 +1060,37 @@ def _emit_nlp_presolve(
     return True
 
 
+def _compute_denominator_free_vars(kkt: KKTSystem) -> set[str]:
+    """Issue #1243: Identify free (`VarKind.CONTINUOUS`) variables that
+    appear in denominator (or `log()`-argument) positions in any
+    stationarity equation body.
+
+    Such variables would default to `.l = 0` and cause GAMS to abort the
+    solve with EXECERROR=1 from div-by-zero (or domain error from log(0))
+    at model-listing time. The MCP variable-init pass uses this set to
+    emit a default `var.l(d) = 1;` for each such variable, mirroring the
+    auto-init that POSITIVE variables already receive.
+
+    Only stationarity equations are scanned — the original NLP equations
+    are emitted verbatim and any `1/var` patterns there reflect the
+    user's source code, which is not our problem to patch.
+
+    Returns the set of lowercased variable names.
+    """
+    denom_free_vars: set[str] = set()
+    variables = kkt.model_ir.variables
+    for eq_def in kkt.stationarity.values():
+        lhs, rhs = eq_def.lhs_rhs
+        for body in (lhs, rhs):
+            for var_ref in _collect_divisor_var_refs(body):
+                var_def = variables.get(var_ref.name)
+                if var_def is None:
+                    continue
+                if var_def.kind == VarKind.CONTINUOUS:
+                    denom_free_vars.add(var_ref.name.lower())
+    return denom_free_vars
+
+
 def emit_gams_mcp(
     kkt: KKTSystem,
     model_name: str = "mcp_model",
@@ -1550,11 +1581,18 @@ def emit_gams_mcp(
     # Issue #1088: Variables whose .l is set by a loop should not get default
     # POSITIVE init (e.g., r.l(t)=1) since the loop provides correct values.
     loop_level_vars = get_var_level_loop_varnames(kkt.model_ir)
+    # Issue #1243: FREE variables that appear in denominator (or log())
+    # positions of stationarity equation bodies need a default .l = 1 to
+    # avoid EXECERROR=1 from div-by-zero at GAMS model-listing time.
+    # Skipped under --nlp-presolve, where the NLP solve provides the
+    # warm-start and we must not overwrite it.
+    denominator_free_vars: set[str] = set() if nlp_presolve else _compute_denominator_free_vars(kkt)
     var_init_groups: dict[str, list[str]] = {}  # var_name -> init lines
     var_init_order: list[str] = []  # preserve original order for stable sort
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
     has_positive_clamp = False  # Track if any POSITIVE variable clamping is done
     has_positive_init = False  # Track if any POSITIVE variable is initialized to 1
+    has_free_denom_init = False  # Track if any FREE-var-in-denominator init was emitted
     for var_name, var_def in kkt.model_ir.variables.items():
         # Issue #742: Skip unreferenced variables (not declared, so no init needed)
         if (
@@ -1649,6 +1687,24 @@ def emit_gams_mcp(
                     lines.append(f"{var_name}.l = 1;")
                     lines.append(f"{var_name}.l = min({var_name}.l, {var_name}.up);")
 
+        # Issue #1243: FREE variables in stationarity-equation denominators
+        # need a default .l = 1 to avoid EXECERROR=1 from `1/var` when the
+        # variable defaults to 0. Mirrors the POSITIVE-var auto-init above.
+        # FREE vars have no upper bound, so no min(.l, .up) clamp is needed.
+        if (
+            var_def.kind == VarKind.CONTINUOUS
+            and not has_init
+            and var_name.lower() in denominator_free_vars
+            and var_name.lower() not in loop_level_vars
+        ):
+            has_free_denom_init = True
+            if var_def.domain:
+                domain_str = ",".join(var_def.domain)
+                lines.append(f"{var_name}.l({domain_str}) = 1;")
+            else:
+                lines.append(f"{var_name}.l = 1;")
+            has_init = True
+
         # Issue #984: Clamp expression-based .l to .lo bounds.
         # When .l is set via an expression (Priority 1b) that may evaluate to 0,
         # ensure .l >= .lo to prevent domain errors (log(0), 1/x division by zero)
@@ -1733,6 +1789,11 @@ def emit_gams_mcp(
                 sections.append("* clamped to min(max(value, 1e-6), upper_bound).")
             elif has_positive_init:
                 sections.append("* POSITIVE variables are set to 1.")
+            if has_free_denom_init:
+                sections.append("* Issue #1243: FREE variables appearing in stationarity-equation")
+                sections.append(
+                    "* denominators (e.g., 1/y from prod-objective derivatives) are set to 1."
+                )
             sections.append("")
         # Issue #763: Wrap .l initialization in $onImplicitAssign to suppress
         # GAMS Error 141 when .l expressions reference other variables' .l values

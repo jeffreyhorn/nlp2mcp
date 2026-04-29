@@ -317,6 +317,84 @@ def _collect_divisor_param_refs(expr: Expr) -> set[ParamRef]:
     return found
 
 
+def _collect_divisor_var_refs(expr: Expr) -> set[VarRef]:
+    """Collect `VarRef` nodes that appear in a divisor or domain-error-prone
+    function-call argument position within `expr`.
+
+    Issue #1243: Used by the MCP variable-init pass to identify FREE
+    variables whose `.l` defaults to 0 but appear in `1/var` patterns
+    (typically from `_diff_prod`'s logarithmic derivative or from
+    `log(var)` derivatives). Such variables must be initialized to a
+    nonzero value to avoid GAMS EXECERROR=1 at model-listing time.
+
+    A VarRef is "divisor-like" if it appears as:
+    - The denominator of `Binary("/", numerator, denominator)`, OR
+      transitively inside the denominator via arithmetic, OR
+    - A subexpression of an argument to `log`/`log2`/`log10`.
+
+    Mirrors `_collect_divisor_param_refs` exactly except for the node
+    type collected. Both indexed and scalar VarRefs are returned — a
+    scalar FREE var that appears in a denominator is just as broken as
+    an indexed one.
+    """
+    found: set[VarRef] = set()
+
+    def _walk(e: Expr, in_divisor: bool = False) -> None:
+        if isinstance(e, VarRef):
+            if in_divisor:
+                found.add(e)
+            return
+        if isinstance(e, Binary):
+            if e.op == "/":
+                _walk(e.left, in_divisor=in_divisor)
+                _walk(e.right, in_divisor=True)
+                return
+            _walk(e.left, in_divisor=in_divisor)
+            _walk(e.right, in_divisor=in_divisor)
+            return
+        if isinstance(e, Unary):
+            _walk(e.child, in_divisor=in_divisor)
+            return
+        if isinstance(e, Call):
+            if e.func in _DIVISOR_LIKE_FUNCS:
+                for arg in e.args:
+                    _walk(arg, in_divisor=True)
+                return
+            for arg in e.args:
+                _walk(arg, in_divisor=in_divisor)
+            return
+        if isinstance(e, (Sum, Prod)):
+            # Walk into the body without propagating in_divisor across
+            # the aggregator boundary — divisor-position is a syntactic
+            # property, not flow-through. The walker still discovers
+            # `1/var` patterns INSIDE the Sum/Prod body because that
+            # `Binary("/")` will set in_divisor=True locally.
+            _walk(e.body, in_divisor=False)
+            if e.condition is not None:
+                _walk(e.condition, in_divisor=False)
+            return
+        if isinstance(e, DollarConditional):
+            _walk(e.value_expr, in_divisor=in_divisor)
+            _walk(e.condition, in_divisor=False)
+            return
+        # Generic fallback: walk dataclass fields.
+        import dataclasses as _dc
+
+        if not hasattr(e, "__dataclass_fields__"):
+            return
+        for f in _dc.fields(e):  # type: ignore[arg-type]
+            val = getattr(e, f.name, None)
+            if isinstance(val, Expr):
+                _walk(val, in_divisor=in_divisor)
+            elif isinstance(val, (tuple, list)):
+                for item in val:
+                    if isinstance(item, Expr):
+                        _walk(item, in_divisor=in_divisor)
+
+    _walk(expr)
+    return found
+
+
 def _build_param_nonzero_condition(param_refs: set[ParamRef]) -> Expr | None:
     """Build a condition expression `(p1(d) <> 0) and (p2(d) <> 0) ...`
     from a set of `ParamRef` nodes. Returns None if the set is empty.
