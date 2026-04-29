@@ -1041,29 +1041,31 @@ def _expr_contains_param_ref(expr: Expr | None) -> bool:
     skip stationarity rows for those instances by guarding on the variable's
     bounds.
 
-    Walks the expression tree generically via dataclass fields. Returns True
-    on the first ParamRef encountered.
+    Walks the expression tree via the AST traversal API (`Expr.children()`),
+    with explicit traversal of VarRef/ParamRef indices since they are stored
+    on those nodes outside the `children()` iterator. Returns True on the
+    first ParamRef encountered.
     """
     if expr is None:
         return False
     if isinstance(expr, ParamRef):
         return True
-    if not hasattr(expr, "__dataclass_fields__"):
+    if not isinstance(expr, Expr):
         return False
-    import dataclasses as _dc
 
-    for f in _dc.fields(expr):  # type: ignore[arg-type]
-        val = getattr(expr, f.name, None)
-        if isinstance(val, ParamRef):
+    for child in expr.children():
+        if _expr_contains_param_ref(child):
             return True
-        if isinstance(val, Expr) and _expr_contains_param_ref(val):
-            return True
-        if isinstance(val, (tuple, list)):
-            for item in val:
-                if isinstance(item, ParamRef):
-                    return True
-                if isinstance(item, Expr) and _expr_contains_param_ref(item):
-                    return True
+
+    # Indices on VarRef / ParamRef are stored on the dataclass but are NOT
+    # part of `children()` — walk them explicitly so a `ParamRef` inside an
+    # IndexOffset offset (e.g., `x(i+li(k))`) is detected.
+    if isinstance(expr, (VarRef, ParamRef)):
+        for idx in getattr(expr, "indices", ()) or ():
+            if isinstance(idx, ParamRef):
+                return True
+            if isinstance(idx, Expr) and _expr_contains_param_ref(idx):
+                return True
     return False
 
 

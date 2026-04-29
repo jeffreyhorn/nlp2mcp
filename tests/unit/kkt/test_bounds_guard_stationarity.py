@@ -10,12 +10,16 @@ making the variable effectively fixed. The MCP must mirror the NLP's
    the row collapses to `0 =E= 0` for fixed instances (avoids
    div-by-zero from derivative terms with the parameter in a
    denominator).
-2. Emitting `v.fx(d)$(not (v.up(d) - v.lo(d) > eps)) = 0` so GAMS
-   treats the variable as fixed for those indices.
+2. Emitting `v.fx(d)$(not (v.up(d) - v.lo(d) > eps)) = v.lo(d)` so
+   GAMS treats the variable as fixed for those indices, with the fix
+   value being the runtime collapsed bound (NOT a hard-coded 0 — that
+   would be wrong when the collapsed bound is non-zero, e.g., sparta's
+   `e.lo(t) = req(t)` where `req(t) > 0`).
 
 These tests validate the helper detection and emission. The
-gtm-specific corpus regression lives in
-`tests/integration/emit/test_gtm_runtime_div_by_zero.py`.
+gtm-specific corpus regressions live in
+`tests/integration/emit/test_gtm_bounds_guard.py` and
+`tests/integration/emit/test_gtm_bdef_guard.py`.
 """
 
 from __future__ import annotations
@@ -74,11 +78,29 @@ solve M using nlp minimizing z;
 """
     output = _emit_mcp(gams, tmp_path)
 
-    # Bounds-collapse fix line (the .fx is emitted via the existing
-    # fix-inactive path that consumes kkt.stationarity_conditions).
-    assert "x.fx(i)$(not (" in output and "x.up(i)" in output and "x.lo(i)" in output, (
-        "Expected `x.fx(i)$(not (x.up(i) - x.lo(i) > ...)) = ...` line in emission.\n\n"
-        f"Output:\n{output}"
+    # Bounds-collapse fix line (emitted via the dedicated stationarity-
+    # bounds path — `stationarity_bounds_conditions` in emitter section
+    # 1a — NOT the older fix-inactive path that consumes
+    # `kkt.stationarity_conditions`).
+    fix_lines = [line.strip() for line in output.splitlines() if "x.fx(i)$(not (" in line]
+    assert fix_lines, (
+        "Expected `x.fx(i)$(not (x.up(i) - x.lo(i) > ...)) = ...` line in "
+        f"emission.\n\nOutput:\n{output}"
+    )
+    assert any("x.up(i)" in line and "x.lo(i)" in line for line in fix_lines), (
+        "Expected the `x.fx(i)` bounds-collapse guard to reference both "
+        "`x.up(i)` and `x.lo(i)`.\n\n"
+        "Fix lines:\n" + "\n".join(fix_lines)
+    )
+    # Issue #1313 review: the .fx RHS must be a runtime bound attribute
+    # (`x.lo(i)` or `x.up(i)`), NOT a compile-time scalar like 0. The
+    # whole point of the bounds-collapse guard is that the runtime
+    # `up == lo` value may be parameter-driven and not known statically.
+    assert any("= x.lo(i)" in line or "= x.up(i)" in line for line in fix_lines), (
+        "Expected the `x.fx(i)` bounds-collapse assignment to fix to the "
+        "collapsed bound value (`x.lo(i)` or `x.up(i)`), not an unrelated "
+        "compile-time constant like 0.\n\n"
+        "Fix lines:\n" + "\n".join(fix_lines)
     )
 
     # Stationarity body guard
@@ -110,11 +132,19 @@ solve M using nlp minimizing z;
 """
     output = _emit_mcp(gams, tmp_path)
 
-    # No bounds-guard fix line for x
-    assert "x.fx" not in output or "x.fx(i)$(not" not in output, (
-        "Static-bound variable should not generate a bounds-collapse fix "
-        "line.\n\n"
-        f"Output:\n{output}"
+    # No bounds-collapse fix line for x. Tighter assertion than before:
+    # any line beginning with `x.fx` and containing the bounds-collapse
+    # condition pattern is forbidden (any other legitimate `x.fx`
+    # assignment, e.g. from an explicit source-level `.fx`, is OK).
+    bounds_collapse_fx = [
+        line
+        for line in output.splitlines()
+        if line.startswith("x.fx") and "x.up" in line and "x.lo" in line
+    ]
+    assert not bounds_collapse_fx, (
+        "Static-bound variable should not generate a bounds-collapse fix line "
+        "(no runtime guard needed when up/lo are compile-time constants).\n\n"
+        "Bounds-collapse fix lines (expected none):\n" + "\n".join(bounds_collapse_fx)
     )
 
     # stat_x body should NOT be wrapped in `$(x.up - x.lo > ...)`

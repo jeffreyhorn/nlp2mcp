@@ -134,8 +134,8 @@ cd /tmp && gams gtm_mcp.gms lo=2
 To verify the original NLP works:
 
 ```bash
-cd /tmp && cp /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/gtm.gms ./
-gams gtm.gms lo=2
+cp data/gamslib/raw/gtm.gms /tmp/gtm_orig.gms
+cd /tmp && gams gtm_orig.gms lo=2
 
 # Output:
 # **** SOLVER STATUS     1 Normal Completion

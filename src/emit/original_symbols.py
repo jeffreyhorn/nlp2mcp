@@ -121,8 +121,12 @@ def _expr_contains_division(expr: Expr) -> bool:
     source data, causing `MODEL STATUS 4 Infeasible` even after PR
     #1321 closes the listing-time aborts).
 
-    Walks generic dataclass fields. Returns True on the first
-    `Binary("/")` encountered.
+    Walks the AST via `Expr.children()`. Returns True on the first
+    `Binary("/")` encountered. Note that this does NOT traverse into
+    indices stored on `VarRef`/`ParamRef`/`MultiplierRef` (e.g., a
+    division inside an `IndexOffset` offset like `i+(j/k)`) — for the
+    parameter-assignment use case, divisions live in the RHS body
+    rather than in indices, so this limitation is acceptable.
     """
     if isinstance(expr, Binary) and expr.op == "/":
         return True

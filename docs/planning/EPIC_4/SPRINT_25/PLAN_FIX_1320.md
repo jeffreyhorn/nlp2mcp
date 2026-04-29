@@ -30,7 +30,7 @@ cd /tmp && gams gtm_mcp.gms lo=2
 ### 1.2 Confirm the original NLP works
 
 ```bash
-cp /Users/jeff/experiments/nlp2mcp/data/gamslib/raw/gtm.gms /tmp/gtm_orig.gms
+cp data/gamslib/raw/gtm.gms /tmp/gtm_orig.gms
 cd /tmp && gams gtm_orig.gms lo=2
 
 # Expected:

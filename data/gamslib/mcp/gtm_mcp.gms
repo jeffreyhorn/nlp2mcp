@@ -191,10 +191,10 @@ bdef.. benefit =E= sum(j, dema(j) * d(j) ** demb(j)) - sum(i$(supc(i) <> 0), sup
 x.fx(i,j)$(not (ij(i,j))) = 0;
 piL_x.fx(i,j)$(not (ij(i,j))) = 0;
 piU_x.fx(i,j)$(not (ij(i,j))) = 0;
-s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
+s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = s.lo(i);
 piL_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
 piU_s.fx(i)$(not (s.up(i) - s.lo(i) > 1e-10)) = 0;
-x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
+x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = x.lo(i,j);
 piL_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
 piU_x.fx(i,j)$(not (x.up(i,j) - x.lo(i,j) > 1e-10)) = 0;
 piU_s.fx(i)$(not (0.99 * supc(i) < inf)) = 0;

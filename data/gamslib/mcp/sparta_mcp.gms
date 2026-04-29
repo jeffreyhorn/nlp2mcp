@@ -119,7 +119,7 @@ bal4(t).. e(t) =E= e(t-1) + sum(l, x(t,l) - x(t-ord(l),l));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
-e.fx(t)$(not (e.up(t) - e.lo(t) > 1e-10)) = 0;
+e.fx(t)$(not (e.up(t) - e.lo(t) > 1e-10)) = e.lo(t);
 piL_e.fx(t)$(not (e.up(t) - e.lo(t) > 1e-10)) = 0;
 piL_e.fx(t)$(not (req(t) > -inf)) = 0;
 

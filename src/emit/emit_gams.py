@@ -2016,16 +2016,31 @@ def emit_gams_mcp(
         domain_str = ",".join(var_def.domain)
         domain_vars = frozenset(var_def.domain)
         cond_gams = expr_to_gams(bounds_cond_expr, domain_vars=domain_vars)
-        # Fix value mirrors section 1: prefer fx, then lo, then up, else 0.
+        # Issue #1313/#1192 review: for runtime bounds-collapse guards,
+        # the correct fixing value is the *runtime* bound attribute
+        # (e.g., `v.lo(d)`), not a compile-time constant. The whole
+        # point of the guard is that the runtime value where `up == lo`
+        # may be parameter- or expression-driven and not known
+        # statically. Fixing to a hard-coded 0 (or to `var_def.lo`)
+        # would be wrong when the collapsed bound is non-zero (e.g.,
+        # sparta's `e.lo(t) = req(t)` where req is a positive
+        # parameter). Emit the fix value as a runtime attribute
+        # reference. Only fall back to a compile-time scalar when the
+        # variable has an explicit static `var_def.fx`.
         if var_def.fx is not None and math.isfinite(var_def.fx):
-            fix_val = var_def.fx
-        elif var_def.lo is not None and math.isfinite(var_def.lo):
-            fix_val = var_def.lo
-        elif var_def.up is not None and math.isfinite(var_def.up):
-            fix_val = var_def.up
+            fix_rhs: str = str(var_def.fx)
+        elif (
+            var_def.lo is not None
+            or var_def.lo_expr is not None
+            or var_def.lo_expr_map
+            or var_def.kind == VarKind.POSITIVE
+        ):
+            fix_rhs = f"{var_name}.lo({domain_str})"
+        elif var_def.up is not None or var_def.up_expr is not None or var_def.up_expr_map:
+            fix_rhs = f"{var_name}.up({domain_str})"
         else:
-            fix_val = 0
-        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_val};")
+            fix_rhs = "0"
+        fx_lines.append(f"{var_name}.fx({domain_str})$(not ({cond_gams})) = {fix_rhs};")
         # Also fix the bound multipliers for the same condition, to keep
         # MCP matching consistent (mirrors section 1 behavior).
         piL_name = create_bound_lo_multiplier_name(var_name)

@@ -185,7 +185,7 @@ Three cases, all using small synthetic inline GAMS:
    - Same as case 1 but `Positive Variable x(i);` so `x.lo(i) = 0` is implicit.
    - Assert emitted MCP guard works correctly when only `up` is parameter-dependent.
 
-### 4.2 Integration test — `tests/integration/emit/test_gtm_runtime_div_by_zero.py`
+### 4.2 Integration test — `tests/integration/emit/test_gtm_bounds_guard.py`
 
 ```
 @pytest.mark.integration
@@ -235,7 +235,7 @@ Particular attention to other models with parameter-dependent bounds:
 | 2. Helper function | `_build_bounds_guard` in `stationarity.py` (param-dependent detection + condition expression construction) | 1.0 |
 | 3. Emitter wiring | fix-line emission near existing variable-bounds section + thread into stationarity-condition machinery | 1.5 |
 | 4. Unit tests | 3 synthetic cases in `tests/unit/kkt/test_bounds_guard_stationarity.py` | 1.0 |
-| 5. Integration test | gtm-specific test in `tests/integration/emit/test_gtm_runtime_div_by_zero.py` | 0.5 |
+| 5. Integration test | gtm-specific test in `tests/integration/emit/test_gtm_bounds_guard.py` | 0.5 |
 | 6. gtm validation | re-emit, GAMS compile check, PATH solve, NLP-vs-MCP comparison | 0.75 |
 | 7. Regression sweep | full-corpus solve-success retest, diagnose any flake/regression | 1.0 |
 | 8. Quality checks | `make typecheck && make format && make lint && make test` | 0.5 |

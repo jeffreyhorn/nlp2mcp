@@ -9,15 +9,21 @@ EXECERROR=3 before PATH ever saw the model.
 
 Post-fix: the bounds-aware stationarity guard wraps the `stat_s(i)`
 body in `$(s.up(i) - s.lo(i) > 1e-10)` and emits a
-`s.fx(i)$(not (...)) = 0` line so the variable is fixed at 0 for
-those instances and the stationarity row collapses to `0 =E= 0`.
+`s.fx(i)$(not (...)) = s.lo(i)` line (runtime bound, not a hard-coded
+0) so the variable is fixed at its collapsed bound for those instances
+and the stationarity row collapses to `0 =E= 0`.
 
-This test asserts the guard is present in the emitted MCP. It does
-**not** assert that gtm fully solves: a residual `bdef`-side
-division-by-zero remains (the original benefit equation has
-`log((supc-s)/supc)` evaluated at sum-time over all i, which still
-hits `log(0/0)` for zero-supc indices). That residual is filed as a
-follow-up and tracked separately from #1192's primary symptom.
+The same PR also injects `$(supc(i) <> 0)` into `bdef` (the parsed-
+source benefit equation; see `test_gtm_bdef_guard.py`) and an
+NA-cleanup pass for division-based parameter assignments
+(`emit_post_assignment_na_cleanup`; see `test_gtm_na_cleanup.py`).
+With all three of those + the #1313 ``$include``-ordering fix, gtm
+reaches `MODEL STATUS 1 Optimal` with `--nlp-presolve` (objective
+`-543.5651` matching the NLP reference).
+
+These tests assert the bounds-collapse guard pieces are present in
+the emitted MCP. End-to-end solve verification lives in the pipeline
+runner's per-model integration tests.
 """
 
 from __future__ import annotations
