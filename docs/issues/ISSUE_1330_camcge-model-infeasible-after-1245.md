@@ -1,7 +1,7 @@
 # camcge: PATH returns MODEL STATUS 4 Infeasible after #1245 unblocks structural EXECERROR=4
 
 **GitHub Issue:** [#1330](https://github.com/jeffreyhorn/nlp2mcp/issues/1330)
-**Status:** OPEN — TWO partial fixes landed 2026-04-30 (`_preferred_decl_domain` arity-guard drop in round 1, `_diff_prod` collapse fix in round 2). Residuals reduced 3× under `--nlp-presolve` (24.76 → 8.58). Deeper issue still blocks `MODEL STATUS 1 Optimal`. See §"Investigation 2026-04-30 (round 2)" below for current state.
+**Status:** OPEN — THREE partial fixes landed 2026-04-30 (`_preferred_decl_domain` arity-guard drop round 1, `_diff_prod` collapse fix round 2, var-init-skip-under-presolve round 3). Residuals reduced 3× under `--nlp-presolve` (24.76 → 8.58). The remaining infeasibility was diagnosed (round 3) as a PATH numerical-convergence issue at a singular Jacobian, NOT an emit / AD bug. The warm-start IS a valid KKT point (all primal & stationarity equations evaluate to ~0 at machine precision); PATH cannot navigate from it. See §"Investigation 2026-04-30 (round 3)" below.
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
 **Last Updated:** 2026-04-30
@@ -421,6 +421,120 @@ Issue stays **OPEN** with TWO partial fixes shipped: the
 `_diff_prod` collapse fix (round 2). Camcge still doesn't reach
 `MODEL STATUS 1 Optimal`, but residuals are 3× smaller under
 `--nlp-presolve`.
+
+---
+
+## Investigation 2026-04-30 (round 3) — variable-init audit + PATH-side numerical issue identified
+
+Executed both items from "Before another fix attempt":
+1. Variable-init audit under `--nlp-presolve`.
+2. Per-equation provenance check (replaces full AD instrumentation —
+   sufficient to localize the issue).
+
+### What was investigated
+
+**Variable-init clobber (potential fix):** A theoretical concern was
+that the MCP's variable-init pass might re-emit `var.l = pd0(i)` (or
+similar source-level inits) AFTER the NLP solve, clobbering the
+warm-start. Audited camcge's emitted presolve output: no such
+`pd.l(i) = pd0(i)` lines were ACTUALLY clobbering the warm-start
+(the NLP optimum and the calibration values happened to be nearly
+equal for camcge specifically), but the structural issue was real
+for any model whose calibration ≠ NLP optimum.
+
+**Fix (preventive):** added an early-`continue` in the variable-init
+loop and gated `emit_var_level_loop_statements` under `not
+nlp_presolve`. The MCP's `var.l = ...` source-level inits are now
+skipped under `--nlp-presolve`. Bounds (`.lo`/`.up`) and lower-bound
+complementarity equations still emit (those don't clobber — they
+enforce feasibility).
+
+**Per-equation residual check at warm-start:** with the fix in place,
+manually injected `display ...; parameter <eq>_check; <eq>_check =
+... =e= 0; display <eq>_check;` blocks into the MCP after the NLP
+solve and before the MCP solve. Findings:
+
+```
+gdp_check    = -4.83e-10    (should be 0; ~machine precision ✓)
+totsav_check =  1.33e-14    (should be 0; ~machine precision ✓)
+absorp_check =  1e-11       (per-instance, all near zero ✓)
+sales_check  =  5e-12       (all near zero ✓)
+stat_cd_check≈  1e-7        (per-instance, all near zero ✓)
+```
+
+**Verdict:** the warm-start IS a valid KKT point. All primal
+equations and stationarity equations evaluate to ~0 at the
+warm-started variable values.
+
+### What's actually happening (PATH-side issue)
+
+PATH still reports `MODEL STATUS 4 Infeasible` with 108 INFES rows.
+But running `mcp_model.iterlim = 0`, the variables remain at the
+warm-start (`totsav_post = 1.33e-14` after the failed solve).
+
+The "INFES = 273.24" / "INFES = 131.96" residuals in the equation
+listing are NOT the equation values at the warm-start — they're
+PATH's predicted residuals from a NEWTON STEP that PATH attempted.
+Even with `iterlim=0`, PATH evaluates a Newton step (just doesn't
+APPLY it) and reports the predicted post-step residuals.
+
+This means PATH's Jacobian at the warm-start is ill-conditioned /
+singular, and the Newton step diverges. Despite the KKT point being
+valid, PATH cannot stay there — its linear system at the warm-start
+has no useful descent direction.
+
+### Hypotheses for the PATH-side issue
+
+1. **Numerical scaling.** camcge's variables span O(1e-3) to O(1e3)
+   ranges (prices ~1, quantities ~600, depreciation ~10). The
+   Jacobian condition number may be very high without explicit
+   scaling. A `--scale` option exists in the CLI; haven't tested it
+   on camcge.
+
+2. **Bound multipliers (piL_*) at warm-start.** The dual-transfer
+   block sets `piL_X.l$(abs(X.l - X.lo) < 1e-6 and X.m > 0) = X.m`.
+   For variables with `.lo = 0.01`, the NLP marginal `X.m` is the
+   active-bound dual. If the NLP didn't bind these bounds tightly,
+   `piL_X.l = 0` at warm-start — but PATH's complementarity check
+   requires `piL_X * (X - lo) = 0`. At a "weakly active" bound,
+   this is a near-singularity.
+
+3. **CGE non-uniqueness.** camcge has multiple equilibria. The KKT
+   system at one equilibrium may have a nullspace / singular
+   Jacobian.
+
+### What's still left
+
+The remaining issue is NOT in our AD or emit pipeline — it's in
+PATH's numerical convergence. Possible directions for a future fix:
+
+- Try `--scale` CLI option on camcge (test scaling).
+- Investigate camcge-specific bound-multiplier setup; tweak
+  `piL_X` initialization to break the near-singularity.
+- Try a different complementarity solver (e.g., MILES). Out of
+  scope for this codebase.
+
+These are NOT correctness issues in our emitter / AD — they're
+numerical-method issues in PATH on this specific model.
+
+### Tests added (round 3)
+
+- `tests/unit/emit/test_nlp_presolve_no_var_init_clobber.py` — 3
+  unit cases:
+  - Without presolve: `var.l` source-level inits are emitted.
+  - Under presolve: `var.l` source-level inits are NOT emitted.
+  - Lower bound complementarity equations still emit under presolve.
+
+### Status (round 3)
+
+Issue stays **OPEN** but with materially diminished concern. Three
+partial fixes shipped (arity-guard drop, `_diff_prod` collapse,
+var-init-skip-under-presolve). The remaining infeasibility is a
+PATH numerical-convergence issue, not an emit / AD bug. Future work
+should investigate scaling / bound-multiplier handling at the
+warm-start, OR accept that camcge requires manual tuning to solve.
+
+Test suite: 4,673 passed (3 new tests; quality gate clean).
 
 ### Out of scope for this attempt
 

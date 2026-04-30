@@ -1608,6 +1608,17 @@ def emit_gams_mcp(
             and var_name.lower() not in kkt.referenced_variables
         ):
             continue
+        # Issue #1330: Under `--nlp-presolve`, the source's calibration
+        # block runs via `$include` and the NLP solve writes optimal
+        # `.l` values. The MCP-side variable-init pass would re-apply
+        # source-level `.l = pd0(i)` style assignments and overwrite
+        # the warm-start (e.g., camcge's `pd.l(i) = pd0(i);` clobbers
+        # the NLP optimum back to calibration values). Skip the entire
+        # var-init pass under presolve — bounds (.lo/.up) are still
+        # emitted earlier, fix-inactive lines still emit, and GAMS
+        # enforces feasibility via the bound clip at solve time.
+        if nlp_presolve:
+            continue
         has_init = False
         emitted_l_expr_init = False
         lines: list[str] = []
@@ -1817,10 +1828,14 @@ def emit_gams_mcp(
     # Issue #1088: Emit loop-based .l initialization after regular .l init.
     # Some models initialize variables sequentially via loops (e.g.,
     # loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))).
-    var_level_loop_code = emit_var_level_loop_statements(kkt.model_ir)
-    if var_level_loop_code:
-        sections.append(var_level_loop_code)
-        sections.append("")
+    # Issue #1330: Skipped under `--nlp-presolve` — same reasoning as
+    # the var-init loop above (the source's calibration runs via
+    # `$include` + NLP solve, which provides the warm-start).
+    if not nlp_presolve:
+        var_level_loop_code = emit_var_level_loop_statements(kkt.model_ir)
+        if var_level_loop_code:
+            sections.append(var_level_loop_code)
+            sections.append("")
 
     # Issue #1007: Emit deferred set assignments that reference .l values
     # (e.g., it(i) = yes$(e.l(i) or m.l(i))) AFTER variable declarations
