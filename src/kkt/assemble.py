@@ -152,6 +152,34 @@ def assemble_kkt_system(
     # Issue #1112: Extract dollar conditions from gradient expressions
     kkt.gradient_conditions = extract_gradient_conditions(gradient)
 
+    # Issue #1327: Record multiplier widenings for equations declared over a
+    # parent set but defined over a dynamic subset (e.g., lmp2's
+    # `Equation Constraints(mm); Constraints(m).. ...`). The multiplier was
+    # created with the parent domain (so GAMS doesn't reject the dynamic
+    # subset as a declaration domain — Error 187), and the existing #1053
+    # fix-inactive emit path uses `multiplier_domain_widenings` to emit
+    # `mult.fx(parent)$(not subset(parent)) = 0;` for excluded instances.
+    for eq_name in list(partition.equalities) + list(partition.inequalities):
+        if eq_name not in model_ir.equations:
+            continue
+        eq_def = model_ir.equations[eq_name]
+        if eq_def.declaration_domain is None or eq_def.declaration_domain == eq_def.domain:
+            continue
+        # Only record positionally-aligned widenings — the existing #1053
+        # emit path uses `zip(strict=True)`, so mismatched-arity domains
+        # (e.g., body uses literal selector, dropping a position from the
+        # declaration) must be excluded.
+        if len(eq_def.domain) != len(eq_def.declaration_domain):
+            continue
+        if eq_name in partition.equalities:
+            if skip_defining_eq and eq_name.lower() == skip_defining_eq.lower():
+                continue
+            mult_name = create_eq_multiplier_name(eq_name)
+        else:
+            mult_name = create_ineq_multiplier_name(eq_name)
+        # orig_dom = body (subset), widened_dom = declaration (parent)
+        kkt.multiplier_domain_widenings[mult_name] = (eq_def.domain, eq_def.declaration_domain)
+
     # Step 5: Build complementarity pairs FIRST (needed by stationarity)
     # Must be done before stationarity: the stationarity builder needs to check the `negated` flag in
     # `kkt.complementarity_ineq` to determine whether to subtract or add Jacobian terms.
@@ -226,7 +254,17 @@ def _create_eq_multipliers(
         # Fixed variables (.fx) create equalities stored in normalized_bounds
         if eq_name in model_ir.equations:
             eq_def = model_ir.equations[eq_name]
-            domain = eq_def.domain
+            # Issue #1327: prefer declaration domain so multipliers are
+            # declared over the parent set rather than a dynamic subset
+            # (GAMS Error 187 otherwise). Only when arities match — body
+            # domains that differ in arity (e.g., literal selector dropping
+            # a position) keep the body domain.
+            if eq_def.declaration_domain is not None and len(eq_def.declaration_domain) == len(
+                eq_def.domain
+            ):
+                domain = eq_def.declaration_domain
+            else:
+                domain = eq_def.domain
         elif eq_name in model_ir.normalized_bounds:
             norm_eq = model_ir.normalized_bounds[eq_name]
             domain = norm_eq.domain_sets
@@ -268,9 +306,23 @@ def _create_ineq_multipliers(
             continue
         eq_def = model_ir.equations[eq_name]
         mult_name = create_ineq_multiplier_name(eq_name)
+        # Issue #1327: When the equation was declared over a parent set but
+        # defined over a dynamic subset (e.g. `Equation X(mm); X(m).. ...`),
+        # GAMS rejects the dynamic subset as a declaration domain (Error 187).
+        # Use the declaration domain for the multiplier so it gets declared
+        # over the parent. Fix-inactive emission elsewhere takes care of
+        # zeroing out the multiplier outside the subset. Only when arities
+        # match — mismatched-arity (e.g., literal selector dropping a
+        # position) keeps the body domain.
+        if eq_def.declaration_domain is not None and len(eq_def.declaration_domain) == len(
+            eq_def.domain
+        ):
+            mult_domain = eq_def.declaration_domain
+        else:
+            mult_domain = eq_def.domain
         multipliers[mult_name] = MultiplierDef(
             name=mult_name,
-            domain=eq_def.domain,
+            domain=mult_domain,
             kind="ineq",
             associated_constraint=eq_name,
         )

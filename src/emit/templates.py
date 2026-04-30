@@ -283,8 +283,13 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
             continue
         eq_def = comp_pair.equation
         # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: prefer declaration_domain (parent set) over body
+        # domain when the equation was declared over a parent and defined
+        # over a dynamic subset, so GAMS doesn't reject the dynamic subset
+        # as a declaration domain (Error 187).
+        decl_domain_tuple = eq_def.declaration_domain or eq_def.domain
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -299,8 +304,13 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
             continue
         eq_def = comp_pair.equation
         # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: prefer declaration_domain (parent set) over body
+        # domain when the equation was declared over a parent and defined
+        # over a dynamic subset, so GAMS doesn't reject the dynamic subset
+        # as a declaration domain (Error 187).
+        decl_domain_tuple = eq_def.declaration_domain or eq_def.domain
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -312,8 +322,13 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
             continue
         eq_def = comp_pair.equation
         # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: prefer declaration_domain (parent set) over body
+        # domain when the equation was declared over a parent and defined
+        # over a dynamic subset, so GAMS doesn't reject the dynamic subset
+        # as a declaration domain (Error 187).
+        decl_domain_tuple = eq_def.declaration_domain or eq_def.domain
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -346,7 +361,16 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         eq_domain: tuple[str, ...]
         if eq_name in kkt.model_ir.equations:
             eq_or_norm: EquationDef = kkt.model_ir.equations[eq_name]
-            eq_domain = eq_or_norm.domain
+            # Issue #1327: prefer declaration_domain (parent) over body
+            # domain so the declaration line uses the parent set, but only
+            # when arities match (mismatched arity from literal selectors
+            # etc. would produce a wrong-shaped declaration).
+            if eq_or_norm.declaration_domain is not None and len(
+                eq_or_norm.declaration_domain
+            ) == len(eq_or_norm.domain):
+                eq_domain = eq_or_norm.declaration_domain
+            else:
+                eq_domain = eq_or_norm.domain
         elif eq_name in kkt.model_ir.normalized_bounds:
             eq_or_norm_2: NormalizedEquation = kkt.model_ir.normalized_bounds[eq_name]
             # NormalizedEquation uses 'domain_sets' instead of 'domain'

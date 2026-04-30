@@ -136,22 +136,45 @@ def build_complementarity_pairs(
         # Create complementarity equation
         # Propagate original condition ($-filter) to preserve domain restrictions
         # like $(ord(i) < ord(j)) from the original inequality
+        # Issue #1327: Mirror the declaration_domain so the comp equation is
+        # declared over the parent set when the original was declared over
+        # parent and defined over subset (e.g. lmp2's `Constraints(mm)` /
+        # `Constraints(m).. ...`). The body domain (`m`) is preserved on
+        # `domain` so the equation BODY head still emits as
+        # `comp_Constraints(m)..`, which GAMS interprets as defining the
+        # equation over members of the subset only. Only widen when arities
+        # match — body domains that differ in arity from the declaration
+        # (literal selectors etc.) keep the body domain everywhere.
+        comp_decl_domain = (
+            eq_def.declaration_domain
+            if (
+                eq_def.declaration_domain is not None
+                and len(eq_def.declaration_domain) == len(eq_def.domain)
+            )
+            else None
+        )
         comp_eq = EquationDef(
             name=f"comp_{eq_name}",
             domain=eq_def.domain,
             condition=eq_def.condition,
             relation=Rel.GE,
             lhs_rhs=(F_lam, Const(0.0)),
+            declaration_domain=comp_decl_domain,
         )
 
         # Check if this is a max constraint from reformulation
         # Max constraints use pattern: minmax_max_{context}_{index}_arg{i}
         is_max_constraint = eq_name.startswith(MINMAX_MAX_CONSTRAINT_PREFIX)
 
+        # Issue #1327: pair the multiplier on its DECLARATION domain (parent
+        # set) so the model's MCP pairing line `comp_eq.lam` works in GAMS.
+        # When declaration_domain is None, falls back to body domain for
+        # backward compat.
+        pair_indices = comp_decl_domain or eq_def.domain
         comp_ineq[eq_name] = ComplementarityPair(
             equation=comp_eq,
             variable=lam_name,
-            variable_indices=eq_def.domain,
+            variable_indices=pair_indices,
             negated=negated,
             is_max_constraint=is_max_constraint,
         )
@@ -162,11 +185,18 @@ def build_complementarity_pairs(
     for eq_name in partition.equalities:
         # Check both equations dict and normalized_bounds dict
         # Fixed variables (.fx) create equalities stored in normalized_bounds
+        equality_decl_domain: tuple[str, ...] | None = None
         if eq_name in kkt.model_ir.equations:
             eq_def = kkt.model_ir.equations[eq_name]
             # Equality equations are simply h(x) = 0
             h_expr = eq_def.lhs_rhs[0]
             domain = eq_def.domain
+            # Issue #1327: only carry declaration_domain when arity matches
+            # (mismatched arity from literal selectors etc. is unsafe).
+            if eq_def.declaration_domain is not None and len(eq_def.declaration_domain) == len(
+                eq_def.domain
+            ):
+                equality_decl_domain = eq_def.declaration_domain
         elif eq_name in kkt.model_ir.normalized_bounds:
             norm_eq = kkt.model_ir.normalized_bounds[eq_name]
             # Normalized equations already have expr in form (lhs - rhs)
@@ -175,11 +205,15 @@ def build_complementarity_pairs(
         else:
             continue
 
+        # Issue #1327: propagate declaration domain so equality multipliers
+        # and equation declarations are emitted over the parent set when
+        # the original was declared parent / defined subset.
         equality_eq = EquationDef(
             name=f"eq_{eq_name}",
             domain=domain,
             relation=Rel.EQ,
             lhs_rhs=(h_expr, Const(0.0)),
+            declaration_domain=equality_decl_domain,
         )
 
         equality_eqs[eq_name] = equality_eq

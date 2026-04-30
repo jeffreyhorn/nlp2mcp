@@ -134,7 +134,9 @@ class EquationHead:
 @dataclass
 class EquationDef:
     name: str
-    domain: tuple[str, ...]  # ("i",) etc.
+    domain: tuple[
+        str, ...
+    ]  # ("i",) etc. — taken from the equation BODY head (e.g. `Constraints(m)..` → ("m",))
     relation: Rel
     lhs_rhs: tuple  # (lhs_expr, rhs_expr) kept as AST later
     condition: object | None = None  # Optional condition expression (Expr) for $ operator filtering
@@ -143,6 +145,16 @@ class EquationDef:
         False  # True when equation head had linear lead/lag qualifier e.g. eq(set(i+1))
         # Circular offsets (++/--) do not restrict domain generation and are excluded.
     )
+    # Issue #1327: When an equation is declared over a parent set but defined
+    # over a dynamic subset (e.g. `Equation Constraints(mm); Constraints(m).. ...`),
+    # `domain` captures the body's `(m)` head while `declaration_domain` captures
+    # the original `(mm)`. The KKT pipeline uses `declaration_domain` for
+    # multiplier and complementarity equation DECLARATIONS (since GAMS rejects
+    # dynamic subsets as declaration domains — Error 187), and the body domain
+    # for the equation BODY head (preserving the source-level pattern of
+    # `comp_Constraints(m).. ...` which GAMS automatically restricts to members
+    # of `m`). Falls back to `domain` for backward compat when not set.
+    declaration_domain: tuple[str, ...] | None = None
 
 
 @dataclass
