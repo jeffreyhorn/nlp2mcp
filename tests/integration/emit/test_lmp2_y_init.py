@@ -12,10 +12,12 @@ emits `var.l(d) = 1;` for each. For lmp2 this produces `y.l(p) = 1;`,
 which satisfies `1/y(p) = 1` at the initial point — the structural
 div-by-zero pathology is gone.
 
-Note: lmp2 does not yet compile end-to-end because of #1323 (the `m`
-dynamic-subset assignment is not extracted into the IR). This test
-validates the emission only, which is the strict acceptance signal
-for #1243. End-to-end pipeline acceptance is gated on #1323's fix.
+Note: as of this PR, #1315/#1323 (dynamic-subset SET assignment
+extraction) and #1327 (multipliers declared over parent set) are
+also resolved, so lmp2 now compiles AND solves to MODEL STATUS 1
+Optimal end-to-end. This test validates the emission's structural
+fix for #1243 specifically (the `y.l(p) = 1;` line); the
+end-to-end solve is covered by the gamslib pipeline test.
 """
 
 from __future__ import annotations

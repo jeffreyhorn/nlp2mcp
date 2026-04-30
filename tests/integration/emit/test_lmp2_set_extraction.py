@@ -92,7 +92,9 @@ def test_lmp2_emits_cases_table_values():
 
     output = _emit_mcp_for(src)
 
-    # All five rows of the Table should be emitted with both keys quoted.
+    # The Table has 5 cases × 2 columns = 10 entries. Spot-check the
+    # first and last rows (both columns each) to verify the mixed-key
+    # branch quotes the literal column labels `'m'` / `'n'` correctly.
     expected_pairs = [
         (("c1", "m"), 10),
         (("c1", "n"), 20),

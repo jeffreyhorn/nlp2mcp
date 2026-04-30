@@ -3233,7 +3233,12 @@ def collect_pre_solve_referenced_params(model_ir: ModelIR) -> set[str]:
                 break
             if "solve" in str(stmt.data):
                 break
-            if str(stmt.data) == "loop_stmt":
+            # Recurse into ALL loop variants — the grammar emits
+            # `loop_stmt`, `loop_stmt_paren`, `loop_stmt_filtered`,
+            # `loop_stmt_paren_filtered`, `loop_stmt_indexed`,
+            # `loop_stmt_indexed_filtered`. Matches the variant-aware
+            # predicate used in `_loop_tree_to_gams`.
+            if str(stmt.data).startswith("loop_stmt"):
                 inner_body: list = []
                 for c in stmt.children:
                     if isinstance(c, Tree) and c.data == "loop_body":
@@ -3544,22 +3549,35 @@ def emit_pre_solve_param_assignments(
                     break
                 if "solve" in str(stmt.data):
                     break
-                # Recurse into inner loops
-                if str(stmt.data) == "loop_stmt":
-                    # Find the loop_body subtree and id_list for the index
+                # Recurse into ALL loop variants — the grammar emits
+                # `loop_stmt`, `loop_stmt_paren`, `loop_stmt_filtered`,
+                # `loop_stmt_paren_filtered`, `loop_stmt_indexed`,
+                # `loop_stmt_indexed_filtered`. Matches the variant-aware
+                # predicate used in `_loop_tree_to_gams`.
+                if str(stmt.data).startswith("loop_stmt"):
+                    # Find the loop_body subtree and any id_list / ID-token
+                    # loop indices. Filtered variants (e.g.,
+                    # `LOOP_K "(" ID DOLLAR ...`) carry the loop index as a
+                    # bare ID token; indexed variants (e.g.,
+                    # `LOOP_K "(" ID "(" id_list ")" ...`) carry both.
                     inner_p_sub = dict(p_sub)
                     inner_l_sub = dict(l_sub)
                     inner_body_stmts: list = []
+
+                    def _record_index(idx_lower: str) -> None:
+                        inner_sdef = model_ir.sets.get(idx_lower)
+                        if inner_sdef and inner_sdef.members:
+                            first = f"'{inner_sdef.members[0]}'"
+                            inner_p_sub[idx_lower] = first
+                            inner_l_sub[idx_lower] = first
+
                     for c in stmt.children:
                         if isinstance(c, Tree) and c.data == "id_list":
                             for tok in c.children:
                                 if isinstance(tok, Token) and tok.type == "ID":
-                                    inner_idx = str(tok).lower()
-                                    inner_sdef = model_ir.sets.get(inner_idx)
-                                    if inner_sdef and inner_sdef.members:
-                                        first = f"'{inner_sdef.members[0]}'"
-                                        inner_p_sub[inner_idx] = first
-                                        inner_l_sub[inner_idx] = first
+                                    _record_index(str(tok).lower())
+                        elif isinstance(c, Token) and c.type == "ID":
+                            _record_index(str(c).lower())
                         elif isinstance(c, Tree) and c.data == "loop_body":
                             inner_body_stmts = [
                                 child for child in c.children if isinstance(child, Tree)
