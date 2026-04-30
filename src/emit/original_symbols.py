@@ -2719,7 +2719,10 @@ def emit_subset_value_assignments(
                     )
                     keep_bare = False
                     if is_set and declared_domain != "*":
-                        elem_sdef = model_ir.sets.get(k)
+                        # Case-insensitive lookup — `model_ir.sets` keys may
+                        # preserve original casing while domain/element refs
+                        # arrive in lowercase from upstream.
+                        elem_sdef = model_ir.sets.get(k) or model_ir.sets.get(k.lower())
                         if elem_sdef is None:
                             # Alias or universe — preserve prior behavior.
                             keep_bare = True
@@ -3230,7 +3233,10 @@ def collect_pre_solve_referenced_params(model_ir: ModelIR) -> set[str]:
     def _walk_stmts(stmts: list) -> None:
         for stmt in stmts:
             if not isinstance(stmt, Tree):
-                break
+                # Skip incidental tokens / whitespace nodes; do NOT
+                # truncate the scan — later assignments in the same body
+                # are still pre-solve.
+                continue
             if "solve" in str(stmt.data):
                 break
             # Recurse into ALL loop variants — the grammar emits
@@ -3546,7 +3552,10 @@ def emit_pre_solve_param_assignments(
         def _extract_pre_solve(stmts: list, p_sub: dict[str, str], l_sub: dict[str, str]) -> None:
             for stmt in stmts:
                 if not isinstance(stmt, Tree):
-                    break
+                    # Skip incidental tokens / whitespace nodes; do NOT
+                    # truncate the scan — later assignments in the same
+                    # body are still pre-solve.
+                    continue
                 if "solve" in str(stmt.data):
                     break
                 # Recurse into ALL loop variants — the grammar emits
