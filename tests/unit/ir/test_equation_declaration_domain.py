@@ -126,9 +126,9 @@ def test_scalar_decl_indexed_body_records_arity_mismatch():
     eq = model.equations.get("E")
     assert eq is not None
     assert eq.domain == ("i",), f"Expected body domain ('i',), got {eq.domain!r}"
-    assert eq.declaration_domain == (), (
-        f"Expected scalar declaration_domain (), got {eq.declaration_domain!r}"
-    )
+    assert (
+        eq.declaration_domain == ()
+    ), f"Expected scalar declaration_domain (), got {eq.declaration_domain!r}"
     assert len(eq.declaration_domain) != len(eq.domain)
 
 
@@ -181,7 +181,9 @@ def test_emit_uses_declaration_domain_even_when_arity_differs():
         "Expected `E` (scalar form) in Equations block; the emitted MCP "
         "should mirror the source's `Equation E;` scalar declaration even "
         "when the body uses `E(i)..` indexing.\nOutput excerpt:\n"
-        + "\n".join(line for line in output.splitlines() if "E" in line and "Equation" not in line)[:500]
+        + "\n".join(line for line in output.splitlines() if "E" in line and "Equation" not in line)[
+            :500
+        ]
     )
 
     # The body should use the indexed form.

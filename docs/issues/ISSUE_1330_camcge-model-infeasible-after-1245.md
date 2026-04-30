@@ -1,7 +1,7 @@
 # camcge: PATH returns MODEL STATUS 4 Infeasible after #1245 unblocks structural EXECERROR=4
 
 **GitHub Issue:** [#1330](https://github.com/jeffreyhorn/nlp2mcp/issues/1330)
-**Status:** OPEN — partial progress made 2026-04-30 (`_preferred_decl_domain` arity-guard drop, see §"Investigation 2026-04-30" below); deeper KKT/AD issue still blocks `MODEL STATUS 1 Optimal`.
+**Status:** OPEN — TWO partial fixes landed 2026-04-30 (`_preferred_decl_domain` arity-guard drop in round 1, `_diff_prod` collapse fix in round 2). Residuals reduced 3× under `--nlp-presolve` (24.76 → 8.58). Deeper issue still blocks `MODEL STATUS 1 Optimal`. See §"Investigation 2026-04-30 (round 2)" below for current state.
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
 **Last Updated:** 2026-04-30
@@ -324,6 +324,103 @@ inconsistent with the NLP at its own solution. Hypotheses:
 Estimated effort to reach `MODEL STATUS 1 Optimal`: **8–16 hours**
 once the AD bug is identified. Could be much higher if the bug is in
 a subtle alias-or-subset interaction.
+
+---
+
+## Investigation 2026-04-30 (round 2) — second AD bug found, partial fix landed; deeper issue remains
+
+Executed steps 1–3 from "Required next steps". Step 1 (hand-derive)
+revealed a real bug in `_diff_prod`. Step 3 (CGE-family comparison)
+confirmed the bug pattern was specific to camcge's objective form
+(Cobb-Douglas with asymmetric `cles(i)` shares).
+
+### What was fixed
+
+**`src/ad/derivative_rules.py::_diff_prod`** — collapse the
+logarithmic-derivative sum when wrt indices name-match the prod's
+bound indices.
+
+The mathematical identity for Cobb-Douglas / power products:
+
+```
+d(prod_i f(i)) / d(x(j))  =  prod * δ(i, j) * f'(i) / f(i)
+                          =  prod * f'(j) / f(j)        (single term)
+```
+
+The old code always produced `prod * sum(i, df(i)/dx / f(i))` — a
+SUM over all bound i. This is correct only when:
+- `df(i)/dx` includes the kronecker δ(i,j) (so the sum collapses to a
+  single term at i=j), OR
+- All `f(i)` are equal (e.g. lmp2's `prod(p, y(p))` at a symmetric
+  optimum where all y(p) coincide).
+
+For asymmetric data like camcge's `cles(i)` per sector, the AD's body
+differentiation didn't produce the kronecker delta. The naive sum
+iterated over all i and gave the SAME value for all stationarity rows
+(since the inner sum is i-independent), making the KKT structurally
+inconsistent even at the NLP optimum.
+
+**The fix:** when `effective_wrt` (post-collapse-substitution wrt
+indices) name-matches the prod's bound indices, return
+`prod * (body_deriv / body)` directly — no Sum wrapper. The body_deriv
+is already at the symbolic bound index, which represents the wrt's
+free index by name; the emitter aliases the prod's bound to a fresh
+name (e.g. `i → i__`) at output time, so the post-`*` term references
+the outer free index correctly.
+
+The collapsed term inherits the prod's `$-condition` via a
+`DollarConditional` wrap.
+
+### Empirical impact
+
+For camcge:
+- Pre-AD-fix presolve: 119 INFES rows, sum 24.76, max 2.70
+- Post-AD-fix presolve: 108 INFES rows, sum **8.58** (3× smaller),
+  max 1.42
+
+Other models (canary check, all preserved):
+- irscge / lrgcge / moncge / stdcge / splcge / quocge / gtm: still
+  Optimal at unchanged objective values
+- twocge: still EXECERROR=8 from #1331 (unrelated)
+- lmp2: still Optimal (multi-solve random; final-iteration obj
+  shifts 35.598 → 35.292 due to slightly different KKT convergence
+  per random instance — both valid local optima)
+
+### Tests added
+
+- `tests/unit/ad/test_diff_prod_collapse.py` — 4 unit cases:
+  - Symbolic wrt collapses to single term.
+  - Prod condition inherited as DollarConditional wrap.
+  - Concrete wrt with set-membership lookup also collapses.
+  - Public `differentiate_expr` API produces collapsed form.
+
+Test suite: 4,670 passed (5 new tests; quality gate clean).
+
+### What's still left
+
+camcge under `--nlp-presolve` still returns `MODEL STATUS 4
+Infeasible` with 108 INFES rows. The largest residual remains the
+`gdp` equation (residual 131.96), suggesting either:
+- A separate AD bug in another derivative path, OR
+- A variable warm-start propagation issue under `--nlp-presolve`
+  (some `.l` value gets clobbered).
+
+Before another fix attempt, would benefit from:
+1. **AD-side instrumentation** (next step 4 from above) — dump
+   per-term gradient provenance to identify the next mismatched term.
+2. **Variable-init audit under `--nlp-presolve`** — verify no `.l`
+   values are clobbered by the MCP-side init pass after the NLP
+   warm-start.
+
+Estimated remaining effort: **6–12 hours**.
+
+### Status
+
+Issue stays **OPEN** with TWO partial fixes shipped: the
+`_preferred_decl_domain` arity-guard drop (round 1) and the
+`_diff_prod` collapse fix (round 2). Camcge still doesn't reach
+`MODEL STATUS 1 Optimal`, but residuals are 3× smaller under
+`--nlp-presolve`.
 
 ### Out of scope for this attempt
 
