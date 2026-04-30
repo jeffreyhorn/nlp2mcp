@@ -58,9 +58,7 @@ def _emit_mcp_for_source(
         j_eq, j_ineq = compute_constraint_jacobian(model)
         grad = compute_objective_gradient(model)
         kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
-        return emit_gams_mcp(
-            kkt, nlp_presolve=nlp_presolve, source_file=source_file
-        )
+        return emit_gams_mcp(kkt, nlp_presolve=nlp_presolve, source_file=source_file)
     finally:
         sys.setrecursionlimit(old)
 
@@ -97,30 +95,27 @@ def test_var_l_init_emitted_without_presolve():
 
 
 @pytest.mark.unit
-def test_var_l_init_skipped_when_presolve_will_actually_emit(tmp_path):
-    """Under `--nlp-presolve` AND with a valid `source_file` (under repo
-    root), the MCP-side variable-init pass must NOT emit
+def test_var_l_init_skipped_when_presolve_will_actually_emit(tmp_path, monkeypatch):
+    """Under `--nlp-presolve` AND with a valid `source_file` (under
+    `_REPO_ROOT`), the MCP-side variable-init pass must NOT emit
     `pd.l(i) = pd0(i)` (or any other `var.l = ...` source-level init).
     The NLP warm-start is the sole source of `.l` values.
-    """
-    # Materialize the source under the repo root so the presolve
-    # `$include` path resolution succeeds. The presolve emit's
-    # early-return checks (`_will_emit_nlp_presolve`) gate the
-    # var-init skip; without a valid in-repo path the skip is
-    # correctly disabled (verified by the "fallback" test below).
-    from pathlib import Path
 
-    repo_root = Path(__file__).resolve().parents[3]
-    src_path = repo_root / "tmp_test_presolve_src.gms"
+    Uses `monkeypatch` to redirect `_REPO_ROOT` to `tmp_path` so the
+    test file lives under the (patched) repo root without polluting
+    the actual checkout — xdist-safe and read-only-checkout-safe.
+    """
+    import src.emit.emit_gams as emit_gams_module
+
+    monkeypatch.setattr(emit_gams_module, "_REPO_ROOT", tmp_path)
+    src_path = tmp_path / "tmp_test_presolve_src.gms"
     src_path.write_text(_SRC_WITH_CALIBRATED_INIT)
-    try:
-        output = _emit_mcp_for_source(
-            _SRC_WITH_CALIBRATED_INIT,
-            nlp_presolve=True,
-            source_file=str(src_path),
-        )
-    finally:
-        src_path.unlink(missing_ok=True)
+
+    output = _emit_mcp_for_source(
+        _SRC_WITH_CALIBRATED_INIT,
+        nlp_presolve=True,
+        source_file=str(src_path),
+    )
 
     assert not re.search(r"^\s*pd\.l\(i\)\s*=\s*pd0\(i\)", output, re.MULTILINE), (
         "Under --nlp-presolve (with a valid in-repo source_file), "
@@ -138,9 +133,7 @@ def test_var_l_init_falls_back_when_presolve_aborts():
     nor any fallback init, reintroducing listing-time div-by-zero.
     """
     # source_file=None → presolve emit aborts → var-init must NOT be skipped.
-    output = _emit_mcp_for_source(
-        _SRC_WITH_CALIBRATED_INIT, nlp_presolve=True, source_file=None
-    )
+    output = _emit_mcp_for_source(_SRC_WITH_CALIBRATED_INIT, nlp_presolve=True, source_file=None)
 
     assert re.search(r"^\s*pd\.l\(i\)\s*=\s*pd0\(i\)", output, re.MULTILINE), (
         "When presolve emit aborts (source_file=None), the var-init "

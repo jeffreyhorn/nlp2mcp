@@ -37,9 +37,7 @@ def _emit_mcp_for_source(
         j_eq, j_ineq = compute_constraint_jacobian(model)
         grad = compute_objective_gradient(model)
         kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
-        return emit_gams_mcp(
-            kkt, nlp_presolve=nlp_presolve, source_file=source_file
-        )
+        return emit_gams_mcp(kkt, nlp_presolve=nlp_presolve, source_file=source_file)
     finally:
         sys.setrecursionlimit(old_limit)
 
@@ -73,27 +71,26 @@ def test_free_var_in_stationarity_denominator_gets_init():
 
 
 @pytest.mark.unit
-def test_free_var_init_skipped_when_presolve_will_emit(tmp_path):
-    """Under `--nlp-presolve` AND with a valid `source_file` (under repo
-    root), the NLP solve provides the warm-start; the emitter must NOT
-    overwrite `y.l` with the default `1`.
+def test_free_var_init_skipped_when_presolve_will_emit(tmp_path, monkeypatch):
+    """Under `--nlp-presolve` AND with a valid `source_file` (under
+    `_REPO_ROOT`), the NLP solve provides the warm-start; the emitter
+    must NOT overwrite `y.l` with the default `1`.
 
     Issue #1330 review: the var-init skip is gated on
     `_will_emit_nlp_presolve(...)` — passing `source_file=None` would
-    correctly disable the skip (see test below). Materialize the source
-    under the repo root to exercise the "presolve will emit" path.
-    """
-    from pathlib import Path
+    correctly disable the skip (see test below).
 
-    repo_root = Path(__file__).resolve().parents[3]
-    src_path = repo_root / "tmp_test_free_var_presolve.gms"
+    Uses `monkeypatch` to redirect `_REPO_ROOT` to `tmp_path` so the
+    test file lives under the (patched) repo root without polluting
+    the actual checkout — xdist-safe and read-only-checkout-safe.
+    """
+    import src.emit.emit_gams as emit_gams_module
+
+    monkeypatch.setattr(emit_gams_module, "_REPO_ROOT", tmp_path)
+    src_path = tmp_path / "tmp_test_free_var_presolve.gms"
     src_path.write_text(_PROD_OBJ_SRC)
-    try:
-        output = _emit_mcp_for_source(
-            _PROD_OBJ_SRC, nlp_presolve=True, source_file=str(src_path)
-        )
-    finally:
-        src_path.unlink(missing_ok=True)
+
+    output = _emit_mcp_for_source(_PROD_OBJ_SRC, nlp_presolve=True, source_file=str(src_path))
 
     # No `y.l(p) = 1;` line should appear.
     assert not re.search(
