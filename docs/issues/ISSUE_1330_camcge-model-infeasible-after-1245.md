@@ -1,9 +1,10 @@
 # camcge: PATH returns MODEL STATUS 4 Infeasible after #1245 unblocks structural EXECERROR=4
 
 **GitHub Issue:** [#1330](https://github.com/jeffreyhorn/nlp2mcp/issues/1330)
-**Status:** OPEN
+**Status:** OPEN — partial progress made 2026-04-30 (`_preferred_decl_domain` arity-guard drop, see §"Investigation 2026-04-30" below); deeper KKT/AD issue still blocks `MODEL STATUS 1 Optimal`.
 **Severity:** Medium — model compiles and PATH runs but returns INFEASIBLE; users get no usable solution
 **Date:** 2026-04-30
+**Last Updated:** 2026-04-30
 **Affected Models:** camcge
 **Predecessors:**
 - [#1245](https://github.com/jeffreyhorn/nlp2mcp/issues/1245) (CLOSED, PR #1329) — wrapped traded-only multiplier terms in `stat_pd` / `stat_xxd` with `$(it(i))` to remove EXECERROR=4 from `1/gamma(in) = 1/0` and `0**negative`.
@@ -213,3 +214,121 @@ regression sweep.
   concern; gtm now needs `--nlp-presolve` to reach Optimal)
 - **#1138** — CGE-family alias-AD mismatch (separate issue, lists
   irscge / lrgcge / moncge / stdcge — different root cause)
+
+---
+
+## Investigation 2026-04-30 — partial fix landed; deeper issue remains
+
+### Summary
+
+Investigated all three approaches from §"Fix Approach". Approach 1
+(`--nlp-presolve`) was tried first because it was the cheapest path
+and would address other camcge-class models too. The `--nlp-presolve`
+emit had a previously unidentified compile bug (`$318 — Domain list
+redefined`) which has been **fixed in this branch**. With the fix,
+the presolve path compiles cleanly and the NLP solves to `MODEL
+STATUS 2 Locally Optimal`. **However**, the subsequent MCP solve
+still returns `MODEL STATUS 4 Infeasible` (now with a different
+residual count of 119 INFES, sum ≈ 24.76) — even with the NLP's
+optimum as warm-start. This indicates the KKT system itself is
+inconsistent at the NLP solution: a structural correctness bug,
+likely in AD or stationarity-equation generation.
+
+### What was fixed
+
+**`src/emit/templates.py::_preferred_decl_domain`** — dropped the
+arity-equality guard. Previously, when an equation's `domain` (body
+head) and `declaration_domain` (source declaration) had different
+arities, the emitter fell back to `domain` for the declaration line.
+For camcge's `gdeq` (declared `Equation gdeq;` scalar but defined
+`gdeq(i)..` indexed), this meant the MCP emitted `gdeq(i)` while the
+`$include`'d source declared `gdeq` scalar — GAMS rejected with `$318
+— Domain list redefined`.
+
+The fix mirrors the source's declaration form exactly, regardless of
+arity. The body emission still uses `domain`. Combined with GAMS's
+auto-promotion of scalar-declared / indexed-body equations, the MCP
+now compiles cleanly under `--nlp-presolve`.
+
+The change is safe: KKT-side machinery (`multiplier_domain_widenings`,
+comp equation construction, fix-inactive emit) has its own arity
+guards in `complementarity.py`, so comp equations only carry
+`declaration_domain` when arities match. Only original-equality
+declaration emission is affected by this change.
+
+Tests added:
+- `test_scalar_decl_indexed_body_records_arity_mismatch` — IR-level.
+- `test_emit_uses_declaration_domain_even_when_arity_differs` —
+  emitter-level.
+
+Existing test suite (4,664 tests) passes; quality gate
+(typecheck / lint / format / test) clean.
+
+### What's left (deeper issue)
+
+Even with `--nlp-presolve`, camcge's MCP returns `MODEL STATUS 4
+Infeasible` with 119 INFES rows. Looking at the listing report:
+
+```
+stat_cd(ag-subsist).. (0.32...)*p(ag-subsist) - (0.00...)*cd(ag-subsist) +
+  ... + (1.00011)*nu_cdeq(ag-subsist) - nu_equil(ag-subsist) =E= 0;
+  (LHS = -1.4157, INFES = 1.4157 ****)
+```
+
+At the NLP-warm-started point, the `stat_cd(ag-subsist)` row
+evaluates to LHS = −1.4157, not zero. The KKT system is structurally
+inconsistent with the NLP at its own solution. Hypotheses:
+
+1. **AD bug specific to the `cdeq` Cobb-Douglas demand block.**
+   `cdeq(i).. cd(i) =e= cles(i) * y / p(i);` is a standard
+   Cobb-Douglas, but the alpha indices and price normalization may
+   interact poorly with the AD pipeline.
+
+2. **Alias-AD mismatch (#1138 family).** camcge does NOT use the
+   `(u,v) / (i,j) / (h,k)` aliases that #1138 lists for
+   irscge / lrgcge / moncge / stdcge — but it uses similar SAM-like
+   structures and may have analogous gradient-derivation issues
+   that #1138's fix doesn't cover.
+
+3. **Subset-conditioned gradient propagation.** The objective `omega`
+   depends on `y`, which depends on `cd(i)`, which is constrained by
+   `cdeq(i)`. The gradient w.r.t. `p(i)` propagates through the chain
+   but the partial derivative `∂cdeq/∂p(i)` for non-traded `i` may
+   be incorrectly computed because of the `(pm(i)*m(i))$it(i)` filter
+   in `absorption(i)..`.
+
+### Required next steps before another fix attempt
+
+1. **Compare KKT residuals with explicit derivatives.** Hand-derive
+   `∂cdeq/∂p(i)` and `∂cdeq/∂cd(i)` for both traded and non-traded
+   `i`, then dump the AD-generated entries for the same partial.
+   Identify which terms differ.
+
+2. **Reduce camcge to a minimal failing block.** Strip the source
+   to just `cdeq` + `equil` + `omega` and see if the smaller MCP
+   still has the inconsistency. If yes, the bug is reproducible at
+   small scale. If no, the issue is from an interaction across
+   blocks.
+
+3. **Compare against a known-good CGE.** irscge / lrgcge / moncge /
+   stdcge match post-#1245. Diff their emitted stat_cd / cdeq
+   bodies against camcge's to spot what's different. The CGE family
+   may use a slightly different consumption-equation form that
+   doesn't trigger the issue.
+
+4. **AD-side instrumentation.** Add a debug flag that dumps every
+   gradient/Jacobian term as it's generated, with provenance back
+   to the source equation it was differentiated from. This would
+   pinpoint exactly which AD step injects the wrong term.
+
+Estimated effort to reach `MODEL STATUS 1 Optimal`: **8–16 hours**
+once the AD bug is identified. Could be much higher if the bug is in
+a subtle alias-or-subset interaction.
+
+### Out of scope for this attempt
+
+- Approach 2 (warm-start from calibration parameters) — not pursued;
+  Approach 1 was preferred and partially succeeded.
+- Approach 3 (INFEASIBLE-row investigation) — partially done above
+  (the `cdeq` row was identified as inconsistent), but full
+  investigation requires AD-side work (next step 1).
