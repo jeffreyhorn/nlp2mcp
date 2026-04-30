@@ -3815,6 +3815,17 @@ class _ModelBuilder:
         relation = _REL_MAP[rel_token.value.lower()]
         lhs = self._expr_with_context(lhs_node, f"equation '{name}' LHS", domain)
         rhs = self._expr_with_context(rhs_node, f"equation '{name}' RHS", domain)
+        # Issue #1327: Track the declaration's domain separately from the
+        # body's domain. When the equation is declared as `Equation X(mm);`
+        # but defined as `X(m).. ...` (m is a subset of mm), GAMS records
+        # the declaration domain as ("mm",) — the KKT pipeline needs this
+        # so it can declare multipliers / complementarity equations over
+        # the parent set rather than the dynamic subset (which GAMS
+        # rejects as a declaration domain — Error 187).
+        decl_domain = self._equation_domains.get(name.lower())
+        declaration_domain = (
+            decl_domain if decl_domain is not None and decl_domain != domain else None
+        )
         equation = EquationDef(
             name=name,
             domain=domain,
@@ -3823,6 +3834,7 @@ class _ModelBuilder:
             condition=condition_expr,
             source_location=source_location,
             has_head_domain_offset=head_has_offset,
+            declaration_domain=declaration_domain,
         )
         self.model.add_equation(equation)
 

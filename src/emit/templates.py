@@ -264,6 +264,19 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         remapped = _remap_domain(domain, dynamic_map)
         return ",".join(remapped)
 
+    def _preferred_decl_domain(eq_def_obj: object) -> tuple[str, ...]:
+        """Issue #1327: prefer `declaration_domain` (parent set) over body
+        `domain` when present AND arities match. The arity guard mirrors the
+        upstream KKT-side guards and protects against future call-sites that
+        construct EquationDefs with mismatched-arity declaration domains
+        (e.g., literal-selector body domains in models like korcge).
+        """
+        body_domain = getattr(eq_def_obj, "domain", ())
+        decl_domain = getattr(eq_def_obj, "declaration_domain", None)
+        if decl_domain is not None and len(decl_domain) == len(body_domain):
+            return decl_domain
+        return body_domain
+
     lines = ["Equations"]
 
     # Stationarity equations
@@ -282,9 +295,10 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         if ref_mults is not None and comp_pair.variable not in ref_mults:
             continue
         eq_def = comp_pair.equation
-        # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: arity-guarded preference for declaration_domain.
+        decl_domain_tuple = _preferred_decl_domain(eq_def)
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -298,9 +312,10 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         if ref_vars is not None and key[0].lower() not in ref_vars:
             continue
         eq_def = comp_pair.equation
-        # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: arity-guarded preference for declaration_domain.
+        decl_domain_tuple = _preferred_decl_domain(eq_def)
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -311,9 +326,10 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         if ref_vars is not None and key[0].lower() not in ref_vars:
             continue
         eq_def = comp_pair.equation
-        # Include domain if present
-        if eq_def.domain:
-            lines.append(f"    {eq_def.name}({_decl_domain_str(eq_def.domain)})")
+        # Issue #1327: arity-guarded preference for declaration_domain.
+        decl_domain_tuple = _preferred_decl_domain(eq_def)
+        if decl_domain_tuple:
+            lines.append(f"    {eq_def.name}({_decl_domain_str(decl_domain_tuple)})")
         else:
             lines.append(f"    {eq_def.name}")
 
@@ -346,7 +362,8 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         eq_domain: tuple[str, ...]
         if eq_name in kkt.model_ir.equations:
             eq_or_norm: EquationDef = kkt.model_ir.equations[eq_name]
-            eq_domain = eq_or_norm.domain
+            # Issue #1327: arity-guarded preference for declaration_domain.
+            eq_domain = _preferred_decl_domain(eq_or_norm)
         elif eq_name in kkt.model_ir.normalized_bounds:
             eq_or_norm_2: NormalizedEquation = kkt.model_ir.normalized_bounds[eq_name]
             # NormalizedEquation uses 'domain_sets' instead of 'domain'
