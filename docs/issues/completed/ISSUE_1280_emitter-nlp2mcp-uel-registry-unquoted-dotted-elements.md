@@ -1,10 +1,10 @@
 # Emitter: `nlp2mcp_uel_registry` Emits Unquoted UELs With Dots
 
 **GitHub Issue:** [#1280](https://github.com/jeffreyhorn/nlp2mcp/issues/1280)
-**Status:** OPEN — Deferred to Sprint 25
+**Status:** RESOLVED — fixed 2026-04-30 (the emitter fix had landed in an earlier commit; this PR refreshes the stale checked-in `mathopt4_mcp.gms` artifact and adds an integration regression test).
 **Severity:** Medium — Compile-time syntax error risk depending on GAMS version; silent misinterpretation risk otherwise
 **Date:** 2026-04-19
-**Last Updated:** 2026-04-19
+**Last Updated:** 2026-04-30
 **Affected Models:** `mathopt4` (observed); any model whose symbol set feeds the UEL registry with attribute-access forms (`<sym>.<attr>`)
 **Labels:** `sprint-25`
 
@@ -92,3 +92,56 @@ After fix:
 - `src/emit/*.py` — `nlp2mcp_uel_registry` declaration emission
 - `tests/unit/emit/` — new test asserting dotted UELs are quoted
 - `data/gamslib/mcp/mathopt4_mcp.gms` — reference artifact (regenerated after fix)
+
+---
+
+## Resolution (2026-04-30)
+
+### What was found
+
+The emitter-side fix had ALREADY landed in an earlier commit (the
+`_sanitize_uel_element` helper at `src/emit/original_symbols.py:351` and
+its application at `src/emit/emit_gams.py:1289`). Re-emitting
+`data/gamslib/raw/mathopt4.gms` from the live emitter produces the
+correctly-quoted form:
+
+```gams
+Set nlp2mcp_uel_registry / 'x1.l', 'x1_0', 'x2.l', 'x2_0' /;
+```
+
+However, the **checked-in artifact** (`data/gamslib/mcp/mathopt4_mcp.gms`)
+was stale and still showed the unquoted form (`x1.l, x2.l`). It dated
+from before the emitter fix landed and was never refreshed.
+
+### What was changed
+
+1. **Refreshed `data/gamslib/mcp/mathopt4_mcp.gms`** — re-emitted from
+   the live emitter to mirror the fixed quoting behavior. 1-line diff:
+   the registry declaration now reads
+   `Set nlp2mcp_uel_registry / 'x1.l', 'x1_0', 'x2.l', 'x2_0' /;`.
+
+2. **Added integration test** (`tests/integration/emit/test_mathopt4_uel_registry_quoting.py`)
+   covering 2 cases:
+   - Dotted attribute labels (`x1.l`, `x2.l`) are emitted single-quoted.
+   - Plain labels (`x1_0`) are quoted but NOT double-quoted (`''x1_0''`).
+
+### Audit (per the issue's audit task)
+
+Searched all `data/gamslib/mcp/*.gms` artifacts for unquoted dotted
+UELs. Only `mathopt4_mcp.gms` was affected; all other models'
+`nlp2mcp_uel_registry` declarations were already correct (either no
+dots, or already single-quoted).
+
+### Verification
+
+- **Buggy form** (`Set nlp2mcp_uel_registry / x1.l, x2.l /;`) — confirmed
+  GAMS rejects with `$161 Conflicting dimensions in element` on the
+  current GAMS 53.1.0 runtime.
+- **Fixed form** (`Set nlp2mcp_uel_registry / 'x1.l', 'x2.l' /;`) —
+  compiles cleanly, no syntax errors.
+- Sanitizer unit test (`test_original_symbols.py:3324+`) covers
+  `_sanitize_uel_element` directly.
+- New integration test verifies the emitter calls the sanitizer
+  correctly end-to-end on the `mathopt4` corpus.
+- Quality gate clean: `make typecheck && make lint && make format &&
+  make test` (**4,677 passed**, 10 skipped, 1 xfailed).
