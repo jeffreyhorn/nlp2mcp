@@ -518,18 +518,18 @@ def _build_subset_guard_for_term(
     refs = _collect_multiplier_refs_in_term(term)
     if not refs:
         return None
-    seen: set[tuple] = set()
+    # Dedupe directly on the clause Expr — `SetMembershipTest` and `Binary`
+    # are frozen dataclasses (hashable), so set membership is structural
+    # and doesn't depend on repr formatting.
+    seen: set[Expr] = set()
     guard: Expr | None = None
     for ref in refs:
         clause = kkt.subset_filter_for_multiplier(ref.name, ref.indices)
         if clause is None:
             continue
-        # Dedupe by repr — clauses are SetMembershipTest / Binary("and"),
-        # both frozen dataclasses, so repr is a stable key.
-        key = (repr(clause),)
-        if key in seen:
+        if clause in seen:
             continue
-        seen.add(key)
+        seen.add(clause)
         guard = clause if guard is None else Binary("and", guard, clause)
     return guard
 

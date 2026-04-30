@@ -903,6 +903,48 @@ def _compute_suppressed_fx_equations(kkt: KKTSystem) -> set[str]:
     return suppressed
 
 
+def _will_emit_nlp_presolve(
+    kkt: KKTSystem,
+    source_file: str | None,
+) -> bool:
+    """Predict whether `_emit_nlp_presolve` will actually emit the
+    `$include`-based pre-solve block.
+
+    Used by callers that need to make decisions BEFORE
+    `_emit_nlp_presolve` runs (e.g., the variable-init pass that
+    skips `.l` assignments under presolve must check here, since
+    var-init runs before the actual presolve emit).
+
+    Mirrors `_emit_nlp_presolve`'s early-return conditions:
+    - `source_file` provided
+    - objective variable extractable
+    - original-model equation list non-empty
+    - source_file resolves inside the repo root
+
+    Issue #1330 review: gating var-init skip on bare `nlp_presolve`
+    flag was incorrect when presolve emission decided to abort
+    (e.g., source file outside repo root) — the resulting MCP would
+    have no `.l` warm-start AND no fallback init, reintroducing
+    listing-time div-by-zero issues the init pass was meant to
+    prevent.
+    """
+    if not source_file:
+        return False
+    try:
+        obj_info = extract_objective_info(kkt.model_ir)
+    except ValueError:
+        return False
+    if not obj_info.objvar:
+        return False
+    if not kkt.model_ir.get_solved_model_equations():
+        return False
+    try:
+        Path(source_file).resolve().relative_to(_REPO_ROOT)
+    except ValueError:
+        return False
+    return True
+
+
 def _emit_nlp_presolve(
     sections: list[str],
     kkt: KKTSystem,
@@ -1589,12 +1631,22 @@ def emit_gams_mcp(
     # Issue #1088: Variables whose .l is set by a loop should not get default
     # POSITIVE init (e.g., r.l(t)=1) since the loop provides correct values.
     loop_level_vars = get_var_level_loop_varnames(kkt.model_ir)
+    # Issue #1330 (review): the var-init skip below must gate on whether
+    # the NLP pre-solve `$include` is ACTUALLY going to be emitted, not
+    # just on the `nlp_presolve` flag. If presolve emission decides to
+    # abort (source_file outside repo root, missing objective, etc.),
+    # skipping var-init would leave the MCP with no warm-start AND no
+    # fallback init — reintroducing listing-time div-by-zero issues
+    # the init pass was meant to prevent.
+    presolve_will_emit = nlp_presolve and _will_emit_nlp_presolve(kkt, source_file)
     # Issue #1243: FREE variables that appear in denominator (or log())
     # positions of stationarity equation bodies need a default .l = 1 to
     # avoid EXECERROR=1 from div-by-zero at GAMS model-listing time.
-    # Skipped under --nlp-presolve, where the NLP solve provides the
-    # warm-start and we must not overwrite it.
-    denominator_free_vars: set[str] = set() if nlp_presolve else _compute_denominator_free_vars(kkt)
+    # Skipped only when presolve will actually emit — that path provides
+    # the warm-start and we must not overwrite it.
+    denominator_free_vars: set[str] = (
+        set() if presolve_will_emit else _compute_denominator_free_vars(kkt)
+    )
     var_init_groups: dict[str, list[str]] = {}  # var_name -> init lines
     var_init_order: list[str] = []  # preserve original order for stable sort
     var_l_deps: dict[str, set[str]] = {}  # var_name -> set of var names it depends on
@@ -1614,10 +1666,15 @@ def emit_gams_mcp(
         # source-level `.l = pd0(i)` style assignments and overwrite
         # the warm-start (e.g., camcge's `pd.l(i) = pd0(i);` clobbers
         # the NLP optimum back to calibration values). Skip the entire
-        # var-init pass under presolve — bounds (.lo/.up) are still
-        # emitted earlier, fix-inactive lines still emit, and GAMS
-        # enforces feasibility via the bound clip at solve time.
-        if nlp_presolve:
+        # var-init pass when the presolve include WILL emit — bounds
+        # (.lo/.up) are still emitted earlier, fix-inactive lines still
+        # emit, and GAMS enforces feasibility via the bound clip at
+        # solve time.
+        # Issue #1330 review: gate on `presolve_will_emit`, NOT on the
+        # bare `nlp_presolve` flag — if presolve emission aborts (e.g.,
+        # source outside repo root), we must fall back to the normal
+        # init path to avoid leaving the MCP without any starting values.
+        if presolve_will_emit:
             continue
         has_init = False
         emitted_l_expr_init = False
@@ -1828,10 +1885,12 @@ def emit_gams_mcp(
     # Issue #1088: Emit loop-based .l initialization after regular .l init.
     # Some models initialize variables sequentially via loops (e.g.,
     # loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))).
-    # Issue #1330: Skipped under `--nlp-presolve` — same reasoning as
-    # the var-init loop above (the source's calibration runs via
-    # `$include` + NLP solve, which provides the warm-start).
-    if not nlp_presolve:
+    # Issue #1330: Skipped only when the NLP pre-solve `$include` will
+    # actually emit (the source's calibration runs via `$include` + NLP
+    # solve, which provides the warm-start). If presolve aborts, fall
+    # back to the loop-based init so the MCP isn't left without any
+    # warm-start values.
+    if not presolve_will_emit:
         var_level_loop_code = emit_var_level_loop_statements(kkt.model_ir)
         if var_level_loop_code:
             sections.append(var_level_loop_code)

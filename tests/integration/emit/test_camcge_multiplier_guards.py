@@ -58,19 +58,22 @@ def test_camcge_stat_pd_wraps_traded_only_multiplier_terms():
         pytest.skip("data/gamslib/raw/camcge.gms is gitignored on this runner.")
 
     output = _emit_mcp_for(src)
-    stat_pd_line = next(
-        (line for line in output.splitlines() if line.lstrip().startswith("stat_pd(i)..")),
-        None,
-    )
-    assert stat_pd_line is not None, "stat_pd(i) line not found in MCP"
+    # Match the full `stat_pd(i)..` block (header through terminating `;`)
+    # so the assertions hold even when `_wrap_long_equation_line` splits
+    # the body across multiple physical lines.
+    stat_pd_match = re.search(r"(?ms)^\s*stat_pd\(i\)\.\..*?;", output)
+    assert stat_pd_match is not None, "stat_pd(i) equation block not found in MCP"
+    stat_pd_block = stat_pd_match.group(0)
 
     # Match `... * nu_esupply(i))$(it(i))` form (the value-expr is the
     # full Binary("*",...) wrapped, with `it(i)` as the dollar condition).
-    assert re.search(r"\* nu_esupply\(i\)\)\$\(it\(i\)\)", stat_pd_line), (
-        "Expected `nu_esupply(i)` term to be wrapped in `$(it(i))`. Line:\n" + stat_pd_line[:500]
+    assert re.search(r"\* nu_esupply\(i\)\)\$\(it\(i\)\)", stat_pd_block, re.DOTALL), (
+        "Expected `nu_esupply(i)` term to be wrapped in `$(it(i))`. Equation block:\n"
+        + stat_pd_block[:500]
     )
-    assert re.search(r"\* nu_costmin\(i\)\)\$\(it\(i\)\)", stat_pd_line), (
-        "Expected `nu_costmin(i)` term to be wrapped in `$(it(i))`. Line:\n" + stat_pd_line[:500]
+    assert re.search(r"\* nu_costmin\(i\)\)\$\(it\(i\)\)", stat_pd_block, re.DOTALL), (
+        "Expected `nu_costmin(i)` term to be wrapped in `$(it(i))`. Equation block:\n"
+        + stat_pd_block[:500]
     )
 
 
@@ -86,19 +89,17 @@ def test_camcge_stat_pd_does_not_wrap_all_i_multiplier_terms():
         pytest.skip("data/gamslib/raw/camcge.gms is gitignored on this runner.")
 
     output = _emit_mcp_for(src)
-    stat_pd_line = next(
-        (line for line in output.splitlines() if line.lstrip().startswith("stat_pd(i)..")),
-        None,
-    )
-    assert stat_pd_line is not None
+    stat_pd_match = re.search(r"(?ms)^\s*stat_pd\(i\)\.\..*?;", output)
+    assert stat_pd_match is not None
+    stat_pd_block = stat_pd_match.group(0)
 
     # nu_absorption(i) and nu_sales(i) should appear bare — no $(...)
     # wrapping immediately around them.
     assert re.search(
-        r"\* nu_absorption\(i\)(?!\)\$\()", stat_pd_line
+        r"\* nu_absorption\(i\)(?!\)\$\()", stat_pd_block, re.DOTALL
     ), "`nu_absorption(i)` should NOT be wrapped (full-domain equation)."
     assert re.search(
-        r"\* nu_sales\(i\)(?!\)\$\()", stat_pd_line
+        r"\* nu_sales\(i\)(?!\)\$\()", stat_pd_block, re.DOTALL
     ), "`nu_sales(i)` should NOT be wrapped (full-domain equation)."
 
 
@@ -113,14 +114,13 @@ def test_camcge_stat_xxd_wraps_traded_only_multiplier_terms():
         pytest.skip("data/gamslib/raw/camcge.gms is gitignored on this runner.")
 
     output = _emit_mcp_for(src)
-    stat_xxd_line = next(
-        (line for line in output.splitlines() if line.lstrip().startswith("stat_xxd(i)..")),
-        None,
-    )
-    assert stat_xxd_line is not None, "stat_xxd(i) line not found in MCP"
+    stat_xxd_match = re.search(r"(?ms)^\s*stat_xxd\(i\)\.\..*?;", output)
+    assert stat_xxd_match is not None, "stat_xxd(i) equation block not found in MCP"
+    stat_xxd_block = stat_xxd_match.group(0)
 
     # Each traded-only multiplier should appear with the wrap.
     for mult in ("nu_cet", "nu_esupply", "nu_armington", "nu_costmin"):
-        assert re.search(rf"\* {mult}\(i\)\)\$\(it\(i\)\)", stat_xxd_line), (
-            f"Expected `{mult}(i)` to be wrapped in `$(it(i))`. Line:\n" + stat_xxd_line[:500]
+        assert re.search(rf"\* {mult}\(i\)\)\$\(it\(i\)\)", stat_xxd_block, re.DOTALL), (
+            f"Expected `{mult}(i)` to be wrapped in `$(it(i))`. Equation block:\n"
+            + stat_xxd_block[:500]
         )

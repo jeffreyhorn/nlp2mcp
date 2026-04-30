@@ -232,7 +232,7 @@ class KKTSystem:
         returns the AND of per-position membership tests. Positions
         whose subset and parent match are skipped.
         """
-        from src.ir.ast import Binary, SetMembershipTest, SymbolRef
+        from src.ir.ast import Binary, IndexOffset, SetMembershipTest, SymbolRef
 
         widening = self.multiplier_domain_widenings.get(mult_name)
         if widening is None:
@@ -247,16 +247,25 @@ class KKTSystem:
             if orig_set.lower() == wide_set.lower():
                 continue
             # Build the membership test using the multiplier's actual
-            # index argument at that position (e.g., `i` for `nu_X(i)`).
+            # index argument at that position (e.g., `i` for `nu_X(i)`,
+            # or `IndexOffset("i", 1, ...)` for lead/lag references).
             idx_expr: Expr
             if isinstance(idx_at_pos, str):
                 idx_expr = SymbolRef(idx_at_pos)
+            elif isinstance(idx_at_pos, IndexOffset):
+                # Lead/lag indices are valid in SetMembershipTest's
+                # `Expr`-typed indices tuple; preserve the offset so the
+                # emitted GAMS condition is e.g. `it(i+1)`.
+                idx_expr = idx_at_pos
+            elif isinstance(idx_at_pos, Expr):
+                # Any other Expr subtype (SubsetIndex, etc.) is also
+                # valid — let it through.
+                idx_expr = idx_at_pos
             else:
-                # IndexOffset / SubsetIndex / nested — re-wrap as
-                # SymbolRef(str(...)) only for plain str cases; for
-                # complex index objects, fall back to None to avoid
-                # generating an incorrect filter.
-                return None
+                # Unknown shape; skip JUST this position rather than
+                # dropping the whole guard. Other positions may still
+                # be guard-able.
+                continue
             clauses.append(SetMembershipTest(orig_set, (idx_expr,)))
         if not clauses:
             return None

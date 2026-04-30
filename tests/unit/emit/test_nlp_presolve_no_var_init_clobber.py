@@ -28,7 +28,21 @@ import sys
 import pytest
 
 
-def _emit_mcp_for_source(gams_src: str, *, nlp_presolve: bool) -> str:
+def _emit_mcp_for_source(
+    gams_src: str, *, nlp_presolve: bool, source_file: str | None = None
+) -> str:
+    """Emit MCP from in-memory GAMS source.
+
+    Args:
+        gams_src: GAMS source text.
+        nlp_presolve: pass-through to `emit_gams_mcp`.
+        source_file: path to the source file (must be under repo root for
+            `_will_emit_nlp_presolve` to allow the var-init skip — see
+            `_will_emit_nlp_presolve` docstring). Defaults to None, which
+            simulates the "presolve aborts" path where the skip should
+            NOT fire (the var-init pass falls back to its normal
+            behavior).
+    """
     from src.ad.constraint_jacobian import compute_constraint_jacobian
     from src.ad.gradient import compute_objective_gradient
     from src.emit.emit_gams import emit_gams_mcp
@@ -44,7 +58,9 @@ def _emit_mcp_for_source(gams_src: str, *, nlp_presolve: bool) -> str:
         j_eq, j_ineq = compute_constraint_jacobian(model)
         grad = compute_objective_gradient(model)
         kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
-        return emit_gams_mcp(kkt, nlp_presolve=nlp_presolve, source_file=None)
+        return emit_gams_mcp(
+            kkt, nlp_presolve=nlp_presolve, source_file=source_file
+        )
     finally:
         sys.setrecursionlimit(old)
 
@@ -81,16 +97,55 @@ def test_var_l_init_emitted_without_presolve():
 
 
 @pytest.mark.unit
-def test_var_l_init_skipped_under_presolve():
-    """Under `--nlp-presolve`, the MCP-side variable-init pass must NOT
-    emit `pd.l(i) = pd0(i)` (or any other `var.l = ...` source-level
-    init). The NLP warm-start is the sole source of `.l` values.
+def test_var_l_init_skipped_when_presolve_will_actually_emit(tmp_path):
+    """Under `--nlp-presolve` AND with a valid `source_file` (under repo
+    root), the MCP-side variable-init pass must NOT emit
+    `pd.l(i) = pd0(i)` (or any other `var.l = ...` source-level init).
+    The NLP warm-start is the sole source of `.l` values.
     """
-    output = _emit_mcp_for_source(_SRC_WITH_CALIBRATED_INIT, nlp_presolve=True)
+    # Materialize the source under the repo root so the presolve
+    # `$include` path resolution succeeds. The presolve emit's
+    # early-return checks (`_will_emit_nlp_presolve`) gate the
+    # var-init skip; without a valid in-repo path the skip is
+    # correctly disabled (verified by the "fallback" test below).
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[3]
+    src_path = repo_root / "tmp_test_presolve_src.gms"
+    src_path.write_text(_SRC_WITH_CALIBRATED_INIT)
+    try:
+        output = _emit_mcp_for_source(
+            _SRC_WITH_CALIBRATED_INIT,
+            nlp_presolve=True,
+            source_file=str(src_path),
+        )
+    finally:
+        src_path.unlink(missing_ok=True)
 
     assert not re.search(r"^\s*pd\.l\(i\)\s*=\s*pd0\(i\)", output, re.MULTILINE), (
-        "Under --nlp-presolve, `pd.l(i) = pd0(i)` would clobber the NLP "
-        "warm-start. Should be skipped."
+        "Under --nlp-presolve (with a valid in-repo source_file), "
+        "`pd.l(i) = pd0(i)` would clobber the NLP warm-start. Should "
+        "be skipped."
+    )
+
+
+@pytest.mark.unit
+def test_var_l_init_falls_back_when_presolve_aborts():
+    """Issue #1330 review: when `nlp_presolve=True` but the presolve
+    `$include` block is NOT actually emitted (e.g., `source_file=None`,
+    or outside the repo root), the var-init pass must FALL BACK to its
+    normal behavior — otherwise the MCP would have neither a warm-start
+    nor any fallback init, reintroducing listing-time div-by-zero.
+    """
+    # source_file=None → presolve emit aborts → var-init must NOT be skipped.
+    output = _emit_mcp_for_source(
+        _SRC_WITH_CALIBRATED_INIT, nlp_presolve=True, source_file=None
+    )
+
+    assert re.search(r"^\s*pd\.l\(i\)\s*=\s*pd0\(i\)", output, re.MULTILINE), (
+        "When presolve emit aborts (source_file=None), the var-init "
+        "pass must fall back to emitting `pd.l(i) = pd0(i)` so the MCP "
+        "isn't left without warm-start values."
     )
 
 

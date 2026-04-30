@@ -18,7 +18,9 @@ import sys
 import pytest
 
 
-def _emit_mcp_for_source(gams_src: str, *, nlp_presolve: bool = False) -> str:
+def _emit_mcp_for_source(
+    gams_src: str, *, nlp_presolve: bool = False, source_file: str | None = None
+) -> str:
     """Helper: parse GAMS source, build KKT, emit MCP, return output string."""
     from src.ad.constraint_jacobian import compute_constraint_jacobian
     from src.ad.gradient import compute_objective_gradient
@@ -35,7 +37,9 @@ def _emit_mcp_for_source(gams_src: str, *, nlp_presolve: bool = False) -> str:
         j_eq, j_ineq = compute_constraint_jacobian(model)
         grad = compute_objective_gradient(model)
         kkt = assemble_kkt_system(model, grad, j_eq, j_ineq)
-        return emit_gams_mcp(kkt, nlp_presolve=nlp_presolve)
+        return emit_gams_mcp(
+            kkt, nlp_presolve=nlp_presolve, source_file=source_file
+        )
     finally:
         sys.setrecursionlimit(old_limit)
 
@@ -69,17 +73,50 @@ def test_free_var_in_stationarity_denominator_gets_init():
 
 
 @pytest.mark.unit
-def test_free_var_init_skipped_under_nlp_presolve():
-    """Under `--nlp-presolve`, the NLP solve provides the warm-start;
-    the emitter must NOT overwrite `y.l` with the default `1`.
+def test_free_var_init_skipped_when_presolve_will_emit(tmp_path):
+    """Under `--nlp-presolve` AND with a valid `source_file` (under repo
+    root), the NLP solve provides the warm-start; the emitter must NOT
+    overwrite `y.l` with the default `1`.
+
+    Issue #1330 review: the var-init skip is gated on
+    `_will_emit_nlp_presolve(...)` — passing `source_file=None` would
+    correctly disable the skip (see test below). Materialize the source
+    under the repo root to exercise the "presolve will emit" path.
     """
-    output = _emit_mcp_for_source(_PROD_OBJ_SRC, nlp_presolve=True)
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[3]
+    src_path = repo_root / "tmp_test_free_var_presolve.gms"
+    src_path.write_text(_PROD_OBJ_SRC)
+    try:
+        output = _emit_mcp_for_source(
+            _PROD_OBJ_SRC, nlp_presolve=True, source_file=str(src_path)
+        )
+    finally:
+        src_path.unlink(missing_ok=True)
 
     # No `y.l(p) = 1;` line should appear.
     assert not re.search(
         r"^\s*y\.l\(p\)\s*=\s*1\s*;", output, re.MULTILINE
     ), "Did NOT expect `y.l(p) = 1;` under --nlp-presolve. Output excerpt:\n" + "\n".join(
         line for line in output.split("\n") if "y.l" in line
+    )
+
+
+@pytest.mark.unit
+def test_free_var_init_falls_back_when_presolve_aborts():
+    """Issue #1330 review: when `nlp_presolve=True` but the presolve
+    `$include` block won't actually emit (e.g., `source_file=None`),
+    the FREE-var-in-denominator init must FALL BACK and emit
+    `y.l(p) = 1;` so the MCP doesn't EXECERROR=1 from `1/y(p)` at
+    listing time.
+    """
+    output = _emit_mcp_for_source(_PROD_OBJ_SRC, nlp_presolve=True, source_file=None)
+
+    assert re.search(r"^\s*y\.l\(p\)\s*=\s*1\s*;", output, re.MULTILINE), (
+        "When presolve emit aborts (source_file=None), the FREE-var "
+        "denominator init must fall back to emitting `y.l(p) = 1;` "
+        "so the MCP isn't left with a div-by-zero hazard."
     )
 
 
