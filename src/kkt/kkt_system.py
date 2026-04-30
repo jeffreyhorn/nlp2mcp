@@ -214,3 +214,53 @@ class KKTSystem:
     scaling_row_factors: list[float] | None = None
     scaling_col_factors: list[float] | None = None
     scaling_mode: str = "none"  # none | auto | byvar
+
+    def subset_filter_for_multiplier(self, mult_name: str, indices: tuple) -> Expr | None:
+        """Issue #1245: Return the source equation's body-domain subset
+        filter for a multiplier whose domain was widened from a subset
+        to a parent set (per `multiplier_domain_widenings`).
+
+        For a multiplier `nu_esupply(i)` widened from `(it,)` to `(i,)`,
+        with the equation iterating over index `i`, this returns
+        `SetMembershipTest("it", (SymbolRef("i"),))` — i.e., the GAMS
+        condition `it(i)` that filters the term to traded-only instances.
+
+        Returns None if the multiplier is not parent-widened (no entry
+        in `multiplier_domain_widenings`, or the widening is a no-op).
+
+        For multi-dim multipliers where multiple positions are widened,
+        returns the AND of per-position membership tests. Positions
+        whose subset and parent match are skipped.
+        """
+        from src.ir.ast import Binary, SetMembershipTest, SymbolRef
+
+        widening = self.multiplier_domain_widenings.get(mult_name)
+        if widening is None:
+            return None
+        orig_dom, widened_dom = widening
+        if orig_dom == widened_dom:
+            return None
+        if len(orig_dom) != len(widened_dom) or len(indices) != len(widened_dom):
+            return None
+        clauses: list[Expr] = []
+        for orig_set, wide_set, idx_at_pos in zip(orig_dom, widened_dom, indices, strict=True):
+            if orig_set.lower() == wide_set.lower():
+                continue
+            # Build the membership test using the multiplier's actual
+            # index argument at that position (e.g., `i` for `nu_X(i)`).
+            idx_expr: Expr
+            if isinstance(idx_at_pos, str):
+                idx_expr = SymbolRef(idx_at_pos)
+            else:
+                # IndexOffset / SubsetIndex / nested — re-wrap as
+                # SymbolRef(str(...)) only for plain str cases; for
+                # complex index objects, fall back to None to avoid
+                # generating an incorrect filter.
+                return None
+            clauses.append(SetMembershipTest(orig_set, (idx_expr,)))
+        if not clauses:
+            return None
+        guard = clauses[0]
+        for clause in clauses[1:]:
+            guard = Binary("and", guard, clause)
+        return guard
