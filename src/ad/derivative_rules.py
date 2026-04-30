@@ -2975,6 +2975,49 @@ def _diff_prod(
     if isinstance(body_derivative, Const) and body_derivative.value == 0.0:
         return Const(0.0)
 
+    # Issue #1330: When the wrt indices are symbolic AND name-match the
+    # prod's bound indices (e.g. differentiating prod(i, cd(i)^cles(i))
+    # w.r.t. cd(i) where the outer `i` is the stationarity equation's
+    # free index), the derivative collapses to a single term:
+    #
+    #   d(prod_i f(i))/d(x(j))  =  prod * δ(i_bound, j) * f'(i)/f(i)
+    #                           =  prod * f'(j) / f(j)        (single term)
+    #
+    # The naive logarithmic-derivative form `prod * sum_i (df(i)/dx/f(i))`
+    # iterates over ALL bound i and treats each as if it matched the wrt
+    # — which is correct only for symmetric data (lmp2's `prod(p, y(p))`
+    # at a symmetric optimum where all y(p) coincide), and WRONG for
+    # asymmetric data like camcge's `cles(i)` per sector.
+    #
+    # For the symbolic-name-match case, return `expr * (body_deriv/body)`
+    # without a Sum wrapper: the body_deriv and body are already at the
+    # symbolic bound index (which has the same name as the wrt's free
+    # index), so the expression evaluates at the wrt's value naturally.
+    # The emitter aliases the prod's bound to a fresh name (e.g. i → i__)
+    # to avoid GAMS error 125, so the post-`*` term references the
+    # outer free index, not the prod's iteration.
+    # Check `effective_wrt` (post-collapse-substitution) rather than the
+    # original `wrt_indices`: when `_sum_should_collapse` fires for a
+    # concrete wrt (e.g. `cd("ag-subsist")` differentiating omega over `i`),
+    # `effective_wrt` becomes the prod's symbolic indices `("i",)`, and the
+    # collapsed-form fix below applies. Original concrete `wrt_indices`
+    # would have failed the `w == s` name check.
+    symbolic_name_match = (
+        effective_wrt is not None
+        and len(effective_wrt) == len(expr.index_sets)
+        and all(
+            isinstance(w, str) and w == s
+            for w, s in zip(effective_wrt, expr.index_sets, strict=True)
+        )
+    )
+    if symbolic_name_match:
+        log_term: Expr = Binary("/", body_derivative, expr.body)
+        # If the prod's iteration is conditioned (e.g. `i$cles(i)`),
+        # the derivative inherits that condition — zero for excluded i.
+        if expr.condition is not None:
+            log_term = DollarConditional(log_term, expr.condition)
+        return Binary("*", expr, log_term)
+
     # Build the logarithmic derivative: sum(i$cond, df(i)/dx / f(i))
     # This is: sum(index_sets, body_derivative / body) with same condition as prod
     log_derivative_body = Binary("/", body_derivative, expr.body)

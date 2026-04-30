@@ -464,6 +464,131 @@ def _inject_divisor_guards(expr: Expr) -> Expr:
     return expr
 
 
+def _collect_multiplier_refs_in_term(
+    expr: Expr,
+) -> list[MultiplierRef]:
+    """Issue #1245: collect MultiplierRef nodes that appear in `expr`
+    WITHOUT crossing aggregator (Sum/Prod) or DollarConditional
+    boundaries.
+
+    A multiplier inside a `sum(j, ... * nu(j))` body is local to that
+    Sum's iteration; the OUTER stationarity-equation rewrite should
+    treat the Sum as a single opaque term. The walker that uses this
+    helper recurses into Sum/Prod bodies separately (so each inner
+    term-level scan is performed in its own scope).
+    """
+    found: list[MultiplierRef] = []
+
+    def _walk(e: Expr) -> None:
+        if isinstance(e, MultiplierRef):
+            found.append(e)
+            return
+        if isinstance(e, (Sum, Prod, DollarConditional)):
+            return
+        # Generic walk through dataclass children.
+        import dataclasses as _dc
+
+        if not hasattr(e, "__dataclass_fields__"):
+            return
+        for f in _dc.fields(e):  # type: ignore[arg-type]
+            val = getattr(e, f.name, None)
+            if isinstance(val, Expr):
+                _walk(val)
+            elif isinstance(val, (tuple, list)):
+                for item in val:
+                    if isinstance(item, Expr):
+                        _walk(item)
+
+    _walk(expr)
+    return found
+
+
+def _build_subset_guard_for_term(
+    term: Expr,
+    kkt: KKTSystem,
+) -> Expr | None:
+    """Issue #1245: collect MultiplierRefs in `term` (not crossing
+    aggregator boundaries) and build the AND of subset-membership
+    guards for any whose multiplier was parent-widened from a subset.
+
+    Returns None when no multiplier in the term needs a guard.
+    Multiple multipliers contribute AND-combined clauses; duplicate
+    clauses are deduplicated.
+    """
+    refs = _collect_multiplier_refs_in_term(term)
+    if not refs:
+        return None
+    # Dedupe directly on the clause Expr — `SetMembershipTest` and `Binary`
+    # are frozen dataclasses (hashable), so set membership is structural
+    # and doesn't depend on repr formatting.
+    seen: set[Expr] = set()
+    guard: Expr | None = None
+    for ref in refs:
+        clause = kkt.subset_filter_for_multiplier(ref.name, ref.indices)
+        if clause is None:
+            continue
+        if clause in seen:
+            continue
+        seen.add(clause)
+        guard = clause if guard is None else Binary("and", guard, clause)
+    return guard
+
+
+def _inject_multiplier_subset_guards(expr: Expr, kkt: KKTSystem) -> Expr:
+    """Issue #1245: wrap each "term" of a stationarity equation body
+    with `$(subset(d))` when the term contains a multiplier that was
+    parent-widened from a subset (per `kkt.multiplier_domain_widenings`).
+
+    The wrap is mathematically a no-op (the multiplier is already 0
+    outside the subset by #1327's fix-inactive emit), but it prevents
+    GAMS from EVALUATING the multiplier's coefficient expression for
+    instances outside the subset — avoiding div-by-zero / domain
+    errors when the source equation's body parameters (e.g.,
+    `gamma(in) = 0` in camcge) make those expressions UNDF.
+
+    "Terms" are operands of `+`, `-` (binary), or `Unary("-")`. The
+    walker descends through additive boundaries until it hits a
+    multiplicative / leaf node, then scans that node for relevant
+    multipliers. Sum/Prod aggregators are recursed into via their
+    body, so inner sums get their bodies wrapped term-wise.
+
+    Returns the rewritten expression. Unchanged subtrees are returned
+    as-is (the walker preserves identity when no rewrite occurs).
+    """
+    # Additive separators: descend term-by-term.
+    if isinstance(expr, Binary) and expr.op in {"+", "-"}:
+        new_left = _inject_multiplier_subset_guards(expr.left, kkt)
+        new_right = _inject_multiplier_subset_guards(expr.right, kkt)
+        if new_left is expr.left and new_right is expr.right:
+            return expr
+        return Binary(expr.op, new_left, new_right)
+    if isinstance(expr, Unary) and expr.op in {"+", "-"}:
+        new_child = _inject_multiplier_subset_guards(expr.child, kkt)
+        if new_child is expr.child:
+            return expr
+        return Unary(expr.op, new_child)
+    # Aggregators: recurse into the body so inner terms get wrapped.
+    if isinstance(expr, (Sum, Prod)):
+        new_body = _inject_multiplier_subset_guards(expr.body, kkt)
+        # Sum/Prod conditions don't carry multiplier products, so leave
+        # the condition untouched.
+        if new_body is expr.body:
+            return expr
+        return type(expr)(expr.index_sets, new_body, expr.condition)
+    if isinstance(expr, DollarConditional):
+        new_val = _inject_multiplier_subset_guards(expr.value_expr, kkt)
+        if new_val is expr.value_expr:
+            return expr
+        return DollarConditional(value_expr=new_val, condition=expr.condition)
+
+    # Otherwise, this is a "term" (a product chain, leaf, or call).
+    # Scan for multipliers that need a subset filter and wrap if so.
+    guard = _build_subset_guard_for_term(expr, kkt)
+    if guard is None:
+        return expr
+    return DollarConditional(value_expr=expr, condition=guard)
+
+
 def emit_equation_def(
     eq_name: str,
     eq_def: EquationDef,
@@ -922,8 +1047,31 @@ def emit_equation_definitions(
     # Stationarity equations
     if kkt.stationarity:
         lines.append("* Stationarity equations")
+        # Issue #1245: Inject subset-membership guards on multiplier-bearing
+        # terms whose multipliers were parent-widened from a subset (per
+        # `kkt.multiplier_domain_widenings`, populated by #1327's fix).
+        # Without this, GAMS evaluates the multiplier's coefficient
+        # expression for instances outside the subset and may hit
+        # div-by-zero / domain errors when the source equation's body
+        # parameters (e.g., `gamma(in) = 0` in camcge) make those
+        # expressions UNDF.
+        inject_subset_guards = bool(kkt.multiplier_domain_widenings)
         for eq_name in sorted(kkt.stationarity.keys()):
             eq_def = kkt.stationarity[eq_name]
+            if inject_subset_guards:
+                lhs, rhs = eq_def.lhs_rhs
+                new_lhs = _inject_multiplier_subset_guards(lhs, kkt)
+                if new_lhs is not lhs:
+                    eq_def = EquationDef(
+                        name=eq_def.name,
+                        domain=eq_def.domain,
+                        relation=eq_def.relation,
+                        lhs_rhs=(new_lhs, rhs),
+                        condition=eq_def.condition,
+                        source_location=eq_def.source_location,
+                        has_head_domain_offset=eq_def.has_head_domain_offset,
+                        declaration_domain=eq_def.declaration_domain,
+                    )
             eq_str, aliases = emit_equation_def(eq_name, eq_def, skip_lead_lag_inference=True)
             lines.append(eq_str)
             _merge_alias_dicts(all_aliases, aliases)

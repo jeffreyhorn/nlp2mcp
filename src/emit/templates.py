@@ -265,15 +265,29 @@ def emit_equations(kkt: KKTSystem, suppressed_fx_equations: set[str] | None = No
         return ",".join(remapped)
 
     def _preferred_decl_domain(eq_def_obj: object) -> tuple[str, ...]:
-        """Issue #1327: prefer `declaration_domain` (parent set) over body
-        `domain` when present AND arities match. The arity guard mirrors the
-        upstream KKT-side guards and protects against future call-sites that
-        construct EquationDefs with mismatched-arity declaration domains
-        (e.g., literal-selector body domains in models like korcge).
+        """Issue #1327: prefer `declaration_domain` over body `domain` when
+        present, mirroring the source's declaration form.
+
+        The KKT-side machinery (`multiplier_domain_widenings`, comp equation
+        construction, fix-inactive emit) is arity-guarded — only true
+        same-arity parent/subset splits are recorded there. Comp equations
+        therefore have `declaration_domain` set only when arities match
+        (see `complementarity.py`).
+
+        The arity guard is intentionally NOT applied here for the original
+        equality-equation declaration: when the source has a scalar
+        declaration (`Equation gdeq;`) but an indexed body (`gdeq(i)..
+        ...`), GAMS broadcasts the equation to the body's indices. The MCP
+        must mirror the same scalar declaration so the `$include` source
+        and the MCP redeclaration agree (otherwise GAMS error 318
+        "Domain list redefined" — issue #1330 on camcge under
+        `--nlp-presolve`). The body emission still uses `domain` (the body
+        head), so the scalar declaration / indexed body pattern is
+        preserved exactly.
         """
         body_domain = getattr(eq_def_obj, "domain", ())
         decl_domain = getattr(eq_def_obj, "declaration_domain", None)
-        if decl_domain is not None and len(decl_domain) == len(body_domain):
+        if decl_domain is not None:
             return decl_domain
         return body_domain
 
