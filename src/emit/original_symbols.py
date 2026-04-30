@@ -2703,20 +2703,34 @@ def emit_subset_value_assignments(
                 ]
             else:
                 # Mixed: some elements are set/alias names, others are literals.
-                # Use per-position is_set_flags to decide quoting:
-                # - is_set=True  → legitimate subset reference, keep bare
-                # - is_set=False → literal UEL (possibly colliding with a set
-                #   name, e.g., cases(c1,m) where 'm' is both element and set),
-                #   force-quote to prevent $170 domain violations.
+                # Issue #1315/#1323: A position with declared domain `*`
+                # (wildcard, e.g. Table headers like `cases(c, *)`) accepts
+                # any literal label — element names that happen to collide
+                # with declared sets MUST be force-quoted, else GAMS would
+                # interpret `cases('c1', m) = 10` as iterating over an
+                # empty set `m` and silently drop the value.
+                # For non-wildcard positions, an element that IS the
+                # position's declared domain set or a subset of it is a
+                # legitimate subset-reference and stays bare.
                 quoted_keys = []
-                for k, is_set in zip(expanded_key, is_set_flags, strict=True):
-                    if is_set:
-                        # Legitimate set reference — keep bare (quote only if
-                        # the name contains special chars like '-')
+                for pos, (k, is_set) in enumerate(zip(expanded_key, is_set_flags, strict=True)):
+                    declared_domain = (
+                        param_def.domain[pos].lower() if pos < len(param_def.domain) else "*"
+                    )
+                    keep_bare = False
+                    if is_set and declared_domain != "*":
+                        elem_sdef = model_ir.sets.get(k)
+                        if elem_sdef is None:
+                            # Alias or universe — preserve prior behavior.
+                            keep_bare = True
+                        else:
+                            elem_parents = {d.lower() for d in elem_sdef.domain}
+                            keep_bare = (
+                                k.lower() == declared_domain or declared_domain in elem_parents
+                            )
+                    if keep_bare:
                         quoted_keys.append(_quote_assignment_index(k, sets_and_aliases_lower))
                     else:
-                        # Literal element — force-quote even if it collides
-                        # with a declared set name
                         if (k.startswith('"') and k.endswith('"')) or (
                             k.startswith("'") and k.endswith("'")
                         ):
@@ -3166,6 +3180,95 @@ def emit_loop_statements(model_ir: ModelIR) -> str:
     return "\n\n".join(lines)
 
 
+def collect_pre_solve_referenced_params(model_ir: ModelIR) -> set[str]:
+    """Collect param names referenced in solve-loop pre-solve assignments.
+
+    Issue #1315/#1323: when `emit_pre_solve_param_assignments` extracts
+    `m(mm) = ord(mm) <= cases(c, 'm')` from lmp2's solve-loop body,
+    `cases` becomes referenced in the MCP. Without surfacing this to
+    `_collect_model_relevant_params`, `cases` would be dropped and GAMS
+    would Error 141 on its use.
+
+    This helper walks the same statements `emit_pre_solve_param_assignments`
+    would extract (parameter assignments + dynamic-subset assignments,
+    pre-solve only) and collects every ID token that names a declared
+    parameter.
+
+    Returns a set of lowercase parameter names.
+    """
+    from lark import Token, Tree
+
+    from src.ir.symbols import LoopStatement
+
+    param_names_lower = {p.lower() for p in model_ir.params}
+    dynamic_subset_names = {
+        name.lower()
+        for name, sdef in model_ir.sets.items()
+        if sdef.domain and len(sdef.domain) == 1 and not sdef.members
+    }
+    _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
+    referenced: set[str] = set()
+
+    def _lhs_name(stmt: Tree) -> str | None:
+        if not stmt.children:
+            return None
+        lhs = stmt.children[0]
+        while isinstance(lhs, Tree) and lhs.data in ("lvalue", "symbol_indexed", "symbol_plain"):
+            lhs = lhs.children[0]
+        if isinstance(lhs, Token) and lhs.type == "ID":
+            return str(lhs).lower()
+        return None
+
+    def _collect_ids(node: object) -> None:
+        if isinstance(node, Token):
+            if node.type == "ID" and str(node).lower() in param_names_lower:
+                referenced.add(str(node).lower())
+        elif isinstance(node, Tree):
+            for c in node.children:
+                _collect_ids(c)
+
+    def _walk_stmts(stmts: list) -> None:
+        for stmt in stmts:
+            if not isinstance(stmt, Tree):
+                break
+            if "solve" in str(stmt.data):
+                break
+            if str(stmt.data) == "loop_stmt":
+                inner_body: list = []
+                for c in stmt.children:
+                    if isinstance(c, Tree) and c.data == "loop_body":
+                        inner_body = [child for child in c.children if isinstance(child, Tree)]
+                _walk_stmts(inner_body)
+                # Match _extract_pre_solve's break-on-inner-solve behavior.
+                for c in stmt.iter_subtrees():
+                    if "solve" in str(c.data):
+                        return
+                continue
+            if str(stmt.data) not in _ASSIGN_TYPES:
+                continue
+            name = _lhs_name(stmt)
+            if name is None:
+                continue
+            if name in param_names_lower or name in dynamic_subset_names:
+                # Skip the LHS subtree (children[0]) so we don't add the
+                # parameter being assigned to into the relevant set just
+                # because it's the assignment's target. We only care about
+                # params *referenced* on the RHS / dollar-condition, since
+                # those are the additional symbols we need to declare /
+                # populate to make the assignment work.
+                for child in stmt.children[1:]:
+                    _collect_ids(child)
+
+    for loop_stmt in model_ir.loop_statements:
+        if not isinstance(loop_stmt, LoopStatement):
+            continue
+        if not _loop_contains_solve(loop_stmt):
+            continue
+        _walk_stmts(loop_stmt.body_stmts)
+
+    return referenced
+
+
 def emit_pre_solve_param_assignments(
     model_ir: ModelIR,
     already_declared_symbols: set[str] | None = None,
@@ -3203,6 +3306,18 @@ def emit_pre_solve_param_assignments(
         return ""
 
     param_names = {name.lower() for name in model_ir.params}
+    # Issue #1315/#1323: Dynamic-subset SET assignments inside multi-solve
+    # loop bodies must also be extracted (e.g., lmp2's `m(mm) = ord(mm) <=
+    # cases(c, 'm')`). Without this, GAMS aborts with Error 66 because the
+    # dynamic subset is referenced in equation domains/bodies but never
+    # populated. A "dynamic subset" is a set with a non-empty parent domain
+    # and no statically declared members (its membership is computed at
+    # runtime).
+    dynamic_subset_names = {
+        name.lower()
+        for name, sdef in model_ir.sets.items()
+        if sdef.domain and len(sdef.domain) == 1 and not sdef.members
+    }
     _ASSIGN_TYPES = {"assign", "conditional_assign_general"}
 
     def _lhs_name(stmt: Tree) -> str | None:
@@ -3367,27 +3482,29 @@ def emit_pre_solve_param_assignments(
             continue
 
         # Build substitution: each loop index -> first element of its set
-        subst: dict[str, str] = {}
+        loop_index_subst: dict[str, str] = {}
         for idx_name in loop_stmt.indices:
             idx_lower = idx_name.lower()
             sdef = model_ir.sets.get(idx_lower)
             if sdef and sdef.members:
                 first_elem = sdef.members[0]
-                subst[idx_lower] = f"'{first_elem}'"
+                loop_index_subst[idx_lower] = f"'{first_elem}'"
 
-        # Also substitute dynamic subsets with their parent sets
-        # (e.g., m → mm, n → nn) since the subsets may not be
-        # populated when these assignments execute.
+        # Param substitution: also substitute dynamic subsets with their
+        # parent sets (e.g., m → mm, n → nn) since the subsets may not be
+        # populated when these assignments execute. Used only for parameter
+        # assignments — set assignments must preserve their LHS subset name.
+        param_subst = dict(loop_index_subst)
         for set_name, sdef in model_ir.sets.items():
             if (
                 sdef.domain
                 and len(sdef.domain) == 1
                 and not sdef.members
-                and set_name.lower() not in subst
+                and set_name.lower() not in param_subst
             ):
-                subst[set_name.lower()] = sdef.domain[0]
+                param_subst[set_name.lower()] = sdef.domain[0]
 
-        if not subst:
+        if not param_subst:
             continue
 
         def _inner_loop_has_solve(loop_node: Tree) -> bool:
@@ -3420,8 +3537,8 @@ def emit_pre_solve_param_assignments(
             + ([model_ir.model_name] if model_ir.model_name else [])
         }
 
-        # Extract pre-solve param assignments (including from inner loops)
-        def _extract_pre_solve(stmts: list, sub: dict[str, str]) -> None:
+        # Extract pre-solve param/subset assignments (including from inner loops)
+        def _extract_pre_solve(stmts: list, p_sub: dict[str, str], l_sub: dict[str, str]) -> None:
             for stmt in stmts:
                 if not isinstance(stmt, Tree):
                     break
@@ -3430,7 +3547,8 @@ def emit_pre_solve_param_assignments(
                 # Recurse into inner loops
                 if str(stmt.data) == "loop_stmt":
                     # Find the loop_body subtree and id_list for the index
-                    inner_sub = dict(sub)
+                    inner_p_sub = dict(p_sub)
+                    inner_l_sub = dict(l_sub)
                     inner_body_stmts: list = []
                     for c in stmt.children:
                         if isinstance(c, Tree) and c.data == "id_list":
@@ -3439,12 +3557,14 @@ def emit_pre_solve_param_assignments(
                                     inner_idx = str(tok).lower()
                                     inner_sdef = model_ir.sets.get(inner_idx)
                                     if inner_sdef and inner_sdef.members:
-                                        inner_sub[inner_idx] = f"'{inner_sdef.members[0]}'"
+                                        first = f"'{inner_sdef.members[0]}'"
+                                        inner_p_sub[inner_idx] = first
+                                        inner_l_sub[inner_idx] = first
                         elif isinstance(c, Tree) and c.data == "loop_body":
                             inner_body_stmts = [
                                 child for child in c.children if isinstance(child, Tree)
                             ]
-                    _extract_pre_solve(inner_body_stmts, inner_sub)
+                    _extract_pre_solve(inner_body_stmts, inner_p_sub, inner_l_sub)
                     # If the inner loop contains a solve, any subsequent
                     # outer statements are post-solve — stop scanning.
                     if _inner_loop_has_solve(stmt):
@@ -3453,18 +3573,25 @@ def emit_pre_solve_param_assignments(
                 if str(stmt.data) not in _ASSIGN_TYPES:
                     continue
                 name = _lhs_name(stmt)
-                if name is None or name not in param_names:
+                if name is None:
                     continue
                 # Skip assignments that reference model attributes
                 # (e.g., objold = harkoli.objVal) — these depend on a
                 # prior solve result and are meaningless in the MCP context.
                 if _tree_has_model_attr(stmt):
                     continue
-                gams_text = _tree_to_gams_subst(stmt, sub)
-                assign_lines.append(gams_text)
-                emitted_params.add(name)
+                if name in param_names:
+                    gams_text = _tree_to_gams_subst(stmt, p_sub)
+                    assign_lines.append(gams_text)
+                    emitted_params.add(name)
+                elif name in dynamic_subset_names:
+                    # Issue #1315/#1323: extract dynamic-subset SET assignments.
+                    # Use loop-index-only substitution so the LHS subset name
+                    # (`m(mm)`) is preserved and not rewritten to `mm(mm)`.
+                    gams_text = _tree_to_gams_subst(stmt, l_sub)
+                    assign_lines.append(gams_text)
 
-        _extract_pre_solve(loop_stmt.body_stmts, subst)
+        _extract_pre_solve(loop_stmt.body_stmts, param_subst, loop_index_subst)
 
     if not assign_lines:
         return ""

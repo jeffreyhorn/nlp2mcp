@@ -22,6 +22,7 @@ from src.emit.original_symbols import (
     _sanitize_set_element,
     _sanitize_uel_element,
     collect_missing_param_labels,
+    collect_pre_solve_referenced_params,
     compute_set_assignment_param_deps,
     emit_computed_parameter_assignments,
     emit_interleaved_params_and_sets,
@@ -250,6 +251,13 @@ def _collect_model_relevant_params(model_ir: ModelIR) -> set[str] | None:
     # Also include params referenced in the objective expression
     if model_ir.objective and model_ir.objective.expr:
         _walk(model_ir.objective.expr)
+
+    # Issue #1315/#1323: Also include params referenced in solve-loop
+    # pre-solve assignments — these are extracted by
+    # `emit_pre_solve_param_assignments` and become MCP-relevant via
+    # the assignments themselves (e.g., lmp2's `m(mm) = cases('c1', 'm')`
+    # makes `cases` relevant).
+    referenced.update(collect_pre_solve_referenced_params(model_ir))
 
     # Also include params referenced in variable initialization (.l, .lo, .up, .fx)
     # and bound expressions — these are critical for solver convergence.
