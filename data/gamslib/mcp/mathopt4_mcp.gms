@@ -25,7 +25,7 @@ Parameters
     report(row,*)
 ;
 
-Set nlp2mcp_uel_registry / x1.l, x1_0, x2.l, x2_0 /;
+Set nlp2mcp_uel_registry / 'x1.l', 'x1_0', 'x2.l', 'x2_0' /;
 
 * ============================================
 * Variables (Primal + Multipliers)
