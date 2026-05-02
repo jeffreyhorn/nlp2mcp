@@ -52,36 +52,59 @@ def _copy_synthetic_attrs(old: object, new: object) -> None:
                 pass
 
 
+def _const_if_integer(value: float) -> Const | None:
+    """Wrap ``value`` in a `Const` only if it's integer-valued; otherwise
+    return `None`.
+
+    `IndexOffset` requires integer offsets — AD's `_resolve_idx` rejects
+    non-integer floats. Returning `None` here ensures we leave the
+    offset in its original symbolic form rather than creating an
+    `IndexOffset(Const(0.5))` that AD would refuse downstream.
+    """
+    if isinstance(value, (int, float)) and float(value).is_integer():
+        return Const(float(value))
+    return None
+
+
 def _resolve_offset_to_const(offset_expr: Expr, scalars: dict[str, float]) -> Const | None:
-    """Try to evaluate `offset_expr` to a numeric constant using `scalars`
-    (a map of lowercase scalar parameter name → value). Returns
-    `Const(value)` on success, or `None` if any sub-expression can't be
-    resolved.
+    """Try to evaluate `offset_expr` to a numeric *integer* constant
+    using `scalars` (a map of lowercase scalar parameter name → value).
+    Returns `Const(integer_value)` on success, or `None` if any
+    sub-expression can't be resolved or the resolved value is not
+    integer-valued.
 
     Supported leaf/operator set:
-    - `Const` (numeric values pass through)
+    - `Const` (numeric values pass through, but only when integer-valued)
     - `SymbolRef` resolving to a key in ``scalars``
     - `Unary` ops `+`, `-`
     - `Binary` ops `+`, `-`, `*` (division and exponentiation are
       intentionally rejected to avoid emitting non-integer offsets)
+
+    All return paths go through `_const_if_integer` so that non-integer
+    intermediates (e.g., a `Scalar half /0.5/` reference, or a
+    multiplication that produces a fractional result) cause the
+    resolver to give up rather than emit an offset AD will refuse.
     """
     if isinstance(offset_expr, Const):
-        # Already a const — pass through (caller may decide to wrap).
+        # Pass through only when the existing Const is integer-valued —
+        # otherwise the caller would build an IndexOffset whose offset
+        # AD would later reject.
         if isinstance(offset_expr.value, (int, float)):
-            return offset_expr
+            return _const_if_integer(float(offset_expr.value))
         return None
     if isinstance(offset_expr, SymbolRef):
         val = scalars.get(offset_expr.name.lower())
         if val is None:
             return None
-        return Const(float(val))
+        return _const_if_integer(val)
     if isinstance(offset_expr, Unary):
         child = _resolve_offset_to_const(offset_expr.child, scalars)
         if child is None:
             return None
         if offset_expr.op == "-":
-            return Const(-float(child.value))
+            return _const_if_integer(-float(child.value))
         if offset_expr.op == "+":
+            # `child` was already integer-validated when produced.
             return child
         return None
     if isinstance(offset_expr, Binary):
@@ -92,25 +115,35 @@ def _resolve_offset_to_const(offset_expr: Expr, scalars: dict[str, float]) -> Co
         lv = float(left.value)
         rv = float(right.value)
         if offset_expr.op == "+":
-            return Const(lv + rv)
+            return _const_if_integer(lv + rv)
         if offset_expr.op == "-":
-            return Const(lv - rv)
+            return _const_if_integer(lv - rv)
         if offset_expr.op == "*":
-            return Const(lv * rv)
+            return _const_if_integer(lv * rv)
         return None
     return None
 
 
 def _build_scalar_value_map(model_ir: ModelIR) -> dict[str, float]:
-    """Collect all SCALAR parameters whose declared `domain == ()` and whose
-    `values` map contains a single numeric entry at key `()`.
+    """Collect all SCALAR parameters whose declared `domain == ()`, whose
+    `values` map contains a single numeric entry at key `()`, AND whose
+    `expressions` list is empty.
 
-    Scalars without a numeric value (e.g., assigned at runtime via
-    expressions) are excluded — those can't be substituted at IR-build time.
+    Scalars are excluded when:
+    - They have a non-empty domain (i.e., they're indexed parameters).
+    - They lack a numeric initial value at `()` (e.g., assigned only at
+      runtime via `expressions`).
+    - They have ANY entries in `expressions` — even if there's an
+      initial numeric value, a runtime reassignment (e.g.,
+      `Scalar l /4/; l = 2 * x.l;`) means the value at the point an
+      offset is evaluated may differ from the initial value. Trusting
+      the initial value would silently produce an incorrect offset.
     """
     out: dict[str, float] = {}
     for name, pdef in model_ir.params.items():
         if pdef.domain:
+            continue
+        if pdef.expressions:
             continue
         v = pdef.values.get(())
         if isinstance(v, (int, float)):

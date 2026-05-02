@@ -152,3 +152,101 @@ def test_indexed_param_not_treated_as_scalar():
 
     # Indexed param 'a' is not a scalar; offset stays opaque.
     assert rewrites == 0
+
+
+@pytest.mark.unit
+def test_non_integer_scalar_not_substituted():
+    """A scalar with a non-integer value (e.g., `Scalar half /0.5/`)
+    must NOT be substituted into an IndexOffset — `IndexOffset` requires
+    integer offsets and the AD's `_resolve_idx` rejects non-integer
+    floats.
+    """
+    ir = ModelIR()
+    ir.params["half"] = ParameterDef(name="half", domain=(), values={(): 0.5})
+    body = VarRef(
+        "pd",
+        (IndexOffset(base="tt", offset=SymbolRef("half"), circular=False),),
+    )
+    ir.equations["test_eq"] = EquationDef(
+        name="test_eq",
+        domain=("tt",),
+        relation=Rel.EQ,
+        lhs_rhs=(body, Const(0.0)),
+    )
+
+    rewrites = resolve_scalar_offsets(ir)
+
+    assert rewrites == 0
+    new_body = ir.equations["test_eq"].lhs_rhs[0]
+    assert isinstance(new_body, VarRef)
+    new_idx = new_body.indices[0]
+    assert isinstance(new_idx, IndexOffset)
+    # Offset stays as the original SymbolRef (not collapsed to Const(0.5)).
+    assert isinstance(new_idx.offset, SymbolRef)
+
+
+@pytest.mark.unit
+def test_non_integer_leaf_blocks_resolution():
+    """`_resolve_offset_to_const` is strictly integer-only at every
+    sub-expression. A non-integer leaf scalar (e.g., `0.5`) causes the
+    resolver to bail out at that leaf, so any expression containing one
+    fails to resolve — even if the final arithmetic happens to land on
+    an integer value (e.g., `0.5 + 0.5 = 1`).
+
+    This conservative behavior is intentional: it keeps the leaf-level
+    invariant simple ("only integers cross resolver boundaries") and
+    matches AD's expectation that `IndexOffset.offset` be integer.
+    Models that genuinely want `tt - 1` should write that literally
+    rather than rely on the resolver to evaluate `tt - half - half`.
+    """
+    scalars = {"half": 0.5, "two": 2.0, "three": 3.0}
+
+    # half by itself is non-integer — must NOT resolve.
+    assert _resolve_offset_to_const(SymbolRef("half"), scalars) is None
+
+    # 2 * 0.5 = 1 mathematically, but the leaf `half` returns None,
+    # propagating up. (Resolver is leaf-strict.)
+    expr_lands_on_int = Binary("*", SymbolRef("two"), SymbolRef("half"))
+    assert _resolve_offset_to_const(expr_lands_on_int, scalars) is None
+
+    # 3 * 0.5 = 1.5 — same outcome.
+    expr_frac = Binary("*", SymbolRef("three"), SymbolRef("half"))
+    assert _resolve_offset_to_const(expr_frac, scalars) is None
+
+    # All-integer expression resolves cleanly.
+    expr_int = Binary("+", SymbolRef("two"), SymbolRef("three"))
+    assert _resolve_offset_to_const(expr_int, scalars).value == 5.0
+
+
+@pytest.mark.unit
+def test_scalar_with_runtime_assignment_excluded():
+    """A scalar that's reassigned at runtime via `expressions` (e.g.,
+    `Scalar l /4/; l = 2 * x.l;`) MUST be excluded from the substitution
+    map. Trusting the initial value `4` would silently produce an
+    incorrect offset if `l` changes before the affected equation is
+    used.
+    """
+    ir = ModelIR()
+    pdef = ParameterDef(name="l", domain=(), values={(): 4.0})
+    # Simulate a runtime reassignment by adding a single entry to expressions.
+    pdef.expressions.append(((), Const(7.0)))
+    ir.params["l"] = pdef
+
+    body = VarRef(
+        "pd",
+        (IndexOffset(base="tt", offset=Unary("-", SymbolRef("l")), circular=False),),
+    )
+    ir.equations["test_eq"] = EquationDef(
+        name="test_eq",
+        domain=("tt",),
+        relation=Rel.EQ,
+        lhs_rhs=(body, Const(0.0)),
+    )
+
+    rewrites = resolve_scalar_offsets(ir)
+
+    assert rewrites == 0
+    # Offset stays in its original symbolic form.
+    new_body = ir.equations["test_eq"].lhs_rhs[0]
+    new_idx = new_body.indices[0]
+    assert isinstance(new_idx.offset, Unary)
