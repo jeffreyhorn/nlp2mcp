@@ -1,10 +1,12 @@
 # otpop: MODEL STATUS 5 (Locally Infeasible) — KKT Mismatch
 
 **GitHub Issue:** [#1234](https://github.com/jeffreyhorn/nlp2mcp/issues/1234)
-**Status:** OPEN — partial fix shipped 2026-04-30 (Approach 1 from "Potential Fix Approaches" — scalar-constant offset resolution). Remaining AD bugs (time-reversal, missing terms in `stat_x`/`stat_d`) still cause `EXECERROR=1`.
-**Severity:** Medium — Model compiles and PATH solves, but KKT system is infeasible
+**Status:** OPEN — two fixes shipped:
+- 2026-04-30 (`f53a4928`): Approach 1 — IR-level scalar-constant offset resolution
+- 2026-05-02: Boundary `_fx_` equation deduplication — otpop now reaches MODEL STATUS 1 (Optimal). Objective still differs from the NLP because otpop is nonconvex and the MCP starts from a default warm-start (no replay of the otpop2 → otpop3 → otpop1 chain that warms the NLP).
+**Severity:** Medium — Model compiles and now solves to a local KKT point; objective matching to the NLP requires a separate warm-start strategy.
 **Date:** 2026-04-08
-**Last Updated:** 2026-04-30
+**Last Updated:** 2026-05-02
 **Affected Models:** otpop
 
 ---
@@ -321,3 +323,142 @@ in the PR body.
 **Total 6–10 h** (Step 1 confirmation + Step 2 derivation + Step 3
 choice + Step 4 implement/test). Similar shape to other AD-bug
 investigations in this codebase.
+
+---
+
+## Investigation 2026-05-02 — diagnosis was wrong; real bug was a `_fx_` boundary conflict; otpop now reaches MODEL STATUS 1
+
+### What the prior plan got wrong
+
+The 2026-04-30 plan blamed `card(t) - ord(t)` AD evaluation, citing
+`(0)*p(...)` coefficients in the listing as evidence. Re-reading the
+GAMS `.lst` more carefully: those are **GAMS's normal display of
+bilinear terms**, where the *other* factor (e.g., `nu_zdef.l = 0`,
+`nu_kdef.l = 0` at the default warm-start) evaluates to zero. They
+are not zero coefficients in the symbolic equation — the emitted
+`.gms` shows `0.365 * v * p(tt+(card(tt)-ord(tt))) * nu_zdef`, which
+is correct.
+
+The **actual abort** was reported one section earlier in the listing:
+
+```
+**** MCP pair x_fx_1974.nu_x_fx_1974 has unmatched equation
+     x_fx_1974
+```
+
+### Real root cause (boundary `_fx_` conflict)
+
+otpop's sets overlap at one element:
+
+```
+th(tt) 'historical years' / 1965*1974 /;   * x.fx(th) = x74 = 29.4
+t(tt)  'model horizon'    / 1974*1990 /;   * stationarity domain for x
+```
+
+For the boundary year **1974** (in BOTH `th` and `t`), the emitter
+correctly synthesizes an MCP-paired `_fx_` equation:
+
+```
+x_fx_1974.. x("1974") - 29.4 =E= 0;
+... x_fx_1974.nu_x_fx_1974, ...   // in the Model statement
+```
+
+But at the same time, the `Variable Bounds` section blindly emitted
+ALL `var.fx_map` entries as `.fx` lines (Issue #1021's fix —
+originally added so spatequ's empty `comp_*` equations had a fixed
+paired variable):
+
+```
+x.fx('1974') = 29.4;
+```
+
+The `.fx` line caused GAMS's `holdFixed=true` pass to **remove the
+column** `x("1974")`, leaving the `x_fx_1974` row with no variables.
+Its paired multiplier `nu_x_fx_1974` was therefore unmatched →
+EXECERROR=1.
+
+Sibling years 1965–1973 didn't trigger this because they're outside
+`t`, so their `_fx_` equations are *suppressed* by
+`_compute_suppressed_fx_equations` (`src/emit/emit_gams.py:855`) and
+fall through to the standard `.fx` + `nu_*.fx = 0` fallback. The
+overlap on 1974 is unique.
+
+### What was fixed
+
+**`src/emit/emit_gams.py:1609`** — the `fx_map` re-emission loop in
+the variable-bounds pass now skips entries whose `_fx_` equation is
+in the MCP (i.e., the equation is in `kkt.model_ir.equalities` AND
+NOT in `suppressed_fx`). When the equation will fix the variable
+through complementarity, we must NOT also `.fx` the column.
+
+```python
+if var_def.fx_map:
+    _equalities_set = set(kkt.model_ir.equalities)
+    for indices, fx_val in sorted(var_def.fx_map.items()):
+        eq_name = _fx_eq_name(var_name, indices)
+        if eq_name in _equalities_set and eq_name not in suppressed_fx:
+            continue
+        ...
+```
+
+This preserves Issue #1021's behavior for the unit-test scenarios
+(those construct `ModelIR` without calling `normalize_model`, so
+`equalities` is empty and the `.fx` is still emitted) and for spatequ
+(diagonal entries fall into `suppressed_fx`, so `.fx` is still
+emitted). It changes behavior only for the boundary case otpop hit.
+
+### Tests added
+
+- `tests/unit/emit/test_fx_suppression.py::TestSuppressedFxInEmission::test_active_fx_equation_skips_redundant_dot_fx`
+  — minimal `ModelIR` with stationarity domain that INCLUDES the
+  fx_map index; asserts the `_fx_` equation is paired and the
+  redundant `.fx` is NOT emitted.
+- `tests/integration/emit/test_otpop_scalar_offset_resolution.py::test_otpop_x_fx_1974_no_redundant_dot_fx`
+  — asserts `x_fx_1974` is paired, `x.fx('1974')` is absent, and
+  siblings 1965–1973 still get `.fx` (since their equations are
+  suppressed).
+
+Quality gate clean: `make typecheck && make lint && make format
+&& make test` → **4,689 passed**, 10 skipped, 1 xfailed.
+
+### End-to-end result
+
+```bash
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --quiet
+gams /tmp/otpop_mcp.gms lo=0
+```
+
+- **SOLVER STATUS**: 1 Normal Completion
+- **MODEL STATUS**: 1 Optimal
+- **REPORT SUMMARY**: 0 NONOPT
+- `nlp2mcp_obj_val = 2307.072`
+
+The MCP solves to a local KKT point. The objective differs from the
+NLP's `pi = 4217.80` because **otpop is nonconvex** (bilinear
+`x*p` in `kdef` and `zdef`) and the original NLP gets warm-started
+by a chain of solves (`otpop2 → otpop3 → otpop1`) before the final
+solve. The MCP starts from default `.l = 0` initialization and
+converges to a different stationary point. Closing this gap is a
+warm-start / multi-solve replay concern, not a KKT-correctness one,
+and is out of scope for this fix.
+
+### What's still left for `#1234`
+
+Closing the objective gap to `pi ≈ 4217.80`:
+
+1. **Replay-style warm start**: emit a pre-solve block that runs
+   `otpop2`, then `otpop3`, then sets `kdef.m = 1; zdef.m = 1;`
+   before the MCP solve, mirroring the original GAMS file's
+   sequence. This already exists in skeleton form (`_emit_nlp_presolve`
+   at `src/emit/emit_gams.py:906`); check whether it activates for
+   otpop and what it emits.
+2. **Multi-solve initialization**: alternatively, capture the final
+   `.l` values from `otpop3` (the warm-up maximize that runs in the
+   original) and inject them as `var.l(...) = ...` lines in the MCP.
+3. **Validate against NLP solution**: once the MCP converges to
+   `pi ≈ 4217.80`, add a pipeline `cmp_obj` assertion in the gamslib
+   regression suite.
+
+These are 2–4 h of work each and are independent of the KKT
+correctness fix shipped here. They can ship in a follow-up PR or
+tracked as a separate issue.

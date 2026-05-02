@@ -90,6 +90,45 @@ def test_otpop_stat_pd_includes_cross_term_from_adef():
 
 
 @pytest.mark.integration
+def test_otpop_x_fx_1974_no_redundant_dot_fx():
+    """Issue #1234 (boundary fix): otpop's `th = 1965*1974` and
+    `t = 1974*1990` overlap on '1974'. The KKT pipeline emits an
+    `x_fx_1974.. x("1974") - 29.4 =E= 0` equation paired with the
+    multiplier `nu_x_fx_1974` because '1974' IS in the active
+    stationarity domain for x.
+
+    Pre-fix the emitter ALSO produced an unconditional
+    `x.fx('1974') = 29.4` line in the variable-bounds section.
+    GAMS held-fixed the column, leaving the `x_fx_1974` row empty
+    and reporting "MCP pair x_fx_1974.nu_x_fx_1974 has unmatched
+    equation" → EXECERROR=1.
+
+    Post-fix the redundant `.fx` is suppressed when the eq is in
+    the MCP (not in `suppressed_fx`), so the equation alone fixes
+    x("1974") through complementarity.
+    """
+    src = "data/gamslib/raw/otpop.gms"
+    if not os.path.exists(src):
+        pytest.skip("data/gamslib/raw/otpop.gms is gitignored on this runner.")
+
+    output = _emit_mcp_for(src)
+
+    # The equation must be in the MCP, paired with its multiplier.
+    assert 'x_fx_1974.. x("1974") - 29.4 =E= 0;' in output
+    assert "x_fx_1974.nu_x_fx_1974" in output
+
+    # The redundant `.fx('1974')` line must NOT appear.
+    assert "x.fx('1974')" not in output
+
+    # Suppressed siblings (1965-1973, outside `t`) DO emit `.fx` (each
+    # appears at least once: in the variable-bounds section and again in
+    # the suppressed-fx fallback section, GAMS treats duplicates as
+    # last-write-wins).
+    for year in (1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973):
+        assert f"x.fx('{year}') = 29.4;" in output
+
+
+@pytest.mark.integration
 def test_otpop_adef_uses_resolved_integer_offset():
     """`adef(tt)$tp(tt).. ... pd(tt-l) ...` should be emitted with the
     SymbolRef `l` resolved to its scalar value `4` — the body should

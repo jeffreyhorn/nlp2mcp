@@ -1606,8 +1606,20 @@ def emit_gams_mcp(
         # complains about empty equations with unfixed paired variables.
         # fx_map keys are always literal UELs (never domain variables),
         # so always quote them to avoid collisions with set/alias names.
+        # Issue #1234: Skip emission when the corresponding `_fx_` equation
+        # is in the MCP (paired with its multiplier). The equation already
+        # fixes the variable through complementarity; emitting `.fx` in
+        # that case makes GAMS hold-fix the column, leaving the equation
+        # row empty and the paired multiplier unmatched. This happens at
+        # the boundary of the active stationarity domain (e.g., otpop's
+        # 1974, in both `th` and `t`), where the `_fx_` equation is
+        # neither suppressed nor accompanied by a blanket `.fx = 0`.
         if var_def.fx_map:
+            _equalities_set = set(kkt.model_ir.equalities)
             for indices, fx_val in sorted(var_def.fx_map.items()):
+                eq_name = _fx_eq_name(var_name, indices)
+                if eq_name in _equalities_set and eq_name not in suppressed_fx:
+                    continue
                 idx_str = _format_map_indices(indices)
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)

@@ -368,3 +368,56 @@ class TestSuppressedFxInEmission:
         assert "a.fx('0') = 1000;" in result
         # And the multiplier should be fixed to 0
         assert "nu_a_fx_0.fx = 0;" in result
+
+    def test_active_fx_equation_skips_redundant_dot_fx(self, manual_index_mapping):
+        """Issue #1234: When a _fx_ equation is in the MCP (not suppressed),
+        the redundant `.fx` assignment must NOT be emitted.
+
+        Setup mirrors otpop's boundary year 1974: the variable's stationarity
+        domain is `t = {'1974'}`, and fx_map has an entry for '1974' (which
+        is INSIDE that active domain). The _fx_ equation `a_fx_1974` is
+        therefore not suppressed and stays paired with its multiplier in the
+        MCP. Emitting `a.fx('1974') = ...` in addition would make GAMS hold-fix
+        the column, leaving the equation row empty and the paired multiplier
+        unmatched (the EXECERROR=1 abort otpop hit before this fix).
+        """
+        from src.ir.ast import Binary, Const, VarRef
+        from src.ir.symbols import EquationDef, Rel
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["tl"] = SetDef(name="tl", members=["1974", "1975"])
+        # Active stationarity domain INCLUDES the fx_map index '1974'.
+        model.sets["t"] = SetDef(name="t", members=["1974", "1975"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("1974",)] = 29.4
+        model.variables["a"] = a
+
+        fx_eq = EquationDef(
+            name="a_fx_1974",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(Binary("-", VarRef("a", indices=("1974",)), Const(29.4)), Const(0.0)),
+        )
+        model.equations["a_fx_1974"] = fx_eq
+        model.equalities.append("a_fx_1974")
+
+        kkt = _make_kkt(
+            model,
+            [("obj", ()), ("a", ("1974",)), ("a", ("1975",))],
+            manual_index_mapping,
+        )
+        kkt.stationarity_conditions["a"] = SetMembershipTest("t", (SymbolRef("tl"),))
+        kkt.multipliers_eq["a_fx_1974"] = MultiplierDef(
+            name="nu_a_fx_1974", domain=(), kind="eq", associated_constraint="a_fx_1974"
+        )
+
+        result = emit_gams_mcp(kkt)
+
+        # The equation IS in the MCP (not suppressed)...
+        assert "a_fx_1974.nu_a_fx_1974" in result
+        # ...so the redundant `.fx` assignment must NOT be emitted.
+        assert "a.fx('1974')" not in result
