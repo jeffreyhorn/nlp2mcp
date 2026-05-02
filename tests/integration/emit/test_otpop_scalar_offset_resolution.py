@@ -1,23 +1,32 @@
 """Sprint 25 / #1234: otpop corpus regression for scalar-constant offset
-resolution.
+resolution + boundary `_fx_` deduplication.
 
 Pre-fix: `otpop`'s `adef` equation uses `pd(tt-l)` where `Scalar l /4/`.
 The parser produced `IndexOffset('tt', Unary('-', SymbolRef('l')))`,
 which the AD engine couldn't differentiate (treats SymbolRef('l') as
 opaque). As a result, `stat_pd(tt)` was missing the cross-term from
 differentiating `adef(tt+4)` w.r.t. `pd(tt)`, producing an
-INCONSISTENT KKT system that PATH couldn't satisfy.
+INCONSISTENT KKT system that PATH couldn't satisfy. Separately, the
+boundary year 1974 (in both `th = 1965*1974` and `t = 1974*1990`)
+hit a duplicate-`x.fx`/`x_fx_1974`-equation conflict that GAMS
+rejected with "MCP pair has unmatched equation" → EXECERROR=1.
 
-Post-fix (this PR): the IR normalizer's `resolve_scalar_offsets` pass
-substitutes `l → 4`, producing `IndexOffset('tt', Const(-4))`. The AD
-machinery then correctly cross-attributes the offset, and
-`stat_pd(tt)` includes the missing `-con*d(tt+3)*nu_adef(tt+4)` term.
+Post-fix (this PR):
+- The IR normalizer's `resolve_scalar_offsets` pass substitutes
+  `l → 4`, producing `IndexOffset('tt', Const(-4))`. The AD
+  machinery then correctly cross-attributes the offset, and
+  `stat_pd(tt)` includes the missing `-con*d(tt+3)*nu_adef(tt+4)`
+  term.
+- The variable-bounds emit no longer writes `x.fx('1974') = 29.4`
+  because `x_fx_1974` is in the MCP and fixes x("1974") through
+  complementarity. The pair `x_fx_1974.nu_x_fx_1974` is matched.
 
-Note: the AD-correctness fix improves the KKT structure but otpop
-still aborts with `EXECERROR=1` due to additional unrelated AD bugs
-(time-reversal `p(t + (card(t) - ord(t)))` derivative, missing terms
-in `stat_x`/`stat_d` for non-fixed historical years). Those are out
-of scope for this PR — the issue stays OPEN with detailed notes.
+End-to-end: otpop now reaches MODEL STATUS 1 Optimal at
+`pi=2307.07` (was: EXECERROR=1 abort). The remaining objective gap
+to the NLP's `pi=4217.80` is caused by two AD bugs that are
+independent of the original symptom of #1234 and tracked under
+their own issues (#1334 sum-collapse, #1335 missing zdef
+cross-term). #1234 itself is closed.
 """
 
 from __future__ import annotations

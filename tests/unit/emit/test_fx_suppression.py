@@ -373,13 +373,18 @@ class TestSuppressedFxInEmission:
         """Issue #1234: When a _fx_ equation is in the MCP (not suppressed),
         the redundant `.fx` assignment must NOT be emitted.
 
-        Setup mirrors otpop's boundary year 1974: the variable's stationarity
-        domain is `t = {'1974'}`, and fx_map has an entry for '1974' (which
-        is INSIDE that active domain). The _fx_ equation `a_fx_1974` is
-        therefore not suppressed and stays paired with its multiplier in the
-        MCP. Emitting `a.fx('1974') = ...` in addition would make GAMS hold-fix
-        the column, leaving the equation row empty and the paired multiplier
-        unmatched (the EXECERROR=1 abort otpop hit before this fix).
+        Setup mirrors otpop's boundary case: the variable `a` is declared
+        on the parent set `tl = {'1974', '1975'}`, and `fx_map` has an
+        entry for `'1974'`. The stationarity condition restricts the
+        active domain to `t = {'1974', '1975'}` — the fx_map index
+        `'1974'` IS a member of that set, so the `_fx_` equation
+        `a_fx_1974` is NOT suppressed and stays paired with its
+        multiplier in the MCP.
+
+        Emitting `a.fx('1974') = ...` in addition would make GAMS
+        hold-fix the column, leaving the equation row empty and the
+        paired multiplier unmatched (the EXECERROR=1 abort otpop hit
+        before this fix).
         """
         from src.ir.ast import Binary, Const, VarRef
         from src.ir.symbols import EquationDef, Rel
@@ -389,7 +394,7 @@ class TestSuppressedFxInEmission:
         model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
 
         model.sets["tl"] = SetDef(name="tl", members=["1974", "1975"])
-        # Active stationarity domain INCLUDES the fx_map index '1974'.
+        # Active stationarity domain `t` INCLUDES the fx_map index '1974'.
         model.sets["t"] = SetDef(name="t", members=["1974", "1975"])
 
         a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)

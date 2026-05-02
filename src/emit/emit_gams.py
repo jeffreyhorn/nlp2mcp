@@ -1490,6 +1490,11 @@ def emit_gams_mcp(
     _sets_aliases_lower = {s.lower() for s in kkt.model_ir.sets} | {
         a.lower() for a in kkt.model_ir.aliases
     }
+    # Issue #1234: precompute the equality-name set ONCE for the
+    # `fx_map` re-emission gate below. `kkt.model_ir.equalities` is
+    # global to the model, so building this inside the per-variable
+    # loop would be O(num_vars * num_equalities).
+    _equalities_set = set(kkt.model_ir.equalities)
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
@@ -1615,7 +1620,6 @@ def emit_gams_mcp(
         # 1974, in both `th` and `t`), where the `_fx_` equation is
         # neither suppressed nor accompanied by a blanket `.fx = 0`.
         if var_def.fx_map:
-            _equalities_set = set(kkt.model_ir.equalities)
             for indices, fx_val in sorted(var_def.fx_map.items()):
                 eq_name = _fx_eq_name(var_name, indices)
                 if eq_name in _equalities_set and eq_name not in suppressed_fx:
