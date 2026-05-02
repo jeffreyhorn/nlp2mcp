@@ -126,8 +126,12 @@ def _resolve_offset_to_const(offset_expr: Expr, scalars: dict[str, float]) -> Co
 
 def _build_scalar_value_map(model_ir: ModelIR) -> dict[str, float]:
     """Collect all SCALAR parameters whose declared `domain == ()`, whose
-    `values` map contains a single numeric entry at key `()`, AND whose
-    `expressions` list is empty.
+    `values` map has a numeric entry at key `()`, AND whose `expressions`
+    list is empty.
+
+    Only the value at key `()` is consulted; any other keys in `values`
+    (none should exist for a true scalar) are ignored — they can't
+    influence a scalar offset substitution.
 
     Scalars are excluded when:
     - They have a non-empty domain (i.e., they're indexed parameters).

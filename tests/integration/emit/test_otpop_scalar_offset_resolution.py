@@ -139,15 +139,25 @@ def test_otpop_x_fx_1974_no_redundant_dot_fx():
 
 @pytest.mark.integration
 def test_otpop_adef_uses_resolved_integer_offset():
-    """`adef(tt)$tp(tt).. ... pd(tt-l) ...` should be emitted with the
-    SymbolRef `l` resolved to its scalar value `4` — the body should
-    contain `pd(tt-4)`, not `pd(tt-l)`.
+    """Smoke test: the conditional `adef(tt)$...` equation block survives
+    the parse → normalize → AD → emit pipeline.
 
-    Note: the EMITTER may still print `pd(tt-l)` (the parser preserves
-    the symbolic form for source readability), but the IR-level AST
-    that the AD pipeline consumes uses the resolved Const(-4) form.
-    The downstream stat_pd cross-term (asserted above) is the
-    end-to-end signal that resolution worked.
+    What this test asserts: an `adef(tt)$...` block exists in the emitted
+    MCP. Nothing more. The emitter renders the offset symbolically
+    (`pd(tt-l)`) regardless of whether the IR has been rewritten — both
+    forms are equivalent at the GAMS-text level, so asserting the
+    rendered offset wouldn't validate scalar-offset resolution.
+
+    The actual signal that scalar-offset resolution worked is the
+    presence of the cross-term `nu_adef(tt+4) * d(tt+3)` in `stat_pd(tt)`
+    — asserted in `test_otpop_stat_pd_includes_cross_term_from_adef`
+    above. Without resolution, the AD engine treats `SymbolRef('l')` as
+    opaque and the cross-term is missing entirely.
+
+    This test stays separate to catch regressions where the adef block
+    fails to emit at all (e.g., a normalize/AD bug that drops the
+    equation), distinct from the cross-term test which would fail with
+    a more specific message.
     """
     src = "data/gamslib/raw/otpop.gms"
     if not os.path.exists(src):
@@ -155,9 +165,5 @@ def test_otpop_adef_uses_resolved_integer_offset():
 
     output = _emit_mcp_for(src)
 
-    # adef body should appear in the MCP (as either pd(tt-l) or pd(tt-4)
-    # — the emitter is free to render either form; what matters is that
-    # the AD's downstream output is correct, which is asserted in the
-    # other test).
     adef_match = re.search(r"(?ms)^\s*adef\(tt\)\$.*?;", output)
     assert adef_match is not None, "adef(tt) equation body not found in MCP"
