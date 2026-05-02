@@ -24,7 +24,7 @@ from src.ir.scalar_offset_resolver import (
     _resolve_offset_to_const,
     resolve_scalar_offsets,
 )
-from src.ir.symbols import EquationDef, ParameterDef, Rel
+from src.ir.symbols import EquationDef, ParameterDef, Rel, VariableDef
 
 
 @pytest.mark.unit
@@ -250,3 +250,47 @@ def test_scalar_with_runtime_assignment_excluded():
     new_body = ir.equations["test_eq"].lhs_rhs[0]
     new_idx = new_body.indices[0]
     assert isinstance(new_idx.offset, Unary)
+
+
+@pytest.mark.unit
+def test_resolve_scalar_offsets_in_variable_scale():
+    """`VariableDef.scale` (Issue #835) is an Expr-valued attribute that
+    can carry IndexOffset indices and is emitted in the variable bounds
+    pass, so it must participate in scalar-offset resolution alongside
+    `l_expr` / `lo_expr` / `up_expr` / `fx_expr`.
+
+    Verifies both the scalar `scale` slot and the per-element `scale_map`.
+    """
+    ir = ModelIR()
+    ir.params["l"] = ParameterDef(name="l", domain=(), values={(): 4.0})
+
+    # Scalar scale: x.scale = pd(tt-l) — synthetic but exercises the
+    # `scale` attr branch.
+    scale_expr = VarRef(
+        "pd",
+        (IndexOffset(base="tt", offset=Unary("-", SymbolRef("l")), circular=False),),
+    )
+    # Per-element scale: x.scale(i) = pd(tt-l)
+    scale_map_expr = VarRef(
+        "pd",
+        (IndexOffset(base="tt", offset=Unary("-", SymbolRef("l")), circular=False),),
+    )
+    var = VariableDef(name="x", domain=("i",))
+    var.scale = scale_expr
+    var.scale_map[("i1",)] = scale_map_expr
+    ir.variables["x"] = var
+
+    rewrites = resolve_scalar_offsets(ir)
+
+    # Two leaf rewrites: one in `scale`, one in `scale_map[('i1',)]`.
+    assert rewrites == 2
+
+    new_scale = ir.variables["x"].scale
+    assert isinstance(new_scale, VarRef)
+    assert isinstance(new_scale.indices[0], IndexOffset)
+    assert isinstance(new_scale.indices[0].offset, Const)
+    assert new_scale.indices[0].offset.value == -4.0
+
+    new_scale_map_expr = ir.variables["x"].scale_map[("i1",)]
+    assert isinstance(new_scale_map_expr.indices[0].offset, Const)
+    assert new_scale_map_expr.indices[0].offset.value == -4.0

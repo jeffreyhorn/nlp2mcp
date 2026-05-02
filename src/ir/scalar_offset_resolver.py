@@ -312,9 +312,12 @@ def resolve_scalar_offsets(model_ir: ModelIR) -> int:
         if any_changed:
             pdef.expressions = new_exprs
 
-    # Variables: l_expr / lo_expr / up_expr / fx_expr and *_map.
+    # Variables: l_expr / lo_expr / up_expr / fx_expr / scale and *_map.
+    # `scale`/`scale_map` (Issue #835) are Expr-valued like the bound exprs
+    # and are emitted later by the variable bounds pass; they can carry
+    # IndexOffset indices and so must be traversed alongside the rest.
     for var_def in model_ir.variables.values():
-        for attr in ("l_expr", "lo_expr", "up_expr", "fx_expr"):
+        for attr in ("l_expr", "lo_expr", "up_expr", "fx_expr", "scale"):
             cur = getattr(var_def, attr, None)
             if isinstance(cur, Expr):
                 new_cur = _rewrite_expr(cur, scalars, counter)
@@ -325,6 +328,7 @@ def resolve_scalar_offsets(model_ir: ModelIR) -> int:
             "lo_expr_map",
             "up_expr_map",
             "fx_expr_map",
+            "scale_map",
         ):
             emap = getattr(var_def, attr_map, None)
             if not emap:

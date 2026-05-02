@@ -1612,17 +1612,36 @@ def emit_gams_mcp(
         # fx_map keys are always literal UELs (never domain variables),
         # so always quote them to avoid collisions with set/alias names.
         # Issue #1234: Skip emission when the corresponding `_fx_` equation
-        # is in the MCP (paired with its multiplier). The equation already
-        # fixes the variable through complementarity; emitting `.fx` in
-        # that case makes GAMS hold-fix the column, leaving the equation
-        # row empty and the paired multiplier unmatched. This happens at
-        # the boundary of the active stationarity domain (e.g., otpop's
+        # is actually paired in the emitted MCP. The equation then fixes
+        # the variable through complementarity; emitting `.fx` in that
+        # case makes GAMS hold-fix the column, leaving the equation row
+        # empty and the paired multiplier unmatched. This happens at the
+        # boundary of the active stationarity domain (e.g., otpop's
         # 1974, in both `th` and `t`), where the `_fx_` equation is
         # neither suppressed nor accompanied by a blanket `.fx = 0`.
+        #
+        # The "actually paired" check requires three things:
+        # 1. The equation is in `kkt.model_ir.equalities` (declared at all).
+        # 2. It is NOT in `suppressed_fx` (not dropped by the conflict
+        #    suppressor).
+        # 3. Its multiplier is not filtered out by `referenced_multipliers`
+        #    (templates.py:370-373 drops equalities whose multiplier was
+        #    simplified away — without this third predicate the gate would
+        #    suppress `.fx` even when the `_fx_` equation isn't emitted,
+        #    leaving the variable unfixed).
         if var_def.fx_map:
             for indices, fx_val in sorted(var_def.fx_map.items()):
                 eq_name = _fx_eq_name(var_name, indices)
-                if eq_name in _equalities_set and eq_name not in suppressed_fx:
+                mult_name = create_eq_multiplier_name(eq_name)
+                eq_paired_in_mcp = (
+                    eq_name in _equalities_set
+                    and eq_name not in suppressed_fx
+                    and (
+                        kkt.referenced_multipliers is None
+                        or mult_name in kkt.referenced_multipliers
+                    )
+                )
+                if eq_paired_in_mcp:
                     continue
                 idx_str = _format_map_indices(indices)
                 # Format value: use integer form for whole numbers
