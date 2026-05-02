@@ -205,19 +205,119 @@ are NOT covered by this fix:
    maximization objective). PATH should iterate to find these but the
    Jacobian-step diverges because of the residuals from issues 1–2.
 
-### Required next steps before another fix attempt
+### How to proceed (next session)
 
-1. Hand-derive `∂zdef/∂x(t')` and compare against the AD's emitted
-   `stat_x(t')` body. Identify why the time-reversal contribution
-   shows `(0)*p(...)` instead of the correct `0.365*v*(...)*1` form.
+**Start here.** Branch is `sprint25-fix-1234`; partial fix is committed
+at `f53a4928`. Untracked `.claude/` is local-only; ignore.
 
-2. Investigate whether the `card(t) - ord(t)` index arithmetic
-   produces an `IndexOffset` with a non-Const offset that escapes
-   the new resolver (it would, since `card(t)` and `ord(t)` aren't
-   scalar parameters — they're GAMS built-in functions).
+**Step 0 — reproduce current state (5 min):**
 
-3. Consider a more general "evaluate at compile time" pass for
-   `card(t)` / `ord(t)` constant arithmetic.
+```bash
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms -o /tmp/otpop_mcp.gms --quiet
+gams /tmp/otpop_mcp.gms lo=0
+# Expect: EXECERROR=1 (not MODEL STATUS 5 anymore — symptoms shifted post-#1232)
+grep -E "stat_(x|d|z|k)" /tmp/otpop_mcp.gms | head -40
+```
 
-Estimated remaining effort: **6–10 hours** (similar shape to other
-AD-bug investigations in this codebase).
+Eyeball the emitted `stat_x`, `stat_d`, `stat_z`, `stat_k`. The bug
+markers from the 2026-04-30 investigation are `(0)*p(1990)` and
+`(0)*p(t)` coefficients — these are where AD failed to resolve a
+time-reversal index.
+
+**Step 1 — confirm the suspected escape path for `card(t) - ord(t)`
+(1–2 h):**
+
+The new IR-level resolver (`src/ir/scalar_offset_resolver.py`) only
+rewrites `IndexOffset.offset` whose leaves are `Const` /
+`SymbolRef → ParameterDef`. `card(t)` and `ord(t)` are `Call` nodes,
+so they pass through untouched.
+
+The AD-side helper `_try_eval_offset` in
+`src/ad/constraint_jacobian.py:133–202` *does* handle
+`Call("card", ...)` and `Call("ord", ...)` — but only when the `ord`
+argument resolves to a *concrete set element* via `pos_map` lookup
+(`:171–192`). For `p(t + (card(t) - ord(t)))` inside
+`sum(t, ...)`, the `t` here is the *symbolic sum index*, not yet
+substituted, so `pos_map[base]` misses and `_try_eval_offset` returns
+`None` (`:191–192`).
+
+**Hypothesis to verify:** during AD differentiation of the `zdef` sum
+body, the cross-attribution step iterates over concrete `t` values
+but feeds the still-symbolic `card(t) - ord(t)` to
+`_try_eval_offset` *before* substitution. Add a debug log at
+`src/ad/constraint_jacobian.py:215` (the `evaluated = ...` line) for
+otpop to confirm which path is taken.
+
+If confirmed: the fix is to substitute the loop variable into the
+offset expression before calling `_try_eval_offset`, OR to handle
+`ord(<sum-index-bound-to-element>)` directly in `_try_eval_offset`.
+
+**Step 2 — hand-derive `∂zdef/∂x(t')` and compare (2–3 h):**
+
+`zdef.. z = v * sum(t, .365 * (xb(t) - x(t)) * p(t + (card(t) - ord(t))))`
+
+By hand: for each `t' ∈ t`,
+`∂zdef/∂x(t') = -.365 * v * p(t' + (card(t) - ord(t')))`.
+
+For `t = (1990, 1991, ..., 2000)` (card=11), `t' = 1990` should map
+to `p(2000)`, `t' = 1991` to `p(1999)`, etc. Print emitted
+`stat_x(1990)` and check what it points to. If it shows `(0)*p(1990)`
+the AD failed to resolve the offset; if it shows `*p(2000)` the AD
+resolved correctly and the bug is elsewhere.
+
+**Step 3 — pick the fix location (1 h):**
+
+Two options, choose based on Step 1's findings:
+
+- **(a) Extend the IR-level resolver** to evaluate `card(<set>)` to a
+  numeric constant (it doesn't depend on the loop variable).
+  `ord(<symbolic>)` cannot be resolved at IR-build time, so
+  `card(t) - ord(t)` would still be partially symbolic. This narrows
+  but does not fully close the gap.
+
+- **(b) Add per-instance offset substitution in
+  `constraint_jacobian.py`** so that when AD enumerates `t' ∈ t`, it
+  substitutes `t → t'` into the offset expression *before* calling
+  `_try_eval_offset`. This handles the general
+  `f(loop_index, card, ord)` case.
+
+Approach (b) is the more general fix and likely the right one;
+approach (a) is a partial mitigation. Discuss with a maintainer
+before committing to (b) since it touches AD-core enumeration logic.
+
+**Step 4 — write tests first (1 h), then implement (1–2 h):**
+
+- Unit test in `tests/unit/ad/test_constraint_jacobian.py`: a tiny
+  `sum(t, x(t) * p(t + (card(t) - ord(t))))` IR fragment, assert the
+  emitted Jacobian has the right `t → reversed-t` mapping.
+- Integration test in
+  `tests/integration/emit/test_otpop_*.py`: assert `stat_x(1990)`
+  contains `*p(2000)` (or whatever the hand-derivation gives).
+- Pipeline check: after fix, otpop should reach MODEL STATUS 1
+  (Optimal) with `nlp2mcp_obj_val` matching the NLP objective
+  (≈ 4217.80). If it still mismatches, items 2 & 3 from the original
+  "What's still left" list are the next layer.
+
+**Step 5 — quality gate & PR:**
+
+```bash
+make typecheck && make lint && make format && make test
+```
+
+Reference `#1234`, link this issue file, summarize hand-derivation
+in the PR body.
+
+### Files Involved (next phase)
+
+- `src/ad/constraint_jacobian.py:133–249` — `_try_eval_offset` and
+  `_resolve_idx`; primary edit site for Approach (b)
+- `src/ad/derivative_rules.py:1847` — `_diff_sum`; verify that the
+  sum-body differentiation passes the right context to the offset
+  resolver
+- `src/ir/scalar_offset_resolver.py` — extend if going with Approach (a)
+
+### Estimated effort
+
+**Total 6–10 h** (Step 1 confirmation + Step 2 derivation + Step 3
+choice + Step 4 implement/test). Similar shape to other AD-bug
+investigations in this codebase.
