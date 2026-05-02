@@ -1,10 +1,17 @@
 # otpop: MODEL STATUS 5 (Locally Infeasible) — KKT Mismatch
 
 **GitHub Issue:** [#1234](https://github.com/jeffreyhorn/nlp2mcp/issues/1234)
-**Status:** OPEN — two fixes shipped:
-- 2026-04-30 (`f53a4928`): Approach 1 — IR-level scalar-constant offset resolution
-- 2026-05-02: Boundary `_fx_` equation deduplication — otpop now reaches MODEL STATUS 1 (Optimal). Objective still differs from the NLP because otpop is nonconvex and the MCP starts from a default warm-start (no replay of the otpop2 → otpop3 → otpop1 chain that warms the NLP).
-**Severity:** Medium — Model compiles and now solves to a local KKT point; objective matching to the NLP requires a separate warm-start strategy.
+**Status:** CLOSED 2026-05-02 — original symptom (MODEL STATUS 5 / EXECERROR=1 abort) resolved. Two fixes shipped:
+- 2026-04-30 (`f53a4928`): IR-level scalar-constant offset resolution
+- 2026-05-02 (`8dbf63e6`): Boundary `_fx_` equation deduplication
+
+otpop now reaches MODEL STATUS 1 (Optimal) at `pi=2307.07`. The remaining objective gap to the NLP's `pi=4217.80` is caused by two distinct AD bugs identified during the 2026-05-02 investigation, tracked under their own issues:
+- **[#1334](https://github.com/jeffreyhorn/nlp2mcp/issues/1334)** — Sum-collapse bug in scalar-constraint stationarity assembly (when ParamRef domain is a strict subset of equation domain).
+- **[#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335)** — Missing `∂zdef/∂p` cross-term in `stat_p` for time-reversal-indexed variable references.
+
+Both AD bugs are independent of the original "model infeasible / EXECERROR=1" framing of this issue and warrant focused investigation under their own titles. See `docs/issues/ISSUE_1334_*.md` and `docs/issues/ISSUE_1335_*.md` for diagnostic notes and code pointers.
+
+**Severity:** Medium → CLOSED (symptom resolved; deeper AD-correctness work tracked elsewhere).
 **Date:** 2026-04-08
 **Last Updated:** 2026-05-02
 **Affected Models:** otpop
