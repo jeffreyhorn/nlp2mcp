@@ -462,3 +462,182 @@ Closing the objective gap to `pi ≈ 4217.80`:
 These are 2–4 h of work each and are independent of the KKT
 correctness fix shipped here. They can ship in a follow-up PR or
 tracked as a separate issue.
+
+---
+
+## Investigation 2026-05-02 (later) — warm-start cannot close the gap; two AD bugs in scalar-constraint stationarity assembly
+
+### What was tried and what it told us
+
+Worked through the three "What's still left" items in order. Each
+revealed a deeper layer:
+
+**(1) Replay-style `--nlp-presolve`** — blocked by parameter
+domain-widening conflict.
+
+The `--nlp-presolve` CLI flag and the `_emit_nlp_presolve` machinery
+(`src/emit/emit_gams.py:906`) DO exist and DO activate for otpop. But
+running the emitted file fails with **GAMS Error 184 ("Domain list
+redefined")** at the `$include` of the source file:
+
+```
+db(t)    'demand scaling constant'
+^^^
+**** 184  Domain list redefined
+```
+
+The MCP file declares `Parameters db(tt); del(tt); ...` because the
+KKT pipeline widens parameter domains from `t` (the original subset
+declaration) to `tt` (the active stationarity equation domain) to
+avoid GAMS $171. The original file's `Parameter db(t);` declaration
+then conflicts at re-include — `$onMultiR` allows re-declaration but
+NOT with a different domain. This blocks the `$include`-based
+presolve approach entirely for any model where the KKT widens a
+parameter domain.
+
+**(2) Manual NLP solve + dual transfer** — finds NLP optimum (pi ≈
+4217.80) for the NLP, then PATH on the MCP **converges away from it
+to pi=2307**, even with all primal `.l` and all dual `nu_*.l`
+warm-started. This was the diagnostic signal: PATH iterates AWAY
+from pi=4217.80 → that point is **not a stationary point of our
+MCP**.
+
+**(3) Residual probe** — solving with `mcp_model.iterlim = 0` after
+the NLP warm-start measures the MCP residual at the NLP solution.
+PATH reports:
+
+```
+FINAL STATISTICS
+Inf-Norm of Complementarity . .  7.5965e+02 eqn: (stat_x('1990'))
+Inf-Norm of Minimum Map . . . .  2.3498e+02 eqn: (stat_p('1986'))
+Inf-Norm of Grad Fischer Fcn. .  2.0135e+05 eqn: (kdef)
+```
+
+Large residuals on `stat_x` and `stat_p` mean those KKT equations
+are NOT satisfied at the NLP solution. There are AD bugs in those
+equation bodies.
+
+### Root cause #1 — sum-over-t__ doesn't collapse for `kdef` cross-term
+
+Mathematically, `kdef.. k = sum(t, del(t)*0.365*(1-c)*p(t)*x(t) - del(t)*rd(t))`
+gives `∂kdef/∂x(tt) = del(tt)*0.365*(1-c)*p(tt)` for `tt ∈ t`.
+
+Current emit in `stat_x(tt)`:
+
+```
++ sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt))
+```
+
+Note: `del(t__)` is summed over the FULL set `t = {1974,...,1990}`,
+giving `sum(del(t__)) ≈ 21.76`. The correct form has no sum and just
+`del(tt)`:
+
+```
++ (((-1) * (del(tt) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt))
+```
+
+The bug is in `src/kkt/stationarity.py` near
+`_add_indexed_jacobian_terms` → scalar-constraint path (`:5279–5310`).
+The code calls `_replace_indices_in_expr` (`:2295`) which substitutes:
+- `del('1974')` → `del(t)` (uses parameter's declared domain `(t,)`)
+- `p('1974')` → `p(tt)` (uses variable's declared domain `(tt,)`)
+
+The two symbols end up with DIFFERENT free indices in the same
+expression. The scalar path then collects free indices, finds `t`
+"uncontrolled" relative to `var_domain={tt}`, and wraps in
+`Sum(("t",), term)`. That sum should collapse against the eq-domain
+guard `$(t(tt))`, but doesn't.
+
+A hand-edit replacing `del(t__)` with `del(tt)` (eliminating the
+sum) reduces `stat_x('1990')` residual from 760 → ~358 (still
+nonzero because the second AD bug below also contributes).
+
+**Where to fix it**: in `_replace_indices_in_expr`'s ParamRef branch
+(`src/kkt/stationarity.py:2413–2479`), when `param_domain` is a
+strict subset of `equation_domain` AND there's a parallel VarRef in
+the same expression that's been substituted to use the eq domain
+variable, the parameter substitution should align with the variable
+substitution (use the eq domain variable, not the parameter's
+declared domain). The existing `_preserve_subset_var_indices`
+(`:2395–2400`) is the analogous logic for VarRef; ParamRef needs a
+mirror that PROMOTES (instead of preserving) when the parameter
+domain is strictly smaller.
+
+Or, equivalently: in
+`_add_jacobian_transpose_terms_scalar`'s wrap-in-Sum logic
+(`:5293–5299`), recognize that the eq-domain guard `$(t(tt))` already
+constrains the free index — collapse the sum to its single matching
+term before emitting.
+
+### Root cause #2 — `stat_p` is missing the `∂zdef/∂p` cross-term
+
+`zdef.. z = v * sum(t, 0.365*(xb(t)-x(t)) * p(t + (card(t)-ord(t))))`.
+For each `t' ∈ t`, the offset `t' + (card(t)-ord(t'))` evaluates to
+the last element of `t` (i.e., `1990`). So:
+
+```
+∂zdef/∂p(p_idx) = v*0.365*(xb(t')-x(t'))   if p_idx = 1990 and t' is each t
+                = 0                          otherwise
+```
+
+i.e., `∂zdef/∂p(1990) = v*0.365*sum(t, xb(t)-x(t))`, only at
+`p(1990)`.
+
+Current emit of `stat_p(tt)` has NO `nu_zdef` term anywhere. The AD
+didn't generate a cross-term for the time-reversal-indexed `p`. This
+is the bug the original issue's "time-reversal" hypothesis was
+pointing at — it's real, just not the cause of the EXECERROR=1
+abort.
+
+This bug is independent of the sum-collapse bug. Both must be fixed
+to make `pi=4218` a stationary point of the MCP.
+
+**Where to look**: AD's per-instance Jacobian for `(zdef, p('1990'))`
+should record a non-zero entry. The time-reversal offset
+`t + (card(t)-ord(t))` may be evaluated at the symbolic-index level
+(returning no concrete entry) rather than the per-element level.
+Investigation should start by asking: `J_eq.get_derivative(zdef_row,
+p_1990_col)` — is it `None` or the correct `v*sum(...)` expression?
+
+`_try_eval_offset` in `src/ad/constraint_jacobian.py:133–202` does
+handle `card(<set>)` and `ord(<concrete-element>)` but only in the
+per-instance enumeration path. For zdef-style sums where the
+substitution `t→t'` happens DURING enumeration, the offset
+`t' + (card(t)-ord(t'))` should resolve per-`t'` to a concrete
+target index — verify this is happening for `(zdef, p_*)` Jacobian
+entries.
+
+### Combined effort
+
+Both bugs are in the AD/KKT pipeline, distinct from the boundary
+`_fx_` emit fix shipped earlier. Both need careful investigation
+because they touch shared substitution machinery
+(`_replace_indices_in_expr`, `_add_jacobian_transpose_terms_scalar`,
+`_try_eval_offset`) and could regress other models.
+
+**Estimated effort:** 8–16 h total (each AD bug is independently
+worth a focused day; cross-regression testing across the gamslib
+corpus adds another half-day per bug).
+
+### What's actually shipped vs. what's deferred
+
+**Shipped (this branch):**
+- KKT-correctness for the boundary `_fx_` emit conflict
+  (commit `8dbf63e6`).
+- Scalar-constant offset resolution in IR (commit `f53a4928`).
+- otpop now reaches MODEL STATUS 1 Optimal (was: EXECERROR=1
+  abort).
+- MCP finds a valid local KKT point (`pi=2307.07`).
+
+**Deferred (separate follow-up):**
+- The two AD bugs documented above (sum-collapse, missing zdef
+  cross-term).
+- Closing the objective gap to `pi ≈ 4217.80`.
+
+Recommendation: file each AD bug as a separate issue with the
+diagnostic notes and code pointers above, then close the original
+`#1234` with a link to those issues. The "MCP solves to MODEL
+STATUS 5 (Locally Infeasible)" symptom from the original report is
+gone; what remains is a different problem (different stationary
+point) that's better tracked under issue titles that name the
+specific AD bugs.
