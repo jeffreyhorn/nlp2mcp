@@ -868,6 +868,27 @@ class TestSetMembershipTest:
         result = expr_to_gams(expr)
         assert result == "(e(i) - m(i))$(t(i))"
 
+    def test_set_membership_with_indexoffset_index(self):
+        """SetMembershipTest with an IndexOffset index — e.g. nh(i+1)."""
+        expr = SetMembershipTest("nh", (IndexOffset("i", Const(1), circular=False),))
+        result = expr_to_gams(expr)
+        assert result == "nh(i+1)"
+
+    def test_set_membership_indexoffset_negative_offset(self):
+        """SetMembershipTest with a lag IndexOffset — e.g. nh(i-1)."""
+        expr = SetMembershipTest("nh", (IndexOffset("i", Const(-1), circular=False),))
+        result = expr_to_gams(expr)
+        assert result == "nh(i-1)"
+
+    def test_set_membership_mixed_indexoffset_and_symbol(self):
+        """SetMembershipTest with mixed IndexOffset + SymbolRef indices."""
+        expr = SetMembershipTest(
+            "edge",
+            (SymbolRef("i"), IndexOffset("j", Const(1), circular=False)),
+        )
+        result = expr_to_gams(expr)
+        assert result == "edge(i,j+1)"
+
 
 @pytest.mark.unit
 class TestIndexOffset:

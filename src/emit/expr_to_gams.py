@@ -692,6 +692,13 @@ def expr_to_gams(
                 rhs_expr, parent_op=parent_op, is_right=is_right, domain_vars=domain_vars
             )
 
+        case IndexOffset():
+            # IndexOffset can appear as a top-level expression when used inside
+            # a SetMembershipTest's index tuple (e.g., the membership-test guard
+            # synthesized for an offset equation domain like `ode1(nh(i+1))..`).
+            # The IR node carries its own GAMS serialization.
+            return expr.to_gams_string()
+
         case _:
             # Fallback for unknown node types
             raise ValueError(f"Unknown expression type: {type(expr).__name__}")
