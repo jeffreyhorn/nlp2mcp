@@ -1616,41 +1616,50 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-05-03T05:38:22.755049+00:00",
+        "parse_date": "2026-05-03T21:48:12.372150+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 22.1872,
+        "parse_time_seconds": 45.2918,
         "variables_count": 10,
         "equations_count": 10
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-05-03T05:38:54.083895+00:00",
+        "translate_date": "2026-05-03T21:49:10.023354+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 31.3235,
+        "translate_time_seconds": 57.2491,
         "output_file": "data/gamslib/mcp/china_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T05:38:54.697746+00:00",
+        "status": "success",
+        "solve_date": "2026-05-03T21:49:11.786987+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.5847,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 27369.569,
+        "solve_time_seconds": 1.6843,
+        "iterations": 266,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T05:38:54.697897+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "mismatch",
+        "comparison_date": "2026-05-03T21:49:11.788055+00:00",
+        "nlp_objective": 40561.5739,
+        "mcp_objective": 27369.569,
+        "absolute_difference": 13192.004900000004,
+        "relative_difference": 0.32523404867186384,
+        "objective_match": false,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 1,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_mismatch",
+        "notes": "Mismatch: diff=1.32e+04 > tolerance=8.11e+01"
       },
       "model_statistics": {
         "variables": 10,
@@ -7369,41 +7378,50 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-05-03T07:32:46.834373+00:00",
+        "parse_date": "2026-05-03T21:49:19.111373+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 1.446,
+        "parse_time_seconds": 5.0566,
         "variables_count": 8,
         "equations_count": 7
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-05-03T07:32:52.498048+00:00",
+        "translate_date": "2026-05-03T21:49:28.780122+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 5.6576,
+        "translate_time_seconds": 9.4679,
         "output_file": "data/gamslib/mcp/pindyck_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T07:32:53.072110+00:00",
+        "status": "success",
+        "solve_date": "2026-05-03T21:49:30.537643+00:00",
         "solver": "PATH",
         "solver_version": null,
-        "solver_status": null,
-        "solver_status_text": null,
-        "model_status": null,
-        "model_status_text": null,
-        "objective_value": null,
-        "solve_time_seconds": 0.5637,
-        "iterations": null,
-        "outcome_category": "path_syntax_error",
-        "error": {
-          "category": "path_syntax_error",
-          "message": "Parse error: compilation_error"
-        }
+        "solver_status": 1,
+        "solver_status_text": "Normal Completion",
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 1170.486,
+        "solve_time_seconds": 1.7025,
+        "iterations": 418,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T07:32:53.072260+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "match",
+        "comparison_date": "2026-05-03T21:49:30.538597+00:00",
+        "nlp_objective": 1170.4863,
+        "mcp_objective": 1170.486,
+        "absolute_difference": 0.00029999999992469384,
+        "relative_difference": 2.5630372600234094e-07,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=3.00e-04, tol=2.34e+00)"
       },
       "model_statistics": {
         "variables": 8,

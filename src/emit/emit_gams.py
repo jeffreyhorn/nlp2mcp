@@ -1659,11 +1659,21 @@ def emit_gams_mcp(
                         or mult_name in kkt.referenced_multipliers
                     )
                 )
-                if eq_paired_in_mcp:
-                    continue
                 idx_str = _format_map_indices(indices)
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                if eq_paired_in_mcp:
+                    # Issue #1349: The `_fx_` equation provides the fix at solve
+                    # time, but the source's `var.fx(idx) = val` also had the
+                    # side effect of setting `var.l(idx) = val`. Subsequent
+                    # var-init loops or recurrences may depend on that .l value
+                    # (e.g., pindyck's `loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))`
+                    # reads r.l('1974') which the .fx side effect would have
+                    # populated). Preserve the .l initialization so loop-based
+                    # var-init does not fail with $141 "Symbol declared but no
+                    # values have been assigned".
+                    bound_lines.append(f"{var_name}.l({idx_str}) = {val_str};")
+                    continue
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
     if bound_lines:

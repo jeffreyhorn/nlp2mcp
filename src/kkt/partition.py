@@ -595,10 +595,20 @@ def _process_expr_map_bound(
         expr = _substitute_symbol_in_expr(expr, rename_map)
 
     if subset_guards:
-        condition: Expr = subset_guards[0]
+        guard_condition: Expr = subset_guards[0]
         for guard in subset_guards[1:]:
-            condition = Binary("and", condition, guard)
-        expr = LhsConditionalAssign(rhs=expr, condition=condition)
+            guard_condition = Binary("and", guard_condition, guard)
+        # Issue #1348: If `expr` is already an `LhsConditionalAssign` (e.g.,
+        # `purchase.up(cp)$purdata(cp,"quantity") = purdata(cp,"quantity")`
+        # parsed with a dollar-condition on the LHS), avoid nesting another
+        # `LhsConditionalAssign` around it — fold the subset-guard into the
+        # existing condition so the emitted equation has a single `$(...)`
+        # guard with both predicates.
+        if isinstance(expr, LhsConditionalAssign):
+            combined = Binary("and", guard_condition, expr.condition)
+            expr = LhsConditionalAssign(rhs=expr.rhs, condition=combined)
+        else:
+            expr = LhsConditionalAssign(rhs=expr, condition=guard_condition)
 
     target_dict[(var_name, ())] = BoundDef(kind, 0.0, domain, expr=expr)
 

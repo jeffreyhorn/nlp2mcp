@@ -5311,18 +5311,38 @@ class _ModelBuilder:
                         else:
                             # Issue #1015: Check if idx is an alias resolving to the
                             # same set as the domain name.
+                            # Issue #1348: Also accept transitive subsets — e.g.,
+                            # china's `gio(g,g) = -1` where gio(ca,g), g(c), c(ca):
+                            # the first `g` should iterate over g's members because
+                            # g ⊂ c ⊂ ca. Walk resolved_idx's parent chain and match
+                            # by SetDef identity (so aliases on either side compare
+                            # equal after resolution).
                             resolved_idx = self._resolve_set_def(idx)
                             dn_lower = domain_name.lower()
                             if dn_lower not in resolved_domain_cache:
                                 resolved_domain_cache[dn_lower] = self._resolve_set_def(domain_name)
                             resolved_domain = resolved_domain_cache[dn_lower]
-                            if (
-                                resolved_idx is not None
-                                and resolved_domain is not None
-                                and resolved_idx is resolved_domain
-                            ):
-                                expand_positions.append(pos)
-                                expand_set_defs[pos] = resolved_idx
+                            if resolved_idx is not None and resolved_domain is not None:
+                                if resolved_idx is resolved_domain:
+                                    expand_positions.append(pos)
+                                    expand_set_defs[pos] = resolved_idx
+                                else:
+                                    visited: set[str] = set()
+                                    stack: list[str] = list(resolved_idx.domain)
+                                    while stack:
+                                        parent_name = stack.pop()
+                                        pn_lower = parent_name.lower()
+                                        if pn_lower in visited:
+                                            continue
+                                        visited.add(pn_lower)
+                                        parent_def = self._resolve_set_def(parent_name)
+                                        if parent_def is None:
+                                            continue
+                                        if parent_def is resolved_domain:
+                                            expand_positions.append(pos)
+                                            expand_set_defs[pos] = resolved_idx
+                                            break
+                                        stack.extend(parent_def.domain)
 
                     if expand_positions:
                         # Build list of member lists for positions that need expansion
