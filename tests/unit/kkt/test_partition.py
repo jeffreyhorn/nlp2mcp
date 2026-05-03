@@ -663,6 +663,80 @@ class TestExpressionBasedBounds:
         assert result.bounds_lo[("x", ("1",))].expr is None
         assert result.bounds_lo[("x", ("2",))].expr is None
 
+    def test_up_expr_map_subset_key_accepted_with_guard(self):
+        """up_expr_map keyed by a strict subset of the domain is accepted,
+        with a SetMembershipTest guard wrapping the bound expression so the
+        bound only applies for elements of the subset (egypt #1343 pattern).
+        """
+        from src.ir.ast import LhsConditionalAssign, SetMembershipTest
+
+        model = ModelIR()
+        # Parent set "c" with members; subset "cup" is a strict subset.
+        model.sets["c"] = SetDef(name="c", members=["a", "b", "x"])
+        model.sets["cup"] = SetDef(name="cup", members=["a"], domain=("c",))
+        model.sets["r"] = SetDef(name="r", members=["r1"])
+
+        var = VariableDef(name="xcrop", domain=("r", "c"))
+        # Source pattern: xcrop.up(r, cup) = upbnds(cup, r);
+        var.up_expr_map = {("r", "cup"): ParamRef("upbnds", indices=("cup", "r"))}
+        model.variables["xcrop"] = var
+
+        result = partition_constraints(model)
+
+        assert ("xcrop", ()) in result.bounds_up
+        bound = result.bounds_up[("xcrop", ())]
+        # Expr should be wrapped in LhsConditionalAssign(condition=cup(c)).
+        assert isinstance(bound.expr, LhsConditionalAssign)
+        cond = bound.expr.condition
+        assert isinstance(cond, SetMembershipTest)
+        assert cond.set_name == "cup"
+        # The renamed RHS should reference parent index "c", not subset "cup".
+        rhs = bound.expr.rhs
+        assert isinstance(rhs, ParamRef)
+        assert rhs.indices == ("c", "r")
+
+    def test_up_expr_map_subset_multi_position_combines_guards(self):
+        """up_expr_map with subset names in multiple positions ANDs both guards
+        (shale #1342 pattern with `uur.up(crr, i, t)` for `uur(c, i, tf)`)."""
+        from src.ir.ast import Binary, LhsConditionalAssign
+
+        model = ModelIR()
+        model.sets["c"] = SetDef(name="c", members=["a", "b"])
+        model.sets["crr"] = SetDef(name="crr", members=["a"], domain=("c",))
+        model.sets["i"] = SetDef(name="i", members=["1"])
+        model.sets["tf"] = SetDef(name="tf", members=["1990", "1991"])
+        model.sets["t"] = SetDef(name="t", members=["1990"], domain=("tf",))
+
+        var = VariableDef(name="uur", domain=("c", "i", "tf"))
+        var.up_expr_map = {("crr", "i", "t"): ParamRef("bbr", indices=("crr",))}
+        model.variables["uur"] = var
+
+        result = partition_constraints(model)
+
+        assert ("uur", ()) in result.bounds_up
+        bound = result.bounds_up[("uur", ())]
+        assert isinstance(bound.expr, LhsConditionalAssign)
+        # Two subset positions → AND of two SetMembershipTests.
+        cond = bound.expr.condition
+        assert isinstance(cond, Binary) and cond.op == "and"
+        # Renamed RHS uses parent set name in subset position.
+        assert isinstance(bound.expr.rhs, ParamRef)
+        assert bound.expr.rhs.indices == ("c",)
+
+    def test_up_expr_map_genuine_mismatch_still_skipped(self):
+        """A key index that is neither equal nor a subset of the domain index
+        should still be rejected with a warning (preserves prior behavior)."""
+        model = ModelIR()
+        model.sets["t"] = SetDef(name="t", members=["1"])
+        model.sets["s"] = SetDef(name="s", members=["a"])  # unrelated to t
+        var = VariableDef(name="x", domain=("t",))
+        var.up_expr_map = {("s",): ParamRef("p", indices=("s",))}
+        model.variables["x"] = var
+
+        result = partition_constraints(model)
+
+        assert ("x", ()) not in result.bounds_up
+
     def test_scalar_lo_expr_skipped_when_per_instance_bounds_exist(self):
         """Scalar lo_expr should be skipped when per-instance numeric bounds exist."""
         model = ModelIR()

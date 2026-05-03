@@ -17,7 +17,15 @@ import logging
 from dataclasses import dataclass, field
 
 from src.ad.index_mapping import resolve_set_members
-from src.ir.ast import Expr, IndexOffset, SubsetIndex
+from src.ir.ast import (
+    Binary,
+    Expr,
+    IndexOffset,
+    LhsConditionalAssign,
+    SetMembershipTest,
+    SubsetIndex,
+    SymbolRef,
+)
 from src.ir.model_ir import ModelIR
 from src.ir.symbols import EquationDef, VarKind
 
@@ -233,6 +241,7 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             "lo",
             result.bounds_lo,
             has_per_instance=has_indexed_lo,
+            model_ir=model_ir,
         )
         _process_expr_map_bound(
             var_def.up_expr_map,
@@ -241,6 +250,7 @@ def partition_constraints(model_ir: ModelIR) -> PartitionResult:
             "up",
             result.bounds_up,
             has_per_instance=has_indexed_up,
+            model_ir=model_ir,
         )
 
         # Issue #922: Synthesize implicit bounds from variable kind.
@@ -407,6 +417,61 @@ def _check_covers_all_instances(var_def, bound_map: dict, model_ir: ModelIR) -> 
         return False
 
 
+def _is_subset_or_alias_of(candidate: str, parent: str, model_ir: ModelIR | None) -> bool:
+    """Check whether `candidate` is a subset or alias resolving to `parent`.
+
+    Used to accept up_expr_map / lo_expr_map keys that use a subset name
+    (e.g., `cup`) where the variable's declared domain has the parent
+    (e.g., `c`). Walks `SetDef.domain` parent chains and resolves aliases.
+    Case-insensitive.
+    """
+    if model_ir is None:
+        return False
+    if candidate.lower() == parent.lower():
+        return True
+    # Resolve alias chain.
+    seen: set[str] = set()
+    cur = candidate
+    while cur in model_ir.aliases and cur.lower() not in seen:
+        seen.add(cur.lower())
+        cur = model_ir.aliases[cur].target
+    if cur.lower() == parent.lower():
+        return True
+    # Walk SetDef.domain (subset → parent chain).
+    visited: set[str] = set()
+    stack = [cur]
+    while stack:
+        name = stack.pop()
+        if name.lower() in visited:
+            continue
+        visited.add(name.lower())
+        set_def = model_ir.sets.get(name)
+        if set_def is None:
+            continue
+        for parent_name in set_def.domain:
+            if parent_name.lower() == parent.lower():
+                return True
+            stack.append(parent_name)
+    return False
+
+
+def _substitute_symbol_in_expr(expr: Expr, mapping: dict[str, str]) -> Expr:
+    """Rename free SymbolRef / VarRef / ParamRef / IndexOffset bases using `mapping`.
+
+    Used to rewrite bound expressions when up_expr_map keys use subset names
+    (e.g., `upbnds(cup, r)` -> `upbnds(c, r)` so the consolidated bound binds
+    against the variable's declared domain). Reuses the AD machinery's
+    `_substitute_indices` for consistent behavior across all expression types.
+    """
+    if not mapping:
+        return expr
+    from src.ad.constraint_jacobian import _substitute_indices
+
+    symbolic = tuple(mapping.keys())
+    concrete = tuple(mapping.values())
+    return _substitute_indices(expr, symbolic, concrete)
+
+
 def _process_expr_map_bound(
     expr_map: dict,
     var_name: str,
@@ -415,12 +480,17 @@ def _process_expr_map_bound(
     target_dict: dict,
     *,
     has_per_instance: bool = False,
+    model_ir: ModelIR | None = None,
 ) -> None:
     """Process an indexed expression-based bound map (lo_expr_map or up_expr_map).
 
     Only consolidates to a single (var_name, ()) entry when the expr_map has
     exactly one entry whose key is a tuple of plain strings matching var_def.domain
-    (no IndexOffset/SubsetIndex). Otherwise logs a warning and skips.
+    (no IndexOffset/SubsetIndex). When the key uses subset/alias names that
+    resolve to the variable's declared domain (e.g., `xcrop.up(r, cup)` for
+    a variable `xcrop(r, c)` with `cup(c)`), accept the key, rewrite the
+    expression to use the parent-domain index names, and wrap in a
+    `LhsConditionalAssign` whose condition restricts the bound to the subset.
 
     Args:
         expr_map: The lo_expr_map or up_expr_map dict
@@ -430,6 +500,8 @@ def _process_expr_map_bound(
         target_dict: Target bounds dict (bounds_lo or bounds_up)
         has_per_instance: Whether per-instance numeric bounds already exist
             for this variable (precomputed by caller for O(1) lookup).
+        model_ir: Model IR; required for subset/alias resolution. When omitted,
+            the historical strict-equality matcher is used.
     """
     if not expr_map:
         return
@@ -484,11 +556,32 @@ def _process_expr_map_bound(
         return
 
     # Validate that key values match domain names (e.g., key ("t",) matches
-    # domain ("t",)). Mismatched keys suggest the bound was assigned with
-    # different indices than the variable declaration, so consolidation would
-    # be incorrect. Compare case-insensitively since the IR uses
+    # domain ("t",)). Compare case-insensitively since the IR uses
     # CaseInsensitiveDict and GAMS identifiers are case-insensitive.
-    if tuple(str(idx).lower() for idx in indices) != tuple(d.lower() for d in domain):
+    #
+    # Subset/alias acceptance: when a key position uses a subset or alias of
+    # the corresponding domain set (e.g., `xcrop.up(r, cup)` for a variable
+    # declared `xcrop(r, c)` with `cup(c)`), accept the key, rewrite the
+    # expression to use the parent index name, and add a SetMembershipTest
+    # guard so the bound is only active for elements of the subset. This
+    # preserves the GAMS source semantic: `xcrop.up(r, cup) = upbnds(cup, r)`
+    # leaves `xcrop.up(r, c)` at its default (+inf) for c ∉ cup.
+    rename_map: dict[str, str] = {}
+    subset_guards: list[Expr] = []
+    for idx, dom in zip(indices, domain, strict=True):
+        idx_str = str(idx)
+        if idx_str.lower() == dom.lower():
+            continue
+        if _is_subset_or_alias_of(idx_str, dom, model_ir):
+            rename_map[idx_str] = dom
+            # Add SetMembershipTest only if the key is a strict subset of
+            # the parent (i.e., would actually filter the index space).
+            # Aliases of the parent have the same members, so no guard is
+            # needed (they're just renamings).
+            if model_ir is not None and idx_str not in model_ir.aliases:
+                subset_guards.append(SetMembershipTest(idx_str, (SymbolRef(dom),)))
+            continue
+        # Genuine mismatch — preserve the historical "skip" behavior.
         logger.warning(
             "Variable '%s' %s_expr_map key %s does not match domain %s. Skipping.",
             var_name,
@@ -497,6 +590,15 @@ def _process_expr_map_bound(
             domain,
         )
         return
+
+    if rename_map:
+        expr = _substitute_symbol_in_expr(expr, rename_map)
+
+    if subset_guards:
+        condition: Expr = subset_guards[0]
+        for guard in subset_guards[1:]:
+            condition = Binary("and", condition, guard)
+        expr = LhsConditionalAssign(rhs=expr, condition=condition)
 
     target_dict[(var_name, ())] = BoundDef(kind, 0.0, domain, expr=expr)
 
