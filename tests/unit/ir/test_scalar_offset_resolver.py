@@ -16,6 +16,7 @@ from src.ir.ast import (
     Call,
     Const,
     IndexOffset,
+    SubsetIndex,
     SymbolRef,
     Unary,
     VarRef,
@@ -336,3 +337,38 @@ def test_index_offset_collapsed_in_non_indices_tuple_field():
     assert isinstance(new_arg, IndexOffset)
     assert isinstance(new_arg.offset, Const)
     assert new_arg.offset.value == -4.0
+
+
+@pytest.mark.unit
+def test_subset_index_passthrough_in_non_indices_tuple_field():
+    """`SubsetIndex` is also an `Expr` subclass (`src/ir/ast.py:586`),
+    so a dedicated `elif isinstance(item, SubsetIndex)` branch in the
+    tuple-item loop would be unreachable. The `Expr` branch's recursive
+    `_rewrite_expr(item)` is a no-op for `SubsetIndex` (no Expr-typed
+    fields; `indices` is `tuple[str, ...]`), so the same instance comes
+    back unchanged — preserving the original "opaque pass-through"
+    intent.
+
+    This test pins that pass-through: a `SubsetIndex` placed in
+    `Call.args` (a non-`indices` tuple-of-Expr field) survives the
+    resolver call unmodified, with object identity intact.
+    """
+    ir = ModelIR()
+    ir.params["l"] = ParameterDef(name="l", domain=(), values={(): 4.0})
+
+    subset_idx = SubsetIndex(subset_name="aij", indices=("a", "i", "j"))
+    body = Call("foo", (subset_idx,))
+    ir.equations["test_eq"] = EquationDef(
+        name="test_eq",
+        domain=("tt",),
+        relation=Rel.EQ,
+        lhs_rhs=(body, Const(0.0)),
+    )
+
+    rewrites = resolve_scalar_offsets(ir)
+
+    assert rewrites == 0
+    new_body = ir.equations["test_eq"].lhs_rhs[0]
+    new_arg = new_body.args[0]
+    # Identity preserved — SubsetIndex was passed through unchanged.
+    assert new_arg is subset_idx

@@ -23,7 +23,6 @@ from src.ir.ast import (
     Const,
     Expr,
     IndexOffset,
-    SubsetIndex,
     SymbolRef,
     Unary,
 )
@@ -243,13 +242,17 @@ def _rewrite_expr(expr: Expr, scalars: dict[str, float], counter: list[int]) -> 
                     else:
                         inner.append(item)
                 elif isinstance(item, Expr):
+                    # Catches every other Expr subclass, including
+                    # `SubsetIndex` — `_rewrite_expr` is a no-op for it
+                    # (no Expr-typed fields, `indices` is `tuple[str, ...]`)
+                    # so the same instance comes back unchanged. An earlier
+                    # explicit `SubsetIndex` branch was unreachable for the
+                    # same reason `IndexOffset` is above (both subclass
+                    # `Expr`); collapsed into this case.
                     new_item: Expr = _rewrite_expr(item, scalars, counter)
                     if new_item is not item:
                         inner_changed = True
                     inner.append(new_item)
-                elif isinstance(item, SubsetIndex):
-                    # SubsetIndex is opaque — pass through.
-                    inner.append(item)
                 else:
                     inner.append(item)
             if inner_changed:
