@@ -154,6 +154,17 @@ def normalize_model(
     normalization to avoid issues with finding it after equations are restructured.
     See GitHub Issue #19 for details.
     """
+    # Issue #1234: resolve scalar-constant references in `IndexOffset.offset`
+    # expressions BEFORE downstream AD/KKT runs. When the source uses a
+    # `Scalar l /4/` and writes `pd(tt-l)`, the parser produces
+    # `IndexOffset('tt', Unary('-', SymbolRef('l')))` — opaque to the AD
+    # engine. Substituting `l → 4` produces `IndexOffset('tt', Const(-4))`,
+    # which the AD treats as a standard integer offset and correctly
+    # cross-attributes (e.g., differentiating `adef(tt2)` w.r.t. `pd(tt')`
+    # adds the missing term to `stat_pd(tt')` when `tt2 - 4 == tt'`).
+    from src.ir.scalar_offset_resolver import resolve_scalar_offsets
+
+    resolve_scalar_offsets(ir)
     # Issue #1154: When multiple solves use different models, the last non-MCP
     # solve wins. But if the last solve's model is a superset of an earlier
     # solve's model (i.e., it references the earlier model plus extras), the

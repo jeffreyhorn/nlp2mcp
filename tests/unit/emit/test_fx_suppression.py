@@ -368,3 +368,121 @@ class TestSuppressedFxInEmission:
         assert "a.fx('0') = 1000;" in result
         # And the multiplier should be fixed to 0
         assert "nu_a_fx_0.fx = 0;" in result
+
+    def test_active_fx_equation_skips_redundant_dot_fx(self, manual_index_mapping):
+        """Issue #1234: When a _fx_ equation is in the MCP (not suppressed),
+        the redundant `.fx` assignment must NOT be emitted.
+
+        Setup mirrors otpop's boundary case: the variable `a` is declared
+        on the parent set `tl = {'1974', '1975'}`, and `fx_map` has an
+        entry for `'1974'`. The stationarity condition restricts the
+        active domain to `t = {'1974', '1975'}` — the fx_map index
+        `'1974'` IS a member of that set, so the `_fx_` equation
+        `a_fx_1974` is NOT suppressed and stays paired with its
+        multiplier in the MCP.
+
+        Emitting `a.fx('1974') = ...` in addition would make GAMS
+        hold-fix the column, leaving the equation row empty and the
+        paired multiplier unmatched (the EXECERROR=1 abort otpop hit
+        before this fix).
+        """
+        from src.ir.ast import Binary, Const, VarRef
+        from src.ir.symbols import EquationDef, Rel
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["tl"] = SetDef(name="tl", members=["1974", "1975"])
+        # Active stationarity domain `t` INCLUDES the fx_map index '1974'.
+        model.sets["t"] = SetDef(name="t", members=["1974", "1975"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("1974",)] = 29.4
+        model.variables["a"] = a
+
+        fx_eq = EquationDef(
+            name="a_fx_1974",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(Binary("-", VarRef("a", indices=("1974",)), Const(29.4)), Const(0.0)),
+        )
+        model.equations["a_fx_1974"] = fx_eq
+        model.equalities.append("a_fx_1974")
+
+        kkt = _make_kkt(
+            model,
+            [("obj", ()), ("a", ("1974",)), ("a", ("1975",))],
+            manual_index_mapping,
+        )
+        kkt.stationarity_conditions["a"] = SetMembershipTest("t", (SymbolRef("tl"),))
+        kkt.multipliers_eq["a_fx_1974"] = MultiplierDef(
+            name="nu_a_fx_1974", domain=(), kind="eq", associated_constraint="a_fx_1974"
+        )
+
+        result = emit_gams_mcp(kkt)
+
+        # The equation IS in the MCP (not suppressed)...
+        assert "a_fx_1974.nu_a_fx_1974" in result
+        # ...so the redundant `.fx` assignment must NOT be emitted.
+        assert "a.fx('1974')" not in result
+
+    def test_fx_emitted_when_multiplier_filtered_out(self, manual_index_mapping):
+        """Issue #1234 follow-up: the `.fx` re-emission gate must also
+        check `kkt.referenced_multipliers`. An equality can be in
+        `kkt.model_ir.equalities` but get filtered out of the emitted MCP
+        (templates.py:370-373 drops equalities whose multiplier was
+        simplified away). In that case the `_fx_` equation is NOT
+        actually paired in the MCP, so the variable would be left
+        unfixed if `.fx` were also suppressed.
+
+        Setup mirrors the active-fx test above, but populates
+        `kkt.referenced_multipliers` WITHOUT `nu_a_fx_1974` — simulating
+        the post-simplification state where the multiplier vanished.
+        The emitter must then KEEP the `a.fx('1974') = 29.4;` line so
+        the variable is still fixed.
+        """
+        from src.ir.ast import Binary, Const, VarRef
+        from src.ir.symbols import EquationDef, Rel
+
+        model = ModelIR()
+        model.objective = ObjectiveIR(sense=ObjSense.MIN, objvar="obj")
+        model.variables["obj"] = VariableDef(name="obj", domain=(), kind=VarKind.CONTINUOUS)
+
+        model.sets["tl"] = SetDef(name="tl", members=["1974", "1975"])
+        model.sets["t"] = SetDef(name="t", members=["1974", "1975"])
+
+        a = VariableDef(name="a", domain=("tl",), kind=VarKind.CONTINUOUS)
+        a.fx_map[("1974",)] = 29.4
+        model.variables["a"] = a
+
+        fx_eq = EquationDef(
+            name="a_fx_1974",
+            domain=(),
+            relation=Rel.EQ,
+            lhs_rhs=(Binary("-", VarRef("a", indices=("1974",)), Const(29.4)), Const(0.0)),
+        )
+        model.equations["a_fx_1974"] = fx_eq
+        model.equalities.append("a_fx_1974")
+
+        kkt = _make_kkt(
+            model,
+            [("obj", ()), ("a", ("1974",)), ("a", ("1975",))],
+            manual_index_mapping,
+        )
+        kkt.stationarity_conditions["a"] = SetMembershipTest("t", (SymbolRef("tl"),))
+        kkt.multipliers_eq["a_fx_1974"] = MultiplierDef(
+            name="nu_a_fx_1974", domain=(), kind="eq", associated_constraint="a_fx_1974"
+        )
+        # Simulate the multiplier being simplified away during stationarity build:
+        # a non-None set that does NOT contain `nu_a_fx_1974` triggers the
+        # equality-filter path in templates.py:370-373.
+        kkt.referenced_multipliers = set()
+
+        result = emit_gams_mcp(kkt)
+
+        # The `_fx_` equation is filtered out of the MCP because its
+        # multiplier is not in `referenced_multipliers`.
+        assert "a_fx_1974.nu_a_fx_1974" not in result
+        # Therefore the `.fx` line MUST be emitted to fix the variable.
+        assert "a.fx('1974') = 29.4;" in result
