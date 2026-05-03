@@ -777,27 +777,38 @@
         "output_file": "data/gamslib/mcp/bearing_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T05:29:25.026280+00:00",
+        "status": "success",
+        "solve_date": "2026-05-03T21:02:17.659200+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 6670.07,
-        "solve_time_seconds": 4.7787,
-        "iterations": 4051,
-        "outcome_category": "model_infeasible",
-        "error": {
-          "category": "model_infeasible",
-          "message": "Model: Locally Infeasible (status 5)"
-        }
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 19517.3319,
+        "solve_time_seconds": 4.3345,
+        "iterations": 2554,
+        "outcome_category": "model_optimal_presolve",
+        "presolve_required": true,
+        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/bearing_mcp_presolve.gms"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T05:29:32.803808+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "match",
+        "comparison_date": "2026-05-03T21:02:17.660492+00:00",
+        "nlp_objective": 19517.3319,
+        "mcp_objective": 19517.3319,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=3.90e+01)"
       }
     },
     {
@@ -5658,27 +5669,38 @@
         "output_file": "data/gamslib/mcp/mathopt3_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T07:07:43.720169+00:00",
+        "status": "success",
+        "solve_date": "2026-05-03T21:02:51.314805+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 139.479,
-        "solve_time_seconds": 7.9413,
-        "iterations": 732,
-        "outcome_category": "model_infeasible",
-        "error": {
-          "category": "model_infeasible",
-          "message": "Model: Locally Infeasible (status 5)"
-        }
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 0.0,
+        "solve_time_seconds": 2.3019,
+        "iterations": 3,
+        "outcome_category": "model_optimal_presolve",
+        "presolve_required": true,
+        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/mathopt3_mcp_presolve.gms"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T07:07:48.355983+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "match",
+        "comparison_date": "2026-05-03T21:02:51.316091+00:00",
+        "nlp_objective": 0.0,
+        "mcp_objective": 0.0,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=1.00e-08)"
       },
       "model_statistics": {
         "variables": 7,
@@ -10003,27 +10025,38 @@
         "output_file": "data/gamslib/mcp/rocket_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T07:38:52.874348+00:00",
+        "status": "success",
+        "solve_date": "2026-05-03T21:04:11.144527+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 1.003,
-        "solve_time_seconds": 5.0916,
-        "iterations": 10803,
-        "outcome_category": "model_infeasible",
-        "error": {
-          "category": "model_infeasible",
-          "message": "Model: Locally Infeasible (status 5)"
-        }
+        "model_status": 2,
+        "model_status_text": "Locally Optimal",
+        "objective_value": 1.0128,
+        "solve_time_seconds": 2.8189,
+        "iterations": 20,
+        "outcome_category": "model_optimal_presolve",
+        "presolve_required": true,
+        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/rocket_mcp_presolve.gms"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T07:39:26.371035+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "match",
+        "comparison_date": "2026-05-03T21:04:11.145634+00:00",
+        "nlp_objective": 1.0128,
+        "mcp_objective": 1.0128,
+        "absolute_difference": 0.0,
+        "relative_difference": 0.0,
+        "objective_match": true,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 2,
+        "status_match": true,
+        "comparison_result": "compare_objective_match",
+        "notes": "Match within tolerance (diff=0.00e+00, tol=2.03e-03)"
       },
       "model_statistics": {
         "variables": 8,
