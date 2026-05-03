@@ -13,6 +13,7 @@ import pytest
 
 from src.ir.ast import (
     Binary,
+    Call,
     Const,
     IndexOffset,
     SymbolRef,
@@ -294,3 +295,44 @@ def test_resolve_scalar_offsets_in_variable_scale():
     new_scale_map_expr = ir.variables["x"].scale_map[("i1",)]
     assert isinstance(new_scale_map_expr.indices[0].offset, Const)
     assert new_scale_map_expr.indices[0].offset.value == -4.0
+
+
+@pytest.mark.unit
+def test_index_offset_collapsed_in_non_indices_tuple_field():
+    """`IndexOffset` is an `Expr` subclass, so when it appears in a
+    tuple-of-Expr field that is NOT named `indices` (e.g., `Call.args`),
+    `_rewrite_expr` must dispatch on `IndexOffset` BEFORE the generic
+    `Expr` recursion — otherwise the leaf-collapse logic is unreachable
+    and the offset stays opaque.
+
+    Construct a synthetic `Call("foo", (IndexOffset("tt", Unary("-",
+    SymbolRef("l"))),))` inside an equation body. With the bugged
+    ordering (`Expr` checked first), the IndexOffset would be re-entered
+    via `_rewrite_expr`, walking only its inner `.offset` Expr without
+    collapsing the IndexOffset itself to a new node with `Const(-4)`.
+    With the fix, the leaf branch fires and collapses the offset.
+    """
+    ir = ModelIR()
+    ir.params["l"] = ParameterDef(name="l", domain=(), values={(): 4.0})
+
+    body = Call(
+        "foo",
+        (IndexOffset(base="tt", offset=Unary("-", SymbolRef("l")), circular=False),),
+    )
+    ir.equations["test_eq"] = EquationDef(
+        name="test_eq",
+        domain=("tt",),
+        relation=Rel.EQ,
+        lhs_rhs=(body, Const(0.0)),
+    )
+
+    rewrites = resolve_scalar_offsets(ir)
+
+    assert rewrites == 1
+    new_body = ir.equations["test_eq"].lhs_rhs[0]
+    assert isinstance(new_body, Call)
+    assert len(new_body.args) == 1
+    new_arg = new_body.args[0]
+    assert isinstance(new_arg, IndexOffset)
+    assert isinstance(new_arg.offset, Const)
+    assert new_arg.offset.value == -4.0

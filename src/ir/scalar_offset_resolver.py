@@ -228,12 +228,13 @@ def _rewrite_expr(expr: Expr, scalars: dict[str, float], counter: list[int]) -> 
             inner_changed = False
             inner: list = []
             for item in val:
-                if isinstance(item, Expr):
-                    new_item: Expr = _rewrite_expr(item, scalars, counter)
-                    if new_item is not item:
-                        inner_changed = True
-                    inner.append(new_item)
-                elif isinstance(item, IndexOffset):
+                # `IndexOffset` is itself an `Expr` subclass, so this branch
+                # MUST come before the generic `Expr` recursion — otherwise
+                # the leaf-collapse logic below would be unreachable and
+                # IndexOffsets in non-`indices` tuple fields (e.g.,
+                # `Call.args`) would only get their inner `.offset`
+                # expression walked, never collapsed to `Const`.
+                if isinstance(item, IndexOffset):
                     resolved = _resolve_offset_to_const(item.offset, scalars)
                     if resolved is not None and not isinstance(item.offset, Const):
                         inner.append(_make_resolved_index_offset(item, resolved))
@@ -241,6 +242,11 @@ def _rewrite_expr(expr: Expr, scalars: dict[str, float], counter: list[int]) -> 
                         counter[0] += 1
                     else:
                         inner.append(item)
+                elif isinstance(item, Expr):
+                    new_item: Expr = _rewrite_expr(item, scalars, counter)
+                    if new_item is not item:
+                        inner_changed = True
+                    inner.append(new_item)
                 elif isinstance(item, SubsetIndex):
                     # SubsetIndex is opaque — pass through.
                     inner.append(item)
