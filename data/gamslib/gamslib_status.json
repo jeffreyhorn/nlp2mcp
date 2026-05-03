@@ -1240,14 +1240,11 @@
         "equations_count": 16
       },
       "nlp2mcp_translate": {
-        "status": "failure",
-        "translate_date": "2026-05-03T05:37:10.348149+00:00",
+        "status": "success",
+        "translate_date": "2026-05-03T19:52:14.413325+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 74.5328,
-        "error": {
-          "category": "unsup_expression_type",
-          "message": "/Users/jeff/experiments/nlp2mcp/src/ad/index_mapping.py:556: UserWarning: Failed to evaluate condition for equation 'asameq': Failed to evaluate condition SetMembershipTest(ICOEFF, (SymbolRef(ii), SymbolRef(jj))) with indices ('ACT', 'ACT'): Set membership for 'ICOEFF' cannot be evaluated statically because the set has no concrete members at compile time. Including unevaluable instances by default.\n  instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir, eq_def.condition)\n/Us"
-        }
+        "translate_time_seconds": 148.7532,
+        "output_file": "data/gamslib/mcp/cesam2_mcp.gms"
       },
       "mcp_solve": {
         "status": "not_tested",
