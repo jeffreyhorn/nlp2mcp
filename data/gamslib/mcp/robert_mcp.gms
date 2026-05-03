@@ -103,8 +103,8 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_s(r,tt).. misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt) =E= 0;
-stat_x(p,tt).. (sum(t__$(sameas(t__, tt)), (((-1) * c(p,t__)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + lam_cc(tt)$(t(tt)) - piL_x(p,tt))$(t(tt)) =E= 0;
+stat_s(r,tt).. (misc("storage-c",r) - nu_sb(r,tt) + nu_sb(r,tt-1)$(ord(tt) > 1) - piL_s(r,tt))$(s.up(r,tt) - s.lo(r,tt) > 1e-10) =E= 0;
+stat_x(p,tt).. (sum(t__$(sameas(t__, tt)), (((-1) * c(p,t__)))$(t(tt))) + sum(r, a(r,p) * nu_sb(r,tt)) + (lam_cc(tt)$(t(tt)))$(t(tt)) - piL_x(p,tt))$(t(tt)) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -127,6 +127,8 @@ pd.. profit =E= sum(t, sum(p, c(p,t) * x(p,t)) - sum(r, misc("storage-c",r) * s(
 
 x.fx(p,tt)$(not (t(tt))) = 0;
 piL_x.fx(p,tt)$(not (t(tt))) = 0;
+s.fx(r,tt)$(not (s.up(r,tt) - s.lo(r,tt) > 1e-10)) = s.lo(r,tt);
+piL_s.fx(r,tt)$(not (s.up(r,tt) - s.lo(r,tt) > 1e-10)) = 0;
 nu_sb.fx(r,tt)$(not (ord(tt) <= card(tt) - 1)) = 0;
 lam_cc.fx(tt)$(not (t(tt))) = 0;
 

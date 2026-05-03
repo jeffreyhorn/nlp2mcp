@@ -127,6 +127,14 @@ sigmay2("gdp2") = 0.05 * gdp0;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+Abar1(i,j)$(NOT (Abar1(i,j) > -inf and Abar1(i,j) < inf)) = 0;
+SAM(i,j)$(NOT (SAM(i,j) > -inf and SAM(i,j) < inf)) = 0;
+Target0(i)$(NOT (Target0(i) > -inf and Target0(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -150,12 +158,12 @@ Variables
     DENTROPY
     GDPFC
     GDP
-    nu_SAMEQ(ii)
-    nu_SAMMAKE(ii,jj)
-    nu_ERROR1EQ(ii)
-    nu_SUMW1(ii)
-    nu_ROWSUM(ii)
-    nu_COLSUM(ii)
+    nu_SAMEQ(i)
+    nu_SAMMAKE(i,j)
+    nu_ERROR1EQ(i)
+    nu_SUMW1(i)
+    nu_ROWSUM(i)
+    nu_COLSUM(j)
     nu_GDPFCDEF
     nu_GDPDEF
     nu_ERROR2EQ(macro)
@@ -239,16 +247,16 @@ Equations
     comp_up_a(ii,jj)
     comp_up_w1(ii,jwt)
     comp_up_w2(macro,jwt)
-    COLSUM(jj)
+    COLSUM(j)
     ENTROPY
-    ERROR1EQ(ii)
+    ERROR1EQ(i)
     ERROR2EQ(macro)
     GDPDEF
     GDPFCDEF
-    ROWSUM(ii)
-    SAMEQ(ii)
-    SAMMAKE(ii,jj)
-    SUMW1(ii)
+    ROWSUM(i)
+    SAMEQ(i)
+    SAMMAKE(i,j)
+    SUMW1(i)
     SUMW2(macro)
 ;
 
@@ -257,16 +265,16 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + (((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
-stat_err1(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii) - nu_COLSUM(ii) =E= 0;
+stat_a(ii,jj).. (log(a(ii,jj) + epsilon) - log(Abar1(ii,ii) + epsilon) + a(ii,jj) * 1 / (a(ii,jj) + epsilon)) * 1$(nonzero(ii,jj)) + ((((-1) * (x(jj) + err1(jj))) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) - piL_a(ii,jj) + piU_a(ii,jj) =E= 0;
+stat_err1(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj))) + nu_ERROR1EQ(ii)$(ii(ii)) - nu_COLSUM(ii)$(jj(ii)) =E= 0;
 stat_err2(macro).. ((-1) * nu_GDPDEF)$(sameas(macro, 'gdp2')) + nu_ERROR2EQ(macro) + ((-1) * nu_GDPFCDEF)$(sameas(macro, 'gdpfc2')) =E= 0;
 stat_gdp.. nu_GDPDEF =E= 0;
 stat_gdpfc.. nu_GDPFCDEF =E= 0;
-stat_tsam(ii,jj).. nu_SAMMAKE(ii,jj)$(nonzero(ii,jj)) + nu_ROWSUM(ii)$((not sameas(ii, "ROW"))) + nu_COLSUM(ii)$(sameas(ii, 'ACT') and sameas(jj, 'ACT') or sameas(ii, 'CAP') and sameas(jj, 'CAP') or sameas(ii, 'COM') and sameas(jj, 'COM') or sameas(ii, 'ENT') and sameas(jj, 'ENT') or sameas(ii, 'FAC') and sameas(jj, 'FAC') or sameas(ii, 'GIN') and sameas(jj, 'GIN') or sameas(ii, 'GRE') and sameas(jj, 'GRE') or sameas(ii, 'HOU') and sameas(jj, 'HOU') or sameas(ii, 'ROW') and sameas(jj, 'ROW')) + (nu_COLSUM(ii)$(ord(ii) = 7))$((sameas(ii, 'ACT') or sameas(ii, 'COM')) and (sameas(jj, 'CAP') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 1))$((sameas(ii, 'ACT') or sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 3))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 2))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 6))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 5))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 4))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + (nu_COLSUM(ii)$(ord(ii) = 8))$(sameas(ii, 'ACT') and sameas(jj, 'ROW')) + (nu_COLSUM(ii)$(ord(ii) = 7))$((sameas(ii, 'CAP') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM'))) + (nu_COLSUM(ii)$(ord(ii) = 6))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'FAC'))) + (nu_COLSUM(ii)$(ord(ii) = 4))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 5))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC'))) + (nu_COLSUM(ii)$(ord(ii) = 1))$((sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 2))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 3))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + (nu_COLSUM(ii)$(ord(ii) = 8))$(sameas(ii, 'ROW') and sameas(jj, 'ACT')) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
-stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + ((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii) + nu_SUMW1(ii) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
+stat_tsam(ii,jj).. (nu_SAMMAKE(ii,jj)$(ii(ii) and jj(jj)))$(nonzero(ii,jj)) + (nu_ROWSUM(ii)$(ii(ii)))$((not sameas(ii, "ROW"))) + (nu_COLSUM(ii)$(jj(ii)))$(sameas(ii, 'ACT') and sameas(jj, 'ACT') or sameas(ii, 'CAP') and sameas(jj, 'CAP') or sameas(ii, 'COM') and sameas(jj, 'COM') or sameas(ii, 'ENT') and sameas(jj, 'ENT') or sameas(ii, 'FAC') and sameas(jj, 'FAC') or sameas(ii, 'GIN') and sameas(jj, 'GIN') or sameas(ii, 'GRE') and sameas(jj, 'GRE') or sameas(ii, 'HOU') and sameas(jj, 'HOU') or sameas(ii, 'ROW') and sameas(jj, 'ROW')) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 7))$((sameas(ii, 'ACT') or sameas(ii, 'COM')) and (sameas(jj, 'CAP') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 1))$((sameas(ii, 'ACT') or sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 3))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 2))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 6))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 5))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 4))$((sameas(ii, 'ACT') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'HOU')) and (sameas(jj, 'CAP') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU') or sameas(jj, 'ROW'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 8))$(sameas(ii, 'ACT') and sameas(jj, 'ROW')) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 7))$((sameas(ii, 'CAP') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 6))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'FAC'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 4))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'HOU'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 5))$((sameas(ii, 'CAP') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 1))$((sameas(ii, 'CAP') or sameas(ii, 'COM') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'CAP') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 2))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'FAC') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GIN') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 3))$((sameas(ii, 'CAP') or sameas(ii, 'ENT') or sameas(ii, 'GIN') or sameas(ii, 'GRE') or sameas(ii, 'HOU') or sameas(ii, 'ROW')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'ENT') or sameas(jj, 'FAC') or sameas(jj, 'GRE') or sameas(jj, 'HOU'))) + ((nu_COLSUM(ii)$(jj(ii)))$(ord(ii) = 8))$(sameas(ii, 'ROW') and sameas(jj, 'ACT')) + nu_GDPDEF$((sameas(ii, 'ACT') or sameas(ii, 'FAC') or sameas(ii, 'GRE')) and (sameas(jj, 'ACT') or sameas(jj, 'COM') or sameas(jj, 'GRE'))) + ((-1) * nu_GDPFCDEF)$(sameas(ii, 'FAC') and sameas(jj, 'ACT')) - piL_tsam(ii,jj) =E= 0;
+stat_w1(ii,jwt).. log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon) + w1(ii,jwt) * 1 / (w1(ii,jwt) + epsilon) + (((-1) * vbar1(ii,jwt)) * nu_ERROR1EQ(ii))$(ii(ii)) + nu_SUMW1(ii)$(ii(ii)) - piL_w1(ii,jwt) + piU_w1(ii,jwt) =E= 0;
 stat_w2(macro,jwt).. log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon) + w2(macro,jwt) * 1 / (w2(macro,jwt) + epsilon) + ((-1) * vbar2(macro,jwt)) * nu_ERROR2EQ(macro) + nu_SUMW2(macro) - piL_w2(macro,jwt) + piU_w2(macro,jwt) =E= 0;
-stat_x(ii).. ((-1) * nu_SAMEQ(ii)) + sum(jj, (((-1) * a(jj,jj)) * nu_SAMMAKE(ii,jj))$(nonzero(ii,jj))) - nu_COLSUM(ii) =E= 0;
-stat_y(ii).. nu_SAMEQ(ii) + ((-1) * nu_ROWSUM(ii))$((not sameas(ii, "ROW"))) =E= 0;
+stat_x(ii).. ((-1) * nu_SAMEQ(ii)$(ii(ii))) + sum(jj, ((((-1) * a(ii+7,jj)) * nu_SAMMAKE(ii,jj))$(ii(ii) and jj(jj)))$(nonzero(ii,jj))) - nu_COLSUM(ii)$(jj(ii)) =E= 0;
+stat_y(ii).. nu_SAMEQ(ii)$(ii(ii)) + (((-1) * nu_ROWSUM(ii))$(ii(ii)))$((not sameas(ii, "ROW"))) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_a(ii,jj)$(nonzero(ii,jj) and 0 > -inf).. a(ii,jj) - 0 =G= 0;
@@ -284,7 +292,7 @@ SAMEQ(ii).. y(ii) =E= x(ii) + err1(ii);
 SAMMAKE(ii,jj)$(nonzero(ii,jj)).. tsam(ii,jj) =E= a(ii,jj) * (x(jj) + err1(jj));
 ERROR1EQ(ii).. err1(ii) =E= sum(jwt, w1(ii,jwt) * vbar1(ii,jwt));
 SUMW1(ii).. sum(jwt, w1(ii,jwt)) =E= 1;
-ENTROPY.. dentropy =E= sum((ii,jj)$(nonzero(ii,jj)), a(ii,jj) * (log(a(ii,jj) + epsilon) - log(Abar1(ii,jj) + epsilon))) + sum((ii,jwt), w1(ii,jwt) * (log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon))) + sum((macro,jwt), w2(macro,jwt) * (log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon)));
+ENTROPY.. dentropy =E= sum((ii,jj)$(nonzero(ii,jj) and Abar1(ii,jj) <> 0), a(ii,jj) * (log(a(ii,jj) + epsilon) - log(Abar1(ii,jj) + epsilon))) + sum((ii,jwt)$(wbar1(ii,jwt) <> 0), w1(ii,jwt) * (log(w1(ii,jwt) + epsilon) - log(wbar1(ii,jwt) + epsilon))) + sum((macro,jwt)$(wbar2(macro,jwt) <> 0), w2(macro,jwt) * (log(w2(macro,jwt) + epsilon) - log(wbar2(macro,jwt) + epsilon)));
 ROWSUM(ii)$((not sameas(ii, "ROW"))).. sum(jj, tsam(ii,jj)) =E= y(ii);
 COLSUM(jj).. sum(ii, tsam(ii,jj)) =E= x(jj) + err1(jj);
 GDPFCDEF.. gdpfc =E= tsam("fac","act") + err2("gdpfc2");
@@ -304,6 +312,11 @@ piL_a.fx(ii,jj)$(not (nonzero(ii,jj) and 0 > -inf)) = 0;
 piU_a.fx(ii,jj)$(not (nonzero(ii,jj) and 1 < inf)) = 0;
 nu_ROWSUM.fx(ii)$(not ((not sameas(ii, "ROW")))) = 0;
 nu_SAMMAKE.fx(ii,jj)$(not (nonzero(ii,jj))) = 0;
+nu_ERROR1EQ.fx(i)$(not (ii(i))) = 0;
+nu_ROWSUM.fx(i)$(not (ii(i))) = 0;
+nu_SAMEQ.fx(i)$(not (ii(i))) = 0;
+nu_SAMMAKE.fx(i,j)$(not (ii(i))) = 0;
+nu_SUMW1.fx(i)$(not (ii(i))) = 0;
 
 * ============================================
 * Model MCP Declaration

@@ -41,6 +41,10 @@ Scalars
     p_Util_gap /0/
 ;
 
+pt(i,t) = p(i);
+
+execError = 0;
+
 loop(t,
    pt(i,t) = uniform(0,1)
 );
@@ -48,6 +52,12 @@ loop(t,
 Parameter icweight(i);
 p(i) = pt(i,'1') ;
 icweight(i) = theta(i)$(not 0) + (1 - theta(i) + sqr(theta(i)))$(0) ;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+pt(i,t)$(NOT (pt(i,t) > -inf and pt(i,t) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)

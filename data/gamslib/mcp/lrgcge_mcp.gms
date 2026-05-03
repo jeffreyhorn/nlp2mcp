@@ -145,6 +145,28 @@ theta(i) = Z0(i) / (xie(i) * E0(i) ** phi(i) + xid(i) * D0(i) ** phi(i)) ** (1 /
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+alpha(i)$(NOT (alpha(i) > -inf and alpha(i) < inf)) = 0;
+ax(i,j)$(NOT (ax(i,j) > -inf and ax(i,j) < inf)) = 0;
+ay(j)$(NOT (ay(j) > -inf and ay(j) < inf)) = 0;
+b(j)$(NOT (b(j) > -inf and b(j) < inf)) = 0;
+beta(h,j)$(NOT (beta(h,j) > -inf and beta(h,j) < inf)) = 0;
+deltad(i)$(NOT (deltad(i) > -inf and deltad(i) < inf)) = 0;
+deltam(i)$(NOT (deltam(i) > -inf and deltam(i) < inf)) = 0;
+eta(i)$(NOT (eta(i) > -inf and eta(i) < inf)) = 0;
+gamma(i)$(NOT (gamma(i) > -inf and gamma(i) < inf)) = 0;
+lambda(i)$(NOT (lambda(i) > -inf and lambda(i) < inf)) = 0;
+mu(i)$(NOT (mu(i) > -inf and mu(i) < inf)) = 0;
+phi(i)$(NOT (phi(i) > -inf and phi(i) < inf)) = 0;
+taum(i)$(NOT (taum(i) > -inf and taum(i) < inf)) = 0;
+tauz(i)$(NOT (tauz(i) > -inf and tauz(i) < inf)) = 0;
+theta(i)$(NOT (theta(i) > -inf and theta(i) < inf)) = 0;
+xid(i)$(NOT (xid(i) > -inf and xid(i) < inf)) = 0;
+xie(i)$(NOT (xie(i) > -inf and xie(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -241,12 +263,6 @@ Positive Variables
     piL_tz(j)
     piL_tm(i)
 ;
-
-* ============================================
-* Variable Bounds
-* ============================================
-
-pf.fx('LAB') = 1;
 
 * ============================================
 * Variable Initialization
@@ -444,7 +460,7 @@ stat_tm(i).. nu_eqTm(i) + ((-1) * (pq(i) * mu(i) / sqr(pq(i)))) * nu_eqXg(i) + (
 stat_tz(j).. nu_eqTz(j) + ((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j+1))$(ord(j) <= card(j) - 1) + (((-1) * (pq(j) * mu(j) / sqr(pq(j)))) * nu_eqXg(j-1))$(ord(j) > 1) + ((-1) * ssg) * nu_eqSg - piL_tz(j) =E= 0;
 stat_x(i,j).. nu_eqX(i,j) - nu_eqpqd(i) - piL_x(i,j) =E= 0;
 stat_xg(i).. nu_eqXg(i) - nu_eqpqd(i) - piL_xg(i) =E= 0;
-stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * sum(i__, xp(i__) ** alpha(i__) * alpha(i__) / xp(i__) / xp(i__) ** alpha(i__)))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
+stat_xp(i).. ((-1) * (prod(i__, xp(i__) ** alpha(i__)) * xp(i) ** alpha(i) * alpha(i) / xp(i) / xp(i) ** alpha(i))) + nu_eqXp(i) - nu_eqpqd(i) - piL_xp(i) =E= 0;
 stat_xv(i).. nu_eqXv(i) - nu_eqpqd(i) - piL_xv(i) =E= 0;
 stat_y(j).. nu_eqpy(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * py(j) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_eqY(j) - piL_y(j) =E= 0;
 stat_z(j).. sum(i, ((-1) * ax(i,j)) * nu_eqX(i,j)) + ((-1) * ay(j)) * nu_eqY(j) + ((-1) * (tauz(j) * pz(j))) * nu_eqTz(j) + nu_eqpzd(j) + ((-1) * ((theta(j) ** phi(j) * xie(j) * (1 + tauz(j)) * pz(j) / pe(j)) ** (1 / (1 - phi(j))))) * nu_eqE(j) + ((-1) * ((theta(j) ** phi(j) * xid(j) * (1 + tauz(j)) * pz(j) / pd(j)) ** (1 / (1 - phi(j))))) * nu_eqDs(j) - piL_z(j) =E= 0;

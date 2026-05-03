@@ -196,15 +196,40 @@ Scalars
 
 $onImplicitAssign
 dat(datvar,i) = dat(datvar,i) / 100;
-$offImplicitAssign
-
-$onImplicitAssign
+series("cns-curr",years) = series("privc",years) * series("cns-defl",years);
+series("pim1",years) = series("pim1",years) / series("usdefl",years);
+series("pim2",years) = series("pim2",years) / series("usdefl",years);
+series("pim3",years) = series("pim3",years) / series("usdefl",years);
+series("pim4",years) = series("pim4",years) / series("usdefl",years);
+series("pim5",years) = series("pim5",years) / series("usdefl",years);
+series("pim6",years) = series("pim6",years) / series("usdefl",years);
+series("pie1",years) = series("pie1",years) / series("usdefl",years);
+series("pie2",years) = series("pie2",years) / series("usdefl",years);
+series("pie3",years) = series("pie3",years) / series("usdefl",years);
+series("pie4",years) = series("pie4",years) / series("usdefl",years);
 li(ty) = 1;
 li("ynonp") = 0;
 t(years) = 0;
 t("7374") = 1;
+cnsgrt = sum(t, series("privc",t) / series("privc",t));
+cnstg = sum(t, series("privc",t));
+er00 = sum(t, series("er",t));
+expgrt = sum(t, series("exports",t) / series("exports",t));
+exptg = sum(t, series("exports",t));
+gdpgrt = sum(t, series("gdpc",t) / series("gdpc",t));
+gdptg = sum(t, series("gdpmp",t));
+gfigrt = sum(t, series("gfi",t) / series("gfi",t));
+gfitg = sum(t, series("gfi",t));
+impgrt = sum(t, series("imports",t) / series("imports",t));
+imptg = sum(t, series("imports",t));
+invgrt = sum(t, series("invest",t) / series("invest",t));
+invtg = sum(t, series("invest",t));
 im(i) = yes$(dat("cons-imp",i));
 ie(i) = yes$(dat("xvoli",i));
+cnsshr = sum(t, series("privc",t)) / gdptg;
+expshr = sum(t, series("exports",t)) / gdptg;
+gfishr = sum(t, series("gfi",t)) / gdptg;
+impshr = sum(t, series("imports",t)) / gdptg;
 $offImplicitAssign
 
 depp(i) = rate("dep-prof",i);
@@ -233,27 +258,45 @@ tax(taxvar,i) = tax(taxvar,i) / 100;
 stock(stockvar,i) = stock(stockvar,i) / 100;
 ayi(i,"urban") = 1 - ayi(i,"rural");
 ayt("urban") = 1 - ayt("rural");
-series("cns-curr",years) = series("privc",years) * series("cns-defl",years);
-series("pim1",years) = series("pim1",years) / series("usdefl",years);
-series("pim2",years) = series("pim2",years) / series("usdefl",years);
-series("pim3",years) = series("pim3",years) / series("usdefl",years);
-series("pim4",years) = series("pim4",years) / series("usdefl",years);
-series("pim5",years) = series("pim5",years) / series("usdefl",years);
-series("pim6",years) = series("pim6",years) / series("usdefl",years);
-series("pie1",years) = series("pie1",years) / series("usdefl",years);
-series("pie2",years) = series("pie2",years) / series("usdefl",years);
-series("pie3",years) = series("pie3",years) / series("usdefl",years);
-series("pie4",years) = series("pie4",years) / series("usdefl",years);
 k(i) = stock("capital",i);
-er00 = sum(t, series("er",t));
+er = er00;
 rhox(i) = 1 / sigmax(i) - 1;
 rhoz(i) = 1 / sigmaz(i) - 1;
 rhon(i) = 1 / sigman(i) - 1;
 rhov(i) = 1 / sigmav(i) - 1;
 rhos(i) = 1 / sigmas(i) - 1;
-er = er00;
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+adst(i)$(NOT (adst(i) > -inf and adst(i) < inf)) = 0;
+aex(i)$(NOT (aex(i) > -inf and aex(i) < inf)) = 0;
+aid(i)$(NOT (aid(i) > -inf and aid(i) < inf)) = 0;
+an(i)$(NOT (an(i) > -inf and an(i) < inf)) = 0;
+aq(sc)$(NOT (aq(sc) > -inf and aq(sc) < inf)) = 0;
+as(i)$(NOT (as(i) > -inf and as(i) < inf)) = 0;
+av(i)$(NOT (av(i) > -inf and av(i) < inf)) = 0;
+az(i)$(NOT (az(i) > -inf and az(i) < inf)) = 0;
+cg(i)$(NOT (cg(i) > -inf and cg(i) < inf)) = 0;
+dat(datvar,i)$(NOT (dat(datvar,i) > -inf and dat(datvar,i) < inf)) = 0;
+deltan(i)$(NOT (deltan(i) > -inf and deltan(i) < inf)) = 0;
+deltaq(sc)$(NOT (deltaq(sc) > -inf and deltaq(sc) < inf)) = 0;
+deltas(i)$(NOT (deltas(i) > -inf and deltas(i) < inf)) = 0;
+deltav(i)$(NOT (deltav(i) > -inf and deltav(i) < inf)) = 0;
+deltax(i)$(NOT (deltax(i) > -inf and deltax(i) < inf)) = 0;
+deltaz(i)$(NOT (deltaz(i) > -inf and deltaz(i) < inf)) = 0;
+rhon(i)$(NOT (rhon(i) > -inf and rhon(i) < inf)) = 0;
+rhoq(sc)$(NOT (rhoq(sc) > -inf and rhoq(sc) < inf)) = 0;
+rhos(i)$(NOT (rhos(i) > -inf and rhos(i) < inf)) = 0;
+rhov(i)$(NOT (rhov(i) > -inf and rhov(i) < inf)) = 0;
+rhox(i)$(NOT (rhox(i) > -inf and rhox(i) < inf)) = 0;
+rhoz(i)$(NOT (rhoz(i) > -inf and rhoz(i) < inf)) = 0;
+series(*,years)$(NOT (series(*,years) > -inf and series(*,years) < inf)) = 0;
+stock(stockvar,i)$(NOT (stock(stockvar,i) > -inf and stock(stockvar,i) < inf)) = 0;
+tax(taxvar,i)$(NOT (tax(taxvar,i) > -inf and tax(taxvar,i) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -454,21 +497,8 @@ Positive Variables
 * ============================================
 
 w.fx(r) = dw(r);
-y.fx('ynonp','agricult') = 0;
-y.fx('ynonp','cap-good') = 0;
-y.fx('ynonp','cons-good') = 0;
-y.fx('ynonp','int-good') = 0;
-y.fx('ynonp','pub-infr') = 0;
-y.fx('ynonp','service') = 0;
-fy.fx('ynonp','agricult') = 0;
-fy.fx('ynonp','cap-good') = 0;
-fy.fx('ynonp','cons-good') = 0;
-fy.fx('ynonp','int-good') = 0;
-fy.fx('ynonp','pub-infr') = 0;
-fy.fx('ynonp','service') = 0;
 ch.lo(i,r) = pop(r) * gamma(i, r) + 0.1;
 taum.fx(i)$((not im(i))) = 0;
-taum.fx('cap-good') = 0;
 
 * ============================================
 * Variable Initialization
@@ -924,18 +954,19 @@ Equations
 * Index aliases to avoid 'Set is under control already' error
 * (GAMS Error 125 when equation domain index is reused in sum)
 Alias(i, i__);
+Alias(j, j__);
 Alias(r, r__);
 
 * Stationarity equations
 stat_ax(i).. ((-1) * ((deltax(i) * z(i) ** ((-1) * rhox(i)) + (1 - deltax(i)) * g(i) ** ((-1) * rhox(i))) ** ((-1) / rhox(i)))) * nu_prodx(i) =E= 0;
 stat_beta(r).. ((-1) * (log(ym(r)))) * nu_meanc(r) =E= 0;
-stat_ch(i,r).. (cpi(r) - pc(i)) * nu_cpidet(r) + pc(i) * nu_les(i,r) + pc(i) * nu_hbudget(r) - nu_fddef(i) + ((-1) * (prod(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)) * sum(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r) * ac(i__,r) / (ch(i__,r) - gamma(i__, r) * pop(r)) / (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)))) * nu_utildef(r) + ((-1) * pc00(i)) * nu_qcns - piL_ch(i,r) =E= 0;
+stat_ch(i,r).. ((cpi(r) - pc(i)) * nu_cpidet(r) + pc(i) * nu_les(i,r) + pc(i) * nu_hbudget(r) - nu_fddef(i) + ((-1) * (prod(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)) * sum(i__, (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r) * ac(i__,r) / (ch(i__,r) - gamma(i__, r) * pop(r)) / (ch(i__,r) - gamma(i__, r) * pop(r)) ** ac(i__,r)))) * nu_utildef(r) + ((-1) * pc00(i)) * nu_qcns - piL_ch(i,r))$(ch.up(i,r) - ch.lo(i,r) > 1e-10) =E= 0;
 stat_cpi(r).. sum(i, ch(i,r)) * nu_cpidet(r) =E= 0;
 stat_deprec(i).. nu_qdep(i) + ((-1) * (sum(j, pc(j) * aid(j)) * sum(j, pc00(j) * aid(j)) * idshr / sqr(sum(j, pc(j) * aid(j))))) * nu_qgfi + ((-1) * (sum(j, pc(j) * aid(j)) * sum(j, pc00(j) * aid(j)) * dstshr / sqr(sum(j, pc(j) * aid(j))))) * nu_qchs =E= 0;
 stat_deprec00(i).. nu_qdep00(i) - nu_qgdp =E= 0;
 stat_dst(i).. nu_dstdet(i) - nu_equil(i) + ((-1) * pq(i)) * nu_invsav + ((-1) * pq00(i)) * nu_qchs =E= 0;
-stat_ex(i).. (nu_export(i) + ((-1) * 1$(ie(i))) * nu_equil(i))$(ie(i)) =E= 0;
-stat_exscale.. sum(ie, ((-1) * ((er00 * pie(ie) / (pq(ie) * (1 + trmx(ie)))) ** eta(ie) * aex(ie))) * nu_export(ie)) + nu_exscale_fx =E= 0;
+stat_ex(i).. (nu_export(i)$(ie(i)) + ((-1) * (trmx(i) * pq(i))) * nu_margdet + ((-1) * 1$(ie(i))) * nu_equil(i) + pq(i) * (1 + trmx(i)) * nu_fbudget + ((-1) * ((1 + trmx(i)) * pq00(i))) * nu_qexp)$(ie(i)) =E= 0;
+stat_exscale.. sum(ie, (((-1) * ((er00 * pie(ie) / (pq(ie) * (1 + trmx(ie)))) ** eta(ie) * aex(ie))) * nu_export(ie))$(ie(ie))) + nu_exscale_fx =E= 0;
 stat_fd(i).. nu_fddef(i) + ((-1) * (trmd(i) * pq(i))) * nu_margdet - nu_equil(i) - piL_fd(i) =E= 0;
 stat_fgtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) + nu_fgtrdet$(sameas(ty, 'ynonp')) =E= 0;
 stat_fwtr(ty).. sum(r, ((-1) * ayt(r)) * nu_fyhdef(ty,r)) + nu_fwtrdet$(sameas(ty, 'ynonp')) =E= 0;
@@ -947,7 +978,7 @@ stat_id(i).. nu_iddet(i) - nu_fddef(i) + ((-1) * pc(i)) * nu_invsav + ((-1) * pc
 stat_invtot.. ((-1) * ksi) + sum(i, ((-1) * (aid(i) * idshr)) * nu_iddet(i)) + sum(i, ((-1) * (adst(i) * dstshr)) * nu_dstdet(i)) =E= 0;
 stat_ls(i).. ((-1) * sum(r$(ri(r,i)), pls(r))) * nu_values(i) + ((-1) * (as(i) * (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) ** ((-1) / rhos(i)) * (-1) / rhos(i) / (deltas(i) * k(i) ** ((-1) * rhos(i)) + ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)))$((not si(i)))) * ((1 - deltas(i)) * ls(i) ** ((-1) * rhos(i)) * ((-1) * rhos(i)) / ls(i))$((not si(i))))) * nu_prods(i) + (((-1) * ((sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i))) * nu_firsts(i))$((not si(i))) + ((-1) * 1$((not sa(i)))) * nu_lmclear + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls(r)))) * nu_yself(i) + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), pls00(r)))) * nu_fyself(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls00(r))) * nu_qdep00(i) + ((-1) * sum(r$(ri(r,i)), depl(i) * pls(r))) * nu_qdep(i) - piL_ls(i) =E= 0;
 stat_lw(i).. ((-1) * sum(r$(ri(r,i)), w(r))) * nu_valuev(i) + ((-1) * (av(i) * (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) ** ((-1) / rhov(i)) * (-1) / rhov(i) / (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) * (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i)) * ((-1) * rhov(i)) / lw(i))) * nu_prodv(i) + ((-1) * ((sum(r$(ri(r,i)), w(r)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i))) * nu_firstv(i) + ((-1) * 1$((not sa(i)))) * nu_lmclear + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), w(r)))) * nu_ywage(i) + ((-1) * ((1 - tw(i)) * sum(r$(ri(r,i)), w00(r)))) * nu_fywage(i) - piL_lw(i) =E= 0;
-stat_m(i).. ((-1) * pm(i)$(im(i))) * nu_valueq(i) + (((-1) * 1$(im(i))) * nu_supply(i))$((not sc(i))) + ((-1) * (pim(i) * trmm(i))$(im(i))) * nu_margdet + ((-1) * ((1 + trmm(i)) * pim00(i))$(im(i))) * nu_qimp + ((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / m(i))) * nu_prodq(i) + ((-1) * ((pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i))) * nu_firstq(i) - piL_m(i) =E= 0;
+stat_m(i).. ((-1) * pm(i)$(im(i))) * nu_valueq(i) + (((-1) * 1$(im(i))) * nu_supply(i))$((not sc(i))) + ((-1) * (pim(i) * trmm(i))$(im(i))) * nu_margdet + ((-1) * pim(i)) * nu_fbudget + ((-1) * ((1 + trmm(i)) * pim00(i))$(im(i))) * nu_qimp + (((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / m(i))) * nu_prodq(i))$(sc(i)) + (((-1) * ((pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i))) * nu_firstq(i))$(sc(i)) - piL_m(i) =E= 0;
 stat_marg.. sum(ss, pq(ss)) * nu_margdet + sum(i, ((-1) * 1$(ss(i))) * nu_equil(i)) =E= 0;
 stat_mc(r).. 1 / mc(r) * nu_meanc(r) + sum(i, ((-1) * (pop(r) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * ac(i,r))) * nu_les(i,r)) - piL_mc(r) =E= 0;
 stat_n(i).. ((-1) * pn(i)) * nu_valuez(i) + ((-1) * (az(i) * (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) ** ((-1) / rhoz(i)) * (-1) / rhoz(i) / (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) * (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i)) * ((-1) * rhoz(i)) / n(i))) * nu_prodz(i) + ((-1) * ((pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) ** sigmaz(i))) * nu_firstz(i) + pn(i) * nu_valuen(i) + nu_prodn(i) - piL_n(i) =E= 0;
@@ -961,27 +992,27 @@ stat_ogdpmp.. nu_qgdpmp =E= 0;
 stat_ogfi.. nu_qgfi - nu_qinv =E= 0;
 stat_oimp.. nu_qimp + nu_qgdpmp =E= 0;
 stat_oinv.. nu_qinv - nu_qgdpmp =E= 0;
-stat_pc(i).. nu_pcdet(i) + sum(r, ((-1) * ch(i,r)) * nu_cpidet(r)) + sum(r, ((-1) * (pop(r) * ac(i+2,r) * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * sum(j, (pc(j) / pc00(j)) ** ac(j,r) * ac(j,r) / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,r)))) * nu_les(i,r)) + sum(r, (ch(i,r) - pop("rural") * (gamma(i, r) + ac(i,"rural") * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * sum(j, (pc(j) / pc00(j)) ** ac(j,r) * ac(j,r) / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,r))) + pop("rural") * ac(i,"rural") * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * sum(j, (pc(j) / pc00(j)) ** ac(j,r) * ac(j,r) / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,r))) * nu_les(i,r)) + sum(r, ch(i,r) * nu_hbudget(r)) + sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) * nu_fbudget + (sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) - id(i)) * nu_invsav - piL_pc(i) =E= 0;
+stat_pc(i).. nu_pcdet(i) + sum(r, ((-1) * ch(i,r)) * nu_cpidet(r)) + sum(j, sum(r, ((-1) * (pop(r) * ac(i+2,r) * (mc(r) - sum(j__, pc00(j__) * gamma(j__, r))) * prod(j__, (pc(j__) / pc00(j__)) ** ac(j__,r)) * (pc(j) / pc00(j)) ** ac(j,r) * ac(j,r) / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,r))) * nu_les(i,r))) + sum(r, (ch(i,r) - pop("rural") * (gamma(i, r) + ac(i,"rural") * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * (pc(j) / pc00(j)) ** ac(j,"rural") * ac(j,"rural") / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,"rural")) + pop("rural") * ac(i,"rural") * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)) * (pc(j) / pc00(j)) ** ac(j,"rural") * ac(j,"rural") / (pc(j) / pc00(j)) * 1 / pc00(j) ** 1 / (pc(j) / pc00(j)) ** ac(j,"rural")) * nu_les(i,r)) + sum(r, ch(i,r) * nu_hbudget(r)) + sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) * nu_fbudget + (sum(i__, pc00(i__) * aid(i__)) * savf / usdefl * er00 / er * aid(i) / sqr(sum(i__, pc00(i__) * aid(i__))) - id(i)) * nu_invsav - piL_pc(i) =E= 0;
 stat_pg(i).. ((-1) * g(i)) * nu_valuex(i) + ((-1) * (g(i) * (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) ** sigmax(i) * sigmax(i) / (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) * pz(i) * (1 - deltax(i)) * deltax(i) / sqr(pz(i) * (1 - deltax(i))))) * nu_firstx(i) + ((-1) * ((1 - thetai) * g(i))) * nu_yinfr(i) + thetai * g(i) * nu_invsav - piL_pg(i) =E= 0;
 stat_pk(i).. ((-1) * k(i)) * nu_values(i) + (((-1) * (ls(i) * (sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i) * sigmas(i) / (sum(r$(ri(r,i)), pls(r)) * deltas(i) / (pk(i) * (1 - deltas(i)))) * ((-1) * (sum(r$(ri(r,i)), pls(r)) * deltas(i) * (1 - deltas(i)))) / sqr(pk(i) * (1 - deltas(i))))) * nu_firsts(i))$((not si(i))) + ((-1) * ((1 - tk(i)) * (1 - thetak(i)) * k(i))) * nu_ycap(i) + k(i) * thetak(i) * nu_invsav + ((-1) * (depp(i) * k(i))) * nu_qdep(i) - piL_pk(i) =E= 0;
 stat_pls(r).. (sum(i, ((-1) * (ls(i) * 1$(ri(r,i)))) * nu_values(i)) + sum(i, (((-1) * (ls(i) * (sum(r__$(ri(r__,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) ** sigmas(i) * sigmas(i) / (sum(r__$(ri(r__,i)), pls(r__)) * deltas(i) / (pk(i) * (1 - deltas(i)))) * pk(i) * (1 - deltas(i)) * deltas(i) * 1$(ri(r,i)) / sqr(pk(i) * (1 - deltas(i))))) * nu_firsts(i))$((not si(i)))) + sum(i, ((-1) * ((1 - tw(i)) * ls(i) * 1$(ri(r,i)))) * nu_yself(i)) + sum(i, ((-1) * (depl(i) * ls(i) * 1$(ri(r,i)))) * nu_qdep(i)) - piL_pls(r))$(sum(i, 1$(ri(r,i)))) =E= 0;
-stat_pm(i).. ((-1) * m(i)$(im(i))) * nu_valueq(i) + nu_pmdef(i) + nu_taumdet(i)$((not sc(i))) + ((-1) * (m(i) * (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i) * sigmaq(i) / (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) * px(i) * (1 - deltaq(i)) * deltaq(i) / sqr(px(i) * (1 - deltaq(i))))) * nu_firstq(i) - piL_pm(i) =E= 0;
+stat_pm(i).. ((-1) * m(i)$(im(i))) * nu_valueq(i) + nu_pmdef(i)$(im(i)) + (nu_taumdet(i)$(im(i)))$((not sc(i))) + (((-1) * (m(i) * (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i) * sigmaq(i) / (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) * px(i) * (1 - deltaq(i)) * deltaq(i) / sqr(px(i) * (1 - deltaq(i))))) * nu_firstq(i))$(sc(i)) - piL_pm(i) =E= 0;
 stat_pn(i).. ((-1) * n(i)) * nu_valuez(i) + ((-1) * (n(i) * (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) ** sigmaz(i) * sigmaz(i) / (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) * pv(i) * (1 - deltaz(i)) * deltaz(i) / sqr(pv(i) * (1 - deltaz(i))))) * nu_firstz(i) + n(i) * nu_valuen(i) - piL_pn(i) =E= 0;
 stat_pnd(i).. ((-1) * nd(i)) * nu_valuen(i) + ((-1) * (nm(i) * (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) ** sigman(i) * sigman(i) / (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) * ((-1) * (deltan(i) * pnm(i) * (1 - deltan(i)))) / sqr((1 - deltan(i)) * pnd(i)))) * nu_firstn(i) + nu_pnddet(i) - piL_pnd(i) =E= 0;
 stat_pnm(i).. ((-1) * nm(i)) * nu_valuen(i) + ((-1) * (nm(i) * (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) ** sigman(i) * sigman(i) / (deltan(i) * pnm(i) / ((1 - deltan(i)) * pnd(i))) * (1 - deltan(i)) * pnd(i) * deltan(i) / sqr((1 - deltan(i)) * pnd(i)))) * nu_firstn(i) + nu_pnmdet(i) - piL_pnm(i) =E= 0;
-stat_pq(i).. q(i) * nu_valueq(i) + ((-1) * ((1 + tnd(i)) * a(i,i))) * nu_pnddet(i) + (((-1) * ((1 + tnd(i)) * a(i,i+2))) * nu_pnddet(i+2))$(ord(i) <= card(i) - 2) + (((-1) * ((1 + tnd(i)) * a(i,i+1))) * nu_pnddet(i+1))$(ord(i) <= card(i) - 1) + (((-1) * ((1 + tnd(i)) * a(i,i+3))) * nu_pnddet(i+3))$(ord(i) <= card(i) - 3) + (((-1) * ((1 + tnd(i)) * a(i,i+4))) * nu_pnddet(i+4))$(ord(i) <= card(i) - 4) + (((-1) * ((1 + tnd(i)) * a(i,i+5))) * nu_pnddet(i+5))$(ord(i) <= card(i) - 5) + (((-1) * ((1 + tnd(i)) * a(i,i-2))) * nu_pnddet(i-2))$(ord(i) > 2) + (((-1) * ((1 + tnd(i)) * a(i,i-1))) * nu_pnddet(i-1))$(ord(i) > 1) + (((-1) * ((1 + tnd(i)) * a(i,i-3))) * nu_pnddet(i-3))$(ord(i) > 3) + (((-1) * ((1 + tnd(i)) * a(i,i-4))) * nu_pnddet(i-4))$(ord(i) > 4) + (((-1) * ((1 + tnd(i)) * a(i,i-5))) * nu_pnddet(i-5))$(ord(i) > 5) + ((-1) * (1 + tfd(i) + trmd(i))) * nu_pcdet(i) + ((-1) * (exscale * aex(i) * (er00 * pie(i) / (pq(i) * (1 + trmx(i)))) ** eta(i) * eta(i) / (er00 * pie(i) / (pq(i) * (1 + trmx(i)))) * ((-1) * (er00 * pie(i) * (1 + trmx(i)))) / sqr(pq(i) * (1 + trmx(i))))) * nu_export(i) + ((-1) * (fd(i) * trmd(i))) * nu_margdet + ((-1) * dst(i)) * nu_invsav - piL_pq(i) =E= 0;
+stat_pq(i).. q(i) * nu_valueq(i) + ((-1) * ((1 + tnd(i)) * a(i,i))) * nu_pnddet(i) + (((-1) * ((1 + tnd(i)) * a(i,i+2))) * nu_pnddet(i+2))$(ord(i) <= card(i) - 2) + (((-1) * ((1 + tnd(i)) * a(i,i+1))) * nu_pnddet(i+1))$(ord(i) <= card(i) - 1) + (((-1) * ((1 + tnd(i)) * a(i,i+3))) * nu_pnddet(i+3))$(ord(i) <= card(i) - 3) + (((-1) * ((1 + tnd(i)) * a(i,i+4))) * nu_pnddet(i+4))$(ord(i) <= card(i) - 4) + (((-1) * ((1 + tnd(i)) * a(i,i+5))) * nu_pnddet(i+5))$(ord(i) <= card(i) - 5) + (((-1) * ((1 + tnd(i)) * a(i,i-2))) * nu_pnddet(i-2))$(ord(i) > 2) + (((-1) * ((1 + tnd(i)) * a(i,i-1))) * nu_pnddet(i-1))$(ord(i) > 1) + (((-1) * ((1 + tnd(i)) * a(i,i-3))) * nu_pnddet(i-3))$(ord(i) > 3) + (((-1) * ((1 + tnd(i)) * a(i,i-4))) * nu_pnddet(i-4))$(ord(i) > 4) + (((-1) * ((1 + tnd(i)) * a(i,i-5))) * nu_pnddet(i-5))$(ord(i) > 5) + ((-1) * (1 + tfd(i) + trmd(i))) * nu_pcdet(i) + (((-1) * (exscale * aex(i) * (er00 * pie(i) / (pq(i) * (1 + trmx(i)))) ** eta(i) * eta(i) / (er00 * pie(i) / (pq(i) * (1 + trmx(i)))) * ((-1) * (er00 * pie(i) * (1 + trmx(i)))) / sqr(pq(i) * (1 + trmx(i))))) * nu_export(i))$(ie(i)) + ((-1) * (fd(i) * trmd(i) + ex(i) * trmx(i))) * nu_margdet + ex(i) * (1 + trmx(i)) * nu_fbudget + ((-1) * dst(i)) * nu_invsav - piL_pq(i) =E= 0;
 stat_ps(i).. s(i) * nu_values(i) + ((-1) * s(i)) * nu_valuev(i) + ((-1) * (lw(i) * (sum(r$(ri(r,i)), w(r)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i) * sigmav(i) / (sum(r$(ri(r,i)), w(r)) * deltav(i) / (ps(i) * (1 - deltav(i)))) * ((-1) * (sum(r$(ri(r,i)), w(r)) * deltav(i) * (1 - deltav(i)))) / sqr(ps(i) * (1 - deltav(i))))) * nu_firstv(i) - piL_ps(i) =E= 0;
 stat_pv(i).. ((-1) * v(i)) * nu_valuez(i) + ((-1) * (n(i) * (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) ** sigmaz(i) * sigmaz(i) / (pn(i) * deltaz(i) / (pv(i) * (1 - deltaz(i)))) * ((-1) * (pn(i) * deltaz(i) * (1 - deltaz(i)))) / sqr(pv(i) * (1 - deltaz(i))))) * nu_firstz(i) + v(i) * nu_valuev(i) + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (gtra + gtrb) / indefl * v(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_gtrdet + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (nct + nfi) * er00 / er / usdefl * v(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_wtrdet - piL_pv(i) =E= 0;
-stat_px(i).. ((-1) * x(i)) * nu_valueq(i) + ((-1) * nu_taumdet(i))$((not sc(i))) + x(i) * nu_valuex(i) + ((-1) * (m(i) * (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i) * sigmaq(i) / (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) * ((-1) * (pm(i) * deltaq(i) * (1 - deltaq(i)))) / sqr(px(i) * (1 - deltaq(i))))) * nu_firstq(i) - piL_px(i) =E= 0;
+stat_px(i).. ((-1) * x(i)) * nu_valueq(i) + (((-1) * nu_taumdet(i))$(im(i)))$((not sc(i))) + x(i) * nu_valuex(i) + (((-1) * (m(i) * (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) ** sigmaq(i) * sigmaq(i) / (pm(i) * deltaq(i) / (px(i) * (1 - deltaq(i)))) * ((-1) * (pm(i) * deltaq(i) * (1 - deltaq(i)))) / sqr(px(i) * (1 - deltaq(i))))) * nu_firstq(i))$(sc(i)) - piL_px(i) =E= 0;
 stat_pz(i).. ((-1) * z(i)) * nu_valuex(i) + ((-1) * (g(i) * (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) ** sigmax(i) * sigmax(i) / (pg(i) * deltax(i) / (pz(i) * (1 - deltax(i)))) * ((-1) * (pg(i) * deltax(i) * (1 - deltax(i)))) / sqr(pz(i) * (1 - deltax(i))))) * nu_firstx(i) + z(i) * nu_valuez(i) - piL_pz(i) =E= 0;
-stat_q(i).. pq(i) * nu_valueq(i) + nu_supply(i)$((not sc(i))) + nu_equil(i) + nu_prodq(i) =E= 0;
+stat_q(i).. pq(i) * nu_valueq(i) + nu_supply(i)$((not sc(i))) + nu_equil(i) + nu_prodq(i)$(sc(i)) =E= 0;
 stat_s(i).. ps(i) * nu_values(i) + nu_prods(i) + ((-1) * ps(i)) * nu_valuev(i) + ((-1) * (av(i) * (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) ** ((-1) / rhov(i)) * (-1) / rhov(i) / (deltav(i) * s(i) ** ((-1) * rhov(i)) + (1 - deltav(i)) * lw(i) ** ((-1) * rhov(i))) * deltav(i) * s(i) ** ((-1) * rhov(i)) * ((-1) * rhov(i)) / s(i))) * nu_prodv(i) + nu_firstv(i) - piL_s(i) =E= 0;
 stat_savf.. sum(i, pc00(i) * aid(i)) * sum(i, pc(i) * aid(i)) * er00 / er * 1 / usdefl ** 1 / sqr(sum(i, pc00(i) * aid(i))) * nu_fbudget + sum(i, pc00(i) * aid(i)) * sum(i, pc(i) * aid(i)) * er00 / er * 1 / usdefl ** 1 / sqr(sum(i, pc00(i) * aid(i))) * nu_invsav + nu_savf_fx =E= 0;
 stat_savg.. nu_invsav =E= 0;
 stat_savh(r).. nu_hbudget(r) + nu_invsav =E= 0;
-stat_taum(i).. (((-1) * pim(i)) * nu_pmdef(i) + nu_taum_fx_cap_good_04720e89$(sameas(i, 'cap-good')))$(im(i)) =E= 0;
+stat_taum(i).. ((((-1) * pim(i)) * nu_pmdef(i))$(im(i)) + nu_taum_fx_cap_good_04720e89$(sameas(i, 'cap-good')))$(im(i)) =E= 0;
 stat_tfd(i).. ((-1) * pq(i)) * nu_pcdet(i) =E= 0;
-stat_tfm(i).. (((-1) * pim(i)) * nu_pmdef(i))$(im(i)) =E= 0;
+stat_tfm(i).. ((((-1) * pim(i)) * nu_pmdef(i))$(im(i)))$(im(i)) =E= 0;
 stat_thetai.. sum(i, ((-1) * (pg(i) * g(i) * (-1))) * nu_yinfr(i)) + sum(i, ((-1) * (pg00(i) * g(i) * (-1))) * nu_fyinfr(i)) + sum(i, pg(i) * g(i)) * nu_invsav =E= 0;
 stat_tk(i).. ((-1) * (pk(i) * k(i) * (1 - thetak(i)) * (-1))) * nu_ycap(i) + ((-1) * (pk00(i) * k(i) * (1 - thetak(i)) * (-1))) * nu_fycap(i) =E= 0;
 stat_tnd(i).. ((-1) * (a(i,i) * pq(i))) * nu_pnddet(i) + (((-1) * (a(i,i+2) * pq(i))) * nu_pnddet(i+2))$(ord(i) <= card(i) - 2) + (((-1) * (a(i,i+1) * pq(i))) * nu_pnddet(i+1))$(ord(i) <= card(i) - 1) + (((-1) * (a(i,i+3) * pq(i))) * nu_pnddet(i+3))$(ord(i) <= card(i) - 3) + (((-1) * (a(i,i+4) * pq(i))) * nu_pnddet(i+4))$(ord(i) <= card(i) - 4) + (((-1) * (a(i,i+5) * pq(i))) * nu_pnddet(i+5))$(ord(i) <= card(i) - 5) + (((-1) * (a(i,i-2) * pq(i))) * nu_pnddet(i-2))$(ord(i) > 2) + (((-1) * (a(i,i-1) * pq(i))) * nu_pnddet(i-1))$(ord(i) > 1) + (((-1) * (a(i,i-3) * pq(i))) * nu_pnddet(i-3))$(ord(i) > 3) + (((-1) * (a(i,i-4) * pq(i))) * nu_pnddet(i-4))$(ord(i) > 4) + (((-1) * (a(i,i-5) * pq(i))) * nu_pnddet(i-5))$(ord(i) > 5) =E= 0;
@@ -991,7 +1022,7 @@ stat_util(r).. ((-1) * (psi * (pop(r)$(mu = 1) + (1 / mu * pop(r) * util(r) ** m
 stat_v(i).. ((-1) * pv(i)) * nu_valuez(i) + ((-1) * (az(i) * (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) ** ((-1) / rhoz(i)) * (-1) / rhoz(i) / (deltaz(i) * v(i) ** ((-1) * rhoz(i)) + (1 - deltaz(i)) * n(i) ** ((-1) * rhoz(i))) * deltaz(i) * v(i) ** ((-1) * rhoz(i)) * ((-1) * rhoz(i)) / v(i))) * nu_prodz(i) + nu_firstz(i) + pv(i) * nu_valuev(i) + nu_prodv(i) + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (gtra + gtrb) / indefl * pv(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_gtrdet + ((-1) * (sum(i__, pv00(i__) * v00(i__)) * (nct + nfi) * er00 / er / usdefl * pv(i) / sqr(sum(i__, pv00(i__) * v00(i__))))) * nu_wtrdet + ((-1) * pv00(i)) * nu_qgdp - piL_v(i) =E= 0;
 stat_w(r).. sum(i, ((-1) * (lw(i) * 1$(ri(r,i)))) * nu_valuev(i)) + sum(i, ((-1) * (lw(i) * (sum(r__$(ri(r__,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) ** sigmav(i) * sigmav(i) / (sum(r__$(ri(r__,i)), w(r__)) * deltav(i) / (ps(i) * (1 - deltav(i)))) * ps(i) * (1 - deltav(i)) * deltav(i) * 1$(ri(r,i)) / sqr(ps(i) * (1 - deltav(i))))) * nu_firstv(i)) + sum(i, ((-1) * ((1 - tw(i)) * lw(i) * 1$(ri(r,i)))) * nu_ywage(i)) - piL_w(r) =E= 0;
 stat_wtr(ty).. sum(r, ((-1) * ayt(r)) * nu_yhdef(ty,r)) + nu_fbudget + nu_wtrdet$(sameas(ty, 'ynonp')) =E= 0;
-stat_x(i).. ((-1) * px(i)) * nu_valueq(i) + ((-1) * nu_supply(i))$((not sc(i))) + px(i) * nu_valuex(i) + nu_prodx(i) + ((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * deltaq(i) * x(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / x(i))) * nu_prodq(i) + nu_firstq(i) - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * px(i)) * nu_valueq(i) + ((-1) * nu_supply(i))$((not sc(i))) + px(i) * nu_valuex(i) + nu_prodx(i) + (((-1) * (aq(i) * (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) ** ((-1) / rhoq(i)) * (-1) / rhoq(i) / (deltaq(i) * x(i) ** ((-1) * rhoq(i)) + (1 - deltaq(i)) * m(i) ** ((-1) * rhoq(i))) * deltaq(i) * x(i) ** ((-1) * rhoq(i)) * ((-1) * rhoq(i)) / x(i))) * nu_prodq(i))$(sc(i)) + nu_firstq(i)$(sc(i)) - piL_x(i) =E= 0;
 stat_y(ty,i).. nu_ycap(i)$(sameas(ty, 'ycap')) + sum(r, ((-1) * ayi(i,r)) * nu_yhdef(ty,r)) + nu_yinfr(i)$(sameas(ty, 'yinfr')) + nu_y_fx_ynonp_agricult$(sameas(ty, 'ynonp') and sameas(i, 'agricult')) + nu_y_fx_ynonp_cap_good_04720e89$(sameas(ty, 'ynonp') and sameas(i, 'cap-good')) + nu_y_fx_ynonp_cons_good_e1e25cc5$(sameas(ty, 'ynonp') and sameas(i, 'cons-good')) + nu_y_fx_ynonp_int_good_71fc43da$(sameas(ty, 'ynonp') and sameas(i, 'int-good')) + nu_y_fx_ynonp_pub_infr_644e4788$(sameas(ty, 'ynonp') and sameas(i, 'pub-infr')) + nu_y_fx_ynonp_service$(sameas(ty, 'ynonp') and sameas(i, 'service')) + nu_yself(i)$(sameas(ty, 'yself')) + nu_ywage(i)$(sameas(ty, 'ywage')) =E= 0;
 stat_yh(ty,r).. nu_yhdef(ty,r) - nu_hbudget(r) =E= 0;
 stat_ym(r).. pop(r) * nu_mean(r) + ((-1) * (beta(r) * 1 / ym(r))) * nu_meanc(r) - piL_ym(r) =E= 0;
@@ -1071,7 +1102,7 @@ yhdef(ty,r).. yh(ty,r) =E= sum(i, ayi(i,r) * y(ty,i)) + ayt(r) * (gtr(ty) + wtr(
 fyhdef(ty,r).. fyh(ty,r) =E= sum(i, ayi(i,r) * fy(ty,i)) + ayt(r) * (fgtr(ty) + fwtr(ty));
 mean(r).. ym(r) * pop(r) =E= sum(ty, fyh(ty,r));
 meanc(r).. log(mc(r)) =E= alpha(r) + beta(r) * log(ym(r));
-les(i,r).. pc(i) * ch(i,r) =E= pop(r) * (pc(i) * gamma(i, r) + ac(i,r) * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j, (pc(j) / pc00(j)) ** ac(j,r)));
+les(i,r).. pc(i) * ch(i,r) =E= pop(r) * (pc(i) * gamma(i, r) + ac(i,r) * (mc(r) - sum(j, pc00(j) * gamma(j, r))) * prod(j$(pc00(j) <> 0), (pc(j) / pc00(j)) ** ac(j,r)));
 iddet(i).. id(i) =E= aid(i) * idshr * invtot;
 dstdet(i).. dst(i) =E= adst(i) * dstshr * invtot;
 hbudget(r).. savh(r) + sum(i, pc(i) * ch(i,r)) =E= sum(ty, yh(ty,r));
@@ -1122,6 +1153,8 @@ pls.fx(r)$(not (sum(i, 1$(ri(r,i))))) = 0;
 piL_pls.fx(r)$(not (sum(i, 1$(ri(r,i))))) = 0;
 taum.fx(i)$(not (im(i))) = 0;
 tfm.fx(i)$(not (im(i))) = 0;
+ch.fx(i,r)$(not (ch.up(i,r) - ch.lo(i,r) > 1e-10)) = ch.lo(i,r);
+piL_ch.fx(i,r)$(not (ch.up(i,r) - ch.lo(i,r) > 1e-10)) = 0;
 piL_m.fx(i)$(not has_m_lo(i)) = 0;
 piL_ch.fx(i,r)$(not (pop(r) * gamma(i, r) + 0.1 > -inf)) = 0;
 nu_firsts.fx(i)$(not ((not si(i)))) = 0;
@@ -1129,11 +1162,8 @@ nu_supply.fx(i)$(not ((not sc(i)))) = 0;
 nu_export.fx(i)$(not (ie(i))) = 0;
 nu_pmdef.fx(i)$(not (im(i))) = 0;
 nu_taumdet.fx(i)$(not (im(i))) = 0;
-nu_export.fx(i)$(not (ie(i))) = 0;
 nu_firstq.fx(i)$(not (sc(i))) = 0;
-nu_pmdef.fx(i)$(not (im(i))) = 0;
 nu_prodq.fx(i)$(not (sc(i))) = 0;
-nu_taumdet.fx(i)$(not (im(i))) = 0;
 
 * ============================================
 * Model MCP Declaration

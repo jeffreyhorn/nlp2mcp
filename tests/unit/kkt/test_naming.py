@@ -3,12 +3,18 @@
 import pytest
 
 from src.kkt.naming import (
+    BOUND_NAME_MAX_LENGTH,
+    GAMS_MAX_IDENTIFIER_LENGTH,
+    clear_long_identifier_registry,
     create_bound_lo_multiplier_name,
+    create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
     detect_naming_collision,
+    get_long_identifier_registry,
     resolve_collision,
+    shorten_identifier,
 )
 
 
@@ -130,3 +136,83 @@ class TestNamingCollision:
         """Resolve collision by finding first available suffix."""
         result = resolve_collision("lam_y", {"lam_y", "lam_y_1", "lam_y_2"})
         assert result == "lam_y_3"
+
+
+@pytest.mark.unit
+class TestIdentifierShortening:
+    """Issue #1290: deterministic shortening for over-length identifiers."""
+
+    def setup_method(self):
+        clear_long_identifier_registry()
+
+    def test_short_name_unchanged(self):
+        assert shorten_identifier("nu_balance") == "nu_balance"
+
+    def test_exactly_at_limit_unchanged(self):
+        name = "x" * GAMS_MAX_IDENTIFIER_LENGTH
+        assert shorten_identifier(name) == name
+        assert get_long_identifier_registry() == {}
+
+    def test_over_limit_is_shortened_to_max_length(self):
+        name = "x" * (GAMS_MAX_IDENTIFIER_LENGTH + 5)
+        out = shorten_identifier(name)
+        assert len(out) == GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_shortening_is_deterministic(self):
+        name = "x" * 80
+        a = shorten_identifier(name)
+        b = shorten_identifier(name)
+        assert a == b
+
+    def test_shortening_records_mapping(self):
+        original = "y" * 80
+        shortened = shorten_identifier(original)
+        registry = get_long_identifier_registry()
+        assert registry[shortened] == original
+
+    def test_shortening_preserves_head_and_appends_hex_hash(self):
+        # Format is `<head>_<8-hex>` totaling exactly max_length.
+        original = "longprefix_" + ("z" * 80)
+        shortened = shorten_identifier(original, max_length=63)
+        assert len(shortened) == 63
+        # Last 9 chars are `_<8-hex>`
+        assert shortened[-9] == "_"
+        # The 8 trailing chars are valid lowercase hex
+        assert all(c in "0123456789abcdef" for c in shortened[-8:])
+        # Head is the original prefix
+        assert original.startswith(shortened[:-9])
+
+    def test_distinct_names_get_distinct_shortenings(self):
+        a = shorten_identifier("a" * 80)
+        b = shorten_identifier("b" * 80)
+        assert a != b
+
+    def test_ferts_style_67char_name(self):
+        # Issue #1290 reproducer
+        original = "nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5"
+        assert len(original) == 67
+        out = shorten_identifier(original)
+        assert len(out) == 63
+        assert get_long_identifier_registry()[out] == original
+
+    def test_eq_multiplier_with_long_eq_name_is_shortened(self):
+        long_eq = "y" * 70
+        out = create_eq_multiplier_name(long_eq)
+        assert len(out) <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_bound_indexed_multiplier_with_long_indices_is_shortened(self):
+        out = create_bound_lo_multiplier_name_indexed(
+            "x", tuple("element_" + "z" * 30 for _ in range(3))
+        )
+        assert len(out) <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_clear_registry(self):
+        shorten_identifier("a" * 80)
+        assert get_long_identifier_registry()
+        clear_long_identifier_registry()
+        assert get_long_identifier_registry() == {}
+
+    def test_bound_name_max_leaves_room_for_multiplier_prefix(self):
+        # Wrapping with `nu_`/`lam_`/`piL_`/`piU_` (max 4 chars) must not
+        # push the result past the GAMS limit.
+        assert BOUND_NAME_MAX_LENGTH + 4 <= GAMS_MAX_IDENTIFIER_LENGTH

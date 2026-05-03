@@ -119,50 +119,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-aweight.l('stage-1') = 1.0;
-aweight.l('stage-2') = 1.0;
-aweight.l('stage-3') = 1.0;
-iweight.l('stage-1') = 136.0;
-iweight.l('stage-2') = 47.0;
-iweight.l('stage-3') = 16.0;
-pweight.l('stage-1') = 2176.0;
-pweight.l('stage-2') = 564.0;
-pweight.l('stage-3') = 144.0;
-instweight.l = 2.5;
-length.l('stage-1') = 125.0;
-length.l('stage-2') = 75.0;
-length.l('stage-3') = 50.0;
-thrust.l('stage-1') = 1.0;
-thrust.l('stage-2') = 1.0;
-thrust.l('stage-3') = 1.0;
-ethrust.l('stage-1') = 746.0;
-ethrust.l('stage-2') = 96.0;
-ethrust.l('stage-3') = 129.0;
-ms.l('stage-1') = 0.3;
-ms.l('stage-2') = 0.29;
-ms.l('stage-3') = 0.21;
-t2w.l('stage-1') = 1.2;
-t2w.l('stage-2') = 0.6;
-t2w.l('stage-3') = 0.7;
-t.l('stage-1') = 155.0;
-t.l('stage-2') = 314.0;
-t.l('stage-3') = 403.0;
-vfac.l('stage-1') = 240.0;
-vfac.l('stage-2') = 240.0;
-vfac.l('stage-3') = 340.0;
-v.l('stage-1') = 1000.0;
-v.l('stage-2') = 1000.0;
-v.l('stage-3') = 1000.0;
-vt.l = 38632.0;
-
-* ============================================
 * Bound Parameters (non-uniform bounds)
 * ============================================
 
@@ -205,6 +161,47 @@ Parameter vfac_up_param(s);
 vfac_up_param('stage-1') = 290;
 vfac_up_param('stage-2') = 290;
 vfac_up_param('stage-3') = 375;
+
+* ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "data/gamslib/raw/launch.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_diweight.l(s) = diweight.m(s);
+nu_dweight.l(s) = dweight.m(s);
+nu_dthrust.l(s) = dthrust.m(s);
+nu_t2wr.l(s) = t2wr.m(s);
+nu_msd.l(s) = msd.m(s);
+lam_pwlower.l(s) = abs(pwlower.m(s));
+lam_pwupper.l(s) = abs(pwupper.m(s));
+nu_defvfac.l(s) = defvfac.m(s);
+nu_defv.l(s) = defv.m(s);
+nu_defvt.l = defvt.m;
+
+* Transfer variable marginals to bound multipliers
+piL_aweight.l(s)$(abs(aweight.l(s) - aweight.lo(s)) < 1e-6 and aweight.m(s) > 0) = aweight.m(s);
+piL_iweight.l(s)$(abs(iweight.l(s) - iweight.lo(s)) < 1e-6 and iweight.m(s) > 0) = iweight.m(s);
+piL_pweight.l(s)$(abs(pweight.l(s) - pweight.lo(s)) < 1e-6 and pweight.m(s) > 0) = pweight.m(s);
+piL_instweight.l$(abs(instweight.l - instweight.lo) < 1e-6 and instweight.m > 0) = instweight.m;
+piL_length.l(s)$(abs(length.l(s) - length.lo(s)) < 1e-6 and length.m(s) > 0) = length.m(s);
+piL_thrust.l(s)$(abs(thrust.l(s) - thrust.lo(s)) < 1e-6 and thrust.m(s) > 0) = thrust.m(s);
+piL_ethrust.l(s)$(abs(ethrust.l(s) - ethrust.lo(s)) < 1e-6 and ethrust.m(s) > 0) = ethrust.m(s);
+piL_ms.l(s)$(abs(ms.l(s) - ms.lo(s)) < 1e-6 and ms.m(s) > 0) = ms.m(s);
+piL_t2w.l(s)$(abs(t2w.l(s) - t2w.lo(s)) < 1e-6 and t2w.m(s) > 0) = t2w.m(s);
+piL_t.l(s)$(abs(t.l(s) - t.lo(s)) < 1e-6 and t.m(s) > 0) = t.m(s);
+piL_vfac.l(s)$(abs(vfac.l(s) - vfac.lo(s)) < 1e-6 and vfac.m(s) > 0) = vfac.m(s);
+piL_v.l(s)$(abs(v.l(s) - v.lo(s)) < 1e-6 and v.m(s) > 0) = v.m(s);
+piL_vt.l$(abs(vt.l - vt.lo) < 1e-6 and vt.m > 0) = vt.m;
+piU_instweight.l$(abs(instweight.l - instweight.up) < 1e-6 and instweight.m < 0) = -(instweight.m);
+piU_length.l(s)$(abs(length.l(s) - length.up(s)) < 1e-6 and length.m(s) < 0) = -(length.m(s));
+piU_ms.l(s)$(abs(ms.l(s) - ms.up(s)) < 1e-6 and ms.m(s) < 0) = -(ms.m(s));
+piU_t2w.l(s)$(abs(t2w.l(s) - t2w.up(s)) < 1e-6 and t2w.m(s) < 0) = -(t2w.m(s));
+piU_vfac.l(s)$(abs(vfac.l(s) - vfac.up(s)) < 1e-6 and vfac.m(s) < 0) = -(vfac.m(s));
+piU_vt.l$(abs(vt.l - vt.up) < 1e-6 and vt.m < 0) = -(vt.m);
 
 * ============================================
 * Equations
@@ -269,6 +266,7 @@ Equations
 * (GAMS Error 125 when equation domain index is reused in sum)
 Alias(s, s__);
 
+$onMultiR
 * Stationarity equations
 stat_aweight(s).. 6739.127337000001 * pweight(s) ** (-0.9904) * thrust(s) ** 0.38745 * ms(s) ** 2.4242 * iweight(s) ** (-0.1959) * aweight(s) ** 0.2781 + 0.0615280908 * numl ** 0.9 * nume(s) ** 0.1616 * length(s) ** 0.1079 * pweight(s) ** 0.2362 * ms(s) ** (-1.5935) * aweight(s) ** (-0.6678) - nu_diweight(s) - piL_aweight(s) =E= 0;
 stat_ethrust(s).. 0.001 * rde2(s) * (ethrust(s) / 1000) ** rde3(s) * rde3(s) / (ethrust(s) / 1000) + 0.001 * rde4(s) * (ethrust(s) / 1000) ** rde5(s) * rde5(s) / (ethrust(s) / 1000) + (nume(s) * numl) ** 0.93 * (0.001 * pre1(s) + 0.001 * pre2(s) * (ethrust(s) / 1000) ** pre3(s) * pre3(s) / (ethrust(s) / 1000) + 0.001 * pre4(s) * (ethrust(s) / 1000) ** pre5(s) * pre5(s) / (ethrust(s) / 1000)) + ((-1) * nume(s)) * nu_dthrust(s) - piL_ethrust(s) =E= 0;
@@ -323,6 +321,7 @@ defv(s).. v(s) =E= vfac(s) * g * log(1 / ms(s));
 defvt.. vt =E= sum(s, v(s));
 costdef.. cost =E= +5272.77 * sum(s, aweight(s) ** 1.2781 * iweight(s) ** (-0.1959) * ms(s) ** 2.4242 * thrust(s) ** 0.38745 * pweight(s) ** (-0.9904)) + 0.185214 * sum(s, aweight(s) ** 0.3322 * ms(s) ** (-1.5935) * pweight(s) ** 0.2362 * length(s) ** 0.1079 * nume(s) ** 0.1616 * numl ** 0.9) + sum(s, rde1(s) + rde2(s) * (ethrust(s) / 1000) ** rde3(s) + rde4(s) * (ethrust(s) / 1000) ** rde5(s)) + sum(s, (pre1(s) * ethrust(s) / 1000 + pre2(s) * (ethrust(s) / 1000) ** pre3(s) + pre4(s) * (ethrust(s) / 1000) ** pre5(s)) * (nume(s) * numl) ** 0.93) + 10.35 * (0.015822 * (instweight * 1000) ** 0.786 - 35.5) + numl ** 0.9 * 0.015822 * (instweight * 1000) ** 0.786 + 8.5 * numl * (3 * sum(s, pweight(s)) / 1000) ** 0.46;
 
+$offMulti
 
 * ============================================
 * Model MCP Declaration

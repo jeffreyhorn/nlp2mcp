@@ -162,9 +162,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + (-4.97) * nu_dischar(t) - lam_demcons(t) - piL_hydro(t) + piU_hydro(t) =E= 0;
+stat_hydro(t).. ((-1) * (losscof * 2 * power(hydro(t), 1))) * nu_losseq(t) + ((-4.97) * nu_dischar(t))$(t(t)) - lam_demcons(t) - piL_hydro(t) + piU_hydro(t) =E= 0;
 stat_loss(t).. nu_losseq(t) + lam_demcons(t) - piL_loss(t) =E= 0;
-stat_q(tt).. (((-1) * (n * (-1))) * nu_flow(tt) + nu_dischar(tt) - piL_q(tt))$(t(tt)) =E= 0;
+stat_q(tt).. (((-1) * (n * (-1))) * nu_flow(tt) + nu_dischar(tt)$(t(tt)) - piL_q(tt))$(t(tt)) =E= 0;
 stat_thermal(t).. 1.15 * n * card(t) * (8 + 0.0032 * thermal(t)) - lam_demcons(t) - piL_thermal(t) + piU_thermal(t) =E= 0;
 stat_v(tt).. nu_flow(tt) + ((-1) * nu_flow(tt+1))$(ord(tt) <= card(tt) - 1) - piL_v(tt) + piU_v(tt) =E= 0;
 

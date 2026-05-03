@@ -40,7 +40,6 @@ Scalars
     plog /65/
 ;
 
-Parameter pp(p);
 pp(p) = ppdat('scenario-1',p) ;
 
 * ============================================
@@ -152,7 +151,7 @@ Equations
 
 * Stationarity equations
 stat_logs(l).. plog + 0.97 * nu_logbal - piL_logs(l) =E= 0;
-stat_paper(q).. ((-1) * pq(q)) + sum(p, ((-1) * aq(p,q)) * nu_qbal(p,q)) - piL_paper(q) + piU_paper(q) =E= 0;
+stat_paper(q).. (((-1) * pq(q)) + sum(p, ((-1) * aq(p,q)) * nu_qbal(p,q)) - piL_paper(q) + piU_paper(q))$(paper.up(q) - paper.lo(q) > 1e-10) =E= 0;
 stat_pulp(p).. sum(w, ((-1) * ap(w,p)) * nu_wbal(w,p)) - nu_pbal(p) - piL_pulp(p) =E= 0;
 stat_purchase(p).. pp(p) - nu_pbal(p) - piL_purchase(p) + piU_purchase(p) =E= 0;
 stat_sales(p).. ((-1) * pp(p)) + nu_pbal(p) - piL_sales(p) + piU_sales(p) =E= 0;
@@ -188,6 +187,9 @@ obj.. profit =E= sum(p, pp(p) * sales(p)) + sum(q, pq(q) * paper(q)) - sum(l, pl
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+paper.fx(q)$(not (paper.up(q) - paper.lo(q) > 1e-10)) = paper.lo(q);
+piL_paper.fx(q)$(not (paper.up(q) - paper.lo(q) > 1e-10)) = 0;
+piU_paper.fx(q)$(not (paper.up(q) - paper.lo(q) > 1e-10)) = 0;
 piL_paper.fx(q)$(not (sdat(q,"lower") > -inf)) = 0;
 piU_paper.fx(q)$(not (sdat(q,"upper") < inf)) = 0;
 

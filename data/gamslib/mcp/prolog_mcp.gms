@@ -69,6 +69,16 @@ an(g,h) = x0(g,h) / prod(gp, p0(gp) ** eta(g,gp,h)) / y0(h) ** epsi(g,h);
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+alpha(g,h)$(NOT (alpha(g,h) > -inf and alpha(g,h) < inf)) = 0;
+an(g,h)$(NOT (an(g,h) > -inf and an(g,h) < inf)) = 0;
+epsi(i,h)$(NOT (epsi(i,h) > -inf and epsi(i,h) < inf)) = 0;
+eta(g,gp,h)$(NOT (eta(g,gp,h) > -inf and eta(g,gp,h) < inf)) = 0;
+gamma(g,h)$(NOT (gamma(g,h) > -inf and gamma(g,h) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -159,12 +169,16 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(gp, gp__);
+
 * Stationarity equations
-stat_p(i).. (((-1) * sum(h, x(i,h))))$(g(i)) + sum((g,h), ((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * sum(gp, p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h)))) * lam_dn(g,h)) + sum(h, x(i,h) * lam_bc(h)) + sum(t, ((-1) * a(i,i+1)) * lam_mp(i,t)) + sum(t, lam_mp(i,t)) - piL_p(i) =E= 0;
+stat_p(i).. (((-1) * sum(h, x(i,h))))$(g(i)) + sum(gp, sum((g,h), (((-1) * (y(h) ** epsi(g,h) * an(g,h) * prod(gp__, p(gp__) ** eta(g,gp__,h)) * p(gp) ** eta(g,gp,h) * eta(g,gp,h) / p(gp) / p(gp) ** eta(g,gp,h))) * lam_dn(g,h))$(g(g)))) + sum(h, x(i,h) * lam_bc(h)) + sum(t, ((-1) * a(i,i+1)) * lam_mp(i,t)) + sum(t, lam_mp(i,t)) - piL_p(i) =E= 0;
 stat_q(i,t).. ((-1) * (1 - a(i,i))) * lam_cb(i) + (((a(i+1,i) * lam_cb(i+1))$(ord(i) <= card(i) - 1))$(ord(t) = 1))$(sameas(i, 'food') or sameas(i, 'h-industry')) + (((a(i+2,i) * lam_cb(i+2))$(ord(i) <= card(i) - 2))$(ord(t) = 2))$(sameas(i, 'food')) + (((a(i-1,i) * lam_cb(i-1))$(ord(i) > 1))$(ord(t) = 1))$(sameas(i, 'h-industry') or sameas(i, 'l-industry')) + (((a(i-2,i) * lam_cb(i-2))$(ord(i) > 2))$(ord(t) = 2))$(sameas(i, 'l-industry')) + sum(k, d(i,k,t) * lam_rc(k)) - piL_q(i,t) =E= 0;
 stat_r(k).. b(k) + sum(h, ((-1) * (bb(h,k) * b(k))) * lam_id(h)) + sum((i,t), ((-1) * d(i,k,t)) * lam_mp(i,t)) - piL_r(k) =E= 0;
-stat_x(i,h).. (((-1) * p(i)))$(g(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h) + (p(i) * lam_bc(h))$(g(i)) - piL_x(i,h) =E= 0;
-stat_y(h).. sum(g, ((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h)) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
+stat_x(i,h).. (((-1) * p(i)))$(g(i)) + 1$(g(i)) * lam_cb(i) + lam_dn(i,h)$(g(i)) + (p(i) * lam_bc(h))$(g(i)) - piL_x(i,h) =E= 0;
+stat_y(h).. sum(g, (((-1) * (an(g,h) * prod(gp, p(gp) ** eta(g,gp,h)) * y(h) ** epsi(g,h) * epsi(g,h) / y(h))) * lam_dn(g,h))$(g(g))) - lam_bc(h) + lam_id(h) - piL_y(h) =E= 0;
 
 * Inequality complementarity equations
 comp_bc(h).. ((-1) * (sum(g, x(g,h) * p(g)) - y(h))) =G= 0;

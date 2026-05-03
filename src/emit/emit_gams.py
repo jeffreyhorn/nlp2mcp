@@ -1464,6 +1464,24 @@ def emit_gams_mcp(
         sections.append("*   π^U (piU_*): Positive multipliers for upper bounds")
         sections.append("")
 
+    # Issue #1290: Emit a comment banner for any identifiers that had to be
+    # shortened to fit GAMS's 63-char identifier limit. Each line records
+    # `shortened -> original` so a human reader can trace the synthetic name
+    # back to the full pre-truncation form.
+    from src.kkt.naming import get_long_identifier_registry
+
+    _long_id_registry = get_long_identifier_registry()
+    if add_comments and _long_id_registry:
+        sections.append("* ============================================")
+        sections.append("* Shortened identifiers (Issue #1290)")
+        sections.append("*")
+        sections.append("* The following names exceeded GAMS's 63-char limit and were")
+        sections.append("* deterministically shortened (head_truncated_<sha256[:8]>):")
+        for shortened, original in sorted(_long_id_registry.items()):
+            sections.append(f"*   {shortened}  <-  {original}")
+        sections.append("* ============================================")
+        sections.append("")
+
     # Compute _fx_ equations to suppress (conflict with fix-inactive blanket .fx).
     # Must be done before emit_variables/emit_equations so they can filter.
     # Kept local — passed explicitly to downstream emitters instead of mutating kkt.

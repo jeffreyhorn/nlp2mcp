@@ -425,8 +425,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(i).. ((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrdiff(i-1))$(ord(i) > 1))$(j(i)) + ((((-1) * r(i-1)) - r(i+1)) * lam_convexity(i))$(middle(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * r(i+2)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * r(i-2)) * lam_convexity(i-1))$(ord(i) > 1))$(middle(i)) + ((((-1) * R_min) - r(i+1)) * lam_convex_edge1(i))$(first(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1))$(first(i)) + ((((-1) * r(i-1)) - R_max) * lam_convex_edge3(i))$(last(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1))$(last(i)) + (((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i))$(last(i)) - piL_r(i) + piU_r(i) =E= 0;
-stat_rdiff(i).. (nu_eqrdiff(i)$(j(i)))$(j(i)) =E= 0;
+stat_r(i).. (((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrdiff(i-1))$(ord(i) > 1))$(j(i)) + ((((-1) * r(i-1)) - r(i+1)) * lam_convexity(i))$(middle(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * r(i+2)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * r(i-2)) * lam_convexity(i-1))$(ord(i) > 1))$(middle(i)) + ((((-1) * R_min) - r(i+1)) * lam_convex_edge1(i))$(first(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1))$(first(i)) + ((((-1) * r(i-1)) - R_max) * lam_convex_edge3(i))$(last(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1))$(last(i)) + (((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i))$(last(i)) - piL_r(i) + piU_r(i))$(r.up(i) - r.lo(i) > 1e-10) =E= 0;
+stat_rdiff(i).. (nu_eqrdiff(i)$(j(i)))$(j(i) and rdiff.up(i) - rdiff.lo(i) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_convex_edge1(i)$((first(i)) and (ord(i) <= card(i) - 1)).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
@@ -453,6 +453,10 @@ eqrdiff(i)$((j(i)) and (ord(i) <= card(i) - 1)).. rdiff(i) =E= r(i+1) - r(i);
 * fixed for excluded instances to satisfy MCP matching.
 
 rdiff.fx(i)$(not (j(i))) = 0;
+r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = r.lo(i);
+piL_r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = 0;
+piU_r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = 0;
+rdiff.fx(i)$(not (rdiff.up(i) - rdiff.lo(i) > 1e-10)) = rdiff.lo(i);
 rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge1.fx(i)$(not (first(i))) = 0;
 lam_convex_edge3.fx(i)$(not (last(i))) = 0;

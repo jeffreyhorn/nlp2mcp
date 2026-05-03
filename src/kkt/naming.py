@@ -17,7 +17,66 @@ For indexed multipliers, the indices are preserved:
 
 from __future__ import annotations
 
+import hashlib
 import re
+
+# Issue #1290: GAMS hard-caps identifiers at 63 characters. Names that
+# would exceed this limit must be shortened deterministically before
+# emission, otherwise gams compile rejects the model with Error 109/108.
+GAMS_MAX_IDENTIFIER_LENGTH = 63
+
+# Bound-equation names are wrapped by a multiplier-prefix at emission
+# (`nu_`, `lam_`, `piL_`, `piU_` — max 4 chars). Reserve those 4 chars so
+# the wrapped multiplier name still fits inside GAMS_MAX_IDENTIFIER_LENGTH.
+BOUND_NAME_MAX_LENGTH = GAMS_MAX_IDENTIFIER_LENGTH - 4
+
+# Module-level registry of identifier shortenings: shortened_name -> original_name.
+# Populated by `shorten_identifier`; consumed by the emitter when emitting a
+# comment banner so a human reader can trace a shortened identifier back to
+# its full original form. Cleared at the start of each emission via
+# `clear_long_identifier_registry()`.
+_LONG_IDENTIFIER_REGISTRY: dict[str, str] = {}
+
+
+def shorten_identifier(name: str, max_length: int = GAMS_MAX_IDENTIFIER_LENGTH) -> str:
+    """Shorten an identifier deterministically if it exceeds max_length.
+
+    Reserves the trailing 9 characters for ``_<8-hex>`` (an 8-char SHA-256
+    prefix), and truncates the head to fit. SHA-256 is used (not MD5) for
+    FIPS compatibility — see the ``_sanitize_identifier`` precedent in
+    ``src/ir/normalize.py``.
+
+    Records the (shortened -> original) pair in the module-level registry
+    so the emitter can surface a comment banner.
+
+    Args:
+        name: Original identifier.
+        max_length: Maximum allowed length (default: GAMS's 63-char limit).
+
+    Returns:
+        Original name unchanged when ``len(name) <= max_length``;
+        otherwise a deterministic shortened form of length ``max_length``.
+    """
+    if len(name) <= max_length:
+        return name
+    hash_suffix = hashlib.sha256(name.encode("utf-8")).hexdigest()[:8]
+    head_len = max_length - len(hash_suffix) - 1  # 1 for the underscore
+    if head_len <= 0:
+        shortened = hash_suffix[:max_length]
+    else:
+        shortened = f"{name[:head_len]}_{hash_suffix}"
+    _LONG_IDENTIFIER_REGISTRY[shortened] = name
+    return shortened
+
+
+def get_long_identifier_registry() -> dict[str, str]:
+    """Return a snapshot of the (shortened -> original) identifier mapping."""
+    return dict(_LONG_IDENTIFIER_REGISTRY)
+
+
+def clear_long_identifier_registry() -> None:
+    """Reset the (shortened -> original) registry. Call at start of each emission."""
+    _LONG_IDENTIFIER_REGISTRY.clear()
 
 
 def sanitize_index_for_identifier(index: str) -> str:
@@ -68,7 +127,7 @@ def create_eq_multiplier_name(eq_name: str) -> str:
         >>> create_eq_multiplier_name("flow")
         'nu_flow'
     """
-    return f"nu_{eq_name}"
+    return shorten_identifier(f"nu_{eq_name}")
 
 
 def create_ineq_multiplier_name(eq_name: str) -> str:
@@ -92,7 +151,7 @@ def create_ineq_multiplier_name(eq_name: str) -> str:
         >>> create_ineq_multiplier_name("demand")
         'lam_demand'
     """
-    return f"lam_{eq_name}"
+    return shorten_identifier(f"lam_{eq_name}")
 
 
 def create_bound_lo_multiplier_name(var_name: str) -> str:
@@ -116,7 +175,7 @@ def create_bound_lo_multiplier_name(var_name: str) -> str:
         >>> create_bound_lo_multiplier_name("y")
         'piL_y'
     """
-    return f"piL_{var_name}"
+    return shorten_identifier(f"piL_{var_name}")
 
 
 def create_bound_up_multiplier_name(var_name: str) -> str:
@@ -140,7 +199,7 @@ def create_bound_up_multiplier_name(var_name: str) -> str:
         >>> create_bound_up_multiplier_name("z")
         'piU_z'
     """
-    return f"piU_{var_name}"
+    return shorten_identifier(f"piU_{var_name}")
 
 
 def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, ...]) -> str:
@@ -171,7 +230,7 @@ def create_bound_lo_multiplier_name_indexed(var_name: str, indices: tuple[str, .
     """
     sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
     indices_str = "_".join(sanitized_indices)
-    return f"piL_{var_name}_{indices_str}"
+    return shorten_identifier(f"piL_{var_name}_{indices_str}")
 
 
 def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, ...]) -> str:
@@ -202,7 +261,7 @@ def create_bound_up_multiplier_name_indexed(var_name: str, indices: tuple[str, .
     """
     sanitized_indices = [sanitize_index_for_identifier(idx) for idx in indices]
     indices_str = "_".join(sanitized_indices)
-    return f"piU_{var_name}_{indices_str}"
+    return shorten_identifier(f"piU_{var_name}_{indices_str}")
 
 
 def detect_naming_collision(multiplier_names: set[str], variable_names: set[str]) -> list[str]:

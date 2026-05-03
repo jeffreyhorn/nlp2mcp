@@ -47,19 +47,23 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/mathopt3.gms"
+$offMulti
 
-x1.l = 10.0;
-x2.l = -10.0;
-x3.l = 10.0;
-x4.l = 10.0;
-x5.l = 10.0;
-x6.l = -10.0;
+* Transfer NLP duals to MCP multiplier initialization
+nu_eq1.l = eq1.m;
+nu_eq2.l = eq2.m;
+nu_eq3.l = eq3.m;
+nu_eq4.l = eq4.m;
+lam_ineq1.l = abs(ineq1.m);
+lam_ineq2.l = abs(ineq2.m);
+lam_ineq3.l = abs(ineq3.m);
+
+* Transfer variable marginals to bound multipliers
 
 * ============================================
 * Equations
@@ -90,6 +94,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_x1.. 2 * (x1 + x2) + 4 * (x1 + x3 - x4) + (-2) * (x2 - x1 + x3 - x4) + 20 * sin(x5 - x6 + x1) * cos(x5 - x6 + x1) + 2 * x1 * nu_eq1 + (x3 - x2 * x4 - cos(x6 - x1 - x3) * (-1)) * nu_eq2 + x2 * nu_eq4 + 2 * lam_ineq1 + 3 * lam_ineq2 + lam_ineq3 =E= 0;
 stat_x2.. 2 * (x1 + x2) + 2 * (x2 - x1 + x3 - x4) + ((-1) * (cos(x2))) * nu_eq1 + ((-1) * (x1 * x4)) * nu_eq2 + (cos(x5) * x6 + 1) * nu_eq3 + x1 * nu_eq4 + 5 * lam_ineq1 + (-2) * lam_ineq2 + lam_ineq3 =E= 0;
@@ -110,6 +115,7 @@ eq2.. x1 * x3 - x2 * x4 * x1 - x5 - sin(x6 - x1 - x3) =E= 0;
 eq3.. x2 * x6 * cos(x5) - sin(x3 * x4) + x2 - x5 =E= 0;
 eq4.. x1 * x2 - sqr(x3) - x4 * x5 - sqr(x6) =E= 0;
 
+$offMulti
 
 * ============================================
 * Model MCP Declaration
@@ -140,25 +146,6 @@ Model mcp_model /
     eq3.nu_eq3,
     eq4.nu_eq4
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/mathopt3.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-nu_eq1.l = eq1.m;
-nu_eq2.l = eq2.m;
-nu_eq3.l = eq3.m;
-nu_eq4.l = eq4.m;
-lam_ineq1.l = abs(ineq1.m);
-lam_ineq2.l = abs(ineq2.m);
-lam_ineq3.l = abs(ineq3.m);
-
-* Transfer variable marginals to bound multipliers
 
 * ============================================
 * Solve Statement

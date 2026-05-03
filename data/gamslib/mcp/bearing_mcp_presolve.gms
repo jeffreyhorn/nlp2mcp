@@ -103,28 +103,6 @@ Positive Variables
     piU_delta_t
 ;
 
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-R.l = 6.0;
-R0.l = 5.0;
-mu.l = 6e-06;
-Q.l = 3.0;
-P0.l = 1000.0;
-Ef.l = 16000.0;
-Ep.l = 3000.0;
-h.l = 0.001;
-delta_t.l = 50.0;
-t.l = 600.0;
-W.l = 101000.0;
-tmp1.l = 0.0001;
-tmp2.l = 0.01;
-
 * Variable Scaling
 mu.scale = 1e-06;
 PL.scale = 10000;
@@ -132,6 +110,48 @@ Ef.scale = 10000;
 Ep.scale = 10000;
 h.scale = hmin;
 W.scale = Ws;
+
+* ============================================
+* NLP Pre-Solve (warm-start for MCP duals)
+* ============================================
+
+$onMultiR
+$include "data/gamslib/raw/bearing.gms"
+$offMulti
+
+* Transfer NLP duals to MCP multiplier initialization
+nu_pumping_energy.l = pumping_energy.m;
+nu_friction.l = friction.m;
+nu_temp_rise.l = temp_rise.m;
+nu_load_capacity.l = load_capacity.m;
+nu_inlet_pressure.l = inlet_pressure.m;
+nu_oil_viscosity.l = oil_viscosity.m;
+nu_temperature.l = temperature.m;
+lam_radius.l = abs(radius.m);
+lam_limit1.l = abs(limit1.m);
+lam_limit2.l = abs(limit2.m);
+nu_temp1.l = temp1.m;
+nu_temp2.l = temp2.m;
+
+* Transfer variable marginals to bound multipliers
+piL_r.l$(abs(r.l - r.lo) < 1e-6 and r.m > 0) = r.m;
+piL_r0.l$(abs(r0.l - r0.lo) < 1e-6 and r0.m > 0) = r0.m;
+piL_mu.l$(abs(mu.l - mu.lo) < 1e-6 and mu.m > 0) = mu.m;
+piL_q.l$(abs(q.l - q.lo) < 1e-6 and q.m > 0) = q.m;
+piL_p0.l$(abs(p0.l - p0.lo) < 1e-6 and p0.m > 0) = p0.m;
+piL_ef.l$(abs(ef.l - ef.lo) < 1e-6 and ef.m > 0) = ef.m;
+piL_ep.l$(abs(ep.l - ep.lo) < 1e-6 and ep.m > 0) = ep.m;
+piL_h.l$(abs(h.l - h.lo) < 1e-6 and h.m > 0) = h.m;
+piL_t.l$(abs(t.l - t.lo) < 1e-6 and t.m > 0) = t.m;
+piL_w.l$(abs(w.l - w.lo) < 1e-6 and w.m > 0) = w.m;
+piL_tmp1.l$(abs(tmp1.l - tmp1.lo) < 1e-6 and tmp1.m > 0) = tmp1.m;
+piL_tmp2.l$(abs(tmp2.l - tmp2.lo) < 1e-6 and tmp2.m > 0) = tmp2.m;
+piU_r.l$(abs(r.l - r.up) < 1e-6 and r.m < 0) = -(r.m);
+piU_r0.l$(abs(r0.l - r0.up) < 1e-6 and r0.m < 0) = -(r0.m);
+piU_mu.l$(abs(mu.l - mu.up) < 1e-6 and mu.m < 0) = -(mu.m);
+piU_q.l$(abs(q.l - q.up) < 1e-6 and q.m < 0) = -(q.m);
+piU_p0.l$(abs(p0.l - p0.up) < 1e-6 and p0.m < 0) = -(p0.m);
+piU_delta_t.l$(abs(delta_t.l - delta_t.up) < 1e-6 and delta_t.m < 0) = -(delta_t.m);
 
 * ============================================
 * Equations
@@ -192,6 +212,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_delta_t.. 9336 * q * gamma * C * nu_temp_rise + (-0.5) * nu_temperature + piU_delta_t =E= 0;
 stat_ef.. 1 + h * nu_friction - nu_temp_rise - piL_ef =E= 0;
@@ -246,6 +267,7 @@ temperature.. t =E= 560 + delta_t / 2;
 temp1.. tmp1 =E= log(r) - log(r0);
 temp2.. tmp2 =E= sqr(r) - sqr(r0);
 
+$offMulti
 
 * ============================================
 * Model MCP Declaration
@@ -308,48 +330,6 @@ Model mcp_model /
 /;
 
 mcp_model.scaleOpt = 1;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/bearing.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-nu_pumping_energy.l = pumping_energy.m;
-nu_friction.l = friction.m;
-nu_temp_rise.l = temp_rise.m;
-nu_load_capacity.l = load_capacity.m;
-nu_inlet_pressure.l = inlet_pressure.m;
-nu_oil_viscosity.l = oil_viscosity.m;
-nu_temperature.l = temperature.m;
-lam_radius.l = abs(radius.m);
-lam_limit1.l = abs(limit1.m);
-lam_limit2.l = abs(limit2.m);
-nu_temp1.l = temp1.m;
-nu_temp2.l = temp2.m;
-
-* Transfer variable marginals to bound multipliers
-piL_r.l$(abs(r.l - r.lo) < 1e-6 and r.m > 0) = r.m;
-piL_r0.l$(abs(r0.l - r0.lo) < 1e-6 and r0.m > 0) = r0.m;
-piL_mu.l$(abs(mu.l - mu.lo) < 1e-6 and mu.m > 0) = mu.m;
-piL_q.l$(abs(q.l - q.lo) < 1e-6 and q.m > 0) = q.m;
-piL_p0.l$(abs(p0.l - p0.lo) < 1e-6 and p0.m > 0) = p0.m;
-piL_ef.l$(abs(ef.l - ef.lo) < 1e-6 and ef.m > 0) = ef.m;
-piL_ep.l$(abs(ep.l - ep.lo) < 1e-6 and ep.m > 0) = ep.m;
-piL_h.l$(abs(h.l - h.lo) < 1e-6 and h.m > 0) = h.m;
-piL_t.l$(abs(t.l - t.lo) < 1e-6 and t.m > 0) = t.m;
-piL_w.l$(abs(w.l - w.lo) < 1e-6 and w.m > 0) = w.m;
-piL_tmp1.l$(abs(tmp1.l - tmp1.lo) < 1e-6 and tmp1.m > 0) = tmp1.m;
-piL_tmp2.l$(abs(tmp2.l - tmp2.lo) < 1e-6 and tmp2.m > 0) = tmp2.m;
-piU_r.l$(abs(r.l - r.up) < 1e-6 and r.m < 0) = -(r.m);
-piU_r0.l$(abs(r0.l - r0.up) < 1e-6 and r0.m < 0) = -(r0.m);
-piU_mu.l$(abs(mu.l - mu.up) < 1e-6 and mu.m < 0) = -(mu.m);
-piU_q.l$(abs(q.l - q.up) < 1e-6 and q.m < 0) = -(q.m);
-piU_p0.l$(abs(p0.l - p0.up) < 1e-6 and p0.m < 0) = -(p0.m);
-piU_delta_t.l$(abs(delta_t.l - delta_t.up) < 1e-6 and delta_t.m < 0) = -(delta_t.m);
 
 * ============================================
 * Solve Statement

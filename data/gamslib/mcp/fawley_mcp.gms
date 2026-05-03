@@ -84,6 +84,15 @@ bp(k,p)$(kuse(k,p)) = 1 / sum(c$(ap(c,p) < 0), ((-1) * ap(c,p)) * prop(c,"gravit
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+bp(k,p)$(NOT (bp(k,p) > -inf and bp(k,p) < inf)) = 0;
+char(c,m)$(NOT (char(c,m) > -inf and char(c,m) < inf)) = 0;
+kp(k)$(NOT (kp(k) > -inf and kp(k) < inf)) = 0;
+pcr(cr)$(NOT (pcr(cr) > -inf and pcr(cr) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -230,19 +239,19 @@ Alias(cfq, cfq__);
 Alias(cr, cr__);
 
 * Stationarity equations
-stat_bq(c,cf).. (sum((cfq__,l,s), (prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + sum((cfq__,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
-stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
+stat_bq(c,cf).. (sum(cfq__, (((-1) * 1$(bposs(cfq__,c))) * nu_mbal(c))$(sameas(cfq__, cf))) + sum((cfq__,l,s), ((prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s))) + sum((cfq__,m), ((((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfq(cfq__)))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
+stat_cap(k).. (nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k))$(cap.up(k) - cap.lo(k) > 1e-10) =E= 0;
 stat_import(c).. (1$(ci(c)) * nu_mbal(c) + (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c))$(ci(c)) =E= 0;
-stat_ov(cf,l,s).. ((dir(l) * nu_qsb(cf,l,s))$(specs(cf,l,s)) - piL_ov(cf,l,s))$(cfq(cf)) =E= 0;
+stat_ov(cf,l,s).. (((dir(l) * nu_qsb(cf,l,s))$(cfq(cf)))$(specs(cf,l,s)) - piL_ov(cf,l,s))$(cfq(cf)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m).. (sum((cfq__,l,s), (((-1) * (specs(cfq__,l,s) * 1$(ms(m,s)))) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + nu_pbal(cf,m)$(cfm(cf,m)) + (((-1) * 1$(cfq(cf))) * nu_dbal(cf))$(sameas(m, 'weight')) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
-stat_rb(cf,r).. (((-1) * piL_rb(cf,r)))$(cfr(cf)) =E= 0;
+stat_q(cf,m).. (sum((cfq__,l,s), ((((-1) * (specs(cfq__,l,s) * 1$(ms(m,s)))) * nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s))) + (nu_pbal(cf,m)$(cfq(cf)))$(cfm(cf,m)) + (((-1) * 1$(cfq(cf))) * nu_dbal(cf))$(sameas(m, 'weight')) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
+stat_rb(cf,r).. (sum(c, ((-1) * recipes(cf,c,r)) * nu_mbal(c)) - piL_rb(cf,r))$(cfr(cf)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c))$(cr(c)) =E= 0;
+stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations
@@ -292,9 +301,12 @@ rb.fx(cf,r)$(not (cfr(cf))) = 0;
 piL_rb.fx(cf,r)$(not (cfr(cf))) = 0;
 u.fx(c)$(not (cr(c))) = 0;
 piL_u.fx(c)$(not (cr(c))) = 0;
+cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = cap.lo(k);
+piL_cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = 0;
+piU_cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = 0;
+u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = u.lo(c);
+piL_u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = 0;
 piU_cap.fx(k)$(not (kp(k) < inf)) = 0;
-nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
-nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
 nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 

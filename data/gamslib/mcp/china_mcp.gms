@@ -89,12 +89,12 @@ ss(s,"normal") = 1;
 ss(sh,"high") = 1;
 $offImplicitAssign
 
-gio(g,'barley') = -1;
-gio(g,'wheat') = -1;
-gio(g,'e-rice') = -1;
-gio(g,'m-rice') = -1;
-gio(g,'l-rice') = -1;
-gio(g,'l-sc-rice') = -1;
+gio('g','barley') = -1;
+gio('g','wheat') = -1;
+gio('g','e-rice') = -1;
+gio('g','m-rice') = -1;
+gio('g','l-rice') = -1;
+gio('g','l-sc-rice') = -1;
 nc('c-straw',n) = 0.63;
 nc('c-gm',n) = 0.4;
 nc('c-hyacinth',n) = 0.24;
@@ -165,6 +165,17 @@ sreq(s,en,"high") = sum(c, hreq(c,en) * mcp(s,c));
 sreq(s,en,f) = sreq(s,en,f) - cdata("e-rice","straw-y") * syield("e-rice",s,f) * enc("c-straw",en) / 100 * mcp(s,"e-rice");
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+cno(c,n)$(NOT (cno(c,n) > -inf and cno(c,n) < inf)) = 0;
+dlab(t,c)$(NOT (dlab(t,c) > -inf and dlab(t,c) < inf)) = 0;
+enc(cf,en)$(NOT (enc(cf,en) > -inf and enc(cf,en) < inf)) = 0;
+freq(c,en)$(NOT (freq(c,en) > -inf and freq(c,en) < inf)) = 0;
+sreq(s,en,f)$(NOT (sreq(s,en,f) > -inf and sreq(s,en,f) < inf)) = 0;
+yield(ca)$(NOT (yield(ca) > -inf and yield(ca) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -293,8 +304,8 @@ Alias(cu, cu__);
 * Stationarity equations
 stat_aqsales(ca).. ((((-1) * aqsprice(ca)))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$(cs(ca)) - piL_aqsales(ca))$(cs(ca)) =E= 0;
 stat_ccost.. 1 + nu_cdef =E= 0;
-stat_purchase(ca).. ((((-1) * purdata(ca,"price")) * nu_cdef)$(cp(ca)) + ((-1) * 1$(cp(ca))) * lam_mb(ca) + lam_chemn$(sameas(ca, 'amm-bi')) - piL_purchase(ca))$(cp(ca)) =E= 0;
-stat_sales(ca).. ((((-1) * cdata(ca,"proc-price")))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca))$(cs(ca)) =E= 0;
+stat_purchase(ca).. ((((-1) * purdata(ca,"price")) * nu_cdef)$(cp(ca)) + ((-1) * 1$(cp(ca))) * lam_mb(ca) + lam_chemn$(sameas(ca, 'amm-bi')) - piL_purchase(ca))$(cp(ca) and purchase.up(ca) - purchase.lo(ca) > 1e-10) =E= 0;
+stat_sales(ca).. ((((-1) * cdata(ca,"proc-price")))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca))$(cs(ca) and sales.up(ca) - sales.lo(ca) > 1e-10) =E= 0;
 stat_xcrop(s,f).. (((-1) * (cxcrop(s) * 1$(ss(s,f)))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$(ss(s,f)))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$(ss(s,f)) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$(ss(s,f)) * lam_fert(en)) + ((-1) * (schem(s) * 1$(ss(s,f)))) * lam_chemn + 1$(ss(s,f)) * lam_landp + ((-1) * ((0.84 * mcp(s,"gm-seeds") - 0.16 * mcp(s,"g-manure")) * 1$(ss(s,f)))) * lam_gmseed - piL_xcrop(s,f))$(ss(s,f)) =E= 0;
 stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) - piL_xfeed(g) =E= 0;
 stat_xfert(ca).. (sum(cf__, ((-1) * cxfert(cf__)) * nu_cdef)$(cf(ca)) + sum(cf__, (crec(ca,cf__) * lam_mb(ca))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-2,cf__) * lam_mb(ca-2))$(ord(ca) > 2))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+11,cf__) * lam_mb(ca+11))$(ord(ca) <= card(ca) - 11))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+13,cf__) * lam_mb(ca+13))$(ord(ca) <= card(ca) - 13))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-7,cf__) * lam_mb(ca-7))$(ord(ca) > 7))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+10,cf__) * lam_mb(ca+10))$(ord(ca) <= card(ca) - 10))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+12,cf__) * lam_mb(ca+12))$(ord(ca) <= card(ca) - 12))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+8,cf__) * lam_mb(ca+8))$(ord(ca) <= card(ca) - 8))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-3,cf__) * lam_mb(ca-3))$(ord(ca) > 3))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+15,cf__) * lam_mb(ca+15))$(ord(ca) <= card(ca) - 15))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+17,cf__) * lam_mb(ca+17))$(ord(ca) <= card(ca) - 17))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+5,cf__) * lam_mb(ca+5))$(ord(ca) <= card(ca) - 5))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+7,cf__) * lam_mb(ca+7))$(ord(ca) <= card(ca) - 7))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+21,cf__) * lam_mb(ca+21))$(ord(ca) <= card(ca) - 21))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+1,cf__) * lam_mb(ca+1))$(ord(ca) <= card(ca) - 1))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+3,cf__) * lam_mb(ca+3))$(ord(ca) <= card(ca) - 3))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-1,cf__) * lam_mb(ca-1))$(ord(ca) > 1))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-4,cf__) * lam_mb(ca-4))$(ord(ca) > 4))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+14,cf__) * lam_mb(ca+14))$(ord(ca) <= card(ca) - 14))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+4,cf__) * lam_mb(ca+4))$(ord(ca) <= card(ca) - 4))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+18,cf__) * lam_mb(ca+18))$(ord(ca) <= card(ca) - 18))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+9,cf__) * lam_mb(ca+9))$(ord(ca) <= card(ca) - 9))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+6,cf__) * lam_mb(ca+6))$(ord(ca) <= card(ca) - 6))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-6,cf__) * lam_mb(ca-6))$(ord(ca) > 6))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+2,cf__) * lam_mb(ca+2))$(ord(ca) <= card(ca) - 2))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+19,cf__) * lam_mb(ca+19))$(ord(ca) <= card(ca) - 19))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+16,cf__) * lam_mb(ca+16))$(ord(ca) <= card(ca) - 16))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+20,cf__) * lam_mb(ca+20))$(ord(ca) <= card(ca) - 20))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-5,cf__) * lam_mb(ca-5))$(ord(ca) > 5))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+23,cf__) * lam_mb(ca+23))$(ord(ca) <= card(ca) - 23))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+22,cf__) * lam_mb(ca+22))$(ord(ca) <= card(ca) - 22))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-11,cf__) * lam_mb(ca-11))$(ord(ca) > 11))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-13,cf__) * lam_mb(ca-13))$(ord(ca) > 13))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-18,cf__) * lam_mb(ca-18))$(ord(ca) > 18))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-14,cf__) * lam_mb(ca-14))$(ord(ca) > 14))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-10,cf__) * lam_mb(ca-10))$(ord(ca) > 10))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-8,cf__) * lam_mb(ca-8))$(ord(ca) > 8))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-12,cf__) * lam_mb(ca-12))$(ord(ca) > 12))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-15,cf__) * lam_mb(ca-15))$(ord(ca) > 15))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-17,cf__) * lam_mb(ca-17))$(ord(ca) > 17))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-9,cf__) * lam_mb(ca-9))$(ord(ca) > 9))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-16,cf__) * lam_mb(ca-16))$(ord(ca) > 16))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-19,cf__) * lam_mb(ca-19))$(ord(ca) > 19))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+25,cf__) * lam_mb(ca+25))$(ord(ca) <= card(ca) - 25))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+24,cf__) * lam_mb(ca+24))$(ord(ca) <= card(ca) - 24))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-21,cf__) * lam_mb(ca-21))$(ord(ca) > 21))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-20,cf__) * lam_mb(ca-20))$(ord(ca) > 20))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-25,cf__) * lam_mb(ca-25))$(ord(ca) > 25))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-22,cf__) * lam_mb(ca-22))$(ord(ca) > 22))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-24,cf__) * lam_mb(ca-24))$(ord(ca) > 24))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-23,cf__) * lam_mb(ca-23))$(ord(ca) > 23))$(sameas(cf__, ca))) + sum(cf__, sum(en, ((-1) * (0.01 * enc(cf__,en))) * lam_fert(en))$(sameas(cf__, ca))) - piL_xfert(ca))$(cf(ca)) =E= 0;
@@ -345,6 +356,10 @@ xfert.fx(ca)$(not (cf(ca))) = 0;
 piL_xfert.fx(ca)$(not (cf(ca))) = 0;
 xupland.fx(ca)$(not (cu(ca))) = 0;
 piL_xupland.fx(ca)$(not (cu(ca))) = 0;
+purchase.fx(ca)$(not (purchase.up(ca) - purchase.lo(ca) > 1e-10)) = purchase.lo(ca);
+piL_purchase.fx(ca)$(not (purchase.up(ca) - purchase.lo(ca) > 1e-10)) = 0;
+sales.fx(ca)$(not (sales.up(ca) - sales.lo(ca) > 1e-10)) = sales.lo(ca);
+piL_sales.fx(ca)$(not (sales.up(ca) - sales.lo(ca) > 1e-10)) = 0;
 
 * Fix multipliers for empty inequality instances (no variables)
 lam_mb.fx('gm-seeds') = 0;

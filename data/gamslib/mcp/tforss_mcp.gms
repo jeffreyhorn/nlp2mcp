@@ -158,8 +158,8 @@ stat_phil.. 1 + nu_acutc =E= 0;
 stat_phip.. 1 + nu_aplnt =E= 0;
 stat_phir.. 1 + nu_aproc =E= 0;
 stat_phix.. -1 + nu_asales =E= 0;
-stat_r(c).. (nu_lbal(c) + (((-1) * muc) * nu_acutc)$(cl(c)) + ((-1) * 1$(cl(c))) * lam_bal(c))$(cl(c)) =E= 0;
-stat_v(s,k,at).. sum(cl, ((-1) * ymf(at,k,s,cl)) * nu_lbal(cl)) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) - piL_v(s,k,at) =E= 0;
+stat_r(c).. (nu_lbal(c)$(cl(c)) + (((-1) * muc) * nu_acutc)$(cl(c)) + ((-1) * 1$(cl(c))) * lam_bal(c))$(cl(c)) =E= 0;
+stat_v(s,k,at).. sum(cl, (((-1) * ymf(at,k,s,cl)) * nu_lbal(cl))$(cl(cl))) + ((-1) * (mup * (1 + rho) ** age(at))) * nu_aplnt + age(at) * lam_landc(s,k) - piL_v(s,k,at) =E= 0;
 stat_x(c).. (sum(cf__, ((-1) * pd(cf__)) * nu_asales)$(cf(c)) + 1$(cf(c)) * lam_bal(c) - piL_x(c))$(cf(c)) =E= 0;
 stat_z(p).. sum(m, b(m,p) * nu_cap(m)) + ((-1) * pc(p)) * nu_aproc + sum(c, ((-1) * a(c,p)) * lam_bal(c)) - piL_z(p) =E= 0;
 

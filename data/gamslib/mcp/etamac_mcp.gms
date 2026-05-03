@@ -93,6 +93,12 @@ loop(t,
    pnelec(t+1) = pnelec(t) * 1 + pngrow(t) ** nyper ;
 );
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+dfact(t)$(NOT (dfact(t) > -inf and dfact(t) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -162,6 +168,8 @@ nn.lo(t) = tol * n0 * ln(t);
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* Issue #1243: FREE variables appearing in stationarity-equation
+* denominators (e.g., 1/y from prod-objective derivatives) are set to 1.
 
 k.l(t) = k0 * l(t);
 k.l('1990') = max(k.l('1990'), 10.9);
@@ -173,6 +181,7 @@ k.l('2015') = max(k.l('2015'), 10.9);
 k.l('2020') = max(k.l('2020'), 10.9);
 k.l('2025') = max(k.l('2025'), 10.9);
 k.l('2030') = max(k.l('2030'), 10.9);
+kn.l(t) = 1;
 y.l(t) = y0 * l(t);
 e.l(t) = e0 * l(t);
 e.l('1990') = max(e.l('1990'), 2.5);
@@ -184,6 +193,7 @@ e.l('2015') = max(e.l('2015'), 2.5);
 e.l('2020') = max(e.l('2020'), 2.5);
 e.l('2025') = max(e.l('2025'), 2.5);
 e.l('2030') = max(e.l('2030'), 2.5);
+en.l(t) = 1;
 n.l(t) = n0 * l(t);
 n.l('1990') = max(n.l('1990'), 50.0);
 n.l('1995') = max(n.l('1995'), 50.0);
@@ -194,6 +204,7 @@ n.l('2015') = max(n.l('2015'), 50.0);
 n.l('2020') = max(n.l('2020'), 50.0);
 n.l('2025') = max(n.l('2025'), 50.0);
 n.l('2030') = max(n.l('2030'), 50.0);
+nn.l(t) = 1;
 c.l(t) = c0 * l(t);
 c.l('1990') = max(c.l('1990'), 3.2);
 c.l('1995') = max(c.l('1995'), 3.2);
@@ -266,16 +277,16 @@ Equations
 
 * Stationarity equations
 stat_c(t).. ((-1) * (dfact(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
-stat_e(t).. ((-1) * nu_fnewelec(t)) + spda ** nyper * nu_newelec(t) + ((-1) * nu_newelec(t-1))$(ord(t) > 1) + ((-1) * pelec(t)) * nu_costnrg(t) - piL_e(t) =E= 0;
+stat_e(t).. ((-1) * nu_fnewelec(t)$(tfirst(t))) + spda ** nyper * nu_newelec(t) + ((-1) * nu_newelec(t-1))$(ord(t) > 1) + ((-1) * pelec(t)) * nu_costnrg(t) - piL_e(t) =E= 0;
 stat_ec(t).. thsnd * nu_costnrg(t) - nu_cc(t) =E= 0;
-stat_en(t).. nu_fnewelec(t) + ((-1) * ((aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * nn(t) ** (rho * (1 - elvs)) * bconst * en(t) ** (rho * elvs) * rho * elvs / en(t))) * nu_ftotalprod(t) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * nn(t) ** (rho * (1 - elvs)) * bconst * en(t) ** (rho * elvs) * rho * elvs / en(t))) * nu_newprod(t-1))$(ord(t) > 1) + nu_newelec(t-1)$(ord(t) > 1) - piL_en(t) =E= 0;
-stat_i(t).. ((-1) * ipm(t)) * nu_newcap(t) - nu_cc(t) - lam_tc(t) - piL_i(t) =E= 0;
-stat_k(t).. ((-1) * (spda ** nyper)) * nu_totalcap(t) + nu_totalcap(t-1)$(ord(t) > 1) + (grow(t) + 1 - spda) * lam_tc(t) - piL_k(t) =E= 0;
-stat_kn(t).. nu_newcap(t-1)$(ord(t) > 1) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * ln(t) ** (rho * (1 - kpvs)) * aconst * kn(t) ** (rho * kpvs) * rho * kpvs / kn(t))) * nu_newprod(t-1))$(ord(t) > 1) + ((-1) * nu_totalcap(t-1))$(ord(t) > 1) - piL_kn(t) =E= 0;
-stat_n(t).. ((-1) * nu_fnewnon(t)) + spda ** nyper * nu_newnon(t) + ((-1) * nu_newnon(t-1))$(ord(t) > 1) + ((-1) * pnelec(t)) * nu_costnrg(t) - piL_n(t) =E= 0;
-stat_nn(t).. nu_fnewnon(t) + ((-1) * ((aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(t))) * nu_ftotalprod(t) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(t))) * nu_newprod(t-1))$(ord(t) > 1) + nu_newnon(t-1)$(ord(t) > 1) - piL_nn(t) =E= 0;
-stat_y(t).. nu_ftotalprod(t) + ((-1) * (spda ** nyper)) * nu_totalprod(t) + nu_totalprod(t-1)$(ord(t) > 1) + nu_cc(t) - piL_y(t) =E= 0;
-stat_yn(t).. nu_newprod(t-1)$(ord(t) > 1) + ((-1) * nu_totalprod(t-1))$(ord(t) > 1) - piL_yn(t) =E= 0;
+stat_en(t).. (nu_fnewelec(t)$(tfirst(t)) + (((-1) * ((aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * nn(t) ** (rho * (1 - elvs)) * bconst * en(t) ** (rho * elvs) * rho * elvs / en(t))) * nu_ftotalprod(t))$(tfirst(t)) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * nn(t) ** (rho * (1 - elvs)) * bconst * en(t) ** (rho * elvs) * rho * elvs / en(t))) * nu_newprod(t-1))$(ord(t) > 1) + nu_newelec(t-1)$(ord(t) > 1) - piL_en(t))$(en.up(t) - en.lo(t) > 1e-10) =E= 0;
+stat_i(t).. ((-1) * ipm(t)) * nu_newcap(t) - nu_cc(t) - lam_tc(t)$(tlast(t)) - piL_i(t) =E= 0;
+stat_k(t).. ((-1) * (spda ** nyper)) * nu_totalcap(t) + nu_totalcap(t-1)$(ord(t) > 1) + ((grow(t) + 1 - spda) * lam_tc(t))$(tlast(t)) - piL_k(t) =E= 0;
+stat_kn(t).. (nu_newcap(t-1)$(ord(t) > 1) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * ln(t) ** (rho * (1 - kpvs)) * aconst * kn(t) ** (rho * kpvs) * rho * kpvs / kn(t))) * nu_newprod(t-1))$(ord(t) > 1) + ((-1) * nu_totalcap(t-1))$(ord(t) > 1) - piL_kn(t))$(kn.up(t) - kn.lo(t) > 1e-10) =E= 0;
+stat_n(t).. ((-1) * nu_fnewnon(t)$(tfirst(t))) + spda ** nyper * nu_newnon(t) + ((-1) * nu_newnon(t-1))$(ord(t) > 1) + ((-1) * pnelec(t)) * nu_costnrg(t) - piL_n(t) =E= 0;
+stat_nn(t).. (nu_fnewnon(t)$(tfirst(t)) + (((-1) * ((aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * knew(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(t))) * nu_ftotalprod(t))$(tfirst(t)) + (((-1) * ((aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) ** (1 / rho) * 1 / rho / (aconst * kn(t) ** (rho * kpvs) * ln(t) ** (rho * (1 - kpvs)) + bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs))) * bconst * en(t) ** (rho * elvs) * nn(t) ** (rho * (1 - elvs)) * rho * (1 - elvs) / nn(t))) * nu_newprod(t-1))$(ord(t) > 1) + nu_newnon(t-1)$(ord(t) > 1) - piL_nn(t))$(nn.up(t) - nn.lo(t) > 1e-10) =E= 0;
+stat_y(t).. (nu_ftotalprod(t)$(tfirst(t)) + ((-1) * (spda ** nyper)) * nu_totalprod(t) + nu_totalprod(t-1)$(ord(t) > 1) + nu_cc(t) - piL_y(t))$(y.up(t) - y.lo(t) > 1e-10) =E= 0;
+stat_yn(t).. (nu_newprod(t-1)$(ord(t) > 1) + ((-1) * nu_totalprod(t-1))$(ord(t) > 1) - piL_yn(t))$(yn.up(t) - yn.lo(t) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_tc(tlast).. ((-1) * (k(tlast) * (grow(tlast) + 1 - spda) - i(tlast))) =G= 0;
@@ -314,6 +325,16 @@ util.. utility =E= sum(t, dfact(t) * log(c(t)));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+en.fx(t)$(not (en.up(t) - en.lo(t) > 1e-10)) = en.lo(t);
+piL_en.fx(t)$(not (en.up(t) - en.lo(t) > 1e-10)) = 0;
+kn.fx(t)$(not (kn.up(t) - kn.lo(t) > 1e-10)) = kn.lo(t);
+piL_kn.fx(t)$(not (kn.up(t) - kn.lo(t) > 1e-10)) = 0;
+nn.fx(t)$(not (nn.up(t) - nn.lo(t) > 1e-10)) = nn.lo(t);
+piL_nn.fx(t)$(not (nn.up(t) - nn.lo(t) > 1e-10)) = 0;
+y.fx(t)$(not (y.up(t) - y.lo(t) > 1e-10)) = y.lo(t);
+piL_y.fx(t)$(not (y.up(t) - y.lo(t) > 1e-10)) = 0;
+yn.fx(t)$(not (yn.up(t) - yn.lo(t) > 1e-10)) = yn.lo(t);
+piL_yn.fx(t)$(not (yn.up(t) - yn.lo(t) > 1e-10)) = 0;
 piL_en.fx(t)$(not (tol * e0 * ln(t) > -inf)) = 0;
 piL_kn.fx(t)$(not (tol * i0 * ipm(t) > -inf)) = 0;
 piL_nn.fx(t)$(not (tol * n0 * ln(t) > -inf)) = 0;
@@ -329,9 +350,6 @@ nu_fnewelec.fx(t)$(not (tfirst(t))) = 0;
 nu_fnewnon.fx(t)$(not (tfirst(t))) = 0;
 nu_ftotalprod.fx(t)$(not (tfirst(t))) = 0;
 lam_tc.fx(t)$(not (tlast(t))) = 0;
-nu_fnewelec.fx(t)$(not (tfirst(t))) = 0;
-nu_fnewnon.fx(t)$(not (tfirst(t))) = 0;
-nu_ftotalprod.fx(t)$(not (tfirst(t))) = 0;
 
 * ============================================
 * Model MCP Declaration

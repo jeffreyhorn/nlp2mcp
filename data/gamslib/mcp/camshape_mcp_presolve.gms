@@ -290,114 +290,23 @@ rdiff.lo(i(j)) = ((-1) * alpha) * d_theta;
 rdiff.up(i(j)) = alpha * d_theta;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
+$onMultiR
+$include "data/gamslib/raw/camshape.gms"
+$offMulti
 
-r.l(i) = (R_min + R_max) / 2;
-r.l('i1') = max(r.l('i1'), 1.0);
-r.l('i2') = max(r.l('i2'), 1.0);
-r.l('i3') = max(r.l('i3'), 1.0);
-r.l('i4') = max(r.l('i4'), 1.0);
-r.l('i5') = max(r.l('i5'), 1.0);
-r.l('i6') = max(r.l('i6'), 1.0);
-r.l('i7') = max(r.l('i7'), 1.0);
-r.l('i8') = max(r.l('i8'), 1.0);
-r.l('i9') = max(r.l('i9'), 1.0);
-r.l('i10') = max(r.l('i10'), 1.0);
-r.l('i11') = max(r.l('i11'), 1.0);
-r.l('i12') = max(r.l('i12'), 1.0);
-r.l('i13') = max(r.l('i13'), 1.0);
-r.l('i14') = max(r.l('i14'), 1.0);
-r.l('i15') = max(r.l('i15'), 1.0);
-r.l('i16') = max(r.l('i16'), 1.0);
-r.l('i17') = max(r.l('i17'), 1.0);
-r.l('i18') = max(r.l('i18'), 1.0);
-r.l('i19') = max(r.l('i19'), 1.0);
-r.l('i20') = max(r.l('i20'), 1.0);
-r.l('i21') = max(r.l('i21'), 1.0);
-r.l('i22') = max(r.l('i22'), 1.0);
-r.l('i23') = max(r.l('i23'), 1.0);
-r.l('i24') = max(r.l('i24'), 1.0);
-r.l('i25') = max(r.l('i25'), 1.0);
-r.l('i26') = max(r.l('i26'), 1.0);
-r.l('i27') = max(r.l('i27'), 1.0);
-r.l('i28') = max(r.l('i28'), 1.0);
-r.l('i29') = max(r.l('i29'), 1.0);
-r.l('i30') = max(r.l('i30'), 1.0);
-r.l('i31') = max(r.l('i31'), 1.0);
-r.l('i32') = max(r.l('i32'), 1.0);
-r.l('i33') = max(r.l('i33'), 1.0);
-r.l('i34') = max(r.l('i34'), 1.0);
-r.l('i35') = max(r.l('i35'), 1.0);
-r.l('i36') = max(r.l('i36'), 1.0);
-r.l('i37') = max(r.l('i37'), 1.0);
-r.l('i38') = max(r.l('i38'), 1.0);
-r.l('i39') = max(r.l('i39'), 1.0);
-r.l('i40') = max(r.l('i40'), 1.0);
-r.l('i41') = max(r.l('i41'), 1.0);
-r.l('i42') = max(r.l('i42'), 1.0);
-r.l('i43') = max(r.l('i43'), 1.0);
-r.l('i44') = max(r.l('i44'), 1.0);
-r.l('i45') = max(r.l('i45'), 1.0);
-r.l('i46') = max(r.l('i46'), 1.0);
-r.l('i47') = max(r.l('i47'), 1.0);
-r.l('i48') = max(r.l('i48'), 1.0);
-r.l('i49') = max(r.l('i49'), 1.0);
-r.l('i50') = max(r.l('i50'), 1.0);
-r.l('i51') = max(r.l('i51'), 1.0);
-r.l('i52') = max(r.l('i52'), 1.0);
-r.l('i53') = max(r.l('i53'), 1.0);
-r.l('i54') = max(r.l('i54'), 1.0);
-r.l('i55') = max(r.l('i55'), 1.0);
-r.l('i56') = max(r.l('i56'), 1.0);
-r.l('i57') = max(r.l('i57'), 1.0);
-r.l('i58') = max(r.l('i58'), 1.0);
-r.l('i59') = max(r.l('i59'), 1.0);
-r.l('i60') = max(r.l('i60'), 1.0);
-r.l('i61') = max(r.l('i61'), 1.0);
-r.l('i62') = max(r.l('i62'), 1.0);
-r.l('i63') = max(r.l('i63'), 1.0);
-r.l('i64') = max(r.l('i64'), 1.0);
-r.l('i65') = max(r.l('i65'), 1.0);
-r.l('i66') = max(r.l('i66'), 1.0);
-r.l('i67') = max(r.l('i67'), 1.0);
-r.l('i68') = max(r.l('i68'), 1.0);
-r.l('i69') = max(r.l('i69'), 1.0);
-r.l('i70') = max(r.l('i70'), 1.0);
-r.l('i71') = max(r.l('i71'), 1.0);
-r.l('i72') = max(r.l('i72'), 1.0);
-r.l('i73') = max(r.l('i73'), 1.0);
-r.l('i74') = max(r.l('i74'), 1.0);
-r.l('i75') = max(r.l('i75'), 1.0);
-r.l('i76') = max(r.l('i76'), 1.0);
-r.l('i77') = max(r.l('i77'), 1.0);
-r.l('i78') = max(r.l('i78'), 1.0);
-r.l('i79') = max(r.l('i79'), 1.0);
-r.l('i80') = max(r.l('i80'), 1.0);
-r.l('i81') = max(r.l('i81'), 1.0);
-r.l('i82') = max(r.l('i82'), 1.0);
-r.l('i83') = max(r.l('i83'), 1.0);
-r.l('i84') = max(r.l('i84'), 1.0);
-r.l('i85') = max(r.l('i85'), 1.0);
-r.l('i86') = max(r.l('i86'), 1.0);
-r.l('i87') = max(r.l('i87'), 1.0);
-r.l('i88') = max(r.l('i88'), 1.0);
-r.l('i89') = max(r.l('i89'), 1.0);
-r.l('i90') = max(r.l('i90'), 1.0);
-r.l('i91') = max(r.l('i91'), 1.0);
-r.l('i92') = max(r.l('i92'), 1.0);
-r.l('i93') = max(r.l('i93'), 1.0);
-r.l('i94') = max(r.l('i94'), 1.0);
-r.l('i95') = max(r.l('i95'), 1.0);
-r.l('i96') = max(r.l('i96'), 1.0);
-r.l('i97') = max(r.l('i97'), 1.0);
-r.l('i98') = max(r.l('i98'), 1.0);
-r.l('i99') = max(r.l('i99'), 1.0);
-r.l('i100') = max(r.l('i100'), 1.0);
+* Transfer NLP duals to MCP multiplier initialization
+lam_convexity.l(i) = abs(convexity.m(i));
+lam_convex_edge1.l(i) = abs(convex_edge1.m(i));
+lam_convex_edge3.l(i) = abs(convex_edge3.m(i));
+lam_convex_edge4.l(i) = abs(convex_edge4.m(i));
+nu_eqrdiff.l(i) = eqrdiff.m(i);
+
+* Transfer variable marginals to bound multipliers
+piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i);
+piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i));
 
 * ============================================
 * Equations
@@ -424,9 +333,10 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
-stat_r(i).. ((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrdiff(i-1))$(ord(i) > 1))$(j(i)) + ((((-1) * r(i-1)) - r(i+1)) * lam_convexity(i))$(middle(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * r(i+2)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * r(i-2)) * lam_convexity(i-1))$(ord(i) > 1))$(middle(i)) + ((((-1) * R_min) - r(i+1)) * lam_convex_edge1(i))$(first(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1))$(first(i)) + ((((-1) * r(i-1)) - R_max) * lam_convex_edge3(i))$(last(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1))$(last(i)) + (((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i))$(last(i)) - piL_r(i) + piU_r(i) =E= 0;
-stat_rdiff(i).. (nu_eqrdiff(i)$(j(i)))$(j(i)) =E= 0;
+stat_r(i).. (((-1) * (pi * R_v / 100)) + nu_eqrdiff(i)$(j(i)) + (((-1) * nu_eqrdiff(i-1))$(ord(i) > 1))$(j(i)) + ((((-1) * r(i-1)) - r(i+1)) * lam_convexity(i))$(middle(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * r(i+2)) * lam_convexity(i+1))$(ord(i) <= card(i) - 1))$(middle(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * r(i-2)) * lam_convexity(i-1))$(ord(i) > 1))$(middle(i)) + ((((-1) * R_min) - r(i+1)) * lam_convex_edge1(i))$(first(i)) + (((((-1) * r(i-1)) + 2 * cos(d_theta) * R_min) * lam_convex_edge1(i-1))$(ord(i) > 1))$(first(i)) + ((((-1) * r(i-1)) - R_max) * lam_convex_edge3(i))$(last(i)) + (((((-1) * r(i+1)) + 2 * cos(d_theta) * R_max) * lam_convex_edge3(i+1))$(ord(i) <= card(i) - 1))$(last(i)) + (((-2) * R_max + 4 * cos(d_theta) * r(i)) * lam_convex_edge4(i))$(last(i)) - piL_r(i) + piU_r(i))$(r.up(i) - r.lo(i) > 1e-10) =E= 0;
+stat_rdiff(i).. (nu_eqrdiff(i)$(j(i)))$(j(i) and rdiff.up(i) - rdiff.lo(i) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_convex_edge1(i)$((first(i)) and (ord(i) <= card(i) - 1)).. ((-1) * (((-1) * R_min) * r(i) - r(i) * r(i+1) + 2 * R_min * r(i+1) * cos(d_theta))) =G= 0;
@@ -444,6 +354,7 @@ comp_up_r(i).. 2 - r(i) =G= 0;
 obj.. area =E= pi * R_v / 100 * sum(i, r(i));
 eqrdiff(i)$((j(i)) and (ord(i) <= card(i) - 1)).. rdiff(i) =E= r(i+1) - r(i);
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -453,6 +364,10 @@ eqrdiff(i)$((j(i)) and (ord(i) <= card(i) - 1)).. rdiff(i) =E= r(i+1) - r(i);
 * fixed for excluded instances to satisfy MCP matching.
 
 rdiff.fx(i)$(not (j(i))) = 0;
+r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = r.lo(i);
+piL_r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = 0;
+piU_r.fx(i)$(not (r.up(i) - r.lo(i) > 1e-10)) = 0;
+rdiff.fx(i)$(not (rdiff.up(i) - rdiff.lo(i) > 1e-10)) = rdiff.lo(i);
 rdiff.fx(i)$(not (ord(i) <= card(i) - 1)) = 0;
 lam_convex_edge1.fx(i)$(not (first(i))) = 0;
 lam_convex_edge3.fx(i)$(not (last(i))) = 0;
@@ -489,25 +404,6 @@ Model mcp_model /
     comp_lo_r.piL_r,
     comp_up_r.piU_r
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/camshape.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-lam_convexity.l(i) = abs(convexity.m(i));
-lam_convex_edge1.l(i) = abs(convex_edge1.m(i));
-lam_convex_edge3.l(i) = abs(convex_edge3.m(i));
-lam_convex_edge4.l(i) = abs(convex_edge4.m(i));
-nu_eqrdiff.l(i) = eqrdiff.m(i);
-
-* Transfer variable marginals to bound multipliers
-piL_r.l(i)$(abs(r.l(i) - r.lo(i)) < 1e-6 and r.m(i) > 0) = r.m(i);
-piU_r.l(i)$(abs(r.l(i) - r.up(i)) < 1e-6 and r.m(i) < 0) = -(r.m(i));
 
 * ============================================
 * Solve Statement

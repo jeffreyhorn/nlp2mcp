@@ -129,8 +129,8 @@ Equations
 stat_cost.. 1 + nu_cdef =E= 0;
 stat_revenue.. -1 + nu_rdef =E= 0;
 stat_x(i,j,k,l).. ((-1) * c(i,j,k,l)) * nu_cdef + 1$(mh(l,k)) * nu_ib(i,k) + t(i,j,k,l) * lam_ma(i,j,l) - piL_x(i,j,k,l) =E= 0;
-stat_y(i,k).. ((-1) * s(k)) * nu_cdef - nu_ib(i,k) + nu_ib(i+1,k)$(ord(i) <= card(i) - 1) - piL_y(i,k) + piU_y(i,k) =E= 0;
-stat_z(i,k).. ((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) - piL_z(i,k) =E= 0;
+stat_y(i,k).. (((-1) * s(k)) * nu_cdef - nu_ib(i,k) + nu_ib(i+1,k)$(ord(i) <= card(i) - 1) - piL_y(i,k) + piU_y(i,k))$(y.up(i,k) - y.lo(i,k) > 1e-10) =E= 0;
+stat_z(i,k).. (((-1) * p(i,k)) * nu_rdef - nu_ib(i,k) - piL_z(i,k))$(z.up(i,k) - z.lo(i,k) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_ma(i,j,l).. ((-1) * (sum(k, t(i,j,k,l) * x(i,j,k,l)) - a(i,j,l))) =G= 0;
@@ -157,6 +157,11 @@ ib(i,k).. sum((j,l)$(mh(l,k)), x(i,j,k,l)) + y(i-1,k) =E= z(i,k) + y(i,k);
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+y.fx(i,k)$(not (y.up(i,k) - y.lo(i,k) > 1e-10)) = y.lo(i,k);
+piL_y.fx(i,k)$(not (y.up(i,k) - y.lo(i,k) > 1e-10)) = 0;
+piU_y.fx(i,k)$(not (y.up(i,k) - y.lo(i,k) > 1e-10)) = 0;
+z.fx(i,k)$(not (z.up(i,k) - z.lo(i,k) > 1e-10)) = z.lo(i,k);
+piL_z.fx(i,k)$(not (z.up(i,k) - z.lo(i,k) > 1e-10)) = 0;
 piL_z.fx(i,k)$(not (d(i,k) > -inf)) = 0;
 piU_y.fx(i,k)$(not (h(k) < inf)) = 0;
 

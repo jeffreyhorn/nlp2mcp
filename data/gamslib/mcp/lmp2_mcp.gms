@@ -45,12 +45,22 @@ Scalars
     Nodmax /0/
 ;
 
-Set nlp2mcp_uel_registry / AvgNodUsd, AvgResUsd /;
+Set nlp2mcp_uel_registry / 'AvgNodUsd', 'AvgResUsd' /;
 
-Parameter a(mm,nn);
-Parameter b(mm);
-Parameter cc(p,nn);
+cases('c1','m') = 10;
+cases('c1','n') = 20;
+cases('c2','m') = 20;
+cases('c2','n') = 30;
+cases('c3','m') = 60;
+cases('c3','n') = 100;
+cases('c4','m') = 100;
+cases('c4','n') = 100;
+cases('c5','m') = 200;
+cases('c5','n') = 200;
+
 Parameter f(p);
+m(mm) = ord(mm) <= cases('c1','m') ;
+n(nn) = ord(nn) <= cases('c1','n') ;
 ResMin = inf ;
 Resmax = 0 ;
 NodMin = inf ;
@@ -79,8 +89,21 @@ Variables
 ;
 
 Positive Variables
+    lam_Constraints(mm)
     piL_x(nn)
 ;
+
+* ============================================
+* Variable Initialization
+* ============================================
+
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* Issue #1243: FREE variables appearing in stationarity-equation
+* denominators (e.g., 1/y from prod-objective derivatives) are set to 1.
+
+y.l(p) = 1;
 
 * ============================================
 * Equations
@@ -93,6 +116,7 @@ Positive Variables
 Equations
     stat_x(nn)
     stat_y(p)
+    comp_Constraints(mm)
     comp_lo_x(nn)
     Objective
     Products(p)
@@ -107,10 +131,11 @@ Equations
 Alias(p, p__);
 
 * Stationarity equations
-stat_x(nn).. (((-1) * piL_x(nn)))$(n(nn)) =E= 0;
-stat_y(p).. prod(p__, y(p__)) * sum(p__, 1 / y(p__)) + nu_Products(p) =E= 0;
+stat_x(nn).. (sum(p, ((-1) * cc(p,nn)) * nu_Products(p)) + sum(m, (((-1) * A(m,nn)) * lam_Constraints(m))$(m(m))) - piL_x(nn))$(n(nn)) =E= 0;
+stat_y(p).. prod(p__, y(p__)) * 1 / y(p) + nu_Products(p) =E= 0;
 
 * Inequality complementarity equations
+comp_Constraints(m).. ((-1) * (b(m) - sum(n, A(m,n) * x(n)))) =G= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(nn).. x(nn) - 0 =G= 0;
@@ -129,6 +154,7 @@ Products(p).. y(p) =E= sum(n, cc(p,n) * x(n));
 
 x.fx(nn)$(not (n(nn))) = 0;
 piL_x.fx(nn)$(not (n(nn))) = 0;
+lam_Constraints.fx(mm)$(not (m(mm))) = 0;
 
 * ============================================
 * Model MCP Declaration
@@ -146,6 +172,7 @@ piL_x.fx(nn)$(not (n(nn))) = 0;
 Model mcp_model /
     stat_x.x,
     stat_y.y,
+    comp_Constraints.lam_Constraints,
     Objective.obj,
     Products.nu_Products,
     comp_lo_x.piL_x

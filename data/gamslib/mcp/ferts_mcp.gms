@@ -106,6 +106,17 @@ execError = 0;
 *   π^L (piL_*): Positive multipliers for lower bounds
 *   π^U (piU_*): Positive multipliers for upper bounds
 
+* ============================================
+* Shortened identifiers (Issue #1290)
+*
+* The following names exceeded GAMS's 63-char limit and were
+* deterministically shortened (head_truncated_<sha256[:8]>):
+*   xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b  <-  xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70
+*   xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea  <-  xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
+*   xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811  <-  xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
+*   xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d  <-  xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
+* ============================================
+
 Variables
     z(p,i)
     psi
@@ -158,13 +169,13 @@ Variables
     nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan
     nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan
     nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout
-    nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
+    nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d
+    nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan
     nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout
-    nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
-    nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70
+    nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea
+    nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b
 ;
 
 Positive Variables
@@ -182,61 +193,6 @@ Positive Variables
     piL_vr(c,i)
     piL_u(c,i)
 ;
-
-* ============================================
-* Variable Bounds
-* ============================================
-
-xi.fx('ammonia','abu-zaabal','abu-zaabal') = 0;
-xi.fx('ammonia','abu-zaabal','assiout') = 0;
-xi.fx('ammonia','abu-zaabal','aswan') = 0;
-xi.fx('ammonia','abu-zaabal','helwan') = 0;
-xi.fx('ammonia','abu-zaabal','kafr-el-zt') = 0;
-xi.fx('ammonia','assiout','abu-zaabal') = 0;
-xi.fx('ammonia','assiout','assiout') = 0;
-xi.fx('ammonia','assiout','aswan') = 0;
-xi.fx('ammonia','assiout','helwan') = 0;
-xi.fx('ammonia','assiout','kafr-el-zt') = 0;
-xi.fx('ammonia','aswan','abu-zaabal') = 0;
-xi.fx('ammonia','aswan','assiout') = 0;
-xi.fx('ammonia','aswan','aswan') = 0;
-xi.fx('ammonia','aswan','helwan') = 0;
-xi.fx('ammonia','aswan','kafr-el-zt') = 0;
-xi.fx('ammonia','helwan','abu-zaabal') = 0;
-xi.fx('ammonia','helwan','assiout') = 0;
-xi.fx('ammonia','helwan','aswan') = 0;
-xi.fx('ammonia','helwan','helwan') = 0;
-xi.fx('ammonia','helwan','kafr-el-zt') = 0;
-xi.fx('ammonia','kafr-el-zt','abu-zaabal') = 0;
-xi.fx('ammonia','kafr-el-zt','assiout') = 0;
-xi.fx('ammonia','kafr-el-zt','aswan') = 0;
-xi.fx('ammonia','kafr-el-zt','helwan') = 0;
-xi.fx('ammonia','kafr-el-zt','kafr-el-zt') = 0;
-xi.fx('sulf-acid','abu-zaabal','abu-zaabal') = 0;
-xi.fx('sulf-acid','abu-zaabal','assiout') = 0;
-xi.fx('sulf-acid','abu-zaabal','aswan') = 0;
-xi.fx('sulf-acid','abu-zaabal','helwan') = 0;
-xi.fx('sulf-acid','abu-zaabal','kafr-el-zt') = 0;
-xi.fx('sulf-acid','assiout','abu-zaabal') = 0;
-xi.fx('sulf-acid','assiout','assiout') = 0;
-xi.fx('sulf-acid','assiout','aswan') = 0;
-xi.fx('sulf-acid','assiout','helwan') = 0;
-xi.fx('sulf-acid','assiout','kafr-el-zt') = 0;
-xi.fx('sulf-acid','aswan','abu-zaabal') = 0;
-xi.fx('sulf-acid','aswan','assiout') = 0;
-xi.fx('sulf-acid','aswan','aswan') = 0;
-xi.fx('sulf-acid','aswan','helwan') = 0;
-xi.fx('sulf-acid','aswan','kafr-el-zt') = 0;
-xi.fx('sulf-acid','helwan','abu-zaabal') = 0;
-xi.fx('sulf-acid','helwan','assiout') = 0;
-xi.fx('sulf-acid','helwan','aswan') = 0;
-xi.fx('sulf-acid','helwan','helwan') = 0;
-xi.fx('sulf-acid','helwan','kafr-el-zt') = 0;
-xi.fx('sulf-acid','kafr-el-zt','abu-zaabal') = 0;
-xi.fx('sulf-acid','kafr-el-zt','assiout') = 0;
-xi.fx('sulf-acid','kafr-el-zt','aswan') = 0;
-xi.fx('sulf-acid','kafr-el-zt','helwan') = 0;
-xi.fx('sulf-acid','kafr-el-zt','kafr-el-zt') = 0;
 
 * ============================================
 * Variable Initialization
@@ -278,7 +234,7 @@ Equations
     stat_z(p,i)
     comp_cc(m,i)
     comp_mb(c,i)
-    comp_mbdb(cf,j)
+    comp_mbdb(c,j)
     comp_lo_u(c,i)
     comp_lo_vf(c,j)
     comp_lo_vr(c,i)
@@ -313,11 +269,11 @@ Equations
     xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan
     xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan
     xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
-    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70
+    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan
-    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5
+    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea
     xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70
     xi_fx_sulf_acid_c8324d9c_assiout_assiout
     xi_fx_sulf_acid_c8324d9c_assiout_aswan
@@ -333,11 +289,11 @@ Equations
     xi_fx_sulf_acid_c8324d9c_helwan_aswan
     xi_fx_sulf_acid_c8324d9c_helwan_helwan
     xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5
-    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70
+    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan
-    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5
+    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d
 ;
 
 * ============================================
@@ -354,10 +310,10 @@ stat_psii.. 1 + 1 / er ** 1 * nu_ai =E= 0;
 stat_psil.. 1 + nu_al =E= 0;
 stat_psip.. 1 + nu_ap =E= 0;
 stat_u(c,i).. sum(cr__, ((-1) * (pd(i,c) * 1$(cposd(cr__,i)))) * nu_ap)$(cr(c)) + ((-1) * 1$(cposd(c,i))) * lam_mb(c,i) - piL_u(c,i) =E= 0;
-stat_vf(c,j).. ((((-1) * mufv(j)) * nu_al)$(cf(c)) + (((-1) * pv(c)) * nu_ai)$(cf(c)) + (((-1) * 1$(pv(c))) * lam_mbdb(c,j))$(cf75(j,c)) - piL_vf(c,j))$(cf(c)) =E= 0;
+stat_vf(c,j).. ((((-1) * mufv(j)) * nu_al)$(cf(c)) + (((-1) * pv(c)) * nu_ai)$(cf(c)) + ((((-1) * 1$(pv(c))) * lam_mbdb(c,j))$(cf(c)))$(cf75(j,c)) - piL_vf(c,j))$(cf(c)) =E= 0;
 stat_vr(c,i).. sum(cr__, ((-1) * (mur(i) * 1$(cposr(cr__,i)))) * nu_al)$(cr(c)) + sum(cr__, ((-1) * (pv(c) * 1$(cposr(cr__,i)))) * nu_ai)$(cr(c)) + ((-1) * 1$(cposr(c,i))) * lam_mb(c,i) - piL_vr(c,i) =E= 0;
-stat_xf(c,i,j).. ((((-1) * (muf(i,j) * 1$(cposp(c,i)))) * nu_al)$(cf(c)) + ((((-1) * 1$(cposp(c,i))) * lam_mbdb(c,j))$(cf75(j,c)))$(cf(c)) + (1$(cposp(c,i)))$(cf(c)) * lam_mb(c,i) - piL_xf(c,i,j))$(cf(c)) =E= 0;
-stat_xi(c,i,i).. sum((cs__,ip), ((-1) * (mui(i,i) * 1$(cposi(cs__,i,ip)))) * nu_al)$(cs(c)) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_aswan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_helwan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_assiout_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_assiout_assiout$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_assiout_aswan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_assiout_helwan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_aswan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_aswan_assiout$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_aswan_aswan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_aswan_helwan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_helwan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_helwan_assiout$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_helwan_aswan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_helwan_helwan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + ((-1) * 1$(cposi(c,i,i))) * lam_mb(c,i) - piL_xi(c,i,i) =E= 0;
+stat_xf(c,i,j).. ((((-1) * (muf(i,j) * 1$(cposp(c,i)))) * nu_al)$(cf(c)) + (((((-1) * 1$(cposp(c,i))) * lam_mbdb(c,j))$(cf(c)))$(cf75(j,c)))$(cf(c)) + (1$(cposp(c,i)))$(cf(c)) * lam_mb(c,i) - piL_xf(c,i,j))$(cf(c)) =E= 0;
+stat_xi(c,i,i).. sum((cs__,ip), ((-1) * (mui(i,i) * 1$(cposi(cs__,i,ip)))) * nu_al)$(cs(c)) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_assiout$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_aswan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_helwan$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_assiout_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_assiout_assiout$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_assiout_aswan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_assiout_helwan$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_aswan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_aswan_assiout$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_aswan_aswan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_aswan_helwan$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_helwan_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_helwan_assiout$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_helwan_aswan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_helwan_helwan$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5$(sameas(c, 'ammonia') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea$(sameas(c, 'sulf-acid') and sameas(i, 'abu-zaabal') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_assiout_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'assiout') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_aswan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'aswan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_abu_zaabal_876cfd70$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5$(sameas(c, 'sulf-acid') and sameas(i, 'helwan') and sameas(i, 'kafr-el-zt')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'abu-zaabal')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'assiout')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'aswan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'helwan')) + nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d$(sameas(c, 'sulf-acid') and sameas(i, 'kafr-el-zt') and sameas(i, 'kafr-el-zt')) + ((-1) * 1$(cposi(c,i,i))) * lam_mb(c,i) - piL_xi(c,i,i) =E= 0;
 stat_z(p,i).. (sum(c, ((-1) * (a(c,p) * 1$(ppos(p,i)))) * lam_mb(c,i)) + sum(m, (b(m,p) * 1$(ppos(p,i)) * lam_cc(m,i))$(mpos(m,i))))$(ppos(p,i)) =E= 0;
 
 * Inequality complementarity equations
@@ -420,13 +376,13 @@ xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70.. xi("sulf-acid","assiout",
 xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan.. xi("sulf-acid","kafr-el-zt","aswan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan.. xi("sulf-acid","kafr-el-zt","helwan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout.. xi("sulf-acid","kafr-el-zt","assiout") - 0 =E= 0;
-xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.. xi("sulf-acid","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
-xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.. xi("sulf-acid","kafr-el-zt","abu-zaabal") - 0 =E= 0;
+xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d.. xi("sulf-acid","kafr-el-zt","kafr-el-zt") - 0 =E= 0;
+xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811.. xi("sulf-acid","kafr-el-zt","abu-zaabal") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan.. xi("sulf-acid","abu-zaabal","aswan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan.. xi("sulf-acid","abu-zaabal","helwan") - 0 =E= 0;
 xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout.. xi("sulf-acid","abu-zaabal","assiout") - 0 =E= 0;
-xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.. xi("sulf-acid","abu-zaabal","kafr-el-zt") - 0 =E= 0;
-xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70.. xi("sulf-acid","abu-zaabal","abu-zaabal") - 0 =E= 0;
+xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea.. xi("sulf-acid","abu-zaabal","kafr-el-zt") - 0 =E= 0;
+xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b.. xi("sulf-acid","abu-zaabal","abu-zaabal") - 0 =E= 0;
 
 
 * ============================================
@@ -500,11 +456,11 @@ Model mcp_model /
     xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_aswan,
     xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_helwan,
     xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_ammonia_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
-    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_zaabal_876cfd70,
+    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_abu_z_86a8760b,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_assiout,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_aswan,
     xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_helwan,
-    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr_el_zt_4b0342d5,
+    xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea.nu_xi_fx_sulf_acid_c8324d9c_abu_zaabal_876cfd70_kafr__11d287ea,
     xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70.nu_xi_fx_sulf_acid_c8324d9c_assiout_abu_zaabal_876cfd70,
     xi_fx_sulf_acid_c8324d9c_assiout_assiout.nu_xi_fx_sulf_acid_c8324d9c_assiout_assiout,
     xi_fx_sulf_acid_c8324d9c_assiout_aswan.nu_xi_fx_sulf_acid_c8324d9c_assiout_aswan,
@@ -520,11 +476,11 @@ Model mcp_model /
     xi_fx_sulf_acid_c8324d9c_helwan_aswan.nu_xi_fx_sulf_acid_c8324d9c_helwan_aswan,
     xi_fx_sulf_acid_c8324d9c_helwan_helwan.nu_xi_fx_sulf_acid_c8324d9c_helwan_helwan,
     xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5.nu_xi_fx_sulf_acid_c8324d9c_helwan_kafr_el_zt_4b0342d5,
-    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_zaabal_876cfd70,
+    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_abu_z_8405c811,
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_assiout,
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_aswan,
     xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_helwan,
-    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5,
+    xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d.nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr__584b643d,
     comp_lo_u.piL_u,
     comp_lo_vf.piL_vf,
     comp_lo_vr.piL_vr,

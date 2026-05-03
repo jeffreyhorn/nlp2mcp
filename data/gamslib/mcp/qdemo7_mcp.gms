@@ -78,6 +78,12 @@ pm(cm) = demdat(cm,"imp-p");
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+beta(c)$(NOT (beta(c) > -inf and beta(c) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -219,13 +225,13 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_exports(c).. 1$(ce(c)) * nu_dem(c) - piL_exports(c) =E= 0;
-stat_flab(t).. ((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_flab(t) =E= 0;
-stat_imports(c).. ((-1) * 1$(cm(c))) * nu_dem(c) - piL_imports(c) =E= 0;
+stat_exports(c).. ((-1) * pe(c)) + (1$(ce(c)) * nu_dem(c))$(cn(c)) - piL_exports(c) =E= 0;
+stat_flab(t).. (((-1) * rwage) * nu_ares - lam_laborbal(t) - piL_flab(t) + piU_flab(t))$(flab.up(t) - flab.lo(t) > 1e-10) =E= 0;
+stat_imports(c).. pm(c) + (((-1) * 1$(cm(c))) * nu_dem(c))$(cn(c)) - piL_imports(c) =E= 0;
 stat_labcost.. nu_alab - nu_acost =E= 0;
 stat_mcost.. nu_amisc - nu_acost =E= 0;
-stat_natcon(c).. (nu_dem(c) - piL_natcon(c))$(cn(c)) =E= 0;
-stat_natprod(c).. nu_proc(c) - nu_dem(c) - piL_natprod(c) =E= 0;
+stat_natcon(c).. (((-1) * (alpha(c) + beta(c) * natcon(c))) + nu_dem(c)$(cn(c)) - piL_natcon(c))$(cn(c)) =E= 0;
+stat_natprod(c).. nu_proc(c) - nu_dem(c)$(cn(c)) - piL_natprod(c) =E= 0;
 stat_pcost.. nu_aplow - nu_acost =E= 0;
 stat_rescost.. nu_ares - nu_acost =E= 0;
 stat_tcost.. 1 + nu_acost =E= 0;
@@ -275,8 +281,10 @@ objn.. cps =E= sum(cn, alpha(cn) * natcon(cn) + 0.5 * beta(cn) * sqr(natcon(cn))
 
 natcon.fx(c)$(not (cn(c))) = 0;
 piL_natcon.fx(c)$(not (cn(c))) = 0;
+flab.fx(t)$(not (flab.up(t) - flab.lo(t) > 1e-10)) = flab.lo(t);
+piL_flab.fx(t)$(not (flab.up(t) - flab.lo(t) > 1e-10)) = 0;
+piU_flab.fx(t)$(not (flab.up(t) - flab.lo(t) > 1e-10)) = 0;
 piU_flab.fx(t)$(not (famlab * fnum < inf)) = 0;
-nu_dem.fx(c)$(not (cn(c))) = 0;
 nu_dem.fx(c)$(not (cn(c))) = 0;
 
 * ============================================

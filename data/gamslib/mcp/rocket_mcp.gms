@@ -86,11 +86,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-v.fx('h0') = 0;
-ht.fx('h0') = 1;
 m.lo(h) = m_f;
 m.fx('h50') = m_f;
-m.fx('h0') = 1;
 t.up(h) = T_c * m_0 * g_0;
 
 * ============================================
@@ -214,9 +211,9 @@ Equations
 stat_d(h).. nu_df(h) + ((-1) * (0.5 * step * m(h) * (-1) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * m(h) * (-1) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_d(h) =E= 0;
 stat_g(h).. nu_gf(h) + ((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_g(h) =E= 0;
 stat_ht(h).. (-1)$(sameas(h, 'h50')) + ((-1) * (D_c * sqr(v(h)) * exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * h_0 * ((-1) * h_c) / sqr(h_0))) * nu_df(h) + ((-1) * (g_0 * 2 * h_0 / ht(h) * ((-1) * h_0) / sqr(ht(h)))) * nu_gf(h) + nu_h_eqn(h) + ((-1) * nu_h_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_ht_fx_h0$(sameas(h, 'h0')) - piL_ht(h) =E= 0;
-stat_m(h).. nu_m_eqn(h) + ((-1) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_m_fx_h0$(sameas(h, 'h0')) - piL_m(h) + piU_m(h) =E= 0;
+stat_m(h).. (nu_m_eqn(h) + ((-1) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_m_fx_h0$(sameas(h, 'h0')) - piL_m(h) + piU_m(h))$(m.up(h) - m.lo(h) > 1e-10) =E= 0;
 stat_step.. sum(h, ((-1) * (v(h) * 0.5)) * nu_h_eqn(h)) + sum(h, c * t(h) * 0.5 / sqr(c) * nu_m_eqn(h)) + sum(h, ((-1) * (0.5 * ((t(h) - d(h) - m(h) * g(h)) / m(h) + 1) + 0.5 * step)) * nu_v_eqn(h)) - piL_step =E= 0;
-stat_t(h).. c * 0.5 * step / sqr(c) * nu_m_eqn(h) + (c * 0.5 * step / sqr(c) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) + (((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_t(h) + piU_t(h) =E= 0;
+stat_t(h).. (c * 0.5 * step / sqr(c) * nu_m_eqn(h) + (c * 0.5 * step / sqr(c) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) + (((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_t(h) + piU_t(h))$(t.up(h) - t.lo(h) > 1e-10) =E= 0;
 stat_v(h).. ((-1) * (exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * D_c * 2 * v(h))) * nu_df(h) + ((-1) * (0.5 * step)) * nu_h_eqn(h) + (((-1) * (0.5 * step)) * nu_h_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_v_eqn(h) + ((-1) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_v_fx_h0$(sameas(h, 'h0')) - piL_v(h) =E= 0;
 
 * Lower bound complementarity equations
@@ -251,6 +248,12 @@ m_fx_h0.. m("h0") - 1 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = m.lo(h);
+piL_m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = 0;
+piU_m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = 0;
+t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = t.lo(h);
+piL_t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = 0;
+piU_t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = 0;
 piL_m.fx(h)$(not (m_f > -inf)) = 0;
 piU_t.fx(h)$(not (T_c * m_0 * g_0 < inf)) = 0;
 nu_h_eqn.fx(h)$(not (ord(h) > 1)) = 0;

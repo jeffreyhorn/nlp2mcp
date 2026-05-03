@@ -154,6 +154,13 @@ def normalize_model(
     normalization to avoid issues with finding it after equations are restructured.
     See GitHub Issue #19 for details.
     """
+    # Issue #1290: reset the per-emission identifier-shortening registry so
+    # the comment banner emitted near variable declarations only contains
+    # mappings produced for *this* model run.
+    from src.kkt.naming import clear_long_identifier_registry
+
+    clear_long_identifier_registry()
+
     # Issue #1234: resolve scalar-constant references in `IndexOffset.offset`
     # expressions BEFORE downstream AD/KKT runs. When the source uses a
     # `Scalar l /4/` and writes `pd(tt-l)`, the parser produces
@@ -344,14 +351,20 @@ def _sanitize_identifier(s: str) -> str:
 
 
 def bound_name(var: str, suffix: str, indices: tuple[str, ...]) -> str:
-    if not indices:
-        return f"{var}_{suffix}"
     # Use underscores instead of parentheses for valid GAMS identifiers
     # e.g., x_fx_1 instead of x_fx(1) which is invalid GAMS syntax
     # PR #658: Sanitize indices to handle special characters (e.g., "q-1" -> "q_1")
-    sanitized = [_sanitize_identifier(idx) for idx in indices]
-    joined = "_".join(sanitized)
-    return f"{var}_{suffix}_{joined}"
+    if not indices:
+        name = f"{var}_{suffix}"
+    else:
+        sanitized = [_sanitize_identifier(idx) for idx in indices]
+        joined = "_".join(sanitized)
+        name = f"{var}_{suffix}_{joined}"
+    # Issue #1290: Cap bound-equation names at BOUND_NAME_MAX_LENGTH so the
+    # multiplier wrapper (`nu_`/`lam_`/`piL_`/`piU_`) still fits in 63 chars.
+    from ..kkt.naming import BOUND_NAME_MAX_LENGTH, shorten_identifier
+
+    return shorten_identifier(name, max_length=BOUND_NAME_MAX_LENGTH)
 
 
 def _expr_domain(expr: Expr) -> tuple[str, ...]:

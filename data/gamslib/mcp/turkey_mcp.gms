@@ -282,6 +282,42 @@ wsc(c,g) = (alphac(c) * qsc(c,g) + 0.5 * betac(c) * sqr(qsc(c,g))) / 1000;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+a(c,r,s)$(NOT (a(c,r,s) > -inf and a(c,r,s) < inf)) = 0;
+alpharc(c)$(NOT (alpharc(c) > -inf and alpharc(c) < inf)) = 0;
+alpharl(cl,l)$(NOT (alpharl(cl,l) > -inf and alpharl(cl,l) < inf)) = 0;
+betac(c)$(NOT (betac(c) > -inf and betac(c) < inf)) = 0;
+betal(cl,l)$(NOT (betal(cl,l) > -inf and betal(cl,l) < inf)) = 0;
+betarc(c)$(NOT (betarc(c) > -inf and betarc(c) < inf)) = 0;
+betarl(cl,l)$(NOT (betarl(cl,l) > -inf and betarl(cl,l) < inf)) = 0;
+capitalt(c)$(NOT (capitalt(c) > -inf and capitalt(c) < inf)) = 0;
+cpricec(c,ty)$(NOT (cpricec(c,ty) > -inf and cpricec(c,ty) < inf)) = 0;
+cpricel(cl,l,ty)$(NOT (cpricel(cl,l,ty) > -inf and cpricel(cl,l,ty) < inf)) = 0;
+drc(s,r,ds,pt,tq)$(NOT (drc(s,r,ds,pt,tq) > -inf and drc(s,r,ds,pt,tq) < inf)) = 0;
+drt(c,ds,pt,tq)$(NOT (drt(c,ds,pt,tq) > -inf and drt(c,ds,pt,tq) < inf)) = 0;
+icostc(r,s)$(NOT (icostc(r,s) > -inf and icostc(r,s) < inf)) = 0;
+incrc(c)$(NOT (incrc(c) > -inf and incrc(c) < inf)) = 0;
+incrl(cl,l)$(NOT (incrl(cl,l) > -inf and incrl(cl,l) < inf)) = 0;
+iop(c)$(NOT (iop(c) > -inf and iop(c) < inf)) = 0;
+labc(s,r,pt,tq)$(NOT (labc(s,r,pt,tq) > -inf and labc(s,r,pt,tq) < inf)) = 0;
+labl(l)$(NOT (labl(l) > -inf and labl(l) < inf)) = 0;
+labt(c,pt,tq)$(NOT (labt(c,pt,tq) > -inf and labt(c,pt,tq) < inf)) = 0;
+lcostc(s,r,pt)$(NOT (lcostc(s,r,pt) > -inf and lcostc(s,r,pt) < inf)) = 0;
+lcostl(l)$(NOT (lcostl(l) > -inf and lcostl(l) < inf)) = 0;
+lcostt(c,pt)$(NOT (lcostt(c,pt) > -inf and lcostt(c,pt) < inf)) = 0;
+pfi(ty)$(NOT (pfi(ty) > -inf and pfi(ty) < inf)) = 0;
+pricec(c,ty)$(NOT (pricec(c,ty) > -inf and pricec(c,ty) < inf)) = 0;
+pricel(cl,l,ty)$(NOT (pricel(cl,l,ty) > -inf and pricel(cl,l,ty) < inf)) = 0;
+qmaxc(c)$(NOT (qmaxc(c) > -inf and qmaxc(c) < inf)) = 0;
+qmaxl(cl,l)$(NOT (qmaxl(cl,l) > -inf and qmaxl(cl,l) < inf)) = 0;
+qminc(c)$(NOT (qminc(c) > -inf and qminc(c) < inf)) = 0;
+qminl(cl,l)$(NOT (qminl(cl,l) > -inf and qminl(cl,l) < inf)) = 0;
+wsc(c,g)$(NOT (wsc(c,g) > -inf and wsc(c,g) < inf)) = 0;
+wsl(cl,l,g)$(NOT (wsl(cl,l,g) > -inf and wsl(cl,l,g) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -530,7 +566,7 @@ Equations
     combc(c)
     combl(cl,l)
     dadcl
-    ddev(ty)
+    ddev
     demnatc(c)
     demnatl(cl,l)
     dprodc(c)
@@ -556,13 +592,13 @@ stat_adc.. -1 + nu_dadcl =E= 0;
 stat_capcost.. 1 + nu_acap =E= 0;
 stat_cropland(ca).. nu_landuse(ca) + sum(ty, 1000 * revdevc(ca,ty) / 1000000 * nu_ddev(ty)) - piL_cropland(ca) =E= 0;
 stat_dprcost.. 1 + nu_adpr =E= 0;
-stat_exportc(c).. 1$(pec(c)) * nu_ndemc(c) + ((-1) * (1000 * pec(c)$(tradec(c,"export-q")) / 1000000)) * nu_aexp - piL_exportc(c) + piU_exportc(c) =E= 0;
-stat_exportl(cl,l).. (1$(pel(cl,l)) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pel(cl,l)$(tradel(l,cl,"export-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aexp - piL_exportl(cl,l) + piU_exportl(cl,l) =E= 0;
-stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c))$(cp(c)) =E= 0;
+stat_exportc(c).. (1$(pec(c)) * nu_ndemc(c) + ((-1) * (1000 * pec(c)$(tradec(c,"export-q")) / 1000000)) * nu_aexp - piL_exportc(c) + piU_exportc(c))$(exportc.up(c) - exportc.lo(c) > 1e-10) =E= 0;
+stat_exportl(cl,l).. ((1$(pel(cl,l)) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pel(cl,l)$(tradel(l,cl,"export-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aexp - piL_exportl(cl,l) + piU_exportl(cl,l))$(exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10) =E= 0;
+stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c))$(cp(c) and exportp.up(c) - exportp.lo(c) > 1e-10) =E= 0;
 stat_feed(l,fclass).. lam_feedd$(sameas(fclass, 'd-fodder')) - lam_totfeed(l) - lam_minfeed(l,fclass) + lam_maxfeed(l,fclass) + lam_feedgr$(sameas(fclass, 'g-fodder')) + lam_feedg$(sameas(fclass, 'grain+con')) + lam_feedp$(sameas(fclass, 'pasture')) - piL_feed(l,fclass) =E= 0;
 stat_impcost.. 1 + nu_aimp =E= 0;
-stat_importc(c).. ((-1) * 1$(pmc(c))) * nu_ndemc(c) + ((-1) * (1000 * pmc(c)$(tradec(c,"import-q")) / 1000000)) * nu_aimp - piL_importc(c) + piU_importc(c) =E= 0;
-stat_importl(cl,l).. (((-1) * 1$(pml(cl,l))) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pml(cl,l)$(tradel(l,cl,"import-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aimp - piL_importl(cl,l) + piU_importl(cl,l) =E= 0;
+stat_importc(c).. (((-1) * 1$(pmc(c))) * nu_ndemc(c) + ((-1) * (1000 * pmc(c)$(tradec(c,"import-q")) / 1000000)) * nu_aimp - piL_importc(c) + piU_importc(c))$(importc.up(c) - importc.lo(c) > 1e-10) =E= 0;
+stat_importl(cl,l).. ((((-1) * 1$(pml(cl,l))) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pml(cl,l)$(tradel(l,cl,"import-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aimp - piL_importl(cl,l) + piU_importl(cl,l))$(importl.up(cl,l) - importl.lo(cl,l) > 1e-10) =E= 0;
 stat_inpcost.. 1 + nu_ainp =E= 0;
 stat_labcost.. 1 + nu_alab =E= 0;
 stat_natconc(c).. nu_ndemc(c) + nu_demnatc(c) + (((-1) * (ioconc(c) * eval("concentrat",c))) * lam_feedg)$(co(c)) =E= 0;
@@ -576,12 +612,12 @@ stat_revexp.. -1 + nu_aexp =E= 0;
 stat_salesc(c).. ((-1) * nu_ndemc(c)) + lam_mbalc(c) - piL_salesc(c) =E= 0;
 stat_salesl(cl,l).. ((-1) * nu_ndeml(cl,l))$(cll(cl,l)) + lam_mball(cl,l)$(cll(cl,l)) - piL_salesl(cl,l) =E= 0;
 stat_sumdev.. card(ty) * phi * k / sqr(card(ty)) + nu_dsum =E= 0;
-stat_totgrain.. nu_tgrain + sum(cg, gmin(cg) * lam_mingrain(cg)) + sum(cg, ((-1) * gmax(cg)) * lam_maxgrain(cg)) =E= 0;
-stat_transfer(c).. ((-1) * nu_tgrain)$(cg(c)) + 1$(ctr(c)) * lam_mbalc(c) + (((-1) * eval("product",c)) * lam_feedgr)$(cgf(c)) + (((-1) * eval("product",c)) * lam_feedg)$(cg(c)) - lam_mingrain(c) + lam_maxgrain(c) - piL_transfer(c) =E= 0;
-stat_treeland(ct).. ((-1) * nu_landbt(ct)) + sum(ty, 1000 * revdevc(ct,ty) / 1000000 * nu_ddev(ty)) - piL_treeland(ct) + piU_treeland(ct) =E= 0;
+stat_totgrain.. nu_tgrain + sum(cg, (gmin(cg) * lam_mingrain(cg))$(cg(cg))) + sum(cg, (((-1) * gmax(cg)) * lam_maxgrain(cg))$(cg(cg))) =E= 0;
+stat_transfer(c).. ((-1) * nu_tgrain)$(cg(c)) + 1$(ctr(c)) * lam_mbalc(c) + (((-1) * eval("product",c)) * lam_feedgr)$(cgf(c)) + (((-1) * eval("product",c)) * lam_feedg)$(cg(c)) - lam_mingrain(c)$(cg(c)) + lam_maxgrain(c)$(cg(c)) - piL_transfer(c) =E= 0;
+stat_treeland(ct).. (((-1) * nu_landbt(ct)$(ct(ct))) + sum(ty, 1000 * revdevc(ct,ty) / 1000000 * nu_ddev(ty)) - piL_treeland(ct) + piU_treeland(ct))$(treeland.up(ct) - treeland.lo(ct) > 1e-10) =E= 0;
 stat_xcrop(s,r,pt).. sum(c, ((-1) * yieldc(c,s,r)) * nu_dprodc(c)) + 1$(sr(s,r)) * lam_landbc(s) + sum(tq, labc(s,r,pt,tq) * lam_labor(tq)) + sum((ds,tq), drc(s,r,ds,pt,tq) * lam_draftb(ds,tq)) + ((-1) * sum(ca, yieldf(ca,s,r) * eval("fodder",ca))) * lam_feedd - piL_xcrop(s,r,pt) =E= 0;
-stat_xlive(l).. sum(ty, 1000 * sum(cl$(cll(cl,l)), revdevl(cl,l,ty)) / 1000000 * nu_ddev(ty)) + ((-1) * lcostl(l)) * nu_alab + sum(tq, labl(l) * lam_labor(tq)) + sum((ds,tq), ((-1) * (1000 * dpower(ds,l) / 1000000)) * lam_draftb(ds,tq)) + sum(cl, (((-1) * (1000 * yieldl(cl,l) / 1000000)) * lam_mball(cl,l))$(cll(cl,l))) + ereq(l) * lam_totfeed(l) + sum(fclass, fmin(l,fclass) * ereq(l) * lam_minfeed(l,fclass)) + sum(fclass, ((-1) * (fmax(l,fclass) * ereq(l))) * lam_maxfeed(l,fclass)) - piL_xlive(l) + piU_xlive(l) =E= 0;
-stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + (1$(cpt(c,pt)) * nu_landbt(c))$(ct(c)) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
+stat_xlive(l).. (sum(ty, 1000 * sum(cl$(cll(cl,l)), revdevl(cl,l,ty)) / 1000000 * nu_ddev(ty)) + ((-1) * lcostl(l)) * nu_alab + sum(tq, labl(l) * lam_labor(tq)) + sum((ds,tq), ((-1) * (1000 * dpower(ds,l) / 1000000)) * lam_draftb(ds,tq)) + sum(cl, (((-1) * (1000 * yieldl(cl,l) / 1000000)) * lam_mball(cl,l))$(cll(cl,l))) + ereq(l) * lam_totfeed(l) + sum(fclass, fmin(l,fclass) * ereq(l) * lam_minfeed(l,fclass)) + sum(fclass, ((-1) * (fmax(l,fclass) * ereq(l))) * lam_maxfeed(l,fclass)) - piL_xlive(l) + piU_xlive(l))$(xlive.up(l) - xlive.lo(l) > 1e-10) =E= 0;
+stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + ((1$(cpt(c,pt)) * nu_landbt(c))$(ct(c)))$(ct(c)) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
 
 * Inequality complementarity equations
 comp_draftb(ds,tq).. ((-1) * (sum((s,r,pt), drc(s,r,ds,pt,tq) * xcrop(s,r,pt)) + sum((ct,pt), drt(ct,ds,pt,tq) * xtree(ct,pt)) - (drsup(ds) + sum(l, dpower(ds,l) * xlive(l)) / 1000))) =G= 0;
@@ -660,6 +696,26 @@ objlin.. cps =E= adc + revexp - impcost - inpcost - dprcost - labcost - capcost 
 exportp.fx(c)$(not (cp(c))) = 0;
 piL_exportp.fx(c)$(not (cp(c))) = 0;
 natconl.fx(cl,l)$(not (cll(cl,l))) = 0;
+exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = exportc.lo(c);
+piL_exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = 0;
+piU_exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = 0;
+exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = exportl.lo(cl,l);
+piL_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
+piU_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
+exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = exportp.lo(c);
+piL_exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = 0;
+importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = importc.lo(c);
+piL_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
+piU_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
+importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = importl.lo(cl,l);
+piL_importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = 0;
+piU_importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = 0;
+treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = treeland.lo(ct);
+piL_treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = 0;
+piU_treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = 0;
+xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = xlive.lo(l);
+piL_xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = 0;
+piU_xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = 0;
 lam_mball.fx(cl,l)$(not (cll(cl,l))) = 0;
 piL_treeland.fx(ct)$(not (0.75 * landt(ct) > -inf)) = 0;
 piU_exportc.fx(c)$(not (expcb(c) < inf)) = 0;

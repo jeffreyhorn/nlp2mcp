@@ -58,22 +58,18 @@ Variables
 ;
 
 * ============================================
-* Variable Bounds
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-x.fx('i0') = 1;
-x.fx('i50') = 3;
+$onMultiR
+$include "data/gamslib/raw/chain.gms"
+$offMulti
 
-* ============================================
-* Variable Initialization
-* ============================================
+* Transfer NLP duals to MCP multiplier initialization
+nu_x_eqn.l(i) = x_eqn.m(i);
+nu_length_eqn.l = length_eqn.m;
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-
-x.l(i) = 4 * abs(b - a) * (ord(i) - 1) / n * (0.5 * (ord(i) - 1) / n - tmin) + a;
-u.l(i) = 4 * abs(b - a) * ((ord(i) - 1) / n - tmin);
+* Transfer variable marginals to bound multipliers
 
 * ============================================
 * Equations
@@ -97,6 +93,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_u(i).. h * x(i) * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) + ((-1) * (0.5 * h)) * nu_x_eqn(i) + (((-1) * (0.5 * h)) * nu_x_eqn(i-1))$(ord(i) > 1) + h * 1 / (2 * sqrt(1 + sqr(u(i)))) * u(i) * 1$(nh(i)) * nu_length_eqn =E= 0;
 stat_x(i).. 0.5 * h * sqrt(1 + sqr(u(i))) * 1$(nh(i)) - nu_x_eqn(i) + nu_x_eqn(i-1)$(ord(i) > 1) + nu_x_fx_i0$(sameas(i, 'i0')) + nu_x_fx_i50$(sameas(i, 'i50')) =E= 0;
@@ -108,6 +105,7 @@ length_eqn.. 0.5 * h * sum(i$(nh(i)), sqrt(1 + sqr(u(i))) + sqrt(1 + sqr(u(i+1))
 x_fx_i0.. x("i0") - 1 =E= 0;
 x_fx_i50.. x("i50") - 3 =E= 0;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -140,20 +138,6 @@ Model mcp_model /
     x_fx_i0.nu_x_fx_i0,
     x_fx_i50.nu_x_fx_i50
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/chain.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-nu_x_eqn.l(i) = x_eqn.m(i);
-nu_length_eqn.l = length_eqn.m;
-
-* Transfer variable marginals to bound multipliers
 
 * ============================================
 * Solve Statement

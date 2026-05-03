@@ -84,6 +84,15 @@ bp(k,p)$(kuse(k,p)) = 1 / sum(c$(ap(c,p) < 0), ((-1) * ap(c,p)) * prop(c,"gravit
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+bp(k,p)$(NOT (bp(k,p) > -inf and bp(k,p) < inf)) = 0;
+char(c,m)$(NOT (char(c,m) > -inf and char(c,m) < inf)) = 0;
+kp(k)$(NOT (kp(k) > -inf and kp(k) < inf)) = 0;
+pcr(cr)$(NOT (pcr(cr) > -inf and pcr(cr) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -145,34 +154,36 @@ cap.up(k) = kp(k);
 sales.fx(cf) = ddat(cf,"demand");
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables are set to 1.
+$onMultiR
+$include "data/gamslib/raw/fawley.gms"
+$offMulti
 
-u.l(c) = 1;
-u.l(c) = min(u.l(c), u.up(c));
-z.l(p) = 1;
-z.l(p) = min(z.l(p), z.up(p));
-cap.l(k) = 1;
-cap.l(k) = min(cap.l(k), cap.up(k));
-trans.l(tr) = 1;
-trans.l(tr) = min(trans.l(tr), trans.up(tr));
-import.l(c) = 1;
-import.l(c) = min(import.l(c), import.up(c));
-bq.l(c,cf) = 1;
-bq.l(c,cf) = min(bq.l(c,cf), bq.up(c,cf));
-rb.l(cf,r) = 1;
-rb.l(cf,r) = min(rb.l(cf,r), rb.up(cf,r));
-q.l(cf,m) = 1;
-q.l(cf,m) = min(q.l(cf,m), q.up(cf,m));
-ov.l(cf,l,s) = 1;
-ov.l(cf,l,s) = min(ov.l(cf,l,s), ov.up(cf,l,s));
-sales.l(cf) = 1;
-sales.l(cf) = min(sales.l(cf), sales.up(cf));
+* Transfer NLP duals to MCP multiplier initialization
+nu_mbal.l(c) = mbal.m(c);
+nu_kbal.l(k) = kbal.m(k);
+nu_dbal.l(cf) = dbal.m(cf);
+nu_qsb.l(cfq,l,s) = qsb.m(cfq,l,s);
+nu_pbal.l(cfq,m) = pbal.m(cfq,m);
+nu_drev.l = drev.m;
+nu_doper.l = doper.m;
+nu_dpur.l = dpur.m;
+nu_dtran.l = dtran.m;
+
+* Transfer variable marginals to bound multipliers
+piL_u.l(c)$(abs(u.l(c) - u.lo(c)) < 1e-6 and u.m(c) > 0) = u.m(c);
+piL_z.l(p)$(abs(z.l(p) - z.lo(p)) < 1e-6 and z.m(p) > 0) = z.m(p);
+piL_cap.l(k)$(abs(cap.l(k) - cap.lo(k)) < 1e-6 and cap.m(k) > 0) = cap.m(k);
+piL_trans.l(tr)$(abs(trans.l(tr) - trans.lo(tr)) < 1e-6 and trans.m(tr) > 0) = trans.m(tr);
+piL_import.l(c)$(abs(import.l(c) - import.lo(c)) < 1e-6 and import.m(c) > 0) = import.m(c);
+piL_bq.l(c,cf)$(abs(bq.l(c,cf) - bq.lo(c,cf)) < 1e-6 and bq.m(c,cf) > 0) = bq.m(c,cf);
+piL_rb.l(cf,r)$(abs(rb.l(cf,r) - rb.lo(cf,r)) < 1e-6 and rb.m(cf,r) > 0) = rb.m(cf,r);
+piL_q.l(cf,m)$(abs(q.l(cf,m) - q.lo(cf,m)) < 1e-6 and q.m(cf,m) > 0) = q.m(cf,m);
+piL_ov.l(cf,l,s)$(abs(ov.l(cf,l,s) - ov.lo(cf,l,s)) < 1e-6 and ov.m(cf,l,s) > 0) = ov.m(cf,l,s);
+piL_sales.l(cf)$(abs(sales.l(cf) - sales.lo(cf)) < 1e-6 and sales.m(cf) > 0) = sales.m(cf);
+piU_cap.l(k)$(abs(cap.l(k) - cap.up(k)) < 1e-6 and cap.m(k) < 0) = -(cap.m(k));
 
 * ============================================
 * Equations
@@ -229,20 +240,21 @@ Equations
 Alias(cfq, cfq__);
 Alias(cr, cr__);
 
+$onMultiR
 * Stationarity equations
-stat_bq(c,cf).. (sum((cfq__,l,s), (prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + sum((cfq__,m), (((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
-stat_cap(k).. nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k) =E= 0;
+stat_bq(c,cf).. (sum(cfq__, (((-1) * 1$(bposs(cfq__,c))) * nu_mbal(c))$(sameas(cfq__, cf))) + sum((cfq__,l,s), ((prop(c,s) * sum(m$(ms(m,s)), char(c,m)) * 1$(bposs(cf,c)) * nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s))) + sum((cfq__,m), ((((-1) * (char(c,m) * 1$(bposs(cf,c)))) * nu_pbal(cfq__,m))$(cfq(cfq__)))$(cfm(cfq__,m))) - piL_bq(c,cf))$(cfq(cf)) =E= 0;
+stat_cap(k).. (nu_kbal(k) + ((-1) * oc(k)) * nu_doper - piL_cap(k) + piU_cap(k))$(cap.up(k) - cap.lo(k) > 1e-10) =E= 0;
 stat_import(c).. (1$(ci(c)) * nu_mbal(c) + (((-1) * pimp(c)) * nu_dpur)$(sameas(c, 'fuel-imp')) - piL_import(c))$(ci(c)) =E= 0;
-stat_ov(cf,l,s).. ((dir(l) * nu_qsb(cf,l,s))$(specs(cf,l,s)) - piL_ov(cf,l,s))$(cfq(cf)) =E= 0;
+stat_ov(cf,l,s).. (((dir(l) * nu_qsb(cf,l,s))$(cfq(cf)))$(specs(cf,l,s)) - piL_ov(cf,l,s))$(cfq(cf)) =E= 0;
 stat_purchase.. 1 + nu_dpur =E= 0;
-stat_q(cf,m).. (sum((cfq__,l,s), (((-1) * (specs(cfq__,l,s) * 1$(ms(m,s)))) * nu_qsb(cfq__,l,s))$(specs(cfq__,l,s))) + nu_pbal(cf,m)$(cfm(cf,m)) + (((-1) * 1$(cfq(cf))) * nu_dbal(cf))$(sameas(m, 'weight')) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
-stat_rb(cf,r).. (((-1) * piL_rb(cf,r)))$(cfr(cf)) =E= 0;
+stat_q(cf,m).. (sum((cfq__,l,s), ((((-1) * (specs(cfq__,l,s) * 1$(ms(m,s)))) * nu_qsb(cfq__,l,s))$(cfq(cfq__)))$(specs(cfq__,l,s))) + (nu_pbal(cf,m)$(cfq(cf)))$(cfm(cf,m)) + (((-1) * 1$(cfq(cf))) * nu_dbal(cf))$(sameas(m, 'weight')) + (((-1) * ocpb) * nu_doper)$(sameas(cf, 'motor-gas') and sameas(m, 'volume')) - piL_q(cf,m))$(cfq(cf)) =E= 0;
+stat_rb(cf,r).. (sum(c, ((-1) * recipes(cf,c,r)) * nu_mbal(c)) - piL_rb(cf,r))$(cfr(cf)) =E= 0;
 stat_recurrent.. 1 + nu_doper =E= 0;
 stat_revenue.. -1 + nu_drev =E= 0;
 stat_sales(cf).. nu_dbal(cf) + ((-1) * ddat(cf,"price")) * nu_drev - piL_sales(cf) =E= 0;
 stat_trans(tr).. sum(c, at(c,tr) * nu_mbal(c)) - piL_trans(tr) =E= 0;
 stat_transport.. 1 + nu_dtran =E= 0;
-stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c))$(cr(c)) =E= 0;
+stat_u(c).. (1$(cr(c)) * nu_mbal(c) + sum(cr__, ((-1) * pcr(cr__)) * nu_dpur)$(cr(c)) + sum(cr__, ((-1) * crdat(cr__,"transport")) * nu_dtran)$(cr(c)) - piL_u(c))$(cr(c) and u.up(c) - u.lo(c) > 1e-10) =E= 0;
 stat_z(p).. sum(c, ap(c,p) * nu_mbal(c)) + sum(k, ((-1) * bp(k,p)) * nu_kbal(k)) - piL_z(p) =E= 0;
 
 * Lower bound complementarity equations
@@ -272,6 +284,7 @@ dpur.. purchase =E= sum(cr, pcr(cr) * u(cr)) + sum(ci, pimp(ci) * import(ci));
 dtran.. transport =E= sum(cr, crdat(cr,"transport") * u(cr));
 dprof.. profit =E= revenue - recurrent - purchase - transport;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -292,9 +305,12 @@ rb.fx(cf,r)$(not (cfr(cf))) = 0;
 piL_rb.fx(cf,r)$(not (cfr(cf))) = 0;
 u.fx(c)$(not (cr(c))) = 0;
 piL_u.fx(c)$(not (cr(c))) = 0;
+cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = cap.lo(k);
+piL_cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = 0;
+piU_cap.fx(k)$(not (cap.up(k) - cap.lo(k) > 1e-10)) = 0;
+u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = u.lo(c);
+piL_u.fx(c)$(not (u.up(c) - u.lo(c) > 1e-10)) = 0;
 piU_cap.fx(k)$(not (kp(k) < inf)) = 0;
-nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
-nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 nu_pbal.fx(cf,m)$(not (cfq(cf))) = 0;
 nu_qsb.fx(cf,l,s)$(not (cfq(cf))) = 0;
 
@@ -351,38 +367,6 @@ Model mcp_model /
     comp_lo_z.piL_z,
     comp_up_cap.piU_cap
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/fawley.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-nu_mbal.l(c) = mbal.m(c);
-nu_kbal.l(k) = kbal.m(k);
-nu_dbal.l(cf) = dbal.m(cf);
-nu_qsb.l(cfq,l,s) = qsb.m(cfq,l,s);
-nu_pbal.l(cfq,m) = pbal.m(cfq,m);
-nu_drev.l = drev.m;
-nu_doper.l = doper.m;
-nu_dpur.l = dpur.m;
-nu_dtran.l = dtran.m;
-
-* Transfer variable marginals to bound multipliers
-piL_u.l(c)$(abs(u.l(c) - u.lo(c)) < 1e-6 and u.m(c) > 0) = u.m(c);
-piL_z.l(p)$(abs(z.l(p) - z.lo(p)) < 1e-6 and z.m(p) > 0) = z.m(p);
-piL_cap.l(k)$(abs(cap.l(k) - cap.lo(k)) < 1e-6 and cap.m(k) > 0) = cap.m(k);
-piL_trans.l(tr)$(abs(trans.l(tr) - trans.lo(tr)) < 1e-6 and trans.m(tr) > 0) = trans.m(tr);
-piL_import.l(c)$(abs(import.l(c) - import.lo(c)) < 1e-6 and import.m(c) > 0) = import.m(c);
-piL_bq.l(c,cf)$(abs(bq.l(c,cf) - bq.lo(c,cf)) < 1e-6 and bq.m(c,cf) > 0) = bq.m(c,cf);
-piL_rb.l(cf,r)$(abs(rb.l(cf,r) - rb.lo(cf,r)) < 1e-6 and rb.m(cf,r) > 0) = rb.m(cf,r);
-piL_q.l(cf,m)$(abs(q.l(cf,m) - q.lo(cf,m)) < 1e-6 and q.m(cf,m) > 0) = q.m(cf,m);
-piL_ov.l(cf,l,s)$(abs(ov.l(cf,l,s) - ov.lo(cf,l,s)) < 1e-6 and ov.m(cf,l,s) > 0) = ov.m(cf,l,s);
-piL_sales.l(cf)$(abs(sales.l(cf) - sales.lo(cf)) < 1e-6 and sales.m(cf) > 0) = sales.m(cf);
-piU_cap.l(k)$(abs(cap.l(k) - cap.up(k)) < 1e-6 and cap.m(k) < 0) = -(cap.m(k));
 
 * ============================================
 * Solve Statement

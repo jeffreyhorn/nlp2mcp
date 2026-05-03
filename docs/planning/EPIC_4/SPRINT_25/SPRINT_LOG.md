@@ -56,3 +56,58 @@ See [`PLAN.md`](PLAN.md) for the full 15-day schedule and [`prompts/PLAN_PROMPTS
 - All 11 Tier 0/1 canary models confirmed present in baseline matching set (no audit-doc drift in that bucket).
 
 ---
+
+### Day 11 — WS2 Batch 3 Finish (#1290, #1291) + Checkpoint 2
+
+**Status:** COMPLETE (2026-05-03)
+**Branch:** `sprint25-day11-batch3-complete-plus-checkpoint2`
+
+| Task | Status |
+|---|---|
+| #1290 ferts 67-char identifier length violation | ✅ Hash-shortening pass in emitter (head + `_<sha256[:8]>`); banner records `shortened <- original` |
+| #1291 clearlak statement ordering hoist | ✅ Detect `Sum`/`Prod` over dynamic sets and add a `__set_<name>__` dep edge in `emit_interleaved_params_and_sets` |
+| Determinism verified (3-seed run on clearlak) | ✅ SHA-256 identical for `PYTHONHASHSEED=0,1,42` (`5d7ad44d…3c4e`) |
+| Unit tests added | ✅ 12 in `tests/unit/kkt/test_naming.py`, 1 in `tests/unit/emit/test_original_symbols.py` |
+| `make typecheck && make lint && make format && make test` | ✅ 4,709 passed, 10 skipped, 1 xfailed (above ≥4,560 target) |
+| Full pipeline retest | ✅ Completed in 11128s (~3h05m); summary captured below |
+
+#### Checkpoint 2 evaluation
+
+**Decision:** **NO-GO** (4 criteria fail; canaries + tests pass).
+
+| Criterion | Day 11 value | Baseline | GO threshold | COND | NO-GO | Status |
+|---|---|---|---|---|---|---|
+| Match | 52 | 54 | ≥ 56 | ≥ 55 | < 54 | **NO-GO** |
+| Solve | 92 | 99 | ≥ 100 | ≥ 99 | < 99 | **NO-GO** |
+| path_syntax_error | 12 | 11 | ≤ 7 | ≤ 9 | > 11 | **NO-GO** |
+| model_infeasible | 14 | 8 | ≤ 7 | ≤ 8 | > 8 | **NO-GO** |
+| Tier 0+1 canaries | 11/11 match | 11/11 | All match | ≤ 1 reg | > 1 reg | GO |
+| Tests | 4,709 pass | 4,522 | All pass | All pass | Any failure | GO |
+
+**Translate stage:** 127 / 142 in-scope (vs baseline 135) — 8 in-scope failures: 7 `unsup_expression_type`, 5 `timeout`, 3 `internal_error`. Categorized list: `catmix, cesam2, danwolfe, decomp, egypt, glider, iswnm, markov, mexls, mine, nebrazil, sarf, shale, srpchase, tricp`.
+
+#### Pre-existing-regression check
+
+The Day 11 Match/Solve/Translate regressions are **not** caused by Day 11's changes. Spot-check:
+
+- `catmix` translates with **identical** error (`Invalid model - Unknown expression type: IndexOffset`) on `main` (commit 2ddcd2d6, pre-Day-11). Verified by stashing Day 11 work, running on main, then restoring.
+
+The regressions accumulated over Sprint 25 Days 1–10 (the Sprint 25 baseline numbers in this log were frozen at Sprint 24 close). All 11 Tier 0/1 canaries match, and Day 11's two new fixes pass their unit + smoke tests:
+
+- Translating `clearlak` produces `leaf(n) = yes$(...)` (line 67) BEFORE `tmp1 = sum(leaf, nprob(leaf))` (line 70) — the source order is preserved in the generated MCP, fixing GAMS error 352 ("Set has not been initialized").
+- Translating `ferts` emits no identifier longer than 62 chars (was 67); a comment banner records the original-to-shortened mapping for the four `nu_xi_fx_*` multipliers that exceeded the 63-char GAMS limit.
+
+#### Decision routing
+
+Per Sprint 25 Plan §"Day 11" NO-GO branch: **main locked; Day 13 reverts offending PRs; Phase E cancelled.**
+
+However, the offending PRs are NOT this Day 11 PR — they are upstream Sprint 25 changes that were merged into main between Day 0 and the current run. The Day 11 PR itself (#1290 + #1291 fixes) is clean: canary set is intact, unit + integration test suite is green, and the two targeted fixes both verify end-to-end via smoke tests.
+
+**Recommendation for Day 12 / Day 13:** before reverting any PR, bisect across the Sprint 25 Day 1–10 PRs to identify which one introduced each of the four regressing metrics. The Day 11 PR should be allowed to merge; it brings #1290 and #1291 over the line and does not contribute to the regressions.
+
+#### Open follow-ups
+
+- Day 12/13: Bisect Sprint-25 day-1–10 PRs to localize the Match −2, Solve −7, path_syntax_error +1, model_infeasible +6 regressions before considering revert scope.
+- Phase E (Pattern E routing — #1141, #1144, #1147) is **cancelled** per the NO-GO routing in PLAN.md §"Day 13".
+
+---

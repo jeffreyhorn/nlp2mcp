@@ -73,6 +73,13 @@ prdev(c,ty)$(ravg(c)) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+prdev(c,ty)$(NOT (prdev(c,ty) > -inf and prdev(c,ty) < inf)) = 0;
+ravg(c)$(NOT (ravg(c) > -inf and ravg(c) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -241,7 +248,7 @@ stat_revenue.. -1 + nu_arev =E= 0;
 stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) - piL_sales(c) =E= 0;
 stat_tlab(tm).. ((-1) * (dpm * twage / sqr(dpm))) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc - piL_tlab(tm) =E= 0;
 stat_vetcost.. 1 + nu_avet + lam_awcc =E= 0;
-stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + (a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s) + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
+stat_xcrop(p,s).. (sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + (a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s) + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s))$(xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10) =E= 0;
 stat_xlive.. nu_lbal + ((-1) * lprice) * nu_arev + ((-1) * vetpr) * nu_avet =E= 0;
 stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) - piL_xliver(r) =E= 0;
 stat_xprod(c).. nu_dprod(c) =E= 0;
@@ -288,6 +295,9 @@ income.. yfarm =E= revenue + vsc * sum(dr, cons(dr)) - labcost - rationr - vetco
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = xcrop.lo(p,s);
+piL_xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = 0;
+piU_xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = 0;
 piU_xcrop.fx(p,s)$(not (xcropl(p,s) and xcropl(p,s) < inf)) = 0;
 
 * ============================================

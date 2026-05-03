@@ -143,8 +143,8 @@ stat_d1(i,t,j).. ((((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * f(i,t) * 2 / 
 stat_d2(i,t,j).. ((((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * ((-1) * (pdata(i,t,j,"strike") * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(d2(i,t,j))))))))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call) + nu_dd2(i,t,j)$(pdata(i,t,j,"strike")) + (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * pdata(i,t,j,"strike") * 2 / sqrt(3.14159265358979) * exp(((-1) * (sqr(((-1) * d2(i,t,j)))))) * (-1))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto))$(pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto) =E= 0;
 stat_f(i,t).. ((-1) * sum(j$(pdata(i,t,j,"nom")), 1$(pdata(i,t,j,"type") = future))) + sum(j, nu_futval(i,t,j)$(pdata(i,t,j,"type") = future)) + sum(j, (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * errorf(d1(i,t,j)))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call)) + sum(j, (((-1) * (exp(((-1) * r(t)) * tdata(t,"term")) * ((-1) * (errorf(((-1) * d1(i,t,j))))))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto)) + sum(j, (((-1) * (q(t) * sqrt(tdata(t,"term")) * 1 / (f(i,t) / pdata(i,t,j,"strike")) * 1 / pdata(i,t,j,"strike") ** 1 / sqr(q(t) * sqrt(tdata(t,"term"))))) * nu_dd1(i,t,j))$(pdata(i,t,j,"strike"))) - piL_f(i,t) =E= 0;
 stat_p(i,j,t).. nu_putval(i,t,j)$(pdata(i,t,j,"type") = puto) - piL_p(i,j,t) =E= 0;
-stat_q(t).. sum((i,j), (((-1) * ((q(t) * sqrt(tdata(t,"term")) * tdata(t,"term") * 0.5 * 2 * q(t) - (log(f(i,t) / pdata(i,t,j,"strike")) + 0.5 * sqr(q(t)) * tdata(t,"term")) * sqrt(tdata(t,"term"))) / sqr(q(t) * sqrt(tdata(t,"term"))))) * nu_dd1(i,t,j))$(pdata(i,t,j,"strike"))) + sum((i,j), (sqrt(tdata(t,"term")) * nu_dd2(i,t,j))$(pdata(i,t,j,"strike"))) - piL_q(t) + piU_q(t) =E= 0;
-stat_r(t).. sum((i,j), (((-1) * (f0(i,t) * exp(r(t) * tdata(t,"term")) * tdata(t,"term"))) * nu_futval(i,t,j))$(pdata(i,t,j,"type") = future)) + sum((i,j), (((-1) * ((f(i,t) * errorf(d1(i,t,j)) - pdata(i,t,j,"strike") * errorf(d2(i,t,j))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call)) + sum((i,j), (((-1) * ((pdata(i,t,j,"strike") * errorf(((-1) * d2(i,t,j))) - f(i,t) * errorf(((-1) * d1(i,t,j)))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto)) - piL_r(t) + piU_r(t) =E= 0;
+stat_q(t).. (sum((i,j), (((-1) * ((q(t) * sqrt(tdata(t,"term")) * tdata(t,"term") * 0.5 * 2 * q(t) - (log(f(i,t) / pdata(i,t,j,"strike")) + 0.5 * sqr(q(t)) * tdata(t,"term")) * sqrt(tdata(t,"term"))) / sqr(q(t) * sqrt(tdata(t,"term"))))) * nu_dd1(i,t,j))$(pdata(i,t,j,"strike"))) + sum((i,j), (sqrt(tdata(t,"term")) * nu_dd2(i,t,j))$(pdata(i,t,j,"strike"))) - piL_q(t) + piU_q(t))$(q.up(t) - q.lo(t) > 1e-10) =E= 0;
+stat_r(t).. (sum((i,j), (((-1) * (f0(i,t) * exp(r(t) * tdata(t,"term")) * tdata(t,"term"))) * nu_futval(i,t,j))$(pdata(i,t,j,"type") = future)) + sum((i,j), (((-1) * ((f(i,t) * errorf(d1(i,t,j)) - pdata(i,t,j,"strike") * errorf(d2(i,t,j))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_callval(i,t,j))$(pdata(i,t,j,"type") = call)) + sum((i,j), (((-1) * ((pdata(i,t,j,"strike") * errorf(((-1) * d2(i,t,j))) - f(i,t) * errorf(((-1) * d1(i,t,j)))) * exp(((-1) * r(t)) * tdata(t,"term")) * tdata(t,"term") * (-1))) * nu_putval(i,t,j))$(pdata(i,t,j,"type") = puto)) - piL_r(t) + piU_r(t))$(r.up(t) - r.lo(t) > 1e-10) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_c(i,j,t).. c(i,j,t) - 0 =G= 0;
@@ -175,6 +175,12 @@ dd2(i,t,j)$(pdata(i,t,j,"strike")).. d2(i,t,j) =E= d1(i,t,j) - q(t) * sqrt(tdata
 
 d1.fx(i,t,j)$(not (pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto)) = 0;
 d2.fx(i,t,j)$(not (pdata(i,t,j,"type") = call or pdata(i,t,j,"strike") or pdata(i,t,j,"type") = puto)) = 0;
+q.fx(t)$(not (q.up(t) - q.lo(t) > 1e-10)) = q.lo(t);
+piL_q.fx(t)$(not (q.up(t) - q.lo(t) > 1e-10)) = 0;
+piU_q.fx(t)$(not (q.up(t) - q.lo(t) > 1e-10)) = 0;
+r.fx(t)$(not (r.up(t) - r.lo(t) > 1e-10)) = r.lo(t);
+piL_r.fx(t)$(not (r.up(t) - r.lo(t) > 1e-10)) = 0;
+piU_r.fx(t)$(not (r.up(t) - r.lo(t) > 1e-10)) = 0;
 piL_q.fx(t)$(not (tdata(t,"qmin") > -inf)) = 0;
 piL_r.fx(t)$(not (tdata(t,"rmin") > -inf)) = 0;
 piU_q.fx(t)$(not (tdata(t,"qmax") < inf)) = 0;

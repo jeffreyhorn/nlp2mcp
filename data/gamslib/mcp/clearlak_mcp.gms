@@ -61,13 +61,13 @@ Scalars
 ;
 
 $onImplicitAssign
-tmp1 = sum(leaf, nprob(leaf));
 np(n,p) = yes$(mod(ord(n) - 2, card(p)) = ord(p) - 1);
 np(root,p) = 0;
 anc(child,parent) = yes$(floor((ord(child) + 1) / card(p)) = ord(parent));
 leaf(n) = yes$(ord(n) > (card(p) ** (card(t) - 1) - 1) / (card(p) - 1));
 chk(child,parent) = 0;
 chk(child,parent) = 1;
+tmp1 = sum(leaf, nprob(leaf));
 snprob(nn) = nprob(nn);
 tmp1 = sum(nn$(leaf(nn)), snprob(leaf)) - 1;
 nn(n) = snprob(n);
@@ -232,132 +232,6 @@ Positive Variables
     piU_l(t,n)
     piU_r(t,n)
 ;
-
-* ============================================
-* Variable Bounds
-* ============================================
-
-l.fx('dec','n1') = 100;
-l.fx('dec','n10') = 100;
-l.fx('dec','n100') = 100;
-l.fx('dec','n101') = 100;
-l.fx('dec','n102') = 100;
-l.fx('dec','n103') = 100;
-l.fx('dec','n104') = 100;
-l.fx('dec','n105') = 100;
-l.fx('dec','n106') = 100;
-l.fx('dec','n107') = 100;
-l.fx('dec','n108') = 100;
-l.fx('dec','n109') = 100;
-l.fx('dec','n11') = 100;
-l.fx('dec','n110') = 100;
-l.fx('dec','n111') = 100;
-l.fx('dec','n112') = 100;
-l.fx('dec','n113') = 100;
-l.fx('dec','n114') = 100;
-l.fx('dec','n115') = 100;
-l.fx('dec','n116') = 100;
-l.fx('dec','n117') = 100;
-l.fx('dec','n118') = 100;
-l.fx('dec','n119') = 100;
-l.fx('dec','n12') = 100;
-l.fx('dec','n120') = 100;
-l.fx('dec','n121') = 100;
-l.fx('dec','n13') = 100;
-l.fx('dec','n14') = 100;
-l.fx('dec','n15') = 100;
-l.fx('dec','n16') = 100;
-l.fx('dec','n17') = 100;
-l.fx('dec','n18') = 100;
-l.fx('dec','n19') = 100;
-l.fx('dec','n2') = 100;
-l.fx('dec','n20') = 100;
-l.fx('dec','n21') = 100;
-l.fx('dec','n22') = 100;
-l.fx('dec','n23') = 100;
-l.fx('dec','n24') = 100;
-l.fx('dec','n25') = 100;
-l.fx('dec','n26') = 100;
-l.fx('dec','n27') = 100;
-l.fx('dec','n28') = 100;
-l.fx('dec','n29') = 100;
-l.fx('dec','n3') = 100;
-l.fx('dec','n30') = 100;
-l.fx('dec','n31') = 100;
-l.fx('dec','n32') = 100;
-l.fx('dec','n33') = 100;
-l.fx('dec','n34') = 100;
-l.fx('dec','n35') = 100;
-l.fx('dec','n36') = 100;
-l.fx('dec','n37') = 100;
-l.fx('dec','n38') = 100;
-l.fx('dec','n39') = 100;
-l.fx('dec','n4') = 100;
-l.fx('dec','n40') = 100;
-l.fx('dec','n41') = 100;
-l.fx('dec','n42') = 100;
-l.fx('dec','n43') = 100;
-l.fx('dec','n44') = 100;
-l.fx('dec','n45') = 100;
-l.fx('dec','n46') = 100;
-l.fx('dec','n47') = 100;
-l.fx('dec','n48') = 100;
-l.fx('dec','n49') = 100;
-l.fx('dec','n5') = 100;
-l.fx('dec','n50') = 100;
-l.fx('dec','n51') = 100;
-l.fx('dec','n52') = 100;
-l.fx('dec','n53') = 100;
-l.fx('dec','n54') = 100;
-l.fx('dec','n55') = 100;
-l.fx('dec','n56') = 100;
-l.fx('dec','n57') = 100;
-l.fx('dec','n58') = 100;
-l.fx('dec','n59') = 100;
-l.fx('dec','n6') = 100;
-l.fx('dec','n60') = 100;
-l.fx('dec','n61') = 100;
-l.fx('dec','n62') = 100;
-l.fx('dec','n63') = 100;
-l.fx('dec','n64') = 100;
-l.fx('dec','n65') = 100;
-l.fx('dec','n66') = 100;
-l.fx('dec','n67') = 100;
-l.fx('dec','n68') = 100;
-l.fx('dec','n69') = 100;
-l.fx('dec','n7') = 100;
-l.fx('dec','n70') = 100;
-l.fx('dec','n71') = 100;
-l.fx('dec','n72') = 100;
-l.fx('dec','n73') = 100;
-l.fx('dec','n74') = 100;
-l.fx('dec','n75') = 100;
-l.fx('dec','n76') = 100;
-l.fx('dec','n77') = 100;
-l.fx('dec','n78') = 100;
-l.fx('dec','n79') = 100;
-l.fx('dec','n8') = 100;
-l.fx('dec','n80') = 100;
-l.fx('dec','n81') = 100;
-l.fx('dec','n82') = 100;
-l.fx('dec','n83') = 100;
-l.fx('dec','n84') = 100;
-l.fx('dec','n85') = 100;
-l.fx('dec','n86') = 100;
-l.fx('dec','n87') = 100;
-l.fx('dec','n88') = 100;
-l.fx('dec','n89') = 100;
-l.fx('dec','n9') = 100;
-l.fx('dec','n90') = 100;
-l.fx('dec','n91') = 100;
-l.fx('dec','n92') = 100;
-l.fx('dec','n93') = 100;
-l.fx('dec','n94') = 100;
-l.fx('dec','n95') = 100;
-l.fx('dec','n96') = 100;
-l.fx('dec','n97') = 100;
-l.fx('dec','n98') = 100;
-l.fx('dec','n99') = 100;
 
 * ============================================
 * Variable Initialization
@@ -525,11 +399,15 @@ Equations
 * Equation Definitions
 * ============================================
 
+* Index aliases to avoid 'Set is under control already' error
+* (GAMS Error 125 when equation domain index is reused in sum)
+Alias(nn, nn__);
+
 * Stationarity equations
-stat_f(t,n).. (nu_ldef(t,n)$(tn(t,n) and (not root(n))) - piL_f(t,n))$(nn(n)) =E= 0;
-stat_l(t,n).. nu_ldef(t,n)$(tn(t,n) and (not root(n))) + sum((child,parent), ((((-1) * 1$(anc(child,parent))) * nu_ldef(t+1,n))$(ord(t) <= card(t) - 1))$(tn(t,n) and (not root(n)))) + nu_l_fx_dec_n1$(sameas(t, 'dec') and sameas(n, 'n1')) + nu_l_fx_dec_n10$(sameas(t, 'dec') and sameas(n, 'n10')) + nu_l_fx_dec_n100$(sameas(t, 'dec') and sameas(n, 'n100')) + nu_l_fx_dec_n101$(sameas(t, 'dec') and sameas(n, 'n101')) + nu_l_fx_dec_n102$(sameas(t, 'dec') and sameas(n, 'n102')) + nu_l_fx_dec_n103$(sameas(t, 'dec') and sameas(n, 'n103')) + nu_l_fx_dec_n104$(sameas(t, 'dec') and sameas(n, 'n104')) + nu_l_fx_dec_n105$(sameas(t, 'dec') and sameas(n, 'n105')) + nu_l_fx_dec_n106$(sameas(t, 'dec') and sameas(n, 'n106')) + nu_l_fx_dec_n107$(sameas(t, 'dec') and sameas(n, 'n107')) + nu_l_fx_dec_n108$(sameas(t, 'dec') and sameas(n, 'n108')) + nu_l_fx_dec_n109$(sameas(t, 'dec') and sameas(n, 'n109')) + nu_l_fx_dec_n11$(sameas(t, 'dec') and sameas(n, 'n11')) + nu_l_fx_dec_n110$(sameas(t, 'dec') and sameas(n, 'n110')) + nu_l_fx_dec_n111$(sameas(t, 'dec') and sameas(n, 'n111')) + nu_l_fx_dec_n112$(sameas(t, 'dec') and sameas(n, 'n112')) + nu_l_fx_dec_n113$(sameas(t, 'dec') and sameas(n, 'n113')) + nu_l_fx_dec_n114$(sameas(t, 'dec') and sameas(n, 'n114')) + nu_l_fx_dec_n115$(sameas(t, 'dec') and sameas(n, 'n115')) + nu_l_fx_dec_n116$(sameas(t, 'dec') and sameas(n, 'n116')) + nu_l_fx_dec_n117$(sameas(t, 'dec') and sameas(n, 'n117')) + nu_l_fx_dec_n118$(sameas(t, 'dec') and sameas(n, 'n118')) + nu_l_fx_dec_n119$(sameas(t, 'dec') and sameas(n, 'n119')) + nu_l_fx_dec_n12$(sameas(t, 'dec') and sameas(n, 'n12')) + nu_l_fx_dec_n120$(sameas(t, 'dec') and sameas(n, 'n120')) + nu_l_fx_dec_n121$(sameas(t, 'dec') and sameas(n, 'n121')) + nu_l_fx_dec_n13$(sameas(t, 'dec') and sameas(n, 'n13')) + nu_l_fx_dec_n14$(sameas(t, 'dec') and sameas(n, 'n14')) + nu_l_fx_dec_n15$(sameas(t, 'dec') and sameas(n, 'n15')) + nu_l_fx_dec_n16$(sameas(t, 'dec') and sameas(n, 'n16')) + nu_l_fx_dec_n17$(sameas(t, 'dec') and sameas(n, 'n17')) + nu_l_fx_dec_n18$(sameas(t, 'dec') and sameas(n, 'n18')) + nu_l_fx_dec_n19$(sameas(t, 'dec') and sameas(n, 'n19')) + nu_l_fx_dec_n2$(sameas(t, 'dec') and sameas(n, 'n2')) + nu_l_fx_dec_n20$(sameas(t, 'dec') and sameas(n, 'n20')) + nu_l_fx_dec_n21$(sameas(t, 'dec') and sameas(n, 'n21')) + nu_l_fx_dec_n22$(sameas(t, 'dec') and sameas(n, 'n22')) + nu_l_fx_dec_n23$(sameas(t, 'dec') and sameas(n, 'n23')) + nu_l_fx_dec_n24$(sameas(t, 'dec') and sameas(n, 'n24')) + nu_l_fx_dec_n25$(sameas(t, 'dec') and sameas(n, 'n25')) + nu_l_fx_dec_n26$(sameas(t, 'dec') and sameas(n, 'n26')) + nu_l_fx_dec_n27$(sameas(t, 'dec') and sameas(n, 'n27')) + nu_l_fx_dec_n28$(sameas(t, 'dec') and sameas(n, 'n28')) + nu_l_fx_dec_n29$(sameas(t, 'dec') and sameas(n, 'n29')) + nu_l_fx_dec_n3$(sameas(t, 'dec') and sameas(n, 'n3')) + nu_l_fx_dec_n30$(sameas(t, 'dec') and sameas(n, 'n30')) + nu_l_fx_dec_n31$(sameas(t, 'dec') and sameas(n, 'n31')) + nu_l_fx_dec_n32$(sameas(t, 'dec') and sameas(n, 'n32')) + nu_l_fx_dec_n33$(sameas(t, 'dec') and sameas(n, 'n33')) + nu_l_fx_dec_n34$(sameas(t, 'dec') and sameas(n, 'n34')) + nu_l_fx_dec_n35$(sameas(t, 'dec') and sameas(n, 'n35')) + nu_l_fx_dec_n36$(sameas(t, 'dec') and sameas(n, 'n36')) + nu_l_fx_dec_n37$(sameas(t, 'dec') and sameas(n, 'n37')) + nu_l_fx_dec_n38$(sameas(t, 'dec') and sameas(n, 'n38')) + nu_l_fx_dec_n39$(sameas(t, 'dec') and sameas(n, 'n39')) + nu_l_fx_dec_n4$(sameas(t, 'dec') and sameas(n, 'n4')) + nu_l_fx_dec_n40$(sameas(t, 'dec') and sameas(n, 'n40')) + nu_l_fx_dec_n41$(sameas(t, 'dec') and sameas(n, 'n41')) + nu_l_fx_dec_n42$(sameas(t, 'dec') and sameas(n, 'n42')) + nu_l_fx_dec_n43$(sameas(t, 'dec') and sameas(n, 'n43')) + nu_l_fx_dec_n44$(sameas(t, 'dec') and sameas(n, 'n44')) + nu_l_fx_dec_n45$(sameas(t, 'dec') and sameas(n, 'n45')) + nu_l_fx_dec_n46$(sameas(t, 'dec') and sameas(n, 'n46')) + nu_l_fx_dec_n47$(sameas(t, 'dec') and sameas(n, 'n47')) + nu_l_fx_dec_n48$(sameas(t, 'dec') and sameas(n, 'n48')) + nu_l_fx_dec_n49$(sameas(t, 'dec') and sameas(n, 'n49')) + nu_l_fx_dec_n5$(sameas(t, 'dec') and sameas(n, 'n5')) + nu_l_fx_dec_n50$(sameas(t, 'dec') and sameas(n, 'n50')) + nu_l_fx_dec_n51$(sameas(t, 'dec') and sameas(n, 'n51')) + nu_l_fx_dec_n52$(sameas(t, 'dec') and sameas(n, 'n52')) + nu_l_fx_dec_n53$(sameas(t, 'dec') and sameas(n, 'n53')) + nu_l_fx_dec_n54$(sameas(t, 'dec') and sameas(n, 'n54')) + nu_l_fx_dec_n55$(sameas(t, 'dec') and sameas(n, 'n55')) + nu_l_fx_dec_n56$(sameas(t, 'dec') and sameas(n, 'n56')) + nu_l_fx_dec_n57$(sameas(t, 'dec') and sameas(n, 'n57')) + nu_l_fx_dec_n58$(sameas(t, 'dec') and sameas(n, 'n58')) + nu_l_fx_dec_n59$(sameas(t, 'dec') and sameas(n, 'n59')) + nu_l_fx_dec_n6$(sameas(t, 'dec') and sameas(n, 'n6')) + nu_l_fx_dec_n60$(sameas(t, 'dec') and sameas(n, 'n60')) + nu_l_fx_dec_n61$(sameas(t, 'dec') and sameas(n, 'n61')) + nu_l_fx_dec_n62$(sameas(t, 'dec') and sameas(n, 'n62')) + nu_l_fx_dec_n63$(sameas(t, 'dec') and sameas(n, 'n63')) + nu_l_fx_dec_n64$(sameas(t, 'dec') and sameas(n, 'n64')) + nu_l_fx_dec_n65$(sameas(t, 'dec') and sameas(n, 'n65')) + nu_l_fx_dec_n66$(sameas(t, 'dec') and sameas(n, 'n66')) + nu_l_fx_dec_n67$(sameas(t, 'dec') and sameas(n, 'n67')) + nu_l_fx_dec_n68$(sameas(t, 'dec') and sameas(n, 'n68')) + nu_l_fx_dec_n69$(sameas(t, 'dec') and sameas(n, 'n69')) + nu_l_fx_dec_n7$(sameas(t, 'dec') and sameas(n, 'n7')) + nu_l_fx_dec_n70$(sameas(t, 'dec') and sameas(n, 'n70')) + nu_l_fx_dec_n71$(sameas(t, 'dec') and sameas(n, 'n71')) + nu_l_fx_dec_n72$(sameas(t, 'dec') and sameas(n, 'n72')) + nu_l_fx_dec_n73$(sameas(t, 'dec') and sameas(n, 'n73')) + nu_l_fx_dec_n74$(sameas(t, 'dec') and sameas(n, 'n74')) + nu_l_fx_dec_n75$(sameas(t, 'dec') and sameas(n, 'n75')) + nu_l_fx_dec_n76$(sameas(t, 'dec') and sameas(n, 'n76')) + nu_l_fx_dec_n77$(sameas(t, 'dec') and sameas(n, 'n77')) + nu_l_fx_dec_n78$(sameas(t, 'dec') and sameas(n, 'n78')) + nu_l_fx_dec_n79$(sameas(t, 'dec') and sameas(n, 'n79')) + nu_l_fx_dec_n8$(sameas(t, 'dec') and sameas(n, 'n8')) + nu_l_fx_dec_n80$(sameas(t, 'dec') and sameas(n, 'n80')) + nu_l_fx_dec_n81$(sameas(t, 'dec') and sameas(n, 'n81')) + nu_l_fx_dec_n82$(sameas(t, 'dec') and sameas(n, 'n82')) + nu_l_fx_dec_n83$(sameas(t, 'dec') and sameas(n, 'n83')) + nu_l_fx_dec_n84$(sameas(t, 'dec') and sameas(n, 'n84')) + nu_l_fx_dec_n85$(sameas(t, 'dec') and sameas(n, 'n85')) + nu_l_fx_dec_n86$(sameas(t, 'dec') and sameas(n, 'n86')) + nu_l_fx_dec_n87$(sameas(t, 'dec') and sameas(n, 'n87')) + nu_l_fx_dec_n88$(sameas(t, 'dec') and sameas(n, 'n88')) + nu_l_fx_dec_n89$(sameas(t, 'dec') and sameas(n, 'n89')) + nu_l_fx_dec_n9$(sameas(t, 'dec') and sameas(n, 'n9')) + nu_l_fx_dec_n90$(sameas(t, 'dec') and sameas(n, 'n90')) + nu_l_fx_dec_n91$(sameas(t, 'dec') and sameas(n, 'n91')) + nu_l_fx_dec_n92$(sameas(t, 'dec') and sameas(n, 'n92')) + nu_l_fx_dec_n93$(sameas(t, 'dec') and sameas(n, 'n93')) + nu_l_fx_dec_n94$(sameas(t, 'dec') and sameas(n, 'n94')) + nu_l_fx_dec_n95$(sameas(t, 'dec') and sameas(n, 'n95')) + nu_l_fx_dec_n96$(sameas(t, 'dec') and sameas(n, 'n96')) + nu_l_fx_dec_n97$(sameas(t, 'dec') and sameas(n, 'n97')) + nu_l_fx_dec_n98$(sameas(t, 'dec') and sameas(n, 'n98')) + nu_l_fx_dec_n99$(sameas(t, 'dec') and sameas(n, 'n99')) - piL_l(t,n) + piU_l(t,n) =E= 0;
-stat_r(t,n).. (nu_ldef(t,n)$(tn(t,n) and (not root(n))) - piL_r(t,n) + piU_r(t,n))$(nn(n)) =E= 0;
-stat_z(t,n).. (((-1) * nu_ldef(t,n))$(tn(t,n) and (not root(n))) - piL_z(t,n))$(nn(n)) =E= 0;
+stat_f(t,n).. (sum(nn__$(sameas(nn__, n)), snprob(n) * floodCost * 1$(tn(t,nn__))) + (nu_ldef(t,n)$(nn(n)))$(tn(t,n) and (not root(n))) - piL_f(t,n))$(nn(n)) =E= 0;
+stat_l(t,n).. (nu_ldef(t,n)$(nn(n)))$(tn(t,n) and (not root(n))) + sum((child,parent), (((((-1) * 1$(anc(child,parent))) * nu_ldef(t+1,n))$(nn(n)))$(ord(t) <= card(t) - 1))$(tn(t,n) and (not root(n)))) + nu_l_fx_dec_n1$(sameas(t, 'dec') and sameas(n, 'n1')) + nu_l_fx_dec_n10$(sameas(t, 'dec') and sameas(n, 'n10')) + nu_l_fx_dec_n100$(sameas(t, 'dec') and sameas(n, 'n100')) + nu_l_fx_dec_n101$(sameas(t, 'dec') and sameas(n, 'n101')) + nu_l_fx_dec_n102$(sameas(t, 'dec') and sameas(n, 'n102')) + nu_l_fx_dec_n103$(sameas(t, 'dec') and sameas(n, 'n103')) + nu_l_fx_dec_n104$(sameas(t, 'dec') and sameas(n, 'n104')) + nu_l_fx_dec_n105$(sameas(t, 'dec') and sameas(n, 'n105')) + nu_l_fx_dec_n106$(sameas(t, 'dec') and sameas(n, 'n106')) + nu_l_fx_dec_n107$(sameas(t, 'dec') and sameas(n, 'n107')) + nu_l_fx_dec_n108$(sameas(t, 'dec') and sameas(n, 'n108')) + nu_l_fx_dec_n109$(sameas(t, 'dec') and sameas(n, 'n109')) + nu_l_fx_dec_n11$(sameas(t, 'dec') and sameas(n, 'n11')) + nu_l_fx_dec_n110$(sameas(t, 'dec') and sameas(n, 'n110')) + nu_l_fx_dec_n111$(sameas(t, 'dec') and sameas(n, 'n111')) + nu_l_fx_dec_n112$(sameas(t, 'dec') and sameas(n, 'n112')) + nu_l_fx_dec_n113$(sameas(t, 'dec') and sameas(n, 'n113')) + nu_l_fx_dec_n114$(sameas(t, 'dec') and sameas(n, 'n114')) + nu_l_fx_dec_n115$(sameas(t, 'dec') and sameas(n, 'n115')) + nu_l_fx_dec_n116$(sameas(t, 'dec') and sameas(n, 'n116')) + nu_l_fx_dec_n117$(sameas(t, 'dec') and sameas(n, 'n117')) + nu_l_fx_dec_n118$(sameas(t, 'dec') and sameas(n, 'n118')) + nu_l_fx_dec_n119$(sameas(t, 'dec') and sameas(n, 'n119')) + nu_l_fx_dec_n12$(sameas(t, 'dec') and sameas(n, 'n12')) + nu_l_fx_dec_n120$(sameas(t, 'dec') and sameas(n, 'n120')) + nu_l_fx_dec_n121$(sameas(t, 'dec') and sameas(n, 'n121')) + nu_l_fx_dec_n13$(sameas(t, 'dec') and sameas(n, 'n13')) + nu_l_fx_dec_n14$(sameas(t, 'dec') and sameas(n, 'n14')) + nu_l_fx_dec_n15$(sameas(t, 'dec') and sameas(n, 'n15')) + nu_l_fx_dec_n16$(sameas(t, 'dec') and sameas(n, 'n16')) + nu_l_fx_dec_n17$(sameas(t, 'dec') and sameas(n, 'n17')) + nu_l_fx_dec_n18$(sameas(t, 'dec') and sameas(n, 'n18')) + nu_l_fx_dec_n19$(sameas(t, 'dec') and sameas(n, 'n19')) + nu_l_fx_dec_n2$(sameas(t, 'dec') and sameas(n, 'n2')) + nu_l_fx_dec_n20$(sameas(t, 'dec') and sameas(n, 'n20')) + nu_l_fx_dec_n21$(sameas(t, 'dec') and sameas(n, 'n21')) + nu_l_fx_dec_n22$(sameas(t, 'dec') and sameas(n, 'n22')) + nu_l_fx_dec_n23$(sameas(t, 'dec') and sameas(n, 'n23')) + nu_l_fx_dec_n24$(sameas(t, 'dec') and sameas(n, 'n24')) + nu_l_fx_dec_n25$(sameas(t, 'dec') and sameas(n, 'n25')) + nu_l_fx_dec_n26$(sameas(t, 'dec') and sameas(n, 'n26')) + nu_l_fx_dec_n27$(sameas(t, 'dec') and sameas(n, 'n27')) + nu_l_fx_dec_n28$(sameas(t, 'dec') and sameas(n, 'n28')) + nu_l_fx_dec_n29$(sameas(t, 'dec') and sameas(n, 'n29')) + nu_l_fx_dec_n3$(sameas(t, 'dec') and sameas(n, 'n3')) + nu_l_fx_dec_n30$(sameas(t, 'dec') and sameas(n, 'n30')) + nu_l_fx_dec_n31$(sameas(t, 'dec') and sameas(n, 'n31')) + nu_l_fx_dec_n32$(sameas(t, 'dec') and sameas(n, 'n32')) + nu_l_fx_dec_n33$(sameas(t, 'dec') and sameas(n, 'n33')) + nu_l_fx_dec_n34$(sameas(t, 'dec') and sameas(n, 'n34')) + nu_l_fx_dec_n35$(sameas(t, 'dec') and sameas(n, 'n35')) + nu_l_fx_dec_n36$(sameas(t, 'dec') and sameas(n, 'n36')) + nu_l_fx_dec_n37$(sameas(t, 'dec') and sameas(n, 'n37')) + nu_l_fx_dec_n38$(sameas(t, 'dec') and sameas(n, 'n38')) + nu_l_fx_dec_n39$(sameas(t, 'dec') and sameas(n, 'n39')) + nu_l_fx_dec_n4$(sameas(t, 'dec') and sameas(n, 'n4')) + nu_l_fx_dec_n40$(sameas(t, 'dec') and sameas(n, 'n40')) + nu_l_fx_dec_n41$(sameas(t, 'dec') and sameas(n, 'n41')) + nu_l_fx_dec_n42$(sameas(t, 'dec') and sameas(n, 'n42')) + nu_l_fx_dec_n43$(sameas(t, 'dec') and sameas(n, 'n43')) + nu_l_fx_dec_n44$(sameas(t, 'dec') and sameas(n, 'n44')) + nu_l_fx_dec_n45$(sameas(t, 'dec') and sameas(n, 'n45')) + nu_l_fx_dec_n46$(sameas(t, 'dec') and sameas(n, 'n46')) + nu_l_fx_dec_n47$(sameas(t, 'dec') and sameas(n, 'n47')) + nu_l_fx_dec_n48$(sameas(t, 'dec') and sameas(n, 'n48')) + nu_l_fx_dec_n49$(sameas(t, 'dec') and sameas(n, 'n49')) + nu_l_fx_dec_n5$(sameas(t, 'dec') and sameas(n, 'n5')) + nu_l_fx_dec_n50$(sameas(t, 'dec') and sameas(n, 'n50')) + nu_l_fx_dec_n51$(sameas(t, 'dec') and sameas(n, 'n51')) + nu_l_fx_dec_n52$(sameas(t, 'dec') and sameas(n, 'n52')) + nu_l_fx_dec_n53$(sameas(t, 'dec') and sameas(n, 'n53')) + nu_l_fx_dec_n54$(sameas(t, 'dec') and sameas(n, 'n54')) + nu_l_fx_dec_n55$(sameas(t, 'dec') and sameas(n, 'n55')) + nu_l_fx_dec_n56$(sameas(t, 'dec') and sameas(n, 'n56')) + nu_l_fx_dec_n57$(sameas(t, 'dec') and sameas(n, 'n57')) + nu_l_fx_dec_n58$(sameas(t, 'dec') and sameas(n, 'n58')) + nu_l_fx_dec_n59$(sameas(t, 'dec') and sameas(n, 'n59')) + nu_l_fx_dec_n6$(sameas(t, 'dec') and sameas(n, 'n6')) + nu_l_fx_dec_n60$(sameas(t, 'dec') and sameas(n, 'n60')) + nu_l_fx_dec_n61$(sameas(t, 'dec') and sameas(n, 'n61')) + nu_l_fx_dec_n62$(sameas(t, 'dec') and sameas(n, 'n62')) + nu_l_fx_dec_n63$(sameas(t, 'dec') and sameas(n, 'n63')) + nu_l_fx_dec_n64$(sameas(t, 'dec') and sameas(n, 'n64')) + nu_l_fx_dec_n65$(sameas(t, 'dec') and sameas(n, 'n65')) + nu_l_fx_dec_n66$(sameas(t, 'dec') and sameas(n, 'n66')) + nu_l_fx_dec_n67$(sameas(t, 'dec') and sameas(n, 'n67')) + nu_l_fx_dec_n68$(sameas(t, 'dec') and sameas(n, 'n68')) + nu_l_fx_dec_n69$(sameas(t, 'dec') and sameas(n, 'n69')) + nu_l_fx_dec_n7$(sameas(t, 'dec') and sameas(n, 'n7')) + nu_l_fx_dec_n70$(sameas(t, 'dec') and sameas(n, 'n70')) + nu_l_fx_dec_n71$(sameas(t, 'dec') and sameas(n, 'n71')) + nu_l_fx_dec_n72$(sameas(t, 'dec') and sameas(n, 'n72')) + nu_l_fx_dec_n73$(sameas(t, 'dec') and sameas(n, 'n73')) + nu_l_fx_dec_n74$(sameas(t, 'dec') and sameas(n, 'n74')) + nu_l_fx_dec_n75$(sameas(t, 'dec') and sameas(n, 'n75')) + nu_l_fx_dec_n76$(sameas(t, 'dec') and sameas(n, 'n76')) + nu_l_fx_dec_n77$(sameas(t, 'dec') and sameas(n, 'n77')) + nu_l_fx_dec_n78$(sameas(t, 'dec') and sameas(n, 'n78')) + nu_l_fx_dec_n79$(sameas(t, 'dec') and sameas(n, 'n79')) + nu_l_fx_dec_n8$(sameas(t, 'dec') and sameas(n, 'n8')) + nu_l_fx_dec_n80$(sameas(t, 'dec') and sameas(n, 'n80')) + nu_l_fx_dec_n81$(sameas(t, 'dec') and sameas(n, 'n81')) + nu_l_fx_dec_n82$(sameas(t, 'dec') and sameas(n, 'n82')) + nu_l_fx_dec_n83$(sameas(t, 'dec') and sameas(n, 'n83')) + nu_l_fx_dec_n84$(sameas(t, 'dec') and sameas(n, 'n84')) + nu_l_fx_dec_n85$(sameas(t, 'dec') and sameas(n, 'n85')) + nu_l_fx_dec_n86$(sameas(t, 'dec') and sameas(n, 'n86')) + nu_l_fx_dec_n87$(sameas(t, 'dec') and sameas(n, 'n87')) + nu_l_fx_dec_n88$(sameas(t, 'dec') and sameas(n, 'n88')) + nu_l_fx_dec_n89$(sameas(t, 'dec') and sameas(n, 'n89')) + nu_l_fx_dec_n9$(sameas(t, 'dec') and sameas(n, 'n9')) + nu_l_fx_dec_n90$(sameas(t, 'dec') and sameas(n, 'n90')) + nu_l_fx_dec_n91$(sameas(t, 'dec') and sameas(n, 'n91')) + nu_l_fx_dec_n92$(sameas(t, 'dec') and sameas(n, 'n92')) + nu_l_fx_dec_n93$(sameas(t, 'dec') and sameas(n, 'n93')) + nu_l_fx_dec_n94$(sameas(t, 'dec') and sameas(n, 'n94')) + nu_l_fx_dec_n95$(sameas(t, 'dec') and sameas(n, 'n95')) + nu_l_fx_dec_n96$(sameas(t, 'dec') and sameas(n, 'n96')) + nu_l_fx_dec_n97$(sameas(t, 'dec') and sameas(n, 'n97')) + nu_l_fx_dec_n98$(sameas(t, 'dec') and sameas(n, 'n98')) + nu_l_fx_dec_n99$(sameas(t, 'dec') and sameas(n, 'n99')) - piL_l(t,n) + piU_l(t,n) =E= 0;
+stat_r(t,n).. ((nu_ldef(t,n)$(nn(n)))$(tn(t,n) and (not root(n))) - piL_r(t,n) + piU_r(t,n))$(nn(n)) =E= 0;
+stat_z(t,n).. (sum(nn__$(sameas(nn__, n)), snprob(n) * lowCost * 1$(tn(t,nn__))) + (((-1) * nu_ldef(t,n))$(nn(n)))$(tn(t,n) and (not root(n))) - piL_z(t,n))$(nn(n)) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_f(t,n).. f(t,n) - 0 =G= 0;
@@ -681,7 +559,6 @@ piL_r.fx(t,n)$(not (nn(n))) = 0;
 piU_r.fx(t,n)$(not (nn(n))) = 0;
 z.fx(t,n)$(not (nn(n))) = 0;
 piL_z.fx(t,n)$(not (nn(n))) = 0;
-nu_ldef.fx(t,n)$(not (nn(n))) = 0;
 nu_ldef.fx(t,n)$(not (nn(n))) = 0;
 
 * ============================================

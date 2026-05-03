@@ -49,6 +49,12 @@ al(t) = a * (1 + g) ** ((1 - b) * (ord(t) - 1));
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+beta(t)$(NOT (beta(t) > -inf and beta(t) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -165,8 +171,8 @@ Equations
 
 * Stationarity equations
 stat_c(t).. ((-1) * (beta(t) * 1 / c(t))) - nu_cc(t) - piL_c(t) =E= 0;
-stat_i(t).. ((-1) * nu_cc(t)) - nu_kk(t) - lam_tc(t) - piL_i(t) + piU_i(t) =E= 0;
-stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + nu_kk(t-1)$(ord(t) > 1) + g * lam_tc(t) - piL_k(t) =E= 0;
+stat_i(t).. (((-1) * nu_cc(t)) - nu_kk(t) - lam_tc(t)$(tlast(t)) - piL_i(t) + piU_i(t))$(i.up(t) - i.lo(t) > 1e-10) =E= 0;
+stat_k(t).. al(t) * k(t) ** b * b / k(t) * nu_cc(t) - nu_kk(t) + nu_kk(t-1)$(ord(t) > 1) + (g * lam_tc(t))$(tlast(t)) - piL_k(t) =E= 0;
 
 * Inequality complementarity equations
 comp_tc(tlast).. ((-1) * (g * k(tlast) - i(tlast))) =G= 0;
@@ -192,6 +198,9 @@ util.. utility =E= sum(t, beta(t) * log(c(t)));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+i.fx(t)$(not (i.up(t) - i.lo(t) > 1e-10)) = i.up(t);
+piL_i.fx(t)$(not (i.up(t) - i.lo(t) > 1e-10)) = 0;
+piU_i.fx(t)$(not (i.up(t) - i.lo(t) > 1e-10)) = 0;
 piU_i.fx(t)$(not (i0 * (1 + ac) ** (ord(t) - 1) < inf)) = 0;
 nu_kk.fx(t)$(not (ord(t) <= card(t) - 1)) = 0;
 lam_tc.fx(t)$(not (tlast(t))) = 0;

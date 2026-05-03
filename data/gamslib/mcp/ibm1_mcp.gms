@@ -95,8 +95,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_bc(e).. nu_ebal(e) - piL_bc(e) + piU_bc(e) =E= 0;
-stat_x(s).. sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s) =E= 0;
+stat_bc(e).. (nu_ebal(e) - piL_bc(e) + piU_bc(e))$(bc.up(e) - bc.lo(e) > 1e-10) =E= 0;
+stat_x(s).. (sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s))$(x.up(s) - x.lo(s) > 1e-10) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_bc(e)$(bspec(e,"minimum") > -inf).. bc(e) - bspec(e,"minimum") =G= 0;
@@ -119,6 +119,12 @@ cdef.. cost =E= sum(s, sup(s,"cost") * x(s));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = bc.lo(e);
+piL_bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = 0;
+piU_bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = 0;
+x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = x.lo(s);
+piL_x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = 0;
+piU_x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = 0;
 piL_bc.fx(e)$(not (bspec(e,"minimum") > -inf)) = 0;
 piL_x.fx(s)$(not (sup(s,"min-use") > -inf)) = 0;
 piU_bc.fx(e)$(not (bspec(e,"maximum") < inf)) = 0;

@@ -104,7 +104,7 @@ comp_lo_beta.. beta - 0.001 =G= 0;
 comp_lo_mu.. mu - 0.001 =G= 0;
 
 * Original equality equations
-loglike.. like =E= n * (log(beta) - log(mu) - loggamma(beta)) + sum(i, (beta - 1) * log(beta * x(i) / mu)) - sum(i, beta * x(i) / mu);
+loglike.. like =E= n * (log(beta) - log(mu) - loggamma(beta)) + sum(i$(x(i) <> 0), (beta - 1) * log(beta * x(i) / mu)) - sum(i, beta * x(i) / mu);
 
 
 * ============================================

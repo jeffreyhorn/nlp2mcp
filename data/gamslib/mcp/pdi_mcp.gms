@@ -45,6 +45,12 @@ pco(p,m) = pfd(p,"over-cost") + ord(m) - (ord(m) < card(m));
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+pc(p,m)$(NOT (pc(p,m) > -inf and pc(p,m) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -188,11 +194,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_dm(c).. sum(m, (-1) * nu_db(c,m)) - piL_dm(c) + piU_dm(c) =E= 0;
-stat_h(d,m).. nu_ib(d,m) - nu_hb(d,m) - piL_h(d,m) + piU_h(d,m) =E= 0;
+stat_dm(c).. (sum(m, (-1) * nu_db(c,m)) - piL_dm(c) + piU_dm(c))$(dm.up(c) - dm.lo(c) > 1e-10) =E= 0;
+stat_h(d,m).. (nu_ib(d,m) - nu_hb(d,m) - piL_h(d,m) + piU_h(d,m))$(h.up(d,m) - h.lo(d,m) > 1e-10) =E= 0;
 stat_holding.. 1 + nu_ah =E= 0;
-stat_pn(p,m).. nu_pb(p,m) + ((-1) * pc(p,m)) * nu_ap - piL_pn(p,m) + piU_pn(p,m) =E= 0;
-stat_po(p,m).. nu_pb(p,m) + ((-1) * pco(p,m)) * nu_ap - piL_po(p,m) + piU_po(p,m) =E= 0;
+stat_pn(p,m).. (nu_pb(p,m) + ((-1) * pc(p,m)) * nu_ap - piL_pn(p,m) + piU_pn(p,m))$(pn.up(p,m) - pn.lo(p,m) > 1e-10) =E= 0;
+stat_po(p,m).. (nu_pb(p,m) + ((-1) * pco(p,m)) * nu_ap - piL_po(p,m) + piU_po(p,m))$(po.up(p,m) - po.lo(p,m) > 1e-10) =E= 0;
 stat_production.. 1 + nu_ap =E= 0;
 stat_revenue.. -1 + nu_ar =E= 0;
 stat_s(d,m).. nu_hb(d,m) + ((-1) * dcd(d,"hold-cost")) * nu_ah + ((-1) * nu_ib(d,m+1))$(ord(m) <= card(m) - 1) - piL_s(d,m) =E= 0;
@@ -238,6 +244,18 @@ x.fx(p,d,m)$(not (pd(p,d))) = 0;
 piL_x.fx(p,d,m)$(not (pd(p,d))) = 0;
 y.fx(d,c,m)$(not (dc(d,c))) = 0;
 piL_y.fx(d,c,m)$(not (dc(d,c))) = 0;
+dm.fx(c)$(not (dm.up(c) - dm.lo(c) > 1e-10)) = dm.lo(c);
+piL_dm.fx(c)$(not (dm.up(c) - dm.lo(c) > 1e-10)) = 0;
+piU_dm.fx(c)$(not (dm.up(c) - dm.lo(c) > 1e-10)) = 0;
+h.fx(d,m)$(not (h.up(d,m) - h.lo(d,m) > 1e-10)) = h.lo(d,m);
+piL_h.fx(d,m)$(not (h.up(d,m) - h.lo(d,m) > 1e-10)) = 0;
+piU_h.fx(d,m)$(not (h.up(d,m) - h.lo(d,m) > 1e-10)) = 0;
+pn.fx(p,m)$(not (pn.up(p,m) - pn.lo(p,m) > 1e-10)) = pn.lo(p,m);
+piL_pn.fx(p,m)$(not (pn.up(p,m) - pn.lo(p,m) > 1e-10)) = 0;
+piU_pn.fx(p,m)$(not (pn.up(p,m) - pn.lo(p,m) > 1e-10)) = 0;
+po.fx(p,m)$(not (po.up(p,m) - po.lo(p,m) > 1e-10)) = po.lo(p,m);
+piL_po.fx(p,m)$(not (po.up(p,m) - po.lo(p,m) > 1e-10)) = 0;
+piU_po.fx(p,m)$(not (po.up(p,m) - po.lo(p,m) > 1e-10)) = 0;
 piL_dm.fx(c)$(not (czd(c,"min-demand") > -inf)) = 0;
 piL_pn.fx(p,m)$(not (pfd(p,"min-prod") > -inf)) = 0;
 piU_dm.fx(c)$(not (czd(c,"max-demand") < inf)) = 0;

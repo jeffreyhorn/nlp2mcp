@@ -136,7 +136,7 @@ stat_b(j,h).. nu_bd(j,h) + ((-1) * (k(j) * lambda(j,h))) * nu_bcd2 - piL_b(j,h) 
 stat_bc.. 1 + nu_bcd2 - piL_bc =E= 0;
 stat_oc.. 1 + nu_ocd - piL_oc =E= 0;
 stat_x(i,j).. ((-1) * c(i,j)) * nu_ocd + lam_ab(i) + sum(h, ((-1) * p(i,j)) * lam_yd(j,h)) - piL_x(i,j) =E= 0;
-stat_y(j,h).. nu_bd(j,h) + lam_yd(j,h) - piL_y(j,h) + piU_y(j,h) =E= 0;
+stat_y(j,h).. (nu_bd(j,h) + lam_yd(j,h) - piL_y(j,h) + piU_y(j,h))$(y.up(j,h) - y.lo(j,h) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_ab(i).. ((-1) * (sum(j, x(i,j)) - aa(i))) =G= 0;
@@ -166,6 +166,9 @@ obj.. phi =E= oc + bc;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+y.fx(j,h)$(not (y.up(j,h) - y.lo(j,h) > 1e-10)) = y.lo(j,h);
+piL_y.fx(j,h)$(not (y.up(j,h) - y.lo(j,h) > 1e-10)) = 0;
+piU_y.fx(j,h)$(not (y.up(j,h) - y.lo(j,h) > 1e-10)) = 0;
 piU_y.fx(j,h)$(not (deltb(j,h) < inf)) = 0;
 
 * ============================================
