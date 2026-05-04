@@ -1652,20 +1652,21 @@ class _ModelBuilder:
         return self.model
 
     def _record_top_level_marginal_reads(self, assign_node: Tree) -> None:
-        """Issue #1270: scan a top-level `assign` Tree for marginal-feedback
-        patterns and record them on `model.top_level_marginal_reads`.
+        """Issue #1270: scan a top-level `assign` Tree for symbol-attribute
+        reads and record them on `model.top_level_marginal_reads`.
 
-        A "marginal-feedback pattern" is ``param[(idx)]$cond = expr`` where
-        ``expr`` references ``X.m`` (a ``bound_scalar`` or ``bound_indexed``
-        node with ``.m`` attribute) for some symbol ``X``. ``X`` can be an
-        equation (the feedback case the gate flags) or a variable (filtered
-        out downstream by `scan_multi_solve_driver` against `equation_names`
-        — listing here is over-approximate by design).
+        Records ``param[(idx)] [$cond] = expr`` where ``expr`` references
+        ``X.attr`` (a ``bound_scalar`` or ``bound_indexed`` node) for any
+        symbol ``X`` and any attribute. PR #1353 review: deliberately
+        over-approximate so the gate's filter (``attr == "m"`` AND
+        ``sym ∈ equation_names``) is the single point of truth — both
+        ``X.l`` (variable level, post-solve reporting) and ``X.m`` on a
+        non-equation symbol are captured here and dropped by the gate.
 
         The LHS may be ``param``, ``param(...)``, or wrapped in ``lvalue``;
         we extract the leftmost ID token. Only assignments whose LHS is a
         declared parameter are recorded (variable bounds, set assignments,
-        and free symbols are skipped).
+        and forward-declared / free symbols all fall through).
         """
         if not assign_node.children:
             return
@@ -1682,13 +1683,17 @@ class _ModelBuilder:
         if not (isinstance(lhs, Token) and lhs.type == "ID"):
             return
         param_name = str(lhs).lower()
-        if param_name not in {p.lower() for p in self.model.params}:
+        # PR #1353 review: model.params is a CaseInsensitiveDict, so its
+        # ``__contains__`` already case-folds the key — no need to
+        # rebuild a lowercase set on every assignment.
+        if param_name not in self.model.params:
             # Not a known parameter — skip (variable bounds, set assignments,
             # and forward-declared symbols all fall through here).
             return
 
         # 2. Walk the RHS subtree (everything after the leftmost lvalue) for
-        # `bound_scalar` / `bound_indexed` nodes with ``.m`` attribute.
+        # `bound_scalar` / `bound_indexed` nodes — record every attr (the
+        # gate filters down to ``.m`` on declared equations).
         def _walk(node: object) -> None:
             if not isinstance(node, Tree):
                 return
@@ -1697,7 +1702,7 @@ class _ModelBuilder:
                 attr = node.children[1]
                 sym_name = str(sym).lower() if isinstance(sym, Token) else ""
                 attr_name = str(attr).lower() if isinstance(attr, Token) else ""
-                if sym_name and attr_name == "m":
+                if sym_name and attr_name:
                     self.model.top_level_marginal_reads.append((param_name, sym_name, attr_name))
             for child in node.children:
                 _walk(child)

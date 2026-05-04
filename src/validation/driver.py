@@ -97,7 +97,10 @@ class MultiSolveDriverError(UserError):
                 if len(report.equation_marginals) > 5
                 else ""
             )
-            attr_desc = f"; equation-marginal feedback inside solve loop: {shown}{extra}"
+            # PR #1353 review: scope-neutral wording — Approach A also
+            # reaches top-level (between-solve) feedback, so "inside
+            # solve loop" was misleading for the saras shape.
+            attr_desc = f"; equation-marginal feedback to a subsequent solve: {shown}{extra}"
         message = (
             "Model is a multi-solve driver script and is out of scope for "
             "nlp2mcp (NLP→MCP via KKT). Declared models: "
@@ -200,10 +203,13 @@ def _params_referenced_in_any_constraint_body(model_ir: ModelIR) -> set[str]:
     feeds the second-stage solve.
 
     Computed as: seed = {params directly referenced in any equation
-    body}; then iterate — for each parameter ``P`` with expressions
-    that reference any seed parameter ``Q``, add ``P`` to the seed.
-    Saturate. Self-referential expressions (``deltaq(sc) =
-    deltaq(sc) / (1 + deltaq(sc))``) terminate naturally.
+    body}; then iterate the **dependency-walk direction** — for each
+    seed parameter ``Q``, scan ``Q``'s assignment expressions and add
+    every parameter ``P`` that ``Q`` reads. ``P`` reaches the equation
+    body via ``Q``, so ``P`` is also a feeder. Saturate. Self-
+    referential expressions (``deltaq(sc) = deltaq(sc) / (1 +
+    deltaq(sc))``) terminate naturally — adding ``deltaq`` to itself
+    is a no-op.
     """
     # Step 1: direct references in equation bodies.
     refs: set[str] = set()

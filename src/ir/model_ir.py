@@ -53,17 +53,19 @@ class ModelIR:
     # Set assignments (Sprint 18 Day 3: dynamic subset initialization)
     set_assignments: list[SetAssignment] = field(default_factory=list)
 
-    # Issue #1270 (Sprint 25 Day 12): Top-level marginal-feedback assignments,
+    # Issue #1270 (Sprint 25 Day 12): Top-level symbol-attribute reads
     # captured by the parser when a top-level (program-level, not nested in a
-    # loop) assignment writes ``param[(idx)]$cond = expr-involving-X.m`` for
-    # any equation/variable symbol ``X``. Each entry is the lowercase tuple
-    # ``(param_name, sym_name, attr)`` where attr is currently ``"m"``. The
-    # multi-solve gate (`scan_multi_solve_driver`) cross-references this list
-    # against equation_names + bodies to flag saras-style primal/dual driver
-    # scripts whose feedback happens between top-level solves rather than
-    # inside a loop. Variable-attribute reads (e.g., ``var.l`` post-solve
-    # reporting) and reads of unknown symbols are recorded too — the gate
-    # filters them out — so this list is over-approximate by design.
+    # loop) assignment writes ``param[(idx)] [$cond] = expr-involving-X.attr``
+    # for any symbol ``X`` and any GAMS attribute (``.m``, ``.l``, ``.lo``,
+    # ``.up``, …). Each entry is the lowercase tuple
+    # ``(param_name, sym_name, attr)``. PR #1353 review: deliberately
+    # over-approximate (every attr is recorded) so the multi-solve gate's
+    # filter (``attr == "m"`` AND ``sym ∈ equation_names``) is the single
+    # point of truth. Variable-attribute reads (e.g. ``util.l``) and reads
+    # of non-equation symbols pass through the parser hook and are dropped
+    # by the gate. The gate cross-references the filtered list against
+    # equation bodies to flag saras-style primal/dual driver scripts whose
+    # feedback happens between top-level solves rather than inside a loop.
     top_level_marginal_reads: list[tuple[str, str, str]] = field(default_factory=list)
 
     # Solve info  (Issue #729: track *all* declared model names, lowercase)
