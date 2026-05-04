@@ -83,7 +83,7 @@ Parameters
     pel(cl,l)
     pml(cl,l)
     pep(c)
-    tradec(c,*) /wheat.production 13205, wheat.'export-q' 1231, wheat.'export-p' 125.6, wheat.'import-p' 607, corn.production 1242, corn.'import-p' 680, rye.production 807, rye.'export-q' 10, rye.'export-p' 130, rye.'import-p' 399, rice.production 225, rice.'import-q' 22.8, rice.'import-p' 383.3, barley.production 5000, barley.'export-q' 0.5, barley.'export-p' 141.1, barley.'import-p' 3975, chickpea.production 285, chickpea.'export-q' 50, chickpea.'export-p' 589.1, chickpea.'import-p' -10, drybean.production 69, drybean.'export-q' 0.3, drybean.'export-p' 832.6, drybean.'import-p' 6, lentil.production 285, lentil.'export-q' 108, lentil.'export-p' 396.7, lentil.'import-p' -20, potato.production 2870, potato.'export-q' 12.9, potato.'export-p' 171.4, onion.production 1000, onion.'export-q' 76.5, onion.'export-p' 94.7, 'gr-pepper'.production 545, 'gr-pepper'.'export-q' 0.4, 'gr-pepper'.'export-p' 497.1, tomato.production 3500, tomato.'export-q' 25.6, tomato.'export-p' 117.8, tomato.'import-p' 92.5, cucumber.production 500, sunflower.production 590, sunflower.'import-p' -39, olive.production 430, olive.'export-q' 5.4, olive.'export-p' 680, olive.'import-p' 148, groundnut.production 57.5, groundnut.'export-q' 1.4, groundnut.'export-p' 709.6, soybean.production 3.3, sesame.production 26, cotton.production 476.2, cotton.'export-q' 150.6, cotton.'export-p' 1751.2, sugarbeet.production 8760, tobacco.production 206.4, tobacco.'export-q' 69.6, tobacco.'export-p' 1908.3, tea.production 555, tea.'import-p' 30, citrus.production 1147, citrus.'export-q' 131.5, citrus.'export-p' 182.7, grape.production 3500, grape.'export-q' 8.1, grape.'export-p' 276.6, grape.'import-p' 302, apple.production 1350, apple.'export-q' 29.7, apple.'export-p' 224.2, peach.production 220, peach.'export-q' 0.9, peach.'export-p' 210.1, apricot.production 110, cherry.production 92, wildcherry.production 50, melon.production 5220, melon.'export-q' 23.2, melon.'export-p' 86.9, strawberry.production 22, strawberry.'export-q' 0.1, strawberry.'export-p' 830.3, banana.production 23.3, quince.production 45, quince.'export-q' 0.1, quince.'export-p' 184.9, pistachio.production 20, pistachio.'export-q' 0.6, pistachio.'export-p' 3760, hazelnut.production 300, hazelnut.'export-q' 7.4, hazelnut.'export-p' 1115.9, hazelnut.'import-p' 282/
+    tradec(c,*) /wheat.production 13205, wheat.'export-q' 1231, wheat.'export-p' 125.6, wheat.'other-q' 607, corn.production 1242, corn.'other-q' 680, rye.production 807, rye.'export-q' 10, rye.'export-p' 130, rye.'other-q' 399, rice.production 225, rice.'import-q' 22.8, rice.'import-p' 383.3, barley.production 5000, barley.'export-q' 0.5, barley.'export-p' 141.1, barley.'other-q' 3975, chickpea.production 285, chickpea.'export-q' 50, chickpea.'export-p' 589.1, chickpea.'other-q' -10, drybean.production 69, drybean.'export-q' 0.3, drybean.'export-p' 832.6, drybean.'other-q' 6, lentil.production 285, lentil.'export-q' 108, lentil.'export-p' 396.7, lentil.'other-q' -20, potato.production 2870, potato.'export-q' 12.9, potato.'export-p' 171.4, onion.production 1000, onion.'export-q' 76.5, onion.'export-p' 94.7, 'gr-pepper'.production 545, 'gr-pepper'.'export-q' 0.4, 'gr-pepper'.'export-p' 497.1, tomato.production 3500, tomato.'export-q' 25.6, tomato.'export-p' 117.8, tomato.'other-q' 92.5, cucumber.production 500, sunflower.production 590, sunflower.'other-q' -39, olive.production 430, olive.'export-q' 5.4, olive.'export-p' 680, olive.'other-q' 148, groundnut.production 57.5, groundnut.'export-q' 1.4, groundnut.'export-p' 709.6, soybean.production 3.3, sesame.production 26, cotton.production 476.2, cotton.'export-q' 150.6, cotton.'export-p' 1751.2, sugarbeet.production 8760, tobacco.production 206.4, tobacco.'export-q' 69.6, tobacco.'export-p' 1908.3, tea.production 555, tea.'other-q' 30, citrus.production 1147, citrus.'export-q' 131.5, citrus.'export-p' 182.7, grape.production 3500, grape.'export-q' 8.1, grape.'export-p' 276.6, grape.'other-q' 302, apple.production 1350, apple.'export-q' 29.7, apple.'export-p' 224.2, peach.production 220, peach.'export-q' 0.9, peach.'export-p' 210.1, apricot.production 110, cherry.production 92, wildcherry.production 50, melon.production 5220, melon.'export-q' 23.2, melon.'export-p' 86.9, strawberry.production 22, strawberry.'export-q' 0.1, strawberry.'export-p' 830.3, banana.production 23.3, quince.production 45, quince.'export-q' 0.1, quince.'export-p' 184.9, pistachio.production 20, pistachio.'export-q' 0.6, pistachio.'export-p' 3760, hazelnut.production 300, hazelnut.'export-q' 7.4, hazelnut.'export-p' 1115.9, hazelnut.'other-q' 282/
     tradel(l,cl,*) /sheep.meat.production 338, sheep.meat.'export-q' 31, sheep.meat.'export-p' 2220, sheep.milk.production 1102.2, sheep.wool.production 59.3, sheep.wool.'import-q' 6, sheep.wool.'import-p' 4315.8, sheep.hide.production 16.2, goat.meat.production 103.5, goat.meat.'export-q' 2.8, goat.meat.'export-p' 2220, goat.milk.production 571.1, goat.wool.production 9.2, goat.wool.'export-q' 0.3, goat.wool.'export-p' 700.2, goat.hide.production 3.8, angora.meat.production 6.5, angora.meat.'export-q' 0.2, angora.meat.'export-p' 2220, angora.milk.production 54.9, angora.wool.production 5.8, angora.wool.'export-q' 1.5, angora.wool.'export-p' 804.6, angora.hide.production 0.3, cattle.meat.production 391, cattle.meat.'export-q' 4, cattle.meat.'export-p' 1140, cattle.milk.production 3386.4, cattle.hide.production 51.6, buffalo.meat.production 34, buffalo.meat.'export-q' 3, buffalo.meat.'export-p' 1140, buffalo.milk.production 296.6, buffalo.hide.production 2.7, poultry.meat.production 132, poultry.meat.'export-q' 18, poultry.meat.'export-p' 762, poultry.egg.production 4322.7/
     tradepp1(*,c) /price.wheat 132, price.tomato 604.4, price.sunflower 1183, price.olive 3308, price.tea 2223.3, price.grape 1164.5, price.hazelnut 2699.3, limit.wheat 40, limit.tomato 18.5, limit.sunflower 13, limit.olive 29.6, limit.tea 5.7, limit.grape 75.6, limit.hazelnut 127, factor.wheat 0.85, factor.tomato 0.2, factor.sunflower 0.33, factor.olive 0.2, factor.tea 0.19, factor.grape 0.25, factor.hazelnut 0.45/
     iop(c)
@@ -417,6 +417,7 @@ Positive Variables
     piL_natql(cl,l,g)
     piU_treeland(ct)
     piU_xlive(l)
+    piU_exportp(c)
     piU_importc(c)
     piU_importl(cl,l)
     piU_exportc(c)
@@ -553,6 +554,7 @@ Equations
     comp_lo_xtree(c,pt)
     comp_up_exportc(c)
     comp_up_exportl(cl,l)
+    comp_up_exportp(c)
     comp_up_importc(c)
     comp_up_importl(cl,l)
     comp_up_treeland(ct)
@@ -594,7 +596,7 @@ stat_cropland(ca).. nu_landuse(ca) + sum(ty, 1000 * revdevc(ca,ty) / 1000000 * n
 stat_dprcost.. 1 + nu_adpr =E= 0;
 stat_exportc(c).. (1$(pec(c)) * nu_ndemc(c) + ((-1) * (1000 * pec(c)$(tradec(c,"export-q")) / 1000000)) * nu_aexp - piL_exportc(c) + piU_exportc(c))$(exportc.up(c) - exportc.lo(c) > 1e-10) =E= 0;
 stat_exportl(cl,l).. ((1$(pel(cl,l)) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pel(cl,l)$(tradel(l,cl,"export-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aexp - piL_exportl(cl,l) + piU_exportl(cl,l))$(exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10) =E= 0;
-stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c))$(cp(c) and exportp.up(c) - exportp.lo(c) > 1e-10) =E= 0;
+stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c) + piU_exportp(c))$(cp(c) and exportp.up(c) - exportp.lo(c) > 1e-10) =E= 0;
 stat_feed(l,fclass).. lam_feedd$(sameas(fclass, 'd-fodder')) - lam_totfeed(l) - lam_minfeed(l,fclass) + lam_maxfeed(l,fclass) + lam_feedgr$(sameas(fclass, 'g-fodder')) + lam_feedg$(sameas(fclass, 'grain+con')) + lam_feedp$(sameas(fclass, 'pasture')) - piL_feed(l,fclass) =E= 0;
 stat_impcost.. 1 + nu_aimp =E= 0;
 stat_importc(c).. (((-1) * 1$(pmc(c))) * nu_ndemc(c) + ((-1) * (1000 * pmc(c)$(tradec(c,"import-q")) / 1000000)) * nu_aimp - piL_importc(c) + piU_importc(c))$(importc.up(c) - importc.lo(c) > 1e-10) =E= 0;
@@ -658,6 +660,7 @@ comp_lo_xtree(c,pt).. xtree(c,pt) - 0 =G= 0;
 * Upper bound complementarity equations
 comp_up_exportc(c)$(expcb(c) < inf).. expcb(c) - exportc(c) =G= 0;
 comp_up_exportl(cl,l)$(explb(cl,l) < inf).. explb(cl,l) - exportl(cl,l) =G= 0;
+comp_up_exportp(c)$(cp(c) and exppb(c) < inf).. exppb(c) - exportp(c) =G= 0;
 comp_up_importc(c)$(impcb(c) < inf).. impcb(c) - importc(c) =G= 0;
 comp_up_importl(cl,l)$(implb(cl,l) < inf).. implb(cl,l) - importl(cl,l) =G= 0;
 comp_up_treeland(ct)$(1.25 * landt(ct) < inf).. 1.25 * landt(ct) - treeland(ct) =G= 0;
@@ -695,6 +698,7 @@ objlin.. cps =E= adc + revexp - impcost - inpcost - dprcost - labcost - capcost 
 
 exportp.fx(c)$(not (cp(c))) = 0;
 piL_exportp.fx(c)$(not (cp(c))) = 0;
+piU_exportp.fx(c)$(not (cp(c))) = 0;
 natconl.fx(cl,l)$(not (cll(cl,l))) = 0;
 exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = exportc.lo(c);
 piL_exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = 0;
@@ -704,6 +708,7 @@ piL_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
 piU_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
 exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = exportp.lo(c);
 piL_exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = 0;
+piU_exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = 0;
 importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = importc.lo(c);
 piL_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
 piU_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
@@ -720,6 +725,7 @@ lam_mball.fx(cl,l)$(not (cll(cl,l))) = 0;
 piL_treeland.fx(ct)$(not (0.75 * landt(ct) > -inf)) = 0;
 piU_exportc.fx(c)$(not (expcb(c) < inf)) = 0;
 piU_exportl.fx(cl,l)$(not (explb(cl,l) < inf)) = 0;
+piU_exportp.fx(c)$(not (cp(c) and exppb(c) < inf)) = 0;
 piU_importc.fx(c)$(not (impcb(c) < inf)) = 0;
 piU_importl.fx(cl,l)$(not (implb(cl,l) < inf)) = 0;
 piU_treeland.fx(ct)$(not (1.25 * landt(ct) < inf)) = 0;
@@ -829,6 +835,7 @@ Model mcp_model /
     comp_lo_xtree.piL_xtree,
     comp_up_exportc.piU_exportc,
     comp_up_exportl.piU_exportl,
+    comp_up_exportp.piU_exportp,
     comp_up_importc.piU_importc,
     comp_up_importl.piU_importl,
     comp_up_treeland.piU_treeland,

@@ -62,7 +62,6 @@ Parameters
     ANEW(i,j)
 ;
 
-vbar1(i,jwt) = 0;
 vbar2(macro,jwt) = 0;
 
 Scalars
@@ -96,9 +95,6 @@ NONZERO(ii,jj) = yes$(Abar0(ii,jj));
 icoeff(ii,acoeff) = yes$(NONZERO(ii,acoeff));
 ival(ii,jj) = yes$(SAM0(ii,jj) and (not icoeff(ii,jj)));
 $offImplicitAssign
-
-vbar1(ii,'4') = 0;
-wbar1(ii,jwt1) = 0.14285714285714285;
 
 ColSum0(ii) = (sam(ii,"total") + sam("total",ii)) / 2;
 gdp0 = sam("fac","act") + sam("gov","act") - sam("act","gov") + sam("gov","com");

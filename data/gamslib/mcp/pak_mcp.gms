@@ -113,7 +113,12 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+i.l('1962','non-traded') = 4.564;
+i.l('1962','traded') = 0;
+ks.l('1962','non-traded') = 0;
+ks.l('1962','traded') = 0;
 f.up(t) = inf$(card(t) - ord(t) >= num);
+c.l('1962') = 33.999;
 
 * ============================================
 * Variable Initialization

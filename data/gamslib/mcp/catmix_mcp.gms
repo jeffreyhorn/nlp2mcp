@@ -64,8 +64,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-x1.fx('0') = 1;
-x2.fx('0') = 0;
+x1.l('0') = 1;
+x2.l('0') = 0;
 
 * ============================================
 * Variable Initialization
@@ -195,8 +195,8 @@ Equations
     comp_lo_u(nh)
     comp_up_u(nh)
     defobj
-    ode1(i)
-    ode2(i)
+    ode1(nh)
+    ode2(nh)
     x1_fx_0
     x2_fx_0
 ;
@@ -206,9 +206,9 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_u(nh).. sum(i, alpha * h * 2 * (u(nh+1) - u(nh)) * (-1) * 1$(nh(i))) + (((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh))$(nh(nh)) + ((((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh))$(nh(nh)) + ((((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) - piL_u(nh) + piU_u(nh) =E= 0;
-stat_x1(nh).. (1$(sameas(nh, '100')) + (((-1) * (1 - h / 2 * u(nh))) * nu_ode1(nh))$(nh(nh)) + (((1 - h / 2 * u(nh) * (-1)) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (h / 2 * u(nh))) * nu_ode2(nh))$(nh(nh)) + ((((-1) * (h / 2 * u(nh))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) + nu_x1_fx_0$(sameas(nh, '0')))$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')) =E= 0;
-stat_x2(nh).. (1$(sameas(nh, '100')) + (((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh))$(nh(nh)) + ((((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh-1))$(ord(nh) > 1))$(nh(nh)) + (((-1) * (1 + h / 2 * (u(nh) * (-10) - (1 - u(nh))))) * nu_ode2(nh))$(nh(nh)) + (((1 - h / 2 * (u(nh) * (-10) - (1 - u(nh)))) * nu_ode2(nh-1))$(ord(nh) > 1))$(nh(nh)) + nu_x2_fx_0$(sameas(nh, '0')))$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')) =E= 0;
+stat_u(nh).. sum(i, alpha * h * 2 * (u(nh+1) - u(nh)) * (-1) * 1$(nh(i))) + ((((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh))$(i(nh)))$(nh(nh)) + (((((-1) * (h / 2 * (10 * x2(nh) - x1(nh)))) * nu_ode1(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) + ((((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh))$(i(nh)))$(nh(nh)) + (((((-1) * (h / 2 * (x1(nh) - 10 * x2(nh) - x2(nh) * (-1)))) * nu_ode2(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) - piL_u(nh) + piU_u(nh) =E= 0;
+stat_x1(nh).. (1$(sameas(nh, '100')) + ((((-1) * (1 - h / 2 * u(nh))) * nu_ode1(nh))$(i(nh)))$(nh(nh)) + ((((1 - h / 2 * u(nh) * (-1)) * nu_ode1(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) + ((((-1) * (h / 2 * u(nh))) * nu_ode2(nh))$(i(nh)))$(nh(nh)) + (((((-1) * (h / 2 * u(nh))) * nu_ode2(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) + nu_x1_fx_0$(sameas(nh, '0')))$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')) =E= 0;
+stat_x2(nh).. (1$(sameas(nh, '100')) + ((((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh))$(i(nh)))$(nh(nh)) + (((((-1) * (h / 2 * u(nh) * 10)) * nu_ode1(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) + ((((-1) * (1 + h / 2 * (u(nh) * (-10) - (1 - u(nh))))) * nu_ode2(nh))$(i(nh)))$(nh(nh)) + ((((1 - h / 2 * (u(nh) * (-10) - (1 - u(nh)))) * nu_ode2(nh-1))$(i(nh-1)))$(ord(nh) > 1))$(nh(nh)) + nu_x2_fx_0$(sameas(nh, '0')))$(sameas(nh, '100') or nh(nh) or sameas(nh, '0')) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_u(nh).. u(nh) - 0 =G= 0;

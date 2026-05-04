@@ -27,7 +27,7 @@ Sets
 ;
 
 Parameters
-    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-el' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-oh' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
+    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-bof' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-el' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
     b(m,p) /'blast-furn'.'pig-iron' 1, openhearth.'steel-oh' 1, bof.'steel-bof' 1, 'direct-red'.sponge 1, 'elec-arc'.'steel-el' 1/
     k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56/
     d(c,j)

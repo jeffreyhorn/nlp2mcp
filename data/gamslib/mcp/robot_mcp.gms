@@ -93,8 +93,17 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
+rho.l('h0') = 4.5;
+rho.l('h50') = 4.5;
 the.fx('h50') = 2 * pi / 3;
+the.l('h0') = 0;
 phi.fx(firstlast) = pi / 4;
+rho_dot.l('h0') = 0;
+rho_dot.l('h50') = 0;
+the_dot.l('h0') = 0;
+the_dot.l('h50') = 0;
+phi_dot.l('h0') = 0;
+phi_dot.l('h50') = 0;
 
 * ============================================
 * Variable Initialization
