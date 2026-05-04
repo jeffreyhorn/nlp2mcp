@@ -53,6 +53,19 @@ class ModelIR:
     # Set assignments (Sprint 18 Day 3: dynamic subset initialization)
     set_assignments: list[SetAssignment] = field(default_factory=list)
 
+    # Issue #1270 (Sprint 25 Day 12): Top-level marginal-feedback assignments,
+    # captured by the parser when a top-level (program-level, not nested in a
+    # loop) assignment writes ``param[(idx)]$cond = expr-involving-X.m`` for
+    # any equation/variable symbol ``X``. Each entry is the lowercase tuple
+    # ``(param_name, sym_name, attr)`` where attr is currently ``"m"``. The
+    # multi-solve gate (`scan_multi_solve_driver`) cross-references this list
+    # against equation_names + bodies to flag saras-style primal/dual driver
+    # scripts whose feedback happens between top-level solves rather than
+    # inside a loop. Variable-attribute reads (e.g., ``var.l`` post-solve
+    # reporting) and reads of unknown symbols are recorded too — the gate
+    # filters them out — so this list is over-approximate by design.
+    top_level_marginal_reads: list[tuple[str, str, str]] = field(default_factory=list)
+
     # Solve info  (Issue #729: track *all* declared model names, lowercase)
     declared_models: set[str] = field(default_factory=set)
     # File handles (Issue #746/#747: track File declarations for validation)

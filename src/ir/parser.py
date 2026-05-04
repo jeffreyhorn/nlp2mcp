@@ -1634,11 +1634,79 @@ class _ModelBuilder:
         for child in tree.children:
             if not isinstance(child, Tree):
                 continue
+            # Issue #1270: capture top-level (program-level) marginal-feedback
+            # assignments — `param[(idx)] [$cond] = expr-involving-X.m` —
+            # before the regular handler runs, so the multi-solve gate can
+            # detect saras-style primal/dual drivers where feedback happens
+            # between top-level solves rather than inside a loop body. Both
+            # plain `assign` and `conditional_assign_general` (LHS dollar
+            # condition `param$cond = ...`) are walked; nested assignments
+            # inside loop / conditional bodies are already covered by the
+            # existing in-loop walker in scan_multi_solve_driver.
+            if child.data in ("assign", "conditional_assign_general"):
+                self._record_top_level_marginal_reads(child)
             handler = getattr(self, f"_handle_{child.data}", None)
             if handler:
                 handler(child)
         self._validate()
         return self.model
+
+    def _record_top_level_marginal_reads(self, assign_node: Tree) -> None:
+        """Issue #1270: scan a top-level `assign` Tree for marginal-feedback
+        patterns and record them on `model.top_level_marginal_reads`.
+
+        A "marginal-feedback pattern" is ``param[(idx)]$cond = expr`` where
+        ``expr`` references ``X.m`` (a ``bound_scalar`` or ``bound_indexed``
+        node with ``.m`` attribute) for some symbol ``X``. ``X`` can be an
+        equation (the feedback case the gate flags) or a variable (filtered
+        out downstream by `scan_multi_solve_driver` against `equation_names`
+        — listing here is over-approximate by design).
+
+        The LHS may be ``param``, ``param(...)``, or wrapped in ``lvalue``;
+        we extract the leftmost ID token. Only assignments whose LHS is a
+        declared parameter are recorded (variable bounds, set assignments,
+        and free symbols are skipped).
+        """
+        if not assign_node.children:
+            return
+        # 1. Extract LHS param name (leftmost ID token).
+        lhs = assign_node.children[0]
+        while isinstance(lhs, Tree) and lhs.data in (
+            "lvalue",
+            "symbol_indexed",
+            "symbol_plain",
+        ):
+            if not lhs.children:
+                return
+            lhs = lhs.children[0]
+        if not (isinstance(lhs, Token) and lhs.type == "ID"):
+            return
+        param_name = str(lhs).lower()
+        if param_name not in {p.lower() for p in self.model.params}:
+            # Not a known parameter — skip (variable bounds, set assignments,
+            # and forward-declared symbols all fall through here).
+            return
+
+        # 2. Walk the RHS subtree (everything after the leftmost lvalue) for
+        # `bound_scalar` / `bound_indexed` nodes with ``.m`` attribute.
+        def _walk(node: object) -> None:
+            if not isinstance(node, Tree):
+                return
+            if node.data in ("bound_scalar", "bound_indexed") and len(node.children) >= 2:
+                sym = node.children[0]
+                attr = node.children[1]
+                sym_name = str(sym).lower() if isinstance(sym, Token) else ""
+                attr_name = str(attr).lower() if isinstance(attr, Token) else ""
+                if sym_name and attr_name == "m":
+                    self.model.top_level_marginal_reads.append((param_name, sym_name, attr_name))
+            for child in node.children:
+                _walk(child)
+
+        # Skip the LHS subtree (children[0]) so writing `p.m = ...` (a
+        # variable-marginal *write* — exotic but legal) doesn't show up as
+        # a read.
+        for rhs_child in assign_node.children[1:]:
+            _walk(rhs_child)
 
     def _handle_sets_block(self, node: Tree) -> None:
         # Sprint 12 Day 5 (Issue #417): Process set declarations (allows space and newline separation)

@@ -24,28 +24,24 @@ are not mistakenly caught:
 2. **Solves target multiple distinct models** — at least two distinct
    model names appear as the target of a ``solve`` statement anywhere
    in the file (top-level or nested in loop bodies).
-3. **Equation-marginal feedback inside a solve loop** — at least one
-   ``eq.m`` access appears inside a ``loop`` whose body also contains
-   a ``solve`` statement, where ``eq`` is a declared ``Equation`` in
-   the IR. Equation marginals are duals: they only carry information
-   across a prior ``solve`` boundary, and reading one inside a loop
-   that re-solves is the signature of iterative dual feedback
-   (Dantzig–Wolfe, column generation, etc.).
+3. **Equation-marginal feedback** — at least one ``eq.m`` access
+   feeds back into a subsequent solve, captured via either of:
+   * (a) inside a ``loop`` whose body also contains a ``solve`` statement
+     (the canonical decomp / danwolfe shape); or
+   * (b) Issue #1270 (Sprint 25 Day 12) — a top-level (non-loop)
+     ``param[(idx)] = ... eq.m(...) ...`` whose receiving parameter
+     is later referenced inside any declared model's constraint body
+     (the saras / primal-dual cross-reference pattern: dual marginal
+     read between solves of two different models). Variable-attribute
+     reads (``var.l``) and parameters that never appear in a model
+     body are filtered out so post-solve reporting / display patterns
+     don't false-positive.
 
-The equation-marginal restriction rules out post-solve bookkeeping
-like ``util_lic(t) = util.l;`` (partssupply): ``util`` is a
-*variable* not an equation, and ``.l`` is not a dual. Single-model
-multi-solve patterns (ibm1) fail condition 1 immediately.
-
-Known gap (tracked for follow-up): two-stage calibration scripts
-that read an equation marginal at top level between solves (e.g.,
-``saras``'s primal-dual pattern) are *not* flagged by this rule.
-Catching them would require either a relaxed scope ("anywhere in
-the source") that risks false positives on post-solve reporting of
-``.m``, or AST-level tracking of whether a parameter that receives
-a marginal is later referenced in a solved model's constraints.
-Left as a future refinement; `decomp` and `danwolfe` — the immediate
-DW targets — match the strict rule.
+The equation-marginal restriction (only ``.m`` on declared equations)
+rules out post-solve bookkeeping like ``util_lic(t) = util.l;``
+(partssupply): ``util`` is a *variable* not an equation, and ``.l``
+is not a dual. Single-model multi-solve patterns (ibm1) fail
+condition 1 immediately.
 """
 
 from __future__ import annotations
@@ -172,6 +168,78 @@ def _collect_equation_marginals(
         _collect_equation_marginals(child, equation_names, out)
 
 
+def _collect_param_refs_in_expr(expr: object, out: set[str]) -> None:
+    """Walk an IR ``Expr`` tree and collect lowercase names of every
+    ``ParamRef`` node. Used by Issue #1270's cross-reference pass to
+    find which top-level-marginal parameters are read inside a model's
+    constraint body.
+    """
+    from ..ir.ast import Expr, ParamRef
+
+    if not isinstance(expr, Expr):
+        return
+    if isinstance(expr, ParamRef):
+        out.add(expr.name.lower())
+    for child in expr.children():
+        _collect_param_refs_in_expr(child, out)
+
+
+def _params_referenced_in_any_constraint_body(model_ir: ModelIR) -> set[str]:
+    """Return lowercase names of parameters that **feed** any declared
+    equation's body — directly or transitively through other parameter
+    assignments. Issue #1270 (Approach A): the cross-reference set used
+    to filter top-level marginal-feedback candidates.
+
+    Direct case: ``Equation foo.. ... + p(i) * x(i)`` — ``p`` is in
+    the set.
+
+    Transitive case (saras): ``clam(...) = eq.m(...)``, then
+    ``cGam(...) = f(clam, ...)``, then ``Equation obj.. ... + cGam(...)``.
+    Both ``cGam`` (direct) and ``clam`` (transitive via cGam) are in
+    the set, so the saras-style ``clam = calibuc.m`` top-level marginal
+    feeds the second-stage solve.
+
+    Computed as: seed = {params directly referenced in any equation
+    body}; then iterate — for each parameter ``P`` with expressions
+    that reference any seed parameter ``Q``, add ``P`` to the seed.
+    Saturate. Self-referential expressions (``deltaq(sc) =
+    deltaq(sc) / (1 + deltaq(sc))``) terminate naturally.
+    """
+    # Step 1: direct references in equation bodies.
+    refs: set[str] = set()
+    for eq in (model_ir.equations or {}).values():
+        lhs, rhs = eq.lhs_rhs if eq.lhs_rhs else (None, None)
+        _collect_param_refs_in_expr(lhs, refs)
+        _collect_param_refs_in_expr(rhs, refs)
+
+    # Step 2: transitive closure through parameter expressions, walked in
+    # the data-flow direction. ``refs`` starts with parameters consumed by
+    # an equation body. For each ``Q`` in ``refs`` whose computed
+    # expression reads ``P``, ``P`` also feeds the equation body via
+    # ``Q`` and is added. Repeat until no new additions. Self-referential
+    # expressions (``deltaq(sc) = deltaq(sc)/(1+deltaq(sc))``) terminate
+    # because adding the param to itself doesn't add anything new.
+    if not refs:
+        return refs
+    params = model_ir.params
+    while True:
+        added = False
+        for qname in tuple(refs):
+            qdef = params.get(qname) if params else None
+            if qdef is None or not qdef.expressions:
+                continue
+            for _, ex in qdef.expressions:
+                expr_refs: set[str] = set()
+                _collect_param_refs_in_expr(ex, expr_refs)
+                new_refs = expr_refs - refs
+                if new_refs:
+                    refs |= new_refs
+                    added = True
+        if not added:
+            break
+    return refs
+
+
 def scan_multi_solve_driver(model_ir: ModelIR) -> MultiSolveReport:
     """Scan a ModelIR for multi-solve-driver signals.
 
@@ -209,6 +277,28 @@ def scan_multi_solve_driver(model_ir: ModelIR) -> MultiSolveReport:
             continue
         for stmt in loop_stmt.body_stmts or []:
             _collect_equation_marginals(stmt, equation_names, equation_marginals)
+
+    # Issue #1270 (Approach A): also flag top-level (non-loop) ``param =
+    # ...eq.m...`` assignments whose receiving parameter is later read
+    # inside any declared model's constraint body — the saras / primal-
+    # dual cross-reference shape. Without this branch, the gate misses
+    # primal/dual drivers that don't wrap their feedback in a loop.
+    #
+    # Filtering rules (mirror the design doc §1.4):
+    #  - ``sym_name`` must be a declared equation (``equation_names``);
+    #    variable marginals like ``var.m`` aren't dual-feedback.
+    #  - ``param_name`` must appear in at least one equation body; pure
+    #    post-solve reporting parameters (display only) are excluded.
+    if model_ir.top_level_marginal_reads:
+        cross_ref_params = _params_referenced_in_any_constraint_body(model_ir)
+        for param_name, sym_name, attr in model_ir.top_level_marginal_reads:
+            if attr != "m":
+                continue
+            if sym_name not in equation_names:
+                continue
+            if param_name not in cross_ref_params:
+                continue
+            equation_marginals.append((sym_name, attr))
 
     # Deduplicate equation-marginal references while preserving first-seen
     # order. A single `eq.m` read inside a loop body is emitted once per
