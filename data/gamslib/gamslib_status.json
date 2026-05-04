@@ -4862,41 +4862,50 @@
       },
       "nlp2mcp_parse": {
         "status": "success",
-        "parse_date": "2026-05-03T07:04:50.811537+00:00",
+        "parse_date": "2026-05-04T04:26:34.397398+00:00",
         "nlp2mcp_version": "1.1.0",
-        "parse_time_seconds": 4.9093,
+        "parse_time_seconds": 8.8425,
         "variables_count": 15,
         "equations_count": 11
       },
       "nlp2mcp_translate": {
         "status": "success",
-        "translate_date": "2026-05-03T07:04:57.741653+00:00",
+        "translate_date": "2026-05-04T04:26:46.434621+00:00",
         "nlp2mcp_version": "1.1.0",
-        "translate_time_seconds": 6.9161,
+        "translate_time_seconds": 11.8088,
         "output_file": "data/gamslib/mcp/launch_mcp.gms"
       },
       "mcp_solve": {
-        "status": "failure",
-        "solve_date": "2026-05-03T07:05:00.172951+00:00",
+        "status": "success",
+        "solve_date": "2026-05-04T04:26:48.864558+00:00",
         "solver": "PATH",
         "solver_version": null,
         "solver_status": 1,
         "solver_status_text": "Normal Completion",
-        "model_status": 5,
-        "model_status_text": "Locally Infeasible",
-        "objective_value": 3689.28,
-        "solve_time_seconds": 2.4159,
-        "iterations": 5381,
-        "outcome_category": "model_infeasible",
-        "error": {
-          "category": "model_infeasible",
-          "message": "Model: Locally Infeasible (status 5)"
-        }
+        "model_status": 1,
+        "model_status_text": "Optimal",
+        "objective_value": 2731.711,
+        "solve_time_seconds": 2.3524,
+        "iterations": 3504,
+        "outcome_category": "model_optimal"
       },
       "solution_comparison": {
-        "comparison_status": "not_tested",
-        "comparison_date": "2026-05-03T07:05:08.284036+00:00",
-        "notes": "Skipped due to solve failure"
+        "comparison_status": "mismatch",
+        "comparison_date": "2026-05-04T04:26:48.865679+00:00",
+        "nlp_objective": 2257.7976,
+        "mcp_objective": 2731.711,
+        "absolute_difference": 473.9133999999999,
+        "relative_difference": 0.17348592146094516,
+        "objective_match": false,
+        "tolerance_absolute": 1e-08,
+        "tolerance_relative": 0.002,
+        "nlp_solver_status": 1,
+        "nlp_model_status": 2,
+        "mcp_solver_status": 1,
+        "mcp_model_status": 1,
+        "status_match": true,
+        "comparison_result": "compare_objective_mismatch",
+        "notes": "Mismatch: diff=4.74e+02 > tolerance=5.46e+00"
       },
       "model_statistics": {
         "variables": 15,
