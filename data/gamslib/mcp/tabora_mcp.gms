@@ -81,6 +81,13 @@ vr(t) = tr * sr * sum(a$(ord(t) + ord(a) > card(t)), yv(a) * delta(a));
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+dist(i)$(NOT (dist(i) > -inf and dist(i) < inf)) = 0;
+labw(i)$(NOT (labw(i) > -inf and labw(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

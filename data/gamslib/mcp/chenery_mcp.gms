@@ -65,6 +65,12 @@ rho(i)$(sig(i) <> 0) = 1 / sig(i) - 1;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+rho(i)$(NOT (rho(i) > -inf and rho(i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -286,12 +292,12 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_e(i).. (alp(i) * nu_dh(i) + 1$(t(i)) * lam_mb(i) + sum(t__, ((-1) * h(t__)) * lam_tb)$(t(i)) - piL_e(i) + piU_e(i))$(t(i)) =E= 0;
-stat_g(t).. nu_dg(t) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
-stat_h(t).. nu_dh(t) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
+stat_e(i).. ((alp(i) * nu_dh(i))$(t(i)) + 1$(t(i)) * lam_mb(i) + sum(t__, ((-1) * h(t__)) * lam_tb)$(t(i)) - piL_e(i) + piU_e(i))$(t(i)) =E= 0;
+stat_g(t).. nu_dg(t)$(t(t)) + m(t) * lam_tb - piL_g(t) + piU_g(t) =E= 0;
+stat_h(t).. nu_dh(t)$(t(t)) + ((-1) * e(t)) * lam_tb - piL_h(t) + piU_h(t) =E= 0;
 stat_k(i).. x(i) * nu_kc + efy(i) * nu_dk(i) + ((-1) * pk) * nu_dv(i) - piL_k(i) + piU_k(i) =E= 0;
 stat_l(i).. efy(i) * nu_dl(i) + ((-1) * plab) * nu_dv(i) + x(i) * lam_lc - piL_l(i) + piU_l(i) =E= 0;
-stat_m(i).. (((-1) * xsi(i)) * nu_dg(i) + (-1)$(t(i)) * lam_mb(i) + sum(t__, g(t__) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i))$(t(i)) =E= 0;
+stat_m(i).. ((((-1) * xsi(i)) * nu_dg(i))$(t(i)) + (-1)$(t(i)) * lam_mb(i) + sum(t__, g(t__) * lam_tb)$(t(i)) - piL_m(i) + piU_m(i))$(t(i)) =E= 0;
 stat_p(i).. ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * pd)) * nu_dem(i) + (1 - aio(i,i)) * nu_sup(i) + (((-1) * aio(i,i+1)) * nu_sup(i+1))$(ord(i) <= card(i) - 1) + (((-1) * aio(i,i-1)) * nu_sup(i-1))$(ord(i) > 1) + (((-1) * aio(i,i+2)) * nu_sup(i+2))$(ord(i) <= card(i) - 2) + (((-1) * aio(i,i-2)) * nu_sup(i-2))$(ord(i) > 2) + (((-1) * aio(i,i+3)) * nu_sup(i+3))$(ord(i) <= card(i) - 3) + (((-1) * aio(i,i-3)) * nu_sup(i-3))$(ord(i) > 3) - piL_p(i) + piU_p(i) =E= 0;
 stat_pd.. sum(i, ((-1) * (ynot(i) * (pd * p(i)) ** thet(i) * thet(i) / (pd * p(i)) * p(i))) * nu_dem(i)) - piL_pd =E= 0;
 stat_pi.. nu_fpr + sum(i$(sig(i) <> 0), ((-1) * ((pi * (1 - del(i)) / del(i)) ** (((-1) * rho(i)) / (1 + rho(i))) * ((-1) * rho(i)) / (1 + rho(i)) / (pi * (1 - del(i)) / del(i)) * del(i) * (1 - del(i)) / sqr(del(i)))) * nu_dvv(i)) - piL_pi + piU_pi =E= 0;

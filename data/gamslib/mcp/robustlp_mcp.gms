@@ -57,7 +57,6 @@ Variables
     x(j)
     y(i)
     v(i,k)
-    nu_defobj(i)
     nu_defrhs(i)
     nu_defv(i,k)
 ;
@@ -76,13 +75,12 @@ Positive Variables
 * Equality constraints: Original equality constraints
 
 Equations
-    stat_obj
     stat_v(i,k)
     stat_x(j)
     stat_y(i)
     comp_socpqcpcons(i)
     comp_lo_y(i)
-    defobj(i)
+    defobj
     defrhs(i)
     defv(i,k)
 ;
@@ -92,9 +90,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_obj.. 1 + sum(i, nu_defobj(i)) =E= 0;
 stat_v(i,k).. nu_defv(i,k) + 2 * v(i,k) * lam_socpqcpcons(i) =E= 0;
-stat_x(j).. sum(i, ((-1) * c(j)) * nu_defobj(i)) + sum(i, A(i,j) * nu_defrhs(i)) + sum((i,k), ((-1) * P(i,j,k)) * nu_defv(i,k)) =E= 0;
+stat_x(j).. c(j) + sum(i, A(i,j) * nu_defrhs(i)) + sum((i,k), ((-1) * P(i,j,k)) * nu_defv(i,k)) =E= 0;
 stat_y(i).. nu_defrhs(i) + ((-1) * (2 * y(i))) * lam_socpqcpcons(i) - piL_y(i) =E= 0;
 
 * Inequality complementarity equations
@@ -104,7 +101,7 @@ comp_socpqcpcons(i).. sqr(y(i)) - sum(k, sqr(v(i,k))) =G= 0;
 comp_lo_y(i).. y(i) - 0 =G= 0;
 
 * Original equality equations
-defobj(i).. obj =E= sum(j, c(j) * x(j));
+defobj.. obj =E= sum(j, c(j) * x(j));
 defrhs(i).. y(i) =E= b(i) - sum(j, A(i,j) * x(j));
 defv(i,k).. v(i,k) =E= sum(j, P(i,j,k) * x(j));
 
@@ -123,12 +120,11 @@ defv(i,k).. v(i,k) =E= sum(j, P(i,j,k) * x(j));
 *          equation ≥ 0 if variable = 0
 
 Model mcp_model /
-    stat_obj.obj,
     stat_v.v,
     stat_x.x,
     stat_y.y,
     comp_socpqcpcons.lam_socpqcpcons,
-    defobj.nu_defobj,
+    defobj.obj,
     defrhs.nu_defrhs,
     defv.nu_defv,
     comp_lo_y.piL_y

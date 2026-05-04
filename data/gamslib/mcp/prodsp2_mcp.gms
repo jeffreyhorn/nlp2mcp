@@ -43,6 +43,12 @@ t2(j,i) = (trand(j,"min",i) + trand(j,"max",i)) / 2;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+t2(j,i)$(NOT (t2(j,i) > -inf and t2(j,i) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

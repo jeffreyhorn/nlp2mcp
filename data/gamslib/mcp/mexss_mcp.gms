@@ -27,7 +27,7 @@ Sets
 ;
 
 Parameters
-    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-el' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-oh' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
+    a(c,p) /pellets.'pig-iron' -1.58, pellets.sponge -1.38, coke.'pig-iron' -0.63, 'nat-gas'.sponge -0.57, electric.'steel-el' -0.58, scrap.'steel-oh' -0.33, scrap.'steel-bof' -0.12, 'pig-iron'.'pig-iron' 1, 'pig-iron'.'steel-oh' -0.77, 'pig-iron'.'steel-bof' -0.95, sponge.sponge 1, sponge.'steel-el' -1.09, steel.'steel-oh' 1, steel.'steel-el' 1, steel.'steel-bof' 1/
     b(m,p) /'blast-furn'.'pig-iron' 1, openhearth.'steel-oh' 1, bof.'steel-bof' 1, 'direct-red'.sponge 1, 'elec-arc'.'steel-el' 1/
     k(m,i) /'blast-furn'.ahmsa 3.25, 'blast-furn'.fundidora 1.4, 'blast-furn'.sicartsa 1.1, openhearth.ahmsa 1.5, openhearth.fundidora 0.85, bof.ahmsa 2.07, bof.fundidora 1.5, bof.sicartsa 1.3, 'direct-red'.hylsa 0.98, 'direct-red'.hylsap 1, 'elec-arc'.hylsa 1.13, 'elec-arc'.hylsap 0.56/
     d(c,j)
@@ -57,6 +57,12 @@ pv(c) = prices(c,"import");
 pe(c) = prices(c,"export");
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+d(c,j)$(NOT (d(c,j) > -inf and d(c,j) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -88,7 +94,7 @@ Positive Variables
     v(c,j)
     e(c,i)
     lam_mbf(c,i)
-    lam_mbi(ci,i)
+    lam_mbi(c,i)
     lam_mbr(c,i)
     lam_cc(m,i)
     lam_mr(c,j)
@@ -139,11 +145,11 @@ Equations
     stat_x(c,i,j)
     stat_z(p,i)
     comp_cc(m,i)
-    comp_mbf(cf,i)
-    comp_mbi(ci,i)
-    comp_mbr(cr,i)
-    comp_me(cf)
-    comp_mr(cf,j)
+    comp_mbf(c,i)
+    comp_mbi(c,i)
+    comp_mbr(c,i)
+    comp_me(c)
+    comp_mr(c,j)
     comp_lo_e(c,i)
     comp_lo_u(c,i)
     comp_lo_v(c,j)
@@ -161,15 +167,15 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_e(c,i).. ((((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel')) + lam_mbf(c,i) + lam_me(c)$(sameas(c, 'steel')) - piL_e(c,i))$(cf(c)) =E= 0;
+stat_e(c,i).. ((((-1) * mue(i)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pe(c)) * nu_aeps)$(sameas(c, 'steel')) + lam_mbf(c,i)$(cf(c)) + (lam_me(c)$(cf(c)))$(sameas(c, 'steel')) - piL_e(c,i))$(cf(c)) =E= 0;
 stat_phieps.. -1 + nu_aeps =E= 0;
 stat_philam.. 1 + nu_alam =E= 0;
 stat_phipi.. 1 + nu_api =E= 0;
 stat_phipsi.. 1 + nu_apsi =E= 0;
-stat_u(c,i).. ((((-1) * pd(c)) * nu_apsi)$(cr(c)) - lam_mbr(c,i) - piL_u(c,i))$(cr(c)) =E= 0;
-stat_v(c,j).. ((((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel')) - lam_mr(c,j) - piL_v(c,j))$(cf(c)) =E= 0;
-stat_x(c,i,j).. ((((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel')) + lam_mbf(c,i)$(sameas(c, 'steel')) + ((-1) * lam_mr(c,j))$(sameas(c, 'steel')) - piL_x(c,i,j))$(cf(c)) =E= 0;
-stat_z(p,i).. sum(cf, ((-1) * a(cf,p)) * lam_mbf(cf,i)) + sum(ci, ((-1) * a(ci,p)) * lam_mbi(ci,i)) + sum(cr, ((-1) * a(cr,p)) * lam_mbr(cr,i)) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
+stat_u(c,i).. ((((-1) * pd(c)) * nu_apsi)$(cr(c)) - lam_mbr(c,i)$(cr(c)) - piL_u(c,i))$(cr(c)) =E= 0;
+stat_v(c,j).. ((((-1) * muv(j)) * nu_alam)$(sameas(c, 'steel')) + (((-1) * pv(c)) * nu_api)$(sameas(c, 'steel')) - lam_mr(c,j)$(cf(c)) - piL_v(c,j))$(cf(c)) =E= 0;
+stat_x(c,i,j).. ((((-1) * muf(i,j)) * nu_alam)$(sameas(c, 'steel')) + (lam_mbf(c,i)$(cf(c)))$(sameas(c, 'steel')) + (((-1) * lam_mr(c,j))$(cf(c)))$(sameas(c, 'steel')) - piL_x(c,i,j))$(cf(c)) =E= 0;
+stat_z(p,i).. sum(cf, (((-1) * a(cf,p)) * lam_mbf(cf,i))$(cf(cf))) + sum(ci, (((-1) * a(ci,p)) * lam_mbi(ci,i))$(ci(ci))) + sum(cr, (((-1) * a(cr,p)) * lam_mbr(cr,i))$(cr(cr))) + sum(m, b(m,p) * lam_cc(m,i)) - piL_z(p,i) =E= 0;
 
 * Inequality complementarity equations
 comp_cc(m,i).. ((-1) * (sum(p, b(m,p) * z(p,i)) - k(m,i))) =G= 0;
@@ -210,6 +216,7 @@ piL_v.fx(c,j)$(not (cf(c))) = 0;
 x.fx(c,i,j)$(not (cf(c))) = 0;
 piL_x.fx(c,i,j)$(not (cf(c))) = 0;
 lam_mbf.fx(c,i)$(not (cf(c))) = 0;
+lam_mbi.fx(c,i)$(not (ci(c))) = 0;
 lam_mbr.fx(c,i)$(not (cr(c))) = 0;
 lam_me.fx(c)$(not (cf(c))) = 0;
 lam_mr.fx(c,j)$(not (cf(c))) = 0;

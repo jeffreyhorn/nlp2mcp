@@ -46,6 +46,14 @@ b(j) = Z0(j) / prod(h, F0(h,j) ** beta(h,j));
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+alpha(i)$(NOT (alpha(i) > -inf and alpha(i) < inf)) = 0;
+b(j)$(NOT (b(j) > -inf and b(j) < inf)) = 0;
+beta(h,j)$(NOT (beta(h,j) > -inf and beta(h,j) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -66,7 +74,7 @@ Variables
     pf(h)
     UU
     nu_eqX(i)
-    nu_eqpz(j)
+    nu_eqpz(i)
     nu_eqF(h,j)
     nu_eqpx(j)
     nu_eqpf(h)
@@ -87,7 +95,7 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-pf.fx('LAB') = 1;
+pf.l('LAB') = 1;
 
 * ============================================
 * Variable Initialization
@@ -141,7 +149,7 @@ Equations
     eqZ(i)
     eqpf(h)
     eqpx(i)
-    eqpz(j)
+    eqpz(i)
     obj
     pf_fx_LAB
 ;
@@ -156,12 +164,12 @@ Alias(h, h__);
 Alias(i, i__);
 
 * Stationarity equations
-stat_f(h,j).. ((-1) * (b(j) * prod(h__, f(h__,j) ** beta(h__,j)) * sum(h__, f(h__,j) ** beta(h__,j) * beta(h__,j) / f(h__,j) / f(h__,j) ** beta(h__,j)))) * nu_eqpz(j) + nu_eqF(h,j) + nu_eqpf(h) - piL_f(h,j) =E= 0;
+stat_f(h,j).. (((-1) * (b(j) * prod(h__, f(h__,j) ** beta(h__,j)) * sum(h__, f(h__,j) ** beta(h__,j) * beta(h__,j) / f(h__,j) / f(h__,j) ** beta(h__,j)))) * nu_eqpz(j))$(j(j)) + nu_eqF(h,j) + nu_eqpf(h) - piL_f(h,j) =E= 0;
 stat_pf(h).. sum(i, ((-1) * (px(i) * alpha(i) * FF(h) / sqr(px(i)))) * nu_eqX(i)) + sum(j, ((-1) * (((-1) * (beta(h,j) * pz(j) * z(j))) / sqr(pf(h)))) * nu_eqF(h,j)) + nu_pf_fx_LAB$(sameas(h, 'LAB')) - piL_pf(h) =E= 0;
 stat_px(i).. ((-1) * (((-1) * (alpha(i) * sum(h, pf(h) * FF(h)))) / sqr(px(i)))) * nu_eqX(i) + nu_eqZ(i) - piL_px(i) =E= 0;
 stat_pz(j).. sum(h, ((-1) * (pf(h) * z(j) * beta(h,j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqZ(j) - piL_pz(j) =E= 0;
-stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) + nu_eqpx(i) - piL_x(i) =E= 0;
-stat_z(j).. nu_eqpz(j) + sum(h, ((-1) * (pf(h) * beta(h,j) * pz(j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqpx(j) - piL_z(j) =E= 0;
+stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * x(i) ** alpha(i) * alpha(i) / x(i) / x(i) ** alpha(i))) + nu_eqX(i) + nu_eqpx(i) - piL_x(i) =E= 0;
+stat_z(j).. nu_eqpz(j)$(j(j)) + sum(h, ((-1) * (pf(h) * beta(h,j) * pz(j) / sqr(pf(h)))) * nu_eqF(h,j)) - nu_eqpx(j) - piL_z(j) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_f(h,j).. f(h,j) - 0.001 =G= 0;

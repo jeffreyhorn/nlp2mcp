@@ -41,6 +41,12 @@ c(i,j) = f * d(i,j) / 1000;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+c(i,j)$(NOT (c(i,j) > -inf and c(i,j) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

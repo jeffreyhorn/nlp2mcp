@@ -23,7 +23,7 @@ Sets
 
 Parameters
     bspec(e,*) /iron.maximum 60, copper.maximum 100, manganese.maximum 40, magnesium.maximum 30, aluminum.maximum inf, aluminum.minimum 1500, silicon.maximum 300, silicon.minimum 250/
-    prop(e,s) /iron.'bin-1' 0.15, iron.'bin-2' 0.04, iron.'bin-3' 0.02, iron.'bin-4' 0.04, iron.'bin-5' 0.02, iron.aluminum 0.01, copper.'bin-1' 0.03, copper.'bin-2' 0.05, copper.'bin-3' 0.08, copper.'bin-4' 0.02, copper.'bin-5' 0.06, copper.aluminum 0.01, manganese.'bin-1' 0.02, manganese.'bin-2' 0.04, manganese.'bin-3' 0.01, manganese.'bin-4' 0.02, manganese.'bin-5' 0.02, magnesium.'bin-1' 0.02, magnesium.'bin-2' 0.03, magnesium.'bin-4' 0.01, aluminum.'bin-1' 0.7, aluminum.'bin-2' 0.75, aluminum.'bin-3' 0.8, aluminum.'bin-4' 0.75, aluminum.'bin-5' 0.8, aluminum.aluminum 0.97, silicon.'bin-1' 0.02, silicon.'bin-2' 0.06, silicon.'bin-3' 0.08, silicon.'bin-4' 0.12, silicon.'bin-5' 0.02, silicon.aluminum 0.01, silicon.silicon 1/
+    prop(e,s) /iron.'bin-1' 0.15, iron.'bin-2' 0.04, iron.'bin-3' 0.02, iron.'bin-4' 0.04, iron.'bin-5' 0.02, iron.aluminum 0.01, copper.'bin-1' 0.03, copper.'bin-2' 0.05, copper.'bin-3' 0.08, copper.'bin-4' 0.02, copper.'bin-5' 0.06, copper.aluminum 0.01, manganese.'bin-1' 0.02, manganese.'bin-2' 0.04, manganese.'bin-3' 0.01, manganese.'bin-4' 0.02, manganese.'bin-5' 0.02, magnesium.'bin-1' 0.02, magnesium.'bin-2' 0.03, magnesium.'bin-5' 0.01, aluminum.'bin-1' 0.7, aluminum.'bin-2' 0.75, aluminum.'bin-3' 0.8, aluminum.'bin-4' 0.75, aluminum.'bin-5' 0.8, aluminum.aluminum 0.97, silicon.'bin-1' 0.02, silicon.'bin-2' 0.06, silicon.'bin-3' 0.08, silicon.'bin-4' 0.12, silicon.'bin-5' 0.02, silicon.aluminum 0.01, silicon.silicon 1/
     dcheck(s)
     sup(s,*) /'bin-1'.inventory 200, 'bin-1'.cost 0.03, 'bin-2'.inventory 750, 'bin-2'.cost 0.08, 'bin-3'.inventory 800, 'bin-3'.'min-use' 400, 'bin-3'.cost 0.17, 'bin-4'.inventory 700, 'bin-4'.'min-use' 100, 'bin-4'.cost 0.12, 'bin-5'.inventory 1500, 'bin-5'.cost 0.15, aluminum.inventory inf, aluminum.cost 0.21, silicon.inventory inf, silicon.cost 0.38/
     report(s,*)
@@ -95,8 +95,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_bc(e).. nu_ebal(e) - piL_bc(e) + piU_bc(e) =E= 0;
-stat_x(s).. sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s) =E= 0;
+stat_bc(e).. (nu_ebal(e) - piL_bc(e) + piU_bc(e))$(bc.up(e) - bc.lo(e) > 1e-10) =E= 0;
+stat_x(s).. (sup(s,"cost") + nu_yield + sum(e, ((-1) * prop(e,s)) * nu_ebal(e)) - piL_x(s) + piU_x(s))$(x.up(s) - x.lo(s) > 1e-10) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_bc(e)$(bspec(e,"minimum") > -inf).. bc(e) - bspec(e,"minimum") =G= 0;
@@ -119,6 +119,12 @@ cdef.. cost =E= sum(s, sup(s,"cost") * x(s));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = bc.lo(e);
+piL_bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = 0;
+piU_bc.fx(e)$(not (bc.up(e) - bc.lo(e) > 1e-10)) = 0;
+x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = x.lo(s);
+piL_x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = 0;
+piU_x.fx(s)$(not (x.up(s) - x.lo(s) > 1e-10)) = 0;
 piL_bc.fx(e)$(not (bspec(e,"minimum") > -inf)) = 0;
 piL_x.fx(s)$(not (sup(s,"min-use") > -inf)) = 0;
 piU_bc.fx(e)$(not (bspec(e,"maximum") < inf)) = 0;

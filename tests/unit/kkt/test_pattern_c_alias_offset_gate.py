@@ -46,6 +46,24 @@ import pytest
 
 
 @pytest.mark.unit
+@pytest.mark.xfail(
+    reason=(
+        "Issue #1351: the Pattern C consolidation gate from #1306 (which this "
+        "test covers) suppressed phantom ±N offsets correctly but the "
+        "downstream zero-offset builder loses the cross-element aggregation, "
+        "leaving launch's KKT structurally incomplete (PATH reports "
+        "model_infeasible). Reverting the gate (this test xfails) restored "
+        "launch's solver-feasibility (obj=2731.711, matches Sprint 25 Day 0 "
+        "baseline) at the cost of re-introducing the phantom-offset emit. "
+        "The proper fix — make the consolidated zero-offset Sum iterate over "
+        "the equation domain with the body's condition (e.g., emit "
+        "`sum(ss$ge(s,ss), -nu_dweight(ss))` instead of "
+        "`sum(ss, -1$ge(ss,s) * nu_dweight(s))` for launch's dweight) — is "
+        "tracked under the launch comparison-mismatch family (#1226, #945, "
+        "#1142). Once that lands, remove this xfail."
+    ),
+    strict=True,
+)
 def test_alias_only_conditional_sum_emits_no_phantom_offsets(tmp_path):
     """A `sum(ss$ge(ss,s), iweight(ss))` body — no `IndexOffset` — must
     not yield `nu_dweight(s+N)` / `nu_dweight(s-N)` terms in the

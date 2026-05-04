@@ -55,7 +55,7 @@ Positive Variables
     slp(n,n)
     sln(n,n)
     z
-    lam_eq2(i,j)
+    lam_eq2(n,n)
     piL_x(n,k)
     piL_r(n)
     piL_slp(n,n)
@@ -107,7 +107,7 @@ Equations
     stat_slp(n,n)
     stat_x(n,k)
     stat_z
-    comp_eq2(i,j)
+    comp_eq2(n,n)
     comp_lo_r(n)
     comp_lo_sln(n,n)
     comp_lo_slp(n,n)
@@ -115,7 +115,7 @@ Equations
     comp_lo_z
     comp_up_x(n,k)
     defobj
-    eq1(i,j)
+    eq1(n,n)
 ;
 
 * ============================================
@@ -123,11 +123,11 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_r(n).. sum((i,j), (((-1) * (2 * (r(i) + r(j)))) * nu_eq1(i,j))$(e(i,j))) + sum((i,j), (2 * (r(i) + r(j)) * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) - piL_r(n) =E= 0;
-stat_sln(n,n).. (sum(i, 1$(e(n,i))) + nu_eq1(n,n)$(e(n,n)) - piL_sln(n,n))$(e(n,n)) =E= 0;
-stat_slp(n,n).. (sum(i, 1$(e(n,i))) + ((-1) * nu_eq1(n,n))$(e(n,n)) - piL_slp(n,n))$(e(n,n)) =E= 0;
-stat_x(n,k).. sum((i,j), (2 * (x(i,k) - x(j,k)) * nu_eq1(i,j))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-1,j))$(ord(i) > 1))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(n,k)) * (-1) * nu_eq1(i-10,j))$(ord(i) > 10))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-9,j))$(ord(i) > 9))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-4,j))$(ord(i) > 4))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-2,j))$(ord(i) > 2))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(n,k)) * (-1) * nu_eq1(i-11,j))$(ord(i) > 11))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-5,j))$(ord(i) > 5))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-12,j))$(ord(i) > 12))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-3,j))$(ord(i) > 3))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-13,j))$(ord(i) > 13))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-14,j))$(ord(i) > 14))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-15,j))$(ord(i) > 15))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-6,j))$(ord(i) > 6))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-16,j))$(ord(i) > 16))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-17,j))$(ord(i) > 17))$(e(i,j))) + sum((i,j), ((2 * (x(n,k) - x(j,k)) * nu_eq1(i-18,j))$(ord(i) > 18))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(n,k)) * (-1) * nu_eq1(i-19,j))$(ord(i) > 19))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-8,j))$(ord(i) > 8))$(e(i,j))) + sum((i,j), ((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-7,j))$(ord(i) > 7))$(e(i,j))) + sum((i,j), (((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-10,j))$(ord(i) > 10))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-9,j))$(ord(i) > 9))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-8,j))$(ord(i) > 8))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-7,j))$(ord(i) > 7))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-6,j))$(ord(i) > 6))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-5,j))$(ord(i) > 5))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-3,j))$(ord(i) > 3))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-4,j))$(ord(i) > 4))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-12,j))$(ord(i) > 12))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-11,j))$(ord(i) > 11))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-2,j))$(ord(i) > 2))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-13,j))$(ord(i) > 13))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-14,j))$(ord(i) > 14))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-15,j))$(ord(i) > 15))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-16,j))$(ord(i) > 16))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-17,j))$(ord(i) > 17))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), ((((-1) * (2 * (x(n,k) - x(j,k)))) * lam_eq2(i-18,j))$(ord(i) > 18))$((not e(i,j)) and ord(i) < ord(j))) - piL_x(n,k) + piU_x(n,k) =E= 0;
-stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), (-1) * lam_eq2(i,j)) - piL_z =E= 0;
+stat_r(n).. (sum((i,j), ((((-1) * (2 * (r(i) + r(j)))) * nu_eq1(i,j))$(i(i) and j(j)))$(e(i,j))) + sum((i,j), ((2 * (r(i) + r(j)) * lam_eq2(i,j))$(i(i) and j(j)))$((not e(i,j)) and ord(i) < ord(j))) - piL_r(n))$(r.up(n) - r.lo(n) > 1e-10) =E= 0;
+stat_sln(n,n).. (sum(i, 1$(e(n,i))) + (nu_eq1(n,n)$(i(n) and j(n)))$(e(n,n)) - piL_sln(n,n))$(e(n,n)) =E= 0;
+stat_slp(n,n).. (sum(i, 1$(e(n,i))) + (((-1) * nu_eq1(n,n))$(i(n) and j(n)))$(e(n,n)) - piL_slp(n,n))$(e(n,n)) =E= 0;
+stat_x(n,k).. (sum((i,j), ((2 * (x(i,k) - x(j,k)) * nu_eq1(i,j))$(i(i) and j(j)))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-1,j))$(i(i-1) and j(j)))$(ord(i) > 1))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-4,j))$(i(i-4) and j(j)))$(ord(i) > 4))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-2,j))$(i(i-2) and j(j)))$(ord(i) > 2))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-11,j))$(i(i-11) and j(j)))$(ord(i) > 11))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-5,j))$(i(i-5) and j(j)))$(ord(i) > 5))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-3,j))$(i(i-3) and j(j)))$(ord(i) > 3))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-6,j))$(i(i-6) and j(j)))$(ord(i) > 6))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-9,j))$(i(i-9) and j(j)))$(ord(i) > 9))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-19,j))$(i(i-19) and j(j)))$(ord(i) > 19))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-8,j))$(i(i-8) and j(j)))$(ord(i) > 8))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-10,j))$(i(i-10) and j(j)))$(ord(i) > 10))$(e(i,j))) + sum((i,j), (((2 * (x(i,k) - x(j,k)) * (-1) * nu_eq1(i-7,j))$(i(i-7) and j(j)))$(ord(i) > 7))$(e(i,j))) + sum((i,j), ((((-1) * (2 * (x(i,k) - x(j,k)))) * lam_eq2(i,j))$(i(i) and j(j)))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-10,j))$(i(i-10) and j(j)))$(ord(i) > 10))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-9,j))$(i(i-9) and j(j)))$(ord(i) > 9))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-8,j))$(i(i-8) and j(j)))$(ord(i) > 8))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-7,j))$(i(i-7) and j(j)))$(ord(i) > 7))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-6,j))$(i(i-6) and j(j)))$(ord(i) > 6))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-5,j))$(i(i-5) and j(j)))$(ord(i) > 5))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-3,j))$(i(i-3) and j(j)))$(ord(i) > 3))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-4,j))$(i(i-4) and j(j)))$(ord(i) > 4))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-12,j))$(i(i-12) and j(j)))$(ord(i) > 12))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-11,j))$(i(i-11) and j(j)))$(ord(i) > 11))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-2,j))$(i(i-2) and j(j)))$(ord(i) > 2))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-13,j))$(i(i-13) and j(j)))$(ord(i) > 13))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-14,j))$(i(i-14) and j(j)))$(ord(i) > 14))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-15,j))$(i(i-15) and j(j)))$(ord(i) > 15))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-16,j))$(i(i-16) and j(j)))$(ord(i) > 16))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-17,j))$(i(i-17) and j(j)))$(ord(i) > 17))$((not e(i,j)) and ord(i) < ord(j))) + sum((i,j), (((((-1) * (2 * (x(i,k) - x(j,k)) * (-1))) * lam_eq2(i-18,j))$(i(i-18) and j(j)))$(ord(i) > 18))$((not e(i,j)) and ord(i) < ord(j))) - piL_x(n,k) + piU_x(n,k))$(x.up(n,k) - x.lo(n,k) > 1e-10) =E= 0;
+stat_z.. 100 + sum((i,j)$((not e(i,j)) and ord(i) < ord(j)), ((-1) * lam_eq2(i,j))$(i(i) and j(j))) - piL_z =E= 0;
 
 * Inequality complementarity equations
 comp_eq2(i,j)$((not e(i,j)) and ord(i) < ord(j)).. sum(k, sqr(x(i,k) - x(j,k))) - (sqr(r(i) + r(j)) - z) =G= 0;
@@ -158,6 +158,11 @@ sln.fx(n,n)$(not (e(n,n))) = 0;
 piL_sln.fx(n,n)$(not (e(n,n))) = 0;
 slp.fx(n,n)$(not (e(n,n))) = 0;
 piL_slp.fx(n,n)$(not (e(n,n))) = 0;
+r.fx(n)$(not (r.up(n) - r.lo(n) > 1e-10)) = r.lo(n);
+piL_r.fx(n)$(not (r.up(n) - r.lo(n) > 1e-10)) = 0;
+x.fx(n,k)$(not (x.up(n,k) - x.lo(n,k) > 1e-10)) = x.lo(n,k);
+piL_x.fx(n,k)$(not (x.up(n,k) - x.lo(n,k) > 1e-10)) = 0;
+piU_x.fx(n,k)$(not (x.up(n,k) - x.lo(n,k) > 1e-10)) = 0;
 lam_eq2.fx(i,j)$(not ((not e(i,j)) and ord(i) < ord(j))) = 0;
 piL_r.fx(n)$(not (myScale * 0.001 > -inf)) = 0;
 piU_x.fx(n,k)$(not (myScale * smax((i,kp), fx(i,kp)) < inf)) = 0;

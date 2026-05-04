@@ -83,7 +83,7 @@ Parameters
     pel(cl,l)
     pml(cl,l)
     pep(c)
-    tradec(c,*) /wheat.production 13205, wheat.'export-q' 1231, wheat.'export-p' 125.6, wheat.'import-p' 607, corn.production 1242, corn.'import-p' 680, rye.production 807, rye.'export-q' 10, rye.'export-p' 130, rye.'import-p' 399, rice.production 225, rice.'import-q' 22.8, rice.'import-p' 383.3, barley.production 5000, barley.'export-q' 0.5, barley.'export-p' 141.1, barley.'import-p' 3975, chickpea.production 285, chickpea.'export-q' 50, chickpea.'export-p' 589.1, chickpea.'import-p' -10, drybean.production 69, drybean.'export-q' 0.3, drybean.'export-p' 832.6, drybean.'import-p' 6, lentil.production 285, lentil.'export-q' 108, lentil.'export-p' 396.7, lentil.'import-p' -20, potato.production 2870, potato.'export-q' 12.9, potato.'export-p' 171.4, onion.production 1000, onion.'export-q' 76.5, onion.'export-p' 94.7, 'gr-pepper'.production 545, 'gr-pepper'.'export-q' 0.4, 'gr-pepper'.'export-p' 497.1, tomato.production 3500, tomato.'export-q' 25.6, tomato.'export-p' 117.8, tomato.'import-p' 92.5, cucumber.production 500, sunflower.production 590, sunflower.'import-p' -39, olive.production 430, olive.'export-q' 5.4, olive.'export-p' 680, olive.'import-p' 148, groundnut.production 57.5, groundnut.'export-q' 1.4, groundnut.'export-p' 709.6, soybean.production 3.3, sesame.production 26, cotton.production 476.2, cotton.'export-q' 150.6, cotton.'export-p' 1751.2, sugarbeet.production 8760, tobacco.production 206.4, tobacco.'export-q' 69.6, tobacco.'export-p' 1908.3, tea.production 555, tea.'import-p' 30, citrus.production 1147, citrus.'export-q' 131.5, citrus.'export-p' 182.7, grape.production 3500, grape.'export-q' 8.1, grape.'export-p' 276.6, grape.'import-p' 302, apple.production 1350, apple.'export-q' 29.7, apple.'export-p' 224.2, peach.production 220, peach.'export-q' 0.9, peach.'export-p' 210.1, apricot.production 110, cherry.production 92, wildcherry.production 50, melon.production 5220, melon.'export-q' 23.2, melon.'export-p' 86.9, strawberry.production 22, strawberry.'export-q' 0.1, strawberry.'export-p' 830.3, banana.production 23.3, quince.production 45, quince.'export-q' 0.1, quince.'export-p' 184.9, pistachio.production 20, pistachio.'export-q' 0.6, pistachio.'export-p' 3760, hazelnut.production 300, hazelnut.'export-q' 7.4, hazelnut.'export-p' 1115.9, hazelnut.'import-p' 282/
+    tradec(c,*) /wheat.production 13205, wheat.'export-q' 1231, wheat.'export-p' 125.6, wheat.'other-q' 607, corn.production 1242, corn.'other-q' 680, rye.production 807, rye.'export-q' 10, rye.'export-p' 130, rye.'other-q' 399, rice.production 225, rice.'import-q' 22.8, rice.'import-p' 383.3, barley.production 5000, barley.'export-q' 0.5, barley.'export-p' 141.1, barley.'other-q' 3975, chickpea.production 285, chickpea.'export-q' 50, chickpea.'export-p' 589.1, chickpea.'other-q' -10, drybean.production 69, drybean.'export-q' 0.3, drybean.'export-p' 832.6, drybean.'other-q' 6, lentil.production 285, lentil.'export-q' 108, lentil.'export-p' 396.7, lentil.'other-q' -20, potato.production 2870, potato.'export-q' 12.9, potato.'export-p' 171.4, onion.production 1000, onion.'export-q' 76.5, onion.'export-p' 94.7, 'gr-pepper'.production 545, 'gr-pepper'.'export-q' 0.4, 'gr-pepper'.'export-p' 497.1, tomato.production 3500, tomato.'export-q' 25.6, tomato.'export-p' 117.8, tomato.'other-q' 92.5, cucumber.production 500, sunflower.production 590, sunflower.'other-q' -39, olive.production 430, olive.'export-q' 5.4, olive.'export-p' 680, olive.'other-q' 148, groundnut.production 57.5, groundnut.'export-q' 1.4, groundnut.'export-p' 709.6, soybean.production 3.3, sesame.production 26, cotton.production 476.2, cotton.'export-q' 150.6, cotton.'export-p' 1751.2, sugarbeet.production 8760, tobacco.production 206.4, tobacco.'export-q' 69.6, tobacco.'export-p' 1908.3, tea.production 555, tea.'other-q' 30, citrus.production 1147, citrus.'export-q' 131.5, citrus.'export-p' 182.7, grape.production 3500, grape.'export-q' 8.1, grape.'export-p' 276.6, grape.'other-q' 302, apple.production 1350, apple.'export-q' 29.7, apple.'export-p' 224.2, peach.production 220, peach.'export-q' 0.9, peach.'export-p' 210.1, apricot.production 110, cherry.production 92, wildcherry.production 50, melon.production 5220, melon.'export-q' 23.2, melon.'export-p' 86.9, strawberry.production 22, strawberry.'export-q' 0.1, strawberry.'export-p' 830.3, banana.production 23.3, quince.production 45, quince.'export-q' 0.1, quince.'export-p' 184.9, pistachio.production 20, pistachio.'export-q' 0.6, pistachio.'export-p' 3760, hazelnut.production 300, hazelnut.'export-q' 7.4, hazelnut.'export-p' 1115.9, hazelnut.'other-q' 282/
     tradel(l,cl,*) /sheep.meat.production 338, sheep.meat.'export-q' 31, sheep.meat.'export-p' 2220, sheep.milk.production 1102.2, sheep.wool.production 59.3, sheep.wool.'import-q' 6, sheep.wool.'import-p' 4315.8, sheep.hide.production 16.2, goat.meat.production 103.5, goat.meat.'export-q' 2.8, goat.meat.'export-p' 2220, goat.milk.production 571.1, goat.wool.production 9.2, goat.wool.'export-q' 0.3, goat.wool.'export-p' 700.2, goat.hide.production 3.8, angora.meat.production 6.5, angora.meat.'export-q' 0.2, angora.meat.'export-p' 2220, angora.milk.production 54.9, angora.wool.production 5.8, angora.wool.'export-q' 1.5, angora.wool.'export-p' 804.6, angora.hide.production 0.3, cattle.meat.production 391, cattle.meat.'export-q' 4, cattle.meat.'export-p' 1140, cattle.milk.production 3386.4, cattle.hide.production 51.6, buffalo.meat.production 34, buffalo.meat.'export-q' 3, buffalo.meat.'export-p' 1140, buffalo.milk.production 296.6, buffalo.hide.production 2.7, poultry.meat.production 132, poultry.meat.'export-q' 18, poultry.meat.'export-p' 762, poultry.egg.production 4322.7/
     tradepp1(*,c) /price.wheat 132, price.tomato 604.4, price.sunflower 1183, price.olive 3308, price.tea 2223.3, price.grape 1164.5, price.hazelnut 2699.3, limit.wheat 40, limit.tomato 18.5, limit.sunflower 13, limit.olive 29.6, limit.tea 5.7, limit.grape 75.6, limit.hazelnut 127, factor.wheat 0.85, factor.tomato 0.2, factor.sunflower 0.33, factor.olive 0.2, factor.tea 0.19, factor.grape 0.25, factor.hazelnut 0.45/
     iop(c)
@@ -282,6 +282,42 @@ wsc(c,g) = (alphac(c) * qsc(c,g) + 0.5 * betac(c) * sqr(qsc(c,g))) / 1000;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+a(c,r,s)$(NOT (a(c,r,s) > -inf and a(c,r,s) < inf)) = 0;
+alpharc(c)$(NOT (alpharc(c) > -inf and alpharc(c) < inf)) = 0;
+alpharl(cl,l)$(NOT (alpharl(cl,l) > -inf and alpharl(cl,l) < inf)) = 0;
+betac(c)$(NOT (betac(c) > -inf and betac(c) < inf)) = 0;
+betal(cl,l)$(NOT (betal(cl,l) > -inf and betal(cl,l) < inf)) = 0;
+betarc(c)$(NOT (betarc(c) > -inf and betarc(c) < inf)) = 0;
+betarl(cl,l)$(NOT (betarl(cl,l) > -inf and betarl(cl,l) < inf)) = 0;
+capitalt(c)$(NOT (capitalt(c) > -inf and capitalt(c) < inf)) = 0;
+cpricec(c,ty)$(NOT (cpricec(c,ty) > -inf and cpricec(c,ty) < inf)) = 0;
+cpricel(cl,l,ty)$(NOT (cpricel(cl,l,ty) > -inf and cpricel(cl,l,ty) < inf)) = 0;
+drc(s,r,ds,pt,tq)$(NOT (drc(s,r,ds,pt,tq) > -inf and drc(s,r,ds,pt,tq) < inf)) = 0;
+drt(c,ds,pt,tq)$(NOT (drt(c,ds,pt,tq) > -inf and drt(c,ds,pt,tq) < inf)) = 0;
+icostc(r,s)$(NOT (icostc(r,s) > -inf and icostc(r,s) < inf)) = 0;
+incrc(c)$(NOT (incrc(c) > -inf and incrc(c) < inf)) = 0;
+incrl(cl,l)$(NOT (incrl(cl,l) > -inf and incrl(cl,l) < inf)) = 0;
+iop(c)$(NOT (iop(c) > -inf and iop(c) < inf)) = 0;
+labc(s,r,pt,tq)$(NOT (labc(s,r,pt,tq) > -inf and labc(s,r,pt,tq) < inf)) = 0;
+labl(l)$(NOT (labl(l) > -inf and labl(l) < inf)) = 0;
+labt(c,pt,tq)$(NOT (labt(c,pt,tq) > -inf and labt(c,pt,tq) < inf)) = 0;
+lcostc(s,r,pt)$(NOT (lcostc(s,r,pt) > -inf and lcostc(s,r,pt) < inf)) = 0;
+lcostl(l)$(NOT (lcostl(l) > -inf and lcostl(l) < inf)) = 0;
+lcostt(c,pt)$(NOT (lcostt(c,pt) > -inf and lcostt(c,pt) < inf)) = 0;
+pfi(ty)$(NOT (pfi(ty) > -inf and pfi(ty) < inf)) = 0;
+pricec(c,ty)$(NOT (pricec(c,ty) > -inf and pricec(c,ty) < inf)) = 0;
+pricel(cl,l,ty)$(NOT (pricel(cl,l,ty) > -inf and pricel(cl,l,ty) < inf)) = 0;
+qmaxc(c)$(NOT (qmaxc(c) > -inf and qmaxc(c) < inf)) = 0;
+qmaxl(cl,l)$(NOT (qmaxl(cl,l) > -inf and qmaxl(cl,l) < inf)) = 0;
+qminc(c)$(NOT (qminc(c) > -inf and qminc(c) < inf)) = 0;
+qminl(cl,l)$(NOT (qminl(cl,l) > -inf and qminl(cl,l) < inf)) = 0;
+wsc(c,g)$(NOT (wsc(c,g) > -inf and wsc(c,g) < inf)) = 0;
+wsl(cl,l,g)$(NOT (wsl(cl,l,g) > -inf and wsl(cl,l,g) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -381,6 +417,7 @@ Positive Variables
     piL_natql(cl,l,g)
     piU_treeland(ct)
     piU_xlive(l)
+    piU_exportp(c)
     piU_importc(c)
     piU_importl(cl,l)
     piU_exportc(c)
@@ -517,6 +554,7 @@ Equations
     comp_lo_xtree(c,pt)
     comp_up_exportc(c)
     comp_up_exportl(cl,l)
+    comp_up_exportp(c)
     comp_up_importc(c)
     comp_up_importl(cl,l)
     comp_up_treeland(ct)
@@ -530,7 +568,7 @@ Equations
     combc(c)
     combl(cl,l)
     dadcl
-    ddev(ty)
+    ddev
     demnatc(c)
     demnatl(cl,l)
     dprodc(c)
@@ -556,13 +594,13 @@ stat_adc.. -1 + nu_dadcl =E= 0;
 stat_capcost.. 1 + nu_acap =E= 0;
 stat_cropland(ca).. nu_landuse(ca) + sum(ty, 1000 * revdevc(ca,ty) / 1000000 * nu_ddev(ty)) - piL_cropland(ca) =E= 0;
 stat_dprcost.. 1 + nu_adpr =E= 0;
-stat_exportc(c).. 1$(pec(c)) * nu_ndemc(c) + ((-1) * (1000 * pec(c)$(tradec(c,"export-q")) / 1000000)) * nu_aexp - piL_exportc(c) + piU_exportc(c) =E= 0;
-stat_exportl(cl,l).. (1$(pel(cl,l)) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pel(cl,l)$(tradel(l,cl,"export-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aexp - piL_exportl(cl,l) + piU_exportl(cl,l) =E= 0;
-stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c))$(cp(c)) =E= 0;
+stat_exportc(c).. (1$(pec(c)) * nu_ndemc(c) + ((-1) * (1000 * pec(c)$(tradec(c,"export-q")) / 1000000)) * nu_aexp - piL_exportc(c) + piU_exportc(c))$(exportc.up(c) - exportc.lo(c) > 1e-10) =E= 0;
+stat_exportl(cl,l).. ((1$(pel(cl,l)) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pel(cl,l)$(tradel(l,cl,"export-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aexp - piL_exportl(cl,l) + piU_exportl(cl,l))$(exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10) =E= 0;
+stat_exportp(c).. ((((-1) * (1000 * pep(c)$(tradepp1("price",c)) / 1000000)) * nu_aexp)$(cp(c)) + iop(c)$(cp(c)) * lam_mbalc(c) - piL_exportp(c) + piU_exportp(c))$(cp(c) and exportp.up(c) - exportp.lo(c) > 1e-10) =E= 0;
 stat_feed(l,fclass).. lam_feedd$(sameas(fclass, 'd-fodder')) - lam_totfeed(l) - lam_minfeed(l,fclass) + lam_maxfeed(l,fclass) + lam_feedgr$(sameas(fclass, 'g-fodder')) + lam_feedg$(sameas(fclass, 'grain+con')) + lam_feedp$(sameas(fclass, 'pasture')) - piL_feed(l,fclass) =E= 0;
 stat_impcost.. 1 + nu_aimp =E= 0;
-stat_importc(c).. ((-1) * 1$(pmc(c))) * nu_ndemc(c) + ((-1) * (1000 * pmc(c)$(tradec(c,"import-q")) / 1000000)) * nu_aimp - piL_importc(c) + piU_importc(c) =E= 0;
-stat_importl(cl,l).. (((-1) * 1$(pml(cl,l))) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pml(cl,l)$(tradel(l,cl,"import-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aimp - piL_importl(cl,l) + piU_importl(cl,l) =E= 0;
+stat_importc(c).. (((-1) * 1$(pmc(c))) * nu_ndemc(c) + ((-1) * (1000 * pmc(c)$(tradec(c,"import-q")) / 1000000)) * nu_aimp - piL_importc(c) + piU_importc(c))$(importc.up(c) - importc.lo(c) > 1e-10) =E= 0;
+stat_importl(cl,l).. ((((-1) * 1$(pml(cl,l))) * nu_ndeml(cl,l))$(cll(cl,l)) + ((-1) * (1000 * pml(cl,l)$(tradel(l,cl,"import-q")) * 1$(cll(cl,l)) / 1000000)) * nu_aimp - piL_importl(cl,l) + piU_importl(cl,l))$(importl.up(cl,l) - importl.lo(cl,l) > 1e-10) =E= 0;
 stat_inpcost.. 1 + nu_ainp =E= 0;
 stat_labcost.. 1 + nu_alab =E= 0;
 stat_natconc(c).. nu_ndemc(c) + nu_demnatc(c) + (((-1) * (ioconc(c) * eval("concentrat",c))) * lam_feedg)$(co(c)) =E= 0;
@@ -576,12 +614,12 @@ stat_revexp.. -1 + nu_aexp =E= 0;
 stat_salesc(c).. ((-1) * nu_ndemc(c)) + lam_mbalc(c) - piL_salesc(c) =E= 0;
 stat_salesl(cl,l).. ((-1) * nu_ndeml(cl,l))$(cll(cl,l)) + lam_mball(cl,l)$(cll(cl,l)) - piL_salesl(cl,l) =E= 0;
 stat_sumdev.. card(ty) * phi * k / sqr(card(ty)) + nu_dsum =E= 0;
-stat_totgrain.. nu_tgrain + sum(cg, gmin(cg) * lam_mingrain(cg)) + sum(cg, ((-1) * gmax(cg)) * lam_maxgrain(cg)) =E= 0;
-stat_transfer(c).. ((-1) * nu_tgrain)$(cg(c)) + 1$(ctr(c)) * lam_mbalc(c) + (((-1) * eval("product",c)) * lam_feedgr)$(cgf(c)) + (((-1) * eval("product",c)) * lam_feedg)$(cg(c)) - lam_mingrain(c) + lam_maxgrain(c) - piL_transfer(c) =E= 0;
-stat_treeland(ct).. ((-1) * nu_landbt(ct)) + sum(ty, 1000 * revdevc(ct,ty) / 1000000 * nu_ddev(ty)) - piL_treeland(ct) + piU_treeland(ct) =E= 0;
+stat_totgrain.. nu_tgrain + sum(cg, (gmin(cg) * lam_mingrain(cg))$(cg(cg))) + sum(cg, (((-1) * gmax(cg)) * lam_maxgrain(cg))$(cg(cg))) =E= 0;
+stat_transfer(c).. ((-1) * nu_tgrain)$(cg(c)) + 1$(ctr(c)) * lam_mbalc(c) + (((-1) * eval("product",c)) * lam_feedgr)$(cgf(c)) + (((-1) * eval("product",c)) * lam_feedg)$(cg(c)) - lam_mingrain(c)$(cg(c)) + lam_maxgrain(c)$(cg(c)) - piL_transfer(c) =E= 0;
+stat_treeland(ct).. (((-1) * nu_landbt(ct)$(ct(ct))) + sum(ty, 1000 * revdevc(ct,ty) / 1000000 * nu_ddev(ty)) - piL_treeland(ct) + piU_treeland(ct))$(treeland.up(ct) - treeland.lo(ct) > 1e-10) =E= 0;
 stat_xcrop(s,r,pt).. sum(c, ((-1) * yieldc(c,s,r)) * nu_dprodc(c)) + 1$(sr(s,r)) * lam_landbc(s) + sum(tq, labc(s,r,pt,tq) * lam_labor(tq)) + sum((ds,tq), drc(s,r,ds,pt,tq) * lam_draftb(ds,tq)) + ((-1) * sum(ca, yieldf(ca,s,r) * eval("fodder",ca))) * lam_feedd - piL_xcrop(s,r,pt) =E= 0;
-stat_xlive(l).. sum(ty, 1000 * sum(cl$(cll(cl,l)), revdevl(cl,l,ty)) / 1000000 * nu_ddev(ty)) + ((-1) * lcostl(l)) * nu_alab + sum(tq, labl(l) * lam_labor(tq)) + sum((ds,tq), ((-1) * (1000 * dpower(ds,l) / 1000000)) * lam_draftb(ds,tq)) + sum(cl, (((-1) * (1000 * yieldl(cl,l) / 1000000)) * lam_mball(cl,l))$(cll(cl,l))) + ereq(l) * lam_totfeed(l) + sum(fclass, fmin(l,fclass) * ereq(l) * lam_minfeed(l,fclass)) + sum(fclass, ((-1) * (fmax(l,fclass) * ereq(l))) * lam_maxfeed(l,fclass)) - piL_xlive(l) + piU_xlive(l) =E= 0;
-stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + (1$(cpt(c,pt)) * nu_landbt(c))$(ct(c)) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
+stat_xlive(l).. (sum(ty, 1000 * sum(cl$(cll(cl,l)), revdevl(cl,l,ty)) / 1000000 * nu_ddev(ty)) + ((-1) * lcostl(l)) * nu_alab + sum(tq, labl(l) * lam_labor(tq)) + sum((ds,tq), ((-1) * (1000 * dpower(ds,l) / 1000000)) * lam_draftb(ds,tq)) + sum(cl, (((-1) * (1000 * yieldl(cl,l) / 1000000)) * lam_mball(cl,l))$(cll(cl,l))) + ereq(l) * lam_totfeed(l) + sum(fclass, fmin(l,fclass) * ereq(l) * lam_minfeed(l,fclass)) + sum(fclass, ((-1) * (fmax(l,fclass) * ereq(l))) * lam_maxfeed(l,fclass)) - piL_xlive(l) + piU_xlive(l))$(xlive.up(l) - xlive.lo(l) > 1e-10) =E= 0;
+stat_xtree(c,pt).. ((-1) * (yieldt(c) * 1$(cpt(c,pt)))) * nu_dprodc(c) + ((1$(cpt(c,pt)) * nu_landbt(c))$(ct(c)))$(ct(c)) + sum(ct__, ((-1) * (1000 * icostt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_ainp)$(ct(c)) + (((-1) * dcostt(c,pt)) * nu_adpr)$(ct(c)) + (((-1) * lcostt(c,pt)) * nu_alab)$(ct(c)) + sum(ct__, ((-1) * (1000 * capitalt(c) * 1$(cpt(ct__,pt)) / 1000000)) * nu_acap)$(ct(c)) + sum(tq, labt(c,pt,tq) * lam_labor(tq)) + sum((ds,tq), drt(c,ds,pt,tq) * lam_draftb(ds,tq)) - piL_xtree(c,pt) =E= 0;
 
 * Inequality complementarity equations
 comp_draftb(ds,tq).. ((-1) * (sum((s,r,pt), drc(s,r,ds,pt,tq) * xcrop(s,r,pt)) + sum((ct,pt), drt(ct,ds,pt,tq) * xtree(ct,pt)) - (drsup(ds) + sum(l, dpower(ds,l) * xlive(l)) / 1000))) =G= 0;
@@ -622,6 +660,7 @@ comp_lo_xtree(c,pt).. xtree(c,pt) - 0 =G= 0;
 * Upper bound complementarity equations
 comp_up_exportc(c)$(expcb(c) < inf).. expcb(c) - exportc(c) =G= 0;
 comp_up_exportl(cl,l)$(explb(cl,l) < inf).. explb(cl,l) - exportl(cl,l) =G= 0;
+comp_up_exportp(c)$(cp(c) and exppb(c) < inf).. exppb(c) - exportp(c) =G= 0;
 comp_up_importc(c)$(impcb(c) < inf).. impcb(c) - importc(c) =G= 0;
 comp_up_importl(cl,l)$(implb(cl,l) < inf).. implb(cl,l) - importl(cl,l) =G= 0;
 comp_up_treeland(ct)$(1.25 * landt(ct) < inf).. 1.25 * landt(ct) - treeland(ct) =G= 0;
@@ -659,11 +698,34 @@ objlin.. cps =E= adc + revexp - impcost - inpcost - dprcost - labcost - capcost 
 
 exportp.fx(c)$(not (cp(c))) = 0;
 piL_exportp.fx(c)$(not (cp(c))) = 0;
+piU_exportp.fx(c)$(not (cp(c))) = 0;
 natconl.fx(cl,l)$(not (cll(cl,l))) = 0;
+exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = exportc.lo(c);
+piL_exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = 0;
+piU_exportc.fx(c)$(not (exportc.up(c) - exportc.lo(c) > 1e-10)) = 0;
+exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = exportl.lo(cl,l);
+piL_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
+piU_exportl.fx(cl,l)$(not (exportl.up(cl,l) - exportl.lo(cl,l) > 1e-10)) = 0;
+exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = exportp.lo(c);
+piL_exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = 0;
+piU_exportp.fx(c)$(not (exportp.up(c) - exportp.lo(c) > 1e-10)) = 0;
+importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = importc.lo(c);
+piL_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
+piU_importc.fx(c)$(not (importc.up(c) - importc.lo(c) > 1e-10)) = 0;
+importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = importl.lo(cl,l);
+piL_importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = 0;
+piU_importl.fx(cl,l)$(not (importl.up(cl,l) - importl.lo(cl,l) > 1e-10)) = 0;
+treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = treeland.lo(ct);
+piL_treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = 0;
+piU_treeland.fx(ct)$(not (treeland.up(ct) - treeland.lo(ct) > 1e-10)) = 0;
+xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = xlive.lo(l);
+piL_xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = 0;
+piU_xlive.fx(l)$(not (xlive.up(l) - xlive.lo(l) > 1e-10)) = 0;
 lam_mball.fx(cl,l)$(not (cll(cl,l))) = 0;
 piL_treeland.fx(ct)$(not (0.75 * landt(ct) > -inf)) = 0;
 piU_exportc.fx(c)$(not (expcb(c) < inf)) = 0;
 piU_exportl.fx(cl,l)$(not (explb(cl,l) < inf)) = 0;
+piU_exportp.fx(c)$(not (cp(c) and exppb(c) < inf)) = 0;
 piU_importc.fx(c)$(not (impcb(c) < inf)) = 0;
 piU_importl.fx(cl,l)$(not (implb(cl,l) < inf)) = 0;
 piU_treeland.fx(ct)$(not (1.25 * landt(ct) < inf)) = 0;
@@ -773,6 +835,7 @@ Model mcp_model /
     comp_lo_xtree.piL_xtree,
     comp_up_exportc.piU_exportc,
     comp_up_exportl.piU_exportl,
+    comp_up_exportp.piU_exportp,
     comp_up_importc.piU_importc,
     comp_up_importl.piU_importl,
     comp_up_treeland.piU_treeland,

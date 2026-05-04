@@ -73,6 +73,13 @@ prdev(c,ty)$(ravg(c)) = 1000 * price(c) * (crev(c,ty) / ravg(c) - 1);
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+prdev(c,ty)$(NOT (prdev(c,ty) > -inf and prdev(c,ty) < inf)) = 0;
+ravg(c)$(NOT (ravg(c) > -inf and ravg(c) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -140,34 +147,41 @@ Positive Variables
 xcrop.up(p,s)$(xcropl(p,s)) = xcropl(p,s);
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables are set to 1.
+$onMultiR
+$include "data/gamslib/raw/agreste.gms"
+$offMulti
 
-xcrop.l(p,s) = 1;
-xcrop.l(p,s) = min(xcrop.l(p,s), xcrop.up(p,s));
-xliver.l(r) = 1;
-xliver.l(r) = min(xliver.l(r), xliver.up(r));
-lswitch.l(s) = 1;
-lswitch.l(s) = min(lswitch.l(s), lswitch.up(s));
-cons.l(dr) = 1;
-cons.l(dr) = min(cons.l(dr), cons.up(dr));
-sales.l(c) = 1;
-sales.l(c) = min(sales.l(c), sales.up(c));
-flab.l(tm) = 1;
-flab.l(tm) = min(flab.l(tm), flab.up(tm));
-tlab.l(tm) = 1;
-tlab.l(tm) = min(tlab.l(tm), tlab.up(tm));
-plab.l = 1;
-plab.l = min(plab.l, plab.up);
-pdev.l(ty) = 1;
-pdev.l(ty) = min(pdev.l(ty), pdev.up(ty));
-ndev.l(ty) = 1;
-ndev.l(ty) = min(ndev.l(ty), ndev.up(ty));
+* Transfer NLP duals to MCP multiplier initialization
+lam_landb.l(s) = abs(landb.m(s));
+nu_lbal.l = lbal.m;
+nu_rliv.l = rliv.m;
+lam_mbalc.l(c) = abs(mbalc.m(c));
+nu_dprod.l(c) = dprod.m(c);
+lam_labc.l(tm) = abs(labc.m(tm));
+nu_cond.l = cond.m;
+nu_ddev.l(ty) = ddev.m(ty);
+nu_arev.l = arev.m;
+nu_acrop.l = acrop.m;
+nu_alab.l = alab.m;
+lam_awcc.l = abs(awcc.m);
+nu_avet.l = avet.m;
+
+* Transfer variable marginals to bound multipliers
+piL_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.lo(p,s)) < 1e-6 and xcrop.m(p,s) > 0) = xcrop.m(p,s);
+piL_xliver.l(r)$(abs(xliver.l(r) - xliver.lo(r)) < 1e-6 and xliver.m(r) > 0) = xliver.m(r);
+piL_lswitch.l(s)$(abs(lswitch.l(s) - lswitch.lo(s)) < 1e-6 and lswitch.m(s) > 0) = lswitch.m(s);
+piL_cons.l(dr)$(abs(cons.l(dr) - cons.lo(dr)) < 1e-6 and cons.m(dr) > 0) = cons.m(dr);
+piL_sales.l(c)$(abs(sales.l(c) - sales.lo(c)) < 1e-6 and sales.m(c) > 0) = sales.m(c);
+piL_flab.l(tm)$(abs(flab.l(tm) - flab.lo(tm)) < 1e-6 and flab.m(tm) > 0) = flab.m(tm);
+piL_tlab.l(tm)$(abs(tlab.l(tm) - tlab.lo(tm)) < 1e-6 and tlab.m(tm) > 0) = tlab.m(tm);
+piL_plab.l$(abs(plab.l - plab.lo) < 1e-6 and plab.m > 0) = plab.m;
+piL_pdev.l(ty)$(abs(pdev.l(ty) - pdev.lo(ty)) < 1e-6 and pdev.m(ty) > 0) = pdev.m(ty);
+piL_ndev.l(ty)$(abs(ndev.l(ty) - ndev.lo(ty)) < 1e-6 and ndev.m(ty) > 0) = ndev.m(ty);
+piU_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.up(p,s)) < 1e-6 and xcrop.m(p,s) < 0) = -(xcrop.m(p,s));
+piU_flab.l(tm)$(abs(flab.l(tm) - flab.up(tm)) < 1e-6 and flab.m(tm) < 0) = -(flab.m(tm));
 
 * ============================================
 * Equations
@@ -227,6 +241,7 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_cons(dr).. ((-1) * vsc) + nu_cond + sum(c, cbndl(c,dr) * lam_mbalc(c)) - piL_cons(dr) =E= 0;
 stat_cropcost.. 1 + nu_acrop + lam_awcc =E= 0;
@@ -241,7 +256,7 @@ stat_revenue.. -1 + nu_arev =E= 0;
 stat_sales(c).. sum(ty, prdev(c,ty) * nu_ddev(ty)) + ((-1) * (1000 * price(c))) * nu_arev + lam_mbalc(c) - piL_sales(c) =E= 0;
 stat_tlab(tm).. ((-1) * (dpm * twage / sqr(dpm))) * nu_alab - lam_labc(tm) + twage / dpm * lam_awcc - piL_tlab(tm) =E= 0;
 stat_vetcost.. 1 + nu_avet + lam_awcc =E= 0;
-stat_xcrop(p,s).. sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + (a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s) + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s) =E= 0;
+stat_xcrop(p,s).. (sum(c, ((-1) * (1000 * yield(p,c,s) / 1000000)) * nu_dprod(c)) + ((-1) * (pcost(p) * 1$(ps(p,s)))) * nu_acrop + (a(p) * 1$(ps(p,s)))$(sc(s)) * lam_landb(s) + sum(tm, labor(p,tm) * 1$(ps(p,s)) * lam_labc(tm)) - piL_xcrop(p,s) + piU_xcrop(p,s))$(xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10) =E= 0;
 stat_xlive.. nu_lbal + ((-1) * lprice) * nu_arev + ((-1) * vetpr) * nu_avet =E= 0;
 stat_xliver(r).. ((-1) * nu_lbal) + ((-1) * rations(r)) * nu_rliv + sum(s, lio(s,r) * lam_landb(s)) + sum(tm, llab(tm,r) * lam_labc(tm)) - piL_xliver(r) =E= 0;
 stat_xprod(c).. nu_dprod(c) =E= 0;
@@ -280,6 +295,7 @@ alab.. labcost =E= (fwage * sum(tm, flab(tm)) + twage * sum(tm, tlab(tm))) / dpm
 avet.. vetcost =E= vetpr * xlive;
 income.. yfarm =E= revenue + vsc * sum(dr, cons(dr)) - labcost - rationr - vetcost - cropcost - phi * sum(ty, pdev(ty) + ndev(ty)) / card(ty);
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -288,6 +304,9 @@ income.. yfarm =E= revenue + vsc * sum(dr, cons(dr)) - labcost - rationr - vetco
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = xcrop.lo(p,s);
+piL_xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = 0;
+piU_xcrop.fx(p,s)$(not (xcrop.up(p,s) - xcrop.lo(p,s) > 1e-10)) = 0;
 piU_xcrop.fx(p,s)$(not (xcropl(p,s) and xcropl(p,s) < inf)) = 0;
 
 * ============================================
@@ -348,43 +367,6 @@ Model mcp_model /
     comp_up_flab.piU_flab,
     comp_up_xcrop.piU_xcrop
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/agreste.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-lam_landb.l(s) = abs(landb.m(s));
-nu_lbal.l = lbal.m;
-nu_rliv.l = rliv.m;
-lam_mbalc.l(c) = abs(mbalc.m(c));
-nu_dprod.l(c) = dprod.m(c);
-lam_labc.l(tm) = abs(labc.m(tm));
-nu_cond.l = cond.m;
-nu_ddev.l(ty) = ddev.m(ty);
-nu_arev.l = arev.m;
-nu_acrop.l = acrop.m;
-nu_alab.l = alab.m;
-lam_awcc.l = abs(awcc.m);
-nu_avet.l = avet.m;
-
-* Transfer variable marginals to bound multipliers
-piL_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.lo(p,s)) < 1e-6 and xcrop.m(p,s) > 0) = xcrop.m(p,s);
-piL_xliver.l(r)$(abs(xliver.l(r) - xliver.lo(r)) < 1e-6 and xliver.m(r) > 0) = xliver.m(r);
-piL_lswitch.l(s)$(abs(lswitch.l(s) - lswitch.lo(s)) < 1e-6 and lswitch.m(s) > 0) = lswitch.m(s);
-piL_cons.l(dr)$(abs(cons.l(dr) - cons.lo(dr)) < 1e-6 and cons.m(dr) > 0) = cons.m(dr);
-piL_sales.l(c)$(abs(sales.l(c) - sales.lo(c)) < 1e-6 and sales.m(c) > 0) = sales.m(c);
-piL_flab.l(tm)$(abs(flab.l(tm) - flab.lo(tm)) < 1e-6 and flab.m(tm) > 0) = flab.m(tm);
-piL_tlab.l(tm)$(abs(tlab.l(tm) - tlab.lo(tm)) < 1e-6 and tlab.m(tm) > 0) = tlab.m(tm);
-piL_plab.l$(abs(plab.l - plab.lo) < 1e-6 and plab.m > 0) = plab.m;
-piL_pdev.l(ty)$(abs(pdev.l(ty) - pdev.lo(ty)) < 1e-6 and pdev.m(ty) > 0) = pdev.m(ty);
-piL_ndev.l(ty)$(abs(ndev.l(ty) - ndev.lo(ty)) < 1e-6 and ndev.m(ty) > 0) = ndev.m(ty);
-piU_xcrop.l(p,s)$(abs(xcrop.l(p,s) - xcrop.up(p,s)) < 1e-6 and xcrop.m(p,s) < 0) = -(xcrop.m(p,s));
-piU_flab.l(tm)$(abs(flab.l(tm) - flab.up(tm)) < 1e-6 and flab.m(tm) < 0) = -(flab.m(tm));
 
 * ============================================
 * Solve Statement

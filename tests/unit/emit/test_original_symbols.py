@@ -2057,6 +2057,113 @@ class TestEmitInterleavedParamsAndSets:
         assert nonzero_line is not None, "NONZERO set assignment should be emitted"
         assert abar0_line < nonzero_line, "abar0 must come before NONZERO"
 
+    def test_iter_blocked_param_emitted_after_dynamic_set_init(self):
+        """Issue #1291: ``tmp = sum(leaf, nprob(leaf))`` reads ``leaf``.
+
+        The clearlak pattern: a scalar parameter assignment reduces over a
+        dynamic set via sum/. The set must be initialized first, otherwise
+        GAMS errors with `352 Set has not been initialized`.
+        """
+        from src.ir.ast import Sum
+
+        model = ModelIR()
+        model.sets["n"] = SetDef(name="n", members=["a", "b", "c"], domain=("*",))
+        model.sets["leaf"] = SetDef(name="leaf", members=[], domain=("n",))
+        model.params["nprob"] = ParameterDef(
+            name="nprob",
+            domain=("n",),
+            values={("a",): 0.2, ("b",): 0.3, ("c",): 0.5},
+        )
+        # tmp = sum(leaf, nprob(leaf))  — scalar, reduces over dynamic `leaf`
+        model.params["tmp"] = ParameterDef(
+            name="tmp",
+            domain=(),
+            expressions=[
+                ((), Sum(("leaf",), ParamRef("nprob", ("leaf",)))),
+            ],
+        )
+        # leaf(n) = yes$(ord(n) > 1)  — initializes leaf before tmp can read it
+        model.set_assignments = [
+            SetAssignment(
+                set_name="leaf",
+                indices=("n",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary(">", Call("ord", (SymbolRef("n"),)), Const(1.0)),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "iter-blocked param should trigger interleaving"
+        assert "tmp" in param_names, "tmp must be emitted by interleaved pass"
+        assert 0 in sa_indices, "leaf set assignment must be emitted by interleaved pass"
+
+        lines = code.split("\n")
+        leaf_line = next((i for i, ln in enumerate(lines) if "leaf(n)" in ln.lower()), None)
+        tmp_line = next(
+            (i for i, ln in enumerate(lines) if ln.lower().lstrip().startswith("tmp")), None
+        )
+        assert leaf_line is not None, "leaf set assignment must be emitted"
+        assert tmp_line is not None, "tmp = sum(...) must be emitted"
+        assert leaf_line < tmp_line, "leaf must be initialized before tmp = sum(leaf, ...)"
+
+    def test_iter_blocked_alias_of_dynamic_set_emitted_after_init(self):
+        """PR #1337 review: iter-blocked detection must follow alias chains.
+
+        ``Alias(leaf, ll)`` then ``tmp = sum(ll, nprob(ll))`` reads ``ll``
+        which aliases the dynamic set ``leaf``. Pre-fix, the iter-blocked
+        intersection used ``dynamic_set_names`` (not the alias-expanded
+        set), so this case was missed and the topological sort could
+        hoist the reduction before the ``leaf`` initialization.
+        """
+        from src.ir.ast import Sum
+
+        model = ModelIR()
+        model.sets["n"] = SetDef(name="n", members=["a", "b", "c"], domain=("*",))
+        model.sets["leaf"] = SetDef(name="leaf", members=[], domain=("n",))
+        model.aliases["ll"] = AliasDef(name="ll", target="leaf")
+        model.params["nprob"] = ParameterDef(
+            name="nprob",
+            domain=("n",),
+            values={("a",): 0.2, ("b",): 0.3, ("c",): 0.5},
+        )
+        # tmp = sum(ll, nprob(ll))  — sums over the *alias* of dynamic `leaf`
+        model.params["tmp"] = ParameterDef(
+            name="tmp",
+            domain=(),
+            expressions=[
+                ((), Sum(("ll",), ParamRef("nprob", ("ll",)))),
+            ],
+        )
+        model.set_assignments = [
+            SetAssignment(
+                set_name="leaf",
+                indices=("n",),
+                expr=DollarConditional(
+                    value_expr=Const(1.0),
+                    condition=Binary(">", Call("ord", (SymbolRef("n"),)), Const(1.0)),
+                ),
+                location=None,
+            ),
+        ]
+
+        code, param_names, sa_indices = emit_interleaved_params_and_sets(model)
+        assert code != "", "alias-iter-blocked param must trigger interleaving"
+        assert "tmp" in param_names
+        assert 0 in sa_indices, "leaf set assignment must be in interleaved output"
+
+        lines = code.split("\n")
+        leaf_line = next((i for i, ln in enumerate(lines) if "leaf(n)" in ln.lower()), None)
+        tmp_line = next(
+            (i for i, ln in enumerate(lines) if ln.lower().lstrip().startswith("tmp")), None
+        )
+        assert leaf_line is not None and tmp_line is not None
+        assert (
+            leaf_line < tmp_line
+        ), "leaf must be initialized before tmp = sum(ll, ...) (ll is alias of leaf)"
+
 
 @pytest.mark.unit
 class TestLoopTreeToGams:

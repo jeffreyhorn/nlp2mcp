@@ -61,6 +61,9 @@ sprob(n) = prob(n);
 
 execError = 0;
 
+sn(n) = sprob(n) ;
+psum = sum(n(n), sprob(n)) ;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -122,8 +125,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_x(i,t).. c(i) + lam_bal + sum((j,sn), (((-1) * a(j,i)) * lam_dembalx(j,t,sn))$(tn(t,sn))) - piL_x(i,t) =E= 0;
-stat_y(j,t,n).. sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(ord(t) <= card(t) - 1))$(tn(t,n))) + ((-1) * lam_dembalx(j,t,n))$(tn(t,n)) - piL_y(j,t,n) =E= 0;
+stat_x(i,t).. c(i) + lam_bal + sum((j,sn), ((((-1) * a(j,i)) * lam_dembalx(j,t,sn))$(sn(sn)))$(tn(t,sn))) - piL_x(i,t) =E= 0;
+stat_y(j,t,n).. (sum(sn$(sameas(sn, n)), sprob(n) * f(j,t) * 1$(tn(t,sn))) + sum(nn, (((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n))$(sn(n)))$(ord(t) <= card(t) - 1))$(tn(t,n))) + (((-1) * lam_dembalx(j,t,n))$(sn(n)))$(tn(t,n)) - piL_y(j,t,n))$(tn(t,n)) =E= 0;
 
 * Inequality complementarity equations
 comp_bal.. ((-1) * (sum((i,t), x(i,t)) - b)) =G= 0;
@@ -144,6 +147,8 @@ obj.. cost =E= sum((i,t), c(i) * x(i,t)) + sum((j,t,sn)$(tn(t,sn)), sprob(sn) * 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+y.fx(j,t,n)$(not (tn(t,n))) = 0;
+piL_y.fx(j,t,n)$(not (tn(t,n))) = 0;
 lam_dembalx.fx(j,t,sn)$(not (tn(t,sn))) = 0;
 lam_dembalx.fx(j,t,sn)$(not (ord(t) > 1)) = 0;
 lam_dembalx.fx(j,t,n)$(not (sn(n))) = 0;

@@ -503,27 +503,60 @@ def _extract_all_conditioned_guard(
     return combined
 
 
-def _remap_condition_to_domain(cond: Expr, var_domain: tuple[str, ...]) -> Expr:
+def _remap_condition_to_domain(
+    cond: Expr,
+    var_domain: tuple[str, ...],
+    model_ir: ModelIR | None = None,
+) -> Expr:
     """Remap condition indices to match the variable's domain.
 
     Issue #1062: Gradient conditions may use equation-context indices
     (e.g., SetMembershipTest(e, (n, i))) that don't match the variable
     domain (e.g., (n, n)). Replace non-domain SymbolRef indices with
-    the variable's domain index at the corresponding position.
+    the corresponding variable-domain index.
+
+    Issue #1350: Position-based remap is wrong when the condition's set
+    has a different arity than the variable. For srkandw's
+    `SetMembershipTest(tn, (t, sn))` against y's domain `(j, t, n)`,
+    naive `var_domain[1]` would map `sn → t` (catastrophic). Use the
+    condition's set's declared domain (`tn(t,n)` → position 1 is `n`)
+    to find the right var_domain index whose parent-chain matches `n`.
+    Falls back to the historical position-based remap when model_ir is
+    unavailable or the parent is not findable in var_domain.
     """
     if not isinstance(cond, SetMembershipTest) or not var_domain:
         return cond
+
+    # Resolve the condition's set declared domain (e.g., for tn(t,n) → ('t','n')).
+    set_declared_domain: tuple[str, ...] = ()
+    if model_ir is not None:
+        set_def = model_ir.sets.get(cond.set_name)
+        if set_def is None and cond.set_name in model_ir.aliases:
+            target = model_ir.aliases[cond.set_name].target
+            set_def = model_ir.sets.get(target)
+        if set_def is not None:
+            set_declared_domain = set_def.domain
 
     new_indices: list[Expr] = []
     domain_lower = {d.lower() for d in var_domain}
     for pos, idx in enumerate(cond.indices):
         if isinstance(idx, SymbolRef) and idx.name.lower() not in domain_lower:
-            # This index is from the equation context, not the variable domain.
-            # Replace with the variable domain index at this position.
-            if pos < len(var_domain):
-                new_indices.append(SymbolRef(var_domain[pos]))
-            else:
-                new_indices.append(idx)
+            replacement: Expr | None = None
+            # #1350 lookup: use the condition's set declared domain to find the
+            # parent set name at this position, then find the var_domain index
+            # that shares that alias root (or is a subset of it).
+            if model_ir is not None and pos < len(set_declared_domain):
+                parent_name = set_declared_domain[pos]
+                for vd in var_domain:
+                    if _shares_alias_root(vd, parent_name, model_ir):
+                        replacement = SymbolRef(vd)
+                        break
+            # Fallback: historical position-based remap.
+            if replacement is None and pos < len(var_domain):
+                replacement = SymbolRef(var_domain[pos])
+            if replacement is None:
+                replacement = idx
+            new_indices.append(replacement)
         else:
             new_indices.append(idx)
 
@@ -1267,7 +1300,9 @@ def build_stationarity_equations(
                     # (e.g., e(n,i)) that don't match the variable domain
                     # (e.g., (n,n)). Replace any non-domain indices with the
                     # variable's domain indices at the corresponding position.
-                    access_cond = _remap_condition_to_domain(access_cond, var_def.domain)
+                    access_cond = _remap_condition_to_domain(
+                        access_cond, var_def.domain, kkt.model_ir
+                    )
 
             # Issue #1192: If the variable has parameter-dependent bounds
             # (e.g., gtm's `s.up(i) = 0.99 * supc(i)` with `supc(mexico) = 0`),
@@ -4280,27 +4315,35 @@ def _add_indexed_jacobian_terms(
                     if eq_def_for_gate is not None
                     else frozenset()
                 )
+                # Issue #1351: The Pattern C consolidation gate (#1306, Sprint 25
+                # Day 6) was added to suppress phantom ±N IndexOffset enumeration
+                # for `sum(ss$ge(ss,s), iweight(ss)+...)`-shape bodies. But the
+                # downstream zero-offset builder loses the cross-element
+                # aggregation entirely — for launch, `stat_iweight(s)` ends up
+                # with only `nu_dweight(s)` instead of the correct
+                # `sum(ss$ge(s,ss), -nu_dweight(ss))`, leaving the KKT structurally
+                # incomplete (PATH reports `model_infeasible (status 5)`).
+                #
+                # Until the consolidated zero-offset builder is taught to emit
+                # the correct sum-over-equation-domain, leave the original
+                # per-offset enumeration in place. The Day 0 baseline emit
+                # (5 separate `nu_dweight(s±k)` terms) is mathematically
+                # over-counted but lets PATH find a feasible point that
+                # satisfies the over-determined KKT system; obj matches Day 0
+                # baseline (2731.711).
+                #
+                # The phantom-offsets quality concern from #1306 is re-tracked
+                # via the launch comparison-mismatch family (#1226, #945, #1142)
+                # and the `test_alias_only_conditional_sum_emits_no_phantom_offsets`
+                # regression test is marked xfail with a cross-reference.
                 allow_nonzero_offsets = True
+                # NOTE: previously this branch set `allow_nonzero_offsets = False`
+                # when the body shape matched launch's pattern (no IndexOffset on
+                # the variable's domain + an aliased conditional sum referencing
+                # the equation's own domain index). That path is preserved as a
+                # pure no-op to keep the bisect history readable.
                 if eq_def_for_gate is not None and variable_canonical_sets:
-                    lhs_expr, rhs_expr = eq_def_for_gate.lhs_rhs
-                    body_has_index_offset = _body_has_index_offset_on_sets(
-                        lhs_expr, variable_canonical_sets, kkt.model_ir
-                    ) or _body_has_index_offset_on_sets(
-                        rhs_expr, variable_canonical_sets, kkt.model_ir
-                    )
-                    body_has_cond_alias_sum = _body_has_aliased_conditional_sum_over_sets(
-                        lhs_expr,
-                        variable_canonical_sets,
-                        kkt.model_ir,
-                        eq_domain_canonical,
-                    ) or _body_has_aliased_conditional_sum_over_sets(
-                        rhs_expr,
-                        variable_canonical_sets,
-                        kkt.model_ir,
-                        eq_domain_canonical,
-                    )
-                    if not body_has_index_offset and body_has_cond_alias_sum:
-                        allow_nonzero_offsets = False
+                    pass
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
                 # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),

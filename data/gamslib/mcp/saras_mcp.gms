@@ -176,7 +176,7 @@ Scalars
     start1 /0/
 ;
 
-Set nlp2mcp_uel_registry / l_tax, p_sup, w_tariff /;
+Set nlp2mcp_uel_registry / 'l_tax', 'p_sup', 'w_tariff' /;
 
 $onImplicitAssign
 bt(yr) = yes$(ord(yr) = card(ot));
@@ -191,6 +191,12 @@ FLC(r,'f1',res)$(fix(res)) = 0.725 * bas_nf(r,"f1") * Bas_FLC(r,"f1",res) / nf(r
 FLC(r,f,res) = bas_FLC(r,f,res);
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+FLC(r,f,res)$(NOT (FLC(r,f,res) > -inf and FLC(r,f,res) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)

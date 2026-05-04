@@ -1464,6 +1464,24 @@ def emit_gams_mcp(
         sections.append("*   π^U (piU_*): Positive multipliers for upper bounds")
         sections.append("")
 
+    # Issue #1290: Emit a comment banner for any identifiers that had to be
+    # shortened to fit GAMS's 63-char identifier limit. Each line records
+    # `shortened -> original` so a human reader can trace the synthetic name
+    # back to the full pre-truncation form.
+    from src.kkt.naming import get_long_identifier_registry
+
+    _long_id_registry = get_long_identifier_registry()
+    if add_comments and _long_id_registry:
+        sections.append("* ============================================")
+        sections.append("* Shortened identifiers (Issue #1290)")
+        sections.append("*")
+        sections.append("* The following names exceeded GAMS's 63-char limit and were")
+        sections.append("* deterministically shortened (head_truncated_<sha256[:8]>):")
+        for shortened, original in sorted(_long_id_registry.items()):
+            sections.append(f"*   {shortened}  <-  {original}")
+        sections.append("* ============================================")
+        sections.append("")
+
     # Compute _fx_ equations to suppress (conflict with fix-inactive blanket .fx).
     # Must be done before emit_variables/emit_equations so they can filter.
     # Kept local — passed explicitly to downstream emitters instead of mutating kkt.
@@ -1641,11 +1659,21 @@ def emit_gams_mcp(
                         or mult_name in kkt.referenced_multipliers
                     )
                 )
-                if eq_paired_in_mcp:
-                    continue
                 idx_str = _format_map_indices(indices)
                 # Format value: use integer form for whole numbers
                 val_str = str(int(fx_val)) if fx_val == int(fx_val) else str(fx_val)
+                if eq_paired_in_mcp:
+                    # Issue #1349: The `_fx_` equation provides the fix at solve
+                    # time, but the source's `var.fx(idx) = val` also had the
+                    # side effect of setting `var.l(idx) = val`. Subsequent
+                    # var-init loops or recurrences may depend on that .l value
+                    # (e.g., pindyck's `loop(t$to(t), r.l(t) = r.l(t-1) - d.l(t))`
+                    # reads r.l('1974') which the .fx side effect would have
+                    # populated). Preserve the .l initialization so loop-based
+                    # var-init does not fail with $141 "Symbol declared but no
+                    # values have been assigned".
+                    bound_lines.append(f"{var_name}.l({idx_str}) = {val_str};")
+                    continue
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
     if bound_lines:

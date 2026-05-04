@@ -40,7 +40,7 @@ Scalars
     dualdev /0/
 ;
 
-Set nlp2mcp_uel_registry / dev, 'power-ser', 'sinus-fun' /;
+Set nlp2mcp_uel_registry / 'dev', 'power-ser', 'sinus-fun' /;
 
 t(n) = (ord(n) - 1) / (card(n) - 1);
 k = (card(n) - 1) / (card(m) - 1);
@@ -50,6 +50,14 @@ w(m+floor((ord(n)-1)/k),n) = 1 - mod(ord(n) - 1, k) / k;
 w(m+1,n) = 1 - w(m,n);
 
 execError = 0;
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+t(n)$(NOT (t(n) > -inf and t(n) < inf)) = 0;
+w(m,n)$(NOT (w(m,n) > -inf and w(m,n) < inf)) = 0;
+y(n)$(NOT (y(n) > -inf and y(n) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)

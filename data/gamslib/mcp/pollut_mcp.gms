@@ -114,8 +114,8 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_k(j).. ((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) - piL_k(j) + piU_k(j) =E= 0;
-stat_l(j).. ((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef - piL_l(j) + piU_l(j) =E= 0;
+stat_k(j).. (((-1) * (l(j) ** z(j,"b") * z(j,"a") * k(j) ** (1 - z(j,"b")) * (1 - z(j,"b")) / k(j))) - nu_kdef + sum(i, w(j,i) / z(j,"k") * lam_eq4(i)) - piL_k(j) + piU_k(j))$(k.up(j) - k.lo(j) > 1e-10) =E= 0;
+stat_l(j).. (((-1) * (z(j,"a") * k(j) ** (1 - z(j,"b")) * l(j) ** z(j,"b") * z(j,"b") / l(j))) - nu_ldef - piL_l(j) + piU_l(j))$(l.up(j) - l.lo(j) > 1e-10) =E= 0;
 stat_tk.. nu_kdef - lam_eq5a + lam_eq5b =E= 0;
 stat_tl.. nu_ldef + gamma2 * lam_eq5a + ((-1) * gamma1) * lam_eq5b =E= 0;
 
@@ -145,6 +145,12 @@ ldef.. tl =E= sum(j, l(j));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+k.fx(j)$(not (k.up(j) - k.lo(j) > 1e-10)) = k.lo(j);
+piL_k.fx(j)$(not (k.up(j) - k.lo(j) > 1e-10)) = 0;
+piU_k.fx(j)$(not (k.up(j) - k.lo(j) > 1e-10)) = 0;
+l.fx(j)$(not (l.up(j) - l.lo(j) > 1e-10)) = l.lo(j);
+piL_l.fx(j)$(not (l.up(j) - l.lo(j) > 1e-10)) = 0;
+piU_l.fx(j)$(not (l.up(j) - l.lo(j) > 1e-10)) = 0;
 piL_k.fx(j)$(not (alpha * z(j,"k0") > -inf)) = 0;
 piL_l.fx(j)$(not (alpha * z(j,"l0") > -inf)) = 0;
 piU_k.fx(j)$(not (beta * z(j,"k0") < inf)) = 0;

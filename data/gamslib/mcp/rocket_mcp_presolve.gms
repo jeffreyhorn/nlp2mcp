@@ -86,89 +86,38 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-v.fx('h0') = 0;
-ht.fx('h0') = 1;
+v.l('h0') = 0;
+ht.l('h0') = 1;
 m.lo(h) = m_f;
 m.fx('h50') = m_f;
-m.fx('h0') = 1;
+m.l('h0') = 1;
 t.up(h) = T_c * m_0 * g_0;
 
 * ============================================
-* Variable Initialization
+* NLP Pre-Solve (warm-start for MCP duals)
 * ============================================
 
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables with explicit .l values are
-* clamped to min(max(value, 1e-6), upper_bound).
+$onMultiR
+$include "data/gamslib/raw/rocket.gms"
+$offMulti
 
-$onImplicitAssign
-step.l = 1 / nh;
-step.l = min(max(step.l, 1e-6), step.up);
-v.l(h) = (ord(h) - 1) / nh * (1 - (ord(h) - 1) / nh);
-v.l(h) = min(max(v.l(h), 1e-6), v.up(h));
-ht.l('h0') = 1.0;
-ht.l('h1') = 1.0;
-ht.l('h2') = 1.0;
-ht.l('h3') = 1.0;
-ht.l('h4') = 1.0;
-ht.l('h5') = 1.0;
-ht.l('h6') = 1.0;
-ht.l('h7') = 1.0;
-ht.l('h8') = 1.0;
-ht.l('h9') = 1.0;
-ht.l('h10') = 1.0;
-ht.l('h11') = 1.0;
-ht.l('h12') = 1.0;
-ht.l('h13') = 1.0;
-ht.l('h14') = 1.0;
-ht.l('h15') = 1.0;
-ht.l('h16') = 1.0;
-ht.l('h17') = 1.0;
-ht.l('h18') = 1.0;
-ht.l('h19') = 1.0;
-ht.l('h20') = 1.0;
-ht.l('h21') = 1.0;
-ht.l('h22') = 1.0;
-ht.l('h23') = 1.0;
-ht.l('h24') = 1.0;
-ht.l('h25') = 1.0;
-ht.l('h26') = 1.0;
-ht.l('h27') = 1.0;
-ht.l('h28') = 1.0;
-ht.l('h29') = 1.0;
-ht.l('h30') = 1.0;
-ht.l('h31') = 1.0;
-ht.l('h32') = 1.0;
-ht.l('h33') = 1.0;
-ht.l('h34') = 1.0;
-ht.l('h35') = 1.0;
-ht.l('h36') = 1.0;
-ht.l('h37') = 1.0;
-ht.l('h38') = 1.0;
-ht.l('h39') = 1.0;
-ht.l('h40') = 1.0;
-ht.l('h41') = 1.0;
-ht.l('h42') = 1.0;
-ht.l('h43') = 1.0;
-ht.l('h44') = 1.0;
-ht.l('h45') = 1.0;
-ht.l('h46') = 1.0;
-ht.l('h47') = 1.0;
-ht.l('h48') = 1.0;
-ht.l('h49') = 1.0;
-ht.l('h50') = 1.0;
-ht.l(h) = min(max(ht.l(h), 1e-6), ht.up(h));
-m.l(h) = (m_f - m_0) * (ord(h) - 1) / nh + m_0;
-m.l(h) = min(max(m.l(h), 1e-6), m.up(h));
-t.l(h) = t.up(h) / 2;
-t.l(h) = min(max(t.l(h), 1e-6), t.up(h));
-g.l(h) = g_0 * sqr(h_0 / ht.l(h));
-g.l(h) = min(max(g.l(h), 1e-6), g.up(h));
-d.l(h) = D_c * sqr(v.l(h)) * exp(((-1) * h_c) * (ht.l(h) - h_0) / h_0);
-d.l(h) = min(max(d.l(h), 1e-6), d.up(h));
-$offImplicitAssign
+* Transfer NLP duals to MCP multiplier initialization
+nu_df.l(h) = df.m(h);
+nu_gf.l(h) = gf.m(h);
+nu_h_eqn.l(h) = h_eqn.m(h);
+nu_m_eqn.l(h) = m_eqn.m(h);
+nu_v_eqn.l(h) = v_eqn.m(h);
+
+* Transfer variable marginals to bound multipliers
+piL_step.l$(abs(step.l - step.lo) < 1e-6 and step.m > 0) = step.m;
+piL_v.l(h)$(abs(v.l(h) - v.lo(h)) < 1e-6 and v.m(h) > 0) = v.m(h);
+piL_ht.l(h)$(abs(ht.l(h) - ht.lo(h)) < 1e-6 and ht.m(h) > 0) = ht.m(h);
+piL_g.l(h)$(abs(g.l(h) - g.lo(h)) < 1e-6 and g.m(h) > 0) = g.m(h);
+piL_m.l(h)$(abs(m.l(h) - m.lo(h)) < 1e-6 and m.m(h) > 0) = m.m(h);
+piL_t.l(h)$(abs(t.l(h) - t.lo(h)) < 1e-6 and t.m(h) > 0) = t.m(h);
+piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6 and d.m(h) > 0) = d.m(h);
+piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6 and m.m(h) < 0) = -(m.m(h));
+piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6 and t.m(h) < 0) = -(t.m(h));
 
 * ============================================
 * Equations
@@ -210,13 +159,14 @@ Equations
 * Equation Definitions
 * ============================================
 
+$onMultiR
 * Stationarity equations
 stat_d(h).. nu_df(h) + ((-1) * (0.5 * step * m(h) * (-1) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * m(h) * (-1) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_d(h) =E= 0;
 stat_g(h).. nu_gf(h) + ((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * m(h) * ((-1) * m(h)) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_g(h) =E= 0;
 stat_ht(h).. (-1)$(sameas(h, 'h50')) + ((-1) * (D_c * sqr(v(h)) * exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * h_0 * ((-1) * h_c) / sqr(h_0))) * nu_df(h) + ((-1) * (g_0 * 2 * h_0 / ht(h) * ((-1) * h_0) / sqr(ht(h)))) * nu_gf(h) + nu_h_eqn(h) + ((-1) * nu_h_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_ht_fx_h0$(sameas(h, 'h0')) - piL_ht(h) =E= 0;
-stat_m(h).. nu_m_eqn(h) + ((-1) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_m_fx_h0$(sameas(h, 'h0')) - piL_m(h) + piU_m(h) =E= 0;
+stat_m(h).. (nu_m_eqn(h) + ((-1) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h) + (((-1) * (0.5 * step * (m(h) * ((-1) * g(h)) - (t(h) - d(h) - m(h) * g(h))) / sqr(m(h)))) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_m_fx_h0$(sameas(h, 'h0')) - piL_m(h) + piU_m(h))$(m.up(h) - m.lo(h) > 1e-10) =E= 0;
 stat_step.. sum(h, ((-1) * (v(h) * 0.5)) * nu_h_eqn(h)) + sum(h, c * t(h) * 0.5 / sqr(c) * nu_m_eqn(h)) + sum(h, ((-1) * (0.5 * ((t(h) - d(h) - m(h) * g(h)) / m(h) + 1) + 0.5 * step)) * nu_v_eqn(h)) - piL_step =E= 0;
-stat_t(h).. c * 0.5 * step / sqr(c) * nu_m_eqn(h) + (c * 0.5 * step / sqr(c) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) + (((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_t(h) + piU_t(h) =E= 0;
+stat_t(h).. (c * 0.5 * step / sqr(c) * nu_m_eqn(h) + (c * 0.5 * step / sqr(c) * nu_m_eqn(h+1))$(ord(h) <= card(h) - 1) + ((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h) + (((-1) * (0.5 * step * 1 / m(h) ** 1)) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) - piL_t(h) + piU_t(h))$(t.up(h) - t.lo(h) > 1e-10) =E= 0;
 stat_v(h).. ((-1) * (exp(((-1) * h_c) * (ht(h) - h_0) / h_0) * D_c * 2 * v(h))) * nu_df(h) + ((-1) * (0.5 * step)) * nu_h_eqn(h) + (((-1) * (0.5 * step)) * nu_h_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_v_eqn(h) + ((-1) * nu_v_eqn(h+1))$(ord(h) <= card(h) - 1) + nu_v_fx_h0$(sameas(h, 'h0')) - piL_v(h) =E= 0;
 
 * Lower bound complementarity equations
@@ -243,6 +193,7 @@ v_fx_h0.. v("h0") - 0 =E= 0;
 ht_fx_h0.. ht("h0") - 1 =E= 0;
 m_fx_h0.. m("h0") - 1 =E= 0;
 
+$offMulti
 
 * ============================================
 * Fix inactive variable instances
@@ -251,6 +202,12 @@ m_fx_h0.. m("h0") - 1 =E= 0;
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = m.lo(h);
+piL_m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = 0;
+piU_m.fx(h)$(not (m.up(h) - m.lo(h) > 1e-10)) = 0;
+t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = t.lo(h);
+piL_t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = 0;
+piU_t.fx(h)$(not (t.up(h) - t.lo(h) > 1e-10)) = 0;
 piL_m.fx(h)$(not (m_f > -inf)) = 0;
 piU_t.fx(h)$(not (T_c * m_0 * g_0 < inf)) = 0;
 nu_h_eqn.fx(h)$(not (ord(h) > 1)) = 0;
@@ -297,32 +254,6 @@ Model mcp_model /
     comp_up_m.piU_m,
     comp_up_t.piU_t
 /;
-
-* ============================================
-* NLP Pre-Solve (warm-start for MCP duals)
-* ============================================
-
-$onMultiR
-$include "/Users/jeff/experiments/nlp2mcp/data/gamslib/raw/rocket.gms"
-$offMulti
-
-* Transfer NLP duals to MCP multiplier initialization
-nu_df.l(h) = df.m(h);
-nu_gf.l(h) = gf.m(h);
-nu_h_eqn.l(h) = h_eqn.m(h);
-nu_m_eqn.l(h) = m_eqn.m(h);
-nu_v_eqn.l(h) = v_eqn.m(h);
-
-* Transfer variable marginals to bound multipliers
-piL_step.l$(abs(step.l - step.lo) < 1e-6 and step.m > 0) = step.m;
-piL_v.l(h)$(abs(v.l(h) - v.lo(h)) < 1e-6 and v.m(h) > 0) = v.m(h);
-piL_ht.l(h)$(abs(ht.l(h) - ht.lo(h)) < 1e-6 and ht.m(h) > 0) = ht.m(h);
-piL_g.l(h)$(abs(g.l(h) - g.lo(h)) < 1e-6 and g.m(h) > 0) = g.m(h);
-piL_m.l(h)$(abs(m.l(h) - m.lo(h)) < 1e-6 and m.m(h) > 0) = m.m(h);
-piL_t.l(h)$(abs(t.l(h) - t.lo(h)) < 1e-6 and t.m(h) > 0) = t.m(h);
-piL_d.l(h)$(abs(d.l(h) - d.lo(h)) < 1e-6 and d.m(h) > 0) = d.m(h);
-piU_m.l(h)$(abs(m.l(h) - m.up(h)) < 1e-6 and m.m(h) < 0) = -(m.m(h));
-piU_t.l(h)$(abs(t.l(h) - t.up(h)) < 1e-6 and t.m(h) < 0) = -(t.m(h));
 
 * ============================================
 * Solve Statement

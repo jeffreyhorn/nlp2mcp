@@ -80,10 +80,10 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-x.fx('n0') = 0;
-x.fx('n10') = 2;
-y.fx('n0') = 0;
-y.fx('n10') = -1;
+x.l('n0') = 0;
+x.l('n10') = 2;
+y.l('n0') = 0;
+y.l('n10') = -1;
 
 * ============================================
 * Variable Initialization
@@ -181,8 +181,6 @@ unit_fx.. unit - 1 =E= 0;
 delta_x.fx(n)$(not (ord(n) > 1)) = 0;
 delta_y.fx(n)$(not (ord(n) > 1)) = 0;
 x.fx(n)$(not (ord(n) > 1 or ord(n) <= card(n) - 1 or sameas(n, 'n0') or sameas(n, 'n10'))) = 0;
-delta_x.fx(n)$(not (ord(n) > 1)) = 0;
-delta_y.fx(n)$(not (ord(n) > 1)) = 0;
 x.fx(n)$(not (ord(n) > 1)) = 0;
 lam_link_up.fx(n)$(not (ord(n) > 1)) = 0;
 

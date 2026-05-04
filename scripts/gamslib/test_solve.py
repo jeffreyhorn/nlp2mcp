@@ -965,13 +965,18 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
         lst_path = Path(tmpdir) / "output.lst"
 
         try:
-            # Run GAMS with PATH solver
+            # Run GAMS with PATH solver. cwd must be the project root so that
+            # the repo-relative `$include "data/gamslib/raw/<model>.gms"` line
+            # emitted by `--nlp-presolve` resolves (#1275 changed the include
+            # from absolute to repo-relative). ScrDir keeps scratch files
+            # (`225a/`, .gdx, .pf) out of the project tree.
             cmd = [
                 gams_exe,
                 str(mcp_path),
                 f"o={lst_path}",
                 "lo=3",  # Detailed log output
                 f"reslim={timeout}",  # Time limit
+                f"ScrDir={tmpdir}",
             ]
 
             subprocess.run(
@@ -979,7 +984,7 @@ def solve_mcp(mcp_path: Path, timeout: int = 120) -> dict[str, Any]:
                 capture_output=True,
                 text=True,
                 timeout=timeout + 10,  # Allow extra time for GAMS overhead
-                cwd=tmpdir,
+                cwd=str(PROJECT_ROOT),
             )
 
             elapsed = time.perf_counter() - start_time

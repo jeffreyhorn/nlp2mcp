@@ -69,8 +69,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-b.fx('s1') = 5;
-b.fx('s30') = 100;
+b.l('s1') = 5;
+b.l('s30') = 100;
 
 * ============================================
 * Variable Initialization

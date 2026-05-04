@@ -42,13 +42,13 @@ Parameters
     yw(te,at,s,cl)
     yv(te,te,s,cl,k)
     iad(at,s)
-    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-pl' -1, sawlogs.'pulp-rs' -1, residuals.'pulp-sl' -1, residuals.'pulp-rs' 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.'pulp-rs' 0.6/
+    a(c,p) /pulplogs.'pulp-pl' -1, sawlogs.'pulp-sl' -1, sawlogs.sawing -1, residuals.'pulp-rs' -1, residuals.sawing 0.4, pulp.'pulp-pl' 0.207, pulp.'pulp-sl' 0.207, pulp.'pulp-rs' 0.207, sawnwood.sawing 0.6/
     b(m,p) /'pulp-mill'.'pulp-pl' 1, 'pulp-mill'.'pulp-sl' 1, 'pulp-mill'.'pulp-rs' 1, 'saw-mill'.sawing 1/
     pc(p) /'pulp-pl' 5.96, 'pulp-sl' 5.96, 'pulp-rs' 5.96, sawing 6/
     pd(cf) /pulp 147, sawnwood 70/
     nu(m) /'pulp-mill' 37.8, 'saw-mill' 61.5/
     age(at)
-    avl(t,te)
+    avl(t,te) /'period-1'.'period-1' 1, 'period-2'.'period-2' 1, 'period-3'.'period-3' 1, 'period-4'.'period-4' 1, 'period-5'.'period-5' 1, 'period-6'.'period-6' 1, 'period-7'.'period-7' 1, 'period-8'.'period-8' 1, 'period-9'.'period-9' 1/
     delt(t)
     rp(*,*,s,k)
     tc(s,k)
@@ -73,16 +73,6 @@ wpos(u,t) = yes$(sum((s,cl), yw(t,u,s,cl)));
 vpos(t,te) = yes$(sum((s,cl,k), yv(t,te,s,cl,k)));
 $offImplicitAssign
 
-avl('period-1',t) = 1;
-avl('period-2',t) = 1;
-avl('period-3',t) = 1;
-avl('period-4',t) = 1;
-avl('period-5',t) = 1;
-avl('period-6',t) = 1;
-avl('period-7',t) = 1;
-avl('period-8',t) = 1;
-avl('period-9',t) = 1;
-
 iad(u,s) = is(u,s) / sum(at, is(at,s)) / 100;
 avl(t,t-1) = 1;
 avl(t,t-2) = 1;
@@ -94,6 +84,12 @@ execError = 0;
 loop(at,
    yv(t,t+ord(at),s,cl,k) = ymf(at,k,s,cl)
 );
+
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+iad(at,s)$(NOT (iad(at,s) > -inf and iad(at,s) < inf)) = 0;
 
 * ============================================
 * Variables (Primal + Multipliers)
@@ -215,15 +211,15 @@ Alias(t, t__);
 * Stationarity equations
 stat_h(m,t).. sum(tp, ((-1) * (sgm * nu(m) * 1$(avl(t,tp)))) * nu_ainvc(t)) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+1,tp)))) * nu_ainvc(t+1))$(ord(t) <= card(t) - 1))$(ord(m) = 1))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+2,tp)))) * nu_ainvc(t+2))$(ord(t) <= card(t) - 2))$(ord(m) = 2))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+3,tp)))) * nu_ainvc(t+3))$(ord(t) <= card(t) - 3))$(ord(m) = 3))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+4,tp)))) * nu_ainvc(t+4))$(ord(t) <= card(t) - 4))$(ord(m) = 4))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+5,tp)))) * nu_ainvc(t+5))$(ord(t) <= card(t) - 5))$(ord(m) = 5))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+6,tp)))) * nu_ainvc(t+6))$(ord(t) <= card(t) - 6))$(ord(m) = 6))$(sameas(t, 'period-1') or sameas(t, 'period-2') or sameas(t, 'period-3')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+7,tp)))) * nu_ainvc(t+7))$(ord(t) <= card(t) - 7))$(ord(m) = 7))$(sameas(t, 'period-1') or sameas(t, 'period-2')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t+8,tp)))) * nu_ainvc(t+8))$(ord(t) <= card(t) - 8))$(ord(m) = 8))$(sameas(t, 'period-1')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-1,tp)))) * nu_ainvc(t-1))$(ord(t) > 1))$(ord(m) = 1))$(sameas(t, 'period-2') or sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-2,tp)))) * nu_ainvc(t-2))$(ord(t) > 2))$(ord(m) = 2))$(sameas(t, 'period-3') or sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-3,tp)))) * nu_ainvc(t-3))$(ord(t) > 3))$(ord(m) = 3))$(sameas(t, 'period-4') or sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-4,tp)))) * nu_ainvc(t-4))$(ord(t) > 4))$(ord(m) = 4))$(sameas(t, 'period-5') or sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-5,tp)))) * nu_ainvc(t-5))$(ord(t) > 5))$(ord(m) = 5))$(sameas(t, 'period-6') or sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-6,tp)))) * nu_ainvc(t-6))$(ord(t) > 6))$(ord(m) = 6))$(sameas(t, 'period-7') or sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-7,tp)))) * nu_ainvc(t-7))$(ord(t) > 7))$(ord(m) = 7))$(sameas(t, 'period-8') or sameas(t, 'period-9')) + sum(tp, ((((-1) * (sgm * nu(m) * 1$(avl(t-8,tp)))) * nu_ainvc(t-8))$(ord(t) > 8))$(ord(m) = 8))$(sameas(t, 'period-9')) + sum(tp, ((-1) * 1$(avl(t,tp))) * lam_cap(m,t)) + sum(tp, (((-1) * 1$(avl(t+1,tp))) * lam_cap(m,t+1))$(ord(t) <= card(t) - 1)) + sum(tp, (((-1) * 1$(avl(t+2,tp))) * lam_cap(m,t+2))$(ord(t) <= card(t) - 2)) + sum(tp, (((-1) * 1$(avl(t+3,tp))) * lam_cap(m,t+3))$(ord(t) <= card(t) - 3)) + sum(tp, (((-1) * 1$(avl(t+4,tp))) * lam_cap(m,t+4))$(ord(t) <= card(t) - 4)) + sum(tp, (((-1) * 1$(avl(t+5,tp))) * lam_cap(m,t+5))$(ord(t) <= card(t) - 5)) + sum(tp, (((-1) * 1$(avl(t+6,tp))) * lam_cap(m,t+6))$(ord(t) <= card(t) - 6)) + sum(tp, (((-1) * 1$(avl(t+7,tp))) * lam_cap(m,t+7))$(ord(t) <= card(t) - 7)) + sum(tp, (((-1) * 1$(avl(t+8,tp))) * lam_cap(m,t+8))$(ord(t) <= card(t) - 8)) + sum(tp, (((-1) * 1$(avl(t-1,tp))) * lam_cap(m,t-1))$(ord(t) > 1)) + sum(tp, (((-1) * 1$(avl(t-2,tp))) * lam_cap(m,t-2))$(ord(t) > 2)) + sum(tp, (((-1) * 1$(avl(t-3,tp))) * lam_cap(m,t-3))$(ord(t) > 3)) + sum(tp, (((-1) * 1$(avl(t-4,tp))) * lam_cap(m,t-4))$(ord(t) > 4)) + sum(tp, (((-1) * 1$(avl(t-5,tp))) * lam_cap(m,t-5))$(ord(t) > 5)) + sum(tp, (((-1) * 1$(avl(t-6,tp))) * lam_cap(m,t-6))$(ord(t) > 6)) + sum(tp, (((-1) * 1$(avl(t-7,tp))) * lam_cap(m,t-7))$(ord(t) > 7)) + sum(tp, (((-1) * 1$(avl(t-8,tp))) * lam_cap(m,t-8))$(ord(t) > 8)) - piL_h(m,t) =E= 0;
 stat_phik(t).. ((-1) * (delt(t) * (-1))) + nu_ainvc(t) =E= 0;
-stat_phil(t).. ((-1) * (delt(t) * (-1))) + nu_acutc(t) =E= 0;
+stat_phil(t).. ((-1) * (delt(t) * (-1))) + nu_acutc(t)$(t(t)) =E= 0;
 stat_phip(t).. ((-1) * (delt(t) * (-1))) + nu_aplnt(t) =E= 0;
 stat_phir(t).. ((-1) * (delt(t) * (-1))) + nu_aproc(t) =E= 0;
 stat_phix(t).. ((-1) * delt(t)) + nu_asales(t) =E= 0;
-stat_r(c,te).. (nu_lbal(c,te) + (((-1) * muc) * nu_acutc(te))$(cl(c) and t(te)) + ((-1) * 1$(cl(c))) * lam_bal(c,te) - lam_sy2(c,te) + lam_sy2(c,te+1)$(ord(te) <= card(te) - 1) - piL_r(c,te))$(cl(c)) =E= 0;
-stat_v(s,k,t,te).. sum(cl, ((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te)) + 1$(vpos(t,te)) * lam_pfs(s,k,t) - piL_v(s,k,t,te) =E= 0;
-stat_w(s,k,u,te).. sum(cl, ((-1) * yw(te,u,s,cl)) * nu_lbal(cl,te)) + sum(t__, (10 * 1$(wpos(u,t__)) * lam_efs(s,k,u))$(sameas(t__, te)))$(t(te)) + ((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te) - piL_w(s,k,u,te) =E= 0;
-stat_x(c,t).. (sum(cf__, (((-1) * pd(cf__)) * nu_asales(t))$(sameas(cf__, c)))$(cf(c)) + 1$(cf(c)) * lam_bal(c,t) - piL_x(c,t))$(cf(c)) =E= 0;
-stat_z(p,t).. ((-1) * pc(p)) * nu_aproc(t) + sum(c, ((-1) * a(c,p)) * lam_bal(c,t)) + sum(m, b(m,p) * lam_cap(m,t)) - piL_z(p,t) =E= 0;
+stat_r(c,te).. (nu_lbal(c,te)$(cl(c)) + ((((-1) * muc) * nu_acutc(te))$(t(te)))$(cl(c) and t(te)) + (((-1) * 1$(cl(c))) * lam_bal(c,te))$(t(te)) - lam_sy2(c,te)$(cl(c)) + (lam_sy2(c,te+1)$(cl(c)))$(ord(te) <= card(te) - 1) - piL_r(c,te))$(cl(c)) =E= 0;
+stat_v(s,k,t,te).. sum(cl, (((-1) * yv(t,t,s,cl,k)) * nu_lbal(cl,te))$(cl(cl))) + (1$(vpos(t,te)) * lam_pfs(s,k,t))$(t(t)) - piL_v(s,k,t,te) =E= 0;
+stat_w(s,k,u,te).. sum(cl, (((-1) * yw(te,u,s,cl)) * nu_lbal(cl,te))$(cl(cl))) + sum(t__, (10 * 1$(wpos(u,t__)) * lam_efs(s,k,u))$(sameas(t__, te)))$(t(te)) + ((((-1) * 1$(wpos(u,te))) * lam_pfs(s,k,te))$(t(te)))$(t(te)) - piL_w(s,k,u,te) =E= 0;
+stat_x(c,t).. (sum(cf__, (((-1) * pd(cf__)) * nu_asales(t))$(sameas(cf__, c)))$(cf(c)) + (1$(cf(c)) * lam_bal(c,t))$(t(t)) - piL_x(c,t))$(cf(c)) =E= 0;
+stat_z(p,t).. ((-1) * pc(p)) * nu_aproc(t) + sum(c, (((-1) * a(c,p)) * lam_bal(c,t))$(t(t))) + sum(m, b(m,p) * lam_cap(m,t)) - piL_z(p,t) =E= 0;
 
 * Inequality complementarity equations
 comp_bal(c,t).. sum(p, a(c,p) * z(p,t)) + r(c,t)$(cl(c)) - x(c,t)$(cf(c)) =G= 0;

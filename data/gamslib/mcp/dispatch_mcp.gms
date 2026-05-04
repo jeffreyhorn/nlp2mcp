@@ -109,7 +109,7 @@ Alias(i, i__);
 
 * Stationarity equations
 stat_cost.. nu_costfn =E= 0;
-stat_p(i).. 100 * b0(i) / 10000 + 100 * (sum(j__, p(j__) * b(i,j__)) + sum(i__, p(i__) * b(i__,i))) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons - piL_p(i) + piU_p(i) =E= 0;
+stat_p(i).. (100 * b0(i) / 10000 + 100 * (sum(j__, p(j__) * b(i,j__)) + sum(i__, p(i__) * b(i__,i))) / 10000 + ((-1) * sum(cg, gendata(i,cg) * p(i) ** pexp(cg) * pexp(cg) / p(i))) * nu_costfn - lam_demcons - piL_p(i) + piU_p(i))$(p.up(i) - p.lo(i) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_demcons.. sum(i, p(i)) - (demand + loss) =G= 0;
@@ -132,6 +132,9 @@ lossfn.. loss =E= b00 + sum(i, b0(i) * p(i)) / 100 + sum((i,j), p(i) * b(i,j) * 
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+p.fx(i)$(not (p.up(i) - p.lo(i) > 1e-10)) = p.lo(i);
+piL_p.fx(i)$(not (p.up(i) - p.lo(i) > 1e-10)) = 0;
+piU_p.fx(i)$(not (p.up(i) - p.lo(i) > 1e-10)) = 0;
 piL_p.fx(i)$(not (gendata(i,"lowlim") > -inf)) = 0;
 piU_p.fx(i)$(not (gendata(i,"upplim") < inf)) = 0;
 

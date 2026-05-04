@@ -107,8 +107,8 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_s(r,tl).. ((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl) =E= 0;
-stat_x(p,tl).. (sum(t__$(sameas(t__, tl)), (((-1) * c(p,t__)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + lam_limit(tl)$(t(tl)) - piL_x(p,tl))$(t(tl)) =E= 0;
+stat_s(r,tl).. (((-1) * ((((-1) * d(r)))$(t(tl)) + f(r)$(ord(tl) = card(tl)))) - nu_balance(r,tl) + nu_balance(r,tl-1)$(ord(tl) > 1) - piL_s(r,tl) + piU_s(r,tl))$(s.up(r,tl) - s.lo(r,tl) > 1e-10) =E= 0;
+stat_x(p,tl).. (sum(t__$(sameas(t__, tl)), (((-1) * c(p,t__)))$(t(tl))) + sum(r, a(r,p) * nu_balance(r,tl)) + (lam_limit(tl)$(t(tl)))$(t(tl)) - piL_x(p,tl))$(t(tl)) =E= 0;
 
 * Inequality complementarity equations
 comp_limit(t).. ((-1) * (sum(p, x(p,t)) - m)) =G= 0;
@@ -134,6 +134,9 @@ obj.. profit =E= sum((p,t), c(p,t) * x(p,t)) + sum((r,tl), ((((-1) * d(r)))$(t(t
 
 x.fx(p,tl)$(not (t(tl))) = 0;
 piL_x.fx(p,tl)$(not (t(tl))) = 0;
+s.fx(r,tl)$(not (s.up(r,tl) - s.lo(r,tl) > 1e-10)) = s.lo(r,tl);
+piL_s.fx(r,tl)$(not (s.up(r,tl) - s.lo(r,tl) > 1e-10)) = 0;
+piU_s.fx(r,tl)$(not (s.up(r,tl) - s.lo(r,tl) > 1e-10)) = 0;
 piU_s.fx(r,tl)$(not (ord(tl) = 1 and b(r) < inf)) = 0;
 nu_balance.fx(r,tl)$(not (ord(tl) <= card(tl) - 1)) = 0;
 lam_limit.fx(tl)$(not (t(tl))) = 0;

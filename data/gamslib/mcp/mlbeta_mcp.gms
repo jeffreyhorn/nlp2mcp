@@ -110,7 +110,7 @@ comp_lo_alpha.. alpha - 0.0001 =G= 0;
 comp_lo_beta.. beta - 0.0001 =G= 0;
 
 * Original equality equations
-loglike.. like =E= n * (loggamma(alpha + beta) - loggamma(alpha) - loggamma(beta)) + sum(i, (alpha - 1) * log(x(i))) + sum(i, (beta - 1) * log(1 - x(i)));
+loglike.. like =E= n * (loggamma(alpha + beta) - loggamma(alpha) - loggamma(beta)) + sum(i$(x(i) <> 0), (alpha - 1) * log(x(i))) + sum(i$(x(i) <> 0), (beta - 1) * log(1 - x(i)));
 
 
 * ============================================

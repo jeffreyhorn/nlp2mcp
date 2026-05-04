@@ -45,6 +45,13 @@ covar(s,sp) = sum(e, (returns(e,sp) - mean(sp)) * (returns(e,s) - mean(s))) / ca
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+covar(stocks,stocks)$(NOT (covar(stocks,stocks) > -inf and covar(stocks,stocks) < inf)) = 0;
+mean(stocks)$(NOT (mean(stocks) > -inf and mean(stocks) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

@@ -86,7 +86,7 @@ Equations
 Alias(i, i__);
 
 * Stationarity equations
-stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * sum(i__, x(i__) ** alpha(i__) * alpha(i__) / x(i__) / x(i__) ** alpha(i__)))) + nu_eqX(i) - piL_x(i) =E= 0;
+stat_x(i).. ((-1) * (prod(i__, x(i__) ** alpha(i__)) * x(i) ** alpha(i) * alpha(i) / x(i) / x(i) ** alpha(i))) + nu_eqX(i) - piL_x(i) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_x(i).. x(i) - 0.001 =G= 0;

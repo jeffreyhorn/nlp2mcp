@@ -48,6 +48,13 @@ k1(s) = gam * h(s) * l(s) * l(s) / 12 / sig;
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+h(s)$(NOT (h(s) > -inf and h(s) < inf)) = 0;
+k1(s)$(NOT (k1(s) > -inf and k1(s) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================

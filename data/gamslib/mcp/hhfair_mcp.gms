@@ -73,7 +73,7 @@ Variables
     nu_savings(tl)
     nu_budget(tl)
     nu_timemoney(tl)
-    nu_terminal(tt)
+    nu_terminal(t)
     nu_a_fx_0
     nu_m_fx_0
 ;
@@ -91,8 +91,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-a.fx('0') = 1000;
-m.fx('0') = 100;
+a.l('0') = 1000;
+m.l('0') = 100;
 
 * ============================================
 * Variable Initialization
@@ -101,6 +101,8 @@ m.fx('0') = 100;
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* Issue #1243: FREE variables appearing in stationarity-equation
+* denominators (e.g., 1/y from prod-objective derivatives) are set to 1.
 
 a.l('1') = 1000.0;
 a.l('2') = 1000.0;
@@ -114,6 +116,7 @@ l.l('3') = 400.0;
 m.l('1') = 100.0;
 m.l('2') = 100.0;
 m.l('3') = 100.0;
+n.l(t) = 1;
 u.l('1') = 1.0;
 u.l('2') = 1.0;
 u.l('3') = 1.0;
@@ -147,9 +150,9 @@ Equations
     income(t)
     m_fx_0
     objective
-    savings(t)
+    savings
     taxes(t)
-    terminal(tt)
+    terminal(t)
     timemoney(t)
     utility(t)
 ;
@@ -163,15 +166,15 @@ Equations
 Alias(t, t__);
 
 * Stationarity equations
-stat_a(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_a_fx_0$(sameas(tl, '0')) + ((-1) * r) * nu_income(tl) + sum(tt, nu_terminal(tt)) =E= 0;
-stat_c(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * a1 * c(t) ** ((-1) * a2) * ((-1) * a2) / c(t) / 10000)) * nu_utility(t) + p * nu_savings(t) + n(t) * ((-1) * (gamma1 * p)) * nu_timemoney(t) + 1.01 * gamma1 * p * lam_dom1(t) - piL_c(t) =E= 0;
-stat_l(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + ((-1) * w) * nu_income(t) + lam_dom2(t) - piL_l(t) + piU_l(t) =E= 0;
-stat_m(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_m_fx_0$(sameas(tl, '0')) + n(tl) * nu_timemoney(tl) + sum(tt, nu_terminal(tt)) - lam_dom1(tl) =E= 0;
-stat_n(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + (m(t) - gamma1 * p * c(t)) * nu_timemoney(t) + lam_dom2(t) =E= 0;
-stat_s(tl).. (nu_budget(tl) + nu_savings(tl))$(t(tl)) =E= 0;
-stat_tax(t).. nu_taxes(t) + nu_savings(t) =E= 0;
-stat_u(t).. ((-1) * (prod(t__, u(t__) ** ufact(t__)) * sum(t__, u(t__) ** ufact(t__) * ufact(t__) / u(t__) / u(t__) ** ufact(t__)))) + nu_utility(t) - piL_u(t) =E= 0;
-stat_y(t).. nu_income(t) + ((-1) * d) * nu_taxes(t) - nu_savings(t) =E= 0;
+stat_a(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_a_fx_0$(sameas(tl, '0')) + (((-1) * r) * nu_income(tl))$(t(tl)) + sum(tt, nu_terminal(tt)$(tt(tt))) =E= 0;
+stat_c(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * a1 * c(t) ** ((-1) * a2) * ((-1) * a2) / c(t) / 10000)) * nu_utility(t) + (p * nu_savings(t))$(t(t)) + (n(t) * ((-1) * (gamma1 * p)) * nu_timemoney(t))$(t(t)) + (1.01 * gamma1 * p * lam_dom1(t))$(t(t)) - piL_c(t) =E= 0;
+stat_l(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + (((-1) * w) * nu_income(t))$(t(t)) + lam_dom2(t) - piL_l(t) + piU_l(t) =E= 0;
+stat_m(tl).. ((-1) * nu_budget(tl)) + nu_budget(tl+1)$(ord(tl) <= card(tl) - 1) + nu_m_fx_0$(sameas(tl, '0')) + (n(tl) * nu_timemoney(tl))$(t(tl)) + sum(tt, nu_terminal(tt)$(tt(tt))) - lam_dom1(tl)$(t(tl)) =E= 0;
+stat_n(t).. ((-1) * (100 * (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) ** ((-1) / a2) * (-1) / a2 / (a1 * c(t) ** ((-1) * a2) + (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2)) * (1 - a1) * (th - l(t) - n(t)) ** ((-1) * a2) * ((-1) * a2) / (th - l(t) - n(t)) * (-1) / 10000)) * nu_utility(t) + ((m(t) - gamma1 * p * c(t)) * nu_timemoney(t))$(t(t)) + lam_dom2(t) =E= 0;
+stat_s(tl).. (nu_budget(tl) + nu_savings(tl)$(t(tl)))$(t(tl)) =E= 0;
+stat_tax(t).. nu_taxes(t) + nu_savings(t)$(t(t)) =E= 0;
+stat_u(t).. ((-1) * (prod(t__, u(t__) ** ufact(t__)) * u(t) ** ufact(t) * ufact(t) / u(t) / u(t) ** ufact(t))) + nu_utility(t) - piL_u(t) =E= 0;
+stat_y(t).. nu_income(t)$(t(t)) + ((-1) * d) * nu_taxes(t) - nu_savings(t)$(t(t)) =E= 0;
 
 * Inequality complementarity equations
 comp_dom1(t).. m(t) - 1.01 * gamma1 * p * c(t) =G= 0;
@@ -212,6 +215,7 @@ nu_budget.fx(tl)$(not (ord(tl) > 1)) = 0;
 lam_dom1.fx(tl)$(not (t(tl))) = 0;
 nu_income.fx(tl)$(not (t(tl))) = 0;
 nu_savings.fx(tl)$(not (t(tl))) = 0;
+nu_terminal.fx(t)$(not (tt(t))) = 0;
 nu_timemoney.fx(tl)$(not (t(tl))) = 0;
 
 * ============================================

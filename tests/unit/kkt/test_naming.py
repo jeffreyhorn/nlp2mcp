@@ -3,12 +3,18 @@
 import pytest
 
 from src.kkt.naming import (
+    BOUND_NAME_MAX_LENGTH,
+    GAMS_MAX_IDENTIFIER_LENGTH,
+    clear_long_identifier_registry,
     create_bound_lo_multiplier_name,
+    create_bound_lo_multiplier_name_indexed,
     create_bound_up_multiplier_name,
     create_eq_multiplier_name,
     create_ineq_multiplier_name,
     detect_naming_collision,
+    get_long_identifier_registry,
     resolve_collision,
+    shorten_identifier,
 )
 
 
@@ -130,3 +136,149 @@ class TestNamingCollision:
         """Resolve collision by finding first available suffix."""
         result = resolve_collision("lam_y", {"lam_y", "lam_y_1", "lam_y_2"})
         assert result == "lam_y_3"
+
+
+@pytest.mark.unit
+class TestIdentifierShortening:
+    """Issue #1290: deterministic shortening for over-length identifiers."""
+
+    def setup_method(self):
+        clear_long_identifier_registry()
+
+    def test_short_name_unchanged(self):
+        assert shorten_identifier("nu_balance") == "nu_balance"
+
+    def test_exactly_at_limit_unchanged(self):
+        name = "x" * GAMS_MAX_IDENTIFIER_LENGTH
+        assert shorten_identifier(name) == name
+        assert get_long_identifier_registry() == {}
+
+    def test_over_limit_is_shortened_to_max_length(self):
+        name = "x" * (GAMS_MAX_IDENTIFIER_LENGTH + 5)
+        out = shorten_identifier(name)
+        assert len(out) == GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_shortening_is_deterministic(self):
+        name = "x" * 80
+        a = shorten_identifier(name)
+        b = shorten_identifier(name)
+        assert a == b
+
+    def test_shortening_records_mapping(self):
+        original = "y" * 80
+        shortened = shorten_identifier(original)
+        registry = get_long_identifier_registry()
+        assert registry[shortened] == original
+
+    def test_shortening_preserves_head_and_appends_hex_hash(self):
+        # Format is `<head>_<8-hex>` totaling exactly max_length.
+        original = "longprefix_" + ("z" * 80)
+        shortened = shorten_identifier(original, max_length=63)
+        assert len(shortened) == 63
+        # Last 9 chars are `_<8-hex>`
+        assert shortened[-9] == "_"
+        # The 8 trailing chars are valid lowercase hex
+        assert all(c in "0123456789abcdef" for c in shortened[-8:])
+        # Head is the original prefix
+        assert original.startswith(shortened[:-9])
+
+    def test_distinct_names_get_distinct_shortenings(self):
+        a = shorten_identifier("a" * 80)
+        b = shorten_identifier("b" * 80)
+        assert a != b
+
+    def test_ferts_style_67char_name(self):
+        # Issue #1290 reproducer
+        original = "nu_xi_fx_sulf_acid_c8324d9c_kafr_el_zt_4b0342d5_kafr_el_zt_4b0342d5"
+        assert len(original) == 67
+        out = shorten_identifier(original)
+        assert len(out) == 63
+        assert get_long_identifier_registry()[out] == original
+
+    def test_eq_multiplier_with_long_eq_name_is_shortened(self):
+        long_eq = "y" * 70
+        out = create_eq_multiplier_name(long_eq)
+        assert len(out) <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_bound_indexed_multiplier_with_long_indices_is_shortened(self):
+        out = create_bound_lo_multiplier_name_indexed(
+            "x", tuple("element_" + "z" * 30 for _ in range(3))
+        )
+        assert len(out) <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_clear_registry(self):
+        shorten_identifier("a" * 80)
+        assert get_long_identifier_registry()
+        clear_long_identifier_registry()
+        assert get_long_identifier_registry() == {}
+
+    def test_bound_name_max_leaves_room_for_multiplier_prefix(self):
+        # Wrapping with `nu_`/`lam_`/`piL_`/`piU_` (max 4 chars) must not
+        # push the result past the GAMS limit.
+        assert BOUND_NAME_MAX_LENGTH + 4 <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_idempotent_repeat_call_does_not_overwrite_or_widen(self):
+        """PR #1337 review: calling shorten_identifier twice with the same
+        ``name`` must produce the same shortened form and leave the
+        registry intact. This protects against subtle issues where a
+        builder calls the helper multiple times during a single emission
+        (e.g. once for the equation name, once for the multiplier)."""
+        clear_long_identifier_registry()
+        long_name = "x" * 80
+        first = shorten_identifier(long_name)
+        second = shorten_identifier(long_name)
+        assert first == second
+        # Registry has exactly one entry mapping this shortened form back
+        # to the original.
+        registry = get_long_identifier_registry()
+        assert registry[first] == long_name
+
+    def test_collision_disambiguates_via_extended_hash_prefix(self, monkeypatch):
+        """PR #1337 review: when two distinct over-length names produce
+        the same shortened form (head match + 8-hex hash collision),
+        ``shorten_identifier`` must widen the hex prefix until uniqueness
+        is reached, NOT silently overwrite the registry."""
+        import hashlib
+
+        clear_long_identifier_registry()
+
+        # Stub SHA-256 so the first 8 hex chars collide for two distinct
+        # inputs but the 9th hex char differs. Using a tiny lookup table
+        # keeps the test self-contained — no need to find a real collision.
+        # Cache the real sha256 BEFORE the monkeypatch so the fallback in
+        # the stub doesn't recurse into itself.
+        _real_sha256 = hashlib.sha256
+        name_a = "alpha_" + ("a" * 80)
+        name_b = "alpha_" + ("b" * 80)
+        canned = {
+            name_a: "deadbeefcafefade" + "0" * 48,
+            name_b: "deadbeefdeadbeef" + "0" * 48,
+        }
+
+        class _StubHash:
+            def __init__(self, payload: bytes) -> None:
+                self._payload = payload.decode("utf-8")
+
+            def hexdigest(self) -> str:
+                if self._payload in canned:
+                    return canned[self._payload]
+                return _real_sha256(self._payload.encode()).hexdigest()
+
+        monkeypatch.setattr(
+            "src.kkt.naming.hashlib.sha256",
+            lambda data: _StubHash(data),
+        )
+
+        a = shorten_identifier(name_a)
+        b = shorten_identifier(name_b)
+
+        # Different inputs must produce different shortened forms.
+        assert a != b, (
+            f"Collision not disambiguated: shorten_identifier({name_a!r}) and "
+            f"shorten_identifier({name_b!r}) both returned {a!r}."
+        )
+        # Both are recorded in the registry mapping back to their respective
+        # originals.
+        registry = get_long_identifier_registry()
+        assert registry[a] == name_a
+        assert registry[b] == name_b

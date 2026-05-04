@@ -1368,6 +1368,28 @@ def _collect_param_refs(expr: Expr) -> set[str]:
     return refs
 
 
+def _collect_iter_set_names(expr: Expr) -> set[str]:
+    """Collect set names that an expression iterates over via Sum/Prod.
+
+    Issue #1291: ``tmp = sum(leaf, nprob(leaf))`` reads ``leaf`` even though
+    ``leaf`` does not appear in `_collect_param_refs` (it's a set, not a
+    parameter) nor in `_collect_set_membership_names` (no
+    ``SetMembershipTest`` node). The dependency-graph driving statement
+    ordering must treat the iterating set as a read so the statement is
+    emitted *after* the set is initialized.
+    """
+    names: set[str] = set()
+    if isinstance(expr, (Sum, Prod)):
+        names.update(s.lower() for s in expr.index_sets)
+    for child in expr.children():
+        names.update(_collect_iter_set_names(child))
+    if isinstance(expr, (VarRef, ParamRef, MultiplierRef)):
+        for idx in expr.indices:
+            if isinstance(idx, Expr):
+                names.update(_collect_iter_set_names(idx))
+    return names
+
+
 def _topological_sort_params(eligible: list[str], param_deps: dict[str, set[str]]) -> list[str]:
     """Topologically sort parameters so dependencies are emitted first.
 
@@ -1918,7 +1940,27 @@ def emit_interleaved_params_and_sets(
                 if pname in index_blocked_params:
                     break
 
-    if not set_blocked_params and not index_blocked_params:
+    # Issue #1291: iter-blocked params — params whose computed expression
+    # iterates over a dynamic set via sum/prod (e.g.
+    # ``tmp = sum(leaf, nprob(leaf))``). The set must be initialized
+    # before the iteration runs, so the param assignment must be emitted
+    # *after* the corresponding set assignment.
+    #
+    # PR #1337 review: compare against ``dynamic_set_names_expanded`` (not
+    # ``dynamic_set_names``) so iterations over an alias of a dynamic set —
+    # e.g., ``Alias(leaf, ll); tmp = sum(ll, nprob(ll))`` — are also
+    # treated as iter-blocked. Without this the topological sort can hoist
+    # the reduction before the alias's dynamic-set initialization.
+    iter_blocked_params: set[str] = set()
+    for pname, pdef in model_ir.params.items():
+        if pdef.expressions:
+            for _, ex in pdef.expressions:
+                iter_sets = _collect_iter_set_names(ex)
+                if iter_sets & dynamic_set_names_expanded:
+                    iter_blocked_params.add(pname.lower())
+                    break
+
+    if not set_blocked_params and not index_blocked_params and not iter_blocked_params:
         # No params depend on dynamic sets — no interleaving needed.
         # Fall back to the simple early-params approach.
         return "", set(), set()
@@ -1945,8 +1987,11 @@ def emit_interleaved_params_and_sets(
     for sa in model_ir.set_assignments:
         sa_direct_deps.update(_collect_param_refs(sa.expr) & all_computed)
 
-    # Build the involved set: everything between sa deps and set-blocked/index-blocked params
-    involved: set[str] = set(set_blocked_params) | index_blocked_params | sa_direct_deps
+    # Build the involved set: everything between sa deps and set-blocked/index-blocked
+    # /iter-blocked params (Issue #1291)
+    involved: set[str] = (
+        set(set_blocked_params) | index_blocked_params | iter_blocked_params | sa_direct_deps
+    )
 
     # Expand upstream: if an involved param depends on another computed param,
     # that param is also involved.
@@ -1994,8 +2039,8 @@ def emit_interleaved_params_and_sets(
     # index-blocked interleaving chain (Issue #1041: index-blocked params and
     # their transitive dependencies must stay so the topological sort places
     # them after their set dependencies but before dependent set assignments).
-    keep_for_interleave: set[str] = set(index_blocked_params)
-    _frontier = set(index_blocked_params)
+    keep_for_interleave: set[str] = set(index_blocked_params) | iter_blocked_params
+    _frontier = set(index_blocked_params) | iter_blocked_params
     while _frontier:
         _next: set[str] = set()
         for p in _frontier:
@@ -2162,6 +2207,19 @@ def emit_interleaved_params_and_sets(
                     canonical_target = _resolve_alias_chain(idx_base)
                     if canonical_target in dynamic_set_names:
                         refs.add(f"__set_{canonical_target}__")
+            # Issue #1291: Sum/Prod over a dynamic set reads that set —
+            # add a pseudo-dep so the assignment is ordered after the set
+            # initialization. PR #1337 review: also catch sums/prods over
+            # an alias of a dynamic set; resolve the alias chain to the
+            # canonical dynamic-set target so the pseudo-dep edge points
+            # at the actual ``__set_<dynamic>__`` writer.
+            for sn in _collect_iter_set_names(expr):
+                if sn in dynamic_set_names:
+                    refs.add(f"__set_{sn}__")
+                elif sn in dynamic_set_names_expanded:
+                    canonical = _resolve_alias_chain(sn)
+                    if canonical in dynamic_set_names:
+                        refs.add(f"__set_{canonical}__")
             stmt_reads.append(refs)
         else:
             # Set assignment — reads the params it references AND
@@ -2172,6 +2230,17 @@ def emit_interleaved_params_and_sets(
             # Add pseudo-deps for referenced dynamic sets (e.g., kt = not ku)
             for sn in _collect_set_membership_names(sa.expr) & dynamic_set_names:
                 refs.add(f"__set_{sn}__")
+            # Issue #1291: set assignment over sum/prod of a dynamic set
+            # also creates a set→set dependency. PR #1337 review: same
+            # alias-resolution as above so iterations over an alias of a
+            # dynamic set are recognised.
+            for sn in _collect_iter_set_names(sa.expr):
+                if sn in dynamic_set_names:
+                    refs.add(f"__set_{sn}__")
+                elif sn in dynamic_set_names_expanded:
+                    canonical = _resolve_alias_chain(sn)
+                    if canonical in dynamic_set_names:
+                        refs.add(f"__set_{canonical}__")
             stmt_reads.append(refs)
 
     # Set of all "writable" names (param names + set pseudo-names)

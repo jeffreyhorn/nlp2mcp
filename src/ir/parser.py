@@ -1506,9 +1506,24 @@ def _merge_dotted_col_headers(
     Row labels already handle this via the ``dotted_label`` grammar node;
     this function provides equivalent behaviour for column headers.
 
-    Returns a list of ``(label, col_pos, source_width)`` tuples where
-    *source_width* is the original token span width in the source text
-    (including quotes if the header was auto-quoted by the preprocessor).
+    Returns a list of ``(label, col_pos, source_width)`` tuples.
+
+    Issue #1352: when the preprocessor's `normalize_special_identifiers`
+    auto-quotes hyphenated headers in tables with descriptions (e.g.,
+    `ref-p` → `'ref-p'`), the inserted apostrophes shift subsequent
+    column positions in the *header* line — but data rows are
+    unchanged. The token columns reported by Lark therefore reflect
+    the *post-quote* layout for headers but the *original* layout
+    for data values, which breaks gap-midpoint matching (e.g.,
+    qdemo7's `wheat ... 140` lands under exp-p instead of imp-p).
+
+    Compensate by computing each header's "effective" identifier
+    column in the *original* (pre-quote) source: subtract the
+    cumulative apostrophe-shift contributed by preceding quoted
+    headers on the same line, plus the leading apostrophe of this
+    header if it is itself quoted. ``source_width`` is also
+    adjusted to the unquoted identifier length so range boundaries
+    line up with where data values actually fall.
     """
     # Step 1: collect (name, adjusted_col_pos, source_length, line_number, original_col_pos)
     raw: list[tuple[str, int, int, int, int]] = []
@@ -1554,7 +1569,28 @@ def _merge_dotted_col_headers(
                 break
         merged.append((name, pos, rlen))
         i = j
-    return merged
+
+    # Step 3 (#1352): compensate for preprocessor-added quotes shifting
+    # header columns relative to unchanged data rows. Iterate the merged
+    # headers in order and accumulate apostrophe-shifts.
+    adjusted: list[tuple[str, int, int]] = []
+    cumulative_shift = 0
+    for name, pos, rlen in merged:
+        identifier_len = len(name)
+        is_quoted = rlen > identifier_len and rlen >= identifier_len + 2
+        if is_quoted:
+            # `pos` points at the leading apostrophe; the identifier itself
+            # starts one column to the right. Map back to the original
+            # source: subtract preceding cumulative shift AND the leading
+            # apostrophe of this header.
+            eff_pos = pos + 1 - (cumulative_shift + 1)
+            eff_width = identifier_len
+            cumulative_shift += 2  # this header's two apostrophes
+        else:
+            eff_pos = pos - cumulative_shift
+            eff_width = rlen
+        adjusted.append((name, eff_pos, eff_width))
+    return adjusted
 
 
 @dataclass
@@ -5311,18 +5347,38 @@ class _ModelBuilder:
                         else:
                             # Issue #1015: Check if idx is an alias resolving to the
                             # same set as the domain name.
+                            # Issue #1348: Also accept transitive subsets — e.g.,
+                            # china's `gio(g,g) = -1` where gio(ca,g), g(c), c(ca):
+                            # the first `g` should iterate over g's members because
+                            # g ⊂ c ⊂ ca. Walk resolved_idx's parent chain and match
+                            # by SetDef identity (so aliases on either side compare
+                            # equal after resolution).
                             resolved_idx = self._resolve_set_def(idx)
                             dn_lower = domain_name.lower()
                             if dn_lower not in resolved_domain_cache:
                                 resolved_domain_cache[dn_lower] = self._resolve_set_def(domain_name)
                             resolved_domain = resolved_domain_cache[dn_lower]
-                            if (
-                                resolved_idx is not None
-                                and resolved_domain is not None
-                                and resolved_idx is resolved_domain
-                            ):
-                                expand_positions.append(pos)
-                                expand_set_defs[pos] = resolved_idx
+                            if resolved_idx is not None and resolved_domain is not None:
+                                if resolved_idx is resolved_domain:
+                                    expand_positions.append(pos)
+                                    expand_set_defs[pos] = resolved_idx
+                                else:
+                                    visited: set[str] = set()
+                                    stack: list[str] = list(resolved_idx.domain)
+                                    while stack:
+                                        parent_name = stack.pop()
+                                        pn_lower = parent_name.lower()
+                                        if pn_lower in visited:
+                                            continue
+                                        visited.add(pn_lower)
+                                        parent_def = self._resolve_set_def(parent_name)
+                                        if parent_def is None:
+                                            continue
+                                        if parent_def is resolved_domain:
+                                            expand_positions.append(pos)
+                                            expand_set_defs[pos] = resolved_idx
+                                            break
+                                        stack.extend(parent_def.domain)
 
                     if expand_positions:
                         # Build list of member lists for positions that need expansion

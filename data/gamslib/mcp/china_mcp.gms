@@ -35,7 +35,7 @@ Sets
 ;
 
 Parameters
-    mcp(s,c) /'bar-r-r'.barley 0.704, 'bar-r-r'.wheat 0.193, 'bar-r-r'.'e-rice' 0.807, 'bar-r-r'.'l-rice' 1, 'gm-r-r'.wheat 0.193, 'gm-r-r'.'e-rice' 0.807, 'gm-r-r'.'l-rice' 1, 'gm-r-r'.'l-sc-rice' 0.704, 'bar-sr'.barley 0.859, 'bar-sr'.'l-sc-rice' 1, 'bar-sr'.'g-manure' 0.141, 'bar-sr'.rapeseed 1, 'bar-sr'.azolla 0.859, 'wh-sr'.wheat 0.859, 'wh-sr'.'l-sc-rice' 1, 'wh-sr'.'g-manure' 0.141, 'wh-sr'.rapeseed 1, 'gm-sr'.'l-sc-rice' 1, 'gm-sr'.'g-manure' 1, 'gm-sr'.rapeseed 1, 'gm-sr'.azolla 0.859, 'rape-sr'.'l-sc-rice' 1, 'rape-sr'.'g-manure' 0.141, 'rape-sr'.'gm-seeds' 0.859, 'rape-sr'.rapeseed 1, 'fallow-sr'.'l-sc-rice' 1, 'fallow-sr'.'g-manure' 0.141, 'fallow-sr'.'azolla-e' 0.859, 'gm-s-sr'.'l-sc-rice' 1, 'gm-s-sr'.'g-manure' 0.1, 'gm-s-sr'.'gm-seeds' 0.9, 'bar-r'.barley 0.9, 'bar-r'.'m-rice' 1, 'bar-r'.'l-sc-rice' 0.1, 'bar-r'.rapeseed 1, 'wh-r'.wheat 0.9, 'wh-r'.'m-rice' 1, 'wh-r'.'l-sc-rice' 0.1, 'gm-r'.'m-rice' 1, 'gm-r'.'l-sc-rice' 1, 'gm-r'.rapeseed 1/
+    mcp(s,c) /'bar-r-r'.barley 0.704, 'bar-r-r'.wheat 0.193, 'bar-r-r'.'e-rice' 0.807, 'bar-r-r'.'l-rice' 1, 'gm-r-r'.wheat 0.193, 'gm-r-r'.'e-rice' 0.807, 'gm-r-r'.'l-rice' 1, 'gm-r-r'.'g-manure' 0.704, 'bar-sr'.barley 0.859, 'bar-sr'.'l-sc-rice' 1, 'bar-sr'.'g-manure' 0.141, 'bar-sr'.azolla 1, 'bar-sr'.'azolla-e' 0.859, 'wh-sr'.wheat 0.859, 'wh-sr'.'l-sc-rice' 1, 'wh-sr'.'g-manure' 0.141, 'wh-sr'.azolla 1, 'gm-sr'.'l-sc-rice' 1, 'gm-sr'.'g-manure' 1, 'gm-sr'.azolla 1, 'gm-sr'.'azolla-e' 0.859, 'rape-sr'.'l-sc-rice' 1, 'rape-sr'.'g-manure' 0.141, 'rape-sr'.rapeseed 0.859, 'rape-sr'.azolla 1, 'fallow-sr'.'l-sc-rice' 1, 'fallow-sr'.'g-manure' 0.141, 'fallow-sr'.fodder 0.859, 'gm-s-sr'.'l-sc-rice' 1, 'gm-s-sr'.'g-manure' 0.1, 'gm-s-sr'.'gm-seeds' 0.9, 'bar-r'.barley 0.9, 'bar-r'.'m-rice' 1, 'bar-r'.'g-manure' 0.1, 'bar-r'.azolla 1, 'wh-r'.wheat 0.9, 'wh-r'.'m-rice' 1, 'wh-r'.'g-manure' 0.1, 'gm-r'.'m-rice' 1, 'gm-r'.'g-manure' 1, 'gm-r'.azolla 1/
     cdata(ca,*) /barley.yield 427.6, barley.'cash-cost' 11, barley.'straw-y' 1, barley.'proc-price' 226, wheat.yield 530.3, wheat.'cash-cost' 11, wheat.'straw-y' 1.1, wheat.'proc-price' 316, 'e-rice'.yield 690.3, 'e-rice'.'cash-cost' 14.9, 'e-rice'.'straw-y' 0.8, 'e-rice'.'proc-price' 232, 'm-rice'.yield 962.7, 'm-rice'.'cash-cost' 23.6, 'm-rice'.'straw-y' 1, 'm-rice'.'proc-price' 238, 'l-rice'.yield 558.2, 'l-rice'.'cash-cost' 18.9, 'l-rice'.'straw-y' 0.8, 'l-rice'.'proc-price' 272, 'l-sc-rice'.yield 857.7, 'l-sc-rice'.'cash-cost' 25.2, 'l-sc-rice'.'straw-y' 1, 'l-sc-rice'.'proc-price' 233, 'g-manure'.yield 4968.1, 'g-manure'.'cash-cost' 2.3, rapeseed.yield 221.1, rapeseed.'cash-cost' 9.8, rapeseed.'straw-y' 1.5, rapeseed.'proc-price' 720, rapeseed.'quota-sale' 4, azolla.yield 1149, 'azolla-e'.yield 1149, fodder.yield 1200, straw.'proc-price' 44, straw.'quota-sale' 1.2, pigs.'proc-price' 1200, pigs.'quota-sale' 4, shoats.'proc-price' 1800, vegetable.'proc-price' 375/
     yield(ca)
     yieldu(ca) /fodder 0.3, vegetable 0.24/
@@ -44,8 +44,8 @@ Parameters
     purdata(ca,*) /'amm-water'.price 30, 'amm-bi'.price 123, nightsoil.price 20, nightsoil.quantity 7, ssp.price 100, ssp.quantity 500, 'pig-m'.price 12, 'pig-m'.quantity 10000, hyacinth.quantity 15/
     pigio(ca,p) /shoats.'r-shoats' 1, shoats.'r-pigs' -0.12, pigs.'r-pigs' 1, 'straw-b'.'r-shoats' 8, 'straw-b'.'r-pigs' 8, 'g-feed'.'r-shoats' -3.3, 'g-feed'.'r-pigs' -2.6, straw.'r-shoats' -8.8, straw.'r-pigs' -8.8, fodder.'r-shoats' -0.55, fodder.'r-pigs' -0.5/
     cxpig(p) /'r-shoats' 90, 'r-pigs' 60/
-    gio(ca,g) /'g-feed'.barley 1, 'g-feed'.wheat 1, 'g-feed'.'e-rice' 1, 'g-feed'.'m-rice' 1, 'g-feed'.'l-rice' 1, 'g-feed'.'l-sc-rice' 1/
-    lu(t,c) /'nov-1'.barley 8.15, 'nov-1'.wheat 8.15, 'nov-1'.'l-rice' 3.17, 'nov-1'.'l-sc-rice' 3, 'nov-1'.'gm-seeds' 14.9, 'nov-mar'.barley 7.45, 'nov-mar'.wheat 7.45, 'nov-mar'.'e-rice' 7.75, 'nov-mar'.'m-rice' 5.57, 'nov-mar'.'l-rice' 6.33, 'nov-mar'.'l-sc-rice' 13.07, 'nov-mar'.'g-manure' 1, 'nov-mar'.'gm-seeds' 1, 'nov-mar'.rapeseed 15.15, 'mar-2'.barley 1.1, 'mar-2'.wheat 1.1, 'mar-2'.'e-rice' 2.03, 'mar-2'.'m-rice' 0.74, 'mar-2'.'l-sc-rice' 0.74, 'mar-2'.'gm-seeds' 1.85, 'apr-1'.barley 0.4, 'apr-1'.wheat 0.4, 'apr-1'.'e-rice' 3.25, 'apr-1'.'m-rice' 0.7, 'apr-1'.'l-sc-rice' 0.7, 'apr-2'.barley 0.9, 'apr-2'.wheat 0.9, 'apr-2'.'e-rice' 3.36, 'apr-2'.'m-rice' 0.7, 'apr-2'.'l-sc-rice' 0.7, 'apr-2'.'gm-seeds' 1, 'may-1'.barley 0.2, 'may-1'.wheat 0.2, 'may-1'.'e-rice' 8.2, 'may-1'.'m-rice' 2.92, 'may-1'.'l-sc-rice' 4.42, 'may-1'.'g-manure' 3, 'may-1'.'gm-seeds' 0.9, 'may-jun'.barley 10.8, 'may-jun'.wheat 8.8, 'may-jun'.'e-rice' 13.58, 'may-jun'.'m-rice' 12.12, 'may-jun'.'l-rice' 1.5, 'may-jun'.'l-sc-rice' 5.27, 'may-jun'.'g-manure' 6.7, 'may-jun'.'gm-seeds' 8.4, 'jun-2'.wheat 2, 'jun-2'.'e-rice' 2.35, 'jun-2'.'m-rice' 4.4, 'jun-2'.'l-rice' 3, 'jun-2'.'l-sc-rice' 8.99, 'jul-1'.'e-rice' 2.48, 'jul-1'.'m-rice' 5.41, 'jul-1'.'l-rice' 3, 'jul-1'.'l-sc-rice' 5, 'jul-2'.'e-rice' 0.7, 'jul-2'.'m-rice' 5.59, 'jul-2'.'l-rice' 3, 'jul-2'.'l-sc-rice' 4.5, 'aug-1'.'e-rice' 8.42, 'aug-1'.'m-rice' 1, 'aug-1'.'l-rice' 9.35, 'aug-1'.'l-sc-rice' 1.42, 'aug-2'.'e-rice' 1.88, 'aug-2'.'m-rice' 3.65, 'aug-2'.'l-rice' 4.92, 'aug-2'.'l-sc-rice' 4.54, sep.barley 1.3, sep.wheat 1.3, sep.'m-rice' 3.2, sep.'l-rice' 5.09, sep.'l-sc-rice' 4.15, sep.'gm-seeds' 1, 'oct-1'.barley 1.3, 'oct-1'.wheat 1.3, 'oct-1'.'m-rice' 6.13, 'oct-1'.'l-rice' 1.52, 'oct-1'.'l-sc-rice' 1.25, 'oct-1'.'g-manure' 1.25, 'oct-1'.'gm-seeds' 0.5, 'oct-2'.barley 1.25, 'oct-2'.wheat 1.25, 'oct-2'.'m-rice' 4.37, 'oct-2'.'l-rice' 0.12, 'oct-2'.'l-sc-rice' 1, 'oct-2'.'g-manure' 1, 'oct-2'.'gm-seeds' 0.3/
+    gio(ca,g) /barley.barley -1, wheat.wheat -1, 'e-rice'.'e-rice' -1, 'm-rice'.'m-rice' -1, 'l-rice'.'l-rice' -1, 'l-sc-rice'.'l-sc-rice' -1, 'g-feed'.barley 1, 'g-feed'.wheat 1, 'g-feed'.'e-rice' 1, 'g-feed'.'m-rice' 1, 'g-feed'.'l-rice' 1, 'g-feed'.'l-sc-rice' 1/
+    lu(t,c) /'nov-1'.barley 8.15, 'nov-1'.wheat 8.15, 'nov-1'.'l-rice' 3.17, 'nov-1'.'l-sc-rice' 3, 'nov-1'.rapeseed 14.9, 'nov-mar'.barley 7.45, 'nov-mar'.wheat 7.45, 'nov-mar'.'e-rice' 7.75, 'nov-mar'.'m-rice' 5.57, 'nov-mar'.'l-rice' 6.33, 'nov-mar'.'l-sc-rice' 13.07, 'nov-mar'.'g-manure' 1, 'nov-mar'.'gm-seeds' 1, 'nov-mar'.rapeseed 15.15, 'mar-2'.barley 1.1, 'mar-2'.wheat 1.1, 'mar-2'.'e-rice' 2.03, 'mar-2'.'m-rice' 0.74, 'mar-2'.'l-sc-rice' 0.74, 'mar-2'.rapeseed 1.85, 'apr-1'.barley 0.4, 'apr-1'.wheat 0.4, 'apr-1'.'e-rice' 3.25, 'apr-1'.'m-rice' 0.7, 'apr-1'.'l-sc-rice' 0.7, 'apr-2'.barley 0.9, 'apr-2'.wheat 0.9, 'apr-2'.'e-rice' 3.36, 'apr-2'.'m-rice' 0.7, 'apr-2'.'l-sc-rice' 0.7, 'apr-2'.rapeseed 1, 'may-1'.barley 0.2, 'may-1'.wheat 0.2, 'may-1'.'e-rice' 8.2, 'may-1'.'m-rice' 2.92, 'may-1'.'l-sc-rice' 4.42, 'may-1'.'g-manure' 3, 'may-1'.rapeseed 0.9, 'may-jun'.barley 10.8, 'may-jun'.wheat 8.8, 'may-jun'.'e-rice' 13.58, 'may-jun'.'m-rice' 12.12, 'may-jun'.'l-rice' 1.5, 'may-jun'.'l-sc-rice' 5.27, 'may-jun'.'gm-seeds' 6.7, 'may-jun'.rapeseed 8.4, 'jun-2'.wheat 2, 'jun-2'.'e-rice' 2.35, 'jun-2'.'m-rice' 4.4, 'jun-2'.'l-rice' 3, 'jun-2'.'l-sc-rice' 8.99, 'jul-1'.'e-rice' 2.48, 'jul-1'.'m-rice' 5.41, 'jul-1'.'l-rice' 3, 'jul-1'.'l-sc-rice' 5, 'jul-2'.'e-rice' 0.7, 'jul-2'.'m-rice' 5.59, 'jul-2'.'l-rice' 3, 'jul-2'.'l-sc-rice' 4.5, 'aug-1'.'e-rice' 8.42, 'aug-1'.'m-rice' 1, 'aug-1'.'l-rice' 9.35, 'aug-1'.'l-sc-rice' 1.42, 'aug-2'.'e-rice' 1.88, 'aug-2'.'m-rice' 3.65, 'aug-2'.'l-rice' 4.92, 'aug-2'.'l-sc-rice' 4.54, sep.barley 1.3, sep.wheat 1.3, sep.'m-rice' 3.2, sep.'l-rice' 5.09, sep.'l-sc-rice' 4.15, sep.rapeseed 1, 'oct-1'.barley 1.3, 'oct-1'.wheat 1.3, 'oct-1'.'m-rice' 6.13, 'oct-1'.'l-rice' 1.52, 'oct-1'.'g-manure' 1.25, 'oct-1'.'gm-seeds' 1.25, 'oct-1'.rapeseed 0.5, 'oct-2'.barley 1.25, 'oct-2'.wheat 1.25, 'oct-2'.'m-rice' 4.37, 'oct-2'.'l-rice' 0.12, 'oct-2'.'g-manure' 1, 'oct-2'.'gm-seeds' 1, 'oct-2'.rapeseed 0.3/
     lab(t,s)
     dlab(t,c)
     labj(t) /'aug-1' 0.12/
@@ -65,7 +65,7 @@ Parameters
     hreq(c,en)
     syield(ca,s,f)
     sys(s,f)
-    crec(ca,cf) /straw.'c-straw' 0.12, 'g-manure'.'c-gm' 0.12, hyacinth.'c-hyacinth' 0.12, 'pig-m'.'c-straw' 0.05, 'pig-m'.'c-gm' 0.05, 'pig-m'.'c-hyacinth' 0.05, silt.'c-straw' 0.83, silt.'c-gm' 0.83, silt.'c-hyacinth' 0.83, azolla.'c-hyacinth' 1, 'azolla-e'.azolla 0.2/
+    crec(ca,cf) /straw.'c-straw' 0.12, 'g-manure'.'c-gm' 0.12, hyacinth.'c-hyacinth' 0.12, 'pig-m'.'c-straw' 0.05, 'pig-m'.'c-gm' 0.05, 'pig-m'.'c-hyacinth' 0.05, silt.'c-straw' 0.83, silt.'c-gm' 0.83, silt.'c-hyacinth' 0.83, azolla.azolla 1, 'azolla-e'.azolla 0.2/
     chemnall(ca,*) /barley.crops 49, barley.qsa 0.17, wheat.crops 49, wheat.qsa 0.17, 'e-rice'.crops 53, 'e-rice'.aqsa 0.17, 'm-rice'.crops 45, 'm-rice'.qsa 0.17, 'l-rice'.crops 45, 'l-rice'.qsa 0.17, 'l-sc-rice'.crops 45, 'l-sc-rice'.qsa 0.17, rapeseed.crops 45, rapeseed.aqsa 0.45, 'g-manure'.crops 4, pigs.qsa 0.225, pigs.aqsa 0.225/
     schem(s)
     frep(en,*)
@@ -89,12 +89,6 @@ ss(s,"normal") = 1;
 ss(sh,"high") = 1;
 $offImplicitAssign
 
-gio(g,'barley') = -1;
-gio(g,'wheat') = -1;
-gio(g,'e-rice') = -1;
-gio(g,'m-rice') = -1;
-gio(g,'l-rice') = -1;
-gio(g,'l-sc-rice') = -1;
 nc('c-straw',n) = 0.63;
 nc('c-gm',n) = 0.4;
 nc('c-hyacinth',n) = 0.24;
@@ -166,6 +160,17 @@ sreq(s,en,f) = sreq(s,en,f) - cdata("e-rice","straw-y") * syield("e-rice",s,f) *
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+cno(c,n)$(NOT (cno(c,n) > -inf and cno(c,n) < inf)) = 0;
+dlab(t,c)$(NOT (dlab(t,c) > -inf and dlab(t,c) < inf)) = 0;
+enc(cf,en)$(NOT (enc(cf,en) > -inf and enc(cf,en) < inf)) = 0;
+freq(c,en)$(NOT (freq(c,en) > -inf and freq(c,en) < inf)) = 0;
+sreq(s,en,f)$(NOT (sreq(s,en,f) > -inf and sreq(s,en,f) < inf)) = 0;
+yield(ca)$(NOT (yield(ca) > -inf and yield(ca) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -208,6 +213,7 @@ Positive Variables
     piL_purchase(ca)
     piL_sales(ca)
     piL_aqsales(ca)
+    piU_purchase(ca)
 ;
 
 * ============================================
@@ -277,6 +283,7 @@ Equations
     comp_lo_xfert(ca)
     comp_lo_xpig(p)
     comp_lo_xupland(ca)
+    comp_up_purchase(ca)
     cdef
     incdef
 ;
@@ -293,8 +300,8 @@ Alias(cu, cu__);
 * Stationarity equations
 stat_aqsales(ca).. ((((-1) * aqsprice(ca)))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"aqsa")) * lam_chemn)$(cs(ca)) - piL_aqsales(ca))$(cs(ca)) =E= 0;
 stat_ccost.. 1 + nu_cdef =E= 0;
-stat_purchase(ca).. ((((-1) * purdata(ca,"price")) * nu_cdef)$(cp(ca)) + ((-1) * 1$(cp(ca))) * lam_mb(ca) + lam_chemn$(sameas(ca, 'amm-bi')) - piL_purchase(ca))$(cp(ca)) =E= 0;
-stat_sales(ca).. ((((-1) * cdata(ca,"proc-price")))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca))$(cs(ca)) =E= 0;
+stat_purchase(ca).. ((((-1) * purdata(ca,"price")) * nu_cdef)$(cp(ca)) + ((-1) * 1$(cp(ca))) * lam_mb(ca) + lam_chemn$(sameas(ca, 'amm-bi')) - piL_purchase(ca) + piU_purchase(ca))$(cp(ca) and purchase.up(ca) - purchase.lo(ca) > 1e-10) =E= 0;
+stat_sales(ca).. ((((-1) * cdata(ca,"proc-price")))$(cs(ca)) + 1$(cs(ca)) * lam_mb(ca) + (((-1) * chemnall(ca,"qsa")) * lam_chemn)$(cs(ca)) + ((-1) * lam_grainq)$(sameas(ca, 'barley') or sameas(ca, 'e-rice') or sameas(ca, 'l-rice') or sameas(ca, 'l-sc-rice') or sameas(ca, 'm-rice') or sameas(ca, 'wheat')) - piL_sales(ca))$(cs(ca) and sales.up(ca) - sales.lo(ca) > 1e-10) =E= 0;
 stat_xcrop(s,f).. (((-1) * (cxcrop(s) * 1$(ss(s,f)))) * nu_cdef + sum(ca, ((-1) * (syield(ca,s,f) * 1$(ss(s,f)))) * lam_mb(ca)) + sum(t, lab(t,s) * 1$(ss(s,f)) * lam_labor(t)) + sum(en, sreq(s,en,f) * 1$(ss(s,f)) * lam_fert(en)) + ((-1) * (schem(s) * 1$(ss(s,f)))) * lam_chemn + 1$(ss(s,f)) * lam_landp + ((-1) * ((0.84 * mcp(s,"gm-seeds") - 0.16 * mcp(s,"g-manure")) * 1$(ss(s,f)))) * lam_gmseed - piL_xcrop(s,f))$(ss(s,f)) =E= 0;
 stat_xfeed(g).. sum(ca, ((-1) * gio(ca,g)) * lam_mb(ca)) - piL_xfeed(g) =E= 0;
 stat_xfert(ca).. (sum(cf__, ((-1) * cxfert(cf__)) * nu_cdef)$(cf(ca)) + sum(cf__, (crec(ca,cf__) * lam_mb(ca))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-2,cf__) * lam_mb(ca-2))$(ord(ca) > 2))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+11,cf__) * lam_mb(ca+11))$(ord(ca) <= card(ca) - 11))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+13,cf__) * lam_mb(ca+13))$(ord(ca) <= card(ca) - 13))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-7,cf__) * lam_mb(ca-7))$(ord(ca) > 7))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+10,cf__) * lam_mb(ca+10))$(ord(ca) <= card(ca) - 10))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+12,cf__) * lam_mb(ca+12))$(ord(ca) <= card(ca) - 12))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+8,cf__) * lam_mb(ca+8))$(ord(ca) <= card(ca) - 8))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-3,cf__) * lam_mb(ca-3))$(ord(ca) > 3))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+15,cf__) * lam_mb(ca+15))$(ord(ca) <= card(ca) - 15))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+17,cf__) * lam_mb(ca+17))$(ord(ca) <= card(ca) - 17))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+5,cf__) * lam_mb(ca+5))$(ord(ca) <= card(ca) - 5))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+7,cf__) * lam_mb(ca+7))$(ord(ca) <= card(ca) - 7))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+21,cf__) * lam_mb(ca+21))$(ord(ca) <= card(ca) - 21))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+1,cf__) * lam_mb(ca+1))$(ord(ca) <= card(ca) - 1))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+3,cf__) * lam_mb(ca+3))$(ord(ca) <= card(ca) - 3))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-1,cf__) * lam_mb(ca-1))$(ord(ca) > 1))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-4,cf__) * lam_mb(ca-4))$(ord(ca) > 4))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+14,cf__) * lam_mb(ca+14))$(ord(ca) <= card(ca) - 14))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+4,cf__) * lam_mb(ca+4))$(ord(ca) <= card(ca) - 4))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+18,cf__) * lam_mb(ca+18))$(ord(ca) <= card(ca) - 18))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+9,cf__) * lam_mb(ca+9))$(ord(ca) <= card(ca) - 9))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+6,cf__) * lam_mb(ca+6))$(ord(ca) <= card(ca) - 6))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-6,cf__) * lam_mb(ca-6))$(ord(ca) > 6))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+2,cf__) * lam_mb(ca+2))$(ord(ca) <= card(ca) - 2))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+19,cf__) * lam_mb(ca+19))$(ord(ca) <= card(ca) - 19))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+16,cf__) * lam_mb(ca+16))$(ord(ca) <= card(ca) - 16))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+20,cf__) * lam_mb(ca+20))$(ord(ca) <= card(ca) - 20))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-5,cf__) * lam_mb(ca-5))$(ord(ca) > 5))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+23,cf__) * lam_mb(ca+23))$(ord(ca) <= card(ca) - 23))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+22,cf__) * lam_mb(ca+22))$(ord(ca) <= card(ca) - 22))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-11,cf__) * lam_mb(ca-11))$(ord(ca) > 11))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-13,cf__) * lam_mb(ca-13))$(ord(ca) > 13))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-18,cf__) * lam_mb(ca-18))$(ord(ca) > 18))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-14,cf__) * lam_mb(ca-14))$(ord(ca) > 14))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-10,cf__) * lam_mb(ca-10))$(ord(ca) > 10))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-8,cf__) * lam_mb(ca-8))$(ord(ca) > 8))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-12,cf__) * lam_mb(ca-12))$(ord(ca) > 12))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-15,cf__) * lam_mb(ca-15))$(ord(ca) > 15))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-17,cf__) * lam_mb(ca-17))$(ord(ca) > 17))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-9,cf__) * lam_mb(ca-9))$(ord(ca) > 9))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-16,cf__) * lam_mb(ca-16))$(ord(ca) > 16))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-19,cf__) * lam_mb(ca-19))$(ord(ca) > 19))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+25,cf__) * lam_mb(ca+25))$(ord(ca) <= card(ca) - 25))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca+24,cf__) * lam_mb(ca+24))$(ord(ca) <= card(ca) - 24))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-21,cf__) * lam_mb(ca-21))$(ord(ca) > 21))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-20,cf__) * lam_mb(ca-20))$(ord(ca) > 20))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-25,cf__) * lam_mb(ca-25))$(ord(ca) > 25))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-22,cf__) * lam_mb(ca-22))$(ord(ca) > 22))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-24,cf__) * lam_mb(ca-24))$(ord(ca) > 24))$(sameas(cf__, ca))) + sum(cf__, ((crec(ca-23,cf__) * lam_mb(ca-23))$(ord(ca) > 23))$(sameas(cf__, ca))) + sum(cf__, sum(en, ((-1) * (0.01 * enc(cf__,en))) * lam_fert(en))$(sameas(cf__, ca))) - piL_xfert(ca))$(cf(ca)) =E= 0;
@@ -314,12 +321,15 @@ comp_mb(ca).. sum((s,f)$(ss(s,f)), syield(ca,s,f) * xcrop(s,f)) + sum(p, pigio(c
 * Lower bound complementarity equations
 comp_lo_aqsales(ca).. aqsales(ca) - 0 =G= 0;
 comp_lo_purchase(ca).. purchase(ca) - 0 =G= 0;
-comp_lo_sales(ca).. sales(ca) - 0 =G= 0;
+comp_lo_sales(ca)$(cs(ca) and cdata(ca,"quota-sale") > -inf).. sales(ca) - cdata(ca,"quota-sale") =G= 0;
 comp_lo_xcrop(s,f).. xcrop(s,f) - 0 =G= 0;
 comp_lo_xfeed(g).. xfeed(g) - 0 =G= 0;
 comp_lo_xfert(ca).. xfert(ca) - 0 =G= 0;
 comp_lo_xpig(p).. xpig(p) - 0 =G= 0;
 comp_lo_xupland(ca).. xupland(ca) - 0 =G= 0;
+
+* Upper bound complementarity equations
+comp_up_purchase(ca)$(cp(ca) and purdata(ca,"quantity") and purdata(ca,"quantity") < inf).. purdata(ca,"quantity") - purchase(ca) =G= 0;
 
 * Original equality equations
 cdef.. ccost =E= sum((s,f)$(ss(s,f)), cxcrop(s) * xcrop(s,f)) + sum(p, cxpig(p) * xpig(p)) + sum(cf, cxfert(cf) * xfert(cf)) + sum(cp, purdata(cp,"price") * purchase(cp));
@@ -337,6 +347,7 @@ aqsales.fx(ca)$(not (cs(ca))) = 0;
 piL_aqsales.fx(ca)$(not (cs(ca))) = 0;
 purchase.fx(ca)$(not (cp(ca))) = 0;
 piL_purchase.fx(ca)$(not (cp(ca))) = 0;
+piU_purchase.fx(ca)$(not (cp(ca))) = 0;
 sales.fx(ca)$(not (cs(ca))) = 0;
 piL_sales.fx(ca)$(not (cs(ca))) = 0;
 xcrop.fx(s,f)$(not (ss(s,f))) = 0;
@@ -345,6 +356,13 @@ xfert.fx(ca)$(not (cf(ca))) = 0;
 piL_xfert.fx(ca)$(not (cf(ca))) = 0;
 xupland.fx(ca)$(not (cu(ca))) = 0;
 piL_xupland.fx(ca)$(not (cu(ca))) = 0;
+purchase.fx(ca)$(not (purchase.up(ca) - purchase.lo(ca) > 1e-10)) = purchase.lo(ca);
+piL_purchase.fx(ca)$(not (purchase.up(ca) - purchase.lo(ca) > 1e-10)) = 0;
+piU_purchase.fx(ca)$(not (purchase.up(ca) - purchase.lo(ca) > 1e-10)) = 0;
+sales.fx(ca)$(not (sales.up(ca) - sales.lo(ca) > 1e-10)) = sales.lo(ca);
+piL_sales.fx(ca)$(not (sales.up(ca) - sales.lo(ca) > 1e-10)) = 0;
+piL_sales.fx(ca)$(not (cs(ca) and cdata(ca,"quota-sale") > -inf)) = 0;
+piU_purchase.fx(ca)$(not (cp(ca) and purdata(ca,"quantity") and purdata(ca,"quantity") < inf)) = 0;
 
 * Fix multipliers for empty inequality instances (no variables)
 lam_mb.fx('gm-seeds') = 0;
@@ -389,7 +407,8 @@ Model mcp_model /
     comp_lo_xfeed.piL_xfeed,
     comp_lo_xfert.piL_xfert,
     comp_lo_xpig.piL_xpig,
-    comp_lo_xupland.piL_xupland
+    comp_lo_xupland.piL_xupland,
+    comp_up_purchase.piU_purchase
 /;
 
 * ============================================

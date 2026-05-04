@@ -100,7 +100,7 @@ stat_x(i,j).. (xb(i,j) * xw(i,j) * 2 * (xb(i,j) - x(i,j)) * (-1) / sqr(xb(i,j)) 
 * Original equality equations
 rbal(i).. t(i) =E= sum(j$(xb(i,j)), x(i,j));
 cbal(j).. t(j) =E= sum(i$(xb(i,j)), x(i,j));
-devsqr.. dev =E= sum((i,j)$(xw(i,j)), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i)), tw(i) * sqr(tb(i) - t(i)) / tb(i));
+devsqr.. dev =E= sum((i,j)$(xw(i,j) and xb(i,j) <> 0), xw(i,j) * sqr(xb(i,j) - x(i,j)) / xb(i,j)) + sum(i$(tw(i) and tb(i) <> 0), tw(i) * sqr(tb(i) - t(i)) / tb(i));
 
 
 * ============================================

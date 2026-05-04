@@ -571,6 +571,40 @@ S O L V E      S U M M A R Y
         assert result["status"] == "failure"
         assert "No .lst file generated" in result["error"]
 
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_solve_runs_from_project_root_with_isolated_scrdir(self, mock_which, mock_run):
+        """Issue #1345 #1346 #1347: gams must run with cwd=PROJECT_ROOT so the
+        repo-relative `$include "data/gamslib/raw/<model>.gms"` emitted by
+        `--nlp-presolve` (#1275) resolves. Scratch files must still be
+        redirected via `ScrDir=<tmpdir>` so they don't pollute the project
+        tree.
+
+        Pre-fix: cwd was the tmpdir, so the include failed with "Unable to
+        open include file" (Error 282). The presolve retry then reported
+        `model_infeasible (status 5)` for every model that needed it
+        (bearing, mathopt3, rocket).
+        """
+        mock_which.return_value = "/usr/bin/gams"
+        mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch("tempfile.TemporaryDirectory") as mock_tmpdir:
+            mock_tmpdir.return_value.__enter__.return_value = "/tmp/test"
+            with patch.object(Path, "exists", return_value=False):
+                solve_mcp(Path("/test/model.gms"))
+
+        assert mock_run.called
+        kwargs = mock_run.call_args.kwargs
+        assert kwargs.get("cwd") == str(PROJECT_ROOT), (
+            f"gams must run with cwd=PROJECT_ROOT for repo-relative $include; "
+            f"got cwd={kwargs.get('cwd')!r}"
+        )
+        cmd = mock_run.call_args.args[0]
+        assert any(arg.startswith("ScrDir=") for arg in cmd), (
+            f"gams must receive ScrDir=<tmpdir> to keep scratch files out of "
+            f"the project; got cmd={cmd!r}"
+        )
+
 
 class TestObjectivesMatch:
     """Tests for objectives_match tolerance comparison function."""

@@ -73,10 +73,10 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-td.fx('1974') = 18;
-s.fx('1974') = 6.5;
-cs.fx('1974') = 0;
-r.fx('1974') = 500;
+td.l('1974') = 18;
+s.l('1974') = 6.5;
+cs.l('1974') = 0;
+r.l('1974') = 500;
 
 * ============================================
 * Variable Initialization
@@ -174,8 +174,8 @@ Equations
     comp_lo_td(t)
     cs_fx_1974
     cseq(t)
-    deq(to)
-    drev(to)
+    deq(t)
+    drev(t)
     r_fx_1974
     req(t)
     s_fx_1974
@@ -191,12 +191,12 @@ Equations
 
 * Stationarity equations
 stat_cs(t).. ((-1) * ((1.1 + 0.1 * p(t)) * 1.02 ** (((-1) * cs(t)) / 7) * log(1.02) * (-0.14285714285714285))) * nu_seq(t) + nu_cseq(t) + ((-1) * nu_cseq(t+1))$(ord(t) <= card(t) - 1) + nu_cs_fx_1974$(sameas(t, '1974')) - piL_cs(t) =E= 0;
-stat_d(t).. (nu_req(t) + nu_deq(t) + ((-1) * (p(t) - 250 / r(t))) * nu_drev(t) - piL_d(t))$(to(t)) =E= 0;
-stat_p(t).. (0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + ((-1) * d(t)) * nu_drev(t) - piL_p(t))$(to(t)) =E= 0;
-stat_r(t).. nu_req(t) + ((-1) * nu_req(t+1))$(ord(t) <= card(t) - 1) + nu_r_fx_1974$(sameas(t, '1974')) + ((-1) * (d(t) * ((-1) * ((-250) / sqr(r(t)))))) * nu_drev(t) - piL_r(t) =E= 0;
-stat_rev(t).. ((((-1) * (1.05 ** (1 - ord(t)))))$(to(t)) + nu_drev(t))$(to(t)) =E= 0;
-stat_s(t).. nu_seq(t) + ((-0.75) * nu_seq(t+1))$(ord(t) <= card(t) - 1) - nu_cseq(t) + nu_s_fx_1974$(sameas(t, '1974')) + nu_deq(t) - piL_s(t) =E= 0;
-stat_td(t).. nu_tdeq(t) + ((-0.87) * nu_tdeq(t+1))$(ord(t) <= card(t) - 1) + nu_td_fx_1974$(sameas(t, '1974')) - nu_deq(t) - piL_td(t) =E= 0;
+stat_d(t).. (nu_req(t) + nu_deq(t)$(to(t)) + (((-1) * (p(t) - 250 / r(t))) * nu_drev(t))$(to(t)) - piL_d(t))$(to(t)) =E= 0;
+stat_p(t).. (0.13 * nu_tdeq(t) + ((-1) * (1.02 ** (((-1) * cs(t)) / 7) * 0.1)) * nu_seq(t) + (((-1) * d(t)) * nu_drev(t))$(to(t)) - piL_p(t))$(to(t)) =E= 0;
+stat_r(t).. nu_req(t) + ((-1) * nu_req(t+1))$(ord(t) <= card(t) - 1) + nu_r_fx_1974$(sameas(t, '1974')) + (((-1) * (d(t) * ((-1) * ((-250) / sqr(r(t)))))) * nu_drev(t))$(to(t)) - piL_r(t) =E= 0;
+stat_rev(t).. ((((-1) * (1.05 ** (1 - ord(t)))))$(to(t)) + nu_drev(t)$(to(t)))$(to(t)) =E= 0;
+stat_s(t).. nu_seq(t) + ((-0.75) * nu_seq(t+1))$(ord(t) <= card(t) - 1) - nu_cseq(t) + nu_s_fx_1974$(sameas(t, '1974')) + nu_deq(t)$(to(t)) - piL_s(t) =E= 0;
+stat_td(t).. nu_tdeq(t) + ((-0.87) * nu_tdeq(t+1))$(ord(t) <= card(t) - 1) + nu_td_fx_1974$(sameas(t, '1974')) - nu_deq(t)$(to(t)) - piL_td(t) =E= 0;
 
 * Lower bound complementarity equations
 comp_lo_cs(t).. cs(t) - 0 =G= 0;

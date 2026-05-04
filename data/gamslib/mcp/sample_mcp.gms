@@ -39,6 +39,13 @@ k2(j) = sum(h, w(h) * data(h,j) / data(h,"pop"));
 
 execError = 0;
 
+* Issue #1322: NA-cleanup for parameters with division-based assignments.
+* If `<param>(d)` ended up NA/UNDF/inf at runtime (typically from
+* zero-divisor arithmetic), reset to 0 so PATH's symbolic Jacobian
+* doesn't produce ~1e30 coefficients.
+k2(j)$(NOT (k2(j) > -inf and k2(j) < inf)) = 0;
+w(h)$(NOT (w(h) > -inf and w(h) < inf)) = 0;
+
 * ============================================
 * Variables (Primal + Multipliers)
 * ============================================
@@ -74,8 +81,11 @@ nr.lo(h) = 1 / data(h,"pop");
 * Initialize variables to avoid division by zero during model generation.
 * Variables appearing in denominators (from log, 1/x derivatives) need
 * non-zero initial values.
+* Issue #1243: FREE variables appearing in stationarity-equation
+* denominators (e.g., 1/y from prod-objective derivatives) are set to 1.
 
 $onImplicitAssign
+nr.l(h) = 1;
 c.l = sum(h, data(h,"cost") * n.l(h));
 $offImplicitAssign
 
@@ -100,7 +110,7 @@ Equations
 * ============================================
 
 * Stationarity equations
-stat_nr(h).. ((-1) * data(h,"cost")) / sqr(nr(h)) + sum(j, k1(h,j) * lam_vbalr(j)) - piL_nr(h) + piU_nr(h) =E= 0;
+stat_nr(h).. (((-1) * data(h,"cost")) / sqr(nr(h)) + sum(j, k1(h,j) * lam_vbalr(j)) - piL_nr(h) + piU_nr(h))$(nr.up(h) - nr.lo(h) > 1e-10) =E= 0;
 
 * Inequality complementarity equations
 comp_vbalr(j).. ((-1) * (sum(h, k1(h,j) * nr(h)) - k2(j) - vmax(j))) =G= 0;
@@ -122,6 +132,9 @@ cbalr.. c =E= sum(h, data(h,"cost") / nr(h));
 * Variables whose paired MCP equation is conditioned must be
 * fixed for excluded instances to satisfy MCP matching.
 
+nr.fx(h)$(not (nr.up(h) - nr.lo(h) > 1e-10)) = nr.lo(h);
+piL_nr.fx(h)$(not (nr.up(h) - nr.lo(h) > 1e-10)) = 0;
+piU_nr.fx(h)$(not (nr.up(h) - nr.lo(h) > 1e-10)) = 0;
 piL_nr.fx(h)$(not (1 / data(h,"pop") > -inf)) = 0;
 
 * ============================================

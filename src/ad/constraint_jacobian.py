@@ -1350,7 +1350,7 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
 
     else:
         # Issue #730: Handle SymbolRef, SetMembershipTest, DollarConditional.
-        from ..ir.ast import DollarConditional, SetMembershipTest, SymbolRef
+        from ..ir.ast import DollarConditional, LhsConditionalAssign, SetMembershipTest, SymbolRef
 
         # SymbolRef – bare index references like SymbolRef("r") that appear as
         # arguments in Call nodes (e.g., gamma(j, r) parsed as
@@ -1372,5 +1372,17 @@ def _substitute_indices(expr, symbolic_indices: tuple[str, ...], concrete_indice
             new_val = _substitute_indices(expr.value_expr, symbolic_indices, concrete_indices)
             new_cond = _substitute_indices(expr.condition, symbolic_indices, concrete_indices)
             return DollarConditional(value_expr=new_val, condition=new_cond)
+
+        # Issue #1348: LhsConditionalAssign — recurse into both rhs and condition
+        # so subset→parent index renames (e.g., `cp → ca` for
+        # `purchase.up(cp)$purdata(cp,"quantity") = purdata(cp,"quantity")`)
+        # propagate into the wrapped expression. Without this, the wrapper
+        # passed through unchanged and the emit retained `purdata(cp,...)` in
+        # an equation domain `(ca)`, yielding a $149 "Uncontrolled set entered
+        # as constant" at GAMS compile time.
+        if isinstance(expr, LhsConditionalAssign):
+            new_rhs = _substitute_indices(expr.rhs, symbolic_indices, concrete_indices)
+            new_cond = _substitute_indices(expr.condition, symbolic_indices, concrete_indices)
+            return LhsConditionalAssign(rhs=new_rhs, condition=new_cond)
 
         return expr
