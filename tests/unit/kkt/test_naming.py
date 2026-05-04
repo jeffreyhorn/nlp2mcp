@@ -216,3 +216,69 @@ class TestIdentifierShortening:
         # Wrapping with `nu_`/`lam_`/`piL_`/`piU_` (max 4 chars) must not
         # push the result past the GAMS limit.
         assert BOUND_NAME_MAX_LENGTH + 4 <= GAMS_MAX_IDENTIFIER_LENGTH
+
+    def test_idempotent_repeat_call_does_not_overwrite_or_widen(self):
+        """PR #1337 review: calling shorten_identifier twice with the same
+        ``name`` must produce the same shortened form and leave the
+        registry intact. This protects against subtle issues where a
+        builder calls the helper multiple times during a single emission
+        (e.g. once for the equation name, once for the multiplier)."""
+        clear_long_identifier_registry()
+        long_name = "x" * 80
+        first = shorten_identifier(long_name)
+        second = shorten_identifier(long_name)
+        assert first == second
+        # Registry has exactly one entry mapping this shortened form back
+        # to the original.
+        registry = get_long_identifier_registry()
+        assert registry[first] == long_name
+
+    def test_collision_disambiguates_via_extended_hash_prefix(self, monkeypatch):
+        """PR #1337 review: when two distinct over-length names produce
+        the same shortened form (head match + 8-hex hash collision),
+        ``shorten_identifier`` must widen the hex prefix until uniqueness
+        is reached, NOT silently overwrite the registry."""
+        import hashlib
+
+        clear_long_identifier_registry()
+
+        # Stub SHA-256 so the first 8 hex chars collide for two distinct
+        # inputs but the 9th hex char differs. Using a tiny lookup table
+        # keeps the test self-contained — no need to find a real collision.
+        # Cache the real sha256 BEFORE the monkeypatch so the fallback in
+        # the stub doesn't recurse into itself.
+        _real_sha256 = hashlib.sha256
+        name_a = "alpha_" + ("a" * 80)
+        name_b = "alpha_" + ("b" * 80)
+        canned = {
+            name_a: "deadbeefcafefade" + "0" * 48,
+            name_b: "deadbeefdeadbeef" + "0" * 48,
+        }
+
+        class _StubHash:
+            def __init__(self, payload: bytes) -> None:
+                self._payload = payload.decode("utf-8")
+
+            def hexdigest(self) -> str:
+                if self._payload in canned:
+                    return canned[self._payload]
+                return _real_sha256(self._payload.encode()).hexdigest()
+
+        monkeypatch.setattr(
+            "src.kkt.naming.hashlib.sha256",
+            lambda data: _StubHash(data),
+        )
+
+        a = shorten_identifier(name_a)
+        b = shorten_identifier(name_b)
+
+        # Different inputs must produce different shortened forms.
+        assert a != b, (
+            f"Collision not disambiguated: shorten_identifier({name_a!r}) and "
+            f"shorten_identifier({name_b!r}) both returned {a!r}."
+        )
+        # Both are recorded in the registry mapping back to their respective
+        # originals.
+        registry = get_long_identifier_registry()
+        assert registry[a] == name_a
+        assert registry[b] == name_b

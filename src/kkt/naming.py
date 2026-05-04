@@ -47,7 +47,21 @@ def shorten_identifier(name: str, max_length: int = GAMS_MAX_IDENTIFIER_LENGTH) 
     ``src/ir/normalize.py``.
 
     Records the (shortened -> original) pair in the module-level registry
-    so the emitter can surface a comment banner.
+    so the emitter can surface a comment banner. Calling
+    ``shorten_identifier`` twice with the same ``name`` is idempotent:
+    the second call returns the same shortened form and does not double-
+    register (the registry's value already matches).
+
+    PR #1337 review: detect and disambiguate collisions. With an 8-hex
+    SHA-256 prefix the birthday collision risk on the suffix alone is
+    ~2^-32, but two different over-length names *can* hash-collide if
+    their head-truncated prefixes also match (extremely rare but
+    possible — and the head shares the first ``head_len`` chars of the
+    full name, so any two names sharing that prefix are at risk if their
+    hashes also collide). When a collision is detected — same shortened
+    form, different originals — extend the hex prefix length one nibble
+    at a time (up to 64 hex chars / a full SHA-256) until uniqueness is
+    achieved. Registry stays accurate; emitted MCP stays collision-free.
 
     Args:
         name: Original identifier.
@@ -59,14 +73,29 @@ def shorten_identifier(name: str, max_length: int = GAMS_MAX_IDENTIFIER_LENGTH) 
     """
     if len(name) <= max_length:
         return name
-    hash_suffix = hashlib.sha256(name.encode("utf-8")).hexdigest()[:8]
-    head_len = max_length - len(hash_suffix) - 1  # 1 for the underscore
-    if head_len <= 0:
-        shortened = hash_suffix[:max_length]
-    else:
-        shortened = f"{name[:head_len]}_{hash_suffix}"
-    _LONG_IDENTIFIER_REGISTRY[shortened] = name
-    return shortened
+    full_hash = hashlib.sha256(name.encode("utf-8")).hexdigest()
+    suffix_len = 8
+    while True:
+        hash_suffix = full_hash[:suffix_len]
+        head_len = max_length - len(hash_suffix) - 1  # 1 for the underscore
+        if head_len <= 0:
+            shortened = hash_suffix[:max_length]
+        else:
+            shortened = f"{name[:head_len]}_{hash_suffix}"
+        existing = _LONG_IDENTIFIER_REGISTRY.get(shortened)
+        if existing is None or existing == name:
+            _LONG_IDENTIFIER_REGISTRY[shortened] = name
+            return shortened
+        # Collision with a different original — widen the hash prefix.
+        if suffix_len >= len(full_hash):
+            # Astronomically unlikely (full 256-bit hash collision), but
+            # raise loudly rather than silently corrupt the registry.
+            raise ValueError(
+                f"shorten_identifier: SHA-256 full-hash collision between "
+                f"{existing!r} and {name!r} (both shorten to {shortened!r}). "
+                f"Pick a different naming scheme for one of them."
+            )
+        suffix_len += 1
 
 
 def get_long_identifier_registry() -> dict[str, str]:

@@ -1945,12 +1945,18 @@ def emit_interleaved_params_and_sets(
     # ``tmp = sum(leaf, nprob(leaf))``). The set must be initialized
     # before the iteration runs, so the param assignment must be emitted
     # *after* the corresponding set assignment.
+    #
+    # PR #1337 review: compare against ``dynamic_set_names_expanded`` (not
+    # ``dynamic_set_names``) so iterations over an alias of a dynamic set —
+    # e.g., ``Alias(leaf, ll); tmp = sum(ll, nprob(ll))`` — are also
+    # treated as iter-blocked. Without this the topological sort can hoist
+    # the reduction before the alias's dynamic-set initialization.
     iter_blocked_params: set[str] = set()
     for pname, pdef in model_ir.params.items():
         if pdef.expressions:
             for _, ex in pdef.expressions:
                 iter_sets = _collect_iter_set_names(ex)
-                if iter_sets & dynamic_set_names:
+                if iter_sets & dynamic_set_names_expanded:
                     iter_blocked_params.add(pname.lower())
                     break
 
@@ -2203,9 +2209,17 @@ def emit_interleaved_params_and_sets(
                         refs.add(f"__set_{canonical_target}__")
             # Issue #1291: Sum/Prod over a dynamic set reads that set —
             # add a pseudo-dep so the assignment is ordered after the set
-            # initialization.
-            for sn in _collect_iter_set_names(expr) & dynamic_set_names:
-                refs.add(f"__set_{sn}__")
+            # initialization. PR #1337 review: also catch sums/prods over
+            # an alias of a dynamic set; resolve the alias chain to the
+            # canonical dynamic-set target so the pseudo-dep edge points
+            # at the actual ``__set_<dynamic>__`` writer.
+            for sn in _collect_iter_set_names(expr):
+                if sn in dynamic_set_names:
+                    refs.add(f"__set_{sn}__")
+                elif sn in dynamic_set_names_expanded:
+                    canonical = _resolve_alias_chain(sn)
+                    if canonical in dynamic_set_names:
+                        refs.add(f"__set_{canonical}__")
             stmt_reads.append(refs)
         else:
             # Set assignment — reads the params it references AND
@@ -2217,9 +2231,16 @@ def emit_interleaved_params_and_sets(
             for sn in _collect_set_membership_names(sa.expr) & dynamic_set_names:
                 refs.add(f"__set_{sn}__")
             # Issue #1291: set assignment over sum/prod of a dynamic set
-            # also creates a set→set dependency.
-            for sn in _collect_iter_set_names(sa.expr) & dynamic_set_names:
-                refs.add(f"__set_{sn}__")
+            # also creates a set→set dependency. PR #1337 review: same
+            # alias-resolution as above so iterations over an alias of a
+            # dynamic set are recognised.
+            for sn in _collect_iter_set_names(sa.expr):
+                if sn in dynamic_set_names:
+                    refs.add(f"__set_{sn}__")
+                elif sn in dynamic_set_names_expanded:
+                    canonical = _resolve_alias_chain(sn)
+                    if canonical in dynamic_set_names:
+                        refs.add(f"__set_{canonical}__")
             stmt_reads.append(refs)
 
     # Set of all "writable" names (param names + set pseudo-names)
