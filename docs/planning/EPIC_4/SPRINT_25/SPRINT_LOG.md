@@ -226,13 +226,17 @@ No open Batch 3 / WS4 tail. Batch 3 (#1290 ferts, #1291 clearlak) closed Day 11;
 
 #### Sprint 26 carryforward issues filed (Task 5)
 
-| # | Title | Bucket |
+5 issues filed during Day 13; one was discovered to duplicate an existing pre-Sprint-25 tracker and was closed:
+
+| # | Title | Bucket / Disposition |
 |---|---|---|
-| [#1354](https://github.com/jeffreyhorn/nlp2mcp/issues/1354) | camcge: PATH \$141 on phantom IndexOffset `nu_ieq(i±N)` / `nu_actp(i±N)` | path_syntax_error (Pattern C variant) |
-| [#1355](https://github.com/jeffreyhorn/nlp2mcp/issues/1355) | cesam2: PATH \$141 on phantom IndexOffset `nu_COLSUM(i±N)` in `stat_tsam` | path_syntax_error (Pattern C variant) |
-| [#1356](https://github.com/jeffreyhorn/nlp2mcp/issues/1356) | fawley: PATH \$171 domain violations in stationarity (post-#1276 fx fix bucket transfer) | path_syntax_error |
-| [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357) | otpop: PATH \$171 domain violations in stationarity (Sprint 25 bucket transfer) | path_syntax_error (likely subsumed by #1334) |
-| ~~#1358~~ | ~~mine: translate fails — "Complex offset expressions not yet supported: ParamRef(li(k))"~~ — **closed as duplicate of [#1224](https://github.com/jeffreyhorn/nlp2mcp/issues/1224)** (existing tracker since Sprint 23, now `sprint-26`-labeled). Doc lives at `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`. |
+| [#1354](https://github.com/jeffreyhorn/nlp2mcp/issues/1354) | camcge: PATH \$141 on phantom IndexOffset `nu_ieq(i±N)` / `nu_actp(i±N)` | path_syntax_error (Pattern C variant) — OPEN |
+| [#1355](https://github.com/jeffreyhorn/nlp2mcp/issues/1355) | cesam2: PATH \$141 on phantom IndexOffset `nu_COLSUM(i±N)` in `stat_tsam` | path_syntax_error (Pattern C variant) — OPEN |
+| [#1356](https://github.com/jeffreyhorn/nlp2mcp/issues/1356) | fawley: PATH \$171 domain violations in stationarity (post-#1276 fx fix bucket transfer) | path_syntax_error — OPEN |
+| [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357) | otpop: PATH \$171 domain violations in stationarity (Sprint 25 bucket transfer) | path_syntax_error (likely subsumed by #1334) — OPEN |
+| ~~[#1358](https://github.com/jeffreyhorn/nlp2mcp/issues/1358)~~ | ~~mine: translate fails — "Complex offset expressions not yet supported: ParamRef(li(k))"~~ | **CLOSED as duplicate of [#1224](https://github.com/jeffreyhorn/nlp2mcp/issues/1224)** (pre-existing tracker since Sprint 23; now `sprint-26`-labeled). Doc at `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`. |
+
+**Filed:** 5. **Net-new open after dedup:** 4 (#1354–#1357). The mine bug is still tracked — via the older #1224 instead of the new #1358.
 
 #### Existing carryforward issues labeled `sprint-26` (no close+refile)
 
@@ -247,7 +251,7 @@ Per Day 13 prompt Task 5, original Pattern A Phase 2 cohort issues were left **o
 | Translation internal_error | #1224 (mine ParamRef IndexOffset — pre-existing, supersedes the closed #1358 duplicate) |
 | AD residuals from Day 11 fixes | #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term in stat_p) |
 
-Total Sprint 26 backlog: **4 new (#1354–#1357) + 19 carryforward (incl. #1224) = 23 issues** under `sprint-26` label.
+**Total Sprint 26 backlog (open issues under `sprint-26` label): 23.** Composition: 4 net-new from Day 13 (#1354–#1357) + 19 pre-existing carryforward (incl. #1224, which now covers the mine bug originally re-filed as #1358 before dedup). The Day 13 *filing* count was 5; the *open-after-dedup* count is 4.
 
 #### Quality checks
 
