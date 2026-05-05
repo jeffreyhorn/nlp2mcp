@@ -62,16 +62,18 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 
 ## Summary Statistics
 
-**Total Unknowns:** 27
+**Total Unknowns:** 27 prep + 4 end-of-sprint = **31**
 
-**By Priority:**
+The Priority / Category breakdowns below cover only the 27 prep-time unknowns (Categories 1–6) — those drove the Sprint 25 prep budget allocation. The 4 end-of-sprint discoveries (KU-33..KU-36) were surfaced during execution and are tracked separately in §"End-of-Sprint Discoveries" toward the bottom of this document; they do not have a Priority assignment because they don't drive prep work for Sprint 25 — they are inputs to Sprint 26 prep instead.
+
+**By Priority** (prep unknowns only):
 
 - Critical: 7 (26%)
 - High: 11 (41%)
 - Medium: 7 (26%)
 - Low: 2 (7%)
 
-**By Category:**
+**By Category** (prep unknowns only):
 
 - Category 1 (Alias-AD Carryforward): 8 unknowns
 - Category 2 (Emitter / Stationarity Backlog): 6 unknowns
@@ -80,7 +82,9 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 - Category 5 (Translation Timeout — Algorithmic): 4 unknowns
 - Category 6 (Pipeline Retest + Determinism): 3 unknowns
 
-**Estimated Research Time:** 18–27 hours (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets).
+**End-of-Sprint Discoveries** (KU-33..KU-36, surfaced during Sprint 25 execution; see §"End-of-Sprint Discoveries"): 4 unknowns. These feed into Sprint 26 prep rather than Sprint 25 prep tasks.
+
+**Estimated Research Time:** 18–27 hours for the 27 prep-time unknowns (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets). End-of-sprint discoveries do not consume Sprint 25 budget.
 
 Note: the per-unknown `Estimated Research Time` fields in the detail sections below are work-item estimates used to scope individual investigations, not an additive total — multiple unknowns are verified in parallel within a single prep task (e.g., Task 2 covers 7 unknowns in one code-audit pass). The authoritative scheduling budget is the per-task total in PREP_PLAN.md.
 
@@ -1814,7 +1818,7 @@ This table shows which Sprint 25 prep tasks verify which unknowns. Prep Task 11 
 | Task 10: Design Byte-Stability Test Infrastructure (PR12) | 6.2 | Seed-set sample-size analysis |
 | Task 11: Plan Sprint 25 Detailed Schedule | 6.3 (+ integrates all others) | Influx budget calibration + sprint schedule |
 
-**Coverage:** All 27 unknowns are assigned to at least one prep task. Most Critical and High-priority unknowns are assigned to the same task that will act on the findings (e.g., Task 2 audits alias-AD AND its findings drive Task 6's rollout design).
+**Coverage:** All 27 prep-time unknowns are assigned to at least one prep task. Most Critical and High-priority unknowns are assigned to the same task that will act on the findings (e.g., Task 2 audits alias-AD AND its findings drive Task 6's rollout design). The 4 end-of-sprint discoveries (KU-33..KU-36) are tracked in §"End-of-Sprint Discoveries" and feed into Sprint 26 prep instead.
 
 **Deferred from Sprint 24** (now carried as Sprint 25 KUs):
 
