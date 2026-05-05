@@ -1515,6 +1515,15 @@ def emit_gams_mcp(
     _equalities_set = set(kkt.model_ir.equalities)
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
+    # PR #1360 review (Copilot): per-instance `var.l(idx) = val` lines emitted
+    # below as the `.l` side-effect of an `_fx_`-replaced source `var.fx(idx) = val`
+    # (Issue #1349) MUST be deferred until AFTER the bulk Variable Initialization
+    # (`var.l(t,n) = 1` for POSITIVE / denominator-FREE variables). Otherwise the
+    # bulk init's wildcard assignment clobbers the per-instance value. clearlak's
+    # `l.fx('dec', n) = 100` for ~120 elements made this visible: the per-instance
+    # overrides were emitted under "Variable Bounds", then the bulk
+    # `l.l(t,n) = 1;` immediately overwrote them.
+    fx_to_l_override_lines: list[str] = []
     for var_name, var_def in kkt.model_ir.variables.items():
         if (
             kkt.referenced_variables is not None
@@ -1672,7 +1681,13 @@ def emit_gams_mcp(
                     # populated). Preserve the .l initialization so loop-based
                     # var-init does not fail with $141 "Symbol declared but no
                     # values have been assigned".
-                    bound_lines.append(f"{var_name}.l({idx_str}) = {val_str};")
+                    # PR #1360 review (Copilot): defer to `fx_to_l_override_lines`
+                    # so this per-instance assignment emits AFTER the bulk
+                    # `var.l(t,n) = 1` Variable Initialization (which would
+                    # otherwise clobber it for variables whose entire domain is
+                    # initialized by a single wildcard assignment, as on
+                    # clearlak's `l(t,n)`).
+                    fx_to_l_override_lines.append(f"{var_name}.l({idx_str}) = {val_str};")
                     continue
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
@@ -1943,6 +1958,25 @@ def emit_gams_mcp(
         sections.extend(init_lines)
         if has_cross_varref:
             sections.append("$offImplicitAssign")
+        sections.append("")
+
+    # PR #1360 review (Copilot): emit per-instance `var.l(idx) = val` overrides
+    # AFTER the bulk Variable Initialization above. These come from Issue #1349
+    # (preserve `.fx → .l` side-effect when the `_fx_` equation handles fixing
+    # at solve time). Emitting them earlier (under "Variable Bounds") meant the
+    # bulk `var.l(t,n) = 1` POSITIVE / denominator-FREE init clobbered them for
+    # variables initialized via a wildcard assignment (clearlak's `l(t,n)`).
+    if fx_to_l_override_lines:
+        if add_comments:
+            sections.append("* ============================================")
+            sections.append("* Fixed-Variable .l Side-Effect (post-bulk-init)")
+            sections.append("* ============================================")
+            sections.append("* Issue #1349 + PR #1360 review: per-instance .l values from")
+            sections.append("* source `var.fx(idx) = val` assignments. Emitted after the")
+            sections.append("* bulk Variable Initialization above so wildcard inits like")
+            sections.append("* `l.l(t,n) = 1` do not clobber these values.")
+            sections.append("")
+        sections.extend(fx_to_l_override_lines)
         sections.append("")
 
     # Issue #1088: Emit loop-based .l initialization after regular .l init.

@@ -61,13 +61,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-x1.l('0') = 1;
-x2.l('0') = 0;
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -179,6 +172,17 @@ x1.l('97') = 1.0;
 x1.l('98') = 1.0;
 x1.l('99') = 1.0;
 x1.l('100') = 1.0;
+
+* ============================================
+* Fixed-Variable .l Side-Effect (post-bulk-init)
+* ============================================
+* Issue #1349 + PR #1360 review: per-instance .l values from
+* source `var.fx(idx) = val` assignments. Emitted after the
+* bulk Variable Initialization above so wildcard inits like
+* `l.l(t,n) = 1` do not clobber these values.
+
+x1.l('0') = 1;
+x2.l('0') = 0;
 
 * ============================================
 * Equations

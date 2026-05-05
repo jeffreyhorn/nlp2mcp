@@ -66,13 +66,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-b.l('s1') = 5;
-b.l('s30') = 100;
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -110,6 +103,17 @@ b.l('s27') = 5.0;
 b.l('s28') = 5.0;
 b.l('s29') = 5.0;
 b.l('s30') = 5.0;
+
+* ============================================
+* Fixed-Variable .l Side-Effect (post-bulk-init)
+* ============================================
+* Issue #1349 + PR #1360 review: per-instance .l values from
+* source `var.fx(idx) = val` assignments. Emitted after the
+* bulk Variable Initialization above so wildcard inits like
+* `l.l(t,n) = 1` do not clobber these values.
+
+b.l('s1') = 5;
+b.l('s30') = 100;
 
 * ============================================
 * Equations
