@@ -3028,6 +3028,17 @@ def _loop_tree_to_gams(
                 lhs = f"({lhs})"
             return f"{lhs}$({rhs})"
         if data == "dollar_cond_paren":
+            # PR #1353 review: ``(1 - a + b)$(c)`` parses with a compound
+            # ``binop``/``unaryop``/``expr`` LHS because the grammar atom
+            # rule ``"(" expr ")"`` is inlined (silent parens). Without
+            # re-wrapping, the emitted text ``1 - a + b$(c)`` would be
+            # parsed by GAMS as ``1 - a + (b$(c))`` due to $-precedence.
+            # Verified against the byte-diff snapshot: no current corpus
+            # model exercises this path, so applying the wrap is a
+            # correctness improvement with zero behaviour delta on the
+            # 141-model corpus.
+            if str(lhs_tree.data) in ("binop", "unaryop", "expr"):
+                lhs = f"({lhs})"
             return f"{lhs}$({rhs})"
         return f"{lhs}${rhs}"
     # bracket_expr: [ expr ]
@@ -3053,17 +3064,26 @@ def _loop_tree_to_gams(
     if data == "compile_const_path":
         return ".".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data.startswith("loop_stmt"):
-        return _emit_loop_node(node)
+        return _emit_loop_node(node, token_subst=token_subst)
 
     # Fallback: join all children with spaces
     return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
 
 
-def _emit_loop_node(node: object) -> str:
+def _emit_loop_node(
+    node: object,
+    *,
+    token_subst: Mapping[str, str] | None = None,
+) -> str:
     """Emit a complete loop statement from its Lark Tree node.
 
     Handles all loop variants: simple, paren, filtered, paren_filtered,
     indexed, indexed_filtered.
+
+    PR #1353 review: ``token_subst`` is forwarded to every
+    ``_loop_tree_to_gams`` call inside the header/body so substitutions
+    reach nested loop statements and their components when callers pass
+    a non-None map.
     """
     from lark import Token, Tree
 
@@ -3098,13 +3118,13 @@ def _emit_loop_node(node: object) -> str:
                     filter_id = str(child)
         elif isinstance(child, Tree):
             if child.data == "id_list":
-                id_list_parts.append(_loop_tree_to_gams(child))
+                id_list_parts.append(_loop_tree_to_gams(child, token_subst=token_subst))
             elif child.data == "index_list" and filter_dollar:
-                filter_idx = _loop_tree_to_gams(child)
+                filter_idx = _loop_tree_to_gams(child, token_subst=token_subst)
             elif child.data in ("expr", "condition") and filter_dollar:
-                filter_expr = _loop_tree_to_gams(child)
+                filter_expr = _loop_tree_to_gams(child, token_subst=token_subst)
             elif child.data == "loop_body":
-                body = _loop_tree_to_gams(child)
+                body = _loop_tree_to_gams(child, token_subst=token_subst)
 
     loop_kind = str(node.data)
 
