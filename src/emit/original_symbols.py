@@ -16,6 +16,7 @@ import logging
 import math
 import re
 from collections import deque
+from collections.abc import Mapping
 
 from src.emit.expr_to_gams import (
     _format_mixed_indices,
@@ -2817,7 +2818,11 @@ def emit_subset_value_assignments(
     return "\n".join(assignments)
 
 
-def _loop_tree_to_gams(node: object) -> str:
+def _loop_tree_to_gams(
+    node: object,
+    *,
+    token_subst: Mapping[str, str] | None = None,
+) -> str:
     """Reconstruct GAMS text from a Lark parse tree node.
 
     Issue #1025: Faithfully converts raw Lark Tree objects back to GAMS
@@ -2825,8 +2830,20 @@ def _loop_tree_to_gams(node: object) -> str:
     that appear in loop bodies (assign, conditional_assign_general, etc.)
     and loop headers (id_list, index_list, conditions).
 
+    Issue #1271 (Sprint 25 Day 12): Optional ``token_subst`` keyword maps
+    case-insensitive ID tokens to their GAMS-text replacement and is
+    applied at every ID emission. When ``None`` (default), behaviour is
+    identical to the pre-refactor function. When provided, this replaces
+    the previous nested ``_loop_tree_to_gams_subst_dispatch`` /
+    ``_tree_to_gams_subst`` helpers that were defined inside
+    :func:`emit_pre_solve_param_assignments`. Recursive calls forward
+    ``token_subst`` unchanged so substitutions reach every depth.
+
     Args:
         node: Lark Token or Tree object
+        token_subst: Optional case-insensitive ID-token rewrite map. If a
+            token's ``str(node).lower()`` is in the map, its value is
+            emitted in place of the original token text.
 
     Returns:
         GAMS text representation
@@ -2835,6 +2852,8 @@ def _loop_tree_to_gams(node: object) -> str:
     from lark import Token, Tree
 
     if isinstance(node, Token):
+        if token_subst is not None and node.type == "ID":
+            return token_subst.get(str(node).lower(), str(node))
         return str(node)
     if not isinstance(node, Tree):
         return str(node)
@@ -2842,45 +2861,45 @@ def _loop_tree_to_gams(node: object) -> str:
     data = str(node.data)
 
     if data == "id_list":
-        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+        return ",".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data in ("index_list", "arg_list"):
-        return ",".join(_loop_tree_to_gams(c) for c in node.children)
+        return ",".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data == "index_simple":
         # index_simple: ID lag_lead_suffix?
-        base = _loop_tree_to_gams(node.children[0])
+        base = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
         if len(node.children) > 1:
-            suffix = _loop_tree_to_gams(node.children[1])
+            suffix = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
             return f"{base}{suffix}"
         return base
     if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
         # e.g. ++1, --2, +1, -1  — operator token followed by offset
-        return "".join(_loop_tree_to_gams(c) for c in node.children)
+        return "".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data == "index_subset":
         # index_subset: ID "(" index_list ")" lag_lead_suffix?  e.g. low(n,nn)
-        name = _loop_tree_to_gams(node.children[0])
-        idx = _loop_tree_to_gams(node.children[1])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        idx = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
         base = f"{name}({idx})"
         if len(node.children) > 2:
-            suffix = _loop_tree_to_gams(node.children[2])
+            suffix = _loop_tree_to_gams(node.children[2], token_subst=token_subst)
             return f"{base}{suffix}"
         return base
     if data == "offset_paren":
         # offset_paren: "(" expr ")"  e.g. (ord(n)-1)
-        return f"({_loop_tree_to_gams(node.children[0])})"
+        return f"({_loop_tree_to_gams(node.children[0], token_subst=token_subst)})"
     if data == "symbol_indexed":
-        name = _loop_tree_to_gams(node.children[0])
-        idx = _loop_tree_to_gams(node.children[1])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        idx = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
         return f"{name}({idx})"
     if data in ("symbol_plain", "lvalue", "number", "funccall"):
-        return _loop_tree_to_gams(node.children[0])
+        return _loop_tree_to_gams(node.children[0], token_subst=token_subst)
     if data == "func_call":
-        name = _loop_tree_to_gams(node.children[0])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
         if len(node.children) > 1:
-            args = _loop_tree_to_gams(node.children[1])
+            args = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
             return f"{name}({args})"
         return f"{name}()"
     if data in ("binop", "unaryop"):
-        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+        return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data == "condition":
         # condition: DOLLAR (paren|bracket|cond_bound|ref_indexed|NUMBER|ID)
         # For $(expr) form, Lark discards anonymous parens — detect expr child
@@ -2889,101 +2908,139 @@ def _loop_tree_to_gams(node: object) -> str:
         parts: list[str] = []
         for c in children:
             if isinstance(c, Tree) and c.data == "expr":
-                parts.append(f"({_loop_tree_to_gams(c)})")
+                parts.append(f"({_loop_tree_to_gams(c, token_subst=token_subst)})")
             else:
-                parts.append(_loop_tree_to_gams(c))
+                parts.append(_loop_tree_to_gams(c, token_subst=token_subst))
         return "".join(parts)
     if data == "bound_indexed":
         # cond_bound: ID "." BOUND_K "(" index_list ")" -> bound_indexed
         # e.g. x.l(i,j)
-        name = _loop_tree_to_gams(node.children[0])
-        attr = _loop_tree_to_gams(node.children[1])
-        idx = _loop_tree_to_gams(node.children[2])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        attr = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
+        idx = _loop_tree_to_gams(node.children[2], token_subst=token_subst)
         return f"{name}.{attr}({idx})"
     if data == "bound_scalar":
         # cond_bound: ID "." BOUND_K -> bound_scalar
         # e.g. x.l
-        name = _loop_tree_to_gams(node.children[0])
-        attr = _loop_tree_to_gams(node.children[1])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        attr = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
         return f"{name}.{attr}"
     if data in ("set_attr", "attr_access"):
         # set_attr: ID "." SET_ATTR_K  e.g. i.ord
         # attr_access: ID "." ID  e.g. x.val
-        return ".".join(_loop_tree_to_gams(c) for c in node.children)
+        return ".".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data == "attr_access_indexed":
         # ref_bound: ID "." ID "(" index_list ")" -> attr_access_indexed
         # e.g. x.val(i)
-        name = _loop_tree_to_gams(node.children[0])
-        attr = _loop_tree_to_gams(node.children[1])
-        idx = _loop_tree_to_gams(node.children[2])
+        name = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        attr = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
+        idx = _loop_tree_to_gams(node.children[2], token_subst=token_subst)
         return f"{name}.{attr}({idx})"
     if data == "assign":
         # assign: lvalue "=" expr ";"
-        return " ".join(_loop_tree_to_gams(c) for c in node.children)
+        return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data == "conditional_assign_general":
         # conditional_assign_general: lvalue condition "=" expr ";"
-        lhs = _loop_tree_to_gams(node.children[0])
-        cond = _loop_tree_to_gams(node.children[1])
-        rest = " ".join(_loop_tree_to_gams(c) for c in node.children[2:])
+        lhs = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        cond = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
+        rest = " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children[2:])
         return f"{lhs}{cond} {rest}"
     if data == "loop_body":
-        stmts = [_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree)]
+        stmts = [
+            _loop_tree_to_gams(c, token_subst=token_subst)
+            for c in node.children
+            if isinstance(c, Tree)
+        ]
         return "\n".join(f"   {s}" for s in stmts)
     if data == "paren":
-        inner = " ".join(_loop_tree_to_gams(c) for c in node.children if isinstance(c, Tree))
+        inner = " ".join(
+            _loop_tree_to_gams(c, token_subst=token_subst)
+            for c in node.children
+            if isinstance(c, Tree)
+        )
         return f"({inner})"
     # sum(domain, expr), prod(domain, expr), smax(domain, expr), smin(domain, expr)
     if data in ("sum", "prod", "smax", "smin"):
         # Skip leading keyword token (SUM_K, PROD_K, etc.) if present
         tree_children = [c for c in node.children if isinstance(c, Tree)]
         if len(tree_children) >= 2:
-            domain = _loop_tree_to_gams(tree_children[0])
-            body = _loop_tree_to_gams(tree_children[1])
+            domain = _loop_tree_to_gams(tree_children[0], token_subst=token_subst)
+            body = _loop_tree_to_gams(tree_children[1], token_subst=token_subst)
         else:
-            domain = _loop_tree_to_gams(node.children[0])
-            body = _loop_tree_to_gams(node.children[1])
+            domain = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+            body = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
         return f"{data}({domain}, {body})"
     # sum_domain variants: index_spec, tuple_domain, tuple_domain_cond
     if data == "sum_domain":
-        return _loop_tree_to_gams(node.children[0])
+        return _loop_tree_to_gams(node.children[0], token_subst=token_subst)
     if data == "index_spec":
         # index_spec: index_list [DOLLAR condition]
         # Emit as "i$(cond)" or just "i" if no condition
         idx_parts: list[Tree] = [c for c in node.children if isinstance(c, Tree)]
-        idx = _loop_tree_to_gams(idx_parts[0])
+        idx = _loop_tree_to_gams(idx_parts[0], token_subst=token_subst)
         if len(idx_parts) >= 2:
-            cond = _loop_tree_to_gams(idx_parts[1])
+            cond = _loop_tree_to_gams(idx_parts[1], token_subst=token_subst)
             return f"{idx}$({cond})"
         return idx
     if data == "tuple_domain":
-        return f"({_loop_tree_to_gams(node.children[0])})"
+        return f"({_loop_tree_to_gams(node.children[0], token_subst=token_subst)})"
     if data == "tuple_domain_cond":
         # Grammar: "(" index_spec ")" DOLLAR expr -> tuple_domain_cond
         # children[0] = index_spec, children[1] = DOLLAR token, children[2] = expr
-        idx = _loop_tree_to_gams(node.children[0])
-        cond = _loop_tree_to_gams(node.children[2])
+        idx = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
+        cond = _loop_tree_to_gams(node.children[2], token_subst=token_subst)
         return f"({idx})$({cond})"
     # dollar_cond: term $ term
-    if data == "dollar_cond":
-        lhs = _loop_tree_to_gams(node.children[0])
-        rhs = _loop_tree_to_gams(node.children[1])
-        return f"{lhs}${rhs}"
     # dollar_cond_paren: term $ (expr) or term $ [expr]
-    if data == "dollar_cond_paren":
-        lhs = _loop_tree_to_gams(node.children[0])
-        rhs = _loop_tree_to_gams(node.children[1])
-        return f"{lhs}$({rhs})"
+    if data in ("dollar_cond", "dollar_cond_paren"):
+        # Grammar: ``term DOLLAR term`` (and its `(...)` / `[...]` siblings,
+        # whose silent literals are dropped by Lark). Children shape is
+        # ``[lhs_tree, DOLLAR_token, rhs_tree]``. PR #1353 review caught a
+        # latent bug in the pre-refactor non-substituting path: it indexed
+        # the RHS as ``children[1]`` (the DOLLAR token), which would
+        # produce ``lhs$$`` output. Verified against the byte-diff
+        # snapshot — no corpus model exercises the path, so the pre-
+        # refactor output never contained the ``$$`` artifact and fixing
+        # the index here is a safe correctness improvement (no byte-diff
+        # delta on the 141-model corpus).
+        #
+        # Issue #1271 (Sprint 25 Day 12): the pre-refactor substituting
+        # dispatcher (`_tree_to_gams_subst`) re-wrapped both forms as
+        # ``LHS$(RHS)`` and additionally parenthesised the LHS when it
+        # was a compound expression (``binop``/``unaryop``/``expr``),
+        # because the grammar atom rule ``"(" expr ")"`` is inlined (silent
+        # parens) and without re-wrapping a group like ``(1 - a + b)$(c)``
+        # would emit as ``1 - a + b$(c)`` — which GAMS parses as
+        # ``1 - a + (b$(c))`` due to $-precedence. Gate the extra
+        # wrapping on ``token_subst is not None`` so the unified function
+        # is byte-identical to the substituting variant.
+        tree_children = [c for c in node.children if isinstance(c, Tree)]
+        if len(tree_children) < 2:
+            # Defensive: malformed / unexpected shape — fall back to
+            # joining children rather than indexing past the end.
+            return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
+        lhs_tree = tree_children[0]
+        rhs_tree = tree_children[1]
+        lhs = _loop_tree_to_gams(lhs_tree, token_subst=token_subst)
+        rhs = _loop_tree_to_gams(rhs_tree, token_subst=token_subst)
+        if token_subst is not None:
+            if str(lhs_tree.data) in ("binop", "unaryop", "expr"):
+                lhs = f"({lhs})"
+            return f"{lhs}$({rhs})"
+        if data == "dollar_cond_paren":
+            return f"{lhs}$({rhs})"
+        return f"{lhs}${rhs}"
     # bracket_expr: [ expr ]
     if data == "bracket_expr":
-        return f"[{_loop_tree_to_gams(node.children[0])}]"
+        return f"[{_loop_tree_to_gams(node.children[0], token_subst=token_subst)}]"
     # brace_expr: { expr }
     if data == "brace_expr":
-        return f"{{{_loop_tree_to_gams(node.children[0])}}}"
+        return f"{{{_loop_tree_to_gams(node.children[0], token_subst=token_subst)}}}"
     # yes$cond, no$cond
     if data == "yes_cond":
-        return f"yes{_loop_tree_to_gams(node.children[0])}"
+        return f"yes{_loop_tree_to_gams(node.children[0], token_subst=token_subst)}"
     if data == "no_cond":
-        return f"no{_loop_tree_to_gams(node.children[0])}"
+        return f"no{_loop_tree_to_gams(node.children[0], token_subst=token_subst)}"
     # bare yes/no values (YES_K/NO_K without condition)
     if data == "yes_value":
         return "yes"
@@ -2991,15 +3048,15 @@ def _loop_tree_to_gams(node: object) -> str:
         return "no"
     # compile_const: compile_time_const -> %name%
     if data == "compile_const":
-        inner = _loop_tree_to_gams(node.children[0])
+        inner = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
         return f"%{inner}%"
     if data == "compile_const_path":
-        return ".".join(_loop_tree_to_gams(c) for c in node.children)
+        return ".".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
     if data.startswith("loop_stmt"):
         return _emit_loop_node(node)
 
     # Fallback: join all children with spaces
-    return " ".join(_loop_tree_to_gams(c) for c in node.children)
+    return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
 
 
 def _emit_loop_node(node: object) -> str:
@@ -3410,146 +3467,11 @@ def emit_pre_solve_param_assignments(
             return str(lhs).lower()
         return None
 
-    def _tree_to_gams_subst(node: object, subst: dict[str, str]) -> str:
-        """Like _loop_tree_to_gams but substitutes loop index tokens."""
-        if isinstance(node, Token):
-            if node.type == "ID" and str(node).lower() in subst:
-                return subst[str(node).lower()]
-            return str(node)
-        if not isinstance(node, Tree):
-            return str(node)
-        data = str(node.data)
-        if data == "index_simple":
-            base = node.children[0]
-            if isinstance(base, Token) and base.type == "ID" and str(base).lower() in subst:
-                val = subst[str(base).lower()]
-                if len(node.children) > 1:
-                    suffix = _tree_to_gams_subst(node.children[1], subst)
-                    return f"{val}{suffix}"
-                return val
-        # Fall through to _loop_tree_to_gams for all other cases,
-        # but we need recursion with substitution — re-dispatch children.
-        return _loop_tree_to_gams_subst_dispatch(node, subst)
-
-    def _loop_tree_to_gams_subst_dispatch(node: Tree, subst: dict[str, str]) -> str:
-        """Dispatch to _loop_tree_to_gams logic but with token substitution."""
-        data = str(node.data)
-        if data == "id_list":
-            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data in ("index_list", "arg_list"):
-            return ",".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data == "index_simple":
-            base = _tree_to_gams_subst(node.children[0], subst)
-            if len(node.children) > 1:
-                suffix = _tree_to_gams_subst(node.children[1], subst)
-                return f"{base}{suffix}"
-            return base
-        if data in ("circular_lead", "circular_lag", "linear_lead", "linear_lag"):
-            return "".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data == "index_subset":
-            name = _tree_to_gams_subst(node.children[0], subst)
-            idx = _tree_to_gams_subst(node.children[1], subst)
-            base = f"{name}({idx})"
-            if len(node.children) > 2:
-                suffix = _tree_to_gams_subst(node.children[2], subst)
-                return f"{base}{suffix}"
-            return base
-        if data == "offset_paren":
-            return f"({_tree_to_gams_subst(node.children[0], subst)})"
-        if data == "symbol_indexed":
-            name = _tree_to_gams_subst(node.children[0], subst)
-            idx = _tree_to_gams_subst(node.children[1], subst)
-            return f"{name}({idx})"
-        if data in ("symbol_plain", "lvalue", "number", "funccall"):
-            return _tree_to_gams_subst(node.children[0], subst)
-        if data == "func_call":
-            name = _tree_to_gams_subst(node.children[0], subst)
-            if len(node.children) > 1:
-                args = _tree_to_gams_subst(node.children[1], subst)
-                return f"{name}({args})"
-            return f"{name}()"
-        if data in ("sum", "prod", "smax", "smin"):
-            tree_children = [c for c in node.children if isinstance(c, Tree)]
-            if len(tree_children) >= 2:
-                domain_part = _tree_to_gams_subst(tree_children[0], subst)
-                expr_part = _tree_to_gams_subst(tree_children[1], subst)
-            else:
-                domain_part = _tree_to_gams_subst(node.children[0], subst)
-                expr_part = _tree_to_gams_subst(node.children[1], subst)
-            return f"{data}({domain_part}, {expr_part})"
-        if data == "sum_domain":
-            return _tree_to_gams_subst(node.children[0], subst)
-        if data == "index_spec":
-            idx_parts = [c for c in node.children if isinstance(c, Tree)]
-            idx = _tree_to_gams_subst(idx_parts[0], subst)
-            if len(idx_parts) >= 2:
-                cond = _tree_to_gams_subst(idx_parts[1], subst)
-                return f"{idx}$({cond})"
-            return idx
-        if data == "tuple_domain_cond":
-            trees = [c for c in node.children if isinstance(c, Tree)]
-            idx_part = f"({_tree_to_gams_subst(trees[0], subst)})" if trees else ""
-            cond_part = f"({_tree_to_gams_subst(trees[1], subst)})" if len(trees) > 1 else ""
-            return f"{idx_part}${cond_part}"
-        if data == "tuple_domain":
-            return f"({_tree_to_gams_subst(node.children[0], subst)})"
-        if data in ("set_attr", "attr_access"):
-            return ".".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data == "attr_access_indexed":
-            name = _tree_to_gams_subst(node.children[0], subst)
-            attr = _tree_to_gams_subst(node.children[1], subst)
-            idx = _tree_to_gams_subst(node.children[2], subst)
-            return f"{name}.{attr}({idx})"
-        if data in ("dollar_cond", "dollar_cond_paren"):
-            # children: [lhs_tree, DOLLAR token, rhs_tree] — skip the DOLLAR token.
-            # For dollar_cond_paren the original "("/")" around the RHS are silent
-            # in the grammar; we re-emit them. We also re-wrap the LHS in parens
-            # when it's a compound expression, because the grammar atom rule
-            # "(" expr ")" is inlined (silent parens), and without re-wrapping
-            # a group like "(1 - a + b)$(c)" would emit as "1 - a + b$(c)",
-            # which GAMS parses as "1 - a + (b$(c))" due to $-precedence.
-            tree_children = [c for c in node.children if isinstance(c, Tree)]
-            lhs_tree = tree_children[0]
-            rhs_tree = tree_children[1]
-            lhs = _tree_to_gams_subst(lhs_tree, subst)
-            rhs = _tree_to_gams_subst(rhs_tree, subst)
-            if str(lhs_tree.data) in ("binop", "unaryop", "expr"):
-                lhs = f"({lhs})"
-            return f"{lhs}$({rhs})"
-        if data == "bracket_expr":
-            return f"[{_tree_to_gams_subst(node.children[0], subst)}]"
-        if data == "brace_expr":
-            return f"{{{_tree_to_gams_subst(node.children[0], subst)}}}"
-        if data == "yes_cond":
-            return f"yes{_tree_to_gams_subst(node.children[0], subst)}"
-        if data == "no_cond":
-            return f"no{_tree_to_gams_subst(node.children[0], subst)}"
-        if data == "yes_value":
-            return "yes"
-        if data == "no_value":
-            return "no"
-        if data in ("binop", "unaryop"):
-            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data == "condition":
-            children = [c for c in node.children if isinstance(c, (Tree, Token))]
-            parts_c: list[str] = []
-            for c in children:
-                if isinstance(c, Tree) and c.data == "expr":
-                    parts_c.append(f"({_tree_to_gams_subst(c, subst)})")
-                else:
-                    parts_c.append(_tree_to_gams_subst(c, subst))
-            return "".join(parts_c)
-        if data == "assign":
-            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        if data == "conditional_assign_general":
-            lhs = _tree_to_gams_subst(node.children[0], subst)
-            cond = _tree_to_gams_subst(node.children[1], subst)
-            rest = " ".join(_tree_to_gams_subst(c, subst) for c in node.children[2:])
-            return f"{lhs}{cond} {rest}"
-        if data == "expr":
-            return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
-        # Fallback: join children
-        return " ".join(_tree_to_gams_subst(c, subst) for c in node.children)
+    # Issue #1271 (Sprint 25 Day 12): the previous nested helpers
+    # ``_tree_to_gams_subst`` and ``_loop_tree_to_gams_subst_dispatch``
+    # have been removed. Use the module-level ``_loop_tree_to_gams``
+    # with the ``token_subst`` keyword argument; both substituting and
+    # non-substituting emission share one well-tested implementation.
 
     assign_lines: list[str] = []
     emitted_params: set[str] = set()
@@ -3677,14 +3599,14 @@ def emit_pre_solve_param_assignments(
                 if _tree_has_model_attr(stmt):
                     continue
                 if name in param_names:
-                    gams_text = _tree_to_gams_subst(stmt, p_sub)
+                    gams_text = _loop_tree_to_gams(stmt, token_subst=p_sub)
                     assign_lines.append(gams_text)
                     emitted_params.add(name)
                 elif name in dynamic_subset_names:
                     # Issue #1315/#1323: extract dynamic-subset SET assignments.
                     # Use loop-index-only substitution so the LHS subset name
                     # (`m(mm)`) is preserved and not rewritten to `mm(mm)`.
-                    gams_text = _tree_to_gams_subst(stmt, l_sub)
+                    gams_text = _loop_tree_to_gams(stmt, token_subst=l_sub)
                     assign_lines.append(gams_text)
 
         _extract_pre_solve(loop_stmt.body_stmts, param_subst, loop_index_subst)

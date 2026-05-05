@@ -2166,6 +2166,154 @@ class TestEmitInterleavedParamsAndSets:
 
 
 @pytest.mark.unit
+class TestLoopTreeToGamsTokenSubst:
+    """Issue #1271 (Sprint 25 Day 12): the substituting variant
+    (`_loop_tree_to_gams_subst_dispatch` / `_tree_to_gams_subst`) was
+    nested inside `emit_pre_solve_param_assignments`. The refactor
+    folds it into the canonical `_loop_tree_to_gams(node, *,
+    token_subst=None)` and the nested helpers are gone. These tests
+    pin the unified function's behaviour for both call shapes:
+    `token_subst=None` (canonical) and `token_subst={…}`
+    (substituting).
+    """
+
+    def _make_tree(self, data: str, children: list) -> object:
+        from lark import Tree
+
+        return Tree(data, children)
+
+    def _make_token(self, type_: str, value: str) -> object:
+        from lark import Token
+
+        return Token(type_, value)
+
+    def test_no_subst_emits_canonical_gams_text(self):
+        """`token_subst=None` (default) is identical to the pre-refactor
+        non-substituting `_loop_tree_to_gams`. Smoke-test: an `assign`
+        node round-trips its tokens unchanged.
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        # x(i) = 2 ;
+        assign = self._make_tree(
+            "assign",
+            [
+                self._make_tree(
+                    "lvalue",
+                    [
+                        self._make_tree(
+                            "symbol_indexed",
+                            [
+                                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                                self._make_tree(
+                                    "index_list",
+                                    [
+                                        self._make_tree(
+                                            "index_simple", [self._make_token("ID", "i")]
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                self._make_token("EQUAL", "="),
+                self._make_tree("number", [self._make_token("NUMBER", "2")]),
+                self._make_token("SEMICOLON", ";"),
+            ],
+        )
+        assert _loop_tree_to_gams(assign).strip() == "x(i) = 2 ;"
+
+    def test_subst_replaces_id_tokens_case_insensitively(self):
+        """`token_subst` rewrites case-insensitive ID tokens to their
+        target. Non-ID tokens (NUMBER, EQUAL, etc.) pass through.
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        assign = self._make_tree(
+            "assign",
+            [
+                self._make_tree(
+                    "lvalue",
+                    [
+                        self._make_tree(
+                            "symbol_indexed",
+                            [
+                                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                                self._make_tree(
+                                    "index_list",
+                                    [
+                                        self._make_tree(
+                                            "index_simple", [self._make_token("ID", "i")]
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                self._make_token("EQUAL", "="),
+                self._make_tree("number", [self._make_token("NUMBER", "2")]),
+                self._make_token("SEMICOLON", ";"),
+            ],
+        )
+        result = _loop_tree_to_gams(assign, token_subst={"i": "'i1'"})
+        # Loop-index `i` is replaced with `'i1'`; the param name `x` is left
+        # unchanged because it isn't in the substitution map.
+        assert "'i1'" in result
+        assert " i " not in result.replace("'i1'", "")  # original `i` is gone
+
+    def test_subst_dollar_cond_wraps_compound_lhs_in_parens(self):
+        """The pre-refactor substituting dispatcher wrapped the LHS of
+        a `dollar_cond` in parentheses when it was a `binop`/`unaryop`/
+        `expr` so `(1 - a + b)$(c)` doesn't degenerate to
+        `1 - a + b$(c)` (which GAMS parses as `1 - a + (b$(c))`). The
+        unified function's `token_subst is not None` path preserves
+        that defence.
+        """
+        from src.emit.original_symbols import _loop_tree_to_gams
+
+        # PR #1353 review (3185213459): the real grammar produces
+        # ``term DOLLAR term`` so the children shape is
+        # ``[lhs_tree, DOLLAR_token, rhs_tree]``. The DOLLAR token must
+        # appear in the fixture so the test exercises the same skip-
+        # token path that real parser output goes through (verified by
+        # parsing a tiny ``Loop(t, x.fx = 1$(ord(t) > 1))`` source —
+        # produced ``Tree('dollar_cond', [Tree('number'), Token('DOLLAR',
+        # '$'), Tree('binop')])``).
+        binop = self._make_tree(
+            "binop",
+            [
+                self._make_tree("number", [self._make_token("NUMBER", "1")]),
+                self._make_token("MINUS", "-"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "a")]),
+            ],
+        )
+        dc = self._make_tree(
+            "dollar_cond",
+            [
+                binop,
+                self._make_token("DOLLAR", "$"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "c")]),
+            ],
+        )
+
+        # token_subst is None → plain `lhs$rhs` rendering, no extra wrap,
+        # no double-`$$` artifact (the latent bug fixed alongside this
+        # test).
+        plain = _loop_tree_to_gams(dc)
+        assert "$$" not in plain, f"Latent DOLLAR-token-as-RHS bug: {plain!r}"
+        assert plain.endswith("$c"), f"Expected `…$c` plain rendering; got {plain!r}"
+
+        # token_subst is non-None → defensive paren-wrap kicks in: LHS
+        # wrapped because it's a `binop`, RHS parenthesised.
+        rewrapped = _loop_tree_to_gams(dc, token_subst={})
+        assert (
+            "(" in rewrapped and "$(c)" in rewrapped
+        ), f"Expected LHS-paren-wrap + $(c) re-wrap; got {rewrapped!r}"
+
+
+@pytest.mark.unit
 class TestLoopTreeToGams:
     """Tests for _loop_tree_to_gams() and related loop emission functions.
 
@@ -2498,33 +2646,54 @@ class TestLoopTreeToGams:
         assert result == "prod(j, y)"
 
     def test_dollar_cond_handler(self):
-        """Test emission of dollar_cond: term$term."""
+        """Test emission of dollar_cond: term$term.
+
+        PR #1353 review: real parser output for ``term DOLLAR term`` is
+        ``[lhs_tree, DOLLAR_token, rhs_tree]``. Pre-fix the emitter
+        indexed the RHS as ``children[1]`` (the DOLLAR token), which
+        produced ``lhs$$`` output. The byte-diff regression confirmed
+        no corpus model exercised the buggy path; the fix now skips
+        non-Tree children and uses ``tree_children[1]`` for RHS.
+        """
         from src.emit.original_symbols import _loop_tree_to_gams
 
-        # x$y
+        # x$y — real parse shape: symbol_plain(ID x), DOLLAR token, symbol_plain(ID y)
         node = self._make_tree(
             "dollar_cond",
-            [self._make_token("ID", "x"), self._make_token("ID", "y")],
+            [
+                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                self._make_token("DOLLAR", "$"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "y")]),
+            ],
         )
         result = _loop_tree_to_gams(node)
         assert result == "x$y"
 
     def test_dollar_cond_paren_handler(self):
-        """Test emission of dollar_cond_paren: term$(expr)."""
+        """Test emission of dollar_cond_paren: term$(expr).
+
+        PR #1353 review: same parse-tree shape correction as
+        ``test_dollar_cond_handler`` — children are
+        ``[lhs_tree, DOLLAR_token, rhs_tree]``.
+        """
         from src.emit.original_symbols import _loop_tree_to_gams
 
         # x$(a > 0)
         inner = self._make_tree(
             "binop",
             [
-                self._make_token("ID", "a"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "a")]),
                 self._make_token("GT", ">"),
-                self._make_token("NUMBER", "0"),
+                self._make_tree("number", [self._make_token("NUMBER", "0")]),
             ],
         )
         node = self._make_tree(
             "dollar_cond_paren",
-            [self._make_token("ID", "x"), inner],
+            [
+                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                self._make_token("DOLLAR", "$"),
+                inner,
+            ],
         )
         result = _loop_tree_to_gams(node)
         assert result == "x$(a > 0)"
