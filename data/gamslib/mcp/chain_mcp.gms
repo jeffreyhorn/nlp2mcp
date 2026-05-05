@@ -66,18 +66,9 @@ Variables
 * non-zero initial values.
 
 x.l(i) = 4 * abs(b - a) * (ord(i) - 1) / n * (0.5 * (ord(i) - 1) / n - tmin) + a;
-u.l(i) = 4 * abs(b - a) * ((ord(i) - 1) / n - tmin);
-
-* ============================================
-* Fixed-Variable .l Side-Effect (post-bulk-init)
-* ============================================
-* Issue #1349 + PR #1360 review: per-instance .l values from
-* source `var.fx(idx) = val` assignments. Emitted after the
-* bulk Variable Initialization above so wildcard inits like
-* `l.l(t,n) = 1` do not clobber these values.
-
 x.l('i0') = 1;
 x.l('i50') = 3;
+u.l(i) = 4 * abs(b - a) * ((ord(i) - 1) / n - tmin);
 
 * ============================================
 * Equations

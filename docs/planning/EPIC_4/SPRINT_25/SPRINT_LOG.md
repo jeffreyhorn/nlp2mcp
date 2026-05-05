@@ -357,11 +357,12 @@ The PR12 determinism harness from Day 1 (#1283 grammar fix + 6 byte-stability te
 
 #### Commits
 
-- This commit: `data/gamslib/gamslib_status.json` updated by the run.
-- No `.py` modified.
+- **Initial retest commit (`58bcbdc1`):** `data/gamslib/gamslib_status.json` + new Day 14 SPRINT_LOG entry + a single regenerated emit artifact (`data/gamslib/mcp/clearlak_mcp.gms`). No `.py` modified at this point.
+- **PR review fix commits (post-`58bcbdc1`):** PR #1360 review surfaced an emitter ordering bug in `data/gamslib/mcp/clearlak_mcp.gms` (Issue #1349 `.fx → .l` side-effect overrides clobbered by the bulk POSITIVE / denominator-FREE init). Subsequent commits modify `src/emit/emit_gams.py` to integrate the per-instance `.l` overrides INTO each variable's init group (after its bulk init / clamp lines, visible to the cross-var topological sort), add a unit regression test in `tests/unit/emit/test_fx_to_l_override_post_init.py`, and refresh affected emit artifacts. The PR diff therefore DOES modify Python sources (contrary to the initial-commit framing). Quality checks were run for the `.py` changes — see §"Quality checks" below.
 
 #### Quality checks
 
-Skipped per Day 14 prompt: no `.py` modified.
+- **Initial retest commit:** skipped per Day 14 prompt (no `.py` modified at that point).
+- **PR review fix commits:** ran `make typecheck && make format && make lint && make test` — all pass. Test counts: 4,736 passed, 10 skipped, 2 xfailed.
 
 ---

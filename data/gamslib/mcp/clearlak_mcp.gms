@@ -244,21 +244,6 @@ Positive Variables
 
 l.l(t,n) = 1;
 l.l(t,n) = min(l.l(t,n), l.up(t,n));
-r.l(t,n) = 1;
-r.l(t,n) = min(r.l(t,n), r.up(t,n));
-f.l(t,n) = 1;
-f.l(t,n) = min(f.l(t,n), f.up(t,n));
-z.l(t,n) = 1;
-z.l(t,n) = min(z.l(t,n), z.up(t,n));
-
-* ============================================
-* Fixed-Variable .l Side-Effect (post-bulk-init)
-* ============================================
-* Issue #1349 + PR #1360 review: per-instance .l values from
-* source `var.fx(idx) = val` assignments. Emitted after the
-* bulk Variable Initialization above so wildcard inits like
-* `l.l(t,n) = 1` do not clobber these values.
-
 l.l('dec','n1') = 100;
 l.l('dec','n10') = 100;
 l.l('dec','n100') = 100;
@@ -380,6 +365,12 @@ l.l('dec','n96') = 100;
 l.l('dec','n97') = 100;
 l.l('dec','n98') = 100;
 l.l('dec','n99') = 100;
+r.l(t,n) = 1;
+r.l(t,n) = min(r.l(t,n), r.up(t,n));
+f.l(t,n) = 1;
+f.l(t,n) = min(f.l(t,n), f.up(t,n));
+z.l(t,n) = 1;
+z.l(t,n) = min(z.l(t,n), z.up(t,n));
 
 * ============================================
 * Equations

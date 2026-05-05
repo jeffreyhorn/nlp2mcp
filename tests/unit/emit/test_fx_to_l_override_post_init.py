@@ -1,17 +1,23 @@
-"""PR #1360 review (Copilot): per-instance `var.l(idx) = val` lines from
-the `.fx → .l` side-effect (Issue #1349) MUST be emitted AFTER the bulk
-`var.l(t,n) = 1` Variable Initialization. Otherwise the wildcard bulk
-init clobbers the per-instance value.
+"""Issue #1349: per-instance ``var.l(idx) = val`` lines emitted as the
+``.fx → .l`` side-effect of an ``_fx_``-replaced source ``var.fx(idx) = val``
+MUST emit AFTER the bulk ``var.l(t,n) = 1`` POSITIVE / denominator-FREE init
+for the same variable, AND must be visible to the cross-variable topological
+sort so dependent ``var.l = expr`` initializations see the override value.
 
-clearlak surfaced this: `l.fx('dec', n) = 100` for ~120 elements expanded
-into per-instance `l.l('dec', 'n_i') = 100;` overrides under "Variable
-Bounds", which the subsequent `l.l(t,n) = 1;` POSITIVE init in the
-Variable Initialization section immediately overwrote, defeating the
-purpose of the #1349 fix.
+clearlak surfaced the wrong-order shape: ``l.fx('dec', n) = 100`` for ~120
+elements expanded into per-instance ``l.l('dec', 'n_i') = 100;`` overrides
+under "Variable Bounds", and the subsequent ``l.l(t,n) = 1;`` POSITIVE init
+in the Variable Initialization section immediately overwrote them.
 
-The fix moves the `.l` overrides into a new "Fixed-Variable .l
-Side-Effect (post-bulk-init)" section that emits AFTER the bulk init,
-so the per-instance value wins.
+The fix integrates the per-instance overrides INTO the same variable's
+init group (after its bulk init / clamp lines) rather than emitting them
+as a separate post-init section. That way:
+
+1. The override emits AFTER the bulk init for the SAME variable (overriding
+   the wildcard).
+2. The override is visible to the topological sort, so any other variable
+   whose ``.l = expr`` references this var's ``.l(idx)`` evaluates against
+   the correct override value.
 """
 
 from __future__ import annotations
@@ -46,7 +52,7 @@ def _emit_mcp_for_source(gams_src: str) -> str:
 # clearlak-shaped synthetic: a POSITIVE variable indexed over (t, n) with
 # per-instance .fx assignments for one slice of the t domain. The bulk
 # var-init pass (POSITIVE → `var.l(t,n) = 1`) would clobber the .fx
-# side-effect without the post-init fix.
+# side-effect without the integrated-override fix.
 _SRC_FX_OVER_POSITIVE_VAR = """
 Set t / dec, jan, feb /;
 Set n / n1, n2, n3 /;
@@ -64,9 +70,9 @@ Solve m using nlp minimizing obj;
 
 
 @pytest.mark.unit
-def test_fx_to_l_override_emitted_after_bulk_init():
-    """The per-instance `l.l('dec', 'n_i') = 100` override must appear
-    AFTER the bulk `l.l(t,n) = 1` (or any wildcard `l.l(...) = ...`)
+def test_fx_to_l_override_emitted_after_bulk_init_for_same_var():
+    """The per-instance ``l.l('dec', 'n_i') = 100`` override must appear
+    AFTER the bulk ``l.l(t,n) = 1`` (or any wildcard ``l.l(...) = ...``)
     Variable Initialization line. Otherwise the bulk init clobbers it
     at GAMS evaluation time.
     """
@@ -102,13 +108,62 @@ def test_fx_to_l_override_emitted_after_bulk_init():
     )
 
 
+# Cross-var dependency: vy depends on vx via a `vy.l = vx.l('dec') * 2;`
+# style assignment. vx has a `.fx → .l` override at 'dec'. The override
+# must emit before vy's init so vy sees the correct value (200, not 2).
+_SRC_FX_WITH_DEPENDENT_INIT = """
+Set t / dec, jan /;
+Variables vx(t), vy, obj;
+vx.fx('dec') = 100;
+vy.l = vx.l('dec') * 2;
+Equation Objective, Bal(t);
+Objective.. obj =e= sum(t, vx(t)) + vy;
+Bal(t).. vx(t) =g= 1;
+Model m /all/;
+Solve m using nlp minimizing obj;
+"""
+
+
 @pytest.mark.unit
-def test_fx_to_l_override_section_header_present():
-    """The post-init override section emits its own labeled comment block
-    so the ordering intent is visible to maintainers reading the .gms.
+def test_fx_to_l_override_visible_to_dependent_var_init():
+    """A dependent variable's `.l = expr` referencing the fixed variable's
+    `.l('dec')` must emit AFTER the override line, so the dependent var
+    evaluates against the override value (100), not the un-overridden
+    state. Without integrating the override into the per-var init group
+    + topo sort, the dependent var emits BEFORE the override and reads
+    the wrong value.
     """
-    output = _emit_mcp_for_source(_SRC_FX_OVER_POSITIVE_VAR)
-    assert "Fixed-Variable .l Side-Effect (post-bulk-init)" in output, (
-        "Expected the post-init `.l` override section to carry a labeled "
-        f"comment header; output:\n{output}"
+    output = _emit_mcp_for_source(_SRC_FX_WITH_DEPENDENT_INIT)
+    lines = output.splitlines()
+
+    override_idx = next(
+        (
+            i
+            for i, ln in enumerate(lines)
+            if ln.strip().startswith("vx.l('dec') =") or ln.strip().startswith('vx.l("dec") =')
+        ),
+        None,
+    )
+    # Element-quote style for the dependent line may differ from the override
+    # line (expression-emit vs literal-key emit); accept either.
+    dependent_idx = next(
+        (
+            i
+            for i, ln in enumerate(lines)
+            if ln.strip().startswith("vy.l =") and "vx.l(" in ln and "dec" in ln
+        ),
+        None,
+    )
+    assert (
+        override_idx is not None
+    ), f"Expected `vx.l('dec') = 100;` override line; output:\n{output}"
+    assert (
+        dependent_idx is not None
+    ), f"Expected `vy.l = vx.l('dec') * 2;` dependent init line; output:\n{output}"
+    assert dependent_idx > override_idx, (
+        f"Dependent var init (line {dependent_idx}) must appear AFTER the fixed "
+        f"variable's .l override (line {override_idx}) so it reads the override "
+        f"value, not a pre-override state.\n"
+        f"  override line:  {lines[override_idx]!r}\n"
+        f"  dependent line: {lines[dependent_idx]!r}"
     )

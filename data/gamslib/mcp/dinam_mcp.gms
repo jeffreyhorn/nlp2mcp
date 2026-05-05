@@ -357,27 +357,18 @@ fdp.l(te) = 1;
 fdp.l(te) = min(fdp.l(te), fdp.up(te));
 inv.l(te) = 1;
 inv.l(te) = min(inv.l(te), inv.up(te));
+inv.l('1968') = 55;
 sav.l(te) = 1;
 sav.l(te) = min(sav.l(te), sav.up(te));
 con.l(te) = 1;
 con.l(te) = min(con.l(te), con.up(te));
+con.l('1968') = 208.8;
 gdp.l(te) = 1;
 gdp.l(te) = min(gdp.l(te), gdp.up(te));
 infdp.l = 1;
 infdp.l = min(infdp.l, infdp.up);
 fc.l(te) = 1;
 fc.l(te) = min(fc.l(te), fc.up(te));
-
-* ============================================
-* Fixed-Variable .l Side-Effect (post-bulk-init)
-* ============================================
-* Issue #1349 + PR #1360 review: per-instance .l values from
-* source `var.fx(idx) = val` assignments. Emitted after the
-* bulk Variable Initialization above so wildcard inits like
-* `l.l(t,n) = 1` do not clobber these values.
-
-inv.l('1968') = 55;
-con.l('1968') = 208.8;
 
 * ============================================
 * Equations
