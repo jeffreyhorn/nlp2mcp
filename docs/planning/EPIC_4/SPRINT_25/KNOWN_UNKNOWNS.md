@@ -62,16 +62,18 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 
 ## Summary Statistics
 
-**Total Unknowns:** 27
+**Total Unknowns:** 27 prep + 4 end-of-sprint = **31**
 
-**By Priority:**
+The Priority / Category breakdowns below cover only the 27 prep-time unknowns (Categories 1–6) — those drove the Sprint 25 prep budget allocation. The 4 end-of-sprint discoveries (KU-33..KU-36) were surfaced during execution and are tracked separately in §"End-of-Sprint Discoveries" toward the bottom of this document; they do not have a Priority assignment because they don't drive prep work for Sprint 25 — they are inputs to Sprint 26 prep instead.
+
+**By Priority** (prep unknowns only):
 
 - Critical: 7 (26%)
 - High: 11 (41%)
 - Medium: 7 (26%)
 - Low: 2 (7%)
 
-**By Category:**
+**By Category** (prep unknowns only):
 
 - Category 1 (Alias-AD Carryforward): 8 unknowns
 - Category 2 (Emitter / Stationarity Backlog): 6 unknowns
@@ -80,7 +82,9 @@ This document identifies assumptions and unknowns for Sprint 25 **before** imple
 - Category 5 (Translation Timeout — Algorithmic): 4 unknowns
 - Category 6 (Pipeline Retest + Determinism): 3 unknowns
 
-**Estimated Research Time:** 18–27 hours (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets).
+**End-of-Sprint Discoveries** (KU-33..KU-36, surfaced during Sprint 25 execution; see §"End-of-Sprint Discoveries"): 4 unknowns. These feed into Sprint 26 prep rather than Sprint 25 prep tasks.
+
+**Estimated Research Time:** 18–27 hours for the 27 prep-time unknowns (spread across prep Tasks 2–10; see `PREP_PLAN.md` §Prep Task Overview for per-task budgets). End-of-sprint discoveries do not consume Sprint 25 budget.
 
 Note: the per-unknown `Estimated Research Time` fields in the detail sections below are work-item estimates used to scope individual investigations, not an additive total — multiple unknowns are verified in parallel within a single prep task (e.g., Task 2 covers 7 unknowns in one code-audit pass). The authoritative scheduling budget is the per-task total in PREP_PLAN.md.
 
@@ -1724,6 +1728,58 @@ _Add unknowns discovered during Sprint 25 execution here, then categorize post-s
 
 ---
 
+## End-of-Sprint Discoveries (KU-33 .. KU-36)
+
+Surfaced during Sprint 25 execution and Day 13 buffer review. Carried forward to Sprint 26.
+
+### KU-33: Pattern C generalizes beyond launch — `nu_<eq>(i±N)` phantom-offset enumeration appears on at least 4 CGE / SAM-balance models
+
+**Surfaced:** Day 13 (filing carryforward issues #1354 camcge, #1355 cesam2, #1356 fawley, #1357 otpop)
+
+**Discovery:** The Day 6 Pattern C gate (PR #1308) was scoped to launch's specific `$ge(ss, s)`-conditional alias sum. Day 13 inspection of the four new `path_syntax_error` models revealed the same phantom-offset enumeration pattern (`nu_ieq(i±N)`, `nu_COLSUM(i±N)`, etc.) emitted on stationarity equations whose source bodies have **no** alias-conditional guard — they have plain `imat(i,j)` SAM-coefficient references where the AD layer is unifying `j` with `i` and then enumerating ±N.
+
+**Sprint 26 implication:** The Pattern C gate needs to be widened to detect plain-alias enumeration (no `$cond` filter required) and consolidate into a single `sum(j$(...), imat(j,i) * nu_<eq>(j))` term scoped to the equation's declared domain. Likely unblocks #1354, #1355, and possibly #1356 / #1357 if the \$171 errors share the same root cause. Estimated value: 2–4 path_syntax_error → solve.
+
+**Status:** 🔍 INCOMPLETE — Sprint 26 root-cause investigation needed before estimating fix scope.
+
+---
+
+### KU-34: Bucket churn dominates Sprint 25 path_syntax_error metric — Day 0 baseline counts conflate translate-failures with solve-failures
+
+**Surfaced:** Day 11 retest analysis (`SPRINT_LOG.md` §"Revised Checkpoint 2 evaluation")
+
+**Discovery:** Sprint 25's `path_syntax_error` count moved 11 → 12 net, but the underlying composition changed substantially: 3 baseline syntax-error models (`clearlak`, `ferts`, `mathopt4`) were resolved during the sprint, while 4 new ones appeared (`camcge`, `cesam2`, `fawley`, `otpop`). The metric measures "models that reached PATH and failed compilation" — when a sprint fixes upstream translate failures, those models surface in the syntax-error bucket as a side effect, even if the sprint also closed the syntax-error issues that were blocking the original residents.
+
+**Sprint 26 implication:** Sprint metrics should track **bucket transitions** (where did each model come from? where did it go?) rather than just net counts. A "−3 / +4 = +1 net" looks like regression but is actually three closed bugs plus four new (transferred-bucket) ones. The Sprint 26 baseline should explicitly tag each of the 12 current `path_syntax_error` entries with its Sprint 24 bucket so progress is attributable.
+
+**Status:** 🔍 INCOMPLETE — Sprint 26 prep should add a "bucket provenance" column to `BASELINE_METRICS.md`.
+
+---
+
+### KU-35: Day 12 multi-solve gate Approach A correctly excludes display-only post-solve patterns — but the over-approximation is wider than documented
+
+**Surfaced:** Day 12 PR #1353 review iterations (Copilot comments 3185118502, 3185118515, 3185184392)
+
+**Discovery:** The original PR description framed `top_level_marginal_reads` as recording only `.m` reads; review surfaced that the parser hook actually captures **every** `bound_scalar` / `bound_indexed` attr (`.l`, `.lo`, `.up`, `.m`, ...), and the gate is the single point of truth that filters to `attr == "m"` AND `sym ∈ equation_names`. The over-approximation also extends to attribute reads inside the LHS `$cond` of `conditional_assign_general` — `p(i)$(eq.m(i) > 0) = ...` reads `eq.m` from a guard, not the RHS, but is still recorded.
+
+**Sprint 26 implication:** When the gate is extended (e.g., to handle additional driver shapes), the implementation should keep the parser-side capture wide and only narrow at the gate. A future "tighten the parser hook to RHS-only" optimization would re-introduce the asymmetry the review caught. Document this in the gate's docstring as an architectural invariant before any future contributor narrows it.
+
+**Status:** ✅ VERIFIED — captured in `_record_top_level_marginal_reads` docstring (PR #1353 final commit `3ed64c6e`).
+
+---
+
+### KU-36: `_loop_tree_to_gams` substitution coverage was incomplete pre-PR-#1353 — silent on bare-ID loop headers
+
+**Surfaced:** Day 12 PR #1353 review iteration (Copilot comment 3189656041)
+
+**Discovery:** The dispatcher refactor unified the substituting and non-substituting paths via `token_subst: Mapping[str, str] | None = None`. Initial implementation forwarded `token_subst` through `_loop_tree_to_gams` recursive calls but missed the raw `Token(type='ID')` children used for `leading_id` / `filter_id` in `_emit_loop_node` (filtered/indexed loop variants). Review caught it before merge — substitution was incomplete for `loop(i$ACTIVE, ...)`-style headers, contradicting the docstring's "applied at every ID emission" claim.
+
+**Sprint 26 implication:** Any future loop-header parsing changes (e.g., adding a new `loop_stmt_*` variant to the grammar) must explicitly handle `token_subst` for any new `Token(type='ID')` extraction sites. The defensive `_id_text` helper in `_emit_loop_node` is the canonical pattern; the test `test_emit_loop_node_substitutes_leading_and_filter_id` pins the contract.
+
+**Status:** ✅ VERIFIED — fix in `_emit_loop_node` plus regression test landed in `3ed64c6e` (PR #1353 final commit).
+
+---
+
 ## Next Steps
 
 1. **Prep Task 2 (Audit Alias-AD Carryforward)** — verifies Unknowns 1.1, 1.2, 1.3, 1.4, 1.6, 1.7, 1.8
@@ -1762,7 +1818,7 @@ This table shows which Sprint 25 prep tasks verify which unknowns. Prep Task 11 
 | Task 10: Design Byte-Stability Test Infrastructure (PR12) | 6.2 | Seed-set sample-size analysis |
 | Task 11: Plan Sprint 25 Detailed Schedule | 6.3 (+ integrates all others) | Influx budget calibration + sprint schedule |
 
-**Coverage:** All 27 unknowns are assigned to at least one prep task. Most Critical and High-priority unknowns are assigned to the same task that will act on the findings (e.g., Task 2 audits alias-AD AND its findings drive Task 6's rollout design).
+**Coverage:** All 27 prep-time unknowns are assigned to at least one prep task. Most Critical and High-priority unknowns are assigned to the same task that will act on the findings (e.g., Task 2 audits alias-AD AND its findings drive Task 6's rollout design). The 4 end-of-sprint discoveries (KU-33..KU-36) are tracked in §"End-of-Sprint Discoveries" and feed into Sprint 26 prep instead.
 
 **Deferred from Sprint 24** (now carried as Sprint 25 KUs):
 
@@ -1774,5 +1830,6 @@ This table shows which Sprint 25 prep tasks verify which unknowns. Prep Task 11 
 ---
 
 **Document Created:** 2026-04-19
-**Total Unknowns:** 27
+**Last Updated:** 2026-05-05 (Day 13 — added end-of-sprint discoveries KU-33..KU-36)
+**Total Unknowns:** 27 prep + 4 end-of-sprint = 31
 **Sprint 24 Carryforward:** 4 KUs (KU-29 → 3.1/3.2, KU-30 → 4.1/4.2, KU-32 → 1.5, KU-13/17 → 1.2)
