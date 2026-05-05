@@ -165,3 +165,95 @@ Per the literal Checkpoint 2 rule (any NO-GO criterion → NO-GO overall), the f
 - Phase E (Pattern E routing — #1141, #1144, #1147) is **cancelled** per the literal NO-GO routing.
 
 ---
+
+### Day 12 — WS4 Small Priorities (#1270, #1271)
+
+**Status:** COMPLETE (2026-05-05)
+**Branch:** `sprint25-day12-small-priorities`
+**PR:** [#1353](https://github.com/jeffreyhorn/nlp2mcp/pull/1353) — MERGED at `6d8ae6b7`
+
+| Task | Status |
+|---|---|
+| #1270 multi-solve gate Approach A (cross-reference) — saras-style top-level `eq.m` reads | ✅ New IR field `top_level_marginal_reads` + transitive closure helper `_params_referenced_in_any_constraint_body` + cross-reference filter in `scan_multi_solve_driver` |
+| #1271 dispatcher refactor — collapse `_loop_tree_to_gams_subst_dispatch` into `_loop_tree_to_gams(node, *, token_subst=None)` | ✅ ~140 LOC removed; byte-diff verified 0 diffs across all 141 currently-translating models |
+| Tests added (4 in `test_driver.py` F1–F4 + integration test for synthetic saras CLI exit-4) | ✅ 4,733 passed, 10 skipped, 2 xfailed |
+| `make typecheck && make lint && make format && make test` | ✅ Pass (one xdist-flaky `test_rocket_expr_bound_emitted` passes in isolation, unrelated to either WS4 change) |
+
+#### Verification — corpus
+
+| Model | declared | solves | margs | is_driver | Notes |
+|---|---|---|---|---|---|
+| saras | 2 | 2 | calibuc.m, calibul.m | **TRUE** | Target — primal/dual driver. Translate now raises `MultiSolveDriverError`. |
+| gussrisk, sparta, partssupply, ibm1, imsl, otpop, turkey | — | — | — | False | Single-model + multi-model regression canaries; correctly excluded by transitive cross-ref + `var.l` vs `eq.m` distinction (Approach A). |
+
+#### PR review iterations
+
+Five rounds of Copilot review comments addressed across commits `ddb37e2b`, `0a608357`, `282386df`, `3ed64c6e`:
+
+- Docstring direction inversion in `_params_referenced_in_any_constraint_body` (Q reads P, not P reads Q)
+- Scope-neutral `MultiSolveDriverError` message (top-level + in-loop both possible now)
+- `CaseInsensitiveDict` redundant lowercase-set comprehension
+- Broadened parser hook to record all `bound_scalar`/`bound_indexed` attrs (not just `.m`) — gate is single point of truth
+- `dollar_cond` / `dollar_cond_paren` `children[1]` was the DOLLAR token, not RHS (fixed for non-substituting branch)
+- Synthetic test fixtures aligned with real grammar shape (DOLLAR token between LHS and RHS)
+- `_emit_loop_node` threading `token_subst` through nested loops + raw `Token('ID')` for `leading_id`/`filter_id`
+- Compound-LHS paren-wrap for `dollar_cond_paren` non-substituting branch
+- Docstring clarification that `$cond` reads in `conditional_assign_general` are intentionally captured
+
+#### Notes
+
+- `data/gamslib/gamslib_status.json` saras entry left for the Day 14 pipeline retest. The translate stage now raises `MultiSolveDriverError`, which the batch pipeline records as `translate.status = failure / category = internal_error` with the multi-solve message — matching how decomp / danwolfe are tracked.
+- Closed #1270 and #1271 via `df79a2d6`; issue docs moved to `docs/issues/completed/`.
+
+---
+
+### Day 13 — Buffer + Sprint 26 Carryforward Issue Filing
+
+**Status:** COMPLETE (2026-05-05)
+**Branch:** `sprint25-day13-buffer`
+
+#### Routing
+
+Per `prompts/PLAN_PROMPTS.md` §"Day 13 Prompt", optional Phase E + Option 1 short-circuit + qabel/abel fix were all skipped:
+
+- **Phase E (Tasks 2–3):** Cancelled per the literal Checkpoint 2 NO-GO routing on `path_syntax_error` (12 vs ≤11 threshold). The CONDITIONAL GO recommendation in §"Revised Checkpoint 2" did not override the formal NO-GO; PLAN.md §"Day 13" routing is unambiguous.
+- **Option 1 short-circuit (Task 3):** Requires "≥4h clear headroom" — Day 13 is buffer day; deferred to Sprint 26 algorithmic timeout workstream.
+- **qabel/abel narrow fix (Task 4):** Day 8 reassessment located the real bug as `#1311` (AD criterion's u-quadratic gradient dropped to `Const(0.0)` when sum index is a subset of the variable's domain). #1311 is **CLOSED** — fix already landed during the sprint. No Day 13 action.
+
+#### Buffer (Task 1)
+
+No open Batch 3 / WS4 tail. Batch 3 (#1290 ferts, #1291 clearlak) closed Day 11; WS4 (#1270, #1271) closed Day 12.
+
+#### Sprint 26 carryforward issues filed (Task 5)
+
+| # | Title | Bucket |
+|---|---|---|
+| [#1354](https://github.com/jeffreyhorn/nlp2mcp/issues/1354) | camcge: PATH \$141 on phantom IndexOffset `nu_ieq(i±N)` / `nu_actp(i±N)` | path_syntax_error (Pattern C variant) |
+| [#1355](https://github.com/jeffreyhorn/nlp2mcp/issues/1355) | cesam2: PATH \$141 on phantom IndexOffset `nu_COLSUM(i±N)` in `stat_tsam` | path_syntax_error (Pattern C variant) |
+| [#1356](https://github.com/jeffreyhorn/nlp2mcp/issues/1356) | fawley: PATH \$171 domain violations in stationarity (post-#1276 fx fix bucket transfer) | path_syntax_error |
+| [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357) | otpop: PATH \$171 domain violations in stationarity (Sprint 25 bucket transfer) | path_syntax_error (likely subsumed by #1334) |
+| [#1358](https://github.com/jeffreyhorn/nlp2mcp/issues/1358) | mine: translate fails — "Complex offset expressions not yet supported: ParamRef(li(k))" + SetMembershipTest non-static | internal_error |
+
+#### Existing carryforward issues labeled `sprint-26` (no close+refile)
+
+Per Day 13 prompt Task 5, original Pattern A Phase 2 cohort issues were left **open** with the existing rel_diff data attached, rather than closed-and-refiled per Day 7 cohort sweep. Reclassification (per `DAY7_COHORT_SWEEP.md` §"Classification Table") will happen during Sprint 26 Day 0 prep where it can be reviewed against fresh evidence.
+
+| Category | Issues |
+|---|---|
+| Pattern A cohort (Day 7 sweep classified as not-Pattern-A) | #1138, #1139, #1140, #1142, #1145, #1150 |
+| Pattern E (Phase E cancelled, carryforward) | #1141, #1144, #1147 |
+| Pattern C launch (Bug #1 / Bug #2) | #1306, #1307 |
+| Translation timeouts | #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant) |
+| AD residuals from Day 11 fixes | #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term in stat_p) |
+
+Total Sprint 26 backlog: **5 new + 18 carryforward = 23 issues** under `sprint-26` label.
+
+#### Quality checks
+
+Skipped per Day 13 prompt: no `.py` modified (this entry is docs-only).
+
+#### KNOWN_UNKNOWNS.md update
+
+End-of-sprint discoveries appended (KU-33..KU-36 — see `KNOWN_UNKNOWNS.md` §"End-of-Sprint Discoveries").
+
+---
