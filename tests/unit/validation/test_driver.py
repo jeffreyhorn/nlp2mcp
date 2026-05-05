@@ -320,3 +320,170 @@ def test_validate_error_exposes_report():
         validate_single_optimization(ir)
     assert exc.value.report.is_driver is True
     assert ("tbal", "m") in exc.value.report.equation_marginals
+
+
+# ---------------------------------------------------------------------------
+# Issue #1270 (Sprint 25 Day 12) — Approach A cross-reference fixtures.
+# Top-level (non-loop) `param[(idx)] = ...eq.m...` whose receiving param
+# is later read inside any declared model's constraint body is the
+# saras / primal-dual driver shape.
+# ---------------------------------------------------------------------------
+
+
+def _add_param(
+    ir: ModelIR,
+    name: str,
+    domain: tuple[str, ...] = (),
+    expressions: list | None = None,
+) -> None:
+    """Helper: register a parameter with optional expression-based assignment."""
+    from src.ir.symbols import ParameterDef
+
+    pd = ParameterDef(
+        name=name,
+        domain=domain,
+        expressions=list(expressions or []),
+    )
+    ir.params[name] = pd
+
+
+def _add_equation_body(
+    ir: ModelIR,
+    name: str,
+    domain: tuple[str, ...],
+    lhs,
+    rhs,
+) -> None:
+    """Helper: register an equation with explicit lhs/rhs ASTs so the
+    cross-reference walker can find ParamRef nodes inside the body.
+    """
+    ir.equations[name] = EquationDef(
+        name=name,
+        domain=domain,
+        relation=Rel.EQ,
+        lhs_rhs=(lhs, rhs),
+    )
+
+
+def test_scan_saras_style_top_level_marginal_with_feedback_is_driver():
+    """F1 (saras): two declared models + two solves, top-level
+    ``clam(...) = calibuc.m(...)`` then ``cGam = f(clam)`` then a
+    constraint body referencing ``cGam``. Approach A's cross-reference
+    walks the equation body to ``cGam``, walks ``cGam``'s expression
+    transitively to ``clam``, and matches the top-level marginal
+    feedback. MUST flag.
+    """
+    from src.ir.ast import Binary, Const, ParamRef, VarRef
+
+    ir = _ir_with_declared_models("sarasdual", "sarasprimal")
+    _add_equation(ir, "calibuc")
+    _add_solve_objective(ir, "sarasdual")
+    _add_solve_objective(ir, "sarasprimal")
+
+    # clam directly receives an equation marginal at top level.
+    _add_param(ir, "clam", domain=("i",))
+    # cGam computed from clam: cGam(i) = clam(i) * 2.
+    _add_param(
+        ir,
+        "cgam",
+        domain=("i",),
+        expressions=[
+            (("i",), Binary("*", ParamRef("clam", ("i",)), Const(2.0))),
+        ],
+    )
+    # An equation in the *primal* model body that references cGam directly.
+    # nclpobj_(i).. x(i) =E= cGam(i)
+    _add_equation_body(
+        ir,
+        "nclpobj_",
+        domain=("i",),
+        lhs=VarRef("x", ("i",)),
+        rhs=ParamRef("cgam", ("i",)),
+    )
+
+    # Top-level capture (would normally be populated by the parser hook).
+    ir.top_level_marginal_reads.append(("clam", "calibuc", "m"))
+
+    report = scan_multi_solve_driver(ir)
+    assert report.is_driver is True
+    assert ("calibuc", "m") in report.equation_marginals
+
+
+def test_scan_post_solve_reporting_no_constraint_feedback_is_not_driver():
+    """F2 (single solve, post-solve reporting): one declared model, one
+    solve, top-level ``report = eq.m`` for *display only* — the
+    receiving parameter never appears in any equation body. MUST NOT
+    flag (current ibm1 / single-solve baseline preserved).
+    """
+    ir = _ir_with_declared_models("m1")
+    _add_equation(ir, "eq1")
+    _add_solve_objective(ir, "m1")
+    _add_param(ir, "report", domain=())
+    # No equation references `report` — it's a pure display target.
+    ir.top_level_marginal_reads.append(("report", "eq1", "m"))
+
+    report = scan_multi_solve_driver(ir)
+    assert report.is_driver is False
+
+
+def test_scan_multi_stage_display_no_constraint_feedback_is_not_driver():
+    """F3 (multi-stage display): two declared models, two solves, top-
+    level ``report = eq.m`` between solves but the parameter is never
+    read inside any model's constraint body. This is the case
+    Approach B (sequence between solves) would over-fire on; Approach
+    A correctly skips it.
+    """
+    from src.ir.ast import ParamRef, VarRef
+
+    ir = _ir_with_declared_models("m1", "m2")
+    _add_equation(ir, "eq1")
+    _add_solve_objective(ir, "m1")
+    _add_solve_objective(ir, "m2")
+    # `report` is a pure display target — exists, but the m2 model body
+    # below references a *different* parameter (`p_input`).
+    _add_param(ir, "report", domain=())
+    _add_param(ir, "p_input", domain=())
+    _add_equation_body(
+        ir,
+        "eq2",
+        domain=(),
+        lhs=VarRef("y", ()),
+        rhs=ParamRef("p_input", ()),
+    )
+    ir.top_level_marginal_reads.append(("report", "eq1", "m"))
+
+    report = scan_multi_solve_driver(ir)
+    assert report.is_driver is False
+
+
+def test_scan_partssupply_var_l_top_level_is_not_driver_under_approach_a():
+    """F4 (partssupply-style ``var.l``): two declared models, two
+    solves, ``util_lic(t) = util.l(t)`` at top level. ``util`` is a
+    variable, not an equation, so its ``.l`` (level) is *not* a dual.
+    Approach A scopes its detector to ``.m`` on declared equations
+    only — so even with a constraint-body reference to ``util_lic``,
+    this MUST NOT flag.
+    """
+    from src.ir.ast import ParamRef, VarRef
+
+    ir = _ir_with_declared_models("m1", "m2")
+    _add_solve_objective(ir, "m1")
+    _add_solve_objective(ir, "m2")
+    _add_param(ir, "util_lic", domain=("t",))
+    _add_equation_body(
+        ir,
+        "eq2",
+        domain=("t",),
+        lhs=VarRef("y", ("t",)),
+        rhs=ParamRef("util_lic", ("t",)),
+    )
+    # Top-level capture records both the marginal-style and var.l-style
+    # reads; the parser hook is over-approximate by design. The gate
+    # filters to ``attr == "m"`` and ``sym in equation_names``, so
+    # var.l (attr "l") and reads of bare variables are skipped.
+    ir.top_level_marginal_reads.append(("util_lic", "util", "l"))
+    # Sanity: even a `.m` on a *variable* (not an equation) must not flag.
+    ir.top_level_marginal_reads.append(("util_lic", "util", "m"))
+
+    report = scan_multi_solve_driver(ir)
+    assert report.is_driver is False

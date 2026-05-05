@@ -69,6 +69,34 @@ SYNTHETIC_DRIVER_GMS = dedent("""\
     );
     """)
 
+SYNTHETIC_SARAS_PRIMAL_DUAL_GMS = dedent("""\
+    * Issue #1270 saras-style primal/dual driver. Two declared models,
+    * two solves at *top level* (not inside a loop), with a top-level
+    * `feedback = eq1.m` between solves whose receiving parameter is
+    * later referenced inside the second model's constraint body. MUST
+    * be refused under Approach A (cross-reference).
+    Set i /i1, i2/;
+    Variables x(i), z1, z2;
+    Positive Variables x;
+    Parameter feedback(i) 'dual feedback from first solve' /i1 0, i2 0/;
+    Equations
+        obj1
+        obj2
+        eq1(i)        'first model constraint'
+        eq2(i)        'second model uses feedback' ;
+    obj1..    z1 =e= sum(i, x(i));
+    obj2..    z2 =e= sum(i, x(i));
+    eq1(i)..  x(i) =g= 1;
+    eq2(i)..  x(i) =g= feedback(i);
+
+    Model dualm   / obj1, eq1 /;
+    Model primalm / obj2, eq2 /;
+
+    Solve dualm using NLP minimizing z1;
+    feedback(i) = eq1.m(i);
+    Solve primalm using NLP minimizing z2;
+    """)
+
 SYNTHETIC_SINGLE_MODEL_MULTI_SOLVE_GMS = dedent("""\
     * ibm1-style regression fixture: one declared model, repeated
     * solves on the same model. MUST NOT be flagged as a driver.
@@ -182,6 +210,34 @@ def test_cli_refuses_synthetic_driver_exit_code_4(tmp_path):
     assert "multi-solve driver" in stderr
     assert "sub" in stderr and "master" in stderr
     assert "bal.m" in stderr
+    assert not out.exists(), "gate let the output file slip through"
+
+
+@pytest.mark.integration
+def test_cli_refuses_synthetic_saras_primal_dual_exit_code_4(tmp_path):
+    """Issue #1270 (Sprint 25 Day 12): saras-style primal/dual driver
+    where the equation-marginal feedback happens at *top level* between
+    two solves, NOT inside a loop. Approach A (cross-reference) must
+    catch this — the CLI must exit 4 and the error must name both
+    declared models and the equation marginal.
+    """
+    src = tmp_path / "synthetic_saras.gms"
+    src.write_text(SYNTHETIC_SARAS_PRIMAL_DUAL_GMS)
+    out = tmp_path / "synthetic_saras_mcp.gms"
+
+    result = CliRunner().invoke(
+        main,
+        [str(src), "-o", str(out), "--quiet"],
+    )
+
+    assert result.exit_code == EXIT_MULTI_SOLVE_OUT_OF_SCOPE, (
+        f"Expected exit {EXIT_MULTI_SOLVE_OUT_OF_SCOPE}, got {result.exit_code}.\n"
+        f"stdout: {result.stdout}\nstderr: {result.stderr}"
+    )
+    stderr = result.stderr.lower()
+    assert "multi-solve driver" in stderr
+    assert "dualm" in stderr and "primalm" in stderr
+    assert "eq1.m" in stderr
     assert not out.exists(), "gate let the output file slip through"
 
 
