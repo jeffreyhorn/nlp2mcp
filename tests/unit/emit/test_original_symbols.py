@@ -2558,6 +2558,54 @@ class TestLoopTreeToGams:
         result = _loop_tree_to_gams(loop)
         assert "loop(arc(i,j)$(d > 0)" in result
 
+    def test_emit_loop_node_substitutes_leading_and_filter_id(self):
+        """PR #1353 review: ``_emit_loop_node`` must apply ``token_subst`` to
+        the raw ``Token(type='ID')`` children used for ``leading_id`` and
+        ``filter_id`` so substitution is consistent across all loop shapes.
+
+        Verifies both filtered (``loop_stmt_filtered`` — leading_id only)
+        and paren_filtered with bare-ID filter (``filter_id`` after $).
+        """
+        from src.emit.original_symbols import _emit_loop_node
+
+        # loop(i$ACTIVE, …) — leading_id="i", filter_id="ACTIVE"
+        body = self._make_tree(
+            "loop_body",
+            [
+                self._make_tree(
+                    "assign",
+                    [
+                        self._make_tree(
+                            "lvalue",
+                            [self._make_tree("symbol_plain", [self._make_token("ID", "y")])],
+                        ),
+                        self._make_token("EQUAL", "="),
+                        self._make_tree("number", [self._make_token("NUMBER", "0")]),
+                        self._make_token("SEMICOLON", ";"),
+                    ],
+                )
+            ],
+        )
+        loop = self._make_tree(
+            "loop_stmt_filtered",
+            [
+                self._make_token("ID", "i"),
+                self._make_token("DOLLAR", "$"),
+                self._make_token("ID", "active"),
+                body,
+            ],
+        )
+
+        # Without substitution: original IDs survive.
+        plain = _emit_loop_node(loop)
+        assert "loop(i$active" in plain
+
+        # With substitution: both leading_id ("i" -> "ii") and filter_id
+        # ("active" -> "active_subset") get rewritten case-insensitively.
+        subst = {"i": "ii", "active": "active_subset"}
+        rewritten = _emit_loop_node(loop, token_subst=subst)
+        assert "loop(ii$active_subset" in rewritten
+
     def test_unaryop_handler(self):
         """Test that unaryop nodes (not 'unary') are handled correctly."""
         from src.emit.original_symbols import _loop_tree_to_gams

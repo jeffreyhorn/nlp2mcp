@@ -1655,13 +1655,20 @@ class _ModelBuilder:
         """Issue #1270: scan a top-level `assign` Tree for symbol-attribute
         reads and record them on `model.top_level_marginal_reads`.
 
-        Records ``param[(idx)] [$cond] = expr`` where ``expr`` references
+        Records ``param[(idx)] [$cond] = expr`` where ``expr`` (or, for
+        ``conditional_assign_general``, the LHS ``$cond`` subtree) references
         ``X.attr`` (a ``bound_scalar`` or ``bound_indexed`` node) for any
         symbol ``X`` and any attribute. PR #1353 review: deliberately
         over-approximate so the gate's filter (``attr == "m"`` AND
         ``sym ∈ equation_names``) is the single point of truth — both
         ``X.l`` (variable level, post-solve reporting) and ``X.m`` on a
         non-equation symbol are captured here and dropped by the gate.
+
+        Per the over-approximation philosophy, attribute reads inside the
+        ``$cond`` subtree (e.g. ``p(i)$(eq.m(i) > 0) = ...``) are also
+        recorded — a guard that branches on a marginal is still a form of
+        feedback that should reach the gate. The walker iterates every
+        child after the LHS without filtering condition vs. RHS subtrees.
 
         The LHS may be ``param``, ``param(...)``, or wrapped in ``lvalue``;
         we extract the leftmost ID token. Only assignments whose LHS is a

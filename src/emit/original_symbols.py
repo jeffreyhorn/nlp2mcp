@@ -3083,7 +3083,10 @@ def _emit_loop_node(
     PR #1353 review: ``token_subst`` is forwarded to every
     ``_loop_tree_to_gams`` call inside the header/body so substitutions
     reach nested loop statements and their components when callers pass
-    a non-None map.
+    a non-None map. Raw ``Token(type='ID')`` children used for
+    ``leading_id`` / ``filter_id`` (filtered/indexed loop variants) are
+    also rewritten via the same case-insensitive ``token_subst`` lookup
+    so substitution is consistent across all loop shapes.
     """
     from lark import Token, Tree
 
@@ -3105,6 +3108,15 @@ def _emit_loop_node(
     filter_expr: str | None = None  # expr after $ (for filtered variants)
     body: str | None = None
 
+    def _id_text(tok: Token) -> str:
+        # PR #1353 review: apply ``token_subst`` to raw ID tokens used for
+        # ``leading_id`` / ``filter_id`` so substitutions reach loop headers
+        # (filtered/indexed variants) consistently with the body emission.
+        text = str(tok)
+        if token_subst is not None and tok.type == "ID":
+            return token_subst.get(text.lower(), text)
+        return text
+
     for child in node.children:
         if isinstance(child, Token):
             if child.type == "DOLLAR":
@@ -3112,10 +3124,10 @@ def _emit_loop_node(
             elif child.type == "ID":
                 if not filter_dollar and leading_id is None:
                     # Before $: loop index or set name
-                    leading_id = str(child)
+                    leading_id = _id_text(child)
                 elif filter_dollar and filter_id is None:
                     # After $: filter identifier
-                    filter_id = str(child)
+                    filter_id = _id_text(child)
         elif isinstance(child, Tree):
             if child.data == "id_list":
                 id_list_parts.append(_loop_tree_to_gams(child, token_subst=token_subst))
