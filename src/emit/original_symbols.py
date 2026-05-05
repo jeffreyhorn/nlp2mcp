@@ -2993,6 +2993,17 @@ def _loop_tree_to_gams(
     # dollar_cond: term $ term
     # dollar_cond_paren: term $ (expr) or term $ [expr]
     if data in ("dollar_cond", "dollar_cond_paren"):
+        # Grammar: ``term DOLLAR term`` (and its `(...)` / `[...]` siblings,
+        # whose silent literals are dropped by Lark). Children shape is
+        # ``[lhs_tree, DOLLAR_token, rhs_tree]``. PR #1353 review caught a
+        # latent bug in the pre-refactor non-substituting path: it indexed
+        # the RHS as ``children[1]`` (the DOLLAR token), which would
+        # produce ``lhs$$`` output. Verified against the byte-diff
+        # snapshot — no corpus model exercises the path, so the pre-
+        # refactor output never contained the ``$$`` artifact and fixing
+        # the index here is a safe correctness improvement (no byte-diff
+        # delta on the 141-model corpus).
+        #
         # Issue #1271 (Sprint 25 Day 12): the pre-refactor substituting
         # dispatcher (`_tree_to_gams_subst`) re-wrapped both forms as
         # ``LHS$(RHS)`` and additionally parenthesised the LHS when it
@@ -3000,22 +3011,22 @@ def _loop_tree_to_gams(
         # because the grammar atom rule ``"(" expr ")"`` is inlined (silent
         # parens) and without re-wrapping a group like ``(1 - a + b)$(c)``
         # would emit as ``1 - a + b$(c)`` — which GAMS parses as
-        # ``1 - a + (b$(c))`` due to $-precedence. The non-substituting
-        # path didn't need that defence (it was used in contexts where
-        # the surrounding emit logic preserved grouping). Gate the extra
+        # ``1 - a + (b$(c))`` due to $-precedence. Gate the extra
         # wrapping on ``token_subst is not None`` so the unified function
-        # is byte-identical to *both* pre-refactor variants.
+        # is byte-identical to the substituting variant.
+        tree_children = [c for c in node.children if isinstance(c, Tree)]
+        if len(tree_children) < 2:
+            # Defensive: malformed / unexpected shape — fall back to
+            # joining children rather than indexing past the end.
+            return " ".join(_loop_tree_to_gams(c, token_subst=token_subst) for c in node.children)
+        lhs_tree = tree_children[0]
+        rhs_tree = tree_children[1]
+        lhs = _loop_tree_to_gams(lhs_tree, token_subst=token_subst)
+        rhs = _loop_tree_to_gams(rhs_tree, token_subst=token_subst)
         if token_subst is not None:
-            tree_children = [c for c in node.children if isinstance(c, Tree)]
-            lhs_tree = tree_children[0]
-            rhs_tree = tree_children[1]
-            lhs = _loop_tree_to_gams(lhs_tree, token_subst=token_subst)
-            rhs = _loop_tree_to_gams(rhs_tree, token_subst=token_subst)
             if str(lhs_tree.data) in ("binop", "unaryop", "expr"):
                 lhs = f"({lhs})"
             return f"{lhs}$({rhs})"
-        lhs = _loop_tree_to_gams(node.children[0], token_subst=token_subst)
-        rhs = _loop_tree_to_gams(node.children[1], token_subst=token_subst)
         if data == "dollar_cond_paren":
             return f"{lhs}$({rhs})"
         return f"{lhs}${rhs}"

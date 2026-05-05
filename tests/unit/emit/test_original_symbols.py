@@ -2273,7 +2273,14 @@ class TestLoopTreeToGamsTokenSubst:
         """
         from src.emit.original_symbols import _loop_tree_to_gams
 
-        # binop( 1 - a ) $ ( c )
+        # PR #1353 review (3185213459): the real grammar produces
+        # ``term DOLLAR term`` so the children shape is
+        # ``[lhs_tree, DOLLAR_token, rhs_tree]``. The DOLLAR token must
+        # appear in the fixture so the test exercises the same skip-
+        # token path that real parser output goes through (verified by
+        # parsing a tiny ``Loop(t, x.fx = 1$(ord(t) > 1))`` source —
+        # produced ``Tree('dollar_cond', [Tree('number'), Token('DOLLAR',
+        # '$'), Tree('binop')])``).
         binop = self._make_tree(
             "binop",
             [
@@ -2286,15 +2293,20 @@ class TestLoopTreeToGamsTokenSubst:
             "dollar_cond",
             [
                 binop,
+                self._make_token("DOLLAR", "$"),
                 self._make_tree("symbol_plain", [self._make_token("ID", "c")]),
             ],
         )
 
-        # token_subst is None → no extra parens, no $-rewrap.
+        # token_subst is None → plain `lhs$rhs` rendering, no extra wrap,
+        # no double-`$$` artifact (the latent bug fixed alongside this
+        # test).
         plain = _loop_tree_to_gams(dc)
-        assert "$(c)" not in plain  # plain $cond, no parens around RHS
+        assert "$$" not in plain, f"Latent DOLLAR-token-as-RHS bug: {plain!r}"
+        assert plain.endswith("$c"), f"Expected `…$c` plain rendering; got {plain!r}"
 
-        # token_subst is non-None → LHS wrapped, RHS parenthesised.
+        # token_subst is non-None → defensive paren-wrap kicks in: LHS
+        # wrapped because it's a `binop`, RHS parenthesised.
         rewrapped = _loop_tree_to_gams(dc, token_subst={})
         assert (
             "(" in rewrapped and "$(c)" in rewrapped
@@ -2634,33 +2646,54 @@ class TestLoopTreeToGams:
         assert result == "prod(j, y)"
 
     def test_dollar_cond_handler(self):
-        """Test emission of dollar_cond: term$term."""
+        """Test emission of dollar_cond: term$term.
+
+        PR #1353 review: real parser output for ``term DOLLAR term`` is
+        ``[lhs_tree, DOLLAR_token, rhs_tree]``. Pre-fix the emitter
+        indexed the RHS as ``children[1]`` (the DOLLAR token), which
+        produced ``lhs$$`` output. The byte-diff regression confirmed
+        no corpus model exercised the buggy path; the fix now skips
+        non-Tree children and uses ``tree_children[1]`` for RHS.
+        """
         from src.emit.original_symbols import _loop_tree_to_gams
 
-        # x$y
+        # x$y — real parse shape: symbol_plain(ID x), DOLLAR token, symbol_plain(ID y)
         node = self._make_tree(
             "dollar_cond",
-            [self._make_token("ID", "x"), self._make_token("ID", "y")],
+            [
+                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                self._make_token("DOLLAR", "$"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "y")]),
+            ],
         )
         result = _loop_tree_to_gams(node)
         assert result == "x$y"
 
     def test_dollar_cond_paren_handler(self):
-        """Test emission of dollar_cond_paren: term$(expr)."""
+        """Test emission of dollar_cond_paren: term$(expr).
+
+        PR #1353 review: same parse-tree shape correction as
+        ``test_dollar_cond_handler`` — children are
+        ``[lhs_tree, DOLLAR_token, rhs_tree]``.
+        """
         from src.emit.original_symbols import _loop_tree_to_gams
 
         # x$(a > 0)
         inner = self._make_tree(
             "binop",
             [
-                self._make_token("ID", "a"),
+                self._make_tree("symbol_plain", [self._make_token("ID", "a")]),
                 self._make_token("GT", ">"),
-                self._make_token("NUMBER", "0"),
+                self._make_tree("number", [self._make_token("NUMBER", "0")]),
             ],
         )
         node = self._make_tree(
             "dollar_cond_paren",
-            [self._make_token("ID", "x"), inner],
+            [
+                self._make_tree("symbol_plain", [self._make_token("ID", "x")]),
+                self._make_token("DOLLAR", "$"),
+                inner,
+            ],
         )
         result = _loop_tree_to_gams(node)
         assert result == "x$(a > 0)"
