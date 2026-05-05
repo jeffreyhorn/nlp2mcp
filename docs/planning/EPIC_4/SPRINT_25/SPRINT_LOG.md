@@ -232,7 +232,7 @@ No open Batch 3 / WS4 tail. Batch 3 (#1290 ferts, #1291 clearlak) closed Day 11;
 | [#1355](https://github.com/jeffreyhorn/nlp2mcp/issues/1355) | cesam2: PATH \$141 on phantom IndexOffset `nu_COLSUM(i±N)` in `stat_tsam` | path_syntax_error (Pattern C variant) |
 | [#1356](https://github.com/jeffreyhorn/nlp2mcp/issues/1356) | fawley: PATH \$171 domain violations in stationarity (post-#1276 fx fix bucket transfer) | path_syntax_error |
 | [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357) | otpop: PATH \$171 domain violations in stationarity (Sprint 25 bucket transfer) | path_syntax_error (likely subsumed by #1334) |
-| [#1358](https://github.com/jeffreyhorn/nlp2mcp/issues/1358) | mine: translate fails — "Complex offset expressions not yet supported: ParamRef(li(k))" + SetMembershipTest non-static | internal_error |
+| ~~#1358~~ | ~~mine: translate fails — "Complex offset expressions not yet supported: ParamRef(li(k))"~~ — **closed as duplicate of [#1224](https://github.com/jeffreyhorn/nlp2mcp/issues/1224)** (existing tracker since Sprint 23, now `sprint-26`-labeled). Doc lives at `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`. |
 
 #### Existing carryforward issues labeled `sprint-26` (no close+refile)
 
@@ -244,9 +244,10 @@ Per Day 13 prompt Task 5, original Pattern A Phase 2 cohort issues were left **o
 | Pattern E (Phase E cancelled, carryforward) | #1141, #1144, #1147 |
 | Pattern C launch (Bug #1 / Bug #2) | #1306, #1307 |
 | Translation timeouts | #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant) |
+| Translation internal_error | #1224 (mine ParamRef IndexOffset — pre-existing, supersedes the closed #1358 duplicate) |
 | AD residuals from Day 11 fixes | #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term in stat_p) |
 
-Total Sprint 26 backlog: **5 new + 18 carryforward = 23 issues** under `sprint-26` label.
+Total Sprint 26 backlog: **4 new (#1354–#1357) + 19 carryforward (incl. #1224) = 23 issues** under `sprint-26` label.
 
 #### Quality checks
 
