@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Sprint 25 Summary - 2026-05-05
+
+**Duration:** 16 days (Day 0 – Day 15) — 1 day longer than Sprint 24 to absorb the Day 5 pivot | **6/8 acceptance criteria met (4 of 8 reaching STRETCH; Parse + Tests are the other 2 met)**
+
+#### Metrics (Baseline → Final, 142-scope; pipeline scope narrowed from 143 by 1-model convexity reclassification mid-sprint)
+- **Parse:** 143/143 → 142/142 (100% of current scope) | **Translate:** 135/143 → 133/142 (93.7%; −2 net = Day 12 saras gate + scope shift)
+- **Solve:** 99 → 104 (+5; STRETCH ≥102) | **Match:** 54 → 60 (+6; STRETCH ≥58) | **Tests:** 4,522 → 4,735 (+213 net; 4,733 at Day 12 PR #1353 close, +2 added by PR #1360 review-fix unit tests during Day 14)
+- **path_syntax_error:** 11 → 12 (+1 net = bucket churn — see below) | **path_solve_terminated:** 10 → 5 (−5; STRETCH ≤8) | **model_infeasible:** 8 → 4 (−4; STRETCH ≤5; 4 gross fixes, 0 gross influx)
+
+#### Day 5 Pivot — the single most important narrative beat
+
+The Day 5 investigation (`DAY5_PATTERN_A_INVESTIGATION.md`, PR #1305) disproved the original Pattern A hypothesis underpinning the planned 8-day Phase 2 cohort sweep. Three Phase 1 target models (qabel, abel, launch) were originally scoped against a single Pattern A root cause in `_partial_collapse_sum`; trace capture under `SPRINT25_DAY2_DEBUG=1` plus byte-comparing the emitted KKT against the formal symbolic derivative showed all three emit AD-correct gradients. The bug surface lives elsewhere — Pattern C (alias-of-IndexOffset) for launch; KKT stationarity stateq sign/offset/domain handling for qabel/abel; and a separate AD-subset-domain bug that was eventually filed and CLOSED as #1311. The pivot collapsed the planned Phase 2 cohort into a Pattern C narrow fix (#1306, #1307, #1351) and an evidence-based deferral of the original Pattern A cohort (#1138, #1139, #1140, #1142, #1145, #1150) to Sprint 26 reclassification. The pivot's methodology — **trace + emitted artifact + formal derivative** — is reusable; it became the basis for new process recommendation **PR16 (run hypothesis validation pre-Sprint-0 for multi-issue workstreams sharing a single hypothesized root cause)**.
+
+#### Key Changes
+- **WS3 Determinism (Day 1, PR #1301)** — Option D `_resolve_ambiguities` post-parse disambiguation for #1283 (Lark grammar ambiguity in multi-row-label tables) + PR12 byte-stability test harness (5 Tier 0/1 fixtures × 5 fixed `PYTHONHASHSEED` values per-commit + nightly full-corpus × 2 seeds)
+- **WS2 Emitter Backlog Batch 1 (Days 2–3)** — #1275 nlp-presolve absolute include paths + #1280 mathopt4 unquoted-UELs-with-dots
+- **WS2 Batch 2.5 (Day 4)** — #1289 ganges/gangesx calibration-assignment stripping (highest-leverage single fix per Prep Task 5)
+- **Day 5 pivot + WS1 Pattern C (Days 6–7)** — Pattern C launch fix Bug #1 (#1306, PR #1308), Pattern A cohort sweep classification (`DAY7_COHORT_SWEEP.md`), Day 8 qabel/abel PATH-solve reassessment leading to #1311 AD-subset-domain bug fix (CLOSED)
+- **WS2 Batch 2 (Days 8–9)** — #1279 robustlp scalar-equation widening, #1276 fawley duplicate `.fx`, #1281 lmp2 duplicate Parameter declarations, #1292 turkpow `stat_zt` 144k-char single-line emission
+- **WS2 Batch 3 (Day 10–11)** — #1290 ferts identifier-shortening (deterministic SHA-256 hash with collision widening) + #1291 clearlak `sum(leaf, ...)` hoisted before `leaf` initialization
+- **Fix-in-place series #1338..#1352 (Days 11–12, post-Checkpoint-2 NO-GO recovery)** — nine targeted issues that recovered Match 52→60, Solve 92→104, model_infeasible 14→4 vs the original NO-GO retest, avoiding Days 1–10 reverts
+- **WS4 Small Priorities (Day 12, PR #1353)** — #1270 multi-solve gate Approach A (cross-reference `top_level_marginal_reads` walking transitively into constraint bodies) + #1271 dispatcher refactor (collapse `_loop_tree_to_gams` and `_loop_tree_to_gams_subst_dispatch` into one parameterized dispatcher; ~140 LOC removed; byte-diff verified zero diffs across all 141 currently-translating models)
+- **PR #1360 follow-up emit fix** — Copilot review of regenerated `data/gamslib/mcp/clearlak_mcp.gms` surfaced an Issue #1349 emit-ordering bug: per-instance `var.l(idx) = val` overrides under "Variable Bounds" were clobbered by the bulk POSITIVE / denominator-FREE `var.l(t,n) = 1` init. Fix integrates the per-instance overrides INTO each variable's init group via `fx_to_l_overrides_by_var: dict[str, list[str]]`, merged before the topological sort so dependent vars' `var.l = expr` evaluate against the correct override values
+
+#### Day 14 Bucket Churn (the +1 path_syntax_error)
+- **Resolved (3):** mathopt4 (now solves to mismatch), saras (translate-gated by Day 12 #1270, same net failure), ferts (transferred to `path_solve_license` — model exceeds demo-license limits but compile clean post-#1290)
+- **Bucket additions (4):** camcge + cesam2 (transferred from `path_solve_terminated` via #1338/#1342/#1344 SetMembershipTest fixes; surfaced new compile-time `$141` errors on phantom IndexOffset — Sprint 26 #1354/#1355), fawley (transferred from `model_infeasible` after #1276/#1130/#1133; surfaced `$171` domain violations — Sprint 26 #1356), otpop (regressed from solving — Sprint 26 #1357, likely subsumed by #1334)
+
+#### Error Influx Accounting (PR10 re-calibrated)
+- **Alias-AD (30% budget):** 0% — no alias-AD-attributable new failures ✅
+- **Emitter recovery (80–100% budget):** 71% (5 influx / 7 fixes) — within budget but on the high end ✅
+
+#### Sprint 25 Known Issues (Tracked for Sprint 26, labeled `sprint-26`)
+- **5 issues filed during Sprint 25 Day 13 — 1 closed as duplicate → 4 net-new open:** #1354 (camcge phantom IndexOffset), #1355 (cesam2 phantom IndexOffset on `nu_COLSUM`), #1356 (fawley `$171` domain violations), #1357 (otpop `$171` domain violations — likely subsumed by #1334) are the 4 open net-new; #1358 was filed for the mine `internal_error` but closed as duplicate of pre-existing #1224 during Day 13 (the bug is still tracked, just via the older issue ID).
+- **19 carryforward (existing issues with sprint-26 label added):** Pattern A cohort #1138, #1139, #1140, #1142, #1145, #1150 (per Day 7 sweep, NOT actually Pattern A — for reclassification); Phase E #1141, #1144, #1147 (cancelled per literal Checkpoint 2 NO-GO routing); Pattern C launch #1306, #1307; translation timeouts #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant), #1224 (mine ParamRef IndexOffset, supersedes the closed #1358); AD residuals from Day 11 fix-in-place series #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term)
+- **Total Sprint 26 backlog: 4 net-new open + 19 carryforward = 23 issues** (5 filed in Sprint 25 Day 13, 1 closed as duplicate)
+
+### Sprint 25 Day 14 — Final Pipeline Retest
+
+- **Pipeline:** `.venv/bin/python scripts/gamslib/run_full_test.py --quiet`, 9310.1s (~2h35m), exit 0, 142/142 in-scope models processed.
+- **Gross-fix accounting (Day 0 → Day 14):** 7 newly solving (gtm, korcge, robustlp newly **match**; chain, etamac, lmp2, mathopt4 newly **mismatch**); 1 new failure (otpop → `path_syntax_error`); 4 bucket transfers (camcge, cesam2, fawley, ferts); 1 intentional translate-time gate (saras via Day 12 #1270).
+- **Pipeline output committed:** `data/gamslib/gamslib_status.json` + 6 of 26 affected `.gms` artifacts (camcge, catmix, cclinpts, chain, clearlak, dinam — refreshed twice during Day 14 PR review iterations to reflect both the initial fix and the restructured per-var-init-group integration). Per `BASELINE_METRICS.md` §6 the `.gms` artifacts are advisory; remaining 20 will refresh on the next pipeline run.
+- **Quality gate clean (Day 14 PR review fix commits):** typecheck ✓, format ✓, lint ✓, **test 4,735 passed / 11 skipped / 2 xfailed** (588s).
+
 ### Sprint 25 Day 12 — WS4 small priorities (#1270 multi-solve gate extension + #1271 dispatcher refactor)
 
 - **#1270 — Multi-solve gate Approach A (cross-reference):** `src/validation/driver.py::scan_multi_solve_driver` now flags primal/dual driver scripts where the dual feedback happens at *top level* between solves, not inside a loop (the saras shape). The IR gained a new field `top_level_marginal_reads: list[tuple[str, str, str]]` populated by the parser when it sees a top-level `param[(idx)] [$cond] = expr-involving-X.m` assignment (both `assign` and `conditional_assign_general` grammar nodes). The validator filters those to assignments whose receiving parameter is **transitively referenced** in any declared model's constraint body — the cross-reference walks ParamRef nodes in equation lhs/rhs, then follows parameter-expression chains backward (for-each-Q-in-refs: add params Q's expressions read) so saras's `clam = calibuc.m → cGam = f(clam) → eq.body uses cGam` chain is recognised. Variable marginals (`var.m`) and parameters that never reach a constraint body are filtered out so post-solve reporting / display patterns don't false-positive (F2/F3 fixtures). The existing in-loop walker (decomp / danwolfe shape) is unchanged. Verified on the corpus: saras flags (target); `gussrisk`, `sparta`, `partssupply`, `ibm1`, `imsl`, `otpop`, `turkey` do not flag (canaries + previous false-positive candidates). 4 new tests in `tests/unit/validation/test_driver.py` (F1 saras-style + F2 single-solve display + F3 multi-stage display + F4 var.l + var.m filtered) and 1 new CLI integration test in `tests/integration/test_decomp_skipped.py` covering the synthetic primal/dual pattern with exit-code-4 + error-message assertions.
