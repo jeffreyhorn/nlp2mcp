@@ -95,4 +95,9 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*.swp" -delete
+	@# GAMS scratch from ad-hoc CLI runs in the repo root (.lst listings,
+	@# .log job logs). Scoped with -maxdepth 1 so we don't touch the
+	@# committed pipeline-output .lst files under data/gamslib/mcp/ or
+	@# any other tree-walked location.
+	find . -maxdepth 1 -type f \( -name "*.lst" -o -name "*.log" \) -delete
 	@echo "Clean complete!"
