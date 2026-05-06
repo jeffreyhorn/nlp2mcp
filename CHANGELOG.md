@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Metrics (Baseline → Final, 142-scope; pipeline scope narrowed from 143 by 1-model convexity reclassification mid-sprint)
 - **Parse:** 143/143 → 142/142 (100% of current scope) | **Translate:** 135/143 → 133/142 (93.7%; −2 net = Day 12 saras gate + scope shift)
-- **Solve:** 99 → 104 (+5; STRETCH ≥102) | **Match:** 54 → 60 (+6; STRETCH ≥58) | **Tests:** 4,522 → 4,733 (+211)
+- **Solve:** 99 → 104 (+5; STRETCH ≥102) | **Match:** 54 → 60 (+6; STRETCH ≥58) | **Tests:** 4,522 → 4,735 (+213 net; 4,733 at Day 12 PR #1353 close, +2 added by PR #1360 review-fix unit tests during Day 14)
 - **path_syntax_error:** 11 → 12 (+1 net = bucket churn — see below) | **path_solve_terminated:** 10 → 5 (−5; STRETCH ≤8) | **model_infeasible:** 8 → 4 (−4; STRETCH ≤5; 4 gross fixes, 0 gross influx)
 
 #### Day 5 Pivot — the single most important narrative beat

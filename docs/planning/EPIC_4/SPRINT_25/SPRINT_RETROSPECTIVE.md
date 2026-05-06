@@ -13,7 +13,7 @@ Sprint 25 met **6 of 8** Revised acceptance criteria, with **4 of 8 reaching STR
 
 The single most important narrative beat of Sprint 25 was the **Day 5 pivot** (`DAY5_PATTERN_A_INVESTIGATION.md`, PR #1305), which disproved the Pattern A hypothesis underpinning the original 8–12 day Phase 2 cohort rollout. Three Phase 1 target models (`qabel`, `abel`, `launch`) were reasoned to share a single root cause in `_partial_collapse_sum`'s multi-index recovery; trace capture under `SPRINT25_DAY2_DEBUG=1` plus byte-comparing the emitted KKT against the formal symbolic derivative showed all three have AD-correct emission. The bug surface lives elsewhere — Pattern C (alias-of-IndexOffset) for `launch`; KKT stationarity stateq sign/offset/domain handling for `qabel/abel`; and a subset-of-domain AD bug for `qabel/abel`'s `u`-quadratic that was eventually traced to issue #1311 (CLOSED during the sprint). The pivot collapsed the original 8 alias-AD issues into a Pattern C narrow fix (#1306, #1307, #1351) and an evidence-based deferral of the Pattern A cohort to Sprint 26 reclassification.
 
-**Key Outcome:** 104 models solve (up from 99). 60 models match (up from 54). Parse 142/142 (100% of post-Sprint-25 in-scope set). Translate 133/142 (93.7%) — 2 below baseline due to the 1-model scope shift + Day 12 saras gate. Tests 4,733 passing (+211 from Sprint 24 baseline). 9 PRs merged across the sprint (5 PR review iterations on PR #1353 alone, plus the Day 11/12/13/14 retest cycle). The Sprint 26 backlog comprises **5 issues filed during Day 13 (1 closed as duplicate of pre-existing #1224) → 4 net-new open + 19 carryforward = 23 total** under the `sprint-26` label.
+**Key Outcome:** 104 models solve (up from 99). 60 models match (up from 54). Parse 142/142 (100% of post-Sprint-25 in-scope set). Translate 133/142 (93.7%) — 2 below baseline due to the 1-model scope shift + Day 12 saras gate. Tests 4,735 passing (+213 net from Sprint 24 baseline; the suite was at 4,733 after Day 12 PR #1353 close, with +2 unit tests added by the PR #1360 review fix during Day 14). 9 PRs merged across the sprint (5 PR review iterations on PR #1353 alone, plus the Day 11/12/13/14 retest cycle). The Sprint 26 backlog comprises **5 issues filed during Day 13 (1 closed as duplicate of pre-existing #1224) → 4 net-new open + 19 carryforward = 23 total** under the `sprint-26` label.
 
 ---
 
@@ -28,7 +28,7 @@ The single most important narrative beat of Sprint 25 was the **Day 5 pivot** (`
 5. :x: path_syntax_error ≤ 7 — achieved 12 (5 above target — bucket churn from upstream translate fixes)
 6. :white_check_mark: path_solve_terminated ≤ 9 — achieved 5 (stretch ≤ 8 also met)
 7. :white_check_mark: model_infeasible ≤ 7 — achieved 4 (stretch ≤ 5 also met)
-8. :white_check_mark: Tests ≥ 4,560 — achieved 4,733 (+173 above target)
+8. :white_check_mark: Tests ≥ 4,560 — achieved 4,735 (+175 above target; 4,733 at Day 12, +2 from Day 14 PR #1360 review fix)
 
 ### Metrics Summary
 
@@ -41,7 +41,7 @@ The single most important narrative beat of Sprint 25 was the **Day 5 pivot** (`
 | path_syntax_error | 11 | ≤ 7 | ≤ 5 | **12** | :x: +1 (bucket churn) |
 | path_solve_terminated | 10 | ≤ 9 | ≤ 8 | **5** | :white_check_mark: stretch |
 | model_infeasible | 8 | ≤ 7 | ≤ 5 | **4** | :white_check_mark: stretch |
-| Tests | 4,522 | ≥ 4,560 | — | **4,733** | :white_check_mark: +211 |
+| Tests | 4,522 | ≥ 4,560 | — | **4,735** | :white_check_mark: +213 |
 
 ### Pipeline Scope Changes
 
@@ -255,7 +255,7 @@ Both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scal
 | path_syntax_error | 12 | ≤ 6 (−6 via Pattern C generalization removing camcge/cesam2/fawley/otpop) |
 | path_solve_terminated | 5 | ≤ 5 (maintain) |
 | model_infeasible | 4 | ≤ 4 (maintain — most carryforwards need investigative work) |
-| Tests | 4,733 | ≥ 4,750 |
+| Tests | 4,735 | ≥ 4,750 |
 
 Rationale: Pattern C generalization is the single highest-leverage workstream (4 path_syntax_error → solve = +4 Solve, +3–4 Match). The Pattern A reclassification work doesn't add net Match by itself but is prep for genuine Sprint 27 fixes. Translation timeout work should target the Option 1 short-circuit (Sprint 25 Day 13 deferral) for srpchase + possibly iswnm = +1–2 Translate.
 
@@ -331,7 +331,7 @@ The Sprint 24 retro recommended re-calibration: 30% influx for alias-AD recoveri
 | path_syntax_error | 48 | 41 | 20 | 23 | 11 | **12** | +1 (bucket churn) |
 | path_solve_terminated | 29 | 12 | 10 | 12 | 10 | **5** | −5 |
 | model_infeasible | 12 | 15 | 12 | 11 | 8 | **4** | −4 |
-| Tests | ~3,500 | 3,957 | 4,209 | 4,364 | 4,522 | **4,733** | +211 |
+| Tests | ~3,500 | 3,957 | 4,209 | 4,364 | 4,522 | **4,735** | +213 |
 
 ---
 
