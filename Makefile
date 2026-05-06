@@ -91,8 +91,18 @@ clean:
 	rm -rf .ruff_cache/
 	rm -rf .coverage
 	rm -rf htmlcov/
+	rm -rf docs/api/build/
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*.swp" -delete
+	@# Editor / merge-conflict backups (no legitimate tracked instances).
+	find . -type f \( -name "*.bak" -o -name "*.orig" -o -name "*.rej" \) -delete
+	@# macOS Finder metadata (recurring on Mac dev environments).
+	find . -type f -name ".DS_Store" -delete
+	@# GAMS scratch from ad-hoc CLI runs in the repo root (.lst listings,
+	@# .log job logs). Scoped with -maxdepth 1 so we don't touch the
+	@# committed pipeline-output .lst files under data/gamslib/mcp/ or
+	@# any other tree-walked location.
+	find . -maxdepth 1 -type f \( -name "*.lst" -o -name "*.log" \) -delete
 	@echo "Clean complete!"
