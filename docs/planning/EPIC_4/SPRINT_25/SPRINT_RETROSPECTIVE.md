@@ -25,7 +25,7 @@ The single most important narrative beat of Sprint 25 was the **Day 5 pivot** (`
 2. :x: Translate ≥ 135/143 — achieved 133/142 (−2 net; Day 12 saras gate accounts for −1 plus 1-model scope shift)
 3. :white_check_mark: Solve ≥ 100 — achieved 104 (stretch ≥ 102 also met)
 4. :white_check_mark: Match ≥ 56 — achieved 60 (stretch ≥ 58 also met)
-5. :x: path_syntax_error ≤ 7 — achieved 12 (5 above target — bucket churn from upstream translate fixes)
+5. :x: path_syntax_error ≤ 7 — achieved 12 (5 above target — bucket churn: 3 baseline syntax-error models resolved (mathopt4, saras, ferts) + 3 transfers from `path_solve_terminated`/`model_infeasible` after upstream translate fixes (camcge, cesam2, fawley) + 1 regression from solving (otpop) = +1 net)
 6. :white_check_mark: path_solve_terminated ≤ 9 — achieved 5 (stretch ≤ 8 also met)
 7. :white_check_mark: model_infeasible ≤ 7 — achieved 4 (stretch ≤ 5 also met)
 8. :white_check_mark: Tests ≥ 4,560 — achieved 4,735 (+175 above target; 4,733 at Day 12, +2 from Day 14 PR #1360 review fix)
