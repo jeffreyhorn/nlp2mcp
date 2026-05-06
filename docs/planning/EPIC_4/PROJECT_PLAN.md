@@ -1199,18 +1199,18 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ### Sprint-Level KPIs
 
-| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 | S26 | S27 | S28 |
-|--------|-----|-----|-----|--------------|--------------|--------------|--------------|-----|-----|-----|-----|
+| Metric | S18 | S19 | S20 | S21 (actual) | S22 (actual) | S23 (actual) | S24 (actual) | S25 (actual) | S26 | S27 | S28 |
+|--------|-----|-----|-----|--------------|--------------|--------------|--------------|--------------|-----|-----|-----|
 | Valid Corpus Defined | ✓ | — | — | — | — | — | — | — | — | — | — |
-| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | 0 | 0 | 0 | 0 |
-| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | 0 | 0 | 0 | 0 |
-| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | ≤8 | ≤8 | ≤5 | maintain ≤5 |
-| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | ≤8 | ≤8 | ≤5 | ≤3 |
-| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | ≤5 | ≤5 | maintain ≤5 | maintain ≤5 |
-| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | ≥100% | ≥100% | ≥100% | ≥100% |
-| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | ≥96% | ≥96% | ≥97% | ≥97% |
-| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | ≥76% | ≥76% | ≥78% | ≥80% |
-| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | ≥43% | ≥43% | ≥48% | ≥52% |
+| lexer_invalid_char | ~95 | <50 | 10 | **3** | **4** | **0**³ | **0** | **0** | 0 | 0 | 0 |
+| internal_error (parse) | ~23 | <15 | 7 | **0** | **0** | **0** | **0** | **0** | 0 | 0 | 0 |
+| path_syntax_error | ≤2 | ≤2 | 48 | **41** | **20** | **23** | **11**⁴ | **12**⁶ | ≤6 | ≤5 | maintain ≤5 |
+| path_solve_terminated | 11 | 11 | 29 | **12** (29/29 classified) | **10** | **12** | **10** | **5** | ≤5 | ≤4 | ≤3 |
+| model_infeasible | 0 | 0 | 12 | **15** | **12**² | **11** | **8**⁵ | **4** | ≤4 | maintain ≤4 | maintain ≤4 |
+| Parse Rate (pipeline scope) | ~41% | ≥55% | 82.5% | **98.1%** (154/157) | **97.5%** (156/160) | **100.0%** (147/147)³ | **100.0%** (143/143)⁴ | **100.0%** (142/142)⁶ | ≥100% | ≥100% | ≥100% |
+| Translate Rate (of parsed) | ~69% | ~72% | 90.9% | **89.0%** (137/154) | **90.4%** (141/156) | **95.2%** (140/147) | **94.4%** (135/143)⁴ | **93.7%** (133/142)⁶ | ≥95% | ≥97% | ≥97% |
+| Solve Rate (of translated) | ≥52% | ≥52% | 27.5% | **47.4%** (65/137) | **63.1%** (89/141) | **61.4%** (86/140) | **73.3%** (99/135) | **78.2%** (104/133) | ≥81% | ≥83% | ≥85% |
+| Full Pipeline Match (pipeline scope) | ~14% | ≥20% | 10.0% | **19.1%** (30/157) | **29.4%** (47/160) | **33.3%** (49/147)³ | **37.8%** (54/143)⁴ | **42.3%** (60/142)⁶ | ≥45% | ≥48% | ≥52% |
 
 ² Sprint 22 `model_infeasible` is 15 total; 12 in-scope after excluding 3 permanently infeasible models (feasopt1, iobalance, orani). A 4th model (meanvar) was declared excluded on Day 7 but later achieved model_optimal, so only 3 remain in the infeasible count. S23–S28 targets are in-scope counts.
 
@@ -1219,6 +1219,8 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ⁴ Sprint 24 pipeline scope narrowed from 147 to 143 models via schema v2.2.1 exclusions (2 multi-solve driver scripts `decomp`/`danwolfe` excluded by the validator gate introduced in PR #1265, plus 2 others moved out of the in-scope convex-continuous set). S24 metrics are reported on the 143-scope. The S24 `path_syntax_error` value of 11 is from the Day 13 Addendum re-retest under doubled pipeline timeouts (PR #1274 bumped translate 300s→600s / solve 60s→120s / compile-check 30s→60s); the pre-bump Day 13 retest saw 6 path_syntax_error, but the doubled-timeout re-retest translated 5 previously-timing-out models whose MCPs all hit path_syntax_error at PATH compile, yielding a net 1:1 influx. Translate = 135/143 is the post-bump value; pre-bump was 130/143.
 
 ⁵ Sprint 24 `model_infeasible` baseline was 14 (triage-scope count from PLAN.md; the narrower 147-pipeline-scope baseline was 11). Δ = −6 net (6 gross fixes: cesam2, qabel, abel, stdcge, lrgcge, moncge recovered; 0 gross influx).
+
+⁶ Sprint 25 pipeline scope narrowed from 143 to 142 models via a runtime convexity reclassification of one model (visible by the Day 11 retest). Per `BASELINE_METRICS.md` §5 this is treated as a runtime filter rather than a scope edit (similar to the multi-solve gate handling of `danwolfe`/`decomp`); identifying the specific model is a Sprint 26 prep item (see Sprint 25 retrospective PR18). The S25 `path_syntax_error` value of 12 is bucket churn — 3 baseline syntax-error models resolved (mathopt4, saras, ferts) and 4 added (camcge, cesam2, fawley, otpop transferred from `path_solve_terminated`/`model_infeasible` after Sprint 25 unblocked their translates and surfaced fresh PATH compile errors). The S25 Translate Rate of 93.7% (133/142) is −2 net vs S24: the Day 12 #1270 multi-solve gate moved saras from `path_syntax_error` to `translate_internal_error` (intentional, same net failure status), plus the 1-model scope shift. S25 Match Rate of 42.3% includes 3 newly-matching models from previously-failing buckets (gtm, korcge, robustlp) and 3 from previously-mismatching. Error-influx accounting (PR10 re-calibrated): alias-AD 0% (within 30% budget), emitter recovery 71% / 5 influx ÷ 7 fixes (within 80–100% budget). 4/7 acceptance criteria reached STRETCH; 1 GO miss on Translate (−2); 1 NO-GO on `path_syntax_error` (+1, bucket churn).
 
 **Note:** Sprint 18 expanded to include emit_gams.py fixes, MCP bug fixes, and lexer analysis (previously Sprint 19 content). All subsequent sprints shifted forward accordingly.
 
@@ -1272,6 +1274,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 
 ## Changelog
 
+- **2026-05-05:** Sprint 25 final metrics recorded (5/7 acceptance criteria met, 4/7 reaching STRETCH: Solve 104, Match 60, model_infeasible 4, path_solve_terminated 5). Updated Rolling KPIs row with S25 actuals + footnote ⁶ documenting the 1-model scope shift (143→142), the +1 path_syntax_error bucket churn, and the PR10 re-calibrated error-influx outcome (alias-AD 0% / emitter 71%, both within budget). Revised S26–S28 targets reflecting the Sprint 25 finishing state (path_syntax_error ≤6 / Match ≥45% / Solve Rate ≥81% for Sprint 26). 23 issues labeled `sprint-26` for Sprint 26 backlog (4 net-new from Sprint 25 Day 13 + 19 carryforward).
 - **2026-04-19:** Inserted new Sprint 25 (Alias Differentiation Carryforward & Emitter Backlog) based on Sprint 24 retrospective. Cascaded old S25→S26, S26→S27, S27→S28. Added S28 column to Rolling KPIs. Shifted sprint weeks (old S25 Weeks 15–16 → new S26 Weeks 17–18; old S26 → S27 Weeks 19–20; old S27 → S28 Weeks 21–22). Updated sprint dependencies, acceptance criteria, and cross-references. S25 targets from Sprint 24 retrospective §Suggested Sprint 25 Targets; components from §Sprint 25 Recommendations Priority 1–5.
 - **2026-04-03:** Inserted new Sprint 24 (Alias Differentiation & Error Category Reduction) based on Sprint 23 retrospective. Cascaded old S24→S25, S25→S26, S26→S27. Added S27 column to Rolling KPIs. Updated sprint dependencies, acceptance criteria, and risk table sprint references. S24 targets from Sprint 23 retrospective recommendations.
 - **2026-03-17:** Replaced Sprint 23 content with Sprint 22 retrospective recommendations (5 priorities: path_solve_terminated, model_infeasible, match rate, path_syntax_error residual, translate failures). Cascaded old S23→S24, S24→S25, S25→S26. Added S26 column to Rolling KPIs. Updated sprint dependencies.
