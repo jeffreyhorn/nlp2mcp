@@ -1515,6 +1515,20 @@ def emit_gams_mcp(
     _equalities_set = set(kkt.model_ir.equalities)
     bound_lines: list[str] = []
     deferred_bound_lines: list[str] = []
+    # Issue #1349: per-instance `var.l(idx) = val` lines emitted below as the
+    # `.l` side-effect of an `_fx_`-replaced source `var.fx(idx) = val` MUST be
+    # appended INSIDE that variable's init group (after its bulk init / clamp
+    # lines) rather than emitted as a separate post-init section. Two reasons:
+    #   1. The bulk `var.l(t,n) = 1` POSITIVE / denominator-FREE init for the
+    #      same variable would otherwise overwrite the per-instance value.
+    #   2. Other variables' `.l` expressions can legally reference this var's
+    #      `.l(idx)` (cross-var refs / topological dependencies). If the
+    #      override emits AFTER the entire init block, dependent vars evaluate
+    #      against the bulk-init value, not the override. Integrating per-var
+    #      keeps the override visible to the topo sort.
+    # Keyed by var_name so the merge into `var_init_groups` below is O(1) per
+    # variable rather than re-scanning a flat list.
+    fx_to_l_overrides_by_var: dict[str, list[str]] = {}
     for var_name, var_def in kkt.model_ir.variables.items():
         if (
             kkt.referenced_variables is not None
@@ -1672,7 +1686,14 @@ def emit_gams_mcp(
                     # populated). Preserve the .l initialization so loop-based
                     # var-init does not fail with $141 "Symbol declared but no
                     # values have been assigned".
-                    bound_lines.append(f"{var_name}.l({idx_str}) = {val_str};")
+                    # The line is collected per-variable here and merged into
+                    # the same variable's init group below (after the bulk init
+                    # / clamp lines) so it overrides the bulk wildcard init AND
+                    # is visible to the topological sort that orders dependent
+                    # vars.
+                    fx_to_l_overrides_by_var.setdefault(var_name, []).append(
+                        f"{var_name}.l({idx_str}) = {val_str};"
+                    )
                     continue
                 bound_lines.append(f"{var_name}.fx({idx_str}) = {val_str};")
 
@@ -1872,6 +1893,22 @@ def emit_gams_mcp(
         if lines:
             var_init_groups[var_name] = lines
             var_init_order.append(var_name)
+
+    # Issue #1349 (continued): merge `.fx → .l` per-instance overrides INTO each
+    # variable's init group (after its bulk init / clamp lines). For variables
+    # that have only overrides and no bulk init, create the group and add to
+    # var_init_order so the topological sort below sees it as a dependency
+    # source for any other var whose `.l` expression reads this var. Skipped
+    # under `--nlp-presolve` (matches the var-init-pass skip via
+    # `presolve_will_emit` above — the NLP solve provides the .l warm-start
+    # for fixed indices).
+    if not presolve_will_emit and fx_to_l_overrides_by_var:
+        for vname, override_lines in fx_to_l_overrides_by_var.items():
+            if vname in var_init_groups:
+                var_init_groups[vname].extend(override_lines)
+            else:
+                var_init_groups[vname] = list(override_lines)
+                var_init_order.append(vname)
 
     # Issue #763: Topological sort of variable init groups so deps come first.
     if var_l_deps:

@@ -262,3 +262,107 @@ Skipped per Day 13 prompt: no `.py` modified (this entry is docs-only).
 End-of-sprint discoveries appended (KU-33..KU-36 — see `KNOWN_UNKNOWNS.md` §"End-of-Sprint Discoveries").
 
 ---
+
+### Day 14 — Final Pipeline Retest
+
+**Status:** COMPLETE (2026-05-05)
+**Branch:** `sprint25-day14-retest`
+**Pipeline:** `.venv/bin/python scripts/gamslib/run_full_test.py --quiet`
+**Run duration:** 9310.1s (~2h35m), exit 0
+**Schema version:** v2.2.1
+**Pre-run snapshot:** `/tmp/sprint25-day14/pre_run_status.json` (advisory; not committed)
+**Pipeline log:** `/tmp/sprint25-day14/pipeline.log` (advisory; not committed)
+
+#### Final headline metrics
+
+| Metric | Day 0 baseline | Day 14 final | Δ vs baseline | Target | Stretch | Status |
+|---|---:|---:|---:|---:|---:|:---:|
+| In-scope denominator | 143 | 142 | −1 | — | — | scope shifted (see §"Scope") |
+| Parse | 143 | 142 | −1 | ≥143 | — | tracks denominator |
+| Translate | 135 | 133 | −2 | ≥135 | ≥137 | **NO-GO** (−2) |
+| Solve | 99 | 104 | +5 | ≥100 | ≥102 | **STRETCH** ✅ |
+| Match | 54 | 60 | +6 | ≥56 | ≥58 | **STRETCH** ✅ |
+| `path_syntax_error` | 11 | 12 | +1 | ≤7 | ≤5 | **NO-GO** (+5 above target) |
+| `path_solve_terminated` | 10 | 5 | −5 | ≤9 | ≤8 | **STRETCH** ✅ |
+| `model_infeasible` | 8 | 4 | −4 | ≤7 | ≤5 | **STRETCH** ✅ |
+| `path_solve_license` | 7 | 8 | +1 | (untracked) | — | bucket transfer of `ferts` |
+| Tests | 4,522 | 4,733 (Day 12) | +211 | ≥4,560 | — | ✅ (above) |
+
+**Score:** 4 of 7 tracked targets at **STRETCH**; 1 GO miss on Translate (−2); 1 NO-GO on `path_syntax_error` (the persistent bucket-churn issue from Day 11). The two NO-GOs are correlated — see §"Bucket churn" below.
+
+#### Scope: 143 → 142
+
+The Day 0 baseline frozen denominator was 143; Day 14 sees 142. The 1-model reduction happened during Sprint 25 (already visible in the Day 11 retest) and was not introduced by Day 14 work. This was discussed under the literal-rule scope-freeze policy in `BASELINE_METRICS.md` §5: convexity-status reclassification of a single model during the sprint is treated as a runtime filter rather than a scope edit, similar to the multi-solve gate handling of `danwolfe`/`decomp`. The model in question carried a Day 0 `solve_success` but doesn't appear in Day 14's in-scope set — identifying it is a Sprint 25 retrospective item; it does not change Day 14 conclusions because all metric ratios use 142.
+
+#### Per-model transitions (Day 0 → Day 14)
+
+**7 models recovered from Day 0 failure into Day 14 solve_success** (the +5 Solve gain plus 2 absorbed by the +1 scope reduction and the 1 new failure below):
+
+| Model | Day 0 bucket | Day 14 status | Notes |
+|---|---|---|---|
+| `gtm` | `path_solve_terminated` | **match** | Sprint 25 #1192 + #1320 + #1322 chain |
+| `korcge` | `model_infeasible` | **match** | Sprint 25 alias-AD / emitter combo |
+| `robustlp` | `model_infeasible` | **match** | Sprint 25 #1279 emitter fix |
+| `chain` | `model_infeasible` | mismatch | Now solving but values diverge |
+| `etamac` | `path_solve_terminated` | mismatch | Same |
+| `lmp2` | `path_solve_terminated` | mismatch | #1281 lmp2 emitter fix landed; rel_diff still material |
+| `mathopt4` | `path_syntax_error` | mismatch | Sprint 25 ferts/clearlak-class emitter fixes |
+
+**1 model regressed into failure:** `otpop` was Day 0 `solve_success` and is now `path_syntax_error` (see #1357 — likely subsumed by #1334).
+
+**4 bucket transfers** (still failing, different category — driven by upstream emitter / translate fixes):
+
+| Model | Day 0 bucket | Day 14 bucket | Carryforward issue |
+|---|---|---|---|
+| `camcge` | `path_solve_terminated` | `path_syntax_error` | #1354 (Pattern C variant) |
+| `cesam2` | `path_solve_terminated` | `path_syntax_error` | #1355 (Pattern C variant) |
+| `fawley` | `model_infeasible` | `path_syntax_error` | #1356 |
+| `ferts` | `path_syntax_error` | `path_solve_license` | demo license limit; not a bug |
+
+**1 intentional translate-time gate** (Day 12 multi-solve Approach A): `saras` was Day 0 `path_syntax_error` (PATH ran but compile-failed) and is now `translate_internal_error` (gated out earlier in the pipeline by #1270). Same net failure status; gate moved the failure point earlier per design.
+
+**Translate failure deltas:**
+- `timeout`: 5 → 5 (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` — unchanged Sprint 26 carryforward).
+- `internal_error`: 3 → 4 (`danwolfe`, `decomp`, `mine` unchanged + `saras` newly gated by Day 12 #1270).
+
+#### Bucket churn — why path_syntax_error stayed at 12
+
+The `path_syntax_error` count moved 11 → 12 net, but composition changed substantially:
+
+- **Resolved (3):** `mathopt4` (now solves to mismatch), `saras` (translate-gated by #1270), `ferts` (transferred to `path_solve_license` after the #1290 identifier-length fix unblocked compile but the model exceeds demo limits).
+- **Bucket additions (4):** `camcge` + `cesam2` (transferred from `path_solve_terminated` after #1338 / #1342 / #1344 SetMembershipTest fixes unblocked translate; surfaced new compile-time `$141` errors on phantom IndexOffset — #1354 / #1355), `fawley` (transferred from `model_infeasible` after #1276 / #1130 / #1133 — surfaced `$171` domain violations — #1356), `otpop` (regressed from solving — #1357, likely subsumed by #1334).
+- **Stayed (8):** `clearlak`, `dinam`, `ganges`, `gangesx`, `indus`, `sample`, `turkey`, `turkpow`.
+
+The −3 / +4 = +1 net hides −5 path_solve_terminated and −4 model_infeasible — both deeply over-target — because models from those buckets that translate-recovered surfaced fresh syntax-time symptoms. This pattern is captured as **KU-34** in `KNOWN_UNKNOWNS.md` §"End-of-Sprint Discoveries".
+
+#### Error-influx accounting (PR7 + PR10 re-calibrated)
+
+Per `PLAN.md` §"Process requirements" and Unknown 6.3 calibration:
+
+**Alias-AD / Pattern C (PR10: 30% influx budget):**
+- Gross fixes: Day 6 PR #1308 (Pattern C launch Bug #1) — 0 net Match gain (per Day 7 cohort sweep, launch needs Bug #2 too — #1307 still open).
+- Gross influx: **0** newly-failing models attributable to alias-AD / Pattern C changes.
+- Influx ratio: 0% — well within the 30% budget. ✅
+
+**Emitter recovery (PR10: 80–100% influx budget):**
+- Gross fixes (newly solving): **7** — `gtm`, `korcge`, `robustlp`, `chain`, `etamac`, `lmp2`, `mathopt4`.
+- Gross influx (newly failing or bucket-transferred): **5** — `otpop` (1 new failure) + `camcge`, `cesam2`, `fawley`, `ferts` (4 bucket transfers in the same general failure pool).
+- Influx ratio: **5/7 = 71%** — within the 80–100% budget. ✅
+
+PR7 (gross fix vs gross influx tracking): documented above per-model.
+
+#### Determinism (PR12)
+
+The PR12 determinism harness from Day 1 (#1283 grammar fix + 6 byte-stability tests) remains green. The emitted `.gms` artifacts are still classified as **advisory-only** per `BASELINE_METRICS.md` §6 — the v2.2.1 schema does not yet pin per-model byte equivalence across `PYTHONHASHSEED` values for all 142 in-scope models. Sprint 26 prep should consider whether to elevate any subset (e.g. the 11 Tier 0/1 canaries) to enforced byte-stability.
+
+#### Commits
+
+- **Initial retest commit (`58bcbdc1`):** `data/gamslib/gamslib_status.json` + new Day 14 SPRINT_LOG entry + a single regenerated emit artifact (`data/gamslib/mcp/clearlak_mcp.gms`). No `.py` modified at this point.
+- **PR review fix commits (post-`58bcbdc1`):** PR #1360 review surfaced an emitter ordering bug in `data/gamslib/mcp/clearlak_mcp.gms` (Issue #1349 `.fx → .l` side-effect overrides clobbered by the bulk POSITIVE / denominator-FREE init). Subsequent commits modify `src/emit/emit_gams.py` to integrate the per-instance `.l` overrides INTO each variable's init group (after its bulk init / clamp lines, visible to the cross-var topological sort), add a unit regression test in `tests/unit/emit/test_fx_to_l_override_post_init.py`, and refresh affected emit artifacts. The PR diff therefore DOES modify Python sources (contrary to the initial-commit framing). Quality checks were run for the `.py` changes — see §"Quality checks" below.
+
+#### Quality checks
+
+- **Initial retest commit:** skipped per Day 14 prompt (no `.py` modified at that point).
+- **PR review fix commits:** ran `make typecheck && make format && make lint && make test` — all pass. Test counts: 4,736 passed, 10 skipped, 2 xfailed.
+
+---

@@ -258,8 +258,6 @@ pwm.fx(i) = pwm0(i);
 tm.fx(it) = tm0(it);
 k.fx(i) = k0(i);
 ls.fx(lc) = ls0(lc);
-l.l('ag-subsist','urban-skil') = 0;
-l.l('publiques','rural') = 0;
 
 * ============================================
 * Variable Initialization
@@ -390,6 +388,8 @@ l.l('services','urban-skil') = max(l.l('services','urban-skil'), 0.01);
 l.l('publiques','rural') = max(l.l('publiques','rural'), 0.01);
 l.l('publiques','urban-unsk') = max(l.l('publiques','urban-unsk'), 0.01);
 l.l('publiques','urban-skil') = max(l.l('publiques','urban-skil'), 0.01);
+l.l('ag-subsist','urban-skil') = 0;
+l.l('publiques','rural') = 0;
 int.l(i) = int0(i);
 int.l('ag-subsist') = max(int.l('ag-subsist'), 0.01);
 int.l('ag-exp+ind') = max(int.l('ag-exp+ind'), 0.01);
