@@ -944,7 +944,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Deliverable:** Generalized Pattern C gate with regression tests on camcge/cesam2/fawley/otpop; #1306 xfail removed; #1307 closed; estimated impact +3 to +5 path_syntax_error → solve.
 
 ### Priority 2: Pattern A Cohort Reclassification (#1138, #1139, #1140, #1142, #1145, #1150) (~4-6h)
-- **Per `DAY7_COHORT_SWEEP.md` §"Classification Table":** the original Pattern A cohort is NOT actually Pattern A. Each issue needs reclassification to its true bug shape:
+- **Per `SPRINT_25/DAY7_COHORT_SWEEP.md` §"Classification Table":** the original Pattern A cohort is NOT actually Pattern A. Each issue needs reclassification to its true bug shape:
   - #1138 → Pattern C plain-alias variant (likely subsumed by Priority 1)
   - #1139 → AD-correct, pipeline-excluded (close with note)
   - #1140 → AD-correct multi-solve dynamics (separate investigation)
@@ -953,14 +953,14 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
   - #1150 → split: qabel = Pattern C massive-enumeration variant; abel = AD-correct/solver noise
 - **Action per issue:** close original with forward link to either an existing tracker or a new genuinely-classified issue.
 - **Note:** #1311 (qabel/abel u-quadratic AD subset-domain bug) was identified during Sprint 25 Day 8 reassessment and CLOSED during Sprint 25 — that bug is fixed.
-- **Deliverable:** 6 cohort issues closed/reclassified with `sprint-27`-labeled successors filed as needed; updated `AUDIT_ALIAS_AD_CARRYFORWARD.md` with the Day 7 classification.
+- **Deliverable:** 6 cohort issues closed/reclassified with `sprint-27`-labeled successors filed as needed; updated `SPRINT_25/AUDIT_ALIAS_AD_CARRYFORWARD.md` with the Day 7 classification.
 
 ### Priority 3: Pattern E Carryforward Re-Verification (#1141, #1144, #1147) (~4-6h)
 - Phase E (Pattern E routing) was cancelled per the literal Checkpoint 2 NO-GO routing during Sprint 25. The three open Pattern E issues remain unresolved and may have shifted bucket via the Sprint 25 fix-in-place series #1338..#1352. Re-verify each before scoping fix work.
 - **Deliverable:** Per-issue re-verification under the post-Sprint-25 emit pipeline; either fix or rescope (file new issues if shape changed; close with reclassification note if subsumed).
 
 ### Priority 4: Translation Timeout — Option 1 Short-Circuit (#885, #931, #932, #1185, #1228, #1224) (~4-6h)
-- **5 hard timeouts** (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`) plus the `mine` `internal_error` (#1224, ParamRef-valued IndexOffset). Per Sprint 25 Prep Task 8 (`PROFILE_HARD_TIMEOUTS.md`), all 5 timeouts share the `SetMembershipTest` / `enumerate_equation_instances` Cartesian-explosion pattern.
+- **5 hard timeouts** (`iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase`) plus the `mine` `internal_error` (#1224, ParamRef-valued IndexOffset). Per Sprint 25 Prep Task 8 (`SPRINT_25/PROFILE_HARD_TIMEOUTS.md`), all 5 timeouts share the `SetMembershipTest` / `enumerate_equation_instances` Cartesian-explosion pattern.
 - **Implement Option 1 short-circuit** in `src/ad/index_mapping.py::enumerate_equation_instances` (with supporting behavior in `resolve_set_members` and the static `SetMembershipTest` failure path in `src/ir/condition_eval.py`). Should unblock at least srpchase and possibly iswnm.
 - **Defer #1224 (mine ParamRef IndexOffset)** to a separate effort — the IndexOffset offset-as-Expr extension is a larger architectural change.
 - **Deliverable:** Option 1 short-circuit landed with regression tests; srpchase translates; iswnm + nebrazil + sarf + mexls re-profiled to confirm whether they cross the budget after the fix.
@@ -1067,13 +1067,13 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 - **Final Translation Fixes (2-3h)**
   - Address remaining translation blockers
   - Handle newly-discovered patterns from late-arriving parsed models
-  - Target: translate rate ≥ 97% of parsed models
+  - Target: translate rate ≥ 95% of parsed models (matches Sprint 27 Acceptance Criteria below; Sprint 28 steps up to ≥ 97%)
   - **Deliverable:** Final translation fixes
 
 - **Final Solve Fixes (2h)**
   - Address any remaining solvable `path_syntax_error` or `path_solve_terminated` models
   - Apply solution forcing strategies to divergent models
-  - Target: solve rate ≥ 68% of translated models
+  - Target: solve rate ≥ 82% of translated models (matches Sprint 27 Acceptance Criteria below; modest +1pp bump on Sprint 26's ≥ 81% if forcing strategies recover 1–2 divergent models)
   - **Deliverable:** Final solve fixes
 
 ### Pipeline Retest (~2h)
@@ -1165,7 +1165,7 @@ Additionally, 3 models (dinam, ferts, tricp) entered path_syntax_error after the
 ### Pipeline Retest (~2h)
 - Full pipeline run with PATH feedback integration
 - Record final metrics
-- **Deliverable:** Updated metrics; expected full pipeline match ≥ 45%
+- **Deliverable:** Updated metrics; expected full pipeline match ≥ 48% (matches Sprint 28 Acceptance Criteria below; up from Sprint 27's ≥ 46%)
 
 ## Deliverables
 - Regression-based performance benchmarks (replacing absolute thresholds)
