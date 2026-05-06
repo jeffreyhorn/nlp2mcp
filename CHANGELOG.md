@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 25 Summary - 2026-05-05
 
-**Duration:** 16 days (Day 0 – Day 15) — 1 day longer than Sprint 24 to absorb the Day 5 pivot | **5/7 acceptance criteria met (4 of 7 reaching STRETCH)**
+**Duration:** 16 days (Day 0 – Day 15) — 1 day longer than Sprint 24 to absorb the Day 5 pivot | **6/8 acceptance criteria met (4 of 8 reaching STRETCH; Parse + Tests are the other 2 met)**
 
 #### Metrics (Baseline → Final, 142-scope; pipeline scope narrowed from 143 by 1-model convexity reclassification mid-sprint)
 - **Parse:** 143/143 → 142/142 (100% of current scope) | **Translate:** 135/143 → 133/142 (93.7%; −2 net = Day 12 saras gate + scope shift)
@@ -40,9 +40,9 @@ The Day 5 investigation (`DAY5_PATTERN_A_INVESTIGATION.md`, PR #1305) disproved 
 - **Emitter recovery (80–100% budget):** 71% (5 influx / 7 fixes) — within budget but on the high end ✅
 
 #### Sprint 25 Known Issues (Tracked for Sprint 26, labeled `sprint-26`)
-- **5 net-new (Sprint 25 Day 13):** #1354 (camcge phantom IndexOffset), #1355 (cesam2 phantom IndexOffset on `nu_COLSUM`), #1356 (fawley `$171` domain violations), #1357 (otpop `$171` domain violations — likely subsumed by #1334), #1358 (closed as duplicate of #1224)
-- **19 carryforward (existing issues with sprint-26 label added):** Pattern A cohort #1138, #1139, #1140, #1142, #1145, #1150 (per Day 7 sweep, NOT actually Pattern A — for reclassification); Phase E #1141, #1144, #1147 (cancelled per literal Checkpoint 2 NO-GO routing); Pattern C launch #1306, #1307; translation timeouts #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant), #1224 (mine ParamRef IndexOffset, supersedes #1358); AD residuals from Day 11 fix-in-place series #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term)
-- **Total Sprint 26 backlog: 4 net-new + 19 carryforward = 23 issues**
+- **5 issues filed during Sprint 25 Day 13 — 1 closed as duplicate → 4 net-new open:** #1354 (camcge phantom IndexOffset), #1355 (cesam2 phantom IndexOffset on `nu_COLSUM`), #1356 (fawley `$171` domain violations), #1357 (otpop `$171` domain violations — likely subsumed by #1334) are the 4 open net-new; #1358 was filed for the mine `internal_error` but closed as duplicate of pre-existing #1224 during Day 13 (the bug is still tracked, just via the older issue ID).
+- **19 carryforward (existing issues with sprint-26 label added):** Pattern A cohort #1138, #1139, #1140, #1142, #1145, #1150 (per Day 7 sweep, NOT actually Pattern A — for reclassification); Phase E #1141, #1144, #1147 (cancelled per literal Checkpoint 2 NO-GO routing); Pattern C launch #1306, #1307; translation timeouts #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant), #1224 (mine ParamRef IndexOffset, supersedes the closed #1358); AD residuals from Day 11 fix-in-place series #1334 (scalar-constraint stationarity spurious Sum), #1335 (missing dzdef/dp cross-term)
+- **Total Sprint 26 backlog: 4 net-new open + 19 carryforward = 23 issues** (5 filed in Sprint 25 Day 13, 1 closed as duplicate)
 
 ### Sprint 25 Day 14 — Final Pipeline Retest
 
