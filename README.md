@@ -36,7 +36,19 @@ Epic 2 (Sprints 6-12) is complete, expanding parser coverage to 100% (28/28 mode
 
 Epic 3 (Sprints 13-17) is complete, delivering GAMSLIB testing infrastructure, automated reporting, and the v1.1.0 release. For detailed sprint summaries, see [docs/planning/EPIC_3/SUMMARY.md](docs/planning/EPIC_3/SUMMARY.md).
 
-Epic 4 Sprint 18 is complete, focused on eliminating path_syntax_error failures. Final metrics across 159 convex models: Parse 61/159 (38.4%), Translate 48/61 (78.7%), Solve 20/48 (41.7%), Full Pipeline 7/159 (4.4%). Key achievements: +7 solving models (13→20), -15 syntax errors (22→7), +3 full pipeline matches (4→7). 3294 tests passing. See [docs/releases/v1.2.0.md](docs/releases/v1.2.0.md) for details.
+Epic 4 (Sprints 18-28) targets the GAMSLIB convex-continuous corpus with the goal of bringing the full pipeline (parse → translate → solve → match NLP reference) up across as many models as possible. Sprints 18-25 are complete; Sprint 26 is the next planned cycle.
+
+**Sprint 25 final metrics (2026-05-05, in-scope = 142 convex-continuous models):**
+
+| Stage | Count | % of in-scope | Δ vs Sprint 18 baseline |
+|---|---:|---:|---:|
+| Parse | 142/142 | 100.0% | +81 (61→142, after gamslib scope expansion + grammar coverage work) |
+| Translate | 133/142 | 93.7% | +85 (48→133) |
+| Solve | 104/133 | 78.2% | +84 (20→104) |
+| Full Pipeline (match NLP reference) | 60/142 | 42.3% | +53 (7→60) |
+| Tests | 4,735 passing | — | +1,441 (3,294→4,735) |
+
+**Sprint 25 highlights:** Day 5 pivot disproved the original Pattern A alias-AD hypothesis on three Phase 1 models (qabel, abel, launch) via a reusable trace + emitted-artifact + formal-derivative methodology; Pattern C narrowed to launch-shape alias-of-IndexOffset (#1306); fix-in-place series #1338..#1352 recovered the original Checkpoint 2 NO-GO (Match 52→60, Solve 92→104, model_infeasible 14→4); WS4 small priorities #1270 (multi-solve gate Approach A — saras driver) and #1271 (`_loop_tree_to_gams` dispatcher refactor, ~140 LOC removed, byte-diff verified across all 141 currently-translating models). For full sprint history and per-sprint metrics, see [docs/planning/EPIC_4/PROJECT_PLAN.md](docs/planning/EPIC_4/PROJECT_PLAN.md) §"Rolling KPIs & Tracking" and individual sprint retrospectives under `docs/planning/EPIC_4/SPRINT_*/SPRINT_RETROSPECTIVE.md`.
 
 ## Installation
 
@@ -325,15 +337,15 @@ Solve mcp_model using MCP;
 
 ### Python API
 
-After an editable install (`pip install -e .`) the package imports use the package name. Example usage:
+The installed package exposes its modules under the `src.*` namespace (per `pyproject.toml` `[tool.setuptools.packages.find] include = ["src*"]`). After an editable install (`pip install -e .`) you can import them directly:
 
 ```python
-from nlp2mcp.ir.parser import parse_model_file
-from nlp2mcp.ir.normalize import normalize_model
-from nlp2mcp.ad.gradient import compute_objective_gradient
-from nlp2mcp.ad.constraint_jacobian import compute_constraint_jacobian
-from nlp2mcp.kkt.assemble import assemble_kkt_system
-from nlp2mcp.emit.emit_gams import emit_gams_mcp
+from src.ir.parser import parse_model_file
+from src.ir.normalize import normalize_model
+from src.ad.gradient import compute_objective_gradient
+from src.ad.constraint_jacobian import compute_constraint_jacobian
+from src.kkt.assemble import assemble_kkt_system
+from src.emit.emit_gams import emit_gams_mcp
 
 # Full pipeline
 model = parse_model_file("examples/simple_nlp.gms")
@@ -346,7 +358,12 @@ gams_code = emit_gams_mcp(kkt, model_name="mcp_model", add_comments=True)
 print(gams_code)
 ```
 
-Note: if you prefer running from the repository without installing, either set `PYTHONPATH=.`, or run modules directly (for example `python -m src.cli ...`), but the recommended workflow for development is an editable install so imports use `nlp2mcp.*`.
+Equivalent CLI invocation:
+
+```bash
+nlp2mcp examples/simple_nlp.gms -o output_mcp.gms     # installed
+python -m src.cli examples/simple_nlp.gms -o output_mcp.gms  # from source checkout
+```
 
 ## Project Structure
 
@@ -354,35 +371,71 @@ Note: if you prefer running from the repository without installing, either set `
 nlp2mcp/
 ├── src/
 │   ├── ad/           # Symbolic differentiation engine
-│   │   ├── api.py              # High-level API
-│   │   ├── differentiate.py    # Core differentiation rules
-│   │   ├── simplify.py         # Expression simplification
-│   │   ├── evaluate.py         # AST evaluation
-│   │   ├── gradient.py         # Gradient computation
-│   │   ├── jacobian.py         # Jacobian computation
-│   │   ├── mapping.py          # Index mapping utilities
-│   │   └── validation.py       # Finite-difference validation
-│   ├── emit/         # Code generation for GAMS MCP (planned)
-│   ├── gams/         # GAMS grammar and parsing utilities
+│   │   ├── api.py                  # High-level differentiation API
+│   │   ├── ad_core.py              # Core symbolic operations
+│   │   ├── derivative_rules.py     # Per-function derivative rules
+│   │   ├── evaluator.py            # AST evaluation
+│   │   ├── gradient.py             # Objective gradient
+│   │   ├── jacobian.py             # Equality Jacobian
+│   │   ├── constraint_jacobian.py  # Constraint Jacobian (eq + ineq)
+│   │   ├── index_mapping.py        # Index/instance enumeration
+│   │   ├── lp_coefficients.py      # LP coefficient extraction
+│   │   ├── minmax_flattener.py     # min/max smoothing
+│   │   ├── sparsity.py             # Sparsity tracking
+│   │   ├── term_collection.py      # Like-term + power collection
+│   │   └── validation.py           # Finite-difference validation
+│   ├── emit/         # GAMS MCP code generation
+│   │   ├── emit_gams.py            # Top-level emitter
+│   │   ├── equations.py            # Equation block emit
+│   │   ├── expr_to_gams.py         # Expression → GAMS string
+│   │   ├── model.py                # Model statement emit
+│   │   ├── original_symbols.py     # Source-symbol re-emission
+│   │   └── templates.py            # Comment / banner templates
+│   ├── gams/         # GAMS grammar (Lark)
 │   ├── ir/           # Intermediate representation
-│   │   ├── ast.py              # Expression AST nodes
-│   │   ├── model_ir.py         # Model IR data structures
-│   │   ├── normalize.py        # Constraint normalization
-│   │   ├── parser.py           # GAMS parser
-│   │   └── symbols.py          # Symbol table definitions
-│   ├── kkt/          # KKT system assembly (planned)
+│   │   ├── ast.py                  # Expression AST nodes
+│   │   ├── condition_eval.py       # Static $cond evaluation
+│   │   ├── diagnostics.py          # Parse-time diagnostics
+│   │   ├── metrics.py              # Model statistics
+│   │   ├── minmax_detection.py     # min/max detection
+│   │   ├── model_ir.py             # Model IR data structures
+│   │   ├── normalize.py            # Constraint normalization
+│   │   ├── parser.py               # GAMS parser (parse tree → IR)
+│   │   ├── preprocessor.py         # $include / $ifThen / macros
+│   │   ├── scalar_offset_resolver.py  # IndexOffset resolution
+│   │   ├── simplification_pipeline.py # Simplification orchestration
+│   │   ├── symbols.py              # Symbol table definitions
+│   │   └── transformations/        # IR rewriting passes
+│   ├── kkt/          # KKT system assembly
+│   │   ├── assemble.py             # Top-level KKT assembly
+│   │   ├── complementarity.py      # Comp pairs (bounds + ineq)
+│   │   ├── empty_equation_detector.py
+│   │   ├── kkt_system.py           # KKT data structures
+│   │   ├── naming.py               # Multiplier / equation naming
+│   │   ├── objective.py            # Objective expansion
+│   │   ├── partition.py            # Equality / inequality split
+│   │   ├── reformulation.py        # MCP reformulations
+│   │   ├── scaling.py              # Curtis-Reid / byvar scaling
+│   │   ├── sqr_reformulation.py    # power(x,2) → x*x
+│   │   └── stationarity.py         # Stationarity equations
+│   ├── validation/   # Multi-solve driver gate (#1265, #1270)
 │   └── utils/        # Utility functions
 ├── tests/
-│   ├── ad/           # Differentiation tests
-│   ├── gams/         # Parser tests
-│   └── ir/           # IR and normalization tests
+│   ├── unit/         # Fast unit tests (~10s)
+│   ├── integration/  # Integration tests (~60s)
+│   ├── e2e/          # End-to-end tests
+│   └── validation/   # Validation tests
 ├── examples/         # Example GAMS models
-├── docs/             # Additional documentation
-│   ├── ad/                   # Automatic differentiation docs
+├── data/gamslib/     # GAMSLIB pipeline (raw sources, MCP outputs, status)
+├── docs/             # Documentation
+│   ├── ad/                   # AD module docs
 │   ├── architecture/         # System architecture
+│   ├── concepts/             # Original concepts (IDEA, NLP2MCP_HIGH_LEVEL)
 │   ├── emit/                 # GAMS emission docs
+│   ├── issues/               # In-tree issue tracking
 │   ├── kkt/                  # KKT assembly docs
-│   └── planning/             # Sprint plans and retrospectives
+│   └── planning/             # Per-Epic plans, sprints, retrospectives
+├── scripts/gamslib/  # Pipeline runners + status reporting
 ├── pyproject.toml    # Project configuration
 ├── Makefile          # Development commands
 └── README.md         # This file
@@ -442,16 +495,7 @@ pytest -n auto          # Auto-detect CPU count
 
 ## Test Organization
 
-The test suite is split into unit, integration, e2e, and validation layers. You can run the different subsets with the scripts in `./scripts/` or via pytest directly. Below are the counts collected locally on Nov 5, 2025 (run in this repository with `python3 -m pytest --collect-only`):
-
-- Total collected tests: **1281**
-- Marker breakdown (may overlap if tests carry multiple markers):
-  - unit: **434**
-  - integration: **223**
-  - e2e: **45**
-  - validation: **66**
-
-Note: marker-based counts can overlap and the total may include tests without markers or additional collected items (fixtures, doctests, etc.). To reproduce these numbers locally run:
+The test suite is split into unit, integration, e2e, and validation layers. You can run the different subsets with the scripts in `./scripts/` or via pytest directly. End of Sprint 25 (2026-05-05): **4,735 tests passing** in `make test` (10 skipped, 2 xfailed). For per-layer marker counts you can reproduce locally:
 
 ```bash
 # Total collected tests
@@ -511,53 +555,79 @@ The `examples/` directory contains sample GAMS NLP models:
 - ✅ `Equations` (scalar and indexed)
 - ✅ `Table` data blocks
 
-### Preprocessing
-- ✅ `$include` directive (nested, relative paths)
-
 ### Comments
 - ✅ GAMS inline comments (`* comment`)
 - ✅ C-style line comments (`// comment`)
 - ✅ Block comments (`$ontext ... $offtext`)
 
-**Note:** Input file comments are stripped during parsing and do not appear in the output. However, the emitter can add explanatory comments to the output (controlled by `--no-comments` flag).
+**Note:** Input file comments are stripped during parsing and do not appear in the output. However, the emitter can add explanatory comments to the output (controlled by `--no-comments` flag). For full preprocessor / `$`-directive coverage see §"Preprocessor / Compilation Directives" below.
 
 ### Expressions
-- ✅ Arithmetic: `+`, `-`, `*`, `/`, `^`
-- ✅ Functions: `exp`, `log`, `sqrt`, `sin`, `cos`, `tan`
-- ✅ Aggregation: `sum(i, expr)`
+- ✅ Arithmetic: `+`, `-`, `*`, `/`, `^`, `**`
+- ✅ Index offsets: `i+1`, `t-2`, etc. (constant integer offsets)
+- ✅ Differentiable functions: `exp`, `log`, `log2`, `log10`, `sqrt`, `sin`, `cos`, `tan`, `power(x,n)`, `sqr(x)`, `abs()` (smooth approximation with `--smooth-abs`)
+- ✅ Set/index intrinsics: `ord(i)`, `card(i)`, `sameas(i, j)`, `i.first`, `i.last`, `i.pos`
+- ✅ Aggregation: `sum(i, expr)`, `prod(i, expr)`, `smax(i, expr)`, `smin(i, expr)`
+- ✅ Conditional aggregation: `sum(i$cond, expr)` and `(i,j)$cond` tuple domains
 - ✅ Comparisons: `=`, `<>`, `<`, `>`, `<=`, `>=`
-- ✅ Logic: `and`, `or`
-- ✅ `min()` and `max()` (reformulated to complementarity)
-- ✅ `abs()` (smooth approximation with `--smooth-abs`)
+- ✅ Logic: `and`, `or`, `not`
+- ✅ `min()` / `max()` (reformulated to complementarity)
+- ✅ Dollar conditionals: `expr$cond`, `lvalue$cond = rhs`
 
 ### Equations
 - ✅ Relations: `=e=` (equality), `=l=` (≤), `=g=` (≥)
-- ✅ Variable bounds: `.lo`, `.up`, `.fx`
+- ✅ Variable bounds: `.lo`, `.up`, `.fx` (scalar + indexed + expression-valued)
+- ✅ Variable scaling: `.scale` (Sprint 23 #835)
+
+### Control Flow
+- ✅ `Loop(set, ...)` and filtered `Loop(i$cond, ...)` (parser + emitter — Sprint 25 #1271 dispatcher refactor unified the substituting and non-substituting paths)
+- ✅ `If(cond, then ; elseif cond, ... ; else ...)`
+- ✅ `While(cond, body)`
+
+### Preprocessor / Compilation Directives
+- ✅ `$include` (nested, relative paths)
+- ✅ `$if`, `$ifThen / $endIf / $else / $elseIf` (#705 + Sprint 24 #1264 partssupply)
+- ✅ `$set` / `$setglobal`, macro expansion in source
+- ✅ `$ontext / $offtext`, `$onEcho / $offEcho`, `$onEps / $offEps`
+- ✅ `$title`, `$eolcom`, `$onImplicitAssign / $offImplicitAssign`
+- ✅ `$onMultiR` / `$offMultiR`
 
 ### Model
 - ✅ `Model` declaration with equation lists or `/all/`
-- ✅ `Solve` statement with `using NLP` and objective
+- ✅ `Solve` statement with `using NLP|DNLP|QCP|MCP|CNS [minimizing|maximizing] <objvar>`
 
 ### Advanced Features
+- ✅ **NLP pre-solve**: `--nlp-presolve` warm-starts MCP from NLP optimum (helps non-convex models)
 - ✅ **Scaling**: Curtis-Reid and byvar scaling (`--scale auto|byvar`)
 - ✅ **Diagnostics**: Model statistics (`--stats`), Jacobian export (`--dump-jacobian`)
 - ✅ **Configuration**: `pyproject.toml` support for default options
 - ✅ **Logging**: Structured logging with verbosity control (`--verbose`, `--quiet`)
+- ✅ **Multi-solve driver gate** (Sprints 24-25, #1265 + #1270): refuses Dantzig–Wolfe / column-generation / saras-style primal-dual scripts where the converged objective is an iterative fixed point rather than a single NLP's optimum
 
 ### Not Yet Supported
-- ❌ Control flow (`Loop`, `If`, `While`)
-- ❌ Other `$` directives (`$if`, `$set`, etc.)
-- ❌ External/user-defined functions
-- ❌ Other non-differentiable functions (floor, ceil, sign, etc.)
+- ❌ True non-differentiable functions at the AD layer: `floor`, `ceil`, `sign`, `mod`, `round`. These parse, but their derivatives are not implemented (the only smoothable case today is `abs()` via `--smooth-abs`).
+- ❌ Stochastic / sampling functions: `uniform`, `normal`, `gamma`, `loggamma`, `psi`. Parse but cannot be differentiated.
+- ❌ External / user-defined functions
+- ❌ Parameter-valued `IndexOffset` (e.g. `x(i+li(k))` where `li` is a `Parameter`). Tracked in [#1224](https://github.com/jeffreyhorn/nlp2mcp/issues/1224) for Sprint 26.
+- ❌ MIP / MINLP / discrete variables. Out of KKT scope by design.
 
 ## Documentation
 
 ### Concepts & Planning
 - [docs/concepts/IDEA.md](docs/concepts/IDEA.md) - Original concept: How KKT conditions transform NLP to MCP
 - [docs/concepts/NLP2MCP_HIGH_LEVEL.md](docs/concepts/NLP2MCP_HIGH_LEVEL.md) - Feasibility study and implementation blueprint
-- [docs/planning/EPIC_1/SUMMARY.md](docs/planning/EPIC_1/SUMMARY.md) - Epic 1 sprint summary and feature overview
-- [docs/planning/EPIC_1/PROJECT_PLAN.md](docs/planning/EPIC_1/PROJECT_PLAN.md) - Detailed 5-sprint development plan
-- [docs/planning/EPIC_1/README.md](docs/planning/EPIC_1/README.md) - Sprint summaries and retrospectives
+
+**Per-Epic plans** (each Epic groups several sprints around a theme):
+
+| Epic | Sprints | Focus | PROJECT_PLAN | README |
+|---|---|---|---|---|
+| 1 | 1-5 | Parser, AD, KKT synthesis, packaging | [PROJECT_PLAN](docs/planning/EPIC_1/PROJECT_PLAN.md) | [README](docs/planning/EPIC_1/README.md) |
+| 2 | 6-12 | Parser coverage to 100% (28/28 fixtures), aggressive simplification, CI | [PROJECT_PLAN](docs/planning/EPIC_2/PROJECT_PLAN.md) | — |
+| 3 | 13-17 | GAMSLIB testing infrastructure, automated reporting, v1.1.0 release | [PROJECT_PLAN](docs/planning/EPIC_3/PROJECT_PLAN.md) | — |
+| 4 | 18-28 | GAMSLIB convex-continuous corpus: parse → translate → solve → match | [PROJECT_PLAN](docs/planning/EPIC_4/PROJECT_PLAN.md) | — |
+
+For per-sprint detail under any Epic, see `docs/planning/EPIC_N/SPRINT_M/SPRINT_RETROSPECTIVE.md` (where applicable). Sprint 25 retrospective lives at [docs/planning/EPIC_4/SPRINT_25/SPRINT_RETROSPECTIVE.md](docs/planning/EPIC_4/SPRINT_25/SPRINT_RETROSPECTIVE.md).
+
 - [docs/development/AGENTS.md](docs/development/AGENTS.md) - Agent-based development notes
 
 ### Technical Documentation
@@ -580,7 +650,7 @@ The `examples/` directory contains sample GAMS NLP models:
 
 **Please read [CONTRIBUTING.md](CONTRIBUTING.md) before contributing!**
 
-This project is in active development (Sprint 5 in progress - hardening, packaging, and documentation). Contributions are welcome!
+This project is in active development. Sprint 25 (Epic 4 — GAMSLIB corpus pipeline) closed 2026-05-05; Sprint 26 starts next with focus on Pattern C gate generalization, Pattern A cohort reclassification, and AD residuals on `otpop`. Contributions are welcome!
 
 ### Quick Start for Contributors
 
@@ -597,7 +667,7 @@ This project is in active development (Sprint 5 in progress - hardening, packagi
    ```bash
    make format   # Auto-format code
    make lint     # Type checking and linting
-   make test     # All tests must pass (602+ tests)
+   make test     # All tests must pass (4,735+ as of Sprint 25)
    ```
 6. **Submit PR**: Push branch and create Pull Request on GitHub
 
@@ -621,12 +691,24 @@ MIT License - See LICENSE file for details
 
 ## Roadmap
 
-- **v0.1.0** (Sprint 1): ✅ Parser and IR - COMPLETE
-- **v0.2.0** (Sprint 2): ✅ Symbolic differentiation - COMPLETE
-- **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation - COMPLETE
-- **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations) - COMPLETE
-- **v0.4.0** (Sprint 4): ✅ Extended features and robustness - COMPLETE
-- **v1.0.0** (Sprint 5): 🔄 Production-ready with hardening, packaging, and comprehensive documentation - IN PROGRESS
+**Epic 1 — Foundations (Sprints 1-5):**
+- **v0.1.0** (Sprint 1): ✅ Parser and IR
+- **v0.2.0** (Sprint 2): ✅ Symbolic differentiation
+- **v0.3.0** (Sprint 3): ✅ KKT synthesis and MCP code generation
+- **v0.3.1** (Post Sprint 3): ✅ Issue #47 fix (indexed equations)
+- **v0.4.0** (Sprint 4): ✅ Extended features and robustness
+- **v1.0.0** (Sprint 5): ✅ Production-ready with hardening, packaging, and comprehensive documentation
+
+**Epic 2 — Parser coverage + simplification (Sprints 6-12):** ✅ COMPLETE — Parser coverage to 100% on the 28-fixture set; aggressive simplification with 26.19% term reduction; full CI infrastructure.
+
+**Epic 3 — GAMSLIB testing infrastructure (Sprints 13-17):** ✅ COMPLETE — Pipeline runner (`scripts/gamslib/run_full_test.py`), automated reporting, schema-versioned status JSON, **v1.1.0 release**.
+
+**Epic 4 — GAMSLIB corpus pipeline (Sprints 18-28):** 🔄 IN PROGRESS through Sprint 25.
+- ✅ **Sprints 18-25 complete** — Parse 142/142 (100%), Translate 133/142 (93.7%), Solve 104 (78.2% of translated), Match 60 (42.3% of in-scope), 4,735 tests passing
+- 🔄 **Sprint 26** (planned) — Pattern C gate generalization (#1354/#1355/#1356/#1357), Pattern A cohort reclassification, AD residuals (#1334/#1335). Targets: Match ≥45% (≥64), Solve Rate ≥81%, path_syntax_error ≤6.
+- 🔄 **Sprints 27-28** — Solver consultation, performance benchmarks, **v2.0.0 release**.
+
+For the Rolling KPIs table tracking per-sprint actuals + revised targets, see [docs/planning/EPIC_4/PROJECT_PLAN.md](docs/planning/EPIC_4/PROJECT_PLAN.md) §"Rolling KPIs & Tracking".
 
 ## Contact
 
