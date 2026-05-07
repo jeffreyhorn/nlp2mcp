@@ -213,7 +213,7 @@ stat_fb(j).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j)))))
 
    cclinpts produces `solution_comparison.comparison_status = mismatch` with NLP-MCP rel_diff ~69.9% on the obj. The Sprint 25 Day 7 cohort sweep determined this is NOT a Pattern A AD-layer bug (the emit has legitimate `fb(j-1) * 1$(not last(j))` lag offsets matching the source body) — it's a condition-guard or sign issue downstream of AD.
 
-   Original alias-AD framing tracked under the now-closed #1145 (closed Sprint 26 Day 1 per Pattern A cohort reclassification — see `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` §"Issue #1145").
+   Original alias-AD framing tracked under #1145, planned to be closed on Sprint 26 Day 1 per Pattern A cohort reclassification — see `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` §"Issue #1145". *(Editor: when filing this Sprint 27 issue after the actual #1145 closure, update this sentence to "now-closed #1145 (closed YYYY-MM-DD via PR #NNNN)" with the real closure date and PR reference.)*
 
    ## Reproduction
 
@@ -242,7 +242,7 @@ stat_fb(j).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j)))))
 
    ## Related
 
-   - **#1145** (closed Sprint 26 Day 1) — the original alias-AD framing, reclassified out via Day 7 cohort sweep + Sprint 26 Prep Task 4.
+   - **#1145** (planned for closure on Sprint 26 Day 1; replace with closed-date + PR ref when this Sprint 27 issue is actually filed) — the original alias-AD framing, reclassified out via Day 7 cohort sweep + Sprint 26 Prep Task 4.
    ````
 
 2. Comment on #1145 with: "Sprint 26 Prep Task 4 re-verification confirms Day 7 sweep classification: this is NOT a Pattern A AD bug — the emit has legitimate offset terms matching the source body. Refiled as new Sprint 27 issue: #NNNN. Closing #1145."
