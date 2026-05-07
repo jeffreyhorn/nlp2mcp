@@ -4,7 +4,7 @@
 **Timeline:** Complete before Sprint 26 Day 1
 **Goal:** Set up Sprint 26 for success — Pattern C Generalization, Pattern A Reclassification & Sprint 25 Carryforward (Match 60 → ≥ 64; Solve 104 → ≥ 108; path_syntax_error 12 → ≤ 6)
 
-**Key Insight from Sprint 25:** Sprint 25 spent Days 1–4 on Phase 1 alias-AD work that produced no Match gain because the underlying Pattern A hypothesis was wrong about the cohort. The Day 5 pivot (`SPRINT_25/DAY5_PATTERN_A_INVESTIGATION.md`) disproved the hypothesis in one day via a reusable methodology — trace capture under `SPRINT25_DAY2_DEBUG=1` + emitted-artifact byte comparison against the formal symbolic derivative. **Sprint 26 prep MUST apply this methodology PRE-Day-0 to the Pattern C generalization hypothesis (Priority 1).** That is the single highest-leverage Sprint 25 process recommendation (PR16) and the primary mitigation for the alias-AD architectural-drift risk that has now hit three consecutive sprints.
+**Key Insight from Sprint 25:** Sprint 25 spent Days 1–4 on Phase 1 alias-AD work that produced no Match gain because the underlying Pattern A hypothesis was wrong about the cohort. The Day 5 pivot (`docs/planning/EPIC_4/SPRINT_25/DAY5_PATTERN_A_INVESTIGATION.md`) disproved the hypothesis in one day via a reusable methodology — trace capture under `SPRINT25_DAY2_DEBUG=1` + emitted-artifact byte comparison against the formal symbolic derivative. **Sprint 26 prep MUST apply this methodology PRE-Day-0 to the Pattern C generalization hypothesis (Priority 1).** That is the single highest-leverage Sprint 25 process recommendation (PR16) and the primary mitigation for the alias-AD architectural-drift risk that has now hit three consecutive sprints.
 
 Sprint 25 also surfaced two structural-emit failure modes that are now explicit prep concerns: (a) the #1308 Pattern C launch fix passed unit + compile-only validation but produced a locally-infeasible MCP at full PATH solve (mitigation: PR19 pre-merge solve-time validation); (b) the #1349 `.fx → .l` side-effect fix passed pindyck integration but introduced a clobbering bug on clearlak that was only caught by Copilot reading the regenerated `.gms` artifact during PR review (mitigation: PR14 reaffirmation — every emit-touching PR must include a regenerated `.gms` diff). Both mitigations are prep-task work items.
 
@@ -68,7 +68,7 @@ This prep plan focuses on:
 
 ### Objective
 
-Create proactive list of assumptions and unknowns for Sprint 26 to prevent late discoveries during implementation. This is the first task because it surfaces risks that inform the design of all other prep tasks — particularly the Pattern C hypothesis validation (Task 3), the Pattern A reclassification pre-work (Task 4), and the PR19 CI design (Task 8). This task also carries forward the four end-of-sprint unknowns from Sprint 25 (KU-33 through KU-36 in `SPRINT_25/KNOWN_UNKNOWNS.md`).
+Create proactive list of assumptions and unknowns for Sprint 26 to prevent late discoveries during implementation. This is the first task because it surfaces risks that inform the design of all other prep tasks — particularly the Pattern C hypothesis validation (Task 3), the Pattern A reclassification pre-work (Task 4), and the PR19 CI design (Task 8). This task also carries forward the four end-of-sprint unknowns from Sprint 25 (KU-33 through KU-36 in `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md`).
 
 ### Why This Matters
 
@@ -110,7 +110,7 @@ Sprint 25 also surfaced **KU-34 (bucket churn confounds path_syntax_error metric
    - Is Phase E (Pattern E routing per `DESIGN_ALIAS_AD_ROLLOUT.md` §Phase 4) still the right framing post-Sprint-25, or do the 3 issues fit a different shape now?
 
    **Priority 4 (Translation Timeout Option 1 Short-Circuit):**
-   - Per `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` Task 8, the Option 1 short-circuit lands in `src/ad/index_mapping.py::enumerate_equation_instances` with supporting behavior in `resolve_set_members` (same file) and the static `SetMembershipTest` failure path in `src/ir/condition_eval.py`. Is this design still valid post-Sprint-25, or did the Sprint 25 #1338..#1341 IndexOffset / SetMembershipTest fixes shift the failure surface?
+   - Per `docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md` Task 8, the Option 1 short-circuit lands in `src/ad/index_mapping.py::enumerate_equation_instances` with supporting behavior in `resolve_set_members` (same file) and the static `SetMembershipTest` failure path in `src/ir/condition_eval.py`. Is this design still valid post-Sprint-25, or did the Sprint 25 #1338..#1341 IndexOffset / SetMembershipTest fixes shift the failure surface?
    - Will the Option 1 short-circuit recover only srpchase, or also unblock 1+ of {iswnm, mexls, nebrazil, sarf}? (Per S25 Prep Task 8: srpchase completes in 500s if budget extends to 900s; the others timeout at 900s.)
    - Should #1224 (mine ParamRef IndexOffset) be deferred to a separate effort, or bundled with Priority 4?
 
@@ -134,7 +134,7 @@ Sprint 25 also surfaced **KU-34 (bucket churn confounds path_syntax_error metric
 
 4. **Assign verification deadlines** (Day 0–1 for Critical, Day 2–3 for High, Day 5+ for Medium/Low).
 
-5. **Create document** following `../SPRINT_25/KNOWN_UNKNOWNS.md` format, including a Task-to-Unknown mapping table that ties each prep task to the specific unknowns it researches.
+5. **Create document** following `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` format, including a Task-to-Unknown mapping table that ties each prep task to the specific unknowns it researches.
 
 ### Changes
 
@@ -201,7 +201,7 @@ Identify which model's convexity status changed during Sprint 25 Days 1–10 to 
 
 ### Why This Matters
 
-The Sprint 25 Day 14 final retest used 142 in-scope models; the Sprint 25 Day 0 baseline (`SPRINT_25/BASELINE_METRICS.md`) used 143. The 1-model reduction is small (1/143 = 0.7%) and was treated as a runtime filter rather than a scope edit per `BASELINE_METRICS.md` §5 — but the specific model that shifted is currently undocumented. Sprint 26's bucket-provenance baseline (Task 9) cannot be accurate without resolving this. If the shift was triggered by a Sprint-25 code change (e.g., the Day 1 grammar / determinism work), Sprint 26 should know which model is affected and why.
+The Sprint 25 Day 14 final retest used 142 in-scope models; the Sprint 25 Day 0 baseline (`docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md`) used 143. The 1-model reduction is small (1/143 = 0.7%) and was treated as a runtime filter rather than a scope edit per `BASELINE_METRICS.md` §5 — but the specific model that shifted is currently undocumented. Sprint 26's bucket-provenance baseline (Task 9) cannot be accurate without resolving this. If the shift was triggered by a Sprint-25 code change (e.g., the Day 1 grammar / determinism work), Sprint 26 should know which model is affected and why.
 
 ### Background
 
@@ -244,7 +244,7 @@ grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/
 
 - New sub-§"Sprint 25 Mid-Sprint Reclassification" in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5
 - Identified model + new convexity status + triggering commit SHA documented inline
-- Note added to `SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section
+- Note added to `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.5
 
 ### Acceptance Criteria
@@ -469,7 +469,7 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 
 - Sprint 25 Day 11 SPRINT_LOG: lists the fix-in-place series #1338..#1352. #1338 specifically is "expr_to_gams now handles IndexOffset as a direct index of SetMembershipTest" affecting catmix/glider/markov/tricp.
 - Phase E original design: `docs/planning/EPIC_4/SPRINT_25/DESIGN_ALIAS_AD_ROLLOUT.md` §Phase 4
-- Sprint 25 cohort sweep classified Pattern E (3 issues): `SPRINT_25/DAY7_COHORT_SWEEP.md`
+- Sprint 25 cohort sweep classified Pattern E (3 issues): `docs/planning/EPIC_4/SPRINT_25/DAY7_COHORT_SWEEP.md`
 - Sprint 25 retrospective §Priority 3 (Pattern E carryforward): "Re-verify each before scoping Sprint 26 fix work."
 
 ### What Needs to Be Done
@@ -554,7 +554,7 @@ Sprint 26 Priority 4 budgets 4–6h for Option 1 short-circuit landing. That bud
 
 ### What Needs to Be Done
 
-1. **Re-read `SPRINT_25/PROFILE_HARD_TIMEOUTS.md` Option 1 design.**
+1. **Re-read `docs/planning/EPIC_4/SPRINT_25/PROFILE_HARD_TIMEOUTS.md` Option 1 design.**
 
 2. **Verify the patch sites still exist and have the expected shape post-Sprint-25:**
 
@@ -725,7 +725,7 @@ Sprint 25's #1308 Pattern C launch fix passed all unit tests and `gams action=c`
 2. **Decide trigger conditions:**
    - File patterns: `src/emit/*.py`, `src/kkt/stationarity.py`, possibly `src/ad/derivative_rules.py`
    - PR-only (not push to main, since main should already be validated)
-   - Skippable via PR label (`[skip-emit-solve-ci]`) for refactor-only PRs that don't change emit semantics
+   - Skippable via PR label `skip-emit-solve-ci` for refactor-only PRs that don't change emit semantics (the label name is plain text — no brackets — to keep it consistent with the `byte-stable-refactor` label introduced in Task 10)
 
 3. **Decide target model list:**
    - Minimum: the 4 Pattern C target models (camcge, cesam2, fawley, otpop) — ensures PR19 catches Pattern C work specifically
@@ -897,7 +897,7 @@ Sprint 25's #1349 `.fx → .l` side-effect fix passed pindyck integration tests 
 
 2. **Draft the rule:**
 
-   > **Emit-affecting PRs:** Every PR that modifies any file under `src/emit/` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff. Use `.venv/bin/python -m src.cli data/gamslib/raw/<model>.gms -o data/gamslib/mcp/<model>_mcp.gms --skip-convexity-check --quiet` to regenerate. Reviewers MUST read the relevant section of the regenerated artifact. Refactor-only PRs that pass byte-diff verification across the corpus may use the `[byte-stable-refactor]` PR label and document the verification command in the PR description in lieu of an artifact diff.
+   > **Emit-affecting PRs:** Every PR that modifies any file under `src/emit/` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff. Use `.venv/bin/python -m src.cli data/gamslib/raw/<model>.gms -o data/gamslib/mcp/<model>_mcp.gms --skip-convexity-check --quiet` to regenerate. Reviewers MUST read the relevant section of the regenerated artifact. Refactor-only PRs that pass byte-diff verification across the corpus may apply the `byte-stable-refactor` PR label (no brackets — plain GitHub label name) and document the verification command in the PR description in lieu of an artifact diff.
 
 3. **Add the rule** to the appropriate `CONTRIBUTING.md` section.
 
@@ -928,7 +928,7 @@ test -f .github/PULL_REQUEST_TEMPLATE.md && \
 ### Acceptance Criteria
 
 - [ ] CONTRIBUTING.md has the new rule with rationale + regeneration command + reviewer instruction
-- [ ] Refactor-only exception documented (`[byte-stable-refactor]` label + PR description requirement)
+- [ ] Refactor-only exception documented (`byte-stable-refactor` label + PR description requirement)
 - [ ] PULL_REQUEST_TEMPLATE.md (if it exists) updated with checklist entry
 - [ ] Unknown 6.4 verified and updated in KNOWN_UNKNOWNS.md
 
@@ -1048,7 +1048,7 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 
 - [ ] **All 11 prep tasks complete** before Sprint 26 Day 1
 - [x] `SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories**
-- [ ] `SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
+- [ ] `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
 - [ ] `SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3)
 - [ ] `SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
 - [ ] `SPRINT_26/PATTERN_E_STATUS.md` re-verifies all 3 Phase E models (Task 5)
@@ -1130,6 +1130,7 @@ All chains converge at Task 11 (final schedule). The longest single chain is 3 t
 ---
 
 **Document Created:** 2026-05-06
+**Last Updated:** 2026-05-07 (Task 1 completed; Tasks 2–10 gained "Unknowns Verified" metadata)
 **Total Prep Tasks:** 11
 **Estimated Total Effort:** 28–39 hours
 **Critical Path Length:** 3 tasks (longest chain — e.g., Task 1 → Task 3 → Task 11)

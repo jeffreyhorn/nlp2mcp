@@ -799,7 +799,7 @@ EOF
 **Tasks to Complete:**
 
 1. **Survey existing CI** — `.github/workflows/*.yml` to understand current trigger/job structure.
-2. **Decide trigger conditions** — file patterns (`src/emit/*.py`, `src/kkt/stationarity.py`, possibly `src/ad/derivative_rules.py`); PR-only; skippable via `[skip-emit-solve-ci]` PR label for refactor-only changes.
+2. **Decide trigger conditions** — file patterns (`src/emit/*.py`, `src/kkt/stationarity.py`, possibly `src/ad/derivative_rules.py`); PR-only; skippable via `skip-emit-solve-ci` PR label for refactor-only changes.
 3. **Decide target model list** — recommended: 4 Pattern C targets (camcge, cesam2, fawley, otpop) + 3 Tier 0 canaries (dispatch, quocge, partssupply). Configurable via `.github/path-solve-ci-targets.txt`.
 4. **Decide PATH timeout** — recommended 30s/model. Time the 11 Tier 0/1 canaries locally to confirm the budget.
 5. **Decide failure handling** — hard-fail on Tier 0 canary regression; soft-fail on Pattern C target models (informational, expected to fail until Sprint 26 lands the fix). PR comment with per-model status.
@@ -855,7 +855,7 @@ locally-infeasible MCP at full PATH solve).
 ## Key findings
 
 - Trigger files: <list>
-- PR-label exception: [skip-emit-solve-ci] for refactor-only PRs
+- PR-label exception: `skip-emit-solve-ci` for refactor-only PRs
 - Target model list: <N> models
 - PATH timeout: 30s/model
 - Estimated CI overhead: ~<X>min on top of make test
@@ -1042,10 +1042,10 @@ EOF
 **Tasks to Complete:**
 
 1. **Read current `CONTRIBUTING.md`** to identify the right section for the new rule (likely §"PR Submission Checklist" or §"Code Changes").
-2. **Draft the rule** with: trigger condition (file patterns), regeneration command, reviewer instruction, refactor-only exception via `[byte-stable-refactor]` PR label.
+2. **Draft the rule** with: trigger condition (file patterns), regeneration command, reviewer instruction, refactor-only exception via `byte-stable-refactor` PR label.
 3. **Add the rule** to the appropriate `CONTRIBUTING.md` section.
 4. **Add corresponding entry** to `.github/PULL_REQUEST_TEMPLATE.md` (if it exists) under the PR checklist.
-5. **Survey Sprint 24/25 PR titles** for refactor-only candidates to estimate how often the `[byte-stable-refactor]` exception will be used.
+5. **Survey Sprint 24/25 PR titles** for refactor-only candidates to estimate how often the `byte-stable-refactor` exception will be used.
 
 **Deliverables:**
 
@@ -1077,7 +1077,7 @@ In `SPRINT_26/PREP_PLAN.md` §Task 10:
 Under `[Unreleased]` → `### Sprint 26 Preparation`, prepend:
 
 ```markdown
-- **Prep Task 10 COMPLETE (YYYY-MM-DD):** Updated CONTRIBUTING.md with emit-PR `.gms` artifact rule (PR14 reaffirmation). Hard rule: every PR that touches `src/emit/*.py` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff; reviewers MUST read the relevant section. Refactor-only exception via `[byte-stable-refactor]` PR label + PR description requirement. Verified Unknown 6.4.
+- **Prep Task 10 COMPLETE (YYYY-MM-DD):** Updated CONTRIBUTING.md with emit-PR `.gms` artifact rule (PR14 reaffirmation). Hard rule: every PR that touches `src/emit/*.py` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff; reviewers MUST read the relevant section. Refactor-only exception via `byte-stable-refactor` PR label + PR description requirement. Verified Unknown 6.4.
 ```
 
 **Quality Gate:**
@@ -1098,7 +1098,7 @@ PR #1360 review.
 
 ## Key findings
 
-- Refactor-only exception: [byte-stable-refactor] PR label + PR
+- Refactor-only exception: `byte-stable-refactor` PR label + PR
   description requirement (document byte-diff verification command +
   result)
 - Sprint 24/25 PRs that would have used the exception: <N> (per title
