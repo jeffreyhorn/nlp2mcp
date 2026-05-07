@@ -542,21 +542,24 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 
 1. **For each of #1141, #1144, #1147, fetch current state** — `gh issue view`. Confirm OPEN, `sprint-26` labeled.
 
-2. **For each issue, run translate + solve on the canonical model** (kand, catmix, camshape) using the current main:
+2. **For each issue, run translate + GAMS compile-only on the canonical model** (kand, catmix, camshape) using the current main. Solve status is read from `data/gamslib/gamslib_status.json` (Day 14 retest values), not re-run here — solve takes ~1–60s per model and the status file already has authoritative results from the latest pipeline retest. If a fresh solve is needed, follow each translate with `gams /tmp/sprint26-pattern-e/${m}_mcp.gms lo=2` (no `action=c`, default solve).
 
    ```bash
    mkdir -p /tmp/sprint26-pattern-e
+   # Notes for the loop body below:
+   # - The `&&` chain ensures gams only runs if translate succeeded.
+   # - GAMS' `o=` flag overrides its default listing-file name (which would
+   #   otherwise be `<input_basename>.lst`, e.g. `kand_mcp.lst`). The listing
+   #   file holds GAMS' own error markers (e.g. $141, $171), which is what
+   #   subsequent greps inspect.
+   # - Comment lines are placed ABOVE the command (not between `\`-continued
+   #   lines), because `\` joins lines in shell and a `#` after `&&` would
+   #   silently swallow the rest of the command.
    for m in kand catmix camshape; do
      .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
        -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet \
-       && \
-     # Only run gams if translate succeeded (the `&&` above guards this).
-     # `o=` overrides GAMS' default listing-file name (which would otherwise
-     # be `<input_basename>.lst`, e.g. `kand_mcp.lst`). The listing file
-     # holds GAMS' own error markers (e.g. $141, $171), which is what we
-     # grep below.
-     gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
-       o=/tmp/sprint26-pattern-e/${m}_compile.lst || true
+       && gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
+              o=/tmp/sprint26-pattern-e/${m}_compile.lst || true
    done
 
    # Verify the artifact exists at the documented path (sanity check — `o=`
