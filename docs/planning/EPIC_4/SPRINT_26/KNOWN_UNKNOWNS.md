@@ -144,14 +144,25 @@ Expected: zero byte-diffs (since the committed baseline reflects current main, b
 
 **Test Case 2: Survey full corpus for unintended gate activation**
 
-```bash
-# Add gated debug print to track which models hit the new gate path
-# Count hits across the 142 in-scope set
-SPRINT26_PATTERN_C_DEBUG=1 .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | \
-  grep -c "PATTERN_C_GATE_FIRED"
+The prototype patch from Task 3 (the 1-line `$cond` removal) does NOT yet emit any debug marker on its own — neither `SPRINT26_PATTERN_C_DEBUG` nor `PATTERN_C_GATE_FIRED` exist in the codebase. To survey gate activations across the full corpus, the prototype patch must include a **temporary instrumentation print** at the gate-fire site. Add the following line inside the gate's match branch in `src/kkt/stationarity.py` (alongside the prototype-patch change), gated on a model name so it's easy to attribute:
+
+```python
+import sys  # if not already imported
+print(f"[SPRINT26_PATTERN_C_GATE_FIRED] model={model_ir.model_name} eq={equation_name}", file=sys.stderr)
 ```
 
-Expected: 4–8 firings (the 4 target models + possibly launch + a small number of true-positive Pattern C variants). If >12, gate is too permissive.
+Pattern modeled after Sprint 25's `[SPRINT25_DAY2][<tag>]` debug-print convention (per `docs/planning/EPIC_4/SPRINT_25/DAY5_PATTERN_A_INVESTIGATION.md`). The tag MUST be removed before the prototype patch merges — it's prep-time instrumentation only, not a permanent feature.
+
+Then count gate firings across the 142 in-scope set:
+
+```bash
+.venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | \
+  grep -c "\[SPRINT26_PATTERN_C_GATE_FIRED\]"
+```
+
+Expected: 4–8 firings (the 4 target models + possibly launch + a small number of true-positive Pattern C variants). If >12, gate is too permissive (false positives on previously-clean models). If <4, gate is too narrow (the prototype isn't catching the targets it's supposed to). The exact firing count + per-model attribution is what gets recorded in `PATTERN_C_HYPOTHESIS_VALIDATION.md`.
+
+Alternative if temporary instrumentation is undesirable: use the existing `SPRINT25_DAY2_DEBUG=1` env var (which traces `_diff_varref` + `_partial_collapse_sum` per Sprint 25 convention), grep for `_partial_collapse_sum` entries on the 4 target models, and confirm the Pattern C path is being hit. This is less precise than the dedicated marker but doesn't require code changes.
 
 ### Risk if Wrong
 
