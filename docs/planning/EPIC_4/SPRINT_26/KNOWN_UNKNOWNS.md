@@ -1493,7 +1493,31 @@ Sprint planning (Tasks 2 + 9)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 2 (Identify Sprint 25 Scope-Shifted Model PR18)
+**Date:** 2026-05-07
+
+**Findings:**
+
+- Shifted model: **`abel`**
+- Prior `convexity.status`: `likely_convex` (Sprint 25 Day 0 baseline)
+- New `convexity.status`: `non_convex` (Sprint 25 Day 4, 2026-04-25)
+- Triggering commit: `c922bb2d` — *"Mark abel non-convex in gamslib_status.json + file #1313 for warm-start fix"*
+- Tracking issue: [#1313](https://github.com/jeffreyhorn/nlp2mcp/issues/1313) — CLOSED during Sprint 25
+- Discovery context: `docs/planning/EPIC_4/SPRINT_25/DAY8_QABEL_ABEL_REASSESSMENT.md` (Day 8 qabel/abel PATH-solve reassessment surfaced the indefinite-eigenvalue lambda matrix)
+- Reversibility during Sprint 26: **NO** — the reclassification reflects a fundamental property of the abel model (indefinite lambda matrix `lambda(money, gov-expend) = 0.444`; symmetric-part eigenvalues approximately `[-0.047, 1.047]`). #1313 closed during Sprint 25 didn't restore convexity (it documented that the warm-start path doesn't apply).
+
+**Evidence:**
+
+- Diff command: `git show d8574a7d:data/gamslib/gamslib_status.json` vs `git show 58bcbdc1:data/gamslib/gamslib_status.json` filtered on `convexity.status` per model — exactly 1 model differs (`abel`).
+- Triggering-commit log: `git log -1 --format=full c922bb2d` documents the indefinite-eigenvalue diagnosis + multi-start NLP confirmation + Sprint 25 Day 8 verification path.
+- abel joins the existing 7 `non_convex` models (`ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp`) under the same handling (kept in comparison set, comparison_status remains `mismatch`, informational).
+
+**Decision:**
+
+- Sprint 26 baseline (Task 9) freezes scope at **142** in-scope, matching the Sprint 25 Day 14 final.
+- The 143 → 142 transition is one-way and documented in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.1 "Sprint 25 Mid-Sprint Reclassification" (added by Task 2).
+- No further scope-shifts anticipated barring discovery of additional non-convex models. Sprint 26 baseline accounting uses 142 throughout.
 
 ---
 

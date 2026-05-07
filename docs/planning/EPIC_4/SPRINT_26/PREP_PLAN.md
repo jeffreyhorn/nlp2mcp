@@ -187,9 +187,10 @@ grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md
 
 ## Task 2: Identify Sprint 25 Scope-Shifted Model (PR18)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 1–2 hours
+**Estimated Time:** 1–2 hours (actual: ~1.5h)
+**Completed:** 2026-05-07
 **Deadline:** Before Sprint 26 Day 1 (must complete before Task 9 baseline)
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -223,11 +224,13 @@ The Sprint 25 Day 14 final retest used 142 in-scope models; the Sprint 25 Day 0 
 
 ### Changes
 
-To be completed.
+- Added §5.1 "Sprint 25 Mid-Sprint Reclassification" to `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` documenting the abel `likely_convex` → `non_convex` reclassification with triggering commit `c922bb2d`, evidence (indefinite-eigenvalue lambda matrix from Sprint 25 Day 8 reassessment), and policy classification (runtime filter — same handling as the existing 7 `non_convex` `ps*_s*` models).
+- Added a forward-link `> **Update (Sprint 26 Prep Task 2 — PR18):** ...` block to `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 14 §"Scope: 143 → 142" pointing at the new BASELINE_METRICS.md §5.1.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknown 6.5 with full Verification Results (Status / Verified by / Date / Findings / Evidence / Decision).
 
 ### Result
 
-To be completed.
+The Sprint 25 scope-shifted model is **`abel`**, reclassified from `likely_convex` to `non_convex` on 2026-04-25 (Sprint 25 Day 4) via commit `c922bb2d`. The reclassification reflects a fundamental property of the abel model — the lambda matrix has indefinite symmetric-part eigenvalues approximately `[-0.047, 1.047]`, making the criterion's u-quadratic genuinely non-convex. Multi-start NLP showed CONOPT finds a unique objective only because the linear `stateq` dynamics tightly constrain the feasible set; the MCP/PATH formulation doesn't have that constraint-induced uniqueness, so PATH converges to a different valid stationary point. Tracked via #1313 (CLOSED during Sprint 25; closing did NOT restore convexity — it documented that the warm-start path doesn't apply). **Reversible during Sprint 26: NO.** Sprint 26 baseline (Task 9) freezes scope at 142 in-scope models, matching the Sprint 25 Day 14 final.
 
 ### Verification
 
@@ -236,24 +239,29 @@ To be completed.
 ls data/gamslib/archive/ | sort
 git log --oneline --diff-filter=M -- data/gamslib/gamslib_status.json | head -10
 
-# After identifying the shifted model, verify it appears in BASELINE_METRICS.md §5
+# Verify the abel reclassification is documented in BASELINE_METRICS.md §5.1
 grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md
+# Expected: §5.1 sub-section heading + abel/likely_convex/non_convex finding
+
+# Verify forward-link in SPRINT_LOG.md Day 14
+grep -A2 "Sprint 26 Prep Task 2 — PR18" docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md
+# Expected: forward-link block under §"Scope: 143 → 142"
 ```
 
 ### Deliverables
 
-- New sub-§"Sprint 25 Mid-Sprint Reclassification" in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5
-- Identified model + new convexity status + triggering commit SHA documented inline
-- Note added to `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section
-- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.5
+- ✅ New sub-§5.1 "Sprint 25 Mid-Sprint Reclassification" in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md`
+- ✅ abel model identified + new convexity status (`non_convex`) + triggering commit SHA (`c922bb2d`) documented inline
+- ✅ Forward-link block added to `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section
+- ✅ Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.5
 
 ### Acceptance Criteria
 
-- [ ] Specific model identified by name
-- [ ] Triggering commit SHA + brief description of why the reclassification fired
-- [ ] Policy classification stated (runtime filter vs scope edit) with rationale
-- [ ] `BASELINE_METRICS.md` §5 updated with the new sub-section
-- [ ] Unknown 6.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Specific model identified by name (`abel`)
+- [x] Triggering commit SHA + brief description (`c922bb2d` — "Mark abel non-convex in gamslib_status.json + file #1313 for warm-start fix")
+- [x] Policy classification stated (runtime filter — same handling as the existing 7 `non_convex` `ps*_s*` models per `BASELINE_METRICS.md` §5)
+- [x] `BASELINE_METRICS.md` §5 updated with the new sub-section (§5.1)
+- [x] Unknown 6.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

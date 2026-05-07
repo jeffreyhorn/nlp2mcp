@@ -113,6 +113,25 @@ The v2.2.1 schema records **23 total exclusions**. Twenty-one are tagged in the 
 
 **Consequence:** Sprint 25 Match-target calibration uses **143 as the denominator**. The Sprint 24 ambiguity (pipeline scope 143 vs triage scope 147) does not recur.
 
+### 5.1 Sprint 25 Mid-Sprint Reclassification
+
+**Identified during Sprint 26 Prep Task 2 (PR18 — Sprint 25 retrospective recommendation).**
+
+**Model:** `abel`
+**Prior `convexity.status`:** `likely_convex` (Sprint 25 Day 0 baseline)
+**New `convexity.status`:** `non_convex` (Sprint 25 Day 4, 2026-04-25)
+**Triggering commit:** `c922bb2d` — *"Mark abel non-convex in gamslib_status.json + file #1313 for warm-start fix"*
+**Tracking issue:** [#1313](https://github.com/jeffreyhorn/nlp2mcp/issues/1313) (CLOSED during Sprint 25)
+**Discovery context:** [`docs/planning/EPIC_4/SPRINT_25/DAY8_QABEL_ABEL_REASSESSMENT.md`](DAY8_QABEL_ABEL_REASSESSMENT.md) — Sprint 25 Day 8 qabel/abel PATH-solve reassessment.
+
+**Reason for reclassification:** abel's lambda matrix has the off-diagonal asymmetric entry `lambda(money, gov-expend) = 0.444`. The symmetric part has eigenvalues approximately `[-0.047, 1.047]` — indefinite, making the criterion's `u`-quadratic genuinely non-convex. Multi-start NLP confirmed the NLP solver finds a unique objective (the linear `stateq` dynamics tightly constrain the feasible set, masking the indefiniteness for CONOPT), but the MCP/PATH formulation doesn't have that constraint-induced uniqueness — the KKT system genuinely has multiple stationary points and PATH converges to a different valid one than CONOPT. This is a property of the model, not the emitter — the MCP is mathematically correct.
+
+**Policy classification:** **Runtime filter** (per §5 above) — same handling as the existing 7 `non_convex` models (`ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp`). abel remains in the 219-corpus and the comparison set; its `solution_comparison.comparison_status` stays as `mismatch` (informational only). The 143-denominator becomes 142 for the Sprint 25 final retest, NOT counting abel as in-scope.
+
+**Reversibility during Sprint 26:** **No.** The reclassification reflects a fundamental property of the abel model (indefinite lambda matrix) and is not a code-change artifact. #1313 (the warm-start fix that would have addressed the PATH convergence issue) was CLOSED during Sprint 25 — but closing it didn't restore convexity, only documented that the warm-start path doesn't apply. Sprint 26 baseline (Task 9) freezes scope at **142** in-scope.
+
+**Sprint 26 implication:** `BASELINE_METRICS.md` Sprint 26 baseline (Task 9) uses 142 as the denominator throughout, matching the Sprint 25 Day 14 final scope. The 143 → 142 transition is a one-way change documented here for traceability; no further scope-shifts are anticipated barring discovery of additional non-convex models.
+
 ---
 
 ## 6. Pre-vs-Post Diff
