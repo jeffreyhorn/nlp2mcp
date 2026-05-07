@@ -1119,7 +1119,7 @@ PR #1360 review.
 
 ```bash
 git push -u origin planning/sprint26-task10
-gh pr create --title "Complete Sprint 26 Prep Task 10: Update CONTRIBUTING.md for Emit-PR `.gms` Diffs (PR14 Reaffirmation)" --body "$(cat <<'EOF'
+gh pr create --title "Complete Sprint 26 Prep Task 10: Update CONTRIBUTING.md for Emit-PR .gms Diffs (PR14 Reaffirmation)" --body "$(cat <<'EOF'
 ## Summary
 
 [Paste the commit message body here]
