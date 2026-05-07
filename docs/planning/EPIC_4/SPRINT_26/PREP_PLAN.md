@@ -36,7 +36,7 @@ This prep plan focuses on:
 
 | # | Task | Priority | Est. Time | Dependencies | Sprint Goal Addressed |
 |---|------|----------|-----------|--------------|----------------------|
-| 1 | Create Sprint 26 Known Unknowns List | Critical | 2–3h | None | All priorities — risk identification |
+| 1 | Create Sprint 26 Known Unknowns List ✅ | Critical | 2–3h | None | All priorities — risk identification |
 | 2 | Identify Sprint 25 Scope-Shifted Model (PR18) | Critical | 1–2h | None | Process — accurate baseline accounting |
 | 3 | Pattern C Hypothesis Validation (PR16) | Critical | 6–8h | Task 1 | Priority 1: gate generalization (4 models) |
 | 4 | Pattern A Cohort Reclassification Pre-Work | High | 3–4h | Task 1 | Priority 2: reclassify 6 issues |
@@ -58,9 +58,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 26 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 2–3 hours
+**Estimated Time:** 2–3 hours (actual: ~2.5h)
+**Completed:** 2026-05-07
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -137,37 +138,50 @@ Sprint 25 also surfaced **KU-34 (bucket churn confounds path_syntax_error metric
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` with 26 unknowns across 6 categories (5 priorities + cross-cutting/process recommendations). Updated Tasks 2–10 of this PREP_PLAN with "Unknowns Verified" metadata lines mapping each prep task to the specific unknowns it researches. Added CHANGELOG.md entry under Sprint 26 Preparation summarizing Task 1 completion.
 
 ### Result
 
-To be completed.
+26 unknowns documented across 6 categories:
+
+- **Category 1: Pattern C Gate Generalization** (6 KUs, 1.1–1.6) — gate selectivity, sameas-decomposed SAM-block detection, #1334 interaction, mathematical equivalence, canary risk, Day-5-methodology PROCEED/REPLAN signal.
+- **Category 2: Pattern A Cohort Reclassification** (4 KUs, 2.1–2.4) — Day 7 sweep classification accuracy, per-issue action, test xfail surface, source/docs cross-references.
+- **Category 3: Pattern E Carryforward Re-Verification** (3 KUs, 3.1–3.3) — bucket shift via S25 fix-in-place series, catmix-#1338 specific check, Phase E framing validity.
+- **Category 4: Translation Timeout Option 1 Short-Circuit** (4 KUs, 4.1–4.4) — design validity, impact projection, #1224 deferral, determinism.
+- **Category 5: AD Residuals (#1334, #1335)** (4 KUs, 5.1–5.4) — file:line currency, otpop reproducer, #1334 ↔ #1357 subsumption, #1335 tractability.
+- **Category 6: Cross-Cutting & Process Recommendations** (5 KUs, 6.1–6.5) — PR19 flakiness, PR19 target list, PR17 readability, PR14 refactor exception, scope-shift reversal.
+
+Priority distribution: Critical 6 (23%), High 9 (35%), Medium 8 (31%), Low 3 (12%) — close to the target ~25/40/25/10 mix. Research is performed across prep Tasks 2–11 per the Task-to-Unknown Mapping in `KNOWN_UNKNOWNS.md` Appendix; the authoritative scheduling budget remains the per-task total in this PREP_PLAN (28–39h across all 11 tasks).
+
+Sprint 25 end-of-sprint KUs (KU-33, KU-34, KU-35, KU-36) carry forward into Sprint 26 prep at the Appendix level (drives Category 1 + Task 9 + regression-canary protection); KU-33 specifically is the basis for Sprint 26 Priority 1.
 
 ### Verification
 
 ```bash
-test -f docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md && echo "EXISTS" || echo "MISSING"
+test -f docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md && echo "EXISTS"
 wc -l docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md
 # Count only numbered unknowns (exclude template headers)
 grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md
-# Expected: ≥ 20
+# Expected: 26
+grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md
+# Expected: 6
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` with ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process)
-- Task-to-Unknown mapping table (Appendix)
-- Sprint 25 carryforward KU-33 through KU-36 migrated into Sprint 26 numbering with full text
-- "Unknowns Verified" metadata added to PREP_PLAN.md Tasks 2–11
-- CHANGELOG.md updated with Task 1 completion entry (under Sprint 26 Preparation)
+- ✅ `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` with 26 unknowns across 6 categories
+- ✅ Task-to-Unknown mapping table (Appendix)
+- ✅ Sprint 25 carryforward KU-33 through KU-36 migrated into Sprint 26 Appendix (with full text + drives-which-unknown forward-links)
+- ✅ "Unknowns Verified" metadata added to PREP_PLAN.md Tasks 2–10 (Task 11 integrates all)
+- ✅ CHANGELOG.md updated with Task 1 completion entry (under Sprint 26 Preparation)
 
 ### Acceptance Criteria
 
-- [ ] ≥ 20 unknowns documented (target 25–30)
-- [ ] All 5 priority areas have at least 3 unknowns each
-- [ ] Sprint 25 end-of-sprint KUs (KU-33, KU-34, KU-35, KU-36) migrated to Sprint 26 numbering (with explicit forward-link to original numbering in Appendix)
-- [ ] All Critical/High unknowns have verification method + deadline assigned
-- [ ] Task-to-Unknown mapping table covers Tasks 2–11
+- [x] ≥ 20 unknowns documented (26 created)
+- [x] All 5 priority areas have at least 3 unknowns each (Cat 1: 6, Cat 2: 4, Cat 3: 3, Cat 4: 4, Cat 5: 4, Cat 6: 5)
+- [x] Sprint 25 end-of-sprint KUs (KU-33, KU-34, KU-35, KU-36) migrated to Sprint 26 numbering (Appendix: KU-33 → drives Cat 1; KU-34 → drives 6.3; KU-35/KU-36 → regression-canary protection)
+- [x] All Critical/High unknowns have verification method + deadline assigned
+- [x] Task-to-Unknown mapping table covers Tasks 2–11
 
 ---
 
@@ -179,6 +193,7 @@ grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKN
 **Deadline:** Before Sprint 26 Day 1 (must complete before Task 9 baseline)
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 6.5 (will Sprint 25 1-model scope shift reverse during Sprint 26?)
 
 ### Objective
 
@@ -230,6 +245,7 @@ grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/
 - New sub-§"Sprint 25 Mid-Sprint Reclassification" in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5
 - Identified model + new convexity status + triggering commit SHA documented inline
 - Note added to `SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.5
 
 ### Acceptance Criteria
 
@@ -237,6 +253,7 @@ grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/
 - [ ] Triggering commit SHA + brief description of why the reclassification fired
 - [ ] Policy classification stated (runtime filter vs scope edit) with rationale
 - [ ] `BASELINE_METRICS.md` §5 updated with the new sub-section
+- [ ] Unknown 6.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -248,6 +265,7 @@ grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/
 **Deadline:** Before Sprint 26 Day 1 (this is the Sprint 26 PR16 implementation; must complete before Priority 1 work begins)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (Pattern C unknowns inform validation focus)
+**Unknowns Verified:** 1.1 (gate selectivity on canaries), 1.2 (sameas-decomposed SAM-block detection), 1.3 (#1334 interaction), 1.4 (mathematical equivalence), 1.5 (canary risk count), 1.6 (PROCEED/REPLAN signal binary)
 
 ### Objective
 
@@ -334,7 +352,7 @@ grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship
 - Trace files for 3 target models at `/tmp/sprint26-day0-validation/<model>_trace.stderr` (advisory, not committed)
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` with per-model hypothesis status + canary regression report + recommendation
 - 1-line prototype patch (committed as a draft branch under `prototype/sprint26-pattern-c-validation` if the recommendation is PROCEED; left as a code excerpt in the validation doc otherwise)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Priority 1 with VERIFIED / WRONG status for each Pattern C unknown
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
 
 ### Acceptance Criteria
 
@@ -343,7 +361,7 @@ grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship
 - [ ] Byte-comparison vs emitted form documented per model
 - [ ] Prototype patch tested on Tier 0/1 canaries
 - [ ] Recommendation written: PROCEED / REPLAN with rationale
-- [ ] Sprint 26 KNOWN_UNKNOWNS.md §Priority 1 updated with verification results
+- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -355,6 +373,7 @@ grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 2.1 (Day 7 sweep accuracy post-S25), 2.2 (per-issue action), 2.3 (test xfail surface), 2.4 (source/docs cross-references)
 
 ### Objective
 
@@ -417,14 +436,14 @@ grep -rE "#(1138|1139|1140|1142|1145|1150)" tests/ 2>/dev/null
 
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` with per-issue action plan
 - Test-file cross-reference scan results (which tests reference the 6 issue numbers; what update is needed when closing each)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Priority 2 with VERIFIED / WRONG per cohort issue
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 2.1, 2.2, 2.3, 2.4
 
 ### Acceptance Criteria
 
 - [ ] All 6 cohort issues have a per-issue action note
 - [ ] Each note states: classification + action + (if refile) draft title + body
 - [ ] Test xfail cross-reference scan documented (zero affected tests OR list of affected tests + planned updates)
-- [ ] Sprint 26 KNOWN_UNKNOWNS.md §Priority 2 updated
+- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -436,6 +455,7 @@ grep -rE "#(1138|1139|1140|1142|1145|1150)" tests/ 2>/dev/null
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
+**Unknowns Verified:** 3.1 (S25 fix-in-place series bucket-shift), 3.2 (catmix-#1338 specific check), 3.3 (Phase E framing validity)
 
 ### Objective
 
@@ -494,13 +514,14 @@ grep -cE "^## Model: (kand|catmix|camshape)" docs/planning/EPIC_4/SPRINT_26/PATT
 ### Deliverables
 
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` with per-model status + recommended action
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Priority 3 with VERIFIED / WRONG per Phase E unknown
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3
 
 ### Acceptance Criteria
 
 - [ ] All 3 Phase E models re-verified
 - [ ] Per-model classification (Resolved / Bucket Shifted / Unchanged) with evidence
 - [ ] Sprint 26 fix scope updated (which of the 3 actually need fix work in Sprint 26)
+- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -512,6 +533,7 @@ grep -cE "^## Model: (kand|catmix|camshape)" docs/planning/EPIC_4/SPRINT_26/PATT
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning + AD engineer
 **Dependencies:** Task 1
+**Unknowns Verified:** 4.1 (S25 design validity), 4.2 (impact projection), 4.3 (#1224 deferral decision), 4.4 (determinism)
 
 ### Objective
 
@@ -573,7 +595,7 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 - `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` with design + patch sites + test plan + projected impact
 - Updated profile data for srpchase + 1 other timeout model (advisory, captured in the design doc)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Priority 4 with VERIFIED / WRONG
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 4.1, 4.2, 4.3, 4.4
 
 ### Acceptance Criteria
 
@@ -582,6 +604,7 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 - [ ] Patch design documented (no implementation yet)
 - [ ] Test fixture plan documented
 - [ ] Projected impact stated (which models the Sprint 26 work is expected to recover)
+- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -593,6 +616,7 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1
+**Unknowns Verified:** 5.1 (file:line currency), 5.2 (otpop reproducer), 5.3 (#1334 ↔ #1357 subsumption), 5.4 (#1335 tractability)
 
 ### Objective
 
@@ -658,7 +682,7 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 
 - `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` with #1334 / #1335 / #1357 relationship analysis
 - Confirmed file:line references (or updates to ISSUE_1334.md / ISSUE_1335.md if stale)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Priority 5 with VERIFIED / WRONG per AD-residuals unknown
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3, 5.4
 
 ### Acceptance Criteria
 
@@ -666,6 +690,7 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 - [ ] otpop reproducer re-run; current residual documented
 - [ ] #1334 ↔ #1357 subsumption decision made with evidence
 - [ ] Sprint 26 fix scope clarified (do #1334 + #1335 alone close #1357, or are 3 issues to fix?)
+- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -677,6 +702,7 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 **Deadline:** Before Sprint 26 Day 1 (CI extension lands during Sprint 26 execution per the PROJECT_PLAN.md schedule)
 **Owner:** Sprint planning + CI engineer
 **Dependencies:** Task 1
+**Unknowns Verified:** 6.1 (PR19 flakiness on canaries), 6.2 (PR19 target list selection)
 
 ### Objective
 
@@ -739,7 +765,7 @@ ls .github/workflows/ 2>&1
 - `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` with trigger conditions + target list + timeout policy + failure handling
 - Draft workflow YAML inline in the design doc (not yet committed to `.github/workflows/`)
 - Target-list file design (`.github/path-solve-ci-targets.txt` format)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Process with VERIFIED / WRONG
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.1, 6.2
 
 ### Acceptance Criteria
 
@@ -748,6 +774,7 @@ ls .github/workflows/ 2>&1
 - [ ] PATH timeout policy documented (default 30s, configurable)
 - [ ] Failure handling policy documented (hard vs soft fail per model class)
 - [ ] CI overhead estimate documented (acceptable for PR latency budget)
+- [ ] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -759,6 +786,7 @@ ls .github/workflows/ 2>&1
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 2 (need Sprint 25 scope-shift documented before recording the new baseline)
+**Unknowns Verified:** 6.3 (PR17 readability), 6.5 (jointly with Task 2 — scope-shift policy decision)
 
 ### Objective
 
@@ -826,7 +854,7 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 - `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` with headline metrics + bucket-provenance column
 - Updated `data/gamslib/gamslib_status.json` (committed)
 - Updated `data/gamslib/mcp/*.gms` artifacts where regenerated (advisory per `BASELINE_METRICS.md` §6)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Cross-cutting with baseline-confirmation results
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 6.3, 6.5
 
 ### Acceptance Criteria
 
@@ -835,6 +863,7 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 - [ ] Bucket-provenance column added per failing model
 - [ ] Scope freeze documented (v2.2.x exclusion list unchanged)
 - [ ] `gamslib_status.json` committed
+- [ ] Unknowns 6.3, 6.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -846,6 +875,7 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 6.4 (refactor-only PR exception design)
 
 ### Objective
 
@@ -893,13 +923,14 @@ test -f .github/PULL_REQUEST_TEMPLATE.md && \
 
 - Updated `CONTRIBUTING.md` with the emit-PR `.gms` artifact rule
 - Updated `.github/PULL_REQUEST_TEMPLATE.md` (if it exists)
-- Update to `SPRINT_26/KNOWN_UNKNOWNS.md` §Process with the rule's exception-case unknown (refactor-only PRs handling)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.4
 
 ### Acceptance Criteria
 
 - [ ] CONTRIBUTING.md has the new rule with rationale + regeneration command + reviewer instruction
 - [ ] Refactor-only exception documented (`[byte-stable-refactor]` label + PR description requirement)
 - [ ] PULL_REQUEST_TEMPLATE.md (if it exists) updated with checklist entry
+- [ ] Unknown 6.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1016,7 +1047,7 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 ### Success Criteria for Prep Phase
 
 - [ ] **All 11 prep tasks complete** before Sprint 26 Day 1
-- [ ] `SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process)
+- [x] `SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories**
 - [ ] `SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
 - [ ] `SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3)
 - [ ] `SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)

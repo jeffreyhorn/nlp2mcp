@@ -1,0 +1,1551 @@
+# Sprint 26 Known Unknowns
+
+**Created:** 2026-05-07
+**Status:** Active — Pre-Sprint 26
+**Purpose:** Proactive documentation of assumptions and unknowns for Sprint 26 — Pattern C Generalization, Pattern A Reclassification, Phase E re-verification, Translation Timeout Option 1 Short-Circuit, AD Residuals (#1334/#1335), and the Sprint 25 retrospective process recommendations PR16–PR19 + PR14 reaffirmation.
+
+---
+
+## Overview
+
+This document identifies all assumptions and unknowns for Sprint 26 features **before** implementation begins. Sprint 26 is the third consecutive sprint to target alias-aware differentiation correctness as Priority 1 (after S24's launch attempt and S25's narrow-gate Pattern C fix); the central new prep activity is **Pattern C hypothesis validation pre-Day-0** (Task 3 of `PREP_PLAN.md`, codifying Sprint 25 retrospective PR16). Sprint 26 also inherits 23 issues labeled `sprint-26` (4 net-new from Sprint 25 Day 13 — #1354 camcge, #1355 cesam2, #1356 fawley, #1357 otpop — plus 19 carryforward).
+
+**Sprint 26 Scope** (per `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 26 entry, Weeks 17–18, 14-day sprint at ≤ 12h/day):
+
+1. **Priority 1: Pattern C Gate Generalization** (#1354/#1355/#1356/#1357 + #1306/#1307) — widen launch-shape gate to plain-alias enumeration + sameas-decomposed SAM blocks
+2. **Priority 2: Pattern A Cohort Reclassification** (#1138/#1139/#1140/#1142/#1145/#1150) — per Day 7 sweep
+3. **Priority 3: Pattern E Carryforward Re-Verification** (#1141/#1144/#1147) — Phase E was cancelled in Sprint 25
+4. **Priority 4: Translation Timeout — Option 1 Short-Circuit** (#885/#931/#932/#1185/#1228 + defers #1224)
+5. **Priority 5: AD Residuals from Sprint 25 Day 11 Fix-In-Place Series** (#1334, #1335)
+6. **Process Recommendations:** PR16 (pre-Sprint-0 hypothesis validation), PR17 (bucket provenance baseline), PR18 (Sprint 25 scope-shift identification), PR19 (pre-merge solve-time validation CI), PR14 reaffirmation (read-the-generated-MCP rule)
+
+**Reference:** See `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 26 entry (Goal, Components, Deliverables, Acceptance Criteria, Estimated Effort 50–75h, Risk Level MEDIUM).
+
+**Lessons from Previous Sprints:**
+
+- Sprint 22: 28 unknowns; early preprocessing research saved 20+ hours.
+- Sprint 23: 32 unknowns; KU-27 (subset-superset domain) led to a high-impact fix.
+- Sprint 24: 26 prep + 6 end-of-sprint KUs (KU-27..KU-32); KU-27 (Lark disambiguation) unblocked CI and surfaced the `requirements.txt` pinning lesson (KU-28).
+- Sprint 25: 27 prep + 4 end-of-sprint KUs (KU-33..KU-36); KU-33 directly drives this sprint's Priority 1; KU-34 drives PR17.
+
+**Sprint 25 Key Learning** (from `SPRINT_25/SPRINT_RETROSPECTIVE.md` §"Day 5 Pivot Retrospective"): Sprint 25 spent Days 1–4 on Phase 1 alias-AD work that produced no Match gain because the underlying Pattern A hypothesis was wrong about the cohort. The Day 5 pivot disproved the hypothesis in 1 day via trace + emitted-artifact + formal-derivative methodology. **Sprint 26's PR16 is the codified version of that methodology applied PRE-Day-0** to the Pattern C generalization hypothesis. This is the single highest-value prep activity for Sprint 26.
+
+**Sprint 25 Carryforward KUs** (from `../SPRINT_25/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
+
+- **KU-33** (Pattern C generalizes beyond launch) → directly drives Priority 1 (this sprint's Category 1)
+- **KU-34** (bucket churn dominates path_syntax_error metric) → drives PR17 bucket-provenance baseline (Task 9 of `PREP_PLAN.md`)
+- **KU-35** (multi-solve gate over-approximation invariant) → regression-canary protection during Sprint 26
+- **KU-36** (`_loop_tree_to_gams` bare-ID substitution invariant) → regression-canary protection during Sprint 26
+
+---
+
+## How to Use This Document
+
+### Before Sprint 26 Day 1
+
+1. Research and verify all **Critical** and **High** priority unknowns during prep tasks (see §"Appendix: Task-to-Unknown Mapping").
+2. Create minimal test cases for validation where needed.
+3. Document findings in the "Verification Results" subsection of each unknown.
+4. Update status: 🔍 INCOMPLETE → ✅ VERIFIED (with evidence) or ❌ WRONG (with correction and new assumption).
+
+### During Sprint 26
+
+1. Review daily during standup — especially unknowns marked 🔍 INCOMPLETE.
+2. Add newly-discovered unknowns in the "Newly Discovered" section (migrate into categories post-sprint).
+3. Update with implementation findings as work progresses.
+4. Flag any assumption that turns out wrong — don't quietly re-scope around it.
+
+### Priority Definitions
+
+- **Critical:** Wrong assumption will break a sprint priority or require major re-planning (>8 hours of rework). For Sprint 26, this includes any unknown whose disconfirmation would force the Pattern C generalization hypothesis (Priority 1) to be replanned during execution.
+- **High:** Wrong assumption will cause significant rework (4–8 hours).
+- **Medium:** Wrong assumption will cause minor issues (2–4 hours).
+- **Low:** Wrong assumption has minimal impact (<2 hours).
+
+---
+
+## Summary Statistics
+
+**Total Unknowns:** 26
+
+**By Priority:**
+
+- Critical: 6 (23%)
+- High: 9 (35%)
+- Medium: 8 (31%)
+- Low: 3 (12%)
+
+**By Category:**
+
+- Category 1 (Pattern C Gate Generalization): 6 unknowns
+- Category 2 (Pattern A Cohort Reclassification): 4 unknowns
+- Category 3 (Pattern E Carryforward Re-Verification): 3 unknowns
+- Category 4 (Translation Timeout — Option 1 Short-Circuit): 4 unknowns
+- Category 5 (AD Residuals #1334 / #1335): 4 unknowns
+- Category 6 (Cross-Cutting & Process Recommendations): 5 unknowns
+
+**Estimated Research Time:** 28–36 hours (work-item estimates; per-unknown numbers sum higher than the prep-task budget because many unknowns are verified in parallel within a single prep task — see §"Appendix: Task-to-Unknown Mapping" for which task verifies which unknowns. The authoritative scheduling budget is the per-task total in `PREP_PLAN.md`: 28–39h across Tasks 1–11.)
+
+---
+
+## Table of Contents
+
+1. [Category 1: Pattern C Gate Generalization](#category-1-pattern-c-gate-generalization)
+2. [Category 2: Pattern A Cohort Reclassification](#category-2-pattern-a-cohort-reclassification)
+3. [Category 3: Pattern E Carryforward Re-Verification](#category-3-pattern-e-carryforward-re-verification)
+4. [Category 4: Translation Timeout — Option 1 Short-Circuit](#category-4-translation-timeout--option-1-short-circuit)
+5. [Category 5: AD Residuals (#1334, #1335)](#category-5-ad-residuals-1334-1335)
+6. [Category 6: Cross-Cutting & Process Recommendations](#category-6-cross-cutting--process-recommendations)
+
+---
+
+# Category 1: Pattern C Gate Generalization
+
+Priority 1 workstream — Issues #1354 (camcge), #1355 (cesam2), #1356 (fawley), #1357 (otpop) plus #1306/#1307 (launch). Drives KU-33 from Sprint 25 §End-of-Sprint Discoveries.
+
+## Unknown 1.1: Does removing the `$cond` filter from the Pattern C gate's predicate break selectivity on Tier 0/1 canaries?
+
+### Priority
+
+**Critical** — If removing the `$cond` filter is too permissive, the broader gate fires on Tier 0/1 canary models (dispatch, quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive) and regresses byte-stable emit. That kills the Priority 1 hypothesis before any of the 4 target models recover.
+
+### Assumption
+
+The Sprint 25 launch-shape Pattern C gate (#1306 narrowing — fires only on alias-only conditional sums with a `$ge(ss, s)`-style filter) generalizes by simply dropping the `$cond` predicate, with no further changes to the gate logic. The remaining predicates (alias-only, IndexOffset present, etc.) are sufficient to keep canary models out of the gate's match set.
+
+### Research Questions
+
+1. How many of the 11 Tier 0/1 canary models contain an "alias-only conditional sum" pattern that the launch gate currently rejects ONLY because of the `$cond` predicate?
+2. Does the launch gate's `$ge(ss, s)`-shaped predicate share machinery with the broader `$cond` check, or are they independent?
+3. If we replace "must have `$cond`" with "may have `$cond`", what other predicates need strengthening to compensate?
+4. Does the gate's "alias-only" predicate (no concrete `IndexOffset`-shaped offsets) need refinement when `$cond` is absent?
+5. Are there models in the 142 in-scope set (beyond the 4 Pattern C targets and 11 canaries) that would unexpectedly enter the gate's match set?
+
+### How to Verify
+
+**Test Case 1: Apply prototype patch, run Tier 0/1 canary regression**
+
+```bash
+# Apply the 1-line patch from Task 3 (PREP_PLAN.md) that removes the `$cond` filter
+# Then byte-diff Tier 0/1 canary outputs against baseline
+mkdir -p /tmp/sprint26-canary-regression
+for m in dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+  .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
+    -o /tmp/sprint26-canary-regression/${m}_mcp.gms --skip-convexity-check --quiet
+  diff -q /tmp/sprint25-golden/${m}_mcp.gms /tmp/sprint26-canary-regression/${m}_mcp.gms
+done
+```
+
+Expected: zero byte-diffs. Any diff means the broader gate is firing on a canary that the narrow gate didn't touch.
+
+**Test Case 2: Survey full corpus for unintended gate activation**
+
+```bash
+# Add gated debug print to track which models hit the new gate path
+# Count hits across the 142 in-scope set
+SPRINT26_PATTERN_C_DEBUG=1 .venv/bin/python scripts/gamslib/run_full_test.py --only-translate --quiet 2>&1 | \
+  grep -c "PATTERN_C_GATE_FIRED"
+```
+
+Expected: 4–8 firings (the 4 target models + possibly launch + a small number of true-positive Pattern C variants). If >12, gate is too permissive.
+
+### Risk if Wrong
+
+- **Gate too permissive:** Tier 0/1 canaries regress; Sprint 26 must abort Priority 1 mid-sprint, replicating the Sprint 25 #1308 → #1351 rollback pattern.
+- **Gate too narrow after refinement:** target models don't actually fire the broader gate; Priority 1 lands without Match gain.
+- **Hidden third predicate needed:** the Pattern C generalization isn't a simple `$cond` removal; needs additional design work in prep, not Sprint 26 Day 1.
+
+### Estimated Research Time
+
+3 hours (within Task 3 hypothesis-validation budget — prototype patch + canary regression + survey)
+
+### Owner
+
+AD/KKT engineer (Task 3)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 1.2: Is `sameas`-decomposed SAM-block alias detection a generalization of the launch-shape gate, or a separate detection path?
+
+### Priority
+
+**Critical** — cesam2 (#1355) is one of the 4 Pattern C target models and exhibits a `nu_COLSUM(i±N)$(jj(i±N))` pattern where the `$(jj(i±N))` guard is from a `sameas`-decomposed SAM block. If this is a fundamentally different detection problem from the launch shape, Priority 1 needs a more substantial design change than a simple gate widening.
+
+### Assumption
+
+The cesam2 `sameas`-decomposed SAM-block alias case is a generalization of the same alias-detection logic as the launch-shape gate, just with an additional `sameas` guard on the alias index. Adding `sameas`-aware predicate to the existing gate logic is sufficient; no separate detection path is needed.
+
+### Research Questions
+
+1. In cesam2's emitted `stat_tsam(i,j)`, what is the source equation that generates the `$(jj(i±N))` pattern? Is the source's `tsam(i,j)` declaration shape responsible, or is it the AD layer that introduces the `jj` guard?
+2. Does the `sameas`-conditional cross product in the source (`sameas('ACT', 'CAP') and ...`) get decomposed at parse time or at AD time?
+3. Is `jj` a subset of `i`, an alias of `i`, or a separate set with `sameas`-based membership? (Determines whether the gate predicate needs alias-detection or subset-detection.)
+4. Does adding `sameas`-aware logic to the existing gate also fire correctly on camcge/fawley/otpop, or is `sameas` cesam2-specific?
+5. Is there a single unified predicate that catches both the launch shape and the cesam2 shape, or are they two separate predicates with overlap?
+
+### How to Verify
+
+**Test Case 1: Inspect cesam2 emit + source**
+
+```bash
+# Get the cesam2 source's tsam declaration + the emitted stat_tsam
+grep -nE "Equation tsam|tsam\(" data/gamslib/raw/cesam2.gms | head -10
+.venv/bin/python -m src.cli data/gamslib/raw/cesam2.gms -o /tmp/cesam2.gms --skip-convexity-check --quiet
+grep -nA5 "^stat_tsam" /tmp/cesam2.gms | head -30
+```
+
+Expected: identify whether `jj` is alias / subset / separate set; identify which AD code path produces the `sameas`-decomposed offset cross-product.
+
+**Test Case 2: Hand-derive formal KKT for cesam2's `tsam(i,j)`**
+
+Compute `∂tsam(i,j)/∂tsam_var(k,l)` from the source NLP. Determine the expected form (with or without explicit `sameas` guards). Compare against the emitted form.
+
+**Test Case 3: Survey other models for `sameas`-decomposed alias patterns**
+
+```bash
+grep -rE "\bsameas\(" data/gamslib/raw/*.gms 2>/dev/null | wc -l   # count models using sameas
+grep -lE "\bsameas\(" data/gamslib/raw/*.gms 2>/dev/null | head -10  # which models
+```
+
+Expected: identify any other model in the 142 in-scope set that uses `sameas`-decomposed cross-products and would be affected by the new logic.
+
+### Risk if Wrong
+
+- **Separate detection path needed:** Priority 1 effort estimate jumps from 12–18h to 18–28h; Sprint 26 may not land cesam2 (#1355).
+- **`sameas` predicate too permissive:** other models with `sameas` patterns regress; canary set enlarges and bug surface widens.
+- **Source-vs-AD decomposition is different from assumed:** the "fix the gate" approach is wrong; need to fix the AD layer instead, which is a different code path entirely.
+
+### Estimated Research Time
+
+2 hours (within Task 3 budget — cesam2 source inspection + hand-derived KKT + sameas corpus survey)
+
+### Owner
+
+AD/KKT engineer (Task 3)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 1.3: Will the Pattern C generalization interact with the #1334 ParamRef substitution fix?
+
+### Priority
+
+**High** — Both #1334 and the Pattern C generalization touch `src/kkt/stationarity.py` and both target otpop. If they interact, Sprint 26 needs to land them in a specific order, and the canary regression for one may need to include the other's patch state.
+
+### Assumption
+
+#1334 (`_replace_indices_in_expr` ParamRef branch fix) and Pattern C generalization (`_partial_collapse_sum` or similar) are orthogonal — they touch different functions in `src/kkt/stationarity.py` and can be landed in either order without test interference.
+
+### Research Questions
+
+1. Does `_replace_indices_in_expr` get called by the Pattern C gate code path, or are the two functions in unrelated control flow?
+2. Does fixing #1334 first change the otpop emit shape such that the Pattern C target pattern no longer appears (i.e., #1334 actually subsumes #1357 — see Unknown 5.3)?
+3. Does the Pattern C gate widening expose any latent #1334-class bugs that were masked by the narrow gate?
+4. Are there shared helper functions (e.g., `_collect_bound_indices`, `_alias_match`) that both fixes modify?
+
+### How to Verify
+
+**Test Case 1: Code-path dependency analysis**
+
+```bash
+# Find call relationships
+grep -nE "_replace_indices_in_expr|_partial_collapse_sum|_apply_alias_offset_to_deriv" \
+  src/kkt/stationarity.py | head -30
+```
+
+**Test Case 2: Apply patches in opposite orders**
+
+Apply #1334 patch first → run otpop translate → record emit. Apply Pattern C patch second → record emit. Compare to: Pattern C first → otpop emit → #1334 second → emit. If both orderings produce the same final emit, the patches are orthogonal.
+
+### Risk if Wrong
+
+- **Interaction means landing order matters:** Sprint 26 sequence must put one fix before the other; canary regression for the second includes the first's patch state. Adds coordination overhead.
+- **#1334 subsumes #1357:** the Pattern C target list shrinks from 4 to 3 (camcge/cesam2/fawley); otpop is fixed by Priority 5 work instead. This affects Priority 1 budget allocation and Match-gain projection.
+
+### Estimated Research Time
+
+2 hours (within Task 3 + Task 7 — code-path analysis + opposite-order patch experiment)
+
+### Owner
+
+AD/KKT engineer (Task 3 + Task 7)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 1.4: Is the consolidated `sum(j$(domain_filter), imat(j,i) * nu_<eq>(j))` form mathematically equivalent to the per-offset enumeration across all 4 target models?
+
+### Priority
+
+**Critical** — If the consolidated form is NOT mathematically equivalent to the per-offset enumeration for some target models, the Pattern C generalization produces a structurally-different (and incorrect) MCP for those models. PR19 pre-merge solve-time validation should catch this, but discovering it during prep prevents wasted Sprint 26 effort.
+
+### Assumption
+
+For each of the 4 Pattern C target models (camcge, cesam2, fawley, otpop), the consolidated `sum(j$(j ∈ valid-domain-of-imat-second-index), imat(j,i) * nu_<eq>(j))` form is mathematically equivalent to the buggy per-offset enumeration `+ ((-1) * imat(i,i)) * nu_<eq>(i) + (((-1) * imat(i+1,i)) * nu_<eq>(i+1))$(ord(i) <= card(i)-1) + ...`. Both forms compute the correct Lagrangian contribution from the eq's body's `sum_j imat(i,j) * <var>(j)` term to `stat_<var>(i)`.
+
+### Research Questions
+
+1. Does the per-offset enumeration's set of `(±N, ord(i) <= card(i) - N)` guards correctly cover every element of the second-index domain? (E.g., for `i ∈ {1..N}`, do the offsets `{-N..+N}` × the guards correctly produce one term per `j ∈ {1..N}`?)
+2. Is the per-offset enumeration over-counting or under-counting any element? (Sprint 25 #1351 found that the launch consolidation gate was under-counting because the consolidated form lost cross-element aggregation.)
+3. Does the consolidated `sum(j$(domain_filter), ...)` form's `domain_filter` accurately encode the second-index domain restriction? (E.g., for `imat(i,j)` declared on `(c,c)` with `c` a subset of `i`, the filter must restrict `j ∈ c`.)
+4. Are there edge cases (empty subset, single-element domain, alias chains) where the two forms diverge?
+5. Does the consolidated form need a `$onMultiR` or similar GAMS pragma to compile correctly under PATH?
+
+### How to Verify
+
+**Test Case 1: Element-by-element comparison on small models**
+
+Pick the smallest of the 4 target models (likely fawley or otpop). For each `i` in the equation's domain, manually enumerate the per-offset terms and the consolidated `sum(j, ...)` terms. Confirm they produce identical sets.
+
+**Test Case 2: Sprint 25 #1351 cross-check**
+
+The Sprint 25 launch-Pattern-C consolidation rollback (#1351, see `SPRINT_25/SPRINT_LOG.md` Day 11) documented "the consolidated zero-offset Sum lost the cross-element aggregation entirely." Confirm the new Sprint 26 consolidation form does NOT have the same loss-of-aggregation bug. Specifically, the consolidated form must iterate over ALL elements of the second-index domain, not just the `j = i` element.
+
+**Test Case 3: Symbolic comparison via SymPy**
+
+Pick a representative camcge stationarity equation. Build the per-offset enumeration as a SymPy expression. Build the consolidated `sum(j, ...)` as a SymPy expression. Compute the symbolic difference. Confirm zero (or document why the difference is non-zero).
+
+### Risk if Wrong
+
+- **Forms not equivalent:** Pattern C generalization produces incorrect MCPs for some target models. PR19 catches this at solve time, but Priority 1 effort is wasted.
+- **Forms equivalent for camcge/cesam2 but not fawley/otpop:** Priority 1 lands for 2 of 4 targets; Sprint 26 Match gain is 1/2 of projected.
+- **Sprint 25 #1351 mistake repeated:** the new consolidation drops cross-element aggregation; locally-infeasible MCPs at solve time. PR19 mitigates but Sprint 26 schedule slips.
+
+### Estimated Research Time
+
+3 hours (within Task 3 + Task 9 — element-enumeration comparison on 1 target model + #1351 cross-check + SymPy verification)
+
+### Owner
+
+AD/KKT engineer (Task 3)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 1.5: How many Tier 0/1 canary models contain `imat(i,j)`-style SAM-coefficient patterns at risk of incorrect gate firing?
+
+### Priority
+
+**Medium** — Drives the size of the canary regression set for Task 3. If 0 of 11 canaries have `imat`-shaped patterns, the regression is fast and clean; if 5+ do, prep needs additional analysis to confirm the broader gate doesn't fire on them.
+
+### Assumption
+
+Most Tier 0/1 canary models (dispatch, quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive) do NOT contain SAM-coefficient `imat(i,j)`-style patterns, so the broader Pattern C gate naturally doesn't fire on them. Maybe 1–2 (CGE-family canaries — quocge, splcge) might have similar shapes; the rest are safe.
+
+### Research Questions
+
+1. Of the 11 Tier 0/1 canaries, which ones are CGE family (with SAM-coefficient matrices)?
+2. For the CGE-family canaries (quocge, splcge), do their stationarity equations currently emit per-offset `nu_<eq>(i±N)` patterns that the broader gate would consolidate?
+3. If a canary's emit changes, would the new emit still be byte-stable (idempotent under repeated runs) and produce a solving MCP?
+
+### How to Verify
+
+**Test Case 1: Categorize canaries by SAM presence**
+
+```bash
+for m in dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+  echo "=== $m ==="
+  grep -cE "\bimat\b|\bSAM\b|\b[a-z]+coef\b" data/gamslib/raw/${m}.gms 2>/dev/null
+done
+```
+
+**Test Case 2: For each at-risk canary, inspect current emit for phantom-offset patterns**
+
+```bash
+for m in quocge splcge; do
+  grep -cE "nu_[a-zA-Z_]+\([^)]+\+[0-9]+\)" data/gamslib/mcp/${m}_mcp.gms 2>/dev/null
+done
+```
+
+Expected: count of phantom-offset terms per canary. If non-zero, the canary may behave like a Pattern C target (good — gate should fire) or may be a true-positive canary (bad — gate should not fire). Determined by Test Case 3.
+
+**Test Case 3: For each at-risk canary, check if current MCP solves and matches**
+
+Use `data/gamslib/gamslib_status.json` to confirm each at-risk canary is currently `solve_success` + `match`. If yes, gate must NOT change emit (or must produce equivalent MCP that still solves+matches).
+
+### Risk if Wrong
+
+- **Many canaries at risk:** Task 3 prep budget needs to expand to cover detailed regression on 5+ canaries instead of 0–2.
+- **Canary regresses unexpectedly during Sprint 26 Day 3+:** Priority 1 must rollback (Sprint 25 #1308 → #1351 pattern repeats).
+
+### Estimated Research Time
+
+1 hour (within Task 3 — corpus survey + emit grep on at-risk canaries)
+
+### Owner
+
+AD/KKT engineer (Task 3)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 1.6: Will the Task 3 Day-5-methodology prototype produce a binary PROCEED / REPLAN signal, or an ambiguous result that doesn't drive a decision?
+
+### Priority
+
+**Critical** — The entire Task 3 PR16 prep activity hinges on this. The Day 5 methodology in Sprint 25 produced a clean "AD is correct" signal because the comparison was byte-equality vs the formal derivative. If the Sprint 26 Pattern C generalization produces partial agreement (e.g., camcge+cesam2 confirm, fawley diverges by 1 term), the decision becomes ambiguous and the prep methodology fails to deliver the expected unambiguous signal.
+
+### Assumption
+
+Applying the Day 5 methodology (trace + emitted-artifact byte comparison against formal symbolic derivative) to the Pattern C generalization on 3 representative target models will produce a clean per-model PROCEED / DISPROVE / PARTIAL-DISPROVE classification. If 3/3 PROCEED, Sprint 26 commits the budget. If 1+ DISPROVE, replan. If PARTIAL-DISPROVE on 1 of 3, treat as DISPROVE (be conservative).
+
+### Research Questions
+
+1. Is the formal derivative for camcge/cesam2/fawley's stationarity equations tractable to hand-derive (≤ 30 minutes per model)?
+2. Are the emitted forms small enough (≤ 100 lines) to byte-compare line-by-line?
+3. What's the expected result for otpop (#1357) — does the Pattern C generalization apply, or is otpop subsumed by #1334 (per Unknown 5.3)? Held-out otpop is the 4th model after PROCEED on 3.
+4. If 1 of 3 produces PARTIAL-DISPROVE, what's the decision rule — defer that model to Sprint 27, or replan all of Priority 1?
+
+### How to Verify
+
+**Test Case 1: Hand-derive the formal KKT for one stationarity equation per target model in 30 minutes each**
+
+Pick the simplest stationarity equation from each model's source (camcge `stat_dk`, cesam2 `stat_tsam`, fawley `stat_<simple>`). Write out the formal derivative on paper or in `/tmp/sprint26-day0-validation/<model>_formal_kkt.md`.
+
+**Test Case 2: Byte-compare emitted vs formal**
+
+Use `diff -u` or a small Python script to count matching/diverging terms per model. Document the diverging terms (these are the Pattern C bug sites).
+
+**Test Case 3: Decision rule documentation**
+
+In `PATTERN_C_HYPOTHESIS_VALIDATION.md`, codify the decision rule: 3/3 PROCEED → Sprint 26 commits Priority 1 budget; 2/3 PROCEED → defer the disproved model to Sprint 27, proceed with 2-target Priority 1; 1/3 or 0/3 PROCEED → replan Priority 1 entirely (most likely action: defer Pattern C generalization to Sprint 27 and pull AD residuals #1334/#1335 to Priority 1).
+
+### Risk if Wrong
+
+- **Methodology produces ambiguous signal:** Sprint 26 can't make a clean PROCEED/REPLAN decision; effort gets wasted on Day 1 of Sprint 26 trying to interpret prep findings.
+- **Formal derivative is intractable to hand-derive:** the Day 5 methodology can't be applied to Pattern C; prep needs a different validation approach (e.g., SymPy comparison, test-vector-based comparison).
+
+### Estimated Research Time
+
+2 hours (within Task 3 — methodology pre-flight on 1 target model before committing the 6–8h Task 3 budget)
+
+### Owner
+
+AD/KKT engineer (Task 3)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+# Category 2: Pattern A Cohort Reclassification
+
+Priority 2 workstream — Issues #1138, #1139, #1140, #1142, #1145, #1150 per the Day 7 cohort sweep classification.
+
+## Unknown 2.1: Is the Sprint 25 Day 7 sweep classification still accurate after the Sprint 25 fix-in-place series #1338..#1352?
+
+### Priority
+
+**High** — The Day 7 sweep was conducted on 2026-04-24, BEFORE the Sprint 25 Day 11 fix-in-place series #1338..#1352 landed (which touched #1338..#1341 IndexOffset/SetMembershipTest, #1348 china subset chain, #1349 pindyck `.fx → .l`, #1350 srkandw `tn(t,t)` self-alias, #1351 launch Pattern C rollback). Some of the cohort issues' bug fingerprints may have shifted via these fixes. Reclassification action plan needs to verify each issue's current state, not just rely on the Day 7 sweep.
+
+### Assumption
+
+The Day 7 cohort sweep classifications (Pattern C plain-alias variant for #1138; AD-correct/pipeline-excluded for #1139; AD-correct multi-solve dynamics for #1140; Pattern C Bug #2 for #1142; offset-handling/condition-guard for #1145; split for #1150 — qabel = Pattern C massive-enumeration, abel = AD-correct/solver noise) remain accurate post Sprint 25 fix-in-place series.
+
+### Research Questions
+
+1. For each cohort issue, run the canonical model translate + emit on current main and grep for the documented bug fingerprint. Does the fingerprint still appear?
+2. Did any of #1338..#1352 fix the cohort issue's underlying bug as a side-effect?
+3. For #1142 (subsumed by #1307 Pattern C Bug #2): is the #1307 fix scheduled in Sprint 26 Priority 1, or does it need separate work?
+4. For #1150 (split into qabel/abel): did Sprint 25 #1311 (closed during S25) actually fix abel?
+
+### How to Verify
+
+**Test Case 1: Per-issue fingerprint re-verification**
+
+```bash
+# For each issue, fetch the canonical model + grep for the bug fingerprint
+for issue_model in "1138:irscge:nu_eqpzs.*\\+" "1139:meanvar:" "1140:ps2_f_s:" "1142:launch:nu_dweight.*\\+" "1145:cclinpts:" "1150:qabel:k-[0-9]+"; do
+  issue=$(echo $issue_model | cut -d: -f1)
+  model=$(echo $issue_model | cut -d: -f2)
+  fingerprint=$(echo $issue_model | cut -d: -f3-)
+  echo "=== Issue #$issue / $model ==="
+  if [ -f data/gamslib/mcp/${model}_mcp.gms ]; then
+    grep -cE "$fingerprint" data/gamslib/mcp/${model}_mcp.gms || echo "(no match — possibly resolved)"
+  fi
+done
+```
+
+**Test Case 2: Sprint 25 #1311 outcome check**
+
+Verify #1311 is CLOSED and the qabel/abel u-quadratic AD subset-domain bug fix landed. Check that abel's emit no longer has the `Const(0.0)` u-derivative documented in `SPRINT_25/DAY8_QABEL_ABEL_REASSESSMENT.md`.
+
+```bash
+gh issue view 1311 --json state | head -3
+grep -E "u\(.*\)" data/gamslib/mcp/abel_mcp.gms | head -5
+```
+
+### Risk if Wrong
+
+- **Day 7 classifications stale:** Reclassification action plan (Task 4) is wrong; Sprint 26 work on Priority 2 produces incorrect issue closures.
+- **Some cohort bugs already fixed by #1338..#1352:** Sprint 26 Priority 2 budget can shrink (good); some `sprint-26` labeled issues should be closed during prep, not during execution.
+
+### Estimated Research Time
+
+2 hours (within Task 4 — per-issue grep + #1311 outcome cross-check)
+
+### Owner
+
+Sprint planning (Task 4)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 2.2: Per cohort issue, what is the correct Sprint 26 action — subsume vs close-as-resolved vs close-and-refile vs investigate further?
+
+### Priority
+
+**Medium** — Each of the 6 cohort issues needs a specific action. The Day 7 sweep gave per-issue classifications but didn't translate them into actions. This unknown drives the per-issue decision matrix in Task 4's PATTERN_A_RECLASSIFICATION_PLAN.md.
+
+### Assumption
+
+Per Sprint 25 retrospective §Priority 2:
+
+- #1138 → subsume into Sprint 26 Priority 1 (Pattern C generalization)
+- #1139 → close-as-resolved (AD-correct, pipeline-excluded)
+- #1140 → close-and-refile under "multi-solve dynamics" or defer to Sprint 27 investigation
+- #1142 → subsume into #1307 (Pattern C Bug #2; addressed by Sprint 26 Priority 1)
+- #1145 → close-and-refile as "offset-handling/condition-guard bug" (Sprint 27)
+- #1150 → split: close abel-portion as resolved (#1311 fixed it); subsume qabel-portion into Sprint 26 Priority 1
+
+### Research Questions
+
+1. For each "subsume" action, does the parent issue (Priority 1 #1306/#1307 or Priority 5 #1334) actually claim coverage? File a forward-link comment on the cohort issue noting the subsumption.
+2. For each "close-and-refile" action, what's the new issue's title, body, and Sprint 27 label?
+3. For each "close-as-resolved" action, what's the evidence (commit SHA, test name, or `gamslib_status.json` entry)?
+4. Does any cohort issue have GitHub linkages (cross-issue references, blocking labels) that need to be updated when closing?
+
+### How to Verify
+
+**Test Case 1: Per-issue evidence collection**
+
+For each cohort issue, write the action note in the format:
+
+```markdown
+## Issue #NNNN
+
+**Day 7 classification:** [from DAY7_COHORT_SWEEP.md]
+**Current emit fingerprint:** [from Unknown 2.1 verification]
+**Recommended action:** [subsume / close-as-resolved / close-and-refile / investigate]
+**Action evidence:** [commit SHA, parent issue, or new-issue draft body]
+**GitHub linkages:** [cross-references to update]
+```
+
+### Risk if Wrong
+
+- **Subsume action without parent coverage:** the cohort issue is closed but the bug isn't actually addressed; user-visible regression.
+- **Close-as-resolved without evidence:** future contributors re-discover the same bug because there's no test pinning the resolution.
+
+### Estimated Research Time
+
+1.5 hours (within Task 4 — per-issue action note + GitHub linkage check)
+
+### Owner
+
+Sprint planning (Task 4)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 2.3: Will closing the 6 cohort issues surface test xfails depending on those issue numbers in their docstrings?
+
+### Priority
+
+**Medium** — Sprint 25 #1306 launch fix introduced an `xfail(strict=True)` on `tests/unit/kkt/test_pattern_c_alias_offset_gate.py` that references the issue number in its `reason=` argument. If any cohort issue has similar test linkages, closing the issue without updating the test produces a stale-reason error.
+
+### Assumption
+
+A small number of test files (≤3) reference cohort issue numbers in `xfail(reason=...)` arguments, docstrings, or comments. Closing the cohort issues requires a synchronized test-update commit.
+
+### Research Questions
+
+1. How many test files reference each of #1138, #1139, #1140, #1142, #1145, #1150?
+2. Are the references in `xfail(reason=...)` arguments (which need synchronized update) or just docstring comments (which are advisory)?
+3. Are there test files that depend on the cohort issue's bug being present (e.g., a regression-canary test that would FAIL if the bug is fixed)?
+
+### How to Verify
+
+**Test Case 1: Recursive grep across tests/**
+
+```bash
+for issue in 1138 1139 1140 1142 1145 1150; do
+  echo "=== #$issue ==="
+  grep -rE "#$issue\b" tests/ 2>/dev/null
+done
+```
+
+**Test Case 2: xfail-specific search**
+
+```bash
+grep -rEB1 -A2 "xfail.*reason.*113[8-9]|xfail.*reason.*114[02-7]|xfail.*reason.*1150" tests/ 2>/dev/null
+```
+
+### Risk if Wrong
+
+- **Stale-reason errors on PRs that close cohort issues:** CI fails on the closing PR; need follow-up commit to clean.
+- **Hidden regression-canary tests:** Sprint 26 Priority 2 work breaks tests it didn't intend to touch.
+
+### Estimated Research Time
+
+1 hour (within Task 4 — recursive grep + per-reference inspection)
+
+### Owner
+
+Sprint planning (Task 4)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 2.4: Does any cohort issue have hidden dependencies on docstring-level references in `src/` or `docs/`?
+
+### Priority
+
+**Low** — Source-level docstring references to issue numbers don't break tests but produce stale documentation. Worth knowing but doesn't drive Sprint 26 scope.
+
+### Assumption
+
+Source-level (and docs-level) references to cohort issue numbers are scattered (estimated ≤ 20 references across `src/`, `docs/`) and can be batch-updated as part of the Sprint 26 Priority 2 issue closures.
+
+### Research Questions
+
+1. How many `src/`-level references to cohort issue numbers exist?
+2. How many `docs/`-level references (excluding `docs/issues/ISSUE_*.md` and `docs/planning/`) exist?
+3. Are any references in user-visible documentation (README.md, CONTRIBUTING.md, public-facing API docs)?
+
+### How to Verify
+
+```bash
+for issue in 1138 1139 1140 1142 1145 1150; do
+  echo "=== #$issue ==="
+  grep -rcE "#$issue\b" src/ 2>/dev/null
+  grep -rcE "#$issue\b" docs/ --include="*.md" 2>/dev/null | grep -v "/issues/\|/planning/"
+done
+```
+
+### Risk if Wrong
+
+- **Stale doc references after closing cohort issues:** future readers see references to closed issues without forward-links.
+
+### Estimated Research Time
+
+0.5 hours (within Task 4 — recursive grep)
+
+### Owner
+
+Sprint planning (Task 4)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+# Category 3: Pattern E Carryforward Re-Verification
+
+Priority 3 workstream — Issues #1141 (kand), #1144 (catmix), #1147 (camshape). Phase E was cancelled per Sprint 25 literal Checkpoint 2 NO-GO routing.
+
+## Unknown 3.1: Did the Sprint 25 fix-in-place series #1338..#1352 shift any of #1141 / #1144 / #1147 bucket via side-effects?
+
+### Priority
+
+**High** — If any Phase E carryforward was inadvertently fixed (or its bucket shifted) by Sprint 25's fix-in-place series, Sprint 26 Priority 3 budget can shrink. catmix specifically was on the Sprint 25 #1338 list (catmix translate via `expr_to_gams` IndexOffset handling for SetMembershipTest indices).
+
+### Assumption
+
+At least one of #1141 / #1144 / #1147 has its bucket shifted via the Sprint 25 fix-in-place series — most likely catmix (#1144) via #1338, since #1338 specifically targeted catmix translate.
+
+### Research Questions
+
+1. What is each Phase E model's current bucket per `data/gamslib/gamslib_status.json` (post-Sprint-25)?
+2. Was the bucket different at the Sprint 25 Day 0 baseline?
+3. If shifted, which Sprint 25 commit triggered the shift?
+4. Does the new bucket match a different category (e.g., catmix moved from `path_syntax_error` to `path_solve_terminated`)?
+
+### How to Verify
+
+**Test Case 1: Per-model current status query**
+
+```bash
+.venv/bin/python <<'EOF'
+import json
+d = json.loads(open('data/gamslib/gamslib_status.json').read())
+for mid in ('kand', 'catmix', 'camshape'):
+  m = next((x for x in d['models'] if x['model_id']==mid), None)
+  if m:
+    t = (m.get('nlp2mcp_translate') or {}).get('status', '?')
+    s = m.get('mcp_solve') or {}
+    cat = (s.get('error') or {}).get('category') or s.get('outcome_category') or '?'
+    cmp = (m.get('solution_comparison') or {}).get('comparison_status', '?')
+    print(f"{mid:12s} translate={t} solve_cat={cat} cmp={cmp}")
+EOF
+```
+
+**Test Case 2: Sprint 25 baseline vs Sprint 25 final diff**
+
+Use the Sprint 25 Day 0 baseline `gamslib_status.json` (Task 2 output) vs current to identify per-model transitions for the 3 Phase E models specifically.
+
+### Risk if Wrong
+
+- **Phase E bucket shifted unexpectedly:** Sprint 26 Priority 3 has wrong target list; effort spent on already-recovered models.
+- **catmix already fixed (per #1338):** can close #1144 during prep; Sprint 26 Priority 3 reduces from 3 to 2 models.
+
+### Estimated Research Time
+
+1.5 hours (within Task 5 — per-model status query + S25-baseline diff)
+
+### Owner
+
+Sprint planning (Task 5)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 3.2: Specifically — was catmix recovered by Sprint 25 #1338 (which was on the SetMembershipTest fix list)?
+
+### Priority
+
+**High** — Direct test of the most likely Sprint-25-side-effect-fix among the 3 Phase E models. If yes, #1144 closes during Sprint 26 prep with no further action; Sprint 26 Priority 3 shrinks by 33%.
+
+### Assumption
+
+#1338 (catmix translate via `expr_to_gams` IndexOffset handling for SetMembershipTest indices) actually fixed catmix's compile-time failure, but #1144 (which is about runtime/solve-time alias-domain inference, per the Day 7 sweep) is a separate bug that #1338 does NOT address.
+
+### Research Questions
+
+1. Does catmix currently translate (status `success` per gamslib_status.json)?
+2. Does the resulting MCP compile successfully under PATH (`gams catmix_mcp.gms action=c`)?
+3. Does it solve? If yes, does it match? If no, what's the failure category?
+4. What was #1144's original bug fingerprint (per `ISSUE_1144_catmix-alias-domain-inference-mismatch.md`)? Does that fingerprint still appear in catmix's emit?
+
+### How to Verify
+
+**Test Case 1: catmix end-to-end pipeline**
+
+```bash
+.venv/bin/python -m src.cli data/gamslib/raw/catmix.gms \
+  -o /tmp/sprint26-pattern-e/catmix_mcp.gms --skip-convexity-check --quiet
+gams /tmp/sprint26-pattern-e/catmix_mcp.gms action=c lo=2
+gams /tmp/sprint26-pattern-e/catmix_mcp.gms lo=2 > /tmp/catmix_solve.log 2>&1
+grep "MODEL STATUS" /tmp/catmix_solve.log
+```
+
+**Test Case 2: Read ISSUE_1144 + grep for its fingerprint**
+
+```bash
+grep -nE "alias.*domain|inference|mismatch" docs/issues/ISSUE_1144*.md | head -10
+# Then grep for the documented buggy emit pattern in current catmix_mcp.gms
+```
+
+### Risk if Wrong
+
+- **catmix actually unchanged:** Sprint 26 Priority 3 still has 3 models; estimated 4–6h holds.
+- **catmix recovered to mismatch:** #1144 closes; Sprint 26 Priority 3 has 2 models.
+
+### Estimated Research Time
+
+1 hour (within Task 5 — catmix end-to-end pipeline + #1144 fingerprint check)
+
+### Owner
+
+Sprint planning (Task 5)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 3.3: Is "Phase E" still the right framing for #1141 / #1144 / #1147 post-Sprint-25?
+
+### Priority
+
+**Medium** — Phase E was a Sprint 25 design construct (`DESIGN_ALIAS_AD_ROLLOUT.md` §Phase 4) for "alias-AD bug shapes that don't fit Patterns A/B/C/D". Post Sprint 25, the Pattern A/C/E dichotomy may have changed. If "Phase E" no longer maps cleanly, Sprint 26 should rename or fold these into other categories.
+
+### Assumption
+
+The "Phase E" designation can stay as-is for Sprint 26 Priority 3 — these 3 issues are the residual alias-AD work that doesn't fit the broader Pattern C generalization (Priority 1) or the Pattern A reclassification (Priority 2).
+
+### Research Questions
+
+1. Per the Day 7 cohort sweep, how was each of #1141 / #1144 / #1147 classified?
+2. Does any of the 3 issues fit the broader Pattern C shape that Priority 1 will fix?
+3. Does any of the 3 issues fit a "Pattern A reclassification" shape that should be folded into Priority 2?
+
+### How to Verify
+
+**Test Case 1: Re-read DAY7_COHORT_SWEEP.md classification**
+
+```bash
+grep -nE "1141|1144|1147" docs/planning/EPIC_4/SPRINT_25/DAY7_COHORT_SWEEP.md | head -20
+```
+
+**Test Case 2: Per-issue forward-classification**
+
+For each of #1141, #1144, #1147, decide: (a) fold into Priority 1 (Pattern C generalization), (b) fold into Priority 2 (cohort reclassification), (c) keep as standalone Priority 3 work.
+
+### Risk if Wrong
+
+- **"Phase E" keeps but is stale:** Sprint 26 documentation uses confusing terminology that doesn't match the real bug shapes.
+- **Should fold into other priority:** Sprint 26 Priority 3 work redistributes; budget reallocates.
+
+### Estimated Research Time
+
+0.5 hours (within Task 5 — sweep doc re-read + per-issue classification decision)
+
+### Owner
+
+Sprint planning (Task 5)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+# Category 4: Translation Timeout — Option 1 Short-Circuit
+
+Priority 4 workstream — Issues #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant); defers #1224 (mine ParamRef IndexOffset).
+
+## Unknown 4.1: Is the Sprint 25 Option 1 short-circuit design still valid post-Sprint-25 #1338..#1341 SetMembershipTest fixes?
+
+### Priority
+
+**Critical** — Sprint 26 Priority 4 budget (4–6h) assumes the Sprint 25 design (`PROFILE_HARD_TIMEOUTS.md`) still applies. If #1338..#1341 (which targeted SetMembershipTest paths) shifted the failure surface, the design needs refresh — and the budget overruns.
+
+### Assumption
+
+The Sprint 25 Option 1 short-circuit design — landing in `src/ad/index_mapping.py::enumerate_equation_instances` (primary) + `resolve_set_members` (same file) + `src/ir/condition_eval.py` (static `SetMembershipTest` failure path) — is still valid. The Sprint 25 #1338..#1341 fixes targeted `expr_to_gams` (a different file path) and `_process_expr_map_bound` (another different path); they did NOT touch the Option 1 patch sites.
+
+### Research Questions
+
+1. Do the Option 1 patch sites still exist in current `src/ad/index_mapping.py` and `src/ir/condition_eval.py` with the expected function signatures?
+2. Did Sprint 25 #1338..#1341 modify any code in `src/ad/index_mapping.py` or `src/ir/condition_eval.py`?
+3. Does the `enumerate_equation_instances` function still hit the documented Cartesian-explosion fallback for srpchase/iswnm?
+4. Are there new code paths (introduced by #1338..#1341 or other Sprint 25 commits) that bypass `enumerate_equation_instances` for the same models?
+
+### How to Verify
+
+**Test Case 1: Patch sites exist**
+
+```bash
+grep -nE "def enumerate_equation_instances|def resolve_set_members" src/ad/index_mapping.py
+grep -nE "SetMembershipTest" src/ir/condition_eval.py | head -10
+```
+
+**Test Case 2: Sprint 25 modification history**
+
+```bash
+git log --oneline --diff-filter=M -- src/ad/index_mapping.py src/ir/condition_eval.py | head -10
+# Check if any of #1338..#1341 commits show in the history
+```
+
+**Test Case 3: srpchase still hits the documented bottleneck**
+
+```bash
+# Re-profile srpchase with SIGALRM 900s
+mkdir -p /tmp/sprint26-profile
+timeout 900 .venv/bin/python -m src.cli data/gamslib/raw/srpchase.gms \
+  -o /tmp/sprint26-profile/srpchase_mcp.gms --skip-convexity-check --quiet \
+  > /tmp/sprint26-profile/srpchase.log 2>&1
+echo "Exit code: $?"
+```
+
+Expected: srpchase still completes in ~500s (per Sprint 25 PROFILE_HARD_TIMEOUTS.md).
+
+### Risk if Wrong
+
+- **Patch sites moved:** Task 6 design refresh needed; budget grows from 3–4h to 6–8h.
+- **Failure surface shifted:** Option 1 doesn't apply; need a different approach for Priority 4.
+
+### Estimated Research Time
+
+1.5 hours (within Task 6 — patch-site verification + Sprint 25 git log + srpchase re-profile)
+
+### Owner
+
+AD engineer (Task 6)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 4.2: Will the Option 1 short-circuit recover only srpchase, or also unblock 1+ of {iswnm, mexls, nebrazil, sarf}?
+
+### Priority
+
+**High** — Sprint 26 Translate target is ≥ 135/142 (+2 from Sprint 25 final 133). If Option 1 only recovers srpchase (+1), the second translate-recovery must come from elsewhere (e.g., #1224 mine if pulled in). If Option 1 recovers 2+ models, Sprint 26 Translate target is comfortably hit by Priority 4 alone.
+
+### Assumption
+
+Option 1 unblocks srpchase (per Sprint 25 PROFILE_HARD_TIMEOUTS.md "srpchase completes in 500s"). Among {iswnm, mexls, nebrazil, sarf}, at most 1 model is also unblocked — the remaining 3 are too far over the 600s budget to recover even with the short-circuit.
+
+### Research Questions
+
+1. Per Sprint 25 PROFILE_HARD_TIMEOUTS.md, how far over budget are iswnm / mexls / nebrazil / sarf at 900s SIGALRM? (i.e., do they complete in 901s or 1500s+?)
+2. Does the short-circuit reduce per-equation-instance work by a constant factor (e.g., 2×) or a variable factor (model-dependent)?
+3. For the model with the lowest over-budget margin (smallest 900s overshoot), what's the projected post-short-circuit translate time?
+
+### How to Verify
+
+**Test Case 1: Re-profile {iswnm, mexls, nebrazil, sarf} with extended SIGALRM**
+
+```bash
+for m in iswnm mexls nebrazil sarf; do
+  timeout 1800 .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
+    -o /tmp/sprint26-profile/${m}_mcp.gms --skip-convexity-check --quiet \
+    > /tmp/sprint26-profile/${m}.log 2>&1
+  echo "$m exit code: $?"
+done
+```
+
+Expected: identify the 1 model (if any) that completes in < 1800s. That's the second-most-likely Option 1 candidate after srpchase.
+
+**Test Case 2: Estimate short-circuit speedup factor**
+
+Per the documented bottleneck shape (`SetMembershipTest` Cartesian explosion), estimate the speedup the short-circuit produces. If the short-circuit eliminates an O(n^k) term (where n is set size and k is equation arity), the speedup may be enormous on smaller models.
+
+### Risk if Wrong
+
+- **Only srpchase recovered:** Sprint 26 Translate target = 134/142 (one short of ≥ 135). Need to pull #1224 or accept missing target.
+- **2+ recovered:** Sprint 26 Translate target comfortably met; possibly hit STRETCH ≥ 137/142.
+
+### Estimated Research Time
+
+1 hour (within Task 6 — extended-budget re-profile of 4 models + speedup estimation)
+
+### Owner
+
+AD engineer (Task 6)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 4.3: Should #1224 (mine ParamRef IndexOffset) be deferred to a separate effort or bundled with Priority 4?
+
+### Priority
+
+**Medium** — Per Sprint 26 Priority 4 description in PROJECT_PLAN.md: "Defer #1224 (mine ParamRef IndexOffset) to a separate effort — the IndexOffset offset-as-Expr extension is a larger architectural change." Need to confirm the deferral decision is correct given Sprint 26 budget.
+
+### Assumption
+
+#1224 requires a non-trivial IndexOffset architectural extension (allowing the offset to be an Expr, not just an int) that's out of Sprint 26 scope. Defer to Sprint 27 or later.
+
+### Research Questions
+
+1. What's the rough effort estimate for #1224's IndexOffset architectural extension?
+2. Are there test fixtures (mine.gms beyond) that would benefit from the extension?
+3. Could a narrower mine-specific fix (without the architectural extension) deliver the same Translate +1 in Sprint 26?
+
+### How to Verify
+
+**Test Case 1: Read ISSUE_1224 + estimate effort**
+
+```bash
+cat docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md
+```
+
+**Test Case 2: Check for mine-only narrow fix**
+
+Inspect mine's source. The `ParamRef(li(k))` offset is on a single equation `pr(k,l+1,i,j)$c(l,i,j)`. A narrow fix could specialize for "ParamRef on the leading index of an equation domain" rather than general "ParamRef as offset in any IndexOffset".
+
+### Risk if Wrong
+
+- **#1224 is actually narrow-scope:** can land in Sprint 26 alongside Option 1; Translate target +1.
+- **#1224 is wider than estimated:** even the narrow fix is out of scope; Sprint 26 holds the deferral.
+
+### Estimated Research Time
+
+1 hour (within Task 6 — read ISSUE_1224 + estimate + narrow-fix feasibility check)
+
+### Owner
+
+AD engineer (Task 6)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 4.4: Will the Option 1 short-circuit produce flaky or non-deterministic behavior on edge-case dynamic-subset inputs?
+
+### Priority
+
+**Medium** — The short-circuit returns "include unevaluable instances by default" (per the documented warning text). If the set of "unevaluable instances" depends on dict iteration order or other non-deterministic state, the short-circuit could produce different MCPs across runs, violating PR12 byte-stability guarantees.
+
+### Assumption
+
+The Option 1 short-circuit is deterministic — the set of "unevaluable instances" is fully determined by the AST shape, not by iteration order or set membership timing.
+
+### Research Questions
+
+1. Does `enumerate_equation_instances` use any data structures with iteration-order dependency (sets, dicts pre-Python-3.7)?
+2. Does the short-circuit's "include all unevaluable instances by default" decision make use of any global state that could vary across runs?
+3. After the short-circuit lands, will the PR12 determinism harness still pass (5 fixtures × 5 seeds byte-equivalent)?
+
+### How to Verify
+
+**Test Case 1: Code-path determinism inspection**
+
+Read `enumerate_equation_instances` and the short-circuit insertion point. Identify any iteration over `dict.items()` / `set` / similar non-deterministic structures.
+
+**Test Case 2: Determinism test post-prototype**
+
+Apply the Option 1 prototype patch. Run the PR12 determinism harness (`tests/integration/test_pipeline_determinism.py`):
+
+```bash
+.venv/bin/python -m pytest tests/integration/test_pipeline_determinism.py -v 2>&1 | tail -15
+```
+
+Expected: all 6 (or however many) determinism tests pass.
+
+### Risk if Wrong
+
+- **Non-deterministic emit:** PR12 fails on Sprint 26 Day 1; Option 1 needs determinism patches before merge.
+- **Determinism guaranteed:** safe to land Option 1 in Sprint 26 without additional plumbing.
+
+### Estimated Research Time
+
+1 hour (within Task 6 — code inspection + determinism test on prototype)
+
+### Owner
+
+AD engineer (Task 6)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+# Category 5: AD Residuals (#1334, #1335)
+
+Priority 5 workstream — both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. Confirmed on otpop.
+
+## Unknown 5.1: Are the file:line references in ISSUE_1334.md / ISSUE_1335.md still accurate after the Sprint 25 fix-in-place series touched stationarity.py?
+
+### Priority
+
+**High** — Sprint 25 #1350 (srkandw `tn(t,t)` self-alias) modified `_remap_condition_to_domain` in `src/kkt/stationarity.py`; Sprint 25 #1351 (launch Pattern C rollback) also modified the file. Stale file:line references means Sprint 26 work starts with broken pointers.
+
+### Assumption
+
+The file:line references in ISSUE_1334 (`src/kkt/stationarity.py:5279–5310` for `_add_jacobian_transpose_terms_scalar`; `:2295–2479` for `_replace_indices_in_expr`) are within ±20 lines of accuracy post Sprint 25 fix-in-place series — close enough that the function names alone identify the targets.
+
+### Research Questions
+
+1. Do the function definitions (`def _add_jacobian_transpose_terms_scalar`, `def _replace_indices_in_expr`) still exist in `src/kkt/stationarity.py`?
+2. What are the current line numbers?
+3. Are the function bodies semantically the same as documented in ISSUE_1334.md, or did Sprint 25 modify the internals?
+
+### How to Verify
+
+```bash
+grep -nE "^def _add_jacobian_transpose_terms_scalar|^def _replace_indices_in_expr|^def _remap_condition_to_domain" \
+  src/kkt/stationarity.py
+# Compare to ISSUE_1334.md / ISSUE_1335.md documented line numbers
+```
+
+### Risk if Wrong
+
+- **References stale by >20 lines:** Sprint 26 Priority 5 work starts with confusion; need to refresh ISSUE_1334.md / ISSUE_1335.md before fix work begins.
+- **Function bodies modified:** Sprint 25 changes may have affected the documented bug shape; need to re-confirm reproducer (Unknown 5.2).
+
+### Estimated Research Time
+
+0.5 hours (within Task 7 — grep + line-number cross-reference)
+
+### Owner
+
+AD/KKT engineer (Task 7)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 5.2: Does the otpop NLP-warm-started reproducer still produce the documented `LHS = -1.4157` residual on `stat_cd(ag-subsist)`?
+
+### Priority
+
+**High** — ISSUE_1334.md documents the otpop reproducer with specific residual values. If Sprint 25 changes shifted those values (or fixed the bug as a side-effect), Sprint 26 Priority 5 work starts with stale baselines.
+
+### Assumption
+
+Running otpop translate + NLP solve + dual transfer + MCP iterlim=0 still produces `stat_cd(ag-subsist)` LHS ≈ -1.4157 (per ISSUE_1334.md §Diagnostic). Sprint 25 changes did NOT inadvertently fix #1334 or shift its residual.
+
+### Research Questions
+
+1. Does the otpop translate currently succeed?
+2. Does the otpop NLP solve under `gams otpop.gms`?
+3. What are the per-equation residuals at the NLP-warm-start (specifically `stat_cd(ag-subsist)`, `stat_x('1990')`, `stat_p('1986')`)?
+4. Are the residuals materially different from the documented values?
+
+### How to Verify
+
+```bash
+mkdir -p /tmp/sprint26-otpop
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
+  -o /tmp/sprint26-otpop/otpop_mcp.gms --skip-convexity-check --quiet
+# Apply the manual NLP solve + dual transfer + MCP iterlim=0 steps from ISSUE_1334.md §Diagnostic
+# (typically requires a custom script; document the procedure in AD_RESIDUALS_RECAP.md)
+```
+
+### Risk if Wrong
+
+- **Residuals shifted:** Sprint 26 fix needs new acceptance criteria; ISSUE docs need refresh.
+- **Bug fixed inadvertently:** #1334 closes during prep; Sprint 26 Priority 5 budget shrinks 8–14h to 4–8h.
+
+### Estimated Research Time
+
+1.5 hours (within Task 7 — otpop reproducer rerun + residual measurement)
+
+### Owner
+
+AD/KKT engineer (Task 7)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 5.3: Does fixing #1334 actually subsume #1357 (otpop `$171` from Sprint 25 Day 13), or are they independent bugs?
+
+### Priority
+
+**Critical** — Sprint 25 #1357 is documented as "likely subsumed by #1334" in its issue body. Sprint 26 needs to confirm this for two reasons: (a) bucket-provenance baseline accounting (Task 9) — does otpop's path_syntax_error count attribute to Priority 1 (Pattern C) or Priority 5 (#1334)?; (b) Match-gain projection — if #1334 alone fixes otpop (#1357), Pattern C generalization doesn't need to target otpop.
+
+### Assumption
+
+#1334 (spurious `Sum(("t__",), ...)` wrap on subset-domain ParamRef) IS the root cause of #1357 (otpop `$171` domain violations from Day 13 carryforward). Fixing #1334 closes #1357 with no separate work needed.
+
+### Research Questions
+
+1. Does the otpop emit's `$171` violation lines (217, 247) actually contain the `sum(t__, ...)` pattern documented in ISSUE_1334.md §"Buggy Emit (otpop)"?
+2. If yes, the subsumption claim is confirmed. If no, #1357 is independent and needs its own fix work.
+3. What's the current Sprint 26 in-scope set's `path_syntax_error` count after subsumption (12 minus how many other bucket transitions)?
+
+### How to Verify
+
+```bash
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
+  -o /tmp/sprint26-otpop/otpop_mcp.gms --skip-convexity-check --quiet
+sed -n '210,250p' /tmp/sprint26-otpop/otpop_mcp.gms | grep -E "sum\(t__|sum\(t,"
+```
+
+Expected if subsumption holds: lines 217 / 247 reference the `sum(t__, ...)` pattern from ISSUE_1334.
+
+### Risk if Wrong
+
+- **Subsumption fails:** Sprint 26 needs separate fix for #1357; Priority 1 Pattern C target list shrinks but Priority 5 budget grows.
+- **Subsumption confirmed:** Pattern C target list includes camcge/cesam2/fawley (3 models, not 4); Match-gain projection adjusts.
+
+### Estimated Research Time
+
+1 hour (within Task 7 — otpop emit grep + ISSUE_1334 fingerprint comparison)
+
+### Owner
+
+AD/KKT engineer (Task 7)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 5.4: Is #1335 a tractable Sprint-26-level fix or does it require larger architectural change?
+
+### Priority
+
+**Medium** — ISSUE_1335 documents "Missing dzdef/dp cross-term in stat_p when zdef references p via time-reversal-indexed offset" — sounds narrow but may have wide blast radius if it touches the same `_replace_indices_in_expr` machinery as #1334.
+
+### Assumption
+
+#1335 is a narrow fix at the same `_add_jacobian_transpose_terms_scalar` site as #1334, and can land in 4–8h of Sprint 26 effort (per the combined #1334 + #1335 estimate of 8–14h).
+
+### Research Questions
+
+1. Per ISSUE_1335.md, what's the specific code path that produces the missing cross-term?
+2. Is it the same function as #1334, or an adjacent function?
+3. Does fixing #1335 require any IR-level changes (vs. KKT-assembly changes only)?
+4. Does the fix apply only to time-reversal-indexed offsets (otpop-specific) or to all reversal-indexed offsets generally?
+
+### How to Verify
+
+```bash
+cat docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md | head -60
+```
+
+### Risk if Wrong
+
+- **#1335 is wider than #1334:** Sprint 26 Priority 5 budget needs to expand from 8–14h to 12–20h.
+- **#1335 narrow:** combined #1334 + #1335 fits in 8h; possibly leaves room for #1224 (mine) bundling.
+
+### Estimated Research Time
+
+1 hour (within Task 7 — read ISSUE_1335 + identify code path + estimate)
+
+### Owner
+
+AD/KKT engineer (Task 7)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+# Category 6: Cross-Cutting & Process Recommendations
+
+Process recommendations from Sprint 25 retrospective: PR16 (already applied via Task 3), PR17 (bucket provenance baseline), PR18 (scope-shifted model identification), PR19 (pre-merge solve-time validation CI), PR14 reaffirmation (read-the-MCP rule).
+
+## Unknown 6.1: Will the PR19 pre-merge solve-time validation CI extension produce flaky failures on Tier 0/1 canaries (PATH solve under tight budget)?
+
+### Priority
+
+**High** — If PR19 is flaky, Sprint 26 PRs spend disproportionate time waiting for re-runs and reviewers lose confidence in the new CI signal. Need to budget the PATH-solve timeout generously enough to avoid flakes while still catching real regressions.
+
+### Assumption
+
+A 30-second PATH-solve budget per model is sufficient for the 11 Tier 0/1 canaries. The current canary models all solve in <10s on the Sprint 25 reference machine; the 30s budget provides 3× margin for CI machine variance.
+
+### Research Questions
+
+1. What's the current PATH-solve time for each Tier 0/1 canary on the local dev machine?
+2. What's the typical CI machine slowdown factor vs local dev (per other slow-test data)?
+3. Are any of the 11 canaries close to a 30s threshold even with the 3× margin?
+4. Should the budget be configurable per model (some need 60s+) or a flat 30s?
+
+### How to Verify
+
+```bash
+# Time each canary's PATH solve locally
+for m in dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+  t0=$(date +%s)
+  gams data/gamslib/mcp/${m}_mcp.gms lo=0 > /dev/null 2>&1
+  echo "$m: $(($(date +%s) - t0))s"
+done
+```
+
+### Risk if Wrong
+
+- **30s too tight:** PR19 produces flaky failures; reviewers ignore the signal; bug surface remains uncaught.
+- **30s too loose:** PR latency grows; reviewers complain about CI time.
+
+### Estimated Research Time
+
+1 hour (within Task 8 — local timing + CI slowdown estimate)
+
+### Owner
+
+CI engineer (Task 8)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 6.2: What's the right target list for PR19 — just the 4 Pattern C target models, all 11 Tier 0/1 canaries, or some subset?
+
+### Priority
+
+**High** — The PR19 design needs an explicit target list. Too narrow misses regressions (e.g., emit change breaks a canary that's not in the list); too broad inflates PR latency.
+
+### Assumption
+
+The PR19 target list should include: (a) the 4 Pattern C target models (camcge, cesam2, fawley, otpop) — for soft-fail informational signal during Sprint 26; (b) 3+ Tier 0 canaries (dispatch, quocge, partssupply) — for hard-fail regression detection. Total: 7 models × 30s = ~3.5min CI overhead, which is acceptable.
+
+### Research Questions
+
+1. How many CI minutes does the existing `make test` consume? Is +3.5min material?
+2. Should the soft-fail / hard-fail distinction be configurable in `.github/path-solve-ci-targets.txt`?
+3. Are there any non-canary in-scope models that have caught emit regressions historically? (Suggests they should be in the PR19 target list.)
+4. Should the target list expand to all 11 Tier 0/1 canaries for safety, or can we trust 3 to catch most regressions?
+
+### How to Verify
+
+**Test Case 1: Survey existing CI duration**
+
+```bash
+# From recent CI logs, find the total runtime of the test workflow
+gh run list --workflow CI --limit 5 --json conclusion,createdAt,updatedAt | python3 -c "
+import json, sys
+runs = json.load(sys.stdin)
+for r in runs:
+    print(r['createdAt'], r['updatedAt'], r['conclusion'])
+"
+```
+
+**Test Case 2: Historical canary-catch analysis**
+
+Survey the last ~10 PRs that touched `src/emit/*.py` or `src/kkt/stationarity.py`. For each, check if the PR review comments or CI failures referenced any non-canary model emit changes.
+
+### Risk if Wrong
+
+- **Target list too narrow:** Sprint 26 emit regressions on non-target models slip through; user-visible bugs.
+- **Target list too broad:** PR latency inflates; CI cost grows; reviewer fatigue.
+
+### Estimated Research Time
+
+1 hour (within Task 8 — CI duration survey + historical PR analysis)
+
+### Owner
+
+CI engineer (Task 8)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 6.3: Will adding bucket-provenance to BASELINE_METRICS.md confuse readers who expect aggregate counts only?
+
+### Priority
+
+**Low** — Documentation usability concern. Worth knowing but doesn't drive Sprint 26 scope.
+
+### Assumption
+
+Adding a per-failing-model "Sprint 25 bucket → Sprint 26 bucket" provenance column to `BASELINE_METRICS.md` clarifies metric attribution without obscuring the aggregate counts (which remain in the main metrics table at the top of the doc).
+
+### Research Questions
+
+1. Is the bucket-provenance column added as a separate sub-section (preserving the aggregate-counts top section) or interleaved?
+2. Are there other docs (CHANGELOG, PROJECT_PLAN, README) that reference BASELINE_METRICS aggregate counts and would be affected by reformatting?
+
+### How to Verify
+
+Mock up the new BASELINE_METRICS.md format with the bucket-provenance column. Get reader feedback on clarity.
+
+### Risk if Wrong
+
+- **Confusing format:** future contributors mis-read metrics; no operational impact.
+
+### Estimated Research Time
+
+0.5 hours (within Task 9 — format mockup + skim review)
+
+### Owner
+
+Sprint planning (Task 9)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 6.4: Does the PR14 emit-PR `.gms` artifact rule need an exception for refactor-only PRs that pass byte-diff verification?
+
+### Priority
+
+**Medium** — Sprint 25 PR #1353 (#1271 dispatcher refactor) was byte-diff verified across 141 models — that diff is "zero" by design. If the PR14 rule says "include one regenerated `.gms` artifact in the diff", refactor-only PRs would either violate the rule or include a redundant `.gms` artifact. Need an explicit exception.
+
+### Assumption
+
+Adding a `[byte-stable-refactor]` PR label + a PR-description requirement (document the byte-diff verification command and result) is sufficient to grant the exception without weakening the rule's enforcement.
+
+### Research Questions
+
+1. How many Sprint 24/25 PRs would have qualified for the `[byte-stable-refactor]` exception?
+2. Is the exception self-policing (reviewers check the label + description) or enforced by CI?
+3. Does the exception apply only to `src/emit/` PRs or also to `src/kkt/stationarity.py` PRs?
+
+### How to Verify
+
+Survey Sprint 24/25 PR titles for refactor-only candidates (`refactor:`, `Dispatcher`, `unify`, `consolidate` keywords). Count: how many would have used the exception?
+
+### Risk if Wrong
+
+- **No exception:** refactor-only PRs include redundant `.gms` artifacts; PR diffs grow unnecessarily.
+- **Exception too permissive:** non-refactor PRs use the label to skip the artifact requirement; PR14 enforcement weakens.
+
+### Estimated Research Time
+
+0.5 hours (within Task 10 — Sprint 24/25 PR title survey)
+
+### Owner
+
+Sprint planning (Task 10)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Unknown 6.5: Will the Sprint 25 1-model scope shift (143 → 142) reverse during Sprint 26?
+
+### Priority
+
+**Low** — The shifted model is currently undocumented (Task 2 PR18 work). If it reverses during Sprint 26 (e.g., a dependency-of-convexity-detection fix lands), the Sprint 26 final retest's in-scope count returns to 143; bucket-provenance baseline (Task 9) needs to handle the count change.
+
+### Assumption
+
+The Sprint 25 scope shift was triggered by a one-way change (e.g., a model became permanently classified as non-convex). It will NOT reverse during Sprint 26 unless explicitly addressed.
+
+### Research Questions
+
+1. Per Task 2's findings, what triggered the Sprint 25 scope shift?
+2. Is the trigger reversible (e.g., a code-change affecting convexity detection that could be reverted)?
+3. If reversible, is reverting the scope shift in scope for Sprint 26?
+
+### How to Verify
+
+Depends on Task 2 outcome. If Task 2 finds the shift was triggered by `src/`-level code, this unknown asks whether reverting that code is in scope for Sprint 26.
+
+### Risk if Wrong
+
+- **Scope reverses:** Sprint 26 final retest reports 143 in-scope; baseline accounting needs adjustment.
+- **Scope stable:** no impact.
+
+### Estimated Research Time
+
+0.5 hours (within Task 9 — depends on Task 2's findings)
+
+### Owner
+
+Sprint planning (Tasks 2 + 9)
+
+### Verification Results
+
+🔍 **Status:** INCOMPLETE
+
+---
+
+## Newly Discovered Unknowns
+
+_Add unknowns discovered during Sprint 26 execution here, then categorize post-sprint._
+
+---
+
+## Template for Adding New Unknowns During Sprint
+
+```markdown
+## Unknown X.Y: [Question/Assumption]
+
+### Priority
+**[Critical/High/Medium/Low]** - [One-line impact]
+
+### Assumption
+[State the assumption being made]
+
+### Research Questions
+1. [Question 1]
+2. [Question 2]
+...
+
+### How to Verify
+[Test cases, experiments, analysis to validate assumption]
+
+### Risk if Wrong
+[Impact if assumption is incorrect]
+
+### Estimated Research Time
+[Hours] ([brief description of research activities])
+
+### Owner
+[Team/Person responsible]
+
+### Verification Results
+🔍 **Status:** INCOMPLETE
+```
+
+---
+
+## Next Steps
+
+**Before Sprint 26 Day 1:**
+
+1. **Prep Task 2 (Identify Sprint 25 Scope-Shifted Model PR18)** — verifies Unknowns 6.5
+2. **Prep Task 3 (Pattern C Hypothesis Validation PR16)** — verifies Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
+3. **Prep Task 4 (Pattern A Cohort Reclassification Pre-Work)** — verifies Unknowns 2.1, 2.2, 2.3, 2.4
+4. **Prep Task 5 (Pattern E Carryforward Status Survey)** — verifies Unknowns 3.1, 3.2, 3.3
+5. **Prep Task 6 (Profile Option 1 Short-Circuit Approach)** — verifies Unknowns 4.1, 4.2, 4.3, 4.4
+6. **Prep Task 7 (AD Residuals Investigation Recap)** — verifies Unknowns 5.1, 5.2, 5.3, 5.4
+7. **Prep Task 8 (Design Pre-Merge Solve-Time Validation CI PR19)** — verifies Unknowns 6.1, 6.2
+8. **Prep Task 9 (Bucket-Provenance Baseline + Scope Freeze PR17 + PR15)** — verifies Unknowns 6.3, 6.5 (jointly with Task 2)
+9. **Prep Task 10 (Update CONTRIBUTING.md for Emit-PR `.gms` Diffs PR14)** — verifies Unknown 6.4
+10. **Prep Task 11 (Plan Sprint 26 Detailed Schedule)** — integrates all verified unknowns
+
+During Sprint 26 execution:
+
+- Daily standup review of 🔍 INCOMPLETE unknowns
+- Update status as findings emerge
+- Add Newly Discovered Unknowns when surfaced
+- Cross-reference with Sprint 26 retrospective
+
+---
+
+## Appendix: Task-to-Unknown Mapping
+
+This table shows which Sprint 26 prep tasks verify which unknowns. Prep Task 11 (Plan Sprint 26 Detailed Schedule) integrates all verified unknowns into the 14-day execution schedule.
+
+| Prep Task | Unknowns Verified | Notes |
+|-----------|-------------------|-------|
+| Task 2: Identify Sprint 25 Scope-Shifted Model (PR18) | 6.5 | Identifies the model + reason; Task 9 documents in BASELINE_METRICS.md §5 |
+| Task 3: Pattern C Hypothesis Validation (PR16) | 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 | Day 5 methodology applied to 3 target models; produces PROCEED/REPLAN signal for Sprint 26 Priority 1 |
+| Task 4: Pattern A Cohort Reclassification Pre-Work | 2.1, 2.2, 2.3, 2.4 | Per-issue action plan for 6 cohort issues; test xfail scan |
+| Task 5: Pattern E Carryforward Status Survey | 3.1, 3.2, 3.3 | Re-verify 3 Phase E models under post-Sprint-25 emit pipeline |
+| Task 6: Profile Option 1 Short-Circuit Approach | 4.1, 4.2, 4.3, 4.4 | Verify Sprint 25 PROFILE_HARD_TIMEOUTS.md design + impact projection + #1224 deferral decision + determinism |
+| Task 7: AD Residuals (#1334, #1335) Investigation Recap | 5.1, 5.2, 5.3, 5.4 | File:line currency + reproducer + #1334 ↔ #1357 subsumption + #1335 tractability |
+| Task 8: Design Pre-Merge Solve-Time Validation CI (PR19) | 6.1, 6.2 | Flakiness risk + target list selection |
+| Task 9: Bucket-Provenance Baseline + Scope Freeze (PR17 + PR15) | 6.3, 6.5 (with Task 2) | Format usability + scope-shift policy decision |
+| Task 10: Update CONTRIBUTING.md for Emit-PR `.gms` Diffs (PR14 Reaffirmation) | 6.4 | Refactor-only exception design |
+| Task 11: Plan Sprint 26 Detailed Schedule | (integrates all) | Sprint 26 14-day schedule + day-by-day prompts |
+
+**Coverage:** All 26 Sprint 26 prep-time unknowns are assigned to at least one prep task. Most Critical and High-priority unknowns are assigned to the same task that will act on the findings (e.g., Task 3 verifies all 6 Pattern C unknowns AND its findings drive Task 11's Day 1–4 schedule allocation).
+
+**Carryforward from Sprint 25** (now informing Sprint 26 prep):
+
+- **KU-33** (Pattern C generalizes beyond launch) → directly drives Category 1 — see Unknowns 1.1, 1.2, 1.4
+- **KU-34** (bucket churn dominates path_syntax_error metric) → drives Task 9 PR17 work — see Unknown 6.3
+- **KU-35** (multi-solve gate over-approximation invariant) → regression-canary protection (no specific unknown; tested via Sprint 26 final retest)
+- **KU-36** (`_loop_tree_to_gams` bare-ID substitution invariant) → regression-canary protection (no specific unknown; tested via Sprint 26 final retest)
+
+---
+
+**Document Created:** 2026-05-07
+**Last Updated:** 2026-05-07
+**Total Unknowns:** 26
+**Owner:** Sprint 26 Planning Team
+**Review Frequency:** Daily during Sprint 26
