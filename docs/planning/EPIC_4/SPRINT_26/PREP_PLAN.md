@@ -545,12 +545,15 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 2. **For each issue, run translate + solve on the canonical model** (kand, catmix, camshape) using the current main:
 
    ```bash
+   mkdir -p /tmp/sprint26-pattern-e
    for m in kand catmix camshape; do
      .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
        -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet
-     # If translate succeeds, run gams compile-only to capture current solve-stage shape
+     # If translate succeeds, run gams compile-only and write the listing to
+     # _compile.lst (via gams `o=` option). The listing file holds GAMS' own
+     # error markers (e.g. $141, $171), which is what we grep below.
      gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
-       > /tmp/sprint26-pattern-e/${m}_compile.log 2>&1 || true
+       o=/tmp/sprint26-pattern-e/${m}_compile.lst || true
    done
    ```
 
