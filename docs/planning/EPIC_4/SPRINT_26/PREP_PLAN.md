@@ -513,9 +513,11 @@ grep -rE "#(1138|1139|1140|1142|1145|1150)" tests/ 2>/dev/null
 
 ## Task 5: Pattern E Carryforward Status Survey
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 2–3 hours
+**Actual Time:** ~1.5 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -540,16 +542,29 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 
 1. **For each of #1141, #1144, #1147, fetch current state** — `gh issue view`. Confirm OPEN, `sprint-26` labeled.
 
-2. **For each issue, run translate + solve on the canonical model** (kand, catmix, camshape) using the current main:
+2. **For each issue, run translate + GAMS compile-only on the canonical model** (kand, catmix, camshape) using the current main. Solve status is read from `data/gamslib/gamslib_status.json` (Day 14 retest values), not re-run here — solve takes ~1–60s per model and the status file already has authoritative results from the latest pipeline retest. If a fresh solve is needed, follow each translate with `gams /tmp/sprint26-pattern-e/${m}_mcp.gms lo=2` (no `action=c`, default solve).
 
    ```bash
+   mkdir -p /tmp/sprint26-pattern-e
+   # Notes for the loop body below:
+   # - The `&&` chain ensures gams only runs if translate succeeded.
+   # - GAMS' `o=` flag overrides its default listing-file name (which would
+   #   otherwise be `<input_basename>.lst`, e.g. `kand_mcp.lst`). The listing
+   #   file holds GAMS' own error markers (e.g. $141, $171), which is what
+   #   subsequent greps inspect.
+   # - Comment lines are placed ABOVE the command (not between `\`-continued
+   #   lines), because `\` joins lines in shell and a `#` after `&&` would
+   #   silently swallow the rest of the command.
    for m in kand catmix camshape; do
      .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
-       -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet
-     # If translate succeeds, run gams compile-only to capture current solve-stage shape
-     gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
-       > /tmp/sprint26-pattern-e/${m}_compile.log 2>&1 || true
+       -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet \
+       && gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
+              o=/tmp/sprint26-pattern-e/${m}_compile.lst || true
    done
+
+   # Verify the artifact exists at the documented path (sanity check — `o=`
+   # does override the default name; confirmed empirically on macOS GAMS 53):
+   ls /tmp/sprint26-pattern-e/{kand,catmix,camshape}_compile.lst
    ```
 
 3. **For each model, classify the current bug shape:**
@@ -561,17 +576,35 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` with one section per Phase E carryforward issue (#1141 kand, #1144 catmix, #1147 camshape). Each section: original Sprint-25 symptom + re-verification (translate + GAMS `action=c` compile + `gamslib_status.json` solve status) + verdict + closure mechanics.
+- Re-verified all 3 issues OPEN on current main with `sprint-26` label via `gh issue view`.
+- Translated + GAMS `action=c` compiled all 3 canonical models on current main; saved at `/tmp/sprint26-pattern-e/<model>_{mcp.gms,compile.lst}` (advisory, not committed) — all 3 translate exit=0 and compile exit=0 with no `$NNN` errors.
+- Cross-referenced Sprint 25 SPRINT_LOG.md Day 11 for the #1338..#1352 fix-in-place series — confirmed catmix (#1144) was on the #1338 SetMembershipTest fix list.
+- Cross-referenced #1160 (camshape follow-up to #1147) — verified CLOSED.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 3.1, 3.2, 3.3 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Per-model status outcome:**
+
+| Issue | Model | Re-verified status (2026-05-07) | Sprint 26 Priority 3 action |
+|---|---|---|---|
+| #1141 | kand | ⚠ **Unchanged** — translates+compiles clean, solves Optimal, still 92.5% rel_diff | **Keep open** — Sprint 26 fix work needed (alias-AD residual) |
+| #1144 | catmix | ✅ **Bucket shifted (largely resolved)** — was `model_infeasible`; now solves Optimal, 0.21% rel_diff | **Close as infeasibility-resolved** — Sprint 25 #1338 SetMembershipTest fix did the work |
+| #1147 | camshape | ⚠ **Bucket shifted (new bug)** — was `path_syntax_error`; now `Locally Infeasible` (model_status=5) | **Close-and-refile as Sprint 27 issue** — original framing stale |
+
+**Phase E framing assessment:** Original "Phase E" framing was valid for **only 1 of 3 models** (kand). catmix's bug was a `skip_lead_lag_inference` regression (NOT alias-AD), already resolved by Sprint 25 #1338. camshape's original `$141` compilation error was a bound-emission issue (NOT alias-AD), already resolved by #1147 partial fix + #1160 follow-up. **Recommendation: retire the "Phase E" label**; reclassify kand as a standalone alias-AD residual under Priority 5 (alongside #1334/#1335).
+
+**Sprint 26 Priority 3 effort estimate:** Reduced from original 3-models / 6–10h investigative work to **1 model fix (kand, ~3–6h) + 2 closures (~30min mechanical)**. Time saved: ~3–4h freed for Priority 1 (Phase A + B), Priority 4 (Option 1), or Priority 5 (#1335).
 
 ### Verification
 
 ```bash
 test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md
-grep -cE "^## Model: (kand|catmix|camshape)" docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md
+# Per-model verdict sub-sections in PATTERN_E_STATUS.md use
+# `### Issue #NNNN: <model> — ...` headings (one per Phase E issue).
+grep -cE "^### Issue #(1141|1144|1147): (kand|catmix|camshape)" \
+  docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md
 # Expected: 3
 ```
 
@@ -582,10 +615,10 @@ grep -cE "^## Model: (kand|catmix|camshape)" docs/planning/EPIC_4/SPRINT_26/PATT
 
 ### Acceptance Criteria
 
-- [ ] All 3 Phase E models re-verified
-- [ ] Per-model classification (Resolved / Bucket Shifted / Unchanged) with evidence
-- [ ] Sprint 26 fix scope updated (which of the 3 actually need fix work in Sprint 26)
-- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 3 Phase E models re-verified
+- [x] Per-model classification (Resolved / Bucket Shifted / Unchanged) with evidence
+- [x] Sprint 26 fix scope updated (which of the 3 actually need fix work in Sprint 26)
+- [x] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

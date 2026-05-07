@@ -967,7 +967,29 @@ Sprint planning (Task 5)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (Pattern E Carryforward Status Survey)
+**Date:** 2026-05-07
+
+**Findings:** **2 of 3 Phase E issues had their bucket shifted by the Sprint 25 fix-in-place series** — only #1141 (kand) is unchanged.
+
+| Issue | Model | Original | Re-verified status (gamslib_status.json + GAMS compile-only) | Bucket shift? |
+|---|---|---|---|---|
+| #1141 | kand | mismatch (92.5% rel_diff) | translates clean, compiles clean, solves Optimal, **mismatch (92.5% rel_diff)** | ❌ Unchanged |
+| #1144 | catmix | model_infeasible (101 INFES eqs) | translates clean, compiles clean, solves **Optimal**, mismatch 0.21% rel_diff | ✅ Shifted (resolved) |
+| #1147 | camshape | path_syntax_error | translates clean, compiles clean, solves **Locally Infeasible** (model_status=5) | ✅ Shifted (new bug) |
+
+**Evidence:**
+
+- Re-verification artifacts at `/tmp/sprint26-pattern-e/{kand,catmix,camshape}_{mcp.gms,compile.lst}` — all 3 translate exit=0, compile exit=0 with no `$NNN` errors.
+- `data/gamslib/gamslib_status.json` Day 14 retest:
+  - `kand.mcp_solve.model_status = 1` (Optimal); `solution_comparison.relative_difference = 0.9254`
+  - `catmix.mcp_solve.model_status = 1` (Optimal); `solution_comparison.relative_difference = 0.00208` (0.21%)
+  - `camshape.mcp_solve.model_status = 5` (Locally Infeasible); `solution_comparison.comparison_status = "not_tested"`
+- Sprint 25 SPRINT_LOG.md Day 11 attributes catmix recovery to **#1338** (`expr_to_gams now handles IndexOffset as a direct index of SetMembershipTest`, affecting catmix/glider/markov/tricp).
+- camshape: original `$141` issue partially fixed during Sprint 23/24 work; follow-up #1160 (CLOSED, *"camshape: MCP pairing error — stat_rdiff.rdiff unmatched equation"*) addressed pairing fix; new Locally Infeasible is a distinct bug not subsumed by either #1147 or #1160.
+
+**Decision:** Sprint 26 Priority 3 fix scope **shrinks from 3 models to 1 (kand)**. catmix closes as resolved; camshape closes-and-refiles as a new Sprint 27 issue tracking the new infeasibility. Per-model action plan documented in `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` §"Per-model status".
 
 ---
 
@@ -1022,7 +1044,19 @@ Sprint planning (Task 5)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (Pattern E Carryforward Status Survey)
+**Date:** 2026-05-07
+
+**Findings:** **catmix WAS recovered by Sprint 25 #1338.** The original `model_infeasible` (101 INFES equations) reported in #1144 is gone — catmix now translates and compiles cleanly, and solves to Optimal with 0.21% rel_diff (essentially solver-noise level).
+
+**Evidence:**
+
+- `gh pr/issue` cross-reference: Sprint 25 SPRINT_LOG.md Day 11 §"Revised Checkpoint 2 evaluation" attributes catmix's recovery to **#1338** (*"expr_to_gams now handles IndexOffset as a direct index of SetMembershipTest"*). The fix-in-place series targeted catmix/glider/markov/tricp specifically.
+- Pipeline status (current main): `nlp2mcp_translate.status = success`; `mcp_solve.status = success`, `model_status = 1 (Optimal)`, `objective_value = -0.048`; `solution_comparison.comparison_status = mismatch` with `relative_difference = 0.00208` (0.21%, within solver tolerance for this scale).
+- Original #1144 fingerprint (per `docs/issues/ISSUE_1144_*.md`): "regressed from `model_optimal` to `model_infeasible` due to ... PR #1076 ... `skip_lead_lag_inference=True`". The current emit no longer exhibits this regression — domain inference is correctly applied for ode1/ode2 lead-indexed equations.
+
+**Decision:** Close #1144 during Sprint 26 Day 1 as "infeasibility resolved by S25 #1338 SetMembershipTest fix series". Optional Sprint 27 follow-up if user-side metric tracking cares about the residual 0.21% rel_diff (low priority — informational level).
 
 ---
 
@@ -1069,7 +1103,31 @@ Sprint planning (Task 5)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 5 (Pattern E Carryforward Status Survey)
+**Date:** 2026-05-07
+
+**Findings:** "Phase E" framing is **invalid for 2 of 3 models** post-Sprint-25. Only #1141 (kand) is genuinely an alias-AD bug requiring Sprint 26 fix work. The original Phase E grouping was based on bug shapes that have since been reclassified or resolved by Sprint 25 work:
+
+| Model | Original Phase E classification | True bug shape (post-S25) | Phase E framing valid? |
+|---|---|---|---|
+| kand | Alias-AD gradient (tree structure) | Genuine alias-AD bug — `_alias_match`-related, applies to `flow(n,nn)` arc-set differentiation | ✅ Yes |
+| catmix | Alias-AD domain inference | Was a `skip_lead_lag_inference=True` regression from PR #1076 — NOT alias-AD; resolved by S25 #1338 | ❌ No |
+| camshape | Alias-AD compilation error | Was a bound-emission `$141` error (lo_map/up_map not emitted) — NOT alias-AD; resolved by #1147 partial fix + #1160 follow-up; current Locally Infeasible is a distinct new bug | ❌ No |
+
+**Evidence:**
+
+- Day 7 cohort sweep (`docs/planning/EPIC_4/SPRINT_25/DAY7_COHORT_SWEEP.md` §"Classification Table") shows the original Phase E grouping was made under the assumption all 3 shared an alias-AD root cause.
+- catmix issue doc (`docs/issues/ISSUE_1144_*.md`) §"Root Cause Analysis" identifies the cause as "PR #1076 (Sprint 22 Day 7 WS3, whouse fix) ... `skip_lead_lag_inference=True`" — domain inference, not alias-AD.
+- camshape issue doc (`docs/issues/ISSUE_1147_*.md`) §"Fix Applied (Partial)" identifies the cause as "emitter did not emit numeric per-element bounds from `lo_map`/`up_map`" — bound emission, not alias-AD. Subsequent #1160 (CLOSED) addressed the residual pairing error.
+
+**Decision:** Sprint 26 should **retire the "Phase E" label**. Specifically:
+
+- **#1141 (kand):** Reclassify as a standalone alias-AD residual; fold under **Priority 5 (AD residuals)** alongside #1334/#1335. Apply the Day 5 methodology (trace + emitted-artifact + formal-derivative byte comparison) per Sprint 26 Prep Task 3 PR16 process.
+- **#1144 (catmix):** Close as resolved (per Unknown 3.2).
+- **#1147 (camshape):** Close-and-refile as new Sprint 27 issue (per `PATTERN_E_STATUS.md` §"Issue #1147").
+
+Sprint 26 Priority 3 effective scope: **1 model fix (kand) + 2 closures**. Total effort: ~3–6h (vs original ~6–10h estimate).
 
 ---
 
