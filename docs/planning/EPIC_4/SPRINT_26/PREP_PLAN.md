@@ -407,9 +407,11 @@ awk '/^## 4\./,/^## 5\./' docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VA
 
 ## Task 4: Pattern A Cohort Reclassification Pre-Work
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 3–4 hours
+**Actual Time:** ~2 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -454,11 +456,33 @@ Per Sprint 25 Day 7 cohort sweep, the original Pattern A cohort is **NOT** actua
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` with one section per cohort issue (#1138, #1139, #1140, #1142, #1145, #1150). Each section: Day 7 classification + re-verification on current main + recommended action + closure mechanics.
+- Re-verified all 6 cohort issues OPEN on current main with `sprint-26` label via `gh issue view`.
+- Re-translated 7 canonical models on current main; saved emit at `/tmp/sprint26-task4-verify/<model>_mcp.gms` (advisory, not committed).
+- Cross-referenced test xfails: 1 affected test (`test_alias_only_conditional_sum_emits_no_phantom_offsets`, already references #1142 via xfail reason).
+- Cross-referenced src/ + docs/ for issue numbers: 1 source comment (`src/kkt/stationarity.py:4336`) needs update when #1142 closes; no other source/docs references outside `docs/issues/` and `docs/planning/`.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 2.1, 2.2, 2.3, 2.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Per-issue action plan codified — Sprint 26 Priority 2 becomes mechanical closure work.**
+
+| Issue | Day 7 → Re-verified | Sprint 26 action |
+|---|---|---|
+| #1138 (irscge family) | ✅ Pattern C plain-alias confirmed | Subsume into Sprint 26 Priority 1 Phase B (gate generalization) |
+| #1139 (meanvar) | ✅ AD-correct confirmed | Close as not-a-bug |
+| #1140 (ps2_f_s family) | ✅ AD-correct + now `non_convex` runtime-filter | Close as informational mismatch |
+| #1142 (launch) | ⚠ Bug #1 fix rolled back via #1351 → both bugs pending | Subsume into Sprint 26 Priority 1 Phase A (consolidated builder fix) |
+| #1145 (cclinpts) | ✅ Condition-guard / sign bug confirmed (NOT Pattern A) | Close-and-refile as Sprint 27 issue (draft title + body in plan) |
+| #1150 (qabel + abel) | ❌ STALE — qabel "massive enumeration" GONE on current main; both halves now resolved | Close as resolved (#1312 fixed qabel massive lag enumeration; #1311 fixed the criterion u-gradient drop; abel reclassified `non_convex`) |
+
+**Day 7 sweep accuracy:** 5 of 6 classifications still accurate on current main. 1 stale (#1150 qabel half — already resolved by Sprint 25 #1312 closure for the massive lag enumeration; #1311 separately addressed the criterion u-gradient drop). 1 needs Bug-#1-fix-rollback annotation (#1142 — addressed by Task 3 routing to Phase A).
+
+**Test xfail impact:** 1 affected test (`test_alias_only_conditional_sum_emits_no_phantom_offsets` — already documented to un-xfail after Phase A lands).
+
+**Source/docs reference impact:** 1 source comment update (`src/kkt/stationarity.py:4336`) when #1142 closes.
+
+**Sprint 26 Priority 2 effort estimate:** Reduced from original 2-4h investigative work to **~1.5h mechanical closure** (4 closes + 1 close-and-refile + 1 forward-link to Priority 1 PR + 1 test xfail removal + 1 source comment update). Time saved → Priority 1 (Phase A + B) or Priority 5.
 
 ### Verification
 
@@ -480,10 +504,10 @@ grep -rE "#(1138|1139|1140|1142|1145|1150)" tests/ 2>/dev/null
 
 ### Acceptance Criteria
 
-- [ ] All 6 cohort issues have a per-issue action note
-- [ ] Each note states: classification + action + (if refile) draft title + body
-- [ ] Test xfail cross-reference scan documented (zero affected tests OR list of affected tests + planned updates)
-- [ ] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 6 cohort issues have a per-issue action note
+- [x] Each note states: classification + action + (if refile) draft title + body
+- [x] Test xfail cross-reference scan documented (zero affected tests OR list of affected tests + planned updates)
+- [x] Unknowns 2.1, 2.2, 2.3, 2.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
