@@ -167,7 +167,8 @@ The original framing of #1147 (alias-related MCP compilation error) is now stale
    .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms \
      -o /tmp/camshape_mcp.gms --skip-convexity-check --quiet
    gams /tmp/camshape_mcp.gms lo=2
-   # Expected: MODEL STATUS 5 (Locally Infeasible), obj=6.2
+   # Observed (the bug): MODEL STATUS 5 (Locally Infeasible), obj=6.2
+   # Expected (no bug):  MODEL STATUS 1 (Optimal), obj ≈ 4.2841 (matching the NLP)
    ```
 
    ## Investigation pointers
