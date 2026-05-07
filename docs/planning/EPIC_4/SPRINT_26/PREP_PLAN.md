@@ -380,10 +380,11 @@ test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md && ech
 # Per-model verdict sub-sections (§2.1 camcge, §2.2 cesam2, §2.3 fawley, §2.4 otpop held-out)
 grep -cE "^### 2\.[1-4] " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 4
 
-# Tier 0/1 canary rows across markdown tables in PATTERN_C_HYPOTHESIS_VALIDATION.md
-# (11 canaries × 2 tables: §1.5 gate-firing-count + §4 byte-stable summary = 22 rows)
-grep -cE "^\| (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive) " \
-  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 22
+# Tier 0/1 canary rows in §4 (canary regression report) of PATTERN_C_HYPOTHESIS_VALIDATION.md.
+# Narrowed via awk to the §4 section so this check specifically validates §4 — independent
+# of any other table (e.g. §1.5's gate-firing table) that happens to share canary names.
+awk '/^## 4\./,/^## 5\./' docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md \
+  | grep -cE "^\| (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive) "   # Expected: 11
 ```
 
 ### Deliverables
