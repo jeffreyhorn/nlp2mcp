@@ -269,9 +269,11 @@ grep -A2 "Sprint 26 Prep Task 2 — PR18" docs/planning/EPIC_4/SPRINT_25/SPRINT_
 
 ## Task 3: Pattern C Hypothesis Validation (PR16)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** Critical
 **Estimated Time:** 6–8 hours
+**Actual Time:** ~5 hours
 **Deadline:** Before Sprint 26 Day 1 (this is the Sprint 26 PR16 implementation; must complete before Priority 1 work begins)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (Pattern C unknowns inform validation focus)
@@ -335,26 +337,54 @@ If the hypothesis is wrong (e.g., the bug surface differs across the 4 models, o
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` documenting per-model verdicts (camcge ✅, cesam2 ✅, fawley ❌, otpop ⚠), prototype-patch canary regression results (2 of 11 canaries + launch regress), the #1351 architectural blocker analysis, and the Sprint 26 Priority 1 replan recommendation.
+- Saved hand-derived formal-KKT excerpts at `/tmp/sprint26-day0-validation/{camcge,cesam2,fawley}_formal_kkt.md` (advisory, not committed) — referenced from the validation doc.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 with Status ✅ VERIFIED + Findings/Evidence/Decision per the validation doc.
+- No source-code modifications (the prototype patch in `src/kkt/stationarity.py:4339` was applied for the canary regression experiment then reverted before commit; full source preserved in the validation doc §5).
 
 ### Result
 
-To be completed.
+**Recommendation: REPLAN Sprint 26 Priority 1.**
+
+Per-model verdicts:
+- **camcge (#1354):** ✅ CONFIRMED Pattern C plain-alias variant. 21 phantom-offset terms in `stat_dk`; formal KKT confirms equivalence to `sum(j, imat(j,i)*nu_ieq(j))`.
+- **cesam2 (#1355):** ✅ CONFIRMED Pattern C `sameas`-decomposed variant. 18 phantom-offset terms in `stat_tsam`; sameas-block guards must be preserved by the consolidated builder.
+- **fawley (#1356):** ❌ DISPROVED. 0 phantom offsets; `$171` errors trace to `comp_up_u(c)` referencing `crdat(c,"supply")` where `crdat` is on subset `cr` — comp_up subset/superset domain widening, NOT Pattern C.
+- **otpop (#1357, held-out):** ⚠ PARTIAL. `$171` blocker is the same comp_up shape as fawley; the small `$141` cascade (5 phantom-offset markers) is the #1334 ParamRef bug. Primary classification: NOT Pattern C.
+
+Tier 0/1 canary regression on prototype patch (broader gate, no `$cond` filter required):
+- **3 of 12** byte-stable regressions (quocge, prolog, launch). Launch regression reproduces the Sprint 25 #1351 bug. Quocge and prolog are NEW regressions on canaries that were previously byte-stable.
+- 122 gate firings on 11 canaries alone (vs expected 4–8 across all 142 in-scope models per Unknown 1.1) — broader predicate is far too permissive.
+
+**Sprint 26 Priority 1 must be a TWO-PHASE workstream**, not a 1-line `$cond` removal:
+- **Phase A (~6h):** Restore the launch fix per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" — make the consolidated zero-offset builder emit `sum(j$(domain_filter), <body>)` over the equation domain, preserving cross-element aggregation. Remove the `xfail` on `test_alias_only_conditional_sum_emits_no_phantom_offsets`.
+- **Phase B (~6–10h):** Generalize the gate predicate to plain-alias (catches camcge) and `sameas`-decomposed (catches cesam2). Re-enable on the 2 confirmed Pattern C target sites only.
+
+**Reduced target list 4 → 2** (camcge + cesam2). fawley + otpop reclassify to Priority 5 / a new comp_up subset-domain widening workstream.
+
+**Revised projection:** +2 Solve / +2 Match (vs original +4 / +3–4). Sprint 26 retrospective will compare against this projection to validate PR16.
+
+**PR16 (pre-Sprint-0 hypothesis validation) is validated as a high-value process recommendation.** ~5h of prep saves ~10–16h of mid-sprint waste. Recommend codifying PR16 into CONTRIBUTING.md as a sprint-prep checklist requirement for any sprint with 3+ issues claimed to share a single hypothesized root cause.
 
 ### Verification
 
 ```bash
-# Trace files captured
-ls /tmp/sprint26-day0-validation/*_trace.stderr | wc -l   # Expected: 3
-ls /tmp/sprint26-day0-validation/*_mcp.gms | wc -l        # Expected: 3
+# Trace files captured (3 primary targets — camcge, cesam2, fawley —
+# plus 1 held-out model — otpop — per PATTERN_C_HYPOTHESIS_VALIDATION.md §1.1)
+ls /tmp/sprint26-day0-validation/*_trace.stderr | wc -l   # Expected: 4
+ls /tmp/sprint26-day0-validation/*_mcp.gms | wc -l        # Expected: 4
 
 # Validation document exists
 test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md && echo "EXISTS"
-grep -c "^## Model: " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: ≥ 3
 
-# Tier 0/1 canary regression count
-grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive):" \
-  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md | wc -l   # Expected: 11
+# Per-model verdict sub-sections (§2.1 camcge, §2.2 cesam2, §2.3 fawley, §2.4 otpop held-out)
+grep -cE "^### 2\.[1-4] " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 4
+
+# Tier 0/1 canary rows in §4 (canary regression report) of PATTERN_C_HYPOTHESIS_VALIDATION.md.
+# Narrowed via awk to the §4 section so this check specifically validates §4 — independent
+# of any other table (e.g. §1.5's gate-firing table) that happens to share canary names.
+awk '/^## 4\./,/^## 5\./' docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md \
+  | grep -cE "^\| (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive) "   # Expected: 11
 ```
 
 ### Deliverables
@@ -366,12 +396,12 @@ grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship
 
 ### Acceptance Criteria
 
-- [ ] Day 5 methodology applied to 3 target models (camcge, cesam2, fawley)
-- [ ] Hand-derived formal KKT documented for at least 1 target stationarity equation per model
-- [ ] Byte-comparison vs emitted form documented per model
-- [ ] Prototype patch tested on Tier 0/1 canaries
-- [ ] Recommendation written: PROCEED / REPLAN with rationale
-- [ ] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Day 5 methodology applied to 3 target models (camcge, cesam2, fawley)
+- [x] Hand-derived formal KKT documented for at least 1 target stationarity equation per model
+- [x] Byte-comparison vs emitted form documented per model
+- [x] Prototype patch tested on Tier 0/1 canaries
+- [x] Recommendation written: PROCEED / REPLAN with rationale
+- [x] Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
