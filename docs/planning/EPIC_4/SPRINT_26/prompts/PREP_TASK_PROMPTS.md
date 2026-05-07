@@ -25,7 +25,7 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
 
 **Priority:** Critical (1–2 hours)
 
-**Objective:** Identify which model's convexity status changed during Sprint 25 Days 1–10 to cause the in-scope denominator to shift from 143 to 142, and document the reason in `SPRINT_25/BASELINE_METRICS.md` §5. This is **Sprint 25 retrospective process recommendation PR18** — codified as the first Sprint 26 prep deliverable.
+**Objective:** Identify which model's convexity status changed during Sprint 25 Days 1–10 to cause the in-scope denominator to shift from 143 to 142, and document the reason in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5. This is **Sprint 25 retrospective process recommendation PR18** — codified as the first Sprint 26 prep deliverable.
 
 **Unknowns Verified:** 6.5
 
@@ -44,8 +44,8 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
 2. **Locate the Sprint 25 Day 14 final `gamslib_status.json`** — `git log --oneline -- data/gamslib/gamslib_status.json | grep "Sprint 25 Day 14"` should surface the commit (`58bcbdc1` or later).
 3. **Diff the two snapshots** focused on the `convexity.status` field per model. Identify which model(s) changed status and what the new status is.
 4. **Determine the trigger** — for each changed model, look at git history of the model's `data/gamslib/raw/<model>.gms` file (if changed) or the convexity-detection code (`src/ir/...` if applicable) to identify the Sprint-25 commit that triggered the reclassification.
-5. **Document the finding** in `SPRINT_25/BASELINE_METRICS.md` §5 ("Scope Freeze") under a new sub-§"Sprint 25 Mid-Sprint Reclassification": model name, prior status, new status, triggering commit (SHA + brief description), and the policy classification (runtime filter vs scope edit).
-6. **Add a forward-link note** to `SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section.
+5. **Document the finding** in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 ("Scope Freeze") under a new sub-§"Sprint 25 Mid-Sprint Reclassification": model name, prior status, new status, triggering commit (SHA + brief description), and the policy classification (runtime filter vs scope edit).
+6. **Add a forward-link note** to `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 14 entry referencing the new sub-section.
 
 **Deliverables:**
 
@@ -55,7 +55,7 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
 
 **Known Unknowns Updates:**
 
-For Unknown 6.5 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For Unknown 6.5 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED (or ❌ WRONG with correction)
 - Verified by: Task 2 (Identify Sprint 25 Scope-Shifted Model PR18)
@@ -66,7 +66,7 @@ For Unknown 6.5 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 2:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 2:
 
 - Change `**Status:** 🔵 NOT STARTED` → `**Status:** ✅ COMPLETE`
 - Fill in the "Changes" section with a summary of what was done
@@ -78,7 +78,7 @@ In `SPRINT_26/PREP_PLAN.md` §Task 2:
 Under `[Unreleased]` → `### Sprint 26 Preparation`, prepend a new bullet:
 
 ```markdown
-- **Prep Task 2 COMPLETE (YYYY-MM-DD):** Identified Sprint 25 scope-shifted model (PR18). Sprint 25 Days 1–10 reclassified `<model>` from `<prior_status>` to `<new_status>` via commit `<SHA>` (`<brief description>`). Documented in `SPRINT_25/BASELINE_METRICS.md` §5 sub-§"Sprint 25 Mid-Sprint Reclassification" with policy classification (runtime filter — same handling as `danwolfe`/`decomp` per §5 policy). Verified Unknown 6.5.
+- **Prep Task 2 COMPLETE (YYYY-MM-DD):** Identified Sprint 25 scope-shifted model (PR18). Sprint 25 Days 1–10 reclassified `<model>` from `<prior_status>` to `<new_status>` via commit `<SHA>` (`<brief description>`). Documented in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 sub-§"Sprint 25 Mid-Sprint Reclassification" with policy classification (runtime filter — same handling as `danwolfe`/`decomp` per §5 policy). Verified Unknown 6.5.
 ```
 
 **Quality Gate:**
@@ -111,10 +111,10 @@ Sprint 25 Days 1–10, and documents the reason in BASELINE_METRICS.md.
 
 ## Deliverables
 
-- Updated SPRINT_25/BASELINE_METRICS.md §5 with new sub-section
-- Updated SPRINT_25/SPRINT_LOG.md Day 14 entry forward-link
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknown 6.5 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 2 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md §5 with new sub-section
+- Updated docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md Day 14 entry forward-link
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknown 6.5 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 2 status → COMPLETE
 - Updated CHANGELOG.md with Task 2 completion entry
 ```
 
@@ -193,11 +193,11 @@ EOF
 - 1-line prototype patch (committed as a draft branch under `prototype/sprint26-pattern-c-validation` if recommendation is PROCEED; left as a code excerpt in the validation doc otherwise)
 - Trace files at `/tmp/sprint26-day0-validation/` (advisory, not committed)
 - Hand-derived formal KKT excerpts at `/tmp/sprint26-day0-validation/<model>_formal_kkt.md` (advisory, not committed)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG (replace 🔍 INCOMPLETE)
 - Verified by: Task 3 (Pattern C Hypothesis Validation PR16)
@@ -208,7 +208,7 @@ For each of Unknowns 1.1, 1.2, 1.3, 1.4, 1.5, 1.6 in `SPRINT_26/KNOWN_UNKNOWNS.m
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 3:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 3:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections (include PROCEED/REPLAN recommendation prominently)
@@ -257,9 +257,9 @@ whether Sprint 26 Priority 1 should PROCEED as planned or REPLAN.
 - docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md
 - (optional) prototype/sprint26-pattern-c-validation branch with
   draft 1-line patch in src/kkt/stationarity.py
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 1.1, 1.2, 1.3, 1.4,
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 1.1, 1.2, 1.3, 1.4,
   1.5, 1.6 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 3 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 3 status → COMPLETE
 - Updated CHANGELOG.md with Task 3 completion entry
 ```
 
@@ -321,11 +321,11 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` with per-issue action plan (one section per issue)
 - Test/source/docs cross-reference scan results (which references need updating per issue)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 2.1, 2.2, 2.3, 2.4 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 2.1, 2.2, 2.3, 2.4 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 2.1, 2.2, 2.3, 2.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 2.1, 2.2, 2.3, 2.4 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 4 (Pattern A Cohort Reclassification Pre-Work)
@@ -336,7 +336,7 @@ For each of Unknowns 2.1, 2.2, 2.3, 2.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 4:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 4:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections (with per-issue action distribution)
@@ -382,9 +382,9 @@ close-and-refile work rather than investigative.
 ## Deliverables
 
 - docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 2.1, 2.2, 2.3, 2.4
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 2.1, 2.2, 2.3, 2.4
   verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 4 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 4 status → COMPLETE
 - Updated CHANGELOG.md with Task 4 completion entry
 ```
 
@@ -450,11 +450,11 @@ EOF
 **Deliverables:**
 
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` with per-model status + recommended action
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 3.1, 3.2, 3.3 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 3.1, 3.2, 3.3 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 3.1, 3.2, 3.3 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 3.1, 3.2, 3.3 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 5 (Pattern E Carryforward Status Survey)
@@ -465,7 +465,7 @@ For each of Unknowns 3.1, 3.2, 3.3 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Veri
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 5:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 5:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections (per-model status outcome)
@@ -503,8 +503,8 @@ catmix (#1144) which was on the #1338 SetMembershipTest fix list.
 ## Deliverables
 
 - docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 3.1, 3.2, 3.3 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 5 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 3.1, 3.2, 3.3 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 5 status → COMPLETE
 - Updated CHANGELOG.md with Task 5 completion entry
 ```
 
@@ -569,11 +569,11 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` with design + patch sites + test plan + projected impact
 - Updated profile data for srpchase + 4 other timeout models (advisory, captured in design doc)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 4.1, 4.2, 4.3, 4.4 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 4.1, 4.2, 4.3, 4.4 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 4.1, 4.2, 4.3, 4.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 4.1, 4.2, 4.3, 4.4 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 6 (Profile Option 1 Short-Circuit Approach)
@@ -584,7 +584,7 @@ For each of Unknowns 4.1, 4.2, 4.3, 4.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 6:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 6:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections
@@ -624,8 +624,8 @@ patch sites; project Sprint 26 Priority 4 impact.
 ## Deliverables
 
 - docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 4.1, 4.2, 4.3, 4.4 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 6 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 4.1, 4.2, 4.3, 4.4 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 6 status → COMPLETE
 - Updated CHANGELOG.md with Task 6 completion entry
 ```
 
@@ -691,11 +691,11 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` with #1334 / #1335 / #1357 relationship analysis
 - (If file:line references are stale) updates to ISSUE_1334.md / ISSUE_1335.md
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 5.1, 5.2, 5.3, 5.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 5.1, 5.2, 5.3, 5.4 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 7 (AD Residuals Investigation Recap)
@@ -706,7 +706,7 @@ For each of Unknowns 5.1, 5.2, 5.3, 5.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 7:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 7:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections
@@ -747,8 +747,8 @@ determine #1334 ↔ #1357 subsumption.
 
 - docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md
 - (optional) Updates to ISSUE_1334.md / ISSUE_1335.md if file:line stale
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 5.1, 5.2, 5.3, 5.4 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 7 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 5.1, 5.2, 5.3, 5.4 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 7 status → COMPLETE
 - Updated CHANGELOG.md with Task 7 completion entry
 ```
 
@@ -809,11 +809,11 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` with trigger conditions + target list + timeout policy + failure handling + draft workflow YAML
 - Target-list file design (`.github/path-solve-ci-targets.txt` format)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.1, 6.2 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.1, 6.2 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 6.1, 6.2 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 6.1, 6.2 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 8 (Design Pre-Merge Solve-Time Validation CI PR19)
@@ -824,7 +824,7 @@ For each of Unknowns 6.1, 6.2 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verificat
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 8:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 8:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections
@@ -865,8 +865,8 @@ locally-infeasible MCP at full PATH solve).
 ## Deliverables
 
 - docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 6.1, 6.2 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 8 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 6.1, 6.2 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 8 status → COMPLETE
 - Updated CHANGELOG.md with Task 8 completion entry
 ```
 
@@ -934,11 +934,11 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` with headline metrics + bucket-provenance column
 - Updated `data/gamslib/gamslib_status.json` (committed)
 - Updated `data/gamslib/mcp/*.gms` artifacts where regenerated (advisory per `BASELINE_METRICS.md` §6)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.3, 6.5 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.3, 6.5 with verification results
 
 **Known Unknowns Updates:**
 
-For each of Unknowns 6.3, 6.5 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For each of Unknowns 6.3, 6.5 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 9 (Bucket-Provenance Baseline + Scope Freeze PR17 + PR15)
@@ -949,7 +949,7 @@ For each of Unknowns 6.3, 6.5 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verificat
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 9:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 9:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections (with headline metrics)
@@ -988,8 +988,8 @@ per-failing-model bucket-provenance column per PR17. Resolves Sprint
 
 - docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md
 - Updated data/gamslib/gamslib_status.json (committed)
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 6.3, 6.5 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 9 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknowns 6.3, 6.5 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 9 status → COMPLETE
 - Updated CHANGELOG.md with Task 9 completion entry
 ```
 
@@ -1051,11 +1051,11 @@ EOF
 
 - Updated `CONTRIBUTING.md` with the emit-PR `.gms` artifact rule
 - Updated `.github/PULL_REQUEST_TEMPLATE.md` (if it exists)
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md` Unknown 6.4 with verification results
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknown 6.4 with verification results
 
 **Known Unknowns Updates:**
 
-For Unknown 6.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
+For Unknown 6.4 in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 - Status: ✅ VERIFIED or ❌ WRONG
 - Verified by: Task 10 (Update CONTRIBUTING.md for Emit-PR `.gms` Diffs PR14 Reaffirmation)
@@ -1066,7 +1066,7 @@ For Unknown 6.4 in `SPRINT_26/KNOWN_UNKNOWNS.md`, update Verification Results:
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 10:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 10:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections
@@ -1110,8 +1110,8 @@ PR #1360 review.
 
 - Updated CONTRIBUTING.md with the emit-PR .gms artifact rule
 - Updated .github/PULL_REQUEST_TEMPLATE.md (if exists)
-- Updated SPRINT_26/KNOWN_UNKNOWNS.md: Unknown 6.4 verified
-- Updated SPRINT_26/PREP_PLAN.md: Task 10 status → COMPLETE
+- Updated docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md: Unknown 6.4 verified
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 10 status → COMPLETE
 - Updated CHANGELOG.md with Task 10 completion entry
 ```
 
@@ -1157,13 +1157,13 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_25/PLAN.md` (template — Sprint 25 schedule format)
 - `docs/planning/EPIC_4/SPRINT_25/prompts/PLAN_PROMPTS.md` (template — Sprint 25 day-by-day prompts)
 - All Sprint 26 prep outputs from Tasks 2–10:
-  - `SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` (Task 3 — most important, dictates Day 1 PROCEED/REPLAN)
-  - `SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` (Task 4)
-  - `SPRINT_26/PATTERN_E_STATUS.md` (Task 5)
-  - `SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` (Task 6)
-  - `SPRINT_26/AD_RESIDUALS_RECAP.md` (Task 7)
-  - `SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` (Task 8)
-  - `SPRINT_26/BASELINE_METRICS.md` (Task 9)
+  - `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` (Task 3 — most important, dictates Day 1 PROCEED/REPLAN)
+  - `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` (Task 4)
+  - `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` (Task 5)
+  - `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` (Task 6)
+  - `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` (Task 7)
+  - `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` (Task 8)
+  - `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` (Task 9)
   - Updated CONTRIBUTING.md (Task 10)
 
 **Tasks to Complete:**
@@ -1195,15 +1195,15 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` — day-by-day execution prompts (Day 0 + Days 1–13)
 - 2 checkpoint evaluation criteria (Day 5 and Day 10)
 - Parallel-work allocation across Priorities 2–5
-- Updated `SPRINT_26/PREP_PLAN.md` with final prep-task status (all 11 tasks COMPLETE)
+- Updated `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` with final prep-task status (all 11 tasks COMPLETE)
 
 **Known Unknowns Updates:**
 
-Task 11 does not introduce new unknowns. Verify all prior task unknowns (1.1–6.5) are marked ✅ VERIFIED or ❌ WRONG in `SPRINT_26/KNOWN_UNKNOWNS.md`. If any are still 🔍 INCOMPLETE, flag and either (a) defer to Sprint 26 Day 0 verification, or (b) block this task pending the prior task's completion.
+Task 11 does not introduce new unknowns. Verify all prior task unknowns (1.1–6.5) are marked ✅ VERIFIED or ❌ WRONG in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`. If any are still 🔍 INCOMPLETE, flag and either (a) defer to Sprint 26 Day 0 verification, or (b) block this task pending the prior task's completion.
 
 **PREP_PLAN.md Updates:**
 
-In `SPRINT_26/PREP_PLAN.md` §Task 11:
+In `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 11:
 
 - Status → ✅ COMPLETE
 - Fill "Changes" and "Result" sections (sprint schedule highlights)
@@ -1256,7 +1256,7 @@ schedule + per-day prompts. Sprint 26 ready to kick off.
 - docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md (day-by-day)
 - 2 checkpoint evaluation criteria
 - Parallel-work allocation
-- Updated SPRINT_26/PREP_PLAN.md: Task 11 status → COMPLETE; Final
+- Updated docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md: Task 11 status → COMPLETE; Final
   Prep-Task Status table all 11 tasks ✅ COMPLETE
 - Updated CHANGELOG.md with Task 11 completion entry + Sprint 26
   ready-to-kick-off marker
@@ -1375,8 +1375,8 @@ If the task is docs-only (no `.py` changes), skip the quality gate but note this
 
 - [New file path 1]
 - [New file path 2]
-- Updated `SPRINT_26/KNOWN_UNKNOWNS.md`: Unknowns X.Y, X.Z verified
-- Updated `SPRINT_26/PREP_PLAN.md`: Task <N> status → COMPLETE
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md`: Unknowns X.Y, X.Z verified
+- Updated `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md`: Task <N> status → COMPLETE
 - Updated `CHANGELOG.md` with Task <N> completion entry
 
 ## Test plan
