@@ -263,7 +263,7 @@ AD/KKT engineer (Task 3)
 **Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
 **Date:** 2026-05-07
 
-**Findings:** cesam2's `sameas`-decomposed SAM-block alias case **is** a generalization of the launch-shape gate — the AD layer enumerates the alias `j` over `i`'s positions via offsets gated by `ord(j) = N`. Hand-derived formal KKT for `stat_TSAM(i,j)` confirms a clean `nu_COLSUM(j)$(jj(j) and <sameas-block-guard>)` form. The 18 per-offset terms in the current emit are mathematically equivalent to this single sum-form term, but require the consolidated builder to merge the equation-domain summation with the sameas-block guard.
+**Findings:** cesam2's `sameas`-decomposed SAM-block alias case **is** a generalization of the launch-shape gate — the AD layer enumerates the alias `j` over `i`'s positions via offsets gated by `ord(j) = N`. Hand-derived formal KKT for `stat_tsam(i,j)` confirms a clean `nu_COLSUM(j)$(jj(j) and <sameas-block-guard>)` form. The 18 per-offset terms in the current emit are mathematically equivalent to this single sum-form term, but require the consolidated builder to merge the equation-domain summation with the sameas-block guard.
 
 **Evidence:**
 
@@ -556,7 +556,7 @@ AD/KKT engineer (Task 3)
 | Model | Verdict | Evidence shape |
 |---|---|---|
 | camcge | ✅ CONFIRMED Pattern C plain-alias variant | 21 phantom-offset terms in stat_dk; formal KKT derived in 30 minutes |
-| cesam2 | ✅ CONFIRMED Pattern C `sameas`-decomposed variant | 18 phantom-offset terms in stat_TSAM; formal KKT derived in 30 minutes |
+| cesam2 | ✅ CONFIRMED Pattern C `sameas`-decomposed variant | 18 phantom-offset terms in stat_tsam; formal KKT derived in 30 minutes |
 | fawley | ❌ DISPROVED — not Pattern C | 0 phantom offsets; bug is comp_up subset/superset |
 | otpop (held-out) | ❌ DISPROVED — primarily not Pattern C | 5 phantom offsets but #1334; primary blocker is comp_up subset/superset |
 

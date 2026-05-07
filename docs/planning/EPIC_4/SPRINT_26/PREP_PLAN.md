@@ -348,7 +348,7 @@ If the hypothesis is wrong (e.g., the bug surface differs across the 4 models, o
 
 Per-model verdicts:
 - **camcge (#1354):** ✅ CONFIRMED Pattern C plain-alias variant. 21 phantom-offset terms in `stat_dk`; formal KKT confirms equivalence to `sum(j, imat(j,i)*nu_ieq(j))`.
-- **cesam2 (#1355):** ✅ CONFIRMED Pattern C `sameas`-decomposed variant. 18 phantom-offset terms in `stat_TSAM`; sameas-block guards must be preserved by the consolidated builder.
+- **cesam2 (#1355):** ✅ CONFIRMED Pattern C `sameas`-decomposed variant. 18 phantom-offset terms in `stat_tsam`; sameas-block guards must be preserved by the consolidated builder.
 - **fawley (#1356):** ❌ DISPROVED. 0 phantom offsets; `$171` errors trace to `comp_up_u(c)` referencing `crdat(c,"supply")` where `crdat` is on subset `cr` — comp_up subset/superset domain widening, NOT Pattern C.
 - **otpop (#1357, held-out):** ⚠ PARTIAL. `$171` blocker is the same comp_up shape as fawley; the small `$141` cascade (5 phantom-offset markers) is the #1334 ParamRef bug. Primary classification: NOT Pattern C.
 
@@ -375,11 +375,13 @@ ls /tmp/sprint26-day0-validation/*_mcp.gms | wc -l        # Expected: 3
 
 # Validation document exists
 test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md && echo "EXISTS"
-grep -c "^## Model: " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: ≥ 3
 
-# Tier 0/1 canary regression count
-grep -E "^- (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive):" \
-  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md | wc -l   # Expected: 11
+# Per-model verdict sub-sections (§2.1 camcge, §2.2 cesam2, §2.3 fawley, §2.4 otpop held-out)
+grep -cE "^### 2\.[1-4] " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 4
+
+# Tier 0/1 canary regression rows in §4 markdown table
+grep -cE "^\| (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive) " \
+  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 11
 ```
 
 ### Deliverables

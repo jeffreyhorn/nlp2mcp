@@ -55,7 +55,7 @@ All 4 models translate cleanly (exit=0, no stderr errors).
 For each of the 3 primary target models, the formal Lagrangian derivative was hand-derived from the source NLP:
 
 - camcge `stat_dk(i)` — `/tmp/sprint26-day0-validation/camcge_formal_kkt.md`
-- cesam2 `stat_TSAM(i,j)` — `/tmp/sprint26-day0-validation/cesam2_formal_kkt.md`
+- cesam2 `stat_tsam(i,j)` — `/tmp/sprint26-day0-validation/cesam2_formal_kkt.md`
 - fawley `stat_u(c)` (closest stationarity to the bug site) — `/tmp/sprint26-day0-validation/fawley_formal_kkt.md`
 
 ### 1.3 Byte-comparison against emitted form
@@ -176,7 +176,7 @@ This is exactly what Sprint 25 retrospective §"What We'd Do Differently" #1 (PR
 ### 2.2 cesam2 (#1355): ✅ CONFIRMED Pattern C sameas-decomposed variant
 
 - **Bug shape:** alias-as-IndexOffset expansion of `sum(jj, TSAM(ii,jj))` for `COLSUM(jj)` differentiation, with additional sameas-block guards from the SAM-tabular structure decomposition.
-- **Formal KKT (hand-derived):** `stat_TSAM(i,j)..  nu_ROWSUM(i)$(ii(i)) + nu_COLSUM(j)$(jj(j)) + ... =e= 0;` (the `nu_COLSUM(j)` reference has `j` as the variable's second index, NOT enumerated via offsets).
+- **Formal KKT (hand-derived):** `stat_tsam(i,j)..  nu_ROWSUM(i)$(ii(i)) + nu_COLSUM(j)$(jj(j)) + ... =e= 0;` (the `nu_COLSUM(j)` reference has `j` as the variable's second index, NOT enumerated via offsets).
 - **GAMS-compile failure mode:** `$141` on `nu_COLSUM(i+9)$(jj(i+9))` etc.
 - **Card(i) = 10**, so `±9` enumeration covers all 10 elements.
 - **Prototype gate firings on cesam2:** 24.
