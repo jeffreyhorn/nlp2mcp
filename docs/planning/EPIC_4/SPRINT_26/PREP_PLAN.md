@@ -1014,7 +1014,7 @@ grep -cE "Checkpoint [12]" docs/planning/EPIC_4/SPRINT_26/PLAN.md   # Expected: 
 - `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` — day-by-day execution prompts (Day 0 + Days 1–13)
 - 2 checkpoint evaluation criteria (Day 5 and Day 10)
 - Parallel-work allocation across Priorities 2–5
-- Updated `SPRINT_26/PREP_PLAN.md` with final prep-task status (all 11 tasks COMPLETE)
+- Updated `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` with final prep-task status (all 11 tasks COMPLETE)
 
 ### Acceptance Criteria
 
@@ -1047,17 +1047,17 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 ### Success Criteria for Prep Phase
 
 - [ ] **All 11 prep tasks complete** before Sprint 26 Day 1
-- [x] `SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories**
+- [x] `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories**
 - [ ] `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
-- [ ] `SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3)
-- [ ] `SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
-- [ ] `SPRINT_26/PATTERN_E_STATUS.md` re-verifies all 3 Phase E models (Task 5)
-- [ ] `SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` confirms patch sites + draft test fixtures (Task 6)
-- [ ] `SPRINT_26/AD_RESIDUALS_RECAP.md` clarifies #1334 ↔ #1357 subsumption (Task 7)
-- [ ] `SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` specifies trigger + target list + timeout + failure handling (Task 8)
-- [ ] `SPRINT_26/BASELINE_METRICS.md` records Day 0 baseline with bucket-provenance column (Task 9)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` re-verifies all 3 Phase E models (Task 5)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` confirms patch sites + draft test fixtures (Task 6)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` clarifies #1334 ↔ #1357 subsumption (Task 7)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` specifies trigger + target list + timeout + failure handling (Task 8)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` records Day 0 baseline with bucket-provenance column (Task 9)
 - [ ] `CONTRIBUTING.md` has the emit-PR `.gms` artifact rule (Task 10)
-- [ ] `SPRINT_26/PLAN.md` + `SPRINT_26/prompts/PLAN_PROMPTS.md` cover Day 0 + Days 1–13 (Task 11)
+- [ ] `docs/planning/EPIC_4/SPRINT_26/PLAN.md` + `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` cover Day 0 + Days 1–13 (Task 11)
 
 ### Critical-Path Summary
 

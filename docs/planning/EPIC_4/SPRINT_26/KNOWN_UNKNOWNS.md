@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document identifies all assumptions and unknowns for Sprint 26 features **before** implementation begins. Sprint 26 is the third consecutive sprint to target alias-aware differentiation correctness as Priority 1 (after S24's launch attempt and S25's narrow-gate Pattern C fix); the central new prep activity is **Pattern C hypothesis validation pre-Day-0** (Task 3 of `PREP_PLAN.md`, codifying Sprint 25 retrospective PR16). Sprint 26 also inherits 23 issues labeled `sprint-26` (4 net-new from Sprint 25 Day 13 — #1354 camcge, #1355 cesam2, #1356 fawley, #1357 otpop — plus 19 carryforward).
+This document identifies all assumptions and unknowns for Sprint 26 features **before** implementation begins. Sprint 26 is the third consecutive sprint to target alias-aware differentiation correctness as Priority 1 (after S24's launch attempt and S25's narrow-gate Pattern C fix); the central new prep activity is **Pattern C hypothesis validation pre-Day-0** (Task 3 of `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md`, codifying Sprint 25 retrospective PR16). Sprint 26 also inherits 23 issues labeled `sprint-26` (4 net-new from Sprint 25 Day 13 — #1354 camcge, #1355 cesam2, #1356 fawley, #1357 otpop — plus 19 carryforward).
 
 **Sprint 26 Scope** (per `docs/planning/EPIC_4/PROJECT_PLAN.md` Sprint 26 entry, Weeks 17–18, 14-day sprint at ≤ 12h/day):
 
@@ -30,10 +30,10 @@ This document identifies all assumptions and unknowns for Sprint 26 features **b
 
 **Sprint 25 Key Learning** (from `docs/planning/EPIC_4/SPRINT_25/SPRINT_RETROSPECTIVE.md` §"Day 5 Pivot Retrospective"): Sprint 25 spent Days 1–4 on Phase 1 alias-AD work that produced no Match gain because the underlying Pattern A hypothesis was wrong about the cohort. The Day 5 pivot disproved the hypothesis in 1 day via trace + emitted-artifact + formal-derivative methodology. **Sprint 26's PR16 is the codified version of that methodology applied PRE-Day-0** to the Pattern C generalization hypothesis. This is the single highest-value prep activity for Sprint 26.
 
-**Sprint 25 Carryforward KUs** (from `../SPRINT_25/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
+**Sprint 25 Carryforward KUs** (from `docs/planning/EPIC_4/SPRINT_25/KNOWN_UNKNOWNS.md` §End-of-Sprint Discoveries):
 
 - **KU-33** (Pattern C generalizes beyond launch) → directly drives Priority 1 (this sprint's Category 1)
-- **KU-34** (bucket churn dominates path_syntax_error metric) → drives PR17 bucket-provenance baseline (Task 9 of `PREP_PLAN.md`)
+- **KU-34** (bucket churn dominates path_syntax_error metric) → drives PR17 bucket-provenance baseline (Task 9 of `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md`)
 - **KU-35** (multi-solve gate over-approximation invariant) → regression-canary protection during Sprint 26
 - **KU-36** (`_loop_tree_to_gams` bare-ID substitution invariant) → regression-canary protection during Sprint 26
 
@@ -84,7 +84,7 @@ This document identifies all assumptions and unknowns for Sprint 26 features **b
 - Category 5 (AD Residuals #1334 / #1335): 4 unknowns
 - Category 6 (Cross-Cutting & Process Recommendations): 5 unknowns
 
-**Estimated Research Time:** 28–36 hours (work-item estimates; per-unknown numbers sum higher than the prep-task budget because many unknowns are verified in parallel within a single prep task — see §"Appendix: Task-to-Unknown Mapping" for which task verifies which unknowns. The authoritative scheduling budget is the per-task total in `PREP_PLAN.md`: 28–39h across Tasks 1–11.)
+**Estimated Research Time:** 28–36 hours (work-item estimates; per-unknown numbers sum higher than the prep-task budget because many unknowns are verified in parallel within a single prep task — see §"Appendix: Task-to-Unknown Mapping" for which task verifies which unknowns. The authoritative scheduling budget is the per-task total in `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md`: 28–39h across Tasks 1–11.)
 
 ---
 

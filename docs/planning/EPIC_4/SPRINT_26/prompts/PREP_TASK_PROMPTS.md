@@ -11,7 +11,7 @@ Self-contained prompts for Sprint 26 Prep Tasks 2–11. Each prompt can be copy-
 
 Task 1 (Create Sprint 26 Known Unknowns List) is already complete — no prompt needed.
 
-Tasks 2–11 are dispatchable in the following order per the dependency graph in `PREP_PLAN.md`:
+Tasks 2–11 are dispatchable in the following order per the dependency graph in `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md`:
 
 - **Parallel kickoff (no dependencies beyond Task 1):** Tasks 2, 3, 4, 5, 6, 7, 8, 10
 - **After Task 2:** Task 9 (needs scope-shift documentation before recording the Sprint 26 baseline)
