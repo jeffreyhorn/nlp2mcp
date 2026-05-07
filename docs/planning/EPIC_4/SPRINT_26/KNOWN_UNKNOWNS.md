@@ -1511,7 +1511,7 @@ Sprint planning (Tasks 2 + 9)
 
 - Diff command: `git show d8574a7d:data/gamslib/gamslib_status.json` vs `git show 58bcbdc1:data/gamslib/gamslib_status.json` filtered on `convexity.status` per model — exactly 1 model differs (`abel`).
 - Triggering-commit log: `git log -1 --format=full c922bb2d` documents the indefinite-eigenvalue diagnosis + multi-start NLP confirmation + Sprint 25 Day 8 verification path.
-- abel joins the existing 7 `non_convex` models (`ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp`) under the same handling (kept in comparison set, comparison_status remains `mismatch`, informational).
+- abel joins the existing 7 `non_convex` models (`ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp`) under the same handling (kept in comparison set, `solution_comparison.comparison_status` remains `mismatch`, informational).
 
 **Decision:**
 

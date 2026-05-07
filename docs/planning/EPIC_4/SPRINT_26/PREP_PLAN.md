@@ -230,7 +230,7 @@ The Sprint 25 Day 14 final retest used 142 in-scope models; the Sprint 25 Day 0 
 
 ### Result
 
-The Sprint 25 scope-shifted model is **`abel`**, reclassified from `likely_convex` to `non_convex` on 2026-04-25 (Sprint 25 Day 4) via commit `c922bb2d`. The reclassification reflects a fundamental property of the abel model — the lambda matrix has indefinite symmetric-part eigenvalues approximately `[-0.047, 1.047]`, making the criterion's u-quadratic genuinely non-convex. Multi-start NLP showed CONOPT finds a unique objective only because the linear `stateq` dynamics tightly constrain the feasible set; the MCP/PATH formulation doesn't have that constraint-induced uniqueness, so PATH converges to a different valid stationary point. Tracked via #1313 (CLOSED during Sprint 25; closing did NOT restore convexity — it documented that the warm-start path doesn't apply). **Reversible during Sprint 26: NO.** Sprint 26 baseline (Task 9) freezes scope at 142 in-scope models, matching the Sprint 25 Day 14 final.
+The Sprint 25 scope-shifted model is **`abel`**, reclassified from `likely_convex` to `non_convex` on 2026-04-25 (Sprint 25 Day 4) via commit `c922bb2d`. The reclassification reflects a fundamental property of the abel model — the lambda matrix has indefinite symmetric-part eigenvalues approximately `[-0.047, 1.047]`, making the criterion's `u`-quadratic genuinely non-convex. Multi-start NLP showed CONOPT finds a unique objective only because the linear `stateq` dynamics tightly constrain the feasible set; the MCP/PATH formulation doesn't have that constraint-induced uniqueness, so PATH converges to a different valid stationary point. Tracked via #1313 (CLOSED during Sprint 25; closing did NOT restore convexity — it documented that the warm-start path doesn't apply). **Reversible during Sprint 26: NO.** Sprint 26 baseline (Task 9) freezes scope at 142 in-scope models, matching the Sprint 25 Day 14 final.
 
 ### Verification
 
@@ -240,8 +240,10 @@ ls data/gamslib/archive/ | sort
 git log --oneline --diff-filter=M -- data/gamslib/gamslib_status.json | head -10
 
 # Verify the abel reclassification is documented in BASELINE_METRICS.md §5.1
-grep -A2 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md
-# Expected: §5.1 sub-section heading + abel/likely_convex/non_convex finding
+# (grep wider context — the §5.1 sub-section runs ~20 lines and the abel-specific
+# Model/status lines start ~3-4 lines below the heading)
+grep -A20 "Sprint 25 Mid-Sprint Reclassification" docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md | grep -E "Model:|likely_convex|non_convex|abel"
+# Expected: lines naming abel + likely_convex → non_convex transition
 
 # Verify forward-link in SPRINT_LOG.md Day 14
 grep -A2 "Sprint 26 Prep Task 2 — PR18" docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md
