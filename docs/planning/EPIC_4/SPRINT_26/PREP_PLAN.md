@@ -548,12 +548,13 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
    mkdir -p /tmp/sprint26-pattern-e
    for m in kand catmix camshape; do
      .venv/bin/python -m src.cli data/gamslib/raw/${m}.gms \
-       -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet
-     # If translate succeeds, run gams compile-only and write the listing to
-     # _compile.lst. The `o=` flag overrides GAMS' default listing-file name
-     # (which would otherwise be `<input_basename>.lst`, e.g. `kand_mcp.lst`).
-     # The listing file holds GAMS' own error markers (e.g. $141, $171), which
-     # is what we grep below.
+       -o /tmp/sprint26-pattern-e/${m}_mcp.gms --skip-convexity-check --quiet \
+       && \
+     # Only run gams if translate succeeded (the `&&` above guards this).
+     # `o=` overrides GAMS' default listing-file name (which would otherwise
+     # be `<input_basename>.lst`, e.g. `kand_mcp.lst`). The listing file
+     # holds GAMS' own error markers (e.g. $141, $171), which is what we
+     # grep below.
      gams /tmp/sprint26-pattern-e/${m}_mcp.gms action=c lo=2 \
        o=/tmp/sprint26-pattern-e/${m}_compile.lst || true
    done

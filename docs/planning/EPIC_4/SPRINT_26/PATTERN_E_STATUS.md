@@ -41,7 +41,8 @@ $ .venv/bin/python -m src.cli data/gamslib/raw/kand.gms \
 ✓ Generated MCP: /tmp/sprint26-pattern-e/kand_mcp.gms
 translate exit=0, emit lines: 166
 
-$ gams /tmp/sprint26-pattern-e/kand_mcp.gms action=c lo=2
+$ gams /tmp/sprint26-pattern-e/kand_mcp.gms action=c lo=2 \
+    o=/tmp/sprint26-pattern-e/kand_compile.lst
 (no compile errors — clean)
 ```
 
@@ -61,7 +62,7 @@ The kand fix likely involves:
 
 **Estimated fix effort:** 3–6h (single-model investigation; fix likely shares scaffolding with the Pattern C generalization work).
 
-**Reframing recommendation:** Drop the "Pattern E" label; reclassify under **Sprint 26 Priority 5 (AD residuals)** alongside #1334 (CLOSED, doc stale) / #1335. The Day 5 methodology applied to kand should give a clean PROCEED/REPLAN signal in 1–2h before any fix work begins.
+**Reframing recommendation:** Drop the "Pattern E" label; reclassify under **Sprint 26 Priority 5 (AD residuals)** alongside #1334 (CLOSED 2026-05-05) / #1335. The Day 5 methodology applied to kand should give a clean PROCEED/REPLAN signal in 1–2h before any fix work begins.
 
 **Test xfail impact:** None. No tests reference #1141.
 
@@ -83,7 +84,8 @@ $ .venv/bin/python -m src.cli data/gamslib/raw/catmix.gms \
 ✓ Generated MCP: /tmp/sprint26-pattern-e/catmix_mcp.gms
 translate exit=0, emit lines: 269
 
-$ gams /tmp/sprint26-pattern-e/catmix_mcp.gms action=c lo=2
+$ gams /tmp/sprint26-pattern-e/catmix_mcp.gms action=c lo=2 \
+    o=/tmp/sprint26-pattern-e/catmix_compile.lst
 (no compile errors — clean)
 ```
 
@@ -126,7 +128,8 @@ $ .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms \
 ✓ Generated MCP: /tmp/sprint26-pattern-e/camshape_mcp.gms
 translate exit=0, emit lines: 504
 
-$ gams /tmp/sprint26-pattern-e/camshape_mcp.gms action=c lo=2
+$ gams /tmp/sprint26-pattern-e/camshape_mcp.gms action=c lo=2 \
+    o=/tmp/sprint26-pattern-e/camshape_compile.lst
 (no compile errors — clean)
 ```
 
