@@ -19,7 +19,7 @@ Per-issue action distribution across the 6 Pattern A cohort issues:
 | #1140 (ps2_f_s family — 7 stochastic models) | AD-correct multi-solve | ✅ Day 7 still accurate (and: 7 are now `non_convex` runtime-filter per Prep Task 2) | **Close as informational mismatch** |
 | #1142 (launch) | Pattern C Bug #1 + Bug #2 | ⚠ Bug #1 fix ROLLED BACK in #1351 (current emit has phantom offsets again) | **Subsume into Sprint 26 Priority 1 Phase A** |
 | #1145 (cclinpts) | Condition-guard / sign bug | ✅ Day 7 still accurate | **Close-and-refile as Sprint 27 issue** |
-| #1150 (qabel + abel) | Split: qabel = Pattern C massive; abel = AD-correct | ❌ STALE — qabel "massive enumeration" GONE on current main; both halves now resolved | **Close as resolved** (#1311 fixed qabel; abel reclassified `non_convex` per Prep Task 2) |
+| #1150 (qabel + abel) | Split: qabel = Pattern C massive; abel = AD-correct | ❌ STALE — qabel "massive enumeration" GONE on current main; both halves now resolved | **Close as resolved** (#1312 fixed qabel massive lag enumeration; #1311 fixed the u-gradient drop on the criterion; abel reclassified `non_convex` per Prep Task 2) |
 
 **Sprint 26 Priority 2 effort (revised):**
 - Original (Sprint 25 retrospective estimate): ~2–4h investigative + close work
@@ -206,9 +206,9 @@ stat_fb(j).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j)))))
 
    **Title:** "cclinpts: stat_b / stat_fb condition-guard or sign bug producing ~70% rel_diff (post-Pattern-A reclassification)"
 
-   **Body:**
+   **Body:** *(rendered with a 4-backtick outer fence so the inner ` ```bash ` block doesn't terminate it early)*
 
-   ```markdown
+   ````markdown
    ## Problem Summary
 
    cclinpts produces `solution_comparison.comparison_status = mismatch` with NLP-MCP rel_diff ~69.9% on the obj. The Sprint 25 Day 7 cohort sweep determined this is NOT a Pattern A AD-layer bug (the emit has legitimate `fb(j-1) * 1$(not last(j))` lag offsets matching the source body) — it's a condition-guard or sign issue downstream of AD.
@@ -243,7 +243,7 @@ stat_fb(j).. ((-1) * (0.5 * (b(j) - b(j-1)) * 1$((not first(j)))))
    ## Related
 
    - **#1145** (closed Sprint 26 Day 1) — the original alias-AD framing, reclassified out via Day 7 cohort sweep + Sprint 26 Prep Task 4.
-   ```
+   ````
 
 2. Comment on #1145 with: "Sprint 26 Prep Task 4 re-verification confirms Day 7 sweep classification: this is NOT a Pattern A AD bug — the emit has legitimate offset terms matching the source body. Refiled as new Sprint 27 issue: #NNNN. Closing #1145."
 
@@ -281,7 +281,7 @@ k+1
 
 The qabel emit and abel emit are now structurally identical (the only diff is the `k` set definition and the alias `ku`/`ki` predicate form). Both have clean ±1 stateq lead/lag and the symmetric quadratic criterion derivative (`0.5 * (sum(np__, ...) + sum(n__, ...))`) — exactly the AD-correct form Day 5 / Day 7 already verified for abel.
 
-**Resolution attribution:** This was almost certainly fixed by **#1311** (CLOSED 2026-04-25 during Sprint 25): "AD: criterion's u-quadratic gradient dropped to `Const(0.0)` when sum index is a subset of variable's domain (qabel/abel)". The #1311 fix unified qabel's emit shape with abel's clean form.
+**Resolution attribution:** The qabel "massive enumeration" fix is tracked under **#1312** (CLOSED 2026-04-25 during Sprint 25): *"Pattern C variant: stationarity emits massive phantom stateq lag enumeration on qabel (k-9 .. k-68)"* — issue doc at `docs/issues/completed/ISSUE_1312_qabel-pattern-c-phantom-stateq-lag-enumeration.md`. A related, separate fix is **#1311** (CLOSED 2026-04-25): *"AD: criterion's u-quadratic gradient dropped to `Const(0.0)` when sum index is a subset of variable's domain (qabel/abel)"* — issue doc at `docs/issues/completed/ISSUE_1311_qabel-abel-ad-drops-u-criterion-gradient-on-subset-sum.md`. Together, #1311 (criterion u-gradient) + #1312 (stateq lag enumeration) restored qabel's emit to a clean form structurally identical to abel's.
 
 **Additional context (post-Sprint-25):** abel was reclassified `convexity.status = non_convex` on 2026-04-25 (see `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.1, identified by Sprint 26 Prep Task 2). qabel was excluded from the convexity comparison via the multi-solve gate during Sprint 25.
 
@@ -290,7 +290,7 @@ The qabel emit and abel emit are now structurally identical (the only diff is th
 **Closure mechanics (Sprint 26 Day 1):**
 1. Comment on #1150 with: "Sprint 26 Prep Task 4 re-verification confirms both halves of #1150 are resolved on current main:
 
-   - **qabel half**: Day 7 sweep (2026-04-24) reported a `k-9..k-68` massive stateq enumeration. Current emit has ONLY clean `k-1`/`k+1` lead/lag offsets matching the source `stateq(n,k+1)` declaration. Resolution likely attributable to #1311 (CLOSED 2026-04-25) which fixed the AD subset-domain bug.
+   - **qabel half**: Day 7 sweep (2026-04-24) reported a `k-9..k-68` massive stateq enumeration. Current emit has ONLY clean `k-1`/`k+1` lead/lag offsets matching the source `stateq(n,k+1)` declaration. Resolution attributable to **#1312** (CLOSED 2026-04-25, *Pattern C variant: stationarity emits massive phantom stateq lag enumeration on qabel*) for the enumeration fix, with a related **#1311** (CLOSED 2026-04-25, *AD criterion u-quadratic gradient drop on subset sum*) addressing the criterion-derivative half.
    - **abel half**: Day 7 sweep classified abel as AD-correct/solver noise. abel was subsequently reclassified `convexity.status = non_convex` on 2026-04-25 (Sprint 25 Day 4, commit `c922bb2d`) per `BASELINE_METRICS.md` §5.1 — runtime-filtered, `comparison_status = mismatch` is informational.
 
    No further action needed; closing as resolved. Re-verification evidence at `/tmp/sprint26-task4-verify/qabel_mcp.gms` vs `abel_mcp.gms` (now byte-identical apart from the `k` set definition)."

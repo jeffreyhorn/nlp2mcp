@@ -655,7 +655,7 @@ Sprint planning (Task 4)
 **Verified by:** Task 4 (Pattern A Cohort Reclassification Pre-Work)
 **Date:** 2026-05-07
 
-**Findings:** 5 of 6 Day 7 classifications still accurate on current main; 1 stale (#1150 qabel half — already resolved by Sprint 25 #1311 closure). One classification needs a Bug-#1-fix-rollback caveat (#1142 — Sprint 25 Day 11 #1351 rolled back the Day 6 PR #1308 fix, so launch's emit has the phantom offsets again).
+**Findings:** 5 of 6 Day 7 classifications still accurate on current main; 1 stale (#1150 qabel half — already resolved by Sprint 25 #1312 closure for the massive lag enumeration; the related #1311 closure separately fixed the criterion u-gradient drop). One classification needs a Bug-#1-fix-rollback caveat (#1142 — Sprint 25 Day 11 #1351 rolled back the Day 6 PR #1308 fix, so launch's emit has the phantom offsets again).
 
 | Issue | Day 7 → Re-verified status | Evidence (current emit on main, 2026-05-07) |
 |---|---|---|
@@ -664,7 +664,7 @@ Sprint planning (Task 4)
 | #1140 | ✅ AD-correct confirmed (additional context: now `non_convex` runtime-filter) | Phantom-offset count = 0 in ps2_f_s emit. All 7 PS-family models reclassified `non_convex` per `BASELINE_METRICS.md` §5. |
 | #1142 | ⚠ Day 7 said Bug #1 "fixed Day 6"; current main has Bug #1 BACK due to #1351 rollback | `stat_iweight(s)` emit has `nu_dweight(s±1)`, `(s±2)` per-offset terms. Bug #2 still pending (#1307 OPEN). Both addressed by Sprint 26 Priority 1 Phase A per Task 3 REPLAN recommendation. |
 | #1145 | ✅ Condition-guard / sign bug confirmed (NOT Pattern A) | `stat_b(j)` and `stat_fb(j)` have legitimate `(j-1) * 1$((not last(j)))` / `1$((not first(j)))` offset terms matching the source body. Not an AD bug. |
-| #1150 (qabel half) | ❌ STALE — Day 7 said "k-9..k-68 massive enumeration"; current main has only `k-1`/`k+1` | Almost certainly fixed by #1311 (CLOSED 2026-04-25 during S25 — "AD: criterion's u-quadratic gradient dropped to Const(0.0) when sum index is a subset of variable's domain"). qabel and abel emits are now structurally identical (only `k` set definition differs). |
+| #1150 (qabel half) | ❌ STALE — Day 7 said "k-9..k-68 massive enumeration"; current main has only `k-1`/`k+1` | Resolved by **#1312** (CLOSED 2026-04-25 during S25 — *"Pattern C variant: stationarity emits massive phantom stateq lag enumeration on qabel (k-9 .. k-68)"*) for the enumeration fix; related **#1311** (CLOSED 2026-04-25 — *"AD: criterion's u-quadratic gradient dropped to Const(0.0) when sum index is a subset of variable's domain"*) separately addressed the criterion-derivative half. Both contributed to making qabel and abel emits structurally identical (only `k` set definition differs). |
 | #1150 (abel half) | ✅ AD-correct confirmed (additional context: now `non_convex` runtime-filter) | Reclassified `non_convex` on 2026-04-25 per `BASELINE_METRICS.md` §5.1 (Sprint 26 Prep Task 2). |
 
 **Evidence:**
@@ -672,9 +672,9 @@ Sprint planning (Task 4)
 - Re-verification artifacts at `/tmp/sprint26-task4-verify/<model>_mcp.gms` for all 7 canonical models (irscge, meanvar, ps2_f_s, launch, cclinpts, qabel, abel) — translate exit=0 on current main.
 - Phantom-offset grep: `grep -cE "nu_[a-zA-Z_]+\([a-zA-Z]+[+-][0-9]+" <emit>` — yields 0 for meanvar / ps2_f_s, ≥1 for irscge / launch (confirming Pattern C shape), and 0 for cclinpts (confirming non-Pattern-A).
 - qabel offset enumeration: `grep -oE "k[+-][0-9]+" qabel_mcp.gms | sort -u` returns only `k-1`, `k+1` — directly contradicting Day 7's "k-9..k-68" claim.
-- `gh issue view` confirms all 6 cohort issues OPEN with `sprint-26` label; #1311 + #1334 CLOSED.
+- `gh issue view` (GitHub authoritative) confirms all 6 cohort issues OPEN with `sprint-26` label; related issues #1311, #1312, #1334 all CLOSED on GitHub. Note: the in-repo issue doc `docs/issues/ISSUE_1334_*.md` still marks `Status: OPEN` and is stale relative to GitHub state — flagged for cleanup as part of Priority 5 work.
 
-**Decision:** Day 7 classifications remain authoritative for 5 of 6 issues. #1150 qabel half is updated to "resolved by #1311". #1142 needs the Bug-#1-fix-rollback annotation (already addressed by Task 3 routing to Phase A).
+**Decision:** Day 7 classifications remain authoritative for 5 of 6 issues. #1150 qabel half is updated to "resolved by #1312 (massive lag enumeration) + #1311 (criterion u-gradient)". #1142 needs the Bug-#1-fix-rollback annotation (already addressed by Task 3 routing to Phase A).
 
 ---
 
@@ -746,7 +746,7 @@ Sprint planning (Task 4)
 | #1140 | **Close as informational mismatch** | All 7 PS-family models now `non_convex` runtime-filter; AD-correct emit verified |
 | #1142 | **Subsume into Sprint 26 Priority 1 Phase A** (consolidated builder fix per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups") | Phase A PR will close #1142, #1306, #1307 (all share root cause) |
 | #1145 | **Close-and-refile as Sprint 27 issue** "cclinpts: stat_b/stat_fb condition-guard or sign bug producing ~70% rel_diff" | Draft title + body in §"Issue #1145" of the reclassification plan |
-| #1150 | **Close as resolved (both halves)** | qabel resolved by #1311 (CLOSED 2026-04-25); abel reclassified `non_convex` per Sprint 26 Prep Task 2 |
+| #1150 | **Close as resolved (both halves)** | qabel massive lag enumeration resolved by #1312 (CLOSED 2026-04-25); criterion u-gradient drop separately resolved by #1311 (CLOSED 2026-04-25); abel reclassified `non_convex` per Sprint 26 Prep Task 2 |
 
 **Evidence:**
 

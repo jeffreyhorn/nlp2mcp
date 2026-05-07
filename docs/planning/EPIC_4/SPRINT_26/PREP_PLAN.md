@@ -474,9 +474,9 @@ Per Sprint 25 Day 7 cohort sweep, the original Pattern A cohort is **NOT** actua
 | #1140 (ps2_f_s family) | ✅ AD-correct + now `non_convex` runtime-filter | Close as informational mismatch |
 | #1142 (launch) | ⚠ Bug #1 fix rolled back via #1351 → both bugs pending | Subsume into Sprint 26 Priority 1 Phase A (consolidated builder fix) |
 | #1145 (cclinpts) | ✅ Condition-guard / sign bug confirmed (NOT Pattern A) | Close-and-refile as Sprint 27 issue (draft title + body in plan) |
-| #1150 (qabel + abel) | ❌ STALE — qabel "massive enumeration" GONE on current main; both halves now resolved | Close as resolved (#1311 fixed qabel; abel reclassified `non_convex`) |
+| #1150 (qabel + abel) | ❌ STALE — qabel "massive enumeration" GONE on current main; both halves now resolved | Close as resolved (#1312 fixed qabel massive lag enumeration; #1311 fixed the criterion u-gradient drop; abel reclassified `non_convex`) |
 
-**Day 7 sweep accuracy:** 5 of 6 classifications still accurate on current main. 1 stale (#1150 qabel half — already resolved by Sprint 25 #1311 closure). 1 needs Bug-#1-fix-rollback annotation (#1142 — addressed by Task 3 routing to Phase A).
+**Day 7 sweep accuracy:** 5 of 6 classifications still accurate on current main. 1 stale (#1150 qabel half — already resolved by Sprint 25 #1312 closure for the massive lag enumeration; #1311 separately addressed the criterion u-gradient drop). 1 needs Bug-#1-fix-rollback annotation (#1142 — addressed by Task 3 routing to Phase A).
 
 **Test xfail impact:** 1 affected test (`test_alias_only_conditional_sum_emits_no_phantom_offsets` — already documented to un-xfail after Phase A lands).
 
