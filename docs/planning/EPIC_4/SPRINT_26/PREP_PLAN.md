@@ -513,9 +513,11 @@ grep -rE "#(1138|1139|1140|1142|1145|1150)" tests/ 2>/dev/null
 
 ## Task 5: Pattern E Carryforward Status Survey
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 2–3 hours
+**Actual Time:** ~1.5 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 1
@@ -561,11 +563,26 @@ Phase E (Pattern E routing) was cancelled per the literal Sprint 25 Checkpoint 2
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` with one section per Phase E carryforward issue (#1141 kand, #1144 catmix, #1147 camshape). Each section: original Sprint-25 symptom + re-verification (translate + GAMS `action=c` compile + `gamslib_status.json` solve status) + verdict + closure mechanics.
+- Re-verified all 3 issues OPEN on current main with `sprint-26` label via `gh issue view`.
+- Translated + GAMS `action=c` compiled all 3 canonical models on current main; saved at `/tmp/sprint26-pattern-e/<model>_{mcp.gms,compile.lst}` (advisory, not committed) — all 3 translate exit=0 and compile exit=0 with no `$NNN` errors.
+- Cross-referenced Sprint 25 SPRINT_LOG.md Day 11 for the #1338..#1352 fix-in-place series — confirmed catmix (#1144) was on the #1338 SetMembershipTest fix list.
+- Cross-referenced #1160 (camshape follow-up to #1147) — verified CLOSED.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 3.1, 3.2, 3.3 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Per-model status outcome:**
+
+| Issue | Model | Re-verified status (2026-05-07) | Sprint 26 Priority 3 action |
+|---|---|---|---|
+| #1141 | kand | ⚠ **Unchanged** — translates+compiles clean, solves Optimal, still 92.5% rel_diff | **Keep open** — Sprint 26 fix work needed (alias-AD residual) |
+| #1144 | catmix | ✅ **Bucket shifted (largely resolved)** — was `model_infeasible`; now solves Optimal, 0.21% rel_diff | **Close as infeasibility-resolved** — Sprint 25 #1338 SetMembershipTest fix did the work |
+| #1147 | camshape | ⚠ **Bucket shifted (new bug)** — was `path_syntax_error`; now `Locally Infeasible` (model_status=5) | **Close-and-refile as Sprint 27 issue** — original framing stale |
+
+**Phase E framing assessment:** Original "Phase E" framing was valid for **only 1 of 3 models** (kand). catmix's bug was a `skip_lead_lag_inference` regression (NOT alias-AD), already resolved by Sprint 25 #1338. camshape's original `$141` compilation error was a bound-emission issue (NOT alias-AD), already resolved by #1147 partial fix + #1160 follow-up. **Recommendation: retire the "Phase E" label**; reclassify kand as a standalone alias-AD residual under Priority 5 (alongside #1334/#1335).
+
+**Sprint 26 Priority 3 effort estimate:** Reduced from original 3-models / 6–10h investigative work to **1 model fix (kand, ~3–6h) + 2 closures (~30min mechanical)**. Time saved: ~3–4h freed for Priority 1 (Phase A + B), Priority 4 (Option 1), or Priority 5 (#1335).
 
 ### Verification
 
@@ -582,10 +599,10 @@ grep -cE "^## Model: (kand|catmix|camshape)" docs/planning/EPIC_4/SPRINT_26/PATT
 
 ### Acceptance Criteria
 
-- [ ] All 3 Phase E models re-verified
-- [ ] Per-model classification (Resolved / Bucket Shifted / Unchanged) with evidence
-- [ ] Sprint 26 fix scope updated (which of the 3 actually need fix work in Sprint 26)
-- [ ] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
+- [x] All 3 Phase E models re-verified
+- [x] Per-model classification (Resolved / Bucket Shifted / Unchanged) with evidence
+- [x] Sprint 26 fix scope updated (which of the 3 actually need fix work in Sprint 26)
+- [x] Unknowns 3.1, 3.2, 3.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
