@@ -659,7 +659,7 @@ Source-level (and docs-level) references to cohort issue numbers are scattered (
 for issue in 1138 1139 1140 1142 1145 1150; do
   echo "=== #$issue ==="
   grep -rcE "#$issue\b" src/ 2>/dev/null
-  grep -rcE "#$issue\b" docs/ --include="*.md" 2>/dev/null | grep -v "/issues/\|/planning/"
+  grep -rcE "#$issue\b" docs/ --include="*.md" 2>/dev/null | grep -vE "/issues/|/planning/"
 done
 ```
 

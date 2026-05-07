@@ -559,7 +559,7 @@ Sprint 26 Priority 4 budgets 4–6h for Option 1 short-circuit landing. That bud
 2. **Verify the patch sites still exist and have the expected shape post-Sprint-25:**
 
    ```bash
-   grep -n "def enumerate_equation_instances\|def resolve_set_members" src/ad/index_mapping.py
+   grep -nE "def enumerate_equation_instances|def resolve_set_members" src/ad/index_mapping.py
    grep -n "SetMembershipTest" src/ir/condition_eval.py
    ```
 
@@ -916,7 +916,7 @@ To be completed.
 ```bash
 grep -c "Emit-affecting PRs\|src/emit\|byte-stable-refactor" CONTRIBUTING.md   # Expected: ≥ 3
 test -f .github/PULL_REQUEST_TEMPLATE.md && \
-  grep -c "regenerated.*\.gms\|Emit-affecting" .github/PULL_REQUEST_TEMPLATE.md
+  grep -cE "regenerated.*\.gms|Emit-affecting" .github/PULL_REQUEST_TEMPLATE.md
 ```
 
 ### Deliverables
