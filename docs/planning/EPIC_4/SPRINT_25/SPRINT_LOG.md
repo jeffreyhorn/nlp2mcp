@@ -294,6 +294,8 @@ End-of-sprint discoveries appended (KU-33..KU-36 — see `KNOWN_UNKNOWNS.md` §"
 
 The Day 0 baseline frozen denominator was 143; Day 14 sees 142. The 1-model reduction happened during Sprint 25 (already visible in the Day 11 retest) and was not introduced by Day 14 work. This was discussed under the literal-rule scope-freeze policy in `BASELINE_METRICS.md` §5: convexity-status reclassification of a single model during the sprint is treated as a runtime filter rather than a scope edit, similar to the multi-solve gate handling of `danwolfe`/`decomp`. The model in question carried a Day 0 `solve_success` but doesn't appear in Day 14's in-scope set — identifying it is a Sprint 25 retrospective item; it does not change Day 14 conclusions because all metric ratios use 142.
 
+> **Update (Sprint 26 Prep Task 2 — PR18):** The shifted model is **`abel`**, reclassified `likely_convex` → `non_convex` on 2026-04-25 (Sprint 25 Day 4) via commit `c922bb2d` based on Day 8 qabel/abel reassessment evidence (indefinite-eigenvalue lambda matrix). See [`BASELINE_METRICS.md` §5.1 "Sprint 25 Mid-Sprint Reclassification"](BASELINE_METRICS.md#51-sprint-25-mid-sprint-reclassification) for full evidence and policy classification. Reversibility during Sprint 26: NO (the reclassification reflects a fundamental model property; #1313 closed during S25 didn't restore convexity).
+
 #### Per-model transitions (Day 0 → Day 14)
 
 **7 models recovered from Day 0 failure into Day 14 solve_success** (the +5 Solve gain plus 2 absorbed by the +1 scope reduction and the 1 new failure below):

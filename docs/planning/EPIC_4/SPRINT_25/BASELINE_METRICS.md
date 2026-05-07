@@ -109,9 +109,31 @@ The v2.2.1 schema records **23 total exclusions**. Twenty-one are tagged in the 
 **Policy for mid-sprint exclusion additions:**
 
 - **Allowed automatically (no freeze break):** The multi-solve driver gate (`src/validation/driver.py`) is a runtime filter. If Sprint 25 work extends the gate's conjunction (issue #1270 follow-up) and the extended gate rejects additional models (e.g., `saras`), those models remain in the 143 denominator but appear as `translate.failure / multi_solve_driver_out_of_scope`. This is identical to the baseline handling of `danwolfe` and `decomp` and does **not** constitute a scope change requiring re-freeze.
+- **Allowed automatically (no freeze break):** `convexity.status` reclassifications (e.g., `likely_convex` → `non_convex`) when sprint work surfaces ground-truth evidence about a model's mathematical structure (indefinite Hessian / lambda matrix, etc.). Reclassified models remain in the 219-corpus and the comparison set; their `solution_comparison.comparison_status` continues to be reported but is treated as informational (parallel to the existing 7 `non_convex` `ps*_s*` models). This is the same runtime-filter treatment as the multi-solve driver gate above and does **not** constitute a scope change requiring re-freeze. See §5.1 for the one Sprint 25 instance (`abel`).
 - **Not allowed:** Adding `legacy_excluded` tags, removing models from the schema, or editing the MINLP set mid-sprint. Any such change requires an explicit Sprint 25 retrospective-style decision before being applied.
 
-**Consequence:** Sprint 25 Match-target calibration uses **143 as the denominator**. The Sprint 24 ambiguity (pipeline scope 143 vs triage scope 147) does not recur.
+**Consequence:** Sprint 25 acceptance criteria — Match target, Solve target, error-category reductions — are **calibrated against the 143-denominator baseline** (Day 0). Mid-sprint reclassifications under the runtime-filter policy above may shift the as-of-Day-N in-scope count below 143 (Sprint 25 Day 14 final: 142 in-scope; see §5.1) without invalidating the calibration: the reclassified model is counted as a runtime-filter mismatch, identical to how the 7 baseline `non_convex` `ps*_s*` models are accounted. The Sprint 24 ambiguity (pipeline scope 143 vs triage scope 147) does not recur.
+
+### 5.1 Sprint 25 Mid-Sprint Reclassification
+
+**Identified during Sprint 26 Prep Task 2 (PR18 — Sprint 25 retrospective recommendation).**
+
+**Model:** `abel`
+**Prior `convexity.status`:** `likely_convex` (Sprint 25 Day 0 baseline)
+**New `convexity.status`:** `non_convex` (Sprint 25 Day 4, 2026-04-25)
+**Triggering commit:** `c922bb2d` — *"Mark abel non-convex in gamslib_status.json + file #1313 for warm-start fix"*
+**Tracking issue:** [#1313](https://github.com/jeffreyhorn/nlp2mcp/issues/1313) (CLOSED during Sprint 25)
+**Discovery context:** [`docs/planning/EPIC_4/SPRINT_25/DAY8_QABEL_ABEL_REASSESSMENT.md`](DAY8_QABEL_ABEL_REASSESSMENT.md) — Sprint 25 Day 8 qabel/abel PATH-solve reassessment.
+
+**Reason for reclassification:** abel's lambda matrix has the off-diagonal asymmetric entry `lambda(money, gov-expend) = 0.444`. The symmetric part has eigenvalues approximately `[-0.047, 1.047]` — indefinite, making the criterion's `u`-quadratic genuinely non-convex. Multi-start NLP confirmed the NLP solver finds a unique objective (the linear `stateq` dynamics tightly constrain the feasible set, masking the indefiniteness for CONOPT), but the MCP/PATH formulation doesn't have that constraint-induced uniqueness — the KKT system genuinely has multiple stationary points and PATH converges to a different valid one than CONOPT. This is a property of the model, not the emitter — the MCP is mathematically correct.
+
+**Policy classification:** **Runtime filter** (per §5 above, second "Allowed automatically" bullet — `convexity.status` reclassifications). Same handling as the existing 7 baseline `non_convex` models (`ps10_s, ps2_f_s, ps2_s, ps3_s, ps3_s_gic, ps3_s_mn, ps3_s_scp`). abel remains in the 219-corpus and the comparison set; its `solution_comparison.comparison_status` stays as `mismatch` (informational only). The 143-denominator was **not** retroactively rewritten — Sprint 25 acceptance deltas remain calibrated against 143 (Day 0 baseline) — but the as-of-Day-14 in-scope count drops to **142** because abel is now in the runtime-filter (non-convex) bucket.
+
+**Relationship to §5 freeze:** The §5 freeze prohibits schema/exclusion-set edits (legacy_excluded additions, MINLP-set edits, model removals). It does **not** prohibit `convexity.status` field changes that reflect newly-surfaced ground-truth evidence about a model's mathematical structure — those are explicitly permitted as a runtime-filter mechanism (§5, second "Allowed automatically" bullet). The Sprint 25 Day 14 final retest reports both the 142 as-of-Day-14 in-scope count AND the deltas-against-143 acceptance numbers (see CHANGELOG Sprint 25 Summary).
+
+**Reversibility during Sprint 26:** **No.** The reclassification reflects a fundamental property of the abel model (indefinite lambda matrix) and is not a code-change artifact. #1313 (the warm-start fix that would have addressed the PATH convergence issue) was CLOSED during Sprint 25 — but closing it didn't restore convexity, only documented that the warm-start path doesn't apply. Sprint 26 baseline (Task 9) freezes scope at **142** in-scope.
+
+**Sprint 26 implication:** `BASELINE_METRICS.md` Sprint 26 baseline (Task 9) uses 142 as the denominator throughout, matching the Sprint 25 Day 14 final scope. The 143 → 142 transition is a one-way change documented here for traceability; no further scope-shifts are anticipated barring discovery of additional non-convex models.
 
 ---
 
