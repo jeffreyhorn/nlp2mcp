@@ -914,7 +914,7 @@ To be completed.
 ### Verification
 
 ```bash
-grep -c "Emit-affecting PRs\|src/emit\|byte-stable-refactor" CONTRIBUTING.md   # Expected: ≥ 3
+grep -cE "Emit-affecting PRs|src/emit|byte-stable-refactor" CONTRIBUTING.md   # Expected: ≥ 3
 test -f .github/PULL_REQUEST_TEMPLATE.md && \
   grep -cE "regenerated.*\.gms|Emit-affecting" .github/PULL_REQUEST_TEMPLATE.md
 ```

@@ -222,8 +222,11 @@ Compute `∂tsam(i,j)/∂tsam_var(k,l)` from the source NLP. Determine the expec
 **Test Case 3: Survey other models for `sameas`-decomposed alias patterns**
 
 ```bash
-grep -rE "\bsameas\(" data/gamslib/raw/*.gms 2>/dev/null | wc -l   # count models using sameas
-grep -lE "\bsameas\(" data/gamslib/raw/*.gms 2>/dev/null | head -10  # which models
+# Note: `sameas(` is a GAMS-specific function call; no word-boundary anchor needed
+# (POSIX ERE doesn't support `\b`; `(^|[^[:alnum:]_])` would be the portable form,
+# but `sameas(` is distinctive enough on its own).
+grep -rE "sameas\(" data/gamslib/raw/*.gms 2>/dev/null | wc -l   # count lines mentioning sameas
+grep -lE "sameas\(" data/gamslib/raw/*.gms 2>/dev/null | head -10  # which models
 ```
 
 Expected: identify any other model in the 142 in-scope set that uses `sameas`-decomposed cross-products and would be affected by the new logic.
@@ -371,9 +374,16 @@ Most Tier 0/1 canary models (dispatch, quocge, partssupply, prolog, sparta, guss
 **Test Case 1: Categorize canaries by SAM presence**
 
 ```bash
+# Note: `\b` isn't a word-boundary in POSIX ERE; using `grep -w` for portability.
+# `-w` matches whole words (boundary on `[a-zA-Z0-9_]`), so `imat` matches but
+# `imat_extra` doesn't. `[a-z]+coef`-suffix matches still need a regex pattern;
+# we use the portable POSIX-ERE `(^|[^[:alnum:]_])` boundary for that one.
 for m in dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
   echo "=== $m ==="
-  grep -cE "\bimat\b|\bSAM\b|\b[a-z]+coef\b" data/gamslib/raw/${m}.gms 2>/dev/null
+  imat=$(grep -cw imat "data/gamslib/raw/${m}.gms" 2>/dev/null || echo 0)
+  sam=$(grep -cw SAM "data/gamslib/raw/${m}.gms" 2>/dev/null || echo 0)
+  coef=$(grep -cE "(^|[^[:alnum:]_])[a-z]+coef([^[:alnum:]_]|$)" "data/gamslib/raw/${m}.gms" 2>/dev/null || echo 0)
+  echo "  imat=$imat sam=$sam coef-suffixed=$coef"
 done
 ```
 
@@ -486,14 +496,30 @@ The Day 7 cohort sweep classifications (Pattern C plain-alias variant for #1138;
 **Test Case 1: Per-issue fingerprint re-verification**
 
 ```bash
-# For each issue, fetch the canonical model + grep for the bug fingerprint
+# For each issue, fetch the canonical model + grep for the bug fingerprint.
+# Issues with no documented fingerprint (e.g., #1139 meanvar — currently
+# pipeline-excluded; #1140 ps2_f_s — multi-solve dynamics, not a single-line
+# pattern; #1145 cclinpts — offset-handling bug requires manual emit inspection)
+# are flagged for manual verification rather than auto-grepped, since an empty
+# fingerprint would make `grep -cE ""` match every line and produce a misleading
+# non-zero count.
 for issue_model in "1138:irscge:nu_eqpzs.*\\+" "1139:meanvar:" "1140:ps2_f_s:" "1142:launch:nu_dweight.*\\+" "1145:cclinpts:" "1150:qabel:k-[0-9]+"; do
-  issue=$(echo $issue_model | cut -d: -f1)
-  model=$(echo $issue_model | cut -d: -f2)
-  fingerprint=$(echo $issue_model | cut -d: -f3-)
+  issue=$(echo "$issue_model" | cut -d: -f1)
+  model=$(echo "$issue_model" | cut -d: -f2)
+  fingerprint=$(echo "$issue_model" | cut -d: -f3-)
   echo "=== Issue #$issue / $model ==="
-  if [ -f data/gamslib/mcp/${model}_mcp.gms ]; then
-    grep -cE "$fingerprint" data/gamslib/mcp/${model}_mcp.gms || echo "(no match — possibly resolved)"
+  if [ -z "$fingerprint" ]; then
+    echo "  (no auto-greppable fingerprint — manual emit inspection required;"
+    echo "   see docs/issues/ISSUE_${issue}_*.md for the bug shape and re-emit"
+    echo "   data/gamslib/mcp/${model}_mcp.gms to inspect)"
+    continue
+  fi
+  if [ -f "data/gamslib/mcp/${model}_mcp.gms" ]; then
+    count=$(grep -cE "$fingerprint" "data/gamslib/mcp/${model}_mcp.gms")
+    echo "  fingerprint matches: $count"
+    [ "$count" = "0" ] && echo "  (no match — possibly resolved by S25 fix-in-place series)"
+  else
+    echo "  (data/gamslib/mcp/${model}_mcp.gms not found — re-emit before checking)"
   fi
 done
 ```
@@ -606,9 +632,11 @@ A small number of test files (≤3) reference cohort issue numbers in `xfail(rea
 **Test Case 1: Recursive grep across tests/**
 
 ```bash
+# Note: `\b` isn't a word-boundary in POSIX ERE; using a numeric boundary
+# `([^0-9]|$)` to ensure `#1138` doesn't match `#11380` etc.
 for issue in 1138 1139 1140 1142 1145 1150; do
   echo "=== #$issue ==="
-  grep -rE "#$issue\b" tests/ 2>/dev/null
+  grep -rE "#${issue}([^0-9]|\$)" tests/ 2>/dev/null
 done
 ```
 
@@ -656,10 +684,12 @@ Source-level (and docs-level) references to cohort issue numbers are scattered (
 ### How to Verify
 
 ```bash
+# Note: `\b` isn't a word-boundary in POSIX ERE; using `([^0-9]|$)` numeric
+# boundary so `#1138` doesn't match `#11380`.
 for issue in 1138 1139 1140 1142 1145 1150; do
   echo "=== #$issue ==="
-  grep -rcE "#$issue\b" src/ 2>/dev/null
-  grep -rcE "#$issue\b" docs/ --include="*.md" 2>/dev/null | grep -vE "/issues/|/planning/"
+  grep -rcE "#${issue}([^0-9]|\$)" src/ 2>/dev/null
+  grep -rcE "#${issue}([^0-9]|\$)" docs/ --include="*.md" 2>/dev/null | grep -vE "/issues/|/planning/"
 done
 ```
 
