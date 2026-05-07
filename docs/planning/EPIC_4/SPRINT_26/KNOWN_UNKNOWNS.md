@@ -180,7 +180,19 @@ AD/KKT engineer (Task 3)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:** Broader gate (no `$cond` filter) is **far too permissive**. Prototype patch fired 122 times across the 11 Tier 0/1 canaries (vs expected 4–8 firings across the entire 142 in-scope set). Most firings produced no byte diff because the matched offset_groups have only a single zero-offset key already, but **2 of 11 canaries (quocge, prolog) plus launch (12th model) regressed byte-stably**. The regressions reproduce the Sprint 25 #1351 bug shape: per-offset terms collapse into single zero-offset terms, losing cross-element aggregation.
+
+**Evidence:**
+
+- Prototype patch applied at `src/kkt/stationarity.py:4339` re-enabling the gate with broader predicate; reverted before commit. See `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` §1.5 for the patch source.
+- Canary regression table: `PATTERN_C_HYPOTHESIS_VALIDATION.md` §4. quocge `stat_pq`, `stat_rt`, `stat_tm`, `stat_tz` lose per-offset terms; prolog `stat_q(i,t)` loses 4 of 5 condition-guarded terms; launch `stat_iweight`, `stat_pweight` reproduce the #1351 bug.
+- `/tmp/sprint26-prototype-canaries/{quocge,prolog,launch}_mcp.gms` vs `/tmp/sprint26-baseline-canaries/` — diff excerpts in `PATTERN_C_HYPOTHESIS_VALIDATION.md` §1.6.
+
+**Decision:** REPLAN — the simple `$cond` removal is **structurally insufficient**. The downstream consolidated zero-offset builder must first be fixed (Phase A in the replanned Sprint 26 Priority 1) per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" before any gate widening can land safely.
 
 ---
 
@@ -247,7 +259,20 @@ AD/KKT engineer (Task 3)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:** cesam2's `sameas`-decomposed SAM-block alias case **is** a generalization of the launch-shape gate — the AD layer enumerates the alias `j` over `i`'s positions via offsets gated by `ord(j) = N`. Hand-derived formal KKT for `stat_TSAM(i,j)` confirms a clean `nu_COLSUM(j)$(jj(j) and <sameas-block-guard>)` form. The 18 per-offset terms in the current emit are mathematically equivalent to this single sum-form term, but require the consolidated builder to merge the equation-domain summation with the sameas-block guard.
+
+**Evidence:**
+
+- Hand-derived formal KKT: `/tmp/sprint26-day0-validation/cesam2_formal_kkt.md`
+- Buggy emit excerpt: `/tmp/sprint26-day0-validation/cesam2_mcp.gms` line 300 — 18 `nu_COLSUM(i±N)` terms gated by `ord(j) = N` selectors.
+- Source: `data/gamslib/raw/cesam2.gms:387` — `COLSUM(jj).. sum(ii, TSAM(ii,jj)) =e= Y(jj);`. Alias `Alias(i,j), (ii,jj);`.
+- Prototype gate firings on cesam2: 24.
+
+**Decision:** Sprint 26 Phase B (gate generalization) must include sameas-block-guard preservation. Same code path as the launch fix (Phase A) — not a separate detection path — but the consolidated builder needs to merge `sum(j$(jj(j)), ...)` with the `<sameas-block-guard>` correctly.
 
 ---
 
@@ -297,7 +322,23 @@ AD/KKT engineer (Task 3 + Task 7)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:**
+
+- Code-path orthogonality (camcge/cesam2): Pattern C generalization works on `_compute_index_offset_key` + offset_groups consolidation in `src/kkt/stationarity.py:4318–4346`. #1334 (`_replace_indices_in_expr` ParamRef branch) is in `src/kkt/stationarity.py:2295–2479` — different function, different control flow. The two patches can land in either order without test interference.
+- **otpop subsumption by #1334 confirmed**: per the original issue doc and verified via this task — otpop `$141` errors trace to phantom-offset markers (`nu_adef(tt+1)`, `nu_pdef(tt+2)`, etc., 5 markers total) which match the #1334 spurious-Sum-on-subset-ParamRef bug pattern. otpop's primary `$171` blocker is the comp_up subset/superset shape (same as fawley), unrelated to either Pattern C or #1334.
+- **Pattern C target list shrinks 4 → 2** (camcge, cesam2 only). otpop reclassifies to #1334 + comp_up subset-domain workstream.
+
+**Evidence:**
+
+- otpop emit static analysis: `grep -oE "nu_[a-zA-Z_]+\([a-zA-Z]+[+-][0-9]+" /tmp/sprint26-day0-validation/otpop_mcp.gms` → 5 markers (`nu_adef(tt+1)` ×2, `nu_pdef(tt+2)`, `nu_pdef(tt+1)`, `nu_adef(tt+4)`).
+- otpop GAMS lst: `/tmp/sprint26-day0-validation/otpop.lst` — `$171` at lines 221, 253 (comp_up_x), `$141` at 321 (downstream cascade).
+- Issue doc itself: `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md` §"Diagnostic / Possible Subsumption" already flagged subsumption by #1334.
+
+**Decision:** Sprint 26 Priority 1 budget allocation excludes otpop. otpop's `$141` portion subsumed by Priority 5 (#1334). otpop's `$171` portion routes to a new comp_up subset-domain widening workstream (alongside fawley's reclassification) — out of Pattern C scope.
 
 ---
 
@@ -349,7 +390,21 @@ AD/KKT engineer (Task 3)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:** The per-offset enumeration **IS** mathematically equivalent to a `sum(j$(domain_filter), ...)` form on camcge and cesam2 — but only because `card(i)` happens to equal the total offset range (camcge `card(i)=11`, ±10 offsets; cesam2 `card(i)=10`, ±9 offsets). The current emit is correct in spirit but rejected at GAMS compile-time due to symbolic out-of-domain references (`$141` errors). However, **the consolidated builder's current implementation is structurally incomplete** — it collapses all offset_groups under a single zero-offset key without restoring the `sum(...)` form. The Sprint 25 #1351 evidence (and the Task 3 prototype experiment regenerating the bug on quocge/prolog/launch) confirms this.
+
+**Evidence:**
+
+- camcge: `card(i)=11`, offsets `{-10..+10}`, 21 per-offset terms cover all 11 elements `j ∈ {1..11}` per `i`. Hand-derived formal KKT confirms equivalence to `sum(j, imat(j,i)*nu_ieq(j))`. See `/tmp/sprint26-day0-validation/camcge_formal_kkt.md`.
+- cesam2: `card(i)=10`, offsets `{-9..+9}`, 18 per-offset terms (gated by `ord(j)=N`) cover all 10 elements via the `j = i + N` selector. Hand-derived formal KKT confirms equivalence to `nu_COLSUM(j)$(jj(j))`. See `/tmp/sprint26-day0-validation/cesam2_formal_kkt.md`.
+- fawley: NO per-offset enumeration present in emit. Bug is in comp_up subset/superset, NOT Pattern C. See `/tmp/sprint26-day0-validation/fawley_formal_kkt.md`.
+- Sprint 25 #1351 cross-check passed: the prototype patch reproduces the loss-of-aggregation bug. The new Sprint 26 consolidation form (Phase A) MUST iterate over the equation domain with the body's condition, not collapse to `nu_<eq>(i)` only. See `PATTERN_C_HYPOTHESIS_VALIDATION.md` §1.6 launch diff.
+- SymPy comparison NOT performed (deemed unnecessary given the structural argument from card(i) coverage and the launch #1351 reproduction).
+
+**Decision:** Sprint 26 Phase A must rewrite the consolidated zero-offset builder to emit `sum(j$(domain_filter), <body>)` over the equation domain, preserving cross-element aggregation. The mathematical equivalence between per-offset enumeration and the consolidated sum form is confirmed for camcge and cesam2 — but only after Phase A's correct implementation (NOT the current collapsed form).
 
 ---
 
@@ -416,7 +471,33 @@ AD/KKT engineer (Task 3)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:** Of the 11 Tier 0/1 canaries, the prototype broader-gate patch fires on 9 (all except `dispatch`, `sparta`, `gussrisk`). Most firings are no-op (single offset_group, gate consolidation has no effect). However, **2 of 11 canaries (quocge, prolog) regress byte-stably** under the prototype patch, with multiple stationarity equations losing per-offset terms and collapsing to single zero-offset terms.
+
+| Canary | Firings | Byte-diff | Notes |
+|---|---|---|---|
+| dispatch | 0 | byte-stable | non-CGE |
+| **quocge** | 67 | **REGRESSED** (14 diff lines) | CGE family (`ax(i,j)`); `stat_pq, stat_rt, stat_tm, stat_tz` lose per-offset terms |
+| partssupply | 4 | byte-stable | |
+| **prolog** | 13 | **REGRESSED** (4 diff lines) | `stat_q(i,t)` loses 4 of 5 condition-guarded terms |
+| sparta | 0 | byte-stable | |
+| gussrisk | 0 | byte-stable | |
+| ps2_f | 4 | byte-stable | |
+| ps3_f | 4 | byte-stable | |
+| ship | 6 | byte-stable | |
+| splcge | 14 | byte-stable | CGE family — at-risk pattern present but offset_groups already consolidated correctly |
+| paklive | 10 | byte-stable | lead/lag model, the gate's IndexOffset-presence guard correctly prevents firing |
+
+**Evidence:**
+
+- Prototype run output: `/tmp/sprint26-prototype-canaries/<m>_mcp.gms` and `<m>_gate.stderr`.
+- Diff excerpts: `PATTERN_C_HYPOTHESIS_VALIDATION.md` §1.6 (quocge `stat_pq` losing `(i+1)/(i-1)` terms; prolog `stat_q(i,t)` losing 4 of 5 sameas-block terms).
+- Counter-evidence from byte-stable cases: paklive's lead/lag pattern + splcge's CGE shape don't regress because the existing IndexOffset-on-domain check (`_body_has_index_offset_on_sets`) correctly excludes them.
+
+**Decision:** The broader gate is not bounded by the launch shape — it activates on any model with an alias-only inner sum where the source body lacks a concrete IndexOffset. The Sprint 26 Phase B predicate must be tighter than the prototype's "no IndexOffset" check; it must also require the source body's expansion to currently produce per-offset terms that need consolidation (and NOT activate on canaries where the offset_groups already correctly consolidate). Combined with the Phase A consolidated-builder fix, this should reduce gate firings to 4–8 across the full 142 in-scope set as originally projected.
 
 ---
 
@@ -466,7 +547,29 @@ AD/KKT engineer (Task 3)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 3 (Pattern C Hypothesis Validation PR16)
+**Date:** 2026-05-07
+
+**Findings:** The methodology produced an **unambiguous REPLAN signal** with concrete per-model verdicts:
+
+| Model | Verdict | Evidence shape |
+|---|---|---|
+| camcge | ✅ CONFIRMED Pattern C plain-alias variant | 21 phantom-offset terms in stat_dk; formal KKT derived in 30 minutes |
+| cesam2 | ✅ CONFIRMED Pattern C `sameas`-decomposed variant | 18 phantom-offset terms in stat_TSAM; formal KKT derived in 30 minutes |
+| fawley | ❌ DISPROVED — not Pattern C | 0 phantom offsets; bug is comp_up subset/superset |
+| otpop (held-out) | ❌ DISPROVED — primarily not Pattern C | 5 phantom offsets but #1334; primary blocker is comp_up subset/superset |
+
+**Decision rule application:** 2/3 PROCEED on Pattern C → defer disproved models. **BUT** the architectural blocker (#1351 consolidated builder is broken) means even the 2 confirmed sites can't be unblocked by gate widening alone. Final recommendation: **REPLAN with two-phase scope** (Phase A consolidated-builder fix + Phase B gate generalization for 2 targets), reducing target list 4 → 2 (camcge + cesam2 only) and reducing projected gain (+2 Solve / +2 Match instead of +4 / +3–4).
+
+**Evidence:**
+
+- Hand-derived formal KKT excerpts at `/tmp/sprint26-day0-validation/<model>_formal_kkt.md` (3 models × ~30 min each = 90 min total).
+- Byte-comparison: `grep -oE "nu_[a-zA-Z_]+\([a-zA-Z]+[+-][0-9]+"` on each emit — phantom-offset count is the binary indicator (>0 = candidate Pattern C; 0 = disproved).
+- GAMS lst inspection for fawley/otpop: confirmed both are comp_up subset/superset domain widening, not Pattern C.
+- Decision document: `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` records the per-model verdicts, decision rule application, and Sprint 26 Priority 1 replan with revised scope/effort/projection.
+
+**Decision:** PR16 methodology validated. The methodology produced a clean, actionable signal in ~5h of prep work. Estimate: ~5h prep saves ~10–16h of mid-sprint waste — net savings ~5–11h. Recommendation: codify PR16 into CONTRIBUTING.md / sprint-prep checklist for any future sprint with 3+ issues claimed to share a single hypothesized root cause.
 
 ---
 
