@@ -37,18 +37,29 @@ Per Sprint 25 retrospective process recommendation **PR16**, this prep task appl
 
 ### 1.1 Trace capture
 
+The 3 primary target models (camcge, cesam2, fawley) get full Day-5-methodology treatment (trace + emit + hand-derived formal KKT). The 4th model otpop is held out as a confirmation check after the primary 3 — the issue doc itself flags otpop as "likely subsumed by #1334" so it's run for completeness but not given a separate hand-derived KKT in §1.2.
+
 ```bash
 mkdir -p /tmp/sprint26-day0-validation
-for m in camcge cesam2 fawley otpop; do
+
+# Primary 3 targets (full Day-5 treatment)
+for m in camcge cesam2 fawley; do
   SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli \
     data/gamslib/raw/${m}.gms \
     -o /tmp/sprint26-day0-validation/${m}_mcp.gms \
     --skip-convexity-check --quiet \
     2> /tmp/sprint26-day0-validation/${m}_trace.stderr
 done
+
+# Held-out 4th model (subsumption check — see §2.4)
+SPRINT25_DAY2_DEBUG=1 .venv/bin/python -m src.cli \
+  data/gamslib/raw/otpop.gms \
+  -o /tmp/sprint26-day0-validation/otpop_mcp.gms \
+  --skip-convexity-check --quiet \
+  2> /tmp/sprint26-day0-validation/otpop_trace.stderr
 ```
 
-All 4 models translate cleanly (exit=0, no stderr errors).
+All 4 models translate cleanly (exit=0, no stderr errors). Output: 4 `_mcp.gms` files + 4 `_trace.stderr` files in `/tmp/sprint26-day0-validation/`.
 
 ### 1.2 Hand-derived formal KKT
 
@@ -255,17 +266,17 @@ Run on a temporarily-applied broader-gate prototype (set `allow_nonzero_offsets 
 
 | Canary model | Firings | Byte-diff |
 |---|---|---|
-| - dispatch | 0 | byte-stable |
-| - quocge | 67 | **REGRESSED** (4 stat equations: `stat_pq`, `stat_rt`, `stat_tm`, `stat_tz` lose per-offset terms) |
-| - partssupply | 4 | byte-stable |
-| - prolog | 13 | **REGRESSED** (`stat_q(i,t)` loses 4 of 5 condition-guarded terms) |
-| - sparta | 0 | byte-stable |
-| - gussrisk | 0 | byte-stable |
-| - ps2_f | 4 | byte-stable |
-| - ps3_f | 4 | byte-stable |
-| - ship | 6 | byte-stable |
-| - splcge | 14 | byte-stable |
-| - paklive | 10 | byte-stable |
+| dispatch | 0 | byte-stable |
+| quocge | 67 | **REGRESSED** (4 stat equations: `stat_pq`, `stat_rt`, `stat_tm`, `stat_tz` lose per-offset terms) |
+| partssupply | 4 | byte-stable |
+| prolog | 13 | **REGRESSED** (`stat_q(i,t)` loses 4 of 5 condition-guarded terms) |
+| sparta | 0 | byte-stable |
+| gussrisk | 0 | byte-stable |
+| ps2_f | 4 | byte-stable |
+| ps3_f | 4 | byte-stable |
+| ship | 6 | byte-stable |
+| splcge | 14 | byte-stable |
+| paklive | 10 | byte-stable |
 
 **Canary regressions: 2 of 11 (quocge, prolog). Plus launch (12th model) regresses with the #1351 reproduction.**
 

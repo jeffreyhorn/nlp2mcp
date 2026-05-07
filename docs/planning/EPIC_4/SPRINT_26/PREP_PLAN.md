@@ -369,9 +369,10 @@ Tier 0/1 canary regression on prototype patch (broader gate, no `$cond` filter r
 ### Verification
 
 ```bash
-# Trace files captured
-ls /tmp/sprint26-day0-validation/*_trace.stderr | wc -l   # Expected: 3
-ls /tmp/sprint26-day0-validation/*_mcp.gms | wc -l        # Expected: 3
+# Trace files captured (3 primary targets — camcge, cesam2, fawley —
+# plus 1 held-out model — otpop — per PATTERN_C_HYPOTHESIS_VALIDATION.md §1.1)
+ls /tmp/sprint26-day0-validation/*_trace.stderr | wc -l   # Expected: 4
+ls /tmp/sprint26-day0-validation/*_mcp.gms | wc -l        # Expected: 4
 
 # Validation document exists
 test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md && echo "EXISTS"
@@ -379,9 +380,10 @@ test -f docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md && ech
 # Per-model verdict sub-sections (§2.1 camcge, §2.2 cesam2, §2.3 fawley, §2.4 otpop held-out)
 grep -cE "^### 2\.[1-4] " docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 4
 
-# Tier 0/1 canary regression rows in §4 markdown table
+# Tier 0/1 canary rows across markdown tables in PATTERN_C_HYPOTHESIS_VALIDATION.md
+# (11 canaries × 2 tables: §1.5 gate-firing-count + §4 byte-stable summary = 22 rows)
 grep -cE "^\| (dispatch|quocge|partssupply|prolog|sparta|gussrisk|ps2_f|ps3_f|ship|splcge|paklive) " \
-  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 11
+  docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md   # Expected: 22
 ```
 
 ### Deliverables
