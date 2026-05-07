@@ -651,7 +651,30 @@ Sprint planning (Task 4)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (Pattern A Cohort Reclassification Pre-Work)
+**Date:** 2026-05-07
+
+**Findings:** 5 of 6 Day 7 classifications still accurate on current main; 1 stale (#1150 qabel half — already resolved by Sprint 25 #1311 closure). One classification needs a Bug-#1-fix-rollback caveat (#1142 — Sprint 25 Day 11 #1351 rolled back the Day 6 PR #1308 fix, so launch's emit has the phantom offsets again).
+
+| Issue | Day 7 → Re-verified status | Evidence (current emit on main, 2026-05-07) |
+|---|---|---|
+| #1138 | ✅ Pattern C plain-alias confirmed | `stat_pq(i)` has `nu_eqpzs(i+1)$(ord(i) <= card(i) - 1)` and `(i-1)$(ord(i) > 1)`. Same family as quocge / camcge (#1354). |
+| #1139 | ✅ AD-correct confirmed | Phantom-offset count = 0 in meanvar emit. Clean Sprint-24 renamed-alias sums. `legacy_excluded` per v2.2.1 schema. |
+| #1140 | ✅ AD-correct confirmed (additional context: now `non_convex` runtime-filter) | Phantom-offset count = 0 in ps2_f_s emit. All 7 PS-family models reclassified `non_convex` per `BASELINE_METRICS.md` §5. |
+| #1142 | ⚠ Day 7 said Bug #1 "fixed Day 6"; current main has Bug #1 BACK due to #1351 rollback | `stat_iweight(s)` emit has `nu_dweight(s±1)`, `(s±2)` per-offset terms. Bug #2 still pending (#1307 OPEN). Both addressed by Sprint 26 Priority 1 Phase A per Task 3 REPLAN recommendation. |
+| #1145 | ✅ Condition-guard / sign bug confirmed (NOT Pattern A) | `stat_b(j)` and `stat_fb(j)` have legitimate `(j-1) * 1$((not last(j)))` / `1$((not first(j)))` offset terms matching the source body. Not an AD bug. |
+| #1150 (qabel half) | ❌ STALE — Day 7 said "k-9..k-68 massive enumeration"; current main has only `k-1`/`k+1` | Almost certainly fixed by #1311 (CLOSED 2026-04-25 during S25 — "AD: criterion's u-quadratic gradient dropped to Const(0.0) when sum index is a subset of variable's domain"). qabel and abel emits are now structurally identical (only `k` set definition differs). |
+| #1150 (abel half) | ✅ AD-correct confirmed (additional context: now `non_convex` runtime-filter) | Reclassified `non_convex` on 2026-04-25 per `BASELINE_METRICS.md` §5.1 (Sprint 26 Prep Task 2). |
+
+**Evidence:**
+
+- Re-verification artifacts at `/tmp/sprint26-task4-verify/<model>_mcp.gms` for all 7 canonical models (irscge, meanvar, ps2_f_s, launch, cclinpts, qabel, abel) — translate exit=0 on current main.
+- Phantom-offset grep: `grep -cE "nu_[a-zA-Z_]+\([a-zA-Z]+[+-][0-9]+" <emit>` — yields 0 for meanvar / ps2_f_s, ≥1 for irscge / launch (confirming Pattern C shape), and 0 for cclinpts (confirming non-Pattern-A).
+- qabel offset enumeration: `grep -oE "k[+-][0-9]+" qabel_mcp.gms | sort -u` returns only `k-1`, `k+1` — directly contradicting Day 7's "k-9..k-68" claim.
+- `gh issue view` confirms all 6 cohort issues OPEN with `sprint-26` label; #1311 + #1334 CLOSED.
+
+**Decision:** Day 7 classifications remain authoritative for 5 of 6 issues. #1150 qabel half is updated to "resolved by #1311". #1142 needs the Bug-#1-fix-rollback annotation (already addressed by Task 3 routing to Phase A).
 
 ---
 
@@ -710,7 +733,28 @@ Sprint planning (Task 4)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (Pattern A Cohort Reclassification Pre-Work)
+**Date:** 2026-05-07
+
+**Findings:** Per-issue actions documented in `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` (one section per issue). Action distribution:
+
+| Issue | Action | Parent / new tracker |
+|---|---|---|
+| #1138 | **Subsume into Sprint 26 Priority 1 Phase B** (gate generalization to plain-alias) | Phase B PR will close #1138 with forward-link |
+| #1139 | **Close as not-a-bug** | meanvar is `legacy_excluded`; AD-correct emit verified |
+| #1140 | **Close as informational mismatch** | All 7 PS-family models now `non_convex` runtime-filter; AD-correct emit verified |
+| #1142 | **Subsume into Sprint 26 Priority 1 Phase A** (consolidated builder fix per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups") | Phase A PR will close #1142, #1306, #1307 (all share root cause) |
+| #1145 | **Close-and-refile as Sprint 27 issue** "cclinpts: stat_b/stat_fb condition-guard or sign bug producing ~70% rel_diff" | Draft title + body in §"Issue #1145" of the reclassification plan |
+| #1150 | **Close as resolved (both halves)** | qabel resolved by #1311 (CLOSED 2026-04-25); abel reclassified `non_convex` per Sprint 26 Prep Task 2 |
+
+**Evidence:**
+
+- Per-issue action notes with classification + action + (if "close-and-refile") draft new-issue title + body in `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md`.
+- Parent-issue coverage verified: Sprint 26 Priority 1 Phase A (per Task 3 REPLAN recommendation) addresses launch / Bug #1 / Bug #2 — covers #1142 / #1306 / #1307. Phase B addresses plain-alias variant — covers #1138 + camcge (#1354).
+- Resolution evidence for #1150: `gh issue view 1311 --json state` returns CLOSED; current emit comparison confirms qabel/abel byte-identical (only `k` set definition differs).
+
+**Decision:** Sprint 26 Priority 2 reduces from "investigative cohort sweep" to **mechanical closure work** — 4 issue closures, 1 close-and-refile, 1 forward-link to Priority 1 PR. Estimated execution: ~1.5h (vs original 2-4h). Time saved → Priority 1 (Phase A + B) or Priority 5 (#1334 follow-up + #1335).
 
 ---
 
@@ -764,7 +808,37 @@ Sprint planning (Task 4)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (Pattern A Cohort Reclassification Pre-Work)
+**Date:** 2026-05-07
+
+**Findings:** **Exactly 1 affected test** — `tests/unit/kkt/test_pattern_c_alias_offset_gate.py::test_alias_only_conditional_sum_emits_no_phantom_offsets`. The test is currently `xfail(strict=True)` with `reason=` explicitly tracking the Phase A fix as the un-xfail trigger:
+
+```python
+@pytest.mark.xfail(
+    reason=(
+        "Issue #1351: the Pattern C consolidation gate from #1306 (which this "
+        "test covers) suppressed phantom ±N offsets correctly but the "
+        "downstream zero-offset builder loses the cross-element aggregation, "
+        ...
+        "is tracked under the launch comparison-mismatch family (#1226, #945, "
+        "#1142). Once that lands, remove this xfail."
+    ),
+    strict=True,
+)
+def test_alias_only_conditional_sum_emits_no_phantom_offsets(tmp_path):
+```
+
+When Sprint 26 Priority 1 Phase A lands and the test starts passing, the `xfail` decorator and the `reason=` block need to be removed (the docstring already references #1142 + #1226 + #945 — same family, all subsumed into Phase A).
+
+**No other tests reference any of the 6 cohort issue numbers** in xfail reasons, docstrings, or comments. Verified via `grep -rE "#?(1138|1139|1140|1142|1145|1150)" tests/`.
+
+**Evidence:**
+
+- Recursive grep output (only match): `tests/unit/kkt/test_pattern_c_alias_offset_gate.py:51-63` — the existing #1142 reference is in the `xfail.reason=` block.
+- No regression-canary tests depend on the cohort bug being present.
+
+**Decision:** When Sprint 26 Priority 1 Phase A PR lands, the same PR (or an immediate follow-up) must remove the `xfail(strict=True)` decorator from `test_alias_only_conditional_sum_emits_no_phantom_offsets`. The test is `strict=True` so a stale-xfail-passing failure will catch the missing un-xfail commit. No other test updates needed for the Pattern A cohort closures.
 
 ---
 
@@ -810,7 +884,27 @@ Sprint planning (Task 4)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 4 (Pattern A Cohort Reclassification Pre-Work)
+**Date:** 2026-05-07
+
+**Findings:** **1 source-level reference** to a cohort issue number outside `docs/issues/` and `docs/planning/`:
+
+| Path | Line | Reference | Update needed when |
+|---|---|---|---|
+| `src/kkt/stationarity.py` | 4336 | `# via the launch comparison-mismatch family (#1226, #945, #1142)` | When #1142 closes (subsumed into Phase A PR) — replace with forward-link to the Phase A PR |
+
+**No other src/ references** to any of the 6 cohort issue numbers. **No docs/ references** outside `docs/planning/` (which are the prep planning docs themselves) and `docs/issues/` (which IS the issue documentation directory and should retain references).
+
+**Evidence:**
+
+- Recursive grep output (only matches outside `docs/issues/` and `docs/planning/`):
+  ```
+  src/kkt/stationarity.py:4336:                # via the launch comparison-mismatch family (#1226, #945, #1142)
+  ```
+- No README.md, CONTRIBUTING.md, or other user-visible documentation references the 6 cohort issue numbers.
+
+**Decision:** Sprint 26 Priority 2 closure of #1142 (subsumed into Phase A PR) MUST include an update to the `src/kkt/stationarity.py:4336` comment to replace `(#1226, #945, #1142)` with a forward-link to the Phase A PR. No other source/docs updates needed for the Pattern A cohort closures.
 
 ---
 
