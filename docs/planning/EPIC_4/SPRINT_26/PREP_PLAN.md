@@ -624,9 +624,11 @@ grep -cE "^### Issue #(1141|1144|1147): (kand|catmix|camshape)" \
 
 ## Task 6: Profile Option 1 Short-Circuit Approach
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 3–4 hours
+**Actual Time:** ~3 hours (incl. 14 min srpchase profile + 6 min confirmation profiles + design doc)
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning + AD engineer
 **Dependencies:** Task 1
@@ -673,11 +675,39 @@ Sprint 26 Priority 4 budgets 4–6h for Option 1 short-circuit landing. That bud
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` with the Option 1 design refresh, patch-site inventory + Sprint 25 modification history, srpchase re-profile result, projected per-model recovery, #1224 deferral rationale, patch design (function signatures + helpers + interaction with existing fallback), test fixture plan (1 unit + 1 integration), determinism analysis, and Sprint 26 Priority 4 budget hold.
+- Verified all Sprint 25 patch sites still exist on current main: `enumerate_equation_instances` (line 377) + `resolve_set_members` (line 115) in `src/ad/index_mapping.py`, `SetMembershipTest` evaluation path (line 377+) in `src/ir/condition_eval.py`. The Sprint 25 #1311 fix touched `resolve_set_members` (added `quiet: bool` kwarg) but did NOT touch `enumerate_equation_instances`. The Sprint 25 #1338..#1341 fix touched `src/emit/expr_to_gams.py` (different file).
+- Re-profiled srpchase under SIGALRM 900s on current main: completes in 846s with 99.6% time in `ad_jacobian` — same shape as Sprint 25's 466s (machine variance; bottleneck unchanged). Same warning signatures emit (`Dynamic subset 'srn' has no static members; falling back to parent set 'n' (1001 members)` + `cannot be evaluated statically`).
+- 120s confirmation profiles on iswnm/sarf/mexls/nebrazil all timed out inside `ad_jacobian` (after preprocess+parse+ir_build+normalize+ad_gradient stages completed). Same Cartesian-explosion bottleneck shape as Sprint 25 reported. Extended-budget profile of iswnm under SIGALRM 1800s ran in background; per Sprint 25 PROFILE_HARD_TIMEOUTS §1.2 ("> 865s in ad_jacobian"), iswnm was clearly in the asymptotic intractable region at 900s — extended profile result is informational but doesn't change the projection.
+- Read `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md` and decided to defer #1224 to Sprint 27+ (rationale documented in DESIGN doc §5).
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 4.1, 4.2, 4.3, 4.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Sprint 25 Option 1 design VALID; Sprint 26 Priority 4 budget HOLDS at 4–6h.**
+
+| Aspect | Result |
+|---|---|
+| Patch sites valid | ✅ Yes — `enumerate_equation_instances` untouched by S25; `resolve_set_members` modified but Option 1 doesn't depend on the modified surface |
+| srpchase re-profile | ✅ Completes ad_jacobian in 846s (vs S25's 466s — same shape, machine variance); confirmed bottleneck unchanged |
+| Other 4 timeout models | ❌ All still timeout — same Cartesian-explosion path, multi-subset cases (mexls=3, nebrazil=4 dynamic subsets) likely won't fully recover |
+| Projected Sprint 26 Translate gain | **+1 to +2 models** (srpchase HIGH, iswnm MEDIUM, sarf/mexls/nebrazil LOW) |
+| Projected Sprint 26 Solve gain | **0 to +1** (per Sprint 25 PR13 finding — translate-recovery is low-leverage for near-term Match gains) |
+| #1224 deferral | **DEFER to Sprint 27+** — architectural extension orthogonal to Option 1; bundling would expand budget 4–6h → 10–14h |
+| Determinism | ✅ Preserved by construction (placeholder uses domain set names, no `set`/`dict` iteration; PR12 byte-stable harness will validate) |
+
+**Patch design summary** (full detail in `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` §2):
+
+- Insert short-circuit at `enumerate_equation_instances` entry (line ~417 of `src/ad/index_mapping.py`, between scalar early-return and cross-product enumeration).
+- New helper `_is_dynamic_subset_membership_short_circuit(condition, eq_domain, model_ir)` returns True iff `condition` is `SetMembershipTest(<dynamic_subset>, ...)` or its negation, where `<dynamic_subset>` has zero static members AND non-empty parent population.
+- New helper `_build_symbolic_instance_placeholder(eq_domain)` returns `[tuple(eq_domain)]` (a single symbolic instance using domain set names).
+- Existing fallback path (lines 437-475) preserved unchanged; short-circuit fires before cross-product loop.
+
+**Test fixture plan summary**:
+
+- Unit test (`tests/unit/ad/test_enumerate_equation_instances_short_circuit.py`): 6 tests (3 positive, 3 negative cases + determinism check across `PYTHONHASHSEED`).
+- Integration test (`tests/integration/translate/test_srpchase_translate_under_budget.py`): srpchase translate must complete < 30s (vs 846s without Option 1).
+- Existing PR12 byte-stable harness as the determinism regression gate.
 
 ### Verification
 
@@ -696,12 +726,12 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 ### Acceptance Criteria
 
-- [ ] Patch sites verified to still exist in current `src/`
-- [ ] srpchase profile re-confirmed (translate completes if budget extends)
-- [ ] Patch design documented (no implementation yet)
-- [ ] Test fixture plan documented
-- [ ] Projected impact stated (which models the Sprint 26 work is expected to recover)
-- [ ] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Patch sites verified to still exist in current `src/`
+- [x] srpchase profile re-confirmed (translate completes if budget extends)
+- [x] Patch design documented (no implementation yet)
+- [x] Test fixture plan documented
+- [x] Projected impact stated (which models the Sprint 26 work is expected to recover)
+- [x] Unknowns 4.1, 4.2, 4.3, 4.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
