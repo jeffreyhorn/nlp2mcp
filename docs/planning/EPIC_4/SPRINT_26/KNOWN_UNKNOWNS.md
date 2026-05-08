@@ -1196,7 +1196,38 @@ AD engineer (Task 6)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (Profile Option 1 Short-Circuit Approach)
+**Date:** 2026-05-07
+
+**Findings:** Sprint 25 PROFILE_HARD_TIMEOUTS.md Option 1 design is **still valid** post-Sprint-25 #1338..#1341. Patch sites all exist with the same shape on current main:
+
+| Patch site | Sprint 25 line ref | Current main line | Modified during S25? |
+|---|---|---|---|
+| `src/ad/index_mapping.py::enumerate_equation_instances` | "around line 430" warning emit | line 377 (def), line 452 (warning) | ❌ No (only `resolve_set_members` was touched by #1311) |
+| `src/ad/index_mapping.py::resolve_set_members` | lines 177-178, 279 (logger.warning) | lines 188, 198, 294, 301 | ✅ Yes — #1311 added `quiet: bool` kwarg; logger.warning still at lines 188 / 198 / 294 / 301 |
+| `src/ir/condition_eval.py` SetMembershipTest evaluation | "around line 417" | line 377 (case), line 417 (raise message) | ❌ No (zero S25 commits to this file) |
+
+Sprint 25 commits to patch-site files: only `src/ad/index_mapping.py` was modified, by `21e1767a` (Fix #1311 — AD subset-membership recognition) + `6273a998` (PR #1310 review). The #1311 fix added the `quiet: bool = False` kwarg to `resolve_set_members` for AD's per-call membership check; it didn't change `enumerate_equation_instances`. The #1338..#1341 fix-in-place series (commit `12548337`) targeted `src/emit/expr_to_gams.py` for IndexOffset-in-SetMembershipTest indices (catmix/glider/markov/tricp), which is unrelated to the Option 1 enumeration path.
+
+Re-profile of srpchase under SIGALRM 900s on current main confirms unchanged bottleneck shape:
+
+```json
+{"model": "srpchase", "status": "complete (ad_jacobian)", "total": 846.02,
+ "stages": [["preprocess", 0.06], ["parse+ir_build", 2.54], ["normalize", 0.06],
+            ["ad_gradient", 0.81], ["ad_jacobian", 842.55]]}
+```
+
+ad_jacobian = 99.6% of total time (vs PROFILE_HARD_TIMEOUTS.md's 466s ad_jacobian = 93% of total — same shape; absolute time variance is machine/load-dependent). Same `Dynamic subset 'srn' has no static members; falling back to parent set 'n' (1001 members)` + `Set membership for 'leaf' cannot be evaluated statically` warning signatures emit at the documented locations.
+
+**Evidence:**
+
+- Patch-site grep output (Section 1.1 of `PATTERN_E_STATUS.md`'s sister design doc — `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` §1.1).
+- Sprint 25 git log of `src/ad/index_mapping.py` and `src/ir/condition_eval.py` (DESIGN_OPTION_1_SHORT_CIRCUIT.md §1.2).
+- `/tmp/sprint26-task6-profile/srpchase.json` — current-main profile result.
+- `/tmp/sprint26-task6-profile/srpchase.log` — 18 warning-signature lines on current main vs 23 (8 + 15) in Sprint 25 §2.2; the 5-line reduction is attributable to #1311's `quiet=True` suppression of fallback warnings from AD's `_is_concrete_instance_of` membership check.
+
+**Decision:** Sprint 26 Priority 4 budget (4–6h) holds. Option 1 patch design proceeds as documented in `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` §2.
 
 ---
 
@@ -1250,7 +1281,27 @@ AD engineer (Task 6)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (Profile Option 1 Short-Circuit Approach)
+**Date:** 2026-05-07
+
+**Findings:** **Projected recovery: +1 to +2 models** (srpchase HIGH confidence; iswnm MEDIUM; sarf/mexls/nebrazil LOW-MEDIUM). Same projection as Sprint 25 PROFILE_HARD_TIMEOUTS.md §4.3 contingency analysis ("0–2 model" gain).
+
+| Model | Sprint 25 status | Sprint 26 (post Option 1) projected | Confidence | Notes |
+|---|---|---|---|---|
+| srpchase | translate timeout @ 600s pipeline (completes @ 900s in 466–846s) | translate **completes < 30s** | HIGH | 1 dynamic subset (srn → n, 1001 members), 2 affected eqs, well-bounded |
+| iswnm | timeout @ 900s | translate likely completes | MEDIUM | 1 dynamic subset (nb), 4 warnings, simpler than srpchase |
+| sarf | timeout @ 900s | translate may complete | MEDIUM-LOW | 1 dynamic subset, eq structure heavier than iswnm |
+| mexls | timeout @ 900s | translate may partially recover | LOW | 3 dynamic subsets — short-circuit collapses each but residual enumeration may still time out |
+| nebrazil | timeout @ 900s | translate may partially recover | LOW | 4 dynamic subsets, 116 fallback warnings — heavy multi-subset Cartesian |
+
+**Evidence:**
+
+- 120s confirmation profiles on the 4 timeout models (`/tmp/sprint26-task6-profile/{iswnm,sarf,mexls,nebrazil}.json` + `.log`) — all 4 timed out, all 4 still inside `ad_jacobian` once they reach it. nebrazil's 188-line warning trail on current main confirms the same multi-subset Cartesian explosion is firing as Sprint 25 reported (50 + 116 = 166 in §2.2 table).
+- An extended-budget profile of iswnm under SIGALRM 1800s is running in background (`/tmp/sprint26-task6-profile/iswnm-1800.{json,log}`); per Sprint 25 PROFILE_HARD_TIMEOUTS §1.2 ("> 865s in ad_jacobian"), iswnm was clearly in the asymptotic intractable region at 900s, so 1800s is unlikely to recover it without the architectural fix — extended profile result will inform but not change the fundamental projection.
+- Per Sprint 25 retrospective §"Translate-recovery is low-leverage for near-term Match gains" (PR13 finding): translate-recovered models hit downstream emitter / stationarity bugs, so a +1 to +2 Translate gain projects to **0 to +1 Solve gain** in Sprint 26.
+
+**Decision:** Sprint 26 Priority 4 lands Option 1 with realistic projection of +1–2 Translate / 0–+1 Solve. srpchase is the high-confidence target; iswnm is a probable bonus; the 3 multi-subset cases are uncertain. Test fixture plan (DESIGN_OPTION_1_SHORT_CIRCUIT.md §3) ships an integration test for srpchase only; iswnm/sarf/mexls/nebrazil tests deferred until post-implementation profiling shows tractability.
 
 ---
 
@@ -1297,7 +1348,34 @@ AD engineer (Task 6)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (Profile Option 1 Short-Circuit Approach)
+**Date:** 2026-05-07
+
+**Findings:** **DEFER #1224 to Sprint 27+.** #1224 is an architectural extension (`IndexOffset.offset: Const → Expr`) orthogonal to Option 1's `SetMembershipTest` enumeration fallback fix; bundling them would expand Sprint 26 Priority 4 from ~4–6h to ~10–14h with substantially higher risk surface.
+
+| Aspect | Option 1 (this Sprint 26 Priority 4) | #1224 (Sprint 27+ candidate) |
+|---|---|---|
+| Touch site | `src/ad/index_mapping.py::enumerate_equation_instances` | `src/ir/ast.py::IndexOffset` (offset field type) + `src/ad/constraint_jacobian.py` (validation) + downstream KKT/emit |
+| Bug shape | Cartesian-fallback enumeration (5 affected models) | Parameter-valued offsets (1 affected model: mine) |
+| Effort | ~4–6h | 6–10h (narrow path #1: enumerate at IR build) — 12–20h (full path #2: Expr-typed offsets) |
+| Risk surface | Narrow (single helper + one new entry-condition predicate) | Broad (IndexOffset is core IR; affects every downstream path) |
+
+Per `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`:
+- mine equation: `pr(k,l+1,i,j)$c(l,i,j).. x(l,i+li(k),j+lj(k)) =g= x(l+1,i,j);`
+- `li(k)`/`lj(k)` are 4-element parameters (Set k = `{ne, se, sw, nw}`)
+- Three fix paths documented; narrowest (path #1: enumerate at IR build time) is still 6–10h alone
+
+**Evidence:**
+
+- `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md` §"Potential Fix Approaches" lists three options with effort estimates.
+- DESIGN_OPTION_1_SHORT_CIRCUIT.md §5 documents the deferral decision with full rationale.
+- Sprint 26 PREP_PLAN.md §Task 6 background already noted: *"#1224 (mine ParamRef IndexOffset) is a separate architectural extension and is NOT bundled with Option 1."* Task 6 verification confirms this stance.
+
+**Decision:** Sprint 26 Priority 4 lands Option 1 alone. File a `sprint-27-candidate` comment on #1224 noting:
+- Sprint 26 explicitly considered and deferred per Task 6 design analysis (this entry).
+- Recommended Sprint 27 fix path: #1 (enumerate at IR build time) — 6–10h, narrowest scope.
+- Alternative path #2 (Expr-typed IndexOffset.offset) would be a multi-sprint architectural change — defer until there's evidence of >1 affected model.
 
 ---
 
@@ -1348,7 +1426,27 @@ AD engineer (Task 6)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 6 (Profile Option 1 Short-Circuit Approach)
+**Date:** 2026-05-07
+
+**Findings:** Option 1 short-circuit is **deterministic by construction** — produces identical output across runs/seeds.
+
+**Reasoning (per code inspection of `enumerate_equation_instances` and the proposed short-circuit in DESIGN_OPTION_1_SHORT_CIRCUIT.md §2):**
+
+1. **Detection predicate** (`_is_dynamic_subset_membership_short_circuit`) inspects `model_ir` structure: set name, `set_def.domain`, `set_def.members`. All three are deterministic per Sprint 25 PR12 byte-stable harness.
+2. **Placeholder result** is a single-element list `[tuple(eq_domain)]` — no sort, no hash-dependent ordering, no `set` / `frozenset` introduced.
+3. **No `dict` iteration** whose order depends on `PYTHONHASHSEED` is added to the new code path.
+4. **Downstream emit path** (existing `src/kkt/stationarity.py::_build_indexed_stationarity_expr`, `src/emit/equations.py::emit_equation_definition`) already handles symbolic-index instances deterministically (per Sprint 25 #1306 / #1351 / #1308 prior art on `stat_<eq>(i)..` symbolic equation heads).
+5. **Existing fallback path** (lines 437-475 of `enumerate_equation_instances`) is unchanged — short-circuit fires BEFORE the cross-product loop; if predicate returns False, control falls through with no semantic change.
+
+**Evidence:**
+
+- DESIGN_OPTION_1_SHORT_CIRCUIT.md §2.5 explicitly documents the determinism analysis.
+- Sprint 25 PR12 byte-stable harness (5 fixtures × 5 seeds) is the post-implementation validation gate — the Sprint 26 Priority 4 PR must run `tests/integration/emit/test_*_byte_stable.py` and pass.
+- The new helper functions (`_is_dynamic_subset_membership_short_circuit`, `_build_symbolic_instance_placeholder` per DESIGN doc §2.3) introduce no `set` / `dict` / hash-order dependent constructs.
+
+**Decision:** Determinism is preserved by construction. Sprint 26 Priority 4 PR includes a determinism unit test (DESIGN_OPTION_1_SHORT_CIRCUIT.md §3.1 Test 6: run with `PYTHONHASHSEED=0` and `PYTHONHASHSEED=42`, assert identical output) plus the existing PR12 byte-stable integration suite as the regression gate.
 
 ---
 
