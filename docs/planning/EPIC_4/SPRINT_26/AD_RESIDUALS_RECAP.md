@@ -1,6 +1,7 @@
 # Sprint 26 AD Residuals Recap — #1334 / #1335 / #1357 Relationship Analysis
 
-**Date:** 2026-05-07
+**Date:** 2026-05-07 (initial verification)
+**Last Updated:** 2026-05-08 (per PR #1371 review-comment fixes — fix-site correction `_add_jacobian_transpose_terms_scalar` → `_add_indexed_jacobian_terms` + intra-file line resyncs + #1335 fix-site refinement to `if eq_domain:` scalar-equation gating + scope-decision/effort-estimate alignment)
 **Task:** Sprint 26 Prep Task 7 (AD Residuals Investigation Recap)
 **Branch:** `planning/sprint26-task7`
 **Re-verification basis:** translate + GAMS `action=c` compile + emit static analysis on current `main`

@@ -1495,7 +1495,8 @@ AD/KKT engineer (Task 7)
 
 ✅ **Status:** VERIFIED
 **Verified by:** Task 7 (AD Residuals Investigation Recap)
-**Date:** 2026-05-07
+**Date:** 2026-05-07 (initial verification)
+**Last Updated:** 2026-05-08 (per PR #1371 review-comment fixes — fix-site correction `_add_jacobian_transpose_terms_scalar` → `_add_indexed_jacobian_terms` for ISSUE_1334.md row; evidence-grep refresh; Sprint 25 commit summary updated to include `_add_indexed_jacobian_terms`)
 
 **Findings:**
 

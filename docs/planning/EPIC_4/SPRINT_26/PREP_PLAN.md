@@ -759,7 +759,7 @@ Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 f
 
 ### Why This Matters
 
-Sprint 26 Priority 5 budgets 8–14h for AD residuals. The two issues share the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. If the issue docs reference stale file:line numbers (post-Sprint-25 stationarity.py was modified by #1351 launch fix among others), Sprint 26 work will start with broken pointers. Pre-verification catches this.
+Sprint 26 Priority 5 budgets 8–14h for AD residuals. #1334's PRIMARY fix-site is `_add_indexed_jacobian_terms` in `src/kkt/stationarity.py` (per the 2026-05-08 Task 7 fix-site correction; the earlier Sprint 25 retrospective claim that #1334 lives in `_add_jacobian_transpose_terms_scalar` was a misattribution — that scalar function only handles SCALAR stationarity, not the otpop indexed-stationarity emit). #1334 also touches `_replace_indices_in_expr`. #1335's fix-site is the scalar-equation gating in `src/ad/constraint_jacobian.py` (`if eq_domain:` guard at `:986` + `:1107`), separate from `src/kkt/stationarity.py`. If the issue docs reference stale file:line numbers (post-Sprint-25 stationarity.py was modified by #1351 launch fix among others), Sprint 26 work will start with broken pointers. Pre-verification catches this.
 
 The #1334 ↔ #1357 subsumption question matters for the bucket-provenance baseline (Task 9) — if #1357 (otpop) is subsumed, otpop's `path_syntax_error` count moves to Priority 5's accountability rather than Priority 1's.
 
@@ -769,7 +769,7 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
 - `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md` — explicitly notes "likely subsumed by #1334"
 - Sprint 25 Day 11 fix #1350 (srkandw `tn(t,t)` self-alias) modified `_remap_condition_to_domain` in `src/kkt/stationarity.py`; verify #1334's referenced lines still match.
-- Sprint 25 retrospective §Priority 5 confirms: "Both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. Combined effort 8–14h."
+- Sprint 25 retrospective §Priority 5 originally claimed: "Both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. Combined effort 8–14h." — **the `_add_jacobian_transpose_terms_scalar` portion of this claim is INCORRECT per the 2026-05-08 Task 7 fix-site correction**. That function only handles scalar stationarity; the otpop indexed-stationarity emit comes from `_add_indexed_jacobian_terms`. #1335's fix-site is in `src/ad/constraint_jacobian.py` (the `if eq_domain:` scalar-equation gate), not in `stationarity.py` at all. The 8–14h combined-effort estimate still holds; the function-name attribution does not.
 
 ### What Needs to Be Done
 
