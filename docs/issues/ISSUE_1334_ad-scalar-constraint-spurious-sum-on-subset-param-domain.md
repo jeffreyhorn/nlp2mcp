@@ -4,7 +4,7 @@
 **Status:** CLOSED on GitHub (closed 2026-05-05; this in-repo doc was previously stale and is now updated to match GitHub state per Sprint 26 Prep Task 5 finding)
 **Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects nonconvex models with subset-domain parameters and scalar aggregation constraints
 **Date:** 2026-05-02
-**Last Updated:** 2026-05-07 (status sync — see Sprint 26 Prep Task 5 / Task 4 KNOWN_UNKNOWNS Unknown 2.1 evidence; otpop $141 cascade still observed in current main suggesting the fix may have been incomplete and warranting Sprint 26 Priority 5 investigation)
+**Last Updated:** 2026-05-08 (file:line resync — see Sprint 26 Prep Task 7 PR #1371 review-comment fixes; ParamRef branch line ref updated from `:2413` to `:2448+`. Earlier 2026-05-07 update was the status sync per Sprint 26 Prep Task 5 / Task 4 KNOWN_UNKNOWNS Unknown 2.1 evidence — otpop $141 cascade still observed in current main suggesting the fix may have been incomplete and warranting Sprint 26 Priority 5 investigation.)
 **Affected Models:** otpop (confirmed); likely other models with scalar `sum`-aggregation constraints (e.g., `kdef`, `xtrack`, `ptrack`-style) over subset domains
 
 ---
