@@ -19,11 +19,11 @@
 - ISSUE_1334.md: ⚠ **Stale on filing**, **synced 2026-05-07** in this PR. `_add_jacobian_transpose_terms_scalar` was at line 5279 when filed, now line 5421 (+142 line drift). `_replace_indices_in_expr` was at line 2295, now line 2330 (+35 line drift). All fix-site references updated.
 - ISSUE_1335.md: ✅ **Accurate**. `_try_eval_offset` at line 133 (matches), `_resolve_idx` at line 204 (matches), `_diff_sum` at line 1847 (matches).
 
-**Sprint 26 Priority 5 fix scope:** **3 distinct bugs to fix**, NOT 1.
+**Sprint 26 Priority 5 scope decision:** **3 distinct bugs identified**, but only **2 fixed in Sprint 26** (#1334 + #1335); #1357 deferred.
 
-- **#1334**: re-investigate the GitHub closure (may need re-open or close-and-refile)
-- **#1335**: narrow AD fix — extend the offset-resolution / sum-expansion pipeline to scalar equations (`if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`; see §3.2 for fix-site detail). Refined fix-site supersedes the earlier `_try_eval_offset` / `_resolve_idx` framing in ISSUE_1335.md §"Where to Look". (~4–8h)
-- **#1357**: comp_up subset/superset (~4–8h, similar to fawley #1356) — file as a new Sprint 27 issue if scope-pressure during Sprint 26 demands it; OR bundle with fawley fix as a Priority 5 sub-workstream
+- **#1334** *(Sprint 26)*: re-investigate the GitHub closure (may need re-open or close-and-refile)
+- **#1335** *(Sprint 26)*: narrow AD fix — extend the offset-resolution / sum-expansion pipeline to scalar equations (`if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`; see §3.2 for fix-site detail). Refined fix-site supersedes the earlier `_try_eval_offset` / `_resolve_idx` framing in ISSUE_1335.md §"Where to Look". (~4–8h)
+- **#1357** *(DEFERRED to Sprint 27)*: comp_up subset/superset (~4–8h, similar to fawley #1356) — bundled with fawley as a Sprint 27 "comp_up subset/superset domain widening" workstream per Task 4 PATTERN_A_RECLASSIFICATION_PLAN. (Aligned with TL;DR table #1357 row + §4 scope decision.)
 
 **Sprint 26 Priority 5 effort estimate:** **Re-estimated upward from the PROJECT_PLAN 8–14h budget.** Original budget was for "#1334 + #1335 alone" (8–14h). Task 7 re-estimate: **~12–18h** if all 3 bugs addressed (#1334 re-investigation + fix 4–10h incl. ~2h closure investigation; #1335 narrow fix 4–8h; #1357 comp_up subset/superset 4–8h). The 8–14h Priority 5 budget covers **#1334 + #1335 only** at the low-end estimates (8h ≤ 4h + 4h ≤ 8–14h works); the third bug (#1357) is **deferred to Sprint 27** alongside fawley #1356 as a "comp_up subset/superset domain widening" workstream (per Task 4 PATTERN_A_RECLASSIFICATION). With #1357 deferred, Sprint 26 Priority 5 scope is ~8–18h for #1334 + #1335 — fits the 8–14h budget at the low end, exceeds at the high end (depends on how much re-investigation #1334 needs).
 
@@ -215,7 +215,7 @@ Different code paths (`src/kkt/stationarity.py` for #1334 vs `src/kkt/complement
 
 **Fix approach (per existing ISSUE_1334.md):**
 - Approach 1 (preferred): fix in `_replace_indices_in_expr`'s ParamRef branch — when `param_domain` is a strict subset of `equation_domain` AND a parallel VarRef has been substituted to use the eq domain variable, align the parameter substitution with the variable substitution.
-- Approach 2 (alternative): targeted suppression in `_add_jacobian_transpose_terms_scalar` — check whether unconstrained indices match the eq-domain guard restriction; if so, substitute and skip the `Sum` wrap.
+- Approach 2 (alternative): targeted suppression in `_add_indexed_jacobian_terms` (the actual indexed-stationarity Sum-wrapping site for the otpop case, per the 2026-05-08 fix-site correction; was incorrectly attributed to `_add_jacobian_transpose_terms_scalar` in earlier drafts — that function only handles scalar stationarity) — check whether unconstrained indices match the eq-domain guard restriction; if so, substitute and skip the `Sum` wrap.
 
 **Estimated effort**: 4–8h per ISSUE_1334.md. Plus ~2h to determine root cause of the GitHub closure mismatch (was the fix incomplete? was it for a different sub-shape?).
 
@@ -318,7 +318,8 @@ ISSUE_1335.md's original framing (substitute `t → t'` BEFORE `_try_eval_offset
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` §"Issue #1145" — fawley reclassification context (parallel to otpop #1357)
 - `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 11 — fix-in-place series #1338..#1352 + #1311 / #1312 closure attribution
 - `src/kkt/stationarity.py:2330` (was `:2295`) — `_replace_indices_in_expr` (#1334 fix site, ParamRef branch)
-- `src/kkt/stationarity.py:5421` (was `:5279`) — `_add_jacobian_transpose_terms_scalar` (#1334 fix site, scalar branch)
+- `src/kkt/stationarity.py:4228+` — `_add_indexed_jacobian_terms` (#1334 PRIMARY fix site for the otpop indexed-stationarity case, per 2026-05-08 fix-site correction)
+- `src/kkt/stationarity.py:5421` (was `:5279`) — `_add_jacobian_transpose_terms_scalar` (#1334 sibling — handles SCALAR stationarity only, NOT the otpop indexed case; listed as parallel-fix candidate)
 - `src/ad/constraint_jacobian.py:133, 204` — `_try_eval_offset`, `_resolve_idx` (#1335 fix sites)
 - `src/ad/derivative_rules.py:1847` — `_diff_sum` (#1335 substitution-context site)
 - Re-verification artifacts (advisory, not committed): `/tmp/sprint26-task7/otpop_{mcp.gms,compile.lst,translate.stderr}`

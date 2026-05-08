@@ -786,6 +786,10 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 2. **Re-run the otpop reproducer (static-emit + GAMS compile-only — see Objective deferral note):**
 
    ```bash
+   # `src.cli` writes directly to the provided path and does not create parent
+   # directories — create the output dir first so the recipe works on a clean machine.
+   mkdir -p /tmp/sprint26-otpop
+
    .venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
      -o /tmp/sprint26-otpop/otpop_mcp.gms --skip-convexity-check --quiet
 

@@ -1501,17 +1501,18 @@ AD/KKT engineer (Task 7)
 
 | Doc | File:line references at filing | Current main | Status | Action taken |
 |---|---|---|---|---|
-| ISSUE_1334.md | `src/kkt/stationarity.py:5279–5310` (_add_jacobian_transpose_terms_scalar), `:2295–2479` (_replace_indices_in_expr) | line 5421 (def), line 2330 (def) | **STALE** (drift +142 / +35 lines) | **Synced 2026-05-07** in this PR — 3 references updated with explicit "was X; resynced 2026-05-07" notes |
+| ISSUE_1334.md | `src/kkt/stationarity.py:5279–5310` (_add_jacobian_transpose_terms_scalar), `:2295–2479` (_replace_indices_in_expr) | line 4228 (`_add_indexed_jacobian_terms`, **PRIMARY** fix-site for the otpop indexed-stationarity case per 2026-05-08 correction); line 2330 (`_replace_indices_in_expr`); line 5421 (`_add_jacobian_transpose_terms_scalar`, scalar-only sibling — NOT applicable to the otpop case) | **STALE on filing + WRONG fix-site attribution** | **Synced 2026-05-07** (line-drift) **+ corrected 2026-05-08** (fix-site: `_add_jacobian_transpose_terms_scalar` only handles scalar stationarity; the otpop `stat_x(tt)` / `stat_p(tt)` indexed emit comes from `_add_indexed_jacobian_terms` at line 4228+). All references updated. |
 | ISSUE_1335.md | `src/ad/constraint_jacobian.py:133–202` (_try_eval_offset), `:204–260` (_resolve_idx), `derivative_rules.py:1847+` (_diff_sum) | lines 133, 204, 1847 (all defs) | **ACCURATE** (all match exactly) | No changes needed |
 
 **Sprint 25 modifications to fix-site files:**
-- `src/kkt/stationarity.py` (7 commits between 2026-04-15 and 2026-05-06): #1351 launch Pattern C rollback, #1350 srkandw, #1278 alias-position ord, #1192 bounds-aware conditional, #1306 Pattern C prototype + PR reviews. None directly modified `_replace_indices_in_expr` or `_add_jacobian_transpose_terms_scalar` — line drift is from surrounding code growth.
+- `src/kkt/stationarity.py` (7 commits between 2026-04-15 and 2026-05-06): #1351 launch Pattern C rollback, #1350 srkandw, #1278 alias-position ord, #1192 bounds-aware conditional, #1306 Pattern C prototype + PR reviews. None directly modified `_replace_indices_in_expr`, `_add_indexed_jacobian_terms`, or `_add_jacobian_transpose_terms_scalar` — line drift is from surrounding code growth.
 - `src/ad/constraint_jacobian.py` (1 commit): #1348 / #1349 china + pindyck. Did not touch `_try_eval_offset` or `_resolve_idx`.
 - `src/ad/derivative_rules.py` (multiple commits): #1311, #1312, #1330, several PR reviews. Did not touch `_diff_sum`.
 
 **Evidence:**
 
-- `grep -nE "^def _add_jacobian_transpose_terms_scalar|^def _replace_indices_in_expr" src/kkt/stationarity.py` returns lines 2330, 5421.
+- `grep -nE "^def _add_indexed_jacobian_terms|^def _replace_indices_in_expr" src/kkt/stationarity.py` returns lines 2330, 4228 (PRIMARY fix-site targets per 2026-05-08 correction).
+- `grep -n "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py` returns line 5421 (sibling — handles SCALAR stationarity only, not the otpop indexed case).
 - `grep -nE "^def _try_eval_offset|^def _resolve_idx" src/ad/constraint_jacobian.py` returns lines 133, 204.
 - `grep -nE "^def _diff_sum" src/ad/derivative_rules.py` returns line 1847.
 - `git log --pretty="format:%h %s" --diff-filter=AM --since="2026-04-15" --until="2026-05-06" -- <file>` for each file (see AD_RESIDUALS_RECAP.md §1.1, §1.2).
