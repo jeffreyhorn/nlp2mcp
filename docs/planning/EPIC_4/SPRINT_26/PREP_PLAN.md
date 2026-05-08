@@ -752,7 +752,7 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Day 13 carryforward) or if they are independent.
 
 > **Verification scope note (added 2026-05-08 per PR #1371 review):** Task 7 verification is **static-emit + GAMS compile-only** — i.e., translate otpop, then run `gams ... action=c` and assert bug-pattern strings in the emitted MCP via:
-> - **#1334 check:** `grep -c "sum\(t__, .* \* nu_kdef" otpop_mcp.gms` (whole-file grep is fine — the pattern only matches the buggy emit shape).
+> - **#1334 check:** `grep -cE "sum\(t__, .* \* nu_kdef" otpop_mcp.gms` (whole-file grep is fine — the pattern only matches the buggy emit shape; `-E` forces extended regex so `\(` / `\*` parse as escaped literals consistently with Step 2's `grep -nE` invocation).
 > - **#1335 check:** `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` (must be **scoped to the `stat_p(...)` equation body** — a whole-file grep for `nu_zdef` would match the declaration / pairing / `stat_x` cross-term and falsely report the bug as fixed). See §What Needs to Be Done Step 2 for the full recipe.
 >
 > The **full NLP-warm-started numerical reproducer** (NLP solve via baseline GAMS, dual-multiplier transfer, MCP run with `iterlim=0`, residual capture per `Inf-Norm` on `stat_x('1990')` ≈ 760) is **deferred to Sprint 26 Priority 5 fix work** — that's a 30+ min end-to-end exercise that exceeds Task 7's 2–3h budget and is more useful as the pre/post fix acceptance gate than as prep verification.
