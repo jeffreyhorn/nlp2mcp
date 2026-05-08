@@ -809,7 +809,7 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 | #1335 | OPEN, sprint-26 labeled. Bug confirmed extant: `nu_zdef` missing from `stat_p(tt)` | **Implement narrow AD fix** at `_try_eval_offset` / `_resolve_idx` per ISSUE_1335.md §"Where to Look" | 4–8h |
 | #1357 | OPEN, sprint-26 labeled. `$171` is comp_up_x subset/superset (NOT subsumed by #1334) | **Defer to Sprint 27** alongside fawley #1356 (same comp_up subset/superset shape per Task 4 PATTERN_A_RECLASSIFICATION) | 4–8h (Sprint 27) |
 
-**Sprint 26 Priority 5 effort estimate:** ~12–18h for #1334 + #1335 (within the 8–14h budget if #1334 re-investigation lands in 2h; tight otherwise). #1357 deferred.
+**Sprint 26 Priority 5 effort estimate:** **Re-estimated** — PROJECT_PLAN budgeted 8–14h for "#1334 + #1335 alone"; Task 7 re-estimate is **~8–18h for #1334 + #1335** (#1334 4–10h incl. ~2h closure re-investigation overhead; #1335 4–8h). The low end (8h) fits the 8–14h Priority 5 budget cleanly; the high end (18h) exceeds it by 4h. Schedule risk: if #1334 re-investigation runs long (closer to 10h than 4h), Priority 5 will overrun the budget — flag in Sprint 26 Day 0 review. #1357 deferred to Sprint 27.
 
 **ISSUE doc file:line currency:** ISSUE_1334.md synced in this PR; ISSUE_1335.md unchanged (already accurate).
 

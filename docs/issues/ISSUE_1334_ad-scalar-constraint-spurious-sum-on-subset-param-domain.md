@@ -71,7 +71,7 @@ Two candidate locations:
 
 ### Approach 1 — fix in `_replace_indices_in_expr`'s ParamRef branch
 
-`src/kkt/stationarity.py:2413–2479`. When `param_domain` is a strict subset of `equation_domain` AND a parallel VarRef in the same expression has been substituted to use the eq domain variable, align the parameter substitution with the variable substitution (use the eq domain variable, not the parameter's declared domain).
+`src/kkt/stationarity.py:2448+` (the ParamRef match-case start; was `:2413–2479` when filed 2026-05-02; resynced 2026-05-08). When `param_domain` is a strict subset of `equation_domain` AND a parallel VarRef in the same expression has been substituted to use the eq domain variable, align the parameter substitution with the variable substitution (use the eq domain variable, not the parameter's declared domain).
 
 This is the inverse of `_preserve_subset_var_indices`. Either:
 - Add a sibling `_promote_subset_param_indices(...)` that returns the eq domain variable when the parameter's domain is a strict subset.
@@ -99,7 +99,7 @@ This is more targeted (only the assembly site) but might miss similar cases in o
 
 ## Files Involved
 
-- `src/kkt/stationarity.py:2330+ (was :2295–2479 when filed 2026-05-02; resynced 2026-05-07)` — `_replace_indices_in_expr` (ParamRef branch at `:2413`)
+- `src/kkt/stationarity.py:2330+ (was :2295–2479 when filed 2026-05-02; resynced 2026-05-08)` — `_replace_indices_in_expr` (ParamRef branch at `:2448+`; was `:2413` when filed 2026-05-02)
 - `src/kkt/stationarity.py:2395–2400` — `_preserve_subset_var_indices` (VarRef analog, reference for the new ParamRef logic)
 - `src/kkt/stationarity.py:5421+` — `_add_jacobian_transpose_terms_scalar` scalar branch (alternative fix site; was `:5279–5310` when filed 2026-05-02; resynced 2026-05-07 per Sprint 26 Prep Task 7 file:line sync)
 - `data/gamslib/raw/otpop.gms` — primary integration test source

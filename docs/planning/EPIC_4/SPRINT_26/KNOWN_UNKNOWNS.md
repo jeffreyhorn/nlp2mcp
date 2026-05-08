@@ -1665,7 +1665,7 @@ The ISSUE_1357.md note "likely subsumed by #1334" was a working hypothesis filed
 - #1335 (narrow AD fix): 4–8h
 - #1357 (independent comp_up subset/superset fix, same shape as fawley #1356): **DEFER to Sprint 27** alongside fawley as a "comp_up subset/superset domain widening" workstream (matches Task 4 PATTERN_A_RECLASSIFICATION_PLAN.md §"Issue #1145" close-and-refile pattern).
 
-Sprint 26 Priority 5 lands #1334 + #1335 (~12–18h) within the 8–14h budget plus the ~2h re-investigation overhead. otpop's `$141` cascade resolves when #1334 + #1335 land; otpop's `$171` resolves separately in Sprint 27 alongside fawley.
+Sprint 26 Priority 5 lands #1334 + #1335. Re-estimated combined effort: **~8–18h** (low end 8h fits the 8–14h budget cleanly; high end 18h exceeds by 4h, primarily due to the #1334 closure re-investigation overhead). Schedule risk noted for Sprint 26 Day 0 review. otpop's `$141` cascade resolves when #1334 + #1335 land; otpop's `$171` resolves separately in Sprint 27 alongside fawley #1356.
 
 ---
 
@@ -1711,9 +1711,9 @@ AD/KKT engineer (Task 7)
 **Verified by:** Task 7 (AD Residuals Investigation Recap)
 **Date:** 2026-05-07
 
-**Findings:** **#1335 is a narrow Sprint-26-level fix.** Per ISSUE_1335.md §"Where to Look", the fix is at `_try_eval_offset` / `_resolve_idx` (`src/ad/constraint_jacobian.py:133+`) + `_diff_sum` substitution context (`src/ad/derivative_rules.py:1847`) — **no architectural change required**.
+**Findings:** **#1335 is a narrow Sprint-26-level fix.** Per Task 7 source inspection (refining ISSUE_1335.md §"Where to Look"), the actual fix site is the `if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` (and the inequality counterpart at `:1107`) that **skips the offset-resolution / sum-expansion pipeline for scalar equations**. The `_resolve_index_offsets` (line 88) and `_expand_sums_with_unresolved_offsets` (line 327) calls are gated behind `if eq_domain:` — for `zdef` (scalar, `eq_domain == ()`), they never run. **No architectural change required**.
 
-The fix shape: substitute the loop variable (`t → t'`) into the offset expression BEFORE calling `_try_eval_offset`. Currently, when AD enumerates `t' ∈ t` for `sum(t, ... p(t + (card(t) - ord(t))))`, the offset `card(t) - ord(t)` is evaluated BEFORE the substitution, so `ord(t)` has no concrete element to look up and `_try_eval_offset` returns `None`. The fix: substitute `t → t'` first, then call `_try_eval_offset` — `ord(t')` resolves to the per-element ordinal, the offset becomes `card(t) - ord(t') + t'_ord = card(t)` (the last element).
+The fix shape (refined from ISSUE_1335.md §"Root Cause (suspected)"): the per-instance substitution path (`_expand_sum_body` at line 484 substitutes `t → t'` and then calls `_resolve_index_offsets`, which evaluates `ord('1990')` correctly) **already works for indexed equations**. What's missing is invoking that pipeline for scalar equations whose body contains sums with offset arithmetic. The fix should EITHER (a) extend the gate to fire for scalar equations with sum-internal offset arithmetic, OR (b) hoist the sum-internal offset resolution earlier in the differentiation pipeline so it runs regardless of `eq_domain` shape. ISSUE_1335.md's original framing ("substitute `t → t'` BEFORE `_try_eval_offset`") was correct in spirit but misattributed the gap — the substitution code path exists and works; it's just not invoked for scalar equations.
 
 **Evidence:**
 
