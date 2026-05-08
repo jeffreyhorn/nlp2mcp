@@ -772,8 +772,15 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 1. **Re-read ISSUE_1334.md and ISSUE_1335.md.** Confirm the file:line references match current `src/kkt/stationarity.py`.
 
    ```bash
-   grep -nE "^def _replace_indices_in_expr|^def _add_jacobian_transpose_terms_scalar" \
+   # PRIMARY fix-site for the otpop indexed-stationarity case (per 2026-05-08 correction):
+   grep -nE "^def _replace_indices_in_expr|^def _add_indexed_jacobian_terms" \
      src/kkt/stationarity.py
+   # Expected: line 2330 (_replace_indices_in_expr), line 4228 (_add_indexed_jacobian_terms)
+
+   # Scalar-stationarity sibling function (not the otpop fix-site, but listed in ISSUE_1334
+   # §Files Involved as a parallel-fix candidate if scalar stationarity exhibits the same shape):
+   grep -n "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py
+   # Expected: line 5421
    ```
 
 2. **Re-run the otpop reproducer (static-emit + GAMS compile-only — see Objective deferral note):**
@@ -784,7 +791,14 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 
    # Static fingerprint check for #1334 + #1335 bug patterns:
    grep -nE "sum\(t__, .* \* nu_kdef" /tmp/sprint26-otpop/otpop_mcp.gms   # #1334: expect 2 hits if bug present
-   grep -nE "nu_zdef" /tmp/sprint26-otpop/otpop_mcp.gms                    # #1335: expect missing from stat_p body
+
+   # #1335: extract just the stat_p(...) equation body and check for nu_zdef.
+   # Plain `grep nu_zdef` over the whole file matches declarations / pairing / stat_x
+   # cross-term; we need to scope to the stat_p body. Equation bodies in emitted MCPs
+   # span from `stat_p(...)..` to the terminating `=E= 0;`.
+   awk '/^stat_p\(.*\)\.\./, /=E= 0;/' /tmp/sprint26-otpop/otpop_mcp.gms | grep -c nu_zdef
+   # Expected: 0 (bug present — cross-term missing from stat_p body)
+   # After fix:  ≥ 1 (cross-term emitted as expected)
 
    # GAMS compile-only validation (catches $171 / $141 cascades):
    gams /tmp/sprint26-otpop/otpop_mcp.gms action=c o=/tmp/sprint26-otpop/otpop_mcp.lst
