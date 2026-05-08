@@ -1562,11 +1562,19 @@ AD/KKT engineer (Task 7)
 
 ### Verification Results
 
-✅ **Status:** VERIFIED
+✅ **Status:** VERIFIED — STATIC FINGERPRINT ONLY (full numerical reproducer DEFERRED to Sprint 26 Priority 5 fix work)
 **Verified by:** Task 7 (AD Residuals Investigation Recap)
 **Date:** 2026-05-07
 
-**Findings:** **#1334 bug pattern is STILL VISIBLE in otpop's emit on current main** despite #1334 being CLOSED on GitHub (closed 2026-05-05). otpop's `stat_p(tt)` and `stat_x(tt)` both contain the spurious `sum(t__, ...)` wrap on `nu_kdef` that ISSUE_1334.md §"Buggy Emit" documents:
+**Scope of verification (important — read before relying on this entry):**
+
+The unknown as originally phrased asks whether the **full NLP-warm-started reproducer still produces `LHS = -1.4157` on `stat_cd(ag-subsist)` plus the documented residuals on `stat_x('1990')` / `stat_p('1986')`**. Task 7 did **NOT** run the full reproducer (NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture is a ~30+ minute end-to-end exercise requiring custom GAMS scripts that are out of scope for a 2–3 hour prep task).
+
+What Task 7 **DID** verify is the **static-emit fingerprint** — the presence of the `sum(t__, ...)` spurious-Sum pattern documented in ISSUE_1334.md §"Buggy Emit" — in current main's otpop emit. The static fingerprint is a **sufficient indicator** that the bug is still present (if the wrong-shape emit is generated, the wrong-residual numerics necessarily follow), but it is **NOT a substitute for the numerical residual measurement** that Sprint 26 Priority 5 fix work should perform as the pre/post acceptance gate.
+
+The original numerical baselines (per ISSUE_1334.md §Diagnostic) — `stat_cd(ag-subsist)` LHS = -1.4157, `Inf-Norm of Minimum Map` 2.35e+02 on `stat_p('1986')` — remain the documented Sprint 26 acceptance targets. Sprint 26 Priority 5 fix work owns re-measuring them.
+
+**Findings (static fingerprint check):** **#1334 bug pattern is STILL VISIBLE in otpop's emit on current main** despite #1334 being CLOSED on GitHub (closed 2026-05-05). otpop's `stat_p(tt)` and `stat_x(tt)` both contain the spurious `sum(t__, ...)` wrap on `nu_kdef` that ISSUE_1334.md §"Buggy Emit" documents:
 
 ```
 stat_p(tt).. ... + sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
@@ -1574,8 +1582,6 @@ stat_x(tt).. ... + sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_k
 ```
 
 This means the GitHub closure (2026-05-05) likely addressed a sibling sub-shape but did NOT fix the otpop-specific case. **Sprint 26 Priority 5 must re-investigate the closure** and either re-open #1334 or file a successor issue capturing the still-extant otpop emit pattern.
-
-The full reproducer (translate + NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture) was NOT run in Task 7 — that's a 30+ minute end-to-end exercise requiring custom GAMS scripts. The static-emit verification (presence of `sum(t__, ...)` pattern in the current emit) is sufficient evidence to conclude the bug is still present without running the full numerical reproducer. ISSUE_1334.md §Diagnostic numerical residuals (`stat_cd(ag-subsist)` LHS = -1.4157, `Inf-Norm of Minimum Map` 2.35e+02 on `stat_p('1986')`) remain the documented baselines — Sprint 26 Priority 5 fix work should re-measure them as the acceptance gate.
 
 **Evidence:**
 

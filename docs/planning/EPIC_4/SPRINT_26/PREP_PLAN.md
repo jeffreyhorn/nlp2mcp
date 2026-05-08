@@ -793,9 +793,9 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 
 - Created `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` with full #1334 / #1335 / #1357 relationship analysis: ISSUE doc currency check, otpop reproducer verification, subsumption decision, per-issue Sprint 26 work plan.
 - Verified file:line references: ISSUE_1334.md was **stale on filing** (line drift +142 / +35 lines for `_add_jacobian_transpose_terms_scalar` / `_replace_indices_in_expr` since the 2026-05-02 file date); **synced 2026-05-07 in this PR** with explicit "was X; resynced 2026-05-07" notes on 3 references. ISSUE_1335.md file:line references **accurate** (no changes needed).
-- Re-ran otpop translate + GAMS `action=c` compile; captured `$171` errors at `comp_up_x(tt)` (lst lines 220) and `piU_x.fx(tt)` (line 252) — same shape as fawley #1356 comp_up subset/superset bug.
-- Confirmed **#1334 bug pattern STILL VISIBLE in current main otpop emit** (2 `sum(t__, ...)` lines on `nu_kdef` cross-term in `stat_p` and `stat_x`) despite #1334 being CLOSED on GitHub 2026-05-05. Suggests the GitHub closure was for a sibling sub-shape; re-investigation needed.
-- Confirmed **#1335 bug STILL VISIBLE**: `nu_zdef` is missing from `stat_p(tt)` body (only present in `stat_x` cross-term + declarations + pairing).
+- Re-ran otpop translate + GAMS `action=c` compile; captured `$171` errors at `comp_up_x(tt)` (lst lines 220) and `piU_x.fx(tt)` (line 252) — same shape as fawley #1356 comp_up subset/superset bug. **(Static-emit + compile-only verification only. The full NLP-warm-started reproducer with `LHS = -1.4157` numerical residual measurement on `stat_cd(ag-subsist)` was DEFERRED to Sprint 26 Priority 5 fix work — that's a 30+ min end-to-end exercise outside the 2–3h Task 7 budget; the static fingerprint check below is sufficient evidence that the bug is still present.)**
+- Confirmed **#1334 bug pattern STILL VISIBLE in current main otpop emit** via static fingerprint check (2 `sum(t__, ...)` lines on `nu_kdef` cross-term in `stat_p` and `stat_x`) despite #1334 being CLOSED on GitHub 2026-05-05. Suggests the GitHub closure was for a sibling sub-shape; re-investigation needed.
+- Confirmed **#1335 bug STILL VISIBLE** via static fingerprint check: `nu_zdef` is missing from `stat_p(tt)` body (only present in `stat_x` cross-term + declarations + pairing).
 - Confirmed **#1334 does NOT subsume #1357**: different code paths (#1334 = `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` in stationarity.py; #1357 = `comp_up` + bound-fixup emission in complementarity.py + emit_gams.py). Independent bugs.
 - Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
@@ -832,10 +832,11 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 ### Acceptance Criteria
 
 - [x] ISSUE_1334.md and ISSUE_1335.md verified accurate (or updated) — ISSUE_1334.md file:lines synced 2026-05-07; ISSUE_1335.md accurate
-- [x] otpop reproducer re-run; current emit + compile errors documented (AD_RESIDUALS_RECAP.md §2)
+- [x] otpop reproducer re-run **(static-emit + GAMS compile-only verification only — full numerical NLP-warm-started reproducer DEFERRED to Sprint 26 Priority 5 fix work)**; current emit + compile errors documented (AD_RESIDUALS_RECAP.md §2)
+- [ ] **(deferred to Sprint 26 Priority 5)** Full numerical NLP-warm-started reproducer re-run: NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture (`stat_cd(ag-subsist)` LHS, `Inf-Norm` on `stat_p('1986')`, etc.). The Sprint 26 fix work owns this as the pre/post acceptance gate.
 - [x] #1334 ↔ #1357 subsumption decision made with evidence — **NOT subsumed** (different code paths)
 - [x] Sprint 26 fix scope clarified — **3 distinct bugs** (Priority 5 lands #1334 + #1335; #1357 deferred to Sprint 27)
-- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md (note: Unknown 5.2 is **VERIFIED — STATIC FINGERPRINT ONLY**, with full numerical residual measurement deferred to Sprint 26 Priority 5 fix work)
 
 ---
 

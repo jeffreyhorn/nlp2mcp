@@ -270,7 +270,8 @@ Different code paths (`src/kkt/stationarity.py` for #1334 vs `src/kkt/complement
 - [x] ISSUE_1334.md and ISSUE_1335.md verified for accuracy:
   - [x] ISSUE_1334.md file:line references **stale on filing**, **synced 2026-05-07** in this PR (3 references updated)
   - [x] ISSUE_1335.md file:line references accurate (no changes needed)
-- [x] otpop reproducer re-run; current emit + compile errors documented (Section 2)
+- [x] otpop reproducer re-run **(static-emit + GAMS compile-only verification only)**; current emit + compile errors documented (Section 2)
+- [ ] **(deferred to Sprint 26 Priority 5 fix work)** Full numerical NLP-warm-started reproducer (NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture per ISSUE_1334.md §Diagnostic). The Sprint 26 fix PR owns this as the pre/post acceptance gate.
 - [x] #1334 ↔ #1357 subsumption decision made: **NOT subsumed** — different code paths and bug shapes (Section 2.4)
 - [x] Sprint 26 Priority 5 fix scope clarified: **3 distinct bugs**, recommended Sprint 26 lands #1334 + #1335 with #1357 deferred to Sprint 27 alongside fawley (Section 4)
 - [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
