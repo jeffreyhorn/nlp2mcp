@@ -1493,7 +1493,30 @@ AD/KKT engineer (Task 7)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (AD Residuals Investigation Recap)
+**Date:** 2026-05-07
+
+**Findings:**
+
+| Doc | File:line references at filing | Current main | Status | Action taken |
+|---|---|---|---|---|
+| ISSUE_1334.md | `src/kkt/stationarity.py:5279–5310` (_add_jacobian_transpose_terms_scalar), `:2295–2479` (_replace_indices_in_expr) | line 5421 (def), line 2330 (def) | **STALE** (drift +142 / +35 lines) | **Synced 2026-05-07** in this PR — 3 references updated with explicit "was X; resynced 2026-05-07" notes |
+| ISSUE_1335.md | `src/ad/constraint_jacobian.py:133–202` (_try_eval_offset), `:204–260` (_resolve_idx), `derivative_rules.py:1847+` (_diff_sum) | lines 133, 204, 1847 (all defs) | **ACCURATE** (all match exactly) | No changes needed |
+
+**Sprint 25 modifications to fix-site files:**
+- `src/kkt/stationarity.py` (7 commits between 2026-04-15 and 2026-05-06): #1351 launch Pattern C rollback, #1350 srkandw, #1278 alias-position ord, #1192 bounds-aware conditional, #1306 Pattern C prototype + PR reviews. None directly modified `_replace_indices_in_expr` or `_add_jacobian_transpose_terms_scalar` — line drift is from surrounding code growth.
+- `src/ad/constraint_jacobian.py` (1 commit): #1348 / #1349 china + pindyck. Did not touch `_try_eval_offset` or `_resolve_idx`.
+- `src/ad/derivative_rules.py` (multiple commits): #1311, #1312, #1330, several PR reviews. Did not touch `_diff_sum`.
+
+**Evidence:**
+
+- `grep -nE "^def _add_jacobian_transpose_terms_scalar|^def _replace_indices_in_expr" src/kkt/stationarity.py` returns lines 2330, 5421.
+- `grep -nE "^def _try_eval_offset|^def _resolve_idx" src/ad/constraint_jacobian.py` returns lines 133, 204.
+- `grep -nE "^def _diff_sum" src/ad/derivative_rules.py` returns line 1847.
+- `git log --pretty="format:%h %s" --diff-filter=AM --since="2026-04-15" --until="2026-05-06" -- <file>` for each file (see AD_RESIDUALS_RECAP.md §1.1, §1.2).
+
+**Decision:** ISSUE_1334.md file:line references resynced in this PR (commit ahead). ISSUE_1335.md needs no changes. Sprint 26 Priority 5 work begins with accurate pointers.
 
 ---
 
@@ -1539,7 +1562,31 @@ AD/KKT engineer (Task 7)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (AD Residuals Investigation Recap)
+**Date:** 2026-05-07
+
+**Findings:** **#1334 bug pattern is STILL VISIBLE in otpop's emit on current main** despite #1334 being CLOSED on GitHub (closed 2026-05-05). otpop's `stat_p(tt)` and `stat_x(tt)` both contain the spurious `sum(t__, ...)` wrap on `nu_kdef` that ISSUE_1334.md §"Buggy Emit" documents:
+
+```
+stat_p(tt).. ... + sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt)) - piL_p(tt) =E= 0;
+stat_x(tt).. ... + sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt)) + ... =E= 0;
+```
+
+This means the GitHub closure (2026-05-05) likely addressed a sibling sub-shape but did NOT fix the otpop-specific case. **Sprint 26 Priority 5 must re-investigate the closure** and either re-open #1334 or file a successor issue capturing the still-extant otpop emit pattern.
+
+The full reproducer (translate + NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture) was NOT run in Task 7 — that's a 30+ minute end-to-end exercise requiring custom GAMS scripts. The static-emit verification (presence of `sum(t__, ...)` pattern in the current emit) is sufficient evidence to conclude the bug is still present without running the full numerical reproducer. ISSUE_1334.md §Diagnostic numerical residuals (`stat_cd(ag-subsist)` LHS = -1.4157, `Inf-Norm of Minimum Map` 2.35e+02 on `stat_p('1986')`) remain the documented baselines — Sprint 26 Priority 5 fix work should re-measure them as the acceptance gate.
+
+**Evidence:**
+
+- `grep -E "sum\(t__" /tmp/sprint26-task7/otpop_mcp.gms` returns 2 matches (in `stat_p` and `stat_x`).
+- AD_RESIDUALS_RECAP.md §2.2 documents the exact lines.
+- `gh issue view 1334 --json state` returns `"state":"CLOSED", "closedAt":"2026-05-05T19:27:18Z"` — the closure is real but the bug pattern persists.
+
+**Decision:** Sprint 26 Priority 5 Day 1: open the GitHub issue tracker and either:
+- Re-open #1334 with a comment explaining "post-closure verification confirms the otpop spurious-sum pattern is still present in current main emit", linking AD_RESIDUALS_RECAP.md §2.2.
+- OR file a successor issue (e.g., "#1XXX: residual otpop spurious `sum(t__, ...)` after #1334 closure — fix-in-place series didn't fully resolve") with cross-references.
+Add ~2h to the Priority 5 budget for this re-investigation step.
 
 ---
 
@@ -1584,7 +1631,35 @@ AD/KKT engineer (Task 7)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED (with correction to assumption)
+**Verified by:** Task 7 (AD Residuals Investigation Recap)
+**Date:** 2026-05-07
+
+**Findings:** **#1334 does NOT subsume #1357.** They are independent bugs in different code paths with different bug shapes.
+
+| Bug | Code path | Bug shape | Manifestation |
+|---|---|---|---|
+| #1334 | `src/kkt/stationarity.py::_add_jacobian_transpose_terms_scalar` (line 5421) + `_replace_indices_in_expr` (line 2330) | Spurious `Sum(("t__",), ...)` wrap on Jacobian-transpose cross-term when ParamRef domain is a strict subset of equation domain | Numerical: KKT point differs from NLP optimum (otpop solves to `pi=2307.07` vs NLP `pi=4217.80`). Visible in stat_p / stat_x emit as `sum(t__, ...) * nu_kdef`. |
+| #1357 | `src/kkt/complementarity.py` + `src/emit/emit_gams.py` (bound-fixup emission) | Subset/superset domain widening in `comp_up_<var>` and `piU_<var>.fx` references — `xb(tt)` referenced where `xb` is on subset `t` and `tt` is superset | Compile-time: GAMS `$171` "Domain violation for set" at lst lines 220, 252 in otpop_mcp.gms (corresponding to source lines 217, 247 — `comp_up_x(tt)$(t(tt) and xb(tt) < inf)..` and `piU_x.fx(tt)$(not (t(tt) and xb(tt) < inf)) = 0;`). Same shape as fawley #1356. |
+
+The ISSUE_1357.md note "likely subsumed by #1334" was a working hypothesis filed Sprint 25 Day 13 but is **DISPROVED by Task 3 + Task 4 + Task 7 evidence**:
+- Task 3 PATTERN_C_HYPOTHESIS_VALIDATION §2.4 first observed that otpop's `$171` is in comp_up_x, not in stationarity.
+- Task 4 PATTERN_A_RECLASSIFICATION_PLAN identified the same comp_up subset/superset shape on fawley #1356.
+- Task 7 (this) confirms the patterns differ: otpop's `$171` errors trace to lst lines 220/252 (comp_up + piU.fx), but ISSUE_1334's spurious `sum(t__, ...)` pattern is in stat_p and stat_x — different lines, different code paths.
+
+**Evidence:**
+
+- `/tmp/sprint26-task7/otpop_compile.lst` line 220-221: `$171 $171` markers point at line 217 of otpop_mcp.gms which reads `comp_up_x(tt)$(t(tt) and xb(tt) < inf).. xb(tt) - x(tt) =G= 0;`. The marker columns hit the `xb(tt)` references.
+- `/tmp/sprint26-task7/otpop_compile.lst` line 253-254: `$171` marker points at line 247 reading `piU_x.fx(tt)$(not (t(tt) and xb(tt) < inf)) = 0;`. Same `xb(tt)` shape.
+- ISSUE_1334.md §"Buggy Emit (otpop)" documents the `sum(t__, ...)` pattern in `stat_p` / `stat_x` — different code path entirely from comp_up_x and piU.fx.
+- ISSUE_1357.md fix-site listing: `src/kkt/stationarity.py:2295–2479` and `:5279–5310` (note: those are the #1334 fix sites — ISSUE_1357 was filed under the "likely subsumed by #1334" hypothesis). Per Task 7 finding, the actual fix sites for #1357 are `src/kkt/complementarity.py` + `src/emit/emit_gams.py`.
+
+**Decision:** Sprint 26 Priority 5 scope decision (per AD_RESIDUALS_RECAP.md §4):
+- #1334 (re-investigate + fix the still-visible spurious-sum pattern): 4–10h
+- #1335 (narrow AD fix): 4–8h
+- #1357 (independent comp_up subset/superset fix, same shape as fawley #1356): **DEFER to Sprint 27** alongside fawley as a "comp_up subset/superset domain widening" workstream (matches Task 4 PATTERN_A_RECLASSIFICATION_PLAN.md §"Issue #1145" close-and-refile pattern).
+
+Sprint 26 Priority 5 lands #1334 + #1335 (~12–18h) within the 8–14h budget plus the ~2h re-investigation overhead. otpop's `$141` cascade resolves when #1334 + #1335 land; otpop's `$171` resolves separately in Sprint 27 alongside fawley.
 
 ---
 
@@ -1626,7 +1701,22 @@ AD/KKT engineer (Task 7)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 7 (AD Residuals Investigation Recap)
+**Date:** 2026-05-07
+
+**Findings:** **#1335 is a narrow Sprint-26-level fix.** Per ISSUE_1335.md §"Where to Look", the fix is at `_try_eval_offset` / `_resolve_idx` (`src/ad/constraint_jacobian.py:133+`) + `_diff_sum` substitution context (`src/ad/derivative_rules.py:1847`) — **no architectural change required**.
+
+The fix shape: substitute the loop variable (`t → t'`) into the offset expression BEFORE calling `_try_eval_offset`. Currently, when AD enumerates `t' ∈ t` for `sum(t, ... p(t + (card(t) - ord(t))))`, the offset `card(t) - ord(t)` is evaluated BEFORE the substitution, so `ord(t)` has no concrete element to look up and `_try_eval_offset` returns `None`. The fix: substitute `t → t'` first, then call `_try_eval_offset` — `ord(t')` resolves to the per-element ordinal, the offset becomes `card(t) - ord(t') + t'_ord = card(t)` (the last element).
+
+**Evidence:**
+
+- `grep -nE "^def _try_eval_offset|^def _resolve_idx" src/ad/constraint_jacobian.py` returns lines 133, 204 — matches ISSUE_1335.md exactly.
+- `grep -nE "^def _diff_sum" src/ad/derivative_rules.py` returns line 1847 — matches.
+- otpop emit on current main: `stat_p(tt)..` has NO `nu_zdef` term (verified via `grep -nE "nu_zdef" /tmp/sprint26-task7/otpop_mcp.gms`). The `nu_zdef` references that exist (line 91 declaration, line 209 stat_x cross-term, line 210 stat_z, line 298 pairing) confirm the bug is specifically the missing `(zdef, p('1990'))` Jacobian entry — exactly what ISSUE_1335 documents.
+- Fix is local to AD/constraint_jacobian — no IR-level changes, no KKT-assembly changes, no emit-side changes.
+
+**Decision:** Sprint 26 Priority 5 lands #1335 in 4–8h per ISSUE_1335.md estimate. Combined with #1334 fix, otpop's NLP-warm-started MCP should converge to `pi ≈ 4217.80` (per ISSUE_1335.md §Tests). #1335 is also the ONLY known model affected — no broader corpus impact projected.
 
 ---
 

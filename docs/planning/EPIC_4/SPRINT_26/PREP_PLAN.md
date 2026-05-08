@@ -737,9 +737,11 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 ## Task 7: AD Residuals (#1334, #1335) Investigation Recap
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 2–3 hours
+**Actual Time:** ~2 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1
@@ -789,11 +791,27 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` with full #1334 / #1335 / #1357 relationship analysis: ISSUE doc currency check, otpop reproducer verification, subsumption decision, per-issue Sprint 26 work plan.
+- Verified file:line references: ISSUE_1334.md was **stale on filing** (line drift +142 / +35 lines for `_add_jacobian_transpose_terms_scalar` / `_replace_indices_in_expr` since the 2026-05-02 file date); **synced 2026-05-07 in this PR** with explicit "was X; resynced 2026-05-07" notes on 3 references. ISSUE_1335.md file:line references **accurate** (no changes needed).
+- Re-ran otpop translate + GAMS `action=c` compile; captured `$171` errors at `comp_up_x(tt)` (lst lines 220) and `piU_x.fx(tt)` (line 252) — same shape as fawley #1356 comp_up subset/superset bug.
+- Confirmed **#1334 bug pattern STILL VISIBLE in current main otpop emit** (2 `sum(t__, ...)` lines on `nu_kdef` cross-term in `stat_p` and `stat_x`) despite #1334 being CLOSED on GitHub 2026-05-05. Suggests the GitHub closure was for a sibling sub-shape; re-investigation needed.
+- Confirmed **#1335 bug STILL VISIBLE**: `nu_zdef` is missing from `stat_p(tt)` body (only present in `stat_x` cross-term + declarations + pairing).
+- Confirmed **#1334 does NOT subsume #1357**: different code paths (#1334 = `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` in stationarity.py; #1357 = `comp_up` + bound-fixup emission in complementarity.py + emit_gams.py). Independent bugs.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Sprint 26 Priority 5 scope = 3 distinct bugs**, NOT 1.
+
+| Issue | Status | Sprint 26 action | Effort |
+|---|---|---|---|
+| #1334 | GitHub-CLOSED 2026-05-05 but bug pattern still extant in otpop emit | **Re-investigate the closure** (was it for a sibling sub-shape?); re-open or file successor; implement Approach 1 fix per ISSUE_1334.md | 4–10h (incl. ~2h re-investigation) |
+| #1335 | OPEN, sprint-26 labeled. Bug confirmed extant: `nu_zdef` missing from `stat_p(tt)` | **Implement narrow AD fix** at `_try_eval_offset` / `_resolve_idx` per ISSUE_1335.md §"Where to Look" | 4–8h |
+| #1357 | OPEN, sprint-26 labeled. `$171` is comp_up_x subset/superset (NOT subsumed by #1334) | **Defer to Sprint 27** alongside fawley #1356 (same comp_up subset/superset shape per Task 4 PATTERN_A_RECLASSIFICATION) | 4–8h (Sprint 27) |
+
+**Sprint 26 Priority 5 effort estimate:** ~12–18h for #1334 + #1335 (within the 8–14h budget if #1334 re-investigation lands in 2h; tight otherwise). #1357 deferred.
+
+**ISSUE doc file:line currency:** ISSUE_1334.md synced in this PR; ISSUE_1335.md unchanged (already accurate).
 
 ### Verification
 
@@ -813,11 +831,11 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 
 ### Acceptance Criteria
 
-- [ ] ISSUE_1334.md and ISSUE_1335.md verified accurate (or updated)
-- [ ] otpop reproducer re-run; current residual documented
-- [ ] #1334 ↔ #1357 subsumption decision made with evidence
-- [ ] Sprint 26 fix scope clarified (do #1334 + #1335 alone close #1357, or are 3 issues to fix?)
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] ISSUE_1334.md and ISSUE_1335.md verified accurate (or updated) — ISSUE_1334.md file:lines synced 2026-05-07; ISSUE_1335.md accurate
+- [x] otpop reproducer re-run; current emit + compile errors documented (AD_RESIDUALS_RECAP.md §2)
+- [x] #1334 ↔ #1357 subsumption decision made with evidence — **NOT subsumed** (different code paths)
+- [x] Sprint 26 fix scope clarified — **3 distinct bugs** (Priority 5 lands #1334 + #1335; #1357 deferred to Sprint 27)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 

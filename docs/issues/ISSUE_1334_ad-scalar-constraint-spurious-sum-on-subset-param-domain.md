@@ -11,7 +11,7 @@
 
 ## Problem Summary
 
-In `_add_jacobian_transpose_terms_scalar` (`src/kkt/stationarity.py:5279–5310`), the cross-term contribution from a scalar constraint (e.g., `kdef`) into an indexed stationarity equation (e.g., `stat_x(tt)`, `stat_p(tt)`) is wrapped in a `Sum(("t__",), ...)` whose body has mixed free indices that should have been unified.
+In `_add_jacobian_transpose_terms_scalar` (`src/kkt/stationarity.py:5421+` — line numbers updated 2026-05-07 per Sprint 26 Prep Task 7 file:line sync; was at `:5279–5310` when this doc was filed 2026-05-02), the cross-term contribution from a scalar constraint (e.g., `kdef`) into an indexed stationarity equation (e.g., `stat_x(tt)`, `stat_p(tt)`) is wrapped in a `Sum(("t__",), ...)` whose body has mixed free indices that should have been unified.
 
 The result is an over-counted coefficient by a factor of `|sum-domain|` (~22× for otpop's `t = 1974*1990`), producing nonzero residuals at the NLP solution and making valid local optima of the original NLP NOT be stationary points of the emitted MCP.
 
@@ -52,7 +52,7 @@ A hand-edit replacing `del(t__)` with `del(tt)` (and removing the `sum`) reduces
 
 ## Root Cause
 
-`_replace_indices_in_expr` (`src/kkt/stationarity.py:2295–2479`) substitutes per-instance Jacobian-entry indices back to symbolic form using each symbol's declared domain:
+`_replace_indices_in_expr` (`src/kkt/stationarity.py:2330+ (was :2295–2479 when filed 2026-05-02; resynced 2026-05-07)`) substitutes per-instance Jacobian-entry indices back to symbolic form using each symbol's declared domain:
 
 | Reference | Substitution result | Why |
 |-----------|--------------------|----|
@@ -99,9 +99,9 @@ This is more targeted (only the assembly site) but might miss similar cases in o
 
 ## Files Involved
 
-- `src/kkt/stationarity.py:2295–2479` — `_replace_indices_in_expr` (ParamRef branch at `:2413`)
+- `src/kkt/stationarity.py:2330+ (was :2295–2479 when filed 2026-05-02; resynced 2026-05-07)` — `_replace_indices_in_expr` (ParamRef branch at `:2413`)
 - `src/kkt/stationarity.py:2395–2400` — `_preserve_subset_var_indices` (VarRef analog, reference for the new ParamRef logic)
-- `src/kkt/stationarity.py:5279–5310` — `_add_jacobian_transpose_terms_scalar` scalar branch (alternative fix site)
+- `src/kkt/stationarity.py:5421+` — `_add_jacobian_transpose_terms_scalar` scalar branch (alternative fix site; was `:5279–5310` when filed 2026-05-02; resynced 2026-05-07 per Sprint 26 Prep Task 7 file:line sync)
 - `data/gamslib/raw/otpop.gms` — primary integration test source
 
 ---
