@@ -22,7 +22,7 @@
 **Sprint 26 Priority 5 fix scope:** **3 distinct bugs to fix**, NOT 1.
 
 - **#1334**: re-investigate the GitHub closure (may need re-open or close-and-refile)
-- **#1335**: narrow AD fix at `_try_eval_offset` / `_resolve_idx` (~4–8h)
+- **#1335**: narrow AD fix — extend the offset-resolution / sum-expansion pipeline to scalar equations (`if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`; see §3.2 for fix-site detail). Refined fix-site supersedes the earlier `_try_eval_offset` / `_resolve_idx` framing in ISSUE_1335.md §"Where to Look". (~4–8h)
 - **#1357**: comp_up subset/superset (~4–8h, similar to fawley #1356) — file as a new Sprint 27 issue if scope-pressure during Sprint 26 demands it; OR bundle with fawley fix as a Priority 5 sub-workstream
 
 **Sprint 26 Priority 5 effort estimate:** **Re-estimated upward from the PROJECT_PLAN 8–14h budget.** Original budget was for "#1334 + #1335 alone" (8–14h). Task 7 re-estimate: **~12–18h** if all 3 bugs addressed (#1334 re-investigation + fix 4–10h incl. ~2h closure investigation; #1335 narrow fix 4–8h; #1357 comp_up subset/superset 4–8h). The 8–14h Priority 5 budget covers **#1334 + #1335 only** at the low-end estimates (8h ≤ 4h + 4h ≤ 8–14h works); the third bug (#1357) is **deferred to Sprint 27** alongside fawley #1356 as a "comp_up subset/superset domain widening" workstream (per Task 4 PATTERN_A_RECLASSIFICATION). With #1357 deferred, Sprint 26 Priority 5 scope is ~8–18h for #1334 + #1335 — fits the 8–14h budget at the low end, exceeds at the high end (depends on how much re-investigation #1334 needs).
@@ -31,16 +31,11 @@
 
 ## 1. ISSUE doc file:line currency check
 
-### 1.1 ISSUE_1334.md — STALE on filing, synced in this PR
+### 1.1 ISSUE_1334.md — STALE on filing, synced + fix-site corrected in this PR
+
+**Initial 2026-05-07 sync (line-drift only)** captured the following before the deeper 2026-05-08 fix-site correction:
 
 ```bash
-$ grep -n "_add_jacobian_transpose_terms_scalar\|_replace_indices_in_expr" docs/issues/ISSUE_1334_*.md
-14:In `_add_jacobian_transpose_terms_scalar` (`src/kkt/stationarity.py:5421+` ...)
-55:`_replace_indices_in_expr` (`src/kkt/stationarity.py:2330+` ...)
-102:- `src/kkt/stationarity.py:2330+` — `_replace_indices_in_expr` (ParamRef branch at `:2448+`)
-103:- `src/kkt/stationarity.py:2395–2400` — `_preserve_subset_var_indices` (VarRef analog, reference for the new ParamRef logic)
-104:- `src/kkt/stationarity.py:5421+` — `_add_jacobian_transpose_terms_scalar` scalar branch (alternative fix site)
-
 $ grep -nE "^def _add_jacobian_transpose_terms_scalar|^def _replace_indices_in_expr" \
     src/kkt/stationarity.py
 2330:def _replace_indices_in_expr(
@@ -50,6 +45,30 @@ $ grep -nE "^def _add_jacobian_transpose_terms_scalar|^def _replace_indices_in_e
 **Drift since 2026-05-02 filing:**
 - `_add_jacobian_transpose_terms_scalar`: was line 5279, now line 5421. Drift: +142 lines.
 - `_replace_indices_in_expr`: was line 2295, now line 2330. Drift: +35 lines.
+
+**2026-05-08 fix-site correction (per PR #1371 review):** `_add_jacobian_transpose_terms_scalar` is invoked from `_build_stationarity_expr` for SCALAR stationarity equations only (e.g., `stat_<scalar>`) — it does NOT produce the indexed `stat_x(tt)` / `stat_p(tt)` emit observed for otpop. The actual indexed-stationarity Sum-wrapping site is `_add_indexed_jacobian_terms` at `src/kkt/stationarity.py:4228+`. Re-running the scan with the corrected target:
+
+```bash
+$ grep -nE "^def _add_indexed_jacobian_terms|^def _replace_indices_in_expr" \
+    src/kkt/stationarity.py
+2330:def _replace_indices_in_expr(
+4228:def _add_indexed_jacobian_terms(
+```
+
+**Post-correction ISSUE_1334.md references** (after both 2026-05-07 line-drift sync and 2026-05-08 fix-site correction):
+
+```bash
+$ grep -nE "stationarity\.py:[0-9]+" docs/issues/ISSUE_1334_*.md | head -10
+14:In `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py:4228+` ...)
+57:`_replace_indices_in_expr` (`src/kkt/stationarity.py:2330+` ...)
+76:Approach 1: `src/kkt/stationarity.py:2448+` (the ParamRef match-case start)
+86:Approach 2: `src/kkt/stationarity.py:4228+` (the `_add_indexed_jacobian_terms` definition)
+104:- `src/kkt/stationarity.py:2330+` — `_replace_indices_in_expr` (ParamRef branch at `:2448+`)
+105:- `src/kkt/stationarity.py:2431` (call-site) and `:2739` (function definition) — `_preserve_subset_var_indices`
+106:- `src/kkt/stationarity.py:2470` and `:2512` — `prefer_declared_domain=True` invocation sites
+107:- `src/kkt/stationarity.py:4228+` — `_add_indexed_jacobian_terms` (PRIMARY fix site)
+108:- `src/kkt/stationarity.py:5421+` — `_add_jacobian_transpose_terms_scalar` scalar branch (NOT applicable to the otpop case)
+```
 
 **Sprint 25 modifications to `src/kkt/stationarity.py`** (between 2026-04-15 and 2026-05-06):
 

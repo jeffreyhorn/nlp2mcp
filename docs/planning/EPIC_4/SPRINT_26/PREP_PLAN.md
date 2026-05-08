@@ -809,7 +809,7 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 - Re-ran otpop translate + GAMS `action=c` compile; captured `$171` errors at `comp_up_x(tt)` (lst lines 220) and `piU_x.fx(tt)` (line 252) — same shape as fawley #1356 comp_up subset/superset bug. **(Static-emit + compile-only verification only. The full NLP-warm-started reproducer with `LHS = -1.4157` numerical residual measurement on `stat_cd(ag-subsist)` was DEFERRED to Sprint 26 Priority 5 fix work — that's a 30+ min end-to-end exercise outside the 2–3h Task 7 budget; the static fingerprint check below is sufficient evidence that the bug is still present.)**
 - Confirmed **#1334 bug pattern STILL VISIBLE in current main otpop emit** via static fingerprint check (2 `sum(t__, ...)` lines on `nu_kdef` cross-term in `stat_p` and `stat_x`) despite #1334 being CLOSED on GitHub 2026-05-05. Suggests the GitHub closure was for a sibling sub-shape; re-investigation needed.
 - Confirmed **#1335 bug STILL VISIBLE** via static fingerprint check: `nu_zdef` is missing from `stat_p(tt)` body (only present in `stat_x` cross-term + declarations + pairing).
-- Confirmed **#1334 does NOT subsume #1357**: different code paths (#1334 = `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` in stationarity.py; #1357 = `comp_up` + bound-fixup emission in complementarity.py + emit_gams.py). Independent bugs.
+- Confirmed **#1334 does NOT subsume #1357**: different code paths (#1334 = `_replace_indices_in_expr` + `_add_indexed_jacobian_terms` in stationarity.py — corrected 2026-05-08 from earlier `_add_jacobian_transpose_terms_scalar` per PR #1371 review-comment fixes; the scalar function only handles SCALAR stationarity, not the otpop indexed-stationarity emit; #1357 = `comp_up` + bound-fixup emission in complementarity.py + emit_gams.py). Independent bugs.
 - Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
@@ -819,7 +819,7 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 | Issue | Status | Sprint 26 action | Effort |
 |---|---|---|---|
 | #1334 | GitHub-CLOSED 2026-05-05 but bug pattern still extant in otpop emit | **Re-investigate the closure** (was it for a sibling sub-shape?); re-open or file successor; implement Approach 1 fix per ISSUE_1334.md | 4–10h (incl. ~2h re-investigation) |
-| #1335 | OPEN, sprint-26 labeled. Bug confirmed extant: `nu_zdef` missing from `stat_p(tt)` | **Implement narrow AD fix** at `_try_eval_offset` / `_resolve_idx` per ISSUE_1335.md §"Where to Look" | 4–8h |
+| #1335 | OPEN, sprint-26 labeled. Bug confirmed extant: `nu_zdef` missing from `stat_p(tt)` | **Extend the offset-resolution / sum-expansion pipeline to scalar equations** — the `if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`, leaving the inner `Sum(t, … x(t-1) …)` unresolved. (Refined fix-site per Task 7 source inspection — supersedes the earlier `_try_eval_offset` / `_resolve_idx` framing in ISSUE_1335.md §"Where to Look".) | 4–8h |
 | #1357 | OPEN, sprint-26 labeled. `$171` is comp_up_x subset/superset (NOT subsumed by #1334) | **Defer to Sprint 27** alongside fawley #1356 (same comp_up subset/superset shape per Task 4 PATTERN_A_RECLASSIFICATION) | 4–8h (Sprint 27) |
 
 **Sprint 26 Priority 5 effort estimate:** **Re-estimated** — PROJECT_PLAN budgeted 8–14h for "#1334 + #1335 alone"; Task 7 re-estimate is **~8–18h for #1334 + #1335** (#1334 4–10h incl. ~2h closure re-investigation overhead; #1335 4–8h). The low end (8h) fits the 8–14h Priority 5 budget cleanly; the high end (18h) exceeds it by 4h. Schedule risk: if #1334 re-investigation runs long (closer to 10h than 4h), Priority 5 will overrun the budget — flag in Sprint 26 Day 0 review. #1357 deferred to Sprint 27.
@@ -832,8 +832,9 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 test -f docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md
 
 # File:line references in ISSUE_1334 still match
-grep -c "^def _replace_indices_in_expr" src/kkt/stationarity.py   # Expected: 1
-grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # Expected: 1
+grep -c "^def _replace_indices_in_expr" src/kkt/stationarity.py    # Expected: 1
+grep -c "^def _add_indexed_jacobian_terms" src/kkt/stationarity.py # Expected: 1 (PRIMARY fix-site for indexed stationarity per 2026-05-08 correction)
+grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py  # Expected: 1 (only relevant for SCALAR stationarity, NOT the otpop indexed case)
 ```
 
 ### Deliverables
