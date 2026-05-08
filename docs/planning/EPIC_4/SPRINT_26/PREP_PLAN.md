@@ -749,7 +749,9 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 ### Objective
 
-Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop NLP-warm-started reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Day 13 carryforward) or if they are independent.
+Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Day 13 carryforward) or if they are independent.
+
+> **Verification scope note (added 2026-05-08 per PR #1371 review):** Task 7 verification is **static-emit + GAMS compile-only** — i.e., translate otpop, then run `gams ... action=c` and assert presence/absence of bug-pattern strings (`sum(t__, ...) * nu_kdef`, `nu_zdef` reference) in the emitted MCP. The **full NLP-warm-started numerical reproducer** (NLP solve via baseline GAMS, dual-multiplier transfer, MCP run with `iterlim=0`, residual capture per `Inf-Norm` on `stat_x('1990')` ≈ 760) is **deferred to Sprint 26 Priority 5 fix work** — that's a 30+ min end-to-end exercise that exceeds Task 7's 2–3h budget and is more useful as the pre/post fix acceptance gate than as prep verification.
 
 ### Why This Matters
 
@@ -774,13 +776,24 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
      src/kkt/stationarity.py
    ```
 
-2. **Re-run the otpop NLP-warm-started reproducer:**
+2. **Re-run the otpop reproducer (static-emit + GAMS compile-only — see Objective deferral note):**
 
    ```bash
    .venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
      -o /tmp/sprint26-otpop/otpop_mcp.gms --skip-convexity-check --quiet
-   # NLP solve + dual transfer + MCP iterlim=0 per ISSUE_1334 §Diagnostic
-   # Verify stat_x('1990') residual ≈ 760 (pre-fix) or whatever the current state shows
+
+   # Static fingerprint check for #1334 + #1335 bug patterns:
+   grep -nE "sum\(t__, .* \* nu_kdef" /tmp/sprint26-otpop/otpop_mcp.gms   # #1334: expect 2 hits if bug present
+   grep -nE "nu_zdef" /tmp/sprint26-otpop/otpop_mcp.gms                    # #1335: expect missing from stat_p body
+
+   # GAMS compile-only validation (catches $171 / $141 cascades):
+   gams /tmp/sprint26-otpop/otpop_mcp.gms action=c o=/tmp/sprint26-otpop/otpop_mcp.lst
+   ls /tmp/sprint26-otpop/otpop_mcp.lst   # confirm o= override produced this exact filename
+   grep -nE "\\\$171|\\\$141" /tmp/sprint26-otpop/otpop_mcp.lst
+
+   # NOTE: the full NLP-warm-started reproducer (NLP solve + dual transfer + MCP iterlim=0
+   # + Inf-Norm residual capture per ISSUE_1334 §Diagnostic) is DEFERRED to Sprint 26 Priority 5
+   # fix work — see Objective for rationale.
    ```
 
 3. **Determine the #1334 ↔ #1357 relationship.** Re-emit otpop and compare the `$171` violation lines (217, 247) to the `_replace_indices_in_expr` ParamRef-substitution pattern documented in ISSUE_1334.md §Buggy Emit. If the patterns match: #1334 subsumes #1357 (close #1357 on Day 1 of fix landing). If they don't match: #1357 is independent and needs its own fix work.
