@@ -84,7 +84,7 @@ e26cfc88 Address PR #1308 review comments
 561a9ac2 Sprint 25 Day 6: Pattern C prototype — gate phantom-offset enumeration on launch-shaped conditional alias sums
 ```
 
-7 Sprint 25 commits to `src/kkt/stationarity.py` — all touched lines around #1306/#1308 (Pattern C gate), #1350 (`_remap_condition_to_domain`), #1351 (Pattern C rollback), #1278 (alias-position `ord` tautology), #1192 (bounds-aware conditional). None directly targeted `_replace_indices_in_expr` or `_add_jacobian_transpose_terms_scalar` — the line-number drift is from the surrounding code growing, not from the fix sites themselves changing.
+7 Sprint 25 commits to `src/kkt/stationarity.py` — all touched lines around #1306/#1308 (Pattern C gate), #1350 (`_remap_condition_to_domain`), #1351 (Pattern C rollback), #1278 (alias-position `ord` tautology), #1192 (bounds-aware conditional). None directly targeted `_replace_indices_in_expr`, `_add_indexed_jacobian_terms` (PRIMARY fix-site for the otpop indexed-stationarity case per 2026-05-08 correction), or `_add_jacobian_transpose_terms_scalar` (scalar-only sibling) — the line-number drift is from the surrounding code growing, not from the fix sites themselves changing.
 
 **File:line references resynced in commit (this PR)** with explicit notes that the original 2026-05-02 numbers reflected the filing-time state.
 
