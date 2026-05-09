@@ -170,7 +170,7 @@ Realistic mid-case (assuming CI is ~2× slower than local): 11 × ~3s + 4 × ~1s
 
 ### Why 30s, not 10s or 60s
 
-- **3× margin over Sprint 25 reference machine local times** (largest canary = dispatch at 4.26s; 30s = 7× margin).
+- **7× margin over reference machine local times** (largest canary = dispatch at 4.26s; 30s / 4.26s ≈ 7×). Smaller canaries (sparta / paklive ≈ 1.01s) get ~30× margin.
 - **Avoids flakiness** from CI machine variance — Unknown 6.1 risk.
 - **Catches cases where a regression makes a previously-fast solve hang or thrash** — exactly the failure mode PR19 is designed to catch (the Pattern C launch fix made the launch MCP locally infeasible, which would have manifested as a PATH solve that runs longer than usual or returns MODEL STATUS 5).
 
