@@ -119,6 +119,7 @@ The 4 Pattern C target models are added as **soft-fail informational** signal: w
 # Run from repo root; redirect only scratch files via ScrDir.
 # Do NOT set curdir= — it would break the repo-relative `$include` resolution
 # in any presolve-variant MCPs that reach this list in the future.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 gams "data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 \
   ScrDir=/tmp/pr19-scratch/$m \
@@ -276,9 +277,11 @@ jobs:
         if: steps.check-label.outputs.skip == 'true'
         uses: actions/github-script@v7
         with:
-          # Left-aligned template literal (no leading spaces inside the
-          # backticks) — Markdown treats indented lines as code blocks, which
-          # would render the table / headers as a literal code block.
+          # Build the body via an array + `.join('\n')` (NOT a template literal)
+          # so YAML-block indentation never bleeds into the rendered Markdown.
+          # Markdown treats lines that start with 4+ spaces as code blocks, which
+          # would render the table / headers as a literal code block if a
+          # multi-line template literal were used inside the indented `script:` block.
           script: |
             const body = [
               '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
