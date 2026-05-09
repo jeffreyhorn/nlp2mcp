@@ -101,9 +101,9 @@ The 219-model corpus and the 142-in-scope denominator are unchanged from Sprint 
 
 | Model | Sprint 25 Day 14 bucket | Sprint 26 Day 0 bucket | Transition note | Translate time pre → post |
 |---|---|---|---|---|
-| `clearlak` | `solve_path_syntax_error` (translates, PATH compile-fails) | `translate_timeout` | Bucket churn | 480.7s → 600.1s |
-| `ganges` | `solve_path_syntax_error` | `translate_timeout` | Bucket churn | 386.9s → 600.7s |
-| `turkpow` | `solve_path_syntax_error` | `translate_timeout` | Bucket churn | 379.8s → 600.1s |
+| `clearlak` | `path_syntax_error` (translates, PATH compile-fails) | `translate_timeout` | Bucket churn | 480.7s → 600.1s |
+| `ganges` | `path_syntax_error` | `translate_timeout` | Bucket churn | 386.9s → 600.7s |
+| `turkpow` | `path_syntax_error` | `translate_timeout` | Bucket churn | 379.8s → 600.1s |
 
 **All 3 still fail; net failure count is unchanged.** They moved earlier in the pipeline because the Sprint 26 Day 0 baseline run was ~37% slower overall (machine load), pushing translate times that were 380–480s into the 600s timeout.
 

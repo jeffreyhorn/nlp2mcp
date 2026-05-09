@@ -1062,8 +1062,11 @@ The bucket-provenance baseline addresses Sprint 25 KU-34 directly: Sprint 26 ret
 test -f docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md
 # Headline metrics recorded
 grep -c "^| Parse " docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
-# Bucket-provenance table present
-grep -c "Sprint 25 bucket" docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
+# Bucket-provenance table present (use a regex that matches both
+# "Sprint 25 bucket" and the more-specific "Sprint 25 Day 14 bucket"
+# wording the baseline doc uses, so the check stays robust to either
+# phrasing)
+grep -cE "Sprint 25( Day 14)? bucket" docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
 # Pipeline retest succeeded
 grep "exit code" /tmp/sprint26-baseline.log | tail -1
 ```
