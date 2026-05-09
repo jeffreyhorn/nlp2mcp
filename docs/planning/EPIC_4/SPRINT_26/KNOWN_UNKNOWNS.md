@@ -1775,7 +1775,39 @@ CI engineer (Task 8)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 8 (Design Pre-Merge Solve-Time Validation CI PR19)
+**Date:** 2026-05-08
+
+**Findings:** 30s/model PATH-solve budget is **highly conservative** — local timing on current main (commit `4b65f4b9`) shows the 11 Tier 0/1 canaries solve in 1.01s–4.26s each (largest = `dispatch` at 4.26s; smallest tied at sparta / paklive ≈ 1.01s; sum = 15.27s). Even at 2× CI machine slowdown, the worst case remains under 10s/model. The 30s budget therefore provides **7× to 30× margin** depending on the model — flake risk is negligible.
+
+| Model | rc | Wall time (local) | MODEL STATUS |
+|---|---|---|---|
+| dispatch | 0 | 4.26s | 1 Optimal |
+| quocge | 0 | 1.44s | 1 Optimal |
+| partssupply | 0 | 1.03s | 1 Optimal |
+| prolog | 0 | 1.17s | 1 Optimal |
+| sparta | 0 | 1.01s | 1 Optimal |
+| gussrisk | 0 | 1.03s | 1 Optimal |
+| ps2_f | 0 | 1.14s | 1 Optimal |
+| ps3_f | 0 | 1.08s | 1 Optimal |
+| ship | 0 | 1.05s | 1 Optimal |
+| splcge | 0 | 1.05s | 1 Optimal |
+| paklive | 0 | 1.01s | 1 Optimal |
+
+Timing-run details:
+
+- **Repo commit:** `4b65f4b9` (current `main` after PR #1371 merge, 2026-05-08)
+- **GAMS version:** 53.1.0 (build `6a03d3b9` — internal GAMS build hash, not a git commit)
+- **Machine:** macOS / DEX-DEG x86 64bit
+
+**Per-model configurability:** to keep flake-tolerance future-proof, the design specifies that the per-model PATH timeout is configurable via the target-list file (e.g., `paklive  # tier=1 reslim=60`). Default 30s applies when no `reslim=N` annotation is present. This addresses Research Question 4.
+
+**Evidence:** §"PATH Timeout" + §"Local timing verification (current main, 2026-05-08)" in `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md`.
+
+**Decision:** PR19 design specifies **30s default per-model timeout** with **per-model `reslim=N` override** via target-list file annotation. Sprint 26 implementation should monitor flake rates during the first 2-3 weeks and adjust per-model overrides if any canary approaches the budget.
+
+**Newly surfaced constraint:** GAMS is **not installed in CI today** — this is a fundamental prerequisite for PR19. Design recommends GAMS demo install (free; all 11 canary sizes fit within the 300/300/2000 demo cap; largest is `quocge` at 158/158/671). Adds ~90s install per CI run (cacheable). Fallback is a self-hosted runner with full GAMS license, out of scope for the prep task. Flagged in Open Questions for Sprint 26 implementation.
 
 ---
 
@@ -1829,7 +1861,47 @@ CI engineer (Task 8)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 8 (Design Pre-Merge Solve-Time Validation CI PR19)
+**Date:** 2026-05-08
+
+**Findings:** PR19 target list is **15 models** = 11 Tier 0/1 canaries (hard-fail) + 4 Pattern C target models (soft-fail).
+
+**Per-tier policy:**
+
+| Tier | Models (n) | Failure handling | Rationale |
+|---|---|---|---|
+| `0` | 1 (`dispatch`) | **Hard-fail** | Canonical canary; minimum complexity; fast solve; byte-stable per PR12 harness. |
+| `1` | 10 (Sprint 25 Day 0 list) | **Hard-fail** | Tier 1 alias-using and matching canaries; all reach MODEL STATUS 1 on current main. |
+| `pattern-c` | 4 (camcge, cesam2, fawley, otpop) | **Soft-fail** (warning + PR comment, exit 0) | Currently fail at compile with $141 / $171; expected to start passing once Sprint 26 Priority 1 lands. Promotion to `tier=1` (hard-fail) once they pass. |
+
+**Why not all 142 in-scope models:**
+- Sprint 25 PR12 byte-stability harness already enforces deterministic emit on the 11 Tier 0/1 canaries — a PATH-solve regression check is the natural complement.
+- Adding all 142 in-scope models would add ~7-15min CI time and substantially inflate PR latency. Most non-canary in-scope models have not historically caught emit regressions early; marginal added signal does not justify the latency cost.
+- Sprint 26 can revisit if Priority 1 work surfaces a non-canary regression that the Tier 0/1 set missed.
+
+**CI overhead estimate:**
+
+| Component | CI worst case |
+|---|---|
+| GAMS demo install | ~90s |
+| Repo checkout + Python setup | ~30s (cached) |
+| Sequential PATH solves (11 × 30s budget) | ≤ 330s |
+| Pattern C fast-fail compile (4 × ~5s) | ≤ 20s |
+| Result aggregation + PR comment | ≤ 10s |
+| **Total** | **≤ ~8 min** |
+
+Realistic mid-case: ~3 min. Comparable to existing `ci.yml` runtime (~3-4min), well under the 12min `timeout-minutes` cap on the workflow.
+
+**Existing-CI-duration survey** (Research Question 1): recent `ci.yml` runs on PR #1371 averaged 155-175s (5 sample runs on 2026-05-08). PR19's projected ~3 min mid-case overhead is within the same order of magnitude — acceptable for emit-affecting PRs.
+
+**Soft-fail / hard-fail configurability** (Research Question 2): yes, configurable via `.github/path-solve-ci-targets.txt` annotations (`# tier=0|1|pattern-c`). When a Pattern C model starts passing, change `tier=pattern-c` → `tier=1` to promote to hard-fail.
+
+**Historical canary-catch analysis** (Research Question 3): not exhaustively surveyed — Sprint 25 DAY 14 final pipeline retest caught the Pattern C launch-fix regression on `launch` (a non-canary model), demonstrating that the canary set alone is not exhaustive. The Pattern C target models are added to the soft-fail surface specifically to catch this class of regression earlier without blocking unrelated PRs. If Sprint 26 surfaces a non-canary regression that the Tier 0/1 set missed, the target list can be expanded.
+
+**Decision:** PR19 design committed at 11 Tier 0/1 (hard-fail) + 4 Pattern C (soft-fail) = 15-model surface. Configurable via `.github/path-solve-ci-targets.txt` per the format specified in the design doc.
+
+**Evidence:** §"Target Model List" + §"Failure Handling" in `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md`.
 
 ---
 

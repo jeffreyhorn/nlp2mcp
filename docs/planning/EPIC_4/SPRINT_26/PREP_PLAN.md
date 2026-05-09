@@ -878,9 +878,11 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py  # E
 
 ## Task 8: Design Pre-Merge Solve-Time Validation CI (PR19)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-08
 **Priority:** High
 **Estimated Time:** 3–4 hours
+**Actual Time:** ~3 hours
 **Deadline:** Before Sprint 26 Day 1 (CI extension lands during Sprint 26 execution per the PROJECT_PLAN.md schedule)
 **Owner:** Sprint planning + CI engineer
 **Dependencies:** Task 1
@@ -927,11 +929,26 @@ Sprint 25's #1308 Pattern C launch fix passed all unit tests and `gams action=c`
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` with full PR19 design: trigger conditions (file paths + `skip-emit-solve-ci` PR-label exception), 15-model target list (11 Tier 0/1 hard-fail + 4 Pattern C soft-fail), 30s/model PATH timeout (configurable via target-list annotation), failure-handling policy, draft workflow YAML, helper-script outline, and test plan.
+- Surveyed all 6 existing CI workflows (`ci.yml`, `lint.yml`, `performance-check.yml`, `gamslib-regression.yml`, `nightly.yml`, `publish-pypi.yml`) — none install GAMS today; PR19 design recommends GAMS demo install (~90s overhead, cacheable; all 11 canaries fit demo limits).
+- Timed all 11 Tier 0/1 canaries locally on current main (commit `4b65f4b9`): 1.01s–4.26s per model; sum 15.27s. 30s budget gives 7×–30× margin per model.
+- Timed all 4 Pattern C target models: rc=2 fast-fail at compile (`$141` / `$171` cascades on camcge / cesam2 / fawley / otpop) — confirms the soft-fail design is correct (these never reach the PATH solver pre-fix).
+- CI overhead: ~3-8min worst case; comparable to existing `ci.yml` runtime (~3-4min).
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.1, 6.2 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+PR19 design committed. Sprint 26 implementation can land the workflow file (`.github/workflows/pr19-emit-solve-validation.yml`), the target-list file (`.github/path-solve-ci-targets.txt`), and the two helper scripts (`scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`) per the design.
+
+**Key design decisions:**
+
+| Decision | Rationale |
+|---|---|
+| Hard-fail on 11 Tier 0/1 canaries | Sprint 25 PR12 byte-stability harness already enforces deterministic emit on these; PATH-solve regression is the natural complement. |
+| Soft-fail on 4 Pattern C target models | Currently fail at compile pre-fix; provide per-model status signal during Sprint 26 Priority 1 fix work without blocking unrelated PRs. Promotion mechanism (`tier=pattern-c` → `tier=1`) once a model starts passing. |
+| 30s/model PATH timeout (configurable per-model) | Local timing shows 4.3s max; 30s gives 7× margin for CI machine variance; per-model `reslim=N` annotation allows future tuning if needed. |
+| GAMS demo install in CI | Free; all canary sizes fit demo cap (300/300/2000); ~90s install overhead (cacheable). Self-hosted runner with full license is the fallback if the demo path proves problematic during Sprint 26 implementation. |
+| `skip-emit-solve-ci` PR label | Matches the planned `byte-stable-refactor` label naming (Task 10) — enables refactor-only PRs to bypass the solve check when byte-diff covers the change. |
 
 ### Verification
 
@@ -951,12 +968,12 @@ ls .github/workflows/ 2>&1
 
 ### Acceptance Criteria
 
-- [ ] Trigger file patterns documented
-- [ ] Target model list committed (≥ Pattern C 4 + ≥ 3 Tier 0 canaries)
-- [ ] PATH timeout policy documented (default 30s, configurable)
-- [ ] Failure handling policy documented (hard vs soft fail per model class)
-- [ ] CI overhead estimate documented (acceptable for PR latency budget)
-- [ ] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Trigger file patterns documented (DESIGN_PR19_SOLVE_TIME_CI.md §Trigger Conditions — paths filter on `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py` + workflow + target-list files)
+- [x] Target model list designed (≥ Pattern C 4 + ≥ 3 Tier 0 canaries) — design specifies 11 Tier 0/1 + 4 Pattern C = 15 models for `.github/path-solve-ci-targets.txt` (planned file path; the file itself is committed during Sprint 26 implementation alongside the workflow YAML, per the design-only scope of this PR)
+- [x] PATH timeout policy documented (default 30s, configurable) — DESIGN doc §"PATH Timeout"; per-model `reslim=N` annotation supported
+- [x] Failure handling policy documented (hard vs soft fail per model class) — DESIGN doc §"Failure Handling"; hard-fail for Tier 0/1, soft-fail for Pattern C
+- [x] CI overhead estimate documented (acceptable for PR latency budget) — ~3min mid-case, ~8min worst case, comparable to existing `ci.yml` (~3-4min)
+- [x] Unknowns 6.1, 6.2 verified and updated in KNOWN_UNKNOWNS.md — both ✅ VERIFIED with timing + policy evidence
 
 ---
 
