@@ -113,12 +113,7 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-i.l('1962','non-traded') = 4.564;
-i.l('1962','traded') = 0;
-ks.l('1962','non-traded') = 0;
-ks.l('1962','traded') = 0;
 f.up(t) = inf$(card(t) - ord(t) >= num);
-c.l('1962') = 33.999;
 
 * ============================================
 * Variable Initialization
@@ -133,8 +128,13 @@ v.l(t,j) = 1;
 v.l(t,j) = min(v.l(t,j), v.up(t,j));
 i.l(te,j) = 1;
 i.l(te,j) = min(i.l(te,j), i.up(te,j));
+i.l('1962','non-traded') = 4.564;
+i.l('1962','traded') = 0;
 s.l(t) = 1;
 s.l(t) = min(s.l(t), s.up(t));
+ks.l('1962','non-traded') = 0;
+ks.l('1962','traded') = 0;
+c.l('1962') = 33.999;
 
 * ============================================
 * Equations
