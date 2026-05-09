@@ -1938,7 +1938,23 @@ Sprint planning (Task 9)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 9 (Bucket-Provenance Baseline + Scope Freeze PR17 + PR15)
+**Date:** 2026-05-09
+
+**Findings:** The bucket-provenance column added to `BASELINE_METRICS.md` §4 does NOT obscure aggregate counts. Three structural design choices preserve readability:
+
+1. **Aggregate counts remain in §2 (top of doc)** — the headline-metrics table reads exactly as it would without bucket provenance. Readers who want only Parse / Translate / Solve / Match counts get them in the first non-purpose section.
+2. **Bucket-provenance is a DEDICATED §4 SECTION** ("Bucket Provenance (PR17) — Per-Failing-Model Transitions"), not interleaved with the aggregate tables. Readers can skip it entirely if they only want headline metrics.
+3. **§4.1 leads with the high-signal subset** (the 3 churn models in this baseline) before showing the full per-bucket transition tables in §4.2. Readers who want quick scope-vs-Sprint-25-final feedback get it in §4.1; readers who want full per-model traceability continue to §4.2.
+
+The bucket-provenance column directly addresses Sprint 25's KU-34 finding that a "+1 path_syntax_error" headline obscured −3 / +4 churn. §4.3 explicitly walks through how Sprint 26 Day-N retests should evaluate acceptance criteria with bucket provenance — e.g., translate +5 from Day 0's 130 should be evaluated as "did Priority 4 recover the 3 machine-variance churn-outs AND add 2 more, or just recover 3?"
+
+**Other-doc impact:** scanned CHANGELOG, PROJECT_PLAN, README — no docs reference Sprint-25 bucket-level aggregate counts in a way that would require reformatting. CHANGELOG and PROJECT_PLAN reference *headline* metrics (Parse, Translate, Solve, Match) which are preserved in §2.
+
+**Evidence:** `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` §2, §4 (committed in this Task 9 PR).
+
+**Decision:** Bucket-provenance column committed in §4. The dedicated-section-with-aggregates-first format is the canonical layout for Sprint 26 retests and any future sprint baselines (Task 9-style work). No format changes needed in CHANGELOG / PROJECT_PLAN / README.
 
 ---
 
@@ -2041,6 +2057,8 @@ Sprint planning (Tasks 2 + 9)
 - Sprint 26 baseline (Task 9) freezes scope at **142** in-scope, matching the Sprint 25 Day 14 final.
 - The 143 → 142 transition is one-way and documented in `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5.1 "Sprint 25 Mid-Sprint Reclassification" (added by Task 2).
 - No further scope-shifts anticipated barring discovery of additional non-convex models. Sprint 26 baseline accounting uses 142 throughout.
+
+**Task 9 Day 0 baseline confirmation (2026-05-09):** the scope freeze held. Sprint 26 Day 0 baseline (`docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md`) shows **142 in-scope**, with `abel.convexity.status = non_convex` carrying forward from Sprint 25 Day 4. The non-convex bucket count is 8 (= 7 baseline `ps*_s*` + abel), unchanged from Sprint 25 Day 14 final. Schema version v2.2.1 unchanged. Excluded set (21) unchanged. Task 9 supersedes this Unknown's "Verification Results" — the freeze is validated against actual pipeline output, not just against Task 2's source-inspection finding.
 
 ---
 

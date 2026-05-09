@@ -267,14 +267,6 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
-* ============================================
-
-pf.l('LAB','JPN') = 1;
-pf.l('LAB','USA') = 1;
-epsilon.l('USA') = 1;
-
-* ============================================
 * Variable Initialization
 * ============================================
 
@@ -349,6 +341,8 @@ pf.l('CAP','JPN') = 1.0;
 pf.l('CAP','USA') = 1.0;
 pf.l('LAB','JPN') = 1.0;
 pf.l('LAB','USA') = 1.0;
+pf.l('LAB','JPN') = 1;
+pf.l('LAB','USA') = 1;
 py.l('BRD','JPN') = 1.0;
 py.l('BRD','USA') = 1.0;
 py.l('MLK','JPN') = 1.0;
@@ -375,6 +369,7 @@ pd.l('MLK','JPN') = 1.0;
 pd.l('MLK','USA') = 1.0;
 epsilon.l('JPN') = 1.0;
 epsilon.l('USA') = 1.0;
+epsilon.l('USA') = 1;
 pWe.l('BRD','JPN') = 1.0;
 pWe.l('BRD','USA') = 1.0;
 pWe.l('MLK','JPN') = 1.0;

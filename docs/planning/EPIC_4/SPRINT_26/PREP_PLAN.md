@@ -979,9 +979,11 @@ ls .github/workflows/ 2>&1
 
 ## Task 9: Bucket-Provenance Baseline + Scope Freeze (PR17 + PR15)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-09
 **Priority:** Critical
 **Estimated Time:** 2–3 hours
+**Actual Time:** ~3.5h (mostly pipeline runtime — 12779s baseline run)
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** Task 2 (need Sprint 25 scope-shift documented before recording the new baseline)
@@ -1030,11 +1032,29 @@ PR17 codifies the requirement: the Sprint 26 baseline must include a per-failing
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` (Sprint 26 Day 0 baseline) following Sprint 25 BASELINE_METRICS.md format, with new §4 "Bucket Provenance (PR17)" — per-failing-model "Sprint 25 Day 14 → Sprint 26 Day 0" transitions.
+- Ran full pipeline baseline (`scripts/gamslib/run_full_test.py --quiet`): 12779s (~3h33m), exit 0, 142/142 in-scope models processed.
+- **Headline metrics:** Parse 142/142, Translate 130/142 (3 fewer than Sprint 25 final due to bucket churn — see §4.1), Solve 104, Match 60. Solve and Match held steady from Sprint 25 final; the Translate −3 is bucket churn (clearlak / ganges / turkpow moved from `path_syntax_error` → `translate_timeout` due to machine-load variance at the 600s budget boundary; Sprint 26 prep PRs #1366–#1372 were all docs-only — no code regression).
+- **Bucket-provenance** §4 documents all per-bucket transitions. 3 in-scope models changed bucket; all attributed to machine variance (translate-time growth: 380–480s pre → 600s post-timeout; comparison models gangesx/turkey/indus also slowed 50–77% but stayed under budget).
+- Confirmed v2.2.1 exclusion set unchanged: 21 excluded (14 MINLP + 7 legacy) + 2 multi-solve drivers in `convexity.status = verified_convex` (danwolfe, decomp); saras carries forward as a third multi-solve driver gated by Sprint 25 Day 12 #1270.
+- Confirmed scope freeze held at 142 in-scope (88 likely_convex + 54 verified_convex); abel `non_convex` carries forward from Sprint 25 Day 4. Schema version v2.2.1 unchanged.
+- Updated `data/gamslib/gamslib_status.json` (committed). 22 emitted `.gms` files regenerated (advisory per BASELINE_METRICS §6 / PR12 byte-stability harness).
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.3 (✅ VERIFIED — bucket-provenance column does not obscure aggregate counts; dedicated §4 with aggregates-first §2 layout) and 6.5 (Task 9 confirmation appended — scope freeze validated against actual pipeline output).
 
 ### Result
 
-To be completed.
+Sprint 26 Day 0 baseline frozen at **Parse 142 / Translate 130 / Solve 104 / Match 60**, with explicit per-failing-model bucket-provenance traceability for Sprint 26 Day-N retest evaluation.
+
+**Acceptance-criteria implications for Sprint 26 (per BASELINE_METRICS §4.3):**
+
+| Sprint 26 target (PROJECT_PLAN) | Day 0 | Net needed | Notes |
+|---|---|---|---|
+| Translate ≥ 135 | 130 | +5 | Priority 4 Option 1 short-circuit must recover the 3 machine-variance churn-outs (clearlak/ganges/turkpow) AND add ≥2 more (per Task 6 projection) |
+| Solve ≥ 108 | 104 | +4 | Priority 1 Pattern C (camcge + cesam2) + Priority 5 AD residuals + Priority 4 unblock combine |
+| Match ≥ 64 | 60 | +4 | Priority 1 + Priority 5 |
+| path_syntax_error ≤ 6 | 9 | −3 | Priority 1 lands −2 (camcge + cesam2); Priority 4 returning churn-outs to path_syntax_error would push count UP — bucket provenance lets retest distinguish "Pattern C fix" from "Priority 4 reverted churn" |
+
+The bucket-provenance baseline addresses Sprint 25 KU-34 directly: Sprint 26 retests will not have the +1 / −3 / +4 churn ambiguity that confused Sprint 25 Checkpoint 2 evaluation.
 
 ### Verification
 
@@ -1042,8 +1062,11 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md
 # Headline metrics recorded
 grep -c "^| Parse " docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
-# Bucket-provenance table present
-grep -c "Sprint 25 bucket" docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
+# Bucket-provenance table present (use a regex that matches both
+# "Sprint 25 bucket" and the more-specific "Sprint 25 Day 14 bucket"
+# wording the baseline doc uses, so the check stays robust to either
+# phrasing)
+grep -cE "Sprint 25( Day 14)? bucket" docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md   # Expected: ≥ 1
 # Pipeline retest succeeded
 grep "exit code" /tmp/sprint26-baseline.log | tail -1
 ```
@@ -1057,12 +1080,12 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 
 ### Acceptance Criteria
 
-- [ ] Full pipeline baseline run completed (exit 0)
-- [ ] Headline metrics match Sprint 25 final (or deltas explained)
-- [ ] Bucket-provenance column added per failing model
-- [ ] Scope freeze documented (v2.2.x exclusion list unchanged)
-- [ ] `gamslib_status.json` committed
-- [ ] Unknowns 6.3, 6.5 verified and updated in KNOWN_UNKNOWNS.md
+- [x] Full pipeline baseline run completed (exit 0) — `scripts/gamslib/run_full_test.py --quiet` ran in 12779s (~3h33m)
+- [x] Headline metrics match Sprint 25 final (or deltas explained) — Solve 104 / Match 60 unchanged; Translate 130 (−3 vs Sprint 25 final 133) explained as machine-variance bucket churn at 600s timeout boundary, not a Sprint 26 prep regression (PRs #1366–#1372 docs-only)
+- [x] Bucket-provenance column added per failing model — `BASELINE_METRICS.md` §4 documents all per-bucket Sprint 25 Day 14 → Sprint 26 Day 0 transitions
+- [x] Scope freeze documented (v2.2.x exclusion list unchanged) — §5; 21 excluded + 2 multi-solve drivers + 1 saras Sprint 25 carryforward; abel `non_convex` carries forward; schema v2.2.1 unchanged
+- [x] `gamslib_status.json` committed (along with 22 advisory `.gms` artifact regenerations per PR12 byte-stability-not-yet-enforced policy)
+- [x] Unknowns 6.3, 6.5 verified and updated in KNOWN_UNKNOWNS.md — both ✅ VERIFIED; 6.3 confirms aggregate-counts-first layout works; 6.5 confirms scope freeze validated against actual Day 0 pipeline output
 
 ---
 

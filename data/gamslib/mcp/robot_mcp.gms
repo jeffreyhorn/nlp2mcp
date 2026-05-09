@@ -93,17 +93,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-rho.l('h0') = 4.5;
-rho.l('h50') = 4.5;
 the.fx('h50') = 2 * pi / 3;
-the.l('h0') = 0;
 phi.fx(firstlast) = pi / 4;
-rho_dot.l('h0') = 0;
-rho_dot.l('h50') = 0;
-the_dot.l('h0') = 0;
-the_dot.l('h50') = 0;
-phi_dot.l('h0') = 0;
-phi_dot.l('h50') = 0;
 
 * ============================================
 * Variable Initialization
@@ -165,7 +156,10 @@ rho.l('h47') = 4.5;
 rho.l('h48') = 4.5;
 rho.l('h49') = 4.5;
 rho.l('h50') = 4.5;
+rho.l('h0') = 4.5;
+rho.l('h50') = 4.5;
 the.l(h) = 2 * pi / 3 * sqr(ord(h) / nh);
+the.l('h0') = 0;
 phi.l(h) = pi / 4;
 rho_dot.l('h0') = 0.0;
 rho_dot.l('h1') = 0.0;
@@ -218,7 +212,11 @@ rho_dot.l('h47') = 0.0;
 rho_dot.l('h48') = 0.0;
 rho_dot.l('h49') = 0.0;
 rho_dot.l('h50') = 0.0;
+rho_dot.l('h0') = 0;
+rho_dot.l('h50') = 0;
 the_dot.l(h) = 4 * pi / 3 * ord(h) / nh;
+the_dot.l('h0') = 0;
+the_dot.l('h50') = 0;
 phi_dot.l('h0') = 0.0;
 phi_dot.l('h1') = 0.0;
 phi_dot.l('h2') = 0.0;
@@ -270,6 +268,8 @@ phi_dot.l('h47') = 0.0;
 phi_dot.l('h48') = 0.0;
 phi_dot.l('h49') = 0.0;
 phi_dot.l('h50') = 0.0;
+phi_dot.l('h0') = 0;
+phi_dot.l('h50') = 0;
 step.l = 1 / nh;
 i_phi.l(h) = (power(L - rho.l(h), 3) + power(rho.l(h), 3)) / 3;
 i_phi.l('h0') = max(i_phi.l('h0'), 0.0001);

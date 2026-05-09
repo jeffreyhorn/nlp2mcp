@@ -195,9 +195,18 @@ Positive Variables
 ;
 
 * ============================================
-* Variable Bounds
+* Variable Initialization
 * ============================================
 
+* Initialize variables to avoid division by zero during model generation.
+* Variables appearing in denominators (from log, 1/x derivatives) need
+* non-zero initial values.
+* POSITIVE variables are set to 1.
+
+xf.l(c,i,j) = 1;
+xf.l(c,i,j) = min(xf.l(c,i,j), xf.up(c,i,j));
+xi.l(c,i,i) = 1;
+xi.l(c,i,i) = min(xi.l(c,i,i), xi.up(c,i,i));
 xi.l('ammonia','abu-zaabal','abu-zaabal') = 0;
 xi.l('ammonia','abu-zaabal','assiout') = 0;
 xi.l('ammonia','abu-zaabal','aswan') = 0;
@@ -248,20 +257,6 @@ xi.l('sulf-acid','kafr-el-zt','assiout') = 0;
 xi.l('sulf-acid','kafr-el-zt','aswan') = 0;
 xi.l('sulf-acid','kafr-el-zt','helwan') = 0;
 xi.l('sulf-acid','kafr-el-zt','kafr-el-zt') = 0;
-
-* ============================================
-* Variable Initialization
-* ============================================
-
-* Initialize variables to avoid division by zero during model generation.
-* Variables appearing in denominators (from log, 1/x derivatives) need
-* non-zero initial values.
-* POSITIVE variables are set to 1.
-
-xf.l(c,i,j) = 1;
-xf.l(c,i,j) = min(xf.l(c,i,j), xf.up(c,i,j));
-xi.l(c,i,i) = 1;
-xi.l(c,i,i) = min(xi.l(c,i,i), xi.up(c,i,i));
 vf.l(c,j) = 1;
 vf.l(c,j) = min(vf.l(c,j), vf.up(c,j));
 vr.l(c,i) = 1;

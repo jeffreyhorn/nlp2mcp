@@ -65,13 +65,6 @@ Positive Variables
 
 u.lo(h) = ((-1) * pi) / 2;
 u.up(h) = pi / 2;
-y.l('y1','h0') = 0;
-y.l('y2','h0') = 0;
-y.l('y2','h50') = 5;
-y.l('y3','h0') = 0;
-y.l('y3','h50') = 45;
-y.l('y4','h0') = 0;
-y.l('y4','h50') = 0;
 
 * ============================================
 * Variable Initialization
@@ -85,6 +78,13 @@ y.l('y4','h50') = 0;
 
 y.l("y2",h) = 5 * (ord(h) - 1) / nh;
 y.l("y3",h) = 45 * (ord(h) - 1) / nh;
+y.l('y1','h0') = 0;
+y.l('y2','h0') = 0;
+y.l('y2','h50') = 5;
+y.l('y3','h0') = 0;
+y.l('y3','h50') = 45;
+y.l('y4','h0') = 0;
+y.l('y4','h50') = 0;
 step.l = 1 / nh;
 step.l = min(max(step.l, 1e-6), step.up);
 

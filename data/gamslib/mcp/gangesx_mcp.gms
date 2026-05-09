@@ -497,21 +497,8 @@ Positive Variables
 * ============================================
 
 w.fx(r) = dw(r);
-y.l('ynonp','agricult') = 0;
-y.l('ynonp','cap-good') = 0;
-y.l('ynonp','cons-good') = 0;
-y.l('ynonp','int-good') = 0;
-y.l('ynonp','pub-infr') = 0;
-y.l('ynonp','service') = 0;
-fy.l('ynonp','agricult') = 0;
-fy.l('ynonp','cap-good') = 0;
-fy.l('ynonp','cons-good') = 0;
-fy.l('ynonp','int-good') = 0;
-fy.l('ynonp','pub-infr') = 0;
-fy.l('ynonp','service') = 0;
 ch.lo(i,r) = pop(r) * gamma(i, r) + 0.1;
 taum.fx(i)$((not im(i))) = 0;
-taum.l('cap-good') = 0;
 
 * ============================================
 * Variable Initialization
@@ -637,10 +624,17 @@ taum.l('cap-good') = 0.0;
 taum.l('int-good') = 0.0;
 taum.l('pub-infr') = 0.0;
 taum.l('service') = 0.0;
+taum.l('cap-good') = 0;
 beta.l(r) = conpar("beta",r);
 util.l('urban') = 10.0;
 util.l('rural') = 10.0;
 utility.l = 10.0;
+fy.l('ynonp','agricult') = 0;
+fy.l('ynonp','cap-good') = 0;
+fy.l('ynonp','cons-good') = 0;
+fy.l('ynonp','int-good') = 0;
+fy.l('ynonp','pub-infr') = 0;
+fy.l('ynonp','service') = 0;
 ex.l(i) = dat("xvoli",i) / pq.l(i);
 dst.l(i) = dat("change-sto",i) / pq.l(i);
 v.l(i) = s.l(i) + dat("wage-labor",i);
@@ -675,6 +669,12 @@ y.l("yself",i) = sum(r$(ri(r,i)), pls.l(r)) * ls.l(i) * (1 - tw.l(i));
 y.l("ywage",i) = sum(r$(ri(r,i)), w.l(r)) * lw.l(i) * (1 - tw.l(i));
 y.l("ycap",i) = pk.l(i) * k(i) * (1 - thetak(i)) * (1 - tk.l(i));
 y.l("yinfr",i) = pg.l(i) * g.l(i) * (1 - thetai.l);
+y.l('ynonp','agricult') = 0;
+y.l('ynonp','cap-good') = 0;
+y.l('ynonp','cons-good') = 0;
+y.l('ynonp','int-good') = 0;
+y.l('ynonp','pub-infr') = 0;
+y.l('ynonp','service') = 0;
 pm.l(im) = pim(im) * (1 + trmm(im) + tfm.l(im) + taum.l(im));
 pm.l('agricult') = max(pm.l('agricult'), 0.001);
 pm.l('cons-good') = max(pm.l('cons-good'), 0.001);

@@ -86,11 +86,8 @@ Positive Variables
 * Variable Bounds
 * ============================================
 
-v.l('h0') = 0;
-ht.l('h0') = 1;
 m.lo(h) = m_f;
 m.fx('h50') = m_f;
-m.l('h0') = 1;
 t.up(h) = T_c * m_0 * g_0;
 
 * ============================================
@@ -108,6 +105,7 @@ step.l = 1 / nh;
 step.l = min(max(step.l, 1e-6), step.up);
 v.l(h) = (ord(h) - 1) / nh * (1 - (ord(h) - 1) / nh);
 v.l(h) = min(max(v.l(h), 1e-6), v.up(h));
+v.l('h0') = 0;
 ht.l('h0') = 1.0;
 ht.l('h1') = 1.0;
 ht.l('h2') = 1.0;
@@ -160,8 +158,10 @@ ht.l('h48') = 1.0;
 ht.l('h49') = 1.0;
 ht.l('h50') = 1.0;
 ht.l(h) = min(max(ht.l(h), 1e-6), ht.up(h));
+ht.l('h0') = 1;
 m.l(h) = (m_f - m_0) * (ord(h) - 1) / nh + m_0;
 m.l(h) = min(max(m.l(h), 1e-6), m.up(h));
+m.l('h0') = 1;
 t.l(h) = t.up(h) / 2;
 t.l(h) = min(max(t.l(h), 1e-6), t.up(h));
 g.l(h) = g_0 * sqr(h_0 / ht.l(h));
