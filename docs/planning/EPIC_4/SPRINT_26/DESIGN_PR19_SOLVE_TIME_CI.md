@@ -40,6 +40,8 @@ paths:
   - "src/kkt/complementarity.py"
   - "src/ad/derivative_rules.py"
   - "src/ad/constraint_jacobian.py"
+  - "scripts/ci/parse_pr19_targets.py"
+  - "scripts/ci/run_pr19_solves.py"
   - ".github/workflows/pr19-emit-solve-validation.yml"
   - ".github/path-solve-ci-targets.txt"
 ```
@@ -51,6 +53,7 @@ paths:
 - `src/kkt/complementarity.py` — #1357 / #1356 fix-site for comp_up subset/superset domain widening (Sprint 27 carryforward, but adding now since the trigger surface should be stable).
 - `src/ad/derivative_rules.py` — `_diff_sum` and related AD-rule changes (#1335 lives upstream of this in `constraint_jacobian.py`, but `derivative_rules.py` directly shapes the emit too).
 - `src/ad/constraint_jacobian.py` — #1335 fix-site (`if eq_domain:` scalar-equation gate at `:986` + `:1107` per Task 7 finding).
+- `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py` — the workflow's helper scripts. If a PR changes either script without touching the workflow YAML, the workflow needs to re-run so script regressions don't merge unnoticed (e.g., a parser bug that silently drops Pattern C targets, or a solve-runner bug that swallows non-zero exit codes).
 - `.github/workflows/pr19-emit-solve-validation.yml` — workflow self-changes need to re-validate.
 - `.github/path-solve-ci-targets.txt` — target-list changes need to re-validate.
 
@@ -247,6 +250,8 @@ on:
       - "src/kkt/complementarity.py"
       - "src/ad/derivative_rules.py"
       - "src/ad/constraint_jacobian.py"
+      - "scripts/ci/parse_pr19_targets.py"
+      - "scripts/ci/run_pr19_solves.py"
       - ".github/workflows/pr19-emit-solve-validation.yml"
       - ".github/path-solve-ci-targets.txt"
 
@@ -315,12 +320,23 @@ jobs:
 
       - name: Install GAMS demo
         if: steps.check-label.outputs.skip != 'true'
+        env:
+          # Pin installer URL + expected SHA256. Sprint 26 implementation must
+          # capture the actual SHA256 for the pinned 53.1.0 installer (e.g.,
+          # `sha256sum linux_x64_64_sfx.exe` after the first manual download)
+          # and store it here. Bumping GAMS version requires updating BOTH the
+          # URL and the checksum — the workflow refuses to execute an installer
+          # whose hash doesn't match, mitigating supply-chain risk if the
+          # CloudFront endpoint is compromised or the file is replaced upstream.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "<TO BE FILLED IN BY SPRINT 26 IMPLEMENTATION>"
         run: |
-          # Download + install GAMS demo edition. The exact installer URL and
-          # silent-install flags are per gams.com/download docs (Sprint 26
-          # implementation must verify the current installer name + flags).
-          curl -fSL -o /tmp/gams-installer.exe \
-            "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          # Download + verify GAMS demo edition. Refuses to run the installer
+          # if the SHA256 doesn't match the pinned value. Silent-install flags
+          # (-q -d) are per gams.com/download docs (Sprint 26 implementation
+          # must verify the current installer name + flags).
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          echo "$GAMS_INSTALLER_SHA256  /tmp/gams-installer.exe" | sha256sum -c -
           chmod +x /tmp/gams-installer.exe
           mkdir -p $HOME/gams
           /tmp/gams-installer.exe -q -d $HOME/gams
@@ -495,7 +511,7 @@ Once the workflow file lands during Sprint 26:
 
 These don't block the design but are worth flagging for the implementer:
 
-1. **GAMS demo installer URL stability**: the URL pattern in the draft YAML (`d37drm4t2jghv5.cloudfront.net/.../linux_x64_64_sfx.exe`) was current at design time. If the URL changes between now and Sprint 26 execution, the implementer must verify against `gams.com/download` docs.
+1. **GAMS demo installer URL stability + checksum capture**: the URL pattern in the draft YAML (`d37drm4t2jghv5.cloudfront.net/.../linux_x64_64_sfx.exe`) was current at design time. If the URL changes between now and Sprint 26 execution, the implementer must verify against `gams.com/download` docs. **The `GAMS_INSTALLER_SHA256` env var in the workflow is a placeholder** (`<TO BE FILLED IN BY SPRINT 26 IMPLEMENTATION>`) — the implementer must run `sha256sum` against the pinned installer once and store the resulting hex digest. After that, any version bump requires re-capturing the checksum (the workflow's `sha256sum -c -` step refuses to execute an installer whose hash doesn't match, mitigating supply-chain risk if CloudFront is compromised or the file is replaced upstream).
 
 2. **GAMS demo license activation**: some GAMS distributions require a license file even for demo. If the bare installer doesn't ship a default demo license, the workflow may need an additional step to install `gamslice.txt`. This is testable during the smoke-test step above.
 
