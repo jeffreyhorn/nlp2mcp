@@ -181,7 +181,14 @@ The bucket-provenance column in this baseline is the explicit input to Sprint 26
 
 ## 5. Frozen v2.2.1 Exclusion Set (PR15)
 
-The Sprint 26 Day 0 frozen state records **24 total out-of-solve-scope models**, unchanged from Sprint 25 Day 14 final. Twenty-one are tagged in the `convexity.status = excluded` bucket; **three** surface at translate time via the multi-solve driver gate — `danwolfe` and `decomp` (Sprint 24 baseline #1270) plus `saras` (Sprint 25 Day 12 #1270 Approach A addition). All 3 multi-solve driver models have `convexity.status = verified_convex` but `nlp2mcp_translate.error.category = internal_error`. (Note: Sprint 25 BASELINE_METRICS.md §4 reported "23 total exclusions" because saras was a Day 12 mid-sprint addition; the corrected Sprint 26 Day 0 count is 24 = 21 excluded + 3 multi-solve gated.)
+The Sprint 26 Day 0 **exclusion set** (Sprint 25 baseline terminology) records **24 models**, unchanged from Sprint 25 Day 14 final. The exclusion set is the union of:
+
+- **21 `excluded`** — `convexity.status = excluded` (the 14 MINLP + 7 legacy entries detailed in §5.1 / §5.2 below)
+- **3 translate-gated multi-solve drivers** — `convexity.status = verified_convex` (so they're counted in the 142-in-scope denominator) BUT gated at translate time with `nlp2mcp_translate.error.category = internal_error`: `danwolfe` and `decomp` (Sprint 24 baseline #1270) plus `saras` (Sprint 25 Day 12 #1270 Approach A addition; detailed in §5.3)
+
+The exclusion set is **distinct from the broader out-of-scope count in §3**, which totals 77 (= 219 − 142) and includes the `error` (43) / `non_convex` (8) / `unknown` (5) buckets that are not part of the formally-frozen exclusion set. The exclusion set is the policy-frozen surface PR15 commits to keeping stable mid-sprint; the broader out-of-scope buckets are runtime-filter classifications that may shift via the §5.4 reclassification policy (e.g., the abel `likely_convex → non_convex` reclassification documented in Sprint 25 §5.1 changed an in-scope model to `non_convex` without breaking the exclusion-set freeze).
+
+(Note: Sprint 25 BASELINE_METRICS.md §4 reported "23 total exclusions" — that count predated the Sprint 25 Day 12 saras addition. The corrected Sprint 26 Day 0 count is **24 = 21 excluded + 3 translate-gated multi-solve drivers**.)
 
 ### 5.1 MINLP out-of-scope (14)
 
