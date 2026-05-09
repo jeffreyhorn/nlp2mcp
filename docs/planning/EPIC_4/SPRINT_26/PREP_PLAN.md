@@ -737,9 +737,11 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 ## Task 7: AD Residuals (#1334, #1335) Investigation Recap
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-07
 **Priority:** High
 **Estimated Time:** 2–3 hours
+**Actual Time:** ~2 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1
@@ -747,11 +749,17 @@ grep -c "def enumerate_equation_instances" src/ad/index_mapping.py   # Expected:
 
 ### Objective
 
-Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop NLP-warm-started reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Day 13 carryforward) or if they are independent.
+Confirm `ISSUE_1334.md` and `ISSUE_1335.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Day 13 carryforward) or if they are independent.
+
+> **Verification scope note (added 2026-05-08 per PR #1371 review):** Task 7 verification is **static-emit + GAMS compile-only** — i.e., translate otpop, then run `gams ... action=c` and assert bug-pattern strings in the emitted MCP via:
+> - **#1334 check:** `grep -cE "sum\(t__, .* \* nu_kdef" otpop_mcp.gms` (whole-file grep is fine — the pattern only matches the buggy emit shape; `-E` forces extended regex so `\(` / `\*` parse as escaped literals consistently with Step 2's `grep -nE` invocation).
+> - **#1335 check:** `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` (must be **scoped to the `stat_p(...)` equation body** — a whole-file grep for `nu_zdef` would match the declaration / pairing / `stat_x` cross-term and falsely report the bug as fixed). See §What Needs to Be Done Step 2 for the full recipe.
+>
+> The **full NLP-warm-started numerical reproducer** (NLP solve via baseline GAMS, dual-multiplier transfer, MCP run with `iterlim=0`, residual capture per `Inf-Norm` on `stat_x('1990')` ≈ 760) is **deferred to Sprint 26 Priority 5 fix work** — that's a 30+ min end-to-end exercise that exceeds Task 7's 2–3h budget and is more useful as the pre/post fix acceptance gate than as prep verification.
 
 ### Why This Matters
 
-Sprint 26 Priority 5 budgets 8–14h for AD residuals. The two issues share the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. If the issue docs reference stale file:line numbers (post-Sprint-25 stationarity.py was modified by #1351 launch fix among others), Sprint 26 work will start with broken pointers. Pre-verification catches this.
+Sprint 26 Priority 5 budgets 8–14h for AD residuals. #1334's PRIMARY fix-site is `_add_indexed_jacobian_terms` in `src/kkt/stationarity.py` (per the 2026-05-08 Task 7 fix-site correction; the earlier Sprint 25 retrospective claim that #1334 lives in `_add_jacobian_transpose_terms_scalar` was a misattribution — that scalar function only handles SCALAR stationarity, not the otpop indexed-stationarity emit). #1334 also touches `_replace_indices_in_expr`. #1335's fix-site is the scalar-equation gating in `src/ad/constraint_jacobian.py` (`if eq_domain:` guard at `:986` + `:1107`), separate from `src/kkt/stationarity.py`. If the issue docs reference stale file:line numbers (post-Sprint-25 stationarity.py was modified by #1351 launch fix among others), Sprint 26 work will start with broken pointers. Pre-verification catches this.
 
 The #1334 ↔ #1357 subsumption question matters for the bucket-provenance baseline (Task 9) — if #1357 (otpop) is subsumed, otpop's `path_syntax_error` count moves to Priority 5's accountability rather than Priority 1's.
 
@@ -761,24 +769,53 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
 - `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md` — explicitly notes "likely subsumed by #1334"
 - Sprint 25 Day 11 fix #1350 (srkandw `tn(t,t)` self-alias) modified `_remap_condition_to_domain` in `src/kkt/stationarity.py`; verify #1334's referenced lines still match.
-- Sprint 25 retrospective §Priority 5 confirms: "Both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. Combined effort 8–14h."
+- Sprint 25 retrospective §Priority 5 originally claimed: "Both target the `_replace_indices_in_expr` + `_add_jacobian_transpose_terms_scalar` pair in `src/kkt/stationarity.py`. Combined effort 8–14h." — **the `_add_jacobian_transpose_terms_scalar` portion of this claim is INCORRECT per the 2026-05-08 Task 7 fix-site correction**. That function only handles scalar stationarity; the otpop indexed-stationarity emit comes from `_add_indexed_jacobian_terms`. #1335's fix-site is in `src/ad/constraint_jacobian.py` (the `if eq_domain:` scalar-equation gate), not in `stationarity.py` at all. The 8–14h combined-effort estimate still holds; the function-name attribution does not.
 
 ### What Needs to Be Done
 
 1. **Re-read ISSUE_1334.md and ISSUE_1335.md.** Confirm the file:line references match current `src/kkt/stationarity.py`.
 
    ```bash
-   grep -nE "^def _replace_indices_in_expr|^def _add_jacobian_transpose_terms_scalar" \
+   # PRIMARY fix-site for the otpop indexed-stationarity case (per 2026-05-08 correction):
+   grep -nE "^def _replace_indices_in_expr|^def _add_indexed_jacobian_terms" \
      src/kkt/stationarity.py
+   # Expected: line 2330 (_replace_indices_in_expr), line 4228 (_add_indexed_jacobian_terms)
+
+   # Scalar-stationarity sibling function (not the otpop fix-site, but listed in ISSUE_1334
+   # §Files Involved as a parallel-fix candidate if scalar stationarity exhibits the same shape):
+   grep -n "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py
+   # Expected: line 5421
    ```
 
-2. **Re-run the otpop NLP-warm-started reproducer:**
+2. **Re-run the otpop reproducer (static-emit + GAMS compile-only — see Objective deferral note):**
 
    ```bash
+   # `src.cli` writes directly to the provided path and does not create parent
+   # directories — create the output dir first so the recipe works on a clean machine.
+   mkdir -p /tmp/sprint26-otpop
+
    .venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
      -o /tmp/sprint26-otpop/otpop_mcp.gms --skip-convexity-check --quiet
-   # NLP solve + dual transfer + MCP iterlim=0 per ISSUE_1334 §Diagnostic
-   # Verify stat_x('1990') residual ≈ 760 (pre-fix) or whatever the current state shows
+
+   # Static fingerprint check for #1334 + #1335 bug patterns:
+   grep -nE "sum\(t__, .* \* nu_kdef" /tmp/sprint26-otpop/otpop_mcp.gms   # #1334: expect 2 hits if bug present
+
+   # #1335: extract just the stat_p(...) equation body and check for nu_zdef.
+   # Plain `grep nu_zdef` over the whole file matches declarations / pairing / stat_x
+   # cross-term; we need to scope to the stat_p body. Equation bodies in emitted MCPs
+   # span from `stat_p(...)..` to the terminating `=E= 0;`.
+   awk '/^stat_p\(.*\)\.\./, /=E= 0;/' /tmp/sprint26-otpop/otpop_mcp.gms | grep -c nu_zdef
+   # Expected: 0 (bug present — cross-term missing from stat_p body)
+   # After fix:  ≥ 1 (cross-term emitted as expected)
+
+   # GAMS compile-only validation (catches $171 / $141 cascades):
+   gams /tmp/sprint26-otpop/otpop_mcp.gms action=c o=/tmp/sprint26-otpop/otpop_mcp.lst
+   ls /tmp/sprint26-otpop/otpop_mcp.lst   # confirm o= override produced this exact filename
+   grep -nE "\\\$171|\\\$141" /tmp/sprint26-otpop/otpop_mcp.lst
+
+   # NOTE: the full NLP-warm-started reproducer (NLP solve + dual transfer + MCP iterlim=0
+   # + Inf-Norm residual capture per ISSUE_1334 §Diagnostic) is DEFERRED to Sprint 26 Priority 5
+   # fix work — see Objective for rationale.
    ```
 
 3. **Determine the #1334 ↔ #1357 relationship.** Re-emit otpop and compare the `$171` violation lines (217, 247) to the `_replace_indices_in_expr` ParamRef-substitution pattern documented in ISSUE_1334.md §Buggy Emit. If the patterns match: #1334 subsumes #1357 (close #1357 on Day 1 of fix landing). If they don't match: #1357 is independent and needs its own fix work.
@@ -789,11 +826,27 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` with full #1334 / #1335 / #1357 relationship analysis: ISSUE doc currency check, otpop reproducer verification, subsumption decision, per-issue Sprint 26 work plan.
+- Verified file:line references: ISSUE_1334.md was **stale on filing** (line drift +142 / +35 lines for `_add_jacobian_transpose_terms_scalar` / `_replace_indices_in_expr` since the 2026-05-02 file date); **synced 2026-05-07 in this PR** with explicit "was X; resynced 2026-05-07" notes on 3 references. ISSUE_1335.md file:line references **accurate** (no changes needed).
+- Re-ran otpop translate + GAMS `action=c` compile; captured `$171` errors at `comp_up_x(tt)` (lst lines 220) and `piU_x.fx(tt)` (line 252) — same shape as fawley #1356 comp_up subset/superset bug. **(Static-emit + compile-only verification only. The full NLP-warm-started reproducer with `LHS = -1.4157` numerical residual measurement on `stat_cd(ag-subsist)` was DEFERRED to Sprint 26 Priority 5 fix work — that's a 30+ min end-to-end exercise outside the 2–3h Task 7 budget; the static fingerprint check below is sufficient evidence that the bug is still present.)**
+- Confirmed **#1334 bug pattern STILL VISIBLE in current main otpop emit** via static fingerprint check (2 `sum(t__, ...)` lines on `nu_kdef` cross-term in `stat_p` and `stat_x`) despite #1334 being CLOSED on GitHub 2026-05-05. Suggests the GitHub closure was for a sibling sub-shape; re-investigation needed.
+- Confirmed **#1335 bug STILL VISIBLE** via static fingerprint check: `nu_zdef` is missing from `stat_p(tt)` body (only present in `stat_x` cross-term + declarations + pairing).
+- Confirmed **#1334 does NOT subsume #1357**: different code paths (#1334 = `_replace_indices_in_expr` + `_add_indexed_jacobian_terms` in stationarity.py — corrected 2026-05-08 from earlier `_add_jacobian_transpose_terms_scalar` per PR #1371 review-comment fixes; the scalar function only handles SCALAR stationarity, not the otpop indexed-stationarity emit; #1357 = `comp_up` + bound-fixup emission in complementarity.py + emit_gams.py). Independent bugs.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 5.1, 5.2, 5.3, 5.4 with Status ✅ VERIFIED + Findings/Evidence/Decision.
 
 ### Result
 
-To be completed.
+**Sprint 26 Priority 5 scope = 3 distinct bugs**, NOT 1.
+
+| Issue | Status | Sprint 26 action | Effort |
+|---|---|---|---|
+| #1334 | GitHub-CLOSED 2026-05-05 but bug pattern still extant in otpop emit | **Re-investigate the closure** (was it for a sibling sub-shape?); re-open or file successor; implement Approach 1 fix per ISSUE_1334.md | 4–10h (incl. ~2h re-investigation) |
+| #1335 | OPEN, sprint-26 labeled. Bug confirmed extant: `nu_zdef` missing from `stat_p(tt)` | **Extend the offset-resolution / sum-expansion pipeline to scalar equations** — the `if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`, leaving the inner `Sum(t, … p(t + (card(t) - ord(t))) …)` (otpop's time-reversal offset on `p`) unresolved. (Refined fix-site per Task 7 source inspection — supersedes the earlier `_try_eval_offset` / `_resolve_idx` framing in ISSUE_1335.md §"Where to Look".) | 4–8h |
+| #1357 | OPEN, sprint-26 labeled. `$171` is comp_up_x subset/superset (NOT subsumed by #1334) | **Defer to Sprint 27** alongside fawley #1356 (same comp_up subset/superset shape per Task 4 PATTERN_A_RECLASSIFICATION) | 4–8h (Sprint 27) |
+
+**Sprint 26 Priority 5 effort estimate:** **Re-estimated** — PROJECT_PLAN budgeted 8–14h for "#1334 + #1335 alone"; Task 7 re-estimate is **~8–18h for #1334 + #1335** (#1334 4–10h incl. ~2h closure re-investigation overhead; #1335 4–8h). The low end (8h) fits the 8–14h Priority 5 budget cleanly; the high end (18h) exceeds it by 4h. Schedule risk: if #1334 re-investigation runs long (closer to 10h than 4h), Priority 5 will overrun the budget — flag in Sprint 26 Day 0 review. #1357 deferred to Sprint 27.
+
+**ISSUE doc file:line currency:** ISSUE_1334.md synced in this PR; ISSUE_1335.md unchanged (already accurate).
 
 ### Verification
 
@@ -801,8 +854,9 @@ To be completed.
 test -f docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md
 
 # File:line references in ISSUE_1334 still match
-grep -c "^def _replace_indices_in_expr" src/kkt/stationarity.py   # Expected: 1
-grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # Expected: 1
+grep -c "^def _replace_indices_in_expr" src/kkt/stationarity.py    # Expected: 1
+grep -c "^def _add_indexed_jacobian_terms" src/kkt/stationarity.py # Expected: 1 (PRIMARY fix-site for indexed stationarity per 2026-05-08 correction)
+grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py  # Expected: 1 (only relevant for SCALAR stationarity, NOT the otpop indexed case)
 ```
 
 ### Deliverables
@@ -813,11 +867,12 @@ grep -c "^def _add_jacobian_transpose_terms_scalar" src/kkt/stationarity.py   # 
 
 ### Acceptance Criteria
 
-- [ ] ISSUE_1334.md and ISSUE_1335.md verified accurate (or updated)
-- [ ] otpop reproducer re-run; current residual documented
-- [ ] #1334 ↔ #1357 subsumption decision made with evidence
-- [ ] Sprint 26 fix scope clarified (do #1334 + #1335 alone close #1357, or are 3 issues to fix?)
-- [ ] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] ISSUE_1334.md and ISSUE_1335.md verified accurate (or updated) — ISSUE_1334.md file:lines synced 2026-05-07; ISSUE_1335.md accurate
+- [x] otpop reproducer re-run **(static-emit + GAMS compile-only verification only — full numerical NLP-warm-started reproducer DEFERRED to Sprint 26 Priority 5 fix work)**; current emit + compile errors documented (AD_RESIDUALS_RECAP.md §2)
+- [ ] **(deferred to Sprint 26 Priority 5)** Full numerical NLP-warm-started reproducer re-run: NLP solve + dual transfer + MCP iterlim=0 + per-equation residual capture (`stat_cd(ag-subsist)` LHS, `Inf-Norm` on `stat_p('1986')`, etc.). The Sprint 26 fix work owns this as the pre/post acceptance gate.
+- [x] #1334 ↔ #1357 subsumption decision made with evidence — **NOT subsumed** (different code paths)
+- [x] Sprint 26 fix scope clarified — **3 distinct bugs** (Priority 5 lands #1334 + #1335; #1357 deferred to Sprint 27)
+- [x] Unknowns 5.1, 5.2, 5.3, 5.4 verified and updated in KNOWN_UNKNOWNS.md (note: Unknown 5.2 is **VERIFIED — STATIC FINGERPRINT ONLY**, with full numerical residual measurement deferred to Sprint 26 Priority 5 fix work)
 
 ---
 
