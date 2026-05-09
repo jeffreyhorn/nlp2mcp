@@ -505,7 +505,7 @@ These don't block the design but are worth flagging for the implementer:
 ## Acceptance Criteria (per PREP_PLAN.md §Task 8)
 
 - [x] Trigger file patterns documented (§Trigger Conditions)
-- [x] Target model list committed (≥ Pattern C 4 + ≥ 3 Tier 0 canaries — design specifies 11 + 4)
+- [x] Target model list designed / specified (≥ Pattern C 4 + ≥ 3 Tier 0 canaries — design specifies 11 + 4 for `.github/path-solve-ci-targets.txt`; the file itself is committed during Sprint 26 implementation alongside the workflow YAML, per the design-only scope of this PR)
 - [x] PATH timeout policy documented (default 30s, configurable via target-list annotation)
 - [x] Failure handling policy documented (hard-fail Tier 0/1; soft-fail Pattern C)
 - [x] CI overhead estimate documented (~3-8min for emit-affecting PRs; within PR latency budget)
