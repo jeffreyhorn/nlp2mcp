@@ -19,7 +19,7 @@ Sprint 26's Priority 1 (Pattern C generalization) is structurally similar. PR19 
 
 ## Constraint: GAMS is not currently installed in CI
 
-The repo's existing CI workflows (`ci.yml`, `gamslib-regression.yml`, `lint.yml`, `performance-check.yml`, `nightly.yml`) do not install GAMS. The `tests/integration/test_pipeline_determinism.py` harness sidesteps this by running `gams action=c` compile-only on the developer machine, and Sprint 25's `DESIGN_ALIAS_AD_ROLLOUT.md` §6.3 explicitly notes "CI does not install GAMS".
+The repo's existing CI workflows (`ci.yml`, `gamslib-regression.yml`, `lint.yml`, `performance-check.yml`, `nightly.yml`) do not install GAMS. The existing `tests/integration/test_pipeline_determinism.py` harness only invokes the Python CLI as a subprocess and compares emitted MCP bytes — it does **not** spawn GAMS at all. The closest thing to a compile-only validation harness is `scripts/gamslib/test_solve.py::solve_mcp` (a developer-machine pipeline script, not a CI test), and Sprint 25's `DESIGN_ALIAS_AD_ROLLOUT.md` §6.3 explicitly notes "CI does not install GAMS".
 
 **PR19 fundamentally requires GAMS in CI.** This design proposes **GAMS demo install** as the path forward — the demo edition is free, has variable / equation / nonzero limits that all 11 Tier 0/1 canary models fit within (largest is `quocge` at 158 equations / 158 variables / 671 nonzeros — well under the 300 / 300 / 2000 demo cap), and adds ~90s install overhead per CI run.
 
@@ -56,7 +56,7 @@ paths:
 
 ### PR-label exception
 
-Refactor-only PRs that don't change emit semantics can opt out via the `skip-emit-solve-ci` PR label (plain text, no brackets — consistent with the planned `byte-stable-refactor` label from Task 10). When the label is present, the workflow short-circuits to a skipped status with an explanatory comment.
+Refactor-only PRs that don't change emit semantics can opt out via the `skip-emit-solve-ci` PR label (plain text, no brackets — consistent with the planned `byte-stable-refactor` label from Task 10). When the label is present, the workflow takes an **early-success bypass path**: subsequent solve steps are gated `if: steps.check-label.outputs.skip != 'true'`, the workflow exits 0 (reports as success in the Actions UI; GitHub Actions does not provide a separate "skipped" status for label-gated workflow bodies), and a dedicated PR-comment step posts a visible bypass notice so reviewers see the skip in the PR conversation, not just the Actions tab.
 
 **Reviewer responsibility:** if the PR adds the `skip-emit-solve-ci` label, reviewers must verify that byte-diff regression tests cover the change before merge. Sprint 25's `#1271` dispatcher refactor is the canonical example: 140 LOC removed, byte-diff verified zero diffs across 141 translating models — `skip-emit-solve-ci` would be appropriate there.
 
@@ -113,12 +113,19 @@ The 4 Pattern C target models are added as **soft-fail informational** signal: w
 
 ## PATH Timeout
 
-**Per-model timeout: 30 seconds.** Set via the `reslim=30` GAMS option on the solve invocation:
+**Per-model timeout: 30 seconds.** Set via the `reslim=30` GAMS option on the solve invocation. Run with `cwd=` set to the repo root and `ScrDir=` redirecting only the scratch files (this mirrors `scripts/gamslib/test_solve.py::solve_mcp` per Sprint 25 #1345/#1346/#1347 fixes — the repo-relative `$include "data/gamslib/raw/<model>.gms"` line in `--nlp-presolve`-emitted MCPs requires the working directory to be the repo root):
 
 ```bash
+# Run from repo root; redirect only scratch files via ScrDir.
+# Do NOT set curdir= — it would break the repo-relative `$include` resolution
+# in any presolve-variant MCPs that reach this list in the future.
+cd "$REPO_ROOT"
 gams "data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 \
-  ScrDir=/tmp/pr19-scratch/$m curdir=/tmp/pr19-scratch/$m
+  ScrDir=/tmp/pr19-scratch/$m \
+  o=/tmp/pr19-scratch/$m/${m}_mcp.lst
 ```
+
+(None of the 15 currently-listed target models — 11 Tier 0/1 canaries + 4 Pattern C target models — use `$include`. The `cwd=$REPO_ROOT` + `ScrDir=` recipe is preserved for future-proofing in case a `_presolve.gms` variant joins the target list.)
 
 ### Local timing verification (current main, 2026-05-08)
 
@@ -142,7 +149,11 @@ Per Unknown 6.1 research:
 | fawley | 2 | 0.56s | (compile error `$171`, fast-fail) |
 | otpop | 2 | 0.54s | (compile error `$141`, fast-fail) |
 
-Sum of Tier 0/1 wall times: **15.27s** (machine: macOS / DEX-DEG x86 64bit, GAMS 53.1.0, current `main` = ea7016bc + 0e553a25 + 31e1bbe5).
+Sum of Tier 0/1 wall times: **15.27s**. Timing run details:
+
+- **Repo commit:** `4b65f4b9` (current `main` after PR #1371 merge, 2026-05-08)
+- **GAMS version:** 53.1.0 (build 6a03d3b9 — internal GAMS build hash, not a git commit)
+- **Machine:** macOS / DEX-DEG x86 64bit
 
 ### CI overhead estimate
 
@@ -261,10 +272,32 @@ jobs:
               core.notice('PR has `skip-emit-solve-ci` label — bypassing PR19 solve validation.');
             }
 
-      - name: Skip workflow when label present
+      - name: Post bypass notice to PR
+        if: steps.check-label.outputs.skip == 'true'
+        uses: actions/github-script@v7
+        with:
+          # Left-aligned template literal (no leading spaces inside the
+          # backticks) — Markdown treats indented lines as code blocks, which
+          # would render the table / headers as a literal code block.
+          script: |
+            const body = [
+              '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
+              '',
+              'PR has the `skip-emit-solve-ci` label — solve validation bypassed.',
+              '',
+              '**Reviewer responsibility:** verify that byte-diff regression tests cover the change before merge. If the PR turns out to alter emit shape, remove the label and re-run.',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+
+      - name: Skip remaining steps when label present
         if: steps.check-label.outputs.skip == 'true'
         run: |
-          echo "PR labeled `skip-emit-solve-ci`; PR19 solve validation bypassed."
+          echo "PR labeled skip-emit-solve-ci; PR19 solve validation bypassed."
           exit 0
 
       - uses: actions/checkout@v4
@@ -354,24 +387,30 @@ jobs:
               ? '✅ PASS (Tier 0/1 all green)'
               : '❌ FAIL (Tier 0/1 regression)';
 
-            const body = `## 🧪 PR19 Pre-Merge Solve Validation Results
-
-            **Trigger:** files changed under \`src/emit/\`, \`src/kkt/stationarity.py\`, ...
-
-            ### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01.results.length}
-
-            | Model | rc | Time | MODEL STATUS |
-            |---|---|---|---|
-            ${tier01Rows}
-
-            ### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternC.results.length}
-
-            | Model | rc | Time | MODEL STATUS | Note |
-            |---|---|---|---|---|
-            ${patternCRows}
-
-            **Overall:** ${overall}
-            `;
+            // Build the body line-by-line so we don't depend on template-literal
+            // indentation. Markdown treats lines that start with 4+ spaces as
+            // code blocks — a multi-line template literal embedded in a
+            // YAML-indented `script:` block would silently fold the table /
+            // headers into a literal code block.
+            const body = [
+              '## 🧪 PR19 Pre-Merge Solve Validation Results',
+              '',
+              '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, ...',
+              '',
+              `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01.results.length}`,
+              '',
+              '| Model | rc | Time | MODEL STATUS |',
+              '|---|---|---|---|',
+              tier01Rows,
+              '',
+              `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternC.results.length}`,
+              '',
+              '| Model | rc | Time | MODEL STATUS | Note |',
+              '|---|---|---|---|---|',
+              patternCRows,
+              '',
+              `**Overall:** ${overall}`,
+            ].join('\n');
 
             // Find existing comment (per gamslib-regression.yml pattern)
             const { data: comments } = await github.rest.issues.listComments({
@@ -415,7 +454,7 @@ jobs:
 Two helper scripts (to be implemented during Sprint 26 execution, not part of this design task):
 
 - **`scripts/ci/parse_pr19_targets.py`** — parses `.github/path-solve-ci-targets.txt` into JSON (`{tier_0_1: [...], pattern_c: [...]}`). ~30 LOC.
-- **`scripts/ci/run_pr19_solves.py`** — iterates a target list, invokes `gams ... reslim=30`, captures exit code + MODEL STATUS + SOLVER STATUS from `.lst`, writes JSON results. Hard-fail exit when `--soft-fail` flag is absent. ~80 LOC.
+- **`scripts/ci/run_pr19_solves.py`** — iterates a target list, invokes `gams ... reslim=30` with `cwd=$REPO_ROOT` + `ScrDir=<tmpdir>` (mirroring `scripts/gamslib/test_solve.py::solve_mcp` per Sprint 25 #1345/#1346/#1347 — required so any future presolve-variant MCP's repo-relative `$include` resolves), captures exit code + MODEL STATUS + SOLVER STATUS from `.lst`, writes JSON results. Hard-fail exit when `--soft-fail` flag is absent. ~80 LOC.
 
 These scripts are local-runnable for developer testing (no CI dependency).
 

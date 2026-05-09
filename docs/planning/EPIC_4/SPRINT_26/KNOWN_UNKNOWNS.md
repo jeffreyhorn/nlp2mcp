@@ -1795,7 +1795,11 @@ CI engineer (Task 8)
 | splcge | 0 | 1.05s | 1 Optimal |
 | paklive | 0 | 1.01s | 1 Optimal |
 
-Reference machine: macOS / DEX-DEG x86 64bit, GAMS 53.1.0 (commit `6a03d3b9`).
+Timing-run details:
+
+- **Repo commit:** `4b65f4b9` (current `main` after PR #1371 merge, 2026-05-08)
+- **GAMS version:** 53.1.0 (build `6a03d3b9` — internal GAMS build hash, not a git commit)
+- **Machine:** macOS / DEX-DEG x86 64bit
 
 **Per-model configurability:** to keep flake-tolerance future-proof, the design specifies that the per-model PATH timeout is configurable via the target-list file (e.g., `paklive  # tier=1 reslim=60`). Default 30s applies when no `reslim=N` annotation is present. This addresses Research Question 4.
 
