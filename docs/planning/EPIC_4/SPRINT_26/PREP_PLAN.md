@@ -931,7 +931,7 @@ Sprint 25's #1308 Pattern C launch fix passed all unit tests and `gams action=c`
 
 - Created `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` with full PR19 design: trigger conditions (file paths + `skip-emit-solve-ci` PR-label exception), 15-model target list (11 Tier 0/1 hard-fail + 4 Pattern C soft-fail), 30s/model PATH timeout (configurable via target-list annotation), failure-handling policy, draft workflow YAML, helper-script outline, and test plan.
 - Surveyed all 6 existing CI workflows (`ci.yml`, `lint.yml`, `performance-check.yml`, `gamslib-regression.yml`, `nightly.yml`, `publish-pypi.yml`) — none install GAMS today; PR19 design recommends GAMS demo install (~90s overhead, cacheable; all 11 canaries fit demo limits).
-- Timed all 11 Tier 0/1 canaries locally on current main (commit `4b65f4b9`): 0.6s–4.3s per model; sum 15.27s. 30s budget gives 7×–30× margin per model.
+- Timed all 11 Tier 0/1 canaries locally on current main (commit `4b65f4b9`): 1.01s–4.26s per model; sum 15.27s. 30s budget gives 7×–30× margin per model.
 - Timed all 4 Pattern C target models: rc=2 fast-fail at compile (`$141` / `$171` cascades on camcge / cesam2 / fawley / otpop) — confirms the soft-fail design is correct (these never reach the PATH solver pre-fix).
 - CI overhead: ~3-8min worst case; comparable to existing `ci.yml` runtime (~3-4min).
 - Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknowns 6.1, 6.2 with Status ✅ VERIFIED + Findings/Evidence/Decision.

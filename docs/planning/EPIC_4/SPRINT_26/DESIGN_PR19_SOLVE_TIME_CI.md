@@ -19,7 +19,7 @@ Sprint 26's Priority 1 (Pattern C generalization) is structurally similar. PR19 
 
 ## Constraint: GAMS is not currently installed in CI
 
-The repo's existing CI workflows (`ci.yml`, `gamslib-regression.yml`, `lint.yml`, `performance-check.yml`, `nightly.yml`) do not install GAMS. The existing `tests/integration/test_pipeline_determinism.py` harness only invokes the Python CLI as a subprocess and compares emitted MCP bytes — it does **not** spawn GAMS at all. The closest thing to a compile-only validation harness is `scripts/gamslib/test_solve.py::solve_mcp` (a developer-machine pipeline script, not a CI test), and Sprint 25's `DESIGN_ALIAS_AD_ROLLOUT.md` §6.3 explicitly notes "CI does not install GAMS".
+The repo's existing CI workflows (`ci.yml`, `gamslib-regression.yml`, `lint.yml`, `performance-check.yml`, `nightly.yml`) do not install GAMS. The existing `tests/integration/test_pipeline_determinism.py` harness only invokes the Python CLI as a subprocess and compares emitted MCP bytes — it does **not** spawn GAMS at all. The closest thing to a GAMS-invoking validation harness is `scripts/gamslib/test_solve.py::solve_mcp` (a developer-machine pipeline script, not a CI test — and it runs a full PATH solve via `reslim=...` + `Solve ... using MCP`, not a compile-only check), and Sprint 25's `DESIGN_ALIAS_AD_ROLLOUT.md` §6.3 explicitly notes "CI does not install GAMS".
 
 **PR19 fundamentally requires GAMS in CI.** This design proposes **GAMS demo install** as the path forward — the demo edition is free, has variable / equation / nonzero limits that all 11 Tier 0/1 canary models fit within (largest is `quocge` at 158 equations / 158 variables / 671 nonzeros — well under the 300 / 300 / 2000 demo cap), and adds ~90s install overhead per CI run.
 

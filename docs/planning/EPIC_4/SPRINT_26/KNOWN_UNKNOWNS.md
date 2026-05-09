@@ -1779,7 +1779,7 @@ CI engineer (Task 8)
 **Verified by:** Task 8 (Design Pre-Merge Solve-Time Validation CI PR19)
 **Date:** 2026-05-08
 
-**Findings:** 30s/model PATH-solve budget is **highly conservative** — local timing on current main (commit `4b65f4b9`) shows the 11 Tier 0/1 canaries solve in 0.6s–4.3s each (largest = `dispatch` at 4.26s; sum = 15.27s). Even at 2× CI machine slowdown, the worst case remains under 10s/model. The 30s budget therefore provides **3× to 30× margin** depending on the model — flake risk is negligible.
+**Findings:** 30s/model PATH-solve budget is **highly conservative** — local timing on current main (commit `4b65f4b9`) shows the 11 Tier 0/1 canaries solve in 1.01s–4.26s each (largest = `dispatch` at 4.26s; smallest tied at sparta / paklive ≈ 1.01s; sum = 15.27s). Even at 2× CI machine slowdown, the worst case remains under 10s/model. The 30s budget therefore provides **7× to 30× margin** depending on the model — flake risk is negligible.
 
 | Model | rc | Wall time (local) | MODEL STATUS |
 |---|---|---|---|
