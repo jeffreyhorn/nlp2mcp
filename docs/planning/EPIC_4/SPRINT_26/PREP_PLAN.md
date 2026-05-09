@@ -1125,7 +1125,7 @@ Sprint 25's #1349 `.fx → .l` side-effect fix passed pindyck integration tests 
 
 3. **Add the rule** to the appropriate `CONTRIBUTING.md` section.
 
-4. **Add a corresponding entry** to `.github/PULL_REQUEST_TEMPLATE.md` (if one exists) under the checklist.
+4. **Add a corresponding entry** to `.github/pull_request_template.md` (if one exists) under the checklist.
 
 ### Changes
 
@@ -1136,7 +1136,7 @@ Sprint 25's #1349 `.fx → .l` side-effect fix passed pindyck integration tests 
   - **What reviewers must do** — read variable bounds / init group + affected equation block(s); look for clobber patterns, ordering bugs, spurious Sum-wraps / missing cross-terms (with cross-references to #1374 / #1334 / #1335 patterns).
   - **Refactor-only exception** — `byte-stable-refactor` PR label + PR-description requirement (byte-diff command, result, justification). #1271 dispatcher refactor cited as canonical example.
   - **Companion `skip-emit-solve-ci` label distinction** — explicit table showing the two labels gate different things (PR14 artifact-in-diff vs PR19 CI workflow).
-- Added new section **"Emit-Affecting Changes (PR14)"** to `.github/PULL_REQUEST_TEMPLATE.md`, placed after §"CI Workflow Changes" and before §"Checklist". Includes the artifact-in-diff checklist + the `byte-stable-refactor` exception checklist + a link back to CONTRIBUTING.md §"Emit-Affecting PRs".
+- Added new section **"Emit-Affecting Changes (PR14)"** to `.github/pull_request_template.md`, placed after §"CI Workflow Changes" and before §"Checklist". Includes the artifact-in-diff checklist + the `byte-stable-refactor` exception checklist + a link back to CONTRIBUTING.md §"Emit-Affecting PRs".
 - Surveyed Sprint 24/25 merged PRs (`gh pr list --state merged --search "merged:>=2026-04-01 merged:<2026-05-09"` filtered by refactor-keyword regex): 5 candidates out of 102 PRs in window. Only **#1271 dispatcher refactor (sub-PR of #1353)** would have qualified for the `byte-stable-refactor` exception under the surveyed criteria — estimated exception frequency **~1 of 100 emit-affecting PRs**.
 - Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknown 6.4 with Status ✅ VERIFIED + Findings/Evidence/Decision (refactor-exception design rationale + Sprint 24/25 survey output).
 
@@ -1150,21 +1150,21 @@ The PR14 reaffirmation is now codified as a hard contributor rule with documente
 
 ```bash
 grep -cE "Emit-affecting PRs|src/emit|byte-stable-refactor" CONTRIBUTING.md   # Expected: ≥ 3
-test -f .github/PULL_REQUEST_TEMPLATE.md && \
-  grep -cE "regenerated.*\.gms|Emit-affecting" .github/PULL_REQUEST_TEMPLATE.md
+test -f .github/pull_request_template.md && \
+  grep -cE "regenerated.*\.gms|Emit-affecting" .github/pull_request_template.md
 ```
 
 ### Deliverables
 
 - Updated `CONTRIBUTING.md` with the emit-PR `.gms` artifact rule
-- Updated `.github/PULL_REQUEST_TEMPLATE.md` (if it exists)
+- Updated `.github/pull_request_template.md` (if it exists)
 - Updated KNOWN_UNKNOWNS.md with verification results for Unknown 6.4
 
 ### Acceptance Criteria
 
 - [x] CONTRIBUTING.md has the new rule with rationale + regeneration command + reviewer instruction — new section "Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" added with the rule, why-it-matters case study (Sprint 25 #1349 / #1360), regeneration command (single-model + full-pipeline variants), and reviewer-responsibility checklist
 - [x] Refactor-only exception documented (`byte-stable-refactor` label + PR description requirement) — exception subsection includes the byte-diff verification checklist + #1271 dispatcher refactor as canonical example
-- [x] PULL_REQUEST_TEMPLATE.md updated with checklist entry — new section "Emit-Affecting Changes (PR14)" added after §"CI Workflow Changes" with both the artifact-in-diff checklist and the `byte-stable-refactor` exception checklist
+- [x] pull_request_template.md updated with checklist entry — new section "Emit-Affecting Changes (PR14)" added after §"CI Workflow Changes" with both the artifact-in-diff checklist and the `byte-stable-refactor` exception checklist
 - [x] Unknown 6.4 verified and updated in KNOWN_UNKNOWNS.md — Status ✅ VERIFIED with Sprint 24/25 PR-survey output (5 candidates / 102 PRs; ~1 of 100 expected exception frequency) + design decision rationale
 
 ---

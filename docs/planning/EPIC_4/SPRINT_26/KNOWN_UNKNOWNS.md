@@ -2017,7 +2017,7 @@ Sprint planning (Task 10)
 3. **Self-policing:** reviewers verify the label conditions are met. CI cannot enforce this directly (no automated check that the byte-diff was actually performed); the responsibility is split between PR author (apply label correctly) and reviewer (verify the description).
 4. **Coverage scope:** rule applies to `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py` — same surface as PR19's trigger paths (Task 8 design) for consistency.
 
-**Evidence:** `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + `.github/PULL_REQUEST_TEMPLATE.md` §"Emit-Affecting Changes (PR14)" (both committed in this Task 10 PR).
+**Evidence:** `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + `.github/pull_request_template.md` §"Emit-Affecting Changes (PR14)" (both committed in this Task 10 PR).
 
 **Decision:** rule wording committed to CONTRIBUTING.md with the `byte-stable-refactor` exception. The PR-description requirement is documented and enforced via reviewer responsibility (no CI). The companion `skip-emit-solve-ci` label (PR19, Task 8) is explicitly distinguished — these two labels gate different things (artifact-in-diff rule vs. PR19 CI workflow) and a pure refactor PR may need both labels.
 
