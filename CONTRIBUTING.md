@@ -154,6 +154,82 @@ All PRs must pass:
 
 ---
 
+## Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)
+
+**Codified per Sprint 25 retrospective recommendation PR14 (reaffirmation of Sprint 24's PR14).**
+
+### The rule
+
+If your PR modifies any of the following, you **MUST** include at least one regenerated `_mcp.gms` artifact from an affected model in the PR diff, and reviewers **MUST** read the relevant section of the regenerated file:
+
+- `src/emit/**/*.py`
+- `src/kkt/stationarity.py`
+- `src/kkt/complementarity.py`
+- `src/ad/derivative_rules.py`
+- `src/ad/constraint_jacobian.py`
+
+### Why
+
+Sprint 25 PR #1349 introduced a per-instance `.l` override emit-ordering bug that clobbered ~120 lines of `.l = expr` overrides in `clearlak_mcp.gms`. The bug **passed all unit tests + `gams action=c` compile-only validation** and was caught only by Copilot reading the regenerated `clearlak_mcp.gms` during PR #1360 review — a 5-minute manual scan that would have caught it at the original PR #1349 merge.
+
+Unit tests + compile validation cannot reliably detect emit-shape regressions because:
+- Unit tests assert on AST/IR structure or per-token strings, not on the cross-cutting interaction of multiple emit groups.
+- `gams action=c` accepts emit ordering that's syntactically valid but semantically clobbers (e.g., a `.l = expr` override followed by a bulk init `.l = default`).
+
+The companion automated check is **PR19** (Sprint 26 Task 8 design — pre-merge solve-time validation CI). PR19 catches a different failure mode (PATH-solve-time regressions on canary models) and does **not** replace human review of the emitted `.gms`.
+
+### Regeneration command
+
+```bash
+# Identify an affected model. Tier 0/1 canaries are usually the easiest to read:
+#   dispatch, quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive
+# Or a Pattern C target (camcge / cesam2 / fawley / otpop) if your PR targets that work.
+
+# Regenerate just the affected model:
+mkdir -p data/gamslib/mcp
+.venv/bin/python -m src.cli "data/gamslib/raw/<model>.gms" \
+    -o "data/gamslib/mcp/<model>_mcp.gms" \
+    --skip-convexity-check --quiet
+
+# Or regenerate the entire pipeline (slow — ~2-3h, only if your PR has corpus-wide impact):
+.venv/bin/python scripts/gamslib/run_full_test.py --quiet
+```
+
+The regenerated `data/gamslib/mcp/<model>_mcp.gms` file (or files) goes in the PR diff alongside your `src/` changes.
+
+### What reviewers must do
+
+1. **Read the relevant section** of the regenerated `_mcp.gms` — at minimum the variable bounds / init group + the equation block(s) your PR touches.
+2. **Look for clobber patterns** — duplicate assignments where one silently overrides the other (e.g., `var.l(idx) = expr` followed by `var.l(idx) = 1.0`).
+3. **Look for ordering bugs** — clamps applied AFTER explicit overrides (e.g., `v.l('h0') = 0` followed by `v.l(h) = min(max(..., 1e-6), ...)` — see #1374 rocket case).
+4. **Spot-check stationarity emit shape** — for `src/kkt/stationarity.py` PRs, read the `stat_<var>` blocks for affected variables; look for spurious `Sum((...,), ...)` wraps or missing cross-terms (#1334 / #1335 patterns).
+
+### Exception: refactor-only PRs (`byte-stable-refactor` label)
+
+If your PR is a **pure refactor** that you have byte-diff-verified produces zero changes in the emitted `_mcp.gms` files across all currently-translating models, you may apply the **`byte-stable-refactor`** PR label to bypass this rule.
+
+**Reviewer responsibility when the label is present:** verify the PR description includes:
+- The byte-diff verification command actually run (e.g., `diff -r /tmp/pre-mcp /tmp/post-mcp`).
+- The result (e.g., "0 diffs across 141 currently-translating models per `PYTHONHASHSEED=0`").
+- A justification for why no `.gms` artifact is included.
+
+The canonical Sprint 24/25 example: PR #1353's #1271 dispatcher refactor — collapsed `_loop_tree_to_gams_subst_dispatch` into `_loop_tree_to_gams(node, *, token_subst=None)`, removed ~140 LOC, byte-diff verified zero diffs across 141 currently-translating models. That PR would have qualified for `byte-stable-refactor` in the Task 10 design.
+
+**Estimated exception frequency:** ~1 of 100 emit-affecting PRs based on the Sprint 24/25 PR-title survey. The exception exists for the genuine refactor case; do not use it to bypass the rule for functional changes.
+
+### Companion: `skip-emit-solve-ci` label (PR19, Sprint 26 Task 8)
+
+Note that `byte-stable-refactor` is **distinct from** the `skip-emit-solve-ci` label (PR19 design — Sprint 26 Task 8 `DESIGN_PR19_SOLVE_TIME_CI.md`). The two labels gate different things:
+
+| Label | Gates | Sprint of origin |
+|---|---|---|
+| `byte-stable-refactor` | This PR14 rule (regenerated `.gms` artifact in diff) | Sprint 26 Task 10 (this rule) |
+| `skip-emit-solve-ci` | The PR19 CI workflow (pre-merge PATH solve on canaries) | Sprint 26 Task 8 |
+
+A pure refactor PR may need both labels; a functional emit change typically gets neither.
+
+---
+
 ## Project Structure
 
 ```

@@ -1091,9 +1091,11 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 
 ## Task 10: Update CONTRIBUTING.md for Emit-PR `.gms` Diffs (PR14 Reaffirmation)
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-09
 **Priority:** Medium
 **Estimated Time:** 1 hour
+**Actual Time:** ~45 min
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -1127,11 +1129,22 @@ Sprint 25's #1349 `.fx → .l` side-effect fix passed pindyck integration tests 
 
 ### Changes
 
-To be completed.
+- Added new top-level section **"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)"** to `CONTRIBUTING.md`, placed after §"Development Workflow" → §"CI/CD Requirements" and before §"Project Structure". Section includes:
+  - **The rule** — file-pattern triggers (extended beyond the prompt's 2 patterns to the 5-file surface that matches PR19's trigger paths from Task 8: `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py` — keeps both rules' surfaces consistent).
+  - **Why** — Sprint 25 #1349 / #1360 case study; rationale for why unit + compile-only validation is insufficient (with explicit annotation that PR19 catches a different failure mode and does NOT replace human review).
+  - **Regeneration command** — single-model + full-pipeline variants.
+  - **What reviewers must do** — read variable bounds / init group + affected equation block(s); look for clobber patterns, ordering bugs, spurious Sum-wraps / missing cross-terms (with cross-references to #1374 / #1334 / #1335 patterns).
+  - **Refactor-only exception** — `byte-stable-refactor` PR label + PR-description requirement (byte-diff command, result, justification). #1271 dispatcher refactor cited as canonical example.
+  - **Companion `skip-emit-solve-ci` label distinction** — explicit table showing the two labels gate different things (PR14 artifact-in-diff vs PR19 CI workflow).
+- Added new section **"Emit-Affecting Changes (PR14)"** to `.github/PULL_REQUEST_TEMPLATE.md`, placed after §"CI Workflow Changes" and before §"Checklist". Includes the artifact-in-diff checklist + the `byte-stable-refactor` exception checklist + a link back to CONTRIBUTING.md §"Emit-Affecting PRs".
+- Surveyed Sprint 24/25 merged PRs (`gh pr list --state merged --search "merged:>=2026-04-01 merged:<2026-05-09"` filtered by refactor-keyword regex): 5 candidates out of 102 PRs in window. Only **#1271 dispatcher refactor (sub-PR of #1353)** would have qualified for the `byte-stable-refactor` exception under the surveyed criteria — estimated exception frequency **~1 of 100 emit-affecting PRs**.
+- Updated `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` Unknown 6.4 with Status ✅ VERIFIED + Findings/Evidence/Decision (refactor-exception design rationale + Sprint 24/25 survey output).
 
 ### Result
 
-To be completed.
+The PR14 reaffirmation is now codified as a hard contributor rule with documented exception mechanism. Sprint 26 PRs that touch emit-affecting files MUST include a regenerated `_mcp.gms` artifact (or apply the `byte-stable-refactor` label with byte-diff verification documented in the PR description). The rule is enforced via reviewer responsibility — no CI check, but the PR template's checklist makes the obligation visible at PR-creation time.
+
+**Coverage scope alignment:** the rule's trigger paths intentionally match Task 8's PR19 trigger paths (5 files). Sprint 26 emit-affecting PRs will get both signals — automated PR19 PATH-solve validation AND mandatory `.gms` artifact in the diff for human review. The two checks are complementary: PR19 catches solve-time regressions on canaries (the failure mode that bit Sprint 25 #1308 launch); PR14 catches emit-shape clobbers that pass compile + canary solves but degrade other models (the failure mode that bit Sprint 25 #1349 clearlak).
 
 ### Verification
 
@@ -1149,10 +1162,10 @@ test -f .github/PULL_REQUEST_TEMPLATE.md && \
 
 ### Acceptance Criteria
 
-- [ ] CONTRIBUTING.md has the new rule with rationale + regeneration command + reviewer instruction
-- [ ] Refactor-only exception documented (`byte-stable-refactor` label + PR description requirement)
-- [ ] PULL_REQUEST_TEMPLATE.md (if it exists) updated with checklist entry
-- [ ] Unknown 6.4 verified and updated in KNOWN_UNKNOWNS.md
+- [x] CONTRIBUTING.md has the new rule with rationale + regeneration command + reviewer instruction — new section "Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" added with the rule, why-it-matters case study (Sprint 25 #1349 / #1360), regeneration command (single-model + full-pipeline variants), and reviewer-responsibility checklist
+- [x] Refactor-only exception documented (`byte-stable-refactor` label + PR description requirement) — exception subsection includes the byte-diff verification checklist + #1271 dispatcher refactor as canonical example
+- [x] PULL_REQUEST_TEMPLATE.md updated with checklist entry — new section "Emit-Affecting Changes (PR14)" added after §"CI Workflow Changes" with both the artifact-in-diff checklist and the `byte-stable-refactor` exception checklist
+- [x] Unknown 6.4 verified and updated in KNOWN_UNKNOWNS.md — Status ✅ VERIFIED with Sprint 24/25 PR-survey output (5 candidates / 102 PRs; ~1 of 100 expected exception frequency) + design decision rationale
 
 ---
 
