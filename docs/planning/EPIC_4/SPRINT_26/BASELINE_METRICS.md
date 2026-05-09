@@ -36,11 +36,11 @@ Sprint 26 prep ran in docs-only PRs #1366–#1372; no `src/` code changed betwee
 ### 2.1 Translate breakdown
 
 - **130 successes**
-- **12 failures:**
-  - **8 `timeout`** (600s budget exceeded):
+- **12 failures** (bucket name in tables / §4 = `translate_<category>`; raw `nlp2mcp_translate.error.category` shown in backticks):
+  - **8 `translate_timeout`** (raw category `timeout`; 600s budget exceeded):
     - 5 unchanged from Sprint 25 final: `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` — `SetMembershipTest` / `enumerate_equation_instances` Cartesian-explosion pattern (Sprint 25 `PROFILE_HARD_TIMEOUTS.md`; Sprint 26 Priority 4 Option 1 short-circuit candidates per Task 6 design).
     - 3 new at Day 0: `clearlak` (480.7s → 600.1s), `ganges` (386.9s → 600.7s), `turkpow` (379.8s → 600.1s) — translate-flaky at the 600s budget boundary; pipeline ran ~37% slower overall (12779s vs Sprint 25's 9310s) due to machine-load variance, pushing these 3 over the timeout. **Not a Sprint 26 prep regression** — Sprint 26 prep PRs were all docs-only.
-  - **4 `internal_error`** (unchanged from Sprint 25 final):
+  - **4 `translate_internal_error`** (raw category `internal_error`; unchanged from Sprint 25 final):
     - `danwolfe`, `decomp` — multi-solve driver scripts, gated at translate (issue #1270).
     - `saras` — multi-solve driver, newly gated by Sprint 25 Day 12 #1270 Approach A.
     - `mine` — `internal_error` from `src/ad/index_mapping.py` UserWarning (#1224 — `IndexOffset(ParamRef)` deferred to Sprint 27 per Task 6 #1224 deferral decision).
@@ -148,18 +148,22 @@ The 219-model corpus and the 142-in-scope denominator are unchanged from Sprint 
 
 #### `translate_timeout` (5 → 8)
 
+(Day 14 / Day 0 cells use the bucket label `translate_timeout`; the underlying `nlp2mcp_translate.error.category` is `timeout`.)
+
 | Model | Sprint 25 Day 14 | Sprint 26 Day 0 | Note |
 |---|---|---|---|
-| `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` | timeout | timeout | All stayed (Sprint 26 Priority 4 candidates per Task 6 design) |
-| `clearlak`, `ganges`, `turkpow` | path_syntax_error | timeout | **Churn-in** (machine variance; see §4.1) |
+| `iswnm`, `mexls`, `nebrazil`, `sarf`, `srpchase` | translate_timeout | translate_timeout | All stayed (Sprint 26 Priority 4 candidates per Task 6 design) |
+| `clearlak`, `ganges`, `turkpow` | path_syntax_error | translate_timeout | **Churn-in** (machine variance; see §4.1) |
 
 #### `translate_internal_error` (4 → 4)
 
+(Day 14 / Day 0 cells use the bucket label `translate_internal_error`; the underlying `nlp2mcp_translate.error.category` is `internal_error`.)
+
 | Model | Sprint 25 Day 14 | Sprint 26 Day 0 | Note |
 |---|---|---|---|
-| `danwolfe`, `decomp` | internal_error | internal_error | Multi-solve drivers (gated by #1270) |
-| `mine` | internal_error | internal_error | `IndexOffset(ParamRef)` (#1224, Sprint 27 deferral per Task 6) |
-| `saras` | internal_error | internal_error | Multi-solve driver (gated by Sprint 25 Day 12 #1270 Approach A) |
+| `danwolfe`, `decomp` | translate_internal_error | translate_internal_error | Multi-solve drivers (gated by #1270) |
+| `mine` | translate_internal_error | translate_internal_error | `IndexOffset(ParamRef)` (#1224, Sprint 27 deferral per Task 6) |
+| `saras` | translate_internal_error | translate_internal_error | Multi-solve driver (gated by Sprint 25 Day 12 #1270 Approach A) |
 
 ### 4.3 Why the bucket-provenance column matters for Sprint 26 acceptance evaluation (per PR17)
 
@@ -177,7 +181,7 @@ The bucket-provenance column in this baseline is the explicit input to Sprint 26
 
 ## 5. Frozen v2.2.1 Exclusion Set (PR15)
 
-The v2.2.1 schema records **23 total exclusions**, unchanged from Sprint 25 Day 14 final. Twenty-one are tagged in the `convexity.status = excluded` bucket; two surface at translate time via the multi-solve driver gate (`danwolfe`, `decomp` — `convexity.status = verified_convex` but `nlp2mcp_translate.error.category = internal_error`).
+The Sprint 26 Day 0 frozen state records **24 total out-of-solve-scope models**, unchanged from Sprint 25 Day 14 final. Twenty-one are tagged in the `convexity.status = excluded` bucket; **three** surface at translate time via the multi-solve driver gate — `danwolfe` and `decomp` (Sprint 24 baseline #1270) plus `saras` (Sprint 25 Day 12 #1270 Approach A addition). All 3 multi-solve driver models have `convexity.status = verified_convex` but `nlp2mcp_translate.error.category = internal_error`. (Note: Sprint 25 BASELINE_METRICS.md §4 reported "23 total exclusions" because saras was a Day 12 mid-sprint addition; the corrected Sprint 26 Day 0 count is 24 = 21 excluded + 3 multi-solve gated.)
 
 ### 5.1 MINLP out-of-scope (14)
 
@@ -187,9 +191,19 @@ The v2.2.1 schema records **23 total exclusions**, unchanged from Sprint 25 Day 
 
 `circpack`, `epscm`, `feasopt1`, `iobalance`, `meanvar`, `orani`, `trigx`
 
-### 5.3 Multi-solve driver out-of-scope (2)
+### 5.3 Multi-solve driver translate-time gate (3)
 
-`danwolfe`, `decomp` — counted in the 142 denominator; appear with `nlp2mcp_translate.error.category = internal_error`. (Sprint 25 Day 12 added `saras` as a third multi-solve driver via #1270 Approach A; saras is also `verified_convex` so it stays in the 142 denominator and the gate effect is visible in the translate failure count.)
+This subsection is the translate-time runtime-filter analog of §5.1 / §5.2 (which are convexity-status `excluded` exclusions). Counted in the 142 denominator; appear at translate time with `nlp2mcp_translate.error.category = internal_error`.
+
+**Sprint 24 baseline (2 models)** — gated by issue #1270 (multi-solve driver detection):
+
+`danwolfe`, `decomp` — Dantzig-Wolfe / Benders decomposition driver scripts.
+
+**Sprint 25 Day 12 addition (1 model)** — gated by issue #1270 Approach A (top-level `eq.m` cross-reference walking transitively into constraint bodies):
+
+`saras` — primal/dual driver (calibuc.m / calibul.m → cGam → constraint-body chain). Per §5.4 below, this is permitted under the "Multi-solve driver gate extensions" runtime-filter policy and does NOT constitute a scope change.
+
+All 3 are `convexity.status = verified_convex` so they remain in the 142 denominator. The "(2)" header in the prior revision referred to Sprint 24's count and excluded the Sprint 25 saras addition; corrected here to "(3)" to match the actual frozen-state count for Sprint 26 Day 0.
 
 ### 5.4 Scope-freeze policy carried forward from Sprint 25 §5
 
