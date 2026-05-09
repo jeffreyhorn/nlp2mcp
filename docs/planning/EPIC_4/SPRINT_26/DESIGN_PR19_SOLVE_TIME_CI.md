@@ -278,7 +278,7 @@ jobs:
               core.notice('PR has `skip-emit-solve-ci` label — bypassing PR19 solve validation.');
             }
 
-      - name: Post bypass notice to PR
+      - name: Post bypass notice to PR (upsert)
         if: steps.check-label.outputs.skip == 'true'
         uses: actions/github-script@v7
         with:
@@ -287,6 +287,12 @@ jobs:
           # Markdown treats lines that start with 4+ spaces as code blocks, which
           # would render the table / headers as a literal code block if a
           # multi-line template literal were used inside the indented `script:` block.
+          #
+          # Upsert (find-existing-then-update) so re-runs (label toggled, new
+          # commits, manual re-run) don't spam the PR thread. Mirrors the
+          # "find existing comment / updateComment vs createComment" pattern
+          # used in the per-model results-comment step below and in
+          # gamslib-regression.yml.
           script: |
             const body = [
               '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
@@ -295,12 +301,29 @@ jobs:
               '',
               '**Reviewer responsibility:** verify that byte-diff regression tests cover the change before merge. If the PR turns out to alter emit shape, remove the label and re-run.',
             ].join('\n');
-            await github.rest.issues.createComment({
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: body,
             });
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
 
       - name: Skip remaining steps when label present
         if: steps.check-label.outputs.skip == 'true'
@@ -341,7 +364,14 @@ jobs:
           mkdir -p $HOME/gams
           /tmp/gams-installer.exe -q -d $HOME/gams
           echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
-          gams --version
+          # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
+          # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
+          # in this same step).
+          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" --version
+
+      - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
+        if: steps.check-label.outputs.skip != 'true'
+        run: gams --version
 
       - name: Read target list
         if: steps.check-label.outputs.skip != 'true'
