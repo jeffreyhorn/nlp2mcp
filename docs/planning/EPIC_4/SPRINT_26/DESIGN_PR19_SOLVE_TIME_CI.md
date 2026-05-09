@@ -64,7 +64,7 @@ Refactor-only PRs that don't change emit semantics can opt out via the `skip-emi
 
 ## Target Model List
 
-**File:** `.github/path-solve-ci-targets.txt`
+**Planned file path:** `.github/path-solve-ci-targets.txt` (to be committed during Sprint 26 implementation alongside the workflow YAML — this PR is design-only and does NOT add the file).
 **Format:** One model per line. Optional inline annotation `# tier=<0|1|pattern-c>`. Blank lines and lines starting with `#` are ignored. Example:
 
 ```

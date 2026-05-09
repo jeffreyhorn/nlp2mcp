@@ -969,7 +969,7 @@ ls .github/workflows/ 2>&1
 ### Acceptance Criteria
 
 - [x] Trigger file patterns documented (DESIGN_PR19_SOLVE_TIME_CI.md §Trigger Conditions — paths filter on `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py` + workflow + target-list files)
-- [x] Target model list committed (≥ Pattern C 4 + ≥ 3 Tier 0 canaries) — design specifies 11 Tier 0/1 + 4 Pattern C = 15 models in `.github/path-solve-ci-targets.txt`
+- [x] Target model list designed (≥ Pattern C 4 + ≥ 3 Tier 0 canaries) — design specifies 11 Tier 0/1 + 4 Pattern C = 15 models for `.github/path-solve-ci-targets.txt` (planned file path; the file itself is committed during Sprint 26 implementation alongside the workflow YAML, per the design-only scope of this PR)
 - [x] PATH timeout policy documented (default 30s, configurable) — DESIGN doc §"PATH Timeout"; per-model `reslim=N` annotation supported
 - [x] Failure handling policy documented (hard vs soft fail per model class) — DESIGN doc §"Failure Handling"; hard-fail for Tier 0/1, soft-fail for Pattern C
 - [x] CI overhead estimate documented (acceptable for PR latency budget) — ~3min mid-case, ~8min worst case, comparable to existing `ci.yml` (~3-4min)
