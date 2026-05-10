@@ -78,7 +78,18 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Tasks:**
 1. Verify `data/gamslib/gamslib_status.json` matches `BASELINE_METRICS.md` Day 0 metrics: Parse 142, Translate 130, Solve 104, Match 60.
 2. Initialize `docs/planning/EPIC_4/SPRINT_26/SPRINT_LOG.md` Day 0 entry per Sprint 25 SPRINT_LOG.md format.
-3. Confirm all 5 carryforward issues (#1334, #1335 — Sprint 26 Priority 5; #1357 — Sprint 27 deferral; #1306, #1307 — Sprint 26 Priority 1; the Pattern A cohort #1138/#1139/#1140/#1142/#1145/#1150 — Sprint 26 Priority 2; #1141/#1144/#1147 — Sprint 26 Priority 3) are labeled `sprint-26` in GitHub.
+3. Confirm GitHub issue labels:
+   - **`sprint-26` label** (Sprint 26 Day 1–13 in-scope work):
+     - Priority 1: #1306, #1307, #1354, #1355
+     - Priority 2: #1138, #1139, #1140, #1142, #1145, #1150 (closing this sprint per Task 4)
+     - Priority 3: #1141, #1144, #1147 (closing or fixing per Task 5)
+     - Priority 4: #885, #931, #932, #1185, #1228 (#1224 deferred per Task 6)
+     - Priority 5: #1334, #1335
+   - **`sprint-27` label** (deferred work — must NOT carry `sprint-26`):
+     - #1357 (otpop `comp_up` subset/superset, deferred per Task 7 — file as Sprint 27 carryforward at Day 13 close per §Day 13)
+     - #1356 (fawley `comp_up`, deferred per Task 4)
+     - #1374 (emit duplicate-init bugs, surfaced during Task 9 PR review)
+     - #1224 (mine `ParamRef` IndexOffset, deferred per Task 6)
 4. Read all Task 3–10 prep outputs as briefing material:
    - `PATTERN_C_HYPOTHESIS_VALIDATION.md` (REPLAN recommendation — drives Day 1)
    - `PATTERN_A_RECLASSIFICATION_PLAN.md` (Day 6–7)
@@ -116,7 +127,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Objective:** Validate Day 1's Phase A patch on the broader corpus. Begin Phase B scoping for camcge + cesam2.
 
 **Tasks:**
-1. Full 54-set Tier 2 golden-file regression (per Sprint 25 SPRINT_LOG.md Day 0 list). Document any regressions.
+1. Full 54-model Tier 0/1/2 golden-file regression (per Sprint 25 SPRINT_LOG.md Day 0 list). Document any regressions.
 2. Translate launch + run full PATH solve. Confirm rel_diff improves vs Sprint 25 final.
 3. **Phase B scoping** (camcge): inspect `data/gamslib/mcp/camcge_mcp.gms` (currently translates with phantom-offset emit per Task 3 finding). Identify the gate condition that needs to fire for camcge. Per Task 3, camcge needs the gate predicate broadened beyond launch's specific conditional shape to detect plain-alias enumeration.
 4. **Phase B scoping** (cesam2): same as camcge but with `sameas`-decomposed SAM-block aliases. Per Task 3, cesam2's gate predicate needs to also recognize `sameas` block guards as Pattern C triggers.
@@ -135,7 +146,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 1. Implement the gate predicate broadening per Day 2 scoping. Probable patch site: `src/kkt/stationarity.py` Pattern C gate predicate (currently launch-shape-specific).
 2. Add unit test: synthetic IR that mirrors camcge's `sum(j$nonsa(j), ...)` plain-alias pattern (no `$cond`); assert no phantom `nu_<eq>(i±N)` enumeration in `stat_<var>` body.
 3. Translate camcge fresh; PATH solve. Confirm `$141` cascade resolves; record rel_diff vs NLP.
-4. Full 54-set golden-file regression.
+4. Full 54-model Tier 0/1/2 golden-file regression.
 5. Tier 0 + Tier 1 canary.
 
 **PR14 obligation:** Include regenerated `data/gamslib/mcp/camcge_mcp.gms` in PR diff.
@@ -153,7 +164,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 1. Extend the gate predicate to also recognize `sameas`-decomposed SAM-block aliases (cesam2 case).
 2. Add unit test for the `sameas` variant.
 3. Translate cesam2 fresh; PATH solve. Confirm `$141` cascade on `nu_COLSUM` resolves; record rel_diff.
-4. Full 54-set golden-file regression.
+4. Full 54-model Tier 0/1/2 golden-file regression.
 5. Tier 0 + Tier 1 canary.
 6. (If PR19 not yet implemented:) Manually run the 11 Tier 0/1 canary PATH solves locally per `DESIGN_PR19_SOLVE_TIME_CI.md` recipe + verify all reach MODEL STATUS 1.
 
@@ -183,7 +194,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 | cesam2 solves to MODEL STATUS 1 | yes | yes | no |
 | Phase A launch fix re-landed (xfail removed) | yes | yes | no |
 | Tier 0 + Tier 1 canaries (11 models) | All match golden | All match golden | > 0 regression |
-| Tier 2 (54 models) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
+| Tier 0/1/2 (54 models combined) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
 
 - **GO** (≥ 4 of 5): Continue Days 6–7 as planned. Sprint 26 Solve +2 (camcge + cesam2) booked.
 - **CONDITIONAL GO** (camcge regresses but cesam2 lands, OR vice versa): proceed with the working half; reclassify the failing model as Sprint 27 carryforward. Sprint 26 Solve +1 booked.

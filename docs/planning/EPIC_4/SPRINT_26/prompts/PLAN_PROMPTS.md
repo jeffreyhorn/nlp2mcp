@@ -65,7 +65,18 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    ```
    Expected: 142 in-scope; per-bucket and headline counts match BASELINE_METRICS.md (Parse 142, Translate 130, Solve 104, Match 60). If any count diverges, do NOT proceed — investigate via `git diff` against the Day 0 baseline commit (`f1cdb91f` — the PR #1373 merge that froze the baseline).
 2. Initialize `docs/planning/EPIC_4/SPRINT_26/SPRINT_LOG.md` Day 0 entry (mirror Sprint 25 SPRINT_LOG.md format — header, baseline-matches-metrics check, day-task list).
-3. Confirm GitHub issues are labeled `sprint-26`: #1334, #1335 (Priority 5); #1306, #1307 (Priority 1); #1138, #1139, #1140, #1142, #1145, #1150 (Priority 2 — closing this sprint); #1141, #1144, #1147 (Priority 3); #885, #931, #932, #1185, #1228 (Priority 4 timeouts; #1224 deferred per Task 6).
+3. Confirm GitHub issue labels (split across two label sets):
+   - **`sprint-26` label** (Sprint 26 Day 1–13 in-scope work):
+     - Priority 1: #1306, #1307, #1354, #1355
+     - Priority 2: #1138, #1139, #1140, #1142, #1145, #1150 (closing this sprint per Task 4)
+     - Priority 3: #1141, #1144, #1147 (closing or fixing per Task 5)
+     - Priority 4: #885, #931, #932, #1185, #1228
+     - Priority 5: #1334, #1335
+   - **`sprint-27` label** (deferred work — must NOT carry `sprint-26`):
+     - #1357 (otpop `comp_up` subset/superset, deferred per Task 7)
+     - #1356 (fawley `comp_up`, deferred per Task 4)
+     - #1374 (emit duplicate-init bugs, surfaced during Task 9 PR review)
+     - #1224 (mine `ParamRef` IndexOffset, deferred per Task 6)
 4. Read all Task 3–10 prep-task outputs as Sprint 26 briefing material (the "in-conversation context" for downstream day-prompts):
    - `PATTERN_C_HYPOTHESIS_VALIDATION.md` — drives Day 1
    - `PATTERN_A_RECLASSIFICATION_PLAN.md` — drives Day 6
@@ -127,7 +138,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Tasks to Complete (~5–7 hours):**
 
-1. **Full 54-set Tier 2 golden-file regression** with Day 1's Phase A patch (per Sprint 25 SPRINT_LOG.md Day 0 list of 43 Tier 2 models — see `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 0 §"Tier 2 canaries generated (43 models)"). Document any regressions; expected 0.
+1. **Full 54-model Tier 0/1/2 golden-file regression** with Day 1's Phase A patch (combined set: 11 Tier 0/1 canaries — `docs/planning/EPIC_4/SPRINT_25/SPRINT_LOG.md` Day 0 §"Tier 0/1 canaries generated (11 models)" — plus 43 Tier 2 canaries — Sprint 25 SPRINT_LOG.md Day 0 §"Tier 2 canaries generated (43 models)" — totaling 54). Document any regressions; expected 0.
 2. **Translate launch + run full PATH solve.** Compare rel_diff against the baseline NLP solution. If rel_diff improves materially (Sprint 25 final was 0.17 — target < 0.01), note as +1 Match candidate for Day 13 pipeline retest.
 3. **Phase B scoping (camcge):**
    - Translate camcge fresh (`.venv/bin/python -m src.cli data/gamslib/raw/camcge.gms -o /tmp/sprint26-day2/camcge_mcp.gms --skip-convexity-check --quiet`).
@@ -167,7 +178,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - `$141` cascade resolves (the 21 phantom-offset terms disappear).
    - PATH solve reaches MODEL STATUS 1 (Optimal).
    - rel_diff vs NLP baseline is documented.
-4. **Full 54-set Tier 2 golden-file regression.** Expected 0 regressions on non-camcge models.
+4. **Full 54-model Tier 0/1/2 golden-file regression.** Expected 0 regressions on non-camcge models.
 5. **Tier 0 + Tier 1 canary.**
 
 **PR14 obligation:** Include regenerated `data/gamslib/mcp/camcge_mcp.gms` in PR diff.
@@ -195,7 +206,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - `$141` cascade on `nu_COLSUM` resolves.
    - PATH solve reaches MODEL STATUS 1 (Optimal).
    - rel_diff vs NLP baseline is documented.
-4. **Full 54-set Tier 2 golden-file regression.** Expected 0 regressions on non-cesam2 models.
+4. **Full 54-model Tier 0/1/2 golden-file regression.** Expected 0 regressions on non-cesam2 models.
 5. **Tier 0 + Tier 1 canary.**
 6. **(If PR19 not yet implemented):** manually run the 11 Tier 0/1 canary PATH solves locally per `DESIGN_PR19_SOLVE_TIME_CI.md` §"PATH Timeout" recipe; verify all reach MODEL STATUS 1.
 
@@ -250,7 +261,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - cesam2 solves to MODEL STATUS 1
    - Phase A launch fix re-landed (xfail removed, test passes)
    - Tier 0 + Tier 1 canaries (11 models) all match golden
-   - Tier 2 (54 models) golden-file regression: 0 (or ≤ 1 documented)
+   - Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented)
 3. **Document Checkpoint 1 decision** in `SPRINT_LOG.md` Day 5 entry: GO / CONDITIONAL GO / NO-GO + per-criterion table + routing decision.
 4. **Buffer** (if Checkpoint passes): absorb any Days 1–4 slippage. If Checkpoint fails: revert + scope-back per the NO-GO routing in `PLAN.md`.
 
