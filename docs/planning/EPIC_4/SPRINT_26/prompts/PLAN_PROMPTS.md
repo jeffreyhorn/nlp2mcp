@@ -24,17 +24,46 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Tasks to Complete (~2 hours):**
 
-1. Verify Day 0 baseline matches `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` §2:
+1. Verify Day 0 baseline matches `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` §2 — the snippet below classifies each in-scope model into its current pipeline bucket and prints per-bucket counts that you can directly compare against §2.1 / §2.2 / §2.3:
    ```bash
    .venv/bin/python -c "
    import json
+   from collections import Counter
    data = json.load(open('data/gamslib/gamslib_status.json'))
    in_scope = [m for m in data['models'] if m['convexity']['status'] in ('likely_convex', 'verified_convex')]
    print('In-scope:', len(in_scope))
-   # Per-bucket counts should match BASELINE_METRICS.md §2.1, §2.2, §2.3
+
+   def bucket(m):
+       parse = m.get('nlp2mcp_parse', {}).get('status', 'unknown')
+       if parse != 'success':
+           return f'parse_{parse}'
+       trans = m.get('nlp2mcp_translate', {})
+       if trans.get('status') != 'success':
+           cat = (trans.get('error') or {}).get('category', 'unknown')
+           return f'translate_{cat}'
+       solve = m.get('mcp_solve', {})
+       oc = solve.get('outcome_category', 'unknown')
+       if solve.get('status') != 'success' or oc not in ('model_optimal', 'model_optimal_presolve'):
+           return f'solve_{oc}'
+       return f'compare_{m.get(\"solution_comparison\", {}).get(\"comparison_status\", \"unknown\")}'
+
+   counts = Counter(bucket(m) for m in in_scope)
+   for b, c in sorted(counts.items(), key=lambda x: (-x[1], x[0])):
+       print(f'  {c:>3}  {b}')
+
+   # Headline checks (must match BASELINE_METRICS.md §2):
+   parse = sum(c for b, c in counts.items() if not b.startswith('parse_'))  # all reach parse_success
+   translate = sum(c for b, c in counts.items() if not b.startswith(('parse_', 'translate_')))
+   solve = sum(c for b, c in counts.items() if b.startswith('compare_'))
+   match = counts.get('compare_match', 0)
+   print()
+   print(f'Parse:     {parse}/142   (BASELINE: 142)')
+   print(f'Translate: {translate}/142   (BASELINE: 130)')
+   print(f'Solve:     {solve}     (BASELINE: 104)')
+   print(f'Match:     {match}     (BASELINE: 60)')
    "
    ```
-   Expected: 142 in-scope; per-bucket counts match BASELINE_METRICS.md.
+   Expected: 142 in-scope; per-bucket and headline counts match BASELINE_METRICS.md (Parse 142, Translate 130, Solve 104, Match 60). If any count diverges, do NOT proceed — investigate via `git diff` against the Day 0 baseline commit (`f1cdb91f` — the PR #1373 merge that froze the baseline).
 2. Initialize `docs/planning/EPIC_4/SPRINT_26/SPRINT_LOG.md` Day 0 entry (mirror Sprint 25 SPRINT_LOG.md format — header, baseline-matches-metrics check, day-task list).
 3. Confirm GitHub issues are labeled `sprint-26`: #1334, #1335 (Priority 5); #1306, #1307 (Priority 1); #1138, #1139, #1140, #1142, #1145, #1150 (Priority 2 — closing this sprint); #1141, #1144, #1147 (Priority 3); #885, #931, #932, #1185, #1228 (Priority 4 timeouts; #1224 deferred per Task 6).
 4. Read all Task 3–10 prep-task outputs as Sprint 26 briefing material (the "in-conversation context" for downstream day-prompts):
@@ -189,15 +218,31 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Tasks to Complete (~4–6 hours):**
 
-1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale):
+1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale). The loop **regenerates each MCP from the current branch's `src/` code** (via `python -m src.cli`) BEFORE running gams — running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only test pre-merge artifacts, missing any translation-side regression introduced by Days 1–4 PRs. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic:
    ```bash
+   REPO_ROOT="$(git rev-parse --show-toplevel)"
    for m in camcge cesam2 fawley otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+     rm -rf /tmp/sprint26-day5/$m
      mkdir -p /tmp/sprint26-day5/$m
-     gams "data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 ScrDir=/tmp/sprint26-day5/$m \
-       o=/tmp/sprint26-day5/$m/${m}_mcp.lst &> /tmp/sprint26-day5/$m.stdout
+     # 1. Regenerate the MCP on the current branch.
+     .venv/bin/python -m src.cli "$REPO_ROOT/data/gamslib/raw/${m}.gms" \
+       -o /tmp/sprint26-day5/$m/${m}_mcp.gms \
+       --skip-convexity-check --quiet \
+       2> /tmp/sprint26-day5/$m.translate.stderr
+     translate_rc=$?
+     if [ $translate_rc -ne 0 ]; then
+       printf "%-13s translate=FAIL (rc=%d)\n" "$m" "$translate_rc"
+       continue
+     fi
+     # 2. Run gams on the freshly-regenerated MCP. Set cwd=$REPO_ROOT so
+     #    any presolve-variant `\$include` lines resolve correctly (per
+     #    Sprint 25 #1345/#1346/#1347; same pattern as scripts/gamslib/test_solve.py).
+     (cd "$REPO_ROOT" && gams "/tmp/sprint26-day5/$m/${m}_mcp.gms" lo=0 reslim=30 \
+       ScrDir=/tmp/sprint26-day5/$m \
+       o=/tmp/sprint26-day5/$m/${m}_mcp.lst) &> /tmp/sprint26-day5/$m.gams.stdout
      gams_rc=$?  # capture GAMS exit code BEFORE the next command overwrites $?
      status=$(grep -hE "MODEL STATUS|SOLVER STATUS" /tmp/sprint26-day5/$m/${m}_mcp.lst 2>/dev/null | head -2 | tr '\n' '|')
-     printf "%-13s rc=%d  %s\n" "$m" "$gams_rc" "$status"
+     printf "%-13s translate=OK  gams_rc=%d  %s\n" "$m" "$gams_rc" "$status"
    done
    ```
 2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)":
@@ -387,10 +432,15 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - MCP run with `iterlim=0` against the otpop_mcp.gms emitted by the Day 9 fix.
    - Capture `Inf-Norm` residual on `stat_x('1990')`. Pre-fix value: ≈ 760. Post-fix target: ≈ 0.
 2. Confirm otpop's NLP-warm-started MCP converges to `pi ≈ 4217.80` (matches NLP per ISSUE_1334.md §Diagnostic).
-3. **Targeted pipeline retest** on the 5 Priority-affected models (camcge, cesam2, srpchase, kand, otpop) + the 11 Tier 0/1 canaries:
+3. **Targeted pipeline retest** on the 5 Priority-affected models (camcge, cesam2, srpchase, kand, otpop) + the 11 Tier 0/1 canaries. Use the same regenerate-from-current-branch loop pattern as Day 5 / §"Reference: Targeted Multi-Model Retest" (regenerate the MCP via `python -m src.cli` THEN run gams on the freshly-regenerated artifact, otherwise the retest only validates the pre-merge committed `_mcp.gms` files):
    ```bash
+   REPO_ROOT="$(git rev-parse --show-toplevel)"
    for m in camcge cesam2 srpchase kand otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
-     # ... per Day 5 recipe
+     # See §"Reference: Targeted Multi-Model Retest (Days 5 + 10)" at the bottom
+     # of this file for the full per-iteration body — regenerates the MCP from
+     # the current branch's src/, then runs gams with cwd=$REPO_ROOT and
+     # captures gams_rc + MODEL STATUS.
+     :
    done
    ```
 4. **Evaluate Checkpoint 2 criteria** per PLAN.md §"Checkpoint 2 criteria (Day 10 evaluation)":
@@ -541,18 +591,34 @@ Expected runtime ~3h on the Sprint 26 reference machine (per Task 9 Day 0 timing
 
 ## Reference: Targeted Multi-Model Retest (Days 5 + 10)
 
+The loop **regenerates each MCP from the current branch's `src/` code** via `python -m src.cli` BEFORE running gams. Running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only re-validate pre-merge artifacts, missing any translation-side regression introduced by the PRs being checkpointed. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic.
+
 ```bash
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 mkdir -p /tmp/sprint26-retest
 for m in <model_list>; do
   rm -rf /tmp/sprint26-retest/$m
   mkdir -p /tmp/sprint26-retest/$m
-  gams "$REPO_ROOT/data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 \
+  # 1. Regenerate the MCP on the current branch (catches translate-side regressions).
+  .venv/bin/python -m src.cli "$REPO_ROOT/data/gamslib/raw/${m}.gms" \
+    -o /tmp/sprint26-retest/$m/${m}_mcp.gms \
+    --skip-convexity-check --quiet \
+    2> /tmp/sprint26-retest/$m.translate.stderr
+  translate_rc=$?
+  if [ $translate_rc -ne 0 ]; then
+    printf "%-13s translate=FAIL (rc=%d)\n" "$m" "$translate_rc"
+    continue
+  fi
+  # 2. Run gams on the freshly-regenerated MCP. cwd=$REPO_ROOT so any
+  #    presolve-variant `$include` lines resolve correctly (per Sprint 25
+  #    #1345/#1346/#1347; same pattern as scripts/gamslib/test_solve.py).
+  (cd "$REPO_ROOT" && gams "/tmp/sprint26-retest/$m/${m}_mcp.gms" lo=0 reslim=30 \
     ScrDir=/tmp/sprint26-retest/$m \
-    o=/tmp/sprint26-retest/$m/${m}_mcp.lst &> /tmp/sprint26-retest/$m.stdout
+    o=/tmp/sprint26-retest/$m/${m}_mcp.lst) &> /tmp/sprint26-retest/$m.gams.stdout
   gams_rc=$?  # capture GAMS exit code BEFORE the next command overwrites $?
   status=$(grep -hE "MODEL STATUS|SOLVER STATUS" /tmp/sprint26-retest/$m/${m}_mcp.lst 2>/dev/null | head -2 | tr '\n' '|')
-  printf "%-13s rc=%d  %s\n" "$m" "$gams_rc" "$status"
+  printf "%-13s translate=OK  gams_rc=%d  %s\n" "$m" "$gams_rc" "$status"
 done
 ```
 
-Where `$REPO_ROOT="$(git rev-parse --show-toplevel)"` and `<model_list>` is the per-day list (Day 5: 4 Pattern C targets + 11 Tier 0/1 canaries; Day 10: 5 Priority-affected models + 11 Tier 0/1 canaries).
+Where `<model_list>` is the per-day list (Day 5: 4 Pattern C targets + 11 Tier 0/1 canaries; Day 10: 5 Priority-affected models + 11 Tier 0/1 canaries).
