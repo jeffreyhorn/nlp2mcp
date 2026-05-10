@@ -1103,7 +1103,9 @@ grep "exit code" /tmp/sprint26-baseline.log | tail -1
 
 ### Objective
 
-Add a hard contributor rule to `CONTRIBUTING.md`: every PR that touches `src/emit/*.py` (or `src/kkt/stationarity.py`) must include at least one regenerated `.gms` artifact from an affected model in the diff. This is the codified instance of Sprint 25 retrospective **PR14 reaffirmation**.
+Add a hard contributor rule to `CONTRIBUTING.md`: every PR that touches the **emit-affecting file surface** (the same 5-file set used by PR19's trigger paths per Task 8 — `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py`) must include at least one regenerated `.gms` artifact from an affected model in the diff. This is the codified instance of Sprint 25 retrospective **PR14 reaffirmation**.
+
+(The trigger surface was extended beyond the original prompt's narrower 2-pattern target — `src/emit/*.py` + `src/kkt/stationarity.py` — during this PR's design, to keep PR14 and PR19 trigger paths consistent. See §Changes below for the rationale; the finalized 5-file surface is what `CONTRIBUTING.md` and `.github/pull_request_template.md` actually enforce.)
 
 ### Why This Matters
 
@@ -1119,9 +1121,11 @@ Sprint 25's #1349 `.fx → .l` side-effect fix passed pindyck integration tests 
 
 1. **Read current `CONTRIBUTING.md`** to identify the right section for the new rule (likely a §"PR Submission Checklist" or §"Emit Changes" section).
 
-2. **Draft the rule:**
+2. **Draft the rule** (the prompt-time draft below was the narrow-trigger starting point; the as-shipped rule in `CONTRIBUTING.md` extends the trigger surface to 5 files for PR19 alignment — see §Changes for the finalized wording):
 
-   > **Emit-affecting PRs:** Every PR that modifies any file under `src/emit/` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff. Use `.venv/bin/python -m src.cli data/gamslib/raw/<model>.gms -o data/gamslib/mcp/<model>_mcp.gms --skip-convexity-check --quiet` to regenerate. Reviewers MUST read the relevant section of the regenerated artifact. Refactor-only PRs that pass byte-diff verification across the corpus may apply the `byte-stable-refactor` PR label (no brackets — plain GitHub label name) and document the verification command in the PR description in lieu of an artifact diff.
+   > **Emit-affecting PRs (PROMPT-TIME DRAFT — superseded by the broader rule in CONTRIBUTING.md):** Every PR that modifies any file under `src/emit/` or `src/kkt/stationarity.py` MUST include at least one regenerated `.gms` artifact from an affected model in the diff. Use `.venv/bin/python -m src.cli data/gamslib/raw/<model>.gms -o data/gamslib/mcp/<model>_mcp.gms --skip-convexity-check --quiet` to regenerate. Reviewers MUST read the relevant section of the regenerated artifact. Refactor-only PRs that pass byte-diff verification across the corpus may apply the `byte-stable-refactor` PR label (no brackets — plain GitHub label name) and document the verification command in the PR description in lieu of an artifact diff.
+
+   The **as-shipped rule** in `CONTRIBUTING.md` extends the trigger surface from the prompt-time 2-pattern set to the 5-file set that matches Task 8 / PR19's trigger paths: `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py`. The extension keeps PR14 and PR19 trigger paths in lockstep so the two checks fire on the same set of PRs.
 
 3. **Add the rule** to the appropriate `CONTRIBUTING.md` section.
 
