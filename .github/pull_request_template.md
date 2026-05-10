@@ -92,6 +92,25 @@ Sprint 10 Retrospective identified incremental documentation as key improvement.
 
 **See:** [CI Workflow Testing Guide](../docs/infrastructure/CI_WORKFLOW_TESTING.md)
 
+## Emit-Affecting Changes (PR14)
+
+<!-- Complete this section ONLY if modifying files under src/emit/, src/kkt/stationarity.py,
+     src/kkt/complementarity.py, src/ad/derivative_rules.py, src/ad/constraint_jacobian.py.
+     Per CONTRIBUTING.md §"Emit-Affecting PRs" — codified per Sprint 25 retrospective PR14. -->
+
+**If this PR modifies emit-affecting files:**
+- [ ] At least one regenerated `data/gamslib/mcp/<model>_mcp.gms` file is included in the diff
+- [ ] PR description identifies the affected model(s) and which `_mcp.gms` section reviewers should read
+- [ ] Reviewer has read the relevant section of the regenerated `_mcp.gms` (variable bounds / init group + affected equation block(s))
+- [ ] No clobber patterns observed (duplicate assignments, misordered clamps — see CONTRIBUTING.md for examples)
+
+**Refactor-only exception (`byte-stable-refactor` label):**
+- [ ] PR is byte-diff-verified to produce zero changes in emitted `_mcp.gms` files across all currently-translating models
+- [ ] PR description includes the byte-diff verification command + result (e.g., `diff -r /tmp/pre /tmp/post` → 0 diffs across N models, `PYTHONHASHSEED=0`)
+- [ ] `byte-stable-refactor` label applied
+
+**See:** [CONTRIBUTING.md §"Emit-Affecting PRs"](../CONTRIBUTING.md#emit-affecting-prs--required-gms-artifact-in-diff-pr14)
+
 ## Checklist
 
 **Before Marking Ready for Review:**

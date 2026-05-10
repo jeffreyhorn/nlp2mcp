@@ -1993,7 +1993,33 @@ Sprint planning (Task 10)
 
 ### Verification Results
 
-🔍 **Status:** INCOMPLETE
+✅ **Status:** VERIFIED
+**Verified by:** Task 10 (Update CONTRIBUTING.md for Emit-PR `.gms` Diffs PR14 Reaffirmation)
+**Date:** 2026-05-09
+
+**Findings:** the `byte-stable-refactor` PR-label exception is justified — the Sprint 24/25 PR-title survey identifies a small but non-zero set of pure refactors that touched emit-affecting files without functional changes. Without the exception, those PRs would either have to include a redundant `.gms` artifact (defeating the rule's signal value) or violate the rule.
+
+**Sprint 24/25 refactor-keyword PR survey** (`gh pr list --state merged --limit 200 --search "merged:>=2026-04-01 merged:<2026-05-09"` filtered by `\b(refactor|dispatcher|unify|consolidate|cleanup|reorganize|extract|simplify|deduplicate)\b`):
+
+- **Total merged PRs in window:** 102
+- **Refactor-keyword candidates:** 5
+  - **#1353** (Sprint 25 Day 12 WS4) — includes the canonical `byte-stable-refactor` case: #1271 dispatcher refactor (collapsed `_loop_tree_to_gams_subst_dispatch` → `_loop_tree_to_gams(node, *, token_subst=None)`, ~140 LOC removed, byte-diff verified zero diffs across 141 currently-translating models). Would have qualified for the label.
+  - #1321 (bounds-aware stationarity guard + bdef divisor-guard injection + NA-cleanup) — functional change despite "Fix" prefix; would NOT qualify.
+  - #1295 (Sprint 25 Prep Task 7 design + dispatcher refactor) — design doc; refactor portion shipped in #1353.
+  - #1258 (Sprint 24 Day 11 issue fix opportunities + cleanup) — functional fixes; would NOT qualify.
+  - #1242 (lmp2: extract inner loop parameter assignments #952) — functional fix; would NOT qualify.
+
+**Estimated exception frequency:** **~1 of 100 emit-affecting PRs** (only #1271 in the surveyed Sprint 24/25 window, and only as a sub-PR of #1353).
+
+**Design decision:**
+1. **Exception mechanism:** PR label `byte-stable-refactor` (plain text, no brackets — naming convention matches the `skip-emit-solve-ci` label introduced by Sprint 26 Task 8 for PR19).
+2. **PR-description requirement:** when the label is present, the PR description MUST document (a) the byte-diff verification command actually run, (b) the result, (c) a justification for why no `.gms` artifact is included.
+3. **Self-policing:** reviewers verify the label conditions are met. CI cannot enforce this directly (no automated check that the byte-diff was actually performed); the responsibility is split between PR author (apply label correctly) and reviewer (verify the description).
+4. **Coverage scope:** rule applies to `src/emit/**/*.py` + `src/kkt/stationarity.py` + `src/kkt/complementarity.py` + `src/ad/derivative_rules.py` + `src/ad/constraint_jacobian.py` — same surface as PR19's trigger paths (Task 8 design) for consistency.
+
+**Evidence:** `CONTRIBUTING.md` §"Emit-Affecting PRs — Required `.gms` Artifact in Diff (PR14)" + `.github/pull_request_template.md` §"Emit-Affecting Changes (PR14)" (both committed in this Task 10 PR).
+
+**Decision:** rule wording committed to CONTRIBUTING.md with the `byte-stable-refactor` exception. The PR-description requirement is documented and enforced via reviewer responsibility (no CI). The companion `skip-emit-solve-ci` label (PR19, Task 8) is explicitly distinguished — these two labels gate different things (artifact-in-diff rule vs. PR19 CI workflow) and a pure refactor PR may need both labels.
 
 ---
 
