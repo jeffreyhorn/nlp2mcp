@@ -70,7 +70,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 ### Day 0 — Setup & Kickoff
 
-**Branch:** none (main).
+**Branch:** `sprint26-day0-kickoff` (docs-only PR for `SPRINT_LOG.md` Day 0 entry; no `src/` changes).
 **Effort:** ~2h.
 
 **Objective:** Verify Day 0 baseline against `BASELINE_METRICS.md` (Task 9), initialize `SPRINT_LOG.md`, confirm all 11 prep tasks closed, set Sprint 26 milestone on GitHub.

@@ -48,7 +48,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Quality Checks:** None (no code changes).
 
-**Commit + PR:** No PR — Day 0 is verification + log initialization. Push the SPRINT_LOG initialization commit directly to `main` if confirmed clean.
+**Commit + PR:** Day 0 is verification + log initialization (no code changes). Per CONTRIBUTING.md §"Development Workflow", create a branch (`sprint26-day0-kickoff`) and open a docs-only PR for the `SPRINT_LOG.md` Day 0 entry — direct pushes to `main` are blocked by branch protection on this repo. The PR should be small (single-commit `SPRINT_LOG.md` initialization) and merge fast; the "no PR" framing in earlier sprint plan docs is a stale convention from before branch protection was enabled.
 
 ---
 
@@ -195,8 +195,9 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
      mkdir -p /tmp/sprint26-day5/$m
      gams "data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 ScrDir=/tmp/sprint26-day5/$m \
        o=/tmp/sprint26-day5/$m/${m}_mcp.lst &> /tmp/sprint26-day5/$m.stdout
+     gams_rc=$?  # capture GAMS exit code BEFORE the next command overwrites $?
      status=$(grep -hE "MODEL STATUS|SOLVER STATUS" /tmp/sprint26-day5/$m/${m}_mcp.lst 2>/dev/null | head -2 | tr '\n' '|')
-     printf "%-13s rc=%d  %s\n" "$m" "$?" "$status"
+     printf "%-13s rc=%d  %s\n" "$m" "$gams_rc" "$status"
    done
    ```
 2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)":
@@ -548,8 +549,9 @@ for m in <model_list>; do
   gams "$REPO_ROOT/data/gamslib/mcp/${m}_mcp.gms" lo=0 reslim=30 \
     ScrDir=/tmp/sprint26-retest/$m \
     o=/tmp/sprint26-retest/$m/${m}_mcp.lst &> /tmp/sprint26-retest/$m.stdout
+  gams_rc=$?  # capture GAMS exit code BEFORE the next command overwrites $?
   status=$(grep -hE "MODEL STATUS|SOLVER STATUS" /tmp/sprint26-retest/$m/${m}_mcp.lst 2>/dev/null | head -2 | tr '\n' '|')
-  printf "%-13s rc=%d  %s\n" "$m" "$?" "$status"
+  printf "%-13s rc=%d  %s\n" "$m" "$gams_rc" "$status"
 done
 ```
 
