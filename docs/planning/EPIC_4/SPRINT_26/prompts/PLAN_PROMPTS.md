@@ -266,7 +266,8 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)":
    - camcge solves to MODEL STATUS 1
    - cesam2 solves to MODEL STATUS 1
-   - Phase A launch fix re-landed (xfail removed, test passes)
+   - Phase A landed: gate restored + correct emit shape + xfail removed (test passes)
+   - launch PATH solve to MODEL STATUS 1 — **stretch** (Phase A re-landed the correct KKT but PATH stalls; PATH-numerics investigation deferred to Sprint 27 issue #1378)
    - Tier 0 + Tier 1 canaries (11 models) all match golden
    - Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented)
 3. **Document Checkpoint 1 decision** in `SPRINT_LOG.md` Day 5 entry: GO / CONDITIONAL GO / NO-GO + per-criterion table + routing decision.

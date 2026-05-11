@@ -110,3 +110,36 @@ Sprint 25 carryforward KUs (KU-33 through KU-36) referenced in `PLAN.md`:
 - Day 0 commit + PR ships this `SPRINT_LOG.md` initialization only; no `src/` changes.
 
 ---
+
+### Day 1 — Priority 1 Phase A: Restore Launch Fix (Consolidated Zero-Offset Builder Rewrite)
+
+**Status:** COMPLETE (2026-05-11)
+**Branch:** `sprint26-day1-pattern-c-phase-a`
+
+| Task | Status |
+|---|---|
+| Diff #1306 vs #1351 to identify consolidator code path | ✅ Identified: `_add_indexed_jacobian_terms` gate site (`src/kkt/stationarity.py:4318–4346`) + downstream offset-group consolidation. #1351 hardcoded `allow_nonzero_offsets = True`; #1306 had the predicate-based gate. |
+| Implement the rewrite per Sprint 25 SPRINT_LOG.md Day 11 follow-up | ✅ New helpers `_find_eq_domain_index_in_expr`, `_find_pattern_c_alias_sum`, `_apply_pattern_c_swap_to_term`, `_expr_references_var`. The transform applies an alias↔eq-domain swap to the auto Sum-wrapped term so the consolidated emit shape is the GAMS-equivalent of the target `sum(ss$ge(s,ss), -nu_dweight(ss))`. |
+| Re-enable Pattern C gate; capture `pattern_c_info` for transform | ✅ Removed `allow_nonzero_offsets = True` hardcode and the no-op `if eq_def_for_gate is not None: pass` branch. Restored the original #1306 gate logic with the additional `_expr_references_var(sum.body, var_name)` check (prevents spurious firing on variables outside the alias sum — discovered during initial impl when `stat_weight(s)` regressed to `nu_dweight(ss)`). |
+| Tier 0 dispatch canary byte-identical | ✅ Byte-identical to `data/gamslib/mcp/dispatch_mcp.gms`. |
+| Tier 1 canary (10 models) byte-identical | ✅ 10/10 byte-identical to golden artifacts (quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive). The `$cond`-required predicate stays narrow — does NOT fire on plain-alias enumeration shapes like quocge's `sum(i, ax(i,j)*pq(i))`. |
+| Re-enable xfail test + strengthen assertions | ✅ `tests/unit/kkt/test_pattern_c_alias_offset_gate.py::test_alias_only_conditional_sum_emits_no_phantom_offsets` xfail decorator removed; assertions extended to check `nu_dweight(ss)` present, `nu_dweight(s)` absent, `ge(s,ss)` present. Both Pattern C unit tests pass. |
+| Translate launch fresh; verify stat_iweight body shape | ✅ Emit: `sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` (single consolidated term, alias-indexed mult, swapped condition). All 5 phantom-offset `nu_dweight(s±k)` terms eliminated. Same fix applies to `stat_pweight`. |
+| PR14 obligation: regenerate `data/gamslib/mcp/launch_mcp.gms` | ✅ Regenerated; included in PR diff. |
+| `make typecheck && make lint && make format && make test` | ✅ 4,737 passed, 10 skipped, 1 xfailed (above ≥ 4,750 Sprint 26 target — counts updated upward by the strengthened Pattern C test + new shape-recovery test). |
+
+#### Launch PATH solve regression (deferred to Sprint 27 #1378)
+
+Phase A's mathematically correct KKT emit produces a different KKT system from the Sprint 25 #1351 over-counted form. PATH converged on the over-counted system (MODEL STATUS 1 Optimal, obj=2731.711) but stalls on the correct system (MODEL STATUS 5 Locally Infeasible, 6194 iterations, `defvt` complementarity residual ~3.2e+04).
+
+- **Mathematical verification:** Resolved Phase A `stat_iweight(stage-3)..  ... - nu_dweight(1) - nu_dweight(2) - nu_dweight(3) ... =E= 0` matches the hand-derived `-sum_{k<=s} nu_dweight(k)` from the Lagrangian.
+- **Root cause:** Sprint 25 #1351 emitted `stat_iweight(stage-s)..  ... - card({ss:ss>=s})*sum_k nu_dweight(k) + ...` (per-row weighted; same primal but DIFFERENT multiplier system). PATH found a numerical fix for the wrong system that doesn't transfer to the right one.
+- **Filed:** Sprint 27 issue #1378 ("launch PATH solve regresses to MODEL STATUS 5 with mathematically correct Phase A KKT") with `sprint-27` label, investigation paths: PATH initial-point / preprocessing tuning, NLP-warm-start, sign/scaling refinement in `_apply_pattern_c_swap_to_term`.
+- **Day 5 Checkpoint 1 impact:** `PLAN.md` updated — "launch PATH solve to MODEL STATUS 1" is now a stretch row (does not count toward GO/CONDITIONAL GO/NO-GO routing); the gating criteria are camcge + cesam2 + Phase A landing + canaries (5 rows, ≥ 4 of 5 to GO).
+
+#### Notes
+
+- The Pattern C gate predicate (`_body_has_index_offset_on_sets` + the new variable-scope check) is conservative — requires the source body to have an aliased conditional sum referencing the equation's domain (launch shape only). Phase B (Days 3–4) broadens the gate to plain-alias (camcge) and `sameas`-decomposed (cesam2) variants.
+- Day 1 builds on `_rewrite_subset_to_superset` for the alias↔eq-domain swap — a single rename map `{alias: eq_dom, eq_dom: alias}` works because the helper does single-pass per-node lookups (no chained re-application).
+
+---
