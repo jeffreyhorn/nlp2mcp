@@ -237,10 +237,10 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Tasks to Complete (~4–6 hours):**
 
-1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale). The loop **regenerates each MCP from the current branch's `src/` code** (via `python -m src.cli`) BEFORE running gams — running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only test pre-merge artifacts, missing any translation-side regression introduced by Days 1–4 PRs. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic:
+1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale). The loop **regenerates each MCP from the current branch's `src/` code** (via `python -m src.cli`) BEFORE running gams — running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only test pre-merge artifacts, missing any translation-side regression introduced by Days 1–4 PRs. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic. **Model list updated Day 3:** dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381) and added srpchase (Priority 4 Day 4 target):
    ```bash
    REPO_ROOT="$(git rev-parse --show-toplevel)"
-   for m in camcge cesam2 fawley otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+   for m in launch srpchase otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
      rm -rf /tmp/sprint26-day5/$m
      mkdir -p /tmp/sprint26-day5/$m
      # 1. Regenerate the MCP on the current branch.
@@ -264,13 +264,18 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
      printf "%-13s translate=OK  gams_rc=%d  %s\n" "$m" "$gams_rc" "$status"
    done
    ```
-2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)" (UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381):
-   - Phase A landed: gate restored + correct emit shape + xfail removed (test passes)
-   - launch PATH solve to MODEL STATUS 1 — **stretch** (Phase A re-landed the correct KKT but PATH stalls; PATH-numerics investigation deferred to Sprint 27 issue #1378)
-   - camcge solves to MODEL STATUS 1 — **n/a — deferred to Sprint 27 #1381** (Phase B builder redesign required; swap approach doesn't generalize to plain-alias)
-   - cesam2 solves to MODEL STATUS 1 — **n/a — deferred to Sprint 27 #1381** (dim-mismatch case requires same redesign)
-   - Tier 0 + Tier 1 canaries (11 models) all match golden
-   - Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented)
+2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)" (UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381 + Priority 4/5 #1334 forward-pull to Day 4):
+   - **Phase A landed**: gate restored + correct emit shape + xfail removed (test passes) — gating
+   - **launch PATH solve to MODEL STATUS 1** — stretch (Phase A re-landed the correct KKT but PATH stalls; PATH-numerics investigation deferred to Sprint 27 issue #1378) — stretch, does NOT count toward routing
+   - **camcge solves to MODEL STATUS 1** — n/a — deferred to Sprint 27 #1381 (Phase B builder redesign required) — does NOT count toward routing
+   - **cesam2 solves to MODEL STATUS 1** — n/a — deferred to Sprint 27 #1381 (dim-mismatch case requires same redesign) — does NOT count toward routing
+   - **Priority 4 Option 1 short-circuit: srpchase translates** (Day 4 PR landed) — gating
+   - **Priority 4 stretch: ≥ 1 of {iswnm, sarf, mexls, nebrazil} also recovers** — stretch, does NOT count toward routing
+   - **Priority 5 #1334 routing decision documented** (Day 4 #1334 re-investigation produced re-open OR successor filed) — gating
+   - **Tier 0 + Tier 1 canaries (11 models) all match golden** — gating
+   - **Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented)** — gating
+
+   **GO** (≥ 5 of 5 gating rows): continue Days 6+. **CONDITIONAL GO** (partial Priority 4 OR Priority 5 routing is "successor filed" not yet re-opened): proceed; Day 8 buffer absorbs follow-up. **NO-GO** (Phase A regression OR srpchase fails to translate OR canary regression > 1): Days 6+ buffer for revert + scope-back.
 3. **Document Checkpoint 1 decision** in `SPRINT_LOG.md` Day 5 entry: GO / CONDITIONAL GO / NO-GO + per-criterion table + routing decision.
 4. **Buffer** (if Checkpoint passes): absorb any Days 1–4 slippage. If Checkpoint fails: revert + scope-back per the NO-GO routing in `PLAN.md`.
 
@@ -426,10 +431,10 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - MCP run with `iterlim=0` against the otpop_mcp.gms emitted by the Day 9 fix.
    - Capture `Inf-Norm` residual on `stat_x('1990')`. Pre-fix value: ≈ 760. Post-fix target: ≈ 0.
 2. Confirm otpop's NLP-warm-started MCP converges to `pi ≈ 4217.80` (matches NLP per ISSUE_1334.md §Diagnostic).
-3. **Targeted pipeline retest** on the 5 Priority-affected models (camcge, cesam2, srpchase, kand, otpop) + the 11 Tier 0/1 canaries. Use the same regenerate-from-current-branch loop pattern as Day 5 / §"Reference: Targeted Multi-Model Retest" (regenerate the MCP via `python -m src.cli` THEN run gams on the freshly-regenerated artifact, otherwise the retest only validates the pre-merge committed `_mcp.gms` files):
+3. **Targeted pipeline retest** on the 3 Priority-affected models in scope (srpchase, kand, otpop) + the 11 Tier 0/1 canaries. Use the same regenerate-from-current-branch loop pattern as Day 5 / §"Reference: Targeted Multi-Model Retest" (regenerate the MCP via `python -m src.cli` THEN run gams on the freshly-regenerated artifact, otherwise the retest only validates the pre-merge committed `_mcp.gms` files). **Model list updated Day 3:** dropped camcge / cesam2 (Phase B deferred to Sprint 27 #1381):
    ```bash
    REPO_ROOT="$(git rev-parse --show-toplevel)"
-   for m in camcge cesam2 srpchase kand otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
+   for m in srpchase kand otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do
      # See §"Reference: Targeted Multi-Model Retest (Days 5 + 10)" at the bottom
      # of this file for the full per-iteration body — regenerates the MCP from
      # the current branch's src/, then runs gams with cwd=$REPO_ROOT and
@@ -437,13 +442,15 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
      :
    done
    ```
-4. **Evaluate Checkpoint 2 criteria** per PLAN.md §"Checkpoint 2 criteria (Day 10 evaluation)":
-   - Match Δ vs Day 0 ≥ +3
-   - Solve Δ vs Day 0 ≥ +3
-   - Priority 1 Phase A + B both landed
-   - Priority 4 srpchase translates
+4. **Evaluate Checkpoint 2 criteria** per PLAN.md §"Checkpoint 2 criteria (Day 10 evaluation)" (UPDATED Day 3 per Phase B reclassification):
+   - Match Δ vs Day 0 ≥ +1 (was ≥ +3; relaxed because Phase B's +2 deferred to Sprint 27 #1381)
+   - Solve Δ vs Day 0 ≥ +1 (same shape)
+   - Priority 1 Phase A landed (already true — PR #1379; sanity check)
+   - Priority 4 srpchase translates (Day 4 PR landed)
    - Priority 5 otpop NLP-warm-started MCP residual ≈ 0
    - Tier 0 + Tier 1 canaries all match golden
+
+   **GO** (≥ 5 of 6 rows green). **CONDITIONAL GO** (3–4 of 6 green). **NO-GO** (≤ 2 of 6 green, OR any regression in Match / Solve / canaries).
 5. **Document Checkpoint 2 decision** in `SPRINT_LOG.md` Day 10 entry.
 
 **Quality Checks:** `make test` after Day 10 work merges.
@@ -478,7 +485,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - Open this PR (touches `.github/workflows/`, so the workflow self-fires).
    - Verify the bypass path: add `skip-emit-solve-ci` label, observe the workflow short-circuits with the bypass-comment notice.
    - Remove the label, observe the workflow runs the 11 Tier 0/1 canaries to MODEL STATUS 1.
-6. **Promotion check:** if Days 1–10 Pattern C work succeeded for camcge / cesam2, change `tier=pattern-c` → `tier=1` in `.github/path-solve-ci-targets.txt` so future PRs hard-fail on regression.
+6. **Promotion check:** Phase B (camcge / cesam2) deferred to Sprint 27 #1381 per Day 3 — leave `tier=pattern-c` on those rows in `.github/path-solve-ci-targets.txt` (soft-fail). Promotion to `tier=1` is a Sprint 27 task after the Phase B redesign lands.
 
 **Quality Checks:** workflow YAML lint per existing `.github/workflows/lint.yml` patterns; verify `actionlint` passes locally if available.
 
@@ -615,4 +622,8 @@ for m in <model_list>; do
 done
 ```
 
-Where `<model_list>` is the per-day list (Day 5: 4 Pattern C targets + 11 Tier 0/1 canaries; Day 10: 5 Priority-affected models + 11 Tier 0/1 canaries).
+Where `<model_list>` is the per-day list (revised Day 3 per Phase B reclassification to Sprint 27 #1381):
+- **Day 5:** 3 in-scope models (launch, srpchase, otpop) + 11 Tier 0/1 canaries = 14 models.
+- **Day 10:** 3 Priority-affected models (srpchase, kand, otpop) + 11 Tier 0/1 canaries = 14 models.
+
+(camcge / cesam2 / fawley dropped from both lists — Phase B builder redesign deferred to Sprint 27 #1381.)

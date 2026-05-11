@@ -184,7 +184,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Objective:** Evaluate Checkpoint 1 (Priority 1 landed); buffer for Phase A/B slippage.
 
 **Tasks:**
-1. Targeted pipeline retest: translate + solve on the 4 Pattern C target models (camcge / cesam2 / fawley / otpop) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint).
+1. Targeted pipeline retest: translate + solve on the 3 models in scope (launch / srpchase / otpop) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added srpchase (Priority 4 Day 4 target).
 2. Evaluate **Checkpoint 1** criteria below.
 3. If GO: continue Days 6–7 Priorities 2 + 3 as planned.
 4. If CONDITIONAL GO: scope-back Phase B work; document remaining open items as Sprint 27 carryforward.
@@ -195,17 +195,24 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 | Criterion | GO | CONDITIONAL GO | NO-GO |
 |---|---|---|---|
 | Phase A landed: gate restored + correct emit shape + xfail removed | yes | yes | no |
-| launch PATH solve to MODEL STATUS 1 | yes (stretch) | n/a — deferred to Sprint 27 #1378 | n/a |
+| launch PATH solve to MODEL STATUS 1 | stretch — deferred to Sprint 27 #1378 | n/a | n/a |
 | camcge solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
 | cesam2 solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
+| Priority 4 Option 1 short-circuit: srpchase translates | yes | n/a | no |
+| Priority 4 stretch: ≥ 1 of {iswnm, sarf, mexls, nebrazil} also recovers | stretch | stretch | stretch (does not count toward routing) |
+| Priority 5 #1334 routing decision documented (re-opened or successor filed) | yes | yes | no |
 | Tier 0 + Tier 1 canaries (11 models) | All match golden | All match golden | > 0 regression |
 | Tier 0/1/2 (54 models combined) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
 
-- **GO** (Phase A landing + 2 canary rows all green): Continue Days 6+ as planned. **No Sprint 26 Solve gain from Phase A/B** (launch and camcge + cesam2 all deferred to Sprint 27 #1378 + #1381 for PATH-numerics / builder-redesign work). Sprint 26 Solve target relaxed to maintain baseline 104.
-- **CONDITIONAL GO** (Phase A regressed OR canary mismatches): assess revert vs forward-fix. Phase A unlikely to regress at this point (already landed Day 1 + validated Day 2).
-- **NO-GO** (Phase A regression that can't be fixed in Day 5 buffer): Revert PR #1379; lock main pre-Phase-A.
+**Routing (revised Day 3 per Phase B reclassification + Priority 4/5 #1334 forward-pull to Day 4):**
 
-**Note:** Phase B (camcge + cesam2) reclassified to Sprint 27 #1381 per Day 3 discovery — the swap-based transform doesn't generalize to plain-alias bodies. Days 3 + 4 freed; available for forward-pulling Priority 4 (Option 1 short-circuit) or Priority 5 (#1334 investigation).
+- **GO** (≥ 5 of 5 gating rows green — Phase A landed + Priority 4 srpchase translates + Priority 5 #1334 routing + 2 canary rows): Continue Days 6+ as planned. **Realistic Sprint 26 Solve / Match Δ now bounded by Priority 4 (srpchase) + Priority 5 (#1334 / #1335 on otpop) only** — Phase A's launch and Phase B's camcge + cesam2 all deferred to Sprint 27 #1378 + #1381. Sprint 26 Solve / Match targets relaxed to maintain baseline.
+- **CONDITIONAL GO** (Priority 4 lands srpchase but other Priority 4 candidates don't recover, OR Priority 5 #1334 routing is "successor filed" but underlying issue not yet re-opened): proceed; Day 8 buffer absorbs the partial-Priority-4 follow-up. Reclassify residual scope to Sprint 27 if needed.
+- **NO-GO** (Phase A regression OR srpchase fails to translate OR canary regression > 1): Days 6+ buffer for revert + scope-back. Phase A unlikely to regress at this point (already landed Day 1 PR #1379 + validated Day 2 PR #1380 byte-stable on 54 canaries).
+
+**Note:** stretch rows (launch PATH solve; ≥ 1 additional Priority 4 model) don't count toward GO routing; they're tracked for sprint-retrospective metrics + Day 13 final retest reporting.
+
+**Note:** Phase B (camcge + cesam2) reclassified to Sprint 27 #1381 per Day 3 discovery — the swap-based transform doesn't generalize to plain-alias bodies. Day 3 freed; Day 4 absorbs Priority 4 Option 1 + Priority 5 #1334 re-investigation forward-pull (originally Day 8); Day 8 is now buffer.
 
 **Deliverable:** PR (or revert) per checkpoint outcome + `SPRINT_LOG.md` Day 5 entry documenting decision.
 
@@ -292,23 +299,25 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Tasks:**
 1. Run the full otpop NLP-warm-started reproducer per ISSUE_1334.md §Diagnostic: NLP solve via baseline GAMS + dual-multiplier transfer + MCP run with `iterlim=0` + `Inf-Norm` residual capture on `stat_x('1990')` ≈ 760 (pre-fix) → ≈ 0 (post-fix).
 2. Confirm otpop's NLP-warm-started MCP converges to `pi ≈ 4217.80` (matches NLP, per ISSUE_1334.md §Diagnostic).
-3. Targeted pipeline retest on the 5 Priority-affected models (camcge, cesam2, srpchase, kand, otpop) + the 11 Tier 0/1 canaries.
+3. Targeted pipeline retest on the 3 Priority-affected models in scope (srpchase, kand, otpop) + the 11 Tier 0/1 canaries. (camcge + cesam2 deferred to Sprint 27 #1381 per Day 3.)
 4. Evaluate **Checkpoint 2** criteria below.
 
-#### Checkpoint 2 criteria (Day 10 evaluation)
+#### Checkpoint 2 criteria (Day 10 evaluation — UPDATED Day 3 per Phase B reclassification)
 
 | Criterion | GO | CONDITIONAL GO | NO-GO |
 |---|---|---|---|
-| Match Δ vs Day 0 | ≥ +3 | ≥ +1 | ≤ 0 |
-| Solve Δ vs Day 0 | ≥ +3 | ≥ +1 | ≤ 0 |
-| Priority 1 Phase A + B both landed | yes | partial (one of two) | none |
+| Match Δ vs Day 0 | ≥ +1 | ≥ 0 (maintain) | ≤ -1 |
+| Solve Δ vs Day 0 | ≥ +1 | ≥ 0 (maintain) | ≤ -1 |
+| Priority 1 Phase A landed | yes (already true — PR #1379) | yes | no |
 | Priority 4 srpchase translates | yes | n/a | no |
 | Priority 5 otpop NLP-warm-started MCP residual ≈ 0 | yes | rel_diff < pre-fix but not 0 | no improvement |
 | Tier 0 + Tier 1 canaries | All match golden | All match golden | > 0 regression |
 
-- **GO** (≥ 5 of 6): Days 11–13 proceed per planned schedule (PR19 implementation + buffer + final retest).
-- **CONDITIONAL GO** (3–4 of 6): Days 11–13 trim scope. PR19 may slip to a Day-12 fast-track implementation; Day 12 buffer reabsorbed for Priority 5 follow-up if otpop didn't fully resolve.
-- **NO-GO** (≤ 2 of 6): Days 11–12 buffer for revert + scope-back; Day 13 final retest captures whatever shipped.
+**Δ-threshold rationale (revised Day 3):** Original Δ targets (≥ +3 Solve / ≥ +3 Match) assumed Phase B would contribute +2 Solve / +2 Match from camcge + cesam2. With Phase B deferred to Sprint 27 #1381, realistic Sprint 26 max Δ is bounded by Priority 4 (srpchase translate recovery, +1 Solve if PATH solves) + Priority 5 (#1334 / #1335 otpop fix, +1 Solve potentially). GO Δ relaxed to ≥ +1; CONDITIONAL GO Δ relaxed to maintain (≥ 0); NO-GO Δ relaxed to ≤ -1 (actual regression).
+
+- **GO** (≥ 5 of 6 rows green): Days 11–13 proceed per planned schedule (PR19 implementation + buffer + final retest).
+- **CONDITIONAL GO** (3–4 of 6 green): Days 11–13 trim scope. PR19 may slip to a Day-12 fast-track implementation; Day 12 buffer reabsorbed for Priority 5 follow-up if otpop didn't fully resolve.
+- **NO-GO** (≤ 2 of 6 green, OR any regression in Match / Solve / canaries): Days 11–12 buffer for revert + scope-back; Day 13 final retest captures whatever shipped.
 
 **Deliverable:** Checkpoint 2 decision documented in `SPRINT_LOG.md` Day 10 entry.
 
@@ -325,7 +334,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 3. Land `scripts/ci/parse_pr19_targets.py` (~30 LOC per Task 8) + `scripts/ci/run_pr19_solves.py` (~80 LOC per Task 8).
 4. Capture the GAMS installer SHA256 (per Task 8 Open Questions Q1) and replace the `<TO BE FILLED IN BY SPRINT 26 IMPLEMENTATION>` placeholder.
 5. Smoke-test PR19 on this branch: open this PR, observe the workflow fires (this PR touches `.github/workflows/`), and verify the bypass path works by adding the `skip-emit-solve-ci` label.
-6. **Promotion check:** if Days 1–10 Pattern C work succeeded for camcge / cesam2, change `tier=pattern-c` → `tier=1` in `.github/path-solve-ci-targets.txt` so future PRs hard-fail on regression.
+6. **Promotion check:** Phase B (camcge / cesam2) deferred to Sprint 27 #1381 per Day 3 — leave `tier=pattern-c` on those rows in `.github/path-solve-ci-targets.txt` (soft-fail). Promotion to `tier=1` is a Sprint 27 task after the Phase B redesign lands.
 
 **Deliverable:** PR for PR19 CI extension implementation.
 
@@ -334,10 +343,10 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Branch:** `sprint26-day12-buffer`.
 **Effort:** ~4–6h.
 
-**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the 4 Pattern C target models per PR14 reaffirmation in CONTRIBUTING.md (Task 10). Buffer for any Days 1–11 slippage.
+**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per PR14 reaffirmation in CONTRIBUTING.md (Task 10). Buffer for any Days 1–11 slippage.
 
 **Tasks:**
-1. Read `data/gamslib/mcp/camcge_mcp.gms`, `cesam2_mcp.gms`, `fawley_mcp.gms`, `otpop_mcp.gms` end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do").
+1. Read `data/gamslib/mcp/launch_mcp.gms` (Phase A, Day 1), `srpchase_mcp.gms` (Priority 4, Day 4), `otpop_mcp.gms` (Priority 5, Day 9), plus any other artifacts that regenerated this sprint, end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do"). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381).
 2. If any new bugs surface: file as Sprint 27 issues unless trivially fixable in 1–2h.
 3. Buffer: absorb any Days 1–11 slippage. Examples:
    - PR19 implementation slipped to Day 12 → finish here.
