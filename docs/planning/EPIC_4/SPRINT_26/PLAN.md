@@ -110,7 +110,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 1. Read Task 3 prototype patch evidence: `src/kkt/stationarity.py:4339` is currently hardcoded `allow_nonzero_offsets = True`. Task 3 confirmed that flipping this to a broader gate predicate without fixing the downstream consolidated builder reproduces Sprint 25 #1351's launch failure on 3 of 12 canary outputs (quocge, prolog, launch).
 2. Diff Sprint 25 #1306 (the original launch fix) vs Sprint 25 #1351 (the rollback) to identify the consolidated zero-offset builder code path. Both PRs touch `src/kkt/stationarity.py` consolidator logic.
 3. Implement the rewrite per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)": `sum(ss$ge(s,ss), -nu_dweight(ss))` instead of the over-counting `sum(ss, -1$ge(ss,s) * nu_dweight(s))` per-offset enumeration.
-4. Re-enable the Pattern C gate for the launch case (un-condition the `if eq_def_for_gate is not None:` branch).
+4. Re-enable the Pattern C gate for the launch case (remove the `if eq_def_for_gate is not None:` guard so the gate-predicate branch no longer no-ops).
 5. Tier 0 dispatch canary: must remain byte-identical.
 6. Tier 1 canary (10 models): must match golden.
 7. Re-run the test that #1351 marked `xfail (strict=True)` — it should now PASS.
@@ -412,7 +412,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 - `docs/planning/EPIC_4/PROJECT_PLAN.md` §Sprint 26 (lines 931–1019) — sprint goal, components, deliverables, acceptance criteria, estimated effort, risk level.
 - `docs/planning/EPIC_4/SPRINT_25/SPRINT_RETROSPECTIVE.md` §"Sprint 26 Recommendations" + §"What We'd Do Differently" — Priorities 1–5 + PR16–PR19 + PR14 reaffirmation rationale.
 - `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` — 11 prep tasks completed before Day 0.
-- `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` — 27 unknowns, all VERIFIED before Day 0.
+- `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` — 26 unknowns, all VERIFIED before Day 0.
 - `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` — Day 0 baseline + bucket-provenance.
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` — Task 3 REPLAN recommendation that drives Day 1 + Day 5 Checkpoint 1 routing.
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` — Task 4 per-issue Day 6 plan.

@@ -1307,7 +1307,7 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 ### Success Criteria for Prep Phase
 
 - [x] **All 11 prep tasks complete** before Sprint 26 Day 1 — see Final Prep-Task Status table below
-- [x] `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 27 unknowns, 6 categories; all VERIFIED**
+- [x] `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories; all VERIFIED**
 - [x] `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
 - [x] `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3) — **REPLAN**
 - [x] `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
@@ -1337,7 +1337,7 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 
 **All 11 prep tasks complete. Sprint 26 ready to kick off Day 0.**
 
-**KU verification:** All 27 Sprint 26 Known Unknowns (KUs 1.1–6.5) are ✅ VERIFIED in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` per Tasks 2–10. The Sprint 25 carryforward KUs (KU-33 through KU-36) are referenced in `PLAN.md` where they drive specific day-level work (KU-33 → Days 1–5; KU-34 → Day 13 retest; KU-35 → Day 1 Phase A; KU-36 → Days 8–10 Priority 5).
+**KU verification:** All 26 Sprint 26 Known Unknowns (KUs 1.1–6.5) are ✅ VERIFIED in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` per Tasks 2–10. The Sprint 25 carryforward KUs (KU-33 through KU-36) are referenced in `PLAN.md` where they drive specific day-level work (KU-33 → Days 1–5; KU-34 → Day 13 retest; KU-35 → Day 1 Phase A; KU-36 → Days 8–10 Priority 5).
 
 **Sprint 27 carryforward issues identified during prep:** #1356 (fawley comp_up subset/superset, per Task 4), #1357 (otpop comp_up subset/superset, per Task 7), #1374 (emit duplicate-init bugs, surfaced during Task 9 PR review), #1224 (mine ParamRef IndexOffset, deferred per Task 6 — pre-existing tracker). All to be filed at Sprint 26 Day 13 close per `PLAN.md`.
 
