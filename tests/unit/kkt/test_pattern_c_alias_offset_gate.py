@@ -46,30 +46,19 @@ import pytest
 
 
 @pytest.mark.unit
-@pytest.mark.xfail(
-    reason=(
-        "Issue #1351: the Pattern C consolidation gate from #1306 (which this "
-        "test covers) suppressed phantom ±N offsets correctly but the "
-        "downstream zero-offset builder loses the cross-element aggregation, "
-        "leaving launch's KKT structurally incomplete (PATH reports "
-        "model_infeasible). Reverting the gate (this test xfails) restored "
-        "launch's solver-feasibility (obj=2731.711, matches Sprint 25 Day 0 "
-        "baseline) at the cost of re-introducing the phantom-offset emit. "
-        "The proper fix — make the consolidated zero-offset Sum iterate over "
-        "the equation domain with the body's condition (e.g., emit "
-        "`sum(ss$ge(s,ss), -nu_dweight(ss))` instead of "
-        "`sum(ss, -1$ge(ss,s) * nu_dweight(s))` for launch's dweight) — is "
-        "tracked under the launch comparison-mismatch family (#1226, #945, "
-        "#1142). Once that lands, remove this xfail."
-    ),
-    strict=True,
-)
 def test_alias_only_conditional_sum_emits_no_phantom_offsets(tmp_path):
     """A `sum(ss$ge(ss,s), iweight(ss))` body — no `IndexOffset` — must
     not yield `nu_dweight(s+N)` / `nu_dweight(s-N)` terms in the
-    stationarity for `iweight`. Only a single zero-offset multiplier
-    (possibly wrapped in `sum(ss, ...)` — Bug #2 is out of scope here)
-    should appear.
+    stationarity for `iweight`, AND the consolidated multiplier must be
+    indexed by the source alias `ss` (not the equation domain `s`).
+
+    Sprint 26 Day 1 Phase A landed the proper Pattern C fix per Sprint 25
+    SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" — the consolidated
+    zero-offset Sum now iterates over the equation domain with the body's
+    condition swapped (``alias ↔ eq_dom``), producing the GAMS-equivalent
+    of the target ``sum(ss$ge(s,ss), -nu_dweight(ss))`` shape rather than
+    the over-counting ``sum(ss, -1$ge(ss,s) * nu_dweight(s))`` form that
+    #1351 rolled back the original #1306 gate to avoid.
 
     Mirrors the minimal shape of launch.gms's dweight equation. Uses a
     small set (card(s)=3) so any enumeration would produce ±1, ±2
@@ -143,12 +132,35 @@ solve m using nlp minimizing z;
             f"Full stat_iweight text:\n{stat_iweight_text}"
         )
 
-    # Sanity: the zero-offset multiplier must still be present. Without
-    # it, the stationarity would be missing the dweight contribution
-    # entirely.
-    assert "nu_dweight(s)" in stat_iweight_text, (
-        "Expected zero-offset nu_dweight(s) multiplier to remain after "
-        "the Pattern C gate consolidates phantom-offset groups. "
+    # Sprint 26 Day 1 Phase A: the consolidated multiplier must be indexed
+    # by the source alias ``ss`` (not the equation domain ``s``). Without
+    # this re-index, the consolidated form ``sum(ss, -1$ge(ss,s) *
+    # nu_dweight(s))`` over-counts and PATH reports model_infeasible
+    # (the #1351 failure mode).
+    assert "nu_dweight(ss)" in stat_iweight_text, (
+        "Expected alias-indexed nu_dweight(ss) multiplier after the Sprint 26 "
+        "Day 1 Phase A Pattern C consolidation transform. "
+        f"Full stat_iweight text:\n{stat_iweight_text}"
+    )
+
+    # Negative: the unswapped ``nu_dweight(s)`` form must NOT appear (it would
+    # be the over-counting body shape that #1351 rolled back to). Note that
+    # ``"nu_dweight(s)"`` (with the closing paren) is distinct from
+    # ``"nu_dweight(ss)"`` as a substring — ``"nu_dweight(s)" in
+    # "nu_dweight(ss)"`` is False.
+    assert "nu_dweight(s)" not in stat_iweight_text, (
+        "Found over-counting nu_dweight(s) (eq-domain-indexed) multiplier in "
+        "stat_iweight body — the consolidated builder should produce "
+        "alias-indexed nu_dweight(ss) per Sprint 26 Day 1 Phase A. "
+        f"Full stat_iweight text:\n{stat_iweight_text}"
+    )
+
+    # Sanity: the body's condition must be swapped to ``ge(s,ss)`` (from the
+    # source's ``ge(ss,s)``) — that's the GAMS-equivalent of the target
+    # ``sum(ss$ge(s,ss), -nu_dweight(ss))`` form.
+    assert "ge(s,ss)" in stat_iweight_text, (
+        "Expected swapped condition ``ge(s,ss)`` in stat_iweight body — "
+        "the Pattern C consolidated builder swaps alias ↔ eq-domain indices. "
         f"Full stat_iweight text:\n{stat_iweight_text}"
     )
 

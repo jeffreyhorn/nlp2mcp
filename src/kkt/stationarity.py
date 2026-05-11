@@ -293,6 +293,197 @@ def _expr_mentions_indices_canonical(
     )
 
 
+def _find_eq_domain_index_in_expr(
+    expr: Expr,
+    target_canonical_sets: frozenset[str],
+    model_ir: ModelIR,
+    bound_indices: frozenset[str],
+) -> str | None:
+    """Return the first lowercased index name in ``expr`` whose canonical set
+    (after alias resolution) is in ``target_canonical_sets`` and is not bound
+    by an enclosing ``Sum``/``Prod``.
+
+    Companion to ``_expr_mentions_indices_canonical`` — used to extract the
+    eq-domain index name from a Pattern C alias-sum's condition so the Day 1
+    Phase A consolidated builder can swap ``alias ↔ eq_dom`` in the term's
+    condition. (Knowing only that the condition mentions SOME eq-domain index
+    is insufficient; the swap requires the index name.)
+    """
+    if isinstance(expr, SymbolRef):
+        name_lower = expr.name.lower()
+        if name_lower not in bound_indices:
+            canonical = _resolve_alias_target(name_lower, model_ir)
+            if canonical in target_canonical_sets:
+                return name_lower
+
+    if isinstance(expr, IndexOffset):
+        if isinstance(expr.base, str):
+            base_lower = expr.base.lower()
+            if base_lower not in bound_indices:
+                canonical = _resolve_alias_target(base_lower, model_ir)
+                if canonical in target_canonical_sets:
+                    return base_lower
+
+    if isinstance(expr, (VarRef, ParamRef, EquationRef, IndexOffset)):
+        for idx in getattr(expr, "indices", ()):
+            if isinstance(idx, str) and idx.lower() not in bound_indices:
+                canonical = _resolve_alias_target(idx.lower(), model_ir)
+                if canonical in target_canonical_sets:
+                    return idx.lower()
+        for child in expr.children():
+            found = _find_eq_domain_index_in_expr(
+                child, target_canonical_sets, model_ir, bound_indices
+            )
+            if found is not None:
+                return found
+        return None
+
+    for child in expr.children():
+        found = _find_eq_domain_index_in_expr(child, target_canonical_sets, model_ir, bound_indices)
+        if found is not None:
+            return found
+    return None
+
+
+def _expr_references_var(expr: Expr, var_name: str) -> bool:
+    """Return True iff ``expr`` contains any ``VarRef`` whose ``name`` matches
+    ``var_name`` (case-insensitive).
+
+    Used by ``_find_pattern_c_alias_sum`` to gate the Pattern C transform on
+    whether the differentiated variable actually appears inside the matching
+    alias-conditional Sum — without this check, a Pattern C body like
+    ``dweight(s).. weight(s) =e= sum(ss$ge(ss,s), iweight(ss) + pweight(ss))``
+    would incorrectly fire the gate when differentiating against ``weight``
+    (which appears OUTSIDE the alias sum), producing a spurious reindex of
+    ``nu_dweight(s)`` to ``nu_dweight(ss)`` in ``stat_weight``.
+    """
+    if isinstance(expr, VarRef) and expr.name.lower() == var_name.lower():
+        return True
+    return any(_expr_references_var(c, var_name) for c in expr.children())
+
+
+def _find_pattern_c_alias_sum(
+    expr: Expr,
+    target_canonical_sets: frozenset[str],
+    model_ir: ModelIR,
+    eq_domain_canonical: frozenset[str],
+    var_name: str,
+    bound_indices: frozenset[str] = frozenset(),
+) -> dict | None:
+    """Find the launch-shaped Pattern C alias sum in ``expr`` that references
+    ``var_name`` in its body, and return its structural info — or ``None`` if
+    no match.
+
+    Same predicate as ``_body_has_aliased_conditional_sum_over_sets`` plus the
+    additional requirement that the differentiated variable ``var_name``
+    appears inside the matching Sum's body. The variable-scope check prevents
+    spurious gate firings for variables that appear outside the alias sum
+    (e.g. launch's ``weight(s)`` on the LHS of
+    ``dweight(s).. weight(s) =e= sum(ss$ge(ss,s), iweight(ss) + ...)`` —
+    differentiating ``stat_weight`` against this equation must NOT trigger
+    the Pattern C swap).
+
+    Returns ``{"alias_name", "eq_domain_index", "condition"}`` for the FIRST
+    matching ``Sum``. Used by ``_add_indexed_jacobian_terms`` to drive the
+    Sprint 26 Day 1 Phase A Pattern C consolidated builder (Sprint 25
+    SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
+
+    - ``alias_name``: lowercased name as it appears in the matching Sum's
+      ``index_sets`` (e.g. ``"ss"`` for launch's ``dweight`` body).
+    - ``eq_domain_index``: lowercased name of the first index in the Sum's
+      condition that canonicalizes to a set in ``eq_domain_canonical`` and is
+      not bound by any enclosing ``Sum``/``Prod``.
+    - ``condition``: the matching Sum's condition AST (unchanged).
+    """
+    if isinstance(expr, Sum):
+        summed_canonicals = frozenset(
+            _resolve_alias_target(idx, model_ir) for idx in expr.index_sets
+        )
+        if (
+            summed_canonicals & target_canonical_sets
+            and expr.condition is not None
+            and _expr_references_var(expr.body, var_name)
+        ):
+            condition_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+            eq_idx_name = _find_eq_domain_index_in_expr(
+                expr.condition, eq_domain_canonical, model_ir, condition_bound
+            )
+            if eq_idx_name is not None:
+                alias_name: str | None = None
+                for idx in expr.index_sets:
+                    if _resolve_alias_target(idx, model_ir) in target_canonical_sets:
+                        alias_name = idx.lower()
+                        break
+                if alias_name is not None:
+                    return {
+                        "alias_name": alias_name,
+                        "eq_domain_index": eq_idx_name,
+                        "condition": expr.condition,
+                    }
+
+    if isinstance(expr, (Sum, Prod)):
+        new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+        for child in expr.children():
+            found = _find_pattern_c_alias_sum(
+                child, target_canonical_sets, model_ir, eq_domain_canonical, var_name, new_bound
+            )
+            if found is not None:
+                return found
+        return None
+
+    for child in expr.children():
+        found = _find_pattern_c_alias_sum(
+            child, target_canonical_sets, model_ir, eq_domain_canonical, var_name, bound_indices
+        )
+        if found is not None:
+            return found
+    return None
+
+
+def _apply_pattern_c_swap_to_term(
+    term: Expr,
+    alias_name: str,
+    eq_domain_index: str,
+) -> Expr:
+    """Apply the Sprint 26 Day 1 Phase A Pattern C alias↔eq-domain swap to a
+    stationarity term.
+
+    When the Pattern C consolidation gate fires, the standard term-building
+    path emits (after the free-index auto Sum-wrap)::
+
+        Sum((alias,), (coeff * 1$cond(alias, eq_dom)) * MultiplierRef(nu_eq, (eq_dom,)))
+
+    which is mathematically over-counting — for launch's ``dweight`` this is
+    the failure mode #1351 rolled back. The correct emit (per Sprint 25
+    SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") is::
+
+        Sum((alias,), (coeff * 1$cond(eq_dom, alias)) * MultiplierRef(nu_eq, (alias,)))
+
+    which is GAMS-equivalent to the target shape::
+
+        sum(alias$cond(eq_dom, alias), coeff * nu_eq(alias))
+
+    The transform swaps ``alias_name`` ↔ ``eq_domain_index`` in the BODY (and
+    condition, if any) of the outer ``Sum``, leaving the Sum's
+    ``index_sets`` alone so the binding contract is preserved. When ``term``
+    is not the expected outer-Sum shape (defensive — e.g., a transform
+    upstream collapsed it), the swap is applied to the whole expression.
+    """
+    swap_map = {
+        alias_name: eq_domain_index,
+        eq_domain_index: alias_name,
+    }
+    if isinstance(term, Sum):
+        new_body = _rewrite_subset_to_superset(term.body, swap_map)
+        new_cond = (
+            _rewrite_subset_to_superset(term.condition, swap_map)
+            if term.condition is not None
+            else None
+        )
+        return Sum(term.index_sets, new_body, new_cond)
+    return _rewrite_subset_to_superset(term, swap_map)
+
+
 def _build_lead_lag_condition_expr(
     lead_offsets: dict[str, int],
     lag_offsets: dict[str, int],
@@ -4315,35 +4506,66 @@ def _add_indexed_jacobian_terms(
                     if eq_def_for_gate is not None
                     else frozenset()
                 )
-                # Issue #1351: The Pattern C consolidation gate (#1306, Sprint 25
-                # Day 6) was added to suppress phantom ±N IndexOffset enumeration
-                # for `sum(ss$ge(ss,s), iweight(ss)+...)`-shape bodies. But the
-                # downstream zero-offset builder loses the cross-element
-                # aggregation entirely — for launch, `stat_iweight(s)` ends up
-                # with only `nu_dweight(s)` instead of the correct
-                # `sum(ss$ge(s,ss), -nu_dweight(ss))`, leaving the KKT structurally
-                # incomplete (PATH reports `model_infeasible (status 5)`).
+                # Sprint 25 Day 6 / Sprint 26 Day 1 Phase A (Pattern C Bug #1):
+                # decide up-front whether non-zero offset groups are semantically
+                # legitimate for this (constraint, variable) pair.
+                # ``_compute_index_offset_key`` computes positional differences
+                # between eq and var instances regardless of source intent, so
+                # for a launch-shaped conditional alias sum (e.g. launch.gms's
+                # ``dweight(s).. ... =e= sum(ss$ge(ss,s), iweight(ss) + ...)``)
+                # it invents ±N offsets that don't exist in the source. The
+                # gate below consolidates those spurious groups into a single
+                # zero-offset key iff BOTH (a) the source equation body has no
+                # ``IndexOffset`` on any index that (via alias resolution)
+                # refers to a set in the variable's domain, AND (b) the body
+                # contains an aliased conditional sum whose ``$`` condition
+                # references the equation's own domain — the launch-style
+                # fingerprint. Plain alias-iteration sums (e.g. quocge's
+                # ``sum(i, ax(i,j)*pq(i))``, prolog's ``sum(j, a(i,j)*q(j,t))``)
+                # lack the conditional link and are deliberately left alone,
+                # preserving existing Tier 0/1 canary outputs. Real lead/lag
+                # equations (e.g. paklive's ``nutbal(n,t).. ... xtransf(n,t--1)``,
+                # twocge #1277, qabel/abel's stateq) retain the original
+                # per-offset grouping because condition (a) fails.
                 #
-                # Until the consolidated zero-offset builder is taught to emit
-                # the correct sum-over-equation-domain, leave the original
-                # per-offset enumeration in place. The Day 0 baseline emit
-                # (5 separate `nu_dweight(s±k)` terms) is mathematically
-                # over-counted but lets PATH find a feasible point that
-                # satisfies the over-determined KKT system; obj matches Day 0
-                # baseline (2731.711).
-                #
-                # The phantom-offsets quality concern from #1306 is re-tracked
-                # via the launch comparison-mismatch family (#1226, #945, #1142)
-                # and the `test_alias_only_conditional_sum_emits_no_phantom_offsets`
-                # regression test is marked xfail with a cross-reference.
+                # Sprint 25 #1351 rolled back the original #1306 gate
+                # ``allow_nonzero_offsets = False`` because the downstream
+                # zero-offset builder collapsed all matched offset entries to a
+                # single ``nu_eq(eq_domain)`` term, losing the cross-element
+                # aggregation and producing a structurally incomplete KKT (PATH
+                # reported ``model_infeasible`` on launch). Sprint 26 Day 1
+                # Phase A restores the gate AND fixes the builder: when the
+                # gate fires we capture ``pattern_c_info`` (alias name, eq-domain
+                # index, body's condition) so the downstream term construction
+                # can swap ``alias ↔ eq_dom`` indices and re-index the
+                # multiplier — producing the correct ``sum(ss$ge(s,ss),
+                # -nu_dweight(ss))`` shape (per Sprint 25 SPRINT_LOG.md Day 11
+                # §"Open follow-ups (revised)").
                 allow_nonzero_offsets = True
-                # NOTE: previously this branch set `allow_nonzero_offsets = False`
-                # when the body shape matched launch's pattern (no IndexOffset on
-                # the variable's domain + an aliased conditional sum referencing
-                # the equation's own domain index). That path is preserved as a
-                # pure no-op to keep the bisect history readable.
+                pattern_c_info: dict | None = None
                 if eq_def_for_gate is not None and variable_canonical_sets:
-                    pass
+                    lhs_expr, rhs_expr = eq_def_for_gate.lhs_rhs
+                    body_has_index_offset = _body_has_index_offset_on_sets(
+                        lhs_expr, variable_canonical_sets, kkt.model_ir
+                    ) or _body_has_index_offset_on_sets(
+                        rhs_expr, variable_canonical_sets, kkt.model_ir
+                    )
+                    if not body_has_index_offset:
+                        pattern_c_info = _find_pattern_c_alias_sum(
+                            lhs_expr,
+                            variable_canonical_sets,
+                            kkt.model_ir,
+                            eq_domain_canonical,
+                            var_name,
+                        ) or _find_pattern_c_alias_sum(
+                            rhs_expr,
+                            variable_canonical_sets,
+                            kkt.model_ir,
+                            eq_domain_canonical,
+                            var_name,
+                        )
+                        if pattern_c_info is not None:
+                            allow_nonzero_offsets = False
 
                 # Issue #1045: Sub-group entries by their index offset pattern.
                 # For lead/lag equations like totalcap(t).. k(t+1) = k(t)*spda + kn(t+1),
@@ -5291,6 +5513,24 @@ def _add_indexed_jacobian_terms(
                                     guard = Binary("and", guard, sc)
                                 term = DollarConditional(value_expr=term, condition=guard)
                             term = Sum(sum_indices, term)
+
+                    # Sprint 26 Day 1 Phase A (Pattern C Bug #1 — proper fix):
+                    # when the gate fired (``pattern_c_info is not None``) and
+                    # the offset_key is the consolidated zero-offset key, the
+                    # standard term-building path produces the mathematically
+                    # over-counting shape ``Sum((alias,), (coeff * 1$cond(
+                    # alias, eq_dom)) * MultiplierRef(nu_eq, (eq_dom,)))`` —
+                    # the failure mode #1351 rolled back. Apply the swap
+                    # ``alias ↔ eq_dom`` to the inner body so the result is the
+                    # GAMS-equivalent of the target form ``sum(alias$cond(
+                    # eq_dom, alias), coeff * nu_eq(alias))`` (per Sprint 25
+                    # SPRINT_LOG.md Day 11 §"Open follow-ups (revised)").
+                    if pattern_c_info is not None and all(o == 0 for o in offset_key):
+                        term = _apply_pattern_c_swap_to_term(
+                            term,
+                            pattern_c_info["alias_name"],
+                            pattern_c_info["eq_domain_index"],
+                        )
 
                     # Issue #1049: Guard multiplier terms with $(sameas(...))
                     # when the constraint references the variable with a fixed

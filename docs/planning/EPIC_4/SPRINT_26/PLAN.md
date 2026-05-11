@@ -192,11 +192,12 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 |---|---|---|---|
 | camcge solves to MODEL STATUS 1 | yes | n/a | no |
 | cesam2 solves to MODEL STATUS 1 | yes | yes | no |
-| Phase A launch fix re-landed (xfail removed) | yes | yes | no |
+| Phase A landed: gate restored + correct emit shape + xfail removed | yes | yes | no |
+| launch PATH solve to MODEL STATUS 1 | yes (stretch) | n/a — deferred to Sprint 27 #1378 | n/a |
 | Tier 0 + Tier 1 canaries (11 models) | All match golden | All match golden | > 0 regression |
 | Tier 0/1/2 (54 models combined) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
 
-- **GO** (≥ 4 of 5): Continue Days 6–7 as planned. Sprint 26 Solve +2 (camcge + cesam2) booked.
+- **GO** (≥ 4 of 5 gating rows; launch PATH solve row is stretch, does not count toward routing): Continue Days 6–7 as planned. Sprint 26 Solve +2 (camcge + cesam2) booked.
 - **CONDITIONAL GO** (camcge regresses but cesam2 lands, OR vice versa): proceed with the working half; reclassify the failing model as Sprint 27 carryforward. Sprint 26 Solve +1 booked.
 - **NO-GO** (Phase A regression OR neither Phase B model lands): Revert Phase B PRs; lock main on Phase A only; route Phase B to Sprint 27.
 
