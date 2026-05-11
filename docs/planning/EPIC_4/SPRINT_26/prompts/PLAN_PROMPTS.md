@@ -246,7 +246,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
        continue
      fi
      # 2. Run gams on the freshly-regenerated MCP. Set cwd=$REPO_ROOT so
-     #    any presolve-variant `\$include` lines resolve correctly (per
+     #    any presolve-variant `$include` lines resolve correctly (per
      #    Sprint 25 #1345/#1346/#1347; same pattern as scripts/gamslib/test_solve.py).
      (cd "$REPO_ROOT" && gams "/tmp/sprint26-day5/$m/${m}_mcp.gms" lo=0 reslim=30 \
        ScrDir=/tmp/sprint26-day5/$m \
