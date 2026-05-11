@@ -26,18 +26,20 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 ---
 
-## Sprint 26 Targets (per PROJECT_PLAN.md §Sprint 26 Acceptance Criteria + Task 9 baseline)
+## Sprint 26 Targets (per PROJECT_PLAN.md §Sprint 26 Acceptance Criteria + Task 9 baseline — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
 
-| Metric | Day 0 (Task 9 baseline) | Sprint 26 Target | Stretch | Net needed |
+| Metric | Day 0 (Task 9 baseline) | Sprint 26 Target (revised Day 3) | Stretch | Net needed |
 |---|---|---|---|---|
 | Parse | 142/142 (100%) | ≥ 142/142 | — | 0 (invariant) |
-| Translate | 130/142 (91.5%) | ≥ 135/142 | ≥ 137/142 | **+5** (Priority 4 must recover the 3 Day 0 machine-variance churn-outs AND add ≥ 2 more — per Task 9 §4.3) |
-| Solve | 104 | ≥ 108 | ≥ 110 | **+4** (Priority 1 +2 from camcge / cesam2; Priority 5 +1–2 from #1334 / #1335 fixes) |
-| Match | 60 | ≥ 64 | ≥ 66 | **+4** (Priority 1 + Priority 5) |
-| path_syntax_error | 9 | ≤ 6 | ≤ 4 | **−3** (Priority 1 lands −2 from camcge + cesam2 if Phase A+B both succeed) |
+| Translate | 130/142 (91.5%) | ≥ 132/142 (maintain churn-outs + ≥ 2 from Priority 4) | ≥ 135/142 | **+2** (Priority 4 short-circuit recovers srpchase / iswnm) |
+| Solve | 104 | ≥ 104 (maintain) | ≥ 106 | **0** (Priority 5 +1–2 stretch from #1334 / #1335; Phase A/B Solve gains deferred to Sprint 27 #1378 + #1381) |
+| Match | 60 | ≥ 60 (maintain) | ≥ 62 | **0** (same rationale as Solve) |
+| path_syntax_error | 9 | ≤ 9 (maintain) | ≤ 8 | **0** (Phase B camcge/cesam2 deferred — they stay in path_syntax_error this sprint) |
 | path_solve_terminated | 5 | ≤ 5 | ≤ 4 | maintain (Sprint 25 floor) |
 | model_infeasible | 4 | ≤ 4 | ≤ 3 | maintain |
-| Tests | 4,735 | ≥ 4,750 | — | +15 (Sprint 26 fix work adds regression tests) |
+| Tests | 4,735 | ≥ 4,737 (maintain Day 1 floor) | ≥ 4,745 | +2 (Phase A regression tests already landed Day 1; Sprint 26 remaining adds modest test coverage) |
+
+**Day 3 target revision rationale:** Phase B's swap-based transform doesn't generalize to plain-alias bodies (Day 3 discovery — element-to-set substitution collapses alias and eq-domain names before the swap can run). Phase B redesign (camcge + cesam2) deferred to Sprint 27 #1381. Sprint 26 Solve / Match / path_syntax_error targets relaxed to maintain; Sprint 26 still delivers Phase A (launch consolidated emit, Day 1 PR #1379) + Priority 2/3/4/5 work.
 
 **Bucket-provenance evaluation** (per PR17, Task 9 §4.3): Sprint 26 Day-N retests must distinguish bucket churn from real regressions. The 3 Day-0 machine-variance churn-outs (clearlak / ganges / turkpow `path_syntax_error → translate_timeout`) are expected to return to `path_syntax_error` once Priority 4 lands the Option 1 short-circuit — the count moving back UP is NOT a regression. The retest must read the per-model bucket-provenance column to disambiguate.
 
@@ -47,7 +49,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 | Priority | Days | Effort | Lead deliverable |
 |---|---|---|---|
-| 1 — Pattern C Phase A + B | 1–4 | ~12–16h | Generalized Pattern C gate; #1306 xfail removed; +2 Match (camcge + cesam2) |
+| 1 — Pattern C Phase A | 1 (Days 2 validation, Day 3 reclassification) | ~6h actual | Phase A landed Day 1 PR #1379; #1306 xfail removed; consolidated launch emit. **Phase B (camcge + cesam2) reclassified Day 3 to Sprint 27 #1381** (swap-based transform doesn't generalize to plain-alias). Days 3 + 4 freed. |
 | **Checkpoint 1** (Day 5) | 5 | n/a | Priority 1 GO/NO-GO routing |
 | 2 — Pattern A reclassification | 6–7 | ~1.5h | 4 closures + 1 close-and-refile + 1 forward-link |
 | 3 — Pattern E carryforward (kand) | 6–7 (parallel) | ~3–6h | kand alias-AD fix OR Sprint 27 carryforward |
@@ -135,42 +137,25 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 **Deliverable:** PR for Phase A validation + Phase B scoping notes.
 
-### Day 3 — Priority 1 Phase B: camcge Fix
+### Day 3 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign — see SPRINT_LOG.md Day 3)
 
-**Branch:** `sprint26-day3-pattern-c-phase-b-camcge`.
-**Effort:** ~5–7h.
+**Original objective:** Pattern C gate generalization for camcge (#1354).
 
-**Objective:** Land the Pattern C gate generalization for camcge (#1354).
+**Reclassification reason:** Day 3 attempt to extend Phase A's swap-based transform via gate-predicate relaxation produced mathematically wrong emits on plain-alias bodies (camcge + 10 other byte-shifted canaries). Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking Phase A's swap assumption. See `SPRINT_LOG.md` Day 3 entry for full design discovery + rollback.
 
-**Tasks:**
-1. Implement the gate predicate broadening per Day 2 scoping. Probable patch site: `src/kkt/stationarity.py` Pattern C gate predicate (currently launch-shape-specific).
-2. Add unit test: synthetic IR that mirrors camcge's `sum(j$nonsa(j), ...)` plain-alias pattern (no `$cond`); assert no phantom `nu_<eq>(i±N)` enumeration in `stat_<var>` body.
-3. Translate camcge fresh; PATH solve. Confirm `$141` cascade resolves; record rel_diff vs NLP.
-4. Full 54-model Tier 0/1/2 golden-file regression.
-5. Tier 0 + Tier 1 canary.
+**Deferred to Sprint 27 #1381:** Pattern C Phase B redesign (camcge + cesam2 + likely other plain-alias variants currently in the path_syntax_error bucket). Estimated 10–16h across Phase B-1 / B-2 / B-3 sub-scopes.
 
-**PR14 obligation:** Include regenerated `data/gamslib/mcp/camcge_mcp.gms` in PR diff.
+**Day 3 deliverable shipped:** Docs-only PR with `SPRINT_LOG.md` Day 3 entry, `PLAN.md` reclassification, and Sprint 27 #1381 carryforward issue. No `src/` changes.
 
-**Deliverable:** PR for camcge Phase B fix. Sprint 26 Solve +1 candidate.
+### Day 4 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign — see SPRINT_LOG.md Day 3)
 
-### Day 4 — Priority 1 Phase B: cesam2 Fix + PR19 First Live Run
+**Original objective:** Pattern C gate generalization for cesam2 (#1355) + dim-mismatch handling.
 
-**Branch:** `sprint26-day4-pattern-c-phase-b-cesam2`.
-**Effort:** ~5–7h.
+**Reclassification reason:** Day 3 design discovery showed Phase B's plain-alias case requires a builder redesign (intercept BEFORE element-to-set substitution, not after). cesam2's dim-mismatch case is a strict superset of the Day 3 issue — same redesign applies.
 
-**Objective:** Land the Pattern C gate generalization for cesam2 (#1355). First emit-affecting PR exercised under PR19 CI (if PR19 implementation lands earlier than Day 11 — otherwise skip the CI portion until Day 11 plus a back-fill canary check).
+**Deferred to Sprint 27 #1381:** Same workstream as camcge (Phase B-3 covers cesam2 dim-mismatch + sameas-block element-to-set artifacts).
 
-**Tasks:**
-1. Extend the gate predicate to also recognize `sameas`-decomposed SAM-block aliases (cesam2 case).
-2. Add unit test for the `sameas` variant.
-3. Translate cesam2 fresh; PATH solve. Confirm `$141` cascade on `nu_COLSUM` resolves; record rel_diff.
-4. Full 54-model Tier 0/1/2 golden-file regression.
-5. Tier 0 + Tier 1 canary.
-6. (If PR19 not yet implemented:) Manually run the 11 Tier 0/1 canary PATH solves locally per `DESIGN_PR19_SOLVE_TIME_CI.md` recipe + verify all reach MODEL STATUS 1.
-
-**PR14 obligation:** Include regenerated `data/gamslib/mcp/cesam2_mcp.gms` in PR diff.
-
-**Deliverable:** PR for cesam2 Phase B fix. Sprint 26 Solve +1 candidate.
+**Day 4 freed.** Available for Day-3-style buffer / forward-pulling later priorities (Priority 4 short-circuit candidate, Priority 5 #1334 investigation).
 
 ### Day 5 — Checkpoint 1 + Buffer
 
@@ -186,20 +171,22 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 4. If CONDITIONAL GO: scope-back Phase B work; document remaining open items as Sprint 27 carryforward.
 5. If NO-GO: assess revert vs forward-fix; potentially extend Day 5 into Day 6 to land a Phase A-only fix.
 
-#### Checkpoint 1 criteria (Day 5 evaluation)
+#### Checkpoint 1 criteria (Day 5 evaluation — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
 
 | Criterion | GO | CONDITIONAL GO | NO-GO |
 |---|---|---|---|
-| camcge solves to MODEL STATUS 1 | yes | n/a | no |
-| cesam2 solves to MODEL STATUS 1 | yes | yes | no |
 | Phase A landed: gate restored + correct emit shape + xfail removed | yes | yes | no |
 | launch PATH solve to MODEL STATUS 1 | yes (stretch) | n/a — deferred to Sprint 27 #1378 | n/a |
+| camcge solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
+| cesam2 solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
 | Tier 0 + Tier 1 canaries (11 models) | All match golden | All match golden | > 0 regression |
 | Tier 0/1/2 (54 models combined) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
 
-- **GO** (≥ 4 of 5 gating rows; launch PATH solve row is stretch, does not count toward routing): Continue Days 6–7 as planned. Sprint 26 Solve +2 (camcge + cesam2) booked.
-- **CONDITIONAL GO** (camcge regresses but cesam2 lands, OR vice versa): proceed with the working half; reclassify the failing model as Sprint 27 carryforward. Sprint 26 Solve +1 booked.
-- **NO-GO** (Phase A regression OR neither Phase B model lands): Revert Phase B PRs; lock main on Phase A only; route Phase B to Sprint 27.
+- **GO** (Phase A landing + 2 canary rows all green): Continue Days 6+ as planned. **No Sprint 26 Solve gain from Phase A/B** (launch and camcge + cesam2 all deferred to Sprint 27 #1378 + #1381 for PATH-numerics / builder-redesign work). Sprint 26 Solve target relaxed to maintain baseline 104.
+- **CONDITIONAL GO** (Phase A regressed OR canary mismatches): assess revert vs forward-fix. Phase A unlikely to regress at this point (already landed Day 1 + validated Day 2).
+- **NO-GO** (Phase A regression that can't be fixed in Day 5 buffer): Revert PR #1379; lock main pre-Phase-A.
+
+**Note:** Phase B (camcge + cesam2) reclassified to Sprint 27 #1381 per Day 3 discovery — the swap-based transform doesn't generalize to plain-alias bodies. Days 3 + 4 freed; available for forward-pulling Priority 4 (Option 1 short-circuit) or Priority 5 (#1334 investigation).
 
 **Deliverable:** PR (or revert) per checkpoint outcome + `SPRINT_LOG.md` Day 5 entry documenting decision.
 

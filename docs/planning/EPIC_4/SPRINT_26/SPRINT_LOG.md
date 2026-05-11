@@ -257,3 +257,72 @@ This is a NEW Phase A→B distinction: when the alias is "shared" with a free va
 - No PR14 artifact regeneration this PR (no `src/` changes).
 
 ---
+
+### Day 3 — RECLASSIFIED to Sprint 27 #1381 (Pattern C Phase B redesign)
+
+**Status:** COMPLETE (2026-05-11) — docs-only PR; src/ rollback.
+**Branch:** `sprint26-day3-pattern-c-phase-b-camcge`
+
+| Task | Status |
+|---|---|
+| Implement gate-predicate relaxation (Day 2 scoping) | ❌ Rolled back — produced mathematically wrong emits on plain-alias bodies. See design discovery below. |
+| File Sprint 27 carryforward issue | ✅ #1381 ("Pattern C Phase B redesign — camcge (#1354) + cesam2 (#1355) plain-alias + dim-mismatch consolidation") |
+| Update `PLAN.md` Day 3 + Day 4 + Day 5 Checkpoint 1 + Sprint 26 Targets table | ✅ Day 3/4 marked RECLASSIFIED; Checkpoint 1 camcge/cesam2 rows → "n/a — deferred to Sprint 27 #1381"; Sprint 26 Solve / Match / path_syntax_error targets relaxed to maintain baseline |
+| Update `PLAN_PROMPTS.md` Day 3 + Day 4 + Day 5 prompts | ✅ Same reclassification |
+| SPRINT_LOG Day 3 entry (this section) | ✅ This entry |
+
+#### Day 3 design discovery — why the Day 2 scoping was wrong
+
+The Day 2 scoping concluded that Phase B for camcge needed only:
+1. Relax `expr.condition is not None` requirement in `_find_pattern_c_alias_sum`
+2. Find eq-domain index in body when no condition (camcge's `imat(i,j)` reference)
+3. Re-use Phase A's `_apply_pattern_c_swap_to_term` (already handles `condition=None`)
+
+Day 3 implemented the relaxation (~15 LOC) and ran it on camcge + the 54-model corpus. Result: **11 byte-shifted canaries, all producing mathematically wrong emits.**
+
+**Concrete failures:**
+
+| Model | Equation | Correct (hand-derived) consolidated form | Day 3 attempt produced |
+|---|---|---|---|
+| camcge | `stat_dk` | `sum(j, (-imat(j,i)) * nu_ieq(j))` | `((-1) * imat(j,j)) * nu_ieq(j)` — `j` free unbound; both coords wrong (should be `imat(j,i)`); no Sum wrap |
+| camcge | `stat_xd` | `sum(j, (-io(j,i)) * nu_inteq(j))` | `((-1) * io(j,j)) * nu_inteq(j)` — same shape failure |
+| quocge | `stat_pq` | `sum(j, (-ax(j,i)) * nu_eqpzs(j))` | `((-1) * ax(j,j)) * nu_eqpzs(j)` — same |
+| prolog | `stat_q` | `sum(j, (-a(j,i)) * lam_cb(j))` (with `t` guard) | `a(i+1,i) * lam_cb(i) - lam_cb(i) + ...` — even more mangled |
+
+**Root cause: element-to-set substitution collapses alias and eq-domain names BEFORE the swap can run.**
+
+Phase A's launch case worked because the source body's condition was `ge(ss,s)` — the alias `ss` and eq-domain `s` are **textually distinct** symbols. The swap `ss ↔ s` correctly transforms each independently.
+
+Plain-alias bodies have `imat(i,j)` (camcge) or `ax(i,j)` (quocge) where `j` is an alias of canonical set `i`. Element-to-set substitution (which runs BEFORE the auto Sum-wrap in `_add_indexed_jacobian_terms`) maps both `i` and `j` to canonical `i`, producing `imat(i,i)` in the indexed derivative. The Day 3 swap `i ↔ j` then transforms both `i`s to `j`s, producing `imat(j,j)` — wrong (position information lost when the names collapsed).
+
+Additionally, the auto Sum-wrap doesn't fire because there's no free index after the collapse — leaving `j` as a dangling unbound reference in the swapped term.
+
+**Phase A's swap-based approach is fundamentally launch-shape-specific.** Generalizing to plain-alias requires intercepting BEFORE element-to-set substitution and building the consolidated term explicitly from the source Sum's body structure (positions preserved). This is a builder redesign, not a predicate relaxation.
+
+#### Sprint 27 #1381 — Phase B redesign scope
+
+Sprint 27 carryforward issue #1381 documents the full Phase B redesign requirements:
+
+- **Phase B-1 (~3–5h):** Source-body-driven builder for camcge's 4-of-5 simple variants (actp, pkdef, inteq, ieq). Read the source Sum's body AST, identify the alias position and eq-domain index in the coefficient, build the consolidated `Sum((alias,), coeff_swapped * mult(alias))` term explicitly.
+- **Phase B-2 (~3–5h):** camcge's prodinv-style — eq-domain factor OUTSIDE the inner Sum (`prodinv(i)..  pk(i)*dk(i) =e= ... - kio(i)*sum(j, dst(j)*p(j))`). Target consolidated form: `dst(i) * sum(j, kio(j) * nu_prodinv(j))` — eq-side factor `kio` reindexed inside the new Sum, var-side factor `dst` left outside.
+- **Phase B-3 (~4–6h):** cesam2's dim-mismatch (eq 1D, var 2D) + sameas-block element-to-set artifacts. Multiplier reindex must use the var-domain position bound to the eq-domain index.
+
+Total: 10–16h, plus per-phase test coverage.
+
+#### Sprint 26 schedule impact
+
+- **Day 3 + Day 4 freed.** Available for forward-pulling Priority 4 (Option 1 short-circuit, originally Day 8–9) or Priority 5 (#1334 investigation, originally Day 8–10).
+- **Day 5 Checkpoint 1 criteria updated** — camcge / cesam2 rows reclassified `n/a — deferred to Sprint 27 #1381`. GO routing now requires only Phase A landing + canary rows green (already true since Day 1 + Day 2).
+- **Sprint 26 Targets relaxed:**
+  - Solve: was ≥ 108 → now maintain ≥ 104 (no Phase A/B Solve gain this sprint; Priority 5 #1334/#1335 still potential +1–2 stretch)
+  - Match: was ≥ 64 → now maintain ≥ 60 (same rationale)
+  - path_syntax_error: was ≤ 6 → now maintain ≤ 9 (camcge + cesam2 stay in path_syntax_error)
+  - Translate: was ≥ 135 → now ≥ 132 (Priority 4 still in scope for +2 from srpchase / iswnm)
+
+#### Notes
+
+- Phase A (launch) landed cleanly Day 1 + validated byte-stable across 54 canaries Day 2 — that work remains shipped via PR #1379 + PR #1380.
+- Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" was explicit about launch-only scope ("proper fix for the launch Pattern C consolidation (#1306 test xfail)"). Sprint 26 Task 3 REPLAN added camcge + cesam2 as hypothesis-validation targets ("verify the gate predicate generalizes"). The Day 3 discovery is the empirical answer: it doesn't generalize via predicate relaxation alone; needs a builder redesign.
+- No `src/` changes in this PR — Day 3 src/ work rolled back. No PR14 obligation. Quality checks not required.
+
+---

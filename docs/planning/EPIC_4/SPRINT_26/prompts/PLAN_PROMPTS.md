@@ -165,63 +165,25 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 ---
 
-## Day 3 Prompt: Priority 1 Phase B — camcge Fix
+## Day 3 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign)
 
-**Branch:** `sprint26-day3-pattern-c-phase-b-camcge`.
+**Original objective:** Pattern C gate generalization for camcge (#1354).
 
-**Objective:** Land the Pattern C gate generalization for camcge (#1354).
+**Reclassification reason (Day 3 design discovery):** Phase A's swap-based transform (Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") doesn't generalize to plain-alias bodies. Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking the swap's assumption that alias and eq-domain are textually distinct. The Day 3 attempt to extend the gate via `expr.condition is not None` relaxation produced mathematically wrong emits on camcge + 10 other byte-shifted canaries (quocge, prolog, paklive, blend, chem, demo1, fdesign, ibm1, pollut, prodmix, trussm — all plain-alias variants).
 
-**Prerequisites:**
-- Day 1 + Day 2 PRs merged.
-- Day 2 scoping notes for the gate-predicate change.
+**Deferred to Sprint 27 #1381:** Pattern C Phase B redesign (camcge + cesam2 + likely other plain-alias variants in path_syntax_error). Estimated 10–16h across Phase B-1 / B-2 / B-3 sub-scopes (see #1381 for breakdown). Requires intercepting BEFORE element-to-set substitution and building the consolidated term explicitly from the source Sum's body structure.
 
-**Tasks to Complete (~5–7 hours):**
-
-1. **Implement the gate predicate broadening** per Day 2 scoping. Likely patch site: the launch-shape gate predicate in `src/kkt/stationarity.py`. The change should additionally recognize plain-alias enumeration where the source body has no `$cond` filter (camcge's `sum(j$nonsa(j), ...)` shape).
-2. **Add unit test** in `tests/unit/kkt/test_pattern_c_alias_offset_gate.py`:
-   - Synthetic IR mirroring camcge's `sum(j$nonsa(j), ...)` plain-alias pattern.
-   - Assert no phantom `nu_<eq>(i±N)` enumeration in `stat_<var>` body.
-3. **Translate camcge fresh** + run full PATH solve. Confirm:
-   - `$141` cascade resolves (the 21 phantom-offset terms disappear).
-   - PATH solve reaches MODEL STATUS 1 (Optimal).
-   - rel_diff vs NLP baseline is documented.
-4. **Full 54-model Tier 0/1/2 golden-file regression.** Expected 0 regressions on non-camcge models.
-5. **Tier 0 + Tier 1 canary.**
-
-**PR14 obligation:** Include regenerated `data/gamslib/mcp/camcge_mcp.gms` in PR diff.
-
-**Quality Checks:** `make typecheck && make lint && make format && make test`.
-
-**Commit + PR:** One PR titled `Sprint 26 Day 3: Priority 1 Phase B — camcge Pattern C gate generalization (closes #1354)`.
+**Day 3 deliverable (this PR):** Docs-only — `SPRINT_LOG.md` Day 3 entry with the design discovery + rollback rationale; `PLAN.md` + `PLAN_PROMPTS.md` Day 3/4/5 updates; CHANGELOG entry. No `src/` changes.
 
 ---
 
-## Day 4 Prompt: Priority 1 Phase B — cesam2 Fix
+## Day 4 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign)
 
-**Branch:** `sprint26-day4-pattern-c-phase-b-cesam2`.
+**Original objective:** Pattern C gate generalization for cesam2 (#1355) + dim-mismatch handling.
 
-**Objective:** Land the Pattern C gate generalization for cesam2 (#1355). First emit-affecting PR exercised under the soon-to-land PR19 CI workflow (if PR19 implementation slipped to Day 11, manually run the canary check).
+**Reclassification reason:** Day 3 discovery applies — cesam2's dim-mismatch case is a strict superset of camcge's plain-alias case, requiring the same builder redesign. Bundled into Sprint 27 #1381 Phase B-3.
 
-**Prerequisites:**
-- Days 1–3 PRs merged.
-
-**Tasks to Complete (~5–7 hours):**
-
-1. **Extend the gate predicate** to also recognize `sameas`-decomposed SAM-block aliases (cesam2 case). Same patch site as Day 3 but with an additional `sameas`-detection branch.
-2. **Add unit test** for the `sameas` variant in `tests/unit/kkt/test_pattern_c_alias_offset_gate.py`.
-3. **Translate cesam2 fresh** + run full PATH solve. Confirm:
-   - `$141` cascade on `nu_COLSUM` resolves.
-   - PATH solve reaches MODEL STATUS 1 (Optimal).
-   - rel_diff vs NLP baseline is documented.
-4. **Full 54-model Tier 0/1/2 golden-file regression.** Expected 0 regressions on non-cesam2 models.
-5. **Tier 0 + Tier 1 canary.**
-6. **(If PR19 not yet implemented):** manually run the 11 Tier 0/1 canary PATH solves locally per `DESIGN_PR19_SOLVE_TIME_CI.md` §"PATH Timeout" recipe; verify all reach MODEL STATUS 1.
-
-**PR14 obligation:** Include regenerated `data/gamslib/mcp/cesam2_mcp.gms` in PR diff.
-
-**Quality Checks:** `make typecheck && make lint && make format && make test`.
-
-**Commit + PR:** One PR titled `Sprint 26 Day 4: Priority 1 Phase B — cesam2 Pattern C gate generalization (closes #1355)`.
+**Day 4 freed.** Available for buffer / forward-pulling later priorities (Priority 4 Option 1 short-circuit, Priority 5 #1334 investigation).
 
 ---
 
@@ -263,11 +225,11 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
      printf "%-13s translate=OK  gams_rc=%d  %s\n" "$m" "$gams_rc" "$status"
    done
    ```
-2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)":
-   - camcge solves to MODEL STATUS 1
-   - cesam2 solves to MODEL STATUS 1
+2. **Evaluate Checkpoint 1 criteria** per `PLAN.md` §"Checkpoint 1 criteria (Day 5 evaluation)" (UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381):
    - Phase A landed: gate restored + correct emit shape + xfail removed (test passes)
    - launch PATH solve to MODEL STATUS 1 — **stretch** (Phase A re-landed the correct KKT but PATH stalls; PATH-numerics investigation deferred to Sprint 27 issue #1378)
+   - camcge solves to MODEL STATUS 1 — **n/a — deferred to Sprint 27 #1381** (Phase B builder redesign required; swap approach doesn't generalize to plain-alias)
+   - cesam2 solves to MODEL STATUS 1 — **n/a — deferred to Sprint 27 #1381** (dim-mismatch case requires same redesign)
    - Tier 0 + Tier 1 canaries (11 models) all match golden
    - Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented)
 3. **Document Checkpoint 1 decision** in `SPRINT_LOG.md` Day 5 entry: GO / CONDITIONAL GO / NO-GO + per-criterion table + routing decision.
