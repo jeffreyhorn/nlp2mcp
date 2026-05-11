@@ -260,7 +260,7 @@ This is a NEW Phase A→B distinction: when the alias is "shared" with a free va
 
 ### Day 3 — RECLASSIFIED to Sprint 27 #1381 (Pattern C Phase B redesign)
 
-**Status:** COMPLETE (2026-05-11) — docs-only PR; src/ rollback.
+**Status:** COMPLETE (2026-05-11) — docs-only PR; `src/` rollback.
 **Branch:** `sprint26-day3-pattern-c-phase-b-camcge`
 
 | Task | Status |

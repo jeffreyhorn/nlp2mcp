@@ -169,7 +169,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Original objective:** Pattern C gate generalization for camcge (#1354).
 
-**Reclassification reason (Day 3 design discovery):** Phase A's swap-based transform (Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") doesn't generalize to plain-alias bodies. Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking the swap's assumption that alias and eq-domain are textually distinct. The Day 3 attempt to extend the gate via `expr.condition is not None` relaxation produced mathematically wrong emits on camcge + 10 other byte-shifted canaries (quocge, prolog, paklive, blend, chem, demo1, fdesign, ibm1, pollut, prodmix, trussm — all plain-alias variants).
+**Reclassification reason (Day 3 design discovery):** Phase A's swap-based transform (Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") doesn't generalize to plain-alias bodies. Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking the swap's assumption that alias and eq-domain are textually distinct. The Day 3 attempt to extend the gate via `expr.condition is not None` relaxation produced mathematically wrong emits on camcge + 11 other byte-shifted canaries (quocge, prolog, paklive, blend, chem, demo1, fdesign, ibm1, pollut, prodmix, trussm — all plain-alias variants).
 
 **Deferred to Sprint 27 #1381:** Pattern C Phase B redesign (camcge + cesam2 + likely other plain-alias variants in path_syntax_error). Estimated 10–16h across Phase B-1 / B-2 / B-3 sub-scopes (see #1381 for breakdown). Requires intercepting BEFORE element-to-set substitution and building the consolidated term explicitly from the source Sum's body structure.
 
@@ -497,7 +497,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Branch:** `sprint26-day12-buffer`.
 
-**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the 4 Pattern C target models per CONTRIBUTING.md §"Emit-Affecting PRs" reviewer obligations. Buffer for any Days 1–11 slippage.
+**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per CONTRIBUTING.md §"Emit-Affecting PRs" reviewer obligations. Buffer for any Days 1–11 slippage. **Updated Day 3:** dropped camcge / cesam2 / fawley (Pattern C Phase B deferred to Sprint 27 #1381) — those artifacts didn't change this sprint.
 
 **Prerequisites:**
 - Days 1–11 PRs merged.
@@ -505,10 +505,10 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 **Tasks to Complete (~4–6 hours):**
 
 1. **Read end-to-end:**
-   - `data/gamslib/mcp/camcge_mcp.gms` (post Day 3 fix)
-   - `data/gamslib/mcp/cesam2_mcp.gms` (post Day 4 fix)
-   - `data/gamslib/mcp/fawley_mcp.gms` (deferred per Task 4 — should be unchanged on `main`)
-   - `data/gamslib/mcp/otpop_mcp.gms` (post Day 9 fix)
+   - `data/gamslib/mcp/launch_mcp.gms` (post Day 1 Phase A fix — PR #1379)
+   - `data/gamslib/mcp/srpchase_mcp.gms` (post Day 4 Priority 4 Option 1 short-circuit)
+   - `data/gamslib/mcp/otpop_mcp.gms` (post Day 9 Priority 5 #1334 + #1335 fixes)
+   - Plus any other artifacts that regenerated this sprint (e.g. iswnm / sarf / mexls / nebrazil if Day 4 Priority 4 stretch recoveries landed).
 2. Per CONTRIBUTING.md §"What reviewers must do" — look for:
    - **Clobber patterns** (duplicate assignments where one silently overrides the other; see #1374).
    - **Ordering bugs** (clamps applied AFTER explicit overrides; see #1374 rocket case).
@@ -520,8 +520,8 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 4. **Buffer:** absorb any Days 1–11 slippage. Examples:
    - PR19 implementation slipped to Day 12 → finish here.
    - Priority 5 otpop full reproducer didn't pass Day 10 → Day 12 deep-dive.
-   - Priority 1 Phase B regressions on Tier 2 models needed scope-back → finalize.
-5. **NO new architectural work** — this is buffer, not slip-prevention.
+   - Priority 4 stretch recoveries (iswnm / sarf / mexls / nebrazil) need additional re-profiling → finalize.
+5. **NO new architectural work** — this is buffer, not slip-prevention. Pattern C Phase B (camcge + cesam2) is explicitly deferred to Sprint 27 #1381 per Day 3; do NOT begin Phase B `src/` work here.
 
 **Quality Checks:** If any `src/` changes land, `make typecheck && make lint && make format && make test`.
 

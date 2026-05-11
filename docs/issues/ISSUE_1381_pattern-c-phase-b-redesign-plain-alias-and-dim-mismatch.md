@@ -2,7 +2,7 @@
 
 **GitHub Issue:** [#1381](https://github.com/jeffreyhorn/nlp2mcp/issues/1381)
 **Status:** OPEN (filed Sprint 26 Day 3, 2026-05-11)
-**Severity:** Medium — affects ≥ 11 GAMSlib models in `path_syntax_error` bucket (camcge, cesam2, quocge, prolog, paklive, blend, chem, demo1, fdesign, ibm1, pollut, prodmix, trussm — full corpus impact larger pending Phase B-1 / B-2 / B-3 implementation).
+**Severity:** Medium — at minimum 13 affected models: 2 Phase B targets currently in `path_syntax_error` bucket (camcge #1354, cesam2 #1355) + 11 Tier 1/2 golden-file canaries that byte-shifted on the Day 3 prototype (quocge, prolog, paklive, blend, chem, demo1, fdesign, ibm1, pollut, prodmix, trussm — all plain-alias variants currently solving correctly with the buggy phantom-offset emit). Full corpus impact larger pending Phase B-1 / B-2 / B-3 implementation.
 **Date:** 2026-05-11
 **Last Updated:** 2026-05-11
 **Affected Models:** camcge (#1354), cesam2 (#1355), plus byte-shifted plain-alias canaries observed Day 3
@@ -12,7 +12,7 @@
 - Sprint 26 Task 3 [PATTERN_C_HYPOTHESIS_VALIDATION.md](../planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md) §3 — REPLAN to 2 targets
 - Sprint 26 Day 1 PR #1379 — Phase A launch fix landed
 - Sprint 26 Day 2 PR #1380 — Phase A validation + (incomplete) Phase B scoping
-- Sprint 26 Day 3 PR #1382 — this issue filed; Phase B reclassified
+- Sprint 26 Day 3 PR [#1382](https://github.com/jeffreyhorn/nlp2mcp/pull/1382) — Pattern C Phase B reclassification PR (docs-only); GitHub issue [#1381](https://github.com/jeffreyhorn/nlp2mcp/issues/1381) (this doc) filed there
 - Sprint 27 #1378 — separate carryforward for launch PATH-numerics on Phase A's correct KKT
 
 ---
@@ -227,7 +227,7 @@ Plus per-phase test coverage (unit + integration) and 54-model golden-file regre
 
 ## Scope and Sprint Routing
 
-**Target: Sprint 27.** Day 3 reclassification (Sprint 26 Day 3 PR #1382) documents this deferral and adjusts Sprint 26 Targets accordingly:
+**Target: Sprint 27.** Day 3 reclassification (Sprint 26 Day 3 PR [#1382](https://github.com/jeffreyhorn/nlp2mcp/pull/1382)) documents this deferral and adjusts Sprint 26 Targets accordingly:
 
 - Sprint 26 Solve target relaxed: ≥ 108 → maintain ≥ 104 (no Phase A/B Solve gain this sprint)
 - Sprint 26 Match target relaxed: ≥ 64 → maintain ≥ 60
@@ -245,7 +245,7 @@ Day 5 Checkpoint 1 criteria updated to reflect Phase B reclassification — only
 - **Sprint 26 Task 3 PATTERN_C_HYPOTHESIS_VALIDATION.md** — REPLAN to 2 targets (camcge + cesam2) hypothesis
 - **Sprint 26 Day 1 PR #1379** — Phase A landed
 - **Sprint 26 Day 2 PR #1380** — Phase A validation + Phase B scoping (the scoping that turned out to be incomplete)
-- **Sprint 26 Day 3 PR #1382** — Phase B reclassified to Sprint 27 #1381 (this issue)
+- **Sprint 26 Day 3 PR [#1382](https://github.com/jeffreyhorn/nlp2mcp/pull/1382)** — the docs-only PR that reclassified Phase B and filed GitHub issue [#1381](https://github.com/jeffreyhorn/nlp2mcp/issues/1381) (this doc)
 - **Sprint 27 #1378** — launch PATH-numerics on Phase A's correct KKT (separate carryforward)
 - **#1354 (camcge)** — will be closed when Phase B-1 + B-2 land
 - **#1355 (cesam2)** — will be closed when Phase B-3 lands

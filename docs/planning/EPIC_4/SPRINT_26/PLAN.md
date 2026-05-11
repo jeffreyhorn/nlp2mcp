@@ -37,7 +37,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 | path_syntax_error | 9 | ≤ 9 (maintain) | ≤ 8 | **0** (Phase B camcge/cesam2 deferred — they stay in path_syntax_error this sprint) |
 | path_solve_terminated | 5 | ≤ 5 | ≤ 4 | maintain (Sprint 25 floor) |
 | model_infeasible | 4 | ≤ 4 | ≤ 3 | maintain |
-| Tests | 4,735 | ≥ 4,737 (maintain Day 1 floor) | ≥ 4,745 | +2 (Phase A regression tests already landed Day 1; Sprint 26 remaining adds modest test coverage) |
+| Tests | 4,735 | ≥ 4,737 (Day 1 floor: baseline 4,735 + 2 Phase A regression tests already landed) | ≥ 4,745 | +2 already booked Day 1 (PR #1379); Sprint 26 remaining work adds modest additional test coverage as a stretch |
 
 **Day 3 target revision rationale:** Phase B's swap-based transform doesn't generalize to plain-alias bodies (Day 3 discovery — element-to-set substitution collapses alias and eq-domain names before the swap can run). Phase B redesign (camcge + cesam2) deferred to Sprint 27 #1381. Sprint 26 Solve / Match / path_syntax_error targets relaxed to maintain; Sprint 26 still delivers Phase A (launch consolidated emit, Day 1 PR #1379) + Priority 2/3/4/5 work.
 
@@ -60,7 +60,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 | 5 — AD residuals — wrap (NLP-warm-started reproducer) | 10 | ~4–6h | otpop NLP-warm-started MCP converges to `pi ≈ 4217.80` |
 | **Checkpoint 2** (Day 10) | 10 | n/a | All 5 priorities landed-or-scoped |
 | 6 — PR19 CI extension | 11 | ~4–8h | `.github/workflows/pr19-emit-solve-validation.yml` lands |
-| 7 — Buffer / PR14 emit-artifact review | 12 | ~4–6h | Mid-sprint "read the regenerated `.gms`" pass on Pattern C target models |
+| 7 — Buffer / PR14 emit-artifact review | 12 | ~4–6h | Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint (launch / srpchase / otpop — Phase B targets camcge / cesam2 deferred to Sprint 27 #1381 per Day 3) |
 | 8 — Final pipeline retest + close | 13 | ~3–6h | Day 13 baseline + bucket-provenance comparison; CHANGELOG; Sprint 26 retrospective scaffold |
 
 **Parallel-work justification:**
