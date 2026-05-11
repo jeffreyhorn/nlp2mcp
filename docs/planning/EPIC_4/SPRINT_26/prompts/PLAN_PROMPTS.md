@@ -14,7 +14,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 ## Day 0 Prompt: Setup & Kickoff
 
-**Branch:** none (verification work on `main`).
+**Branch:** `sprint26-day0-kickoff` (matches `PLAN.md` Day 0). Day 0 is verification + log-initialization (no `src/` changes), but per CONTRIBUTING.md and branch protection on `main`, the `SPRINT_LOG.md` Day 0 entry still ships via a docs-only PR — see §"Commit + PR" below.
 
 **Objective:** Verify Day 0 baseline; initialize SPRINT_LOG; brief on all prep-task outputs.
 
