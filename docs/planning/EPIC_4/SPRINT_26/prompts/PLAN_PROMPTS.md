@@ -63,7 +63,14 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    print(f'Match:     {match}     (BASELINE: 60)')
    "
    ```
-   Expected: 142 in-scope; per-bucket and headline counts match BASELINE_METRICS.md (Parse 142, Translate 130, Solve 104, Match 60). If any count diverges, do NOT proceed — investigate via `git diff` against the Day 0 baseline commit (`f1cdb91f` — the PR #1373 merge that froze the baseline).
+   Expected: 142 in-scope; per-bucket and headline counts match BASELINE_METRICS.md (Parse 142, Translate 130, Solve 104, Match 60). If any count diverges, do NOT proceed — investigate via an explicit revision-range diff against the Day 0 baseline commit (`f1cdb91f` — the PR #1373 merge that froze the baseline):
+   ```bash
+   # 1. What changed on main since the baseline freeze (any file)?
+   git diff f1cdb91f..HEAD --stat
+   # 2. Did the status JSON or BASELINE_METRICS itself drift?
+   git diff f1cdb91f..HEAD -- data/gamslib/gamslib_status.json \
+                             docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md
+   ```
 2. Initialize `docs/planning/EPIC_4/SPRINT_26/SPRINT_LOG.md` Day 0 entry (mirror Sprint 25 SPRINT_LOG.md format — header, baseline-matches-metrics check, day-task list).
 3. Confirm GitHub issue labels (split across two label sets):
    - **`sprint-26` label** (Sprint 26 Day 1–13 in-scope work):

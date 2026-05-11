@@ -1323,7 +1323,7 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 
 | Task | Title | Status | Completed | PR |
 |---|---|---|---|---|
-| 1 | Identify Sprint 26 Known Unknowns | ✅ COMPLETE | 2026-05-07 | (Day 0 prep — direct commit) |
+| 1 | Identify Sprint 26 Known Unknowns | ✅ COMPLETE | 2026-05-07 | #1365 (bundled with PREP_PLAN — KNOWN_UNKNOWNS.md added in commit `99065502`) |
 | 2 | Identify Sprint 25 Scope-Shifted Model (PR18) | ✅ COMPLETE | 2026-05-07 | #1366 |
 | 3 | Pattern C Generalization Hypothesis Validation (PR16) | ✅ COMPLETE | 2026-05-07 | #1367 |
 | 4 | Pattern A Cohort Reclassification Pre-Work | ✅ COMPLETE | 2026-05-07 | #1368 |
