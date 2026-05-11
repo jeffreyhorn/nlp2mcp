@@ -143,3 +143,117 @@ Phase A's mathematically correct KKT emit produces a different KKT system from t
 - Day 1 builds on `_rewrite_subset_to_superset` for the alias↔eq-domain swap — a single rename map `{alias: eq_dom, eq_dom: alias}` works because the helper does single-pass per-node lookups (no chained re-application).
 
 ---
+
+### Day 2 — Priority 1 Phase A Validation + Phase B Scoping (camcge / cesam2)
+
+**Status:** COMPLETE (2026-05-11)
+**Branch:** `sprint26-day2-pattern-c-phase-a-validation`
+
+Validation + scoping pass (no `src/` changes). Confirms Day 1 Phase A is byte-stable across the 54-model golden corpus and identifies the gate-predicate + builder-transform changes needed for Day 3 (camcge) and Day 4 (cesam2).
+
+| Task | Status |
+|---|---|
+| Full 54-model Tier 0/1/2 golden-file regression | ✅ 54/54 byte-identical (11 Tier 0/1: dispatch, quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive; 43 Tier 2: ajax, alkyl, ampl, ... whouse — full list in Sprint 25 SPRINT_LOG.md Day 0). |
+| Translate launch fresh + verify byte-identical to Day 1 commit | ✅ Byte-identical to `data/gamslib/mcp/launch_mcp.gms` from PR #1379. |
+| launch PATH solve outcome | ⚠ MODEL STATUS 5 (Locally Infeasible) — consistent with Sprint 27 #1378 deferral. PATH-numerics work is out of scope for Days 2–10; rel_diff vs NLP baseline (Sprint 25 final 0.17) cannot be computed (MCP didn't solve). |
+| Phase B scoping for camcge (#1354) | ✅ Documented below. |
+| Phase B scoping for cesam2 (#1355) | ✅ Documented below. |
+| `make typecheck && make lint && make format && make test` | ✅ See PR test plan. |
+
+#### Phase B scoping — camcge (#1354)
+
+**Phantom-offset emit (current main, Day 1 Phase A patch applied):** 120 phantom-offset terms across 5 multipliers:
+
+| Multiplier | Phantom-offset count | Source equation |
+|---|---|---|
+| `nu_prodinv` | 40 | `prodinv(i)..  pk(i)*dk(i) =e= kio(i)*savings - kio(i)*sum(j, dst(j)*p(j));` |
+| `nu_pkdef` | 20 | `pkdef(i)..    pk(i) =e= sum(j, p(j)*imat(j,i));` |
+| `nu_inteq` | 20 | `inteq(j)..    int(j) =e= sum(i, io(j,i)*xd(i));` |
+| `nu_ieq` | 20 | `ieq(i)..      id(i) =e= sum(j, imat(i,j)*dk(j));` |
+| `nu_actp` | 20 | `actp(i)..     px(i)*(1-itax(i)) =e= pva(i) + sum(j, io(j,i)*p(j));` |
+
+Each source body has the same shape: `sum(<alias>, <coeff>*<var>(...))` where the alias canonical-resolves to the eq-domain set. **No `$cond` filter** linking the alias to the eq-domain index.
+
+**Why Phase A doesn't fire on camcge:** `_find_pattern_c_alias_sum` at `src/kkt/stationarity.py:362` requires `expr.condition is not None` for the matching Sum. Camcge's sources have `expr.condition is None` → gate doesn't fire → phantom offsets emit.
+
+**Gate predicate change needed (Day 3):**
+
+1. **Relax `expr.condition is not None` requirement** in `_find_pattern_c_alias_sum`. The condition check was originally there as a tighter scope marker for the launch fingerprint; the variable-scope guard (`_expr_references_var(expr.body, var_name)`) plus the equation-domain reference check already constrain the predicate to alias-sums that produce phantom offsets.
+2. **Handle missing `condition` in `_apply_pattern_c_swap_to_term`** / `pattern_c_info`. When `pattern_c_info["condition"] is None`, the swap-applied condition is also None — no outer `DollarConditional` wrap on the consolidated Sum.
+
+**Expected target shape (after Phase B camcge fix):**
+
+```gams
+# Before (current, 21 phantom-offset terms):
+stat_dk(i).. pk(i) * nu_prodinv(i)
+           + ((-1) * imat(i,i)) * nu_ieq(i)
+           + (((-1) * imat(i-1,i)) * nu_ieq(i-1))$(ord(i) > 1)
+           + (((-1) * imat(i+1,i)) * nu_ieq(i+1))$(ord(i) <= card(i) - 1)
+           + ... 19 more
+           =E= 0;
+
+# After (Phase B camcge, single consolidated Sum):
+stat_dk(i).. pk(i) * nu_prodinv(i)
+           + sum(j, ((-1) * imat(j,i)) * nu_ieq(j))
+           =E= 0;
+```
+
+The coefficient swap (`imat(i,j) → imat(j,i)`) plus multiplier reindex (`nu_ieq(i) → nu_ieq(j)`) is the same transform Phase A applies — just without the `condition` swap (since there's no condition). The existing `_apply_pattern_c_swap_to_term` already handles `term.condition is None` correctly (single-pass per-node).
+
+**Effort estimate (Day 3):** ~2–4h (predicate relaxation + new test fixture for camcge plain-alias shape).
+
+#### Phase B scoping — cesam2 (#1355)
+
+**Phantom-offset emit (current main, Day 1 Phase A patch applied):** 18 phantom-offset terms, all `nu_COLSUM(i±N)` within `stat_tsam(i,j)`. Source equation:
+
+```gams
+COLSUM(jj)..   sum(ii, TSAM(ii,jj)) =e= Y(jj);
+```
+
+- `jj` and `ii` are both aliases of canonical set `i`.
+- COLSUM has 1D domain `(jj,)`; TSAM (the variable being differentiated) has 2D domain `(i, j)` — both canonical `i`.
+- **Dim-mismatch case:** eq domain 1D vs var domain 2D.
+
+**Current buggy emit shape:**
+
+```gams
+stat_tsam(i,j).. (nu_ROWSUM(i)$(ii(i))
+               + (nu_COLSUM(i)$(jj(i)))$(<huge sameas-block guard>)     # WRONG: nu_COLSUM(i), should be nu_COLSUM(j)
+               + (((nu_COLSUM(i+7)$(jj(i+7)))$(ord(i) <= card(i) - 7))$(ord(j) = 7))$(...)
+               + ... 17 more phantom-offset terms with sameas-block guards
+               =E= 0;
+```
+
+The `sameas`-block guards (`sameas(i, 'ACT')` / `sameas(j, 'COM')` / etc.) are emit-formatting artifacts from element-to-set mapping firing on the dim-mismatch — they disappear once the consolidation is correct (the correct emit has no per-offset enumeration).
+
+**Why Phase A doesn't fire on cesam2:** same as camcge — `expr.condition is None` on `sum(ii, TSAM(ii, jj))`. Predicate relaxation fixes the gate-firing problem.
+
+**Gate predicate + transform change needed (Day 4):**
+
+1. **Relax `expr.condition is not None`** (same change as camcge — sharing the gate-relaxation work from Day 3).
+2. **Handle dim-mismatch in `_apply_pattern_c_swap_to_term`**: when the eq's domain is a strict prefix/subset of the var's domain (cesam2: `(jj,)` ↔ `(i, j)`), the multiplier reindex must produce `nu_COLSUM(var_dom[position_of_eq_idx])` — for cesam2 that's `nu_COLSUM(j)` (since `jj` binds to the var's second position). The current `_apply_pattern_c_swap_to_term` uses `(alias_name,) * len(mult_domain)` — correct for same-dim Phase A but wrong for dim-mismatch.
+
+**Expected target shape (after Phase B cesam2 fix):**
+
+```gams
+# Before (current, 18 phantom-offset terms with sameas blocks):
+stat_tsam(i,j).. (nu_ROWSUM(i)$(ii(i)) + (nu_COLSUM(i)$(jj(i)))$(<sameas mess>) + 18 phantom-offsets ...)$(...) =E= 0;
+
+# After (Phase B cesam2, single zero-offset COLSUM term, no phantom offsets):
+stat_tsam(i,j).. (nu_ROWSUM(i)$(ii(i)) + nu_COLSUM(j)$(jj(j)) + nu_SAMCOEF(...) + nu_TSAMEQ(...) + nu_GDPDEF + ...)$(ii(i) and ii(j)) =E= 0;
+```
+
+Note: the source body has NO Sum-wrap in the result — because cesam2's alias-sum binds `ii` to the var's first position (already controlled by `stat_tsam(i,j)`), so the consolidation produces a single multiplier reference, not a Sum.
+
+This is a NEW Phase A→B distinction: when the alias is "shared" with a free var-domain index (dim-mismatch case), the consolidated form is a single zero-offset term rather than a Sum-wrapped term. The `_apply_pattern_c_swap_to_term` helper needs a dim-mismatch branch that emits this shape.
+
+**Effort estimate (Day 4):** ~4–6h (predicate relaxation already from Day 3; dim-mismatch handling in the swap helper is the new work, plus 2 new test fixtures: dim-mismatch + sameas-block-cleanup verification).
+
+#### Notes
+
+- Phase B scope confirmed at 2 targets (camcge + cesam2). fawley and otpop remain reclassified out of Pattern C scope per Task 3 REPLAN (deferred to Sprint 27 #1356 / #1357 for the comp_up subset/superset shape).
+- Day 3 lands camcge (simpler, ~2–4h). Day 4 lands cesam2 (dim-mismatch, ~4–6h). Day 5 Checkpoint 1 evaluates both.
+- The Phase B gate-relaxation is conservative: even with `expr.condition is None` accepted, the predicate still requires (a) no `IndexOffset` on var's domain in body, (b) an aliased Sum over var's domain canonical, (c) the differentiated variable referenced inside the Sum's body. Plain alias-sums where the variable is NOT inside the Sum (e.g. quocge's `eqXp` body where `rt` is outside the alias sum) won't fire — the per-`_var_inside_alias_sum`-style scope check is unchanged.
+- No PR14 artifact regeneration this PR (no `src/` changes).
+
+---
