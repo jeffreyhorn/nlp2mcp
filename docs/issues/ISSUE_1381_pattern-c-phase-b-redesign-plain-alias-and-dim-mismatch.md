@@ -27,7 +27,7 @@ Sprint 26 Task 3 REPLAN extended scope to camcge + cesam2 (plain-alias / `sameas
 
 ## Symptom — Wrong consolidated emit on plain-alias bodies
 
-Day 3 ran the gate-predicate relaxation across the 54-model golden corpus. 11 canaries byte-shifted, all producing mathematically wrong consolidated emits:
+Day 3 ran the gate-predicate relaxation against camcge (no golden file — in `path_syntax_error` bucket; observed wrong emit) AND across the 54-model golden corpus (11 canaries byte-shifted from their committed goldens). All 12 affected models produced mathematically wrong consolidated emits — the table below mixes both:
 
 | Model | Equation | Correct consolidated form (hand-derived) | Day 3 produced |
 |---|---|---|---|
