@@ -237,7 +237,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Tasks to Complete (~4–6 hours):**
 
-1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale). The loop **regenerates each MCP from the current branch's `src/` code** (via `python -m src.cli`) BEFORE running gams — running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only test pre-merge artifacts, missing any translation-side regression introduced by Days 1–4 PRs. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic. **Model list updated Day 3:** dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381) and added srpchase (Priority 4 Day 4 target):
+1. **Targeted pipeline retest** (NOT full pipeline — see PLAN.md Day 5 rationale). The loop **regenerates each MCP from the current branch's `src/` code** (via `python -m src.cli`) BEFORE running gams — running gams on the committed `data/gamslib/mcp/<model>_mcp.gms` would only test pre-merge artifacts, missing any translation-side regression introduced by Days 1–4 PRs. All paths anchor on `$REPO_ROOT` so the recipe is cwd-agnostic. **Model list updated Day 3:** dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added launch (Phase A landed Day 1 — smoke-check) + srpchase (Priority 4 Day 4 target):
    ```bash
    REPO_ROOT="$(git rev-parse --show-toplevel)"
    for m in launch srpchase otpop dispatch quocge partssupply prolog sparta gussrisk ps2_f ps3_f ship splcge paklive; do

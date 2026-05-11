@@ -184,10 +184,10 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Objective:** Evaluate Checkpoint 1 (Priority 1 landed); buffer for Phase A/B slippage.
 
 **Tasks:**
-1. Targeted pipeline retest: translate + solve on the 3 models in scope (launch / srpchase / otpop) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added srpchase (Priority 4 Day 4 target).
+1. Targeted pipeline retest: translate + solve on the 3 models in scope (launch / srpchase / otpop) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added launch (Phase A landed Day 1 — smoke-check) + srpchase (Priority 4 Day 4 target).
 2. Evaluate **Checkpoint 1** criteria below.
 3. If GO: continue Days 6–7 Priorities 2 + 3 as planned.
-4. If CONDITIONAL GO: scope-back Phase B work; document remaining open items as Sprint 27 carryforward.
+4. If CONDITIONAL GO: scope-back current open items (Priority 4 stretch recoveries — iswnm / sarf / mexls / nebrazil — that didn't land Day 4; Priority 5 #1334 routing decision still pending); document residual scope as Sprint 27 carryforward. Phase B (camcge + cesam2) is already deferred to Sprint 27 #1381 per Day 3 — no scope-back needed there.
 5. If NO-GO: assess revert vs forward-fix; potentially extend Day 5 into Day 6 to land a Phase A-only fix.
 
 #### Checkpoint 1 criteria (Day 5 evaluation — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
