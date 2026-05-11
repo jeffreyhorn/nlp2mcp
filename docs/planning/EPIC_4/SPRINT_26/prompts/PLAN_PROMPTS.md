@@ -88,8 +88,8 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
    - `PATTERN_C_HYPOTHESIS_VALIDATION.md` — drives Day 1
    - `PATTERN_A_RECLASSIFICATION_PLAN.md` — drives Day 6
    - `PATTERN_E_STATUS.md` — drives Day 6
-   - `DESIGN_OPTION_1_SHORT_CIRCUIT.md` — drives Day 8
-   - `AD_RESIDUALS_RECAP.md` — drives Days 8–10
+   - `DESIGN_OPTION_1_SHORT_CIRCUIT.md` — drives Day 4 (pulled forward from Day 8 per Day 3 reschedule)
+   - `AD_RESIDUALS_RECAP.md` — drives Day 4 + Days 9–10 (#1334 investigation pulled forward to Day 4 per Day 3 reschedule)
    - `DESIGN_PR19_SOLVE_TIME_CI.md` — drives Day 11
    - `BASELINE_METRICS.md` — Day 13 retest comparison basis
 
@@ -177,13 +177,52 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 ---
 
-## Day 4 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign)
+## Day 4 Prompt: Priority 4 Option 1 Short-Circuit + Priority 5 #1334 Re-Investigation (Parallel) — PULLED FORWARD FROM DAY 8
 
-**Original objective:** Pattern C gate generalization for cesam2 (#1355) + dim-mismatch handling.
+**Branch:** `sprint26-day4-priority-4-and-5-start`.
 
-**Reclassification reason:** Day 3 discovery applies — cesam2's dim-mismatch case is a strict superset of camcge's plain-alias case, requiring the same builder redesign. Bundled into Sprint 27 #1381 Phase B-3.
+**Reschedule note:** Day 4's original Pattern C cesam2 Phase B work reclassified to Sprint 27 #1381 (per Day 3 discovery). Day 8's Priority 4 + Priority 5 #1334 work pulled forward to fill Day 4. Day 8 is now buffer (see Day 8 prompt).
 
-**Day 4 freed.** Available for buffer / forward-pulling later priorities (Priority 4 Option 1 short-circuit, Priority 5 #1334 investigation).
+**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
+
+**Prerequisites:**
+- Read `DESIGN_OPTION_1_SHORT_CIRCUIT.md` §"3. Patch design" — the specific patch sites + entry-condition predicate.
+- Read `AD_RESIDUALS_RECAP.md` §"3.1 #1334" + `docs/issues/ISSUE_1334_*.md` — the otpop bug pattern + the GitHub closure context that needs re-investigation.
+
+**Tasks to Complete (~7–10 hours):**
+
+**Priority 4 — Option 1 short-circuit (~4–6h):**
+
+1. **Implement Option 1 short-circuit** at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
+2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
+3. **Add 1 unit test** (synthetic dynamic-subset case) in `tests/unit/ad/test_index_mapping.py` (or wherever the existing `enumerate_equation_instances` tests live).
+4. **Add 1 integration test** asserting srpchase translates within 30s.
+5. **Tier 0 + Tier 1 canary.**
+6. **Re-profile srpchase** under SIGALRM 900s; expected `846s → < 10s` per Task 6 §TL;DR projection.
+7. **Re-profile iswnm + sarf + mexls + nebrazil** to determine if they recover (LOW–MEDIUM confidence per Task 6).
+
+**Priority 5 — #1334 re-investigation (~3–4h):**
+
+1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7 §2.2, the otpop bug pattern is STILL VISIBLE in current main emit:
+   ```bash
+   grep -nE "sum\(t__, .* \* nu_kdef" data/gamslib/mcp/otpop_mcp.gms
+   # Expected: 2 lines if bug present (current state per Task 7 finding)
+   ```
+2. Determine: was the closure for a sibling sub-shape, or was it premature?
+   - Read GitHub issue #1334 close-comment + linked PR (if any).
+   - Compare otpop emit pre-Sprint-25 vs current main.
+3. **Routing decision:**
+   - If sibling: file successor issue with the otpop reproducer + Task 7 evidence.
+   - If premature: re-open #1334.
+4. **Begin Approach 1 fix** per ISSUE_1334.md §Approach 1: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
+
+**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary). Priority 5 PR (Day 9) will include `otpop_mcp.gms`.
+
+**Quality Checks:** `make typecheck && make lint && make format && make test`.
+
+**Commit + PR:** Two PRs to keep diffs scoped:
+- `Sprint 26 Day 4: Priority 4 — Option 1 short-circuit (closes #885 / #931 / #932 / #1185 / #1228 if recoveries confirm)`.
+- `Sprint 26 Day 4: Priority 5 — #1334 re-investigation note` (no `src/` changes; just `SPRINT_LOG.md` and possibly a re-opened or successor GitHub issue).
 
 ---
 
@@ -304,50 +343,24 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 ---
 
-## Day 8 Prompt: Priority 4 Option 1 Short-Circuit + Priority 5 #1334 Re-Investigation (Parallel)
+## Day 8 Prompt: Buffer (Priority 4 + Priority 5 #1334 investigation moved to Day 4)
 
-**Branch:** `sprint26-day8-priority-4-and-5-start`.
+**Branch:** as needed for buffer work (e.g. `sprint26-day8-buffer` if any commits ship from this day).
 
-**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
+**Reschedule note:** Day 8's original Priority 4 Option 1 short-circuit + Priority 5 #1334 re-investigation pulled forward to Day 4 when Phase B reclassification freed Day 4 (per Day 3 discovery). Day 8 is now buffer.
 
-**Prerequisites:**
-- Read `DESIGN_OPTION_1_SHORT_CIRCUIT.md` §"3. Patch design" — the specific patch sites + entry-condition predicate.
-- Read `AD_RESIDUALS_RECAP.md` §"3.1 #1334" + `docs/issues/ISSUE_1334_*.md` — the otpop bug pattern + the GitHub closure context that needs re-investigation.
+**Objective:** Absorb any slippage from Days 4 / 6 / 7. If nothing slipped, choose one of the buffer-use options below.
 
-**Tasks to Complete (~7–10 hours):**
+**Buffer uses (in priority order):**
 
-**Priority 4 — Option 1 short-circuit (~4–6h):**
+1. **Absorb slippage** — if Day 4 (Priority 4 + #1334 start), Day 6 (Priority 2/3), or Day 7 (kand + xfail cleanup) didn't fully land, catch up here.
+2. **Forward-pull Priority 5 #1335 start** — originally Day 9. If Day 4's #1334 investigation already produced enough lead time that Day 9 can absorb #1334 fix completion + #1335 start without crowding, leave #1335 on Day 9. Otherwise, scope #1335 onto Day 8 to give Day 9 more time for #1334 fix completion.
+3. **Forward-pull Day 12's PR14 emit-artifact review pass** — if Days 4 + 9 produced multiple regenerated `.gms` artifacts (srpchase, otpop, and possibly others), do the mid-sprint PR14 read-through here instead of deferring to Day 12.
+4. **Sprint 27 #1381 (Pattern C Phase B redesign) — design notes only.** If other buffer uses are exhausted, sketch out Phase B-1 (source-body-driven builder) design notes in advance of Sprint 27. **Do NOT begin `src/` implementation in Sprint 26** — Phase B is explicitly deferred per Day 3.
 
-1. **Implement Option 1 short-circuit** at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
-2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
-3. **Add 1 unit test** (synthetic dynamic-subset case) in `tests/unit/ad/test_index_mapping.py` (or wherever the existing `enumerate_equation_instances` tests live).
-4. **Add 1 integration test** asserting srpchase translates within 30s.
-5. **Tier 0 + Tier 1 canary.**
-6. **Re-profile srpchase** under SIGALRM 900s; expected `846s → < 10s` per Task 6 §TL;DR projection.
-7. **Re-profile iswnm + sarf + mexls + nebrazil** to determine if they recover (LOW–MEDIUM confidence per Task 6).
+**Quality Checks:** Re-verify `make test` green at end-of-day if any `src/` changes shipped from buffer work.
 
-**Priority 5 — #1334 re-investigation (~3–4h):**
-
-1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7 §2.2, the otpop bug pattern is STILL VISIBLE in current main emit:
-   ```bash
-   grep -nE "sum\(t__, .* \* nu_kdef" data/gamslib/mcp/otpop_mcp.gms
-   # Expected: 2 lines if bug present (current state per Task 7 finding)
-   ```
-2. Determine: was the closure for a sibling sub-shape, or was it premature?
-   - Read GitHub issue #1334 close-comment + linked PR (if any).
-   - Compare otpop emit pre-Sprint-25 vs current main.
-3. **Routing decision:**
-   - If sibling: file successor issue with the otpop reproducer + Task 7 evidence.
-   - If premature: re-open #1334.
-4. **Begin Approach 1 fix** per ISSUE_1334.md §Approach 1: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
-
-**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary). Priority 5 PR (Day 9) will include `otpop_mcp.gms`.
-
-**Quality Checks:** `make typecheck && make lint && make format && make test`.
-
-**Commit + PR:** Two PRs to keep diffs scoped:
-- `Sprint 26 Day 8: Priority 4 — Option 1 short-circuit (closes #885 / #931 / #932 / #1185 / #1228 if recoveries confirm)`.
-- `Sprint 26 Day 8: Priority 5 — #1334 re-investigation note` (no `src/` changes; just `SPRINT_LOG.md` and possibly a re-opened or successor GitHub issue).
+**Commit + PR:** Per buffer-use option chosen (zero or more PRs).
 
 ---
 
@@ -355,11 +368,11 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
 
-**Objective:** Land Priority 5 #1334 fix per Day 8 scoping. Begin #1335 fix.
+**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Begin #1335 fix.
 
 **Prerequisites:**
-- Day 8 PRs merged.
-- Day 8 #1334 routing decision documented (re-opened or successor filed).
+- Day 4 PRs merged (Priority 4 Option 1 short-circuit + Priority 5 #1334 investigation).
+- Day 4 #1334 routing decision documented (re-opened or successor filed).
 
 **Tasks to Complete (~5–8 hours):**
 

@@ -49,22 +49,26 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 | Priority | Days | Effort | Lead deliverable |
 |---|---|---|---|
-| 1 — Pattern C Phase A | 1 (Days 2 validation, Day 3 reclassification) | ~6h actual | Phase A landed Day 1 PR #1379; #1306 xfail removed; consolidated launch emit. **Phase B (camcge + cesam2) reclassified Day 3 to Sprint 27 #1381** (swap-based transform doesn't generalize to plain-alias). Days 3 + 4 freed. |
-| **Checkpoint 1** (Day 5) | 5 | n/a | Priority 1 GO/NO-GO routing |
+| 1 — Pattern C Phase A | 1 (Days 2 validation, Day 3 reclassification) | ~6h actual | Phase A landed Day 1 PR #1379; #1306 xfail removed; consolidated launch emit. **Phase B (camcge + cesam2) reclassified Day 3 to Sprint 27 #1381** (swap-based transform doesn't generalize to plain-alias). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 investigation forward-pull. |
+| 4 — Option 1 short-circuit | **4 (PULLED FORWARD from Day 8)** | ~4–6h | srpchase translates; +1–2 Translate |
+| 5 — AD residuals — #1334 investigation start | **4 (PULLED FORWARD from Day 8)** | ~3–4h | Re-investigation of 2026-05-05 #1334 closure; Approach 1 fix start |
+| **Checkpoint 1** (Day 5) | 5 | n/a | Phase A GO/NO-GO routing (Phase B rows reclassified to Sprint 27 #1381) |
 | 2 — Pattern A reclassification | 6–7 | ~1.5h | 4 closures + 1 close-and-refile + 1 forward-link |
 | 3 — Pattern E carryforward (kand) | 6–7 (parallel) | ~3–6h | kand alias-AD fix OR Sprint 27 carryforward |
-| 4 — Option 1 short-circuit | 8–9 | ~4–6h | srpchase translates; +1–2 Translate |
-| 5 — AD residuals (#1334 + #1335) | 8–10 (parallel) | ~8–18h | otpop NLP-warm-started MCP converges to `pi ≈ 4217.80` |
+| Buffer / absorb slippage | 8 | ~6h | Catch up on Days 4 / 6 / 7 slippage; optionally forward-pull Day 12 PR14 review or Day 9 #1335 start |
+| 5 — AD residuals — #1334 fix completion + #1335 start | 9 | ~5–8h | Continue Approach 1 from Day 4; otpop `sum(t__, ...)` lines disappear; #1335 scalar-equation-gate fix start |
+| 5 — AD residuals — wrap (NLP-warm-started reproducer) | 10 | ~4–6h | otpop NLP-warm-started MCP converges to `pi ≈ 4217.80` |
 | **Checkpoint 2** (Day 10) | 10 | n/a | All 5 priorities landed-or-scoped |
 | 6 — PR19 CI extension | 11 | ~4–8h | `.github/workflows/pr19-emit-solve-validation.yml` lands |
 | 7 — Buffer / PR14 emit-artifact review | 12 | ~4–6h | Mid-sprint "read the regenerated `.gms`" pass on Pattern C target models |
 | 8 — Final pipeline retest + close | 13 | ~3–6h | Day 13 baseline + bucket-provenance comparison; CHANGELOG; Sprint 26 retrospective scaffold |
 
 **Parallel-work justification:**
+- Day 4: Priority 4 (`src/ad/index_mapping.py`) + Priority 5 #1334 investigation (`src/kkt/stationarity.py`) touch different files. The ad/* surface shared dependency means PR landing order matters but the work itself is parallel-safe.
 - Days 6–7: Priority 2 (mechanical issue closures, GitHub-only) + Priority 3 (kand fix in `src/`) have no shared file surface — safe to run in parallel.
-- Days 8–10: Priority 4 (`src/ad/index_mapping.py`) + Priority 5 (`src/ad/constraint_jacobian.py` + `src/kkt/stationarity.py`) touch different files. The ad/* surface shared dependency means PR landing order matters but the work itself is parallel-safe.
+- Day 9: continuation of Priority 5 #1334 fix + #1335 start touches the same `src/` surface but in sequenced sub-tasks (not parallel) — single PR per day.
 
-**Per-day budget sanity check:** No day exceeds 12h estimated work. Heaviest days: Day 1 (~6–8h Phase A scoping + prototype), Day 8 (~4–6h Priority 4 + ~3–6h Priority 5 start = ~7–12h). All within budget.
+**Per-day budget sanity check:** No day exceeds 12h estimated work. Heaviest days: Day 1 (~6–8h Phase A scoping + prototype), Day 4 (~4–6h Priority 4 + ~3–4h Priority 5 #1334 start = ~7–10h after Day 3 reclassification pulled Priority 4/5 forward). All within budget.
 
 ---
 
@@ -96,8 +100,8 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
    - `PATTERN_C_HYPOTHESIS_VALIDATION.md` (REPLAN recommendation — drives Day 1)
    - `PATTERN_A_RECLASSIFICATION_PLAN.md` (Day 6–7)
    - `PATTERN_E_STATUS.md` (Day 6–7)
-   - `DESIGN_OPTION_1_SHORT_CIRCUIT.md` (Day 8–9)
-   - `AD_RESIDUALS_RECAP.md` (Day 8–10)
+   - `DESIGN_OPTION_1_SHORT_CIRCUIT.md` (Day 4 — pulled forward from Day 8 per Day 3 reschedule)
+   - `AD_RESIDUALS_RECAP.md` (Day 4 + Day 9–10 — #1334 investigation pulled forward to Day 4 per Day 3 reschedule)
    - `DESIGN_PR19_SOLVE_TIME_CI.md` (Day 11)
    - `BASELINE_METRICS.md` (Day 13 retest comparison basis)
 
@@ -147,15 +151,30 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 **Day 3 deliverable shipped:** Docs-only PR with `SPRINT_LOG.md` Day 3 entry, `PLAN.md` reclassification, and Sprint 27 #1381 carryforward issue. No `src/` changes.
 
-### Day 4 — RECLASSIFIED to Sprint 27 #1381 (Phase B redesign — see SPRINT_LOG.md Day 3)
+### Day 4 — Priority 4 Option 1 Short-Circuit + Priority 5 #1334 Re-Investigation (Parallel) — PULLED FORWARD FROM DAY 8
 
-**Original objective:** Pattern C gate generalization for cesam2 (#1355) + dim-mismatch handling.
+**Branch:** `sprint26-day4-priority-4-and-5-start`.
+**Effort:** ~7–10h (Priority 4 ~4–6h + Priority 5 #1334 investigation ~3–4h).
 
-**Reclassification reason:** Day 3 design discovery showed Phase B's plain-alias case requires a builder redesign (intercept BEFORE element-to-set substitution, not after). cesam2's dim-mismatch case is a strict superset of the Day 3 issue — same redesign applies.
+**Pulled forward from Day 8 because Day 4's original Phase B cesam2 work reclassified to Sprint 27 #1381 (see Day 3).** Day 8 is now buffer (see below).
 
-**Deferred to Sprint 27 #1381:** Same workstream as camcge (Phase B-3 covers cesam2 dim-mismatch + sameas-block element-to-set artifacts).
+**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
 
-**Day 4 freed.** Available for Day-3-style buffer / forward-pulling later priorities (Priority 4 short-circuit candidate, Priority 5 #1334 investigation).
+**Priority 4 tasks (per Task 6 DESIGN_OPTION_1_SHORT_CIRCUIT.md):**
+1. Implement Option 1 short-circuit at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
+2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
+3. Add 1 unit test (synthetic dynamic-subset case) + 1 integration test (srpchase translates).
+4. Tier 0 + Tier 1 canary.
+5. Re-profile srpchase under SIGALRM 900s (expected: 846s → < 10s per Task 6 projection). Re-profile iswnm + sarf + mexls + nebrazil (LOW–MEDIUM confidence per Task 6).
+
+**Priority 5 #1334 tasks (per Task 7 AD_RESIDUALS_RECAP.md):**
+1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7, the otpop bug pattern is STILL VISIBLE in current main emit (2× `sum(t__, ...)` lines on `nu_kdef`) despite the closure. Determine: was the closure for a sibling sub-shape, or was it premature?
+2. If sibling: file successor issue with the otpop reproducer. If premature: re-open #1334.
+3. Begin implementing Approach 1 fix per ISSUE_1334.md: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
+
+**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary).
+
+**Deliverable:** PR for Priority 4 Option 1 (separate from Priority 5 to keep diff scope manageable) + Day 4 #1334 investigation note in `SPRINT_LOG.md`.
 
 ### Day 5 — Checkpoint 1 + Buffer
 
@@ -230,35 +249,26 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 **Deliverable:** PR for kand fix (or carryforward) + xfail-removal cleanup.
 
-### Day 8 — Priority 4 Option 1 Short-Circuit + Priority 5 #1334 Re-Investigation (Parallel)
+### Day 8 — Buffer (Priority 4 + Priority 5 #1334 investigation moved to Day 4)
 
-**Branch:** `sprint26-day8-priority-4-and-5-start`.
-**Effort:** ~7–10h (Priority 4 ~4–6h + Priority 5 #1334 investigation ~3–4h).
+**Branch:** none required (buffer day).
+**Effort:** ~6h available.
 
-**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
+**Reschedule note (Day 3 update):** Priority 4 Option 1 short-circuit + Priority 5 #1334 re-investigation work originally scheduled here was pulled forward to **Day 4** when Phase B reclassified to Sprint 27 #1381 freed Day 4.
 
-**Priority 4 tasks (per Task 6 DESIGN_OPTION_1_SHORT_CIRCUIT.md):**
-1. Implement Option 1 short-circuit at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
-2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
-3. Add 1 unit test (synthetic dynamic-subset case) + 1 integration test (srpchase translates).
-4. Tier 0 + Tier 1 canary.
-5. Re-profile srpchase under SIGALRM 900s (expected: 846s → < 10s per Task 6 projection). Re-profile iswnm + sarf + mexls + nebrazil (LOW–MEDIUM confidence per Task 6).
+**Day 8 available uses (in priority order):**
 
-**Priority 5 #1334 tasks (per Task 7 AD_RESIDUALS_RECAP.md):**
-1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7, the otpop bug pattern is STILL VISIBLE in current main emit (2× `sum(t__, ...)` lines on `nu_kdef`) despite the closure. Determine: was the closure for a sibling sub-shape, or was it premature?
-2. If sibling: file successor issue with the otpop reproducer. If premature: re-open #1334.
-3. Begin implementing Approach 1 fix per ISSUE_1334.md: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
-
-**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary).
-
-**Deliverable:** PR for Priority 4 Option 1 (separate from Priority 5 to keep diff scope manageable) + Day 8 #1334 investigation note in `SPRINT_LOG.md`.
+1. **Absorb Days 4 / 6 / 7 slippage** — if any priority slipped, catch up here.
+2. **Forward-pull Priority 5 #1335** — originally Day 9. If Day 4's #1334 investigation completed cleanly and Day 9 can absorb #1335 start without crowding, leave on Day 9. Otherwise scope #1335 onto Day 8.
+3. **Forward-pull Day 12's PR14 emit-artifact review pass** — if Day 4 + 9 produced multiple regenerated `.gms` artifacts (srpchase, otpop, possibly others), do the mid-sprint PR14 read-through here.
+4. **Sprint 27 #1381 (Pattern C Phase B redesign) — start Phase B-1 design notes** if other buffer uses are exhausted. Do NOT begin src/ implementation in Sprint 26 (per Day 3 deferral); design notes only.
 
 ### Day 9 — Priority 5 #1334 Fix + #1335 Start
 
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
 **Effort:** ~5–8h.
 
-**Objective:** Land Priority 5 #1334 fix per Day 8 scoping. Begin #1335 fix.
+**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Begin #1335 fix.
 
 **Priority 5 #1334 tasks:**
 1. Complete Approach 1 implementation: ParamRef-branch alignment when `param_domain` is a strict subset of `equation_domain` AND a parallel VarRef has been substituted to use the eq domain variable (per ISSUE_1334.md §Approach 1, line 76).
@@ -388,7 +398,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Priority 1 Phase A consolidated builder rewrite breaks > 1 Tier 2 model | Medium | High | Day 5 Checkpoint 1 NO-GO routing; Day 1 keeps the prototype branch isolated until Day 2 validation. Sprint 25 #1351 rollback experience documented in Task 3 §Recommendation. |
-| Priority 5 #1334 GitHub closure was premature; otpop bug doesn't actually resolve with documented Approach 1 | Medium | Medium | Day 8 re-investigation budgeted ~3–4h before committing to fix work. If Approach 1 doesn't work, Approach 2 fallback per ISSUE_1334.md §Approach 2 (targeted suppression in `_add_indexed_jacobian_terms`). If both fail, scope-back Priority 5 to #1335-only and Sprint 27-carryforward #1334. |
+| Priority 5 #1334 GitHub closure was premature; otpop bug doesn't actually resolve with documented Approach 1 | Medium | Medium | Day 4 re-investigation budgeted ~3–4h before committing to fix work. If Approach 1 doesn't work, Approach 2 fallback per ISSUE_1334.md §Approach 2 (targeted suppression in `_add_indexed_jacobian_terms`). If both fail, scope-back Priority 5 to #1335-only and Sprint 27-carryforward #1334. |
 | Priority 4 Option 1 short-circuit recovers srpchase but breaks Tier 0/1 canary determinism | Low | Medium | Per Task 6 §"Determinism preserved by construction" — placeholder uses domain set names, no `set`/`dict` iteration, PR12 byte-stable harness will validate. If determinism breaks, revert + Sprint 27 carryforward. |
 | Day 0 machine-variance churn-outs (clearlak / ganges / turkpow translate timeouts) recover via Priority 4 but headline reads as +3 path_syntax_error regression | High | Low | Day 13 retest applies bucket-provenance evaluation per PR17 (Task 9 §4.3) — explicit table distinguishes bucket churn from real regression. CHANGELOG narrates the disambiguation. |
 | PR19 CI extension implementation slips past Day 11 due to GAMS demo installer issues | Medium | Low | Task 8 §"Open Questions" already flagged installer URL stability + license activation + caching as Sprint 26 implementation risks. Day 11 has 4–8h budget; Day 12 buffer absorbs slip if needed. Self-hosted runner with full GAMS license is the documented fallback per Task 8 design. |
