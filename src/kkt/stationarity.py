@@ -338,6 +338,19 @@ def _find_eq_domain_index_in_expr(
                 return found
         return None
 
+    # For nested Sum/Prod nodes, extend bound_indices with the local index
+    # bindings before recursing — without this, an index that is locally
+    # bound inside the condition (e.g. ``sum(s, ge(s, ...))`` where ``s``
+    # is also one of ``target_canonical_sets``) would be incorrectly
+    # returned as an "eq-domain" mention.
+    if isinstance(expr, (Sum, Prod)):
+        new_bound = bound_indices | frozenset(idx.lower() for idx in expr.index_sets)
+        for child in expr.children():
+            found = _find_eq_domain_index_in_expr(child, target_canonical_sets, model_ir, new_bound)
+            if found is not None:
+                return found
+        return None
+
     for child in expr.children():
         found = _find_eq_domain_index_in_expr(child, target_canonical_sets, model_ir, bound_indices)
         if found is not None:
@@ -4473,42 +4486,9 @@ def _add_indexed_jacobian_terms(
             mult_domain = _get_constraint_domain(kkt, eq_name_base)
 
             if mult_domain:
-                # Sprint 25 Day 6 (Pattern C Bug #1): decide up-front whether
-                # non-zero offset groups are semantically legitimate for this
-                # (constraint, variable) pair. `_compute_index_offset_key`
-                # computes positional differences between eq and var instances
-                # regardless of source intent, so for a launch-shaped
-                # conditional alias sum (e.g. launch.gms's
-                # `dweight(s).. ... =e= sum(ss$ge(ss,s), iweight(ss) + ...)`)
-                # it invents ±N offsets that don't exist in the source. The
-                # gate below consolidates those spurious groups into a single
-                # zero-offset key iff BOTH (a) the source equation body has no
-                # `IndexOffset` on any index that (via alias resolution)
-                # refers to a set in the variable's domain, AND (b) the body
-                # contains an aliased conditional sum whose `$` condition
-                # references the equation's own domain — the launch-style
-                # fingerprint. Plain alias-iteration sums (e.g. quocge's
-                # `sum(i, ax(i,j)*pq(i))`, prolog's `sum(j, a(i,j)*q(j,t))`)
-                # lack the conditional link and are deliberately left alone,
-                # preserving existing Tier 0/1 canary outputs. Real lead/lag
-                # equations (e.g. paklive's `nutbal(n,t).. ... xtransf(n,t--1)`,
-                # twocge #1277, qabel/abel's stateq) retain the original
-                # per-offset grouping because condition (a) fails.
-                eq_def_for_gate = kkt.model_ir.equations.get(eq_name_base)
-                variable_canonical_sets = frozenset(
-                    _resolve_alias_target(d, kkt.model_ir) for d in var_domain
-                )
-                eq_domain_canonical = (
-                    frozenset(
-                        _resolve_alias_target(d, kkt.model_ir)
-                        for d in (eq_def_for_gate.domain or ())
-                    )
-                    if eq_def_for_gate is not None
-                    else frozenset()
-                )
-                # Sprint 25 Day 6 / Sprint 26 Day 1 Phase A (Pattern C Bug #1):
-                # decide up-front whether non-zero offset groups are semantically
-                # legitimate for this (constraint, variable) pair.
+                # Sprint 25 Day 6 #1306 / Sprint 26 Day 1 Phase A (Pattern C
+                # Bug #1): decide up-front whether non-zero offset groups are
+                # semantically legitimate for this (constraint, variable) pair.
                 # ``_compute_index_offset_key`` computes positional differences
                 # between eq and var instances regardless of source intent, so
                 # for a launch-shaped conditional alias sum (e.g. launch.gms's
@@ -4528,19 +4508,31 @@ def _add_indexed_jacobian_terms(
                 # twocge #1277, qabel/abel's stateq) retain the original
                 # per-offset grouping because condition (a) fails.
                 #
-                # Sprint 25 #1351 rolled back the original #1306 gate
-                # ``allow_nonzero_offsets = False`` because the downstream
-                # zero-offset builder collapsed all matched offset entries to a
-                # single ``nu_eq(eq_domain)`` term, losing the cross-element
-                # aggregation and producing a structurally incomplete KKT (PATH
-                # reported ``model_infeasible`` on launch). Sprint 26 Day 1
-                # Phase A restores the gate AND fixes the builder: when the
-                # gate fires we capture ``pattern_c_info`` (alias name, eq-domain
-                # index, body's condition) so the downstream term construction
-                # can swap ``alias ↔ eq_dom`` indices and re-index the
-                # multiplier — producing the correct ``sum(ss$ge(s,ss),
-                # -nu_dweight(ss))`` shape (per Sprint 25 SPRINT_LOG.md Day 11
-                # §"Open follow-ups (revised)").
+                # Sprint 25 #1351 rolled back the original #1306 gate because
+                # the downstream zero-offset builder collapsed all matched
+                # offset entries to a single ``nu_eq(eq_domain)`` term, losing
+                # the cross-element aggregation and producing a structurally
+                # incomplete KKT (PATH reported ``model_infeasible`` on
+                # launch). Sprint 26 Day 1 Phase A restores the gate AND fixes
+                # the builder: when the gate fires we capture
+                # ``pattern_c_info`` (alias name, eq-domain index, body's
+                # condition) so the downstream term construction can swap
+                # ``alias ↔ eq_dom`` indices and re-index the multiplier —
+                # producing the correct ``sum(ss$ge(s,ss), -nu_dweight(ss))``
+                # shape (per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups
+                # (revised)").
+                eq_def_for_gate = kkt.model_ir.equations.get(eq_name_base)
+                variable_canonical_sets = frozenset(
+                    _resolve_alias_target(d, kkt.model_ir) for d in var_domain
+                )
+                eq_domain_canonical = (
+                    frozenset(
+                        _resolve_alias_target(d, kkt.model_ir)
+                        for d in (eq_def_for_gate.domain or ())
+                    )
+                    if eq_def_for_gate is not None
+                    else frozenset()
+                )
                 allow_nonzero_offsets = True
                 pattern_c_info: dict | None = None
                 if eq_def_for_gate is not None and variable_canonical_sets:
