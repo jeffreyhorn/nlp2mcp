@@ -1175,12 +1175,14 @@ test -f .github/pull_request_template.md && \
 
 ## Task 11: Plan Sprint 26 Detailed Schedule
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
+**Completed:** 2026-05-09
 **Priority:** Critical
 **Estimated Time:** 3–4 hours
+**Actual Time:** ~3 hours
 **Deadline:** Before Sprint 26 Day 1
 **Owner:** Sprint planning
-**Dependencies:** Tasks 1–10
+**Dependencies:** Tasks 1–10 (all VERIFIED — see Final Prep-Task Status table below)
 
 ### Objective
 
@@ -1228,11 +1230,30 @@ Sprint 26 has the highest-leverage workstream of the post-Sprint-25 backlog (Pat
 
 ### Changes
 
-To be completed.
+- Created `docs/planning/EPIC_4/SPRINT_26/PLAN.md` — 14-day Sprint 26 detailed schedule (Day 0 + Days 1–13). Sections: Executive Summary, Sprint 26 Targets (vs Day 0 baseline), Workstream Allocation (priorities + days + effort), Daily Schedule (per-day branch / objective / tasks / deliverable), 2 Checkpoints (Day 5 + Day 10) with quantitative GO / CONDITIONAL GO / NO-GO criteria, Process Requirements (PR6/PR7/PR8/PR9/PR10/PR12/PR14/PR15/PR16/PR17/PR18/PR19), Risk Register, Related Documents.
+- Created `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` — day-by-day execution prompts mirroring Sprint 25 PLAN_PROMPTS.md format. 14 prompts: Day 0 (setup + briefing), Days 1–4 (Priority 1 Phase A + Phase B), Day 5 (Checkpoint 1), Days 6–7 (Priorities 2 + 3), Days 8–10 (Priorities 4 + 5 + Checkpoint 2), Day 11 (PR19 implementation), Day 12 (buffer + PR14 review pass), Day 13 (final retest + Sprint close).
+- **Schedule honors Task 3 REPLAN**: Priority 1 split into Phase A (Day 1 — restore Sprint 25 launch fix via consolidated zero-offset builder rewrite) + Phase B (Days 3–4 — generalize gate to camcge / cesam2). fawley + otpop reclassified out of Priority 1 per Task 3.
+- **Schedule honors Task 4 + Task 5 mechanical-closure findings**: Priority 2 reduced from ~4–6h investigative to ~1.5h GitHub-only closures (6 issues). Priority 3 reduced from 3 models to 1 (kand) + 2 mechanical closures (catmix, camshape).
+- **Schedule honors Task 7 scope decision**: Priority 5 = #1334 + #1335 only; #1357 deferred to Sprint 27 alongside fawley #1356 as a "comp_up subset/superset domain widening" workstream.
+- **Per-day budget**: heaviest day is Day 8 (~7–10h Priority 4 + Priority 5 #1334 start). All 14 days within ≤ 12h/day budget; total estimated 50–75h within 168h cap.
+- **2 checkpoints**:
+  - **Checkpoint 1 (Day 5)**: Priority 1 Phase A + B both landed, camcge + cesam2 solve to MODEL STATUS 1, Tier 0/1 canaries match, ≤ 1 documented Tier 2 regression.
+  - **Checkpoint 2 (Day 10)**: Aggregate Match Δ ≥ +3, Solve Δ ≥ +3, all 5 priorities landed-or-scoped, otpop NLP-warm-started MCP residual ≈ 0.
+- **Updated Final Prep-Task Status table** below (added) — all 11 tasks ✅ COMPLETE.
 
 ### Result
 
-To be completed.
+Sprint 26 ready to kick off Day 0. The schedule integrates all 10 prior prep-task outputs into a budget-respecting 14-day plan. Pattern C work is front-loaded (Days 1–5) with explicit Checkpoint 1 routing. Mechanical closures (Priorities 2 + 3) absorb the buffer freed by Task 4 + Task 5 effort reductions. Priority 4 + Priority 5 land in parallel on Days 8–10 with PR19 implementation (Day 11) as the bridge between fix-work and final retest.
+
+**Sprint 26 Targets** (per PROJECT_PLAN.md §Sprint 26 Acceptance Criteria + Task 9 Day 0 baseline):
+
+| Metric | Day 0 | Target | Net needed |
+|---|---|---|---|
+| Translate | 130 | ≥ 135 | +5 (Priority 4 must recover 3 churn-outs + add ≥ 2) |
+| Solve | 104 | ≥ 108 | +4 (Priority 1 + Priority 5) |
+| Match | 60 | ≥ 64 | +4 (Priority 1 + Priority 5) |
+| path_syntax_error | 9 | ≤ 6 | −3 (Priority 1 lands −2; Priority 4 returns 3 churn-outs to bucket) |
+| Tests | 4,735 | ≥ 4,750 | +15 (regression tests added per priority) |
 
 ### Verification
 
@@ -1257,13 +1278,13 @@ grep -cE "Checkpoint [12]" docs/planning/EPIC_4/SPRINT_26/PLAN.md   # Expected: 
 
 ### Acceptance Criteria
 
-- [ ] Schedule covers all 14 days (Day 0 + Days 1–13)
-- [ ] No day exceeds 12 hours of estimated work (per PROJECT_PLAN.md ≤ 12h/day)
-- [ ] Total estimated work ≤ 168h (within 14-day budget); target 50–75h per PROJECT_PLAN.md
-- [ ] 2 checkpoints defined with quantitative GO / NO-GO criteria
-- [ ] Day-by-day prompts match Sprint 25's format
-- [ ] Cross-references with all 10 prior prep-task outputs
-- [ ] Sprint 25 carryforward KUs (KU-33..KU-36) referenced where they drive specific day-level work
+- [x] Schedule covers all 14 days (Day 0 + Days 1–13) — `PLAN.md` §"Daily Schedule" has 14 day sections + `PLAN_PROMPTS.md` has 14 prompts
+- [x] No day exceeds 12 hours of estimated work (per PROJECT_PLAN.md ≤ 12h/day) — heaviest day is Day 8 at ~7–10h (Priority 4 + Priority 5 #1334 start in parallel)
+- [x] Total estimated work ≤ 168h (within 14-day budget); target 50–75h per PROJECT_PLAN.md — sum across days = ~50–75h, well within 168h cap
+- [x] 2 checkpoints defined with quantitative GO / NO-GO criteria — Checkpoint 1 Day 5 (Priority 1 landed, camcge + cesam2 reach MODEL STATUS 1) + Checkpoint 2 Day 10 (Match Δ ≥ +3, Solve Δ ≥ +3, all 5 priorities landed-or-scoped, otpop reproducer ≈ 0). Each has GO / CONDITIONAL GO / NO-GO routing per `PLAN.md`.
+- [x] Day-by-day prompts match Sprint 25's format — PLAN_PROMPTS.md mirrors `SPRINT_25/prompts/PLAN_PROMPTS.md` structure (per-day Branch + Objective + Prerequisites + Tasks + PR14 obligation + Quality Checks + Commit/PR)
+- [x] Cross-references with all 10 prior prep-task outputs — PLAN.md §"Related Documents" lists all 10; per-day prompts reference the relevant prep-task output as a Prerequisite
+- [x] Sprint 25 carryforward KUs (KU-33..KU-36) referenced where they drive specific day-level work — KU-33 (Pattern C) drives Days 1–5 via Task 3; KU-34 (bucket churn) drives Day 13 retest evaluation via PR17; KU-35 (Sprint 25 PR #1351 launch rollback) drives Day 1 Phase A; KU-36 (otpop $171 vs $141) drives Days 8–10 Priority 5 + Sprint 27 #1357 deferral
 
 ---
 
@@ -1285,18 +1306,40 @@ Sprint 26 preparation comprises 11 tasks spanning ~28–39 hours (3.5–5 workin
 
 ### Success Criteria for Prep Phase
 
-- [ ] **All 11 prep tasks complete** before Sprint 26 Day 1
-- [x] `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories**
-- [ ] `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` re-verifies all 3 Phase E models (Task 5)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` confirms patch sites + draft test fixtures (Task 6)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` clarifies #1334 ↔ #1357 subsumption (Task 7)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` specifies trigger + target list + timeout + failure handling (Task 8)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` records Day 0 baseline with bucket-provenance column (Task 9)
-- [ ] `CONTRIBUTING.md` has the emit-PR `.gms` artifact rule (Task 10)
-- [ ] `docs/planning/EPIC_4/SPRINT_26/PLAN.md` + `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` cover Day 0 + Days 1–13 (Task 11)
+- [x] **All 11 prep tasks complete** before Sprint 26 Day 1 — see Final Prep-Task Status table below
+- [x] `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` documents ≥ 20 unknowns across ≥ 6 categories (5 priorities + cross-cutting/process) — **DONE 2026-05-07: 26 unknowns, 6 categories; all VERIFIED**
+- [x] `docs/planning/EPIC_4/SPRINT_25/BASELINE_METRICS.md` §5 updated with Sprint 25 mid-sprint reclassification documentation (Task 2)
+- [x] `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` produces a clear PROCEED / REPLAN recommendation (Task 3) — **REPLAN**
+- [x] `docs/planning/EPIC_4/SPRINT_26/PATTERN_A_RECLASSIFICATION_PLAN.md` has per-issue action notes for all 6 cohort issues (Task 4)
+- [x] `docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md` re-verifies all 3 Phase E models (Task 5)
+- [x] `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` confirms patch sites + draft test fixtures (Task 6)
+- [x] `docs/planning/EPIC_4/SPRINT_26/AD_RESIDUALS_RECAP.md` clarifies #1334 ↔ #1357 subsumption (Task 7) — **NOT subsumed**
+- [x] `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` specifies trigger + target list + timeout + failure handling (Task 8)
+- [x] `docs/planning/EPIC_4/SPRINT_26/BASELINE_METRICS.md` records Day 0 baseline with bucket-provenance column (Task 9)
+- [x] `CONTRIBUTING.md` has the emit-PR `.gms` artifact rule (Task 10)
+- [x] `docs/planning/EPIC_4/SPRINT_26/PLAN.md` + `docs/planning/EPIC_4/SPRINT_26/prompts/PLAN_PROMPTS.md` cover Day 0 + Days 1–13 (Task 11)
+
+### Final Prep-Task Status
+
+| Task | Title | Status | Completed | PR |
+|---|---|---|---|---|
+| 1 | Identify Sprint 26 Known Unknowns | ✅ COMPLETE | 2026-05-07 | #1365 (bundled with PREP_PLAN — KNOWN_UNKNOWNS.md added in commit `99065502`) |
+| 2 | Identify Sprint 25 Scope-Shifted Model (PR18) | ✅ COMPLETE | 2026-05-07 | #1366 |
+| 3 | Pattern C Generalization Hypothesis Validation (PR16) | ✅ COMPLETE | 2026-05-07 | #1367 |
+| 4 | Pattern A Cohort Reclassification Pre-Work | ✅ COMPLETE | 2026-05-07 | #1368 |
+| 5 | Pattern E Carryforward Status Survey | ✅ COMPLETE | 2026-05-07 | #1369 |
+| 6 | Profile Option 1 Short-Circuit Approach | ✅ COMPLETE | 2026-05-07 | #1370 |
+| 7 | AD Residuals (#1334, #1335) Investigation Recap | ✅ COMPLETE | 2026-05-07 | #1371 |
+| 8 | Design Pre-Merge Solve-Time Validation CI (PR19) | ✅ COMPLETE | 2026-05-08 | #1372 |
+| 9 | Bucket-Provenance Baseline + Scope Freeze (PR17 + PR15) | ✅ COMPLETE | 2026-05-09 | #1373 |
+| 10 | Update CONTRIBUTING.md for Emit-PR `.gms` Diffs (PR14 Reaffirmation) | ✅ COMPLETE | 2026-05-09 | #1375 |
+| 11 | Plan Sprint 26 Detailed Schedule | ✅ COMPLETE | 2026-05-09 | (this PR) |
+
+**All 11 prep tasks complete. Sprint 26 ready to kick off Day 0.**
+
+**KU verification:** All 26 Sprint 26 Known Unknowns (KUs 1.1–6.5) are ✅ VERIFIED in `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` per Tasks 2–10. The Sprint 25 carryforward KUs (KU-33 through KU-36) are referenced in `PLAN.md` where they drive specific day-level work (KU-33 → Days 1–5; KU-34 → Day 13 retest; KU-35 → Day 1 Phase A; KU-36 → Days 8–10 Priority 5).
+
+**Sprint 27 carryforward issues identified during prep:** #1356 (fawley comp_up subset/superset, per Task 4), #1357 (otpop comp_up subset/superset, per Task 7), #1374 (emit duplicate-init bugs, surfaced during Task 9 PR review), #1224 (mine ParamRef IndexOffset, deferred per Task 6 — pre-existing tracker). All to be filed at Sprint 26 Day 13 close per `PLAN.md`.
 
 ### Critical-Path Summary
 
