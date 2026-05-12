@@ -915,7 +915,7 @@ The over-counted `sum(t__, ...) * nu_kdef` cross-term in `stat_x(tt)` / `stat_p(
 - Phase 3 integration tests (otpop emit grep + hand-derived KKT shape + Tier 0/1 byte-stable regression).
 - Effort estimate: 10–16h (mirrors #1381 / #1385 / #1390).
 
-**Closed #1334** with carryforward comment. Moved `ISSUE_1334_*.md` → `docs/issues/completed/`. Created `ISSUE_1393_*.md` in `docs/issues/`.
+**Closure mechanics:** #1334 was already closed on GitHub 2026-05-05 (unintentional auto-closure via PR #1359; reopened Day 4 via PR #1384). Day 9 close-and-refile re-closed #1334 with a carryforward comment pointing to Sprint 27 #1393 (the Day 9 GitHub closure reflects the carryforward routing, not a new fix landing — the bug persists in current main, deferred to Sprint 27). Moved `ISSUE_1334_*.md` → `docs/issues/completed/`. Created `ISSUE_1393_*.md` in `docs/issues/`.
 
 #### Sprint 26 architectural reclassification surface (post Day 9)
 

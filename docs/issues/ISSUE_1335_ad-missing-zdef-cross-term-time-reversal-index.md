@@ -46,8 +46,6 @@ Two distinct defects in the broken emit:
 
 ---
 
----
-
 ## Problem Summary
 
 When an equation references a variable via an index whose offset is a non-trivial expression involving the sum index variable (e.g., `p(t + (card(t) - ord(t)))`), the AD does not produce a Jacobian entry for the time-reversed mapping target. The corresponding cross-term is then missing from the affected stationarity equation.
