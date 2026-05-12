@@ -177,52 +177,40 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 ---
 
-## Day 4 Prompt: Priority 4 Option 1 Short-Circuit + Priority 5 #1334 Re-Investigation (Parallel) — PULLED FORWARD FROM DAY 8
+## Day 4 — RECLASSIFIED Priority 4 to Sprint 27 #1385; Priority 5 #1334 re-investigation completed (2026-05-12)
 
-**Branch:** `sprint26-day4-priority-4-and-5-start`.
+**Branches:**
+- Priority 4: `sprint26-day4-priority-4-option-1-short-circuit` (Day 4 docs-only PR after rollback — Priority 4 reclassification + Sprint 27 #1385 carryforward).
+- Priority 5: `sprint26-day4-priority-5-1334-investigation-on-p4` (separate docs-only PR; #1334 re-opened).
 
-**Reschedule note:** Day 4's original Pattern C cesam2 Phase B work reclassified to Sprint 27 #1381 (per Day 3 discovery). Day 8's Priority 4 + Priority 5 #1334 work pulled forward to fill Day 4. Day 8 is now buffer (see Day 8 prompt).
+**Reschedule note:** Day 4's original Pattern C cesam2 Phase B work reclassified to Sprint 27 #1381 (per Day 3 discovery). Day 8's Priority 4 + Priority 5 #1334 work pulled forward to fill Day 4. Day 8 is now buffer.
 
-**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
+**Day 4 outcome (revised 2026-05-12):**
 
-**Prerequisites:**
-- Read `DESIGN_OPTION_1_SHORT_CIRCUIT.md` §"3. Patch design" — the specific patch sites + entry-condition predicate.
-- Read `AD_RESIDUALS_RECAP.md` §"3.1 #1334" + `docs/issues/ISSUE_1334_*.md` — the otpop bug pattern + the GitHub closure context that needs re-investigation.
+### Priority 4 — RECLASSIFIED to Sprint 27 #1385 (Option 1 short-circuit redesign)
 
-**Tasks to Complete (~7–10 hours):**
+Day 4 attempted to implement the Option 1 short-circuit per Task 6 design. **Translate-time savings worked** (srpchase 846s → 5.7s; iswnm 61.1s recovered) **BUT the resulting MCP emit was structurally wrong** — the `_build_symbolic_instance_placeholder` returned `[("srn",)]` (the SET NAME as the index) which the downstream AD/emit pipeline treated as the literal element string `"srn"`, producing broken multiplier references like `nu_slack("srn")` and `lam_demand("srn")` (invalid — `srn` is a subset of `n`, not an element). Same root-cause class as Day 3 Pattern B reclassification (Sprint 27 #1381): design doc validated against an assumption ("downstream emit handles symbolic-index instances per Sprint 25 #1306 / #1308 prior art") that doesn't hold — the prior art is for indexed-equation HEADERS that bind symbolic indices, but the AD pipeline's per-instance enumeration treats the placeholder as a concrete element.
 
-**Priority 4 — Option 1 short-circuit (~4–6h):**
+**Day 4 src/ rolled back** (commit `243fe578` reverted on the Day 4 PR branch). **Sprint 27 #1385** captures the redesign scope (10–16h: AD/emit pipeline changes for symbolic-instance handling OR alternative short-circuit shape that works with concrete indices). The 5 translate-timeout candidate issues (#885, #931, #932, #1185, #1228) carry forward to Sprint 27.
 
-1. **Implement Option 1 short-circuit** at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
-2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
-3. **Add 1 unit test** (synthetic dynamic-subset case) in `tests/unit/ad/test_index_mapping.py` (or wherever the existing `enumerate_equation_instances` tests live).
-4. **Add 1 integration test** asserting srpchase translates within 30s.
-5. **Tier 0 + Tier 1 canary.**
-6. **Re-profile srpchase** under SIGALRM 900s; expected `846s → < 10s` per Task 6 §TL;DR projection.
-7. **Re-profile iswnm + sarf + mexls + nebrazil** to determine if they recover (LOW–MEDIUM confidence per Task 6).
+**Sprint 26 Translate target relaxed:** `≥ 132/142` (was `+2 from Priority 4`) → `maintain ≥ 130/142` (per PLAN.md §"Sprint 26 Targets" revised Day 4).
 
-**Priority 5 — #1334 re-investigation (~3–4h):**
+### Priority 5 #1334 — COMPLETED Day 4 (separate docs-only PR)
 
-1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7 §2.2, the otpop bug pattern is STILL VISIBLE in current main emit:
-   ```bash
-   grep -nE "sum\(t__, .* \* nu_kdef" data/gamslib/mcp/otpop_mcp.gms
-   # Expected: 2 lines if bug present (current state per Task 7 finding)
-   ```
-2. Determine: was the closure for a sibling sub-shape, or was it premature?
-   - Read GitHub issue #1334 close-comment + linked PR (if any).
-   - Compare otpop emit pre-Sprint-25 vs current main.
-3. **Routing decision:**
-   - If sibling: file successor issue with the otpop reproducer + Task 7 evidence.
-   - If premature: re-open #1334.
-4. **Scope and sketch the Approach 1 fix** per ISSUE_1334.md §Approach 1: identify the patch site (`_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`), document the change shape in the SPRINT_LOG.md Day 4 entry, and add any prerequisite refactor sub-tasks to the Day 9 plan. **Do NOT commit `src/` changes on Day 4** — the Priority 5 PR is investigation + scoping only (see §"Commit + PR" below). Implementation lands Day 9 alongside #1335.
+Re-investigation per Task 7 §2.2 + §3.1 completed:
 
-**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary). Priority 5 PR (Day 9) will include `otpop_mcp.gms`.
+1. **Bug present on current main:** `grep -cE "sum\(t__," /tmp/otpop_mcp.gms` returns 2; spurious `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt))` wraps in `stat_p(tt)` + `stat_x(tt)`.
+2. **#1334 closure traced to PR #1359** ("Sprint 25 Day 13: buffer + Sprint 26 carryforward issue filing" — docs-only). PR #1359's body explicitly listed #1334 under supposed-to-stay-OPEN "carryforward issues with rel_diff data attached"; the auto-closure was UNINTENDED.
+3. **Re-opened #1334** with full re-investigation context.
+4. **Approach 1 sketched** in SPRINT_LOG.md Day 4 §Priority 5 §"Approach 1 sketch" — Day 9 picks up `_replace_indices_in_expr` ParamRef-branch implementation alongside #1335.
 
-**Quality Checks:** `make typecheck && make lint && make format && make test`.
+### Day 4 deliverables (revised)
 
-**Commit + PR:** Two PRs to keep diffs scoped:
-- `Sprint 26 Day 4: Priority 4 — Option 1 short-circuit (closes #885 / #931 / #932 / #1185 / #1228 if recoveries confirm)`.
-- `Sprint 26 Day 4: Priority 5 — #1334 re-investigation note` (no `src/` changes; just `SPRINT_LOG.md` and possibly a re-opened or successor GitHub issue).
+Two docs-only PRs:
+- **Priority 4 reclassification PR** (this branch): src/ rollback + Sprint 27 #1385 carryforward + PLAN.md / PLAN_PROMPTS.md / SPRINT_LOG.md / CHANGELOG updates.
+- **Priority 5 #1334 PR** (separate branch, stacked): re-investigation findings + Approach 1 sketch + #1334 re-opened on GitHub.
+
+No src/ changes shipped Day 4. No PR14 obligation. Quality checks not required.
 
 ---
 

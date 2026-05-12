@@ -33,7 +33,7 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 | Metric | Day 0 (Task 9 baseline) | Sprint 26 Target (revised Day 3) | Stretch | Net needed |
 |---|---|---|---|---|
 | Parse | 142/142 (100%) | ≥ 142/142 | — | 0 (invariant) |
-| Translate | 130/142 (91.5%) | ≥ 132/142 (maintain churn-outs + ≥ 2 from Priority 4) | ≥ 135/142 | **+2** (Priority 4 short-circuit recovers srpchase / iswnm) |
+| Translate | 130/142 (91.5%) | ≥ 130/142 (maintain) | ≥ 132/142 | **0** (Priority 4 reclassified to Sprint 27 #1385 per Day 4 — placeholder approach broken downstream; the +2 Translate from srpchase + iswnm carries forward to Sprint 27) |
 | Solve | 104 | ≥ 104 (maintain) | ≥ 106 | **0** (Priority 5 +1–2 stretch from #1334 / #1335; Phase A/B Solve gains deferred to Sprint 27 #1378 + #1381) |
 | Match | 60 | ≥ 60 (maintain) | ≥ 62 | **0** (same rationale as Solve) |
 | path_syntax_error | 9 | ≤ 9 (maintain) | ≤ 8 | **0** (Phase B camcge/cesam2 deferred — they stay in path_syntax_error this sprint) |
@@ -160,23 +160,22 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 
 **Pulled forward from Day 8 because Day 4's original Phase B cesam2 work reclassified to Sprint 27 #1381 (see Day 3).** Day 8 is now buffer (see below).
 
-**Objective:** Land Priority 4 Option 1 short-circuit per Task 6 design. Begin Priority 5 #1334 re-investigation per Task 7 recap.
+**Objective (revised Day 4):** Priority 4 Option 1 short-circuit RECLASSIFIED to Sprint 27 #1385 (placeholder approach broken downstream — see Day 4 reclassification rationale below). Priority 5 #1334 re-investigation completed (re-opened #1334; Approach 1 sketched for Day 9 implementation).
 
-**Priority 4 tasks (per Task 6 DESIGN_OPTION_1_SHORT_CIRCUIT.md):**
-1. Implement Option 1 short-circuit at `src/ad/index_mapping.py::enumerate_equation_instances` (line 377) per Task 6 patch design.
-2. Add supporting changes to `resolve_set_members` (line 115) and `src/ir/condition_eval.py` SetMembershipTest evaluation path.
-3. Add 1 unit test (synthetic dynamic-subset case) + 1 integration test (srpchase translates).
-4. Tier 0 + Tier 1 canary.
-5. Re-profile srpchase under SIGALRM 900s (expected: 846s → < 10s per Task 6 projection). Re-profile iswnm + sarf + mexls + nebrazil (LOW–MEDIUM confidence per Task 6).
+**Priority 4 — RECLASSIFIED to Sprint 27 #1385 (Option 1 short-circuit redesign):**
 
-**Priority 5 #1334 tasks (per Task 7 AD_RESIDUALS_RECAP.md):**
-1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7, the otpop bug pattern is STILL VISIBLE in current main emit (2× `sum(t__, ...)` lines on `nu_kdef`) despite the closure. Determine: was the closure for a sibling sub-shape, or was it premature?
-2. If sibling: file successor issue with the otpop reproducer. If premature: re-open #1334.
-3. Scope and sketch the Approach 1 fix per ISSUE_1334.md (patch site `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`); document the change shape in the SPRINT_LOG.md Day 4 entry. **Do NOT commit `src/` changes on Day 4** — the Priority 5 PR is investigation + scoping only. Implementation lands Day 9 alongside #1335.
+Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate-time savings worked (srpchase 846s → 5.7s; iswnm 61.1s recovered) BUT the resulting MCP emit was structurally wrong — the `_build_symbolic_instance_placeholder` returned `[("srn",)]` (the SET NAME as the index) which the downstream AD/emit pipeline treated as the literal element string `"srn"`, producing broken multiplier references like `nu_slack("srn")` and `lam_demand("srn")` (invalid — `srn` is a subset of `n`, not an element of `n`). Same root-cause class as Day 3 Pattern B reclassification: the design doc validated against an assumption ("downstream emit handles symbolic-index instances per Sprint 25 #1306 / #1308 prior art") that doesn't hold — the prior art is for indexed equation HEADERS that bind symbolic indices, but the AD pipeline's per-instance enumeration treats the placeholder as a concrete element. **Day 4 src/ rolled back; Sprint 27 #1385 captures the redesign scope** (10–16h: AD/emit pipeline changes for symbolic-instance handling OR alternative short-circuit shape that works with concrete indices). Sprint 26 Translate target relaxes from `≥ 132` (was `+2 from Priority 4`) back to `maintain ≥ 130`. The 5 translate-timeout candidates (#885, #931, #932, #1185, #1228) carry forward to Sprint 27.
 
-**PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary).
+**Priority 5 #1334 tasks — COMPLETED Day 4 (separate docs-only PR):**
+1. Re-investigated the 2026-05-05 GitHub closure of #1334. ✅ Bug pattern STILL VISIBLE on current main (`grep -cE "sum\(t__," otpop_mcp.gms` returns 2). Closure traced to PR #1359 ("Sprint 25 Day 13") — a docs-only PR that explicitly listed #1334 as supposed-to-stay-OPEN; the auto-closure was unintended.
+2. **Re-opened #1334** with full re-investigation context.
+3. Scoped and sketched the Approach 1 fix per ISSUE_1334.md (patch site `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`); change shape documented in SPRINT_LOG.md Day 4 §Priority 5 §"Approach 1 sketch". **No `src/` changes on Day 4** — Day 9 picks up implementation alongside #1335.
 
-**Deliverable:** PR for Priority 4 Option 1 (separate from Priority 5 to keep diff scope manageable) + Day 4 #1334 investigation note in `SPRINT_LOG.md`.
+**PR14 obligation (revised Day 4):** No PR14 obligation. Priority 4 src/ rolled back; Priority 5 is docs-only.
+
+**Deliverable:** Two PRs (revised Day 4):
+- Priority 4 reclassification + Sprint 27 #1385 carryforward (this Day 4 docs-only PR after rollback)
+- Priority 5 #1334 re-investigation note (separate docs-only PR; #1334 re-opened)
 
 ### Day 5 — Checkpoint 1 + Buffer
 

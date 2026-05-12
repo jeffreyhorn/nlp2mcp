@@ -326,3 +326,85 @@ Total: 10–16h, plus per-phase test coverage.
 - No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks not required.
 
 ---
+
+### Day 4 — RECLASSIFIED Priority 4 to Sprint 27 #1385; Priority 5 #1334 re-investigation completed
+
+**Status:** COMPLETE (2026-05-12) — Priority 4 src/ rolled back; Priority 5 #1334 re-investigation shipped (separate docs-only PR).
+**Branches:**
+- Priority 4 reclassification: `sprint26-day4-priority-4-option-1-short-circuit` (this PR — docs-only after rollback)
+- Priority 5 #1334: `sprint26-day4-priority-5-1334-investigation-on-p4` (separate docs-only PR; #1334 re-opened)
+
+**Reschedule note (Day 3):** Day 4 originally scoped for Pattern C cesam2 Phase B work. Phase B reclassified to Sprint 27 #1381; Day 8's Priority 4 + Priority 5 #1334 work pulled forward. Day 8 is now buffer.
+
+#### Priority 4 — RECLASSIFIED to Sprint 27 #1385 (Option 1 short-circuit redesign)
+
+| Task | Status |
+|---|---|
+| Implement Option 1 short-circuit at `src/ad/index_mapping.py::enumerate_equation_instances` per Task 6 design | ❌ Rolled back — placeholder approach broken downstream. See "Day 4 Priority 4 design discovery" below. |
+| Add unit + integration tests | ❌ Rolled back. Tests pass in isolation (positive predicate firing + negative cases) but the integration test only verified "translation completes" + "stat_ appears" — NOT emit correctness. Stronger test coverage required for Sprint 27 redesign (hand-derived KKT shape verification + GAMS compile-clean). |
+| Re-profile srpchase / iswnm / sarf / mexls / nebrazil | ✅ Profile data captured BEFORE rollback (informative for Sprint 27 #1385 redesign): srpchase 846s → 5.7s (recovers translate but emit broken); iswnm 61.1s (recovers; emit not hand-verified); sarf/mexls/nebrazil still timeout >180s (per design doc §4.1, LOW-MEDIUM confidence — independent of the placeholder bug). |
+| Tier 0 + Tier 1 canary byte-identical | ✅ 11/11 byte-identical was true of the BROKEN impl (the predicate is conservative — doesn't fire on Tier 0/1 canaries). After rollback: trivially still 11/11 byte-identical. |
+| File Sprint 27 carryforward issue | ✅ #1385 ("Translation timeout Option 1 short-circuit redesign — placeholder approach broken downstream") with full design discovery + Phase 1/2/3 sub-scope breakdown. Issue doc at `docs/issues/ISSUE_1385_*.md`. |
+| Update PLAN.md / PLAN_PROMPTS.md / Sprint 26 Targets table | ✅ Day 4 marked RECLASSIFIED in both docs; Translate target relaxed `≥ 132 → maintain ≥ 130`. |
+
+##### Day 4 Priority 4 design discovery — why the Task 6 design was incomplete
+
+Day 4 implemented the Task 6 design verbatim:
+
+```python
+def _build_symbolic_instance_placeholder(eq_domain):
+    return [tuple(eq_domain)]  # e.g., [("srn",)] for srpchase's slack(srn)$..
+```
+
+**Translate-time savings worked** (srpchase 846s → 5.7s). **Emit-side correctness FAILED.** Concrete failures observed in srpchase emit (the Copilot reviewer caught all three on PR #1383):
+
+```gams
+stat_y(n).. ((((-1) * 1$(ancestor(srn,srn))) * nu_slack("srn"))$(srn(srn)))$((not leaf(srn))) + ((((-1) * 1$(ancestor(srn,srn))) * lam_demand("srn"))$(srn(srn)))$(leaf(srn)) - piL_y(n) =E= 0;
+
+stat_x(n).. (prob(n) * price(n) - piL_x(n))$(srn(n)) =E= 0;
+```
+
+1. **`nu_slack("srn")` / `lam_demand("srn")`** — quoted literal "srn" where `srn` is the SET name (subset of `n`), not a valid element of `n` (which has elements `n0..n1000`). GAMS would emit UEL/domain errors at runtime.
+2. **`1$(ancestor(srn,srn))`** — using "srn" as both arguments of `ancestor` SetMembershipTest.
+3. **`stat_x(n)` missing the `comp_demand` cross-term** — Jacobian entries involving `x(srn)` got dropped during AD differentiation because `_diff_varref` requires exact index matches; with the symbolic placeholder the entries become 0.
+
+**Root cause:** the design doc §2.3 asserted "the downstream emit path already handles symbolic-index instances per Sprint 25 #1306 / #1308 prior art." That assertion was wrong. The Sprint 25 prior art is for INDEXED stationarity equations where the equation HEADER `stat_<eq>(i)..` BINDS the symbolic index `i`. The Day 4 placeholder is different: it tries to use the SET NAME (`"srn"`) as an instance/element value, but the AD pipeline (`src/ad/constraint_jacobian.py::_diff_varref` etc.) treats the placeholder tuple `("srn",)` as a CONCRETE element string per the existing Cartesian-enumeration contract — NOT as a bound symbol.
+
+**This is the same root-cause class as Sprint 26 Day 3 Phase B reclassification (Sprint 27 #1381).** Both shared the diagnostic gap: prep-task validation at the design stage (read code; identify patch sites; verify nothing obvious blocks the change) is necessary but insufficient. Empirical end-to-end verification — actually running the pipeline AND verifying emit correctness against hand-derived expected output — must be part of the design-validation phase, not deferred to implementation day. Sprint 27 prep should add a Phase 0 sub-task to both #1381 and #1385: "translate one concrete target model with a prototype patch + verify GAMS compile-clean + KKT body shape against hand-derived Lagrangian" BEFORE committing the implementation budget.
+
+##### Sprint 27 #1385 — Option 1 redesign scope
+
+Sprint 27 carryforward issue #1385 documents the full Option 1 redesign requirements (`docs/issues/ISSUE_1385_*.md` for the full issue doc):
+
+- **Phase 1 (~3–4h):** Inventory AD/emit consumer sites + Option A (symbolic-instance handling end-to-end) vs Option B (alternative shape — emit-time guard rather than translate-time collapse) design choice.
+- **Phase 2 (~4–6h):** Implement chosen option.
+- **Phase 3 (~3–6h):** Integration tests verifying emit CORRECTNESS (hand-derived KKT shape + GAMS compile-clean) on srpchase + iswnm — NOT just "translation completes".
+
+Total: 10–16h, plus Tier 0/1 byte-stable regression + PR14 obligation.
+
+##### Sprint 26 schedule impact
+
+- **Sprint 26 Translate target relaxed:** `≥ 132/142` (was `+2 from Priority 4`) → `maintain ≥ 130/142`. The +2 Translate from srpchase + iswnm carries forward to Sprint 27.
+- **Day 5 Checkpoint 1 criteria** to be updated similarly when Day 5 is executed: "Priority 4 Option 1 short-circuit: srpchase translates" reclassifies to `n/a — deferred to Sprint 27 #1385`.
+- **Day 8 buffer** (already free per Day 3 reschedule) absorbs whatever forward-pull alternatives the user chooses; Day 9 Priority 5 work remains as planned.
+
+#### Priority 5 — #1334 re-investigation (separate docs-only PR; #1334 re-opened)
+
+Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
+
+| Task | Status |
+|---|---|
+| Verify otpop bug pattern still visible in current main emit (per Task 7 §2.2 grep) | ✅ **Bug present.** `grep -cE "sum\(t__," /tmp/otpop_mcp.gms` returns 2 (matches §2.2 finding); spurious `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt))` wraps in `stat_p(tt)` line 207 + `stat_x(tt)` line 209. |
+| Read GitHub issue #1334 close-comment + linked PR | ✅ #1334 closed 2026-05-05 by PR #1359 (docs-only; the body explicitly listed #1334 as supposed-to-stay-OPEN — closure was UNINTENDED). |
+| Routing decision | ✅ **Re-opened #1334.** Posted re-open comment with bug-pattern reproduction, closure context, and Sprint 26 routing (Day 4 scoping → Day 9 implementation). |
+| Scope and sketch the Approach 1 fix per ISSUE_1334.md | ✅ Documented in the Priority 5 PR's SPRINT_LOG diff (separate branch). Patch site `_replace_indices_in_expr` ParamRef branch in `src/kkt/stationarity.py:2448+`; align ParamRef substitution with parallel VarRef substitution when param_domain is strict subset of equation_domain. Day 9 picks up implementation alongside #1335. |
+
+**Sprint 26 Day 4 Priority 5 deliverable:** investigation + scoping only. **NO `src/` changes** — Day 9 picks up implementation alongside #1335.
+
+#### Notes
+
+- The Day 4 src/ commit (`243fe578` on the Day 4 PR branch) was reverted via `git reset --hard main` on the branch. The PR title is updated to reflect reclassification.
+- Per Sprint 26 Day 3 reclassification PR #1382, this is the **second** Sprint 26 day where a prep-task design was empirically disproved. The pattern is consistent: design-doc inspection of patch sites + downstream-handling assertions is insufficient without empirical end-to-end correctness verification.
+- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks not required.
+
+---
