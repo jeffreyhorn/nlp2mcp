@@ -323,7 +323,7 @@ Total: 10–16h, plus per-phase test coverage.
 
 - Phase A (launch) landed cleanly Day 1 + validated byte-stable across 54 canaries Day 2 — that work remains shipped via PR #1379 + PR #1380.
 - Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" was explicit about launch-only scope ("proper fix for the launch Pattern C consolidation (#1306 test xfail)"). Sprint 26 Task 3 REPLAN added camcge + cesam2 as hypothesis-validation targets ("verify the gate predicate generalizes"). The Day 3 discovery is the empirical answer: it doesn't generalize via predicate relaxation alone; needs a builder redesign.
-- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks not required.
+- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md; no CI-gating change expected since no Python files were modified.
 
 ---
 
@@ -450,6 +450,6 @@ What actually happens (current main):
 
 - The Day 4 src/ commit (`243fe578` on the Day 4 PR branch) was reverted via `git reset --hard main` on the branch. The PR title is updated to reflect reclassification.
 - Per Sprint 26 Day 3 reclassification PR #1382, this is the **second** Sprint 26 day where a prep-task design was empirically disproved. The pattern is consistent: design-doc inspection of patch sites + downstream-handling assertions is insufficient without empirical end-to-end correctness verification.
-- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks not required.
+- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md; no CI-gating change expected since no Python files were modified.
 
 ---

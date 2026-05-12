@@ -210,7 +210,7 @@ Two docs-only PRs:
 - **Priority 4 reclassification PR** (this branch): src/ rollback + Sprint 27 #1385 carryforward + PLAN.md / PLAN_PROMPTS.md / SPRINT_LOG.md / CHANGELOG updates.
 - **Priority 5 #1334 PR** (separate branch, stacked): re-investigation findings + Approach 1 sketch + #1334 re-opened on GitHub.
 
-No src/ changes shipped Day 4. No PR14 obligation. Quality checks not required.
+No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md; no CI-gating change expected since no Python files were modified.
 
 ---
 
