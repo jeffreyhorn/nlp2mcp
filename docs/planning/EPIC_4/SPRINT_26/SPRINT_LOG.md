@@ -834,40 +834,59 @@ Day 8 forward-pulls work from Days 9 + 12:
 
 ---
 
-### Day 9 — Priority 5 #1335 fix shipped; #1334 RECLASSIFIED to Sprint 27 #1393
+### Day 9 — Priority 5 BOTH #1334 + #1335 reclassified to Sprint 27 (math-correctness regression on the #1335 fix attempt)
 
-**Status:** COMPLETE (2026-05-12) — #1335 narrow AD fix landed; #1334 Approach 1 framing was insufficient on empirical inspection — reclassified to Sprint 27 #1393 with corrected fix-surface diagnosis.
+**Status:** COMPLETE (2026-05-12) — Day 9 attempted both #1334 + #1335 fixes; both ultimately reclassified to Sprint 27 carryforwards. #1334 reclassified mid-Day-9 to Sprint 27 #1393 (Approach 1 framing insufficient on empirical inspection). #1335 fix attempt successfully placed `nu_zdef` in `stat_p` body BUT introduced a math-correctness regression in the resulting cross-term (caught by PR #1394 review); src/ rolled back; #1335 reopened with corrected fix-surface diagnosis.
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
 
 **Objective (per PLAN.md Day 9):** Land Priority 5 #1334 fix per Day 4 scoping + Day 8 scoping refinement. Land #1335 fix per Day 8 scoping (Day 8 buffer pulled the design forward; Day 9 lands implementation only).
 
-#### Priority 5 #1335 fix (~1.5h actual, on Day 8 budget estimate)
+#### Priority 5 #1335 fix attempt — ROLLED BACK after PR #1394 review (math-correctness regression)
 
-**Fix shipped** in `src/ad/constraint_jacobian.py`:
+**Day 9 sequence:**
 
-1. **Gate relaxation at `:986` (equality) and `:1107` (inequality):** moved `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` calls OUTSIDE the `if eq_domain:` predicate. Scalar equations now also get offset resolution + sum expansion (was the AD_RESIDUALS_RECAP §3.2 design recommendation).
+1. **First implementation attempt — narrow gate relaxation** (`src/ad/constraint_jacobian.py:986` + `:1107`): moved `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` calls OUTSIDE the `if eq_domain:` predicate (per AD_RESIDUALS_RECAP §3.2 design recommendation). Initial verification: `nu_zdef` still missing from `stat_p` body — gate relaxation alone wasn't sufficient.
 
-2. **Eager `ord()` substitution in `_substitute_single_index`** — required follow-up discovery: gate relaxation alone wasn't enough. The `_try_eval_offset` global-set lookup for `ord('1974')` returned ambiguous positions (otpop '1974' at position 0 in `t`, position 9 in `tt`, position 9 in `th`), causing `_expand_sum_body` to abort expansion. Added `iter_pos: int | None = None` parameter to `_substitute_single_index`; when provided, eagerly evaluates `Call('ord', SymbolRef(var_name))` to `Const(iter_pos + 1)` (1-based, matching GAMS semantics). `_expand_sum_body` now passes `pos` per iteration. This is the disambiguation mechanism — uses the iteration set's position unambiguously rather than searching all sets at emit time.
+2. **Follow-up discovery — `_try_eval_offset` ambiguity:** debug tracing revealed the `_try_eval_offset` global-set lookup for `ord('1974')` returned ambiguous positions (otpop '1974' at position 0 in `t`, position 9 in `tt`, position 9 in `th`), causing `_expand_sum_body` to abort expansion. Added `iter_pos: int | None = None` parameter to `_substitute_single_index`; when provided, eagerly evaluates `Call('ord', SymbolRef(var_name))` to `Const(iter_pos + 1)` (1-based, matching GAMS semantics). Re-verification: `nu_zdef` now in `stat_p` body — bug reproducer flipped from 0 → 1.
 
-**Bug reproducer confirmation:**
+3. **Tier 0/1 byte-stable check:** 12/12 canaries byte-identical pre/post fix. Quality checks (`make typecheck && make format && make lint && make test`) all clean; 6 new tests in `tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py` all passed (5 unit-level + 1 end-to-end otpop emit assertion).
 
-```bash
-# Pre-fix (verified Day 8 + start of Day 9):
-awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef
-# 0
+4. **PR #1394 opened with the fix** — passed initial quality gates.
 
-# Post-fix (verified end of Day 9):
-awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef
-# 1
-```
+5. **PR #1394 review discovery (rolled back):** Copilot reviewer identified a **math-correctness regression** in the new `stat_p(tt)` cross-term:
 
-**Tests added:** `tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py` (6 tests):
-- 5 unit-level tests for `_substitute_single_index` `iter_pos` parameter (eager ord substitution; pass-through cases).
-- 1 end-to-end integration test asserting `nu_zdef` appears in `stat_p` body of regenerated `otpop_mcp.gms`.
+   **Observed (broken) emit:**
+   ```gams
+   sum(t, ((-1) * (v * (0.365 * (xb(t) - x(tt)) + 0.365 * (xb(t) - x(tt)) + ... 17 copies ...))) * nu_zdef)$(sameas(tt, '1990'))
+   ```
 
-**Tier 0/1 byte-stable regression:** ✅ all 12 canaries (11 Tier 0/1 + launch) byte-identical pre/post #1335 fix. The gate relaxation doesn't perturb existing emit shapes.
+   **Expected (hand-derived) cross-term:**
+   ```gams
+   ((-1) * v * sum(t, 0.365 * (xb(t) - x(t)))) * nu_zdef $ (sameas(tt, '1990'))
+   ```
 
-**PR14 obligation:** ✅ regenerated `data/gamslib/mcp/otpop_mcp.gms` included in the PR diff.
+   Two distinct defects:
+   - **`x(tt)` instead of `x(t)` inside the sum** — the sum iterator is `t`, but downstream re-symbolization in `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py:4432+`) rewrote `x(t)` → `x(tt)` because the eq-domain index `tt` of `stat_p(tt)` aliases the column header `p(tt)`. Breaks per-iteration coupling.
+   - **17 duplicated copies of `0.365 * (xb(t) - x(tt))` inside the sum** — `_expand_sum_body` expanded the original `sum(t, body)` into 17 concrete-element terms; downstream re-symbolization collapsed the 17 concrete elements back to the SAME symbolic `t` and wrapped in a spurious outer `sum(t, ...)`, leaving 17 copies of the body inside. Overcounts by ~|t|.
+
+6. **Day 9 action (rollback):**
+   - Reverted `src/ad/constraint_jacobian.py` to pre-Day-9 state (gate stays on `if eq_domain:`; no `iter_pos` parameter).
+   - Deleted `tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py`.
+   - Restored `data/gamslib/mcp/otpop_mcp.gms` from `main` (back to pre-fix shape: `nu_zdef` missing from `stat_p`, but mathematically consistent).
+   - **Reopened #1335** (was closed earlier in Day 9 prematurely after the fix attempt landed).
+   - Moved `ISSUE_1335_*.md` back from `docs/issues/completed/` to `docs/issues/`.
+   - Updated `ISSUE_1335_*.md` with the corrected fix-surface diagnosis + Sprint 27 carryforward routing.
+
+**Root cause class:** same as Sprint 26 #1381 / #1385 / #1390 / #1393 — AD-vs-emit pipeline assumption mismatch. The expansion-based approach in `_expand_sum_body` is correct for AD differentiation but the downstream symbolic re-emit in `_add_indexed_jacobian_terms` doesn't preserve the expanded shape; this is an AD/emit pipeline architecture issue.
+
+**Corrected fix-surface diagnosis (Sprint 27 carryforward — kept open as #1335, not refiled as new issue):** the narrow gate-relaxation approach was incomplete. A correct fix must either:
+- **(A)** Run `_expand_sums_with_unresolved_offsets` AND fix the downstream re-symbolization in `_add_indexed_jacobian_terms` to handle expanded-Sum shapes.
+- **(B)** Resolve the IndexOffset `card(t) - ord(t)` symbolically (without expanding the Sum) so AD's `_diff_sum` can compute the partial without Sum expansion.
+- **(C)** A hybrid where the expansion happens but then collapses back to symbolic-Sum form post-AD with the correct shape.
+
+Estimated effort: 6–10h (narrower than the architectural redesigns #1381/#1385/#1390/#1393 — this is a Sum-shape-preservation bug, not a Sum-collapse architecture change). Sprint 27 prep should add a Phase 0 acceptance gate.
+
+**PR14 obligation:** N/A post-rollback — `data/gamslib/mcp/otpop_mcp.gms` reverted to pre-Day-9 shape.
 
 #### Priority 5 #1334 — RECLASSIFIED to Sprint 27 #1393 (Approach 1 framing insufficient)
 
@@ -911,31 +930,46 @@ All four now have parity design docs (Phase 1 / 2 / 3 + Tests + Files + Phase 0 
 
 Plus the AD-residual carryforward #1335 — FIXED Sprint 26 Day 9 in this PR — and #1378 (launch PATH numerics deferral, Day 1).
 
-#### Quality checks
+#### Quality checks (post-rollback)
 
-- `make format`: clean (378 files unchanged).
+- `make format`: clean.
 - `make lint`: ruff + mypy + black clean.
-- `make test`: 4,743 passed / 10 skipped / 1 xfailed (the 4,737 baseline + 6 new Day 9 #1335 tests).
-- Tier 0/1 byte-stable: ✅ 12/12 canaries (11 Tier 0/1 + launch) byte-identical to committed goldens.
+- `make test`: 4,737 passed / 10 skipped / 1 xfailed (back to pre-Day-9 baseline after the 6 Day 9 tests were deleted alongside the src/ revert).
+- Tier 0/1 byte-stable: ✅ 12/12 canaries byte-identical to committed goldens (trivially — no `src/` changes vs main after rollback).
 
-#### Day 9 deliverables (this PR)
+#### Day 9 deliverables (this PR, post-rollback)
 
-1. **`src/ad/constraint_jacobian.py`** (#1335 fix):
-   - Lines 986 + 1107: gate relaxation (move offset resolution / sum expansion outside `if eq_domain:`).
-   - Lines 568+: `_substitute_single_index` extended with `iter_pos: int | None = None`.
-   - Lines 540, 551: `_expand_sum_body` callers pass `iter_pos=pos`.
-2. **`tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py`** (6 new tests).
-3. **`data/gamslib/mcp/otpop_mcp.gms`** regenerated (PR14 obligation; `nu_zdef` now present in `stat_p` body).
-4. **Sprint 27 issue #1393** filed for the #1334 carryforward.
-5. **#1334 closed** + `ISSUE_1334_*.md` moved to `docs/issues/completed/`.
-6. **`docs/issues/ISSUE_1393_*.md`** created.
-7. **SPRINT_LOG.md Day 9 entry** (this section).
-8. **CHANGELOG.md Day 9 bullet**.
+1. **`src/ad/constraint_jacobian.py`**: REVERTED to pre-Day-9 main (no net `src/` changes vs main after rollback).
+2. **`tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py`**: DELETED.
+3. **`data/gamslib/mcp/otpop_mcp.gms`**: REVERTED to pre-Day-9 main (no PR14 obligation; emit unchanged).
+4. **Sprint 27 issue #1393** filed for the #1334 carryforward (AD `_sum_should_collapse` redesign).
+5. **#1334 closed** + `ISSUE_1334_*.md` moved to `docs/issues/completed/` (stays moved — #1334 framing was structurally wrong, refiled as #1393 with corrected diagnosis).
+6. **`docs/issues/ISSUE_1393_*.md`** created (#1334 successor).
+7. **#1335 reopened** with corrected fix-surface diagnosis (Sprint 27 carryforward).
+8. **`docs/issues/ISSUE_1335_*.md`** moved back from `docs/issues/completed/` to `docs/issues/`; updated with Sprint 26 Day 9 §"Fix Attempt Rolled Back" section + Sprint 27 prep notes.
+9. **SPRINT_LOG.md Day 9 entry** (this section — updated to reflect both reclassifications + rollback).
+10. **CHANGELOG.md Day 9 bullet** (updated similarly).
+
+#### Sprint 26 architectural reclassification surface (post Day 9 rollback)
+
+Sprint 26 has now produced **4 architectural reclassifications + 1 in-place Sprint 27 carryforward** in the same root-cause class (prep-task design validation at patch-site level + downstream-handling assumption that doesn't hold empirically):
+
+| Issue | Sprint 26 Day | Pattern | Effort (Sprint 27) | Phase 0 gate? |
+|---|---|---|---|---|
+| #1381 Pattern C Phase B | Day 3 | Close-and-refile (was #1138 cohort) | 10–16h | Yes |
+| #1385 Option 1 short-circuit | Day 4 | New issue (was Task 6 #1224) | 10–16h | Yes |
+| #1390 kand tree-predicate Sum | Day 7 | Close-and-refile (was #1141) | 10–16h | Yes |
+| #1393 scalar-eq Sum-collapse | Day 9 | Close-and-refile (was #1334) | 10–16h | Yes |
+| **#1335 scalar-eq nu_zdef cross-term** | **Day 9** | **In-place reopen (kept #1335)** | **6–10h** (narrower) | **Yes** |
+
+#1335 is kept open (rather than close-and-refile to a new issue number) because the underlying bug shape and target model are unchanged — only the fix-surface diagnosis was updated. The Day 9 fix attempt + rollback narrative is captured in the `ISSUE_1335_*.md` doc.
 
 #### Notes (Day 9)
 
-- **Effort actual ~5h** vs ~4.5–6.5h budget per PLAN.md (#1335 ~2.5h incl. the eager-ord follow-up + #1334 attempt ~1.5h + reclassification docs ~1h). The eager-ord discovery (`_try_eval_offset` ambiguity for elements appearing in multiple sets at different positions) was not anticipated in the Day 8 scoping — added ~1h to #1335 actual vs Day 8 estimate. Caught here cleanly via debug tracing.
-- **#1334 carryforward is consistent with the Sprint 26 pattern.** Like #1141 → #1390 on Day 7, the original framing in ISSUE_1334.md was scoped against an assumption (fix surface in stationarity.py ParamRef branch) that didn't hold empirically (fix surface is in AD `_diff_sum`).
-- **Sprint 26 metric Δ projections — partial gain:** #1335 fix produces `nu_zdef` in `stat_p` body, which is a structural correctness improvement; doesn't directly change PATH solve outcome on otpop (#1334 / #1393 carryforward + #1357 separate `$171` errors are still present). Day 10 NLP-warm-started reproducer assesses the residual impact.
+- **Effort actual ~6h** vs ~4.5–6.5h budget per PLAN.md (#1335 ~3.5h incl. the eager-ord follow-up + review-discovered rollback + reopen/doc updates; #1334 attempt + reclassification ~1.5h; SPRINT_LOG/CHANGELOG updates ~1h).
+- **#1334 carryforward (close-and-refile to #1393)** is consistent with the Sprint 26 pattern. Like #1141 → #1390 on Day 7, the original framing in ISSUE_1334.md was scoped against an assumption (fix surface in stationarity.py ParamRef branch) that didn't hold empirically (fix surface is in AD `_diff_sum`).
+- **#1335 carryforward (in-place reopen)** breaks the close-and-refile pattern but matches the underlying reality: the bug shape and target model are unchanged from the original 2026-05-02 filing — only the fix-surface diagnosis was updated. A new issue number would obscure the continuity.
+- **Sprint 26 metric Δ projections — NO Priority 5 gain.** Both #1334 (`stat_x` / `stat_p` over-counted `sum(t__, ...)` cross-term) and #1335 (`nu_zdef` missing from `stat_p`) carry forward to Sprint 27 with no Sprint 26 fixes shipped. Day 10 NLP-warm-started reproducer will confirm otpop residual hasn't changed vs Day 0 baseline.
+- **Lessons learned:** like Day 4 #1385 (placeholder approach broke downstream emit) and Day 7 #1390 (per-instance enumeration architecture), the Day 9 #1335 fix attempt produced a SYNTAX-correct emit (`make typecheck && make lint && make test` all green; `nu_zdef` present per the original acceptance criterion) but **mathematically wrong** cross-term shape. The standard quality gates didn't catch it — the Copilot reviewer's hand-derived KKT comparison did. Sprint 27 prep should make Phase 0 (hand-derived KKT shape verification on a concrete target instance) MANDATORY for any AD/emit pipeline change.
 
 ---
