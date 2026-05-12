@@ -368,7 +368,7 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
 - Day 4 #1334 routing decision documented (re-opened or successor filed).
 - Day 8 buffer PR merged (#1335 scoping + line-number verification + bug reproducer captured per Day 8 SPRINT_LOG §"Buffer use 2").
 
-**Tasks to Complete (~5–8 hours, ~3–5h #1334 + ~2–3h #1335):**
+**Tasks to Complete (~4.5–6.5 hours, ~3–5h #1334 + ~1.5h #1335 — #1335 design pulled forward Day 8; freed budget absorbs #1334 contingency if Approach 1 needs iteration):**
 
 **Priority 5 #1334 fix (~3–5h):**
 
@@ -383,7 +383,7 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
    # Expected: 0 lines (was 2 pre-fix per Task 7 §2.2)
    ```
 
-**Priority 5 #1335 fix (~2–3h — design pulled forward Day 8; Day 9 implementation only):**
+**Priority 5 #1335 fix (~1.5h — design pulled forward Day 8; Day 9 implementation only):**
 
 Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping" verified:
 - Bug reproducer: `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` returns 0 on current main (must be ≥ 1 post-fix).

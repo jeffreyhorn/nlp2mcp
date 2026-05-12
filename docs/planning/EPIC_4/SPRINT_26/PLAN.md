@@ -274,7 +274,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 ### Day 9 — Priority 5 #1334 Fix + #1335 Implementation
 
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
-**Effort:** ~5–8h (#1334 ~3–5h + #1335 ~2–3h — Day 8 buffer pulled the #1335 scoping forward so Day 9 only needs the implementation per Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping").
+**Effort:** ~4.5–6.5h (#1334 ~3–5h + #1335 ~1.5h — Day 8 buffer pulled the #1335 scoping forward so Day 9 only needs the implementation per Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping"; freed budget absorbs #1334 contingency if Approach 1 needs iteration).
 
 **Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Land #1335 fix per Day 8 scoping (bug reproducer confirmed on current main; fix surface line-number-verified at `src/ad/constraint_jacobian.py:986` + `:1107`; test plan documented).
 
