@@ -453,3 +453,84 @@ What actually happens (current main):
 - No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
 
 ---
+
+### Day 5 — Checkpoint 1 Evaluation
+
+**Status:** COMPLETE (2026-05-12) — **Checkpoint 1 verdict: GO.** All gating rows green.
+**Branch:** `sprint26-day5-checkpoint1` (docs-only PR — Day 5 SPRINT_LOG entry).
+
+**Objective (per PLAN.md Day 5):** Evaluate Checkpoint 1 GO / CONDITIONAL GO / NO-GO routing after Days 1–4 PRs merged.
+
+#### Targeted pipeline retest (13 models, ~6 min)
+
+Recipe per PLAN_PROMPTS.md Day 5: regenerate each MCP from current branch's `src/` via `python -m src.cli`, then run `gams ... reslim=30`. cwd anchored on `$REPO_ROOT` for `$include` resolution.
+
+| Model | Translate | gams_rc | MODEL STATUS | SOLVER STATUS | Bucket vs Day 0 | Notes |
+|---|---|---|---|---|---|---|
+| launch | OK | 0 | 5 Locally Infeasible | 1 Normal Completion | unchanged (was `path_solve_terminated` per Day 0; Phase A correct KKT diverged the PATH residual) | Stretch row per Day 1; Sprint 27 #1378 PATH-numerics investigation. Does NOT count toward routing. |
+| otpop | OK | 2 | n/a (5 compile errors) | n/a | unchanged (`path_syntax_error` per Day 0 — $171 domain violations on `comp_up` subset/superset = #1357 territory) | Carryforward to Sprint 27 #1357 (deferred per Task 7 §2.4). Day 9 Priority 5 #1334 / #1335 may secondarily expose a cleaner emit but won't resolve the $171s. |
+| dispatch | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 0 canary ✓ |
+| quocge | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| partssupply | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| prolog | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| sparta | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| gussrisk | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| ps2_f | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| ps3_f | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| ship | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| splcge | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+| paklive | OK | 0 | 1 Optimal | 1 Normal Completion | unchanged | Tier 1 canary ✓ |
+
+**Byte-identity vs committed goldens** (`data/gamslib/mcp/<m>_mcp.gms`):
+- launch + 11 Tier 0/1 canaries: **12/12 BYTE-IDENTICAL** to committed artifacts. No emit drift this sprint despite Phase A `src/` changes (Days 1 + 2 regression sweeps already verified the gate stays narrow).
+
+**Test suite:** `make test` → 4,737 passed / 10 skipped / 1 xfailed / 41 warnings (374.53s). The 41 warnings are the same `_add_indexed_jacobian_terms` element-substitution warnings present pre-Phase-A (ps2_f_s / ps2_s / ps3_s_gic Multi-pattern Jacobian skips); not new regressions.
+
+#### Checkpoint 1 criteria evaluation (per PLAN.md §"Checkpoint 1 criteria" revised Day 3 + Day 4)
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| Phase A landed: gate restored + correct emit shape + xfail removed | ✅ **GO** | PR #1379 (Day 1); Day 2 PR #1380 validation (54-canary byte-stable); xfail removed on `tests/unit/kkt/test_pattern_c_alias_offset_gate.py::test_alias_only_conditional_sum_emits_no_phantom_offsets` per Day 1 commit history |
+| launch PATH solve to MODEL STATUS 1 | stretch | MODEL STATUS 5 Locally Infeasible (consistent with Sprint 27 #1378 deferral). Does NOT count toward routing per PLAN.md Day 5 note. |
+| camcge solves to MODEL STATUS 1 | n/a | Deferred to Sprint 27 #1381 per Day 3 reclassification |
+| cesam2 solves to MODEL STATUS 1 | n/a | Deferred to Sprint 27 #1381 per Day 3 reclassification |
+| Priority 4 Option 1: srpchase translates | n/a | Reclassified to Sprint 27 #1385 per Day 4 (src/ rolled back) |
+| Priority 4 stretch: ≥ 1 of {iswnm, sarf, mexls, nebrazil} also recovers | n/a | Reclassified to Sprint 27 #1385 per Day 4 |
+| Priority 5 #1334 routing decision documented | ✅ **GO** | #1334 re-opened during Day 4 PR #1384 with full re-investigation context; Approach 1 sketched at SPRINT_LOG.md Day 4 §"Approach 1 sketch"; Day 9 picks up implementation. |
+| Tier 0 + Tier 1 canaries (11 models) all match golden | ✅ **GO** | 11/11 byte-identical to committed `data/gamslib/mcp/*_mcp.gms` (table above). |
+| Tier 0/1/2 (54 models combined) golden-file regression: 0 (or ≤ 1 documented) | ✅ **GO** | Authoritative Tier 0/1/2 byte-stability evidence is Sprint 26 Day 2 PR #1380's 54-canary regression sweep (11 Tier 0/1 + 43 Tier 2 per Sprint 25 SPRINT_LOG.md Day 0 list), which verified 0 regressions under the Day 1 Phase A patch on this same `src/` state. Day 5 retest re-verifies the 11 Tier 0/1 subset inline (table above; 11/11 byte-identical). Day 5 `make test` (4,737 passed, 10 skipped, 1 xfailed) runs `pytest -m "not slow"` per Makefile:50 — that covers the 5-fixture per-commit byte-stability harness in `tests/integration/test_pipeline_determinism.py` (chenery/abel/partssupply/ps2_f/himmel11; 5 fixtures × 5 seeds), NOT the full 54-canary sweep (Day 2 PR #1380 is the canonical reference). No new regression since Day 2 (no `src/` changes Days 3–5). |
+
+**3 / 3 gating rows GREEN. Verdict: GO.** Days 6–7 proceed per planned schedule (Priority 2 Pattern A mechanical closures + Priority 3 Pattern E kand scoping in parallel).
+
+#### Sprint 26 Δ status at Day 5
+
+| Metric | Day 0 baseline | Day 5 (current main) | Target | Status |
+|---|---|---|---|---|
+| Parse | 142/142 | 142/142 (expected; no parser changes Sprint 26) | ≥ 142/142 | ✅ maintain |
+| Translate | 130/142 | 130/142 (expected; Priority 4 deferred Day 4 → no Translate gain Sprint 26) | maintain ≥ 130 | ✅ on target |
+| Solve | 104 | 104 (expected; Day 5 retest is sample only — full retest Day 13) | maintain ≥ 104 | ✅ on target |
+| Match | 60 | 60 (expected; same rationale as Solve) | maintain ≥ 60 | ✅ on target |
+| Tests | 4,735 | 4,737 (+2 from Phase A Day 1 PR #1379) | ≥ 4,737 | ✅ floor met |
+
+#### Buffer use (Day 5 remaining time)
+
+Per PLAN.md Day 5 §"Tasks step 4" — buffer absorbs Days 1–4 slippage. None to absorb (all PRs merged cleanly: #1379, #1380, #1382, #1383, #1384). Day 5 closes with the Checkpoint 1 docs PR only.
+
+#### Forward look (Days 6–10)
+
+| Day | Workstream | Branch | Effort |
+|---|---|---|---|
+| 6 | Priority 2 (Pattern A cohort closures, ~1.5h) + Priority 3 (kand scoping, ~3–4h) | `sprint26-day6-priority-2-and-3` | ~4–6h |
+| 7 | Priority 3 kand fix + xfail cleanup | `sprint26-day7-priority-3-kand` | ~4–6h |
+| 8 | Buffer (Priority 4 / 5 #1334 already shipped Day 4; Phase B redesign + Option 1 redesign deferred to Sprint 27 #1381 + #1385) | as needed | ~6h available |
+| 9 | Priority 5 #1334 fix completion + #1335 start | `sprint26-day9-priority-5-1334-and-1335` | ~5–8h |
+| 10 | Priority 5 wrap (otpop NLP-warm-started reproducer) + Checkpoint 2 | `sprint26-day10-checkpoint2` | ~4–6h |
+
+#### Notes (Day 5)
+
+- **No `src/` changes.** Day 5 is checkpoint evaluation + docs only. Quality checks (`make test`) verified clean per CONTRIBUTING.md / docs/development/AGENTS.md.
+- otpop's compile-error status is the **expected** Day 0 bucket (`path_syntax_error`). The Sprint 27 #1357 carryforward (comp_up subset/superset) is independent of Sprint 26 Priority 5 #1334 / #1335 (which target the AD-residuals layer; see Day 4 §"Notes (Priority 5)" — #1334 doesn't subsume #1357).
+- launch's MODEL STATUS 5 is the **expected** Phase A behavior: the consolidated emit produces the mathematically-correct KKT that diverges PATH residuals vs Day 0's over-counted-but-tractable form (per Sprint 25 #1351 rollback experience). PATH-numerics deferred to Sprint 27 #1378.
+- Day 5 was originally allocated a heavier scope (CONDITIONAL GO Priority 4 stretch scope-back; Phase A regression revert) but those branches are n/a after the Day 3 + Day 4 reclassifications shrank the Sprint 26 risk surface.
+
+---
