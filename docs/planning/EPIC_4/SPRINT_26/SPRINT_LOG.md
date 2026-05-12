@@ -436,7 +436,7 @@ What actually happens (current main):
 - Tier 0 + Tier 1 (11 models) byte-stable across the regression.
 - Combined PR with #1335 narrow AD fix (same target model otpop, same verification recipe).
 
-**Estimated effort (Day 9):** 4–8h #1334 (Approach 1 implementation + investigation contingency) + 4–8h #1335 (per Task 7 §3.2 scalar-equation `if eq_domain:` gate fix at `src/ad/constraint_jacobian.py:986+:1107`) = 8–18h total Priority 5 (Day 9 + Day 10 wrap).
+**Estimated effort (Day 9):** 4–8h #1334 (Approach 1 implementation + investigation contingency) + 4–8h #1335 (per Task 7 §3.2 scalar-equation `if eq_domain:` gate fix at `src/ad/constraint_jacobian.py:986`/`:1107`) = 8–18h total Priority 5 (Day 9 + Day 10 wrap).
 
 ##### Notes (Priority 5)
 
