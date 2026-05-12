@@ -323,6 +323,133 @@ Total: 10–16h, plus per-phase test coverage.
 
 - Phase A (launch) landed cleanly Day 1 + validated byte-stable across 54 canaries Day 2 — that work remains shipped via PR #1379 + PR #1380.
 - Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" was explicit about launch-only scope ("proper fix for the launch Pattern C consolidation (#1306 test xfail)"). Sprint 26 Task 3 REPLAN added camcge + cesam2 as hypothesis-validation targets ("verify the gate predicate generalizes"). The Day 3 discovery is the empirical answer: it doesn't generalize via predicate relaxation alone; needs a builder redesign.
-- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks not required.
+- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
+
+---
+
+### Day 4 — RECLASSIFIED Priority 4 to Sprint 27 #1385; Priority 5 #1334 re-investigation completed
+
+**Status:** COMPLETE (2026-05-12) — Priority 4 src/ rolled back; Priority 5 #1334 re-investigation shipped (separate docs-only PR).
+**Branches:**
+- Priority 4 reclassification: `sprint26-day4-priority-4-option-1-short-circuit` (this PR — docs-only after rollback)
+- Priority 5 #1334: `sprint26-day4-priority-5-1334-investigation-on-p4` (separate docs-only PR; #1334 re-opened)
+
+**Reschedule note (Day 3):** Day 4 originally scoped for Pattern C cesam2 Phase B work. Phase B reclassified to Sprint 27 #1381; Day 8's Priority 4 + Priority 5 #1334 work pulled forward. Day 8 is now buffer.
+
+#### Priority 4 — RECLASSIFIED to Sprint 27 #1385 (Option 1 short-circuit redesign)
+
+| Task | Status |
+|---|---|
+| Implement Option 1 short-circuit at `src/ad/index_mapping.py::enumerate_equation_instances` per Task 6 design | ❌ Rolled back — placeholder approach broken downstream. See "Day 4 Priority 4 design discovery" below. |
+| Add unit + integration tests | ❌ Rolled back. Tests pass in isolation (positive predicate firing + negative cases) but the integration test only verified "translation completes" + "stat_ appears" — NOT emit correctness. Stronger test coverage required for Sprint 27 redesign (hand-derived KKT shape verification + GAMS compile-clean). |
+| Re-profile srpchase / iswnm / sarf / mexls / nebrazil | ✅ Profile data captured BEFORE rollback (informative for Sprint 27 #1385 redesign): srpchase 846s → 5.7s (recovers translate but emit broken); iswnm 61.1s (recovers; emit not hand-verified); sarf/mexls/nebrazil still timeout >180s (per design doc §4.1, LOW-MEDIUM confidence — independent of the placeholder bug). |
+| Tier 0 + Tier 1 canary byte-identical | ✅ 11/11 byte-identical was true of the BROKEN impl (the predicate is conservative — doesn't fire on Tier 0/1 canaries). After rollback: trivially still 11/11 byte-identical. |
+| File Sprint 27 carryforward issue | ✅ #1385 ("Translation timeout Option 1 short-circuit redesign — placeholder approach broken downstream") with full design discovery + Phase 1/2/3 sub-scope breakdown. Issue doc at `docs/issues/ISSUE_1385_*.md`. |
+| Update PLAN.md / PLAN_PROMPTS.md / Sprint 26 Targets table | ✅ Day 4 marked RECLASSIFIED in both docs; Translate target relaxed `≥ 132 → maintain ≥ 130`. |
+
+##### Day 4 Priority 4 design discovery — why the Task 6 design was incomplete
+
+Day 4 implemented the Task 6 design verbatim:
+
+```python
+def _build_symbolic_instance_placeholder(eq_domain):
+    return [tuple(eq_domain)]  # e.g., [("srn",)] for srpchase's slack(srn)$..
+```
+
+**Translate-time savings worked** (srpchase 846s → 5.7s). **Emit-side correctness FAILED.** Concrete failures observed in srpchase emit (the Copilot reviewer caught all three on PR #1383):
+
+```gams
+stat_y(n).. ((((-1) * 1$(ancestor(srn,srn))) * nu_slack("srn"))$(srn(srn)))$((not leaf(srn))) + ((((-1) * 1$(ancestor(srn,srn))) * lam_demand("srn"))$(srn(srn)))$(leaf(srn)) - piL_y(n) =E= 0;
+
+stat_x(n).. (prob(n) * price(n) - piL_x(n))$(srn(n)) =E= 0;
+```
+
+1. **`nu_slack("srn")` / `lam_demand("srn")`** — quoted literal "srn" where `srn` is the SET name (subset of `n`), not a valid element of `n` (which has elements `n0..n1000`). GAMS would emit UEL/domain errors at runtime.
+2. **`1$(ancestor(srn,srn))`** — using "srn" as both arguments of `ancestor` SetMembershipTest.
+3. **`stat_x(n)` missing the `comp_demand` cross-term** — Jacobian entries involving `x(srn)` got dropped during AD differentiation because `_diff_varref` requires exact index matches; with the symbolic placeholder the entries become 0.
+
+**Root cause:** the design doc §2.3 asserted "the downstream emit path already handles symbolic-index instances per Sprint 25 #1306 / #1308 prior art." That assertion was wrong. The Sprint 25 prior art is for INDEXED stationarity equations where the equation HEADER `stat_<eq>(i)..` BINDS the symbolic index `i`. The Day 4 placeholder is different: it tries to use the SET NAME (`"srn"`) as an instance/element value, but the AD pipeline (`src/ad/constraint_jacobian.py::_diff_varref` etc.) treats the placeholder tuple `("srn",)` as a CONCRETE element string per the existing Cartesian-enumeration contract — NOT as a bound symbol.
+
+**This is the same root-cause class as Sprint 26 Day 3 Phase B reclassification (Sprint 27 #1381).** Both shared the diagnostic gap: prep-task validation at the design stage (read code; identify patch sites; verify nothing obvious blocks the change) is necessary but insufficient. Empirical end-to-end verification — actually running the pipeline AND verifying emit correctness against hand-derived expected output — must be part of the design-validation phase, not deferred to implementation day. Sprint 27 prep should add a Phase 0 sub-task to both #1381 and #1385: "translate one concrete target model with a prototype patch + verify GAMS compile-clean + KKT body shape against hand-derived Lagrangian" BEFORE committing the implementation budget.
+
+##### Sprint 27 #1385 — Option 1 redesign scope
+
+Sprint 27 carryforward issue #1385 documents the full Option 1 redesign requirements (`docs/issues/ISSUE_1385_*.md` for the full issue doc):
+
+- **Phase 1 (~3–4h):** Inventory AD/emit consumer sites + Option A (symbolic-instance handling end-to-end) vs Option B (alternative shape — emit-time guard rather than translate-time collapse) design choice.
+- **Phase 2 (~4–6h):** Implement chosen option.
+- **Phase 3 (~3–6h):** Integration tests verifying emit CORRECTNESS (hand-derived KKT shape + GAMS compile-clean) on srpchase + iswnm — NOT just "translation completes".
+
+Total: 10–16h, plus Tier 0/1 byte-stable regression + PR14 obligation.
+
+##### Sprint 26 schedule impact
+
+- **Sprint 26 Translate target relaxed:** `≥ 132/142` (was `+2 from Priority 4`) → `maintain ≥ 130/142`. The +2 Translate from srpchase + iswnm carries forward to Sprint 27.
+- **Day 5 Checkpoint 1 criteria** to be updated similarly when Day 5 is executed: "Priority 4 Option 1 short-circuit: srpchase translates" reclassifies to `n/a — deferred to Sprint 27 #1385`.
+- **Day 8 buffer** (already free per Day 3 reschedule) absorbs whatever forward-pull alternatives the user chooses; Day 9 Priority 5 work remains as planned.
+
+#### Priority 5 — #1334 re-investigation (separate docs-only PR; #1334 re-opened)
+
+Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
+
+| Task | Status |
+|---|---|
+| Verify otpop bug pattern still visible in current main emit (per Task 7 §2.2 grep) | ✅ **Bug present.** `grep -cE "sum\(t__," /tmp/otpop_mcp.gms` returns 2 (matches §2.2 finding); spurious `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt))` wraps in `stat_p(tt)` line 207 + `stat_x(tt)` line 209. |
+| Read GitHub issue #1334 close-comment + linked PR | ✅ #1334 closed 2026-05-05 by PR #1359 (docs-only; the body explicitly listed #1334 as supposed-to-stay-OPEN — closure was UNINTENDED). |
+| Routing decision | ✅ **Re-opened #1334.** Posted re-open comment with bug-pattern reproduction, closure context, and Sprint 26 routing (Day 4 scoping → Day 9 implementation). |
+| Scope and sketch the Approach 1 fix per `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` | ✅ See the §"Approach 1 sketch" section immediately below. Patch site `_replace_indices_in_expr` (def at `src/kkt/stationarity.py:2534`; `case ParamRef` branch at `:2652+`); align ParamRef substitution with parallel VarRef substitution when param_domain is strict subset of equation_domain. Day 9 picks up implementation alongside #1335. |
+
+**Sprint 26 Day 4 Priority 5 deliverable:** investigation + scoping only. **NO `src/` changes** — Day 9 picks up implementation alongside #1335.
+
+##### Approach 1 sketch (per `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §Approach 1, refined per Task 7 §3.1)
+
+**Patch site (verified Day 4 via `grep -nE`):** `_replace_indices_in_expr` in `src/kkt/stationarity.py` (def at line ~2534; the `case ParamRef` branch at ~2652+; grep anchor `def _replace_indices_in_expr(` to avoid line drift).
+
+**Bug shape recap.** otpop's source body for `kdef` (NLP source at `data/gamslib/raw/otpop.gms:99`; the emit at `data/gamslib/mcp/otpop_mcp.gms:224` is the byte-identical body with `=e=` → `=E=` capitalization):
+
+```gams
+kdef.. k =e= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
+```
+
+Source declarations (`data/gamslib/raw/otpop.gms:27`): `del(t)` is declared on subset `t` (where `t ⊂ tt` per the set declaration in lines 12–13 of the source). The MCP emit at `data/gamslib/mcp/otpop_mcp.gms:30` widens this to `del(tt)` via the Issue #1164/#1175 `KKTSystem.param_domain_widenings` machinery (computed in `src/kkt/stationarity.py:1628+` and consumed in `src/emit/original_symbols.py:1069+` when emitting the Parameters block) — but the bug is that the ParamRef substitution machinery used inside AD's stationarity-body construction does NOT apply the same widening to source-body call-site references like `del(t)` inside the Sum. (For variables, the analogous in-body subset-preservation logic is Issue #666's `_preserve_subset_var_indices` at `src/kkt/stationarity.py:2943+`; the parameter-side analog called out by ISSUE_1334 §Approach 1 is the inverse — a `_promote_subset_param_indices` companion that aligns ParamRef substitution with parallel VarRef substitution under the eq-domain guard.)
+
+When AD differentiates with respect to `x(tt)` for the indexed-stationarity path (`stat_x(tt)`):
+- The Sum's iteration index is `t` (the subset; `t ⊂ tt`).
+- `del` is declared on subset `t` in the source; the call-site `del(t)` uses that declared domain.
+- Substitution `x(t) → x(tt)` should propagate to a parallel `del(t) → del(tt)` so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c) * p(tt)` — a per-`tt` scalar (the `p(tt)` factor is the other variable in the product `p(t) * x(t)`; differentiating w.r.t. `x` leaves `p` as the coefficient). The symmetric `stat_p(tt)` case gets `del(tt) * 0.365 * (1 - c) * x(tt)`.
+
+What actually happens (current main):
+- The Sum-internal `t` doesn't get substituted to `tt` consistently across `del(t)`, `p(t)`, and `x(t)`.
+- `x(t)` (for `stat_x`) and `p(t)` (for `stat_p`) become `x(tt)` / `p(tt)` (correctly, via the indexed-stationarity rewrite).
+- `del(t)` gets WRAPPED in a residual `Sum(("t__",), ...)` — the offset-resolution machinery treats the leftover unbound `t` as a free index requiring an aggregating Sum. The `t__` is a fresh alias minted to bind it.
+- The `nu_kdef` cross-terms then emit as `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)` in `stat_p(tt)` and `sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)` in `stat_x(tt)` — over-counting `del` by `|t|` in both.
+
+**Approach 1 fix (Day 9 scope):**
+
+1. In `_replace_indices_in_expr`, identify the ParamRef branch where `param.indices` includes a name that's been substituted in a parallel VarRef in the same expression context.
+2. When `param_domain` (the parameter's declared domain) is a strict subset of `equation_domain` (the stationarity equation's domain) AND a parallel VarRef has been substituted to use the eq-domain variable, align the parameter substitution with the variable substitution: rewrite `del(t)` → `del(tt)` (using the eq-domain index) the same way `x(t)` was rewritten to `x(tt)`.
+3. Result: the Jacobian entry for `(kdef, x(tt))` becomes a clean scalar `del(tt) * 0.365 * (1 - c) * p(tt)` (and `(kdef, p(tt))` becomes `del(tt) * 0.365 * (1 - c) * x(tt)`) — no Sum wrap, no `t__`.
+
+**Alternative (Approach 2 — fallback if Approach 1 has unexpected side-effects):** targeted suppression in `_add_indexed_jacobian_terms` (per Task 7 §3.1 fix-site correction; was incorrectly attributed to `_add_jacobian_transpose_terms_scalar` in earlier `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` drafts — that function only handles SCALAR stationarity; otpop's `stat_p(tt)` and `stat_x(tt)` are INDEXED). Check whether unconstrained indices in the Jacobian-entry derivative match the equation-domain guard restriction (`$(t(tt))`); if they do, substitute and skip the `Sum` wrap.
+
+**Day 9 acceptance gate** (per Task 7 §3.1):
+- otpop emit `grep -cE "sum\(t__," data/gamslib/mcp/otpop_mcp.gms` returns 0 (currently 2).
+- otpop NLP-warm-started MCP residual on `stat_x('1990')` shrinks toward 0 (Day 10 acceptance — full reproducer per `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §Diagnostic).
+- Tier 0 + Tier 1 (11 models) byte-stable across the regression.
+- Combined PR with #1335 narrow AD fix (same target model otpop, same verification recipe).
+
+**Estimated effort (Day 9):** 4–8h #1334 (Approach 1 implementation + investigation contingency) + 4–8h #1335 (per Task 7 §3.2 scalar-equation `if eq_domain:` gate fix at `src/ad/constraint_jacobian.py:986`/`:1107`) = 8–18h total Priority 5 (Day 9 + Day 10 wrap).
+
+##### Notes (Priority 5)
+
+- #1334 doesn't subsume #1357 (per Task 7 §2.4 — different code paths: `src/kkt/stationarity.py` for #1334 vs `src/kkt/complementarity.py` + `src/emit/emit_gams.py` for #1357). #1357 stays in Sprint 27 deferral.
+- #1335 (`nu_zdef` missing from `stat_p`) is a separate but related bug — same target model otpop, different fix-site (`src/ad/constraint_jacobian.py:986`/`:1107` `if eq_domain:` gate). Day 9 lands both fixes in one PR per Task 7 §"Combined PR" framing.
+- This Priority 5 sub-PR is docs-only — no `src/` changes per Day 4 scoping. Day 9 picks up the implementation.
+
+#### Notes
+
+- The Day 4 src/ commit (`243fe578` on the Day 4 PR branch) was reverted via `git reset --hard main` on the branch. The PR title is updated to reflect reclassification.
+- Per Sprint 26 Day 3 reclassification PR #1382, this is the **second** Sprint 26 day where a prep-task design was empirically disproved. The pattern is consistent: design-doc inspection of patch sites + downstream-handling assertions is insufficient without empirical end-to-end correctness verification.
+- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
 
 ---
