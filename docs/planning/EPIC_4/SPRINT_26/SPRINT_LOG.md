@@ -534,3 +534,96 @@ Per PLAN.md Day 5 §"Tasks step 4" — buffer absorbs Days 1–4 slippage. None 
 - Day 5 was originally allocated a heavier scope (CONDITIONAL GO Priority 4 stretch scope-back; Phase A regression revert) but those branches are n/a after the Day 3 + Day 4 reclassifications shrank the Sprint 26 risk surface.
 
 ---
+
+### Day 6 — Priority 2 (Mechanical Closures) + Priority 3 (Pattern E closures + kand Scoping)
+
+**Status:** COMPLETE (2026-05-12) — 8 GitHub issue closures + 2 Sprint 27 successor issues filed (#1387, #1388) + kand alias-AD scoping for Day 7 implementation.
+**Branch:** `sprint26-day6-priority-2-and-3`.
+
+**Objective (per PLAN.md Day 6):** Mechanical close-and-refile of the 6 Pattern A cohort issues per Task 4 + the 2 closable Pattern E issues per Task 5 + scope the kand alias-AD fix work (Day 7 implementation target).
+
+#### Priority 2 — Pattern A cohort closures (per Task 4 `PATTERN_A_RECLASSIFICATION_PLAN.md`)
+
+| Issue | Model | Action | Verdict | GitHub state | Issue doc |
+|---|---|---|---|---|---|
+| #1138 | irscge / lrgcge / moncge / stdcge family (4 CGE models) | Close + forward-link to Sprint 27 #1381 | Already CLOSED 2026-05-12 (during Day 4); added Sprint 26 Day 6 forward-link comment to #1381 | CLOSED | Moved `ISSUE_1138_*.md` → `docs/issues/completed/` |
+| #1139 | meanvar | Close as **not-a-bug** | meanvar is `legacy_excluded`; AD output is mathematically correct | CLOSED (reason: not planned) | Moved `ISSUE_1139_*.md` → `completed/` |
+| #1140 | ps*_s* family (7 stochastic models) | Close as **informational mismatch** | All 7 are `non_convex` runtime-filter per Prep Task 2; consistent with `danwolfe` / `decomp` precedent | CLOSED (reason: not planned) | Moved `ISSUE_1140_*.md` → `completed/` |
+| #1142 | launch | Close as **duplicate of Priority 1 Phase A** (Day 1 PR #1379) | xfail un-xfailed and strengthened in PR #1379. PATH-numerics deferred to Sprint 27 #1378 (separate concern from the AD-correctness fix #1142 was tracking). | CLOSED (reason: completed) | Moved `ISSUE_1142_*.md` → `completed/` |
+| #1145 | cclinpts | Close-and-refile as **Sprint 27 #1387** | Day 7 sweep classification still accurate: legitimate `(j-1)` lag offsets matching source body; the 69.9% rel_diff is a condition-guard or sign bug downstream of AD, NOT a Pattern A AD-layer bug | CLOSED + filed #1387 successor | Moved `ISSUE_1145_*.md` → `completed/`; created `ISSUE_1387_*.md` |
+| #1150 | qabel + abel | Close as **resolved (both halves)** | qabel "massive enumeration" gone on current main (#1312 CLOSED 2026-04-25 fixed it); abel u-gradient drop separately addressed (#1311 CLOSED 2026-04-25) + abel reclassified `non_convex` per Prep Task 2 | CLOSED (reason: completed) | No pre-existing `ISSUE_1150_*.md` doc to move |
+
+**Priority 2 effort actual:** ~30 min (mechanical GitHub-only closures + forward-link comment on already-closed #1138). Estimated ~1.5h per PLAN.md / Task 4.
+
+#### Priority 3 — Pattern E carryforward (per Task 5 `PATTERN_E_STATUS.md`)
+
+| Issue | Model | Action | Verdict | GitHub state | Issue doc |
+|---|---|---|---|---|---|
+| #1144 | catmix | Close as **bucket-shifted-resolved** | Now translates clean + solves MODEL STATUS 1 Optimal with rel_diff 0.21% (within tolerance). Sprint 25 #1338 SetMembershipTest fix did the work. | CLOSED (reason: completed) | Moved `ISSUE_1144_*.md` → `completed/` |
+| #1147 | camshape | Close-and-refile as **Sprint 27 #1388** | Original `path_syntax_error` resolved (partial fix on #1147 + follow-up #1160 both closed). Current state: translates clean, compiles clean, but solves `Locally Infeasible` model_status=5 obj=6.2 vs NLP obj=4.2841 — distinct NEW bug. | CLOSED + filed #1388 successor | Moved `ISSUE_1147_*.md` → `completed/`; created `ISSUE_1388_*.md` |
+| #1141 | kand | **Keep open** — Sprint 26 fix scoping today; Day 7 implementation | Still 92.5% rel_diff on current main; alias-AD bug confirmed reproducible. Scoping captured below. | OPEN (still) | `ISSUE_1141_*.md` retained in `docs/issues/` |
+
+**Priority 3 effort actual:** ~30 min closures + ~1h kand scoping = ~1.5h. Estimated ~3–4h per PLAN.md (kand fix scoping was lighter than budgeted; Day 7 absorbs the fix work).
+
+#### Priority 3 — kand alias-AD scoping (Day 7 fix target)
+
+**Source body** (`data/gamslib/raw/kand.gms:99-100`):
+
+```gams
+dembalx(j,tn(t,n))..
+   sum(i, a(j,i)*x(i,t)) + y(j,tn) =g= dem(n,j) + eps*sum(tree(nn,n), y(j,t-1,nn));
+```
+
+Set declarations (`data/gamslib/raw/kand.gms:23, 54-56`):
+- `Alias (n,nn);` — `nn` is the alias of `n`.
+- `Set tree(n,n)` — predicate over `(n,n)` describing the scenario tree structure (e.g., `n-1.(n-4*n-6), n-2.(n-7*n-9), n-3.(n-10*n-12)`).
+
+**Current emit (broken)** — `stat_y(j,t,n)` produces 22 phantom-offset cross-terms for `lam_dembalx`:
+
+```gams
+stat_y(j,t,n).. (prob(n) * f(j,t) * 1$(tn(t,n)) + ((-1) * lam_dembalx(j,t,n))$(tn(t,n))
+  + sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+9))$(...))$(tn(t,n)))
+  + sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n+10))$(...))$(tn(t,n)))
+  + ... [20 more terms with offsets k = -8..+11] ...
+  + sum(nn, ((eps * 1$(tree(nn,n)) * lam_dembalx(j,t+1,n-8))$(...))$(tn(t,n)))
+  - piL_y(j,t,n))$(tn(t,n)) =E= 0;
+```
+
+**Hand-derived correct shape.** Differentiating `dembalx(j,tn(t_inner,n_inner)).. ... + eps*sum(tree(nn,n_inner), y(j,t_inner-1,nn))` w.r.t. `y(j,t,n)`:
+- Non-zero when `t_inner-1 = t` (i.e., `t_inner = t+1`) AND `nn = n` AND `tree(n, n_inner)` holds (after alias-swap of nn → n in the iteration).
+- Correct cross-term: `eps * sum(n_inner$tree(n,n_inner), lam_dembalx(j, t+1, n_inner))$(tn(t+1,n_inner))` — a SINGLE sum over the scenario-tree partner-set of `n`, not 22 offset enumerations.
+
+**Hypothesized fix surface** (Day 7 target):
+1. The AD pipeline's alias-aware partial collapse-Sum path produces an enumeration over the offset relationship between `nn` and `n` instead of recognizing that `tree(nn,n)` is the binding predicate.
+2. Initial candidates: `src/ad/constraint_jacobian.py` (around the offset-resolution path for Sum bodies) and `src/ad/derivative_rules.py` (alias-AD partial). The `SPRINT25_DAY2_DEBUG=1` trace shows the `partial_collapse_sum` machinery firing repeatedly with `sum_index_sets=('j', 't', 'n')` and `wrt_indices=('p-1', 'time-1', 'nn')` — suggests the alias substitution `nn → n` isn't propagating to the post-collapse offset-resolution step.
+3. Expected fix shape: detect when the Sum body's predicate `tree(nn, eq_domain_index)` constrains the iteration to a single-element-per-partner set, and emit a single guarded cross-term instead of enumerating per-offset.
+
+**Day 7 acceptance gate:**
+- `stat_y(j,t,n)` body should have exactly 1 cross-term referencing `lam_dembalx` (the `eps * sum(...) * lam_dembalx(j,t+1,...)` term), not 22.
+- kand `make test` + Tier 0/1 (11 canaries) byte-stable.
+- kand `solution_comparison.comparison_status` improves from current 92.5% rel_diff toward < 1% (acceptance) or marks legitimate non-convergence.
+
+**Estimated effort (Day 7):** 3–6h investigation + fix per Task 5 contingency. If intractable in budget, close-and-refile as Sprint 27 issue (kand was OPEN entering Sprint 26; the Sprint 26 #1141 keeps its current OPEN state regardless of fix outcome — the Sprint 27 refile path only triggers if Day 7 can't land the fix).
+
+#### Quality checks
+
+- `make test` (no `src/` changes Day 6): re-verified clean against the merged Day 5 main + Day 6 docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md.
+
+#### Day 6 deliverables (this PR)
+
+1. 8 GitHub issue closures (`gh issue close` on #1139, #1140, #1142, #1144, #1145, #1147, #1150; `gh issue comment` on already-closed #1138).
+2. 2 Sprint 27 successor issues filed (#1387 for cclinpts; #1388 for camshape).
+3. 7 issue docs moved to `docs/issues/completed/` (#1138, #1139, #1140, #1142, #1144, #1145, #1147).
+4. 2 new issue docs created in `docs/issues/` (`ISSUE_1387_*.md`, `ISSUE_1388_*.md`).
+5. SPRINT_LOG.md Day 6 entry (this section) — closure table + kand scoping notes.
+6. CHANGELOG.md Day 6 bullet.
+
+#### Notes (Day 6)
+
+- **No `src/` changes.** Day 6 is GitHub-only mechanical work + docs. No PR14 obligation. Quality checks (`make test`) verified clean per CONTRIBUTING.md / docs/development/AGENTS.md.
+- The xfail test `tests/unit/kkt/test_pattern_c_alias_offset_gate.py::test_alias_only_conditional_sum_emits_no_phantom_offsets` was already un-xfailed in Day 1 PR #1379 (per Day 4 PATTERN_A_RECLASSIFICATION_PLAN.md §"Test xfail impact" + Day 1 SPRINT_LOG entry). No xfail-removal cleanup needed today.
+- The source comment at `src/kkt/stationarity.py:4336` referencing `#1226, #945, #1142` is now partially stale (#1142 closed today). Day 7's kand-fix PR will touch nearby code and can update this comment as part of that diff; no standalone change today.
+- Sprint 27 Pattern A cohort cleanup is now complete: #1138, #1142, #1145 (refiled #1387) all closed in Sprint 26; the original 6-issue cohort has been reduced to a single follow-up tracker (#1387 cclinpts) plus the Phase B redesign carryforward (#1381 for camcge / cesam2).
+- Sprint 27 Pattern E cohort cleanup is now complete: 2 of the original 3 closed (#1144, #1147 refiled #1388); kand (#1141) remains as the standalone alias-AD residual being addressed Day 7.
+
+---
