@@ -5,7 +5,14 @@
 **Severity:** Medium — affects 5 GAMSlib `translate_timeout` models that Option 1 was meant to recover (srpchase, iswnm, sarf, mexls, nebrazil) plus blocks any downstream Solve / Match gain those models would have produced post-recovery.
 **Date:** 2026-05-12
 **Last Updated:** 2026-05-12
-**Affected Models:** srpchase (#885 / #931 / #932 / #1185 / #1228 carry forward), iswnm, sarf, mexls, nebrazil
+**Affected Models:** srpchase, iswnm, sarf, mexls, nebrazil (5 GAMSlib `translate_timeout` models that Option 1 was meant to recover; srpchase has no separate carryforward issue — it's the primary Option 1 target).
+**Related issues** (Sprint 26 `sprint-26` labeled, carrying forward to Sprint 27 alongside this redesign):
+- **#885** — sarf: Translation timeout from combinatorial explosion in variable instances
+- **#931** — iswnm: Translation timeout — Indus surface water network submodule
+- **#932** — nebrazil: Translation timeout — North-East Brazil agricultural model
+- **#1185** — mexls (SEQ=210): Translation timeout (large LP)
+- **#1228** — iswnm: Translation timeout — empty set causes instance explosion
+
 **Target Sprint:** Sprint 27 (10–16h across three sub-phases)
 **Cross-references:**
 - `docs/planning/EPIC_4/SPRINT_26/DESIGN_OPTION_1_SHORT_CIRCUIT.md` — Sprint 26 Prep Task 6 design (full original spec; needs revision per this issue's findings)
@@ -184,7 +191,7 @@ The 5 translate-timeout candidate issues (#885, #931, #932, #1185, #1228) carry 
 
 ## Lessons Learned
 
-This is the second Sprint 26 reclassification (after Day 3 Pattern B → Sprint 27 #1381) where a prep-task design assumed downstream pipeline behavior that didn't hold in practice. Both shared the same diagnostic gap:
+This is the second Sprint 26 reclassification (after Day 3 Pattern C Phase B → Sprint 27 #1381) where a prep-task design assumed downstream pipeline behavior that didn't hold in practice. Both shared the same diagnostic gap:
 
 - **Prep-task validation at the design stage** (read code; identify patch sites; verify nothing obvious blocks the change) is necessary but insufficient.
 - **Empirical end-to-end verification** — actually running the pipeline AND verifying emit correctness against hand-derived expected output — must be part of the design-validation phase, not deferred to implementation day.
