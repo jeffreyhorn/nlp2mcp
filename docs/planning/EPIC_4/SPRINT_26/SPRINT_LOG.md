@@ -928,7 +928,7 @@ Sprint 26 has now produced **4 architectural reclassifications** in this same ro
 
 All four now have parity design docs (Phase 1 / 2 / 3 + Tests + Files + Phase 0 acceptance gate) per the Day 8 buffer 4 cleanup. Sprint 27 prep can pick up directly from these docs without additional scoping.
 
-Plus the AD-residual carryforward #1335 — FIXED Sprint 26 Day 9 in this PR — and #1378 (launch PATH numerics deferral, Day 1).
+Plus the AD-residual carryforward #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h, narrower than the four architectural redesigns above) — and #1378 (launch PATH numerics deferral, Day 1).
 
 #### Quality checks (post-rollback)
 

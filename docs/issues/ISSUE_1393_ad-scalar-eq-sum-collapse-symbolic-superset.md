@@ -9,7 +9,7 @@
 **Target Sprint:** Sprint 27 (10–16h across architectural change + integration tests + Tier 0/1 byte-stable regression).
 **Cross-references:**
 - Predecessor: #1334 (now CLOSED 2026-05-12 via Sprint 26 Day 9 — see [docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md](completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md)).
-- Companion: #1335 (FIXED Sprint 26 Day 9 — same target model otpop, independent fix in the gate relaxation at `src/ad/constraint_jacobian.py:986` / `:1107`).
+- Companion: #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate, narrower scope than this issue's 10–16h architectural redesign). Same target model otpop; see `docs/issues/ISSUE_1335_*.md` for the corrected fix-surface diagnosis with three competing Sprint 27 approaches.
 - Sister Sprint 27 carryforwards (AD-architecture-level reclassifications):
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4).
@@ -25,7 +25,7 @@ otpop's `kdef.. k =e= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)))` 
   ```
   — single guarded term (`x(t)` matches `x(tt)` only when `t(tt)` holds).
 
-- **Observed `stat_x(tt)` cross-term** (current main, post Sprint 26 Day 9 #1335 fix):
+- **Observed `stat_x(tt)` cross-term** (current main; Day 9 #1335 fix attempt rolled back so this is the pre-Day-9 baseline shape — see `docs/issues/ISSUE_1335_*.md` §"Sprint 26 Day 9 Update — Fix Attempt Rolled Back" for the narrative):
   ```
   sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt))
   ```
@@ -146,7 +146,7 @@ Integration tests verifying EMIT CORRECTNESS (hand-derived KKT shape + GAMS comp
 ## Related
 
 - **#1334** — closed Sprint 26 Day 9 via this PR; original Approach 1 framing in stationarity.py was insufficient; corrected diagnosis localizes fix to AD `_diff_sum` / `_sum_should_collapse`.
-- **#1335** — narrow AD scalar-equation gate relaxation; FIXED Sprint 26 Day 9 in the same PR (independent of #1334).
+- **#1335** — narrow AD scalar-equation gate relaxation; Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate). Independent of #1334's wider architectural scope.
 - **#1381** (Sprint 27): Pattern C Phase B redesign — similar AD-architecture-level reclassification (Day 3).
 - **#1385** (Sprint 27): Option 1 short-circuit redesign — closest sibling pattern, AD-vs-emit symbolic/concrete handling (Day 4).
 - **#1390** (Sprint 27): kand tree-predicate Sum redesign — AD-Sum-architecture-level (Day 7).
