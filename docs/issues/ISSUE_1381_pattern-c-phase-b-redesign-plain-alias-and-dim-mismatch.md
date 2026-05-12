@@ -61,7 +61,7 @@ For launch, the same logic ran but the symbols `ss` and `s` weren't aliases of t
 
 ### 2. Auto Sum-wrap doesn't fire on plain-alias post-collapse
 
-Phase A's transform relies on the auto Sum-wrap (in `_add_indexed_jacobian_terms` around line 5269) wrapping the term in `Sum((alias,), term)` when the indexed derivative has uncontrolled free indices. The wrap binds the alias `ss` for launch because `ss` was free in the post-element-to-set body (`ge(ss,s)` still has free `ss`).
+Phase A's transform relies on the auto Sum-wrap (inside `_add_indexed_jacobian_terms`; grep for `term = Sum(sum_indices, term)` — three call sites covering indexed-constraint and scalar-constraint paths) wrapping the term in `Sum((alias,), term)` when the indexed derivative has uncontrolled free indices. The wrap binds the alias `ss` for launch because `ss` was free in the post-element-to-set body (`ge(ss,s)` still has free `ss`).
 
 For plain-alias bodies, post-element-to-set there is **no free index** — the alias `j` has been mapped to canonical `i`, and `i` is the controlled eq/var index. So no auto Sum-wrap fires. The Day 3 swap then introduces `j` into the body (via the rename), but no Sum binds it — `j` becomes a dangling unbound reference.
 
@@ -193,7 +193,12 @@ Pipeline regression: 54-model Tier 0/1/2 golden-file check; expect byte-shifts o
 - `src/kkt/stationarity.py`:
   - `_find_pattern_c_alias_sum` (Day 3 left predicate launch-shape-only; relaxation will be re-applied as part of Phase B-1)
   - `_apply_pattern_c_swap_to_term` (Phase A logic; keep for launch case)
-  - `_add_indexed_jacobian_terms` (gate site at line 4476+; standard term-building loop at line 5269+; auto Sum-wrap; element-to-set call ordering)
+  - `_add_indexed_jacobian_terms` — anchor by grep rather than line number to avoid drift:
+    - **Gate site**: grep for `# Sprint 25 Day 6 #1306 / Sprint 26 Day 1 Phase A` (Pattern C predicate block; ~line 4489 as of this writing)
+    - **`allow_nonzero_offsets` decision**: grep for `allow_nonzero_offsets = True` and `pattern_c_info: dict | None = None` (~line 4536)
+    - **Standard term-building loop**: grep for `for offset_key, group_entries in offset_groups.items():` (~line 4669)
+    - **Auto Sum-wrap (3 call sites)**: grep for `term = Sum(sum_indices, term)` (~lines 5473 / 5507 / 5574 covering indexed and scalar constraint paths)
+    - **Element-to-set call ordering**: grep for `_replace_indices_in_expr(` calls inside `_add_indexed_jacobian_terms`
   - NEW: `_build_pattern_c_consolidated_term` (Phase B-1 builder driven from source body)
   - NEW: `_classify_eq_body_factors` (Phase B-2 helper for separating eq-side / var-side / inner-Sum factors)
   - NEW: `_build_pattern_c_dim_mismatch_term` (Phase B-3 builder for dim-mismatch case)
