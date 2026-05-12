@@ -53,7 +53,7 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 |---|---|---|---|
 | 1 — Pattern C Phase A | 1 (Days 2 validation, Day 3 reclassification) | ~6h actual | Phase A landed Day 1 PR #1379; #1306 xfail removed; consolidated launch emit. **Phase B (camcge + cesam2) reclassified Day 3 to Sprint 27 #1381** (swap-based transform doesn't generalize to plain-alias). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 investigation forward-pull. |
 | 4 — Option 1 short-circuit | **4 (PULLED FORWARD from Day 8)** | ~4–6h | srpchase translates; +1–2 Translate |
-| 5 — AD residuals — #1334 investigation start | **4 (PULLED FORWARD from Day 8)** | ~3–4h | Re-investigation of 2026-05-05 #1334 closure; Approach 1 fix start |
+| 5 — AD residuals — #1334 investigation + scoping (no `src/`) | **4 (PULLED FORWARD from Day 8)** | ~3–4h | Re-investigation of 2026-05-05 #1334 closure; Approach 1 fix scoped/sketched in `SPRINT_LOG.md` Day 4 entry. Implementation lands Day 9. |
 | **Checkpoint 1** (Day 5) | 5 | n/a | Phase A GO/NO-GO routing (Phase B rows reclassified to Sprint 27 #1381) |
 | 2 — Pattern A reclassification | 6–7 | ~1.5h | 4 closures + 1 close-and-refile + 1 forward-link |
 | 3 — Pattern E carryforward (kand) | 6–7 (parallel) | ~3–6h | kand alias-AD fix OR Sprint 27 carryforward |
