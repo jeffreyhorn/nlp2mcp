@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Sprint 26 is the post-Sprint-25 carryforward sprint focused on five priorities (schedule revised Day 3 per Phase B reclassification to Sprint 27 #1381):
+Sprint 26 is the post-Sprint-25 carryforward sprint focused on five priorities (schedule revised Day 3 per Phase B reclassification to Sprint 27 #1381, and again Day 4 per Priority 4 reclassification to Sprint 27 #1385):
 
 - **Priority 1 (Day 1 only — REVISED Day 3): Pattern C Phase A landed (launch fix).** Phase A restored the Sprint 25 #1351 launch fix via consolidated zero-offset builder rewrite (PR #1379, Day 2 validation PR #1380). **Phase B (camcge + cesam2 generalization) reclassified to Sprint 27 #1381** — the swap-based transform doesn't generalize to plain-alias bodies; needs a builder redesign (10–16h) intercepting BEFORE element-to-set substitution. fawley + otpop reclassify out of Priority 1 (see Priority 2 / Priority 5 routing). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 forward-pull.
 - **Priority 4 (Day 4 — RECLASSIFIED to Sprint 27 #1385):** Translation timeout Option 1 short-circuit attempted Day 4 per Task 6 design. Translate-time savings worked (srpchase 846s → 5.7s) but the placeholder approach broke the downstream AD/emit pipeline; **src/ rolled back, redesign deferred to Sprint 27 #1385** (10–16h). The 5 translate-timeout candidates (#885, #931, #932, #1185, #1228) carry forward to Sprint 27 alongside #1224 (already deferred).
@@ -28,9 +28,9 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 
 ---
 
-## Sprint 26 Targets (per PROJECT_PLAN.md §Sprint 26 Acceptance Criteria + Task 9 baseline — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
+## Sprint 26 Targets (per PROJECT_PLAN.md §Sprint 26 Acceptance Criteria + Task 9 baseline — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381, and UPDATED Day 4 per Priority 4 reclassification to Sprint 27 #1385)
 
-| Metric | Day 0 (Task 9 baseline) | Sprint 26 Target (revised Day 3) | Stretch | Net needed |
+| Metric | Day 0 (Task 9 baseline) | Sprint 26 Target (revised Day 3 + Day 4) | Stretch | Net needed |
 |---|---|---|---|---|
 | Parse | 142/142 (100%) | ≥ 142/142 | — | 0 (invariant) |
 | Translate | 130/142 (91.5%) | ≥ 130/142 (maintain) | ≥ 132/142 | **0** (Priority 4 reclassified to Sprint 27 #1385 per Day 4 — placeholder approach broken downstream; the +2 Translate from srpchase + iswnm carries forward to Sprint 27) |
@@ -191,7 +191,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 4. If CONDITIONAL GO: scope-back any current open items (Priority 5 #1334 routing decision still pending after Day 4 — should already be re-opened per Day 4 outcome); document residual scope as Sprint 27 carryforward. Phase B (camcge + cesam2) already deferred to Sprint 27 #1381 per Day 3 — no scope-back needed there. Priority 4 (srpchase + 4 stretch candidates) already reclassified to Sprint 27 #1385 per Day 4 — no scope-back needed there either.
 5. If NO-GO: assess revert vs forward-fix; potentially extend Day 5 into Day 6 to land a Phase A-only fix.
 
-#### Checkpoint 1 criteria (Day 5 evaluation — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
+#### Checkpoint 1 criteria (Day 5 evaluation — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381 + UPDATED Day 4 per Priority 4 reclassification to Sprint 27 #1385)
 
 | Criterion | GO | CONDITIONAL GO | NO-GO |
 |---|---|---|---|
@@ -303,7 +303,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 3. Targeted pipeline retest on the 2 Priority-affected models in scope (kand — Priority 3; otpop — Priority 5) + the 11 Tier 0/1 canaries. (camcge + cesam2 deferred to Sprint 27 #1381 per Day 3; srpchase deferred to Sprint 27 #1385 per Day 4.)
 4. Evaluate **Checkpoint 2** criteria below.
 
-#### Checkpoint 2 criteria (Day 10 evaluation — UPDATED Day 3 per Phase B reclassification)
+#### Checkpoint 2 criteria (Day 10 evaluation — UPDATED Day 3 per Phase B reclassification + UPDATED Day 4 per Priority 4 reclassification)
 
 | Criterion | GO | CONDITIONAL GO | NO-GO |
 |---|---|---|---|
