@@ -271,22 +271,22 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 3. **Forward-pull Day 12's PR14 emit-artifact review pass** — if Day 9 produced a regenerated `otpop_mcp.gms` (the only emit-affecting artifact this sprint after Day 1 / launch and the Day 4 Priority 4 rollback), do the mid-sprint PR14 read-through here.
 4. **Sprint 27 #1381 (Pattern C Phase B redesign) or #1385 (Option 1 short-circuit redesign) — start design notes** if other buffer uses are exhausted. Do NOT begin src/ implementation in Sprint 26 (both are explicitly Sprint 27 carryforward); design notes only.
 
-### Day 9 — Priority 5 #1334 Fix + #1335 Start
+### Day 9 — Priority 5 #1334 Fix + #1335 Implementation
 
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
-**Effort:** ~5–8h.
+**Effort:** ~5–8h (#1334 ~3–5h + #1335 ~2–3h — Day 8 buffer pulled the #1335 scoping forward so Day 9 only needs the implementation per Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping").
 
-**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Begin #1335 fix.
+**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Land #1335 fix per Day 8 scoping (bug reproducer confirmed on current main; fix surface line-number-verified at `src/ad/constraint_jacobian.py:986` + `:1107`; test plan documented).
 
 **Priority 5 #1334 tasks:**
 1. Complete Approach 1 implementation: ParamRef-branch alignment when `param_domain` is a strict subset of `equation_domain` AND a parallel VarRef has been substituted to use the eq domain variable (per ISSUE_1334.md §Approach 1, line 76).
 2. Add unit test in `tests/unit/kkt/`: minimal `ModelIR` with scalar `kdef.. k = sum(t, p(t)*x(t))` over `t ⊂ tt`; assert no `sum(t__, ...)` wrap in `stat_x(tt)`.
 3. Translate otpop fresh; verify `sum(t__, ...) * nu_kdef` lines disappear from `stat_p` and `stat_x`.
 
-**Priority 5 #1335 tasks (per AD_RESIDUALS_RECAP.md §3.2):**
-1. Implement scalar-equation gating fix at `src/ad/constraint_jacobian.py:986` + `:1107` (the `if eq_domain:` gate that currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`).
-2. Add unit test asserting `nu_zdef` cross-term emission in `stat_p` body for the otpop time-reversal-on-`p` shape.
-3. Translate otpop fresh; verify `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` returns ≥ 1 (per Task 7 §What-needs-to-be-done verification recipe).
+**Priority 5 #1335 tasks (per AD_RESIDUALS_RECAP.md §3.2 + Day 8 scoping):**
+1. Implement the scalar-equation gating fix per Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping" — extend the `if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` (and the inequality counterpart at `:1107`) so `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` also fire for scalar equations like `zdef`. Either (a) relax the gate to always run offset resolution + sum expansion (regardless of `eq_domain` shape), OR (b) add a complementary scalar-equation branch that runs the same pipeline. Day 8 scoping recommends approach (a) for simplicity; approach (b) is the conservative fallback if (a) introduces unexpected Tier 0/1 regressions.
+2. Add unit test asserting `nu_zdef` cross-term emission in `stat_p` body for the otpop time-reversal-on-`p` shape (Day 8 captured the bug reproducer at `/tmp/sprint26-day8/otpop/otpop_mcp.gms`; `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' | grep -c nu_zdef` returns **0** pre-fix, must return **≥ 1** post-fix).
+3. Translate otpop fresh; verify the same grep returns ≥ 1 (per Task 7 §What-needs-to-be-done verification recipe).
 
 **Deliverable:** PR for #1334 + #1335 (combined, since both touch otpop and share verification recipe). PR14 obligation: include regenerated `data/gamslib/mcp/otpop_mcp.gms`.
 
@@ -347,7 +347,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 **Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per PR14 reaffirmation in CONTRIBUTING.md (Task 10). Buffer for any Days 1–11 slippage.
 
 **Tasks:**
-1. Read `data/gamslib/mcp/launch_mcp.gms` (Phase A, Day 1) and `otpop_mcp.gms` (Priority 5, Day 9), plus any other artifacts that regenerated this sprint, end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do"). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381). **Updated Day 4:** dropped srpchase (Priority 4 deferred to Sprint 27 #1385; src/ rolled back, no artifact regenerated this sprint).
+1. Read `data/gamslib/mcp/otpop_mcp.gms` (Priority 5, Day 9), plus any other artifacts that regenerated this sprint, end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do"). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381). **Updated Day 4:** dropped srpchase (Priority 4 deferred to Sprint 27 #1385; src/ rolled back, no artifact regenerated this sprint). **Updated Day 8:** dropped `launch_mcp.gms` from this Day 12 review list — Day 8 buffer pulled the Phase A artifact review forward (see Day 8 SPRINT_LOG §"Buffer use 3: PR14 review of launch_mcp.gms"; clean post-Phase A, no clobber / phantom Sum-wraps / missing cross-terms detected).
 2. If any new bugs surface: file as Sprint 27 issues unless trivially fixable in 1–2h.
 3. Buffer: absorb any Days 1–11 slippage. Examples:
    - PR19 implementation slipped to Day 12 → finish here.
