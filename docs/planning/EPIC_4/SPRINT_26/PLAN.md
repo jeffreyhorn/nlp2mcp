@@ -10,15 +10,17 @@
 
 ## Executive Summary
 
-Sprint 26 is the post-Sprint-25 carryforward sprint focused on five priorities:
+Sprint 26 is the post-Sprint-25 carryforward sprint focused on five priorities (schedule revised Day 3 per Phase B reclassification to Sprint 27 #1381):
 
-- **Priority 1 (Days 1–4): Pattern C generalization — REPLANNED per Task 3.** Two-phase scope: Phase A restores the Sprint 25 #1351 launch fix via consolidated zero-offset builder rewrite; Phase B generalizes the gate to plain-alias (camcge) + `sameas`-decomposed (cesam2) variants. Reduced target list: 4 → 2 (camcge + cesam2). fawley + otpop reclassify out of Priority 1 (see Priority 2 / Priority 5 routing).
-- **Priority 2 (Days 6–7): Pattern A cohort reclassification — MECHANICAL.** Per Task 4, 6 cohort issues = 4 closures + 1 close-and-refile + 1 forward-link to Priority 1 PR. Effort dropped from original 4–6h investigative to ~1.5h mechanical.
+- **Priority 1 (Day 1 only — REVISED Day 3): Pattern C Phase A landed (launch fix).** Phase A restored the Sprint 25 #1351 launch fix via consolidated zero-offset builder rewrite (PR #1379, Day 2 validation PR #1380). **Phase B (camcge + cesam2 generalization) reclassified to Sprint 27 #1381** — the swap-based transform doesn't generalize to plain-alias bodies; needs a builder redesign (10–16h) intercepting BEFORE element-to-set substitution. fawley + otpop reclassify out of Priority 1 (see Priority 2 / Priority 5 routing). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 forward-pull.
+- **Priority 4 (Day 4 — PULLED FORWARD from Day 8): Translation timeout Option 1 short-circuit.** Per Task 6 design, 4–6h budget, projected +1–2 Translate gain (srpchase HIGH; iswnm/sarf/mexls/nebrazil LOW–MEDIUM). #1224 deferred to Sprint 27.
+- **Priority 5 (Day 4 + Days 9–10 — Day 4 #1334 investigation PULLED FORWARD from Day 8): AD residuals #1334 + #1335.** Per Task 7 recap, scope decision: 2 of 3 originally-bundled issues (#1334 + #1335 in Sprint 26; #1357 deferred to Sprint 27 alongside fawley #1356 as a "comp_up subset/superset" workstream). Day 4 = #1334 investigation + scoping (no `src/`); Day 9 = #1334 fix completion + #1335 start; Day 10 = wrap + Checkpoint 2. Re-estimated 8–18h.
+- **Priority 2 (Days 6–7): Pattern A cohort reclassification — MECHANICAL.** Per Task 4, 6 cohort issues = 4 closures + 1 close-and-refile + 1 forward-link to Sprint 27 #1381 (camcge fix deferred). Effort dropped from original 4–6h investigative to ~1.5h mechanical.
 - **Priority 3 (Days 6–7, parallel): Pattern E carryforward.** Per Task 5, scope reduced from 3 models to 1 (kand alias-AD). catmix and camshape closures are mechanical.
-- **Priority 4 (Days 8–9): Translation timeout Option 1 short-circuit.** Per Task 6 design, 4–6h budget, projected +1–2 Translate gain. #1224 deferred to Sprint 27.
-- **Priority 5 (Days 8–10, parallel): AD residuals #1334 + #1335.** Per Task 7 recap, scope decision: 2 of 3 originally-bundled issues (#1334 + #1335 in Sprint 26; #1357 deferred to Sprint 27 alongside fawley #1356 as a "comp_up subset/superset" workstream). Re-estimated 8–18h.
 
 Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Sprint 26 prep (Tasks 9, 10). PR19 design landed via Task 8; **CI extension implementation lands during Sprint 26 Day 11** per the Task 8 design doc.
+
+Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward to Day 4). Day 12 is the standard PR14 emit-artifact review pass on the models with emit changes this sprint (launch / srpchase / otpop).
 
 **Two checkpoints** at Days 5 and 10 (criteria below).
 
@@ -224,7 +226,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Objective:** Mechanical close-and-refile per Task 4 + scope kand fix work per Task 5.
 
 **Priority 2 tasks (per Task 4 PATTERN_A_RECLASSIFICATION_PLAN.md):**
-1. **#1138** (irscge family): close as duplicate of Sprint 26 Priority 1 Phase B (camcge fix already landed Day 3).
+1. **#1138** (irscge family): close-and-forward-link to Sprint 27 #1381 (Phase B redesign — camcge / cesam2 plain-alias generalization). Per Day 3 reclassification, the Phase B builder redesign that would close #1138 is deferred to Sprint 27. Forward-link to #1381 in the close comment so the cohort-issue tracking stays accurate.
 2. **#1139** (meanvar): close as `not-a-bug` with note that meanvar is `legacy_excluded`.
 3. **#1140** (PS-family): close as informational-mismatch with note that all 7 ps*_s* models are `non_convex` runtime-filter (per Prep Task 2).
 4. **#1142** (launch): close as duplicate of Sprint 26 Priority 1 Phase A (launch fix already re-landed Day 1).

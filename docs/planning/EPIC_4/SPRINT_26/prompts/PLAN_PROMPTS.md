@@ -300,7 +300,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 
 **Priority 2 — Pattern A cohort closures (~1.5h):**
 
-1. **#1138** (irscge family): close as duplicate of Sprint 26 Priority 1 Phase B. Forward-link to Day 3 PR (camcge fix landed).
+1. **#1138** (irscge family): close-and-forward-link to Sprint 27 #1381 (Phase B redesign — camcge / cesam2 plain-alias generalization). Per Day 3 reclassification, the Phase B builder redesign that would close #1138 is deferred to Sprint 27 (Day 3 prototype produced wrong emits on irscge-family canaries — see Sprint 27 #1381 design discovery). Forward-link to #1381 in the close comment so the cohort-issue tracking stays accurate.
 2. **#1139** (meanvar): close as `not-a-bug`. Note: meanvar is `legacy_excluded`.
 3. **#1140** (PS-family): close as informational-mismatch. Note: all 7 ps*_s* models are `non_convex` runtime-filter per Prep Task 2.
 4. **#1142** (launch): close as duplicate of Sprint 26 Priority 1 Phase A. Forward-link to Day 1 PR.
