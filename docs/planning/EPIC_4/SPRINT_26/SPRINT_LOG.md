@@ -323,6 +323,6 @@ Total: 10–16h, plus per-phase test coverage.
 
 - Phase A (launch) landed cleanly Day 1 + validated byte-stable across 54 canaries Day 2 — that work remains shipped via PR #1379 + PR #1380.
 - Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" was explicit about launch-only scope ("proper fix for the launch Pattern C consolidation (#1306 test xfail)"). Sprint 26 Task 3 REPLAN added camcge + cesam2 as hypothesis-validation targets ("verify the gate predicate generalizes"). The Day 3 discovery is the empirical answer: it doesn't generalize via predicate relaxation alone; needs a builder redesign.
-- No `src/` changes in this PR — Day 3 src/ work rolled back. No PR14 obligation. Quality checks not required.
+- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks not required.
 
 ---

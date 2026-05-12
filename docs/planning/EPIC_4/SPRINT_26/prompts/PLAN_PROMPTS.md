@@ -214,7 +214,7 @@ Step-by-step execution prompts for Sprint 26 Days 0–13.
 3. **Routing decision:**
    - If sibling: file successor issue with the otpop reproducer + Task 7 evidence.
    - If premature: re-open #1334.
-4. **Begin Approach 1 fix** per ISSUE_1334.md §Approach 1: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
+4. **Scope and sketch the Approach 1 fix** per ISSUE_1334.md §Approach 1: identify the patch site (`_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`), document the change shape in the SPRINT_LOG.md Day 4 entry, and add any prerequisite refactor sub-tasks to the Day 9 plan. **Do NOT commit `src/` changes on Day 4** — the Priority 5 PR is investigation + scoping only (see §"Commit + PR" below). Implementation lands Day 9 alongside #1335.
 
 **PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary). Priority 5 PR (Day 9) will include `otpop_mcp.gms`.
 

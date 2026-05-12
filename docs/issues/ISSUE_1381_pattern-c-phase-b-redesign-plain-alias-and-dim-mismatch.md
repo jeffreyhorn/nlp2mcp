@@ -87,7 +87,7 @@ Phase B requires intercepting BEFORE element-to-set substitution and building th
 
 Target: camcge's 4-of-5 simple variants (`actp`, `pkdef`, `inteq`, `ieq`). All share the shape `sum(<alias>, <coeff>(<eq_idx>, <alias>) * <var>(<alias>))`.
 
-When the Pattern C gate fires (after the predicate relaxation that Day 3 already implemented), instead of running through the standard derivative-and-swap path:
+When the Pattern C gate fires (the Day 3 predicate relaxation was prototyped but rolled back when the downstream swap was found to produce wrong emits — Sprint 27 Phase B-1 must re-apply the relaxation alongside the new source-body-driven builder), instead of running through the standard derivative-and-swap path:
 
 1. Read the source `Sum` node from `pattern_c_info` (already captured by `_find_pattern_c_alias_sum`).
 2. Identify the alias name (e.g. `j`) and eq-domain index (e.g. `i`) from the source body's structure, with positions preserved (NOT through element-to-set).

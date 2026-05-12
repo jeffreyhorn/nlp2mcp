@@ -145,7 +145,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 
 **Original objective:** Pattern C gate generalization for camcge (#1354).
 
-**Reclassification reason:** Day 3 attempt to extend Phase A's swap-based transform via gate-predicate relaxation produced mathematically wrong emits on plain-alias bodies (camcge + 10 other byte-shifted canaries). Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking Phase A's swap assumption. See `SPRINT_LOG.md` Day 3 entry for full design discovery + rollback.
+**Reclassification reason:** Day 3 attempt to extend Phase A's swap-based transform via gate-predicate relaxation produced mathematically wrong emits on plain-alias bodies (camcge + 11 other byte-shifted canaries). Element-to-set substitution collapses the alias name to its canonical (same as the eq-domain index) BEFORE the swap can run, breaking Phase A's swap assumption. See `SPRINT_LOG.md` Day 3 entry for full design discovery + rollback.
 
 **Deferred to Sprint 27 #1381:** Pattern C Phase B redesign (camcge + cesam2 + likely other plain-alias variants currently in the path_syntax_error bucket). Estimated 10–16h across Phase B-1 / B-2 / B-3 sub-scopes.
 
@@ -170,7 +170,7 @@ Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Spr
 **Priority 5 #1334 tasks (per Task 7 AD_RESIDUALS_RECAP.md):**
 1. Re-investigate the 2026-05-05 GitHub closure of #1334. Per Task 7, the otpop bug pattern is STILL VISIBLE in current main emit (2× `sum(t__, ...)` lines on `nu_kdef`) despite the closure. Determine: was the closure for a sibling sub-shape, or was it premature?
 2. If sibling: file successor issue with the otpop reproducer. If premature: re-open #1334.
-3. Begin implementing Approach 1 fix per ISSUE_1334.md: `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`. Continue Day 9.
+3. Scope and sketch the Approach 1 fix per ISSUE_1334.md (patch site `_replace_indices_in_expr` ParamRef branch at `src/kkt/stationarity.py:2448+`); document the change shape in the SPRINT_LOG.md Day 4 entry. **Do NOT commit `src/` changes on Day 4** — the Priority 5 PR is investigation + scoping only. Implementation lands Day 9 alongside #1335.
 
 **PR14 obligation:** Priority 4 PR includes regenerated `data/gamslib/mcp/srpchase_mcp.gms` (or a comparable Tier 0/1 canary).
 
