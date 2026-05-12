@@ -397,7 +397,7 @@ Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
 | Verify otpop bug pattern still visible in current main emit (per Task 7 §2.2 grep) | ✅ **Bug present.** `grep -cE "sum\(t__," /tmp/otpop_mcp.gms` returns 2 (matches §2.2 finding); spurious `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)$(t(tt))` wraps in `stat_p(tt)` line 207 + `stat_x(tt)` line 209. |
 | Read GitHub issue #1334 close-comment + linked PR | ✅ #1334 closed 2026-05-05 by PR #1359 (docs-only; the body explicitly listed #1334 as supposed-to-stay-OPEN — closure was UNINTENDED). |
 | Routing decision | ✅ **Re-opened #1334.** Posted re-open comment with bug-pattern reproduction, closure context, and Sprint 26 routing (Day 4 scoping → Day 9 implementation). |
-| Scope and sketch the Approach 1 fix per `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` | ✅ Documented in the Priority 5 PR's SPRINT_LOG diff (separate branch). Patch site `_replace_indices_in_expr` (def at `src/kkt/stationarity.py:2534`; `case ParamRef` branch at `:2652+`); align ParamRef substitution with parallel VarRef substitution when param_domain is strict subset of equation_domain. Day 9 picks up implementation alongside #1335. |
+| Scope and sketch the Approach 1 fix per `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` | ✅ See the §"Approach 1 sketch" section immediately below. Patch site `_replace_indices_in_expr` (def at `src/kkt/stationarity.py:2534`; `case ParamRef` branch at `:2652+`); align ParamRef substitution with parallel VarRef substitution when param_domain is strict subset of equation_domain. Day 9 picks up implementation alongside #1335. |
 
 **Sprint 26 Day 4 Priority 5 deliverable:** investigation + scoping only. **NO `src/` changes** — Day 9 picks up implementation alongside #1335.
 
@@ -405,28 +405,28 @@ Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
 
 **Patch site (verified Day 4 via `grep -nE`):** `_replace_indices_in_expr` in `src/kkt/stationarity.py` (def at line ~2534; the `case ParamRef` branch at ~2652+; grep anchor `def _replace_indices_in_expr(` to avoid line drift).
 
-**Bug shape recap.** otpop's source body for `kdef`:
+**Bug shape recap.** otpop's source body for `kdef` (current emit at `data/gamslib/mcp/otpop_mcp.gms:224`):
 
 ```gams
-kdef..  k =e= sum(t, del(t) * (x(t) - x.fx(t)) * 0.365 * (1 - c)) * v;
+kdef.. k =E= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
 ```
 
-When AD differentiates with respect to `x(tt)` for the indexed-stationarity path:
+When AD differentiates with respect to `x(tt)` for the indexed-stationarity path (`stat_x(tt)`):
 - The Sum's iteration index is `t` (a subset of `tt` in otpop's set declaration).
 - `del(t)` is a parameter on subset `t`.
-- `x(tt)` substitution should propagate through to `del(tt)` (canonical superset name) so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c)` — a per-tt scalar.
+- `x(tt)` substitution should propagate through to `del(tt)` (canonical superset name) so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c) * p(tt)` — a per-`tt` scalar (the `p(tt)` factor is the other variable in the product `p(t) * x(t)`; differentiating w.r.t. `x` leaves `p` as the coefficient). The symmetric `stat_p(tt)` case gets `del(tt) * 0.365 * (1 - c) * x(tt)`.
 
 What actually happens (current main):
-- The Sum-internal `t` doesn't get substituted to `tt` consistently across `del(t)` and `x(t)`.
-- `x(t)` becomes `x(tt)` (correctly, via the indexed-stationarity rewrite).
+- The Sum-internal `t` doesn't get substituted to `tt` consistently across `del(t)`, `p(t)`, and `x(t)`.
+- `x(t)` (for `stat_x`) and `p(t)` (for `stat_p`) become `x(tt)` / `p(tt)` (correctly, via the indexed-stationarity rewrite).
 - `del(t)` gets WRAPPED in a residual `Sum(("t__",), ...)` — the offset-resolution machinery treats the leftover unbound `t` as a free index requiring an aggregating Sum. The `t__` is a fresh alias minted to bind it.
-- The `nu_kdef` cross-term then emits as `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)` — over-counting `del` by `|t|`.
+- The `nu_kdef` cross-terms then emit as `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)` in `stat_p(tt)` and `sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)` in `stat_x(tt)` — over-counting `del` by `|t|` in both.
 
 **Approach 1 fix (Day 9 scope):**
 
 1. In `_replace_indices_in_expr`, identify the ParamRef branch where `param.indices` includes a name that's been substituted in a parallel VarRef in the same expression context.
 2. When `param_domain` (the parameter's declared domain) is a strict subset of `equation_domain` (the stationarity equation's domain) AND a parallel VarRef has been substituted to use the eq-domain variable, align the parameter substitution with the variable substitution: rewrite `del(t)` → `del(tt)` (using the eq-domain index) the same way `x(t)` was rewritten to `x(tt)`.
-3. Result: the Jacobian entry for `(kdef, x(tt))` becomes a clean scalar `del(tt) * 0.365 * (1 - c)` — no Sum wrap, no `t__`.
+3. Result: the Jacobian entry for `(kdef, x(tt))` becomes a clean scalar `del(tt) * 0.365 * (1 - c) * p(tt)` (and `(kdef, p(tt))` becomes `del(tt) * 0.365 * (1 - c) * x(tt)`) — no Sum wrap, no `t__`.
 
 **Alternative (Approach 2 — fallback if Approach 1 has unexpected side-effects):** targeted suppression in `_add_indexed_jacobian_terms` (per Task 7 §3.1 fix-site correction; was incorrectly attributed to `_add_jacobian_transpose_terms_scalar` in earlier `ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` drafts — that function only handles SCALAR stationarity; otpop's `stat_p(tt)` and `stat_x(tt)` are INDEXED). Check whether unconstrained indices in the Jacobian-entry derivative match the equation-domain guard restriction (`$(t(tt))`); if they do, substitute and skip the `Sum` wrap.
 
