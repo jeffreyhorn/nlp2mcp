@@ -13,14 +13,14 @@
 Sprint 26 is the post-Sprint-25 carryforward sprint focused on five priorities (schedule revised Day 3 per Phase B reclassification to Sprint 27 #1381):
 
 - **Priority 1 (Day 1 only — REVISED Day 3): Pattern C Phase A landed (launch fix).** Phase A restored the Sprint 25 #1351 launch fix via consolidated zero-offset builder rewrite (PR #1379, Day 2 validation PR #1380). **Phase B (camcge + cesam2 generalization) reclassified to Sprint 27 #1381** — the swap-based transform doesn't generalize to plain-alias bodies; needs a builder redesign (10–16h) intercepting BEFORE element-to-set substitution. fawley + otpop reclassify out of Priority 1 (see Priority 2 / Priority 5 routing). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 forward-pull.
-- **Priority 4 (Day 4 — PULLED FORWARD from Day 8): Translation timeout Option 1 short-circuit.** Per Task 6 design, 4–6h budget, projected +1–2 Translate gain (srpchase HIGH; iswnm/sarf/mexls/nebrazil LOW–MEDIUM). #1224 deferred to Sprint 27.
+- **Priority 4 (Day 4 — RECLASSIFIED to Sprint 27 #1385):** Translation timeout Option 1 short-circuit attempted Day 4 per Task 6 design. Translate-time savings worked (srpchase 846s → 5.7s) but the placeholder approach broke the downstream AD/emit pipeline; **src/ rolled back, redesign deferred to Sprint 27 #1385** (10–16h). The 5 translate-timeout candidates (#885, #931, #932, #1185, #1228) carry forward to Sprint 27 alongside #1224 (already deferred).
 - **Priority 5 (Day 4 + Days 9–10 — Day 4 #1334 investigation PULLED FORWARD from Day 8): AD residuals #1334 + #1335.** Per Task 7 recap, scope decision: 2 of 3 originally-bundled issues (#1334 + #1335 in Sprint 26; #1357 deferred to Sprint 27 alongside fawley #1356 as a "comp_up subset/superset" workstream). Day 4 = #1334 investigation + scoping (no `src/`); Day 9 = #1334 fix completion + #1335 start; Day 10 = wrap + Checkpoint 2. Re-estimated 8–18h.
 - **Priority 2 (Days 6–7): Pattern A cohort reclassification — MECHANICAL.** Per Task 4, 6 cohort issues = 4 closures + 1 close-and-refile + 1 forward-link to Sprint 27 #1381 (camcge fix deferred). Effort dropped from original 4–6h investigative to ~1.5h mechanical.
 - **Priority 3 (Days 6–7, parallel): Pattern E carryforward.** Per Task 5, scope reduced from 3 models to 1 (kand alias-AD). catmix and camshape closures are mechanical.
 
 Process recommendations PR12, PR14, PR15, PR17, PR18 have already landed via Sprint 26 prep (Tasks 9, 10). PR19 design landed via Task 8; **CI extension implementation lands during Sprint 26 Day 11** per the Task 8 design doc.
 
-Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward to Day 4). Day 12 is the standard PR14 emit-artifact review pass on the models with emit changes this sprint (launch / srpchase / otpop).
+Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward to Day 4; Priority 4 subsequently reclassified to Sprint 27 #1385 on Day 4). Day 12 is the standard PR14 emit-artifact review pass on the models with emit changes this sprint (launch — Day 1; otpop — Day 9; **srpchase dropped per Day 4 Priority 4 reclassification**).
 
 **Two checkpoints** at Days 5 and 10 (criteria below).
 
@@ -43,7 +43,7 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 
 **Day 3 target revision rationale:** Phase B's swap-based transform doesn't generalize to plain-alias bodies (Day 3 discovery — element-to-set substitution collapses alias and eq-domain names before the swap can run). Phase B redesign (camcge + cesam2) deferred to Sprint 27 #1381. Sprint 26 Solve / Match / path_syntax_error targets relaxed to maintain; Sprint 26 still delivers Phase A (launch consolidated emit, Day 1 PR #1379) + Priority 2/3/4/5 work.
 
-**Bucket-provenance evaluation** (per PR17, Task 9 §4.3): Sprint 26 Day-N retests must distinguish bucket churn from real regressions. The 3 Day-0 machine-variance churn-outs (clearlak / ganges / turkpow `path_syntax_error → translate_timeout`) are expected to return to `path_syntax_error` once Priority 4 lands the Option 1 short-circuit — the count moving back UP is NOT a regression. The retest must read the per-model bucket-provenance column to disambiguate.
+**Bucket-provenance evaluation** (per PR17, Task 9 §4.3): Sprint 26 Day-N retests must distinguish bucket churn from real regressions. The 3 Day-0 machine-variance churn-outs (clearlak / ganges / turkpow `path_syntax_error → translate_timeout`) were originally expected to return to `path_syntax_error` once Priority 4 landed the Option 1 short-circuit. With Priority 4 reclassified to Sprint 27 #1385 on Day 4, that recovery now carries forward to Sprint 27 as well — these 3 models should remain in `translate_timeout` for the Sprint 26 Day 13 retest. The retest must still read the per-model bucket-provenance column to disambiguate any other movement.
 
 ---
 
@@ -52,7 +52,7 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 | Priority | Days | Effort | Lead deliverable |
 |---|---|---|---|
 | 1 — Pattern C Phase A | 1 (Days 2 validation, Day 3 reclassification) | ~6h actual | Phase A landed Day 1 PR #1379; #1306 xfail removed; consolidated launch emit. **Phase B (camcge + cesam2) reclassified Day 3 to Sprint 27 #1381** (swap-based transform doesn't generalize to plain-alias). Days 3 freed; Day 4 absorbs Priority 4 + Priority 5 #1334 investigation forward-pull. |
-| 4 — Option 1 short-circuit | **4 (PULLED FORWARD from Day 8)** | ~4–6h | srpchase translates; +1–2 Translate |
+| 4 — Option 1 short-circuit | **4 — RECLASSIFIED to Sprint 27 #1385 (Day 4)** | ~3h Day 4 docs-only PR (src/ rolled back) | Placeholder approach broken downstream; redesign deferred to Sprint 27 #1385 (10–16h) |
 | 5 — AD residuals — #1334 investigation + scoping (no `src/`) | **4 (PULLED FORWARD from Day 8)** | ~3–4h | Re-investigation of 2026-05-05 #1334 closure; Approach 1 fix scoped/sketched in `SPRINT_LOG.md` Day 4 entry. Implementation lands Day 9. |
 | **Checkpoint 1** (Day 5) | 5 | n/a | Phase A GO/NO-GO routing (Phase B rows reclassified to Sprint 27 #1381) |
 | 2 — Pattern A reclassification | 6–7 | ~1.5h | 4 closures + 1 close-and-refile + 1 forward-link |
@@ -62,15 +62,15 @@ Day 8 is now buffer (Priority 4 + Priority 5 #1334 investigation pulled forward 
 | 5 — AD residuals — wrap (NLP-warm-started reproducer) | 10 | ~4–6h | otpop NLP-warm-started MCP converges to `pi ≈ 4217.80` |
 | **Checkpoint 2** (Day 10) | 10 | n/a | All 5 priorities landed-or-scoped |
 | 6 — PR19 CI extension | 11 | ~4–8h | `.github/workflows/pr19-emit-solve-validation.yml` lands |
-| 7 — Buffer / PR14 emit-artifact review | 12 | ~4–6h | Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint (launch / srpchase / otpop — Phase B targets camcge / cesam2 deferred to Sprint 27 #1381 per Day 3) |
+| 7 — Buffer / PR14 emit-artifact review | 12 | ~4–6h | Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint (launch — Day 1; otpop — Day 9. srpchase dropped per Day 4 Priority 4 reclassification to Sprint 27 #1385; Phase B targets camcge / cesam2 deferred to Sprint 27 #1381 per Day 3) |
 | 8 — Final pipeline retest + close | 13 | ~3–6h | Day 13 baseline + bucket-provenance comparison; CHANGELOG; Sprint 26 retrospective scaffold |
 
 **Parallel-work justification:**
-- Day 4: Priority 4 (`src/ad/index_mapping.py`) + Priority 5 #1334 investigation (`src/kkt/stationarity.py`) touch different files. The ad/* surface shared dependency means PR landing order matters but the work itself is parallel-safe.
+- Day 4: Originally planned as Priority 4 (`src/ad/index_mapping.py`) + Priority 5 #1334 investigation (`src/kkt/stationarity.py`) — different files, parallel-safe. **Outcome (Day 4): Priority 4 reclassified to Sprint 27 #1385 after src/ rollback; Priority 5 #1334 investigation shipped as docs-only PR #1384.** Both PRs were docs-only by end-of-day.
 - Days 6–7: Priority 2 (mechanical issue closures, GitHub-only) + Priority 3 (kand fix in `src/`) have no shared file surface — safe to run in parallel.
 - Day 9: continuation of Priority 5 #1334 fix + #1335 start touches the same `src/` surface but in sequenced sub-tasks (not parallel) — single PR per day.
 
-**Per-day budget sanity check:** No day exceeds 12h estimated work. Heaviest days: Day 1 (~6–8h Phase A scoping + prototype), Day 4 (~4–6h Priority 4 + ~3–4h Priority 5 #1334 start = ~7–10h after Day 3 reclassification pulled Priority 4/5 forward). All within budget.
+**Per-day budget sanity check:** No day exceeds 12h estimated work. Heaviest days: Day 1 (~6–8h Phase A scoping + prototype), Day 4 actual (~7h: Priority 4 prototype + downstream-emit discovery + rollback + Sprint 27 #1385 carryforward + Priority 5 #1334 investigation). All within budget.
 
 ---
 
@@ -185,10 +185,10 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 **Objective:** Evaluate Checkpoint 1 (Priority 1 landed); buffer for Phase A/B slippage.
 
 **Tasks:**
-1. Targeted pipeline retest: translate + solve on the 3 models in scope (launch / srpchase / otpop) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added launch (Phase A landed Day 1 — smoke-check) + srpchase (Priority 4 Day 4 target).
+1. Targeted pipeline retest: translate + solve on the 2 models in scope (launch — Phase A smoke-check; otpop — for Day 4 #1334 investigation context) + 11 Tier 0/1 canaries. Full pipeline retest deferred to Day 13 (would cost ~3.5h here; not justified mid-sprint). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381); added launch (Phase A landed Day 1 — smoke-check). **srpchase dropped Day 4** per Priority 4 reclassification to Sprint 27 #1385.
 2. Evaluate **Checkpoint 1** criteria below.
 3. If GO: continue Days 6–7 Priorities 2 + 3 as planned.
-4. If CONDITIONAL GO: scope-back current open items (Priority 4 stretch recoveries — iswnm / sarf / mexls / nebrazil — that didn't land Day 4; Priority 5 #1334 routing decision still pending); document residual scope as Sprint 27 carryforward. Phase B (camcge + cesam2) is already deferred to Sprint 27 #1381 per Day 3 — no scope-back needed there.
+4. If CONDITIONAL GO: scope-back any current open items (Priority 5 #1334 routing decision still pending after Day 4 — should already be re-opened per Day 4 outcome); document residual scope as Sprint 27 carryforward. Phase B (camcge + cesam2) already deferred to Sprint 27 #1381 per Day 3 — no scope-back needed there. Priority 4 (srpchase + 4 stretch candidates) already reclassified to Sprint 27 #1385 per Day 4 — no scope-back needed there either.
 5. If NO-GO: assess revert vs forward-fix; potentially extend Day 5 into Day 6 to land a Phase A-only fix.
 
 #### Checkpoint 1 criteria (Day 5 evaluation — UPDATED Day 3 per Phase B reclassification to Sprint 27 #1381)
@@ -199,21 +199,21 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 | launch PATH solve to MODEL STATUS 1 | stretch — deferred to Sprint 27 #1378 | n/a | n/a |
 | camcge solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
 | cesam2 solves to MODEL STATUS 1 | n/a — deferred to Sprint 27 #1381 | n/a | n/a |
-| Priority 4 Option 1 short-circuit: srpchase translates | yes | n/a | no |
-| Priority 4 stretch: ≥ 1 of {iswnm, sarf, mexls, nebrazil} also recovers | stretch | stretch | stretch (does not count toward routing) |
+| Priority 4 Option 1 short-circuit: srpchase translates | n/a — reclassified to Sprint 27 #1385 (Day 4) | n/a | n/a |
+| Priority 4 stretch: ≥ 1 of {iswnm, sarf, mexls, nebrazil} also recovers | n/a — reclassified to Sprint 27 #1385 (Day 4) | n/a | n/a |
 | Priority 5 #1334 routing decision documented (re-opened or successor filed) | yes | yes | no |
 | Tier 0 + Tier 1 canaries (11 models) | All match golden | All match golden | > 0 regression |
 | Tier 0/1/2 (54 models combined) golden-file regression | 0 regression | ≤ 1 regression (documented) | > 1 regression |
 
-**Routing (revised Day 3 per Phase B reclassification + Priority 4/5 #1334 forward-pull to Day 4):**
+**Routing (revised Day 4 per Phase B reclassification to Sprint 27 #1381 + Priority 4 reclassification to Sprint 27 #1385):**
 
-- **GO** (≥ 5 of 5 gating rows green — Phase A landed + Priority 4 srpchase translates + Priority 5 #1334 routing + 2 canary rows): Continue Days 6+ as planned. **Realistic Sprint 26 Solve / Match Δ now bounded by Priority 4 (srpchase) + Priority 5 (#1334 / #1335 on otpop) only** — Phase A's launch and Phase B's camcge + cesam2 all deferred to Sprint 27 #1378 + #1381. Sprint 26 Solve / Match targets relaxed to maintain baseline.
-- **CONDITIONAL GO** (Priority 4 lands srpchase but other Priority 4 candidates don't recover, OR Priority 5 #1334 routing is "successor filed" but underlying issue not yet re-opened): proceed; Day 8 buffer absorbs the partial-Priority-4 follow-up. Reclassify residual scope to Sprint 27 if needed.
-- **NO-GO** (Phase A regression OR srpchase fails to translate OR canary regression > 1): Days 6+ buffer for revert + scope-back. Phase A unlikely to regress at this point (already landed Day 1 PR #1379 + validated Day 2 PR #1380 byte-stable on 54 canaries).
+- **GO** (≥ 3 of 3 gating rows green — Phase A landed + Priority 5 #1334 routing + 2 canary rows): Continue Days 6+ as planned. **Realistic Sprint 26 Solve / Match Δ now bounded by Priority 5 (#1334 / #1335 on otpop) only** — Phase A's launch (deferred to Sprint 27 #1378), Phase B's camcge + cesam2 (deferred to Sprint 27 #1381), and Priority 4's srpchase + 4 stretch candidates (deferred to Sprint 27 #1385) all carry forward to Sprint 27. Sprint 26 Solve / Match targets already relaxed to maintain baseline.
+- **CONDITIONAL GO** (Priority 5 #1334 routing is "successor filed" but underlying issue not yet re-opened): proceed; Day 8 buffer absorbs the Priority 5 follow-up. (Should not apply after Day 4 — #1334 was re-opened during Day 4 investigation.)
+- **NO-GO** (Phase A regression OR canary regression > 1): Days 6+ buffer for revert + scope-back. Phase A unlikely to regress at this point (already landed Day 1 PR #1379 + validated Day 2 PR #1380 byte-stable on 54 canaries).
 
-**Note:** stretch rows (launch PATH solve; ≥ 1 additional Priority 4 model) don't count toward GO routing; they're tracked for sprint-retrospective metrics + Day 13 final retest reporting.
+**Note:** stretch rows (launch PATH solve) don't count toward GO routing; they're tracked for sprint-retrospective metrics + Day 13 final retest reporting. Priority 4 srpchase / 4 stretch rows are removed from this table per Day 4 reclassification — they no longer gate or stretch Sprint 26 routing.
 
-**Note:** Phase B (camcge + cesam2) reclassified to Sprint 27 #1381 per Day 3 discovery — the swap-based transform doesn't generalize to plain-alias bodies. Day 3 freed; Day 4 absorbs Priority 4 Option 1 + Priority 5 #1334 re-investigation forward-pull (originally Day 8); Day 8 is now buffer.
+**Note:** Phase B (camcge + cesam2) reclassified to Sprint 27 #1381 per Day 3 discovery — the swap-based transform doesn't generalize to plain-alias bodies. Priority 4 (srpchase + 4 stretch candidates) reclassified to Sprint 27 #1385 per Day 4 discovery — the placeholder approach broke the downstream AD/emit pipeline. Days 3 + 8 are now buffer; Day 4 shipped two docs-only PRs (Priority 4 reclassification + Priority 5 #1334 investigation).
 
 **Deliverable:** PR (or revert) per checkpoint outcome + `SPRINT_LOG.md` Day 5 entry documenting decision.
 
@@ -257,19 +257,19 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 
 **Deliverable:** PR for kand fix (or carryforward) + xfail-removal cleanup.
 
-### Day 8 — Buffer (Priority 4 + Priority 5 #1334 investigation moved to Day 4)
+### Day 8 — Buffer (Priority 4 + Priority 5 #1334 investigation moved to Day 4; Priority 4 subsequently reclassified to Sprint 27 #1385)
 
 **Branch:** none required (buffer day).
 **Effort:** ~6h available.
 
-**Reschedule note (Day 3 update):** Priority 4 Option 1 short-circuit + Priority 5 #1334 re-investigation work originally scheduled here was pulled forward to **Day 4** when Phase B reclassified to Sprint 27 #1381 freed Day 4.
+**Reschedule note (Day 3 + Day 4 updates):** Priority 4 Option 1 short-circuit + Priority 5 #1334 re-investigation work originally scheduled here was pulled forward to **Day 4** when Phase B reclassified to Sprint 27 #1381 freed Day 4. On Day 4 the Priority 4 src/ work itself was reclassified to Sprint 27 #1385 after the placeholder approach broke the downstream AD/emit pipeline; Priority 5 #1334 investigation shipped as docs-only PR #1384.
 
 **Day 8 available uses (in priority order):**
 
 1. **Absorb Days 4 / 6 / 7 slippage** — if any priority slipped, catch up here.
 2. **Forward-pull Priority 5 #1335** — originally Day 9. If Day 4's #1334 investigation completed cleanly and Day 9 can absorb #1335 start without crowding, leave on Day 9. Otherwise scope #1335 onto Day 8.
-3. **Forward-pull Day 12's PR14 emit-artifact review pass** — if Day 4 + 9 produced multiple regenerated `.gms` artifacts (srpchase, otpop, possibly others), do the mid-sprint PR14 read-through here.
-4. **Sprint 27 #1381 (Pattern C Phase B redesign) — start Phase B-1 design notes** if other buffer uses are exhausted. Do NOT begin src/ implementation in Sprint 26 (per Day 3 deferral); design notes only.
+3. **Forward-pull Day 12's PR14 emit-artifact review pass** — if Day 9 produced a regenerated `otpop_mcp.gms` (the only emit-affecting artifact this sprint after Day 1 / launch and the Day 4 Priority 4 rollback), do the mid-sprint PR14 read-through here.
+4. **Sprint 27 #1381 (Pattern C Phase B redesign) or #1385 (Option 1 short-circuit redesign) — start design notes** if other buffer uses are exhausted. Do NOT begin src/ implementation in Sprint 26 (both are explicitly Sprint 27 carryforward); design notes only.
 
 ### Day 9 — Priority 5 #1334 Fix + #1335 Start
 
@@ -300,7 +300,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 **Tasks:**
 1. Run the full otpop NLP-warm-started reproducer per ISSUE_1334.md §Diagnostic: NLP solve via baseline GAMS + dual-multiplier transfer + MCP run with `iterlim=0` + `Inf-Norm` residual capture on `stat_x('1990')` ≈ 760 (pre-fix) → ≈ 0 (post-fix).
 2. Confirm otpop's NLP-warm-started MCP converges to `pi ≈ 4217.80` (matches NLP, per ISSUE_1334.md §Diagnostic).
-3. Targeted pipeline retest on the 3 Priority-affected models in scope (srpchase, kand, otpop) + the 11 Tier 0/1 canaries. (camcge + cesam2 deferred to Sprint 27 #1381 per Day 3.)
+3. Targeted pipeline retest on the 2 Priority-affected models in scope (kand — Priority 3; otpop — Priority 5) + the 11 Tier 0/1 canaries. (camcge + cesam2 deferred to Sprint 27 #1381 per Day 3; srpchase deferred to Sprint 27 #1385 per Day 4.)
 4. Evaluate **Checkpoint 2** criteria below.
 
 #### Checkpoint 2 criteria (Day 10 evaluation — UPDATED Day 3 per Phase B reclassification)
@@ -310,11 +310,11 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 | Match Δ vs Day 0 | ≥ +1 | ≥ 0 (maintain) | ≤ -1 |
 | Solve Δ vs Day 0 | ≥ +1 | ≥ 0 (maintain) | ≤ -1 |
 | Priority 1 Phase A landed | yes (already true — PR #1379) | yes | no |
-| Priority 4 srpchase translates | yes | n/a | no |
+| Priority 4 srpchase translates | n/a — reclassified to Sprint 27 #1385 (Day 4) | n/a | n/a |
 | Priority 5 otpop NLP-warm-started MCP residual ≈ 0 | yes | rel_diff < pre-fix but not 0 | no improvement |
 | Tier 0 + Tier 1 canaries | All match golden | All match golden | > 0 regression |
 
-**Δ-threshold rationale (revised Day 3):** Original Δ targets (≥ +3 Solve / ≥ +3 Match) assumed Phase B would contribute +2 Solve / +2 Match from camcge + cesam2. With Phase B deferred to Sprint 27 #1381, realistic Sprint 26 max Δ is bounded by Priority 4 (srpchase translate recovery, +1 Solve if PATH solves) + Priority 5 (#1334 / #1335 otpop fix, +1 Solve potentially). GO Δ relaxed to ≥ +1; CONDITIONAL GO Δ relaxed to maintain (≥ 0); NO-GO Δ relaxed to ≤ -1 (actual regression).
+**Δ-threshold rationale (revised Day 4):** Original Δ targets (≥ +3 Solve / ≥ +3 Match) assumed Phase B would contribute +2 Solve / +2 Match from camcge + cesam2 and Priority 4 would contribute +1 Solve from srpchase. With Phase B deferred to Sprint 27 #1381 (Day 3) and Priority 4 deferred to Sprint 27 #1385 (Day 4), realistic Sprint 26 max Δ is bounded by Priority 5 (#1334 / #1335 otpop fix, +1 Solve potentially) only. GO Δ relaxed to ≥ +1; CONDITIONAL GO Δ relaxed to maintain (≥ 0); NO-GO Δ relaxed to ≤ -1 (actual regression).
 
 - **GO** (≥ 5 of 6 rows green): Days 11–13 proceed per planned schedule (PR19 implementation + buffer + final retest).
 - **CONDITIONAL GO** (3–4 of 6 green): Days 11–13 trim scope. PR19 may slip to a Day-12 fast-track implementation; Day 12 buffer reabsorbed for Priority 5 follow-up if otpop didn't fully resolve.
@@ -347,7 +347,7 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 **Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per PR14 reaffirmation in CONTRIBUTING.md (Task 10). Buffer for any Days 1–11 slippage.
 
 **Tasks:**
-1. Read `data/gamslib/mcp/launch_mcp.gms` (Phase A, Day 1), `srpchase_mcp.gms` (Priority 4, Day 4), `otpop_mcp.gms` (Priority 5, Day 9), plus any other artifacts that regenerated this sprint, end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do"). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381).
+1. Read `data/gamslib/mcp/launch_mcp.gms` (Phase A, Day 1) and `otpop_mcp.gms` (Priority 5, Day 9), plus any other artifacts that regenerated this sprint, end-to-end. Look for clobber patterns / ordering bugs / spurious Sum-wraps / missing cross-terms (per Task 10 reviewer-checklist + CONTRIBUTING.md §"What reviewers must do"). Model list updated Day 3: dropped camcge / cesam2 / fawley (Phase B deferred to Sprint 27 #1381). **Updated Day 4:** dropped srpchase (Priority 4 deferred to Sprint 27 #1385; src/ rolled back, no artifact regenerated this sprint).
 2. If any new bugs surface: file as Sprint 27 issues unless trivially fixable in 1–2h.
 3. Buffer: absorb any Days 1–11 slippage. Examples:
    - PR19 implementation slipped to Day 12 → finish here.
@@ -409,8 +409,8 @@ Day 4 attempted to implement Option 1 short-circuit per Task 6 design. Translate
 |---|---|---|---|
 | Priority 1 Phase A consolidated builder rewrite breaks > 1 Tier 2 model | Medium | High | Day 5 Checkpoint 1 NO-GO routing; Day 1 keeps the prototype branch isolated until Day 2 validation. Sprint 25 #1351 rollback experience documented in Task 3 §Recommendation. |
 | Priority 5 #1334 GitHub closure was premature; otpop bug doesn't actually resolve with documented Approach 1 | Medium | Medium | Day 4 re-investigation budgeted ~3–4h before committing to fix work. If Approach 1 doesn't work, Approach 2 fallback per ISSUE_1334.md §Approach 2 (targeted suppression in `_add_indexed_jacobian_terms`). If both fail, scope-back Priority 5 to #1335-only and Sprint 27-carryforward #1334. |
-| Priority 4 Option 1 short-circuit recovers srpchase but breaks Tier 0/1 canary determinism | Low | Medium | Per Task 6 §"Determinism preserved by construction" — placeholder uses domain set names, no `set`/`dict` iteration, PR12 byte-stable harness will validate. If determinism breaks, revert + Sprint 27 carryforward. |
-| Day 0 machine-variance churn-outs (clearlak / ganges / turkpow translate timeouts) recover via Priority 4 but headline reads as +3 path_syntax_error regression | High | Low | Day 13 retest applies bucket-provenance evaluation per PR17 (Task 9 §4.3) — explicit table distinguishes bucket churn from real regression. CHANGELOG narrates the disambiguation. |
+| Priority 4 Option 1 short-circuit recovers srpchase but breaks Tier 0/1 canary determinism | Low | Medium | **REALIZED via different failure mode (Day 4):** translate-time savings worked but the placeholder approach produced structurally wrong MCP emit on srpchase (broken `nu_slack("srn")` literals). Day 4 src/ rolled back; Sprint 27 #1385 carries the redesign. Tier 0/1 determinism never threatened — rollback was on a separate branch before merge. |
+| Day 0 machine-variance churn-outs (clearlak / ganges / turkpow translate timeouts) recover via Priority 4 but headline reads as +3 path_syntax_error regression | High | Low | **N/A post Day 4:** Priority 4 reclassified to Sprint 27 #1385; the 3 models stay in `translate_timeout` for Sprint 26 Day 13 retest. Day 13 retest still applies bucket-provenance evaluation per PR17 (Task 9 §4.3) for any other movement. |
 | PR19 CI extension implementation slips past Day 11 due to GAMS demo installer issues | Medium | Low | Task 8 §"Open Questions" already flagged installer URL stability + license activation + caching as Sprint 26 implementation risks. Day 11 has 4–8h budget; Day 12 buffer absorbs slip if needed. Self-hosted runner with full GAMS license is the documented fallback per Task 8 design. |
 
 ---
