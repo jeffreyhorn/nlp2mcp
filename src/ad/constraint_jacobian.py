@@ -530,9 +530,14 @@ def _expand_sum_body(
         return False
 
     terms: list[Expr] = []
-    for member in members:
+    # Issue #1335: pass the iteration-set position so _substitute_single_index
+    # can eagerly evaluate `ord(sum_var) → Const(pos+1)`. Without this hint,
+    # `_try_eval_offset` would search ALL sets for the substituted element
+    # and find ambiguous positions (e.g., otpop '1974' appears at position 0
+    # in `t`, position 9 in `tt`, position 9 in `th`), leaving ord unresolved.
+    for pos, member in enumerate(members):
         # Substitute sum variable with concrete member
-        term = _substitute_single_index(body, sum_var, member)
+        term = _substitute_single_index(body, sum_var, member, iter_pos=pos)
         # Resolve IndexOffsets in the substituted term
         term = _resolve_index_offsets(term, model_ir, _domain_cache)
         # If unresolved IndexOffset nodes remain after resolution (e.g.,
@@ -543,7 +548,7 @@ def _expand_sum_body(
         # Apply condition if present — use DollarConditional to preserve
         # GAMS $ semantics (skip undefined terms rather than multiply by 0)
         if condition is not None:
-            cond_sub = _substitute_single_index(condition, sum_var, member)
+            cond_sub = _substitute_single_index(condition, sum_var, member, iter_pos=pos)
             cond_resolved = _resolve_index_offsets(cond_sub, model_ir, _domain_cache)
             if _has_unresolved_index_offsets(cond_resolved):
                 return None
@@ -560,16 +565,31 @@ def _expand_sum_body(
     return result
 
 
-def _substitute_single_index(expr: Expr, var_name: str, value: str) -> Expr:
+def _substitute_single_index(
+    expr: Expr,
+    var_name: str,
+    value: str,
+    iter_pos: int | None = None,
+) -> Expr:
     """Substitute a single index variable with a concrete value in an expression.
 
     Replaces occurrences of ``var_name`` in VarRef/ParamRef indices and
     SymbolRef nodes. Function calls such as Call('ord', ...) are left
     unchanged here and may be evaluated later during index offset resolution.
+
+    Issue #1335: When ``iter_pos`` is provided (the 0-based position of
+    ``value`` in the iteration set being expanded), eagerly evaluate
+    ``Call('ord', SymbolRef(var_name))`` to ``Const(iter_pos + 1)``
+    (1-based, matching GAMS semantics). This avoids the ambiguity that
+    arises when the substituted element exists in multiple sets at
+    different positions (e.g., otpop's '1974' is at position 0 in `t`
+    but position 9 in `tt` / `th`), which would otherwise leave
+    ``ord()`` unresolved during downstream offset resolution.
     """
     from ..ir.ast import (
         Binary,
         Call,
+        Const,
         DollarConditional,
         ParamRef,
         Prod,
@@ -634,6 +654,21 @@ def _substitute_single_index(expr: Expr, var_name: str, value: str) -> Expr:
             _SET_LEVEL_INTRINSICS = {"card"}
             if e.func.lower() in _SET_LEVEL_INTRINSICS:
                 return e
+            # Issue #1335: when iter_pos is supplied and we're processing
+            # `Call('ord', (SymbolRef(var_name),))`, eagerly evaluate to
+            # `Const(iter_pos + 1)`. The downstream `_try_eval_offset` lookup
+            # by element name searches all sets and can find ambiguous
+            # positions when an element appears in multiple sets at different
+            # 0-based positions — substituting eagerly here uses the
+            # iteration set's position unambiguously.
+            if (
+                iter_pos is not None
+                and e.func.lower() == "ord"
+                and len(e.args) == 1
+                and isinstance(e.args[0], SymbolRef)
+                and e.args[0].name.lower() == var_lower
+            ):
+                return Const(float(iter_pos + 1))
             new_args = tuple(_sub(arg) for arg in e.args)
             if all(n is o for n, o in zip(new_args, e.args, strict=True)):
                 return e
@@ -985,18 +1020,25 @@ def _compute_equality_jacobian(
             constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
-                # Issue #1045: Resolve IndexOffset nodes to concrete domain elements.
-                # After substitution, k(t+1) with t→"1990" becomes k(IndexOffset("1990",1)).
-                # This resolves it to k("1995") so differentiation can match var instances.
-                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
+            # Issue #1045: Resolve IndexOffset nodes to concrete domain elements.
+            # After substitution, k(t+1) with t→"1990" becomes k(IndexOffset("1990",1)).
+            # This resolves it to k("1995") so differentiation can match var instances.
+            #
+            # Issue #1335: Run offset resolution + sum expansion regardless of
+            # whether eq_domain is non-empty. Scalar equations (eq_domain == ())
+            # can still have inner Sum bodies with offset-arithmetic referencing
+            # the sum variable (e.g., otpop's zdef.. z = sum(t, p(t + (card(t) -
+            # ord(t))))). Without this, _diff_sum sees the unresolved offset
+            # and produces no cross-term — missing nu_zdef from stat_p.
+            constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
-                # Issue #1081: Expand sums with unresolved IndexOffset nodes.
-                # When a sum body contains offsets like ord(l) that reference the
-                # sum variable, expand the sum into explicit terms so each term
-                # can have its IndexOffset resolved to a concrete element.
-                constraint_expr = _expand_sums_with_unresolved_offsets(
-                    constraint_expr, model_ir, resolve_cache
-                )
+            # Issue #1081: Expand sums with unresolved IndexOffset nodes.
+            # When a sum body contains offsets like ord(l) that reference the
+            # sum variable, expand the sum into explicit terms so each term
+            # can have its IndexOffset resolved to a concrete element.
+            constraint_expr = _expand_sums_with_unresolved_offsets(
+                constraint_expr, model_ir, resolve_cache
+            )
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
@@ -1106,13 +1148,15 @@ def _compute_inequality_jacobian(
             constraint_expr = base_expr
             if eq_domain:
                 constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
-                # Issue #1045: Resolve IndexOffset nodes to concrete domain elements
-                constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
+            # Issue #1045: Resolve IndexOffset nodes to concrete domain elements.
+            # Issue #1335: Run regardless of eq_domain (see equality counterpart
+            # at line 986 for the otpop zdef rationale).
+            constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
 
-                # Issue #1081: Expand sums with unresolved IndexOffset nodes
-                constraint_expr = _expand_sums_with_unresolved_offsets(
-                    constraint_expr, model_ir, resolve_cache
-                )
+            # Issue #1081: Expand sums with unresolved IndexOffset nodes
+            constraint_expr = _expand_sums_with_unresolved_offsets(
+                constraint_expr, model_ir, resolve_cache
+            )
 
             # Differentiate w.r.t. each variable (only those referenced)
             for var_name, var_instances in var_instances_cache:
