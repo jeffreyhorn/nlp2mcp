@@ -691,3 +691,145 @@ Plus the AD-residual carryforwards #1334 / #1335 (Priority 5 Day 9 + 10 implemen
 - **Sprint 26 Days 8–10 outlook**: Day 8 stays buffer; Days 9–10 Priority 5 (#1334 / #1335 otpop fix + Checkpoint 2) remain on track. The kand reclassification doesn't change Sprint 26's metric Δ projections — #1141 was already in the "maintain (no Δ gain)" basket per the Day 5 Checkpoint 1 evaluation since the rel_diff threshold for `comparison_status` is fixed.
 
 ---
+
+### Day 8 — Buffer (all 4 buffer uses completed)
+
+**Status:** COMPLETE (2026-05-12) — all 4 buffer uses executed per PLAN_PROMPTS.md Day 8 prompt. Forward-pulled work from Day 9 (#1335 scoping) + Day 12 (PR14 review pass on `launch_mcp.gms`). Sprint 27 design notes added to #1390.
+**Branch:** `sprint26-day8-buffer` (docs-only PR; no `src/` changes).
+
+**Objective (per PLAN.md Day 8):** Absorb any Days 4 / 6 / 7 slippage; otherwise execute as many of the 4 buffer-use options as fit in budget.
+
+#### Buffer use 1: Absorb slippage — N/A
+
+Days 1–7 PRs all landed cleanly:
+- Day 1 PR #1379 (Phase A) ✅ merged
+- Day 2 PR #1380 (Phase A 54-canary validation) ✅ merged
+- Day 3 PR #1382 (Phase B reclassification → Sprint 27 #1381) ✅ merged
+- Day 4 PR #1383 (Priority 4 reclassification → Sprint 27 #1385) ✅ merged
+- Day 4 PR #1384 (Priority 5 #1334 investigation) ✅ merged
+- Day 5 PR #1386 (Checkpoint 1 GO) ✅ merged
+- Day 6 PR #1389 (Priority 2 + Priority 3 closures + kand scoping) ✅ merged
+- Day 7 PR #1391 (Priority 3 kand reclassification → Sprint 27 #1390) ✅ merged
+
+Nothing to absorb. Verdict: N/A.
+
+#### Buffer use 2: Forward-pull Priority 5 #1335 scoping (from Day 9)
+
+Per PLAN_PROMPTS.md Day 8 buffer option 2: scope #1335 to give Day 9 more time for #1334 fix completion.
+
+**Bug reproducer (verified on current main, Day 8):**
+
+```bash
+.venv/bin/python -m src.cli data/gamslib/raw/otpop.gms \
+  -o /tmp/sprint26-day8/otpop/otpop_mcp.gms --skip-convexity-check --quiet
+awk '/^stat_p\(.*\)\.\./, /=E= 0;/' /tmp/sprint26-day8/otpop/otpop_mcp.gms | grep -c nu_zdef
+# Returns: 0 (must be ≥ 1 post-fix)
+```
+
+**Fix surface line-number verification (Day 8 grep against current main):**
+
+| Reference (per AD_RESIDUALS_RECAP.md §3.2) | Current line | Verdict |
+|---|---|---|
+| `_compute_equality_jacobian` | `src/ad/constraint_jacobian.py:903` | ✅ accurate |
+| `if eq_domain:` gate (equality) | `src/ad/constraint_jacobian.py:986` | ✅ accurate |
+| `_compute_inequality_jacobian` | `src/ad/constraint_jacobian.py:1027` | ✅ accurate |
+| `if eq_domain:` gate (inequality) | `src/ad/constraint_jacobian.py:1107` | ✅ accurate |
+| `_resolve_index_offsets` | `src/ad/constraint_jacobian.py:88` | ✅ accurate |
+| `_expand_sums_with_unresolved_offsets` | `src/ad/constraint_jacobian.py:327` | ✅ accurate |
+| `_expand_sum_body` | `src/ad/constraint_jacobian.py:484` | ✅ accurate |
+| `_diff_sum` | `src/ad/derivative_rules.py:1847` | ✅ accurate |
+
+All 8 fix-surface line numbers in AD_RESIDUALS_RECAP §3.2 verify on current main — no drift since Prep Task 7 (2026-05-08) re-sync. Day 9 implementation can proceed against these anchors without re-verification.
+
+**Design recommendation (Day 8):** Per AD_RESIDUALS_RECAP §3.2, two competing options:
+
+- **Approach (a) — gate relaxation (RECOMMENDED, simpler):** drop the `if eq_domain:` predicate; always run `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` regardless of `eq_domain` shape. Sketch:
+
+  ```python
+  # src/ad/constraint_jacobian.py:986+ (and parallel at :1107)
+  constraint_expr = base_expr
+  if eq_domain:
+      constraint_expr = _substitute_indices(constraint_expr, eq_domain, eq_indices)
+  # Always run offset resolution + sum expansion (was gated on eq_domain only)
+  constraint_expr = _resolve_index_offsets(constraint_expr, model_ir, resolve_cache)
+  constraint_expr = _expand_sums_with_unresolved_offsets(
+      constraint_expr, model_ir, resolve_cache
+  )
+  ```
+
+  Risk: changes behavior for ALL scalar-equation paths (currently 4–5 scalar equations across Tier 0/1 canaries). Tier 0/1 byte-stable regression is the safety net.
+
+- **Approach (b) — complementary scalar branch (CONSERVATIVE FALLBACK):** add a separate branch for `not eq_domain` that runs the same `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` calls. Functionally equivalent to (a) but preserves the gate semantics for clarity. Use this if (a) introduces unexpected Tier 0/1 regressions.
+
+**Day 9 implementation plan (carried forward):**
+1. Apply approach (a) at `src/ad/constraint_jacobian.py:986` + `:1107` (~30 min code change).
+2. Add unit test: minimal `ModelIR` with `zdef..  z = sum(t, p(t + (card(t) - ord(t))))` (otpop's time-reversal shape); assert `nu_zdef` appears in the resulting `stat_p` body. (~1h test design + write.)
+3. Translate otpop fresh; verify `nu_zdef` grep returns ≥ 1. (~15 min.)
+4. Tier 0/1 byte-stable regression (combined with #1334 fix in the Day 9 PR). (~15 min byte-compare.)
+
+**Day 9 effort estimate (revised post Day 8 scoping):** #1335 budget shrinks from 2–3h to ~1.5h (~30 min code + ~1h test + ~15 min verify + ~15 min canary check). Freed budget can re-absorb #1334 contingency if Approach 1 needs iteration.
+
+#### Buffer use 3: PR14 review pass on `launch_mcp.gms` (forward-pull from Day 12)
+
+Per PLAN_PROMPTS.md Day 8 buffer option 3 + Day 12 Task 1 (mid-sprint PR14 reaffirmation per CONTRIBUTING.md / Task 10).
+
+**Coverage:** `data/gamslib/mcp/launch_mcp.gms` (394 lines, post Day 1 PR #1379 Phase A consolidated-emit rewrite). The only emit-affecting Sprint 26 artifact ready for review at Day 8 (otpop pending Day 9 #1334 + #1335 fix; srpchase Day 4 src/ was rolled back).
+
+**Reviewer checklist findings:**
+
+| Check | Result |
+|---|---|
+| Clobber patterns (duplicate `.l` / `.fx` on same instance, where one silently overrides; per #1374) | ✅ 35 `.l` overrides total; `sort | uniq -c | sort -rn | head -3` shows 1× each — no duplicates. 0 `.fx` overrides. |
+| Ordering bugs (clamps applied AFTER explicit overrides; per #1374 rocket case) | ✅ Init block (`.l =` per-element overrides on lines 129–142+) is followed by no later clamp; no ordering issue. |
+| Spurious Sum-wraps `sum(t__, ...)` (#1334 pattern) | ✅ 0 occurrences of `sum(t__,`. |
+| Phantom alias-Sum wraps `sum([a-z]__,)` | ⚠ 1 occurrence at line 279: `stat_pweight(s).. ... + 0.01173 * numl * (3 * sum(s__, pweight(s__)) / 1000) ** (-0.54) + ...`. **Verified legitimate** — this is the derivative of the source line 126 `+ 8.5*numl*(3*sum(s, pweight(s))/1000)**0.460` (the inner sum appears in the obj). The `s__` is an alias-renamed dummy iterator avoiding name collision with the outer eq-domain `s`. NOT a phantom. |
+| Missing cross-terms (#1335 pattern) | ✅ Phase A's target `stat_iweight(s)` (line 276) has the expected consolidated `sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` shape per Day 1 PR #1379. |
+
+**Verdict:** `launch_mcp.gms` is clean post-Phase A — no clobber, no phantom Sum-wraps, no ordering bugs, no missing cross-terms. Day 12 review list drops `launch_mcp.gms`; only `otpop_mcp.gms` remains for Day 12 (post Day 9 emit regeneration).
+
+#### Buffer use 4: Sprint 27 design notes (for #1381, #1385, #1390)
+
+Per PLAN_PROMPTS.md Day 8 buffer option 4: "sketch out design notes in advance of Sprint 27. **Do NOT begin `src/` implementation in Sprint 26**."
+
+**#1381 (Pattern C Phase B redesign):** ✅ already complete — `docs/issues/ISSUE_1381_*.md` has full Phase B-1 / B-2 / B-3 breakdown (3–5h + 3–5h + 4–6h = 10–16h total) + Tests sections (B-1, B-2, B-3, Integration tests) + Files Involved + Estimated Effort + Scope and Sprint Routing. Day 8 verified the design is still accurate (line-number references in the doc use only filename paths, no specific line numbers to drift; underlying patch sites in `src/kkt/stationarity.py` are AD-architecture-level and stable). No update needed.
+
+**#1385 (Option 1 short-circuit redesign):** ✅ already complete — `docs/issues/ISSUE_1385_*.md` has full Phase 1 / 2 / 3 breakdown (3–4h + 4–6h + 3–6h = 10–16h total) + Tests sections (Phase 1 deliverable, Phase 2, Phase 3 integration) + Files Involved + Lessons Learned. Day 8 verified the design is still accurate. No update needed.
+
+**#1390 (kand tree-predicate-aliased Sum architecture redesign):** ⚠ updated Day 8 — `docs/issues/ISSUE_1390_*.md` previously had only "Investigation pointers" + a brief effort estimate. Day 8 added a §"Proposed Fix Approach — Three Sub-Phases" section (Phase 1: 3–4h architecture choice between Option A predicate-preserving cross-term vs Option B emit-time guard reconstruction + Phase 0 acceptance gate; Phase 2: 4–6h implementation; Phase 3: 3–6h integration test coverage + Tier 0/1 byte-stable regression) plus a §"Tests to Add (Sprint 27)" section (Phase 1 deliverable + Phase 2 unit tests + Phase 3 integration test in `tests/integration/ad/test_kand_tree_predicate.py`). Brings #1390 up to the same design-doc depth as #1381 / #1385.
+
+**Sprint 27 carryforward design surface summary (post Day 8 buffer):**
+
+| Issue | Design status | Effort | Phase 0 acceptance gate? |
+|---|---|---|---|
+| #1381 Pattern C Phase B | Complete (Day 3) — 3 sub-phases + integration tests | 10–16h | Yes — per Sprint 27 prep methodology |
+| #1385 Option 1 short-circuit | Complete (Day 4) — 3 phases + lessons learned | 10–16h | Yes — established by this issue |
+| #1390 kand tree-predicate Sum | Complete (Day 8) — 3 phases + tests + files | 10–16h | Yes — per established methodology |
+
+All three Sprint 27 carryforwards now have parity design documentation. Sprint 27 prep can pick up directly from these docs without additional scoping.
+
+#### Updates to downstream PLAN.md / PLAN_PROMPTS.md
+
+Day 8 forward-pulls work from Days 9 + 12:
+
+- **Day 9** (`PLAN.md` line 274, `PLAN_PROMPTS.md` line 360): #1335 scoping pulled forward to Day 8. Day 9 §"Priority 5 #1335 tasks" updated to reference Day 8 scoping + drop the design step; effort estimate reduced from 2–3h to ~1.5h. Both files updated this Day 8 PR.
+- **Day 12** (`PLAN.md` line 350, `PLAN_PROMPTS.md` line 501): `launch_mcp.gms` PR14 review pulled forward to Day 8. Day 12 §"Read end-to-end" list updated to drop `launch_mcp.gms`; only `otpop_mcp.gms` remains in scope. Both files updated this Day 8 PR.
+
+#### Quality checks
+
+- `make test` (no `src/` changes Day 8): re-verified clean per CONTRIBUTING.md / docs/development/AGENTS.md.
+
+#### Day 8 deliverables (this PR)
+
+1. SPRINT_LOG.md Day 8 entry (this section).
+2. CHANGELOG.md Day 8 bullet.
+3. `docs/issues/ISSUE_1390_*.md` — added §"Proposed Fix Approach — Three Sub-Phases" + §"Tests to Add" sections.
+4. PLAN.md Day 9 + Day 12 — updated to reflect forward-pulled work.
+5. PLAN_PROMPTS.md Day 9 + Day 12 — updated to reflect forward-pulled work.
+
+#### Notes (Day 8)
+
+- **No `src/` changes.** Day 8 is buffer + docs only. No PR14 obligation.
+- **Effort actual ~4h** vs ~6h budget per PLAN.md (#1335 scoping ~1h + `launch_mcp.gms` review ~1h + #1390 design notes ~1h + PLAN/PROMPTS updates ~30 min + SPRINT_LOG/CHANGELOG ~30 min).
+- Day 9 effort estimate revised down to ~6.5h (was ~5–8h): #1334 ~3–5h + #1335 ~1.5h (post Day 8 scoping pull); freed budget absorbs #1334 contingency if Approach 1 needs iteration.
+
+---

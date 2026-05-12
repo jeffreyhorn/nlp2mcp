@@ -93,17 +93,63 @@ After enumeration, each match-positive concrete-element pair is converted back t
 
 3. **Phase 0 acceptance gate** (per Sprint 27 prep methodology established Sprint 26 Days 3 + 4): translate kand with a prototype patch + verify GAMS compile-clean + hand-derive `stat_y('p-1', 'time-2', 'n-4')` KKT instance vs the emit BEFORE committing the full implementation budget. The Sprint 26 Day 3 + Day 4 reclassifications established that prep-task design validation at the patch-site level is insufficient; empirical end-to-end correctness verification is required.
 
-## Files involved (preliminary)
+## Proposed Fix Approach — Three Sub-Phases
 
-- `src/ad/constraint_jacobian.py` (`_compute_inequality_jacobian` + `_compute_equality_jacobian` per-equation enumeration; `_expand_sum_body` / `_expand_sums_with_unresolved_offsets` static-set substitution)
-- `src/ad/derivative_rules.py` (`_partial_collapse_sum` + `_partial_index_match`; `_diff_varref` with `bound_indices`)
-- `src/kkt/stationarity.py` (cross-term accumulation site)
-- `data/gamslib/raw/kand.gms` (source — kept as the target reproducer)
-- `data/gamslib/mcp/kand_mcp.gms` (current emit with 22 phantom terms)
+(Phase decomposition added Sprint 26 Day 8 per buffer use 4 — Sprint 27 design notes only. No `src/` implementation at this point. Mirrors the Phase 1/2/3 structure used in #1381 and #1385 Sprint 27 carryforwards.)
+
+### Phase 1 (~3–4h): Inventory + design choice
+
+**Deliverable:** decision between two competing architecture options.
+
+- **Option A — Predicate-preserving cross-term:** detect when a Sum body has a static-set predicate over the equation domain (`sum(tree(nn, eq_domain_index), body)`) and preserve the predicate as a guard rather than enumerating. Touch sites: `src/ad/constraint_jacobian.py:903` / `:1027` per-equation iteration; introduce a `_preserve_predicate_constrained_sum` helper analogous to Issue #666's `_preserve_subset_var_indices` at `src/kkt/stationarity.py:2943+`.
+- **Option B — Emit-time guard reconstruction:** let the per-instance enumeration run as today, but post-process the AD output to detect when the cross-terms differ only by a `lam_<eq>` index that follows a predicate, and collapse them back into a single guarded Sum at the stationarity-assembly step. Touch sites: `src/kkt/stationarity.py` cross-term accumulation; new post-processing pass.
+
+Phase 1 must include the **Phase 0 acceptance gate** (per Sprint 26 Days 3 + 4 reclassification methodology): translate kand with a Phase-1 prototype + verify GAMS compile-clean + hand-derive `stat_y('p-1', 'time-2', 'n-4')` KKT instance against the emit. BEFORE committing the Phase 2 implementation budget.
+
+### Phase 2 (~4–6h): Implementation
+
+Implement the chosen option from Phase 1. Reuse existing infrastructure:
+- `_partial_collapse_sum` + `_partial_index_match` (`src/ad/derivative_rules.py`) — these are the alias-AD matching helpers; should NOT need modification if Option A is chosen (the architecture change is at the per-equation iteration level, not the per-term differentiation level).
+- `_expand_sum_body` / `_expand_sums_with_unresolved_offsets` (`src/ad/constraint_jacobian.py:484`, `:327`) — these handle static-set element substitution; Option A would add a fast-path that skips expansion when the Sum has a predicate constraining iteration to a small predicate-satisfying set.
+- `KKTSystem.param_domain_widenings` precedent (Issue #1164/#1175, `src/kkt/kkt_system.py:201`) — model for how to communicate the predicate structure from the IR to the emit-time stationarity assembly.
+
+### Phase 3 (~3–6h): Integration test coverage + Tier 0/1/2 byte-stable regression
+
+Integration tests verifying EMIT CORRECTNESS (hand-derived KKT shape + GAMS compile-clean), not just "translation completes". This is the Sprint 26 Days 3 + 4 lesson — narrow unit tests that only verify "the patch fires" pass even when the downstream emit is structurally wrong.
+
+## Tests to Add (Sprint 27)
+
+### Phase 1 deliverable
+
+- 1 hand-derived KKT shape verification document at `docs/issues/ISSUE_1390_kand_phase_0_handderived_kkt.md` (or inline in this issue body) — pins the expected `stat_y('p-1', 'time-2', 'n-4')` and `stat_y('p-2', 'time-2', 'n-9')` cross-term shapes.
+
+### Phase 2
+
+- 1 unit test in `tests/unit/ad/test_predicate_constrained_sum.py` (synthetic 3-element tree predicate + Sum body) asserting the chosen architecture produces a single guarded Sum cross-term, not per-element enumeration.
+- 1 unit test asserting the predicate is preserved through `differentiate_expr` for both equality-jacobian and inequality-jacobian paths.
+
+### Phase 3 (integration)
+
+- 1 integration test in `tests/integration/ad/test_kand_tree_predicate.py`:
+  - Translate kand from `data/gamslib/raw/kand.gms`.
+  - Assert `grep -cE "lam_dembalx\(j,t\+1,n[\+\-][0-9]+\)" data/gamslib/mcp/kand_mcp.gms` returns 0 (no phantom-offset cross-terms).
+  - Assert `grep -cE "sum\([a-z_]+\\\$tree\(n," data/gamslib/mcp/kand_mcp.gms` returns ≥ 1 (single predicate-guarded Sum).
+  - Run `gams data/gamslib/mcp/kand_mcp.gms lo=2` and assert MODEL STATUS 1 Optimal.
+  - Assert NLP-MCP rel_diff < 1% (vs current 92.5%).
+- Tier 0/1 byte-stable canary check (11 models, mirror Sprint 26 Day 5 retest list).
+
+## Files Involved
+
+- `src/ad/constraint_jacobian.py` (`_compute_inequality_jacobian` + `_compute_equality_jacobian` per-equation enumeration at `:903` / `:1027`; `_expand_sum_body` / `_expand_sums_with_unresolved_offsets` static-set substitution at `:484` / `:327`).
+- `src/ad/derivative_rules.py` (`_partial_collapse_sum` + `_partial_index_match`; `_diff_varref` with `bound_indices`).
+- `src/kkt/stationarity.py` (cross-term accumulation site; Option B post-processing would land here).
+- `src/kkt/kkt_system.py` (`param_domain_widenings` precedent at `:201` — pattern for communicating predicate structure to emit time).
+- `data/gamslib/raw/kand.gms` (source — kept as the target reproducer; do NOT use any other model for Phase 0 acceptance gate).
+- `data/gamslib/mcp/kand_mcp.gms` (current emit with 22 phantom terms; will regenerate post-fix).
 
 ## Effort estimate
 
-10–16h across three sub-phases (architectural change + integration tests + Tier 0/1 byte-stable regression). Mirrors the Sprint 27 #1381 (Pattern C Phase B redesign) + #1385 (Option 1 short-circuit redesign) effort profiles for similar AD-architecture-level reclassifications.
+10–16h across three sub-phases (Phase 1: 3–4h architecture choice + Phase 0 acceptance gate; Phase 2: 4–6h implementation; Phase 3: 3–6h integration test coverage + Tier 0/1 byte-stable regression). Mirrors the Sprint 27 #1381 (Pattern C Phase B redesign) + #1385 (Option 1 short-circuit redesign) effort profiles for similar AD-architecture-level reclassifications.
 
 ## Related
 

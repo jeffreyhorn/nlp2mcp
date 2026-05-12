@@ -357,17 +357,18 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
 
 ---
 
-## Day 9 Prompt: Priority 5 #1334 Fix + #1335 Start
+## Day 9 Prompt: Priority 5 #1334 Fix + #1335 Implementation
 
 **Branch:** `sprint26-day9-priority-5-1334-and-1335`.
 
-**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Begin #1335 fix.
+**Objective:** Land Priority 5 #1334 fix per Day 4 scoping. Land #1335 fix per Day 8 scoping (Day 8 buffer pulled the #1335 design forward; Day 9 lands the src/ implementation only).
 
 **Prerequisites:**
 - Day 4 docs PRs merged (Priority 4 reclassification to Sprint 27 #1385 + Priority 5 #1334 investigation per PR #1384).
 - Day 4 #1334 routing decision documented (re-opened or successor filed).
+- Day 8 buffer PR merged (#1335 scoping + line-number verification + bug reproducer captured per Day 8 SPRINT_LOG §"Buffer use 2").
 
-**Tasks to Complete (~5–8 hours):**
+**Tasks to Complete (~4.5–6.5 hours, ~3–5h #1334 + ~1.5h #1335 — #1335 design pulled forward Day 8; freed budget absorbs #1334 contingency if Approach 1 needs iteration):**
 
 **Priority 5 #1334 fix (~3–5h):**
 
@@ -382,14 +383,19 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
    # Expected: 0 lines (was 2 pre-fix per Task 7 §2.2)
    ```
 
-**Priority 5 #1335 fix (~2–3h):**
+**Priority 5 #1335 fix (~1.5h — design pulled forward Day 8; Day 9 implementation only):**
 
-1. Implement scalar-equation gating fix per AD_RESIDUALS_RECAP.md §3.2: extend the offset-resolution / sum-expansion pipeline to scalar equations. The `if eq_domain:` gate at `src/ad/constraint_jacobian.py:986` + `:1107` currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`.
+Day 8 SPRINT_LOG §"Buffer use 2: #1335 scoping" verified:
+- Bug reproducer: `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` returns 0 on current main (must be ≥ 1 post-fix).
+- Fix surface line numbers: `src/ad/constraint_jacobian.py:986` (equality jacobian gate) and `:1107` (inequality jacobian gate) — both verified accurate on current main.
+- Design recommendation: extend the gate to always run offset resolution + sum expansion regardless of `eq_domain` shape; the conservative fallback is a complementary scalar-equation branch that runs the same pipeline.
+
+1. Apply the gate relaxation at `src/ad/constraint_jacobian.py:986` + `:1107` (the `if eq_domain:` gate that currently skips `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` for scalar equations like `zdef`).
 2. Add unit test asserting `nu_zdef` cross-term emission in `stat_p` body for the otpop time-reversal-on-`p` shape.
 3. Translate otpop fresh; verify per Task 7 §What-needs-to-be-done verification recipe:
    ```bash
    awk '/^stat_p\(.*\)\.\./, /=E= 0;/' /tmp/sprint26-day9/otpop_mcp.gms | grep -c nu_zdef
-   # Expected: ≥ 1 (was 0 pre-fix per Task 7 §2.3)
+   # Expected: ≥ 1 (was 0 pre-fix per Task 7 §2.3 + Day 8 verification)
    ```
 
 **Tier 0 + Tier 1 + Tier 2** golden-file regression for both fixes (single full sweep for the combined PR).
@@ -485,7 +491,7 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
 
 **Branch:** `sprint26-day12-buffer`.
 
-**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per CONTRIBUTING.md §"Emit-Affecting PRs" reviewer obligations. Buffer for any Days 1–11 slippage. **Updated Day 3:** dropped camcge / cesam2 / fawley (Pattern C Phase B deferred to Sprint 27 #1381) — those artifacts didn't change this sprint.
+**Objective:** Mid-sprint "read the regenerated `.gms`" pass on the models with emit changes this sprint per CONTRIBUTING.md §"Emit-Affecting PRs" reviewer obligations. Buffer for any Days 1–11 slippage. **Updated Day 3:** dropped camcge / cesam2 / fawley (Pattern C Phase B deferred to Sprint 27 #1381) — those artifacts didn't change this sprint. **Updated Day 8:** dropped `launch_mcp.gms` — Day 8 buffer pulled the Phase A artifact review forward (see Day 8 SPRINT_LOG §"Buffer use 3"; clean post-Phase A, no clobber / phantom Sum-wraps / missing cross-terms detected).
 
 **Prerequisites:**
 - Days 1–11 PRs merged.
@@ -493,8 +499,7 @@ No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format 
 **Tasks to Complete (~4–6 hours):**
 
 1. **Read end-to-end:**
-   - `data/gamslib/mcp/launch_mcp.gms` (post Day 1 Phase A fix — PR #1379)
-   - `data/gamslib/mcp/otpop_mcp.gms` (post Day 9 Priority 5 #1334 + #1335 fixes)
+   - `data/gamslib/mcp/otpop_mcp.gms` (post Day 9 Priority 5 #1334 + #1335 fixes) — the only emit-affecting artifact still in scope for this review pass after the Day 8 forward-pull of `launch_mcp.gms`.
    - Plus any other artifacts that regenerated this sprint. **srpchase dropped Day 4** per Priority 4 reclassification to Sprint 27 #1385 (src/ rolled back; no Sprint 26 emit artifact). iswnm / sarf / mexls / nebrazil deferred alongside srpchase to Sprint 27 #1385.
 2. Per CONTRIBUTING.md §"What reviewers must do" — look for:
    - **Clobber patterns** (duplicate assignments where one silently overrides the other; see #1374).
