@@ -401,6 +401,49 @@ Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
 
 **Sprint 26 Day 4 Priority 5 deliverable:** investigation + scoping only. **NO `src/` changes** — Day 9 picks up implementation alongside #1335.
 
+##### Approach 1 sketch (per ISSUE_1334.md §Approach 1, refined per Task 7 §3.1)
+
+**Patch site (verified Day 4 via `grep -nE`):** `_replace_indices_in_expr` ParamRef branch in `src/kkt/stationarity.py` (current line ~2448; grep anchor `def _replace_indices_in_expr(` to avoid line drift).
+
+**Bug shape recap.** otpop's source body for `kdef`:
+
+```gams
+kdef..  k =e= sum(t, del(t) * (x(t) - x.fx(t)) * 0.365 * (1 - c)) * v;
+```
+
+When AD differentiates with respect to `x(tt)` for the indexed-stationarity path:
+- The Sum's iteration index is `t` (a subset of `tt` in otpop's set declaration).
+- `del(t)` is a parameter on subset `t`.
+- `x(tt)` substitution should propagate through to `del(tt)` (canonical superset name) so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c)` — a per-tt scalar.
+
+What actually happens (current main):
+- The Sum-internal `t` doesn't get substituted to `tt` consistently across `del(t)` and `x(t)`.
+- `x(t)` becomes `x(tt)` (correctly, via the indexed-stationarity rewrite).
+- `del(t)` gets WRAPPED in a residual `Sum(("t__",), ...)` — the offset-resolution machinery treats the leftover unbound `t` as a free index requiring an aggregating Sum. The `t__` is a fresh alias minted to bind it.
+- The `nu_kdef` cross-term then emits as `sum(t__, ((-1) * (del(t__) * x(tt) * 0.365 * (1 - c))) * nu_kdef)` — over-counting `del` by `|t|`.
+
+**Approach 1 fix (Day 9 scope):**
+
+1. In `_replace_indices_in_expr`, identify the ParamRef branch where `param.indices` includes a name that's been substituted in a parallel VarRef in the same expression context.
+2. When `param_domain` (the parameter's declared domain) is a strict subset of `equation_domain` (the stationarity equation's domain) AND a parallel VarRef has been substituted to use the eq-domain variable, align the parameter substitution with the variable substitution: rewrite `del(t)` → `del(tt)` (using the eq-domain index) the same way `x(t)` was rewritten to `x(tt)`.
+3. Result: the Jacobian entry for `(kdef, x(tt))` becomes a clean scalar `del(tt) * 0.365 * (1 - c)` — no Sum wrap, no `t__`.
+
+**Alternative (Approach 2 — fallback if Approach 1 has unexpected side-effects):** targeted suppression in `_add_indexed_jacobian_terms` (per Task 7 §3.1 fix-site correction; was incorrectly attributed to `_add_jacobian_transpose_terms_scalar` in earlier ISSUE_1334.md drafts — that function only handles SCALAR stationarity; otpop's `stat_p(tt)` and `stat_x(tt)` are INDEXED). Check whether unconstrained indices in the Jacobian-entry derivative match the equation-domain guard restriction (`$(t(tt))`); if they do, substitute and skip the `Sum` wrap.
+
+**Day 9 acceptance gate** (per Task 7 §3.1):
+- otpop emit `grep -cE "sum\(t__," data/gamslib/mcp/otpop_mcp.gms` returns 0 (currently 2).
+- otpop NLP-warm-started MCP residual on `stat_x('1990')` shrinks toward 0 (Day 10 acceptance — full reproducer per ISSUE_1334.md §Diagnostic).
+- Tier 0 + Tier 1 (11 models) byte-stable across the regression.
+- Combined PR with #1335 narrow AD fix (same target model otpop, same verification recipe).
+
+**Estimated effort (Day 9):** 4–8h #1334 (Approach 1 implementation + investigation contingency) + 4–8h #1335 (per Task 7 §3.2 scalar-equation `if eq_domain:` gate fix at `src/ad/constraint_jacobian.py:986+:1107`) = 8–18h total Priority 5 (Day 9 + Day 10 wrap).
+
+##### Notes (Priority 5)
+
+- #1334 doesn't subsume #1357 (per Task 7 §2.4 — different code paths: `src/kkt/stationarity.py` for #1334 vs `src/kkt/complementarity.py` + `src/emit/emit_gams.py` for #1357). #1357 stays in Sprint 27 deferral.
+- #1335 (`nu_zdef` missing from `stat_p`) is a separate but related bug — same target model otpop, different fix-site (`src/ad/constraint_jacobian.py:986`/`:1107` `if eq_domain:` gate). Day 9 lands both fixes in one PR per Task 7 §"Combined PR" framing.
+- This Priority 5 sub-PR is docs-only — no `src/` changes per Day 4 scoping. Day 9 picks up the implementation.
+
 #### Notes
 
 - The Day 4 src/ commit (`243fe578` on the Day 4 PR branch) was reverted via `git reset --hard main` on the branch. The PR title is updated to reflect reclassification.
