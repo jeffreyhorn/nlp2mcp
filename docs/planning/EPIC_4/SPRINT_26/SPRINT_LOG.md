@@ -627,3 +627,67 @@ stat_y(j,t,n).. (prob(n) * f(j,t) * 1$(tn(t,n)) + ((-1) * lam_dembalx(j,t,n))$(t
 - Sprint 27 Pattern E cohort cleanup is now complete: 2 of the original 3 closed (#1144, #1147 refiled #1388); kand (#1141) remains as the standalone alias-AD residual being addressed Day 7.
 
 ---
+
+### Day 7 — Priority 3 kand RECLASSIFIED to Sprint 27 #1390 (intractable in budget)
+
+**Status:** COMPLETE (2026-05-12) — Day 7 Task 5 contingency triggered: kand fix is AD-architecture-level (exceeds 4–6h budget). Reclassified to Sprint 27 #1390.
+**Branch:** `sprint26-day7-priority-3-kand`.
+
+**Objective (per PLAN.md Day 7):** Land kand alias-AD fix per Day 6 scoping; un-xfail affected test; update source comment ref.
+
+**Day 7 outcome:**
+
+1. **Step 1 (kand fix):** Attempted root-cause localization per Day 6 scoping. Day 7 `SPRINT25_DAY2_DEBUG=1` trace analysis (see kand source `data/gamslib/raw/kand.gms:99–100` `dembalx(j,tn(t,n))..` body) confirms the bug is **AD-architecture-level**, not a localized helper bug.
+2. **Step 2 (xfail cleanup):** No-op — the xfail test `tests/unit/kkt/test_pattern_c_alias_offset_gate.py::test_alias_only_conditional_sum_emits_no_phantom_offsets` was already un-xfailed in Day 1 PR #1379. Verified `pytest.mark.xfail` decorator absent on current main (Day 7 grep confirms).
+3. **Step 3 (source comment cleanup):** No-op — `grep -nE "#1142" src/` returns 0 matches on current main. The `src/kkt/stationarity.py:4336` reference cited by PATTERN_A_RECLASSIFICATION_PLAN.md was already removed in PR #1379. Day 6 SPRINT_LOG note about this being deferred to Day 7 is superseded.
+4. **Step 4 (Task 5 contingency):** **Triggered.** Filed Sprint 27 #1390 ("kand: alias-AD per-instance enumeration produces 22 phantom-offset cross-terms in stat_y (tree-predicate-aliased Sum architecture redesign)") with the full Day 6 + Day 7 evidence. Closed #1141 with carryforward comment.
+5. **Step 5 (Tier 0/1/2 regression):** Not applicable — no `src/` changes.
+
+#### Day 7 trace analysis (intractability evidence)
+
+`SPRINT25_DAY2_DEBUG=1` trace captured against current main (~5,886 lines; see `/tmp/sprint26-day6-kand/trace.stderr` from Day 6 retained for Sprint 27 #1390 reference):
+
+```
+[diff_varref] enter name='y' expr.indices=('p-2', 'time-1', 'nn') wrt_indices=('p-2', 'time-2', 'n-5') bound_indices=['nn']
+[diff_varref] -> Const(0.0) [no match]
+[diff_varref] enter name='y' expr.indices=('p-2', 'time-2', 'n-9') wrt_indices=('p-2', 'time-2', 'n-5') bound_indices=[]
+[diff_varref] -> Const(0.0) [no match]
+[diff_varref] enter name='y' expr.indices=('p-2', 'time-2', 'n-9') wrt_indices=('p-2', 'time-2', 'n-9') bound_indices=[]
+[diff_varref] -> Const(1.0) [exact index match]
+```
+
+The AD cross-term enumeration step iterates over each static `n`-element as a wrt-candidate, producing one cross-term per element-substitution; later steps convert these back to symbolic + offset form at emit time. This generates the 22 phantom-offset terms `lam_dembalx(j,t+1,n+k)` for k = -8..+11 instead of a single predicate-guarded Sum `sum(n_inner$tree(n,n_inner), eps * lam_dembalx(j,t+1,n_inner))`.
+
+**Why this can't fit in a 4–6h budget:** the per-instance enumeration is the architecture of `_compute_inequality_jacobian` + `_compute_equality_jacobian` (`src/ad/constraint_jacobian.py:903`, `:1027`) — single-helper patches in `_partial_collapse_sum` / `_partial_index_match` (`src/ad/derivative_rules.py`) won't suffice. Day 6 + Day 7 evidence localizes this as a Sprint 27 #1390 architectural redesign (~10–16h, mirroring #1381 / #1385 effort profiles).
+
+#### Quality checks
+
+- `make test` (no `src/` changes Day 7): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile:33–39, so `make typecheck` is redundant once `make lint` has been run.)
+- **kand emit unchanged Day 7:** no PR14 obligation (no `src/` changes).
+
+#### Day 7 deliverables (this PR)
+
+1. Sprint 27 successor issue filed (#1390).
+2. #1141 closed with carryforward comment.
+3. `ISSUE_1141_kand-alias-tree-mismatch.md` moved to `docs/issues/completed/`.
+4. `ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md` created in `docs/issues/`.
+5. SPRINT_LOG.md Day 7 entry (this section).
+6. CHANGELOG.md Day 7 bullet.
+
+#### Sprint 27 carryforward status update
+
+Sprint 26 has now produced **3 architectural reclassifications**, all sharing the same root-cause class (prep-task design validation at patch-site level + downstream-handling assumption that doesn't hold empirically; established Sprint 27 prep methodology = Phase 0 acceptance gate):
+
+- **#1381** (Sprint 26 Day 3) — Pattern C Phase B redesign (camcge + cesam2 plain-alias generalization).
+- **#1385** (Sprint 26 Day 4) — Option 1 short-circuit redesign (srpchase + iswnm + sarf + mexls + nebrazil translation-timeout candidates).
+- **#1390** (Sprint 26 Day 7) — kand tree-predicate-aliased Sum architecture redesign.
+
+Plus the AD-residual carryforwards #1334 / #1335 (Priority 5 Day 9 + 10 implementation target — narrow fixes still in scope) and #1378 (launch PATH numerics deferral, Day 1).
+
+#### Notes (Day 7)
+
+- **No `src/` changes.** Day 7 is GitHub-only mechanical + docs work after the Task 5 contingency trigger. Quality checks verified clean.
+- **Effort actual ~2h** vs ~4–6h budget per PLAN.md (Day 6 scoping + Day 7 trace analysis combined produced the intractability evidence in 1 of the budgeted 4–6 hours; remaining time was issue filing + docs).
+- **Sprint 26 Days 8–10 outlook**: Day 8 stays buffer; Days 9–10 Priority 5 (#1334 / #1335 otpop fix + Checkpoint 2) remain on track. The kand reclassification doesn't change Sprint 26's metric Δ projections — #1141 was already in the "maintain (no Δ gain)" basket per the Day 5 Checkpoint 1 evaluation since the rel_diff threshold for `comparison_status` is fixed.
+
+---
