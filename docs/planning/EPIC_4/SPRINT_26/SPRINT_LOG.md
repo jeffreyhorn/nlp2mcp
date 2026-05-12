@@ -405,16 +405,18 @@ Detailed status + Approach 1 sketch in the Priority 5 PR. Highlights:
 
 **Patch site (verified Day 4 via `grep -nE`):** `_replace_indices_in_expr` in `src/kkt/stationarity.py` (def at line ~2534; the `case ParamRef` branch at ~2652+; grep anchor `def _replace_indices_in_expr(` to avoid line drift).
 
-**Bug shape recap.** otpop's source body for `kdef` (current emit at `data/gamslib/mcp/otpop_mcp.gms:224`):
+**Bug shape recap.** otpop's source body for `kdef` (NLP source at `data/gamslib/raw/otpop.gms:99`; the emit at `data/gamslib/mcp/otpop_mcp.gms:224` is the byte-identical body with `=e=` → `=E=` capitalization):
 
 ```gams
-kdef.. k =E= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
+kdef.. k =e= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)));
 ```
 
+Source declarations (`data/gamslib/raw/otpop.gms:27`): `del(t)` is declared on subset `t` (where `t ⊂ tt` per the set declaration in lines 12–13 of the source). The MCP emit at `data/gamslib/mcp/otpop_mcp.gms:30` promotes this to `del(tt)` via the Issue #666 superset-promotion rule — but the bug is that the ParamRef substitution machinery used during AD does NOT apply the same promotion to source-body call-site references like `del(t)` inside the Sum.
+
 When AD differentiates with respect to `x(tt)` for the indexed-stationarity path (`stat_x(tt)`):
-- The Sum's iteration index is `t` (a subset of `tt` in otpop's set declaration).
-- `del(t)` is a parameter on subset `t`.
-- `x(tt)` substitution should propagate through to `del(tt)` (canonical superset name) so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c) * p(tt)` — a per-`tt` scalar (the `p(tt)` factor is the other variable in the product `p(t) * x(t)`; differentiating w.r.t. `x` leaves `p` as the coefficient). The symmetric `stat_p(tt)` case gets `del(tt) * 0.365 * (1 - c) * x(tt)`.
+- The Sum's iteration index is `t` (the subset; `t ⊂ tt`).
+- `del` is declared on subset `t` in the source; the call-site `del(t)` uses that declared domain.
+- Substitution `x(t) → x(tt)` should propagate to a parallel `del(t) → del(tt)` so the Jacobian entry's coefficient becomes `del(tt) * 0.365 * (1 - c) * p(tt)` — a per-`tt` scalar (the `p(tt)` factor is the other variable in the product `p(t) * x(t)`; differentiating w.r.t. `x` leaves `p` as the coefficient). The symmetric `stat_p(tt)` case gets `del(tt) * 0.365 * (1 - c) * x(tt)`.
 
 What actually happens (current main):
 - The Sum-internal `t` doesn't get substituted to `tt` consistently across `del(t)`, `p(t)`, and `x(t)`.
