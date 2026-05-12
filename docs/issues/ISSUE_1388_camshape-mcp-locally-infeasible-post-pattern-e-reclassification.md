@@ -10,7 +10,7 @@
 **Cross-references:**
 - Predecessor: #1147 (now CLOSED 2026-05-12 via Sprint 26 Day 6 — see [docs/issues/completed/ISSUE_1147_camshape-alias-compilation-error.md](completed/ISSUE_1147_camshape-alias-compilation-error.md)).
 - Sibling (closed Sprint 25): #1160 ("camshape: MCP pairing error — stat_rdiff.rdiff unmatched equation (subset domain mismatch)") — fixed; current bug is distinct.
-- Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md](planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md) §"Issue #1147".
+- Reclassification source: [docs/planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md](../planning/EPIC_4/SPRINT_26/PATTERN_E_STATUS.md) §"Issue #1147".
 
 ## Problem Summary
 
