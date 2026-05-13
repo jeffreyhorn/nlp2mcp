@@ -9,7 +9,7 @@
 **Target Sprint:** Sprint 27 (10–16h across architectural change + integration tests + Tier 0/1 byte-stable regression).
 **Cross-references:**
 - Predecessor: #1334. Closure history: originally CLOSED on GitHub 2026-05-05 (unintentional auto-closure via PR #1359 — a docs-only PR whose body explicitly listed #1334 as supposed-to-stay-OPEN); REOPENED Sprint 26 Day 4 (PR #1384) during Priority 5 #1334 investigation; close-and-refiled to this Sprint 27 #1393 on Sprint 26 Day 9 (the Day 9 GitHub closure + ISSUE_1334 doc move to `docs/issues/completed/` reflects the carryforward, not a new fix landing). See [docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md](completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md) for the original 2026-05-02 framing.
-- Companion: #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate, narrower scope than this issue's 10–16h architectural redesign). Same target model otpop; see `docs/issues/ISSUE_1335_*.md` for the corrected fix-surface diagnosis with three competing Sprint 27 approaches.
+- Companion: #1335 — Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate, narrower scope than this issue's 10–16h architectural redesign). Same target model otpop; see `[docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md](ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md)` for the corrected fix-surface diagnosis with three competing Sprint 27 approaches.
 - Sister Sprint 27 carryforwards (AD-architecture-level reclassifications):
   - #1381 (Pattern C Phase B redesign — Sprint 26 Day 3).
   - #1385 (Option 1 short-circuit redesign — Sprint 26 Day 4).
@@ -25,7 +25,7 @@ otpop's `kdef.. k =e= sum(t, del(t) * (0.365 * (1 - c) * p(t) * x(t) - rd(t)))` 
   ```
   — single guarded term (`x(t)` matches `x(tt)` only when `t(tt)` holds).
 
-- **Observed `stat_x(tt)` cross-term** (current main; Day 9 #1335 fix attempt rolled back so this is the pre-Day-9 baseline shape — see `docs/issues/ISSUE_1335_*.md` §"Sprint 26 Day 9 Update — Fix Attempt Rolled Back" for the narrative):
+- **Observed `stat_x(tt)` cross-term** (current main; Day 9 #1335 fix attempt rolled back so this is the pre-Day-9 baseline shape — see `[docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md](ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md)` §"Sprint 26 Day 9 Update — Fix Attempt Rolled Back" for the narrative):
   ```
   sum(t__, ((-1) * (del(t__) * 0.365 * (1 - c) * p(tt))) * nu_kdef)$(t(tt))
   ```

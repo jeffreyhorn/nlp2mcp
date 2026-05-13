@@ -1,10 +1,10 @@
 # otpop: PATH $171 Domain Violations in Stationarity (Sprint 25 Bucket Transfer)
 
 **GitHub Issue:** [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357)
-**Status:** OPEN — Sprint 26 carryforward (filed Sprint 25 Day 13). Possibly subsumed by **#1334**.
+**Status:** OPEN — Sprint 27 carryforward (filed Sprint 25 Day 13). Comparison target for Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) (the close-and-refile successor of #1334 after Sprint 26 Day 9 reclassification).
 **Severity:** Medium — model translates cleanly but PATH compilation fails with multiple `$171` errors
 **Date:** 2026-05-05
-**Last Updated:** 2026-05-05
+**Last Updated:** 2026-05-13 (Sprint 26 Day 9 — subsumption reference re-routed from #1334 to its Sprint 27 successor #1393; see §"Where to Investigate" step 3 for the close-and-refile rationale).
 **Affected Models:** otpop (confirmed)
 
 ---

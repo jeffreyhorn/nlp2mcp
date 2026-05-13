@@ -662,7 +662,7 @@ EOF
 
 **Priority:** High (2–3 hours)
 
-**Objective:** Confirm `docs/issues/completed/ISSUE_1334_*.md` and `docs/issues/ISSUE_1335_*.md` are still accurate after Sprint 25 fix-in-place series; verify the otpop NLP-warm-started reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Sprint 25 Day 13) or if they are independent. *(Post-Sprint-26-Day-9 update: #1334 was close-and-refiled to Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393); see `docs/issues/ISSUE_1393_*.md` for the active Sprint 27 carryforward.)*
+**Objective:** Confirm [`docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`](../../../issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md) and [`docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`](../../../issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md) are still accurate after Sprint 25 fix-in-place series; verify the otpop NLP-warm-started reproducer; determine whether fixing #1334 actually subsumes #1357 (otpop `$171` from Sprint 25 Day 13) or if they are independent. *(Post-Sprint-26-Day-9 update: #1334 was close-and-refiled to Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393); see [`docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md`](../../../issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md) for the active Sprint 27 carryforward.)*
 
 **Unknowns Verified:** 5.1, 5.2, 5.3, 5.4
 
@@ -677,7 +677,7 @@ EOF
 
 **Tasks to Complete:**
 
-1. **Re-read `docs/issues/completed/ISSUE_1334_*.md` and `docs/issues/ISSUE_1335_*.md`** — confirm file:line references match current `src/kkt/stationarity.py` (note: #1334 is now in `completed/` after Sprint 26 Day 9 close-and-refile to Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393); #1335 remains in `docs/issues/` as a Sprint 27 in-place carryforward post Day 9 rollback):
+1. **Re-read [`docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`](../../../issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md) and [`docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`](../../../issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md)** — confirm file:line references match current `src/kkt/stationarity.py` (note: #1334 is now in `completed/` after Sprint 26 Day 9 close-and-refile to Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393); #1335 remains in `docs/issues/` as a Sprint 27 in-place carryforward post Day 9 rollback):
    ```bash
    grep -nE "^def _replace_indices_in_expr|^def _add_jacobian_transpose_terms_scalar" \
      src/kkt/stationarity.py
