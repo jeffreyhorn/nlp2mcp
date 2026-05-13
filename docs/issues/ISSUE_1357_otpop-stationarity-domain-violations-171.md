@@ -46,7 +46,7 @@ The `$171` errors at lines 217 / 247 of the emitted `otpop_mcp.gms` strongly sug
 
 1. Open `/tmp/otpop_mcp.gms` (regenerate per "Reproduction") and inspect lines 217 and 247.
 2. Match each violating reference back to its source equation in `data/gamslib/raw/otpop.gms`.
-3. Compare against the buggy emit shape documented in `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §"Buggy Emit (otpop)".
+3. Compare against the buggy emit shape documented in `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §"Buggy Emit (otpop)".
 4. If the shape matches (`sum(t__, ...)` over a parameter's declared subset domain): subsumed by #1334.
 5. If it doesn't: file as a new variant and identify the differing assembly path.
 

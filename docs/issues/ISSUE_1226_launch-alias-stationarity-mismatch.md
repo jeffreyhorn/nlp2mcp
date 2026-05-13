@@ -92,4 +92,4 @@ None — the MCP compiles and solves without errors. The issue is numerical
 - `data/gamslib/raw/launch.gms` — Source model (198 lines)
 - `src/ad/derivative_rules.py` — `_alias_match`, `_partial_collapse_sum`
 - `src/kkt/stationarity.py` — `_replace_indices_in_expr`
-- `docs/issues/ISSUE_1142_launch-conditional-alias-mismatch.md` — Superseded issue
+- `docs/issues/completed/ISSUE_1142_launch-conditional-alias-mismatch.md` — Superseded issue

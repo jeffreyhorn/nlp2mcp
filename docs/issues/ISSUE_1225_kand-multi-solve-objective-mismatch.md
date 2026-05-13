@@ -86,4 +86,4 @@ gams /tmp/kand_mcp.gms lo=2
 - `data/gamslib/raw/kand.gms` — Source model (104 lines)
 - `src/ir/parser.py` — Solve statement extraction (last-solve-wins)
 - `scripts/gamslib/run_full_test.py` — Comparison pipeline
-- `docs/issues/ISSUE_1141_kand-alias-tree-mismatch.md` — Superseded issue
+- `docs/issues/completed/ISSUE_1141_kand-alias-tree-mismatch.md` — Superseded issue

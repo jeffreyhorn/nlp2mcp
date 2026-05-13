@@ -670,7 +670,7 @@ EOF
 
 - `docs/planning/EPIC_4/SPRINT_26/PREP_PLAN.md` §Task 7
 - `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` §Category 5 (Unknowns 5.1, 5.2, 5.3, 5.4)
-- `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`
+- `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`
 - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
 - `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md`
 - Sprint 25 Day 11 SPRINT_LOG entry (#1350 srkandw `tn(t,t)` self-alias touched stationarity.py)

@@ -208,7 +208,7 @@ This is exactly what Sprint 25 retrospective §"What We'd Do Differently" #1 (PR
 ### 2.4 otpop (#1357): ⚠ PARTIAL — `$171` is comp_up subset/superset, `$141` is #1334 ParamRef
 
 - **Bug shape (primary blocker, $171):** same comp_up subset/superset shape as fawley. `comp_up_x(tt)$(t(tt) and xb(tt) < inf)..` references `xb(tt)` where `tt` is the superset and `xb` is on subset `t`.
-- **Bug shape (secondary, $141):** small phantom-offset count (5 markers across `nu_adef`, `nu_pdef`) — these match the #1334 ParamRef substitution issue described in `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`.
+- **Bug shape (secondary, $141):** small phantom-offset count (5 markers across `nu_adef`, `nu_pdef`) — these match the #1334 ParamRef substitution issue described in `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`.
 - **Per the issue doc itself**: "Possibly subsumed by #1334." Confirmed — `$141` cascade is the #1334 spurious-Sum-on-subset-ParamRef bug.
 - **Required fix:**
   - $171 portion: same comp_up subset-domain widening fix as fawley.
