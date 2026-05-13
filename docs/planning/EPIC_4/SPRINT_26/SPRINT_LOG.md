@@ -323,7 +323,7 @@ Total: 10–16h, plus per-phase test coverage.
 
 - Phase A (launch) landed cleanly Day 1 + validated byte-stable across 54 canaries Day 2 — that work remains shipped via PR #1379 + PR #1380.
 - Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)" was explicit about launch-only scope ("proper fix for the launch Pattern C consolidation (#1306 test xfail)"). Sprint 26 Task 3 REPLAN added camcge + cesam2 as hypothesis-validation targets ("verify the gate predicate generalizes"). The Day 3 discovery is the empirical answer: it doesn't generalize via predicate relaxation alone; needs a builder redesign.
-- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
+- No `src/` changes in this PR — Day 3 `src/` work rolled back. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.) No CI-gating change expected since no Python files were modified.
 
 ---
 
@@ -450,7 +450,7 @@ What actually happens (current main):
 
 - The Day 4 src/ commit (`243fe578` on the Day 4 PR branch) was reverted via `git reset --hard main` on the branch. The PR title is updated to reflect reclassification.
 - Per Sprint 26 Day 3 reclassification PR #1382, this is the **second** Sprint 26 day where a prep-task design was empirically disproved. The pattern is consistent: design-doc inspection of patch sites + downstream-handling assertions is insufficient without empirical end-to-end correctness verification.
-- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
+- No `src/` changes in either Day 4 PR (Priority 4 reclassification + Priority 5 investigation). No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.) No CI-gating change expected since no Python files were modified.
 
 ---
 
@@ -662,7 +662,7 @@ The AD cross-term enumeration step iterates over each static `n`-element as a wr
 
 #### Quality checks
 
-- `make test` (no `src/` changes Day 7): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile:33–39, so `make typecheck` is redundant once `make lint` has been run.)
+- `make test` (no `src/` changes Day 7): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
 - **kand emit unchanged Day 7:** no PR14 obligation (no `src/` changes).
 
 #### Day 7 deliverables (this PR)
@@ -1059,7 +1059,7 @@ All Sprint 26 baseline metrics maintained. The Day 13 full pipeline retest will 
 
 #### Quality checks
 
-- `make test` (no `src/` changes Day 10): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile:33–39, so the standalone `make typecheck` from AGENTS.md is redundant once `make lint` has been run.)
+- `make test` (no `src/` changes Day 10): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
 
 #### Day 10 deliverables (this PR)
 

@@ -210,7 +210,7 @@ Two docs-only PRs:
 - **Priority 4 reclassification PR** (this branch): src/ rollback + Sprint 27 #1385 carryforward + PLAN.md / PLAN_PROMPTS.md / SPRINT_LOG.md / CHANGELOG updates.
 - **Priority 5 #1334 PR** (separate branch, stacked): re-investigation findings + Approach 1 sketch + #1334 re-opened on GitHub.
 
-No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile target — see `Makefile:33–39` — so the standalone `make typecheck` from the AGENTS.md "Before submitting" checklist is redundant once `make lint` has been run.) No CI-gating change expected since no Python files were modified.
+No src/ changes shipped Day 4. No PR14 obligation. Quality checks (`make format && make lint && make test`) verified clean against the docs-only diff per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.) No CI-gating change expected since no Python files were modified.
 
 ---
 
