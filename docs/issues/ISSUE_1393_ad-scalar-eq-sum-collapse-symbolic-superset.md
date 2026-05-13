@@ -145,7 +145,7 @@ Integration tests verifying EMIT CORRECTNESS (hand-derived KKT shape + GAMS comp
 
 ## Related
 
-- **#1334** — closed Sprint 26 Day 9 via this PR; original Approach 1 framing in stationarity.py was insufficient; corrected diagnosis localizes fix to AD `_diff_sum` / `_sum_should_collapse`.
+- **#1334** — superseded by this Sprint 27 #1393 via Sprint 26 Day 9 close-and-refile (see the Predecessor cross-reference above for the full closure history: originally closed on GitHub 2026-05-05 via PR #1359 unintentional auto-closure; reopened Day 4 via PR #1384; re-closed Day 9 with carryforward comment to #1393, ISSUE_1334 doc moved to `docs/issues/completed/`). Original Approach 1 framing in stationarity.py was insufficient; corrected diagnosis localizes fix to AD `_diff_sum` / `_sum_should_collapse`.
 - **#1335** — narrow AD scalar-equation gate relaxation; Day 9 fix attempt rolled back per PR #1394 review (math-correctness regression in the resulting cross-term shape); reopened in-place as a Sprint 27 carryforward (6–10h estimate). Independent of #1334's wider architectural scope.
 - **#1381** (Sprint 27): Pattern C Phase B redesign — similar AD-architecture-level reclassification (Day 3).
 - **#1385** (Sprint 27): Option 1 short-circuit redesign — closest sibling pattern, AD-vs-emit symbolic/concrete handling (Day 4).
