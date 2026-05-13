@@ -943,7 +943,7 @@ Plus the AD-residual carryforward #1335 — Day 9 fix attempt rolled back per PR
 2. **`tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py`**: DELETED.
 3. **`data/gamslib/mcp/otpop_mcp.gms`**: REVERTED to pre-Day-9 main (no PR14 obligation; emit unchanged).
 4. **Sprint 27 issue #1393** filed for the #1334 carryforward (AD `_sum_should_collapse` redesign).
-5. **#1334 closed** + `ISSUE_1334_*.md` moved to `docs/issues/completed/` (stays moved — #1334 framing was structurally wrong, refiled as #1393 with corrected diagnosis).
+5. **#1334 re-closed with carryforward comment to #1393** (per the §"Closure mechanics:" paragraph above — #1334 was already closed on GitHub 2026-05-05 unintentionally, then reopened Day 4 via PR #1384; Day 9 re-closure routes to #1393 rather than implying a fresh closure on Day 9). `ISSUE_1334_*.md` moved to `docs/issues/completed/` (stays moved — #1334 framing was structurally wrong, refiled as #1393 with corrected diagnosis).
 6. **`docs/issues/ISSUE_1393_*.md`** created (#1334 successor).
 7. **#1335 reopened** with corrected fix-surface diagnosis (Sprint 27 carryforward).
 8. **`docs/issues/ISSUE_1335_*.md`** moved back from `docs/issues/completed/` to `docs/issues/`; updated with Sprint 26 Day 9 §"Fix Attempt Rolled Back" section + Sprint 27 prep notes.
