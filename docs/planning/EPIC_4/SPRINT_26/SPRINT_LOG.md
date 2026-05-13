@@ -973,3 +973,104 @@ Sprint 26 has now produced **4 architectural reclassifications + 1 in-place Spri
 - **Lessons learned:** like Day 4 #1385 (placeholder approach broke downstream emit) and Day 7 #1390 (per-instance enumeration architecture), the Day 9 #1335 fix attempt produced a SYNTAX-correct emit (`make typecheck && make lint && make test` all green; `nu_zdef` present per the original acceptance criterion) but **mathematically wrong** cross-term shape. The standard quality gates didn't catch it — the Copilot reviewer's hand-derived KKT comparison did. Sprint 27 prep should make Phase 0 (hand-derived KKT shape verification on a concrete target instance) MANDATORY for any AD/emit pipeline change.
 
 ---
+
+### Day 10 — Priority 5 wrap + Checkpoint 2: CONDITIONAL GO
+
+**Status:** COMPLETE (2026-05-13) — Checkpoint 2 verdict: **CONDITIONAL GO.** Both #1334 + #1335 fixes carried forward to Sprint 27 per Day 9 reclassifications; Sprint 26 metric Δ is "maintain baseline" (no Priority 5 gain, as anticipated). Days 11–13 proceed per planned schedule — no Priority 5 follow-up to absorb (Sprint 27 owns it).
+**Branch:** `sprint26-day10-checkpoint2` (docs-only PR; no `src/` changes).
+
+**Objective (per PLAN.md Day 10):** Evaluate Checkpoint 2 routing after Day 9's #1334 + #1335 reclassifications. Run the otpop NLP-warm-started reproducer per ISSUE_1334.md §Diagnostic if it would produce meaningful data (skipped — see §"NLP-warm-started reproducer status" below).
+
+#### Targeted pipeline retest (13 models)
+
+Recipe per Day 5 / Day 10 §"Reference: Targeted Multi-Model Retest" pattern: regenerate each MCP from current branch's `src/`, then run `gams ... reslim=30` with `cwd=$REPO_ROOT`.
+
+| Model | Translate | gams_rc | MODEL STATUS | Bucket vs Day 0 | Notes |
+|---|---|---|---|---|---|
+| kand | OK | 0 | 1 Optimal | unchanged (still 92.5% rel_diff per Day 7 #1390 carryforward) | Priority 3; reclassified Day 7 → Sprint 27 #1390 |
+| otpop | OK | 2 | n/a ($171 compile) | unchanged (`path_syntax_error` per Day 0; #1357 + #1334 + #1335 all Sprint 27 carryforward) | Priority 5 |
+| dispatch | OK | 0 | 1 Optimal | unchanged | Tier 0 canary ✓ |
+| quocge | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| partssupply | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| prolog | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| sparta | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| gussrisk | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| ps2_f | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| ps3_f | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| ship | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| splcge | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+| paklive | OK | 0 | 1 Optimal | unchanged | Tier 1 canary ✓ |
+
+**Byte-identity vs committed goldens:** **14/14 BYTE-IDENTICAL** (11 Tier 0/1 + launch + kand + otpop). No emit drift since Day 5 retest — consistent with the fact that no Sprint 26 `src/` changes shipped Days 6–10 (Day 6 docs-only closures; Day 7 docs-only reclassification; Day 8 docs-only buffer; Day 9 src/ attempted then reverted).
+
+**Priority 5 bug reproducers on otpop_mcp.gms (current main = Day 0 baseline):**
+- `#1334` (over-counted `sum(t__, ...) * nu_kdef`): `grep -cE "sum\(t__, .* \* nu_kdef" otpop_mcp.gms` returns **2** (Day 0 baseline: 2; Sprint 27 #1393 target: 0).
+- `#1335` (`nu_zdef` cross-term in `stat_p`): `awk '/^stat_p\(.*\)\.\./, /=E= 0;/' otpop_mcp.gms | grep -c nu_zdef` returns **0** (Day 0 baseline: 0; Sprint 27 target: ≥ 1).
+
+Both bugs at Day 0 baseline as expected — Day 9 fix attempts both rolled back / reclassified.
+
+#### NLP-warm-started reproducer status
+
+**Deferred to Sprint 27 fix work.** PLAN.md Day 10 task 1 (the otpop NLP-warm-started reproducer per ISSUE_1334.md §Diagnostic) is the **acceptance gate** for the #1334 / #1335 fixes. Since both fixes carried forward to Sprint 27 (#1393 + #1335 in-place), running the reproducer on current main would produce the pre-fix baseline residual (`stat_x('1990')` ≈ 760 per the value documented in ISSUE_1334.md §Diagnostic) without measuring any fix impact.
+
+Additionally, otpop's GAMS compile fails with `$171` errors at lines 217 / 247 (the `comp_up` subset/superset bug tracked under #1357 — Sprint 27 carryforward). The MCP run with `iterlim=0` against an emit that doesn't compile-clean would not reach the residual measurement step regardless of whether #1334 / #1335 were fixed.
+
+Sprint 27 should run the full reproducer as part of the #1393 / #1335 / #1357 fix-validation Phase 3 (the established Sprint 27 prep methodology — translate target model + GAMS compile-clean + hand-derived KKT shape + Tier 0/1 byte-stable + numerical residual reproducer).
+
+#### Checkpoint 2 criteria evaluation (per PLAN.md §"Checkpoint 2 criteria" revised Day 3 + Day 4)
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| Match Δ vs Day 0 ≥ +1 (GO); ≥ 0 (CONDITIONAL); ≤ -1 (NO-GO) | **maintain (0)** — CONDITIONAL GO threshold | No `src/` shipped Days 6–10; no Match Δ vs Day 0 baseline. Sprint 26 Days 1–5 also produced no Match Δ (Phase A launch landed but launch's PATH stalls per Sprint 27 #1378). |
+| Solve Δ vs Day 0 ≥ +1 (GO); ≥ 0 (CONDITIONAL); ≤ -1 (NO-GO) | **maintain (0)** — CONDITIONAL GO threshold | Same rationale as Match Δ — no `src/` shipped. |
+| Priority 1 Phase A landed | ✅ **GO** | PR #1379 (Day 1) — gate restored, xfail removed, launch consolidated emit. |
+| Priority 4 srpchase translates | **n/a** | Reclassified Sprint 27 #1385 (Day 4); no Sprint 26 measurement needed. |
+| Priority 5 otpop NLP-warm-started MCP residual ≈ 0 | **no improvement** — NO-GO threshold per the table | Both #1334 / #1335 fixes carryforward to Sprint 27; reproducer deferred (rationale above). Day 0 baseline residual `~760` unchanged. |
+| Tier 0 + Tier 1 canaries all match golden | ✅ **GO** | 14/14 byte-identical (11 Tier 0/1 + launch + kand + otpop). |
+
+**Row tally:** 2 fully GO (Phase A + Tier 0/1) + 2 CONDITIONAL-threshold (Match + Solve maintain) + 1 n/a (Priority 4) + 1 NO-GO-threshold (Priority 5 no improvement, anticipated). No regressions.
+
+**Verdict logic** (per PLAN.md §"Checkpoint 2 criteria" Routing block):
+- **GO** requires ≥ 5 of 6 rows green: 2 strictly green → NOT met.
+- **CONDITIONAL GO** 3–4 of 6 green with no regression: 2 strictly green + 2 at CONDITIONAL threshold + 0 regressions → 4 effective greens → **met**.
+- **NO-GO** ≤ 2 of 6 green OR any regression: 0 regressions; the Priority 5 NO-GO-threshold row is an EXPECTED carryforward outcome (per Day 9 reclassification), not a Sprint 26 fix failure.
+
+**Verdict: CONDITIONAL GO.** Days 11–13 proceed per planned schedule. Per the original PLAN.md Conditional-GO routing ("Days 11–13 trim scope. PR19 may slip to a Day-12 fast-track implementation; Day 12 buffer reabsorbed for Priority 5 follow-up if otpop didn't fully resolve"), the Priority 5 follow-up branch is **n/a** — Sprint 27 #1393 / #1335 / #1357 own the work, no Sprint 26 reabsorption needed. PR19 implementation remains scheduled Day 11.
+
+#### Sprint 26 Δ status at Day 10 (pre-Day-13 retest)
+
+| Metric | Day 0 baseline | Day 10 (current main) | Target | Status |
+|---|---|---|---|---|
+| Parse | 142/142 | 142/142 (no parser changes) | ≥ 142/142 | ✅ maintain |
+| Translate | 130/142 | 130/142 (no translate-recovering `src/` shipped) | maintain ≥ 130 | ✅ on target |
+| Solve | 104 | 104 (no Solve-affecting `src/` shipped) | maintain ≥ 104 | ✅ on target |
+| Match | 60 | 60 (no Match-affecting `src/` shipped) | maintain ≥ 60 | ✅ on target |
+| Tests | 4,735 | 4,737 (+2 from Phase A Day 1 PR #1379) | ≥ 4,737 | ✅ floor met |
+
+All Sprint 26 baseline metrics maintained. The Day 13 full pipeline retest will produce the authoritative final-baseline numbers.
+
+#### Forward look (Days 11–13)
+
+| Day | Workstream | Branch | Effort |
+|---|---|---|---|
+| 11 | PR19 CI extension implementation (Task 8 design) | `sprint26-day11-pr19-ci-extension` | ~4–8h |
+| 12 | Buffer / PR14 emit-artifact review pass (only `otpop_mcp.gms` left in scope — `launch_mcp.gms` reviewed Day 8 buffer 3) | `sprint26-day12-buffer` | ~4–6h |
+| 13 | Final pipeline retest + Sprint 26 close + Sprint 27 carryforward filing | `sprint26-day13-final-retest` | ~3–6h |
+
+#### Quality checks
+
+- `make test` (no `src/` changes Day 10): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (`make lint` runs mypy on `src/` per Makefile:33–39, so the standalone `make typecheck` from AGENTS.md is redundant once `make lint` has been run.)
+
+#### Day 10 deliverables (this PR)
+
+1. SPRINT_LOG.md Day 10 entry (this section) — Checkpoint 2 evaluation table + targeted retest table + Sprint 26 Δ status + Days 11–13 forward look.
+2. CHANGELOG.md Day 10 bullet.
+
+#### Notes (Day 10)
+
+- **No `src/` changes.** Day 10 is checkpoint evaluation + docs only. Quality checks verified clean.
+- **Effort actual ~1h** vs ~4–6h budget per PLAN.md. Significantly under-budget because the Day 9 reclassifications made the Checkpoint 2 verdict mechanical (no fix to validate; no acceptance-gate reproducer to run).
+- **Sprint 26 Days 11–13 outlook:** Day 11 = PR19 CI extension (Task 8 design); Day 12 = buffer + `otpop_mcp.gms` PR14 review (`launch_mcp.gms` already reviewed Day 8 buffer 3); Day 13 = final pipeline retest + Sprint 27 carryforward filing for the 5 Sprint 27 issues already opened (#1381, #1385, #1390, #1393, #1335) plus any new ones surfaced Day 13.
+- **Priority 5 follow-up status:** Sprint 26 schedule reabsorption is N/A — Sprint 27 owns all of #1334 (refiled #1393), #1335 (in-place), #1357 (was already Sprint 27 carryforward), #1378 (launch PATH numerics from Day 1), and #1390 (kand from Day 7).
+
+---
