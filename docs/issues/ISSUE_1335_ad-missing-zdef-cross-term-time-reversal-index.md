@@ -1,11 +1,48 @@
 # AD: Missing `∂zdef/∂p` Cross-Term in `stat_p` When `zdef` References `p` via Time-Reversal-Indexed Offset
 
 **GitHub Issue:** [#1335](https://github.com/jeffreyhorn/nlp2mcp/issues/1335)
-**Status:** OPEN
-**Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects models that use `card`/`ord` arithmetic on sum index variables to construct time-reversal or end-of-horizon mappings
+**Status:** OPEN — Sprint 26 Day 9 fix attempt rolled back per PR #1394 review; Sprint 27 carryforward.
+**Severity:** Medium — Produces a valid local KKT point that differs from the NLP optimum; affects models that use `card`/`ord` arithmetic on sum index variables to construct time-reversal or end-of-horizon mappings.
 **Date:** 2026-05-02
-**Last Updated:** 2026-05-02
-**Affected Models:** otpop (confirmed); any model using `var(t + (card(t) - ord(t)))` or similar non-trivial offset arithmetic to map sum iterates to a fixed boundary element
+**Last Updated:** 2026-05-12 (Sprint 26 Day 9 — rolled-back fix-attempt diagnosis added; reopened post-PR-#1394-review).
+**Affected Models:** otpop (confirmed); any model using `var(t + (card(t) - ord(t)))` or similar non-trivial offset arithmetic to map sum iterates to a fixed boundary element.
+
+---
+
+## Sprint 26 Day 9 Update — Fix Attempt Rolled Back
+
+The Sprint 26 Day 9 PR #1394 attempted a narrow gate-relaxation fix at `src/ad/constraint_jacobian.py:986` + `:1107` (move `_resolve_index_offsets` + `_expand_sums_with_unresolved_offsets` outside the `if eq_domain:` predicate) plus an `iter_pos: int | None = None` parameter on `_substitute_single_index` that eagerly substitutes `Call('ord', SymbolRef(var_name))` → `Const(iter_pos + 1)` (to disambiguate the global-set `ord` lookup when an element appears at different positions in multiple sets).
+
+The fix **DID** place `nu_zdef` into otpop's `stat_p` body — the primary bug shape described below resolved. **BUT** introduced a new math-correctness regression:
+
+**Observed (broken) emit on `stat_p(tt)` post-fix:**
+
+```gams
+sum(t, ((-1) * (v * (0.365 * (xb(t) - x(tt)) + 0.365 * (xb(t) - x(tt)) + ... 17 copies ...))) * nu_zdef)$(sameas(tt, '1990'))
+```
+
+**Expected (hand-derived) cross-term:**
+
+```gams
+((-1) * v * sum(t, 0.365 * (xb(t) - x(t)))) * nu_zdef $ (sameas(tt, '1990'))
+```
+
+Two distinct defects in the broken emit:
+
+1. **`x(tt)` instead of `x(t)` inside the sum.** The sum iterator is `t`, but downstream re-symbolization in `_add_indexed_jacobian_terms` (`src/kkt/stationarity.py:4432+`) rewrote `x(t)` → `x(tt)` because the eq-domain index `tt` of `stat_p(tt)` aliases the column header `p(tt)`. Breaks per-iteration coupling.
+2. **17 duplicated copies of `0.365 * (xb(t) - x(tt))` inside the sum.** `_expand_sum_body` expanded the original `sum(t, body)` into 17 concrete-element terms; downstream re-symbolization collapsed the 17 concrete elements back to the SAME symbolic `t` and wrapped in a spurious outer `sum(t, ...)`, leaving 17 copies of the body inside. Overcounts by ~|t|.
+
+**Root cause class:** AD-vs-emit pipeline assumption mismatch — same class as Sprint 26 #1381 (Pattern C Phase B), #1385 (Option 1 short-circuit), #1390 (kand tree-predicate Sum), and #1334 → #1393 (scalar-eq Sum-collapse w/ symbolic-superset wrt). The expansion-based approach in `_expand_sum_body` is correct for AD differentiation but the downstream symbolic re-emit doesn't preserve the expanded shape; this is an AD/emit pipeline architecture issue.
+
+**Sprint 26 Day 9 PR #1394 action:** revert the `src/ad/constraint_jacobian.py` changes, delete the unit tests (`tests/integration/ad/test_issue_1335_scalar_eq_sum_expansion.py`), restore `data/gamslib/mcp/otpop_mcp.gms` to its pre-fix shape (no `nu_zdef` in `stat_p` — original bug returns, but mathematically consistent). Reopen #1335 with this corrected diagnosis; move this doc back from `docs/issues/completed/` to `docs/issues/` for Sprint 27 carryforward.
+
+**Corrected fix-surface diagnosis (Sprint 27 carryforward):** the narrow gate-relaxation approach was incomplete. A correct #1335 fix must either:
+
+- **(A)** Run `_expand_sums_with_unresolved_offsets` AND fix the downstream re-symbolization in `_add_indexed_jacobian_terms` to handle expanded-Sum shapes — preserves per-iteration var-binding when converting concrete element references back to symbolic for emit.
+- **(B)** Resolve the IndexOffset `card(t) - ord(t)` symbolically (without expanding the Sum) so AD's `_diff_sum` can compute the partial without Sum expansion. Requires extending `_try_eval_offset` to handle symbolic-base IndexOffsets when the offset arithmetic is fully resolvable from the iteration set's cardinality alone.
+- **(C)** A hybrid where the expansion happens but then collapses back to symbolic-Sum form post-AD with the correct shape.
+
+**Estimated effort:** 6–10h (narrower than the architectural redesigns #1381/#1385/#1390/#1393 — this is a Sum-shape-preservation bug, not a Sum-collapse architecture change). Sprint 27 prep should add a Phase 0 acceptance gate per the established methodology (translate otpop with prototype + hand-derive `stat_p('1990')` KKT against emit BEFORE committing the implementation budget).
 
 ---
 

@@ -765,7 +765,7 @@ The #1334 ↔ #1357 subsumption question matters for the bucket-provenance basel
 
 ### Background
 
-- `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`
+- `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`
 - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`
 - `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md` — explicitly notes "likely subsumed by #1334"
 - Sprint 25 Day 11 fix #1350 (srkandw `tn(t,t)` self-alias) modified `_remap_condition_to_domain` in `src/kkt/stationarity.py`; verify #1334's referenced lines still match.
@@ -1389,7 +1389,7 @@ All chains converge at Task 11 (final schedule). The longest single chain is 3 t
 - **Pattern C launch:** #1306, #1307
 - **Translation timeouts:** #885 (sarf), #931 (iswnm), #932 (nebrazil), #1185 (mexls), #1228 (iswnm second variant)
 - **Translation internal_error:** #1224 (mine ParamRef IndexOffset — `docs/issues/ISSUE_1224_mine-paramref-index-offset-unsupported.md`)
-- **AD residuals from Sprint 25 Day 11 fix-in-place series:** #1334 (`docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`), #1335 (`docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`)
+- **AD residuals from Sprint 25 Day 11 fix-in-place series:** #1334 (`docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md`), #1335 (`docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md`)
 
 ### Prior-Sprint Retrospectives (for process recommendations)
 

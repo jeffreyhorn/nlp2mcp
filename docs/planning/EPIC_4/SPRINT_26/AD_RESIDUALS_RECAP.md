@@ -312,7 +312,7 @@ ISSUE_1335.md's original framing (substitute `t → t'` BEFORE `_try_eval_offset
 
 ## 6. Files referenced
 
-- `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` — file:line references synced 2026-05-07 in this PR
+- `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` — file:line references synced 2026-05-07 in this PR
 - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md` — file:line references accurate (no sync needed)
 - `docs/issues/ISSUE_1357_otpop-stationarity-domain-violations-171.md` — bug shape independent of #1334
 - `docs/planning/EPIC_4/SPRINT_26/PATTERN_C_HYPOTHESIS_VALIDATION.md` §2.4 — Task 3 finding that otpop's `$171` is comp_up subset/superset (not Pattern C)

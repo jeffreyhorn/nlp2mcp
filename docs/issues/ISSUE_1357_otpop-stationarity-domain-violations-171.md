@@ -1,10 +1,10 @@
 # otpop: PATH $171 Domain Violations in Stationarity (Sprint 25 Bucket Transfer)
 
 **GitHub Issue:** [#1357](https://github.com/jeffreyhorn/nlp2mcp/issues/1357)
-**Status:** OPEN — Sprint 26 carryforward (filed Sprint 25 Day 13). Possibly subsumed by **#1334**.
+**Status:** OPEN — Sprint 27 carryforward (filed Sprint 25 Day 13). Comparison target for Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) (the close-and-refile successor of #1334 after Sprint 26 Day 9 reclassification).
 **Severity:** Medium — model translates cleanly but PATH compilation fails with multiple `$171` errors
 **Date:** 2026-05-05
-**Last Updated:** 2026-05-05
+**Last Updated:** 2026-05-13 (Sprint 26 Day 9 — subsumption reference re-routed from #1334 to its Sprint 27 successor #1393; see §"Where to Investigate" step 3 for the close-and-refile rationale).
 **Affected Models:** otpop (confirmed)
 
 ---
@@ -46,8 +46,8 @@ The `$171` errors at lines 217 / 247 of the emitted `otpop_mcp.gms` strongly sug
 
 1. Open `/tmp/otpop_mcp.gms` (regenerate per "Reproduction") and inspect lines 217 and 247.
 2. Match each violating reference back to its source equation in `data/gamslib/raw/otpop.gms`.
-3. Compare against the buggy emit shape documented in `docs/issues/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §"Buggy Emit (otpop)".
-4. If the shape matches (`sum(t__, ...)` over a parameter's declared subset domain): subsumed by #1334.
+3. Compare against the buggy emit shape documented in `docs/issues/completed/ISSUE_1334_ad-scalar-constraint-spurious-sum-on-subset-param-domain.md` §"Buggy Emit (otpop)". **Note (Sprint 26 Day 9):** #1334 was close-and-refiled to Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) with a corrected fix-surface diagnosis (AD `_diff_sum` / `_sum_should_collapse` in `src/ad/derivative_rules.py`, not stationarity-time substitution); the underlying buggy emit shape is unchanged on current main, so the §"Buggy Emit (otpop)" reference remains accurate as a comparison target. Use #1393 (active Sprint 27 carryforward) for cross-references to the work-in-progress fix.
+4. If the shape matches (`sum(t__, ...)` over a parameter's declared subset domain): subsumed by #1393 (formerly #1334).
 5. If it doesn't: file as a new variant and identify the differing assembly path.
 
 ---
