@@ -662,7 +662,7 @@ The AD cross-term enumeration step iterates over each static `n`-element as a wr
 
 #### Quality checks
 
-- `make test` (no `src/` changes Day 7): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
+- **Quality checks (docs-only exception):** Day 7 has no `src/` or `tests/` changes. CONTRIBUTING.md / docs/development/AGENTS.md require the standard "Before submitting" checklist (`make format && make lint && make test`, plus `make typecheck` per AGENTS line 197) before a code-modifying PR — those format/lint/typecheck targets check Python files in `src/` + `tests/`, so with no Python changes Day 7 they would only re-verify the unchanged main state (not Day 7's docs additions). For this docs-only PR, the meaningful check is `make test` to confirm the existing test suite still passes on this branch. `make test` re-verified clean. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
 - **kand emit unchanged Day 7:** no PR14 obligation (no `src/` changes).
 
 #### Day 7 deliverables (this PR)
@@ -1059,7 +1059,7 @@ All Sprint 26 baseline metrics maintained. The Day 13 full pipeline retest will 
 
 #### Quality checks
 
-- `make test` (no `src/` changes Day 10): verified clean per CONTRIBUTING.md / docs/development/AGENTS.md. (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
+- **Quality checks (docs-only exception):** Day 10 has no `src/` or `tests/` changes. CONTRIBUTING.md / docs/development/AGENTS.md require the standard "Before submitting" checklist (`make format && make lint && make test`, plus `make typecheck` per AGENTS line 197) before a code-modifying PR — those format/lint/typecheck targets check Python files in `src/` + `tests/`, so with no Python changes Day 10 they would only re-verify the unchanged main state (not Day 10's docs additions). For this docs-only PR, the meaningful check is `make test` to confirm the existing test suite still passes on this branch. `make test` re-verified clean (**4,737 passed / 10 skipped / 1 xfailed, 211.37s**). (Per `Makefile:33–39`, `make lint` runs mypy on `src/` in addition to ruff + black, so it overlaps with `make typecheck`; both targets remain available per AGENTS.md's "Before submitting" checklist.)
 
 #### Day 10 deliverables (this PR)
 
