@@ -100,19 +100,18 @@ jobs:
       - name: Install GAMS demo
         if: steps.check-label.outputs.skip != 'true'
         env:
-          # Pin installer URL + expected SHA256. Sprint 26 Day 11 left the SHA256
-          # as a placeholder (TODO marker) because the installer is ~648 MB and
-          # the Linux SHA256 must match what the CI download produces — the
-          # canonical capture path is the first workflow run, where the
-          # `sha256sum -c` step below will fail with the actual hash visible in
-          # the CI log. Update this constant after the first run and commit.
+          # Pin installer URL + expected SHA256. Bumping the GAMS version
+          # requires updating BOTH the URL and the checksum — the workflow
+          # refuses to execute an installer whose hash doesn't match,
+          # mitigating supply-chain risk if the CloudFront endpoint is
+          # compromised or the file is replaced upstream.
           #
-          # Bumping the GAMS version requires updating BOTH the URL and the
-          # checksum — the workflow refuses to execute an installer whose hash
-          # doesn't match, mitigating supply-chain risk if the CloudFront
-          # endpoint is compromised or the file is replaced upstream.
+          # SHA256 captured on first PR #1396 CI run (Sprint 26 Day 11) for
+          # GAMS demo 53.1.0 linux_x64_64_sfx.exe (~648 MB). To refresh:
+          # bump URL → push → read the actual SHA256 from the failing
+          # `Install GAMS demo` step log → pin it here.
           GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
-          GAMS_INSTALLER_SHA256: "<TO BE FILLED IN BY FIRST CI RUN — see comment above>"
+          GAMS_INSTALLER_SHA256: "8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a"
         run: |
           # Download + verify GAMS demo edition. Refuses to run the installer
           # if the SHA256 doesn't match the pinned value.
