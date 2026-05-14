@@ -187,13 +187,13 @@ jobs:
         id: solve-pattern-c
         run: |
           # Iterate the pattern_c list. Always exit 0 — record results only.
+          # `--tier soft-fail` derives no-enforcement automatically.
           python3 scripts/ci/run_pr19_solves.py \
             --targets /tmp/pr19-targets.json \
             --tier soft-fail \
             --output /tmp/pr19-results-patternc.json \
             --reslim 30 \
-            --scratch-base /tmp/pr19-scratch \
-            --soft-fail
+            --scratch-base /tmp/pr19-scratch
 
       - name: Post PR comment with per-model status
         if: steps.check-label.outputs.skip != 'true' && always()
@@ -237,11 +237,14 @@ jobs:
               const renderPatternCRow = (m) =>
                 `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
 
+              // Fallback row must occupy all 5 columns of its host table —
+              // a single-cell row breaks Markdown table rendering when the
+              // companion tier ran but this one did not.
               const tier01Rows = tier01 === null
-                ? '| _hard-fail tier did not run — see workflow logs_ |'
+                ? '| _hard-fail tier did not run — see workflow logs_ | | | | |'
                 : tier01.results.map(renderTier01Row).join('\n');
               const patternCRows = patternC === null
-                ? '| _soft-fail tier did not run — see workflow logs_ |'
+                ? '| _soft-fail tier did not run — see workflow logs_ | | | | |'
                 : patternC.results.map(renderPatternCRow).join('\n');
 
               const tier01Pass = tier01 === null ? 0 : tier01.results.filter(m => m.passed).length;
@@ -265,7 +268,7 @@ jobs:
                 '',
                 `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01Total}`,
                 '',
-                '| Model | rc | Time | MODEL STATUS | |',
+                '| Model | rc | Time | MODEL STATUS | Pass |',
                 '|---|---|---|---|---|',
                 tier01Rows,
                 '',

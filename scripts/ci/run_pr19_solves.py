@@ -13,8 +13,9 @@ per Sprint 25 #1345/#1346/#1347 — `cwd=$REPO_ROOT` + `ScrDir=<tmpdir>` mirrors
 repo-relative `$include "data/gamslib/raw/<model>.gms"` resolves correctly.
 
 Captures exit code + MODEL STATUS + SOLVER STATUS + wall time per model into a JSON
-file. Hard-fail (exit 1) when any model has ``rc != 0`` or ``MODEL STATUS != 1``,
-UNLESS ``--soft-fail`` is set (Pattern C informational tier — always exit 0).
+file. Hard-fail (exit 1) when any model has ``rc != 0``, ``MODEL STATUS != 1``,
+or ``SOLVER STATUS != 1``, UNLESS the tier is ``soft-fail`` (Pattern C
+informational bucket — always exit 0).
 """
 
 from __future__ import annotations
@@ -85,9 +86,30 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
         rc = completed.returncode
     except subprocess.TimeoutExpired:
         rc = 124
+    except FileNotFoundError:
+        # `gams` not on PATH — common for local smoke tests when the user
+        # forgot to source the GAMS env, and possible in CI if the install
+        # step's $GITHUB_PATH update didn't propagate. Return a structured
+        # record (mirrors the "mcp missing" branch) instead of crashing
+        # with a traceback.
+        wall_time = round(time.monotonic() - start, 2)
+        return {
+            "model": model,
+            "rc": -1,
+            "wall_time": wall_time,
+            "model_status": "n/a (gams missing)",
+            "solver_status": "n/a (gams missing)",
+            "passed": False,
+            "error": "`gams` not found on PATH",
+        }
     wall_time = round(time.monotonic() - start, 2)
     model_status, solver_status = _read_status(lst_path)
-    passed = rc == 0 and model_status.startswith("1 ")
+    # Pass requires rc=0 AND MODEL STATUS=1 (Optimal/Solved) AND SOLVER STATUS=1
+    # (Normal Completion). MODEL STATUS alone can stay at 1 from a prior
+    # iteration even when SOLVER STATUS reports an abnormal termination
+    # (e.g., 3 Resource Interrupt, 4 Terminated by Solver), so both are
+    # needed to catch all PATH regressions.
+    passed = rc == 0 and model_status.startswith("1 ") and solver_status.startswith("1 ")
     return {
         "model": model,
         "rc": rc,
@@ -105,7 +127,13 @@ def main() -> int:
         "--tier",
         required=True,
         choices=["hard-fail", "soft-fail"],
-        help="Which target bucket to solve: hard-fail (tier_0_1) or soft-fail (pattern_c)",
+        help=(
+            "Which target bucket to solve. hard-fail (tier_0_1) enforces pass/fail "
+            "via exit code; soft-fail (pattern_c) always exits 0 — informational "
+            "only. Pass/fail enforcement is derived from this flag (no separate "
+            "--soft-fail switch — keeps the interface consistent with the bucket "
+            "name)."
+        ),
     )
     parser.add_argument("--output", required=True, help="Output JSON path for results")
     parser.add_argument("--reslim", type=int, default=30, help="Default per-model PATH timeout (s)")
@@ -113,11 +141,6 @@ def main() -> int:
         "--scratch-base",
         default="/tmp/pr19-scratch",
         help="Base directory for per-model GAMS scratch files",
-    )
-    parser.add_argument(
-        "--soft-fail",
-        action="store_true",
-        help="Always exit 0; capture results without enforcing pass/fail on this bucket",
     )
     args = parser.parse_args()
 
@@ -144,7 +167,10 @@ def main() -> int:
     out = {"tier": args.tier, "results": results}
     Path(args.output).write_text(json.dumps(out, indent=2))
 
-    if args.soft_fail:
+    # Soft-fail tier always exits 0 (informational); hard-fail tier exits 1
+    # if any model regressed. Derived from --tier so the two CLI flags can't
+    # disagree.
+    if args.tier == "soft-fail":
         return 0
     return 0 if all(r["passed"] for r in results) else 1
 

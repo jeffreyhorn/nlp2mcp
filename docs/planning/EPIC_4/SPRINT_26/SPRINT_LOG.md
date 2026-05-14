@@ -1120,7 +1120,7 @@ exit rc=0
 $ .venv/bin/python scripts/ci/run_pr19_solves.py \
     --targets /tmp/pr19-targets.json --tier soft-fail \
     --output /tmp/pr19-results-patternc.json --reslim 30 \
-    --scratch-base /tmp/pr19-test-scratch --soft-fail
+    --scratch-base /tmp/pr19-test-scratch
   ✗ camcge        rc=2  0.20s  n/a
   ✗ cesam2        rc=2  0.22s  n/a
   ✗ fawley        rc=2  0.25s  n/a
@@ -1130,18 +1130,22 @@ exit rc=0  (soft-fail tier always exits 0 — informational signal for Sprint 27
 
 11/11 Tier 0/1 canaries pass at MODEL STATUS 1 Optimal. 4/4 Pattern C soft-fail rows correctly fast-fail at compile (`$141` / `$171`) — expected per Task 8 §"Local timing verification" + Day 5 / Day 10 retest evidence.
 
-#### Open question — GAMS installer SHA256
+#### GAMS installer SHA256 — captured + pinned
 
-The Day 11 implementation left `GAMS_INSTALLER_SHA256` as `"<TO BE FILLED IN BY FIRST CI RUN — see comment above>"` (placeholder). **Rationale:** the Linux installer is **648 MB** (per `curl -sI` on the URL); downloading from macOS to compute the SHA256 locally is awkward (slow, large local artifact, no CI-environment match). The canonical capture path is the first CI workflow run — the `sha256sum -c` step will fail with the actual installer hash visible in CI logs, then a follow-up commit pins the value. The workflow YAML's surrounding comment block documents this update procedure for future GAMS version bumps.
+The Day 11 implementation initially left `GAMS_INSTALLER_SHA256` as a placeholder, then captured the actual hash from the first CI run on this PR (a fix-up commit replaced the brittle `sha256sum -c` invocation with an explicit two-step that always prints the actual hash before the verify check, so the value was visible in CI logs). The pinned value for GAMS demo `53.1.0` `linux_x64_64_sfx.exe` (~648 MB) is:
 
-**Smoke-test caveat:** the workflow's first PR-event run on this branch will fail at the `Install GAMS demo` step due to the SHA256 mismatch. This is **expected behavior** — the bypass-label path (`skip-emit-solve-ci`) gives reviewers a clean route around the failure for the SHA256-capture cycle. Subsequent commits pin the captured hash; future runs go green.
+```
+8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a
+```
+
+**Rationale for the capture-from-CI approach:** the installer is 648 MB; downloading from macOS to compute the SHA256 locally is awkward (slow, large local artifact, no CI-environment match). The workflow YAML's surrounding comment block documents the update procedure for future GAMS version bumps: bump URL → push → read the actual SHA256 from the failing `Install GAMS demo` step log → pin it.
 
 #### Smoke-test plan
 
 Per Task 8 §"Test Plan":
 - **Trigger fires on this PR:** ✓ — touches `.github/workflows/pr19-emit-solve-validation.yml` + `.github/path-solve-ci-targets.txt` + `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`, all of which are in the workflow's `on.pull_request.paths` list.
 - **Bypass-label path:** add `skip-emit-solve-ci` label → workflow short-circuits with the bypass-comment notice, exits clean. Verifiable on this PR after open.
-- **Hard-fail path:** the SHA256 placeholder will trigger a `sha256sum -c` failure on the `Install GAMS demo` step. The actual hash will be visible in the CI log. Follow-up commit pins it.
+- **Hard-fail path:** with the SHA256 now pinned, the `Install GAMS demo` step succeeds and the downstream Tier 0/1 + Pattern C solve steps run end-to-end on the runner.
 
 #### Promotion check (per Task 8 §"Promotion check")
 
@@ -1166,8 +1170,8 @@ Phase B (camcge / cesam2) deferred to Sprint 27 #1381 per Day 3 — kept as `tie
 #### Notes (Day 11)
 
 - **Effort actual ~3h** vs ~4–8h budget per PLAN.md (under-budget — the design doc was thorough, all helper-script logic was straightforward, and local smoke-test confirmed the runner works on the exact 15-model target set).
-- **First CI run will fail at `sha256sum -c`** (placeholder); follow-up commit captures the actual hash from CI logs and pins it. This is the canonical capture path documented in the workflow YAML's `Install GAMS demo` step comment.
+- **GAMS installer SHA256 captured + pinned in this PR** (commit `b2b04b14`): `8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a`. The original placeholder approach was replaced after the first CI run surfaced the actual hash.
 - **Days 12–13 outlook:** Day 12 = buffer + `otpop_mcp.gms` PR14 review (only emit-affecting Sprint 26 artifact still in scope after Day 8 buffer 3 reviewed `launch_mcp.gms`); Day 13 = final pipeline retest + Sprint 26 close + Sprint 27 carryforward filing.
-- **Sprint 27 PR19 follow-ups (post-merge):** (1) capture the GAMS installer SHA256; (2) revisit the target-list file once any Pattern C model passes (promote `tier=pattern-c` → `tier=1`); (3) optional: extend the lint workflow to cover `scripts/ci/` if more CI helpers land.
+- **Sprint 27 PR19 follow-ups (post-merge):** (1) revisit the target-list file once any Pattern C model passes (promote `tier=pattern-c` → `tier=1`); (2) optional: extend the lint workflow to cover `scripts/ci/` if more CI helpers land.
 
 ---

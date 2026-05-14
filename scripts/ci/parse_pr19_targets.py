@@ -27,10 +27,20 @@ from pathlib import Path
 _ANNOTATION = re.compile(r"\b(?P<key>tier|reslim)\s*=\s*(?P<value>[a-zA-Z0-9_-]+)")
 
 
+class TargetParseError(ValueError):
+    """Raised on malformed target-list entries.
+
+    Surfaced via main() as a non-zero exit so CI fails loudly when the
+    target list has a typo (e.g., ``tier=patternc`` silently dropping a
+    model from coverage, or ``reslim=30s`` crashing without a useful
+    line reference).
+    """
+
+
 def parse_targets(path: Path) -> dict:
     tier_0_1: list[dict] = []
     pattern_c: list[dict] = []
-    for raw_line in path.read_text().splitlines():
+    for line_no, raw_line in enumerate(path.read_text().splitlines(), start=1):
         line = raw_line.strip()
         if not line or line.startswith("#"):
             continue
@@ -44,14 +54,26 @@ def parse_targets(path: Path) -> dict:
         }
         tier = annotations.get("tier", "1")
         reslim_raw = annotations.get("reslim")
-        reslim: int | None = int(reslim_raw) if reslim_raw is not None else None
+        if reslim_raw is None:
+            reslim: int | None = None
+        else:
+            try:
+                reslim = int(reslim_raw)
+            except ValueError as exc:
+                raise TargetParseError(
+                    f"line {line_no}: malformed reslim={reslim_raw!r} "
+                    f"(must be an integer number of seconds): {raw_line!r}"
+                ) from exc
         entry = {"model": model_part, "tier": tier, "reslim": reslim}
         if tier == "pattern-c":
             pattern_c.append(entry)
         elif tier in ("0", "1"):
             tier_0_1.append(entry)
         else:
-            print(f"warning: unknown tier {tier!r} on line {raw_line!r}", file=sys.stderr)
+            raise TargetParseError(
+                f"line {line_no}: unknown tier {tier!r} "
+                f"(expected one of 0, 1, pattern-c): {raw_line!r}"
+            )
     return {"tier_0_1": tier_0_1, "pattern_c": pattern_c}
 
 
@@ -63,7 +85,12 @@ def main() -> int:
     if not targets_path.is_file():
         print(f"error: target list not found: {targets_path}", file=sys.stderr)
         return 2
-    print(json.dumps(parse_targets(targets_path), indent=2))
+    try:
+        targets = parse_targets(targets_path)
+    except TargetParseError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(targets, indent=2))
     return 0
 
 
