@@ -117,7 +117,22 @@ jobs:
           # Download + verify GAMS demo edition. Refuses to run the installer
           # if the SHA256 doesn't match the pinned value.
           curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
-          echo "$GAMS_INSTALLER_SHA256  /tmp/gams-installer.exe" | sha256sum -c -
+          # Always compute and print the actual SHA256 — makes the value visible
+          # in CI logs regardless of whether the verify check below succeeds or
+          # fails. On first CI run with a placeholder pin, the printed value is
+          # what should be copied into GAMS_INSTALLER_SHA256 for the follow-up
+          # commit. On subsequent runs, the printed value lets you confirm the
+          # pin is still correct (and detects upstream installer rotation).
+          ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
+          echo "Actual SHA256 of downloaded installer: $ACTUAL_SHA256"
+          echo "Pinned SHA256 in workflow:             $GAMS_INSTALLER_SHA256"
+          if [ "$ACTUAL_SHA256" != "$GAMS_INSTALLER_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch. Update GAMS_INSTALLER_SHA256 in"
+            echo "       .github/workflows/pr19-emit-solve-validation.yml to"
+            echo "       the actual value above (and verify it matches the"
+            echo "       upstream gams.com download for this URL)."
+            exit 1
+          fi
           chmod +x /tmp/gams-installer.exe
           mkdir -p $HOME/gams
           /tmp/gams-installer.exe -q -d $HOME/gams
