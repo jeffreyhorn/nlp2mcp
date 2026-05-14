@@ -1074,3 +1074,100 @@ All Sprint 26 baseline metrics maintained. The Day 13 full pipeline retest will 
 - **Priority 5 follow-up status:** Sprint 26 schedule reabsorption is N/A — Sprint 27 owns all of #1334 (refiled #1393), #1335 (in-place), #1357 (was already Sprint 27 carryforward), #1378 (launch PATH numerics from Day 1), and #1390 (kand from Day 7).
 
 ---
+
+### Day 11 — PR19 CI Extension Implementation
+
+**Status:** COMPLETE (2026-05-13) — PR19 pre-merge solve-time validation CI extension landed per Task 8 design (`DESIGN_PR19_SOLVE_TIME_CI.md`). Workflow YAML + target list + 2 helper scripts + smoke-test infrastructure all shipped.
+**Branch:** `sprint26-day11-pr19-ci-extension` (small `src/`-adjacent: 2 helper scripts under `scripts/ci/` are `*.py` files but new files, not changes to `src/`; quality checks ran clean).
+
+**Objective (per PLAN.md Day 11):** Implement PR19 per Task 8 design doc. Land workflow YAML + target list + helper scripts + capture GAMS installer SHA256.
+
+#### Deliverables
+
+| File | Purpose | Notes |
+|---|---|---|
+| `.github/workflows/pr19-emit-solve-validation.yml` | Workflow YAML — triggers on PR changes to `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, the helper scripts, the workflow itself, or the target-list file. Includes the `skip-emit-solve-ci` label bypass + bypass PR comment. Pins GAMS installer URL. | SHA256 placeholder (see "Open question" below). |
+| `.github/path-solve-ci-targets.txt` | Target model list — 11 Tier 0/1 hard-fail canaries + 4 Pattern C soft-fail (informational) per Task 8 §"Target Model List". | Pattern C entries call out Sprint 27 #1381 / #1357 / #1393 carryforward routing in the inline comment. |
+| `scripts/ci/parse_pr19_targets.py` | Parses target-list file into JSON `{tier_0_1: [...], pattern_c: [...]}`. Handles `tier=` and `reslim=` annotations + comments. | ~50 LOC after black formatting. |
+| `scripts/ci/run_pr19_solves.py` | Iterates a target bucket, invokes `gams ... reslim=30` with `cwd=$REPO_ROOT` + `ScrDir=<tmpdir>` per Sprint 25 #1345/#1346/#1347 pattern, captures rc + MODEL STATUS + SOLVER STATUS + wall time per model, writes JSON. Hard-fail (exit 1) when any model has rc != 0 or MODEL STATUS != 1, UNLESS `--soft-fail` flag is passed. | ~150 LOC after black formatting. |
+
+#### Local smoke-test results
+
+```
+$ .venv/bin/python scripts/ci/parse_pr19_targets.py .github/path-solve-ci-targets.txt
+{
+  "tier_0_1": [11 entries — dispatch (tier=0), quocge..paklive (tier=1)],
+  "pattern_c": [4 entries — camcge, cesam2, fawley, otpop]
+}
+
+$ .venv/bin/python scripts/ci/run_pr19_solves.py \
+    --targets /tmp/pr19-targets.json --tier hard-fail \
+    --output /tmp/pr19-results-tier01.json --reslim 30 \
+    --scratch-base /tmp/pr19-test-scratch
+  ✓ dispatch      rc=0  1.05s  1 Optimal
+  ✓ quocge        rc=0  0.45s  1 Optimal
+  ✓ partssupply   rc=0  0.33s  1 Optimal
+  ✓ prolog        rc=0  0.34s  1 Optimal
+  ✓ sparta        rc=0  0.33s  1 Optimal
+  ✓ gussrisk      rc=0  0.31s  1 Optimal
+  ✓ ps2_f         rc=0  0.34s  1 Optimal
+  ✓ ps3_f         rc=0  0.35s  1 Optimal
+  ✓ ship          rc=0  0.34s  1 Optimal
+  ✓ splcge        rc=0  0.33s  1 Optimal
+  ✓ paklive       rc=0  0.38s  1 Optimal
+exit rc=0
+
+$ .venv/bin/python scripts/ci/run_pr19_solves.py \
+    --targets /tmp/pr19-targets.json --tier soft-fail \
+    --output /tmp/pr19-results-patternc.json --reslim 30 \
+    --scratch-base /tmp/pr19-test-scratch --soft-fail
+  ✗ camcge        rc=2  0.20s  n/a
+  ✗ cesam2        rc=2  0.22s  n/a
+  ✗ fawley        rc=2  0.25s  n/a
+  ✗ otpop         rc=2  0.23s  n/a
+exit rc=0  (soft-fail tier always exits 0 — informational signal for Sprint 27 work)
+```
+
+11/11 Tier 0/1 canaries pass at MODEL STATUS 1 Optimal. 4/4 Pattern C soft-fail rows correctly fast-fail at compile (`$141` / `$171`) — expected per Task 8 §"Local timing verification" + Day 5 / Day 10 retest evidence.
+
+#### Open question — GAMS installer SHA256
+
+The Day 11 implementation left `GAMS_INSTALLER_SHA256` as `"<TO BE FILLED IN BY FIRST CI RUN — see comment above>"` (placeholder). **Rationale:** the Linux installer is **648 MB** (per `curl -sI` on the URL); downloading from macOS to compute the SHA256 locally is awkward (slow, large local artifact, no CI-environment match). The canonical capture path is the first CI workflow run — the `sha256sum -c` step will fail with the actual installer hash visible in CI logs, then a follow-up commit pins the value. The workflow YAML's surrounding comment block documents this update procedure for future GAMS version bumps.
+
+**Smoke-test caveat:** the workflow's first PR-event run on this branch will fail at the `Install GAMS demo` step due to the SHA256 mismatch. This is **expected behavior** — the bypass-label path (`skip-emit-solve-ci`) gives reviewers a clean route around the failure for the SHA256-capture cycle. Subsequent commits pin the captured hash; future runs go green.
+
+#### Smoke-test plan
+
+Per Task 8 §"Test Plan":
+- **Trigger fires on this PR:** ✓ — touches `.github/workflows/pr19-emit-solve-validation.yml` + `.github/path-solve-ci-targets.txt` + `scripts/ci/parse_pr19_targets.py` + `scripts/ci/run_pr19_solves.py`, all of which are in the workflow's `on.pull_request.paths` list.
+- **Bypass-label path:** add `skip-emit-solve-ci` label → workflow short-circuits with the bypass-comment notice, exits clean. Verifiable on this PR after open.
+- **Hard-fail path:** the SHA256 placeholder will trigger a `sha256sum -c` failure on the `Install GAMS demo` step. The actual hash will be visible in the CI log. Follow-up commit pins it.
+
+#### Promotion check (per Task 8 §"Promotion check")
+
+Phase B (camcge / cesam2) deferred to Sprint 27 #1381 per Day 3 — kept as `tier=pattern-c` (soft-fail) in the target list. Promotion to `tier=1` is a Sprint 27 task after the Phase B redesign + #1393 (scalar-eq Sum-collapse) + #1357 (comp_up subset/superset) all land. The target-list file's Pattern C section explicitly notes this routing.
+
+#### Quality checks
+
+- `make format` (touched 2 new `*.py` files in `scripts/ci/`): black reformatted both files to match repo style; verified clean post-format.
+- `make lint`: ruff + mypy + black --check all clean (mypy continues to skip `scripts/` per the Makefile target; the new files match the repo's typed-Python conventions).
+- `make test`: re-verified clean (no `src/` or `tests/` changes, just new `scripts/ci/` + `.github/` files).
+- YAML syntax: validated via `python -c "import yaml; yaml.safe_load(...)"`. `actionlint` not installed locally; CI will catch any GitHub Actions schema issues on first run.
+
+#### Day 11 deliverables (this PR)
+
+1. **`.github/workflows/pr19-emit-solve-validation.yml`** — full workflow YAML per Task 8 design.
+2. **`.github/path-solve-ci-targets.txt`** — 11 Tier 0/1 + 4 Pattern C entries.
+3. **`scripts/ci/parse_pr19_targets.py`** — target-list parser.
+4. **`scripts/ci/run_pr19_solves.py`** — solve runner with hard-fail / soft-fail tier handling.
+5. **SPRINT_LOG.md Day 11 entry** (this section).
+6. **CHANGELOG.md Day 11 bullet**.
+
+#### Notes (Day 11)
+
+- **Effort actual ~3h** vs ~4–8h budget per PLAN.md (under-budget — the design doc was thorough, all helper-script logic was straightforward, and local smoke-test confirmed the runner works on the exact 15-model target set).
+- **First CI run will fail at `sha256sum -c`** (placeholder); follow-up commit captures the actual hash from CI logs and pins it. This is the canonical capture path documented in the workflow YAML's `Install GAMS demo` step comment.
+- **Days 12–13 outlook:** Day 12 = buffer + `otpop_mcp.gms` PR14 review (only emit-affecting Sprint 26 artifact still in scope after Day 8 buffer 3 reviewed `launch_mcp.gms`); Day 13 = final pipeline retest + Sprint 26 close + Sprint 27 carryforward filing.
+- **Sprint 27 PR19 follow-ups (post-merge):** (1) capture the GAMS installer SHA256; (2) revisit the target-list file once any Pattern C model passes (promote `tier=pattern-c` → `tier=1`); (3) optional: extend the lint workflow to cover `scripts/ci/` if more CI helpers land.
+
+---

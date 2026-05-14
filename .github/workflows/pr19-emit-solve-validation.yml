@@ -1,0 +1,254 @@
+name: PR19 Pre-Merge Solve-Time Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/emit/**/*.py"
+      - "src/kkt/stationarity.py"
+      - "src/kkt/complementarity.py"
+      - "src/ad/derivative_rules.py"
+      - "src/ad/constraint_jacobian.py"
+      - "scripts/ci/parse_pr19_targets.py"
+      - "scripts/ci/run_pr19_solves.py"
+      - ".github/workflows/pr19-emit-solve-validation.yml"
+      - ".github/path-solve-ci-targets.txt"
+
+jobs:
+  emit-solve-validation:
+    name: PR19 emit solve validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check skip-emit-solve-ci label
+        id: check-label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const skip = labels.includes('skip-emit-solve-ci');
+            core.setOutput('skip', skip ? 'true' : 'false');
+            if (skip) {
+              core.notice('PR has `skip-emit-solve-ci` label — bypassing PR19 solve validation.');
+            }
+
+      - name: Post bypass notice to PR (upsert)
+        if: steps.check-label.outputs.skip == 'true'
+        uses: actions/github-script@v7
+        with:
+          # Build the body via an array + `.join('\n')` (NOT a template literal)
+          # so YAML-block indentation never bleeds into the rendered Markdown.
+          # Markdown treats lines that start with 4+ spaces as code blocks, which
+          # would render the table / headers as a literal code block if a
+          # multi-line template literal were used inside the indented `script:` block.
+          #
+          # Upsert (find-existing-then-update) so re-runs (label toggled, new
+          # commits, manual re-run) don't spam the PR thread.
+          script: |
+            const body = [
+              '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
+              '',
+              'PR has the `skip-emit-solve-ci` label — solve validation bypassed.',
+              '',
+              '**Reviewer responsibility:** verify that byte-diff regression tests cover the change before merge. If the PR turns out to alter emit shape, remove the label and re-run.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+      - name: Skip remaining steps when label present
+        if: steps.check-label.outputs.skip == 'true'
+        run: |
+          echo "PR labeled skip-emit-solve-ci; PR19 solve validation bypassed."
+          exit 0
+
+      - uses: actions/checkout@v4
+        if: steps.check-label.outputs.skip != 'true'
+
+      - name: Set up Python 3.12
+        if: steps.check-label.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install GAMS demo
+        if: steps.check-label.outputs.skip != 'true'
+        env:
+          # Pin installer URL + expected SHA256. Sprint 26 Day 11 left the SHA256
+          # as a placeholder (TODO marker) because the installer is ~648 MB and
+          # the Linux SHA256 must match what the CI download produces — the
+          # canonical capture path is the first workflow run, where the
+          # `sha256sum -c` step below will fail with the actual hash visible in
+          # the CI log. Update this constant after the first run and commit.
+          #
+          # Bumping the GAMS version requires updating BOTH the URL and the
+          # checksum — the workflow refuses to execute an installer whose hash
+          # doesn't match, mitigating supply-chain risk if the CloudFront
+          # endpoint is compromised or the file is replaced upstream.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "<TO BE FILLED IN BY FIRST CI RUN — see comment above>"
+        run: |
+          # Download + verify GAMS demo edition. Refuses to run the installer
+          # if the SHA256 doesn't match the pinned value.
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          echo "$GAMS_INSTALLER_SHA256  /tmp/gams-installer.exe" | sha256sum -c -
+          chmod +x /tmp/gams-installer.exe
+          mkdir -p $HOME/gams
+          /tmp/gams-installer.exe -q -d $HOME/gams
+          echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
+          # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
+          # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
+          # in this same step).
+          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" --version
+
+      - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
+        if: steps.check-label.outputs.skip != 'true'
+        run: gams --version
+
+      - name: Read target list
+        if: steps.check-label.outputs.skip != 'true'
+        id: targets
+        run: |
+          python3 scripts/ci/parse_pr19_targets.py \
+            .github/path-solve-ci-targets.txt \
+            > /tmp/pr19-targets.json
+          cat /tmp/pr19-targets.json
+
+      - name: Run PATH solves (Tier 0/1 — hard-fail)
+        if: steps.check-label.outputs.skip != 'true'
+        id: solve-canaries
+        run: |
+          # Iterate the tier_0_1 list, run gams reslim=30, capture exit code +
+          # MODEL STATUS + SOLVER STATUS + wall time, accumulate into
+          # /tmp/pr19-results-tier01.json. Hard-fail (exit 1) if any model has
+          # rc != 0 or MODEL STATUS != 1.
+          python3 scripts/ci/run_pr19_solves.py \
+            --targets /tmp/pr19-targets.json \
+            --tier hard-fail \
+            --output /tmp/pr19-results-tier01.json \
+            --reslim 30 \
+            --scratch-base /tmp/pr19-scratch
+
+      - name: Run PATH solves (Pattern C — soft-fail / informational)
+        if: steps.check-label.outputs.skip != 'true' && always()
+        id: solve-pattern-c
+        run: |
+          # Iterate the pattern_c list. Always exit 0 — record results only.
+          python3 scripts/ci/run_pr19_solves.py \
+            --targets /tmp/pr19-targets.json \
+            --tier soft-fail \
+            --output /tmp/pr19-results-patternc.json \
+            --reslim 30 \
+            --scratch-base /tmp/pr19-scratch \
+            --soft-fail
+
+      - name: Post PR comment with per-model status
+        if: steps.check-label.outputs.skip != 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const tier01 = JSON.parse(fs.readFileSync('/tmp/pr19-results-tier01.json', 'utf8'));
+            const patternC = JSON.parse(fs.readFileSync('/tmp/pr19-results-patternc.json', 'utf8'));
+
+            const renderTier01Row = (m) =>
+              `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '❌'} |`;
+            const renderPatternCRow = (m) =>
+              `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
+
+            const tier01Rows = tier01.results.map(renderTier01Row).join('\n');
+            const patternCRows = patternC.results.map(renderPatternCRow).join('\n');
+
+            const tier01Pass = tier01.results.filter(m => m.passed).length;
+            const patternCPass = patternC.results.filter(m => m.passed).length;
+
+            const overall = tier01Pass === tier01.results.length
+              ? '✅ PASS (Tier 0/1 all green)'
+              : '❌ FAIL (Tier 0/1 regression)';
+
+            // Build the body line-by-line so we don't depend on template-literal
+            // indentation. Markdown treats lines that start with 4+ spaces as
+            // code blocks — a multi-line template literal embedded in a
+            // YAML-indented `script:` block would silently fold the table /
+            // headers into a literal code block.
+            const body = [
+              '## 🧪 PR19 Pre-Merge Solve Validation Results',
+              '',
+              '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, or the PR19 CI files themselves.',
+              '',
+              `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01.results.length}`,
+              '',
+              '| Model | rc | Time | MODEL STATUS | |',
+              '|---|---|---|---|---|',
+              tier01Rows,
+              '',
+              `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternC.results.length} passing`,
+              '',
+              '| Model | rc | Time | MODEL STATUS | Note |',
+              '|---|---|---|---|---|',
+              patternCRows,
+              '',
+              `**Overall:** ${overall}`,
+            ].join('\n');
+
+            // Upsert (find-existing-then-update) so re-runs don't spam the PR.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+            );
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+      - name: Upload solve artifacts
+        if: steps.check-label.outputs.skip != 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr19-solve-results
+          path: |
+            /tmp/pr19-results-tier01.json
+            /tmp/pr19-results-patternc.json
+            /tmp/pr19-scratch/*/*.lst
+          retention-days: 30
