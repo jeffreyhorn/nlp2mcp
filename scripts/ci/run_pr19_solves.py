@@ -35,6 +35,12 @@ _MODEL_STATUS = re.compile(
 _SOLVER_STATUS = re.compile(
     r"\*\*\*\*\s+SOLVER STATUS\s+(?P<code>\d+)\s+(?P<text>.+?)\s*$", re.MULTILINE
 )
+# Model names get pasted into filesystem paths (`data/gamslib/mcp/<model>_mcp.gms`
+# and `<scratch>/<model>`); reject anything that could traverse out of those
+# directories. parse_pr19_targets.py already enforces this for the canonical
+# input, but the targets JSON could be hand-edited to bypass that — this is
+# the defense-in-depth check at the consumer.
+_MODEL_NAME = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 def _read_status(lst_path: Path) -> tuple[str, str]:
@@ -54,6 +60,19 @@ def _read_status(lst_path: Path) -> tuple[str, str]:
 
 
 def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> dict:
+    if not _MODEL_NAME.match(model):
+        return {
+            "model": model,
+            "rc": -1,
+            "wall_time": 0.0,
+            "model_status": "n/a (invalid model name)",
+            "solver_status": "n/a (invalid model name)",
+            "passed": False,
+            "error": (
+                f"invalid model name {model!r} (must match [A-Za-z0-9_]+ — "
+                f"no path separators, '..', or whitespace)"
+            ),
+        }
     mcp_path = repo_root / "data" / "gamslib" / "mcp" / f"{model}_mcp.gms"
     scratch_dir = scratch_base / model
     scratch_dir.mkdir(parents=True, exist_ok=True)

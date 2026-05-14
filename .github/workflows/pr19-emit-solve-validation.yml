@@ -57,28 +57,42 @@ jobs:
               '',
               '**Reviewer responsibility:** verify that byte-diff regression tests cover the change before merge. If the PR turns out to alter emit shape, remove the label and re-run.',
             ].join('\n');
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const botComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
-            );
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            // Wrap the upsert in try/catch — fork PRs (and any setup with
+            // restricted GITHUB_TOKEN permissions) get a 403 on
+            // issues.createComment / updateComment. Failing the workflow on
+            // that would block the bypass-label path entirely; warn instead
+            // so the rest of the workflow's signal still reaches the PR via
+            // the check status.
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: body,
               });
+              const botComment = comments.find(c =>
+                c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+              );
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body,
+                });
+              }
+            } catch (err) {
+              core.warning(
+                `PR19 bypass-notice comment skipped (${err.status || 'no status'} ${err.message}). ` +
+                `Common cause: PR is from a fork or GITHUB_TOKEN lacks pull-requests:write. ` +
+                `Bypass label is still in effect; this is a notification-only failure.`
+              );
             }
 
       - name: Skip remaining steps when label present
@@ -289,28 +303,42 @@ jobs:
             }
 
             // Upsert (find-existing-then-update) so re-runs don't spam the PR.
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            const botComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
-            );
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body,
-              });
-            } else {
-              await github.rest.issues.createComment({
+            // Wrap in try/catch — fork PRs (and any setup with restricted
+            // GITHUB_TOKEN permissions) get a 403 on issues.createComment /
+            // updateComment. The solve results are already in the workflow
+            // step output + uploaded artifacts; warn instead of failing so
+            // the actual pass/fail signal still reaches the check status.
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: body,
               });
+              const botComment = comments.find(c =>
+                c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+              );
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body,
+                });
+              }
+            } catch (err) {
+              core.warning(
+                `PR19 results comment skipped (${err.status || 'no status'} ${err.message}). ` +
+                `Common cause: PR is from a fork or GITHUB_TOKEN lacks pull-requests:write. ` +
+                `Per-model results are still available in the workflow step output and the ` +
+                `pr19-solve-results artifact; the check status reflects the actual pass/fail.`
+              );
             }
 
       - name: Upload solve artifacts

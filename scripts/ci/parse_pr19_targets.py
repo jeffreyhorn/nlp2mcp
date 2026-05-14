@@ -25,6 +25,11 @@ import sys
 from pathlib import Path
 
 _ANNOTATION = re.compile(r"\b(?P<key>tier|reslim)\s*=\s*(?P<value>[a-zA-Z0-9_-]+)")
+# Model names get pasted into filesystem paths (`data/gamslib/mcp/<model>_mcp.gms`
+# and `<scratch>/<model>`), so reject anything that could traverse out of those
+# directories or smuggle whitespace / shell metacharacters into the gams call.
+# All real GAMSlib model names match this pattern.
+_MODEL_NAME = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 class TargetParseError(ValueError):
@@ -49,6 +54,12 @@ def parse_targets(path: Path) -> dict:
         annotation_part = "" if comment_idx < 0 else line[comment_idx:]
         if not model_part:
             continue
+        if not _MODEL_NAME.match(model_part):
+            raise TargetParseError(
+                f"line {line_no}: invalid model name {model_part!r} "
+                f"(must match [A-Za-z0-9_]+ — no path separators, '..', "
+                f"or whitespace): {raw_line!r}"
+            )
         annotations = {
             m.group("key"): m.group("value") for m in _ANNOTATION.finditer(annotation_part)
         }
