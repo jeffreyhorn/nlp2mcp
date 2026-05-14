@@ -212,7 +212,11 @@ def main() -> int:
 
     results: list[dict] = []
     for entry in bucket:
-        per_model_reslim = entry.get("reslim") or args.reslim
+        # Explicit None check — `entry.get("reslim") or args.reslim` would
+        # discard a legitimate `reslim=0` override (0 is falsy) and silently
+        # use the default timeout instead.
+        entry_reslim = entry.get("reslim")
+        per_model_reslim = args.reslim if entry_reslim is None else entry_reslim
         result = _solve_one(entry["model"], repo_root, scratch_base, per_model_reslim)
         results.append(result)
         marker = "✓" if result["passed"] else "✗"
