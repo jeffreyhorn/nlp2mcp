@@ -225,9 +225,9 @@ jobs:
               body = [
                 '## 🧪 PR19 Pre-Merge Solve Validation — SETUP FAILED',
                 '',
-                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the `sha256sum -c` check (GAMS installer hash mismatch).',
+                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the SHA256 verify check (GAMS installer hash mismatch — pinned value no longer matches the upstream installer).',
                 '',
-                `**Action:** check the [workflow run logs](${runUrl}) for the actual installer SHA256 (visible in the failing \`sha256sum\` line) and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
+                `**Action:** check the [workflow run logs](${runUrl}) for the \`Install GAMS demo\` step — it always prints two lines, \`Actual SHA256 of downloaded installer: <hash>\` and \`Pinned SHA256 in workflow: <hash>\`. Copy the actual hash and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
                 '',
                 'If the SHA256 is already pinned correctly, see the run logs for the underlying error.',
               ].join('\n');

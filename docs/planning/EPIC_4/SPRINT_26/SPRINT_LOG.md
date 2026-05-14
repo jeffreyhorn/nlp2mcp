@@ -1086,10 +1086,10 @@ All Sprint 26 baseline metrics maintained. The Day 13 full pipeline retest will 
 
 | File | Purpose | Notes |
 |---|---|---|
-| `.github/workflows/pr19-emit-solve-validation.yml` | Workflow YAML — triggers on PR changes to `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, the helper scripts, the workflow itself, or the target-list file. Includes the `skip-emit-solve-ci` label bypass + bypass PR comment. Pins GAMS installer URL. | SHA256 placeholder (see "Open question" below). |
+| `.github/workflows/pr19-emit-solve-validation.yml` | Workflow YAML — triggers on PR changes to `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, the helper scripts, the workflow itself, or the target-list file. Includes the `skip-emit-solve-ci` label bypass + bypass PR comment. Pins GAMS installer URL + SHA256. | SHA256 captured + pinned (see §"GAMS installer SHA256" below). |
 | `.github/path-solve-ci-targets.txt` | Target model list — 11 Tier 0/1 hard-fail canaries + 4 Pattern C soft-fail (informational) per Task 8 §"Target Model List". | Pattern C entries call out Sprint 27 #1381 / #1357 / #1393 carryforward routing in the inline comment. |
-| `scripts/ci/parse_pr19_targets.py` | Parses target-list file into JSON `{tier_0_1: [...], pattern_c: [...]}`. Handles `tier=` and `reslim=` annotations + comments. | ~50 LOC after black formatting. |
-| `scripts/ci/run_pr19_solves.py` | Iterates a target bucket, invokes `gams ... reslim=30` with `cwd=$REPO_ROOT` + `ScrDir=<tmpdir>` per Sprint 25 #1345/#1346/#1347 pattern, captures rc + MODEL STATUS + SOLVER STATUS + wall time per model, writes JSON. Hard-fail (exit 1) when any model has rc != 0 or MODEL STATUS != 1, UNLESS `--soft-fail` flag is passed. | ~150 LOC after black formatting. |
+| `scripts/ci/parse_pr19_targets.py` | Parses target-list file into JSON `{tier_0_1: [...], pattern_c: [...]}`. Handles `tier=` and `reslim=` annotations + comments. Hard-fails on unknown tier or malformed reslim with a line-numbered `TargetParseError`. | ~75 LOC after black formatting. |
+| `scripts/ci/run_pr19_solves.py` | Iterates a target bucket, invokes `gams ... reslim=30` with `cwd=$REPO_ROOT` + `ScrDir=<tmpdir>` per Sprint 25 #1345/#1346/#1347 pattern, captures rc + MODEL STATUS + SOLVER STATUS + wall time per model, writes JSON. Hard-fail (exit 1) when any model has rc != 0, MODEL STATUS != 1, or SOLVER STATUS != 1 — derived from `--tier hard-fail`; `--tier soft-fail` always exits 0. | ~170 LOC after black formatting. |
 
 #### Local smoke-test results
 
