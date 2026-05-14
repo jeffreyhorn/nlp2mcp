@@ -132,7 +132,13 @@ jobs:
         run: gams --version
 
       - name: Read target list
-        if: steps.check-label.outputs.skip != 'true'
+        # Run with `always()` so the targets JSON exists even when the upstream
+        # GAMS install step fails (e.g., on first run when GAMS_INSTALLER_SHA256
+        # is still the placeholder). The downstream Post-Comment step needs to
+        # render a SOMETHING table — without the targets JSON, it can only post
+        # a generic "setup failed" notice. (This step has no GAMS dependency,
+        # only the helper script + target-list file checked out.)
+        if: steps.check-label.outputs.skip != 'true' && always()
         id: targets
         run: |
           python3 scripts/ci/parse_pr19_targets.py \
@@ -156,7 +162,12 @@ jobs:
             --scratch-base /tmp/pr19-scratch
 
       - name: Run PATH solves (Pattern C — soft-fail / informational)
-        if: steps.check-label.outputs.skip != 'true' && always()
+        # Run after hard-fail succeeded — depends on `gams` being on PATH and
+        # `/tmp/pr19-targets.json` existing. If the upstream solve step or the
+        # GAMS install failed, this step skips naturally (`success()` is the
+        # default condition); the Post-Comment step below handles the
+        # missing-results-file case so the PR still gets a status update.
+        if: steps.check-label.outputs.skip != 'true'
         id: solve-pattern-c
         run: |
           # Iterate the pattern_c list. Always exit 0 — record results only.
@@ -174,48 +185,83 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const tier01 = JSON.parse(fs.readFileSync('/tmp/pr19-results-tier01.json', 'utf8'));
-            const patternC = JSON.parse(fs.readFileSync('/tmp/pr19-results-patternc.json', 'utf8'));
 
-            const renderTier01Row = (m) =>
-              `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '❌'} |`;
-            const renderPatternCRow = (m) =>
-              `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
+            // Tolerate missing JSON files — happens when the GAMS install step
+            // fails (e.g., first-run SHA256 placeholder) and the solve steps
+            // get skipped. In that case we post a "setup failed" notice instead
+            // of a per-model table.
+            const safeRead = (path) => {
+              try {
+                return JSON.parse(fs.readFileSync(path, 'utf8'));
+              } catch (err) {
+                return null;
+              }
+            };
+            const tier01 = safeRead('/tmp/pr19-results-tier01.json');
+            const patternC = safeRead('/tmp/pr19-results-patternc.json');
 
-            const tier01Rows = tier01.results.map(renderTier01Row).join('\n');
-            const patternCRows = patternC.results.map(renderPatternCRow).join('\n');
+            let body;
+            if (tier01 === null && patternC === null) {
+              // Both solve steps failed to produce results — most likely the
+              // GAMS install step failed before any solve ran. Post a generic
+              // "setup failed" notice with a pointer to the run logs.
+              const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              body = [
+                '## 🧪 PR19 Pre-Merge Solve Validation — SETUP FAILED',
+                '',
+                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the `sha256sum -c` check (GAMS installer hash mismatch).',
+                '',
+                `**Action:** check the [workflow run logs](${runUrl}) for the actual installer SHA256 (visible in the failing \`sha256sum\` line) and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
+                '',
+                'If the SHA256 is already pinned correctly, see the run logs for the underlying error.',
+              ].join('\n');
+            } else {
+              const renderTier01Row = (m) =>
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '❌'} |`;
+              const renderPatternCRow = (m) =>
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
 
-            const tier01Pass = tier01.results.filter(m => m.passed).length;
-            const patternCPass = patternC.results.filter(m => m.passed).length;
+              const tier01Rows = tier01 === null
+                ? '| _hard-fail tier did not run — see workflow logs_ |'
+                : tier01.results.map(renderTier01Row).join('\n');
+              const patternCRows = patternC === null
+                ? '| _soft-fail tier did not run — see workflow logs_ |'
+                : patternC.results.map(renderPatternCRow).join('\n');
 
-            const overall = tier01Pass === tier01.results.length
-              ? '✅ PASS (Tier 0/1 all green)'
-              : '❌ FAIL (Tier 0/1 regression)';
+              const tier01Pass = tier01 === null ? 0 : tier01.results.filter(m => m.passed).length;
+              const tier01Total = tier01 === null ? 0 : tier01.results.length;
+              const patternCPass = patternC === null ? 0 : patternC.results.filter(m => m.passed).length;
+              const patternCTotal = patternC === null ? 0 : patternC.results.length;
 
-            // Build the body line-by-line so we don't depend on template-literal
-            // indentation. Markdown treats lines that start with 4+ spaces as
-            // code blocks — a multi-line template literal embedded in a
-            // YAML-indented `script:` block would silently fold the table /
-            // headers into a literal code block.
-            const body = [
-              '## 🧪 PR19 Pre-Merge Solve Validation Results',
-              '',
-              '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, or the PR19 CI files themselves.',
-              '',
-              `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01.results.length}`,
-              '',
-              '| Model | rc | Time | MODEL STATUS | |',
-              '|---|---|---|---|---|',
-              tier01Rows,
-              '',
-              `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternC.results.length} passing`,
-              '',
-              '| Model | rc | Time | MODEL STATUS | Note |',
-              '|---|---|---|---|---|',
-              patternCRows,
-              '',
-              `**Overall:** ${overall}`,
-            ].join('\n');
+              const overall = (tier01 !== null && tier01Pass === tier01Total)
+                ? '✅ PASS (Tier 0/1 all green)'
+                : '❌ FAIL (Tier 0/1 regression or did not run)';
+
+              // Build the body line-by-line so we don't depend on template-literal
+              // indentation. Markdown treats lines that start with 4+ spaces as
+              // code blocks — a multi-line template literal embedded in a
+              // YAML-indented `script:` block would silently fold the table /
+              // headers into a literal code block.
+              body = [
+                '## 🧪 PR19 Pre-Merge Solve Validation Results',
+                '',
+                '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, or the PR19 CI files themselves.',
+                '',
+                `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01Total}`,
+                '',
+                '| Model | rc | Time | MODEL STATUS | |',
+                '|---|---|---|---|---|',
+                tier01Rows,
+                '',
+                `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternCTotal} passing`,
+                '',
+                '| Model | rc | Time | MODEL STATUS | Note |',
+                '|---|---|---|---|---|',
+                patternCRows,
+                '',
+                `**Overall:** ${overall}`,
+              ].join('\n');
+            }
 
             // Upsert (find-existing-then-update) so re-runs don't spam the PR.
             const { data: comments } = await github.rest.issues.listComments({
@@ -252,3 +298,8 @@ jobs:
             /tmp/pr19-results-patternc.json
             /tmp/pr19-scratch/*/*.lst
           retention-days: 30
+          # When the GAMS install step fails before any solve runs (e.g.,
+          # SHA256 placeholder mismatch on first CI run), none of the listed
+          # paths exist. Don't fail the workflow on missing artifacts —
+          # the Post-Comment step already surfaces the setup-failure cause.
+          if-no-files-found: warn
