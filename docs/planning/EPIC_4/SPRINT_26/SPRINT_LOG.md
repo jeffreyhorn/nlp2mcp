@@ -1175,3 +1175,64 @@ Phase B (camcge / cesam2) deferred to Sprint 27 #1381 per Day 3 — kept as `tie
 - **Sprint 27 PR19 follow-ups (post-merge):** (1) revisit the target-list file once any Pattern C model passes (promote `tier=pattern-c` → `tier=1`); (2) optional: extend the lint workflow to cover `scripts/ci/` if more CI helpers land.
 
 ---
+
+### Day 12 — Buffer / PR14 Emit-Artifact Review Pass
+
+**Status:** COMPLETE (2026-05-14) — docs-only confirmation. No emit artifacts in scope for review (PLAN_PROMPTS.md Day 12 task list reduced to N/A after Day 9 Priority 5 rollback); no Days 1–11 slippage to absorb.
+**Branch:** `sprint26-day12-buffer`.
+
+**Objective (per PLAN_PROMPTS.md Day 12):** Mid-sprint "read the regenerated `.gms`" pass per CONTRIBUTING.md §"Emit-Affecting PRs" + buffer for any Days 1–11 slippage.
+
+#### Outcome
+
+**Task 1 — read regenerated `.gms` end-to-end:**
+
+`git log --since="2026-05-10" -- data/gamslib/mcp/` shows exactly one emit-affecting artifact change this sprint:
+
+```
+8d4cc4ac Sprint 26 Day 1 Phase A: restore launch fix via consolidated zero-offset builder rewrite
+  data/gamslib/mcp/launch_mcp.gms
+```
+
+`launch_mcp.gms` was reviewed end-to-end in **Day 8 buffer 3** against CONTRIBUTING.md reviewer checklist — clean post Phase A (35 `.l` overrides no-duplicates, 0 `.fx` overrides, 0 `sum(t__,)` phantom wraps, single legitimate `sum(s__, pweight(s__))` derivative term, target `stat_iweight(s)` consolidates to `sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` per Day 1 PR #1379 design — full notes in Day 8 §"Buffer use 3").
+
+`otpop_mcp.gms` listed in the PLAN_PROMPTS.md Day 12 task list ("post Day 9 #1334 + #1335 fixes") — **NOT in scope** because Day 9 src/ rolled back (both #1334 → Sprint 27 #1393 and #1335 in-place reopen per Day 9 SPRINT_LOG.md §"Priority 5"). `otpop_mcp.gms` is still at the pre-Sprint-26 baseline (Day 0). Review of unchanged artifacts is not a Day 12 obligation under CONTRIBUTING.md §"Emit-Affecting PRs" — that section gates on regeneration, not on baseline state.
+
+**Task 2 — bug-pattern scan:** N/A — no in-scope artifacts.
+
+**Task 3 — new-bug routing:** N/A — no new bugs surfaced (no review performed).
+
+**Task 4 — buffer absorption:** N/A — Days 1–11 all landed without slippage:
+
+| Day | Outcome | Slippage |
+|---|---|---|
+| 1 | Phase A landed (PR #1379) | None |
+| 2 | Phase A validation + Phase B scoping (docs-only) | None |
+| 3 | Phase B reclassified → Sprint 27 #1381 | None |
+| 4 | Priority 4 reclassified → Sprint 27 #1385; #1334 reopened | None |
+| 5 | Checkpoint 1 GO (docs-only) | None |
+| 6 | Priority 2/3 mechanical closures + kand scoping (docs-only) | None |
+| 7 | Priority 3 kand reclassified → Sprint 27 #1390 | None |
+| 8 | All 4 buffer sub-uses executed (slippage absorption N/A) | None |
+| 9 | #1334 → Sprint 27 #1393; #1335 in-place reopen (src/ rollback) | None |
+| 10 | Checkpoint 2 CONDITIONAL GO (docs-only) | None |
+| 11 | PR19 CI extension landed (PR #1396 merged) | None |
+
+PR19 (Day 11) shipped on Day 11 as planned. Priority 5 reproducer is a Sprint 27 obligation per Day 10. Priority 4 stretch recoveries (iswnm/sarf/mexls/nebrazil) → Sprint 27 #1385. No slippage anywhere in the 11-day execution window.
+
+**Task 5 — no new architectural work:** ✓ — this is a confirmation-only docs PR; no `src/` changes; Pattern C Phase B + Priority 4 redesign + #1393 + #1390 all explicitly Sprint 27.
+
+#### Day 12 deliverables (this PR)
+
+1. **SPRINT_LOG.md Day 12 entry** (this section) — confirms no-op outcome with the git-log evidence + Days 1–11 slippage table.
+2. **CHANGELOG.md Day 12 bullet** — one-line summary.
+
+No `src/` changes; no PR14 obligation triggered; no quality checks required.
+
+#### Notes (Day 12)
+
+- **Effort actual ~30min** vs ~4–6h budget per PLAN.md (well under-budget — the Day 12 task list was structurally N/A once Day 9 rolled back).
+- **PLAN_PROMPTS.md Day 12 staleness:** the prompt was written before Day 9's #1334 + #1335 src/ rollback decision. The "Read end-to-end: otpop_mcp.gms post Day 9 Priority 5 #1334 + #1335 fixes" task implicitly assumes those fixes shipped; they didn't. Day 13 wrap-up should note this in the Sprint 26 retro so future sprint planners know prompt task lists need to track mid-sprint reclassifications.
+- **Day 13 outlook:** final pipeline retest + Sprint 26 close + Sprint 27 carryforward filing per PLAN.md. Effort budget ~4–6h; Day 13 carries the full pipeline run + 5 Sprint 27 carryforward verifications.
+
+---
