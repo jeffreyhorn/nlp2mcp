@@ -205,8 +205,27 @@ def main() -> int:
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    targets = json.loads(Path(args.targets).read_text())
-    bucket = targets["tier_0_1"] if args.tier == "hard-fail" else targets["pattern_c"]
+
+    targets_path = Path(args.targets)
+    try:
+        targets = json.loads(targets_path.read_text())
+    except OSError as exc:
+        print(f"error: cannot read targets JSON at {targets_path}: {exc}", file=sys.stderr)
+        return 2
+    except json.JSONDecodeError as exc:
+        print(f"error: invalid JSON in {targets_path}: {exc}", file=sys.stderr)
+        return 2
+
+    bucket_key = "tier_0_1" if args.tier == "hard-fail" else "pattern_c"
+    try:
+        bucket = targets[bucket_key]
+    except KeyError:
+        print(
+            f"error: targets JSON {targets_path} missing required key {bucket_key!r} "
+            f"(produce it via parse_pr19_targets.py)",
+            file=sys.stderr,
+        )
+        return 2
     scratch_base = Path(args.scratch_base)
     scratch_base.mkdir(parents=True, exist_ok=True)
 

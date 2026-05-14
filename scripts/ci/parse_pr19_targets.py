@@ -64,6 +64,11 @@ def parse_targets(path: Path) -> dict:
                     f"line {line_no}: malformed reslim={reslim_raw!r} "
                     f"(must be an integer number of seconds): {raw_line!r}"
                 ) from exc
+            if reslim < 0:
+                raise TargetParseError(
+                    f"line {line_no}: invalid reslim={reslim} "
+                    f"(must be >= 0 seconds): {raw_line!r}"
+                )
         entry = {"model": model_part, "tier": tier, "reslim": reslim}
         if tier == "pattern-c":
             pattern_c.append(entry)
