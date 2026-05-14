@@ -233,19 +233,24 @@ jobs:
                 'If the SHA256 is already pinned correctly, see the run logs for the underlying error.',
               ].join('\n');
             } else {
+              // SOLVER STATUS is a column of its own — `passed` is the
+              // conjunction of MODEL STATUS=1 AND SOLVER STATUS=1, so
+              // showing both columns lets reviewers diagnose abnormal
+              // PATH terminations (e.g., MODEL STATUS=1 + SOLVER STATUS=3
+              // Resource Interrupt) without digging into artifacts.
               const renderTier01Row = (m) =>
-                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '❌'} |`;
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '❌'} |`;
               const renderPatternCRow = (m) =>
-                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
 
-              // Fallback row must occupy all 5 columns of its host table —
+              // Fallback row must occupy all 6 columns of its host table —
               // a single-cell row breaks Markdown table rendering when the
               // companion tier ran but this one did not.
               const tier01Rows = tier01 === null
-                ? '| _hard-fail tier did not run — see workflow logs_ | | | | |'
+                ? '| _hard-fail tier did not run — see workflow logs_ | | | | | |'
                 : tier01.results.map(renderTier01Row).join('\n');
               const patternCRows = patternC === null
-                ? '| _soft-fail tier did not run — see workflow logs_ | | | | |'
+                ? '| _soft-fail tier did not run — see workflow logs_ | | | | | |'
                 : patternC.results.map(renderPatternCRow).join('\n');
 
               const tier01Pass = tier01 === null ? 0 : tier01.results.filter(m => m.passed).length;
@@ -269,14 +274,14 @@ jobs:
                 '',
                 `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01Total}`,
                 '',
-                '| Model | rc | Time | MODEL STATUS | Pass |',
-                '|---|---|---|---|---|',
+                '| Model | rc | Time | MODEL STATUS | SOLVER STATUS | Pass |',
+                '|---|---|---|---|---|---|',
                 tier01Rows,
                 '',
                 `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternCTotal} passing`,
                 '',
-                '| Model | rc | Time | MODEL STATUS | Note |',
-                '|---|---|---|---|---|',
+                '| Model | rc | Time | MODEL STATUS | SOLVER STATUS | Note |',
+                '|---|---|---|---|---|---|',
                 patternCRows,
                 '',
                 `**Overall:** ${overall}`,

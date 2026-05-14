@@ -69,6 +69,7 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
             "error": f"mcp artifact not found at {mcp_path}",
         }
     start = time.monotonic()
+    error: str | None = None
     try:
         completed = subprocess.run(
             [
@@ -87,6 +88,7 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
         rc = completed.returncode
     except subprocess.TimeoutExpired:
         rc = 124
+        error = f"subprocess timeout after {reslim + 30}s (gams reslim={reslim})"
     except FileNotFoundError:
         # `gams` not on PATH — common for local smoke tests when the user
         # forgot to source the GAMS env, and possible in CI if the install
@@ -111,7 +113,7 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
     # (e.g., 3 Resource Interrupt, 4 Terminated by Solver), so both are
     # needed to catch all PATH regressions.
     passed = rc == 0 and model_status.startswith("1 ") and solver_status.startswith("1 ")
-    return {
+    result: dict = {
         "model": model,
         "rc": rc,
         "wall_time": wall_time,
@@ -119,6 +121,9 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
         "solver_status": solver_status,
         "passed": passed,
     }
+    if error is not None:
+        result["error"] = error
+    return result
 
 
 def _resolve_repo_root(override: str | None) -> Path:
@@ -200,6 +205,15 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if args.reslim < 0:
+        print(
+            f"error: --reslim must be >= 0, got {args.reslim} "
+            f"(negative values produce an invalid `gams reslim=<neg>` invocation "
+            f"and a too-small subprocess timeout)",
+            file=sys.stderr,
+        )
+        return 2
+
     try:
         repo_root = _resolve_repo_root(args.repo_root)
     except FileNotFoundError as exc:
@@ -236,6 +250,15 @@ def main() -> int:
         # use the default timeout instead.
         entry_reslim = entry.get("reslim")
         per_model_reslim = args.reslim if entry_reslim is None else entry_reslim
+        # Defense-in-depth: parse_pr19_targets.py already rejects negative
+        # reslim, but a hand-edited targets JSON could bypass that.
+        if per_model_reslim < 0:
+            print(
+                f"error: targets entry {entry.get('model')!r} has invalid reslim="
+                f"{per_model_reslim} (must be >= 0)",
+                file=sys.stderr,
+            )
+            return 2
         result = _solve_one(entry["model"], repo_root, scratch_base, per_model_reslim)
         results.append(result)
         marker = "✓" if result["passed"] else "✗"
