@@ -1225,7 +1225,7 @@ PR19 (Day 11) shipped on Day 11 as planned. Priority 5 reproducer is a Sprint 27
 #### Day 12 deliverables (this PR)
 
 1. **SPRINT_LOG.md Day 12 entry** (this section) — confirms no-op outcome with the git-log evidence + Days 1–11 slippage table.
-2. **CHANGELOG.md Day 12 bullet** — one-line summary.
+2. **CHANGELOG.md Day 12 bullet** — summary paragraph (Tasks 1 / 4 / 5 verdicts + the PLAN_PROMPTS.md staleness note + budget actuals), matching the format of the other Sprint 26 day entries.
 
 No `src/` changes; no PR14 obligation triggered; no quality checks required.
 
