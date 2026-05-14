@@ -138,12 +138,14 @@ jobs:
           echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
           # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
           # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
-          # in this same step).
-          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" --version
+          # in this same step). Use `gams audit` (canonical version+license dump
+          # that exits 0); `gams --version` parses `--version` as a positional
+          # input file on 53.1.0 demo and exits with rc=6.
+          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" audit lo=2
 
       - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
         if: steps.check-label.outputs.skip != 'true'
-        run: gams --version
+        run: gams audit lo=2
 
       - name: Read target list
         # Run with `always()` so the targets JSON exists even when the upstream
