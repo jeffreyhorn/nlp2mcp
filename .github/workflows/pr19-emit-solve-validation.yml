@@ -169,7 +169,8 @@ jobs:
           # Iterate the tier_0_1 list, run gams reslim=30, capture exit code +
           # MODEL STATUS + SOLVER STATUS + wall time, accumulate into
           # /tmp/pr19-results-tier01.json. Hard-fail (exit 1) if any model has
-          # rc != 0 or MODEL STATUS != 1.
+          # rc != 0, MODEL STATUS != 1, or SOLVER STATUS != 1 — `passed` in
+          # the runner is the conjunction of all three.
           python3 scripts/ci/run_pr19_solves.py \
             --targets /tmp/pr19-targets.json \
             --tier hard-fail \

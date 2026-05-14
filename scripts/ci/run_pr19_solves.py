@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -120,6 +121,51 @@ def _solve_one(model: str, repo_root: Path, scratch_base: Path, reslim: int) -> 
     }
 
 
+def _resolve_repo_root(override: str | None) -> Path:
+    """Locate the repo root without assuming git is on PATH or .git exists.
+
+    Resolution order:
+      1. ``--repo-root`` CLI override (caller knows best).
+      2. ``$GITHUB_WORKSPACE`` (set by GitHub Actions; survives even when
+         the checkout has no .git directory, as with shallow clones).
+      3. ``git rev-parse --show-toplevel`` (the original behavior).
+      4. ``Path(__file__).resolve().parents[2]`` — scripts/ci/this.py is
+         two levels below the repo root in the source layout.
+
+    Raises ``FileNotFoundError`` with a clear message if none yield a
+    directory containing ``data/gamslib/mcp`` (the path the runner needs).
+    """
+
+    candidates: list[tuple[str, Path]] = []
+    if override:
+        candidates.append(("--repo-root", Path(override)))
+    workspace = os.environ.get("GITHUB_WORKSPACE")
+    if workspace:
+        candidates.append(("$GITHUB_WORKSPACE", Path(workspace)))
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+        if out:
+            candidates.append(("git rev-parse --show-toplevel", Path(out)))
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        pass
+    candidates.append(("Path(__file__).parents[2]", Path(__file__).resolve().parents[2]))
+
+    for label, candidate in candidates:
+        if (candidate / "data" / "gamslib" / "mcp").is_dir():
+            return candidate
+
+    tried = "\n  ".join(f"{label}: {path}" for label, path in candidates)
+    raise FileNotFoundError(
+        "could not locate repo root (need a directory containing "
+        f"data/gamslib/mcp). Tried:\n  {tried}\n"
+        "Pass --repo-root <path> or set $GITHUB_WORKSPACE."
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--targets", required=True, help="JSON from parse_pr19_targets.py")
@@ -142,11 +188,23 @@ def main() -> int:
         default="/tmp/pr19-scratch",
         help="Base directory for per-model GAMS scratch files",
     )
+    parser.add_argument(
+        "--repo-root",
+        default=None,
+        help=(
+            "Path to the repo root. Defaults to: $GITHUB_WORKSPACE if set "
+            "(GitHub Actions runner) → `git rev-parse --show-toplevel` → the "
+            "package's two-levels-up parent (scripts/ci/run_pr19_solves.py "
+            "→ repo root). Override when running outside a git checkout."
+        ),
+    )
     args = parser.parse_args()
 
-    repo_root = Path(
-        subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
-    )
+    try:
+        repo_root = _resolve_repo_root(args.repo_root)
+    except FileNotFoundError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     targets = json.loads(Path(args.targets).read_text())
     bucket = targets["tier_0_1"] if args.tier == "hard-fail" else targets["pattern_c"]
     scratch_base = Path(args.scratch_base)
