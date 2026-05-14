@@ -260,7 +260,14 @@ def main() -> int:
         )
         return 2
     scratch_base = Path(args.scratch_base)
-    scratch_base.mkdir(parents=True, exist_ok=True)
+    try:
+        scratch_base.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(
+            f"error: cannot create scratch directory {scratch_base}: {exc}",
+            file=sys.stderr,
+        )
+        return 2
 
     results: list[dict] = []
     for idx, entry in enumerate(bucket):
@@ -323,7 +330,24 @@ def main() -> int:
         )
 
     out = {"tier": args.tier, "results": results}
-    Path(args.output).write_text(json.dumps(out, indent=2))
+    output_path = Path(args.output)
+    try:
+        # Create the parent dir if needed so the output JSON can land even
+        # when the caller hasn't pre-created --output's directory (e.g.,
+        # local smoke tests writing to /tmp/pr19/foo.json).
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(out, indent=2))
+    except OSError as exc:
+        # Per-model results are still in `results` (printed line-by-line
+        # above) and the workflow run log, but the JSON for downstream
+        # steps (PR comment + artifact upload) is gone. Exit 2 with a
+        # clear message so CI surfaces the cause.
+        print(
+            f"error: cannot write results JSON to {output_path}: {exc} "
+            f"(per-model results are still in the run log above)",
+            file=sys.stderr,
+        )
+        return 2
 
     # Soft-fail tier always exits 0 (informational); hard-fail tier exits 1
     # if any model regressed. Derived from --tier so the two CLI flags can't

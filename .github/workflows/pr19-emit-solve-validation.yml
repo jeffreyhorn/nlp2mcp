@@ -82,10 +82,14 @@ jobs:
             // so the rest of the workflow's signal still reaches the PR via
             // the check status.
             try {
-              const { data: comments } = await github.rest.issues.listComments({
+              // Paginate — `listComments` defaults to 30 per page; large PRs
+              // can push the marker past the first page, which would otherwise
+              // cause this upsert to create a duplicate on every rerun.
+              const comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
+                per_page: 100,
               });
               const botComment = comments.find(c =>
                 c.user.type === 'Bot' && c.body.includes(marker)
@@ -334,10 +338,14 @@ jobs:
             // step output + uploaded artifacts; warn instead of failing so
             // the actual pass/fail signal still reaches the check status.
             try {
-              const { data: comments } = await github.rest.issues.listComments({
+              // Paginate — `listComments` defaults to 30 per page; large PRs
+              // can push the marker past the first page, which would otherwise
+              // cause this upsert to create a duplicate on every rerun.
+              const comments = await github.paginate(github.rest.issues.listComments, {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
+                per_page: 100,
               });
               const botComment = comments.find(c =>
                 c.user.type === 'Bot' && c.body.includes(marker)
