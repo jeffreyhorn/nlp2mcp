@@ -263,7 +263,28 @@ def main() -> int:
     scratch_base.mkdir(parents=True, exist_ok=True)
 
     results: list[dict] = []
-    for entry in bucket:
+    for idx, entry in enumerate(bucket):
+        # Schema check — parse_pr19_targets.py produces well-formed dicts, but
+        # the targets JSON is treated as potentially hand-edited elsewhere
+        # (defense-in-depth for model name + reslim). A non-dict / missing
+        # model / non-string model would otherwise crash with a traceback at
+        # `entry["model"]`. Surface a clear stderr message + exit 2 instead.
+        if not isinstance(entry, dict):
+            print(
+                f"error: targets {bucket_key!r}[{idx}] is not a dict: {entry!r} "
+                f"(expected {{'model': str, 'tier': str, 'reslim': int|null}})",
+                file=sys.stderr,
+            )
+            return 2
+        model = entry.get("model")
+        if not isinstance(model, str) or not model:
+            print(
+                f"error: targets {bucket_key!r}[{idx}] missing or invalid 'model' "
+                f"field (must be a non-empty string, got {model!r})",
+                file=sys.stderr,
+            )
+            return 2
+
         # Explicit None check — `entry.get("reslim") or args.reslim` would
         # discard a legitimate `reslim=0` override (0 is falsy) and silently
         # use the default timeout instead.
@@ -273,12 +294,12 @@ def main() -> int:
         # reslim, but a hand-edited targets JSON could bypass that.
         if per_model_reslim < 0:
             print(
-                f"error: targets entry {entry.get('model')!r} has invalid reslim="
+                f"error: targets entry {model!r} has invalid reslim="
                 f"{per_model_reslim} (must be >= 0)",
                 file=sys.stderr,
             )
             return 2
-        result = _solve_one(entry["model"], repo_root, scratch_base, per_model_reslim)
+        result = _solve_one(model, repo_root, scratch_base, per_model_reslim)
         results.append(result)
         marker = "✓" if result["passed"] else "✗"
         print(

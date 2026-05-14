@@ -50,7 +50,14 @@ jobs:
           # Upsert (find-existing-then-update) so re-runs (label toggled, new
           # commits, manual re-run) don't spam the PR thread.
           script: |
+            // Unique HTML-comment marker so this upsert can't accidentally
+            // overwrite the per-model results comment (which uses
+            // <!-- pr19-solve-validation:results -->). Toggling the bypass
+            // label off then on (or re-running after a prior results post)
+            // would otherwise match either comment via a shared substring.
+            const marker = '<!-- pr19-solve-validation:bypass -->';
             const body = [
+              marker,
               '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
               '',
               'PR has the `skip-emit-solve-ci` label — solve validation bypassed.',
@@ -70,7 +77,7 @@ jobs:
                 issue_number: context.issue.number,
               });
               const botComment = comments.find(c =>
-                c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+                c.user.type === 'Bot' && c.body.includes(marker)
               );
               if (botComment) {
                 await github.rest.issues.updateComment({
@@ -231,6 +238,11 @@ jobs:
             const tier01 = safeRead('/tmp/pr19-results-tier01.json');
             const patternC = safeRead('/tmp/pr19-results-patternc.json');
 
+            // Unique HTML-comment marker so this upsert can't accidentally
+            // overwrite the bypass-notice comment (which uses
+            // <!-- pr19-solve-validation:bypass -->) on label-toggle re-runs.
+            const marker = '<!-- pr19-solve-validation:results -->';
+
             let body;
             if (tier01 === null && patternC === null) {
               // Both solve steps failed to produce results — most likely the
@@ -238,6 +250,7 @@ jobs:
               // "setup failed" notice with a pointer to the run logs.
               const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
               body = [
+                marker,
                 '## 🧪 PR19 Pre-Merge Solve Validation — SETUP FAILED',
                 '',
                 'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the SHA256 verify check (GAMS installer hash mismatch — pinned value no longer matches the upstream installer).',
@@ -282,6 +295,7 @@ jobs:
               // YAML-indented `script:` block would silently fold the table /
               // headers into a literal code block.
               body = [
+                marker,
                 '## 🧪 PR19 Pre-Merge Solve Validation Results',
                 '',
                 '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, or the PR19 CI files themselves.',
@@ -315,7 +329,7 @@ jobs:
                 issue_number: context.issue.number,
               });
               const botComment = comments.find(c =>
-                c.user.type === 'Bot' && c.body.includes('PR19 Pre-Merge Solve Validation')
+                c.user.type === 'Bot' && c.body.includes(marker)
               );
               if (botComment) {
                 await github.rest.issues.updateComment({
