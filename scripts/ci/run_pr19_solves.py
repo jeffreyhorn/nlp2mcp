@@ -289,6 +289,20 @@ def main() -> int:
         # discard a legitimate `reslim=0` override (0 is falsy) and silently
         # use the default timeout instead.
         entry_reslim = entry.get("reslim")
+        # Schema check — parse_pr19_targets.py only emits `int | None`, but a
+        # hand-edited targets JSON could ship a string/float/etc. Catch it
+        # here rather than letting `per_model_reslim < 0` raise TypeError
+        # (bool also passes `isinstance(int)` and is excluded for safety).
+        if entry_reslim is not None and (
+            isinstance(entry_reslim, bool) or not isinstance(entry_reslim, int)
+        ):
+            print(
+                f"error: targets entry {model!r} has invalid reslim="
+                f"{entry_reslim!r} (must be an integer or null, got "
+                f"{type(entry_reslim).__name__})",
+                file=sys.stderr,
+            )
+            return 2
         per_model_reslim = args.reslim if entry_reslim is None else entry_reslim
         # Defense-in-depth: parse_pr19_targets.py already rejects negative
         # reslim, but a hand-edited targets JSON could bypass that.

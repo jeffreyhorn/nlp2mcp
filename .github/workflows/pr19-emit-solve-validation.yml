@@ -18,7 +18,18 @@ jobs:
   emit-solve-validation:
     name: PR19 emit solve validation
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    # Budget breakdown for worst-case (regression scenario):
+    #   - GAMS install (download 648MB + extract):        ~90s
+    #   - Tier 0/1 solves, all timing out:                11 × 60s = 660s
+    #     (reslim=30 + 30s subprocess buffer per model)
+    #   - Pattern C solves, all timing out (soft-fail):    4 × 60s = 240s
+    #   - PR-comment upserts + artifact upload:           ~30s
+    #   - Total:                                          ~17min
+    # Set to 20 minutes to leave headroom; happy-path Tier 0/1 is 4.6s sum
+    # (see SPRINT_LOG.md Day 11 smoke-test), so this is only consumed when a
+    # regression causes timeouts — exactly when we most need the workflow to
+    # finish + post structured results.
+    timeout-minutes: 20
 
     permissions:
       contents: read

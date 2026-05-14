@@ -106,6 +106,11 @@ def main() -> int:
     except TargetParseError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except OSError as exc:
+        # Permission error, transient FS issue, race with deletion, etc.
+        # The `is_file()` check above only covers the happy path.
+        print(f"error: cannot read target list {targets_path}: {exc}", file=sys.stderr)
+        return 2
     print(json.dumps(targets, indent=2))
     return 0
 
