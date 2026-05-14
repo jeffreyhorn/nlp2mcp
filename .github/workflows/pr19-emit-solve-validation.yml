@@ -1,0 +1,391 @@
+name: PR19 Pre-Merge Solve-Time Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/emit/**/*.py"
+      - "src/kkt/stationarity.py"
+      - "src/kkt/complementarity.py"
+      - "src/ad/derivative_rules.py"
+      - "src/ad/constraint_jacobian.py"
+      - "scripts/ci/parse_pr19_targets.py"
+      - "scripts/ci/run_pr19_solves.py"
+      - ".github/workflows/pr19-emit-solve-validation.yml"
+      - ".github/path-solve-ci-targets.txt"
+
+jobs:
+  emit-solve-validation:
+    name: PR19 emit solve validation
+    runs-on: ubuntu-latest
+    # Budget breakdown for worst-case (regression scenario):
+    #   - GAMS install (download 648MB + extract):        ~90s
+    #   - Tier 0/1 solves, all timing out:                11 × 60s = 660s
+    #     (reslim=30 + 30s subprocess buffer per model)
+    #   - Pattern C solves, all timing out (soft-fail):    4 × 60s = 240s
+    #   - PR-comment upserts + artifact upload:           ~30s
+    #   - Total:                                          ~17min
+    # Set to 20 minutes to leave headroom; happy-path Tier 0/1 is 4.6s sum
+    # (see SPRINT_LOG.md Day 11 smoke-test), so this is only consumed when a
+    # regression causes timeouts — exactly when we most need the workflow to
+    # finish + post structured results.
+    timeout-minutes: 20
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check skip-emit-solve-ci label
+        id: check-label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const skip = labels.includes('skip-emit-solve-ci');
+            core.setOutput('skip', skip ? 'true' : 'false');
+            if (skip) {
+              core.notice('PR has `skip-emit-solve-ci` label — bypassing PR19 solve validation.');
+            }
+
+      - name: Post bypass notice to PR (upsert)
+        if: steps.check-label.outputs.skip == 'true'
+        uses: actions/github-script@v7
+        with:
+          # Build the body via an array + `.join('\n')` (NOT a template literal)
+          # so YAML-block indentation never bleeds into the rendered Markdown.
+          # Markdown treats lines that start with 4+ spaces as code blocks, which
+          # would render the table / headers as a literal code block if a
+          # multi-line template literal were used inside the indented `script:` block.
+          #
+          # Upsert (find-existing-then-update) so re-runs (label toggled, new
+          # commits, manual re-run) don't spam the PR thread.
+          script: |
+            // Unique HTML-comment marker so this upsert can't accidentally
+            // overwrite the per-model results comment (which uses
+            // <!-- pr19-solve-validation:results -->). Toggling the bypass
+            // label off then on (or re-running after a prior results post)
+            // would otherwise match either comment via a shared substring.
+            const marker = '<!-- pr19-solve-validation:bypass -->';
+            const body = [
+              marker,
+              '## 🧪 PR19 Pre-Merge Solve Validation — BYPASSED',
+              '',
+              'PR has the `skip-emit-solve-ci` label — solve validation bypassed.',
+              '',
+              '**Reviewer responsibility:** verify that byte-diff regression tests cover the change before merge. If the PR turns out to alter emit shape, remove the label and re-run.',
+            ].join('\n');
+            // Wrap the upsert in try/catch — fork PRs (and any setup with
+            // restricted GITHUB_TOKEN permissions) get a 403 on
+            // issues.createComment / updateComment. Failing the workflow on
+            // that would block the bypass-label path entirely; warn instead
+            // so the rest of the workflow's signal still reaches the PR via
+            // the check status.
+            try {
+              // Paginate — `listComments` defaults to 30 per page; large PRs
+              // can push the marker past the first page, which would otherwise
+              // cause this upsert to create a duplicate on every rerun.
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              });
+              const botComment = comments.find(c =>
+                c.user.type === 'Bot' && c.body.includes(marker)
+              );
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body,
+                });
+              }
+            } catch (err) {
+              core.warning(
+                `PR19 bypass-notice comment skipped (${err.status || 'no status'} ${err.message}). ` +
+                `Common cause: PR is from a fork or GITHUB_TOKEN lacks pull-requests:write. ` +
+                `Bypass label is still in effect; this is a notification-only failure.`
+              );
+            }
+
+      - name: Skip remaining steps when label present
+        if: steps.check-label.outputs.skip == 'true'
+        run: |
+          echo "PR labeled skip-emit-solve-ci; PR19 solve validation bypassed."
+          exit 0
+
+      - uses: actions/checkout@v4
+        if: steps.check-label.outputs.skip != 'true'
+
+      - name: Set up Python 3.12
+        if: steps.check-label.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install GAMS demo
+        if: steps.check-label.outputs.skip != 'true'
+        env:
+          # Pin installer URL + expected SHA256. Bumping the GAMS version
+          # requires updating BOTH the URL and the checksum — the workflow
+          # refuses to execute an installer whose hash doesn't match,
+          # mitigating supply-chain risk if the CloudFront endpoint is
+          # compromised or the file is replaced upstream.
+          #
+          # SHA256 captured on first PR #1396 CI run (Sprint 26 Day 11) for
+          # GAMS demo 53.1.0 linux_x64_64_sfx.exe (~648 MB). To refresh:
+          # bump URL → push → read the actual SHA256 from the failing
+          # `Install GAMS demo` step log → pin it here.
+          GAMS_INSTALLER_URL: "https://d37drm4t2jghv5.cloudfront.net/distributions/53.1.0/linux/linux_x64_64_sfx.exe"
+          GAMS_INSTALLER_SHA256: "8a82c82e257e54afc0d18c144957a862edae4e75020b81eed1950d93cb447b1a"
+        run: |
+          # Download + verify GAMS demo edition. Refuses to run the installer
+          # if the SHA256 doesn't match the pinned value.
+          curl -fSL -o /tmp/gams-installer.exe "$GAMS_INSTALLER_URL"
+          # Always compute and print the actual SHA256 — makes the value visible
+          # in CI logs regardless of whether the verify check below succeeds or
+          # fails. On first CI run with a placeholder pin, the printed value is
+          # what should be copied into GAMS_INSTALLER_SHA256 for the follow-up
+          # commit. On subsequent runs, the printed value lets you confirm the
+          # pin is still correct (and detects upstream installer rotation).
+          ACTUAL_SHA256=$(sha256sum /tmp/gams-installer.exe | awk '{print $1}')
+          echo "Actual SHA256 of downloaded installer: $ACTUAL_SHA256"
+          echo "Pinned SHA256 in workflow:             $GAMS_INSTALLER_SHA256"
+          if [ "$ACTUAL_SHA256" != "$GAMS_INSTALLER_SHA256" ]; then
+            echo "ERROR: SHA256 mismatch. Update GAMS_INSTALLER_SHA256 in"
+            echo "       .github/workflows/pr19-emit-solve-validation.yml to"
+            echo "       the actual value above (and verify it matches the"
+            echo "       upstream gams.com download for this URL)."
+            exit 1
+          fi
+          chmod +x /tmp/gams-installer.exe
+          mkdir -p $HOME/gams
+          /tmp/gams-installer.exe -q -d $HOME/gams
+          echo "$HOME/gams/gams53.1_linux_x64_64_sfx" >> $GITHUB_PATH
+          # Smoke-check the installer landed (use absolute path — `$GITHUB_PATH`
+          # only takes effect for SUBSEQUENT steps, so plain `gams` won't resolve
+          # in this same step). Use `gams audit` (canonical version+license dump
+          # that exits 0); `gams --version` parses `--version` as a positional
+          # input file on 53.1.0 demo and exits with rc=6.
+          "$HOME/gams/gams53.1_linux_x64_64_sfx/gams" audit lo=2
+
+      - name: Verify GAMS on PATH (separate step so $GITHUB_PATH applies)
+        if: steps.check-label.outputs.skip != 'true'
+        run: gams audit lo=2
+
+      - name: Read target list
+        # Run with `always()` so the targets JSON exists even when the upstream
+        # GAMS install step fails (e.g., on first run when GAMS_INSTALLER_SHA256
+        # is still the placeholder). The downstream Post-Comment step needs to
+        # render a SOMETHING table — without the targets JSON, it can only post
+        # a generic "setup failed" notice. (This step has no GAMS dependency,
+        # only the helper script + target-list file checked out.)
+        if: steps.check-label.outputs.skip != 'true' && always()
+        id: targets
+        run: |
+          python3 scripts/ci/parse_pr19_targets.py \
+            .github/path-solve-ci-targets.txt \
+            > /tmp/pr19-targets.json
+          cat /tmp/pr19-targets.json
+
+      - name: Run PATH solves (Tier 0/1 — hard-fail)
+        if: steps.check-label.outputs.skip != 'true'
+        id: solve-canaries
+        run: |
+          # Iterate the tier_0_1 list, run gams reslim=30, capture exit code +
+          # MODEL STATUS + SOLVER STATUS + wall time, accumulate into
+          # /tmp/pr19-results-tier01.json. Hard-fail (exit 1) if any model has
+          # rc != 0, MODEL STATUS != 1, or SOLVER STATUS != 1 — `passed` in
+          # the runner is the conjunction of all three.
+          python3 scripts/ci/run_pr19_solves.py \
+            --targets /tmp/pr19-targets.json \
+            --tier hard-fail \
+            --output /tmp/pr19-results-tier01.json \
+            --reslim 30 \
+            --scratch-base /tmp/pr19-scratch
+
+      - name: Run PATH solves (Pattern C — soft-fail / informational)
+        # Run after hard-fail succeeded — depends on `gams` being on PATH and
+        # `/tmp/pr19-targets.json` existing. If the upstream solve step or the
+        # GAMS install failed, this step skips naturally (`success()` is the
+        # default condition); the Post-Comment step below handles the
+        # missing-results-file case so the PR still gets a status update.
+        if: steps.check-label.outputs.skip != 'true'
+        id: solve-pattern-c
+        run: |
+          # Iterate the pattern_c list. Always exit 0 — record results only.
+          # `--tier soft-fail` derives no-enforcement automatically.
+          python3 scripts/ci/run_pr19_solves.py \
+            --targets /tmp/pr19-targets.json \
+            --tier soft-fail \
+            --output /tmp/pr19-results-patternc.json \
+            --reslim 30 \
+            --scratch-base /tmp/pr19-scratch
+
+      - name: Post PR comment with per-model status
+        if: steps.check-label.outputs.skip != 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Tolerate missing JSON files — happens when the GAMS install step
+            // fails (e.g., first-run SHA256 placeholder) and the solve steps
+            // get skipped. In that case we post a "setup failed" notice instead
+            // of a per-model table.
+            const safeRead = (path) => {
+              try {
+                return JSON.parse(fs.readFileSync(path, 'utf8'));
+              } catch (err) {
+                return null;
+              }
+            };
+            const tier01 = safeRead('/tmp/pr19-results-tier01.json');
+            const patternC = safeRead('/tmp/pr19-results-patternc.json');
+
+            // Unique HTML-comment marker so this upsert can't accidentally
+            // overwrite the bypass-notice comment (which uses
+            // <!-- pr19-solve-validation:bypass -->) on label-toggle re-runs.
+            const marker = '<!-- pr19-solve-validation:results -->';
+
+            let body;
+            if (tier01 === null && patternC === null) {
+              // Both solve steps failed to produce results — most likely the
+              // GAMS install step failed before any solve ran. Post a generic
+              // "setup failed" notice with a pointer to the run logs.
+              const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+              body = [
+                marker,
+                '## 🧪 PR19 Pre-Merge Solve Validation — SETUP FAILED',
+                '',
+                'Neither the Tier 0/1 hard-fail tier nor the Pattern C soft-fail tier produced results. Most common cause: the `Install GAMS demo` step failed at the SHA256 verify check (GAMS installer hash mismatch — pinned value no longer matches the upstream installer).',
+                '',
+                `**Action:** check the [workflow run logs](${runUrl}) for the \`Install GAMS demo\` step — it always prints two lines, \`Actual SHA256 of downloaded installer: <hash>\` and \`Pinned SHA256 in workflow: <hash>\`. Copy the actual hash and pin it in \`.github/workflows/pr19-emit-solve-validation.yml\`'s \`GAMS_INSTALLER_SHA256\` env var.`,
+                '',
+                'If the SHA256 is already pinned correctly, see the run logs for the underlying error.',
+              ].join('\n');
+            } else {
+              // SOLVER STATUS is a column of its own — `passed` is the
+              // conjunction of MODEL STATUS=1 AND SOLVER STATUS=1, so
+              // showing both columns lets reviewers diagnose abnormal
+              // PATH terminations (e.g., MODEL STATUS=1 + SOLVER STATUS=3
+              // Resource Interrupt) without digging into artifacts.
+              const renderTier01Row = (m) =>
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '❌'} |`;
+              const renderPatternCRow = (m) =>
+                `| ${m.model} | ${m.rc} | ${m.wall_time}s | ${m.model_status} | ${m.solver_status} | ${m.passed ? '✅' : '⚠ expected pre-fix'} |`;
+
+              // Fallback row must occupy all 6 columns of its host table —
+              // a single-cell row breaks Markdown table rendering when the
+              // companion tier ran but this one did not.
+              const tier01Rows = tier01 === null
+                ? '| _hard-fail tier did not run — see workflow logs_ | | | | | |'
+                : tier01.results.map(renderTier01Row).join('\n');
+              const patternCRows = patternC === null
+                ? '| _soft-fail tier did not run — see workflow logs_ | | | | | |'
+                : patternC.results.map(renderPatternCRow).join('\n');
+
+              const tier01Pass = tier01 === null ? 0 : tier01.results.filter(m => m.passed).length;
+              const tier01Total = tier01 === null ? 0 : tier01.results.length;
+              const patternCPass = patternC === null ? 0 : patternC.results.filter(m => m.passed).length;
+              const patternCTotal = patternC === null ? 0 : patternC.results.length;
+
+              const overall = (tier01 !== null && tier01Pass === tier01Total)
+                ? '✅ PASS (Tier 0/1 all green)'
+                : '❌ FAIL (Tier 0/1 regression or did not run)';
+
+              // Build the body line-by-line so we don't depend on template-literal
+              // indentation. Markdown treats lines that start with 4+ spaces as
+              // code blocks — a multi-line template literal embedded in a
+              // YAML-indented `script:` block would silently fold the table /
+              // headers into a literal code block.
+              body = [
+                marker,
+                '## 🧪 PR19 Pre-Merge Solve Validation Results',
+                '',
+                '**Trigger:** files changed under `src/emit/`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, or the PR19 CI files themselves.',
+                '',
+                `### Tier 0/1 canaries (hard-fail surface) — ${tier01Pass}/${tier01Total}`,
+                '',
+                '| Model | rc | Time | MODEL STATUS | SOLVER STATUS | Pass |',
+                '|---|---|---|---|---|---|',
+                tier01Rows,
+                '',
+                `### Pattern C target models (soft-fail / informational) — ${patternCPass}/${patternCTotal} passing`,
+                '',
+                '| Model | rc | Time | MODEL STATUS | SOLVER STATUS | Note |',
+                '|---|---|---|---|---|---|',
+                patternCRows,
+                '',
+                `**Overall:** ${overall}`,
+              ].join('\n');
+            }
+
+            // Upsert (find-existing-then-update) so re-runs don't spam the PR.
+            // Wrap in try/catch — fork PRs (and any setup with restricted
+            // GITHUB_TOKEN permissions) get a 403 on issues.createComment /
+            // updateComment. The solve results are already in the workflow
+            // step output + uploaded artifacts; warn instead of failing so
+            // the actual pass/fail signal still reaches the check status.
+            try {
+              // Paginate — `listComments` defaults to 30 per page; large PRs
+              // can push the marker past the first page, which would otherwise
+              // cause this upsert to create a duplicate on every rerun.
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              });
+              const botComment = comments.find(c =>
+                c.user.type === 'Bot' && c.body.includes(marker)
+              );
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body,
+                });
+              }
+            } catch (err) {
+              core.warning(
+                `PR19 results comment skipped (${err.status || 'no status'} ${err.message}). ` +
+                `Common cause: PR is from a fork or GITHUB_TOKEN lacks pull-requests:write. ` +
+                `Per-model results are still available in the workflow step output and the ` +
+                `pr19-solve-results artifact; the check status reflects the actual pass/fail.`
+              );
+            }
+
+      - name: Upload solve artifacts
+        if: steps.check-label.outputs.skip != 'true' && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr19-solve-results
+          path: |
+            /tmp/pr19-results-tier01.json
+            /tmp/pr19-results-patternc.json
+            /tmp/pr19-scratch/*/*.lst
+          retention-days: 30
+          # When the GAMS install step fails before any solve runs (e.g.,
+          # SHA256 placeholder mismatch on first CI run), none of the listed
+          # paths exist. Don't fail the workflow on missing artifacts —
+          # the Post-Comment step already surfaces the setup-failure cause.
+          if-no-files-found: warn

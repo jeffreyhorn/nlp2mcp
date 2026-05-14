@@ -1,0 +1,35 @@
+# PR19 Pre-Merge Solve-Time Validation — Target Model List
+#
+# Format: one model per line. Optional inline annotation `# tier=<0|1|pattern-c>`.
+# Optional `reslim=<N>` annotation overrides the default 30s PATH timeout for that model.
+# Blank lines and lines starting with `#` are ignored.
+#
+# See `docs/planning/EPIC_4/SPRINT_26/DESIGN_PR19_SOLVE_TIME_CI.md` §"Target Model List"
+# for the per-tier semantics and rationale for this list.
+
+# Tier 0/1 canaries — hard-fail on regression.
+# These models all reach MODEL STATUS 1 (Optimal) on current main and are tracked
+# byte-stable across PYTHONHASHSEED values per BASELINE_METRICS.md §6.
+dispatch         # tier=0
+quocge           # tier=1
+partssupply      # tier=1
+prolog           # tier=1
+sparta           # tier=1
+gussrisk         # tier=1
+ps2_f            # tier=1
+ps3_f            # tier=1
+ship             # tier=1
+splcge           # tier=1
+paklive          # tier=1
+
+# Pattern C target models — soft-fail (informational only). Currently fail at compile
+# with $141 / $171 cascades; expected to pass once Sprint 26 Priority 1 / Sprint 27
+# carryforwards (#1381 Phase B redesign, #1393 scalar-eq Sum-collapse, #1357 comp_up
+# subset/superset) land. Once a model starts passing, promote to tier=1 (hard-fail).
+#
+# Sprint 26 Day 11 status: camcge / cesam2 deferred to Sprint 27 #1381 per Day 3;
+# fawley + otpop carry forward as comparison targets for Sprint 27 work.
+camcge           # tier=pattern-c
+cesam2           # tier=pattern-c
+fawley           # tier=pattern-c
+otpop            # tier=pattern-c
