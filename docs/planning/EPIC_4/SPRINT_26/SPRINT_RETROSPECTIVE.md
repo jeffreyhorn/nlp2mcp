@@ -2,7 +2,7 @@
 
 **Created:** 2026-05-14
 **Duration:** 14 sprint days (Day 0 – Day 13) — within plan budget
-**Sprint Goal (Revised post-Day-3 + post-Day-4):** Parse ≥ 142/142, Translate ≥ 130/142 (maintain), Solve ≥ 104 (maintain), Match ≥ 60 (maintain), `path_syntax_error` ≤ 9 (maintain), `path_solve_terminated` ≤ 5, `model_infeasible` ≤ 4, Tests ≥ 4,737. All "maintain" targets reflect the Sprint 26 Day 3 + Day 4 + Day 7 + Day 9 reclassification decisions: Phase B (camcge/cesam2) → Sprint 27 #1381, Priority 4 (srpchase + 4 stretch) → Sprint 27 #1385, Priority 3 (kand) → Sprint 27 #1390, Priority 5 #1334 → Sprint 27 #1393 + #1335 in-place reopen → Sprint 27.
+**Sprint Goal (Revised post-Day-3 + post-Day-4 + post-Day-7 + post-Day-9):** Parse ≥ 142/142, Translate ≥ 130/142 (maintain), Solve ≥ 104 (maintain), Match ≥ 60 (maintain), `path_syntax_error` ≤ 9 (maintain), `path_solve_terminated` ≤ 5, `model_infeasible` ≤ 4, Tests ≥ 4,737. All "maintain" targets reflect the four mid-sprint reclassification decisions: Day 3 — Phase B (camcge/cesam2) → Sprint 27 #1381, Day 4 — Priority 4 (srpchase + 4 stretch) → Sprint 27 #1385, Day 7 — Priority 3 (kand) → Sprint 27 #1390, Day 9 — Priority 5 #1334 → Sprint 27 #1393 + #1335 in-place reopen → Sprint 27.
 
 **Original Sprint Goal (per `PROJECT_PLAN.md` §Sprint 26 + `PREP_PLAN.md` Task 9 baseline):** Translate ≥ 135 (+5), Solve ≥ 108 (+4), Match ≥ 64 (+4), `path_syntax_error` ≤ 6 (−3). The relaxed targets reflect four architectural reclassifications during Days 1–10 that converted +Solve/+Match aspirations into Sprint 27 carryforward work without forcing a sprint cancellation or revert cycle.
 
@@ -293,14 +293,14 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 
 | Metric | Sprint 26 Final | Sprint 27 Target |
 |--------|-----------------|-------------------|
-| Parse | 142/142 | maintain ≥ 142/142 |
-| Translate | 134/142 | ≥ 135/142 (+1 via #1385 + #1224) |
-| Solve | 103 | ≥ 108 (+5 via #1381 camcge/cesam2 + #1398 qdemo7 recovery) |
-| Match | 59 | ≥ 64 (+5 via #1381 + #1393 + #1335 + #1398 qdemo7 recovery) |
-| path_syntax_error | 17 | ≤ 6 (−11 via #1398 [4 models recover] + #1381 [2 models recover] + #1357 + #1356 + machine-variance churn-backs returning to translate-success) |
-| path_solve_terminated | 5 | maintain ≤ 5 |
-| model_infeasible | 4 | maintain ≤ 4 |
-| Tests | 4,737 | ≥ 4,750 |
+| Parse | 142/142 | ≥ 142/142 (= ≥100% pipeline scope per PROJECT_PLAN.md S27) |
+| Translate | 134/142 | ≥ 135/142 (= maintain ≥95% per PROJECT_PLAN.md S27; +1 via #1385 srpchase + #1224 mine recovery) |
+| Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 + #1398 qdemo7 recovery + #1357 otpop + #1356 fawley recoveries) |
+| Match | 59 | ≥ 66 (= ≥46% of 142 pipeline scope per PROJECT_PLAN.md S27; +7 via #1381 + #1393 + #1335 + #1398 + #1357 + #1356 fixes) |
+| path_syntax_error | 17 | ≤ 6 (−11 via #1398 [4 models recover] + #1381 [2 models recover] + #1357 + #1356 + machine-variance churn-backs returning to translate-success per PROJECT_PLAN.md S27) |
+| path_solve_terminated | 5 | maintain ≤ 5 (per PROJECT_PLAN.md S27) |
+| model_infeasible | 4 | ≤ 3 (−1 via Sprint 27 work; tightening from S26's maintain ≤4 per PROJECT_PLAN.md S27) |
+| Tests | 4,737 | ≥ 4,750 (S26 floor + Sprint 27 coverage additions) |
 
 Rationale: Sprint 27 inherits Sprint 26's deferred targets. The Pattern C Phase B redesign (#1381) is the highest-leverage workstream (2 path_syntax_error → match = +2 Solve, +2 Match). The three AD-architecture redesigns (#1390, #1385, #1393) need Phase 0 acceptance gates before any src/ commits.
 
