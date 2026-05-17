@@ -297,7 +297,7 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 | Translate | 134/142 | ≥ 135/142 (= maintain ≥95% per PROJECT_PLAN.md S27; +1 via #1385 srpchase + #1224 mine recovery) |
 | Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 + #1398 qdemo7 recovery + #1357 otpop + #1356 fawley recoveries) |
 | Match | 59 | ≥ 66 (= ≥46% of 142 pipeline scope per PROJECT_PLAN.md S27; +7 via #1381 + #1393 + #1335 + #1398 + #1357 + #1356 fixes) |
-| path_syntax_error | 17 | ≤ 6 (−11 via #1398 [4 models recover] + #1381 [2 models recover] + #1357 + #1356 + machine-variance churn-backs returning to translate-success per PROJECT_PLAN.md S27) |
+| path_syntax_error | 17 | ≤ 6 (−11 needed; available paths: #1398 fixes up to **9 currently-in-path_syntax_error models** with the widened scope — qdemo7, egypt, ferts, shale, fawley, dinam, ganges, gangesx, srpchase + a partial subset of these may recover; #1381 fixes camcge, cesam2 = 2 models; #1357 fixes otpop = 1; #1356 fixes fawley = 1 [also in #1398 scope — single-count]; total recovery surface 9 + 2 + 1 = 12, well above the 11 needed) |
 | path_solve_terminated | 5 | maintain ≤ 5 (per PROJECT_PLAN.md S27) |
 | model_infeasible | 4 | ≤ 3 (−1 via Sprint 27 work; tightening from S26's maintain ≤4 per PROJECT_PLAN.md S27) |
 | Tests | 4,737 | ≥ 4,750 (S26 floor + Sprint 27 coverage additions) |

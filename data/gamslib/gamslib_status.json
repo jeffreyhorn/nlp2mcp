@@ -790,7 +790,7 @@
         "iterations": 2554,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/bearing_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/bearing_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -1358,7 +1358,7 @@
         "iterations": 4,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/chain_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/chain_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -4965,7 +4965,7 @@
         "iterations": 730,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/launch_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/launch_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "mismatch",
@@ -5798,7 +5798,7 @@
         "iterations": 3,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/mathopt3_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/mathopt3_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -6397,7 +6397,7 @@
         "translate_time_seconds": 1.9832,
         "error": {
           "category": "internal_error",
-          "message": "/Users/jeff/experiments/nlp2mcp/src/ad/index_mapping.py:556: UserWarning: Failed to evaluate condition for equation 'pr': Failed to evaluate condition SetMembershipTest(c, (SymbolRef(l), SymbolRef(i), SymbolRef(j))) with indices ('nw', '1', '1', '1'): Set membership for 'c' cannot be evaluated statically because the set has no concrete members at compile time. Including unevaluable instances by default.\n  instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir, eq_def.condition"
+          "message": "src/ad/index_mapping.py:556: UserWarning: Failed to evaluate condition for equation 'pr': Failed to evaluate condition SetMembershipTest(c, (SymbolRef(l), SymbolRef(i), SymbolRef(j))) with indices ('nw', '1', '1', '1'): Set membership for 'c' cannot be evaluated statically because the set has no concrete members at compile time. Including unevaluable instances by default.\n  instances = enumerate_equation_instances(eq_name, eq_def.domain, model_ir, eq_def.condition"
         }
       },
       "mcp_solve": {
@@ -10087,7 +10087,7 @@
         "iterations": 2228,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/robustlp_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/robustlp_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
@@ -10165,7 +10165,7 @@
         "iterations": 20,
         "outcome_category": "model_optimal_presolve",
         "presolve_required": true,
-        "mcp_file_used": "/Users/jeff/experiments/nlp2mcp/data/gamslib/mcp/rocket_mcp_presolve.gms"
+        "mcp_file_used": "data/gamslib/mcp/rocket_mcp_presolve.gms"
       },
       "solution_comparison": {
         "comparison_status": "match",
