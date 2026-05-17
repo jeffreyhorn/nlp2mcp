@@ -225,7 +225,7 @@ For any AD/emit pipeline change that targets a known-misbehaving model:
 
 > Before committing src/ implementation effort, hand-derive the expected KKT body shape from the Lagrangian on a concrete target instance (e.g., `stat_p('1990')` for otpop), document the shape in the issue, and verify that the prototype's regenerated `.gms` matches byte-for-byte against the hand-derived form. If the prototype's emit doesn't match, the fix-surface diagnosis is wrong — replan the issue before committing src/ effort.
 
-This is the **same Day 5 methodology** that Sprint 25 retrospective PR16 already recommended for pre-Sprint-0 multi-issue workstreams. Sprint 26 demonstrates the methodology applies equally to single-issue fix-implementation — the Day 9 #1335 attempt had GREEN quality gates AND existing-test-shaped expected behavior, but the hand-derived KKT showed the emit was mathematically wrong. Make Phase 0 mandatory for any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/`. All six Sprint 26-filed Sprint 27 architectural-redesign issues with Phase 0 in their issue body (#1378, #1381, #1385, #1390, #1393, #1398) had Phase 0 acceptance gates added per this recommendation; #1335 (in-place reopen Day 13) has its Phase 0 in the reopen comment. See the Acknowledgments section for the full 13-issue Phase 0 inventory breakdown including the 4 carryforward issues (#1356, #1357, #1387, #1388) that still need Phase 0 sections authored before Sprint 27 implementation.
+This is the **same Day 5 methodology** that Sprint 25 retrospective PR16 already recommended for pre-Sprint-0 multi-issue workstreams. Sprint 26 demonstrates the methodology applies equally to single-issue fix-implementation — the Day 9 #1335 attempt had GREEN quality gates AND existing-test-shaped expected behavior, but the hand-derived KKT showed the emit was mathematically wrong. Make Phase 0 mandatory for any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/`. All seven Sprint 26-filed Sprint 27 issues with Phase 0 in their issue body (#1378, #1381, #1385, #1390, #1393, #1398, #1400) had Phase 0 acceptance gates added per this recommendation; #1335 (in-place reopen Day 13) has its Phase 0 in the reopen comment. See the Acknowledgments section for the full 14-issue Phase 0 inventory breakdown including the 4 carryforward issues (#1356, #1357, #1387, #1388) that still need Phase 0 sections authored before Sprint 27 implementation.
 
 ### 2. PR21 — Prep-Task Acceptance Criteria Should Include End-to-End Emit Verification
 
@@ -233,7 +233,7 @@ Sprint 26 prep tasks 3 (Pattern C), 6 (Option 1), 5 (Pattern E kand), 7 (#1334) 
 
 ### 3. PR22 — Mid-Sprint Reclassification Should Auto-Propagate to Downstream Day Prompts
 
-The Day 12 PLAN_PROMPTS.md staleness (otpop review listed despite Day 9 src/ rollback) is recoverable by adding a Day 0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*_mcp.gms` changes and auto-generates the Day 12 PR14 review list. The same script could regenerate the Day 13 retest comparison surface (which artifacts changed, which didn't). Build effort: ~1–2h; pays for itself the first time a mid-sprint reclassification happens.
+The Day 12 PLAN_PROMPTS.md staleness (otpop review listed despite Day 9 src/ rollback) is recoverable by adding a Day 0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers both standard `*_mcp.gms` and presolve `*_mcp_presolve.gms` artifacts; the Day 13 retest changed `launch_mcp_presolve.gms` which a narrower `*_mcp.gms` glob would have missed) and auto-generates the Day 12 PR14 review list. The same script could regenerate the Day 13 retest comparison surface (which artifacts changed, which didn't). Build effort: ~1–2h; pays for itself the first time a mid-sprint reclassification happens.
 
 ### 4. PR23 — CI-Workflow PRs Need a Pre-Merge Self-Review Checklist
 
@@ -294,7 +294,7 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 | Metric | Sprint 26 Final | Sprint 27 Target |
 |--------|-----------------|-------------------|
 | Parse | 142/142 | ≥ 142/142 (= ≥100% pipeline scope per PROJECT_PLAN.md S27) |
-| Translate | 134/142 | ≥ 135/142 (= maintain ≥95% per PROJECT_PLAN.md S27; +1 via #1385 srpchase + #1224 mine recovery) |
+| Translate | 134/142 | ≥ 135/142 (= ≥95% per PROJECT_PLAN.md S27 — improvement from S26's 94.4%, not maintenance; +1 via #1385 srpchase + #1224 mine recovery) |
 | Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 [+2] + #1398 qdemo7 recovery [+1] + #1357 otpop [+1] + #1356 fawley [+1] + #1378 launch PATH-numerics recovery [+1] + #1385 Option 1 short-circuit unblocking srpchase/iswnm translates that then solve [+1–2]) |
 | Match | 59 | ≥ 66 (= ≥46% of 142 pipeline scope per PROJECT_PLAN.md S27; +7 via #1381 + #1393 + #1335 + #1398 + #1357 + #1356 fixes) |
 | path_syntax_error | 17 | ≤ 6 (−11 needed; available paths: #1398 fixes up to **9 currently-in-path_syntax_error models** with the widened scope — qdemo7, egypt, ferts, shale, fawley, dinam, ganges, gangesx, srpchase + a partial subset of these may recover; #1381 fixes camcge, cesam2 = 2 models; #1357 fixes otpop = 1; #1356 fixes fawley = 1 [also in #1398 scope — single-count]; total recovery surface 9 + 2 + 1 = 12, well above the 11 needed) |
@@ -370,7 +370,7 @@ Rationale: Sprint 27 inherits Sprint 26's deferred targets. The Pattern C Phase 
 
 **PR21:** Prep-task acceptance criteria should include end-to-end emit verification on a concrete target model. Budget ~1–2h per workstream; saves ~3–7h of mid-sprint rollback per misdiagnosed workstream.
 
-**PR22:** Build a Day-0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*_mcp.gms` changes and auto-generates the Day 12 PR14 review list + Day 13 retest comparison surface. Avoids prompt-staleness on mid-sprint reclassifications.
+**PR22:** Build a Day-0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers both standard `*_mcp.gms` and presolve `*_mcp_presolve.gms` artifacts) and auto-generates the Day 12 PR14 review list + Day 13 retest comparison surface. Avoids prompt-staleness on mid-sprint reclassifications.
 
 **PR23:** Add a CI-workflow PR self-review checklist to CONTRIBUTING.md (input validation, pagination, fork tolerance, schema validation, error handling, marker uniqueness, logging visibility). Compresses CI-workflow PR review iteration count.
 
@@ -409,9 +409,11 @@ PR #1396 (Day 11) went through 11 rounds of Copilot review. The implementation c
 
 ## Acknowledgments
 
-Sprint 26 shipped Phase A (the consolidated launch fix per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") and the PR19 pre-merge solve-time validation CI extension while absorbing four close-and-refile architectural reclassifications + one in-place carryforward without sprint cancellation. The Day 9 PR #1394 review hand-derived-KKT catch is the canonical example of the methodology Sprint 25 introduced (Day 5 pivot) being reusable for single-issue fix-implementations — feeding directly into PR20 (Phase 0 acceptance gate). The Sprint 27 backlog totals 13 issues labeled `sprint-27`:
+Sprint 26 shipped Phase A (the consolidated launch fix per Sprint 25 SPRINT_LOG.md Day 11 §"Open follow-ups (revised)") and the PR19 pre-merge solve-time validation CI extension while absorbing four close-and-refile architectural reclassifications + one in-place carryforward without sprint cancellation. The Day 9 PR #1394 review hand-derived-KKT catch is the canonical example of the methodology Sprint 25 introduced (Day 5 pivot) being reusable for single-issue fix-implementations — feeding directly into PR20 (Phase 0 acceptance gate). The Sprint 27 backlog totals 14 issues labeled `sprint-27`:
 
-- **6 issues with Phase 0 acceptance gates pre-documented in the issue body** (per PR20): #1378, #1381, #1385, #1390, #1393, #1398. These are the architectural-redesign tracks filed during Sprint 26 (Days 1, 3, 4, 7, 9, 13) where the Phase 0 gate was authored as part of the issue's filing/reclassification.
+- **7 issues with Phase 0 acceptance gates pre-documented in the issue body** (per PR20): #1378, #1381, #1385, #1390, #1393, #1398, #1400. These are the architectural-redesign / operational-hygiene tracks filed during Sprint 26 (Days 1, 3, 4, 7, 9, 13) where the Phase 0 gate was authored as part of the issue's filing/reclassification. #1400 (pipeline absolute-path leak fix) was filed Day 13 during PR #1399 review with a Phase 0 acceptance gate covering both the `mcp_file_used` field rewrite and the captured-warning fix.
 - **1 issue with Phase 0 acceptance gate in a reopen comment** (per PR20): #1335 (Day 13 reopen comment per Day 9 in-place carryforward intent).
 - **4 issues without a formal Phase 0 yet** (Sprint 27 prep should author them before any src/ implementation effort): #1356 (fawley comp_up subset/superset — fix-surface diagnosis carried forward from Sprint 25), #1357 (otpop comp_up subset/superset — same), #1387 (cclinpts close-and-refile from Day 6 — fix-surface diagnosis not yet hand-derived), #1388 (camshape close-and-refile from Day 6 — `ISSUE_1388_*.md` has an investigation pointer mentioning "hand-derived KKT for camshape" but no formal Phase 0 acceptance-gate section).
 - **2 issues without an applicable Phase 0** (observation-style or scoping-only): #1224 (mine ParamRef IndexOffset — scoped/triaged but no fix-surface Phase 0 yet), #1374 (emit duplicate-init bugs — observation-style without a single fix-surface target).
+
+7 + 1 + 4 + 2 = 14.

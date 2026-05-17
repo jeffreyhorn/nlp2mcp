@@ -37,18 +37,18 @@ Sprint 26 absorbed **4 close-and-refile architectural reclassifications + 1 in-p
 - **Alias-AD (30% budget):** **133% (4 influx / 3 fixes) ❌ EXCEEDED** — 4 Phase A side-effect regressions (qdemo7/egypt/ferts/shale) against 3 effective fixes (launch consolidation + 3 machine-variance churn-backs returning to Sprint 25 baseline). The 4-influx outcome is the **same failure-mode shape** that PR19 was designed to prevent — just at a broader emit-affected surface than PR19's initial target list (canaries + Pattern C targets). Sprint 27 #1398 + PR19 target-list widening closes this loop.
 - **Emitter recovery (80–100% budget):** N/A — no emitter recovery work shipped (Priority 4 reclassified to Sprint 27 #1385).
 
-#### Sprint 27 Backlog at Sprint 26 Close (labeled `sprint-27`, 13 issues)
-- **1 net-new from Day 13:** #1398 (Phase A gate side-effect — qdemo7/egypt/ferts/shale + widened scope per PR #1399 review — see issue body)
+#### Sprint 27 Backlog at Sprint 26 Close (labeled `sprint-27`, 14 issues)
+- **2 net-new from Day 13:** #1398 (Phase A gate side-effect — qdemo7/egypt/ferts/shale + widened scope per PR #1399 review — see issue body), #1400 (pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings — surfaced by PR #1399 review; pre-existing since Day 0 baseline; one-time JSON cleanup landed in Day 13 PR but pipeline-side fix is Sprint 27 work)
 - **7 net-new from Sprint 26 reclassifications + close-and-refile (Days 1–9):** #1378 (launch PATH numerics — Day 1), #1381 (Pattern C Phase B redesign — Day 3), #1385 (Translation timeout Option 1 short-circuit redesign — Day 4), #1387 (cclinpts condition-guard/sign bug close-and-refile — Day 6), #1388 (camshape Locally Infeasible close-and-refile — Day 6), #1390 (kand alias-AD per-instance enumeration — Day 7), #1393 (scalar-eq Sum-collapse from #1334 close-and-refile — Day 9)
 - **1 reopened in-place Day 13 (per Day 9 intent):** #1335 (AD scalar-equation cross-term — Sprint 25 carryforward; Day 9 close was premature; sprint-27 label added Day 13)
 - **4 pre-existing carryforward (sprint-26 label moved to sprint-27 Day 13):** #1224 (mine ParamRef IndexOffset, Sprint 24 → Sprint 27 via Sprint 26 Task 6 deferral), #1356 (fawley comp_up subset/superset), #1357 (otpop comp_up subset/superset), #1374 (emit duplicate-init bugs)
 
-**Total: 1 + 7 + 1 + 4 = 13.**
+**Total: 2 + 7 + 1 + 4 = 14.**
 
 #### Sprint 26 Known Issues + Sprint 27 Recommendations
 - **PR20 (NEW for Sprint 27):** Phase 0 acceptance gate — hand-derived KKT shape on a concrete target instance before committing src/ implementation effort. Sprint 26's 4 mid-sprint reclassifications + #1335 review-caught regression all motivate this.
 - **PR21 (NEW for Sprint 27):** Prep-task acceptance criteria should include end-to-end emit verification on a concrete target model. ~1–2h per workstream; saves ~3–7h of mid-sprint rollback per misdiagnosed workstream.
-- **PR22 (NEW for Sprint 27):** Day-0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*_mcp.gms` changes and auto-generates the Day 12 PR14 review list + Day 13 retest comparison surface. Avoids prompt-staleness on mid-sprint reclassifications.
+- **PR22 (NEW for Sprint 27):** Day-0 / mid-sprint script that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers both standard `*_mcp.gms` and presolve `*_mcp_presolve.gms` artifacts; Day 13 retest changed `launch_mcp_presolve.gms` which a narrower glob would have missed) and auto-generates the Day 12 PR14 review list + Day 13 retest comparison surface. Avoids prompt-staleness on mid-sprint reclassifications.
 - **PR23 (NEW for Sprint 27):** CI-workflow PR self-review checklist in CONTRIBUTING.md (input validation, pagination, fork tolerance, schema validation, error handling, marker uniqueness, logging visibility). Compresses CI-workflow PR review iteration count.
 
 ### Sprint 26 Execution

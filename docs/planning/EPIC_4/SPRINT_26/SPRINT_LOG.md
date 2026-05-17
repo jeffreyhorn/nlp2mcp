@@ -1323,20 +1323,20 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 #### Day 13 Deliverables (this PR)
 
 1. **`data/gamslib/gamslib_status.json`** — pipeline-output update.
-2. **16 regenerated `data/gamslib/mcp/*_mcp.gms` artifacts** — advisory per BASELINE_METRICS.md §6 (PR12 byte-stability harness covers the 5 fast fixtures, not the full corpus). 15 modified: dinam, egypt, fawley, ferts, ganges, gangesx, harker, launch_mcp_presolve, qdemo7, qsambal, sambal, shale, sroute, tfordy, turkpow; 1 new: srpchase (chronic-timeout translate recovery via Day 13 faster runner). Most reflect Phase A gate side-effects — the full widened scope across **14 affected models** (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute) is documented in the Sprint 27 #1398 issue body + widened-scope comments at [issuecomment-4472363765](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472363765) and [issuecomment-4472473408](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472473408) (PR #1399 Copilot review surfaced 10 additional models beyond the original 4 listed in this SPRINT_LOG section). Small post-Sprint-25 retest churn accounts for the remaining diffs.
+2. **16 regenerated `data/gamslib/mcp/*.gms` artifacts** (the glob covers both standard `*_mcp.gms` and presolve `*_mcp_presolve.gms` shapes) — advisory per BASELINE_METRICS.md §6 (PR12 byte-stability harness covers the 5 fast fixtures, not the full corpus). 15 modified: dinam, egypt, fawley, ferts, ganges, gangesx, harker, **launch_mcp_presolve** (presolve artifact, not standard `*_mcp.gms`), qdemo7, qsambal, sambal, shale, sroute, tfordy, turkpow; 1 new: srpchase (chronic-timeout translate recovery via Day 13 faster runner). Most reflect Phase A gate side-effects — the full widened scope across **14 affected models** (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute) is documented in the Sprint 27 #1398 issue body + widened-scope comments at [issuecomment-4472363765](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472363765) and [issuecomment-4472473408](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472473408) (PR #1399 Copilot review surfaced 10 additional models beyond the original 4 listed in this SPRINT_LOG section). Small post-Sprint-25 retest churn accounts for the remaining diffs.
 3. **SPRINT_LOG.md Day 13 entry** (this section).
 4. **SPRINT_RETROSPECTIVE.md** (new): full Sprint 26 retrospective per Sprint 25 retro template + the 4-reclassification chain narrative + KU-37/38/39 end-of-sprint discoveries + Sprint 27 PR20–PR23 process recommendations.
 5. **CHANGELOG.md** — Sprint 26 Summary entry per Sprint 25 Summary precedent.
 6. **PROJECT_PLAN.md** — Rolling KPIs row updated + footnote ⁷ documenting Day 13 metrics + the Phase A gate side-effect.
 7. **Sprint 27 #1398** filed — Phase A Pattern C gate predicate fires too broadly. #1335 reopened in-place with sprint-27 label (Day 9 close was premature; carryforward intent).
 
-**Sprint 27 backlog at Day 13 close: 13 issues labeled `sprint-27`** — composition:
-- **1 filed net-new during Day 13:** #1398 (Phase A gate side-effect discovery)
+**Sprint 27 backlog at Day 13 close: 14 issues labeled `sprint-27`** — composition:
+- **2 filed net-new during Day 13:** #1398 (Phase A gate side-effect discovery) + #1400 (pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings — surfaced by PR #1399 Copilot review; pre-existing since Day 0 baseline)
 - **7 filed during Sprint 26 reclassifications + close-and-refile (Days 1–9):** #1378 (launch PATH numerics, Day 1) + #1381 (Pattern C Phase B redesign, Day 3) + #1385 (Option 1 short-circuit redesign, Day 4) + #1387 (cclinpts close-and-refile, Day 6) + #1388 (camshape close-and-refile, Day 6) + #1390 (kand AD-architecture redesign, Day 7) + #1393 (scalar-eq Sum-collapse from #1334, Day 9)
 - **1 reopened in-place Day 13 (per Day 9 intent):** #1335
 - **4 pre-existing carryforward (sprint-26 label moved to sprint-27 Day 13, including #1224 from earlier sprints):** #1224 + #1356 + #1357 + #1374
 
-1 + 7 + 1 + 4 = 13.
+2 + 7 + 1 + 4 = 14.
 
 #### Quality Checks (Day 13)
 
