@@ -38,11 +38,12 @@ Sprint 26 absorbed **4 close-and-refile architectural reclassifications + 1 in-p
 - **Emitter recovery (80–100% budget):** N/A — no emitter recovery work shipped (Priority 4 reclassified to Sprint 27 #1385).
 
 #### Sprint 26 Sprint 27 Backlog (labeled `sprint-27`, 13 issues)
-- **4 net-new from Day 13:** #1398 (Phase A gate side-effect — qdemo7/egypt/ferts/shale, **filed Day 13**)
-- **4 net-new from Sprint 26 reclassifications:** #1378 (launch PATH numerics — Day 1), #1381 (Pattern C Phase B redesign — Day 3), #1385 (Translation timeout Option 1 short-circuit redesign — Day 4), #1390 (kand alias-AD per-instance enumeration — Day 7), #1393 (scalar-eq Sum-collapse from #1334 close-and-refile — Day 9), #1387 (cclinpts condition-guard/sign bug — Day 6), #1388 (camshape Locally Infeasible — Day 6) = 7 net-new from reclassifications
-- **2 carryforward from Sprint 25 reopened by Day 9 + Day 13:** #1335 (Day 9 in-place reopen for Sprint 27 carryforward routing)
-- **3 carryforward from Sprint 25 (`sprint-26` label moved to `sprint-27` Day 13):** #1356 (fawley comp_up subset/superset), #1357 (otpop comp_up subset/superset), #1374 (emit duplicate-init bugs)
-- **2 carryforward from earlier sprints:** #1224 (mine ParamRef IndexOffset, Sprint 24 → Sprint 27 via Sprint 26 Task 6 deferral)
+- **1 net-new from Day 13:** #1398 (Phase A gate side-effect — qdemo7/egypt/ferts/shale + widened scope per PR #1399 review — see issue body)
+- **7 net-new from Sprint 26 reclassifications + close-and-refile (Days 1–9):** #1378 (launch PATH numerics — Day 1), #1381 (Pattern C Phase B redesign — Day 3), #1385 (Translation timeout Option 1 short-circuit redesign — Day 4), #1387 (cclinpts condition-guard/sign bug close-and-refile — Day 6), #1388 (camshape Locally Infeasible close-and-refile — Day 6), #1390 (kand alias-AD per-instance enumeration — Day 7), #1393 (scalar-eq Sum-collapse from #1334 close-and-refile — Day 9)
+- **1 reopened in-place Day 13 (per Day 9 intent):** #1335 (AD scalar-equation cross-term — Sprint 25 carryforward; Day 9 close was premature; sprint-27 label added Day 13)
+- **4 pre-existing carryforward (sprint-26 label moved to sprint-27 Day 13):** #1224 (mine ParamRef IndexOffset, Sprint 24 → Sprint 27 via Sprint 26 Task 6 deferral), #1356 (fawley comp_up subset/superset), #1357 (otpop comp_up subset/superset), #1374 (emit duplicate-init bugs)
+
+**Total: 1 + 7 + 1 + 4 = 13.**
 
 #### Sprint 26 Known Issues + Sprint 27 Recommendations
 - **PR20 (NEW for Sprint 27):** Phase 0 acceptance gate — hand-derived KKT shape on a concrete target instance before committing src/ implementation effort. Sprint 26's 4 mid-sprint reclassifications + #1335 review-caught regression all motivate this.
