@@ -1257,7 +1257,9 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 | model_infeasible | 4 | **4** | 0 | ≤ 4 | ≤ 3 | ✅ MET |
 | Tests | 4,735 | **4,737** | +2 | ≥ 4,737 | ≥ 4,745 | ✅ MET |
 
-**Headline verdict:** 5 of 8 criteria MET (Parse, Translate STRETCH, path_solve_terminated, model_infeasible, Tests). 3 MISS — all attributable to a single root cause: **Phase A's Pattern C gate predicate fires too broadly** on equations whose Sum bodies are already correctly alias-indexed (no over-counting to consolidate). Filed as Sprint 27 **#1398** with Phase 0 acceptance gate per PR20.
+**Headline verdict:** 5 of 8 criteria MET (Parse, Translate STRETCH, path_solve_terminated, model_infeasible, Tests). 3 MISS with mixed attribution:
+- **Solve −1 and Match −1**: single root cause — qdemo7 regressed via Phase A's Pattern C gate predicate firing too broadly (filed Sprint 27 **#1398** with Phase 0 acceptance gate per PR20).
+- **path_syntax_error +8**: 4 Phase A gate side-effects (#1398 — qdemo7 + egypt + ferts + shale) PLUS 4 translate recoveries cascading from `translate_timeout` to `path_syntax_error` (clearlak / ganges / turkpow machine-variance churn-backs + srpchase chronic recovery via Day 13 faster runner). The 4 translate-recovery transitions are NOT a Sprint 26 regression — they're models returning to their Sprint 25 final-state bucket (or unblocking past a chronic timeout); the path_syntax_error counter went up because they now make it past translate to hit a pre-existing PATH compile error.
 
 #### Per-Bucket Provenance (PR17) — Sprint 25 Final → Sprint 26 Day 0 → Sprint 26 Day 13
 
@@ -1274,7 +1276,7 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 | ferts | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** — `stat_z(p,i)` rewritten with `p↔i` swap |
 | shale | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** |
 
-**4 unchanged buckets (Day 0 → Day 13):** matches (qdemo7 left), mismatches (38), compare_skipped (6, ps*_s_mn family + aircraft/apl1p/apl1pca/senstran), model_infeasible (4: agreste/camshape/cesam/lnts), path_solve_terminated (5: dyncge/elec/maxmin/tricp/twocge), translate_internal_error (4: danwolfe/decomp/mine/saras).
+**6 buckets with no per-model membership changes (Day 0 → Day 13):** mismatches (38; matches lost qdemo7 so it's counted in the bucket-change table above, not here), compare_skipped (6, ps*_s_mn family + aircraft/apl1p/apl1pca/senstran), model_infeasible (4: agreste/camshape/cesam/lnts), path_solve_terminated (5: dyncge/elec/maxmin/tricp/twocge), translate_internal_error (4: danwolfe/decomp/mine/saras), and parse_fail (0).
 
 **Net Day 13 vs Sprint 25 final** (the meaningful sprint Δ — Day 0 vs Day 13 is confounded by Day 0's machine-variance churn-outs):
 
@@ -1345,6 +1347,6 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 
 - **Effort actual ~3h** (pipeline runtime ~1h26m + analysis + write-up ~1h30m + commit/PR ~5min) vs ~3–6h budget per PLAN.md — at lower end of budget.
 - **PR19 first production catch:** None this sprint. PR19 was the **mechanism**; its target-list selection was the **limit**. The 4 Phase A side-effects (qdemo7/egypt/ferts/shale) confirm PR19's design assumption (structural emit changes need solve-time validation) but expose that the **target list needs to be a configurable subset of the in-scope corpus, not just canaries + Pattern C targets**. Sprint 27 PR19-followup: widen the target list to cover models with high Phase A gate-firing potential.
-- **Sprint 26 final verdict — CONDITIONAL CARRYFORWARD:** Sprint 26 maintained the Sprint 25 final envelope (matches the relaxed Day 3 + Day 4 + Day 7 + Day 9 reclassification targets) and shipped Phase A + PR19 cleanly, but introduced 4 Phase A side-effect regressions that net to −1 Solve / −1 Match / +5 path_syntax_error vs Sprint 25 final. Net Sprint 26 outcome: **PR19 + 4 reclassification carryforwards** ready for Sprint 27 with Phase 0 acceptance gates pre-documented per Sprint 26 retrospective PR20.
+- **Sprint 26 final verdict — CONDITIONAL CARRYFORWARD:** Sprint 26 held the line on Parse / path_solve_terminated / model_infeasible / Tests vs Sprint 25 final and shipped Phase A + PR19 cleanly, but introduced 4 Phase A side-effect regressions that net to −1 Solve / −1 Match / +5 path_syntax_error vs Sprint 25 final (Translate net +1 from srpchase chronic recovery). The "maintain ≤9" target on path_syntax_error was set under the assumption that Phase A wouldn't ripple to non-launch models — wrong assumption; #1398 captures the gate-predicate scope expansion needed for Sprint 27. Net Sprint 26 outcome: **PR19 + 4 reclassification carryforwards** ready for Sprint 27 with Phase 0 acceptance gates pre-documented per Sprint 26 retrospective PR20.
 
 ---

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Sprint 26 Summary - 2026-05-14
 
-**Duration:** 14 days (Day 0 – Day 13) — within plan budget | **5/8 acceptance criteria met (1 STRETCH on Translate; Parse + path_solve_terminated + model_infeasible + Tests are the other 4 met)** | **3 MISS — all attributable to a single root cause (Phase A gate side-effect, filed as Sprint 27 #1398)**
+**Duration:** 14 days (Day 0 – Day 13) — within plan budget | **5/8 acceptance criteria met (1 STRETCH on Translate; Parse + path_solve_terminated + model_infeasible + Tests are the other 4 met)** | **3 MISS with mixed attribution — Solve −1 and Match −1 both single-root-caused by Phase A gate side-effect (qdemo7 regression, filed Sprint 27 #1398); path_syntax_error +8 is partially #1398 (4 Phase A side-effects) PLUS 4 translate recoveries cascading from `translate_timeout` to `path_syntax_error` (clearlak/ganges/turkpow machine-variance churn-backs + srpchase chronic recovery via Day 13 faster runner)**
 
 #### Metrics (Day 0 → Day 13, 142-scope; scope unchanged from Sprint 25 Day 14 final)
 - **Parse:** 142/142 → 142/142 (100% maintained) | **Translate:** 130/142 → 134/142 (94.4%; **+4 STRETCH ≥132** — 3 machine-variance churn-out recoveries + 1 chronic srpchase recovery via Day 13 faster runner)
@@ -37,7 +37,7 @@ Sprint 26 absorbed **4 close-and-refile architectural reclassifications + 1 in-p
 - **Alias-AD (30% budget):** **133% (4 influx / 3 fixes) ❌ EXCEEDED** — 4 Phase A side-effect regressions (qdemo7/egypt/ferts/shale) against 3 effective fixes (launch consolidation + 3 machine-variance churn-backs returning to Sprint 25 baseline). The 4-influx outcome is the **same failure-mode shape** that PR19 was designed to prevent — just at a broader emit-affected surface than PR19's initial target list (canaries + Pattern C targets). Sprint 27 #1398 + PR19 target-list widening closes this loop.
 - **Emitter recovery (80–100% budget):** N/A — no emitter recovery work shipped (Priority 4 reclassified to Sprint 27 #1385).
 
-#### Sprint 26 Sprint 27 Backlog (labeled `sprint-27`, 13 issues)
+#### Sprint 27 Backlog at Sprint 26 Close (labeled `sprint-27`, 13 issues)
 - **1 net-new from Day 13:** #1398 (Phase A gate side-effect — qdemo7/egypt/ferts/shale + widened scope per PR #1399 review — see issue body)
 - **7 net-new from Sprint 26 reclassifications + close-and-refile (Days 1–9):** #1378 (launch PATH numerics — Day 1), #1381 (Pattern C Phase B redesign — Day 3), #1385 (Translation timeout Option 1 short-circuit redesign — Day 4), #1387 (cclinpts condition-guard/sign bug close-and-refile — Day 6), #1388 (camshape Locally Infeasible close-and-refile — Day 6), #1390 (kand alias-AD per-instance enumeration — Day 7), #1393 (scalar-eq Sum-collapse from #1334 close-and-refile — Day 9)
 - **1 reopened in-place Day 13 (per Day 9 intent):** #1335 (AD scalar-equation cross-term — Sprint 25 carryforward; Day 9 close was premature; sprint-27 label added Day 13)

@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Sprint 26 maintained the Sprint 25 final metric envelope while shipping (a) **Phase A** (the consolidated launch fix via the zero-offset builder rewrite — PR #1379), (b) **PR19 CI extension** (pre-merge solve-time validation workflow for Tier 0/1 canaries + Pattern C target models — PR #1396), and (c) **four close-and-refile architectural reclassifications + one in-place carryforward** (Sprint 27 #1381, #1385, #1390, #1393, #1335). Net headline: Solve, Match, Translate, Parse all maintained at Day 0 baseline; the originally-targeted +Solve/+Match gains carry forward to Sprint 27 as a chain of architectural redesigns whose **fix-surface was misdiagnosed at prep time** and only surfaced empirically during Days 1, 3, 4, 7, and 9 execution.
+Sprint 26 held the line on Parse / Translate / path_solve_terminated / model_infeasible / Tests while shipping (a) **Phase A** (the consolidated launch fix via the zero-offset builder rewrite — PR #1379), (b) **PR19 CI extension** (pre-merge solve-time validation workflow for Tier 0/1 canaries + Pattern C target models — PR #1396), and (c) **four close-and-refile architectural reclassifications + one in-place carryforward** (Sprint 27 #1381, #1385, #1390, #1393, #1335). **Net headline:** Parse 142/142 maintained, Translate +4 STRETCH (130 → 134; 3 Day-0 machine-variance translate-timeout churn-outs returned + 1 chronic srpchase recovery via Day 13 faster runner), but Solve −1 and Match −1 (qdemo7 regressed via Phase A gate side-effect #1398) and path_syntax_error +8 (4 Phase A side-effects #1398 + 4 translate recoveries cascading from translate_timeout to path_syntax_error). The originally-targeted +Solve/+Match gains carry forward to Sprint 27 as a chain of architectural redesigns whose **fix-surface was misdiagnosed at prep time** and only surfaced empirically during Days 1, 3, 4, 7, and 9 execution.
 
 The single most important narrative beat of Sprint 26 was the **chain of four mid-sprint reclassifications** (Days 3, 4, 7, 9), each of which discovered that the original fix-surface diagnosis assumed downstream pipeline handling that didn't hold empirically. Days 3 (Phase B), 4 (Priority 4), 7 (kand), and 9 (Priority 5 #1334) all followed the same arc: prep-time design validated at the patch-site level → mid-day implementation prototype passed unit-test-level checks → end-to-end emit verification revealed the assumed downstream handling was wrong → rollback + Sprint 27 carryforward filing. This pattern, repeated 4 times in one sprint, is the basis for new process recommendation **PR20 (Phase 0 acceptance gate: hand-derived KKT shape on a concrete target model before committing src/ implementation effort)** — applied retroactively in PR #1394 review of the Day 9 #1335 attempt, where the reviewer hand-derived the expected KKT and caught a duplicated-cross-term math regression that GREEN quality gates didn't.
 
@@ -50,7 +50,7 @@ The single most important narrative beat of Sprint 26 was the **chain of four mi
 
 ### Final Error Category Breakdown (Day 13)
 
-**Translate failures (Day 0 8 → Day 13 8 out of 142 in-scope):**
+**Translate failures (Day 0 12 → Day 13 8 out of 142 in-scope):**
 
 | Category | Day 0 | Day 13 | Δ |
 |----------|-------|--------|---|
@@ -294,10 +294,10 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 | Metric | Sprint 26 Final | Sprint 27 Target |
 |--------|-----------------|-------------------|
 | Parse | 142/142 | maintain ≥ 142/142 |
-| Translate | 134/142 | ≥ 135/142 (+5 via #1385 + #1224) |
-| Solve | 103 | ≥ 108 (+4 via #1381 camcge/cesam2) |
-| Match | 59 | ≥ 64 (+4 via #1381 + #1393 + #1335) |
-| path_syntax_error | 17 | ≤ 6 (−3 via #1381 + #1357 + #1356) |
+| Translate | 134/142 | ≥ 135/142 (+1 via #1385 + #1224) |
+| Solve | 103 | ≥ 108 (+5 via #1381 camcge/cesam2 + #1398 qdemo7 recovery) |
+| Match | 59 | ≥ 64 (+5 via #1381 + #1393 + #1335 + #1398 qdemo7 recovery) |
+| path_syntax_error | 17 | ≤ 6 (−11 via #1398 [4 models recover] + #1381 [2 models recover] + #1357 + #1356 + machine-variance churn-backs returning to translate-success) |
 | path_solve_terminated | 5 | maintain ≤ 5 |
 | model_infeasible | 4 | maintain ≤ 4 |
 | Tests | 4,737 | ≥ 4,750 |
