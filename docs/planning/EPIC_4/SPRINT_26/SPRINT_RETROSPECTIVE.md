@@ -39,7 +39,7 @@ The single most important narrative beat of Sprint 26 was the **chain of four mi
 | Translate | 130/142 (91.5%) | ≥ 130/142 | ≥ 132/142 | **134** | :white_check_mark: STRETCH |
 | Solve | 104 | ≥ 104 | ≥ 106 | **103** | :x: −1 (qdemo7 Phase A gate side-effect #1398) |
 | Match | 60 | ≥ 60 | ≥ 62 | **59** | :x: −1 (qdemo7 Phase A gate side-effect #1398) |
-| path_syntax_error | 9 | ≤ 9 | ≤ 8 | **17** | :x: +8 (4 Phase A side-effects [qdemo7/egypt/ferts/shale, #1398] + 4 machine-variance recoveries from translate_timeout) |
+| path_syntax_error | 9 | ≤ 9 | ≤ 8 | **17** | :x: +8 (4 Phase A side-effects [qdemo7/egypt/ferts/shale, #1398] + 3 machine-variance translate churn-backs [clearlak/ganges/turkpow] + 1 chronic srpchase translate recovery via Day 13 faster runner) |
 | path_solve_terminated | 5 | ≤ 5 | ≤ 4 | **5** | :white_check_mark: maintained |
 | model_infeasible | 4 | ≤ 4 | ≤ 3 | **4** | :white_check_mark: maintained |
 | Tests | 4,735 | ≥ 4,737 | ≥ 4,745 | **4,737** | :white_check_mark: +2 (Day 1 Phase A regression tests) |
@@ -295,7 +295,7 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 |--------|-----------------|-------------------|
 | Parse | 142/142 | ≥ 142/142 (= ≥100% pipeline scope per PROJECT_PLAN.md S27) |
 | Translate | 134/142 | ≥ 135/142 (= ≥95% per PROJECT_PLAN.md S27 — improvement from S26's 94.4%, not maintenance; +1 via #1385 [recovers iswnm / mexls / nebrazil / sarf — any of the 4 chronic timeouts still failing at Day 13] OR #1224 [recovers mine from translate_internal_error]; srpchase is NOT a candidate — already translated at Day 13 per `gamslib_status.json`) |
-| Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 [+2] + #1398 qdemo7 recovery [+1] + #1357 otpop [+1] + #1356 fawley [+1] + #1378 launch PATH-numerics recovery [+1] + #1398 widened-scope recoveries [+2 from egypt/ferts/shale once PATH compile clears]) |
+| Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 [+2 — solve from path_syntax_error] + #1398 qdemo7 recovery [+1 — solve from path_syntax_error] + #1357 otpop [+1 — solve from path_syntax_error] + #1356 fawley [+1 — solve from path_syntax_error] + #1378 launch PATH-numerics recovery [+1 — solve from model_optimal_presolve mismatch] + AD-architecture redesigns #1390 kand / #1393 / #1335 [+2 stretch — partial-rel-diff recoveries from mismatch to match, not Solve gains per se]; #1398 widened-scope egypt/ferts/shale remain blocked by `path_solve_license` even with Phase A compile fix, so they don't add Solve gains) |
 | Match | 59 | ≥ 66 (= ≥46% of 142 pipeline scope per PROJECT_PLAN.md S27; +7 via #1381 + #1393 + #1335 + #1398 + #1357 + #1356 fixes) |
 | path_syntax_error | 17 | ≤ 6 (−11 needed; available paths: #1398 fixes up to **9 currently-in-path_syntax_error models** with the widened scope — qdemo7, egypt, ferts, shale, fawley, dinam, ganges, gangesx, srpchase + a partial subset of these may recover; #1381 fixes camcge, cesam2 = 2 models; #1357 fixes otpop = 1; #1356 fixes fawley = 1 [also in #1398 scope — single-count]; total recovery surface 9 + 2 + 1 = 12, well above the 11 needed) |
 | path_solve_terminated | 5 | maintain ≤ 5 (per PROJECT_PLAN.md S27) |
@@ -326,7 +326,7 @@ Rationale: Sprint 27 inherits Sprint 26's deferred targets. The Pattern C Phase 
 
 ### PR10: Budget for Error Category Influx — Re-Calibrated Outcome
 
-**Status:** PR10 alias-AD 30% budget **EXCEEDED at 133%** (4 influx / 3 fixes). 4 Phase A side-effect regressions (qdemo7/egypt/ferts/shale → path_syntax_error) against 3 effective fixes (launch consolidation + 3 machine-variance translate churn-backs returning to Sprint 25 baseline state). The 4-influx outcome is the **same failure-mode shape** that PR19 was designed to prevent — just at a broader emit-affected surface than PR19's initial target list (canaries + Pattern C targets). Sprint 27 #1398 + PR19 target-list widening closes this loop.
+**Status:** PR10 alias-AD 30% budget **EXCEEDED at 400%** (4 influx / 1 fix). 4 Phase A side-effect regressions driving metric-bucket transitions (qdemo7/egypt/ferts/shale → path_syntax_error) against 1 Sprint 26 alias-AD fix (Phase A consolidated launch emit, PR #1379). The 3 machine-variance translate churn-backs (clearlak / ganges / turkpow) are runner-speed effects reverting to the Sprint 25 baseline state, not Sprint 26 fixes. The 4-influx outcome is the **same failure-mode shape** that PR19 was designed to prevent — just at a broader emit-affected surface than PR19's initial target list (canaries + Pattern C targets). Widened-scope known-bug surface is 15 models (1500% if measured against the widened surface). Sprint 27 #1398 + PR19 target-list widening closes this loop.
 
 ### PR11: Highest-Leverage Fix in Days 1–5
 
@@ -338,7 +338,7 @@ Rationale: Sprint 27 inherits Sprint 26's deferred targets. The Pattern C Phase 
 
 ### PR13: 100% Influx Budget for Previously-Timeout-Excluded Translate Recoveries
 
-**Status:** N/A. Sprint 26 did not unblock new translate recoveries (Priority 4 reclassified to Sprint 27 #1385).
+**Status:** N/A for src/-driven recoveries — Priority 4 (the planned src/-driven translate recovery via Option 1 short-circuit) was reclassified to Sprint 27 #1385, so no `src/` change targeting translate-timeout unblocking shipped this sprint. Day 13 retest did show 4 translate recoveries (clearlak / ganges / turkpow / srpchase), but these are machine-variance / runner-speed effects, not src/-driven recoveries that would trigger the PR13 budget calculus.
 
 ### PR14: Mid-Sprint "Read the Generated MCP" Review Pass
 
