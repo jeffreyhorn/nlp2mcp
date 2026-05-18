@@ -310,7 +310,7 @@ Rationale: Sprint 27 inherits Sprint 26's deferred targets. The Pattern C Phase 
 
 ### PR6: Full Pipeline for All Definitive Metrics
 
-**Status:** FOLLOWED. Day 0 baseline + Day 5 Checkpoint 1 + Day 10 Checkpoint 2 + Day 13 final retest all used `run_full_test.py --quiet`. Targeted Day 5 + Day 10 retests on 13 models (12 Tier 0/1 + launch + otpop) were sufficient for the Checkpoint verdicts.
+**Status:** FOLLOWED. Day 0 baseline + Day 5 Checkpoint 1 + Day 10 Checkpoint 2 + Day 13 final retest all used `run_full_test.py --quiet`. Targeted Day 5 + Day 10 retests on 13 models (11 Tier 0/1 canaries + launch + otpop) were sufficient for the Checkpoint verdicts.
 
 ### PR7: Track model_infeasible Gross Fixes and Gross Influx
 
