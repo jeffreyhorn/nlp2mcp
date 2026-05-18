@@ -84,14 +84,14 @@ The single most important narrative beat of Sprint 26 was the **chain of four mi
 |---|---|---|---|---|
 | clearlak | path_syntax_error | translate_timeout | path_syntax_error | **Bucket churn-back** (Day 0 machine-variance timeout → Day 13 faster runner translated within 600s, returns to path_syntax_error) |
 | ganges | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back pattern |
-| turkpow | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back pattern |
+| turkpow | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back pattern — **PLUS** translate-recovery surfaced a Phase A `stat_zt(m,v,b,t)` syntax regression part of the widened #1398 affected set (mixed attribution: bucket transition is machine-variance recovery, path_syntax_error symptom is partially #1398-attributable on top of the pre-Sprint-26 syntax error) |
 | srpchase | translate_timeout | translate_timeout | path_syntax_error | **Translate recovery** (chronic Sprint 25 timeout; Day 13 faster runner unblocked translate at 274.2s — per `gamslib_status.json` `translate_time_seconds` — vs Sprint 25's 846s under SIGALRM 900s profile; surfaces path_syntax_error post-translate) |
 | qdemo7 | compare_match | compare_match | path_syntax_error | **Real regression — Phase A gate side-effect #1398** |
 | egypt | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect #1398** — `stat_xcrop(r,c)` rewritten with `i↔j` swap; PATH compile now fails before license check |
 | ferts | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect #1398** — `stat_z(p,i)` rewritten with `p↔i` swap |
 | shale | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect #1398** |
 
-Of the 8 transitions: 4 are bucket churn-back / translate recovery (no Sprint 26 src/ attribution), 4 are real Phase A gate side-effects (filed as #1398 for Sprint 27).
+Of the 8 transitions: 4 are bucket churn-back / translate recovery (no Sprint 26 src/ attribution as the primary cause; **turkpow has mixed attribution** — its translate recovery exposed a Phase A `stat_zt(m,v,b,t)` syntax regression that's part of the widened #1398 affected set per PR #1399 review), 4 are real Phase A gate side-effects (filed as #1398 for Sprint 27 — qdemo7/egypt/ferts/shale plus the 11 additional models surfaced in PR #1399 review, for 15 total affected models).
 
 ---
 

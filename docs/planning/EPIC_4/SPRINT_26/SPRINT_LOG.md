@@ -1259,7 +1259,7 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 
 **Headline verdict:** 5 of 8 criteria MET (Parse, Translate STRETCH, path_solve_terminated, model_infeasible, Tests). 3 MISS with mixed attribution:
 - **Solve −1 and Match −1**: single root cause — qdemo7 regressed via Phase A's Pattern C gate predicate firing too broadly (filed Sprint 27 **#1398** with Phase 0 acceptance gate per PR20).
-- **path_syntax_error +8**: 4 Phase A gate side-effects (#1398 — qdemo7 + egypt + ferts + shale) PLUS 4 translate recoveries cascading from `translate_timeout` to `path_syntax_error` (clearlak / ganges / turkpow machine-variance churn-backs + srpchase chronic recovery via Day 13 faster runner). The 4 translate-recovery transitions are NOT a Sprint 26 regression — they're models returning to their Sprint 25 final-state bucket (or unblocking past a chronic timeout); the path_syntax_error counter went up because they now make it past translate to hit a pre-existing PATH compile error.
+- **path_syntax_error +8**: 4 Phase A gate side-effects driving a bucket transition (#1398 — qdemo7 + egypt + ferts + shale) PLUS 4 translate recoveries cascading from `translate_timeout` to `path_syntax_error` (clearlak / ganges / srpchase: 3 transitions are NOT a Sprint 26 regression — models returning to their Sprint 25 final-state bucket or unblocking past a chronic timeout to hit a pre-existing PATH compile error; **turkpow has mixed attribution** — the translate recovery also surfaced a Phase A `stat_zt(m,v,b,t)` syntax regression that's part of the widened #1398 affected set per PR #1399 review, so turkpow's path_syntax_error symptom is partially #1398-attributable on top of its pre-Sprint-26 baseline).
 
 #### Per-Bucket Provenance (PR17) — Sprint 25 Final → Sprint 26 Day 0 → Sprint 26 Day 13
 
@@ -1269,7 +1269,7 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 |---|---|---|---|---|
 | clearlak | path_syntax_error | translate_timeout | path_syntax_error | **Bucket churn-back** (Day 0 machine-variance timeout → Day 13 faster runner translated within 600s, returns to path_syntax_error per Sprint 25 final state) |
 | ganges | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back as clearlak |
-| turkpow | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back as clearlak |
+| turkpow | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back as clearlak — **PLUS** translate-recovery surfaced a Phase A `stat_zt(m,v,b,t)` syntax regression that's part of the widened #1398 affected set per PR #1399 review (mixed attribution: bucket transition is machine-variance recovery to the Sprint 25 baseline state, but the path_syntax_error symptom is now partially #1398-attributable on top of the pre-Sprint-26 syntax error) |
 | srpchase | translate_timeout | translate_timeout | path_syntax_error | **Translate recovery** (chronic Sprint 25 timeout; Day 13 faster runner unblocked translate at 274.2s — per `gamslib_status.json` `translate_time_seconds` — vs Sprint 25's 846s under SIGALRM 900s profile; surfaces path_syntax_error post-translate) |
 | qdemo7 | compare_match | compare_match | path_syntax_error | **Real regression — Phase A gate side-effect (#1398)** |
 | egypt | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** — `stat_xcrop(r,c)` rewritten with `i↔j` swap; PATH compile now fails before license check |
