@@ -1328,7 +1328,7 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 4. **SPRINT_RETROSPECTIVE.md** (new): full Sprint 26 retrospective per Sprint 25 retro template + the 4-reclassification chain narrative + KU-37/38/39 end-of-sprint discoveries + Sprint 27 PR20–PR23 process recommendations.
 5. **CHANGELOG.md** — Sprint 26 Summary entry per Sprint 25 Summary precedent.
 6. **PROJECT_PLAN.md** — Rolling KPIs row updated + footnote ⁷ documenting Day 13 metrics + the Phase A gate side-effect.
-7. **Sprint 27 #1398** filed — Phase A Pattern C gate predicate fires too broadly. #1335 reopened in-place with sprint-27 label (Day 9 close was premature; carryforward intent).
+7. **Sprint 27 #1398** filed — Phase A Pattern C gate predicate fires too broadly (originally 4 affected models; widened to 14 during PR #1399 review). **Sprint 27 #1400** filed — pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings (pre-existing since Day 0 baseline, surfaced by PR #1399 review; one-time JSON cleanup landed in this PR but pipeline-side fix is Sprint 27 work). **#1335 reopened** in-place with sprint-27 label (Day 9 close was premature; carryforward intent).
 
 **Sprint 27 backlog at Day 13 close: 14 issues labeled `sprint-27`** — composition:
 - **2 filed net-new during Day 13:** #1398 (Phase A gate side-effect discovery) + #1400 (pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings — surfaced by PR #1399 Copilot review; pre-existing since Day 0 baseline)

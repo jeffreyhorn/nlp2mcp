@@ -14,7 +14,7 @@ Sprint 26 held the line on Parse / Translate / path_solve_terminated / model_inf
 
 The single most important narrative beat of Sprint 26 was the **chain of four mid-sprint reclassifications** (Days 3, 4, 7, 9), each of which discovered that the original fix-surface diagnosis assumed downstream pipeline handling that didn't hold empirically. Days 3 (Phase B), 4 (Priority 4), 7 (kand), and 9 (Priority 5 #1334) all followed the same arc: prep-time design validated at the patch-site level → mid-day implementation prototype passed unit-test-level checks → end-to-end emit verification revealed the assumed downstream handling was wrong → rollback + Sprint 27 carryforward filing. This pattern, repeated 4 times in one sprint, is the basis for new process recommendation **PR20 (Phase 0 acceptance gate: hand-derived KKT shape on a concrete target model before committing src/ implementation effort)** — applied retroactively in PR #1394 review of the Day 9 #1335 attempt, where the reviewer hand-derived the expected KKT and caught a duplicated-cross-term math regression that GREEN quality gates didn't.
 
-**Key Outcome:** Phase A (the only Sprint 26 emit-affecting `src/` change to ship) corrected the launch consolidation shape to mathematically-equivalent form (`sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` per-Lagrangian), at the cost of regressing launch from PATH-tractable but over-counted (Day 0: MODEL STATUS 1 obj=2731.711) to mathematically-correct but PATH-stalled (MODEL STATUS 5 Locally Infeasible). The PATH-numerics divergence carries forward to Sprint 27 #1378. **Tests:** 4,737 passing (Day 1 floor 4,737 met). **PRs merged across the sprint:** 7+ (Day 1 #1379 Phase A + Day 1 review-fix #1379-followup + Day 2/3/4/5/6/7/8/9/10/12 docs-only PRs + Day 11 #1396 PR19 + Day 13 [this PR]). **Sprint 27 backlog:** 13 issues labeled `sprint-27`.
+**Key Outcome:** Phase A (the only Sprint 26 emit-affecting `src/` change to ship) corrected the launch consolidation shape to mathematically-equivalent form (`sum(ss, ((-1) * 1$(ge(s,ss))) * nu_dweight(ss))` per-Lagrangian), at the cost of regressing launch from PATH-tractable but over-counted (Day 0: MODEL STATUS 1 obj=2731.711) to mathematically-correct but PATH-stalled (MODEL STATUS 5 Locally Infeasible). The PATH-numerics divergence carries forward to Sprint 27 #1378. **Tests:** 4,737 passing (Day 1 floor 4,737 met). **PRs merged across the sprint:** 7+ (Day 1 #1379 Phase A + Day 1 review-fix #1379-followup + Day 2/3/4/5/6/7/8/9/10/12 docs-only PRs + Day 11 #1396 PR19 + Day 13 [this PR]). **Sprint 27 backlog:** 14 issues labeled `sprint-27` (see Acknowledgments section for the full Phase 0 inventory breakdown).
 
 ---
 
@@ -253,7 +253,7 @@ Sprint 27 should add this checklist to CONTRIBUTING.md §"CI Workflow PR Checkli
 
 ## Sprint 27 Recommendations
 
-Based on Sprint 26 findings and the 13 issues labeled `sprint-27`:
+Based on Sprint 26 findings and the 14 issues labeled `sprint-27`:
 
 ### Priority 1: Pattern C Phase B Redesign (#1381, ~10–16h)
 
@@ -294,8 +294,8 @@ Both fawley (#1356) and otpop (#1357) exhibit `$171` domain violations in `comp_
 | Metric | Sprint 26 Final | Sprint 27 Target |
 |--------|-----------------|-------------------|
 | Parse | 142/142 | ≥ 142/142 (= ≥100% pipeline scope per PROJECT_PLAN.md S27) |
-| Translate | 134/142 | ≥ 135/142 (= ≥95% per PROJECT_PLAN.md S27 — improvement from S26's 94.4%, not maintenance; +1 via #1385 srpchase + #1224 mine recovery) |
-| Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 [+2] + #1398 qdemo7 recovery [+1] + #1357 otpop [+1] + #1356 fawley [+1] + #1378 launch PATH-numerics recovery [+1] + #1385 Option 1 short-circuit unblocking srpchase/iswnm translates that then solve [+1–2]) |
+| Translate | 134/142 | ≥ 135/142 (= ≥95% per PROJECT_PLAN.md S27 — improvement from S26's 94.4%, not maintenance; +1 via #1385 [recovers iswnm / mexls / nebrazil / sarf — any of the 4 chronic timeouts still failing at Day 13] OR #1224 [recovers mine from translate_internal_error]; srpchase is NOT a candidate — already translated at Day 13 per `gamslib_status.json`) |
+| Solve | 103 | ≥ 111 (= ≥82% of 135 translated per PROJECT_PLAN.md S27; +8 via #1381 camcge/cesam2 [+2] + #1398 qdemo7 recovery [+1] + #1357 otpop [+1] + #1356 fawley [+1] + #1378 launch PATH-numerics recovery [+1] + #1398 widened-scope recoveries [+2 from egypt/ferts/shale once PATH compile clears]) |
 | Match | 59 | ≥ 66 (= ≥46% of 142 pipeline scope per PROJECT_PLAN.md S27; +7 via #1381 + #1393 + #1335 + #1398 + #1357 + #1356 fixes) |
 | path_syntax_error | 17 | ≤ 6 (−11 needed; available paths: #1398 fixes up to **9 currently-in-path_syntax_error models** with the widened scope — qdemo7, egypt, ferts, shale, fawley, dinam, ganges, gangesx, srpchase + a partial subset of these may recover; #1381 fixes camcge, cesam2 = 2 models; #1357 fixes otpop = 1; #1356 fixes fawley = 1 [also in #1398 scope — single-count]; total recovery surface 9 + 2 + 1 = 12, well above the 11 needed) |
 | path_solve_terminated | 5 | maintain ≤ 5 (per PROJECT_PLAN.md S27) |
