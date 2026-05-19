@@ -1236,3 +1236,117 @@ No `src/` changes; no PR14 obligation triggered; no quality checks required.
 - **Day 13 outlook:** final pipeline retest + Sprint 26 close + Sprint 27 carryforward filing per PLAN.md. Effort budget ~4–6h; Day 13 carries the full pipeline run + 5 Sprint 27 carryforward verifications.
 
 ---
+
+### Day 13 — Final Pipeline Retest + Sprint 26 Close
+
+**Status:** COMPLETE (2026-05-14) — full pipeline retest, bucket-provenance comparison, retrospective + CHANGELOG + PROJECT_PLAN footnote + Sprint 27 carryforward filing all landed in this PR.
+**Branch:** `sprint26-day13-final-retest`.
+
+**Pipeline:** `.venv/bin/python scripts/gamslib/run_full_test.py --quiet` — **5165.8s (~1h26m), exit 0**, 142/142 in-scope models processed. Run was ~60% faster than Day 0 (12779s) due to machine-load variance — Day 0 was on a contended runner. Same `gamslib_status.json` file shape; v2.2.1 schema unchanged.
+
+#### Headline Metrics — Day 13 vs Sprint 26 Targets
+
+| Metric | Day 0 (Task 9) | Day 13 | Δ vs Day 0 | Sprint 26 Target | Stretch | Verdict |
+|---|---|---|---|---|---|---|
+| Parse | 142/142 (100%) | **142/142 (100%)** | 0 | ≥ 142/142 | — | ✅ MET |
+| Translate | 130/142 (91.5%) | **134/142 (94.4%)** | **+4** | ≥ 130/142 (maintain) | ≥ 132/142 | ✅ STRETCH |
+| Solve | 104 | **103** | **−1** | ≥ 104 (maintain) | ≥ 106 | ❌ MISS by 1 |
+| Match | 60 | **59** | **−1** | ≥ 60 (maintain) | ≥ 62 | ❌ MISS by 1 |
+| path_syntax_error | 9 | **17** | **+8** | ≤ 9 (maintain) | ≤ 8 | ❌ MISS by 8 |
+| path_solve_terminated | 5 | **5** | 0 | ≤ 5 | ≤ 4 | ✅ MET |
+| model_infeasible | 4 | **4** | 0 | ≤ 4 | ≤ 3 | ✅ MET |
+| Tests | 4,735 | **4,737** | +2 | ≥ 4,737 | ≥ 4,745 | ✅ MET |
+
+**Headline verdict:** 5 of 8 criteria MET (Parse, Translate STRETCH, path_solve_terminated, model_infeasible, Tests). 3 MISS with mixed attribution:
+- **Solve −1 and Match −1**: single root cause — qdemo7 regressed via Phase A's Pattern C gate predicate firing too broadly (filed Sprint 27 **#1398** with Phase 0 acceptance gate per PR20).
+- **path_syntax_error +8**: 4 Phase A gate side-effects driving a bucket transition (#1398 — qdemo7 + egypt + ferts + shale) PLUS 4 translate recoveries cascading from `translate_timeout` to `path_syntax_error` (clearlak / ganges / srpchase: 3 transitions are NOT a Sprint 26 regression — models returning to their Sprint 25 final-state bucket or unblocking past a chronic timeout to hit a pre-existing PATH compile error; **turkpow has mixed attribution** — the translate recovery also surfaced a Phase A `stat_zt(m,v,b,t)` syntax regression that's part of the widened #1398 affected set per PR #1399 review, so turkpow's path_syntax_error symptom is partially #1398-attributable on top of its pre-Sprint-26 baseline).
+
+#### Per-Bucket Provenance (PR17) — Sprint 25 Final → Sprint 26 Day 0 → Sprint 26 Day 13
+
+**8 models with bucket changes Day 0 → Day 13:**
+
+| Model | Sprint 25 final | Day 0 | Day 13 | Type |
+|---|---|---|---|---|
+| clearlak | path_syntax_error | translate_timeout | path_syntax_error | **Bucket churn-back** (Day 0 machine-variance timeout → Day 13 faster runner translated within 600s, returns to path_syntax_error per Sprint 25 final state) |
+| ganges | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back as clearlak |
+| turkpow | path_syntax_error | translate_timeout | path_syntax_error | Same churn-back as clearlak — **PLUS** translate-recovery surfaced a Phase A `stat_zt(m,v,b,t)` syntax regression that's part of the widened #1398 affected set per PR #1399 review (mixed attribution: bucket transition is machine-variance recovery to the Sprint 25 baseline state, but the path_syntax_error symptom is now partially #1398-attributable on top of the pre-Sprint-26 syntax error) |
+| srpchase | translate_timeout | translate_timeout | path_syntax_error | **Translate recovery** (chronic Sprint 25 timeout; Day 13 faster runner unblocked translate at 274.2s — per `gamslib_status.json` `translate_time_seconds` — vs Sprint 25's 846s under SIGALRM 900s profile; surfaces path_syntax_error post-translate) |
+| qdemo7 | compare_match | compare_match | path_syntax_error | **Real regression — Phase A gate side-effect (#1398)** |
+| egypt | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** — `stat_xcrop(r,c)` rewritten with `i↔j` swap; PATH compile now fails before license check |
+| ferts | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** — `stat_z(p,i)` rewritten with `p↔i` swap |
+| shale | path_solve_license | path_solve_license | path_syntax_error | **Phase A gate side-effect (#1398)** |
+
+**6 buckets with no per-model membership changes (Day 0 → Day 13):** mismatches (38; matches lost qdemo7 so it's counted in the bucket-change table above, not here), compare_skipped (6, ps*_s_mn family + aircraft/apl1p/apl1pca/senstran), model_infeasible (4: agreste/camshape/cesam/lnts), path_solve_terminated (5: dyncge/elec/maxmin/tricp/twocge), translate_internal_error (4: danwolfe/decomp/mine/saras), and parse_fail (0).
+
+**Net Day 13 vs Sprint 25 final** (the meaningful sprint Δ — Day 0 vs Day 13 is confounded by Day 0's machine-variance churn-outs):
+
+| Metric | S25 final | Day 13 | Δ |
+|---|---|---|---|
+| Parse | 142/142 | 142/142 | 0 |
+| Translate | 133/142 | 134/142 | +1 (srpchase recovery; chronic Sprint 25 timeout unblocked by Day 13 faster runner) |
+| Solve | 104 | 103 | −1 (qdemo7) |
+| Match | 60 | 59 | −1 (qdemo7) |
+| path_syntax_error | 12 | 17 | +5 (qdemo7 + egypt/ferts/shale + srpchase recovery) |
+| path_solve_terminated | 5 | 5 | 0 |
+| model_infeasible | 4 | 4 | 0 |
+| path_solve_license | 8 | 5 | −3 (egypt/ferts/shale transferred to path_syntax_error via Phase A gate) |
+| translate_timeout | 5 | 4 | −1 (srpchase recovery) |
+| translate_internal_error | 4 | 4 | 0 |
+
+#### Phase A Gate Side-Effect — Sprint 27 #1398
+
+**Root cause:** Phase A's `_find_pattern_c_alias_sum` gate predicate (`src/kkt/stationarity.py`) correctly identified the launch-shape case (alias-conditional Sum whose body references an offset-indexed multiplier needing consolidation). The gate's predicate works on launch but **fires too broadly** on Sums whose body multipliers are already correctly alias-indexed without needing consolidation. For these models, the `i ↔ j` swap in `_apply_pattern_c_swap_to_term` introduces an error rather than correcting the launch over-counting pattern.
+
+**Concrete examples:**
+
+- **qdemo7 `stat_xcrop(c)`**: pre-Sprint-26 emit `sum(s, 1$(sc(s,c)) * lam_plow(s))` → Day 13 emit `sum(s, 1$(sc(c,s)) * lam_plow(c))`. PATH compile-fails (`lam_plow` is alias-indexed in the original; the swap dereferences it via `c` which is the eq-domain, breaking GAMS's domain check).
+- **ferts `stat_z(p,i)`**: pre-Sprint-26 emit `sum(c, ((-1) * (a(c,p) * 1$(ppos(p,i)))) * lam_mb(c,i))` → Day 13 emit `sum(c, ((-1) * (a(c,i) * 1$(ppos(i,p)))) * lam_mb(c,p))`. Same shape regression.
+- **egypt + shale**: similar swap regressions in their `stat_xcrop` / equivalent equations.
+
+**PR19 covered 1 of the 15 #1398-affected models but didn't gate on it; missed the other 14 entirely:** PR19 (Day 11 CI extension) runs PATH solve on 11 Tier 0/1 canaries + 4 Pattern C target models (camcge, cesam2, fawley, otpop). Of the Day 13-discovered widened scope of #1398 (15 affected models — qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow), **only fawley** is in PR19's target list (Pattern C **soft-fail / informational** tier — PR19 ran the PATH solve on fawley but the result is reported, not blocking; the Pattern C tier is expected to compile-fail pre-fix per the Sprint 26 baseline, so a fresh Phase A regression on top wouldn't change the soft-fail outcome). **Net effect: PR19 effectively missed all 15 #1398-affected models as a gating signal** — the 14 are entirely outside coverage; the 1 (fawley) is in the informational tier where a compile failure is the expected baseline. **Sprint 27 follow-up:** widen the PR19 target list to include the 14 currently-uncovered #1398-affected models (or a representative subset covering the distinct emit shapes — at minimum the 8 Phase 0 anchor models (Sprint 27 #1398 work): **launch** (Phase A original target — verify byte-stability) + qdemo7 + ferts + sambal + ganges + sroute + turkpow + dinam (each covers a distinct emit shape — qdemo7/ferts/sambal/ganges/sroute = alias-of-eq-domain swaps; turkpow's `stat_zt(m,v,b,t)` = inner-sum-of-bs-conditioned-products; dinam covers BOTH `comp_mb(i,t)` [differentiate-vs-current-eq-index error] AND `stat_ka(te)` [row-multiplier-collapse on inner Sum] — 2 distinct shapes not covered by the other 6 anchors per #1398 widened-scope comment 4481338519). **Note:** the current `.github/path-solve-ci-targets.txt` does NOT include launch in any tier — Sprint 27 PR19 widening should add launch as `tier=1` (Phase A's original target; byte-stability is the Sprint 26 baseline)) so similar gate-overreach catches surface at PR-review time, not at end-of-sprint retest.
+
+#### Error-Influx Accounting (PR7 + PR10)
+
+**model_infeasible (PR7):**
+- Sprint 25 final: 4 models (agreste, camshape, cesam, lnts)
+- Day 13: 4 models (same)
+- **Gross fixes:** 0
+- **Gross influx:** 0
+- **Net change:** 0 (maintain Sprint 25 stretch floor of ≤ 5)
+
+**Error-influx (PR10 re-calibrated):**
+- **Alias-AD / Pattern C (30% budget):** **400% (4 influx / 1 fix)** ❌ — 4 Phase A side-effect regressions driving metric-bucket transitions (qdemo7, egypt, ferts, shale) against 1 Sprint 26 alias-AD fix (Phase A consolidated launch emit, PR #1379). The 3 machine-variance translate churn-backs (clearlak / ganges / turkpow) are NOT Sprint 26 fixes — they're runner-speed effects that reverted to the Sprint 25 baseline state. Above the 30% budget. The widened #1398 known-bug surface (15 models per PR #1399 review) is broader than the 4 models that drove metric-bucket transitions; if measured against the widened surface the ratio is 1500% (15 influx / 1 fix).
+- **Emitter recovery (80–100% budget):** N/A — no emitter recovery work shipped this sprint (Priority 4 reclassified to Sprint 27 #1385).
+
+**PR10 violation rationale:** Phase A was a known-risk structural emit change (Sprint 25 SPRINT_RETROSPECTIVE.md §"What Could Be Improved" #3 — `path_syntax_error` 11 → 12 churn risk). PR19 mitigation (CI extension, Day 11) was scoped to canaries + 4 Pattern C target models (camcge / cesam2 / fawley / otpop); the affected non-target models (originally 4 identified, widened to **15** in PR #1399 review — qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow) are 14 outside PR19's coverage; the 1 (fawley) is already in PR19's Pattern C **soft-fail / informational** tier (compile failure is the expected baseline there, so a fresh Phase A regression on top wouldn't change the soft-fail outcome — PR19 effectively missed all 15 as a gating signal). The widened-influx outcome is the **same failure-mode shape** that PR19 was designed to prevent on the canary set — just at a broader emit-affected surface than PR19's initial target list. Sprint 27 #1398 + PR19 target-list extension to the 14 currently-uncovered #1398-affected models (or the 8 Phase 0 anchor models from the #1398 widened-scope comments: launch + qdemo7 + ferts + sambal + ganges + sroute + turkpow + dinam (dinam adds 2 distinct shapes — `comp_mb(i,t)` differentiate-vs-current-eq-index error + `stat_ka(te)` row-multiplier-collapse on inner Sum — per comment 4481338519); fawley already in PR19 Pattern C tier but launch is NOT yet in any PR19 tier (Sprint 27 PR19 widening should add launch as `tier=1`)) closes this loop.
+
+#### Day 13 Deliverables (this PR)
+
+1. **`data/gamslib/gamslib_status.json`** — pipeline-output update.
+2. **16 regenerated `data/gamslib/mcp/*.gms` artifacts** (the glob covers both standard `*_mcp.gms` and presolve `*_mcp_presolve.gms` shapes) — advisory per BASELINE_METRICS.md §6 (PR12 byte-stability harness covers the 5 fast fixtures, not the full corpus). 15 modified: dinam, egypt, fawley, ferts, ganges, gangesx, harker, **launch_mcp_presolve** (presolve artifact, not standard `*_mcp.gms`), qdemo7, qsambal, sambal, shale, sroute, tfordy, turkpow; 1 new: srpchase (chronic-timeout translate recovery via Day 13 faster runner). Most reflect Phase A gate side-effects — the full widened scope across **15 affected models** (qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow) is documented in the Sprint 27 #1398 issue body + widened-scope comments at [issuecomment-4472363765](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472363765), [issuecomment-4472473408](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472473408), and [issuecomment-4472989210](https://github.com/jeffreyhorn/nlp2mcp/issues/1398#issuecomment-4472989210) (PR #1399 Copilot review surfaced 11 additional models beyond the original 4 listed in this SPRINT_LOG section). Small post-Sprint-25 retest churn accounts for the remaining diffs.
+3. **SPRINT_LOG.md Day 13 entry** (this section).
+4. **SPRINT_RETROSPECTIVE.md** (new): full Sprint 26 retrospective per Sprint 25 retro template + the 4-reclassification chain narrative + KU-37/38/39 end-of-sprint discoveries + Sprint 27 PR20–PR23 process recommendations.
+5. **CHANGELOG.md** — Sprint 26 Summary entry per Sprint 25 Summary precedent.
+6. **PROJECT_PLAN.md** — Rolling KPIs row updated + footnote ⁷ documenting Day 13 metrics + the Phase A gate side-effect.
+7. **Sprint 27 #1398** filed — Phase A Pattern C gate predicate fires too broadly (originally 4 affected models; widened to 15 during PR #1399 review). **Sprint 27 #1400** filed — pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings (pre-existing since Day 0 baseline, surfaced by PR #1399 review; one-time JSON cleanup landed in this PR but pipeline-side fix is Sprint 27 work). **#1335 reopened** in-place with sprint-27 label (Day 9 close was premature; carryforward intent).
+
+**Sprint 27 backlog at Day 13 close: 14 issues labeled `sprint-27`** — composition:
+- **2 filed net-new during Day 13:** #1398 (Phase A gate side-effect discovery) + #1400 (pipeline emit writes developer-local absolute paths to `gamslib_status.json` `mcp_file_used` + captured warnings — surfaced by PR #1399 Copilot review; pre-existing since Day 0 baseline)
+- **7 filed during Sprint 26 reclassifications + close-and-refile (Days 1–9):** #1378 (launch PATH numerics, Day 1) + #1381 (Pattern C Phase B redesign, Day 3) + #1385 (Option 1 short-circuit redesign, Day 4) + #1387 (cclinpts close-and-refile, Day 6) + #1388 (camshape close-and-refile, Day 6) + #1390 (kand AD-architecture redesign, Day 7) + #1393 (scalar-eq Sum-collapse from #1334, Day 9)
+- **1 reopened in-place Day 13 (per Day 9 intent):** #1335
+- **4 pre-existing carryforward (sprint-26 label moved to sprint-27 Day 13, including #1224 from earlier sprints):** #1224 + #1356 + #1357 + #1374
+
+2 + 7 + 1 + 4 = 14.
+
+#### Quality Checks (Day 13)
+
+- `make test`: **4,737 passed / 10 skipped / 1 xfailed** (235s). One transient flake on `test_performance_overhead_acceptable` cleared on rerun — unrelated to Day 13 changes (no src/ touched).
+- No `src/` or `tests/` changes in Day 13 PR; only `data/gamslib/`, `docs/planning/EPIC_4/SPRINT_26/`, `CHANGELOG.md`, `docs/planning/EPIC_4/PROJECT_PLAN.md`.
+
+#### Notes (Day 13)
+
+- **Effort actual ~3h** (pipeline runtime ~1h26m + analysis + write-up ~1h30m + commit/PR ~5min) vs ~3–6h budget per PLAN.md — at lower end of budget.
+- **PR19 first production catch:** None this sprint. PR19 was the **mechanism**; its target-list selection was the **limit**. The 4 Phase A side-effects (qdemo7/egypt/ferts/shale) confirm PR19's design assumption (structural emit changes need solve-time validation) but expose that the **target list needs to be a configurable subset of the in-scope corpus, not just canaries + Pattern C targets**. Sprint 27 PR19-followup: widen the target list to cover models with high Phase A gate-firing potential.
+- **Sprint 26 final verdict — CONDITIONAL CARRYFORWARD:** Sprint 26 held the line on Parse / path_solve_terminated / model_infeasible / Tests vs Sprint 25 final and shipped Phase A + PR19 cleanly, but introduced 4 Phase A side-effect regressions that net to −1 Solve / −1 Match / +5 path_syntax_error vs Sprint 25 final (Translate net +1 from srpchase chronic recovery). The "maintain ≤9" target on path_syntax_error was set under the assumption that Phase A wouldn't ripple to non-launch models — wrong assumption; #1398 captures the gate-predicate scope expansion needed for Sprint 27. Net Sprint 26 outcome: **PR19 + 4 reclassification carryforwards** ready for Sprint 27 with Phase 0 acceptance gates pre-documented per Sprint 26 retrospective PR20.
+
+---
