@@ -36,7 +36,13 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
 - `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 2
 - `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` §Unknown 7.1, §Unknown 7.2, §Unknown 9.1
 - `docs/planning/EPIC_4/SPRINT_26/SPRINT_RETROSPECTIVE.md` §"What We'd Do Differently" PR20 codification rationale
-- Existing Phase 0 reference content (Note: no issue doc currently has a formal `## Phase 0: Acceptance Gate` section header — that's literally what this task establishes as a template. The following 4 issue docs mention Phase 0 in their content for guidance on what to include in each subsection): `docs/issues/ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md` (most comprehensive — see lines 88+ and 107), `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` (lines 95+), `docs/issues/ISSUE_1385_option-1-short-circuit-redesign-symbolic-instance-handling.md` (line 201), `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md` (line 45). After Task 2 lands, these 4 issues should also be updated with formal `## Phase 0: Acceptance Gate` sections in a follow-on (Sprint 27 Day 0).
+- Existing Phase 0 reference content (Note: no issue doc currently has a formal `## Phase 0: Acceptance Gate` section header — that's literally what this task establishes as a template. The following 4 issue docs mention Phase 0 in their content for guidance on what to include in each subsection). Locate the reference passages via grep — line numbers will drift as the docs evolve:
+  - `docs/issues/ISSUE_1390_kand-tree-predicate-aliased-sum-architecture-redesign.md` — most comprehensive; has the stable section heading `## Investigation pointers (Phase 0 / Sprint 27 prep work)` (find via `grep -n "Investigation pointers (Phase 0" docs/issues/ISSUE_1390_*.md`) plus additional Phase 0 mentions (find via `grep -n "Phase 0" docs/issues/ISSUE_1390_*.md`).
+  - `docs/issues/ISSUE_1393_ad-scalar-eq-sum-collapse-symbolic-superset.md` — Phase 0 mentioned inline within the design discussion (find via `grep -n "Phase 0" docs/issues/ISSUE_1393_*.md`).
+  - `docs/issues/ISSUE_1385_option-1-short-circuit-redesign-symbolic-instance-handling.md` — Phase 0 mentioned inline (find via `grep -n "Phase 0" docs/issues/ISSUE_1385_*.md`).
+  - `docs/issues/ISSUE_1335_ad-missing-zdef-cross-term-time-reversal-index.md` — Phase 0 mentioned in the Estimated effort paragraph (find via `grep -n "Phase 0" docs/issues/ISSUE_1335_*.md`).
+
+  After Task 2 lands, these 4 issues should also be updated with formal `## Phase 0: Acceptance Gate` sections in a follow-on (Sprint 27 Day 0).
 - The 4 target issue documents (current state):
   - `docs/issues/ISSUE_1356_*.md` (fawley comp_up — no formal Phase 0)
   - `docs/issues/ISSUE_1357_*.md` (otpop comp_up — no formal Phase 0)
@@ -1042,9 +1048,9 @@ EOF
    - Subcommands or flags for "PR14 review list" mode (per-PR scope) vs "mid-sprint retest" mode (since-sprint-start scope)
    - Handles cross-sprint timestamp ambiguity from KU Unknown 9.3 via `--since-commit` (commit boundaries are unambiguous)
 2. **Implement the script** at `scripts/sprint_audit/changed_emit_artifacts.py`:
-   - `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode: `git log --since <date> -- <pathspec>` for `--since-date`, `git log <sha>..HEAD -- <pathspec>` for `--since-commit`
+   - `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode: `git log --name-only --pretty=format:"COMMIT:%H%n%s" --since <date> -- 'data/gamslib/mcp/*_mcp.gms' 'data/gamslib/mcp/*_mcp_presolve.gms'` for `--since-date`, same form with `<sha>..HEAD` replacing `--since <date>` for `--since-commit`. **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` ensures the COMMIT line is distinguishable from file paths during output parsing.
    - Validate the `--since-commit` SHA via `git rev-parse` before constructing the revision range
-   - Filter for `data/gamslib/mcp/*_mcp.gms` or `*_mcp_presolve.gms` paths
+   - Parse output by walking lines: each `COMMIT:<sha>` line starts a new group; subsequent non-blank lines until the next `COMMIT:` are the changed file paths for that commit (already filtered by the `-- <pathspec>` to mcp artifacts)
    - Group changes by triggering commit
    - Output structured format suitable for mid-sprint retest reports
 3. **Integration with PR14 review process** — document in CONTRIBUTING.md §"Emit-PR `.gms` Diff Workflow" (or similar) how to invoke the script.

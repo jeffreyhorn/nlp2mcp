@@ -1004,7 +1004,7 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
    - Handles the cross-sprint timestamp ambiguity from KU Unknown 9.3 — `--since-commit` is the structural mitigation (commit boundaries are unambiguous)
 
 2. **Implement the script** in `scripts/sprint_audit/changed_emit_artifacts.py`:
-   - Use `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode: `git log --since <date> -- <pathspec>` for `--since-date`, `git log <sha>..HEAD -- <pathspec>` for `--since-commit`
+   - Use `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode. For `--since-date`: `git log --name-only --pretty=format:"COMMIT:%H%n%s" --since <date> -- 'data/gamslib/mcp/*_mcp.gms' 'data/gamslib/mcp/*_mcp_presolve.gms'`. For `--since-commit`: same form with `<sha>..HEAD` replacing `--since <date>`. **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` ensures each COMMIT line is distinguishable from file paths during output parsing.
    - Filter for paths matching `data/gamslib/mcp/*_mcp.gms` or `data/gamslib/mcp/*_mcp_presolve.gms`
    - Group changes by triggering commit
    - Output structured format suitable for inclusion in mid-sprint retest reports
