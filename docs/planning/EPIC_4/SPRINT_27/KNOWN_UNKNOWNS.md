@@ -19,7 +19,7 @@ This document identifies all assumptions and unknowns for Sprint 27 features **b
 5. **Priority 5: comp_up Subset/Superset Workstream (#1356 fawley + #1357 otpop)** — Domain-widening fix in `src/kkt/complementarity.py` + `src/emit/emit_gams.py`
 6. **Priority 6: #1224 mine ParamRef IndexOffset** — `src/ad/index_mapping.py` UserWarning fix
 7. **Priority 7: Day 6 Close-and-Refile Carryforwards (#1387 cclinpts + #1388 camshape)** — Fix-surface analysis + implementation OR Sprint 28 carryforward filing
-8. **Priority 8: Pipeline Absolute-Path Leak Fix (#1400)** — `scripts/gamslib/run_full_test.py` path-relativization (sets `mcp_file_used` at line 899 + uses default `warnings.formatwarning` which emits absolute paths); `scripts/gamslib/test_solve.py:911 solve_mcp` function may also need audit
+8. **Priority 8: Pipeline Absolute-Path Leak Fix (#1400)** — `scripts/gamslib/run_full_test.py:899` `mcp_file_used` assignment serializes an absolute path; the second leak source (originally described in Sprint 26 CHANGELOG / PROJECT_PLAN as `warnings.formatwarning` is INCORRECT — `grep -lE "warnings\." scripts/gamslib/*.py` returns nothing). Task 8 must AUDIT to identify the actual second source; most likely candidate is captured subprocess stderr (`scripts/gamslib/test_solve.py:982-988` runs GAMS with `capture_output=True`, and GAMS stderr can contain absolute paths in error messages that may be persisted into `gamslib_status.json`).
 9. **Priority 9: Emit Duplicate-Init Bugs (#1374)** — Observation-style sweep of regenerated `*_mcp.gms` artifacts
 10. **Process Recommendations:** PR20 (Phase 0 acceptance gate codification), PR21 (prep-task end-to-end emit verification template), PR22 (mid-sprint `scripts/sprint_audit/changed_emit_artifacts.py`), PR23 (CI-workflow PR self-review checklist)
 
@@ -1080,30 +1080,32 @@ Sprint planning
 
 # Category 8: Pipeline Absolute-Path Leak Fix (#1400)
 
-Priority 8 workstream — `scripts/gamslib/run_full_test.py` sets the `mcp_file_used` field at line 899 (`model["mcp_solve"]["mcp_file_used"] = str(presolve_path)`) which serializes an absolute path; the same file's warning capture uses Python's default `warnings.formatwarning` which emits `<absolute path>:<line>`. PATH solve logic lives in `scripts/gamslib/test_solve.py` (`solve_mcp` function at line 911). Fix to repo-relative paths. (Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo — `solve_mcp` is a function in `test_solve.py`.)
+Priority 8 workstream — `scripts/gamslib/run_full_test.py:899` sets the `mcp_file_used` field (`model["mcp_solve"]["mcp_file_used"] = str(presolve_path)`) which serializes an absolute path. **The original Sprint 26 CHANGELOG / PROJECT_PLAN.md attribution of the second leak source to `run_full_test.py:warnings.formatwarning` is INCORRECT** — `grep -lE "warnings\." scripts/gamslib/*.py` returns nothing; no warning-capture logic exists in `scripts/gamslib/`. The actual second leak source must be identified by audit during Task 8; the most plausible candidate is captured subprocess stderr/tracebacks (e.g., `scripts/gamslib/test_solve.py:982-988` runs the GAMS PATH subprocess with `capture_output=True`, and GAMS stderr can contain absolute paths in error messages that may be persisted into `gamslib_status.json` via the status dict). PATH solve helper: `scripts/gamslib/test_solve.py:911 solve_mcp` function (note: there is no `scripts/gamslib/solve_mcp.py` file in the repo). Fix to repo-relative paths.
 
-## Unknown 8.1: Are there other absolute-path leak sources beyond `run_full_test.py` (mcp_file_used + warnings.formatwarning)?
+## Unknown 8.1: Beyond `run_full_test.py:899 mcp_file_used`, what is the actual second absolute-path leak source (the Sprint 26 attribution to `warnings.formatwarning` is wrong)?
 
 ### Priority
 
-**Medium** — Sprint 26 Day 13 surfaced 2 leak sources (both in `scripts/gamslib/run_full_test.py`), but the audit may not have been exhaustive — `scripts/gamslib/test_solve.py` (`solve_mcp` function) may also contribute paths to the status JSON. If 1+ additional sources exist, Sprint 27 Priority 8 effort grows; if not caught, `gamslib_status.json` will not be byte-identical across machines post-fix.
+**Medium** — Sprint 26 Day 13 surfaced the `mcp_file_used` leak at `run_full_test.py:899` and attributed a second source to `warnings.formatwarning`, but the latter attribution is incorrect (no `warnings` module usage in `scripts/gamslib/`). Task 8 must audit to find the actual second source before #1400 can be fixed correctly; the most plausible candidate is captured subprocess stderr in `scripts/gamslib/test_solve.py:982-988` (`subprocess.run(cmd, capture_output=True, ...)`) where GAMS stderr text may include absolute paths. If the actual second source is structurally different from the wrong-attribution candidate, Sprint 27 Priority 8 effort estimate may need adjustment; if not caught, `gamslib_status.json` will not be byte-identical across machines post-fix.
 
 ### Assumption
 
-The 2 sources surfaced in Sprint 26 Day 13 (`scripts/gamslib/run_full_test.py:899` mcp_file_used assignment + `run_full_test.py:warnings.formatwarning` capture) are the only absolute-path leak sources in the pipeline. The fix is contained to that single file; `scripts/gamslib/test_solve.py:911 solve_mcp` and the other `scripts/gamslib/*.py` modules do not contribute leaked paths.
+The 2 actual absolute-path leak sources are: (1) `scripts/gamslib/run_full_test.py:899` mcp_file_used assignment (confirmed); (2) captured GAMS subprocess stderr from `scripts/gamslib/test_solve.py:982-988` (`capture_output=True`) where absolute paths in GAMS error messages get serialized into the status dict. The original CHANGELOG attribution to `warnings.formatwarning` was inherited from an incorrect description in the PROJECT_PLAN.md #1400 priority block and propagated forward; this needs correction in PROJECT_PLAN.md as a follow-on.
 
 ### Research Questions
 
-1. Does grep across `scripts/gamslib/*.py` for absolute-path constructions (e.g., `Path.cwd()`, `os.path.abspath`, `__file__` without basename) find additional leak sources?
-2. Are there error-message or log-message formatters elsewhere that emit absolute paths?
-3. Does the `gamslib_status.json` JSON schema contain any other path field that might leak?
-4. Will the path-relativization break any downstream consumer of `gamslib_status.json` (e.g., the bucket-provenance baseline scripts from Task 3)?
+1. What IS the actual second leak source (since `warnings.formatwarning` is not it)? Inspect `gamslib_status.json` from a recent pipeline run and grep for any field containing `/Users/` or `/home/` — those fields identify the actual leak paths.
+2. Does the captured subprocess stderr from `scripts/gamslib/test_solve.py:982-988` (`subprocess.run(cmd, capture_output=True, ...)`) get persisted into the status dict? If yes, GAMS error messages with absolute paths leak via that channel.
+3. Does grep across `scripts/gamslib/*.py` for absolute-path constructions (e.g., `Path.cwd()`, `os.path.abspath`, `__file__` without basename, `str(presolve_path)` style assignments) find additional leak sources beyond run_full_test.py:899?
+4. Does the `gamslib_status.json` JSON schema contain any other path field that might leak?
+5. Will the path-relativization break any downstream consumer of `gamslib_status.json` (e.g., the bucket-provenance baseline scripts from Task 3)?
 
 ### How to Verify
 
-1. `grep -rnE "abspath|os.path.realpath|str\(Path.cwd|/Users/|/home/" scripts/gamslib/` to surface absolute-path constructions.
-2. Inspect all path-related fields in `gamslib_status.json`.
-3. Test path-relativization against downstream consumers in Task 3's bucket-provenance scripts.
+1. Run pipeline against 1–2 models and inspect resulting `gamslib_status.json` for any field with absolute paths: `grep -rE "/Users/|/home/" data/gamslib/gamslib_status.json` — each match identifies a real leak source.
+2. `grep -rnE "abspath|os.path.realpath|str\(Path.cwd|str\(.*_path\)|capture_output=True" scripts/gamslib/` to surface absolute-path construction sites + subprocess-capture call sites.
+3. Inspect all path-related fields in `gamslib_status.json`.
+4. Test path-relativization against downstream consumers in Task 3's bucket-provenance scripts.
 
 ### Risk if Wrong
 
@@ -1137,19 +1139,19 @@ Basename-only relativization is sufficient because the mcp file is always at `da
 ### Research Questions
 
 1. Is the mcp file always at the fixed relative path per the cwd convention, or could it vary (e.g., user-configurable output directory)?
-2. Does `PROJECT_ROOT` exist as a constant in the codebase already, or would Priority 8 need to introduce it?
-3. Does the warnings.formatwarning custom formatter need PROJECT_ROOT (for relative path of `<warning file>:<line>`) since warnings can come from anywhere in `src/`?
+2. Does `PROJECT_ROOT` exist as a constant in the codebase already (yes — see `scripts/gamslib/test_solve.py:987` `cwd=str(PROJECT_ROOT)`), or would Priority 8 need to introduce additional helpers?
+3. For the captured-subprocess-stderr leak source (per Unknown 8.1's actual second source), does the GAMS stderr text need full PROJECT_ROOT-based relativization (paths can come from anywhere in the GAMS subprocess working tree) or a basename-only approach (since GAMS only references the input mcp file)?
 
 ### How to Verify
 
-1. Confirm cwd convention in `scripts/gamslib/run_full_test.py` (per #1345/#1346/#1347 — `mcp_file_used` is assigned at line 899 to `str(presolve_path)` where `presolve_path` is constructed at line 701 as `mcp_path.with_name(f"{model_id}_mcp_presolve.gms")`). Also audit `scripts/gamslib/test_solve.py:911 solve_mcp` for any cwd / abspath dependency.
-2. Decide per-leak-source: basename for mcp_file_used (fixed path); PROJECT_ROOT for warnings (variable paths).
+1. Confirm cwd convention in `scripts/gamslib/run_full_test.py` (per #1345/#1346/#1347 — `mcp_file_used` is assigned at line 899 to `str(presolve_path)` where `presolve_path` is constructed at line 701 as `mcp_path.with_name(f"{model_id}_mcp_presolve.gms")`). Also audit `scripts/gamslib/test_solve.py:911 solve_mcp` for cwd / abspath dependency (it uses `cwd=str(PROJECT_ROOT)` per line 987, which is the right pattern).
+2. Decide per-leak-source: basename for mcp_file_used (fixed path); PROJECT_ROOT-relative for captured subprocess stderr (variable paths in GAMS error messages).
 3. Document chosen approach in `docs/issues/ISSUE_1400_*.md`.
 
 ### Risk if Wrong
 
 - **PROJECT_ROOT approach selected unnecessarily:** Minor over-engineering; no functional impact.
-- **Basename approach for variable paths breaks:** Warning paths uninformative; minor logging quality loss.
+- **Basename approach for variable paths breaks:** Captured subprocess stderr paths become uninformative; minor logging / debuggability loss.
 
 ### Estimated Research Time
 

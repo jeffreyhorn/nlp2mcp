@@ -131,7 +131,7 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
    - Are both Sprint 27 tractable within the 6–12h Priority 7 budget, or should one (or both) be deferred to Sprint 28 with formal Phase 0 + carryforward filing?
 
    **Priority 8 (#1400 Pipeline Absolute-Path Leak):**
-   - Are there other absolute-path leak sources beyond `scripts/gamslib/run_full_test.py` (mcp_file_used at line 899 + warnings.formatwarning)? (E.g., does `scripts/gamslib/test_solve.py:911 solve_mcp` contribute paths to the status JSON via the dict it returns? Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo; `solve_mcp` is a function in `test_solve.py`.)
+   - What IS the actual second leak source beyond `scripts/gamslib/run_full_test.py:899 mcp_file_used`? The Sprint 26 CHANGELOG / PROJECT_PLAN.md attribution to `warnings.formatwarning` is INCORRECT — `grep -lE "warnings\." scripts/gamslib/*.py` returns nothing. Most plausible actual candidate: captured GAMS subprocess stderr from `scripts/gamslib/test_solve.py:982-988` (where `subprocess.run(cmd, capture_output=True, ...)` runs) gets persisted into the status dict and can contain absolute paths from GAMS error messages. (Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo; `solve_mcp` is a function in `test_solve.py:911`.)
    - Will the path-relativization break any downstream consumer of `gamslib_status.json` (e.g., the bucket-provenance baseline scripts from Task 3)?
 
    **Priority 9 (#1374 Emit Duplicate-Init Bugs):**
