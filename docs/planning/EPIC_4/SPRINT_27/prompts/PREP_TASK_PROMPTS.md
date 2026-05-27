@@ -55,11 +55,11 @@ Tasks 2–11 are dispatchable in the following order per the dependency graph in
    - #1356/#1357: `comp_up_x(tt)$(t(tt) and xb(tt) < inf)..` shape — derive expected complementarity condition with subset/superset domain widening
    - #1387 cclinpts: identify which stationarity equation produces the ~70% rel_diff; hand-derive expected vs current emit
    - #1388 camshape: identify which equation(s) drive the Locally Infeasible outcome; hand-derive KKT and compare against current MCP emit
-2. **Author Phase 0 sections** — each issue file gets a new `## Phase 0: Acceptance Gate` section with subsections:
-   - **Hand-Derived KKT Shape** — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target
-   - **Expected Emit Pattern** — what `*_mcp.gms` should contain, by equation name + index pattern
-   - **Verification Methodology** — explicit byte-comparison or pattern-match command(s) to run against regenerated `<model>_mcp.gms`
-   - **PROCEED/REPLAN Signal** — binary criteria for whether Phase 1 src/ work can begin
+2. **Author Phase 0 sections** — each issue file gets a new `## Phase 0: Acceptance Gate` section with exactly the following 4 subsections (each rendered as a markdown `###` heading so the verification grep in PREP_PLAN.md Task 2 §Verification matches; do NOT use bold text or `####` for these — the verification expects literal `### Hand-Derived KKT Shape`, `### Expected Emit Pattern`, `### Verification Methodology`, `### PROCEED/REPLAN Signal`):
+   - `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target
+   - `### Expected Emit Pattern` — what `*_mcp.gms` should contain, by equation name + index pattern
+   - `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against regenerated `<model>_mcp.gms`
+   - `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 src/ work can begin
 3. **Codify Phase 0 methodology in CONTRIBUTING.md** — add new §"Phase 0 Acceptance Gates" section that:
    - States the hard rule: any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/` MUST have a Phase 0 section in its `docs/issues/ISSUE_*.md` file before any src/ commit
    - References the canonical template (the 4 subsections from step 2)

@@ -254,11 +254,11 @@ Codifying the Phase 0 rule in CONTRIBUTING.md (separate from the per-issue deriv
    - #1387 cclinpts: identify which stationarity equation produces the ~70% rel_diff; hand-derive expected vs current emit
    - #1388 camshape: identify which equation(s) drive the Locally Infeasible outcome; hand-derive KKT and compare against current MCP emit
 
-3. **Author Phase 0 sections** — each issue file gets a new `## Phase 0: Acceptance Gate` section with subsections:
-   - **Hand-Derived KKT Shape** — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target
-   - **Expected Emit Pattern** — what `*_mcp.gms` should contain, by equation name + index pattern
-   - **Verification Methodology** — explicit byte-comparison or pattern-match command(s) to run against regenerated `<model>_mcp.gms`
-   - **PROCEED/REPLAN Signal** — binary criteria for whether Phase 1 src/ work can begin
+3. **Author Phase 0 sections** — each issue file gets a new `## Phase 0: Acceptance Gate` section with exactly the following 4 subsections (each rendered as a markdown `###` heading so the verification grep in §Verification below matches; do NOT use bold text or `####` for these — the verification expects `### Hand-Derived KKT Shape`, etc.):
+   - `### Hand-Derived KKT Shape` — formal Lagrangian + stationarity / primal-feasibility / complementarity equations for the target
+   - `### Expected Emit Pattern` — what `*_mcp.gms` should contain, by equation name + index pattern
+   - `### Verification Methodology` — explicit byte-comparison or pattern-match command(s) to run against regenerated `<model>_mcp.gms`
+   - `### PROCEED/REPLAN Signal` — binary criteria for whether Phase 1 src/ work can begin
 
 4. **Codify Phase 0 methodology in CONTRIBUTING.md** — add new §"Phase 0 Acceptance Gates" section that:
    - States the hard rule: any issue whose Phase 1 design touches `src/ad/`, `src/kkt/`, or `src/emit/` MUST have a Phase 0 section in its `docs/issues/ISSUE_*.md` file before any src/ commit
@@ -287,9 +287,13 @@ for issue in 1356 1357 1387 1388; do
     || echo "ISSUE_${issue}: MISSING"
 done
 
-# CONTRIBUTING.md contains the hard rule
-grep -n "Phase 0 Acceptance Gates" CONTRIBUTING.md
-grep -n "src/ad/, src/kkt/, or src/emit/" CONTRIBUTING.md
+# CONTRIBUTING.md contains the hard rule — check stable section header
+# and each path-prefix token independently (tolerates wording / punctuation
+# / ordering changes that would break an exact-phrase match)
+grep -nE "^##+ Phase 0 Acceptance Gates" CONTRIBUTING.md
+grep -F "src/ad/" CONTRIBUTING.md
+grep -F "src/kkt/" CONTRIBUTING.md
+grep -F "src/emit/" CONTRIBUTING.md
 
 # Each Phase 0 section has the 4 required subsections
 for issue in 1356 1357 1387 1388; do
