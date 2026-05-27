@@ -91,7 +91,7 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
 
 ### What Needs to Be Done
 
-1. **Review Sprint 26 carryforward / end-of-sprint KUs** — KU-37 through KU-39 continue into Sprint 27 with full text (not just pointers). Migrate into Sprint 27 numbering as Category 7 (Sprint 26 Carryforward).
+1. **Review Sprint 26 carryforward / end-of-sprint KUs** — KU-37 through KU-39 continue into Sprint 27 with full text. Reference them prominently in the Overview §"Sprint 26 Carryforward KUs" subsection and again in the Appendix §"Carryforward from Sprint 26" with forward-links to the Sprint 27 categories/unknowns they drive. (Note: since Sprint 27's categories are organized by Priority — Cat 1 = #1398, Cat 2 = #1381, ..., Cat 9 = process recommendations — there is no dedicated "Sprint 26 Carryforward" category; the carryforward KUs are cross-cutting drivers that map into the priority-aligned categories per the forward-links.)
 
 2. **For each Priority area, brainstorm unknowns:**
 
@@ -150,7 +150,7 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
 
 3. **Categorize by topic, prioritize by risk, define verification method.**
 
-4. **Assign verification deadlines** (Day 0–1 for Critical, Day 2–3 for High, Day 5+ for Medium/Low).
+4. **Assign verification owners** — map each unknown to the specific prep task that will verify it (via the Task-to-Unknown Mapping in the Appendix). All Critical/High unknowns inherit the global "Before Sprint 27 Day 1" deadline via their assigned prep task. (Note: per Sprint 26 KNOWN_UNKNOWNS.md convention, per-unknown Deadline fields are not used — the deadline is implicit via the prep task that verifies the unknown.)
 
 5. **Create document** following `docs/planning/EPIC_4/SPRINT_26/KNOWN_UNKNOWNS.md` format, including a Task-to-Unknown mapping table that ties each prep task to the specific unknowns it researches.
 
@@ -200,8 +200,8 @@ grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
 
 - [x] ≥ 25 unknowns documented (28 created)
 - [x] All 9 priority areas have at least 2 unknowns each (P1: 4, P2: 3, P3: 5, P4: 2, P5: 3, P6: 2, P7: 3, P8: 2, P9: 4)
-- [x] Sprint 26 end-of-sprint KUs (KU-37, KU-38, KU-39) migrated to Sprint 27 numbering (Overview §"Sprint 26 Carryforward KUs"; Appendix §"Carryforward from Sprint 26")
-- [x] All Critical/High unknowns have verification method + deadline assigned
+- [x] Sprint 26 end-of-sprint KUs (KU-37, KU-38, KU-39) migrated to Sprint 27 numbering (Overview §"Sprint 26 Carryforward KUs"; Appendix §"Carryforward from Sprint 26") — referenced as cross-cutting drivers with forward-links into the priority-aligned categories rather than a dedicated "Sprint 26 Carryforward" category
+- [x] All Critical/High unknowns have a verification method (per-unknown "How to Verify" subsection) and a verification owner (assigned to a specific prep task via Appendix Task-to-Unknown Mapping) with the implicit deadline of "Before Sprint 27 Day 1" stated globally in KNOWN_UNKNOWNS.md §"How to Use This Document" → §"Before Sprint 27 Day 1" (matching Sprint 26 KNOWN_UNKNOWNS.md convention — per-unknown Deadline fields are not used; the deadline is inherited from the prep task that verifies the unknown)
 - [x] Task-to-Unknown mapping table covers Tasks 2–11
 
 ---
