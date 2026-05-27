@@ -1013,7 +1013,7 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 
 4. **Test the script:**
    - Run against Sprint 26 history to validate output format
-   - Verify it surfaces the Sprint 26 Day 12-13 #1398 / #1400 emit changes (the staleness-incident triggering changes)
+   - Verify it surfaces the Sprint 26 Day 13 #1398-regenerated emit artifacts (e.g., `launch_mcp.gms` + `launch_mcp_presolve.gms` + the 14 other #1398-affected models' `*_mcp.gms`). NOTE: #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script — it's not an emit artifact and will not appear in output; #1396 (PR19 CI YAML) is also out of scope
    - Document expected output in a `--help` text or accompanying README
 
 5. **Author `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`** with:
@@ -1044,12 +1044,14 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 # Script --help works
 .venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --help
 
-# Dry-run against Sprint 26 history (date-based) surfaces #1398 / #1400 emit changes
-.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-date "2026-04-22" | grep -E "1398|1400"
+# Dry-run against Sprint 26 history (date-based) surfaces the #1398-regenerated *_mcp.gms artifacts.
+# NOTE: #1400 (scripts/gamslib/* path-relativization) is intentionally NOT in scope for this script
+# (it's not an emit artifact). Validate against the 15 #1398-affected models' regenerated files.
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-date "2026-04-22" | grep -E "launch_mcp|qdemo7_mcp|sambal_mcp|ganges_mcp"
 
 # Dry-run against Sprint 26 history (commit-based) — unambiguous boundary
 SPRINT26_DAY0_SHA=$(git rev-list -1 --before="2026-04-23" main)
-.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit "$SPRINT26_DAY0_SHA" | grep -E "1398|1400"
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit "$SPRINT26_DAY0_SHA" | grep -E "launch_mcp|qdemo7_mcp|sambal_mcp|ganges_mcp"
 ```
 
 ### Deliverables
@@ -1065,7 +1067,7 @@ SPRINT26_DAY0_SHA=$(git rev-list -1 --before="2026-04-23" main)
 - [ ] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit set
 - [ ] Script accepts mutually exclusive `--since-date <date>` (date-based via `git log --since`) and `--since-commit <sha>` (commit-based via `git log <sha>..HEAD`) arguments
 - [ ] Script output groups changes by triggering commit
-- [ ] Both dry-runs against Sprint 26 history (`--since-date` + `--since-commit`) surface #1398 / #1400 emit changes
+- [ ] Both dry-runs against Sprint 26 history (`--since-date` + `--since-commit`) surface the #1398-regenerated `*_mcp.gms` artifacts (15 affected models + presolve variants). #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script and does not appear in output
 - [ ] CONTRIBUTING.md updated with script-invocation workflow
 - [ ] Script handles the cross-sprint timestamp ambiguity case via `--since-commit` (documented in PR22_SCRIPT_DESIGN.md)
 - [ ] Unknown 9.3 verified and updated in KNOWN_UNKNOWNS.md
