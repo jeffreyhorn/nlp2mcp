@@ -1046,17 +1046,17 @@ Sprint planning + AD/KKT engineer
 **Verified by:** Task 2 (Author Missing Phase 0 Acceptance Gates PR20)
 **Date:** 2026-05-27
 
-**Findings:** Phase 0 hand-derivation for `stat_r(i)` (middle index) identifies **5 specific checks** that distinguish emit bug (case a/b — fixable in Sprint 27) from fundamental model property (case c — Sprint 28 carryforward):
+**Findings:** Phase 0 hand-derivation for `stat_r(i)` (middle index) identifies **5 specific per-term presence-and-sign checks** (executed via grep against the emit) that distinguish emit bug (case a/b — fixable in Sprint 27) from fundamental model property (case c — Sprint 28 carryforward):
 
-1. Constant `(pi * R_v / n)` objective gradient term presence + sign
-2. `lam_convexity(i-1)` cross-term presence with `ord(i) > 1` guard
-3. `lam_convexity(i+1)` cross-term presence with `ord(i) <= card(i) - 1` guard
+1. Constant `(pi * R_v / n)` objective gradient term presence + sign (Lagrangian-flipped)
+2. `lam_convexity(i-1)` cross-term presence with canonical `middle(i-1)` guard (NOT the looser `ord(i) > 1` currently in the emit — `middle(i-1)` implies `ord(i)>2 and ord(i)<=card(i)`; the emit's looser form over-fires at `i=2` where `convexity(1)=convexity(first(i))` doesn't exist, which is itself a suspected bug surface)
+3. `lam_convexity(i+1)` cross-term presence with canonical `middle(i+1)` guard (NOT the looser `ord(i) <= card(i) - 1` currently in the emit; same over-fire risk at the `i=card(i)-1` boundary)
 4. `nu_eqrdiff(i-1)` (+1) and `nu_eqrdiff(i)` (-1) presence with correct signs
 5. The bound-fixup `$(r.up(i) - r.lo(i) > 1e-10)` outer wrap correctness
 
-The Phase 0 §"PROCEED/REPLAN Signal" specifies that the canonical fundamental-property test is the **NLP-warm-started PATH solve**: if PATH converges to MODEL STATUS 1 with `obj ≈ 4.2841` from the NLP starting point but fails to do so from the default starting point, then camshape is starting-point sensitive (case c variant) and Sprint 28 carryforward applies. If even the NLP-warm-started solve fails, the emit has a structural bug (case a) and Sprint 27 Priority 7 PROCEED.
+The Phase 0 §"PROCEED/REPLAN Signal" specifies that the canonical fundamental-property test is the **NLP-warm-started PATH solve**: if PATH converges to MODEL STATUS 1 with `obj ≈ 4.2841` from the NLP starting point but fails to do so from the default starting point, then camshape is starting-point sensitive (case c variant) and Sprint 28 carryforward applies. If even the NLP-warm-started solve fails AND all 5 per-term grep checks above pass (no emit bug), then this is case (c) — fundamental property; Sprint 28 carryforward. If any of the 5 grep checks fails, this is case (a) — fix-and-ship in Sprint 27.
 
-**Evidence:** Hand-derivation in Phase 0 §"Hand-Derived KKT Shape" of `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md` walks through `∂L/∂r(i)` term-by-term for middle indices. The Phase 0 verification methodology includes both byte-comparison against the emit AND the NLP-warm-started solve test.
+**Evidence:** Hand-derivation in Phase 0 §"Hand-Derived KKT Shape" of `docs/issues/ISSUE_1388_camshape-mcp-locally-infeasible-post-pattern-e-reclassification.md` walks through `∂L/∂r(i)` term-by-term for middle indices. The Phase 0 verification methodology is grep/pattern-based per-term presence-and-sign checks (NOT a literal byte-diff or canonicalized normalization step — the emit may reorder or differently-parenthesize terms vs the canonical hand-derived form), plus the NLP-warm-started PATH solve test.
 
 **Decision:** Sprint 27 Priority 7 prep is at PROCEED-with-condition state — the runtime warm-start experiment (Sprint 27 Day 0 or Day 1) selects between Sprint 27 fix vs Sprint 28 carryforward. Effort estimate stays at 3–6h for Sprint 27 fix path; +1h for Sprint 28 carryforward filing if case (c) is confirmed.
 
