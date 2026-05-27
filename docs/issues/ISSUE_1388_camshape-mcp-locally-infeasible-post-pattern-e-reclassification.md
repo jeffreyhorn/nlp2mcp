@@ -4,7 +4,7 @@
 **Status:** OPEN (filed Sprint 26 Day 6, 2026-05-12)
 **Severity:** Medium — translate + compile clean but the PATH solve produces `Locally Infeasible (model_status = 5)` with obj=6.2 vs NLP obj=4.2841.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
 **Affected Models:** camshape
 **Target Sprint:** Sprint 27 (3–6h investigation + fix)
 **Cross-references:**
@@ -119,7 +119,7 @@ For edge cases (`first(i)` / `last(i)`), additional terms from `convex_edge*` ap
 
 ### Expected Emit Pattern
 
-The current emit at line 428 (`stat_r(i)..`) appears to be missing the **(pi * R_v / n)** objective gradient term (the emit starts with `(-1) * (pi * R_v / 100)` but the source uses `n=100`, so that's the constant; need to verify). The cross-coupling terms for `lam_convexity(i-1)` and `lam_convexity(i+1)` ARE present in the emit but have unusual `$(...)$(...)` nested-conditional structures that may guard incorrectly.
+The current emit at line 428 (`stat_r(i)..`) **DOES contain** the `(pi * R_v / n)` objective gradient term — it appears as `(-1) * (pi * R_v / 100)` (the source uses `n=100`, so this is the correctly-substituted constant; the `(-1)` prefix is the Lagrangian-sign flip, consistent with stationarity convention). The objective gradient term is therefore present and correctly signed; the issue (if any) is elsewhere in `stat_r(i)`. The cross-coupling terms for `lam_convexity(i-1)` and `lam_convexity(i+1)` ARE also present in the emit but have unusual `$(...)$(...)` nested-conditional structures that may guard incorrectly — that is the more likely emit-bug surface to investigate.
 
 **Key Phase 0 verifications:**
 

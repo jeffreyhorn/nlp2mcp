@@ -4,7 +4,7 @@
 **Status:** OPEN — Sprint 26 carryforward (filed Sprint 25 Day 13)
 **Severity:** Medium — model translates cleanly post-Sprint-25 fixes but PATH compilation fails with 3 `$171` errors
 **Date:** 2026-05-05
-**Last Updated:** 2026-05-05
+**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
 **Affected Models:** fawley (confirmed); root cause not yet localized — may share family with #1357 (otpop)
 
 ---

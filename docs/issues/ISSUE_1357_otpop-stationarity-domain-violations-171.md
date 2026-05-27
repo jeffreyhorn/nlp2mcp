@@ -4,7 +4,7 @@
 **Status:** OPEN — Sprint 27 carryforward (filed Sprint 25 Day 13). Comparison target for Sprint 27 [#1393](https://github.com/jeffreyhorn/nlp2mcp/issues/1393) (the close-and-refile successor of #1334 after Sprint 26 Day 9 reclassification).
 **Severity:** Medium — model translates cleanly but PATH compilation fails with multiple `$171` errors
 **Date:** 2026-05-05
-**Last Updated:** 2026-05-13 (Sprint 26 Day 9 — subsumption reference re-routed from #1334 to its Sprint 27 successor #1393; see §"Where to Investigate" step 3 for the close-and-refile rationale).
+**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification; previous update 2026-05-13 Sprint 26 Day 9 — subsumption reference re-routed from #1334 to its Sprint 27 successor #1393; see §"Where to Investigate" step 3 for the close-and-refile rationale).
 **Affected Models:** otpop (confirmed)
 
 ---

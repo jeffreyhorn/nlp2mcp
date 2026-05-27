@@ -4,7 +4,7 @@
 **Status:** OPEN (filed Sprint 26 Day 6, 2026-05-12)
 **Severity:** Medium — produces a valid MCP solve but with ~70% rel_diff vs the NLP optimum; not a Pattern A AD-layer bug.
 **Date:** 2026-05-12
-**Last Updated:** 2026-05-12
+**Last Updated:** 2026-05-27 (Sprint 27 Prep Task 2 — Phase 0 acceptance-gate section authored per PR20 codification)
 **Affected Models:** cclinpts
 **Target Sprint:** Sprint 27 (3–6h investigation + fix)
 **Cross-references:**
