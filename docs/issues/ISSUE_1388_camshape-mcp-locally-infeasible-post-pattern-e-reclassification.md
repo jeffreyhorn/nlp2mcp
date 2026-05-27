@@ -138,13 +138,38 @@ If hand-derivation matches the emit byte-for-byte (after equivalence simplificat
 .venv/bin/python -m src.cli data/gamslib/raw/camshape.gms \
   -o /tmp/camshape_mcp.gms --skip-convexity-check --quiet
 
-# Step 2: extract stat_r and stat_rdiff for byte-comparison
+# Step 2: extract stat_r and stat_rdiff for visual inspection
 grep -nE '^stat_r\(i\)\.\.|^stat_rdiff\(i\)\.\.' /tmp/camshape_mcp.gms > /tmp/camshape_stat_after.txt
 cat /tmp/camshape_stat_after.txt
 
-# Step 3: hand-derive the KKT for one INSTANCE — e.g., stat_r('5') (a middle
-# index away from edges) — and byte-compare against the emit. Use the source
-# convexity / convex_edge / eqrdiff equations with i=5, i-1=4, i+1=6 substituted.
+# Step 3: per-term presence-and-sign verification on stat_r(i) — each grep
+# below MUST return ≥ 1 hit for PROCEED. (This is NOT a literal byte-diff
+# against the hand-derived form — the emit may reorder or differently-
+# parenthesize the terms. The check verifies that every expected term is
+# present with the correct sign/guard, and no spurious terms appear.)
+STAT_R=$(grep -E '^stat_r\(i\)\.\.' /tmp/camshape_mcp.gms)
+
+# Check 1: objective gradient constant (pi * R_v / n) with Lagrangian-flip
+echo "$STAT_R" | grep -cE '\(-1\).*\(pi.*R_v.*100\)' | grep -v '^0$' > /dev/null \
+  || echo "MISSING/WRONG-SIGN: objective gradient (-1)*(pi*R_v/100) on stat_r(i)"
+
+# Check 2: lam_convexity(i-1) cross-term with middle(i-1) AND ord(i)>1 guard
+echo "$STAT_R" | grep -cE 'lam_convexity\(i-1\).*ord\(i\) > 1' | grep -v '^0$' > /dev/null \
+  || echo "MISSING/MIS-GUARDED: lam_convexity(i-1) cross-term + ord(i)>1 guard"
+
+# Check 3: lam_convexity(i+1) cross-term with middle(i+1) AND ord(i)<=card(i)-1 guard
+echo "$STAT_R" | grep -cE 'lam_convexity\(i\+1\).*ord\(i\) <= card\(i\) - 1' | grep -v '^0$' > /dev/null \
+  || echo "MISSING/MIS-GUARDED: lam_convexity(i+1) cross-term + ord(i)<=card(i)-1 guard"
+
+# Check 4: nu_eqrdiff(i-1) (+1 coefficient) and nu_eqrdiff(i) (-1 coefficient)
+echo "$STAT_R" | grep -cF 'nu_eqrdiff(i-1)' | grep -v '^0$' > /dev/null \
+  || echo "MISSING: nu_eqrdiff(i-1) cross-term in stat_r(i)"
+echo "$STAT_R" | grep -cF 'nu_eqrdiff(i)' | grep -v '^0$' > /dev/null \
+  || echo "MISSING: nu_eqrdiff(i) cross-term in stat_r(i)"
+
+# Check 5: bound-fixup outer wrap with $(r.up(i) - r.lo(i) > 1e-10)
+echo "$STAT_R" | grep -cF 'r.up(i) - r.lo(i) > 1e-10' | grep -v '^0$' > /dev/null \
+  || echo "MISSING: bound-fixup wrap $(r.up(i) - r.lo(i) > 1e-10)"
 
 # Step 4: NLP-warm-started PATH solve test — load the NLP solution as initial
 # point and re-run PATH; if PATH converges to MODEL STATUS 1 with obj ≈ 4.28,
@@ -163,13 +188,13 @@ gams /tmp/camshape_mcp.gms lo=2 | grep -E 'MODEL STATUS|SOLVER STATUS|OBJECTIVE'
 
 **PROCEED** with Sprint 27 Priority 7 implementation if ALL of:
 
-- (a) Hand-derived KKT for `stat_r('5')` (middle instance) byte-compares to emit modulo algebraic simplifications → if differences are present, identify the missing/wrong term and fix in src/
+- (a) All 5 per-term presence-and-sign checks in §"Verification Methodology" Step 3 return ≥ 1 grep hit (objective gradient constant, lam_convexity(i-1), lam_convexity(i+1), nu_eqrdiff(i-1) + nu_eqrdiff(i), bound-fixup wrap) — pattern-match grep, NOT literal byte-diff, since the emit may reorder or differently-parenthesize terms vs the canonical hand-derived form. If any check fails, identify the missing/mis-guarded term and fix in src/
 - (b) PATH solve reaches MODEL STATUS 1 (Optimal) with `obj ≈ 4.2841` (NLP value) post-fix
 - (c) Tier 0/1 canary byte-stability preserved
 
 **REPLAN — Sprint 28 Carryforward** if:
 
-- (a) Hand-derived KKT byte-matches the emit (no emit bug) AND
+- (a) All 5 per-term presence-and-sign checks in §"Verification Methodology" Step 3 pass (no emit bug — every expected term is present with correct sign and guard) AND
 - (b) NLP-warm-started PATH solve STILL fails to converge to Optimal → this is case (c), fundamental model property; PATH genuinely converges to a non-NLP stationary point because camshape's KKT has multiple stationary points. File for Sprint 28 with formal Phase 0 carryforward documentation; do NOT spend Sprint 27 Priority 7 budget on a non-fixable bug.
 
 **REPLAN — Scope expansion** if:

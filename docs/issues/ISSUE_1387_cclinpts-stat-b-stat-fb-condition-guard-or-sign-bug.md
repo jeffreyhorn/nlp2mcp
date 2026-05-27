@@ -131,20 +131,47 @@ stat_fb(j)..
   + nu_FBCalc(j) =E= 0;
 ```
 
-(The exact sign conventions depend on how nlp2mcp wraps the gradient with the Lagrangian-sign flip; the emit may use a different but equivalent form. The PROCEED criterion is that the BYTE-COMPARED emit matches the hand-derived KKT modulo trivial algebraic simplifications.)
+(The exact sign conventions depend on how nlp2mcp wraps the gradient with the Lagrangian-sign flip; the emit may use a different but equivalent form. The PROCEED criterion is **per-term presence-and-sign verification via pattern-match grep, NOT a literal byte-diff** — see §"Verification Methodology" for the explicit `grep -F` patterns to check, one per expected term. The hand-derived KKT above lists the canonical expected terms; the emit may reorder or differently-parenthesize them. PROCEED if every expected term's pattern-match grep returns ≥ 1 hit AND no unexpected/spurious terms are present.)
 
 ### Verification Methodology
+
+The acceptance check is **per-term presence-and-sign verification via pattern-match grep**, NOT a literal byte-diff (the emit may reorder or differently-parenthesize terms vs the canonical hand-derived form).
 
 ```bash
 # Step 1: regenerate the emit with the prototype fix
 .venv/bin/python -m src.cli data/gamslib/raw/cclinpts.gms \
   -o /tmp/cclinpts_mcp.gms --skip-convexity-check --quiet
 
-# Step 2: extract stat_b + stat_fb and compare against hand-derived form
+# Step 2: extract stat_b + stat_fb for visual inspection
 grep -nE '^stat_b\(j\)\.\.|^stat_fb\(j\)\.\.' /tmp/cclinpts_mcp.gms > /tmp/stat_b_fb_after.txt
 cat /tmp/stat_b_fb_after.txt
 
-# Step 3: PATH solve — should reach MODEL STATUS 1 (Optimal) with obj
+# Step 3: per-term presence check — each grep MUST return ≥ 1 hit
+# (extracts just the stat_b line to scope the patterns to that equation)
+STAT_B=$(grep -E '^stat_b\(j\)\.\.' /tmp/cclinpts_mcp.gms)
+STAT_FB=$(grep -E '^stat_fb\(j\)\.\.' /tmp/cclinpts_mcp.gms)
+
+# stat_b(j) MUST contain Term 1 at j (rectangle, fires for j ∉ last)
+echo "$STAT_B" | grep -cF 'fb(j) - fb(j-1)' | grep -v '^0$' > /dev/null || echo "MISSING stat_b Term 1: fb(j) - fb(j-1) with last(j) guard"
+echo "$STAT_B" | grep -cF 'not last(j)' | grep -v '^0$' > /dev/null || echo "MISSING stat_b last(j) guard"
+# stat_b(j) MUST contain Term 2 at j (triangle, factor 0.5, fires for j ∉ first)
+echo "$STAT_B" | grep -cE '0\.5.*fb\(j\) - fb\(j-1\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_b Term 2 at j: 0.5 * (fb(j) - fb(j-1))"
+echo "$STAT_B" | grep -cF 'not first(j)' | grep -v '^0$' > /dev/null || echo "MISSING stat_b first(j) guard"
+# stat_b(j) MUST contain Term 2 at j+1 (the offset-indexed cross-term)
+echo "$STAT_B" | grep -cE '0\.5.*fb\(j\+1\) - fb\(j\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_b Term 2 at j+1: 0.5 * (fb(j+1) - fb(j))"
+
+# stat_fb(j) MUST contain all 4 contributions (Term 1 at j, Term 1 at j+1,
+# Term 2 at j, Term 2 at j+1). Pre-fix it contains only 1 of 4.
+echo "$STAT_FB" | grep -cE 'b\(.*30.*\) - b\(j\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_fb Term 1 at j: b(s30) - b(j)"
+echo "$STAT_FB" | grep -cE 'b\(.*30.*\) - b\(j\+1\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_fb Term 1 at j+1: b(s30) - b(j+1)"
+echo "$STAT_FB" | grep -cE '0\.5.*b\(j\) - b\(j-1\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_fb Term 2 at j: 0.5 * (b(j) - b(j-1))"
+echo "$STAT_FB" | grep -cE '0\.5.*b\(j\+1\) - b\(j\)' | grep -v '^0$' > /dev/null || echo "MISSING stat_fb Term 2 at j+1: 0.5 * (b(j+1) - b(j))"
+
+# Step 4: sign-flip check — confirm no double-negation pattern remains
+# (pre-fix shows ((-1) * (((-1) * ...))) which flattens to positive)
+echo "$STAT_B" | grep -F '((-1) * (((-1) *' && echo "WARNING: double-negation pattern detected — Lagrangian-sign convention may have a bug"
+
+# Step 5: PATH solve — should reach MODEL STATUS 1 (Optimal) with obj
 # matching the NLP solve (rel_diff < 1% post-fix; was 69.9% pre-fix)
 gams /tmp/cclinpts_mcp.gms lo=2
 .venv/bin/python -c "
