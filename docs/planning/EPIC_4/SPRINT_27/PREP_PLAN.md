@@ -18,7 +18,7 @@ Sprint 27 inherits the Sprint 26 carryforward backlog of **14 issues labeled `sp
 
 This prep plan focuses on:
 
-1. **Risk identification** — Sprint 27 Known Unknowns List covering #1398 fix-surface scope, four AD-architectural redesigns (#1390/#1385/#1393), comp_up subset/superset domain widening, the Phase 0 acceptance-gate methodology rollout, and PR21/PR22/PR23 process recommendations
+1. **Risk identification** — Sprint 27 Known Unknowns List covering #1398 fix-surface scope, four AD-architectural redesigns (#1390/#1385/#1393), comp_up subset/superset domain widening, the Phase 0 acceptance-gate methodology rollout, and process recommendations PR20–PR23 (PR20 codified in Task 2; **PR21 (prep-task end-to-end emit verification template) is codified in Task 6's PR16-style hypothesis-validation experiments for Priority 3 sub-priorities — each experiment translates one concrete target model with a prototype patch and verifies GAMS compile-clean + KKT body shape against hand-derived Lagrangian, matching the PR21 template definition**; PR22 codified in Task 9; PR23 codified in Task 10)
 2. **Phase 0 acceptance-gate codification (PR20)** — Author missing Phase 0 sections on `docs/issues/ISSUE_1356_*.md`, `ISSUE_1357_*.md`, `ISSUE_1387_*.md`, `ISSUE_1388_*.md`; codify the methodology in CONTRIBUTING.md as a hard rule before any Sprint 27 src/ work
 3. **Sprint 26 → Sprint 27 bucket-provenance baseline + scope freeze (PR15 + PR17 carryforward)** — Day 0 pipeline run; per-failing-model bucket provenance with Sprint 26 final → Sprint 27 Day 0 transitions
 4. **#1398 widened-scope verification + anchor-model audit** — Verify all 15 affected models surfaced; identify the 8 distinct emit shapes for Phase 0 anchor-model selection (launch + qdemo7 + ferts + sambal + ganges + sroute + turkpow + dinam)
@@ -1004,7 +1004,10 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
    - Handles the cross-sprint timestamp ambiguity from KU Unknown 9.3 — `--since-commit` is the structural mitigation (commit boundaries are unambiguous)
 
 2. **Implement the script** in `scripts/sprint_audit/changed_emit_artifacts.py`:
-   - Use `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode. For `--since-date`: `git log --name-only --pretty=format:"COMMIT:%H%n%s" --since <date> -- 'data/gamslib/mcp/*_mcp.gms' 'data/gamslib/mcp/*_mcp_presolve.gms'`. For `--since-commit`: same form with `<sha>..HEAD` replacing `--since <date>`. **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` ensures each COMMIT line is distinguishable from file paths during output parsing.
+   - Use `subprocess.run(argv_list, ...)` to scan commits — argv elements are passed verbatim without shell parsing, so the `--pretty=format:` value and the pathspecs must NOT be wrapped in shell-style quotes when included as argv elements. The argv form differs by mode:
+     - For `--since-date`: `subprocess.run(['git', 'log', '--name-only', '--pretty=format:COMMIT:%H%n%s', '--since', date_str, '--', 'data/gamslib/mcp/*_mcp.gms', 'data/gamslib/mcp/*_mcp_presolve.gms'], ...)`
+     - For `--since-commit`: same argv structure with `f'{sha}..HEAD'` replacing `'--since', date_str`
+   - **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` value (passed as a single argv element without surrounding shell quotes) ensures each COMMIT line is distinguishable from file paths during output parsing.
    - Filter for paths matching `data/gamslib/mcp/*_mcp.gms` or `data/gamslib/mcp/*_mcp_presolve.gms`
    - Group changes by triggering commit
    - Output structured format suitable for inclusion in mid-sprint retest reports
@@ -1307,7 +1310,7 @@ The Critical Path runs through three chains:
 
 ### Success Criteria for Prep Phase
 
-- [ ] All 11 prep tasks complete with deliverables verified per per-task acceptance criteria
+- [ ] All 11 prep tasks complete with deliverables verified per their respective acceptance criteria
 - [ ] `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` exists with ≥ 25 unknowns
 - [ ] All 4 carryforward issues (#1356, #1357, #1387, #1388) have Phase 0 acceptance-gate sections authored
 - [ ] CONTRIBUTING.md has new §"Phase 0 Acceptance Gates" + §"CI Workflow PR Checklist" + §"Emit-PR `.gms` Diff Workflow" sections
