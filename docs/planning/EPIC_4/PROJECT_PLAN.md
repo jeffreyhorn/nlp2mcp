@@ -1068,8 +1068,9 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 - **Deliverable:** Both issues either fixed or scoped with formal Phase 0 + Sprint 28 carryforward filing if intractable in Sprint 27 budget.
 
 ### Priority 8: Pipeline Absolute-Path Leak Fix (#1400) (~2-4h)
-- `scripts/gamslib/solve_mcp.py` `mcp_file_used` field writes absolute paths (`/Users/...`). Fix to repo-relative paths against `PROJECT_ROOT` (or basename only — file is always at `data/gamslib/mcp/<model>_mcp_presolve.gms` per Sprint 25 #1345/#1346/#1347 cwd convention).
-- `scripts/gamslib/run_full_test.py` warning-capture path uses Python's default `warnings.formatwarning` which emits `<absolute path>:<line>:...`. Replace with custom formatter using repo-relative paths.
+- **Correction (per Sprint 27 PR #1402 review):** the original filing referenced a non-existent file `scripts/gamslib/solve_mcp.py` and incorrectly attributed a second leak source to `warnings.formatwarning`. Verified facts: (a) the `mcp_file_used` field is assigned at `scripts/gamslib/run_full_test.py:899` (`model["mcp_solve"]["mcp_file_used"] = str(presolve_path)` where `presolve_path` is `PROJECT_ROOT`-anchored), not in a `solve_mcp.py` module; (b) there is no `warnings` module usage anywhere in `scripts/gamslib/` (`grep -lE "warnings\." scripts/gamslib/*.py` returns nothing); (c) `solve_mcp()` is a function at `scripts/gamslib/test_solve.py:911` that calls `subprocess.run(..., capture_output=True)` but discards stdout/stderr (no `result = ...` capture) — the error message stored in the status dict is synthesized from parsed `.lst` content via `parse_gams_listing(...)`, so subprocess stderr is NOT a leak channel either.
+- **Confirmed leak source:** `scripts/gamslib/run_full_test.py:899` `mcp_file_used` assignment. Fix to repo-relative paths against `PROJECT_ROOT` (or basename only — file is always at `data/gamslib/mcp/<model>_mcp_presolve.gms` per Sprint 25 #1345/#1346/#1347 cwd convention).
+- **Audit-driven approach for additional leak sources:** Priority 8 implementation must run `grep -oE "\"[a-z_]+\": \"/[^\"]+\"" data/gamslib/gamslib_status.json | sort -u` against a recent pipeline-run JSON to identify any other absolute-path fields. If `mcp_file_used` is the only leak, Priority 8 effort is at the low end of 2–4h.
 - **Deliverable:** Pipeline no longer leaks developer-local absolute paths into `gamslib_status.json`; next pipeline retest produces byte-identical JSON across different developer machines (modulo wall-time fields).
 
 ### Priority 9: Emit Duplicate-Init Bugs (#1374) — observation-style (~2-4h investigation; defer fix to Sprint 28 if Sprint 27 budget is consumed)
@@ -1098,7 +1099,7 @@ Three Sprint 26 reclassifications targeting different AD pipeline subsystems. **
 - comp_up subset/superset domain widening for fawley + otpop (#1356 + #1357)
 - mine ParamRef IndexOffset support in `src/ad/index_mapping.py` (#1224)
 - Day 6 close-and-refile fixes for cclinpts + camshape (#1387 + #1388) or formal Phase 0 + Sprint 28 carryforward filing
-- Pipeline absolute-path leak fix in `scripts/gamslib/solve_mcp.py` + `run_full_test.py` (#1400)
+- Pipeline absolute-path leak fix in `scripts/gamslib/run_full_test.py:899` (`mcp_file_used` assignment; the original filing's reference to a `scripts/gamslib/solve_mcp.py` file was incorrect — no such file exists) (#1400)
 - Emit duplicate-init bug investigation + targeted fixes (#1374)
 - PR19 target-list widening to cover all 15 #1398-affected models + launch
 - 4 Phase 0 acceptance-gate sections authored on backlog issues (#1356, #1357, #1387, #1388) per PR20
