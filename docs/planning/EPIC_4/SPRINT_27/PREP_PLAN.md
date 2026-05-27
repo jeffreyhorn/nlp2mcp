@@ -558,8 +558,8 @@ The widening is non-trivial: PR19's CI extension runs PATH-solve on each target 
 
 ### Background
 
-- Sprint 26 PR #1396 (PR19 CI extension landed in Sprint 26 Day 12-13): introduces `.github/path-solve-ci-targets.txt` + `.github/workflows/path-solve-validation.yml` triggered on `src/{emit,kkt,ad}/**` changes
-- Current PR19 target list (per `.github/path-solve-ci-targets.txt`): pindyck, clearlak (Sprint 26 anchor canaries) — launch is intentionally NOT in this list per Sprint 26 reasoning that launch is a Sprint 26 fix target, not a canary
+- Sprint 26 PR #1396 (PR19 CI extension landed in Sprint 26 Day 11): introduces `.github/path-solve-ci-targets.txt` + `.github/workflows/pr19-emit-solve-validation.yml` triggered on an explicit path allowlist (`src/emit/**/*.py`, `src/kkt/stationarity.py`, `src/kkt/complementarity.py`, `src/ad/derivative_rules.py`, `src/ad/constraint_jacobian.py`, plus the helper scripts + workflow file + target-list file)
+- Current PR19 target list (per `.github/path-solve-ci-targets.txt`): 15 models = 11 Tier 0/1 canaries hard-fail (dispatch, quocge, partssupply, prolog, sparta, gussrisk, ps2_f, ps3_f, ship, splcge, paklive) + 4 Pattern C target models soft-fail / informational (camcge, cesam2, fawley, otpop) — launch is intentionally NOT in this list per Sprint 26 reasoning that launch is a Sprint 26 fix target, not a canary
 - 15 #1398-affected models (from Task 4)
 - PATH-solve per-model runtime: ~20-60 seconds depending on model size; solve-timeout cap at 60s in PR19 config
 - Sprint 27 PROJECT_PLAN.md §"Priority 1" + §"PR19 target-list widening" rationale
@@ -1177,8 +1177,6 @@ Create the detailed 14-day Sprint 27 schedule (Day 0 setup + Days 1–13 executi
 ### Why This Matters
 
 Sprint 27 spans 9 work-item priorities + 4 process recommendations + pipeline retests over 14 days. Without an explicit day-by-day schedule with dependency-aware sequencing, Sprint 27 risks the same fragmentation pattern seen in Sprint 25 (Days 1-4 wasted on wrong hypothesis) and Sprint 26 (Day 1 fix surfaced gate-overreach only at Day 13 review). The schedule is the integration point for all 10 prior prep tasks' outputs — Phase 0 sections (Task 2), baseline (Task 3), anchor mapping (Task 4), PR19 widening (Task 5), AD risk assessments (Task 6), comp_up fix surface (Task 7), Priority 7 verdicts (Task 8), PR22 script (Task 9), PR23 checklist (Task 10).
-
-### Why This Matters
 
 The Sprint 27 schedule must explicitly:
 1. Land Task 2's PR20 codification + per-issue Phase 0 sections on Day 0 (before any src/ work)

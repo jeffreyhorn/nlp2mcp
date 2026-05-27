@@ -462,7 +462,7 @@ EOF
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` (Task 4 output — must complete first)
 - `.github/path-solve-ci-targets.txt` (current PR19 target list — from Sprint 26 PR #1396)
 - `.github/workflows/pr19-emit-solve-validation.yml` (CI workflow)
-- Sprint 26 PR #1396 CI logs (per-model PATH-solve runtime) — `gh run list -w "PATH Solve Validation"` to discover
+- Sprint 26 PR #1396 CI logs (per-model PATH-solve runtime) — `gh run list -w "PR19 Pre-Merge Solve-Time Validation"` to discover
 - Sprint 27 PROJECT_PLAN.md §"Priority 1" + §"PR19 target-list widening" rationale
 
 **Tasks to Complete:**
