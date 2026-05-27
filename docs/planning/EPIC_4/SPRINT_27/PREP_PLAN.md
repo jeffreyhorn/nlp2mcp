@@ -386,13 +386,20 @@ To be completed.
 
 ```bash
 # Baseline file exists with the standard 7 sections
+# (Sprint 26 BASELINE_METRICS.md convention: section headers like "## 1. Purpose",
+# "## 2. Baseline Headline Metrics", ... — no § symbol per Sprint 26 precedent)
 test -f docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md && echo "EXISTS"
-grep -cE "^## §[0-9]+" docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md
+grep -cE "^## [0-9]+\." docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md
 # Expected: ≥ 7
 
-# Bucket provenance covers all failing models
-grep -cE "^### Model: " docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md
-# Expected: ~83 (count of failing models in Sprint 27 Day 0)
+# Bucket provenance covers all failing-model buckets (Sprint 26 convention:
+# per-bucket subsections under §4.2 with `#### \`<bucket>\`` style headers,
+# each containing the per-model transition list/table for that bucket)
+grep -cE '^#### `[a-z_]+`' docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md
+# Expected: ≥ 5 (one per failing-bucket category: path_syntax_error,
+# path_solve_terminated, model_infeasible, path_solve_license,
+# translate_timeout, translate_internal_error — additional buckets if any
+# new failure modes surface in Sprint 27 Day 0)
 
 # Scope freeze at 142 in-scope
 grep -A3 "Scope Freeze" docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md | grep -E "142|in-scope"
@@ -1005,9 +1012,9 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 
 2. **Implement the script** in `scripts/sprint_audit/changed_emit_artifacts.py`:
    - Use `subprocess.run(argv_list, ...)` to scan commits — argv elements are passed verbatim without shell parsing, so the `--pretty=format:` value and the pathspecs must NOT be wrapped in shell-style quotes when included as argv elements. The argv form differs by mode:
-     - For `--since-date`: `subprocess.run(['git', 'log', '--name-only', '--pretty=format:COMMIT:%H%n%s', '--since', date_str, '--', 'data/gamslib/mcp/*_mcp.gms', 'data/gamslib/mcp/*_mcp_presolve.gms'], ...)`
+     - For `--since-date`: `subprocess.run(['git', 'log', '--name-only', '--pretty=format:COMMIT:%H', '--since', date_str, '--', 'data/gamslib/mcp/*_mcp.gms', 'data/gamslib/mcp/*_mcp_presolve.gms'], ...)`
      - For `--since-commit`: same argv structure with `f'{sha}..HEAD'` replacing `'--since', date_str`
-   - **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` value (passed as a single argv element without surrounding shell quotes) ensures each COMMIT line is distinguishable from file paths during output parsing.
+   - **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:COMMIT:%H` is intentionally SHA-only (do NOT add `%n%s` — including the subject `%s` would emit a second non-path line per commit that the parser would incorrectly treat as a changed file path, breaking commit-to-files mapping). If commit subjects are needed for display, fetch them in a separate `git log` pass keyed by SHA. The format value (passed as a single argv element without surrounding shell quotes) makes each COMMIT line distinguishable from file paths during output parsing.
    - Filter for paths matching `data/gamslib/mcp/*_mcp.gms` or `data/gamslib/mcp/*_mcp_presolve.gms`
    - Group changes by triggering commit
    - Output structured format suitable for inclusion in mid-sprint retest reports

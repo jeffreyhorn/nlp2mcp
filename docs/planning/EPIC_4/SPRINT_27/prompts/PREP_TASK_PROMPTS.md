@@ -1049,9 +1049,9 @@ EOF
    - Handles cross-sprint timestamp ambiguity from KU Unknown 9.3 via `--since-commit` (commit boundaries are unambiguous)
 2. **Implement the script** at `scripts/sprint_audit/changed_emit_artifacts.py`:
    - Use `subprocess.run(argv_list, ...)` to scan commits — argv elements are passed verbatim without shell parsing, so do NOT include shell-style quotes around `--pretty=format:` values or pathspecs. The argv form differs by mode:
-     - For `--since-date`: `subprocess.run(['git', 'log', '--name-only', '--pretty=format:COMMIT:%H%n%s', '--since', date_str, '--', 'data/gamslib/mcp/*_mcp.gms', 'data/gamslib/mcp/*_mcp_presolve.gms'], ...)`
+     - For `--since-date`: `subprocess.run(['git', 'log', '--name-only', '--pretty=format:COMMIT:%H', '--since', date_str, '--', 'data/gamslib/mcp/*_mcp.gms', 'data/gamslib/mcp/*_mcp_presolve.gms'], ...)`
      - For `--since-commit`: same argv structure with `f'{sha}..HEAD'` replacing `'--since', date_str`
-   - **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:` value (note: NO surrounding shell quotes when passed as argv element) ensures each COMMIT line is distinguishable from file paths during output parsing.
+   - **IMPORTANT:** `--name-only` (or `--name-status`) is REQUIRED — without it, `git log` won't include changed file paths in output and the script can't build the commit-to-files mapping. The custom `--pretty=format:COMMIT:%H` (note: `%H` only, NO `%n%s` — including the subject line `%s` would emit a second non-path line per commit that the parser would incorrectly treat as a file path). If commit subjects are needed for display, fetch them in a separate `git log` pass keyed by SHA rather than mixing them with the `--name-only` output.
    - Validate the `--since-commit` SHA via `git rev-parse` before constructing the revision range
    - Parse output by walking lines: each `COMMIT:<sha>` line starts a new group; subsequent non-blank lines until the next `COMMIT:` are the changed file paths for that commit (already filtered by the `-- <pathspec>` to mcp artifacts)
    - Group changes by triggering commit
