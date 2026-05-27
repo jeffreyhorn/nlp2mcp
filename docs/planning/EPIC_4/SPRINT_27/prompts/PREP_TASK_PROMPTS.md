@@ -1049,7 +1049,7 @@ EOF
    - Output structured format suitable for mid-sprint retest reports
 3. **Integration with PR14 review process** — document in CONTRIBUTING.md §"Emit-PR `.gms` Diff Workflow" (or similar) how to invoke the script.
 4. **Test the script:**
-   - Dry-run against Sprint 26 history; verify it surfaces 16 total regenerated emit artifacts: `launch_mcp.gms` + `launch_mcp_presolve.gms` (Phase A target — regenerated Day 1 PR #1379; launch is NOT one of the 15 #1398-affected models) PLUS all 15 #1398-affected models' `*_mcp.gms` (regenerated Day 13: qdemo7 / egypt / ferts / shale / sambal / qsambal / harker / tfordy / dinam / ganges / gangesx / fawley / srpchase / sroute / turkpow). NOTE: #1400 is a `scripts/gamslib/*` path-relativization change (not an emit artifact) and will NOT appear in the script's output by design — do not expect to see it
+   - Dry-run against Sprint 26 history; verify the output MUST INCLUDE AT LEAST the following artifacts (exact count varies because the script scans both `*_mcp.gms` and `*_mcp_presolve.gms` and which presolve variants were regenerated depends on Sprint 26 commit history): launch artifacts (`launch_mcp.gms` and/or `launch_mcp_presolve.gms` — Phase A target, regenerated Day 1 PR #1379; launch is the separate Phase A fix target, NOT one of the 15 #1398-affected) AND artifacts for all 15 #1398-affected models (Day 13 regenerated: qdemo7, egypt, ferts, shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx, fawley, srpchase, sroute, turkpow — each contributing `<model>_mcp.gms` and possibly `<model>_mcp_presolve.gms`). NOTE: #1400 is a `scripts/gamslib/*` path-relativization change (not an emit artifact) and will NOT appear in the script's output by design — do not expect to see it
    - Document expected output in `--help` or accompanying notes
 5. **Author `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`** with: design decisions (CLI, output format, integration); implementation summary (file:line locations); validation results (Sprint 26 dry-run output); CONTRIBUTING.md integration plan.
 
@@ -1087,7 +1087,7 @@ In `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 9:
 Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 ```markdown
-- **Prep Task 9 COMPLETE (YYYY-MM-DD):** PR22 mid-sprint audit script designed + implemented. New `scripts/sprint_audit/changed_emit_artifacts.py` scans git history for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates PR14 review list + retest comparison surface. CLI exposes two mutually exclusive flags: `--since-date <date>` (date-based; uses `git log --since`) and `--since-commit <sha>` (commit-based; uses `git log <sha>..HEAD`). The two-flag design resolves the cross-sprint timestamp ambiguity from Unknown 9.3 — `git log --since` is date-only and won't accept commit SHAs, so a single overloaded `--since` would be misleading. Sprint 26 history dry-runs (both modes) surface 16 regenerated emit artifacts correctly: `launch_mcp.gms` + `launch_mcp_presolve.gms` (Phase A target, Day 1 — separate from the 15 #1398-affected) PLUS all 15 #1398-affected models' `*_mcp.gms` (Day 13). #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script and does not appear in output. CONTRIBUTING.md updated with §"Emit-PR `.gms` Diff Workflow" referencing the script. Validation document at `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`. Verified Unknown 9.3.
+- **Prep Task 9 COMPLETE (YYYY-MM-DD):** PR22 mid-sprint audit script designed + implemented. New `scripts/sprint_audit/changed_emit_artifacts.py` scans git history for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates PR14 review list + retest comparison surface. CLI exposes two mutually exclusive flags: `--since-date <date>` (date-based; uses `git log --since`) and `--since-commit <sha>` (commit-based; uses `git log <sha>..HEAD`). The two-flag design resolves the cross-sprint timestamp ambiguity from Unknown 9.3 — `git log --since` is date-only and won't accept commit SHAs, so a single overloaded `--since` would be misleading. Sprint 26 history dry-runs (both modes) include AT LEAST the launch artifacts (`launch_mcp.gms` / `launch_mcp_presolve.gms` — Phase A target, Day 1; launch is the separate Phase A fix target, NOT one of the 15 #1398-affected) PLUS all 15 #1398-affected models' artifacts (Day 13 regenerated — exact count varies because the script scans both `*_mcp.gms` and `*_mcp_presolve.gms` and not every model regenerates both variants). #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script and does not appear in output. CONTRIBUTING.md updated with §"Emit-PR `.gms` Diff Workflow" referencing the script. Validation document at `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`. Verified Unknown 9.3.
 ```
 
 **Quality Gate:**
@@ -1122,9 +1122,15 @@ frozen PLAN_PROMPTS.md (Sprint 26 Day 12 staleness incident).
 ## Validation
 
 - Sprint 26 dry-runs (both `--since-date` and `--since-commit` modes):
-  surface the #1398 Day 13 regenerated `*_mcp.gms` artifacts
-  correctly (15 affected models + presolve variants — e.g.,
-  `launch_mcp.gms` / `launch_mcp_presolve.gms`)
+  output must include AT LEAST (a) launch artifacts
+  (`launch_mcp.gms` / `launch_mcp_presolve.gms` — Phase A target,
+  Day 1; launch is the separate Phase A fix target, NOT one of the
+  15 #1398-affected models) AND (b) artifacts for all 15
+  #1398-affected models (Day 13 regenerated: qdemo7, egypt, ferts,
+  shale, sambal, qsambal, harker, tfordy, dinam, ganges, gangesx,
+  fawley, srpchase, sroute, turkpow). Exact artifact count varies
+  because the script scans both `*_mcp.gms` and `*_mcp_presolve.gms`
+  and not every model regenerates both variants.
 - #1400 (`scripts/gamslib/*` path-relativization) is intentionally
   out of scope for this script and does not appear in output
 - Cross-sprint timestamp ambiguity: handled via `--since-commit` form
@@ -1164,7 +1170,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 9: PR22 Mid-Sprint Audit Scri
 - [x] make test PASS
 - [x] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit
 - [x] CLI accepts mutually exclusive `--since-date <date>` (uses `git log --since`) and `--since-commit <sha>` (uses `git log <sha>..HEAD`) arguments
-- [x] Sprint 26 history dry-runs (both `--since-date` and `--since-commit`) surface 16 regenerated emit artifacts: `launch_mcp.gms` + `launch_mcp_presolve.gms` (Phase A target, Day 1 — launch is NOT one of the 15 #1398-affected models, it's a separate Phase A target) PLUS all 15 #1398-affected models' `*_mcp.gms` (Day 13). #1400 (`scripts/gamslib/*` path-relativization) intentionally NOT in scope for this script
+- [x] Sprint 26 history dry-runs (both `--since-date` and `--since-commit`) include AT LEAST: launch artifacts (`launch_mcp.gms` / `launch_mcp_presolve.gms` — Phase A target, Day 1; launch is NOT one of the 15 #1398-affected models, it's a separate Phase A target) PLUS all 15 #1398-affected models' `*_mcp.gms` (Day 13). Exact count varies because the script scans both `*_mcp.gms` and `*_mcp_presolve.gms` and not every model regenerates both variants. #1400 (`scripts/gamslib/*` path-relativization) intentionally NOT in scope for this script
 - [x] CONTRIBUTING.md updated with script invocation workflow
 - [x] Unknown 9.3 verified in KNOWN_UNKNOWNS.md
 - [x] Task 9 Acceptance Criteria all checked in PREP_PLAN.md

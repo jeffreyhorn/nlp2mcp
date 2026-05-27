@@ -131,7 +131,7 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
    - Are both Sprint 27 tractable within the 6–12h Priority 7 budget, or should one (or both) be deferred to Sprint 28 with formal Phase 0 + carryforward filing?
 
    **Priority 8 (#1400 Pipeline Absolute-Path Leak):**
-   - What IS the actual second leak source beyond `scripts/gamslib/run_full_test.py:899 mcp_file_used`? The Sprint 26 CHANGELOG / PROJECT_PLAN.md attribution to `warnings.formatwarning` is INCORRECT — `grep -lE "warnings\." scripts/gamslib/*.py` returns nothing. Most plausible actual candidate: captured GAMS subprocess stderr from `scripts/gamslib/test_solve.py:982-988` (where `subprocess.run(cmd, capture_output=True, ...)` runs) gets persisted into the status dict and can contain absolute paths from GAMS error messages. (Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo; `solve_mcp` is a function in `test_solve.py:911`.)
+   - Is `scripts/gamslib/run_full_test.py:899 mcp_file_used` the only absolute-path leak source, or are there additional fields in `gamslib_status.json` that leak? (The Sprint 26 CHANGELOG / PROJECT_PLAN.md attribution to `warnings.formatwarning` is INCORRECT — `grep -lE "warnings\." scripts/gamslib/*.py` returns nothing. A subsequent PR22 speculation about captured GAMS subprocess stderr from `scripts/gamslib/test_solve.py:982-988` is also wrong — `solve_mcp()` discards stdout/stderr and synthesizes the error string from parsed `.lst` content. The right approach is a direct AUDIT of `gamslib_status.json` for absolute-path substrings to identify real leak fields rather than speculate.) Note: there is no `scripts/gamslib/solve_mcp.py` file in the repo; `solve_mcp` is a function in `test_solve.py:911`.
    - Will the path-relativization break any downstream consumer of `gamslib_status.json` (e.g., the bucket-provenance baseline scripts from Task 3)?
 
    **Priority 9 (#1374 Emit Duplicate-Init Bugs):**
@@ -1013,7 +1013,7 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 
 4. **Test the script:**
    - Run against Sprint 26 history to validate output format
-   - Verify it surfaces 16 regenerated emit artifacts from Sprint 26: `launch_mcp.gms` + `launch_mcp_presolve.gms` (Phase A target — regenerated Day 1 PR #1379; launch is NOT one of the 15 #1398-affected models, it's a separate target) PLUS all 15 #1398-affected models' `*_mcp.gms` (regenerated Day 13). NOTE: #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script — it's not an emit artifact and will not appear in output; #1396 (PR19 CI YAML) is also out of scope
+   - Verify it surfaces AT LEAST: launch artifacts (`launch_mcp.gms` and/or `launch_mcp_presolve.gms` — Phase A target, regenerated Day 1 PR #1379; launch is NOT one of the 15 #1398-affected models, it's a separate target) PLUS all 15 #1398-affected models' artifacts (regenerated Day 13). Exact count varies because the script scans both `*_mcp.gms` and `*_mcp_presolve.gms` and not every model regenerates both variants. NOTE: #1400 (`scripts/gamslib/*` path-relativization) is intentionally NOT in scope for this script — it's not an emit artifact and will not appear in output; #1396 (PR19 CI YAML) is also out of scope
    - Document expected output in a `--help` text or accompanying README
 
 5. **Author `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`** with:
