@@ -141,7 +141,7 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
    **Process Recommendations (PR20–PR23 + Sprint 26 reaffirmations):**
    - Will PR20's hard rule for Phase 0 acceptance gates produce friction on small/tactical PRs (e.g., #1400 pipeline absolute-path leak is a 2–4h scripts/-only fix that shouldn't need formal Phase 0)?
    - Will PR21's prep-task end-to-end emit verification template be reusable beyond Sprint 27 (i.e., is the template general or Sprint-27-specific)?
-   - PR22's audit script depends on `git log --since=<sprint-start>` — does it handle the Sprint 27 case where Sprint 26's late carryforward landings (#1396 PR19 CI, #1398 emit changes) create cross-sprint timestamp ambiguity?
+   - PR22's audit script needs to scan git history since sprint start — since `git log --since` is date-based and won't accept commit SHAs, does the CLI need separate `--since-date` / `--since-commit` flags to handle the Sprint 27 case where Sprint 26's late carryforward landings (#1396 PR19 CI, #1398 emit changes) create cross-sprint timestamp ambiguity?
    - Will PR23's CI-workflow PR checklist apply only to `.github/workflows/*.yml` PRs, or also to `scripts/ci/*` infrastructure PRs?
 
    **Cross-cutting:**
@@ -974,7 +974,7 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 
 ### Objective
 
-Design and implement `scripts/sprint_audit/changed_emit_artifacts.py` that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covering `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates the PR14 review list + retest comparison surface. This is the codified instance of Sprint 26 retrospective process recommendation **PR22**.
+Design and implement `scripts/sprint_audit/changed_emit_artifacts.py` that scans git history (via `git log --since <date>` or `git log <commit>..HEAD` — selected by CLI flag) for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covering `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates the PR14 review list + retest comparison surface. This is the codified instance of Sprint 26 retrospective process recommendation **PR22**.
 
 ### Why This Matters
 
@@ -993,13 +993,14 @@ For Sprint 27, this is especially critical because the sprint has 14 issues touc
 ### What Needs to Be Done
 
 1. **Design the script interface:**
-   - Command-line args: `--since <date|commit>` (default: Sprint 27 Day 0 commit SHA — to be filled by Task 11)
+   - Command-line args: mutually exclusive `--since-date <date>` (passed to `git log --since <date>` — date-based; subject to same-day commit-boundary ambiguity) and `--since-commit <sha>` (implemented via `git log <sha>..HEAD` — commit-based, unambiguous). Exactly one of the two must be specified. The Sprint 27 Day 0 commit SHA (to be filled by Task 11) is the recommended `--since-commit` value for mid-sprint retests; `--since-date` is provided for quick ad-hoc invocations.
+   - Note: `git log --since` is date-based (accepts ISO-8601 dates, relative expressions like `"2 days ago"`, or full timestamps) and does NOT accept commit SHAs — that's why the script needs two distinct flags rather than a single overloaded `--since` argument.
    - Output format: structured list (e.g., JSON or markdown table) of changed `data/gamslib/mcp/*.gms` files + the triggering commit(s) for each
    - Subcommands or flags for: "PR14 review list" mode (per-PR scope) vs "mid-sprint retest" mode (since-sprint-start scope)
-   - Handles the cross-sprint timestamp ambiguity from KU's Sprint 27 Task 1 unknowns (Sprint 26 late carryforward landings create ambiguity)
+   - Handles the cross-sprint timestamp ambiguity from KU Unknown 9.3 — `--since-commit` is the structural mitigation (commit boundaries are unambiguous)
 
 2. **Implement the script** in `scripts/sprint_audit/changed_emit_artifacts.py`:
-   - Use `subprocess.run(['git', 'log', ...])` to scan commits
+   - Use `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode: `git log --since <date> -- <pathspec>` for `--since-date`, `git log <sha>..HEAD -- <pathspec>` for `--since-commit`
    - Filter for paths matching `data/gamslib/mcp/*_mcp.gms` or `data/gamslib/mcp/*_mcp_presolve.gms`
    - Group changes by triggering commit
    - Output structured format suitable for inclusion in mid-sprint retest reports
@@ -1039,8 +1040,12 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 # Script --help works
 .venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --help
 
-# Dry-run against Sprint 26 history surfaces #1398 / #1400 emit changes
-.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since "2026-04-22" | grep -E "1398|1400"
+# Dry-run against Sprint 26 history (date-based) surfaces #1398 / #1400 emit changes
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-date "2026-04-22" | grep -E "1398|1400"
+
+# Dry-run against Sprint 26 history (commit-based) — unambiguous boundary
+SPRINT26_DAY0_SHA=$(git rev-list -1 --before="2026-04-23" main)
+.venv/bin/python scripts/sprint_audit/changed_emit_artifacts.py --since-commit "$SPRINT26_DAY0_SHA" | grep -E "1398|1400"
 ```
 
 ### Deliverables
@@ -1054,11 +1059,11 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 ### Acceptance Criteria
 
 - [ ] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit set
-- [ ] Script accepts `--since <date|commit>` argument
+- [ ] Script accepts mutually exclusive `--since-date <date>` (date-based via `git log --since`) and `--since-commit <sha>` (commit-based via `git log <sha>..HEAD`) arguments
 - [ ] Script output groups changes by triggering commit
-- [ ] Dry-run against Sprint 26 history surfaces #1398 / #1400 emit changes
+- [ ] Both dry-runs against Sprint 26 history (`--since-date` + `--since-commit`) surface #1398 / #1400 emit changes
 - [ ] CONTRIBUTING.md updated with script-invocation workflow
-- [ ] Script handles the cross-sprint timestamp ambiguity case (documented in PR22_SCRIPT_DESIGN.md)
+- [ ] Script handles the cross-sprint timestamp ambiguity case via `--since-commit` (documented in PR22_SCRIPT_DESIGN.md)
 - [ ] Unknown 9.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---

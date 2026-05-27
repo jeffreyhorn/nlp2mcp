@@ -102,13 +102,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 2 is research/docs only. No Python source code is modified. **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 2 is research/docs only — no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -155,7 +155,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 2: Author Missing Phase 0 Acc
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] All 4 ISSUE_*.md files contain `## Phase 0: Acceptance Gate` section with 4 required subsections
 - [x] CONTRIBUTING.md §"Phase 0 Acceptance Gates" exists with hard rule + exception scope + Sprint 26 incident citations
 - [x] Unknowns 7.1, 7.2, 9.1 verified in KNOWN_UNKNOWNS.md
@@ -240,13 +240,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 3 runs the pipeline (which exercises Python code) but does not modify Python source. **Skip the Python quality gate** unless you modify `scripts/gamslib/` or `src/` during baseline analysis. If you do, run:
+Task 3 runs the pipeline (which exercises Python code) and updates `data/gamslib/gamslib_status.json` + the BASELINE_METRICS.md doc; no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For data/docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -298,7 +298,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 3: Bucket-Provenance Baseline
 ## Test plan
 
 - [x] Pipeline retest completed (`scripts/gamslib/run_full_test.py` exit 0)
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] BASELINE_METRICS.md contains all 7 sections (§1–§7)
 - [x] Scope frozen at 142 (matches Sprint 26 Day 14)
 - [x] Per-failing-model bucket-provenance entries present for ~83 failing models
@@ -381,13 +381,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 4 is research/docs only. No Python source code is modified. **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 4 is research/docs only — no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -431,7 +431,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 4: #1398 Widened-Scope Verifi
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_1_ANCHOR_MAPPING.md exists; all 15 #1398-affected models referenced
 - [x] All 8 anchor models have dedicated sections with distinguishing emit patterns
 - [x] All 7 non-anchor models assigned to anchors with justification
@@ -520,13 +520,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 5 is design/docs only. No Python source code or CI workflow YAML is modified (implementation lands at Sprint 27 Day 0). **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 5 is design/docs only — no Python source code or CI workflow YAML is expected to change (implementation lands at Sprint 27 Day 0). Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -569,7 +569,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 5: PR19 Target-List Widening 
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PR19_WIDENING_DESIGN.md exists with all 4 required sections
 - [x] All 16 candidate model names appear in document
 - [x] Recommended option includes estimated CI runtime delta
@@ -660,13 +660,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 6's validation experiments touch `src/` as throwaway prototypes (model-name-guarded). All `src/` changes MUST be reverted before committing the prep task — only docs are committed. If any `src/` changes remain in the diff at commit time, run:
+Task 6's validation experiments touch `src/` as throwaway prototypes (model-name-guarded). All `src/` changes MUST be reverted before committing the prep task — only docs are committed. **Preferred outcome:** zero `src/` diff in the commit; only docs. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless (whether or not `src/` changes remain):
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass. **Preferred outcome:** zero `src/` diff in the commit; only docs.
+Do NOT proceed to commit until all pass.
 
 **Commit Message Format:**
 
@@ -797,13 +797,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 7 is research/docs only. No Python source code is modified (proposed patch shipped as a diff sketch in the design doc, NOT applied). **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 7 is research/docs only — proposed patch shipped as a diff sketch in the design doc, NOT applied; no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -845,7 +845,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 7: comp_up Subset/Superset Fi
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_5_FIX_SURFACE.md exists with all 6 required sections
 - [x] Patch sites identified with `file:line` precision
 - [x] Unified diff sketch covers all required changes
@@ -939,13 +939,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 8 is research/docs only. No Python source code is modified. **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 8 is research/docs only — no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -992,7 +992,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 8: #1387 cclinpts + #1388 cam
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PRIORITY_7_FIX_SURFACE.md exists with per-issue subsections for #1387 + #1388
 - [x] Each issue has a documented verdict (Sprint 27 fix OR Sprint 28 carryforward)
 - [x] If Sprint 27 fix verdict: source-code patch sites identified + effort estimate
@@ -1014,7 +1014,7 @@ EOF
 
 **Priority:** Medium (2–3 hours)
 
-**Objective:** Design and implement `scripts/sprint_audit/changed_emit_artifacts.py` that scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covering `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates the PR14 review list + retest comparison surface. This is the codified instance of Sprint 26 retrospective process recommendation **PR22**.
+**Objective:** Design and implement `scripts/sprint_audit/changed_emit_artifacts.py` that scans git history (via `git log --since <date>` or `git log <commit>..HEAD` — selected by CLI flag) for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covering `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates the PR14 review list + retest comparison surface. This is the codified instance of Sprint 26 retrospective process recommendation **PR22**.
 
 **Unknowns Verified:** 9.3
 
@@ -1030,12 +1030,15 @@ EOF
 **Tasks to Complete:**
 
 1. **Design the script interface:**
-   - Command-line args: `--since <date|commit>` (default: Sprint 27 Day 0 commit SHA placeholder for Task 11)
+   - Command-line args: mutually exclusive `--since-date <date>` (passed to `git log --since <date>` — date-based; subject to same-day commit-boundary ambiguity) and `--since-commit <sha>` (implemented via `git log <sha>..HEAD` — commit-based, unambiguous). Exactly one must be specified.
+   - Note: `git log --since` is date-based and does NOT accept commit SHAs, so a single overloaded `--since <date|commit>` would be misleading. Two distinct flags is the correct design.
+   - Recommended `--since-commit` value for mid-sprint retests: the Sprint 27 Day 0 commit SHA (to be recorded in PLAN.md Day 0 entry by Task 11).
    - Output format: structured list (JSON or markdown table) of changed `data/gamslib/mcp/*.gms` files + triggering commits
    - Subcommands or flags for "PR14 review list" mode (per-PR scope) vs "mid-sprint retest" mode (since-sprint-start scope)
-   - Handles cross-sprint timestamp ambiguity from KU Unknown 9.3
+   - Handles cross-sprint timestamp ambiguity from KU Unknown 9.3 via `--since-commit` (commit boundaries are unambiguous)
 2. **Implement the script** at `scripts/sprint_audit/changed_emit_artifacts.py`:
-   - `subprocess.run(['git', 'log', ...])` to scan commits
+   - `subprocess.run(['git', 'log', ...])` to scan commits — the `git` invocation differs by mode: `git log --since <date> -- <pathspec>` for `--since-date`, `git log <sha>..HEAD -- <pathspec>` for `--since-commit`
+   - Validate the `--since-commit` SHA via `git rev-parse` before constructing the revision range
    - Filter for `data/gamslib/mcp/*_mcp.gms` or `*_mcp_presolve.gms` paths
    - Group changes by triggering commit
    - Output structured format suitable for mid-sprint retest reports
@@ -1060,7 +1063,7 @@ For Unknown 9.3 in `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md`, update Ve
 - Status: ✅ VERIFIED (or ❌ WRONG with correction)
 - Verified by: Task 9 (PR22 Mid-Sprint Audit Script Design)
 - Date: today's date (YYYY-MM-DD)
-- Findings: CLI accepts `--since <date|commit>`; dry-run on Sprint 26 surfaces #1398 / #1400; cross-sprint timestamp ambiguity handling
+- Findings: CLI implements two mutually exclusive flags `--since-date <date>` + `--since-commit <sha>` (resolving Unknown 9.3's two-flag design question); both dry-runs on Sprint 26 surface #1398 / #1400; cross-sprint timestamp ambiguity handled via `--since-commit`
 - Evidence: dry-run output; CLI design notes
 - Decision: script ready for Sprint 27 mid-sprint use; CONTRIBUTING.md workflow integration complete
 
@@ -1079,15 +1082,15 @@ In `docs/planning/EPIC_4/SPRINT_27/PREP_PLAN.md` §Task 9:
 Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 ```markdown
-- **Prep Task 9 COMPLETE (YYYY-MM-DD):** PR22 mid-sprint audit script designed + implemented. New `scripts/sprint_audit/changed_emit_artifacts.py` scans `git log --since=<sprint-start>` for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates PR14 review list + retest comparison surface. CLI accepts `--since <date|commit>` to handle cross-sprint timestamp ambiguity. Sprint 26 history dry-run surfaces #1398 + #1400 emit changes correctly. CONTRIBUTING.md updated with §"Emit-PR `.gms` Diff Workflow" referencing the script. Validation document at `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`. Verified Unknown 9.3.
+- **Prep Task 9 COMPLETE (YYYY-MM-DD):** PR22 mid-sprint audit script designed + implemented. New `scripts/sprint_audit/changed_emit_artifacts.py` scans git history for emit-affecting `data/gamslib/mcp/*.gms` changes (broad glob covers `*_mcp.gms` + `*_mcp_presolve.gms`) and auto-generates PR14 review list + retest comparison surface. CLI exposes two mutually exclusive flags: `--since-date <date>` (date-based; uses `git log --since`) and `--since-commit <sha>` (commit-based; uses `git log <sha>..HEAD`). The two-flag design resolves the cross-sprint timestamp ambiguity from Unknown 9.3 — `git log --since` is date-only and won't accept commit SHAs, so a single overloaded `--since` would be misleading. Sprint 26 history dry-runs (both modes) surface #1398 + #1400 emit changes correctly. CONTRIBUTING.md updated with §"Emit-PR `.gms` Diff Workflow" referencing the script. Validation document at `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md`. Verified Unknown 9.3.
 ```
 
 **Quality Gate:**
 
-Task 9 creates new Python code (`scripts/sprint_audit/changed_emit_artifacts.py`). **Run the full Python quality gate before committing:**
+Task 9 creates new Python code (`scripts/sprint_audit/changed_emit_artifacts.py`). Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
 Do NOT proceed to commit until all pass. If any check fails, fix the issue and re-run; do not bypass.
@@ -1104,15 +1107,19 @@ frozen PLAN_PROMPTS.md (Sprint 26 Day 12 staleness incident).
 ## Script
 
 - Path: scripts/sprint_audit/changed_emit_artifacts.py
-- CLI: --since <date|commit>; subcommands or flags for PR14 vs retest modes
+- CLI: mutually exclusive `--since-date <date>` (uses `git log --since`)
+  + `--since-commit <sha>` (uses `git log <sha>..HEAD`); subcommands or
+  flags for PR14 vs retest modes
 - Output: structured list of changed `data/gamslib/mcp/*.gms` files
   grouped by triggering commit
 - Filter: `*_mcp.gms` + `*_mcp_presolve.gms` (broad glob)
 
 ## Validation
 
-- Sprint 26 dry-run: surfaces #1398 + #1400 emit changes correctly
-- Cross-sprint timestamp ambiguity: handled via `--since <commit>` form
+- Sprint 26 dry-runs (both `--since-date` and `--since-commit` modes):
+  surface #1398 + #1400 emit changes correctly
+- Cross-sprint timestamp ambiguity: handled via `--since-commit` form
+  (commit boundaries are unambiguous unlike `--since` date semantics)
 
 ## Quality Gate
 
@@ -1147,8 +1154,8 @@ gh pr create --title "Complete Sprint 27 Prep Task 9: PR22 Mid-Sprint Audit Scri
 - [x] make format PASS
 - [x] make test PASS
 - [x] Script exists at `scripts/sprint_audit/changed_emit_artifacts.py` with executable bit
-- [x] CLI accepts `--since <date|commit>` argument
-- [x] Sprint 26 history dry-run surfaces #1398 + #1400 emit changes
+- [x] CLI accepts mutually exclusive `--since-date <date>` (uses `git log --since`) and `--since-commit <sha>` (uses `git log <sha>..HEAD`) arguments
+- [x] Sprint 26 history dry-runs (both `--since-date` and `--since-commit`) surface #1398 + #1400 emit changes
 - [x] CONTRIBUTING.md updated with script invocation workflow
 - [x] Unknown 9.3 verified in KNOWN_UNKNOWNS.md
 - [x] Task 9 Acceptance Criteria all checked in PREP_PLAN.md
@@ -1223,13 +1230,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 10 is research/docs only. No Python source code is modified. **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 10 is research/docs only — no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -1275,7 +1282,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 10: PR23 CI-Workflow PR Self-
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] CONTRIBUTING.md §"CI Workflow PR Checklist" exists with rationale + scope + 7-category checklist
 - [x] Each of 7 categories has 3-5 specific items
 - [x] Total checklist contains ≥ 25 items
@@ -1375,13 +1382,13 @@ Under `[Unreleased]` → `### Sprint 27 Preparation`, prepend a new bullet:
 
 **Quality Gate:**
 
-Task 11 is docs/scheduling only. No Python source code is modified. **Skip the Python quality gate.** If you touched any `.py` file unexpectedly, run:
+Task 11 is docs/scheduling only — no Python source code is expected to change. Per CONTRIBUTING.md §"Before Every Commit" and `docs/development/AGENTS.md` §"Before submitting", run the full Python quality gate before committing regardless:
 
 ```bash
-make typecheck && make lint && make format && make test
+make typecheck && make format && make lint && make test
 ```
 
-Do NOT proceed to commit until all pass.
+Do NOT proceed to commit until all pass. (For docs-only diffs the suite runs against the unchanged main state and should pass quickly; failures here indicate you touched something unintended.)
 
 **Commit Message Format:**
 
@@ -1444,7 +1451,7 @@ gh pr create --title "Complete Sprint 27 Prep Task 11: Plan Sprint 27 Detailed S
 
 ## Test plan
 
-- [x] No Python source code modified — quality gate skipped per workflow rules
+- [x] Full Python quality gate run before commit per CONTRIBUTING.md §"Before Every Commit": `make typecheck && make format && make lint && make test` all PASS
 - [x] PLAN.md covers all 14 days (Day 0 + Days 1-13)
 - [x] PLAN_PROMPTS.md covers all 14 days
 - [x] SPRINT_LOG.md skeleton covers all 14 days

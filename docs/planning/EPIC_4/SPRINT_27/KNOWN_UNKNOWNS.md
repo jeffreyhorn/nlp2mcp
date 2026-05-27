@@ -1255,23 +1255,24 @@ Sprint planning
 
 ### Priority
 
-**Medium** — Sprint 26 Day 12-13 landed multiple emit-affecting changes (#1396 PR19 CI extension, #1398 sweep findings, #1400 pipeline leak). The PR22 audit script's `git log --since=<sprint-start>` query must handle the case where Sprint 27 Day 0 is on a date with mid-day commit boundaries between Sprint 26 and Sprint 27.
+**Medium** — Sprint 26 Day 12-13 landed multiple emit-affecting changes (#1396 PR19 CI extension, #1398 sweep findings, #1400 pipeline leak). The PR22 audit script's git-history query must handle the case where Sprint 27 Day 0 is on a date with mid-day commit boundaries between Sprint 26 and Sprint 27. Note: `git log --since` is date-based and does NOT accept commit SHAs — to use a commit boundary the script must build the query as `git log <sha>..HEAD` instead.
 
 ### Assumption
 
-The PR22 audit script accepts an explicit `--since <commit>` argument (not just `--since <date>`) that can be set to the Sprint 27 Day 0 commit SHA, avoiding cross-sprint timestamp ambiguity entirely.
+The PR22 audit script accepts two mutually exclusive flags — `--since-date <date>` (date-based, passed to `git log --since`) and `--since-commit <sha>` (commit-based, implemented via `git log <sha>..HEAD`). The Sprint 27 Day 0 commit SHA is the recommended `--since-commit` value for mid-sprint retests, avoiding cross-sprint timestamp ambiguity entirely.
 
 ### Research Questions
 
-1. Does the script accept both `--since <date>` and `--since <commit>` forms?
-2. If only `--since <date>`, what is the timestamp resolution (UTC midnight? local time? second-resolution?) and does it handle the same-day commit boundary?
-3. Should the Sprint 27 Day 0 commit SHA be recorded in `docs/planning/EPIC_4/SPRINT_27/PLAN.md` Day 0 entry for use as the canonical script anchor?
+1. Does the script implement two distinct flags (`--since-date` and `--since-commit`) rather than a single overloaded `--since <date|commit>` (which would be misleading since `git log --since` itself is date-only)?
+2. For `--since-date`: what is the timestamp resolution (UTC midnight? local time? second-resolution?) and does it handle the same-day commit boundary?
+3. For `--since-commit`: is the input SHA validated against `git rev-parse` before constructing the `<sha>..HEAD` revision range?
+4. Should the Sprint 27 Day 0 commit SHA be recorded in `docs/planning/EPIC_4/SPRINT_27/PLAN.md` Day 0 entry for use as the canonical `--since-commit` anchor?
 
 ### How to Verify
 
-1. Design the script's CLI to accept both date and commit forms (Task 9 deliverable).
+1. Design the script's CLI to accept `--since-date` + `--since-commit` as mutually exclusive flags (Task 9 deliverable).
 2. Document the Sprint 27 Day 0 anchor commit SHA in PLAN.md Day 0.
-3. Dry-run the script with the anchor commit SHA against Sprint 26 history to verify behavior.
+3. Dry-run the script with both `--since-date "2026-04-22"` and `--since-commit <sprint-26-day-0-sha>` against Sprint 26 history to verify both modes surface the same #1398 / #1400 emit changes.
 
 ### Risk if Wrong
 
@@ -1449,7 +1450,7 @@ This table shows which Sprint 27 prep tasks verify which unknowns. Prep Task 11 
 | Task 6: AD Architectural Redesigns Risk Assessment (PR16 application) | 3.1, 3.2, 3.3, 3.4, 3.5 | Per-sub-priority hypothesis + validation experiment + PROCEED/REPLAN signal; coordinated-design analysis; #1335 approach selection |
 | Task 7: comp_up Subset/Superset Fix-Surface Analysis | 5.1, 5.2, 5.3 | Patch site identification; corpus sweep for additional models; clearlak regression risk assessment |
 | Task 8: #1387 cclinpts + #1388 camshape Fix-Surface Analysis | 7.1, 7.2, 7.3 | Bug classification; emit-bug-vs-fundamental-property analysis; combined-budget fit decision |
-| Task 9: PR22 Mid-Sprint Audit Script Design | 9.3 | CLI design (--since date vs commit); cross-sprint timestamp handling |
+| Task 9: PR22 Mid-Sprint Audit Script Design | 9.3 | CLI design — mutually exclusive `--since-date` (uses `git log --since`) + `--since-commit` (uses `git log <sha>..HEAD`); cross-sprint timestamp handling |
 | Task 10: PR23 CI-Workflow PR Self-Review Checklist Authoring | (no specific unknown; design-only) | Drafts checklist based on Sprint 26 PR #1396 review surface |
 | Task 11: Plan Sprint 27 Detailed Schedule | (integrates all) | Sprint 27 14-day schedule + day-by-day prompts; absorbs decisions from all prior tasks |
 
