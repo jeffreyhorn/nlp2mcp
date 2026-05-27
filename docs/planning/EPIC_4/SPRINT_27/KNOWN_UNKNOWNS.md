@@ -1313,7 +1313,23 @@ The #1374 emit duplicate-init bug (e.g., ganges `taum.l('cap-good')` after `taum
 
 ### How to Verify
 
-1. Corpus sweep: `grep -lE "(var)\.l\(([^)]+)\) = [^;]+;.*(var)\.l\(([^)]+)\) = " data/gamslib/mcp/*_mcp.gms` (approximate pattern; tune to find per-element duplicates).
+1. Corpus sweep — find files with two `.l(...)` assignments to the same variable on the same line. Two approaches:
+
+   - **PCRE one-shot (preferred; requires GNU grep with PCRE):** uses `\1` backreference to match the same variable twice without enumerating candidates:
+
+     ```bash
+     grep -lP '(\w+)\.l\([^)]+\) = [^;]+;.*\1\.l\([^)]+\) = ' data/gamslib/mcp/*_mcp.gms
+     ```
+
+   - **POSIX two-step (portable; works in BSD grep):** first enumerate candidate variables via `.l(...)` assignments, then per-variable grep for duplicates. (POSIX ERE doesn't support backreferences, so a one-shot is not possible; BRE `\1` works but is awkward to write portably.) Example one-liner:
+
+     ```bash
+     for f in data/gamslib/mcp/*_mcp.gms; do
+       awk -F'.l(' '/\.l\(.*\) = / {n[$1]++} END {for (v in n) if (n[v] > 1) print FILENAME ": " v}' "$f"
+     done
+     ```
+
+   Both approaches identify files with multiple per-element `.l(idx) = val` assignments to the same variable. Tune as needed to filter for the specific per-element-override-after-parameterized-init shape observed on ganges (`taum.l(i)` parameterized init followed by `taum.l('cap-good') = ...` per-element override).
 2. Classify pattern shape per affected model.
 3. Estimate Solve gain from the targeted fix.
 
