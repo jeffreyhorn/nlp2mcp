@@ -59,9 +59,10 @@ This prep plan focuses on:
 
 ## Task 1: Create Sprint 27 Known Unknowns List
 
-**Status:** 🔵 NOT STARTED
+**Status:** ✅ COMPLETE
 **Priority:** Critical
-**Estimated Time:** 3–4 hours
+**Estimated Time:** 3–4 hours (actual: ~3h)
+**Completed:** 2026-05-26
 **Deadline:** Before Sprint 27 Day 1
 **Owner:** Sprint planning
 **Dependencies:** None
@@ -155,11 +156,25 @@ Sprint 26 also surfaced **KU-37 (Phase A gate overreach metric)** — Sprint 27 
 
 ### Changes
 
-To be completed.
+Created `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` with 28 unknowns across 9 categories (one per Sprint 27 priority) + process recommendations folded into Category 9. Added "Unknowns Verified" metadata to Tasks 2–10 of this PREP_PLAN with per-task unknown mappings. Added CHANGELOG.md entry under Sprint 27 Preparation summarizing Task 1 completion.
 
 ### Result
 
-To be completed.
+28 unknowns documented across 9 categories:
+
+- **Category 1: Phase A Gate Predicate Tightening (#1398)** (4 KUs, 1.1–1.4) — 15-model baseline persistence; anchor distinctness; positional-info requirement; PR19 CI runtime impact
+- **Category 2: Pattern C Phase B Redesign (#1381)** (3 KUs, 2.1–2.3) — camcge/cesam2 generalization; Priority 1/2 sequencing; canary byte-stability surface
+- **Category 3: AD Architectural Redesigns (#1390, #1385, #1393 + #1335)** (5 KUs, 3.1–3.5) — signature changes for #1390; concrete-index preservation scope for #1385; #1335 approach selection (KU-39); coordinated design (KU-38); PROCEED/REPLAN binary signal
+- **Category 4: launch PATH-Numerics Investigation (#1378)** (2 KUs, 4.1–4.2) — solver-tuning vs in-place fix class; launch byte-stability anchor interaction
+- **Category 5: comp_up Subset/Superset (#1356/#1357)** (3 KUs, 5.1–5.3) — single vs coordinated patch; corpus-wide scope; #1349 `.fx → .l` interaction
+- **Category 6: #1224 mine ParamRef IndexOffset** (2 KUs, 6.1–6.2) — bundling with #1385; downstream failure mode after fix
+- **Category 7: Day 6 Close-and-Refile (#1387/#1388)** (3 KUs, 7.1–7.3) — bug class for #1387; emit-bug vs fundamental-property for #1388; combined-budget fit
+- **Category 8: Pipeline Absolute-Path Leak (#1400)** (2 KUs, 8.1–8.2) — additional leak sources; PROJECT_ROOT vs basename approach
+- **Category 9: Process Recommendations (PR20–PR23) + #1374** (4 KUs, 9.1–9.4) — PR20 small-PR friction; PR21 template generality; PR22 cross-sprint timestamp; #1374 sweep scope
+
+Priority distribution: Critical 6 (21%), High 11 (39%), Medium 8 (29%), Low 3 (11%) — close to the target ~25/40/25/10 mix (slight Critical→Medium skew vs target). Research is performed across prep Tasks 2–11 per the Task-to-Unknown Mapping in `KNOWN_UNKNOWNS.md` Appendix; the authoritative scheduling budget remains the per-task total in this PREP_PLAN (31–44h across all 11 tasks).
+
+Sprint 26 end-of-sprint KUs (KU-37, KU-38, KU-39) carry forward into Sprint 27 prep at the Overview / Appendix level (KU-37 → drives Cat 1; KU-38 → drives Unknown 3.4; KU-39 → drives Unknown 3.3). KU-37 specifically is the basis for Sprint 27 Priority 1 (#1398).
 
 ### Verification
 
@@ -168,26 +183,26 @@ test -f docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md && echo "EXISTS"
 wc -l docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
 # Count only numbered unknowns (exclude template headers)
 grep -cE "^## Unknown [0-9]+\.[0-9]+:" docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
-# Expected: ≥ 25
+# Expected: 28
 grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
-# Expected: ≥ 7 (9 priorities collapsed into ~7 categories + process recs + cross-cutting + S26 carryforward)
+# Expected: 9
 ```
 
 ### Deliverables
 
-- `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` with ≥ 25 unknowns across ≥ 7 categories
-- Task-to-Unknown mapping table (Appendix)
-- Sprint 26 carryforward KU-37 through KU-39 migrated into Sprint 27 Appendix (with full text + drives-which-unknown forward-links)
-- "Unknowns Verified" metadata added to PREP_PLAN.md Tasks 2–10 (Task 11 integrates all)
-- CHANGELOG.md updated with Task 1 completion entry (under Sprint 27 Preparation)
+- ✅ `docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md` with 28 unknowns across 9 categories
+- ✅ Task-to-Unknown mapping table (Appendix)
+- ✅ Sprint 26 carryforward KU-37 through KU-39 migrated into Sprint 27 Overview + Appendix (with full text + drives-which-unknown forward-links)
+- ✅ "Unknowns Verified" metadata added to PREP_PLAN.md Tasks 2–10 (Task 11 integrates all)
+- ✅ CHANGELOG.md updated with Task 1 completion entry (under Sprint 27 Preparation)
 
 ### Acceptance Criteria
 
-- [ ] ≥ 25 unknowns documented
-- [ ] All 9 priority areas have at least 2 unknowns each (P1: ≥ 4, P2: ≥ 3, P3: ≥ 4, P4: ≥ 2, P5: ≥ 3, P6: ≥ 2, P7: ≥ 3, P8: ≥ 2, P9: ≥ 2)
-- [ ] Sprint 26 end-of-sprint KUs (KU-37, KU-38, KU-39) migrated to Sprint 27 numbering
-- [ ] All Critical/High unknowns have verification method + deadline assigned
-- [ ] Task-to-Unknown mapping table covers Tasks 2–11
+- [x] ≥ 25 unknowns documented (28 created)
+- [x] All 9 priority areas have at least 2 unknowns each (P1: 4, P2: 3, P3: 5, P4: 2, P5: 3, P6: 2, P7: 3, P8: 2, P9: 4)
+- [x] Sprint 26 end-of-sprint KUs (KU-37, KU-38, KU-39) migrated to Sprint 27 numbering (Overview §"Sprint 26 Carryforward KUs"; Appendix §"Carryforward from Sprint 26")
+- [x] All Critical/High unknowns have verification method + deadline assigned
+- [x] Task-to-Unknown mapping table covers Tasks 2–11
 
 ---
 
@@ -199,6 +214,7 @@ grep -cE "^# Category " docs/planning/EPIC_4/SPRINT_27/KNOWN_UNKNOWNS.md
 **Deadline:** Before Sprint 27 Day 1 (this is the Sprint 26 PR20 implementation; must complete before any Priority 5 / 7 src/ work begins)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (KU-37/38/39 inform the Phase 0 derivation scope)
+**Unknowns Verified:** 7.1, 7.2, 9.1
 
 ### Objective
 
@@ -289,6 +305,7 @@ done
 - Phase 0 acceptance-gate section authored in `docs/issues/ISSUE_1387_*.md`
 - Phase 0 acceptance-gate section authored in `docs/issues/ISSUE_1388_*.md`
 - New §"Phase 0 Acceptance Gates" section in `CONTRIBUTING.md`
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 9.1
 - CHANGELOG.md updated with Task 2 completion entry
 
 ### Acceptance Criteria
@@ -297,6 +314,7 @@ done
 - [ ] Each Phase 0 section contains all 4 required subsections (Hand-Derived KKT Shape, Expected Emit Pattern, Verification Methodology, PROCEED/REPLAN Signal)
 - [ ] CONTRIBUTING.md §"Phase 0 Acceptance Gates" exists with hard rule, exception scope, and Sprint 26 incident citations
 - [ ] Each Phase 0 section's "Verification Methodology" subsection includes at least one concrete `grep` / `diff` / pattern-match command runnable against regenerated `<model>_mcp.gms`
+- [ ] Unknowns 7.1, 7.2, 9.1 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] CHANGELOG.md entry references all 4 issues + CONTRIBUTING.md update
 
 ---
@@ -309,6 +327,7 @@ done
 **Deadline:** Before Sprint 27 Day 1 (Day 0 baseline must exist before any Sprint 27 src/ work)
 **Owner:** Sprint planning
 **Dependencies:** None
+**Unknowns Verified:** 1.1
 
 ### Objective
 
@@ -397,6 +416,7 @@ print(buckets)
 - `docs/planning/EPIC_4/SPRINT_27/BASELINE_METRICS.md` with §1–§7 sections
 - Updated `data/gamslib/gamslib_status.json` from Day 0 retest (or confirmation no drift from Sprint 26 Day 14)
 - Per-failing-model bucket-provenance entries for all ~83 failing models
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 1.1
 - CHANGELOG.md updated with Task 3 completion entry
 
 ### Acceptance Criteria
@@ -406,6 +426,7 @@ print(buckets)
 - [ ] §6 Per-Failing-Model Bucket Provenance covers all failing models with Sprint 26 final → Sprint 27 Day 0 transitions
 - [ ] No unexplained drift between Sprint 26 Day 14 `gamslib_status.json` and Sprint 27 Day 0 `gamslib_status.json`; any drift root-caused and documented
 - [ ] Sprint 27 target metrics in §7 match PROJECT_PLAN.md §Sprint 27 Acceptance Criteria
+- [ ] Unknown 1.1 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -417,6 +438,7 @@ print(buckets)
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 1 work begins on Day 1)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 3 (baseline must exist to verify the 15-model #1398 affected set)
+**Unknowns Verified:** 1.1 (cross-reference with Task 3), 1.2, 4.2
 
 ### Objective
 
@@ -500,6 +522,7 @@ grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/plan
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_1_ANCHOR_MAPPING.md` with per-anchor sections + per-non-anchor justifications
 - Confirmation (in PRIORITY_1_ANCHOR_MAPPING.md) that all 15 models present in Sprint 27 Day 0 baseline at non-compare_match buckets
 - "Open questions" subsection for any ambiguous mappings
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 1.1 (cross-reference), 1.2, 4.2
 - CHANGELOG.md updated with Task 4 completion entry
 
 ### Acceptance Criteria
@@ -509,6 +532,7 @@ grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/plan
 - [ ] All 7 non-anchor models have an assigned anchor with justification
 - [ ] Any anchor pair flagged as "may share shape" has a Day 1/2 hand-derived KKT escalation note
 - [ ] Any model from the original 15 that has self-recovered or shifted bucket is flagged with Sprint 27 scope-impact note
+- [ ] Unknowns 1.2 and 4.2 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -520,6 +544,7 @@ grep -E "^- (egypt|shale|qsambal|harker|tfordy|gangesx|srpchase) → " docs/plan
 **Deadline:** Before Sprint 27 Day 1 (PR19 widening must land before Priority 1 to prevent re-regression)
 **Owner:** Sprint planning + CI engineer
 **Dependencies:** Task 4 (anchor-model mapping needed to confirm target-list composition)
+**Unknowns Verified:** 1.4
 
 ### Objective
 
@@ -594,6 +619,7 @@ grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIG
 - `docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIGN.md` with state inventory + runtime calc + 3 options + recommendation + implementation steps
 - Explicit recommendation among Options A/B/C
 - Estimated CI runtime delta for the recommended option
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 1.4
 - CHANGELOG.md updated with Task 5 completion entry
 
 ### Acceptance Criteria
@@ -601,6 +627,7 @@ grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIG
 - [ ] PR19_WIDENING_DESIGN.md exists with all 4 required sections (state, runtime calc, options, recommendation)
 - [ ] All 16 candidate model names appear in the document
 - [ ] Recommended option includes estimated CI runtime delta
+- [ ] Unknown 1.4 verified and updated in KNOWN_UNKNOWNS.md
 - [ ] Implementation steps include the exact `.github/path-solve-ci-targets.txt` lines to add
 - [ ] Validation plan defines how Sprint 27 Day 1 will confirm CI works on the widened set
 
@@ -614,6 +641,7 @@ grep -E "^## Recommendation:" docs/planning/EPIC_4/SPRINT_27/PR19_WIDENING_DESIG
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 3's 30-48h budget is committed)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (KU-38/39 inform the risk assessment scope)
+**Unknowns Verified:** 3.1, 3.2, 3.3, 3.4, 3.5
 
 ### Objective
 
@@ -698,6 +726,7 @@ grep -E "^## Coordinated Design" docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_ASSESSMENT.md` with per-redesign hypothesis + validation experiment + PROCEED/REPLAN criteria + coordinated design analysis
 - Explicit selection of one of the 3 #1335 approaches (KU-39 resolution)
 - Coordinated-design recommendation (KU-38 resolution)
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 3.1, 3.2, 3.3, 3.4, 3.5
 - CHANGELOG.md updated with Task 6 completion entry
 
 ### Acceptance Criteria
@@ -707,6 +736,7 @@ grep -E "^## Coordinated Design" docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_
 - [ ] Coordinated-design analysis explicitly addresses each pair (#1390+#1385, #1385+#1393, #1390+#1393)
 - [ ] Each validation experiment includes the specific file:line patch site + the regeneration command + the verification methodology
 - [ ] Each experiment is marked "scheduled for Day 0" or "executed in prep with result"
+- [ ] Unknowns 3.1, 3.2, 3.3, 3.4, 3.5 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -718,6 +748,7 @@ grep -E "^## Coordinated Design" docs/planning/EPIC_4/SPRINT_27/PRIORITY_3_RISK_
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 5 begins)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 1 (Priority 5 unknowns), Task 2 (#1356 + #1357 Phase 0 sections must be authored first)
+**Unknowns Verified:** 5.1, 5.2, 5.3
 
 ### Objective
 
@@ -811,6 +842,7 @@ grep -E "^## Affected Models" docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURF
 - Confirmation of single-file or coordinated patch shape
 - List of all models exhibiting the comp_up subset/superset shape
 - Day 1 readiness assessment
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 5.1, 5.2, 5.3
 - CHANGELOG.md updated with Task 7 completion entry
 
 ### Acceptance Criteria
@@ -820,6 +852,7 @@ grep -E "^## Affected Models" docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURF
 - [ ] Unified diff sketch covers all required changes
 - [ ] Affected-model sweep ran against `data/gamslib/mcp/*_mcp.gms` corpus
 - [ ] Implementation effort estimate fits within Priority 5's 8-12h budget (or REPLAN flagged)
+- [ ] Unknowns 5.1, 5.2, 5.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -831,6 +864,7 @@ grep -E "^## Affected Models" docs/planning/EPIC_4/SPRINT_27/PRIORITY_5_FIX_SURF
 **Deadline:** Before Sprint 27 Day 1 (must complete before Priority 7 begins; informs Sprint 28 carryforward decision)
 **Owner:** Sprint planning + AD/KKT engineer
 **Dependencies:** Task 2 (#1387 + #1388 Phase 0 sections must be authored first)
+**Unknowns Verified:** 7.1, 7.2, 7.3
 
 ### Objective
 
@@ -914,6 +948,7 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 - `docs/planning/EPIC_4/SPRINT_27/PRIORITY_7_FIX_SURFACE.md` with per-issue analysis + verdict
 - Per-issue fix-surface estimate
 - If deferred: Sprint 28 carryforward filing for each deferred issue + GitHub label updates
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknowns 7.1, 7.2, 7.3
 - CHANGELOG.md updated with Task 8 completion entry
 
 ### Acceptance Criteria
@@ -923,6 +958,7 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 - [ ] If Sprint 27 fix verdict, source-code patch sites identified + effort estimate
 - [ ] If Sprint 28 carryforward verdict, GitHub issue labeled `sprint-28` + carryforward rationale documented
 - [ ] Combined Sprint 27 effort for #1387 + #1388 (if both kept) fits within Priority 7's 6-12h budget
+- [ ] Unknowns 7.1, 7.2, 7.3 verified and updated in KNOWN_UNKNOWNS.md (Task 2 may already verify 7.1/7.2 via Phase 0 authoring; Task 8 finalizes with fix-surface analysis)
 
 ---
 
@@ -934,6 +970,7 @@ gh issue list --label sprint-28 --json number,title | grep -E "1387|1388"
 **Deadline:** Before Sprint 27 Day 1 (script must exist before mid-sprint retests rely on it)
 **Owner:** Sprint planning + tooling engineer
 **Dependencies:** None
+**Unknowns Verified:** 9.3
 
 ### Objective
 
@@ -1011,6 +1048,7 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 - `scripts/sprint_audit/changed_emit_artifacts.py` (executable Python script)
 - `docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md` with design + implementation + validation
 - CONTRIBUTING.md updated with §"Emit-PR `.gms` Diff Workflow" (or similar) referencing the script
+- Updated KNOWN_UNKNOWNS.md with verification results for Unknown 9.3
 - CHANGELOG.md updated with Task 9 completion entry
 
 ### Acceptance Criteria
@@ -1021,6 +1059,7 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 - [ ] Dry-run against Sprint 26 history surfaces #1398 / #1400 emit changes
 - [ ] CONTRIBUTING.md updated with script-invocation workflow
 - [ ] Script handles the cross-sprint timestamp ambiguity case (documented in PR22_SCRIPT_DESIGN.md)
+- [ ] Unknown 9.3 verified and updated in KNOWN_UNKNOWNS.md
 
 ---
 
@@ -1032,6 +1071,7 @@ test -f docs/planning/EPIC_4/SPRINT_27/PR22_SCRIPT_DESIGN.md && echo "EXISTS"
 **Deadline:** Before Sprint 27 Day 1
 **Owner:** Sprint planning + CI engineer
 **Dependencies:** None
+**Unknowns Verified:** (no specific unknown; design-only — checklist content derived from Sprint 26 PR #1396 review history)
 
 ### Objective
 
